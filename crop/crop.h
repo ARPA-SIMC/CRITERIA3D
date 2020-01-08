@@ -11,8 +11,6 @@
         #include "root.h"
     #endif
 
-#define TEST
-
     enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FALLOW, FRUIT_TREE};
 
     /*!
