@@ -1745,9 +1745,9 @@ bool Project::searchDefaultPath(QString* path)
     bool isFound = false;
     while (! isFound)
     {
-        myPath += "../";
         if (QDir(myPath + "DATA").exists()) isFound = true;
         if (QDir::cleanPath(myPath) == "/" || QDir::cleanPath(myPath) == myVolumeDOS) break;
+        myPath += "../";
     }
 
     if (! isFound)
