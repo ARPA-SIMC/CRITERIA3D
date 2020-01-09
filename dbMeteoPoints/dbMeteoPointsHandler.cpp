@@ -732,7 +732,7 @@ bool Crit3DMeteoPointsDbHandler::loadVariableProperties()
             }
             if (meteoVar != noMeteoVar)
             {
-                ret = _mapIdMeteoVar.insert(std::pair<int, meteoVariable>(id_variable,meteoVar));
+                ret = _mapIdMeteoVar.insert(std::pair<int, meteoVariable>(id_variable, meteoVar));
                 if (ret.second==false)
                 {
                     error = "element 'z' already existed";
@@ -740,7 +740,7 @@ bool Crit3DMeteoPointsDbHandler::loadVariableProperties()
             }
             else
             {
-                error = "variable " + variable + "is not correct";
+                error = "Wrong variable: " + variable;
                 return false;
             }
         }
