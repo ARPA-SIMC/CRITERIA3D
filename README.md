@@ -25,7 +25,7 @@ Algorithms for potential/actual solar radiation computation.
 Algorithms for the spatialization of meteorological data.
 
 # License
-CRITERIA3D has been developed under contract issued by 
+agrolib has been developed under contract issued by 
 ARPAE Hydro-Meteo-Climate Service, Emilia-Romagna, Italy: http://www.arpae.it/sim/
 
 agrolib is released under the GNU LGPL license.
