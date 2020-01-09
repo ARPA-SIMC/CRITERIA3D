@@ -5,7 +5,7 @@
 #
 #----------------------------------------------------
 
-QT       -= core gui
+QT   -= core gui
 
 TEMPLATE = agrolib
 CONFIG += staticlib

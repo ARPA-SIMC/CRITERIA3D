@@ -65,5 +65,3 @@ FORMS += \
     formInfo.ui \
     formPeriod.ui
 
-
-

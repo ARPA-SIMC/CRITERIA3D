@@ -34,6 +34,6 @@ HEADERS += \
     utilities.h
 
 unix {
-    target.path = /usr/agrolib
+    target.path = /usr/lib
     INSTALLS += target
 }
