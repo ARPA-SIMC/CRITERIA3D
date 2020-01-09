@@ -47,8 +47,3 @@ HEADERS += \
     crit3dClimateList.h \
     crit3dElabList.h \
     crit3dAnomalyList.h
-
-unix {
-    target.path = /usr/agrolib
-    INSTALLS += target
-}
