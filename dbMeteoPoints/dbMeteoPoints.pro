@@ -9,7 +9,7 @@ QT       += network sql
 
 QT       -= gui
 
-TEMPLATE = agrolib
+TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
