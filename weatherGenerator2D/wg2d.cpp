@@ -776,7 +776,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                     counter++;
                 }
             }
-            matricial::matrixProductNoCheck(dummyMatrix,dummyMatrix2,nrStations,nrStations,nrStations,M);
+            matricial::matrixProductNoCheck(dummyMatrix, dummyMatrix2, nrStations, nrStations, nrStations,M);
             for (int i=0;i<nrStations;i++)
             {
                 for (int j=i;j<nrStations;j++)

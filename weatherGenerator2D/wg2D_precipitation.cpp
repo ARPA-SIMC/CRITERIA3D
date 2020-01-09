@@ -1342,8 +1342,8 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                 for (int j=0;j<nrStations;j++)
                     dummyMatrix[i][j] = amountsCorrelationMatrix[i][j];
        }
-       matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,true);
-       matricial::matrixProductNoCheck(dummyMatrix,randomMatrix,nrStations,nrStations,lengthSeries,dummyMatrix3);
+       matricial::choleskyDecompositionTriangularMatrix(dummyMatrix, nrStations, true);
+       matricial::matrixProductNoCheck(dummyMatrix, randomMatrix, nrStations, nrStations, lengthSeries, dummyMatrix3);
        double meanValue,stdDevValueOverSQRT_2;
        for (int i=0;i<nrStations;i++)
        {

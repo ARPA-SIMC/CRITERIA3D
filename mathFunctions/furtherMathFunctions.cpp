@@ -810,7 +810,7 @@ namespace matricial
     }
 
     // it assume that rowSecond == colFirst
-    int matrixProductNoCheck(double **first,double**second,int colFirst,int rowFirst,int colSecond,double ** multiply)
+    int matrixProductNoCheck(double **first, double**second,int rowFirst, int colFirst, int colSecond, double ** multiply)
     {
         int c, d, k;
         double sum = 0;
