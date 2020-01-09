@@ -776,7 +776,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                     counter++;
                 }
             }
-            matricial::matrixProductNoCheck(dummyMatrix,dummyMatrix2,nrStations,nrStations,nrStations,nrStations,M);
+            matricial::matrixProductNoCheck(dummyMatrix,dummyMatrix2,nrStations,nrStations,nrStations,M);
             for (int i=0;i<nrStations;i++)
             {
                 for (int j=i;j<nrStations;j++)
@@ -803,7 +803,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         //bool isLowerDiagonal = true;
         matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,true);
         //printf("cholesky\n");
-        matricial::matrixProductNoCheck(dummyMatrix,normalizedMatrixRandom,nrStations,nrStations,lengthSeries,nrStations,dummyMatrix3);
+        matricial::matrixProductNoCheck(dummyMatrix, normalizedMatrixRandom, nrStations, nrStations, lengthSeries, dummyMatrix3);
 
         double meanValue,stdDevValue;
         for (int i=0;i<nrStations;i++)
