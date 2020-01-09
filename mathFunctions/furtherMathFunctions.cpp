@@ -809,11 +809,12 @@ namespace matricial
         return CRIT3D_OK;
     }
 
-    int matrixProductNoCheck(double **first,double**second,int colFirst,int rowFirst,int colSecond,int rowSecond,double ** multiply)
+    // it assume that colFirst == rowSecond
+    int matrixProductNoCheck(double **first,double**second,int colFirst,int rowFirst,int colSecond,double ** multiply)
     {
         int c, d, k;
         double sum = 0;
-        //if ((colFirst != rowSecond)) return NODATA;
+
         for ( c = 0 ; c < rowFirst ; c++ )
         {
             for ( d = 0 ; d < colSecond ; d++ )
@@ -828,6 +829,7 @@ namespace matricial
         }
         return CRIT3D_OK;
     }
+
 
     void matrixProductSquareMatricesNoCheck(double **first,double**second,int dimension,double ** multiply)
     {
