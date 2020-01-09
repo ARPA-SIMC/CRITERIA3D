@@ -11,7 +11,7 @@
 
 QT  += widgets sql
 
-TEMPLATE = lib
+TEMPLATE = agrolib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
@@ -40,7 +40,7 @@ unix:{
     INCLUDEPATH += /usr/include/qwt/
 }
 macx:{
-    INCLUDEPATH += /usr/local/opt/qwt/lib/qwt.framework/Headers/
+    INCLUDEPATH += /usr/local/opt/qwt/agrolib/qwt.framework/Headers/
 }
 
 SOURCES += \
@@ -75,7 +75,7 @@ HEADERS += \
     tableWaterRetention.h
 
 unix {
-    target.path = /usr/lib
+    target.path = /usr/agrolib
     INSTALLS += target
 }
 
@@ -83,7 +83,7 @@ win32:{
     include($$(QWT_ROOT)\features\qwt.prf)
 }
 unix:{
-    include(/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qwt.prf)
+    include(/usr/agrolib/x86_64-linux-gnu/qt5/mkspecs/features/qwt.prf)
 }
 macx:{
     include(/usr/local/opt/qwt/features/qwt.prf)

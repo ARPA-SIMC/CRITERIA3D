@@ -24,12 +24,13 @@ unix:{
 win32:{
     TARGET = shapeHandler
 }
+
 TEMPLATE = lib
 CONFIG += staticlib
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
-INCLUDEPATH =  shapelib ../mathFunctions
+INCLUDEPATH =  shapelib  ../mathFunctions
 
 SOURCES += \
     shapelib/dbfopen.c      \
