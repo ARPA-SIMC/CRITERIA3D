@@ -7,7 +7,7 @@
 
 QT   -= core gui
 
-TEMPLATE = lib
+TEMPLATE = agrolib
 CONFIG += staticlib
 
 DEFINES += _CRT_SECURE_NO_WARNINGS

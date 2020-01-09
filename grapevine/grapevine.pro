@@ -8,7 +8,7 @@
 QT      -= core gui
 
 TARGET = grapevine
-TEMPLATE = agrolib
+TEMPLATE = lib
 CONFIG += staticlib
 
 DEFINES += GRAPEVINE_LIBRARY

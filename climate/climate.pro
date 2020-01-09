@@ -8,7 +8,7 @@
 QT       -= gui
 QT       += sql xml
 
-TEMPLATE = lib
+TEMPLATE = agrolib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
@@ -47,3 +47,8 @@ HEADERS += \
     crit3dClimateList.h \
     crit3dElabList.h \
     crit3dAnomalyList.h
+
+unix {
+    target.path = /usr/agrolib
+    INSTALLS += target
+}
