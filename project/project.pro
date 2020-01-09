@@ -7,7 +7,7 @@
 
 QT  += core gui widgets sql xml
 
-TEMPLATE = agrolib
+TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
@@ -64,6 +64,4 @@ HEADERS += \
 FORMS += \
     formInfo.ui \
     formPeriod.ui
-
-
 
