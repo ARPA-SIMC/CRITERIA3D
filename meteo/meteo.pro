@@ -37,8 +37,3 @@ HEADERS += meteo.h \
     meteoGrid.h \
     quality.h
 
-unix {
-    target.path = /usr/agrolib
-    INSTALLS += target
-}
-
