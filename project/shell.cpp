@@ -7,7 +7,7 @@
 
 #ifdef _WIN32
     #include "Windows.h"
-    #pragma comment(agrolib, "User32.agrolib")
+    #pragma comment(lib, "User32.lib")
 #endif
 
 using namespace std;

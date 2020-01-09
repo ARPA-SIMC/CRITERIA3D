@@ -38,7 +38,7 @@ HEADERS += meteo.h \
     quality.h
 
 unix {
-    target.path = /usr/agrolib
+    target.path = /usr/lib
     INSTALLS += target
 }
 
