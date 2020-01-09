@@ -9,7 +9,7 @@ QT -= gui
 QT += core sql
 
 TARGET = soil
-TEMPLATE = agrolib
+TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release

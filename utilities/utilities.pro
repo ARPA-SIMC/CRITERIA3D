@@ -8,7 +8,7 @@
 QT      += core sql
 QT      -= gui
 
-TEMPLATE = agrolib
+TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
@@ -33,7 +33,3 @@ SOURCES += \
 HEADERS += \
     utilities.h
 
-unix {
-    target.path = /usr/agrolib
-    INSTALLS += target
-}

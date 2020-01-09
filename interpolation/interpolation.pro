@@ -7,7 +7,7 @@
 
 QT   -= gui core
 
-TEMPLATE = agrolib
+TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release

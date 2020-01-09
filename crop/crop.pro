@@ -9,7 +9,7 @@ QT -= gui
 QT += core sql
 
 TARGET = crop
-TEMPLATE = agrolib
+TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
