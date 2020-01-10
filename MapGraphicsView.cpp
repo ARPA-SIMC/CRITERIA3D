@@ -186,7 +186,7 @@ void MapGraphicsView::setScene(MapGraphicsScene * scene)
             SLOT(handleChildViewContextMenu(QContextMenuEvent*)));
 
     //Insert new stuff
-    if (this->layout() != 0)
+    if (this->layout() != nullptr)
         delete this->layout();
     this->setLayout(new QVBoxLayout(this));
     this->layout()->addWidget(childView);
@@ -259,8 +259,8 @@ void MapGraphicsView::setZoomLevel(quint8 nZoom, ZoomMode zMode)
     const QPointF  centerGeoPos = this->mapToScene(QPoint(this->width()/2,this->height()/2));
     QPointF mousePoint = _childView->mapToScene(_childView->mapFromGlobal(QCursor::pos()));
     QRectF sceneRect = _childScene->sceneRect();
-    const float xRatio = mousePoint.x() / sceneRect.width();
-    const float yRatio = mousePoint.y() / sceneRect.height();
+    const float xRatio = float(mousePoint.x() / sceneRect.width());
+    const float yRatio = float(mousePoint.y() / sceneRect.height());
     const QPointF centerPos = _childView->mapToScene(QPoint(_childView->width()/2,_childView->height()/2));
     const QPointF offset = mousePoint - centerPos;
 
@@ -378,8 +378,8 @@ void MapGraphicsView::renderTiles()
 void MapGraphicsView::doTileLayout()
 {
     //Calculate the center point and polygon of the viewport in QGraphicsScene coordinates
-    const QPointF centerPointQGS = _childView->mapToScene(_childView->width()/2.0,
-                                                          _childView->height()/2.0);
+    const QPointF centerPointQGS = _childView->mapToScene(_childView->width()/2,
+                                                          _childView->height()/2);
     QPolygon viewportPolygonQGV;
     viewportPolygonQGV << QPoint(0,0) << QPoint(0,_childView->height()) << QPoint(_childView->width(),_childView->height()) << QPoint(_childView->width(),0);
 

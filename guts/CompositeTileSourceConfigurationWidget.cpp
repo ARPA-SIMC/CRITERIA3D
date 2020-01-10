@@ -80,6 +80,17 @@ void CompositeTileSourceConfigurationWidget::addOSMTileLayer()
 }
 
 //private slot
+void CompositeTileSourceConfigurationWidget::addESRISatLayer()
+{
+    QSharedPointer<CompositeTileSource> composite = _composite.toStrongRef();
+    if (composite.isNull())
+        return;
+
+    QSharedPointer<OSMTileSource> source(new OSMTileSource(OSMTileSource::ESRIWorldImagery));
+    composite->addSourceTop(source);
+}
+
+//private slot
 void CompositeTileSourceConfigurationWidget::on_removeSourceButton_clicked()
 {
     QItemSelectionModel * selModel = this->ui->listView->selectionModel();
@@ -184,5 +195,6 @@ void CompositeTileSourceConfigurationWidget::init()
     //Build a menu of possible sources for the "add" button
     QMenu * menu = new QMenu(this->ui->addSourceButton);
     menu->addAction("OpenStreetMap Tiles", this, SLOT(addOSMTileLayer()));
+    menu->addAction("ESRI - World Imagery", this, SLOT(addESRISatLayer()));
     this->ui->addSourceButton->setMenu(menu);
 }

@@ -45,7 +45,7 @@ QPointF OSMTileSource::qgs2ll(const QPointF &qgs, quint8 zoomLevel) const
 
 quint64 OSMTileSource::tilesOnZoomLevel(quint8 zoomLevel) const
 {
-    return pow(4.0,zoomLevel);
+    return quint64(pow(4.0, zoomLevel));
 }
 
 quint16 OSMTileSource::tileSize() const
@@ -70,18 +70,22 @@ QString OSMTileSource::name() const
     switch(_tileType)
     {
     case OSMTiles:
-        return "OpenStreetMap Tiles";
-        break;
+        return "OpenStreetMap standard tiles";
+
+    case ESRIWorldImagery:
+        return "ESRI - World Imagery tiles";
+
+    case Terrain:
+        return "Stamen Terrain tiles";
 
     default:
-        return "Unknown Tiles";
-        break;
+        return "Unknown tiles";
     }
 }
 
 QString OSMTileSource::tileFileExtension() const
 {
-    if (_tileType == OSMTiles)
+    if ((_tileType == OSMTiles) || (_tileType == ESRIWorldImagery))
         return "png";
     else
         return "jpg";
@@ -98,9 +102,26 @@ void OSMTileSource::fetchTile(quint32 x, quint32 y, quint8 z)
     //Figure out which server to request from based on our desired tile type
     if (_tileType == OSMTiles)
     {
-        host = "https://b.tile.openstreetmap.org";
+        host = "http://b.tile.openstreetmap.org";
         url = "/%1/%2/%3.png";
     }
+    else if (_tileType == ESRIWorldImagery)
+    {
+        host = "http://server.arcgisonline.com";
+        url = "/arcgis/rest/services/World_Imagery/MapServer/tile/%1/%3/%2.png";
+    }
+    else if (_tileType == Terrain)
+    {
+        host = "http://tile.stamen.com";
+        url = "/terrain/%1/%2/%3.png";
+    }
+    else
+    {
+        //default openstreetmap
+        host = "http://b.tile.openstreetmap.org";
+        url = "/%1/%2/%3.png";
+    }
+
 
     //Use the unique cacheID to see if this tile has already been requested
     const QString cacheID = this->createCacheID(x,y,z);
@@ -130,7 +151,7 @@ void OSMTileSource::handleNetworkRequestFinished()
     QObject * sender = QObject::sender();
     QNetworkReply * reply = qobject_cast<QNetworkReply *>(sender);
 
-    if (reply == 0)
+    if (reply == nullptr)
     {
         qWarning() << "QNetworkReply cast failure";
         return;

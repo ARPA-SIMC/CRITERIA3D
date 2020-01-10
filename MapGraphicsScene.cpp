@@ -16,7 +16,7 @@ MapGraphicsScene::~MapGraphicsScene()
 
 void MapGraphicsScene::addObject(MapGraphicsObject *object)
 {
-    if (object == 0)
+    if (object == nullptr)
         return;
 
     connect(object,

@@ -47,6 +47,21 @@ void CircleObject::setRadius(qreal radius)
     this->redrawRequested();
 }
 
+QColor CircleObject::color() const
+{
+    return _fillColor;
+}
+
+void CircleObject::setFillColor(const QColor &color)
+{
+    if (_fillColor == color)
+        return;
+
+    _fillColor = color;
+    this->redrawRequested();
+}
+
+
 //protected
 //virtual from MapGraphicsObject
 void CircleObject::keyReleaseEvent(QKeyEvent *event)
@@ -59,3 +74,5 @@ void CircleObject::keyReleaseEvent(QKeyEvent *event)
     else
         event->ignore();
 }
+
+

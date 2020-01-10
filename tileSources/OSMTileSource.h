@@ -15,7 +15,9 @@ class MAPGRAPHICSSHARED_EXPORT OSMTileSource : public MapTileSource
 public:
     enum OSMTileType
     {
-        OSMTiles
+        OSMTiles,
+        ESRIWorldImagery,
+        Terrain
     };
 
 public:

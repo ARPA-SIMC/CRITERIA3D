@@ -53,7 +53,7 @@ QImage *MapTileSource::getFinishedTile(quint32 x, quint32 y, quint8 z)
     if (!_tempCache.contains(cacheID))
     {
         qWarning() << "getFinishedTile() called, but the tile is not present";
-        return 0;
+        return nullptr;
     }
     return _tempCache.take(cacheID);
 }
@@ -128,7 +128,7 @@ bool MapTileSource::cacheID2xyz(const QString & string, quint32 *x, quint32 *y, 
 
 QImage *MapTileSource::fromMemCache(const QString &cacheID)
 {
-    QImage * toRet = 0;
+    QImage * toRet = nullptr;
 
     if (_memoryCache.contains(cacheID))
     {
@@ -152,7 +152,7 @@ QImage *MapTileSource::fromMemCache(const QString &cacheID)
 
 void MapTileSource::toMemCache(const QString &cacheID, QImage *toCache, const QDateTime &expireTime)
 {
-    if (toCache == 0)
+    if (toCache == nullptr)
         return;
 
     if (_memoryCache.contains(cacheID))
@@ -171,13 +171,13 @@ QImage *MapTileSource::fromDiskCache(const QString &cacheID)
     //Figure out x,y,z based on the cacheID
     quint32 x,y,z;
     if (!MapTileSource::cacheID2xyz(cacheID,&x,&y,&z))
-        return 0;
+        return nullptr;
 
     //See if we've got it in the cache
     const QString path = this->getDiskCacheFile(x,y,z);
     QFile fp(path);
     if (!fp.exists())
-        return 0;
+        return nullptr;
 
     //Figure out when the tile we're loading from cache was supposed to expire
     QDateTime expireTime = this->getTileExpirationTime(cacheID);
@@ -187,13 +187,13 @@ QImage *MapTileSource::fromDiskCache(const QString &cacheID)
     {
         if (!QFile::remove(path))
             qWarning() << "Failed to remove old cache file" << path;
-        return 0;
+        return nullptr;
     }
 
     if (!fp.open(QFile::ReadOnly))
     {
         qWarning() << "Failed to open" << QFileInfo(fp.fileName()).baseName() << "from cache";
-        return 0;
+        return nullptr;
     }
 
     QByteArray data;
@@ -204,7 +204,7 @@ QImage *MapTileSource::fromDiskCache(const QString &cacheID)
         if (++counter >= MAX_DISK_CACHE_READ_ATTEMPTS)
         {
             qWarning() << "Reading cache file" << fp.fileName() << "took too long. Aborting.";
-            return 0;
+            return nullptr;
         }
     }
 
@@ -212,7 +212,7 @@ QImage *MapTileSource::fromDiskCache(const QString &cacheID)
     if (!image->loadFromData(data))
     {
         delete image;
-        return 0;
+        return nullptr;
     }
 
     return image;
@@ -237,7 +237,7 @@ void MapTileSource::toDiskCache(const QString &cacheID, QImage *toCache, const Q
     this->setTileExpirationTime(cacheID, expireTime);
 
     //Auto-detect file format
-    const char * format = 0;
+    const char * format = nullptr;
 
     //No compression for lossy file types!
     const int quality = 100;
@@ -250,7 +250,7 @@ void MapTileSource::toDiskCache(const QString &cacheID, QImage *toCache, const Q
 void MapTileSource::prepareRetrievedTile(quint32 x, quint32 y, quint8 z, QImage *image)
 {
     //Do tile sanity check here optionally
-    if (image == 0)
+    if (image == nullptr)
         return;
 
     //Put it into the "temporary retrieval cache" so the user can grab it

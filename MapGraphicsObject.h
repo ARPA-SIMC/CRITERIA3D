@@ -27,7 +27,7 @@ public:
     //PrivateQGraphicsObject will call some of our protected event handlers that nobody else needs to touch
     friend class PrivateQGraphicsObject;
 public:
-    explicit MapGraphicsObject(bool sizeIsZoomInvariant=false,MapGraphicsObject *parent = 0);
+    explicit MapGraphicsObject(bool sizeIsZoomInvariant=false,MapGraphicsObject *parent = nullptr);
     virtual ~MapGraphicsObject();
 
     bool sizeIsZoomInvariant() const;
@@ -61,7 +61,7 @@ public:
      * @param option
      * @param widget
      */
-    virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget=0)=0;
+    virtual void paint(QPainter * painter, const QStyleOptionGraphicsItem * option, QWidget * widget=nullptr)=0;
 
     bool enabled() const;
     void setEnabled(bool);

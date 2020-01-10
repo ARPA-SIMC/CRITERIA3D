@@ -17,7 +17,6 @@ MapGraphicsObject::MapGraphicsObject(bool sizeIsZoomInvariant, MapGraphicsObject
     _zValue = 0.0;
     _selected = false;
 
-
     /*
      * When we get back to the event loop, mark us as constructed.
      * This is a hack so that we can set properties of child objects in their constructors
@@ -129,8 +128,10 @@ void MapGraphicsObject::setVisible(bool nVisible)
 
     if (_constructed)
         this->visibleChanged();
-    else
-        QTimer::singleShot(1, this, SIGNAL(visibleChanged()));
+
+    // problemi con molti oggetti (punti stazione)
+    /*else
+        QTimer::singleShot(1, this, SIGNAL(visibleChanged()));*/
 }
 
 qreal MapGraphicsObject::longitude() const

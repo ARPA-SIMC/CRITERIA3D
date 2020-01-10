@@ -27,6 +27,7 @@ private slots:
     void handleCurrentSelectionChanged(QModelIndex,QModelIndex);
     void handleCompositeChange();
     void addOSMTileLayer();
+    void addESRISatLayer();
 
     void on_removeSourceButton_clicked();
 

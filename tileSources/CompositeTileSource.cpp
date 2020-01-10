@@ -31,14 +31,18 @@ CompositeTileSource::~CompositeTileSource()
     //Then we clear the sources
     _childSources.clear();
 
+    /*
+     * generava accesso illegale di memoria nel cambio di mappa
     int numThreads = tileSourceThreads.size();
     //Then we wait for all of those threads to shut down
     for (int i = 0; i < numThreads; i++)
     {
         QPointer<QThread> thread = tileSourceThreads[i];
-        if (!thread.isNull() && thread != this->thread())
-            thread->wait(10000);
+        if (!thread.isNull())
+            if (thread != this->thread())
+                thread->wait(10000);
     }
+    */
 
     delete this->_globalMutex;
 }

@@ -12,7 +12,7 @@ public:
     explicit LineObject(const Position& endA,
                         const Position& endB,
                         qreal thickness = 0.0,
-                        MapGraphicsObject *parent = 0);
+                        MapGraphicsObject *parent = nullptr);
     virtual ~LineObject();
 
     //pure-virtual from MapGraphicsObject

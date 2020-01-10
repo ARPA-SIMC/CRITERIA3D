@@ -6,7 +6,7 @@
 MapTileGraphicsObject::MapTileGraphicsObject(quint16 tileSize)
 {
     this->setTileSize(tileSize);
-    _tile = 0;
+    _tile = nullptr;
     _tileX = 0;
     _tileY = 0;
     _tileZoom = 0;
@@ -19,10 +19,10 @@ MapTileGraphicsObject::MapTileGraphicsObject(quint16 tileSize)
 
 MapTileGraphicsObject::~MapTileGraphicsObject()
 {
-    if (_tile != 0)
+    if (_tile != nullptr)
     {
         delete _tile;
-        _tile = 0;
+        _tile = nullptr;
     }
 }
 
@@ -41,7 +41,7 @@ void MapTileGraphicsObject::paint(QPainter *painter, const QStyleOptionGraphicsI
     Q_UNUSED(widget)
 
     //If we've got a tile, draw it. Otherwise, show a loading or "No tile source" message
-    if (_tile != 0)
+    if (_tile != nullptr)
         painter->drawPixmap(this->boundingRect().toRect(),
                             *_tile);
     else
@@ -76,10 +76,10 @@ void MapTileGraphicsObject::setTile(quint32 x, quint32 y, quint8 z, bool force)
         return;
 
     //Get rid of the old tile
-    if (_tile != 0)
+    if (_tile != nullptr)
     {
         delete _tile;
-        _tile = 0;
+        _tile = nullptr;
     }
 
     //Store information for the tile we're requesting
@@ -166,7 +166,7 @@ void MapTileGraphicsObject::handleTileRetrieved(quint32 x, quint32 y, quint8 z)
     QImage * image = _tileSource->getFinishedTile(x,y,z);
 
     //Make sure someone didn't snake us to grabbing our tile
-    if (image == 0)
+    if (image == nullptr)
     {
         qWarning() << "Failed to get tile" << x << y << z << "from MapTileSource";
         return;
@@ -179,15 +179,15 @@ void MapTileGraphicsObject::handleTileRetrieved(quint32 x, quint32 y, quint8 z)
 
     //Delete the QImage
     delete image;
-    image = 0;
+    image = nullptr;
 
     //Make sure that the old tile has been disposed of. If it hasn't, do it
     //In reality, it should have been, so display a warning
-    if (_tile != 0)
+    if (_tile != nullptr)
     {
         qWarning() << "Tile should be null, but isn't";
         delete _tile;
-        _tile = 0;
+        _tile = nullptr;
     }
 
     //Set the new tile and force a redraw

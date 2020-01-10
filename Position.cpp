@@ -93,7 +93,7 @@ void Position::setAltitude(const qreal &altitude)
 qreal Position::flatDistanceEstimate(const Position &other) const
 {
     const QVector2D offsetMeters = this->flatOffsetMeters(other);
-    return offsetMeters.length();
+    return qreal(offsetMeters.length());
 }
 
 QVector2D Position::flatOffsetMeters(const Position &dest) const
@@ -184,5 +184,5 @@ QDataStream& operator>>(QDataStream& stream, Position& pos)
 //Non-member method for hashing
 uint qHash(const Position& pos)
 {
-    return pos.lonLat().x() + pos.lonLat().y() + pos.altitude();
+    return uint(pos.lonLat().x() + pos.lonLat().y() + pos.altitude());
 }
