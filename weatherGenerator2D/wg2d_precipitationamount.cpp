@@ -561,7 +561,7 @@ void weatherGenerator2D::spatialIterationAmountsMonthly(int iMonth, double** cor
            //printf(" cholesky \n");
        }*/
        //pressEnterToContinue();
-       matricial::matrixProduct(dummyMatrix,randomMatrix,nrStations,nrStations,lengthSeries,nrStations,dummyMatrix3);
+       matricial::matrixProductNoCheck(dummyMatrix, randomMatrix, nrStations, nrStations, lengthSeries, dummyMatrix3);
        /*for (int i=0;i<lengthSeries;i++)
        {
            for (int j=0;j<nrStations;j++)

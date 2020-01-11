@@ -217,7 +217,7 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
     free(inputTMax);
     free(inputPrec);
     weatherGenerator2D::precipitationMonthlyAverage(monthlySimulatedAveragePrecipitationInternalFunction,monthlyClimateAveragePrecipitationInternalFunction);
-    /*for (int iStation=0;iStation<nrStations;iStation++)
+    for (int iStation=0;iStation<nrStations;iStation++)
     {
         printf("stazione %d\n",iStation);
         for (int iMonth=0;iMonth<12;iMonth++)
@@ -226,7 +226,7 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
             printf("%f  %f \n",monthlySimulatedAveragePrecipitationInternalFunction[iStation][iMonth],monthlyClimateAveragePrecipitationInternalFunction[iStation][iMonth]);
         }
         pressEnterToContinue();
-    }*/
+    }
 
     for (int iStation=0;iStation<nrStations;iStation++)
     {
@@ -234,7 +234,7 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
         {
             int doy,day,month;
             day = month = 0;
-            doy = (iDate+1)%365;
+            doy = iDate%365 + 1;
             weatherGenerator2D::dateFromDoy(doy,2001,&day,&month);
             if (outputWeatherData[iStation].precipitation[iDate] > parametersModel.precipitationThreshold + EPSILON)
             {
@@ -338,7 +338,7 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
                 {
                     int doy,day,month;
                     day = month = 0;
-                    doy = (k+1)%365;
+                    doy = k%365 + 1;
                     weatherGenerator2D::dateFromDoy(doy,2001,&day,&month);
                     if (month == (iMonth+1))
                     {
@@ -374,7 +374,7 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
                 {
                     int doy,day,month;
                     day = month = 0;
-                    doy = (k+1)%365;
+                    doy = k%365+1;
                     weatherGenerator2D::dateFromDoy(doy,2001,&day,&month);
                     if (month == (iMonth+1))
                     {
@@ -480,7 +480,7 @@ void weatherGenerator2D::precipitationMonthlyAverage(float** averageSimulation, 
 
         for (int i=0; i<365*parametersModel.yearOfSimulation; i++)
         {
-            doy = (i+1)%365;
+            doy = i%365+1;
             weatherGenerator2D::dateFromDoy(doy,2001,&day,&month);
             if (outputWeatherData[iStation].precipitation[i] > parametersModel.precipitationThreshold)
             {
