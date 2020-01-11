@@ -84,7 +84,11 @@
         int matrixSum(double**a , double**b, int rowA , int rowB, int colA, int colB,double **c);
         int matrixDifference(double**a , double**b, int rowA , int rowB, int colA, int colB, double **c);
         int matrixProduct(double **first,double**second,int colFirst, int rowFirst,int colSecond,int rowSecond,double ** multiply);
+<<<<<<< HEAD
+        int matrixProductNoCheck(double **first,double**second,int colFirst,int rowFirst,int colSecond,double ** multiply);
+=======
         int matrixProductNoCheck(double **first,double**second,int rowFirst,int colFirst,int colSecond,double ** multiply);
+>>>>>>> df6f55f8ade925fe8b7a3b5d1bccd85ff61068da
         void matrixProductSquareMatricesNoCheck(double **first,double**second,int dimension,double ** multiply);
         void choleskyDecompositionSinglePointer(double *a, int n, double *p);
         void choleskyDecompositionTriangularMatrix(double **a, int n, bool isLowerMatrix);
