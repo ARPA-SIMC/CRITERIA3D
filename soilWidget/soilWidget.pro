@@ -74,11 +74,6 @@ HEADERS += \
     dialogNewSoil.h \
     tableWaterRetention.h
 
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}
-
 win32:{
     include($$(QWT_ROOT)\features\qwt.prf)
 }

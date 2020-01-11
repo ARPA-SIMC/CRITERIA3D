@@ -33,7 +33,3 @@ SOURCES += \
 HEADERS += \
     utilities.h
 
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}
