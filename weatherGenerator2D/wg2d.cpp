@@ -776,11 +776,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                     counter++;
                 }
             }
-<<<<<<< HEAD
             matricial::matrixProductNoCheck(dummyMatrix,dummyMatrix2,nrStations,nrStations,nrStations,M);
-=======
-            matricial::matrixProductNoCheck(dummyMatrix, dummyMatrix2, nrStations, nrStations, nrStations,M);
->>>>>>> df6f55f8ade925fe8b7a3b5d1bccd85ff61068da
             for (int i=0;i<nrStations;i++)
             {
                 for (int j=i;j<nrStations;j++)
@@ -892,7 +888,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
 
             }
         }
-        printf("iteration step %d\n",ii);
+        //printf("iteration step %d\n",ii);
     }  // end of the while cycle
 
 

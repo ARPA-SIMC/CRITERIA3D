@@ -614,7 +614,7 @@ void weatherGenerator2D::spatialIterationAmountsMonthly(int iMonth, double** cor
            }
            //printf("\n");
        }
-       printf("%d\n", ii);
+       //printf("%d\n", ii);
        //pressEnterToContinue();
        for (int i=0;i<nrStations;i++)
        {

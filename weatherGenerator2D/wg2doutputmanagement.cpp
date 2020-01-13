@@ -109,7 +109,7 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
         for (int jMonth=0;jMonth<12;jMonth++)
         {
             meanAmountsPrecGenerated[iStation][jMonth] /= cumulatedOccurrencePrecGenerated[iStation][jMonth];
-            printf("%d  %f %f\n",jMonth,meanAmountsPrecGenerated[iStation][jMonth],cumulatedOccurrencePrecGenerated[iStation][jMonth]);
+            //printf("%d  %f %f\n",jMonth,meanAmountsPrecGenerated[iStation][jMonth],cumulatedOccurrencePrecGenerated[iStation][jMonth]);
         }
         //pressEnterToContinue();
     }
@@ -184,7 +184,7 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
             }
             counter++;
         }
-        computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
+        computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
     }
 
     free(inputTMin);
@@ -219,13 +219,13 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
     weatherGenerator2D::precipitationMonthlyAverage(monthlySimulatedAveragePrecipitationInternalFunction,monthlyClimateAveragePrecipitationInternalFunction);
     for (int iStation=0;iStation<nrStations;iStation++)
     {
-        printf("stazione %d\n",iStation);
+        //printf("stazione %d\n",iStation);
         for (int iMonth=0;iMonth<12;iMonth++)
         {
-            printf("%f  %f \n",monthlySimulatedAveragePrecipitation[iStation][iMonth],monthlyClimateAveragePrecipitation[iStation][iMonth]);
-            printf("%f  %f \n",monthlySimulatedAveragePrecipitationInternalFunction[iStation][iMonth],monthlyClimateAveragePrecipitationInternalFunction[iStation][iMonth]);
+            //printf("%f  %f \n",monthlySimulatedAveragePrecipitation[iStation][iMonth],monthlyClimateAveragePrecipitation[iStation][iMonth]);
+            //printf("%f  %f \n",monthlySimulatedAveragePrecipitationInternalFunction[iStation][iMonth],monthlyClimateAveragePrecipitationInternalFunction[iStation][iMonth]);
         }
-        pressEnterToContinue();
+        //pressEnterToContinue();
     }
 
     for (int iStation=0;iStation<nrStations;iStation++)
@@ -413,7 +413,7 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
     fp = fopen("correlationMatrices.txt","w");
     for (int iMonth=0;iMonth<12;iMonth++)
     {
-        printf("month %d \n",iMonth+1);
+        //printf("month %d \n",iMonth+1);
         //printf("observed\n");
         fprintf(fp,"month %d \n",iMonth+1);
         //fprintf(fp,"observed\n");
@@ -421,36 +421,36 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
         {
             for (int j=0;j<nrStations;j++)
             {
-                printf("%.2f ", correlationMatrix[iMonth].amount[j][i]);
+                //printf("%.2f ", correlationMatrix[iMonth].amount[j][i]);
                 //fprintf(fp,"%.2f ", correlationMatrix[iMonth].amount[j][i]);
             }
-            printf("\n");
+            //printf("\n");
             //fprintf(fp,"\n");
         }
 
-        printf("simulated\n");
+        //printf("simulated\n");
         //fprintf(fp,"simulated\n");
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++)
             {
-                printf("%.2f ", correlationMatrixSimulation[iMonth].amount[j][i]);
+                //printf("%.2f ", correlationMatrixSimulation[iMonth].amount[j][i]);
                 //fprintf(fp,"%.2f ", correlationMatrixSimulation[iMonth].amount[j][i]);
             }
-            printf("\n");
+            //printf("\n");
             //fprintf(fp,"\n");
         }
 
-        printf("simulated - observed\n");
+        //printf("simulated - observed\n");
         fprintf(fp,"simulated - observed\n");
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++)
             {
-                printf("%.2f ", correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]);
+                //printf("%.2f ", correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]);
                 fprintf(fp,"%.2f ", correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]);
             }
-            printf("\n");
+            //printf("\n");
             fprintf(fp,"\n");
         }
 
