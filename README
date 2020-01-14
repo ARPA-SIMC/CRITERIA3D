@@ -5,4 +5,4 @@ Its only dependency is Qt. If you're on a system with recent Qt libraries and a 
 
 If you're using QtCreator, just open the .pro file and build it. If you're on a command line, run qmake on the .pro file, then make.
 
-ADD: used by GUI of CRITERIA-3D (https://github.com/ARPA-SIMC/CRITERIA3D) 
+MapGraphics library is used by [CRITERIA-3D](https://github.com/ARPA-SIMC/CRITERIA3D) and [PRAGA](https://github.com/ARPA-SIMC/PRAGA) 
