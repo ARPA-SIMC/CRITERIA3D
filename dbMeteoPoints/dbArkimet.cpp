@@ -368,7 +368,9 @@ bool DbArkimet::saveHourlyData()
     // WIND DIRECTION
     statement = QString("INSERT INTO `%1_H` ");
     statement += "SELECT date_time, id_variable, value FROM TmpHourlyData WHERE ";
-    statement += "id_point = %1 AND variable_name = 'W_DIR' AND strftime('%M', date_time) = '00'";
+    statement += "id_point = %1";
+    statement += " AND variable_name = '" + QString::fromStdString(MapHourlyMeteoVarToString.at(windVectorDirection)) + "'";
+    statement += " AND strftime('%M', date_time) = '00'";
 
     foreach (QString station, stations) {
         qry.exec(statement.arg(station));
@@ -377,7 +379,9 @@ bool DbArkimet::saveHourlyData()
     // RADIATION: prevailing HH:30 data
     statement = QString("INSERT INTO `%1_H` ");
     statement += " SELECT DATETIME(date_time, '+30 minutes'), id_variable, value FROM TmpHourlyData WHERE ";
-    statement += " id_point = %1 AND variable_name = 'RAD' AND strftime('%M', date_time) = '30'";
+    statement += " id_point = %1";
+    statement += " AND variable_name = '" + QString::fromStdString(MapHourlyMeteoVarToString.at(globalIrradiance)) + "'";
+    statement += " AND strftime('%M', date_time) = '30'";
 
     foreach (QString station, stations) {
         qry.exec(statement.arg(station));
