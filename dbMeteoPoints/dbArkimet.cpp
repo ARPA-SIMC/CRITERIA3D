@@ -365,7 +365,7 @@ bool DbArkimet::saveHourlyData()
     // no more data
     if (stations.isEmpty()) return true;
 
-    // WIND DIRECTION
+    // WIND DIRECTION: use HH:00 data
     statement = QString("INSERT INTO `%1_H` ");
     statement += "SELECT date_time, id_variable, value FROM TmpHourlyData WHERE ";
     statement += "id_point = %1";
@@ -376,7 +376,7 @@ bool DbArkimet::saveHourlyData()
         qry.exec(statement.arg(station));
     }
 
-    // RADIATION: prevailing HH:30 data
+    // RADIATION: use HH:30 data
     statement = QString("INSERT INTO `%1_H` ");
     statement += " SELECT DATETIME(date_time, '+30 minutes'), id_variable, value FROM TmpHourlyData WHERE ";
     statement += " id_point = %1";
@@ -391,7 +391,7 @@ bool DbArkimet::saveHourlyData()
     statement = QString("DELETE FROM TmpHourlyData WHERE variable_name IN ('RAD', 'W_DIR')");
     qry.exec(statement);
 
-    // la media funziona su tutte le var che hanno AVG nel nome (Temp, RH, Wind intensity)
+    // MODIFICARE! la media funziona su tutte le var che hanno AVG nel nome (Temp, RH, Wind intensity)
     statement = QString("INSERT INTO `%1_H`");
     statement += " SELECT date_time_adj, id_variable, avg_value FROM (";
     statement += " SELECT KEY, date_time_adj, id_variable, AVG(value) AS avg_value";
