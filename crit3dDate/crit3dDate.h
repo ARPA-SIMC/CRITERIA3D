@@ -21,8 +21,6 @@
         #define NO_DATETIME Crit3DTime(NO_DATE, 0)
     #endif
 
-    #define TEST_FAUST
-
     class Crit3DDate
     {
     public:
