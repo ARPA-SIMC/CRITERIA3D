@@ -388,14 +388,18 @@ bool DbArkimet::saveHourlyData()
     }
 
     // DELETE radiation and wind direction
-    statement = QString("DELETE FROM TmpHourlyData WHERE variable_name IN ('RAD', 'W_DIR')");
+    statement = QString("DELETE FROM TmpHourlyData WHERE variable_name = '" + QString::fromStdString(MapHourlyMeteoVarToString.at(globalIrradiance)) + "'");
+    statement += " OR variable_name = '" + QString::fromStdString(MapHourlyMeteoVarToString.at(windVectorDirection)) + "'";
     qry.exec(statement);
 
-    // MODIFICARE! la media funziona su tutte le var che hanno AVG nel nome (Temp, RH, Wind intensity)
+    // media su tutte le var average (Temp, RH, Wind intensity)
     statement = QString("INSERT INTO `%1_H`");
     statement += " SELECT date_time_adj, id_variable, avg_value FROM (";
     statement += " SELECT KEY, date_time_adj, id_variable, AVG(value) AS avg_value";
-    statement += " FROM TmpHourlyData WHERE id_point = %1 AND variable_name like '%AVG%' GROUP BY KEY )";
+    statement += " FROM TmpHourlyData WHERE id_point = %1 AND variable_name = '" + QString::fromStdString(MapHourlyMeteoVarToString.at(airTemperature)) + "'";
+    statement += " OR variable_name = '" + QString::fromStdString(MapHourlyMeteoVarToString.at(airRelHumidity)) + "'";
+    statement += " OR variable_name = '" + QString::fromStdString(MapHourlyMeteoVarToString.at(windScalarIntensity)) + "'";
+    statement += " GROUP BY KEY )";
 
     QString delStationStatement = QString("DELETE FROM TmpHourlyData WHERE id_point = %1");
 
