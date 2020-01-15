@@ -1,5 +1,4 @@
 #include <stdio.h>
-//#include <stdlib.h>
 #include <math.h>
 #include <malloc.h>
 #include <iostream>
@@ -25,15 +24,10 @@ void weatherGenerator2D::initializeOutputData(int* nrDays)
         outputWeatherData[iStation].monthSimulated = (int*)calloc(length, sizeof(int));
         outputWeatherData[iStation].daySimulated = (int*)calloc(length, sizeof(int));
         outputWeatherData[iStation].doySimulated = (int*)calloc(length, sizeof(int));
-        //if (isTempWG2D)
-        //{
-            outputWeatherData[iStation].maxT = (double*)calloc(length, sizeof(double));
-            outputWeatherData[iStation].minT = (double*)calloc(length, sizeof(double));
-        //}
-        //if (isPrecWG2D)
-            outputWeatherData[iStation].precipitation = (double*)calloc(length, sizeof(double));
+        outputWeatherData[iStation].maxT = (double*)calloc(length, sizeof(double));
+        outputWeatherData[iStation].minT = (double*)calloc(length, sizeof(double));
+        outputWeatherData[iStation].precipitation = (double*)calloc(length, sizeof(double));
     }
-    // = (double*)calloc(lengthOfRandomSeries, sizeof(double));
 }
 
 void weatherGenerator2D::getWeatherGeneratorOutput()
@@ -153,15 +147,6 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
             }
         }
 
-        /*
-        for(int i=0;i<parametersModel.yearOfSimulation*365;i++)
-        {
-            //printf("%d %d %.1f %.1f %.1f\n",outputWeatherData[iStation].daySimulated[i],outputWeatherData[iStation].monthSimulated[i],outputWeatherData[iStation].minT[i],outputWeatherData[iStation].maxT[i],outputWeatherData[iStation].precipitation[i]);
-            //printf("%d %d %.1f %.1f %.1f\n",outputWeatherData[iStation].daySimulated[i],outputWeatherData[iStation].monthSimulated[i],outputWeatherData[iStation].minT[i],outputWeatherData[iStation].maxT[i],outputWeatherData[iStation].precipitation[i]);
-            //printf("%d %d %.1f\n",outputWeatherData[iStation].daySimulated[i],outputWeatherData[iStation].monthSimulated[i],outputWeatherData[iStation].precipitation[i]);
-
-        }*/
-        //pressEnterToContinue();
         counter = 0;
         for (int i=0;i<nrDays;i++)
         {
@@ -253,7 +238,7 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
 
     for (int iStation=0;iStation<nrStations;iStation++)
     {
-        outputFileName = "wgSimulation_2_station_" + QString::number(iStation) + ".txt";
+        outputFileName = "wgSimulation_station_" + QString::number(iStation) + ".txt";
         counter = 0;
         for (int i=0;i<nrDays;i++)
         {
