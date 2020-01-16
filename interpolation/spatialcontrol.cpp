@@ -241,7 +241,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
 
     // quality control - spatial
     if (checkSpatial && myVar != precipitation && myVar != dailyPrecipitation
-                     && myVar != globalIrradiance && myVar != dailyGlobalRadiation)
+                     && myVar != globalIrradiance && myVar != dailyGlobalRadiation && myVar == windVectorDirection)
     {
         spatialQualityControl(myVar, meteoPoints, nrMeteoPoints, spatialQualityInterpolationSettings, myClimate, myTime);
     }
