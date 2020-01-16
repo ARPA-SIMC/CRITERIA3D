@@ -187,7 +187,7 @@ void DbArkimet::createTmpTableHourly()
     this->deleteTmpTableHourly();
 
     QSqlQuery qry(_db);
-    qry.prepare("CREATE TABLE TmpHourlyData (KEY TEXT, date_time TEXT, date_time_adj TEXT, id_point TEXT, id_variable INTEGER, variable_name TEXT, value REAL, frequency INTEGER)");
+    qry.prepare("CREATE TABLE TmpHourlyData (date_time TEXT, id_point TEXT, id_variable INTEGER, value REAL)");
     if( !qry.exec() )
     {
         qDebug() << qry.lastError();
@@ -234,34 +234,17 @@ void DbArkimet::deleteTmpTableDaily()
 }
 
 
-void DbArkimet::appendQueryHourly(QString dateTimeStr, QString idPoint, QString idVariable, QString varName, QString value, QString frequency, bool isFirstData)
+void DbArkimet::appendQueryHourly(QString dateTime, QString idPoint, QString idVar, QString value, bool isFirstData)
 {
     if (isFirstData)
         queryString = "INSERT INTO TmpHourlyData VALUES ";
     else
         queryString += ",";
 
-    // build an hourly key
-    // shift time to end hour
-    QDateTime myTime = QDateTime::fromString(dateTimeStr, "yyyy-MM-dd hh:mm:ss");
-    if (myTime.time().minute() > 0)
-    {
-        int hour = myTime.time().hour();
-        myTime.setTime(QTime(hour, 0, 0));
-        myTime = myTime.addSecs(3600);
-    }
-    QString key = varName + myTime.toString("yyyyMMddhh") + "_" + idPoint;
-
-    QString dateTimeAdj = myTime.toString("yyyy-MM-dd hh:mm:ss");
-
-    queryString += "('" + key + "'"
-            + ",'" + dateTimeStr + "'"
-            + ",'" + dateTimeAdj + "'"
+    queryString += "('" + dateTime + "'"
             + ",'" + idPoint + "'"
-            + "," + idVariable
-            + ",'" + varName + "'"
+            + "," + idVar
             + "," + value
-            + "," + frequency
             + ")";
 }
 
@@ -339,12 +322,12 @@ bool DbArkimet::saveHourlyData()
     while (qry.next())
         stations.append(qry.value(0).toString());
 
-    // insert data
+    // insert data (only timestamp HH::00)
     foreach (QString id_point, stations)
     {
         statement = QString("INSERT INTO `%1_H` ").arg(id_point);
         statement += QString("SELECT date_time, id_variable, value FROM TmpHourlyData ");
-        statement += QString("WHERE id_point = %1 AND frequency = 3600").arg(id_point);
+        statement += QString("WHERE id_point = %1 AND strftime('%M', date_time) = '00'").arg(id_point);
 
         _db.exec(statement);
         if (_db.lastError().type() != QSqlError::NoError)

@@ -40,7 +40,7 @@
             bool saveHourlyData();
             bool saveDailyData(QDate startDate, QDate endDate);
 
-            void appendQueryHourly(QString dateTime, QString idPoint, QString idVariable, QString varName, QString value, QString frequency, bool isFirstData);
+            void appendQueryHourly(QString dateTime, QString idPoint, QString idVar, QString value, bool isFirstData);
             void appendQueryDaily(QString date, QString idPoint, QString idVar, QString value, bool isFirstData);
     signals:
 
