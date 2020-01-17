@@ -1993,13 +1993,13 @@ bool Project::start(QString appPath)
 
 bool Project::loadProject()
 {
+    if (logFileName != "") setLogFile(logFileName);
+
     if (! loadParameters(parametersFileName))
     {
         logError();
         return false;
     }
-
-    if (logFileName != "") setLogFile(logFileName);
 
     if (demFileName != "") loadDEM(demFileName);
 
