@@ -39,15 +39,15 @@
 void initializeCrop(CriteriaModel* myCase, int currentDoy)
 {    
     // initialize root density
-    if (myCase->myCrop.roots.rootDensity != nullptr) free(myCase->myCrop.roots.rootDensity);
-    myCase->myCrop.roots.rootDensity = (double*) calloc(unsigned(myCase->nrLayers), sizeof(double));
+    if (myCase->myCrop.roots.rootDensity != nullptr) delete[] myCase->myCrop.roots.rootDensity;
+    myCase->myCrop.roots.rootDensity = new double[unsigned(myCase->nrLayers)];
 
     // initialize root depth
     myCase->myCrop.roots.rootDepth = 0;
 
     // initialize transpiration
-    if (myCase->myCrop.roots.transpiration != nullptr) free(myCase->myCrop.roots.transpiration);
-    myCase->myCrop.roots.transpiration = (double*) calloc(unsigned(myCase->nrLayers), sizeof(double));
+    if (myCase->myCrop.roots.transpiration != nullptr) delete[] myCase->myCrop.roots.transpiration;
+    myCase->myCrop.roots.transpiration = new double[unsigned(myCase->nrLayers)];
 
     // root max depth
     if (myCase->myCrop.roots.rootDepthMax > myCase->mySoil.totalDepth)
@@ -176,7 +176,6 @@ bool updateLAI(CriteriaModel* myCase, int myDoy)
 bool updateRoots(CriteriaModel* myCase)
 {
     root::computeRootDepth(&(myCase->myCrop), myCase->mySoil.totalDepth, myCase->myCrop.degreeDays, myCase->output.dailyWaterTable);
-
     return root::computeRootDensity(&(myCase->myCrop), myCase->layer, myCase->nrLayers, myCase->mySoil.totalDepth);
 }
 
@@ -349,15 +348,19 @@ bool evaporation(CriteriaModel* myCase)
 
     // evaporation on soil
     int lastLayerEvap = int(floor(MAX_EVAPORATION_DEPTH / myCase->layerThickness)) +1;
-    double* coeffEvap = (double *) calloc(unsigned(lastLayerEvap), sizeof(double));
-    double sumCoeff = 0.0;
-    double layerDepth;
-    int i;
+    double* coeffEvap = new double[unsigned(lastLayerEvap)];
+    double layerDepth, coeffDepth;
 
-    for (i=1; i<=lastLayerEvap; i++)
+    double sumCoeff = 0;
+    double minDepth = myCase->layer[1].depth + myCase->layer[1].thickness / 2;
+    for (int i=1; i <= lastLayerEvap; i++)
     {
         layerDepth = myCase->layer[i].depth + myCase->layer[i].thickness / 2.0;
-        // coeff = ~0.9 at 1 cm, ~0.1 at MAX_EVAPORATION_DEPTH
+
+        coeffDepth = MAXVALUE((layerDepth - minDepth) / (MAX_EVAPORATION_DEPTH - minDepth), 0);
+        // values = 1 a depthMin, ~0.1 a depthMax
+        coeffEvap[i-1] = exp(-2 * coeffDepth);
+
         coeffEvap[i-1] = MINVALUE(1.0, exp((-layerDepth * 2.0) / MAX_EVAPORATION_DEPTH));
         sumCoeff += coeffEvap[i-1];
     }
@@ -369,7 +372,7 @@ bool evaporation(CriteriaModel* myCase)
         isWaterSupply = false;
         sumEvap = 0.0;
 
-        for (i=1; i<=lastLayerEvap; i++)
+        for (int i=1; i<=lastLayerEvap; i++)
         {
             evapLayerThreshold = myCase->layer[i].FC - coeffEvap[i-1] * (myCase->layer[i].FC - myCase->layer[i].HH);
             evapLayer = (coeffEvap[i-1] / sumCoeff) * residualEvaporation;
@@ -389,7 +392,7 @@ bool evaporation(CriteriaModel* myCase)
         myCase->output.dailyEvaporation  += sumEvap;
     }
 
-    free(coeffEvap);
+    delete[] coeffEvap;
 
     return true;
 }
@@ -426,7 +429,7 @@ double cropTranspiration(CriteriaModel* myCase, bool getWaterStress)
         return 0;
 
     // initialize stressed layers
-    bool* isLayerStressed = (bool*) calloc(unsigned(myCase->nrLayers), sizeof(bool));
+    bool* isLayerStressed = new bool[unsigned(myCase->nrLayers)];
     for (int i = 0; i < myCase->nrLayers; i++)
         isLayerStressed[i] = false;
 
@@ -516,7 +519,7 @@ double cropTranspiration(CriteriaModel* myCase, bool getWaterStress)
         }
     }
 
-    free(isLayerStressed);
+    delete[] isLayerStressed;
 
     if (getWaterStress)
     {

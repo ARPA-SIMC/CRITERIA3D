@@ -301,6 +301,8 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         j = 0; //reset block stations counter
 
     } // end while
+
+    _dbMeteo->deleteTmpTableDaily();
     return downloadOk;
 }
 
@@ -378,6 +380,8 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
             QString idVariable, value, frequency;
             QStringList fields;
             int i, idVarArkimet;
+
+            _dbMeteo->createTmpTableHourly();
             bool isVarOk, isFirstData = true;
 
             for (line = QString(reply->readLine()); !(line.isNull() || line.isEmpty());  line = QString(reply->readLine()))
@@ -417,7 +421,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
                         flag = fields[6];
                         if (flag.left(1) != "1" && flag.left(3) != "054")
                         {
-                            _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, varName, value, frequency, isFirstData);
+                            _dbMeteo->appendQueryHourly(dateTime, idPoint, idVariable, value, isFirstData);
                             isFirstData = false;
                         }
                     }
@@ -426,9 +430,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
 
             if (_dbMeteo->queryString != "")
             {
-               _dbMeteo->createTmpTableHourly();
                _dbMeteo->saveHourlyData();
-               _dbMeteo->deleteTmpTableHourly();
             }
         }
 
@@ -438,6 +440,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
         j = 0; //reset block stations counter
     }
 
+    _dbMeteo->deleteTmpTableHourly();
     return true;
 }
 

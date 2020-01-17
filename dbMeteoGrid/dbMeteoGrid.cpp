@@ -65,6 +65,9 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
     int nRow;
     int nCol;
 
+    _tableDaily.exists = false;
+    _tableHourly.exists = false;
+
     while(!ancestor.isNull())
     {
         if (ancestor.toElement().tagName().toUpper() == "CONNECTION")
@@ -214,6 +217,8 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
 
         else if (ancestor.toElement().tagName().toUpper() == "TABLEDAILY")
         {
+            _tableDaily.exists = true;
+
             child = ancestor.firstChild();
             while( !child.isNull())
             {
@@ -278,6 +283,8 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
 
         else if (ancestor.toElement().tagName().toUpper() == "TABLEHOURLY")
         {
+            _tableHourly.exists = true;
+
             child = ancestor.firstChild();
             while( !child.isNull())
             {
@@ -490,64 +497,69 @@ bool Crit3DMeteoGridDbHandler::checkXML(QString *myError)
         return false;
     }
 
-    /* table daily and hourly */
-
-    if (_tableDaily.fieldTime.isNull() || _tableDaily.fieldTime.isEmpty())
+    /* table daily */
+    if (_tableDaily.exists)
     {
-        *myError = "Missing table Daily fieldTime";
-        return false;
-    }
-
-    if (_tableHourly.fieldTime.isNull() || _tableHourly.fieldTime.isEmpty())
-    {
-        *myError = "Missing table Hourly fieldTime";
-        return false;
-    }
-
-    if (_tableDaily.varcode.size() < 1 && _tableHourly.varcode.size() < 1)
-    {
-        *myError = "Missing daily and hourly var code";
-        return false;
-    }
-
-    for (unsigned int i=0; i < _tableDaily.varcode.size(); i++)
-    {
-        if (_tableDaily.varcode[i].varCode == NODATA)
+        if (_tableDaily.fieldTime.isNull() || _tableDaily.fieldTime.isEmpty())
         {
-            *myError = "Missing daily var code";
+            *myError = "Missing table Daily fieldTime";
             return false;
         }
-        if (_tableDaily.varcode[i].varPragaName.isNull() || _tableDaily.varcode[i].varPragaName.isEmpty())
+
+        if (_tableDaily.varcode.size() < 1 && _tableHourly.varcode.size() < 1)
         {
-            *myError = "Missing daily varPragaName";
+            *myError = "Missing daily and hourly var code";
             return false;
         }
-        if (_gridStructure.isFixedFields() == true && (_tableDaily.varcode[i].varField.isNull() || _tableDaily.varcode[i].varField.isEmpty()) )
+
+        for (unsigned int i=0; i < _tableDaily.varcode.size(); i++)
         {
-            *myError = "Fixed Field: Missing daily varField";
-            return false;
+            if (_tableDaily.varcode[i].varCode == NODATA)
+            {
+                *myError = "Missing daily var code";
+                return false;
+            }
+            if (_tableDaily.varcode[i].varPragaName.isNull() || _tableDaily.varcode[i].varPragaName.isEmpty())
+            {
+                *myError = "Missing daily varPragaName";
+                return false;
+            }
+            if (_gridStructure.isFixedFields() == true && (_tableDaily.varcode[i].varField.isNull() || _tableDaily.varcode[i].varField.isEmpty()) )
+            {
+                *myError = "Fixed Field: Missing daily varField";
+                return false;
+            }
         }
     }
 
-    for (unsigned int i=0; i < _tableHourly.varcode.size(); i++)
+    /* table hourly */
+    if (_tableHourly.exists)
     {
-        if (_tableHourly.varcode[i].varCode == NODATA)
+        if (_tableHourly.fieldTime.isNull() || _tableHourly.fieldTime.isEmpty())
         {
-            *myError = "Missing daily var code";
+            *myError = "Missing table Hourly fieldTime";
             return false;
         }
-        if (_tableHourly.varcode[i].varPragaName.isNull() || _tableHourly.varcode[i].varPragaName.isEmpty())
+
+        for (unsigned int i=0; i < _tableHourly.varcode.size(); i++)
         {
-            *myError = "Missing daily varPragaName";
-            return false;
-        }
-        if (_gridStructure.isFixedFields() == true && (_tableHourly.varcode[i].varField.isNull() || _tableHourly.varcode[i].varField.isEmpty()) )
-        {
-            *myError = "Fixed Field: Missing daily varField";
-            return false;
+            if (_tableHourly.varcode[i].varCode == NODATA)
+            {
+                *myError = "Missing daily var code";
+                return false;
+            }
+            if (_tableHourly.varcode[i].varPragaName.isNull() || _tableHourly.varcode[i].varPragaName.isEmpty())
+            {
+                *myError = "Missing daily varPragaName";
+                return false;
+            }
+            if (_gridStructure.isFixedFields() == true && (_tableHourly.varcode[i].varField.isNull() || _tableHourly.varcode[i].varField.isEmpty()) )
+            {
+                *myError = "Fixed Field: Missing daily varField";
+                return false;
+            }
         }
     }
-
 
     return true;
 }

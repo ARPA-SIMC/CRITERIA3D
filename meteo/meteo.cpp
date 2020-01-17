@@ -557,7 +557,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case globalIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
             setRadiationScale(colorScale);
             break;
-        case windVectorIntensity: case windScalarIntensity: case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax: case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
+        case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY: case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax: case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
             setWindIntensityScale(colorScale);
             break;
         case anomaly:

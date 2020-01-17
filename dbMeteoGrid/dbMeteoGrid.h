@@ -38,6 +38,7 @@
 
     struct TXMLTable
     {
+         bool exists;
          QString fieldTime;
          QString fieldVarCode;
          QString fieldValue;
