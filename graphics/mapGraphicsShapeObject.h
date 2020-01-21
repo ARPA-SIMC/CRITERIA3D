@@ -40,6 +40,7 @@
         std::vector< std::vector<GeoBounds>> geoBounds;
         std::vector< std::vector<LatLonPoint>> geoPoints;
 
+        QString referenceField;
         bool isDrawing;
 
         void setMapExtents();
@@ -76,7 +77,7 @@
         void clear();
 
         bool initializeUTM(Crit3DShapeHandler* shapePtr);
-        void setShape(Crit3DShapeHandler* shapePtr);
+        void setReferenceField(QString myField);
         Crit3DShapeHandler* getShapePointer();
 
         QPointF getPixel(const LatLonPoint &geoPoint);
