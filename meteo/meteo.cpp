@@ -693,6 +693,20 @@ meteoVariable getMeteoVar(std::string varString)
     return noMeteoVar;
 }
 
+std::string getMeteoVarName(meteoVariable var)
+{
+    auto search = MapDailyMeteoVarToString.find(var);
+
+    if (search != MapDailyMeteoVarToString.end())
+        return search->second;
+    else
+    {
+        search = MapHourlyMeteoVarToString.find(var);
+        if (search != MapHourlyMeteoVarToString.end()) return search->second;
+    }
+
+    return "";
+}
 
 meteoVariable getHourlyMeteoVar(std::string varString)
 {

@@ -238,6 +238,7 @@
     meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string &value);
     meteoVariable getMeteoVar(std::string varString);
     meteoVariable getHourlyMeteoVar(std::string varString);
+    std::string getMeteoVarName(meteoVariable var);
 
     bool checkLapseRateCode(lapseRateCodeType myType, bool useLapseRateCode, bool useSupplemental);
     meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod myAggregation);
