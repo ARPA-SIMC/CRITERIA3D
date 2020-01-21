@@ -680,36 +680,28 @@ frequencyType getVarFrequency(meteoVariable myVar)
 
 meteoVariable getMeteoVar(std::string varString)
 {
-    meteoVariable meteoVar;
+    auto search = MapDailyMeteoVar.find(varString);
 
-    try {
-      meteoVar = MapDailyMeteoVar.at(varString);
-    }
-    catch (const std::out_of_range& ) {
-        try {
-            meteoVar = MapHourlyMeteoVar.at(varString);
-        }
-        catch (const std::out_of_range& ) {
-            meteoVar = noMeteoVar;
-        }
+    if (search != MapDailyMeteoVar.end())
+        return search->second;
+    else
+    {
+        search = MapHourlyMeteoVar.find(varString);
+        if (search != MapHourlyMeteoVar.end()) return search->second;
     }
 
-    return (meteoVar);
+    return noMeteoVar;
 }
 
 
 meteoVariable getHourlyMeteoVar(std::string varString)
 {
-    meteoVariable meteoVar;
+    auto search = MapHourlyMeteoVar.find(varString);
 
-    try {
-        meteoVar = MapHourlyMeteoVar.at(varString);
-    }
-    catch (const std::out_of_range& ) {
-        meteoVar = noMeteoVar;
-    }
-
-    return (meteoVar);
+    if (search != MapHourlyMeteoVar.end())
+        return search->second;
+    else
+        return noMeteoVar;
 }
 
 
