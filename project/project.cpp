@@ -960,29 +960,13 @@ bool Project::loadMeteoGridDB(QString xmlName)
     meteoGridDbHandler = new Crit3DMeteoGridDbHandler();
     meteoGridDbHandler->meteoGrid()->setGisSettings(this->gisSettings);
 
-    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString))
-    {
-        logError();
-        return false;
-    }
+    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString)) return false;
 
-    if (! this->meteoGridDbHandler->openDatabase(&errorString))
-    {
-        logError();
-        return false;
-    }
+    if (! this->meteoGridDbHandler->openDatabase(&errorString)) return false;
 
-    if (! this->meteoGridDbHandler->loadCellProperties(&errorString))
-    {
-        logError();
-        return false;
-    }
+    if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
 
-    if (! this->meteoGridDbHandler->updateGridDate(&errorString))
-    {
-        logError();
-        return false;
-    }
+    this->meteoGridDbHandler->updateGridDate(&errorString);
 
     meteoGridLoaded = true;
     logInfo("Meteo Grid = " + xmlName);
