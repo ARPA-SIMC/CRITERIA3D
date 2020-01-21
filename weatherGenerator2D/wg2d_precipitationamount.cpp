@@ -26,6 +26,7 @@ void weatherGenerator2D::initializePrecipitationAmountParameters()
             precipitationAmount[i].averageEstimation[j] = NODATA;
             precipitationAmount[i].stdDevEstimation[j] = NODATA;
         }
+        /*
         precipitationAmount[i].averageFourierParameters.a0 = NODATA;
         precipitationAmount[i].averageFourierParameters.aCos1 = NODATA;
         precipitationAmount[i].averageFourierParameters.aSin1 = NODATA;
@@ -36,6 +37,7 @@ void weatherGenerator2D::initializePrecipitationAmountParameters()
         precipitationAmount[i].standardDeviationFourierParameters.aSin1 = NODATA;
         precipitationAmount[i].standardDeviationFourierParameters.aCos2 = NODATA;
         precipitationAmount[i].standardDeviationFourierParameters.aSin2 = NODATA;
+        */
     }
 }
 

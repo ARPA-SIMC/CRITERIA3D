@@ -8,7 +8,6 @@
 #include "weatherGenerator.h"
 #include "wgClimate.h"
 
-
 void weatherGenerator2D::initializeOutputData(int* nrDays)
 {
     int length = 365*parametersModel.yearOfSimulation;
@@ -107,7 +106,6 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
         counterSeason[3] = counterSeason[2] = counterSeason[1] = counterSeason[0] = 0;
         for (int iYear=1;iYear<=parametersModel.yearOfSimulation;iYear++)
         {
-            //counterSeason[3] = counterSeason[2] = counterSeason[1] = counterSeason[0] = 0;
             for (int iDoy=0; iDoy<365; iDoy++)
             {
                 outputWeatherData[iStation].yearSimulated[counter] = iYear;
@@ -119,7 +117,6 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
                 {
                     outputWeatherData[iStation].maxT[counter] = maxTGenerated[counter][iStation];
                     outputWeatherData[iStation].minT[counter] = minTGenerated[counter][iStation];
-                    //printf("%.2f %.2f %.0f\n",outputWeatherData[0].maxT[counter],outputWeatherData[0].minT[counter],occurrencePrecGenerated[counter][0]);
                 }
                 else
                 {
@@ -144,7 +141,6 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
                 counter++;
             }
         }
-
         counter = 0;
         for (int i=0;i<nrDays;i++)
         {
@@ -210,7 +206,6 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
 
         }
     }
-
     nrDays = 365*parametersModel.yearOfSimulation;
     for (int i=1;i<=parametersModel.yearOfSimulation;i++)
     {
@@ -232,9 +227,7 @@ void weatherGenerator2D::getWeatherGeneratorOutput()
         {
             inputTMin[i]= (float)(outputWeatherData[iStation].minT[counter]);
             inputTMax[i]= (float)(outputWeatherData[iStation].maxT[counter]);
-            //if (isPrecWG2D)
             inputPrec[i]= (float)(outputWeatherData[iStation].precipitation[counter]);
-            //else inputPrec[i]= 0;
             if (isLeapYear(outputWeatherData[iStation].yearSimulated[counter]) && outputWeatherData[iStation].monthSimulated[counter] == 2 && outputWeatherData[iStation].daySimulated[counter] == 28)
             {
                 ++i;
@@ -373,19 +366,15 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
     fp = fopen("correlationMatrices.txt","w");
     for (int iMonth=0;iMonth<12;iMonth++)
     {
-        fprintf(fp,"month %d \n",iMonth+1);
-        fprintf(fp,"simulated - observed\n");
+        fprintf(fp,"month %d \nsimulated - observed\n",iMonth+1);
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++)
             {
                 fprintf(fp,"%.2f ", correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]);
             }
-            //printf("\n");
             fprintf(fp,"\n");
         }
-
-        //pressEnterToContinue();
     }
     fclose(fp);
     for (int iMonth=0;iMonth<12;iMonth++)
@@ -397,8 +386,6 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
         }
     }
     free(correlationMatrixSimulation);
-
-
 }
 
 void weatherGenerator2D::precipitationMonthlyAverage(float** averageSimulation, float** averageClimate)
@@ -432,8 +419,6 @@ void weatherGenerator2D::precipitationMonthlyAverage(float** averageSimulation, 
         doy = day = month = 0;
         for (int i=0; i<nrData; i++)
         {
-            //doy = (i+1)%365;
-            //weatherGenerator2D::dateFromDoy(doy,2001,&day,&month);
             month = obsDataD[iStation][i].date.month;
             if (obsDataD[iStation][i].prec > parametersModel.precipitationThreshold) // including that prec != -9999
             {
@@ -445,8 +430,6 @@ void weatherGenerator2D::precipitationMonthlyAverage(float** averageSimulation, 
         for (int iMonth=0; iMonth<12; iMonth++)
         {
             averageClimate[iStation][iMonth] /= (obsDataD[iStation][nrData-1].date.year - obsDataD[iStation][0].date.year);
-            //printf("prova %f  %d",averageClimate[iStation][iMonth],counterMonth[iMonth]);
         }
-        //pressEnterToContinue();
     }
 }
