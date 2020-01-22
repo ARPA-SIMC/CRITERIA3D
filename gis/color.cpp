@@ -102,16 +102,22 @@ Crit3DColor* Crit3DColorScale::getColor(float myValue)
     int myIndex = 0;
 
     if (myValue <= minimum)
+    {
         myIndex = 0;
+    }
     else if (myValue >= maximum)
+    {
         myIndex = nrColors-1;
+    }
     else
+    {
         if (classification == classificationMethod::EqualInterval)
         {
             myIndex = int(round((nrColors-1) * ((myValue - minimum) / (maximum - minimum))));
         }
+    }
 
-    return(&color[myIndex]);
+    return &color[myIndex];
 }
 
 

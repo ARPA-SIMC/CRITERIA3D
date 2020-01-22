@@ -35,11 +35,11 @@
         QPointF referencePixel;
 
         unsigned int nrShapes;
-        std::vector< double> values;
         std::vector< std::vector<ShapeObject::Part>> shapeParts;
         std::vector< std::vector<std::vector<unsigned int>>> holes;
         std::vector< std::vector<GeoBounds>> geoBounds;
         std::vector< std::vector<LatLonPoint>> geoPoints;
+        std::vector< float> values;
 
         bool isDrawing;
         bool isFill;
@@ -72,6 +72,8 @@
          * \param parent MapGraphicsObject
          */
         explicit MapGraphicsShapeObject(MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
+
+        Crit3DColorScale* colorScale;
 
         void setDrawing(bool value);
         void updateCenter();
