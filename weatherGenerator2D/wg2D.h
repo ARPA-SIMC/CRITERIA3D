@@ -192,7 +192,7 @@
         double** precGenerated;
         void initializePrecipitationAmountParameters();
         void computeprecipitationAmountParameters();
-        void getSeasonalMeanPrecipitation(int iStation, int iSeason, int length, double* meanPrec);
+        void getSeasonalMeanPrecipitation(int iStation, int iSeason, double* meanPrec);
         void getPrecipitationAmount();
         void spatialIterationAmountsMonthly(int iMonth, double** correlationMatrixSimulatedData,double ** amountsCorrelationMatrix , double** randomMatrix, int lengthSeries, double** occurrences, double** simulatedPrecipitationAmountsSeasonal);
         void precipitationCorrelationMatricesSimulation();
@@ -239,7 +239,7 @@
         int  doyFromDate(int day,int month,int year);
         int  dateFromDoy(int doy, int year, int *day, int *month);
         void harmonicsFourier(double* variable, double *par, int nrPar, double* estimatedVariable, int nrEstimatedVariable);
-        void computeResiduals(double* averageTMaxDry,double* averageTMaxWet,double* stdDevTMaxDry,double* stdDevTMaxWet,double* averageTMinDry,double* averageTMinWet,double* stdDevTMinDry,double* stdDevTMinWet,int lengthArray,int idStation);
+        void computeResiduals(double* averageTMaxDry,double* averageTMaxWet,double* stdDevTMaxDry,double* stdDevTMaxWet,double* averageTMinDry,double* averageTMinWet,double* stdDevTMinDry,double* stdDevTMinWet,int idStation);
         void temperaturesCorrelationMatrices();
         void covarianceOfResiduals(double** covarianceMatrix, int lag);
         void initializeTemperaturecorrelationMatrices();

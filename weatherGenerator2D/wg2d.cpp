@@ -505,7 +505,7 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
     int gasDevIset = 0;
     double gasDevGset = 0;
     srand(time(NULL));
-    int randomNumberInitial = rand();
+    rand();
 
     for (int i=0;i<12;i++)
     {

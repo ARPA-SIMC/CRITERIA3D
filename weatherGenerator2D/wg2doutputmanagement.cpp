@@ -415,8 +415,7 @@ void weatherGenerator2D::precipitationMonthlyAverage(float** averageSimulation, 
     for (int iStation=0 ; iStation < nrStations ; iStation++)
     {
         int counterMonth[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-        int doy,day,month;
-        doy = day = month = 0;
+        int month = 0;
         for (int i=0; i<nrData; i++)
         {
             month = obsDataD[iStation][i].date.month;

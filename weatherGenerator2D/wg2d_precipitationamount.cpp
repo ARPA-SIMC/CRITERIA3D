@@ -46,10 +46,6 @@ void weatherGenerator2D::computeprecipitationAmountParameters()
     weatherGenerator2D::initializePrecipitationAmountParameters();
     for (int iStation=0; iStation<nrStations; iStation++)
     {
-        //double averageAmountPrec[365];
-        double stdDevAmountPrec[365];
-        int countAmountPrec[365];
-
         float* averageMonthlyAmountPrec = nullptr;
         averageMonthlyAmountPrec = (float *)calloc(12, sizeof(float));
         double* averageMonthlyAmountPrecLarger = nullptr;
@@ -94,8 +90,7 @@ void weatherGenerator2D::computeprecipitationAmountParameters()
         {
 
             averageAmountPrec[iDay] = 0;
-            stdDevAmountPrec[iDay] = 0;
-            countAmountPrec[iDay] = 0;
+
         }
         for (int iDatum=0; iDatum<nrData; iDatum++)
         {
@@ -172,7 +167,7 @@ void weatherGenerator2D::computeprecipitationAmountParameters()
     }
 }
 
-void weatherGenerator2D::getSeasonalMeanPrecipitation(int iStation, int iSeason, int length, double* meanPrec)
+void weatherGenerator2D::getSeasonalMeanPrecipitation(int iStation, int iSeason, double* meanPrec)
 {
     int index = 0;
     if (iSeason == 0)
@@ -330,7 +325,7 @@ void weatherGenerator2D::getPrecipitationAmount()
         int gasDevIset = 0;
         double gasDevGset = 0;
         srand (time(nullptr));
-        int firstRandomNumber = rand();
+        rand();
         double** randomMatrixNormalDistributionMonthly = (double **)calloc(nrStations, sizeof(double*));
         double** simulatedPrecipitationAmountsMonthly = (double **)calloc(nrStations, sizeof(double*));
         double** amountCorrelationMatrixMonthSimulated = (double **)calloc(nrStations, sizeof(double*));
@@ -397,7 +392,7 @@ void weatherGenerator2D::spatialIterationAmountsMonthly(int iMonth, double** cor
 
    //double** normRandom = (double**)calloc(nrStations, sizeof(double*));
    //double** uniformRandom = (double**)calloc(nrStations, sizeof(double*));
-   double normRandomVar;
+   //double normRandomVar;
    double uniformRandomVar;
    //double** correlationMatrixSimulatedData = (double**)calloc(nrStations, sizeof(double*));
    double** initialAmountsCorrelationMatrix = (double**)calloc(nrStations, sizeof(double*));
