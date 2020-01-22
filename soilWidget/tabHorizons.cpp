@@ -178,8 +178,7 @@ void TabHorizons::insertSoilHorizons(soil::Crit3DSoil *soil, soil::Crit3DTexture
 
 }
 
-void TabHorizons::updateTableModel(soil::Crit3DSoil *soil, soil::Crit3DTextureClass* textureClassList,
-                                     soil::Crit3DFittingOptions* fittingOptions)
+void TabHorizons::updateTableModel(soil::Crit3DSoil *soil)
 {
     if (soil == nullptr)
     {
@@ -192,8 +191,6 @@ void TabHorizons::updateTableModel(soil::Crit3DSoil *soil, soil::Crit3DTextureCl
     clearSelections();
 
     mySoil = soil;
-    myTextureClassList = textureClassList;
-    myFittingOptions = fittingOptions;
 
     int row = signed(mySoil->nrHorizons);
     tableModel->setRowCount(row);
