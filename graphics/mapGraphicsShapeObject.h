@@ -42,6 +42,7 @@
 
         QString referenceField;
         bool isDrawing;
+        bool isFill;
 
         void setMapExtents();
         void drawShape(QPainter* myPainter);
@@ -78,6 +79,7 @@
 
         bool initializeUTM(Crit3DShapeHandler* shapePtr);
         void setReferenceField(QString myField);
+        void setFill(bool value);
         Crit3DShapeHandler* getShapePointer();
 
         QPointF getPixel(const LatLonPoint &geoPoint);

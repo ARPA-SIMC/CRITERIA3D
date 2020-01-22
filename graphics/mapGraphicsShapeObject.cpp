@@ -8,17 +8,18 @@
 MapGraphicsShapeObject::MapGraphicsShapeObject(MapGraphicsView* _view, MapGraphicsObject *parent) :
     MapGraphicsObject(true, parent)
 {
-    this->setFlag(MapGraphicsObject::ObjectIsSelectable, false);
-    this->setFlag(MapGraphicsObject::ObjectIsMovable, false);
-    this->setFlag(MapGraphicsObject::ObjectIsFocusable);
-    this->view = _view;
+    setFlag(MapGraphicsObject::ObjectIsSelectable, false);
+    setFlag(MapGraphicsObject::ObjectIsMovable, false);
+    setFlag(MapGraphicsObject::ObjectIsFocusable);
+    view = _view;
 
-    this->geoMap = new gis::Crit3DGeoMap();
-    this->referenceField = "";
-    this->isDrawing = false;
-    this->shapePointer = nullptr;
-    this->nrShapes = 0;
-    this->updateCenter();
+    geoMap = new gis::Crit3DGeoMap();
+    referenceField = "";
+    isDrawing = false;
+    isFill = false;
+    shapePointer = nullptr;
+    nrShapes = 0;
+    updateCenter();
 }
 
 
@@ -100,10 +101,16 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
     QPainterPath* inner;
 
     myPainter->setPen(Qt::black);
-    myPainter->setBrush(Qt::red);
+    myPainter->setBrush(Qt::NoBrush);
 
     for (unsigned long i = 0; i < nrShapes; i++)
     {
+        if (isFill)
+        {
+            myPainter->setBrush(Qt::red);
+            // TODO color
+        }
+
         for (unsigned int j = 0; j < shapeParts[i].size(); j++)
         {
             if (shapeParts[i][j].hole)
@@ -232,6 +239,12 @@ Crit3DShapeHandler* MapGraphicsShapeObject::getShapePointer()
 void MapGraphicsShapeObject::setReferenceField(QString myField)
 {
     referenceField = myField;
+}
+
+
+void MapGraphicsShapeObject::setFill(bool value)
+{
+    isFill = value;
 }
 
 
