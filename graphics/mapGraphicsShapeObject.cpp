@@ -11,9 +11,10 @@ MapGraphicsShapeObject::MapGraphicsShapeObject(MapGraphicsView* _view, MapGraphi
     this->setFlag(MapGraphicsObject::ObjectIsSelectable, false);
     this->setFlag(MapGraphicsObject::ObjectIsMovable, false);
     this->setFlag(MapGraphicsObject::ObjectIsFocusable);
-    view = _view;
+    this->view = _view;
 
     this->geoMap = new gis::Crit3DGeoMap();
+    this->referenceField = "";
     this->isDrawing = false;
     this->shapePointer = nullptr;
     this->nrShapes = 0;
@@ -148,9 +149,9 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
 bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
 {
     if (shapePtr == nullptr) return false;
+    shapePointer = shapePtr;
 
     updateCenter();
-    setShape(shapePtr);
 
     double lat, lon;
     ShapeObject myShape;
@@ -222,15 +223,15 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
 }
 
 
-void MapGraphicsShapeObject::setShape(Crit3DShapeHandler* shapePtr)
-{
-    this->shapePointer = shapePtr;
-}
-
-
 Crit3DShapeHandler* MapGraphicsShapeObject::getShapePointer()
 {
     return this->shapePointer;
+}
+
+
+void MapGraphicsShapeObject::setReferenceField(QString myField)
+{
+    referenceField = myField;
 }
 
 

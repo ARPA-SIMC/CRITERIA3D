@@ -51,6 +51,19 @@ TabHorizons::TabHorizons()
     insertSoilElement = false;
 }
 
+
+void TabHorizons::updateBarHorizon(soil::Crit3DSoil* mySoil)
+{
+    if (mySoil == nullptr)
+    {
+        return;
+    }
+
+    barHorizons.clear();
+    barHorizons.draw(mySoil);
+}
+
+
 void TabHorizons::insertSoilHorizons(soil::Crit3DSoil *soil, soil::Crit3DTextureClass* textureClassList,
                                      soil::Crit3DFittingOptions* fittingOptions)
 {

@@ -745,7 +745,7 @@ void Crit3DSoilWidget::tabChanged(int index)
         {
             if (mySoil.nrHorizons > 0)
             {
-                wrDataTab->insertData(&mySoil);
+                wrDataTab->insertData(&mySoil, textureClassList, fittingOptions);
                 addHorizon->setEnabled(false);
                 deleteHorizon->setEnabled(false);
             }
@@ -771,7 +771,7 @@ void Crit3DSoilWidget::tabChanged(int index)
         }
 
     }
-    else if (index == 3) // tab water retention curve
+    else if (index == 3) // tab hydraulic conductivity curve
     {
         if (!hydraConducCurveTab->getFillElement())
         {
@@ -791,8 +791,8 @@ void Crit3DSoilWidget::tabChanged(int index)
 void Crit3DSoilWidget::updateAll()
 {
     changed = true;
-    horizonsTab->insertSoilHorizons(&mySoil, textureClassList, fittingOptions);
-    wrDataTab->insertData(&mySoil);
+    horizonsTab->updateBarHorizon(&mySoil);
+    wrDataTab->insertData(&mySoil, textureClassList, fittingOptions);
     wrCurveTab->insertElements(&mySoil);
     hydraConducCurveTab->insertElements(&mySoil);
 }
@@ -801,5 +801,6 @@ void Crit3DSoilWidget::updateByTabWR()
 {
     changed = true;
     wrCurveTab->insertElements(&mySoil);
+    horizonsTab->insertSoilHorizons(&mySoil, textureClassList, fittingOptions);
 }
 
