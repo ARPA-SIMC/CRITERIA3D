@@ -14,7 +14,6 @@ MapGraphicsShapeObject::MapGraphicsShapeObject(MapGraphicsView* _view, MapGraphi
     view = _view;
 
     geoMap = new gis::Crit3DGeoMap();
-    referenceField = "";
     isDrawing = false;
     isFill = false;
     shapePointer = nullptr;
@@ -101,11 +100,14 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
     QPainterPath* inner;
 
     myPainter->setPen(Qt::black);
-    myPainter->setBrush(Qt::NoBrush);
 
     for (unsigned long i = 0; i < nrShapes; i++)
     {
-        if (isFill)
+        if (values[i] == NODATA)
+        {
+            myPainter->setBrush(Qt::NoBrush);
+        }
+        else
         {
             myPainter->setBrush(Qt::red);
             // TODO color
@@ -171,6 +173,8 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
     holes.resize(nrShapes);
     geoBounds.resize(nrShapes);
     geoPoints.resize(nrShapes);
+    values.resize(nrShapes);
+
     double refLatitude = geoMap->referencePoint.latitude;
 
     int zoneNumber = shapePtr->getUtmZone();
@@ -181,6 +185,8 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
     {
         shapePointer->getShape(int(i), myShape);
         shapeParts[i] = myShape.getParts();
+
+        values[i] = NODATA;
 
         unsigned int nrParts = myShape.getPartCount();
         holes[i].resize(nrParts);
@@ -236,9 +242,13 @@ Crit3DShapeHandler* MapGraphicsShapeObject::getShapePointer()
 }
 
 
-void MapGraphicsShapeObject::setReferenceField(QString myField)
+// call AFTER initialize
+void MapGraphicsShapeObject::setValues(QString myField)
 {
-    referenceField = myField;
+    for (unsigned int i = 0; i < nrShapes; i++)
+    {
+        values[i] = shapePointer->getNumericValue(signed(i), myField.toStdString());
+    }
 }
 
 

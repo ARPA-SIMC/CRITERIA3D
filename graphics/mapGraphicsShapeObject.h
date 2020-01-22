@@ -35,12 +35,12 @@
         QPointF referencePixel;
 
         unsigned int nrShapes;
+        std::vector< double> values;
         std::vector< std::vector<ShapeObject::Part>> shapeParts;
         std::vector< std::vector<std::vector<unsigned int>>> holes;
         std::vector< std::vector<GeoBounds>> geoBounds;
         std::vector< std::vector<LatLonPoint>> geoPoints;
 
-        QString referenceField;
         bool isDrawing;
         bool isFill;
 
@@ -78,7 +78,7 @@
         void clear();
 
         bool initializeUTM(Crit3DShapeHandler* shapePtr);
-        void setReferenceField(QString myField);
+        void setValues(QString myField);
         void setFill(bool value);
         Crit3DShapeHandler* getShapePointer();
 
