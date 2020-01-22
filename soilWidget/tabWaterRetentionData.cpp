@@ -53,7 +53,8 @@ TabWaterRetentionData::TabWaterRetentionData()
     fillData = false;
 }
 
-void TabWaterRetentionData::insertData(soil::Crit3DSoil *soil)
+void TabWaterRetentionData::insertData(soil::Crit3DSoil *soil, soil::Crit3DTextureClass* textureClassList,
+                                       soil::Crit3DFittingOptions* fittingOptions)
 {
     if (soil == nullptr)
     {
@@ -66,6 +67,8 @@ void TabWaterRetentionData::insertData(soil::Crit3DSoil *soil)
     barHorizons.draw(soil);
     deleteRow->setEnabled(false);
     mySoil = soil;
+    myTextureClassList = textureClassList;
+    myFittingOptions = fittingOptions;
     addRow->setEnabled(true);
 
     connect(tableWaterRetention, &QTableWidget::cellClicked, [=](int row, int column){ this->cellClicked(row, column); });
@@ -139,6 +142,10 @@ void TabWaterRetentionData::addRowClicked()
     auto itPos = mySoil->horizon[currentHorizon].dbData.waterRetention.begin() + numRow;
     // Insert element
     mySoil->horizon[currentHorizon].dbData.waterRetention.insert(itPos, newRow);
+
+    std::string errorString;
+    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, &errorString);
+
     deleteRow->setEnabled(true);
 
     if (!horizonChanged.contains(currentHorizon))
@@ -177,6 +184,8 @@ void TabWaterRetentionData::removeRowClicked()
 
     tableWaterRetention->removeRow(row);
     mySoil->horizon[currentHorizon].dbData.waterRetention.erase(mySoil->horizon[currentHorizon].dbData.waterRetention.begin() + row);
+    std::string errorString;
+    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, &errorString);
 
     emit updateSignal();
 }
@@ -275,6 +284,9 @@ void TabWaterRetentionData::cellChanged(int row, int column)
 
     tableWaterRetention->sortByColumn(0, Qt::AscendingOrder);
     sort(mySoil->horizon[currentHorizon].dbData.waterRetention.begin(), mySoil->horizon[currentHorizon].dbData.waterRetention.end(), soil::sortWaterPotential);
+
+    std::string errorString;
+    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, &errorString);
 
     tableWaterRetention->update();
     tableWaterRetention->blockSignals(false);
