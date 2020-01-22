@@ -914,7 +914,6 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
                simulatedPrecipitationAmounts[iSeason].matrixAmounts[i][j]= simulatedPrecipitationAmountsSeasonal[i][j];
 
            }
-
       }
 
       // free memory
@@ -1045,8 +1044,6 @@ void weatherGenerator2D::initializeOccurrenceIndex()
            occurrenceIndexSeasonal[i].bin[j][10] = NODATA;
        }
    }
-
-
 }
 
 void weatherGenerator2D::initializePrecipitationOutputs(int lengthSeason[])
