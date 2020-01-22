@@ -745,7 +745,7 @@ void Crit3DSoilWidget::tabChanged(int index)
         {
             if (mySoil.nrHorizons > 0)
             {
-                wrDataTab->insertData(&mySoil);
+                wrDataTab->insertData(&mySoil, textureClassList, fittingOptions);
                 addHorizon->setEnabled(false);
                 deleteHorizon->setEnabled(false);
             }
@@ -792,8 +792,7 @@ void Crit3DSoilWidget::updateAll()
 {
     changed = true;
     horizonsTab->updateBarHorizon(&mySoil);
-    //horizonsTab->insertSoilHorizons(&mySoil, textureClassList, fittingOptions);
-    wrDataTab->insertData(&mySoil);
+    wrDataTab->insertData(&mySoil, textureClassList, fittingOptions);
     wrCurveTab->insertElements(&mySoil);
     hydraConducCurveTab->insertElements(&mySoil);
 }
@@ -802,5 +801,6 @@ void Crit3DSoilWidget::updateByTabWR()
 {
     changed = true;
     wrCurveTab->insertElements(&mySoil);
+    horizonsTab->updateTableModel(&mySoil);
 }
 
