@@ -95,17 +95,17 @@
         double precipitationThreshold;
     };
 
-    struct TfourierParameters{
+    /*struct TfourierParameters{
         double a0;
         double aSin1;
         double aCos1;
         double aSin2;
         double aCos2;
-    };
+    };*/
 
     struct Tvariable{
-        TfourierParameters averageFourierParameters;
-        TfourierParameters standardDeviationFourierParameters;
+        //TfourierParameters averageFourierParameters;
+        //TfourierParameters standardDeviationFourierParameters;
         double* averageEstimation;
         double* stdDevEstimation;
     };
@@ -213,11 +213,8 @@
         ToutputWeatherData *outputWeatherData;
 
         double* normalRandomNumbers;
-        //int contatoreGammaUguale = 0;
-        //int contatoreGammaUguale2 = 0;
-        //int contatoreGammaDiverso = 0;
+
         //functions
-        void deallocateMemoryPointers();
         void commonModuleCompute();
         void precipitationCompute();
         void precipitation29February(int idStation);

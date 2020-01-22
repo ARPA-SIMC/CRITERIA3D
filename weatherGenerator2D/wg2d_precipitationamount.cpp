@@ -26,6 +26,7 @@ void weatherGenerator2D::initializePrecipitationAmountParameters()
             precipitationAmount[i].averageEstimation[j] = NODATA;
             precipitationAmount[i].stdDevEstimation[j] = NODATA;
         }
+        /*
         precipitationAmount[i].averageFourierParameters.a0 = NODATA;
         precipitationAmount[i].averageFourierParameters.aCos1 = NODATA;
         precipitationAmount[i].averageFourierParameters.aSin1 = NODATA;
@@ -36,6 +37,7 @@ void weatherGenerator2D::initializePrecipitationAmountParameters()
         precipitationAmount[i].standardDeviationFourierParameters.aSin1 = NODATA;
         precipitationAmount[i].standardDeviationFourierParameters.aCos2 = NODATA;
         precipitationAmount[i].standardDeviationFourierParameters.aSin2 = NODATA;
+        */
     }
 }
 
@@ -63,11 +65,9 @@ void weatherGenerator2D::computeprecipitationAmountParameters()
         for (int iMonth=0;iMonth<12;iMonth++)
         {
             averageMonthlyAmountPrec[iMonth] = 0;
-            //stdDevMonthlyAmountPrec[iMonth] = 0;
             countMonthlyAmountPrec[iMonth] = 0;
         }
 
-        //month = {, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365, 396};
         month[0] = -61;
         month[1] = -31;
         month[2] = 0;
@@ -84,8 +84,6 @@ void weatherGenerator2D::computeprecipitationAmountParameters()
         month[13] = 334;
         month[14] = 365;
         month[15] = 396;
-
-
 
         for (int iMonth=0;iMonth<16;iMonth++)
         {
@@ -161,11 +159,7 @@ void weatherGenerator2D::computeprecipitationAmountParameters()
             averageAmountPrec[jjj] = interpolation::cubicSpline(jjj*1.0,month,averageMonthlyAmountPrecLarger,16);
 
         }
-        /*
-        for (int i=0; i<365 ; i++)
-        {
-            precipitationAmount[iStation].averageEstimation[i] = double(averageAmountPrec[(i+334)%365]);
-        }*/
+
         for (int i=0; i<365 ; i++)
         {
             precipitationAmount[iStation].averageEstimation[i] = double(averageAmountPrec[i]);
@@ -355,14 +349,7 @@ void weatherGenerator2D::getPrecipitationAmount()
                  randomMatrixNormalDistributionMonthly[i][j] = myrandom::normalRandom(&gasDevIset,&gasDevGset);
             }
         }
-        /*for (int i=0;i<nrStations;i++)
-        {
-            for (int j=0;j<nrStations;j++)
-            {
-                printf("%.2f\n", correlationMatrix[iMonth].amount[i][j]);
-            }
-        }
-        pressEnterToContinue();*/
+
         weatherGenerator2D::spatialIterationAmountsMonthly(iMonth, amountCorrelationMatrixMonthSimulated , correlationMatrix[iMonth].amount,randomMatrixNormalDistributionMonthly,lengthMonth[iMonth]*parametersModel.yearOfSimulation,randomMatrix[iMonth].matrixOccurrences,simulatedPrecipitationAmountsMonthly);
         for (int j=0;j<lengthMonth[iMonth]*parametersModel.yearOfSimulation;j++)
         {
@@ -370,14 +357,12 @@ void weatherGenerator2D::getPrecipitationAmount()
             {
 
                 int dayUntilThefirstDayOfTheMonth,counter;
-                //double weibullOutput;
                 dayUntilThefirstDayOfTheMonth = counter = 0;
                 while (counter < iMonth)
                 {
                     dayUntilThefirstDayOfTheMonth += lengthMonth[counter]*parametersModel.yearOfSimulation;
                     counter++;
                 }
-                //dayOfYear += j%iMonth;
                 precGenerated[i][j+dayUntilThefirstDayOfTheMonth] = simulatedPrecipitationAmountsMonthly[i][j];
             }
         }
@@ -394,17 +379,6 @@ void weatherGenerator2D::getPrecipitationAmount()
         free(simulatedPrecipitationAmountsMonthly);
         free(amountCorrelationMatrixMonthSimulated);
     }
-
-    for (int j=0;j<365*parametersModel.yearOfSimulation;j++)
-    {
-        for (int i=0;i<nrStations;i++)
-        {
-            //printf("value %.3f  ",precGenerated[i][j]);
-        }
-        //printf("\n");
-    }
-    //pressEnterToContinue();
-
 }
 
 

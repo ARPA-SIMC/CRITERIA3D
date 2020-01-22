@@ -176,7 +176,7 @@
         bool updateProxy();
         void checkMeteoPointsDEM();
         bool writeTopographicDistanceMaps(bool onlyWithData);
-        bool loadTopographicDistanceMaps();
+        bool loadTopographicDistanceMaps(bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime);
         bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
         bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);

@@ -960,29 +960,13 @@ bool Project::loadMeteoGridDB(QString xmlName)
     meteoGridDbHandler = new Crit3DMeteoGridDbHandler();
     meteoGridDbHandler->meteoGrid()->setGisSettings(this->gisSettings);
 
-    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString))
-    {
-        logError();
-        return false;
-    }
+    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString)) return false;
 
-    if (! this->meteoGridDbHandler->openDatabase(&errorString))
-    {
-        logError();
-        return false;
-    }
+    if (! this->meteoGridDbHandler->openDatabase(&errorString)) return false;
 
-    if (! this->meteoGridDbHandler->loadCellProperties(&errorString))
-    {
-        logError();
-        return false;
-    }
+    if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
 
-    if (! this->meteoGridDbHandler->updateGridDate(&errorString))
-    {
-        logError();
-        return false;
-    }
+    this->meteoGridDbHandler->updateGridDate(&errorString);
 
     meteoGridLoaded = true;
     logInfo("Meteo Grid = " + xmlName);
@@ -1428,7 +1412,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData)
 }
 
 
-bool Project::loadTopographicDistanceMaps()
+bool Project::loadTopographicDistanceMaps(bool showInfo)
 {
     if (nrMeteoPoints == 0)
     {
@@ -1444,8 +1428,12 @@ bool Project::loadTopographicDistanceMaps()
     }
 
     FormInfo myInfo;
-    QString infoStr = "Loading topographic distance maps...";
-    int infoStep = myInfo.start(infoStr, nrMeteoPoints);
+    int infoStep;
+    if (showInfo)
+    {
+        QString infoStr = "Loading topographic distance maps...";
+        infoStep = myInfo.start(infoStr, nrMeteoPoints);
+    }
 
     std::string myError;
     std::string fileName;
@@ -1453,7 +1441,9 @@ bool Project::loadTopographicDistanceMaps()
 
     for (int i=0; i < nrMeteoPoints; i++)
     {
-        if ((i % infoStep) == 0) myInfo.setValue(i);
+        if (showInfo)
+            if ((i % infoStep) == 0)
+                myInfo.setValue(i);
 
         if (meteoPoints[i].active)
         {
@@ -1467,7 +1457,7 @@ bool Project::loadTopographicDistanceMaps()
         }
     }
 
-    myInfo.close();
+    if (showInfo) myInfo.close();
 
     return true;
 }
@@ -1848,7 +1838,7 @@ void Project::saveProxies()
 {
     Q_FOREACH (QString group, parameters->childGroups())
     {
-        if (group.left(5) == "proxy")
+        if (group.left(6) == "proxy_")
             parameters->remove(group);
     }
 
@@ -1993,13 +1983,13 @@ bool Project::start(QString appPath)
 
 bool Project::loadProject()
 {
+    if (logFileName != "") setLogFile(logFileName);
+
     if (! loadParameters(parametersFileName))
     {
         logError();
         return false;
     }
-
-    if (logFileName != "") setLogFile(logFileName);
 
     if (demFileName != "") loadDEM(demFileName);
 

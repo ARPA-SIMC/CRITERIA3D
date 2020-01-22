@@ -60,7 +60,7 @@ Crit3DMeteoPointsDbHandler::~Crit3DMeteoPointsDbHandler()
         QString connection = _db.connectionName();
         _db.close();
         _db = QSqlDatabase();
-        _db.removeDatabase(connection);
+        QSqlDatabase::removeDatabase(connection);
     }
 }
 
