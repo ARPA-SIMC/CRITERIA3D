@@ -7,6 +7,28 @@
 
 namespace canopy {
 
+
+    double canopyInterceptionHydrall(double laiCanopy,double laiUnderstorey, double prec)
+    {
+        double canopyCapacity;
+        double interception;
+        double maxInterception;
+        double upperBoundPrec = 20;
+        if (prec > upperBoundPrec) maxInterception = 0.15 * upperBoundPrec;
+        else maxInterception = 0.15 * prec;
+        canopyCapacity = 0.07 * (laiCanopy + laiUnderstorey);
+        if (canopyCapacity > maxInterception) interception = maxInterception ;
+        else interception = canopyCapacity;
+        return interception;
+    }
+
+    double canopyNoInterceptedRainfallHydrall(double laiCanopy,double laiUnderstorey, double prec)
+    {
+        double interception;
+        interception = canopyInterceptionHydrall(laiCanopy, laiUnderstorey, prec);
+        return (prec - canopyInterceptionHydrall(laiCanopy, laiUnderstorey, prec));
+    }
+
     double plantCover(double lai, double extinctionCoefficient,double laiMin)
     {
         if (lai < laiMin) lai=laiMin;
@@ -67,7 +89,9 @@ namespace canopy {
         // double* freeRainfall (mm)
         // double *drainage (mm)
         // double* stemFlow (mm)
-        // double* throughfallWater: (mm) water fallen on the ground composed by 2 components: interception free water + intercpted and fallen from leaves and branches (not from the trunk)
+        // double* throughfallWater: (mm) water fallen on the ground composed by 2 components: interception free water + intercepted and fallen from leaves and branches (not from the trunk)
+        // double *soilWater (mm) total rainfall water falling on soil
+
 
         double actualCover,actualStorage,grossStorage;
         double interception;
@@ -103,7 +127,7 @@ namespace canopy {
         // double maxStemFlowRate (mm)
 
         // output:
-        // double *drainage (mm)
+        // double *soilWater (mm) total rainfall water falling on soil
 
         double actualCover,actualStorage,grossStorage,drainage;
         double interception;
