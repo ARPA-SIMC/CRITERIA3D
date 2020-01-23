@@ -98,7 +98,6 @@ void weatherGenerator2D::initializeTemperatureParameters()
         dailyResidual[i].maxTWet = 0;
         dailyResidual[i].minTWet = 0;
     }
-
 }
 
 void weatherGenerator2D::initializeTemperaturecorrelationMatrices()
@@ -140,7 +139,6 @@ void weatherGenerator2D::computeTemperatureParameters()
         int finalDay = 365;
         for (int iDay=0;iDay<finalDay;iDay++)
         {
-
             averageTMaxDry[iDay]=0;
             averageTMaxWet[iDay]=0;
             stdDevTMaxDry[iDay]=0;
@@ -177,7 +175,6 @@ void weatherGenerator2D::computeTemperatureParameters()
         {
             int dayOfYear;
             dayOfYear = weatherGenerator2D::doyFromDate(obsDataD[iStation][iDatum].date.day,obsDataD[iStation][iDatum].date.month,obsDataD[iStation][iDatum].date.year);
-            //if (dayOfYear == 366) dayOfYear--;
             if ((isLeapYear(obsDataD[iStation][iDatum].date.year)) && (obsDataD[iStation][iDatum].date.month > 2)) dayOfYear--;
             dayOfYear--;
             if (obsDataD[iStation][iDatum].date.month == 2 && obsDataD[iStation][iDatum].date.day == 29)
@@ -233,7 +230,6 @@ void weatherGenerator2D::computeTemperatureParameters()
         {
             int dayOfYear;
             dayOfYear = weatherGenerator2D::doyFromDate(obsDataD[iStation][iDatum].date.day,obsDataD[iStation][iDatum].date.month,obsDataD[iStation][iDatum].date.year);
-            //if (dayOfYear == 366) dayOfYear--;
             if ((isLeapYear(obsDataD[iStation][iDatum].date.year)) && (obsDataD[iStation][iDatum].date.month > 2))
             {
                 dayOfYear--; // to avoid problems in leap years
@@ -255,8 +251,6 @@ void weatherGenerator2D::computeTemperatureParameters()
                     if ((fabs(obsDataD[iStation][iDatum].tMin - NODATA))> EPSILON)
                     {
                         stdDevTMinWet[dayOfYear] += (obsDataD[iStation][iDatum].tMin - averageTMinWet[dayOfYear])*(obsDataD[iStation][iDatum].tMin - averageTMinWet[dayOfYear]);
-                        //printf("%d %f %f\n ",dayOfYear,obsDataD[iStation][iDatum].tMin,(fabs(obsDataD[iStation][iDatum].tMin)-NODATA));
-                        //getchar();
                     }
                 }
                 else if (obsDataD[iStation][iDatum].prec <= parametersModel.precipitationThreshold)
@@ -300,103 +294,45 @@ void weatherGenerator2D::computeTemperatureParameters()
             par[i] = NODATA;
         }
         weatherGenerator2D::harmonicsFourier(averageTMaxDry,par,nrPar,temperatureCoefficients[iStation].maxTDry.averageEstimation,365);
-        /*
-        temperatureCoefficients[iStation].maxTDry.averageFourierParameters.a0 = par[0];
-        temperatureCoefficients[iStation].maxTDry.averageFourierParameters.aCos1 = par[1];
-        temperatureCoefficients[iStation].maxTDry.averageFourierParameters.aSin1 = par[2];
-        temperatureCoefficients[iStation].maxTDry.averageFourierParameters.aCos2 = par[3];
-        temperatureCoefficients[iStation].maxTDry.averageFourierParameters.aSin2 = par[4];
-        */
-
-
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
         weatherGenerator2D::harmonicsFourier(averageTMinDry,par,nrPar,temperatureCoefficients[iStation].minTDry.averageEstimation,365);
-        /*
-        temperatureCoefficients[iStation].minTDry.averageFourierParameters.a0 = par[0];
-        temperatureCoefficients[iStation].minTDry.averageFourierParameters.aCos1 = par[1];
-        temperatureCoefficients[iStation].minTDry.averageFourierParameters.aSin1 = par[2];
-        temperatureCoefficients[iStation].minTDry.averageFourierParameters.aCos2 = par[3];
-        temperatureCoefficients[iStation].minTDry.averageFourierParameters.aSin2 = par[4];
-        */
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
         weatherGenerator2D::harmonicsFourier(averageTMaxWet,par,nrPar,temperatureCoefficients[iStation].maxTWet.averageEstimation,365);
-        /*
-        temperatureCoefficients[iStation].maxTWet.averageFourierParameters.a0 = par[0];
-        temperatureCoefficients[iStation].maxTWet.averageFourierParameters.aCos1 = par[1];
-        temperatureCoefficients[iStation].maxTWet.averageFourierParameters.aSin1 = par[2];
-        temperatureCoefficients[iStation].maxTWet.averageFourierParameters.aCos2 = par[3];
-        temperatureCoefficients[iStation].maxTWet.averageFourierParameters.aSin2 = par[4];
-        */
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
         weatherGenerator2D::harmonicsFourier(averageTMinWet,par,nrPar,temperatureCoefficients[iStation].minTWet.averageEstimation,365);
-        /*
-        temperatureCoefficients[iStation].minTWet.averageFourierParameters.a0 = par[0];
-        temperatureCoefficients[iStation].minTWet.averageFourierParameters.aCos1 = par[1];
-        temperatureCoefficients[iStation].minTWet.averageFourierParameters.aSin1 = par[2];
-        temperatureCoefficients[iStation].minTWet.averageFourierParameters.aCos2 = par[3];
-        temperatureCoefficients[iStation].minTWet.averageFourierParameters.aSin2 = par[4];
-        */
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
         weatherGenerator2D::harmonicsFourier(stdDevTMaxDry,par,nrPar,temperatureCoefficients[iStation].maxTDry.stdDevEstimation,365);
-        /*
-        temperatureCoefficients[iStation].maxTDry.standardDeviationFourierParameters.a0 = par[0];
-        temperatureCoefficients[iStation].maxTDry.standardDeviationFourierParameters.aCos1 = par[1];
-        temperatureCoefficients[iStation].maxTDry.standardDeviationFourierParameters.aSin1 = par[2];
-        temperatureCoefficients[iStation].maxTDry.standardDeviationFourierParameters.aCos2 = par[3];
-        temperatureCoefficients[iStation].maxTDry.standardDeviationFourierParameters.aSin2 = par[4];
-        */
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
         weatherGenerator2D::harmonicsFourier(stdDevTMinDry,par,nrPar,temperatureCoefficients[iStation].minTDry.stdDevEstimation,365);
-        /*
-        temperatureCoefficients[iStation].minTDry.standardDeviationFourierParameters.a0 = par[0];
-        temperatureCoefficients[iStation].minTDry.standardDeviationFourierParameters.aCos1 = par[1];
-        temperatureCoefficients[iStation].minTDry.standardDeviationFourierParameters.aSin1 = par[2];
-        temperatureCoefficients[iStation].minTDry.standardDeviationFourierParameters.aCos2 = par[3];
-        temperatureCoefficients[iStation].minTDry.standardDeviationFourierParameters.aSin2 = par[4];
-        */
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
         weatherGenerator2D::harmonicsFourier(stdDevTMaxWet,par,nrPar,temperatureCoefficients[iStation].maxTWet.stdDevEstimation,365);
-        /*
-        temperatureCoefficients[iStation].maxTWet.standardDeviationFourierParameters.a0 = par[0];
-        temperatureCoefficients[iStation].maxTWet.standardDeviationFourierParameters.aCos1 = par[1];
-        temperatureCoefficients[iStation].maxTWet.standardDeviationFourierParameters.aSin1 = par[2];
-        temperatureCoefficients[iStation].maxTWet.standardDeviationFourierParameters.aCos2 = par[3];
-        temperatureCoefficients[iStation].maxTWet.standardDeviationFourierParameters.aSin2 = par[4];
-        */
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
         weatherGenerator2D::harmonicsFourier(stdDevTMinWet,par,nrPar,temperatureCoefficients[iStation].minTWet.stdDevEstimation,365);
-        /*
-        temperatureCoefficients[iStation].minTWet.standardDeviationFourierParameters.a0 = par[0];
-        temperatureCoefficients[iStation].minTWet.standardDeviationFourierParameters.aCos1 = par[1];
-        temperatureCoefficients[iStation].minTWet.standardDeviationFourierParameters.aSin1 = par[2];
-        temperatureCoefficients[iStation].minTWet.standardDeviationFourierParameters.aCos2 = par[3];
-        temperatureCoefficients[iStation].minTWet.standardDeviationFourierParameters.aSin2 = par[4];
-        */
         // free memory of parameters, variable par[]
         free(par);
 
-        weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,temperatureCoefficients[iStation].maxTWet.averageEstimation,temperatureCoefficients[iStation].maxTDry.stdDevEstimation,temperatureCoefficients[iStation].maxTWet.stdDevEstimation,temperatureCoefficients[iStation].minTDry.averageEstimation,temperatureCoefficients[iStation].minTWet.averageEstimation,temperatureCoefficients[iStation].minTDry.stdDevEstimation,temperatureCoefficients[iStation].minTWet.stdDevEstimation,365,iStation);
+        weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,temperatureCoefficients[iStation].maxTWet.averageEstimation,temperatureCoefficients[iStation].maxTDry.stdDevEstimation,temperatureCoefficients[iStation].maxTWet.stdDevEstimation,temperatureCoefficients[iStation].minTDry.averageEstimation,temperatureCoefficients[iStation].minTWet.averageEstimation,temperatureCoefficients[iStation].minTDry.stdDevEstimation,temperatureCoefficients[iStation].minTWet.stdDevEstimation,iStation);
 
         int matrixRang = 2;
         double** matrixCovarianceLag0 = (double **) calloc(matrixRang, sizeof(double*));
@@ -502,21 +438,21 @@ void weatherGenerator2D::computeTemperatureParameters()
 
 void weatherGenerator2D::harmonicsFourier(double* variable, double *par,int nrPar, double* estimatedVariable, int nrEstimatedVariable)
 {
-    int maxIterations = 100000;
-    int functionCode;
+    //int maxIterations = 100000;
+    //int functionCode;
 
     // find the upper bound
     double valueMax,valueMin;
     bool validDays[365];
     int nrValidDays;
 
-    double valueCurrent;
+    //double valueCurrent;
     valueMax = 0;
     nrValidDays = 0;
     for (int i=0;i<365;i++)
     {
-        valueCurrent = variable[i];
-        valueCurrent = variable[i];
+        //valueCurrent = variable[i];
+        //valueCurrent = variable[i];
         if (fabs(variable[i] - NODATA)< EPSILON  || fabs(variable[i]) < EPSILON)
         {
             validDays[i] = false;
@@ -598,7 +534,7 @@ void weatherGenerator2D::harmonicsFourier(double* variable, double *par,int nrPa
 
 }
 
-void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* averageTMaxWet,double* stdDevTMaxDry,double* stdDevTMaxWet,double* averageTMinDry,double* averageTMinWet,double* stdDevTMinDry,double* stdDevTMinWet,int lengthArray,int idStation)
+void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* averageTMaxWet,double* stdDevTMaxDry,double* stdDevTMaxWet,double* averageTMinDry,double* averageTMinWet,double* stdDevTMinDry,double* stdDevTMinWet,int idStation)
 {
     for (int i=0; i<nrData; i++)
     {
@@ -854,8 +790,8 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
     int gasDevIset = 0;
     double gasDevGset = 0;
     srand (time(nullptr));    
-    int firstRandomNumber;
-    firstRandomNumber = rand();
+    //int firstRandomNumber;
+    //firstRandomNumber = rand();
     int lengthOfRandomSeries;
     lengthOfRandomSeries = parametersModel.yearOfSimulation*365;
     int nrSquareOfStations;
@@ -1075,9 +1011,8 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
         free(correlationMatrixTemperature.maxT[i]);
         free(correlationMatrixTemperature.minT[i]);
     }
-    correlationMatrixTemperature.maxT;
-    correlationMatrixTemperature.minT;
-
+    free(correlationMatrixTemperature.maxT);
+    free(correlationMatrixTemperature.minT);
 }
 
 void weatherGenerator2D::initializeMultiOccurrenceTemperature(int length)
