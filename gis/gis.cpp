@@ -370,17 +370,18 @@ namespace gis
         double x, y;
         Crit3DUtmPoint *myPoint;
 
-        x = header->llCorner.x + header->cellSize * (myCol + 0.5);
-        y = header->llCorner.y + header->cellSize * (header->nrRows - myRow - 0.5);
+        x = header->llCorner.x + header->cellSize * (double(myCol) + 0.5);
+        y = header->llCorner.y + header->cellSize * (double(header->nrRows - myRow) - 0.5);
+
         myPoint = new Crit3DUtmPoint(x, y);
-        return (myPoint);
+        return myPoint;
     }
 
 
     void Crit3DRasterGrid::getXY(int myRow, int myCol, double* x, double* y)
     {
-        *x = header->llCorner.x + header->cellSize * (myCol + 0.5);
-        *y = header->llCorner.y + header->cellSize * (header->nrRows - myRow - 0.5);
+        *x = header->llCorner.x + header->cellSize * (double(myCol) + 0.5);
+        *y = header->llCorner.y + header->cellSize * (double(header->nrRows - myRow) - 0.5);
     }
 
 
@@ -418,7 +419,7 @@ namespace gis
         myGrid->minimum = minimum;
         myGrid->colorScale->maximum = myGrid->maximum;
         myGrid->colorScale->minimum = myGrid->minimum;
-        return(true);
+        return true;
     }
 
 
