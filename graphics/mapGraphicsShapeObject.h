@@ -39,8 +39,8 @@
         std::vector< std::vector<std::vector<unsigned int>>> holes;
         std::vector< std::vector<GeoBounds>> geoBounds;
         std::vector< std::vector<LatLonPoint>> geoPoints;
+        std::vector< float> values;
 
-        QString referenceField;
         bool isDrawing;
         bool isFill;
 
@@ -73,12 +73,14 @@
          */
         explicit MapGraphicsShapeObject(MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
 
+        Crit3DColorScale* colorScale;
+
         void setDrawing(bool value);
         void updateCenter();
         void clear();
 
         bool initializeUTM(Crit3DShapeHandler* shapePtr);
-        void setReferenceField(QString myField);
+        void setValues(QString myField);
         void setFill(bool value);
         Crit3DShapeHandler* getShapePointer();
 

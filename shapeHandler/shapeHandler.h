@@ -63,6 +63,8 @@
         int getUtmZone() const;
         int nWidthField(int fieldIndex);
         int nDecimalsField(int fieldIndex);
+        int getFieldPos(std::string fieldName);
+        double getNumericValue(int shapeNumber, std::string fieldName);
     };
 
 
