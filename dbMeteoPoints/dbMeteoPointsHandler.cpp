@@ -361,7 +361,7 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
 
     QString tableName = QString::fromStdString(meteoPoint->id) + "_H";
 
-    QString statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATE('%2') AND date_time < DATE('%3', '+1 day')")
+    QString statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATE('%2') AND date_time <= DATETIME('%3 00:00:00', '+1 day')")
                                  .arg(tableName).arg(startDate).arg(endDate);
     if( !qry.exec(statement) )
     {
