@@ -205,6 +205,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
                         if (date.time().hour() == 0)
                         {
                             date = date.addDays(-1);
+                            date = date.addSecs(HOUR_SECONDS*23);
                         }
                     }
 
