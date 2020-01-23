@@ -686,7 +686,7 @@ void Crit3DMeteoGrid::aggregateMeteoGrid(meteoVariable myVar, frequencyType freq
                             }
                             else
                             {
-                                _meteoPoints[row][col]->obsDataH[0].date = date;
+                                //_meteoPoints[row][col]->obsDataH[0].date = date;
                                 initialize = false;
                             }
                             fillMeteoPointHourlyValue(row, col, numberOfDays, initialize, date, hour, minute, myVar, float(myValue));
