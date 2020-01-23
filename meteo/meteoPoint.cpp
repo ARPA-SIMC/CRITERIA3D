@@ -449,9 +449,25 @@ void Crit3DMeteoPoint::cleanObsDataM()
 
 bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue)
 {
+    bool only24 = false;
+
     // day index
     int i = obsDataH[0].date.daysTo(myDate);
-    if (i < 0 || i >= nrObsDataDaysH) return false;
+
+    //check if out of range (accept +1 date exceed)
+    if (i < 0 || i > nrObsDataDaysH) return false;
+    //if +1 date exceed accept only hour 00:00 and set it to last date (24:00)
+    if (i == nrObsDataDaysH)
+    {
+        if (myHour != 0)
+            return false;
+        else
+        {
+            myHour = 24;
+            i--;
+            only24 = true;
+        }
+    }
 
     // hour index
     int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
@@ -460,7 +476,7 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
     {
         return false;
     }
-    if (h == hourlyFraction * 24)
+    if (h == hourlyFraction * 24 && ! only24)
     {
         h = 0;
         i++;
@@ -503,6 +519,8 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
     {
         i--;
         h = 24;
+
+        if (i < 0) return false;
 
         if (myVar == airTemperature)
             obsDataH[i].tAir[h] = myValue;
