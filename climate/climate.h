@@ -65,13 +65,13 @@
 
     float thomH(float tempAvg, float relHumAvgAir);
 
-    int thomDailyNHoursAbove(TObsDataH hourlyValues, float thomthreshold, float minimumPercentage);
+    int thomDailyNHoursAbove(TObsDataH *hourlyValues, float thomthreshold, float minimumPercentage);
 
-    float thomDailyMax(TObsDataH hourlyValues, float minimumPercentage);
+    float thomDailyMax(TObsDataH *hourlyValues, float minimumPercentage);
 
-    float thomDailyMean(TObsDataH hourlyValues, float minimumPercentage);
+    float thomDailyMean(TObsDataH *hourlyValues, float minimumPercentage);
 
-    float dailyLeafWetnessComputation(TObsDataH hourlyValues, float minimumPercentage);
+    float dailyLeafWetnessComputation(TObsDataH *hourlyValues, float minimumPercentage);
 
     float computeDailyBIC(float prec, float etp);
 
