@@ -39,32 +39,43 @@
         int	isDBFRecordDeleted(int record);
         int	getType();
         int getFieldNumbers();
+        std::string	getTypeString();
+
         std::string	getFieldName(int fieldPos);
         DBFFieldType getFieldType(int fieldPos);
-        std::string	getTypeString();
+        int getFieldPos(std::string fieldName);
+        DBFFieldType getFieldType(std::string fieldName);
+
         int readIntAttribute(int shapeNumber, int fieldPos);
         bool writeIntAttribute(int shapeNumber, int fieldPos, int nFieldValue);
+
         double readDoubleAttribute(int shapeNumber, int fieldPos);
         bool writeDoubleAttribute(int shapeNumber, int fieldPos, double dFieldValue);
+
         std::string readStringAttribute(int shapeNumber, int fieldPos);
         bool writeStringAttribute(int shapeNumber, int fieldPos, const char* pszFieldValue);
-        bool deleteRecord(int shapeNumber);
 
+        bool deleteRecord(int shapeNumber);
         //bool addRecord(std::vector<std::string> fields);
 
         bool addField(const char * fieldName, int type, int nWidth, int nDecimals );
         bool removeField(int iField);
-        std::string getFilepath() const;
+
         void setFilepath(std::string filename);
+        std::string getFilepath() const;
+
+        bool getIsWGS84() const;
+        int getUtmZone() const;
+
         void packDBF(std::string newFile);
         void packSHP(std::string newFile);
         bool existRecordDeleted();
-        bool getIsWGS84() const;
-        int getUtmZone() const;
+
         int nWidthField(int fieldIndex);
         int nDecimalsField(int fieldIndex);
-        int getFieldPos(std::string fieldName);
+
         double getNumericValue(int shapeNumber, std::string fieldName);
+        std::string getStringValue(int shapeNumber, std::string fieldName);
     };
 
 

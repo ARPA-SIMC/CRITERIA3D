@@ -264,6 +264,17 @@ int	Crit3DShapeHandler::getFieldPos(std::string fieldName)
 }
 
 
+DBFFieldType Crit3DShapeHandler::getFieldType(std::string fieldName)
+{
+    int pos = getFieldPos(fieldName);
+
+    if (pos == -1)
+        return FTInvalid;
+    else
+        return getFieldType(pos);
+}
+
+
 double Crit3DShapeHandler::getNumericValue(int shapeNumber, std::string fieldName)
 {
     int fieldPos = getFieldPos(fieldName);
@@ -281,6 +292,20 @@ double Crit3DShapeHandler::getNumericValue(int shapeNumber, std::string fieldNam
         return readDoubleAttribute(shapeNumber, fieldPos);
     }
     else return NODATA;
+}
+
+
+std::string Crit3DShapeHandler::getStringValue(int shapeNumber, std::string fieldName)
+{
+    int fieldPos = getFieldPos(fieldName);
+    if (fieldPos == -1) return "";
+
+    DBFFieldType fieldType = getFieldType(fieldPos);
+    if (fieldType == FTString)
+    {
+        return readStringAttribute(shapeNumber, fieldPos);
+    }
+    else return "";
 }
 
 
