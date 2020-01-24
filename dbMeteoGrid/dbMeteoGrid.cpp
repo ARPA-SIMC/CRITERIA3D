@@ -1522,9 +1522,6 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *myError,
         return hourlyVarList;
     }
 
-    // take also 00:00 day after
-    last = last.addSecs(3600);
-
     QString statement = QString("SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3` <= '%5' ORDER BY `%3`").arg(tableH).arg(varCode).arg(_tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm"));
     if( !qry.exec(statement) )
     {

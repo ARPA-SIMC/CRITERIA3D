@@ -454,16 +454,16 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
 
     //check if out of range (accept +1 date exceed)
     if (i < 0 || i > nrObsDataDaysH) return false;
-    //if +1 date exceed accept only hour 00:00 and set it to last date (24:00)
-    if (i == nrObsDataDaysH)
+
+    //if +1 date exceed accept only hour 00:00
+    if (i == nrObsDataDaysH && myHour != 0) return false;
+
+    // hour 0 becomes hour 24 of the previous day
+    if (myHour == 0)
     {
-        if (myHour != 0)
-            return false;
-        else
-        {
-            myHour = 24;
-            i--;
-        }
+        myHour = 24;
+        i--;
+        if (i < 0) return false;
     }
 
     // hour index
