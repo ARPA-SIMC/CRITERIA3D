@@ -947,7 +947,7 @@ int thomDailyNHoursAbove(TObsDataH hourlyValues, float thomthreshold, float mini
                 nrHours++;
         }
     }
-    if ( (float(nData) / 24.f * 100.f) < minimumPercentage)
+    if ( (float(nData) / 24 * 100) < minimumPercentage)
         nrHours = NODATA;
 
     return nrHours;
@@ -984,7 +984,7 @@ float thomDailyMean(TObsDataH hourlyValues, float minimumPercentage)
     std::vector<float> thomValues;
     float thomDailyMean;
 
-    for (int hour = 1; hour < 24; hour++)
+    for (int hour = 0; hour < 24; hour++)
     {
         float thom = thomH(hourlyValues.tAir[hour], hourlyValues.rhAir[hour]);
         if (thom != NODATA)
