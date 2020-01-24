@@ -83,8 +83,8 @@
         void clear();
 
         bool initializeUTM(Crit3DShapeHandler* shapePtr);
-        void setNumericValues(QString myField);
-        void setCategories(QString myField);
+        void setNumericValues(std::string fieldName);
+        void setCategories(std::string fieldName);
 
         void setFill(bool value);
         Crit3DShapeHandler* getShapePointer();

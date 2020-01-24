@@ -251,13 +251,13 @@ Crit3DShapeHandler* MapGraphicsShapeObject::getShapePointer()
 
 
 // warning: call after initializeUTM
-void MapGraphicsShapeObject::setNumericValues(QString myField)
+void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
 {
     // set values
     float firstValue = NODATA;
     for (unsigned int i = 0; i < nrShapes; i++)
     {
-        values[i] = float(shapePointer->getNumericValue(signed(i), myField.toStdString()));
+        values[i] = float(shapePointer->getNumericValue(signed(i), fieldName));
 
         // TODO Fix problem with NULL
         if (isEqual(values[i], 0)) values[i] = NODATA;
@@ -292,13 +292,13 @@ int MapGraphicsShapeObject::getCategoryIndex(std::string strValue)
 
 
 // warning: call after initializeUTM
-void MapGraphicsShapeObject::setCategories(QString myField)
+void MapGraphicsShapeObject::setCategories(std::string fieldName)
 {
     // fill categories and set values(index of categories)
     categories.clear();
     for (unsigned int i = 0; i < nrShapes; i++)
     {
-        std::string strValue = shapePointer->getStringValue(signed(i), myField.toStdString());
+        std::string strValue = shapePointer->getStringValue(signed(i), fieldName);
 
         if (strValue != "")
         {
