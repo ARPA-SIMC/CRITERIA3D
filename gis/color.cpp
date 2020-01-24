@@ -288,6 +288,27 @@ bool setRadiationScale(Crit3DColorScale* myScale)
 }
 
 
+bool reverseColorScale(Crit3DColorScale* myScale)
+{
+    // copy key colors
+    Crit3DColor* oldKeyColor = new Crit3DColor[unsigned(myScale->nrKeyColors)];
+    for (int i = 0; i < myScale->nrKeyColors; i++)
+    {
+        oldKeyColor[i] = myScale->keyColor[i];
+    }
+
+    // reverse key colors
+    int lastIndex = myScale->nrKeyColors - 1;
+    for (int i = 0; i < myScale->nrKeyColors; i++)
+    {
+        myScale->keyColor[i] = oldKeyColor[lastIndex - i];
+    }
+
+    // reclassify
+    return(myScale->classify());
+}
+
+
 /*!
  * \brief roundColorScale round colorScale values on the second (or third) digit of each range.
  * It requires that nrColors is a multiply of nrIntervals for a correct visualization in the colors legend.
