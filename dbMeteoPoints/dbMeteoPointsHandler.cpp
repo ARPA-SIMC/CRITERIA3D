@@ -202,11 +202,6 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
                     else if (frequency == hourly)
                     {
                         date = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
-                        if (date.time().hour() == 0)
-                        {
-                            date = date.addDays(-1);
-                            date = date.addSecs(HOUR_SECONDS*23);
-                        }
                     }
 
                     if (lastDate.isNull() || date > lastDate)

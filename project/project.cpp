@@ -929,8 +929,16 @@ bool Project::loadMeteoPointsDB(QString dbName)
     QDateTime dbLastTime = findDbPointLastTime();
     if (! dbLastTime.isNull())
     {
-        setCurrentDate(dbLastTime.date());
-        setCurrentHour(dbLastTime.time().hour());
+        if (dbLastTime.time().hour() == 00)
+        {
+            setCurrentDate(dbLastTime.date().addDays(-1));
+            setCurrentHour(24);
+        }
+        else
+        {
+            setCurrentDate(dbLastTime.date());
+            setCurrentHour(dbLastTime.time().hour());
+        }
     }
 
     // load proxy values for detrending
