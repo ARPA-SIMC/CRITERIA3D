@@ -1044,12 +1044,8 @@ void Project::loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo)
 {
     if (this->meteoGridDbHandler != nullptr)
     {
-        QDateTime t1 = QDateTime(firstDate);
-        QDateTime t2 = QDateTime(lastDate.addDays(1));
-
         this->loadMeteoGridDailyData(firstDate, lastDate, showInfo);
-
-        this->loadMeteoGridHourlyData(t1, t2, showInfo);
+        this->loadMeteoGridHourlyData(QDateTime(firstDate, QTime(1,0)), QDateTime(lastDate.addDays(1), QTime(0,0)), showInfo);
     }
 }
 
