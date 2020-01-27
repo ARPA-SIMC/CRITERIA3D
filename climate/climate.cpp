@@ -931,14 +931,14 @@ float thomH(float tempAvg, float relHumAvgAir)
 
 
 // compute # hours thom >  threshold per day
-int thomDailyNHoursAbove(TObsDataH hourlyValues, float thomthreshold, float minimumPercentage)
+int thomDailyNHoursAbove(TObsDataH* hourlyValues, float thomthreshold, float minimumPercentage)
 {
 
     int nData = 0;
     int nrHours = NODATA;
     for (int hour = 0; hour < 24; hour++)
     {
-        float thom = thomH(hourlyValues.tAir[hour], hourlyValues.rhAir[hour]);
+        float thom = thomH(hourlyValues->tAir[hour], hourlyValues->rhAir[hour]);
         if (thom != NODATA)
         {
             nData = nData + 1;
@@ -957,13 +957,13 @@ int thomDailyNHoursAbove(TObsDataH hourlyValues, float thomthreshold, float mini
 }
 
 // compute daily max thom value
-float thomDailyMax(TObsDataH hourlyValues, float minimumPercentage)
+float thomDailyMax(TObsDataH* hourlyValues, float minimumPercentage)
 {
     int nData = 0;
     float thomMax = NODATA;
     for (int hour = 0; hour < 24; hour++)
     {
-        float thom = thomH(hourlyValues.tAir[hour], hourlyValues.rhAir[hour]);
+        float thom = thomH(hourlyValues->tAir[hour], hourlyValues->rhAir[hour]);
         if (thom != NODATA)
         {
             nData = nData + 1;
@@ -978,7 +978,7 @@ float thomDailyMax(TObsDataH hourlyValues, float minimumPercentage)
 }
 
 // compute daily avg thom value
-float thomDailyMean(TObsDataH hourlyValues, float minimumPercentage)
+float thomDailyMean(TObsDataH* hourlyValues, float minimumPercentage)
 {
 
     int nData = 0;
@@ -987,7 +987,7 @@ float thomDailyMean(TObsDataH hourlyValues, float minimumPercentage)
 
     for (int hour = 0; hour < 24; hour++)
     {
-        float thom = thomH(hourlyValues.tAir[hour], hourlyValues.rhAir[hour]);
+        float thom = thomH(hourlyValues->tAir[hour], hourlyValues->rhAir[hour]);
         if (thom != NODATA)
         {
             thomValues.push_back(thom);
@@ -1004,7 +1004,7 @@ float thomDailyMean(TObsDataH hourlyValues, float minimumPercentage)
 
 }
 
-float dailyLeafWetnessComputation(TObsDataH hourlyValues, float minimumPercentage)
+float dailyLeafWetnessComputation(TObsDataH* hourlyValues, float minimumPercentage)
 {
 
     int nData = 0;
@@ -1012,9 +1012,9 @@ float dailyLeafWetnessComputation(TObsDataH hourlyValues, float minimumPercentag
 
     for (int hour = 0; hour < 24; hour++)
     {
-        if (hourlyValues.leafW[hour] == 0 || hourlyValues.leafW[hour] == 1)
+        if (hourlyValues->leafW[hour] == 0 || hourlyValues->leafW[hour] == 1)
         {
-                dailyLeafWetnessRes = dailyLeafWetnessRes + hourlyValues.leafW[hour];
+                dailyLeafWetnessRes = dailyLeafWetnessRes + hourlyValues->leafW[hour];
                 nData = nData + 1;
         }
     }
@@ -1524,14 +1524,14 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
     float res;
     int nrValidValues = 0;
 
-    TObsDataH hourlyValues;
+    TObsDataH* hourlyValues;
 
     Crit3DDate date;
 
     for (int index = 0; index < meteoPoint.nrObsDataDaysH; index++)
     {
         date = meteoPoint.getMeteoPointHourlyValuesDate(index);
-        if (meteoPoint.getMeteoPointValueDayH(date, &hourlyValues))
+        if (meteoPoint.getMeteoPointValueDayH(date, hourlyValues))
         {
             switch(myVar)
             {
