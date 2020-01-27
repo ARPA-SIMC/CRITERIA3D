@@ -4,6 +4,7 @@
 #include <math.h>       /* ceil */
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "climate.h"
 #include "crit3dDate.h"
 #include "utilities.h"
@@ -1523,7 +1524,7 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
     float res;
     int nrValidValues = 0;
 
-    TObsDataH* hourlyValues = nullptr;
+    TObsDataH* hourlyValues;
 
     Crit3DDate date;
 
@@ -1549,16 +1550,14 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
                 default:
                     res = NODATA;
                     break;
-
-                if (res != NODATA)
-                {
-                    nrValidValues += 1;
-                }
             }
+
+            if (! isEqual(res, NODATA)) nrValidValues += 1;
         }
 
         outputValues.push_back(res);
     }
+
     if (nrValidValues > 0)
         return true;
     else

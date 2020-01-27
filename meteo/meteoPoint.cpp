@@ -737,7 +737,7 @@ Crit3DDate Crit3DMeteoPoint::getMeteoPointHourlyValuesDate(int index)
     return obsDataH[index].date;
 }
 
-bool Crit3DMeteoPoint::getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH* hourlyValues)
+bool Crit3DMeteoPoint::getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH* &hourlyValues)
 {
     int d = obsDataH[0].date.daysTo(myDate);
     if (d < 0 || d >= nrObsDataDaysH) return false;

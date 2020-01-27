@@ -540,15 +540,17 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
     {
         case airTemperature: case dailyAirTemperatureAvg: case dailyAirTemperatureMax:
         case dailyAirTemperatureMin: case dailyAirTemperatureRange:
-        case airDewTemperature: case dailyAirDewTemperatureAvg:
+        case airDewTemperature: case dailyAirDewTemperatureAvg: case dailyAirDewTemperatureMin: case dailyAirDewTemperatureMax:
             setTemperatureScale(colorScale);
             break;
         case airRelHumidity: case dailyAirRelHumidityAvg: case dailyAirRelHumidityMax:
         case dailyAirRelHumidityMin: case leafWetness: case dailyLeafWetness:
+        case thom: case dailyThomMax: case dailyThomAvg: case dailyThomHoursAbove: case dailyThomDaytime: case dailyThomNighttime:
             setRelativeHumidityScale(colorScale);
             break;
         case precipitation: case dailyPrecipitation: case referenceEvapotranspiration:
-        case dailyReferenceEvapotranspirationHS: case dailyReferenceEvapotranspirationPM:
+        case dailyReferenceEvapotranspirationHS: case dailyReferenceEvapotranspirationPM: case actualEvaporation:
+        case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
             break;
         case dailyBIC:
@@ -558,6 +560,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             setRadiationScale(colorScale);
             break;
         case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY: case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax: case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
+        case atmPressure:
             setWindIntensityScale(colorScale);
             break;
         case anomaly:
@@ -593,6 +596,18 @@ std::string getVariableString(meteoVariable myVar)
         return "Minimum relative humidity (%)";
     else if (myVar == airDewTemperature || myVar == dailyAirDewTemperatureAvg)
         return "Air dew temperature (°C)";
+    else if (myVar == dailyAirDewTemperatureMax)
+        return "Maximum air dew temperature (°C)";
+    else if (myVar == dailyAirDewTemperatureMin)
+        return "Minimum air dew temperature (°C)";
+    else if (myVar == thom || myVar == dailyThomAvg)
+        return "Thom index ()";
+    else if (myVar == dailyThomDaytime)
+        return "Day Thom index ()";
+    else if (myVar == dailyThomNighttime)
+        return "Night Thom index ()";
+    else if (myVar == dailyThomHoursAbove)
+        return "Hours with Thom index above (h)";
     else if ((myVar == dailyPrecipitation ||  myVar == precipitation))
         return "Precipitation (mm)";
     else if (myVar == dailyGlobalRadiation)
@@ -623,15 +638,17 @@ std::string getVariableString(meteoVariable myVar)
         return "Maximum wind scalar intensity (m s-1)";
     else if (myVar == referenceEvapotranspiration ||
              myVar == dailyReferenceEvapotranspirationHS ||
-             myVar == dailyReferenceEvapotranspirationPM)
+             myVar == dailyReferenceEvapotranspirationPM ||
+             myVar == actualEvaporation)
         return "Reference evapotranspiration (mm)";
     else if (myVar == leafWetness || myVar == dailyLeafWetness)
         return "Leaf wetness (h)";
     else if (myVar == dailyBIC)
         return "Hydroclimatic balance (mm)";
+    else if (myVar == dailyWaterTableDepth)
+        return "Water table depth (mm)";
     else if (myVar == noMeteoTerrain)
         return "Elevation (m)";
-
     else
         return "No variable";
 }
