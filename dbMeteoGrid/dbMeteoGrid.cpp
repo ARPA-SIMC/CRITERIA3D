@@ -1951,6 +1951,9 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyData(QString *myError, QString 
                 QString valueS = QString("'%1'").arg(value);
                 if (value == NODATA)
                     valueS = "NULL";
+                else {
+                    int a =0;
+                }
 
                 int varCode = getHourlyVarCode(meteoVar);
                 statement += QString(" ('%1','%2',%3),").arg(dateTime.toString("yyyy-MM-dd hh:mm")).arg(varCode).arg(valueS);
