@@ -193,6 +193,7 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
         shapePointer->getShape(int(i), myShape);
         shapeParts[i] = myShape.getParts();
 
+        // intialize values
         values[i] = NODATA;
 
         unsigned int nrParts = myShape.getPartCount();
@@ -249,31 +250,82 @@ Crit3DShapeHandler* MapGraphicsShapeObject::getShapePointer()
 }
 
 
-// call AFTER initialize
-void MapGraphicsShapeObject::setValues(QString myField)
+// warning: call after initializeUTM
+void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
 {
-    colorScale->minimum = NODATA;
-    colorScale->maximum = NODATA;
-
+    // set values
+    float firstValue = NODATA;
     for (unsigned int i = 0; i < nrShapes; i++)
     {
-        values[i] = float(shapePointer->getNumericValue(signed(i), myField.toStdString()));
+        values[i] = float(shapePointer->getNumericValue(signed(i), fieldName));
+
         // TODO Fix problem with NULL
         if (isEqual(values[i], 0)) values[i] = NODATA;
 
-        if (! isEqual(values[i], NODATA))
-        {
-            if (isEqual(colorScale->minimum, NODATA))
-            {
-                colorScale->minimum = values[i];
-                colorScale->maximum = values[i];
-            }
-            else
+        if (isEqual(firstValue, NODATA) && (! isEqual(values[i], NODATA)))
+            firstValue = values[i];
+    }
+
+    // set min/max
+    colorScale->minimum = firstValue;
+    colorScale->maximum = firstValue;
+    if (! isEqual(firstValue, NODATA))
+    {
+        for (unsigned int i = 0; i < nrShapes; i++)
+            if (! isEqual(values[i], NODATA))
             {
                 colorScale->minimum = MINVALUE(colorScale->minimum, values[i]);
                 colorScale->maximum = MAXVALUE(colorScale->maximum, values[i]);
             }
+    }
+}
+
+
+int MapGraphicsShapeObject::getCategoryIndex(std::string strValue)
+{
+    for (unsigned int i = 0; i < categories.size(); i++)
+    {
+        if (categories[i] == strValue) return signed(i);
+    }
+    return NODATA;
+}
+
+
+// warning: call after initializeUTM
+void MapGraphicsShapeObject::setCategories(std::string fieldName)
+{
+    // fill categories and set values(index of categories)
+    categories.clear();
+    for (unsigned int i = 0; i < nrShapes; i++)
+    {
+        std::string strValue = shapePointer->getStringValue(signed(i), fieldName);
+
+        if (strValue != "")
+        {
+            int index = getCategoryIndex(strValue);
+            if (index != NODATA)
+            {
+                values[i] = index+1;
+            }
+            else
+            {
+                categories.push_back(strValue);
+                values[i] = categories.size();
+            }
         }
+        else values[i] = NODATA;
+    }
+
+    // define min/max
+    if (! categories.empty())
+    {
+        colorScale->minimum = 1;
+        colorScale->maximum = categories.size();
+    }
+    else
+    {
+        colorScale->minimum = NODATA;
+        colorScale->maximum = NODATA;
     }
 }
 
