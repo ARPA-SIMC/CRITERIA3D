@@ -801,6 +801,6 @@ void Crit3DSoilWidget::updateByTabWR()
 {
     changed = true;
     wrCurveTab->insertElements(&mySoil);
-    horizonsTab->insertSoilHorizons(&mySoil, textureClassList, fittingOptions);
+    horizonsTab->updateTableModel(&mySoil);
 }
 

@@ -141,11 +141,9 @@ bool computeTransmissivityFromTRange(Crit3DMeteoPoint* meteoPoints, int nrMeteoP
             if (transmissivity != NODATA)
             {
                 // save transmissivity data in memory (all daily values)
-                indexDate = -currentTime.date.daysTo(meteoPoints[i].obsDataH->date);
-                int nrDailyValues = hourlyFraction * 24 +1;
-
-                for (int j = 0; j < nrDailyValues; j++)
-                    meteoPoints[i].obsDataH[indexDate].transmissivity[j] = transmissivity;
+                int nrDailyValues = hourlyFraction * 24;
+                for (int h = 1; h <= nrDailyValues; h++)
+                    meteoPoints[i].setMeteoPointValueH(currentTime.date, h, 0, atmTransmissivity, transmissivity);
 
                 //midnight
                 meteoPoints[i].setMeteoPointValueH(currentTime.date.addDays(1),

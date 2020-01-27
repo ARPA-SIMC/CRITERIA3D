@@ -66,79 +66,86 @@
     };
 
     class Crit3DMeteoPoint {
-    public:
-        std::string name;
-        std::string id;
-        std::string dataset;
-        std::string state;
-        std::string region;
-        std::string province;
-        std::string municipality;
+        public:
+            std::string name;
+            std::string id;
+            std::string dataset;
+            std::string state;
+            std::string region;
+            std::string province;
+            std::string municipality;
 
-        std::vector<gis::Crit3DPoint> aggregationPoints;
-        long aggregationPointsMaxNr;
+            std::vector<gis::Crit3DPoint> aggregationPoints;
+            long aggregationPointsMaxNr;
 
-        gis::Crit3DPoint point;
-        double latitude;
-        double longitude;
-        double area;
-        int latInt;
-        int lonInt;
-        bool isInsideDem;
+            gis::Crit3DPoint point;
+            double latitude;
+            double longitude;
+            double area;
+            int latInt;
+            int lonInt;
+            bool isInsideDem;
 
-        bool isUTC;
-        bool isForecast;
-        int hourlyFraction;
-        long nrObsDataDaysH;
-        long nrObsDataDaysD;
-        long nrObsDataDaysM;
-        TObsDataH *obsDataH;
-        TObsDataD *obsDataD;
-        TObsDataM *obsDataM;
-        quality::qualityType quality;
-        float currentValue;
-        float residual;   
-        float elaboration;
+            bool isUTC;
+            bool isForecast;
+            int hourlyFraction;
+            long nrObsDataDaysH;
+            long nrObsDataDaysD;
+            long nrObsDataDaysM;
 
-        float anomaly;
-        float anomalyPercentage;
-        float climate;
-        bool active;
-        bool selected;
+            TObsDataD *obsDataD;
+            TObsDataM *obsDataM;
+            quality::qualityType quality;
+            float currentValue;
+            float residual;
+            float elaboration;
 
-        std::vector <float> proxyValues;
-        lapseRateCodeType lapseRateCode;
-        gis::Crit3DRasterGrid* topographicDistance;
+            float anomaly;
+            float anomalyPercentage;
+            float climate;
+            bool active;
+            bool selected;
 
-        Crit3DMeteoPoint();
+            std::vector <float> proxyValues;
+            lapseRateCodeType lapseRateCode;
+            gis::Crit3DRasterGrid* topographicDistance;
 
-        void initializeObsDataH(int hourlyFraction, int numberOfDays, const Crit3DDate& firstDate);
-        void emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& myDate);
-        void emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
-        void cleanObsDataH();
-        bool isDateLoadedH(const Crit3DDate& myDate);
-        bool isDateIntervalLoadedH(const Crit3DDate& date1, const Crit3DDate& date2);
-        bool isDateIntervalLoadedH(const Crit3DTime& time1, const Crit3DTime& time2);
-        float obsDataConsistencyH(meteoVariable myVar, const Crit3DTime& time1, const Crit3DTime& time2);
+            Crit3DMeteoPoint();
 
-        void initializeObsDataD(int numberOfDays, const Crit3DDate& firstDate);
-        void emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
-        void cleanObsDataD();
-        bool isDateLoadedD(const Crit3DDate& myDate);
-        bool isDateIntervalLoadedD(const Crit3DDate& date1, const Crit3DDate& date2);
+            void initializeObsDataH(int hourlyFraction, int numberOfDays, const Crit3DDate& firstDate);
+            void emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& myDate);
+            void emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
+            void cleanObsDataH();
+            bool isDateLoadedH(const Crit3DDate& myDate);
+            bool isDateIntervalLoadedH(const Crit3DDate& date1, const Crit3DDate& date2);
+            bool isDateIntervalLoadedH(const Crit3DTime& time1, const Crit3DTime& time2);
+            float obsDataConsistencyH(meteoVariable myVar, const Crit3DTime& time1, const Crit3DTime& time2);
 
-        void initializeObsDataM(int numberOfMonths, int month, int year);
-        void cleanObsDataM();
+            void initializeObsDataD(int numberOfDays, const Crit3DDate& firstDate);
+            void emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
+            void cleanObsDataD();
+            bool isDateLoadedD(const Crit3DDate& myDate);
+            bool isDateIntervalLoadedD(const Crit3DDate& date1, const Crit3DDate& date2);
 
-        float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar);
-        bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);
-        float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar);
-        bool setMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, float myValue);
+            void initializeObsDataM(int numberOfMonths, int month, int year);
+            void cleanObsDataM();
 
-        float getMeteoPointValue(const Crit3DTime& myTime, meteoVariable myVar);
+            float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar);
+            bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);
+            float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar);
+            bool setMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, float myValue);
 
-        float getProxyValue(unsigned pos);
-        std::vector <float> getProxyValues();
+            bool getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH *hourlyValues);
+            Crit3DDate getMeteoPointHourlyValuesDate(int index);
+
+            float getMeteoPointValue(const Crit3DTime& myTime, meteoVariable myVar);
+
+            float getProxyValue(unsigned pos);
+            std::vector <float> getProxyValues();
+
+        private:
+            TObsDataH *obsDataH;
+
     };
 
 

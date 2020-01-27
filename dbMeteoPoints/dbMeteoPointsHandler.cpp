@@ -202,10 +202,6 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
                     else if (frequency == hourly)
                     {
                         date = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
-                        if (date.time().hour() == 0)
-                        {
-                            date = date.addDays(-1);
-                        }
                     }
 
                     if (lastDate.isNull() || date > lastDate)
@@ -361,7 +357,7 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
 
     QString tableName = QString::fromStdString(meteoPoint->id) + "_H";
 
-    QString statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATE('%2') AND date_time < DATE('%3', '+1 day')")
+    QString statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATETIME('%2 01:00:00') AND date_time <= DATETIME('%3 00:00:00', '+1 day')")
                                  .arg(tableName).arg(startDate).arg(endDate);
     if( !qry.exec(statement) )
     {
@@ -475,7 +471,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, m
 
     QString tableName = QString::fromStdString(meteoPoint->id) + "_H";
 
-    QString statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3 AND date_time >= DATE('%4') AND date_time <= DATETIME('%5 00:00:00', '+1 day')")
+    QString statement = QString( "SELECT * FROM `%1` WHERE `%2` = %3 AND date_time >= DATETIME('%4 01:00:00') AND date_time <= DATETIME('%5 00:00:00', '+1 day')")
                                  .arg(tableName).arg(FIELD_METEO_VARIABLE).arg(idVar).arg(startDate).arg(endDate);
     if( !qry.exec(statement) )
     {

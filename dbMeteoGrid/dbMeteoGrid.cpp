@@ -1222,7 +1222,9 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyData(QString *myError, QString mete
         return false;
     }
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2` <= '%4' ORDER BY `%2`").arg(tableH).arg(_tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm"));
+    QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2` <= '%4' ORDER BY `%2`")
+                                .arg(tableH).arg(_tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm"));
+
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();
@@ -1519,9 +1521,6 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *myError,
         *myError = "Missing MeteoPoint id";
         return hourlyVarList;
     }
-
-    // take also 00:00 day after
-    last = last.addSecs(3600);
 
     QString statement = QString("SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3` <= '%5' ORDER BY `%3`").arg(tableH).arg(varCode).arg(_tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm"));
     if( !qry.exec(statement) )
