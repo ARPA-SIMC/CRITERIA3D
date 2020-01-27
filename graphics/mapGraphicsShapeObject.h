@@ -39,7 +39,9 @@
         std::vector< std::vector<std::vector<unsigned int>>> holes;
         std::vector< std::vector<GeoBounds>> geoBounds;
         std::vector< std::vector<LatLonPoint>> geoPoints;
-        std::vector< float> values;
+
+        std::vector<float> values;
+        std::vector<std::string> categories;
 
         bool isDrawing;
         bool isFill;
@@ -47,6 +49,7 @@
         void setMapExtents();
         void drawShape(QPainter* myPainter);
         void setPolygon(unsigned int i, unsigned int j, QPolygonF* polygon);
+        int getCategoryIndex(std::string strValue);
 
     protected:
         /*!
@@ -80,13 +83,14 @@
         void clear();
 
         bool initializeUTM(Crit3DShapeHandler* shapePtr);
-        void setValues(QString myField);
+        void setNumericValues(std::string fieldName);
+        void setCategories(std::string fieldName);
+
         void setFill(bool value);
         Crit3DShapeHandler* getShapePointer();
 
         QPointF getPixel(const LatLonPoint &geoPoint);
     };
-
 
 
 #endif // MAPGRAPHICSSHAPEOBJECT_H
