@@ -2184,4 +2184,3 @@ QString Crit3DMeteoGridDbHandler::tableHourlyModel() const
 
 
 
-

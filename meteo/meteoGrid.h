@@ -134,6 +134,7 @@
 
             double aggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab);
 
+            void aggregateHourlyInDaily(meteoVariable myVar, Crit3DDate dateIni, Crit3DDate dateFin);
 
             bool getIsElabValue() const;
             void setIsElabValue(bool isElabValue);
