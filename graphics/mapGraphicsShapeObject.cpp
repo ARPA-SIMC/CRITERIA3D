@@ -102,7 +102,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
     QPainterPath* path;
     QPainterPath* inner;
 
-    myPainter->setPen(Qt::black);
+    myPainter->setPen(Qt::gray);
     myPainter->setBrush(Qt::NoBrush);
 
     for (unsigned long i = 0; i < nrShapes; i++)
