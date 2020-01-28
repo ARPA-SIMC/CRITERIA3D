@@ -82,8 +82,8 @@
             std::vector<std::vector<Crit3DMeteoPoint *> > meteoPoints() const;
             void setMeteoPoints(const std::vector<std::vector<Crit3DMeteoPoint *> > &meteoPoints);
 
-            Crit3DMeteoPoint meteoPoint(int row, int col);
-            Crit3DMeteoPoint* meteoPointPointer(int row, int col);
+            Crit3DMeteoPoint meteoPoint(unsigned row, unsigned col);
+            Crit3DMeteoPoint* meteoPointPointer(unsigned row, unsigned col);
 
             void setActive(unsigned int row, unsigned int col, bool active);
 
@@ -133,8 +133,6 @@
             void aggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute, gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *dataRaster, aggregationMethod elab);
 
             double aggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab);
-
-            void aggregateHourlyInDaily(meteoVariable myVar, Crit3DDate dateIni, Crit3DDate dateFin);
 
             bool getIsElabValue() const;
             void setIsElabValue(bool isElabValue);

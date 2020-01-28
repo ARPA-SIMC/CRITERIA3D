@@ -5,7 +5,7 @@
         #include <vector>
     #endif
 
-    enum meteoComputation { average, stdDev, sum, maxInList, minInList,
+    enum meteoComputation { average, stdDev, sum, maxInList, minInList, timeIntegration,
                             differenceWithThreshold, lastDayBelowThreshold,
                             sumAbove, avgAbove, stdDevAbove,
                             percentile, median, freqPositive,

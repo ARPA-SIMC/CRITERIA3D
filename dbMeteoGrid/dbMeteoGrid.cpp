@@ -15,7 +15,6 @@ Crit3DMeteoGridDbHandler::~Crit3DMeteoGridDbHandler()
     delete _meteoGrid;
 }
 
-
 bool Crit3DMeteoGridDbHandler::parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc, QString *error)
 {
     if (xmlFileName == "")
@@ -2181,6 +2180,4 @@ QString Crit3DMeteoGridDbHandler::tableHourlyModel() const
 {
     return _tableHourlyModel;
 }
-
-
 
