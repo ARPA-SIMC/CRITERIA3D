@@ -1647,7 +1647,7 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
 
     for (date = dateIni; date <= dateFin; date.addDays(1))
     {
-        for (hour = 0; hour < 24; hour++)
+        for (hour = 1; hour <= 24; hour++)
         {
             value = meteoPoint->getMeteoPointValueH(date, hour, 0, hourlyVar);
             values.push_back(value);
