@@ -259,7 +259,7 @@ void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
     {
         values[i] = float(shapePointer->getNumericValue(signed(i), fieldName));
 
-        // TODO Fix problem with NULL
+        // zero equal to null value
         if (isEqual(values[i], 0)) values[i] = NODATA;
 
         if (isEqual(firstValue, NODATA) && (! isEqual(values[i], NODATA)))
