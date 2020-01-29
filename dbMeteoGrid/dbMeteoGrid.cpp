@@ -916,163 +916,161 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
     QString tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
     QString tableH = _tableHourly.prefix + QString::fromStdString(id) + _tableHourly.postFix;
 
-    QString statement = QString("SELECT MIN(`%1`) as minDate, MAX(`%1`) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
-    if( !qry.exec(statement) )
+    QString statement;
+
+    if (_tableDaily.exists)
     {
-        while( qry.lastError().number() == tableNotFoundError)
+        statement = QString("SELECT MIN(`%1`) as minDate, MAX(`%1`) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
+        if( !qry.exec(statement) )
         {
+            while( qry.lastError().number() == tableNotFoundError)
+            {
 
-            if ( col < _gridStructure.header().nrCols-1)
-            {
-                col = col + 1;
-            }
-            else if( row < _gridStructure.header().nrRows-1)
-            {
-                row = row + 1;
-                col = 0;
+                if ( col < _gridStructure.header().nrCols-1)
+                {
+                    col = col + 1;
+                }
+                else if( row < _gridStructure.header().nrRows-1)
+                {
+                    row = row + 1;
+                    col = 0;
+                }
+
+                if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
+                {
+                    *myError = "active cell not found";
+                    return false;
+                }
+                tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
+                tableH = _tableHourly.prefix + QString::fromStdString(id) + _tableHourly.postFix;
+
+                statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
+                qry.exec(statement);
             }
 
-            if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
+            if ( !qry.lastError().type() == QSqlError::NoError && qry.lastError().number() != tableNotFoundError)
             {
-                *myError = "active cell not found";
+                *myError = qry.lastError().text();
                 return false;
             }
-            tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
-            tableH = _tableHourly.prefix + QString::fromStdString(id) + _tableHourly.postFix;
-
-            statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
-            qry.exec(statement);
-        }
-
-        if ( !qry.lastError().type() == QSqlError::NoError && qry.lastError().number() != tableNotFoundError)
-        {
-            *myError = qry.lastError().text();
-            return false;
-        }
-    }
-    else
-    {
-        if (qry.next())
-        {
-            if (getValue(qry.value("minDate"), &temp))
-            {
-                if (temp < minDateD)
-                    minDateD = temp;
-            }
-            else
-            {
-                *myError = "Missing daily fieldTime";
-                return false;
-            }
-
-            if (getValue(qry.value("maxDate"), &temp))
-            {
-                if (temp > maxDateD)
-                    maxDateD = temp;
-            }
-            else
-            {
-                *myError = "Missing daily fieldTime";
-                return false;
-            }
-
         }
         else
         {
-            *myError = "Error: fieldTime not found" ;
-            return false;
-        }
-    }
-
-
-    statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
-    if( !qry.exec(statement) )
-    {
-        while( qry.lastError().number() == tableNotFoundError)
-        {
-
-            if ( col < _gridStructure.header().nrCols-1)
+            if (qry.next())
             {
-                col = col + 1;
-            }
-            else if( row < _gridStructure.header().nrRows-1)
-            {
-                row = row + 1;
-                col = 0;
-            }
+                if (getValue(qry.value("minDate"), &temp))
+                {
+                    if (temp < minDateD)
+                        minDateD = temp;
+                }
+                else
+                {
+                    *myError = "Missing daily fieldTime";
+                    return false;
+                }
 
-            if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
-            {
-                *myError = "active cell not found";
-                return false;
-            }
+                if (getValue(qry.value("maxDate"), &temp))
+                {
+                    if (temp > maxDateD)
+                        maxDateD = temp;
+                }
+                else
+                {
+                    *myError = "Missing daily fieldTime";
+                    return false;
+                }
 
-            tableH = _tableHourly.prefix + QString::fromStdString(id) + _tableHourly.postFix;
-
-            statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
-            qry.exec(statement);
-        }
-        if ( !qry.lastError().type() == QSqlError::NoError && qry.lastError().number() != tableNotFoundError)
-        {
-            *myError = qry.lastError().text();
-            return false;
-        }
-    }
-    else
-    {
-        if (qry.next())
-        {
-            if (getValue(qry.value("minDate"), &temp))
-            {
-                if (temp < minDateH)
-                    minDateH = temp;
             }
             else
             {
-                *myError = "Missing hourly fieldTime";
+                *myError = "Error: fieldTime not found" ;
                 return false;
             }
+        }
+    }
 
-            if (getValue(qry.value("maxDate"), &temp))
+    if (_tableHourly.exists)
+    {
+        statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
+        if( !qry.exec(statement) )
+        {
+            while( qry.lastError().number() == tableNotFoundError)
             {
-                if (temp > maxDateH)
-                    maxDateH = temp;
+
+                if ( col < _gridStructure.header().nrCols-1)
+                {
+                    col = col + 1;
+                }
+                else if( row < _gridStructure.header().nrRows-1)
+                {
+                    row = row + 1;
+                    col = 0;
+                }
+
+                if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
+                {
+                    *myError = "active cell not found";
+                    return false;
+                }
+
+                tableH = _tableHourly.prefix + QString::fromStdString(id) + _tableHourly.postFix;
+
+                statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
+                qry.exec(statement);
             }
-            else
+            if ( !qry.lastError().type() == QSqlError::NoError && qry.lastError().number() != tableNotFoundError)
             {
-                *myError = "Missing hourly fieldTime";
+                *myError = qry.lastError().text();
                 return false;
             }
-
         }
         else
         {
-            *myError = "Error: fieldTime not found" ;
-            return false;
+            if (qry.next())
+            {
+                if (getValue(qry.value("minDate"), &temp))
+                {
+                    if (temp < minDateH)
+                        minDateH = temp;
+                }
+                else
+                {
+                    *myError = "Missing hourly fieldTime";
+                    return false;
+                }
+
+                if (getValue(qry.value("maxDate"), &temp))
+                {
+                    if (temp > maxDateH)
+                        maxDateH = temp;
+                }
+                else
+                {
+                    *myError = "Missing hourly fieldTime";
+                    return false;
+                }
+
+            }
+            else
+            {
+                *myError = "Error: fieldTime not found" ;
+                return false;
+            }
         }
     }
-
 
     // the last hourly day is always incomplete, there is just 00.00 value
     maxDateH = maxDateH.addDays(-1);
 
     if (minDateD < minDateH)
-    {
         _firstDate = minDateD;
-    }
     else
-    {
         _firstDate = minDateH;
-    }
 
     if (maxDateD > maxDateH)
-    {
         _lastDate = maxDateD;
-    }
     else
-    {
         _lastDate = maxDateH;
-    }
 
     return true;
 
