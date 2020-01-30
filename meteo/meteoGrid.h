@@ -110,11 +110,6 @@
             void initMeteoPoints(int nRow, int nCol);
 
             void fillMeteoPoint(unsigned int row, unsigned int col, const std::string &code, const std::string &name, int height, bool active);
-
-            bool fillMeteoPointDailyValue(unsigned row, unsigned col, int numberOfDays, bool initialize, Crit3DDate date, meteoVariable variable, float value);
-            bool fillMeteoPointHourlyValue(unsigned row, unsigned col, int numberOfDays, bool initialize, Crit3DDate date, int  hour, int minute, meteoVariable variable, float value);
-            void fillMeteoPointCurrentDailyValue(unsigned row, unsigned col, Crit3DDate date, meteoVariable variable);
-            void fillMeteoPointCurrentHourlyValue(unsigned row, unsigned col, Crit3DDate date, int hour, int minute, meteoVariable variable);
             void fillCurrentDailyValue(Crit3DDate date, meteoVariable variable);
             void fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable);
 

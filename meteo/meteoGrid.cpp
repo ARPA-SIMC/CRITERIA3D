@@ -270,59 +270,22 @@ void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const s
             gis::getUtmFromLatLon(_gisSettings.utmZone, geoPoint, &utmPoint);
             _meteoPoints[row][col]->point.utm.x = utmPoint.x;
             _meteoPoints[row][col]->point.utm.y = utmPoint.y;
-
         }
     }
-
-}
-
-bool Crit3DMeteoGrid::fillMeteoPointDailyValue(unsigned row, unsigned col, int numberOfDays, bool initialize, Crit3DDate date, meteoVariable variable, float value)
-{
-    if (initialize)
-    {
-        _meteoPoints[row][col]->initializeObsDataD(numberOfDays, date);
-    }
-    return _meteoPoints[row][col]->setMeteoPointValueD(date, variable, value);
-}
-
-bool Crit3DMeteoGrid::fillMeteoPointHourlyValue(unsigned row, unsigned col, int numberOfDays, bool initialize, Crit3DDate date, int  hour, int minute, meteoVariable variable, float value)
-{
-    if (initialize)
-    {
-        int myHourlyFraction = 1;
-        _meteoPoints[row][col]->initializeObsDataH(myHourlyFraction, numberOfDays, date);
-    }
-    return _meteoPoints[row][col]->setMeteoPointValueH(date, hour, minute, variable, value);
-}
-
-void Crit3DMeteoGrid::fillMeteoPointCurrentDailyValue(unsigned row, unsigned col, Crit3DDate date, meteoVariable variable)
-{
-    if (_meteoPoints[row][col]->active && _meteoPoints[row][col]->nrObsDataDaysD != 0)
-        _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueD(date, variable);
-    else
-        _meteoPoints[row][col]->currentValue = NODATA;
 }
 
 void Crit3DMeteoGrid::fillCurrentDailyValue(Crit3DDate date, meteoVariable variable)
 {
-    for (int row = 0; row < _gridStructure.header().nrRows; row++)
-        for (int col = 0; col < _gridStructure.header().nrCols; col++)
-            fillMeteoPointCurrentDailyValue(unsigned(row), unsigned(col), date, variable);
-}
-
-void Crit3DMeteoGrid::fillMeteoPointCurrentHourlyValue(unsigned row, unsigned col, Crit3DDate date, int hour, int minute, meteoVariable variable)
-{
-    if (_meteoPoints[row][col]->active && _meteoPoints[row][col]->nrObsDataDaysH != 0)
-        _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueH(date, hour, minute, variable);
-    else
-        _meteoPoints[row][col]->currentValue = NODATA;
+    for (unsigned row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
+            _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueD(date, variable);
 }
 
 void Crit3DMeteoGrid::fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable)
 {
     for (int row = 0; row < _gridStructure.header().nrRows; row++)
         for(int col = 0; col < _gridStructure.header().nrCols; col++)
-            fillMeteoPointCurrentHourlyValue(unsigned(row), unsigned(col), date, hour, minute, variable);
+            _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueH(date, hour, minute, variable);
 }
 
 void Crit3DMeteoGrid::fillMeteoRaster()
@@ -681,30 +644,19 @@ void Crit3DMeteoGrid::aggregateMeteoGrid(meteoVariable myVar, frequencyType freq
                         if (freq == hourly)
                         {
                             if (_meteoPoints[row][col]->nrObsDataDaysH == 0)
-                            {
-                                initialize = true;
-                            }
-                            else
-                            {
-                                //_meteoPoints[row][col]->obsDataH[0].date = date;
-                                initialize = false;
-                            }
-                            fillMeteoPointHourlyValue(row, col, numberOfDays, initialize, date, hour, minute, myVar, float(myValue));
-                            fillMeteoPointCurrentHourlyValue(row, col, date, hour, minute, myVar);
+                                _meteoPoints[row][col]->initializeObsDataH(1, numberOfDays, date);
+
+                            _meteoPoints[row][col]->setMeteoPointValueH(date, hour, minute, myVar, float(myValue));
+                            _meteoPoints[row][col]->currentValue = float(myValue);
                         }
                         else if (freq == daily)
                         {
                             if (_meteoPoints[row][col]->nrObsDataDaysD == 0)
-                            {
-                                initialize = true;
-                            }
-                            else
-                            {
-                                _meteoPoints[row][col]->obsDataD[0].date = date;
-                                initialize = false;
-                            }
-                            fillMeteoPointDailyValue(row, col, numberOfDays, initialize, date, myVar, float(myValue));
-                            fillMeteoPointCurrentDailyValue(row, col, date, myVar);
+                                _meteoPoints[row][col]->initializeObsDataD(numberOfDays, date);
+
+                            _meteoPoints[row][col]->setMeteoPointValueD(date, myVar, float(myValue));
+                            _meteoPoints[row][col]->currentValue = float(myValue);
+
                         }
                     }
                 }
