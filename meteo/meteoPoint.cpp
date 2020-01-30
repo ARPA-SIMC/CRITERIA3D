@@ -27,6 +27,7 @@
 #include <math.h>
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "meteoPoint.h"
 
 
@@ -842,7 +843,12 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate& myDate, meteoVaria
     else if (myVar == dailyAirTemperatureMin)
         return (obsDataD[i].tMin);
     else if (myVar == dailyAirTemperatureAvg)
-        return (obsDataD[i].tAvg);
+    {   /* todo
+        if (isEqual(obsDataD[i].tAvg, NODATA) && autoTavg && (! isEqual(obsDataD[i].tMin, NODATA && ! isEqual(obsDataD[i].tMax, NODATA))))
+            return ((obsDataD[i].tMin / obsDataD[i].tMax) / 2);
+        else*/
+        return obsDataD[i].tAvg;
+    }
     else if (myVar == dailyPrecipitation)
         return (obsDataD[i].prec);
     else if (myVar == dailyAirRelHumidityMax)
