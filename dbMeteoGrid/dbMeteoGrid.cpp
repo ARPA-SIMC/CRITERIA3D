@@ -1656,7 +1656,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVarFixedFields(QStrin
     return hourlyVarList;
 }
 
-bool Crit3DMeteoGridDbHandler::saveCellGridDailyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate, QList<meteoVariable> meteoVariableList)
+bool Crit3DMeteoGridDbHandler::saveCellGridDailyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
+                                                     QList<meteoVariable> meteoVariableList)
 {
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
