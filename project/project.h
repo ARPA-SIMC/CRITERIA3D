@@ -92,7 +92,6 @@
         Crit3DHourlyMeteoMaps *hourlyMeteoMaps;
 
         gis::Crit3DRasterGrid DEM;
-        gis::Crit3DRasterGrid dataRaster;
 
         Crit3DInterpolationSettings interpolationSettings;
         Crit3DInterpolationSettings qualityInterpolationSettings;

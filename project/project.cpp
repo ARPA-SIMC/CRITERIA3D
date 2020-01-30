@@ -95,7 +95,6 @@ void Project::clearProject()
 
     clearProxyDEM();
     DEM.clear();
-    dataRaster.clear();
 
     delete radiationMaps;
     delete hourlyMeteoMaps;
