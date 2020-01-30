@@ -603,7 +603,7 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(int row, int col, gis::Crit3DR
 }
 
 void Crit3DMeteoGrid::aggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute,
-                                         gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *dataRaster, aggregationMethod elab)
+                                         gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab)
 {
     int numberOfDays = 1;
     int initialize;
@@ -625,8 +625,8 @@ void Crit3DMeteoGrid::aggregateMeteoGrid(meteoVariable myVar, frequencyType freq
                 {
                     double x = _meteoPoints[row][col]->aggregationPoints[i].utm.x;
                     double y = _meteoPoints[row][col]->aggregationPoints[i].utm.y;
-                    float interpolatedValue = gis::getValueFromXY(*dataRaster, x, y);
-                    if (isEqual(interpolatedValue, dataRaster->header->flag) == false)
+                    float interpolatedValue = gis::getValueFromXY(*myRaster, x, y);
+                    if (isEqual(interpolatedValue, myRaster->header->flag) == false)
                     {
                         _meteoPoints[row][col]->aggregationPoints[i].z = double(interpolatedValue);
                         validValues = validValues + 1;
