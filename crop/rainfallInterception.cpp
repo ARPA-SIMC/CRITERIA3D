@@ -51,7 +51,7 @@ namespace canopy {
     }
     double evaporationFromCanopy(double waterFreeEvaporation, double storage,double grossStorage)
     {
-        if (grossStorage < 0.1*storage) return grossStorage;
+        if (grossStorage < 0.01*storage) return grossStorage;
 
         if (grossStorage >= storage) return waterFreeEvaporation;
         else
