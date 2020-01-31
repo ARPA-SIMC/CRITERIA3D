@@ -1576,6 +1576,9 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
     meteoVariable hourlyVar = noMeteoVar;
     meteoComputation elab = noMeteoComp;
 
+    if (meteoPoint->nrObsDataDaysD == 0)
+        meteoPoint->initializeObsDataD(dateIni.daysTo(dateFin)+1, dateIni);
+
     switch(myVar)
     {
         case dailyAirTemperatureAvg:
