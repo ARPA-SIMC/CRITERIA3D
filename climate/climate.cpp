@@ -1568,7 +1568,6 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
 bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin, Crit3DMeteoSettings *meteoSettings)
 {
 
-    int nrValidValues = 0;
     Crit3DDate date;
     std::vector <float> values;
     float value, dailyValue;
@@ -1648,13 +1647,12 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
 
     if (hourlyVar == noMeteoVar || elab == noMeteoComp) return false;
 
-    for (date = dateIni; date <= dateFin; date.addDays(1))
+    for (date = dateIni; date <= dateFin; date = date.addDays(1))
     {
         for (hour = 1; hour <= 24; hour++)
         {
             value = meteoPoint->getMeteoPointValueH(date, hour, 0, hourlyVar);
             values.push_back(value);
-            if (! isEqual(value, NODATA)) nrValidValues++;
         }
 
         dailyValue = statisticalElab(elab, NODATA, values, values.size(), NODATA);
