@@ -606,7 +606,6 @@ void Crit3DMeteoGrid::aggregateMeteoGrid(meteoVariable myVar, frequencyType freq
                                          gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab)
 {
     int numberOfDays = 1;
-    int initialize;
 
     if (!_isAggregationDefined)
     {
