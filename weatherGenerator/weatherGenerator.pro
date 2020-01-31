@@ -9,7 +9,8 @@
 #---------------------------------------------------------------------
 
 
-QT  += xml gui
+QT      += xml
+QT      -= gui
 
 TEMPLATE = lib
 CONFIG += staticlib
