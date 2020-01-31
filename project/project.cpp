@@ -1051,6 +1051,8 @@ void Project::loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo)
 
 bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showInfo)
 {
+    if (! meteoGridDbHandler->tableDaily().exists) return false;
+
     std::string id;
     int count = 0;
 
@@ -1109,6 +1111,8 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
     int count = 0;
     FormInfo myInfo;
     int infoStep = 1;
+
+    if (! meteoGridDbHandler->tableHourly().exists) return false;
 
     if (showInfo)
     {
