@@ -42,10 +42,10 @@ Crit3DRadiationMaps::Crit3DRadiationMaps()
     globalRadiationMap = new gis::Crit3DRasterGrid;
     beamRadiationMap = new gis::Crit3DRasterGrid;
     diffuseRadiationMap = new gis::Crit3DRasterGrid;
+    sunElevationMap = new gis::Crit3DRasterGrid;
 
     /*
     linkeMap = new gis::Crit3DRasterGrid;
-    sunElevationMap = new gis::Crit3DRasterGrid;
     albedoMap = new gis::Crit3DRasterGrid;
     reflectedRadiationMap = new gis::Crit3DRasterGrid;
     sunAzimuthMap = new gis::Crit3DRasterGrid;
@@ -79,9 +79,10 @@ Crit3DRadiationMaps::Crit3DRadiationMaps(const gis::Crit3DRasterGrid& myDEM, con
     diffuseRadiationMap = new gis::Crit3DRasterGrid;
     diffuseRadiationMap->initializeGrid(myDEM);
 
-    /*
     sunElevationMap = new gis::Crit3DRasterGrid;
     sunElevationMap->initializeGrid(myDEM);
+
+    /*
     albedoMap = new gis::Crit3DRasterGrid;
     linkeMap = new gis::Crit3DRasterGrid;
     reflectedRadiationMap = new gis::Crit3DRasterGrid;
@@ -116,9 +117,9 @@ void Crit3DRadiationMaps::clear()
     globalRadiationMap->clear();
     beamRadiationMap->clear();
     diffuseRadiationMap->clear();
+    sunElevationMap->clear();
 
     /*
-    sunElevationMap->clear();
     albedoMap->clear();
     linkeMap->clear();
     reflectedRadiationMap->clear();
@@ -135,9 +136,9 @@ void Crit3DRadiationMaps::clear()
     delete globalRadiationMap;
     delete beamRadiationMap;
     delete diffuseRadiationMap;
+    delete sunElevationMap;
 
     /*
-    delete sunElevationMap;
     delete albedoMap;
     delete linkeMap;
     delete reflectedRadiationMap;
@@ -840,9 +841,9 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
                     radiationMaps->sunIncidenceMap->value[myRow][myCol] = mySunPosition.incidence;
                     radiationMaps->sunShadowMap->value[myRow][myCol] = float((mySunPosition.shadow) ?  0 : 1);
                     radiationMaps->reflectedRadiationMap->value[myRow][myCol] = float(myRadPoint.reflected);
-                    radiationMaps->sunElevationMap->value[myRow][myCol] = mySunPosition.elevation;
                     */
 
+                    radiationMaps->sunElevationMap->value[myRow][myCol] = mySunPosition.elevation;
                     radiationMaps->globalRadiationMap->value[myRow][myCol] = float(myRadPoint.global);
                     radiationMaps->beamRadiationMap->value[myRow][myCol] = float(myRadPoint.beam);
                     radiationMaps->diffuseRadiationMap->value[myRow][myCol] = float(myRadPoint.diffuse);
@@ -856,9 +857,9 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
         gis::updateMinMaxRasterGrid(radiationMaps->sunIncidenceMap);
         gis::updateMinMaxRasterGrid(radiationMaps->sunShadowMap);
         gis::updateMinMaxRasterGrid(radiationMaps->reflectedRadiationMap);
-        gis::updateMinMaxRasterGrid(radiationMaps->sunElevationMap);
         */
 
+        gis::updateMinMaxRasterGrid(radiationMaps->sunElevationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->transmissivityMap);
         gis::updateMinMaxRasterGrid(radiationMaps->globalRadiationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->beamRadiationMap);
