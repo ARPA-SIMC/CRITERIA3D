@@ -602,7 +602,7 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(int row, int col, gis::Crit3DR
     }
 }
 
-void Crit3DMeteoGrid::aggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute,
+void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute,
                                          gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab)
 {
     int numberOfDays = 1;
@@ -638,7 +638,7 @@ void Crit3DMeteoGrid::aggregateMeteoGrid(meteoVariable myVar, frequencyType freq
                     if ( (validValues / _meteoPoints[row][col]->aggregationPointsMaxNr) > ( GRID_MIN_COVERAGE / 100 ) )
                     {
 
-                        double myValue = aggregateMeteoGridPoint(*(_meteoPoints[row][col]), elab);
+                        double myValue = spatialAggregateMeteoGridPoint(*(_meteoPoints[row][col]), elab);
 
                         if (freq == hourly)
                         {
@@ -666,7 +666,7 @@ void Crit3DMeteoGrid::aggregateMeteoGrid(meteoVariable myVar, frequencyType freq
 }
 
 
-double Crit3DMeteoGrid::aggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab)
+double Crit3DMeteoGrid::spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab)
 {
 
     std::vector <double> validValues;

@@ -125,9 +125,9 @@
 
             void assignCellAggregationPoints(int row, int col, gis::Crit3DRasterGrid* myDEM, bool excludeNoData);
 
-            void aggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute, gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab);
+            void spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute, gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab);
 
-            double aggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab);
+            double spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab);
 
             bool getIsElabValue() const;
             void setIsElabValue(bool isElabValue);
