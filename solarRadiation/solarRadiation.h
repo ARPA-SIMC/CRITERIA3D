@@ -21,8 +21,10 @@
         gis::Crit3DRasterGrid* transmissivityMap;
         gis::Crit3DRasterGrid* globalRadiationMap;
 
-        /*
+        // for vine3d
         gis::Crit3DRasterGrid* sunElevationMap;
+
+        /*
         gis::Crit3DRasterGrid* linkeMap;
         gis::Crit3DRasterGrid* albedoMap;
         gis::Crit3DRasterGrid* reflectedRadiationMap;
