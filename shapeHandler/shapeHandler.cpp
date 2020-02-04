@@ -460,7 +460,6 @@ void Crit3DShapeHandler::packDBF(std::string newFile)
     DBFHandle hDBF;
     hDBF = DBFCreate(newFile.c_str());
 
-
     // copy fields
     for(unsigned int i = 0; i < unsigned(m_fields); i++ )
     {
