@@ -129,6 +129,8 @@ gis::Crit3DRasterGrid* Crit3DDailyMeteoMaps::getMapFromVar(meteoVariable myVar)
         return mapDailyRHMax;
     else if (myVar == dailyAirRelHumidityMin)
         return mapDailyRHMin;
+    else if (myVar == dailyReferenceEvapotranspirationHS)
+        return mapDailyET0HS;
     else if (myVar == dailyLeafWetness)
         return mapDailyLeafW;
     else
