@@ -87,12 +87,13 @@ bool Crit3DDailyMeteoMaps::computeHSET0Map(gis::Crit3DGisSettings* gisSettings, 
 bool Crit3DDailyMeteoMaps::fixDailyThermalConsistency()
 {
     if (! mapDailyTMax->isLoaded || ! mapDailyTMin->isLoaded) return true;
+    if ( mapDailyTMax->getMapTime() != mapDailyTMin->getMapTime()) return true;
 
     float TRange = NODATA;
     unsigned row, col;
 
     for (row = 0; row < unsigned(mapDailyTMax->header->nrRows); row++)
-        for (col = 0; col < unsigned(mapDailyTMax->header->nrCols); row++)
+        for (col = 0; col < unsigned(mapDailyTMax->header->nrCols); col++)
         {
             if (! isEqual(mapDailyTMax->value[row][col], mapDailyTMax->header->flag) &&
                 ! isEqual(mapDailyTMin->value[row][col], mapDailyTMin->header->flag))
