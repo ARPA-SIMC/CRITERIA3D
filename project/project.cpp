@@ -999,7 +999,7 @@ bool Project::loadAggregationdDB(QString dbName)
     return true;
 }
 
-bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool showInfo)
+bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
@@ -1023,16 +1023,13 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool showInfo
             if ((i % step) == 0) myInfo.setValue(i);
         }
 
-        if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i])))
-        {
-            isData = true;
-        }
+        if (loadHourly)
+            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
 
-        if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i])))
-        {
-            isData = true;
-        }
+        if (loadDaily)
+            if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
     }
+
     if (showInfo) myInfo.close();
 
     return isData;

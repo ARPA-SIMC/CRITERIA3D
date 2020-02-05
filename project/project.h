@@ -154,7 +154,7 @@
 
         bool loadDEM(QString myFileName);
         void closeDEM();
-        bool loadMeteoPointsData(QDate firstDate, QDate lastDate, bool showInfo);
+        bool loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo);
         bool loadMeteoPointsDB(QString dbName);
         bool loadMeteoGridDB(QString xmlName);
         bool loadAggregationdDB(QString dbName);
