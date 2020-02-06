@@ -450,6 +450,16 @@ void Crit3DMeteoPoint::cleanObsDataM()
 
 bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue)
 {
+    //check
+    if (myVar == noMeteoVar)
+    {
+        return NODATA;
+    }
+    if (obsDataH == nullptr)
+    {
+        return NODATA;
+    }
+
     // day index
     int i = obsDataH[0].date.daysTo(myDate);
 
@@ -569,56 +579,68 @@ float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour
     }
 
     // day index
-    int d = obsDataH[0].date.daysTo(myDate);
-    if (d < 0 || d >= nrObsDataDaysH)
+    int i = obsDataH[0].date.daysTo(myDate);
+
+    //check if out of range (accept +1 date exceed)
+    if (i < 0 || i > nrObsDataDaysH) return false;
+
+    //if +1 date exceed accept only hour 00:00
+    if (i == nrObsDataDaysH && myHour != 0) return false;
+
+    // sub hourly index
+    int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
+
+    // hour 0 becomes hour 24 of the previous day
+    if (myHour == 0 && subH == 0)
     {
-        return NODATA;
+        myHour = 24;
+        i--;
+        if (i < 0) return false;
     }
 
-    // hour index
-    int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
+    // (sub)hour index
     int j = hourlyFraction * myHour + subH - 1;
-    if (j < 0 || j > hourlyFraction * 24 - 1) return NODATA;
+    if (j < 0 || j >= hourlyFraction * 24) return false;
 
     if (myVar == airTemperature)
-        return (obsDataH[d].tAir[j]);
+        return (obsDataH[i].tAir[j]);
     else if (myVar == precipitation)
-        return (obsDataH[d].prec[j]);
+        return (obsDataH[i].prec[j]);
     else if (myVar == airRelHumidity)
-        return (obsDataH[d].rhAir[j]);
+        return (obsDataH[i].rhAir[j]);
     else if (myVar == airDewTemperature)
     {
-        if (int(obsDataH[d].tDew[j]) != int(NODATA))
-            return obsDataH[d].tDew[j];
+        if (int(obsDataH[i].tDew[j]) != int(NODATA))
+            return obsDataH[i].tDew[j];
         else
-            return tDewFromRelHum(obsDataH[d].rhAir[j], obsDataH[d].tAir[j]);
+            return tDewFromRelHum(obsDataH[i].rhAir[j], obsDataH[i].tAir[j]);
     }
     else if (myVar == globalIrradiance)
-        return (obsDataH[d].irradiance[j]);
+        return (obsDataH[i].irradiance[j]);
     else if (myVar == referenceEvapotranspiration)
-        return (obsDataH[d].et0[j]);
+        return (obsDataH[i].et0[j]);
     else if (myVar == windScalarIntensity)
-        return (obsDataH[d].windScalInt[j]);
+        return (obsDataH[i].windScalInt[j]);
     else if (myVar == windVectorIntensity)
-        return (obsDataH[d].windVecInt[j]);
+        return (obsDataH[i].windVecInt[j]);
     else if (myVar == windVectorDirection)
-        return (obsDataH[d].windVecDir[j]);
+        return (obsDataH[i].windVecDir[j]);
     else if (myVar == windVectorX)
     {
         float u = NODATA, v = NODATA;
-        computeWindCartesian(obsDataH[d].windVecInt[j], obsDataH[d].windVecDir[j], &u, &v);
+        computeWindCartesian(obsDataH[i].windVecInt[j], obsDataH[i].windVecDir[j], &u, &v);
         return u;
     }
     else if (myVar == windVectorY)
     {
         float u = NODATA, v = NODATA;
-        computeWindCartesian(obsDataH[d].windVecInt[j], obsDataH[d].windVecDir[j], &u, &v);
+        computeWindCartesian(obsDataH[i].windVecInt[j], obsDataH[i].windVecDir[j], &u, &v);
         return v;
     }
     else if (myVar == leafWetness)
-        return float(obsDataH[d].leafW[j]);
+        return float(obsDataH[i].leafW[j]);
     else if (myVar == atmTransmissivity)
-        return (obsDataH[d].transmissivity[j]);
+        return (obsDataH[i].transmissivity[j]);
     else
     {
         return (NODATA);
