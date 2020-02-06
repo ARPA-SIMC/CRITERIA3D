@@ -1945,7 +1945,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyData(QString *myError, QString 
         foreach (meteoVariable meteoVar, meteoVariableList)
             if (getVarFrequency(meteoVar) == hourly)
             {
-                for (QDateTime myTime = firstTime; myTime < lastTime; myTime = myTime.addSecs(3600))
+                for (QDateTime myTime = firstTime; myTime <= lastTime; myTime = myTime.addSecs(3600))
                 {
                     float value = meteoGrid()->meteoPoint(row,col).getMeteoPointValueH(getCrit3DDate(myTime.date()), myTime.time().hour(), myTime.time().minute(), meteoVar);
                     QString valueS = QString("'%1'").arg(value);
@@ -1994,7 +1994,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataFF(QString *myError, QStrin
     {
         statement =  QString(("REPLACE INTO `%1` VALUES")).arg(tableH);
 
-        for (QDateTime myTime = firstTime; myTime < lastTime; myTime = myTime.addSecs(3600))
+        for (QDateTime myTime = firstTime; myTime <= lastTime; myTime = myTime.addSecs(3600))
         {
             statement += QString(" ('%1',").arg(myTime.toString("yyyy-MM-dd hh:mm"));
             for (unsigned int j = 0; j < _tableHourly.varcode.size(); j++)
