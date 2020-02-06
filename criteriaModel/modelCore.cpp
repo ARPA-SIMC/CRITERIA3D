@@ -48,7 +48,7 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString* myError)
     if (! myCase->loadMeteo(myUnit->idMeteo, myUnit->idForecast, myError))
         return false;
 
-    if (! loadCropParameters(myUnit->idCrop, &(myCase->myCrop), &(myCase->dbParameters), myError))
+    if (! loadCropParameters(myUnit->idCrop, &(myCase->myCrop), &(myCase->dbCrop), myError))
         return false;
 
     if (! myCase->isSeasonalForecast)
