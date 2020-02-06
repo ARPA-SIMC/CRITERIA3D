@@ -66,6 +66,7 @@ bool computeTransmissivity(Crit3DRadiationSettings* mySettings, Crit3DMeteoPoint
     {
         float myRad = meteoPoints[i].getMeteoPointValueH(myTime.date, myTime.getHour(),
                                                          myTime.getMinutes(), globalIrradiance);
+
         if (myRad != NODATA)
         {
             myIndex = 0;

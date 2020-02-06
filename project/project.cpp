@@ -95,7 +95,6 @@ void Project::clearProject()
 
     clearProxyDEM();
     DEM.clear();
-    dataRaster.clear();
 
     delete radiationMaps;
     delete hourlyMeteoMaps;
@@ -1000,7 +999,7 @@ bool Project::loadAggregationdDB(QString dbName)
     return true;
 }
 
-bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool showInfo)
+bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
@@ -1024,16 +1023,13 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool showInfo
             if ((i % step) == 0) myInfo.setValue(i);
         }
 
-        if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i])))
-        {
-            isData = true;
-        }
+        if (loadHourly)
+            if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
 
-        if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i])))
-        {
-            isData = true;
-        }
+        if (loadDaily)
+            if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
     }
+
     if (showInfo) myInfo.close();
 
     return isData;
@@ -1052,6 +1048,8 @@ void Project::loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo)
 
 bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showInfo)
 {
+    if (! meteoGridDbHandler->tableDaily().exists) return false;
+
     std::string id;
     int count = 0;
 
@@ -1110,6 +1108,8 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
     int count = 0;
     FormInfo myInfo;
     int infoStep = 1;
+
+    if (! meteoGridDbHandler->tableHourly().exists) return false;
 
     if (showInfo)
     {
@@ -1543,11 +1543,14 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
 
     // at least a meteoPoint with transmissivity data
     if (! computeTransmissivity(&radSettings, meteoPoints, nrMeteoPoints, intervalWidth, myTime, DEM))
+    {
+        // TODO: add flag to parameters. Could be NOT wanted
         if (! computeTransmissivityFromTRange(meteoPoints, nrMeteoPoints, myTime))
         {
-            logError("Function interpolateRasterRadiation: it is not possible to compute transmissivity.");
+            logError("Function interpolateDemRadiation: cannot compute transmissivity.");
             return false;
         }
+    }
 
     if (! checkAndPassDataToInterpolation(quality, atmTransmissivity, meteoPoints, nrMeteoPoints,
                                         myTime, &qualityInterpolationSettings,
@@ -1602,8 +1605,8 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
 
     if (myVar == globalIrradiance)
     {
-        Crit3DTime measureTime = myTime.addSeconds(-1800);
-        return interpolateDemRadiation(measureTime, myRaster, showInfo);
+        Crit3DTime halfHour = myTime.addSeconds(-1800);
+        return interpolateDemRadiation(halfHour, myRaster, showInfo);
     }
     else
     {

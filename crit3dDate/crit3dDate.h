@@ -70,6 +70,7 @@
         bool isEqual(const Crit3DTime&) const;
 
         int getHour() const;
+        int getNearestHour() const;
         int getMinutes() const;
         int getSeconds() const;
 

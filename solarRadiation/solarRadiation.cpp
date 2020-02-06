@@ -842,10 +842,12 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
                     radiationMaps->sunShadowMap->value[myRow][myCol] = float((mySunPosition.shadow) ?  0 : 1);
                     radiationMaps->reflectedRadiationMap->value[myRow][myCol] = float(myRadPoint.reflected);
                     */
+
+                    radiationMaps->sunElevationMap->value[myRow][myCol] = mySunPosition.elevation;
                     radiationMaps->globalRadiationMap->value[myRow][myCol] = float(myRadPoint.global);
                     radiationMaps->beamRadiationMap->value[myRow][myCol] = float(myRadPoint.beam);
                     radiationMaps->diffuseRadiationMap->value[myRow][myCol] = float(myRadPoint.diffuse);
-                    radiationMaps->sunElevationMap->value[myRow][myCol] = mySunPosition.elevation;
+
                 }
             }
         }
@@ -854,20 +856,20 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
         gis::updateMinMaxRasterGrid(radiationMaps->sunAzimuthMap);
         gis::updateMinMaxRasterGrid(radiationMaps->sunIncidenceMap);
         gis::updateMinMaxRasterGrid(radiationMaps->sunShadowMap);
-        gis::updateMinMaxRasterGrid(radiationMaps->reflectedRadiationMap);        
+        gis::updateMinMaxRasterGrid(radiationMaps->reflectedRadiationMap);
         */
 
+        gis::updateMinMaxRasterGrid(radiationMaps->sunElevationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->transmissivityMap);
         gis::updateMinMaxRasterGrid(radiationMaps->globalRadiationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->beamRadiationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->diffuseRadiationMap);
-        gis::updateMinMaxRasterGrid(radiationMaps->sunElevationMap);
+
 
         radiationMaps->transmissivityMap->setMapTime(myTime);
         radiationMaps->globalRadiationMap->setMapTime(myTime);
         radiationMaps->beamRadiationMap->setMapTime(myTime);
         radiationMaps->diffuseRadiationMap->setMapTime(myTime);
-        radiationMaps->sunElevationMap->setMapTime(myTime);
 
         radiationMaps->setComputed(true);
         return true;

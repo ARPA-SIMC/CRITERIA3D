@@ -134,10 +134,8 @@
             bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);
             float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar);
             bool setMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, float myValue);
-
             bool getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH *&hourlyValues);
             Crit3DDate getMeteoPointHourlyValuesDate(int index);
-
             float getMeteoPointValue(const Crit3DTime& myTime, meteoVariable myVar);
 
             float getProxyValue(unsigned pos);

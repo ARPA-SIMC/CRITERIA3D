@@ -146,7 +146,7 @@ float computeTminHourlyWeight(int myHour)
 float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTime myTime)
 {
     Crit3DDate myDate = myTime.date;
-    int myHour = myTime.getHour();
+    int myHour = myTime.getNearestHour();
 
     // TODO improve!
     if (myDate == getNullDate() || myHour == NODATA)

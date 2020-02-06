@@ -52,6 +52,11 @@ int Crit3DTime::getHour() const
     return (time / 3600);
 }
 
+int Crit3DTime::getNearestHour() const
+{
+    return int(round(time / 3600));
+}
+
 int Crit3DTime::getMinutes() const
 {
     return (time - getHour()*3600) / 60;

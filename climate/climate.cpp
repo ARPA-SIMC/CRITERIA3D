@@ -1565,6 +1565,103 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
 
 }
 
+bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin, Crit3DMeteoSettings *meteoSettings)
+{
+
+    Crit3DDate date;
+    std::vector <float> values;
+    float value, dailyValue;
+    short hour;
+    meteoVariable hourlyVar = noMeteoVar;
+    meteoComputation elab = noMeteoComp;
+
+    if (meteoPoint->nrObsDataDaysD == 0)
+        meteoPoint->initializeObsDataD(dateIni.daysTo(dateFin)+1, dateIni);
+
+    switch(myVar)
+    {
+        case dailyAirTemperatureAvg:
+            hourlyVar = airTemperature;
+            elab = average;
+            break;
+
+        case dailyAirTemperatureMax:
+            hourlyVar = airTemperature;
+            elab = maxInList;
+            break;
+
+        case dailyAirTemperatureMin:
+            hourlyVar = airTemperature;
+            elab = minInList;
+            break;
+
+        case dailyPrecipitation:
+            hourlyVar = precipitation;
+            elab = sum;
+            break;
+
+        case dailyAirRelHumidityAvg:
+            hourlyVar = airRelHumidity;
+            elab = average;
+            break;
+
+        case dailyAirRelHumidityMax:
+            hourlyVar = airRelHumidity;
+            elab = maxInList;
+            break;
+
+        case dailyAirRelHumidityMin:
+            hourlyVar = airRelHumidity;
+            elab = minInList;
+            break;
+
+        case dailyGlobalRadiation:
+            hourlyVar = globalIrradiance;
+            elab = timeIntegration;
+            break;
+
+        case dailyWindScalarIntensityAvg:
+            hourlyVar = windScalarIntensity;
+            elab = average;
+            break;
+
+        case dailyWindScalarIntensityMax:
+            hourlyVar = windScalarIntensity;
+            elab = maxInList;
+            break;
+
+        case dailyReferenceEvapotranspirationPM:
+            hourlyVar = referenceEvapotranspiration;
+            elab = sum;
+            break;
+
+        case dailyLeafWetness:
+            hourlyVar = leafWetness;
+            elab = sum;
+            break;
+
+        default:
+            hourlyVar = noMeteoVar;
+            break;
+    }
+
+    if (hourlyVar == noMeteoVar || elab == noMeteoComp) return false;
+
+    for (date = dateIni; date <= dateFin; date = date.addDays(1))
+    {
+        for (hour = 1; hour <= 24; hour++)
+        {
+            value = meteoPoint->getMeteoPointValueH(date, hour, 0, hourlyVar);
+            values.push_back(value);
+        }
+
+        dailyValue = statisticalElab(elab, NODATA, values, values.size(), NODATA);
+        meteoPoint->setMeteoPointValueD(date, myVar, dailyValue);
+    }
+
+    return true;
+
+}
 
 bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid, meteoVariable variable, meteoComputation elab1,
     QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings, Crit3DElaborationSettings* elabSettings)
@@ -3879,3 +3976,6 @@ bool appendXMLAnomaly(Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QS
     return true;
 
 }
+
+
+

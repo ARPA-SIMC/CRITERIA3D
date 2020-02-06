@@ -82,8 +82,8 @@
             std::vector<std::vector<Crit3DMeteoPoint *> > meteoPoints() const;
             void setMeteoPoints(const std::vector<std::vector<Crit3DMeteoPoint *> > &meteoPoints);
 
-            Crit3DMeteoPoint meteoPoint(int row, int col);
-            Crit3DMeteoPoint* meteoPointPointer(int row, int col);
+            Crit3DMeteoPoint meteoPoint(unsigned row, unsigned col);
+            Crit3DMeteoPoint* meteoPointPointer(unsigned row, unsigned col);
 
             void setActive(unsigned int row, unsigned int col, bool active);
 
@@ -110,11 +110,6 @@
             void initMeteoPoints(int nRow, int nCol);
 
             void fillMeteoPoint(unsigned int row, unsigned int col, const std::string &code, const std::string &name, int height, bool active);
-
-            bool fillMeteoPointDailyValue(unsigned row, unsigned col, int numberOfDays, bool initialize, Crit3DDate date, meteoVariable variable, float value);
-            bool fillMeteoPointHourlyValue(unsigned row, unsigned col, int numberOfDays, bool initialize, Crit3DDate date, int  hour, int minute, meteoVariable variable, float value);
-            void fillMeteoPointCurrentDailyValue(unsigned row, unsigned col, Crit3DDate date, meteoVariable variable);
-            void fillMeteoPointCurrentHourlyValue(unsigned row, unsigned col, Crit3DDate date, int hour, int minute, meteoVariable variable);
             void fillCurrentDailyValue(Crit3DDate date, meteoVariable variable);
             void fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable);
 
@@ -130,10 +125,9 @@
 
             void assignCellAggregationPoints(int row, int col, gis::Crit3DRasterGrid* myDEM, bool excludeNoData);
 
-            void aggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute, gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *dataRaster, aggregationMethod elab);
+            void spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute, gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab);
 
-            double aggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab);
-
+            double spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab);
 
             bool getIsElabValue() const;
             void setIsElabValue(bool isElabValue);
