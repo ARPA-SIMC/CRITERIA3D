@@ -56,8 +56,8 @@
         QString idMeteo;
         QString idForecast;
         QString idCropClass;
+        int idCropNumber;
         int idSoilNumber;
-        int idICM;              // for MOSES
 
         CriteriaUnit();
     };
@@ -69,7 +69,7 @@
         QString idCase;
 
         // DATABASE
-        QSqlDatabase dbParameters;
+        QSqlDatabase dbCrop;
         QSqlDatabase dbSoil;
         QSqlDatabase dbMeteo;
         QSqlDatabase dbForecast;

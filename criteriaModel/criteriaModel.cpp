@@ -53,7 +53,7 @@ CriteriaUnit::CriteriaUnit()
     this->idCropClass = "";
     this->idForecast = "";
     this->idSoilNumber = NODATA;
-    this->idICM = NODATA;
+    this->idCropNumber = NODATA;
 }
 
 
