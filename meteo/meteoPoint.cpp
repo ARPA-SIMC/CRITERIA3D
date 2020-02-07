@@ -582,10 +582,10 @@ float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour
     int i = obsDataH[0].date.daysTo(myDate);
 
     //check if out of range (accept +1 date exceed)
-    if (i < 0 || i > nrObsDataDaysH) return false;
+    if (i < 0 || i > nrObsDataDaysH) return NODATA;
 
     //if +1 date exceed accept only hour 00:00
-    if (i == nrObsDataDaysH && myHour != 0) return false;
+    if (i == nrObsDataDaysH && myHour != 0) return NODATA;
 
     // sub hourly index
     int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
@@ -595,7 +595,7 @@ float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour
     {
         myHour = 24;
         i--;
-        if (i < 0) return false;
+        if (i < 0) return NODATA;
     }
 
     // (sub)hour index
