@@ -960,6 +960,9 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     this->meteoGridDbHandler->updateGridDate(&errorString);
 
+    if (loadGridDataAtStart)
+        setCurrentDate(meteoGridDbHandler->lastDate());
+
     meteoGridLoaded = true;
     logInfo("Meteo Grid = " + xmlName);
 
@@ -1182,7 +1185,13 @@ QDateTime Project::findDbPointFirstTime()
 void Project::checkMeteoPointsDEM()
 {
     for (int i=0; i < nrMeteoPoints; i++)
-        meteoPoints[i].isInsideDem = ! gis::isOutOfGridXY(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, DEM.header);
+    {
+        if (! gis::isOutOfGridXY(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, DEM.header)
+                && (! isEqual(gis::getValueFromXY(DEM, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y), DEM.header->flag)))
+             meteoPoints[i].isInsideDem = true;
+        else
+            meteoPoints[i].isInsideDem = false;
+    }
 }
 
 
