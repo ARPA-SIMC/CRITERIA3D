@@ -781,7 +781,9 @@ bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError)
     _db.setDatabaseName(_connection.name);
     _db.setUserName(_connection.user);
     _db.setPassword(_connection.password);
-    //_db.setConnectOptions();
+    // TODO problem with ssl connection
+    _db.setConnectOptions();
+
     if (!_db.open())
     {
        *myError = "Connection with database fail.\n" + _db.lastError().text();
