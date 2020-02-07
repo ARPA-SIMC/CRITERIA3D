@@ -124,7 +124,7 @@
         void clearProxyDEM();
         bool checkProxy(QString name_, QString gridName_, QString table_, QString field_, QString *error);
         void addProxyToProject(QString name_, QString gridName_, QString table_, QString field_, bool isForQuality_, bool isActive_);
-        bool addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears);
+        void addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears);
         void setCurrentDate(QDate myDate);
         void setCurrentHour(int myHour);
         void setCurrentVariable(meteoVariable variable);

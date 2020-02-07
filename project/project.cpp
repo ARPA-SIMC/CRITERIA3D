@@ -195,31 +195,17 @@ void Project::addProxyToProject(QString name_, QString gridName_, QString table_
 }
 
 
-bool Project::addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears)
+void Project::addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears)
 {
+    // no check on grids
     std::string myError;
 
     Crit3DProxyGridSeries mySeries(name_);
 
-    gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
-
     for (unsigned i=0; i < gridNames.size(); i++)
-    {
-        logInfo("Checking grid " + gridNames[i] + " for proxy " + name_ + " (" + QString::number(i+1) + "/" + QString::number(gridNames.size()) + ")");
-
-        if (gis::readEsriGrid(getCompleteFileName(gridNames[i], PATH_GEO).toStdString(), myGrid, &myError))
-            mySeries.addGridToSeries(gridNames[i], signed(gridYears[i]));
-        else {
-            errorString = "Grid " + gridNames[i] + " not found";
-            return false;
-        }
-    }
+        mySeries.addGridToSeries(gridNames[i], signed(gridYears[i]));
 
     proxyGridSeries.push_back(mySeries);
-
-    myGrid->clear();
-
-    return true;
 }
 
 bool Project::loadParameters(QString parametersFileName)
@@ -624,8 +610,7 @@ bool Project::loadParameters(QString parametersFileName)
             parameters->endArray();
             parameters->endGroup();
 
-            if (! addProxyGridSeries(proxyName, proxyGridSeriesNames, proxyGridSeriesYears))
-                logError();
+            addProxyGridSeries(proxyName, proxyGridSeriesNames, proxyGridSeriesYears);
         }
     }
 
