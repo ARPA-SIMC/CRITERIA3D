@@ -470,7 +470,7 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
     int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
 
     //if +1 date exceed accept only hour 00:00
-    if (i == nrObsDataDaysH && myHour != 0 && subH == 0) return false;
+    if (i == nrObsDataDaysH && (myHour != 0 || subH != 0)) return false;
 
     // hour 0 becomes hour 24 of the previous day
     if (myHour == 0 && subH == 0)
@@ -587,7 +587,7 @@ float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour
     int subH = int(ceil(float(myMinutes) / float(60 / hourlyFraction)));
 
     //if +1 date exceed accept only hour 00:00
-    if (i == nrObsDataDaysH && myHour != 0 && subH == 0) return NODATA;
+    if (i == nrObsDataDaysH && (myHour != 0 || subH != 0)) return NODATA;
 
     // hour 0 becomes hour 24 of the previous day
     if (myHour == 0 && subH == 0)
