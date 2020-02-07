@@ -960,7 +960,7 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     this->meteoGridDbHandler->updateGridDate(&errorString);
 
-    if (loadGridDataAtStart)
+    if (loadGridDataAtStart || ! meteoPointsLoaded)
         setCurrentDate(meteoGridDbHandler->lastDate());
 
     meteoGridLoaded = true;
