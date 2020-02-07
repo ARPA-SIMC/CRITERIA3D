@@ -1478,7 +1478,7 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime)
             if (! gis::isOutOfGridRowCol(row, col, *(hourlyMeteoMaps->mapHourlyTair)))
             {
                 meteoPoints[i].setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(),
-                                          airTemperature, hourlyMeteoMaps->mapHourlyRelHum->value[row][col]);
+                                          airTemperature, hourlyMeteoMaps->mapHourlyTair->value[row][col]);
             }
         }
     }
