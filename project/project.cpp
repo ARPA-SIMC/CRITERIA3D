@@ -1498,12 +1498,9 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    // Proxy vars regression and detrend
+    FormInfo myInfo;
     if (showInfo && modality == MODE_GUI)
-    {
-        FormInfo myInfo;
         myInfo.start("Preparing interpolation...", 0);
-    }
 
     //detrending and checking precipitation
     if (! preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))

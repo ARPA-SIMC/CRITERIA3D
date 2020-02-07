@@ -275,7 +275,7 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
 
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        if (meteoPoints[i].quality == quality::accepted)
+        if (meteoPoints[i].active && meteoPoints[i].quality == quality::accepted)
         {
             Crit3DInterpolationDataPoint myPoint;
 
