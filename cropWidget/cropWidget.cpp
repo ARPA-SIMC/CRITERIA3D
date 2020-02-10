@@ -61,6 +61,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     saveButtonLayout->setAlignment(Qt::AlignLeft);
     saveButtonLayout->addWidget(saveButton);
 
+    QLabel *cropName = new QLabel(tr("CROP_NAME: "));
+
     QLabel *cropId = new QLabel(tr("ID_CROP: "));
     cropIdValue = new QLineEdit();
     cropIdValue->setReadOnly(true);
@@ -80,26 +82,48 @@ Crit3DCropWidget::Crit3DCropWidget()
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
 
+    infoCropGroup->setFixedWidth(this->width()/4);
+    infoMeteoGroup->setFixedWidth(this->width()/4);
+
     infoCropGroup->setTitle("Crop");
     infoMeteoGroup->setTitle("Meteo");
 
-    cropInfoLayout->addWidget(cropId, 0, 0);
-    cropInfoLayout->addWidget(cropIdValue, 0, 1);
-    cropInfoLayout->addWidget(cropType, 1, 0);
-    cropInfoLayout->addWidget(cropTypeValue, 1, 1);
-    cropInfoLayout->addWidget(cropSowing, 2, 0);
-    cropInfoLayout->addWidget(cropSowingValue, 2, 1);
-    cropInfoLayout->addWidget(cropCycleMax, 3, 0);
-    cropInfoLayout->addWidget(cropCycleMaxValue, 3, 1);
+    cropInfoLayout->addWidget(cropName, 0, 0);
+    cropInfoLayout->addWidget(&cropListComboBox, 0, 1);
+    cropInfoLayout->addWidget(cropId, 1, 0);
+    cropInfoLayout->addWidget(cropIdValue, 1, 1);
+    cropInfoLayout->addWidget(cropType, 2, 0);
+    cropInfoLayout->addWidget(cropTypeValue, 2, 1);
+    cropInfoLayout->addWidget(cropSowing, 3, 0);
+    cropInfoLayout->addWidget(cropSowingValue, 3, 1);
+    cropInfoLayout->addWidget(cropCycleMax, 4, 0);
+    cropInfoLayout->addWidget(cropCycleMaxValue, 4, 1);
 
-    meteoInfoLayout->addWidget(&meteoListComboBox, 0, 0);
+    QLabel *meteoName = new QLabel(tr("METEO_NAME: "));
+
+    QLabel *meteoYear = new QLabel(tr("year: "));
+
+    QLabel *lat = new QLabel(tr("latitude: "));
+    latValue = new QLineEdit();
+    latValue->setReadOnly(true);
+
+    QLabel *lon = new QLabel(tr("longitude: "));
+    lonValue = new QLineEdit();
+    lonValue->setReadOnly(true);
+
+    meteoInfoLayout->addWidget(meteoName, 0, 0);
+    meteoInfoLayout->addWidget(&meteoListComboBox, 0, 1);
+    meteoInfoLayout->addWidget(meteoYear, 1, 0);
+    meteoInfoLayout->addWidget(&yearListComboBox, 1, 1);
+    meteoInfoLayout->addWidget(lat, 2, 0);
+    meteoInfoLayout->addWidget(latValue, 2, 1);
+    meteoInfoLayout->addWidget(lon, 3, 0);
+    meteoInfoLayout->addWidget(lonValue, 3, 1);
 
     infoCropGroup->setLayout(cropInfoLayout);
     infoMeteoGroup->setLayout(meteoInfoLayout);
 
-    infoLayout->addWidget(&cropListComboBox);
     infoLayout->addWidget(infoCropGroup);
-    infoLayout->addWidget(&meteoListComboBox);
     infoLayout->addWidget(infoMeteoGroup);
 
     mainLayout->addLayout(saveButtonLayout);

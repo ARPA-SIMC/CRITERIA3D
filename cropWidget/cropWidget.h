@@ -17,10 +17,13 @@ class Crit3DCropWidget : public QWidget
         QGroupBox *infoMeteoGroup;
         QComboBox cropListComboBox;
         QComboBox meteoListComboBox;
+        QComboBox yearListComboBox;
         QLineEdit* cropIdValue;
         QLineEdit* cropTypeValue;
         QLineEdit* cropSowingValue;
         QLineEdit* cropCycleMaxValue;
+        QLineEdit* latValue;
+        QLineEdit* lonValue;
         QTabWidget* tabWidget;
         QAction* saveChanges;
         QAction* restoreData;
