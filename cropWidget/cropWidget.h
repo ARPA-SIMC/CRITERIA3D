@@ -5,6 +5,12 @@
 #include <QComboBox>
 #include <QGroupBox>
 #include <QLineEdit>
+#include <QLabel>
+#include <QSqlDatabase>
+
+#ifndef CROP_H
+    #include "crop.h"
+#endif
 
 class Crit3DCropWidget : public QWidget
 {
@@ -12,15 +18,25 @@ class Crit3DCropWidget : public QWidget
 
     public:
         Crit3DCropWidget();
+        void on_actionOpenCropDB();
+        void on_actionChooseCrop(QString cropName);
     private:
+        QSqlDatabase dbCrop;
+        Crit3DCrop* myCrop;
+
         QGroupBox *infoCropGroup;
         QGroupBox *infoMeteoGroup;
         QComboBox cropListComboBox;
         QComboBox meteoListComboBox;
+        QComboBox yearListComboBox;
         QLineEdit* cropIdValue;
         QLineEdit* cropTypeValue;
+        //QLabel* cropSowing;
+        //QLabel* cropCycleMax;
         QLineEdit* cropSowingValue;
         QLineEdit* cropCycleMaxValue;
+        QLineEdit* latValue;
+        QLineEdit* lonValue;
         QTabWidget* tabWidget;
         QAction* saveChanges;
         QAction* restoreData;

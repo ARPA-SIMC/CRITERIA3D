@@ -3,7 +3,14 @@
 
     class Crit3DCrop;
     class QString;
+    class QStringList;
     class QSqlDatabase;
+
+    bool openDbCrop(QString dbName, QSqlDatabase* dbCrop, QString* error);
+
+    bool getCropNameList(QSqlDatabase* dbCrop, QStringList* cropNameList, QString* error);
+
+    QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myError);
 
     QString getCropFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField,
                              QString idCropClass, QString *myError);

@@ -7,7 +7,71 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
+#include <QUuid>
 #include <QVariant>
+
+bool openDbCrop(QString dbName, QSqlDatabase* dbCrop, QString* error)
+{
+
+    *dbCrop = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    dbCrop->setDatabaseName(dbName);
+
+    if (!dbCrop->open())
+    {
+       *error = "Connection with database fail";
+       return false;
+    }
+
+    return true;
+}
+
+bool getCropNameList(QSqlDatabase* dbCrop, QStringList* cropNameList, QString* error)
+{
+    // query crop list
+    QString queryString = "SELECT crop_name FROM crop";
+    QSqlQuery query = dbCrop->exec(queryString);
+
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+
+    QString cropName;
+    do
+    {
+        getValue(query.value("crop_name"), &cropName);
+        if (cropName != "")
+        {
+            cropNameList->append(cropName);
+        }
+    }
+    while(query.next());
+
+    return true;
+}
+
+QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myError)
+{
+    *myError = "";
+    QString queryString = "SELECT * FROM crop WHERE crop_name='" + cropName +"'";
+
+    QSqlQuery query = dbCrop->exec(queryString);
+    query.last();
+
+    if (! query.isValid())
+    {
+        *myError = query.lastError().text();
+        return "";
+    }
+
+    QString idCrop;
+    getValue(query.value("id_crop"), &idCrop);
+
+    return idCrop;
+}
+
 
 
 bool loadCropParameters(QString idCrop, Crit3DCrop* myCrop, QSqlDatabase* dbCrop, QString *myError)
