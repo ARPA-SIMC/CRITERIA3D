@@ -24,6 +24,7 @@
 
 #include "cropWidget.h"
 #include "cropDbTools.h"
+#include "utilities.h"
 #include <QFileInfo>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -31,6 +32,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QPushButton>
+
 
 Crit3DCropWidget::Crit3DCropWidget()
 {
@@ -46,12 +48,11 @@ Crit3DCropWidget::Crit3DCropWidget()
     QGridLayout *meteoInfoLayout = new QGridLayout();
 
     // check save button pic
-    QString saveButtonPath = "../../DOC/img/saveButton.png";
-    QFileInfo savePath(saveButtonPath);
-    if (! savePath.exists())
-    {
+    QString docPath, saveButtonPath;
+    if (searchDocPath(&docPath))
+        saveButtonPath = docPath + "img/saveButton.png";
+    else
         saveButtonPath = "../img/saveButton.png";
-    }
 
     QPixmap pixmap(saveButtonPath);
     QPushButton *saveButton = new QPushButton();
@@ -240,7 +241,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         }
 
     }
-    cropTypeValue->setText(QString::fromStdString(types_str[myCrop.type]));
+    //cropTypeValue->setText(QString::fromStdString(types_str[myCrop.type]));
 
     if (myCrop.type == HERBACEOUS_ANNUAL ||  myCrop.type == HERBACEOUS_PERENNIAL || myCrop.type == HORTICULTURAL)
     {
