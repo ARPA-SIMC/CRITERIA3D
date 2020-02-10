@@ -166,6 +166,8 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
+
+    connect(openMeteoDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenMeteoDB);
 }
 
 void Crit3DCropWidget::on_actionOpenCropDB()
@@ -198,7 +200,19 @@ void Crit3DCropWidget::on_actionOpenCropDB()
     {
         this->cropListComboBox.addItem(cropStringList[i]);
     }
-    saveChanges->setEnabled(true);
+    //saveChanges->setEnabled(true);
+}
+
+void Crit3DCropWidget::on_actionOpenMeteoDB()
+{
+    QString dbMeteoName = QFileDialog::getOpenFileName(this, tr("Open meteo database"), "", tr("SQLite files (*.db)"));
+    if (dbMeteoName == "")
+    {
+        return;
+    }
+
+    // TO DO openMeteoDB, esistono già funzioni che operano su questi DB?
+    // METEO_NAME sarebbe una delle tabelle del db selezionato?
 }
 
 void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
