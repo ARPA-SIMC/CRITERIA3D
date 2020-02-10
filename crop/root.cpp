@@ -35,7 +35,6 @@
 #include "gammaFunction.h"
 #include "root.h"
 #include "crop.h"
-#include "soil.h"
 
 
 Crit3DRoot::Crit3DRoot()

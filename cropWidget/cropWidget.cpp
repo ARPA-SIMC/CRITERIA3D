@@ -23,12 +23,14 @@
 
 
 #include "cropWidget.h"
+#include "cropDbTools.h"
 #include <QFileInfo>
+#include <QFileDialog>
+#include <QMessageBox>
 #include <QLayout>
 #include <QMenu>
 #include <QMenuBar>
 #include <QPushButton>
-#include <QLabel>
 
 Crit3DCropWidget::Crit3DCropWidget()
 {
@@ -71,11 +73,11 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropTypeValue = new QLineEdit();
     cropTypeValue->setReadOnly(true);
 
-    QLabel * cropSowing= new QLabel(tr("sowing DOY: "));
+    QLabel* cropSowing = new QLabel(tr("sowing DOY: "));
     cropSowingValue = new QLineEdit();
     cropSowingValue->setReadOnly(true);
 
-    QLabel * cropCycleMax= new QLabel(tr("cycle max duration: "));
+    QLabel* cropCycleMax= new QLabel(tr("cycle max duration: "));
     cropCycleMaxValue = new QLineEdit();
     cropCycleMaxValue->setReadOnly(true);
 
@@ -160,4 +162,87 @@ Crit3DCropWidget::Crit3DCropWidget()
     editMenu->addAction(newCrop);
     editMenu->addAction(deleteCrop);
     editMenu->addAction(restoreData);
+
+    connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
+    connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
 }
+
+void Crit3DCropWidget::on_actionOpenCropDB()
+{
+    QString dbCropName = QFileDialog::getOpenFileName(this, tr("Open crop database"), "", tr("SQLite files (*.db)"));
+    if (dbCropName == "")
+    {
+        return;
+    }
+
+    // open crop db
+    QString error;
+    if (! openDbCrop(dbCropName, &dbCrop, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        return;
+    }
+
+    // read crop list
+    QStringList cropStringList;
+    if (! getCropNameList(&dbCrop, &cropStringList, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        return;
+    }
+
+    // show crop list
+    this->cropListComboBox.clear();
+    for (int i = 0; i < cropStringList.size(); i++)
+    {
+        this->cropListComboBox.addItem(cropStringList[i]);
+    }
+    saveChanges->setEnabled(true);
+}
+
+void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
+{
+    QString error;
+    QString idCrop = getIdCropFromName(&dbCrop, cropName, &error);
+    if (idCrop.isEmpty())
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        return;
+    }
+
+    // TO DO clean myCrop
+    cropIdValue->setText(idCrop);
+    if (!loadCropParameters(idCrop, myCrop, &dbCrop, &error))
+    {
+        if (error.contains("Empty"))
+        {
+            QMessageBox::information(nullptr, "Warning", error);
+        }
+        else
+        {
+            QMessageBox::critical(nullptr, "Error!", error);
+            return;
+        }
+
+    }
+    cropTypeValue->setText(QString::fromStdString(types_str[myCrop->type]));
+
+    // TO DO solve problem QLabel hide
+    if (myCrop->type == HERBACEOUS_ANNUAL ||  myCrop->type == HERBACEOUS_PERENNIAL || myCrop->type == HORTICULTURAL)
+    {
+        //cropSowing->setVisible(true);
+        //cropCycleMax->setVisible(true);
+        cropSowingValue->setText(QString::number(myCrop->sowingDoy));
+        cropSowingValue->setVisible(true);
+        cropCycleMaxValue->setText(QString::number(myCrop->plantCycle));
+        cropCycleMaxValue->setVisible(true);
+    }
+    else
+    {
+        //cropSowing->setVisible(false);
+        //cropCycleMax->setVisible(false);
+        cropSowingValue->setVisible(false);
+        cropCycleMaxValue->setVisible(false);
+    }
+}
+
