@@ -305,8 +305,8 @@ float cropIrrigationDemand(CriteriaModel* myCase, int doy, float currentPrec, fl
     }
     else
     {
-        //return float(myCase->myCrop.irrigationVolume);
-        return float(MAXVALUE(int(myCase->output.dailyMaxTranspiration), myCase->myCrop.irrigationVolume));
+        return float(myCase->myCrop.irrigationVolume);
+        //return float(MAXVALUE(int(myCase->output.dailyMaxTranspiration), myCase->myCrop.irrigationVolume));
     }
 }
 
