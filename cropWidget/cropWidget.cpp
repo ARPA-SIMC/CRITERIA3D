@@ -168,6 +168,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     editMenu->addAction(deleteCrop);
     editMenu->addAction(restoreData);
 
+    myCrop = nullptr;
+
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
 
@@ -249,9 +251,15 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         return;
     }
 
-    // TO DO clean myCrop
+    // delete previous crop
+    if (myCrop != nullptr)
+    {
+        delete myCrop;
+    }
+    myCrop = new Crit3DCrop();
+
     cropIdValue->setText(idCrop);
-    if (!loadCropParameters(idCrop, &myCrop, &dbCrop, &error))
+    if (!loadCropParameters(idCrop, myCrop, &dbCrop, &error))
     {
         if (error.contains("Empty"))
         {
@@ -264,15 +272,15 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         }
 
     }
-    cropTypeValue->setText(QString::fromStdString(getCropTypeString(myCrop.type)));
+    cropTypeValue->setText(QString::fromStdString(getCropTypeString(myCrop->type)));
 
-    if (myCrop.type == HERBACEOUS_ANNUAL ||  myCrop.type == HERBACEOUS_PERENNIAL || myCrop.type == HORTICULTURAL)
+    if (myCrop->type == HERBACEOUS_ANNUAL ||  myCrop->type == HERBACEOUS_PERENNIAL || myCrop->type == HORTICULTURAL)
     {
         cropSowing.setVisible(true);
         cropCycleMax.setVisible(true);
-        cropSowingValue->setText(QString::number(myCrop.sowingDoy));
+        cropSowingValue->setText(QString::number(myCrop->sowingDoy));
         cropSowingValue->setVisible(true);
-        cropCycleMaxValue->setText(QString::number(myCrop.plantCycle));
+        cropCycleMaxValue->setText(QString::number(myCrop->plantCycle));
         cropCycleMaxValue->setVisible(true);
     }
     else

@@ -25,7 +25,7 @@ class Crit3DCropWidget : public QWidget
     private:
         QSqlDatabase dbCrop;
         QSqlDatabase dbMeteo;
-        Crit3DCrop myCrop;
+        Crit3DCrop* myCrop;
 
         QGroupBox *infoCropGroup;
         QGroupBox *infoMeteoGroup;
