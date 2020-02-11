@@ -396,7 +396,7 @@ bool removeDirectory(QString myPath)
 bool searchDocPath(QString* docPath)
 {
     QString myPath = QDir::currentPath();
-    QString myVolumeDOS = QDir::rootPath();
+    QString myRoot = QDir::rootPath();
 
     bool isFound = false;
     while (! isFound)
@@ -406,7 +406,7 @@ bool searchDocPath(QString* docPath)
             isFound = true;
             break;
         }
-        if (QDir::cleanPath(myPath) == myVolumeDOS)
+        if (QDir::cleanPath(myPath) == myRoot)
             break;
 
         myPath = QFileInfo(myPath).dir().absolutePath();
