@@ -241,7 +241,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         }
 
     }
-    //cropTypeValue->setText(QString::fromStdString(types_str[myCrop.type]));
+    cropTypeValue->setText(QString::fromStdString(getCropTypeString(myCrop.type)));
 
     if (myCrop.type == HERBACEOUS_ANNUAL ||  myCrop.type == HERBACEOUS_PERENNIAL || myCrop.type == HORTICULTURAL)
     {
