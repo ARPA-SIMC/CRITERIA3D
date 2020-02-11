@@ -285,9 +285,14 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
 {
     QString error;
-    QString lon = getLonFromIdMeteo(&dbMeteo, idMeteo, &error);
-    lonValue->setText(lon);
-    QString lat = getLatFromIdMeteo(&dbMeteo, idMeteo, &error);
-    latValue->setText(lat);
+    QString lat;
+    QString lon;
+    if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
+    {
+        latValue->setText(lat);
+        lonValue->setText(lon);
+    }
+    QString table = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);
+
 }
 

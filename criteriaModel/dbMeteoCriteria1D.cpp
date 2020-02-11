@@ -53,7 +53,7 @@ bool getIdMeteoList(QSqlDatabase* dbMeteo, QStringList* idMeteoList, QString* er
     return true;
 }
 
-QString getLatFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *myError)
+bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *myError)
 {
     *myError = "";
     QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
@@ -64,16 +64,16 @@ QString getLatFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *myErr
     if (! query.isValid())
     {
         *myError = query.lastError().text();
-        return "";
+        return false;
     }
 
-    QString latitude;
-    getValue(query.value("latitude"), &latitude);
+    getValue(query.value("latitude"), lat);
+    getValue(query.value("longitude"), lon);
 
-    return latitude;
+    return true;
 }
 
-QString getLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *myError)
+QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *myError)
 {
     *myError = "";
     QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
@@ -87,10 +87,10 @@ QString getLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *myErr
         return "";
     }
 
-    QString longitude;
-    getValue(query.value("longitude"), &longitude);
+    QString table_name;
+    getValue(query.value("table_name"), &table_name);
 
-    return longitude;
+    return table_name;
 }
 
 /*!
