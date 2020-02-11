@@ -1733,7 +1733,7 @@ bool Project::searchDefaultPath(QString* defaultPath)
     bool isFound = false;
     while (! isFound)
     {
-        if (QDir(myPath + "DATA").exists())
+        if (QDir(myPath + "/DATA").exists())
         {
             isFound = true;
             break;
