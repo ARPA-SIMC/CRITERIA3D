@@ -265,7 +265,7 @@
         void computeWeatherGenerator2D();
         void pressEnterToContinue();
         void initializeRandomNumbers(double* vector);
-        void getWeatherGeneratorOutput(ToutputWeatherData* outputSimulations,int startingYear);
+        ToutputWeatherData* getWeatherGeneratorOutput(int startingYear);
     };
 
 #endif // WEATHERGENERATOR2D_H

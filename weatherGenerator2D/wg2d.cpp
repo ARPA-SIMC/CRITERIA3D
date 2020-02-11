@@ -285,6 +285,7 @@ void weatherGenerator2D::computeWeatherGenerator2D()
         if (isPrecWG2D)
             weatherGenerator2D::precipitationCompute();
         weatherGenerator2D::prepareWeatherGeneratorOutput();
+        //return outputWeatherData;
 }
 
 void weatherGenerator2D::commonModuleCompute()

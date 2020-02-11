@@ -438,7 +438,7 @@ void weatherGenerator2D::precipitationMonthlyAverage(float** averageSimulation, 
     }
 }
 
-void weatherGenerator2D::getWeatherGeneratorOutput(ToutputWeatherData* outputSimulations,int startingYear)
+ToutputWeatherData* weatherGenerator2D::getWeatherGeneratorOutput(int startingYear)
 {
     for (int iStation = 0; iStation <nrStations; iStation++)
     {
@@ -448,15 +448,18 @@ void weatherGenerator2D::getWeatherGeneratorOutput(ToutputWeatherData* outputSim
             for (int iDoy=0; iDoy<365; iDoy++)
             {
                 //printf("%f\n",outputWeatherData[iStation].minT[counter]);
-                outputSimulations[iStation].yearSimulated[counter] = outputWeatherData[iStation].yearSimulated[counter] + startingYear;
+                /*outputSimulations[iStation].yearSimulated[counter] = outputWeatherData[iStation].yearSimulated[counter] + startingYear;
                 outputSimulations[iStation].monthSimulated[counter] = outputWeatherData[iStation].monthSimulated[counter];
                 outputSimulations[iStation].daySimulated[counter] = outputWeatherData[iStation].daySimulated[counter];
                 outputSimulations[iStation].doySimulated[counter] = outputWeatherData[iStation].doySimulated[counter];
                 outputSimulations[iStation].minT[counter] = outputWeatherData[iStation].minT[counter];
                 outputSimulations[iStation].maxT[counter] = outputWeatherData[iStation].maxT[counter];
                 outputSimulations[iStation].precipitation[counter] = outputWeatherData[iStation].precipitation[counter];
+                */
+                outputWeatherData[iStation].yearSimulated[counter] += startingYear-1;
                 counter++;
             }
         }
     }
+    return outputWeatherData;
 }
