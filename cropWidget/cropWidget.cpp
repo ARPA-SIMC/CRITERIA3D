@@ -34,6 +34,8 @@
 #include <QMenuBar>
 #include <QPushButton>
 
+#include <QDebug>
+
 
 Crit3DCropWidget::Crit3DCropWidget()
 {
@@ -293,6 +295,21 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
         lonValue->setText(lon);
     }
     QString table = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);
+    QStringList yearList;
+    if (!getYears(&dbMeteo, table, &yearList, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        this->yearListComboBox.clear();
+        return;
+    }
+    for (int i = 0; i<yearList.size(); i++)
+    {
+        if ( checkYear(&dbMeteo, table, yearList[i], &error))
+        {
+            this->yearListComboBox.addItem(yearList[i]);
+        }
+    }
+
 
 }
 

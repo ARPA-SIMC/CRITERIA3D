@@ -53,9 +53,9 @@ bool getIdMeteoList(QSqlDatabase* dbMeteo, QStringList* idMeteoList, QString* er
     return true;
 }
 
-bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *myError)
+bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *error)
 {
-    *myError = "";
+    *error = "";
     QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
 
     QSqlQuery query = dbMeteo->exec(queryString);
@@ -63,7 +63,7 @@ bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, 
 
     if (! query.isValid())
     {
-        *myError = query.lastError().text();
+        *error = query.lastError().text();
         return false;
     }
 
@@ -73,9 +73,9 @@ bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, 
     return true;
 }
 
-QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *myError)
+QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *error)
 {
-    *myError = "";
+    *error = "";
     QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
 
     QSqlQuery query = dbMeteo->exec(queryString);
@@ -83,7 +83,7 @@ QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString 
 
     if (! query.isValid())
     {
-        *myError = query.lastError().text();
+        *error = query.lastError().text();
         return "";
     }
 
@@ -91,6 +91,85 @@ QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString 
     getValue(query.value("table_name"), &table_name);
 
     return table_name;
+}
+
+bool getYears(QSqlDatabase* dbMeteo, QString table, QStringList* yearList, QString *error)
+{
+    *error = "";
+    QString queryString = "SELECT date, strftime('%Y',date) as Year FROM '" + table +"'";
+
+    QSqlQuery query = dbMeteo->exec(queryString);
+
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+
+    QString year;
+    do
+    {
+        getValue(query.value("Year"), &year);
+        if (year != "" && !yearList->contains(year))
+        {
+            yearList->append(year);
+        }
+    }
+    while(query.next());
+
+    return true;
+}
+
+bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *error)
+{
+    *error = "";
+
+    QString queryString = "SELECT COUNT(date) FROM '" + table +"'" + " WHERE strftime('%Y',date) = '" + year +"'";
+    QSqlQuery query = dbMeteo->exec(queryString);
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+    int count;
+    int max_missing = 30;
+
+    getValue(query.value(0), &count);
+    if (count < 365-max_missing)
+    {
+        *error = "incomplete year, missing more than max_missing days";
+        return false;
+    }
+
+    queryString = "SELECT date FROM '" + table +"'" + "WHERE strftime('%Y',date) = '" + year +"'";
+    query = dbMeteo->exec(queryString);
+
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+
+    QDate date;
+    QDate previousDate(year.toInt()-1, 12, 31);
+
+    do
+    {
+        getValue(query.value("date"), &date);
+        if (previousDate.daysTo(date) > 2)
+        {
+            *error = "incomplete year, missing more than 1 consecutive days";
+            return false;
+        }
+        previousDate = date;
+
+    }
+    while(query.next());
+
+    return true;
 }
 
 /*!

@@ -9,8 +9,10 @@
 
     bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error);
     bool getIdMeteoList(QSqlDatabase* dbMeteo, QStringList* idMeteoList, QString* error);
-    bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *myError);
-    QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *myError);
+    bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *error);
+    QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *error);
+    bool getYears(QSqlDatabase* dbMeteo, QString table, QStringList* yearList, QString *error);
+    bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *error);
     bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QString *myError);
 
 #endif // DBMETEOCRITERIA1D_H
