@@ -24,6 +24,7 @@
 
 #include "cropWidget.h"
 #include "cropDbTools.h"
+#include "dbMeteoCriteria1D.h"
 #include "utilities.h"
 #include <QFileInfo>
 #include <QFileDialog>
@@ -169,6 +170,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
 
     connect(openMeteoDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenMeteoDB);
+    connect(&meteoListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseMeteo);
 }
 
 void Crit3DCropWidget::on_actionOpenCropDB()
@@ -183,7 +185,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
     QString error;
     if (! openDbCrop(dbCropName, &dbCrop, &error))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error DB crop", error);
         return;
     }
 
@@ -211,9 +213,28 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
     {
         return;
     }
+    // open meteo db
+    QString error;
+    if (! openDbMeteo(dbMeteoName, &dbMeteo, &error))
+    {
+        QMessageBox::critical(nullptr, "Error DB meteo", error);
+        return;
+    }
+    // read id_meteo list
+    QStringList idMeteoList;
+    if (! getIdMeteoList(&dbMeteo, &idMeteoList, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        return;
+    }
 
-    // TO DO openMeteoDB, esistono già funzioni che operano su questi DB?
-    // METEO_NAME sarebbe una delle tabelle del db selezionato?
+    // show id_meteo list
+    this->meteoListComboBox.clear();
+    for (int i = 0; i < idMeteoList.size(); i++)
+    {
+        this->meteoListComboBox.addItem(idMeteoList[i]);
+    }
+    //saveChanges->setEnabled(true);
 }
 
 void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
@@ -259,5 +280,14 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         cropSowingValue->setVisible(false);
         cropCycleMaxValue->setVisible(false);
     }
+}
+
+void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
+{
+    QString error;
+    QString lon = getLonFromIdMeteo(&dbMeteo, idMeteo, &error);
+    lonValue->setText(lon);
+    QString lat = getLatFromIdMeteo(&dbMeteo, idMeteo, &error);
+    latValue->setText(lat);
 }
 

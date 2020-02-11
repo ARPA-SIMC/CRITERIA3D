@@ -3,6 +3,7 @@
 #include <QSqlError>
 #include <QVariant>
 #include <QDate>
+#include <QUuid>
 
 #include "commonConstants.h"
 #include "crit3dDate.h"
@@ -10,6 +11,87 @@
 #include "utilities.h"
 #include "meteoPoint.h"
 
+bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
+{
+
+    *dbMeteo = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    dbMeteo->setDatabaseName(dbName);
+
+    if (!dbMeteo->open())
+    {
+       *error = "Connection with database fail";
+       return false;
+    }
+
+    return true;
+}
+
+bool getIdMeteoList(QSqlDatabase* dbMeteo, QStringList* idMeteoList, QString* error)
+{
+    // query id_meteo list
+    QString queryString = "SELECT id_meteo FROM meteo_locations";
+    QSqlQuery query = dbMeteo->exec(queryString);
+
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+
+    QString idMeteo;
+    do
+    {
+        getValue(query.value("id_meteo"), &idMeteo);
+        if (idMeteo != "")
+        {
+            idMeteoList->append(idMeteo);
+        }
+    }
+    while(query.next());
+
+    return true;
+}
+
+QString getLatFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *myError)
+{
+    *myError = "";
+    QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
+
+    QSqlQuery query = dbMeteo->exec(queryString);
+    query.last();
+
+    if (! query.isValid())
+    {
+        *myError = query.lastError().text();
+        return "";
+    }
+
+    QString latitude;
+    getValue(query.value("latitude"), &latitude);
+
+    return latitude;
+}
+
+QString getLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *myError)
+{
+    *myError = "";
+    QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
+
+    QSqlQuery query = dbMeteo->exec(queryString);
+    query.last();
+
+    if (! query.isValid())
+    {
+        *myError = query.lastError().text();
+        return "";
+    }
+
+    QString longitude;
+    getValue(query.value("longitude"), &longitude);
+
+    return longitude;
+}
 
 /*!
  * \brief read daily meteo data from a table in the criteria-1D format

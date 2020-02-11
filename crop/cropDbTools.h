@@ -1,10 +1,11 @@
 #ifndef CROPDBTOOLS_H
 #define CROPDBTOOLS_H
 
+#include <QSqlDatabase>
+
     class Crit3DCrop;
     class QString;
     class QStringList;
-    class QSqlDatabase;
 
     bool openDbCrop(QString dbName, QSqlDatabase* dbCrop, QString* error);
 

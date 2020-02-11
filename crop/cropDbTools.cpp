@@ -4,7 +4,6 @@
 #include "utilities.h"
 
 #include <QString>
-#include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QUuid>

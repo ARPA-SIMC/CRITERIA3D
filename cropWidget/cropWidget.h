@@ -21,8 +21,10 @@ class Crit3DCropWidget : public QWidget
         void on_actionOpenCropDB();
         void on_actionChooseCrop(QString cropName);
         void on_actionOpenMeteoDB();
+        void on_actionChooseMeteo(QString idMeteo);
     private:
         QSqlDatabase dbCrop;
+        QSqlDatabase dbMeteo;
         Crit3DCrop myCrop;
 
         QGroupBox *infoCropGroup;
