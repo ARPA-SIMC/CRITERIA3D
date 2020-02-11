@@ -158,6 +158,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
 
     QDate date;
     QDate previousDate(year.toInt()-1, 12, 31);
+    QDate lastDate(year.toInt(), 12, 31);
 
     do
     {
@@ -171,6 +172,13 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
 
     }
     while(query.next());
+
+    // check last day
+    if (date.daysTo(lastDate) > 1)
+    {
+        *error = "incomplete year, missing more than 1 consecutive days";
+        return false;
+    }
 
     return true;
 }
