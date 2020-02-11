@@ -137,7 +137,10 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     int max_missing = 30;
 
     getValue(query.value(0), &count);
-    if (count < 365-max_missing)
+    QDate temp(year.toInt(), 1, 1);
+    int daysInYear = temp.daysInYear();
+
+    if (count < daysInYear-max_missing)
     {
         *error = "incomplete year, missing more than max_missing days";
         return false;
