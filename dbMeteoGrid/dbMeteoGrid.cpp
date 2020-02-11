@@ -1077,18 +1077,6 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
 }
 
-void Crit3DMeteoGridDbHandler::initializeData(QDate dateIni, QDate dateFin)
-{
-    int nrDays = dateIni.daysTo(dateFin) + 1;
-
-    for (unsigned row = 0; row < gridStructure().header().nrRows; row++)
-        for (unsigned col = 0; col < gridStructure().header().nrCols; col++)
-            if (meteoGrid()->meteoPoint(row, col).active)
-            {
-                meteoGrid()->meteoPoint(row, col).initializeObsDataH(1, nrDays, getCrit3DDate(dateIni));
-                meteoGrid()->meteoPoint(row, col).initializeObsDataD(nrDays, getCrit3DDate(dateIni));
-            }
-}
 
 bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString *myError, QString meteoPoint, QDate first, QDate last)
 {

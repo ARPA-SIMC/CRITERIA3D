@@ -90,8 +90,6 @@
         std::string getDailyPragaName(meteoVariable meteoVar);
         std::string getHourlyPragaName(meteoVariable meteoVar);
 
-        void initializeData(QDate dateIni, QDate dateFin);
-
         bool loadCellProperties(QString *myError);
         bool updateGridDate(QString *myError);
         bool loadGridDailyData(QString *myError, QString meteoPoint, QDate first, QDate last);
