@@ -602,6 +602,19 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(int row, int col, gis::Crit3DR
     }
 }
 
+void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
+{
+    int nrDays = dateIni.daysTo(dateFin) + 1;
+
+    for (unsigned row = 0; row < gridStructure().header().nrRows; row++)
+        for (unsigned col = 0; col < gridStructure().header().nrCols; col++)
+            if (_meteoPoints[row][col]->active)
+            {
+                _meteoPoints[row][col]->initializeObsDataH(1, nrDays, dateIni);
+                _meteoPoints[row][col]->initializeObsDataD(nrDays, dateIni);
+            }
+}
+
 void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute,
                                          gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab)
 {

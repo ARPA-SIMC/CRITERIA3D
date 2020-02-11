@@ -1088,7 +1088,6 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString *myError, QString meteo
 
     unsigned row;
     unsigned col;
-    bool initialize = true;
 
     if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
