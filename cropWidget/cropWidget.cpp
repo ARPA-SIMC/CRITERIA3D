@@ -24,6 +24,7 @@
 
 #include "cropWidget.h"
 #include "cropDbTools.h"
+#include "utilities.h"
 #include <QFileInfo>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -31,6 +32,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QPushButton>
+
 
 Crit3DCropWidget::Crit3DCropWidget()
 {
@@ -46,12 +48,11 @@ Crit3DCropWidget::Crit3DCropWidget()
     QGridLayout *meteoInfoLayout = new QGridLayout();
 
     // check save button pic
-    QString saveButtonPath = "../../DOC/img/saveButton.png";
-    QFileInfo savePath(saveButtonPath);
-    if (! savePath.exists())
-    {
+    QString docPath, saveButtonPath;
+    if (searchDocPath(&docPath))
+        saveButtonPath = docPath + "img/saveButton.png";
+    else
         saveButtonPath = "../img/saveButton.png";
-    }
 
     QPixmap pixmap(saveButtonPath);
     QPushButton *saveButton = new QPushButton();
@@ -73,13 +74,14 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropTypeValue = new QLineEdit();
     cropTypeValue->setReadOnly(true);
 
-    QLabel* cropSowing = new QLabel(tr("sowing DOY: "));
     cropSowingValue = new QLineEdit();
     cropSowingValue->setReadOnly(true);
 
-    QLabel* cropCycleMax= new QLabel(tr("cycle max duration: "));
     cropCycleMaxValue = new QLineEdit();
     cropCycleMaxValue->setReadOnly(true);
+    cropSowing.setText("sowing DOY: ");
+    cropCycleMax.setText("cycle max duration: ");
+
 
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
@@ -96,9 +98,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropInfoLayout->addWidget(cropIdValue, 1, 1);
     cropInfoLayout->addWidget(cropType, 2, 0);
     cropInfoLayout->addWidget(cropTypeValue, 2, 1);
-    cropInfoLayout->addWidget(cropSowing, 3, 0);
+    cropInfoLayout->addWidget(&cropSowing, 3, 0);
     cropInfoLayout->addWidget(cropSowingValue, 3, 1);
-    cropInfoLayout->addWidget(cropCycleMax, 4, 0);
+    cropInfoLayout->addWidget(&cropCycleMax, 4, 0);
     cropInfoLayout->addWidget(cropCycleMaxValue, 4, 1);
 
     QLabel *meteoName = new QLabel(tr("METEO_NAME: "));
@@ -165,6 +167,8 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
+
+    connect(openMeteoDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenMeteoDB);
 }
 
 void Crit3DCropWidget::on_actionOpenCropDB()
@@ -197,7 +201,19 @@ void Crit3DCropWidget::on_actionOpenCropDB()
     {
         this->cropListComboBox.addItem(cropStringList[i]);
     }
-    saveChanges->setEnabled(true);
+    //saveChanges->setEnabled(true);
+}
+
+void Crit3DCropWidget::on_actionOpenMeteoDB()
+{
+    QString dbMeteoName = QFileDialog::getOpenFileName(this, tr("Open meteo database"), "", tr("SQLite files (*.db)"));
+    if (dbMeteoName == "")
+    {
+        return;
+    }
+
+    // TO DO openMeteoDB, esistono già funzioni che operano su questi DB?
+    // METEO_NAME sarebbe una delle tabelle del db selezionato?
 }
 
 void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
@@ -212,7 +228,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 
     // TO DO clean myCrop
     cropIdValue->setText(idCrop);
-    if (!loadCropParameters(idCrop, myCrop, &dbCrop, &error))
+    if (!loadCropParameters(idCrop, &myCrop, &dbCrop, &error))
     {
         if (error.contains("Empty"))
         {
@@ -225,22 +241,21 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         }
 
     }
-    cropTypeValue->setText(QString::fromStdString(types_str[myCrop->type]));
+    cropTypeValue->setText(QString::fromStdString(getCropTypeString(myCrop.type)));
 
-    // TO DO solve problem QLabel hide
-    if (myCrop->type == HERBACEOUS_ANNUAL ||  myCrop->type == HERBACEOUS_PERENNIAL || myCrop->type == HORTICULTURAL)
+    if (myCrop.type == HERBACEOUS_ANNUAL ||  myCrop.type == HERBACEOUS_PERENNIAL || myCrop.type == HORTICULTURAL)
     {
-        //cropSowing->setVisible(true);
-        //cropCycleMax->setVisible(true);
-        cropSowingValue->setText(QString::number(myCrop->sowingDoy));
+        cropSowing.setVisible(true);
+        cropCycleMax.setVisible(true);
+        cropSowingValue->setText(QString::number(myCrop.sowingDoy));
         cropSowingValue->setVisible(true);
-        cropCycleMaxValue->setText(QString::number(myCrop->plantCycle));
+        cropCycleMaxValue->setText(QString::number(myCrop.plantCycle));
         cropCycleMaxValue->setVisible(true);
     }
     else
     {
-        //cropSowing->setVisible(false);
-        //cropCycleMax->setVisible(false);
+        cropSowing.setVisible(false);
+        cropCycleMax.setVisible(false);
         cropSowingValue->setVisible(false);
         cropCycleMaxValue->setVisible(false);
     }

@@ -210,7 +210,7 @@
         double** occurrencePrecGenerated;
         double** amountsPrecGenerated;
 
-        ToutputWeatherData *outputWeatherData;
+
 
         double* normalRandomNumbers;
 
@@ -249,14 +249,14 @@
         void initializeMultiOccurrenceTemperature(int length);
         void initializeTemperaturesOutput(int length);
         void createAmountOutputSerie();
+        void prepareWeatherGeneratorOutput();
 
-        void getWeatherGeneratorOutput();
         void initializeOutputData(int* nrDays);
         void randomSet(double *arrayNormal,int dimArray);
 
     public:
         // variables
-
+        ToutputWeatherData *outputWeatherData;
         //functions
         weatherGenerator2D() {}
         bool initializeData(int lengthDataSeries, int nrStations);
@@ -265,6 +265,7 @@
         void computeWeatherGenerator2D();
         void pressEnterToContinue();
         void initializeRandomNumbers(double* vector);
+        ToutputWeatherData* getWeatherGeneratorOutput(int startingYear);
     };
 
 #endif // WEATHERGENERATOR2D_H

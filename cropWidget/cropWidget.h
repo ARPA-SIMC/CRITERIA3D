@@ -20,9 +20,10 @@ class Crit3DCropWidget : public QWidget
         Crit3DCropWidget();
         void on_actionOpenCropDB();
         void on_actionChooseCrop(QString cropName);
+        void on_actionOpenMeteoDB();
     private:
         QSqlDatabase dbCrop;
-        Crit3DCrop* myCrop;
+        Crit3DCrop myCrop;
 
         QGroupBox *infoCropGroup;
         QGroupBox *infoMeteoGroup;
@@ -31,8 +32,8 @@ class Crit3DCropWidget : public QWidget
         QComboBox yearListComboBox;
         QLineEdit* cropIdValue;
         QLineEdit* cropTypeValue;
-        //QLabel* cropSowing;
-        //QLabel* cropCycleMax;
+        QLabel cropSowing;
+        QLabel cropCycleMax;
         QLineEdit* cropSowingValue;
         QLineEdit* cropCycleMaxValue;
         QLineEdit* latValue;

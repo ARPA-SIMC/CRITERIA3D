@@ -12,15 +12,6 @@
     #endif
 
     enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FALLOW, FRUIT_TREE};
-    const char * const types_str[] =
-    {
-        [HERBACEOUS_ANNUAL] = "HERBACEOUS_ANNUAL",
-        [HERBACEOUS_PERENNIAL] = "HERBACEOUS_PERENNIAL",
-        [HORTICULTURAL]  = "HORTICULTURAL",
-        [GRASS]  = "GRASS",
-        [FALLOW]  = "FALLOW",
-        [FRUIT_TREE]  = "FRUIT_TREE"
-    };
 
     /*!
      * \brief The Crit3DCrop class
@@ -87,6 +78,7 @@
 
 
     speciesType getCropType(std::string cropType);
+    std::string getCropTypeString(speciesType cropType);
 
     double computeDegreeDays(double myTmin, double myTmax, double myLowerThreshold, double myUpperThreshold);
 

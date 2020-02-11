@@ -235,7 +235,7 @@ speciesType getCropType(std::string cropType)
         return HORTICULTURAL;
     else if (cropType == "grass")
         return GRASS;
-    else if (cropType == "grass_first_year")
+    else if (cropType == "grass_first_year")  //LC perchè si perde la distinzione grass o grass_first_year, nella get quale devo considerare?
         return GRASS;
     else if (cropType == "fallow")
         return FALLOW;
@@ -243,6 +243,25 @@ speciesType getCropType(std::string cropType)
         return FRUIT_TREE;
     else
         return HERBACEOUS_ANNUAL;
+}
+
+std::string getCropTypeString(speciesType cropType)
+{
+    switch (cropType)
+    {
+    case HERBACEOUS_ANNUAL:
+        return "herbaceous";
+    case HERBACEOUS_PERENNIAL:
+        return "herbaceous_perennial";
+    case HORTICULTURAL:
+        return "horticultural";
+    case GRASS:
+        return "grass";
+    case FALLOW:
+        return "fallow";
+    case FRUIT_TREE:
+        return "fruit_tree";
+    }
 }
 
 double computeDegreeDays(double myTmin, double myTmax, double myLowerThreshold, double myUpperThreshold)

@@ -32,6 +32,7 @@
 #include "soilDbTools.h"
 #include "commonConstants.h"
 #include "dialogNewSoil.h"
+#include "utilities.h"
 
 #include <math.h>
 #include <QSqlDatabase>
@@ -63,25 +64,22 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     QVBoxLayout *texturalLayout = new QVBoxLayout();
     QGridLayout *infoLayout = new QGridLayout();
 
-    // check triangle pic
-    picPath = "../../DOC/img/textural_soil.png";
-    QFileInfo triangleFile(picPath);
-    if (! triangleFile.exists())
+    // check triangle pic and save button pic
+    QString docPath, saveButtonPath;
+    if (searchDocPath(&docPath))
+    {
+        picPath = docPath + "img/textural_soil.png";
+        saveButtonPath = docPath + "img/saveButton.png";
+    }
+    else
     {
         picPath = "../img/textural_soil.png";
+        saveButtonPath = "../img/saveButton.png";
     }
 
     pic.load(picPath);
     labelPic = new QLabel();
     labelPic->setPixmap(pic);
-
-    // check save button pic
-    QString saveButtonPath = "../../DOC/img/saveButton.png";
-    QFileInfo savePath(saveButtonPath);
-    if (! savePath.exists())
-    {
-        saveButtonPath = "../img/saveButton.png";
-    }
 
     QPixmap pixmap(saveButtonPath);
     QPushButton *saveButton = new QPushButton();

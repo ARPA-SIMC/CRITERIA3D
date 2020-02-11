@@ -44,5 +44,6 @@
     QStringList FloatVectorToStringList(std::vector <float> myVector);
 
     bool removeDirectory(QString myPath);
+    bool searchDocPath(QString* docPath);
 
 #endif // UTILITIES_H
