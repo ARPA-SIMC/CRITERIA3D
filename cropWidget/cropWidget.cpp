@@ -24,6 +24,7 @@
 
 #include "cropWidget.h"
 #include "cropDbTools.h"
+#include "dbMeteoCriteria1D.h"
 #include "utilities.h"
 #include <QFileInfo>
 #include <QFileDialog>
@@ -32,6 +33,8 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QPushButton>
+
+#include <QDebug>
 
 
 Crit3DCropWidget::Crit3DCropWidget()
@@ -165,10 +168,13 @@ Crit3DCropWidget::Crit3DCropWidget()
     editMenu->addAction(deleteCrop);
     editMenu->addAction(restoreData);
 
+    myCrop = nullptr;
+
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
 
     connect(openMeteoDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenMeteoDB);
+    connect(&meteoListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseMeteo);
 }
 
 void Crit3DCropWidget::on_actionOpenCropDB()
@@ -183,7 +189,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
     QString error;
     if (! openDbCrop(dbCropName, &dbCrop, &error))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error DB crop", error);
         return;
     }
 
@@ -211,9 +217,28 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
     {
         return;
     }
+    // open meteo db
+    QString error;
+    if (! openDbMeteo(dbMeteoName, &dbMeteo, &error))
+    {
+        QMessageBox::critical(nullptr, "Error DB meteo", error);
+        return;
+    }
+    // read id_meteo list
+    QStringList idMeteoList;
+    if (! getIdMeteoList(&dbMeteo, &idMeteoList, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        return;
+    }
 
-    // TO DO openMeteoDB, esistono già funzioni che operano su questi DB?
-    // METEO_NAME sarebbe una delle tabelle del db selezionato?
+    // show id_meteo list
+    this->meteoListComboBox.clear();
+    for (int i = 0; i < idMeteoList.size(); i++)
+    {
+        this->meteoListComboBox.addItem(idMeteoList[i]);
+    }
+    //saveChanges->setEnabled(true);
 }
 
 void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
@@ -226,9 +251,15 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         return;
     }
 
-    // TO DO clean myCrop
+    // delete previous crop
+    if (myCrop != nullptr)
+    {
+        delete myCrop;
+    }
+    myCrop = new Crit3DCrop();
+
     cropIdValue->setText(idCrop);
-    if (!loadCropParameters(idCrop, &myCrop, &dbCrop, &error))
+    if (!loadCropParameters(idCrop, myCrop, &dbCrop, &error))
     {
         if (error.contains("Empty"))
         {
@@ -241,15 +272,15 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         }
 
     }
-    cropTypeValue->setText(QString::fromStdString(getCropTypeString(myCrop.type)));
+    cropTypeValue->setText(QString::fromStdString(getCropTypeString(myCrop->type)));
 
-    if (myCrop.type == HERBACEOUS_ANNUAL ||  myCrop.type == HERBACEOUS_PERENNIAL || myCrop.type == HORTICULTURAL)
+    if (myCrop->type == HERBACEOUS_ANNUAL ||  myCrop->type == HERBACEOUS_PERENNIAL || myCrop->type == HORTICULTURAL)
     {
         cropSowing.setVisible(true);
         cropCycleMax.setVisible(true);
-        cropSowingValue->setText(QString::number(myCrop.sowingDoy));
+        cropSowingValue->setText(QString::number(myCrop->sowingDoy));
         cropSowingValue->setVisible(true);
-        cropCycleMaxValue->setText(QString::number(myCrop.plantCycle));
+        cropCycleMaxValue->setText(QString::number(myCrop->plantCycle));
         cropCycleMaxValue->setVisible(true);
     }
     else
@@ -259,5 +290,34 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         cropSowingValue->setVisible(false);
         cropCycleMaxValue->setVisible(false);
     }
+}
+
+void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
+{
+    QString error;
+    QString lat;
+    QString lon;
+    if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
+    {
+        latValue->setText(lat);
+        lonValue->setText(lon);
+    }
+    QString table = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);
+    QStringList yearList;
+    if (!getYears(&dbMeteo, table, &yearList, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        this->yearListComboBox.clear();
+        return;
+    }
+    for (int i = 0; i<yearList.size(); i++)
+    {
+        if ( checkYear(&dbMeteo, table, yearList[i], &error))
+        {
+            this->yearListComboBox.addItem(yearList[i]);
+        }
+    }
+
+
 }
 

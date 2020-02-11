@@ -396,7 +396,7 @@ bool removeDirectory(QString myPath)
 bool searchDocPath(QString* docPath)
 {
     QString myPath = QDir::currentPath();
-    QString myVolumeDOS = QDir::rootPath();
+    QString myRoot = QDir::rootPath();
 
     bool isFound = false;
     while (! isFound)
@@ -406,7 +406,7 @@ bool searchDocPath(QString* docPath)
             isFound = true;
             break;
         }
-        if (QDir::cleanPath(myPath) == myVolumeDOS)
+        if (QDir::cleanPath(myPath) == myRoot)
             break;
 
         myPath = QFileInfo(myPath).dir().absolutePath();
@@ -416,33 +416,4 @@ bool searchDocPath(QString* docPath)
     *docPath = QDir::cleanPath(myPath) + "/DOC/";
     return true;
 }
-// LC funziona solo su Windows
-/*
-bool searchDocPath(QString* docPath)
-{
-    QString myPath = QDir::currentPath();
-    QString myVolumeDOS = myPath.left(3);
-
-    bool isFound = false;
-    while (! isFound)
-    {
-        if (QDir(myPath + "DOC").exists())
-        {
-            isFound = true;
-            break;
-        }
-        if (QDir::cleanPath(myPath) == "/" || QDir::cleanPath(myPath) == myVolumeDOS)
-            break;
-
-        myPath += "../";
-    }
-    if (! isFound) return false;
-
-    *docPath = QDir::cleanPath(myPath) + "/DOC/";
-    return true;
-}
-*/
-
-
-
 

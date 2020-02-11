@@ -41,7 +41,7 @@
 
         void clearMeteoPoints();
         bool createDefaultProject(QString fileName);
-        bool searchDefaultPath(QString* path);
+        bool searchDefaultPath(QString* defaultPath);
 
     protected:
         frequencyType currentFrequency;

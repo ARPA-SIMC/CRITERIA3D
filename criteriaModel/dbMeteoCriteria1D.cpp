@@ -3,6 +3,7 @@
 #include <QSqlError>
 #include <QVariant>
 #include <QDate>
+#include <QUuid>
 
 #include "commonConstants.h"
 #include "crit3dDate.h"
@@ -10,6 +11,177 @@
 #include "utilities.h"
 #include "meteoPoint.h"
 
+bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
+{
+
+    *dbMeteo = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    dbMeteo->setDatabaseName(dbName);
+
+    if (!dbMeteo->open())
+    {
+       *error = "Connection with database fail";
+       return false;
+    }
+
+    return true;
+}
+
+bool getIdMeteoList(QSqlDatabase* dbMeteo, QStringList* idMeteoList, QString* error)
+{
+    // query id_meteo list
+    QString queryString = "SELECT id_meteo FROM meteo_locations";
+    QSqlQuery query = dbMeteo->exec(queryString);
+
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+
+    QString idMeteo;
+    do
+    {
+        getValue(query.value("id_meteo"), &idMeteo);
+        if (idMeteo != "")
+        {
+            idMeteoList->append(idMeteo);
+        }
+    }
+    while(query.next());
+
+    return true;
+}
+
+bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *error)
+{
+    *error = "";
+    QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
+
+    QSqlQuery query = dbMeteo->exec(queryString);
+    query.last();
+
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+
+    getValue(query.value("latitude"), lat);
+    getValue(query.value("longitude"), lon);
+
+    return true;
+}
+
+QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *error)
+{
+    *error = "";
+    QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
+
+    QSqlQuery query = dbMeteo->exec(queryString);
+    query.last();
+
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return "";
+    }
+
+    QString table_name;
+    getValue(query.value("table_name"), &table_name);
+
+    return table_name;
+}
+
+bool getYears(QSqlDatabase* dbMeteo, QString table, QStringList* yearList, QString *error)
+{
+    *error = "";
+    QString queryString = "SELECT date, strftime('%Y',date) as Year FROM '" + table +"'";
+
+    QSqlQuery query = dbMeteo->exec(queryString);
+
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+
+    QString year;
+    do
+    {
+        getValue(query.value("Year"), &year);
+        if (year != "" && !yearList->contains(year))
+        {
+            yearList->append(year);
+        }
+    }
+    while(query.next());
+
+    return true;
+}
+
+bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *error)
+{
+    *error = "";
+
+    QString queryString = "SELECT COUNT(date) FROM '" + table +"'" + " WHERE strftime('%Y',date) = '" + year +"'";
+    QSqlQuery query = dbMeteo->exec(queryString);
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+    int count;
+    int max_missing = 30;
+
+    getValue(query.value(0), &count);
+    QDate temp(year.toInt(), 1, 1);
+    int daysInYear = temp.daysInYear();
+
+    if (count < daysInYear-max_missing)
+    {
+        *error = "incomplete year, missing more than max_missing days";
+        return false;
+    }
+
+    queryString = "SELECT date FROM '" + table +"'" + "WHERE strftime('%Y',date) = '" + year +"'";
+    query = dbMeteo->exec(queryString);
+
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+
+    QDate date;
+    QDate previousDate(year.toInt()-1, 12, 31);
+    QDate lastDate(year.toInt(), 12, 31);
+
+    do
+    {
+        getValue(query.value("date"), &date);
+        if (previousDate.daysTo(date) > 2)
+        {
+            *error = "incomplete year, missing more than 1 consecutive days";
+            return false;
+        }
+        previousDate = date;
+
+    }
+    while(query.next());
+
+    // check last day
+    if (date.daysTo(lastDate) > 1)
+    {
+        *error = "incomplete year, missing more than 1 consecutive days";
+        return false;
+    }
+
+    return true;
+}
 
 /*!
  * \brief read daily meteo data from a table in the criteria-1D format

@@ -1725,24 +1725,23 @@ bool Project::loadProjectSettings(QString settingsFileName)
 }
 
 
-bool Project::searchDefaultPath(QString* path)
+bool Project::searchDefaultPath(QString* defaultPath)
 {
     QString myPath = getApplicationPath();
-    QString myVolumeDOS = myPath.left(3);
+    QString myRoot = QDir::rootPath();
 
     bool isFound = false;
     while (! isFound)
     {
-        if (QDir(myPath + "DATA").exists())
+        if (QDir(myPath + "/DATA").exists())
         {
             isFound = true;
             break;
         }
-
-        if (QDir::cleanPath(myPath) == "/" || QDir::cleanPath(myPath) == myVolumeDOS)
+        if (QDir::cleanPath(myPath) == myRoot)
             break;
 
-        myPath += "../";
+        myPath = QFileInfo(myPath).dir().absolutePath();
     }
 
     if (! isFound)
@@ -1751,7 +1750,7 @@ bool Project::searchDefaultPath(QString* path)
         return false;
     }
 
-    *path = QDir::cleanPath(myPath) + "/DATA/";
+    *defaultPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;
 }
 
