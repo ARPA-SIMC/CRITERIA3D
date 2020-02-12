@@ -11,6 +11,8 @@
 #include "utilities.h"
 #include "meteoPoint.h"
 
+#include <qdebug.h>
+
 bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
 {
 
@@ -125,7 +127,18 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
 {
     *error = "";
 
-    QString queryString = "SELECT COUNT(date) FROM '" + table +"'" + " WHERE strftime('%Y',date) = '" + year +"'";
+    QString TMIN_MIN = "-50.0";
+    QString TMIN_MAX = "40.0";
+
+    QString TMAX_MIN = "-40.0";
+    QString TMAX_MAX = "50.0";
+
+    // count valid temp
+    QString queryString = "SELECT COUNT(date) FROM '" + table +"'" + " WHERE strftime('%Y',date) = '" + year+"'";
+    queryString = queryString + " AND tmin NOT LIKE '' AND tmax NOT LIKE ''";
+    queryString = queryString + " AND CAST(tmin AS float) >=" + TMIN_MIN + " AND CAST(tmin AS float) <=" + TMIN_MAX;
+    queryString = queryString + " AND CAST(tmax AS float) >= " + TMAX_MIN + " AND CAST(tmax AS float) <= " + TMAX_MAX;
+
     QSqlQuery query = dbMeteo->exec(queryString);
     query.first();
     if (! query.isValid())
@@ -134,19 +147,21 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
         return false;
     }
     int count;
-    int max_missing = 30;
+    const int MAX_MISSING_DAYS = 30;
 
     getValue(query.value(0), &count);
     QDate temp(year.toInt(), 1, 1);
     int daysInYear = temp.daysInYear();
 
-    if (count < daysInYear-max_missing)
+    if (count < daysInYear-MAX_MISSING_DAYS)
     {
-        *error = "incomplete year, missing more than max_missing days";
+        *error = "incomplete year, valid data missing more than MAX_MISSING_DAYS";
         return false;
     }
 
-    queryString = "SELECT date FROM '" + table +"'" + "WHERE strftime('%Y',date) = '" + year +"'";
+    // check consecutive missing days (1 missing day allowed)
+
+    queryString = "SELECT * FROM '" + table +"'" + "WHERE strftime('%Y',date) = '" + year +"'";
     query = dbMeteo->exec(queryString);
 
     query.first();
@@ -159,14 +174,47 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     QDate date;
     QDate previousDate(year.toInt()-1, 12, 31);
     QDate lastDate(year.toInt(), 12, 31);
+    float tmin = NODATA;
+    float tmax = NODATA;
+    float tmin_min = TMIN_MIN.toFloat();
+    float tmin_max = TMIN_MAX.toFloat();
+
+    float tmax_min = TMAX_MIN.toFloat();
+    float tmax_max = TMAX_MAX.toFloat();
+
+    int invalidTemp = 0;
 
     do
     {
         getValue(query.value("date"), &date);
+        getValue(query.value("tmin"), &tmin);
+        getValue(query.value("tmax"), &tmax);
+        // 2 days missing
         if (previousDate.daysTo(date) > 2)
         {
             *error = "incomplete year, missing more than 1 consecutive days";
             return false;
+        }
+        // 1 day missing, the next one invalid temp
+        if ( (previousDate.daysTo(date) == 2) && (tmin < tmin_min || tmin > tmin_max || tmax < tmax_min || tmax > tmax_max ) )
+        {
+            *error = "incomplete year, missing valid data more than 1 consecutive days";
+            return false;
+        }
+        // no day missing, check valid temp
+        if (tmin < tmin_min || tmin > tmin_max || tmax < tmax_min || tmax > tmax_max )
+        {
+            invalidTemp = invalidTemp + 1;
+            if (invalidTemp > 1)
+            {
+                *error = "incomplete year, missing valid data more than 1 consecutive days";
+                return false;
+            }
+
+        }
+        else
+        {
+            invalidTemp = 0;
         }
         previousDate = date;
 
@@ -174,7 +222,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     while(query.next());
 
     // check last day
-    if (date.daysTo(lastDate) > 1)
+    if (date.daysTo(lastDate) > 1 || (date.daysTo(lastDate) == 1 && invalidTemp > 0) )
     {
         *error = "incomplete year, missing more than 1 consecutive days";
         return false;
