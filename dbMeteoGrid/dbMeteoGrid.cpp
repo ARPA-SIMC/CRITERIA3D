@@ -1311,10 +1311,11 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString *myError, Q
 
     }
 
-
     return true;
 }
 
+
+/*
 std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
 {
     QSqlQuery qry(_db);
@@ -1394,6 +1395,78 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
         }
 
     }
+
+    return dailyVarList;
+} */
+
+
+std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, QString meteoPoint,
+                                    meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
+{
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
+    QDate currentDate, lastDateDB;
+    unsigned int previousIndex, currentIndex;
+    std::vector<float> dailyVarList;
+
+    int varCode = getDailyVarCode(variable);
+    if (varCode == NODATA)
+    {
+        *myError = "Variable not existing";
+        return dailyVarList;
+    }
+
+    unsigned row, col;
+    if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
+    {
+        *myError = "Missing MeteoPoint id";
+        return dailyVarList;
+    }
+
+    QString statement = QString("SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`").arg(tableD).arg(varCode).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
+    if(! qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return dailyVarList;
+    }
+
+    // read first date
+    qry.first();
+    if (!getValue(qry.value(_tableDaily.fieldTime), firstDateDB))
+    {
+        *myError = "Missing first date";
+        return dailyVarList;
+    }
+
+    // read last date
+    qry.last();
+    if (!getValue(qry.value(_tableDaily.fieldTime), &lastDateDB))
+    {
+        *myError = "Missing last date";
+        return dailyVarList;
+    }
+
+    // resize vector
+    int nrValues = int(firstDateDB->daysTo(lastDateDB)) + 1;
+    dailyVarList.resize(unsigned(nrValues));
+
+    // assign values
+    previousIndex = 0;
+    qry.first();
+    do
+    {
+        currentDate = qry.value(_tableDaily.fieldTime).toDate();
+        currentIndex = unsigned(firstDateDB->daysTo(currentDate));
+
+        for (unsigned int i = previousIndex+1; i < currentIndex; i++)
+        {
+            dailyVarList[i] = NODATA;
+        }
+
+        dailyVarList[currentIndex] = qry.value("Value").toFloat();
+        previousIndex = currentIndex;
+
+    } while (qry.next());
 
     return dailyVarList;
 }
