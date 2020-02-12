@@ -231,6 +231,127 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     return true;
 }
 
+bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPoint *meteoPoint, QString validYear, QString *error)
+{
+    *error = "";
+
+    QString queryString = "SELECT * FROM '" + table +"'" + "WHERE strftime('%Y',date) = '" + validYear +"'";
+    QSqlQuery query = dbMeteo->exec(queryString);
+
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+
+    QDate date;
+    QDate previousDate(validYear.toInt()-1, 12, 31);
+    QDate lastDate(validYear.toInt(), 12, 31);
+    float tmin = NODATA;
+    float tmax = NODATA;
+    float tavg = NODATA;
+
+    const float tmin_min = -50;
+    const float tmin_max = 40;
+
+    const float tmax_min = -40;
+    const float tmax_max = 50;
+
+
+    do
+    {
+        getValue(query.value("date"), &date);
+        getValue(query.value("tmin"), &tmin);
+        getValue(query.value("tmax"), &tmax);
+
+        if (tmin < tmin_min || tmin > tmin_max)
+        {
+            tmin = NODATA;
+        }
+        if (tmax < tmax_min || tmax > tmax_max)
+        {
+            tmax = NODATA;
+        }
+        if (tmin == NODATA || tmax == NODATA)
+        {
+            tavg = NODATA;
+        }
+        else
+        {
+            tavg = (tmin + tmax) * 0.5f;
+        }
+        meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMin, tmin);
+        meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMax, tmax);
+        meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureAvg, tavg);
+    }
+    while(query.next());
+
+    QDate firstDate(validYear.toInt(), 1, 1);
+    int daysInYear = firstDate.daysInYear();
+    float prevTmin = NODATA;
+    float prevTmax = NODATA;
+    float nextTmin = NODATA;
+    float nextTmax = NODATA;
+
+    // fill NODATA values with average values of day before and next.
+    for (int i = 0; i < daysInYear; i++)
+    {
+        tmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate), dailyAirTemperatureMin);
+        tmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate), dailyAirTemperatureMax);
+        tavg = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate), dailyAirTemperatureAvg);
+        if (tmin == NODATA)
+        {
+            if (i!=0 && i!=(daysInYear-1))
+            {
+                prevTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(-1)), dailyAirTemperatureMin);
+                nextTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(1)), dailyAirTemperatureMin);
+                tmin = (prevTmin + nextTmin) * 0.5f;
+            }
+            else if (i==0)
+            {
+                nextTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(1)), dailyAirTemperatureMin);
+                tmin = nextTmin;
+            }
+            else if (i==(daysInYear-1))
+            {
+                prevTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(-1)), dailyAirTemperatureMin);
+                tmin = prevTmin;
+            }
+
+            meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMin, tmin);
+
+        }
+        if (tmax == NODATA)
+        {
+            if (i!=0 && i!=(daysInYear-1))
+            {
+                prevTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(-1)), dailyAirTemperatureMax);
+                nextTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(1)), dailyAirTemperatureMax);
+                tmax = (prevTmin + nextTmin) * 0.5f;
+            }
+            else if (i==0)
+            {
+                nextTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(1)), dailyAirTemperatureMax);
+                tmax = nextTmax;
+            }
+            else if (i==(daysInYear-1))
+            {
+                prevTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(-1)), dailyAirTemperatureMax);
+                tmax = prevTmax;
+            }
+
+            meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMax, tmax);
+        }
+        if (tavg == NODATA)
+        {
+            tavg = (tmin + tmax) * 0.5f;
+            meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureAvg, tavg);
+        }
+    }
+    return true;
+}
+
 /*!
  * \brief read daily meteo data from a table in the criteria-1D format
  * \brief (`date`,`tmin`,`tmax`,`tavg`,`prec`,`etp`,`watertable`)
