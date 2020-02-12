@@ -130,6 +130,8 @@
 
             void saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<int> > &meteoGridRow, std::vector<std::vector<int> > &meteoGridCol);
 
+            void computeWindVectorHourly(const Crit3DDate myDate, const int myHour);
+
     private:
 
             Crit3DMeteoGridStructure _gridStructure;

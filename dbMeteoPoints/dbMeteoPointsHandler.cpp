@@ -384,6 +384,12 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
                 value = qry.value(2).toFloat();
                 meteoPoint->setMeteoPointValueH(Crit3DDate(d.date().day(), d.date().month(), d.date().year()),
                                                        d.time().hour(), d.time().minute(), variable, value);
+
+                // copy scalar intensity to vector intensity (instantaneous values are equivalent, following WMO)
+                // should be removed when when we hourly averages are available
+                if (variable == windScalarIntensity)
+                    meteoPoint->setMeteoPointValueH(Crit3DDate(d.date().day(), d.date().month(), d.date().year()),
+                                                           d.time().hour(), d.time().minute(), windVectorIntensity, value);
             }
         }
     }

@@ -190,7 +190,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
     QRadioButton RHmin("Minimum air relative humidity");
     QRadioButton RHmax("Maximum air relative humidity");
     QRadioButton Rad("Solar radiation");
-    QRadioButton ET0HS("Reference evapotranspiration (Hargreaves)");
+    QRadioButton ET0HS("Reference evapotranspiration (Hargreaves-Samani)");
     QRadioButton ET0PM("Reference evapotranspiration (Penman-Monteith)");
     QRadioButton BIC("Hydroclimatic balance");
     QRadioButton WindVAvg("Average wind vector intensity");
@@ -204,7 +204,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
     QRadioButton RH("Air relative humidity");
     QRadioButton DewT("Air dew temperature (°C)");
     QRadioButton Irr("Solar irradiance");
-    QRadioButton ET0PMh("Reference evapotranspiration (Hargreaves)");
+    QRadioButton ET0PMh("Reference evapotranspiration (Penman-Monteith)");
     QRadioButton WSInt("Wind scalar intensity");
     QRadioButton WVInt("Wind vector intensity");
     QRadioButton WVDir("Wind vector direction");

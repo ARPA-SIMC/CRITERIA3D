@@ -25,8 +25,10 @@
         float* tDew;
         float* irradiance;
         float* et0;
-        float* windVecInt;
         float* windScalInt;
+        float* windVecX;
+        float* windVecY;
+        float* windVecInt;
         float* windVecDir;
         int* leafW;
         float* transmissivity;
