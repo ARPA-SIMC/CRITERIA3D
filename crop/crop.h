@@ -72,8 +72,13 @@
         int getDaysFromCurrentSowing(int myDoy);
         bool isInsideTypicalCycle(int myDoy);
         bool isPluriannual();
-        bool needReset(Crit3DDate myDate, float latitude, float waterTableDepth);
+
+        void initialize(double latitude, int nrLayers, double totalSoilDepth, int currentDoy);
+        bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
         void resetCrop(int nrLayers);
+        bool updateLAI(double latitude, int nrLayers, int myDoy);
+        bool dailyUpdate(const Crit3DDate &myDate, double latitude, int nrLayers, double totalDepth,
+                        double tmin, double tmax, double waterTableDepth, std::string* myError);
     };
 
 
