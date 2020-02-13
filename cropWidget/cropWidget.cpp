@@ -221,6 +221,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
     //saveChanges->setEnabled(true);
 }
 
+
 void Crit3DCropWidget::on_actionOpenMeteoDB()
 {
     QString dbMeteoName = QFileDialog::getOpenFileName(this, tr("Open meteo database"), "", tr("SQLite files (*.db)"));
@@ -251,6 +252,7 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
     }
     //saveChanges->setEnabled(true);
 }
+
 
 void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 {

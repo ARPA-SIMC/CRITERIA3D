@@ -1,13 +1,13 @@
 #ifndef TABLAI_H
 #define TABLAI_H
 
-#include <QtWidgets>
+    #include <QtWidgets>
 
-class TabLAI : public QWidget
-{
-    Q_OBJECT
-public:
-    TabLAI();
-};
+    class TabLAI : public QWidget
+    {
+        Q_OBJECT
+    public:
+        TabLAI();
+    };
 
 #endif // TABLAI_H
