@@ -39,8 +39,10 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../so
 
 SOURCES += \
     cropWidget.cpp \
+    dialogNewCrop.cpp \
     tabLAI.cpp
 
 HEADERS += \
     cropWidget.h \
+    dialogNewCrop.h \
     tabLAI.h

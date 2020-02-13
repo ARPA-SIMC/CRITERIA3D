@@ -251,4 +251,26 @@ float getIrriRatioFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString c
         return NODATA;
 }
 
+bool deleteCropData(QSqlDatabase* dbCrop, QString cropName, QString *error)
+{
+
+    QSqlQuery qry(*dbCrop);
+    if (cropName.isEmpty())
+    {
+        *error = "crop_name missing";
+        return false;
+    }
+
+    // delete all row from table crop of crop:crop_name
+    qry.prepare( "DELETE FROM crop WHERE crop_name = :crop_name");
+    qry.bindValue(":crop_name", cropName);
+
+    if( !qry.exec() )
+    {
+        *error = qry.lastError().text();
+        return false;
+    }
+    return true;
+}
+
 
