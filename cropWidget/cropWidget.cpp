@@ -23,6 +23,7 @@
 
 
 #include "cropWidget.h"
+#include "dialogNewCrop.h"
 #include "cropDbTools.h"
 #include "dbMeteoCriteria1D.h"
 #include "utilities.h"
@@ -180,6 +181,10 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(openMeteoDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenMeteoDB);
     connect(&meteoListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseMeteo);
     connect(&yearListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseYear);
+
+    connect(newCrop, &QAction::triggered, this, &Crit3DCropWidget::on_actionNewCrop);
+    connect(deleteCrop, &QAction::triggered, this, &Crit3DCropWidget::on_actionDeleteCrop);
+    connect(restoreData, &QAction::triggered, this, &Crit3DCropWidget::on_actionRestoreData);
 }
 
 void Crit3DCropWidget::on_actionOpenCropDB()
@@ -212,6 +217,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
     {
         this->cropListComboBox.addItem(cropStringList[i]);
     }
+
     //saveChanges->setEnabled(true);
 }
 
@@ -343,4 +349,59 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
         return;
     }
 
+}
+
+void Crit3DCropWidget::on_actionDeleteCrop()
+{
+    QString msg;
+        if (cropListComboBox.currentText().isEmpty())
+        {
+            msg = "Select the soil to be deleted";
+            QMessageBox::information(nullptr, "Warning", msg);
+        }
+        else
+        {
+            QMessageBox::StandardButton confirm;
+            msg = "Are you sure you want to delete "+cropListComboBox.currentText()+" ?";
+            confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+            QString error;
+
+            if (confirm == QMessageBox::Yes)
+            {
+                if (deleteCropData(&dbCrop, cropListComboBox.currentText(), &error))
+                {
+                    cropListComboBox.removeItem(cropListComboBox.currentIndex());
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+}
+
+void Crit3DCropWidget::on_actionRestoreData()
+{
+    // TO DO
+    // deve salvare il db Crop originario? le modifiche possibili sono solo dovute a delete/new crop?
+}
+
+void Crit3DCropWidget::on_actionNewCrop()
+{
+    if (!dbCrop.isOpen())
+    {
+        QString msg = "Open a Db Crop";
+        QMessageBox::information(nullptr, "Warning", msg);
+        return;
+    }
+    DialogNewCrop dialog;
+    QString error;
+    if (dialog.result() != QDialog::Accepted)
+    {
+        return;
+    }
+    else
+    {
+        // TO DO
+    }
 }

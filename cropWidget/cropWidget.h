@@ -26,6 +26,9 @@ class Crit3DCropWidget : public QWidget
         void on_actionOpenMeteoDB();
         void on_actionChooseMeteo(QString idMeteo);
         void on_actionChooseYear(QString year);
+        void on_actionDeleteCrop();
+        void on_actionRestoreData();
+        void on_actionNewCrop();
     private:
         QSqlDatabase dbCrop;
         QSqlDatabase dbMeteo;
