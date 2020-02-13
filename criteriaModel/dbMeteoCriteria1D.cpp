@@ -28,7 +28,8 @@ bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
     return true;
 }
 
-bool getIdMeteoList(QSqlDatabase* dbMeteo, QStringList* idMeteoList, QString* error)
+
+bool getMeteoPointList(QSqlDatabase* dbMeteo, QStringList* idMeteoList, QString* error)
 {
     // query id_meteo list
     QString queryString = "SELECT id_meteo FROM meteo_locations";
@@ -55,6 +56,7 @@ bool getIdMeteoList(QSqlDatabase* dbMeteo, QStringList* idMeteoList, QString* er
     return true;
 }
 
+
 bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *error)
 {
     *error = "";
@@ -74,6 +76,7 @@ bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, 
 
     return true;
 }
+
 
 QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *error)
 {
@@ -95,7 +98,8 @@ QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString 
     return table_name;
 }
 
-bool getYears(QSqlDatabase* dbMeteo, QString table, QStringList* yearList, QString *error)
+
+bool getYearList(QSqlDatabase* dbMeteo, QString table, QStringList* yearList, QString *error)
 {
     *error = "";
     QString queryString = "SELECT date, strftime('%Y',date) as Year FROM '" + table +"'";
@@ -122,6 +126,7 @@ bool getYears(QSqlDatabase* dbMeteo, QString table, QStringList* yearList, QStri
 
     return true;
 }
+
 
 bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *error)
 {
@@ -210,7 +215,6 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
                 *error = "incomplete year, missing valid data more than 1 consecutive days";
                 return false;
             }
-
         }
         else
         {
@@ -230,6 +234,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
 
     return true;
 }
+
 
 bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPoint *meteoPoint, QString validYear, QString *error)
 {

@@ -237,7 +237,7 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
     }
     // read id_meteo list
     QStringList idMeteoList;
-    if (! getIdMeteoList(&dbMeteo, &idMeteoList, &error))
+    if (! getMeteoPointList(&dbMeteo, &idMeteoList, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
         return;
@@ -303,6 +303,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
     }
 }
 
+
 void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
 {
     QString error;
@@ -315,7 +316,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     }
     tableMeteo = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);
     QStringList yearList;
-    if (!getYears(&dbMeteo, tableMeteo, &yearList, &error))
+    if (!getYearList(&dbMeteo, tableMeteo, &yearList, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
         this->yearListComboBox.clear();
@@ -330,6 +331,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     }
 
 }
+
 
 void Crit3DCropWidget::on_actionChooseYear(QString year)
 {
