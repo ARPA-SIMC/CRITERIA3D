@@ -247,8 +247,9 @@ bool weatherGenerator2D::initializeData(int lengthDataSeries, int stations)
     return 0;
 }
 
-void weatherGenerator2D::initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D)
+void weatherGenerator2D::initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D,bool computeStats)
 {
+    computeStatistics = computeStats;
     isPrecWG2D = computePrecWG2D;
     isTempWG2D = computeTempWG2D;
     // default parameters
@@ -292,11 +293,32 @@ void weatherGenerator2D::commonModuleCompute()
 {
     // step 1 of precipitation WG2D
     printf("step 1/9 \n");
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     weatherGenerator2D::precipitationP00P10(); // it computes the monthly probabilities p00 and p10
     printf("step 2/9 \n");
+    //time_t rawtime;
+    //struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 2 of precipitation WG2D
     weatherGenerator2D::precipitationCorrelationMatrices(); // computation of monthly correlation amongst stations
     printf("step 3/9 \n");
+    //time_t rawtime;
+    //struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 3 of precipitation WG2D
     weatherGenerator2D::precipitationMultisiteOccurrenceGeneration(); // generation of a sequence of dry/wet days after statistics and random numbers
 
@@ -306,14 +328,33 @@ void weatherGenerator2D::temperatureCompute()
 {
     // step 1 of temperature WG2D
     printf("step 4/9\n");
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     weatherGenerator2D::computeTemperatureParameters();
     printf("step 5/9\n");
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 2 of temperature WG2D
     weatherGenerator2D::temperaturesCorrelationMatrices();
     printf("step 6/9\n");
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 3 of temperature WG2D
     weatherGenerator2D::multisiteRandomNumbersTemperature();
     printf("step 7/9\n");
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 4 of temperature WG2D
     weatherGenerator2D::multisiteTemperatureGeneration();
     printf("end temperature module\n");
@@ -327,8 +368,22 @@ void weatherGenerator2D::precipitationCompute()
     weatherGenerator2D::initializePrecipitationOutputs(lengthSeason);
     // step 4 of precipitation WG2D
     printf("step 8/9 \n");
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     weatherGenerator2D::precipitationMultiDistributionParameterization(); // seasonal amounts distribution
     printf("step 9/9\n");
+    //time_t rawtime;
+    //struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 5 of precipitation WG2D
     if (parametersModel.distributionPrecipitation == 3)
     {
@@ -627,7 +682,8 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
         {
             free(normalizedRandomMatrix[i]);            
         }
-        free(normalizedRandomMatrix);        
+        free(normalizedRandomMatrix);
+        printf("step 3/9 step %d/12\n",iMonth+1);
     }
 
 
@@ -829,6 +885,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
 
             }
         }
+
     }  // end of the while cycle
 
 

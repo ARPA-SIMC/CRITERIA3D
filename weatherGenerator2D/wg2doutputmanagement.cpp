@@ -158,7 +158,8 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
             }
             counter++;
         }
-        computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
+        if(computeStatistics)
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
     }
 
     free(inputTMin);
@@ -168,28 +169,31 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
     precThreshold = float(parametersModel.precipitationThreshold);
     minPrecData = NODATA;
     nrDays = nrData;
-    inputTMin = (float*)calloc(nrDays, sizeof(float));
-    inputTMax = (float*)calloc(nrDays, sizeof(float));
-    inputPrec = (float*)calloc(nrDays, sizeof(float));
-    // compute climate statistics from observed data
-    for (int iStation=0;iStation<nrStations;iStation++)
+    if(computeStatistics)
     {
-        outputFileName = "wgClimate_station_" + QString::number(iStation) + ".txt";
-        inputFirstDate.day = obsDataD[iStation][0].date.day;
-        inputFirstDate.month = obsDataD[iStation][0].date.month;
-        inputFirstDate.year = obsDataD[iStation][0].date.year;
-        nrDays = nrData;
-        for (int i=0;i<nrDays;i++)
+        inputTMin = (float*)calloc(nrDays, sizeof(float));
+        inputTMax = (float*)calloc(nrDays, sizeof(float));
+        inputPrec = (float*)calloc(nrDays, sizeof(float));
+        // compute climate statistics from observed data
+        for (int iStation=0;iStation<nrStations;iStation++)
         {
-            inputTMin[i] = obsDataD[iStation][i].tMin;
-            inputTMax[i] = obsDataD[iStation][i].tMax;
-            inputPrec[i] = obsDataD[iStation][i].prec;
+            outputFileName = "wgClimate_station_" + QString::number(iStation) + ".txt";
+            inputFirstDate.day = obsDataD[iStation][0].date.day;
+            inputFirstDate.month = obsDataD[iStation][0].date.month;
+            inputFirstDate.year = obsDataD[iStation][0].date.year;
+            nrDays = nrData;
+            for (int i=0;i<nrDays;i++)
+            {
+                inputTMin[i] = obsDataD[iStation][i].tMin;
+                inputTMax[i] = obsDataD[iStation][i].tMax;
+                inputPrec[i] = obsDataD[iStation][i].prec;
+            }
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
         }
-        computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
+        free(inputTMin);
+        free(inputTMax);
+        free(inputPrec);
     }
-    free(inputTMin);
-    free(inputTMax);
-    free(inputPrec);
     weatherGenerator2D::precipitationMonthlyAverage(monthlySimulatedAveragePrecipitationInternalFunction,monthlyClimateAveragePrecipitationInternalFunction);
 
     for (int iStation=0;iStation<nrStations;iStation++)
@@ -207,45 +211,50 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
 
         }
     }
-    nrDays = 365*parametersModel.yearOfSimulation;
-    for (int i=1;i<=parametersModel.yearOfSimulation;i++)
+    if(computeStatistics)
     {
-        if (isLeapYear(i)) nrDays++;
-    }
-    inputTMin = (float*)calloc(nrDays, sizeof(float));
-    inputTMax = (float*)calloc(nrDays, sizeof(float));
-    inputPrec = (float*)calloc(nrDays, sizeof(float));
-    inputFirstDate.day = 1;
-    inputFirstDate.month = 1;
-    inputFirstDate.year = 1;
-
-
-    for (int iStation=0;iStation<nrStations;iStation++)
-    {
-        outputFileName = "wgSimulation_station_" + QString::number(iStation) + ".txt";
-        counter = 0;
-        for (int i=0;i<nrDays;i++)
+        nrDays = 365*parametersModel.yearOfSimulation;
+        for (int i=1;i<=parametersModel.yearOfSimulation;i++)
         {
-            inputTMin[i]= (float)(outputWeatherData[iStation].minT[counter]);
-            inputTMax[i]= (float)(outputWeatherData[iStation].maxT[counter]);
-            inputPrec[i]= (float)(outputWeatherData[iStation].precipitation[counter]);
-            //printf("%f\n",outputWeatherData[iStation].minT[counter]);
-            if (isLeapYear(outputWeatherData[iStation].yearSimulated[counter]) && outputWeatherData[iStation].monthSimulated[counter] == 2 && outputWeatherData[iStation].daySimulated[counter] == 28)
+            if (isLeapYear(i)) nrDays++;
+        }
+
+        inputTMin = (float*)calloc(nrDays, sizeof(float));
+        inputTMax = (float*)calloc(nrDays, sizeof(float));
+        inputPrec = (float*)calloc(nrDays, sizeof(float));
+        inputFirstDate.day = 1;
+        inputFirstDate.month = 1;
+        inputFirstDate.year = 1;
+
+
+        for (int iStation=0;iStation<nrStations;iStation++)
+        {
+            outputFileName = "wgSimulation_station_" + QString::number(iStation) + ".txt";
+            counter = 0;
+            for (int i=0;i<nrDays;i++)
             {
-                ++i;
                 inputTMin[i]= (float)(outputWeatherData[iStation].minT[counter]);
                 inputTMax[i]= (float)(outputWeatherData[iStation].maxT[counter]);
                 inputPrec[i]= (float)(outputWeatherData[iStation].precipitation[counter]);
+                //printf("%f\n",outputWeatherData[iStation].minT[counter]);
+                if (isLeapYear(outputWeatherData[iStation].yearSimulated[counter]) && outputWeatherData[iStation].monthSimulated[counter] == 2 && outputWeatherData[iStation].daySimulated[counter] == 28)
+                {
+                    ++i;
+                    inputTMin[i]= (float)(outputWeatherData[iStation].minT[counter]);
+                    inputTMax[i]= (float)(outputWeatherData[iStation].maxT[counter]);
+                    inputPrec[i]= (float)(outputWeatherData[iStation].precipitation[counter]);
 
+                }
+                counter++;
             }
-            counter++;
+
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
         }
-        computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
+        free(inputTMin);
+        free(inputTMax);
+        free(inputPrec);
+        weatherGenerator2D::precipitationCorrelationMatricesSimulation();
     }
-    free(inputTMin);
-    free(inputTMax);
-    free(inputPrec);
-    weatherGenerator2D::precipitationCorrelationMatricesSimulation();
 
     //printf("%f\n",outputWeatherData[3].minT[5]);
 }
@@ -447,15 +456,6 @@ ToutputWeatherData* weatherGenerator2D::getWeatherGeneratorOutput(int startingYe
         {
             for (int iDoy=0; iDoy<365; iDoy++)
             {
-                //printf("%f\n",outputWeatherData[iStation].minT[counter]);
-                /*outputSimulations[iStation].yearSimulated[counter] = outputWeatherData[iStation].yearSimulated[counter] + startingYear;
-                outputSimulations[iStation].monthSimulated[counter] = outputWeatherData[iStation].monthSimulated[counter];
-                outputSimulations[iStation].daySimulated[counter] = outputWeatherData[iStation].daySimulated[counter];
-                outputSimulations[iStation].doySimulated[counter] = outputWeatherData[iStation].doySimulated[counter];
-                outputSimulations[iStation].minT[counter] = outputWeatherData[iStation].minT[counter];
-                outputSimulations[iStation].maxT[counter] = outputWeatherData[iStation].maxT[counter];
-                outputSimulations[iStation].precipitation[counter] = outputWeatherData[iStation].precipitation[counter];
-                */
                 outputWeatherData[iStation].yearSimulated[counter] += startingYear-1;
                 counter++;
             }
