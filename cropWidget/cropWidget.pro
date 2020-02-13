@@ -34,7 +34,7 @@ win32:{
     TARGET = cropWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../soil ../crop ../criteriaModel
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../soil ../crop ../criteriaModel
 
 
 SOURCES += \

@@ -12,6 +12,8 @@
     #include "crop.h"
 #endif
 
+#include "meteoPoint.h"
+
 class Crit3DCropWidget : public QWidget
 {
     Q_OBJECT
@@ -22,10 +24,13 @@ class Crit3DCropWidget : public QWidget
         void on_actionChooseCrop(QString cropName);
         void on_actionOpenMeteoDB();
         void on_actionChooseMeteo(QString idMeteo);
+        void on_actionChooseYear(QString year);
     private:
         QSqlDatabase dbCrop;
         QSqlDatabase dbMeteo;
         Crit3DCrop* myCrop;
+        QString tableMeteo;
+        Crit3DMeteoPoint *meteoPoint;
 
         QGroupBox *infoCropGroup;
         QGroupBox *infoMeteoGroup;

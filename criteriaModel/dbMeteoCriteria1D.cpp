@@ -235,7 +235,7 @@ bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPo
 {
     *error = "";
 
-    QString queryString = "SELECT * FROM '" + table +"'" + "WHERE strftime('%Y',date) = '" + validYear +"'";
+    QString queryString = "SELECT * FROM '" + table +"'" + " WHERE strftime('%Y',date) = '" + validYear +"'";
     QSqlQuery query = dbMeteo->exec(queryString);
 
     query.first();
