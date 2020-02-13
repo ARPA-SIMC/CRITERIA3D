@@ -9,7 +9,7 @@
 #
 #----------------------------------------------------
 
-QT  += widgets sql
+QT  += widgets sql charts
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -34,11 +34,15 @@ win32:{
     TARGET = cropWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../soil ../crop ../criteriaModel
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../soil ../crop ../criteriaModel
 
 
 SOURCES += \
-    cropWidget.cpp
+    cropWidget.cpp \
+    dialogNewCrop.cpp \
+    tabLAI.cpp
 
 HEADERS += \
-    cropWidget.h
+    cropWidget.h \
+    dialogNewCrop.h \
+    tabLAI.h

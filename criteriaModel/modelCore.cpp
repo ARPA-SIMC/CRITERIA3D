@@ -31,6 +31,7 @@
 #include <math.h>
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "criteriaModel.h"
 #include "croppingSystem.h"
 #include "cropDbTools.h"
@@ -116,13 +117,13 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
         }
 
         // check on wrong data
-        if (prec < 0.0) prec = 0.0;
-        myCase->output.dailyPrec = prec;
+        if (prec < 0) prec = 0;
+        myCase->output.dailyPrec = double(prec);
 
         // WATERTABLE
         waterTableDepth = myCase->meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth);
 
-        myCase->output.dailyWaterTable = waterTableDepth;
+        myCase->output.dailyWaterTable = double(waterTableDepth);
         if (myDate < lastDate)
             tomorrowPrec = myCase->meteoPoint.getMeteoPointValueD(myDate.addDays(1), dailyPrecipitation);
         else
@@ -130,10 +131,10 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
 
         // ET0
         et0 = myCase->meteoPoint.getMeteoPointValueD(myDate, dailyReferenceEvapotranspirationHS);
-        if ((et0 == NODATA || et0 <= 0))
+        if ( isEqual(et0, NODATA) || et0 <= 0 )
             et0 = ET0_Hargreaves(0.17, myCase->meteoPoint.latitude, doy, tmax, tmin);
 
-        myCase->output.dailyEt0 = et0;
+        myCase->output.dailyEt0 = double(et0);
 
         // CROP
         if (! updateCrop(myCase, myError, myDate, tmin, tmax, waterTableDepth))
