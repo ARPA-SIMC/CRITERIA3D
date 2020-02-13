@@ -198,6 +198,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
     QRadioButton WindVDir("Prevailing wind vector direction");
     QRadioButton WindSAvg("Average wind scalar intensity");
     QRadioButton WindSMax("Maximum wind scalar intensity");
+    QRadioButton LeafWD("Leaf wetness");
 
     QRadioButton T("Air temperature");
     QRadioButton P("Precipitation");
@@ -230,6 +231,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
         layoutVariable.addWidget(&WindVAvg);
         layoutVariable.addWidget(&WindVMax);
         layoutVariable.addWidget(&WindVDir);
+        layoutVariable.addWidget(&LeafWD);
 
         if (myCurrentVar == dailyAirTemperatureMin)
             Tmin.setChecked(true);
@@ -263,6 +265,8 @@ meteoVariable chooseMeteoVariable(Project* myProject)
             WindVMax.setChecked(true);
         else if (myCurrentVar == dailyWindVectorDirectionPrevailing)
             WindVDir.setChecked(true);
+        else if (myCurrentVar == dailyLeafWetness)
+            LeafWD.setChecked(true);
     }
     else if (myProject->getCurrentFrequency() == hourly)
     {
@@ -357,6 +361,8 @@ meteoVariable chooseMeteoVariable(Project* myProject)
            return (dailyWindVectorIntensityMax);
        else if (WindVDir.isChecked())
            return (dailyWindVectorDirectionPrevailing);
+       else if (LeafWD.isChecked())
+           return (dailyLeafWetness);
    }
 
    if (myProject->getCurrentFrequency() == hourly)
