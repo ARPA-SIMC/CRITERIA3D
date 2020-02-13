@@ -30,6 +30,7 @@
 
 #include <math.h>
 #include "physics.h"
+#include "basicMath.h"
 #include "commonConstants.h"
 
 
@@ -401,4 +402,20 @@ int windPrevailingDir(std::vector<float> intensity, std::vector<float> dir, int 
 
 }
 
+float TimeIntegration(std::vector<float> values, float timeStep)
+{
 
+    if (values.size() == 0)
+        return NODATA;
+
+    float sum = 0;
+
+    for (unsigned i = 0; i < values.size(); i++)
+    {
+        if (isEqual(values[i], NODATA))
+            sum += values[i] * timeStep;
+    }
+
+    return sum;
+
+}

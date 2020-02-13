@@ -22,6 +22,6 @@
     float erosivityFactor(std::vector<float> values, int nValues);
     float rainIntensity(std::vector<float> values, int nValues, float rainfallThreshold);
     int windPrevailingDir(std::vector<float> intensity, std::vector<float> dir, int nValues, bool useIntensity);
-
+    float TimeIntegration(std::vector<float> values, float timeStep);
 
 #endif // PHYSICS_H

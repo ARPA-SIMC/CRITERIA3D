@@ -77,6 +77,8 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
             return rainIntensity(values, nValues, rainfallThreshold);
         case stdDev:
             return statistics::standardDeviation(values, nValues);
+        case timeIntegration:
+            return TimeIntegration(values, param);
 
         default:
             return NODATA;
