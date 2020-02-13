@@ -35,51 +35,55 @@
 #include "root.h"
 
 
-// initialization of crop
 void initializeCrop(CriteriaModel* myCase, int currentDoy)
+{
+    initializeCrop(&(myCase->myCrop), myCase->meteoPoint.latitude, myCase->nrLayers, myCase->mySoil.totalDepth, currentDoy);
+}
+
+
+void initializeCrop(Crit3DCrop* myCrop, double latitude, int nrLayers, double totalSoilDepth, int currentDoy)
 {    
     // initialize root density
-    if (myCase->myCrop.roots.rootDensity != nullptr) delete[] myCase->myCrop.roots.rootDensity;
-    myCase->myCrop.roots.rootDensity = new double[unsigned(myCase->nrLayers)];
+    if (myCrop->roots.rootDensity != nullptr) delete[] myCrop->roots.rootDensity;
+    myCrop->roots.rootDensity = new double[unsigned(nrLayers)];
 
     // initialize root depth
-    myCase->myCrop.roots.rootDepth = 0;
+    myCrop->roots.rootDepth = 0;
 
     // initialize transpiration
-    if (myCase->myCrop.roots.transpiration != nullptr) delete[] myCase->myCrop.roots.transpiration;
-    myCase->myCrop.roots.transpiration = new double[unsigned(myCase->nrLayers)];
+    if (myCrop->roots.transpiration != nullptr) delete[] myCrop->roots.transpiration;
+    myCrop->roots.transpiration = new double[unsigned(nrLayers)];
 
     // root max depth
-    if (myCase->myCrop.roots.rootDepthMax > myCase->mySoil.totalDepth)
-        myCase->myCrop.roots.rootDepthMax = myCase->mySoil.totalDepth;
+    if (myCrop->roots.rootDepthMax > totalSoilDepth)
+        myCrop->roots.rootDepthMax = totalSoilDepth;
 
-    myCase->myCrop.degreeDays = 0;
+    myCrop->degreeDays = 0;
 
-    if (myCase->meteoPoint.latitude > 0)
-        myCase->myCrop.doyStartSenescence = 305;
+    if (latitude > 0)
+        myCrop->doyStartSenescence = 305;
     else
-        myCase->myCrop.doyStartSenescence = 120;
+        myCrop->doyStartSenescence = 120;
 
-    myCase->myCrop.LAIstartSenescence = NODATA;
-    myCase->myCrop.currentSowingDoy = NODATA;
+    myCrop->LAIstartSenescence = NODATA;
+    myCrop->currentSowingDoy = NODATA;
 
-    myCase->myCrop.daysSinceIrrigation = NODATA;
+    myCrop->daysSinceIrrigation = NODATA;
 
     // is crop living?
-    if (myCase->myCrop.isPluriannual())
-        myCase->myCrop.isLiving = true;
+    if (myCrop->isPluriannual())
+        myCrop->isLiving = true;
     else
     {
-        myCase->myCrop.isLiving = myCase->myCrop.isInsideTypicalCycle(currentDoy);
+        myCrop->isLiving = myCrop->isInsideTypicalCycle(currentDoy);
 
-        if (myCase->myCrop.isLiving == true)
-            myCase->myCrop.currentSowingDoy = myCase->myCrop.sowingDoy;
+        if (myCrop->isLiving == true)
+            myCrop->currentSowingDoy = myCrop->sowingDoy;
     }
 
     // reset crop
-    myCase->myCrop.resetCrop(myCase->nrLayers);
+    myCrop->resetCrop(nrLayers);
 }
-
 
 
 bool cropWaterDemand(CriteriaModel* myCase)

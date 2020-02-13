@@ -10,6 +10,8 @@
     #define MAX_EVAPORATION_DEPTH 0.15
 
     void initializeCrop(CriteriaModel* myCase, int currentDoy);
+    void initializeCrop(Crit3DCrop* myCrop, double latitude, int nrLayers, double totalSoilDepth, int currentDoy);
+
     bool updateCrop(CriteriaModel* myCase, QString *myError, Crit3DDate myDate, float tmin, float tmax, float waterTableDepth);
     bool updateLAI(CriteriaModel* myCase, int myDoy);
 
