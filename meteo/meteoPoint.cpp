@@ -162,6 +162,7 @@ void Crit3DMeteoPoint::initializeObsDataD(int numberOfDays, const Crit3DDate& fi
         obsDataD[i].windVecDirPrev = NODATA;
         obsDataD[i].windScalIntAvg = NODATA;
         obsDataD[i].windScalIntMax = NODATA;
+        obsDataD[i].leafW = NODATA;
         obsDataD[i].waterTable = NODATA;
         ++myDate;
     }

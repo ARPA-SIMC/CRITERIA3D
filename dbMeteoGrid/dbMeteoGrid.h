@@ -137,8 +137,8 @@
         QString _tableDailyModel;
         QString _tableHourlyModel;
 
-        QMap<QString, QString> _mapDailyMySqlVarType;
-        QMap<QString, QString> _mapHourlyMySqlVarType;
+        QMap<meteoVariable, QString> _mapDailyMySqlVarType;
+        QMap<meteoVariable, QString> _mapHourlyMySqlVarType;
 
     };
 
