@@ -1574,6 +1574,7 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
     short hour;
     meteoVariable hourlyVar = noMeteoVar;
     meteoComputation elab = noMeteoComp;
+    float param = NODATA;
 
     if (meteoPoint->nrObsDataDaysD == 0)
         meteoPoint->initializeObsDataD(dateIni.daysTo(dateFin)+1, dateIni);
@@ -1618,6 +1619,7 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
         case dailyGlobalRadiation:
             hourlyVar = globalIrradiance;
             elab = timeIntegration;
+            param = 3600;
             break;
 
         case dailyWindScalarIntensityAvg:
@@ -1655,7 +1657,7 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
             values.push_back(value);
         }
 
-        dailyValue = statisticalElab(elab, NODATA, values, values.size(), NODATA);
+        dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
         meteoPoint->setMeteoPointValueD(date, myVar, dailyValue);
     }
 
