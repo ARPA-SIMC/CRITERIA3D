@@ -27,6 +27,7 @@
 #include "cropDbTools.h"
 #include "dbMeteoCriteria1D.h"
 #include "utilities.h"
+
 #include <QFileInfo>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -187,6 +188,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(restoreData, &QAction::triggered, this, &Crit3DCropWidget::on_actionRestoreData);
 }
 
+
 void Crit3DCropWidget::on_actionOpenCropDB()
 {
     QString dbCropName = QFileDialog::getOpenFileName(this, tr("Open crop database"), "", tr("SQLite files (*.db)"));
@@ -229,6 +231,7 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
     {
         return;
     }
+
     // open meteo db
     QString error;
     if (! openDbMeteo(dbMeteoName, &dbMeteo, &error))
@@ -236,6 +239,7 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
         QMessageBox::critical(nullptr, "Error DB meteo", error);
         return;
     }
+
     // read id_meteo list
     QStringList idMeteoList;
     if (! getMeteoPointList(&dbMeteo, &idMeteoList, &error))
@@ -308,15 +312,16 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 
 void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
 {
-    QString error;
-    QString lat;
-    QString lon;
+    QString error, lat, lon;
+
     if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
     {
         latValue->setText(lat);
         lonValue->setText(lon);
     }
+
     tableMeteo = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);
+
     QStringList yearList;
     if (!getYearList(&dbMeteo, tableMeteo, &yearList, &error))
     {
@@ -324,6 +329,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
         this->yearListComboBox.clear();
         return;
     }
+
     for (int i = 0; i<yearList.size(); i++)
     {
         if ( checkYear(&dbMeteo, tableMeteo, yearList[i], &error))
@@ -338,22 +344,25 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
 void Crit3DCropWidget::on_actionChooseYear(QString year)
 {
     QString error;
+
     // delete previous meteoPoint
     if (meteoPoint != nullptr)
     {
         delete meteoPoint;
     }
     meteoPoint = new Crit3DMeteoPoint();
+
     QDate firstDate(year.toInt(), 1, 1);
     int daysInYear = firstDate.daysInYear();
     meteoPoint->initializeObsDataD(daysInYear, getCrit3DDate(firstDate));
+
     if (!fillDailyTempCriteria1D(&dbMeteo, tableMeteo, meteoPoint, year, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
         return;
     }
-
 }
+
 
 void Crit3DCropWidget::on_actionDeleteCrop()
 {
@@ -384,11 +393,13 @@ void Crit3DCropWidget::on_actionDeleteCrop()
         }
 }
 
+
 void Crit3DCropWidget::on_actionRestoreData()
 {
     // TO DO
     // deve salvare il db Crop originario? le modifiche possibili sono solo dovute a delete/new crop?
 }
+
 
 void Crit3DCropWidget::on_actionNewCrop()
 {
