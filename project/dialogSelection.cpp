@@ -395,10 +395,3 @@ meteoVariable chooseMeteoVariable(Project* myProject)
 
    return noMeteoVar;
 }
-
-
-
-
-
-
-
