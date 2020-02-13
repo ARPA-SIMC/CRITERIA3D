@@ -1619,7 +1619,7 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
         case dailyGlobalRadiation:
             hourlyVar = globalIrradiance;
             elab = timeIntegration;
-            param = 3600;
+            param = float(0.003600);
             break;
 
         case dailyWindScalarIntensityAvg:

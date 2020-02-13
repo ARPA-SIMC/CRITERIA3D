@@ -790,10 +790,7 @@ bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError)
        return false;
     }
     else
-    {
-       qDebug() << "Database: connection ok";
        return true;
-    }
 }
 
 
