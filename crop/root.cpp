@@ -436,7 +436,7 @@ namespace root
                 b = MAXVALUE(layers[i].depth + layers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // right extreme
                 if (b>0)
                 {
-                    a = MAXVALUE(layers[i].depth - layers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); //left extreme
+                    a = MAXVALUE(layers[i].depth - layers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // left extreme
                     myCrop->roots.rootDensity[i] = Incomplete_Gamma_Function(b/theta,kappa) - Incomplete_Gamma_Function(a/theta,kappa);
                     myCrop->roots.rootDensity[i] /= normalizationFactor;
                 }

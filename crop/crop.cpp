@@ -37,6 +37,7 @@
 #include "commonConstants.h"
 #include "crop.h"
 #include "root.h"
+#include "development.h"
 
 
 Crit3DCrop::Crit3DCrop()
@@ -90,6 +91,110 @@ Crit3DCrop::Crit3DCrop()
 }
 
 
+void Crit3DCrop::initialize( double latitude, int nrLayers, double totalSoilDepth, int currentDoy)
+{
+    // initialize root density
+    if (roots.rootDensity != nullptr) delete[] roots.rootDensity;
+    roots.rootDensity = new double[unsigned(nrLayers)];
+
+    // initialize root depth
+    roots.rootDepth = 0;
+    if (roots.rootDepthMax > totalSoilDepth)
+        roots.rootDepthMax = totalSoilDepth;
+
+    // initialize transpiration
+    if (roots.transpiration != nullptr) delete[] roots.transpiration;
+    roots.transpiration = new double[unsigned(nrLayers)];
+
+    degreeDays = 0;
+
+    if (latitude > 0)
+        doyStartSenescence = 305;
+    else
+        doyStartSenescence = 120;
+
+    LAIstartSenescence = NODATA;
+    currentSowingDoy = NODATA;
+
+    daysSinceIrrigation = NODATA;
+
+    // is crop living?
+    if (isPluriannual())
+        isLiving = true;
+    else
+    {
+        isLiving = isInsideTypicalCycle(currentDoy);
+
+        if (isLiving == true)
+            currentSowingDoy = sowingDoy;
+    }
+
+    resetCrop(nrLayers);
+}
+
+
+bool Crit3DCrop::updateLAI(double latitude, int nrLayers, int myDoy)
+{
+    double degreeDaysLai = 0;
+    double myLai = 0;
+
+    if (! isPluriannual())
+    {
+        if (! isEmerged)
+        {
+            if (degreeDays < degreeDaysEmergence)
+                return true;
+            else if (myDoy - sowingDoy >= MIN_EMERGENCE_DAYS)
+            {
+                isEmerged = true;
+                degreeDaysLai = degreeDays - degreeDaysEmergence;
+            }
+            else
+                return true;
+        }
+        else
+        {
+            degreeDaysLai = degreeDays - degreeDaysEmergence;
+        }
+
+        if (degreeDaysLai > 0)
+            myLai = leafDevelopment::getLAICriteria(this, degreeDaysLai);
+    }
+    else
+    {
+        if (type == GRASS)
+            // grass cut
+            if (degreeDays >= degreeDaysIncrease)
+                resetCrop(nrLayers);
+
+        if (degreeDays > 0)
+            myLai = leafDevelopment::getLAICriteria(this, degreeDays);
+        else
+            myLai = LAImin;
+
+        bool inSenescence;
+        if (latitude > 0)
+            inSenescence = (myDoy >= doyStartSenescence);
+        else
+            inSenescence = ((myDoy >= doyStartSenescence) && (myDoy < 182));
+
+        if (inSenescence)
+        {
+            if (myDoy == doyStartSenescence || int(LAIstartSenescence) == int(NODATA))
+                LAIstartSenescence = myLai;
+            else
+                myLai = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence, doyStartSenescence);
+        }
+
+        if (type == FRUIT_TREE)
+            myLai += LAIgrass;
+    }
+    LAI = myLai;
+
+    return true;
+}
+
+
 bool Crit3DCrop::isWaterSurplusResistant()
 {
     return (idCrop == "RICE" || idCrop == "KIWIFRUIT" || type == GRASS || type == FALLOW);
@@ -126,7 +231,7 @@ bool Crit3DCrop::isPluriannual()
 }
 
 
-bool Crit3DCrop::needReset(Crit3DDate myDate, float latitude, float waterTableDepth)
+bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTableDepth)
 {
     int currentDoy = getDoyFromDate(myDate);
 
@@ -163,7 +268,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, float latitude, float waterTableDe
             // is sowing possible? (check period and watertable depth)
             if (daysFromSowing >= 0 && daysFromSowing <= sowingDoyPeriod)
             {
-                float waterTableThreshold = 0.2f;
+                double waterTableThreshold = 0.2;
 
                 if (isWaterSurplusResistant()
                         || int(waterTableDepth) == int(NODATA)
@@ -222,6 +327,46 @@ void Crit3DCrop::resetCrop(int nrLayers)
 }
 
 
+bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, int nrLayers, double totalDepth,
+                             double tmin, double tmax, double waterTableDepth, std::string* myError)
+{
+    *myError = "";
+
+    if (idCrop == "") return false;
+
+    // check start/end crop cycle (update isLiving)
+    if (needReset(myDate, latitude, waterTableDepth))
+    {
+        resetCrop(nrLayers);
+    }
+
+    if (isLiving)
+    {
+        int currentDoy = getDoyFromDate(myDate);
+
+        // update degree days
+        degreeDays += computeDegreeDays(tmin, tmax, thermalThreshold, upperThermalThreshold);
+
+        // update LAI
+        if ( !updateLAI(latitude, nrLayers, currentDoy))
+        {
+            *myError = "Error in updating LAI for crop " + idCrop;
+            return false;
+        }
+
+        // update roots
+        root::computeRootDepth(this, totalDepth, degreeDays, waterTableDepth);
+        /* if (! root::computeRootDensity(myCrop, layersVector, nrLayers, totalDepth))
+        {
+            *myError = "Error in updating roots for crop " + QString::fromStdString(idCrop);
+            return false;
+        }*/
+    }
+
+    return true;
+}
+
+
 speciesType getCropType(std::string cropType)
 {
     // lower case
@@ -262,10 +407,13 @@ std::string getCropTypeString(speciesType cropType)
     case FRUIT_TREE:
         return "fruit_tree";
     }
+
+    return "No crop type";
 }
 
 double computeDegreeDays(double myTmin, double myTmax, double myLowerThreshold, double myUpperThreshold)
 {
     return MAXVALUE((myTmin + MINVALUE(myTmax, myUpperThreshold)) / 2. - myLowerThreshold, 0);
 }
+
 
