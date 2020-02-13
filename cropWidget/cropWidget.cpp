@@ -140,6 +140,8 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     cropLayout->addLayout(infoLayout);
     tabWidget = new QTabWidget;
+    tabLAI = new TabLAI();
+    tabWidget->addTab(tabLAI, tr("LAI development"));
     cropLayout->addWidget(tabWidget);
 
     this->setLayout(mainLayout);

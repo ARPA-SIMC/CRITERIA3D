@@ -9,7 +9,7 @@
 #
 #----------------------------------------------------
 
-QT  += widgets sql
+QT  += widgets sql charts
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -38,7 +38,9 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../so
 
 
 SOURCES += \
-    cropWidget.cpp
+    cropWidget.cpp \
+    tabLAI.cpp
 
 HEADERS += \
-    cropWidget.h
+    cropWidget.h \
+    tabLAI.h

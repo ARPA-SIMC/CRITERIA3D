@@ -12,6 +12,7 @@
     #include "crop.h"
 #endif
 
+#include "tabLAI.h"
 #include "meteoPoint.h"
 
 class Crit3DCropWidget : public QWidget
@@ -48,6 +49,8 @@ class Crit3DCropWidget : public QWidget
         QTabWidget* tabWidget;
         QAction* saveChanges;
         QAction* restoreData;
+
+        TabLAI* tabLAI;
 };
 
 #endif // CROPWIDGET_H
