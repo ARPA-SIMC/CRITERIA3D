@@ -408,13 +408,11 @@ float TimeIntegration(std::vector<float> values, float timeStep)
     if (values.size() == 0)
         return NODATA;
 
-    float sum = 0;
+    float sum = NODATA;
 
     for (unsigned i = 0; i < values.size(); i++)
-    {
-        if (isEqual(values[i], NODATA))
-            sum += values[i] * timeStep;
-    }
+        if (! isEqual(values[i], NODATA))
+            sum = (isEqual(sum, NODATA) ? values[i] * timeStep : sum + values[i] * timeStep);
 
     return sum;
 
