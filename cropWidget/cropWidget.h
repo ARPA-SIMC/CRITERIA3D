@@ -36,6 +36,7 @@
 
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;
+            QGroupBox *infoParametersGroup;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
             QComboBox yearListComboBox;
@@ -47,6 +48,16 @@
             QLineEdit* cropCycleMaxValue;
             QLineEdit* latValue;
             QLineEdit* lonValue;
+            QLineEdit* LAIminValue;
+            QLineEdit* LAImaxValue;
+            QLineEdit* LAIgrassValue;
+            QLineEdit* thermalThresholdValue;
+            QLineEdit* upperThermalThresholdValue;
+            QLineEdit* degreeDaysEmergenceValue;
+            QLineEdit* degreeDaysLAIincValue;
+            QLineEdit* degreeDaysLAIdecValue;
+            QLineEdit* LAIcurveAValue;
+            QLineEdit* LAIcurveBValue;
             QTabWidget* tabWidget;
             QAction* saveChanges;
             QAction* restoreData;

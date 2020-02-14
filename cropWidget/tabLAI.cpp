@@ -13,6 +13,8 @@ TabLAI::TabLAI()
     chart->setTitle("LAI development");
     chartView->setChart(chart);
     series = new QLineSeries();
+    axisX = new QDateTimeAxis();
+    axisY = new QValueAxis();
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
@@ -32,6 +34,7 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int ye
     double tmax;
     QDateTime x;
 
+    series->clear();
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         tmin = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
@@ -50,7 +53,6 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int ye
 void TabLAI::drawLAI(Crit3DCrop* myCrop)
 {
     chart->addSeries(series);
-    QDateTimeAxis *axisX = new QDateTimeAxis();
     QDate first(year, 1, 1);
     QDate last(year, 12, 31);
     axisX->setTitleText("Date");
@@ -61,7 +63,6 @@ void TabLAI::drawLAI(Crit3DCrop* myCrop)
     chart->addAxis(axisX, Qt::AlignBottom);
     series->attachAxis(axisX);
 
-    QValueAxis *axisY = new QValueAxis();
     axisY->setTitleText("LAI");
     axisY->setRange(0,6);
     axisY->setTickCount(5);

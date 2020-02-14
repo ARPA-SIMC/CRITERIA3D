@@ -52,6 +52,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     QVBoxLayout *infoLayout = new QVBoxLayout();
     QGridLayout *cropInfoLayout = new QGridLayout();
     QGridLayout *meteoInfoLayout = new QGridLayout();
+    QGridLayout *parametersInfoLayout = new QGridLayout();
 
     // check save button pic
     QString docPath, saveButtonPath;
@@ -91,12 +92,15 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
+    infoParametersGroup = new QGroupBox(tr(""));
 
     infoCropGroup->setFixedWidth(this->width()/4);
     infoMeteoGroup->setFixedWidth(this->width()/4);
+    infoParametersGroup->setFixedWidth(this->width()/4);
 
     infoCropGroup->setTitle("Crop");
     infoMeteoGroup->setTitle("Meteo");
+    infoParametersGroup->setTitle("Parameters");
 
     cropInfoLayout->addWidget(cropName, 0, 0);
     cropInfoLayout->addWidget(&cropListComboBox, 0, 1);
@@ -130,11 +134,65 @@ Crit3DCropWidget::Crit3DCropWidget()
     meteoInfoLayout->addWidget(lon, 3, 0);
     meteoInfoLayout->addWidget(lonValue, 3, 1);
 
+    QLabel *LAImin = new QLabel(tr("LAI min: "));
+    LAIminValue = new QLineEdit();
+
+    QLabel *LAImax = new QLabel(tr("LAI max: "));
+    LAImaxValue = new QLineEdit();
+
+    QLabel *LAIgrass = new QLabel(tr("LAI grass: "));
+    LAIgrassValue = new QLineEdit();
+
+    QLabel *thermalThreshold = new QLabel(tr("thermal threshold: "));
+    thermalThresholdValue = new QLineEdit();
+
+    QLabel *upperThermalThreshold = new QLabel(tr("upper thermal threshold: "));
+    upperThermalThresholdValue = new QLineEdit();
+
+    QLabel *degreeDaysEmergence = new QLabel(tr("degree days emergence: "));
+    degreeDaysEmergenceValue = new QLineEdit();
+
+    QLabel *degreeDaysLAIinc = new QLabel(tr("degree days LAI increase: "));
+    degreeDaysLAIincValue = new QLineEdit();
+
+    QLabel *degreeDaysLAIdec = new QLabel(tr("degree days LAI decrease: "));
+    degreeDaysLAIdecValue = new QLineEdit();
+
+    QLabel *LAIcurveA = new QLabel(tr("LAI curve factor A: "));
+    LAIcurveAValue = new QLineEdit();
+
+    QLabel *LAIcurveB = new QLabel(tr("LAI curve factor B: "));
+    LAIcurveBValue = new QLineEdit();
+
+    parametersInfoLayout->addWidget(LAImin, 0, 0);
+    parametersInfoLayout->addWidget(LAIminValue, 0, 1);
+    parametersInfoLayout->addWidget(LAImax, 1, 0);
+    parametersInfoLayout->addWidget(LAImaxValue, 1, 1);
+    parametersInfoLayout->addWidget(LAIgrass, 3, 0);
+    parametersInfoLayout->addWidget(LAIgrassValue, 3, 1);
+    parametersInfoLayout->addWidget(thermalThreshold, 4, 0);
+    parametersInfoLayout->addWidget(thermalThresholdValue, 4, 1);
+    parametersInfoLayout->addWidget(upperThermalThreshold, 5, 0);
+    parametersInfoLayout->addWidget(upperThermalThresholdValue, 5, 1);
+    parametersInfoLayout->addWidget(degreeDaysEmergence, 6, 0);
+    parametersInfoLayout->addWidget(degreeDaysEmergenceValue, 6, 1);
+    parametersInfoLayout->addWidget(degreeDaysLAIinc, 7, 0);
+    parametersInfoLayout->addWidget(degreeDaysLAIincValue, 7, 1);
+    parametersInfoLayout->addWidget(degreeDaysLAIdec, 8, 0);
+    parametersInfoLayout->addWidget(degreeDaysLAIdecValue, 8, 1);
+    parametersInfoLayout->addWidget(LAIcurveA, 9, 0);
+    parametersInfoLayout->addWidget(LAIcurveAValue, 9, 1);
+    parametersInfoLayout->addWidget(LAIcurveB, 10, 0);
+    parametersInfoLayout->addWidget(LAIcurveBValue, 10, 1);
+
+
     infoCropGroup->setLayout(cropInfoLayout);
     infoMeteoGroup->setLayout(meteoInfoLayout);
+    infoParametersGroup->setLayout(parametersInfoLayout);
 
     infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(infoMeteoGroup);
+    infoLayout->addWidget(infoParametersGroup);
 
     mainLayout->addLayout(saveButtonLayout);
     mainLayout->addLayout(cropLayout);

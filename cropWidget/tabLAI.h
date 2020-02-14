@@ -22,6 +22,8 @@
         QChartView *chartView;
         QChart *chart;
         QLineSeries *series;
+        QDateTimeAxis *axisX;
+        QValueAxis *axisY;
     };
 
 #endif // TABLAI_H
