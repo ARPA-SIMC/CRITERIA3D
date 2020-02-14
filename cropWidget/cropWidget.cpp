@@ -52,6 +52,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     QVBoxLayout *infoLayout = new QVBoxLayout();
     QGridLayout *cropInfoLayout = new QGridLayout();
     QGridLayout *meteoInfoLayout = new QGridLayout();
+    QGridLayout *parametersInfoLayout = new QGridLayout();
 
     // check save button pic
     QString docPath, saveButtonPath;
@@ -91,12 +92,15 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
+    infoParametersGroup = new QGroupBox(tr(""));
 
     infoCropGroup->setFixedWidth(this->width()/4);
     infoMeteoGroup->setFixedWidth(this->width()/4);
+    infoParametersGroup->setFixedWidth(this->width()/4);
 
     infoCropGroup->setTitle("Crop");
     infoMeteoGroup->setTitle("Meteo");
+    infoParametersGroup->setTitle("Parameters");
 
     cropInfoLayout->addWidget(cropName, 0, 0);
     cropInfoLayout->addWidget(&cropListComboBox, 0, 1);
@@ -130,11 +134,65 @@ Crit3DCropWidget::Crit3DCropWidget()
     meteoInfoLayout->addWidget(lon, 3, 0);
     meteoInfoLayout->addWidget(lonValue, 3, 1);
 
+    QLabel *LAImin = new QLabel(tr("LAI min: "));
+    LAIminValue = new QLineEdit();
+
+    QLabel *LAImax = new QLabel(tr("LAI max: "));
+    LAImaxValue = new QLineEdit();
+
+    LAIgrass = new QLabel(tr("LAI grass: "));
+    LAIgrassValue = new QLineEdit();
+
+    QLabel *thermalThreshold = new QLabel(tr("thermal threshold: "));
+    thermalThresholdValue = new QLineEdit();
+
+    QLabel *upperThermalThreshold = new QLabel(tr("upper thermal threshold: "));
+    upperThermalThresholdValue = new QLineEdit();
+
+    QLabel *degreeDaysEmergence = new QLabel(tr("degree days emergence: "));
+    degreeDaysEmergenceValue = new QLineEdit();
+
+    QLabel *degreeDaysLAIinc = new QLabel(tr("degree days LAI increase: "));
+    degreeDaysLAIincValue = new QLineEdit();
+
+    QLabel *degreeDaysLAIdec = new QLabel(tr("degree days LAI decrease: "));
+    degreeDaysLAIdecValue = new QLineEdit();
+
+    QLabel *LAIcurveA = new QLabel(tr("LAI curve factor A: "));
+    LAIcurveAValue = new QLineEdit();
+
+    QLabel *LAIcurveB = new QLabel(tr("LAI curve factor B: "));
+    LAIcurveBValue = new QLineEdit();
+
+    parametersInfoLayout->addWidget(LAImin, 0, 0);
+    parametersInfoLayout->addWidget(LAIminValue, 0, 1);
+    parametersInfoLayout->addWidget(LAImax, 1, 0);
+    parametersInfoLayout->addWidget(LAImaxValue, 1, 1);
+    parametersInfoLayout->addWidget(LAIgrass, 3, 0);
+    parametersInfoLayout->addWidget(LAIgrassValue, 3, 1);
+    parametersInfoLayout->addWidget(thermalThreshold, 4, 0);
+    parametersInfoLayout->addWidget(thermalThresholdValue, 4, 1);
+    parametersInfoLayout->addWidget(upperThermalThreshold, 5, 0);
+    parametersInfoLayout->addWidget(upperThermalThresholdValue, 5, 1);
+    parametersInfoLayout->addWidget(degreeDaysEmergence, 6, 0);
+    parametersInfoLayout->addWidget(degreeDaysEmergenceValue, 6, 1);
+    parametersInfoLayout->addWidget(degreeDaysLAIinc, 7, 0);
+    parametersInfoLayout->addWidget(degreeDaysLAIincValue, 7, 1);
+    parametersInfoLayout->addWidget(degreeDaysLAIdec, 8, 0);
+    parametersInfoLayout->addWidget(degreeDaysLAIdecValue, 8, 1);
+    parametersInfoLayout->addWidget(LAIcurveA, 9, 0);
+    parametersInfoLayout->addWidget(LAIcurveAValue, 9, 1);
+    parametersInfoLayout->addWidget(LAIcurveB, 10, 0);
+    parametersInfoLayout->addWidget(LAIcurveBValue, 10, 1);
+
+
     infoCropGroup->setLayout(cropInfoLayout);
     infoMeteoGroup->setLayout(meteoInfoLayout);
+    infoParametersGroup->setLayout(parametersInfoLayout);
 
     infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(infoMeteoGroup);
+    infoLayout->addWidget(infoParametersGroup);
 
     mainLayout->addLayout(saveButtonLayout);
     mainLayout->addLayout(cropLayout);
@@ -175,6 +233,8 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     myCrop = nullptr;
     meteoPoint = nullptr;
+    nrLayers = 100;     // depth each layer = 2 cm
+    totalSoilDepth = 2; // [m] average soil depth
 
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
@@ -307,6 +367,34 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         cropSowingValue->setVisible(false);
         cropCycleMaxValue->setVisible(false);
     }
+
+    // parameters
+
+    LAIminValue->setText(QString::number(myCrop->LAImin));
+    LAImaxValue->setText(QString::number(myCrop->LAImax));
+    if (myCrop->type == FRUIT_TREE)
+    {
+        LAIgrass->setVisible(true);
+        LAIgrassValue->setVisible(true);
+        LAIgrassValue->setText(QString::number(myCrop->LAIgrass));
+    }
+    else
+    {
+        LAIgrass->setVisible(false);
+        LAIgrassValue->setVisible(false);
+    }
+    thermalThresholdValue->setText(QString::number(myCrop->thermalThreshold));
+    upperThermalThresholdValue->setText(QString::number(myCrop->upperThermalThreshold));
+    degreeDaysEmergenceValue->setText(QString::number(myCrop->degreeDaysEmergence));
+    degreeDaysLAIincValue->setText(QString::number(myCrop->degreeDaysIncrease));
+    degreeDaysLAIdecValue->setText(QString::number(myCrop->degreeDaysDecrease));
+    LAIcurveAValue->setText(QString::number(myCrop->LAIcurve_a));
+    LAIcurveBValue->setText(QString::number(myCrop->LAIcurve_b));
+
+    if (meteoPoint != nullptr && !yearListComboBox.currentText().isEmpty())
+    {
+        updateTabLAI();
+    }
 }
 
 
@@ -351,6 +439,8 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
         delete meteoPoint;
     }
     meteoPoint = new Crit3DMeteoPoint();
+    meteoPoint->latitude = latValue->text().toDouble();
+    meteoPoint->longitude = lonValue->text().toDouble();
 
     QDate firstDate(year.toInt(), 1, 1);
     int daysInYear = firstDate.daysInYear();
@@ -361,6 +451,11 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
         QMessageBox::critical(nullptr, "Error!", error);
         return;
     }
+    if (myCrop != nullptr)
+    {
+        updateTabLAI();
+    }
+
 }
 
 
@@ -420,3 +515,14 @@ void Crit3DCropWidget::on_actionNewCrop()
         // TO DO
     }
 }
+
+void Crit3DCropWidget::updateTabLAI()
+{
+    int currentDoy = 1;
+    if (myCrop == nullptr || meteoPoint == nullptr)
+    {
+        return;
+    }
+    tabLAI->computeLAI(myCrop, meteoPoint, yearListComboBox.currentText().toInt(), nrLayers, totalSoilDepth, currentDoy);
+}
+

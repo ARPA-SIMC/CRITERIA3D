@@ -8,12 +8,7 @@
     #include <QLabel>
     #include <QSqlDatabase>
 
-    #ifndef CROP_H
-        #include "crop.h"
-    #endif
-
     #include "tabLAI.h"
-    #include "meteoPoint.h"
 
     class Crit3DCropWidget : public QWidget
     {
@@ -29,15 +24,19 @@
             void on_actionDeleteCrop();
             void on_actionRestoreData();
             void on_actionNewCrop();
+            void updateTabLAI();
         private:
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
             Crit3DCrop* myCrop;
             QString tableMeteo;
             Crit3DMeteoPoint *meteoPoint;
+            int nrLayers;
+            int totalSoilDepth;
 
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;
+            QGroupBox *infoParametersGroup;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
             QComboBox yearListComboBox;
@@ -49,6 +48,17 @@
             QLineEdit* cropCycleMaxValue;
             QLineEdit* latValue;
             QLineEdit* lonValue;
+            QLineEdit* LAIminValue;
+            QLineEdit* LAImaxValue;
+            QLabel *LAIgrass;
+            QLineEdit* LAIgrassValue;
+            QLineEdit* thermalThresholdValue;
+            QLineEdit* upperThermalThresholdValue;
+            QLineEdit* degreeDaysEmergenceValue;
+            QLineEdit* degreeDaysLAIincValue;
+            QLineEdit* degreeDaysLAIdecValue;
+            QLineEdit* LAIcurveAValue;
+            QLineEdit* LAIcurveBValue;
             QTabWidget* tabWidget;
             QAction* saveChanges;
             QAction* restoreData;

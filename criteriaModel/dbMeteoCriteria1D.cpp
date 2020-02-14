@@ -302,25 +302,26 @@ bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPo
     // fill NODATA values with average values of day before and next.
     for (int i = 0; i < daysInYear; i++)
     {
-        tmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate), dailyAirTemperatureMin);
-        tmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate), dailyAirTemperatureMax);
-        tavg = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate), dailyAirTemperatureAvg);
+        date = firstDate.addDays(i);
+        tmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMin);
+        tmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMax);
+        tavg = meteoPoint->getMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureAvg);
         if (tmin == NODATA)
         {
             if (i!=0 && i!=(daysInYear-1))
             {
-                prevTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(-1)), dailyAirTemperatureMin);
-                nextTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(1)), dailyAirTemperatureMin);
+                prevTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(-1)), dailyAirTemperatureMin);
+                nextTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(1)), dailyAirTemperatureMin);
                 tmin = (prevTmin + nextTmin) * 0.5f;
             }
             else if (i==0)
             {
-                nextTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(1)), dailyAirTemperatureMin);
+                nextTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(1)), dailyAirTemperatureMin);
                 tmin = nextTmin;
             }
             else if (i==(daysInYear-1))
             {
-                prevTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(-1)), dailyAirTemperatureMin);
+                prevTmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(-1)), dailyAirTemperatureMin);
                 tmin = prevTmin;
             }
 
@@ -331,18 +332,18 @@ bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPo
         {
             if (i!=0 && i!=(daysInYear-1))
             {
-                prevTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(-1)), dailyAirTemperatureMax);
-                nextTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(1)), dailyAirTemperatureMax);
+                prevTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(-1)), dailyAirTemperatureMax);
+                nextTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(1)), dailyAirTemperatureMax);
                 tmax = (prevTmin + nextTmin) * 0.5f;
             }
             else if (i==0)
             {
-                nextTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(1)), dailyAirTemperatureMax);
+                nextTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(1)), dailyAirTemperatureMax);
                 tmax = nextTmax;
             }
             else if (i==(daysInYear-1))
             {
-                prevTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(firstDate.addDays(-1)), dailyAirTemperatureMax);
+                prevTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(-1)), dailyAirTemperatureMax);
                 tmax = prevTmax;
             }
 

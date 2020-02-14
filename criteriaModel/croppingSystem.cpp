@@ -337,15 +337,14 @@ double cropTranspiration(CriteriaModel* myCase, bool getWaterStress)
 
     for (int i = myCase->myCrop.roots.firstRootLayer; i <= myCase->myCrop.roots.lastRootLayer; i++)
     {
-        surplusThreshold = myCase->layer[i].SAT - (WSS * (myCase->layer[i].SAT - myCase->layer[i].FC));
+        surplusThreshold = myCase->layer[i].SAT - (WSS * (myCase->layer[i].SAT - myCase->layer[i].FC)); // [mm]
 
-        soilThickness = myCase->layer[i].thickness * myCase->layer[i].soilFraction * 1000.0;    // [mm]
+        soilThickness = myCase->layer[i].thickness * myCase->layer[i].soilFraction * 1000.0;            // [mm]
 
         thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCase->myCrop.psiLeaf), myCase->layer[i].horizon);
+        cropWP = thetaWP * soilThickness;      // [mm]
 
-        cropWP = thetaWP * soilThickness;                                                         // [mm]
-
-        waterScarcityThreshold = myCase->layer[i].FC - myCase->myCrop.fRAW * (myCase->layer[i].FC - cropWP);
+        waterScarcityThreshold = myCase->layer[i].FC - myCase->myCrop.fRAW * (myCase->layer[i].FC - cropWP);  // [mm]
 
         if (myCase->layer[i].waterContent > surplusThreshold)
         {

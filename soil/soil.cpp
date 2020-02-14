@@ -744,9 +744,9 @@ namespace soil
             fittingWaterRetentionCurve(horizon, fittingOptions);
         }
 
-        // update with coarse fragment
-        horizon->vanGenuchten.thetaS *= (1.0 - horizon->coarseFragments);
-        horizon->vanGenuchten.thetaR *= (1.0 - horizon->coarseFragments);
+        // update with coarse fragment (TODO check altre parti del codice!)
+        //horizon->vanGenuchten.thetaS *= (1.0 - horizon->coarseFragments);
+        //horizon->vanGenuchten.thetaR *= (1.0 - horizon->coarseFragments);
 
         horizon->CEC = 50.0;
         horizon->PH = 7.7;

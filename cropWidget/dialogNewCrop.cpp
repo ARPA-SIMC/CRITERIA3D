@@ -1,4 +1,5 @@
 #include "dialogNewCrop.h"
+#include "crop.h"
 
 DialogNewCrop::DialogNewCrop()
 {
@@ -13,17 +14,23 @@ DialogNewCrop::DialogNewCrop()
     QLabel *idCropName = new QLabel(tr("Enter crop name: "));
     nameCropValue = new QLineEdit();
 
-    QLabel *typeCropLabel = new QLabel(tr("Enter crop type: "));
-    typeCropValue = new QLineEdit();
+    QLabel *typeCropLabel = new QLabel(tr("Select crop type: "));
+    QComboBox* typeCropComboBox = new QComboBox();
+
+    for (int i=0; i<numSpeciesType; i++)
+    {
+        speciesType type = (speciesType) i;
+        typeCropComboBox->addItem(QString::fromStdString(getCropTypeString(type)));
+    }
 
     layoutCrop->addWidget(idCropLabel, 0 , 0);
     layoutCrop->addWidget(idCropValue, 0 , 1);
     layoutCrop->addWidget(idCropName, 1 , 0);
     layoutCrop->addWidget(nameCropValue, 1 , 1);
     layoutCrop->addWidget(typeCropLabel, 2 , 0);
-    layoutCrop->addWidget(typeCropValue, 2 , 1);
+    layoutCrop->addWidget(typeCropComboBox, 2 , 1);
 
-    // TO DO quali sono le info necessarie?
+    // isPluriannal: NO sowingDoy e cycleMaxduration, SI valori di default NULL e 365
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
