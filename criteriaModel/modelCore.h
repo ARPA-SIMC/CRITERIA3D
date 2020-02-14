@@ -6,8 +6,8 @@
     class CriteriaUnit;
     class QString;
 
-    bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString* myError);
-    bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit3DDate& lastDate, QString* myError);
+    bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError);
+    bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit3DDate& lastDate, QString *myError);
 
 
 #endif // MODELCORE_H

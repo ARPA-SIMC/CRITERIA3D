@@ -91,20 +91,16 @@ Crit3DCrop::Crit3DCrop()
 }
 
 
-void Crit3DCrop::initialize( double latitude, int nrLayers, double totalSoilDepth, int currentDoy)
+void Crit3DCrop::initialize( double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy)
 {
     // initialize root density
     if (roots.rootDensity != nullptr) delete[] roots.rootDensity;
-    roots.rootDensity = new double[unsigned(nrLayers)];
+    roots.rootDensity = new double[nrLayers];
 
     // initialize root depth
     roots.rootDepth = 0;
     if (roots.rootDepthMax > totalSoilDepth)
         roots.rootDepthMax = totalSoilDepth;
-
-    // initialize transpiration
-    if (roots.transpiration != nullptr) delete[] roots.transpiration;
-    roots.transpiration = new double[unsigned(nrLayers)];
 
     degreeDays = 0;
 
