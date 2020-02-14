@@ -175,6 +175,8 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     myCrop = nullptr;
     meteoPoint = nullptr;
+    nrLayers = 100;     // depth each layer = 2 cm
+    totalSoilDepth = 2; // [m] average soil depth
 
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
@@ -307,6 +309,10 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         cropSowingValue->setVisible(false);
         cropCycleMaxValue->setVisible(false);
     }
+    if (meteoPoint != nullptr && !yearListComboBox.currentText().isEmpty())
+    {
+        updateTabLAI();
+    }
 }
 
 
@@ -351,6 +357,8 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
         delete meteoPoint;
     }
     meteoPoint = new Crit3DMeteoPoint();
+    meteoPoint->latitude = latValue->text().toDouble();
+    meteoPoint->longitude = lonValue->text().toDouble();
 
     QDate firstDate(year.toInt(), 1, 1);
     int daysInYear = firstDate.daysInYear();
@@ -361,6 +369,11 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
         QMessageBox::critical(nullptr, "Error!", error);
         return;
     }
+    if (myCrop != nullptr)
+    {
+        updateTabLAI();
+    }
+
 }
 
 
@@ -420,3 +433,14 @@ void Crit3DCropWidget::on_actionNewCrop()
         // TO DO
     }
 }
+
+void Crit3DCropWidget::updateTabLAI()
+{
+    int currentDoy = 1;
+    if (myCrop == nullptr || meteoPoint == nullptr)
+    {
+        return;
+    }
+    tabLAI->computeLAI(myCrop, meteoPoint, yearListComboBox.currentText().toInt(), nrLayers, totalSoilDepth, currentDoy);
+}
+
