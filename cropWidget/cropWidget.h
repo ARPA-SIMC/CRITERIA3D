@@ -50,6 +50,7 @@
             QLineEdit* lonValue;
             QLineEdit* LAIminValue;
             QLineEdit* LAImaxValue;
+            QLabel *LAIgrass;
             QLineEdit* LAIgrassValue;
             QLineEdit* thermalThresholdValue;
             QLineEdit* upperThermalThresholdValue;
