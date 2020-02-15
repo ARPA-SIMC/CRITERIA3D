@@ -364,11 +364,6 @@ bool CriteriaModel::createOutputTable(QString* myError)
     QString queryString = "DROP TABLE '" + this->idCase + "'";
     QSqlQuery myQuery = this->dbOutput.exec(queryString);
 
-    if (! myQuery.isValid())
-    {
-        *myError = "Error in drop table: " + this->idCase + "\n" + myQuery.lastError().text();
-    }
-
     queryString = "CREATE TABLE '" + this->idCase + "'"
             + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
             + " RAW REAL, DEFICIT REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "

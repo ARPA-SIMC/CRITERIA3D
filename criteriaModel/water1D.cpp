@@ -72,7 +72,6 @@ bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigat
     double waterDeficit = NODATA;           // [mm]
     double localWater = NODATA;             // [mm]
     double distrH2O = NODATA;               // [mm] la quantità di acqua (=imax dello strato sotto) che potrebbe saturare il profilo sotto lo strato in surplus
-    double maxInfiltration = NODATA;        // [mm] maximum infiltration (Driessen)
 
     // Assign precipitation (surface pond)
     myCase->layers[0].waterContent += double(prec + surfaceIrrigation);
@@ -99,10 +98,12 @@ bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigat
     // Maximum infiltration - due to gravitational force and permeability (Driessen 1986, eq.34)
     for (i = 1; i < myCase->nrLayers; i++)
     {
-        maxInfiltration = 10 * myCase->layers[i].horizon->Driessen.gravConductivity;
+        myCase->layers[i].maxInfiltration = 10 * myCase->layers[i].horizon->Driessen.gravConductivity;
+
         if (myCase->layers[i].depth < myCase->depthPloughedSoil)
-            maxInfiltration += 10 * (1 - avgPloughSatDegree) * myCase->layers[i].horizon->Driessen.maxSorptivity;
-        myCase->layers[i].maxInfiltration = maxInfiltration;
+        {
+            myCase->layers[i].maxInfiltration += 10 * (1 - avgPloughSatDegree) * myCase->layers[i].horizon->Driessen.maxSorptivity;
+        }
     }
 
     myCase->layers[0].maxInfiltration = myCase->layers[1].maxInfiltration;

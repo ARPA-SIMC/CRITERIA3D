@@ -332,7 +332,7 @@ double cropTranspiration(CriteriaModel* myCase, bool getWaterStress)
     if (myCase->output.dailyMaxTranspiration < EPSILON)
         return 0;
 
-    // initialize stressed layers
+    // initialize
     bool* isLayerStressed = new bool[myCase->nrLayers];
     double* layerTranspiration = new double[myCase->nrLayers];
     for (unsigned int i = 0; i < myCase->nrLayers; i++)

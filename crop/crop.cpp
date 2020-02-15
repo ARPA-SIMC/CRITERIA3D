@@ -170,16 +170,22 @@ bool Crit3DCrop::updateLAI(double latitude, int nrLayers, int myDoy)
 
         bool inSenescence;
         if (latitude > 0)
+        {
+            // north
             inSenescence = (myDoy >= doyStartSenescence);
+        }
         else
+        {
+            // south
             inSenescence = ((myDoy >= doyStartSenescence) && (myDoy < 182));
+        }
 
         if (inSenescence)
         {
             if (myDoy == doyStartSenescence || int(LAIstartSenescence) == int(NODATA))
                 LAIstartSenescence = myLai;
             else
-                myLai = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence, doyStartSenescence);
+                myLai = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence, myDoy - doyStartSenescence);
         }
 
         if (type == FRUIT_TREE)
