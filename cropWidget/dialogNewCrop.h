@@ -10,6 +10,9 @@
     public:
         DialogNewCrop(Crit3DCrop* newCrop);
         void on_actionChooseType(QString type);
+        void done(bool res);
+        bool checkData();
+        QString getNameCrop();
 
     private:
         Crit3DCrop* newCrop;
