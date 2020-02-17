@@ -40,13 +40,13 @@
 void initializeWater(CriteriaModel* myCase)
 {
     // TODO water content as function of month
-    myCase->layer[0].waterContent = 0.0;
-    for (int i = 1; i < myCase->nrLayers; i++)
+    myCase->layers[0].waterContent = 0.0;
+    for (unsigned int i = 1; i < myCase->nrLayers; i++)
     {
-        if (myCase->layer[i].depth <= myCase->depthPloughedSoil)
-            myCase->layer[i].waterContent = soil::getWaterContentFromAW(myCase->initialAW[0], &(myCase->layer[i]));
+        if (myCase->layers[i].depth <= myCase->depthPloughedSoil)
+            myCase->layers[i].waterContent = soil::getWaterContentFromAW(myCase->initialAW[0], &(myCase->layers[i]));
         else
-            myCase->layer[i].waterContent = soil::getWaterContentFromAW(myCase->initialAW[1], &(myCase->layer[i]));
+            myCase->layers[i].waterContent = soil::getWaterContentFromAW(myCase->initialAW[1], &(myCase->layers[i]));
     }
 }
 
@@ -63,36 +63,34 @@ void initializeWater(CriteriaModel* myCase)
 bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigation)
 {
     // TODO extend to geometric layers
-    int i, j, l, nrPloughLayers;
-    int reached = NODATA;            // [-] index of reached layer for surpuls water
-    double avgPloughSatDegree = NODATA;    // [-] average degree of saturation ploughed soil
-    double fluxLayer = NODATA;       // [mm]
-    double residualFlux = NODATA;    // [mm]
-    double localFlux = NODATA;       // [mm]
-    double waterSurplus = NODATA;    // [mm]
-    double waterDeficit = NODATA;    // [mm]
-    double localWater = NODATA;      // [mm]
-    double distrH2O = NODATA;        // [mm] la quantità di acqua (=imax dello strato sotto) che potrebbe saturare il profilo sotto lo strato in surplus
-    double maxInfiltration = NODATA; // [mm] maximum infiltration (Driessen)
+    unsigned int reached;                   // [-] index of reached layers for surpuls water
+    double avgPloughSatDegree = NODATA;     // [-] average degree of saturation ploughed soil
+    double fluxLayer = NODATA;              // [mm]
+    double residualFlux = NODATA;           // [mm]
+    double localFlux = NODATA;              // [mm]
+    double waterSurplus = NODATA;           // [mm]
+    double waterDeficit = NODATA;           // [mm]
+    double localWater = NODATA;             // [mm]
+    double distrH2O = NODATA;               // [mm] la quantità di acqua (=imax dello strato sotto) che potrebbe saturare il profilo sotto lo strato in surplus
 
     // Assign precipitation (surface pond)
-    myCase->layer[0].waterContent += double(prec + surfaceIrrigation);
+    myCase->layers[0].waterContent += double(prec + surfaceIrrigation);
 
     // Initialize fluxes
-    for (i = 0; i< myCase->nrLayers; i++)
+    for (unsigned int i = 0; i < myCase->nrLayers; i++)
     {
-        myCase->layer[i].flux = 0.0;
-        myCase->layer[9].maxInfiltration = 0.0;
+        myCase->layers[i].flux = 0.0;
+        myCase->layers[i].maxInfiltration = 0.0;
     }
 
     // Average degree of saturation (ploughed soil)
-    i = 1;
-    nrPloughLayers = 0;
+    unsigned int i = 1;
+    unsigned int nrPloughLayers = 0;
     avgPloughSatDegree = 0;
-    while ((i < myCase->nrLayers) && (myCase->layer[i].depth < myCase->depthPloughedSoil))
+    while (i < myCase->nrLayers && myCase->layers[i].depth < myCase->depthPloughedSoil)
     {
         nrPloughLayers++;
-        avgPloughSatDegree += (myCase->layer[i].waterContent / myCase->layer[i].SAT);
+        avgPloughSatDegree += (myCase->layers[i].waterContent / myCase->layers[i].SAT);
         i++;
     }
     avgPloughSatDegree /= nrPloughLayers;
@@ -100,23 +98,27 @@ bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigat
     // Maximum infiltration - due to gravitational force and permeability (Driessen 1986, eq.34)
     for (i = 1; i < myCase->nrLayers; i++)
     {
-        maxInfiltration = 10 * myCase->layer[i].horizon->Driessen.gravConductivity;
-        if (myCase->layer[i].depth < myCase->depthPloughedSoil)
-            maxInfiltration += 10 * (1 - avgPloughSatDegree) * myCase->layer[i].horizon->Driessen.maxSorptivity;
-        myCase->layer[i].maxInfiltration = maxInfiltration;
+        myCase->layers[i].maxInfiltration = 10 * myCase->layers[i].horizon->Driessen.gravConductivity;
+
+        if (myCase->layers[i].depth < myCase->depthPloughedSoil)
+        {
+            myCase->layers[i].maxInfiltration += 10 * (1 - avgPloughSatDegree) * myCase->layers[i].horizon->Driessen.maxSorptivity;
+        }
     }
 
-    myCase->layer[0].maxInfiltration = myCase->layer[1].maxInfiltration;
-    myCase->layer[0].flux = 0;
+    myCase->layers[0].maxInfiltration = myCase->layers[1].maxInfiltration;
+    myCase->layers[0].flux = 0;
 
-    for (l = myCase->nrLayers-1; l >= 0; l--)
+    for (int layerIndex = signed(myCase->nrLayers)-1; layerIndex >= 0; layerIndex--)
     {
-        // find layer in water surplus
-        if (myCase->layer[l].waterContent > myCase->layer[l].critical)
+        unsigned int l = unsigned(layerIndex);
+
+        // find layers in water surplus
+        if (myCase->layers[l].waterContent > myCase->layers[l].critical)
         {
-            fluxLayer = MINVALUE(myCase->layer[l].maxInfiltration, myCase->layer[l].waterContent - myCase->layer[l].critical);
-            myCase->layer[l].flux += fluxLayer;
-            myCase->layer[l].waterContent -= fluxLayer;
+            fluxLayer = MINVALUE(myCase->layers[l].maxInfiltration, myCase->layers[l].waterContent - myCase->layers[l].critical);
+            myCase->layers[l].flux += fluxLayer;
+            myCase->layers[l].waterContent -= fluxLayer;
 
             // TODO translate comment
             // cerca il punto di arrivo del fronte
@@ -127,12 +129,12 @@ bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigat
                 reached = l;
             else
             {
-                distrH2O = myCase->layer[l+1].maxInfiltration;
+                distrH2O = myCase->layers[l+1].maxInfiltration;
                 i = l+1;
                 while ((i < myCase->nrLayers-1) && (distrH2O > 0.0))
                 {
-                    distrH2O -= (myCase->layer[i].SAT - myCase->layer[i].waterContent);
-                    distrH2O = MINVALUE(distrH2O, myCase->layer[i].maxInfiltration);
+                    distrH2O -= (myCase->layers[i].SAT - myCase->layers[i].waterContent);
+                    distrH2O = MINVALUE(distrH2O, myCase->layers[i].maxInfiltration);
                     if (distrH2O > 0.0) i++;
                 }
                 reached = i;
@@ -142,7 +144,7 @@ bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigat
                     reached += 1;
 
             while ((reached < (myCase->nrLayers -1))
-                   && (myCase->layer[reached].waterContent >= myCase->layer[reached].SAT))
+                   && (myCase->layers[reached].waterContent >= myCase->layers[reached].SAT))
                     reached += 1;
 
             // move water and compute fluxes
@@ -152,68 +154,69 @@ bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigat
                 // define fluxLayer in base allo stato idrico dello strato sottostante
                 // sotto Field Capacity tolgo il deficit al fluxLayer,
                 // in water surplus, aggiungo il surplus al fluxLayer
-                if (myCase->layer[i].waterContent > myCase->layer[i].critical)
+                if (myCase->layers[i].waterContent > myCase->layers[i].critical)
                 {
-                    // layer in water surplus (critical point: usually is FC)
-                    waterSurplus = myCase->layer[i].waterContent - myCase->layer[i].critical;
+                    // layers in water surplus (critical point: usually is FC)
+                    waterSurplus = myCase->layers[i].waterContent - myCase->layers[i].critical;
                     fluxLayer += waterSurplus;
-                    myCase->layer[i].waterContent -= waterSurplus;
+                    myCase->layers[i].waterContent -= waterSurplus;
                 }
                 else
                 {
-                    // layer before critical point
-                    waterDeficit = myCase->layer[i].critical - myCase->layer[i].waterContent;
+                    // layers before critical point
+                    waterDeficit = myCase->layers[i].critical - myCase->layers[i].waterContent;
                     localWater = MINVALUE(fluxLayer, waterDeficit);
                     fluxLayer -= localWater;
-                    myCase->layer[i].waterContent += localWater;
+                    myCase->layers[i].waterContent += localWater;
                     if (fluxLayer <= 0.0) break;
                 }
 
-                residualFlux = myCase->layer[i].maxInfiltration - myCase->layer[i].flux;
+                residualFlux = myCase->layers[i].maxInfiltration - myCase->layers[i].flux;
                 residualFlux = MAXVALUE(residualFlux, 0.0);
 
                 if (residualFlux >= fluxLayer)
                 {
-                    myCase->layer[i].flux += fluxLayer;
+                    myCase->layers[i].flux += fluxLayer;
                 }
                 else
                 {
                     // local surplus (localflux)
                     localFlux = fluxLayer - residualFlux;
                     fluxLayer = residualFlux;
-                    myCase->layer[i].flux += fluxLayer;
+                    myCase->layers[i].flux += fluxLayer;
 
                     // surplus management
-                    if (localFlux <= (myCase->layer[i].SAT - myCase->layer[i].waterContent))
+                    if (localFlux <= (myCase->layers[i].SAT - myCase->layers[i].waterContent))
                     {
-                        // available space for water in the layer
-                        myCase->layer[i].waterContent += localFlux;
+                        // available space for water in the layers
+                        myCase->layers[i].waterContent += localFlux;
                         localFlux = 0;
                     }
                     else
                     {
                         // not enough space for water, upper layers are involved
+                        unsigned int j;
                         for (j = i; j >= l + 1; j--)
                         {
                             if (localFlux <= 0.0) break;
 
-                            localWater = MINVALUE(localFlux, myCase->layer[j].SAT - myCase->layer[j].waterContent);
+                            localWater = MINVALUE(localFlux, myCase->layers[j].SAT - myCase->layers[j].waterContent);
                             if (j < i)
-                                myCase->layer[j].flux -= localFlux;
+                                myCase->layers[j].flux -= localFlux;
 
                             localFlux -= localWater;
-                            myCase->layer[j].waterContent += localWater;
+                            myCase->layers[j].waterContent += localWater;
                         }
 
                         // residual water
                         if ((localFlux > 0.0) && (j == l))
                         {
-                            myCase->layer[l].waterContent += localFlux;
-                            myCase->layer[l].flux -= localFlux;
+                            myCase->layers[l].waterContent += localFlux;
+                            myCase->layers[l].flux -= localFlux;
                         }
                     }
                 }
-            } // end cycle l+1-->reached layer
+            } // end cycle l+1-->reached layers
 
             // drainage
             if ((reached == myCase->nrLayers-1) && (fluxLayer > 0))
@@ -226,21 +229,21 @@ bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigat
             i = reached;
             while ((fluxLayer > 0) && (i >= l+1))
             {
-                localWater = MINVALUE(fluxLayer, myCase->layer[i].SAT - myCase->layer[i].waterContent);
+                localWater = MINVALUE(fluxLayer, myCase->layers[i].SAT - myCase->layers[i].waterContent);
                 fluxLayer -= localWater;
-                myCase->layer[i].flux -= localWater;
-                myCase->layer[i].waterContent += localWater;
+                myCase->layers[i].flux -= localWater;
+                myCase->layers[i].waterContent += localWater;
                 i--;
             }
 
-            // first layer (pond on surface)
+            // first layers (pond on surface)
             if ((fluxLayer != 0.) && (i == l))
             {
-                myCase->layer[l].waterContent += fluxLayer;
-                myCase->layer[l].flux -= fluxLayer;
+                myCase->layers[l].waterContent += fluxLayer;
+                myCase->layers[l].flux -= fluxLayer;
             }
 
-        }  // end if surplus layer
+        }  // end if surplus layers
     }
 
     return true;
@@ -256,100 +259,99 @@ bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigat
 bool computeCapillaryRise(CriteriaModel* myCase, double waterTableDepth)
 {
     double psi, previousPsi;             // [kPa] water potential
-    double he_boundary;                  // [kPa] air entry point boundary layer
+    double he_boundary;                  // [kPa] air entry point boundary layers
     double k_psi;                        // [cm/d] water conductivity
     double dz, dPsi;                     // [m]
     double capillaryRise;                // [mm]
     double maxCapillaryRise;             // [mm]
     double capillaryRiseSum = 0;         // [mm]
-    int i;
 
-    int lastLayer = myCase->nrLayers - 1;
+    unsigned int lastLayer = myCase->nrLayers - 1;
     const double REDUCTION_FACTOR = 0.5;
 
     // NO WaterTable, wrong data or watertable too depth
     if ( (int(waterTableDepth) == int(NODATA))
       || (waterTableDepth <= 0)
-      || (waterTableDepth > (myCase->layer[lastLayer].depth + 8)))
+      || (waterTableDepth > (myCase->layers[lastLayer].depth + 8)))
     {
         //re-initialize threshold for vertical drainage
-        for (i = 1; i < myCase->nrLayers; i++)
-            myCase->layer[i].critical = myCase->layer[i].FC;
+        for (unsigned int i = 1; i < myCase->nrLayers; i++)
+            myCase->layers[i].critical = myCase->layers[i].FC;
 
         return false;
     }
 
-    // search boundary layer: first layer over watertable
-    // depth is assigned at center layer
-    i = lastLayer;
+    // search boundary layers: first layers over watertable
+    // depth is assigned at center layers
+    int first = signed(lastLayer);
     if (waterTableDepth < myCase->mySoil.totalDepth)
     {
-        while ((i > 1) && (waterTableDepth <= myCase->layer[i].depth))
-            i--;
+        while ((first > 1) && (waterTableDepth <= myCase->layers[unsigned(first)].depth))
+            first--;
     }
 
-    int boundaryLayer = i;
+    unsigned int boundaryLayer = unsigned(first);
 
     // layers below watertable: saturated
     if (boundaryLayer < lastLayer)
     {
-        for (i = boundaryLayer + 1; i <= lastLayer; i++)
+        for (unsigned int i = boundaryLayer+1; i <= lastLayer; i++)
         {
-            myCase->layer[i].critical = myCase->layer[i].SAT;
+            myCase->layers[i].critical = myCase->layers[i].SAT;
 
-            if (myCase->layer[i].waterContent < myCase->layer[i].SAT)
+            if (myCase->layers[i].waterContent < myCase->layers[i].SAT)
             {
-                capillaryRiseSum += (myCase->layer[i].SAT - myCase->layer[i].waterContent);
-                myCase->layer[i].waterContent = myCase->layer[i].SAT;
+                capillaryRiseSum += (myCase->layers[i].SAT - myCase->layers[i].waterContent);
+                myCase->layers[i].waterContent = myCase->layers[i].SAT;
             }
         }
     }
 
-    // air entry point of boundary layer
-    he_boundary = myCase->layer[boundaryLayer].horizon->vanGenuchten.he;    // [kPa]
+    // air entry point of boundary layers
+    he_boundary = myCase->layers[boundaryLayer].horizon->vanGenuchten.he;       // [kPa]
 
     // above watertable: assign water content threshold for vertical drainage
-    for (i = 1; i <= boundaryLayer; i++)
+    for (unsigned int i = 1; i <= boundaryLayer; i++)
     {
-        dz = (waterTableDepth - myCase->layer[i].depth);                    // [m]
-        psi = soil::metersTokPa(dz) + he_boundary;                          // [kPa]
+        dz = (waterTableDepth - myCase->layers[i].depth);                       // [m]
+        psi = soil::metersTokPa(dz) + he_boundary;                              // [kPa]
 
-        myCase->layer[i].critical = soil::getWaterContentFromPsi(psi, &(myCase->layer[i]));
+        myCase->layers[i].critical = soil::getWaterContentFromPsi(psi, &(myCase->layers[i]));
 
-        if (myCase->layer[i].critical < myCase->layer[i].FC)
+        if (myCase->layers[i].critical < myCase->layers[i].FC)
         {
-            myCase->layer[i].critical = myCase->layer[i].FC;
+            myCase->layers[i].critical = myCase->layers[i].FC;
         }
     }
 
     // above watertable: capillary rise
-    previousPsi = soil::getWaterPotential(&(myCase->layer[boundaryLayer]));
-    for (i = boundaryLayer; i > 0; i--)
+    previousPsi = soil::getWaterPotential(&(myCase->layers[boundaryLayer]));
+    for (unsigned int i = boundaryLayer; i > 0; i--)
     {
-        psi = soil::getWaterPotential(&(myCase->layer[i]));                 // [kPa]
+        psi = soil::getWaterPotential(&(myCase->layers[i]));                // [kPa]
 
         if (i < boundaryLayer && psi < previousPsi)
             break;
 
         dPsi = soil::kPaToMeters(psi - he_boundary);                        // [m]
-        dz = waterTableDepth - myCase->layer[i].depth;                      // [m]
+        dz = waterTableDepth - myCase->layers[i].depth;                     // [m]
 
         if (dPsi > dz)
         {
-            k_psi = soil::getWaterConductivity(&(myCase->layer[i]));        // [cm day-1]
+            k_psi = soil::getWaterConductivity(&(myCase->layers[i]));       // [cm day-1]
 
             k_psi *= REDUCTION_FACTOR * 10.;                                // [mm day-1]
 
             capillaryRise = k_psi * ((dPsi / dz) - 1);                      // [mm day-1]
 
-            maxCapillaryRise = myCase->layer[i].critical - myCase->layer[i].waterContent;
+            maxCapillaryRise = myCase->layers[i].critical - myCase->layers[i].waterContent;
             capillaryRise = MINVALUE(capillaryRise, maxCapillaryRise);
 
             // update water contet
-            myCase->layer[i].waterContent += capillaryRise;
+            myCase->layers[i].waterContent += capillaryRise;
             capillaryRiseSum += capillaryRise;
 
-            previousPsi = soil::getWaterPotential(&(myCase->layer[i]));     // [kPa]
+            previousPsi = soil::getWaterPotential(&(myCase->layers[i]));     // [kPa]
         }
         else
         {
@@ -380,10 +382,10 @@ bool computeSurfaceRunoff(CriteriaModel* myCase)
 
     roughness = myCase->myCrop.maxSurfacePuddle + clodHeight;
 
-    if (myCase->layer[0].waterContent > roughness)
+    if (myCase->layers[0].waterContent > roughness)
     {
-       myCase->output.dailySurfaceRunoff = myCase->layer[0].waterContent - roughness;
-       myCase->layer[0].waterContent = roughness;
+       myCase->output.dailySurfaceRunoff = myCase->layers[0].waterContent - roughness;
+       myCase->layers[0].waterContent = roughness;
     }
     else
        myCase->output.dailySurfaceRunoff = 0.0;
@@ -409,24 +411,24 @@ bool computeLateralDrainage(CriteriaModel* myCase)
     const double drainDepth = 1.0;          // [m]
     const double fieldWidth = 100.0;        // [m]
 
-    for (int l = 1; l < myCase->nrLayers; l++)
+    for (unsigned int i = 1; i < myCase->nrLayers; i++)
     {
-        if (myCase->layer[l].depth > drainDepth)
+        if (myCase->layers[i].depth > drainDepth)
             break;
 
-        waterSurplus = myCase->layer[l].waterContent - myCase->layer[l].critical;               // [mm]
+        waterSurplus = myCase->layers[i].waterContent - myCase->layers[i].critical;               // [mm]
         if (waterSurplus > 0.0)
         {
-            satFactor = waterSurplus / (myCase->layer[l].SAT - myCase->layer[l].critical);      // [-]
+            satFactor = waterSurplus / (myCase->layers[i].SAT - myCase->layers[i].critical);      // [-]
 
-            hydrHead = satFactor * (drainDepth - myCase->layer[l].depth);                       // [m]
+            hydrHead = satFactor * (drainDepth - myCase->layers[i].depth);                       // [m]
 
-            maxDrainage =  10 * myCase->layer[l].horizon->Driessen.k0 * hydrHead /
+            maxDrainage =  10 * myCase->layers[i].horizon->Driessen.k0 * hydrHead /
                     (hydrHead + (fieldWidth / PI) * log(fieldWidth / (PI * drainRadius)));      // [mm]
 
             layerDrainage = MINVALUE(waterSurplus, maxDrainage);                                // [mm]
 
-            myCase->layer[l].waterContent -= layerDrainage;
+            myCase->layers[i].waterContent -= layerDrainage;
             myCase->output.dailyLateralDrainage += layerDrainage;
         }
     }
@@ -447,16 +449,16 @@ double getSoilWaterContent(CriteriaModel* myCase)
     double depthRatio;                      // [-]
     double waterContent = 0.0;              // [mm]
 
-    for (int i = 1; i < myCase->nrLayers; i++)
+    for (unsigned int i = 1; i < myCase->nrLayers; i++)
     {
-        lowerDepth = myCase->layer[i].depth + myCase->layer[i].thickness * 0.5;
+        lowerDepth = myCase->layers[i].depth + myCase->layers[i].thickness * 0.5;
         if (lowerDepth < maxDepth)
-            waterContent += myCase->layer[i].waterContent;
+            waterContent += myCase->layers[i].waterContent;
         else
         {
-            upperDepth = myCase->layer[i].depth - myCase->layer[i].thickness * 0.5;
-            depthRatio = (maxDepth - upperDepth) / myCase->layer[i].thickness;
-            waterContent += myCase->layer[i].waterContent * depthRatio;
+            upperDepth = myCase->layers[i].depth - myCase->layers[i].thickness * 0.5;
+            depthRatio = (maxDepth - upperDepth) / myCase->layers[i].thickness;
+            waterContent += myCase->layers[i].waterContent * depthRatio;
             break;
         }
     }

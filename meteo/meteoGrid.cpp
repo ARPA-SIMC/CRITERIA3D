@@ -615,6 +615,16 @@ void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
             }
 }
 
+void Crit3DMeteoGrid::emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin)
+{
+    for (unsigned row = 0; row < gridStructure().header().nrRows; row++)
+        for (unsigned col = 0; col < gridStructure().header().nrCols; col++)
+        {
+            _meteoPoints[row][col]->emptyObsDataH(dateIni, dateFin);
+            _meteoPoints[row][col]->emptyObsDataD(dateIni, dateFin);
+        }
+}
+
 void Crit3DMeteoGrid::computeWindVectorHourly(const Crit3DDate myDate, const int myHour)
 {
     float intensity = NODATA, direction = NODATA;

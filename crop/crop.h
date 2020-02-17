@@ -12,6 +12,7 @@
     #endif
 
     enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FALLOW, FRUIT_TREE};
+    const int numSpeciesType = 6;
 
     /*!
      * \brief The Crit3DCrop class
@@ -73,7 +74,7 @@
         bool isInsideTypicalCycle(int myDoy);
         bool isPluriannual();
 
-        void initialize(double latitude, int nrLayers, double totalSoilDepth, int currentDoy);
+        void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
         void resetCrop(int nrLayers);
         bool updateLAI(double latitude, int nrLayers, int myDoy);

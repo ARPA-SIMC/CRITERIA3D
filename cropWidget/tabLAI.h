@@ -16,7 +16,6 @@
     public:
         TabLAI();
         void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int year, int nrLayers, double totalSoilDepth, int currentDoy);
-        void drawLAI(Crit3DCrop* myCrop);
     private:
         int year;
         QChartView *chartView;

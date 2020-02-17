@@ -62,7 +62,6 @@ CriteriaModel::CriteriaModel()
     this->idCase = "";
     this->outputString = "";
 
-    this->layer = nullptr;
     this->nrLayers = 0;
     this->layerThickness = 0.02;          /*!<  [m] default thickness = 2 cm  */
 
@@ -120,60 +119,52 @@ bool CriteriaModel::setSoil(QString soilCode, QString *myError)
     if (! loadSoil(&dbSoil, soilCode, &mySoil, soilTexture, &fittingOptions, myError))
         return false;
 
-    // nr of layers (check on last layer)
-    double temp = mySoil.totalDepth / this->layerThickness;
-    this->nrLayers = int(floor(temp)) + 1;
-    if ((temp - floor(temp)) > 0.5)
-    {
-        this->nrLayers++;
-    }
+    // nr of layers (round check the center of last layers)
+    double nrLayersDouble = mySoil.totalDepth / this->layerThickness;
+    nrLayers = unsigned(round(nrLayersDouble)) + 1;
 
     // alloc memory for layers
-    if (this->layer != nullptr)
-    {
-        free(this->layer);
-    }
-    this->layer = (soil::Crit3DLayer *) calloc(unsigned(this->nrLayers), sizeof(soil::Crit3DLayer));
+    layers.clear();
+    layers.resize(unsigned(nrLayers));
 
-    double soilFraction, hygroscopicHumidity;
-    int horizonIndex;
+    double hygroscopicHumidity;
+    unsigned int horizonIndex;
     double currentDepth;
 
     // initialize layers
-    layer[0].depth = 0.0;
-    layer[0].thickness = 0.0;
+    layers[0].depth = 0.0;
+    layers[0].thickness = 0.0;
 
-    currentDepth = this->layerThickness / 2.0;
-    for (int i = 1; i < this->nrLayers; i++)
+    currentDepth = layerThickness / 2.0;
+    for (unsigned int i = 1; i < nrLayers; i++)
     {
         horizonIndex = soil::getHorizonIndex(&(mySoil), currentDepth);
 
-        layer[i].horizon = &(mySoil.horizon[horizonIndex]);
+        layers[i].horizon = &(mySoil.horizon[horizonIndex]);
 
-        soilFraction = (1.0 - layer[i].horizon->coarseFragments);
-        layer[i].soilFraction = soilFraction;                       // [-]
+        layers[i].soilFraction = (1.0 - layers[i].horizon->coarseFragments);    // [-]
 
-        // TODO geometric layer
-        layer[i].depth = currentDepth;                              // [m]
-        layer[i].thickness = this->layerThickness;                  // [m]
-
-        //[mm]
-        layer[i].SAT = mySoil.horizon[horizonIndex].vanGenuchten.thetaS * soilFraction * layer[i].thickness * 1000.0;
+        // TODO geometric layers
+        layers[i].depth = currentDepth;                              // [m]
+        layers[i].thickness = this->layerThickness;                  // [m]
 
         //[mm]
-        layer[i].FC = mySoil.horizon[horizonIndex].waterContentFC * soilFraction * layer[i].thickness * 1000.0;
-        layer[i].critical = layer[i].FC;
+        layers[i].SAT = mySoil.horizon[horizonIndex].vanGenuchten.thetaS * layers[i].soilFraction * layers[i].thickness * 1000.0;
 
         //[mm]
-        layer[i].WP = mySoil.horizon[horizonIndex].waterContentWP * soilFraction * layer[i].thickness * 1000.0;
+        layers[i].FC = mySoil.horizon[horizonIndex].waterContentFC * layers[i].soilFraction * layers[i].thickness * 1000.0;
+        layers[i].critical = layers[i].FC;
+
+        //[mm]
+        layers[i].WP = mySoil.horizon[horizonIndex].waterContentWP * layers[i].soilFraction * layers[i].thickness * 1000.0;
 
         // hygroscopic humidity: -2000 kPa
         hygroscopicHumidity = soil::thetaFromSignPsi(-2000, &(mySoil.horizon[horizonIndex]));
 
         //[mm]
-        layer[i].HH = hygroscopicHumidity * soilFraction * layer[i].thickness * 1000.0;
+        layers[i].HH = hygroscopicHumidity * layers[i].soilFraction * layers[i].thickness * 1000.0;
 
-        currentDepth += layer[i].thickness;              //[m]
+        currentDepth += layers[i].thickness;              //[m]
     }
 
     return(true);
@@ -372,11 +363,6 @@ bool CriteriaModel::createOutputTable(QString* myError)
 {
     QString queryString = "DROP TABLE '" + this->idCase + "'";
     QSqlQuery myQuery = this->dbOutput.exec(queryString);
-
-    if (! myQuery.isValid())
-    {
-        *myError = "Error in dropping table: " + this->idCase + "\n" + myQuery.lastError().text();
-    }
 
     queryString = "CREATE TABLE '" + this->idCase + "'"
             + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "

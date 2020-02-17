@@ -15,6 +15,24 @@ TabLAI::TabLAI()
     series = new QLineSeries();
     axisX = new QDateTimeAxis();
     axisY = new QValueAxis();
+
+    chart->addSeries(series);
+    QDate first(QDate::currentDate().year(), 1, 1);
+    QDate last(QDate::currentDate().year(), 12, 31);
+    axisX->setTitleText("Date");
+    axisX->setFormat("MMM dd");
+    axisX->setMin(QDateTime(first, QTime(0,0,0)));
+    axisX->setMax(QDateTime(last, QTime(0,0,0)));
+    axisX->setTickCount(13);
+    chart->addAxis(axisX, Qt::AlignBottom);
+    series->attachAxis(axisX);
+
+    axisY->setTitleText("LAI");
+    axisY->setRange(0,6);
+    axisY->setTickCount(5);
+    chart->addAxis(axisY, Qt::AlignLeft);
+    series->attachAxis(axisY);
+
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
@@ -47,25 +65,13 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int ye
         x.setDate(QDate(myDate.year, myDate.month, myDate.day));
         series->append(x.toMSecsSinceEpoch(), myCrop->LAI);
     }
-    drawLAI(myCrop);
-}
 
-void TabLAI::drawLAI(Crit3DCrop* myCrop)
-{
-    chart->addSeries(series);
+    // update x axis
     QDate first(year, 1, 1);
     QDate last(year, 12, 31);
-    axisX->setTitleText("Date");
-    axisX->setFormat("MMM dd");
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
-    axisX->setTickCount(15);
-    chart->addAxis(axisX, Qt::AlignBottom);
-    series->attachAxis(axisX);
 
-    axisY->setTitleText("LAI");
-    axisY->setRange(0,6);
-    axisY->setTickCount(5);
-    chart->addAxis(axisY, Qt::AlignLeft);
-    series->attachAxis(axisY);
 }
+
+

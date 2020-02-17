@@ -290,6 +290,33 @@ void Crit3DMeteoPoint::emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& d
         }
 }
 
+void Crit3DMeteoPoint::emptyObsDataH(const Crit3DDate& date1, const Crit3DDate& date2)
+{
+    if (! isDateIntervalLoadedH(date1, date2)) return;
+
+    int nrDayValues = hourlyFraction * 24;
+    int indexIni = obsDataH[0].date.daysTo(date1);
+    int indexFin = obsDataH[0].date.daysTo(date2);
+
+    for (int i = indexIni; i <= indexFin; i++)
+        for (int j = 0; j < nrDayValues; j++)
+        {
+            obsDataH[i].tAir[j] = NODATA;
+            obsDataH[i].prec[j] = NODATA;
+            obsDataH[i].rhAir[j] = NODATA;
+            obsDataH[i].tDew[j] = NODATA;
+            obsDataH[i].irradiance[j] = NODATA;
+            obsDataH[i].windScalInt[j] = NODATA;
+            obsDataH[i].windVecX[j] = NODATA;
+            obsDataH[i].windVecY[j] = NODATA;
+            obsDataH[i].windVecInt[j] = NODATA;
+            obsDataH[i].windVecDir[j] = NODATA;
+            obsDataH[i].leafW[j] = NODATA;
+            obsDataH[i].transmissivity[j] = NODATA;
+            obsDataH[i].et0[j] = NODATA;
+        }
+}
+
 void Crit3DMeteoPoint::emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2)
 {
     if (! isDateIntervalLoadedH(date1, date2)) return;
@@ -331,6 +358,34 @@ void Crit3DMeteoPoint::emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& d
             obsDataD[i].et0_pm = NODATA;
         else if (myVar == dailyLeafWetness)
             obsDataD[i].leafW = NODATA;
+}
+
+void Crit3DMeteoPoint::emptyObsDataD(const Crit3DDate& date1, const Crit3DDate& date2)
+{
+    if (! isDateIntervalLoadedH(date1, date2)) return;
+
+    int indexIni = obsDataH[0].date.daysTo(date1);
+    int indexFin = obsDataH[0].date.daysTo(date2);
+
+    for (int i = indexIni; i <= indexFin; i++)
+    {
+        obsDataD[i].tMax = NODATA;
+        obsDataD[i].tMin = NODATA;
+        obsDataD[i].tAvg = NODATA;
+        obsDataD[i].prec = NODATA;
+        obsDataD[i].rhMax = NODATA;
+        obsDataD[i].rhMin = NODATA;
+        obsDataD[i].rhAvg = NODATA;
+        obsDataD[i].globRad = NODATA;
+        obsDataD[i].windScalIntAvg = NODATA;
+        obsDataD[i].windScalIntMax = NODATA;
+        obsDataD[i].windVecIntAvg = NODATA;
+        obsDataD[i].windVecIntMax = NODATA;
+        obsDataD[i].windVecDirPrev = NODATA;
+        obsDataD[i].et0_hs = NODATA;
+        obsDataD[i].et0_pm = NODATA;
+        obsDataD[i].leafW = NODATA;
+    }
 }
 
 bool Crit3DMeteoPoint::isDateLoadedH(const Crit3DDate& myDate)

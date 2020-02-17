@@ -39,7 +39,7 @@
 #include "modelCore.h"
 
 
-bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString* myError)
+bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError)
 {
     myCase->idCase = myUnit->idCase;
 
@@ -53,8 +53,10 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString* myError)
         return false;
 
     if (! myCase->isSeasonalForecast)
+    {
         if (! myCase->createOutputTable(myError))
             return false;
+    }
 
     // set computation period (all meteo data)
     Crit3DDate firstDate, lastDate;
@@ -69,7 +71,7 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString* myError)
 }
 
 
-bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit3DDate& lastDate, QString* myError)
+bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit3DDate& lastDate, QString *myError)
 {
     Crit3DDate myDate;
     long myIndex;
@@ -137,7 +139,7 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
         myCase->output.dailyEt0 = double(et0);
 
         // CROP
-        if (! updateCrop(myCase, myError, myDate, tmin, tmax, waterTableDepth))
+        if (! updateCrop(myCase, myDate, tmin, tmax, double(waterTableDepth), myError))
             return false;
 
         // ETcrop
@@ -190,7 +192,7 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
         }
 
         // Output variables
-        myCase->output.dailySurfaceWaterContent = myCase->layer[0].waterContent;
+        myCase->output.dailySurfaceWaterContent = myCase->layers[0].waterContent;
         myCase->output.dailySoilWaterContent = getSoilWaterContent(myCase);
         myCase->output.dailyCropAvailableWater = getCropReadilyAvailableWater(myCase);
         myCase->output.dailyCropWaterDeficit = getCropWaterDeficit(myCase);

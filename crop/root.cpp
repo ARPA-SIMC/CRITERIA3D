@@ -50,7 +50,6 @@ Crit3DRoot::Crit3DRoot()
     this->rootLength = NODATA;
     this->rootDepth = NODATA;
     this->rootDensity = nullptr;
-    this->transpiration = nullptr;
 }
 
 
@@ -238,7 +237,7 @@ namespace root
         return order;
     }
 
-    int nrAtoms(soil::Crit3DLayer* layers, int nrLayers, double rootDepthMin, double* minThickness, int* atoms)
+    int nrAtoms(const std::vector<soil::Crit3DLayer> &layers, int nrLayers, double rootDepthMin, double* minThickness, int* atoms)
     {
         int multiplicationFactor = 1;
 
@@ -247,7 +246,7 @@ namespace root
         else
             *minThickness = layers[1].thickness;
 
-        for(int i=1; i<nrLayers; i++)
+        for(unsigned int i=1; i < unsigned(nrLayers); i++)
             *minThickness = MINVALUE(*minThickness, layers[i].thickness);
 
         double tmp = *minThickness * 1.001;
@@ -261,9 +260,9 @@ namespace root
 
         int value;
         int counter = 0;
-        for(int i=0; i<nrLayers; i++)
+        for(unsigned int i=0; i < unsigned(nrLayers); i++)
         {
-           value = int(round(multiplicationFactor * layers[i].thickness));
+            value = int(round(multiplicationFactor * layers[i].thickness));
            atoms[i] = value;
            counter += value;
         }
@@ -303,12 +302,12 @@ namespace root
         // TODO verify
         k = LiMin + (Limax - LiMin) * (shapeFactor-1);
         rootDensitySum = 0 ;
-        for (int i = 0 ; i<(2*nrLayersWithRoot) ; i++)
+        for (int i = 0 ; i < (2*nrLayersWithRoot); i++)
         {
             lunetteDensity[i] *= exp(-k*(i+0.5));
             rootDensitySum += lunetteDensity[i];
         }
-        for (int i = 0 ; i<(2*nrLayersWithRoot) ; i++)
+        for (int i = 0 ; i < (2*nrLayersWithRoot); i++)
         {
             lunetteDensity[i] /= rootDensitySum ;
         }
@@ -369,7 +368,7 @@ namespace root
     }
 
 
-    bool computeRootDensity(Crit3DCrop* myCrop, soil::Crit3DLayer* layers, int nrLayers, double soilDepth)
+    bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &layers, int nrLayers, double soilDepth)
     {
         int i, layer;
 
@@ -431,7 +430,7 @@ namespace root
             // complete gamma function
             normalizationFactor = Gamma_Function(kappa);
 
-            for (i=1 ; i<nrLayers ; i++)
+            for (unsigned i=1 ; i < unsigned(nrLayers) ; i++)
             {
                 b = MAXVALUE(layers[i].depth + layers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // right extreme
                 if (b>0)
@@ -444,7 +443,7 @@ namespace root
         }
 
         double rootDensitySum = 0. ;
-        for (i=0 ; i<nrLayers ; i++)
+        for (unsigned i=0 ; i < unsigned(nrLayers); i++)
         {
             myCrop->roots.rootDensity[i] *= layers[i].soilFraction;
             rootDensitySum += myCrop->roots.rootDensity[i];

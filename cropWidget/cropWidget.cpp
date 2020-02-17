@@ -140,7 +140,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     QLabel *LAImax = new QLabel(tr("LAI max: "));
     LAImaxValue = new QLineEdit();
 
-    QLabel *LAIgrass = new QLabel(tr("LAI grass: "));
+    LAIgrass = new QLabel(tr("LAI grass: "));
     LAIgrassValue = new QLineEdit();
 
     QLabel *thermalThreshold = new QLabel(tr("thermal threshold: "));
@@ -367,6 +367,30 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         cropSowingValue->setVisible(false);
         cropCycleMaxValue->setVisible(false);
     }
+
+    // parameters
+
+    LAIminValue->setText(QString::number(myCrop->LAImin));
+    LAImaxValue->setText(QString::number(myCrop->LAImax));
+    if (myCrop->type == FRUIT_TREE)
+    {
+        LAIgrass->setVisible(true);
+        LAIgrassValue->setVisible(true);
+        LAIgrassValue->setText(QString::number(myCrop->LAIgrass));
+    }
+    else
+    {
+        LAIgrass->setVisible(false);
+        LAIgrassValue->setVisible(false);
+    }
+    thermalThresholdValue->setText(QString::number(myCrop->thermalThreshold));
+    upperThermalThresholdValue->setText(QString::number(myCrop->upperThermalThreshold));
+    degreeDaysEmergenceValue->setText(QString::number(myCrop->degreeDaysEmergence));
+    degreeDaysLAIincValue->setText(QString::number(myCrop->degreeDaysIncrease));
+    degreeDaysLAIdecValue->setText(QString::number(myCrop->degreeDaysDecrease));
+    LAIcurveAValue->setText(QString::number(myCrop->LAIcurve_a));
+    LAIcurveBValue->setText(QString::number(myCrop->LAIcurve_b));
+
     if (meteoPoint != nullptr && !yearListComboBox.currentText().isEmpty())
     {
         updateTabLAI();
@@ -480,15 +504,19 @@ void Crit3DCropWidget::on_actionNewCrop()
         QMessageBox::information(nullptr, "Warning", msg);
         return;
     }
-    DialogNewCrop dialog;
+    Crit3DCrop* newCrop = new Crit3DCrop();
+    DialogNewCrop dialog(newCrop);
     QString error;
     if (dialog.result() != QDialog::Accepted)
     {
+        delete newCrop;
         return;
     }
     else
     {
         // TO DO
+        // write newCrop on Db
+        delete newCrop;
     }
 }
 
