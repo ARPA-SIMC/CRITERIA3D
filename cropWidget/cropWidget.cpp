@@ -94,9 +94,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     infoMeteoGroup = new QGroupBox(tr(""));
     infoParametersGroup = new QGroupBox(tr(""));
 
-    infoCropGroup->setFixedWidth(this->width()/4);
-    infoMeteoGroup->setFixedWidth(this->width()/4);
-    infoParametersGroup->setFixedWidth(this->width()/4);
+    infoCropGroup->setFixedWidth(this->width()/4.5);
+    infoMeteoGroup->setFixedWidth(this->width()/4.5);
+    infoParametersGroup->setFixedWidth(this->width()/4.5);
 
     infoCropGroup->setTitle("Crop");
     infoMeteoGroup->setTitle("Meteo");
@@ -134,34 +134,34 @@ Crit3DCropWidget::Crit3DCropWidget()
     meteoInfoLayout->addWidget(lon, 3, 0);
     meteoInfoLayout->addWidget(lonValue, 3, 1);
 
-    QLabel *LAImin = new QLabel(tr("LAI min: "));
+    QLabel *LAImin = new QLabel(tr("LAI min [m2 m-2]: "));
     LAIminValue = new QLineEdit();
 
-    QLabel *LAImax = new QLabel(tr("LAI max: "));
+    QLabel *LAImax = new QLabel(tr("LAI max [m2 m-2]: "));
     LAImaxValue = new QLineEdit();
 
-    LAIgrass = new QLabel(tr("LAI grass: "));
+    LAIgrass = new QLabel(tr("LAI grass [m2 m-2]: "));
     LAIgrassValue = new QLineEdit();
 
-    QLabel *thermalThreshold = new QLabel(tr("thermal threshold: "));
+    QLabel *thermalThreshold = new QLabel(tr("thermal threshold [°C]: "));
     thermalThresholdValue = new QLineEdit();
 
-    QLabel *upperThermalThreshold = new QLabel(tr("upper thermal threshold: "));
+    QLabel *upperThermalThreshold = new QLabel(tr("upper thermal threshold [°C]: "));
     upperThermalThresholdValue = new QLineEdit();
 
-    QLabel *degreeDaysEmergence = new QLabel(tr("degree days emergence: "));
+    QLabel *degreeDaysEmergence = new QLabel(tr("degree days emergence [°C]: "));
     degreeDaysEmergenceValue = new QLineEdit();
 
-    QLabel *degreeDaysLAIinc = new QLabel(tr("degree days LAI increase: "));
+    QLabel *degreeDaysLAIinc = new QLabel(tr("degree days LAI increase [°C]: "));
     degreeDaysLAIincValue = new QLineEdit();
 
-    QLabel *degreeDaysLAIdec = new QLabel(tr("degree days LAI decrease: "));
+    QLabel *degreeDaysLAIdec = new QLabel(tr("degree days LAI decrease [°C]: "));
     degreeDaysLAIdecValue = new QLineEdit();
 
-    QLabel *LAIcurveA = new QLabel(tr("LAI curve factor A: "));
+    QLabel *LAIcurveA = new QLabel(tr("LAI curve factor A [-]: "));
     LAIcurveAValue = new QLineEdit();
 
-    QLabel *LAIcurveB = new QLabel(tr("LAI curve factor B: "));
+    QLabel *LAIcurveB = new QLabel(tr("LAI curve factor B [-]: "));
     LAIcurveBValue = new QLineEdit();
 
     parametersInfoLayout->addWidget(LAImin, 0, 0);
