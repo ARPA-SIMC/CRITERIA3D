@@ -99,19 +99,22 @@ double getCropReadilyAvailableWater(CriteriaModel* myCase)
     if (myCase->myCrop.roots.rootDepth <= myCase->myCrop.roots.rootDepthMin) return 0.;
     if (myCase->myCrop.roots.firstRootLayer == NODATA) return 0.;
 
-    double depth, threshold, layerRAW;
-
     double sumRAW = 0.0;
     for (unsigned int i = unsigned(myCase->myCrop.roots.firstRootLayer); i <= unsigned(myCase->myCrop.roots.lastRootLayer); i++)
     {
-        threshold = myCase->layers[i].FC - myCase->myCrop.fRAW * (myCase->layers[i].FC - myCase->layers[i].WP);
+        double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCase->myCrop.psiLeaf), myCase->layers[i].horizon);
+        // [mm]
+        double cropWP = thetaWP * myCase->layers[i].thickness * myCase->layers[i].soilFraction * 1000.0;
+        // [mm]
+        double threshold = myCase->layers[i].FC - myCase->myCrop.fRAW * (myCase->layers[i].FC - cropWP);
 
-        layerRAW = (myCase->layers[i].waterContent - threshold);
+        double layerRAW = (myCase->layers[i].waterContent - threshold);
 
-        depth = myCase->layers[i].depth + myCase->layers[i].thickness / 2.0;
-
-        if (myCase->myCrop.roots.rootDepth < depth)
-                layerRAW *= (myCase->myCrop.roots.rootDepth - depth) / myCase->layers[i].thickness;
+        double layerMaxDepth = myCase->layers[i].depth + myCase->layers[i].thickness / 2.0;
+        if (myCase->myCrop.roots.rootDepth < layerMaxDepth)
+        {
+                layerRAW *= (myCase->myCrop.roots.rootDepth - layerMaxDepth) / myCase->layers[i].thickness;
+        }
 
         sumRAW += layerRAW;
     }
@@ -123,7 +126,7 @@ double getCropReadilyAvailableWater(CriteriaModel* myCase)
 /*!
  * \brief getTotalReadilyAvailableWater
  * \return sum of readily available water (mm)
- * \note take into account at minimum the forst meter f soil and the surface water
+ * \note take into account at minimum the first meter of soil and the surface water
  */
 double getTotalReadilyAvailableWater(CriteriaModel* myCase)
 {
