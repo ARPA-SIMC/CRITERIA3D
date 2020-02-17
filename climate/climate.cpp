@@ -1651,6 +1651,10 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
 
     for (date = dateIni; date <= dateFin; date = date.addDays(1))
     {
+        dailyValue = NODATA;
+        value = NODATA;
+        values.clear();
+
         for (hour = 1; hour <= 24; hour++)
         {
             value = meteoPoint->getMeteoPointValueH(date, hour, 0, hourlyVar);
@@ -1659,6 +1663,10 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
 
         dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
         meteoPoint->setMeteoPointValueD(date, myVar, dailyValue);
+
+        if (myVar == dailyLeafWetness && dailyValue > 24)
+            int a = 0;
+
     }
 
     return true;
