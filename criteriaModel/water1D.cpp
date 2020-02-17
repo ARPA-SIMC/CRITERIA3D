@@ -106,7 +106,7 @@ bool computeInfiltration(CriteriaModel* myCase, float prec, float surfaceIrrigat
         }
     }
 
-    myCase->layers[0].maxInfiltration = myCase->layers[1].maxInfiltration;
+    myCase->layers[0].maxInfiltration = MINVALUE(myCase->layers[0].waterContent, myCase->layers[1].maxInfiltration);
     myCase->layers[0].flux = 0;
 
     for (int layerIndex = signed(myCase->nrLayers)-1; layerIndex >= 0; layerIndex--)

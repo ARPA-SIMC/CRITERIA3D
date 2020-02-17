@@ -326,7 +326,6 @@ double cropTranspiration(CriteriaModel* myCase, bool getWaterStress)
     double TRs=0.0;                                 // [mm] actual transpiration with only water scarsity stress
     double TRe=0.0;                                 // [mm] actual transpiration with only water surplus stress
     double totRootDensityWithoutStress = 0.0;       // [-]
-    double stress = 0.0;                            // [-]
     double redistribution = 0.0;                    // [mm]
 
     if (myCase->output.dailyMaxTranspiration < EPSILON)
@@ -406,36 +405,37 @@ double cropTranspiration(CriteriaModel* myCase, bool getWaterStress)
         }
     }
 
+    // WATER STRESS [-]
+    double waterStress = 0.0;
+    if (myCase->output.dailyMaxTranspiration > 0)
+        waterStress = 1.0 - (TRs / myCase->output.dailyMaxTranspiration);
+
     // Hydraulic redistribution
     // the movement of water from moist to dry soil through plant roots
     // TODO add numerical process
-    if (myCase->output.dailyMaxTranspiration > 0 && totRootDensityWithoutStress > 0)
+    if (waterStress > EPSILON && totRootDensityWithoutStress > EPSILON)
     {
-        stress = 1.0 - (TRs / myCase->output.dailyMaxTranspiration);
+        // redistribution acts on not stressed roots
+        redistribution = MINVALUE(waterStress, totRootDensityWithoutStress) * myCase->output.dailyMaxTranspiration;
 
-        if (stress > EPSILON)
+        for (int i = myCase->myCrop.roots.firstRootLayer; i <= myCase->myCrop.roots.lastRootLayer; i++)
         {
-            redistribution = MINVALUE(stress, totRootDensityWithoutStress * 0.5) * myCase->output.dailyMaxTranspiration;
-            // maximum 1.6 mm (Neumann at al. values span from 0 to 3.2)
-            // redistribution = MINVALUE(redistribution, 1.6);
-
-            for (int i = myCase->myCrop.roots.firstRootLayer; i <= myCase->myCrop.roots.lastRootLayer; i++)
+            if (! isLayerStressed[i])
             {
-                if (! isLayerStressed[i])
-                {
-                    double addTransp = redistribution * (myCase->myCrop.roots.rootDensity[i] / totRootDensityWithoutStress);
-                    layerTranspiration[i] += addTransp;
-                    TRs += addTransp;
-                    TRe += addTransp;
-                }
+                double addTransp = redistribution * (myCase->myCrop.roots.rootDensity[i] / totRootDensityWithoutStress);
+                layerTranspiration[i] += addTransp;
+                TRs += addTransp;
+                TRe += addTransp;
             }
         }
     }
 
     if (getWaterStress)
     {
-        // return water stress
-        return 1.0 - (TRs / myCase->output.dailyMaxTranspiration);
+        if (waterStress < EPSILON)
+            return 0;
+        else
+            return 1.0 - (TRs / myCase->output.dailyMaxTranspiration);
     }
 
     // update water content
