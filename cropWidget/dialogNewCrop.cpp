@@ -30,6 +30,9 @@ DialogNewCrop::DialogNewCrop(Crit3DCrop *newCrop)
     cycleMaxDuration = new QLabel(tr("Enter cycle max duration: "));
     cycleMaxDurationValue = new QLineEdit();
 
+    sowingDoYValue->setValidator(new QIntValidator(-365, 365));
+    cycleMaxDurationValue->setValidator(new QIntValidator(0, 365));
+
     layoutCrop->addWidget(idCropLabel, 0 , 0);
     layoutCrop->addWidget(idCropValue, 0 , 1);
     layoutCrop->addWidget(idCropName, 1 , 0);
@@ -99,4 +102,68 @@ void DialogNewCrop::on_actionChooseType(QString type)
         newCrop->sowingDoy = NODATA;
         newCrop->plantCycle = 365;
     }
+}
+
+void DialogNewCrop::done(bool res)
+{
+    if(res)  // ok was pressed
+    {
+        if (!checkData())
+        {
+            return;
+        }
+        newCrop->idCrop = idCropValue->text().toStdString();
+        if (sowingDoY->isVisible())
+        {
+            newCrop->sowingDoy = sowingDoYValue->text().toInt();
+            newCrop->plantCycle = cycleMaxDurationValue->text().toInt();
+        }
+        else
+        {
+            newCrop->sowingDoy = NODATA;
+            newCrop->plantCycle = 365;
+        }
+        QDialog::done(QDialog::Accepted);
+        return;
+
+    }
+    else    // cancel, close or exc was pressed
+    {
+        QDialog::done(QDialog::Rejected);
+        return;
+    }
+}
+
+bool DialogNewCrop::checkData()
+{
+    if (idCropValue->text().isEmpty())
+    {
+        QMessageBox::information(nullptr, "Missing parameter", "Insert ID CROP");
+        return false;
+    }
+    if (nameCropValue->text().isEmpty())
+    {
+        QMessageBox::information(nullptr, "Missing parameter", "Insert ID NAME");
+        return false;
+    }
+    if (sowingDoY->isVisible())
+    {
+        if (sowingDoYValue->text().isEmpty())
+        {
+            QMessageBox::information(nullptr, "Missing parameter", "Insert sowing day of year");
+            return false;
+        }
+        if (cycleMaxDurationValue->text().isEmpty())
+        {
+            QMessageBox::information(nullptr, "Missing parameter", "Insert plant cycle max duration");
+            return false;
+        }
+    }
+    return true;
+
+}
+
+QString DialogNewCrop::getNameCrop()
+{
+    return nameCropValue->text();
 }
