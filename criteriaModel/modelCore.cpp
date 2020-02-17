@@ -195,7 +195,7 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
         myCase->output.dailySurfaceWaterContent = myCase->layers[0].waterContent;
         myCase->output.dailySoilWaterContent = getSoilWaterContent(myCase);
         myCase->output.dailyCropAvailableWater = getCropReadilyAvailableWater(myCase);
-        myCase->output.dailyCropWaterDeficit = getCropWaterDeficit(myCase);
+        myCase->output.dailyWaterDeficit = getSoilWaterDeficit(myCase);
 
         if (! myCase->isSeasonalForecast)
         {

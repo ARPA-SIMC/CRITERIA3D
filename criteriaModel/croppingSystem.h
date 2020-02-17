@@ -19,8 +19,8 @@
     double cropTranspiration(CriteriaModel* myCase, bool getWaterStress);
 
     double getCropReadilyAvailableWater(CriteriaModel* myCase);
-    double getTotalReadilyAvailableWater(CriteriaModel* myCase);
     double getCropWaterDeficit(CriteriaModel* myCase);
+    double getSoilWaterDeficit(CriteriaModel* myCase);
 
 
 #endif // CROPPINGSYSTEM_H

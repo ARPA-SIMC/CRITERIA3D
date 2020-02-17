@@ -100,7 +100,7 @@ void CriteriaModelOutput::initializeDaily()
     this->dailyMaxEvaporation = 0.0;
     this->dailyTranspiration = 0.0;
     this->dailyCropAvailableWater = 0.0;
-    this->dailyCropWaterDeficit = 0.0;
+    this->dailyWaterDeficit = 0.0;
     this->dailyCapillaryRise = 0.0;
     this->dailyWaterTable = NODATA;
     this->dailyKc = 0.0;
@@ -409,7 +409,7 @@ void CriteriaModel::prepareOutput(Crit3DDate myDate, bool isFirst)
             + "," + QString::number(this->output.dailySoilWaterContent, 'g', 5)
             + "," + QString::number(this->output.dailySurfaceWaterContent, 'g', 4)
             + "," + QString::number(this->output.dailyCropAvailableWater, 'g', 4)
-            + "," + QString::number(this->output.dailyCropWaterDeficit, 'g', 4)
+            + "," + QString::number(this->output.dailyWaterDeficit, 'g', 4)
             + "," + QString::number(this->output.dailyDrainage, 'g', 4)
             + "," + QString::number(this->output.dailySurfaceRunoff, 'g', 4)
             + "," + QString::number(this->output.dailyEt0, 'g', 3)

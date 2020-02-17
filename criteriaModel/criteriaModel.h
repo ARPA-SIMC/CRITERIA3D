@@ -39,7 +39,7 @@
         double dailyKc;
         double dailyTranspiration;
         double dailyCropAvailableWater;
-        double dailyCropWaterDeficit;
+        double dailyWaterDeficit;
         double dailyWaterTable;
         double dailyCapillaryRise;
 

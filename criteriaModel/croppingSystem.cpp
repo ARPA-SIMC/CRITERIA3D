@@ -123,44 +123,6 @@ double getCropReadilyAvailableWater(CriteriaModel* myCase)
 }
 
 
-/*!
- * \brief getTotalReadilyAvailableWater
- * \return sum of readily available water (mm)
- * \note take into account at minimum the first meter of soil and the surface water
- */
-double getTotalReadilyAvailableWater(CriteriaModel* myCase)
-{
-    if (! myCase->myCrop.isLiving) return NODATA;
-    if (myCase->myCrop.roots.rootDepth <= myCase->myCrop.roots.rootDepthMin) return NODATA;
-    if (myCase->myCrop.roots.firstRootLayer == NODATA) return NODATA;
-
-    double threshold;
-    int lastLayer = 0;
-
-    while (unsigned(lastLayer) < (myCase->nrLayers-1) && myCase->layers[unsigned(lastLayer)].depth < 1.0)
-            lastLayer++;
-
-    lastLayer = MAXVALUE(lastLayer, myCase->myCrop.roots.lastRootLayer);
-
-    // surface water
-    double RAW = myCase->layers[0].waterContent;
-
-    for (unsigned int i = 1; i <= unsigned(lastLayer); i++)
-    {
-        if (signed(i) < myCase->myCrop.roots.firstRootLayer)
-            threshold = myCase->layers[i].FC;
-        else
-            // rooting zone
-            threshold = myCase->layers[i].FC - myCase->myCrop.fRAW * (myCase->layers[i].FC - myCase->layers[i].WP);
-
-        if(myCase->layers[i].waterContent > threshold)
-            RAW += (myCase->layers[i].waterContent - threshold);
-    }
-
-    return RAW;
-}
-
-
 float cropIrrigationDemand(CriteriaModel* myCase, int doy, float currentPrec, float nextPrec)
 {
     // update days since last irrigation
@@ -186,7 +148,7 @@ float cropIrrigationDemand(CriteriaModel* myCase, int doy, float currentPrec, fl
             myCase->myCrop.degreeDays > myCase->myCrop.degreeDaysEndIrrigation) return 0;
     }
 
-    // check forecast
+    // check forecast (today and tomorrow)
     double waterNeeds = myCase->myCrop.irrigationVolume / myCase->myCrop.irrigationShift;
     double todayWater = double(currentPrec) + myCase->layers[0].waterContent;
     double twoDaysWater = todayWater + double(nextPrec);
@@ -469,8 +431,32 @@ double getCropWaterDeficit(CriteriaModel* myCase)
 
     double waterDeficit = 0.0;
     for (int i = myCase->myCrop.roots.firstRootLayer; i <= myCase->myCrop.roots.lastRootLayer; i++)
+    {
         waterDeficit += myCase->layers[unsigned(i)].FC - myCase->layers[unsigned(i)].waterContent;
+    }
 
     return MAXVALUE(waterDeficit, 0.0);
+}
+
+
+/*!
+ * \brief getSoilWaterDeficit
+ * \param myCase
+ * \return sum of water deficit (mm) in the first meter of soil
+ */
+double getSoilWaterDeficit(CriteriaModel* myCase)
+{
+    // surface water content
+    double waterDeficit = -myCase->layers[0].waterContent;
+
+    for (unsigned int i = 1; i <= myCase->nrLayers; i++)
+    {
+        if (myCase->layers[i].depth > 1)
+            return waterDeficit;
+
+        waterDeficit += myCase->layers[unsigned(i)].FC - myCase->layers[unsigned(i)].waterContent;
+    }
+
+    return waterDeficit;
 }
 
