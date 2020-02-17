@@ -55,21 +55,37 @@ Crit3DCropWidget::Crit3DCropWidget()
     QGridLayout *parametersInfoLayout = new QGridLayout();
 
     // check save button pic
-    QString docPath, saveButtonPath;
+    QString docPath, saveButtonPath, updateButtonPath;
     if (searchDocPath(&docPath))
+    {
         saveButtonPath = docPath + "img/saveButton.png";
+        updateButtonPath = docPath + "img/updateButton.png";
+    }
     else
+    {
         saveButtonPath = "../img/saveButton.png";
+        updateButtonPath = "../img/updateButton.png";
+    }
 
-    QPixmap pixmap(saveButtonPath);
+    QPixmap savePixmap(saveButtonPath);
+    QPixmap updatePixmap(updateButtonPath);
     QPushButton *saveButton = new QPushButton();
-    QIcon ButtonIcon(pixmap);
-    saveButton->setIcon(ButtonIcon);
-    saveButton->setIconSize(pixmap.rect().size());
-    saveButton->setFixedSize(pixmap.rect().size());
+    QPushButton *updateButton = new QPushButton();
+    QIcon saveButtonIcon(savePixmap);
+    QIcon updateButtonIcon(updatePixmap);
+    saveButton->setIcon(saveButtonIcon);
+    saveButton->setIconSize(savePixmap.rect().size());
+    saveButton->setFixedSize(savePixmap.rect().size());
 
     saveButtonLayout->setAlignment(Qt::AlignLeft);
     saveButtonLayout->addWidget(saveButton);
+
+    updateButton->setIcon(updateButtonIcon);
+    updateButton->setIconSize(savePixmap.rect().size());
+    updateButton->setFixedSize(savePixmap.rect().size());
+
+    saveButtonLayout->setAlignment(Qt::AlignLeft);
+    saveButtonLayout->addWidget(updateButton);
 
     QLabel *cropName = new QLabel(tr("CROP_NAME: "));
 
