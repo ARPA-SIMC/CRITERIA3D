@@ -351,7 +351,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
     }
     cropTypeValue->setText(QString::fromStdString(getCropTypeString(myCrop->type)));
 
-    if (myCrop->type == HERBACEOUS_ANNUAL ||  myCrop->type == HERBACEOUS_PERENNIAL || myCrop->type == HORTICULTURAL)
+    if (! myCrop->isPluriannual())
     {
         cropSowing.setVisible(true);
         cropCycleMax.setVisible(true);
