@@ -30,6 +30,9 @@ DialogNewCrop::DialogNewCrop(Crit3DCrop *newCrop)
     cycleMaxDuration = new QLabel(tr("Enter cycle max duration: "));
     cycleMaxDurationValue = new QLineEdit();
 
+    sowingDoYValue->setValidator(new QIntValidator(-365, 365));
+    cycleMaxDurationValue->setValidator(new QIntValidator(0, 365));
+
     layoutCrop->addWidget(idCropLabel, 0 , 0);
     layoutCrop->addWidget(idCropValue, 0 , 1);
     layoutCrop->addWidget(idCropName, 1 , 0);
