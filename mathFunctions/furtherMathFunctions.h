@@ -86,6 +86,9 @@
         int matrixProduct(double **first,double**second,int colFirst, int rowFirst,int colSecond,int rowSecond,double ** multiply);
         int matrixProductNoCheck(double **first,double**second,int rowFirst,int colFirst,int colSecond,double ** multiply);
         void matrixProductSquareMatricesNoCheck(double **first,double**second,int dimension,double ** multiply);
+        void  multiplyStrassen(double **c, double **d, int size, double **newMatrix);
+        void add(double **a, double **b, int size,double **c);
+        void sub(double **a,double **b,int size,double **c);
         void choleskyDecompositionSinglePointer(double *a, int n, double *p);
         void choleskyDecompositionTriangularMatrix(double **a, int n, bool isLowerMatrix);
         void transposedSquareMatrix(double **a, int n);

@@ -25,6 +25,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <malloc.h>
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
@@ -829,10 +830,282 @@ namespace matricial
         }
         return CRIT3D_OK;
     }
+    void  multiplyStrassen(double **c,double **d,int size,double **newMatrix)
+    {
+        if(size == 1){
+            newMatrix[0][0] = c[0][0] *d[0][0];
+        }
+        else {
+            int i,j;
+            int nsize =size/2;
+            double **c11 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                c11[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **c12 =(double**)  malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                c12[i]= (double *)malloc(nsize * sizeof(double));
+            }
+            double **c21 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                c21[i]= (double *)malloc(nsize * sizeof(double));
+            }
+            double **c22 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                c22[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **d11 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                d11[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **d12 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                d12[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **d21 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                d21[i]= (double*) malloc(nsize*sizeof(double));
+            }
+            double **d22 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                d22[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **m1 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                m1[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **m2 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                m2[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **m3 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                m3[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **m4 =(double**)  malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                m4[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **m5 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                m5[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **m6 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                m6[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **m7 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                m7[i]= (double *)malloc(nsize * sizeof(double));
+            }
+            for(i=0;i<nsize;i++){
+                for(j=0;j<nsize;j++){
+                    c11[i][j]=c[i][j];
+                    c12[i][j]=c[i][j+nsize];
+                    c21[i][j]=c[i+nsize][j];
+                    c22[i][j]=c[i+nsize][j+nsize];
+                    d11[i][j]=d[i][j];
+                    d12[i][j]=d[i][j+nsize];
+                    d21[i][j]=d[i+nsize][j];
+                    d22[i][j]=d[i+nsize][j+nsize];
+                }
+            }
+            double **temp1 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp1[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **temp2 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp2[i]= (double *)malloc(nsize*sizeof(double));
+            }
+
+            add(c11,c22,nsize,temp1);
+            add(d11,d22,nsize,temp2);
+            multiplyStrassen(temp1,temp2,nsize,m1);
+            free(temp1);
+            free(temp2);
+
+            double **temp3 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp3[i]= (double *)malloc(nsize*sizeof(int));
+            }
+            add(c21,c22,nsize,temp3);
+            multiplyStrassen(temp3,d11,nsize,m2);
+            free(temp3);
 
 
+            double **temp4 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp4[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            sub(d12,d22,nsize,temp4);
+            multiplyStrassen(c11,temp4,nsize,m3);
+            free(temp4);
 
 
+            double **temp5 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp5[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            sub(d21,d11,nsize,temp5);
+            multiplyStrassen(c22,temp5,nsize,m4);
+            free(temp5);
+
+
+            double **temp6 =(double**)  malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp6[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            add(c11,c12,nsize,temp6);
+            multiplyStrassen(temp6,d22,nsize,m5);
+            free(temp6);
+
+            double **temp7 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp7[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **temp8 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp8[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            sub(c21,c11,nsize,temp7);
+            add(d11,d12,nsize,temp8);
+            multiplyStrassen(temp7,temp8,nsize,m6);
+            free(temp7);
+            free(temp8);
+
+            double **temp9 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp9[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **temp10 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                temp10[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            sub(c12,c22,nsize,temp9);
+            add(d21,d22,nsize,temp10);
+            multiplyStrassen(temp9,temp10,nsize,m7);
+            free(temp9);
+            free(temp10);
+
+
+            double **te1 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                te1[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **te2 =(double**)  malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                te2[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **te3 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                te3[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **te4 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                te4[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **te5 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                te5[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **te6 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                te6[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **te7 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                te7[i]= (double *)malloc(nsize*sizeof(double));
+            }
+            double **te8 = (double**) malloc(nsize * sizeof(double *));
+            for(i=0;i<nsize;i++){
+                te8[i]= (double *)malloc(nsize*sizeof(double));
+            }
+
+            add(m1,m7,nsize,te1);
+            sub(m4,m5,nsize,te2);
+            add(te1,te2,nsize,te3);    //c11
+
+            add(m3,m5,nsize,te4);//c12
+            add(m2,m4,nsize,te5);//c21
+
+            add(m3,m6,nsize,te6);
+            sub(m1,m2,nsize,te7);
+
+            add(te6,te7,nsize,te8);//c22
+
+            int a=0;
+            int b=0;
+            int c=0;
+            int d=0;
+            int e=0;
+            int nsize2= 2*nsize;
+            for(i=0;i<nsize2;i++){
+                for(j=0;j<nsize2;j++){
+                    if(j>=0 && j<nsize && i>=0 && i<nsize){
+                        newMatrix[i][j] = te3[i][j];
+                    }
+                    if(j>=nsize && j<nsize2 && i>=0 && i<nsize){
+                        a=j-nsize;
+                        newMatrix[i][j] = te4[i][a];
+                    }
+                    if(j>=0 && j<nsize && i>= nsize && i < nsize2){
+                        c=i-nsize;
+                        newMatrix[i][j] = te5[c][j];
+                    }
+                    if(j>=nsize && j< nsize2 && i>= nsize && i< nsize2 ){
+                        d=i-nsize;
+                        e=j-nsize;
+                        newMatrix[i][j] =te8[d][e];
+                    }
+                }
+            }
+        free(m1);
+        free(m2);
+        free(m3);
+        free(m4);
+        free(m5);
+        free(m6);
+        free(m7);
+        free(te1);
+        free(te2);
+        free(te3);
+        free(te4);
+        free(te5);
+        free(te6);
+        free(te7);
+        free(te8);
+        free(c11);
+        free(c12);
+        free(c21);
+        free(c22);
+        free(d11);
+        free(d12);
+        free(d21);
+        free(d22);
+        }
+    }
+    void add(double **a, double **b, int size,double **c)
+    {
+        int i,j;
+        for(i=0;i<size;i++){
+            for(j=0;j<size;j++){
+                c[i][j] = a[i][j] + b[i][j];
+            }
+        }
+    }
+
+    void sub(double **a,double **b,int size,double **c)
+    {
+        int i,j;
+        for(i=0;i<size;i++){
+                    for(j=0;j<size;j++){
+                            c[i][j]= a[i][j] - b[i][j];
+                    }
+            }
+
+
+    }
     void matrixProductSquareMatricesNoCheck(double **first,double**second,int dimension,double ** multiply)
     {
 
