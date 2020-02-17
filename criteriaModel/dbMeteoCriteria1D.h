@@ -1,7 +1,7 @@
 #ifndef DBMETEOCRITERIA1D_H
 #define DBMETEOCRITERIA1D_H
 
-#include <QSqlDatabase>
+    #include <QSqlDatabase>
 
     class QSqlQuery;
     class QString;
@@ -18,5 +18,6 @@
 
     bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPoint *meteoPoint, QString validYear, QString *error);
     bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QString *myError);
+
 
 #endif // DBMETEOCRITERIA1D_H

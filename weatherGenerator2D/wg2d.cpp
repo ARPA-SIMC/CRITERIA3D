@@ -702,6 +702,12 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
 
 void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,double** occurrences, double** matrixOccurrence, double** normalizedMatrixRandom,double ** transitionNormal,int lengthSeries)
 {
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( " begin spatialIterationOccurrence Current local time and date: %s", asctime (timeinfo) );
     // M and K matrices are also used as ancillary dummy matrices
     double val = 5;
     int ii = 0;
@@ -739,23 +745,34 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
     double minimalValueToExitFromCycle = NODATA;
     int counterConvergence=0;
     bool exitWhileCycle = false;
-
+    int nrEigenvaluesLessThan0;
+    int counter;
+    double meanValue,stdDevValue;
+    double myDiff;
     while ((val>TOLERANCE_MULGETS) && (ii<MAX_ITERATION_MULGETS) && (!exitWhileCycle))
-    {
+    { // !! chiedere a Fausto se vale la pena nelle matrici interne passare da calloc a malloc
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "begin while cycle Current local time and date: %s", asctime (timeinfo) );
         ii++;
-        int nrEigenvaluesLessThan0 = 0;
-        int counter = 0;
+        nrEigenvaluesLessThan0 = 0;
+        counter = 0;
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
             {
-                M[i][j] = MINVALUE(M[i][j],1);
-                correlationArray[counter] = M[i][j];
+                M[i][j] = MINVALUE(M[i][j],1);  // !! forse si può togliere o forse posso togliere quello sotto
+                correlationArray[counter] = M[i][j]; // !! (i*nrStations + j) è più veloce rispetto a counter ?
                 counter++;
             }
         }
-        eigenproblem::rs(nrStations,correlationArray,eigenvalues,true,eigenvectors);
-
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "initialization arrays Current local time and date: %s", asctime (timeinfo) );
+        eigenproblem::rs(nrStations,correlationArray,eigenvalues,true,eigenvectors); // !! potrei riformulare rs come rsWeatherGenerator2D senza controlli
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( " eigenvalues Current local time and date: %s", asctime (timeinfo) );
         for (int i=0;i<nrStations;i++)
         {
             if (eigenvalues[i] <= 0)
@@ -776,15 +793,19 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                     counter++;
                 }
             }
+
             matricial::matrixProductNoCheck(dummyMatrix,dummyMatrix2,nrStations,nrStations,nrStations,M);
+            time ( &rawtime );
+            timeinfo = localtime ( &rawtime );
+            printf ( "define matrices Current local time and date: %s", asctime (timeinfo) );
             for (int i=0;i<nrStations;i++)
             {
                 for (int j=i;j<nrStations;j++)
                 {
                      if (i == j)
                      {
-                         dummyMatrix[i][j] = 1.;
-                     }
+                         dummyMatrix[i][j] = 1.; // !! conviene mantenere if oppure far calcolare i valori diagonali che restituirebbero 1?
+                     }                           // !! mettere dummyMatrix[i][i] = 1 fuori da questo ciclo e sostituire j=i con j=i+1
                      else
                      {
                          dummyMatrix[i][j] = MINVALUE(2*M[i][j]/(M[i][i] + M[j][j]),ONELESSEPSILON);
@@ -798,13 +819,21 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         else
         {
             for (int i=0;i<nrStations;i++)
-                for (int j=0;j<nrStations;j++) dummyMatrix[i][j] = M[i][j];
+                for (int j=0;j<nrStations;j++) dummyMatrix[i][j] = M[i][j]; // !! verificare che M sia simmetrica nel caso si può accorciare il for interno
         }
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "before cholesky Current local time and date: %s", asctime (timeinfo) );
         //bool isLowerDiagonal = true;
         matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,true);
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "after colesky  Current local time and date: %s", asctime (timeinfo) );
         matricial::matrixProductNoCheck(dummyMatrix, normalizedMatrixRandom, nrStations, nrStations, lengthSeries, dummyMatrix3);
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "matrix product Current local time and date: %s", asctime (timeinfo) );
 
-        double meanValue,stdDevValue;
         for (int i=0;i<nrStations;i++)
         {
             meanValue = stdDevValue = 0;
@@ -812,7 +841,10 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 meanValue += dummyMatrix3[i][j];
             meanValue /= lengthSeries;
             for (int j=0;j<lengthSeries;j++)
-                stdDevValue += (dummyMatrix3[i][j]- meanValue)*(dummyMatrix3[i][j]- meanValue);
+            {
+                myDiff = (dummyMatrix3[i][j]- meanValue);
+                stdDevValue += (myDiff)*(myDiff);
+            }
             stdDevValue /= (lengthSeries-1);
             stdDevValue = sqrt(stdDevValue);
 
@@ -821,11 +853,13 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 normRandom[i][j]= (dummyMatrix3[i][j]-meanValue)/stdDevValue;
             }
         }
-
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "compute random matrix  Current local time and date: %s", asctime (timeinfo) );
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<lengthSeries;j++)
-                occurrences[i][j]= 0.;
+                occurrences[i][j]= 0.;  // !! posso inizializzarlo a zero in modo piu veloce?
         }
 
         for (int i=0;i<nrStations;i++)
@@ -842,15 +876,19 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 }
             }
         }
-
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "define occurrence matrix Current local time and date: %s", asctime (timeinfo) );
         statistics::correlationsMatrixNoCheck(nrStations,occurrences,lengthSeries,K);
-
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "compute correlation matrix Current local time and date: %s", asctime (timeinfo) );
         val = 0;
         for (int i=0; i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++)
             {
-                val = MAXVALUE(val, fabs(K[i][j] - matrixOccurrence[i][j]));   
+                val = MAXVALUE(val, fabs(K[i][j] - matrixOccurrence[i][j])); // !! potrebbe essere simmetrica quindi possiamo accorciare il secondo loop da i a nrStations
             }
 
         }
@@ -885,7 +923,10 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
 
             }
         }
-
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "end while cycle Current local time and date: %s", asctime (timeinfo) );
+        pressEnterToContinue();
     }  // end of the while cycle
 
 

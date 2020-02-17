@@ -504,15 +504,19 @@ void Crit3DCropWidget::on_actionNewCrop()
         QMessageBox::information(nullptr, "Warning", msg);
         return;
     }
-    DialogNewCrop dialog;
+    Crit3DCrop* newCrop = new Crit3DCrop();
+    DialogNewCrop dialog(newCrop);
     QString error;
     if (dialog.result() != QDialog::Accepted)
     {
+        delete newCrop;
         return;
     }
     else
     {
         // TO DO
+        // write newCrop on Db
+        delete newCrop;
     }
 }
 

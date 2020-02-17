@@ -23,7 +23,7 @@ TabLAI::TabLAI()
     axisX->setFormat("MMM dd");
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
-    axisX->setTickCount(15);
+    axisX->setTickCount(13);
     chart->addAxis(axisX, Qt::AlignBottom);
     series->attachAxis(axisX);
 

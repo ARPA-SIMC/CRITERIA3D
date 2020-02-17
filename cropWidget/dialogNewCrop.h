@@ -1,18 +1,28 @@
 #ifndef DIALOGNEWCROP_H
 #define DIALOGNEWCROP_H
 
-    #include <QtWidgets>
+#include "crop.h"
+#include <QtWidgets>
 
     class DialogNewCrop : public QDialog
     {
         Q_OBJECT
     public:
-        DialogNewCrop();
+        DialogNewCrop(Crit3DCrop* newCrop);
+        void on_actionChooseType(QString type);
+        void done(bool res);
+        bool checkData();
+        QString getNameCrop();
 
     private:
-        QLineEdit *idCropValue;
-        QLineEdit *nameCropValue;
-        QLineEdit *typeCropValue;
+        Crit3DCrop* newCrop;
+        QLineEdit* idCropValue;
+        QLineEdit* nameCropValue;
+        QLineEdit* typeCropValue;
+        QLabel *sowingDoY;
+        QLineEdit* sowingDoYValue;
+        QLabel *cycleMaxDuration;
+        QLineEdit* cycleMaxDurationValue;
     };
 
 #endif // DIALOGNEWCROP_H

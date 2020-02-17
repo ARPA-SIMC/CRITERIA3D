@@ -831,8 +831,11 @@ namespace matricial
     }
 
 
+
+
     void matrixProductSquareMatricesNoCheck(double **first,double**second,int dimension,double ** multiply)
     {
+
         int c, d, k;
         double sum = 0;
         for ( c = 0 ; c < dimension ; c++ )
