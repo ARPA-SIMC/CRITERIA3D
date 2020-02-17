@@ -9,6 +9,7 @@
     #include "crop.h"
 #endif
 #include <QtCharts>
+#include "crit3DChartView.h"
 
     class TabLAI : public QWidget
     {
@@ -18,7 +19,7 @@
         void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int year, int nrLayers, double totalSoilDepth, int currentDoy);
     private:
         int year;
-        QChartView *chartView;
+        Crit3DChartView *chartView;
         QChart *chart;
         QLineSeries *series;
         QDateTimeAxis *axisX;

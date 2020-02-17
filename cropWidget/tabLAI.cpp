@@ -7,9 +7,8 @@ TabLAI::TabLAI()
 {
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
-    // Create empty graph view
-    chartView = new QChartView();
-    chart = new QChart();
+    chart = new QChart();   
+    chartView = new Crit3DChartView(chart);
     chart->setTitle("LAI development");
     chartView->setChart(chart);
     series = new QLineSeries();
