@@ -20,9 +20,9 @@
         QLineEdit* nameCropValue;
         QLineEdit* typeCropValue;
         QLabel *sowingDoY;
-        QLineEdit* sowingDoYValue;
+        QSpinBox* sowingDoYValue;
         QLabel *cycleMaxDuration;
-        QLineEdit* cycleMaxDurationValue;
+        QSpinBox* cycleMaxDurationValue;
     };
 
 #endif // DIALOGNEWCROP_H

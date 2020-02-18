@@ -98,12 +98,14 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropTypeValue = new QLineEdit();
     cropTypeValue->setReadOnly(true);
 
-    cropSowingValue = new QLineEdit();
-
-    cropCycleMaxValue = new QLineEdit();
+    cropSowingValue = new QSpinBox();
+    cropCycleMaxValue = new QSpinBox();
+    cropSowingValue->setMinimum(-365);
+    cropSowingValue->setMaximum(365);
+    cropCycleMaxValue->setMinimum(0);
+    cropCycleMaxValue->setMaximum(365);
     cropSowing.setText("sowing DOY: ");
     cropCycleMax.setText("cycle max duration: ");
-
 
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
@@ -136,10 +138,16 @@ Crit3DCropWidget::Crit3DCropWidget()
     QLabel *meteoYear = new QLabel(tr("year: "));
 
     QLabel *lat = new QLabel(tr("latitude: "));
-    latValue = new QLineEdit();
+    latValue = new QDoubleSpinBox();
+    latValue->setMinimum(-90);
+    latValue->setMaximum(90);
+    latValue->setDecimals(3);
 
     QLabel *lon = new QLabel(tr("longitude: "));
-    lonValue = new QLineEdit();
+    lonValue = new QDoubleSpinBox();
+    lonValue->setMinimum(-180);
+    lonValue->setMaximum(180);
+    lonValue->setDecimals(3);
 
     meteoInfoLayout->addWidget(meteoName, 0, 0);
     meteoInfoLayout->addWidget(&meteoListComboBox, 0, 1);
@@ -413,9 +421,9 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
     {
         cropSowing.setVisible(true);
         cropCycleMax.setVisible(true);
-        cropSowingValue->setText(QString::number(myCrop->sowingDoy));
+        cropSowingValue->setValue(myCrop->sowingDoy);
         cropSowingValue->setVisible(true);
-        cropCycleMaxValue->setText(QString::number(myCrop->plantCycle));
+        cropCycleMaxValue->setValue(myCrop->plantCycle);
         cropCycleMaxValue->setVisible(true);
     }
     else
@@ -477,8 +485,8 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
 
     if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
     {
-        latValue->setText(lat);
-        lonValue->setText(lon);
+        latValue->setValue(lat.toDouble());
+        lonValue->setValue(lon.toDouble());
     }
 
     tableMeteo = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);

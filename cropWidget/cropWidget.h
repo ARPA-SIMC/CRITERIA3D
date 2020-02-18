@@ -47,10 +47,10 @@
             QLineEdit* cropTypeValue;
             QLabel cropSowing;
             QLabel cropCycleMax;
-            QLineEdit* cropSowingValue;
-            QLineEdit* cropCycleMaxValue;
-            QLineEdit* latValue;
-            QLineEdit* lonValue;
+            QSpinBox *cropSowingValue;
+            QSpinBox* cropCycleMaxValue;
+            QDoubleSpinBox* latValue;
+            QDoubleSpinBox* lonValue;
             QLineEdit* LAIminValue;
             QLineEdit* LAImaxValue;
             QLabel *LAIgrass;
