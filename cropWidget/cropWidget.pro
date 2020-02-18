@@ -41,10 +41,12 @@ SOURCES += \
     crit3DChartView.cpp \
     cropWidget.cpp \
     dialogNewCrop.cpp \
-    tabLAI.cpp
+    tabLAI.cpp \
+    tabRootDepth.cpp
 
 HEADERS += \
     crit3DChartView.h \
     cropWidget.h \
     dialogNewCrop.h \
-    tabLAI.h
+    tabLAI.h \
+    tabRootDepth.h

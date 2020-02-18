@@ -25,13 +25,14 @@ DialogNewCrop::DialogNewCrop(Crit3DCrop *newCrop)
     }
 
     sowingDoY = new QLabel(tr("Enter sowing DOY: "));
-    sowingDoYValue = new QLineEdit();
+    sowingDoYValue = new QSpinBox();
+    sowingDoYValue->setMinimum(-365);
+    sowingDoYValue->setMaximum(365);
 
     cycleMaxDuration = new QLabel(tr("Enter cycle max duration: "));
-    cycleMaxDurationValue = new QLineEdit();
-
-    sowingDoYValue->setValidator(new QIntValidator(-365, 365));
-    cycleMaxDurationValue->setValidator(new QIntValidator(0, 365));
+    cycleMaxDurationValue = new QSpinBox();
+    cycleMaxDurationValue->setMinimum(0);
+    cycleMaxDurationValue->setMaximum(365);
 
     layoutCrop->addWidget(idCropLabel, 0 , 0);
     layoutCrop->addWidget(idCropValue, 0 , 1);

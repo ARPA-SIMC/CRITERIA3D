@@ -9,6 +9,7 @@
     #include <QSqlDatabase>
 
     #include "tabLAI.h"
+    #include "tabRootDepth.h"
 
     class Crit3DCropWidget : public QWidget
     {
@@ -25,6 +26,7 @@
             void on_actionRestoreData();
             void on_actionNewCrop();
             void updateTabLAI();
+            void tabChanged(int index);
         private:
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
@@ -36,7 +38,8 @@
 
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;
-            QGroupBox *infoParametersGroup;
+            QGroupBox *laiParametersGroup;
+            QGroupBox *rootParametersGroup;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
             QComboBox yearListComboBox;
@@ -44,10 +47,10 @@
             QLineEdit* cropTypeValue;
             QLabel cropSowing;
             QLabel cropCycleMax;
-            QLineEdit* cropSowingValue;
-            QLineEdit* cropCycleMaxValue;
-            QLineEdit* latValue;
-            QLineEdit* lonValue;
+            QSpinBox *cropSowingValue;
+            QSpinBox* cropCycleMaxValue;
+            QDoubleSpinBox* latValue;
+            QDoubleSpinBox* lonValue;
             QLineEdit* LAIminValue;
             QLineEdit* LAImaxValue;
             QLabel *LAIgrass;
@@ -59,11 +62,18 @@
             QLineEdit* degreeDaysLAIdecValue;
             QLineEdit* LAIcurveAValue;
             QLineEdit* LAIcurveBValue;
+            QLineEdit* rootDepthZeroValue;
+            QLineEdit* rootDepthMaxValue;
+            QComboBox* rootShapeComboBox;
+            QLineEdit* shapeDeformationValue;
+            QLabel *degreeDaysInc;
+            QLineEdit* degreeDaysIncValue;
             QTabWidget* tabWidget;
             QAction* saveChanges;
             QAction* restoreData;
 
             TabLAI* tabLAI;
+            TabRootDepth* tabRootDepth;
     };
 
 #endif // CROPWIDGET_H
