@@ -12,7 +12,7 @@
                     float tmin, float tmax, double waterTableDepth, QString *myError);
 
     float cropIrrigationDemand(CriteriaModel* myCase, int doy, float myPrec, float nextPrec);
-    bool cropWaterDemand(CriteriaModel* myCase);
+    void cropWaterDemand(CriteriaModel* myCase);
     bool optimalIrrigation(CriteriaModel* myCase, float myIrrigation);
 
     bool evaporation(CriteriaModel* myCase);

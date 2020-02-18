@@ -134,7 +134,7 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
         // ET0
         et0 = myCase->meteoPoint.getMeteoPointValueD(myDate, dailyReferenceEvapotranspirationHS);
         if ( isEqual(et0, NODATA) || et0 <= 0 )
-            et0 = ET0_Hargreaves(0.17, myCase->meteoPoint.latitude, doy, tmax, tmin);
+            et0 = float(ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, myCase->meteoPoint.latitude, doy, double(tmax), double(tmin)));
 
         myCase->output.dailyEt0 = double(et0);
 
@@ -143,8 +143,7 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
             return false;
 
         // ETcrop
-        if (! cropWaterDemand(myCase))
-            return false;
+        cropWaterDemand(myCase);
 
         // WATERTABLE (if available)
         computeCapillaryRise(myCase, double(waterTableDepth));

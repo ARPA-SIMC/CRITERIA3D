@@ -129,7 +129,7 @@ void Crit3DCrop::initialize( double latitude, unsigned int nrLayers, double tota
 }
 
 
-bool Crit3DCrop::updateLAI(double latitude, int nrLayers, int myDoy)
+bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
 {
     double degreeDaysLai = 0;
     double myLai = 0;
@@ -291,13 +291,13 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
 
 // reset of (already initialized) crop
 // TODO: partenza intelligente (usando sowing doy e ciclo)
-void Crit3DCrop::resetCrop(int nrLayers)
+void Crit3DCrop::resetCrop(unsigned int nrLayers)
 {
     // roots
     if (! isPluriannual())
     {
         roots.rootDensity[0] = 0.0;
-        for (int i = 1; i < nrLayers; i++)
+        for (unsigned int i = 1; i < nrLayers; i++)
             roots.rootDensity[i] = 0;
     }
 
@@ -329,7 +329,7 @@ void Crit3DCrop::resetCrop(int nrLayers)
 }
 
 
-bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, int nrLayers, double totalDepth,
+bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, unsigned int nrLayers, double totalDepth,
                              double tmin, double tmax, double waterTableDepth, std::string* myError)
 {
     *myError = "";
@@ -366,6 +366,45 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, int nrLa
     }
 
     return true;
+}
+
+
+// Liangxia Zhang, Zhongmin Hu, Jiangwen Fan, Decheng Zhou & Fengpei Tang, 2014
+// A meta-analysis of the canopy light extinction coefficient in terrestrial ecosystems
+// "Cropland had the highest value of K (0.62), followed by broadleaf forest (0.59),
+// shrubland (0.56), grassland (0.50), and needleleaf forest (0.45)"
+double Crit3DCrop::getSurfaceCoverFraction()
+{
+    double k = 0.6;      // [-] light extinction coefficient
+
+    if (idCrop == "" || ! isLiving || LAI < EPSILON)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1 - exp(-k * LAI);
+    }
+}
+
+
+double Crit3DCrop::getMaxEvaporation(double ET0)
+{
+    const double maxEvapRatio = 0.66;
+
+    double SCF = this->getSurfaceCoverFraction();
+    return ET0 * maxEvapRatio * (1 - SCF);
+}
+
+
+double Crit3DCrop::getMaxTranspiration(double ET0)
+{
+    if (idCrop == "" || ! isLiving || LAI < EPSILON)
+        return 0;
+
+    double SCF = this->getSurfaceCoverFraction();
+    double kcmaxFactor = 1 + (kcMax - 1) * SCF;
+    return ET0 * (SCF * kcmaxFactor);
 }
 
 

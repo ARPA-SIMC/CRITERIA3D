@@ -103,7 +103,6 @@ void CriteriaModelOutput::initializeDaily()
     this->dailyWaterDeficit = 0.0;
     this->dailyCapillaryRise = 0.0;
     this->dailyWaterTable = NODATA;
-    this->dailyKc = 0.0;
 }
 
 
@@ -367,7 +366,7 @@ bool CriteriaModel::createOutputTable(QString* myError)
     queryString = "CREATE TABLE '" + this->idCase + "'"
             + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
             + " RAW REAL, DEFICIT REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
-            + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, KC REAL, ROOTDEPTH REAL )";
+            + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOTDEPTH REAL )";
     myQuery = this->dbOutput.exec(queryString);
 
     if (myQuery.lastError().isValid())
@@ -395,7 +394,7 @@ void CriteriaModel::prepareOutput(Crit3DDate myDate, bool isFirst)
     {
         this->outputString = "INSERT INTO '" + this->idCase + "'"
             + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, RAW, DEFICIT, DRAINAGE, RUNOFF, ET0,"
-            + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, KC, ROOTDEPTH) "
+            + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOTDEPTH) "
             + " VALUES ";
     }
     else
@@ -418,7 +417,6 @@ void CriteriaModel::prepareOutput(Crit3DDate myDate, bool isFirst)
             + "," + QString::number(this->output.dailyMaxEvaporation, 'g', 3)
             + "," + QString::number(this->output.dailyEvaporation, 'g', 3)
             + "," + getOutputStringNullZero(this->myCrop.LAI)
-            + "," + getOutputStringNullZero(this->output.dailyKc)
             + "," + getOutputStringNullZero(this->myCrop.roots.rootDepth)
             + ")";
 
