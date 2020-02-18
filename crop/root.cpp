@@ -56,19 +56,34 @@ Crit3DRoot::Crit3DRoot()
 namespace root
 {
     rootDistributionType getRootDistributionType(int rootShape)
+    {
+        switch (rootShape)
         {
-            switch (rootShape)
-            {
-                case (1):
-                    return CYLINDRICAL_DISTRIBUTION;
-                case (4):
-                    return CARDIOID_DISTRIBUTION;
-                case (5):
-                    return GAMMA_DISTRIBUTION;
-                default:
-                    return GAMMA_DISTRIBUTION;
-             }
+            case (1):
+                return CYLINDRICAL_DISTRIBUTION;
+            case (4):
+                return CARDIOID_DISTRIBUTION;
+            case (5):
+                return GAMMA_DISTRIBUTION;
+            default:
+                return GAMMA_DISTRIBUTION;
+         }
+    }
+
+    std::string getRootDistributionTypeString(rootDistributionType rootType)
+    {
+        switch (rootType)
+        {
+        case CYLINDRICAL_DISTRIBUTION:
+            return "cylinder";
+        case CARDIOID_DISTRIBUTION:
+            return "cardioid";
+        case GAMMA_DISTRIBUTION:
+            return "gamma function";
         }
+
+        return "No root type";
+    }
 
     double computeRootDepth(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth)
     {

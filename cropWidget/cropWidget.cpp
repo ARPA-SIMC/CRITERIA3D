@@ -52,7 +52,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     QVBoxLayout *infoLayout = new QVBoxLayout();
     QGridLayout *cropInfoLayout = new QGridLayout();
     QGridLayout *meteoInfoLayout = new QGridLayout();
-    QGridLayout *parametersInfoLayout = new QGridLayout();
+    QGridLayout *parametersLaiLayout = new QGridLayout();
+    QGridLayout *parametersRootDepthLayout = new QGridLayout();
 
     // check save button pic
     QString docPath, saveButtonPath, updateButtonPath;
@@ -98,25 +99,26 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropTypeValue->setReadOnly(true);
 
     cropSowingValue = new QLineEdit();
-    cropSowingValue->setReadOnly(true);
 
     cropCycleMaxValue = new QLineEdit();
-    cropCycleMaxValue->setReadOnly(true);
     cropSowing.setText("sowing DOY: ");
     cropCycleMax.setText("cycle max duration: ");
 
 
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
-    infoParametersGroup = new QGroupBox(tr(""));
+    laiParametersGroup = new QGroupBox(tr(""));
+    rootParametersGroup = new QGroupBox(tr(""));
 
     infoCropGroup->setFixedWidth(this->width()/4.5);
     infoMeteoGroup->setFixedWidth(this->width()/4.5);
-    infoParametersGroup->setFixedWidth(this->width()/4.5);
+    laiParametersGroup->setFixedWidth(this->width()/4.5);
+    rootParametersGroup->setFixedWidth(this->width()/4.5);
 
     infoCropGroup->setTitle("Crop");
     infoMeteoGroup->setTitle("Meteo");
-    infoParametersGroup->setTitle("Parameters");
+    laiParametersGroup->setTitle("LAI Parameters");
+    rootParametersGroup->setTitle("root depth Parameters");
 
     cropInfoLayout->addWidget(cropName, 0, 0);
     cropInfoLayout->addWidget(&cropListComboBox, 0, 1);
@@ -135,11 +137,9 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     QLabel *lat = new QLabel(tr("latitude: "));
     latValue = new QLineEdit();
-    latValue->setReadOnly(true);
 
     QLabel *lon = new QLabel(tr("longitude: "));
     lonValue = new QLineEdit();
-    lonValue->setReadOnly(true);
 
     meteoInfoLayout->addWidget(meteoName, 0, 0);
     meteoInfoLayout->addWidget(&meteoListComboBox, 0, 1);
@@ -180,35 +180,70 @@ Crit3DCropWidget::Crit3DCropWidget()
     QLabel *LAIcurveB = new QLabel(tr("LAI curve factor B [-]: "));
     LAIcurveBValue = new QLineEdit();
 
-    parametersInfoLayout->addWidget(LAImin, 0, 0);
-    parametersInfoLayout->addWidget(LAIminValue, 0, 1);
-    parametersInfoLayout->addWidget(LAImax, 1, 0);
-    parametersInfoLayout->addWidget(LAImaxValue, 1, 1);
-    parametersInfoLayout->addWidget(LAIgrass, 3, 0);
-    parametersInfoLayout->addWidget(LAIgrassValue, 3, 1);
-    parametersInfoLayout->addWidget(thermalThreshold, 4, 0);
-    parametersInfoLayout->addWidget(thermalThresholdValue, 4, 1);
-    parametersInfoLayout->addWidget(upperThermalThreshold, 5, 0);
-    parametersInfoLayout->addWidget(upperThermalThresholdValue, 5, 1);
-    parametersInfoLayout->addWidget(degreeDaysEmergence, 6, 0);
-    parametersInfoLayout->addWidget(degreeDaysEmergenceValue, 6, 1);
-    parametersInfoLayout->addWidget(degreeDaysLAIinc, 7, 0);
-    parametersInfoLayout->addWidget(degreeDaysLAIincValue, 7, 1);
-    parametersInfoLayout->addWidget(degreeDaysLAIdec, 8, 0);
-    parametersInfoLayout->addWidget(degreeDaysLAIdecValue, 8, 1);
-    parametersInfoLayout->addWidget(LAIcurveA, 9, 0);
-    parametersInfoLayout->addWidget(LAIcurveAValue, 9, 1);
-    parametersInfoLayout->addWidget(LAIcurveB, 10, 0);
-    parametersInfoLayout->addWidget(LAIcurveBValue, 10, 1);
+    parametersLaiLayout->addWidget(LAImin, 0, 0);
+    parametersLaiLayout->addWidget(LAIminValue, 0, 1);
+    parametersLaiLayout->addWidget(LAImax, 1, 0);
+    parametersLaiLayout->addWidget(LAImaxValue, 1, 1);
+    parametersLaiLayout->addWidget(LAIgrass, 3, 0);
+    parametersLaiLayout->addWidget(LAIgrassValue, 3, 1);
+    parametersLaiLayout->addWidget(thermalThreshold, 4, 0);
+    parametersLaiLayout->addWidget(thermalThresholdValue, 4, 1);
+    parametersLaiLayout->addWidget(upperThermalThreshold, 5, 0);
+    parametersLaiLayout->addWidget(upperThermalThresholdValue, 5, 1);
+    parametersLaiLayout->addWidget(degreeDaysEmergence, 6, 0);
+    parametersLaiLayout->addWidget(degreeDaysEmergenceValue, 6, 1);
+    parametersLaiLayout->addWidget(degreeDaysLAIinc, 7, 0);
+    parametersLaiLayout->addWidget(degreeDaysLAIincValue, 7, 1);
+    parametersLaiLayout->addWidget(degreeDaysLAIdec, 8, 0);
+    parametersLaiLayout->addWidget(degreeDaysLAIdecValue, 8, 1);
+    parametersLaiLayout->addWidget(LAIcurveA, 9, 0);
+    parametersLaiLayout->addWidget(LAIcurveAValue, 9, 1);
+    parametersLaiLayout->addWidget(LAIcurveB, 10, 0);
+    parametersLaiLayout->addWidget(LAIcurveBValue, 10, 1);
+
+    QLabel *rootDepthZero = new QLabel(tr("root depth zero [m]: "));
+    rootDepthZeroValue = new QLineEdit();
+
+    QLabel *rootDepthMax = new QLabel(tr("root depth max [m]: "));
+    rootDepthMaxValue = new QLineEdit();
+
+    QLabel *rootShape = new QLabel(tr("root shape: "));
+    rootShapeComboBox = new QComboBox();
+    rootShapeComboBox->setMaximumWidth(rootParametersGroup->width()/3);
+
+    for (int i=0; i<numRootDistributionType; i++)
+    {
+        rootDistributionType type = (rootDistributionType) i;
+        rootShapeComboBox->addItem(QString::fromStdString(root::getRootDistributionTypeString(type)));
+    }
+
+    QLabel *shapeDeformation = new QLabel(tr("shape deformation [-]: "));
+    shapeDeformationValue = new QLineEdit();
+
+    degreeDaysInc = new QLabel(tr("degree days root inc [°C]: "));
+    degreeDaysIncValue = new QLineEdit();
+
+    parametersRootDepthLayout->addWidget(rootDepthZero, 0, 0);
+    parametersRootDepthLayout->addWidget(rootDepthZeroValue, 0, 1);
+    parametersRootDepthLayout->addWidget(rootDepthMax, 1, 0);
+    parametersRootDepthLayout->addWidget(rootDepthMaxValue, 1, 1);
+    parametersRootDepthLayout->addWidget(rootShape, 2, 0);
+    parametersRootDepthLayout->addWidget(rootShapeComboBox, 2, 1);
+    parametersRootDepthLayout->addWidget(shapeDeformation, 3, 0);
+    parametersRootDepthLayout->addWidget(shapeDeformationValue, 3, 1);
+    parametersRootDepthLayout->addWidget(degreeDaysInc, 4, 0);
+    parametersRootDepthLayout->addWidget(degreeDaysIncValue, 4, 1);
 
 
     infoCropGroup->setLayout(cropInfoLayout);
     infoMeteoGroup->setLayout(meteoInfoLayout);
-    infoParametersGroup->setLayout(parametersInfoLayout);
+    laiParametersGroup->setLayout(parametersLaiLayout);
+    rootParametersGroup->setLayout(parametersRootDepthLayout);
 
     infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(infoMeteoGroup);
-    infoLayout->addWidget(infoParametersGroup);
+    infoLayout->addWidget(laiParametersGroup);
+    infoLayout->addWidget(rootParametersGroup);
 
     mainLayout->addLayout(saveButtonLayout);
     mainLayout->addLayout(cropLayout);
@@ -217,7 +252,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropLayout->addLayout(infoLayout);
     tabWidget = new QTabWidget;
     tabLAI = new TabLAI();
+    tabRootDepth = new TabRootDepth();
     tabWidget->addTab(tabLAI, tr("LAI development"));
+    tabWidget->addTab(tabRootDepth, tr("Root depth"));
     cropLayout->addWidget(tabWidget);
 
     this->setLayout(mainLayout);
@@ -259,9 +296,14 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(&meteoListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseMeteo);
     connect(&yearListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseYear);
 
+    connect(tabWidget, &QTabWidget::currentChanged, [=](int index){ this->tabChanged(index); });
+
     connect(newCrop, &QAction::triggered, this, &Crit3DCropWidget::on_actionNewCrop);
     connect(deleteCrop, &QAction::triggered, this, &Crit3DCropWidget::on_actionDeleteCrop);
     connect(restoreData, &QAction::triggered, this, &Crit3DCropWidget::on_actionRestoreData);
+
+    //set current tab
+    tabChanged(0);
 }
 
 
@@ -384,8 +426,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         cropCycleMaxValue->setVisible(false);
     }
 
-    // parameters
-
+    // LAI parameters
     LAIminValue->setText(QString::number(myCrop->LAImin));
     LAImaxValue->setText(QString::number(myCrop->LAImax));
     if (myCrop->type == FRUIT_TREE)
@@ -406,6 +447,22 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
     degreeDaysLAIdecValue->setText(QString::number(myCrop->degreeDaysDecrease));
     LAIcurveAValue->setText(QString::number(myCrop->LAIcurve_a));
     LAIcurveBValue->setText(QString::number(myCrop->LAIcurve_b));
+
+    // root parameters
+    rootDepthZeroValue->setText(QString::number(myCrop->roots.rootDepthMin));
+    rootDepthMaxValue->setText(QString::number(myCrop->roots.rootDepthMax));
+    shapeDeformationValue->setText(QString::number(myCrop->roots.shapeDeformation));
+    if (myCrop->isPluriannual())
+    {
+        degreeDaysInc->setVisible(false);
+        degreeDaysIncValue->setVisible(false);
+    }
+    else
+    {
+        degreeDaysInc->setVisible(true);
+        degreeDaysIncValue->setVisible(true);
+        degreeDaysIncValue->setText(QString::number(myCrop->roots.degreeDaysRootGrowth));
+    }
 
     if (meteoPoint != nullptr && !yearListComboBox.currentText().isEmpty())
     {
@@ -546,3 +603,18 @@ void Crit3DCropWidget::updateTabLAI()
     tabLAI->computeLAI(myCrop, meteoPoint, yearListComboBox.currentText().toInt(), nrLayers, totalSoilDepth, currentDoy);
 }
 
+void Crit3DCropWidget::tabChanged(int index)
+{
+
+    if (index == 0) //LAI tab
+    {
+        rootParametersGroup->hide();
+        laiParametersGroup->setVisible(true);
+
+    }
+    else if(index == 1) //root depth tab
+    {
+        laiParametersGroup->hide();
+        rootParametersGroup->setVisible(true);
+    }
+}

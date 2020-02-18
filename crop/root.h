@@ -9,6 +9,7 @@
     class Crit3DCrop;
 
     enum rootDistributionType {CYLINDRICAL_DISTRIBUTION, CARDIOID_DISTRIBUTION, GAMMA_DISTRIBUTION};
+    const int numRootDistributionType = 3;
     enum rootGrowthType {LINEAR, EXPONENTIAL, LOGISTIC};
 
     /*!
@@ -44,6 +45,7 @@
         int nrAtoms(const std::vector<soil::Crit3DLayer> &layers, int nrLayers, double rootDepthMin, double* minThickness, int* atoms);
         double getRootLengthDD(Crit3DRoot* myRoot, double currentDD, double emergenceDD);
         rootDistributionType getRootDistributionType(int rootShape);
+        std::string getRootDistributionTypeString(rootDistributionType rootType);
 
         double computeRootLength(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
         double computeRootDepth(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
