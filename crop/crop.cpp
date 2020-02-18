@@ -35,6 +35,7 @@
 
 #include "crit3dDate.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "crop.h"
 #include "root.h"
 #include "development.h"
@@ -405,6 +406,223 @@ double Crit3DCrop::getMaxTranspiration(double ET0)
     double SCF = this->getSurfaceCoverFraction();
     double kcmaxFactor = 1 + (kcMax - 1) * SCF;
     return ET0 * (SCF * kcmaxFactor);
+}
+
+
+/*!
+ * \brief getCropWaterDeficit
+ * \return sum of water deficit (mm) in the rooting zone
+ */
+double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit3DLayer> &layers)
+{
+    //check
+    if (! isLiving) return NODATA;
+    if (roots.rootDepth <= roots.rootDepthMin) return NODATA;
+    if (roots.firstRootLayer == NODATA) return NODATA;
+
+    double waterDeficit = 0.0;
+    for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
+    {
+        waterDeficit += layers[unsigned(i)].FC - layers[unsigned(i)].waterContent;
+    }
+
+    return MAXVALUE(waterDeficit, 0.0);
+}
+
+
+/*!
+ * \brief computeTranspiration
+ * \return total transpiration and layerTranspiration vector [mm]
+ * or percentage of water stress (if returnWaterStress = true)
+ */
+double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer> &layers,
+                                        std::vector<double>* layerTranspiration, bool returnWaterStress)
+{
+    // check
+    if (idCrop == "" || ! isLiving) return 0;
+    if (roots.rootDepth <= roots.rootDepthMin) return 0;
+    if (roots.firstRootLayer == NODATA) return 0;
+    if (maxTranspiration < EPSILON) return 0;
+
+    double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
+    double cropWP;                                  // [mm] wilting point specific for crop
+    double surplusThreshold;                        // [mm] water surplus stress threshold
+    double waterScarcityThreshold;                  // [mm] water scarcity stress threshold
+    double WSS;                                     // [] water surplus stress
+
+    double TRs=0.0;                                 // [mm] actual transpiration with only water scarsity stress
+    double TRe=0.0;                                 // [mm] actual transpiration with only water surplus stress
+    double totRootDensityWithoutStress = 0.0;       // [-]
+    double redistribution = 0.0;                    // [mm]
+
+    // initialize
+    unsigned int nrLayers = unsigned(layers.size());
+    layerTranspiration->resize(nrLayers);
+    bool* isLayerStressed = new bool[nrLayers];
+    for (unsigned int i = 0; i < nrLayers; i++)
+    {
+        isLayerStressed[i] = false;
+        (*layerTranspiration)[i] = 0;
+    }
+
+    // water surplus
+    if (isWaterSurplusResistant())
+        WSS = 0.0;
+    else
+        WSS = 0.5;
+
+    for (unsigned int i = unsigned(roots.firstRootLayer); i <= unsigned(roots.lastRootLayer); i++)
+    {
+        // [mm]
+        surplusThreshold = layers[i].SAT - (WSS * (layers[i].SAT - layers[i].FC));
+
+        thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), layers[i].horizon);
+        // [mm]
+        cropWP = thetaWP * layers[i].thickness * layers[i].soilFraction * 1000.0;
+
+        // [mm]
+        waterScarcityThreshold = layers[i].FC - fRAW * (layers[i].FC - cropWP);
+
+        if (layers[i].waterContent > surplusThreshold)
+        {
+            // WATER SURPLUS
+            (*layerTranspiration)[i] = maxTranspiration * roots.rootDensity[i] *
+                                    ((layers[i].SAT - layers[i].waterContent) / (layers[i].SAT - surplusThreshold));
+
+            TRe += (*layerTranspiration)[i];
+            TRs += maxTranspiration * roots.rootDensity[i];
+            isLayerStressed[i] = true;
+        }
+        else if (layers[i].waterContent < waterScarcityThreshold)
+        {
+            // WATER SCARSITY
+            if (layers[i].waterContent <= cropWP)
+            {
+                (*layerTranspiration)[i] = 0;
+            }
+            else
+            {
+                (*layerTranspiration)[i] = maxTranspiration * roots.rootDensity[i] *
+                                        ((layers[i].waterContent - cropWP) / (waterScarcityThreshold - cropWP));
+            }
+
+            TRs += (*layerTranspiration)[i];
+            TRe += maxTranspiration * roots.rootDensity[i];
+            isLayerStressed[i] = true;
+        }
+        else
+        {
+            // normal conditions
+            (*layerTranspiration)[i] = maxTranspiration * roots.rootDensity[i];
+
+            TRs += (*layerTranspiration)[i];
+            TRe += (*layerTranspiration)[i];
+
+            if ((layers[i].waterContent - (*layerTranspiration)[i]) > waterScarcityThreshold)
+            {
+                isLayerStressed[i] = false;
+                totRootDensityWithoutStress +=  roots.rootDensity[i];
+            }
+            else
+            {
+                isLayerStressed[i] = true;
+            }
+        }
+    }
+
+    // WATER STRESS [-]
+    double waterStress = 1 - (TRs / maxTranspiration);
+
+    // Hydraulic redistribution
+    // the movement of water from moist to dry soil through plant roots
+    // TODO add numerical process
+    if (waterStress > EPSILON && totRootDensityWithoutStress > EPSILON)
+    {
+        // redistribution acts on not stressed roots
+        redistribution = MINVALUE(waterStress, totRootDensityWithoutStress) * maxTranspiration;
+
+        for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
+        {
+            if (! isLayerStressed[i])
+            {
+                double addLayerTransp = redistribution * (roots.rootDensity[i] / totRootDensityWithoutStress);
+                (*layerTranspiration)[unsigned(i)] += addLayerTransp;
+                TRs += addLayerTransp;
+                TRe += addLayerTransp;
+            }
+        }
+    }
+
+    if (returnWaterStress)
+    {
+        if (waterStress < EPSILON)
+            return 0;
+        else
+            return 1 - (TRs / maxTranspiration);
+    }
+
+    // update water content
+    double totalTranspiration = 0;
+    for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
+    {
+        totalTranspiration += (*layerTranspiration)[unsigned(i)];
+    }
+
+    return totalTranspiration;
+}
+
+
+double Crit3DCrop::getIrrigationDemand(int doy, double currentPrec, double nextPrec, double maxTranspiration,
+                                       const std::vector<soil::Crit3DLayer> &layers)
+{
+    // update days since last irrigation
+    if (daysSinceIrrigation != NODATA)
+        daysSinceIrrigation++;
+
+    // check irrigated crop
+    if (idCrop == "" || ! isLiving || isEqual(irrigationVolume, NODATA) || isEqual(irrigationVolume, 0))
+        return 0;
+
+    // check irrigation period
+    if (doyStartIrrigation != NODATA && doyEndIrrigation != NODATA)
+    {
+        if (doy < doyStartIrrigation || doy > doyEndIrrigation)
+            return 0;
+    }
+    if (degreeDaysStartIrrigation != NODATA && degreeDaysEndIrrigation != NODATA)
+    {
+        if (degreeDays < degreeDaysStartIrrigation || degreeDays > degreeDaysEndIrrigation)
+            return 0;
+    }
+
+    // check forecast (today and tomorrow)
+    double waterNeeds = irrigationVolume / irrigationShift;
+    double todayWater = currentPrec + layers[0].waterContent;
+    double twoDaysWater = todayWater + nextPrec;
+
+    if (todayWater > waterNeeds) return 0;
+    if (twoDaysWater > 2*waterNeeds) return 0;
+
+    // check water stress (before infiltration)
+    double threshold = 1. - stressTolerance;
+
+    std::vector<double> layerTranspiration;
+    double waterStress = this->computeTranspiration(maxTranspiration, layers, &layerTranspiration, true);
+    if (waterStress <= threshold) return 0;
+
+    // check irrigation shift
+    if (daysSinceIrrigation != NODATA)
+    {
+        if (daysSinceIrrigation < irrigationShift)
+            return 0;
+    }
+
+    // IRRIGATION
+
+    // reset irrigation shift
+    daysSinceIrrigation = 0;
+
+    return irrigationVolume;
 }
 
 

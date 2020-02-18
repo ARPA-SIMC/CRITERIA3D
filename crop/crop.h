@@ -84,6 +84,13 @@
         double getSurfaceCoverFraction();
         double getMaxEvaporation(double ET0);
         double getMaxTranspiration(double ET0);
+
+        double getCropWaterDeficit(const std::vector<soil::Crit3DLayer> &layers);
+        double getIrrigationDemand(int doy, double currentPrec, double nextPrec,
+                                   double maxTranpiration, const std::vector<soil::Crit3DLayer>& layers);
+
+        double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer>& layers,
+                                    std::vector<double>* layerTranspiration, bool returnWaterStress);
     };
 
 

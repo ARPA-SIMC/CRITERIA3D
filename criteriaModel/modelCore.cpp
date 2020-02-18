@@ -77,8 +77,9 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
     long myIndex;
     int doy;
     float tmin, tmax;                               // [°C]
-    float prec, et0, tomorrowPrec;                  // [mm]
-    float irrigation, irrigationPrec;               // [mm]
+    float prec, tomorrowPrec;                       // [mm]
+    double et0;                                     // [mm]
+    double irrigation, irrigationPrec;              // [mm]
     float waterTableDepth;                          // [m]
     bool isFirstDay = true;
     int indexSeasonalForecast = NODATA;
@@ -132,25 +133,29 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
             tomorrowPrec = 0;
 
         // ET0
-        et0 = myCase->meteoPoint.getMeteoPointValueD(myDate, dailyReferenceEvapotranspirationHS);
-        if ( isEqual(et0, NODATA) || et0 <= 0 )
-            et0 = float(ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, myCase->meteoPoint.latitude, doy, double(tmax), double(tmin)));
+        et0 = double(myCase->meteoPoint.getMeteoPointValueD(myDate, dailyReferenceEvapotranspirationHS));
+        if (isEqual(et0, NODATA) || et0 <= 0)
+            et0 = ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, myCase->meteoPoint.latitude, doy, double(tmax), double(tmin));
 
-        myCase->output.dailyEt0 = double(et0);
+        myCase->output.dailyEt0 = et0;
 
         // CROP
         if (! updateCrop(myCase, myDate, tmin, tmax, double(waterTableDepth), myError))
             return false;
 
-        // ETcrop
-        cropWaterDemand(myCase);
+        // Evaporation / transpiration
+        myCase->output.dailyMaxEvaporation = myCase->myCrop.getMaxEvaporation(myCase->output.dailyEt0);
+        myCase->output.dailyMaxTranspiration = myCase->myCrop.getMaxTranspiration(myCase->output.dailyEt0);
 
         // WATERTABLE (if available)
         computeCapillaryRise(myCase, double(waterTableDepth));
 
         // IRRIGATION
-        irrigation = cropIrrigationDemand(myCase, doy, prec, tomorrowPrec);
-        myCase->output.dailyIrrigation = double(irrigation);
+        irrigation = myCase->myCrop.getIrrigationDemand(doy, prec, tomorrowPrec, myCase->output.dailyMaxTranspiration, myCase->layers);
+        if (myCase->optimizeIrrigation)
+            irrigation = MINVALUE(myCase->myCrop.getCropWaterDeficit(myCase->layers), irrigation);
+
+        myCase->output.dailyIrrigation = irrigation;
         irrigationPrec = 0.0;
 
         if (irrigation > 0)
@@ -170,11 +175,8 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
             return false;
 
         // EVAPORATION
-        if (! evaporation(myCase))
+        if (! computeEvaporation(myCase))
             return false;
-
-        // TRANSPIRATION
-        myCase->output.dailyTranspiration = cropTranspiration(myCase, false);
 
         // RUNOFF (after evaporation)
         if (! computeSurfaceRunoff(myCase))
@@ -184,10 +186,23 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
         if (! myCase->optimizeIrrigation)
         {
             if ((myCase->output.dailySurfaceRunoff > 1) && (myCase->output.dailyIrrigation > 0))
-                {
-                    myCase->output.dailyIrrigation -= floor(myCase->output.dailySurfaceRunoff);
-                    myCase->output.dailySurfaceRunoff -= floor(myCase->output.dailySurfaceRunoff);
-                }
+            {
+                myCase->output.dailyIrrigation -= floor(myCase->output.dailySurfaceRunoff);
+                myCase->output.dailySurfaceRunoff -= floor(myCase->output.dailySurfaceRunoff);
+            }
+        }
+
+        // TRANSPIRATION
+        std::vector<double> layerTranspiration;
+        myCase->output.dailyTranspiration = myCase->myCrop.computeTranspiration(myCase->output.dailyMaxTranspiration,
+                                                                                myCase->layers, &layerTranspiration, false);
+        // assign transpiration
+        if (myCase->output.dailyTranspiration > 0)
+        {
+            for (unsigned int i = unsigned(myCase->myCrop.roots.firstRootLayer); i <= unsigned(myCase->myCrop.roots.lastRootLayer); i++)
+            {
+                myCase->layers[i].waterContent -= layerTranspiration[i];
+            }
         }
 
         // Output variables

@@ -11,15 +11,11 @@
     bool updateCrop(CriteriaModel* myCase, Crit3DDate myDate,
                     float tmin, float tmax, double waterTableDepth, QString *myError);
 
-    float cropIrrigationDemand(CriteriaModel* myCase, int doy, float myPrec, float nextPrec);
-    void cropWaterDemand(CriteriaModel* myCase);
     bool optimalIrrigation(CriteriaModel* myCase, float myIrrigation);
 
-    bool evaporation(CriteriaModel* myCase);
-    double cropTranspiration(CriteriaModel* myCase, bool getWaterStress);
+    bool computeEvaporation(CriteriaModel* myCase);
 
     double getCropReadilyAvailableWater(CriteriaModel* myCase);
-    double getCropWaterDeficit(CriteriaModel* myCase);
     double getSoilWaterDeficit(CriteriaModel* myCase);
 
 
