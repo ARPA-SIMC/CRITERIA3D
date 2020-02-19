@@ -27,6 +27,7 @@
 #include "cropDbTools.h"
 #include "dbMeteoCriteria1D.h"
 #include "utilities.h"
+#include "commonConstants.h"
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -632,6 +633,62 @@ void Crit3DCropWidget::on_actionUpdate()
     {
         return;
     }
+    myCrop->idCrop = cropIdValue->text().toStdString();
+    myCrop->type = getCropType(cropTypeValue->text().toStdString());
+    if (cropSowing.isVisible())
+    {
+        myCrop->sowingDoy = cropSowingValue->value();
+        myCrop->plantCycle = cropCycleMaxValue->value();
+    }
+    else
+    {
+        myCrop->sowingDoy = NODATA;
+        myCrop->plantCycle = NODATA;
+    }
+    myCrop->kcMax = maxKcValue->text().toDouble();
+    myCrop->LAImin = LAIminValue->value();
+    myCrop->LAImax = LAImaxValue->value();
+    if (LAIgrassValue->isVisible())
+    {
+        myCrop->LAIgrass = LAIgrassValue->text().toDouble();
+    }
+    else
+    {
+        myCrop->LAIgrass = NODATA;
+    }
+    myCrop->thermalThreshold = thermalThresholdValue->text().toDouble();
+    myCrop->upperThermalThreshold = upperThermalThresholdValue->text().toDouble();
+    myCrop->degreeDaysEmergence = degreeDaysEmergenceValue->text().toDouble();
+    myCrop->degreeDaysIncrease = degreeDaysLAIincValue->text().toDouble();
+    myCrop->degreeDaysDecrease = degreeDaysLAIdecValue->text().toDouble();
+    myCrop->LAIcurve_a = LAIcurveAValue->text().toDouble();
+    myCrop->LAIcurve_b = LAIcurveBValue->text().toDouble();
+
+    // root
+    myCrop->roots.rootDepthMin = rootDepthZeroValue->text().toDouble();
+    myCrop->roots.rootDepthMax = rootDepthMaxValue->text().toDouble();
+    myCrop->roots.shapeDeformation = shapeDeformationValue->value();
+    myCrop->roots.rootShape = root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString());
+    if (degreeDaysIncValue->isVisible())
+    {
+        myCrop->roots.degreeDaysRootGrowth = degreeDaysIncValue->text().toDouble();
+    }
+    else
+    {
+        myCrop->roots.degreeDaysRootGrowth = NODATA;
+    }
+    if (meteoPoint != nullptr)
+    {
+        meteoPoint->latitude = latValue->value();
+        meteoPoint->longitude = lonValue->value();
+        if (!yearListComboBox.currentText().isEmpty() && (tabWidget->currentIndex() == 0))
+        {
+            updateTabLAI();
+        }
+    }
+
+
+
 }
 
 void Crit3DCropWidget::on_actionNewCrop()

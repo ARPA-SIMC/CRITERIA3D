@@ -73,6 +73,22 @@ namespace root
          }
     }
 
+    rootDistributionType getRootDistributionTypeFromString(std::string rootShape)
+    {
+        if (rootShape == "cylinder")
+        {
+            return CYLINDRICAL_DISTRIBUTION;
+        }
+        if (rootShape == "cardioid")
+        {
+            return CARDIOID_DISTRIBUTION;
+        }
+        if (rootShape == "gamma function")
+        {
+            return GAMMA_DISTRIBUTION;
+        }
+    }
+
     std::string getRootDistributionTypeString(rootDistributionType rootType)
     {
         switch (rootType)
