@@ -42,14 +42,15 @@
 
     namespace root
     {
-        int nrAtoms(const std::vector<soil::Crit3DLayer> &layers, int nrLayers, double rootDepthMin, double* minThickness, int* atoms);
+        int nrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, int nrLayers, double rootDepthMin, double* minThickness, int* atoms);
         double getRootLengthDD(Crit3DRoot* myRoot, double currentDD, double emergenceDD);
         rootDistributionType getRootDistributionType(int rootShape);
         std::string getRootDistributionTypeString(rootDistributionType rootType);
 
         double computeRootLength(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
         double computeRootDepth(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
-        bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &layers, int nrLayers, double soilDepth);
+        bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers,
+                                unsigned int nrLayers, double soilDepth);
     }
 
 #endif // ROOT_H
