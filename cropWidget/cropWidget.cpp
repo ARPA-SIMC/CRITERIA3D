@@ -107,6 +107,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropSowing.setText("sowing DOY: ");
     cropCycleMax.setText("cycle max duration: ");
 
+    QLabel * maxKc= new QLabel(tr("max kc [-]: "));
+    maxKcValue = new QLineEdit();
+
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
     laiParametersGroup = new QGroupBox(tr(""));
@@ -132,6 +135,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropInfoLayout->addWidget(cropSowingValue, 3, 1);
     cropInfoLayout->addWidget(&cropCycleMax, 4, 0);
     cropInfoLayout->addWidget(cropCycleMaxValue, 4, 1);
+    cropInfoLayout->addWidget(maxKc, 5, 0);
+    cropInfoLayout->addWidget(maxKcValue, 5, 1);
 
     QLabel *meteoName = new QLabel(tr("METEO_NAME: "));
 
@@ -432,7 +437,8 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         cropCycleMax.setVisible(false);
         cropSowingValue->setVisible(false);
         cropCycleMaxValue->setVisible(false);
-    }
+    }   
+    maxKcValue->setText(QString::number(myCrop->kcMax));
 
     // LAI parameters
     LAIminValue->setText(QString::number(myCrop->LAImin));
@@ -499,9 +505,23 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
         return;
     }
 
+    int pos = 0;
     for (int i = 0; i<yearList.size(); i++)
     {
-        if ( checkYear(&dbMeteo, tableMeteo, yearList[i], &error))
+        if ( !checkYear(&dbMeteo, tableMeteo, yearList[i], &error))
+        {
+            yearList.removeAt(pos);
+        }
+        else
+        {
+            pos = pos + 1;
+        }
+    }
+
+    // add year if exists previous year
+    for (int i = 1; i<yearList.size(); i++)
+    {
+        if (yearList[i].toInt() == yearList[i-1].toInt()+1)
         {
             this->yearListComboBox.addItem(yearList[i]);
         }

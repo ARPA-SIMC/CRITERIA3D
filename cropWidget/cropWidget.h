@@ -45,6 +45,7 @@
             QComboBox yearListComboBox;
             QLineEdit* cropIdValue;
             QLineEdit* cropTypeValue;
+            QLineEdit* maxKcValue;
             QLabel cropSowing;
             QLabel cropCycleMax;
             QSpinBox *cropSowingValue;
