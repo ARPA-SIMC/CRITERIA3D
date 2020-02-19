@@ -25,7 +25,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
-#include <malloc.h>
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
