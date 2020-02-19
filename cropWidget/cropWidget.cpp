@@ -543,13 +543,22 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
     meteoPoint->latitude = latValue->text().toDouble();
     meteoPoint->longitude = lonValue->text().toDouble();
 
-    QDate firstDate(year.toInt(), 1, 1);
-    int daysInYear = firstDate.daysInYear();
-    meteoPoint->initializeObsDataD(daysInYear, getCrit3DDate(firstDate));
+    // init meteoPoint with 2 years
+    int firstYear = year.toInt()-1;
+    QDate firstDate(firstYear, 1, 1);
+    QDate currentDate(year.toInt(), 1, 1);
+    int numberDays = firstDate.daysInYear() + currentDate.daysInYear();
+    meteoPoint->initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
+    // fill meteoPoint
+    if (!fillDailyTempCriteria1D(&dbMeteo, tableMeteo, meteoPoint, QString::number(firstYear), &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
+        return;
+    }
     if (!fillDailyTempCriteria1D(&dbMeteo, tableMeteo, meteoPoint, year, &error))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error!", error + " year: " + year);
         return;
     }
     if (myCrop != nullptr)

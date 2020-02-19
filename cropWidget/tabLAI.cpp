@@ -37,15 +37,16 @@ TabLAI::TabLAI()
     setLayout(mainLayout);
 }
 
-void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int year, int nrLayers, double totalSoilDepth, int currentDoy)
+void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, int nrLayers, double totalSoilDepth, int currentDoy)
 {
-    this->year = year;
-    myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
+    year = currentYear;
+    int prevYear = currentYear - 1;
+
 
     double waterTableDepth = NODATA;
     std::string error;
 
-    Crit3DDate firstDate = Crit3DDate(1,1,year);
+    Crit3DDate firstDate = Crit3DDate(1,1,prevYear);
     Crit3DDate lastDate = Crit3DDate(31,12,year);
     double tmin;
     double tmax;
@@ -54,6 +55,11 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int ye
     series->clear();
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
+        // init at first day of the year
+        if (myDate.day == 1 && myDate.month == 1)
+        {
+            myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
+        }
         tmin = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         tmax = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
         if (!myCrop->dailyUpdate(myDate, meteoPoint->latitude, nrLayers, totalSoilDepth, tmin, tmax, waterTableDepth, &error))
@@ -61,8 +67,13 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int ye
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(error));
             return;
         }
-        x.setDate(QDate(myDate.year, myDate.month, myDate.day));
-        series->append(x.toMSecsSinceEpoch(), myCrop->LAI);
+        // display only current year
+        if (myDate.year == year)
+        {
+            x.setDate(QDate(myDate.year, myDate.month, myDate.day));
+            series->append(x.toMSecsSinceEpoch(), myCrop->LAI);
+        }
+
     }
 
     // update x axis
