@@ -107,9 +107,6 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropSowing.setText("sowing DOY: ");
     cropCycleMax.setText("cycle max duration: ");
 
-    QLabel * maxKc= new QLabel(tr("max kc [-]: "));
-    maxKcValue = new QLineEdit();
-
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
     laiParametersGroup = new QGroupBox(tr(""));
@@ -122,8 +119,8 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     infoCropGroup->setTitle("Crop");
     infoMeteoGroup->setTitle("Meteo");
-    laiParametersGroup->setTitle("LAI Parameters");
-    rootParametersGroup->setTitle("root depth Parameters");
+    laiParametersGroup->setTitle("LAI parameters");
+    rootParametersGroup->setTitle("root parameters");
 
     cropInfoLayout->addWidget(cropName, 0, 0);
     cropInfoLayout->addWidget(&cropListComboBox, 0, 1);
@@ -135,8 +132,6 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropInfoLayout->addWidget(cropSowingValue, 3, 1);
     cropInfoLayout->addWidget(&cropCycleMax, 4, 0);
     cropInfoLayout->addWidget(cropCycleMaxValue, 4, 1);
-    cropInfoLayout->addWidget(maxKc, 5, 0);
-    cropInfoLayout->addWidget(maxKcValue, 5, 1);
 
     QLabel *meteoName = new QLabel(tr("METEO_NAME: "));
 
@@ -193,6 +188,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     QLabel *LAIcurveB = new QLabel(tr("LAI curve factor B [-]: "));
     LAIcurveBValue = new QLineEdit();
 
+    QLabel * maxKc= new QLabel(tr("max kc [-]: "));
+    maxKcValue = new QLineEdit();
+
     parametersLaiLayout->addWidget(LAImin, 0, 0);
     parametersLaiLayout->addWidget(LAIminValue, 0, 1);
     parametersLaiLayout->addWidget(LAImax, 1, 0);
@@ -213,6 +211,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     parametersLaiLayout->addWidget(LAIcurveAValue, 9, 1);
     parametersLaiLayout->addWidget(LAIcurveB, 10, 0);
     parametersLaiLayout->addWidget(LAIcurveBValue, 10, 1);
+    parametersLaiLayout->addWidget(maxKc, 11, 0);
+    parametersLaiLayout->addWidget(maxKcValue, 11, 1);
 
     QLabel *rootDepthZero = new QLabel(tr("root depth zero [m]: "));
     rootDepthZeroValue = new QLineEdit();
