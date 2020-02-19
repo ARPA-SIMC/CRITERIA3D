@@ -50,7 +50,7 @@
         double computeRootLength(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
         double computeRootDepth(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
         bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers,
-                                unsigned int nrLayers, double soilDepth);
+                                int nrLayers, double soilDepth);
     }
 
 #endif // ROOT_H
