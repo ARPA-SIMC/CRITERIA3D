@@ -39,17 +39,20 @@
 
 Crit3DRoot::Crit3DRoot()
 {
-    this->rootShape = CYLINDRICAL_DISTRIBUTION;
-    this->growth = LOGISTIC;
-    this->shapeDeformation = NODATA;
-    this->degreeDaysRootGrowth = NODATA;
-    this->rootDepthMin = NODATA;
-    this->rootDepthMax = NODATA;
-    this->firstRootLayer = NODATA;
-    this->lastRootLayer = NODATA;
-    this->rootLength = NODATA;
-    this->rootDepth = NODATA;
-    this->rootDensity = nullptr;
+    // parameters
+    rootShape = CYLINDRICAL_DISTRIBUTION;
+    growth = LOGISTIC;
+    shapeDeformation = NODATA;
+    degreeDaysRootGrowth = NODATA;
+    rootDepthMin = NODATA;
+    rootDepthMax = NODATA;
+
+    // variables
+    firstRootLayer = NODATA;
+    lastRootLayer = NODATA;
+    rootLength = NODATA;
+    rootDepth = NODATA;
+    rootDensity.clear();
 }
 
 

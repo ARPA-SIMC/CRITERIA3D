@@ -65,6 +65,7 @@
         double LAI;
         double LAIstartSenescence;
         int daysSinceIrrigation;
+        std::vector<double> layerTranspiration;
 
         Crit3DCrop();
 
@@ -85,12 +86,11 @@
         double getMaxEvaporation(double ET0);
         double getMaxTranspiration(double ET0);
 
-        double getCropWaterDeficit(const std::vector<soil::Crit3DLayer> &layers);
+        double getCropWaterDeficit(const std::vector<soil::Crit3DLayer>& soilLayers);
         double getIrrigationDemand(int doy, double currentPrec, double nextPrec,
-                                   double maxTranpiration, const std::vector<soil::Crit3DLayer>& layers);
+                                   double maxTranpiration, const std::vector<soil::Crit3DLayer>& soilLayers);
 
-        double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer>& layers,
-                                    std::vector<double>* layerTranspiration, bool returnWaterStress);
+        double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer>& soilLayers, double *waterStress);
     };
 
 

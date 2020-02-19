@@ -31,7 +31,7 @@
         double rootLength;                  /*!< [m]  */
         int firstRootLayer;                 /*!< [-]  */
         int lastRootLayer;                  /*!< [-]  */
-        double* rootDensity;                /*!< [-]  */
+        std::vector<double> rootDensity;    /*!< [-]  */
 
         /*! state variables */
         double rootDepth;                   /*!<  [m]  current root depth */

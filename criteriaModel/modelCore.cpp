@@ -193,15 +193,15 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
         }
 
         // TRANSPIRATION
-        std::vector<double> layerTranspiration;
-        myCase->output.dailyTranspiration = myCase->myCrop.computeTranspiration(myCase->output.dailyMaxTranspiration,
-                                                                                myCase->layers, &layerTranspiration, false);
+        double waterStress;
+        myCase->output.dailyTranspiration = myCase->myCrop.computeTranspiration(myCase->output.dailyMaxTranspiration, myCase->layers, &waterStress);
+
         // assign transpiration
         if (myCase->output.dailyTranspiration > 0)
         {
             for (unsigned int i = unsigned(myCase->myCrop.roots.firstRootLayer); i <= unsigned(myCase->myCrop.roots.lastRootLayer); i++)
             {
-                myCase->layers[i].waterContent -= layerTranspiration[i];
+                myCase->layers[i].waterContent -= myCase->myCrop.layerTranspiration[i];
             }
         }
 
