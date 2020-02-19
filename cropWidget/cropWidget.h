@@ -54,8 +54,8 @@
             QSpinBox* cropCycleMaxValue;
             QDoubleSpinBox* latValue;
             QDoubleSpinBox* lonValue;
-            QLineEdit* LAIminValue;
-            QLineEdit* LAImaxValue;
+            QDoubleSpinBox* LAIminValue;
+            QDoubleSpinBox* LAImaxValue;
             QLabel *LAIgrass;
             QLineEdit* LAIgrassValue;
             QLineEdit* thermalThresholdValue;
@@ -68,7 +68,7 @@
             QLineEdit* rootDepthZeroValue;
             QLineEdit* rootDepthMaxValue;
             QComboBox* rootShapeComboBox;
-            QLineEdit* shapeDeformationValue;
+            QDoubleSpinBox* shapeDeformationValue;
             QLabel *degreeDaysInc;
             QLineEdit* degreeDaysIncValue;
             QTabWidget* tabWidget;
