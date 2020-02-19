@@ -25,6 +25,8 @@
             void on_actionDeleteCrop();
             void on_actionRestoreData();
             void on_actionNewCrop();
+            void on_actionSave();
+            void on_actionUpdate();
             void updateTabLAI();
             void tabChanged(int index);
         private:
