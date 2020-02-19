@@ -315,6 +315,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(deleteCrop, &QAction::triggered, this, &Crit3DCropWidget::on_actionDeleteCrop);
     connect(restoreData, &QAction::triggered, this, &Crit3DCropWidget::on_actionRestoreData);
 
+    connect(saveButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionSave);
+    connect(updateButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionUpdate);
+
     //set current tab
     tabChanged(0);
 }
@@ -605,6 +608,18 @@ void Crit3DCropWidget::on_actionRestoreData()
     // deve salvare il db Crop originario? le modifiche possibili sono solo dovute a delete/new crop?
 }
 
+void Crit3DCropWidget::on_actionSave()
+{
+    // TO DO
+}
+
+void Crit3DCropWidget::on_actionUpdate()
+{
+    if (myCrop == nullptr)
+    {
+        return;
+    }
+}
 
 void Crit3DCropWidget::on_actionNewCrop()
 {
