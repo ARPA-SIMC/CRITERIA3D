@@ -71,13 +71,15 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     QPixmap savePixmap(saveButtonPath);
     QPixmap updatePixmap(updateButtonPath);
-    QPushButton *saveButton = new QPushButton();
-    QPushButton *updateButton = new QPushButton();
+    saveButton = new QPushButton();
+    updateButton = new QPushButton();
     QIcon saveButtonIcon(savePixmap);
     QIcon updateButtonIcon(updatePixmap);
     saveButton->setIcon(saveButtonIcon);
     saveButton->setIconSize(savePixmap.rect().size());
     saveButton->setFixedSize(savePixmap.rect().size());
+    saveButton->setEnabled(false);
+    updateButton->setEnabled(false);
 
     saveButtonLayout->setAlignment(Qt::AlignLeft);
     saveButtonLayout->addWidget(saveButton);
@@ -133,6 +135,19 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropInfoLayout->addWidget(cropSowingValue, 3, 1);
     cropInfoLayout->addWidget(&cropCycleMax, 4, 0);
     cropInfoLayout->addWidget(cropCycleMaxValue, 4, 1);
+
+    connect(cropSowingValue, QOverload<int>::of(&QSpinBox::valueChanged), [=]{ this->editSlot(); });
+    connect(cropCycleMaxValue, QOverload<int>::of(&QSpinBox::valueChanged), [=]{ this->editSlot(); });
+
+    // iterate over each, only looking for QWidgetItem
+//    for(int i = 0; i < cropInfoLayout->count(); i++)
+//    {
+//      QLayoutItem * item = cropInfoLayout->itemAt(i);
+//      if(dynamic_cast<QWidgetItem *>(item))
+//      {
+//          connect(item->widget(), &QLineEdit::textChanged, [=](const QString &newText){ this->editSlot(newText); });
+//      }
+//    }
 
     QLabel *meteoName = new QLabel(tr("METEO_NAME: "));
 
@@ -315,6 +330,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     QAction* openMeteoDB = new QAction(tr("&Open dbMeteo"), this);
     saveChanges = new QAction(tr("&Save Changes"), this);
 
+    saveChanges->setEnabled(false);
+
     QAction* newCrop = new QAction(tr("&New Crop"), this);
     QAction* deleteCrop = new QAction(tr("&Delete Crop"), this);
     restoreData = new QAction(tr("&Restore Data"), this);
@@ -331,6 +348,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     meteoPoint = nullptr;
     nrLayers = 100;     // depth each layer = 2 cm
     totalSoilDepth = 2; // [m] average soil depth
+    changed = false;
 
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
@@ -384,7 +402,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
         this->cropListComboBox.addItem(cropStringList[i]);
     }
 
-    //saveChanges->setEnabled(true);
+    saveChanges->setEnabled(true);
 }
 
 
@@ -418,12 +436,28 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
     {
         this->meteoListComboBox.addItem(idMeteoList[i]);
     }
-    //saveChanges->setEnabled(true);
+    saveChanges->setEnabled(true);
 }
 
 
 void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 {
+    if (changed)
+    {
+        QString idCropChanged = QString::fromStdString(myCrop->idCrop);
+        QMessageBox::StandardButton confirm;
+        QString msg = "Do you want to save changes to crop "+ idCropChanged + " ?";
+        confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+
+        if (confirm == QMessageBox::Yes)
+        {
+            on_actionSave();
+        }
+
+    }
+
+    changed = false;
+
     QString error;
     QString idCrop = getIdCropFromName(&dbCrop, cropName, &error);
     if (idCrop.isEmpty())
@@ -785,4 +819,13 @@ void Crit3DCropWidget::tabChanged(int index)
         laiParametersGroup->hide();
         rootParametersGroup->setVisible(true);
     }
+}
+
+void Crit3DCropWidget::editSlot()
+{
+    changed = true;
+    saveChanges->setEnabled(true);
+    saveButton->setEnabled(true);
+    updateButton->setEnabled(true);
+    qDebug() << "edit";
 }

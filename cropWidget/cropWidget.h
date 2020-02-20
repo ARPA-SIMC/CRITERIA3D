@@ -31,6 +31,7 @@
             bool updateMeteoPoint();
             void updateTabLAI();
             void tabChanged(int index);
+            void editSlot();
         private:
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
@@ -39,6 +40,7 @@
             Crit3DMeteoPoint *meteoPoint;
             int nrLayers;
             int totalSoilDepth;
+            bool changed;
 
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;
@@ -76,9 +78,12 @@
             QTabWidget* tabWidget;
             QAction* saveChanges;
             QAction* restoreData;
+            QPushButton *saveButton;
+            QPushButton *updateButton;
 
             TabLAI* tabLAI;
             TabRootDepth* tabRootDepth;
+
     };
 
 #endif // CROPWIDGET_H
