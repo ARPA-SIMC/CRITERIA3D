@@ -77,6 +77,31 @@ bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, 
     return true;
 }
 
+bool updateLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString lat, QString lon, QString *error)
+{
+    QSqlQuery qry(*dbMeteo);
+    *error = "";
+    if (idMeteo.isEmpty())
+    {
+        *error = "id_meteo missing";
+        return false;
+    }
+    qry.prepare( "UPDATE meteo_locations SET longitude = :longitude, "
+                 "latitude = :latitude WHERE id_meteo = :id_meteo");
+
+    qry.bindValue(":longitude", lon);
+    qry.bindValue(":latitude", lat);
+
+    qry.bindValue(":id_meteo", idMeteo);
+
+    if( !qry.exec() )
+    {
+        *error = qry.lastError().text();
+        return false;
+    }
+    return true;
+}
+
 
 QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *error)
 {

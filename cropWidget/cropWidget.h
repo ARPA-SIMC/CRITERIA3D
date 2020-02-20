@@ -27,11 +27,14 @@
             void on_actionNewCrop();
             void on_actionSave();
             void on_actionUpdate();
+            bool saveCrop();
+            bool saveMeteo();
             bool updateCrop();
             bool updateMeteoPoint();
             void updateTabLAI();
             void tabChanged(int index);
-            void editSlot();
+            bool checkIfCropIsChanged();
+            bool checkIfMeteoIsChanged();
         private:
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
@@ -40,7 +43,8 @@
             Crit3DMeteoPoint *meteoPoint;
             int nrLayers;
             int totalSoilDepth;
-            bool changed;
+            bool cropChanged;
+            bool meteoChanged;
 
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;

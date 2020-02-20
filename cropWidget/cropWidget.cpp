@@ -136,19 +136,6 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropInfoLayout->addWidget(&cropCycleMax, 4, 0);
     cropInfoLayout->addWidget(cropCycleMaxValue, 4, 1);
 
-    connect(cropSowingValue, QOverload<int>::of(&QSpinBox::valueChanged), [=]{ this->editSlot(); });
-    connect(cropCycleMaxValue, QOverload<int>::of(&QSpinBox::valueChanged), [=]{ this->editSlot(); });
-
-    // iterate over each, only looking for QWidgetItem
-//    for(int i = 0; i < cropInfoLayout->count(); i++)
-//    {
-//      QLayoutItem * item = cropInfoLayout->itemAt(i);
-//      if(dynamic_cast<QWidgetItem *>(item))
-//      {
-//          connect(item->widget(), &QLineEdit::textChanged, [=](const QString &newText){ this->editSlot(newText); });
-//      }
-//    }
-
     QLabel *meteoName = new QLabel(tr("METEO_NAME: "));
 
     QLabel *meteoYear = new QLabel(tr("year: "));
@@ -348,7 +335,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     meteoPoint = nullptr;
     nrLayers = 100;     // depth each layer = 2 cm
     totalSoilDepth = 2; // [m] average soil depth
-    changed = false;
+    cropChanged = false;
+    meteoChanged = false;
 
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
@@ -403,6 +391,8 @@ void Crit3DCropWidget::on_actionOpenCropDB()
     }
 
     saveChanges->setEnabled(true);
+    saveButton->setEnabled(true);
+    updateButton->setEnabled(true);
 }
 
 
@@ -437,12 +427,14 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
         this->meteoListComboBox.addItem(idMeteoList[i]);
     }
     saveChanges->setEnabled(true);
+    saveButton->setEnabled(true);
+    updateButton->setEnabled(true);
 }
 
 
 void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 {
-    if (changed)
+    if (checkIfCropIsChanged())
     {
         QString idCropChanged = QString::fromStdString(myCrop->idCrop);
         QMessageBox::StandardButton confirm;
@@ -451,12 +443,16 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 
         if (confirm == QMessageBox::Yes)
         {
-            on_actionSave();
+            if (updateCrop())
+            {
+                if (saveCrop())
+                {
+                    cropChanged = false; //already saved
+                }
+            }
         }
 
     }
-
-    changed = false;
 
     QString error;
     QString idCrop = getIdCropFromName(&dbCrop, cropName, &error);
@@ -607,8 +603,8 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
         delete meteoPoint;
     }
     meteoPoint = new Crit3DMeteoPoint();
-    meteoPoint->latitude = latValue->text().toDouble();
-    meteoPoint->longitude = lonValue->text().toDouble();
+    meteoPoint->latitude = latValue->value();
+    meteoPoint->longitude = lonValue->value();
 
     // init meteoPoint with 2 years
     int firstYear = year.toInt()-1;
@@ -674,22 +670,46 @@ void Crit3DCropWidget::on_actionRestoreData()
 
 void Crit3DCropWidget::on_actionSave()
 {
-    QString error;
+
     if (updateCrop())
     {
-        if (!updateCropLAIparam(&dbCrop, cropIdValue->text(), myCrop, &error))
+        if (saveCrop())
         {
-            QMessageBox::critical(nullptr, "UpDate LAI param failed!", error);
-        }
-        if (!updateCropRootparam(&dbCrop, cropIdValue->text(), myCrop, &error))
-        {
-            QMessageBox::critical(nullptr, "UpDate root param failed!", error);
+            cropChanged = false; //already saved
         }
     }
     if (updateMeteoPoint())
     {
-
+        if (saveMeteo())
+        {
+            meteoChanged = false; //already saved
+        }
     }
+
+}
+
+bool Crit3DCropWidget::saveCrop()
+{
+    QString error;
+    if (!updateCropLAIparam(&dbCrop, cropIdValue->text(), myCrop, &error) || !updateCropRootparam(&dbCrop, cropIdValue->text(), myCrop, &error))
+    {
+        QMessageBox::critical(nullptr, "UpDate param failed!", error);
+        return false;
+    }
+    return true;
+
+}
+
+bool Crit3DCropWidget::saveMeteo()
+{
+    QString error;
+    if (!updateLatLonFromIdMeteo(&dbMeteo, meteoListComboBox.currentText(), latValue->text(), lonValue->text(), &error))
+    {
+        QMessageBox::critical(nullptr, "UpDate meteo failed!", error);
+        return false;
+    }
+    return true;
+
 }
 
 void Crit3DCropWidget::on_actionUpdate()
@@ -756,6 +776,8 @@ bool Crit3DCropWidget::updateCrop()
     {
         myCrop->roots.degreeDaysRootGrowth = NODATA;
     }
+    cropChanged = true;
+
     return true;
 }
 
@@ -768,6 +790,7 @@ bool Crit3DCropWidget::updateMeteoPoint()
     meteoPoint->latitude = latValue->value();
     meteoPoint->longitude = lonValue->value();
 
+    meteoChanged = true;
     return true;
 }
 
@@ -821,11 +844,67 @@ void Crit3DCropWidget::tabChanged(int index)
     }
 }
 
-void Crit3DCropWidget::editSlot()
+bool Crit3DCropWidget::checkIfCropIsChanged()
 {
-    changed = true;
-    saveChanges->setEnabled(true);
-    saveButton->setEnabled(true);
-    updateButton->setEnabled(true);
-    qDebug() << "edit";
+
+    // check all editable fields
+    if (myCrop == nullptr)
+    {
+        cropChanged = false;
+        return cropChanged;
+    }
+    else if(cropSowingValue->isVisible() && (myCrop->sowingDoy != cropSowingValue->value() || myCrop->plantCycle != cropCycleMaxValue->value()))
+    {
+        cropChanged = true;
+    }
+    else if ( myCrop->kcMax != maxKcValue->text().toDouble()
+            || myCrop->LAImin != LAIminValue->value() || myCrop->LAImax != LAImaxValue->value())
+    {
+        cropChanged = true;
+
+    }
+    else if (LAIgrassValue->isVisible() && myCrop->LAIgrass != LAIgrassValue->text().toDouble())
+    {
+        cropChanged = true;
+    }
+    else if (myCrop->thermalThreshold != thermalThresholdValue->text().toDouble() || myCrop->upperThermalThreshold != upperThermalThresholdValue->text().toDouble()
+            || myCrop->degreeDaysEmergence != degreeDaysEmergenceValue->text().toDouble() || myCrop->degreeDaysIncrease != degreeDaysLAIincValue->text().toDouble()
+            || myCrop->degreeDaysDecrease != degreeDaysLAIdecValue->text().toDouble() || myCrop->LAIcurve_a != LAIcurveAValue->text().toDouble() || myCrop->LAIcurve_b != LAIcurveBValue->text().toDouble())
+    {
+        cropChanged = true;
+    }
+    else if(myCrop->roots.rootDepthMin != rootDepthZeroValue->text().toDouble() || myCrop->roots.rootDepthMax != rootDepthMaxValue->text().toDouble()
+            || myCrop->roots.shapeDeformation != shapeDeformationValue->value() || myCrop->roots.rootShape != root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString()))
+    {
+        cropChanged = true;
+    }
+    else if (degreeDaysIncValue->isVisible() && myCrop->roots.degreeDaysRootGrowth != degreeDaysIncValue->text().toDouble())
+    {
+        cropChanged = true;
+    }
+    else
+    {
+        cropChanged = false;
+    }
+    saveChanges->setEnabled(cropChanged);
+    saveButton->setEnabled(cropChanged);
+    updateButton->setEnabled(cropChanged);
+    return cropChanged;
+}
+
+bool Crit3DCropWidget::checkIfMeteoIsChanged()
+{
+    if (meteoPoint == nullptr)
+    {
+        meteoChanged = false;
+        return meteoChanged;
+    }
+    if (meteoPoint->latitude != latValue->value() || meteoPoint->longitude != lonValue->value())
+    {
+        meteoChanged = true;
+        saveChanges->setEnabled(meteoChanged);
+        saveButton->setEnabled(meteoChanged);
+        updateButton->setEnabled(meteoChanged);
+        return meteoChanged;
+    }
 }
