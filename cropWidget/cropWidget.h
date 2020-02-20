@@ -27,6 +27,8 @@
             void on_actionNewCrop();
             void on_actionSave();
             void on_actionUpdate();
+            bool updateCrop();
+            bool updateMeteoPoint();
             void updateTabLAI();
             void tabChanged(int index);
         private:

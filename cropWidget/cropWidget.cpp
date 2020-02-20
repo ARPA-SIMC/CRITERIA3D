@@ -605,30 +605,30 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
 void Crit3DCropWidget::on_actionDeleteCrop()
 {
     QString msg;
-        if (cropListComboBox.currentText().isEmpty())
+    if (cropListComboBox.currentText().isEmpty())
+    {
+        msg = "Select the soil to be deleted";
+        QMessageBox::information(nullptr, "Warning", msg);
+    }
+    else
+    {
+        QMessageBox::StandardButton confirm;
+        msg = "Are you sure you want to delete "+cropListComboBox.currentText()+" ?";
+        confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+        QString error;
+
+        if (confirm == QMessageBox::Yes)
         {
-            msg = "Select the soil to be deleted";
-            QMessageBox::information(nullptr, "Warning", msg);
+            if (deleteCropData(&dbCrop, cropListComboBox.currentText(), &error))
+            {
+                cropListComboBox.removeItem(cropListComboBox.currentIndex());
+            }
         }
         else
         {
-            QMessageBox::StandardButton confirm;
-            msg = "Are you sure you want to delete "+cropListComboBox.currentText()+" ?";
-            confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
-            QString error;
-
-            if (confirm == QMessageBox::Yes)
-            {
-                if (deleteCropData(&dbCrop, cropListComboBox.currentText(), &error))
-                {
-                    cropListComboBox.removeItem(cropListComboBox.currentIndex());
-                }
-            }
-            else
-            {
-                return;
-            }
+            return;
         }
+    }
 }
 
 
@@ -640,14 +640,43 @@ void Crit3DCropWidget::on_actionRestoreData()
 
 void Crit3DCropWidget::on_actionSave()
 {
-    // TO DO
+    QString error;
+    if (updateCrop())
+    {
+        if (!updateCropLAIparam(&dbCrop, cropIdValue->text(), myCrop, &error))
+        {
+            QMessageBox::critical(nullptr, "UpDate LAI param failed!", error);
+        }
+        if (!updateCropRootparam(&dbCrop, cropIdValue->text(), myCrop, &error))
+        {
+            QMessageBox::critical(nullptr, "UpDate root param failed!", error);
+        }
+    }
+    if (updateMeteoPoint())
+    {
+
+    }
 }
 
 void Crit3DCropWidget::on_actionUpdate()
 {
+
+    if (updateCrop() && updateMeteoPoint())
+    {
+        if (!yearListComboBox.currentText().isEmpty())
+        {
+            updateTabLAI();
+        }
+    }
+
+}
+
+bool Crit3DCropWidget::updateCrop()
+{
+
     if (myCrop == nullptr)
     {
-        return;
+        return false;
     }
     myCrop->idCrop = cropIdValue->text().toStdString();
     myCrop->type = getCropType(cropTypeValue->text().toStdString());
@@ -693,18 +722,19 @@ void Crit3DCropWidget::on_actionUpdate()
     {
         myCrop->roots.degreeDaysRootGrowth = NODATA;
     }
-    if (meteoPoint != nullptr)
+    return true;
+}
+
+bool Crit3DCropWidget::updateMeteoPoint()
+{
+    if (meteoPoint == nullptr)
     {
-        meteoPoint->latitude = latValue->value();
-        meteoPoint->longitude = lonValue->value();
-        if (!yearListComboBox.currentText().isEmpty() && (tabWidget->currentIndex() == 0))
-        {
-            updateTabLAI();
-        }
+        return false;
     }
+    meteoPoint->latitude = latValue->value();
+    meteoPoint->longitude = lonValue->value();
 
-
-
+    return true;
 }
 
 void Crit3DCropWidget::on_actionNewCrop()

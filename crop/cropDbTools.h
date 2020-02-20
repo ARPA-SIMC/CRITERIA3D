@@ -25,5 +25,9 @@
 
     bool deleteCropData(QSqlDatabase* dbCrop, QString cropName, QString *error);
 
+    bool updateCropLAIparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *error);
+
+    bool updateCropRootparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *error);
+
 
 #endif // CROPDBTOOLS_H
