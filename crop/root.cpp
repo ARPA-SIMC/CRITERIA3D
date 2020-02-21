@@ -321,6 +321,7 @@ namespace root
     {
         double *lunette =  new double[unsigned(2*nrLayersWithRoot)];
         double *lunetteDensity = new double[unsigned(2*nrLayersWithRoot)];
+
         for (int i = 0 ; i<nrLayersWithRoot ; i++)
         {
             double sinAlfa, cosAlfa, alfa;
@@ -361,16 +362,16 @@ namespace root
             densityThinLayers[nrUpperLayersWithoutRoot+i] = lunetteDensity[2*i] + lunetteDensity[2*i+1];
         }
 
-        free(lunette);
-        free(lunetteDensity);
+        delete[] lunette;
+        delete[] lunetteDensity;
     }
 
 
     void cylindricalDistribution(double deformation, int nrLayersWithRoot,int nrUpperLayersWithoutRoot , int totalLayers,double* densityThinLayers)
     {
        int i;
-
        double *cylinderDensity =  new double[unsigned(2*nrLayersWithRoot)];
+
        for (i = 0 ; i<2*nrLayersWithRoot; i++)
        {
            cylinderDensity[i]= 1./(2*nrLayersWithRoot);
@@ -405,7 +406,8 @@ namespace root
        {
            densityThinLayers[nrUpperLayersWithoutRoot+i] = cylinderDensity[2*i] + cylinderDensity[2*i+1] ;
        }
-       free(cylinderDensity);
+
+       delete[] cylinderDensity;
     }
 
 
@@ -426,13 +428,13 @@ namespace root
             || (myCrop->roots.rootShape == CYLINDRICAL_DISTRIBUTION))
         {
             double minimumThickness;
-            int *atoms = new int[nrLayers];
+            int* atoms = new int[nrLayers];
             int numberOfRootedLayers, numberOfTopUnrootedLayers;
             unsigned int nrAtoms;
             nrAtoms = root::getNrAtoms(soilLayers, myCrop->roots.rootDepthMin, &minimumThickness, atoms);
             numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
             numberOfRootedLayers = int(ceil(MINVALUE(myCrop->roots.rootLength, soilDepth) / minimumThickness));
-            double *densityThinLayers =  new double[nrAtoms];
+            double* densityThinLayers =  new double[nrAtoms];
 
             for (i=0; i < nrAtoms; i++)
                 densityThinLayers[i] = 0.;
@@ -458,8 +460,9 @@ namespace root
                     counter++;
                 }
             }
-            free(atoms);
-            free(densityThinLayers);
+
+            delete[] atoms;
+            delete[] densityThinLayers;
         }
         else if (myCrop->roots.rootShape == GAMMA_DISTRIBUTION)
         {

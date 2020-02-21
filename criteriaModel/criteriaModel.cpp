@@ -348,17 +348,17 @@ void CriteriaModel::prepareOutput(Crit3DDate myDate, bool isFirst)
 {
     if (isFirst)
     {
-        this->outputString = "INSERT INTO '" + this->idCase + "'"
+        outputString = "INSERT INTO '" + this->idCase + "'"
             + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, RAW, DEFICIT, DRAINAGE, RUNOFF, ET0,"
             + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOTDEPTH) "
             + " VALUES ";
     }
     else
     {
-        this->outputString += ",";
+        outputString += ",";
     }
 
-    this->outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
+    outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
             + "," + QString::number(this->output.dailyPrec, 'g', 4)
             + "," + QString::number(this->output.dailyIrrigation, 'g', 4)
             + "," + QString::number(this->output.dailySoilWaterContent, 'g', 5)
@@ -381,7 +381,8 @@ void CriteriaModel::prepareOutput(Crit3DDate myDate, bool isFirst)
 
 bool CriteriaModel::saveOutput(QString* myError)
 {
-    QSqlQuery myQuery = this->dbOutput.exec(this->outputString);
+    QSqlQuery myQuery = dbOutput.exec(outputString);
+    outputString.clear();
 
     if (myQuery.lastError().type() != QSqlError::NoError)
     {
