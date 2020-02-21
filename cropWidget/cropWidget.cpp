@@ -529,6 +529,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
     rootDepthZeroValue->setText(QString::number(myCrop->roots.rootDepthMin));
     rootDepthMaxValue->setText(QString::number(myCrop->roots.rootDepthMax));
     shapeDeformationValue->setValue(myCrop->roots.shapeDeformation);
+    rootShapeComboBox->setCurrentText(QString::fromStdString(root::getRootDistributionTypeString(myCrop->roots.rootShape)));
     if (myCrop->isPluriannual())
     {
         degreeDaysInc->setVisible(false);
