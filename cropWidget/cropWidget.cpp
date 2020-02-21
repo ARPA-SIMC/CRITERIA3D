@@ -361,6 +361,29 @@ Crit3DCropWidget::Crit3DCropWidget()
 
 void Crit3DCropWidget::on_actionOpenCropDB()
 {
+
+    if (myCrop != nullptr)
+    {
+        if (checkIfCropIsChanged())
+        {
+            QString idCropChanged = QString::fromStdString(myCrop->idCrop);
+            QMessageBox::StandardButton confirm;
+            QString msg = "Do you want to save changes to crop "+ idCropChanged + " ?";
+            confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+
+            if (confirm == QMessageBox::Yes)
+            {
+                if (updateCrop())
+                {
+                    if (saveCrop())
+                    {
+                        cropChanged = false; //already saved
+                    }
+                }
+            }
+
+        }
+    }
     QString dbCropName = QFileDialog::getOpenFileName(this, tr("Open crop database"), "", tr("SQLite files (*.db)"));
     if (dbCropName == "")
     {
@@ -398,6 +421,27 @@ void Crit3DCropWidget::on_actionOpenCropDB()
 
 void Crit3DCropWidget::on_actionOpenMeteoDB()
 {
+    if (meteoPoint != nullptr)
+    {
+        if (checkIfMeteoIsChanged())
+        {
+            QString idMeteo = meteoListComboBox.currentText();
+            QMessageBox::StandardButton confirm;
+            QString msg = "Do you want to save changes to meteo "+ idMeteo + " ?";
+            confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+
+            if (confirm == QMessageBox::Yes)
+            {
+                if (updateMeteoPoint())
+                {
+                    if (saveMeteo())
+                    {
+                        meteoChanged = false; //already saved
+                    }
+                }
+            }
+        }
+    }
     QString dbMeteoName = QFileDialog::getOpenFileName(this, tr("Open meteo database"), "", tr("SQLite files (*.db)"));
     if (dbMeteoName == "")
     {
@@ -546,6 +590,9 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
     {
         updateTabLAI();
     }
+    saveChanges->setEnabled(true);
+    saveButton->setEnabled(true);
+    updateButton->setEnabled(true);
 }
 
 
@@ -716,12 +763,14 @@ bool Crit3DCropWidget::saveMeteo()
 void Crit3DCropWidget::on_actionUpdate()
 {
 
-    if (updateCrop() && updateMeteoPoint())
+    if (!updateCrop() || !updateMeteoPoint())
     {
-        if (!yearListComboBox.currentText().isEmpty())
-        {
-            updateTabLAI();
-        }
+        //something is null
+        return;
+    }
+    if (!yearListComboBox.currentText().isEmpty())
+    {
+        updateTabLAI();
     }
 
 }
