@@ -303,8 +303,7 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
     // roots
     if (! isPluriannual())
     {
-        roots.rootDensity[0] = 0.0;
-        for (unsigned int i = 1; i < nrLayers; i++)
+        for (unsigned int i = 0; i < nrLayers; i++)
             roots.rootDensity[i] = 0;
     }
 
@@ -336,12 +335,15 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
 }
 
 
-bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, unsigned int nrLayers, double totalDepth,
+bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
                              double tmin, double tmax, double waterTableDepth, std::string* myError)
 {
     *myError = "";
-
     if (idCrop == "") return false;
+
+    unsigned int nrLayers = unsigned(soilLayers.size());
+    double totalDepth = 0;
+    if (nrLayers > 0) totalDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
     // check start/end crop cycle (update isLiving)
     if (needReset(myDate, latitude, waterTableDepth))
@@ -365,11 +367,12 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, unsigned
 
         // update roots
         root::computeRootDepth(this, totalDepth, degreeDays, waterTableDepth);
-        /* if (! root::computeRootDensity(myCrop, layersVector, nrLayers, totalDepth))
+
+        if ( !root::computeRootDensity(this, soilLayers, totalDepth))
         {
-            *myError = "Error in updating roots for crop " + QString::fromStdString(idCrop);
+            *myError = "Error in updating roots for crop " + idCrop;
             return false;
-        }*/
+        }
     }
 
     return true;
@@ -432,7 +435,7 @@ double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit3DLayer> &soi
         waterDeficit += soilLayers[unsigned(i)].FC - soilLayers[unsigned(i)].waterContent;
     }
 
-    return MAXVALUE(waterDeficit, 0.0);
+    return MAXVALUE(waterDeficit, 0);
 }
 
 

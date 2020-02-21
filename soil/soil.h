@@ -232,6 +232,8 @@
         bool fittingWaterRetentionCurve(Crit3DHorizon* horizon,
                         Crit3DFittingOptions* fittingOptions);
         bool sortWaterPotential(soil::Crit3DWaterRetention first, soil::Crit3DWaterRetention second);
+
+        std::vector<soil::Crit3DLayer> getRegularSoilLayers(soil::Crit3DSoil* mySoil, double layerThickness);
     }
 
 

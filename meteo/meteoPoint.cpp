@@ -521,13 +521,9 @@ void Crit3DMeteoPoint::cleanObsDataM()
 bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue)
 {
     //check
-    if (myVar == noMeteoVar)
+    if (myVar == noMeteoVar || obsDataH == nullptr)
     {
-        return NODATA;
-    }
-    if (obsDataH == nullptr)
-    {
-        return NODATA;
+        return false;
     }
 
     // day index
@@ -744,6 +740,20 @@ bool Crit3DMeteoPoint::getMeteoPointValueDayH(const Crit3DDate& myDate, TObsData
     hourlyValues = &(obsDataH[d]);
     return true;
 }
+
+
+bool Crit3DMeteoPoint::existDailyData(const Crit3DDate& myDate)
+{
+    if (obsDataD == nullptr) return false;
+
+    int index = obsDataD[0].date.daysTo(myDate);
+
+    if ((index < 0) || (index >= nrObsDataDaysD))
+        return false;
+    else
+        return true;
+}
+
 
 float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar)
 {

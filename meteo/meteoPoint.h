@@ -134,6 +134,8 @@
             void initializeObsDataM(int numberOfMonths, int month, int year);
             void cleanObsDataM();
 
+            bool existDailyData(const Crit3DDate& myDate);
+
             float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar);
             bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);
             float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar);

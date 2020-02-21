@@ -4,7 +4,7 @@
     class CriteriaModel;
 
     void initializeWater(CriteriaModel* myCase);
-    bool computeInfiltration(CriteriaModel* myCase, float prec, float sprayIrrigation);
+    bool computeInfiltration(CriteriaModel* myCase, double prec, double sprayIrrigation);
     bool computeSurfaceRunoff(CriteriaModel* myCase);
     bool computeLateralDrainage(CriteriaModel* myCase);
     bool computeCapillaryRise(CriteriaModel* myCase, double waterTableDepth);

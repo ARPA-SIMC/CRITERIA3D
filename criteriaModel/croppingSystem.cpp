@@ -46,16 +46,9 @@ bool updateCrop(CriteriaModel* myCase, Crit3DDate myDate, float tmin, float tmax
 {
     std::string errorString;
 
-    if ( !myCase->myCrop.dailyUpdate(myDate, myCase->meteoPoint.latitude, signed(myCase->nrLayers),
-                                    myCase->mySoil.totalDepth, tmin, tmax, waterTableDepth, &errorString))
+    if ( !myCase->myCrop.dailyUpdate(myDate, myCase->meteoPoint.latitude, myCase->soilLayers, tmin, tmax, waterTableDepth, &errorString))
     {
         *myError = QString::fromStdString(errorString);
-        return false;
-    }
-
-    if ( !root::computeRootDensity(&(myCase->myCrop), myCase->layers, signed(myCase->nrLayers), myCase->mySoil.totalDepth))
-    {
-        *myError = "Error in updating roots for crop " + QString::fromStdString(myCase->myCrop.idCrop);
         return false;
     }
 
@@ -77,18 +70,18 @@ double getCropReadilyAvailableWater(CriteriaModel* myCase)
     double sumRAW = 0.0;
     for (unsigned int i = unsigned(myCase->myCrop.roots.firstRootLayer); i <= unsigned(myCase->myCrop.roots.lastRootLayer); i++)
     {
-        double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCase->myCrop.psiLeaf), myCase->layers[i].horizon);
+        double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCase->myCrop.psiLeaf), myCase->soilLayers[i].horizon);
         // [mm]
-        double cropWP = thetaWP * myCase->layers[i].thickness * myCase->layers[i].soilFraction * 1000.0;
+        double cropWP = thetaWP * myCase->soilLayers[i].thickness * myCase->soilLayers[i].soilFraction * 1000.0;
         // [mm]
-        double threshold = myCase->layers[i].FC - myCase->myCrop.fRAW * (myCase->layers[i].FC - cropWP);
+        double threshold = myCase->soilLayers[i].FC - myCase->myCrop.fRAW * (myCase->soilLayers[i].FC - cropWP);
 
-        double layerRAW = (myCase->layers[i].waterContent - threshold);
+        double layerRAW = (myCase->soilLayers[i].waterContent - threshold);
 
-        double layerMaxDepth = myCase->layers[i].depth + myCase->layers[i].thickness / 2.0;
+        double layerMaxDepth = myCase->soilLayers[i].depth + myCase->soilLayers[i].thickness / 2.0;
         if (myCase->myCrop.roots.rootDepth < layerMaxDepth)
         {
-                layerRAW *= (myCase->myCrop.roots.rootDepth - layerMaxDepth) / myCase->layers[i].thickness;
+                layerRAW *= (myCase->myCrop.roots.rootDepth - layerMaxDepth) / myCase->soilLayers[i].thickness;
         }
 
         sumRAW += layerRAW;
@@ -98,35 +91,34 @@ double getCropReadilyAvailableWater(CriteriaModel* myCase)
 }
 
 
-bool optimalIrrigation(CriteriaModel* myCase, float myIrrigation)
+double optimalIrrigation(std::vector<soil::Crit3DLayer> soilLayers, double irrigationMax)
 {
-    float myDeficit;
-    float residualIrrigation = myIrrigation;
+    double residualIrrigation = irrigationMax;
+    unsigned int nrLayers = unsigned(soilLayers.size());
 
     unsigned int i=0;
-    while (i < myCase->nrLayers && residualIrrigation > 0)
+    while (i < nrLayers && residualIrrigation > 0)
     {
-        if (myCase->layers[i].waterContent < myCase->layers[i].FC)
+        if (soilLayers[i].waterContent < soilLayers[i].FC)
         {
-            myDeficit = float(myCase->layers[i].FC - myCase->layers[i].waterContent);
-            myDeficit = MINVALUE(myDeficit, residualIrrigation);
+            double deficit = soilLayers[i].FC - soilLayers[i].waterContent;
+            deficit = MINVALUE(deficit, residualIrrigation);
 
-            myCase->layers[i].waterContent += double(myDeficit);
-            residualIrrigation -= myDeficit;
+            soilLayers[i].waterContent += deficit;
+            residualIrrigation -= deficit;
         }
         i++;
     }
 
-    myCase->output.dailyIrrigation = double(myIrrigation - residualIrrigation);
-    return true;
+    return (irrigationMax - residualIrrigation);
 }
 
 
 bool computeEvaporation(CriteriaModel* myCase)
 {
     // evaporation on surface
-    double evaporationOpenWater = MINVALUE(myCase->output.dailyMaxEvaporation, myCase->layers[0].waterContent);
-    myCase->layers[0].waterContent -= evaporationOpenWater;
+    double evaporationOpenWater = MINVALUE(myCase->output.dailyMaxEvaporation, myCase->soilLayers[0].waterContent);
+    myCase->soilLayers[0].waterContent -= evaporationOpenWater;
     myCase->output.dailyEvaporation = evaporationOpenWater;
 
     double residualEvaporation = myCase->output.dailyMaxEvaporation - evaporationOpenWater;
@@ -139,10 +131,10 @@ bool computeEvaporation(CriteriaModel* myCase)
     double layerDepth, coeffDepth;
 
     double sumCoeff = 0;
-    double minDepth = myCase->layers[1].depth + myCase->layers[1].thickness / 2;
+    double minDepth = myCase->soilLayers[1].depth + myCase->soilLayers[1].thickness / 2;
     for (unsigned int i=1; i <= lastLayerEvap; i++)
     {
-        layerDepth = myCase->layers[i].depth + myCase->layers[i].thickness / 2.0;
+        layerDepth = myCase->soilLayers[i].depth + myCase->soilLayers[i].thickness / 2.0;
 
         coeffDepth = MAXVALUE((layerDepth - minDepth) / (MAX_EVAPORATION_DEPTH - minDepth), 0);
         // values = 1 a depthMin, ~0.1 a depthMax
@@ -161,17 +153,17 @@ bool computeEvaporation(CriteriaModel* myCase)
 
         for (unsigned int i=1; i<=lastLayerEvap; i++)
         {
-            evapLayerThreshold = myCase->layers[i].FC - coeffEvap[i-1] * (myCase->layers[i].FC - myCase->layers[i].HH);
+            evapLayerThreshold = myCase->soilLayers[i].FC - coeffEvap[i-1] * (myCase->soilLayers[i].FC - myCase->soilLayers[i].HH);
             evapLayer = (coeffEvap[i-1] / sumCoeff) * residualEvaporation;
 
-            if (myCase->layers[i].waterContent > (evapLayerThreshold + evapLayer))
+            if (myCase->soilLayers[i].waterContent > (evapLayerThreshold + evapLayer))
                 isWaterSupply = true;
-            else if (myCase->layers[i].waterContent > evapLayerThreshold)
-                evapLayer = myCase->layers[i].waterContent - evapLayerThreshold;
+            else if (myCase->soilLayers[i].waterContent > evapLayerThreshold)
+                evapLayer = myCase->soilLayers[i].waterContent - evapLayerThreshold;
             else
                 evapLayer = 0.0;
 
-            myCase->layers[i].waterContent -= evapLayer;
+            myCase->soilLayers[i].waterContent -= evapLayer;
             sumEvap += evapLayer;
         }
 
@@ -193,14 +185,14 @@ bool computeEvaporation(CriteriaModel* myCase)
 double getSoilWaterDeficit(CriteriaModel* myCase)
 {
     // surface water content
-    double waterDeficit = -myCase->layers[0].waterContent;
+    double waterDeficit = -myCase->soilLayers[0].waterContent;
 
     for (unsigned int i = 1; i <= myCase->nrLayers; i++)
     {
-        if (myCase->layers[i].depth > 1)
+        if (myCase->soilLayers[i].depth > 1)
             return waterDeficit;
 
-        waterDeficit += myCase->layers[unsigned(i)].FC - myCase->layers[unsigned(i)].waterContent;
+        waterDeficit += myCase->soilLayers[unsigned(i)].FC - myCase->soilLayers[unsigned(i)].waterContent;
     }
 
     return waterDeficit;

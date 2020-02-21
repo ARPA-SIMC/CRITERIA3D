@@ -35,14 +35,14 @@
             void tabChanged(int index);
             bool checkIfCropIsChanged();
             bool checkIfMeteoIsChanged();
+
         private:
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
             Crit3DCrop* myCrop;
             QString tableMeteo;
             Crit3DMeteoPoint *meteoPoint;
-            int nrLayers;
-            int totalSoilDepth;
+            std::vector<soil::Crit3DLayer> soilLayers;
             bool cropChanged;
             bool meteoChanged;
 
