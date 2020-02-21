@@ -95,8 +95,8 @@
             long nrObsDataDaysD;
             long nrObsDataDaysM;
 
-            TObsDataD *obsDataD;
-            TObsDataM *obsDataM;
+            std::vector<TObsDataD> obsDataD;
+            std::vector<TObsDataM> obsDataM;
             quality::qualityType quality;
             float currentValue;
             float residual;
@@ -125,14 +125,12 @@
             bool isDateIntervalLoadedH(const Crit3DTime& time1, const Crit3DTime& time2);
             float obsDataConsistencyH(meteoVariable myVar, const Crit3DTime& time1, const Crit3DTime& time2);
 
-            void initializeObsDataD(int numberOfDays, const Crit3DDate& firstDate);
+            void initializeObsDataD(unsigned int numberOfDays, const Crit3DDate& firstDate);
             void emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
-            void cleanObsDataD();
             bool isDateLoadedD(const Crit3DDate& myDate);
             bool isDateIntervalLoadedD(const Crit3DDate& date1, const Crit3DDate& date2);
 
-            void initializeObsDataM(int numberOfMonths, int month, int year);
-            void cleanObsDataM();
+            void initializeObsDataM(unsigned int numberOfMonths, unsigned int month, int year);
 
             bool existDailyData(const Crit3DDate& myDate);
 

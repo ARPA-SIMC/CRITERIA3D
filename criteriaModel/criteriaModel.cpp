@@ -118,6 +118,7 @@ bool CriteriaModel::setSoil(QString soilCode, QString *myError)
     if (! loadSoil(&dbSoil, soilCode, &mySoil, soilTexture, &fittingOptions, myError))
         return false;
 
+    soilLayers.clear();
     soilLayers = soil::getRegularSoilLayers(&mySoil, layerThickness);
     nrLayers = unsigned(soilLayers.size());
 

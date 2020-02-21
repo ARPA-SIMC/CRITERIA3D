@@ -60,8 +60,6 @@ Crit3DMeteoPoint::Crit3DMeteoPoint()
     this->hourlyFraction = 1;
 
     this->obsDataH = nullptr;
-    this->obsDataD = nullptr;
-    this->obsDataM = nullptr;
 
     this->currentValue = NODATA;
     this->residual = NODATA;
@@ -95,7 +93,7 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
     obsDataH = new TObsDataH[unsigned(numberOfDays)];
 
     Crit3DDate myDate = firstDate;
-    for (int i = 0; i < numberOfDays; i++)
+    for (unsigned int i = 0; i < numberOfDays; i++)
     {
         obsDataH[i].date = myDate;
         obsDataH[i].tAir = new float[nrDailyValues];
@@ -133,18 +131,17 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
 }
 
 
-void Crit3DMeteoPoint::initializeObsDataD(int numberOfDays, const Crit3DDate& firstDate)
+void Crit3DMeteoPoint::initializeObsDataD(unsigned int numberOfDays, const Crit3DDate& firstDate)
 {
-    this->cleanObsDataD();
-
+    obsDataD.clear();
+    obsDataD.resize(numberOfDays);
     nrObsDataDaysD = numberOfDays;
-    obsDataD = new TObsDataD[unsigned(numberOfDays)];
 
     quality = quality::missing_data;
     residual = NODATA;
 
     Crit3DDate myDate = firstDate;
-    for (int i = 0; i < numberOfDays; i++)
+    for (unsigned int i = 0; i < numberOfDays; i++)
     {
         obsDataD[i].date = myDate;
         obsDataD[i].tMax = NODATA;
@@ -168,18 +165,17 @@ void Crit3DMeteoPoint::initializeObsDataD(int numberOfDays, const Crit3DDate& fi
     }
 }
 
-void Crit3DMeteoPoint::initializeObsDataM(int numberOfMonths, int month, int year)
+void Crit3DMeteoPoint::initializeObsDataM(unsigned int numberOfMonths, unsigned int month, int year)
 {
-    this->cleanObsDataM();
-
+    obsDataM.clear();
+    obsDataM.resize(numberOfMonths);
     nrObsDataDaysM = numberOfMonths;
-    obsDataM = new TObsDataM[unsigned(numberOfMonths)];
 
     quality = quality::missing_data;
     residual = NODATA;
     int addYear = -1;
 
-    for (int i = month; i <= numberOfMonths; i++)
+    for (unsigned int i = month; i <= numberOfMonths; i++)
     {
         if (i < 12)
         {
@@ -216,7 +212,7 @@ void Crit3DMeteoPoint::emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& m
     int i = obsDataH[0].date.daysTo(myDate);
     residual = NODATA;
 
-    if (i>=0 && i<nrObsDataDaysH)
+    if (i >= 0 && i < nrObsDataDaysH)
         if (obsDataH[i].date == myDate)
             for (int j = 0; j < nrDayValues; j++)
             {
@@ -325,7 +321,7 @@ void Crit3DMeteoPoint::emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& d
     int indexFin = obsDataD[0].date.daysTo(date2);
     residual = NODATA;
 
-    for (int i = indexIni; i <= indexFin; i++)
+    for (unsigned int i = indexIni; i <= indexFin; i++)
         if (myVar == dailyAirTemperatureMax)
             obsDataD[i].tMax = NODATA;
         else if (myVar == dailyAirTemperatureMin)
@@ -367,7 +363,7 @@ void Crit3DMeteoPoint::emptyObsDataD(const Crit3DDate& date1, const Crit3DDate& 
     int indexIni = obsDataH[0].date.daysTo(date1);
     int indexFin = obsDataH[0].date.daysTo(date2);
 
-    for (int i = indexIni; i <= indexFin; i++)
+    for (unsigned int i = indexIni; i <= indexFin; i++)
     {
         obsDataD[i].tMax = NODATA;
         obsDataD[i].tMin = NODATA;
@@ -413,11 +409,11 @@ bool Crit3DMeteoPoint::isDateIntervalLoadedH(const Crit3DDate& date1, const Crit
 bool Crit3DMeteoPoint::isDateLoadedD(const Crit3DDate& myDate)
 {
     if (nrObsDataDaysD == 0)
-        return (false);
-    else if (myDate < obsDataD->date || myDate > (obsDataD->date.addDays(nrObsDataDaysD - 1)))
-        return (false);
+        return false;
+    else if (myDate < obsDataD[0].date || myDate > obsDataD[unsigned(nrObsDataDaysD-1)].date)
+        return false;
     else
-        return (true);
+        return true;
 }
 
 bool Crit3DMeteoPoint::isDateIntervalLoadedD(const Crit3DDate& date1, const Crit3DDate& date2)
@@ -426,8 +422,8 @@ bool Crit3DMeteoPoint::isDateIntervalLoadedD(const Crit3DDate& date1, const Crit
         return false;
     else if (date1 > date2)
         return false;
-    else if (date1 < obsDataD->date || date2 > (obsDataD->date.addDays(nrObsDataDaysD - 1)))
-        return (false);
+    else if (date1 < obsDataD[0].date || date2 > obsDataD[unsigned(nrObsDataDaysD-1)].date)
+        return false;
     else
         return (true);
 }
@@ -502,21 +498,6 @@ void Crit3DMeteoPoint::cleanObsDataH()
 }
 
 
-void Crit3DMeteoPoint::cleanObsDataD()
-{
-    quality = quality::missing_data;
-
-    if (nrObsDataDaysD > 0)
-        delete [] obsDataD;
-}
-
-void Crit3DMeteoPoint::cleanObsDataM()
-{
-    quality = quality::missing_data;
-
-    if (nrObsDataDaysM > 0)
-        delete [] obsDataM;
-}
 
 bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue)
 {
@@ -609,9 +590,10 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
 
 bool Crit3DMeteoPoint::setMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, float myValue)
 {
+    long index = obsDataD[0].date.daysTo(myDate);
+    if ((index < 0) || (index >= nrObsDataDaysD)) return false;
 
-    long i = obsDataD[0].date.daysTo(myDate);
-    if ((i <0) || (i >= nrObsDataDaysD)) return false;
+    unsigned i = unsigned(index);
 
     if (myVar == dailyAirTemperatureMax)
         obsDataD[i].tMax = myValue;
@@ -744,7 +726,7 @@ bool Crit3DMeteoPoint::getMeteoPointValueDayH(const Crit3DDate& myDate, TObsData
 
 bool Crit3DMeteoPoint::existDailyData(const Crit3DDate& myDate)
 {
-    if (obsDataD == nullptr) return false;
+    if (obsDataD.size() == 0) return false;
 
     int index = obsDataD[0].date.daysTo(myDate);
 
@@ -759,10 +741,12 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate& myDate, meteoVaria
 {
     //check
     if (myVar == noMeteoVar) return NODATA;
-    if (obsDataD == nullptr) return NODATA;
+    if (nrObsDataDaysD == 0) return NODATA;
 
-    int i = obsDataD[0].date.daysTo(myDate);
-    if ((i < 0) || (i >= nrObsDataDaysD)) return NODATA;
+    int index = obsDataD[0].date.daysTo(myDate);
+    if ((index < 0) || (index >= nrObsDataDaysD)) return NODATA;
+
+    unsigned i = unsigned(index);
 
     if (myVar == dailyAirTemperatureMax)
         return (obsDataD[i].tMax);
