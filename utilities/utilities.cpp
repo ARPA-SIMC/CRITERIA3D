@@ -417,3 +417,30 @@ bool searchDocPath(QString* docPath)
     return true;
 }
 
+
+bool searchDataPath(QString* dataPath)
+{
+    QString myPath = QDir::currentPath();
+    QString myRoot = QDir::rootPath();
+
+    bool isFound = false;
+    while (! isFound)
+    {
+        if (QDir(myPath + "/DATA").exists())
+        {
+            isFound = true;
+            break;
+        }
+
+        if (QDir::cleanPath(myPath) == myRoot)
+            break;
+
+        myPath = QFileInfo(myPath).dir().absolutePath();
+    }
+
+    if (! isFound) return false;
+
+    *dataPath = QDir::cleanPath(myPath) + "/DATA/";
+    return true;
+}
+
