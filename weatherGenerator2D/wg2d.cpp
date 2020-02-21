@@ -892,9 +892,30 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         {
             counterConvergence++;
         }
-        if (counterConvergence > 20)
+        if (counterConvergence > 30)
         {
-            if (val <= fabs(minimalValueToExitFromCycle) + TOLERANCE_MULGETS) return;
+            if (val <= fabs(minimalValueToExitFromCycle) + TOLERANCE_MULGETS)
+            {
+                for (int i=0;i<nrStations;i++)
+                {
+                    free(dummyMatrix[i]);
+                    free(dummyMatrix2[i]);
+                    free(dummyMatrix3[i]);
+                    free(normRandom[i]);
+
+                }
+
+
+                 free(dummyMatrix);
+                 free(dummyMatrix2);
+                 free(dummyMatrix3);
+                 free(correlationArray);
+                 free(eigenvalues);
+                 free(eigenvectors);
+                 free(normRandom);
+
+                return;
+            }
         }
         for (int i=0; i<nrStations;i++)
         {
