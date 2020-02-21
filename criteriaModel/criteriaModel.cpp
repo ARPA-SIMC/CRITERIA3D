@@ -267,7 +267,7 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
         float previousTmin = NODATA;
         float previousTmax = NODATA;
         long lastObservedIndex = long(firstObsDate.daysTo(lastObsDate));
-        for (long i = lastObservedIndex; i < meteoPoint.nrObsDataDaysD; i++)
+        for (unsigned long i = lastObservedIndex; i < meteoPoint.nrObsDataDaysD; i++)
         {
             // tmin
             if (int(meteoPoint.obsDataD[i].tMin) != int(NODATA))
@@ -286,7 +286,7 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
     // fill watertable (all data)
     // estende il dato precedente se mancante
     float previousWatertable = NODATA;
-    for (long i = 0; i < meteoPoint.nrObsDataDaysD; i++)
+    for (unsigned long i = 0; i < meteoPoint.nrObsDataDaysD; i++)
     {
         // watertable
         if (int(meteoPoint.obsDataD[i].waterTable) != int(NODATA))
@@ -307,7 +307,7 @@ void CriteriaModel::initializeSeasonalForecast(const Crit3DDate& firstDate, cons
         if (seasonalForecasts != nullptr) free(seasonalForecasts);
 
         nrSeasonalForecasts = lastDate.year - firstDate.year +1;
-        seasonalForecasts = (double*) calloc(unsigned(nrSeasonalForecasts), sizeof(double));
+        seasonalForecasts = new double[unsigned(nrSeasonalForecasts)];
         for (int i = 0; i < nrSeasonalForecasts; i++)
             seasonalForecasts[i] = NODATA;
     }
