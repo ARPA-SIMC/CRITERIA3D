@@ -437,7 +437,6 @@ bool searchDataPath(QString* dataPath)
 
         myPath = QFileInfo(myPath).dir().absolutePath();
     }
-
     if (! isFound) return false;
 
     *dataPath = QDir::cleanPath(myPath) + "/DATA/";
