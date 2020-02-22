@@ -396,7 +396,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
         QMessageBox::critical(nullptr, "Error DB crop", error);
         return;
     }
-/*
+
     // read crop list
     QStringList cropStringList;
     if (! getCropNameList(&dbCrop, &cropStringList, &error))
@@ -411,7 +411,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
     {
         this->cropListComboBox.addItem(cropStringList[i]);
     }
-*/
+
     saveChanges->setEnabled(true);
     saveButton->setEnabled(true);
     updateButton->setEnabled(true);
@@ -477,6 +477,11 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
 
 void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 {
+
+    if (cropName.isEmpty())
+    {
+        return;
+    }
     if (checkIfCropIsChanged())
     {
         QString idCropChanged = QString::fromStdString(myCrop->idCrop);
@@ -597,6 +602,11 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 
 void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
 {
+
+    if (idMeteo.isEmpty())
+    {
+        return;
+    }
     QString error, lat, lon;
 
     if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
