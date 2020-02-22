@@ -119,7 +119,11 @@
             void emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
             void emptyObsDataH(const Crit3DDate& date1, const Crit3DDate& date2);
             void emptyObsDataD(const Crit3DDate& date1, const Crit3DDate& date2);
+
             void cleanObsDataH();
+            void cleanObsDataD();
+            void cleanObsDataM();
+
             bool isDateLoadedH(const Crit3DDate& myDate);
             bool isDateIntervalLoadedH(const Crit3DDate& date1, const Crit3DDate& date2);
             bool isDateIntervalLoadedH(const Crit3DTime& time1, const Crit3DTime& time2);

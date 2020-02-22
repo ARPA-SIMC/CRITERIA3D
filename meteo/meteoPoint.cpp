@@ -498,6 +498,21 @@ void Crit3DMeteoPoint::cleanObsDataH()
 }
 
 
+void Crit3DMeteoPoint::cleanObsDataD()
+{
+    quality = quality::missing_data;
+
+    obsDataD.clear();
+}
+
+void Crit3DMeteoPoint::cleanObsDataM()
+{
+    quality = quality::missing_data;
+
+    obsDataM.clear();
+}
+
+
 
 bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue)
 {
