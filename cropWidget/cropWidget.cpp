@@ -384,6 +384,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
 
         }
     }
+
     QString dbCropName = QFileDialog::getOpenFileName(this, tr("Open crop database"), "", tr("SQLite files (*.db)"));
     if (dbCropName == "")
     {
@@ -397,7 +398,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
         QMessageBox::critical(nullptr, "Error DB crop", error);
         return;
     }
-
+/*
     // read crop list
     QStringList cropStringList;
     if (! getCropNameList(&dbCrop, &cropStringList, &error))
@@ -412,7 +413,7 @@ void Crit3DCropWidget::on_actionOpenCropDB()
     {
         this->cropListComboBox.addItem(cropStringList[i]);
     }
-
+*/
     saveChanges->setEnabled(true);
     saveButton->setEnabled(true);
     updateButton->setEnabled(true);
