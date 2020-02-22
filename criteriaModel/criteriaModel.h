@@ -88,7 +88,7 @@
         // SOIL
         soil::Crit3DSoil mySoil;
         soil::Crit3DTextureClass soilTexture[13];
-        std::vector<soil::Crit3DLayer> layers;
+        std::vector<soil::Crit3DLayer> soilLayers;
         soil::Crit3DFittingOptions fittingOptions;
         unsigned int nrLayers;
         double layerThickness;                  /*!<  [m]  */

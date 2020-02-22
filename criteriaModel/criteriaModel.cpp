@@ -118,55 +118,11 @@ bool CriteriaModel::setSoil(QString soilCode, QString *myError)
     if (! loadSoil(&dbSoil, soilCode, &mySoil, soilTexture, &fittingOptions, myError))
         return false;
 
-    // nr of layers (round check the center of last layers)
-    double nrLayersDouble = mySoil.totalDepth / this->layerThickness;
-    nrLayers = unsigned(round(nrLayersDouble)) + 1;
+    soilLayers.clear();
+    soilLayers = soil::getRegularSoilLayers(&mySoil, layerThickness);
+    nrLayers = unsigned(soilLayers.size());
 
-    // alloc memory for layers
-    layers.clear();
-    layers.resize(unsigned(nrLayers));
-
-    double hygroscopicHumidity;
-    unsigned int horizonIndex;
-    double currentDepth;
-
-    // initialize layers
-    layers[0].depth = 0.0;
-    layers[0].thickness = 0.0;
-
-    currentDepth = layerThickness / 2.0;
-    for (unsigned int i = 1; i < nrLayers; i++)
-    {
-        horizonIndex = soil::getHorizonIndex(&(mySoil), currentDepth);
-
-        layers[i].horizon = &(mySoil.horizon[horizonIndex]);
-
-        layers[i].soilFraction = (1.0 - layers[i].horizon->coarseFragments);    // [-]
-
-        // TODO geometric layers
-        layers[i].depth = currentDepth;                              // [m]
-        layers[i].thickness = this->layerThickness;                  // [m]
-
-        //[mm]
-        layers[i].SAT = mySoil.horizon[horizonIndex].vanGenuchten.thetaS * layers[i].soilFraction * layers[i].thickness * 1000.0;
-
-        //[mm]
-        layers[i].FC = mySoil.horizon[horizonIndex].waterContentFC * layers[i].soilFraction * layers[i].thickness * 1000.0;
-        layers[i].critical = layers[i].FC;
-
-        //[mm]
-        layers[i].WP = mySoil.horizon[horizonIndex].waterContentWP * layers[i].soilFraction * layers[i].thickness * 1000.0;
-
-        // hygroscopic humidity: -2000 kPa
-        hygroscopicHumidity = soil::thetaFromSignPsi(-2000, &(mySoil.horizon[horizonIndex]));
-
-        //[mm]
-        layers[i].HH = hygroscopicHumidity * layers[i].soilFraction * layers[i].thickness * 1000.0;
-
-        currentDepth += layers[i].thickness;              //[m]
-    }
-
-    return(true);
+    return true;
 }
 
 
@@ -311,7 +267,7 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
         float previousTmin = NODATA;
         float previousTmax = NODATA;
         long lastObservedIndex = long(firstObsDate.daysTo(lastObsDate));
-        for (long i = lastObservedIndex; i < meteoPoint.nrObsDataDaysD; i++)
+        for (unsigned long i = lastObservedIndex; i < meteoPoint.nrObsDataDaysD; i++)
         {
             // tmin
             if (int(meteoPoint.obsDataD[i].tMin) != int(NODATA))
@@ -330,7 +286,7 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
     // fill watertable (all data)
     // estende il dato precedente se mancante
     float previousWatertable = NODATA;
-    for (long i = 0; i < meteoPoint.nrObsDataDaysD; i++)
+    for (unsigned long i = 0; i < meteoPoint.nrObsDataDaysD; i++)
     {
         // watertable
         if (int(meteoPoint.obsDataD[i].waterTable) != int(NODATA))
@@ -351,7 +307,7 @@ void CriteriaModel::initializeSeasonalForecast(const Crit3DDate& firstDate, cons
         if (seasonalForecasts != nullptr) free(seasonalForecasts);
 
         nrSeasonalForecasts = lastDate.year - firstDate.year +1;
-        seasonalForecasts = (double*) calloc(unsigned(nrSeasonalForecasts), sizeof(double));
+        seasonalForecasts = new double[unsigned(nrSeasonalForecasts)];
         for (int i = 0; i < nrSeasonalForecasts; i++)
             seasonalForecasts[i] = NODATA;
     }
@@ -392,17 +348,17 @@ void CriteriaModel::prepareOutput(Crit3DDate myDate, bool isFirst)
 {
     if (isFirst)
     {
-        this->outputString = "INSERT INTO '" + this->idCase + "'"
+        outputString = "INSERT INTO '" + this->idCase + "'"
             + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, RAW, DEFICIT, DRAINAGE, RUNOFF, ET0,"
             + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOTDEPTH) "
             + " VALUES ";
     }
     else
     {
-        this->outputString += ",";
+        outputString += ",";
     }
 
-    this->outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
+    outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
             + "," + QString::number(this->output.dailyPrec, 'g', 4)
             + "," + QString::number(this->output.dailyIrrigation, 'g', 4)
             + "," + QString::number(this->output.dailySoilWaterContent, 'g', 5)
@@ -425,7 +381,8 @@ void CriteriaModel::prepareOutput(Crit3DDate myDate, bool isFirst)
 
 bool CriteriaModel::saveOutput(QString* myError)
 {
-    QSqlQuery myQuery = this->dbOutput.exec(this->outputString);
+    QSqlQuery myQuery = dbOutput.exec(outputString);
+    outputString.clear();
 
     if (myQuery.lastError().type() != QSqlError::NoError)
     {

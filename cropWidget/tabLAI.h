@@ -16,7 +16,7 @@
         Q_OBJECT
     public:
         TabLAI();
-        void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, int nrLayers, double totalSoilDepth, int currentDoy);
+        void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer>& soilLayers);
     private:
         int year;
         Crit3DChartView *chartView;

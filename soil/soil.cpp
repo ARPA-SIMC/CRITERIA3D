@@ -612,7 +612,7 @@ namespace soil
     {
         // surface 2%
         if (upperDepth == 0.0) return 0.02;
-        // first layers 1%
+        // first layer 1%
         if (upperDepth > 0 && upperDepth < 0.5) return 0.01;
         // sub-surface 0.5%
         return MINIMUM_ORGANIC_MATTER;
@@ -893,6 +893,56 @@ namespace soil
     {
         return (first.water_potential < second.water_potential);
     }
+
+
+    // TODO geometric soil Layers
+    std::vector<soil::Crit3DLayer> getRegularSoilLayers(soil::Crit3DSoil* mySoil, double layerThickness)
+    {
+        // nr of layers (round check the center of last layer)
+        double nrLayersDouble = mySoil->totalDepth / layerThickness;
+        unsigned int nrLayers = unsigned(round(nrLayersDouble)) + 1;
+
+        // initialize soilLayers
+        std::vector<soil::Crit3DLayer> soilLayers;
+        soilLayers.resize(unsigned(nrLayers));
+
+        // layer 0: surface
+        soilLayers[0].depth = 0.0;
+        soilLayers[0].thickness = 0.0;
+
+        double currentDepth = layerThickness / 2;
+        for (unsigned int i = 1; i < nrLayers; i++)
+        {
+            unsigned horizonIndex = unsigned(soil::getHorizonIndex(mySoil, currentDepth));
+
+            soilLayers[i].horizon = &(mySoil->horizon[horizonIndex]);
+
+            // [-]
+            soilLayers[i].soilFraction = (1.0 - soilLayers[i].horizon->coarseFragments);
+
+            // [m]
+            soilLayers[i].depth = currentDepth;
+            soilLayers[i].thickness = layerThickness;
+
+            // [mm]
+            soilLayers[i].SAT = mySoil->horizon[horizonIndex].vanGenuchten.thetaS * soilLayers[i].soilFraction * soilLayers[i].thickness * 1000;
+            soilLayers[i].FC = mySoil->horizon[horizonIndex].waterContentFC * soilLayers[i].soilFraction * soilLayers[i].thickness * 1000;
+            soilLayers[i].critical = soilLayers[i].FC;
+            soilLayers[i].WP = mySoil->horizon[horizonIndex].waterContentWP * soilLayers[i].soilFraction * soilLayers[i].thickness * 1000;
+
+            // hygroscopic humidity: volumetric water content at -2000 kPa
+            double hygroscopicHumidity = soil::thetaFromSignPsi(-2000, &(mySoil->horizon[horizonIndex]));
+
+            // [mm]
+            soilLayers[i].HH = hygroscopicHumidity * soilLayers[i].soilFraction * soilLayers[i].thickness * 1000;
+
+            // [m]
+            currentDepth += soilLayers[i].thickness;
+        }
+
+        return soilLayers;
+    }
+
 }
 
 
