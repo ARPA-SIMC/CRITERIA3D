@@ -280,7 +280,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
                 double waterTableThreshold = 0.2;
 
                 if (isWaterSurplusResistant()
-                        || int(waterTableDepth) == int(NODATA)
+                        || isEqual(waterTableDepth, NODATA)
                         || waterTableDepth >= waterTableThreshold)
                 {
                     isLiving = true;
@@ -465,7 +465,6 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
 
     // initialize
     unsigned int nrLayers = unsigned(soilLayers.size());
-    layerTranspiration.resize(nrLayers);
     bool* isLayerStressed = new bool[nrLayers];
     for (unsigned int i = 0; i < nrLayers; i++)
     {
