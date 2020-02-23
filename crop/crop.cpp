@@ -568,6 +568,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
         totalTranspiration += layerTranspiration[unsigned(i)];
     }
 
+    delete[] isLayerStressed;
     return totalTranspiration;
 }
 
