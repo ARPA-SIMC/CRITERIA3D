@@ -12,6 +12,7 @@
     bool getYearList(QSqlDatabase* dbMeteo, QString table, QStringList* yearList, QString *error);
     bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *error);
     bool updateLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString lat, QString lon, QString *error);
+    bool updateLatFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString lat, QString *error);
     QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *error);
 
     bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *error);

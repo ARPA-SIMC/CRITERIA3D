@@ -20,8 +20,10 @@
             void on_actionOpenCropDB();
             void on_actionChooseCrop(QString cropName);
             void on_actionOpenMeteoDB();
+            void on_actionOpenSoilDB();
             void on_actionChooseMeteo(QString idMeteo);
             void on_actionChooseYear(QString year);
+            void on_actionChooseSoil(QString soilCode);
             void on_actionDeleteCrop();
             void on_actionRestoreData();
             void on_actionNewCrop();
@@ -39,7 +41,10 @@
         private:
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
+            QSqlDatabase dbSoil;
             Crit3DCrop* myCrop;
+            soil::Crit3DSoil mySoil;
+            soil::Crit3DTextureClass textureClassList[13];
             QString tableMeteo;
             Crit3DMeteoPoint *meteoPoint;
             std::vector<soil::Crit3DLayer> soilLayers;
@@ -48,10 +53,12 @@
 
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;
+            QGroupBox *infoSoilGroup;
             QGroupBox *laiParametersGroup;
             QGroupBox *rootParametersGroup;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
+            QComboBox soilListComboBox;
             QComboBox yearListComboBox;
             QLineEdit* cropIdValue;
             QLineEdit* cropTypeValue;
@@ -61,7 +68,6 @@
             QSpinBox *cropSowingValue;
             QSpinBox* cropCycleMaxValue;
             QDoubleSpinBox* latValue;
-            QDoubleSpinBox* lonValue;
             QDoubleSpinBox* LAIminValue;
             QDoubleSpinBox* LAImaxValue;
             QLabel *LAIgrass;

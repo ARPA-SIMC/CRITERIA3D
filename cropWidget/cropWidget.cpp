@@ -26,6 +26,7 @@
 #include "dialogNewCrop.h"
 #include "cropDbTools.h"
 #include "dbMeteoCriteria1D.h"
+#include "soilDbTools.h"
 #include "utilities.h"
 #include "commonConstants.h"
 
@@ -53,6 +54,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     QVBoxLayout *infoLayout = new QVBoxLayout();
     QGridLayout *cropInfoLayout = new QGridLayout();
     QGridLayout *meteoInfoLayout = new QGridLayout();
+    QHBoxLayout *soilInfoLayout = new QHBoxLayout();
     QGridLayout *parametersLaiLayout = new QGridLayout();
     QGridLayout *parametersRootDepthLayout = new QGridLayout();
 
@@ -112,6 +114,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
+    infoSoilGroup = new QGroupBox(tr(""));
     laiParametersGroup = new QGroupBox(tr(""));
     rootParametersGroup = new QGroupBox(tr(""));
 
@@ -122,6 +125,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     infoCropGroup->setTitle("Crop");
     infoMeteoGroup->setTitle("Meteo");
+    infoSoilGroup->setTitle("Soil");
     laiParametersGroup->setTitle("LAI parameters");
     rootParametersGroup->setTitle("root parameters");
 
@@ -146,20 +150,14 @@ Crit3DCropWidget::Crit3DCropWidget()
     latValue->setMaximum(90);
     latValue->setDecimals(3);
 
-    QLabel *lon = new QLabel(tr("longitude: "));
-    lonValue = new QDoubleSpinBox();
-    lonValue->setMinimum(-180);
-    lonValue->setMaximum(180);
-    lonValue->setDecimals(3);
-
     meteoInfoLayout->addWidget(meteoName, 0, 0);
     meteoInfoLayout->addWidget(&meteoListComboBox, 0, 1);
     meteoInfoLayout->addWidget(meteoYear, 1, 0);
     meteoInfoLayout->addWidget(&yearListComboBox, 1, 1);
     meteoInfoLayout->addWidget(lat, 2, 0);
     meteoInfoLayout->addWidget(latValue, 2, 1);
-    meteoInfoLayout->addWidget(lon, 3, 0);
-    meteoInfoLayout->addWidget(lonValue, 3, 1);
+
+    soilInfoLayout->addWidget(&soilListComboBox);
 
     QLabel *LAImin = new QLabel(tr("LAI min [m2 m-2]: "));
     LAIminValue = new QDoubleSpinBox();
@@ -282,11 +280,13 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     infoCropGroup->setLayout(cropInfoLayout);
     infoMeteoGroup->setLayout(meteoInfoLayout);
+    infoSoilGroup->setLayout(soilInfoLayout);
     laiParametersGroup->setLayout(parametersLaiLayout);
     rootParametersGroup->setLayout(parametersRootDepthLayout);
 
     infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(infoMeteoGroup);
+    infoLayout->addWidget(infoSoilGroup);
     infoLayout->addWidget(laiParametersGroup);
     infoLayout->addWidget(rootParametersGroup);
 
@@ -315,6 +315,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     QAction* openCropDB = new QAction(tr("&Open dbCrop"), this);
     QAction* openMeteoDB = new QAction(tr("&Open dbMeteo"), this);
+    QAction* openSoilDB = new QAction(tr("&Open dbSoil"), this);
     saveChanges = new QAction(tr("&Save Changes"), this);
 
     saveChanges->setEnabled(false);
@@ -325,6 +326,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     fileMenu->addAction(openCropDB);
     fileMenu->addAction(openMeteoDB);
+    fileMenu->addAction(openSoilDB);
     fileMenu->addAction(saveChanges);
 
     editMenu->addAction(newCrop);
@@ -342,6 +344,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(openMeteoDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenMeteoDB);
     connect(&meteoListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseMeteo);
     connect(&yearListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseYear);
+
+    connect(openSoilDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenSoilDB);
+    connect(&soilListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseSoil);
 
     connect(tabWidget, &QTabWidget::currentChanged, [=](int index){ this->tabChanged(index); });
 
@@ -469,6 +474,53 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
     {
         this->meteoListComboBox.addItem(idMeteoList[i]);
     }
+    saveChanges->setEnabled(true);
+    saveButton->setEnabled(true);
+    updateButton->setEnabled(true);
+}
+
+void Crit3DCropWidget::on_actionOpenSoilDB()
+{
+    QString dbSoilName = QFileDialog::getOpenFileName(this, tr("Open soil database"), "", tr("SQLite files (*.db)"));
+    if (dbSoilName == "") return;
+
+    // open soil db
+    QString error;
+    if (! openDbSoil(dbSoilName, &dbSoil, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        return;
+    }
+
+    // load default VG parameters
+    if (! loadVanGenuchtenParameters(&dbSoil, textureClassList, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        return;
+    }
+
+    // load default Driessen parameters
+    if (! loadDriessenParameters(&dbSoil, textureClassList, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        return;
+    }
+
+    // read soil list
+    QStringList soilStringList;
+    if (! getSoilList(&dbSoil, &soilStringList, &error))
+    {
+        QMessageBox::critical(nullptr, "Error!", error);
+        return;
+    }
+
+    // show soil list
+    this->soilListComboBox.clear();
+    for (int i = 0; i < soilStringList.size(); i++)
+    {
+        this->soilListComboBox.addItem(soilStringList[i]);
+    }
+
     saveChanges->setEnabled(true);
     saveButton->setEnabled(true);
     updateButton->setEnabled(true);
@@ -612,7 +664,6 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
     {
         latValue->setValue(lat.toDouble());
-        lonValue->setValue(lon.toDouble());
     }
 
     tableMeteo = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);
@@ -661,7 +712,6 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
     }
     meteoPoint = new Crit3DMeteoPoint();
     meteoPoint->latitude = latValue->value();
-    meteoPoint->longitude = lonValue->value();
 
     // init meteoPoint with 2 years
     int firstYear = year.toInt()-1;
@@ -687,6 +737,35 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
     }
 
 }
+
+void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
+{
+    // soilListComboBox has been cleared
+    if (soilCode.isEmpty())
+    {
+        return;
+    }
+
+    QString error;
+    mySoil.cleanSoil();
+    // TO DO
+/*
+    if (! loadSoil(&dbSoil, soilCode, &mySoil, textureClassList, fittingOptions, &error))
+    {
+        if (error.contains("Empty"))
+        {
+            QMessageBox::information(nullptr, "Warning", error);
+        }
+        else
+        {
+            QMessageBox::critical(nullptr, "Error!", error);
+            return;
+        }
+
+    }
+    */
+}
+
 
 
 void Crit3DCropWidget::on_actionDeleteCrop()
@@ -760,7 +839,7 @@ bool Crit3DCropWidget::saveCrop()
 bool Crit3DCropWidget::saveMeteo()
 {
     QString error;
-    if (!updateLatLonFromIdMeteo(&dbMeteo, meteoListComboBox.currentText(), latValue->text(), lonValue->text(), &error))
+    if (!updateLatFromIdMeteo(&dbMeteo, meteoListComboBox.currentText(), latValue->text(), &error))
     {
         QMessageBox::critical(nullptr, "UpDate meteo failed!", error);
         return false;
@@ -847,7 +926,6 @@ bool Crit3DCropWidget::updateMeteoPoint()
         return false;
     }
     meteoPoint->latitude = latValue->value();
-    meteoPoint->longitude = lonValue->value();
 
     meteoChanged = true;
     return true;
@@ -955,7 +1033,7 @@ bool Crit3DCropWidget::checkIfMeteoIsChanged()
     {
         meteoChanged = false;
     }
-    if (meteoPoint->latitude != latValue->value() || meteoPoint->longitude != lonValue->value())
+    if (meteoPoint->latitude != latValue->value())
     {
         meteoChanged = true;
         saveChanges->setEnabled(meteoChanged);
