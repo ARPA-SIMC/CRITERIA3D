@@ -27,6 +27,7 @@ TabRootDepth::TabRootDepth()
     series->attachAxis(axisX);
 
     axisY->setTitleText("Depth  [m]");
+    axisY->setReverse(true);
     axisY->setRange(0,2);
     axisY->setTickCount(5);
     chart->addAxis(axisY, Qt::AlignLeft);
@@ -76,7 +77,12 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
         if (myDate.year == year)
         {
             x.setDate(QDate(myDate.year, myDate.month, myDate.day));
-            series->append(x.toMSecsSinceEpoch(), myCrop->LAI);
+            if (myCrop->roots.rootDepthMin != NODATA)
+            {
+                axisY->setMin(myCrop->roots.rootDepthMin);
+                series->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepth);
+            }
+
         }
     }
 

@@ -34,6 +34,7 @@
             bool updateCrop();
             bool updateMeteoPoint();
             void updateTabLAI();
+            void updateTabRootDepth();
             void tabChanged(int index);
             bool checkIfCropIsChanged();
             bool checkIfMeteoIsChanged();

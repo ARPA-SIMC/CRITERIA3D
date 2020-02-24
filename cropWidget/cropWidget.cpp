@@ -645,7 +645,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
 
     if (meteoPoint != nullptr && !yearListComboBox.currentText().isEmpty())
     {
-        updateTabLAI();
+        on_actionUpdate();
     }
     saveChanges->setEnabled(true);
     saveButton->setEnabled(true);
@@ -734,7 +734,7 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
     }
     if (myCrop != nullptr)
     {
-        updateTabLAI();
+        on_actionUpdate();
     }
 
 }
@@ -860,6 +860,10 @@ void Crit3DCropWidget::on_actionUpdate()
     if (!yearListComboBox.currentText().isEmpty())
     {
         updateTabLAI();
+        if (!mySoil.code.empty())
+        {
+            updateTabRootDepth();
+        }
     }
 
 }
@@ -964,6 +968,14 @@ void Crit3DCropWidget::updateTabLAI()
     }
 }
 
+void Crit3DCropWidget::updateTabRootDepth()
+{
+    if (myCrop != nullptr && meteoPoint != nullptr)
+    {
+        tabRootDepth->computeRootDepth(myCrop, meteoPoint, yearListComboBox.currentText().toInt(), soilLayers);
+    }
+}
+
 void Crit3DCropWidget::tabChanged(int index)
 {
 
@@ -971,6 +983,7 @@ void Crit3DCropWidget::tabChanged(int index)
     {
         rootParametersGroup->hide();
         laiParametersGroup->setVisible(true);
+        updateTabLAI();
 
     }
     else if(index == 1) //root depth tab
@@ -983,6 +996,7 @@ void Crit3DCropWidget::tabChanged(int index)
         }
         laiParametersGroup->hide();
         rootParametersGroup->setVisible(true);
+        updateTabRootDepth();
     }
 }
 
