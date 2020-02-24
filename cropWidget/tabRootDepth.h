@@ -16,6 +16,7 @@
         Q_OBJECT
     public:
         TabRootDepth();
+        void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer> &soilLayers);
     private:
         int year;
         Crit3DChartView *chartView;
