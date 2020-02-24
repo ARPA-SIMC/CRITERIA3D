@@ -45,6 +45,8 @@
             Crit3DCrop* myCrop;
             soil::Crit3DSoil mySoil;
             soil::Crit3DTextureClass textureClassList[13];
+            soil::Crit3DFittingOptions fittingOptions;
+            double layerThickness;
             QString tableMeteo;
             Crit3DMeteoPoint *meteoPoint;
             std::vector<soil::Crit3DLayer> soilLayers;

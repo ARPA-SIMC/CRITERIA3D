@@ -337,6 +337,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     meteoPoint = nullptr;
     cropChanged = false;
     meteoChanged = false;
+    layerThickness = 0.02;
 
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
@@ -748,9 +749,8 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
 
     QString error;
     mySoil.cleanSoil();
-    // TO DO
-/*
-    if (! loadSoil(&dbSoil, soilCode, &mySoil, textureClassList, fittingOptions, &error))
+
+    if (! loadSoil(&dbSoil, soilCode, &mySoil, textureClassList, &fittingOptions, &error))
     {
         if (error.contains("Empty"))
         {
@@ -763,7 +763,8 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
         }
 
     }
-    */
+    soilLayers = getRegularSoilLayers(&mySoil, layerThickness);
+
 }
 
 
@@ -974,6 +975,12 @@ void Crit3DCropWidget::tabChanged(int index)
     }
     else if(index == 1) //root depth tab
     {
+        if (mySoil.code.empty())
+        {
+            QString msg = "Open a Db Soil";
+            QMessageBox::information(nullptr, "Warning", msg);
+            return;
+        }
         laiParametersGroup->hide();
         rootParametersGroup->setVisible(true);
     }
