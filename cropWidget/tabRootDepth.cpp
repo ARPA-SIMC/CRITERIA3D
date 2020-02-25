@@ -16,7 +16,7 @@ TabRootDepth::TabRootDepth()
     seriesRootDepth->setName("rooth depth");
     seriesRootDepth->setColor(QColor(Qt::red));
     seriesRootDepthMin = new QLineSeries();
-    seriesRootDepthMin->setName("rooth ini");
+    seriesRootDepthMin->setName("root depht zero");
     seriesRootDepthMin->setColor(QColor(Qt::blue));
     axisX = new QDateTimeAxis();
     axisY = new QValueAxis();
