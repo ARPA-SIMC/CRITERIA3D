@@ -35,8 +35,9 @@ TabRootDepth::TabRootDepth()
     seriesRootDepthMin->attachAxis(axisX);
 
     axisY->setTitleText("Depth  [m]");
-    axisY->setRange(0,6);
-    axisY->setTickCount(7);
+    axisY->setReverse(true);
+    axisY->setRange(0,2);
+    axisY->setTickCount(5);
     chart->addAxis(axisY, Qt::AlignLeft);
     seriesRootDepth->attachAxis(axisY);
     seriesRootDepthMin->attachAxis(axisY);
