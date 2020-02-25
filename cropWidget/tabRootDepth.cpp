@@ -1,5 +1,6 @@
 #include "tabRootDepth.h"
 #include "commonConstants.h"
+#include "utilities.h"
 #include <QMessageBox>
 
 
@@ -7,32 +8,35 @@ TabRootDepth::TabRootDepth()
 {
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
-    chart = new QChart();   
+    chart = new QChart();
     chartView = new Crit3DChartView(chart);
     chart->setTitle("Root Depth");
     chartView->setChart(chart);
-    series = new QLineSeries();
-    axisX = new QDateTimeAxis();
-    axisY = new QValueAxis();
-
+    series = new QStackedBarSeries();
+    rootDepth = new QBarSet("");
+    rootDepthMin = new QBarSet("");
     chart->addSeries(series);
+
+    series->append(rootDepth);
+    series->append(rootDepthMin);
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
-    axisX->setTitleText("Date");
-    axisX->setFormat("MMM dd");
-    axisX->setMin(QDateTime(first, QTime(0,0,0)));
-    axisX->setMax(QDateTime(last, QTime(0,0,0)));
-    axisX->setTickCount(13);
-    chart->addAxis(axisX, Qt::AlignBottom);
-    series->attachAxis(axisX);
+    QDate myDate;
+    for (myDate = first; myDate <= last; myDate=myDate.addDays(1))
+    {
+        categories << myDate.toString("MMM dd");
+    }
 
-    axisY->setTitleText("Depth  [m]");
+    axisX = new QBarCategoryAxis();
+    axisX->append(categories);
+    chart->addAxis(axisX, Qt::AlignBottom);
+    QValueAxis *axisY = new QValueAxis();
     axisY->setReverse(true);
     axisY->setRange(0,2);
-    axisY->setTickCount(5);
     chart->addAxis(axisY, Qt::AlignLeft);
     series->attachAxis(axisY);
-
+    chart->legend()->setVisible(false);
+    chartView->setRenderHint(QPainter::Antialiasing);
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
@@ -40,7 +44,15 @@ TabRootDepth::TabRootDepth()
 
 void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
-/*
+
+    categories.clear();
+    for (int i = 0; i<rootDepth->count(); i++)
+    {
+        rootDepth->remove(i);
+        rootDepthMin->remove(i);
+    }
+    chart->removeSeries(series);
+
     unsigned int nrLayers = unsigned(soilLayers.size());
     double totalSoilDepth = 0;
     if (nrLayers > 0) totalSoilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
@@ -57,10 +69,9 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
     double tmax;
     QDateTime x;
 
-    series->clear();
-
     int currentDoy = 1;
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
+
 
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
@@ -76,22 +87,20 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
         // display only current year
         if (myDate.year == year)
         {
-            x.setDate(QDate(myDate.year, myDate.month, myDate.day));
-            if (myCrop->roots.rootDepthMin != NODATA)
+            if (myCrop->roots.rootDepthMin != NODATA && myCrop->roots.rootDepth != NODATA)
             {
-                axisY->setMin(myCrop->roots.rootDepthMin);
-                series->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepth);
-            }
+                categories << (getQDate(myDate)).toString("MMM dd");
+                qDebug() << "date " << (getQDate(myDate)).toString("MMM dd");
+                qDebug() << "myCrop->roots.rootDepthMin" << myCrop->roots.rootDepthMin;
+                qDebug() << "myCrop->roots.rootDepth" << myCrop->roots.rootDepth;
+                *rootDepthMin << myCrop->roots.rootDepthMin;
+                *rootDepth << myCrop->roots.rootDepth;
 
+            }
         }
     }
 
-    // update x axis
-    QDate first(year, 1, 1);
-    QDate last(year, 12, 31);
-    axisX->setMin(QDateTime(first, QTime(0,0,0)));
-    axisX->setMax(QDateTime(last, QTime(0,0,0)));
-*/
+    chart->addSeries(series);
 }
 
 
