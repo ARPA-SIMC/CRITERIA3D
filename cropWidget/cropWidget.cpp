@@ -764,6 +764,7 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
 
     }
     soilLayers = getRegularSoilLayers(&mySoil, layerThickness);
+    on_actionUpdate();
 
 }
 

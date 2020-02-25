@@ -21,15 +21,10 @@
         int year;
         Crit3DChartView *chartView;
         QChart *chart;
-        //QLineSeries *series;
-        QStackedBarSeries* series;
-        QBarSet *rootDepth;
-        QBarSet *rootDepthMin;
-        QBarCategoryAxis *axisX;
+        QLineSeries *seriesRootDepth;
+        QLineSeries *seriesRootDepthMin;
+        QDateTimeAxis *axisX;
         QValueAxis *axisY;
-        QStringList categories;
-        //QDateTimeAxis *axisX;
-        //QValueAxis *axisY;
     };
 
 #endif // TABROOTDEPTH_H
