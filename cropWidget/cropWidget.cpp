@@ -358,6 +358,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(saveButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionSave);
     connect(updateButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionUpdate);
 
+
     //set current tab
     tabChanged(0);
 }
@@ -387,13 +388,22 @@ void Crit3DCropWidget::on_actionOpenCropDB()
             }
 
         }
+
     }
 
-    QString dbCropName = QFileDialog::getOpenFileName(this, tr("Open crop database"), "", tr("SQLite files (*.db)"));
-    if (dbCropName == "")
+    QString newCropName = QFileDialog::getOpenFileName(this, tr("Open crop database"), "", tr("SQLite files (*.db)"));
+
+    if (newCropName == "")
     {
         return;
     }
+    else
+    {
+        QFile::remove(dbCropName + "backup");
+        dbCropName = newCropName;
+    }
+    // copy to restore data
+    QFile::copy(dbCropName, dbCropName +"backup");
 
     // open crop db
     QString error;
@@ -1063,4 +1073,10 @@ bool Crit3DCropWidget::checkIfMeteoIsChanged()
         updateButton->setEnabled(meteoChanged);
     }
     return meteoChanged;
+}
+
+void Crit3DCropWidget::closeEvent(QCloseEvent *event)
+{
+    QFile::remove(dbCropName + "backup");
+    QWidget::closeEvent(event);
 }

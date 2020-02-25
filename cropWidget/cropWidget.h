@@ -43,6 +43,7 @@
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
             QSqlDatabase dbSoil;
+            QString dbCropName;
             Crit3DCrop* myCrop;
             soil::Crit3DSoil mySoil;
             soil::Crit3DTextureClass textureClassList[13];
@@ -96,6 +97,7 @@
 
             TabLAI* tabLAI;
             TabRootDepth* tabRootDepth;
+            void closeEvent(QCloseEvent *event);
 
     };
 
