@@ -17,7 +17,7 @@ TabRootDepth::TabRootDepth()
     seriesRootDepth->setColor(QColor(Qt::red));
     seriesRootDepthMin = new QLineSeries();
     seriesRootDepthMin->setName("root depht zero");
-    seriesRootDepthMin->setColor(QColor(Qt::blue));
+    seriesRootDepthMin->setColor(QColor(Qt::green));
     axisX = new QDateTimeAxis();
     axisY = new QValueAxis();
 
@@ -41,6 +41,9 @@ TabRootDepth::TabRootDepth()
     chart->addAxis(axisY, Qt::AlignLeft);
     seriesRootDepth->attachAxis(axisY);
     seriesRootDepthMin->attachAxis(axisY);
+
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
 
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
@@ -91,11 +94,6 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
             {
                 seriesRootDepthMin->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepthMin);
                 seriesRootDepth->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepth);
-            }
-            else
-            {
-                seriesRootDepthMin->append(x.toMSecsSinceEpoch(), 0);
-                seriesRootDepth->append(x.toMSecsSinceEpoch(), 0);
             }
         }
     }
