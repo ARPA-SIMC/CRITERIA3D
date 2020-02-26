@@ -58,7 +58,7 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError)
     }
 
     // set computation period (all meteo data)
-    Crit3DDate firstDate, lastDate;
+    Crit3DDate myDate, firstDate, lastDate;
     long lastIndex = myCase->meteoPoint.nrObsDataDaysD-1;
     firstDate = myCase->meteoPoint.obsDataD[0].date;
     lastDate = myCase->meteoPoint.obsDataD[lastIndex].date;
@@ -67,6 +67,29 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError)
         myCase->initializeSeasonalForecast(firstDate, lastDate);
 
     return computeModel(myCase, firstDate, lastDate, myError);
+
+
+    /*
+     * // initialize crop and soil water
+    initializeWater(myCase);
+    myCase->myCrop.initialize(myCase->meteoPoint.latitude, myCase->nrLayers, myCase->mySoil.totalDepth, getDoyFromDate(firstDate));
+
+    std::string errorString;
+    for (myDate = firstDate; myDate <= lastDate; ++myDate)
+    {
+        if (! computeDailyModel(myDate, &(myCase->meteoPoint), &(myCase->myCrop), &(myCase->soilLayers), &(myCase->output), &errorString))
+        {
+            *myError = QString::fromStdString(errorString);
+            return false;
+        }
+    }
+
+    if (! myCase->isSeasonalForecast)
+        if(! myCase->saveOutput(myError))
+            return false;
+
+    return true;
+    */
 }
 
 
@@ -276,6 +299,9 @@ bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCr
                        std::string *myError)
 {
     bool optimizeIrrigation = false;
+
+    // Initialize output
+    myOutput->initializeDaily();
     int doy = getDoyFromDate(myDate);
 
     // check daily meteo data
@@ -327,23 +353,23 @@ bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCr
     if (optimizeIrrigation) irrigation = MINVALUE(irrigation, myCrop->getCropWaterDeficit(*soilLayers));
 
     // assign irrigation
-    double irrigationAsPrec;
+    double sprayIrrigation;
     if (irrigation > 0)
     {
         if (optimizeIrrigation)
         {
             myOutput->dailyIrrigation = computeOptimalIrrigation(soilLayers, irrigation);
-            irrigationAsPrec = 0;
+            sprayIrrigation = 0;
         }
         else
         {
             myOutput->dailyIrrigation = irrigation;
-            irrigationAsPrec = irrigation;
+            sprayIrrigation = irrigation;
         }
     }
 
     // INFILTRATION
-    /*if (! computeInfiltration(myCase, prec, irrigationPrec))
+    /*if (! computeInfiltration(myCase, prec, sprayIrrigation))
         return false;
 
     // LATERAL DRAINAGE
