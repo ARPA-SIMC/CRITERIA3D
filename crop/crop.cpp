@@ -106,8 +106,6 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
 
     // initialize root depth
     roots.rootDepth = 0;
-    if (roots.rootDepthMax > totalSoilDepth)
-        roots.rootDepthMax = totalSoilDepth;
 
     degreeDays = 0;
 
