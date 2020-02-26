@@ -36,14 +36,12 @@ SOURCES += \
     dbMeteoCriteria1D.cpp \
     modelCore.cpp \
     water1D.cpp \
-    croppingSystem.cpp \
     criteriaModel.cpp
 
 HEADERS += \
     dbMeteoCriteria1D.h \
     modelCore.h \
     water1D.h \
-    croppingSystem.h \
     criteriaModel.h
 
 unix {

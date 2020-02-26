@@ -33,7 +33,6 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "criteriaModel.h"
-#include "croppingSystem.h"
 #include "cropDbTools.h"
 #include "water1D.h"
 #include "modelCore.h"
@@ -92,7 +91,7 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
 
     initializeWater(myCase);
 
-    initializeCrop(myCase, getDoyFromDate(firstDate));
+    myCase->myCrop.initialize(myCase->meteoPoint.latitude, myCase->nrLayers, myCase->mySoil.totalDepth, getDoyFromDate(firstDate));
 
     for (myDate = firstDate; myDate <= lastDate; ++myDate)
     {
@@ -146,7 +145,7 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
         myCase->output.dailyMaxTranspiration = myCase->myCrop.getMaxTranspiration(myCase->output.dailyEt0);
 
         // WATERTABLE (if available)
-        computeCapillaryRise(myCase, waterTableDepth);
+        myCase->output.dailyCapillaryRise = computeCapillaryRise(&(myCase->soilLayers), waterTableDepth);
 
         // IRRIGATION
         irrigation = myCase->myCrop.getIrrigationDemand(doy, prec, tomorrowPrec, myCase->output.dailyMaxTranspiration, myCase->soilLayers);
@@ -158,7 +157,7 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
         {
             if (myCase->optimizeIrrigation)
             {
-                myCase->output.dailyIrrigation = optimalIrrigation(myCase->soilLayers, irrigation);
+                myCase->output.dailyIrrigation = computeOptimalIrrigation(&(myCase->soilLayers), irrigation);
                 irrigationPrec = 0;
             }
             else
@@ -272,16 +271,12 @@ bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit
 }
 
 
-// in sviluppo (non usa myCase)
 bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCrop* myCrop,
-                       const std::vector<soil::Crit3DLayer>& soilLayers, std::string *myError)
+                       std::vector<soil::Crit3DLayer>* soilLayers, CriteriaModelOutput* myOutput,
+                       std::string *myError)
 {
     bool optimizeIrrigation = false;
-
     int doy = getDoyFromDate(myDate);
-    unsigned int nrLayers = unsigned(soilLayers.size());
-    double totalDepth = 0;
-    if (nrLayers > 0) totalDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
     // check daily meteo data
     if (! meteoPoint->existDailyData(myDate))
@@ -302,56 +297,53 @@ bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCr
 
     // check on wrong data
     if (prec < 0) prec = 0;
+    myOutput->dailyPrec = prec;
 
     // water table
-    double waterTableDepth = double(meteoPoint->getMeteoPointValueD(myDate, dailyWaterTableDepth));
+    myOutput->dailyWaterTable = double(meteoPoint->getMeteoPointValueD(myDate, dailyWaterTableDepth));
 
     // prec forecast
     double precTomorrow = double(meteoPoint->getMeteoPointValueD(myDate.addDays(1), dailyPrecipitation));
     if (isEqual(precTomorrow, NODATA)) precTomorrow = 0;
 
     // ET0
-    double dailyET0 = double(meteoPoint->getMeteoPointValueD(myDate, dailyReferenceEvapotranspirationHS));
-    if (isEqual(dailyET0, NODATA) || dailyET0 <= 0)
-        dailyET0 = ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, meteoPoint->latitude, doy, tmax, tmin);
+    myOutput->dailyEt0 = double(meteoPoint->getMeteoPointValueD(myDate, dailyReferenceEvapotranspirationHS));
+    if (isEqual(myOutput->dailyEt0, NODATA) || myOutput->dailyEt0 <= 0)
+        myOutput->dailyEt0 = ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, meteoPoint->latitude, doy, tmax, tmin);
 
     // update LAI and root depth
-    if (! myCrop->dailyUpdate(myDate, meteoPoint->latitude, soilLayers, tmin, tmax, waterTableDepth, myError))
+    if (! myCrop->dailyUpdate(myDate, meteoPoint->latitude, *soilLayers, tmin, tmax, myOutput->dailyWaterTable, myError))
         return false;
 
     // Evaporation / transpiration
-    double dailyMaxEvaporation = myCrop->getMaxEvaporation(dailyET0);
-    double dailyMaxTranspiration = myCrop->getMaxTranspiration(dailyET0);
+    myOutput->dailyMaxEvaporation = myCrop->getMaxEvaporation(myOutput->dailyEt0);
+    myOutput->dailyMaxTranspiration = myCrop->getMaxTranspiration(myOutput->dailyEt0);
 
     // WATERTABLE (if available)
-    // computeCapillaryRise(myCase, double(waterTableDepth));
+    myOutput->dailyCapillaryRise = computeCapillaryRise(soilLayers, myOutput->dailyWaterTable);
 
     // IRRIGATION
-    double irrigation = myCrop->getIrrigationDemand(doy, prec, precTomorrow, dailyMaxTranspiration, soilLayers);
-    if (optimizeIrrigation) irrigation = MINVALUE(irrigation, myCrop->getCropWaterDeficit(soilLayers));
+    double irrigation = myCrop->getIrrigationDemand(doy, prec, precTomorrow, myOutput->dailyMaxTranspiration, *soilLayers);
+    if (optimizeIrrigation) irrigation = MINVALUE(irrigation, myCrop->getCropWaterDeficit(*soilLayers));
 
-    // assign irrigation (optimal or equal to precipitation)
-    double irrigationPrec;
+    // assign irrigation
+    double irrigationAsPrec;
     if (irrigation > 0)
     {
         if (optimizeIrrigation)
         {
-            irrigation = optimalIrrigation(soilLayers, irrigation);
-            irrigationPrec = 0;
+            myOutput->dailyIrrigation = computeOptimalIrrigation(soilLayers, irrigation);
+            irrigationAsPrec = 0;
         }
         else
         {
-            irrigationPrec = irrigation;
+            myOutput->dailyIrrigation = irrigation;
+            irrigationAsPrec = irrigation;
         }
     }
 
-    return true;
-}
-
-
-/*
     // INFILTRATION
-    if (! computeInfiltration(myCase, prec, irrigationPrec))
+    /*if (! computeInfiltration(myCase, prec, irrigationPrec))
         return false;
 
     // LATERAL DRAINAGE
@@ -365,29 +357,102 @@ bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCr
     // RUNOFF (after evaporation)
     if (! computeSurfaceRunoff(myCase))
         return false;
+        */
 
     // Adjust irrigation losses
-    if (! myCase->optimizeIrrigation)
+    if (! optimizeIrrigation)
     {
-        if ((myCase->output.dailySurfaceRunoff > 1) && (myCase->output.dailyIrrigation > 0))
+        if ((myOutput->dailySurfaceRunoff > 1) && (myOutput->dailyIrrigation > 0))
         {
-            myCase->output.dailyIrrigation -= floor(myCase->output.dailySurfaceRunoff);
-            myCase->output.dailySurfaceRunoff -= floor(myCase->output.dailySurfaceRunoff);
+            myOutput->dailyIrrigation -= floor(myOutput->dailySurfaceRunoff);
+            myOutput->dailySurfaceRunoff -= floor(myOutput->dailySurfaceRunoff);
         }
     }
 
     // TRANSPIRATION
     double waterStress;
-    myCase->output.dailyTranspiration = myCase->myCrop.computeTranspiration(myCase->output.dailyMaxTranspiration, myCase->soilLayers, &waterStress);
+    myOutput->dailyTranspiration = myCrop->computeTranspiration(myOutput->dailyMaxTranspiration, *soilLayers, &waterStress);
 
     // assign transpiration
-    if (myCase->output.dailyTranspiration > 0)
+    if (myOutput->dailyTranspiration > 0)
     {
-        for (unsigned int i = unsigned(myCase->myCrop.roots.firstRootLayer); i <= unsigned(myCase->myCrop.roots.lastRootLayer); i++)
+        for (unsigned int i = unsigned(myCrop->roots.firstRootLayer); i <= unsigned(myCrop->roots.lastRootLayer); i++)
         {
-            myCase->soilLayers[i].waterContent -= myCase->myCrop.layerTranspiration[i];
+            (*soilLayers)[i].waterContent -= myCrop->layerTranspiration[i];
         }
     }
+
+    return true;
 }
-*/
+
+
+bool updateCrop(CriteriaModel* myCase, Crit3DDate myDate, float tmin, float tmax, double waterTableDepth, QString *myError)
+{
+    std::string errorString;
+
+    if ( !myCase->myCrop.dailyUpdate(myDate, myCase->meteoPoint.latitude, myCase->soilLayers, tmin, tmax, waterTableDepth, &errorString))
+    {
+        *myError = QString::fromStdString(errorString);
+        return false;
+    }
+
+    return true;
+}
+
+
+/*!
+ * \brief getCropReadilyAvailableWater
+ * \return sum of readily available water (mm) in the rooting zone
+ */
+double getCropReadilyAvailableWater(CriteriaModel* myCase)
+{
+    if (! myCase->myCrop.isLiving) return 0.;
+    if (myCase->myCrop.roots.rootDepth <= myCase->myCrop.roots.rootDepthMin) return 0.;
+    if (myCase->myCrop.roots.firstRootLayer == NODATA) return 0.;
+
+    double sumRAW = 0.0;
+    for (unsigned int i = unsigned(myCase->myCrop.roots.firstRootLayer); i <= unsigned(myCase->myCrop.roots.lastRootLayer); i++)
+    {
+        double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCase->myCrop.psiLeaf), myCase->soilLayers[i].horizon);
+        // [mm]
+        double cropWP = thetaWP * myCase->soilLayers[i].thickness * myCase->soilLayers[i].soilFraction * 1000.0;
+        // [mm]
+        double threshold = myCase->soilLayers[i].FC - myCase->myCrop.fRAW * (myCase->soilLayers[i].FC - cropWP);
+
+        double layerRAW = (myCase->soilLayers[i].waterContent - threshold);
+
+        double layerMaxDepth = myCase->soilLayers[i].depth + myCase->soilLayers[i].thickness / 2.0;
+        if (myCase->myCrop.roots.rootDepth < layerMaxDepth)
+        {
+                layerRAW *= (myCase->myCrop.roots.rootDepth - layerMaxDepth) / myCase->soilLayers[i].thickness;
+        }
+
+        sumRAW += layerRAW;
+    }
+
+    return sumRAW;
+}
+
+
+/*!
+ * \brief getSoilWaterDeficit
+ * \param myCase
+ * \return sum of water deficit (mm) in the first meter of soil
+ */
+double getSoilWaterDeficit(CriteriaModel* myCase)
+{
+    // surface water content
+    double waterDeficit = -myCase->soilLayers[0].waterContent;
+
+    for (unsigned int i = 1; i <= myCase->nrLayers; i++)
+    {
+        if (myCase->soilLayers[i].depth > 1)
+            return waterDeficit;
+
+        waterDeficit += myCase->soilLayers[unsigned(i)].FC - myCase->soilLayers[unsigned(i)].waterContent;
+    }
+
+    return waterDeficit;
+}
+
 
