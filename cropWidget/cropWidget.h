@@ -31,6 +31,7 @@
             void on_actionUpdate();
             bool saveCrop();
             bool saveMeteo();
+            void updateCropParam(QString idCrop);
             bool updateCrop();
             bool updateMeteoPoint();
             void updateTabLAI();
@@ -54,6 +55,7 @@
             std::vector<soil::Crit3DLayer> soilLayers;
             bool cropChanged;
             bool meteoChanged;
+            double meteoLatBackUp;
 
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;
