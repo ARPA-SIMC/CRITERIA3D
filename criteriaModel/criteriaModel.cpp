@@ -69,10 +69,6 @@ CriteriaModel::CriteriaModel()
 
     this->isGeometricLayer = false;
 
-    this->depthPloughedSoil = 0.5;        /*!<  [m] depth of ploughed soil  */
-    this->initialAW[0] = 0.85;            /*!<  [-] fraction of available Water (ploughed soil)  */
-    this->initialAW[1] = 0.8;             /*!<  [-] fraction of available Water (deep soil)  */
-
     this->optimizeIrrigation = false;
 
     this->isSeasonalForecast = false;

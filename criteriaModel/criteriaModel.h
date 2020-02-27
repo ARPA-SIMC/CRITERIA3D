@@ -102,10 +102,6 @@
         // WHEATER
         Crit3DMeteoPoint meteoPoint;
 
-        // FIELD
-        double depthPloughedSoil;               /*!< [m] depth of ploughed soil (working layer) */
-        double initialAW[2];                    /*!< [-] fraction of available water (between wilting point and field capacity) */
-
         // OUTPUT
         CriteriaModelOutput output;
         QString outputString;

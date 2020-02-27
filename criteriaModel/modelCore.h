@@ -15,18 +15,16 @@
     #include <vector>
 
     bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError);
-    bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit3DDate& lastDate, QString *myError);
-
-    bool updateCrop(CriteriaModel* myCase, Crit3DDate myDate,
-                    float tmin, float tmax, double waterTableDepth, QString *myError);
 
     bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCrop* myCrop,
-                           std::vector<soil::Crit3DLayer>* soilLayers, CriteriaModelOutput* myOutput,
+                           std::vector<soil::Crit3DLayer>* soilLayers, CriteriaModelOutput* myOutput, bool optimizeIrrigation,
                            std::string *myError);
 
     double getCropReadilyAvailableWater(CriteriaModel* myCase);
 
     double getSoilWaterDeficit(CriteriaModel* myCase);
+
+    //bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit3DDate& lastDate, QString *myError);
 
 
 #endif // MODELCORE_H
