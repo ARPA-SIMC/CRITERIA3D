@@ -24,9 +24,6 @@
     gantolini@arpae.it
 */
 
-#include <iostream>
-#include <QSqlQuery>
-#include <QSqlError>
 #include <QString>
 #include <math.h>
 
@@ -75,6 +72,8 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError)
     myCase->myCrop.initialize(myCase->meteoPoint.latitude, myCase->nrLayers, myCase->mySoil.totalDepth, getDoyFromDate(firstDate));
 
     std::string errorString;
+    bool isFirstDay = true;
+    int indexSeasonalForecast = NODATA;
     for (myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! computeDailyModel(myDate, &(myCase->meteoPoint), &(myCase->myCrop), &(myCase->soilLayers),
@@ -83,13 +82,60 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError)
             *myError = QString::fromStdString(errorString);
             return false;
         }
+
+        // output
+        if (! myCase->isSeasonalForecast)
+        {
+            myCase->prepareOutput(myDate, isFirstDay);
+            isFirstDay = false;
+        }
+
+        // seasonal forecast: update values of annual irrigation
+        if (myCase->isSeasonalForecast)
+        {
+            bool isInsideSeason = false;
+            // normal seasons
+            if (myCase->firstSeasonMonth < 11)
+            {
+                if (myDate.month >= myCase->firstSeasonMonth && myDate.month <= myCase->firstSeasonMonth+2)
+                    isInsideSeason = true;
+            }
+            // NDJ or DJF
+            else
+            {
+                int lastMonth = (myCase->firstSeasonMonth + 2) % 12;
+                if (myDate.month >= myCase->firstSeasonMonth || myDate.month <= lastMonth)
+                   isInsideSeason = true;
+            }
+
+            if (isInsideSeason)
+            {
+                // first date of season
+                if (myDate.day == 1 && myDate.month == myCase->firstSeasonMonth)
+                {
+                    if (indexSeasonalForecast == NODATA)
+                        indexSeasonalForecast = 0;
+                    else
+                        indexSeasonalForecast++;
+                }
+
+                // sum of irrigations
+                if (indexSeasonalForecast != NODATA)
+                {
+                    if (int(myCase->seasonalForecasts[indexSeasonalForecast]) == int(NODATA))
+                        myCase->seasonalForecasts[indexSeasonalForecast] = myCase->output.dailyIrrigation;
+                    else
+                        myCase->seasonalForecasts[indexSeasonalForecast] += myCase->output.dailyIrrigation;
+                }
+            }
+        }
     }
 
-    if (! myCase->isSeasonalForecast)
-        if(! myCase->saveOutput(myError))
-            return false;
+    if (myCase->isSeasonalForecast)
+        return true;
+    else
+        return myCase->saveOutput(myError);
 
-    return true;
 }
 
 
@@ -203,6 +249,12 @@ bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCr
             (*soilLayers)[i].waterContent -= myCrop->layerTranspiration[i];
         }
     }
+
+    // output variables
+    myOutput->dailySurfaceWaterContent = (*soilLayers)[0].waterContent;
+    myOutput->dailySoilWaterContent = getSoilWaterContent(soilLayers);
+    //myOutput->dailyCropAvailableWater = getCropReadilyAvailableWater(soilLayers);
+    //myOutput->dailyWaterDeficit = getSoilWaterDeficit(soilLayers);
 
     return true;
 }
