@@ -950,7 +950,7 @@ bool Crit3DCropWidget::updateCrop()
     myCrop->kcMax = maxKcValue->text().toDouble();
     myCrop->LAImin = LAIminValue->value();
     myCrop->LAImax = LAImaxValue->value();
-    if (LAIgrassValue->isVisible())
+    if (myCrop->type == FRUIT_TREE)
     {
         myCrop->LAIgrass = LAIgrassValue->text().toDouble();
     }
@@ -971,13 +971,13 @@ bool Crit3DCropWidget::updateCrop()
     myCrop->roots.rootDepthMax = rootDepthMaxValue->text().toDouble();
     myCrop->roots.shapeDeformation = shapeDeformationValue->value();
     myCrop->roots.rootShape = root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString());
-    if (degreeDaysIncValue->isVisible())
+    if (myCrop->isPluriannual())
     {
-        myCrop->roots.degreeDaysRootGrowth = degreeDaysIncValue->text().toDouble();
+        myCrop->roots.degreeDaysRootGrowth = NODATA;
     }
     else
     {
-        myCrop->roots.degreeDaysRootGrowth = NODATA;
+        myCrop->roots.degreeDaysRootGrowth = degreeDaysIncValue->text().toDouble();
     }
     cropChanged = true;
 
@@ -1085,7 +1085,7 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         return cropChanged;
 
     }
-    if (LAIgrassValue->isVisible() && myCrop->LAIgrass != LAIgrassValue->text().toDouble())
+    if (myCrop->type == FRUIT_TREE && myCrop->LAIgrass != LAIgrassValue->text().toDouble())
     {
         cropChanged = true;
         return cropChanged;
@@ -1103,7 +1103,7 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         cropChanged = true;
         return cropChanged;
     }
-    if (degreeDaysIncValue->isVisible() && myCrop->roots.degreeDaysRootGrowth != degreeDaysIncValue->text().toDouble())
+    if (!myCrop->isPluriannual() && myCrop->roots.degreeDaysRootGrowth != degreeDaysIncValue->text().toDouble())
     {
         cropChanged = true;
         return cropChanged;
