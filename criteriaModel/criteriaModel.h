@@ -43,7 +43,7 @@
         double dailyCapillaryRise;
 
         CriteriaModelOutput();
-        void initializeDaily();
+        void initializeDailyOutput();
     };
 
 

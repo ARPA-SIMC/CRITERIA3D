@@ -36,15 +36,15 @@
 /*!
  * \brief Initialize soil water content
  */
-void initializeWater(std::vector<soil::Crit3DLayer> soilLayers)
+void initializeWater(std::vector<soil::Crit3DLayer>* soilLayers)
 {
     // TODO water content as function of month
     double initialAW = 0.8;             /*!<  [-] fraction of available Water  */
 
-    soilLayers[0].waterContent = 0.0;
-    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    (*soilLayers)[0].waterContent = 0.0;
+    for (unsigned int i = 1; i < (*soilLayers).size(); i++)
     {
-        soilLayers[i].waterContent = soil::getWaterContentFromAW(initialAW, &(soilLayers[i]));
+        (*soilLayers)[i].waterContent = soil::getWaterContentFromAW(initialAW, (*soilLayers)[i]);
     }
 }
 

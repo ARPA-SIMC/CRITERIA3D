@@ -11,7 +11,7 @@
 
     class Crit3DCrop;
 
-    void initializeWater(std::vector<soil::Crit3DLayer> soilLayers);
+    void initializeWater(std::vector<soil::Crit3DLayer> *soilLayers);
 
     double computeInfiltration(std::vector<soil::Crit3DLayer> *soilLayers, double inputWater, double ploughedSoilDepth);
 

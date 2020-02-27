@@ -221,7 +221,7 @@
 
         double getVolumetricWaterContent(Crit3DLayer* layer);
         double getWaterContentFromPsi(double signPsi, Crit3DLayer* layer);
-        double getWaterContentFromAW(double availableWater, Crit3DLayer* layer);
+        double getWaterContentFromAW(double availableWater, const Crit3DLayer &layer);
 
         double getWaterPotential(Crit3DLayer* layer);
         double getWaterConductivity(Crit3DLayer* layer);

@@ -81,30 +81,30 @@ CriteriaModel::CriteriaModel()
 }
 
 
-void CriteriaModelOutput::initializeDaily()
+void CriteriaModelOutput::initializeDailyOutput()
 {
-    this->dailyPrec = 0.0;
-    this->dailyDrainage = 0.0;
-    this->dailySurfaceRunoff = 0.0;
-    this->dailyLateralDrainage = 0.0;
-    this->dailyIrrigation = 0.0;
-    this->dailySoilWaterContent = 0.0;
-    this->dailySurfaceWaterContent = 0.0;
-    this->dailyEt0 = 0.0;
-    this->dailyEvaporation = 0.0;
-    this->dailyMaxTranspiration = 0.0;
-    this->dailyMaxEvaporation = 0.0;
-    this->dailyTranspiration = 0.0;
-    this->dailyCropAvailableWater = 0.0;
-    this->dailyWaterDeficit = 0.0;
-    this->dailyCapillaryRise = 0.0;
+    this->dailyPrec = NODATA;
+    this->dailyDrainage = NODATA;
+    this->dailySurfaceRunoff = NODATA;
+    this->dailyLateralDrainage = NODATA;
+    this->dailyIrrigation = NODATA;
+    this->dailySoilWaterContent = NODATA;
+    this->dailySurfaceWaterContent = NODATA;
+    this->dailyEt0 = NODATA;
+    this->dailyEvaporation = NODATA;
+    this->dailyMaxTranspiration = NODATA;
+    this->dailyMaxEvaporation = NODATA;
+    this->dailyTranspiration = NODATA;
+    this->dailyCropAvailableWater = NODATA;
+    this->dailyWaterDeficit = NODATA;
+    this->dailyCapillaryRise = NODATA;
     this->dailyWaterTable = NODATA;
 }
 
 
 CriteriaModelOutput::CriteriaModelOutput()
 {
-    this->initializeDaily();
+    this->initializeDailyOutput();
 }
 
 

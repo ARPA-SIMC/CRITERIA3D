@@ -66,7 +66,7 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError)
     //return computeModel(myCase, firstDate, lastDate, myError);
 
     // initialize soil moisture
-    initializeWater(myCase->soilLayers);
+    initializeWater(&(myCase->soilLayers));
 
     // initialize crop
     myCase->myCrop.initialize(myCase->meteoPoint.latitude, myCase->nrLayers, myCase->mySoil.totalDepth, getDoyFromDate(firstDate));
@@ -139,7 +139,6 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError)
 }
 
 
-
 bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCrop* myCrop,
                        std::vector<soil::Crit3DLayer>* soilLayers, CriteriaModelOutput* myOutput,
                        bool optimizeIrrigation, std::string *myError)
@@ -147,7 +146,7 @@ bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCr
     double ploughedSoilDepth = 0.5;     /*!< [m] depth of ploughed soil (working layer) */
 
     // Initialize output
-    myOutput->initializeDaily();
+    myOutput->initializeDailyOutput();
     int doy = getDoyFromDate(myDate);
 
     // check daily meteo data

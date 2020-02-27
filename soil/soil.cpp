@@ -549,19 +549,19 @@ namespace soil
     /*!
      * \brief get water content corresponding to a specific available water
      * \param availableWater    [-] (0: wilting point, 1: field capacity)
-     * \param layer: pointer to Crit3DLayer class
+     * \param layer: Crit3DLayer class
      * \return  water content   [mm]
      */
-    double getWaterContentFromAW(double availableWater, Crit3DLayer* layer)
+    double getWaterContentFromAW(double availableWater, const Crit3DLayer& layer)
     {
         if (availableWater < 0)
-            return (layer->WP);
+            return layer.WP;
 
         else if (availableWater > 1)
-            return (layer->FC);
+            return layer.FC;
 
         else
-            return (layer->WP + availableWater * (layer->FC - layer->WP));
+            return layer.WP + availableWater * (layer.FC - layer.WP);
     }
 
 
