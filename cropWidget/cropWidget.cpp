@@ -443,18 +443,9 @@ void Crit3DCropWidget::checkCropUpdate()
 
 void Crit3DCropWidget::openCropDB(QString newDbCropName)
 {
-    QFileInfo fileCrop(dbCropName);
-    QFile::remove(fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");
-
-    dbCropName = newDbCropName;
-    fileCrop.setFile(dbCropName);
-
-    // copy db (to restore data)
-    QFile::copy(dbCropName, fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");
-
     // open crop db
     QString error;
-    if (! openDbCrop(dbCropName, &dbCrop, &error))
+    if (! openDbCrop(newDbCropName, &dbCrop, &error))
     {
         QMessageBox::critical(nullptr, "Error DB crop", error);
         return;
@@ -633,6 +624,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         delete myCrop;
     }
     myCrop = new Crit3DCrop();
+
     updateCropParam(idCrop);
 
 
@@ -718,6 +710,7 @@ void Crit3DCropWidget::updateCropParam(QString idCrop)
     {
         on_actionUpdate();
     }
+    cropFromDB = *myCrop;
 }
 
 
@@ -874,38 +867,8 @@ void Crit3DCropWidget::on_actionRestoreData()
     QString currentCrop = cropListComboBox.currentText();
     if (checkIfCropIsChanged())
     {
-        //this->blockSignals(true);
-        QFileInfo fileCrop(dbCropName);
-        QFile::remove(dbCropName);  // remove db file changed
-        QFile::rename(fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db", dbCropName);
-        // backup copy
-        QFile::copy(dbCropName, fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");
-
-
-        // open crop db
-        QString error;
-        if (! openDbCrop(dbCropName, &dbCrop, &error))
-        {
-            QMessageBox::critical(nullptr, "Error DB crop", error);
-            return;
-        }
-
-        // read crop list
-        QStringList cropStringList;
-        if (! getCropNameList(&dbCrop, &cropStringList, &error))
-        {
-            QMessageBox::critical(nullptr, "Error!", error);
-            return;
-        }
-
-        // show crop list
-        this->cropListComboBox.clear();
-        for (int i = 0; i < cropStringList.size(); i++)
-        {
-            this->cropListComboBox.addItem(cropStringList[i]);
-        }
-        cropListComboBox.setCurrentText(currentCrop);
-
+        *myCrop = cropFromDB;
+        updateCropParam(QString::fromStdString(myCrop->idCrop));
     }
     if (checkIfMeteoIsChanged())
     {
@@ -945,9 +908,7 @@ bool Crit3DCropWidget::saveCrop()
         QMessageBox::critical(nullptr, "UpDate param failed!", error);
         return false;
     }
-    QFileInfo fileCrop(dbCropName);
-    QFile::remove(fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");   // update also backup copy
-    QFile::copy(dbCropName, fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");
+    cropFromDB = *myCrop;
     return true;
 }
 
@@ -1127,39 +1088,39 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
 
     if(cropSowingValue->isVisible())
     {
-        if (myCrop->sowingDoy != cropSowingValue->value() || myCrop->plantCycle != cropCycleMaxValue->value())
+        if (cropFromDB.sowingDoy != cropSowingValue->value() || cropFromDB.plantCycle != cropCycleMaxValue->value())
         {
             cropChanged = true;
             return cropChanged;
         }
 
     }
-    if ( myCrop->kcMax != maxKcValue->text().toDouble()
-            || myCrop->LAImin != LAIminValue->value() || myCrop->LAImax != LAImaxValue->value())
+    if ( cropFromDB.kcMax != maxKcValue->text().toDouble()
+            || cropFromDB.LAImin != LAIminValue->value() || cropFromDB.LAImax != LAImaxValue->value())
     {
         cropChanged = true;
         return cropChanged;
 
     }
-    if (myCrop->type == FRUIT_TREE && myCrop->LAIgrass != LAIgrassValue->text().toDouble())
+    if (cropFromDB.type == FRUIT_TREE && cropFromDB.LAIgrass != LAIgrassValue->text().toDouble())
     {
         cropChanged = true;
         return cropChanged;
     }
-    if (myCrop->thermalThreshold != thermalThresholdValue->text().toDouble() || myCrop->upperThermalThreshold != upperThermalThresholdValue->text().toDouble()
-            || myCrop->degreeDaysEmergence != degreeDaysEmergenceValue->text().toDouble() || myCrop->degreeDaysIncrease != degreeDaysLAIincValue->text().toDouble()
-            || myCrop->degreeDaysDecrease != degreeDaysLAIdecValue->text().toDouble() || myCrop->LAIcurve_a != LAIcurveAValue->text().toDouble() || myCrop->LAIcurve_b != LAIcurveBValue->text().toDouble())
+    if (cropFromDB.thermalThreshold != thermalThresholdValue->text().toDouble() || cropFromDB.upperThermalThreshold != upperThermalThresholdValue->text().toDouble()
+            || cropFromDB.degreeDaysEmergence != degreeDaysEmergenceValue->text().toDouble() || cropFromDB.degreeDaysIncrease != degreeDaysLAIincValue->text().toDouble()
+            || cropFromDB.degreeDaysDecrease != degreeDaysLAIdecValue->text().toDouble() || cropFromDB.LAIcurve_a != LAIcurveAValue->text().toDouble() || cropFromDB.LAIcurve_b != LAIcurveBValue->text().toDouble())
     {
         cropChanged = true;
         return cropChanged;
     }
-    if(myCrop->roots.rootDepthMin != rootDepthZeroValue->text().toDouble() || myCrop->roots.rootDepthMax != rootDepthMaxValue->text().toDouble()
-            || myCrop->roots.shapeDeformation != shapeDeformationValue->value() || myCrop->roots.rootShape != root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString()))
+    if(cropFromDB.roots.rootDepthMin != rootDepthZeroValue->text().toDouble() || cropFromDB.roots.rootDepthMax != rootDepthMaxValue->text().toDouble()
+            || cropFromDB.roots.shapeDeformation != shapeDeformationValue->value() || cropFromDB.roots.rootShape != root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString()))
     {
         cropChanged = true;
         return cropChanged;
     }
-    if (!myCrop->isPluriannual() && myCrop->roots.degreeDaysRootGrowth != degreeDaysIncValue->text().toDouble())
+    if (!cropFromDB.isPluriannual() && cropFromDB.roots.degreeDaysRootGrowth != degreeDaysIncValue->text().toDouble())
     {
         cropChanged = true;
         return cropChanged;
@@ -1185,9 +1146,3 @@ bool Crit3DCropWidget::checkIfMeteoIsChanged()
     return meteoChanged;
 }
 
-void Crit3DCropWidget::closeEvent(QCloseEvent *event)
-{
-    QFileInfo fileCrop(dbCropName);
-    QFile::remove(fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");
-    QWidget::closeEvent(event);
-}
