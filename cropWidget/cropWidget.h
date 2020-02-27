@@ -45,8 +45,8 @@
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
             QSqlDatabase dbSoil;
-            QString dbCropName;
             Crit3DCrop* myCrop;
+            Crit3DCrop cropFromDB;
             soil::Crit3DSoil mySoil;
             soil::Crit3DTextureClass textureClassList[13];
             soil::Crit3DFittingOptions fittingOptions;
@@ -100,7 +100,6 @@
 
             TabLAI* tabLAI;
             TabRootDepth* tabRootDepth;
-            void closeEvent(QCloseEvent *event);
 
             void checkCropUpdate();
             void openCropDB(QString newDbCropName);
