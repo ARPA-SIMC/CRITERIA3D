@@ -10,6 +10,8 @@
 #endif
 #include <QtCharts>
 #include "crit3DChartView.h"
+#include "callout.h"
+
 
     class TabRootDepth : public QWidget
     {
@@ -17,6 +19,8 @@
     public:
         TabRootDepth();
         void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer> &soilLayers);
+        void tooltip(QPointF point, bool state);
+        Callout *m_tooltip;
     private:
         int year;
         Crit3DChartView *chartView;

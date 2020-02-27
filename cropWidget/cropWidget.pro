@@ -38,6 +38,7 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../so
 
 
 SOURCES += \
+    callout.cpp \
     crit3DChartView.cpp \
     cropWidget.cpp \
     dialogNewCrop.cpp \
@@ -45,6 +46,7 @@ SOURCES += \
     tabRootDepth.cpp
 
 HEADERS += \
+    callout.h \
     crit3DChartView.h \
     cropWidget.h \
     dialogNewCrop.h \

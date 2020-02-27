@@ -32,6 +32,10 @@ TabLAI::TabLAI()
     chart->addAxis(axisY, Qt::AlignLeft);
     series->attachAxis(axisY);
 
+    chart->setAcceptHoverEvents(true);
+    m_tooltip = new Callout(chart);
+    connect(series, &QLineSeries::hovered, this, &TabLAI::tooltip);
+
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
@@ -84,6 +88,25 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int cu
     QDate last(year, 12, 31);
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
+}
+
+void TabLAI::tooltip(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("X: %1 \nY: %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
 }
 
 
