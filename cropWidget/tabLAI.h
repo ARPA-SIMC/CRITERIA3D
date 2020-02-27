@@ -10,6 +10,7 @@
 #endif
 #include <QtCharts>
 #include "crit3DChartView.h"
+#include "callout.h"
 
     class TabLAI : public QWidget
     {
@@ -17,6 +18,7 @@
     public:
         TabLAI();
         void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer>& soilLayers);
+        void tooltip(QPointF point, bool state);
     private:
         int year;
         Crit3DChartView *chartView;
@@ -24,6 +26,7 @@
         QLineSeries *series;
         QDateTimeAxis *axisX;
         QValueAxis *axisY;
+        Callout *m_tooltip;
     };
 
 #endif // TABLAI_H
