@@ -17,6 +17,7 @@
 
         public:
             Crit3DCropWidget();
+            void on_actionOpenProject();
             void on_actionOpenCropDB();
             void on_actionChooseCrop(QString cropName);
             void on_actionOpenMeteoDB();
@@ -101,6 +102,11 @@
             TabRootDepth* tabRootDepth;
             void closeEvent(QCloseEvent *event);
 
+            void checkCropUpdate();
+            void openCropDB(QString newDbCropName);
+            void openMeteoDB(QString dbMeteoName);
+            void openSoilDB(QString dbSoilName);
     };
+
 
 #endif // CROPWIDGET_H

@@ -313,6 +313,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     menuBar->addMenu(editMenu);
     this->layout()->setMenuBar(menuBar);
 
+    QAction* openProject = new QAction(tr("&Open CRITERIA-1D Project"), this);
     QAction* openCropDB = new QAction(tr("&Open dbCrop"), this);
     QAction* openMeteoDB = new QAction(tr("&Open dbMeteo"), this);
     QAction* openSoilDB = new QAction(tr("&Open dbSoil"), this);
@@ -324,6 +325,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     QAction* deleteCrop = new QAction(tr("&Delete Crop"), this);
     restoreData = new QAction(tr("&Restore Data"), this);
 
+    fileMenu->addAction(openProject);
     fileMenu->addAction(openCropDB);
     fileMenu->addAction(openMeteoDB);
     fileMenu->addAction(openSoilDB);
@@ -340,6 +342,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     meteoLatBackUp = NODATA;
     layerThickness = 0.02;
 
+    connect(openProject, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenProject);
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
 
@@ -359,15 +362,60 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(saveButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionSave);
     connect(updateButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionUpdate);
 
-
     //set current tab
     tabChanged(0);
 }
 
 
+void Crit3DCropWidget::on_actionOpenProject()
+{
+    checkCropUpdate();
+
+    QString projFileName = QFileDialog::getOpenFileName(this, tr("Open Criteria-1D project"), "", tr("Settings files (*.ini)"));
+
+    if (projFileName == "") return;
+
+    QString path = QFileInfo(projFileName).absolutePath();
+
+    QSettings* projectSettings;
+    projectSettings = new QSettings(projFileName, QSettings::IniFormat);
+    projectSettings->beginGroup("project");
+
+    path += projectSettings->value("path","").toString();
+
+    QString newDbCropName = projectSettings->value("db_crop","").toString();
+    if (newDbCropName.left(1) == ".")
+        newDbCropName = QDir::cleanPath(path + newDbCropName);
+
+    QString dbMeteoName = projectSettings->value("db_meteo","").toString();
+    if (dbMeteoName.left(1) == ".")
+        dbMeteoName = QDir::cleanPath(path + dbMeteoName);
+
+    QString dbSoilName = projectSettings->value("db_soil","").toString();
+    if (dbSoilName.left(1) == ".")
+        dbSoilName = QDir::cleanPath(path + dbSoilName);
+
+    openCropDB(newDbCropName);
+    openMeteoDB(dbMeteoName);
+    openSoilDB(dbSoilName);
+}
+
+
 void Crit3DCropWidget::on_actionOpenCropDB()
 {
+    checkCropUpdate();
 
+    QString newDbCropName = QFileDialog::getOpenFileName(this, tr("Open crop database"), "", tr("SQLite files (*.db)"));
+
+    if (newDbCropName == "")
+        return;
+    else
+        openCropDB(newDbCropName);
+}
+
+
+void Crit3DCropWidget::checkCropUpdate()
+{
     if (myCrop != nullptr)
     {
         if (checkIfCropIsChanged())
@@ -383,28 +431,25 @@ void Crit3DCropWidget::on_actionOpenCropDB()
                 {
                     if (saveCrop())
                     {
-                        cropChanged = false; //already saved
+                        // already saved
+                        cropChanged = false;
                     }
                 }
             }
-
         }
-
     }
+}
 
-    QString newCropName = QFileDialog::getOpenFileName(this, tr("Open crop database"), "", tr("SQLite files (*.db)"));
 
-    if (newCropName == "")
-    {
-        return;
-    }
-
+void Crit3DCropWidget::openCropDB(QString newDbCropName)
+{
     QFileInfo fileCrop(dbCropName);
     QFile::remove(fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");
-    dbCropName = newCropName;
+
+    dbCropName = newDbCropName;
     fileCrop.setFile(dbCropName);
 
-    // copy to restore data
+    // copy db (to restore data)
     QFile::copy(dbCropName, fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");
 
     // open crop db
@@ -459,13 +504,18 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
             }
         }
     }
+
     QString dbMeteoName = QFileDialog::getOpenFileName(this, tr("Open meteo database"), "", tr("SQLite files (*.db)"));
     if (dbMeteoName == "")
-    {
         return;
-    }
+    else
+        openMeteoDB(dbMeteoName);
 
-    // open meteo db
+}
+
+
+void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
+{
     QString error;
     if (! openDbMeteo(dbMeteoName, &dbMeteo, &error))
     {
@@ -492,12 +542,19 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
     updateButton->setEnabled(true);
 }
 
+
 void Crit3DCropWidget::on_actionOpenSoilDB()
 {
     QString dbSoilName = QFileDialog::getOpenFileName(this, tr("Open soil database"), "", tr("SQLite files (*.db)"));
-    if (dbSoilName == "") return;
+    if (dbSoilName == "")
+        return;
+    else
+        openSoilDB(dbSoilName);
+}
 
-    // open soil db
+
+void Crit3DCropWidget::openSoilDB(QString dbSoilName)
+{
     QString error;
     if (! openDbSoil(dbSoilName, &dbSoil, &error))
     {
@@ -533,7 +590,6 @@ void Crit3DCropWidget::on_actionOpenSoilDB()
     {
         this->soilListComboBox.addItem(soilStringList[i]);
     }
-
 }
 
 
@@ -561,7 +617,6 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
                 }
             }
         }
-
     }
 
     QString error;
@@ -881,6 +936,7 @@ void Crit3DCropWidget::on_actionSave()
 
 }
 
+
 bool Crit3DCropWidget::saveCrop()
 {
     QString error;
@@ -893,8 +949,8 @@ bool Crit3DCropWidget::saveCrop()
     QFile::remove(fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");   // update also backup copy
     QFile::copy(dbCropName, fileCrop.absolutePath() + "/" + fileCrop.baseName() + "_tmp.db");
     return true;
-
 }
+
 
 bool Crit3DCropWidget::saveMeteo()
 {
@@ -1062,13 +1118,13 @@ void Crit3DCropWidget::tabChanged(int index)
 
 bool Crit3DCropWidget::checkIfCropIsChanged()
 {
-
     // check all editable fields
     if (myCrop == nullptr)
     {
         cropChanged = false;
         return cropChanged;
     }
+
     if(cropSowingValue->isVisible())
     {
         if (myCrop->sowingDoy != cropSowingValue->value() || myCrop->plantCycle != cropCycleMaxValue->value())
