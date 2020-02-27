@@ -107,7 +107,7 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
                 // last day
                 seriesRootDepthMin->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepthMin);
                 seriesRootDepth->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepthMin);
-                break;
+                startValidData = false;
             }
         }
     }
