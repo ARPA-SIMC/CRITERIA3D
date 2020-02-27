@@ -1048,14 +1048,14 @@ void Crit3DCropWidget::tabChanged(int index)
     }
     else if(index == 1) //root depth tab
     {
+        laiParametersGroup->hide();
+        rootParametersGroup->setVisible(true);
         if (mySoil.code.empty())
         {
             QString msg = "Open a Db Soil";
             QMessageBox::information(nullptr, "Warning", msg);
             return;
         }
-        laiParametersGroup->hide();
-        rootParametersGroup->setVisible(true);
         updateTabRootDepth();
     }
 }
