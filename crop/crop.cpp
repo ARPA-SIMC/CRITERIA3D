@@ -107,6 +107,11 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
     // initialize root depth
     roots.rootDepth = 0;
 
+    if (roots.rootDepthMax < totalSoilDepth)
+        roots.actualRootDepthMax = roots.rootDepthMax;
+    else
+        roots.actualRootDepthMax = totalSoilDepth;
+
     degreeDays = 0;
 
     if (latitude > 0)
@@ -305,8 +310,6 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
             roots.rootDensity[i] = 0;
     }
 
-    // serve per tenere conto di totalSoilDepth
-    roots.actualRootDepthMax = roots.rootDepthMax;
     isEmerged = false;
 
     if (isLiving)
@@ -342,8 +345,6 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, const st
     if (idCrop == "") return false;
 
     unsigned int nrLayers = unsigned(soilLayers.size());
-    double totalDepth = 0;
-    if (nrLayers > 0) totalDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
     // check start/end crop cycle (update isLiving)
     if (needReset(myDate, latitude, waterTableDepth))
@@ -366,9 +367,9 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, const st
         }
 
         // update roots
-        root::computeRootDepth(this, totalDepth, degreeDays, waterTableDepth);
+        root::computeRootDepth(this, degreeDays, waterTableDepth);
 
-        if ( !root::computeRootDensity(this, soilLayers, totalDepth))
+        if ( !root::computeRootDensity(this, soilLayers))
         {
             *myError = "Error in updating roots for crop " + idCrop;
             return false;

@@ -108,7 +108,7 @@ namespace root
         return "No root type";
     }
 
-    double computeRootDepth(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth)
+    double computeRootDepth(Crit3DCrop* myCrop, double currentDD, double waterTableDepth)
     {
         if (!(myCrop->isLiving))
         {
@@ -117,7 +117,7 @@ namespace root
         }
         else
         {
-            myCrop->roots.rootLength = computeRootLength(myCrop, soilDepth, currentDD, waterTableDepth);
+            myCrop->roots.rootLength = computeRootLength(myCrop, currentDD, waterTableDepth);
             myCrop->roots.rootDepth = myCrop->roots.rootDepthMin + myCrop->roots.rootLength;
         }
 
@@ -126,16 +126,9 @@ namespace root
 
 
     // TODO this function computes the root length based on thermal units, it could be changed for perennial crops
-    double computeRootLength(Crit3DCrop* myCrop, double totalSoilDepth, double currentDD, double waterTableDepth)
+    double computeRootLength(Crit3DCrop* myCrop, double currentDD, double waterTableDepth)
     {
         double myRootLength = NODATA;
-
-        if (myCrop->roots.actualRootDepthMax > totalSoilDepth)
-        {
-            // attenzione è diverso da criteria
-            myCrop->roots.actualRootDepthMax = totalSoilDepth;
-            std::cout << "Warning: input root profile deeper than soil profile\n";
-        }
 
         if (myCrop->isPluriannual())
         {
@@ -422,10 +415,12 @@ namespace root
     }
 
 
-    bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers, double soilDepth)
+    bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers)
     {
         unsigned int i, layer;
         unsigned int nrLayers = unsigned(soilLayers.size());
+        double soilDepth = 0;
+        if (nrLayers > 0) soilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
         // Initialize
         for (i = 0; i < nrLayers; i++)
