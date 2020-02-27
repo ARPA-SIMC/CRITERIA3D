@@ -305,6 +305,8 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
             roots.rootDensity[i] = 0;
     }
 
+    // serve per tenere conto di totalSoilDepth
+    roots.actualRootDepthMax = roots.rootDepthMax;
     isEmerged = false;
 
     if (isLiving)

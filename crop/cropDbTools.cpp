@@ -114,6 +114,7 @@ bool loadCropParameters(QString idCrop, Crit3DCrop* myCrop, QSqlDatabase* dbCrop
     myCrop->roots.shapeDeformation = query.value("root_shape_deformation").toDouble();
     myCrop->roots.rootDepthMin = query.value("root_depth_zero").toDouble();
     myCrop->roots.rootDepthMax = query.value("root_depth_max").toDouble();
+    myCrop->roots.actualRootDepthMax = myCrop->roots.rootDepthMax;
     getValue(query.value("degree_days_root_increase"), &(myCrop->roots.degreeDaysRootGrowth));
 
     // WATER NEEDS

@@ -28,6 +28,7 @@
         double shapeDeformation;            /*!< [-]   */
 
         /*! variables */
+        double actualRootDepthMax;          /*!< [m]  it takes into account soilDepth */
         double rootLength;                  /*!< [m]  */
         int firstRootLayer;                 /*!< [-]  */
         int lastRootLayer;                  /*!< [-]  */
@@ -48,7 +49,7 @@
         rootDistributionType getRootDistributionTypeFromString(std::string rootShape);
         std::string getRootDistributionTypeString(rootDistributionType rootType);
 
-        double computeRootLength(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
+        double computeRootLength(Crit3DCrop* myCrop, double totalSoilDepth, double currentDD, double waterTableDepth);
         double computeRootDepth(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
         bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers, double soilDepth);
     }
