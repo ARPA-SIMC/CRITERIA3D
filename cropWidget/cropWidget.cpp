@@ -732,7 +732,7 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
     int firstYear = year.toInt()-1;
     QDate firstDate(firstYear, 1, 1);
     QDate currentDate(year.toInt(), 1, 1);
-    int numberDays = firstDate.daysInYear() + currentDate.daysInYear();
+    unsigned int numberDays = firstDate.daysInYear() + currentDate.daysInYear();
     meteoPoint->initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
     // fill meteoPoint

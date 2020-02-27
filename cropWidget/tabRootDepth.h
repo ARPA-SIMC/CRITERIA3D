@@ -2,14 +2,14 @@
 #define TABROOTDEPTH_H
 
     #include <QtWidgets>
-#ifndef METEOPOINT_H
-    #include "meteoPoint.h"
-#endif
-#ifndef CROP_H
-    #include "crop.h"
-#endif
-#include <QtCharts>
-#include "crit3DChartView.h"
+    #ifndef METEOPOINT_H
+        #include "meteoPoint.h"
+    #endif
+    #ifndef CROP_H
+        #include "crop.h"
+    #endif
+    #include <QtCharts>
+    #include "crit3DChartView.h"
 
     class TabRootDepth : public QWidget
     {
