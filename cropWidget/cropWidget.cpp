@@ -1086,7 +1086,7 @@ void Crit3DCropWidget::updateTabLAI()
 
 void Crit3DCropWidget::updateTabRootDepth()
 {
-    if (myCrop != nullptr && meteoPoint != nullptr)
+    if (myCrop != nullptr && meteoPoint != nullptr && !mySoil.code.empty())
     {
         tabRootDepth->computeRootDepth(myCrop, meteoPoint, yearListComboBox.currentText().toInt(), soilLayers);
     }
