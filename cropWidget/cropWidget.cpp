@@ -375,7 +375,7 @@ void Crit3DCropWidget::on_actionOpenProject()
 
     if (projFileName == "") return;
 
-    QString path = QFileInfo(projFileName).absolutePath();
+    QString path = QFileInfo(projFileName).absolutePath()+"/";
 
     QSettings* projectSettings;
     projectSettings = new QSettings(projFileName, QSettings::IniFormat);
