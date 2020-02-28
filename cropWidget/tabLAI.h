@@ -22,6 +22,7 @@
         void tooltipPE(QPointF point, bool state);
         void tooltipME(QPointF point, bool state);
         void tooltipMT(QPointF point, bool state);
+        void handleMarkerClicked();
     private:
         int year;
         Crit3DChartView *chartView;

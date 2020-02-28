@@ -1,6 +1,7 @@
 #include "tabLAI.h"
 #include "commonConstants.h"
 #include <QMessageBox>
+#include <QLegendMarker>
 
 
 TabLAI::TabLAI()
@@ -79,6 +80,11 @@ TabLAI::TabLAI()
     connect(seriesPotentialEvap, &QLineSeries::hovered, this, &TabLAI::tooltipPE);
     connect(seriesMaxEvap, &QLineSeries::hovered, this, &TabLAI::tooltipME);
     connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabLAI::tooltipMT);
+
+    foreach(QLegendMarker* marker, chart->legend()->markers())
+    {
+        QObject::connect(marker, &QLegendMarker::clicked, this, &TabLAI::handleMarkerClicked);
+    }
 
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
@@ -219,6 +225,47 @@ void TabLAI::tooltipMT(QPointF point, bool state)
     } else {
         m_tooltip->hide();
     }
+}
+
+void TabLAI::handleMarkerClicked()
+{
+    QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
+
+    if(marker->type() == QLegendMarker::LegendMarkerTypeXY)
+    {
+        // Toggle visibility of series
+        marker->series()->setVisible(!marker->series()->isVisible());
+
+        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
+        marker->setVisible(true);
+
+        // change marker alpha, if series is not visible
+        qreal alpha = 1.0;
+
+        if (!marker->series()->isVisible()) {
+            alpha = 0.5;
+        }
+
+        QColor color;
+        QBrush brush = marker->labelBrush();
+        color = brush.color();
+        color.setAlphaF(alpha);
+        brush.setColor(color);
+        marker->setLabelBrush(brush);
+
+        brush = marker->brush();
+        color = brush.color();
+        color.setAlphaF(alpha);
+        brush.setColor(color);
+        marker->setBrush(brush);
+
+        QPen pen = marker->pen();
+        color = pen.color();
+        color.setAlphaF(alpha);
+        pen.setColor(color);
+        marker->setPen(pen);
+    }
+
 }
 
 
