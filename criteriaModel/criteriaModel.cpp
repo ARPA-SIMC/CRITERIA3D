@@ -88,8 +88,7 @@ Crit1DCase::Crit1DCase()
     idCase = "";
 
     soilLayers.clear();
-    layerThickness = 0.02;          /*!<  [m] default thickness = 2 cm  */
-    maxSimulationDepth = 2.0;       /*!<  [m] default simulation depth = 2 meters  */
+    minLayerThickness = 0.02;          /*!<  [m] default thickness = 2 cm  */
     isGeometricLayer = false;
 
     optimizeIrrigation = false;
@@ -99,7 +98,15 @@ Crit1DCase::Crit1DCase()
 void Crit1DCase::initializeSoil()
 {
     soilLayers.clear();
-    soilLayers = soil::getRegularSoilLayers(&mySoil, layerThickness);
+
+    if (this->isGeometricLayer)
+    {
+        // TODO
+    }
+    else
+    {
+        soilLayers = soil::getRegularSoilLayers(&mySoil, minLayerThickness);
+    }
 }
 
 

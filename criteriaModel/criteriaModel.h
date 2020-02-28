@@ -72,8 +72,7 @@
         soil::Crit3DSoil mySoil;
         std::vector<soil::Crit3DLayer> soilLayers;
 
-        double layerThickness;                  /*!<  [m]  */
-        double maxSimulationDepth;              /*!<  [m]  */
+        double minLayerThickness;    /*!<  [m]  */
         bool isGeometricLayer;
 
         // CROP
