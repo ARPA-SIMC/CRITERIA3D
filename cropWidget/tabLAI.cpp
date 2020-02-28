@@ -15,13 +15,13 @@ TabLAI::TabLAI()
     seriesMaxEvap = new QLineSeries();
     seriesMaxTransp = new QLineSeries();
     seriesLAI->setName("LAI [m2 m-2]");
-    seriesLAI->setColor(QColor(Qt::green));
+
     seriesPotentialEvap->setName("potential evapotranspiration [mm]");
     seriesPotentialEvap->setColor(QColor(Qt::darkGray));
     seriesMaxEvap->setName("max evaporation [mm]");
-    seriesMaxEvap->setColor(QColor(Qt::red));
+    seriesMaxEvap->setColor(QColor(Qt::blue));
     seriesMaxTransp->setName("max transpiration [mm]");
-    seriesMaxTransp->setColor(QColor(Qt::blue));
+    seriesMaxTransp->setColor(QColor(Qt::red));
 
     axisX = new QDateTimeAxis();
     axisY = new QValueAxis();
@@ -44,13 +44,26 @@ TabLAI::TabLAI()
     seriesMaxEvap->attachAxis(axisX);
     seriesMaxTransp->attachAxis(axisX);
 
+    //QFont font("Helvetica", 12);
+    QFont font = axisY->titleFont();
+    font.setPointSize(12);
+    font.setBold(true);
+
     axisY->setTitleText("LAI  [m2 m-2]");
+    axisY->setTitleFont(font);
     axisY->setRange(0,7);
     axisY->setTickCount(8);
+
+    QPen pen;
+    pen.setWidth(3);
+    pen.setBrush(Qt::green);
 
     axisYdx->setTitleText("evapotranspiration [mm]");
     axisYdx->setRange(0,7);
     axisYdx->setTickCount(8);
+    axisYdx->setTitleFont(font);
+
+    seriesLAI->setPen(pen);
 
     chart->addAxis(axisY, Qt::AlignLeft);
     chart->addAxis(axisYdx, Qt::AlignRight);
@@ -116,13 +129,13 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int cu
         if (myDate.year == year)
         {
             x.setDate(QDate(myDate.year, myDate.month, myDate.day));
-            seriesLAI->append(x.toMSecsSinceEpoch(), myCrop->LAI);
             doy = getDoyFromDate(myDate);
             // ET0
             dailyEt0 = ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, meteoPoint->latitude, doy, tmax, tmin);
             seriesPotentialEvap->append(x.toMSecsSinceEpoch(), dailyEt0);
             seriesMaxEvap->append(x.toMSecsSinceEpoch(), myCrop->getMaxEvaporation(dailyEt0));
             seriesMaxTransp->append(x.toMSecsSinceEpoch(), myCrop->getMaxTranspiration(dailyEt0));
+            seriesLAI->append(x.toMSecsSinceEpoch(), myCrop->LAI);
         }
     }
 
