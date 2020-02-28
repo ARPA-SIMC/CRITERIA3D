@@ -44,9 +44,8 @@ TabLAI::TabLAI()
     seriesMaxEvap->attachAxis(axisX);
     seriesMaxTransp->attachAxis(axisX);
 
-    //QFont font("Helvetica", 12);
     QFont font = axisY->titleFont();
-    font.setPointSize(12);
+    font.setPointSize(11);
     font.setBold(true);
 
     axisY->setTitleText("LAI  [m2 m-2]");
@@ -76,10 +75,10 @@ TabLAI::TabLAI()
     chart->legend()->setAlignment(Qt::AlignBottom);
     chart->setAcceptHoverEvents(true);
     m_tooltip = new Callout(chart);
-    connect(seriesLAI, &QLineSeries::hovered, this, &TabLAI::tooltip);
-    connect(seriesPotentialEvap, &QLineSeries::hovered, this, &TabLAI::tooltip);
-    connect(seriesMaxEvap, &QLineSeries::hovered, this, &TabLAI::tooltip);
-    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabLAI::tooltip);
+    connect(seriesLAI, &QLineSeries::hovered, this, &TabLAI::tooltipLAI);
+    connect(seriesPotentialEvap, &QLineSeries::hovered, this, &TabLAI::tooltipPE);
+    connect(seriesMaxEvap, &QLineSeries::hovered, this, &TabLAI::tooltipME);
+    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabLAI::tooltipMT);
 
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
@@ -146,7 +145,7 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int cu
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
 }
 
-void TabLAI::tooltip(QPointF point, bool state)
+void TabLAI::tooltipLAI(QPointF point, bool state)
 {
     if (m_tooltip == nullptr)
         m_tooltip = new Callout(chart);
@@ -155,7 +154,64 @@ void TabLAI::tooltip(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("X: %1 \nY: %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setText(QString("%1 \nLAI %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
+
+void TabLAI::tooltipPE(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \npotential evapotranspiration %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
+
+void TabLAI::tooltipME(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \nmax evaporation %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
+
+void TabLAI::tooltipMT(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \nmax transpiration %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
