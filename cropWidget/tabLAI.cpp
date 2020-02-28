@@ -45,7 +45,7 @@ TabLAI::TabLAI()
     seriesMaxTransp->attachAxis(axisX);
 
     QFont font = axisY->titleFont();
-    font.setPointSize(11);
+    font.setPointSize(10);
     font.setBold(true);
 
     axisY->setTitleText("LAI  [m2 m-2]");
