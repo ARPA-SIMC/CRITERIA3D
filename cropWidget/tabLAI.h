@@ -23,9 +23,13 @@
         int year;
         Crit3DChartView *chartView;
         QChart *chart;
-        QLineSeries *series;
+        QLineSeries *seriesLAI;
+        QLineSeries *seriesPotentialEvap;
+        QLineSeries *seriesMaxEvap;
+        QLineSeries *seriesMaxTransp;
         QDateTimeAxis *axisX;
         QValueAxis *axisY;
+        QValueAxis *axisYdx;
         Callout *m_tooltip;
     };
 
