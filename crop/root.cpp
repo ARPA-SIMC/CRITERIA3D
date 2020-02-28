@@ -39,6 +39,12 @@
 
 Crit3DRoot::Crit3DRoot()
 {
+    this->clear();
+}
+
+
+void Crit3DRoot::clear()
+{
     // parameters
     rootShape = CYLINDRICAL_DISTRIBUTION;
     growth = LOGISTIC;

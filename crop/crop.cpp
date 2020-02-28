@@ -41,10 +41,17 @@
 #include "development.h"
 
 
-Crit3DCrop::Crit3DCrop()
-    : idCrop{""}
+Crit3DCrop::Crit3DCrop() 
 {
+    this->clear();
+}
+
+void Crit3DCrop::clear()
+{
+    idCrop = "";
     type = HERBACEOUS_ANNUAL;
+
+    roots.clear();
 
     /*!
      * \brief crop cycle

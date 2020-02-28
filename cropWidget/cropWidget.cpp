@@ -441,9 +441,22 @@ void Crit3DCropWidget::checkCropUpdate()
 }
 
 
+void Crit3DCropWidget::clearCrop()
+{
+    if (myCrop != nullptr)
+    {
+        myCrop->clear();
+        cropFromDB.clear();
+        delete myCrop;
+        myCrop = nullptr;
+    }
+}
+
+
 void Crit3DCropWidget::openCropDB(QString newDbCropName)
 {
-    // open crop db
+    clearCrop();
+
     QString error;
     if (! openDbCrop(newDbCropName, &dbCrop, &error))
     {

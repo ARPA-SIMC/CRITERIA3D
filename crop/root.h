@@ -39,6 +39,8 @@
 
         Crit3DRoot();
 
+        void clear();
+
     };
 
     namespace root

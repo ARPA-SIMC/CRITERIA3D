@@ -101,6 +101,7 @@
             TabLAI* tabLAI;
             TabRootDepth* tabRootDepth;
 
+            void clearCrop();
             void checkCropUpdate();
             void openCropDB(QString newDbCropName);
             void openMeteoDB(QString dbMeteoName);

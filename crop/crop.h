@@ -69,6 +69,8 @@
 
         Crit3DCrop();
 
+        void clear();
+
         bool isWaterSurplusResistant();
         int getDaysFromTypicalSowing(int myDoy);
         int getDaysFromCurrentSowing(int myDoy);
