@@ -75,6 +75,8 @@ QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myErr
 
 bool loadCropParameters(QString idCrop, Crit3DCrop* myCrop, QSqlDatabase* dbCrop, QString *myError)
 {
+    myCrop->clear();
+
     QString idCropString = idCrop;
 
     QString queryString = "SELECT * FROM crop WHERE id_crop = '" + idCrop + "'";

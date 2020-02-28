@@ -35,83 +35,84 @@
 #include "modelCore.h"
 
 
-bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError)
+bool runModel(Crit1DIrrigationForecast *irrForecast, const Crit1DUnit& myUnit, QString *myError)
 {
-    myCase->idCase = myUnit->idCase;
+    irrForecast->myCase.idCase = myUnit.idCase;
 
-    if (! myCase->setSoil(myUnit->idSoil, myError))
+    if (! irrForecast->setSoil(myUnit.idSoil, myError))
         return false;
 
-    if (! myCase->loadMeteo(myUnit->idMeteo, myUnit->idForecast, myError))
+    if (! irrForecast->loadMeteo(myUnit.idMeteo, myUnit.idForecast, myError))
         return false;
 
-    if (! loadCropParameters(myUnit->idCrop, &(myCase->myCrop), &(myCase->dbCrop), myError))
+    if (! loadCropParameters(myUnit.idCrop, &(irrForecast->myCase.myCrop), &(irrForecast->dbCrop), myError))
         return false;
 
-    if (! myCase->isSeasonalForecast)
+    if (! irrForecast->isSeasonalForecast)
     {
-        if (! myCase->createOutputTable(myError))
+        if (! irrForecast->createOutputTable(myError))
             return false;
     }
 
     // set computation period (all meteo data)
     Crit3DDate myDate, firstDate, lastDate;
-    long lastIndex = myCase->meteoPoint.nrObsDataDaysD-1;
-    firstDate = myCase->meteoPoint.obsDataD[0].date;
-    lastDate = myCase->meteoPoint.obsDataD[lastIndex].date;
+    long lastIndex = irrForecast->myCase.meteoPoint.nrObsDataDaysD-1;
+    firstDate = irrForecast->myCase.meteoPoint.obsDataD[0].date;
+    lastDate = irrForecast->myCase.meteoPoint.obsDataD[lastIndex].date;
 
-    if (myCase->isSeasonalForecast)
-        myCase->initializeSeasonalForecast(firstDate, lastDate);
+    if (irrForecast->isSeasonalForecast)
+        irrForecast->initializeSeasonalForecast(firstDate, lastDate);
 
     //return computeModel(myCase, firstDate, lastDate, myError);
 
     // initialize soil moisture
-    initializeWater(&(myCase->soilLayers));
+    initializeWater(&(irrForecast->myCase.soilLayers));
 
     // initialize crop
-    myCase->myCrop.initialize(myCase->meteoPoint.latitude, myCase->nrLayers, myCase->mySoil.totalDepth, getDoyFromDate(firstDate));
+    unsigned int nrLayers = irrForecast->myCase.soilLayers.size();
+    irrForecast->myCase.myCrop.initialize(irrForecast->myCase.meteoPoint.latitude, nrLayers,
+                                          irrForecast->myCase.mySoil.totalDepth, getDoyFromDate(firstDate));
 
     std::string errorString;
     bool isFirstDay = true;
     int indexSeasonalForecast = NODATA;
     for (myDate = firstDate; myDate <= lastDate; ++myDate)
     {
-        if (! computeDailyModel(myDate, &(myCase->meteoPoint), &(myCase->myCrop), &(myCase->soilLayers),
-                                &(myCase->output), myCase->optimizeIrrigation, &errorString))
+        if (! computeDailyModel(myDate, &(irrForecast->myCase), &errorString))
         {
             *myError = QString::fromStdString(errorString);
             return false;
         }
 
         // output
-        if (! myCase->isSeasonalForecast)
+        if (! irrForecast->isSeasonalForecast)
         {
-            myCase->prepareOutput(myDate, isFirstDay);
+            irrForecast->prepareOutput(myDate, isFirstDay);
             isFirstDay = false;
         }
 
         // seasonal forecast: update values of annual irrigation
-        if (myCase->isSeasonalForecast)
+        if (irrForecast->isSeasonalForecast)
         {
             bool isInsideSeason = false;
             // normal seasons
-            if (myCase->firstSeasonMonth < 11)
+            if (irrForecast->firstSeasonMonth < 11)
             {
-                if (myDate.month >= myCase->firstSeasonMonth && myDate.month <= myCase->firstSeasonMonth+2)
+                if (myDate.month >= irrForecast->firstSeasonMonth && myDate.month <= irrForecast->firstSeasonMonth+2)
                     isInsideSeason = true;
             }
             // NDJ or DJF
             else
             {
-                int lastMonth = (myCase->firstSeasonMonth + 2) % 12;
-                if (myDate.month >= myCase->firstSeasonMonth || myDate.month <= lastMonth)
+                int lastMonth = (irrForecast->firstSeasonMonth + 2) % 12;
+                if (myDate.month >= irrForecast->firstSeasonMonth || myDate.month <= lastMonth)
                    isInsideSeason = true;
             }
 
             if (isInsideSeason)
             {
                 // first date of season
-                if (myDate.day == 1 && myDate.month == myCase->firstSeasonMonth)
+                if (myDate.day == 1 && myDate.month == irrForecast->firstSeasonMonth)
                 {
                     if (indexSeasonalForecast == NODATA)
                         indexSeasonalForecast = 0;
@@ -122,31 +123,38 @@ bool runModel(CriteriaModel* myCase, CriteriaUnit *myUnit, QString *myError)
                 // sum of irrigations
                 if (indexSeasonalForecast != NODATA)
                 {
-                    if (int(myCase->seasonalForecasts[indexSeasonalForecast]) == int(NODATA))
-                        myCase->seasonalForecasts[indexSeasonalForecast] = myCase->output.dailyIrrigation;
+                    if (int(irrForecast->seasonalForecasts[indexSeasonalForecast]) == int(NODATA))
+                        irrForecast->seasonalForecasts[indexSeasonalForecast] = irrForecast->myCase.output.dailyIrrigation;
                     else
-                        myCase->seasonalForecasts[indexSeasonalForecast] += myCase->output.dailyIrrigation;
+                        irrForecast->seasonalForecasts[indexSeasonalForecast] += irrForecast->myCase.output.dailyIrrigation;
                 }
             }
         }
     }
 
-    if (myCase->isSeasonalForecast)
+    if (irrForecast->isSeasonalForecast)
         return true;
     else
-        return myCase->saveOutput(myError);
+        return irrForecast->saveOutput(myError);
 
 }
 
 
+bool computeDailyModel(Crit3DDate myDate, Crit1DCase* myCase, std::string* myError)
+{
+    return computeDailyModel(myDate, &(myCase->meteoPoint), &(myCase->myCrop), &(myCase->soilLayers),
+                             &(myCase->output), myCase->optimizeIrrigation, myError);
+}
+
+
 bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCrop* myCrop,
-                       std::vector<soil::Crit3DLayer>* soilLayers, CriteriaModelOutput* myOutput,
+                       std::vector<soil::Crit3DLayer>* soilLayers, Crit1DOutput* myOutput,
                        bool optimizeIrrigation, std::string *myError)
 {
     double ploughedSoilDepth = 0.5;     /*!< [m] depth of ploughed soil (working layer) */
 
     // Initialize output
-    myOutput->initializeDailyOutput();
+    myOutput->initialize();
     int doy = getDoyFromDate(myDate);
 
     // check daily meteo data
@@ -224,7 +232,7 @@ bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCr
     myOutput->dailyEvaporation = computeEvaporation(soilLayers, myOutput->dailyMaxEvaporation);
 
     // RUNOFF (after evaporation)
-    myOutput->dailySurfaceRunoff = computeSurfaceRunoff(myCrop, soilLayers);
+    myOutput->dailySurfaceRunoff = computeSurfaceRunoff(*myCrop, soilLayers);
 
     // adjust irrigation losses
     if (! optimizeIrrigation)
@@ -251,286 +259,11 @@ bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCr
 
     // output variables
     myOutput->dailySurfaceWaterContent = (*soilLayers)[0].waterContent;
-    myOutput->dailySoilWaterContent = getSoilWaterContent(soilLayers);
-    //myOutput->dailyCropAvailableWater = getCropReadilyAvailableWater(soilLayers);
-    //myOutput->dailyWaterDeficit = getSoilWaterDeficit(soilLayers);
+    myOutput->dailySoilWaterContent = getSoilWaterContent(*soilLayers);
+    myOutput->dailyWaterDeficit = getSoilWaterDeficit(*soilLayers);
+    myOutput->dailyCropAvailableWater = getCropReadilyAvailableWater(*myCrop, *soilLayers);
 
     return true;
 }
-
-
-
-/*!
- * \brief getCropReadilyAvailableWater
- * \return sum of readily available water (mm) in the rooting zone
- */
-double getCropReadilyAvailableWater(CriteriaModel* myCase)
-{
-    if (! myCase->myCrop.isLiving) return 0.;
-    if (myCase->myCrop.roots.rootDepth <= myCase->myCrop.roots.rootDepthMin) return 0.;
-    if (myCase->myCrop.roots.firstRootLayer == NODATA) return 0.;
-
-    double sumRAW = 0.0;
-    for (unsigned int i = unsigned(myCase->myCrop.roots.firstRootLayer); i <= unsigned(myCase->myCrop.roots.lastRootLayer); i++)
-    {
-        double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCase->myCrop.psiLeaf), myCase->soilLayers[i].horizon);
-        // [mm]
-        double cropWP = thetaWP * myCase->soilLayers[i].thickness * myCase->soilLayers[i].soilFraction * 1000.0;
-        // [mm]
-        double threshold = myCase->soilLayers[i].FC - myCase->myCrop.fRAW * (myCase->soilLayers[i].FC - cropWP);
-
-        double layerRAW = (myCase->soilLayers[i].waterContent - threshold);
-
-        double layerMaxDepth = myCase->soilLayers[i].depth + myCase->soilLayers[i].thickness / 2.0;
-        if (myCase->myCrop.roots.rootDepth < layerMaxDepth)
-        {
-                layerRAW *= (myCase->myCrop.roots.rootDepth - layerMaxDepth) / myCase->soilLayers[i].thickness;
-        }
-
-        sumRAW += layerRAW;
-    }
-
-    return sumRAW;
-}
-
-
-/*!
- * \brief getSoilWaterDeficit
- * \param myCase
- * \return sum of water deficit (mm) in the first meter of soil
- */
-double getSoilWaterDeficit(CriteriaModel* myCase)
-{
-    // surface water content
-    double waterDeficit = -myCase->soilLayers[0].waterContent;
-
-    for (unsigned int i = 1; i <= myCase->nrLayers; i++)
-    {
-        if (myCase->soilLayers[i].depth > 1)
-            return waterDeficit;
-
-        waterDeficit += myCase->soilLayers[unsigned(i)].FC - myCase->soilLayers[unsigned(i)].waterContent;
-    }
-
-    return waterDeficit;
-}
-
-
-/*
-bool updateCrop(CriteriaModel* myCase, Crit3DDate myDate, float tmin, float tmax, double waterTableDepth, QString *myError)
-{
-    std::string errorString;
-
-    if ( !myCase->myCrop.dailyUpdate(myDate, myCase->meteoPoint.latitude, myCase->soilLayers, tmin, tmax, waterTableDepth, &errorString))
-    {
-        *myError = QString::fromStdString(errorString);
-        return false;
-    }
-
-    return true;
-}
-*/
-
-
-/*
-bool computeModel(CriteriaModel* myCase, const Crit3DDate& firstDate, const Crit3DDate& lastDate, QString *myError)
-{
-    Crit3DDate myDate;
-    int doy;
-    float tmin, tmax;                               // [°C]
-    double prec, tomorrowPrec;                      // [mm]
-    double et0;                                     // [mm]
-    double irrigation;                              // [mm]
-    double waterTableDepth;                         // [m]
-    bool isFirstDay = true;
-    int indexSeasonalForecast = NODATA;
-    bool isInsideSeason;
-
-    if (int(myCase->meteoPoint.latitude) == int(NODATA))
-    {
-        *myError = "Latitude is missing";
-        return false;
-    }
-
-    initializeWater(myCase->soilLayers);
-
-    myCase->myCrop.initialize(myCase->meteoPoint.latitude, myCase->nrLayers, myCase->mySoil.totalDepth, getDoyFromDate(firstDate));
-
-    for (myDate = firstDate; myDate <= lastDate; ++myDate)
-    {
-        // Initialize
-        myCase->output.initializeDaily();
-        doy = getDoyFromDate(myDate);
-
-        // check daily meteo data
-        if (! myCase->meteoPoint.existDailyData(myDate))
-        {
-            *myError = "Missing weather data: " + QString::fromStdString(myDate.toStdString());
-            return false;
-        }
-
-        prec = double(myCase->meteoPoint.getMeteoPointValueD(myDate, dailyPrecipitation));
-        tmin = myCase->meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
-        tmax = myCase->meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax);
-
-        if (int(prec) == int(NODATA) || int(tmin) == int(NODATA) || int(tmax) == int(NODATA))
-        {
-            *myError = "Missing weather data: " + QString::fromStdString(myDate.toStdString());
-            return false;
-        }
-
-        // check on wrong data
-        if (prec < 0) prec = 0;
-        myCase->output.dailyPrec = double(prec);
-
-        // WATERTABLE
-        waterTableDepth = double(myCase->meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
-
-        myCase->output.dailyWaterTable = double(waterTableDepth);
-        if (myDate < lastDate)
-            tomorrowPrec = double(myCase->meteoPoint.getMeteoPointValueD(myDate.addDays(1), dailyPrecipitation));
-        else
-            tomorrowPrec = 0;
-
-        // ET0
-        et0 = double(myCase->meteoPoint.getMeteoPointValueD(myDate, dailyReferenceEvapotranspirationHS));
-        if (isEqual(et0, NODATA) || et0 <= 0)
-            et0 = ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, myCase->meteoPoint.latitude, doy, double(tmax), double(tmin));
-
-        myCase->output.dailyEt0 = et0;
-
-        // CROP
-        if (! updateCrop(myCase, myDate, tmin, tmax, waterTableDepth, myError))
-            return false;
-
-        // Evaporation / transpiration
-        myCase->output.dailyMaxEvaporation = myCase->myCrop.getMaxEvaporation(myCase->output.dailyEt0);
-        myCase->output.dailyMaxTranspiration = myCase->myCrop.getMaxTranspiration(myCase->output.dailyEt0);
-
-        // WATERTABLE (if available)
-        myCase->output.dailyCapillaryRise = computeCapillaryRise(&(myCase->soilLayers), waterTableDepth);
-
-        // IRRIGATION
-        irrigation = myCase->myCrop.getIrrigationDemand(doy, prec, tomorrowPrec, myCase->output.dailyMaxTranspiration, myCase->soilLayers);
-        if (myCase->optimizeIrrigation)
-            irrigation = MINVALUE(myCase->myCrop.getCropWaterDeficit(myCase->soilLayers), irrigation);
-
-        // assign irrigation: optimal (subirrigation) or add to precipitation (sprinkler/drop)
-        double waterInput = prec;
-        myCase->output.dailyIrrigation = 0;
-        if (irrigation > 0)
-        {
-            if (myCase->optimizeIrrigation)
-            {
-                myCase->output.dailyIrrigation = computeOptimalIrrigation(&(myCase->soilLayers), irrigation);
-            }
-            else
-            {
-                myCase->output.dailyIrrigation = irrigation;
-                waterInput += irrigation;
-            }
-        }
-
-        // INFILTRATION
-        myCase->output.dailyDrainage = computeInfiltration(&(myCase->soilLayers), waterInput, myCase->depthPloughedSoil);
-
-        // LATERAL DRAINAGE
-        if (! computeLateralDrainage(myCase))
-            return false;
-
-        // EVAPORATION
-        if (! computeEvaporation(myCase))
-            return false;
-
-        // RUNOFF (after evaporation)
-        if (! computeSurfaceRunoff(myCase))
-            return false;
-
-        // Adjust irrigation losses
-        if (! myCase->optimizeIrrigation)
-        {
-            if ((myCase->output.dailySurfaceRunoff > 1) && (myCase->output.dailyIrrigation > 0))
-            {
-                myCase->output.dailyIrrigation -= floor(myCase->output.dailySurfaceRunoff);
-                myCase->output.dailySurfaceRunoff -= floor(myCase->output.dailySurfaceRunoff);
-            }
-        }
-
-        // TRANSPIRATION
-        double waterStress;
-        myCase->output.dailyTranspiration = myCase->myCrop.computeTranspiration(myCase->output.dailyMaxTranspiration, myCase->soilLayers, &waterStress);
-
-        // assign transpiration
-        if (myCase->output.dailyTranspiration > 0)
-        {
-            for (unsigned int i = unsigned(myCase->myCrop.roots.firstRootLayer); i <= unsigned(myCase->myCrop.roots.lastRootLayer); i++)
-            {
-                myCase->soilLayers[i].waterContent -= myCase->myCrop.layerTranspiration[i];
-            }
-        }
-
-        // Output variables
-        myCase->output.dailySurfaceWaterContent = myCase->soilLayers[0].waterContent;
-        myCase->output.dailySoilWaterContent = getSoilWaterContent(myCase);
-        myCase->output.dailyCropAvailableWater = getCropReadilyAvailableWater(myCase);
-        myCase->output.dailyWaterDeficit = getSoilWaterDeficit(myCase);
-
-        if (! myCase->isSeasonalForecast)
-        {
-            myCase->prepareOutput(myDate, isFirstDay);
-            isFirstDay = false;
-        }
-
-        // seasonal forecast: update values of annual irrigation
-        if (myCase->isSeasonalForecast)
-        {
-            isInsideSeason = false;
-            // normal seasons
-            if (myCase->firstSeasonMonth < 11)
-            {
-                if (myDate.month >= myCase->firstSeasonMonth && myDate.month <= myCase->firstSeasonMonth+2)
-                    isInsideSeason = true;
-            }
-            // NDJ or DJF
-            else
-            {
-                int lastMonth = (myCase->firstSeasonMonth + 2) % 12;
-                if (myDate.month >= myCase->firstSeasonMonth || myDate.month <= lastMonth)
-                   isInsideSeason = true;
-            }
-
-            if (isInsideSeason)
-            {
-                // first date of season
-                if (myDate.day == 1 && myDate.month == myCase->firstSeasonMonth)
-                {
-                    if (indexSeasonalForecast == NODATA)
-                        indexSeasonalForecast = 0;
-                    else
-                        indexSeasonalForecast++;
-                }
-
-                // sum of irrigations
-                if (indexSeasonalForecast != NODATA)
-                {
-                    if (int(myCase->seasonalForecasts[indexSeasonalForecast]) == int(NODATA))
-                        myCase->seasonalForecasts[indexSeasonalForecast] = myCase->output.dailyIrrigation;
-                    else
-                        myCase->seasonalForecasts[indexSeasonalForecast] += myCase->output.dailyIrrigation;
-                }
-            }
-        }
-    }
-
-    if (myCase->isSeasonalForecast)
-        return true;
-    else
-        return myCase->saveOutput(myError);
-}
-*/
-
-
-
-
 
 

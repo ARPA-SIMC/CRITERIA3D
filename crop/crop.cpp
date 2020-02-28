@@ -214,19 +214,19 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
 }
 
 
-bool Crit3DCrop::isWaterSurplusResistant()
+bool Crit3DCrop::isWaterSurplusResistant() const
 {
     return (idCrop == "RICE" || idCrop == "KIWIFRUIT" || type == GRASS || type == FALLOW);
 }
 
 
-int Crit3DCrop::getDaysFromTypicalSowing(int myDoy)
+int Crit3DCrop::getDaysFromTypicalSowing(int myDoy) const
 {
     return (myDoy - sowingDoy) % 365;
 }
 
 
-int Crit3DCrop::getDaysFromCurrentSowing(int myDoy)
+int Crit3DCrop::getDaysFromCurrentSowing(int myDoy) const
 {
     if (currentSowingDoy != NODATA)
         return (myDoy - currentSowingDoy) % 365;
@@ -235,13 +235,13 @@ int Crit3DCrop::getDaysFromCurrentSowing(int myDoy)
 }
 
 
-bool Crit3DCrop::isInsideTypicalCycle(int myDoy)
+bool Crit3DCrop::isInsideTypicalCycle(int myDoy) const
 {
-    return ((myDoy >= sowingDoy) && (getDaysFromTypicalSowing(myDoy) < plantCycle));
+    return (myDoy >= sowingDoy && getDaysFromTypicalSowing(myDoy) < plantCycle);
 }
 
 
-bool Crit3DCrop::isPluriannual()
+bool Crit3DCrop::isPluriannual() const
 {
     return (type == HERBACEOUS_PERENNIAL ||
             type == GRASS ||

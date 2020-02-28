@@ -19,10 +19,10 @@
     #include <vector>
 
     /*!
-     * \brief The CriteriaModelOutput class
+     * \brief daily output of Criteria1D
      * \note all variables are in [mm]
      */
-    class CriteriaModelOutput
+    class Crit1DOutput
     {
     public:
         double dailyPrec;
@@ -42,12 +42,12 @@
         double dailyWaterTable;
         double dailyCapillaryRise;
 
-        CriteriaModelOutput();
-        void initializeDailyOutput();
+        Crit1DOutput();
+        void initialize();
     };
 
 
-    class CriteriaUnit
+    class Crit1DUnit
     {
         public:
         QString idCase;
@@ -59,38 +59,19 @@
         int idCropNumber;
         int idSoilNumber;
 
-        CriteriaUnit();
+        Crit1DUnit();
     };
 
 
-    class CriteriaModel
+    class Crit1DCase
     {
     public:
         QString idCase;
 
-        // DATABASE
-        QSqlDatabase dbCrop;
-        QSqlDatabase dbSoil;
-        QSqlDatabase dbMeteo;
-        QSqlDatabase dbForecast;
-        QSqlDatabase dbOutput;
-
-        // IRRIGATION seasonal forecast
-        bool isSeasonalForecast;
-        int firstSeasonMonth;
-        double* seasonalForecasts;
-        int nrSeasonalForecasts;
-
-        // IRRIGATION short term forecast
-        bool isShortTermForecast;
-        int daysOfForecast;
-
         // SOIL
         soil::Crit3DSoil mySoil;
-        soil::Crit3DTextureClass soilTexture[13];
         std::vector<soil::Crit3DLayer> soilLayers;
-        soil::Crit3DFittingOptions fittingOptions;
-        unsigned int nrLayers;
+
         double layerThickness;                  /*!<  [m]  */
         double maxSimulationDepth;              /*!<  [m]  */
         bool isGeometricLayer;
@@ -103,13 +84,45 @@
         Crit3DMeteoPoint meteoPoint;
 
         // OUTPUT
-        CriteriaModelOutput output;
+        Crit1DOutput output;
+
+        Crit1DCase();
+
+        void initializeSoil();
+
+    };
+
+
+    class Crit1DIrrigationForecast
+    {
+    public:
+        // DATABASE
+        QSqlDatabase dbCrop;
+        QSqlDatabase dbSoil;
+        QSqlDatabase dbMeteo;
+        QSqlDatabase dbForecast;
+        QSqlDatabase dbOutput;
+
+        soil::Crit3DTextureClass soilTexture[13];
+        soil::Crit3DFittingOptions fittingOptions;
+
+        // seasonal forecast
+        bool isSeasonalForecast;
+        int firstSeasonMonth;
+        double* seasonalForecasts;
+        int nrSeasonalForecasts;
+
+        // short term forecast
+        bool isShortTermForecast;
+        int daysOfForecast;
+
+        Crit1DCase myCase;
         QString outputString;
 
-        CriteriaModel();
+        Crit1DIrrigationForecast();
 
-        bool loadMeteo(QString idMeteo, QString idForecast, QString *myError);
         bool setSoil(QString soilCode, QString *myError);
+        bool loadMeteo(QString idMeteo, QString idForecast, QString *myError);
         bool createOutputTable(QString* myError);
         void prepareOutput(Crit3DDate myDate, bool isFirst);
         bool saveOutput(QString* myError);

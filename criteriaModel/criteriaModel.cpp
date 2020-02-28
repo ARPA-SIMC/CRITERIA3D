@@ -41,9 +41,10 @@
 #include "soilDbTools.h"
 #include "meteo.h"
 #include "root.h"
+#include "basicMath.h"
 
 
-CriteriaUnit::CriteriaUnit()
+Crit1DUnit::Crit1DUnit()
 {
     this->idCase = "";
     this->idCrop = "";
@@ -57,31 +58,12 @@ CriteriaUnit::CriteriaUnit()
 }
 
 
-CriteriaModel::CriteriaModel()
+Crit1DOutput::Crit1DOutput()
 {
-    this->idCase = "";
-    this->outputString = "";
-
-    this->nrLayers = 0;
-    this->layerThickness = 0.02;          /*!<  [m] default thickness = 2 cm  */
-
-    this->maxSimulationDepth = 2.0;       /*!<  [m] default simulation depth = 2 meters  */
-
-    this->isGeometricLayer = false;
-
-    this->optimizeIrrigation = false;
-
-    this->isSeasonalForecast = false;
-    this->firstSeasonMonth = NODATA;
-    this->nrSeasonalForecasts = 0;
-    this->seasonalForecasts = nullptr;
-
-    this->isShortTermForecast = false;
-    this->daysOfForecast = NODATA;
+    this->initialize();
 }
 
-
-void CriteriaModelOutput::initializeDailyOutput()
+void Crit1DOutput::initialize()
 {
     this->dailyPrec = NODATA;
     this->dailyDrainage = NODATA;
@@ -101,24 +83,37 @@ void CriteriaModelOutput::initializeDailyOutput()
     this->dailyWaterTable = NODATA;
 }
 
-
-CriteriaModelOutput::CriteriaModelOutput()
+Crit1DCase::Crit1DCase()
 {
-    this->initializeDailyOutput();
+    idCase = "";
+
+    soilLayers.clear();
+    layerThickness = 0.02;          /*!<  [m] default thickness = 2 cm  */
+    maxSimulationDepth = 2.0;       /*!<  [m] default simulation depth = 2 meters  */
+    isGeometricLayer = false;
+
+    optimizeIrrigation = false;
 }
 
 
-bool CriteriaModel::setSoil(QString soilCode, QString *myError)
+void Crit1DCase::initializeSoil()
 {
-    // load Soil
-    if (! loadSoil(&dbSoil, soilCode, &mySoil, soilTexture, &fittingOptions, myError))
-        return false;
-
     soilLayers.clear();
     soilLayers = soil::getRegularSoilLayers(&mySoil, layerThickness);
-    nrLayers = unsigned(soilLayers.size());
+}
 
-    return true;
+
+Crit1DIrrigationForecast::Crit1DIrrigationForecast()
+{
+    isSeasonalForecast = false;
+    firstSeasonMonth = NODATA;
+    nrSeasonalForecasts = 0;
+    seasonalForecasts = nullptr;
+
+    isShortTermForecast = false;
+    daysOfForecast = NODATA;
+
+    outputString = "";
 }
 
 
@@ -131,7 +126,18 @@ QString getId5Char(QString id)
 }
 
 
-bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myError)
+bool Crit1DIrrigationForecast::setSoil(QString soilCode, QString *myError)
+{
+    if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), soilTexture, &fittingOptions, myError))
+        return false;
+
+    myCase.initializeSoil();
+
+    return true;
+}
+
+
+bool Crit1DIrrigationForecast::loadMeteo(QString idMeteo, QString idForecast, QString *myError)
 {
     QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo + "'";
     QSqlQuery query = dbMeteo.exec(queryString);
@@ -158,7 +164,7 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
 
     double myLat, myLon;
     if (getValue(query.value(("latitude")), &myLat))
-        this->meteoPoint.latitude = myLat;
+        myCase.meteoPoint.latitude = myLat;
     else
     {
         *myError = "Missing latitude in idMeteo: " + idMeteo;
@@ -166,7 +172,7 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
     }
 
     if (getValue(query.value(("longitude")), &myLon))
-        this->meteoPoint.longitude = myLon;
+        myCase.meteoPoint.longitude = myLon;
 
     queryString = "SELECT * FROM " + tableName + " ORDER BY [date]";
     query = this->dbMeteo.exec(queryString);
@@ -193,10 +199,10 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
         nrDays += this->daysOfForecast;
 
     // Initialize data
-    this->meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstObsDate));
+    myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstObsDate));
 
     // Read observed data
-    if (! readDailyDataCriteria1D(&query, &meteoPoint, myError)) return false;
+    if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), myError)) return false;
 
     // Add Short-Term forecast
     if (this->isShortTermForecast)
@@ -246,7 +252,7 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
             // previsioni indietro di un giorno: accettato ma tolgo un giorno
             if (firstForecastDate == lastObsDate)
             {
-                meteoPoint.nrObsDataDaysD--;
+                myCase.meteoPoint.nrObsDataDaysD--;
             }
             else
             {
@@ -256,39 +262,43 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
         }
 
         // Read forecast data
-        if (! readDailyDataCriteria1D(&query, &meteoPoint, myError)) return false;
+        if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), myError)) return false;
 
         // fill temperature (only forecast)
         // estende il dato precedente se mancante
         float previousTmin = NODATA;
         float previousTmax = NODATA;
         long lastObservedIndex = long(firstObsDate.daysTo(lastObsDate));
-        for (unsigned long i = lastObservedIndex; i < meteoPoint.nrObsDataDaysD; i++)
+        for (unsigned long i = lastObservedIndex; i < unsigned(myCase.meteoPoint.nrObsDataDaysD); i++)
         {
             // tmin
-            if (int(meteoPoint.obsDataD[i].tMin) != int(NODATA))
-                previousTmin = meteoPoint.obsDataD[i].tMin;
+            if (int(myCase.meteoPoint.obsDataD[i].tMin) != int(NODATA))
+                previousTmin = myCase.meteoPoint.obsDataD[i].tMin;
             else if (int(previousTmin) != int(NODATA))
-                meteoPoint.obsDataD[i].tMin = previousTmin;
+                myCase.meteoPoint.obsDataD[i].tMin = previousTmin;
 
             // tmax
-            if (int(meteoPoint.obsDataD[i].tMax) != int(NODATA))
-                previousTmax = meteoPoint.obsDataD[i].tMax;
+            if (int(myCase.meteoPoint.obsDataD[i].tMax) != int(NODATA))
+                previousTmax = myCase.meteoPoint.obsDataD[i].tMax;
             else if (int(previousTmax) != int(NODATA))
-                meteoPoint.obsDataD[i].tMax = previousTmax;
+                myCase.meteoPoint.obsDataD[i].tMax = previousTmax;
         }
     }
 
     // fill watertable (all data)
     // estende il dato precedente se mancante
     float previousWatertable = NODATA;
-    for (unsigned long i = 0; i < meteoPoint.nrObsDataDaysD; i++)
+    for (unsigned long i = 0; i < unsigned(myCase.meteoPoint.nrObsDataDaysD); i++)
     {
         // watertable
-        if (int(meteoPoint.obsDataD[i].waterTable) != int(NODATA))
-            previousWatertable = meteoPoint.obsDataD[i].waterTable;
-        else if (int(previousWatertable) != int(NODATA))
-            meteoPoint.obsDataD[i].waterTable = previousWatertable;
+        if (! isEqual(myCase.meteoPoint.obsDataD[i].waterTable, NODATA))
+        {
+            previousWatertable = myCase.meteoPoint.obsDataD[i].waterTable;
+        }
+        else if (isEqual(previousWatertable, NODATA))
+        {
+            myCase.meteoPoint.obsDataD[i].waterTable = previousWatertable;
+        }
     }
 
     return true;
@@ -296,26 +306,30 @@ bool CriteriaModel::loadMeteo(QString idMeteo, QString idForecast, QString *myEr
 
 
 // alloc memory for annual values of irrigation
-void CriteriaModel::initializeSeasonalForecast(const Crit3DDate& firstDate, const Crit3DDate& lastDate)
+void Crit1DIrrigationForecast::initializeSeasonalForecast(const Crit3DDate& firstDate, const Crit3DDate& lastDate)
 {
     if (isSeasonalForecast)
     {
-        if (seasonalForecasts != nullptr) free(seasonalForecasts);
+        if (seasonalForecasts != nullptr)
+            delete[] seasonalForecasts;
 
         nrSeasonalForecasts = lastDate.year - firstDate.year +1;
         seasonalForecasts = new double[unsigned(nrSeasonalForecasts)];
+
         for (int i = 0; i < nrSeasonalForecasts; i++)
+        {
             seasonalForecasts[i] = NODATA;
+        }
     }
 }
 
 
-bool CriteriaModel::createOutputTable(QString* myError)
+bool Crit1DIrrigationForecast::createOutputTable(QString* myError)
 {
-    QString queryString = "DROP TABLE '" + this->idCase + "'";
+    QString queryString = "DROP TABLE '" + myCase.idCase + "'";
     QSqlQuery myQuery = this->dbOutput.exec(queryString);
 
-    queryString = "CREATE TABLE '" + this->idCase + "'"
+    queryString = "CREATE TABLE '" + myCase.idCase + "'"
             + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
             + " RAW REAL, DEFICIT REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
             + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOTDEPTH REAL )";
@@ -323,7 +337,7 @@ bool CriteriaModel::createOutputTable(QString* myError)
 
     if (myQuery.lastError().isValid())
     {
-        *myError = "Error in creating table: " + this->idCase + "\n" + myQuery.lastError().text();
+        *myError = "Error in creating table: " + myCase.idCase + "\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -340,11 +354,11 @@ QString getOutputStringNullZero(double value)
 }
 
 
-void CriteriaModel::prepareOutput(Crit3DDate myDate, bool isFirst)
+void Crit1DIrrigationForecast::prepareOutput(Crit3DDate myDate, bool isFirst)
 {
     if (isFirst)
     {
-        outputString = "INSERT INTO '" + this->idCase + "'"
+        outputString = "INSERT INTO '" + myCase.idCase + "'"
             + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, RAW, DEFICIT, DRAINAGE, RUNOFF, ET0,"
             + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOTDEPTH) "
             + " VALUES ";
@@ -355,27 +369,26 @@ void CriteriaModel::prepareOutput(Crit3DDate myDate, bool isFirst)
     }
 
     outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
-            + "," + QString::number(this->output.dailyPrec, 'g', 4)
-            + "," + QString::number(this->output.dailyIrrigation, 'g', 4)
-            + "," + QString::number(this->output.dailySoilWaterContent, 'g', 5)
-            + "," + QString::number(this->output.dailySurfaceWaterContent, 'g', 4)
-            + "," + QString::number(this->output.dailyCropAvailableWater, 'g', 4)
-            + "," + QString::number(this->output.dailyWaterDeficit, 'g', 4)
-            + "," + QString::number(this->output.dailyDrainage, 'g', 4)
-            + "," + QString::number(this->output.dailySurfaceRunoff, 'g', 4)
-            + "," + QString::number(this->output.dailyEt0, 'g', 3)
-            + "," + QString::number(this->output.dailyMaxTranspiration, 'g', 3)
-            + "," + QString::number(this->output.dailyTranspiration, 'g', 3)
-            + "," + QString::number(this->output.dailyMaxEvaporation, 'g', 3)
-            + "," + QString::number(this->output.dailyEvaporation, 'g', 3)
-            + "," + getOutputStringNullZero(this->myCrop.LAI)
-            + "," + getOutputStringNullZero(this->myCrop.roots.rootDepth)
+            + "," + QString::number(myCase.output.dailyPrec, 'g', 4)
+            + "," + QString::number(myCase.output.dailyIrrigation, 'g', 4)
+            + "," + QString::number(myCase.output.dailySoilWaterContent, 'g', 5)
+            + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 4)
+            + "," + QString::number(myCase.output.dailyCropAvailableWater, 'g', 4)
+            + "," + QString::number(myCase.output.dailyWaterDeficit, 'g', 4)
+            + "," + QString::number(myCase.output.dailyDrainage, 'g', 4)
+            + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 4)
+            + "," + QString::number(myCase.output.dailyEt0, 'g', 3)
+            + "," + QString::number(myCase.output.dailyMaxTranspiration, 'g', 3)
+            + "," + QString::number(myCase.output.dailyTranspiration, 'g', 3)
+            + "," + QString::number(myCase.output.dailyMaxEvaporation, 'g', 3)
+            + "," + QString::number(myCase.output.dailyEvaporation, 'g', 3)
+            + "," + getOutputStringNullZero(myCase.myCrop.LAI)
+            + "," + getOutputStringNullZero(myCase.myCrop.roots.rootDepth)
             + ")";
-
 }
 
 
-bool CriteriaModel::saveOutput(QString* myError)
+bool Crit1DIrrigationForecast::saveOutput(QString* myError)
 {
     QSqlQuery myQuery = dbOutput.exec(outputString);
     outputString.clear();
@@ -388,3 +401,4 @@ bool CriteriaModel::saveOutput(QString* myError)
 
     return true;
 }
+
