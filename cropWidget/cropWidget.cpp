@@ -905,7 +905,7 @@ bool Crit3DCropWidget::saveCrop()
     QString error;
     if (!updateCropLAIparam(&dbCrop, cropIdValue->text(), myCrop, &error) || !updateCropRootparam(&dbCrop, cropIdValue->text(), myCrop, &error))
     {
-        QMessageBox::critical(nullptr, "UpDate param failed!", error);
+        QMessageBox::critical(nullptr, "Update param failed!", error);
         return false;
     }
     cropFromDB = *myCrop;
@@ -918,7 +918,7 @@ bool Crit3DCropWidget::saveMeteo()
     QString error;
     if (!updateLatFromIdMeteo(&dbMeteo, meteoListComboBox.currentText(), latValue->text(), &error))
     {
-        QMessageBox::critical(nullptr, "UpDate meteo failed!", error);
+        QMessageBox::critical(nullptr, "Update meteo failed!", error);
         return false;
     }
     meteoLatBackUp = latValue->value();
