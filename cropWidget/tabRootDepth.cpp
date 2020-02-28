@@ -47,8 +47,8 @@ TabRootDepth::TabRootDepth()
 
     chart->setAcceptHoverEvents(true);
     m_tooltip = new Callout(chart);
-    connect(seriesRootDepthMin, &QLineSeries::hovered, this, &TabRootDepth::tooltip);
-    connect(seriesRootDepth, &QLineSeries::hovered, this, &TabRootDepth::tooltip);
+    connect(seriesRootDepthMin, &QLineSeries::hovered, this, &TabRootDepth::tooltipRDM);
+    connect(seriesRootDepth, &QLineSeries::hovered, this, &TabRootDepth::tooltipRD);
 
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
@@ -120,7 +120,7 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
 
 }
 
-void TabRootDepth::tooltip(QPointF point, bool state)
+void TabRootDepth::tooltipRDM(QPointF point, bool state)
 {
     if (m_tooltip == nullptr)
         m_tooltip = new Callout(chart);
@@ -129,7 +129,26 @@ void TabRootDepth::tooltip(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("X: %1 \nY: %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setText(QString("%1 \nroot ini %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
+
+void TabRootDepth::tooltipRD(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \nroot depth %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();

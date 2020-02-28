@@ -154,7 +154,7 @@ void TabLAI::tooltipLAI(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nLAI %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setText(QString("%1 \nLAI %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -173,7 +173,7 @@ void TabLAI::tooltipPE(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nPot. ET %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setText(QString("%1 \nPot. ET %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -192,7 +192,7 @@ void TabLAI::tooltipME(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nEvap. max %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setText(QString("%1 \nEvap. max %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -211,7 +211,7 @@ void TabLAI::tooltipMT(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nTransp. max %3 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setText(QString("%1 \nTransp. max %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
