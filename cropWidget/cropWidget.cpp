@@ -193,11 +193,11 @@ Crit3DCropWidget::Crit3DCropWidget()
     degreeDaysEmergenceValue = new QLineEdit();
     degreeDaysEmergenceValue->setValidator(secondValidator);
 
-    QLabel *degreeDaysLAIinc = new QLabel(tr("degree days LAI increase [°C]: "));
+    QLabel *degreeDaysLAIinc = new QLabel(tr("degree days phase 1 [°C]: "));
     degreeDaysLAIincValue = new QLineEdit();
     degreeDaysLAIincValue->setValidator(secondValidator);
 
-    QLabel *degreeDaysLAIdec = new QLabel(tr("degree days LAI decrease [°C]: "));
+    QLabel *degreeDaysLAIdec = new QLabel(tr("degree days phase 2 [°C]: "));
     degreeDaysLAIdecValue = new QLineEdit();
     degreeDaysLAIdecValue->setValidator(secondValidator);
 
@@ -209,7 +209,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     LAIcurveBValue = new QLineEdit();
     LAIcurveBValue->setValidator(firstValidator);
 
-    QLabel * maxKc= new QLabel(tr("max kc [-]: "));
+    QLabel * maxKc= new QLabel(tr("kc max [-]: "));
     maxKcValue = new QLineEdit();
     maxKcValue->setValidator(firstValidator);
 
