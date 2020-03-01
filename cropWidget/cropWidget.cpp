@@ -338,7 +338,6 @@ Crit3DCropWidget::Crit3DCropWidget()
     myCrop = nullptr;
     meteoPoint = nullptr;
     cropChanged = false;
-    meteoChanged = false;
     meteoLatBackUp = NODATA;
     layerThickness = 0.02;
 
@@ -487,34 +486,12 @@ void Crit3DCropWidget::openCropDB(QString newDbCropName)
 
 void Crit3DCropWidget::on_actionOpenMeteoDB()
 {
-    if (meteoPoint != nullptr)
-    {
-        if (checkIfMeteoIsChanged())
-        {
-            QString idMeteo = meteoListComboBox.currentText();
-            QMessageBox::StandardButton confirm;
-            QString msg = "Do you want to save changes to meteo "+ idMeteo + " ?";
-            confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
-
-            if (confirm == QMessageBox::Yes)
-            {
-                if (updateMeteoPoint())
-                {
-                    if (saveMeteo())
-                    {
-                        meteoChanged = false; //already saved
-                    }
-                }
-            }
-        }
-    }
 
     QString dbMeteoName = QFileDialog::getOpenFileName(this, tr("Open meteo database"), "", tr("SQLite files (*.db)"));
     if (dbMeteoName == "")
         return;
     else
         openMeteoDB(dbMeteoName);
-
 }
 
 
@@ -883,13 +860,7 @@ void Crit3DCropWidget::on_actionRestoreData()
         *myCrop = cropFromDB;
         updateCropParam(QString::fromStdString(myCrop->idCrop));
     }
-    if (checkIfMeteoIsChanged())
-    {
-        latValue->setValue(meteoLatBackUp);
-        meteoChanged = false;
-    }
-
-
+    latValue->setValue(meteoLatBackUp);
 }
 
 void Crit3DCropWidget::on_actionSave()
@@ -902,14 +873,6 @@ void Crit3DCropWidget::on_actionSave()
             cropChanged = false; //already saved
         }
     }
-    if (updateMeteoPoint())
-    {
-        if (saveMeteo())
-        {
-            meteoChanged = false; //already saved
-        }
-    }
-
 }
 
 
@@ -925,19 +888,6 @@ bool Crit3DCropWidget::saveCrop()
     return true;
 }
 
-
-bool Crit3DCropWidget::saveMeteo()
-{
-    QString error;
-    if (!updateLatFromIdMeteo(&dbMeteo, meteoListComboBox.currentText(), latValue->text(), &error))
-    {
-        QMessageBox::critical(nullptr, "Update meteo failed!", error);
-        return false;
-    }
-    meteoLatBackUp = latValue->value();
-    return true;
-
-}
 
 void Crit3DCropWidget::on_actionUpdate()
 {
@@ -1021,8 +971,6 @@ bool Crit3DCropWidget::updateMeteoPoint()
         return false;
     }
     meteoPoint->latitude = latValue->value();
-
-    meteoChanged = true;
     return true;
 }
 
@@ -1144,18 +1092,3 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
     }
     return cropChanged;
 }
-
-bool Crit3DCropWidget::checkIfMeteoIsChanged()
-{
-    if (meteoPoint == nullptr)
-    {
-        meteoChanged = false;
-        return meteoChanged;
-    }
-    if (meteoPoint->latitude != latValue->value())
-    {
-        meteoChanged = true;
-    }
-    return meteoChanged;
-}
-

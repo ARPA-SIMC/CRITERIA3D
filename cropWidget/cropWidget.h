@@ -31,7 +31,6 @@
             void on_actionSave();
             void on_actionUpdate();
             bool saveCrop();
-            bool saveMeteo();
             void updateCropParam(QString idCrop);
             bool updateCrop();
             bool updateMeteoPoint();
@@ -39,7 +38,6 @@
             void updateTabRootDepth();
             void tabChanged(int index);
             bool checkIfCropIsChanged();
-            bool checkIfMeteoIsChanged();
 
         private:
             QSqlDatabase dbCrop;
@@ -55,7 +53,6 @@
             Crit3DMeteoPoint *meteoPoint;
             std::vector<soil::Crit3DLayer> soilLayers;
             bool cropChanged;
-            bool meteoChanged;
             double meteoLatBackUp;
 
             QGroupBox *infoCropGroup;
