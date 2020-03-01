@@ -4,7 +4,6 @@
     #include <QtWidgets>
     #include <QtCharts>
 
-    #include "crit3DChartView.h"
     #include "callout.h"
 
     #ifndef METEOPOINT_H
@@ -25,7 +24,7 @@
         Callout *m_tooltip;
     private:
         int year;
-        Crit3DChartView *chartView;
+        QChartView *chartView;
         QChart *chart;
         QLineSeries *seriesRootDepth;
         QLineSeries *seriesRootDepthMin;

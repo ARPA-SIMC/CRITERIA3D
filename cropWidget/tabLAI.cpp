@@ -9,7 +9,7 @@ TabLAI::TabLAI()
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
     chart = new QChart();   
-    chartView = new Crit3DChartView(chart);
+    chartView = new QChartView(chart);
     chartView->setChart(chart);
     seriesLAI = new QLineSeries();
     seriesPotentialEvap = new QLineSeries();

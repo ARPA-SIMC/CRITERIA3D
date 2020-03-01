@@ -10,6 +10,7 @@
 
     #include "tabLAI.h"
     #include "tabRootDepth.h"
+    #include "tabRootDensity.h"
 
     class Crit3DCropWidget : public QWidget
     {
@@ -97,6 +98,7 @@
 
             TabLAI* tabLAI;
             TabRootDepth* tabRootDepth;
+            TabRootDensity* tabRootDensity;
 
             void clearCrop();
             void checkCropUpdate();

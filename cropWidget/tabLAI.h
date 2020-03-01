@@ -9,7 +9,6 @@
     #include "crop.h"
 #endif
 #include <QtCharts>
-#include "crit3DChartView.h"
 #include "callout.h"
 
     class TabLAI : public QWidget
@@ -25,7 +24,7 @@
         void handleMarkerClicked();
     private:
         int year;
-        Crit3DChartView *chartView;
+        QChartView *chartView;
         QChart *chart;
         QLineSeries *seriesLAI;
         QLineSeries *seriesPotentialEvap;

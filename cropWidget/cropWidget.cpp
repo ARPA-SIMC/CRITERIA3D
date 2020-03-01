@@ -313,8 +313,10 @@ Crit3DCropWidget::Crit3DCropWidget()
     tabWidget = new QTabWidget;
     tabLAI = new TabLAI();
     tabRootDepth = new TabRootDepth();
+    tabRootDensity = new TabRootDensity();
     tabWidget->addTab(tabLAI, tr("LAI development"));
     tabWidget->addTab(tabRootDepth, tr("Root depth"));
+    tabWidget->addTab(tabRootDensity, tr("Root density"));
     cropLayout->addWidget(tabWidget);
 
     this->setLayout(mainLayout);
