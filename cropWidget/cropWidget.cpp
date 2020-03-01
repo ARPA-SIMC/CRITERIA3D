@@ -161,6 +161,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     QLabel *LAImin = new QLabel(tr("LAI min [m2 m-2]: "));
     LAIminValue = new QDoubleSpinBox();
+    LAIminValue->setMaximumWidth(laiParametersGroup->width()/5);
     LAIminValue->setMinimum(0);
     LAIminValue->setMaximum(10);
     LAIminValue->setDecimals(1);
@@ -168,6 +169,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     QLabel *LAImax = new QLabel(tr("LAI max [m2 m-2]: "));
     LAImaxValue = new QDoubleSpinBox();
+    LAImaxValue->setMaximumWidth(laiParametersGroup->width()/5);
     LAImaxValue->setMinimum(0);
     LAImaxValue->setMaximum(10);
     LAImaxValue->setDecimals(1);
@@ -175,6 +177,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     LAIgrass = new QLabel(tr("LAI grass [m2 m-2]: "));
     LAIgrassValue = new QLineEdit();
+    LAIgrassValue->setMaximumWidth(laiParametersGroup->width()/5);
     QDoubleValidator* firstValidator = new QDoubleValidator(-99.0, 99.0, 3, this);
     QDoubleValidator* secondValidator = new QDoubleValidator(-9999.0, 9999.0, 3, this);
     firstValidator->setNotation(QDoubleValidator::StandardNotation);
@@ -183,34 +186,42 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     QLabel *thermalThreshold = new QLabel(tr("thermal threshold [°C]: "));
     thermalThresholdValue = new QLineEdit();
+    thermalThresholdValue->setMaximumWidth(laiParametersGroup->width()/5);
     thermalThresholdValue->setValidator(firstValidator);
 
     QLabel *upperThermalThreshold = new QLabel(tr("upper thermal threshold [°C]: "));
     upperThermalThresholdValue = new QLineEdit();
+    upperThermalThresholdValue->setMaximumWidth(laiParametersGroup->width()/5);
     upperThermalThresholdValue->setValidator(firstValidator);
 
     QLabel *degreeDaysEmergence = new QLabel(tr("degree days emergence [°C]: "));
     degreeDaysEmergenceValue = new QLineEdit();
+    degreeDaysEmergenceValue->setMaximumWidth(laiParametersGroup->width()/5);
     degreeDaysEmergenceValue->setValidator(secondValidator);
 
     QLabel *degreeDaysLAIinc = new QLabel(tr("degree days phase 1 [°C]: "));
     degreeDaysLAIincValue = new QLineEdit();
+    degreeDaysLAIincValue->setMaximumWidth(laiParametersGroup->width()/5);
     degreeDaysLAIincValue->setValidator(secondValidator);
 
     QLabel *degreeDaysLAIdec = new QLabel(tr("degree days phase 2 [°C]: "));
     degreeDaysLAIdecValue = new QLineEdit();
+    degreeDaysLAIdecValue->setMaximumWidth(laiParametersGroup->width()/5);
     degreeDaysLAIdecValue->setValidator(secondValidator);
 
     QLabel *LAIcurveA = new QLabel(tr("LAI curve factor A [-]: "));
     LAIcurveAValue = new QLineEdit();
+    LAIcurveAValue->setMaximumWidth(laiParametersGroup->width()/5);
     LAIcurveAValue->setValidator(firstValidator);
 
     QLabel *LAIcurveB = new QLabel(tr("LAI curve factor B [-]: "));
     LAIcurveBValue = new QLineEdit();
+    LAIcurveBValue->setMaximumWidth(laiParametersGroup->width()/5);
     LAIcurveBValue->setValidator(firstValidator);
 
     QLabel * maxKc= new QLabel(tr("kc max [-]: "));
     maxKcValue = new QLineEdit();
+    maxKcValue->setMaximumWidth(laiParametersGroup->width()/5);
     maxKcValue->setValidator(firstValidator);
 
     parametersLaiLayout->addWidget(LAImin, 0, 0);
@@ -238,10 +249,12 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     QLabel *rootDepthZero = new QLabel(tr("root depth zero [m]: "));
     rootDepthZeroValue = new QLineEdit();
+    rootDepthZeroValue->setMaximumWidth(rootParametersGroup->width()/5);
     rootDepthZeroValue->setValidator(firstValidator);
 
     QLabel *rootDepthMax = new QLabel(tr("root depth max [m]: "));
     rootDepthMaxValue = new QLineEdit();
+    rootDepthMaxValue->setMaximumWidth(rootParametersGroup->width()/5);
     rootDepthMaxValue->setValidator(firstValidator);
 
     QLabel *rootShape = new QLabel(tr("root shape: "));
@@ -256,6 +269,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     QLabel *shapeDeformation = new QLabel(tr("shape deformation [-]: "));
     shapeDeformationValue = new QDoubleSpinBox();
+    shapeDeformationValue->setMaximumWidth(rootParametersGroup->width()/5);
     shapeDeformationValue->setMinimum(0);
     shapeDeformationValue->setMaximum(2);
     shapeDeformationValue->setDecimals(1);
@@ -264,6 +278,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     degreeDaysInc = new QLabel(tr("degree days root inc [°C]: "));
     degreeDaysIncValue = new QLineEdit();
+    degreeDaysIncValue->setMaximumWidth(rootParametersGroup->width()/5);
     degreeDaysIncValue->setValidator(secondValidator);
 
     parametersRootDepthLayout->addWidget(rootDepthZero, 0, 0);
