@@ -28,9 +28,9 @@
 
 #include "commonConstants.h"
 #include "water1D.h"
-#include "criteriaModel.h"
 #include "soil.h"
 #include "basicMath.h"
+#include "crop.h"
 
 
 /*!
@@ -73,7 +73,7 @@ double computeInfiltration(std::vector<soil::Crit3DLayer>* soilLayers, double in
     double distrH2O = NODATA;               // [mm] la quantità di acqua (=imax dello strato sotto) che potrebbe saturare il profilo sotto lo strato in surplus
     double drainage = 0;                    // [mm]
 
-    unsigned int nrLayers = (*soilLayers).size();
+    unsigned nrLayers = unsigned((*soilLayers).size());
 
     // Assign precipitation (surface pond)
     (*soilLayers)[0].waterContent += inputWater;
@@ -269,7 +269,7 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer>* soilLayers, double w
 
     const double REDUCTION_FACTOR = 0.5;
 
-    unsigned int nrLayers = soilLayers->size();
+    unsigned nrLayers = unsigned((*soilLayers).size());
     unsigned int lastLayer = nrLayers-1;
     if (nrLayers == 0) return 0;
 
@@ -481,7 +481,7 @@ double computeLateralDrainage(std::vector<soil::Crit3DLayer>* soilLayers)
 
     double lateralDrainageSum = 0;          // [mm]
 
-    unsigned int nrLayers = soilLayers->size();
+    unsigned nrLayers = unsigned((*soilLayers).size());
 
     for (unsigned int i = 1; i < nrLayers; i++)
     {
@@ -517,7 +517,7 @@ double computeLateralDrainage(std::vector<soil::Crit3DLayer>* soilLayers)
 double computeOptimalIrrigation(std::vector<soil::Crit3DLayer>* soilLayers, double irrigationMax)
 {
     double residualIrrigation = irrigationMax;
-    unsigned int nrLayers = soilLayers->size();
+    unsigned int nrLayers = unsigned(soilLayers->size());
 
     unsigned int i=0;
     while (i < nrLayers && residualIrrigation > 0)
@@ -549,7 +549,7 @@ double getSoilWaterContent(const std::vector<soil::Crit3DLayer>& soilLayers)
     double depthRatio;                      // [-]
     double waterContentSum = 0;             // [mm]
 
-    unsigned int nrLayers = soilLayers.size();
+    unsigned int nrLayers = unsigned(soilLayers.size());
 
     for (unsigned int i = 1; i < nrLayers; i++)
     {

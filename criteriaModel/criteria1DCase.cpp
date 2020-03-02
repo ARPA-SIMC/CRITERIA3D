@@ -29,125 +29,75 @@
 
 #include "commonConstants.h"
 #include "basicMath.h"
-#include "criteriaModel.h"
 #include "cropDbTools.h"
 #include "water1D.h"
-#include "modelCore.h"
+#include "criteria1DCase.h"
 
 
-bool runModel(Crit1DIrrigationForecast *irrForecast, const Crit1DUnit& myUnit, QString *myError)
+
+Crit1DOutput::Crit1DOutput()
 {
-    irrForecast->myCase.idCase = myUnit.idCase;
+    this->initialize();
+}
 
-    if (! irrForecast->setSoil(myUnit.idSoil, myError))
-        return false;
+void Crit1DOutput::initialize()
+{
+    this->dailyPrec = NODATA;
+    this->dailyDrainage = NODATA;
+    this->dailySurfaceRunoff = NODATA;
+    this->dailyLateralDrainage = NODATA;
+    this->dailyIrrigation = NODATA;
+    this->dailySoilWaterContent = NODATA;
+    this->dailySurfaceWaterContent = NODATA;
+    this->dailyEt0 = NODATA;
+    this->dailyEvaporation = NODATA;
+    this->dailyMaxTranspiration = NODATA;
+    this->dailyMaxEvaporation = NODATA;
+    this->dailyTranspiration = NODATA;
+    this->dailyCropAvailableWater = NODATA;
+    this->dailyWaterDeficit = NODATA;
+    this->dailyCapillaryRise = NODATA;
+    this->dailyWaterTable = NODATA;
+}
 
-    if (! irrForecast->loadMeteo(myUnit.idMeteo, myUnit.idForecast, myError))
-        return false;
 
-    if (! loadCropParameters(myUnit.idCrop, &(irrForecast->myCase.myCrop), &(irrForecast->dbCrop), myError))
-        return false;
+Crit1DCase::Crit1DCase()
+{
+    idCase = "";
 
-    if (! irrForecast->isSeasonalForecast)
+    soilLayers.clear();
+    minLayerThickness = 0.02;          /*!<  [m] default thickness = 2 cm  */
+    isGeometricLayer = false;
+
+    optimizeIrrigation = false;
+}
+
+
+void Crit1DCase::initializeSoil()
+{
+    soilLayers.clear();
+
+    if (this->isGeometricLayer)
     {
-        if (! irrForecast->createOutputTable(myError))
-            return false;
+        // TODO
     }
-
-    // set computation period (all meteo data)
-    Crit3DDate myDate, firstDate, lastDate;
-    long lastIndex = irrForecast->myCase.meteoPoint.nrObsDataDaysD-1;
-    firstDate = irrForecast->myCase.meteoPoint.obsDataD[0].date;
-    lastDate = irrForecast->myCase.meteoPoint.obsDataD[lastIndex].date;
-
-    if (irrForecast->isSeasonalForecast)
-        irrForecast->initializeSeasonalForecast(firstDate, lastDate);
-
-    //return computeModel(myCase, firstDate, lastDate, myError);
-
-    // initialize soil moisture
-    initializeWater(&(irrForecast->myCase.soilLayers));
-
-    // initialize crop
-    unsigned int nrLayers = irrForecast->myCase.soilLayers.size();
-    irrForecast->myCase.myCrop.initialize(irrForecast->myCase.meteoPoint.latitude, nrLayers,
-                                          irrForecast->myCase.mySoil.totalDepth, getDoyFromDate(firstDate));
-
-    std::string errorString;
-    bool isFirstDay = true;
-    int indexSeasonalForecast = NODATA;
-    for (myDate = firstDate; myDate <= lastDate; ++myDate)
-    {
-        if (! computeDailyModel(myDate, &(irrForecast->myCase), &errorString))
-        {
-            *myError = QString::fromStdString(errorString);
-            return false;
-        }
-
-        // output
-        if (! irrForecast->isSeasonalForecast)
-        {
-            irrForecast->prepareOutput(myDate, isFirstDay);
-            isFirstDay = false;
-        }
-
-        // seasonal forecast: update values of annual irrigation
-        if (irrForecast->isSeasonalForecast)
-        {
-            bool isInsideSeason = false;
-            // normal seasons
-            if (irrForecast->firstSeasonMonth < 11)
-            {
-                if (myDate.month >= irrForecast->firstSeasonMonth && myDate.month <= irrForecast->firstSeasonMonth+2)
-                    isInsideSeason = true;
-            }
-            // NDJ or DJF
-            else
-            {
-                int lastMonth = (irrForecast->firstSeasonMonth + 2) % 12;
-                if (myDate.month >= irrForecast->firstSeasonMonth || myDate.month <= lastMonth)
-                   isInsideSeason = true;
-            }
-
-            if (isInsideSeason)
-            {
-                // first date of season
-                if (myDate.day == 1 && myDate.month == irrForecast->firstSeasonMonth)
-                {
-                    if (indexSeasonalForecast == NODATA)
-                        indexSeasonalForecast = 0;
-                    else
-                        indexSeasonalForecast++;
-                }
-
-                // sum of irrigations
-                if (indexSeasonalForecast != NODATA)
-                {
-                    if (int(irrForecast->seasonalForecasts[indexSeasonalForecast]) == int(NODATA))
-                        irrForecast->seasonalForecasts[indexSeasonalForecast] = irrForecast->myCase.output.dailyIrrigation;
-                    else
-                        irrForecast->seasonalForecasts[indexSeasonalForecast] += irrForecast->myCase.output.dailyIrrigation;
-                }
-            }
-        }
-    }
-
-    if (irrForecast->isSeasonalForecast)
-        return true;
     else
-        return irrForecast->saveOutput(myError);
+    {
+        soilLayers = soil::getRegularSoilLayers(&mySoil, minLayerThickness);
+    }
 
+    initializeWater(&soilLayers);
 }
 
 
-bool computeDailyModel(Crit3DDate myDate, Crit1DCase* myCase, std::string* myError)
+bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string* myError)
 {
-    return computeDailyModel(myDate, &(myCase->meteoPoint), &(myCase->myCrop), &(myCase->soilLayers),
-                             &(myCase->output), myCase->optimizeIrrigation, myError);
+    return dailyModel(myDate, &meteoPoint, &myCrop, &soilLayers,
+                             &output, optimizeIrrigation, myError);
 }
 
 
-bool computeDailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCrop* myCrop,
+bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCrop* myCrop,
                        std::vector<soil::Crit3DLayer>* soilLayers, Crit1DOutput* myOutput,
                        bool optimizeIrrigation, std::string *myError)
 {

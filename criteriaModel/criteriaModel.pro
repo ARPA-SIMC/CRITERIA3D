@@ -33,16 +33,16 @@ INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../gis ../meteo \
                 ../soil ../crop ../utilities
 
 SOURCES += \
+    criteria1DCase.cpp \
     dbMeteoCriteria1D.cpp \
-    modelCore.cpp \
-    water1D.cpp \
-    criteriaModel.cpp
+    irrigationForecast.cpp \
+    water1D.cpp
 
 HEADERS += \
+    criteria1DCase.h \
     dbMeteoCriteria1D.h \
-    modelCore.h \
-    water1D.h \
-    criteriaModel.h
+    irrigationForecast.h \
+    water1D.h
 
 unix {
     target.path = /usr/lib

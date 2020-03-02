@@ -13,6 +13,7 @@
 
 #include <qdebug.h>
 
+
 bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
 {
 
