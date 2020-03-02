@@ -920,6 +920,7 @@ void Crit3DCropWidget::on_actionUpdate()
         if (!mySoil.code.empty())
         {
             updateTabRootDepth();
+            updateTabRootDensity();
         }
     }
 
@@ -1031,6 +1032,14 @@ void Crit3DCropWidget::updateTabRootDepth()
     }
 }
 
+void Crit3DCropWidget::updateTabRootDensity()
+{
+    if (myCrop != nullptr && meteoPoint != nullptr && !mySoil.code.empty())
+    {
+        tabRootDensity->computeRootDensity(myCrop, meteoPoint, yearListComboBox.currentText().toInt(), soilLayers);
+    }
+}
+
 void Crit3DCropWidget::tabChanged(int index)
 {
 
@@ -1052,6 +1061,18 @@ void Crit3DCropWidget::tabChanged(int index)
             return;
         }
         updateTabRootDepth();
+    }
+    else if(index == 2) //root density tab
+    {
+        laiParametersGroup->hide();
+        rootParametersGroup->setVisible(true);
+        if (mySoil.code.empty())
+        {
+            QString msg = "Open a Db Soil";
+            QMessageBox::information(nullptr, "Warning", msg);
+            return;
+        }
+        updateTabRootDensity();
     }
 }
 
