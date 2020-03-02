@@ -4,6 +4,9 @@
     #ifndef CRITERIA1DCASE_H
         #include "criteria1DCase.h"
     #endif
+    #ifndef QSQLDATABASE_H
+        #include <QSqlDatabase>
+    #endif
 
 
     class Crit1DUnit

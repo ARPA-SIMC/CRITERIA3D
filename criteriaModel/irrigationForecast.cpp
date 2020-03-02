@@ -3,7 +3,7 @@
 #include "basicMath.h"
 #include "soilDbTools.h"
 #include "cropDbTools.h"
-#include "dbMeteoCriteria1D.h"
+#include "criteria1DdbMeteo.h"
 #include "water1D.h"
 #include "utilities.h"
 
@@ -78,7 +78,7 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString *myErr
     int indexSeasonalForecast = NODATA;
     for (myDate = firstDate; myDate <= lastDate; ++myDate)
     {
-        if (! myCase.computeDailyModel(myDate, &errorString))
+        if (! myCase.computeDailyModel(myDate, errorString))
         {
             *myError = QString::fromStdString(errorString);
             return false;
@@ -326,10 +326,10 @@ void Crit1DIrrigationForecast::initializeSeasonalForecast(const Crit3DDate& firs
     {
         seasonalForecasts.clear();
 
-        nrSeasonalForecasts = unsigned(lastDate.year - firstDate.year +1);
+        nrSeasonalForecasts = lastDate.year - firstDate.year +1;
         seasonalForecasts.resize(unsigned(nrSeasonalForecasts));
 
-        for (unsigned int i = 0; i < nrSeasonalForecasts; i++)
+        for (unsigned int i = 0; i < unsigned(nrSeasonalForecasts); i++)
         {
             seasonalForecasts[i] = NODATA;
         }

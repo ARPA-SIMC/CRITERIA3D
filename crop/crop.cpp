@@ -345,10 +345,10 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
 }
 
 
-bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
-                             double tmin, double tmax, double waterTableDepth, std::string* myError)
+bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
+                             double tmin, double tmax, double waterTableDepth, std::string &myError)
 {
-    *myError = "";
+    myError = "";
     if (idCrop == "") return false;
 
     unsigned int nrLayers = unsigned(soilLayers.size());
@@ -369,7 +369,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, const st
         // update LAI
         if ( !updateLAI(latitude, nrLayers, currentDoy))
         {
-            *myError = "Error in updating LAI for crop " + idCrop;
+            myError = "Error in updating LAI for crop " + idCrop;
             return false;
         }
 
@@ -378,7 +378,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, const st
 
         if ( !root::computeRootDensity(this, soilLayers))
         {
-            *myError = "Error in updating roots for crop " + idCrop;
+            myError = "Error in updating roots for crop " + idCrop;
             return false;
         }
     }

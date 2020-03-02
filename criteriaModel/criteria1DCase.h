@@ -13,9 +13,6 @@
     #ifndef QSTRING_H
         #include <QString>
     #endif
-    #ifndef QSQLDATABASE_H
-        #include <QSqlDatabase>
-    #endif
 
     #include <vector>
 
@@ -57,9 +54,9 @@
         soil::Crit3DSoil mySoil;
         std::vector<soil::Crit3DLayer> soilLayers;
 
-        double minLayerThickness;    /*!<  [m]  */
+        double minLayerThickness;       // [m]
         bool isGeometricLayer;
-        //TODO geometricFactor
+        double geometricFactor;         // [-]
 
         // CROP
         Crit3DCrop myCrop;
@@ -74,14 +71,13 @@
         Crit1DCase();
 
         void initializeSoil();
-        bool computeDailyModel(Crit3DDate myDate, std::string *myError);
+        bool computeDailyModel(Crit3DDate myDate, std::string &myError);
 
     };
 
 
-    bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint* meteoPoint, Crit3DCrop* myCrop,
-                       std::vector<soil::Crit3DLayer>* soilLayers, Crit1DOutput* myOutput, bool optimizeIrrigation,
-                       std::string *myError);
+    bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers,
+                    Crit1DOutput &myOutput, bool optimizeIrrigation, std::string &myError);
 
 
 

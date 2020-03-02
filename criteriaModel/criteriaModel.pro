@@ -34,13 +34,13 @@ INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../gis ../meteo \
 
 SOURCES += \
     criteria1DCase.cpp \
-    dbMeteoCriteria1D.cpp \
+    criteria1DdbMeteo.cpp \
     irrigationForecast.cpp \
     water1D.cpp
 
 HEADERS += \
     criteria1DCase.h \
-    dbMeteoCriteria1D.h \
+    criteria1DdbMeteo.h \
     irrigationForecast.h \
     water1D.h
 

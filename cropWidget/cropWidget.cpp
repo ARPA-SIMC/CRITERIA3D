@@ -25,7 +25,7 @@
 #include "cropWidget.h"
 #include "dialogNewCrop.h"
 #include "cropDbTools.h"
-#include "dbMeteoCriteria1D.h"
+#include "criteria1DdbMeteo.h"
 #include "soilDbTools.h"
 #include "utilities.h"
 #include "commonConstants.h"
