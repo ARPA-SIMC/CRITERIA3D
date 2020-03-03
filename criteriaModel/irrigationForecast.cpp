@@ -40,17 +40,17 @@ Crit1DIrrigationForecast::Crit1DIrrigationForecast()
 }
 
 
-bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString *myError)
+bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myError)
 {
     myCase.idCase = myUnit.idCase;
 
     if (! setSoil(myUnit.idSoil, myError))
         return false;
 
-    if (! setMeteo(myUnit.idMeteo, myUnit.idForecast, myError))
+    if (! setMeteo(myUnit.idMeteo, myUnit.idForecast, &myError))
         return false;
 
-    if (! loadCropParameters(myUnit.idCrop, &(myCase.myCrop), &(dbCrop), myError))
+    if (! loadCropParameters(myUnit.idCrop, &(myCase.myCrop), &(dbCrop), &myError))
         return false;
 
     if (! isSeasonalForecast)
@@ -80,7 +80,7 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString *myErr
     {
         if (! myCase.computeDailyModel(myDate, errorString))
         {
-            *myError = QString::fromStdString(errorString);
+            myError = QString::fromStdString(errorString);
             return false;
         }
 
@@ -140,12 +140,17 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString *myErr
 }
 
 
-bool Crit1DIrrigationForecast::setSoil(QString soilCode, QString *myError)
+bool Crit1DIrrigationForecast::setSoil(QString soilCode, QString &myError)
 {
-    if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), soilTexture, &fittingOptions, myError))
+    if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), soilTexture, &fittingOptions, &myError))
         return false;
 
-    myCase.initializeSoil();
+    std::string errorString;
+    if (! myCase.initializeSoil(errorString))
+    {
+        myError = QString::fromStdString(errorString);
+        return false;
+    }
 
     return true;
 }
@@ -337,7 +342,7 @@ void Crit1DIrrigationForecast::initializeSeasonalForecast(const Crit3DDate& firs
 }
 
 
-bool Crit1DIrrigationForecast::createOutputTable(QString* myError)
+bool Crit1DIrrigationForecast::createOutputTable(QString &myError)
 {
     QString queryString = "DROP TABLE '" + myCase.idCase + "'";
     QSqlQuery myQuery = this->dbOutput.exec(queryString);
@@ -350,7 +355,7 @@ bool Crit1DIrrigationForecast::createOutputTable(QString* myError)
 
     if (myQuery.lastError().isValid())
     {
-        *myError = "Error in creating table: " + myCase.idCase + "\n" + myQuery.lastError().text();
+        myError = "Error in creating table: " + myCase.idCase + "\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -392,14 +397,14 @@ void Crit1DIrrigationForecast::prepareOutput(Crit3DDate myDate, bool isFirst)
 }
 
 
-bool Crit1DIrrigationForecast::saveOutput(QString* myError)
+bool Crit1DIrrigationForecast::saveOutput(QString &myError)
 {
     QSqlQuery myQuery = dbOutput.exec(outputString);
     outputString.clear();
 
     if (myQuery.lastError().type() != QSqlError::NoError)
     {
-        *myError = "Error in saving output:\n" + myQuery.lastError().text();
+        myError = "Error in saving output:\n" + myQuery.lastError().text();
         return false;
     }
 

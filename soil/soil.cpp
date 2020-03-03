@@ -169,6 +169,17 @@ namespace soil
         this->nrHorizons = nrHorizons - 1;
     }
 
+    int Crit3DSoil::getHorizonIndex(double depth)
+    {
+       for (unsigned int index = 0; index < nrHorizons; index++)
+       {
+           if (depth >= horizon[index].upperDepth && depth <= (horizon[index].lowerDepth + EPSILON))
+               return int(index);
+       }
+
+       return NODATA;
+    }
+
     void Crit3DSoil::cleanSoil()
     {
         for (unsigned int i = 0; i < this->horizon.size(); i++)
@@ -182,6 +193,30 @@ namespace soil
         this->id = NODATA;
         this->code = "";
         this->name = "";
+    }
+
+
+    bool Crit3DLayer::setLayer(Crit3DHorizon *horizonPointer)
+    {
+        if (horizonPointer == nullptr)
+            return false;
+
+        horizon = horizonPointer;
+
+        double hygroscopicHumidity = -2000;     // [kPa]
+        double waterContentHH = soil::thetaFromSignPsi(hygroscopicHumidity, horizon);
+
+        // [-]
+        soilFraction = (1.0 - horizon->coarseFragments);
+
+        // [mm]
+        SAT = horizon->vanGenuchten.thetaS * soilFraction * thickness * 1000;
+        FC = horizon->waterContentFC * soilFraction * thickness * 1000;
+        WP = horizon->waterContentWP * soilFraction * thickness * 1000;
+        HH = waterContentHH * soilFraction * thickness * 1000;
+        critical = FC;
+
+        return true;
     }
 
 
@@ -895,52 +930,53 @@ namespace soil
     }
 
 
-    // TODO geometric soil Layers
-    std::vector<soil::Crit3DLayer> getRegularSoilLayers(soil::Crit3DSoil* mySoil, double layerThickness)
+    bool Crit3DSoil::setSoilLayers(double layerThicknessMin, double geometricFactor,
+                                   std::vector<Crit3DLayer> &soilLayers, std::string &myError)
     {
-        // nr of layers (round check the center of last layer)
-        double nrLayersDouble = mySoil->totalDepth / layerThickness;
-        unsigned int nrLayers = unsigned(round(nrLayersDouble)) + 1;
-
-        // initialize soilLayers
-        std::vector<soil::Crit3DLayer> soilLayers;
-        soilLayers.resize(unsigned(nrLayers));
+        soilLayers.clear();
 
         // layer 0: surface
+        soilLayers.resize(1);
         soilLayers[0].depth = 0.0;
         soilLayers[0].thickness = 0.0;
 
-        double currentDepth = layerThickness / 2;
-        for (unsigned int i = 1; i < nrLayers; i++)
+        // layer > 0: soil
+        unsigned int i = 1;
+        double currentTopLayer = 0.0;
+        double currentThikness = layerThicknessMin;
+        double currentDepth = currentTopLayer + currentThikness / 2.0;
+
+        while (currentDepth <= totalDepth)
         {
-            unsigned horizonIndex = unsigned(soil::getHorizonIndex(mySoil, currentDepth));
+            Crit3DLayer newLayer;
+            newLayer.thickness = currentThikness;
+            newLayer.depth = currentDepth;
 
-            soilLayers[i].horizon = &(mySoil->horizon[horizonIndex]);
+            // get soil horizon
+            int horizonIndex = getHorizonIndex(currentDepth);
+            if (horizonIndex == NODATA)
+            {
+                myError = "No horizon defined for depth:" + std::to_string(currentDepth);
+                return false;
+            }
 
-            // [-]
-            soilLayers[i].soilFraction = (1.0 - soilLayers[i].horizon->coarseFragments);
+            // set layer properties from soil horizon
+            Crit3DHorizon* horizonPointer = &(horizon[horizonIndex]);
+            if (! newLayer.setLayer(horizonPointer))
+            {
+                return false;
+            }
 
-            // [m]
-            soilLayers[i].depth = currentDepth;
-            soilLayers[i].thickness = layerThickness;
+            soilLayers.push_back(newLayer);
 
-            // [mm]
-            soilLayers[i].SAT = mySoil->horizon[horizonIndex].vanGenuchten.thetaS * soilLayers[i].soilFraction * soilLayers[i].thickness * 1000;
-            soilLayers[i].FC = mySoil->horizon[horizonIndex].waterContentFC * soilLayers[i].soilFraction * soilLayers[i].thickness * 1000;
-            soilLayers[i].critical = soilLayers[i].FC;
-            soilLayers[i].WP = mySoil->horizon[horizonIndex].waterContentWP * soilLayers[i].soilFraction * soilLayers[i].thickness * 1000;
-
-            // hygroscopic humidity: volumetric water content at -2000 kPa
-            double hygroscopicHumidity = soil::thetaFromSignPsi(-2000, &(mySoil->horizon[horizonIndex]));
-
-            // [mm]
-            soilLayers[i].HH = hygroscopicHumidity * soilLayers[i].soilFraction * soilLayers[i].thickness * 1000;
-
-            // [m]
-            currentDepth += soilLayers[i].thickness;
+            // update depth
+            currentTopLayer += currentThikness;
+            currentThikness *= geometricFactor;
+            currentDepth = currentTopLayer + currentThikness / 2.0;
+            i++;
         }
 
-        return soilLayers;
+        return true;
     }
 
 }

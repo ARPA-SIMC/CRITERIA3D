@@ -67,27 +67,26 @@ Crit1DCase::Crit1DCase()
 
     minLayerThickness = 0.02;           /*!< [m] default thickness = 2 cm  */
     geometricFactor = 1.2;              /*!< [-] default factor for geometric progression  */
-    isGeometricLayer = false;
+    isGeometricLayers = false;
     optimizeIrrigation = false;
 
     soilLayers.clear();
 }
 
 
-void Crit1DCase::initializeSoil()
+bool Crit1DCase::initializeSoil(std::string &myError)
 {
     soilLayers.clear();
 
-    if (this->isGeometricLayer)
-    {
-        // TODO
-    }
-    else
-    {
-        soilLayers = soil::getRegularSoilLayers(&mySoil, minLayerThickness);
-    }
+    double factor = 1.0;
+    if (isGeometricLayers) factor = geometricFactor;
+
+    if (! mySoil.setSoilLayers(minLayerThickness, factor, soilLayers, myError))
+        return false;
 
     initializeWater(soilLayers);
+
+    return true;
 }
 
 

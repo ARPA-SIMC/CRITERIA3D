@@ -830,11 +830,16 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
             QMessageBox::critical(nullptr, "Error!", error);
             return;
         }
-
     }
-    soilLayers = getRegularSoilLayers(&mySoil, layerThickness);
-    on_actionUpdate();
 
+    std::string errorString;
+    if (! mySoil.setSoilLayers(layerThickness, 1.0, soilLayers, errorString))
+    {
+        QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorString));
+        return;
+    }
+
+    on_actionUpdate();
 }
 
 

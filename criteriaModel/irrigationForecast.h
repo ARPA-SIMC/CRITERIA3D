@@ -55,18 +55,18 @@
 
         Crit1DIrrigationForecast();
 
-        bool runModel(const Crit1DUnit &myUnit, QString *myError);
+        bool runModel(const Crit1DUnit &myUnit, QString &myError);
 
     private:
 
-        bool setSoil(QString soilCode, QString *myError);
+        bool setSoil(QString soilCode, QString &myError);
         bool setMeteo(QString idMeteo, QString idForecast, QString *myError);
 
         void initializeSeasonalForecast(const Crit3DDate& firstDate, const Crit3DDate& lastDate);
 
-        bool createOutputTable(QString* myError);
+        bool createOutputTable(QString &myError);
         void prepareOutput(Crit3DDate myDate, bool isFirst);
-        bool saveOutput(QString* myError);
+        bool saveOutput(QString &myError);
 
     };
 

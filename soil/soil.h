@@ -139,24 +139,6 @@
         };
 
 
-        class Crit3DSoil
-        {
-        public:
-            int id;
-            std::string code;
-            std::string name;
-            unsigned int nrHorizons;
-            double totalDepth;                  /*!<   [m]  */
-            std::vector <Crit3DHorizon> horizon;
-
-            Crit3DSoil();
-            void initialize(const std::string &soilCode, int nrHorizons);
-            void cleanSoil();
-            void addHorizon(int nHorizon, Crit3DHorizon *newHorizon);
-            void deleteHorizon(int nHorizon);
-        };
-
-
         class Crit3DLayer
         {
         public:
@@ -175,7 +157,33 @@
             Crit3DHorizon *horizon;
 
             Crit3DLayer();
+
+            bool setLayer(Crit3DHorizon *horizonPointer);
         };
+
+
+        class Crit3DSoil
+        {
+        public:
+            int id;
+            std::string code;
+            std::string name;
+            unsigned int nrHorizons;
+            double totalDepth;                  /*!<   [m]  */
+            std::vector <Crit3DHorizon> horizon;
+
+            Crit3DSoil();
+
+            void initialize(const std::string &soilCode, int nrHorizons);
+            void cleanSoil();
+            void addHorizon(int nHorizon, Crit3DHorizon *newHorizon);
+            void deleteHorizon(int nHorizon);
+            int getHorizonIndex(double depth);
+
+            bool setSoilLayers(double layerThicknessMin, double geometricFactor,
+                               std::vector<Crit3DLayer> &soilLayers, std::string &myError);
+        };
+
 
         class Crit3DFittingOptions
         {
@@ -232,8 +240,6 @@
         bool fittingWaterRetentionCurve(Crit3DHorizon* horizon,
                         Crit3DFittingOptions* fittingOptions);
         bool sortWaterPotential(soil::Crit3DWaterRetention first, soil::Crit3DWaterRetention second);
-
-        std::vector<soil::Crit3DLayer> getRegularSoilLayers(soil::Crit3DSoil* mySoil, double layerThickness);
     }
 
 

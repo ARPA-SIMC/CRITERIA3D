@@ -131,7 +131,7 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
 
     daysSinceIrrigation = NODATA;
 
-    // is crop living?
+    // check if the crop is living
     if (isPluriannual())
         isLiving = true;
     else
@@ -325,9 +325,7 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
 
         // LAI
         LAI = LAImin;
-
-        if (type == FRUIT_TREE)
-            LAI += LAIgrass;
+        if (type == FRUIT_TREE) LAI += LAIgrass;
     }
     else
     {
