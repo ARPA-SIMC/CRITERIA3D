@@ -28,14 +28,14 @@ TabRootDensity::TabRootDensity()
     axisX->setTitleText("Rooth density [%]");
     axisX->setRange(0,2.2);
     axisX->setTickCount(12);
-    axisX->setLabelFormat("%.2f");
+    axisX->setLabelFormat("%.1f");
     chart->addAxis(axisX, Qt::AlignBottom);
     seriesRootDensity->attachAxis(axisX);
 
     axisY->setTitleText("Depth  [m]");
     axisY->setReverse(true);
 
-    categories << "2.00" << "1.80" << "1.60" << "1.40" << "1.20" << "1.00" << "0.80" << "0.60" << "0.40" << "0.20" << "0.00";
+    categories << "2.0" << "1.8" << "1.6" << "1.4" << "1.2" << "1.0" << "0.8" << "0.6" << "0.4" << "0.2" << "0.0";
     axisY->append(categories);
     chart->addAxis(axisY, Qt::AlignLeft);
     seriesRootDensity->attachAxis(axisY);
@@ -65,7 +65,7 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
     if (nrLayers > 0) totalSoilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
     categories.clear();
-    for (int i = 0; i<nrLayers; i++)
+    for (int i = 1; i<nrLayers; i++)
     {
         if (soilLayers[i].depth <= 2)
         {
@@ -99,6 +99,7 @@ void TabRootDensity::updateRootDensity()
     double waterTableDepth = NODATA;
     double tmin;
     double tmax;
+    double maxDepth = 0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         tmin = mp->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
@@ -113,17 +114,23 @@ void TabRootDensity::updateRootDensity()
         // display only current year
         if (myDate == lastDate)
         {
-            for (int i = 0; i<nrLayers; i++)
+            for (int i = (nrLayers-1); i>0; i--)
             {
                 if (layers[i].depth <= 2)
                 {
                     *set << crop->roots.rootDensity[i]*100;
+                    if (crop->roots.rootDensity[i]*100 > maxDepth)
+                    {
+                        maxDepth = crop->roots.rootDensity[i]*100;
+                    }
                 }
 
             }
 
         }
     }
+    maxDepth = qRound(maxDepth);
+    axisX->setRange(0,maxDepth);
     seriesRootDensity->append(set);
     chart->addSeries(seriesRootDensity);
 }
