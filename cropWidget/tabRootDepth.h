@@ -2,14 +2,16 @@
 #define TABROOTDEPTH_H
 
     #include <QtWidgets>
-#ifndef METEOPOINT_H
-    #include "meteoPoint.h"
-#endif
-#ifndef CROP_H
-    #include "crop.h"
-#endif
-#include <QtCharts>
-#include "crit3DChartView.h"
+    #include <QtCharts>
+
+    #include "callout.h"
+
+    #ifndef METEOPOINT_H
+        #include "meteoPoint.h"
+    #endif
+    #ifndef CROP_H
+        #include "crop.h"
+    #endif
 
     class TabRootDepth : public QWidget
     {
@@ -17,9 +19,12 @@
     public:
         TabRootDepth();
         void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer> &soilLayers);
+        void tooltipRDM(QPointF point, bool state);
+        void tooltipRD(QPointF point, bool state);
+        Callout *m_tooltip;
     private:
         int year;
-        Crit3DChartView *chartView;
+        QChartView *chartView;
         QChart *chart;
         QLineSeries *seriesRootDepth;
         QLineSeries *seriesRootDepthMin;

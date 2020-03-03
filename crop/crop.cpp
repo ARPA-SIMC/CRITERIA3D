@@ -41,10 +41,17 @@
 #include "development.h"
 
 
-Crit3DCrop::Crit3DCrop()
-    : idCrop{""}
+Crit3DCrop::Crit3DCrop() 
 {
+    this->clear();
+}
+
+void Crit3DCrop::clear()
+{
+    idCrop = "";
     type = HERBACEOUS_ANNUAL;
+
+    roots.clear();
 
     /*!
      * \brief crop cycle
@@ -106,8 +113,11 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
 
     // initialize root depth
     roots.rootDepth = 0;
-    if (roots.rootDepthMax > totalSoilDepth)
-        roots.rootDepthMax = totalSoilDepth;
+
+    if (roots.rootDepthMax < totalSoilDepth)
+        roots.actualRootDepthMax = roots.rootDepthMax;
+    else
+        roots.actualRootDepthMax = totalSoilDepth;
 
     degreeDays = 0;
 
@@ -204,19 +214,19 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
 }
 
 
-bool Crit3DCrop::isWaterSurplusResistant()
+bool Crit3DCrop::isWaterSurplusResistant() const
 {
     return (idCrop == "RICE" || idCrop == "KIWIFRUIT" || type == GRASS || type == FALLOW);
 }
 
 
-int Crit3DCrop::getDaysFromTypicalSowing(int myDoy)
+int Crit3DCrop::getDaysFromTypicalSowing(int myDoy) const
 {
     return (myDoy - sowingDoy) % 365;
 }
 
 
-int Crit3DCrop::getDaysFromCurrentSowing(int myDoy)
+int Crit3DCrop::getDaysFromCurrentSowing(int myDoy) const
 {
     if (currentSowingDoy != NODATA)
         return (myDoy - currentSowingDoy) % 365;
@@ -225,13 +235,13 @@ int Crit3DCrop::getDaysFromCurrentSowing(int myDoy)
 }
 
 
-bool Crit3DCrop::isInsideTypicalCycle(int myDoy)
+bool Crit3DCrop::isInsideTypicalCycle(int myDoy) const
 {
-    return ((myDoy >= sowingDoy) && (getDaysFromTypicalSowing(myDoy) < plantCycle));
+    return (myDoy >= sowingDoy && getDaysFromTypicalSowing(myDoy) < plantCycle);
 }
 
 
-bool Crit3DCrop::isPluriannual()
+bool Crit3DCrop::isPluriannual() const
 {
     return (type == HERBACEOUS_PERENNIAL ||
             type == GRASS ||
@@ -335,15 +345,13 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
 }
 
 
-bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
-                             double tmin, double tmax, double waterTableDepth, std::string* myError)
+bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
+                             double tmin, double tmax, double waterTableDepth, std::string &myError)
 {
-    *myError = "";
+    myError = "";
     if (idCrop == "") return false;
 
     unsigned int nrLayers = unsigned(soilLayers.size());
-    double totalDepth = 0;
-    if (nrLayers > 0) totalDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
     // check start/end crop cycle (update isLiving)
     if (needReset(myDate, latitude, waterTableDepth))
@@ -361,16 +369,16 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate& myDate, double latitude, const st
         // update LAI
         if ( !updateLAI(latitude, nrLayers, currentDoy))
         {
-            *myError = "Error in updating LAI for crop " + idCrop;
+            myError = "Error in updating LAI for crop " + idCrop;
             return false;
         }
 
         // update roots
-        root::computeRootDepth(this, totalDepth, degreeDays, waterTableDepth);
+        root::computeRootDepth(this, degreeDays, waterTableDepth);
 
-        if ( !root::computeRootDensity(this, soilLayers, totalDepth))
+        if ( !root::computeRootDensity(this, soilLayers))
         {
-            *myError = "Error in updating roots for crop " + idCrop;
+            myError = "Error in updating roots for crop " + idCrop;
             return false;
         }
     }

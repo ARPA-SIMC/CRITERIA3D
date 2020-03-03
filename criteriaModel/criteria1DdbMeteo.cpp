@@ -7,11 +7,10 @@
 
 #include "commonConstants.h"
 #include "crit3dDate.h"
-#include "dbMeteoCriteria1D.h"
+#include "criteria1DdbMeteo.h"
 #include "utilities.h"
 #include "meteoPoint.h"
 
-#include <qdebug.h>
 
 bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
 {

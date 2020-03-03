@@ -9,7 +9,7 @@ TabRootDepth::TabRootDepth()
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
     chart = new QChart();
-    chartView = new Crit3DChartView(chart);
+    chartView = new QChartView(chart);
     chart->setTitle("Root Depth");
     chartView->setChart(chart);
     seriesRootDepth = new QLineSeries();
@@ -44,6 +44,11 @@ TabRootDepth::TabRootDepth()
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
+
+    chart->setAcceptHoverEvents(true);
+    m_tooltip = new Callout(chart);
+    connect(seriesRootDepthMin, &QLineSeries::hovered, this, &TabRootDepth::tooltipRDM);
+    connect(seriesRootDepth, &QLineSeries::hovered, this, &TabRootDepth::tooltipRD);
 
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
@@ -81,7 +86,7 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
         tmin = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         tmax = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
 
-        if (!myCrop->dailyUpdate(myDate, meteoPoint->latitude, soilLayers, tmin, tmax, waterTableDepth, &error))
+        if (!myCrop->dailyUpdate(myDate, meteoPoint->latitude, soilLayers, tmin, tmax, waterTableDepth, error))
         {
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(error));
             return;
@@ -102,7 +107,7 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
                 // last day
                 seriesRootDepthMin->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepthMin);
                 seriesRootDepth->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepthMin);
-                break;
+                startValidData = false;
             }
         }
     }
@@ -115,5 +120,42 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
 
 }
 
+void TabRootDepth::tooltipRDM(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \nroot ini %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
+
+void TabRootDepth::tooltipRD(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \nroot depth %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
 
 

@@ -39,6 +39,12 @@
 
 Crit3DRoot::Crit3DRoot()
 {
+    this->clear();
+}
+
+
+void Crit3DRoot::clear()
+{
     // parameters
     rootShape = CYLINDRICAL_DISTRIBUTION;
     growth = LOGISTIC;
@@ -48,6 +54,7 @@ Crit3DRoot::Crit3DRoot()
     rootDepthMax = NODATA;
 
     // variables
+    actualRootDepthMax = NODATA;
     firstRootLayer = NODATA;
     lastRootLayer = NODATA;
     rootLength = NODATA;
@@ -107,7 +114,7 @@ namespace root
         return "No root type";
     }
 
-    double computeRootDepth(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth)
+    double computeRootDepth(Crit3DCrop* myCrop, double currentDD, double waterTableDepth)
     {
         if (!(myCrop->isLiving))
         {
@@ -116,7 +123,7 @@ namespace root
         }
         else
         {
-            myCrop->roots.rootLength = computeRootLength(myCrop, soilDepth, currentDD, waterTableDepth);
+            myCrop->roots.rootLength = computeRootLength(myCrop, currentDD, waterTableDepth);
             myCrop->roots.rootDepth = myCrop->roots.rootDepthMin + myCrop->roots.rootLength;
         }
 
@@ -125,26 +132,20 @@ namespace root
 
 
     // TODO this function computes the root length based on thermal units, it could be changed for perennial crops
-    double computeRootLength(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth)
+    double computeRootLength(Crit3DCrop* myCrop, double currentDD, double waterTableDepth)
     {
         double myRootLength = NODATA;
 
-        if (myCrop->roots.rootDepthMax > soilDepth)
-        {
-            myCrop->roots.rootDepthMax = soilDepth; // attenzione è diverso da criteria
-            std::cout << "Warning: input root profile deeper than soil profile\n";
-        }
-
         if (myCrop->isPluriannual())
         {
-            myRootLength = myCrop->roots.rootDepthMax - myCrop->roots.rootDepthMin;
+            myRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
         }
         else
         {
             if (currentDD <= 0)
                 myRootLength = 0.0;
             else if (currentDD > myCrop->roots.degreeDaysRootGrowth)
-                myRootLength = myCrop->roots.rootDepthMax - myCrop->roots.rootDepthMin;
+                myRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
             else
             {
                 // in order to avoid numerical divergences when calculating density through cardioid and gamma function
@@ -193,7 +194,7 @@ namespace root
     {
         // this function computes the roots rate of development
         double myRootLength = NODATA;
-        double maxRootLength = myRoot->rootDepthMax - myRoot->rootDepthMin;
+        double maxRootLength = myRoot->actualRootDepthMax - myRoot->rootDepthMin;
 
         if (currentDD <= 0) return 0.;
         if (currentDD > myRoot->degreeDaysRootGrowth) return maxRootLength;
@@ -213,10 +214,10 @@ namespace root
             k = -(iniLog - filLog) / (emergenceDD - myRoot->degreeDaysRootGrowth);
             b = -(filLog + k * myRoot->degreeDaysRootGrowth);
 
-            logMax = (myRoot->rootDepthMax) / (1 + exp(-b - k * myRoot->degreeDaysRootGrowth));
-            logMin = myRoot->rootDepthMax / (1 + exp(-b));
+            logMax = (myRoot->actualRootDepthMax) / (1 + exp(-b - k * myRoot->degreeDaysRootGrowth));
+            logMin = myRoot->actualRootDepthMax / (1 + exp(-b));
             deformationFactor = (logMax - logMin) / maxRootLength ;
-            myRootLength = 1.0 / deformationFactor * (myRoot->rootDepthMax / (1.0 + exp(-b - k * currentDD)) - logMin);
+            myRootLength = 1.0 / deformationFactor * (myRoot->actualRootDepthMax / (1.0 + exp(-b - k * currentDD)) - logMin);
         }
         else if (myRoot->growth == EXPONENTIAL)
         {
@@ -420,10 +421,12 @@ namespace root
     }
 
 
-    bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers, double soilDepth)
+    bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers)
     {
         unsigned int i, layer;
         unsigned int nrLayers = unsigned(soilLayers.size());
+        double soilDepth = 0;
+        if (nrLayers > 0) soilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
         // Initialize
         for (i = 0; i < nrLayers; i++)

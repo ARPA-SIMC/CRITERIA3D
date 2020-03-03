@@ -1,9 +1,9 @@
 #ifndef DBMETEOCRITERIA1D_H
 #define DBMETEOCRITERIA1D_H
 
-    #include <QSqlDatabase>
-
+    class QSqlDatabase;
     class QSqlQuery;
+    class QStringList;
     class QString;
     class Crit3DMeteoPoint;
 

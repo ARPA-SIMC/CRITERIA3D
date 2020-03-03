@@ -9,18 +9,22 @@
 
     #define MAX_EVAPORATION_DEPTH 0.15
 
-    class CriteriaModel;
+    class Crit3DCrop;
 
-    void initializeWater(CriteriaModel* myCase);
-    bool computeInfiltration(CriteriaModel* myCase, double prec, double sprayIrrigation);
-    bool computeEvaporation(CriteriaModel* myCase);
-    bool computeSurfaceRunoff(CriteriaModel* myCase);
-    bool computeLateralDrainage(CriteriaModel* myCase);
+    void initializeWater(std::vector<soil::Crit3DLayer> &soilLayers);
 
-    double computeOptimalIrrigation(std::vector<soil::Crit3DLayer>* soilLayers, double myIrrigation);
-    double computeCapillaryRise(std::vector<soil::Crit3DLayer> *soilLayers, double waterTableDepth);
+    double computeInfiltration(std::vector<soil::Crit3DLayer> &soilLayers, double inputWater, double ploughedSoilDepth);
 
-    double getSoilWaterContent(CriteriaModel* myCase);
+    double computeEvaporation(std::vector<soil::Crit3DLayer> &soilLayers, double maxEvaporation);
+    double computeSurfaceRunoff(const Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers);
+    double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers);
+    double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double waterTableDepth);
+
+    double computeOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, double irrigationMax);
+
+    double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers);
+    double getSoilWaterDeficit(const std::vector<soil::Crit3DLayer> &soilLayers);
+    double getCropReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit3DLayer> &soilLayers);
 
 
 #endif // WATER1D_H

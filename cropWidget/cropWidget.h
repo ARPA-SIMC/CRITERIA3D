@@ -10,6 +10,7 @@
 
     #include "tabLAI.h"
     #include "tabRootDepth.h"
+    #include "tabRootDensity.h"
 
     class Crit3DCropWidget : public QWidget
     {
@@ -17,6 +18,7 @@
 
         public:
             Crit3DCropWidget();
+            void on_actionOpenProject();
             void on_actionOpenCropDB();
             void on_actionChooseCrop(QString cropName);
             void on_actionOpenMeteoDB();
@@ -30,22 +32,21 @@
             void on_actionSave();
             void on_actionUpdate();
             bool saveCrop();
-            bool saveMeteo();
             void updateCropParam(QString idCrop);
             bool updateCrop();
             bool updateMeteoPoint();
             void updateTabLAI();
             void updateTabRootDepth();
+            void updateTabRootDensity();
             void tabChanged(int index);
             bool checkIfCropIsChanged();
-            bool checkIfMeteoIsChanged();
 
         private:
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
             QSqlDatabase dbSoil;
-            QString dbCropName;
             Crit3DCrop* myCrop;
+            Crit3DCrop cropFromDB;
             soil::Crit3DSoil mySoil;
             soil::Crit3DTextureClass textureClassList[13];
             soil::Crit3DFittingOptions fittingOptions;
@@ -54,7 +55,6 @@
             Crit3DMeteoPoint *meteoPoint;
             std::vector<soil::Crit3DLayer> soilLayers;
             bool cropChanged;
-            bool meteoChanged;
             double meteoLatBackUp;
 
             QGroupBox *infoCropGroup;
@@ -99,8 +99,14 @@
 
             TabLAI* tabLAI;
             TabRootDepth* tabRootDepth;
-            void closeEvent(QCloseEvent *event);
+            TabRootDensity* tabRootDensity;
 
+            void clearCrop();
+            void checkCropUpdate();
+            void openCropDB(QString newDbCropName);
+            void openMeteoDB(QString dbMeteoName);
+            void openSoilDB(QString dbSoilName);
     };
+
 
 #endif // CROPWIDGET_H

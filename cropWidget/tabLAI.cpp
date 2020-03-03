@@ -1,6 +1,7 @@
 #include "tabLAI.h"
 #include "commonConstants.h"
 #include <QMessageBox>
+#include <QLegendMarker>
 
 
 TabLAI::TabLAI()
@@ -8,14 +9,29 @@ TabLAI::TabLAI()
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
     chart = new QChart();   
-    chartView = new Crit3DChartView(chart);
-    chart->setTitle("LAI development");
+    chartView = new QChartView(chart);
     chartView->setChart(chart);
-    series = new QLineSeries();
+    seriesLAI = new QLineSeries();
+    seriesPotentialEvap = new QLineSeries();
+    seriesMaxEvap = new QLineSeries();
+    seriesMaxTransp = new QLineSeries();
+    seriesLAI->setName("Leaf Area Index [m2 m-2]");
+
+    seriesPotentialEvap->setName("Potential evapotranspiration [mm]");
+    seriesPotentialEvap->setColor(QColor(Qt::darkGray));
+    seriesMaxEvap->setName("Evaporation max [mm]");
+    seriesMaxEvap->setColor(QColor(Qt::blue));
+    seriesMaxTransp->setName("Transpiration max [mm]");
+    seriesMaxTransp->setColor(QColor(Qt::red));
+
     axisX = new QDateTimeAxis();
     axisY = new QValueAxis();
+    axisYdx = new QValueAxis();
 
-    chart->addSeries(series);
+    chart->addSeries(seriesLAI);
+    chart->addSeries(seriesPotentialEvap);
+    chart->addSeries(seriesMaxEvap);
+    chart->addSeries(seriesMaxTransp);
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
@@ -24,13 +40,51 @@ TabLAI::TabLAI()
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
     axisX->setTickCount(13);
     chart->addAxis(axisX, Qt::AlignBottom);
-    series->attachAxis(axisX);
+    seriesLAI->attachAxis(axisX);
+    seriesPotentialEvap->attachAxis(axisX);
+    seriesMaxEvap->attachAxis(axisX);
+    seriesMaxTransp->attachAxis(axisX);
 
-    axisY->setTitleText("LAI  [m2 m-2]");
-    axisY->setRange(0,6);
-    axisY->setTickCount(7);
+    QFont font = axisY->titleFont();
+    font.setPointSize(9);
+    font.setBold(true);
+
+    axisY->setTitleText("Leaf Area Index [m2 m-2]");
+    axisY->setTitleFont(font);
+    axisY->setRange(0,7);
+    axisY->setTickCount(8);
+
+    QPen pen;
+    pen.setWidth(3);
+    pen.setBrush(Qt::green);
+
+    axisYdx->setTitleText("Evapotranspiration [mm]");
+    axisYdx->setRange(0,7);
+    axisYdx->setTickCount(8);
+    axisYdx->setTitleFont(font);
+
+    seriesLAI->setPen(pen);
+
     chart->addAxis(axisY, Qt::AlignLeft);
-    series->attachAxis(axisY);
+    chart->addAxis(axisYdx, Qt::AlignRight);
+    seriesLAI->attachAxis(axisY);
+    seriesPotentialEvap->attachAxis(axisYdx);
+    seriesMaxEvap->attachAxis(axisYdx);
+    seriesMaxTransp->attachAxis(axisYdx);
+
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+    chart->setAcceptHoverEvents(true);
+    m_tooltip = new Callout(chart);
+    connect(seriesLAI, &QLineSeries::hovered, this, &TabLAI::tooltipLAI);
+    connect(seriesPotentialEvap, &QLineSeries::hovered, this, &TabLAI::tooltipPE);
+    connect(seriesMaxEvap, &QLineSeries::hovered, this, &TabLAI::tooltipME);
+    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabLAI::tooltipMT);
+
+    foreach(QLegendMarker* marker, chart->legend()->markers())
+    {
+        QObject::connect(marker, &QLegendMarker::clicked, this, &TabLAI::handleMarkerClicked);
+    }
 
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
@@ -54,8 +108,13 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int cu
     double tmin;
     double tmax;
     QDateTime x;
+    double dailyEt0;
+    int doy;
 
-    series->clear();
+    seriesLAI->clear();
+    seriesPotentialEvap->clear();
+    seriesMaxEvap->clear();
+    seriesMaxTransp->clear();
 
     int currentDoy = 1;
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
@@ -65,7 +124,7 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int cu
         tmin = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         tmax = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
 
-        if (!myCrop->dailyUpdate(myDate, meteoPoint->latitude, soilLayers, tmin, tmax, waterTableDepth, &error))
+        if (!myCrop->dailyUpdate(myDate, meteoPoint->latitude, soilLayers, tmin, tmax, waterTableDepth, error))
         {
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(error));
             return;
@@ -75,7 +134,13 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int cu
         if (myDate.year == year)
         {
             x.setDate(QDate(myDate.year, myDate.month, myDate.day));
-            series->append(x.toMSecsSinceEpoch(), myCrop->LAI);
+            doy = getDoyFromDate(myDate);
+            // ET0
+            dailyEt0 = ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, meteoPoint->latitude, doy, tmax, tmin);
+            seriesPotentialEvap->append(x.toMSecsSinceEpoch(), dailyEt0);
+            seriesMaxEvap->append(x.toMSecsSinceEpoch(), myCrop->getMaxEvaporation(dailyEt0));
+            seriesMaxTransp->append(x.toMSecsSinceEpoch(), myCrop->getMaxTranspiration(dailyEt0));
+            seriesLAI->append(x.toMSecsSinceEpoch(), myCrop->LAI);
         }
     }
 
@@ -84,6 +149,123 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int cu
     QDate last(year, 12, 31);
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
+}
+
+void TabLAI::tooltipLAI(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \nLAI %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
+
+void TabLAI::tooltipPE(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \nPot. ET %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
+
+void TabLAI::tooltipME(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \nEvap. max %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
+
+void TabLAI::tooltipMT(QPointF point, bool state)
+{
+    if (m_tooltip == nullptr)
+        m_tooltip = new Callout(chart);
+
+    if (state)
+    {
+        QDateTime xDate;
+        xDate.setMSecsSinceEpoch(point.x());
+        m_tooltip->setText(QString("%1 \nTransp. max %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    } else {
+        m_tooltip->hide();
+    }
+}
+
+void TabLAI::handleMarkerClicked()
+{
+    QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
+
+    if(marker->type() == QLegendMarker::LegendMarkerTypeXY)
+    {
+        // Toggle visibility of series
+        marker->series()->setVisible(!marker->series()->isVisible());
+
+        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
+        marker->setVisible(true);
+
+        // change marker alpha, if series is not visible
+        qreal alpha = 1.0;
+
+        if (!marker->series()->isVisible()) {
+            alpha = 0.5;
+        }
+
+        QColor color;
+        QBrush brush = marker->labelBrush();
+        color = brush.color();
+        color.setAlphaF(alpha);
+        brush.setColor(color);
+        marker->setLabelBrush(brush);
+
+        brush = marker->brush();
+        color = brush.color();
+        color.setAlphaF(alpha);
+        brush.setColor(color);
+        marker->setBrush(brush);
+
+        QPen pen = marker->pen();
+        color = pen.color();
+        color.setAlphaF(alpha);
+        pen.setColor(color);
+        marker->setPen(pen);
+    }
+
 }
 
 
