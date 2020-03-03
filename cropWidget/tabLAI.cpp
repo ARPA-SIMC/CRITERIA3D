@@ -15,13 +15,13 @@ TabLAI::TabLAI()
     seriesPotentialEvap = new QLineSeries();
     seriesMaxEvap = new QLineSeries();
     seriesMaxTransp = new QLineSeries();
-    seriesLAI->setName("LAI [m2 m-2]");
+    seriesLAI->setName("Leaf Area Index [m2 m-2]");
 
-    seriesPotentialEvap->setName("potential evapotranspiration [mm]");
+    seriesPotentialEvap->setName("Potential evapotranspiration [mm]");
     seriesPotentialEvap->setColor(QColor(Qt::darkGray));
-    seriesMaxEvap->setName("evaporation max [mm]");
+    seriesMaxEvap->setName("Evaporation max [mm]");
     seriesMaxEvap->setColor(QColor(Qt::blue));
-    seriesMaxTransp->setName("transpiration max [mm]");
+    seriesMaxTransp->setName("Transpiration max [mm]");
     seriesMaxTransp->setColor(QColor(Qt::red));
 
     axisX = new QDateTimeAxis();
@@ -46,10 +46,10 @@ TabLAI::TabLAI()
     seriesMaxTransp->attachAxis(axisX);
 
     QFont font = axisY->titleFont();
-    font.setPointSize(10);
+    font.setPointSize(9);
     font.setBold(true);
 
-    axisY->setTitleText("LAI  [m2 m-2]");
+    axisY->setTitleText("Leaf Area Index [m2 m-2]");
     axisY->setTitleFont(font);
     axisY->setRange(0,7);
     axisY->setTickCount(8);
@@ -58,7 +58,7 @@ TabLAI::TabLAI()
     pen.setWidth(3);
     pen.setBrush(Qt::green);
 
-    axisYdx->setTitleText("evapotranspiration [mm]");
+    axisYdx->setTitleText("Evapotranspiration [mm]");
     axisYdx->setRange(0,7);
     axisYdx->setTickCount(8);
     axisYdx->setTitleFont(font);
