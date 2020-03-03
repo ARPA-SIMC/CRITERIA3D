@@ -26,7 +26,7 @@ private:
     int year;
     QChartView *chartView;
     QChart *chart;
-    QHorizontalPercentBarSeries *seriesRootDensity;
+    QHorizontalBarSeries *seriesRootDensity;
     QBarSet *set;
     QValueAxis *axisX;
     QBarCategoryAxis *axisY;

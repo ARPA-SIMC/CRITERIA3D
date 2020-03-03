@@ -10,18 +10,19 @@ TabRootDensity::TabRootDensity()
     chart->setTitle("Root Density");
     chartView->setChart(chart);
 
-    seriesRootDensity = new QHorizontalPercentBarSeries();
+    seriesRootDensity = new QHorizontalBarSeries();
     seriesRootDensity->setName("rooth density");
     set = new QBarSet("");
     seriesRootDensity->append(set);
+    chart->addSeries(seriesRootDensity);
 
     axisX = new QValueAxis();
     axisY = new QBarCategoryAxis();
 
-    chart->addSeries(seriesRootDensity);
     axisX->setTitleText("Rooth density [%]");
-    axisX->setRange(0,0.022);
+    axisX->setRange(0,2.2);
     axisX->setTickCount(12);
+    axisX->setLabelFormat("%.2f");
     chart->addAxis(axisX, Qt::AlignBottom);
     seriesRootDensity->attachAxis(axisX);
 
@@ -33,10 +34,8 @@ TabRootDensity::TabRootDensity()
     chart->addAxis(axisY, Qt::AlignLeft);
     seriesRootDensity->attachAxis(axisY);
 
-    chart->legend()->setVisible(true);
-    chart->legend()->setAlignment(Qt::AlignBottom);
-
-    chart->setAcceptHoverEvents(true);
+    chart->legend()->setVisible(false);
+    //chart->setAcceptHoverEvents(true);
     //m_tooltip = new Callout(chart);
     //connect(seriesRootDensity, &QLineSeries::hovered, this, &TabRootDensity::tooltip);
 
@@ -53,9 +52,19 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
     if (nrLayers > 0) totalSoilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
     categories.clear();
+    if (set != nullptr)
+    {
+        seriesRootDensity->remove(set);
+        chart->removeSeries(seriesRootDensity);
+    }
+    set = new QBarSet("");
+
     for (int i = 0; i<nrLayers; i++)
     {
-        categories << QString::number(soilLayers[i].depth);
+        if (soilLayers[i].depth <= 2)
+        {
+            categories << QString::number(soilLayers[i].depth);
+        }
     }
 
     year = currentYear;
@@ -65,12 +74,11 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
     std::string error;
 
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
-    Crit3DDate lastDate = Crit3DDate(31, 12, year);
+    //Crit3DDate lastDate = Crit3DDate(31, 12, year);
+    Crit3DDate lastDate = Crit3DDate(30, 6, year);
     double tmin;
     double tmax;
     QDateTime x;
-
-    seriesRootDensity->clear();
 
     int currentDoy = 1;
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
@@ -87,16 +95,21 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
         }
 
         // display only current year
-        if (myDate.year == year)
+        if (myDate == lastDate)
         {
             for (int i = 0; i<nrLayers; i++)
             {
-                qDebug() << "myCrop->roots.rootDensity[i] " << myCrop->roots.rootDensity[i];
-                //*set << myCrop->roots.rootDensity[i];
+                if (soilLayers[i].depth <= 2)
+                {
+                    *set << myCrop->roots.rootDensity[i]*100;
+                }
+
             }
 
         }
     }
+    seriesRootDensity->append(set);
+    chart->addSeries(seriesRootDensity);
 
 }
 
