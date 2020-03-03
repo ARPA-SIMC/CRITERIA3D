@@ -33,8 +33,6 @@ TabRootDensity::TabRootDensity()
     seriesRootDensity->attachAxis(axisX);
 
     axisY->setTitleText("Depth  [m]");
-    axisY->setReverse(true);
-
     categories << "2.0" << "1.8" << "1.6" << "1.4" << "1.2" << "1.0" << "0.8" << "0.6" << "0.4" << "0.2" << "0.0";
     axisY->append(categories);
     chart->addAxis(axisY, Qt::AlignLeft);
@@ -64,15 +62,20 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
     double totalSoilDepth = 0;
     if (nrLayers > 0) totalSoilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
+    axisY->clear();
     categories.clear();
-    for (int i = 1; i<nrLayers; i++)
+    for (int i = (nrLayers-1); i>0; i--)
     {
         if (soilLayers[i].depth <= 2)
         {
-            categories << QString::number(soilLayers[i].depth);
+            if (!categories.contains(QString::number(soilLayers[i].depth, 'f', 1)))
+            {
+                categories << QString::number(soilLayers[i].depth, 'f', 1);
+            }
+
         }
     }
-
+    axisY->append(categories);
     int currentDoy = 1;
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
     updateRootDensity();
@@ -111,7 +114,7 @@ void TabRootDensity::updateRootDensity()
             return;
         }
 
-        // display only current year
+        // display only current doy
         if (myDate == lastDate)
         {
             for (int i = (nrLayers-1); i>0; i--)
