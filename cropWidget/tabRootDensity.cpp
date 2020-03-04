@@ -11,10 +11,11 @@ TabRootDensity::TabRootDensity()
     dateLayout->setAlignment(Qt::AlignHCenter);
     currentDate = new QDateEdit;
     slider = new QSlider(Qt::Horizontal);
-    slider->setMinimum(0);
-    slider->setMaximum(366);
-    QDate defaultDate(currentDate->date().year(), 06, 30);
-    currentDate->setDate(defaultDate);
+    slider->setMinimum(1);
+    QDate middleDate(currentDate->date().year(),06,30);
+    slider->setMaximum(QDate(middleDate.year(),12,31).dayOfYear());
+    slider->setValue(middleDate.dayOfYear());
+    currentDate->setDate(middleDate);
     currentDate->setDisplayFormat("MMM dd");
     currentDate->setMaximumWidth(this->width()/5);
     chart = new QChart();
@@ -48,6 +49,7 @@ TabRootDensity::TabRootDensity()
     nrLayers = 0;
 
     connect(currentDate, &QDateEdit::dateChanged, this, &TabRootDensity::updateRootDensity);
+    connect(slider, &QSlider::valueChanged, this, &TabRootDensity::updateDate);
     plotLayout->addWidget(chartView);
     sliderLayout->addWidget(slider);
     dateLayout->addWidget(currentDate);
@@ -65,6 +67,9 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
     layers = soilLayers;
     nrLayers = unsigned(soilLayers.size());
     year = currentYear;
+
+    QDate lastDate(year,12,31);
+    slider->setMaximum(lastDate.dayOfYear());
 
     double totalSoilDepth = 0;
     if (nrLayers > 0) totalSoilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
@@ -90,9 +95,24 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
     updateRootDensity();
 }
 
+void TabRootDensity::updateDate()
+{
+    int doy = slider->value();
+    QDate newDate = QDate(year, 1, 1).addDays(doy - 1);
+    if (newDate != currentDate->date())
+    {
+        currentDate->setDate(newDate);
+    }
+
+}
+
 void TabRootDensity::updateRootDensity()
 {
 
+    QDate newDate(year,currentDate->date().month(),currentDate->date().day());
+    slider->blockSignals(true);
+    slider->setValue(newDate.dayOfYear());
+    slider->blockSignals(false);
     if (crop == nullptr || mp == nullptr || nrLayers == 0)
     {
         return;

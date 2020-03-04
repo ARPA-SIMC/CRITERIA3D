@@ -20,6 +20,7 @@ class TabRootDensity : public QWidget
 public:
     TabRootDensity();
     void computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer> &soilLayers);
+    void updateDate();
     void updateRootDensity();
 
 private:
