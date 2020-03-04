@@ -4,14 +4,19 @@
 TabRootDensity::TabRootDensity()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
-    QHBoxLayout *dateLayout = new QHBoxLayout;
+    QVBoxLayout *sliderLayout = new QVBoxLayout;
+    QVBoxLayout *dateLayout = new QVBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
+
     dateLayout->setAlignment(Qt::AlignHCenter);
-    QLabel *dateLabel = new QLabel(tr("select day and month: "));
     currentDate = new QDateEdit;
+    slider = new QSlider(Qt::Horizontal);
+    slider->setMinimum(0);
+    slider->setMaximum(366);
     QDate defaultDate(currentDate->date().year(), 06, 30);
     currentDate->setDate(defaultDate);
     currentDate->setDisplayFormat("MMM dd");
+    currentDate->setMaximumWidth(this->width()/5);
     chart = new QChart();
     chartView = new QChartView(chart);
     chartView->setChart(chart);
@@ -28,12 +33,13 @@ TabRootDensity::TabRootDensity()
     axisX->setTitleText("Rooth density [%]");
     axisX->setRange(0,2.2);
     axisX->setTickCount(12);
-    axisX->setLabelFormat("%.1f");
+    axisX->setLabelFormat("%.2f");
     chart->addAxis(axisX, Qt::AlignBottom);
     seriesRootDensity->attachAxis(axisX);
 
     axisY->setTitleText("Depth  [m]");
-    categories << "2.0" << "1.8" << "1.6" << "1.4" << "1.2" << "1.0" << "0.8" << "0.6" << "0.4" << "0.2" << "0.0";
+    //categories << "2.0" << "1.8" << "1.6" << "1.4" << "1.2" << "1.0" << "0.8" << "0.6" << "0.4" << "0.2" << "0.0";
+    categories << "2.00" << "1.80" << "1.60" << "1.40" << "1.20" << "1.00" << "0.80" << "0.60" << "0.40" << "0.20" << "0.00";
     axisY->append(categories);
     chart->addAxis(axisY, Qt::AlignLeft);
     seriesRootDensity->attachAxis(axisY);
@@ -43,8 +49,9 @@ TabRootDensity::TabRootDensity()
 
     connect(currentDate, &QDateEdit::dateChanged, this, &TabRootDensity::updateRootDensity);
     plotLayout->addWidget(chartView);
-    dateLayout->addWidget(dateLabel);
+    sliderLayout->addWidget(slider);
     dateLayout->addWidget(currentDate);
+    mainLayout->addLayout(sliderLayout);
     mainLayout->addLayout(dateLayout);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
@@ -68,13 +75,15 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
     {
         if (soilLayers[i].depth <= 2)
         {
-            if (!categories.contains(QString::number(soilLayers[i].depth, 'f', 1)))
+            if (!categories.contains(QString::number(soilLayers[i].depth, 'f', 2)))
             {
-                categories << QString::number(soilLayers[i].depth, 'f', 1);
+                categories << QString::number(soilLayers[i].depth, 'f', 2);
             }
 
         }
     }
+    qDebug() << "categories " << categories;
+    qDebug() << "categories size " << categories.size();
     axisY->append(categories);
     int currentDoy = 1;
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
