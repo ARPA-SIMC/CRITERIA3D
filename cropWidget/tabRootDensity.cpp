@@ -34,7 +34,7 @@ TabRootDensity::TabRootDensity()
     axisX->setTitleText("Rooth density [%]");
     axisX->setRange(0,2.2);
     axisX->setTickCount(12);
-    axisX->setLabelFormat("%.2f");
+    axisX->setLabelFormat("%.1f");
     chart->addAxis(axisX, Qt::AlignBottom);
     seriesRootDensity->attachAxis(axisX);
 
@@ -180,7 +180,7 @@ void TabRootDensity::updateRootDensity()
         }
     }
 
-    maxRootDensity = ceil(maxRootDensity);
+    maxRootDensity = maxRootDensity;
     axisX->setRange(0, maxRootDensity);
     seriesRootDensity->append(set);
     chart->addSeries(seriesRootDensity);
@@ -197,7 +197,7 @@ void TabRootDensity::tooltip(bool state, int index, QBarSet *barset)
 
     if (state) {
         m_tooltip->setText(QString("%1 \n ").arg(set->at(index)));
-        QPointF point(barset->at(index), index);
+        QPointF point(index, barset->at(index));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -207,7 +207,7 @@ void TabRootDensity::tooltip(bool state, int index, QBarSet *barset)
     else {
         m_tooltip->hide();
     }
-    */
+*/
     /*
     if (m_tooltip == nullptr)
         m_tooltip = new Callout(chart);
