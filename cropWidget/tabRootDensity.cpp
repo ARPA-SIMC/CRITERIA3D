@@ -46,7 +46,6 @@ TabRootDensity::TabRootDensity()
         categories.append(QString::number(i, 'f', 2));
         i = i-0.1;
     }
-    //categories << "2.00" << "1.80" << "1.60" << "1.40" << "0.1" << "0.10" << "0.09" << "0.08" << "0.07" << "0.06" << "0.05";
     axisY->append(categories);
     chart->addAxis(axisY, Qt::AlignLeft);
     seriesRootDensity->attachAxis(axisY);
@@ -173,7 +172,7 @@ void TabRootDensity::updateRootDensity()
 
                         if (rootDensityAdj > maxRootDensity)
                         {
-                            maxRootDensity = crop->roots.rootDensity[i]*100;
+                            maxRootDensity = rootDensityAdj;
                         }
                     }
                 }
@@ -189,10 +188,10 @@ void TabRootDensity::updateRootDensity()
 
 void TabRootDensity::tooltip(bool state, int index, QBarSet *barset)
 {
-    /*
+
     qDebug() << "index " << index;
     qDebug() << "set->at(index) " << set->at(index);
-
+/*
     if (m_tooltip == nullptr)
         m_tooltip = new Callout(chart);
 
