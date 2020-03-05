@@ -189,16 +189,18 @@ void TabRootDensity::updateRootDensity()
 void TabRootDensity::tooltip(bool state, int index, QBarSet *barset)
 {
 
-    qDebug() << "index " << index;
-    qDebug() << "set->at(index) " << set->at(index);
-/*
     if (m_tooltip == nullptr)
         m_tooltip = new Callout(chart);
 
-    if (state) {
+    if (state)
+    {
         m_tooltip->setText(QString("%1 \n ").arg(set->at(index)));
-        QPointF point(index, barset->at(index));
-        m_tooltip->setAnchor(point);
+
+        QPoint point = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(point);
+        QPointF pointF = chart->mapToValue(mapPoint,seriesRootDensity);
+
+        m_tooltip->setAnchor(pointF);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
         m_tooltip->show();
@@ -207,29 +209,5 @@ void TabRootDensity::tooltip(bool state, int index, QBarSet *barset)
     else {
         m_tooltip->hide();
     }
-*/
-    /*
-    if (m_tooltip == nullptr)
-        m_tooltip = new Callout(chart);
 
-    if (state) {
-
-        int yindex=m_barSetList.indexOf(barset);
-        double indexbarset=m_barSetList.indexOf(barset)-1;
-        indexbarset=indexbarset/6;
-        QBarSet *set=m_barSetList.at(yindex);
-        QString yname=set->label();
-        m_tooltip->setText("from:"+categories.at(index)+"\n to :"+QString("\n: %2 ").arg(set->at(index)));
-        QPointF point(index+indexbarset, barset->at(index));
-        qDebug()<<"index:"<<indexbarset<<index<< " "<<barset->at(index);
-        m_tooltip->setAnchor(point);
-        m_tooltip->setZValue(11);
-        m_tooltip->updateGeometry();
-        m_tooltip->show();
-
-    }
-    else {
-        m_tooltip->hide();
-    }
-        */
 }
