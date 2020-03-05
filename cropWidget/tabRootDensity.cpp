@@ -83,26 +83,14 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
 
     axisY->clear();
     categories.clear();
+    depthLayers.clear();
     double i = totalSoilDepth-0.05;
     while (i >= 0)
     {
         categories.append(QString::number(i, 'f', 2));
         i = i-0.1;
     }
-    /*
-    for (int i = (nrLayers-1); i>0; i--)
-    {
-        if (soilLayers[i].depth <= 2)
-        {
-            double layerDepth = soilLayers[i].depth + soilLayers[i].thickness/2;
-            QString depthStr = QString::number(layerDepth, 'f', 1);
-            if (!categories.contains(depthStr))
-            {
-                categories << depthStr;
-            }
-        }
-    }
-    */
+
     double n = totalSoilDepth/0.02;
     double value;
     for (int i = n; i>0; i--)
@@ -169,19 +157,6 @@ void TabRootDensity::updateRootDensity()
         // display only current doy
         if (myDate == lastDate)
         {
-            /*
-            for (int i = (nrLayers-1); i>0; i--)
-            {
-                if (layers[i].depth <= 2)
-                {
-                    *set << crop->roots.rootDensity[i]*100;
-                    if (crop->roots.rootDensity[i]*100 > maxRootDensity)
-                    {
-                        maxRootDensity = crop->roots.rootDensity[i]*100;
-                    }
-                }
-            }
-            */
             for (int i = 0; i<depthLayers.size(); i++)
             {
                 int layerIndex;
@@ -190,13 +165,16 @@ void TabRootDensity::updateRootDensity()
                 if (depthLayers[i] <= 2)
                 {
                     layerIndex = getSoilLayerIndex(layers, depthLayers[i]);
-                    rootDensity = crop->roots.rootDensity[layerIndex]*100;
-                    rootDensityAdj = rootDensity/layers[layerIndex].thickness*0.02;
-                    *set << rootDensityAdj;
-
-                    if (rootDensityAdj > maxRootDensity)
+                    if (layerIndex != NODATA)
                     {
-                        maxRootDensity = crop->roots.rootDensity[i]*100;
+                        rootDensity = crop->roots.rootDensity[layerIndex]*100;
+                        rootDensityAdj = rootDensity/layers[layerIndex].thickness*0.02;
+                        *set << rootDensityAdj;
+
+                        if (rootDensityAdj > maxRootDensity)
+                        {
+                            maxRootDensity = crop->roots.rootDensity[i]*100;
+                        }
                     }
                 }
             }
