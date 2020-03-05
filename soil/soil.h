@@ -203,6 +203,8 @@
         int getNLTextureClass(double sand, double silt, double clay);
 
         int getHorizonIndex(Crit3DSoil* soil, double depth);
+        int getSoilLayerIndex(std::vector<soil::Crit3DLayer> &soilLayers, double depth);
+
         double getFieldCapacity(Crit3DHorizon* horizon, soil::units unit);
         double getWiltingPoint(soil::units unit);
 

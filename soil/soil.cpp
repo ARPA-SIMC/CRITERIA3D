@@ -386,6 +386,20 @@ namespace soil
     }
 
 
+    int getSoilLayerIndex(std::vector<soil::Crit3DLayer> &soilLayers, double depth)
+    {
+       for (unsigned int index = 0; index < soilLayers.size(); index++)
+       {
+           double upperDepth = soilLayers[index].depth - soilLayers[index].thickness/2;
+           double lowerDepth = soilLayers[index].depth + soilLayers[index].thickness/2;
+           if (depth >= upperDepth && depth <= lowerDepth)
+               return signed(index);
+       }
+
+       return NODATA;
+    }
+
+
     /*!
      * \brief Field Capacity water potential as clay function
      * \param horizon
