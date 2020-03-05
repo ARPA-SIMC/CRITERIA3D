@@ -30,6 +30,7 @@ private:
     std::vector<soil::Crit3DLayer> layers;
     unsigned int nrLayers;
     int year;
+    QList<double> depthLayers;
     QSlider* slider;
     QDateEdit *currentDate;
     QChartView *chartView;
