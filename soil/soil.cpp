@@ -956,21 +956,28 @@ namespace soil
 
         // layer > 0: soil
         unsigned int i = 1;
-        double currentTopLayer = 0.0;
+        double upperDepth = 0.0;
         double currentThikness = layerThicknessMin;
-        double currentDepth = currentTopLayer + currentThikness / 2.0;
+        double currentDepth = currentThikness / 2.0;
 
-        while (currentDepth <= totalDepth)
+        while (upperDepth < totalDepth)
         {
             Crit3DLayer newLayer;
             newLayer.thickness = currentThikness;
             newLayer.depth = currentDepth;
 
+            // last layer: thickness reduced
+            if ((upperDepth + currentThikness) > totalDepth)
+            {
+                newLayer.thickness = totalDepth - upperDepth;
+                newLayer.depth = upperDepth + newLayer.thickness/2;
+            }
+
             // get soil horizon
-            int horizonIndex = getHorizonIndex(currentDepth);
+            int horizonIndex = getHorizonIndex(newLayer.depth);
             if (horizonIndex == NODATA)
             {
-                myError = "No horizon defined for depth:" + std::to_string(currentDepth);
+                myError = "No horizon defined for depth:" + std::to_string(newLayer.depth);
                 return false;
             }
 
@@ -984,9 +991,9 @@ namespace soil
             soilLayers.push_back(newLayer);
 
             // update depth
-            currentTopLayer += currentThikness;
+            upperDepth += currentThikness;
             currentThikness *= geometricFactor;
-            currentDepth = currentTopLayer + currentThikness / 2.0;
+            currentDepth = upperDepth + currentThikness / 2.0;
             i++;
         }
 
