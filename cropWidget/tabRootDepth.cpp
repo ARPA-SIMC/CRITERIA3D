@@ -47,6 +47,8 @@ TabRootDepth::TabRootDepth()
 
     chart->setAcceptHoverEvents(true);
     m_tooltip = new Callout(chart);
+    m_tooltip->hide();
+
     connect(seriesRootDepthMin, &QLineSeries::hovered, this, &TabRootDepth::tooltipRDM);
     connect(seriesRootDepth, &QLineSeries::hovered, this, &TabRootDepth::tooltipRD);
 
@@ -122,9 +124,6 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
 
 void TabRootDepth::tooltipRDM(QPointF point, bool state)
 {
-    if (m_tooltip == nullptr)
-        m_tooltip = new Callout(chart);
-
     if (state)
     {
         QDateTime xDate;
@@ -141,9 +140,6 @@ void TabRootDepth::tooltipRDM(QPointF point, bool state)
 
 void TabRootDepth::tooltipRD(QPointF point, bool state)
 {
-    if (m_tooltip == nullptr)
-        m_tooltip = new Callout(chart);
-
     if (state)
     {
         QDateTime xDate;

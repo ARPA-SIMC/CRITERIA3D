@@ -75,7 +75,10 @@ TabLAI::TabLAI()
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
     chart->setAcceptHoverEvents(true);
+
     m_tooltip = new Callout(chart);
+    m_tooltip->hide();
+
     connect(seriesLAI, &QLineSeries::hovered, this, &TabLAI::tooltipLAI);
     connect(seriesPotentialEvap, &QLineSeries::hovered, this, &TabLAI::tooltipPE);
     connect(seriesMaxEvap, &QLineSeries::hovered, this, &TabLAI::tooltipME);
@@ -153,9 +156,6 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int cu
 
 void TabLAI::tooltipLAI(QPointF point, bool state)
 {
-    if (m_tooltip == nullptr)
-        m_tooltip = new Callout(chart);
-
     if (state)
     {
         QDateTime xDate;
@@ -172,9 +172,6 @@ void TabLAI::tooltipLAI(QPointF point, bool state)
 
 void TabLAI::tooltipPE(QPointF point, bool state)
 {
-    if (m_tooltip == nullptr)
-        m_tooltip = new Callout(chart);
-
     if (state)
     {
         QDateTime xDate;
@@ -191,9 +188,6 @@ void TabLAI::tooltipPE(QPointF point, bool state)
 
 void TabLAI::tooltipME(QPointF point, bool state)
 {
-    if (m_tooltip == nullptr)
-        m_tooltip = new Callout(chart);
-
     if (state)
     {
         QDateTime xDate;
@@ -210,8 +204,6 @@ void TabLAI::tooltipME(QPointF point, bool state)
 
 void TabLAI::tooltipMT(QPointF point, bool state)
 {
-    if (m_tooltip == nullptr)
-        m_tooltip = new Callout(chart);
 
     if (state)
     {

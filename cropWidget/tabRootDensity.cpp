@@ -53,6 +53,9 @@ TabRootDensity::TabRootDensity()
     chart->legend()->setVisible(false);
     nrLayers = 0;
 
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
+
     connect(currentDate, &QDateEdit::dateChanged, this, &TabRootDensity::updateRootDensity);
     connect(slider, &QSlider::valueChanged, this, &TabRootDensity::updateDate);
     connect(seriesRootDensity, &QHorizontalBarSeries::hovered, this, &TabRootDensity::tooltip);
@@ -189,12 +192,10 @@ void TabRootDensity::updateRootDensity()
 void TabRootDensity::tooltip(bool state, int index, QBarSet *barset)
 {
 
-    if (m_tooltip == nullptr)
-        m_tooltip = new Callout(chart);
-
-    if (state)
+    if (state && barset!=nullptr && index < barset->count())
     {
-        m_tooltip->setText(QString("%1 \n ").arg(set->at(index)));
+        QString valueStr = QString::number(barset->at(index));
+        m_tooltip->setText(valueStr);
 
         QPoint point = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(point);
@@ -204,9 +205,9 @@ void TabRootDensity::tooltip(bool state, int index, QBarSet *barset)
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
         m_tooltip->show();
-
     }
-    else {
+    else
+    {
         m_tooltip->hide();
     }
 
