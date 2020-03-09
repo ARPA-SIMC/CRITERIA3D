@@ -278,9 +278,9 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
         // check valid prec
         if (prec < prec_min )
         {
-            invalidPrec = invalidPrec + 1;
+            invalidPrec = invalidPrec + previousDate.daysTo(date);
             // 7 day missing, the next one invalid temp
-            if ( invalidPrec + previousDate.daysTo(date) > MAX_MISSING_CONSECUTIVE_DAYS_PREC +1 )
+            if ( invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC )
             {
                  *error = "incomplete year, missing valid data (prec) more than 7 consecutive days";
                  return false;
