@@ -284,7 +284,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
 }
 
 
-bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPoint *meteoPoint, QString validYear, QString *error)
+bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPoint *meteoPoint, QString validYear, QString *error)
 {
     *error = "";
 
@@ -304,6 +304,7 @@ bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPo
     float tmin = NODATA;
     float tmax = NODATA;
     float tavg = NODATA;
+    float prec = NODATA;
 
     const float tmin_min = -50;
     const float tmin_max = 40;
@@ -317,6 +318,7 @@ bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPo
         getValue(query.value("date"), &date);
         getValue(query.value("tmin"), &tmin);
         getValue(query.value("tmax"), &tmax);
+        getValue(query.value("prec"), &prec);
 
         if (tmin < tmin_min || tmin > tmin_max)
         {
@@ -334,9 +336,14 @@ bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPo
         {
             tavg = (tmin + tmax) * 0.5f;
         }
+        if (prec < 0)
+        {
+            prec = NODATA;
+        }
         meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMin, tmin);
         meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMax, tmax);
         meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureAvg, tavg);
+        meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyPrecipitation, prec);
     }
     while(query.next());
 
@@ -401,6 +408,10 @@ bool fillDailyTempCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPo
         {
             tavg = (tmin + tmax) * 0.5f;
             meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureAvg, tavg);
+        }
+        if (prec == NODATA)
+        {
+            prec = 0;
         }
     }
     return true;
