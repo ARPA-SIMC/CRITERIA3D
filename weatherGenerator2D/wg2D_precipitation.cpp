@@ -1140,7 +1140,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
 {
    double val=5;
    int ii=0;
-   double kiter=0.1;
+   double kiter=0.01;
    double** dummyMatrix = (double**)calloc(nrStations, sizeof(double*));
    double** dummyMatrix2 = (double**)calloc(nrStations, sizeof(double*));
    double* correlationArray =(double*)calloc(nrStations*nrStations, sizeof(double));
@@ -1330,7 +1330,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
        {
            ++counterConvergence;
        }
-       if (counterConvergence > 30)
+       if (counterConvergence > 1000)
        {
            if (val <= fabs(minimalValueToExitFromCycle) + TOLERANCE_MULGETS)
            {
@@ -1373,7 +1373,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                }
            }
        }
-       //printf(" iteration step %d\n", ii);
+       printf("iter %d value %f \n",ii,val);
    }
    // free memory
    for (int i=0;i<nrStations;i++)

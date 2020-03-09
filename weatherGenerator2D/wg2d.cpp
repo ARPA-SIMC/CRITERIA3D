@@ -714,7 +714,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
     // M and K matrices are also used as ancillary dummy matrices
     double val = 5;
     int ii = 0;
-    double kiter = 0.1;   // iteration parameter in calculation of new estimate of matrix 'mat'
+    double kiter = 0.01;   // iteration parameter in calculation of new estimate of matrix 'mat'
     double* eigenvalues = (double*)calloc(nrStations, sizeof(double));
     double* eigenvectors = (double*)calloc(nrStations*nrStations, sizeof(double));
     double* correlationArray = (double*)calloc(nrStations*nrStations, sizeof(double));
@@ -898,7 +898,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         {
             counterConvergence++;
         }
-        if (counterConvergence > 30)
+        if (counterConvergence > 1000)
         {
             if (val <= fabs(minimalValueToExitFromCycle) + TOLERANCE_MULGETS)
             {
@@ -938,6 +938,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 }
             }
         }
+        printf("iter %d value %f \n",ii,val);
 
     }  // end of the while cycle
 
