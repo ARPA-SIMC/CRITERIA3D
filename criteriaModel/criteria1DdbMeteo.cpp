@@ -303,7 +303,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     }
 
     // check last day (prec)
-    if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_PREC || (date.daysTo(lastDate) == MAX_MISSING_CONSECUTIVE_DAYS_PREC && invalidPrec > 0) )
+    if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_PREC || (date.daysTo(lastDate) + invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC ) )
     {
         *error = "incomplete year, missing more than 1 consecutive days (prec)";
         return false;
