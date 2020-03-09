@@ -186,11 +186,13 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     QString TMAX_MIN = "-40.0";
     QString TMAX_MAX = "50.0";
 
-    // count valid temp
+    QString PREC_MIN = "0.0";
+
+    // count valid temp and prec
     QString queryString = "SELECT COUNT(date) FROM '" + table +"'" + " WHERE strftime('%Y',date) = '" + year+"'";
-    queryString = queryString + " AND tmin NOT LIKE '' AND tmax NOT LIKE ''";
+    queryString = queryString + " AND tmin NOT LIKE '' AND tmax NOT LIKE '' AND prec NOT LIKE ''";
     queryString = queryString + " AND CAST(tmin AS float) >=" + TMIN_MIN + " AND CAST(tmin AS float) <=" + TMIN_MAX;
-    queryString = queryString + " AND CAST(tmax AS float) >= " + TMAX_MIN + " AND CAST(tmax AS float) <= " + TMAX_MAX;
+    queryString = queryString + " AND CAST(tmax AS float) >= " + TMAX_MIN + " AND CAST(tmax AS float) <= " + TMAX_MAX + " AND CAST(prec AS float) >= " + PREC_MIN;
 
     QSqlQuery query = dbMeteo->exec(queryString);
     query.first();
@@ -212,7 +214,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
         return false;
     }
 
-    // check consecutive missing days (1 missing day allowed)
+    // check consecutive missing days (1 missing day allowed for temperature)
 
     queryString = "SELECT * FROM '" + table +"'" + "WHERE strftime('%Y',date) = '" + year +"'";
     query = dbMeteo->exec(queryString);
@@ -229,19 +231,23 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     QDate lastDate(year.toInt(), 12, 31);
     float tmin = NODATA;
     float tmax = NODATA;
+    float prec = NODATA;
     float tmin_min = TMIN_MIN.toFloat();
     float tmin_max = TMIN_MAX.toFloat();
 
     float tmax_min = TMAX_MIN.toFloat();
     float tmax_max = TMAX_MAX.toFloat();
+    float prec_min = PREC_MIN.toFloat();
 
     int invalidTemp = 0;
+    int invalidPrec = 0;
 
     do
     {
         getValue(query.value("date"), &date);
         getValue(query.value("tmin"), &tmin);
         getValue(query.value("tmax"), &tmax);
+        getValue(query.value("prec"), &prec);
         // 2 days missing
         if (previousDate.daysTo(date) > (MAX_MISSING_CONSECUTIVE_DAYS_T+1))
         {
@@ -251,7 +257,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
         // 1 day missing, the next one invalid temp
         if ( (previousDate.daysTo(date) == (MAX_MISSING_CONSECUTIVE_DAYS_T+1)) && (tmin < tmin_min || tmin > tmin_max || tmax < tmax_min || tmax > tmax_max ) )
         {
-            *error = "incomplete year, missing valid data more than 1 consecutive days";
+            *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
             return false;
         }
         // no day missing, check valid temp
@@ -260,7 +266,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
             invalidTemp = invalidTemp + 1;
             if (invalidTemp > 1)
             {
-                *error = "incomplete year, missing valid data more than 1 consecutive days";
+                *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
                 return false;
             }
         }
@@ -268,15 +274,38 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
         {
             invalidTemp = 0;
         }
+
+        // check valid prec
+        if (prec < prec_min )
+        {
+            invalidPrec = invalidPrec + 1;
+            // 7 day missing, the next one invalid temp
+            if ( invalidPrec + previousDate.daysTo(date) > MAX_MISSING_CONSECUTIVE_DAYS_PREC +1 )
+            {
+                 *error = "incomplete year, missing valid data (prec) more than 7 consecutive days";
+                 return false;
+            }
+        }
+        else
+        {
+            invalidPrec = 0;
+        }
         previousDate = date;
 
     }
     while(query.next());
 
-    // check last day
+    // check last day (temp)
     if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_T || (date.daysTo(lastDate) == MAX_MISSING_CONSECUTIVE_DAYS_T && invalidTemp > 0) )
     {
-        *error = "incomplete year, missing more than 1 consecutive days";
+        *error = "incomplete year, missing more than 1 consecutive days (temp)";
+        return false;
+    }
+
+    // check last day (prec)
+    if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_PREC || (date.daysTo(lastDate) == MAX_MISSING_CONSECUTIVE_DAYS_PREC && invalidPrec > 0) )
+    {
+        *error = "incomplete year, missing more than 1 consecutive days (prec)";
         return false;
     }
 
