@@ -29,6 +29,8 @@
 #include "soilDbTools.h"
 #include "utilities.h"
 #include "commonConstants.h"
+#include "formInfo.h"
+
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -57,6 +59,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     QHBoxLayout *soilInfoLayout = new QHBoxLayout();
     QGridLayout *parametersLaiLayout = new QGridLayout();
     QGridLayout *parametersRootDepthLayout = new QGridLayout();
+    QGridLayout *parametersIrrigationLayout = new QGridLayout();
+    QGridLayout *parametersWaterStressLayout = new QGridLayout();
 
     // check save button pic
     QString docPath, saveButtonPath, updateButtonPath;
@@ -117,17 +121,23 @@ Crit3DCropWidget::Crit3DCropWidget()
     infoSoilGroup = new QGroupBox(tr(""));
     laiParametersGroup = new QGroupBox(tr(""));
     rootParametersGroup = new QGroupBox(tr(""));
+    irrigationParametersGroup = new QGroupBox(tr(""));
+    waterStressParametersGroup = new QGroupBox(tr(""));
 
     infoCropGroup->setFixedWidth(this->width()/4.5);
     infoMeteoGroup->setFixedWidth(this->width()/4.5);
     laiParametersGroup->setFixedWidth(this->width()/4.5);
     rootParametersGroup->setFixedWidth(this->width()/4.5);
+    irrigationParametersGroup->setFixedWidth(this->width()/4.5);
+    waterStressParametersGroup->setFixedWidth(this->width()/4.5);
 
     infoCropGroup->setTitle("Crop");
     infoMeteoGroup->setTitle("Meteo");
     infoSoilGroup->setTitle("Soil");
     laiParametersGroup->setTitle("LAI parameters");
     rootParametersGroup->setTitle("root parameters");
+    irrigationParametersGroup->setTitle("irrigation parameters");
+    waterStressParametersGroup->setTitle("water stress parameters");
 
     cropInfoLayout->addWidget(cropName, 0, 0);
     cropInfoLayout->addWidget(&cropListComboBox, 0, 1);
@@ -298,12 +308,16 @@ Crit3DCropWidget::Crit3DCropWidget()
     infoSoilGroup->setLayout(soilInfoLayout);
     laiParametersGroup->setLayout(parametersLaiLayout);
     rootParametersGroup->setLayout(parametersRootDepthLayout);
+    irrigationParametersGroup->setLayout(parametersIrrigationLayout);
+    waterStressParametersGroup->setLayout(parametersWaterStressLayout);
 
     infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(infoMeteoGroup);
     infoLayout->addWidget(infoSoilGroup);
     infoLayout->addWidget(laiParametersGroup);
     infoLayout->addWidget(rootParametersGroup);
+    infoLayout->addWidget(irrigationParametersGroup);
+    infoLayout->addWidget(waterStressParametersGroup);
 
     mainLayout->addLayout(saveButtonLayout);
     mainLayout->addLayout(cropLayout);
@@ -1051,6 +1065,8 @@ void Crit3DCropWidget::tabChanged(int index)
     if (index == 0) //LAI tab
     {
         rootParametersGroup->hide();
+        irrigationParametersGroup->hide();
+        waterStressParametersGroup->hide();
         laiParametersGroup->setVisible(true);
         updateTabLAI();
 
@@ -1058,6 +1074,8 @@ void Crit3DCropWidget::tabChanged(int index)
     else if(index == 1) //root depth tab
     {
         laiParametersGroup->hide();
+        irrigationParametersGroup->hide();
+        waterStressParametersGroup->hide();
         rootParametersGroup->setVisible(true);
         if (myCase.mySoil.code.empty())
         {
@@ -1070,6 +1088,8 @@ void Crit3DCropWidget::tabChanged(int index)
     else if(index == 2) //root density tab
     {
         laiParametersGroup->hide();
+        irrigationParametersGroup->hide();
+        waterStressParametersGroup->hide();
         rootParametersGroup->setVisible(true);
         if (myCase.mySoil.code.empty())
         {
@@ -1079,6 +1099,16 @@ void Crit3DCropWidget::tabChanged(int index)
         }
         updateTabRootDensity();
     }
+    else if(index == 3) //irrigation tab
+    {
+        laiParametersGroup->hide();
+        rootParametersGroup->hide();
+        irrigationParametersGroup->setVisible(true);
+        waterStressParametersGroup->setVisible(true);
+        FormInfo formInfo;
+        // TO DO
+    }
+
 }
 
 bool Crit3DCropWidget::checkIfCropIsChanged()

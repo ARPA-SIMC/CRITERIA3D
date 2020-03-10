@@ -60,6 +60,8 @@
             QGroupBox *infoSoilGroup;
             QGroupBox *laiParametersGroup;
             QGroupBox *rootParametersGroup;
+            QGroupBox *irrigationParametersGroup;
+            QGroupBox *waterStressParametersGroup;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
             QComboBox soilListComboBox;
