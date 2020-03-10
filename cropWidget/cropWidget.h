@@ -8,6 +8,7 @@
     #include <QLabel>
     #include <QSqlDatabase>
 
+    #include "criteria1DCase.h"
     #include "tabLAI.h"
     #include "tabRootDepth.h"
     #include "tabRootDensity.h"
@@ -45,15 +46,11 @@
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
             QSqlDatabase dbSoil;
-            Crit3DCrop* myCrop;
+            Crit1DCase myCase;
             Crit3DCrop cropFromDB;
-            soil::Crit3DSoil mySoil;
             soil::Crit3DTextureClass textureClassList[13];
             soil::Crit3DFittingOptions fittingOptions;
-            double layerThickness;
             QString tableMeteo;
-            Crit3DMeteoPoint *meteoPoint;
-            std::vector<soil::Crit3DLayer> soilLayers;
             bool cropChanged;
             double meteoLatBackUp;
 

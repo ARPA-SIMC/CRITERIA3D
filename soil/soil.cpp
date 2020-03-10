@@ -409,8 +409,8 @@ namespace soil
      */
     double getFieldCapacity(Crit3DHorizon* horizon, soil::units unit)
     {
-        double fcMin = -10;                 /*!< [kPa] clay < 20% sandy soils */
-        double fcMax = -33;                 /*!< [kPa] clay > 50% clay soils */
+        double fcMin = -10;                 /*!< [kPa] clay < 20% : sandy soils */
+        double fcMax = -33;                 /*!< [kPa] clay > 50% : clay soils */
 
         const double CLAYMIN = 20;
         const double CLAYMAX = 50;

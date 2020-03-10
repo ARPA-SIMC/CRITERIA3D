@@ -33,6 +33,11 @@
 
 Crit3DMeteoPoint::Crit3DMeteoPoint()
 {
+    this->clear();
+}
+
+void Crit3DMeteoPoint::clear()
+{
     this->dataset = "";
     this->municipality = "";
     this->state = "";
@@ -79,6 +84,10 @@ Crit3DMeteoPoint::Crit3DMeteoPoint()
     topographicDistance = nullptr;
 }
 
+void Crit3DMeteoPoint::setId(std::string value)
+{
+    this->id = value;
+}
 
 void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate)
 {

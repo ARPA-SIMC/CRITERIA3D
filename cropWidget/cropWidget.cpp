@@ -352,11 +352,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     editMenu->addAction(deleteCrop);
     editMenu->addAction(restoreData);
 
-    myCrop = nullptr;
-    meteoPoint = nullptr;
     cropChanged = false;
     meteoLatBackUp = NODATA;
-    layerThickness = 0.02;
 
     connect(openProject, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenProject);
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
@@ -432,11 +429,11 @@ void Crit3DCropWidget::on_actionOpenCropDB()
 
 void Crit3DCropWidget::checkCropUpdate()
 {
-    if (myCrop != nullptr)
+    if (!myCase.myCrop.idCrop.empty())
     {
         if (checkIfCropIsChanged())
         {
-            QString idCropChanged = QString::fromStdString(myCrop->idCrop);
+            QString idCropChanged = QString::fromStdString(myCase.myCrop.idCrop);
             QMessageBox::StandardButton confirm;
             QString msg = "Do you want to save changes to crop "+ idCropChanged + " ?";
             confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
@@ -459,13 +456,8 @@ void Crit3DCropWidget::checkCropUpdate()
 
 void Crit3DCropWidget::clearCrop()
 {
-    if (myCrop != nullptr)
-    {
-        myCrop->clear();
+        myCase.myCrop.clear();
         cropFromDB.clear();
-        delete myCrop;
-        myCrop = nullptr;
-    }
 }
 
 
@@ -600,7 +592,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
     }
     if (checkIfCropIsChanged())
     {
-        QString idCropChanged = QString::fromStdString(myCrop->idCrop);
+        QString idCropChanged = QString::fromStdString(myCase.myCrop.idCrop);
         QMessageBox::StandardButton confirm;
         QString msg = "Do you want to save changes to crop "+ idCropChanged + " ?";
         confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
@@ -625,13 +617,8 @@ void Crit3DCropWidget::on_actionChooseCrop(QString cropName)
         return;
     }
 
-    // delete previous crop
-    if (myCrop != nullptr)
-    {
-        delete myCrop;
-    }
-    myCrop = new Crit3DCrop();
-
+    // clear previous myCrop
+    clearCrop();
     updateCropParam(idCrop);
 
 
@@ -641,7 +628,7 @@ void Crit3DCropWidget::updateCropParam(QString idCrop)
 {
     QString error;
     cropIdValue->setText(idCrop);
-    if (!loadCropParameters(idCrop, myCrop, &dbCrop, &error))
+    if (!loadCropParameters(idCrop, &(myCase.myCrop), &dbCrop, &error))
     {
         if (error.contains("Empty"))
         {
@@ -654,15 +641,15 @@ void Crit3DCropWidget::updateCropParam(QString idCrop)
         }
 
     }
-    cropTypeValue->setText(QString::fromStdString(getCropTypeString(myCrop->type)));
+    cropTypeValue->setText(QString::fromStdString(getCropTypeString(myCase.myCrop.type)));
 
-    if (! myCrop->isPluriannual())
+    if (! myCase.myCrop.isPluriannual())
     {
         cropSowing.setVisible(true);
         cropCycleMax.setVisible(true);
-        cropSowingValue->setValue(myCrop->sowingDoy);
+        cropSowingValue->setValue(myCase.myCrop.sowingDoy);
         cropSowingValue->setVisible(true);
-        cropCycleMaxValue->setValue(myCrop->plantCycle);
+        cropCycleMaxValue->setValue(myCase.myCrop.plantCycle);
         cropCycleMaxValue->setVisible(true);
     }
     else
@@ -672,36 +659,36 @@ void Crit3DCropWidget::updateCropParam(QString idCrop)
         cropSowingValue->setVisible(false);
         cropCycleMaxValue->setVisible(false);
     }
-    maxKcValue->setText(QString::number(myCrop->kcMax));
+    maxKcValue->setText(QString::number(myCase.myCrop.kcMax));
 
     // LAI parameters
-    LAIminValue->setValue(myCrop->LAImin);
-    LAImaxValue->setValue(myCrop->LAImax);
-    if (myCrop->type == FRUIT_TREE)
+    LAIminValue->setValue(myCase.myCrop.LAImin);
+    LAImaxValue->setValue(myCase.myCrop.LAImax);
+    if (myCase.myCrop.type == FRUIT_TREE)
     {
         LAIgrass->setVisible(true);
         LAIgrassValue->setVisible(true);
-        LAIgrassValue->setText(QString::number(myCrop->LAIgrass));
+        LAIgrassValue->setText(QString::number(myCase.myCrop.LAIgrass));
     }
     else
     {
         LAIgrass->setVisible(false);
         LAIgrassValue->setVisible(false);
     }
-    thermalThresholdValue->setText(QString::number(myCrop->thermalThreshold));
-    upperThermalThresholdValue->setText(QString::number(myCrop->upperThermalThreshold));
-    degreeDaysEmergenceValue->setText(QString::number(myCrop->degreeDaysEmergence));
-    degreeDaysLAIincValue->setText(QString::number(myCrop->degreeDaysIncrease));
-    degreeDaysLAIdecValue->setText(QString::number(myCrop->degreeDaysDecrease));
-    LAIcurveAValue->setText(QString::number(myCrop->LAIcurve_a));
-    LAIcurveBValue->setText(QString::number(myCrop->LAIcurve_b));
+    thermalThresholdValue->setText(QString::number(myCase.myCrop.thermalThreshold));
+    upperThermalThresholdValue->setText(QString::number(myCase.myCrop.upperThermalThreshold));
+    degreeDaysEmergenceValue->setText(QString::number(myCase.myCrop.degreeDaysEmergence));
+    degreeDaysLAIincValue->setText(QString::number(myCase.myCrop.degreeDaysIncrease));
+    degreeDaysLAIdecValue->setText(QString::number(myCase.myCrop.degreeDaysDecrease));
+    LAIcurveAValue->setText(QString::number(myCase.myCrop.LAIcurve_a));
+    LAIcurveBValue->setText(QString::number(myCase.myCrop.LAIcurve_b));
 
     // root parameters
-    rootDepthZeroValue->setText(QString::number(myCrop->roots.rootDepthMin));
-    rootDepthMaxValue->setText(QString::number(myCrop->roots.rootDepthMax));
-    shapeDeformationValue->setValue(myCrop->roots.shapeDeformation);
-    rootShapeComboBox->setCurrentText(QString::fromStdString(root::getRootDistributionTypeString(myCrop->roots.rootShape)));
-    if (myCrop->isPluriannual())
+    rootDepthZeroValue->setText(QString::number(myCase.myCrop.roots.rootDepthMin));
+    rootDepthMaxValue->setText(QString::number(myCase.myCrop.roots.rootDepthMax));
+    shapeDeformationValue->setValue(myCase.myCrop.roots.shapeDeformation);
+    rootShapeComboBox->setCurrentText(QString::fromStdString(root::getRootDistributionTypeString(myCase.myCrop.roots.rootShape)));
+    if (myCase.myCrop.isPluriannual())
     {
         degreeDaysInc->setVisible(false);
         degreeDaysIncValue->setVisible(false);
@@ -710,14 +697,14 @@ void Crit3DCropWidget::updateCropParam(QString idCrop)
     {
         degreeDaysInc->setVisible(true);
         degreeDaysIncValue->setVisible(true);
-        degreeDaysIncValue->setText(QString::number(myCrop->roots.degreeDaysRootGrowth));
+        degreeDaysIncValue->setText(QString::number(myCase.myCrop.roots.degreeDaysRootGrowth));
     }
 
-    if (meteoPoint != nullptr && !yearListComboBox.currentText().isEmpty())
+    if (!myCase.meteoPoint.id.empty() && !yearListComboBox.currentText().isEmpty())
     {
         on_actionUpdate();
     }
-    cropFromDB = *myCrop;
+    cropFromDB = myCase.myCrop;
 }
 
 
@@ -728,6 +715,8 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     {
         return;
     }
+    myCase.meteoPoint.setId(idMeteo.toStdString());
+
     QString error, lat, lon;
 
     if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
@@ -775,33 +764,30 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
 {
     QString error;
 
-    // delete previous meteoPoint
-    if (meteoPoint != nullptr)
-    {
-        delete meteoPoint;
-    }
-    meteoPoint = new Crit3DMeteoPoint();
-    meteoPoint->latitude = latValue->value();
+    // clear previous meteoPoint
+    myCase.meteoPoint.clear();
+    myCase.meteoPoint.id = meteoListComboBox.currentText().toStdString();
+    myCase.meteoPoint.latitude = latValue->value();
 
     // init meteoPoint with 2 years
     int firstYear = year.toInt()-1;
     QDate firstDate(firstYear, 1, 1);
     QDate currentDate(year.toInt(), 1, 1);
     unsigned int numberDays = firstDate.daysInYear() + currentDate.daysInYear();
-    meteoPoint->initializeObsDataD(numberDays, getCrit3DDate(firstDate));
+    myCase.meteoPoint.initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
     // fill meteoPoint
-    if (!fillDailyTempCriteria1D(&dbMeteo, tableMeteo, meteoPoint, QString::number(firstYear), &error))
+    if (!fillDailyTempCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(firstYear), &error))
     {
         QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
         return;
     }
-    if (!fillDailyTempCriteria1D(&dbMeteo, tableMeteo, meteoPoint, year, &error))
+    if (!fillDailyTempCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), year, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error + " year: " + year);
         return;
     }
-    if (myCrop != nullptr)
+    if (!myCase.myCrop.idCrop.empty())
     {
         on_actionUpdate();
     }
@@ -817,9 +803,9 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
     }
 
     QString error;
-    mySoil.cleanSoil();
+    myCase.mySoil.cleanSoil();
 
-    if (! loadSoil(&dbSoil, soilCode, &mySoil, textureClassList, &fittingOptions, &error))
+    if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), textureClassList, &fittingOptions, &error))
     {
         if (error.contains("Empty"))
         {
@@ -833,7 +819,8 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
     }
 
     std::string errorString;
-    if (! mySoil.setSoilLayers(layerThickness, 1, soilLayers, errorString))
+
+    if (! myCase.initializeSoil(errorString))
     {
         QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorString));
         return;
@@ -879,8 +866,8 @@ void Crit3DCropWidget::on_actionRestoreData()
     QString currentCrop = cropListComboBox.currentText();
     if (checkIfCropIsChanged())
     {
-        *myCrop = cropFromDB;
-        updateCropParam(QString::fromStdString(myCrop->idCrop));
+        myCase.myCrop = cropFromDB;
+        updateCropParam(QString::fromStdString(myCase.myCrop.idCrop));
     }
     latValue->setValue(meteoLatBackUp);
 }
@@ -901,12 +888,12 @@ void Crit3DCropWidget::on_actionSave()
 bool Crit3DCropWidget::saveCrop()
 {
     QString error;
-    if (!updateCropLAIparam(&dbCrop, cropIdValue->text(), myCrop, &error) || !updateCropRootparam(&dbCrop, cropIdValue->text(), myCrop, &error))
+    if (!updateCropLAIparam(&dbCrop, cropIdValue->text(), &(myCase.myCrop), &error) || !updateCropRootparam(&dbCrop, cropIdValue->text(), &(myCase.myCrop), &error))
     {
         QMessageBox::critical(nullptr, "Update param failed!", error);
         return false;
     }
-    cropFromDB = *myCrop;
+    cropFromDB = myCase.myCrop;
     return true;
 }
 
@@ -922,7 +909,7 @@ void Crit3DCropWidget::on_actionUpdate()
     if (!yearListComboBox.currentText().isEmpty())
     {
         updateTabLAI();
-        if (!mySoil.code.empty())
+        if (!myCase.mySoil.code.empty())
         {
             updateTabRootDepth();
             updateTabRootDensity();
@@ -934,53 +921,53 @@ void Crit3DCropWidget::on_actionUpdate()
 bool Crit3DCropWidget::updateCrop()
 {
 
-    if (myCrop == nullptr)
+    if (myCase.myCrop.idCrop.empty())
     {
         return false;
     }
-    myCrop->idCrop = cropIdValue->text().toStdString();
-    myCrop->type = getCropType(cropTypeValue->text().toStdString());
+    myCase.myCrop.idCrop = cropIdValue->text().toStdString();
+    myCase.myCrop.type = getCropType(cropTypeValue->text().toStdString());
     if (cropSowing.isVisible())
     {
-        myCrop->sowingDoy = cropSowingValue->value();
-        myCrop->plantCycle = cropCycleMaxValue->value();
+        myCase.myCrop.sowingDoy = cropSowingValue->value();
+        myCase.myCrop.plantCycle = cropCycleMaxValue->value();
     }
     else
     {
-        myCrop->sowingDoy = NODATA;
-        myCrop->plantCycle = NODATA;
+        myCase.myCrop.sowingDoy = NODATA;
+        myCase.myCrop.plantCycle = NODATA;
     }
-    myCrop->kcMax = maxKcValue->text().toDouble();
-    myCrop->LAImin = LAIminValue->value();
-    myCrop->LAImax = LAImaxValue->value();
-    if (myCrop->type == FRUIT_TREE)
+    myCase.myCrop.kcMax = maxKcValue->text().toDouble();
+    myCase.myCrop.LAImin = LAIminValue->value();
+    myCase.myCrop.LAImax = LAImaxValue->value();
+    if (myCase.myCrop.type == FRUIT_TREE)
     {
-        myCrop->LAIgrass = LAIgrassValue->text().toDouble();
+        myCase.myCrop.LAIgrass = LAIgrassValue->text().toDouble();
     }
     else
     {
-        myCrop->LAIgrass = NODATA;
+        myCase.myCrop.LAIgrass = NODATA;
     }
-    myCrop->thermalThreshold = thermalThresholdValue->text().toDouble();
-    myCrop->upperThermalThreshold = upperThermalThresholdValue->text().toDouble();
-    myCrop->degreeDaysEmergence = degreeDaysEmergenceValue->text().toDouble();
-    myCrop->degreeDaysIncrease = degreeDaysLAIincValue->text().toDouble();
-    myCrop->degreeDaysDecrease = degreeDaysLAIdecValue->text().toDouble();
-    myCrop->LAIcurve_a = LAIcurveAValue->text().toDouble();
-    myCrop->LAIcurve_b = LAIcurveBValue->text().toDouble();
+    myCase.myCrop.thermalThreshold = thermalThresholdValue->text().toDouble();
+    myCase.myCrop.upperThermalThreshold = upperThermalThresholdValue->text().toDouble();
+    myCase.myCrop.degreeDaysEmergence = degreeDaysEmergenceValue->text().toDouble();
+    myCase.myCrop.degreeDaysIncrease = degreeDaysLAIincValue->text().toDouble();
+    myCase.myCrop.degreeDaysDecrease = degreeDaysLAIdecValue->text().toDouble();
+    myCase.myCrop.LAIcurve_a = LAIcurveAValue->text().toDouble();
+    myCase.myCrop.LAIcurve_b = LAIcurveBValue->text().toDouble();
 
     // root
-    myCrop->roots.rootDepthMin = rootDepthZeroValue->text().toDouble();
-    myCrop->roots.rootDepthMax = rootDepthMaxValue->text().toDouble();
-    myCrop->roots.shapeDeformation = shapeDeformationValue->value();
-    myCrop->roots.rootShape = root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString());
-    if (myCrop->isPluriannual())
+    myCase.myCrop.roots.rootDepthMin = rootDepthZeroValue->text().toDouble();
+    myCase.myCrop.roots.rootDepthMax = rootDepthMaxValue->text().toDouble();
+    myCase.myCrop.roots.shapeDeformation = shapeDeformationValue->value();
+    myCase.myCrop.roots.rootShape = root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString());
+    if (myCase.myCrop.isPluriannual())
     {
-        myCrop->roots.degreeDaysRootGrowth = NODATA;
+        myCase.myCrop.roots.degreeDaysRootGrowth = NODATA;
     }
     else
     {
-        myCrop->roots.degreeDaysRootGrowth = degreeDaysIncValue->text().toDouble();
+        myCase.myCrop.roots.degreeDaysRootGrowth = degreeDaysIncValue->text().toDouble();
     }
     cropChanged = true;
 
@@ -989,11 +976,11 @@ bool Crit3DCropWidget::updateCrop()
 
 bool Crit3DCropWidget::updateMeteoPoint()
 {
-    if (meteoPoint == nullptr)
+    if (myCase.meteoPoint.id.empty())
     {
         return false;
     }
-    meteoPoint->latitude = latValue->value();
+    myCase.meteoPoint.latitude = latValue->value();
     return true;
 }
 
@@ -1023,25 +1010,25 @@ void Crit3DCropWidget::on_actionNewCrop()
 
 void Crit3DCropWidget::updateTabLAI()
 {
-    if (myCrop != nullptr && meteoPoint != nullptr)
+    if (!myCase.myCrop.idCrop.empty() && !myCase.meteoPoint.id.empty())
     {
-        tabLAI->computeLAI(myCrop, meteoPoint, yearListComboBox.currentText().toInt(), soilLayers);
+        tabLAI->computeLAI(&(myCase.myCrop), &(myCase.meteoPoint), yearListComboBox.currentText().toInt(), myCase.soilLayers);
     }
 }
 
 void Crit3DCropWidget::updateTabRootDepth()
 {
-    if (myCrop != nullptr && meteoPoint != nullptr && !mySoil.code.empty())
+    if (!myCase.myCrop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
     {
-        tabRootDepth->computeRootDepth(myCrop, meteoPoint, yearListComboBox.currentText().toInt(), soilLayers);
+        tabRootDepth->computeRootDepth(&(myCase.myCrop), &(myCase.meteoPoint), yearListComboBox.currentText().toInt(), myCase.soilLayers);
     }
 }
 
 void Crit3DCropWidget::updateTabRootDensity()
 {
-    if (myCrop != nullptr && meteoPoint != nullptr && !mySoil.code.empty())
+    if (!myCase.myCrop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
     {
-        tabRootDensity->computeRootDensity(myCrop, meteoPoint, yearListComboBox.currentText().toInt(), soilLayers);
+        tabRootDensity->computeRootDensity(&(myCase.myCrop), &(myCase.meteoPoint), yearListComboBox.currentText().toInt(), myCase.soilLayers);
     }
 }
 
@@ -1059,7 +1046,7 @@ void Crit3DCropWidget::tabChanged(int index)
     {
         laiParametersGroup->hide();
         rootParametersGroup->setVisible(true);
-        if (mySoil.code.empty())
+        if (myCase.mySoil.code.empty())
         {
             QString msg = "Open a Db Soil";
             QMessageBox::information(nullptr, "Warning", msg);
@@ -1071,7 +1058,7 @@ void Crit3DCropWidget::tabChanged(int index)
     {
         laiParametersGroup->hide();
         rootParametersGroup->setVisible(true);
-        if (mySoil.code.empty())
+        if (myCase.mySoil.code.empty())
         {
             QString msg = "Open a Db Soil";
             QMessageBox::information(nullptr, "Warning", msg);
@@ -1084,7 +1071,7 @@ void Crit3DCropWidget::tabChanged(int index)
 bool Crit3DCropWidget::checkIfCropIsChanged()
 {
     // check all editable fields
-    if (myCrop == nullptr)
+    if (myCase.myCrop.idCrop.empty())
     {
         cropChanged = false;
         return cropChanged;
