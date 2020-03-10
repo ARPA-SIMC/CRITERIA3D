@@ -958,16 +958,15 @@ namespace soil
         unsigned int i = 1;
         double upperDepth = 0.0;
         double currentThikness = layerThicknessMin;
-        double currentDepth = currentThikness / 2.0;
 
         while (upperDepth < totalDepth)
         {
             Crit3DLayer newLayer;
-            newLayer.thickness = currentThikness;
-            newLayer.depth = currentDepth;
+            newLayer.thickness = round(currentThikness*100) / 100;
+            newLayer.depth = upperDepth + newLayer.thickness / 2.0;;
 
             // last layer: thickness reduced
-            if ((upperDepth + currentThikness) > totalDepth)
+            if ((upperDepth + newLayer.thickness) > totalDepth)
             {
                 newLayer.thickness = totalDepth - upperDepth;
                 newLayer.depth = upperDepth + newLayer.thickness/2;
@@ -991,9 +990,8 @@ namespace soil
             soilLayers.push_back(newLayer);
 
             // update depth
-            upperDepth += currentThikness;
+            upperDepth += newLayer.thickness;
             currentThikness *= geometricFactor;
-            currentDepth = upperDepth + currentThikness / 2.0;
             i++;
         }
 
