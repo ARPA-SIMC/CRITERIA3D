@@ -314,9 +314,11 @@ Crit3DCropWidget::Crit3DCropWidget()
     tabLAI = new TabLAI();
     tabRootDepth = new TabRootDepth();
     tabRootDensity = new TabRootDensity();
+    tabIrrigation = new TabIrrigation();
     tabWidget->addTab(tabLAI, tr("LAI development"));
     tabWidget->addTab(tabRootDepth, tr("Root depth"));
     tabWidget->addTab(tabRootDensity, tr("Root density"));
+    tabWidget->addTab(tabIrrigation, tr("Irrigation"));
     cropLayout->addWidget(tabWidget);
 
     this->setLayout(mainLayout);
@@ -777,12 +779,12 @@ void Crit3DCropWidget::on_actionChooseYear(QString year)
     myCase.meteoPoint.initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
     // fill meteoPoint
-    if (!fillDailyTempCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(firstYear), &error))
+    if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(firstYear), &error))
     {
         QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
         return;
     }
-    if (!fillDailyTempCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), year, &error))
+    if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), year, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error + " year: " + year);
         return;
