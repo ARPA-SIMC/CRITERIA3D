@@ -876,14 +876,25 @@ void Crit3DCropWidget::on_actionRestoreData()
 
 void Crit3DCropWidget::on_actionSave()
 {
+    QMessageBox::StandardButton confirm;
+    QString msg = "Are you sure you want to save "+cropListComboBox.currentText()+" ?";
+    confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
 
-    if (updateCrop())
+    if (confirm == QMessageBox::Yes)
     {
-        if (saveCrop())
+        if (updateCrop())
         {
-            cropChanged = false; //already saved
+            if (saveCrop())
+            {
+                cropChanged = false; //already saved
+            }
         }
     }
+    else
+    {
+        return;
+    }
+
 }
 
 
