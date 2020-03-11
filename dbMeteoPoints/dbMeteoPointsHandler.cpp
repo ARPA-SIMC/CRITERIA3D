@@ -2,6 +2,7 @@
 #include "commonConstants.h"
 #include "meteo.h"
 #include "utilities.h"
+#include "basicMath.h"
 
 #include <QtSql>
 
@@ -544,6 +545,8 @@ bool Crit3DMeteoPointsDbHandler::readPointProxyValues(Crit3DMeteoPoint* myPoint,
     QString statement;
     int nrProxy;
     Crit3DProxy* myProxy;
+    float proxyMaxValue = NODATA;
+    float myValue;
 
     nrProxy = interpolationSettings->getProxyNr();
     myPoint->proxyValues.resize(nrProxy);
@@ -556,6 +559,7 @@ bool Crit3DMeteoPointsDbHandler::readPointProxyValues(Crit3DMeteoPoint* myPoint,
         if (interpolationSettings->getSelectedCombination().getValue(i))
         {
             myProxy = interpolationSettings->getProxy(i);
+            proxyMaxValue = myProxy->getMaxVal();
             proxyField = QString::fromStdString(myProxy->getProxyField());
             proxyTable = QString::fromStdString(myProxy->getProxyTable());
             if (proxyField != "" && proxyTable != "")
@@ -565,7 +569,11 @@ bool Crit3DMeteoPointsDbHandler::readPointProxyValues(Crit3DMeteoPoint* myPoint,
                 {
                     qry.last();
                     if (qry.value(proxyField) != "")
-                        myPoint->proxyValues[i] = qry.value(proxyField).toFloat();
+                    {
+                        myValue = qry.value(proxyField).toFloat();
+                        if (isEqual(proxyMaxValue, NODATA) || myValue <= proxyMaxValue)
+                            myPoint->proxyValues[i] = myValue;
+                    }
                 }
             }
 
@@ -576,9 +584,10 @@ bool Crit3DMeteoPointsDbHandler::readPointProxyValues(Crit3DMeteoPoint* myPoint,
                     return false;
                 else
                 {
-                    float myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
-                    if (myValue != proxyGrid->header->flag)
-                        myPoint->proxyValues[i] = myValue;
+                    myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
+                    if (! isEqual(myValue, proxyGrid->header->flag))
+                        if (isEqual(proxyMaxValue, NODATA) || myValue <= proxyMaxValue)
+                            myPoint->proxyValues[i] = myValue;
                 }
             }
         }

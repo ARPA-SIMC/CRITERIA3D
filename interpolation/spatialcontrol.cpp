@@ -151,7 +151,6 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
     float stdDev, stdDevZ, minDist, myValue, myResidual;
     std::vector <int> listIndex;
     std::vector <float> listResiduals;
-    std::vector <float> myProxyValues;
     std::vector <Crit3DInterpolationDataPoint> myInterpolationPoints;
 
     if (passDataToInterpolation(meteoPoints, nrMeteoPoints, myInterpolationPoints, settings))
@@ -195,7 +194,7 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
                                             float(meteoPoints[listIndex[i]].point.utm.x),
                                             float(meteoPoints[listIndex[i]].point.utm.y),
                                             float(meteoPoints[listIndex[i]].point.z),
-                                            myProxyValues, false);
+                                            meteoPoints[listIndex[i]].getProxyValues(), false);
 
                     myValue = meteoPoints[listIndex[i]].currentValue;
 

@@ -28,6 +28,7 @@
         std::string proxyField;
         bool isSignificant;
         bool forQualityControl;
+        float maxVal;
 
         float regressionR2;
         float regressionSlope;
@@ -72,6 +73,8 @@
         void setProxyField(const std::string &value);
         std::vector<gis::Crit3DRasterGrid *> getGridSeries() const;
         void setGridSeries(const std::vector<gis::Crit3DRasterGrid *> &value);
+        float getMaxVal() const;
+        void setMaxVal(float value);
     };
 
     class Crit3DProxyCombination
