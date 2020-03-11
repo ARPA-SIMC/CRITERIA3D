@@ -772,6 +772,30 @@ void Crit3DCropWidget::updateCropParam(QString idCrop)
         degreeDaysIncValue->setVisible(true);
         degreeDaysIncValue->setText(QString::number(myCase.myCrop.roots.degreeDaysRootGrowth));
     }
+    // irrigation parameters
+    irrigationVolumeValue->setText(QString::number(myCase.myCrop.irrigationVolume));
+    if (irrigationVolumeValue->text().toInt() == 0)
+    {
+        irrigationShiftValue->setValue(0);
+        irrigationShiftValue->setEnabled(false);
+        degreeDaysStartValue->setText(nullptr);
+        degreeDaysStartValue->setEnabled(false);
+        degreeDaysEndValue->setText(nullptr);
+        degreeDaysEndValue->setEnabled(false);
+    }
+    else if (irrigationVolumeValue->text().toInt() > 0)
+    {
+        irrigationShiftValue->setEnabled(true);
+        irrigationShiftValue->setValue(myCase.myCrop.irrigationShift);
+        degreeDaysStartValue->setEnabled(true);
+        degreeDaysStartValue->setText(QString::number(myCase.myCrop.degreeDaysStartIrrigation));
+        degreeDaysEndValue->setEnabled(true);
+        degreeDaysEndValue->setText(QString::number(myCase.myCrop.degreeDaysEndIrrigation));
+    }
+    // water stress parameters
+    psiLeafValue->setText(QString::number(myCase.myCrop.psiLeaf));
+    rawFractionValue->setValue(myCase.myCrop.fRAW);
+    stressToleranceValue->setValue(myCase.myCrop.stressTolerance);
 
     if (!myCase.meteoPoint.id.empty() && !yearListComboBox.currentText().isEmpty())
     {
