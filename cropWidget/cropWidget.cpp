@@ -190,8 +190,10 @@ Crit3DCropWidget::Crit3DCropWidget()
     LAIgrassValue->setMaximumWidth(laiParametersGroup->width()/5);
     QDoubleValidator* firstValidator = new QDoubleValidator(-99.0, 99.0, 3, this);
     QDoubleValidator* secondValidator = new QDoubleValidator(-9999.0, 9999.0, 3, this);
+    QDoubleValidator* positiveValidator = new QDoubleValidator(0, 99999.0, 3, this);
     firstValidator->setNotation(QDoubleValidator::StandardNotation);
     secondValidator->setNotation(QDoubleValidator::StandardNotation);
+    positiveValidator->setNotation(QDoubleValidator::StandardNotation);
     LAIgrassValue->setValidator(firstValidator);
 
     QLabel *thermalThreshold = new QLabel(tr("thermal threshold [°C]: "));
@@ -207,17 +209,17 @@ Crit3DCropWidget::Crit3DCropWidget()
     QLabel *degreeDaysEmergence = new QLabel(tr("degree days emergence [°C]: "));
     degreeDaysEmergenceValue = new QLineEdit();
     degreeDaysEmergenceValue->setMaximumWidth(laiParametersGroup->width()/5);
-    degreeDaysEmergenceValue->setValidator(secondValidator);
+    degreeDaysEmergenceValue->setValidator(positiveValidator);
 
     QLabel *degreeDaysLAIinc = new QLabel(tr("degree days phase 1 [°C]: "));
     degreeDaysLAIincValue = new QLineEdit();
     degreeDaysLAIincValue->setMaximumWidth(laiParametersGroup->width()/5);
-    degreeDaysLAIincValue->setValidator(secondValidator);
+    degreeDaysLAIincValue->setValidator(positiveValidator);
 
     QLabel *degreeDaysLAIdec = new QLabel(tr("degree days phase 2 [°C]: "));
     degreeDaysLAIdecValue = new QLineEdit();
     degreeDaysLAIdecValue->setMaximumWidth(laiParametersGroup->width()/5);
-    degreeDaysLAIdecValue->setValidator(secondValidator);
+    degreeDaysLAIdecValue->setValidator(positiveValidator);
 
     QLabel *LAIcurveA = new QLabel(tr("LAI curve factor A [-]: "));
     LAIcurveAValue = new QLineEdit();
@@ -289,7 +291,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     degreeDaysInc = new QLabel(tr("degree days root inc [°C]: "));
     degreeDaysIncValue = new QLineEdit();
     degreeDaysIncValue->setMaximumWidth(rootParametersGroup->width()/5);
-    degreeDaysIncValue->setValidator(secondValidator);
+    degreeDaysIncValue->setValidator(positiveValidator);
 
     parametersRootDepthLayout->addWidget(rootDepthZero, 0, 0);
     parametersRootDepthLayout->addWidget(rootDepthZeroValue, 0, 1);
@@ -302,6 +304,61 @@ Crit3DCropWidget::Crit3DCropWidget()
     parametersRootDepthLayout->addWidget(degreeDaysInc, 4, 0);
     parametersRootDepthLayout->addWidget(degreeDaysIncValue, 4, 1);
 
+    QLabel *irrigationVolume = new QLabel(tr("irrigation quantity [mm]: "));
+    irrigationVolumeValue = new QLineEdit();
+    irrigationVolumeValue->setMaximumWidth(irrigationParametersGroup->width()/5);
+    irrigationVolumeValue->setValidator(positiveValidator);
+    QLabel *irrigationShift = new QLabel(tr("irrigation shift [days]: "));
+    irrigationShiftValue = new QSpinBox();
+    irrigationShiftValue->setMaximumWidth(irrigationParametersGroup->width()/5);
+    irrigationShiftValue->setMinimum(0);
+    irrigationShiftValue->setMaximum(365);
+
+    QLabel *degreeDaysStart = new QLabel(tr("degreee days start irrigation [°C]: "));
+    degreeDaysStartValue = new QLineEdit();
+    degreeDaysStartValue->setMaximumWidth(irrigationParametersGroup->width()/5);
+    degreeDaysStartValue->setValidator(positiveValidator);
+    QLabel *degreeDaysEnd = new QLabel(tr("degreee days end irrigation [°C]: "));
+    degreeDaysEndValue = new QLineEdit();
+    degreeDaysEndValue->setMaximumWidth(irrigationParametersGroup->width()/5);
+    degreeDaysEndValue->setValidator(positiveValidator);
+
+    parametersIrrigationLayout->addWidget(irrigationVolume, 0, 0);
+    parametersIrrigationLayout->addWidget(irrigationVolumeValue, 0, 1);
+    parametersIrrigationLayout->addWidget(irrigationShift, 1, 0);
+    parametersIrrigationLayout->addWidget(irrigationShiftValue, 1, 1);
+    parametersIrrigationLayout->addWidget(degreeDaysStart, 2, 0);
+    parametersIrrigationLayout->addWidget(degreeDaysStartValue, 2, 1);
+    parametersIrrigationLayout->addWidget(degreeDaysEnd, 3, 0);
+    parametersIrrigationLayout->addWidget(degreeDaysEndValue, 3, 1);
+
+    QLabel *psiLeaf = new QLabel(tr("psi leaf [cm]: "));
+    psiLeafValue = new QLineEdit();
+    psiLeafValue->setMaximumWidth(waterStressParametersGroup->width()/5);
+    psiLeafValue->setValidator(positiveValidator);
+
+    QLabel *rawFraction = new QLabel(tr("raw fraction [-]: "));
+    rawFractionValue = new QDoubleSpinBox();
+    rawFractionValue->setMaximumWidth(waterStressParametersGroup->width()/5);
+    rawFractionValue->setMinimum(0);
+    rawFractionValue->setMaximum(1);
+    rawFractionValue->setDecimals(2);
+    rawFractionValue->setSingleStep(0.05);
+
+    QLabel *stressTolerance = new QLabel(tr("stress tolerance [-]: "));
+    stressToleranceValue = new QDoubleSpinBox();
+    stressToleranceValue->setMaximumWidth(waterStressParametersGroup->width()/5);
+    stressToleranceValue->setMinimum(0);
+    stressToleranceValue->setMaximum(1);
+    stressToleranceValue->setDecimals(2);
+    stressToleranceValue->setSingleStep(0.05);
+
+    parametersWaterStressLayout->addWidget(psiLeaf, 0, 0);
+    parametersWaterStressLayout->addWidget(psiLeafValue, 0, 1);
+    parametersWaterStressLayout->addWidget(rawFraction, 1, 0);
+    parametersWaterStressLayout->addWidget(rawFractionValue, 1, 1);
+    parametersWaterStressLayout->addWidget(stressTolerance, 2, 0);
+    parametersWaterStressLayout->addWidget(stressToleranceValue, 2, 1);
 
     infoCropGroup->setLayout(cropInfoLayout);
     infoMeteoGroup->setLayout(meteoInfoLayout);
