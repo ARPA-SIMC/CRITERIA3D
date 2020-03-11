@@ -228,6 +228,7 @@ bool Project::loadParameters(QString parametersFileName)
     QString gridName = "";
     QString proxyName = "", proxyGridName = "", proxyTable = "", proxyField = "";
     bool isActive = false, forQuality = false;
+    float proxyMaxValue = NODATA;
     QStringList myList;
     std::vector <QString> proxyGridSeriesNames;
     std::vector <unsigned> proxyGridSeriesYears;
@@ -586,6 +587,7 @@ bool Project::loadParameters(QString parametersFileName)
             isActive = parameters->value("active").toBool();
             forQuality = parameters->value("use_for_spatial_quality_control").toBool();
             proxyGridName = parameters->value("raster").toString();
+            proxyMaxValue = parameters->value("max_value").toFloat();
 
             parameters->endGroup();
 
