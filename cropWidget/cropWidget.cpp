@@ -306,6 +306,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     QLabel *irrigationVolume = new QLabel(tr("irrigation quantity [mm]: "));
     irrigationVolumeValue = new QLineEdit();
+    irrigationVolumeValue->setText(QString::number(0));
     irrigationVolumeValue->setMaximumWidth(irrigationParametersGroup->width()/5);
     irrigationVolumeValue->setValidator(positiveValidator);
     QLabel *irrigationShift = new QLabel(tr("irrigation shift [days]: "));
@@ -313,15 +314,18 @@ Crit3DCropWidget::Crit3DCropWidget()
     irrigationShiftValue->setMaximumWidth(irrigationParametersGroup->width()/5);
     irrigationShiftValue->setMinimum(0);
     irrigationShiftValue->setMaximum(365);
+    irrigationShiftValue->setEnabled(false);
 
     QLabel *degreeDaysStart = new QLabel(tr("degreee days start irrigation [°C]: "));
     degreeDaysStartValue = new QLineEdit();
     degreeDaysStartValue->setMaximumWidth(irrigationParametersGroup->width()/5);
     degreeDaysStartValue->setValidator(positiveValidator);
+    degreeDaysStartValue->setEnabled(false);
     QLabel *degreeDaysEnd = new QLabel(tr("degreee days end irrigation [°C]: "));
     degreeDaysEndValue = new QLineEdit();
     degreeDaysEndValue->setMaximumWidth(irrigationParametersGroup->width()/5);
     degreeDaysEndValue->setValidator(positiveValidator);
+    degreeDaysEndValue->setEnabled(false);
 
     parametersIrrigationLayout->addWidget(irrigationVolume, 0, 0);
     parametersIrrigationLayout->addWidget(irrigationVolumeValue, 0, 1);
@@ -438,6 +442,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     connect(openSoilDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenSoilDB);
     connect(&soilListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseSoil);
+    connect(irrigationVolumeValue, &QLineEdit::editingFinished, [=](){ this->irrigationVolumeChanged(); });
 
     connect(tabWidget, &QTabWidget::currentChanged, [=](int index){ this->tabChanged(index); });
 
@@ -774,7 +779,7 @@ void Crit3DCropWidget::updateCropParam(QString idCrop)
     }
     // irrigation parameters
     irrigationVolumeValue->setText(QString::number(myCase.myCrop.irrigationVolume));
-    if (irrigationVolumeValue->text().toInt() == 0)
+    if (irrigationVolumeValue->text().toDouble() == 0)
     {
         irrigationShiftValue->setValue(0);
         irrigationShiftValue->setEnabled(false);
@@ -783,7 +788,7 @@ void Crit3DCropWidget::updateCropParam(QString idCrop)
         degreeDaysEndValue->setText(nullptr);
         degreeDaysEndValue->setEnabled(false);
     }
-    else if (irrigationVolumeValue->text().toInt() > 0)
+    else if (irrigationVolumeValue->text().toDouble() > 0)
     {
         irrigationShiftValue->setEnabled(true);
         irrigationShiftValue->setValue(myCase.myCrop.irrigationShift);
@@ -996,7 +1001,8 @@ void Crit3DCropWidget::on_actionSave()
 bool Crit3DCropWidget::saveCrop()
 {
     QString error;
-    if (!updateCropLAIparam(&dbCrop, cropIdValue->text(), &(myCase.myCrop), &error) || !updateCropRootparam(&dbCrop, cropIdValue->text(), &(myCase.myCrop), &error))
+    if (!updateCropLAIparam(&dbCrop, cropIdValue->text(), &(myCase.myCrop), &error) || !updateCropRootparam(&dbCrop, cropIdValue->text(), &(myCase.myCrop), &error)
+            || !updateCropIrrigationparam(&dbCrop, cropIdValue->text(), &(myCase.myCrop), &error) )
     {
         QMessageBox::critical(nullptr, "Update param failed!", error);
         return false;
@@ -1077,6 +1083,46 @@ bool Crit3DCropWidget::updateCrop()
     {
         myCase.myCrop.roots.degreeDaysRootGrowth = degreeDaysIncValue->text().toDouble();
     }
+    // irrigation
+    QString error;
+    if (irrigationVolumeValue->text().isEmpty())
+    {
+        error = "irrigation Volume is NULL, insert a valid value";
+        QMessageBox::critical(nullptr, "Error irrigation update", error);
+        return false;
+    }
+    else if (irrigationVolumeValue->text().toDouble() == 0)
+    {
+        myCase.myCrop.irrigationVolume = 0;
+        myCase.myCrop.irrigationShift = NODATA;
+        myCase.myCrop.degreeDaysStartIrrigation = NODATA;
+        myCase.myCrop.degreeDaysEndIrrigation = NODATA;
+
+    }
+    else if (irrigationVolumeValue->text().toDouble() > 0)
+    {
+        if (irrigationShiftValue->value() == 0)
+        {
+            error = "irrigation shift sould be > 0";
+            QMessageBox::critical(nullptr, "Error irrigation update", error);
+            return false;
+        }
+        if (degreeDaysStartValue->text().isEmpty() || degreeDaysEndValue->text().isEmpty())
+        {
+            // LC not NULL o > 0? Nel db crop ho casi con irrigation_volume > 0 e degreeDaysStartValue=0
+            error = "irrigation degree days is NULL, insert a valid value";
+            QMessageBox::critical(nullptr, "Error irrigation update", error);
+            return false;
+        }
+        myCase.myCrop.irrigationShift = irrigationShiftValue->value();
+        myCase.myCrop.degreeDaysStartIrrigation = degreeDaysStartValue->text().toInt();
+        myCase.myCrop.degreeDaysEndIrrigation = degreeDaysEndValue->text().toInt();
+    }
+    // water stress
+    myCase.myCrop.psiLeaf = psiLeafValue->text().toDouble();
+    myCase.myCrop.fRAW = rawFractionValue->text().toDouble();
+    myCase.myCrop.stressTolerance = stressToleranceValue->text().toDouble();
+
     cropChanged = true;
 
     return true;
@@ -1245,4 +1291,26 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         cropChanged = false;
     }
     return cropChanged;
+}
+
+void Crit3DCropWidget::irrigationVolumeChanged()
+{
+    if (irrigationVolumeValue->text().toDouble() == 0)
+    {
+        irrigationShiftValue->setValue(0);
+        irrigationShiftValue->setEnabled(false);
+        degreeDaysStartValue->setText(nullptr);
+        degreeDaysStartValue->setEnabled(false);
+        degreeDaysEndValue->setText(nullptr);
+        degreeDaysEndValue->setEnabled(false);
+    }
+    else if (irrigationVolumeValue->text().toDouble() > 0)
+    {
+        irrigationShiftValue->setEnabled(true);
+        irrigationShiftValue->setValue(myCase.myCrop.irrigationShift);
+        degreeDaysStartValue->setEnabled(true);
+        degreeDaysStartValue->setText(QString::number(myCase.myCrop.degreeDaysStartIrrigation));
+        degreeDaysEndValue->setEnabled(true);
+        degreeDaysEndValue->setText(QString::number(myCase.myCrop.degreeDaysEndIrrigation));
+    }
 }

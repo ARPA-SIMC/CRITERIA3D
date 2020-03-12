@@ -42,6 +42,7 @@
             void updateTabRootDensity();
             void tabChanged(int index);
             bool checkIfCropIsChanged();
+            void irrigationVolumeChanged();
 
         private:
             QSqlDatabase dbCrop;
