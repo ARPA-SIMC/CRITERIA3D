@@ -15,6 +15,15 @@ private:
     QChart *chart;
     QDateTimeAxis *axisX;
     QValueAxis *axisY;
+    QBarCategoryAxis *axisYdx;
+    QStringList categories;
+    QLineSeries* seriesLAI;
+    QLineSeries* seriesMaxTransp;
+    QLineSeries* seriesRealTransp;
+    QBarSeries *seriesPrec;
+    QBarSeries *seriesIrrigation;
+    QBarSet *setPrec;
+    QBarSet *setIrrigation;
 
 };
 
