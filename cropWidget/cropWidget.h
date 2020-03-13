@@ -42,6 +42,7 @@
             void updateTabRootDensity();
             void tabChanged(int index);
             bool checkIfCropIsChanged();
+            void irrigationVolumeChanged();
 
         private:
             QSqlDatabase dbCrop;
@@ -91,6 +92,13 @@
             QDoubleSpinBox* shapeDeformationValue;
             QLabel *degreeDaysInc;
             QLineEdit* degreeDaysIncValue;
+            QLineEdit* irrigationVolumeValue;
+            QSpinBox* irrigationShiftValue;
+            QLineEdit* degreeDaysStartValue;
+            QLineEdit* degreeDaysEndValue;
+            QLineEdit* psiLeafValue;
+            QDoubleSpinBox* rawFractionValue;
+            QDoubleSpinBox* stressToleranceValue;
             QTabWidget* tabWidget;
             QAction* saveChanges;
             QAction* restoreData;

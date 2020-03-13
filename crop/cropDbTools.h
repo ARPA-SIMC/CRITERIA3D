@@ -29,5 +29,7 @@
 
     bool updateCropRootparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *error);
 
+    bool updateCropIrrigationparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *error);
+
 
 #endif // CROPDBTOOLS_H

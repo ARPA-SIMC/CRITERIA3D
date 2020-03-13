@@ -600,9 +600,9 @@ double getSoilWaterDeficit(const std::vector<soil::Crit3DLayer> &soilLayers)
  */
 double getCropReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
-    if (! myCrop.isLiving) return 0;
-    if (myCrop.roots.rootDepth <= myCrop.roots.rootDepthMin) return 0;
-    if (myCrop.roots.firstRootLayer == NODATA) return 0;
+    if (! myCrop.isLiving) return NODATA;
+    if (myCrop.roots.rootDepth <= myCrop.roots.rootDepthMin) return NODATA;
+    if (myCrop.roots.firstRootLayer == NODATA) return NODATA;
 
     double sumRAW = 0.0;
     for (unsigned int i = unsigned(myCrop.roots.firstRootLayer); i <= unsigned(myCrop.roots.lastRootLayer); i++)

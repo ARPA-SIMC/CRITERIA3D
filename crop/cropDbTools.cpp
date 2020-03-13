@@ -341,5 +341,47 @@ bool updateCropRootparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCro
     return true;
 }
 
+bool updateCropIrrigationparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *error)
+{
+    QSqlQuery qry(*dbCrop);
+    if (idCrop.isEmpty())
+    {
+        *error = "id_crop missing";
+        return false;
+    }
+    qry.prepare( "UPDATE crop SET irrigation_shift = :irrigation_shift, irrigation_volume = :irrigation_volume, "
+                 "degree_days_start_irrigation = :degree_days_start_irrigation, degree_days_end_irrigation = :degree_days_end_irrigation, "
+                 "psi_leaf = :psi_leaf, raw_fraction = :raw_fraction, stress_tolerance = :stress_tolerance"
+                 " WHERE id_crop = :id_crop");
+
+    if (myCrop->irrigationVolume == 0)
+    {
+        qry.bindValue(":irrigation_shift", QVariant(QVariant::String));
+        qry.bindValue(":irrigation_volume", 0);
+        qry.bindValue(":degree_days_start_irrigation", QVariant(QVariant::String));
+        qry.bindValue(":degree_days_end_irrigation", QVariant(QVariant::String));
+    }
+    else
+    {
+        qry.bindValue(":irrigation_shift", myCrop->irrigationShift);
+        qry.bindValue(":irrigation_volume", myCrop->irrigationVolume);
+        qry.bindValue(":degree_days_start_irrigation", myCrop->degreeDaysStartIrrigation);
+        qry.bindValue(":degree_days_end_irrigation", myCrop->degreeDaysEndIrrigation);
+    }
+
+    qry.bindValue(":psi_leaf", myCrop->psiLeaf);
+    qry.bindValue(":raw_fraction", myCrop->fRAW);
+    qry.bindValue(":stress_tolerance", myCrop->stressTolerance);
+
+    qry.bindValue(":id_crop", idCrop);
+
+    if( !qry.exec() )
+    {
+        *error = qry.lastError().text();
+        return false;
+    }
+    return true;
+}
+
 
 
