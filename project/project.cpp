@@ -587,7 +587,7 @@ bool Project::loadParameters(QString parametersFileName)
             isActive = parameters->value("active").toBool();
             forQuality = parameters->value("use_for_spatial_quality_control").toBool();
             proxyGridName = parameters->value("raster").toString();
-            proxyMaxValue = parameters->value("max_value").toFloat();
+            if (parameters->contains("max_value")) proxyMaxValue = parameters->value("max_value").toFloat();
 
             parameters->endGroup();
 
