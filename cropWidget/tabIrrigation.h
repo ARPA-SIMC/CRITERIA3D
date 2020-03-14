@@ -3,12 +3,14 @@
 
 #include <QtWidgets>
 #include <QtCharts>
+#include "criteria1DCase.h"
 
 class TabIrrigation : public QWidget
 {
     Q_OBJECT
 public:
     TabIrrigation();
+    void computeIrrigation(Crit1DCase myCase, int currentYear);
 private:
     int year;
     QChartView *chartView;
