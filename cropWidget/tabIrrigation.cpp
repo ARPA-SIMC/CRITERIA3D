@@ -24,8 +24,7 @@ TabIrrigation::TabIrrigation()
 
     seriesPrec = new QBarSeries();
     seriesIrrigation = new QBarSeries();
-    seriesPrec->setName("Precipitation");
-    seriesIrrigation->setName("Irrigation");
+
     setPrec = new QBarSet("Precipitation");
     setIrrigation = new QBarSet("Irrigation");
     setPrec->setColor(QColor(Qt::blue));
@@ -34,12 +33,16 @@ TabIrrigation::TabIrrigation()
     seriesIrrigation->append(setIrrigation);
 
     axisX = new QDateTimeAxis();
+    //axisX = new QBarCategoryAxis();
     axisY = new QValueAxis();
-    axisYdx = new QBarCategoryAxis();
+    axisYdx = new QValueAxis();
 
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
+    categories << "Jan 01" << "Feb 01" << "Mar 01" << "Apr 01" << "May 01" << "Jun 01" << "Jul 01" << "Aug 01" << "Sep 01" << "Oct 01" << "Nov 01" << "Dic 01";
+    //axisX->append(categories);
+
     axisX->setFormat("MMM dd");
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
@@ -50,18 +53,12 @@ TabIrrigation::TabIrrigation()
     font.setBold(true);
     axisY->setTitleText("LAI [m2 m-2] - Crop transpiration [mm]");
     axisY->setTitleFont(font);
-    axisY->setRange(0,9);   // LC se lo faccio arrivare ad 8 i 2 reticolati di asse dx e sx non coincidono come invece così
-    axisY->setTickCount(10);
+    axisY->setRange(0,8);
+    axisY->setTickCount(9);
 
     axisYdx->setTitleText("Prec - Irrigation [mm]");
-
-    int i = 0;
-    while (i<=40)
-    {
-        categories.append(QString::number(i));
-        i = i+5;
-    }
-    axisYdx->append(categories);
+    axisYdx->setRange(0,40);
+    axisYdx->setTickCount(9);
 
     chart->addAxis(axisX, Qt::AlignBottom);
     chart->addAxis(axisY, Qt::AlignLeft);
@@ -118,6 +115,24 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     seriesMaxTransp->clear();
     seriesRealTransp->clear();
 
+    if (setPrec != nullptr)
+    {
+        seriesPrec->remove(setPrec);
+        chart->removeSeries(seriesPrec);
+        setPrec = new QBarSet("Precipitation");
+        setPrec->setColor(QColor(Qt::blue));
+    }
+
+    if (setIrrigation != nullptr)
+    {
+        seriesIrrigation->remove(setIrrigation);
+        chart->removeSeries(seriesIrrigation);
+        setIrrigation = new QBarSet("Irrigation");
+        setIrrigation->setColor(QColor(Qt::cyan));
+    }
+
+
+
     int currentDoy = 1;
     myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
 
@@ -143,6 +158,8 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
             seriesLAI->append(x.toMSecsSinceEpoch(), myCase.myCrop.LAI);
             seriesMaxTransp->append(x.toMSecsSinceEpoch(), myCase.output.dailyMaxTranspiration);
             seriesRealTransp->append(x.toMSecsSinceEpoch(), myCase.output.dailyTranspiration);
+            *setPrec << myCase.output.dailyPrec;
+            *setIrrigation << myCase.output.dailyIrrigation;
 
         }
         cont = cont + 1; // formInfo update
@@ -155,4 +172,11 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     QDate last(year, 12, 31);
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
+
+    // add histogram series
+    seriesPrec->append(setPrec);
+    chart->addSeries(seriesPrec);
+    seriesIrrigation->append(setIrrigation);
+    chart->addSeries(seriesIrrigation);
+
 }
