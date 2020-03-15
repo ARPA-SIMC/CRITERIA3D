@@ -15,16 +15,14 @@ private:
     int year;
     QChartView *chartView;
     QChart *chart;
-    QDateTimeAxis *axisX;
-    //QBarCategoryAxis *axisX;
+    QBarCategoryAxis *axisX;
     QValueAxis *axisY;
     QValueAxis *axisYdx;
     QStringList categories;
     QLineSeries* seriesLAI;
     QLineSeries* seriesMaxTransp;
     QLineSeries* seriesRealTransp;
-    QBarSeries *seriesPrec;
-    QBarSeries *seriesIrrigation;
+    QBarSeries *seriesPrecIrr;
     QBarSet *setPrec;
     QBarSet *setIrrigation;
 

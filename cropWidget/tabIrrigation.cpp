@@ -22,18 +22,16 @@ TabIrrigation::TabIrrigation()
     seriesMaxTransp->setColor(QColor(Qt::darkGray));
     seriesRealTransp->setColor(QColor(Qt::red));
 
-    seriesPrec = new QBarSeries();
-    seriesIrrigation = new QBarSeries();
+    seriesPrecIrr = new QBarSeries();
 
     setPrec = new QBarSet("Precipitation");
     setIrrigation = new QBarSet("Irrigation");
     setPrec->setColor(QColor(Qt::blue));
     setIrrigation->setColor(QColor(Qt::cyan));
-    seriesPrec->append(setPrec);
-    seriesIrrigation->append(setIrrigation);
+    seriesPrecIrr->append(setPrec);
+    seriesPrecIrr->append(setIrrigation);
 
-    axisX = new QDateTimeAxis();
-    //axisX = new QBarCategoryAxis();
+    axisX = new QBarCategoryAxis();
     axisY = new QValueAxis();
     axisYdx = new QValueAxis();
 
@@ -41,12 +39,7 @@ TabIrrigation::TabIrrigation()
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
     categories << "Jan 01" << "Feb 01" << "Mar 01" << "Apr 01" << "May 01" << "Jun 01" << "Jul 01" << "Aug 01" << "Sep 01" << "Oct 01" << "Nov 01" << "Dic 01";
-    //axisX->append(categories);
-
-    axisX->setFormat("MMM dd");
-    axisX->setMin(QDateTime(first, QTime(0,0,0)));
-    axisX->setMax(QDateTime(last, QTime(0,0,0)));
-    axisX->setTickCount(13);
+    axisX->append(categories);
 
     QFont font = axisY->titleFont();
     font.setPointSize(9);
@@ -67,8 +60,7 @@ TabIrrigation::TabIrrigation()
     chart->addSeries(seriesLAI);
     chart->addSeries(seriesMaxTransp);
     chart->addSeries(seriesRealTransp);
-    chart->addSeries(seriesPrec);
-    chart->addSeries(seriesIrrigation);
+    chart->addSeries(seriesPrecIrr);
 
 
     seriesLAI->attachAxis(axisX);
@@ -79,14 +71,12 @@ TabIrrigation::TabIrrigation()
     seriesRealTransp->attachAxis(axisX);
     seriesRealTransp->attachAxis(axisY);
 
-    seriesPrec->attachAxis(axisX);
-    seriesPrec->attachAxis(axisYdx);
-    seriesIrrigation->attachAxis(axisX);
-    seriesIrrigation->attachAxis(axisYdx);
-
+    seriesPrecIrr->attachAxis(axisX);
+    seriesPrecIrr->attachAxis(axisYdx);
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
+    chartView->setRenderHint(QPainter::Antialiasing);
 
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
@@ -108,30 +98,14 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
 
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
     Crit3DDate lastDate = Crit3DDate(31, 12, year);
-    QDateTime x;
+
     int doy;
 
+    axisX->clear();
     seriesLAI->clear();
     seriesMaxTransp->clear();
     seriesRealTransp->clear();
-
-    if (setPrec != nullptr)
-    {
-        seriesPrec->remove(setPrec);
-        chart->removeSeries(seriesPrec);
-        setPrec = new QBarSet("Precipitation");
-        setPrec->setColor(QColor(Qt::blue));
-    }
-
-    if (setIrrigation != nullptr)
-    {
-        seriesIrrigation->remove(setIrrigation);
-        chart->removeSeries(seriesIrrigation);
-        setIrrigation = new QBarSet("Irrigation");
-        setIrrigation->setColor(QColor(Qt::cyan));
-    }
-
-
+    categories.clear();
 
     int currentDoy = 1;
     myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
@@ -153,11 +127,11 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
         // display only current year
         if (myDate.year == year)
         {
-            x.setDate(QDate(myDate.year, myDate.month, myDate.day));
             doy = getDoyFromDate(myDate);
-            seriesLAI->append(x.toMSecsSinceEpoch(), myCase.myCrop.LAI);
-            seriesMaxTransp->append(x.toMSecsSinceEpoch(), myCase.output.dailyMaxTranspiration);
-            seriesRealTransp->append(x.toMSecsSinceEpoch(), myCase.output.dailyTranspiration);
+            categories.append(QString::number(doy));
+            seriesLAI->append(doy, myCase.myCrop.LAI);
+            seriesMaxTransp->append(doy, myCase.output.dailyMaxTranspiration);
+            seriesRealTransp->append(doy, myCase.output.dailyTranspiration);
             *setPrec << myCase.output.dailyPrec;
             *setIrrigation << myCase.output.dailyIrrigation;
 
@@ -166,17 +140,11 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
 
     }
     formInfo.close();
-
-    // update x axis
-    QDate first(year, 1, 1);
-    QDate last(year, 12, 31);
-    axisX->setMin(QDateTime(first, QTime(0,0,0)));
-    axisX->setMax(QDateTime(last, QTime(0,0,0)));
+    axisX->append(categories);
 
     // add histogram series
-    seriesPrec->append(setPrec);
-    chart->addSeries(seriesPrec);
-    seriesIrrigation->append(setIrrigation);
-    chart->addSeries(seriesIrrigation);
+    seriesPrecIrr->append(setPrec);
+    seriesPrecIrr->append(setIrrigation);
+    chart->addSeries(seriesPrecIrr);
 
 }
