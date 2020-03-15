@@ -1020,12 +1020,27 @@ void Crit3DCropWidget::on_actionUpdate()
     }
     if (!yearListComboBox.currentText().isEmpty())
     {
-        updateTabLAI();
-        if (!myCase.mySoil.code.empty())
+        if (tabWidget->currentIndex() == 0)
         {
-            updateTabRootDepth();
-            updateTabRootDensity();
-            updateTabIrrigation();
+            updateTabLAI();
+        }
+        else
+        {
+            if (!myCase.mySoil.code.empty())
+            {
+                if (tabWidget->currentIndex() == 1)
+                {
+                    updateTabRootDepth();
+                }
+                if (tabWidget->currentIndex() == 2)
+                {
+                    updateTabRootDensity();
+                }
+                if (tabWidget->currentIndex() == 3)
+                {
+                    updateTabIrrigation();
+                }
+            }
         }
     }
 
