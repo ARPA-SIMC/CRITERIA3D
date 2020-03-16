@@ -22,8 +22,7 @@ private:
     QLineSeries* seriesLAI;
     QLineSeries* seriesMaxTransp;
     QLineSeries* seriesRealTransp;
-    QBarSeries *seriesPrec;
-    QBarSeries *seriesIrr;
+    QBarSeries* seriesPrecIrr;
     QBarSet *setPrec;
     QBarSet *setIrrigation;
 

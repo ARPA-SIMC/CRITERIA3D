@@ -22,16 +22,17 @@ TabIrrigation::TabIrrigation()
     seriesMaxTransp->setColor(QColor(Qt::darkGray));
     seriesRealTransp->setColor(QColor(Qt::red));
 
-    seriesPrec = new QBarSeries();
-    seriesIrr = new QBarSeries();
+    seriesPrecIrr = new QBarSeries();
 
     setPrec = new QBarSet("Precipitation");
     setIrrigation = new QBarSet("Irrigation");
     setPrec->setColor(QColor(Qt::blue));
+    setPrec->setBorderColor(QColor(Qt::blue));
     setIrrigation->setColor(QColor(Qt::cyan));
+    setIrrigation->setBorderColor(QColor(Qt::cyan));
 
-    seriesPrec->append(setPrec);
-    seriesIrr->append(setIrrigation);
+    seriesPrecIrr->append(setPrec);
+    seriesPrecIrr->append(setIrrigation);
 
     axisX = new QBarCategoryAxis();
     axisY = new QValueAxis();
@@ -62,9 +63,7 @@ TabIrrigation::TabIrrigation()
     chart->addSeries(seriesLAI);
     chart->addSeries(seriesMaxTransp);
     chart->addSeries(seriesRealTransp);
-    chart->addSeries(seriesPrec);
-    chart->addSeries(seriesIrr);
-
+    chart->addSeries(seriesPrecIrr);
     seriesLAI->attachAxis(axisX);
     seriesLAI->attachAxis(axisY);
 
@@ -73,10 +72,8 @@ TabIrrigation::TabIrrigation()
     seriesRealTransp->attachAxis(axisX);
     seriesRealTransp->attachAxis(axisY);
 
-    seriesPrec->attachAxis(axisX);
-    seriesPrec->attachAxis(axisYdx);
-    seriesIrr->attachAxis(axisX);
-    seriesIrr->attachAxis(axisYdx);
+    seriesPrecIrr->attachAxis(axisX);
+    seriesPrecIrr->attachAxis(axisYdx);
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
@@ -112,6 +109,21 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     seriesRealTransp->clear();
     categories.clear();
 
+    if (setPrec!= nullptr)
+    {
+        seriesPrecIrr->remove(setPrec);
+        setPrec = new QBarSet("Precipitation");
+        setPrec->setColor(QColor(Qt::blue));
+        setPrec->setBorderColor(QColor(Qt::blue));
+    }
+    if (setIrrigation!= nullptr)
+    {
+        seriesPrecIrr->remove(setIrrigation);
+        setIrrigation = new QBarSet("Irrigation");
+        setIrrigation->setColor(QColor(Qt::cyan));
+        setIrrigation->setBorderColor(QColor(Qt::cyan));
+    }
+
     int currentDoy = 1;
     myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
 
@@ -143,6 +155,9 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     }
 
     formInfo.close();
+
+    seriesPrecIrr->append(setPrec);
+    seriesPrecIrr->append(setIrrigation);
     axisX->append(categories);
     axisX->setGridLineVisible(false);
 }
