@@ -122,8 +122,8 @@
 
         void setProxyDEM();
         void clearProxyDEM();
-        bool checkProxy(QString name_, QString gridName_, QString table_, QString field_, QString *error);
-        void addProxyToProject(QString name_, QString gridName_, QString table_, QString field_, bool isForQuality_, bool isActive_);
+        bool checkProxy(const Crit3DProxy &myProxy, QString *error);
+        bool addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder);
         void addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears);
         void setCurrentDate(QDate myDate);
         void setCurrentHour(int myHour);

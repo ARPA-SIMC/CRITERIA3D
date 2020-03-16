@@ -392,11 +392,7 @@ bool ProxyDialog::checkProxies(QString *error)
 
     for (unsigned i=0; i < _proxy.size(); i++)
     {
-        if (!_project->checkProxy(QString::fromStdString(_proxy[i].getName()),
-                                  QString::fromStdString(_proxy[i].getGridName()),
-                                  QString::fromStdString(_proxy[i].getProxyTable()),
-                                  QString::fromStdString(_proxy[i].getProxyField()),
-                                  error))
+        if (!_project->checkProxy(_proxy[i], error))
             return false;
 
         table_ = _proxy[i].getProxyTable();
@@ -420,14 +416,18 @@ void ProxyDialog::saveProxies()
     _project->interpolationSettings.initializeProxy();
     _project->qualityInterpolationSettings.initializeProxy();
 
+    std::vector <Crit3DProxy> proxyList;
+    std::deque <bool> proxyActive;
+    std::vector <int> proxyOrder;
+
     for (unsigned i=0; i < _proxy.size(); i++)
     {   
-        _project->addProxyToProject(QString::fromStdString(_proxy[i].getName()),
-                           QString::fromStdString(_proxy[i].getGridName()),
-                           QString::fromStdString(_proxy[i].getProxyTable()),
-                           QString::fromStdString(_proxy[i].getProxyField()),
-                            _proxy[i].getForQualityControl(), true);
+        proxyList.push_back(_proxy[i]);
+        proxyActive.push_back(true);
+        proxyOrder.push_back(i+1);
     }
+
+    _project->addProxyToProject(proxyList, proxyActive, proxyOrder);
 }
 
 

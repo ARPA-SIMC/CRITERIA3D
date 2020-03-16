@@ -158,40 +158,55 @@ void Project::setProxyDEM()
     }
 }
 
-bool Project::checkProxy(QString name_, QString gridName_, QString table_, QString field_, QString *error)
+bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
 {
+    std::string name_ = myProxy.getName();
+
     if (name_ == "")
     {
         *error = "no name";
         return false;
     }
 
-    bool isHeight = (getProxyPragaName(name_.toStdString()) == height);
+    bool isHeight = (getProxyPragaName(name_) == height);
 
-    if (!isHeight & (gridName_ == "") & (table_ == "" && field_ == ""))
+    if (!isHeight & (myProxy.getGridName() == "") & (myProxy.getProxyTable() == "" && myProxy.getProxyField() == ""))
     {
-        *error = "error reading grid, table or field for proxy " + name_;
+        *error = "error reading grid, table or field for proxy " + QString::fromStdString(name_);
         return false;
     }
 
     return true;
 }
 
-void Project::addProxyToProject(QString name_, QString gridName_, QString table_, QString field_, bool isForQuality_, bool isActive_)
+bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder)
 {
-    Crit3DProxy myProxy;
+    unsigned i, indexOrder;
+    bool orderFound;
 
-    myProxy.setName(name_.toStdString());
-    myProxy.setGridName(gridName_.toStdString());
-    myProxy.setProxyTable(table_.toStdString());
-    myProxy.setProxyField(field_.toStdString());
-    myProxy.setForQualityControl(isForQuality_);
+    for (indexOrder=1; i <= proxyList.size(); indexOrder++)
+    {
+        orderFound = false;
 
-    interpolationSettings.addProxy(myProxy, isActive_);
-    if (isForQuality_)
-        qualityInterpolationSettings.addProxy(myProxy, isActive_);
+        for (i=0; i < proxyList.size(); i++)
+            if (i+1 == unsigned(proxyOrder[indexOrder]))
+            {
+                interpolationSettings.addProxy(proxyList[i], proxyActive[i]);
+                if (proxyList[i].getForQualityControl())
+                    qualityInterpolationSettings.addProxy(proxyList[i], proxyActive[i]);
 
-    if (getProxyPragaName(name_.toStdString()) == height) setProxyDEM();
+                if (getProxyPragaName(proxyList[i].getName()) == height) setProxyDEM();
+
+                orderFound = true;
+
+                continue;
+            }
+
+        if (! orderFound) return false;
+    }
+
+    return true;
+
 }
 
 
@@ -225,10 +240,12 @@ bool Project::loadParameters(QString parametersFileName)
     interpolationSettings.initialize();
     qualityInterpolationSettings.initialize();
 
-    QString gridName = "";
-    QString proxyName = "", proxyGridName = "", proxyTable = "", proxyField = "";
-    bool isActive = false, forQuality = false;
+    std::vector <Crit3DProxy> proxyListTmp;
+    std::deque <bool> proxyActiveTmp;
+    std::vector <int> proxyOrder;
+
     float proxyMaxValue = NODATA;
+
     QStringList myList;
     std::vector <QString> proxyGridSeriesNames;
     std::vector <unsigned> proxyGridSeriesYears;
@@ -578,29 +595,47 @@ bool Project::loadParameters(QString parametersFileName)
         //proxy variables (for interpolation)
         if (group.startsWith("proxy_"))
         {
-            proxyName = group.right(group.size()-6);
+            Crit3DProxy* myProxy = new Crit3DProxy();
+
+            myProxy->setName(group.right(group.size()-6).toStdString());
 
             parameters->beginGroup(group);
 
-            proxyTable = parameters->value("table").toString();
-            proxyField = parameters->value("field").toString();
-            isActive = parameters->value("active").toBool();
-            forQuality = parameters->value("use_for_spatial_quality_control").toBool();
-            proxyGridName = parameters->value("raster").toString();
+            myProxy->setProxyTable(parameters->value("table").toString().toStdString());
+            myProxy->setProxyField(parameters->value("field").toString().toStdString());
+            myProxy->setGridName(parameters->value("raster").toString().toStdString());
+            myProxy->setForQualityControl(parameters->value("use_for_spatial_quality_control").toBool());
+
+            if (! parameters->contains("active"))
+            {
+                errorString = "active not specified for proxy " + QString::fromStdString(myProxy->getName());
+                return false;
+            }
+
+            if (! parameters->contains("order"))
+            {
+                errorString = "order not specified for proxy " + QString::fromStdString(myProxy->getName());
+                return false;
+            }
+
             if (parameters->contains("max_value")) proxyMaxValue = parameters->value("max_value").toFloat();
 
-            parameters->endGroup();
-
-            if (checkProxy(proxyName, proxyGridName, proxyTable, proxyField, &errorString))
-                addProxyToProject(proxyName, proxyGridName, proxyTable, proxyField, forQuality, isActive);
+            if (checkProxy(*myProxy, &errorString))
+            {
+                proxyListTmp.push_back(*myProxy);
+                proxyActiveTmp.push_back(parameters->value("active").toBool());
+                proxyOrder.push_back(parameters->value("order").toInt());
+            }
             else
                 logError();
+
+            parameters->endGroup();
         }
 
         //proxy grid annual series
         if (group.startsWith("proxygrid"))
         {
-            proxyName = group.right(group.length()-10);
+            QString proxyName = group.right(group.length()-10);
 
             parameters->beginGroup(group);
             int nrGrids = parameters->beginReadArray("grids");
@@ -615,6 +650,10 @@ bool Project::loadParameters(QString parametersFileName)
             addProxyGridSeries(proxyName, proxyGridSeriesNames, proxyGridSeriesYears);
         }
     }
+
+    if (proxyListTmp.size() > 0)
+        addProxyToProject(proxyListTmp, proxyActiveTmp, proxyOrder);
+
 
     // check proxy grids for detrending
     if (!loadProxyGrids())
