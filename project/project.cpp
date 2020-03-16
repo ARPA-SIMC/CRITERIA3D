@@ -181,15 +181,15 @@ bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
 
 bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder)
 {
-    unsigned i, indexOrder;
+    unsigned i, order;
     bool orderFound;
 
-    for (indexOrder=1; i <= proxyList.size(); indexOrder++)
+    for (order=1; order <= proxyList.size(); order++)
     {
         orderFound = false;
 
         for (i=0; i < proxyList.size(); i++)
-            if (i+1 == unsigned(proxyOrder[indexOrder]))
+            if (unsigned(proxyOrder[i]) == order)
             {
                 interpolationSettings.addProxy(proxyList[i], proxyActive[i]);
                 if (proxyList[i].getForQualityControl())
@@ -199,7 +199,7 @@ bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque 
 
                 orderFound = true;
 
-                continue;
+                break;
             }
 
         if (! orderFound) return false;
@@ -243,8 +243,6 @@ bool Project::loadParameters(QString parametersFileName)
     std::vector <Crit3DProxy> proxyListTmp;
     std::deque <bool> proxyActiveTmp;
     std::vector <int> proxyOrder;
-
-    float proxyMaxValue = NODATA;
 
     QStringList myList;
     std::vector <QString> proxyGridSeriesNames;
@@ -618,7 +616,7 @@ bool Project::loadParameters(QString parametersFileName)
                 return false;
             }
 
-            if (parameters->contains("max_value")) proxyMaxValue = parameters->value("max_value").toFloat();
+            if (parameters->contains("max_value")) myProxy->setMaxVal(parameters->value("max_value").toFloat());
 
             if (checkProxy(*myProxy, &errorString))
             {
