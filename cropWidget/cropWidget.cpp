@@ -1123,7 +1123,6 @@ bool Crit3DCropWidget::updateCrop()
         }
         if (degreeDaysStartValue->text().isEmpty() || degreeDaysEndValue->text().isEmpty())
         {
-            // LC not NULL o > 0? Nel db crop ho casi con irrigation_volume > 0 e degreeDaysStartValue=0
             error = "irrigation degree days is NULL, insert a valid value";
             QMessageBox::critical(nullptr, "Error irrigation update", error);
             return false;

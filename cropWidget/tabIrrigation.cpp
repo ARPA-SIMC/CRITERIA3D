@@ -22,14 +22,16 @@ TabIrrigation::TabIrrigation()
     seriesMaxTransp->setColor(QColor(Qt::darkGray));
     seriesRealTransp->setColor(QColor(Qt::red));
 
-    seriesPrecIrr = new QBarSeries();
+    seriesPrec = new QBarSeries();
+    seriesIrr = new QBarSeries();
 
     setPrec = new QBarSet("Precipitation");
     setIrrigation = new QBarSet("Irrigation");
     setPrec->setColor(QColor(Qt::blue));
     setIrrigation->setColor(QColor(Qt::cyan));
-    seriesPrecIrr->append(setPrec);
-    seriesPrecIrr->append(setIrrigation);
+
+    seriesPrec->append(setPrec);
+    seriesIrr->append(setIrrigation);
 
     axisX = new QBarCategoryAxis();
     axisY = new QValueAxis();
@@ -60,8 +62,8 @@ TabIrrigation::TabIrrigation()
     chart->addSeries(seriesLAI);
     chart->addSeries(seriesMaxTransp);
     chart->addSeries(seriesRealTransp);
-    chart->addSeries(seriesPrecIrr);
-
+    chart->addSeries(seriesPrec);
+    chart->addSeries(seriesIrr);
 
     seriesLAI->attachAxis(axisX);
     seriesLAI->attachAxis(axisY);
@@ -71,8 +73,10 @@ TabIrrigation::TabIrrigation()
     seriesRealTransp->attachAxis(axisX);
     seriesRealTransp->attachAxis(axisY);
 
-    seriesPrecIrr->attachAxis(axisX);
-    seriesPrecIrr->attachAxis(axisYdx);
+    seriesPrec->attachAxis(axisX);
+    seriesPrec->attachAxis(axisYdx);
+    seriesIrr->attachAxis(axisX);
+    seriesIrr->attachAxis(axisYdx);
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
@@ -82,6 +86,7 @@ TabIrrigation::TabIrrigation()
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 }
+
 
 void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
 {
@@ -115,10 +120,8 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     int cont = 0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
-        if ( (cont % step) == 0)
-        {
-            formInfo.setValue(cont);
-        }
+        if ( (cont % step) == 0) formInfo.setValue(cont);
+
         if (! myCase.computeDailyModel(myDate, errorString))
         {
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(error));
@@ -134,17 +137,12 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
             seriesRealTransp->append(doy, myCase.output.dailyTranspiration);
             *setPrec << myCase.output.dailyPrec;
             *setIrrigation << myCase.output.dailyIrrigation;
-
         }
-        cont = cont + 1; // formInfo update
 
+        cont++; // formInfo update
     }
+
     formInfo.close();
     axisX->append(categories);
-
-    // add histogram series
-    seriesPrecIrr->append(setPrec);
-    seriesPrecIrr->append(setIrrigation);
-    chart->addSeries(seriesPrecIrr);
-
 }
+
