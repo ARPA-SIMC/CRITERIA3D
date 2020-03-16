@@ -40,6 +40,48 @@ Crit1DIrrigationForecast::Crit1DIrrigationForecast()
 }
 
 
+// update values of annual irrigation
+void Crit1DIrrigationForecast::updateSeasonalForecast(Crit3DDate myDate, int index)
+{
+    bool isInsideSeason = false;
+
+    // normal seasons
+    if (firstSeasonMonth < 11)
+    {
+        if (myDate.month >= firstSeasonMonth && myDate.month <= firstSeasonMonth+2)
+            isInsideSeason = true;
+    }
+    // NDJ or DJF
+    else
+    {
+        int lastMonth = (firstSeasonMonth + 2) % 12;
+        if (myDate.month >= firstSeasonMonth || myDate.month <= lastMonth)
+            isInsideSeason = true;
+    }
+
+    if (isInsideSeason)
+    {
+        // first date of season
+        if (myDate.day == 1 && myDate.month == firstSeasonMonth)
+        {
+            if (index == NODATA)
+                index = 0;
+            else
+                index++;
+        }
+
+        // sum of irrigations
+        if (index != NODATA)
+        {
+            if (int(seasonalForecasts[index]) == int(NODATA))
+                seasonalForecasts[index] = myCase.output.dailyIrrigation;
+            else
+                seasonalForecasts[index] += myCase.output.dailyIrrigation;
+        }
+    }
+}
+
+
 bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myError)
 {
     myCase.idCase = myUnit.idCase;
@@ -65,8 +107,8 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myErr
     firstDate = myCase.meteoPoint.obsDataD[0].date;
     lastDate = myCase.meteoPoint.obsDataD[lastIndex].date;
 
-    if (isSeasonalForecast)
-        initializeSeasonalForecast(firstDate, lastDate);
+    if (isSeasonalForecast) initializeSeasonalForecast(firstDate, lastDate);
+    int indexSeasonalForecast = NODATA;
 
     // initialize crop
     unsigned nrLayers = unsigned(myCase.soilLayers.size());
@@ -75,7 +117,7 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myErr
 
     std::string errorString;
     bool isFirstDay = true;
-    int indexSeasonalForecast = NODATA;
+
     for (myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! myCase.computeDailyModel(myDate, errorString))
@@ -85,50 +127,14 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myErr
         }
 
         // output
-        if (! isSeasonalForecast)
+        if (isSeasonalForecast)
+        {
+            updateSeasonalForecast(myDate, indexSeasonalForecast);
+        }
+        else
         {
             prepareOutput(myDate, isFirstDay);
             isFirstDay = false;
-        }
-
-        // seasonal forecast: update values of annual irrigation
-        if (isSeasonalForecast)
-        {
-            bool isInsideSeason = false;
-            // normal seasons
-            if (firstSeasonMonth < 11)
-            {
-                if (myDate.month >= firstSeasonMonth && myDate.month <= firstSeasonMonth+2)
-                    isInsideSeason = true;
-            }
-            // NDJ or DJF
-            else
-            {
-                int lastMonth = (firstSeasonMonth + 2) % 12;
-                if (myDate.month >= firstSeasonMonth || myDate.month <= lastMonth)
-                    isInsideSeason = true;
-            }
-
-            if (isInsideSeason)
-            {
-                // first date of season
-                if (myDate.day == 1 && myDate.month == firstSeasonMonth)
-                {
-                    if (indexSeasonalForecast == NODATA)
-                        indexSeasonalForecast = 0;
-                    else
-                        indexSeasonalForecast++;
-                }
-
-                // sum of irrigations
-                if (indexSeasonalForecast != NODATA)
-                {
-                    if (int(seasonalForecasts[indexSeasonalForecast]) == int(NODATA))
-                        seasonalForecasts[indexSeasonalForecast] = myCase.output.dailyIrrigation;
-                    else
-                        seasonalForecasts[indexSeasonalForecast] += myCase.output.dailyIrrigation;
-                }
-            }
         }
     }
 
@@ -136,7 +142,6 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myErr
         return true;
     else
         return saveOutput(myError);
-
 }
 
 

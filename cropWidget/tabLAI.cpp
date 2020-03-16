@@ -11,12 +11,12 @@ TabLAI::TabLAI()
     chart = new QChart();   
     chartView = new QChartView(chart);
     chartView->setChart(chart);
+
     seriesLAI = new QLineSeries();
     seriesPotentialEvap = new QLineSeries();
     seriesMaxEvap = new QLineSeries();
     seriesMaxTransp = new QLineSeries();
     seriesLAI->setName("Leaf Area Index [m2 m-2]");
-
     seriesPotentialEvap->setName("Potential evapotranspiration [mm]");
     seriesPotentialEvap->setColor(QColor(Qt::darkGray));
     seriesMaxEvap->setName("Evaporation max [mm]");

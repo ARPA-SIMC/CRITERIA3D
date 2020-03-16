@@ -64,6 +64,8 @@
 
         void initializeSeasonalForecast(const Crit3DDate& firstDate, const Crit3DDate& lastDate);
 
+        void updateSeasonalForecast(Crit3DDate myDate, int index);
+
         bool createOutputTable(QString &myError);
         void prepareOutput(Crit3DDate myDate, bool isFirst);
         bool saveOutput(QString &myError);

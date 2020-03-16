@@ -40,6 +40,7 @@
             void updateTabLAI();
             void updateTabRootDepth();
             void updateTabRootDensity();
+            void updateTabIrrigation();
             void tabChanged(int index);
             bool checkIfCropIsChanged();
             void irrigationVolumeChanged();

@@ -29,8 +29,6 @@
 #include "soilDbTools.h"
 #include "utilities.h"
 #include "commonConstants.h"
-#include "formInfo.h"
-
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -1022,11 +1020,27 @@ void Crit3DCropWidget::on_actionUpdate()
     }
     if (!yearListComboBox.currentText().isEmpty())
     {
-        updateTabLAI();
-        if (!myCase.mySoil.code.empty())
+        if (tabWidget->currentIndex() == 0)
         {
-            updateTabRootDepth();
-            updateTabRootDensity();
+            updateTabLAI();
+        }
+        else
+        {
+            if (!myCase.mySoil.code.empty())
+            {
+                if (tabWidget->currentIndex() == 1)
+                {
+                    updateTabRootDepth();
+                }
+                if (tabWidget->currentIndex() == 2)
+                {
+                    updateTabRootDensity();
+                }
+                if (tabWidget->currentIndex() == 3)
+                {
+                    updateTabIrrigation();
+                }
+            }
         }
     }
 
@@ -1186,6 +1200,14 @@ void Crit3DCropWidget::updateTabRootDensity()
     }
 }
 
+void Crit3DCropWidget::updateTabIrrigation()
+{
+    if (!myCase.myCrop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
+    {
+        tabIrrigation->computeIrrigation(myCase, yearListComboBox.currentText().toInt());
+    }
+}
+
 void Crit3DCropWidget::tabChanged(int index)
 {
 
@@ -1232,8 +1254,14 @@ void Crit3DCropWidget::tabChanged(int index)
         rootParametersGroup->hide();
         irrigationParametersGroup->setVisible(true);
         waterStressParametersGroup->setVisible(true);
-        FormInfo formInfo;
-        // TO DO
+
+        if (myCase.mySoil.code.empty())
+        {
+            QString msg = "Open a Db Soil";
+            QMessageBox::information(nullptr, "Warning", msg);
+            return;
+        }
+        updateTabIrrigation();
     }
 
 }
