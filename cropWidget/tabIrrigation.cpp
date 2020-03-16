@@ -144,5 +144,6 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
 
     formInfo.close();
     axisX->append(categories);
+    axisX->setGridLineVisible(false);
 }
 
