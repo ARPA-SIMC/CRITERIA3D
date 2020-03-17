@@ -93,11 +93,6 @@ TabIrrigation::TabIrrigation()
     connect(seriesRealTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipRT);
     connect(seriesPrecIrr, &QHorizontalBarSeries::hovered, this, &TabIrrigation::tooltipPrecIrr);
 
-    foreach(QLegendMarker* marker, chart->legend()->markers())
-    {
-        QObject::connect(marker, &QLegendMarker::clicked, this, &TabIrrigation::handleMarkerClicked);
-    }
-
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
@@ -185,6 +180,11 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     QDate last(year, 12, 31);
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+
+    foreach(QLegendMarker* marker, chart->legend()->markers())
+    {
+        QObject::connect(marker, &QLegendMarker::clicked, this, &TabIrrigation::handleMarkerClicked);
+    }
 }
 
 void TabIrrigation::tooltipLAI(QPointF point, bool state)
@@ -282,9 +282,9 @@ void TabIrrigation::tooltipPrecIrr(bool state, int index, QBarSet *barset)
 
 void TabIrrigation::handleMarkerClicked()
 {
-    QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
 
-    if(marker->type() == QLegendMarker::LegendMarkerTypeXY)
+    QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
+    if (marker->type() == QLegendMarker::LegendMarkerTypeXY)
     {
         // Toggle visibility of series
         marker->series()->setVisible(!marker->series()->isVisible());
@@ -317,6 +317,46 @@ void TabIrrigation::handleMarkerClicked()
         color.setAlphaF(alpha);
         pen.setColor(color);
         marker->setPen(pen);
+    }
+    else if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
+    {
+        // Toggle visibility of series
+        marker->series()->setVisible(!marker->series()->isVisible());
+
+        // change marker alpha, if series is not visible
+        qreal alpha = 1.0;
+
+        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
+        foreach(QLegendMarker* marker, chart->legend()->markers())
+        {
+            if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
+            {
+                marker->setVisible(true);
+            }
+            if (!marker->series()->isVisible()) {
+                alpha = 0.5;
+            }
+
+            QColor color;
+            QBrush brush = marker->labelBrush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setLabelBrush(brush);
+
+            brush = marker->brush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setBrush(brush);
+
+            QPen pen = marker->pen();
+            color = pen.color();
+            color.setAlphaF(alpha);
+            pen.setColor(color);
+            marker->setPen(pen);
+        }
+
     }
 
 }
