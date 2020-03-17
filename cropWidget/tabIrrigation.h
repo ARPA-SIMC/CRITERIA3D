@@ -16,13 +16,14 @@ private:
     QChartView *chartView;
     QChart *chart;
     QBarCategoryAxis *axisX;
+    QDateTimeAxis *axisXvirtual;
     QValueAxis *axisY;
     QValueAxis *axisYdx;
     QStringList categories;
     QLineSeries* seriesLAI;
     QLineSeries* seriesMaxTransp;
     QLineSeries* seriesRealTransp;
-    QBarSeries *seriesPrecIrr;
+    QBarSeries* seriesPrecIrr;
     QBarSet *setPrec;
     QBarSet *setIrrigation;
 

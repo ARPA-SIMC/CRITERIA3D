@@ -27,19 +27,28 @@ TabIrrigation::TabIrrigation()
     setPrec = new QBarSet("Precipitation");
     setIrrigation = new QBarSet("Irrigation");
     setPrec->setColor(QColor(Qt::blue));
+    setPrec->setBorderColor(QColor(Qt::blue));
     setIrrigation->setColor(QColor(Qt::cyan));
+    setIrrigation->setBorderColor(QColor(Qt::cyan));
+
     seriesPrecIrr->append(setPrec);
     seriesPrecIrr->append(setIrrigation);
 
     axisX = new QBarCategoryAxis();
+    axisXvirtual = new QDateTimeAxis();
     axisY = new QValueAxis();
     axisYdx = new QValueAxis();
 
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
-    categories << "Jan 01" << "Feb 01" << "Mar 01" << "Apr 01" << "May 01" << "Jun 01" << "Jul 01" << "Aug 01" << "Sep 01" << "Oct 01" << "Nov 01" << "Dic 01";
-    axisX->append(categories);
+    //categories << "Jan 01" << "Feb 01" << "Mar 01" << "Apr 01" << "May 01" << "Jun 01" << "Jul 01" << "Aug 01" << "Sep 01" << "Oct 01" << "Nov 01" << "Dic 01";
+    //axisX->append(categories);
+    axisXvirtual->setTitleText("Date");
+    axisXvirtual->setFormat("MMM dd");
+    axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
+    axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+    axisXvirtual->setTickCount(13);
 
     QFont font = axisY->titleFont();
     font.setPointSize(9);
@@ -54,6 +63,7 @@ TabIrrigation::TabIrrigation()
     axisYdx->setTickCount(9);
 
     chart->addAxis(axisX, Qt::AlignBottom);
+    chart->addAxis(axisXvirtual, Qt::AlignBottom);
     chart->addAxis(axisY, Qt::AlignLeft);
     chart->addAxis(axisYdx, Qt::AlignRight);
 
@@ -61,8 +71,6 @@ TabIrrigation::TabIrrigation()
     chart->addSeries(seriesMaxTransp);
     chart->addSeries(seriesRealTransp);
     chart->addSeries(seriesPrecIrr);
-
-
     seriesLAI->attachAxis(axisX);
     seriesLAI->attachAxis(axisY);
 
@@ -77,11 +85,12 @@ TabIrrigation::TabIrrigation()
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
     chartView->setRenderHint(QPainter::Antialiasing);
-
+    axisX->hide();
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 }
+
 
 void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
 {
@@ -107,6 +116,21 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     seriesRealTransp->clear();
     categories.clear();
 
+    if (setPrec!= nullptr)
+    {
+        seriesPrecIrr->remove(setPrec);
+        setPrec = new QBarSet("Precipitation");
+        setPrec->setColor(QColor(Qt::blue));
+        setPrec->setBorderColor(QColor(Qt::blue));
+    }
+    if (setIrrigation!= nullptr)
+    {
+        seriesPrecIrr->remove(setIrrigation);
+        setIrrigation = new QBarSet("Irrigation");
+        setIrrigation->setColor(QColor(Qt::cyan));
+        setIrrigation->setBorderColor(QColor(Qt::cyan));
+    }
+
     int currentDoy = 1;
     myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
 
@@ -115,10 +139,8 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     int cont = 0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
-        if ( (cont % step) == 0)
-        {
-            formInfo.setValue(cont);
-        }
+        if ( (cont % step) == 0) formInfo.setValue(cont);
+
         if (! myCase.computeDailyModel(myDate, errorString))
         {
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(error));
@@ -134,17 +156,22 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
             seriesRealTransp->append(doy, myCase.output.dailyTranspiration);
             *setPrec << myCase.output.dailyPrec;
             *setIrrigation << myCase.output.dailyIrrigation;
-
         }
-        cont = cont + 1; // formInfo update
 
+        cont++; // formInfo update
     }
-    formInfo.close();
-    axisX->append(categories);
 
-    // add histogram series
+    formInfo.close();
+
     seriesPrecIrr->append(setPrec);
     seriesPrecIrr->append(setIrrigation);
-    chart->addSeries(seriesPrecIrr);
+    axisX->append(categories);
+    axisX->setGridLineVisible(false);
 
+    // update virtual x axis
+    QDate first(year, 1, 1);
+    QDate last(year, 12, 31);
+    axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
+    axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
 }
+
