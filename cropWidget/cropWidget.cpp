@@ -388,10 +388,12 @@ Crit3DCropWidget::Crit3DCropWidget()
     tabRootDepth = new TabRootDepth();
     tabRootDensity = new TabRootDensity();
     tabIrrigation = new TabIrrigation();
+    tabWaterContent = new TabWaterContent();
     tabWidget->addTab(tabLAI, tr("LAI development"));
     tabWidget->addTab(tabRootDepth, tr("Root depth"));
     tabWidget->addTab(tabRootDensity, tr("Root density"));
     tabWidget->addTab(tabIrrigation, tr("Irrigation"));
+    tabWidget->addTab(tabWaterContent, tr("Water Content"));
     cropLayout->addWidget(tabWidget);
 
     this->setLayout(mainLayout);
@@ -1040,6 +1042,10 @@ void Crit3DCropWidget::on_actionUpdate()
                 {
                     updateTabIrrigation();
                 }
+                if (tabWidget->currentIndex() == 4)
+                {
+                    updateTabWaterContent();
+                }
             }
         }
     }
@@ -1207,6 +1213,14 @@ void Crit3DCropWidget::updateTabIrrigation()
     }
 }
 
+void Crit3DCropWidget::updateTabWaterContent()
+{
+    if (!myCase.myCrop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
+    {
+        tabWaterContent->computeWaterContent(myCase, yearListComboBox.currentText().toInt());
+    }
+}
+
 void Crit3DCropWidget::tabChanged(int index)
 {
 
@@ -1261,6 +1275,21 @@ void Crit3DCropWidget::tabChanged(int index)
             return;
         }
         updateTabIrrigation();
+    }
+    else if(index == 4) //water content tab
+    {
+        laiParametersGroup->hide();
+        rootParametersGroup->hide();
+        irrigationParametersGroup->hide();
+        waterStressParametersGroup->hide();
+
+        if (myCase.mySoil.code.empty())
+        {
+            QString msg = "Open a Db Soil";
+            QMessageBox::information(nullptr, "Warning", msg);
+            return;
+        }
+        updateTabWaterContent();
     }
 
 }
