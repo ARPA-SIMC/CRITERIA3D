@@ -35,14 +35,20 @@ TabIrrigation::TabIrrigation()
     seriesPrecIrr->append(setIrrigation);
 
     axisX = new QBarCategoryAxis();
+    axisXvirtual = new QDateTimeAxis();
     axisY = new QValueAxis();
     axisYdx = new QValueAxis();
 
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
-    categories << "Jan 01" << "Feb 01" << "Mar 01" << "Apr 01" << "May 01" << "Jun 01" << "Jul 01" << "Aug 01" << "Sep 01" << "Oct 01" << "Nov 01" << "Dic 01";
-    axisX->append(categories);
+    //categories << "Jan 01" << "Feb 01" << "Mar 01" << "Apr 01" << "May 01" << "Jun 01" << "Jul 01" << "Aug 01" << "Sep 01" << "Oct 01" << "Nov 01" << "Dic 01";
+    //axisX->append(categories);
+    axisXvirtual->setTitleText("Date");
+    axisXvirtual->setFormat("MMM dd");
+    axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
+    axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+    axisXvirtual->setTickCount(13);
 
     QFont font = axisY->titleFont();
     font.setPointSize(9);
@@ -57,6 +63,7 @@ TabIrrigation::TabIrrigation()
     axisYdx->setTickCount(9);
 
     chart->addAxis(axisX, Qt::AlignBottom);
+    chart->addAxis(axisXvirtual, Qt::AlignBottom);
     chart->addAxis(axisY, Qt::AlignLeft);
     chart->addAxis(axisYdx, Qt::AlignRight);
 
@@ -78,7 +85,7 @@ TabIrrigation::TabIrrigation()
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
     chartView->setRenderHint(QPainter::Antialiasing);
-
+    axisX->hide();
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
@@ -160,5 +167,11 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     seriesPrecIrr->append(setIrrigation);
     axisX->append(categories);
     axisX->setGridLineVisible(false);
+
+    // update virtual x axis
+    QDate first(year, 1, 1);
+    QDate last(year, 12, 31);
+    axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
+    axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
 }
 

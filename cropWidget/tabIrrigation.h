@@ -16,6 +16,7 @@ private:
     QChartView *chartView;
     QChart *chart;
     QBarCategoryAxis *axisX;
+    QDateTimeAxis *axisXvirtual;
     QValueAxis *axisY;
     QValueAxis *axisYdx;
     QStringList categories;
