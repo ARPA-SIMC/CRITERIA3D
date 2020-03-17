@@ -127,7 +127,7 @@
         Crit3DProxyCombination optimalCombination;
         Crit3DProxyCombination selectedCombination;
         Crit3DProxyCombination *currentCombination;
-        int indexHeight;
+        unsigned indexHeight;
 
     public:
         Crit3DInterpolationSettings();
@@ -185,8 +185,8 @@
         Crit3DProxyCombination* getSelectedCombinationRef();
         void setSelectedCombination(const Crit3DProxyCombination &value);
         void setValueSelectedCombination(unsigned int index, bool isActive);
-        int getIndexHeight() const;
-        void setIndexHeight(int value);
+        unsigned getIndexHeight() const;
+        void setIndexHeight(unsigned value);
         Crit3DProxyCombination *getCurrentCombination() const;
         void setCurrentCombination(Crit3DProxyCombination *value);
         std::vector<Crit3DProxy> getCurrentProxy() const;

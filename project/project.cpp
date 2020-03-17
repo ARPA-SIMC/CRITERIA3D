@@ -653,10 +653,7 @@ bool Project::loadParameters(QString parametersFileName)
     if (proxyListTmp.size() > 0)
         addProxyToProject(proxyListTmp, proxyActiveTmp, proxyOrder);
 
-
-    // check proxy grids for detrending
-    if (!loadProxyGrids())
-        return false;
+    updateProxy();
 
     if (!loadRadiationGrids())
         return false;
@@ -895,6 +892,7 @@ bool Project::loadDEM(QString myFileName)
     }
 
     setProxyDEM();
+    updateProxy();
 
     //set interpolation settings DEM
     interpolationSettings.setCurrentDEM(&DEM);
@@ -1309,17 +1307,13 @@ bool Project::loadProxyGrids()
             {
                 gis::Crit3DRasterGrid proxyGrid;
                 std::string myError;
-                if (gis::readEsriGrid(fileName.toStdString(), &proxyGrid, & myError))
+                if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, & myError))
                 {
                     gis::Crit3DRasterGrid* resGrid = new gis::Crit3DRasterGrid();
                     gis::resampleGrid(proxyGrid, resGrid, *(DEM.header), aggrAverage, 0);
                     myProxy->setGrid(resGrid);
                 }
-                else
-                {
-                    logError("Error loading proxy grid " + fileName);
-                    interpolationSettings.getSelectedCombination().setValue(i, false);
-                }
+
                 proxyGrid.clear();
             }
         }
@@ -1543,9 +1537,14 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         myInfo.start("Preparing interpolation...", 0);
 
     //detrending and checking precipitation
-    if (! preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+
+    if (showInfo && modality == MODE_GUI)
+        myInfo.close();
+
+    if (! interpolationReady)
     {
-        logError("Interpolation: error in function preInterpolation");
+        logError("Interpolation: error in function preInterpolation");   
         return false;
     }
 

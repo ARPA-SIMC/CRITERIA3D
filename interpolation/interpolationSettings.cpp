@@ -168,12 +168,12 @@ void Crit3DInterpolationSettings::setValueSelectedCombination(unsigned int index
     selectedCombination.setValue(index, isActive);
 }
 
-int Crit3DInterpolationSettings::getIndexHeight() const
+unsigned Crit3DInterpolationSettings::getIndexHeight() const
 {
     return indexHeight;
 }
 
-void Crit3DInterpolationSettings::setIndexHeight(int value)
+void Crit3DInterpolationSettings::setIndexHeight(unsigned value)
 {
     indexHeight = value;
 }
