@@ -202,11 +202,11 @@ void ProxyDialog::changedTable()
     _field.addItems(getFields(&db, _table.currentText()));
 }
 
-void ProxyDialog::changedProxy()
+void ProxyDialog::changedProxy(bool savePrevious)
 {
     if (_proxyCombo.count() == 0) return;
 
-    if (proxyIndex != _proxyCombo.currentIndex())
+    if (proxyIndex != _proxyCombo.currentIndex() && savePrevious)
     {
         Crit3DProxy *myProxy = &(_proxy.at(unsigned(proxyIndex)));
         saveProxy(myProxy);
@@ -283,7 +283,7 @@ void ProxyDialog::deleteProxy()
 
     _proxy.erase(_proxy.begin() + _proxyCombo.currentIndex());
     listProxies();
-    changedProxy();
+    changedProxy(false);
 }
 
 void ProxyDialog::saveProxy(Crit3DProxy* myProxy)
@@ -321,7 +321,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
     _proxyCombo.clear();
     listProxies();
 
-    connect(&_proxyCombo, &QComboBox::currentTextChanged, [=](){ this->changedProxy(); });
+    connect(&_proxyCombo, &QComboBox::currentTextChanged, [=](){ this->changedProxy(true); });
     layoutProxyCombo->addWidget(&_proxyCombo);
 
     QPushButton *_add = new QPushButton("add");
@@ -379,7 +379,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
     {
         proxyIndex = 0;
         _proxyCombo.setCurrentIndex(proxyIndex);
-        changedProxy();
+        changedProxy(true);
     }
 
     exec();

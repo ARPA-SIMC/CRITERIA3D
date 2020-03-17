@@ -195,8 +195,6 @@ bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque 
                 if (proxyList[i].getForQualityControl())
                     qualityInterpolationSettings.addProxy(proxyList[i], proxyActive[i]);
 
-                if (getProxyPragaName(proxyList[i].getName()) == height) setProxyDEM();
-
                 orderFound = true;
 
                 break;
@@ -204,6 +202,9 @@ bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque 
 
         if (! orderFound) return false;
     }
+
+    for (i=0; i < interpolationSettings.getProxyNr(); i++)
+        if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == height) setProxyDEM();
 
     return true;
 
@@ -1883,6 +1884,7 @@ void Project::saveProxies()
     {
         myProxy = interpolationSettings.getProxy(i);
         parameters->beginGroup("proxy_" + QString::fromStdString(myProxy->getName()));
+            parameters->setValue("order", i+1);
             parameters->setValue("active", interpolationSettings.getSelectedCombination().getValue(i));
             parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
             parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));

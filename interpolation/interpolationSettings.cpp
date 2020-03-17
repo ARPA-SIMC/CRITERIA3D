@@ -238,6 +238,8 @@ void Crit3DInterpolationSettings::initializeProxy()
     currentProxy.clear();
     selectedCombination.clear();
     optimalCombination.clear();
+
+    indexHeight = NODATA;
 }
 
 void Crit3DInterpolationSettings::initialize()

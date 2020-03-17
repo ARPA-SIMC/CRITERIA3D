@@ -59,7 +59,7 @@
             QLineEdit _proxyGridName;
             QCheckBox _forQuality;
 
-            void changedProxy();
+            void changedProxy(bool savePrevious);
             void changedTable();
             void selectGridFile();
             void listProxies();
