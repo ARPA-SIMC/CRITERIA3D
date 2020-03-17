@@ -91,6 +91,7 @@ TabIrrigation::TabIrrigation()
     connect(seriesLAI, &QLineSeries::hovered, this, &TabIrrigation::tooltipLAI);
     connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipMT);
     connect(seriesRealTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipRT);
+    connect(seriesPrecIrr, &QHorizontalBarSeries::hovered, this, &TabIrrigation::tooltipPrecIrr);
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
@@ -242,6 +243,41 @@ void TabIrrigation::tooltipRT(QPointF point, bool state)
     {
         m_tooltip->hide();
     }
+}
+
+void TabIrrigation::tooltipPrecIrr(bool state, int index, QBarSet *barset)
+{
+
+    if (state && barset!=nullptr && index < barset->count())
+    {
+        QString valueStr;
+        if (barset->label() == "Precipitation")
+        {
+            valueStr = "Precipitation\n" + QString::number(barset->at(index));
+        }
+        else if (barset->label() == "Irrigation")
+        {
+            valueStr = "Irrigation\n" + QString::number(barset->at(index));
+        }
+
+        m_tooltip->setText(valueStr);
+
+        QPoint point = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(point);
+        QPointF pointF = chart->mapToValue(mapPoint,seriesPrecIrr);
+        int ratio = axisYdx->max()/axisY->max();
+        pointF.setY(pointF.y()/ratio);
+
+        m_tooltip->setAnchor(pointF);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+
 }
 
 void TabIrrigation::handleMarkerClicked()

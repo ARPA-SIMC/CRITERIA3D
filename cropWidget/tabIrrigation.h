@@ -15,6 +15,7 @@ public:
     void tooltipLAI(QPointF point, bool state);
     void tooltipMT(QPointF point, bool state);
     void tooltipRT(QPointF point, bool state);
+    void tooltipPrecIrr(bool state, int index, QBarSet *barset);
     void handleMarkerClicked();
 private:
     int year;
