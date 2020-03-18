@@ -714,7 +714,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
     // M and K matrices are also used as ancillary dummy matrices
     double val = 5;
     int ii = 0;
-    double kiter = 0.01;   // iteration parameter in calculation of new estimate of matrix 'mat'
+    double kiter = 0.1;   // iteration parameter in calculation of new estimate of matrix 'mat'
     double* eigenvalues = (double*)calloc(nrStations, sizeof(double));
     double* eigenvectors = (double*)calloc(nrStations*nrStations, sizeof(double));
     double* correlationArray = (double*)calloc(nrStations*nrStations, sizeof(double));
@@ -762,21 +762,23 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         {
             for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
             {
-                printf("%f  ",M[i][j]);
+                //printf("%f  ",M[i][j]);
+
             }
-            printf("\n");
-        }
-        pressEnterToContinue();*/
+            //printf("\n");
+        }*/
+        //pressEnterToContinue();
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
             {
+                M[i][j] = MINVALUE(M[i][j],1);
                 correlationArray[counter] = M[i][j];
                 counter++;
             }
         }
 
-        eigenproblem::rs(nrStations,correlationArray,eigenvalues,true,eigenvectors); // !! potrei riformulare rs come rsWeatherGenerator2D senza controlli
+        eigenproblem::rs(nrStations,correlationArray,eigenvalues,true,eigenvectors);
 
         for (int i=0;i<nrStations;i++)
         {
@@ -898,7 +900,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         {
             counterConvergence++;
         }
-        if (counterConvergence > 1000)
+        if (counterConvergence > 20)
         {
             if (val <= fabs(minimalValueToExitFromCycle) + TOLERANCE_MULGETS)
             {
@@ -934,11 +936,13 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 for (int j=i+1;j<nrStations;j++)
                 {
                     M[i][j] += kiter*(matrixOccurrence[i][j]-K[i][j]);
-                    M[j][i] = MINVALUE(M[i][j],ONELESSEPSILON);
+                    M[j][i] = M[i][j];
+                    //M[j][i] = MINVALUE(M[i][j],ONELESSEPSILON);
                 }
+
             }
         }
-        printf("iter %d value %f \n",ii,val);
+        //printf("iter %d value %f \n",ii,val);
 
     }  // end of the while cycle
 

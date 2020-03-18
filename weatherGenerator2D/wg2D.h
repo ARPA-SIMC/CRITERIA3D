@@ -11,7 +11,7 @@
     #endif
 
     #define TOLERANCE_MULGETS 0.001
-    #define MAX_ITERATION_MULGETS 2000
+    #define MAX_ITERATION_MULGETS 180
     #define ONELESSEPSILON 0.999999
 
 
