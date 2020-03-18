@@ -45,7 +45,8 @@ SOURCES += \
     tabIrrigation.cpp \
     tabLAI.cpp \
     tabRootDensity.cpp \
-    tabRootDepth.cpp
+    tabRootDepth.cpp \
+    tabWaterContent.cpp
 
 HEADERS += \
     ../../agrolib/project/formInfo.h \
@@ -55,4 +56,5 @@ HEADERS += \
     tabIrrigation.h \
     tabLAI.h \
     tabRootDensity.h \
-    tabRootDepth.h
+    tabRootDepth.h \
+    tabWaterContent.h

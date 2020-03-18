@@ -19,7 +19,7 @@ TabIrrigation::TabIrrigation()
     seriesRealTransp->setName("Transpiration real [mm]");
 
     seriesLAI->setColor(QColor(Qt::darkGreen));
-    seriesMaxTransp->setColor(QColor(Qt::darkGray));
+    seriesMaxTransp->setColor(QColor(0,0,1,255));
     seriesRealTransp->setColor(QColor(Qt::red));
 
     seriesPrecIrr = new QBarSeries();
@@ -42,8 +42,6 @@ TabIrrigation::TabIrrigation()
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
-    //categories << "Jan 01" << "Feb 01" << "Mar 01" << "Apr 01" << "May 01" << "Jun 01" << "Jul 01" << "Aug 01" << "Sep 01" << "Oct 01" << "Nov 01" << "Dic 01";
-    //axisX->append(categories);
     axisXvirtual->setTitleText("Date");
     axisXvirtual->setFormat("MMM dd");
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
@@ -86,6 +84,15 @@ TabIrrigation::TabIrrigation()
     chart->legend()->setAlignment(Qt::AlignBottom);
     chartView->setRenderHint(QPainter::Antialiasing);
     axisX->hide();
+
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
+
+    connect(seriesLAI, &QLineSeries::hovered, this, &TabIrrigation::tooltipLAI);
+    connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipMT);
+    connect(seriesRealTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipRT);
+    connect(seriesPrecIrr, &QHorizontalBarSeries::hovered, this, &TabIrrigation::tooltipPrecIrr);
+
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
@@ -173,5 +180,183 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     QDate last(year, 12, 31);
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+
+    foreach(QLegendMarker* marker, chart->legend()->markers())
+    {
+        QObject::connect(marker, &QLegendMarker::clicked, this, &TabIrrigation::handleMarkerClicked);
+    }
 }
 
+void TabIrrigation::tooltipLAI(QPointF point, bool state)
+{
+    if (state)
+    {
+        QDate xDate(year, 1, 1);
+        int doy = point.x();
+        xDate = xDate.addDays(doy-1);
+        m_tooltip->setText(QString("%1 \nLAI %2 ").arg(xDate.toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+}
+
+void TabIrrigation::tooltipMT(QPointF point, bool state)
+{
+    if (state)
+    {
+        QDate xDate(year, 1, 1);
+        int doy = point.x();
+        xDate = xDate.addDays(doy-1);
+        m_tooltip->setText(QString("%1 \nTransp max %2 ").arg(xDate.toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+
+}
+
+void TabIrrigation::tooltipRT(QPointF point, bool state)
+{
+    if (state)
+    {
+        QDate xDate(year, 1, 1);
+        int doy = point.x();
+        xDate = xDate.addDays(doy-1);
+        m_tooltip->setText(QString("%1 \nTransp real %2 ").arg(xDate.toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+}
+
+void TabIrrigation::tooltipPrecIrr(bool state, int index, QBarSet *barset)
+{
+
+    if (state && barset!=nullptr && index < barset->count())
+    {
+        QString valueStr;
+        if (barset->label() == "Precipitation")
+        {
+            valueStr = "Precipitation\n" + QString::number(barset->at(index));
+        }
+        else if (barset->label() == "Irrigation")
+        {
+            valueStr = "Irrigation\n" + QString::number(barset->at(index));
+        }
+
+        m_tooltip->setText(valueStr);
+
+        QPoint point = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(point);
+        QPointF pointF = chart->mapToValue(mapPoint,seriesPrecIrr);
+        int ratio = axisYdx->max()/axisY->max();
+        pointF.setY(pointF.y()/ratio);
+
+        m_tooltip->setAnchor(pointF);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+
+}
+
+void TabIrrigation::handleMarkerClicked()
+{
+
+    QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
+    if (marker->type() == QLegendMarker::LegendMarkerTypeXY)
+    {
+        // Toggle visibility of series
+        marker->series()->setVisible(!marker->series()->isVisible());
+
+        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
+        marker->setVisible(true);
+
+        // change marker alpha, if series is not visible
+        qreal alpha = 1.0;
+
+        if (!marker->series()->isVisible()) {
+            alpha = 0.5;
+        }
+
+        QColor color;
+        QBrush brush = marker->labelBrush();
+        color = brush.color();
+        color.setAlphaF(alpha);
+        brush.setColor(color);
+        marker->setLabelBrush(brush);
+
+        brush = marker->brush();
+        color = brush.color();
+        color.setAlphaF(alpha);
+        brush.setColor(color);
+        marker->setBrush(brush);
+
+        QPen pen = marker->pen();
+        color = pen.color();
+        color.setAlphaF(alpha);
+        pen.setColor(color);
+        marker->setPen(pen);
+    }
+    else if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
+    {
+        // Toggle visibility of series
+        marker->series()->setVisible(!marker->series()->isVisible());
+
+        // change marker alpha, if series is not visible
+        qreal alpha = 1.0;
+
+        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
+        foreach(QLegendMarker* marker, chart->legend()->markers())
+        {
+            if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
+            {
+                marker->setVisible(true);
+            }
+            if (!marker->series()->isVisible()) {
+                alpha = 0.5;
+            }
+
+            QColor color;
+            QBrush brush = marker->labelBrush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setLabelBrush(brush);
+
+            brush = marker->brush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setBrush(brush);
+
+            QPen pen = marker->pen();
+            color = pen.color();
+            color.setAlphaF(alpha);
+            pen.setColor(color);
+            marker->setPen(pen);
+        }
+
+    }
+
+}

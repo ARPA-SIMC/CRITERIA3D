@@ -4,6 +4,7 @@
 #include <QtWidgets>
 #include <QtCharts>
 #include "criteria1DCase.h"
+#include "callout.h"
 
 class TabIrrigation : public QWidget
 {
@@ -11,6 +12,11 @@ class TabIrrigation : public QWidget
 public:
     TabIrrigation();
     void computeIrrigation(Crit1DCase myCase, int currentYear);
+    void tooltipLAI(QPointF point, bool state);
+    void tooltipMT(QPointF point, bool state);
+    void tooltipRT(QPointF point, bool state);
+    void tooltipPrecIrr(bool state, int index, QBarSet *barset);
+    void handleMarkerClicked();
 private:
     int year;
     QChartView *chartView;
@@ -26,6 +32,7 @@ private:
     QBarSeries* seriesPrecIrr;
     QBarSet *setPrec;
     QBarSet *setIrrigation;
+    Callout *m_tooltip;
 
 };
 
