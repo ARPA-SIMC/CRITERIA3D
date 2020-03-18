@@ -51,7 +51,7 @@ TabWaterContent::TabWaterContent()
     setLayout(mainLayout);
 }
 
-void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear)
+void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bool isVolumetricWaterContent)
 {
 
 }

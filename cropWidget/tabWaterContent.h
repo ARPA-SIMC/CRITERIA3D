@@ -13,10 +13,11 @@ class TabWaterContent : public QWidget
     Q_OBJECT
 public:
     TabWaterContent();
-    void computeWaterContent(Crit1DCase myCase, int currentYear);
+    void computeWaterContent(Crit1DCase myCase, int currentYear, bool isVolumetricWaterContent);
 
 private:
     int year;
+    bool isVolumetricWaterContent;
     QChartView *chartView;
     QChart *chart;
     QHorizontalBarSeries *seriesWaterContent;
