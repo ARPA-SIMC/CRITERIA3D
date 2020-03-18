@@ -535,68 +535,6 @@ std::map<int, meteoVariable> Crit3DMeteoPointsDbHandler::getMapIdMeteoVar() cons
     return _mapIdMeteoVar;
 }
 
-bool Crit3DMeteoPointsDbHandler::readPointProxyValues(Crit3DMeteoPoint* myPoint, Crit3DInterpolationSettings* interpolationSettings)
-{
-    if (myPoint == nullptr) return false;
-
-    QSqlQuery qry(_db);
-    QString proxyField;
-    QString proxyTable;
-    QString statement;
-    int nrProxy;
-    Crit3DProxy* myProxy;
-    float proxyMaxValue = NODATA;
-    float myValue;
-
-    nrProxy = interpolationSettings->getProxyNr();
-    myPoint->proxyValues.resize(nrProxy);
-
-    for (int i=0; i < nrProxy; i++)
-    {
-        myPoint->proxyValues[i] = NODATA;
-
-        // read only for active proxies
-        if (interpolationSettings->getSelectedCombination().getValue(i))
-        {
-            myProxy = interpolationSettings->getProxy(i);
-            proxyMaxValue = myProxy->getMaxVal();
-            proxyField = QString::fromStdString(myProxy->getProxyField());
-            proxyTable = QString::fromStdString(myProxy->getProxyTable());
-            if (proxyField != "" && proxyTable != "")
-            {
-                statement = QString("SELECT `%1` FROM `%2` WHERE id_point = '%3'").arg(proxyField).arg(proxyTable).arg(QString::fromStdString((*myPoint).id));
-                if(qry.exec(statement))
-                {
-                    qry.last();
-                    if (qry.value(proxyField) != "")
-                    {
-                        myValue = qry.value(proxyField).toFloat();
-                        if (isEqual(proxyMaxValue, NODATA) || myValue <= proxyMaxValue)
-                            myPoint->proxyValues[i] = myValue;
-                    }
-                }
-            }
-
-            if (myPoint->proxyValues[i] == NODATA)
-            {
-                gis::Crit3DRasterGrid* proxyGrid = myProxy->getGrid();
-                if (proxyGrid == nullptr || ! proxyGrid->isLoaded)
-                    return false;
-                else
-                {
-                    myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
-                    if (! isEqual(myValue, proxyGrid->header->flag))
-                        if (isEqual(proxyMaxValue, NODATA) || myValue <= proxyMaxValue)
-                            myPoint->proxyValues[i] = myValue;
-                }
-            }
-        }
-    }
-
-    return true;
-}
-
-
 QList<Crit3DMeteoPoint> Crit3DMeteoPointsDbHandler::getPropertiesFromDb(const gis::Crit3DGisSettings& gisSettings, QString *errorString)
 {
     QList<Crit3DMeteoPoint> meteoPointsList;
