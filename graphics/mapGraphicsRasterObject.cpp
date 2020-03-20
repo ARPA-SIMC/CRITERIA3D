@@ -420,7 +420,11 @@ void RasterObject::updateCenter()
     geoMap->referencePoint.latitude = newCenter.y();
     referencePixel = view->tileSource()->ll2qgs(newCenter, view->zoomLevel());
 
-    if (isDrawing) setPos(newCenter);
+    if (isDrawing)
+    {
+        setPos(newCenter);
+        this->colorScaleLegend->repaint();
+    }
 }
 
 

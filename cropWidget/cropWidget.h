@@ -66,6 +66,7 @@
             QGroupBox *rootParametersGroup;
             QGroupBox *irrigationParametersGroup;
             QGroupBox *waterStressParametersGroup;
+            QGroupBox *waterContentGroup;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
             QComboBox soilListComboBox;
@@ -102,6 +103,8 @@
             QLineEdit* psiLeafValue;
             QDoubleSpinBox* rawFractionValue;
             QDoubleSpinBox* stressToleranceValue;
+            QRadioButton *volWaterContent;
+            QRadioButton *degreeSat;
             QTabWidget* tabWidget;
             QAction* saveChanges;
             QAction* restoreData;
