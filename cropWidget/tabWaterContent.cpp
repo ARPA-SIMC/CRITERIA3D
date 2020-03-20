@@ -90,7 +90,7 @@ qDebug() << "totalSoilDepth " << totalSoilDepth;
     Crit3DDate lastDate = Crit3DDate(31, 12, year);
 
     // update axes and colorMap size
-    nx = getDoyFromDate(lastDate)-1;
+    nx = getDoyFromDate(lastDate);
     ny = nrLayers;
     colorMap->data()->setSize(nx, ny);
     colorMap->data()->setRange(QCPRange(0, nx), QCPRange(totalSoilDepth,0));

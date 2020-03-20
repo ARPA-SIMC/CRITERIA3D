@@ -455,6 +455,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(openSoilDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenSoilDB);
     connect(&soilListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseSoil);
     connect(irrigationVolumeValue, &QLineEdit::editingFinished, [=](){ this->irrigationVolumeChanged(); });
+    connect(volWaterContent, &QRadioButton::toggled, [=](bool status){ this->variableWaterContentChanged(status); });
 
     connect(tabWidget, &QTabWidget::currentChanged, [=](int index){ this->tabChanged(index); });
 
@@ -1386,4 +1387,9 @@ void Crit3DCropWidget::irrigationVolumeChanged()
         degreeDaysEndValue->setEnabled(true);
         degreeDaysEndValue->setText(QString::number(myCase.myCrop.degreeDaysEndIrrigation));
     }
+}
+
+void Crit3DCropWidget::variableWaterContentChanged(bool status)
+{
+    updateTabWaterContent();
 }
