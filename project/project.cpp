@@ -617,8 +617,6 @@ bool Project::loadParameters(QString parametersFileName)
                 return false;
             }
 
-            if (parameters->contains("max_value")) myProxy->setMaxVal(parameters->value("max_value").toFloat());
-
             if (checkProxy(*myProxy, &errorString))
             {
                 proxyListTmp.push_back(*myProxy);
@@ -1244,7 +1242,7 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
     QString statement;
     int nrProxy;
     Crit3DProxy* myProxy;
-    float proxyMaxValue, myValue;
+    float myValue;
 
     nrProxy = int(interpolationSettings.getProxyNr());
     myPoint->proxyValues.resize(unsigned(nrProxy));
@@ -1259,7 +1257,6 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
             myProxy = interpolationSettings.getProxy(i);
             proxyField = QString::fromStdString(myProxy->getProxyField());
             proxyTable = QString::fromStdString(myProxy->getProxyTable());
-            proxyMaxValue = myProxy->getMaxVal();
 
             if (proxyField != "" && proxyTable != "")
             {
@@ -1269,9 +1266,8 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
                     qry.last();
                     if (qry.value(proxyField) != "")
                     {
-                        myValue = qry.value(proxyField).toFloat();
-                        if (isEqual(proxyMaxValue, NODATA) || myValue <= proxyMaxValue)
-                            myPoint->proxyValues[i] = myValue;
+                        if (! qry.value(proxyField).isNull())
+                            myPoint->proxyValues[i] = qry.value(proxyField).toFloat();
                     }
                 }
             }
@@ -1285,8 +1281,7 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
                 {
                     myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
                     if (! isEqual(myValue, proxyGrid->header->flag))
-                        if (isEqual(proxyMaxValue, NODATA) || myValue <= proxyMaxValue)
-                            myPoint->proxyValues[i] = myValue;
+                        myPoint->proxyValues[i] = myValue;
                 }
             }
         }
@@ -1893,11 +1888,10 @@ void Project::saveProxies()
         parameters->beginGroup("proxy_" + QString::fromStdString(myProxy->getName()));
             parameters->setValue("order", i+1);
             parameters->setValue("active", interpolationSettings.getSelectedCombination().getValue(i));
-            parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
-            parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));
             parameters->setValue("use_for_spatial_quality_control", myProxy->getForQualityControl());
-            parameters->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
-            parameters->setValue("max_value", QString::number(myProxy->getMaxVal()));
+            if (myProxy->getProxyTable() != "") parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
+            if (myProxy->getProxyField() != "") parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));
+            if (myProxy->getGridName() != "") parameters->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
         parameters->endGroup();
     }
 }

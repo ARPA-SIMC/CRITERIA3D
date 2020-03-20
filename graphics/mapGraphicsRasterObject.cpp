@@ -423,7 +423,9 @@ void RasterObject::updateCenter()
     if (isDrawing)
     {
         setPos(newCenter);
-        this->colorScaleLegend->repaint();
+
+        if (this->colorScaleLegend != nullptr)
+            this->colorScaleLegend->repaint();
     }
 }
 

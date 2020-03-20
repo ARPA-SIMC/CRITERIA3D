@@ -28,7 +28,6 @@
         std::string proxyField;
         bool isSignificant;
         bool forQualityControl;
-        float maxVal;
 
         float regressionR2;
         float regressionSlope;
@@ -41,6 +40,8 @@
 
     public:
         Crit3DProxy();
+
+        void initializeOrography();
 
         std::string getName() const;
         void setName(const std::string &value);
@@ -63,8 +64,6 @@
         void setInversionLapseRate(float value);
         bool getInversionIsSignificative() const;
         void setInversionIsSignificative(bool value);
-
-        void initializeOrography();
         bool getForQualityControl() const;
         void setForQualityControl(bool value);
         std::string getProxyTable() const;
@@ -73,8 +72,6 @@
         void setProxyField(const std::string &value);
         std::vector<gis::Crit3DRasterGrid *> getGridSeries() const;
         void setGridSeries(const std::vector<gis::Crit3DRasterGrid *> &value);
-        float getMaxVal() const;
-        void setMaxVal(float value);
     };
 
     class Crit3DProxyCombination
