@@ -22,6 +22,7 @@ private:
     QCustomPlot *graphic;
     QCPColorMap *colorMap;
     QCPColorScale *colorScale;
+    QCPColorGradient gradient;
     int nx;
     int ny;
     //QList<double> depthLayers;

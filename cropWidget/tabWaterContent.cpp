@@ -33,8 +33,6 @@ TabWaterContent::TabWaterContent()
     //colorMap->setGradient(QCPColorGradient::gpPolar);
     // we could have also created a QCPColorGradient instance and added own colors to
     // the gradient, see the documentation of QCPColorGradient for what's possible.
-
-    QCPColorGradient gradient;
     gradient.clearColorStops();
     gradient.setColorStopAt(0, QColor(128, 0, 128));
     gradient.setColorStopAt(0.25, QColor(255, 0, 0));
@@ -76,20 +74,6 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
         totalSoilDepth = myCase.soilLayers[nrLayers-1].depth + myCase.soilLayers[nrLayers-1].thickness / 2;
     }
 
-    /*
-    depthLayers.clear();
-
-    double n = totalSoilDepth/0.02;
-    double value;
-    for (int i = n; i>=0; i--)
-    {
-        value = i*0.02;
-        depthLayers.append(value);
-        qDebug() << "value " << value;
-    }
-qDebug() << "n " << n;
-qDebug() << "totalSoilDepth " << totalSoilDepth;
-*/
     int currentDoy = 1;
     year = currentYear;
     int prevYear = currentYear - 1;
@@ -110,7 +94,7 @@ qDebug() << "totalSoilDepth " << totalSoilDepth;
 
     std::string errorString;
     double waterContent = 0.0;
-    double maxWaterContent = -NODATA;
+    double maxWaterContent = 0.0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! myCase.computeDailyModel(myDate, errorString))
@@ -122,34 +106,6 @@ qDebug() << "totalSoilDepth " << totalSoilDepth;
         if (myDate.year == year)
         {
             doy = getDoyFromDate(myDate);
-            /*
-            for (int i = 0; i<depthLayers.size(); i++)
-            {
-                int layerIndex;
-                if (depthLayers[i] <= 2)
-                {
-                    layerIndex = getSoilLayerIndex(myCase.soilLayers, depthLayers[i]);
-                    if (layerIndex != NODATA)
-                    {
-                        waterContent = myCase.soilLayers[layerIndex].waterContent;
-                        if (isVolumetricWaterContent)
-                        {
-                            waterContent = waterContent/myCase.soilLayers[layerIndex].thickness;
-                            if (waterContent > maxWaterContent)
-                            {
-                                maxWaterContent = waterContent;
-                            }
-                        }
-                        else
-                        {
-                            waterContent = waterContent/myCase.soilLayers[layerIndex].SAT;
-                        }
-
-                    }
-                    colorMap->data()->setCell(doy, depthLayers[i], waterContent);
-                }
-            }
-            */
             for (int i = 0; i<nrLayers; i++)
             {
                 waterContent = myCase.soilLayers[i].waterContent;
@@ -177,6 +133,26 @@ qDebug() << "totalSoilDepth " << totalSoilDepth;
             }
         }
     }
+    double step;
+    if(isVolumetricWaterContent)
+    {
+        step = maxWaterContent/4;
+        colorScale->setDataRange(QCPRange(0,maxWaterContent));
+    }
+    else
+    {
+        maxWaterContent = 1;
+        step = maxWaterContent/4;
+        colorScale->setDataRange(QCPRange(0,1));
+    }
+    gradient.clearColorStops();
+    gradient.setColorStopAt(0, QColor(128, 0, 128));
+    gradient.setColorStopAt(step, QColor(255, 0, 0));
+    gradient.setColorStopAt(step*2, QColor(255, 255, 0));
+    gradient.setColorStopAt(step*3, QColor(64, 196, 64));
+    gradient.setColorStopAt(maxWaterContent, QColor(0, 0, 255));
+    colorMap->setGradient(gradient);
+    colorMap->setColorScale(colorScale);
 
     colorScale->axis()->setLabel(title);
     graphic->replot();
