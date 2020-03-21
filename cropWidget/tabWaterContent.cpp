@@ -22,7 +22,6 @@ TabWaterContent::TabWaterContent()
     colorMap->data()->setSize(nx, ny); // we want the color map to have nx * ny data points
     colorMap->data()->setRange(QCPRange(0, 364), QCPRange(2, 0)); // and span the coordinate range in both key (x) and value (y) dimensions
 
-
     // add a color scale:
     colorScale = new QCPColorScale(graphic);
     colorScale->setDataRange(QCPRange(0,1));
@@ -31,9 +30,18 @@ TabWaterContent::TabWaterContent()
     colorMap->setColorScale(colorScale); // associate the color map with the color scale
 
     // set the color gradient of the color map to one of the presets:
-    colorMap->setGradient(QCPColorGradient::gpPolar);
+    //colorMap->setGradient(QCPColorGradient::gpPolar);
     // we could have also created a QCPColorGradient instance and added own colors to
     // the gradient, see the documentation of QCPColorGradient for what's possible.
+
+    QCPColorGradient gradient;
+    gradient.clearColorStops();
+    gradient.setColorStopAt(0, QColor(128, 0, 128));
+    gradient.setColorStopAt(0.25, QColor(255, 0, 0));
+    gradient.setColorStopAt(0.5, QColor(255, 255, 0));
+    gradient.setColorStopAt(0.75, QColor(64, 196, 64));
+    gradient.setColorStopAt(1, QColor(0, 0, 255));
+    colorMap->setGradient(gradient);
 
     // rescale the data dimension (color) such that all data points lie in the span visualized by the color gradient:
     colorMap->rescaleDataRange();
