@@ -1,7 +1,14 @@
 #----------------------------------------------------
 #
-#   qcustomplot library
+#  QCustomPlot library
+#  Copyright (C) 2011-2018 Emanuel Eichhammer
+#  GPL V.3 license
 #
+#----------------------------------------------------
+#  Author: Emanuel Eichhammer
+#  Website/Contact: http://www.qcustomplot.com/
+#  Date: 25.06.18
+#  Version: 2.0.1
 #----------------------------------------------------
 
 QT   -= gui
