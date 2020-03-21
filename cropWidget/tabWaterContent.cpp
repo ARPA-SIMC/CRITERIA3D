@@ -83,10 +83,10 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
 
     // update axes and colorMap size
     nx = getDoyFromDate(lastDate);
-    ny = nrLayers;
+    ny = nrLayers-1;
     colorMap->data()->setSize(nx, ny);
     colorMap->data()->setRange(QCPRange(0, nx), QCPRange(totalSoilDepth,0));
-    colorMap->rescaleDataRange();
+    colorMap->rescaleDataRange(true);
     graphic->rescaleAxes();
 
     int doy;
@@ -106,14 +106,14 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
         if (myDate.year == year)
         {
             doy = getDoyFromDate(myDate);
-            for (int i = 0; i<nrLayers; i++)
+            for (unsigned int i = 1; i < nrLayers; i++)
             {
                 waterContent = myCase.soilLayers[i].waterContent;
                 if (waterContent != NODATA)
                 {
                     if (isVolumetricWaterContent)
                     {
-                        waterContent = waterContent*myCase.soilLayers[i].thickness;
+                        waterContent = waterContent/(myCase.soilLayers[i].thickness*1000);
                         if (waterContent > maxWaterContent)
                         {
                             maxWaterContent = waterContent;
@@ -128,7 +128,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
                     qDebug() << " myCase.soilLayers[i].depth " << QString::number(myCase.soilLayers[i].depth);
                     qDebug() << " waterContent " << QString::number(waterContent);
                     */
-                    colorMap->data()->setCell(doy-1, i, waterContent);
+                    colorMap->data()->setCell(doy-1, i-1, waterContent);
                 }
             }
         }
@@ -137,7 +137,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
     if(isVolumetricWaterContent)
     {
         step = maxWaterContent/4;
-        colorScale->setDataRange(QCPRange(0,maxWaterContent));
+        colorScale->setDataRange(QCPRange(0, maxWaterContent));
     }
     else
     {
