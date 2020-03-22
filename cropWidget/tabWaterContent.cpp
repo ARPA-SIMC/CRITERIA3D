@@ -12,8 +12,22 @@ TabWaterContent::TabWaterContent()
     graphic->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom); // this will also allow rescaling the color scale by dragging/zooming
     graphic->axisRect()->setupFullAxesBox(true);
     graphic->xAxis->setLabel("Date");
+
+    /*
+    QSharedPointer<QCPAxisTickerDateTime> dateTicker(new QCPAxisTickerDateTime);
+    dateTicker->setDateTimeFormat("MMM d");
+    graphic->xAxis->setTicker(dateTicker);
+    QDateTime first(QDate(QDate::currentDate().year(), 1, 1), QTime(8, 30, 0));
+    QDateTime last(QDate(QDate::currentDate().year(), 12, 31), QTime(8, 30, 0));
+    double firstDouble = first.toTime_t();
+    double lastDouble = first.toTime_t();
+    graphic->xAxis->setRange(firstDouble, lastDouble);
+    //graphic->xAxis->setRange(QCPAxisTickerDateTime::dateTimeToKey(first), QCPAxisTickerDateTime::dateTimeToKey(last));
+    */
+
     graphic->yAxis->setLabel("Water Content");
     graphic->yAxis->setRangeReversed(true);
+
 
     // set up the QCPColorMap:
     colorMap = new QCPColorMap(graphic->xAxis, graphic->yAxis);
