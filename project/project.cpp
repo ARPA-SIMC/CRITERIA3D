@@ -651,7 +651,8 @@ bool Project::loadParameters(QString parametersFileName)
     if (proxyListTmp.size() > 0)
         addProxyToProject(proxyListTmp, proxyActiveTmp, proxyOrder);
 
-    updateProxy();
+    if (! updateProxy())
+        return false;
 
     if (!loadRadiationGrids())
         return false;
@@ -890,7 +891,8 @@ bool Project::loadDEM(QString myFileName)
     }
 
     setProxyDEM();
-    updateProxy();
+    interpolationSettings.setProxyLoaded(false);
+    if (! updateProxy()) return false;
 
     //set interpolation settings DEM
     interpolationSettings.setCurrentDEM(&DEM);
@@ -1316,6 +1318,11 @@ bool Project::loadProxyGrids()
                     gis::resampleGrid(proxyGrid, resGrid, *(DEM.header), aggrAverage, 0);
                     myProxy->setGrid(resGrid);
                 }
+                else
+                {
+                    errorString = "Error loading proxy grid " + fileName;
+                    return false;
+                }
 
                 proxyGrid.clear();
             }
@@ -1367,8 +1374,6 @@ bool Project::loadRadiationGrids()
 
 bool Project::readProxyValues()
 {
-    if (meteoPointsDbHandler == nullptr) return false;
-
     QSqlDatabase myDb = this->meteoPointsDbHandler->getDb();
 
     for (int i = 0; i < this->nrMeteoPoints; i++)
@@ -1382,8 +1387,16 @@ bool Project::readProxyValues()
 
 bool Project::updateProxy()
 {
-    if (! loadProxyGrids()) return false;
-    if (! readProxyValues()) return false;
+    if (DEM.isLoaded)
+        if (! interpolationSettings.getProxyLoaded())
+        {
+            if (loadProxyGrids()) interpolationSettings.setProxyLoaded(true);
+            else return false;
+
+            if (meteoPointsDbHandler != nullptr)
+                if (! readProxyValues()) return false;
+        }
+
     return true;
 }
 
@@ -2031,11 +2044,14 @@ bool Project::loadProject()
         return false;
     }
 
-    if (demFileName != "") loadDEM(demFileName);
+    if (demFileName != "")
+        if (! loadDEM(demFileName)) return false;
 
-    if (dbPointsFileName != "") loadMeteoPointsDB(dbPointsFileName);
+    if (dbPointsFileName != "")
+        if (! loadMeteoPointsDB(dbPointsFileName)) return false;
 
-    if (dbGridXMLFileName != "") loadMeteoGridDB(dbGridXMLFileName);
+    if (dbGridXMLFileName != "")
+        if (! loadMeteoGridDB(dbGridXMLFileName)) return false;
 
     return true;
 }
