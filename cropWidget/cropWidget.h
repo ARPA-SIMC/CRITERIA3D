@@ -46,6 +46,7 @@
             void tabChanged(int index);
             bool checkIfCropIsChanged();
             void irrigationVolumeChanged();
+            void variableWaterContentChanged(bool status);
 
         private:
             QSqlDatabase dbCrop;

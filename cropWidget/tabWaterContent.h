@@ -6,7 +6,7 @@
 #include <QtCharts>
 
 #include "criteria1DCase.h"
-#include "callout.h"
+#include "qcustomplot.h"
 
 class TabWaterContent : public QWidget
 {
@@ -18,14 +18,14 @@ public:
 private:
     int year;
     bool isVolumetricWaterContent;
-    QChartView *chartView;
-    QChart *chart;
-    QHorizontalBarSeries *seriesWaterContent;
-    QBarSet *set;
-    QDateTimeAxis *axisX;
-    QBarCategoryAxis *axisY;
-    QStringList categories;
-    Callout *m_tooltip;
+    QString title;
+    QCustomPlot *graphic;
+    QCPColorMap *colorMap;
+    QCPColorScale *colorScale;
+    QCPColorGradient gradient;
+    int nx;
+    int ny;
+    //QList<double> depthLayers;
 
 };
 
