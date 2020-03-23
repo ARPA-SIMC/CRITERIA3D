@@ -444,16 +444,22 @@ void ProxyDialog::accept()
     if (checkProxies(&error))
     {
         saveProxies();
-        _project->updateProxy();
+        _project->interpolationSettings.setProxyLoaded(false);
 
-        QMessageBox::StandardButton reply;
-          reply = QMessageBox::question(this, "Save interpolation proxies", "Save changes to settings?",
+        if (_project->updateProxy())
+        {
+            QMessageBox::StandardButton reply;
+            reply = QMessageBox::question(this, "Save interpolation proxies", "Save changes to settings?",
                                         QMessageBox::Yes|QMessageBox::No);
 
-        if (reply == QMessageBox::Yes)
-            _project->saveProxies();
+            if (reply == QMessageBox::Yes)
+                _project->saveProxies();
 
-        QDialog::done(QDialog::Accepted);
+            QDialog::done(QDialog::Accepted);
+        }
+        else {
+            QMessageBox::information(nullptr, "Error updating proxy", error);
+        }
     }
     else
         QMessageBox::information(nullptr, "Proxy error", error);

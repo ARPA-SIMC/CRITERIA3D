@@ -228,6 +228,16 @@ void Crit3DInterpolationSettings::setUseInterpolatedTForRH(bool value)
     useInterpolatedTForRH = value;
 }
 
+bool Crit3DInterpolationSettings::getProxyLoaded() const
+{
+    return proxyLoaded;
+}
+
+void Crit3DInterpolationSettings::setProxyLoaded(bool value)
+{
+    proxyLoaded = value;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -235,6 +245,8 @@ Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 
 void Crit3DInterpolationSettings::initializeProxy()
 {
+    proxyLoaded = false;
+
     currentProxy.clear();
     selectedCombination.clear();
     optimalCombination.clear();
@@ -267,7 +279,6 @@ void Crit3DInterpolationSettings::initialize()
 
     if (currentCombination == nullptr)
         currentCombination = new Crit3DProxyCombination();
-
 
     initializeProxy();
 }

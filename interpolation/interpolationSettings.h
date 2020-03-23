@@ -120,6 +120,7 @@
         int indexPointCV;
         float topoDist_Kh, topoDist_Kz;
 
+        bool proxyLoaded;
         std::vector <Crit3DProxy> currentProxy;
         Crit3DProxyCombination optimalCombination;
         Crit3DProxyCombination selectedCombination;
@@ -194,6 +195,8 @@
         void setSurfaceRoughness(float value);
         bool getUseInterpolatedTForRH() const;
         void setUseInterpolatedTForRH(bool value);
+        bool getProxyLoaded() const;
+        void setProxyLoaded(bool value);
     };
 
 #endif // INTERPOLATIONSETTINGS_H
