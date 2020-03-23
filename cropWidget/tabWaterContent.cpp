@@ -13,24 +13,22 @@ TabWaterContent::TabWaterContent()
     graphic->axisRect()->setupFullAxesBox(true);
     graphic->xAxis->setLabel("Date");
 
-    /*
     QSharedPointer<QCPAxisTickerDateTime> dateTicker(new QCPAxisTickerDateTime);
     dateTicker->setDateTimeFormat("MMM d");
+    dateTicker->setTickCount(13);
     graphic->xAxis->setTicker(dateTicker);
-    QDateTime first(QDate(QDate::currentDate().year(), 1, 1), QTime(8, 30, 0));
-    QDateTime last(QDate(QDate::currentDate().year(), 12, 31), QTime(8, 30, 0));
+    QDateTime first(QDate(QDate::currentDate().year(), 1, 1), QTime(0, 0, 0));
+    QDateTime last(QDate(QDate::currentDate().year(), 12, 31), QTime(23, 0, 0));
     double firstDouble = first.toTime_t();
-    double lastDouble = first.toTime_t();
+    double lastDouble = last.toTime_t();
     graphic->xAxis->setRange(firstDouble, lastDouble);
-    //graphic->xAxis->setRange(QCPAxisTickerDateTime::dateTimeToKey(first), QCPAxisTickerDateTime::dateTimeToKey(last));
-    */
-
+    graphic->xAxis->setVisible(true);
     graphic->yAxis->setLabel("Water Content");
     graphic->yAxis->setRangeReversed(true);
 
 
     // set up the QCPColorMap:
-    colorMap = new QCPColorMap(graphic->xAxis, graphic->yAxis);
+    colorMap = new QCPColorMap(graphic->xAxis2, graphic->yAxis);
     nx = 365;
     ny = 20;
     colorMap->data()->setSize(nx, ny); // we want the color map to have nx * ny data points
@@ -45,8 +43,7 @@ TabWaterContent::TabWaterContent()
 
     // set the color gradient of the color map to one of the presets:
     //colorMap->setGradient(QCPColorGradient::gpPolar);
-    // we could have also created a QCPColorGradient instance and added own colors to
-    // the gradient, see the documentation of QCPColorGradient for what's possible.
+    // create a QCPColorGradient instance and added own colors to the gradient
     gradient.clearColorStops();
     gradient.setColorStopAt(0, QColor(128, 0, 128));
     gradient.setColorStopAt(0.25, QColor(255, 0, 0));
@@ -65,6 +62,7 @@ TabWaterContent::TabWaterContent()
 
     // rescale the key (x) and value (y) axes so the whole color map is visible:
     graphic->rescaleAxes();
+
     plotLayout->addWidget(graphic);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
