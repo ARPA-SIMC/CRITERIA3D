@@ -34,7 +34,6 @@
 #include "criteria1DCase.h"
 
 
-
 Crit1DOutput::Crit1DOutput()
 {
     this->initialize();

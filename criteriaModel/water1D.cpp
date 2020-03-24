@@ -312,7 +312,7 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
     for (unsigned int i = 1; i <= boundaryLayer; i++)
     {
         dz = (waterTableDepth - soilLayers[i].depth);                       // [m]
-        psi = soil::metersTokPa(dz) + he_boundary;                             // [kPa]
+        psi = soil::metersTokPa(dz) + he_boundary;                          // [kPa]
 
         soilLayers[i].critical = soil::getWaterContentFromPsi(psi, &(soilLayers[i]));
 
@@ -323,21 +323,21 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
     }
 
     // above watertable: capillary rise
-    previousPsi = soil::getWaterPotential(&(soilLayers[boundaryLayer]));
+    previousPsi = soilLayers[boundaryLayer].getWaterPotential();
     for (unsigned int i = boundaryLayer; i > 0; i--)
     {
-        psi = soil::getWaterPotential(&(soilLayers[i]));                 // [kPa]
+        psi = soilLayers[i].getWaterPotential();                        // [kPa]
 
         if (i < boundaryLayer && psi < previousPsi)
             break;
 
-        dPsi = soil::kPaToMeters(psi - he_boundary);                        // [m]
-        dz = waterTableDepth - soilLayers[i].depth;                      // [m]
+        dPsi = soil::kPaToMeters(psi - he_boundary);                    // [m]
+        dz = waterTableDepth - soilLayers[i].depth;                     // [m]
 
         if (dPsi > dz)
         {
             // [cm day-1]
-            k_psi = soil::getWaterConductivity(&(soilLayers[i]));
+            k_psi = soilLayers[i].getWaterConductivity();
             // [mm day-1]
             k_psi *= REDUCTION_FACTOR * 10.;
             // [mm day-1]
@@ -351,7 +351,7 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
             soilLayers[i].waterContent += capillaryRise;
             capillaryRiseSum += capillaryRise;
 
-            previousPsi = soil::getWaterPotential(&(soilLayers[i]));     // [kPa]
+            previousPsi = soilLayers[i].getWaterPotential();            // [kPa]
         }
         else
         {

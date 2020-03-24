@@ -159,6 +159,10 @@
             Crit3DLayer();
 
             bool setLayer(Crit3DHorizon *horizonPointer);
+            double getVolumetricWaterContent();
+            double getDegreeOfSaturation();
+            double getWaterPotential();
+            double getWaterConductivity();
         };
 
 
@@ -229,12 +233,8 @@
         double estimateTotalPorosity(Crit3DHorizon* horizon, double bulkDensity);
         double estimateThetaSat(Crit3DHorizon* horizon, double bulkDensity);
 
-        double getVolumetricWaterContent(Crit3DLayer* layer);
         double getWaterContentFromPsi(double signPsi, Crit3DLayer* layer);
         double getWaterContentFromAW(double availableWater, const Crit3DLayer &layer);
-
-        double getWaterPotential(Crit3DLayer* layer);
-        double getWaterConductivity(Crit3DLayer* layer);
 
         bool setHorizon(Crit3DHorizon* horizon, Crit3DTextureClass* textureClassList,
                         Crit3DFittingOptions *fittingOptions, std::string* error);

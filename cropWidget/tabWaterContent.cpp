@@ -23,7 +23,7 @@ TabWaterContent::TabWaterContent()
     double lastDouble = last.toTime_t();
     graphic->xAxis->setRange(firstDouble, lastDouble);
     graphic->xAxis->setVisible(true);
-    graphic->yAxis->setLabel("Water Content");
+    graphic->yAxis->setLabel("Depth");
     graphic->yAxis->setRangeReversed(true);
 
 
@@ -105,6 +105,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
     std::string errorString;
     double waterContent = 0.0;
     double maxWaterContent = 0.0;
+    double minWaterContent = 1.0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! myCase.computeDailyModel(myDate, errorString))
@@ -118,23 +119,17 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
             doy = getDoyFromDate(myDate);
             for (unsigned int i = 1; i < nrLayers; i++)
             {
-                waterContent = myCase.soilLayers[i].waterContent;
-                if (waterContent != NODATA)
+                if (isVolumetricWaterContent)
                 {
-                    if (isVolumetricWaterContent)
-                    {
-                        waterContent = waterContent/(myCase.soilLayers[i].thickness*1000);
-                        if (waterContent > maxWaterContent)
-                        {
-                            maxWaterContent = waterContent;
-                        }
-                    }
-                    else
-                    {
-                        waterContent = waterContent/myCase.soilLayers[i].SAT;
-                    }
-                    colorMap->data()->setCell(doy-1, i-1, waterContent);
+                    waterContent = myCase.soilLayers[i].getVolumetricWaterContent();
+                    maxWaterContent = MAXVALUE(waterContent, maxWaterContent);
+                    minWaterContent = MINVALUE(waterContent, minWaterContent);
                 }
+                else
+                {
+                    waterContent = myCase.soilLayers[i].getDegreeOfSaturation();
+                }
+                colorMap->data()->setCell(doy-1, i-1, waterContent);
             }
         }
     }
@@ -142,13 +137,12 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
     if(isVolumetricWaterContent)
     {
         step = maxWaterContent/4;
-        colorScale->setDataRange(QCPRange(0, maxWaterContent));
+        colorScale->setDataRange(QCPRange(minWaterContent, maxWaterContent));
     }
     else
     {
-        maxWaterContent = 1;
-        step = maxWaterContent/4;
-        colorScale->setDataRange(QCPRange(0,1));
+        step = 0.25;
+        colorScale->setDataRange(QCPRange(0, 1));
     }
 
     gradient.clearColorStops();
@@ -160,7 +154,6 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
     colorMap->setGradient(gradient);
     colorMap->setColorScale(colorScale);
 
-    colorMap->rescaleDataRange(true);
     graphic->rescaleAxes();
 
     colorScale->axis()->setLabel(title);

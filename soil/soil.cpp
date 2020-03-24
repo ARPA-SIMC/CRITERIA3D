@@ -615,40 +615,45 @@ namespace soil
 
 
     /*!
-     * \brief get current volumetric water content
-     * \param layer: pointer to Crit3DLayer class
-     * \return volumetric water content [-]
+     * \brief return current volumetric water content [m3 m^3]
      */
-    double getVolumetricWaterContent(Crit3DLayer* layer)
+    double Crit3DLayer::getVolumetricWaterContent()
     {
-        // unit of layer->thickness is [m]
-        double theta = layer->waterContent / (layer->thickness * layer->soilFraction * 1000);
+        // waterContent [mm] - thickness [m]
+        double theta = waterContent / (thickness * soilFraction * 1000);
         return theta;
+    }
+
+    /*!
+     * \brief return degree of saturation [-]
+     */
+    double Crit3DLayer::getDegreeOfSaturation()
+    {
+        double theta = getVolumetricWaterContent();
+        return (theta - horizon->vanGenuchten.thetaR) / (horizon->vanGenuchten.thetaS - horizon->vanGenuchten.thetaR);
     }
 
 
     /*!
      * \brief get current water potential
-     * \param layer: pointer to Crit3DLayer class
      * \return water potential [kPa]
      */
-    double getWaterPotential(Crit3DLayer* layer)
+    double Crit3DLayer::getWaterPotential()
     {
-        double theta = getVolumetricWaterContent(layer);
-        return psiFromTheta(theta, layer->horizon);
+        double theta = getVolumetricWaterContent();
+        return psiFromTheta(theta, horizon);
     }
 
 
     /*!
      * \brief get current water conductivity
-     * \param layer: pointer to Crit3DLayer class
      * \return hydraulic conductivity   [cm day^-1]
      */
-    double getWaterConductivity(Crit3DLayer* layer)
+    double Crit3DLayer::getWaterConductivity()
     {
-        double theta = getVolumetricWaterContent(layer);
-        double degreeOfSaturation = SeFromTheta(theta, layer->horizon);
-        return waterConductivity(degreeOfSaturation, layer->horizon);
+        double theta = getVolumetricWaterContent();
+        double degreeOfSaturation = SeFromTheta(theta, horizon);
+        return waterConductivity(degreeOfSaturation, horizon);
     }
 
 

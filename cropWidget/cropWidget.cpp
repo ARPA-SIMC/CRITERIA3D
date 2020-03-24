@@ -455,7 +455,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(openSoilDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenSoilDB);
     connect(&soilListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseSoil);
     connect(irrigationVolumeValue, &QLineEdit::editingFinished, [=](){ this->irrigationVolumeChanged(); });
-    connect(volWaterContent, &QRadioButton::toggled, [=](bool status){ this->variableWaterContentChanged(status); });
+    connect(volWaterContent, &QRadioButton::toggled, [=](){ this->variableWaterContentChanged(); });
 
     connect(tabWidget, &QTabWidget::currentChanged, [=](int index){ this->tabChanged(index); });
 
@@ -1389,7 +1389,7 @@ void Crit3DCropWidget::irrigationVolumeChanged()
     }
 }
 
-void Crit3DCropWidget::variableWaterContentChanged(bool status)
+void Crit3DCropWidget::variableWaterContentChanged()
 {
     updateTabWaterContent();
 }
