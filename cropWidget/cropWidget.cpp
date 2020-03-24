@@ -830,6 +830,9 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     {
         return;
     }
+    this->yearListComboBox.blockSignals(true);
+    this->yearListComboBox.clear();
+    this->yearListComboBox.blockSignals(false);
     myCase.meteoPoint.setId(idMeteo.toStdString());
 
     QString error, lat, lon;
