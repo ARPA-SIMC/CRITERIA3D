@@ -27,7 +27,7 @@
             void on_actionOpenMeteoDB();
             void on_actionOpenSoilDB();
             void on_actionChooseMeteo(QString idMeteo);
-            void on_actionChooseYear(QString year);
+            void on_actionChooseFirstYear(QString year);
             void on_actionChooseSoil(QString soilCode);
             void on_actionDeleteCrop();
             void on_actionRestoreData();
@@ -35,6 +35,7 @@
             void on_actionSave();
             void on_actionUpdate();
             bool saveCrop();
+            void updateMeteoPointValues();
             void updateCropParam(QString idCrop);
             bool updateCrop();
             bool updateMeteoPoint();
@@ -59,6 +60,7 @@
             QString tableMeteo;
             bool cropChanged;
             double meteoLatBackUp;
+            QStringList yearList;
 
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;
@@ -71,7 +73,8 @@
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
             QComboBox soilListComboBox;
-            QComboBox yearListComboBox;
+            QComboBox firstYearListComboBox;
+            QComboBox lastYearListComboBox;
             QLineEdit* cropIdValue;
             QLineEdit* cropTypeValue;
             QLineEdit* maxKcValue;

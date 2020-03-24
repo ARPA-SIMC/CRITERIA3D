@@ -16,14 +16,13 @@
         Q_OBJECT
     public:
         TabLAI();
-        void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer>& soilLayers);
+        void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, const std::vector<soil::Crit3DLayer>& soilLayers);
         void tooltipLAI(QPointF point, bool state);
         void tooltipPE(QPointF point, bool state);
         void tooltipME(QPointF point, bool state);
         void tooltipMT(QPointF point, bool state);
         void handleMarkerClicked();
     private:
-        int year;
         QChartView *chartView;
         QChart *chart;
         QLineSeries *seriesLAI;
