@@ -98,8 +98,6 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
     ny = nrLayers-1;
     colorMap->data()->setSize(nx, ny);
     colorMap->data()->setRange(QCPRange(0, nx), QCPRange(totalSoilDepth,0));
-    colorMap->rescaleDataRange(true);
-    graphic->rescaleAxes();
 
     int doy;
     myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
@@ -135,11 +133,6 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
                     {
                         waterContent = waterContent/myCase.soilLayers[i].SAT;
                     }
-                    /*
-                    qDebug() << " doy " << QString::number(doy);
-                    qDebug() << " myCase.soilLayers[i].depth " << QString::number(myCase.soilLayers[i].depth);
-                    qDebug() << " waterContent " << QString::number(waterContent);
-                    */
                     colorMap->data()->setCell(doy-1, i-1, waterContent);
                 }
             }
@@ -157,14 +150,18 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
         step = maxWaterContent/4;
         colorScale->setDataRange(QCPRange(0,1));
     }
+
     gradient.clearColorStops();
     gradient.setColorStopAt(0, QColor(128, 0, 128));
     gradient.setColorStopAt(step, QColor(255, 0, 0));
     gradient.setColorStopAt(step*2, QColor(255, 255, 0));
     gradient.setColorStopAt(step*3, QColor(64, 196, 64));
-    gradient.setColorStopAt(maxWaterContent, QColor(0, 0, 255));
+    gradient.setColorStopAt(1, QColor(0, 0, 255));
     colorMap->setGradient(gradient);
     colorMap->setColorScale(colorScale);
+
+    colorMap->rescaleDataRange(true);
+    graphic->rescaleAxes();
 
     colorScale->axis()->setLabel(title);
     graphic->replot();
