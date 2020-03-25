@@ -454,7 +454,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(openMeteoDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenMeteoDB);
     connect(&meteoListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseMeteo);
     connect(&firstYearListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseFirstYear);
-    connect(&lastYearListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::updateMeteoPointValues);
+    connect(&lastYearListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseLastYear);
 
     connect(openSoilDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenSoilDB);
     connect(&soilListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseSoil);
@@ -836,10 +836,12 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     }
     // clear prev year list
     this->firstYearListComboBox.blockSignals(true);
+    this->lastYearListComboBox.blockSignals(true);
     this->firstYearListComboBox.clear();
     this->lastYearListComboBox.clear();
     yearList.clear();
     this->firstYearListComboBox.blockSignals(false);
+    this->lastYearListComboBox.blockSignals(false);
 
     myCase.meteoPoint.setId(idMeteo.toStdString());
     QString error, lat, lon;
@@ -902,6 +904,19 @@ void Crit3DCropWidget::on_actionChooseFirstYear(QString year)
         {
             break;
         }
+    }
+    updateMeteoPointValues();
+}
+
+void Crit3DCropWidget::on_actionChooseLastYear(QString year)
+{
+    if (year.toInt() - this->firstYearListComboBox.currentText().toInt() > MAX_YEARS)
+    {
+        QString msg = "Period too long: maximum 5 years";
+        QMessageBox::information(nullptr, "Error", msg);
+        int max = this->firstYearListComboBox.currentText().toInt() + MAX_YEARS;
+        this->lastYearListComboBox.setCurrentText(QString::number(max));
+        return;
     }
     updateMeteoPointValues();
 }
@@ -1258,7 +1273,7 @@ void Crit3DCropWidget::updateTabIrrigation()
 {
     if (!myCase.myCrop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
     {
-        tabIrrigation->computeIrrigation(myCase, firstYearListComboBox.currentText().toInt());
+        tabIrrigation->computeIrrigation(myCase, firstYearListComboBox.currentText().toInt(), lastYearListComboBox.currentText().toInt());
     }
 }
 

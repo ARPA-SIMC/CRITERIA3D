@@ -99,7 +99,7 @@ TabIrrigation::TabIrrigation()
 }
 
 
-void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
+void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int lastYear)
 {
     FormInfo formInfo;
 
@@ -107,13 +107,14 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     double totalSoilDepth = 0;
     if (nrLayers > 0) totalSoilDepth = myCase.soilLayers[nrLayers-1].depth + myCase.soilLayers[nrLayers-1].thickness / 2;
 
-    year = currentYear;
-    int prevYear = currentYear - 1;
+    this->firstYear = firstYear;
+    this->lastYear = lastYear;
+    int prevYear = firstYear - 1;
 
     std::string error;
 
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
-    Crit3DDate lastDate = Crit3DDate(31, 12, year);
+    Crit3DDate lastDate = Crit3DDate(31, 12, this->lastYear);
 
     int doy;
 
@@ -153,8 +154,8 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(error));
             return;
         }
-        // display only current year
-        if (myDate.year == year)
+        // display only interval firstYear lastYear
+        if (myDate.year >= this->firstYear)
         {
             doy = getDoyFromDate(myDate);
             categories.append(QString::number(doy));
@@ -176,8 +177,8 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int currentYear)
     axisX->setGridLineVisible(false);
 
     // update virtual x axis
-    QDate first(year, 1, 1);
-    QDate last(year, 12, 31);
+    QDate first(this->firstYear, 1, 1);
+    QDate last(this->lastYear, 12, 31);
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
 
@@ -191,7 +192,7 @@ void TabIrrigation::tooltipLAI(QPointF point, bool state)
 {
     if (state)
     {
-        QDate xDate(year, 1, 1);
+        QDate xDate(this->firstYear, 1, 1);
         int doy = point.x();
         xDate = xDate.addDays(doy-1);
         m_tooltip->setText(QString("%1 \nLAI %2 ").arg(xDate.toString("MMM dd")).arg(point.y(), 0, 'f', 1));
@@ -210,7 +211,7 @@ void TabIrrigation::tooltipMT(QPointF point, bool state)
 {
     if (state)
     {
-        QDate xDate(year, 1, 1);
+        QDate xDate(this->firstYear, 1, 1);
         int doy = point.x();
         xDate = xDate.addDays(doy-1);
         m_tooltip->setText(QString("%1 \nTransp max %2 ").arg(xDate.toString("MMM dd")).arg(point.y(), 0, 'f', 1));
@@ -230,7 +231,7 @@ void TabIrrigation::tooltipRT(QPointF point, bool state)
 {
     if (state)
     {
-        QDate xDate(year, 1, 1);
+        QDate xDate(this->firstYear, 1, 1);
         int doy = point.x();
         xDate = xDate.addDays(doy-1);
         m_tooltip->setText(QString("%1 \nTransp real %2 ").arg(xDate.toString("MMM dd")).arg(point.y(), 0, 'f', 1));
