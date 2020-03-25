@@ -43,7 +43,7 @@ TabIrrigation::TabIrrigation()
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
     axisXvirtual->setTitleText("Date");
-    axisXvirtual->setFormat("MMM dd");
+    axisXvirtual->setFormat("MMM dd <br> yyyy");
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
     axisXvirtual->setTickCount(13);
@@ -157,7 +157,7 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
         // display only interval firstYear lastYear
         if (myDate.year >= this->firstYear)
         {
-            doy = getDoyFromDate(myDate);
+            doy = getDoyFromDate(myDate)*(myDate.year - this->firstYear +1);
             categories.append(QString::number(doy));
             seriesLAI->append(doy, myCase.myCrop.LAI);
             seriesMaxTransp->append(doy, myCase.output.dailyMaxTranspiration);

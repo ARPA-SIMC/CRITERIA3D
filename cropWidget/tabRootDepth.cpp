@@ -26,7 +26,7 @@ TabRootDepth::TabRootDepth()
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
-    axisX->setFormat("MMM dd");
+    axisX->setFormat("MMM dd <br> yyyy");
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
     axisX->setTickCount(13);
