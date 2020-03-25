@@ -915,12 +915,18 @@ void Crit3DCropWidget::updateMeteoPointValues()
     myCase.meteoPoint.id = meteoListComboBox.currentText().toStdString();
     myCase.meteoPoint.latitude = latValue->value();
 
-    // init meteoPoint with 2 years
+    // init meteoPoint with all years asked
     int firstYear = this->firstYearListComboBox.currentText().toInt() - 1;
     int lastYear = this->lastYearListComboBox.currentText().toInt();
     QDate firstDate(firstYear, 1, 1);
     QDate lastDate(lastYear, 1, 1);
-    unsigned int numberDays = firstDate.daysInYear() + lastDate.daysInYear();
+    QDate myDate = firstDate;
+    unsigned int numberDays = 0;
+    while (myDate.year() <= lastDate.year())
+    {
+        numberDays = numberDays + myDate.daysInYear();
+        myDate.setDate(myDate.year()+1, 1, 1);
+    }
     myCase.meteoPoint.initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
     // fill meteoPoint
