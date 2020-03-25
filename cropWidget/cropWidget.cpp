@@ -1242,7 +1242,7 @@ void Crit3DCropWidget::updateTabRootDepth()
 {
     if (!myCase.myCrop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
     {
-        tabRootDepth->computeRootDepth(&(myCase.myCrop), &(myCase.meteoPoint), firstYearListComboBox.currentText().toInt(), myCase.soilLayers);
+        tabRootDepth->computeRootDepth(&(myCase.myCrop), &(myCase.meteoPoint), firstYearListComboBox.currentText().toInt(), lastYearListComboBox.currentText().toInt(), myCase.soilLayers);
     }
 }
 

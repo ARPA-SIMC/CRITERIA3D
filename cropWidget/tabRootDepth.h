@@ -18,12 +18,11 @@
         Q_OBJECT
     public:
         TabRootDepth();
-        void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer> &soilLayers);
+        void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, const std::vector<soil::Crit3DLayer> &soilLayers);
         void tooltipRDM(QPointF point, bool state);
         void tooltipRD(QPointF point, bool state);
         Callout *m_tooltip;
     private:
-        int year;
         QChartView *chartView;
         QChart *chart;
         QLineSeries *seriesRootDepth;
