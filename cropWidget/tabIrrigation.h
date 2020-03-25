@@ -11,15 +11,14 @@ class TabIrrigation : public QWidget
     Q_OBJECT
 public:
     TabIrrigation();
-    void computeIrrigation(Crit1DCase myCase, int firstYear, int lastYear);
+    void computeIrrigation(Crit1DCase myCase, int currentYear);
     void tooltipLAI(QPointF point, bool state);
     void tooltipMT(QPointF point, bool state);
     void tooltipRT(QPointF point, bool state);
     void tooltipPrecIrr(bool state, int index, QBarSet *barset);
     void handleMarkerClicked();
 private:
-    int firstYear;
-    int lastYear;
+    int year;
     QChartView *chartView;
     QChart *chart;
     QBarCategoryAxis *axisX;

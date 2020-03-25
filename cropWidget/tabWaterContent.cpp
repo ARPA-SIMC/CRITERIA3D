@@ -14,7 +14,7 @@ TabWaterContent::TabWaterContent()
     graphic->xAxis->setLabel("Date");
 
     QSharedPointer<QCPAxisTickerDateTime> dateTicker(new QCPAxisTickerDateTime);
-    dateTicker->setDateTimeFormat("MMM d");
+    dateTicker->setDateTimeFormat("MMM d \n yyyy");
     dateTicker->setTickCount(13);
     graphic->xAxis->setTicker(dateTicker);
     QDateTime first(QDate(QDate::currentDate().year(), 1, 1), QTime(0, 0, 0));
@@ -68,7 +68,7 @@ TabWaterContent::TabWaterContent()
     setLayout(mainLayout);
 }
 
-void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bool isVolumetricWaterContent)
+void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int lastYear, bool isVolumetricWaterContent)
 {
     if (isVolumetricWaterContent)
     {
@@ -87,19 +87,31 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
     }
 
     int currentDoy = 1;
-    year = currentYear;
-    int prevYear = currentYear - 1;
+    int prevYear = firstYear - 1;
 
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
-    Crit3DDate lastDate = Crit3DDate(31, 12, year);
+    Crit3DDate lastDate = Crit3DDate(31, 12, lastYear);
 
     // update axes and colorMap size
-    nx = getDoyFromDate(lastDate);
-    ny = nrLayers-1;
+    QDateTime first(QDate(firstYear, 1, 1), QTime(0, 0, 0));
+    QDateTime last(QDate(lastYear, 12, 31), QTime(23, 0, 0));
+    double firstDouble = first.toTime_t();
+    double lastDouble = last.toTime_t();
+    graphic->xAxis->setRange(firstDouble, lastDouble);
+    QDateTime myDate = first;
+    unsigned int numberDays = 0;
+    while (myDate.date().year() <= last.date().year())
+    {
+        numberDays = numberDays + myDate.date().daysInYear();
+        myDate.setDate(QDate(myDate.date().year()+1, 1, 1));
+    }
+    nx = numberDays;
+    ny = (nrLayers-1);
+
     colorMap->data()->setSize(nx, ny);
     colorMap->data()->setRange(QCPRange(0, nx), QCPRange(totalSoilDepth,0));
 
-    int doy;
+    int doy = 0;
     myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
 
     std::string errorString;
@@ -112,10 +124,10 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int currentYear, bo
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorString));
             return;
         }
-        // display only current year
-        if (myDate.year == year)
+        // display only interval firstYear lastYear
+        if (myDate.year >= firstYear)
         {
-            doy = getDoyFromDate(myDate);
+            doy = doy+1; // if display 1 year this is the day Of year, otherwise count all days in that period
             for (unsigned int i = 1; i < nrLayers; i++)
             {
                 waterContent = myCase.soilLayers[i].waterContent;

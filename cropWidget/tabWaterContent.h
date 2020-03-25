@@ -13,10 +13,9 @@ class TabWaterContent : public QWidget
     Q_OBJECT
 public:
     TabWaterContent();
-    void computeWaterContent(Crit1DCase myCase, int currentYear, bool isVolumetricWaterContent);
+    void computeWaterContent(Crit1DCase myCase, int firstYear, int lastYear, bool isVolumetricWaterContent);
 
 private:
-    int year;
     bool isVolumetricWaterContent;
     QString title;
     QCustomPlot *graphic;
@@ -25,7 +24,6 @@ private:
     QCPColorGradient gradient;
     int nx;
     int ny;
-    //QList<double> depthLayers;
 
 };
 
