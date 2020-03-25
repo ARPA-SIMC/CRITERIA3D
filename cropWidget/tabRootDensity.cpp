@@ -5,7 +5,7 @@ TabRootDensity::TabRootDensity()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QVBoxLayout *sliderLayout = new QVBoxLayout;
-    QVBoxLayout *dateLayout = new QVBoxLayout;
+    QHBoxLayout *dateLayout = new QHBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
 
     dateLayout->setAlignment(Qt::AlignHCenter);
@@ -18,6 +18,8 @@ TabRootDensity::TabRootDensity()
     currentDate->setDate(middleDate);
     currentDate->setDisplayFormat("MMM dd");
     currentDate->setMaximumWidth(this->width()/5);
+    yearComboBox.addItem(QString::number(QDate::currentDate().year()));
+    yearComboBox.setMaximumWidth(this->width()/5);
     chart = new QChart();
     chartView = new QChartView(chart);
     chartView->setChart(chart);
@@ -59,8 +61,10 @@ TabRootDensity::TabRootDensity()
     connect(currentDate, &QDateEdit::dateChanged, this, &TabRootDensity::updateRootDensity);
     connect(slider, &QSlider::valueChanged, this, &TabRootDensity::updateDate);
     connect(seriesRootDensity, &QHorizontalBarSeries::hovered, this, &TabRootDensity::tooltip);
+    connect(&yearComboBox, &QComboBox::currentTextChanged, this, &TabRootDensity::on_actionChooseYear);
     plotLayout->addWidget(chartView);
     sliderLayout->addWidget(slider);
+    dateLayout->addWidget(&yearComboBox);
     dateLayout->addWidget(currentDate);
     mainLayout->addLayout(sliderLayout);
     mainLayout->addLayout(dateLayout);
@@ -68,14 +72,22 @@ TabRootDensity::TabRootDensity()
     setLayout(mainLayout);
 }
 
-void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int currentYear, const std::vector<soil::Crit3DLayer> &soilLayers)
+void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
 
     crop = myCrop;
     mp = meteoPoint;
     layers = soilLayers;
     nrLayers = unsigned(soilLayers.size());
-    year = currentYear;
+
+    yearComboBox.blockSignals(true);
+    yearComboBox.clear();
+    for (int i = firstYear; i<=lastYear; i++)
+    {
+        yearComboBox.addItem(QString::number(i));
+    }
+    year = yearComboBox.currentText().toInt();
+    yearComboBox.blockSignals(false);
 
     QDate lastDate(year,12,31);
     slider->setMaximum(lastDate.dayOfYear());
@@ -105,6 +117,14 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
 
     int currentDoy = 1;
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
+    updateRootDensity();
+}
+
+void TabRootDensity::on_actionChooseYear(QString year)
+{
+    this->year = year.toInt();
+    QDate lastDate(this->year,12,31);
+    slider->setMaximum(lastDate.dayOfYear());
     updateRootDensity();
 }
 
