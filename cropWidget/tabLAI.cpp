@@ -2,6 +2,7 @@
 #include "commonConstants.h"
 #include <QMessageBox>
 #include <QLegendMarker>
+#include "formInfo.h"
 
 
 TabLAI::TabLAI()
@@ -96,6 +97,9 @@ TabLAI::TabLAI()
 
 void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
+
+    FormInfo formInfo;
+
     unsigned int nrLayers = unsigned(soilLayers.size());
     double totalSoilDepth = 0;
     if (nrLayers > 0) totalSoilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
@@ -120,9 +124,11 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
 
     int currentDoy = 1;
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
-
+    int step = formInfo.start("Compute model...", (lastYear-firstYear+2)*365);
+    int cont = 0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
+        if ( (cont % step) == 0) formInfo.setValue(cont);
         tmin = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         tmax = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
 
@@ -144,7 +150,9 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
             seriesMaxTransp->append(x.toMSecsSinceEpoch(), myCrop->getMaxTranspiration(dailyEt0));
             seriesLAI->append(x.toMSecsSinceEpoch(), myCrop->LAI);
         }
+        cont++; // formInfo update
     }
+    formInfo.close();
 
     // update x axis
     QDate first(firstYear, 1, 1);

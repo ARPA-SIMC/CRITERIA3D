@@ -141,7 +141,7 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
     myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
 
     std::string errorString;
-    int step = formInfo.start("Compute model...", 730);
+    int step = formInfo.start("Compute model...", (lastYear-firstYear+2)*365);
     int cont = 0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
