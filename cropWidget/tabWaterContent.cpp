@@ -1,6 +1,6 @@
 #include "tabWaterContent.h"
 #include "commonConstants.h"
-
+#include "formInfo.h"
 
 TabWaterContent::TabWaterContent()
 {
@@ -69,6 +69,8 @@ TabWaterContent::TabWaterContent()
 
 void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int lastYear, bool isVolumetricWaterContent)
 {
+
+    FormInfo formInfo;
     if (isVolumetricWaterContent)
     {
         title = "volumetric water content [m3 m-3]";
@@ -99,6 +101,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     graphic->xAxis->setRange(firstDouble, lastDouble);
     QDateTime myDate = first;
     unsigned int numberDays = 0;
+
     while (myDate.date().year() <= last.date().year())
     {
         numberDays = numberDays + myDate.date().daysInYear();
@@ -116,6 +119,9 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     std::string errorString;
     double waterContent = 0.0;
     double maxWaterContent = 0.0;
+
+    int step = formInfo.start("Compute model...", (lastYear-firstYear+2)*365);
+    int cont = 0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! myCase.computeDailyModel(myDate, errorString))
@@ -123,6 +129,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorString));
             return;
         }
+        if ( (cont % step) == 0) formInfo.setValue(cont);
         // display only interval firstYear lastYear
         if (myDate.year >= firstYear)
         {
@@ -141,7 +148,9 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
                 colorMap->data()->setCell(doy-1, i-1, waterContent);
             }
         }
+        cont++; // formInfo update
     }
+    formInfo.close();
 
     if(isVolumetricWaterContent)
     {
