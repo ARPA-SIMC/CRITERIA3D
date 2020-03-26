@@ -117,7 +117,6 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     std::string errorString;
     double waterContent = 0.0;
     double maxWaterContent = 0.0;
-    double minWaterContent = 1.0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! myCase.computeDailyModel(myDate, errorString))
@@ -135,7 +134,6 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
                 {
                     waterContent = myCase.soilLayers[i].getVolumetricWaterContent();
                     maxWaterContent = MAXVALUE(waterContent, maxWaterContent);
-                    minWaterContent = MINVALUE(waterContent, minWaterContent);
                 }
                 else
                 {
@@ -148,7 +146,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
 
     if(isVolumetricWaterContent)
     {
-        colorScale->setDataRange(QCPRange(minWaterContent, maxWaterContent));
+        colorScale->setDataRange(QCPRange(0, maxWaterContent));
     }
     else
     {
@@ -164,7 +162,6 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     colorMap->setGradient(gradient);
     colorMap->setColorScale(colorScale);
 
-    //colorMap->rescaleDataRange(true);
     graphic->rescaleAxes();
 
     colorScale->axis()->setLabel(title);
