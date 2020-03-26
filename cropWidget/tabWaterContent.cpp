@@ -9,7 +9,6 @@ TabWaterContent::TabWaterContent()
     graphic = new QCustomPlot();
 
     // configure axis rect:
-    graphic->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom); // this will also allow rescaling the color scale by dragging/zooming
     graphic->axisRect()->setupFullAxesBox(true);
     graphic->xAxis->setLabel("Date");
 
