@@ -117,6 +117,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     std::string errorString;
     double waterContent = 0.0;
     double maxWaterContent = 0.0;
+    double minWaterContent = 1.0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! myCase.computeDailyModel(myDate, errorString))
@@ -130,49 +131,45 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
             doy = doy+1; // if display 1 year this is the day Of year, otherwise count all days in that period
             for (unsigned int i = 1; i < nrLayers; i++)
             {
-                waterContent = myCase.soilLayers[i].waterContent;
-                if (waterContent != NODATA)
+                if (isVolumetricWaterContent)
                 {
-                    if (isVolumetricWaterContent)
-                    {
-                        waterContent = waterContent/(myCase.soilLayers[i].thickness*1000);
-                        if (waterContent > maxWaterContent)
-                        {
-                            maxWaterContent = waterContent;
-                        }
-                    }
-                    else
-                    {
-                        waterContent = waterContent/myCase.soilLayers[i].SAT;
-                    }
-                    colorMap->data()->setCell(doy-1, i-1, waterContent);
+                    waterContent = myCase.soilLayers[i].getVolumetricWaterContent();
+                    maxWaterContent = MAXVALUE(waterContent, maxWaterContent);
+                    minWaterContent = MINVALUE(waterContent, minWaterContent);
                 }
+                else
+                {
+                    waterContent = myCase.soilLayers[i].getDegreeOfSaturation();
+                }
+                colorMap->data()->setCell(doy-1, i-1, waterContent);
             }
         }
     }
+
     double step;
     if(isVolumetricWaterContent)
     {
-        step = maxWaterContent/4;
-        colorScale->setDataRange(QCPRange(0, maxWaterContent));
+        step = (maxWaterContent-minWaterContent) / 4.0;
     }
     else
     {
-        maxWaterContent = 1;
-        step = maxWaterContent/4;
-        colorScale->setDataRange(QCPRange(0,1));
+        step = 0.25;
+        minWaterContent = 0.0;
+        maxWaterContent = 1.0;
     }
 
+    colorScale->setDataRange(QCPRange(minWaterContent, maxWaterContent));
+
     gradient.clearColorStops();
-    gradient.setColorStopAt(0, QColor(128, 0, 128));
-    gradient.setColorStopAt(step, QColor(255, 0, 0));
-    gradient.setColorStopAt(step*2, QColor(255, 255, 0));
-    gradient.setColorStopAt(step*3, QColor(64, 196, 64));
-    gradient.setColorStopAt(1, QColor(0, 0, 255));
+    gradient.setColorStopAt(minWaterContent, QColor(128, 0, 128));
+    gradient.setColorStopAt(minWaterContent + step, QColor(255, 0, 0));
+    gradient.setColorStopAt(minWaterContent + step*2.0, QColor(255, 255, 0));
+    gradient.setColorStopAt(minWaterContent + step*3.0, QColor(64, 196, 64));
+    gradient.setColorStopAt(maxWaterContent, QColor(0, 0, 255));
     colorMap->setGradient(gradient);
     colorMap->setColorScale(colorScale);
 
-    colorMap->rescaleDataRange(true);
+    //colorMap->rescaleDataRange(true);
     graphic->rescaleAxes();
 
     colorScale->axis()->setLabel(title);
