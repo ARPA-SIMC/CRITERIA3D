@@ -146,26 +146,21 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
         }
     }
 
-    double step;
     if(isVolumetricWaterContent)
     {
-        step = (maxWaterContent-minWaterContent) / 4.0;
+        colorScale->setDataRange(QCPRange(minWaterContent, maxWaterContent));
     }
     else
     {
-        step = 0.25;
-        minWaterContent = 0.0;
-        maxWaterContent = 1.0;
+        colorScale->setDataRange(QCPRange(0, 1));
     }
 
-    colorScale->setDataRange(QCPRange(minWaterContent, maxWaterContent));
-
     gradient.clearColorStops();
-    gradient.setColorStopAt(minWaterContent, QColor(128, 0, 128));
-    gradient.setColorStopAt(minWaterContent + step, QColor(255, 0, 0));
-    gradient.setColorStopAt(minWaterContent + step*2.0, QColor(255, 255, 0));
-    gradient.setColorStopAt(minWaterContent + step*3.0, QColor(64, 196, 64));
-    gradient.setColorStopAt(maxWaterContent, QColor(0, 0, 255));
+    gradient.setColorStopAt(0, QColor(128, 0, 128));
+    gradient.setColorStopAt(0.25, QColor(255, 0, 0));
+    gradient.setColorStopAt(0.5, QColor(255, 255, 0));
+    gradient.setColorStopAt(0.75, QColor(64, 196, 64));
+    gradient.setColorStopAt(1, QColor(0, 0, 255));
     colorMap->setGradient(gradient);
     colorMap->setColorScale(colorScale);
 
