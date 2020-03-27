@@ -92,6 +92,13 @@ TabIrrigation::TabIrrigation()
     connect(seriesMaxTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipMT);
     connect(seriesRealTransp, &QLineSeries::hovered, this, &TabIrrigation::tooltipRT);
     connect(seriesPrecIrr, &QHorizontalBarSeries::hovered, this, &TabIrrigation::tooltipPrecIrr);
+    foreach(QLegendMarker* marker, chart->legend()->markers())
+    {
+        if (marker->type() == QLegendMarker::LegendMarkerTypeXY)
+        {
+            QObject::connect(marker, &QLegendMarker::clicked, this, &TabIrrigation::handleMarkerClicked);
+        }
+    }
 
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
@@ -181,8 +188,12 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
-        marker->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &TabIrrigation::handleMarkerClicked);
+        if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &TabIrrigation::handleMarkerClicked);
+        }
     }
 }
 
