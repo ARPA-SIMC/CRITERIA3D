@@ -1197,6 +1197,7 @@ bool Crit3DCropWidget::updateCrop()
             QMessageBox::critical(nullptr, "Error irrigation update", error);
             return false;
         }
+        myCase.myCrop.irrigationVolume = irrigationVolumeValue->text().toDouble();
         myCase.myCrop.irrigationShift = irrigationShiftValue->value();
         myCase.myCrop.degreeDaysStartIrrigation = degreeDaysStartValue->text().toInt();
         myCase.myCrop.degreeDaysEndIrrigation = degreeDaysEndValue->text().toInt();
