@@ -7,6 +7,7 @@
     #ifndef _VECTOR_
         #include <vector>
     #endif
+    #include <QDir>
 
     class QDate;
     class QDateTime;
