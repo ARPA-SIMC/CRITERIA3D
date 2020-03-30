@@ -7,6 +7,6 @@
     #include <QString>
 
     bool writeUCMListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error);
-    bool shapeFromCSV(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape, QString fileCSV, QString fileCSVRef, QString outputName, std::string *error);
+    bool shapeFromCSV(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape, QString fileCSV, QString fileCSVRef, QString outputName, std::string *error, bool showInfo);
 
 #endif // UCMUTILITIES_H
