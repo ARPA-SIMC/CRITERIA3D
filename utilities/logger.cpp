@@ -45,10 +45,7 @@ void Logger::writeInfo(const QString &value)
         out.setCodec("UTF-8");
         out << text;
     }
-    else
-    {
-        std::cout << text.toStdString() << std::endl;
-    }
+    std::cout << text.toStdString() << std::endl;
 
 }
 
@@ -66,10 +63,7 @@ void Logger::writeError(const QString &value)
         out.setCodec("UTF-8");
         out << text;
     }
-    else
-    {
-        std::cout << text.toStdString() << std::endl;
-    }
+    std::cout << text.toStdString() << std::endl;
 
 }
 
