@@ -39,10 +39,10 @@ void Logger::writeInfo(const QString &value)
     {
         text = QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm") + text;
     }
-    QTextStream out(file);
-    out.setCodec("UTF-8");
-    if (file != nullptr)
+    if (logFileName != "")
     {
+        QTextStream out(file);
+        out.setCodec("UTF-8");
         out << text;
     }
     else
@@ -60,10 +60,10 @@ void Logger::writeError(const QString &value)
     {
         text = QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm") + text;
     }
-    QTextStream out(file);
-    out.setCodec("UTF-8");
-    if (file != nullptr)
+    if (logFileName != "")
     {
+        QTextStream out(file);
+        out.setCodec("UTF-8");
         out << text;
     }
     else
