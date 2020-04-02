@@ -322,9 +322,8 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
     }
 
     // start from 01:00
-    QDateTime startTime;
+    QDateTime startTime((QDateTime(startDate)));
     startTime.setTimeSpec(Qt::UTC);
-    startTime = QDateTime(startDate);
     startTime = startTime.addSecs(3600);
 
     QDateTime endTime((QDateTime(endDate)));
