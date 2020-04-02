@@ -1,74 +1,8 @@
-#include "ucmUtilities.h"
+#include "shapeFromCSVForShell.h"
 #include "shapeUtilities.h"
-#include "ucmDb.h"
 #include "commonConstants.h"
 
 #include <QtSql>
-#include "formInfo.h"
-
-
-
-
-long getFileLenght(QString fileName)
-{
-    QFile file(fileName);
-    if ( !file.open(QFile::ReadOnly | QFile::Text) )
-    {
-        qDebug() << "data file not exists";
-        return 0;
-    }
-
-    QTextStream inputStream(&file);
-
-    long nrRows = 0;
-    while( !inputStream.atEnd())
-    {
-        inputStream.readLine();
-        nrRows++;
-    }
-
-    file.close();
-
-    return nrRows;
-}
-
-
-bool writeUCMListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error)
-{
-    UcmDb* unitList = new UcmDb(dbName);
-
-    QStringList idCase, idCrop, idMeteo, idSoil;
-    QList<double> ha;
-
-    int nShape = shapeHandler->getShapeCount();
-
-    for (int i = 0; i < nShape; i++)
-    {
-        QString key = QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CASE"));
-        if (key.isEmpty()) continue;
-
-        if ( !idCase.contains(key) )
-        {
-            idCase << key;
-            idCrop << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CROP"));
-            idMeteo << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_METEO"));
-            idSoil << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_SOIL"));
-            ha << shapeHandler->getNumericValue(signed(i), "HA");
-        }
-        else
-        {
-            // TODO search value and sum ha
-        }
-    }
-
-    bool res = unitList->writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha);
-    *error = unitList->getError().toStdString();
-
-    delete unitList;
-
-    return res;
-}
-
 
 /* output format file:
  * CSVfieldName, ShapeFieldName, type, lenght, decimals nr
@@ -77,8 +11,8 @@ bool writeUCMListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::str
  * deficit,DEFICIT,FLOAT,10,1
  * forecast7daysIRR,FcstIrr7d,FLOAT,10,1
 */
-bool shapeFromCSV(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape,
-                  QString fileCSV, QString fileCSVRef, QString outputName, std::string *error, bool showInfo)
+bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape,
+                  QString fileCSV, QString fileCSVRef, QString outputName, std::string *error)
 {
     int CSVRefRequiredInfo = 5;
     int defaultStringLenght = 20;
@@ -128,9 +62,6 @@ bool shapeFromCSV(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputSh
     }
 
     int nShape = outputShape->getShapeCount();
-
-    long nrRows = getFileLenght(fileCSV);
-    if (nrRows == 0) return false;
 
     QFile file(fileCSV);
     if ( !file.open(QFile::ReadOnly | QFile::Text) )
@@ -209,21 +140,12 @@ bool shapeFromCSV(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputSh
         return false;
     }
 
-    FormInfo formInfo;
-    long count = 0;
-    int step = 0;
-    if (showInfo)
-    {
-        step = formInfo.start("create shape... ", nrRows);
-    }
 
     // Reads the data up to the end of file
     QString line;
     QStringList items;
     while (!inputStream.atEnd())
     {
-        count++;
-        if (showInfo && (count%step == 0)) formInfo.setValue(count);
 
         line = inputStream.readLine();
         items = line.split(",");
@@ -250,8 +172,6 @@ bool shapeFromCSV(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputSh
         }
 
     }
-
-    if (showInfo) formInfo.close();
 
     file.close();
     return true;

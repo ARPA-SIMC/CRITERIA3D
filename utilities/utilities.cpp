@@ -9,7 +9,7 @@
 #include <QSqlDatabase>
 #include <QSqlDriver>
 #include <QSqlRecord>
-#include <QDir>
+
 
 QStringList getFields(QSqlDatabase* db_, QString tableName)
 {
@@ -442,4 +442,3 @@ bool searchDataPath(QString* dataPath)
     *dataPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;
 }
-

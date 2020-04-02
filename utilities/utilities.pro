@@ -28,8 +28,10 @@ win32:{
 INCLUDEPATH += ../crit3dDate ../mathFunctions
 
 SOURCES += \
+    logger.cpp \
     utilities.cpp
 
 HEADERS += \
+    logger.h \
     utilities.h
 
