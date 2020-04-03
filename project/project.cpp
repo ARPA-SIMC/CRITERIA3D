@@ -158,68 +158,70 @@ void Project::setProxyDEM()
     }
 }
 
-bool Project::checkProxy(QString name_, QString gridName_, QString table_, QString field_, QString *error)
+bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
 {
+    std::string name_ = myProxy.getName();
+
     if (name_ == "")
     {
         *error = "no name";
         return false;
     }
 
-    bool isHeight = (getProxyPragaName(name_.toStdString()) == height);
+    bool isHeight = (getProxyPragaName(name_) == height);
 
-    if (!isHeight & (gridName_ == "") & (table_ == "" && field_ == ""))
+    if (!isHeight & (myProxy.getGridName() == "") & (myProxy.getProxyTable() == "" && myProxy.getProxyField() == ""))
     {
-        *error = "error reading grid, table or field for proxy " + name_;
+        *error = "error reading grid, table or field for proxy " + QString::fromStdString(name_);
         return false;
     }
 
     return true;
 }
 
-void Project::addProxyToProject(QString name_, QString gridName_, QString table_, QString field_, bool isForQuality_, bool isActive_)
+bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder)
 {
-    Crit3DProxy myProxy;
+    unsigned i, order;
+    bool orderFound;
 
-    myProxy.setName(name_.toStdString());
-    myProxy.setGridName(gridName_.toStdString());
-    myProxy.setProxyTable(table_.toStdString());
-    myProxy.setProxyField(field_.toStdString());
-    myProxy.setForQualityControl(isForQuality_);
+    for (order=1; order <= proxyList.size(); order++)
+    {
+        orderFound = false;
 
-    interpolationSettings.addProxy(myProxy, isActive_);
-    if (isForQuality_)
-        qualityInterpolationSettings.addProxy(myProxy, isActive_);
+        for (i=0; i < proxyList.size(); i++)
+            if (unsigned(proxyOrder[i]) == order)
+            {
+                interpolationSettings.addProxy(proxyList[i], proxyActive[i]);
+                if (proxyList[i].getForQualityControl())
+                    qualityInterpolationSettings.addProxy(proxyList[i], proxyActive[i]);
 
-    if (getProxyPragaName(name_.toStdString()) == height) setProxyDEM();
+                orderFound = true;
+
+                break;
+            }
+
+        if (! orderFound) return false;
+    }
+
+    for (i=0; i < interpolationSettings.getProxyNr(); i++)
+        if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == height) setProxyDEM();
+
+    return true;
+
 }
 
 
-bool Project::addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears)
+void Project::addProxyGridSeries(QString name_, std::vector <QString> gridNames, std::vector <unsigned> gridYears)
 {
+    // no check on grids
     std::string myError;
 
     Crit3DProxyGridSeries mySeries(name_);
 
-    gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
-
     for (unsigned i=0; i < gridNames.size(); i++)
-    {
-        logInfo("Checking grid " + gridNames[i] + " for proxy " + name_ + " (" + QString::number(i+1) + "/" + QString::number(gridNames.size()) + ")");
-
-        if (gis::readEsriGrid(getCompleteFileName(gridNames[i], PATH_GEO).toStdString(), myGrid, &myError))
-            mySeries.addGridToSeries(gridNames[i], signed(gridYears[i]));
-        else {
-            errorString = "Grid " + gridNames[i] + " not found";
-            return false;
-        }
-    }
+        mySeries.addGridToSeries(gridNames[i], signed(gridYears[i]));
 
     proxyGridSeries.push_back(mySeries);
-
-    myGrid->clear();
-
-    return true;
 }
 
 bool Project::loadParameters(QString parametersFileName)
@@ -239,9 +241,10 @@ bool Project::loadParameters(QString parametersFileName)
     interpolationSettings.initialize();
     qualityInterpolationSettings.initialize();
 
-    QString gridName = "";
-    QString proxyName = "", proxyGridName = "", proxyTable = "", proxyField = "";
-    bool isActive = false, forQuality = false;
+    std::vector <Crit3DProxy> proxyListTmp;
+    std::deque <bool> proxyActiveTmp;
+    std::vector <int> proxyOrder;
+
     QStringList myList;
     std::vector <QString> proxyGridSeriesNames;
     std::vector <unsigned> proxyGridSeriesYears;
@@ -591,28 +594,45 @@ bool Project::loadParameters(QString parametersFileName)
         //proxy variables (for interpolation)
         if (group.startsWith("proxy_"))
         {
-            proxyName = group.right(group.size()-6);
+            Crit3DProxy* myProxy = new Crit3DProxy();
+
+            myProxy->setName(group.right(group.size()-6).toStdString());
 
             parameters->beginGroup(group);
 
-            proxyTable = parameters->value("table").toString();
-            proxyField = parameters->value("field").toString();
-            isActive = parameters->value("active").toBool();
-            forQuality = parameters->value("use_for_spatial_quality_control").toBool();
-            proxyGridName = parameters->value("raster").toString();
+            myProxy->setProxyTable(parameters->value("table").toString().toStdString());
+            myProxy->setProxyField(parameters->value("field").toString().toStdString());
+            myProxy->setGridName(parameters->value("raster").toString().toStdString());
+            myProxy->setForQualityControl(parameters->value("use_for_spatial_quality_control").toBool());
 
-            parameters->endGroup();
+            if (! parameters->contains("active"))
+            {
+                errorString = "active not specified for proxy " + QString::fromStdString(myProxy->getName());
+                return false;
+            }
 
-            if (checkProxy(proxyName, proxyGridName, proxyTable, proxyField, &errorString))
-                addProxyToProject(proxyName, proxyGridName, proxyTable, proxyField, forQuality, isActive);
+            if (! parameters->contains("order"))
+            {
+                errorString = "order not specified for proxy " + QString::fromStdString(myProxy->getName());
+                return false;
+            }
+
+            if (checkProxy(*myProxy, &errorString))
+            {
+                proxyListTmp.push_back(*myProxy);
+                proxyActiveTmp.push_back(parameters->value("active").toBool());
+                proxyOrder.push_back(parameters->value("order").toInt());
+            }
             else
                 logError();
+
+            parameters->endGroup();
         }
 
         //proxy grid annual series
         if (group.startsWith("proxygrid"))
         {
-            proxyName = group.right(group.length()-10);
+            QString proxyName = group.right(group.length()-10);
 
             parameters->beginGroup(group);
             int nrGrids = parameters->beginReadArray("grids");
@@ -624,13 +644,14 @@ bool Project::loadParameters(QString parametersFileName)
             parameters->endArray();
             parameters->endGroup();
 
-            if (! addProxyGridSeries(proxyName, proxyGridSeriesNames, proxyGridSeriesYears))
-                logError();
+            addProxyGridSeries(proxyName, proxyGridSeriesNames, proxyGridSeriesYears);
         }
     }
 
-    // check proxy grids for detrending
-    if (!loadProxyGrids())
+    if (proxyListTmp.size() > 0)
+        addProxyToProject(proxyListTmp, proxyActiveTmp, proxyOrder);
+
+    if (! updateProxy())
         return false;
 
     if (!loadRadiationGrids())
@@ -870,6 +891,8 @@ bool Project::loadDEM(QString myFileName)
     }
 
     setProxyDEM();
+    interpolationSettings.setProxyLoaded(false);
+    if (! updateProxy()) return false;
 
     //set interpolation settings DEM
     interpolationSettings.setCurrentDEM(&DEM);
@@ -974,6 +997,9 @@ bool Project::loadMeteoGridDB(QString xmlName)
     if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
 
     this->meteoGridDbHandler->updateGridDate(&errorString);
+
+    if (loadGridDataAtStart || ! meteoPointsLoaded)
+        setCurrentDate(meteoGridDbHandler->lastDate());
 
     meteoGridLoaded = true;
     logInfo("Meteo Grid = " + xmlName);
@@ -1197,7 +1223,13 @@ QDateTime Project::findDbPointFirstTime()
 void Project::checkMeteoPointsDEM()
 {
     for (int i=0; i < nrMeteoPoints; i++)
-        meteoPoints[i].isInsideDem = ! gis::isOutOfGridXY(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, DEM.header);
+    {
+        if (! gis::isOutOfGridXY(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, DEM.header)
+                && (! isEqual(gis::getValueFromXY(DEM, meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y), DEM.header->flag)))
+             meteoPoints[i].isInsideDem = true;
+        else
+            meteoPoints[i].isInsideDem = false;
+    }
 }
 
 
@@ -1212,6 +1244,7 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
     QString statement;
     int nrProxy;
     Crit3DProxy* myProxy;
+    float myValue;
 
     nrProxy = int(interpolationSettings.getProxyNr());
     myPoint->proxyValues.resize(unsigned(nrProxy));
@@ -1226,6 +1259,7 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
             myProxy = interpolationSettings.getProxy(i);
             proxyField = QString::fromStdString(myProxy->getProxyField());
             proxyTable = QString::fromStdString(myProxy->getProxyTable());
+
             if (proxyField != "" && proxyTable != "")
             {
                 statement = QString("SELECT %1 FROM %2 WHERE id_point = '%3'").arg(proxyField).arg(proxyTable).arg(QString::fromStdString((*myPoint).id));
@@ -1233,7 +1267,10 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
                 {
                     qry.last();
                     if (qry.value(proxyField) != "")
-                        myPoint->proxyValues[i] = qry.value(proxyField).toFloat();
+                    {
+                        if (! qry.value(proxyField).isNull())
+                            myPoint->proxyValues[i] = qry.value(proxyField).toFloat();
+                    }
                 }
             }
 
@@ -1244,8 +1281,8 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
                     return false;
                 else
                 {
-                    float myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
-                    if (int(myValue) != int(proxyGrid->header->flag))
+                    myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
+                    if (! isEqual(myValue, proxyGrid->header->flag))
                         myPoint->proxyValues[i] = myValue;
                 }
             }
@@ -1275,7 +1312,7 @@ bool Project::loadProxyGrids()
             {
                 gis::Crit3DRasterGrid proxyGrid;
                 std::string myError;
-                if (gis::readEsriGrid(fileName.toStdString(), &proxyGrid, & myError))
+                if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, & myError))
                 {
                     gis::Crit3DRasterGrid* resGrid = new gis::Crit3DRasterGrid();
                     gis::resampleGrid(proxyGrid, resGrid, *(DEM.header), aggrAverage, 0);
@@ -1283,9 +1320,10 @@ bool Project::loadProxyGrids()
                 }
                 else
                 {
-                    logError("Error loading proxy grid " + fileName);
-                    interpolationSettings.getSelectedCombination().setValue(i, false);
+                    errorString = "Error loading proxy grid " + fileName;
+                    return false;
                 }
+
                 proxyGrid.clear();
             }
         }
@@ -1336,8 +1374,6 @@ bool Project::loadRadiationGrids()
 
 bool Project::readProxyValues()
 {
-    if (meteoPointsDbHandler == nullptr) return false;
-
     QSqlDatabase myDb = this->meteoPointsDbHandler->getDb();
 
     for (int i = 0; i < this->nrMeteoPoints; i++)
@@ -1351,8 +1387,16 @@ bool Project::readProxyValues()
 
 bool Project::updateProxy()
 {
-    if (! loadProxyGrids()) return false;
-    if (! readProxyValues()) return false;
+    if (DEM.isLoaded)
+        if (! interpolationSettings.getProxyLoaded())
+        {
+            if (loadProxyGrids()) interpolationSettings.setProxyLoaded(true);
+            else return false;
+
+            if (meteoPointsDbHandler != nullptr)
+                if (! readProxyValues()) return false;
+        }
+
     return true;
 }
 
@@ -1484,7 +1528,7 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime)
             if (! gis::isOutOfGridRowCol(row, col, *(hourlyMeteoMaps->mapHourlyTair)))
             {
                 meteoPoints[i].setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(),
-                                          airTemperature, hourlyMeteoMaps->mapHourlyRelHum->value[row][col]);
+                                          airTemperature, hourlyMeteoMaps->mapHourlyTair->value[row][col]);
             }
         }
     }
@@ -1504,17 +1548,19 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    // Proxy vars regression and detrend
+    FormInfo myInfo;
     if (showInfo && modality == MODE_GUI)
-    {
-        FormInfo myInfo;
         myInfo.start("Preparing interpolation...", 0);
-    }
 
     //detrending and checking precipitation
-    if (! preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+
+    if (showInfo && modality == MODE_GUI)
+        myInfo.close();
+
+    if (! interpolationReady)
     {
-        logError("Interpolation: error in function preInterpolation");
+        logError("Interpolation: error in function preInterpolation");   
         return false;
     }
 
@@ -1734,24 +1780,23 @@ bool Project::loadProjectSettings(QString settingsFileName)
 }
 
 
-bool Project::searchDefaultPath(QString* path)
+bool Project::searchDefaultPath(QString* defaultPath)
 {
     QString myPath = getApplicationPath();
-    QString myVolumeDOS = myPath.left(3);
+    QString myRoot = QDir::rootPath();
 
     bool isFound = false;
     while (! isFound)
     {
-        if (QDir(myPath + "DATA").exists())
+        if (QDir(myPath + "/DATA").exists())
         {
             isFound = true;
             break;
         }
-
-        if (QDir::cleanPath(myPath) == "/" || QDir::cleanPath(myPath) == myVolumeDOS)
+        if (QDir::cleanPath(myPath) == myRoot)
             break;
 
-        myPath += "../";
+        myPath = QFileInfo(myPath).dir().absolutePath();
     }
 
     if (! isFound)
@@ -1760,7 +1805,7 @@ bool Project::searchDefaultPath(QString* path)
         return false;
     }
 
-    *path = QDir::cleanPath(myPath) + "/DATA/";
+    *defaultPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;
 }
 
@@ -1854,11 +1899,12 @@ void Project::saveProxies()
     {
         myProxy = interpolationSettings.getProxy(i);
         parameters->beginGroup("proxy_" + QString::fromStdString(myProxy->getName()));
+            parameters->setValue("order", i+1);
             parameters->setValue("active", interpolationSettings.getSelectedCombination().getValue(i));
-            parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
-            parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));
             parameters->setValue("use_for_spatial_quality_control", myProxy->getForQualityControl());
-            parameters->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
+            if (myProxy->getProxyTable() != "") parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
+            if (myProxy->getProxyField() != "") parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));
+            if (myProxy->getGridName() != "") parameters->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
         parameters->endGroup();
     }
 }
@@ -1998,11 +2044,14 @@ bool Project::loadProject()
         return false;
     }
 
-    if (demFileName != "") loadDEM(demFileName);
+    if (demFileName != "")
+        if (! loadDEM(demFileName)) return false;
 
-    if (dbPointsFileName != "") loadMeteoPointsDB(dbPointsFileName);
+    if (dbPointsFileName != "")
+        if (! loadMeteoPointsDB(dbPointsFileName)) return false;
 
-    if (dbGridXMLFileName != "") loadMeteoGridDB(dbGridXMLFileName);
+    if (dbGridXMLFileName != "")
+        if (! loadMeteoGridDB(dbGridXMLFileName)) return false;
 
     return true;
 }

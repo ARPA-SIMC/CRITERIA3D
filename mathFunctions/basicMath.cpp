@@ -412,7 +412,7 @@
             else if (rank < 0.f)
                 return list[0];
             else
-                return ((rank - (int)(rank)) * (list[(int)(rank) + 1] - list[(int)(rank)])) + list[(int)(rank)];
+                return ((rank - int(rank)) * (list[unsigned(rank) + 1] - list[unsigned(rank)])) + list[unsigned(rank)];
         }
 
     }

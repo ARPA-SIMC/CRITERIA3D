@@ -25,8 +25,10 @@
         float* tDew;
         float* irradiance;
         float* et0;
-        float* windVecInt;
         float* windScalInt;
+        float* windVecX;
+        float* windVecY;
+        float* windVecInt;
         float* windVecDir;
         int* leafW;
         float* transmissivity;
@@ -93,8 +95,8 @@
             long nrObsDataDaysD;
             long nrObsDataDaysM;
 
-            TObsDataD *obsDataD;
-            TObsDataM *obsDataM;
+            std::vector<TObsDataD> obsDataD;
+            std::vector<TObsDataM> obsDataM;
             quality::qualityType quality;
             float currentValue;
             float residual;
@@ -111,24 +113,31 @@
             gis::Crit3DRasterGrid* topographicDistance;
 
             Crit3DMeteoPoint();
+            void clear();
 
             void initializeObsDataH(int hourlyFraction, int numberOfDays, const Crit3DDate& firstDate);
             void emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& myDate);
             void emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
+            void emptyObsDataH(const Crit3DDate& date1, const Crit3DDate& date2);
+            void emptyObsDataD(const Crit3DDate& date1, const Crit3DDate& date2);
+
             void cleanObsDataH();
+            void cleanObsDataD();
+            void cleanObsDataM();
+
             bool isDateLoadedH(const Crit3DDate& myDate);
             bool isDateIntervalLoadedH(const Crit3DDate& date1, const Crit3DDate& date2);
             bool isDateIntervalLoadedH(const Crit3DTime& time1, const Crit3DTime& time2);
             float obsDataConsistencyH(meteoVariable myVar, const Crit3DTime& time1, const Crit3DTime& time2);
 
-            void initializeObsDataD(int numberOfDays, const Crit3DDate& firstDate);
+            void initializeObsDataD(unsigned int numberOfDays, const Crit3DDate& firstDate);
             void emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
-            void cleanObsDataD();
             bool isDateLoadedD(const Crit3DDate& myDate);
             bool isDateIntervalLoadedD(const Crit3DDate& date1, const Crit3DDate& date2);
 
-            void initializeObsDataM(int numberOfMonths, int month, int year);
-            void cleanObsDataM();
+            void initializeObsDataM(unsigned int numberOfMonths, unsigned int month, int year);
+
+            bool existDailyData(const Crit3DDate& myDate);
 
             float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar);
             bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);
@@ -141,7 +150,9 @@
             float getProxyValue(unsigned pos);
             std::vector <float> getProxyValues();
 
-        private:
+            void setId(std::string value);
+
+    private:
             TObsDataH *obsDataH;
 
     };

@@ -120,7 +120,6 @@ contributors:
 
 */
 
-
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -247,8 +246,9 @@ bool weatherGenerator2D::initializeData(int lengthDataSeries, int stations)
     return 0;
 }
 
-void weatherGenerator2D::initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D)
+void weatherGenerator2D::initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D,bool computeStats)
 {
+    computeStatistics = computeStats;
     isPrecWG2D = computePrecWG2D;
     isTempWG2D = computeTempWG2D;
     // default parameters
@@ -284,18 +284,40 @@ void weatherGenerator2D::computeWeatherGenerator2D()
             weatherGenerator2D::temperatureCompute();
         if (isPrecWG2D)
             weatherGenerator2D::precipitationCompute();
-        weatherGenerator2D::getWeatherGeneratorOutput();
+        weatherGenerator2D::prepareWeatherGeneratorOutput();
+        //return outputWeatherData;
 }
 
 void weatherGenerator2D::commonModuleCompute()
 {
     // step 1 of precipitation WG2D
     printf("step 1/9 \n");
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     weatherGenerator2D::precipitationP00P10(); // it computes the monthly probabilities p00 and p10
     printf("step 2/9 \n");
+    //time_t rawtime;
+    //struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 2 of precipitation WG2D
     weatherGenerator2D::precipitationCorrelationMatrices(); // computation of monthly correlation amongst stations
     printf("step 3/9 \n");
+    //time_t rawtime;
+    //struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 3 of precipitation WG2D
     weatherGenerator2D::precipitationMultisiteOccurrenceGeneration(); // generation of a sequence of dry/wet days after statistics and random numbers
 
@@ -305,19 +327,37 @@ void weatherGenerator2D::temperatureCompute()
 {
     // step 1 of temperature WG2D
     printf("step 4/9\n");
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     weatherGenerator2D::computeTemperatureParameters();
     printf("step 5/9\n");
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 2 of temperature WG2D
     weatherGenerator2D::temperaturesCorrelationMatrices();
     printf("step 6/9\n");
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 3 of temperature WG2D
     weatherGenerator2D::multisiteRandomNumbersTemperature();
     printf("step 7/9\n");
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 4 of temperature WG2D
     weatherGenerator2D::multisiteTemperatureGeneration();
     printf("end temperature module\n");
-    if (!isPrecWG2D) printf("step 8/9 & 9/9 not computed\n");
-}
+    }
 
 void weatherGenerator2D::precipitationCompute()
 {
@@ -326,8 +366,22 @@ void weatherGenerator2D::precipitationCompute()
     weatherGenerator2D::initializePrecipitationOutputs(lengthSeason);
     // step 4 of precipitation WG2D
     printf("step 8/9 \n");
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     weatherGenerator2D::precipitationMultiDistributionParameterization(); // seasonal amounts distribution
     printf("step 9/9\n");
+    //time_t rawtime;
+    //struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
+
     // step 5 of precipitation WG2D
     if (parametersModel.distributionPrecipitation == 3)
     {
@@ -337,6 +391,10 @@ void weatherGenerator2D::precipitationCompute()
     {
         weatherGenerator2D::precipitationMultisiteAmountsGeneration(); // generation of synthetic series
     }
+    if (!isPrecWG2D) printf("step 8/9 & 9/9 not computed\n");
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
     printf("end precipitation module\n");
 }
 
@@ -626,7 +684,14 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
         {
             free(normalizedRandomMatrix[i]);            
         }
-        free(normalizedRandomMatrix);        
+        free(normalizedRandomMatrix);
+        time_t rawtime;
+        struct tm * timeinfo;
+
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        printf ( "Current local time and date: %s", asctime (timeinfo) );
+        printf("step 3/9 step %d/12\n",iMonth+1);
     }
 
 
@@ -645,6 +710,7 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
 
 void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,double** occurrences, double** matrixOccurrence, double** normalizedMatrixRandom,double ** transitionNormal,int lengthSeries)
 {
+
     // M and K matrices are also used as ancillary dummy matrices
     double val = 5;
     int ii = 0;
@@ -675,19 +741,33 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
     {
        for (int j=0;j<nrStations;j++)
        {
-            M[i][j] = matrixOccurrence[i][j];  // M is the matrix named mat in the original code
+            M[i][j] = MINVALUE(matrixOccurrence[i][j],1);  //MINVALUE(M[i][j],1) M is the matrix named mat in the original code
        }
     }
 
     double minimalValueToExitFromCycle = NODATA;
     int counterConvergence=0;
-    bool exitWhileCycle = false;
+    //bool exitWhileCycle = false;
+    int nrEigenvaluesLessThan0;
+    int counter;
+    double meanValue,stdDevValue;
+    double myDiff;
+    while ((val>TOLERANCE_MULGETS) && (ii<MAX_ITERATION_MULGETS))
+    { // !! chiedere a Fausto se vale la pena nelle matrici interne passare da calloc a malloc
 
-    while ((val>TOLERANCE_MULGETS) && (ii<MAX_ITERATION_MULGETS) && (!exitWhileCycle))
-    {
         ii++;
-        int nrEigenvaluesLessThan0 = 0;
-        int counter = 0;
+        nrEigenvaluesLessThan0 = 0;
+        counter = 0;
+        /*for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
+            {
+                //printf("%f  ",M[i][j]);
+
+            }
+            //printf("\n");
+        }*/
+        //pressEnterToContinue();
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
@@ -697,6 +777,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 counter++;
             }
         }
+
         eigenproblem::rs(nrStations,correlationArray,eigenvalues,true,eigenvectors);
 
         for (int i=0;i<nrStations;i++)
@@ -719,20 +800,27 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                     counter++;
                 }
             }
-            matricial::matrixProductNoCheck(dummyMatrix,dummyMatrix2,nrStations,nrStations,nrStations,M);
+            int cMatrix, dMatrix, kMatrix;
+            double sumMatrix = 0;
+            for ( cMatrix = 0 ; cMatrix < nrStations ; cMatrix++ )
+            {
+                for ( dMatrix = cMatrix ; dMatrix < nrStations ; dMatrix++ )
+                {
+                    for ( kMatrix = 0 ; kMatrix < nrStations ; kMatrix++ )
+                    {
+                        sumMatrix += dummyMatrix[cMatrix][kMatrix] * dummyMatrix2[kMatrix][dMatrix];
+                    }
+                    M[dMatrix][cMatrix] = M[cMatrix][dMatrix] = sumMatrix;
+                    sumMatrix = 0.;
+                }
+            }
             for (int i=0;i<nrStations;i++)
             {
-                for (int j=i;j<nrStations;j++)
+                dummyMatrix[i][i] = 1.;
+                for (int j=i+1;j<nrStations;j++)
                 {
-                     if (i == j)
-                     {
-                         dummyMatrix[i][j] = 1.;
-                     }
-                     else
-                     {
                          dummyMatrix[i][j] = MINVALUE(2*M[i][j]/(M[i][i] + M[j][j]),ONELESSEPSILON);
                          dummyMatrix[j][i] = dummyMatrix[i][j];
-                     }
                 }
              }
 
@@ -741,13 +829,17 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         else
         {
             for (int i=0;i<nrStations;i++)
-                for (int j=0;j<nrStations;j++) dummyMatrix[i][j] = M[i][j];
+                for (int j=i;j<nrStations;j++)
+                {
+                    dummyMatrix[j][i] = dummyMatrix[i][j] = M[i][j]; // !! verificare che M sia simmetrica nel caso si può accorciare il for interno
+                }
         }
+
         //bool isLowerDiagonal = true;
-        matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,true);
+
         matricial::matrixProductNoCheck(dummyMatrix, normalizedMatrixRandom, nrStations, nrStations, lengthSeries, dummyMatrix3);
 
-        double meanValue,stdDevValue;
+
         for (int i=0;i<nrStations;i++)
         {
             meanValue = stdDevValue = 0;
@@ -755,7 +847,10 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 meanValue += dummyMatrix3[i][j];
             meanValue /= lengthSeries;
             for (int j=0;j<lengthSeries;j++)
-                stdDevValue += (dummyMatrix3[i][j]- meanValue)*(dummyMatrix3[i][j]- meanValue);
+            {
+                myDiff = (dummyMatrix3[i][j]- meanValue);
+                stdDevValue += (myDiff)*(myDiff);
+            }
             stdDevValue /= (lengthSeries-1);
             stdDevValue = sqrt(stdDevValue);
 
@@ -791,13 +886,11 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         val = 0;
         for (int i=0; i<nrStations;i++)
         {
-            for (int j=0;j<nrStations;j++)
+            for (int j=i;j<nrStations;j++)
             {
-                val = MAXVALUE(val, fabs(K[i][j] - matrixOccurrence[i][j]));   
+                val = MAXVALUE(val, fabs(K[i][j] - matrixOccurrence[i][j]));
             }
-
         }
-
         if (val < fabs(minimalValueToExitFromCycle))
         {
             minimalValueToExitFromCycle = val;
@@ -809,25 +902,48 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         }
         if (counterConvergence > 20)
         {
-            if (val <= fabs(minimalValueToExitFromCycle) + TOLERANCE_MULGETS) exitWhileCycle = true;
+            if (val <= fabs(minimalValueToExitFromCycle) + TOLERANCE_MULGETS)
+            {
+                for (int i=0;i<nrStations;i++)
+                {
+                    free(dummyMatrix[i]);
+                    free(dummyMatrix2[i]);
+                    free(dummyMatrix3[i]);
+                    free(normRandom[i]);
+
+                }
+
+
+                 free(dummyMatrix);
+                 free(dummyMatrix2);
+                 free(dummyMatrix3);
+                 free(correlationArray);
+                 free(eigenvalues);
+                 free(eigenvectors);
+                 free(normRandom);
+
+                return;
+            }
         }
         for (int i=0; i<nrStations;i++)
         {
             M[i][i]= 1.;
         }
-        if ((ii != MAX_ITERATION_MULGETS) && (val > TOLERANCE_MULGETS)  && (!exitWhileCycle))
+        if ((ii != MAX_ITERATION_MULGETS) && (val > TOLERANCE_MULGETS))
         {
             for (int i=0; i<nrStations;i++)
             {
                 for (int j=i+1;j<nrStations;j++)
                 {
                     M[i][j] += kiter*(matrixOccurrence[i][j]-K[i][j]);
-                    M[j][i] = MINVALUE(M[i][j],ONELESSEPSILON);
-
+                    M[j][i] = M[i][j];
+                    //M[j][i] = MINVALUE(M[i][j],ONELESSEPSILON);
                 }
 
             }
         }
+        //printf("iter %d value %f \n",ii,val);
+
     }  // end of the while cycle
 
 

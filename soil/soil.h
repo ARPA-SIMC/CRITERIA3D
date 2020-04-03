@@ -139,24 +139,6 @@
         };
 
 
-        class Crit3DSoil
-        {
-        public:
-            int id;
-            std::string code;
-            std::string name;
-            unsigned int nrHorizons;
-            double totalDepth;                  /*!<   [m]  */
-            std::vector <Crit3DHorizon> horizon;
-
-            Crit3DSoil();
-            void initialize(const std::string &soilCode, int nrHorizons);
-            void cleanSoil();
-            void addHorizon(int nHorizon, Crit3DHorizon *newHorizon);
-            void deleteHorizon(int nHorizon);
-        };
-
-
         class Crit3DLayer
         {
         public:
@@ -175,7 +157,37 @@
             Crit3DHorizon *horizon;
 
             Crit3DLayer();
+
+            bool setLayer(Crit3DHorizon *horizonPointer);
+            double getVolumetricWaterContent();
+            double getDegreeOfSaturation();
+            double getWaterPotential();
+            double getWaterConductivity();
         };
+
+
+        class Crit3DSoil
+        {
+        public:
+            int id;
+            std::string code;
+            std::string name;
+            unsigned int nrHorizons;
+            double totalDepth;                  /*!<   [m]  */
+            std::vector <Crit3DHorizon> horizon;
+
+            Crit3DSoil();
+
+            void initialize(const std::string &soilCode, int nrHorizons);
+            void cleanSoil();
+            void addHorizon(int nHorizon, Crit3DHorizon *newHorizon);
+            void deleteHorizon(int nHorizon);
+            int getHorizonIndex(double depth);
+
+            bool setSoilLayers(double layerThicknessMin, double geometricFactor,
+                               std::vector<Crit3DLayer> &soilLayers, std::string &myError);
+        };
+
 
         class Crit3DFittingOptions
         {
@@ -195,6 +207,8 @@
         int getNLTextureClass(double sand, double silt, double clay);
 
         int getHorizonIndex(Crit3DSoil* soil, double depth);
+        int getSoilLayerIndex(std::vector<soil::Crit3DLayer> &soilLayers, double depth);
+
         double getFieldCapacity(Crit3DHorizon* horizon, soil::units unit);
         double getWiltingPoint(soil::units unit);
 
@@ -219,12 +233,8 @@
         double estimateTotalPorosity(Crit3DHorizon* horizon, double bulkDensity);
         double estimateThetaSat(Crit3DHorizon* horizon, double bulkDensity);
 
-        double getVolumetricWaterContent(Crit3DLayer* layer);
         double getWaterContentFromPsi(double signPsi, Crit3DLayer* layer);
-        double getWaterContentFromAW(double availableWater, Crit3DLayer* layer);
-
-        double getWaterPotential(Crit3DLayer* layer);
-        double getWaterConductivity(Crit3DLayer* layer);
+        double getWaterContentFromAW(double availableWater, const Crit3DLayer &layer);
 
         bool setHorizon(Crit3DHorizon* horizon, Crit3DTextureClass* textureClassList,
                         Crit3DFittingOptions *fittingOptions, std::string* error);

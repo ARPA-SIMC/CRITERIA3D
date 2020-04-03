@@ -904,9 +904,14 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
                randomMatrixNormalDistribution[i][j] = myrandom::normalRandom(&gasDevIset,&gasDevGset);
           }
       }
-      printf("step 9/9 substep %d/4\n",iSeason+1);
-      weatherGenerator2D::spatialIterationAmounts(simulatedPrecipitationAmounts[iSeason].matrixK , simulatedPrecipitationAmounts[iSeason].matrixM,randomMatrixNormalDistribution,lengthSeason[iSeason]*parametersModel.yearOfSimulation,occurrenceSeason,phatAlpha,phatBeta,simulatedPrecipitationAmountsSeasonal);
 
+      weatherGenerator2D::spatialIterationAmounts(simulatedPrecipitationAmounts[iSeason].matrixK , simulatedPrecipitationAmounts[iSeason].matrixM,randomMatrixNormalDistribution,lengthSeason[iSeason]*parametersModel.yearOfSimulation,occurrenceSeason,phatAlpha,phatBeta,simulatedPrecipitationAmountsSeasonal);
+      time_t rawtime;
+      struct tm * timeinfo;
+      time ( &rawtime );
+      timeinfo = localtime ( &rawtime );
+      printf ( "Current local time and date: %s", asctime (timeinfo) );
+      printf("step 9/9 substep %d/4\n",iSeason+1);
       for (int i=0;i<nrStations;i++)
       {
            for (int j=0;j<lengthSeason[iSeason]*parametersModel.yearOfSimulation;j++)
@@ -1192,7 +1197,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
    bool exitWhileCycle = false;
    int nrEigenvaluesLessThan0;
    int counter;
-   while ((val>TOLERANCE_MULGETS) && (ii<MAX_ITERATION_MULGETS) && (!exitWhileCycle))
+   while ((val>TOLERANCE_MULGETS) && (ii<MAX_ITERATION_MULGETS))
    {
        ++ii;
        nrEigenvaluesLessThan0 = 0;
@@ -1230,7 +1235,31 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                    ++counter;
                }
            }
-           matricial::matrixProductSquareMatricesNoCheck(dummyMatrix,dummyMatrix2,nrStations,amountsCorrelationMatrix);
+           int cMatrix, dMatrix, kMatrix;
+           double sumMatrix = 0;
+           for ( cMatrix = 0 ; cMatrix < nrStations ; cMatrix++ )
+           {
+               for ( dMatrix = cMatrix ; dMatrix < nrStations ; dMatrix++ )
+               {
+                   for ( kMatrix = 0 ; kMatrix < nrStations ; kMatrix++ )
+                   {
+                       sumMatrix += dummyMatrix[cMatrix][kMatrix] * dummyMatrix2[kMatrix][dMatrix];
+                   }
+                   amountsCorrelationMatrix[dMatrix][cMatrix] = amountsCorrelationMatrix[cMatrix][dMatrix] = sumMatrix;
+                   sumMatrix = 0.;
+               }
+           }
+           //matricial::matrixProductSquareMatricesNoCheck(dummyMatrix,dummyMatrix2,nrStations,amountsCorrelationMatrix);
+           /*for (int i=0;i<nrStations;i++)
+           {
+               for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
+               {
+                   printf("%f  ",amountsCorrelationMatrix[i][j]);
+               }
+               printf("\n");
+           }
+           pressEnterToContinue();
+            */
            for (int i=0;i<nrStations-1;i++)
            {
                dummyMatrix[i][i] = 1.;
@@ -1286,11 +1315,12 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
        val = 0;
        for (int i=0;i<nrStations;i++)
        {
-           for (int j=0;j<nrStations;j++)
+           for (int j=i;j<nrStations;j++)
            {
                val = MAXVALUE(val,fabs(correlationMatrixSimulatedData[i][j] - initialAmountsCorrelationMatrix[i][j]));
            }
        }
+
        if (val < fabs(minimalValueToExitFromCycle))
        {
            minimalValueToExitFromCycle = val;
@@ -1300,11 +1330,32 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
        {
            ++counterConvergence;
        }
-       if (counterConvergence > 20)
+       if (counterConvergence > 30)
        {
-           if (val <= fabs(minimalValueToExitFromCycle) + TOLERANCE_MULGETS) exitWhileCycle = true;
+           if (val <= fabs(minimalValueToExitFromCycle) + TOLERANCE_MULGETS)
+           {
+               for (int i=0;i<nrStations;i++)
+               {
+                   free(dummyMatrix[i]);
+                   free(dummyMatrix2[i]);
+                   free(dummyMatrix3[i]);
+                   free(initialAmountsCorrelationMatrix[i]);
+               }
+
+
+                free(dummyMatrix);
+                free(dummyMatrix2);
+                free(dummyMatrix3);
+                free(correlationArray);
+                free(eigenvalues);
+                free(eigenvectors);
+                free(initialAmountsCorrelationMatrix);
+
+               return;
+           }
        }
-       if (ii != MAX_ITERATION_MULGETS && val> TOLERANCE_MULGETS && (!exitWhileCycle))
+
+       if (ii != MAX_ITERATION_MULGETS && val> TOLERANCE_MULGETS )
        {
            for (int i=0;i<nrStations;i++)
            {
@@ -1317,12 +1368,12 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                    else
                    {
                        amountsCorrelationMatrix[i][j] += kiter*(initialAmountsCorrelationMatrix[i][j]-correlationMatrixSimulatedData[i][j]);
-                       amountsCorrelationMatrix[i][j] = MINVALUE(amountsCorrelationMatrix[i][j],ONELESSEPSILON);
+                       amountsCorrelationMatrix[i][j] = MINVALUE(amountsCorrelationMatrix[i][j],1);
                    }
                }
            }
        }
-       //printf(" iteration step %d\n", ii);
+       //printf("iter %d value %f \n",ii,val);
    }
    // free memory
    for (int i=0;i<nrStations;i++)

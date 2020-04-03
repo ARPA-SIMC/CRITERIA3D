@@ -300,12 +300,7 @@ std::string Crit3DShapeHandler::getStringValue(int shapeNumber, std::string fiel
     int fieldPos = getFieldPos(fieldName);
     if (fieldPos == -1) return "";
 
-    DBFFieldType fieldType = getFieldType(fieldPos);
-    if (fieldType == FTString)
-    {
-        return readStringAttribute(shapeNumber, fieldPos);
-    }
-    else return "";
+    return readStringAttribute(shapeNumber, fieldPos);
 }
 
 

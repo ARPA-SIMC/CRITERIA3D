@@ -7,6 +7,7 @@
     #ifndef _VECTOR_
         #include <vector>
     #endif
+    #include <QDir>
 
     class QDate;
     class QDateTime;
@@ -44,5 +45,7 @@
     QStringList FloatVectorToStringList(std::vector <float> myVector);
 
     bool removeDirectory(QString myPath);
+    bool searchDocPath(QString* docPath);
+    bool searchDataPath(QString* dataPath);
 
 #endif // UTILITIES_H

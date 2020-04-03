@@ -168,12 +168,12 @@ void Crit3DInterpolationSettings::setValueSelectedCombination(unsigned int index
     selectedCombination.setValue(index, isActive);
 }
 
-int Crit3DInterpolationSettings::getIndexHeight() const
+unsigned Crit3DInterpolationSettings::getIndexHeight() const
 {
     return indexHeight;
 }
 
-void Crit3DInterpolationSettings::setIndexHeight(int value)
+void Crit3DInterpolationSettings::setIndexHeight(unsigned value)
 {
     indexHeight = value;
 }
@@ -228,6 +228,16 @@ void Crit3DInterpolationSettings::setUseInterpolatedTForRH(bool value)
     useInterpolatedTForRH = value;
 }
 
+bool Crit3DInterpolationSettings::getProxyLoaded() const
+{
+    return proxyLoaded;
+}
+
+void Crit3DInterpolationSettings::setProxyLoaded(bool value)
+{
+    proxyLoaded = value;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -235,9 +245,13 @@ Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 
 void Crit3DInterpolationSettings::initializeProxy()
 {
+    proxyLoaded = false;
+
     currentProxy.clear();
     selectedCombination.clear();
     optimalCombination.clear();
+
+    indexHeight = NODATA;
 }
 
 void Crit3DInterpolationSettings::initialize()
@@ -265,7 +279,6 @@ void Crit3DInterpolationSettings::initialize()
 
     if (currentCombination == nullptr)
         currentCombination = new Crit3DProxyCombination();
-
 
     initializeProxy();
 }

@@ -190,7 +190,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
     QRadioButton RHmin("Minimum air relative humidity");
     QRadioButton RHmax("Maximum air relative humidity");
     QRadioButton Rad("Solar radiation");
-    QRadioButton ET0HS("Reference evapotranspiration (Hargreaves)");
+    QRadioButton ET0HS("Reference evapotranspiration (Hargreaves-Samani)");
     QRadioButton ET0PM("Reference evapotranspiration (Penman-Monteith)");
     QRadioButton BIC("Hydroclimatic balance");
     QRadioButton WindVAvg("Average wind vector intensity");
@@ -198,13 +198,14 @@ meteoVariable chooseMeteoVariable(Project* myProject)
     QRadioButton WindVDir("Prevailing wind vector direction");
     QRadioButton WindSAvg("Average wind scalar intensity");
     QRadioButton WindSMax("Maximum wind scalar intensity");
+    QRadioButton LeafWD("Leaf wetness");
 
     QRadioButton T("Air temperature");
     QRadioButton P("Precipitation");
     QRadioButton RH("Air relative humidity");
     QRadioButton DewT("Air dew temperature (°C)");
     QRadioButton Irr("Solar irradiance");
-    QRadioButton ET0PMh("Reference evapotranspiration (Hargreaves)");
+    QRadioButton ET0PMh("Reference evapotranspiration (Penman-Monteith)");
     QRadioButton WSInt("Wind scalar intensity");
     QRadioButton WVInt("Wind vector intensity");
     QRadioButton WVDir("Wind vector direction");
@@ -230,6 +231,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
         layoutVariable.addWidget(&WindVAvg);
         layoutVariable.addWidget(&WindVMax);
         layoutVariable.addWidget(&WindVDir);
+        layoutVariable.addWidget(&LeafWD);
 
         if (myCurrentVar == dailyAirTemperatureMin)
             Tmin.setChecked(true);
@@ -263,6 +265,8 @@ meteoVariable chooseMeteoVariable(Project* myProject)
             WindVMax.setChecked(true);
         else if (myCurrentVar == dailyWindVectorDirectionPrevailing)
             WindVDir.setChecked(true);
+        else if (myCurrentVar == dailyLeafWetness)
+            LeafWD.setChecked(true);
     }
     else if (myProject->getCurrentFrequency() == hourly)
     {
@@ -357,6 +361,8 @@ meteoVariable chooseMeteoVariable(Project* myProject)
            return (dailyWindVectorIntensityMax);
        else if (WindVDir.isChecked())
            return (dailyWindVectorDirectionPrevailing);
+       else if (LeafWD.isChecked())
+           return (dailyLeafWetness);
    }
 
    if (myProject->getCurrentFrequency() == hourly)
@@ -389,10 +395,3 @@ meteoVariable chooseMeteoVariable(Project* myProject)
 
    return noMeteoVar;
 }
-
-
-
-
-
-
-

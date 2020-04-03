@@ -141,7 +141,7 @@ unsigned sortPointsByDistance(unsigned maxIndex, vector <Crit3DInterpolationData
 }
 
 
-void computeDistances(vector <Crit3DInterpolationDataPoint> &myPoints,  Crit3DInterpolationSettings* mySettings,
+void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint> &myPoints,  Crit3DInterpolationSettings* mySettings,
                       float x, float y, float z, bool excludeSupplemental)
 {
     int row, col;
@@ -155,7 +155,7 @@ void computeDistances(vector <Crit3DInterpolationDataPoint> &myPoints,  Crit3DIn
             myPoints[i].distance = gis::computeDistance(x, y, float((myPoints[i]).point->utm.x) , float((myPoints[i]).point->utm.y));
             myPoints[i].deltaZ = float(fabs(myPoints[i].point->z - z));
 
-            if (mySettings->getUseTAD())
+            if (mySettings->getUseTAD() && getUseTadVar(myVar))
             {
                 float topoDistance = 0.;
                 float kh = mySettings->getTopoDist_Kh();
@@ -186,7 +186,7 @@ void computeDistances(vector <Crit3DInterpolationDataPoint> &myPoints,  Crit3DIn
     return;
 }
 
-bool neighbourhoodVariability(std::vector <Crit3DInterpolationDataPoint> &myInterpolationPoints,
+bool neighbourhoodVariability(meteoVariable myVar, std::vector <Crit3DInterpolationDataPoint> &myInterpolationPoints,
                               Crit3DInterpolationSettings* mySettings,
                               float x, float y, float z, int nMax,
                               float* devSt, float* devStDeltaZ, float* minDistance)
@@ -197,7 +197,7 @@ bool neighbourhoodVariability(std::vector <Crit3DInterpolationDataPoint> &myInte
     vector <float> deltaZ;
     vector <Crit3DInterpolationDataPoint> validPoints;
 
-    computeDistances(myInterpolationPoints, mySettings, x, y, z, true);
+    computeDistances(myVar, myInterpolationPoints, mySettings, x, y, z, true);
     max_points = sortPointsByDistance(nMax, myInterpolationPoints, validPoints);
 
     if (max_points > 1)
@@ -231,10 +231,10 @@ bool neighbourhoodVariability(std::vector <Crit3DInterpolationDataPoint> &myInte
 }
 
 
-bool regressionSimple(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode,
-                      int proxyPosition, bool isZeroIntercept, float* myCoeff, float* myIntercept, float* myR2)
+bool regressionSimple(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+                      unsigned proxyPosition, bool isZeroIntercept, float* myCoeff, float* myIntercept, float* myR2)
 {
-    long i;
+    unsigned i;
     float myProxyValue;
     Crit3DInterpolationDataPoint myPoint;
     vector <float> myValues, myZ;
@@ -246,17 +246,20 @@ bool regressionSimple(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool
     myValues.clear();
     myZ.clear();
 
-    for (i = 0; i < long(myPoints.size()); i++)
+    for (i = 0; i < myPoints.size(); i++)
     {
         myPoint = myPoints[i];
         myProxyValue = NODATA;
-        if (myPoint.isActive && checkLapseRateCode(myPoint.lapseRateCode, useLapseRateCode, true))
+        if (myPoint.isActive)
         {
-            myProxyValue = myPoint.getProxyValue(proxyPosition);
-            if (myProxyValue != NODATA)
+            if (proxyPosition != mySettings->getIndexHeight() || checkLapseRateCode(myPoint.lapseRateCode, mySettings->getUseLapseRateCode(), true))
             {
-                myValues.push_back(myPoint.value);
-                myZ.push_back(myProxyValue);
+                myProxyValue = myPoint.getProxyValue(proxyPosition);
+                if (! isEqual(myProxyValue, NODATA))
+                {
+                    myValues.push_back(myPoint.value);
+                    myZ.push_back(myProxyValue);
+                }
             }
         }
     }
@@ -276,7 +279,7 @@ bool regressionGeneric(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cri
 {
     float q, m, r2;
 
-    if (! regressionSimple(myPoints, mySettings->getUseLapseRateCode(), proxyPos, isZeroIntercept, &m, &q, &r2))
+    if (! regressionSimple(myPoints, mySettings, proxyPos, isZeroIntercept, &m, &q, &r2))
         return false;
 
     Crit3DProxy* myProxy = mySettings->getProxy(proxyPos);
@@ -287,15 +290,14 @@ bool regressionGeneric(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cri
 
 
 bool regressionSimpleT(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
-                       Crit3DTime myTime, meteoVariable myVar, int orogProxyPos)
+                       Crit3DTime myTime, meteoVariable myVar, unsigned orogProxyPos)
 {
     float q, m, r2;
-    bool useLRCode = mySettings->getUseLapseRateCode();
 
     Crit3DProxy* myProxyOrog = mySettings->getProxy(orogProxyPos);
     myProxyOrog->initializeOrography();
 
-    if (! regressionSimple(myPoints, useLRCode, orogProxyPos, false, &m, &q, &r2))
+    if (! regressionSimple(myPoints, mySettings, orogProxyPos, false, &m, &q, &r2))
         return false;
 
     if (r2 < mySettings->getMinRegressionR2())
@@ -309,7 +311,7 @@ bool regressionSimpleT(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cri
     {
         myProxyOrog->setInversionLapseRate(m);
 
-        float maxZ = MINVALUE(getMaxHeight(myPoints, useLRCode), mySettings->getMaxHeightInversion());
+        float maxZ = MINVALUE(getMaxHeight(myPoints, mySettings->getUseLapseRateCode()), mySettings->getMaxHeightInversion());
         myProxyOrog->setLapseRateH1(maxZ);
         myProxyOrog->setRegressionSlope(myClimate->getClimateLapseRate(myVar, myTime));
         myProxyOrog->setInversionIsSignificative(true);
@@ -364,8 +366,6 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
     float DELTAZ_INI = 80.;
     float maxHeightInv = mySettings->getMaxHeightInversion();
 
-    bool useLRCode = mySettings->getUseLapseRateCode();
-
     Crit3DProxy* myProxyOrog = mySettings->getProxy(orogProxyPos);
 
     mySignificativeR2 = MAXVALUE(mySettings->getMinRegressionR2(), float(0.2));
@@ -381,8 +381,8 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
 
     myProxyOrog->setRegressionSlope(climateLapseRate);
 
-    maxPointsZ = getMaxHeight(myPoints, useLRCode);
-    heightInf = getMinHeight(myPoints, useLRCode);
+    maxPointsZ = getMaxHeight(myPoints, mySettings->getUseLapseRateCode());
+    heightInf = getMinHeight(myPoints, mySettings->getUseLapseRateCode());
 
     if (maxPointsZ == heightInf)
         return false;
@@ -401,7 +401,7 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
         while (myAvg == NODATA)
         {
             heightSup = heightSup + deltaZ;
-            myAvg = findHeightIntervalAvgValue(useLRCode, myPoints, heightInf, heightSup, maxPointsZ);
+            myAvg = findHeightIntervalAvgValue(mySettings->getUseLapseRateCode(), myPoints, heightInf, heightSup, maxPointsZ);
         }
         myIntervalsHeight.push_back((heightSup + heightInf) / float(2.));
         myIntervalsValues.push_back(myAvg);
@@ -427,7 +427,7 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
 
     /*! create vectors below and above inversion */
     for (i = 0; i < long(myPoints.size()); i++)
-        if (myPoints[i].point->z != NODATA && checkLapseRateCode(myPoints[i].lapseRateCode, useLRCode, true))
+        if (myPoints[i].point->z != NODATA && checkLapseRateCode(myPoints[i].lapseRateCode, mySettings->getUseLapseRateCode(), true))
         {
             if (myPoints[i].point->z <= myProxyOrog->getLapseRateH1())
             {
@@ -458,7 +458,7 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
     /*! only positive lapse rate*/
     if (myProxyOrog->getInversionIsSignificative() && myIntervalsValues1.size() == myIntervalsValues.size())
     {
-        if (! regressionSimple(myPoints, useLRCode, orogProxyPos, false, &m, &q, &r2))
+        if (! regressionSimple(myPoints, mySettings, orogProxyPos, false, &m, &q, &r2))
             return false;
 
         if (r2 >= mySignificativeR2)
@@ -501,7 +501,7 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
     /*! inversion is not significant with data neither with intervals */
     if (r2_values < mySignificativeR2Inv && r2_intervals < mySignificativeR2Inv)
     {
-        if (! regressionSimple(myPoints, useLRCode, orogProxyPos, false, &m, &q, &r2))
+        if (! regressionSimple(myPoints, mySettings, orogProxyPos, false, &m, &q, &r2))
             return false;
 
         /*! case 0: regression with all data much significant */
@@ -550,7 +550,7 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
         lapseRateT1 = NODATA;
 
         /*! case 2: regression with data */
-        if (! regressionSimple(myPoints, useLRCode, orogProxyPos, false, &m, &q, &r2))
+        if (! regressionSimple(myPoints, mySettings, orogProxyPos, false, &m, &q, &r2))
             return false;
 
         if (r2 >= mySignificativeR2)
@@ -904,6 +904,19 @@ bool getUseDetrendingVar(meteoVariable myVar)
         return false;
 }
 
+bool getUseTadVar(meteoVariable myVar)
+{
+    //exclude large scale variables
+    if (myVar == globalIrradiance ||
+            myVar == atmTransmissivity ||
+            myVar == dailyGlobalRadiation ||
+            myVar == atmPressure ||
+            myVar == dailyWaterTableDepth )
+
+        return false;
+    else
+        return true;
+}
 
 void detrendPoints(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
                    meteoVariable myVar, unsigned pos)
@@ -1134,7 +1147,7 @@ void optimalDetrending(meteoVariable myVar,
             detrending(interpolationPoints, myCombination, mySettings, myClimate, myVar, myTime);
             mySettings->setCurrentCombination(&myCombination);
 
-            if (mySettings->getUseTAD())
+            if (mySettings->getUseTAD() && getUseTadVar(myVar))
                 topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, myTime);
 
             if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, true, true))
@@ -1191,7 +1204,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         }
     }
 
-    if (mySettings->getUseTAD())
+    if (mySettings->getUseTAD() && getUseTadVar(myVar))
         topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, myTime);
 
     return (true);
@@ -1207,7 +1220,7 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
 
     float myResult = NODATA;
 
-    computeDistances(myPoints, mySettings, myX, myY, myZ, excludeSupplemental);
+    computeDistances(myVar, myPoints, mySettings, myX, myY, myZ, excludeSupplemental);
 
     if (mySettings->getInterpolationMethod() == idw)
     {

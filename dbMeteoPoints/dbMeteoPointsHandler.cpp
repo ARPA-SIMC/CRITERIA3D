@@ -2,6 +2,7 @@
 #include "commonConstants.h"
 #include "meteo.h"
 #include "utilities.h"
+#include "basicMath.h"
 
 #include <QtSql>
 
@@ -384,6 +385,12 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
                 value = qry.value(2).toFloat();
                 meteoPoint->setMeteoPointValueH(Crit3DDate(d.date().day(), d.date().month(), d.date().year()),
                                                        d.time().hour(), d.time().minute(), variable, value);
+
+                // copy scalar intensity to vector intensity (instantaneous values are equivalent, following WMO)
+                // should be removed when when we hourly averages are available
+                if (variable == windScalarIntensity)
+                    meteoPoint->setMeteoPointValueH(Crit3DDate(d.date().day(), d.date().month(), d.date().year()),
+                                                           d.time().hour(), d.time().minute(), windVectorIntensity, value);
             }
         }
     }
@@ -527,60 +534,6 @@ std::map<int, meteoVariable> Crit3DMeteoPointsDbHandler::getMapIdMeteoVar() cons
 {
     return _mapIdMeteoVar;
 }
-
-bool Crit3DMeteoPointsDbHandler::readPointProxyValues(Crit3DMeteoPoint* myPoint, Crit3DInterpolationSettings* interpolationSettings)
-{
-    if (myPoint == nullptr) return false;
-
-    QSqlQuery qry(_db);
-    QString proxyField;
-    QString proxyTable;
-    QString statement;
-    int nrProxy;
-    Crit3DProxy* myProxy;
-
-    nrProxy = interpolationSettings->getProxyNr();
-    myPoint->proxyValues.resize(nrProxy);
-
-    for (int i=0; i < nrProxy; i++)
-    {
-        myPoint->proxyValues[i] = NODATA;
-
-        // read only for active proxies
-        if (interpolationSettings->getSelectedCombination().getValue(i))
-        {
-            myProxy = interpolationSettings->getProxy(i);
-            proxyField = QString::fromStdString(myProxy->getProxyField());
-            proxyTable = QString::fromStdString(myProxy->getProxyTable());
-            if (proxyField != "" && proxyTable != "")
-            {
-                statement = QString("SELECT `%1` FROM `%2` WHERE id_point = '%3'").arg(proxyField).arg(proxyTable).arg(QString::fromStdString((*myPoint).id));
-                if(qry.exec(statement))
-                {
-                    qry.last();
-                    if (qry.value(proxyField) != "")
-                        myPoint->proxyValues[i] = qry.value(proxyField).toFloat();
-                }
-            }
-
-            if (myPoint->proxyValues[i] == NODATA)
-            {
-                gis::Crit3DRasterGrid* proxyGrid = myProxy->getGrid();
-                if (proxyGrid == nullptr || ! proxyGrid->isLoaded)
-                    return false;
-                else
-                {
-                    float myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
-                    if (myValue != proxyGrid->header->flag)
-                        myPoint->proxyValues[i] = myValue;
-                }
-            }
-        }
-    }
-
-    return true;
-}
-
 
 QList<Crit3DMeteoPoint> Crit3DMeteoPointsDbHandler::getPropertiesFromDb(const gis::Crit3DGisSettings& gisSettings, QString *errorString)
 {

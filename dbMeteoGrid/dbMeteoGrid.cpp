@@ -400,31 +400,33 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
 
 void Crit3DMeteoGridDbHandler::initMapMySqlVarType()
 {
-    _mapDailyMySqlVarType["DAILY_TMIN"] = "float(4,1)";
-    _mapDailyMySqlVarType["DAILY_TMAX"] = "float(4,1)";
-    _mapDailyMySqlVarType["DAILY_TAVG"] = "float(4,1)";
-    _mapDailyMySqlVarType["DAILY_PREC"] = "float(4,1) UNSIGNED";
-    _mapDailyMySqlVarType["DAILY_RHMIN"] = "tinyint(3) UNSIGNED";
-    _mapDailyMySqlVarType["DAILY_RHMAX"] = "tinyint(3) UNSIGNED";
-    _mapDailyMySqlVarType["DAILY_RHAVG"] = "tinyint(3) UNSIGNED";
-    _mapDailyMySqlVarType["DAILY_RAD"] = "float(5,2) UNSIGNED";
-    _mapDailyMySqlVarType["DAILY_W_INT_AVG"] = "float(3,1) UNSIGNED";
-    _mapDailyMySqlVarType["DAILY_W_DIR"] = "smallint(3) UNSIGNED";
-    _mapDailyMySqlVarType["DAILY_W_INT_MAX"] = "float(3,1) UNSIGNED";
-    _mapDailyMySqlVarType["DAILY_ET0_HS"] = "float(3,1) UNSIGNED";
-    _mapDailyMySqlVarType["DAILY_LEAFW"] = "tinyint(3) UNSIGNED";
+    _mapDailyMySqlVarType[dailyAirTemperatureMin] = "float(4,1)";
+    _mapDailyMySqlVarType[dailyAirTemperatureMax] = "float(4,1)";
+    _mapDailyMySqlVarType[dailyAirTemperatureAvg] = "float(4,1)";
+    _mapDailyMySqlVarType[dailyPrecipitation] = "float(4,1) UNSIGNED";
+    _mapDailyMySqlVarType[dailyAirRelHumidityMin] = "tinyint(3) UNSIGNED";
+    _mapDailyMySqlVarType[dailyAirRelHumidityMax] = "tinyint(3) UNSIGNED";
+    _mapDailyMySqlVarType[dailyAirRelHumidityAvg] = "tinyint(3) UNSIGNED";
+    _mapDailyMySqlVarType[dailyGlobalRadiation] = "float(5,2) UNSIGNED";
+    _mapDailyMySqlVarType[dailyWindScalarIntensityAvg] = "float(3,1) UNSIGNED";
+    _mapDailyMySqlVarType[dailyWindScalarIntensityMax] = "float(3,1) UNSIGNED";
+    _mapDailyMySqlVarType[dailyWindVectorIntensityAvg] = "float(3,1) UNSIGNED";
+    _mapDailyMySqlVarType[dailyWindVectorIntensityMax] = "float(3,1) UNSIGNED";
+    _mapDailyMySqlVarType[dailyWindVectorDirectionPrevailing] = "smallint(3) UNSIGNED";
+    _mapDailyMySqlVarType[dailyReferenceEvapotranspirationHS] = "float(3,1) UNSIGNED";
+    _mapDailyMySqlVarType[dailyReferenceEvapotranspirationPM] = "float(3,1) UNSIGNED";
+    _mapDailyMySqlVarType[dailyLeafWetness] = "tinyint(3) UNSIGNED";
+    _mapDailyMySqlVarType[dailyWaterTableDepth] = "tinyint(3) UNSIGNED";
 
-
-
-    _mapHourlyMySqlVarType["TAVG"] = "float(4,1)";
-    _mapHourlyMySqlVarType["PREC"] = "float(4,1) UNSIGNED";
-    _mapHourlyMySqlVarType["RHAVG"] = "tinyint(3) UNSIGNED";
-    _mapHourlyMySqlVarType["RAD"] = "float(5,1) UNSIGNED";
-    _mapHourlyMySqlVarType["W_INT_AVG"] = "float(3,1) UNSIGNED";
-    _mapHourlyMySqlVarType["W_DIR"] = "smallint(3) UNSIGNED";
-    _mapHourlyMySqlVarType["ET0_HS"] = "float(3,1) UNSIGNED";
-    _mapHourlyMySqlVarType["ET0_PM"] = "float(3,1) UNSIGNED";
-    _mapHourlyMySqlVarType["LEAFW"] = "tinyint(3) UNSIGNED";
+    _mapHourlyMySqlVarType[airTemperature] = "float(4,1)";
+    _mapHourlyMySqlVarType[precipitation] = "float(4,1) UNSIGNED";
+    _mapHourlyMySqlVarType[airRelHumidity] = "tinyint(3) UNSIGNED";
+    _mapHourlyMySqlVarType[globalIrradiance] = "float(5,1) UNSIGNED";
+    _mapHourlyMySqlVarType[windScalarIntensity] = "float(3,1) UNSIGNED";
+    _mapHourlyMySqlVarType[windVectorIntensity] = "float(3,1) UNSIGNED";
+    _mapHourlyMySqlVarType[windVectorDirection] = "smallint(3) UNSIGNED";
+    _mapHourlyMySqlVarType[referenceEvapotranspiration] = "float(3,1) UNSIGNED";
+    _mapHourlyMySqlVarType[leafWetness] = "tinyint(3) UNSIGNED";
 
 }
 
@@ -788,10 +790,7 @@ bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError)
        return false;
     }
     else
-    {
-       qDebug() << "Database: connection ok";
        return true;
-    }
 }
 
 
@@ -1088,7 +1087,6 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString *myError, QString meteo
 
     unsigned row;
     unsigned col;
-    bool initialize = true;
 
     if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
@@ -1312,10 +1310,11 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString *myError, Q
 
     }
 
-
     return true;
 }
 
+
+/*
 std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
 {
     QSqlQuery qry(_db);
@@ -1395,6 +1394,78 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
         }
 
     }
+
+    return dailyVarList;
+} */
+
+
+std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, QString meteoPoint,
+                                    meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
+{
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
+    QDate currentDate, lastDateDB;
+    unsigned int previousIndex, currentIndex;
+    std::vector<float> dailyVarList;
+
+    int varCode = getDailyVarCode(variable);
+    if (varCode == NODATA)
+    {
+        *myError = "Variable not existing";
+        return dailyVarList;
+    }
+
+    unsigned row, col;
+    if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
+    {
+        *myError = "Missing MeteoPoint id";
+        return dailyVarList;
+    }
+
+    QString statement = QString("SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`").arg(tableD).arg(varCode).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
+    if(! qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return dailyVarList;
+    }
+
+    // read first date
+    qry.first();
+    if (!getValue(qry.value(_tableDaily.fieldTime), firstDateDB))
+    {
+        *myError = "Missing first date";
+        return dailyVarList;
+    }
+
+    // read last date
+    qry.last();
+    if (!getValue(qry.value(_tableDaily.fieldTime), &lastDateDB))
+    {
+        *myError = "Missing last date";
+        return dailyVarList;
+    }
+
+    // resize vector
+    int nrValues = int(firstDateDB->daysTo(lastDateDB)) + 1;
+    dailyVarList.resize(unsigned(nrValues));
+
+    // assign values
+    previousIndex = 0;
+    qry.first();
+    do
+    {
+        currentDate = qry.value(_tableDaily.fieldTime).toDate();
+        currentIndex = unsigned(firstDateDB->daysTo(currentDate));
+
+        for (unsigned int i = previousIndex+1; i < currentIndex; i++)
+        {
+            dailyVarList[i] = NODATA;
+        }
+
+        dailyVarList[currentIndex] = qry.value("Value").toFloat();
+        previousIndex = currentIndex;
+
+    } while (qry.next());
 
     return dailyVarList;
 }
@@ -1712,7 +1783,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataFF(QString *myError, QString
     for (unsigned int i=0; i < _tableDaily.varcode.size(); i++)
     {
         QString var = _tableDaily.varcode[i].varPragaName;
-        QString type = _mapDailyMySqlVarType[var];
+        QString type = _mapDailyMySqlVarType[getMeteoVar(var.toStdString())];
         QString varFieldItem = _tableDaily.varcode[i].varField;
         tableFields = tableFields  + ", " + varFieldItem.toLower() + " " + type;
     }
@@ -1803,7 +1874,7 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyFF(QString *myError, QStr
         {
             varField = _tableDaily.varcode[i].varField;
         }
-        QString type = _mapDailyMySqlVarType[var];
+        QString type = _mapDailyMySqlVarType[getMeteoVar(var.toStdString())];
 
         QString varFieldItem = _tableDaily.varcode[i].varField;
         tableFields = tableFields  + ", " + varFieldItem.toLower() + " " + type;
@@ -1945,7 +2016,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyData(QString *myError, QString 
         foreach (meteoVariable meteoVar, meteoVariableList)
             if (getVarFrequency(meteoVar) == hourly)
             {
-                for (QDateTime myTime = firstTime; myTime < lastTime; myTime = myTime.addSecs(3600))
+                for (QDateTime myTime = firstTime; myTime <= lastTime; myTime = myTime.addSecs(3600))
                 {
                     float value = meteoGrid()->meteoPoint(row,col).getMeteoPointValueH(getCrit3DDate(myTime.date()), myTime.time().hour(), myTime.time().minute(), meteoVar);
                     QString valueS = QString("'%1'").arg(value);
@@ -1978,7 +2049,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataFF(QString *myError, QStrin
     for (unsigned int i=0; i < _tableHourly.varcode.size(); i++)
     {
         QString var = _tableHourly.varcode[i].varPragaName;
-        QString type = _mapHourlyMySqlVarType[var];
+        QString type = _mapHourlyMySqlVarType[getMeteoVar(var.toStdString())];
         QString varFieldItem = _tableHourly.varcode[i].varField;
         tableFields = tableFields  + ", " + varFieldItem.toLower() + " " + type;
     }
@@ -1994,7 +2065,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataFF(QString *myError, QStrin
     {
         statement =  QString(("REPLACE INTO `%1` VALUES")).arg(tableH);
 
-        for (QDateTime myTime = firstTime; myTime < lastTime; myTime = myTime.addSecs(3600))
+        for (QDateTime myTime = firstTime; myTime <= lastTime; myTime = myTime.addSecs(3600))
         {
             statement += QString(" ('%1',").arg(myTime.toString("yyyy-MM-dd hh:mm"));
             for (unsigned int j = 0; j < _tableHourly.varcode.size(); j++)
@@ -2073,7 +2144,7 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridHourlyFF(QString *myError, QSt
             varField = _tableHourly.varcode[i].varField;
         }
         QString varFieldItem = _tableHourly.varcode[i].varField;
-        QString type = _mapHourlyMySqlVarType[var];
+        QString type = _mapHourlyMySqlVarType[getMeteoVar(var.toStdString())];
         tableFields = tableFields  + ", " + varFieldItem.toLower() + " " + type;
     }
 

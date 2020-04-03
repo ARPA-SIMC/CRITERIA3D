@@ -266,7 +266,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
                     idArkimet = fields[2].toInt();
 
                     if (idArkimet == PREC_ID)
-                        if ((prec0024 && fields[0].mid(8,2) == "08") || (!prec0024 && fields[0].mid(8,2) == "00"))
+                        if ((prec0024 && fields[0].mid(8,2) != "00") || (!prec0024 && fields[0].mid(8,2) != "08"))
                             continue;
 
                     value = fields[3].toDouble();
@@ -322,10 +322,12 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
     }
 
     // start from 01:00
-    QDateTime startTime = QDateTime(startDate);
+    QDateTime startTime((QDateTime(startDate)));
+    startTime.setTimeSpec(Qt::UTC);
     startTime = startTime.addSecs(3600);
 
-    QDateTime endTime = QDateTime(endDate);
+    QDateTime endTime((QDateTime(endDate)));
+    endTime.setTimeSpec(Qt::UTC);
     endTime = endTime.addSecs(3600 * 24);
 
     // reftime

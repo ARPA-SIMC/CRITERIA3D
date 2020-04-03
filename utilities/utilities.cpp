@@ -9,7 +9,7 @@
 #include <QSqlDatabase>
 #include <QSqlDriver>
 #include <QSqlRecord>
-#include <QDir>
+
 
 QStringList getFields(QSqlDatabase* db_, QString tableName)
 {
@@ -393,3 +393,52 @@ bool removeDirectory(QString myPath)
 }
 
 
+bool searchDocPath(QString* docPath)
+{
+    QString myPath = QDir::currentPath();
+    QString myRoot = QDir::rootPath();
+
+    bool isFound = false;
+    while (! isFound)
+    {
+        if (QDir(myPath + "/DOC").exists())
+        {
+            isFound = true;
+            break;
+        }
+        if (QDir::cleanPath(myPath) == myRoot)
+            break;
+
+        myPath = QFileInfo(myPath).dir().absolutePath();
+    }
+    if (! isFound) return false;
+
+    *docPath = QDir::cleanPath(myPath) + "/DOC/";
+    return true;
+}
+
+
+bool searchDataPath(QString* dataPath)
+{
+    QString myPath = QDir::currentPath();
+    QString myRoot = QDir::rootPath();
+
+    bool isFound = false;
+    while (! isFound)
+    {
+        if (QDir(myPath + "/DATA").exists())
+        {
+            isFound = true;
+            break;
+        }
+
+        if (QDir::cleanPath(myPath) == myRoot)
+            break;
+
+        myPath = QFileInfo(myPath).dir().absolutePath();
+    }
+    if (! isFound) return false;
+
+    *dataPath = QDir::cleanPath(myPath) + "/DATA/";
+    return true;
+}

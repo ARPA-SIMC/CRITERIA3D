@@ -202,11 +202,11 @@ void ProxyDialog::changedTable()
     _field.addItems(getFields(&db, _table.currentText()));
 }
 
-void ProxyDialog::changedProxy()
+void ProxyDialog::changedProxy(bool savePrevious)
 {
     if (_proxyCombo.count() == 0) return;
 
-    if (proxyIndex != _proxyCombo.currentIndex())
+    if (proxyIndex != _proxyCombo.currentIndex() && savePrevious)
     {
         Crit3DProxy *myProxy = &(_proxy.at(unsigned(proxyIndex)));
         saveProxy(myProxy);
@@ -283,7 +283,7 @@ void ProxyDialog::deleteProxy()
 
     _proxy.erase(_proxy.begin() + _proxyCombo.currentIndex());
     listProxies();
-    changedProxy();
+    changedProxy(false);
 }
 
 void ProxyDialog::saveProxy(Crit3DProxy* myProxy)
@@ -321,7 +321,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
     _proxyCombo.clear();
     listProxies();
 
-    connect(&_proxyCombo, &QComboBox::currentTextChanged, [=](){ this->changedProxy(); });
+    connect(&_proxyCombo, &QComboBox::currentTextChanged, [=](){ this->changedProxy(true); });
     layoutProxyCombo->addWidget(&_proxyCombo);
 
     QPushButton *_add = new QPushButton("add");
@@ -379,7 +379,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
     {
         proxyIndex = 0;
         _proxyCombo.setCurrentIndex(proxyIndex);
-        changedProxy();
+        changedProxy(true);
     }
 
     exec();
@@ -392,11 +392,7 @@ bool ProxyDialog::checkProxies(QString *error)
 
     for (unsigned i=0; i < _proxy.size(); i++)
     {
-        if (!_project->checkProxy(QString::fromStdString(_proxy[i].getName()),
-                                  QString::fromStdString(_proxy[i].getGridName()),
-                                  QString::fromStdString(_proxy[i].getProxyTable()),
-                                  QString::fromStdString(_proxy[i].getProxyField()),
-                                  error))
+        if (!_project->checkProxy(_proxy[i], error))
             return false;
 
         table_ = _proxy[i].getProxyTable();
@@ -420,14 +416,18 @@ void ProxyDialog::saveProxies()
     _project->interpolationSettings.initializeProxy();
     _project->qualityInterpolationSettings.initializeProxy();
 
+    std::vector <Crit3DProxy> proxyList;
+    std::deque <bool> proxyActive;
+    std::vector <int> proxyOrder;
+
     for (unsigned i=0; i < _proxy.size(); i++)
     {   
-        _project->addProxyToProject(QString::fromStdString(_proxy[i].getName()),
-                           QString::fromStdString(_proxy[i].getGridName()),
-                           QString::fromStdString(_proxy[i].getProxyTable()),
-                           QString::fromStdString(_proxy[i].getProxyField()),
-                            _proxy[i].getForQualityControl(), true);
+        proxyList.push_back(_proxy[i]);
+        proxyActive.push_back(true);
+        proxyOrder.push_back(i+1);
     }
+
+    _project->addProxyToProject(proxyList, proxyActive, proxyOrder);
 }
 
 
@@ -444,16 +444,22 @@ void ProxyDialog::accept()
     if (checkProxies(&error))
     {
         saveProxies();
-        _project->updateProxy();
+        _project->interpolationSettings.setProxyLoaded(false);
 
-        QMessageBox::StandardButton reply;
-          reply = QMessageBox::question(this, "Save interpolation proxies", "Save changes to settings?",
+        if (_project->updateProxy())
+        {
+            QMessageBox::StandardButton reply;
+            reply = QMessageBox::question(this, "Save interpolation proxies", "Save changes to settings?",
                                         QMessageBox::Yes|QMessageBox::No);
 
-        if (reply == QMessageBox::Yes)
-            _project->saveProxies();
+            if (reply == QMessageBox::Yes)
+                _project->saveProxies();
 
-        QDialog::done(QDialog::Accepted);
+            QDialog::done(QDialog::Accepted);
+        }
+        else {
+            QMessageBox::information(nullptr, "Error updating proxy", error);
+        }
     }
     else
         QMessageBox::information(nullptr, "Proxy error", error);

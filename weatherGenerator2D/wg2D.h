@@ -11,7 +11,7 @@
     #endif
 
     #define TOLERANCE_MULGETS 0.001
-    #define MAX_ITERATION_MULGETS 200
+    #define MAX_ITERATION_MULGETS 180
     #define ONELESSEPSILON 0.999999
 
 
@@ -164,6 +164,7 @@
         int lengthSeason[4];
         int numberObservedDJF,numberObservedMAM,numberObservedJJA,numberObservedSON;
         int numberObservedMax;
+        bool computeStatistics;
         TObsDataD** obsDataD;
         TObsPrecDataD** obsPrecDataD;
         TprecOccurrence** precOccurence;
@@ -210,7 +211,7 @@
         double** occurrencePrecGenerated;
         double** amountsPrecGenerated;
 
-        ToutputWeatherData *outputWeatherData;
+
 
         double* normalRandomNumbers;
 
@@ -249,22 +250,23 @@
         void initializeMultiOccurrenceTemperature(int length);
         void initializeTemperaturesOutput(int length);
         void createAmountOutputSerie();
+        void prepareWeatherGeneratorOutput();
 
-        void getWeatherGeneratorOutput();
         void initializeOutputData(int* nrDays);
         void randomSet(double *arrayNormal,int dimArray);
 
     public:
         // variables
-
+        ToutputWeatherData *outputWeatherData;
         //functions
         weatherGenerator2D() {}
         bool initializeData(int lengthDataSeries, int nrStations);
-        void initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D);
+        void initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D, bool computeStatistics);
         void setObservedData(TObsDataD** observations);
         void computeWeatherGenerator2D();
         void pressEnterToContinue();
         void initializeRandomNumbers(double* vector);
+        ToutputWeatherData* getWeatherGeneratorOutput(int startingYear);
     };
 
 #endif // WEATHERGENERATOR2D_H

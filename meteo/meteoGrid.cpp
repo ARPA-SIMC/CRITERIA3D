@@ -602,6 +602,51 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(int row, int col, gis::Crit3DR
     }
 }
 
+void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
+{
+    int nrDays = dateIni.daysTo(dateFin) + 1;
+
+    for (unsigned row = 0; row < gridStructure().header().nrRows; row++)
+        for (unsigned col = 0; col < gridStructure().header().nrCols; col++)
+            if (_meteoPoints[row][col]->active)
+            {
+                _meteoPoints[row][col]->initializeObsDataH(1, nrDays, dateIni);
+                _meteoPoints[row][col]->initializeObsDataD(nrDays, dateIni);
+            }
+}
+
+void Crit3DMeteoGrid::emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin)
+{
+    for (unsigned row = 0; row < gridStructure().header().nrRows; row++)
+        for (unsigned col = 0; col < gridStructure().header().nrCols; col++)
+        {
+            _meteoPoints[row][col]->emptyObsDataH(dateIni, dateFin);
+            _meteoPoints[row][col]->emptyObsDataD(dateIni, dateFin);
+        }
+}
+
+void Crit3DMeteoGrid::computeWindVectorHourly(const Crit3DDate myDate, const int myHour)
+{
+    float intensity = NODATA, direction = NODATA;
+    float u,v;
+
+    for (unsigned row = 0; row < gridStructure().header().nrRows; row++)
+        for (unsigned col = 0; col < gridStructure().header().nrCols; col++)
+        {
+            u = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorX);
+            v = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorY);
+
+            if (! isEqual(u, NODATA) && ! isEqual(v, NODATA))
+            {
+                if (computeWindPolar(u, v, &intensity, &direction))
+                {
+                    _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorIntensity, intensity);
+                    _meteoPoints[row][col]->setMeteoPointValueH(myDate, myHour, 0, windVectorDirection, direction);
+                }
+            }
+        }
+}
+
 void Crit3DMeteoGrid::spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute,
                                          gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab)
 {

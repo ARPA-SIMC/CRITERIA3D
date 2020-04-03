@@ -114,25 +114,23 @@
             void fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable);
 
             bool findMeteoPointFromId(unsigned *row, unsigned *col, const std::string &code);
-
             bool getMeteoPointActiveId(int row, int col, std::string *id);
-
             bool findFirstActiveMeteoPoint(std::string* id, int* row, int* col);
-
             bool isActiveMeteoPointFromId(const std::string &id);
 
+            void initializeData(Crit3DDate dateIni, Crit3DDate dateFin);
+            void emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin);
             void findGridAggregationPoints(gis::Crit3DRasterGrid* myDEM);
-
             void assignCellAggregationPoints(int row, int col, gis::Crit3DRasterGrid* myDEM, bool excludeNoData);
-
             void spatialAggregateMeteoGrid(meteoVariable myVar, frequencyType freq, Crit3DDate date, int  hour, int minute, gis::Crit3DRasterGrid* myDEM, gis::Crit3DRasterGrid *myRaster, aggregationMethod elab);
-
             double spatialAggregateMeteoGridPoint(Crit3DMeteoPoint myPoint, aggregationMethod elab);
 
             bool getIsElabValue() const;
             void setIsElabValue(bool isElabValue);
 
             void saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<int> > &meteoGridRow, std::vector<std::vector<int> > &meteoGridCol);
+
+            void computeWindVectorHourly(const Crit3DDate myDate, const int myHour);
 
     private:
 

@@ -68,7 +68,7 @@ namespace leafDevelopment
     }
 
 
-    //Antonio - new LAI algorithm
+    // Antonio - new LAI algorithm
     double getNewLai(double fractionTranspirableSoilWater, double previousLai, double a, double b,double laiMIN,double laiMAX,double growthDD,double emergenceDD,double currentDD,double thermalUnits,bool *isSenescence,double* actualLaiMax)
     {
         if (currentDD <= emergenceDD) return laiMIN;
@@ -112,6 +112,22 @@ namespace leafDevelopment
         return stress;
     }
 
+
+    double getLAISenescence(double LaiMin, double LAIStartSenescence, int daysFromStartSenescence)
+    {
+        double a, b;
+        int LENGTH_SENESCENCE = 30;
+
+        if (daysFromStartSenescence > LENGTH_SENESCENCE)
+            return LaiMin;
+
+        a = log(MAXVALUE(LAIStartSenescence, 0.1));
+        b = (log(MAXVALUE(LaiMin, 0.01)) - a) / LENGTH_SENESCENCE;
+
+        return exp(a + b * daysFromStartSenescence);
+    }
+
+
     double getLAICriteria(Crit3DCrop* myCrop, double myDegreeDays)
     {
         // decreasing parameter
@@ -136,21 +152,5 @@ namespace leafDevelopment
         }
     }
 
-    double getLAISenescence(double LaiMin, double LAIStartSenescence, int daysFromStartSenescence)
-    {
-        double a, b;
-        int LENGTH_SENESCENCE = 30;
-
-        if (daysFromStartSenescence > LENGTH_SENESCENCE)
-            return LaiMin;
-
-        a = log(MAXVALUE(LAIStartSenescence, 0.1));
-        b = (log(MAXVALUE(LaiMin, 0.01)) - a) / LENGTH_SENESCENCE;
-
-        return exp(a + b * daysFromStartSenescence);
-    }
-
 }
-
-
 

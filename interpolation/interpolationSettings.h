@@ -41,6 +41,8 @@
     public:
         Crit3DProxy();
 
+        void initializeOrography();
+
         std::string getName() const;
         void setName(const std::string &value);
         gis::Crit3DRasterGrid *getGrid() const;
@@ -62,8 +64,6 @@
         void setInversionLapseRate(float value);
         bool getInversionIsSignificative() const;
         void setInversionIsSignificative(bool value);
-
-        void initializeOrography();
         bool getForQualityControl() const;
         void setForQualityControl(bool value);
         std::string getProxyTable() const;
@@ -120,11 +120,12 @@
         int indexPointCV;
         float topoDist_Kh, topoDist_Kz;
 
+        bool proxyLoaded;
         std::vector <Crit3DProxy> currentProxy;
         Crit3DProxyCombination optimalCombination;
         Crit3DProxyCombination selectedCombination;
         Crit3DProxyCombination *currentCombination;
-        int indexHeight;
+        unsigned indexHeight;
 
     public:
         Crit3DInterpolationSettings();
@@ -182,8 +183,8 @@
         Crit3DProxyCombination* getSelectedCombinationRef();
         void setSelectedCombination(const Crit3DProxyCombination &value);
         void setValueSelectedCombination(unsigned int index, bool isActive);
-        int getIndexHeight() const;
-        void setIndexHeight(int value);
+        unsigned getIndexHeight() const;
+        void setIndexHeight(unsigned value);
         Crit3DProxyCombination *getCurrentCombination() const;
         void setCurrentCombination(Crit3DProxyCombination *value);
         std::vector<Crit3DProxy> getCurrentProxy() const;
@@ -194,6 +195,8 @@
         void setSurfaceRoughness(float value);
         bool getUseInterpolatedTForRH() const;
         void setUseInterpolatedTForRH(bool value);
+        bool getProxyLoaded() const;
+        void setProxyLoaded(bool value);
     };
 
 #endif // INTERPOLATIONSETTINGS_H

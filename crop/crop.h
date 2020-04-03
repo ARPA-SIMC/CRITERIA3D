@@ -12,6 +12,7 @@
     #endif
 
     enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FALLOW, FRUIT_TREE};
+    const int numSpeciesType = 6;
 
     /*!
      * \brief The Crit3DCrop class
@@ -64,20 +65,38 @@
         double LAI;
         double LAIstartSenescence;
         int daysSinceIrrigation;
+        std::vector<double> layerTranspiration;
 
         Crit3DCrop();
 
-        bool isWaterSurplusResistant();
-        int getDaysFromTypicalSowing(int myDoy);
-        int getDaysFromCurrentSowing(int myDoy);
-        bool isInsideTypicalCycle(int myDoy);
-        bool isPluriannual();
-        bool needReset(Crit3DDate myDate, float latitude, float waterTableDepth);
-        void resetCrop(int nrLayers);
+        void clear();
+
+        bool isWaterSurplusResistant() const;
+        int getDaysFromTypicalSowing(int myDoy) const;
+        int getDaysFromCurrentSowing(int myDoy) const;
+        bool isInsideTypicalCycle(int myDoy) const;
+        bool isPluriannual() const;
+
+        void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
+        bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
+        void resetCrop(unsigned int nrLayers);
+        bool updateLAI(double latitude, unsigned int nrLayers, int myDoy);
+        bool dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers, double tmin, double tmax, double waterTableDepth, std::string &myError);
+
+        double getSurfaceCoverFraction();
+        double getMaxEvaporation(double ET0);
+        double getMaxTranspiration(double ET0);
+
+        double getCropWaterDeficit(const std::vector<soil::Crit3DLayer>& soilLayers);
+        double getIrrigationDemand(int doy, double currentPrec, double nextPrec,
+                                   double maxTranpiration, const std::vector<soil::Crit3DLayer>& soilLayers);
+
+        double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer>& soilLayers, double *waterStress);
     };
 
 
     speciesType getCropType(std::string cropType);
+    std::string getCropTypeString(speciesType cropType);
 
     double computeDegreeDays(double myTmin, double myTmax, double myLowerThreshold, double myUpperThreshold);
 

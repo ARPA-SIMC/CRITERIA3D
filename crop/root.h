@@ -4,10 +4,12 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
+    #include <vector>
 
     class Crit3DCrop;
 
     enum rootDistributionType {CYLINDRICAL_DISTRIBUTION, CARDIOID_DISTRIBUTION, GAMMA_DISTRIBUTION};
+    const int numRootDistributionType = 3;
     enum rootGrowthType {LINEAR, EXPONENTIAL, LOGISTIC};
 
     /*!
@@ -26,28 +28,32 @@
         double shapeDeformation;            /*!< [-]   */
 
         /*! variables */
+        double actualRootDepthMax;          /*!< [m]  it takes into account soilDepth */
         double rootLength;                  /*!< [m]  */
         int firstRootLayer;                 /*!< [-]  */
         int lastRootLayer;                  /*!< [-]  */
-        double* rootDensity;                /*!< [-]  */
-        double* transpiration;              /*!< [mm] */
+        std::vector<double> rootDensity;    /*!< [-]  */
 
         /*! state variables */
         double rootDepth;                   /*!<  [m]  current root depth */
 
         Crit3DRoot();
 
+        void clear();
+
     };
 
     namespace root
     {
-        int nrAtoms(soil::Crit3DLayer* layers, int nrLayers, double rootDepthMin, double* minThickness, int* atoms);
+        int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double rootDepthMin, double* minThickness, int* atoms);
         double getRootLengthDD(Crit3DRoot* myRoot, double currentDD, double emergenceDD);
         rootDistributionType getRootDistributionType(int rootShape);
+        rootDistributionType getRootDistributionTypeFromString(std::string rootShape);
+        std::string getRootDistributionTypeString(rootDistributionType rootType);
 
-        double computeRootLength(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
-        double computeRootDepth(Crit3DCrop* myCrop, double soilDepth, double currentDD, double waterTableDepth);
-        bool computeRootDensity(Crit3DCrop* myCrop, soil::Crit3DLayer* layers, int nrLayers, double soilDepth);
+        double computeRootLength(Crit3DCrop* myCrop, double currentDD, double waterTableDepth);
+        double computeRootDepth(Crit3DCrop* myCrop, double currentDD, double waterTableDepth);
+        bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers);
     }
 
 #endif // ROOT_H
