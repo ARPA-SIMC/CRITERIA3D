@@ -177,8 +177,40 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     setLayout(mainLayout);
 }
 
-void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> meteoPoint)
+void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType freq)
 {
+    for (int i = 0; i < lineSeries.size(); i++)
+    {
+        lineSeries[0]->clear();
+    }
+    Crit3DDate firstDate;
+    Crit3DDate myDate;
+    long nDays = 0;
+    if (freq == daily)
+    {
+        nDays = mpVector[0].nrObsDataDaysD;
+        firstDate = mpVector[0].obsDataD[0].date;
+        for (int day = 0; day<nDays; day++)
+        {
+            myDate = firstDate.addDays(day);
+            for (int i = 0; i < lineSeries.size(); i++)
+            {
+                meteoVariable meteoVar = MapDailyMeteoVar.at(lineSeries[i]->name().toStdString());
+                double value = mpVector[0].getMeteoPointValueD(myDate, meteoVar);
+                lineSeries[i]->append(day+1, value);
+            }
+        }
+        // update virtual x axis
+        QDate first(firstDate.year, firstDate.month, firstDate.day);
+        QDate last = first.addDays(nDays);
+        axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
+        axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+    }
+    else if (freq == hourly)
+    {
+        nDays = mpVector[0].nrObsDataDaysH;
+        firstDate = mpVector[0].getMeteoPointHourlyValuesDate(0);
+    }
 
 }
 
