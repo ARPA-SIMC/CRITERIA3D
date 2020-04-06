@@ -6,6 +6,7 @@
     #include <QGroupBox>
     #include <QLineEdit>
     #include <QLabel>
+#include "meteoPoint.h"
 
 
     class Crit3DMeteoWidget : public QWidget
@@ -14,8 +15,11 @@
 
         public:
             Crit3DMeteoWidget();
+            void draw(Crit3DMeteoPoint* meteoPoint);
 
         private:
+            QMap<QString, QStringList> MapCSVDefault;
+            QMap<QString, QStringList> MapCSVStyles;
 
     };
 

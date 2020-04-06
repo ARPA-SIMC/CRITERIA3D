@@ -34,7 +34,7 @@ win32:{
     TARGET = meteoWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../utilities
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities
 
 
 SOURCES += \
