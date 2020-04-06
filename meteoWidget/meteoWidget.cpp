@@ -72,6 +72,19 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
                 qDebug() << "invalid format CSV, missing data";
             }
             MapCSVDefault.insert(key,items);
+            if (items[0] == "line")
+            {
+                QLineSeries* line = new QLineSeries();
+                line->setName(key);
+                line->setColor(QColor(items[1]));
+                lineSeries.append(line);
+            }
+            if (items[0] == "bar")
+            {
+                QBarSet* set = new QBarSet(key);
+                set->setColor(QColor(items[1]));
+                setVector.append(set);
+            }
         }
     }
 
@@ -104,10 +117,67 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
-    this->setLayout(mainLayout);
+    QVBoxLayout *plotLayout = new QVBoxLayout;
+    chart = new QChart();
+    chartView = new QChartView(chart);
+    chartView->setChart(chart);
+
+    axisX = new QBarCategoryAxis();
+    axisXvirtual = new QDateTimeAxis();
+    axisY = new QValueAxis();
+    axisYdx = new QValueAxis();
+
+    QDate first(QDate::currentDate().year(), 1, 1);
+    QDate last(QDate::currentDate().year(), 12, 31);
+    axisX->setTitleText("Date");
+    axisX->setGridLineVisible(false);
+    axisXvirtual->setTitleText("Date");
+    axisXvirtual->setFormat("MMM dd <br> yyyy");
+    axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
+    axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+    axisXvirtual->setTickCount(13);
+
+    axisY->setRange(0,30);
+    axisY->setGridLineVisible(false);
+
+    axisYdx->setRange(0,8);
+    axisYdx->setGridLineVisible(false);
+
+    chart->addAxis(axisX, Qt::AlignBottom);
+    chart->addAxis(axisXvirtual, Qt::AlignBottom);
+    chart->addAxis(axisY, Qt::AlignLeft);
+    chart->addAxis(axisYdx, Qt::AlignRight);
+
+    for (int i = 0; i < lineSeries.size(); i++)
+    {
+        chart->addSeries(lineSeries[i]);
+        lineSeries[i]->attachAxis(axisX);
+        lineSeries[i]->attachAxis(axisY);
+    }
+
+    barSeries = new QBarSeries();
+    for (int i = 0; i < setVector.size(); i++)
+    {
+        barSeries->append(setVector[i]);
+    }
+    if (setVector.size() != 0)
+    {
+        chart->addSeries(barSeries);
+        barSeries->attachAxis(axisX);
+        barSeries->attachAxis(axisYdx);
+    }
+
+    chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+    chartView->setRenderHint(QPainter::Antialiasing);
+    axisX->hide();
+
+    plotLayout->addWidget(chartView);
+    mainLayout->addLayout(plotLayout);
+    setLayout(mainLayout);
 }
 
-void Crit3DMeteoWidget::draw(Crit3DMeteoPoint* meteoPoint)
+void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> meteoPoint)
 {
 
 }
