@@ -179,13 +179,36 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 
 void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType freq)
 {
+
+    // clear all
     for (int i = 0; i < lineSeries.size(); i++)
     {
         lineSeries[0]->clear();
     }
+    QStringList nameBar;
+    QVector<QColor> colorBar;
+    int sizeBarSet = setVector.size();
+
+    for (int i = 0; i < sizeBarSet; i++)
+    {
+        nameBar.append(setVector[i]->label());
+        colorBar.append(setVector[i]->color());
+        barSeries->remove(setVector[i]);
+        setVector.clear();
+
+    }
+    for (int i = 0; i < sizeBarSet; i++)
+    {
+        QBarSet* set = new QBarSet(nameBar[i]);
+        set->setColor(colorBar[i]);
+        setVector.append(set);
+    }
+
+    categories.clear();
     Crit3DDate firstDate;
     Crit3DDate myDate;
     long nDays = 0;
+    double maxBar = 0;
     if (freq == daily)
     {
         nDays = mpVector[0].nrObsDataDaysD;
@@ -193,18 +216,36 @@ void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType f
         for (int day = 0; day<nDays; day++)
         {
             myDate = firstDate.addDays(day);
+            categories.append(QString::number(day+1));
             for (int i = 0; i < lineSeries.size(); i++)
             {
                 meteoVariable meteoVar = MapDailyMeteoVar.at(lineSeries[i]->name().toStdString());
                 double value = mpVector[0].getMeteoPointValueD(myDate, meteoVar);
                 lineSeries[i]->append(day+1, value);
             }
+            for (int j = 0; j < setVector.size(); j++)
+            {
+                meteoVariable meteoVar = MapDailyMeteoVar.at(setVector[j]->label().toStdString());
+                double value = mpVector[0].getMeteoPointValueD(myDate, meteoVar);
+                *setVector[j] << value;
+                if (value > maxBar)
+                {
+                    maxBar = value;
+                }
+            }
         }
+        for (int i = 0; i < setVector.size(); i++)
+        {
+            barSeries->append(setVector[i]);
+        }
+        axisX->append(categories);
+        axisX->setGridLineVisible(false);
         // update virtual x axis
         QDate first(firstDate.year, firstDate.month, firstDate.day);
         QDate last = first.addDays(nDays);
         axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
         axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+        axisYdx->setRange(0,maxBar);
     }
     else if (freq == hourly)
     {

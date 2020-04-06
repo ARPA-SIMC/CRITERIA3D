@@ -30,6 +30,7 @@
             QVector<QLineSeries*> lineSeries;
             QBarSeries* barSeries;
             QVector<QBarSet*> setVector;
+            QStringList categories;
 
     };
 
