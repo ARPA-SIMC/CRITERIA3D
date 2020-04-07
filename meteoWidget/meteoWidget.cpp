@@ -23,7 +23,9 @@
 
 
 #include "meteoWidget.h"
+#include "dialogSelectVar.h"
 #include "utilities.h"
+#include "commonConstants.h"
 
 #include <QMessageBox>
 #include <QLayout>
@@ -39,6 +41,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 {
     this->setWindowTitle(QStringLiteral("Graph"));
     this->resize(1240, 700);
+    currentFreq = daily; //default
 
     QString csvPath, defaultPath, stylesPath;
     if (searchDataPath(&csvPath))
@@ -70,6 +73,14 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
             if (key.isEmpty() || items[0].isEmpty())
             {
                 qDebug() << "invalid format CSV, missing data";
+            }
+            if (key.contains("DAILY"))
+            {
+                currentFreq = daily;
+            }
+            else
+            {
+                currentFreq = hourly;
             }
             MapCSVDefault.insert(key,items);
             if (items[0] == "line")
@@ -117,7 +128,32 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
+    QGroupBox *horizontalGroupBox = new QGroupBox();
+    QHBoxLayout *buttonLayout = new QHBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
+
+    dailyButton = new QPushButton(tr("daily"));
+    hourlyButton = new QPushButton(tr("hourly"));
+    addVarButton = new QPushButton(tr("+/- var"));
+    dailyButton->setMaximumWidth(this->width()/8);
+    hourlyButton->setMaximumWidth(this->width()/8);
+    addVarButton->setMaximumWidth(this->width()/8);
+
+    if (currentFreq == daily)
+    {
+        dailyButton->setEnabled(false);
+        hourlyButton->setEnabled(true);
+    }
+    else if(currentFreq == hourly)
+    {
+        hourlyButton->setEnabled(false);
+        dailyButton->setEnabled(true);
+    }
+
+    buttonLayout->addWidget(dailyButton);
+    buttonLayout->addWidget(hourlyButton);
+    buttonLayout->addWidget(addVarButton);
+    buttonLayout->setAlignment(Qt::AlignLeft);
     chart = new QChart();
     chartView = new QChartView(chart);
     chartView->setChart(chart);
@@ -148,13 +184,6 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     chart->addAxis(axisY, Qt::AlignLeft);
     chart->addAxis(axisYdx, Qt::AlignRight);
 
-    for (int i = 0; i < lineSeries.size(); i++)
-    {
-        chart->addSeries(lineSeries[i]);
-        lineSeries[i]->attachAxis(axisX);
-        lineSeries[i]->attachAxis(axisY);
-    }
-
     barSeries = new QBarSeries();
     for (int i = 0; i < setVector.size(); i++)
     {
@@ -167,17 +196,30 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
         barSeries->attachAxis(axisYdx);
     }
 
+    for (int i = 0; i < lineSeries.size(); i++)
+    {
+        chart->addSeries(lineSeries[i]);
+        lineSeries[i]->attachAxis(axisX);
+        lineSeries[i]->attachAxis(axisY);
+    }
+
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
     chartView->setRenderHint(QPainter::Antialiasing);
     axisX->hide();
 
+    connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
+    connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
+    connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
+
     plotLayout->addWidget(chartView);
+    horizontalGroupBox->setLayout(buttonLayout);
+    mainLayout->addWidget(horizontalGroupBox);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 }
 
-void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType freq)
+void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> mpVector)
 {
 
     // clear all
@@ -210,7 +252,8 @@ void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType f
     Crit3DDate myDate;
     long nDays = 0;
     double maxBar = 0;
-    if (freq == daily)
+    double maxLine = NODATA;
+    if (currentFreq == daily)
     {
         nDays = mpVector[0].nrObsDataDaysD;
         firstDate = mpVector[0].obsDataD[0].date;
@@ -223,6 +266,10 @@ void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType f
                 meteoVariable meteoVar = MapDailyMeteoVar.at(lineSeries[i]->name().toStdString());
                 double value = mpVector[0].getMeteoPointValueD(myDate, meteoVar);
                 lineSeries[i]->append(day+1, value);
+                if (value > maxLine)
+                {
+                    maxLine = value;
+                }
             }
             for (int j = 0; j < setVector.size(); j++)
             {
@@ -247,13 +294,62 @@ void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType f
         axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
         axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
         axisYdx->setRange(0,maxBar);
+        axisY->setMax(maxLine);
     }
-    else if (freq == hourly)
+    else if (currentFreq == hourly)
     {
         nDays = mpVector[0].nrObsDataDaysH;
         firstDate = mpVector[0].getMeteoPointHourlyValuesDate(0);
+
+        // TO DO
     }
 
+}
+
+void Crit3DMeteoWidget::showVar()
+{
+    QStringList allKeys = MapCSVStyles.keys();
+    QStringList selectedVar = MapCSVDefault.keys();
+    QStringList allVar;
+    for (int i = 0; i<allKeys.size(); i++)
+    {
+        if (currentFreq == daily)
+        {
+            if (allKeys[i].contains("DAILY") && !selectedVar.contains(allKeys[i]))
+            {
+                allVar.append(allKeys[i]);
+            }
+        }
+        else if (currentFreq == hourly)
+        {
+            if (!allKeys[i].contains("DAILY") && !selectedVar.contains(allKeys[i]))
+            {
+                allVar.append(allKeys[i]);
+            }
+        }
+    }
+    DialogSelectVar selectDialog(allVar, selectedVar);
+}
+
+void Crit3DMeteoWidget::showDailyGraph()
+{
+    currentFreq = daily;
+
+    dailyButton->setEnabled(false);
+    hourlyButton->setEnabled(true);
+
+    // TO DO
+
+}
+
+void Crit3DMeteoWidget::showHourlyGraph()
+{
+    currentFreq = hourly;
+
+    hourlyButton->setEnabled(false);
+    dailyButton->setEnabled(true);
+
+    // TO DO
 }
 
 

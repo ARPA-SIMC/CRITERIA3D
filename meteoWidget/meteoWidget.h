@@ -16,9 +16,15 @@
 
         public:
             Crit3DMeteoWidget();
-            void draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType freq);
+            void draw(QVector<Crit3DMeteoPoint> mpVector);
+            void showDailyGraph();
+            void showHourlyGraph();
+            void showVar();
 
         private:
+            QPushButton *addVarButton;
+            QPushButton *dailyButton;
+            QPushButton *hourlyButton;
             QChartView *chartView;
             QChart *chart;
             QBarCategoryAxis *axisX;
@@ -31,6 +37,7 @@
             QBarSeries* barSeries;
             QVector<QBarSet*> setVector;
             QStringList categories;
+            frequencyType currentFreq;
 
     };
 

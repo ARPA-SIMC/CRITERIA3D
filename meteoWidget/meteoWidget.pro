@@ -35,10 +35,12 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities
 
 
 SOURCES += \
+    dialogSelectVar.cpp \
     meteoWidget.cpp
 
 
 HEADERS += \
+    dialogSelectVar.h \
     meteoWidget.h
 
 
