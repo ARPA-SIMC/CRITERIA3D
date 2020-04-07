@@ -7,7 +7,7 @@
     #include <QGroupBox>
     #include <QLineEdit>
     #include <QLabel>
-#include "meteoPoint.h"
+    #include "meteoPoint.h"
 
 
     class Crit3DMeteoWidget : public QWidget

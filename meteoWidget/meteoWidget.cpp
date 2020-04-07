@@ -201,6 +201,7 @@ void Crit3DMeteoWidget::draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType f
     {
         QBarSet* set = new QBarSet(nameBar[i]);
         set->setColor(colorBar[i]);
+        set->setBorderColor(colorBar[i]);
         setVector.append(set);
     }
 

@@ -3,9 +3,6 @@
 #   Meteo Widget library
 #   This project is part of CRITERIA-3D distribution
 #
-#   It requires Qwt library
-#   https://qwt.sourceforge.io/index.html
-#   Windows: set QWT_ROOT in environment variables
 #
 #----------------------------------------------------
 
