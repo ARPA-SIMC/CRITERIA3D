@@ -227,15 +227,32 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mpVector)
 {
     meteoPoints.append(mpVector);
-    // clear all
+    resetValues();
+
+    if (currentFreq == daily)
+    {
+        drawDailyVar();
+    }
+    else if (currentFreq == hourly)
+    {
+        drawHourlyVar();
+    }
+
+}
+
+void Crit3DMeteoWidget::resetValues()
+{
+    // clear lineSeries values
     for (int i = 0; i < lineSeries[0].size(); i++)
     {
         lineSeries[0][i]->clear();
     }
-//    QLineSeries* line = new QLineSeries();
-//    line->setName(key);
-//    line->setColor(QColor(items[1]));
-//    lineSeries.append(line);
+    // add lineSeries elements for each mp
+    for (int np=0; np<meteoPoints.size();np++)
+    {
+        QVector<QLineSeries*> vectorLine = lineSeries[0];
+        lineSeries.append(vectorLine);
+    }
 
     QStringList nameBar;
     QVector<QColor> colorBar;
@@ -257,17 +274,14 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mpVector)
         vectorBarSet.append(set);
     }
     setVector.append(vectorBarSet);
+    // add vectorBarSet elements for each mp
+    for (int np=0; np<meteoPoints.size();np++)
+    {
+        QVector<QBarSet*> vectorBarSet = setVector[0];
+        setVector.append(vectorBarSet);
+    }
 
     categories.clear();
-    if (currentFreq == daily)
-    {
-        drawDailyVar();
-    }
-    else if (currentFreq == hourly)
-    {
-        drawHourlyVar();
-    }
-
 }
 
 void Crit3DMeteoWidget::drawDailyVar()
@@ -393,20 +407,19 @@ void Crit3DMeteoWidget::showHourlyGraph()
     {
         QString name = lineSeries[0][i]->name();
         nameVar.append(name.replace("DAILY_",""));
-        lineSeries[0][i]->clear();
     }
-    lineSeries[0].clear();
-    int sizeBarSet = setVector[0].size();
-    /*
-    for (int i = 0; i < sizeBarSet; i++)
+    lineSeries.clear();
+    for (int i = 0; i < setVector[0].size(); i++)
     {
         QString name = setVector[0][i]->label();
         nameVar.append(name.replace("DAILY_",""));
-        barSeries->remove(setVector[i]);
     }
+    barSeries.clear();
     setVector.clear();
 
-    QMapIterator<QString, QStringList> i(MapCSVDefault);
+    QVector<QLineSeries*> vectorLine;
+    QVector<QBarSet*> vectorBarSet;
+    QMapIterator<QString, QStringList> i(MapCSVStyles);
 
     while (i.hasNext())
     {
@@ -421,18 +434,40 @@ void Crit3DMeteoWidget::showHourlyGraph()
                     QLineSeries* line = new QLineSeries();
                     line->setName(i.key());
                     line->setColor(QColor(items[1]));
-                    lineSeries[0].append(line);
+                    vectorLine.append(line);
                 }
                 if (items[0] == "bar")
                 {
                     QBarSet* set = new QBarSet(i.key());
                     set->setColor(QColor(items[1]));
-                    setVector.append(set);
+                    vectorBarSet.append(set);
                 }
             }
         }
     }
-    */
+    lineSeries.append(vectorLine);
+    setVector.append(vectorBarSet);
+    chart->removeAllSeries();
+
+    QBarSeries* barFirstSeries = new QBarSeries();
+    for (int i = 0; i < setVector[0].size(); i++)
+    {
+        barFirstSeries->append(setVector[0][i]);
+    }
+    barSeries.append(barFirstSeries);
+    if (setVector[0].size() != 0)
+    {
+        chart->addSeries(barSeries[0]);
+        barSeries[0]->attachAxis(axisX);
+        barSeries[0]->attachAxis(axisYdx);
+    }
+
+    for (int i = 0; i < lineSeries[0].size(); i++)
+    {
+        chart->addSeries(lineSeries[0][i]);
+        lineSeries[0][i]->attachAxis(axisX);
+        lineSeries[0][i]->attachAxis(axisY);
+    }
 
     // TO DO
 }

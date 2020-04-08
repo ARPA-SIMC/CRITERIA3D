@@ -17,6 +17,7 @@
         public:
             Crit3DMeteoWidget();
             void draw(Crit3DMeteoPoint mpVector);
+            void resetValues();
             void drawDailyVar();
             void drawHourlyVar();
             void showDailyGraph();
