@@ -16,7 +16,9 @@
 
         public:
             Crit3DMeteoWidget();
-            void draw(QVector<Crit3DMeteoPoint> mpVector);
+            void draw(Crit3DMeteoPoint mpVector);
+            void drawDailyVar();
+            void drawHourlyVar();
             void showDailyGraph();
             void showHourlyGraph();
             void showVar();
@@ -33,10 +35,11 @@
             QValueAxis *axisYdx;
             QMap<QString, QStringList> MapCSVDefault;
             QMap<QString, QStringList> MapCSVStyles;
-            QVector<QLineSeries*> lineSeries;
-            QBarSeries* barSeries;
-            QVector<QBarSet*> setVector;
+            QVector<QVector<QLineSeries*>> lineSeries;
+            QVector<QBarSeries*> barSeries;
+            QVector<QVector<QBarSet*>> setVector;
             QStringList categories;
+            QVector<Crit3DMeteoPoint> meteoPoints;
             frequencyType currentFreq;
 
     };
