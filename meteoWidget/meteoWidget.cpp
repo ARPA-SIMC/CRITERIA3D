@@ -245,13 +245,16 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mpVector)
 
 void Crit3DMeteoWidget::resetValues()
 {
-    // clear lineSeries values
-    for (int i = 0; i < lineSeries[0].size(); i++)
+    // clear prev lineSeries values, keep lineSeries[0] to clone
+    for (int mp=0; mp<meteoPoints.size()-1;mp++)
     {
-        lineSeries[0][i]->clear();
+        for (int i = 0; i < lineSeries[mp].size(); i++)
+        {
+            lineSeries[mp][i]->clear();
+        }
     }
-    // add lineSeries elements for each mp
-    for (int np=0; np<meteoPoints.size();np++)
+    // add lineSeries elements for each mp, clone lineSeries[0]
+    for (int mp=0; mp<meteoPoints.size()-1;mp++)
     {
         QVector<QLineSeries*> vectorLine = lineSeries[0];
         lineSeries.append(vectorLine);
@@ -277,8 +280,9 @@ void Crit3DMeteoWidget::resetValues()
         vectorBarSet.append(set);
     }
     setVector.append(vectorBarSet);
+
     // add vectorBarSet elements for each mp
-    for (int np=0; np<meteoPoints.size();np++)
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
         QVector<QBarSet*> vectorBarSet = setVector[0];
         setVector.append(vectorBarSet);
@@ -291,7 +295,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 {
 
     FormInfo formInfo;
-    // TO DO general case replace meteoPoints[0] with all mp used
+
     Crit3DDate firstDate;
     Crit3DDate myDate;
     long nDays = 0;
@@ -303,46 +307,56 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     int step = formInfo.start("Compute model...", nDays);
     int cont = 0;
-    for (int day = 0; day<nDays; day++)
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        if ( (cont % step) == 0) formInfo.setValue(cont);
-        myDate = firstDate.addDays(day);
-        categories.append(QString::number(day+1));
-        for (int i = 0; i < lineSeries[0].size(); i++)
+        for (int day = 0; day<nDays; day++)
         {
-            meteoVariable meteoVar = MapDailyMeteoVar.at(lineSeries[0][i]->name().toStdString());
-            double value = meteoPoints[0].getMeteoPointValueD(myDate, meteoVar);
-            lineSeries[0][i]->append(day+1, value);
-            if (value > maxLine)
+            if ( (cont % step) == 0) formInfo.setValue(cont);
+            myDate = firstDate.addDays(day);
+            categories.append(QString::number(day+1));
+            for (int i = 0; i < lineSeries[mp].size(); i++)
             {
-                maxLine = value;
+                meteoVariable meteoVar = MapDailyMeteoVar.at(lineSeries[mp][i]->name().toStdString());
+                double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar);
+                lineSeries[mp][i]->append(day+1, value);
+                if (value > maxLine)
+                {
+                    maxLine = value;
+                }
             }
-        }
-        for (int j = 0; j < setVector[0].size(); j++)
-        {
-            meteoVariable meteoVar = MapDailyMeteoVar.at(setVector[0][j]->label().toStdString());
-            double value = meteoPoints[0].getMeteoPointValueD(myDate, meteoVar);
-            *setVector[0][j] << value;
-            if (value > maxBar)
+            for (int j = 0; j < setVector[mp].size(); j++)
             {
-                maxBar = value;
+                meteoVariable meteoVar = MapDailyMeteoVar.at(setVector[mp][j]->label().toStdString());
+                double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar);
+                *setVector[mp][j] << value;
+                if (value > maxBar)
+                {
+                    maxBar = value;
+                }
             }
+            cont++; // formInfo update
         }
-        cont++; // formInfo update
     }
     formInfo.close();
 
-    QBarSeries* barFirstSeries = new QBarSeries();
-    for (int i = 0; i < setVector[0].size(); i++)
+    QBarSeries* barMpSeries = new QBarSeries();
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        barFirstSeries->append(setVector[0][i]);
+        for (int i = 0; i < setVector[mp].size(); i++)
+        {
+            barMpSeries->append(setVector[mp][i]);
+        }
+        barSeries.append(barMpSeries);
     }
-    barSeries.append(barFirstSeries);
-    if (setVector[0].size() != 0)
+
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        chart->addSeries(barSeries[0]);
-        barSeries[0]->attachAxis(axisX);
-        barSeries[0]->attachAxis(axisYdx);
+        if (setVector[mp].size() != 0)
+        {
+            chart->addSeries(barSeries[mp]);
+            barSeries[mp]->attachAxis(axisX);
+            barSeries[mp]->attachAxis(axisYdx);
+        }
     }
     axisX->append(categories);
     axisX->setGridLineVisible(false);
@@ -359,8 +373,9 @@ void Crit3DMeteoWidget::drawDailyVar()
 
 void Crit3DMeteoWidget::drawHourlyVar()
 {
+
     FormInfo formInfo;
-    // TO DO general case replace meteoPoints[0] with all mp used
+
     Crit3DDate firstDate;
     Crit3DDate myDate;
     long nDays = 0;
@@ -372,49 +387,59 @@ void Crit3DMeteoWidget::drawHourlyVar()
     firstDate = meteoPoints[0].getMeteoPointHourlyValuesDate(0);
 
     int step = formInfo.start("Compute model...", nDays*24);
-    for (int day = 0; day<nDays; day++)
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        myDate = firstDate.addDays(day);
-        for (int hour = 1; hour < 25; hour++)
+        for (int day = 0; day<nDays; day++)
         {
-            if ( (nValues % step) == 0) formInfo.setValue(nValues);
-            nValues = nValues + 1;
-            categories.append(QString::number(nValues));
-            for (int i = 0; i < lineSeries[0].size(); i++)
+            myDate = firstDate.addDays(day);
+            for (int hour = 1; hour < 25; hour++)
             {
-                meteoVariable meteoVar = MapHourlyMeteoVar.at(lineSeries[0][i]->name().toStdString());
-                double value = meteoPoints[0].getMeteoPointValueH(myDate, hour, 0, meteoVar);
-                lineSeries[0][i]->append(nValues, value);
-                if (value > maxLine)
+                if ( (nValues % step) == 0) formInfo.setValue(nValues);
+                nValues = nValues + 1;
+                categories.append(QString::number(nValues));
+                for (int i = 0; i < lineSeries[mp].size(); i++)
                 {
-                    maxLine = value;
+                    meteoVariable meteoVar = MapHourlyMeteoVar.at(lineSeries[mp][i]->name().toStdString());
+                    double value = meteoPoints[mp].getMeteoPointValueH(myDate, hour, 0, meteoVar);
+                    lineSeries[mp][i]->append(nValues, value);
+                    if (value > maxLine)
+                    {
+                        maxLine = value;
+                    }
                 }
-            }
-            for (int j = 0; j < setVector[0].size(); j++)
-            {
-                meteoVariable meteoVar = MapHourlyMeteoVar.at(setVector[0][j]->label().toStdString());
-                double value = meteoPoints[0].getMeteoPointValueH(myDate, hour, 0, meteoVar);
-                *setVector[0][j] << value;
-                if (value > maxBar)
+                for (int j = 0; j < setVector[mp].size(); j++)
                 {
-                    maxBar = value;
+                    meteoVariable meteoVar = MapHourlyMeteoVar.at(setVector[mp][j]->label().toStdString());
+                    double value = meteoPoints[mp].getMeteoPointValueH(myDate, hour, 0, meteoVar);
+                    *setVector[mp][j] << value;
+                    if (value > maxBar)
+                    {
+                        maxBar = value;
+                    }
                 }
             }
         }
     }
     formInfo.close();
 
-    QBarSeries* barFirstSeries = new QBarSeries();
-    for (int i = 0; i < setVector[0].size(); i++)
+    QBarSeries* barMpSeries = new QBarSeries();
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        barFirstSeries->append(setVector[0][i]);
+        for (int i = 0; i < setVector[mp].size(); i++)
+        {
+            barMpSeries->append(setVector[mp][i]);
+        }
+        barSeries.append(barMpSeries);
     }
-    barSeries.append(barFirstSeries);
-    if (setVector[0].size() != 0)
+
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        chart->addSeries(barSeries[0]);
-        barSeries[0]->attachAxis(axisX);
-        barSeries[0]->attachAxis(axisYdx);
+        if (setVector[mp].size() != 0)
+        {
+            chart->addSeries(barSeries[mp]);
+            barSeries[mp]->attachAxis(axisX);
+            barSeries[mp]->attachAxis(axisYdx);
+        }
     }
     axisX->append(categories);
     axisX->setGridLineVisible(false);
@@ -509,6 +534,7 @@ void Crit3DMeteoWidget::updateSeries()
     barSeries.clear();
     setVector.clear();
     lineSeries.clear();
+    chart->removeAllSeries();
 
     QVector<QLineSeries*> vectorLine;
     QVector<QBarSet*> vectorBarSet;
@@ -538,23 +564,39 @@ void Crit3DMeteoWidget::updateSeries()
             }
         }
     }
-    lineSeries.append(vectorLine);
-    setVector.append(vectorBarSet);
-    chart->removeAllSeries();
 
-    QBarSeries* barFirstSeries = new QBarSeries();
-    for (int i = 0; i < setVector[0].size(); i++)
+    // add lineSeries elements for each mp, clone lineSeries[0]
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        barFirstSeries->append(setVector[0][i]);
+        lineSeries.append(vectorLine);
     }
-    barSeries.append(barFirstSeries);
 
-    for (int i = 0; i < lineSeries[0].size(); i++)
+    // add vectorBarSet elements for each mp
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        chart->addSeries(lineSeries[0][i]);
-        lineSeries[0][i]->attachAxis(axisX);
-        lineSeries[0][i]->attachAxis(axisY);
+        setVector.append(vectorBarSet);
     }
+
+    QBarSeries* barMpSeries = new QBarSeries();
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        for (int i = 0; i < setVector[mp].size(); i++)
+        {
+            barMpSeries->append(setVector[mp][i]);
+        }
+        barSeries.append(barMpSeries);
+    }
+
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        for (int i = 0; i < lineSeries[mp].size(); i++)
+        {
+            chart->addSeries(lineSeries[mp][i]);
+            lineSeries[mp][i]->attachAxis(axisX);
+            lineSeries[mp][i]->attachAxis(axisY);
+        }
+    }
+
 }
 
 
