@@ -21,6 +21,7 @@ public:
     void variableSelClicked(QListWidgetItem* item);
     void addVar();
     void deleteVar();
+    QStringList getSelectedVariables();
 };
 
 #endif // DIALOGSELECTVAR_H

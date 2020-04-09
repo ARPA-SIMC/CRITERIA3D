@@ -83,4 +83,15 @@ void DialogSelectVar::deleteVar()
     listAllVar->addItem(item);
 }
 
+QStringList DialogSelectVar::getSelectedVariables()
+{
+    QStringList variableSelected;
+    for(int i = 0; i < listSelectedVar->count(); ++i)
+    {
+        QString var = listSelectedVar->item(i)->text();
+        variableSelected.append(var);
+    }
+    return variableSelected;
+}
+
 
