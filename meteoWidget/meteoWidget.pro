@@ -31,15 +31,17 @@ win32:{
     TARGET = meteoWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../project
 
 
 SOURCES += \
+    ../../agrolib/project/formInfo.cpp \
     dialogSelectVar.cpp \
     meteoWidget.cpp
 
 
 HEADERS += \
+    ../../agrolib/project/formInfo.h \
     dialogSelectVar.h \
     meteoWidget.h
 

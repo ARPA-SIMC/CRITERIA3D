@@ -26,6 +26,7 @@
 #include "dialogSelectVar.h"
 #include "utilities.h"
 #include "commonConstants.h"
+#include "formInfo.h"
 
 #include <QMessageBox>
 #include <QLayout>
@@ -287,6 +288,7 @@ void Crit3DMeteoWidget::resetValues()
 void Crit3DMeteoWidget::drawDailyVar()
 {
 
+    FormInfo formInfo;
     // TO DO general case replace meteoPoints[0] with all mp used
     Crit3DDate firstDate;
     Crit3DDate myDate;
@@ -297,8 +299,11 @@ void Crit3DMeteoWidget::drawDailyVar()
     nDays = meteoPoints[0].nrObsDataDaysD;
     firstDate = meteoPoints[0].obsDataD[0].date;
 
+    int step = formInfo.start("Compute model...", nDays);
+    int cont = 0;
     for (int day = 0; day<nDays; day++)
     {
+        if ( (cont % step) == 0) formInfo.setValue(cont);
         myDate = firstDate.addDays(day);
         categories.append(QString::number(day+1));
         for (int i = 0; i < lineSeries[0].size(); i++)
@@ -321,7 +326,10 @@ void Crit3DMeteoWidget::drawDailyVar()
                 maxBar = value;
             }
         }
+        cont++; // formInfo update
     }
+    formInfo.close();
+
     QBarSeries* barFirstSeries = new QBarSeries();
     for (int i = 0; i < setVector[0].size(); i++)
     {
@@ -349,6 +357,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 
 void Crit3DMeteoWidget::drawHourlyVar()
 {
+    FormInfo formInfo;
     // TO DO general case replace meteoPoints[0] with all mp used
     Crit3DDate firstDate;
     Crit3DDate myDate;
@@ -360,11 +369,13 @@ void Crit3DMeteoWidget::drawHourlyVar()
     nDays = meteoPoints[0].nrObsDataDaysH;
     firstDate = meteoPoints[0].getMeteoPointHourlyValuesDate(0);
 
+    int step = formInfo.start("Compute model...", nDays*24);
     for (int day = 0; day<nDays; day++)
     {
         myDate = firstDate.addDays(day);
         for (int hour = 1; hour < 25; hour++)
         {
+            if ( (nValues % step) == 0) formInfo.setValue(nValues);
             nValues = nValues + 1;
             categories.append(QString::number(nValues));
             for (int i = 0; i < lineSeries[0].size(); i++)
@@ -389,6 +400,8 @@ void Crit3DMeteoWidget::drawHourlyVar()
             }
         }
     }
+    formInfo.close();
+
     QBarSeries* barFirstSeries = new QBarSeries();
     for (int i = 0; i < setVector[0].size(); i++)
     {
