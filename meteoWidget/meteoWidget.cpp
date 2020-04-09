@@ -286,6 +286,7 @@ void Crit3DMeteoWidget::resetValues()
 
 void Crit3DMeteoWidget::drawDailyVar()
 {
+
     // TO DO general case replace meteoPoints[0] with all mp used
     Crit3DDate firstDate;
     Crit3DDate myDate;
@@ -338,6 +339,8 @@ void Crit3DMeteoWidget::drawDailyVar()
     // update virtual x axis
     QDate first(firstDate.year, firstDate.month, firstDate.day);
     QDate last = first.addDays(nDays);
+    axisXvirtual->setFormat("MMM dd <br> yyyy");
+    axisXvirtual->setTickCount(13);
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
     axisYdx->setRange(0,maxBar);
@@ -346,16 +349,69 @@ void Crit3DMeteoWidget::drawDailyVar()
 
 void Crit3DMeteoWidget::drawHourlyVar()
 {
+    // TO DO general case replace meteoPoints[0] with all mp used
     Crit3DDate firstDate;
     Crit3DDate myDate;
     long nDays = 0;
+    int nValues = 0;
     double maxBar = 0;
     double maxLine = NODATA;
 
     nDays = meteoPoints[0].nrObsDataDaysH;
     firstDate = meteoPoints[0].getMeteoPointHourlyValuesDate(0);
 
-    // TO DO
+    for (int day = 0; day<nDays; day++)
+    {
+        myDate = firstDate.addDays(day);
+        for (int hour = 0; hour < 24; hour++)
+        {
+            categories.append(QString::number(nValues));
+            for (int i = 0; i < lineSeries[0].size(); i++)
+            {
+                meteoVariable meteoVar = MapHourlyMeteoVar.at(lineSeries[0][i]->name().toStdString());
+                double value = meteoPoints[0].getMeteoPointValueH(myDate, hour, 0, meteoVar);
+                lineSeries[0][i]->append(nValues, value);
+                if (value > maxLine)
+                {
+                    maxLine = value;
+                }
+            }
+            for (int j = 0; j < setVector[0].size(); j++)
+            {
+                meteoVariable meteoVar = MapHourlyMeteoVar.at(setVector[0][j]->label().toStdString());
+                double value = meteoPoints[0].getMeteoPointValueH(myDate, hour, 0, meteoVar);
+                *setVector[0][j] << value;
+                if (value > maxBar)
+                {
+                    maxBar = value;
+                }
+            }
+            nValues = nValues + 1;
+        }
+    }
+    QBarSeries* barFirstSeries = new QBarSeries();
+    for (int i = 0; i < setVector[0].size(); i++)
+    {
+        barFirstSeries->append(setVector[0][i]);
+    }
+    barSeries.append(barFirstSeries);
+    if (setVector[0].size() != 0)
+    {
+        chart->addSeries(barSeries[0]);
+        barSeries[0]->attachAxis(axisX);
+        barSeries[0]->attachAxis(axisYdx);
+    }
+    axisX->append(categories);
+    axisX->setGridLineVisible(false);
+    // update virtual x axis
+    QDate first(firstDate.year, firstDate.month, firstDate.day);
+    QDate last = first.addDays(nDays);
+    axisXvirtual->setFormat("MMM dd <br> yyyy <br> hh:mm");
+    axisXvirtual->setTickCount(20);
+    axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
+    axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+    axisYdx->setRange(0,maxBar);
+    axisY->setMax(maxLine);
 }
 
 void Crit3DMeteoWidget::showVar()
@@ -455,12 +511,14 @@ void Crit3DMeteoWidget::showHourlyGraph()
         barFirstSeries->append(setVector[0][i]);
     }
     barSeries.append(barFirstSeries);
+    /*
     if (setVector[0].size() != 0)
     {
         chart->addSeries(barSeries[0]);
         barSeries[0]->attachAxis(axisX);
         barSeries[0]->attachAxis(axisYdx);
     }
+    */
 
     for (int i = 0; i < lineSeries[0].size(); i++)
     {
@@ -469,7 +527,8 @@ void Crit3DMeteoWidget::showHourlyGraph()
         lineSeries[0][i]->attachAxis(axisY);
     }
 
-    // TO DO
+
+    drawHourlyVar();
 }
 
 
