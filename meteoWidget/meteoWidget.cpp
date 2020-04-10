@@ -98,6 +98,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
             {
                 QBarSet* set = new QBarSet(key);
                 set->setColor(QColor(items[1]));
+                set->setBorderColor(QColor(items[1]));
                 vectorBarSet.append(set);
                 currentVariables.append(key);
             }
@@ -231,7 +232,6 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mpVector)
 {
     meteoPoints.append(mpVector);
     resetValues();
-
     if (currentFreq == daily)
     {
         drawDailyVar();
@@ -240,24 +240,18 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mpVector)
     {
         drawHourlyVar();
     }
-
 }
 
 void Crit3DMeteoWidget::resetValues()
 {
-    // clear prev lineSeries values, keep lineSeries[0] to clone
-    for (int mp=0; mp<meteoPoints.size()-1;mp++)
+
+    QVector<QLineSeries*> vectorLine;
+    for (int i = 0; i<lineSeries[0].size(); i++)
     {
-        for (int i = 0; i < lineSeries[mp].size(); i++)
-        {
-            lineSeries[mp][i]->clear();
-        }
-    }
-    // add lineSeries elements for each mp, clone lineSeries[0]
-    for (int mp=0; mp<meteoPoints.size()-1;mp++)
-    {
-        QVector<QLineSeries*> vectorLine = lineSeries[0];
-        lineSeries.append(vectorLine);
+        QLineSeries* line = new QLineSeries();
+        line->setName(lineSeries[0][i]->name());
+        line->setColor(lineSeries[0][i]->color());
+        vectorLine.append(line);
     }
 
     QStringList nameBar;
@@ -269,8 +263,29 @@ void Crit3DMeteoWidget::resetValues()
         nameBar.append(setVector[0][i]->label());
         colorBar.append(setVector[0][i]->color());
     }
+
+    // clear prev series values
+    for (int mp=0; mp<meteoPoints.size()-1;mp++)
+    {
+        for (int i = 0; i < lineSeries[mp].size(); i++)
+        {
+            lineSeries[mp][i]->clear();
+        }
+        lineSeries[mp].clear();
+        setVector[mp].clear();
+        barSeries[mp]->clear();
+    }
     barSeries.clear();
     setVector.clear();
+    lineSeries.clear();
+    chart->removeAllSeries();
+
+    // add lineSeries elements for each mp, clone lineSeries[0]
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        lineSeries.append(vectorLine);
+    }
+
     QVector<QBarSet*> vectorBarSet;
     for (int i = 0; i < sizeBarSet; i++)
     {
@@ -279,16 +294,22 @@ void Crit3DMeteoWidget::resetValues()
         set->setBorderColor(colorBar[i]);
         vectorBarSet.append(set);
     }
-    setVector.append(vectorBarSet);
 
     // add vectorBarSet elements for each mp
     for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        QVector<QBarSet*> vectorBarSet = setVector[0];
         setVector.append(vectorBarSet);
     }
 
-    categories.clear();
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        for (int i = 0; i < lineSeries[mp].size(); i++)
+        {
+            chart->addSeries(lineSeries[mp][i]);
+            lineSeries[mp][i]->attachAxis(axisX);
+            lineSeries[mp][i]->attachAxis(axisY);
+        }
+    }
 }
 
 void Crit3DMeteoWidget::drawDailyVar()
@@ -559,6 +580,7 @@ void Crit3DMeteoWidget::updateSeries()
                 {
                     QBarSet* set = new QBarSet(i.key());
                     set->setColor(QColor(items[1]));
+                    set->setBorderColor(QColor(items[1]));
                     vectorBarSet.append(set);
                 }
             }
