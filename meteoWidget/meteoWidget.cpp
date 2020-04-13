@@ -245,13 +245,14 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mpVector)
 void Crit3DMeteoWidget::resetValues()
 {
 
-    QVector<QLineSeries*> vectorLine;
-    for (int i = 0; i<lineSeries[0].size(); i++)
+    QStringList nameLine;
+    QVector<QColor> colorLine;
+    int sizeLineSeries = lineSeries[0].size();
+
+    for (int i = 0; i< sizeLineSeries; i++)
     {
-        QLineSeries* line = new QLineSeries();
-        line->setName(lineSeries[0][i]->name());
-        line->setColor(lineSeries[0][i]->color());
-        vectorLine.append(line);
+        nameLine.append(lineSeries[0][i]->name());
+        colorLine.append(lineSeries[0][i]->color());
     }
 
     QStringList nameBar;
@@ -280,26 +281,40 @@ void Crit3DMeteoWidget::resetValues()
     lineSeries.clear();
     chart->removeAllSeries();
 
+    QVector<QLineSeries*> vectorLine;
     // add lineSeries elements for each mp, clone lineSeries[0]
     for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        lineSeries.append(vectorLine);
-    }
-
-    QVector<QBarSet*> vectorBarSet;
-    for (int i = 0; i < sizeBarSet; i++)
-    {
-        QBarSet* set = new QBarSet(nameBar[i]);
-        set->setColor(colorBar[i]);
-        set->setBorderColor(colorBar[i]);
-        vectorBarSet.append(set);
+        for (int i = 0; i<sizeLineSeries; i++)
+        {
+            QLineSeries* line = new QLineSeries();
+            line->setName(nameLine[i]);
+            line->setColor(colorLine[i]);
+            vectorLine.append(line);
+        }
+        if (vectorLine.size() != 0)
+        {
+            lineSeries.append(vectorLine);
+        }
     }
 
     // add vectorBarSet elements for each mp
+    QVector<QBarSet*> vectorBarSet;
     for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        setVector.append(vectorBarSet);
+        for (int i = 0; i < sizeBarSet; i++)
+        {
+            QBarSet* set = new QBarSet(nameBar[i]);
+            set->setColor(colorBar[i]);
+            set->setBorderColor(colorBar[i]);
+            vectorBarSet.append(set);
+        }
+        //if (vectorBarSet.size() != 0)
+        //{
+            setVector.append(vectorBarSet);
+        //}
     }
+
 
     for (int mp=0; mp<meteoPoints.size();mp++)
     {
