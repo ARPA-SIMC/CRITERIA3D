@@ -44,6 +44,8 @@
             QStringList categories;
             QVector<Crit3DMeteoPoint> meteoPoints;
             frequencyType currentFreq;
+            bool isLine;
+            bool isBar;
 
     };
 
