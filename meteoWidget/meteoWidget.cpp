@@ -126,6 +126,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     if (dailyVar != 0 && hourlyVar != 0)
     {
         qDebug() << "invalid format CSV, both daily and hourly variables";
+        currentFreq = noFrequency;
         currentVariables.clear();
         MapCSVDefault.clear();
         isLine = false;
@@ -180,12 +181,12 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     hourlyButton->setMaximumWidth(this->width()/8);
     addVarButton->setMaximumWidth(this->width()/8);
 
-    if (currentFreq == daily)
+    if (currentFreq == daily || currentFreq == noFrequency)
     {
         dailyButton->setEnabled(false);
         hourlyButton->setEnabled(true);
     }
-    else if(currentFreq == hourly)
+    else
     {
         hourlyButton->setEnabled(false);
         dailyButton->setEnabled(true);
@@ -611,6 +612,17 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
 void Crit3DMeteoWidget::showVar()
 {
+    if (currentFreq == noFrequency)
+    {
+        if (!dailyButton->isEnabled()) // dailyButton is pressed
+        {
+            currentFreq = daily;
+        }
+        else
+        {
+            currentFreq = hourly;
+        }
+    }
     QStringList allKeys = MapCSVStyles.keys();
     QStringList selectedVar = currentVariables;
     QStringList allVar;
@@ -705,6 +717,7 @@ void Crit3DMeteoWidget::updateSeries()
                 QStringList items = i.value();
                 if (items[0] == "line")
                 {
+                    isLine = true;
                     QLineSeries* line = new QLineSeries();
                     line->setName(i.key());
                     line->setColor(QColor(items[1]));
@@ -712,6 +725,7 @@ void Crit3DMeteoWidget::updateSeries()
                 }
                 if (items[0] == "bar")
                 {
+                    isBar = true;
                     QBarSet* set = new QBarSet(i.key());
                     set->setColor(QColor(items[1]));
                     set->setBorderColor(QColor(items[1]));
@@ -722,34 +736,39 @@ void Crit3DMeteoWidget::updateSeries()
     }
 
     // add lineSeries elements for each mp, clone lineSeries[0]
-    for (int mp=0; mp<meteoPoints.size();mp++)
+    if (isLine)
     {
-        lineSeries.append(vectorLine);
+        for (int mp=0; mp<meteoPoints.size();mp++)
+        {
+            lineSeries.append(vectorLine);
+        }
+        for (int mp=0; mp<meteoPoints.size();mp++)
+        {
+            for (int i = 0; i < lineSeries[mp].size(); i++)
+            {
+                chart->addSeries(lineSeries[mp][i]);
+                lineSeries[mp][i]->attachAxis(axisX);
+                lineSeries[mp][i]->attachAxis(axisY);
+            }
+        }
     }
 
     // add vectorBarSet elements for each mp
-    for (int mp=0; mp<meteoPoints.size();mp++)
+    if (isBar)
     {
-        setVector.append(vectorBarSet);
-    }
-
-    QBarSeries* barMpSeries = new QBarSeries();
-    for (int mp=0; mp<meteoPoints.size();mp++)
-    {
-        for (int i = 0; i < setVector[mp].size(); i++)
+        for (int mp=0; mp<meteoPoints.size();mp++)
         {
-            barMpSeries->append(setVector[mp][i]);
+            setVector.append(vectorBarSet);
         }
-        barSeries.append(barMpSeries);
-    }
 
-    for (int mp=0; mp<meteoPoints.size();mp++)
-    {
-        for (int i = 0; i < lineSeries[mp].size(); i++)
+        QBarSeries* barMpSeries = new QBarSeries();
+        for (int mp=0; mp<meteoPoints.size();mp++)
         {
-            chart->addSeries(lineSeries[mp][i]);
-            lineSeries[mp][i]->attachAxis(axisX);
-            lineSeries[mp][i]->attachAxis(axisY);
+            for (int i = 0; i < setVector[mp].size(); i++)
+            {
+                barMpSeries->append(setVector[mp][i]);
+            }
+            barSeries.append(barMpSeries);
         }
     }
 
