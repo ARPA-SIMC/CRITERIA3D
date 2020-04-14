@@ -410,6 +410,7 @@ void Crit3DMeteoWidget::drawDailyVar()
     QString name;
     for (int mp=0; mp<meteoPoints.size();mp++)
     {
+        categories.clear();
         for (int day = 0; day<nDays; day++)
         {
             if ( (cont % step) == 0) formInfo.setValue(cont);
@@ -516,6 +517,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     int step = formInfo.start("Compute model...", nDays*24);
     for (int mp=0; mp<meteoPoints.size();mp++)
     {
+        categories.clear();
         for (int day = 0; day<nDays; day++)
         {
             myDate = firstDate.addDays(day);
