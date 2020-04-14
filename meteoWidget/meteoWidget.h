@@ -38,6 +38,8 @@
             QMap<QString, QStringList> MapCSVDefault;
             QMap<QString, QStringList> MapCSVStyles;
             QStringList currentVariables;
+            QStringList nameLines;
+            QStringList nameBar;
             QVector<QVector<QLineSeries*>> lineSeries;
             QVector<QBarSeries*> barSeries;
             QVector<QVector<QBarSet*>> setVector;
