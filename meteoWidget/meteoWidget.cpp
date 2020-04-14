@@ -701,6 +701,8 @@ void Crit3DMeteoWidget::updateSeries()
     chart->removeAllSeries();
     nameLines.clear();
     nameBar.clear();
+    isLine = false;
+    isBar = false;
 
     QVector<QLineSeries*> vectorLine;
     QVector<QBarSet*> vectorBarSet;
@@ -743,6 +745,12 @@ void Crit3DMeteoWidget::updateSeries()
     if (isBar)
     {
         setVector.append(vectorBarSet);
+        QBarSeries* barFirstSeries = new QBarSeries();
+        for (int i = 0; i < setVector[0].size(); i++)
+        {
+            barFirstSeries->append(setVector[0][i]);
+        }
+        barSeries.append(barFirstSeries);
     }
 
     resetValues();
