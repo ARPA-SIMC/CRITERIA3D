@@ -42,7 +42,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 {
     this->setWindowTitle(QStringLiteral("Graph"));
     this->resize(1240, 700);
-    currentFreq = daily; //default
+    currentFreq = noFrequency;
+
     isLine = false;
     isBar = false;
     QVector<QLineSeries*> vectorLine;
@@ -107,6 +108,28 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
                 currentVariables.append(key);
             }
         }
+    }
+    // check valid data
+    int dailyVar = 0;
+    int hourlyVar = 0;
+    for (int i = 0; i<currentVariables.size(); i++)
+    {
+        if (currentVariables[i].contains("DAILY"))
+        {
+            dailyVar = dailyVar+1;
+        }
+        else
+        {
+            hourlyVar = hourlyVar+1;
+        }
+    }
+    if (dailyVar != 0 && hourlyVar != 0)
+    {
+        qDebug() << "invalid format CSV, both daily and hourly variables";
+        currentVariables.clear();
+        MapCSVDefault.clear();
+        isLine = false;
+        isBar = false;
     }
     if (isLine)
     {
