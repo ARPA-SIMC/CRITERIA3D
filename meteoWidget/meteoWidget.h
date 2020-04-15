@@ -16,7 +16,7 @@
 
         public:
             Crit3DMeteoWidget();
-            void draw(Crit3DMeteoPoint mpVector);
+            void draw(Crit3DMeteoPoint mp);
             void resetValues();
             void drawDailyVar();
             void drawHourlyVar();
@@ -29,6 +29,8 @@
             QPushButton *addVarButton;
             QPushButton *dailyButton;
             QPushButton *hourlyButton;
+            QDateTimeEdit *firstDate;
+            QDateTimeEdit *lastDate;
             QChartView *chartView;
             QChart *chart;
             QBarCategoryAxis *axisX;
@@ -46,6 +48,10 @@
             QStringList categories;
             QVector<Crit3DMeteoPoint> meteoPoints;
             frequencyType currentFreq;
+            QDate firstDailyDate;
+            QDate lastDailyDate;
+            QDate firstHourlyDate;
+            QDate lastHourlyDate;
             bool isLine;
             bool isBar;
 

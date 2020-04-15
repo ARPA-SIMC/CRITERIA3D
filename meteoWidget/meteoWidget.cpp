@@ -43,6 +43,10 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     this->setWindowTitle(QStringLiteral("Graph"));
     this->resize(1240, 700);
     currentFreq = noFrequency;
+    firstDailyDate = QDate::currentDate();
+    firstHourlyDate = QDate::currentDate();
+    lastDailyDate = QDate(1800,1,1);
+    lastHourlyDate = QDate(1800,1,1);
 
     isLine = false;
     isBar = false;
@@ -202,6 +206,10 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     dailyButton = new QPushButton(tr("daily"));
     hourlyButton = new QPushButton(tr("hourly"));
     addVarButton = new QPushButton(tr("+/- var"));
+    QLabel *labelFirstDate = new QLabel(tr("Start Date: "));
+    QLabel *labelEndDate = new QLabel(tr("End Date: "));
+    firstDate = new QDateTimeEdit(QDate::currentDate());
+    lastDate = new QDateTimeEdit(QDate::currentDate());
     dailyButton->setMaximumWidth(this->width()/8);
     hourlyButton->setMaximumWidth(this->width()/8);
     addVarButton->setMaximumWidth(this->width()/8);
@@ -210,16 +218,24 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     {
         dailyButton->setEnabled(false);
         hourlyButton->setEnabled(true);
+        firstDate->setDisplayFormat("dd/MM/yyyy");
+        lastDate->setDisplayFormat("dd/MM/yyyy");
     }
     else
     {
         hourlyButton->setEnabled(false);
         dailyButton->setEnabled(true);
+        firstDate->setDisplayFormat("dd/MM/yyyy hh:mm");
+        lastDate->setDisplayFormat("dd/MM/yyyy hh:mm");
     }
 
     buttonLayout->addWidget(dailyButton);
     buttonLayout->addWidget(hourlyButton);
     buttonLayout->addWidget(addVarButton);
+    buttonLayout->addWidget(labelFirstDate);
+    buttonLayout->addWidget(firstDate);
+    buttonLayout->addWidget(labelEndDate);
+    buttonLayout->addWidget(lastDate);
     buttonLayout->setAlignment(Qt::AlignLeft);
     chart = new QChart();
     chartView = new QChartView(chart);
@@ -267,16 +283,49 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     setLayout(mainLayout);
 }
 
-void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mpVector)
+void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
 {
-    meteoPoints.append(mpVector);
+    meteoPoints.append(mp);
+    QDate myDailyDateFirst;
+    QDate myDailyDateLast;
+    QDate myHourlyDateFirst;
+    QDate myHourlyDateLast;
+    // search bigger data interval to show between meteoPoints
+    for (int i = 0; i < meteoPoints.size(); i++)
+    {
+        myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year, meteoPoints[i].obsDataD[0].date.month, meteoPoints[i].obsDataD[0].date.day);
+        myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD);
+        if (myDailyDateFirst.isValid() && myDailyDateFirst < firstDailyDate)
+        {
+            firstDailyDate = myDailyDateFirst;
+        }
+        if (myDailyDateLast.isValid() && myDailyDateLast > lastDailyDate)
+        {
+            lastDailyDate = myDailyDateLast;
+        }
+        myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year, meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
+                                  meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
+        myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH);
+        if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
+        {
+            firstHourlyDate = myHourlyDateFirst;
+        }
+        if (myHourlyDateLast.isValid() && myHourlyDateLast > lastHourlyDate)
+        {
+            lastHourlyDate = myHourlyDateLast;
+        }
+    }
     resetValues();
     if (currentFreq == daily)
     {
+        firstDate->setDate(firstDailyDate);
+        lastDate->setDate(lastDailyDate);
         drawDailyVar();
     }
     else if (currentFreq == hourly)
     {
+        firstDate->setDate(firstHourlyDate);
+        lastDate->setDate(lastHourlyDate);
         drawHourlyVar();
     }
 }
@@ -390,14 +439,14 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     FormInfo formInfo;
 
-    Crit3DDate firstDate;
     Crit3DDate myDate;
     long nDays = 0;
     double maxBar = 0;
     double maxLine = NODATA;
 
-    nDays = meteoPoints[0].nrObsDataDaysD;
-    firstDate = meteoPoints[0].obsDataD[0].date;
+    Crit3DDate firstDate = getCrit3DDate(this->firstDate->date());
+    Crit3DDate lastDate = getCrit3DDate(this->lastDate->date());
+    nDays = firstDate.daysTo(lastDate);
 
     int step = formInfo.start("Compute model...", nDays);
     int cont = 0;
@@ -481,15 +530,13 @@ void Crit3DMeteoWidget::drawDailyVar()
         axisY->setVisible(false);
     }
 
-    QDate first(firstDate.year, firstDate.month, firstDate.day);
-    QDate last = first.addDays(nDays);
     axisX->append(categories);
     axisX->setGridLineVisible(false);
     // update virtual x axis
     axisXvirtual->setFormat("MMM dd <br> yyyy");
     axisXvirtual->setTickCount(13);
-    axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
-    axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+    axisXvirtual->setMin(QDateTime(this->firstDate->date(), QTime(0,0,0)));
+    axisXvirtual->setMax(QDateTime(this->lastDate->date(), QTime(0,0,0)));
 
 }
 
@@ -498,15 +545,15 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     FormInfo formInfo;
 
-    Crit3DDate firstDate;
     Crit3DDate myDate;
     long nDays = 0;
     int nValues = 0;
     double maxBar = 0;
     double maxLine = NODATA;
 
-    nDays = meteoPoints[0].nrObsDataDaysH;
-    firstDate = meteoPoints[0].getMeteoPointHourlyValuesDate(0);
+    Crit3DDate firstDate = getCrit3DDate(this->firstDate->date());
+    Crit3DDate lastDate = getCrit3DDate(this->lastDate->date());
+    nDays = firstDate.daysTo(lastDate);
 
     int step = formInfo.start("Compute model...", nDays*24);
 
@@ -596,12 +643,10 @@ void Crit3DMeteoWidget::drawHourlyVar()
     axisX->append(categories);
     axisX->setGridLineVisible(false);
     // update virtual x axis
-    QDate first(firstDate.year, firstDate.month, firstDate.day);
-    QDate last = first.addDays(nDays);
     axisXvirtual->setFormat("MMM dd <br> yyyy <br> hh:mm");
     axisXvirtual->setTickCount(20); // TO DO how many?
-    axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
-    axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
+    axisXvirtual->setMin(QDateTime(this->firstDate->date(), QTime(0,0,0)));
+    axisXvirtual->setMax(QDateTime(this->lastDate->date(), QTime(0,0,0)));
 
 }
 
@@ -659,6 +704,12 @@ void Crit3DMeteoWidget::showVar()
 void Crit3DMeteoWidget::showDailyGraph()
 {
     currentFreq = daily;
+    firstDate->setDate(firstDailyDate);
+    lastDate->setDate(lastDailyDate);
+    firstDate->setDisplayFormat("dd/MM/yyyy");
+    lastDate->setDisplayFormat("dd/MM/yyyy");
+    firstDate->setMinimumWidth(firstDate->width()-firstDate->width()*0.3);
+    lastDate->setMinimumWidth(lastDate->width()-lastDate->width()*0.3);
 
     dailyButton->setEnabled(false);
     hourlyButton->setEnabled(true);
@@ -678,6 +729,12 @@ void Crit3DMeteoWidget::showDailyGraph()
 void Crit3DMeteoWidget::showHourlyGraph()
 {
     currentFreq = hourly;
+    firstDate->setDate(firstHourlyDate);
+    lastDate->setDate(lastHourlyDate);
+    firstDate->setDisplayFormat("dd/MM/yyyy hh:mm");
+    lastDate->setDisplayFormat("dd/MM/yyyy hh:mm");
+    firstDate->setMinimumWidth(firstDate->width()+firstDate->width()*0.3);
+    lastDate->setMinimumWidth(lastDate->width()+lastDate->width()*0.3);
 
     hourlyButton->setEnabled(false);
     dailyButton->setEnabled(true);
