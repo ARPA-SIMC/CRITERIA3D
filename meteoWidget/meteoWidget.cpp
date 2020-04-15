@@ -164,12 +164,6 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     if (isBar)
     {
         setVector.append(vectorBarSet);
-        QBarSeries* barFirstSeries = new QBarSeries();
-        for (int i = 0; i < setVector[0].size(); i++)
-        {
-            barFirstSeries->append(setVector[0][i]);
-        }
-        barSeries.append(barFirstSeries);
     }
 
     // read Crit3DPlotStyles and fill MapCSVStyles
@@ -450,9 +444,9 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     if (isBar)
     {
-        QBarSeries* barMpSeries = new QBarSeries();
         for (int mp=0; mp<meteoPoints.size();mp++)
         {
+            QBarSeries* barMpSeries = new QBarSeries();
             for (int i = 0; i < nameBar.size(); i++)
             {
                 barMpSeries->append(setVector[mp][i]);
@@ -560,9 +554,10 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     if (isBar)
     {
-        QBarSeries* barMpSeries = new QBarSeries();
+
         for (int mp=0; mp<meteoPoints.size();mp++)
         {
+            QBarSeries* barMpSeries = new QBarSeries();
             for (int i = 0; i < nameBar.size(); i++)
             {
                 barMpSeries->append(setVector[mp][i]);
