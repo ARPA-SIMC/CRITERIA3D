@@ -73,12 +73,16 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
             if (items.size() < CSVRequiredInfo)
             {
                 qDebug() << "invalid format CSV, missing data";
+                currentVariables.clear();
+                break;
             }
             QString key = items[0];
             items.removeFirst();
             if (key.isEmpty() || items[0].isEmpty())
             {
                 qDebug() << "invalid format CSV, missing data";
+                currentVariables.clear();
+                break;
             }
             if (key.contains("DAILY"))
             {
@@ -91,23 +95,39 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
             MapCSVDefault.insert(key,items);
             if (items[0] == "line")
             {
-                isLine = true;
-                QLineSeries* line = new QLineSeries();
-                line->setName(key);
-                line->setColor(QColor(items[1]));
-                vectorLine.append(line);
-                currentVariables.append(key);
-                nameLines.append(key);
+                auto search = MapDailyMeteoVar.find(key.toStdString());
+                auto searchHourly = MapHourlyMeteoVar.find(key.toStdString());
+                if (search != MapDailyMeteoVar.end() || searchHourly != MapHourlyMeteoVar.end())
+                {
+                    isLine = true;
+                    QLineSeries* line = new QLineSeries();
+                    line->setName(key);
+                    line->setColor(QColor(items[1]));
+                    vectorLine.append(line);
+                    currentVariables.append(key);
+                    nameLines.append(key);
+                }
             }
-            if (items[0] == "bar")
+            else if (items[0] == "bar")
             {
-                isBar = true;
-                QBarSet* set = new QBarSet(key);
-                set->setColor(QColor(items[1]));
-                set->setBorderColor(QColor(items[1]));
-                vectorBarSet.append(set);
-                currentVariables.append(key);
-                nameBar.append(key);
+                auto search = MapDailyMeteoVar.find(key.toStdString());
+                auto searchHourly = MapHourlyMeteoVar.find(key.toStdString());
+                if (search != MapDailyMeteoVar.end() || searchHourly != MapHourlyMeteoVar.end())
+                {
+                    isBar = true;
+                    QBarSet* set = new QBarSet(key);
+                    set->setColor(QColor(items[1]));
+                    set->setBorderColor(QColor(items[1]));
+                    vectorBarSet.append(set);
+                    currentVariables.append(key);
+                    nameBar.append(key);
+                }
+            }
+            else
+            {
+                qDebug() << "invalid format CSV, missing line or bar";
+                currentVariables.clear();
+                break;
             }
         }
     }
@@ -125,9 +145,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
             hourlyVar = hourlyVar+1;
         }
     }
-    if (dailyVar != 0 && hourlyVar != 0)
+    if (currentVariables.isEmpty() || (dailyVar != 0 && hourlyVar != 0))
     {
-        qDebug() << "invalid format CSV, both daily and hourly variables";
+        qDebug() << "invalid format CSV";
         currentFreq = noFrequency;
         currentVariables.clear();
         nameLines.clear();
@@ -136,6 +156,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
         isLine = false;
         isBar = false;
     }
+
     if (isLine)
     {
         lineSeries.append(vectorLine);
@@ -143,6 +164,12 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     if (isBar)
     {
         setVector.append(vectorBarSet);
+        QBarSeries* barFirstSeries = new QBarSeries();
+        for (int i = 0; i < setVector[0].size(); i++)
+        {
+            barFirstSeries->append(setVector[0][i]);
+        }
+        barSeries.append(barFirstSeries);
     }
 
     // read Crit3DPlotStyles and fill MapCSVStyles
@@ -229,32 +256,6 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     chart->addAxis(axisXvirtual, Qt::AlignBottom);
     chart->addAxis(axisY, Qt::AlignLeft);
     chart->addAxis(axisYdx, Qt::AlignRight);
-
-    if (isBar)
-    {
-        QBarSeries* barFirstSeries = new QBarSeries();
-        for (int i = 0; i < setVector[0].size(); i++)
-        {
-            barFirstSeries->append(setVector[0][i]);
-        }
-        barSeries.append(barFirstSeries);
-        if (setVector[0].size() != 0)
-        {
-            chart->addSeries(barSeries[0]);
-            barSeries[0]->attachAxis(axisX);
-            barSeries[0]->attachAxis(axisYdx);
-        }
-    }
-
-    if (isLine)
-    {
-        for (int i = 0; i < lineSeries[0].size(); i++)
-        {
-            chart->addSeries(lineSeries[0][i]);
-            lineSeries[0][i]->attachAxis(axisX);
-            lineSeries[0][i]->attachAxis(axisY);
-        }
-    }
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
