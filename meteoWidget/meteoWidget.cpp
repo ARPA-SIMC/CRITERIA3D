@@ -406,16 +406,15 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     int step = formInfo.start("Compute model...", nDays);
     int cont = 0;
-    QString substring;
-    QString name;
-    for (int mp=0; mp<meteoPoints.size();mp++)
+
+    categories.clear();
+    for (int day = 0; day<nDays; day++)
     {
-        categories.clear();
-        for (int day = 0; day<nDays; day++)
+        myDate = firstDate.addDays(day);
+        categories.append(QString::number(day+1));
+        for (int mp=0; mp<meteoPoints.size();mp++)
         {
             if ( (cont % step) == 0) formInfo.setValue(cont);
-            myDate = firstDate.addDays(day);
-            categories.append(QString::number(day+1));
             if (isLine)
             {
                 for (int i = 0; i < nameLines.size(); i++)
@@ -515,17 +514,18 @@ void Crit3DMeteoWidget::drawHourlyVar()
     firstDate = meteoPoints[0].getMeteoPointHourlyValuesDate(0);
 
     int step = formInfo.start("Compute model...", nDays*24);
-    for (int mp=0; mp<meteoPoints.size();mp++)
+
+    categories.clear();
+    for (int day = 0; day<nDays; day++)
     {
-        categories.clear();
-        for (int day = 0; day<nDays; day++)
+        myDate = firstDate.addDays(day);
+        for (int hour = 1; hour < 25; hour++)
         {
-            myDate = firstDate.addDays(day);
-            for (int hour = 1; hour < 25; hour++)
+            if ( (nValues % step) == 0) formInfo.setValue(nValues);
+            nValues = nValues + 1;
+            categories.append(QString::number(nValues));
+            for (int mp=0; mp<meteoPoints.size();mp++)
             {
-                if ( (nValues % step) == 0) formInfo.setValue(nValues);
-                nValues = nValues + 1;
-                categories.append(QString::number(nValues));
                 if (isLine)
                 {
                     for (int i = 0; i < nameLines.size(); i++)
@@ -608,6 +608,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
 
 }
+
 
 void Crit3DMeteoWidget::showVar()
 {
