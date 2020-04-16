@@ -23,6 +23,7 @@
             void showDailyGraph();
             void showHourlyGraph();
             void updateSeries();
+            void updateDate();
             void showVar();
 
         private:

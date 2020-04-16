@@ -275,6 +275,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
+    connect(firstDate, &QDateTimeEdit::dateChanged, [=](){ updateDate(); });
+    connect(lastDate, &QDateTimeEdit::dateChanged, [=](){ updateDate(); });
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -285,6 +287,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 
 void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
 {
+    firstDate->blockSignals(true);
+    lastDate->blockSignals(true);
+
     meteoPoints.append(mp);
     QDate myDailyDateFirst;
     QDate myDailyDateLast;
@@ -348,6 +353,8 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
         }
         drawHourlyVar();
     }
+    firstDate->blockSignals(false);
+    lastDate->blockSignals(false);
 }
 
 void Crit3DMeteoWidget::resetValues()
@@ -854,6 +861,21 @@ void Crit3DMeteoWidget::updateSeries()
     }
 
     resetValues();
+
+}
+
+void Crit3DMeteoWidget::updateDate()
+{
+
+    resetValues();
+    if (currentFreq == daily)
+    {
+        drawDailyVar();
+    }
+    else if (currentFreq == hourly)
+    {
+        drawHourlyVar();
+    }
 
 }
 
