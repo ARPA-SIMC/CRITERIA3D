@@ -576,7 +576,6 @@ void Crit3DMeteoWidget::drawDailyVar()
                     }
                 }
             }
-
         }
         tCount = 2;
     }
@@ -621,7 +620,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     Crit3DDate lastCrit3DDate = getCrit3DDate(lastDate->date());
     nDays = firstCrit3DDate.daysTo(lastCrit3DDate);
 
-    int step = formInfo.start("Compute model...", nDays*24);
+    int step = formInfo.start("Compute model...", (nDays+1)*24);
 
     categories.clear();
     for (int day = 0; day<=nDays; day++)
@@ -712,7 +711,15 @@ void Crit3DMeteoWidget::drawHourlyVar()
     axisXvirtual->setFormat("MMM dd <br> yyyy <br> hh:mm");
     axisXvirtual->setTickCount(20); // TO DO how many?
     axisXvirtual->setMin(QDateTime(this->firstDate->date(), QTime(0,0,0)));
-    axisXvirtual->setMax(QDateTime(this->lastDate->date(), QTime(0,0,0)));
+    if (firstDate->date() == lastDate->date())
+    {
+        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(1), QTime(0,0,0)));
+    }
+    else
+    {
+        axisXvirtual->setMax(QDateTime(this->lastDate->date(), QTime(0,0,0)));
+    }
+
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
 
