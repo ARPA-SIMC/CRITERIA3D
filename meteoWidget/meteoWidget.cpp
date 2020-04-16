@@ -275,8 +275,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
-    connect(firstDate, &QDateTimeEdit::dateChanged, [=](){ updateDate(); });
-    connect(lastDate, &QDateTimeEdit::dateChanged, [=](){ updateDate(); });
+    connect(firstDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
+    connect(lastDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -299,7 +299,7 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
     for (int i = 0; i < meteoPoints.size(); i++)
     {
         myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year, meteoPoints[i].obsDataD[0].date.month, meteoPoints[i].obsDataD[0].date.day);
-        myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD);
+        myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD-1);
         if (myDailyDateFirst.isValid() && myDailyDateFirst < firstDailyDate)
         {
             firstDailyDate = myDailyDateFirst;
@@ -310,7 +310,7 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
         }
         myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year, meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
                                   meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
-        myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH);
+        myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH-1);
         if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
         {
             firstHourlyDate = myHourlyDateFirst;
@@ -479,7 +479,7 @@ void Crit3DMeteoWidget::drawDailyVar()
     int cont = 0;
 
     categories.clear();
-    for (int day = 0; day<nDays; day++)
+    for (int day = 0; day<=nDays; day++)
     {
         myDate = firstDate.addDays(day);
         categories.append(QString::number(day+1));
@@ -585,7 +585,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     int step = formInfo.start("Compute model...", nDays*24);
 
     categories.clear();
-    for (int day = 0; day<nDays; day++)
+    for (int day = 0; day<=nDays; day++)
     {
         myDate = firstDate.addDays(day);
         for (int hour = 1; hour < 25; hour++)
