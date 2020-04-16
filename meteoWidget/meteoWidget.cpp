@@ -34,7 +34,7 @@
 #include <QMenuBar>
 #include <QPushButton>
 #include <QDate>
-
+#include <QtGlobal>
 #include <QDebug>
 
 
@@ -469,7 +469,7 @@ void Crit3DMeteoWidget::drawDailyVar()
     lastDate->blockSignals(true);
 
     Crit3DDate myDate;
-    long nDays = 0;
+    int nDays = 0;
     double maxBar = 0;
     double maxLine = NODATA;
 
@@ -484,7 +484,7 @@ void Crit3DMeteoWidget::drawDailyVar()
     for (int day = 0; day<=nDays; day++)
     {
         myDate = firstCrit3DDate.addDays(day);
-        categories.append(QString::number(day+1));
+        categories.append(QString::number(day));
         for (int mp=0; mp<meteoPoints.size();mp++)
         {
             if ( (cont % step) == 0) formInfo.setValue(cont);
@@ -494,7 +494,7 @@ void Crit3DMeteoWidget::drawDailyVar()
                 {
                     meteoVariable meteoVar = MapDailyMeteoVar.at(nameLines[i].toStdString());
                     double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar);
-                    lineSeries[mp][i]->append(day+1, value);
+                    lineSeries[mp][i]->append(day, value);
                     if (value > maxLine)
                     {
                         maxLine = value;
@@ -559,13 +559,47 @@ void Crit3DMeteoWidget::drawDailyVar()
         axisY->setVisible(false);
     }
 
+    int tCount = 0;
+    if (nDays<=2)
+    {
+        // add minimimum values required
+        if (nDays==0)
+        {
+            categories.append(QString::number(1));
+            for (int mp=0; mp<meteoPoints.size();mp++)
+            {
+                if (isLine)
+                {
+                    for (int i = 0; i < nameLines.size(); i++)
+                    {
+                        lineSeries[0][0]->append(1, NODATA);
+                    }
+                }
+            }
+
+        }
+        tCount = 2;
+    }
+    else
+    {
+        tCount = qMin(nDays+1,13);
+    }
+
     axisX->setCategories(categories);
     axisX->setGridLineVisible(false);
     // update virtual x axis
     axisXvirtual->setFormat("MMM dd <br> yyyy");
-    axisXvirtual->setTickCount(13);
-    axisXvirtual->setMin(QDateTime(this->firstDate->date(), QTime(0,0,0)));
-    axisXvirtual->setMax(QDateTime(this->lastDate->date(), QTime(0,0,0)));
+
+    axisXvirtual->setTickCount(tCount);
+    axisXvirtual->setMin(QDateTime(firstDate->date(), QTime(0,0,0)));
+    if (firstDate->date() == lastDate->date())
+    {
+        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(1), QTime(0,0,0)));
+    }
+    else
+    {
+        axisXvirtual->setMax(QDateTime(lastDate->date(), QTime(0,0,0)));
+    }
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
 }
@@ -596,7 +630,6 @@ void Crit3DMeteoWidget::drawHourlyVar()
         for (int hour = 1; hour < 25; hour++)
         {
             if ( (nValues % step) == 0) formInfo.setValue(nValues);
-            nValues = nValues + 1;
             categories.append(QString::number(nValues));
             for (int mp=0; mp<meteoPoints.size();mp++)
             {
@@ -627,6 +660,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
                     }
                 }
             }
+            nValues = nValues + 1;
         }
     }
     formInfo.close();
