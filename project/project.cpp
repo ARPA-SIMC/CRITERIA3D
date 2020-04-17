@@ -2056,7 +2056,6 @@ bool Project::loadProject()
     return true;
 }
 
-
 bool Project::checkMeteoGridForExport()
 {
     if (! meteoGridLoaded || meteoGridDbHandler == nullptr)
