@@ -590,14 +590,14 @@ void Crit3DMeteoWidget::drawDailyVar()
     axisXvirtual->setFormat("MMM dd <br> yyyy");
 
     axisXvirtual->setTickCount(tCount);
-    axisXvirtual->setMin(QDateTime(firstDate->date(), QTime(0,0,0)));
+    axisXvirtual->setMin(QDateTime(firstDate->date().addDays(-1), QTime(0,0,0)));
     if (firstDate->date() == lastDate->date())
     {
-        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(1), QTime(0,0,0)));
+        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(2), QTime(0,0,0)));
     }
     else
     {
-        axisXvirtual->setMax(QDateTime(lastDate->date(), QTime(0,0,0)));
+        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(1), QTime(0,0,0)));
     }
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
