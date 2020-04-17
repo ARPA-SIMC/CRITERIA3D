@@ -125,6 +125,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
                     vectorBarSet.append(set);
                     currentVariables.append(key);
                     nameBar.append(key);
+                    colorBar.append(QColor(items[1]));
                 }
             }
             else
@@ -366,7 +367,6 @@ void Crit3DMeteoWidget::resetValues()
         colorLine.append(lineSeries[0][i]->color());
     }
 
-    QVector<QColor> colorBar;
     for (int i = 0; i < nameBar.size(); i++)
     {
         colorBar.append(setVector[0][i]->color());
@@ -559,6 +559,7 @@ void Crit3DMeteoWidget::drawDailyVar()
         axisY->setVisible(false);
     }
 
+<<<<<<< HEAD
     int tCount = 0;
     if (nDays<=2)
     {
@@ -567,6 +568,25 @@ void Crit3DMeteoWidget::drawDailyVar()
         {
             categories.append(QString::number(1));
             for (int mp=0; mp<meteoPoints.size();mp++)
+=======
+
+    // add minimimum values required
+    if (nDays==0)
+    {
+        categories.append(QString::number(1));
+        categoriesVirtual.append(firstDate->date().addDays(1).toString("MMM dd <br> yyyy"));
+        for (int mp=0; mp<meteoPoints.size();mp++)
+        {
+            if (isLine)
+            {
+                for (int i = 0; i < nameLines.size(); i++)
+                {
+                    lineSeries[mp][0]->append(1, NODATA);
+                }
+            }
+
+            if (isBar)
+>>>>>>> 625de4f5a393f45e9b76714b0860a88bfc475cfb
             {
                 if (isLine)
                 {
@@ -576,15 +596,39 @@ void Crit3DMeteoWidget::drawDailyVar()
                     }
                 }
             }
+
         }
         tCount = 2;
     }
+<<<<<<< HEAD
     else
     {
         tCount = qMin(nDays+1,13);
     }
 
     axisX->setCategories(categories);
+=======
+
+
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        for (int j = 0; j < nameBar.size(); j++)
+        {
+            if (nDays < 5)
+            {
+                setVector[mp][j]->setColor(QColor("transparent"));
+            }
+            else
+            {
+                setVector[mp][j]->setColor(colorBar[j]);
+            }
+        }
+    }
+
+    axisX->setCategories(categories);
+    axisXvirtual->setCategories(categoriesVirtual);
+
+>>>>>>> 625de4f5a393f45e9b76714b0860a88bfc475cfb
     axisX->setGridLineVisible(false);
     // update virtual x axis
     axisXvirtual->setFormat("MMM dd <br> yyyy");
@@ -884,6 +928,7 @@ void Crit3DMeteoWidget::updateSeries()
                 {
                     isBar = true;
                     nameBar.append(i.key());
+                    colorBar.append(QColor(items[1]));
                     QBarSet* set = new QBarSet(i.key());
                     set->setColor(QColor(items[1]));
                     set->setBorderColor(QColor(items[1]));

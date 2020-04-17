@@ -44,6 +44,7 @@
             QStringList currentVariables;
             QStringList nameLines;
             QStringList nameBar;
+            QVector<QColor> colorBar;
             QVector<QVector<QLineSeries*>> lineSeries;
             QVector<QBarSeries*> barSeries;
             QVector<QVector<QBarSet*>> setVector;
