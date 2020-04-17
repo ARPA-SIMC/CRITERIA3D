@@ -486,11 +486,6 @@ void Crit3DMeteoWidget::drawDailyVar()
     // virtual x axis
     int nrIntervals = 12;
     double step = double(nDays) / double(nrIntervals);
-    while (fabs(step - round(step)) > 0.05)
-    {
-        nrIntervals++;
-        step = double(nDays) / double(nrIntervals);
-    }
     double nextIndex = step / 2 - 1;
     for (int day = 0; day < nDays; day++)
     {
