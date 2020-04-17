@@ -7,7 +7,7 @@
     #include <QGroupBox>
     #include <QLineEdit>
     #include <QLabel>
-#include "meteoPoint.h"
+    #include "meteoPoint.h"
 
 
     class Crit3DMeteoWidget : public QWidget
@@ -16,9 +16,22 @@
 
         public:
             Crit3DMeteoWidget();
-            void draw(QVector<Crit3DMeteoPoint> mpVector, frequencyType freq);
+            void draw(Crit3DMeteoPoint mp);
+            void resetValues();
+            void drawDailyVar();
+            void drawHourlyVar();
+            void showDailyGraph();
+            void showHourlyGraph();
+            void updateSeries();
+            void updateDate();
+            void showVar();
 
         private:
+            QPushButton *addVarButton;
+            QPushButton *dailyButton;
+            QPushButton *hourlyButton;
+            QDateTimeEdit *firstDate;
+            QDateTimeEdit *lastDate;
             QChartView *chartView;
             QChart *chart;
             QBarCategoryAxis *axisX;
@@ -27,10 +40,21 @@
             QValueAxis *axisYdx;
             QMap<QString, QStringList> MapCSVDefault;
             QMap<QString, QStringList> MapCSVStyles;
-            QVector<QLineSeries*> lineSeries;
-            QBarSeries* barSeries;
-            QVector<QBarSet*> setVector;
+            QStringList currentVariables;
+            QStringList nameLines;
+            QStringList nameBar;
+            QVector<QVector<QLineSeries*>> lineSeries;
+            QVector<QBarSeries*> barSeries;
+            QVector<QVector<QBarSet*>> setVector;
             QStringList categories;
+            QVector<Crit3DMeteoPoint> meteoPoints;
+            frequencyType currentFreq;
+            QDate firstDailyDate;
+            QDate lastDailyDate;
+            QDate firstHourlyDate;
+            QDate lastHourlyDate;
+            bool isLine;
+            bool isBar;
 
     };
 

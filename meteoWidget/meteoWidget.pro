@@ -3,9 +3,6 @@
 #   Meteo Widget library
 #   This project is part of CRITERIA-3D distribution
 #
-#   It requires Qwt library
-#   https://qwt.sourceforge.io/index.html
-#   Windows: set QWT_ROOT in environment variables
 #
 #----------------------------------------------------
 
@@ -34,14 +31,18 @@ win32:{
     TARGET = meteoWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../project
 
 
 SOURCES += \
+    ../../agrolib/project/formInfo.cpp \
+    dialogSelectVar.cpp \
     meteoWidget.cpp
 
 
 HEADERS += \
+    ../../agrolib/project/formInfo.h \
+    dialogSelectVar.h \
     meteoWidget.h
 
 

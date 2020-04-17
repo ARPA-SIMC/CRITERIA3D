@@ -66,7 +66,7 @@ bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* 
     QFile file(fileCSV);
     if ( !file.open(QFile::ReadOnly | QFile::Text) )
     {
-        qDebug() << "data file not exists";
+        qDebug() << "data file not exists:" << fileCSV;
         return false;
     }
 
