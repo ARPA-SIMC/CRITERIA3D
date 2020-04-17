@@ -480,37 +480,35 @@ void Crit3DMeteoWidget::drawDailyVar()
     Crit3DDate lastfirstCrit3DDate = getCrit3DDate(lastDate->date());
     nDays = firstCrit3DDate.daysTo(lastfirstCrit3DDate)+1;
 
-    int step = formInfo.start("Compute model...", nDays);
-    int cont = 0;
-
     categories.clear();
     categoriesVirtual.clear();
 
+    // virtual x axis
     int nrIntervals = 12;
-    double ratio = double(nDays) / double(nrIntervals);
+    double step = double(nDays) / double(nrIntervals);
+    while (fabs(step - round(step)) > 0.05)
+    {
+        nrIntervals++;
+        step = double(nDays) / double(nrIntervals);
+    }
+    double nextIndex = step / 2 - 1;
+    for (int day = 0; day < nDays; day++)
+    {
+        myDate = firstCrit3DDate.addDays(day);
+        if (nDays <= nrIntervals || day == round(nextIndex))
+        {
+            categoriesVirtual.append(getQDate(myDate).toString("MMM dd <br> yyyy"));
+            nextIndex += step;
+        }
+    }
 
-    for (int day = 0; day<nDays; day++)
+    for (int day = 0; day < nDays; day++)
     {
         myDate = firstCrit3DDate.addDays(day);
         categories.append(QString::number(day));
-        if (nDays > nrIntervals)
-        {
-            if (fabs(fmod(day, ratio)) < 0.01)
-            {
-                categoriesVirtual.append(getQDate(myDate).toString("MMM dd <br> yyyy"));
-            }
-            else
-            {
-                categoriesVirtual.append("");
-            }
-        }
-        else
-        {
-            categoriesVirtual.append(getQDate(myDate).toString("MMM dd <br> yyyy"));
-        }
+
         for (int mp=0; mp<meteoPoints.size();mp++)
         {
-            if ( (cont % step) == 0) formInfo.setValue(cont);
             if (isLine)
             {
                 for (int i = 0; i < nameLines.size(); i++)
@@ -538,10 +536,8 @@ void Crit3DMeteoWidget::drawDailyVar()
                     }
                 }
             }
-            cont++; // formInfo update
         }
     }
-    formInfo.close();
 
     if (isBar)
     {
