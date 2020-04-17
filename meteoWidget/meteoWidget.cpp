@@ -263,14 +263,14 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     axisYdx->setGridLineVisible(false);
 
     chart->addAxis(axisX, Qt::AlignBottom);
-    chart->addAxis(axisXvirtual, Qt::AlignBottom);
+    //chart->addAxis(axisXvirtual, Qt::AlignBottom);
     chart->addAxis(axisY, Qt::AlignLeft);
     chart->addAxis(axisYdx, Qt::AlignRight);
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
     chartView->setRenderHint(QPainter::Antialiasing);
-    axisX->hide();
+    //axisX->hide();
 
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
@@ -484,7 +484,22 @@ void Crit3DMeteoWidget::drawDailyVar()
     for (int day = 0; day<=nDays; day++)
     {
         myDate = firstCrit3DDate.addDays(day);
-        categories.append(QString::number(day));
+        //categories.append(QString::number(day));
+        if (nDays>12)
+        {
+            if (day % ( (nDays+1)/12) == 0)
+            {
+                categories.append(getQDate(myDate).toString("MMM dd <br> yyyy"));
+            }
+            else
+            {
+                categories.append("");
+            }
+        }
+        else
+        {
+            categories.append(getQDate(myDate).toString("MMM dd <br> yyyy"));
+        }
         for (int mp=0; mp<meteoPoints.size();mp++)
         {
             if ( (cont % step) == 0) formInfo.setValue(cont);
@@ -559,34 +574,28 @@ void Crit3DMeteoWidget::drawDailyVar()
         axisY->setVisible(false);
     }
 
-    int tCount = 0;
-    if (nDays<=2)
+
+    // add minimimum values required
+    if (nDays==0)
     {
-        // add minimimum values required
-        if (nDays==0)
+        categories.append(firstDate->date().addDays(1).toString("MMM dd <br> yyyy"));
+        for (int mp=0; mp<meteoPoints.size();mp++)
         {
-            categories.append(QString::number(1));
-            for (int mp=0; mp<meteoPoints.size();mp++)
+            if (isLine)
             {
-                if (isLine)
+                for (int i = 0; i < nameLines.size(); i++)
                 {
-                    for (int i = 0; i < nameLines.size(); i++)
-                    {
-                        lineSeries[0][0]->append(1, NODATA);
-                    }
+                    lineSeries[0][0]->append(1, NODATA);
                 }
             }
         }
-        tCount = 2;
-    }
-    else
-    {
-        tCount = qMin(nDays+1,13);
     }
 
     axisX->setCategories(categories);
     axisX->setGridLineVisible(false);
+
     // update virtual x axis
+    /*
     axisXvirtual->setFormat("MMM dd <br> yyyy");
 
     axisXvirtual->setTickCount(tCount);
@@ -599,6 +608,8 @@ void Crit3DMeteoWidget::drawDailyVar()
     {
         axisXvirtual->setMax(QDateTime(lastDate->date().addDays(1), QTime(0,0,0)));
     }
+    */
+
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
 }
