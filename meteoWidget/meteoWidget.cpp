@@ -659,57 +659,83 @@ void Crit3DMeteoWidget::drawHourlyVar()
     firstDate->blockSignals(true);
     lastDate->blockSignals(true);
 
-    Crit3DDate myDate;
-    long nDays = 0;
-    int nValues = 0;
+    Crit3DTime myDate;
+    int nDays = 0;
     double maxBar = 0;
     double maxLine = NODATA;
 
-    Crit3DDate firstCrit3DDate = getCrit3DDate(firstDate->date());
-    Crit3DDate lastCrit3DDate = getCrit3DDate(lastDate->date());
-    nDays = firstCrit3DDate.daysTo(lastCrit3DDate);
-
-    int step = formInfo.start("Compute model...", (nDays+1)*24);
+    Crit3DTime firstCrit3DDate(getCrit3DDate(firstDate->date()),0);
+    Crit3DTime lastCrit3DDate(getCrit3DDate(lastDate->date()),0);
+    nDays = firstCrit3DDate.date.daysTo(lastCrit3DDate.date)+1;
+    int nValues = nDays*24;
+    int stepFormInfo = formInfo.start("Compute model...", nValues);
 
     categories.clear();
-    for (int day = 0; day<=nDays; day++)
+    categoriesVirtual.clear();
+
+    // virtual x axis
+    int nrIntervals;
+    if (nValues <= 12)
     {
-        myDate = firstCrit3DDate.addDays(day);
-        for (int hour = 1; hour < 25; hour++)
+        nrIntervals = nValues;
+    }
+    else if (nValues <= 45)
+    {
+        nrIntervals = nValues/3;
+    }
+    else
+    {
+        nrIntervals = 12;
+    }
+    double step = double(nValues) / double(nrIntervals);
+    double nextIndex = step / 2 - 0.5;
+
+    for (int value = 0; value < nValues; value++)
+    {
+        myDate = firstCrit3DDate.addSeconds(value*3600);
+        if (value == round(nextIndex))
         {
-            if ( (nValues % step) == 0) formInfo.setValue(nValues);
-            categories.append(QString::number(nValues));
-            for (int mp=0; mp<meteoPoints.size();mp++)
+            categoriesVirtual.append(getQDateTime(myDate).toString("MMM dd <br> yyyy <br> hh:mm"));
+            nextIndex += step;
+        }
+    }
+
+    for (int value = 0; value< nValues; value++)
+    {
+        myDate = firstCrit3DDate.addSeconds(value*3600);
+        if ( (nValues % stepFormInfo) == 0) formInfo.setValue(nValues);
+        categories.append(QString::number(nValues));
+
+        for (int mp=0; mp<meteoPoints.size();mp++)
+        {
+            if (isLine)
             {
-                if (isLine)
+                for (int i = 0; i < nameLines.size(); i++)
                 {
-                    for (int i = 0; i < nameLines.size(); i++)
+                    meteoVariable meteoVar = MapHourlyMeteoVar.at(nameLines[i].toStdString());
+                    double value = meteoPoints[mp].getMeteoPointValueH(myDate.date, myDate.getHour(), 0, meteoVar);
+                    lineSeries[mp][i]->append(nValues, value);
+                    if (value > maxLine)
                     {
-                        meteoVariable meteoVar = MapHourlyMeteoVar.at(nameLines[i].toStdString());
-                        double value = meteoPoints[mp].getMeteoPointValueH(myDate, hour, 0, meteoVar);
-                        lineSeries[mp][i]->append(nValues, value);
-                        if (value > maxLine)
-                        {
-                            maxLine = value;
-                        }
-                    }
-                }
-                if (isBar)
-                {
-                    for (int j = 0; j < nameBar.size(); j++)
-                    {
-                        meteoVariable meteoVar = MapHourlyMeteoVar.at(nameBar[j].toStdString());
-                        double value = meteoPoints[mp].getMeteoPointValueH(myDate, hour, 0, meteoVar);
-                        *setVector[mp][j] << value;
-                        if (value > maxBar)
-                        {
-                            maxBar = value;
-                        }
+                        maxLine = value;
                     }
                 }
             }
-            nValues = nValues + 1;
+            if (isBar)
+            {
+                for (int j = 0; j < nameBar.size(); j++)
+                {
+                    meteoVariable meteoVar = MapHourlyMeteoVar.at(nameBar[j].toStdString());
+                    double value = meteoPoints[mp].getMeteoPointValueH(myDate.date, myDate.getHour(), 0, meteoVar);
+                    *setVector[mp][j] << value;
+                    if (value > maxBar)
+                    {
+                        maxBar = value;
+                    }
+                }
+            }
         }
+        nValues = nValues + 1;
     }
     formInfo.close();
 
@@ -755,6 +781,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
 
     axisX->setCategories(categories);
+    axisXvirtual->setCategories(categoriesVirtual);
     axisX->setGridLineVisible(false);
     // update virtual x axis
     /*
