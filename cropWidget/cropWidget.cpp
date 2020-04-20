@@ -839,7 +839,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     this->lastYearListComboBox.blockSignals(true);
     this->firstYearListComboBox.clear();
     this->lastYearListComboBox.clear();
-    yearList.clear();
+    this->yearList.clear();
     this->firstYearListComboBox.blockSignals(false);
     this->lastYearListComboBox.blockSignals(false);
 

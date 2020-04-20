@@ -125,6 +125,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
                     vectorBarSet.append(set);
                     currentVariables.append(key);
                     nameBar.append(key);
+                    colorBar.append(QColor(items[1]));
                 }
             }
             else
@@ -242,7 +243,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     chartView->setChart(chart);
 
     axisX = new QBarCategoryAxis();
-    axisXvirtual = new QDateTimeAxis();
+    axisXvirtual = new QBarCategoryAxis();
+    //axisXvirtual = new QDateTimeAxis();
     axisY = new QValueAxis();
     axisYdx = new QValueAxis();
 
@@ -251,10 +253,12 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     axisX->setTitleText("Date");
     axisX->setGridLineVisible(false);
     axisXvirtual->setTitleText("Date");
+    /*
     axisXvirtual->setFormat("MMM dd <br> yyyy");
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
     axisXvirtual->setTickCount(13);
+    */
 
     axisY->setRange(0,30);
     axisY->setGridLineVisible(false);
@@ -366,7 +370,6 @@ void Crit3DMeteoWidget::resetValues()
         colorLine.append(lineSeries[0][i]->color());
     }
 
-    QVector<QColor> colorBar;
     for (int i = 0; i < nameBar.size(); i++)
     {
         colorBar.append(setVector[0][i]->color());
@@ -475,19 +478,32 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     Crit3DDate firstCrit3DDate = getCrit3DDate(firstDate->date());
     Crit3DDate lastfirstCrit3DDate = getCrit3DDate(lastDate->date());
-    nDays = firstCrit3DDate.daysTo(lastfirstCrit3DDate);
-
-    int step = formInfo.start("Compute model...", nDays);
-    int cont = 0;
+    nDays = firstCrit3DDate.daysTo(lastfirstCrit3DDate)+1;
 
     categories.clear();
-    for (int day = 0; day<=nDays; day++)
+    categoriesVirtual.clear();
+
+    // virtual x axis
+    int nrIntervals = 12;
+    double step = double(nDays) / double(nrIntervals);
+    double nextIndex = step / 2 - 1;
+    for (int day = 0; day < nDays; day++)
+    {
+        myDate = firstCrit3DDate.addDays(day);
+        if (nDays <= nrIntervals || day == round(nextIndex))
+        {
+            categoriesVirtual.append(getQDate(myDate).toString("MMM dd <br> yyyy"));
+            nextIndex += step;
+        }
+    }
+
+    for (int day = 0; day < nDays; day++)
     {
         myDate = firstCrit3DDate.addDays(day);
         categories.append(QString::number(day));
+
         for (int mp=0; mp<meteoPoints.size();mp++)
         {
-            if ( (cont % step) == 0) formInfo.setValue(cont);
             if (isLine)
             {
                 for (int i = 0; i < nameLines.size(); i++)
@@ -515,10 +531,8 @@ void Crit3DMeteoWidget::drawDailyVar()
                     }
                 }
             }
-            cont++; // formInfo update
         }
     }
-    formInfo.close();
 
     if (isBar)
     {
@@ -559,46 +573,70 @@ void Crit3DMeteoWidget::drawDailyVar()
         axisY->setVisible(false);
     }
 
-    int tCount = 0;
-    if (nDays<=2)
+
+    // add minimimum values required
+    if (nDays==0)
     {
-        // add minimimum values required
-        if (nDays==0)
+        categories.append(QString::number(1));
+        categoriesVirtual.append(firstDate->date().addDays(1).toString("MMM dd <br> yyyy"));
+        for (int mp=0; mp<meteoPoints.size();mp++)
         {
-            categories.append(QString::number(1));
-            for (int mp=0; mp<meteoPoints.size();mp++)
+            if (isLine)
             {
-                if (isLine)
+                for (int i = 0; i < nameLines.size(); i++)
                 {
-                    for (int i = 0; i < nameLines.size(); i++)
-                    {
-                        lineSeries[0][0]->append(1, NODATA);
-                    }
+                    lineSeries[mp][0]->append(1, NODATA);
                 }
             }
+
+            if (isBar)
+            {
+                for (int j = 0; j < nameBar.size(); j++)
+                {
+                    *setVector[mp][j] << NODATA;
+                }
+            }
+
         }
-        tCount = 2;
     }
-    else
+
+
+    for (int mp=0; mp<meteoPoints.size();mp++)
     {
-        tCount = qMin(nDays+1,13);
+        for (int j = 0; j < nameBar.size(); j++)
+        {
+            if (nDays < 5)
+            {
+                setVector[mp][j]->setColor(QColor("transparent"));
+            }
+            else
+            {
+                setVector[mp][j]->setColor(colorBar[j]);
+            }
+        }
     }
 
     axisX->setCategories(categories);
+    axisXvirtual->setCategories(categoriesVirtual);
+
     axisX->setGridLineVisible(false);
+
     // update virtual x axis
+    /*
     axisXvirtual->setFormat("MMM dd <br> yyyy");
 
     axisXvirtual->setTickCount(tCount);
-    axisXvirtual->setMin(QDateTime(firstDate->date(), QTime(0,0,0)));
+    axisXvirtual->setMin(QDateTime(firstDate->date().addDays(-1), QTime(0,0,0)));
     if (firstDate->date() == lastDate->date())
     {
-        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(1), QTime(0,0,0)));
+        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(2), QTime(0,0,0)));
     }
     else
     {
-        axisXvirtual->setMax(QDateTime(lastDate->date(), QTime(0,0,0)));
+        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(1), QTime(0,0,0)));
     }
+    */
+
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
 }
@@ -708,6 +746,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     axisX->setCategories(categories);
     axisX->setGridLineVisible(false);
     // update virtual x axis
+    /*
     axisXvirtual->setFormat("MMM dd <br> yyyy <br> hh:mm");
     axisXvirtual->setTickCount(20); // TO DO how many?
     axisXvirtual->setMin(QDateTime(this->firstDate->date(), QTime(0,0,0)));
@@ -719,6 +758,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     {
         axisXvirtual->setMax(QDateTime(this->lastDate->date(), QTime(0,0,0)));
     }
+    */
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
@@ -884,6 +924,7 @@ void Crit3DMeteoWidget::updateSeries()
                 {
                     isBar = true;
                     nameBar.append(i.key());
+                    colorBar.append(QColor(items[1]));
                     QBarSet* set = new QBarSet(i.key());
                     set->setColor(QColor(items[1]));
                     set->setBorderColor(QColor(items[1]));

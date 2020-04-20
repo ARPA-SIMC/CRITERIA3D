@@ -35,7 +35,8 @@
             QChartView *chartView;
             QChart *chart;
             QBarCategoryAxis *axisX;
-            QDateTimeAxis *axisXvirtual;
+            QBarCategoryAxis *axisXvirtual;
+            //QDateTimeAxis *axisXvirtual;
             QValueAxis *axisY;
             QValueAxis *axisYdx;
             QMap<QString, QStringList> MapCSVDefault;
@@ -43,10 +44,12 @@
             QStringList currentVariables;
             QStringList nameLines;
             QStringList nameBar;
+            QVector<QColor> colorBar;
             QVector<QVector<QLineSeries*>> lineSeries;
             QVector<QBarSeries*> barSeries;
             QVector<QVector<QBarSet*>> setVector;
             QStringList categories;
+            QStringList categoriesVirtual;
             QVector<Crit3DMeteoPoint> meteoPoints;
             frequencyType currentFreq;
             QDate firstDailyDate;
