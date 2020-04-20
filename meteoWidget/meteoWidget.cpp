@@ -484,13 +484,25 @@ void Crit3DMeteoWidget::drawDailyVar()
     categoriesVirtual.clear();
 
     // virtual x axis
-    int nrIntervals = 12;
+    int nrIntervals;
+    if (nDays <= 12)
+    {
+        nrIntervals = nDays;
+    }
+    else if (nDays <= 45)
+    {
+        nrIntervals = nDays/3;
+    }
+    else
+    {
+        nrIntervals = 12;
+    }
     double step = double(nDays) / double(nrIntervals);
-    double nextIndex = step / 2 - 1;
+    double nextIndex = step / 2 - 0.5;
     for (int day = 0; day < nDays; day++)
     {
         myDate = firstCrit3DDate.addDays(day);
-        if (nDays <= nrIntervals || day == round(nextIndex))
+        if (day == round(nextIndex))
         {
             categoriesVirtual.append(getQDate(myDate).toString("MMM dd <br> yyyy"));
             nextIndex += step;
