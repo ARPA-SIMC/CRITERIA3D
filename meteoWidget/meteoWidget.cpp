@@ -416,7 +416,11 @@ void Crit3DMeteoWidget::resetValues()
             {
                 QLineSeries* line = new QLineSeries();
                 line->setName("ID"+QString::fromStdString(meteoPoints[mp].id)+"_"+nameLines[i]);
-                line->setColor(colorLine[i]);
+                QColor lineColor = colorLine[i];
+                //lineColor = lineColor.lighter(mp*150);
+                lineColor.setAlpha(mp*200+55);
+                line->setColor(lineColor);
+                //line->setColor(colorLine[i]);
                 vectorLine.append(line);
             }
             if (vectorLine.size() != 0)
@@ -438,8 +442,12 @@ void Crit3DMeteoWidget::resetValues()
             {
                 name = "ID"+QString::fromStdString(meteoPoints[mp].id)+"_"+nameBar[i];
                 QBarSet* set = new QBarSet(name);
-                set->setColor(colorBar[i]);
-                set->setBorderColor(colorBar[i]);
+                QColor barColor = colorBar[i];
+                barColor.setAlpha(mp*200+55);
+                set->setColor(barColor);
+                set->setBorderColor(barColor);
+                //set->setColor(colorBar[i]);
+                //set->setBorderColor(colorBar[i]);
                 vectorBarSet.append(set);
             }
             if (vectorBarSet.size() != 0)
@@ -623,7 +631,10 @@ void Crit3DMeteoWidget::drawDailyVar()
             }
             else
             {
-                setVector[mp][j]->setColor(colorBar[j]);
+                QColor barColor = colorBar[j];
+                barColor.setAlpha(mp*200+55);
+                setVector[mp][j]->setColor(barColor);
+                //setVector[mp][j]->setColor(colorBar[j]);
             }
         }
     }
@@ -654,7 +665,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 
 void Crit3DMeteoWidget::drawHourlyVar()
 {
-
+/*
     FormInfo formInfo;
     firstDate->blockSignals(true);
     lastDate->blockSignals(true);
@@ -784,23 +795,22 @@ void Crit3DMeteoWidget::drawHourlyVar()
     axisXvirtual->setCategories(categoriesVirtual);
     axisX->setGridLineVisible(false);
     // update virtual x axis
-    /*
-    axisXvirtual->setFormat("MMM dd <br> yyyy <br> hh:mm");
-    axisXvirtual->setTickCount(20); // TO DO how many?
-    axisXvirtual->setMin(QDateTime(this->firstDate->date(), QTime(0,0,0)));
-    if (firstDate->date() == lastDate->date())
-    {
-        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(1), QTime(0,0,0)));
-    }
-    else
-    {
-        axisXvirtual->setMax(QDateTime(this->lastDate->date(), QTime(0,0,0)));
-    }
-    */
+//    axisXvirtual->setFormat("MMM dd <br> yyyy <br> hh:mm");
+//    axisXvirtual->setTickCount(20); // TO DO how many?
+//    axisXvirtual->setMin(QDateTime(this->firstDate->date(), QTime(0,0,0)));
+//    if (firstDate->date() == lastDate->date())
+//    {
+//        axisXvirtual->setMax(QDateTime(lastDate->date().addDays(1), QTime(0,0,0)));
+//    }
+//    else
+//    {
+//        axisXvirtual->setMax(QDateTime(this->lastDate->date(), QTime(0,0,0)));
+//    }
+
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
-
+*/
 }
 
 
