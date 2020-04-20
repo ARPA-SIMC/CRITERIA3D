@@ -37,12 +37,14 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../pr
 SOURCES += \
     ../../agrolib/project/formInfo.cpp \
     dialogSelectVar.cpp \
-    meteoWidget.cpp
+    meteoWidget.cpp \
+    callout.cpp
 
 
 HEADERS += \
     ../../agrolib/project/formInfo.h \
     dialogSelectVar.h \
-    meteoWidget.h
+    meteoWidget.h   \
+    callout.h
 
 

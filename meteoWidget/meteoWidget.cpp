@@ -276,6 +276,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     chartView->setRenderHint(QPainter::Antialiasing);
     axisX->hide();
 
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
+
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
@@ -467,6 +470,7 @@ void Crit3DMeteoWidget::resetValues()
                 chart->addSeries(lineSeries[mp][i]);
                 lineSeries[mp][i]->attachAxis(axisX);
                 lineSeries[mp][i]->attachAxis(axisY);
+                connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
             }
         }
     }
@@ -665,7 +669,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 
 void Crit3DMeteoWidget::drawHourlyVar()
 {
-/*
+
     FormInfo formInfo;
     firstDate->blockSignals(true);
     lastDate->blockSignals(true);
@@ -810,7 +814,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
-*/
+
 }
 
 
@@ -1014,4 +1018,24 @@ void Crit3DMeteoWidget::updateDate()
         drawHourlyVar();
     }
 
+}
+
+void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
+{
+    QLineSeries *series = qobject_cast<QLineSeries *>(sender());
+    if (state)
+    {
+        int doy = point.x(); //start from 0
+        QDate xDate = firstDate->date().addDays(doy);
+        double value = series->at(doy).y();
+        m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")).arg(value, 0, 'f', 1));
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
 }
