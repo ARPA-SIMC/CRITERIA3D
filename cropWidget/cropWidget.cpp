@@ -65,8 +65,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     QString docPath, saveButtonPath, updateButtonPath;
     if (searchDocPath(&docPath))
     {
-        saveButtonPath = docPath + "img/saveButton.png";
-        updateButtonPath = docPath + "img/updateButton.png";
+        saveButtonPath = docPath + "img_/saveButton.png";
+        updateButtonPath = docPath + "img_/updateButton.png";
     }
     else
     {
@@ -74,8 +74,24 @@ Crit3DCropWidget::Crit3DCropWidget()
         updateButtonPath = "../img/updateButton.png";
     }
 
-    QPixmap savePixmap(saveButtonPath);
-    QPixmap updatePixmap(updateButtonPath);
+    QPixmap savePixmap;
+    QPixmap updatePixmap;
+    if (QFileInfo(saveButtonPath).exists())
+        savePixmap.load(saveButtonPath);
+    else
+    {
+        savePixmap.rect().setSize(QSize(20,20));
+        QMessageBox::critical(nullptr, "error", "missing file: img/saveButton.png");
+    }
+
+    if (QFileInfo(updateButtonPath).exists())
+        updatePixmap.load(updateButtonPath);
+    else
+    {
+        updatePixmap.rect().setSize(QSize(20,20));
+        QMessageBox::critical(nullptr, "error", "missing file: img/updateButton.png");
+    }
+
     saveButton = new QPushButton();
     updateButton = new QPushButton();
     QIcon saveButtonIcon(savePixmap);
