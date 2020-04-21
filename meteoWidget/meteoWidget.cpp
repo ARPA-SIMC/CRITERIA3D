@@ -65,6 +65,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     QFile fileDefaultGraph(defaultPath);
     if ( !fileDefaultGraph.open(QFile::ReadOnly | QFile::Text) ) {
         qDebug() << "File not exists";
+        QMessageBox::information(nullptr, "Warning", "Missing Crit3DPlotDefault.csv");
     }
     else
     {
@@ -174,6 +175,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     // read Crit3DPlotStyles and fill MapCSVStyles
     QFile fileStylesGraph(stylesPath);
     if ( !fileStylesGraph.open(QFile::ReadOnly | QFile::Text) ) {
+        QMessageBox::information(nullptr, "Error", "Missing Crit3DPlotStyles.csv");
         qDebug() << "File not exists";
     }
     else
@@ -186,12 +188,14 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
             QStringList items = line.split(",");
             if (items.size() < CSVRequiredInfo)
             {
+                QMessageBox::information(nullptr, "Error", "invalid format Crit3DPlotStyles.csv");
                 qDebug() << "invalid format CSV, missing data";
             }
             QString key = items[0];
             items.removeFirst();
             if (key.isEmpty() || items[0].isEmpty())
             {
+                QMessageBox::information(nullptr, "Error", "invalid format Crit3DPlotStyles.csv");
                 qDebug() << "invalid format CSV, missing data";
             }
             MapCSVStyles.insert(key,items);
