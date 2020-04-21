@@ -1018,7 +1018,10 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
         return;
     }
 
-    on_actionUpdate();
+    if (tabWidget->currentIndex() != 0)
+    {
+        on_actionUpdate();
+    }
 }
 
 
