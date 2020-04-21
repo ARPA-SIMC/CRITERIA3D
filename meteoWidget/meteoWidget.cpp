@@ -678,11 +678,8 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     // virtual x axis
     int nrIntervals;
-    if (nValues <= 12)
-    {
-        nrIntervals = nValues;
-    }
-    else if (nValues <= 45)
+
+    if (nValues <= 45)
     {
         nrIntervals = nValues/3;
     }
