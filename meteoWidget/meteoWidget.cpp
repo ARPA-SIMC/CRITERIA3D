@@ -257,12 +257,6 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     axisX->setTitleText("Date");
     axisX->setGridLineVisible(false);
     axisXvirtual->setTitleText("Date");
-    /*
-    axisXvirtual->setFormat("MMM dd <br> yyyy");
-    axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
-    axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
-    axisXvirtual->setTickCount(13);
-    */
 
     axisY->setRange(0,30);
     axisY->setGridLineVisible(false);
@@ -604,7 +598,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 
 
     // add minimimum values required
-    if (nDays==0)
+    if (nDays==1)
     {
         categories.append(QString::number(1));
         categoriesVirtual.append(firstDate->date().addDays(1).toString("MMM dd <br> yyyy"));
@@ -993,6 +987,7 @@ void Crit3DMeteoWidget::updateDate()
 
 }
 
+/*
 void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 {
     QLineSeries *series = qobject_cast<QLineSeries *>(sender());
@@ -1047,6 +1042,140 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
             if (qMin(distBefore,distDoY) == distBefore)
             {
                 doy = doy - 1;
+            }
+
+        }
+
+        if (currentFreq == daily)
+        {
+            QDate xDate = firstDate->date().addDays(doy);
+            double value = series->at(doy).y();
+            m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")).arg(value, 0, 'f', 1));
+        }
+        if (currentFreq == hourly)
+        {
+            QDateTime xDate(firstDate->date(),QTime(0,0,0));
+            xDate = xDate.addSecs(3600*doy);
+            double value = series->at(doy).y();
+            m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")).arg(value, 0, 'f', 1));
+        }
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+}
+*/
+
+void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
+{
+    QLineSeries *series = qobject_cast<QLineSeries *>(sender());
+    if (state)
+    {
+        int doy = point.x(); //start from 0
+        QPoint CursorPoint = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
+
+        QPoint pointDoY = series->at(doy).toPoint();
+
+        if (doy == 0)
+        {
+            QPoint pointNext = series->at(doy+1).toPoint();
+            int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointNext).x());
+            int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
+            int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
+
+            if (qMin(distDoY, distNext) == distNext)
+            {
+                if (distNext > distStep/10)
+                {
+                    return;
+                }
+                else
+                {
+                    doy = doy + 1;
+                }
+            }
+            else
+            {
+                if (distDoY > distStep/10)
+                {
+                    return;
+                }
+            }
+
+        }
+        else if (doy > 0 && doy < series->count())
+        {
+            QPoint pointBefore = series->at(doy-1).toPoint();
+            QPoint pointNext = series->at(doy+1).toPoint();
+
+            int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointNext).x());
+            int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
+            int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
+            int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
+
+            if (qMin(qMin(distBefore,distDoY), distNext) == distBefore)
+            {
+                if (distBefore > distStep/10)
+                {
+                    return;
+                }
+                else
+                {
+                    doy = doy - 1;
+                }
+            }
+            else if (qMin(qMin(distBefore,distDoY), distNext) == distNext)
+            {
+                if (distNext > distStep/10)
+                {
+                    return;
+                }
+                else
+                {
+                    doy = doy + 1;
+                }
+            }
+            else
+            {
+                if (distDoY > distStep/10)
+                {
+                    return;
+                }
+            }
+
+        }
+        else if (doy == series->count())
+        {
+            QPoint pointBefore = series->at(doy-1).toPoint();
+            QPoint pointDoY = series->at(doy).toPoint();
+            int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointBefore).x());
+
+            int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
+            int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
+
+            if (qMin(distDoY, distBefore) == distBefore)
+            {
+                if (distBefore > distStep/10)
+                {
+                    return;
+                }
+                else
+                {
+                    doy = doy - 1;
+                }
+            }
+            else
+            {
+                if (distDoY > distStep/10)
+                {
+                    return;
+                }
             }
 
         }
