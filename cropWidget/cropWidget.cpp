@@ -493,9 +493,7 @@ void Crit3DCropWidget::on_actionOpenProject()
 {
     this->firstYearListComboBox.blockSignals(true);
     this->lastYearListComboBox.blockSignals(true);
-
     checkCropUpdate();
-
     QString projFileName = QFileDialog::getOpenFileName(this, tr("Open Criteria-1D project"), "", tr("Settings files (*.ini)"));
 
     if (projFileName == "") return;
