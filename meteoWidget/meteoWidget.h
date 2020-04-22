@@ -27,6 +27,7 @@
             void updateDate();
             void showVar();
             void tooltipLineSeries(QPointF point, bool state);
+            void tooltipBar(bool state, int index, QBarSet *barset);
 
         private:
             QPushButton *addVarButton;

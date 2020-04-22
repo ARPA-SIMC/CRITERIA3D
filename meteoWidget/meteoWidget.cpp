@@ -576,6 +576,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 
         for (int mp=0; mp<meteoPoints.size();mp++)
         {
+            connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
             if (nameBar.size() != 0)
             {
                 chart->addSeries(barSeries[mp]);
@@ -753,6 +754,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
         for (int mp=0; mp<meteoPoints.size();mp++)
         {
+            connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
             if (nameBar.size() != 0)
             {
                 chart->addSeries(barSeries[mp]);
@@ -1072,3 +1074,42 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
         m_tooltip->hide();
     }
 }
+
+void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
+{
+
+    QBarSeries *series = qobject_cast<QBarSeries *>(sender());
+    if (state && barset!=nullptr && index < barset->count())
+    {
+
+        QPoint point = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(point);
+        QPointF pointF = chart->mapToValue(mapPoint,series);
+
+        QString valueStr;
+        if (currentFreq == daily)
+        {
+            QDate xDate = firstDate->date().addDays(index);
+            valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
+        }
+        if (currentFreq == hourly)
+        {
+            QDateTime xDate(firstDate->date(),QTime(0,0,0));
+            xDate = xDate.addSecs(3600*index);
+            valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy hh:mm")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
+        }
+
+        m_tooltip->setText(valueStr);
+        m_tooltip->setAnchor(pointF);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+
+}
+
