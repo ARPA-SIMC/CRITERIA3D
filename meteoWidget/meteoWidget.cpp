@@ -997,6 +997,58 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
     if (state)
     {
         int doy = point.x(); //start from 0
+        QPoint CursorPoint = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
+
+        if (doy==0)
+        {
+
+            QPoint pointDoY = series->at(doy).toPoint();
+            QPoint pointNext = series->at(doy+1).toPoint();
+
+            int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
+            int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
+
+            if (qMin(distDoY, distNext) == distNext)
+            {
+                doy = doy + 1;
+            }
+        }
+        else if (doy > 0 && doy < series->count())
+        {
+            QPoint pointBefore = series->at(doy-1).toPoint();
+            QPoint pointDoY = series->at(doy).toPoint();
+            QPoint pointNext = series->at(doy+1).toPoint();
+
+            int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
+            int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
+            int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
+
+            if (qMin(qMin(distBefore,distDoY), distNext) == distBefore)
+            {
+                doy = doy - 1;
+            }
+            else if (qMin(qMin(distBefore,distDoY), distNext) == distNext)
+            {
+                doy = doy + 1;
+            }
+
+        }
+        else if (doy == series->count())
+        {
+            QPoint pointBefore = series->at(doy-1).toPoint();
+            QPoint pointDoY = series->at(doy).toPoint();
+
+            int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
+            int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
+
+            if (qMin(distBefore,distDoY) == distBefore)
+            {
+                doy = doy - 1;
+            }
+
+        }
+
         if (currentFreq == daily)
         {
             QDate xDate = firstDate->date().addDays(doy);
