@@ -496,6 +496,7 @@ void Crit3DMeteoWidget::drawDailyVar()
     int nDays = 0;
     double maxBar = 0;
     double maxLine = NODATA;
+    double minLine = -NODATA;
 
     Crit3DDate firstCrit3DDate = getCrit3DDate(firstDate->date());
     Crit3DDate lastfirstCrit3DDate = getCrit3DDate(lastDate->date());
@@ -548,6 +549,10 @@ void Crit3DMeteoWidget::drawDailyVar()
                     if (value > maxLine)
                     {
                         maxLine = value;
+                    }
+                    if (value != NODATA && value < minLine)
+                    {
+                        minLine = value;
                     }
                 }
             }
@@ -602,6 +607,7 @@ void Crit3DMeteoWidget::drawDailyVar()
     {
         axisY->setVisible(true);
         axisY->setMax(maxLine);
+        axisY->setMin(minLine);
     }
     else
     {
@@ -686,6 +692,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     int nDays = 0;
     double maxBar = 0;
     double maxLine = NODATA;
+    double minLine = -NODATA;
 
     Crit3DTime firstCrit3DDate(getCrit3DDate(firstDate->date()),0);
     Crit3DTime lastCrit3DDate(getCrit3DDate(lastDate->date()),0);
@@ -738,6 +745,10 @@ void Crit3DMeteoWidget::drawHourlyVar()
                     if (value > maxLine)
                     {
                         maxLine = value;
+                    }
+                    if (value != NODATA && value < minLine)
+                    {
+                        minLine = value;
                     }
                 }
             }
@@ -793,6 +804,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     {
         axisY->setVisible(true);
         axisY->setMax(maxLine);
+        axisY->setMin(minLine);
     }
     else
     {
