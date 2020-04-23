@@ -666,6 +666,13 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
+
+    foreach(QLegendMarker* marker, chart->legend()->markers())
+    {
+        marker->setVisible(true);
+        marker->series()->setVisible(true);
+        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+    }
 }
 
 void Crit3DMeteoWidget::drawHourlyVar()
@@ -799,6 +806,13 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
+
+    foreach(QLegendMarker* marker, chart->legend()->markers())
+    {
+        marker->setVisible(true);
+        marker->series()->setVisible(true);
+        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+    }
 
 }
 
@@ -1259,4 +1273,86 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
     }
 
 }
+
+void Crit3DMeteoWidget::handleMarkerClicked()
+{
+
+    QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
+    if (marker->type() == QLegendMarker::LegendMarkerTypeXY)
+    {
+        // Toggle visibility of series
+        marker->series()->setVisible(!marker->series()->isVisible());
+
+        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
+        marker->setVisible(true);
+
+        // change marker alpha, if series is not visible
+        qreal alpha = 1.0;
+
+        if (!marker->series()->isVisible()) {
+            alpha = 0.5;
+        }
+
+        QColor color;
+        QBrush brush = marker->labelBrush();
+        color = brush.color();
+        color.setAlphaF(alpha);
+        brush.setColor(color);
+        marker->setLabelBrush(brush);
+
+        brush = marker->brush();
+        color = brush.color();
+        color.setAlphaF(alpha);
+        brush.setColor(color);
+        marker->setBrush(brush);
+
+        QPen pen = marker->pen();
+        color = pen.color();
+        color.setAlphaF(alpha);
+        pen.setColor(color);
+        marker->setPen(pen);
+    }
+    else if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
+    {
+        // Toggle visibility of series
+        marker->series()->setVisible(!marker->series()->isVisible());
+
+        // change marker alpha, if series is not visible
+        qreal alpha = 1.0;
+
+        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
+        foreach(QLegendMarker* marker, chart->legend()->markers())
+        {
+            if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
+            {
+                marker->setVisible(true);
+            }
+            if (!marker->series()->isVisible()) {
+                alpha = 0.5;
+            }
+
+            QColor color;
+            QBrush brush = marker->labelBrush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setLabelBrush(brush);
+
+            brush = marker->brush();
+            color = brush.color();
+            color.setAlphaF(alpha);
+            brush.setColor(color);
+            marker->setBrush(brush);
+
+            QPen pen = marker->pen();
+            color = pen.color();
+            color.setAlphaF(alpha);
+            pen.setColor(color);
+            marker->setPen(pen);
+        }
+
+    }
+
+}
+
 
