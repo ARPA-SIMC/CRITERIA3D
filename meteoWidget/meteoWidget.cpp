@@ -1255,9 +1255,16 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
     if (state && barset!=nullptr && index < barset->count())
     {
 
-        QPoint point = QCursor::pos();
-        QPoint mapPoint = chartView->mapFromGlobal(point);
+        QPoint CursorPoint = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
+
         QPointF pointF = chart->mapToValue(mapPoint,series);
+        qDebug() << "1. pointF.y " << pointF.y();
+        qDebug() << "axisYdx->max() " << axisYdx->max();
+        qDebug() << "axisY->max() " << axisY->max();
+        double ratio = axisYdx->max()/axisY->max();
+        pointF.setY(pointF.y()/ratio);
+        qDebug() << "2. pointF.y " << pointF.y();
 
         QString valueStr;
         if (currentFreq == daily)
