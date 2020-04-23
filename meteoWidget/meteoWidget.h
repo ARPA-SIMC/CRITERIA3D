@@ -8,6 +8,7 @@
     #include <QLineEdit>
     #include <QLabel>
     #include "meteoPoint.h"
+    #include "callout.h"
 
 
     class Crit3DMeteoWidget : public QWidget
@@ -25,6 +26,9 @@
             void updateSeries();
             void updateDate();
             void showVar();
+            void tooltipLineSeries(QPointF point, bool state);
+            void tooltipBar(bool state, int index, QBarSet *barset);
+            void handleMarkerClicked();
 
         private:
             QPushButton *addVarButton;
@@ -36,7 +40,6 @@
             QChart *chart;
             QBarCategoryAxis *axisX;
             QBarCategoryAxis *axisXvirtual;
-            //QDateTimeAxis *axisXvirtual;
             QValueAxis *axisY;
             QValueAxis *axisYdx;
             QMap<QString, QStringList> MapCSVDefault;
@@ -58,6 +61,7 @@
             QDate lastHourlyDate;
             bool isLine;
             bool isBar;
+            Callout *m_tooltip;
 
     };
 
