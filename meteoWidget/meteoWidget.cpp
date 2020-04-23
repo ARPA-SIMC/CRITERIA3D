@@ -248,15 +248,15 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 
     axisX = new QBarCategoryAxis();
     axisXvirtual = new QBarCategoryAxis();
-    //axisXvirtual = new QDateTimeAxis();
+
     axisY = new QValueAxis();
     axisYdx = new QValueAxis();
 
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
-    axisX->setGridLineVisible(false);
     axisXvirtual->setTitleText("Date");
+    axisXvirtual->setGridLineVisible(false);
 
     axisY->setRange(0,30);
     axisY->setGridLineVisible(false);
