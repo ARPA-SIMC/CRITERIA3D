@@ -486,6 +486,7 @@ void Crit3DMeteoWidget::resetValues()
             }
         }
     }
+
 }
 
 void Crit3DMeteoWidget::drawDailyVar()
@@ -1121,14 +1122,17 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 {
     QLineSeries *series = qobject_cast<QLineSeries *>(sender());
+    computeTooltipLineSeries(series, point, state);
+}
+
+bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state)
+{
     if (state)
     {
         int doy = point.x(); //start from 0
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
-
         QPoint pointDoY = series->at(doy).toPoint();
-
         if (doy == 0)
         {
             QPoint pointNext = series->at(doy+1).toPoint();
@@ -1140,7 +1144,7 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
             {
                 if (distNext > distStep/10)
                 {
-                    return;
+                    return false;
                 }
                 else
                 {
@@ -1151,7 +1155,7 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
             {
                 if (distDoY > distStep/10)
                 {
-                    return;
+                    return false;
                 }
             }
 
@@ -1170,7 +1174,7 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
             {
                 if (distBefore > distStep/10)
                 {
-                    return;
+                    return false;
                 }
                 else
                 {
@@ -1181,7 +1185,7 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
             {
                 if (distNext > distStep/10)
                 {
-                    return;
+                    return false;
                 }
                 else
                 {
@@ -1192,7 +1196,7 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
             {
                 if (distDoY > distStep/10)
                 {
-                    return;
+                    return false;
                 }
             }
 
@@ -1210,7 +1214,7 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
             {
                 if (distBefore > distStep/10)
                 {
-                    return;
+                    return false;
                 }
                 else
                 {
@@ -1221,7 +1225,7 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
             {
                 if (distDoY > distStep/10)
                 {
-                    return;
+                    return false;
                 }
             }
 
@@ -1244,10 +1248,12 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
         m_tooltip->show();
+        return true;
     }
     else
     {
         m_tooltip->hide();
+        return false;
     }
 }
 
@@ -1261,12 +1267,30 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
 
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
-
         QPointF pointF = chart->mapToValue(mapPoint,series);
 
         // traslate coordination, reference is axisY not axisYdx
         qreal repos = ((axisY->max() - axisY->min())/(axisYdx->max() - axisYdx->min()) * (pointF.y() - axisYdx->min())) + axisY->min();
         pointF.setY(repos);
+
+        // check if bar is hiding QlineSeries
+        if(isLine)
+        {
+            for (int mp=0; mp<meteoPoints.size();mp++)
+            {
+                for (int i = 0; i < nameLines.size(); i++)
+                {
+                    double lineSeriesY = lineSeries[mp][i]->at(pointF.toPoint().x()).y();
+                    if (  static_cast<int>( lineSeriesY) == pointF.toPoint().y())
+                    {
+                        if (computeTooltipLineSeries(lineSeries[mp][i], pointF, true))
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
 
         QString valueStr;
         if (currentFreq == daily)
@@ -1276,6 +1300,7 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
         }
         if (currentFreq == hourly)
         {
+
             QDateTime xDate(firstDate->date(),QTime(0,0,0));
             xDate = xDate.addSecs(3600*index);
             valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy hh:mm")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
