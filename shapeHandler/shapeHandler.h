@@ -43,7 +43,10 @@
 
         std::string	getFieldName(int fieldPos);
         DBFFieldType getFieldType(int fieldPos);
+
         int getFieldPos(std::string fieldName);
+        bool existField(std::string fieldName);
+
         DBFFieldType getFieldType(std::string fieldName);
 
         int readIntAttribute(int shapeNumber, int fieldPos);

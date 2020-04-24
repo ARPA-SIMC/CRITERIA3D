@@ -56,10 +56,13 @@ bool computeUnitCropMap(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3
     int soilIndex = ucm->getFieldPos(idSoil);
     int meteoIndex = ucm->getFieldPos(idMeteo);
 
-    // add fields
-    ucm->addField("ID_CROP", FTString, 5, 0);
+    // add ID CASE
     ucm->addField("ID_CASE", FTString, 20, 0);
     int idCaseIndex = ucm->getFieldPos("ID_CASE");
+
+    // add ID CROP
+    bool existIdCrop = ucm->existField("ID_CROP");
+    if (! existIdCrop) ucm->addField("ID_CROP", FTString, 5, 0);
     int idCropIndex = ucm->getFieldPos("ID_CROP");
 
     // FILL ID_CROP and ID_CASE
@@ -78,7 +81,7 @@ bool computeUnitCropMap(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3
         if (meteoStr != "" && soilStr != "" && cropStr != "")
             caseStr = "M" + meteoStr + "S" + soilStr + "C" + cropStr;
 
-        ucm->writeStringAttribute(shapeIndex, idCropIndex, cropStr.c_str());
+        if (! existIdCrop) ucm->writeStringAttribute(shapeIndex, idCropIndex, cropStr.c_str());
         ucm->writeStringAttribute(shapeIndex, idCaseIndex, caseStr.c_str());
 
         if (caseStr == "")
