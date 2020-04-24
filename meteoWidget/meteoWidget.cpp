@@ -248,15 +248,15 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 
     axisX = new QBarCategoryAxis();
     axisXvirtual = new QBarCategoryAxis();
-    //axisXvirtual = new QDateTimeAxis();
+
     axisY = new QValueAxis();
     axisYdx = new QValueAxis();
 
     QDate first(QDate::currentDate().year(), 1, 1);
     QDate last(QDate::currentDate().year(), 12, 31);
     axisX->setTitleText("Date");
-    axisX->setGridLineVisible(false);
     axisXvirtual->setTitleText("Date");
+    axisXvirtual->setGridLineVisible(false);
 
     axisY->setRange(0,30);
     axisY->setGridLineVisible(false);
@@ -282,6 +282,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
     connect(firstDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
     connect(lastDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
+
+    // TEST DELETE
+    QWidget::setMouseTracking(true);
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -496,6 +499,7 @@ void Crit3DMeteoWidget::drawDailyVar()
     int nDays = 0;
     double maxBar = 0;
     double maxLine = NODATA;
+    double minLine = -NODATA;
 
     Crit3DDate firstCrit3DDate = getCrit3DDate(firstDate->date());
     Crit3DDate lastfirstCrit3DDate = getCrit3DDate(lastDate->date());
@@ -548,6 +552,10 @@ void Crit3DMeteoWidget::drawDailyVar()
                     if (value > maxLine)
                     {
                         maxLine = value;
+                    }
+                    if (value != NODATA && value < minLine)
+                    {
+                        minLine = value;
                     }
                 }
             }
@@ -602,6 +610,7 @@ void Crit3DMeteoWidget::drawDailyVar()
     {
         axisY->setVisible(true);
         axisY->setMax(maxLine);
+        axisY->setMin(minLine);
     }
     else
     {
@@ -686,6 +695,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     int nDays = 0;
     double maxBar = 0;
     double maxLine = NODATA;
+    double minLine = -NODATA;
 
     Crit3DTime firstCrit3DDate(getCrit3DDate(firstDate->date()),0);
     Crit3DTime lastCrit3DDate(getCrit3DDate(lastDate->date()),0);
@@ -738,6 +748,10 @@ void Crit3DMeteoWidget::drawHourlyVar()
                     if (value > maxLine)
                     {
                         maxLine = value;
+                    }
+                    if (value != NODATA && value < minLine)
+                    {
+                        minLine = value;
                     }
                 }
             }
@@ -793,6 +807,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     {
         axisY->setVisible(true);
         axisY->setMax(maxLine);
+        axisY->setMin(minLine);
     }
     else
     {
@@ -1240,12 +1255,18 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
 {
 
     QBarSeries *series = qobject_cast<QBarSeries *>(sender());
+
     if (state && barset!=nullptr && index < barset->count())
     {
 
-        QPoint point = QCursor::pos();
-        QPoint mapPoint = chartView->mapFromGlobal(point);
+        QPoint CursorPoint = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
+
         QPointF pointF = chart->mapToValue(mapPoint,series);
+
+        // traslate coordination, reference is axisY not axisYdx
+        qreal repos = ((axisY->max() - axisY->min())/(axisYdx->max() - axisYdx->min()) * (pointF.y() - axisYdx->min())) + axisY->min();
+        pointF.setY(repos);
 
         QString valueStr;
         if (currentFreq == daily)

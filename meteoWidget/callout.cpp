@@ -1,4 +1,4 @@
-/****************************************************************************
+﻿/****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -128,6 +128,7 @@ void Callout::setAnchor(QPointF point)
 {
     m_anchor = point;
 }
+
 
 void Callout::updateGeometry()
 {
