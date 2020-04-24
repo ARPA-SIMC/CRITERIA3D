@@ -283,6 +283,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     connect(firstDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
     connect(lastDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
 
+    // TEST DELETE
+    QWidget::setMouseTracking(true);
+
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
     mainLayout->addWidget(horizontalGroupBox);
@@ -1252,6 +1255,7 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
 {
 
     QBarSeries *series = qobject_cast<QBarSeries *>(sender());
+
     if (state && barset!=nullptr && index < barset->count())
     {
 
@@ -1259,12 +1263,10 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
         QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
 
         QPointF pointF = chart->mapToValue(mapPoint,series);
-        qDebug() << "1. pointF.y " << pointF.y();
-        qDebug() << "axisYdx->max() " << axisYdx->max();
-        qDebug() << "axisY->max() " << axisY->max();
-        double ratio = axisYdx->max()/axisY->max();
-        pointF.setY(pointF.y()/ratio);
-        qDebug() << "2. pointF.y " << pointF.y();
+
+        // traslate coordination, reference is axisY not axisYdx
+        qreal repos = ((axisY->max() - axisY->min())/(axisYdx->max() - axisYdx->min()) * (pointF.y() - axisYdx->min())) + axisY->min();
+        pointF.setY(repos);
 
         QString valueStr;
         if (currentFreq == daily)
