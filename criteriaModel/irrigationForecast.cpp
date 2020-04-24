@@ -41,7 +41,7 @@ Crit1DIrrigationForecast::Crit1DIrrigationForecast()
 
 
 // update values of annual irrigation
-void Crit1DIrrigationForecast::updateSeasonalForecast(Crit3DDate myDate, int index)
+void Crit1DIrrigationForecast::updateSeasonalForecast(Crit3DDate myDate, int* index)
 {
     bool isInsideSeason = false;
 
@@ -64,19 +64,20 @@ void Crit1DIrrigationForecast::updateSeasonalForecast(Crit3DDate myDate, int ind
         // first date of season
         if (myDate.day == 1 && myDate.month == firstSeasonMonth)
         {
-            if (index == NODATA)
-                index = 0;
+            if (*index == NODATA)
+                *index = 0;
             else
-                index++;
+                (*index)++;
         }
 
         // sum of irrigations
-        if (index != NODATA)
+        if (*index != NODATA)
         {
-            if (int(seasonalForecasts[index]) == int(NODATA))
-                seasonalForecasts[index] = myCase.output.dailyIrrigation;
+            unsigned int i = unsigned(*index);
+            if (int(seasonalForecasts[i]) == int(NODATA))
+                seasonalForecasts[i] = float(myCase.output.dailyIrrigation);
             else
-                seasonalForecasts[index] += myCase.output.dailyIrrigation;
+                seasonalForecasts[i] += float(myCase.output.dailyIrrigation);
         }
     }
 }
@@ -103,7 +104,7 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myErr
 
     // set computation period (all meteo data)
     Crit3DDate myDate, firstDate, lastDate;
-    long lastIndex = myCase.meteoPoint.nrObsDataDaysD-1;
+    unsigned long lastIndex = unsigned(myCase.meteoPoint.nrObsDataDaysD-1);
     firstDate = myCase.meteoPoint.obsDataD[0].date;
     lastDate = myCase.meteoPoint.obsDataD[lastIndex].date;
 
@@ -129,7 +130,7 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myErr
         // output
         if (isSeasonalForecast)
         {
-            updateSeasonalForecast(myDate, indexSeasonalForecast);
+            updateSeasonalForecast(myDate, &indexSeasonalForecast);
         }
         else
         {
