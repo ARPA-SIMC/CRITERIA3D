@@ -378,9 +378,9 @@ void Crit3DMeteoWidget::resetValues()
     }
 
     // clear prev series values
-    for (int mp=0; mp< nMeteoPoints-1;mp++)
+    if (isLine)
     {
-        if (isLine)
+        for (int mp = 0; mp<lineSeries.size(); mp++)
         {
             for (int i = 0; i < lineSeries[mp].size(); i++)
             {
@@ -388,19 +388,15 @@ void Crit3DMeteoWidget::resetValues()
             }
             lineSeries[mp].clear();
         }
-        if (isBar)
-        {
-            setVector[mp].clear();
-            barSeries[mp]->clear();
-        }
-    }
-
-    if (isLine)
-    {
         lineSeries.clear();
     }
     if (isBar)
     {
+        for (int mp = 0; mp<lineSeries.size(); mp++)
+        {
+            setVector[mp].clear();
+            barSeries[mp]->clear();
+        }
         barSeries.clear();
         setVector.clear();
     }
