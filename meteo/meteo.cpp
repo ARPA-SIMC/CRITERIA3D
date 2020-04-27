@@ -860,6 +860,8 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
 
         else if (myVar == referenceEvapotranspiration)
             return dailyReferenceEvapotranspirationHS;
+        else
+            return noMeteoVar;
     }
 
     else if (myFreq == hourly)
@@ -907,5 +909,7 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
 
         else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM)
             return referenceEvapotranspiration;
+        else
+            return noMeteoVar;
     }
 }

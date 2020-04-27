@@ -917,11 +917,22 @@ void Crit3DMeteoWidget::showDailyGraph()
     dailyButton->setEnabled(false);
     hourlyButton->setEnabled(true);
 
-    for (int i = 0; i<currentVariables.size(); i++)
+    QStringList currentHourlyVar = currentVariables;
+    currentVariables.clear();
+
+    for (int i = 0; i<currentHourlyVar.size(); i++)
     {
-        QString name = currentVariables[i];
-        name = "DAILY_"+name;
-        currentVariables[i] = name;
+        QString name = currentHourlyVar[i];
+        auto searchHourly = MapHourlyMeteoVar.find(name.toStdString());
+        if (searchHourly != MapHourlyMeteoVar.end())
+        {
+            meteoVariable hourlyVar = MapHourlyMeteoVar.at(name.toStdString());
+            meteoVariable dailyVar = updateMeteoVariable(hourlyVar, daily);
+            if (dailyVar != noMeteoVar)
+            {
+                currentVariables.append(QString::fromStdString(MapDailyMeteoVarToString.at(dailyVar)));
+            }
+        }
     }
 
     updateSeries();
@@ -954,11 +965,22 @@ void Crit3DMeteoWidget::showHourlyGraph()
     hourlyButton->setEnabled(false);
     dailyButton->setEnabled(true);
 
-    for (int i = 0; i<currentVariables.size(); i++)
+    QStringList currentDailyVar = currentVariables;
+    currentVariables.clear();
+
+    for (int i = 0; i<currentDailyVar.size(); i++)
     {
-        QString name = currentVariables[i];
-        name = name.replace("DAILY_","");
-        currentVariables[i] = name;
+        QString name = currentDailyVar[i];
+        auto searchDaily = MapDailyMeteoVar.find(name.toStdString());
+        if (searchDaily != MapDailyMeteoVar.end())
+        {
+            meteoVariable dailyVar = MapDailyMeteoVar.at(name.toStdString());
+            meteoVariable hourlyVar= updateMeteoVariable(dailyVar, hourly);
+            if (hourlyVar != noMeteoVar)
+            {
+                currentVariables.append(QString::fromStdString(MapHourlyMeteoVarToString.at(hourlyVar)));
+            }
+        }
     }
     updateSeries();
     drawHourlyVar();
