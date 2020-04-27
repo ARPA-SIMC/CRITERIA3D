@@ -283,9 +283,6 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     connect(firstDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
     connect(lastDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
 
-    // TEST DELETE
-    QWidget::setMouseTracking(true);
-
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
     mainLayout->addWidget(horizontalGroupBox);
@@ -428,7 +425,7 @@ void Crit3DMeteoWidget::resetValues()
                 }
                 else
                 {
-                    lineColor.setAlpha( 255-(mp*(200/(nMeteoPoints-1))));
+                    lineColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))));
                 }
                 line->setColor(lineColor);
                 vectorLine.append(line);
@@ -459,7 +456,7 @@ void Crit3DMeteoWidget::resetValues()
                 }
                 else
                 {
-                    barColor.setAlpha( 255-(mp*(200/(nMeteoPoints-1))) );
+                    barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
                 }
                 set->setColor(barColor);
                 set->setBorderColor(barColor);
@@ -549,14 +546,17 @@ void Crit3DMeteoWidget::drawDailyVar()
                 {
                     meteoVariable meteoVar = MapDailyMeteoVar.at(nameLines[i].toStdString());
                     double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar);
-                    lineSeries[mp][i]->append(day, value);
-                    if (value > maxLine)
+                    if (value != NODATA)
                     {
-                        maxLine = value;
-                    }
-                    if (value != NODATA && value < minLine)
-                    {
-                        minLine = value;
+                        lineSeries[mp][i]->append(day, value);
+                        if (value > maxLine)
+                        {
+                            maxLine = value;
+                        }
+                        if (value < minLine)
+                        {
+                            minLine = value;
+                        }
                     }
                 }
             }
@@ -567,10 +567,13 @@ void Crit3DMeteoWidget::drawDailyVar()
                 {
                     meteoVariable meteoVar = MapDailyMeteoVar.at(nameBar[j].toStdString());
                     double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar);
-                    *setVector[mp][j] << value;
-                    if (value > maxBar)
+                    if (value != NODATA)
                     {
-                        maxBar = value;
+                        *setVector[mp][j] << value;
+                        if (value > maxBar)
+                        {
+                            maxBar = value;
+                        }
                     }
                 }
             }
@@ -663,7 +666,7 @@ void Crit3DMeteoWidget::drawDailyVar()
                 }
                 else
                 {
-                    barColor.setAlpha( 255-(mp*(200/(nMeteoPoints-1))) );
+                    barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
                 }
                 setVector[mp][j]->setColor(barColor);
             }
@@ -672,7 +675,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     axisX->setCategories(categories);
     axisXvirtual->setCategories(categoriesVirtual);
-    axisX->setGridLineVisible(false);
+    axisXvirtual->setGridLineVisible(false);
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
@@ -745,14 +748,17 @@ void Crit3DMeteoWidget::drawHourlyVar()
                 {
                     meteoVariable meteoVar = MapHourlyMeteoVar.at(nameLines[i].toStdString());
                     double value = meteoPoints[mp].getMeteoPointValueH(myDate.date, myDate.getHour(), 0, meteoVar);
-                    lineSeries[mp][i]->append(cont, value);
-                    if (value > maxLine)
+                    if (value != NODATA)
                     {
-                        maxLine = value;
-                    }
-                    if (value != NODATA && value < minLine)
-                    {
-                        minLine = value;
+                        lineSeries[mp][i]->append(cont, value);
+                        if (value > maxLine)
+                        {
+                            maxLine = value;
+                        }
+                        if (value < minLine)
+                        {
+                            minLine = value;
+                        }
                     }
                 }
             }
@@ -762,10 +768,13 @@ void Crit3DMeteoWidget::drawHourlyVar()
                 {
                     meteoVariable meteoVar = MapHourlyMeteoVar.at(nameBar[j].toStdString());
                     double value = meteoPoints[mp].getMeteoPointValueH(myDate.date, myDate.getHour(), 0, meteoVar);
-                    *setVector[mp][j] << value;
-                    if (value > maxBar)
+                    if (value != NODATA)
                     {
-                        maxBar = value;
+                        *setVector[mp][j] << value;
+                        if (value > maxBar)
+                        {
+                            maxBar = value;
+                        }
                     }
                 }
             }
@@ -1034,90 +1043,6 @@ void Crit3DMeteoWidget::updateDate()
     }
 
 }
-
-/*
-void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
-{
-    QLineSeries *series = qobject_cast<QLineSeries *>(sender());
-    if (state)
-    {
-        int doy = point.x(); //start from 0
-        QPoint CursorPoint = QCursor::pos();
-        QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
-
-        if (doy==0)
-        {
-
-            QPoint pointDoY = series->at(doy).toPoint();
-            QPoint pointNext = series->at(doy+1).toPoint();
-
-            int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
-            int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
-
-            if (qMin(distDoY, distNext) == distNext)
-            {
-                doy = doy + 1;
-            }
-        }
-        else if (doy > 0 && doy < series->count())
-        {
-            QPoint pointBefore = series->at(doy-1).toPoint();
-            QPoint pointDoY = series->at(doy).toPoint();
-            QPoint pointNext = series->at(doy+1).toPoint();
-
-            int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
-            int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
-            int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
-
-            if (qMin(qMin(distBefore,distDoY), distNext) == distBefore)
-            {
-                doy = doy - 1;
-            }
-            else if (qMin(qMin(distBefore,distDoY), distNext) == distNext)
-            {
-                doy = doy + 1;
-            }
-
-        }
-        else if (doy == series->count())
-        {
-            QPoint pointBefore = series->at(doy-1).toPoint();
-            QPoint pointDoY = series->at(doy).toPoint();
-
-            int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
-            int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
-
-            if (qMin(distBefore,distDoY) == distBefore)
-            {
-                doy = doy - 1;
-            }
-
-        }
-
-        if (currentFreq == daily)
-        {
-            QDate xDate = firstDate->date().addDays(doy);
-            double value = series->at(doy).y();
-            m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")).arg(value, 0, 'f', 1));
-        }
-        if (currentFreq == hourly)
-        {
-            QDateTime xDate(firstDate->date(),QTime(0,0,0));
-            xDate = xDate.addSecs(3600*doy);
-            double value = series->at(doy).y();
-            m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")).arg(value, 0, 'f', 1));
-        }
-        m_tooltip->setAnchor(point);
-        m_tooltip->setZValue(11);
-        m_tooltip->updateGeometry();
-        m_tooltip->show();
-    }
-    else
-    {
-        m_tooltip->hide();
-    }
-}
-*/
 
 void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 {
