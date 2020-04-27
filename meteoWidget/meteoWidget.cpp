@@ -211,6 +211,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     dailyButton = new QPushButton(tr("daily"));
     hourlyButton = new QPushButton(tr("hourly"));
     addVarButton = new QPushButton(tr("+/- var"));
+    tableButton = new QPushButton(tr("Table"));
     QLabel *labelFirstDate = new QLabel(tr("Start Date: "));
     QLabel *labelEndDate = new QLabel(tr("End Date: "));
     firstDate = new QDateTimeEdit(QDate::currentDate());
@@ -218,6 +219,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     dailyButton->setMaximumWidth(this->width()/8);
     hourlyButton->setMaximumWidth(this->width()/8);
     addVarButton->setMaximumWidth(this->width()/8);
+    tableButton->setMaximumWidth(this->width()/8);
 
     if (currentFreq == daily || currentFreq == noFrequency)
     {
@@ -241,6 +243,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     buttonLayout->addWidget(firstDate);
     buttonLayout->addWidget(labelEndDate);
     buttonLayout->addWidget(lastDate);
+    buttonLayout->addWidget(tableButton);
     buttonLayout->setAlignment(Qt::AlignLeft);
     chart = new QChart();
     chartView = new QChartView(chart);
@@ -280,6 +283,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
+    connect(tableButton, &QPushButton::clicked, [=](){ showTable(); });
     connect(firstDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
     connect(lastDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
 
@@ -1059,6 +1063,11 @@ void Crit3DMeteoWidget::updateDate()
     {
         drawHourlyVar();
     }
+
+}
+
+void Crit3DMeteoWidget::showTable()
+{
 
 }
 

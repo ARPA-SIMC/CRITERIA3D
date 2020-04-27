@@ -25,6 +25,7 @@
             void showHourlyGraph();
             void updateSeries();
             void updateDate();
+            void showTable();
             void showVar();
             void tooltipLineSeries(QPointF point, bool state);
             bool computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state);
@@ -35,6 +36,7 @@
             QPushButton *addVarButton;
             QPushButton *dailyButton;
             QPushButton *hourlyButton;
+            QPushButton *tableButton;
             QDateTimeEdit *firstDate;
             QDateTimeEdit *lastDate;
             QChartView *chartView;
