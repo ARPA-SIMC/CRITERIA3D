@@ -24,6 +24,7 @@
 
 #include "meteoWidget.h"
 #include "dialogSelectVar.h"
+#include "dialogMeteoTable.h"
 #include "utilities.h"
 #include "commonConstants.h"
 #include "formInfo.h"
@@ -1068,6 +1069,14 @@ void Crit3DMeteoWidget::updateDate()
 
 void Crit3DMeteoWidget::showTable()
 {
+    if (currentFreq == daily)
+    {
+        DialogMeteoTable meteoTable(meteoPoints, firstDailyDate, lastDailyDate, currentFreq, currentVariables);
+    }
+    else if (currentFreq == hourly)
+    {
+        DialogMeteoTable meteoTable(meteoPoints, firstHourlyDate, lastHourlyDate, currentFreq, currentVariables);
+    }
 
 }
 
