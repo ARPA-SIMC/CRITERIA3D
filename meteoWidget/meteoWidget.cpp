@@ -1069,15 +1069,7 @@ void Crit3DMeteoWidget::updateDate()
 
 void Crit3DMeteoWidget::showTable()
 {
-    if (currentFreq == daily)
-    {
-        DialogMeteoTable meteoTable(meteoPoints, firstDailyDate, lastDailyDate, currentFreq, currentVariables);
-    }
-    else if (currentFreq == hourly)
-    {
-        DialogMeteoTable meteoTable(meteoPoints, firstHourlyDate, lastHourlyDate, currentFreq, currentVariables);
-    }
-
+    DialogMeteoTable meteoTable(meteoPoints, firstDate->date(), lastDate->date(), currentFreq, currentVariables);
 }
 
 void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
