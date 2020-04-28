@@ -69,12 +69,12 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
                 if (currentFreq == daily)
                 {
                     myDate = firstDate.addDays(row % nValues);
-                    meteoTable->setItem(row, col, new QTableWidgetItem(myDate.toString("MMM dd yyyy")));
+                    meteoTable->setItem(row, col, new QTableWidgetItem(myDate.toString("yyyy-MM-dd")));
                 }
                 else if (currentFreq == hourly)
                 {
                     myDateTime = firstDateTime.addSecs(row % nValues * 3600);
-                    meteoTable->setItem(row, col, new QTableWidgetItem(myDateTime.toString("MMM dd yyyy hh:mm")));
+                    meteoTable->setItem(row, col, new QTableWidgetItem(myDateTime.toString("yyyy-MM-dd hh:mm")));
                 }
             }
             else
