@@ -111,6 +111,7 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
     meteoTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     meteoTable->setSelectionMode(QAbstractItemView::SingleSelection);
     meteoTable->setShowGrid(true);
+    meteoTable->horizontalHeader()->setStyleSheet("QHeaderView { font-weight: bold; }");
     meteoTable->setStyleSheet("QTableView {selection-background-color: red;}");
 
 
