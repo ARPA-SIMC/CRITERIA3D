@@ -20,18 +20,17 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
     meteoTable = new QTableWidget();
     mainLayout->addWidget(meteoTable);
 
-    int colNumber = currentVariables.size()+2; //ID, Data, variables
-    int nValues = 0;
+    int colNumber = currentVariables.size()*meteoPoints.size()+1; // variables for ID + Data
+    int rowNumber = 0;
 
     if (currentFreq == daily)
     {
-        nValues = firstDate.daysTo(lastDate)+1; // naVlues = nDays
+        rowNumber = firstDate.daysTo(lastDate)+1; // naVlues = nDays
     }
     else if (currentFreq == hourly)
     {
-        nValues = (firstDate.daysTo(lastDate)+1)*24; // naVlues = nDays * 24 hours
+        rowNumber = (firstDate.daysTo(lastDate)+1)*24; // naVlues = nDays * 24 hours
     }
-    int rowNumber = (meteoPoints.size())*nValues;
 
     meteoTable->setRowCount(rowNumber);
     meteoTable->setColumnCount(colNumber);
@@ -40,14 +39,17 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
 
     labels.clear();
     meteoTableHeader.clear();
-    meteoTableHeader << "ID" << "Date";
+    meteoTableHeader << "Date";
 
     for (int i=0; i < currentVariables.size(); i++)
     {
-        meteoTableHeader << currentVariables[i];
+        for (int mp = 0; mp < meteoPoints.size(); mp++)
+        {
+            meteoTableHeader << "ID"+idList[mp]+"_"+currentVariables[i];
+        }
     }
 
-    for (int j = 0; j < rowNumber; j++)
+    for (int j = 1; j < rowNumber-1; j++)
     {
         labels << QString::number(j);
     }
@@ -62,33 +64,39 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
         {
             if (col == 0)
             {
-                meteoTable->setItem(row, col, new QTableWidgetItem(idList[row / nValues]));
-            }
-            else if (col == 1)
-            {
                 if (currentFreq == daily)
                 {
-                    myDate = firstDate.addDays(row % nValues);
+                    myDate = firstDate.addDays(row);
                     meteoTable->setItem(row, col, new QTableWidgetItem(myDate.toString("yyyy-MM-dd")));
                 }
                 else if (currentFreq == hourly)
                 {
-                    myDateTime = firstDateTime.addSecs(row % nValues * 3600);
+                    myDateTime = firstDateTime.addSecs(row * 3600);
                     meteoTable->setItem(row, col, new QTableWidgetItem(myDateTime.toString("yyyy-MM-dd hh:mm")));
                 }
             }
             else
             {
+                int varPos = (col-1)/meteoPoints.size();
+                int mpPos = (col % meteoPoints.size());
+                if (mpPos != 0)
+                {
+                    mpPos = mpPos - 1;
+                }
+                else
+                {
+                    mpPos = meteoPoints.size()-1;
+                }
                 if (currentFreq == daily)
                 {
-                    meteoVariable meteoVar = MapDailyMeteoVar.at(currentVariables[col-2].toStdString());
-                    double value = meteoPoints[row / nValues].getMeteoPointValueD(getCrit3DDate(myDate), meteoVar);
+                    meteoVariable meteoVar = MapDailyMeteoVar.at(currentVariables[varPos].toStdString());
+                    double value = meteoPoints[mpPos].getMeteoPointValueD(getCrit3DDate(myDate), meteoVar);
                     meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
                 }
                 else if (currentFreq == hourly)
                 {
-                    meteoVariable meteoVar = MapHourlyMeteoVar.at(currentVariables[col-2].toStdString());
-                    double value = meteoPoints[row / nValues].getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, meteoVar);
+                    meteoVariable meteoVar = MapHourlyMeteoVar.at(currentVariables[varPos].toStdString());
+                    double value = meteoPoints[mpPos].getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, meteoVar);
                     meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
                 }
 
@@ -99,6 +107,7 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
 
     meteoTable->setVerticalHeaderLabels(labels);
     meteoTable->setHorizontalHeaderLabels(meteoTableHeader);
+    meteoTable->resizeColumnsToContents();
     meteoTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     meteoTable->setSelectionMode(QAbstractItemView::SingleSelection);
     meteoTable->setShowGrid(true);
