@@ -16,6 +16,16 @@ StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillC
     _view = view;
 }
 
+void StationMarker::setId(std::string id)
+{
+    _id = id;
+}
+
+std::string StationMarker::id() const
+{
+    return _id;
+}
+
 
 void StationMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
 {
@@ -51,31 +61,36 @@ void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
     pointSelected.latitude = this->latitude();
     pointSelected.longitude = this->longitude();
 
-    /*
     if (event->buttons() & Qt::LeftButton)
     {
+        emit stationClicked();
+        /*
         QColor color = this->color();
         if ( color ==  Qt::white )
         {
             this->setFillColor(QColor((Qt::red)));
-            project_->meteoPointsSelected << pointSelected;
+            //myProject->meteoPointsSelected << pointSelected;
         }
         else
         {
             this->setFillColor(QColor((Qt::white)));
-            for (int i = 0; i < project_->meteoPointsSelected.size(); i++)
-            {
-                if (project_->meteoPointsSelected[i].latitude == pointSelected.latitude
-                    && project_->meteoPointsSelected[i].longitude == pointSelected.longitude)
-                    project_->meteoPointsSelected.removeAt(i);
-            }
+
+//            for (int i = 0; i < project_->meteoPointsSelected.size(); i++)
+//            {
+//                if (project_->meteoPointsSelected[i].latitude == pointSelected.latitude
+//                    && project_->meteoPointsSelected[i].longitude == pointSelected.longitude)
+//                    project_->meteoPointsSelected.removeAt(i);
+//            }
+
         }
+        */
     }
-    */
+
 
     if (event->buttons() & Qt::RightButton)
     {
-
+        // test
+        /*
         QMenu menu;
         QAction *firstItem = menu.addAction("Menu Item 1");
         QAction *secondItem = menu.addAction("Menu Item 2");
@@ -94,6 +109,7 @@ void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
         {
             this->setFillColor(QColor((Qt::green)));
         }
+        */
 
     }
 

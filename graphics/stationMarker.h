@@ -13,14 +13,19 @@
 
         public:
             explicit StationMarker(qreal radius, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
+            void setId(std::string id);
             void setToolTip(Crit3DMeteoPoint* meteoPoint_);
+            std::string id() const;
 
-        private:
+    private:
             MapGraphicsView* _view;
+            std::string _id;
 
         protected:
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
             //void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
+        signals:
+            void stationClicked();
 
     };
 
