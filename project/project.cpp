@@ -10,7 +10,6 @@
 #include "transmissivity.h"
 #include "utilities.h"
 #include "aggregation.h"
-#include "meteoWidget.h"
 
 #include <iostream>
 #include <QDir>
@@ -50,6 +49,7 @@ void Project::initializeProject()
     meteoPointsDbHandler = nullptr;
     meteoGridDbHandler = nullptr;
     aggregationDbHandler = nullptr;
+    meteoWidget = nullptr;
 
     meteoSettings->initialize();
     quality->initialize();
@@ -93,6 +93,7 @@ void Project::clearProject()
     delete parameters;
     delete projectSettings;
     delete aggregationDbHandler;
+    delete meteoWidget;
 
     clearProxyDEM();
     DEM.clear();
@@ -2134,15 +2135,17 @@ void Project::showMeteoWidgt(std::string idMeteoPoint)
     QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly);
     QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly);
 
-    //Crit3DMeteoWidget meteoWidget;
+    if (meteoWidget == nullptr)
+    {
+        meteoWidget = new Crit3DMeteoWidget();
+    }
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (meteoPoints[i].id == idMeteoPoint)
         {
             meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(meteoPoints[i]));
             meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(meteoPoints[i]));
-            //meteoWidget.show();
-            //meteoWidget.draw(meteoPoints[i]);
+            meteoWidget->draw(meteoPoints[i]);
         }
     }
 

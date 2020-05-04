@@ -32,6 +32,9 @@
     #ifndef _FSTREAM_
         #include <fstream>
     #endif
+    #ifndef METEOWIDGET
+        #include "meteoWidget.h"
+    #endif
 
     class Project {
     private:
@@ -99,6 +102,8 @@
         std::vector <Crit3DProxyGridSeries> proxyGridSeries;
 
         Crit3DClimateParameters climateParameters;
+
+        Crit3DMeteoWidget *meteoWidget;
 
         Project();
 

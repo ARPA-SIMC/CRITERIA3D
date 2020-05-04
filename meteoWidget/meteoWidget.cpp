@@ -293,6 +293,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     mainLayout->addWidget(horizontalGroupBox);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
+
 }
 
 void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
@@ -365,6 +366,9 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
     }
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
+
+    show();
+
 }
 
 void Crit3DMeteoWidget::resetValues()
