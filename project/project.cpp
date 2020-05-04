@@ -2138,6 +2138,7 @@ void Project::showMeteoWidgt(std::string idMeteoPoint)
     if (meteoWidget == nullptr)
     {
         meteoWidget = new Crit3DMeteoWidget();
+        QObject::connect(meteoWidget, SIGNAL(closeWidget()), this, SLOT(deleteMeteoWidget()));
     }
     for (int i=0; i < nrMeteoPoints; i++)
     {
@@ -2149,6 +2150,14 @@ void Project::showMeteoWidgt(std::string idMeteoPoint)
         }
     }
 
+}
+
+void Project::deleteMeteoWidget()
+{
+    if (meteoWidget != nullptr)
+    {
+        meteoWidget = nullptr;
+    }
 }
 
 

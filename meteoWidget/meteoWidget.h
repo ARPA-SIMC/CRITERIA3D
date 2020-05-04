@@ -31,6 +31,7 @@
             bool computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state);
             void tooltipBar(bool state, int index, QBarSet *barset);
             void handleMarkerClicked();
+            void closeEvent(QCloseEvent *event);
 
         private:
             QPushButton *addVarButton;
@@ -65,6 +66,8 @@
             bool isLine;
             bool isBar;
             Callout *m_tooltip;
+    signals:
+        void closeWidget();
 
     };
 

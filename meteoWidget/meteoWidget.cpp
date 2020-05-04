@@ -1358,4 +1358,9 @@ void Crit3DMeteoWidget::handleMarkerClicked()
 
 }
 
+void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
+{
+    event->accept();
+    emit closeWidget();
+}
 
