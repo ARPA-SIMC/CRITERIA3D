@@ -32,7 +32,7 @@
     #ifndef _FSTREAM_
         #include <fstream>
     #endif
-    #ifndef METEOWIDGET
+    #ifndef METEOWIDGET_H
         #include "meteoWidget.h"
     #endif
 
