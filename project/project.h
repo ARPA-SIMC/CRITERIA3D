@@ -194,7 +194,7 @@
         void importHourlyMeteoData(const QString& fileName, bool importAllFiles, bool deletePreviousData);
 
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
-        void showMeteoWidgt(std::string idMeteoPoint);
+        void showMeteoWidgetPoint(std::string idMeteoPoint);
 
     private slots:
         void deleteMeteoWidget();

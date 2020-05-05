@@ -2126,7 +2126,7 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
     }
 }
 
-void Project::showMeteoWidgt(std::string idMeteoPoint)
+void Project::showMeteoWidgetPoint(std::string idMeteoPoint)
 {
 
     QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily).date();
