@@ -38,6 +38,7 @@ SOURCES += \
     ../../agrolib/project/formInfo.cpp \
     dialogMeteoTable.cpp \
     dialogSelectVar.cpp \
+    meteoTable.cpp \
     meteoWidget.cpp \
     callout.cpp
 
@@ -46,6 +47,7 @@ HEADERS += \
     ../../agrolib/project/formInfo.h \
     dialogMeteoTable.h \
     dialogSelectVar.h \
+    meteoTable.h \
     meteoWidget.h   \
     callout.h
 

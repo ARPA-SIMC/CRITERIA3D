@@ -2,6 +2,7 @@
 #define DIALOGMETEOTABLE_H
 
 #include "meteoPoint.h"
+#include "meteoTable.h"
 #include <QtWidgets>
 
 class DialogMeteoTable : public QDialog
@@ -15,7 +16,7 @@ class DialogMeteoTable : public QDialog
     QDate lastDate;
     frequencyType currentFreq;
     QStringList currentVariables;
-    QTableWidget* meteoTable;
+    MeteoTable* meteoTable;
     QStringList labels;
     QStringList meteoTableHeader;
 

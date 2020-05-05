@@ -17,7 +17,7 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
     this->resize(800, 600);
 
 
-    meteoTable = new QTableWidget();
+    meteoTable = new MeteoTable();
     mainLayout->addWidget(meteoTable);
 
     int colNumber = currentVariables.size()*meteoPoints.size()+1; // variables for ID + Data
@@ -108,8 +108,8 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
     meteoTable->setVerticalHeaderLabels(labels);
     meteoTable->setHorizontalHeaderLabels(meteoTableHeader);
     meteoTable->resizeColumnsToContents();
-    meteoTable->setSelectionBehavior(QAbstractItemView::SelectRows);
-    meteoTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    meteoTable->setSelectionBehavior(QAbstractItemView::SelectItems);
+    meteoTable->setSelectionMode(QAbstractItemView::ContiguousSelection);
     meteoTable->setShowGrid(true);
     meteoTable->horizontalHeader()->setStyleSheet("QHeaderView { font-weight: bold; }");
     meteoTable->setStyleSheet("QTableView {selection-background-color: red;}");
