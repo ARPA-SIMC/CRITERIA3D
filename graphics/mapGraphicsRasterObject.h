@@ -80,6 +80,8 @@
         void updateCenter();
         Position getCurrentCenter();
 
+        gis::Crit3DGridHeader getLatLonHeader() const;
+
     protected:
         //virtual from MapGraphicsObject
         /*!

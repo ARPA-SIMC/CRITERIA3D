@@ -107,6 +107,11 @@ QPointF RasterObject::getPixel(const QPointF &latLonPoint)
     return QRectF( -widthPixels, -heightPixels, widthPixels*2, heightPixels*2);
  }
 
+ gis::Crit3DGridHeader RasterObject::getLatLonHeader() const
+ {
+     return latLonHeader;
+ }
+
  void RasterObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
  {
      Q_UNUSED(option)
