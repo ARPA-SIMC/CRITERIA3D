@@ -105,7 +105,8 @@
 
         Crit3DClimateParameters climateParameters;
 
-        Crit3DMeteoWidget *meteoWidget;
+        Crit3DMeteoWidget *meteoWidgetPoint;
+        Crit3DMeteoWidget *meteoWidgetGrid;
 
         Project();
 
@@ -195,9 +196,11 @@
 
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
         void showMeteoWidgetPoint(std::string idMeteoPoint);
+        void showMeteoWidgetGrid(std::string idCell);
 
     private slots:
-        void deleteMeteoWidget();
+        void deleteMeteoWidgetPoint();
+        void deleteMeteoWidgetGrid();
 
     };
 

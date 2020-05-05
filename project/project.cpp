@@ -49,7 +49,8 @@ void Project::initializeProject()
     meteoPointsDbHandler = nullptr;
     meteoGridDbHandler = nullptr;
     aggregationDbHandler = nullptr;
-    meteoWidget = nullptr;
+    meteoWidgetPoint = nullptr;
+    meteoWidgetGrid = nullptr;
 
     meteoSettings->initialize();
     quality->initialize();
@@ -93,7 +94,8 @@ void Project::clearProject()
     delete parameters;
     delete projectSettings;
     delete aggregationDbHandler;
-    delete meteoWidget;
+    delete meteoWidgetPoint;
+    delete meteoWidgetGrid;
 
     clearProxyDEM();
     DEM.clear();
@@ -2135,10 +2137,10 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint)
     QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly);
     QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly);
 
-    if (meteoWidget == nullptr)
+    if (meteoWidgetPoint == nullptr)
     {
-        meteoWidget = new Crit3DMeteoWidget();
-        QObject::connect(meteoWidget, SIGNAL(closeWidget()), this, SLOT(deleteMeteoWidget()));
+        meteoWidgetPoint = new Crit3DMeteoWidget();
+        QObject::connect(meteoWidgetPoint, SIGNAL(closeWidget()), this, SLOT(deleteMeteoWidgetPoint()));
     }
     for (int i=0; i < nrMeteoPoints; i++)
     {
@@ -2146,17 +2148,58 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint)
         {
             meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(meteoPoints[i]));
             meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(meteoPoints[i]));
-            meteoWidget->draw(meteoPoints[i]);
+            meteoWidgetPoint->draw(meteoPoints[i]);
         }
     }
 
 }
 
-void Project::deleteMeteoWidget()
+void Project::showMeteoWidgetGrid(std::string idCell)
 {
-    if (meteoWidget != nullptr)
+
+    QDate firstDate = meteoGridDbHandler->firstDate();
+    QDate lastDate = meteoGridDbHandler->lastDate();
+
+    QDateTime firstDateTime = QDateTime(firstDate, QTime(1,0));
+    QDateTime lastDateTime = QDateTime(lastDate.addDays(1), QTime(0,0));
+
+    if (meteoWidgetGrid == nullptr)
     {
-        meteoWidget = nullptr;
+        meteoWidgetGrid = new Crit3DMeteoWidget();
+        QObject::connect(meteoWidgetGrid, SIGNAL(closeWidget()), this, SLOT(deleteMeteoWidgetGrid()));
+    }
+    if (!meteoGridDbHandler->gridStructure().isFixedFields())
+    {
+        meteoGridDbHandler->loadGridDailyData(&errorString, QString::fromStdString(idCell), firstDate, lastDate);
+        meteoGridDbHandler->loadGridHourlyData(&errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+    }
+    else
+    {
+        meteoGridDbHandler->loadGridDailyDataFixedFields(&errorString, QString::fromStdString(idCell), firstDate, lastDate);
+        meteoGridDbHandler->loadGridHourlyDataFixedFields(&errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+    }
+    unsigned row;
+    unsigned col;
+    if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
+    {
+        meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
+    }
+
+}
+
+void Project::deleteMeteoWidgetPoint()
+{
+    if (meteoWidgetPoint != nullptr)
+    {
+        meteoWidgetPoint = nullptr;
+    }
+}
+
+void Project::deleteMeteoWidgetGrid()
+{
+    if (meteoWidgetGrid != nullptr)
+    {
+        meteoWidgetGrid = nullptr;
     }
 }
 
