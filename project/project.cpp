@@ -2130,6 +2130,7 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
 
 void Project::showMeteoWidgetPoint(std::string idMeteoPoint)
 {
+    QMessageBox waitDialog;
 
     QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily).date();
     QDate lastDaily = meteoPointsDbHandler->getLastDate(daily).date();
@@ -2146,9 +2147,14 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint)
     {
         if (meteoPoints[i].id == idMeteoPoint)
         {
+            waitDialog.setWindowTitle("Waiting");
+            waitDialog.setText("Loading data...");
+            waitDialog.show();
             meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(meteoPoints[i]));
             meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(meteoPoints[i]));
+            waitDialog.close();
             meteoWidgetPoint->draw(meteoPoints[i]);
+            return;
         }
     }
 
@@ -2156,6 +2162,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint)
 
 void Project::showMeteoWidgetGrid(std::string idCell)
 {
+    QMessageBox waitDialog;
 
     QDate firstDate = meteoGridDbHandler->firstDate();
     QDate lastDate = meteoGridDbHandler->lastDate();
@@ -2168,6 +2175,9 @@ void Project::showMeteoWidgetGrid(std::string idCell)
         meteoWidgetGrid = new Crit3DMeteoWidget();
         QObject::connect(meteoWidgetGrid, SIGNAL(closeWidget()), this, SLOT(deleteMeteoWidgetGrid()));
     }
+    waitDialog.setWindowTitle("Waiting");
+    waitDialog.setText("Loading data...");
+    waitDialog.show();
     if (!meteoGridDbHandler->gridStructure().isFixedFields())
     {
         meteoGridDbHandler->loadGridDailyData(&errorString, QString::fromStdString(idCell), firstDate, lastDate);
@@ -2178,6 +2188,7 @@ void Project::showMeteoWidgetGrid(std::string idCell)
         meteoGridDbHandler->loadGridDailyDataFixedFields(&errorString, QString::fromStdString(idCell), firstDate, lastDate);
         meteoGridDbHandler->loadGridHourlyDataFixedFields(&errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
     }
+    waitDialog.close();
     unsigned row;
     unsigned col;
     if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
