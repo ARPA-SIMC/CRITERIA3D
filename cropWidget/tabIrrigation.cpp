@@ -69,15 +69,15 @@ TabIrrigation::TabIrrigation()
     chart->addSeries(seriesMaxTransp);
     chart->addSeries(seriesRealTransp);
     chart->addSeries(seriesPrecIrr);
+
     seriesLAI->attachAxis(axisX);
-    seriesLAI->attachAxis(axisY);
-
     seriesMaxTransp->attachAxis(axisX);
-    seriesMaxTransp->attachAxis(axisY);
     seriesRealTransp->attachAxis(axisX);
-    seriesRealTransp->attachAxis(axisY);
-
     seriesPrecIrr->attachAxis(axisX);
+
+    seriesLAI->attachAxis(axisY);
+    seriesMaxTransp->attachAxis(axisY);
+    seriesRealTransp->attachAxis(axisY);
     seriesPrecIrr->attachAxis(axisYdx);
 
     chart->legend()->setVisible(true);
@@ -120,6 +120,11 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
 
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
     Crit3DDate lastDate = Crit3DDate(31, 12, lastYear);
+
+    chart->addSeries(seriesLAI);
+    chart->addSeries(seriesMaxTransp);
+    chart->addSeries(seriesRealTransp);
+    chart->addSeries(seriesPrecIrr);
 
     axisX->clear();
     seriesLAI->clear();
@@ -186,6 +191,16 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
 
+    chart->addSeries(seriesLAI);
+    chart->addSeries(seriesMaxTransp);
+    chart->addSeries(seriesRealTransp);
+    chart->addSeries(seriesPrecIrr);
+
+    seriesLAI->attachAxis(axisY);
+    seriesMaxTransp->attachAxis(axisY);
+    seriesRealTransp->attachAxis(axisY);
+    seriesPrecIrr->attachAxis(axisYdx);
+
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {
         if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
@@ -204,7 +219,7 @@ void TabIrrigation::tooltipLAI(QPointF point, bool state)
         QDate xDate(firstYear, 1, 1);
         int doy = point.x(); //start from 0
         xDate = xDate.addDays(doy);
-        m_tooltip->setText(QString("%1 \nLAI %2 ").arg(xDate.toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1 \nLAI %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -223,7 +238,7 @@ void TabIrrigation::tooltipMT(QPointF point, bool state)
         QDate xDate(firstYear, 1, 1);
         int doy = point.x();
         xDate = xDate.addDays(doy);
-        m_tooltip->setText(QString("%1 \nTransp max %2 ").arg(xDate.toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1 \nTransp max %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -243,7 +258,7 @@ void TabIrrigation::tooltipRT(QPointF point, bool state)
         QDate xDate(firstYear, 1, 1);
         int doy = point.x();
         xDate = xDate.addDays(doy);
-        m_tooltip->setText(QString("%1 \nTransp real %2 ").arg(xDate.toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1 \nTransp real %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -273,11 +288,11 @@ void TabIrrigation::tooltipPrecIrr(bool state, int index, QBarSet *barset)
         QString valueStr;
         if (barset->label() == "Precipitation")
         {
-            valueStr = QString("%1 \nPrecipitationl %2 ").arg(xDate.toString("MMM dd")).arg(barset->at(index), 0, 'f', 1);
+            valueStr = QString("%1 \nPrecipitationl %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
         }
         else if (barset->label() == "Irrigation")
         {
-            valueStr = QString("%1 \nIrrigation %2 ").arg(xDate.toString("MMM dd")).arg(barset->at(index), 0, 'f', 1);
+            valueStr = QString("%1 \nIrrigation %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
         }
 
         m_tooltip->setText(valueStr);

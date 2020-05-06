@@ -133,7 +133,7 @@ void TabRootDepth::tooltipRDM(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nroot ini %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setText(QString("%1 \nroot ini %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y()));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -149,7 +149,7 @@ void TabRootDepth::tooltipRD(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nroot depth %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y()));
+        m_tooltip->setText(QString("%1 \nroot depth %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y()));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
