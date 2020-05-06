@@ -218,13 +218,11 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     QLabel *labelEndDate = new QLabel(tr("End Date: "));
     firstDate = new QDateTimeEdit(QDate::currentDate());
     lastDate = new QDateTimeEdit(QDate::currentDate());
-    dailyButton->setMaximumWidth(this->width()/9);
-    hourlyButton->setMaximumWidth(this->width()/9);
-    addVarButton->setMaximumWidth(this->width()/9);
-    tableButton->setMaximumWidth(this->width()/9);
-    redrawButton->setMaximumWidth(this->width()/9);
-    firstDate->setMaximumWidth(this->width()/9);
-    lastDate->setMaximumWidth(this->width()/9);
+    dailyButton->setMaximumWidth(100);
+    hourlyButton->setMaximumWidth(100);
+    addVarButton->setMaximumWidth(100);
+    tableButton->setMaximumWidth(100);
+    redrawButton->setMaximumWidth(100);
 
     if (currentFreq == daily || currentFreq == noFrequency)
     {
@@ -232,6 +230,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
         hourlyButton->setEnabled(true);
         firstDate->setDisplayFormat("dd/MM/yyyy");
         lastDate->setDisplayFormat("dd/MM/yyyy");
+        firstDate->setMaximumWidth(100);
+        lastDate->setMaximumWidth(100);
     }
     else
     {
@@ -239,6 +239,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
         dailyButton->setEnabled(true);
         firstDate->setDisplayFormat("dd/MM/yyyy hh:mm");
         lastDate->setDisplayFormat("dd/MM/yyyy hh:mm");
+        firstDate->setMaximumWidth(140);
+        lastDate->setMaximumWidth(140);
     }
 
     buttonLayout->addWidget(dailyButton);
@@ -291,8 +293,6 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
     connect(tableButton, &QPushButton::clicked, [=](){ showTable(); });
     connect(redrawButton, &QPushButton::clicked, [=](){ updateDate(); });
-    //connect(firstDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
-    //connect(lastDate, &QDateTimeEdit::editingFinished, [=](){ updateDate(); });
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -947,6 +947,9 @@ void Crit3DMeteoWidget::showDailyGraph()
     }
     firstDate->setDisplayFormat("dd/MM/yyyy");
     lastDate->setDisplayFormat("dd/MM/yyyy");
+    firstDate->setMaximumWidth(100);
+    lastDate->setMaximumWidth(100);
+
     firstDate->setMinimumWidth(firstDate->width()-firstDate->width()*0.3);
     lastDate->setMinimumWidth(lastDate->width()-lastDate->width()*0.3);
 
@@ -995,6 +998,9 @@ void Crit3DMeteoWidget::showHourlyGraph()
     }
     firstDate->setDisplayFormat("dd/MM/yyyy hh:mm");
     lastDate->setDisplayFormat("dd/MM/yyyy hh:mm");
+    firstDate->setMaximumWidth(140);
+    lastDate->setMaximumWidth(140);
+
     firstDate->setMinimumWidth(firstDate->width()+firstDate->width()*0.3);
     lastDate->setMinimumWidth(lastDate->width()+lastDate->width()*0.3);
 
