@@ -2,7 +2,7 @@
 #define CROPWIDGET_H
 
 #ifndef MAX_YEARS
-    #define MAX_YEARS 5
+    #define MAX_YEARS 10
 #endif
 
     #include <QWidget>
