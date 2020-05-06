@@ -38,7 +38,7 @@
             QPushButton *dailyButton;
             QPushButton *hourlyButton;
             QPushButton *tableButton;
-            QPushButton *refreshButton;
+            QPushButton *redrawButton;
             QDateTimeEdit *firstDate;
             QDateTimeEdit *lastDate;
             QChartView *chartView;
