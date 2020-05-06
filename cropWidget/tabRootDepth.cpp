@@ -60,8 +60,6 @@ TabRootDepth::TabRootDepth()
 
 void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
-
-    FormInfo formInfo;
     unsigned int nrLayers = unsigned(soilLayers.size());
     double totalSoilDepth = 0;
     if (nrLayers > 0) totalSoilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
@@ -76,6 +74,8 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
     double tmax;
     QDateTime x;
 
+    chart->removeSeries(seriesRootDepth);
+    chart->removeSeries(seriesRootDepthMin);
     seriesRootDepth->clear();
     seriesRootDepthMin->clear();
 
@@ -83,11 +83,8 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
     bool startValidData = false;
 
-    int step = formInfo.start("Compute model...", (lastYear-firstYear+2)*365);
-    int cont = 0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
-        if ( (cont % step) == 0) formInfo.setValue(cont);
         tmin = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         tmax = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
 
@@ -115,15 +112,18 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
                 startValidData = false;
             }
         }
-        cont++; // formInfo update
     }
-    formInfo.close();
 
     // update x axis
     QDate first(firstYear, 1, 1);
     QDate last(lastYear, 12, 31);
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
+
+    chart->addSeries(seriesRootDepth);
+    chart->addSeries(seriesRootDepthMin);
+    seriesRootDepth->attachAxis(axisY);
+    seriesRootDepthMin->attachAxis(axisY);
 
 }
 
