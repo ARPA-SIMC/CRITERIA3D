@@ -278,7 +278,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
-    //chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->setRenderHint(QPainter::Antialiasing);
     axisX->hide();
 
     m_tooltip = new Callout(chart);
@@ -477,22 +477,6 @@ void Crit3DMeteoWidget::resetValues()
             }
         }
     }
-
-
-    for (int mp=0; mp<nMeteoPoints;mp++)
-    {
-        if (isLine)
-        {
-            for (int i = 0; i < nameLines.size(); i++)
-            {
-                chart->addSeries(lineSeries[mp][i]);
-                lineSeries[mp][i]->attachAxis(axisX);
-                lineSeries[mp][i]->attachAxis(axisY);
-                connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
-            }
-        }
-    }
-
 }
 
 void Crit3DMeteoWidget::drawDailyVar()
@@ -628,6 +612,22 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     if (isLine)
     {
+        formInfo.showInfo("add series...");
+        for (int mp=0; mp<nMeteoPoints;mp++)
+        {
+            if (isLine)
+            {
+                for (int i = 0; i < nameLines.size(); i++)
+                {
+                    chart->addSeries(lineSeries[mp][i]);
+                    lineSeries[mp][i]->attachAxis(axisX);
+                    lineSeries[mp][i]->attachAxis(axisY);
+                    connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+                }
+            }
+        }
+        formInfo.close();
+
         axisY->setVisible(true);
         axisY->setMax(maxLine);
         axisY->setMin(minLine);
@@ -750,13 +750,14 @@ void Crit3DMeteoWidget::drawHourlyVar()
         }
     }
 
+    int nMeteoPoints = meteoPoints.size();
     for (int cont = 0; cont< nValues; cont++)
     {
         myDate = firstCrit3DDate.addSeconds(cont*3600);
         if ( (cont % stepFormInfo) == 0) formInfo.setValue(cont);
         categories.append(QString::number(cont));
 
-        for (int mp=0; mp<meteoPoints.size();mp++)
+        for (int mp=0; mp<nMeteoPoints;mp++)
         {
             if (isLine)
             {
@@ -805,7 +806,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     if (isBar)
     {
 
-        for (int mp=0; mp<meteoPoints.size();mp++)
+        for (int mp=0; mp<nMeteoPoints;mp++)
         {
             QBarSeries* barMpSeries = new QBarSeries();
             for (int i = 0; i < nameBar.size(); i++)
@@ -815,7 +816,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
             barSeries.append(barMpSeries);
         }
 
-        for (int mp=0; mp<meteoPoints.size();mp++)
+        for (int mp=0; mp<nMeteoPoints;mp++)
         {
             connect(barSeries[mp], &QBarSeries::hovered, this, &Crit3DMeteoWidget::tooltipBar);
             if (nameBar.size() != 0)
@@ -835,6 +836,22 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     if (isLine)
     {
+        formInfo.showInfo("add series...");
+        for (int mp=0; mp<nMeteoPoints;mp++)
+        {
+            if (isLine)
+            {
+                for (int i = 0; i < nameLines.size(); i++)
+                {
+                    chart->addSeries(lineSeries[mp][i]);
+                    lineSeries[mp][i]->attachAxis(axisX);
+                    lineSeries[mp][i]->attachAxis(axisY);
+                    connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+                }
+            }
+        }
+        formInfo.close();
+
         axisY->setVisible(true);
         axisY->setMax(maxLine);
         axisY->setMin(minLine);
