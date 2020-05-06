@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include <QLegendMarker>
 #include "formInfo.h"
+#include "qdebug.h"
 
 
 TabLAI::TabLAI()
@@ -97,9 +98,6 @@ TabLAI::TabLAI()
 
 void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
-
-    FormInfo formInfo;
-
     unsigned int nrLayers = unsigned(soilLayers.size());
     double totalSoilDepth = 0;
     if (nrLayers > 0) totalSoilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
@@ -117,6 +115,11 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
     double dailyEt0;
     int doy;
 
+    chart->removeSeries(seriesLAI);
+    chart->removeSeries(seriesPotentialEvap);
+    chart->removeSeries(seriesMaxEvap);
+    chart->removeSeries(seriesMaxTransp);
+
     seriesLAI->clear();
     seriesPotentialEvap->clear();
     seriesMaxEvap->clear();
@@ -124,11 +127,9 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
 
     int currentDoy = 1;
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
-    int step = formInfo.start("Compute model...", (lastYear-firstYear+2)*365);
-    int cont = 0;
+
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
-        if ( (cont % step) == 0) formInfo.setValue(cont);
         tmin = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         tmax = meteoPoint->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
 
@@ -150,15 +151,24 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
             seriesMaxTransp->append(x.toMSecsSinceEpoch(), myCrop->getMaxTranspiration(dailyEt0));
             seriesLAI->append(x.toMSecsSinceEpoch(), myCrop->LAI);
         }
-        cont++; // formInfo update
     }
-    formInfo.close();
 
     // update x axis
     QDate first(firstYear, 1, 1);
     QDate last(lastYear, 12, 31);
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
+
+    chart->addSeries(seriesLAI);
+    chart->addSeries(seriesPotentialEvap);
+    chart->addSeries(seriesMaxEvap);
+    chart->addSeries(seriesMaxTransp);
+
+    seriesLAI->attachAxis(axisY);
+    seriesPotentialEvap->attachAxis(axisYdx);
+    seriesMaxEvap->attachAxis(axisYdx);
+    seriesMaxTransp->attachAxis(axisYdx);
+
 }
 
 void TabLAI::tooltipLAI(QPointF point, bool state)
@@ -167,7 +177,7 @@ void TabLAI::tooltipLAI(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nLAI %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1 \nLAI: %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -183,7 +193,7 @@ void TabLAI::tooltipPE(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nPot. ET %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1 \nPot. ET: %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -199,7 +209,7 @@ void TabLAI::tooltipME(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nEvap. max %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1 \nEvap. max: %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -216,7 +226,7 @@ void TabLAI::tooltipMT(QPointF point, bool state)
     {
         QDateTime xDate;
         xDate.setMSecsSinceEpoch(point.x());
-        m_tooltip->setText(QString("%1 \nTransp. max %2 ").arg(xDate.date().toString("MMM dd")).arg(point.y(), 0, 'f', 1));
+        m_tooltip->setText(QString("%1 \nTransp. max: %2 ").arg(xDate.date().toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
