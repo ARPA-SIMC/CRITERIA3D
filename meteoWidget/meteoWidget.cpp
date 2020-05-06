@@ -495,7 +495,6 @@ void Crit3DMeteoWidget::drawDailyVar()
     Crit3DDate firstCrit3DDate = getCrit3DDate(firstDate->date());
     Crit3DDate lastfirstCrit3DDate = getCrit3DDate(lastDate->date());
     nDays = firstCrit3DDate.daysTo(lastfirstCrit3DDate)+1;
-    int stepFormInfo = formInfo.start("Compute model...", nDays);
 
     categories.clear();
     categoriesVirtual.clear();
@@ -530,7 +529,6 @@ void Crit3DMeteoWidget::drawDailyVar()
     for (int day = 0; day < nDays; day++)
     {
         myDate = firstCrit3DDate.addDays(day);
-        if ( (day % stepFormInfo) == 0) formInfo.setValue(day);
         categories.append(QString::number(day));
 
         for (int mp=0; mp<nMeteoPoints;mp++)
@@ -578,7 +576,6 @@ void Crit3DMeteoWidget::drawDailyVar()
             }
         }
     }
-    formInfo.close();
 
     if (isBar)
     {
@@ -721,7 +718,6 @@ void Crit3DMeteoWidget::drawHourlyVar()
     Crit3DTime lastCrit3DDate(getCrit3DDate(lastDate->date()),0);
     nDays = firstCrit3DDate.date.daysTo(lastCrit3DDate.date)+1;
     int nValues = nDays*24;
-    int stepFormInfo = formInfo.start("Compute model...", nValues);
 
     categories.clear();
     categoriesVirtual.clear();
@@ -754,7 +750,6 @@ void Crit3DMeteoWidget::drawHourlyVar()
     for (int cont = 0; cont< nValues; cont++)
     {
         myDate = firstCrit3DDate.addSeconds(cont*3600);
-        if ( (cont % stepFormInfo) == 0) formInfo.setValue(cont);
         categories.append(QString::number(cont));
 
         for (int mp=0; mp<nMeteoPoints;mp++)
@@ -801,7 +796,6 @@ void Crit3DMeteoWidget::drawHourlyVar()
             }
         }
     }
-    formInfo.close();
 
     if (isBar)
     {
