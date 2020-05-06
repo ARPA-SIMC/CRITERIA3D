@@ -278,7 +278,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget()
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
-    chartView->setRenderHint(QPainter::Antialiasing);
+    //chartView->setRenderHint(QPainter::Antialiasing);
     axisX->hide();
 
     m_tooltip = new Callout(chart);
@@ -586,6 +586,10 @@ void Crit3DMeteoWidget::drawDailyVar()
                             maxBar = value;
                         }
                     }
+                    else
+                    {
+                        *setVector[mp][j] << 0;
+                    }
                 }
             }
         }
@@ -653,7 +657,7 @@ void Crit3DMeteoWidget::drawDailyVar()
             {
                 for (int j = 0; j < nameBar.size(); j++)
                 {
-                    *setVector[mp][j] << NODATA;
+                    *setVector[mp][j] << 0;
                 }
             }
 
@@ -787,6 +791,10 @@ void Crit3DMeteoWidget::drawHourlyVar()
                         {
                             maxBar = value;
                         }
+                    }
+                    else
+                    {
+                        *setVector[mp][j] << 0;
                     }
                 }
             }
