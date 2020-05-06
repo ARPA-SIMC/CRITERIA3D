@@ -485,7 +485,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 {
 
     FormInfo formInfo;
-    formInfo.showInfo("draw daily data...");
+    formInfo.showInfo("Draw daily data...");
 
     firstDate->blockSignals(true);
     lastDate->blockSignals(true);
@@ -710,7 +710,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
 {
 
     FormInfo formInfo;
-    formInfo.showInfo("draw hourly data...");
+    formInfo.showInfo("Draw hourly data...");
 
     firstDate->blockSignals(true);
     lastDate->blockSignals(true);
