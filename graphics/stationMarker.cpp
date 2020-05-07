@@ -94,6 +94,7 @@ void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
         QMenu menu;
         QAction *firstItem = menu.addAction("Open new meteo widget");
         QAction *secondItem = menu.addAction("Append to meteo widget");
+        QAction *thirdItem = menu.addAction(QString::fromStdString(this->id()));
         QAction *selection =  menu.exec(QCursor::pos());
 
         if (selection == firstItem)
