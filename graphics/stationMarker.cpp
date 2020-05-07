@@ -61,10 +61,12 @@ void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
     pointSelected.latitude = this->latitude();
     pointSelected.longitude = this->longitude();
 
+
     if (event->buttons() & Qt::LeftButton)
     {
-        emit stationClicked();
         /*
+        emit stationClicked();
+
         QColor color = this->color();
         if ( color ==  Qt::white )
         {
@@ -89,28 +91,19 @@ void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
     if (event->buttons() & Qt::RightButton)
     {
-        // test
-        /*
         QMenu menu;
-        QAction *firstItem = menu.addAction("Menu Item 1");
-        QAction *secondItem = menu.addAction("Menu Item 2");
-        QAction *thirdItem = menu.addAction("Menu Item 3");
+        QAction *firstItem = menu.addAction("Open new meteo widget");
+        QAction *secondItem = menu.addAction("Append to meteo widget");
         QAction *selection =  menu.exec(QCursor::pos());
 
         if (selection == firstItem)
         {
-            this->setFillColor(QColor((Qt::yellow)));
+            emit newStationClicked();
         }
         else if (selection == secondItem)
         {
-            this->setFillColor(QColor((Qt::blue)));
+            emit appendStationClicked();
         }
-        else if (selection == thirdItem)
-        {
-            this->setFillColor(QColor((Qt::green)));
-        }
-        */
-
     }
 
 }

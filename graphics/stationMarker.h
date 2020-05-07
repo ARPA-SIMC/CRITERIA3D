@@ -25,7 +25,8 @@
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
             //void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
         signals:
-            void stationClicked();
+            void newStationClicked();
+            void appendStationClicked();
 
     };
 
