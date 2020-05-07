@@ -1398,6 +1398,17 @@ void Crit3DMeteoWidget::handleMarkerClicked()
 void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
 {
     event->accept();
-    emit closeWidget();
+    emit closeWidget(meteoWidgetID);
 }
+
+std::string Crit3DMeteoWidget::getMeteoWidgetID() const
+{
+    return meteoWidgetID;
+}
+
+void Crit3DMeteoWidget::setMeteoWidgetID(const std::string &value)
+{
+    meteoWidgetID = value;
+}
+
 

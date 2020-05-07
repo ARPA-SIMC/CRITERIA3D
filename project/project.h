@@ -105,8 +105,8 @@
 
         Crit3DClimateParameters climateParameters;
 
-        Crit3DMeteoWidget *meteoWidgetPoint;
-        Crit3DMeteoWidget *meteoWidgetGrid;
+        QVector<Crit3DMeteoWidget*> meteoWidgetPointVector;
+        QVector<Crit3DMeteoWidget*> meteoWidgetGridVector;
 
         Project();
 
@@ -195,11 +195,11 @@
         void importHourlyMeteoData(const QString& fileName, bool importAllFiles, bool deletePreviousData);
 
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
-        void showMeteoWidgetPoint(std::string idMeteoPoint);
+        void showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell);
 
     private slots:
-        void deleteMeteoWidgetPoint();
+        void deleteMeteoWidgetPoint(std::string id);
         void deleteMeteoWidgetGrid();
 
     };
