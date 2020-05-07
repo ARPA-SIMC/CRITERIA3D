@@ -99,6 +99,7 @@
          */
         QRectF boundingRect() const;
 
+
     private:
         MapGraphicsView* view;
         gis::Crit3DRasterGrid* rasterPointer;
@@ -121,6 +122,7 @@
         bool getCurrentWindow(gis::Crit3DRasterWindow* window);
         int getCurrentStep(const gis::Crit3DRasterWindow& window);
         bool drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter, bool drawBorder);
+
     };
 
 

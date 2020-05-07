@@ -458,3 +458,5 @@ void RasterObject::setMapExtents()
     geoMap->topRight.latitude = MINVALUE(84, topRight.y());
 }
 
+
+
