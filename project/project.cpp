@@ -2135,8 +2135,8 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
     QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, idMeteoPoint).date();
     bool hasDailyData = !(firstDaily.isNull() || lastDaily.isNull());
 
-    QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly);
-    QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly);
+    QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, idMeteoPoint);
+    QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, idMeteoPoint);
     bool hasHourlyData = !(firstHourly.isNull() || lastHourly.isNull());
 
     if (!hasDailyData && !hasHourlyData)
