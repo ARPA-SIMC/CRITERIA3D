@@ -41,8 +41,12 @@
         QStringList getDatasetsList();
         QStringList getDatasetsActive();
         void setDatasetsActive(QString active);
-        QDateTime getLastDate(frequencyType frequency);
+
         QDateTime getFirstDate(frequencyType frequency);
+        QDateTime getLastDate(frequencyType frequency);
+        QDateTime getFirstDate(frequencyType frequency, std::string idMeteoPoint);
+        QDateTime getLastDate(frequencyType frequency, std::string idMeteoPoint);
+
         bool existData(Crit3DMeteoPoint *meteoPoint, frequencyType myFreq);
         bool writePointProperties(Crit3DMeteoPoint* pointProp);
         QList<Crit3DMeteoPoint> getPropertiesFromDb(const gis::Crit3DGisSettings& gisSettings, QString *errorString);
