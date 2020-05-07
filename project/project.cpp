@@ -1478,7 +1478,7 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
     }
 
     FormInfo myInfo;
-    int infoStep;
+    int infoStep = 0;
     if (showInfo)
     {
         QString infoStr = "Loading topographic distance maps...";
@@ -1492,8 +1492,10 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (showInfo)
+        {
             if ((i % infoStep) == 0)
                 myInfo.setValue(i);
+        }
 
         if (meteoPoints[i].active)
         {
