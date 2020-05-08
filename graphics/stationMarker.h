@@ -23,10 +23,10 @@
 
         protected:
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
-            //void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
+            void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
         signals:
-            void newStationClicked();
-            void appendStationClicked();
+            void newStationClicked(std::string);
+            void appendStationClicked(std::string);
 
     };
 
