@@ -8,9 +8,22 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
 
     QString title = "Table meteo values ID: ";
     QStringList idList;
+    QStringList nameList;
     for (int i=0; i<meteoPoints.size(); i++)
     {
         idList << QString::fromStdString(meteoPoints[i].id);
+
+        QString pointName = QString::fromStdString(meteoPoints[i].name);
+        QStringList elementsName = pointName.split(' ');
+        if (elementsName.size() == 1)
+        {
+            pointName = elementsName[0].left(8);
+        }
+        else
+        {
+            pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
+        }
+        nameList << pointName;
     }
     title = title+idList.join(",");
     this->setWindowTitle(title);
@@ -46,7 +59,7 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
     {
         for (int mp = 0; mp < meteoPoints.size(); mp++)
         {
-            meteoTableHeader << "ID"+idList[mp]+"_"+currentVariables[i];
+            meteoTableHeader << idList[mp]+"_"+nameList[mp]+"_"+currentVariables[i];
         }
     }
 
