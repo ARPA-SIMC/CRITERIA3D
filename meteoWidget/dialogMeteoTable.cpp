@@ -1,5 +1,6 @@
 #include "dialogMeteoTable.h"
 #include "utilities.h"
+#include "commonConstants.h"
 
 DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QStringList currentVariables)
     :meteoPoints(meteoPoints), firstDate(firstDate), lastDate(lastDate), currentFreq(currentFreq), currentVariables(currentVariables)
@@ -7,9 +8,22 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
 
     QString title = "Table meteo values ID: ";
     QStringList idList;
+    QStringList nameList;
     for (int i=0; i<meteoPoints.size(); i++)
     {
         idList << QString::fromStdString(meteoPoints[i].id);
+
+        QString pointName = QString::fromStdString(meteoPoints[i].name);
+        QStringList elementsName = pointName.split(' ');
+        if (elementsName.size() == 1)
+        {
+            pointName = elementsName[0].left(8);
+        }
+        else
+        {
+            pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
+        }
+        nameList << pointName;
     }
     title = title+idList.join(",");
     this->setWindowTitle(title);
@@ -45,7 +59,7 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
     {
         for (int mp = 0; mp < meteoPoints.size(); mp++)
         {
-            meteoTableHeader << "ID"+idList[mp]+"_"+currentVariables[i];
+            meteoTableHeader << idList[mp]+"_"+nameList[mp]+"_"+currentVariables[i];
         }
     }
 
@@ -91,13 +105,19 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
                 {
                     meteoVariable meteoVar = MapDailyMeteoVar.at(currentVariables[varPos].toStdString());
                     double value = meteoPoints[mpPos].getMeteoPointValueD(getCrit3DDate(myDate), meteoVar);
-                    meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
+                    if (value != NODATA)
+                    {
+                        meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
+                    }
                 }
                 else if (currentFreq == hourly)
                 {
                     meteoVariable meteoVar = MapHourlyMeteoVar.at(currentVariables[varPos].toStdString());
                     double value = meteoPoints[mpPos].getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, meteoVar);
-                    meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
+                    if (value != NODATA)
+                    {
+                        meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
+                    }
                 }
 
             }

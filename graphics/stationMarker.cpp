@@ -25,6 +25,11 @@ std::string StationMarker::id() const
     return _id;
 }
 
+void StationMarker::setName(const std::string &name)
+{
+    _name = name;
+}
+
 
 void StationMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
 {
@@ -59,6 +64,7 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (event->button() == Qt::RightButton)
     {
         QMenu menu;
+        menu.addSection("Point " + QString::fromStdString(this->_name) + " ID "+QString::fromStdString(this->id()));
         QAction *firstItem = menu.addAction("Open new meteo widget");
         QAction *secondItem = menu.addAction("Append to meteo widget");
 

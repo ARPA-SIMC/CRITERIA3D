@@ -17,11 +17,29 @@ void MeteoTable::keyPressEvent(QKeyEvent *event)
 
                 QString text;
                 QItemSelectionRange range = selectionModel()->selection().first();
+                QStringList headerContents;
+
+                if (range.bottom() - range.top() == this->rowCount()-1)
+                {
+                    for (auto j = range.left(); j <= range.right(); ++j)
+                    {
+                        headerContents << this->horizontalHeaderItem(j)->text();
+                    }
+                }
+
                 for (auto i = range.top(); i <= range.bottom(); ++i)
                 {
                     QStringList rowContents;
                     for (auto j = range.left(); j <= range.right(); ++j)
+                    {
                         rowContents << model()->index(i,j).data().toString();
+                    }
+                    if (!headerContents.isEmpty())
+                    {
+                        text += headerContents.join("\t");
+                        text += "\n";
+                        headerContents.clear();
+                    }
                     text += rowContents.join("\t");
                     text += "\n";
                 }

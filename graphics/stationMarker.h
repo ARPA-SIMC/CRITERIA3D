@@ -16,10 +16,12 @@
             void setId(std::string id);
             void setToolTip(Crit3DMeteoPoint* meteoPoint_);
             std::string id() const;
+            void setName(const std::string &name);
 
     private:
             MapGraphicsView* _view;
             std::string _id;
+            std::string _name;
 
         protected:
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
