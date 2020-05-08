@@ -1401,14 +1401,15 @@ void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
     emit closeWidget(meteoWidgetID);
 }
 
-std::string Crit3DMeteoWidget::getMeteoWidgetID() const
+int Crit3DMeteoWidget::getMeteoWidgetID() const
 {
     return meteoWidgetID;
 }
 
-void Crit3DMeteoWidget::setMeteoWidgetID(const std::string &value)
+void Crit3DMeteoWidget::setMeteoWidgetID(int value)
 {
     meteoWidgetID = value;
 }
+
 
 

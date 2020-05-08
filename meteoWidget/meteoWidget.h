@@ -17,8 +17,8 @@
 
         public:
             Crit3DMeteoWidget();
-            std::string getMeteoWidgetID() const;
-            void setMeteoWidgetID(const std::string &value);
+            int getMeteoWidgetID() const;
+            void setMeteoWidgetID(int value);
             void draw(Crit3DMeteoPoint mp);
             void resetValues();
             void drawDailyVar();
@@ -36,7 +36,7 @@
             void closeEvent(QCloseEvent *event);
 
     private:
-            std::string meteoWidgetID;
+            int meteoWidgetID;
             QPushButton *addVarButton;
             QPushButton *dailyButton;
             QPushButton *hourlyButton;
@@ -71,7 +71,7 @@
             bool isBar;
             Callout *m_tooltip;
     signals:
-        void closeWidget(std::string);
+        void closeWidget(int);
 
     };
 
