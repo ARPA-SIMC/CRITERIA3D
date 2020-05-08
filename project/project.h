@@ -199,7 +199,7 @@
         void showMeteoWidgetGrid(std::string idCell);
 
     private slots:
-        void deleteMeteoWidgetPoint(std::string id);
+        void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid();
 
     };

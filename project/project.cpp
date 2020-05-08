@@ -2146,7 +2146,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
     }
 
     FormInfo formInfo;
-
+    int meteoWidgetId = 0;
     if (meteoWidgetPointVector.isEmpty())
     {
         isAppend = false;
@@ -2162,7 +2162,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
                 meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &(meteoPoints[i]));
                 meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &(meteoPoints[i]));
                 formInfo.close();
-                meteoWidgetPointVector.takeLast()->draw(meteoPoints[i]);
+                meteoWidgetPointVector[meteoWidgetPointVector.size()-1]->draw(meteoPoints[i]);
                 return;
             }
         }
@@ -2170,9 +2170,17 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
     else if (!isAppend)
     {
         Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget();
-        meteoWidgetPoint->setMeteoWidgetID(idMeteoPoint);
+        if (!meteoWidgetPointVector.isEmpty())
+        {
+            meteoWidgetId = meteoWidgetPointVector[meteoWidgetPointVector.size()-1]->getMeteoWidgetID()+1;
+        }
+        else
+        {
+            meteoWidgetId = 0;
+        }
+        meteoWidgetPoint->setMeteoWidgetID(meteoWidgetId);
         meteoWidgetPointVector.append(meteoWidgetPoint);
-        QObject::connect(meteoWidgetPoint, SIGNAL(closeWidget(std::string)), this, SLOT(deleteMeteoWidgetPoint(std::string)));
+        QObject::connect(meteoWidgetPoint, SIGNAL(closeWidget(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
         for (int i=0; i < nrMeteoPoints; i++)
         {
             if (meteoPoints[i].id == idMeteoPoint)
@@ -2228,7 +2236,7 @@ void Project::showMeteoWidgetGrid(std::string idCell)
 
 }
 
-void Project::deleteMeteoWidgetPoint(std::string id)
+void Project::deleteMeteoWidgetPoint(int id)
 {
     for (int i = 0; i<meteoWidgetPointVector.size(); i++)
     {
