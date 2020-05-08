@@ -2189,7 +2189,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
 
 }
 
-void Project::showMeteoWidgetGrid(std::string idCell)
+void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 {
     /*
     FormInfo formInfo;
