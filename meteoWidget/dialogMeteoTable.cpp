@@ -1,5 +1,6 @@
 #include "dialogMeteoTable.h"
 #include "utilities.h"
+#include "commonConstants.h"
 
 DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QStringList currentVariables)
     :meteoPoints(meteoPoints), firstDate(firstDate), lastDate(lastDate), currentFreq(currentFreq), currentVariables(currentVariables)
@@ -91,13 +92,19 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
                 {
                     meteoVariable meteoVar = MapDailyMeteoVar.at(currentVariables[varPos].toStdString());
                     double value = meteoPoints[mpPos].getMeteoPointValueD(getCrit3DDate(myDate), meteoVar);
-                    meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
+                    if (value != NODATA)
+                    {
+                        meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
+                    }
                 }
                 else if (currentFreq == hourly)
                 {
                     meteoVariable meteoVar = MapHourlyMeteoVar.at(currentVariables[varPos].toStdString());
                     double value = meteoPoints[mpPos].getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, meteoVar);
-                    meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
+                    if (value != NODATA)
+                    {
+                        meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));
+                    }
                 }
 
             }
