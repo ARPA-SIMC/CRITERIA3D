@@ -16,7 +16,7 @@
         Q_OBJECT
 
         public:
-            Crit3DMeteoWidget();
+            Crit3DMeteoWidget(QString title);
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
             void draw(Crit3DMeteoPoint mp);

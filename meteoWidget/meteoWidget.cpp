@@ -39,9 +39,9 @@
 #include <QDebug>
 
 
-Crit3DMeteoWidget::Crit3DMeteoWidget()
+Crit3DMeteoWidget::Crit3DMeteoWidget(QString title)
 {
-    this->setWindowTitle(QStringLiteral("Graph"));
+    this->setWindowTitle(title);
     this->resize(1240, 700);
     currentFreq = noFrequency;
     firstDailyDate = QDate::currentDate();
@@ -428,7 +428,17 @@ void Crit3DMeteoWidget::resetValues()
             for (int i = 0; i<nameLines.size(); i++)
             {
                 QLineSeries* line = new QLineSeries();
-                line->setName("ID"+QString::fromStdString(meteoPoints[mp].id)+"_"+nameLines[i]);
+                QString pointName = QString::fromStdString(meteoPoints[mp].name);
+                QStringList elementsName = pointName.split(' ');
+                if (elementsName.size() == 1)
+                {
+                    pointName = elementsName[0].left(8);
+                }
+                else
+                {
+                    pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
+                }
+                line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
                 QColor lineColor = colorLine[i];
                 if (nMeteoPoints == 1)
                 {
@@ -458,7 +468,17 @@ void Crit3DMeteoWidget::resetValues()
             vectorBarSet.clear();
             for (int i = 0; i < nameBar.size(); i++)
             {
-                name = "ID"+QString::fromStdString(meteoPoints[mp].id)+"_"+nameBar[i];
+                QString pointName = QString::fromStdString(meteoPoints[mp].name);
+                QStringList elementsName = pointName.split(' ');
+                if (elementsName.size() == 1)
+                {
+                    pointName = elementsName[0].left(8);
+                }
+                else
+                {
+                    pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
+                }
+                name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
                 QBarSet* set = new QBarSet(name);
                 QColor barColor = colorBar[i];
                 if (nMeteoPoints == 1)
