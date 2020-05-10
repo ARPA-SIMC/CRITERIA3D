@@ -29,6 +29,7 @@
         signals:
             void newStationClicked(std::string);
             void appendStationClicked(std::string);
+            void openCropClicked(std::string);
 
     };
 
