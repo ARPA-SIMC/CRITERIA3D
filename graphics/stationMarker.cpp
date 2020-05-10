@@ -86,6 +86,6 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-
+    Q_UNUSED(event);
 }
 

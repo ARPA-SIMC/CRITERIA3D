@@ -55,6 +55,8 @@ DialogSelectVar::DialogSelectVar(QStringList allVar, QStringList selectedVar)
 
 void DialogSelectVar::variableAllClicked(QListWidgetItem* item)
 {
+    Q_UNUSED(item);
+
     addButton->setEnabled(true);
     deleteButton->setEnabled(false);
     listSelectedVar->clearSelection();
@@ -62,6 +64,8 @@ void DialogSelectVar::variableAllClicked(QListWidgetItem* item)
 
 void DialogSelectVar::variableSelClicked(QListWidgetItem* item)
 {
+    Q_UNUSED(item);
+
     addButton->setEnabled(false);
     deleteButton->setEnabled(true);
     listAllVar->clearSelection();
