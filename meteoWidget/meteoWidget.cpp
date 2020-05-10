@@ -1147,6 +1147,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
         QPoint pointDoY = series->at(doy).toPoint();
+
         if (doy == 0)
         {
             QPoint pointNext = series->at(doy+1).toPoint();
