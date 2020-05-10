@@ -1423,7 +1423,7 @@ frequencyType getAggregationFrequency(meteoVariable myVar)
     {
         return hourly;
     }
-    else if (myVar != NODATA)
+    else if (myVar != noMeteoVar)
     {
         return daily;
     }
@@ -1665,7 +1665,9 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
         meteoPoint->setMeteoPointValueD(date, myVar, dailyValue);
 
         if (myVar == dailyLeafWetness && dailyValue > 24)
-            int a = 0;
+        {
+            // todo warning
+        }
 
     }
 
@@ -2371,7 +2373,6 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     QString refElabParam1;
     QString refElabParam2;
     bool param1IsClimate = false;
-    bool refParam1IsClimate;
     bool anomalyIsClimate;
     QString elabParam2;
 
@@ -2815,13 +2816,11 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                     {
                         if (ancestor.toElement().attribute("readParamFromClimate").toUpper() == "TRUE" || ancestor.toElement().attribute("readParamFromClimate").toUpper() == "YES")
                         {
-                            refParam1IsClimate = true;
                             listXMLAnomaly->insertRefParam1IsClimate(true);
                             listXMLAnomaly->insertRefParam1(NODATA);
                         }
                         else
                         {
-                            refParam1IsClimate = false;
                             listXMLAnomaly->insertRefParam1IsClimate(false);
                             listXMLAnomaly->insertRefParam1ClimateField("");
                         }

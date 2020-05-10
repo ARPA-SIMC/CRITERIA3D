@@ -53,7 +53,7 @@ void Crit3DElabList::reset()
     _listYearStart.clear();
 }
 
-void Crit3DElabList::eraseElement(int index)
+void Crit3DElabList::eraseElement(unsigned int index)
 {
     if (_listAll.size() > index)
     {
