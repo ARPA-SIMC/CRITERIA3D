@@ -102,7 +102,7 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
     obsDataH = new TObsDataH[unsigned(numberOfDays)];
 
     Crit3DDate myDate = firstDate;
-    for (unsigned int i = 0; i < numberOfDays; i++)
+    for (unsigned int i = 0; i < unsigned(numberOfDays); i++)
     {
         obsDataH[i].date = myDate;
         obsDataH[i].tAir = new float[nrDailyValues];
@@ -330,7 +330,7 @@ void Crit3DMeteoPoint::emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& d
     int indexFin = obsDataD[0].date.daysTo(date2);
     residual = NODATA;
 
-    for (unsigned int i = indexIni; i <= indexFin; i++)
+    for (unsigned int i = indexIni; i <= unsigned(indexFin); i++)
         if (myVar == dailyAirTemperatureMax)
             obsDataD[i].tMax = NODATA;
         else if (myVar == dailyAirTemperatureMin)
@@ -372,7 +372,7 @@ void Crit3DMeteoPoint::emptyObsDataD(const Crit3DDate& date1, const Crit3DDate& 
     int indexIni = obsDataH[0].date.daysTo(date1);
     int indexFin = obsDataH[0].date.daysTo(date2);
 
-    for (unsigned int i = indexIni; i <= indexFin; i++)
+    for (unsigned int i = indexIni; i <= unsigned(indexFin); i++)
     {
         obsDataD[i].tMax = NODATA;
         obsDataD[i].tMin = NODATA;

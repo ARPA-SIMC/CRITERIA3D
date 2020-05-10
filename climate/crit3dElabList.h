@@ -34,7 +34,7 @@ public:
     void setListAll(const QStringList &listClimateElab);
 
     void reset();
-    void eraseElement(int index);
+    void eraseElement(unsigned int index);
 
     std::vector<int> listYearStart() const;
     void setListYearStart(const std::vector<int> &listYearStart);
