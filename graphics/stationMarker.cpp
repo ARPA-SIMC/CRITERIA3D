@@ -64,8 +64,9 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     if (event->button() == Qt::RightButton)
     {
         QMenu menu;
-        QString title = "Point: " + QString::fromStdString(this->_name) + " ID: " + QString::fromStdString(this->id());
-        menu.addAction(title);
+        const QString title = "Point: " + QString::fromStdString(this->_name) + " ID: " + QString::fromStdString(this->id());
+        QAction *titleSection = menu.addAction(title);
+        titleSection->setEnabled(false);
         menu.addSeparator();
 
         QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
