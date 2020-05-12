@@ -40,6 +40,7 @@ QT_END_NAMESPACE
 
 QT_CHARTS_BEGIN_NAMESPACE
 class QChart;
+class QAbstractSeries;
 QT_CHARTS_END_NAMESPACE
 
 QT_CHARTS_USE_NAMESPACE
@@ -55,6 +56,7 @@ public:
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,QWidget *widget);
+    void setSeries(QAbstractSeries *series);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -67,6 +69,7 @@ private:
     QPointF m_anchor;
     QFont m_font;
     QChart *m_chart;
+    QAbstractSeries *m_series;
 };
 
 #endif // CALLOUT_H

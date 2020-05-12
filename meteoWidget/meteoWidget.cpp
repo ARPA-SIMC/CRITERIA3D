@@ -439,6 +439,7 @@ void Crit3DMeteoWidget::resetValues()
     }
 
     chart->removeAllSeries();
+    delete m_tooltip;
 
     if (isLine)
     {
@@ -544,6 +545,8 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     categories.clear();
     categoriesVirtual.clear();
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
 
     // virtual x axis
     int nrIntervals;
@@ -770,6 +773,8 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     categories.clear();
     categoriesVirtual.clear();
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
 
     // virtual x axis
     int nrIntervals;
@@ -1281,6 +1286,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             double value = series->at(doy).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")).arg(value, 0, 'f', 1));
         }
+        m_tooltip->setSeries(series);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
         m_tooltip->updateGeometry();
@@ -1305,10 +1311,6 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
         QPointF pointF = chart->mapToValue(mapPoint,series);
-
-        // traslate coordination, reference is axisY not axisYdx
-        qreal repos = ((axisY->max() - axisY->min())/(axisYdx->max() - axisYdx->min()) * (pointF.y() - axisYdx->min())) + axisY->min();
-        pointF.setY(repos);
 
         // check if bar is hiding QlineSeries
         if(isLine)
@@ -1343,6 +1345,7 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
             valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy hh:mm")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
         }
 
+        m_tooltip->setSeries(series);
         m_tooltip->setText(valueStr);
         m_tooltip->setAnchor(pointF);
         m_tooltip->setZValue(11);
