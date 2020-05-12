@@ -39,7 +39,7 @@
 #include <QDebug>
 
 
-Crit3DMeteoWidget::Crit3DMeteoWidget(QString title)
+Crit3DMeteoWidget::Crit3DMeteoWidget(QString title, QString projectPath)
 {
     this->setWindowTitle(title);
     this->resize(1240, 700);
@@ -55,10 +55,32 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(QString title)
     QVector<QBarSet*> vectorBarSet;
 
     QString csvPath, defaultPath, stylesPath;
-    if (searchDataPath(&csvPath))
+    if (!projectPath.isEmpty())
     {
-        defaultPath = csvPath + "SETTINGS/Crit3DPlotDefault.csv";
-        stylesPath = csvPath + "SETTINGS/Crit3DPlotStyles.csv";
+        defaultPath = projectPath + "SETTINGS/Crit3DPlotDefault.csv";
+        stylesPath = projectPath + "SETTINGS/Crit3DPlotStyles.csv";
+        if (QFileInfo::exists(defaultPath) == false)
+        {
+            defaultPath = "";
+        }
+        if (QFileInfo::exists(stylesPath) == false)
+        {
+            stylesPath = "";
+        }
+    }
+    if (defaultPath.isEmpty() || stylesPath.isEmpty())
+    {
+        if (searchDataPath(&csvPath))
+        {
+            if (defaultPath.isEmpty())
+            {
+                defaultPath = csvPath + "SETTINGS/Crit3DPlotDefault.csv";
+            }
+            if (stylesPath.isEmpty())
+            {
+                stylesPath = csvPath + "SETTINGS/Crit3DPlotStyles.csv";
+            }
+        }
     }
 
     // read Crit3DPlotDefault and fill MapCSVDefault
