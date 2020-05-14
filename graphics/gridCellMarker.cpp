@@ -1,37 +1,36 @@
 #include "commonConstants.h"
-#include "stationMarker.h"
+#include "gridCellMarker.h"
 #include "meteoPoint.h"
 
 #include <QMenu>
 #include <QtDebug>
 
-StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent) :
-    CircleObject(radius, sizeIsZoomInvariant, fillColor, parent)
+GridCellMarker::GridCellMarker(QPolygonF geoPoly, QColor fillColor, MapGraphicsObject *parent) :
+    PolygonObject(geoPoly, fillColor, parent)
 {
 
     this->setFlag(MapGraphicsObject::ObjectIsSelectable, false);
     this->setFlag(MapGraphicsObject::ObjectIsMovable, false);
     this->setFlag(MapGraphicsObject::ObjectIsFocusable, false);
-    _view = view;
 }
 
-void StationMarker::setId(std::string id)
+void GridCellMarker::setId(std::string id)
 {
     _id = id;
 }
 
-std::string StationMarker::id() const
+std::string GridCellMarker::id() const
 {
     return _id;
 }
 
-void StationMarker::setName(const std::string &name)
+void GridCellMarker::setName(const std::string &name)
 {
     _name = name;
 }
 
 
-void StationMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
+void GridCellMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
 {
     QString idpoint = QString::fromStdString(meteoPoint_->id);
     QString name = QString::fromStdString(meteoPoint_->name);
@@ -55,10 +54,10 @@ void StationMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
         toolTipText = QString("value: <b> %1 <br/> %2 <br/> </b>").arg(value).arg(myQuality) + toolTipText;
     }
 
-    CircleObject::setToolTip(toolTipText);
+    PolygonObject::setToolTip(toolTipText);
 }
 
-void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void GridCellMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
 
     if (event->button() == Qt::RightButton)
@@ -99,7 +98,7 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void GridCellMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
 }
