@@ -16,7 +16,7 @@
         Q_OBJECT
 
         public:
-            Crit3DMeteoWidget(QString title, QString projectPath);
+            Crit3DMeteoWidget(bool isGrid, QString projectPath);
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
             void draw(Crit3DMeteoPoint mp);
@@ -37,6 +37,7 @@
 
     private:
             int meteoWidgetID;
+            bool isGrid;
             QPushButton *addVarButton;
             QPushButton *dailyButton;
             QPushButton *hourlyButton;

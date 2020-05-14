@@ -39,9 +39,19 @@
 #include <QDebug>
 
 
-Crit3DMeteoWidget::Crit3DMeteoWidget(QString title, QString projectPath)
+Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 {
-    this->setWindowTitle(title);
+    this->isGrid = isGrid;
+
+    if (this->isGrid)
+    {
+        this->setWindowTitle("Grid");
+    }
+    else
+    {
+        this->setWindowTitle("Point");
+    }
+
     this->resize(1240, 700);
     currentFreq = noFrequency;
     firstDailyDate = QDate::currentDate();

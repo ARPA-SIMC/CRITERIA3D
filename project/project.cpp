@@ -2169,7 +2169,8 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
     }
     else if (!isAppend)
     {
-        Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget("Point", projectPath);
+        bool isGrid = false;
+        Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isGrid, projectPath);
         if (!meteoWidgetPointVector.isEmpty())
         {
             meteoWidgetId = meteoWidgetPointVector[meteoWidgetPointVector.size()-1]->getMeteoWidgetID()+1;
@@ -2236,7 +2237,8 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     }
     else if (!isAppend)
     {
-        Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget("Grid", projectPath);
+        bool isGrid = true;
+        Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath);
         if (!meteoWidgetGridVector.isEmpty())
         {
             meteoWidgetId = meteoWidgetGridVector[meteoWidgetGridVector.size()-1]->getMeteoWidgetID()+1;
