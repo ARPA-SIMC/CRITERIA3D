@@ -623,7 +623,7 @@ void Crit3DCropWidget::openUnitsDB(QString dbUnitsName)
     this->caseListComboBox.clear();
     for (int i = 0; i < caseStringList.size(); i++)
     {
-        this->cropListComboBox.addItem(caseStringList[i]);
+        this->caseListComboBox.addItem(caseStringList[i]);
     }
 }
 
