@@ -49,8 +49,8 @@ void MapGraphicsObject::setEnabled(bool nEnabled)
     _enabled = nEnabled;
     if (_constructed)
         this->enabledChanged();
-    else
-        QTimer::singleShot(1, this, SIGNAL(enabledChanged()));
+    /*else
+        QTimer::singleShot(1, this, SIGNAL(enabledChanged()));*/
 }
 
 qreal MapGraphicsObject::opacity() const
@@ -63,8 +63,8 @@ void MapGraphicsObject::setOpacity(qreal nOpacity)
     _opacity = nOpacity;
     if (_constructed)
         this->opacityChanged();
-    else
-        QTimer::singleShot(1, this, SIGNAL(opacityChanged()));
+    /*else
+        QTimer::singleShot(1, this, SIGNAL(opacityChanged()));*/
 }
 
 MapGraphicsObject *MapGraphicsObject::parent() const
@@ -77,8 +77,8 @@ void MapGraphicsObject::setParent(MapGraphicsObject * nParent)
     _parent = nParent;
     if (_constructed)
         this->parentChanged();
-    else
-        QTimer::singleShot(1, this, SIGNAL(parentChanged()));
+    /*else
+        QTimer::singleShot(1, this, SIGNAL(parentChanged()));*/
 }
 
 const QPointF &MapGraphicsObject::pos() const
@@ -94,8 +94,9 @@ void MapGraphicsObject::setPos(const QPointF & nPos)
 
     if (_constructed)
         this->posChanged();
-    else
-        QTimer::singleShot(1, this, SIGNAL(posChanged()));
+    // problemi con molti oggetti
+    /*else
+        QTimer::singleShot(1, this, SIGNAL(posChanged()));*/
 }
 
 qreal MapGraphicsObject::rotation() const
@@ -111,8 +112,8 @@ void MapGraphicsObject::setRotation(qreal nRotation)
 
     if (_constructed)
         this->rotationChanged();
-    else
-        QTimer::singleShot(1, this, SIGNAL(rotationChanged()));
+    /*else
+        QTimer::singleShot(1, this, SIGNAL(rotationChanged()));*/
 }
 
 bool MapGraphicsObject::visible() const
@@ -165,8 +166,8 @@ void MapGraphicsObject::setZValue(qreal nZValue)
 
     if (_constructed)
         this->zValueChanged();
-    else
-        QTimer::singleShot(1, this, SIGNAL(zValueChanged()));
+    /*else
+        QTimer::singleShot(1, this, SIGNAL(zValueChanged()));*/
 }
 
 bool MapGraphicsObject::isSelected() const
@@ -213,8 +214,8 @@ void MapGraphicsObject::setFlags(MapGraphicsObject::MapGraphicsObjectFlags flags
 
     if (_constructed)
         this->flagsChanged();
-    else
-        QTimer::singleShot(1, this, SIGNAL(flagsChanged()));
+    /*else
+        QTimer::singleShot(1, this, SIGNAL(flagsChanged()));*/
 }
 
 MapGraphicsObject::MapGraphicsObjectFlags MapGraphicsObject::flags() const
