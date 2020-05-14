@@ -70,30 +70,6 @@ void PolygonObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     painter->setBrush(_fillColor);
     painter->drawPolygon(enuPoly);
 
-
-    //Populate edit and add-vertex handles if necessary.
-    //Is there a better place to do this? Most likely, yes.
-    if (_editCircles.isEmpty())
-    {
-        //Create objects to edit the polygon!
-        for (int i = 0; i < _geoPoly.size(); i++)
-        {
-            //Edit circles - to change the shape
-            CircleObject * circle = this->constructEditCircle();
-            circle->setPos(_geoPoly.at(i));
-            _editCircles.append(circle);
-
-            QPointF current = _geoPoly.at(i);
-            QPointF next = _geoPoly.at((i+1) % _geoPoly.size());
-            QPointF avg((current.x() + next.x())/2.0,
-                        (current.y() + next.y())/2.0);
-
-            //Add vertex circles - to add new vertices
-            CircleObject * betweener = this->constructAddVertexCircle();
-            betweener->setPos(avg);
-            _addVertexCircles.append(betweener);
-        }
-    }
 }
 
 void PolygonObject::setPos(const QPointF & nPos)
@@ -128,7 +104,7 @@ QPolygonF PolygonObject::geoPoly() const
 
 void PolygonObject::setGeoPoly(const QPolygonF &newPoly)
 {
-    if (newPoly == _geoPoly)
+    if (newPoly == _geoPoly && !_editCircles.isEmpty())
         return;
 
     _geoPoly = newPoly;
@@ -139,6 +115,25 @@ void PolygonObject::setGeoPoly(const QPolygonF &newPoly)
         this->destroyAddVertexCircle(obj);
     _editCircles.clear();
     _addVertexCircles.clear();
+
+    //Create objects to edit the polygon!
+    for (int i = 0; i < _geoPoly.size(); i++)
+    {
+        //Edit circles - to change the shape
+        CircleObject * circle = this->constructEditCircle();
+        circle->setPos(_geoPoly.at(i));
+        _editCircles.append(circle);
+
+        QPointF current = _geoPoly.at(i);
+        QPointF next = _geoPoly.at((i+1) % _geoPoly.size());
+        QPointF avg((current.x() + next.x())/2.0,
+                    (current.y() + next.y())/2.0);
+
+        //Add vertex circles - to add new vertices
+        CircleObject * betweener = this->constructAddVertexCircle();
+        betweener->setPos(avg);
+        _addVertexCircles.append(betweener);
+    }
 
     this->setPos(newPoly.boundingRect().center());
     this->polygonChanged(newPoly);
