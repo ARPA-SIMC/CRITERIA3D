@@ -2181,7 +2181,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
         }
         meteoWidgetPoint->setMeteoWidgetID(meteoWidgetId);
         meteoWidgetPointVector.append(meteoWidgetPoint);
-        QObject::connect(meteoWidgetPoint, SIGNAL(closeWidget(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
+        QObject::connect(meteoWidgetPoint, SIGNAL(closeWidgetPoint(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
         for (int i=0; i < nrMeteoPoints; i++)
         {
             if (meteoPoints[i].id == idMeteoPoint)
@@ -2249,7 +2249,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         }
         meteoWidgetGrid->setMeteoWidgetID(meteoWidgetId);
         meteoWidgetGridVector.append(meteoWidgetGrid);
-        QObject::connect(meteoWidgetGrid, SIGNAL(closeWidget(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
+        QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
         formInfo.showInfo("Loading data...");
         if (!meteoGridDbHandler->gridStructure().isFixedFields())
         {

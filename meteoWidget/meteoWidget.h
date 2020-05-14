@@ -72,7 +72,8 @@
             bool isBar;
             Callout *m_tooltip;
     signals:
-        void closeWidget(int);
+        void closeWidgetPoint(int);
+        void closeWidgetGrid(int);
 
     };
 
