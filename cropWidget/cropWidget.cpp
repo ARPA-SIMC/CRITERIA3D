@@ -38,6 +38,7 @@
 #include <QMenuBar>
 #include <QPushButton>
 #include <QDate>
+#include <QSqlQuery>
 
 #include <QDebug>
 
@@ -50,8 +51,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QHBoxLayout *saveButtonLayout = new QHBoxLayout();
-    QHBoxLayout *cropLayout = new QHBoxLayout();
+    QHBoxLayout *WidgetLayout = new QHBoxLayout();
     QVBoxLayout *infoLayout = new QVBoxLayout();
+    QGridLayout *caseInfoLayout = new QGridLayout();
     QGridLayout *cropInfoLayout = new QGridLayout();
     QGridLayout *meteoInfoLayout = new QGridLayout();
     QHBoxLayout *soilInfoLayout = new QHBoxLayout();
@@ -129,6 +131,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropSowing.setText("sowing DOY: ");
     cropCycleMax.setText("cycle max duration: ");
 
+    infoCaseGroup = new QGroupBox(tr(""));
     infoCropGroup = new QGroupBox(tr(""));
     infoMeteoGroup = new QGroupBox(tr(""));
     infoSoilGroup = new QGroupBox(tr(""));
@@ -138,6 +141,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     waterStressParametersGroup = new QGroupBox(tr(""));
     waterContentGroup = new QGroupBox(tr(""));
 
+    infoCaseGroup->setFixedWidth(this->width()/4.5);
     infoCropGroup->setFixedWidth(this->width()/4.5);
     infoMeteoGroup->setFixedWidth(this->width()/4.5);
     laiParametersGroup->setFixedWidth(this->width()/4.5);
@@ -146,14 +150,17 @@ Crit3DCropWidget::Crit3DCropWidget()
     waterStressParametersGroup->setFixedWidth(this->width()/4.5);
     waterContentGroup->setFixedWidth(this->width()/4.5);
 
+    infoCaseGroup->setTitle("Case");
     infoCropGroup->setTitle("Crop");
     infoMeteoGroup->setTitle("Meteo");
     infoSoilGroup->setTitle("Soil");
-    laiParametersGroup->setTitle("LAI parameters");
+    laiParametersGroup->setTitle("Crop parameters");
     rootParametersGroup->setTitle("root parameters");
     irrigationParametersGroup->setTitle("irrigation parameters");
     waterStressParametersGroup->setTitle("water stress parameters");
     waterContentGroup->setTitle("water content variable");
+
+    caseInfoLayout->addWidget(&caseListComboBox);
 
     cropInfoLayout->addWidget(cropName, 0, 0);
     cropInfoLayout->addWidget(&cropListComboBox, 0, 1);
@@ -389,6 +396,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     waterContentLayout->addWidget(volWaterContent);
     waterContentLayout->addWidget(degreeSat);
 
+    infoCaseGroup->setLayout(caseInfoLayout);
     infoCropGroup->setLayout(cropInfoLayout);
     infoMeteoGroup->setLayout(meteoInfoLayout);
     infoSoilGroup->setLayout(soilInfoLayout);
@@ -398,6 +406,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     waterStressParametersGroup->setLayout(parametersWaterStressLayout);
     waterContentGroup->setLayout(waterContentLayout);
 
+    infoLayout->addWidget(infoCaseGroup);
     infoLayout->addWidget(infoCropGroup);
     infoLayout->addWidget(infoMeteoGroup);
     infoLayout->addWidget(infoSoilGroup);
@@ -408,10 +417,10 @@ Crit3DCropWidget::Crit3DCropWidget()
     infoLayout->addWidget(waterContentGroup);
 
     mainLayout->addLayout(saveButtonLayout);
-    mainLayout->addLayout(cropLayout);
+    mainLayout->addLayout(WidgetLayout);
     mainLayout->setAlignment(Qt::AlignTop);
 
-    cropLayout->addLayout(infoLayout);
+    WidgetLayout->addLayout(infoLayout);
     tabWidget = new QTabWidget;
     tabLAI = new TabLAI();
     tabRootDepth = new TabRootDepth();
@@ -423,7 +432,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     tabWidget->addTab(tabRootDensity, tr("Root density"));
     tabWidget->addTab(tabIrrigation, tr("Irrigation"));
     tabWidget->addTab(tabWaterContent, tr("Water Content"));
-    cropLayout->addWidget(tabWidget);
+    WidgetLayout->addWidget(tabWidget);
 
     this->setLayout(mainLayout);
 
@@ -493,6 +502,7 @@ void Crit3DCropWidget::on_actionOpenProject()
 {
     this->firstYearListComboBox.blockSignals(true);
     this->lastYearListComboBox.blockSignals(true);
+
     checkCropUpdate();
     QString projFileName = QFileDialog::getOpenFileName(this, tr("Open Criteria-1D project"), "", tr("Settings files (*.ini)"));
 
@@ -518,9 +528,14 @@ void Crit3DCropWidget::on_actionOpenProject()
     if (dbSoilName.left(1) == ".")
         dbSoilName = QDir::cleanPath(path + dbSoilName);
 
+    QString dbUnitsName = projectSettings->value("db_units","").toString();
+    if (dbUnitsName.left(1) == ".")
+        dbUnitsName = QDir::cleanPath(path + dbUnitsName);
+
     openCropDB(newDbCropName);
     openMeteoDB(dbMeteoName);
     openSoilDB(dbSoilName);
+    openUnitsDB(dbUnitsName);
 
     this->firstYearListComboBox.blockSignals(false);
     this->lastYearListComboBox.blockSignals(false);
@@ -563,6 +578,52 @@ void Crit3DCropWidget::checkCropUpdate()
                 }
             }
         }
+    }
+}
+
+
+void Crit3DCropWidget::openUnitsDB(QString dbUnitsName)
+{
+    unitList.clear();
+
+    QString error;
+    if (! openDbCrop(dbUnitsName, &dbUnits, &error))
+    {
+        QMessageBox::critical(nullptr, "Error DB Units", error);
+        return;
+    }
+
+    // read case list
+    QStringList caseStringList;
+    QString queryString = "SELECT DISTINCT ID_CASE, ID_CROP, ID_SOIL, ID_METEO FROM units";
+    queryString += " ORDER BY ID_CROP, ID_SOIL, ID_METEO";
+
+    QSqlQuery query = dbUnits.exec(queryString);
+    query.last();
+
+    int nr = query.at() + 1;     // SQLITE doesn't support SIZE
+    unitList.resize(nr);
+
+    int i = 0;
+    query.first();
+    do
+    {
+        unitList[i].idCase = query.value("ID_CASE").toString();
+        caseStringList.append(unitList[i].idCase);
+
+        unitList[i].idCropClass = query.value("ID_CROP").toString();
+        unitList[i].idMeteo = query.value("ID_METEO").toString();
+        unitList[i].idForecast = query.value("ID_METEO").toString();
+        unitList[i].idSoilNumber = query.value("ID_SOIL").toInt();
+
+        i++;
+    } while(query.next());
+
+    // show unit list
+    this->caseListComboBox.clear();
+    for (int i = 0; i < caseStringList.size(); i++)
+    {
+        this->caseListComboBox.addItem(caseStringList[i]);
     }
 }
 

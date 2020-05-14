@@ -4,25 +4,12 @@
     #ifndef CRITERIA1DCASE_H
         #include "criteria1DCase.h"
     #endif
+    #ifndef CRITERIA1DUNIT_H
+        #include "criteria1DUnit.h"
+    #endif
     #ifndef QSQLDATABASE_H
         #include <QSqlDatabase>
     #endif
-
-
-    class Crit1DUnit
-    {
-    public:
-        QString idCase;
-        QString idCrop;
-        QString idSoil;
-        QString idMeteo;
-        QString idForecast;
-        QString idCropClass;
-        int idCropNumber;
-        int idSoilNumber;
-
-        Crit1DUnit();
-    };
 
 
     class Crit1DIrrigationForecast

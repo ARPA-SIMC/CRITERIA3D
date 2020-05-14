@@ -13,19 +13,6 @@
 #include <QSqlQuery>
 
 
-Crit1DUnit::Crit1DUnit()
-{
-    this->idCase = "";
-    this->idCrop = "";
-    this->idSoil = "";
-    this->idMeteo = "";
-
-    this->idCropClass = "";
-    this->idForecast = "";
-    this->idSoilNumber = NODATA;
-    this->idCropNumber = NODATA;
-}
-
 
 Crit1DIrrigationForecast::Crit1DIrrigationForecast()
 {
