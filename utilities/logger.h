@@ -10,6 +10,7 @@ class Logger
 public:
     Logger();
     ~Logger();
+
     bool setLog(QString path, QString fileName);
     void setShowDateTime(bool value);
     void writeInfo(const QString &value);

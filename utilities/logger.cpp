@@ -7,6 +7,7 @@
 Logger::Logger()
 {
     logFileName = "";
+    file = nullptr;
 }
 
 bool Logger::setLog(QString path, QString fileName)
@@ -77,5 +78,7 @@ void Logger::setShowDateTime(bool value)
 Logger::~Logger()
 {
     if (file != nullptr)
-    file->close();
+    {
+        file->close();
+    }
 }
