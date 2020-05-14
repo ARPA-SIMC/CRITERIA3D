@@ -18,6 +18,7 @@
     #include "tabRootDensity.h"
     #include "tabIrrigation.h"
     #include "tabWaterContent.h"
+    #include "criteria1DUnit.h"
 
     class Crit3DCropWidget : public QWidget
     {
@@ -55,6 +56,7 @@
             void variableWaterContentChanged();
 
         private:
+            QSqlDatabase dbUnits;
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
             QSqlDatabase dbSoil;
@@ -67,6 +69,9 @@
             double meteoLatBackUp;
             QStringList yearList;
 
+            std::vector<Crit1DUnit> unitList;
+
+            QGroupBox *infoCaseGroup;
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;
             QGroupBox *infoSoilGroup;
@@ -75,6 +80,7 @@
             QGroupBox *irrigationParametersGroup;
             QGroupBox *waterStressParametersGroup;
             QGroupBox *waterContentGroup;
+            QComboBox caseListComboBox;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
             QComboBox soilListComboBox;
@@ -128,7 +134,8 @@
 
             void clearCrop();
             void checkCropUpdate();
-            void openCropDB(QString newDbCropName);
+            void openUnitsDB(QString dbUnitsName);
+            void openCropDB(QString dbCropName);
             void openMeteoDB(QString dbMeteoName);
             void openSoilDB(QString dbSoilName);
     };
