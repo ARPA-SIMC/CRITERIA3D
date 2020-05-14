@@ -62,11 +62,8 @@ void GridCellMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
     if (event->button() == Qt::RightButton)
     {
+        bool isGrid = true;
         QMenu menu;
-        const QString title = "Point: " + QString::fromStdString(this->_name) + " ID: " + QString::fromStdString(this->id());
-        QAction *titleSection = menu.addAction(title);
-        titleSection->setEnabled(false);
-        menu.addSeparator();
 
         QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
         QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
@@ -82,11 +79,11 @@ void GridCellMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         {
             if (selection == openMeteoWidget)
             {
-                emit newStationClicked(_id);
+                emit newCellClicked(_id, isGrid);
             }
             else if (selection == appendMeteoWidget)
             {
-                emit appendStationClicked(_id);
+                emit appendCellClicked(_id, isGrid);
             }
             #ifdef CRITERIA3D
             else if (selection == openCropWidget)

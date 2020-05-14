@@ -27,8 +27,8 @@
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
             void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
         signals:
-            void newStationClicked(std::string);
-            void appendStationClicked(std::string);
+            void newCellClicked(std::string, bool);
+            void appendCellClicked(std::string, bool);
             void openCropClicked(std::string);
 
     };
