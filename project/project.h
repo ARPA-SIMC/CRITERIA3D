@@ -105,8 +105,8 @@
 
         Crit3DClimateParameters climateParameters;
 
-        QVector<Crit3DMeteoWidget*> meteoWidgetPointVector;
-        QVector<Crit3DMeteoWidget*> meteoWidgetGridVector;
+        QList<Crit3DMeteoWidget*> meteoWidgetPointList;
+        QList<Crit3DMeteoWidget*> meteoWidgetGridList;
 
         Project();
 
