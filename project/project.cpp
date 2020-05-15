@@ -2139,12 +2139,6 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
     QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, idMeteoPoint);
     bool hasHourlyData = !(firstHourly.isNull() || lastHourly.isNull());
 
-    qDebug() << "idMeteoPoint " << QString::fromStdString(idMeteoPoint);
-    qDebug() << "firstDaily " << firstDaily;
-    qDebug() << "lastDaily " << lastDaily;
-    qDebug() << "firstHourly " << firstHourly;
-    qDebug() << "lastHourly " << lastHourly;
-
     if (!hasDailyData && !hasHourlyData)
     {
         logInfoGUI("No data.");
