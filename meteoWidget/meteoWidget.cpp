@@ -334,6 +334,16 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 
 }
 
+Crit3DMeteoWidget::~Crit3DMeteoWidget()
+{
+    qDebug() << "Destructor called start";
+    delete m_tooltip;
+    chart->removeAllSeries();
+    chartView->deleteLater();
+    chart->deleteLater();
+    qDebug() << "Destructor called end";
+}
+
 void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
 {
     firstDate->blockSignals(true);

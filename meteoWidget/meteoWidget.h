@@ -17,6 +17,7 @@
 
         public:
             Crit3DMeteoWidget(bool isGrid, QString projectPath);
+            ~Crit3DMeteoWidget();
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
             void draw(Crit3DMeteoPoint mp);
