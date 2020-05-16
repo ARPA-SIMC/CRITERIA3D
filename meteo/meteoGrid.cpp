@@ -598,8 +598,8 @@ void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
 {
     int nrDays = dateIni.daysTo(dateFin) + 1;
 
-    for (unsigned row = 0; row < gridStructure().header().nrRows; row++)
-        for (unsigned col = 0; col < gridStructure().header().nrCols; col++)
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
             if (_meteoPoints[row][col]->active)
             {
                 _meteoPoints[row][col]->initializeObsDataH(1, nrDays, dateIni);
@@ -609,8 +609,8 @@ void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
 
 void Crit3DMeteoGrid::emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin)
 {
-    for (unsigned row = 0; row < gridStructure().header().nrRows; row++)
-        for (unsigned col = 0; col < gridStructure().header().nrCols; col++)
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
         {
             _meteoPoints[row][col]->emptyObsDataH(dateIni, dateFin);
             _meteoPoints[row][col]->emptyObsDataD(dateIni, dateFin);
@@ -622,8 +622,8 @@ void Crit3DMeteoGrid::computeWindVectorHourly(const Crit3DDate myDate, const int
     float intensity = NODATA, direction = NODATA;
     float u,v;
 
-    for (unsigned row = 0; row < gridStructure().header().nrRows; row++)
-        for (unsigned col = 0; col < gridStructure().header().nrCols; col++)
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
         {
             u = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorX);
             v = _meteoPoints[row][col]->getMeteoPointValueH(myDate, myHour, 0, windVectorY);

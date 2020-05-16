@@ -829,6 +829,7 @@ namespace matricial
         }
         return CRIT3D_OK;
     }
+
     void  multiplyStrassen(double **c,double **d,int size,double **newMatrix)
     {
         if(size == 1){
@@ -1034,6 +1035,7 @@ namespace matricial
             add(te6,te7,nsize,te8);//c22
 
             int a=0;
+            // TODO check: b is unused
             int b=0;
             int c=0;
             int d=0;

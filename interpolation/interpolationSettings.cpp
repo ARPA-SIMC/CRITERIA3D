@@ -588,7 +588,7 @@ bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DP
         if (indexHeight == NODATA || binaryString[indexHeight] == '0')
             return false;
 
-    for (int i=0; i < binaryString.length()-1; i++)
+    for (unsigned int i=0; i < binaryString.length()-1; i++)
         outCombination->setValue(i, binaryString[i] == '1' && selectedCombination.getValue(i));
 
     outCombination->setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());

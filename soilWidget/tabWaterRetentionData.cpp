@@ -351,9 +351,8 @@ void TabWaterRetentionData::widgetClicked(int index)
     tableWaterRetention->setSortingEnabled(false);
     tableWaterRetention->blockSignals(true);
 
-    for (int j = 0; j < mySoil->horizon[index].dbData.waterRetention.size(); j++)
+    for (unsigned int j = 0; j < mySoil->horizon[index].dbData.waterRetention.size(); j++)
     {
-
         if (mySoil->horizon[index].dbData.waterRetention[j].water_potential < 1)
         {
             tableWaterRetention->setItem(j, 0, new Crit3DTableWidgetItem( QString::number(mySoil->horizon[index].dbData.waterRetention[j].water_potential, 'f', 3)));
@@ -366,8 +365,8 @@ void TabWaterRetentionData::widgetClicked(int index)
 
         tableWaterRetention->setItem(j, 1, new Crit3DTableWidgetItem( QString::number(mySoil->horizon[index].dbData.waterRetention[j].water_content, 'f', 3 )));
         tableWaterRetention->item(j,1)->setTextAlignment(Qt::AlignRight);
-
     }
+
     tableWaterRetention->setSortingEnabled(true);
     tableWaterRetention->sortByColumn(0, Qt::AscendingOrder);
     tableWaterRetention->blockSignals(false);

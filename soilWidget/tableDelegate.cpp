@@ -8,6 +8,9 @@ TableDelegate::TableDelegate(QObject *parent) : QStyledItemDelegate(parent)
 
 QWidget* TableDelegate::createEditor(QWidget* parent,const QStyleOptionViewItem &option,const QModelIndex &index) const
 {
+    Q_UNUSED(option);
+    Q_UNUSED(index);
+
     QLineEdit* editor = new QLineEdit(parent);
     double bottom = 0;
     double top = 1000000;
@@ -43,6 +46,7 @@ void TableDelegate::setModelData(QWidget* editor,QAbstractItemModel* model,const
 
 void TableDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+    Q_UNUSED(index);
     editor->setGeometry(option.rect);
 }
 

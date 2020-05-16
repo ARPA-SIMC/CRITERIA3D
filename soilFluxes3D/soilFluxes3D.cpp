@@ -716,22 +716,33 @@ namespace soilFluxes3D {
 	switch (direction) {
         case UP:
             if (myNode[n].up.index != NOLINK)
-                return (myNode[n].up.sumFlow);
+            {
+                return myNode[n].up.sumFlow;
+            }
             else
+            {
                 return INDEX_ERROR;
+            }
 
 		case DOWN:
             if (myNode[n].down.index != NOLINK)
-                return (myNode[n].down.sumFlow);
+            {
+                return myNode[n].down.sumFlow;
+            }
             else
+            {
                 return INDEX_ERROR;
+            }
 
 		case LATERAL:
 			// return maximum lateral flow
             for (short i = 0; i < myStructure.nrLateralLinks; i++)
                 if (myNode[n].lateral[i].index != NOLINK)
                     if (fabs(myNode[n].lateral[i].sumFlow) > maxFlow)
+                    {
                         maxFlow = myNode[n].lateral[i].sumFlow;
+                    }
+
             return maxFlow;
 
         default:

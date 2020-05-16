@@ -823,6 +823,7 @@ meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod 
     return noMeteoVar;
 }
 
+
 meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
 {
     if (myFreq == daily)
@@ -864,9 +865,8 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
             return noMeteoVar;
     }
 
-    else if (myFreq == hourly)
+    if (myFreq == hourly)
     {
-
         //check
         if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureMin || myVar == dailyAirTemperatureRange)
             return airTemperature;
@@ -912,4 +912,6 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
         else
             return noMeteoVar;
     }
+
+    return noMeteoVar;
 }

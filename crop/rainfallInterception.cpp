@@ -24,9 +24,8 @@ namespace canopy {
 
     double canopyNoInterceptedRainfallHydrall(double laiCanopy,double laiUnderstorey, double prec)
     {
-        double interception;
-        interception = canopyInterceptionHydrall(laiCanopy, laiUnderstorey, prec);
-        return (prec - canopyInterceptionHydrall(laiCanopy, laiUnderstorey, prec));
+        double interception = canopyInterceptionHydrall(laiCanopy, laiUnderstorey, prec);
+        return (prec - interception);
     }
 
     double plantCover(double lai, double extinctionCoefficient,double laiMin)
