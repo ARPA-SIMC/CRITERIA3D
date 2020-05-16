@@ -28,7 +28,7 @@
             Crit3DCropWidget();
             void on_actionOpenProject();
             void on_actionOpenCropDB();
-            void on_actionChooseCrop(QString cropName);
+            void on_actionChooseCrop(QString idCrop);
             void on_actionOpenMeteoDB();
             void on_actionOpenSoilDB();
             void on_actionChooseMeteo(QString idMeteo);
@@ -86,7 +86,7 @@
             QComboBox soilListComboBox;
             QComboBox firstYearListComboBox;
             QComboBox lastYearListComboBox;
-            QLineEdit* cropIdValue;
+            QLineEdit* cropNameValue;
             QLineEdit* cropTypeValue;
             QLineEdit* maxKcValue;
             QLabel cropSowing;

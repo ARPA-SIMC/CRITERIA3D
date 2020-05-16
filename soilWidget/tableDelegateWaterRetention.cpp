@@ -9,6 +9,9 @@ TableDelegateWaterRetention::TableDelegateWaterRetention(QObject *parent) : QSty
 
 QWidget* TableDelegateWaterRetention::createEditor(QWidget* parent,const QStyleOptionViewItem &option,const QModelIndex &index) const
 {
+    Q_UNUSED(option);
+    Q_UNUSED(index);
+
     QLineEdit* editor = new QLineEdit(parent);
     QDoubleValidator* val = new QDoubleValidator(editor);
     val->setBottom(0);
@@ -18,7 +21,7 @@ QWidget* TableDelegateWaterRetention::createEditor(QWidget* parent,const QStyleO
 }
 
 void TableDelegateWaterRetention::setEditorData(QWidget *editor, const QModelIndex &index) const
-{
+{ 
     double value = index.model()->data(index,Qt::EditRole).toDouble();
     QLineEdit* line = static_cast<QLineEdit*>(editor);
     line->setText(QString().setNum(value));
@@ -33,5 +36,6 @@ void TableDelegateWaterRetention::setModelData(QWidget* editor,QAbstractItemMode
 
 void TableDelegateWaterRetention::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+    Q_UNUSED(index);
     editor->setGeometry(option.rect);
 }
