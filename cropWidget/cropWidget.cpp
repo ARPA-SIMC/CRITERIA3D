@@ -39,6 +39,7 @@
 #include <QPushButton>
 #include <QDate>
 #include <QSqlQuery>
+#include <QSqlError>
 
 #include <QDebug>
 
@@ -533,8 +534,8 @@ void Crit3DCropWidget::on_actionOpenProject()
         dbUnitsName = QDir::cleanPath(path + dbUnitsName);
 
     openCropDB(newDbCropName);
-    openMeteoDB(dbMeteoName);
     openSoilDB(dbSoilName);
+    openMeteoDB(dbMeteoName);
     openUnitsDB(dbUnitsName);
 
     this->firstYearListComboBox.blockSignals(false);
@@ -586,20 +587,35 @@ void Crit3DCropWidget::openUnitsDB(QString dbUnitsName)
 {
     unitList.clear();
 
-    QString error;
-    if (! openDbCrop(dbUnitsName, &dbUnits, &error))
+    if (dbUnitsName == "")
     {
-        QMessageBox::critical(nullptr, "Error DB Units", error);
+        QMessageBox::critical(nullptr, "Error", "Missing DB Units");
+        return;
+    }
+
+    QString error;
+    if (! openDbUnits(dbUnitsName, &dbUnits, &error))
+    {
+        QMessageBox::critical(nullptr, "Error in DB Units", error);
         return;
     }
 
     // read case list
     QStringList caseStringList;
     QString queryString = "SELECT DISTINCT ID_CASE, ID_CROP, ID_SOIL, ID_METEO FROM units";
-    queryString += " ORDER BY ID_CROP, ID_SOIL, ID_METEO";
+    queryString += " ORDER BY ID_CASE";
 
     QSqlQuery query = dbUnits.exec(queryString);
     query.last();
+    if (! query.isValid())
+    {
+        error = query.lastError().nativeErrorCode();
+        if (error != "")
+            QMessageBox::critical(nullptr, "Error in DB Units", error);
+        else
+            QMessageBox::critical(nullptr, "Error in DB Units", "Missing units");
+        return;
+    }
 
     int nr = query.at() + 1;     // SQLITE doesn't support SIZE
     unitList.resize(nr);
@@ -696,13 +712,13 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
         return;
     }
 
-
     // show id_meteo list
     this->meteoListComboBox.clear();
     for (int i = 0; i < idMeteoList.size(); i++)
     {
         this->meteoListComboBox.addItem(idMeteoList[i]);
     }
+
     saveChanges->setEnabled(true);
     saveButton->setEnabled(true);
     updateButton->setEnabled(true);
