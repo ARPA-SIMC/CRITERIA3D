@@ -24,10 +24,10 @@ bool openDbCrop(QString dbName, QSqlDatabase* dbCrop, QString* error)
     return true;
 }
 
-bool getCropNameList(QSqlDatabase* dbCrop, QStringList* cropNameList, QString* error)
+bool getCropIdList(QSqlDatabase* dbCrop, QStringList* cropIdList, QString* error)
 {
     // query crop list
-    QString queryString = "SELECT crop_name FROM crop";
+    QString queryString = "SELECT id_crop FROM crop";
     QSqlQuery query = dbCrop->exec(queryString);
 
     query.first();
@@ -37,13 +37,13 @@ bool getCropNameList(QSqlDatabase* dbCrop, QStringList* cropNameList, QString* e
         return false;
     }
 
-    QString cropName;
+    QString cropId;
     do
     {
-        getValue(query.value("crop_name"), &cropName);
-        if (cropName != "")
+        getValue(query.value("id_crop"), &cropId);
+        if (cropId != "")
         {
-            cropNameList->append(cropName);
+            cropIdList->append(cropId);
         }
     }
     while(query.next());
@@ -94,6 +94,7 @@ bool loadCropParameters(QString idCrop, Crit3DCrop* myCrop, QSqlDatabase* dbCrop
     }
 
     myCrop->idCrop = idCropString.toStdString();
+    myCrop->name = query.value("crop_name").toString().toStdString();
     myCrop->type = getCropType(query.value("type").toString().toStdString());
     myCrop->plantCycle = query.value("plant_cycle_max_duration").toInt();
     getValue(query.value("sowing_doy"), &(myCrop->sowingDoy));
@@ -290,8 +291,16 @@ bool updateCropLAIparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop
                  "lai_curve_factor_a = :lai_curve_factor_a, lai_curve_factor_b = :lai_curve_factor_b, "
                  "kc_max = :kc_max WHERE id_crop = :id_crop");
 
-    qry.bindValue(":sowing_doy", myCrop->sowingDoy);
-    qry.bindValue(":max_cycle", myCrop->plantCycle);
+    if (myCrop->sowingDoy != NODATA)
+    {
+        qry.bindValue(":sowing_doy", myCrop->sowingDoy);
+        qry.bindValue(":max_cycle", myCrop->plantCycle);
+    }
+    else
+    {
+        qry.bindValue(":sowing_doy", "");
+        qry.bindValue(":max_cycle", 365);
+    }
     qry.bindValue(":lai_min", myCrop->LAImin);
     qry.bindValue(":lai_max", myCrop->LAImax);
     qry.bindValue(":lai_grass", myCrop->LAIgrass);

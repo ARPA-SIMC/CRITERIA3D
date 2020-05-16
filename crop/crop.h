@@ -22,6 +22,7 @@
         public:
 
         std::string idCrop;
+        std::string name;
         speciesType type;
 
         Crit3DRoot roots;

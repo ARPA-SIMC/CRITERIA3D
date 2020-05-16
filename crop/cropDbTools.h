@@ -9,7 +9,7 @@
 
     bool openDbCrop(QString dbName, QSqlDatabase* dbCrop, QString* error);
 
-    bool getCropNameList(QSqlDatabase* dbCrop, QStringList* cropNameList, QString* error);
+    bool getCropIdList(QSqlDatabase* dbCrop, QStringList* cropNameList, QString* error);
 
     QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myError);
 
