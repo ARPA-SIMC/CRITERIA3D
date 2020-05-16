@@ -4,6 +4,7 @@
     #include "MapGraphics_global.h"
     #include "PolygonObject.h"
     #include "MapGraphicsView.h"
+    #include "stationMarker.h"
 
     class Crit3DMeteoPoint;
 
@@ -12,16 +13,18 @@
         Q_OBJECT
 
         public:
-            explicit GridCellMarker(QPolygonF geoPoly, QColor fillColor, MapGraphicsObject *parent = nullptr);
+            explicit GridCellMarker(QPolygonF geoPoly, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
             void setId(std::string id);
             void setToolTip(Crit3DMeteoPoint* meteoPoint_);
             std::string id() const;
             void setName(const std::string &name);
+            void setPointList(const QList<StationMarker *> &value);
 
     private:
             MapGraphicsView* _view;
             std::string _id;
             std::string _name;
+            QList<StationMarker*> pointList;
 
         protected:
             void mousePressEvent(QGraphicsSceneMouseEvent *event);

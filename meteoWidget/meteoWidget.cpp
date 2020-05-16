@@ -336,7 +336,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 
 Crit3DMeteoWidget::~Crit3DMeteoWidget()
 {
-    qDebug() << "Destructor called start";
+    qDebug() << "Destructor called start " << getMeteoWidgetID();
     delete m_tooltip;
     chart->removeAllSeries();
     chartView->deleteLater();
