@@ -1008,8 +1008,8 @@ void Crit3DMeteoWidget::showDailyGraph()
     else
     {
         firstDate->setMinimumDate(firstDailyDate);
-        firstDate->setDate(firstDailyDate);
-        lastDate->setDate(lastDailyDate);
+        firstDate->setDate(firstDate->date());
+        lastDate->setDate(lastDate->date());
         lastDate->setMaximumDate(lastDailyDate);
     }
     firstDate->setDisplayFormat("dd/MM/yyyy");
@@ -1059,8 +1059,10 @@ void Crit3DMeteoWidget::showHourlyGraph()
     else
     {
         firstDate->setMinimumDate(firstHourlyDate);
-        firstDate->setDate(firstHourlyDate);
-        lastDate->setDate(lastHourlyDate);
+        firstDate->setDate(firstDate->date());
+        firstDate->setTime(QTime(0,0,0));
+        lastDate->setDate(lastDate->date());
+        lastDate->setTime(QTime(23,0,0));
         lastDate->setMaximumDate(lastHourlyDate);
     }
     firstDate->setDisplayFormat("dd/MM/yyyy hh:mm");
