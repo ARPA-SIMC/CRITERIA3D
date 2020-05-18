@@ -18,8 +18,6 @@
             void setToolTip(Crit3DMeteoPoint* meteoPoint_);
             std::string id() const;
             void setName(const std::string &name);
-            void setPointList(const QList<StationMarker *> &value);
-
 
     private:
             MapGraphicsView* _view;
