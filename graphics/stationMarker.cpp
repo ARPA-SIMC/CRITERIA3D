@@ -117,6 +117,7 @@ void StationMarker::setToolTip()
     CircleObject::setToolTip(toolTipText);
 }
 
+/*
 QString StationMarker::getToolTipText()
 {
     QString idpoint = QString::fromStdString(_id);
@@ -142,6 +143,7 @@ QString StationMarker::getToolTipText()
     }
     return toolTipText;
 }
+*/
 
 void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
@@ -164,11 +166,11 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         {
             if (selection == openMeteoWidget)
             {
-                emit newStationClicked(_id, isGrid);
+                emit newStationClicked(_id, _name, isGrid);
             }
             else if (selection == appendMeteoWidget)
             {
-                emit appendStationClicked(_id, isGrid);
+                emit appendStationClicked(_id, _name, isGrid);
             }
             #ifdef CRITERIA3D
             else if (selection == openCropWidget)

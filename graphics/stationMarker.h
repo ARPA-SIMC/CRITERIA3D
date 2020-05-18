@@ -17,7 +17,7 @@
             void setId(std::string id);
             //void setToolTip(Crit3DMeteoPoint* meteoPoint_);
             void setToolTip();
-            QString getToolTipText();
+            //QString getToolTipText();
             std::string id() const;
             void setName(const std::string &name);
             void setDataset(const std::string &dataset);
@@ -40,8 +40,8 @@
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
             void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
         signals:
-            void newStationClicked(std::string, bool);
-            void appendStationClicked(std::string, bool);
+            void newStationClicked(std::string, std::string, bool);
+            void appendStationClicked(std::string, std::string, bool);
             void openCropClicked(std::string);
 
     };

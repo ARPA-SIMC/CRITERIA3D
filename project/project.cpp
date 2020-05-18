@@ -2133,7 +2133,7 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
     }
 }
 
-void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
+void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend)
 {
     // check dates
     QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, idMeteoPoint).date();
@@ -2159,6 +2159,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
 
     Crit3DMeteoPoint mp;
     mp.setId(idMeteoPoint);
+    mp.setName(namePoint);
 
     if (isAppend)
     {

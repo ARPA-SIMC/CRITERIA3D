@@ -89,6 +89,11 @@ void Crit3DMeteoPoint::setId(std::string value)
     this->id = value;
 }
 
+void Crit3DMeteoPoint::setName(std::string name)
+{
+    this->name = name;
+}
+
 void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate)
 {
     this->cleanObsDataH();

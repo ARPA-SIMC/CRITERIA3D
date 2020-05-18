@@ -151,6 +151,7 @@
             std::vector <float> getProxyValues();
 
             void setId(std::string value);
+            void setName(std::string name);
 
     private:
             TObsDataH *obsDataH;
