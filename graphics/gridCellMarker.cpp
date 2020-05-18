@@ -31,12 +31,6 @@ void GridCellMarker::setName(const std::string &name)
     _name = name;
 }
 
-void GridCellMarker::setPointList(const QList<StationMarker *> &value)
-{
-    pointList = value;
-}
-
-
 void GridCellMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
 {
 

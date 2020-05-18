@@ -25,7 +25,6 @@
             MapGraphicsView* _view;
             std::string _id;
             std::string _name;
-            QList<StationMarker*> pointList;
 
         protected:
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
