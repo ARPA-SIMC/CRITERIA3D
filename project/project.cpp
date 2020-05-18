@@ -24,6 +24,7 @@ Project::Project()
     meteoSettings = new Crit3DMeteoSettings();
     quality = new Crit3DQuality();
     meteoPointsColorScale = new Crit3DColorScale();
+    meteoGridDbHandler = nullptr;
 
     // They not change after loading default settings
     appPath = "";
@@ -33,6 +34,7 @@ Project::Project()
 
     modality = MODE_GUI;
 }
+
 
 void Project::initializeProject()
 {
@@ -836,6 +838,7 @@ void Project::closeMeteoGridDB()
 
     if (meteoGridDbHandler != nullptr)
     {
+        meteoGridDbHandler->closeDatabase();
         delete meteoGridDbHandler;
     }
 
@@ -986,6 +989,8 @@ bool Project::loadMeteoGridDB(QString xmlName)
 {
     if (xmlName == "") return false;
 
+    closeMeteoGridDB();
+
     dbGridXMLFileName = xmlName;
     xmlName = getCompleteFileName(xmlName, PATH_METEOGRID);
 
@@ -998,7 +1003,10 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
 
-    this->meteoGridDbHandler->updateGridDate(&errorString);
+    if (!meteoGridDbHandler->updateGridDate(&errorString))
+    {
+        logInfo("updateGridDate: " + errorString);
+    }
 
     if (loadGridDataAtStart || ! meteoPointsLoaded)
         setCurrentDate(meteoGridDbHandler->lastDate());
