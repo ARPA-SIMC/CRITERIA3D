@@ -14,6 +14,7 @@ Crit3DMeteoGridDbHandler::Crit3DMeteoGridDbHandler()
 
 Crit3DMeteoGridDbHandler::~Crit3DMeteoGridDbHandler()
 {
+    closeDatabase();
     delete _meteoGrid;
 }
 

@@ -834,12 +834,9 @@ void Project::closeMeteoPointsDB()
 
 void Project::closeMeteoGridDB()
 {
-    //TODO check clean data
-
     if (meteoGridDbHandler != nullptr)
     {
-        meteoGridDbHandler->closeDatabase();
-        delete meteoGridDbHandler;
+        delete meteoGridDbHandler;  //this also close db
     }
 
     dbGridXMLFileName = "";
