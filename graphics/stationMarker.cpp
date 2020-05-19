@@ -145,11 +145,6 @@ QString StationMarker::getToolTipText()
 }
 */
 
-void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    Q_UNUSED(event)
-}
-
 
 void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {  
@@ -185,5 +180,10 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 #endif
         }
     }
+}
+
+void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    Q_UNUSED(event)
 }
 

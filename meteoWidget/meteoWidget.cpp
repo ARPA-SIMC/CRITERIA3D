@@ -53,6 +53,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
     }
 
     this->resize(1240, 700);
+    this->setAttribute(Qt::WA_DeleteOnClose);
     currentFreq = noFrequency;
     firstDailyDate = QDate::currentDate();
     firstHourlyDate = QDate::currentDate();
@@ -336,12 +337,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 
 Crit3DMeteoWidget::~Crit3DMeteoWidget()
 {
-    qDebug() << "Destructor called start " << getMeteoWidgetID();
-    delete m_tooltip;
-    chart->removeAllSeries();
-    chartView->deleteLater();
-    chart->deleteLater();
-    qDebug() << "Destructor called end";
+
 }
 
 void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
@@ -1465,7 +1461,7 @@ void Crit3DMeteoWidget::handleMarkerClicked()
 
 void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
 {
-    event->accept();
+
     if(isGrid)
     {
         emit closeWidgetGrid(meteoWidgetID);
@@ -1474,6 +1470,8 @@ void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
     {
         emit closeWidgetPoint(meteoWidgetID);
     }
+    delete m_tooltip;
+    event->accept();
 }
 
 int Crit3DMeteoWidget::getMeteoWidgetID() const
