@@ -180,7 +180,6 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             #endif
         }
     }
-    qDebug() << "mouseReleaseEvent end";
 }
 
 void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
