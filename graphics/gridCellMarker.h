@@ -24,16 +24,15 @@
             std::string _id;
             std::string _name;
 
+/*
         protected:
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
             void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 
-//            bool eventFilter(QObject *obj, QEvent *event);
-
         signals:
             void newCellClicked(std::string, std::string, bool);
             void appendCellClicked(std::string, std::string, bool);
-            void openCropClicked(std::string);
+*/
 
     };
 

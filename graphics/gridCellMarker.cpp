@@ -40,7 +40,7 @@ void GridCellMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
     double altitude = meteoPoint_->point.z;
     QString municipality = QString::fromStdString(meteoPoint_->municipality);
 
-    QString toolTipText = QString("<b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5")
+    QString toolTipText = QString("Grid: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5")
                             .arg(name).arg(idpoint).arg(dataset).arg(altitude).arg(municipality);
 
     if (meteoPoint_->currentValue != NODATA)
@@ -59,6 +59,7 @@ void GridCellMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
     PolygonObject::setToolTip(toolTipText);
 }
 
+/*
 void GridCellMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
 
@@ -69,11 +70,6 @@ void GridCellMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
         QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
         QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
-
-        #ifdef CRITERIA3D
-            menu.addSeparator();
-            QAction *openCropWidget = menu.addAction("Open crop widget");
-        #endif
 
         QAction *selection =  menu.exec(QCursor::pos());
 
@@ -87,12 +83,6 @@ void GridCellMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             {
                 emit appendCellClicked(_id, _name, isGrid);
             }
-            #ifdef CRITERIA3D
-            else if (selection == openCropWidget)
-            {
-                emit openCropClicked(_id);
-            }
-            #endif
         }
     }
 }
@@ -101,4 +91,4 @@ void GridCellMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     Q_UNUSED(event)
 }
-
+*/

@@ -98,7 +98,7 @@ void StationMarker::setToolTip()
     double altitude = _altitude;
     QString municipality = QString::fromStdString(_municipality);
 
-    QString toolTipText = QString("<b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5")
+    QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5")
                             .arg(name).arg(idpoint).arg(dataset).arg(altitude).arg(municipality);
 
     if (_currentValue != NODATA)
@@ -145,9 +145,14 @@ QString StationMarker::getToolTipText()
 }
 */
 
-void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
+    Q_UNUSED(event)
+}
 
+
+void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{  
     if (event->button() == Qt::RightButton)
     {
         bool isGrid = false;
@@ -155,10 +160,10 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
         QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
 
-        #ifdef CRITERIA3D
-            menu.addSeparator();
-            QAction *openCropWidget = menu.addAction("Open crop widget");
-        #endif
+#ifdef CRITERIA3D
+        menu.addSeparator();
+        QAction *openCropWidget = menu.addAction("Open crop widget");
+#endif
 
         QAction *selection =  menu.exec(QCursor::pos());
 
@@ -172,19 +177,13 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             {
                 emit appendStationClicked(_id, _name, isGrid);
             }
-            #ifdef CRITERIA3D
+#ifdef CRITERIA3D
             else if (selection == openCropWidget)
             {
                 emit openCropClicked(_id);
             }
-            #endif
+#endif
         }
     }
-    qDebug() << "mouseReleaseEvent end";
-}
-
-void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-    Q_UNUSED(event)
 }
 
