@@ -493,7 +493,7 @@ bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
     if (! this->isGrid)
         return false;
 
-    gis::getRowColFromLatLon(this->latLonHeader, geoPoint, row, col);
+    gis::getMeteoGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
 
     // check out of grid
     if (gis::isOutOfGridRowCol(*row, *col, this->latLonHeader))
