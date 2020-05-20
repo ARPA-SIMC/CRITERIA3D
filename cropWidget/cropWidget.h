@@ -28,6 +28,7 @@
             Crit3DCropWidget();
             void on_actionOpenProject();
             void on_actionOpenCropDB();
+            void on_actionChooseCase(QString idCase);
             void on_actionChooseCrop(QString idCrop);
             void on_actionOpenMeteoDB();
             void on_actionOpenSoilDB();

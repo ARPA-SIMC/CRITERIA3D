@@ -471,6 +471,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     meteoLatBackUp = NODATA;
 
     connect(openProject, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenProject);
+    connect(&caseListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCase);
+
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
     connect(&cropListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCrop);
 
@@ -772,6 +774,14 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
     {
         this->soilListComboBox.addItem(soilStringList[i]);
     }
+}
+
+
+void Crit3DCropWidget::on_actionChooseCase(QString idCase)
+{
+    int index = caseListComboBox.currentIndex();
+    QString idMeteo = unitList[index].idMeteo;
+    meteoListComboBox.setCurrentText(idMeteo);
 }
 
 
