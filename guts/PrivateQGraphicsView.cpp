@@ -9,6 +9,7 @@ PrivateQGraphicsView::PrivateQGraphicsView(QWidget *parent) :
 {
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    this->setMouseTracking(true);
 }
 
 PrivateQGraphicsView::PrivateQGraphicsView(QGraphicsScene *scene, QWidget *parent) :
@@ -16,6 +17,7 @@ PrivateQGraphicsView::PrivateQGraphicsView(QGraphicsScene *scene, QWidget *paren
 {
     this->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     this->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    this->setMouseTracking(true);
 }
 
 PrivateQGraphicsView::~PrivateQGraphicsView()

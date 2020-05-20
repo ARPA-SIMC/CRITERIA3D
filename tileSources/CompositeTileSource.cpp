@@ -5,7 +5,6 @@
 #include <QMutexLocker>
 #include <QThread>
 #include <QPointer>
-#include <QTimer>
 
 CompositeTileSource::CompositeTileSource() :
     MapTileSource()

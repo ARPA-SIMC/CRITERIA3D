@@ -322,6 +322,7 @@ void MapGraphicsView::handleChildMouseDoubleClick(QMouseEvent *event)
 void MapGraphicsView::handleChildMouseMove(QMouseEvent *event)
 {
     event->setAccepted(false);
+    emit(mouseMoveSignal(event->pos()));
 }
 
 //protected slot
