@@ -534,6 +534,13 @@ namespace gis
         else return false;
     }
 
+    bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DGridHeader& header)
+    {
+        if (  myRow < 0 || myRow >= header.nrRows
+            || myCol < 0 || myCol >= header.nrCols) return true;
+        else return false;
+    }
+
     void getUtmXYFromRowColSinglePrecision(const Crit3DRasterGrid& myGrid,
                                             int myRow, int myCol, float* myX, float* myY)
     {
@@ -611,8 +618,9 @@ namespace gis
         if ((x < header->llCorner.x) || (y < header->llCorner.y)
             || (x >= (header->llCorner.x + (header->nrCols * header->cellSize)))
             || (y >= (header->llCorner.y + (header->nrRows * header->cellSize))))
-            return(true);
-        else return(false);
+            return true;
+
+        else return false;
     }
 
     void getLatLonFromUtm(const Crit3DGisSettings& gisSettings, double utmX, double utmY, double *myLat, double *myLon)

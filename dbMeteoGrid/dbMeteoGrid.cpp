@@ -3,6 +3,7 @@
 #include "utilities.h"
 #include "commonConstants.h"
 
+#include <iostream>
 #include <QtSql>
 
 
@@ -13,6 +14,7 @@ Crit3DMeteoGridDbHandler::Crit3DMeteoGridDbHandler()
 
 Crit3DMeteoGridDbHandler::~Crit3DMeteoGridDbHandler()
 {
+    closeDatabase();
     delete _meteoGrid;
 }
 
@@ -833,6 +835,7 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
     }
     else
     {
+        bool hasHeight = true;
         while (qry.next())
         {
 
@@ -860,10 +863,14 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
                 return false;
             }
 
-            // facoltativa
-            if (! getValue(qry.value("Height"), &height))
+            // height: facoltativa
+            height = NODATA;
+            if (hasHeight)
             {
-                height = NODATA;
+                if (! qry.value("Height").isValid())
+                    hasHeight = false;
+                else
+                    getValue(qry.value("Height"), &height);
             }
 
             if (! getValue(qry.value("Active"), &active))
@@ -871,7 +878,6 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
                 *myError = "Missing data: Active";
                 return false;
             }
-
 
             if (row < _meteoGrid->gridStructure().header().nrRows
                 && col < _meteoGrid->gridStructure().header().nrCols)
@@ -891,39 +897,43 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
 
 bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 {
-
-    QSqlQuery qry(_db);
+    QStringList tableList = _db.tables(QSql::Tables);
+    if (tableList.size() <= 1)
+    {
+        *myError = "No data.";
+        return false;
+    }
 
     int row = 0;
     int col = 0;
     int tableNotFoundError = 1146;
     std::string id;
 
+    if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
+    {
+        *myError = "No active cells.";
+        return false;
+    }
+
     QDate maxDateD(QDate(1800, 1, 1));
     QDate minDateD(QDate(7800, 12, 31));
 
     QDate maxDateH(QDate(1800, 1, 1));
     QDate minDateH(QDate(7800, 12, 31));
-
     QDate temp;
-
-    if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
-    {
-        *myError = "active cell not found";
-        return false;
-    }
 
     QString tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
     QString tableH = _tableHourly.prefix + QString::fromStdString(id) + _tableHourly.postFix;
-
-    QString statement;
+    QSqlQuery qry(_db);
 
     if (_tableDaily.exists)
     {
-        statement = QString("SELECT MIN(`%1`) as minDate, MAX(`%1`) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
+        QString statement = QString("SELECT MIN(`%1`) as minDate, MAX(`%1`) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
         if( !qry.exec(statement) )
         {
-            while( qry.lastError().number() == tableNotFoundError)
+            while( qry.lastError().number() == tableNotFoundError
+                   && (col < _gridStructure.header().nrCols-1
+                       || row < _gridStructure.header().nrRows-1))
             {
 
                 if ( col < _gridStructure.header().nrCols-1)
@@ -991,7 +1001,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
     if (_tableHourly.exists)
     {
-        statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
+        QString statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
         if( !qry.exec(statement) )
         {
             while( qry.lastError().number() == tableNotFoundError)

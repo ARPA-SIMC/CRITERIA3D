@@ -24,6 +24,7 @@ Project::Project()
     meteoSettings = new Crit3DMeteoSettings();
     quality = new Crit3DQuality();
     meteoPointsColorScale = new Crit3DColorScale();
+    meteoGridDbHandler = nullptr;
 
     // They not change after loading default settings
     appPath = "";
@@ -33,6 +34,7 @@ Project::Project()
 
     modality = MODE_GUI;
 }
+
 
 void Project::initializeProject()
 {
@@ -832,11 +834,9 @@ void Project::closeMeteoPointsDB()
 
 void Project::closeMeteoGridDB()
 {
-    //TODO check clean data
-
     if (meteoGridDbHandler != nullptr)
     {
-        delete meteoGridDbHandler;
+        delete meteoGridDbHandler;  //this also close db
     }
 
     dbGridXMLFileName = "";
@@ -986,6 +986,8 @@ bool Project::loadMeteoGridDB(QString xmlName)
 {
     if (xmlName == "") return false;
 
+    closeMeteoGridDB();
+
     dbGridXMLFileName = xmlName;
     xmlName = getCompleteFileName(xmlName, PATH_METEOGRID);
 
@@ -998,7 +1000,10 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
 
-    this->meteoGridDbHandler->updateGridDate(&errorString);
+    if (!meteoGridDbHandler->updateGridDate(&errorString))
+    {
+        logInfo("updateGridDate: " + errorString);
+    }
 
     if (loadGridDataAtStart || ! meteoPointsLoaded)
         setCurrentDate(meteoGridDbHandler->lastDate());
@@ -2168,7 +2173,6 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
         formInfo.close();
         meteoWidgetPointList[meteoWidgetPointList.size()-1]->draw(mp);
-        qDebug() << "isAppend showMeteoWidgetPoint end " << QString::fromStdString(idMeteoPoint);
         return;
     }
     else if (!isAppend)
@@ -2191,7 +2195,6 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
         formInfo.close();
         meteoWidgetPoint->draw(mp);
-        qDebug() << "showMeteoWidgetPoint end " << QString::fromStdString(idMeteoPoint);
         return;
     }
 
@@ -2274,18 +2277,15 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 
 void Project::deleteMeteoWidgetPoint(int id)
 {
-    qDebug() << "deleteMeteoWidgetPoint ";
-    qDebug() << "1. meteoWidgetPointList.size() " << meteoWidgetPointList.size();
+
     for (int i = 0; i<meteoWidgetPointList.size(); i++)
     {
         if (meteoWidgetPointList[i]->getMeteoWidgetID() == id)
         {
-            qDebug() << "i " << i;
-            delete meteoWidgetPointList.takeAt(i);
+            meteoWidgetPointList.removeAt(i);
             break;
         }
     }
-    qDebug() << "2. meteoWidgetPointList.size() " << meteoWidgetPointList.size();
 }
 
 void Project::deleteMeteoWidgetGrid(int id)
@@ -2294,7 +2294,7 @@ void Project::deleteMeteoWidgetGrid(int id)
     {
         if (meteoWidgetGridList[i]->getMeteoWidgetID() == id)
         {
-            delete meteoWidgetGridList.takeAt(i);
+            meteoWidgetGridList.removeAt(i);
             break;
         }
     }
