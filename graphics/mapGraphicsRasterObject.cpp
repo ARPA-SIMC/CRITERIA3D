@@ -497,7 +497,9 @@ bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
 
     // check out of grid
     if (gis::isOutOfGridRowCol(*row, *col, this->latLonHeader))
+    {
         return false;
+    }
 
     // UTM -> transform in real [row, col]
     if (! this->isLatLon)
