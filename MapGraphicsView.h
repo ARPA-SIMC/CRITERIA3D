@@ -74,6 +74,7 @@ public:
     
 signals:
     void zoomLevelChanged(quint8 nZoom);
+    void mouseMoveSignal(const QPoint&);
     
 public slots:
 
