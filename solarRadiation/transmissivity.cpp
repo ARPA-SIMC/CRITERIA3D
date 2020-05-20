@@ -107,7 +107,6 @@ bool computeTransmissivityFromTRange(Crit3DMeteoPoint* meteoPoints, int nrMeteoP
     int deltaSeconds = 3600 / hourlyFraction;
 
     int counter = 0;
-    int indexDate;
     Crit3DTime timeTmp;
     float temp, tmin, tmax;
     float transmissivity;

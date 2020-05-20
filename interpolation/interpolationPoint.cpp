@@ -51,7 +51,7 @@ float Crit3DInterpolationDataPoint::getProxyValue(unsigned int pos)
 std::vector <float> Crit3DInterpolationDataPoint::getProxyValues()
 {
     std::vector <float> myValues;
-    for (int i=0; i < proxyValues.size(); i++)
+    for (unsigned int i=0; i < proxyValues.size(); i++)
         myValues.push_back(getProxyValue(i));
 
     return myValues;

@@ -242,6 +242,7 @@
 
     bool checkLapseRateCode(lapseRateCodeType myType, bool useLapseRateCode, bool useSupplemental);
     meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod myAggregation);
+    meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq);
 
 
 #endif // METEO_H

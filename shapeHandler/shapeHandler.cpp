@@ -264,6 +264,16 @@ int	Crit3DShapeHandler::getFieldPos(std::string fieldName)
 }
 
 
+bool Crit3DShapeHandler::existField(std::string fieldName)
+{
+    for (int i = 0; i < m_fields; i++)
+        if (m_fieldsList.at(unsigned(i)) == fieldName)
+            return true;
+
+    return false;
+}
+
+
 DBFFieldType Crit3DShapeHandler::getFieldType(std::string fieldName)
 {
     int pos = getFieldPos(fieldName);

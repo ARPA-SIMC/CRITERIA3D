@@ -2,7 +2,7 @@
 #define CROPWIDGET_H
 
 #ifndef MAX_YEARS
-    #define MAX_YEARS 5
+    #define MAX_YEARS 10
 #endif
 
     #include <QWidget>
@@ -18,6 +18,7 @@
     #include "tabRootDensity.h"
     #include "tabIrrigation.h"
     #include "tabWaterContent.h"
+    #include "criteria1DUnit.h"
 
     class Crit3DCropWidget : public QWidget
     {
@@ -27,7 +28,7 @@
             Crit3DCropWidget();
             void on_actionOpenProject();
             void on_actionOpenCropDB();
-            void on_actionChooseCrop(QString cropName);
+            void on_actionChooseCrop(QString idCrop);
             void on_actionOpenMeteoDB();
             void on_actionOpenSoilDB();
             void on_actionChooseMeteo(QString idMeteo);
@@ -55,6 +56,7 @@
             void variableWaterContentChanged();
 
         private:
+            QSqlDatabase dbUnits;
             QSqlDatabase dbCrop;
             QSqlDatabase dbMeteo;
             QSqlDatabase dbSoil;
@@ -67,6 +69,9 @@
             double meteoLatBackUp;
             QStringList yearList;
 
+            std::vector<Crit1DUnit> unitList;
+
+            QGroupBox *infoCaseGroup;
             QGroupBox *infoCropGroup;
             QGroupBox *infoMeteoGroup;
             QGroupBox *infoSoilGroup;
@@ -75,12 +80,13 @@
             QGroupBox *irrigationParametersGroup;
             QGroupBox *waterStressParametersGroup;
             QGroupBox *waterContentGroup;
+            QComboBox caseListComboBox;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
             QComboBox soilListComboBox;
             QComboBox firstYearListComboBox;
             QComboBox lastYearListComboBox;
-            QLineEdit* cropIdValue;
+            QLineEdit* cropNameValue;
             QLineEdit* cropTypeValue;
             QLineEdit* maxKcValue;
             QLabel cropSowing;
@@ -128,7 +134,8 @@
 
             void clearCrop();
             void checkCropUpdate();
-            void openCropDB(QString newDbCropName);
+            void openUnitsDB(QString dbUnitsName);
+            void openCropDB(QString dbCropName);
             void openMeteoDB(QString dbMeteoName);
             void openSoilDB(QString dbSoilName);
     };

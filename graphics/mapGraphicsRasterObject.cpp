@@ -30,6 +30,7 @@
 #include "basicMath.h"
 #include "mapGraphicsRasterObject.h"
 #include <math.h>
+#include <QMenu>
 
 #define MAPBORDER 10
 
@@ -45,6 +46,7 @@ RasterObject::RasterObject(MapGraphicsView* _view, MapGraphicsObject *parent) :
     matrix = nullptr;
     rasterPointer = nullptr;
     colorScaleLegend = nullptr;
+    isLoaded = false;
     isLatLon = false;
     isGrid = false;
     geoMap = new gis::Crit3DGeoMap();
@@ -62,9 +64,19 @@ void RasterObject::clear()
     setDrawing(false);
     setDrawBorders(false);
     freeIndexesMatrix();
+
     latLonHeader.nrCols = 0;
     latLonHeader.nrRows = 0;
     colorScaleLegend = nullptr;
+    matrix = nullptr;
+    rasterPointer = nullptr;
+
+    isGrid = false;
+    isLatLon = false;
+    isLoaded = false;
+    isDrawing = false;
+    drawBorder = false;
+    utmZone = NODATA;
 }
 
 
@@ -89,8 +101,18 @@ QPointF RasterObject::getPixel(const QPointF &latLonPoint)
 {
     QPointF pixel = view->tileSource()->ll2qgs(latLonPoint, view->zoomLevel());
     pixel.setX(pixel.x() - referencePixel.x());
-    pixel.setY(this->referencePixel.y() - pixel.y());
+    pixel.setY(referencePixel.y() - pixel.y());
     return pixel;
+}
+
+
+QPointF RasterObject::getLatLon(const QPointF &pos)
+{
+    QPointF pixel = pos;
+    pixel.setX(pixel.x() + referencePixel.x());
+    pixel.setY(referencePixel.y() + pixel.y());
+    QPointF latLonPoint = view->tileSource()->qgs2ll(pixel, view->zoomLevel());
+    return latLonPoint;
 }
 
 
@@ -105,6 +127,11 @@ QPointF RasterObject::getPixel(const QPointF &latLonPoint)
     int heightPixels = view->height() - MAPBORDER*2;
 
     return QRectF( -widthPixels, -heightPixels, widthPixels*2, heightPixels*2);
+ }
+
+ gis::Crit3DGridHeader RasterObject::getLatLonHeader() const
+ {
+     return latLonHeader;
  }
 
  void RasterObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -227,6 +254,7 @@ bool RasterObject::initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Cri
 
     setDrawing(true);
     setDrawBorders(isGrid);
+    isLoaded = true;
 
     return true;
 }
@@ -258,8 +286,11 @@ bool RasterObject::initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::
 
     setDrawing(true);
     setDrawBorders(isGrid_);
+    isLoaded = true;
+
     return true;
 }
+
 
 
 bool RasterObject::getCurrentWindow(gis::Crit3DRasterWindow* window)
@@ -408,6 +439,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
 
 void RasterObject::updateCenter()
 {
+
     if (! isDrawing) return;
 
     QPointF newCenter;
@@ -452,4 +484,33 @@ void RasterObject::setMapExtents()
     geoMap->topRight.longitude = MINVALUE(180, topRight.x());
     geoMap->topRight.latitude = MINVALUE(84, topRight.y());
 }
+
+
+
+bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
+{
+    // only for grid
+    if (! this->isGrid)
+        return false;
+
+    gis::getMeteoGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
+
+    // check out of grid
+    if (gis::isOutOfGridRowCol(*row, *col, this->latLonHeader))
+    {
+        return false;
+    }
+
+    // UTM -> transform in real [row, col]
+    if (! this->isLatLon)
+    {
+        RowCol myRowCol = matrix[*row][*col];
+        *row = myRowCol.row;
+        *col = myRowCol.col;
+    }
+
+    return true;
+}
+
+
 

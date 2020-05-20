@@ -32,8 +32,13 @@
     #ifndef _FSTREAM_
         #include <fstream>
     #endif
+    #ifndef METEOWIDGET_H
+        #include "meteoWidget.h"
+    #endif
 
-    class Project {
+    class Project : public QObject {
+        Q_OBJECT
+
     private:
         QString appPath;
         QString defaultPath;
@@ -99,6 +104,9 @@
         std::vector <Crit3DProxyGridSeries> proxyGridSeries;
 
         Crit3DClimateParameters climateParameters;
+
+        QList<Crit3DMeteoWidget*> meteoWidgetPointList;
+        QList<Crit3DMeteoWidget*> meteoWidgetGridList;
 
         Project();
 
@@ -187,6 +195,12 @@
         void importHourlyMeteoData(const QString& fileName, bool importAllFiles, bool deletePreviousData);
 
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
+        void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
+        void showMeteoWidgetGrid(std::string idCell, bool isAppend);
+
+    private slots:
+        void deleteMeteoWidgetPoint(int id);
+        void deleteMeteoWidgetGrid(int id);
 
     };
 

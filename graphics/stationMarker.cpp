@@ -1,22 +1,68 @@
 #include "commonConstants.h"
 #include "stationMarker.h"
-#include "meteoPoint.h"
 
 #include <QMenu>
 #include <QtDebug>
-
 
 StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent) :
     CircleObject(radius, sizeIsZoomInvariant, fillColor, parent)
 {
 
-    this->setFlag(MapGraphicsObject::ObjectIsSelectable);
-    this->setFlag(MapGraphicsObject::ObjectIsMovable);
-    this->setFlag(MapGraphicsObject::ObjectIsFocusable);
+    this->setFlag(MapGraphicsObject::ObjectIsSelectable, false);
+    this->setFlag(MapGraphicsObject::ObjectIsMovable, false);
+    this->setFlag(MapGraphicsObject::ObjectIsFocusable, false);
     _view = view;
+    _id = "";
+    _name = "";
+    _dataset = "";
+    _altitude = NODATA;
+    _municipality = "";
+    _currentValue = NODATA;
+
+}
+
+void StationMarker::setId(std::string id)
+{
+    _id = id;
+}
+
+std::string StationMarker::id() const
+{
+    return _id;
+}
+
+void StationMarker::setName(const std::string &name)
+{
+    _name = name;
+}
+
+void StationMarker::setDataset(const std::string &dataset)
+{
+    _dataset = dataset;
+}
+
+void StationMarker::setAltitude(double altitude)
+{
+    _altitude = altitude;
+}
+
+void StationMarker::setMunicipality(const std::string &municipality)
+{
+    _municipality = municipality;
+}
+
+void StationMarker::setQuality(const quality::qualityType &quality)
+{
+    _quality = quality;
+}
+
+void StationMarker::setCurrentValue(float currentValue)
+{
+    _currentValue = currentValue;
 }
 
 
+/*
 void StationMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
 {
     QString idpoint = QString::fromStdString(meteoPoint_->id);
@@ -43,121 +89,101 @@ void StationMarker::setToolTip(Crit3DMeteoPoint* meteoPoint_)
 
     CircleObject::setToolTip(toolTipText);
 }
-
-
-void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
+*/
+void StationMarker::setToolTip()
 {
-    gis::Crit3DGeoPoint pointSelected;
-    pointSelected.latitude = this->latitude();
-    pointSelected.longitude = this->longitude();
+    QString idpoint = QString::fromStdString(_id);
+    QString name = QString::fromStdString(_name);
+    QString dataset = QString::fromStdString(_dataset);
+    double altitude = _altitude;
+    QString municipality = QString::fromStdString(_municipality);
 
-    /*
-    if (event->buttons() & Qt::LeftButton)
+    QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5")
+                            .arg(name).arg(idpoint).arg(dataset).arg(altitude).arg(municipality);
+
+    if (_currentValue != NODATA)
     {
-        QColor color = this->color();
-        if ( color ==  Qt::white )
-        {
-            this->setFillColor(QColor((Qt::red)));
-            project_->meteoPointsSelected << pointSelected;
-        }
-        else
-        {
-            this->setFillColor(QColor((Qt::white)));
-            for (int i = 0; i < project_->meteoPointsSelected.size(); i++)
-            {
-                if (project_->meteoPointsSelected[i].latitude == pointSelected.latitude
-                    && project_->meteoPointsSelected[i].longitude == pointSelected.longitude)
-                    project_->meteoPointsSelected.removeAt(i);
-            }
-        }
-    }
-    */
+        QString value = QString::number(double(_currentValue));
 
-    if (event->buttons() & Qt::RightButton)
-    {
+        QString myQuality = "";
+        if (_quality == quality::wrong_syntactic)
+            myQuality = "WRONG DATA (syntax control)";
+        if (_quality == quality::wrong_spatial)
+            myQuality = "WRONG DATA (spatial control)";
 
-        QMenu menu;
-        QAction *firstItem = menu.addAction("Menu Item 1");
-        QAction *secondItem = menu.addAction("Menu Item 2");
-        QAction *thirdItem = menu.addAction("Menu Item 3");
-        QAction *selection =  menu.exec(QCursor::pos());
-
-        if (selection == firstItem)
-        {
-            this->setFillColor(QColor((Qt::yellow)));
-        }
-        else if (selection == secondItem)
-        {
-            this->setFillColor(QColor((Qt::blue)));
-        }
-        else if (selection == thirdItem)
-        {
-            this->setFillColor(QColor((Qt::green)));
-        }
-
+        toolTipText = QString("value: <b> %1 <br/> %2 <br/> </b>").arg(value).arg(myQuality) + toolTipText;
     }
 
+    CircleObject::setToolTip(toolTipText);
 }
-
-
-/* abilitare se si preferisce selezionare la stazione con doppio click
- * invece che con singolo click di sinistra ed al singolo click collegare altre azioni
- */
 
 /*
-void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
+QString StationMarker::getToolTipText()
 {
+    QString idpoint = QString::fromStdString(_id);
+    QString name = QString::fromStdString(_name);
+    QString dataset = QString::fromStdString(_dataset);
+    double altitude = _altitude;
+    QString municipality = QString::fromStdString(_municipality);
 
-    if (event->buttons() & Qt::LeftButton)
+    QString toolTipText = QString("<b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5")
+                            .arg(name).arg(idpoint).arg(dataset).arg(altitude).arg(municipality);
+
+    if (_currentValue != NODATA)
     {
+        QString value = QString::number(double(_currentValue));
 
+        QString myQuality = "";
+        if (_quality == quality::wrong_syntactic)
+            myQuality = "WRONG DATA (syntax control)";
+        if (_quality == quality::wrong_spatial)
+            myQuality = "WRONG DATA (spatial control)";
+
+        toolTipText = QString("value: <b> %1 <br/> %2 <br/> </b>").arg(value).arg(myQuality) + toolTipText;
     }
-    else if (event->buttons() & Qt::RightButton)
-    {
-        QMenu menu;
-        QAction *firstItem = menu.addAction("Menu Item 1");
-        QAction *secondItem = menu.addAction("Menu Item 2");
-        QAction *thirdItem = menu.addAction("Menu Item 3");
-        QAction *selection =  menu.exec(QCursor::pos());
-
-        if (selection == firstItem)
-        {
-            this->setFillColor(QColor((Qt::yellow)));
-        }
-        else if (selection == secondItem)
-        {
-            this->setFillColor(QColor((Qt::blue)));
-        }
-        else if (selection == thirdItem)
-        {
-            this->setFillColor(QColor((Qt::green)));
-        }
-    }
-}
-
-
-void StationMarker::mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event)
-{
-
-    gis::Crit3DGeoPoint pointSelected;
-    pointSelected.latitude = this->latitude();
-    pointSelected.longitude = this->longitude();
-
-    QColor color = this->color();
-    if ( color ==  Qt::white )
-    {
-        //this->setFillColor(QColor(255,0,0,255));
-        this->setFillColor(QColor((Qt::red)));
-        project_->meteoPointsSelected << pointSelected;
-    }
-    else
-    {
-        this->setFillColor(QColor((Qt::white)));
-        for (int i = 0; i < project_->meteoPointsSelected.size(); i++)
-        {
-            if (project_->meteoPointsSelected[i].latitude == pointSelected.latitude && myProject.meteoPointsSelected[i].longitude == pointSelected.longitude)
-                project_->meteoPointsSelected.removeAt(i);
-        }
-    }
+    return toolTipText;
 }
 */
+
+
+void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+{  
+    if (event->button() == Qt::RightButton)
+    {
+        bool isGrid = false;
+        QMenu menu;
+        QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
+        QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
+
+#ifdef CRITERIA3D
+        menu.addSeparator();
+        QAction *openCropWidget = menu.addAction("Open crop widget");
+#endif
+
+        QAction *selection =  menu.exec(QCursor::pos());
+
+        if (selection != nullptr)
+        {
+            if (selection == openMeteoWidget)
+            {
+                emit newStationClicked(_id, _name, isGrid);
+            }
+            else if (selection == appendMeteoWidget)
+            {
+                emit appendStationClicked(_id, _name, isGrid);
+            }
+#ifdef CRITERIA3D
+            else if (selection == openCropWidget)
+            {
+                emit openCropClicked(_id);
+            }
+#endif
+        }
+    }
+}
+
+void StationMarker::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    Q_UNUSED(event)
+}
+

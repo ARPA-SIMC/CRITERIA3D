@@ -189,6 +189,7 @@
         float getValueFromXY(const Crit3DRasterGrid& myGrid, double x, double y);
 
         bool isOutOfGridXY(double x, double y, Crit3DRasterHeader* header);
+        bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DGridHeader& header);
 
         bool isMinimum(const Crit3DRasterGrid& myGrid, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& myGrid, int row, int col);

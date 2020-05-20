@@ -149,6 +149,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
 
      // analysis matrix
     std::vector <std::vector<int> > matrix(nrRefShapes, std::vector<int>(varFieldVectorSize, 0));
+    std::vector <int> matrixNull(nrRefShapes, 0);
 
     for (int row = 0; row < rasterRef->header->nrRows; row++)
     {
@@ -157,9 +158,12 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
             int refIndex = int(rasterRef->value[row][col]);
             int valIndex = int(rasterVal->value[row][col]);
 
-            if ( refIndex != NODATA && valIndex != NODATA)
+            if (refIndex != NODATA)
             {
-                matrix[unsigned(refIndex)][unsigned(valIndex)]++;
+                if (valIndex != NODATA)
+                    matrix[unsigned(refIndex)][unsigned(valIndex)]++;
+                else
+                    matrixNull[unsigned(refIndex)]++;
             }
         }
     }
@@ -181,6 +185,11 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
                     indexVector[row] = signed(col);
                     maxValue = matrix[row][col];
                 }
+            }
+            // check on null values
+            if (maxValue < matrixNull[row])
+            {
+                indexVector[row] = NODATA;
             }
         }
     }

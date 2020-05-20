@@ -63,12 +63,15 @@
          */
         explicit RasterObject(MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
 
+        bool isLoaded;
+
         void clear();
         void setDrawing(bool value);
         void setDrawBorders(bool value);
         void setColorLegend(ColorLegend* myLegend);
 
         QPointF getPixel(const QPointF &latLonPoint);
+        QPointF getLatLon(const QPointF &pos);
 
         bool initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings, bool isGrid_);
         bool initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings,
@@ -79,6 +82,9 @@
         gis::Crit3DRasterGrid* getRaster();
         void updateCenter();
         Position getCurrentCenter();
+
+        gis::Crit3DGridHeader getLatLonHeader() const;
+        bool getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col);
 
     protected:
         //virtual from MapGraphicsObject
@@ -119,6 +125,7 @@
         bool getCurrentWindow(gis::Crit3DRasterWindow* window);
         int getCurrentStep(const gis::Crit3DRasterWindow& window);
         bool drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter, bool drawBorder);
+
     };
 
 

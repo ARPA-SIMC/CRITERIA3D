@@ -334,6 +334,7 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
     float tmax = NODATA;
     float tavg = NODATA;
     float prec = NODATA;
+    float waterTable = NODATA;
 
     const float tmin_min = -50;
     const float tmin_max = 40;
@@ -348,6 +349,10 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
         getValue(query.value("tmin"), &tmin);
         getValue(query.value("tmax"), &tmax);
         getValue(query.value("prec"), &prec);
+
+        // Watertable depth [m]
+        getValue(query.value("watertable"), &waterTable);
+        if (waterTable < 0.f) waterTable = NODATA;
 
         if (tmin < tmin_min || tmin > tmin_max)
         {
@@ -369,10 +374,13 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
         {
             prec = NODATA;
         }
-        meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMin, tmin);
-        meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMax, tmax);
-        meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureAvg, tavg);
-        meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyPrecipitation, prec);
+
+        Crit3DDate myDate = getCrit3DDate(date);
+        meteoPoint->setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmin);
+        meteoPoint->setMeteoPointValueD(myDate, dailyAirTemperatureMax, tmax);
+        meteoPoint->setMeteoPointValueD(myDate, dailyAirTemperatureAvg, tavg);
+        meteoPoint->setMeteoPointValueD(myDate, dailyPrecipitation, prec);
+        meteoPoint->setMeteoPointValueD(myDate, dailyWaterTableDepth, waterTable);
     }
     while(query.next());
 

@@ -295,22 +295,24 @@
                 i=first;
                 j=last;
 
-                while(i<j){
-                    while(i<last && values[i] <= values[pivot])
-                        i++;
-                    while(values[j]>values[pivot])
-                        j--;
-                    if(i<j){
-                        temp=values[i];
-                         values[i]=values[j];
-                         values[j]=temp;
+                while(i<j)
+                {
+                    while(i<last && values[i] <= values[pivot]) i++;
+                    while(values[j] > values[pivot]) j--;
+                    if(i<j)
+                    {
+                        temp = values[i];
+                        values[i] = values[j];
+                        values[j] = temp;
                     }
                 }
-                temp=values[pivot];
-                values[pivot]=values[j];
-                values[j]=temp;
-                quicksortAscendingFloat(values,first,j-1);
-                quicksortAscendingFloat(values,j+1,last);
+                temp = values[pivot];
+                values[pivot] = values[j];
+                values[j] = temp;
+                if (j > first)
+                    quicksortAscendingFloat(values, first, j-1);
+                if (j < last)
+                    quicksortAscendingFloat(values, j+1, last);
             }
         }
 
@@ -374,7 +376,7 @@
         {
             // check
             if (*nList == 0 || perc <= 0.f || perc >= 100.f)
-                return (NODATA);
+                return NODATA;
 
             perc /= 100.f;
 
@@ -382,11 +384,11 @@
             {
                 // clean nodata
                 std::vector<float> cleanList;
-                for (int i = 0; i < *nList; i++)
+                for (unsigned int i = 0; i < unsigned(*nList); i++)
                 {
-                    if (list[i] != NODATA)
+                    if (int(list[i]) != int(NODATA))
                     {
-                        cleanList.push_back(list[unsigned(i)]);
+                        cleanList.push_back(list[i]);
                     }
                 }
 
@@ -398,7 +400,7 @@
                     return (NODATA);
 
                 // sort
-                quicksortAscendingFloat(cleanList, 0, *nList - 1);
+                quicksortAscendingFloat(cleanList, 0, unsigned(*nList - 1));
 
                 list.erase(list.begin(),list.end());
                 list = cleanList;
