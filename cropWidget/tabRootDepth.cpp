@@ -81,7 +81,6 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
 
     int currentDoy = 1;
     myCrop->initialize(meteoPoint->latitude, nrLayers, totalSoilDepth, currentDoy);
-    bool startValidData = false;
 
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
@@ -94,22 +93,18 @@ void TabRootDepth::computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoP
             return;
         }
 
-        // display only interval firstYear lastYear
+        // display only from firstYear
         if (myDate.year >= firstYear)
         {
             x.setDate(QDate(myDate.year, myDate.month, myDate.day));
-            if (myCrop->roots.rootDepthMin!= NODATA && myCrop->roots.rootDepth!= NODATA)
+            seriesRootDepthMin->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepthMin);
+            if (myCrop->roots.rootDepth!= NODATA)
             {
-                startValidData = true;
-                seriesRootDepthMin->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepthMin);
                 seriesRootDepth->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepth);
             }
-            else if (startValidData && myCrop->roots.rootDepth == NODATA)
+            else
             {
-                // last day
-                seriesRootDepthMin->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepthMin);
                 seriesRootDepth->append(x.toMSecsSinceEpoch(), myCrop->roots.rootDepthMin);
-                startValidData = false;
             }
         }
     }
