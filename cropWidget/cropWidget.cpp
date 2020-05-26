@@ -636,8 +636,11 @@ void Crit3DCropWidget::openUnitsDB(QString dbUnitsName)
         i++;
     } while(query.next());
 
-    // show unit list
+    // unit list
+    this->caseListComboBox.blockSignals(true);
     this->caseListComboBox.clear();
+    this->caseListComboBox.blockSignals(false);
+
     for (int i = 0; i < caseStringList.size(); i++)
     {
         this->caseListComboBox.addItem(caseStringList[i]);
@@ -777,10 +780,8 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
 }
 
 
-void Crit3DCropWidget::on_actionChooseCase(QString idCase)
+void Crit3DCropWidget::on_actionChooseCase()
 {
-    Q_UNUSED(idCase);
-
     this->firstYearListComboBox.blockSignals(true);
     this->lastYearListComboBox.blockSignals(true);
 
