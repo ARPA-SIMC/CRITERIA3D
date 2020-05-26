@@ -1532,7 +1532,7 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         cropChanged = true;
         return cropChanged;
     }
-    // Degree days
+    // degree days
     if (cropFromDB.thermalThreshold != thermalThresholdValue->text().toDouble()
             || cropFromDB.upperThermalThreshold != upperThermalThresholdValue->text().toDouble()
             || cropFromDB.degreeDaysEmergence != degreeDaysEmergenceValue->text().toDouble()
@@ -1544,7 +1544,7 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         cropChanged = true;
         return cropChanged;
     }
-    // Roots
+    // roots
     if(cropFromDB.roots.rootDepthMin != rootDepthZeroValue->text().toDouble()
             || cropFromDB.roots.rootDepthMax != rootDepthMaxValue->text().toDouble()
             || cropFromDB.roots.shapeDeformation != shapeDeformationValue->value()
@@ -1558,8 +1558,8 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         cropChanged = true;
         return cropChanged;
     }
-    // Kc - stress tolerance
-    if(cropFromDB.kcMax != maxKcValue->text().toDouble()
+    // water needs
+    if( cropFromDB.kcMax != maxKcValue->text().toDouble()
        || cropFromDB.stressTolerance != stressToleranceValue->text().toDouble()
        || cropFromDB.psiLeaf != psiLeafValue->text().toDouble()
        || cropFromDB.fRAW != rawFractionValue->text().toDouble() )
@@ -1567,6 +1567,8 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         cropChanged = true;
         return cropChanged;
     }
+
+    // TODO check irrigation parameters
 
     cropChanged = false;
     return cropChanged;
