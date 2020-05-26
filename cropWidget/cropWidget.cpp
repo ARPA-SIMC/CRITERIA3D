@@ -502,9 +502,6 @@ Crit3DCropWidget::Crit3DCropWidget()
 
 void Crit3DCropWidget::on_actionOpenProject()
 {
-    this->firstYearListComboBox.blockSignals(true);
-    this->lastYearListComboBox.blockSignals(true);
-
     checkCropUpdate();
     QString projFileName = QFileDialog::getOpenFileName(this, tr("Open Criteria-1D project"), "", tr("Settings files (*.ini)"));
 
@@ -534,13 +531,24 @@ void Crit3DCropWidget::on_actionOpenProject()
     if (dbUnitsName.left(1) == ".")
         dbUnitsName = QDir::cleanPath(path + dbUnitsName);
 
+    this->cropListComboBox.blockSignals(true);
+    this->soilListComboBox.blockSignals(true);
+
     openCropDB(newDbCropName);
     openSoilDB(dbSoilName);
+
+    this->cropListComboBox.blockSignals(false);
+    this->soilListComboBox.blockSignals(false);
+
+    this->firstYearListComboBox.blockSignals(true);
+    this->lastYearListComboBox.blockSignals(true);
+
     openMeteoDB(dbMeteoName);
-    openUnitsDB(dbUnitsName);
 
     this->firstYearListComboBox.blockSignals(false);
     this->lastYearListComboBox.blockSignals(false);
+
+    openUnitsDB(dbUnitsName);
 }
 
 
