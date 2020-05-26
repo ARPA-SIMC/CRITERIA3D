@@ -1205,9 +1205,9 @@ void Crit3DCropWidget::on_actionSave()
 bool Crit3DCropWidget::saveCrop()
 {
     QString error;
-    QString idCrop = cropListComboBox.currentText();
-    if (!updateCropLAIparam(&dbCrop, idCrop, &(myCase.myCrop), &error) || !updateCropRootparam(&dbCrop, idCrop, &(myCase.myCrop), &error)
-            || !updateCropIrrigationparam(&dbCrop, idCrop, &(myCase.myCrop), &error) )
+    if ( !updateCropLAIparam(&dbCrop, &(myCase.myCrop), &error)
+            || !updateCropRootparam(&dbCrop, &(myCase.myCrop), &error)
+            || !updateCropIrrigationparam(&dbCrop, &(myCase.myCrop), &error) )
     {
         QMessageBox::critical(nullptr, "Update param failed!", error);
         return false;
