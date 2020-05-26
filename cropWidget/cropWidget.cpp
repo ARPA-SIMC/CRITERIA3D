@@ -779,9 +779,43 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
 
 void Crit3DCropWidget::on_actionChooseCase(QString idCase)
 {
+    Q_UNUSED(idCase);
+
+    this->firstYearListComboBox.blockSignals(true);
+    this->lastYearListComboBox.blockSignals(true);
+
     int index = caseListComboBox.currentIndex();
+    QString errorStr;
+
+    // METEO
     QString idMeteo = unitList[index].idMeteo;
     meteoListComboBox.setCurrentText(idMeteo);
+
+    // SOIL
+    QString idSoil = getIdSoilString(&dbSoil, unitList[index].idSoilNumber, &errorStr);
+    if (idSoil != "")
+    {
+        soilListComboBox.setCurrentText(idSoil);
+    }
+    else
+    {
+        QString soilNumber = QString::number(unitList[index].idSoilNumber);
+        QMessageBox::critical(nullptr, "Error!", "Missing soil nr: " + soilNumber + "\n" + errorStr);
+    }
+
+    // CROP
+    QString idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class", unitList[index].idCropClass, &errorStr);
+    if (idCrop != "")
+    {
+        cropListComboBox.setCurrentText(idCrop);
+    }
+    else
+    {
+        QMessageBox::critical(nullptr, "Error!", "Missing crop class: " + unitList[index].idCropClass + "\n" + errorStr);
+    }
+
+    this->firstYearListComboBox.blockSignals(false);
+    this->lastYearListComboBox.blockSignals(false);
 }
 
 
@@ -1485,10 +1519,9 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
             cropChanged = true;
             return cropChanged;
         }
-
     }
-    if ( cropFromDB.kcMax != maxKcValue->text().toDouble()
-            || cropFromDB.LAImin != LAIminValue->value() || cropFromDB.LAImax != LAImaxValue->value())
+    // LAI
+    if (cropFromDB.LAImin != LAIminValue->value() || cropFromDB.LAImax != LAImaxValue->value())
     {
         cropChanged = true;
         return cropChanged;
@@ -1499,15 +1532,23 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         cropChanged = true;
         return cropChanged;
     }
-    if (cropFromDB.thermalThreshold != thermalThresholdValue->text().toDouble() || cropFromDB.upperThermalThreshold != upperThermalThresholdValue->text().toDouble()
-            || cropFromDB.degreeDaysEmergence != degreeDaysEmergenceValue->text().toDouble() || cropFromDB.degreeDaysIncrease != degreeDaysLAIincValue->text().toDouble()
-            || cropFromDB.degreeDaysDecrease != degreeDaysLAIdecValue->text().toDouble() || cropFromDB.LAIcurve_a != LAIcurveAValue->text().toDouble() || cropFromDB.LAIcurve_b != LAIcurveBValue->text().toDouble())
+    // Degree days
+    if (cropFromDB.thermalThreshold != thermalThresholdValue->text().toDouble()
+            || cropFromDB.upperThermalThreshold != upperThermalThresholdValue->text().toDouble()
+            || cropFromDB.degreeDaysEmergence != degreeDaysEmergenceValue->text().toDouble()
+            || cropFromDB.degreeDaysIncrease != degreeDaysLAIincValue->text().toDouble()
+            || cropFromDB.degreeDaysDecrease != degreeDaysLAIdecValue->text().toDouble()
+            || cropFromDB.LAIcurve_a != LAIcurveAValue->text().toDouble()
+            || cropFromDB.LAIcurve_b != LAIcurveBValue->text().toDouble())
     {
         cropChanged = true;
         return cropChanged;
     }
-    if(cropFromDB.roots.rootDepthMin != rootDepthZeroValue->text().toDouble() || cropFromDB.roots.rootDepthMax != rootDepthMaxValue->text().toDouble()
-            || cropFromDB.roots.shapeDeformation != shapeDeformationValue->value() || cropFromDB.roots.rootShape != root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString()))
+    // Roots
+    if(cropFromDB.roots.rootDepthMin != rootDepthZeroValue->text().toDouble()
+            || cropFromDB.roots.rootDepthMax != rootDepthMaxValue->text().toDouble()
+            || cropFromDB.roots.shapeDeformation != shapeDeformationValue->value()
+            || cropFromDB.roots.rootShape != root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString()))
     {
         cropChanged = true;
         return cropChanged;
@@ -1517,10 +1558,17 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         cropChanged = true;
         return cropChanged;
     }
-    else
+    // Kc - stress tolerance
+    if(cropFromDB.kcMax != maxKcValue->text().toDouble()
+       || cropFromDB.stressTolerance != stressToleranceValue->text().toDouble()
+       || cropFromDB.psiLeaf != psiLeafValue->text().toDouble()
+       || cropFromDB.fRAW != rawFractionValue->text().toDouble() )
     {
-        cropChanged = false;
+        cropChanged = true;
+        return cropChanged;
     }
+
+    cropChanged = false;
     return cropChanged;
 }
 

@@ -389,6 +389,7 @@ bool updateCropIrrigationparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop*
         *error = qry.lastError().text();
         return false;
     }
+
     return true;
 }
 

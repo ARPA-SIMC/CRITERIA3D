@@ -373,12 +373,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
 
         // update roots
         root::computeRootDepth(this, degreeDays, waterTableDepth);
-
-        if ( !root::computeRootDensity(this, soilLayers))
-        {
-            myError = "Error in updating roots for crop " + idCrop;
-            return false;
-        }
+        root::computeRootDensity(this, soilLayers);
     }
 
     return true;
