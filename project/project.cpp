@@ -1765,9 +1765,14 @@ bool Project::loadProjectSettings(QString settingsFileName)
             if(myPath.left(1) == ".")
             {
                 newProjectPath = getProjectPath() + myPath;
-                newProjectPath = QDir::cleanPath(newProjectPath);
+            }
+           else if(myPath.left(5) == "$HOME")
+            {
+                newProjectPath = QDir::homePath() + myPath.right(myPath.length()-5);
             }
             else newProjectPath = myPath;
+
+            newProjectPath = QDir::cleanPath(newProjectPath);
 
             if (newProjectPath.right(1) != "/") newProjectPath += "/";
             setProjectPath(newProjectPath);

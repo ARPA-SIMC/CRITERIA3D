@@ -458,9 +458,11 @@ Crit3DCropWidget::Crit3DCropWidget()
     restoreData = new QAction(tr("&Restore Data"), this);
 
     fileMenu->addAction(openProject);
+    fileMenu->addSeparator();
     fileMenu->addAction(openCropDB);
     fileMenu->addAction(openMeteoDB);
     fileMenu->addAction(openSoilDB);
+    fileMenu->addSeparator();
     fileMenu->addAction(saveChanges);
 
     editMenu->addAction(newCrop);
