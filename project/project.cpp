@@ -1569,7 +1569,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 
     if (! interpolationReady)
     {
-        logError("Interpolation: error in function preInterpolation");   
+        logError("Interpolation: error in function preInterpolation");
         return false;
     }
 
@@ -1803,6 +1803,8 @@ bool Project::searchDefaultPath(QString* defaultPath)
 {
     QString myPath = getApplicationPath();
     QString myRoot = QDir::rootPath();
+    // windows: installation on other volume (for example D:)
+    QString myVolume = myPath.left(3);
 
     bool isFound = false;
     while (! isFound)
@@ -1812,7 +1814,7 @@ bool Project::searchDefaultPath(QString* defaultPath)
             isFound = true;
             break;
         }
-        if (QDir::cleanPath(myPath) == myRoot)
+        if (QDir::cleanPath(myPath) == myRoot || QDir::cleanPath(myPath) == myVolume)
             break;
 
         myPath = QFileInfo(myPath).dir().absolutePath();
