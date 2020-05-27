@@ -47,7 +47,7 @@
 Crit3DCropWidget::Crit3DCropWidget()
 {
     this->setWindowTitle(QStringLiteral("CRITERIA 1D - Crop Editor"));
-    this->resize(1600, 800);
+    this->resize(1500, 800);
 
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
@@ -142,14 +142,14 @@ Crit3DCropWidget::Crit3DCropWidget()
     waterStressParametersGroup = new QGroupBox(tr(""));
     waterContentGroup = new QGroupBox(tr(""));
 
-    infoCaseGroup->setFixedWidth(this->width()/4);
-    infoCropGroup->setFixedWidth(this->width()/4);
-    infoMeteoGroup->setFixedWidth(this->width()/4);
-    laiParametersGroup->setFixedWidth(this->width()/4);
-    rootParametersGroup->setFixedWidth(this->width()/4);
-    irrigationParametersGroup->setFixedWidth(this->width()/4);
-    waterStressParametersGroup->setFixedWidth(this->width()/4);
-    waterContentGroup->setFixedWidth(this->width()/4);
+    infoCaseGroup->setFixedWidth(this->width()/5);
+    infoCropGroup->setFixedWidth(this->width()/5);
+    infoMeteoGroup->setFixedWidth(this->width()/5);
+    laiParametersGroup->setFixedWidth(this->width()/5);
+    rootParametersGroup->setFixedWidth(this->width()/5);
+    irrigationParametersGroup->setFixedWidth(this->width()/5);
+    waterStressParametersGroup->setFixedWidth(this->width()/5);
+    waterContentGroup->setFixedWidth(this->width()/5);
 
     infoCaseGroup->setTitle("Case");
     infoCropGroup->setTitle("Crop");
