@@ -46,7 +46,7 @@
 
 Crit3DCropWidget::Crit3DCropWidget()
 {
-    this->setWindowTitle(QStringLiteral("CRITERIA 1D"));
+    this->setWindowTitle(QStringLiteral("CRITERIA 1D - Crop Editor"));
     this->resize(1400, 700);
 
     // layout
