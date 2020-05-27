@@ -47,7 +47,12 @@
 Crit3DCropWidget::Crit3DCropWidget()
 {
     this->setWindowTitle(QStringLiteral("CRITERIA 1D - Crop Editor"));
-    this->resize(1500, 800);
+    this->resize(1250, 700);
+
+    // font
+    QFont myFont = this->font();
+    myFont.setPointSize(9);
+    this->setFont(myFont);
 
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
