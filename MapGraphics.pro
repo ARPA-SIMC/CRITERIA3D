@@ -23,7 +23,6 @@ win32:{
 
 DEFINES += MAPGRAPHICS_LIBRARY
 
-
 SOURCES += \
     tileSources/OSMTileSource.cpp \
     tileSources/GridTileSource.cpp \
