@@ -9,7 +9,7 @@
 #
 #----------------------------------------------------
 
-QT  += widgets sql
+QT  += widgets sql charts
 
 TEMPLATE = lib
 CONFIG += staticlib
