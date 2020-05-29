@@ -17,6 +17,7 @@
         void resetAll();
         bool getFillElement() const;
         void setFillElement(bool value);
+        void highlightCurve(bool isHightlight);
 
     private:
         BarHorizonList barHorizons;
@@ -30,6 +31,7 @@
         QMap< int, QScatterSeries* > curveMarkerMap;
         //Crit3DCurvePicker *pick;
         bool fillElement;
+        int indexSelected;
 
         double dxMin = 0.001;
         double dxMax = 10000000;
@@ -43,7 +45,7 @@
 
     private slots:
         void widgetClicked(int index);
-        void curveClicked(int index);
+        void curveClicked();
 
     signals:
         void horizonSelected(int nHorizon);

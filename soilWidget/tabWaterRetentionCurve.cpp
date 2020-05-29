@@ -2,7 +2,6 @@
 #include "commonConstants.h"
 
 
-
 TabWaterRetentionCurve::TabWaterRetentionCurve()
 {
 
@@ -78,14 +77,13 @@ void TabWaterRetentionCurve::resetAll()
         curveList.clear();
     }
 
-    /*
     if (!curveMarkerMap.isEmpty())
     {
         qDeleteAll(curveMarkerMap);
         curveMarkerMap.clear();
     }
 
-
+    /*
     if (pick != nullptr)
     {
         delete pick;
@@ -121,10 +119,6 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
     barHorizons.draw(soil);
     fillElement = true;
     mySoil = soil;
-    QVector<double> xVector;
-    QVector<double> yVector;
-    QVector<double> xMarkers;
-    QVector<double> yMarkers;
     double x;
     double maxThetaSat = 0;
 
@@ -134,6 +128,8 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
         // insert Curves
         QLineSeries* curve = new QLineSeries();
         curve->setColor(color);
+        QString name = QString::number(i);
+        curve->setName(name);
         double factor = 1.2;
         x = dxMin;
         while (x < dxMax*factor)
@@ -150,16 +146,14 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
         curve->attachAxis(axisX);
         curve->attachAxis(axisY);
         curveList.push_back(curve);
+        connect(curve, &QLineSeries::clicked, [=](){ this->curveClicked(); });
 
         // insert marker
-
         if (!mySoil->horizon[i].dbData.waterRetention.empty())
         {
             QScatterSeries *curveMarkers = new QScatterSeries();
             curveMarkers->setColor(color);
             curveMarkers->setMarkerSize(8);
-            xMarkers.clear();
-            yMarkers.clear();
             for (unsigned int j = 0; j < mySoil->horizon[i].dbData.waterRetention.size(); j++)
             {
                 double x = mySoil->horizon[i].dbData.waterRetention[j].water_potential;
@@ -173,6 +167,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
             curveMarkers->attachAxis(axisX);
             curveMarkers->attachAxis(axisY);
             curveMarkerMap[i] = curveMarkers;
+            //connect(curveMarkers, &QScatterSeries::clicked, [=](){ this->curveClicked(); });
         }
     }
 
@@ -187,44 +182,73 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
     pick->setStateMachine(new QwtPickerClickPointMachine());
     connect(pick, SIGNAL(clicked(int)), this, SLOT(curveClicked(int)));
 
+    */
     for (int i=0; i < barHorizons.barList.size(); i++)
     {
         connect(barHorizons.barList[i], SIGNAL(clicked(int)), this, SLOT(widgetClicked(int)));
     }
-
-    myPlot->replot();
-    */
 }
 
 
 void TabWaterRetentionCurve::widgetClicked(int index)
 {
-    /*
+
     // check selection state
     if (barHorizons.barList[index]->getSelected())
     {
         barHorizons.deselectAll(index);
 
         // select the right curve
-        pick->setSelectedCurveIndex(index);
-        pick->highlightCurve(true);
+        indexSelected = index;
+        highlightCurve(true);
         emit horizonSelected(index);
     }
     else
     {
-        pick->highlightCurve(false);
-        pick->setSelectedCurveIndex(-1);
+        indexSelected = -1;
+        highlightCurve(false);
         emit horizonSelected(-1);
     }
-    */
-
 
 }
 
-void TabWaterRetentionCurve::curveClicked(int index)
+void TabWaterRetentionCurve::curveClicked()
 {
+    // TO DO
+    qDebug() << "curveClicked";
+    QLineSeries *series = qobject_cast<QLineSeries *>(sender());
+    //int index = series->name().toInt();
+    int index = curveList.indexOf(series);
+    qDebug() << "index " << index;
+    //barHorizons.selectItem(index);
+    //emit horizonSelected(index);
+}
 
-    barHorizons.selectItem(index);
-    emit horizonSelected(index);
+void TabWaterRetentionCurve::highlightCurve( bool isHightlight )
+{
+    for ( int i = 0; i < curveList.size(); i++ )
+    {
+        QColor curveColor = curveList[i]->color();
+        if ( isHightlight && i == indexSelected)
+        {
+            qreal alpha = 1.0;
+            curveColor.setAlphaF(alpha);
+            curveList[i]->setColor(curveColor);
+            if (!curveMarkerMap.isEmpty() && i<curveMarkerMap.size())
+            {
+                curveMarkerMap[i]->setColor(curveColor);
+            }
+        }
+        else
+        {
+            qreal alpha = 0.5;
+            curveColor.setAlphaF(alpha);
+            curveList[i]->setColor(curveColor);
+            if (!curveMarkerMap.isEmpty() && i<curveMarkerMap.size())
+            {
+                curveMarkerMap[i]->setColor(curveColor);
+            }
+        }
+    }
 
 }
