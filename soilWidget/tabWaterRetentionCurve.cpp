@@ -83,14 +83,6 @@ void TabWaterRetentionCurve::resetAll()
         curveMarkerMap.clear();
     }
 
-    /*
-    if (pick != nullptr)
-    {
-        delete pick;
-        pick = nullptr;
-    }
-    */
-
     chart->removeAllSeries();
     fillElement = false;
 
@@ -128,8 +120,6 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
         // insert Curves
         QLineSeries* curve = new QLineSeries();
         curve->setColor(color);
-        QString name = QString::number(i);
-        curve->setName(name);
         double factor = 1.2;
         x = dxMin;
         while (x < dxMax*factor)
@@ -142,11 +132,11 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
             }
             x *= factor;
         }
+        curveList.push_back(curve);
         chart->addSeries(curve);
         curve->attachAxis(axisX);
         curve->attachAxis(axisY);
-        curveList.push_back(curve);
-        connect(curve, &QLineSeries::clicked, [=](){ this->curveClicked(); });
+        connect(curve, &QXYSeries::clicked, this, &TabWaterRetentionCurve::curveClicked);
 
         // insert marker
         if (!mySoil->horizon[i].dbData.waterRetention.empty())
@@ -163,11 +153,11 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
                     curveMarkers->append(x,y);
                 }
             }
+            curveMarkerMap[i] = curveMarkers;
             chart->addSeries(curveMarkers);
             curveMarkers->attachAxis(axisX);
             curveMarkers->attachAxis(axisY);
-            curveMarkerMap[i] = curveMarkers;
-            //connect(curveMarkers, &QScatterSeries::clicked, [=](){ this->curveClicked(); });
+            connect(curveMarkers, &QXYSeries::clicked, this, &TabWaterRetentionCurve::markerClicked);
         }
     }
 
@@ -177,12 +167,6 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
     // rescale to maxThetaSat
     axisY->setMax(std::max(yMax, maxThetaSat));
 
-    /*
-    pick = new Crit3DCurvePicker(myPlot, curveList, curveMarkerMap);
-    pick->setStateMachine(new QwtPickerClickPointMachine());
-    connect(pick, SIGNAL(clicked(int)), this, SLOT(curveClicked(int)));
-
-    */
     for (int i=0; i < barHorizons.barList.size(); i++)
     {
         connect(barHorizons.barList[i], SIGNAL(clicked(int)), this, SLOT(widgetClicked(int)));
@@ -214,14 +198,30 @@ void TabWaterRetentionCurve::widgetClicked(int index)
 
 void TabWaterRetentionCurve::curveClicked()
 {
-    // TO DO
-    qDebug() << "curveClicked";
-    QLineSeries *series = qobject_cast<QLineSeries *>(sender());
-    //int index = series->name().toInt();
-    int index = curveList.indexOf(series);
-    qDebug() << "index " << index;
-    //barHorizons.selectItem(index);
-    //emit horizonSelected(index);
+
+    auto serie = qobject_cast<QLineSeries *>(sender());
+    if (serie != nullptr)
+    {
+        int index = curveList.indexOf(serie);
+        indexSelected = index;
+        highlightCurve(true);
+        barHorizons.selectItem(index);
+        emit horizonSelected(index);
+    }
+}
+
+void TabWaterRetentionCurve::markerClicked()
+{
+
+    auto serie = qobject_cast<QScatterSeries *>(sender());
+    if (serie != nullptr)
+    {
+        int index = curveMarkerMap.key(serie);
+        indexSelected = index;
+        highlightCurve(true);
+        barHorizons.selectItem(index);
+        emit horizonSelected(index);
+    }
 }
 
 void TabWaterRetentionCurve::highlightCurve( bool isHightlight )

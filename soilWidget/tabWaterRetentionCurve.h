@@ -46,6 +46,7 @@
     private slots:
         void widgetClicked(int index);
         void curveClicked();
+        void markerClicked();
 
     signals:
         void horizonSelected(int nHorizon);
