@@ -46,6 +46,7 @@ macx:{
 SOURCES += \
     barHorizon.cpp \
     curvePicker.cpp \
+    rangelimitedvalueaxis.cpp \
     soilTable.cpp \
     soilWidget.cpp \
     tabHorizons.cpp \
@@ -56,11 +57,13 @@ SOURCES += \
     tableDelegateWaterRetention.cpp \
     curvePanner.cpp \
     dialogNewSoil.cpp \
-    tableWaterRetention.cpp
+    tableWaterRetention.cpp \
+    zoomablechartview.cpp
 
 HEADERS += \
     barHorizon.h \
     curvePicker.h \
+    rangelimitedvalueaxis.h \
     soilTable.h \
     soilWidget.h \
     tabHorizons.h \
@@ -72,7 +75,8 @@ HEADERS += \
     curvePanner.h \
     tableWidgetItem.h \
     dialogNewSoil.h \
-    tableWaterRetention.h
+    tableWaterRetention.h \
+    zoomablechartview.h
 
 win32:{
     include($$(QWT_ROOT)\features\qwt.prf)

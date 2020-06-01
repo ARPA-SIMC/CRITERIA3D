@@ -9,7 +9,7 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
     QVBoxLayout *plotLayout = new QVBoxLayout;
 
     chart = new QChart();
-    chartView = new QChartView(chart);
+    chartView = new ZoomableChartView();
     chartView->setChart(chart);
 
     axisX = new QLogValueAxis();
@@ -20,6 +20,10 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
     axisY->setTitleText(QString("Volumetric water content [%1]").arg(QString("m3 m-3")));
     axisY->setRange(yMin, yMax);
     axisY->setTickCount(7);
+    chartView->setRangeX(dxMin, dxMax);
+    chartView->setRangeY(dyMin, dyMax);
+    chartView->setZoomMode(ZoomableChartView::Pan);
+    chartView->setMaxZoomIteration(4);
 
     QFont font = axisY->titleFont();
     font.setPointSize(11);
@@ -29,28 +33,6 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
 
     chart->addAxis(axisX, Qt::AlignBottom);
     chart->addAxis(axisY, Qt::AlignLeft);
-
-    // Left Button for panning
-    /*
-    Crit3DCurvePanner* panner = new Crit3DCurvePanner(myPlot, xlog, dxMin, dxMax, dyMin, dyMax);
-    panner->setMouseButton(Qt::LeftButton);
-    QwtPlotZoomer* zoomer = new QwtPlotZoomer( QwtPlot::xBottom, QwtPlot::yLeft, myPlot->canvas()  );
-    zoomer->setRubberBandPen( QColor( Qt::black ) );
-    zoomer->setTrackerPen( QColor( Qt::red ) );
-    zoomer->setMaxStackDepth(5);
-    // CTRL+LeftButton for the zooming
-    zoomer->setMousePattern( QwtEventPattern::MouseSelect1, Qt::LeftButton, Qt::ControlModifier);
-    // CTRL+RightButton back to full size
-    zoomer->setMousePattern( QwtEventPattern::MouseSelect2, Qt::RightButton, Qt::ControlModifier);
-
-    // grid
-    QwtPlotGrid *grid = new QwtPlotGrid();
-    grid->enableY(true);
-    grid->enableYMin(true);
-    grid->setMajorPen( Qt::darkGray, 0, Qt::SolidLine );
-    grid->setMinorPen( Qt::gray, 0 , Qt::DotLine );
-    grid->attach(myPlot);
-    */
 
     chart->legend()->setVisible(false);
     chart->legend()->setAlignment(Qt::AlignBottom);
