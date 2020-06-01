@@ -6,6 +6,7 @@
     #include <QMap>
     #include "soil.h"
     #include "barHorizon.h"
+    #include "zoomablechartview.h"
 
 
     class TabWaterRetentionCurve: public QWidget
@@ -23,13 +24,12 @@
         BarHorizonList barHorizons;
 
         soil::Crit3DSoil* mySoil;
-        QChartView *chartView;
+        ZoomableChartView *chartView;
         QChart *chart;
         QList<QLineSeries*> curveList;
         QValueAxis *axisY;
         QLogValueAxis *axisX;
         QMap< int, QScatterSeries* > curveMarkerMap;
-        //Crit3DCurvePicker *pick;
         bool fillElement;
         int indexSelected;
 
