@@ -62,6 +62,5 @@ HEADERS += \
     shell.h
 
 FORMS += \
-    formInfo.ui \
     formPeriod.ui
 
