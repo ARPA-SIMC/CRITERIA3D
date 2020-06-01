@@ -1,19 +1,16 @@
 #ifndef FORMINFO_H
 #define FORMINFO_H
 
-    #include <QDialog>
+    #include <QWidget>
+    #include <QLabel>
+    #include <QProgressBar>
 
-    namespace Ui {
-    class formInfo;
-    }
-
-    class FormInfo : public QDialog
+    class FormInfo : public QWidget
     {
         Q_OBJECT
 
     public:
-        explicit FormInfo(QWidget *parent = nullptr);
-        ~FormInfo();
+        explicit FormInfo();
 
         int start(QString info, int nrValues);
         void setValue(int myValue);
@@ -21,7 +18,9 @@
         void showInfo(QString info);
 
     private:
-        Ui::formInfo *ui;
+        QLabel* label;
+        QProgressBar* progressBar;
+
     };
 
 #endif // FORMINFO_H

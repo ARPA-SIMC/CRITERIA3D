@@ -1064,7 +1064,7 @@ void Crit3DCropWidget::on_actionChooseLastYear(QString year)
 {
     if (year.toInt() - this->firstYearListComboBox.currentText().toInt() > MAX_YEARS)
     {
-        QString msg = "Period too long: maximum 5 years";
+        QString msg = "Period too long: maximum " + QString::number(MAX_YEARS) + " years";
         QMessageBox::information(nullptr, "Error", msg);
         int max = this->firstYearListComboBox.currentText().toInt() + MAX_YEARS;
         this->lastYearListComboBox.setCurrentText(QString::number(max));
