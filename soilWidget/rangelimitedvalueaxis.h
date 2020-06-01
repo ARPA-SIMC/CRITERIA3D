@@ -1,3 +1,7 @@
+/*
+ * zoom functionality from: https://github.com/martonmiklos/qt_zoomable_chart_widget
+*/
+
 #ifndef RANGELIMITEDVALUEAXIS_H
 #define RANGELIMITEDVALUEAXIS_H
 

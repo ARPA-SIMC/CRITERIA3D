@@ -1,9 +1,14 @@
+/*
+ * zoom functionality from: https://github.com/martonmiklos/qt_zoomable_chart_widget
+*/
+
 #ifndef CHARTVIEW_H
 #define CHARTVIEW_H
 
 #include <QtCharts/QChartView>
 #include <QtWidgets/QRubberBand>
 #include "rangelimitedvalueaxis.h"
+
 
 QT_CHARTS_USE_NAMESPACE
 

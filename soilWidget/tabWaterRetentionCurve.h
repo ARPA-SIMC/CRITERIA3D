@@ -7,6 +7,7 @@
     #include "soil.h"
     #include "barHorizon.h"
     #include "zoomablechartview.h"
+    #include "callout.h"
 
 
     class TabWaterRetentionCurve: public QWidget
@@ -19,6 +20,9 @@
         bool getFillElement() const;
         void setFillElement(bool value);
         void highlightCurve(bool isHightlight);
+        void tooltipLineSeries(QPointF point, bool state);
+        void tooltipScatterSeries(QPointF point, bool state);
+        void closeEvent(QCloseEvent *event);
 
     private:
         BarHorizonList barHorizons;
@@ -30,6 +34,7 @@
         QValueAxis *axisY;
         QLogValueAxis *axisX;
         QMap< int, QScatterSeries* > curveMarkerMap;
+        Callout *m_tooltip;
         bool fillElement;
         int indexSelected;
 

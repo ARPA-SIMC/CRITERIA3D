@@ -45,6 +45,7 @@ macx:{
 
 SOURCES += \
     barHorizon.cpp \
+    callout.cpp \
     curvePicker.cpp \
     rangelimitedvalueaxis.cpp \
     soilTable.cpp \
@@ -62,6 +63,7 @@ SOURCES += \
 
 HEADERS += \
     barHorizon.h \
+    callout.h \
     curvePicker.h \
     rangelimitedvalueaxis.h \
     soilTable.h \

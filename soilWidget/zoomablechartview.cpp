@@ -1,3 +1,7 @@
+/*
+ * zoom functionality from: https://github.com/martonmiklos/qt_zoomable_chart_widget
+*/
+
 #include "zoomablechartview.h"
 #include <QtGui/QGuiApplication>
 #include <QtGui/QMouseEvent>
@@ -19,12 +23,13 @@ void ZoomableChartView::mousePressEvent(QMouseEvent *event)
 {
     m_isTouching = true;
     m_lastMousePos = event->localPos();
-    qWarning() << "Press" << m_lastMousePos;
+    //qWarning() << "Press" << m_lastMousePos;
     QChartView::mousePressEvent(event);
 }
 
 void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
 {
+
     if (!m_isTouching)
         return;
 
@@ -43,7 +48,7 @@ void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
 
             if (moveHorizontalAxis) {
                 qreal dx = -(event->localPos().x() - m_lastMousePos.x());
-                qWarning() << "Move" << event->localPos().x() << dx;
+                //qWarning() << "Move" << event->localPos().x() << dx;
                 for (auto series : this->chart()->series()) {
                     for (auto axis : series->attachedAxes()) {
                         if (axis->orientation() != Qt::Horizontal)

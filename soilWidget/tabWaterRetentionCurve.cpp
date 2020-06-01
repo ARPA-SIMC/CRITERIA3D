@@ -38,6 +38,9 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
     chart->legend()->setAlignment(Qt::AlignBottom);
     chart->setAcceptHoverEvents(true);
 
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
+
     mainLayout->addWidget(barHorizons.groupBox);
     plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
@@ -119,6 +122,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
         curve->attachAxis(axisX);
         curve->attachAxis(axisY);
         connect(curve, &QXYSeries::clicked, this, &TabWaterRetentionCurve::curveClicked);
+        connect(curve, &QLineSeries::hovered, this, &TabWaterRetentionCurve::tooltipLineSeries);
 
         // insert marker
         if (!mySoil->horizon[i].dbData.waterRetention.empty())
@@ -140,6 +144,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
             curveMarkers->attachAxis(axisX);
             curveMarkers->attachAxis(axisY);
             connect(curveMarkers, &QXYSeries::clicked, this, &TabWaterRetentionCurve::markerClicked);
+            connect(curveMarkers, &QScatterSeries::hovered, this, &TabWaterRetentionCurve::tooltipScatterSeries);
         }
     }
 
@@ -189,6 +194,15 @@ void TabWaterRetentionCurve::curveClicked()
         highlightCurve(true);
         barHorizons.selectItem(index);
         emit horizonSelected(index);
+        /*
+        // show tooltip
+        QPoint CursorPoint = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
+        QPointF pointF = chart->mapToValue(mapPoint,serie);
+        double xValue = pointF.x();
+        double yValue = pointF.y();
+        chartView->setToolTip(QString("Horizon %1 \n%2 %3 ").arg(index+1).arg(xValue, 0, 'f', 3).arg(yValue, 0, 'f', 3));
+        */
     }
 }
 
@@ -233,4 +247,56 @@ void TabWaterRetentionCurve::highlightCurve( bool isHightlight )
         }
     }
 
+}
+
+void TabWaterRetentionCurve::tooltipLineSeries(QPointF point, bool state)
+{
+
+    auto serie = qobject_cast<QLineSeries *>(sender());
+    int index = curveList.indexOf(serie)+1;
+    if (state)
+    {
+        double xValue = point.x();
+        double yValue = point.y();
+                //series->at(doy).y();
+        m_tooltip->setText(QString("Horizon %1 \n%2 %3 ").arg(index).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setSeries(serie);
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+}
+
+void TabWaterRetentionCurve::tooltipScatterSeries(QPointF point, bool state)
+{
+
+    auto serie = qobject_cast<QScatterSeries *>(sender());
+    int index = curveMarkerMap.key(serie)+1;
+    if (state)
+    {
+        double xValue = point.x();
+        double yValue = point.y();
+
+        m_tooltip->setText(QString("Horizon %1 \n%2 %3 ").arg(index).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setSeries(serie);
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+}
+
+void TabWaterRetentionCurve::closeEvent(QCloseEvent *event)
+{
+    delete m_tooltip;
+    event->accept();
 }
