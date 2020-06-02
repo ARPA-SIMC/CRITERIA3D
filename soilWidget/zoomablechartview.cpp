@@ -14,7 +14,7 @@ ZoomableChartView::ZoomableChartView(QWidget *parent) :
     setRubberBand(QChartView::RectangleRubberBand);
     // default values
     nZoomIterations = 0;
-    maxZoom = 10;
+    maxZoom = MAXZOOM;
 }
 
 void ZoomableChartView::mousePressEvent(QMouseEvent *event)

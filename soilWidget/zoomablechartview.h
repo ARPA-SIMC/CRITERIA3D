@@ -11,6 +11,7 @@
 
 
 QT_CHARTS_USE_NAMESPACE
+#define MAXZOOM 10
 
 //![1]
 class ZoomableChartView : public QChartView
