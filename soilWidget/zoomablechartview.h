@@ -55,8 +55,6 @@ private:
     ZoomMode m_zoomMode = RectangleZoom;
     RangeLimitedValueAxis *rangeXAxis;
     RangeLimitedValueAxis *rangeYAxis;
-    bool rangeLimitedAxisX;
-    bool rangeLimitedAxisY;
     int maxZoom;
     int nZoomIterations;
     double dxMin;

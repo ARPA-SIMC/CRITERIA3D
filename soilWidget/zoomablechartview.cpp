@@ -13,8 +13,6 @@ ZoomableChartView::ZoomableChartView(QWidget *parent) :
 {
     setRubberBand(QChartView::RectangleRubberBand);
     // default values
-    rangeLimitedAxisX = false;
-    rangeLimitedAxisY = false;
     nZoomIterations = 0;
     maxZoom = 10;
 }
@@ -61,7 +59,7 @@ void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
                             QPointF oldPoint = getSeriesCoordFromChartCoord(m_lastMousePos, series);
                             QPointF newPoint = getSeriesCoordFromChartCoord(event->localPos(), series);
                             qreal dxAxis = -(newPoint.x() - oldPoint.x());
-                            if (rangeLimitedAxisX
+                            if (rangeXAxis->isLowerRangeLimited()
                                     && (rangeXAxis->min() + dxAxis) < rangeXAxis->lowerLimit())
                             {
                                 dxAxis = -(rangeXAxis->min() - rangeXAxis->lowerLimit());
@@ -77,7 +75,7 @@ void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
                             }
 
 
-                            if (rangeLimitedAxisX
+                            if (rangeXAxis->isUpperRangeLimited()
                                     && (rangeXAxis->max() + dxAxis) > rangeXAxis->upperLimit())
                             {
                                 dxAxis = -(rangeXAxis->upperLimit() - rangeXAxis->max());
@@ -107,7 +105,7 @@ void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
                             QPointF oldPoint = getSeriesCoordFromChartCoord(m_lastMousePos, series);
                             QPointF newPoint = getSeriesCoordFromChartCoord(event->localPos(), series);
                             qreal dyAxis = -(newPoint.y() - oldPoint.y());
-                            if (rangeLimitedAxisY
+                            if (rangeYAxis->isLowerRangeLimited()
                                     && (rangeYAxis->min() + dyAxis) < rangeYAxis->lowerLimit())
                             {
                                 dyAxis = rangeYAxis->min() - rangeYAxis->lowerLimit();
@@ -122,7 +120,7 @@ void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
                                 }
                             }
 
-                            if (rangeLimitedAxisY
+                            if (rangeYAxis->isUpperRangeLimited()
                                     && (rangeYAxis->max() + dyAxis) > rangeYAxis->upperLimit())
                             {
                                 dyAxis = rangeYAxis->upperLimit() - rangeYAxis->max();
@@ -348,15 +346,14 @@ void ZoomableChartView::keyPressEvent(QKeyEvent *event)
 
 void ZoomableChartView::setRangeX(double dxMin, double dxMax)
 {
-    rangeLimitedAxisX = true;
+
     this->dxMin = dxMin;
     this->dxMax = dxMax;
-
 }
 
 void ZoomableChartView::setRangeY(double dyMin, double dyMax)
 {
-    rangeLimitedAxisY = true;
+
     this->dyMin = dyMin;
     this->dyMax = dyMax;
 }
