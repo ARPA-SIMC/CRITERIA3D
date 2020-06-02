@@ -198,10 +198,17 @@ void TabWaterRetentionCurve::curveClicked()
         // show tooltip
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
-        QPointF pointF = chart->mapToValue(mapPoint,serie);
-        double xValue = pointF.x();
-        double yValue = pointF.y();
-        chartView->setToolTip(QString("Horizon %1 \n%2 %3 ").arg(index+1).arg(xValue, 0, 'f', 3).arg(yValue, 0, 'f', 3));
+        QPointF valueGivenSeries = chart->mapToValue(mapPoint, serie);
+        qDebug() << "mapPoint " << mapPoint;
+        qDebug() << "valueGivenSeries " << valueGivenSeries;
+        double xValue = valueGivenSeries.x();
+        double yValue = valueGivenSeries.y();
+        m_tooltip->setText(QString("Horizon %1 \n%2 %3 ").arg(index+1).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setSeries(serie);
+        m_tooltip->setAnchor(valueGivenSeries);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
         */
     }
 }
