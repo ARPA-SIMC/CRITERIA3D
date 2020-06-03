@@ -46,6 +46,7 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
     mainLayout->addLayout(plotLayout);
 
     setLayout(mainLayout);
+    setMouseTracking(true);
     fillElement = false;
 
 }
@@ -122,7 +123,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
         curve->attachAxis(axisX);
         curve->attachAxis(axisY);
         connect(curve, &QXYSeries::clicked, this, &TabWaterRetentionCurve::curveClicked);
-        connect(curve, &QLineSeries::hovered, this, &TabWaterRetentionCurve::tooltipLineSeries);
+        //connect(curve, &QLineSeries::hovered, this, &TabWaterRetentionCurve::tooltipLineSeries);
 
         // insert marker
         if (!mySoil->horizon[i].dbData.waterRetention.empty())
@@ -158,6 +159,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
     {
         connect(barHorizons.barList[i], SIGNAL(clicked(int)), this, SLOT(widgetClicked(int)));
     }
+    connect(chartView, SIGNAL(mouseMoveSignal()), this, SLOT(tooltipLineSeries()));
 }
 
 
