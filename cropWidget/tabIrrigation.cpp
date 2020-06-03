@@ -121,11 +121,6 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
     Crit3DDate lastDate = Crit3DDate(31, 12, lastYear);
 
-    chart->addSeries(seriesLAI);
-    chart->addSeries(seriesMaxTransp);
-    chart->addSeries(seriesRealTransp);
-    chart->addSeries(seriesPrecIrr);
-
     axisX->clear();
     seriesLAI->clear();
     seriesMaxTransp->clear();
@@ -190,16 +185,6 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
     QDate last(lastYear, 12, 31);
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
-
-    chart->addSeries(seriesLAI);
-    chart->addSeries(seriesMaxTransp);
-    chart->addSeries(seriesRealTransp);
-    chart->addSeries(seriesPrecIrr);
-
-    seriesLAI->attachAxis(axisY);
-    seriesMaxTransp->attachAxis(axisY);
-    seriesRealTransp->attachAxis(axisY);
-    seriesPrecIrr->attachAxis(axisYdx);
 
     foreach(QLegendMarker* marker, chart->legend()->markers())
     {

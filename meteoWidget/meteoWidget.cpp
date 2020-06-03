@@ -53,6 +53,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
     }
 
     this->resize(1240, 700);
+    this->setAttribute(Qt::WA_DeleteOnClose);
     currentFreq = noFrequency;
     firstDailyDate = QDate::currentDate();
     firstHourlyDate = QDate::currentDate();
@@ -336,12 +337,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 
 Crit3DMeteoWidget::~Crit3DMeteoWidget()
 {
-    qDebug() << "Destructor called start";
-    delete m_tooltip;
-    chart->removeAllSeries();
-    chartView->deleteLater();
-    chart->deleteLater();
-    qDebug() << "Destructor called end";
+
 }
 
 void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
@@ -389,10 +385,8 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
         }
         else
         {
-            firstDate->setMinimumDate(firstDailyDate);
             firstDate->setDate(firstDailyDate);
             lastDate->setDate(lastDailyDate);
-            lastDate->setMaximumDate(lastDailyDate);
         }
         drawDailyVar();
     }
@@ -405,10 +399,8 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
         }
         else
         {
-            firstDate->setMinimumDate(firstHourlyDate);
             firstDate->setDate(firstHourlyDate);
             lastDate->setDate(lastHourlyDate);
-            lastDate->setMaximumDate(lastHourlyDate);
         }
         drawHourlyVar();
     }
@@ -1000,17 +992,13 @@ void Crit3DMeteoWidget::showDailyGraph()
     currentFreq = daily;
     if (firstDailyDate == QDate::currentDate() && lastDailyDate == QDate(1800,1,1))
     {
-        firstDate->setMinimumDate(QDate::currentDate());
         firstDate->setDate(QDate::currentDate());
-        lastDate->setMaximumDate(QDate::currentDate());
         lastDate->setDate(QDate::currentDate());
     }
     else
     {
-        firstDate->setMinimumDate(firstDailyDate);
-        firstDate->setDate(firstDailyDate);
-        lastDate->setDate(lastDailyDate);
-        lastDate->setMaximumDate(lastDailyDate);
+        firstDate->setDate(firstDate->date());
+        lastDate->setDate(lastDate->date());
     }
     firstDate->setDisplayFormat("dd/MM/yyyy");
     lastDate->setDisplayFormat("dd/MM/yyyy");
@@ -1051,17 +1039,15 @@ void Crit3DMeteoWidget::showHourlyGraph()
     currentFreq = hourly;
     if (firstHourlyDate == QDate::currentDate() && lastHourlyDate == QDate(1800,1,1))
     {
-        firstDate->setMinimumDate(QDate::currentDate());
         firstDate->setDate(QDate::currentDate());
-        lastDate->setMaximumDate(QDate::currentDate());
         lastDate->setDate(QDate::currentDate());
     }
     else
     {
-        firstDate->setMinimumDate(firstHourlyDate);
-        firstDate->setDate(firstHourlyDate);
-        lastDate->setDate(lastHourlyDate);
-        lastDate->setMaximumDate(lastHourlyDate);
+        firstDate->setDate(firstDate->date());
+        firstDate->setTime(QTime(0,0,0));
+        lastDate->setDate(lastDate->date());
+        lastDate->setTime(QTime(23,0,0));
     }
     firstDate->setDisplayFormat("dd/MM/yyyy hh:mm");
     lastDate->setDisplayFormat("dd/MM/yyyy hh:mm");
@@ -1162,7 +1148,11 @@ void Crit3DMeteoWidget::updateSeries()
 
 void Crit3DMeteoWidget::updateDate()
 {
-
+    if (lastDate->dateTime() < firstDate->dateTime())
+    {
+        QMessageBox::information(nullptr, "Error", "Invalid data range");
+        return;
+    }
     resetValues();
     if (currentFreq == daily)
     {
@@ -1463,7 +1453,7 @@ void Crit3DMeteoWidget::handleMarkerClicked()
 
 void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
 {
-    event->accept();
+
     if(isGrid)
     {
         emit closeWidgetGrid(meteoWidgetID);
@@ -1472,6 +1462,8 @@ void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
     {
         emit closeWidgetPoint(meteoWidgetID);
     }
+    delete m_tooltip;
+    event->accept();
 }
 
 int Crit3DMeteoWidget::getMeteoWidgetID() const

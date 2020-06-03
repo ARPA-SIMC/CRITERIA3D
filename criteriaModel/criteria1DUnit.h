@@ -25,5 +25,7 @@
         bool load(QSqlDatabase* dbUnits, QString idCase, QString *error);
     };
 
+    bool openDbUnits(QString dbName, QSqlDatabase* dbUnits, QString* error);
+
 
 #endif // CRITERIA1DUNIT_H

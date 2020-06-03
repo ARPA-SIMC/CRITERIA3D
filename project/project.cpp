@@ -24,6 +24,7 @@ Project::Project()
     meteoSettings = new Crit3DMeteoSettings();
     quality = new Crit3DQuality();
     meteoPointsColorScale = new Crit3DColorScale();
+    meteoGridDbHandler = nullptr;
 
     // They not change after loading default settings
     appPath = "";
@@ -33,6 +34,7 @@ Project::Project()
 
     modality = MODE_GUI;
 }
+
 
 void Project::initializeProject()
 {
@@ -832,11 +834,9 @@ void Project::closeMeteoPointsDB()
 
 void Project::closeMeteoGridDB()
 {
-    //TODO check clean data
-
     if (meteoGridDbHandler != nullptr)
     {
-        delete meteoGridDbHandler;
+        delete meteoGridDbHandler;  //this also close db
     }
 
     dbGridXMLFileName = "";
@@ -986,6 +986,8 @@ bool Project::loadMeteoGridDB(QString xmlName)
 {
     if (xmlName == "") return false;
 
+    closeMeteoGridDB();
+
     dbGridXMLFileName = xmlName;
     xmlName = getCompleteFileName(xmlName, PATH_METEOGRID);
 
@@ -998,7 +1000,10 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
 
-    this->meteoGridDbHandler->updateGridDate(&errorString);
+    if (!meteoGridDbHandler->updateGridDate(&errorString))
+    {
+        logInfo("updateGridDate: " + errorString);
+    }
 
     if (loadGridDataAtStart || ! meteoPointsLoaded)
         setCurrentDate(meteoGridDbHandler->lastDate());
@@ -1564,7 +1569,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 
     if (! interpolationReady)
     {
-        logError("Interpolation: error in function preInterpolation");   
+        logError("Interpolation: error in function preInterpolation");
         return false;
     }
 
@@ -1760,9 +1765,14 @@ bool Project::loadProjectSettings(QString settingsFileName)
             if(myPath.left(1) == ".")
             {
                 newProjectPath = getProjectPath() + myPath;
-                newProjectPath = QDir::cleanPath(newProjectPath);
+            }
+           else if(myPath.left(5) == "$HOME")
+            {
+                newProjectPath = QDir::homePath() + myPath.right(myPath.length()-5);
             }
             else newProjectPath = myPath;
+
+            newProjectPath = QDir::cleanPath(newProjectPath);
 
             if (newProjectPath.right(1) != "/") newProjectPath += "/";
             setProjectPath(newProjectPath);
@@ -1771,6 +1781,11 @@ bool Project::loadProjectSettings(QString settingsFileName)
         projectName = projectSettings->value("name").toString();
         demFileName = projectSettings->value("dem").toString();
         dbPointsFileName = projectSettings->value("meteo_points").toString();
+        // for Criteria projects
+        if (dbPointsFileName == "")
+        {
+            dbPointsFileName = projectSettings->value("db_meteo").toString();
+        }
         dbGridXMLFileName = projectSettings->value("meteo_grid").toString();
         loadGridDataAtStart = projectSettings->value("load_grid_data_at_start").toBool();
     projectSettings->endGroup();
@@ -1788,6 +1803,8 @@ bool Project::searchDefaultPath(QString* defaultPath)
 {
     QString myPath = getApplicationPath();
     QString myRoot = QDir::rootPath();
+    // windows: installation on other volume (for example D:)
+    QString myVolume = myPath.left(3);
 
     bool isFound = false;
     while (! isFound)
@@ -1797,7 +1814,7 @@ bool Project::searchDefaultPath(QString* defaultPath)
             isFound = true;
             break;
         }
-        if (QDir::cleanPath(myPath) == myRoot)
+        if (QDir::cleanPath(myPath) == myRoot || QDir::cleanPath(myPath) == myVolume)
             break;
 
         myPath = QFileInfo(myPath).dir().absolutePath();
@@ -2128,7 +2145,7 @@ void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFi
     }
 }
 
-void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
+void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend)
 {
     // check dates
     QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, idMeteoPoint).date();
@@ -2154,6 +2171,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, bool isAppend)
 
     Crit3DMeteoPoint mp;
     mp.setId(idMeteoPoint);
+    mp.setName(namePoint);
 
     if (isAppend)
     {
@@ -2266,12 +2284,12 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 
 void Project::deleteMeteoWidgetPoint(int id)
 {
-    qDebug() << "deleteMeteoWidgetPoint ";
+
     for (int i = 0; i<meteoWidgetPointList.size(); i++)
     {
         if (meteoWidgetPointList[i]->getMeteoWidgetID() == id)
         {
-            delete meteoWidgetPointList.takeAt(i);
+            meteoWidgetPointList.removeAt(i);
             break;
         }
     }
@@ -2283,7 +2301,7 @@ void Project::deleteMeteoWidgetGrid(int id)
     {
         if (meteoWidgetGridList[i]->getMeteoWidgetID() == id)
         {
-            delete meteoWidgetGridList.takeAt(i);
+            meteoWidgetGridList.removeAt(i);
             break;
         }
     }

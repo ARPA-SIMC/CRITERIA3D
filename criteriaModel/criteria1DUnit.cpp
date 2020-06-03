@@ -3,6 +3,7 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVariant>
+#include <QUuid>
 
 
 Crit1DUnit::Crit1DUnit()
@@ -42,3 +43,20 @@ bool Crit1DUnit::load(QSqlDatabase* dbUnits, QString idCase, QString *error)
 
     return true;
 }
+
+
+bool openDbUnits(QString dbName, QSqlDatabase* dbUnits, QString* error)
+{
+
+    *dbUnits = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    dbUnits->setDatabaseName(dbName);
+
+    if (!dbUnits->open())
+    {
+       *error = "Connection with database fail";
+       return false;
+    }
+
+    return true;
+}
+
