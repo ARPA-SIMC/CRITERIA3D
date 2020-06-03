@@ -6,9 +6,14 @@
 
 FormInfo::FormInfo()
 {
-    this->resize(500, 200);
+    this->resize(500, 180);
     this->label = new(QLabel);
     this->progressBar = new(QProgressBar);
+
+    // font size
+    QFont font = this->label->font();
+    font.setPointSize(9);
+    this->label->setFont(font);
 
     QVBoxLayout *mainLayout = new QVBoxLayout();
     mainLayout->addWidget(this->label);
