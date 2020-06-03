@@ -6,6 +6,8 @@
     struct TweatherGenClimate;
     class QString;
 
+    #include <vector>
+
     bool computeWGClimate(int nrDays, Crit3DDate firstDate, float *inputTMin, float *inputTMax,
                           float *inputPrec, float precThreshold, float minPrecData,
                           TweatherGenClimate* wGen, bool writeOutput, QString outputFileName);
@@ -15,10 +17,10 @@
 
     float sampleStdDeviation(float values[], int nElement);
 
-    bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin, float *inputTMax,
-                          float *inputPrec, float precThreshold, float minPrecData,
-                          TweatherGenClimate* wGen, bool writeOutput, QString outputFileName, float* monthlyPrecipitation);
-
+    bool computeWGClimate(int nrDays, Crit3DDate inputFirstDate, const std::vector<float>& inputTMin,
+                          const std::vector<float>& inputTMax, const std::vector<float>& inputPrec,
+                          float precThreshold, float minPrecData,
+                          TweatherGenClimate* wGen, bool writeOutput, QString outputFileName);
 
 #endif // WGCLIMATE_H
 

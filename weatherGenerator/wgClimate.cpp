@@ -21,8 +21,9 @@ using namespace std;
   * \param  *inputTMax      [°C] array(1..nrDays) of maximum temperature
   * \param  *inputPrec      [mm] array(1..nrDays) of precipitation
 */
-bool computeWGClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin, float *inputTMax,
-                      float *inputPrec, float precThreshold, float minPrecData,
+bool computeWGClimate(int nrDays, Crit3DDate inputFirstDate, const std::vector<float>& inputTMin,
+                      const std::vector<float>& inputTMax, const std::vector<float>& inputPrec,
+                      float precThreshold, float minPrecData,
                       TweatherGenClimate* wGen, bool writeOutput, QString outputFileName)
 {
     long nValidData = 0;
@@ -304,17 +305,18 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
 bool climateGenerator(int nrData, TinputObsData climateDailyObsData, Crit3DDate climateDateIni, Crit3DDate climateDateFin, float precThreshold, float minPrecData, TweatherGenClimate* wGen)
 
 {
-    int startIndex, nrDays;
+    unsigned int nrDays;
+    int startIndex;
     TinputObsData newDailyObsData;
     bool result = false;
 
     startIndex = difference(climateDailyObsData.inputFirstDate, climateDateIni); // starts from 0
-    nrDays = difference(climateDateIni,climateDateFin)+1;
+    nrDays = difference(climateDateIni, climateDateFin)+1;
 
     newDailyObsData.inputFirstDate = climateDateIni;
-    newDailyObsData.inputTMin = (float*) malloc(nrDays*sizeof(float));
-    newDailyObsData.inputTMax = (float*) malloc(nrDays*sizeof(float));
-    newDailyObsData.inputPrecip = (float*) malloc(nrDays*sizeof(float));
+    newDailyObsData.inputTMin.resize(nrDays);
+    newDailyObsData.inputTMax.resize(nrDays);
+    newDailyObsData.inputPrecip.resize(nrDays);
 
     int j = 0;
 
@@ -333,9 +335,9 @@ bool climateGenerator(int nrData, TinputObsData climateDailyObsData, Crit3DDate 
                               newDailyObsData.inputTMax, newDailyObsData.inputPrecip,
                               precThreshold, minPrecData, wGen, false,"");
 
-    free(newDailyObsData.inputTMin);
-    free(newDailyObsData.inputTMax);
-    free(newDailyObsData.inputPrecip);
+    newDailyObsData.inputTMin.clear();
+    newDailyObsData.inputTMax.clear();
+    newDailyObsData.inputPrecip.clear();
 
     return result;
 }
