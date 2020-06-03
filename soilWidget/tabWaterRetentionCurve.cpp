@@ -9,7 +9,7 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
     QVBoxLayout *plotLayout = new QVBoxLayout;
 
     chart = new QChart();
-    chartView = new ZoomableChartView();
+    chartView = new QChartView();
     chartView->setChart(chart);
 
     axisX = new QLogValueAxis();
@@ -20,10 +20,12 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
     axisY->setTitleText(QString("Volumetric water content [%1]").arg(QString("m3 m-3")));
     axisY->setRange(yMin, yMax);
     axisY->setTickCount(7);
+    /*
     chartView->setRangeX(dxMin, dxMax);
     chartView->setRangeY(dyMin, dyMax);
     chartView->setZoomMode(ZoomableChartView::Pan);
     chartView->setMaxZoomIteration(4);
+    */
 
     QFont font = axisY->titleFont();
     font.setPointSize(11);
@@ -123,7 +125,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
         curve->attachAxis(axisX);
         curve->attachAxis(axisY);
         connect(curve, &QXYSeries::clicked, this, &TabWaterRetentionCurve::curveClicked);
-        //connect(curve, &QLineSeries::hovered, this, &TabWaterRetentionCurve::tooltipLineSeries);
+        connect(curve, &QLineSeries::hovered, this, &TabWaterRetentionCurve::tooltipLineSeries);
 
         // insert marker
         if (!mySoil->horizon[i].dbData.waterRetention.empty())
@@ -159,7 +161,6 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
     {
         connect(barHorizons.barList[i], SIGNAL(clicked(int)), this, SLOT(widgetClicked(int)));
     }
-    connect(chartView, SIGNAL(mouseMoveSignal()), this, SLOT(tooltipLineSeries()));
 }
 
 
@@ -236,22 +237,24 @@ void TabWaterRetentionCurve::highlightCurve( bool isHightlight )
         QColor curveColor = curveList[i]->color();
         if ( isHightlight && i == indexSelected)
         {
-            qreal alpha = 1.0;
-            curveColor.setAlphaF(alpha);
-            curveList[i]->setColor(curveColor);
+            QPen pen = curveList[i]->pen();
+            pen.setWidth(2);
+            pen.setBrush(QBrush(curveColor));
+            curveList[i]->setPen(pen);
             if (!curveMarkerMap.isEmpty() && i<curveMarkerMap.size())
             {
-                curveMarkerMap[i]->setColor(curveColor);
+                curveMarkerMap[i]->setPen(pen);
             }
         }
         else
         {
-            qreal alpha = 0.5;
-            curveColor.setAlphaF(alpha);
-            curveList[i]->setColor(curveColor);
+            QPen pen = curveList[i]->pen();
+            pen.setWidth(1);
+            pen.setBrush(QBrush(curveColor));
+            curveList[i]->setPen(pen);
             if (!curveMarkerMap.isEmpty() && i<curveMarkerMap.size())
             {
-                curveMarkerMap[i]->setColor(curveColor);
+                curveMarkerMap[i]->setPen(pen);
             }
         }
     }

@@ -28,7 +28,7 @@
         BarHorizonList barHorizons;
 
         soil::Crit3DSoil* mySoil;
-        ZoomableChartView *chartView;
+        QChartView *chartView;
         QChart *chart;
         QList<QLineSeries*> curveList;
         QValueAxis *axisY;
