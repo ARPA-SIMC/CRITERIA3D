@@ -3,9 +3,6 @@
 #   Soil Widget library
 #   This project is part of CRITERIA-3D distribution
 #
-#   It requires Qwt library
-#   https://qwt.sourceforge.io/index.html
-#   Windows: set QWT_ROOT in environment variables
 #
 #----------------------------------------------------
 
@@ -36,17 +33,9 @@ win32:{
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../soil ../utilities
 
-unix:{
-    INCLUDEPATH += /usr/include/qwt/
-}
-macx:{
-    INCLUDEPATH += /usr/local/opt/qwt/lib/qwt.framework/Headers/
-}
-
 SOURCES += \
     barHorizon.cpp \
     callout.cpp \
-    curvePicker.cpp \
     rangelimitedvalueaxis.cpp \
     soilTable.cpp \
     soilWidget.cpp \
@@ -56,7 +45,6 @@ SOURCES += \
     tabHydraulicConductivityCurve.cpp \
     tableDelegate.cpp \
     tableDelegateWaterRetention.cpp \
-    curvePanner.cpp \
     dialogNewSoil.cpp \
     tableWaterRetention.cpp \
     zoomablechartview.cpp
@@ -64,7 +52,6 @@ SOURCES += \
 HEADERS += \
     barHorizon.h \
     callout.h \
-    curvePicker.h \
     rangelimitedvalueaxis.h \
     soilTable.h \
     soilWidget.h \
@@ -74,18 +61,7 @@ HEADERS += \
     tabHydraulicConductivityCurve.h \
     tableDelegate.h \
     tableDelegateWaterRetention.h \
-    curvePanner.h \
     tableWidgetItem.h \
     dialogNewSoil.h \
     tableWaterRetention.h \
     zoomablechartview.h
-
-win32:{
-    include($$(QWT_ROOT)\features\qwt.prf)
-}
-unix:{
-    include(/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qwt.prf)
-}
-macx:{
-    include(/usr/local/opt/qwt/features/qwt.prf)
-}

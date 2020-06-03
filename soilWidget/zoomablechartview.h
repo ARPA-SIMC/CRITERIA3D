@@ -66,6 +66,7 @@ private:
     static bool isAxisTypeZoomableWithMouse(const QAbstractAxis::AxisType type);
     QPointF getSeriesCoordFromChartCoord(const QPointF & mousePos, QAbstractSeries *series) const;
     QPointF getChartCoordFromSeriesCoord(const QPointF & seriesPos, QAbstractSeries *series) const;
+
 };
 
 #endif

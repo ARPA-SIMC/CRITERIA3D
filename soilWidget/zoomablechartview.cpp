@@ -15,21 +15,28 @@ ZoomableChartView::ZoomableChartView(QWidget *parent) :
     // default values
     nZoomIterations = 0;
     maxZoom = MAXZOOM;
+    dxMin = 0;
+    dxMax = 0;
+    dyMin = 0;
+    dyMax = 0;
 }
 
 void ZoomableChartView::mousePressEvent(QMouseEvent *event)
 {
     m_isTouching = true;
     m_lastMousePos = event->localPos();
-    //qWarning() << "Press" << m_lastMousePos;
+    qWarning() << "Press" << m_lastMousePos;
     QChartView::mousePressEvent(event);
 }
+
 
 void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
 {
 
     if (!m_isTouching)
+    {
         return;
+    }
 
     if (dragMode() == ScrollHandDrag) {
         if (event->buttons() & Qt::LeftButton) {
@@ -46,14 +53,17 @@ void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
 
             if (moveHorizontalAxis) {
                 qreal dx = -(event->localPos().x() - m_lastMousePos.x());
-                //qWarning() << "Move" << event->localPos().x() << dx;
+                qWarning() << "Move" << event->localPos().x() << dx;
                 for (auto series : this->chart()->series()) {
                     for (auto axis : series->attachedAxes()) {
                         if (axis->orientation() != Qt::Horizontal)
                             continue;
                             rangeXAxis = static_cast<RangeLimitedValueAxis*>(axis);
-                            rangeXAxis->setLowerLimit(dxMin);
-                            rangeXAxis->setUpperLimit(dxMax);
+                            if (dxMin!=dxMax!=0)
+                            {
+                                rangeXAxis->setLowerLimit(dxMin);
+                                rangeXAxis->setUpperLimit(dxMax);
+                            }
                             if (rangeXAxis->orientation() != Qt::Horizontal)
                                 continue;
                             QPointF oldPoint = getSeriesCoordFromChartCoord(m_lastMousePos, series);
@@ -98,8 +108,11 @@ void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
                             continue;
 
                             rangeYAxis = static_cast<RangeLimitedValueAxis*>(axis);
-                            rangeYAxis->setLowerLimit(dyMin);
-                            rangeYAxis->setUpperLimit(dyMax);
+                            if (dyMin!=dyMax!=0)
+                            {
+                                rangeYAxis->setLowerLimit(dyMin);
+                                rangeYAxis->setUpperLimit(dyMax);
+                            }
                             if (rangeYAxis->orientation() != Qt::Vertical)
                                 continue;
                             QPointF oldPoint = getSeriesCoordFromChartCoord(m_lastMousePos, series);
@@ -143,6 +156,7 @@ void ZoomableChartView::mouseMoveEvent(QMouseEvent *event)
     QChartView::mouseMoveEvent(event);
 }
 
+
 void ZoomableChartView::wheelEvent(QWheelEvent *event)
 {
     bool zoomHorizontalAxis = false;
@@ -180,15 +194,20 @@ bool ZoomableChartView::isAxisTypeZoomableWithMouse(const QAbstractAxis::AxisTyp
 
 QPointF ZoomableChartView::getSeriesCoordFromChartCoord(const QPointF &chartPos, QAbstractSeries *series) const
 {
+    qDebug() << "getSeriesCoordFromChartCoord ";
     auto const chartItemPos = chart()->mapFromScene(chartPos);
     auto const valueGivenSeries = chart()->mapToValue(chartItemPos, series);
+    qDebug() << "valueGivenSeries " << valueGivenSeries;
     return valueGivenSeries;
 }
 
 QPointF ZoomableChartView::getChartCoordFromSeriesCoord(const QPointF &seriesPos, QAbstractSeries *series) const
 {
+    qDebug() << "getChartCoordFromSeriesCoord ";
+
     QPointF ret = chart()->mapToPosition(seriesPos, series);
     ret = chart()->mapFromScene(ret);
+    qDebug() << "ret  " << ret;
     return ret;
 }
 
