@@ -20,12 +20,6 @@ TabHydraulicConductivityCurve::TabHydraulicConductivityCurve()
     axisY->setBase(10);
     axisY->setRange(yMin, yMax);
 
-    /*
-    chartView->setRangeX(dxMin, dxMax);
-    chartView->setZoomMode(ZoomableChartView::Pan);
-    chartView->setMaxZoomIteration(4);
-    */
-
     QFont font = axisY->titleFont();
     font.setPointSize(11);
     font.setBold(true);
@@ -63,6 +57,9 @@ void TabHydraulicConductivityCurve::resetAll()
     }
 
     chart->removeAllSeries();
+    delete m_tooltip;
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
     fillElement = false;
 
 }
@@ -163,22 +160,6 @@ void TabHydraulicConductivityCurve::curveClicked()
         highlightCurve(true);
         barHorizons.selectItem(index);
         emit horizonSelected(index);
-        /*
-        // show tooltip
-        QPoint CursorPoint = QCursor::pos();
-        QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
-        QPointF valueGivenSeries = chart->mapToValue(mapPoint, serie);
-        qDebug() << "mapPoint " << mapPoint;
-        qDebug() << "valueGivenSeries " << valueGivenSeries;
-        double xValue = valueGivenSeries.x();
-        double yValue = valueGivenSeries.y();
-        m_tooltip->setText(QString("Horizon %1 \n%2 %3 ").arg(index+1).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
-        m_tooltip->setSeries(serie);
-        m_tooltip->setAnchor(valueGivenSeries);
-        m_tooltip->setZValue(11);
-        m_tooltip->updateGeometry();
-        m_tooltip->show();
-        */
     }
 }
 
@@ -228,8 +209,3 @@ void TabHydraulicConductivityCurve::tooltipLineSeries(QPointF point, bool state)
     }
 }
 
-void TabHydraulicConductivityCurve::closeEvent(QCloseEvent *event)
-{
-    delete m_tooltip;
-    event->accept();
-}
