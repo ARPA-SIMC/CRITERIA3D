@@ -845,7 +845,11 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
     counter = 0;
     for (int i=0; i<nrStations;i++)
     {
-        if (eigenvalues[i] < 0) counter++;
+        if (eigenvalues[i] < 0)
+        {
+            counter++;
+            eigenvalues[i] = 0.000001;
+        }
     }
 
     if (counter > 0)
@@ -871,9 +875,24 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
         }
 
     }
-
+    /*for (int iProva=0; iProva<nrStations; iProva++)
+    {
+        for (int jProva=0; jProva<nrStations; jProva++)
+        {
+            //printf("%d %d %f\n",iProva, jProva,dummyMatrix[iProva][jProva]);
+        }
+        //getchar();
+    }*/
     isLowerDiagonal = false;
     matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,isLowerDiagonal);
+    for (int iProva=0; iProva<nrStations; iProva++)
+    {
+        for (int jProva=0; jProva<nrStations; jProva++)
+        {
+            //printf("%d %d %f\n",iProva, jProva,dummyMatrix[iProva][jProva]);
+        }
+        //getchar();
+    }
     matricial::transposedMatrix(dummyMatrix,nrStations,nrStations,dummyMatrix2);
     matricial::matrixProduct(dummyMatrix2,dummyMatrix,nrStations,nrStations,nrStations,nrStations,dummyMatrix3);
     isLowerDiagonal = true;
@@ -904,16 +923,24 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
     }*/
     //free(arrayRandomNormalNumbers);
     // fine parte da togliere
-    for (int iProva=0; iProva<nrStations; iProva++)
+    /*for (int iProva=0; iProva<nrStations; iProva++)
     {
         for (int jProva=0; jProva<nrStations; jProva++)
         {
             printf("%d %d %f\n",iProva, jProva,dummyMatrix3[iProva][jProva]);
         }
         getchar();
-    }
+    }*/
     matricial::matrixProduct(dummyMatrix3,normRandom,nrStations,nrStations,lengthOfRandomSeries,nrStations,normRandom2);
     matricial::transposedMatrix(normRandom2,nrStations,lengthOfRandomSeries,normRandomMaxT);
+    for (int iProva=0; iProva<nrStations; iProva++)
+    {
+        for (int jProva=0; jProva<lengthOfRandomSeries; jProva++)
+        {
+            //printf("%d %d %f\n",iProva, jProva,normRandom2[iProva][jProva]);
+        }
+        //getchar();
+    }
 
 
     // for Tmin
@@ -938,7 +965,11 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
     counter = 0;
     for (int i=0; i<nrStations;i++)
     {
-        if (eigenvalues[i] < 0) counter++;
+        if (eigenvalues[i] < 0)
+        {
+            counter++;
+            eigenvalues[i] = 0.000001;
+        }
     }
 
     if (counter > 0)
@@ -1170,14 +1201,17 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
         for (int j=0;j<lengthOfRandomSeries;j++)
         {
 
+
+            printf("%.1f %.1f\n",residuals[0],residuals[1]);
             residuals[0] = temperatureCoefficients[i].A[0][0]*residuals[0] + temperatureCoefficients[i].A[0][1]*residuals[1];
             residuals[0] += temperatureCoefficients[i].B[0][0]*eps[0][j] + temperatureCoefficients[i].B[0][1]*eps[1][j];
             residuals[1] = temperatureCoefficients[i].A[1][0]*residuals[0] + temperatureCoefficients[i].A[1][1]*residuals[1];
             residuals[1] += temperatureCoefficients[i].B[1][0]*eps[0][j] + temperatureCoefficients[i].B[1][1]*eps[1][j];
             ksi[0][j] = residuals[0];
             ksi[1][j] = residuals[1];
-            //printf("%.1f %.1f\n",eps[0][j],eps[1][j]);
-            //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].B[0][0],temperatureCoefficients[i].B[0][1],temperatureCoefficients[i].B[1][0],temperatureCoefficients[i].B[1][1]);
+            //printf("%.1f %.1f\n",ksi[0][j],ksi[1][j]);
+            //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].A[0][0],temperatureCoefficients[i].A[0][1],temperatureCoefficients[i].A[1][0],temperatureCoefficients[i].A[1][1]);
+            residuals[0] = residuals[1]=0;
         }
         //getchar();
         double** cAverage = (double**)calloc(2, sizeof(double*));
