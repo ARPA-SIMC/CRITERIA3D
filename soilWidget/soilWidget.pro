@@ -36,7 +36,6 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../soil ../utilities
 SOURCES += \
     barHorizon.cpp \
     callout.cpp \
-    rangelimitedvalueaxis.cpp \
     soilTable.cpp \
     soilWidget.cpp \
     tabHorizons.cpp \
@@ -46,13 +45,11 @@ SOURCES += \
     tableDelegate.cpp \
     tableDelegateWaterRetention.cpp \
     dialogNewSoil.cpp \
-    tableWaterRetention.cpp \
-    zoomablechartview.cpp
+    tableWaterRetention.cpp
 
 HEADERS += \
     barHorizon.h \
     callout.h \
-    rangelimitedvalueaxis.h \
     soilTable.h \
     soilWidget.h \
     tabHorizons.h \
@@ -63,5 +60,4 @@ HEADERS += \
     tableDelegateWaterRetention.h \
     tableWidgetItem.h \
     dialogNewSoil.h \
-    tableWaterRetention.h \
-    zoomablechartview.h
+    tableWaterRetention.h

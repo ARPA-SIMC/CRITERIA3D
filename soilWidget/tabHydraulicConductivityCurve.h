@@ -5,7 +5,6 @@
     #include <QtCharts>
     #include "soil.h"
     #include "barHorizon.h"
-    #include "zoomablechartview.h"
     #include "callout.h"
 
     class TabHydraulicConductivityCurve: public QWidget
@@ -19,12 +18,11 @@
         void setFillElement(bool value);
         void highlightCurve( bool isHightlight );
         void tooltipLineSeries(QPointF point, bool state);
-        void closeEvent(QCloseEvent *event);
 
     private:
         BarHorizonList barHorizons;
         soil::Crit3DSoil* mySoil;
-        ZoomableChartView *chartView;
+        QChartView *chartView;
         QChart *chart;
         QList<QLineSeries*> curveList;
         QLogValueAxis *axisX;

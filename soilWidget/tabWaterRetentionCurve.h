@@ -6,7 +6,6 @@
     #include <QMap>
     #include "soil.h"
     #include "barHorizon.h"
-    #include "zoomablechartview.h"
     #include "callout.h"
 
 
@@ -22,13 +21,12 @@
         void highlightCurve(bool isHightlight);
         void tooltipLineSeries(QPointF point, bool state);
         void tooltipScatterSeries(QPointF point, bool state);
-        void closeEvent(QCloseEvent *event);
 
     private:
         BarHorizonList barHorizons;
 
         soil::Crit3DSoil* mySoil;
-        ZoomableChartView *chartView;
+        QChartView *chartView;
         QChart *chart;
         QList<QLineSeries*> curveList;
         QValueAxis *axisY;

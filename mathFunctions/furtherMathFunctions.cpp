@@ -675,25 +675,30 @@ namespace interpolation
     }
 
 
-    double cubicSpline(double x , double *firstColumn , double *secondColumn, int dim)
+    double cubicSpline(double x, double *firstColumn, double *secondColumn, int dim)
     {
-        double a,b,c,d,y ;
-        int i = 0 ;
+        double a,b,c,d,y;
+        int i = 0;
         double *secondDerivative = (double *) calloc(dim, sizeof(double));
+
         for (int i=0 ; i < dim; i++)
         {
             secondDerivative[i] = NODATA;
         }
-        punctualSecondDerivative(dim,firstColumn,secondColumn,secondDerivative);
-        while (x > firstColumn[i]) i++ ;
-        double step;
-        step = (firstColumn[i]- firstColumn[i-1]);
-        a = (firstColumn[i] - x)/ step ;
-        b = 1 - a ;
+
+        punctualSecondDerivative(dim, firstColumn, secondColumn, secondDerivative);
+
+        while (x > firstColumn[i])
+            i++;
+
+        double step = (firstColumn[i]- firstColumn[i-1]);
+        a = (firstColumn[i] - x)/ step;
+        b = 1 - a;
         d = c = step*step/6;
         c *= (a*a*a - a);
         d *= (b*b*b - b);
         y = a*secondColumn[i-1]+b*secondColumn[i]+c*secondDerivative[i-1]+d*secondDerivative[i];
+
         free(secondDerivative);
         return y ;
     }
@@ -707,6 +712,7 @@ namespace interpolation
         double *diagonal =  (double *) calloc(matrixDimension, sizeof(double));
         double *subDiagonal =  (double *) calloc(matrixDimension, sizeof(double));
         double *superDiagonal =  (double *) calloc(matrixDimension, sizeof(double));
+
         for (int i=0 ; i < matrixDimension; i++)
         {
             y2[i] = 0;
@@ -716,11 +722,15 @@ namespace interpolation
             constantTerm[i] = (secondColumn[i+2]-secondColumn[i+1])/(firstColumn[i+2]-firstColumn[i+1])
                     -(secondColumn[i+1]-secondColumn[i])/(firstColumn[i+1]-firstColumn[i]);
         }
+
         tridiagonalThomasAlgorithm(matrixDimension,subDiagonal,diagonal,superDiagonal,constantTerm,y2);
+
         for (int i = 0 ; i < dim ; i++) secondDerivative[i]= 0;
         for (int i = 1 ; i < dim-1 ; i++) secondDerivative[i] = y2[i-1];
+
         free(y2);
         free(constantTerm);
+        free(diagonal);
         free(subDiagonal);
         free(superDiagonal);
 
@@ -728,33 +738,32 @@ namespace interpolation
 
     void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output)
     {
+        // * n - number of equations
+        // * subDiagonal - sub-diagonal (means it is the diagonal below the main diagonal) -- indexed from 1..n-1
+        // * b - the main diagonal
+        // * c - sup-diagonal (means it is the diagonal above the main diagonal) -- indexed from 0..n-2
+        // * v - right part
+        // * output - the answer
 
-            // * n - number of equations
-            // * subDiagonal - sub-diagonal (means it is the diagonal below the main diagonal) -- indexed from 1..n-1
-            // * b - the main diagonal
-            // * c - sup-diagonal (means it is the diagonal above the main diagonal) -- indexed from 0..n-2
-            // * v - right part
-            // * output - the answer
+        double *newDiagonal, *newConstantTerm;
+        newDiagonal = (double *) calloc(n, sizeof(double));
+        newConstantTerm =   (double *) calloc(n, sizeof(double));
 
-            double *newDiagonal, *newConstantTerm;
-            newDiagonal = (double *) calloc(n, sizeof(double));
-            newConstantTerm =   (double *) calloc(n, sizeof(double));
+        newDiagonal[0] = mainDiagonal[0];
+        newConstantTerm[0]= constantTerm[0];
+        for (int i = 1; i < n; i++)
+        {
+                double m = subDiagonal[i]/mainDiagonal[i-1];
+                newDiagonal[i] = mainDiagonal[i] - m*superDiagonal[i-1];
+                newConstantTerm[i] = constantTerm[i] - m*constantTerm[i-1];
+        }
 
-            newDiagonal[0] = mainDiagonal[0];
-            newConstantTerm[0]= constantTerm[0];
-            for (int i = 1; i < n; i++)
-            {
-                    double m = subDiagonal[i]/mainDiagonal[i-1];
-                    newDiagonal[i] = mainDiagonal[i] - m*superDiagonal[i-1];
-                    newConstantTerm[i] = constantTerm[i] - m*constantTerm[i-1];
-            }
+        output[n-1] = newConstantTerm[n-1]/newDiagonal[n-1];
+        for (int i = n - 2; i >= 0; i--)
+                output[i]=(newConstantTerm[i]-superDiagonal[i]*output[i+1])/newDiagonal[i];
 
-            output[n-1] = newConstantTerm[n-1]/newDiagonal[n-1];
-            for (int i = n - 2; i >= 0; i--)
-                    output[i]=(newConstantTerm[i]-superDiagonal[i]*output[i+1])/newDiagonal[i];
-
-            free(newDiagonal);
-            free(newConstantTerm);
+        free(newDiagonal);
+        free(newConstantTerm);
     }
 
 
