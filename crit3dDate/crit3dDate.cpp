@@ -46,9 +46,10 @@ int getDaysInMonth(int month, int year)
 {
     if (month < 1 || month > 12) return NODATA;
 
-    if(month == 2 && isLeapYear(year)) return 29;
-
-    else return daysInMonth[month-1];
+    if(month == 2 && isLeapYear(year))
+        return 29;
+    else
+        return daysInMonth[month-1];
 }
 
 
@@ -247,6 +248,84 @@ Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2)
         return myDate2;
 }
 
+
+/*
+Crit3DDate getDateFromDoy(int doy,int year)
+{
+    int monthList[12];
+    monthList[0]= 31;
+    for(int month = 1; month < 12; month++)
+    {
+        monthList[month] = monthList[month-1] + getDaysInMonth(month+1, year);
+    }
+
+    if (doy > monthList[11])
+    {
+        return false;
+    }
+    else if (doy > monthList[10])
+    {
+        *month = 12;
+        *day = doy - monthList[10];
+    }
+    else if (doy > monthList[9])
+    {
+        *month = 11;
+        *day = doy - monthList[9];
+    }
+    else if (doy > monthList[8])
+    {
+        *month = 10;
+        *day = doy - monthList[8];
+    }
+    else if (doy > monthList[7])
+    {
+        *month = 9;
+        *day = doy - monthList[7];
+    }
+    else if (doy > monthList[6])
+    {
+        *month = 8;
+        *day = doy - monthList[6];
+    }
+    else if (doy > monthList[5])
+    {
+        *month = 7;
+        *day = doy - monthList[5];
+    }
+    else if (doy > monthList[4])
+    {
+        *month = 6;
+        *day = doy - monthList[4];
+    }
+    else if (doy > monthList[3])
+    {
+        *month = 5;
+        *day = doy - monthList[3];
+    }
+    else if (doy > monthList[2])
+    {
+        *month = 4;
+        *day = doy - monthList[2];
+    }
+    else if (doy > monthList[1])
+    {
+        *month = 3;
+        *day = doy - monthList[1];
+    }
+    else if (doy > monthList[0])
+    {
+        *month = 2;
+        *day = doy - monthList[0];
+    }
+    else
+    {
+        *month = 1;
+        *day = doy;
+    }
+    return true;
+}
+*/
 
 Crit3DDate getDateFromDoy(int myYear, int myDoy)
 {
