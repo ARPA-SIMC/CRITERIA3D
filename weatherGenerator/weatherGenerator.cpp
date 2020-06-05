@@ -657,7 +657,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAn
     if (! checkLastYearDate(lastYearDailyObsData->inputFirstDate, lastYearDailyObsData->inputLastDate,
                             lastYearDailyObsData->dataLenght, myPredictionYear, &wgDoy1, &nrDaysBeforeWgDoy1))
     {
-        qDebug() << "Error Wrong Date: observed data should include at least 9 months before wgDoy1";
+        qDebug() << "ERROR: observed data should include at least 9 months before wgDoy1";
         return false;
     }
 
@@ -694,7 +694,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAn
     nrValues = nrYears * 365 + addday +1;
     if (nrValues <= 0)
     {
-        qDebug() << "Error Wrong Date";
+        qDebug() << "ERROR: wrong date";
         return false;
     }
 
@@ -743,7 +743,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAn
         ++myDate;
     }
 
-    qDebug() << "...Observed OK";
+    qDebug() << "Observed OK";
     int outputDataLenght = nrDaysBeforeWgDoy1;
 
     // store the climate without anomalies
@@ -782,7 +782,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAn
         myYear = myYear + nrRepetitions;
     }
 
-    qDebug() << "\nWrite output:" << outputFileName;
+    qDebug() << "\n>>> output:" << outputFileName;
 
     writeMeteoDataCsv (outputFileName, separator, myDailyPredictions, outputDataLenght);
 
