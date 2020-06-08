@@ -207,19 +207,14 @@ int Crit3DDate::daysTo(const Crit3DDate& myDate) const
     Crit3DDate first = min(*this, myDate);
     Crit3DDate last = max(*this, myDate);
 
-    int delta = 0;
-    while (first.year < last.year)
+    int leap;
+    int delta = - getDoyFromDate(first);
+    for (int year = first.year; year < last.year; year++)
     {
-        int currentDoy = getDoyFromDate(first);
-        int endYearDoy = getDoyFromDate(Crit3DDate(31, 12, first.year));
-        delta += (endYearDoy - currentDoy + 1);
-        first.setDate(1, 1, first.year + 1);
+        leap = isLeapYear(year) ? 1 : 0;
+        delta += (365 + leap);
     }
-    while (first < last)
-    {
-        delta++;
-        ++first;
-    }
+    delta += getDoyFromDate(last);
 
     if (last == myDate)
         return delta;
@@ -289,22 +284,7 @@ bool isNullDate(Crit3DDate myDate)
 
 int difference(Crit3DDate firstDate, Crit3DDate lastDate)
 {
-    int delta = 0;
-
-    while (firstDate.year < lastDate.year)
-    {
-        int currentDoy = getDoyFromDate(firstDate);
-        int endYearDoy = getDoyFromDate(Crit3DDate(31, 12, firstDate.year));
-        delta += (endYearDoy - currentDoy + 1);
-        firstDate.setDate(1, 1, firstDate.year + 1);
-    }
-    while (firstDate < lastDate)
-    {
-        delta++;
-        ++firstDate;
-    }
-
-    return delta;
+    return firstDate.daysTo(lastDate);
 }
 
 
