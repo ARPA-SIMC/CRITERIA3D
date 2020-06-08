@@ -183,6 +183,7 @@ Crit3DDate Crit3DDate::addDays(long offset) const
         {
             offset -= (365 + leap);
             currentYear++;
+            if (currentYear == 0) currentYear = 1;
             leap = isLeapYear(currentYear) ? 1 : 0;
         }
         return getDateFromDoy(currentYear, offset);
@@ -195,6 +196,7 @@ Crit3DDate Crit3DDate::addDays(long offset) const
         {
             offset += (365 + leap);
             currentYear--;
+            if (currentYear == 0) currentYear = -1;
             leap = isLeapYear(currentYear) ? 1 : 0;
         }
         return getDateFromDoy(currentYear, 365 + leap + offset);
@@ -209,10 +211,13 @@ int Crit3DDate::daysTo(const Crit3DDate& myDate) const
 
     int leap;
     int delta = - getDoyFromDate(first);
-    for (int year = first.year; year < last.year; year++)
+    int year = first.year;
+    while (year < last.year)
     {
         leap = isLeapYear(year) ? 1 : 0;
         delta += (365 + leap);
+        year++;
+        if (year == 0) year = 1;
     }
     delta += getDoyFromDate(last);
 
