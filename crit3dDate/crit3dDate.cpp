@@ -170,34 +170,35 @@ Crit3DDate& operator -- (Crit3DDate& myDate)
 }
 
 
-Crit3DDate Crit3DDate::addDays(long nrDays) const
+Crit3DDate Crit3DDate::addDays(long offset) const
 {
-    Crit3DDate myDate = *this;
+    int currentYear = this->year;
+    int leap = isLeapYear(currentYear) ? 1 : 0;
 
-    if (nrDays >= 0)
+    if (offset >= 0)
     {
-        while (nrDays > 365)
+        // shift back to the first of January
+        offset += getDoyFromDate(*this);
+        while(offset > (365 + leap))
         {
-            int currentDoy = getDoyFromDate(myDate);
-            int endYearDoy = getDoyFromDate(Crit3DDate(31, 12, myDate.year));
-            nrDays -= (endYearDoy - currentDoy + 1);
-            myDate.setDate(1, 1, myDate.year + 1);
+            offset -= (365 + leap);
+            currentYear++;
+            leap = isLeapYear(currentYear) ? 1 : 0;
         }
-        for (int i = 0; i < nrDays; i++)
-            ++myDate;
+        return getDateFromDoy(currentYear, offset);
     }
     else
     {
-        while (abs(nrDays) > 365)
+        // shift ahead to the 31 of December
+        offset -= (365 + leap - getDoyFromDate(*this));
+        while (fabs(offset) >= (365 + leap))
         {
-            nrDays += getDoyFromDate(myDate);
-            myDate.setDate(31, 12, myDate.year - 1);
+            offset += (365 + leap);
+            currentYear--;
+            leap = isLeapYear(currentYear) ? 1 : 0;
         }
-        for (int i = 0; i > nrDays; i--)
-            --myDate;
+        return getDateFromDoy(currentYear, 365 + leap + offset);
     }
-
-    return myDate;
 }
 
 
@@ -251,15 +252,13 @@ Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2)
 
 Crit3DDate getDateFromDoy(int year, int doy)
 {
-    int leap = 0;
-    if (isLeapYear(year))
-        leap = 1;
+    if (doy < 1) return NO_DATE;
 
-    if (doy > (365 + leap))
-        return NO_DATE;
+    int leap = isLeapYear(year) ? 1 : 0;
 
-    int firstDoy = 0;
-    int lastDoy = 0;
+    if (doy > (365 + leap)) return NO_DATE;
+
+    int firstDoy, lastDoy = 0;
     for(int month = 1; month <= 12; month++)
     {
         firstDoy = lastDoy;
@@ -312,11 +311,11 @@ int difference(Crit3DDate firstDate, Crit3DDate lastDate)
 bool isLeapYear(int year)
 {
     bool isLeap = false ;
-    if (year%4 == 0)
+    if (year % 4 == 0)
     {
       isLeap = true;
-      if (year%100 == 0)
-          if (! (year%400 == 0)) isLeap = false;
+      if (year % 100 == 0)
+          if (! (year % 400 == 0)) isLeap = false;
     }
     return isLeap ;
 }

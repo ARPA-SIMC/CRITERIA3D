@@ -43,7 +43,7 @@
         friend Crit3DDate& operator -- (Crit3DDate& myFirstDate);
 
         void setDate(int myDay, int myMonth, int myYear);
-        Crit3DDate addDays(long myDays) const;
+        Crit3DDate addDays(long offset) const;
         int daysTo(const Crit3DDate& myDate) const;
         std::string toStdString();
         std::string toString();
