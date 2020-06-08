@@ -101,6 +101,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
     QPolygonF polygon;
     QPainterPath* path;
     QPainterPath* inner;
+    QColor color;
 
     myPainter->setPen(QColor(64, 64, 64));
     myPainter->setBrush(Qt::NoBrush);
@@ -112,10 +113,13 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
             if (values[i] != NODATA)
             {
                 Crit3DColor* myColor = colorScale->getColor(values[i]);
-                myPainter->setBrush(QColor(myColor->red, myColor->green, myColor->blue));
+                color = QColor(myColor->red, myColor->green, myColor->blue);
+                myPainter->setPen(color);
+                myPainter->setBrush(color);
             }
             else
             {
+                myPainter->setPen(QColor(64, 64, 64));
                 myPainter->setBrush(Qt::NoBrush);
             }
         }
@@ -260,7 +264,7 @@ void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
         values[i] = float(shapePointer->getNumericValue(signed(i), fieldName));
 
         // zero equal to null value
-        if (isEqual(values[i], 0)) values[i] = NODATA;
+        if (isEqual(values[i], -9999)) values[i] = NODATA;
 
         if (isEqual(firstValue, NODATA) && (! isEqual(values[i], NODATA)))
             firstValue = values[i];

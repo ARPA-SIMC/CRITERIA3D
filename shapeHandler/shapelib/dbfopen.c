@@ -1194,7 +1194,7 @@ DBFReadIntegerAttribute( DBFHandle psDBF, int iRecord, int iField )
     pnValue = (int *) DBFReadAttribute( psDBF, iRecord, iField, 'I' );
 
     if( pnValue == NULL )
-        return 0;
+        return -9999;
     else
         return( *pnValue );
 }
@@ -1214,7 +1214,7 @@ DBFReadDoubleAttribute( DBFHandle psDBF, int iRecord, int iField )
     pdValue = (double *) DBFReadAttribute( psDBF, iRecord, iField, 'N' );
 
     if( pdValue == NULL )
-        return 0.0;
+        return -9999;
     else
         return( *pdValue );
 }
