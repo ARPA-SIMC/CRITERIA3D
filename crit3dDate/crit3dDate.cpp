@@ -39,6 +39,7 @@
 #endif
 
 const long daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const long doyMonth[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
 
 
 // index: 1 - 12
@@ -295,28 +296,22 @@ int difference(Crit3DDate firstDate, Crit3DDate lastDate)
 
 bool isLeapYear(int year)
 {
-    bool isLeap = false ;
-    if (year % 4 == 0)
-    {
-      isLeap = true;
-      if (year % 100 == 0)
-          if (! (year % 400 == 0)) isLeap = false;
-    }
-    return isLeap ;
+    // No year 0 in Gregorian calendar, so -1, -5, -9 etc are leap years
+    if (year < 1)
+        ++year;
+
+    return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 }
 
 
 int getDoyFromDate(const Crit3DDate& myDate)
 {
-    int myDoy = 0;
-    for(int month = 1; month < myDate.month; month++)
-    {
-        myDoy += getDaysInMonth(month, myDate.year);
-    }
+    int doy = doyMonth[myDate.month-1] + myDate.day;
+    if (myDate.month > 2)
+        if (isLeapYear(myDate.year))
+            doy++;
 
-    myDoy += myDate.day;
-
-    return myDoy;
+    return doy;
 }
 
 
