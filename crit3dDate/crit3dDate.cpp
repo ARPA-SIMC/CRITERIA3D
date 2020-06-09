@@ -39,7 +39,7 @@
 #endif
 
 const long daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-const long doyMonth[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+const long doyMonth[13] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
 
 
 // index: 1 - 12
@@ -173,59 +173,18 @@ Crit3DDate& operator -- (Crit3DDate& myDate)
 
 Crit3DDate Crit3DDate::addDays(long offset) const
 {
-    int currentYear = this->year;
-    int leap = isLeapYear(currentYear) ? 1 : 0;
+    if (offset == 0) return (*this);
 
-    if (offset >= 0)
-    {
-        // shift back to the first of January
-        offset += getDoyFromDate(*this);
-        while(offset > (365 + leap))
-        {
-            offset -= (365 + leap);
-            currentYear++;
-            if (currentYear == 0) currentYear = 1;
-            leap = isLeapYear(currentYear) ? 1 : 0;
-        }
-        return getDateFromDoy(currentYear, offset);
-    }
-    else
-    {
-        // shift ahead to the 31 of December
-        offset -= (365 + leap - getDoyFromDate(*this));
-        while (fabs(offset) >= (365 + leap))
-        {
-            offset += (365 + leap);
-            currentYear--;
-            if (currentYear == 0) currentYear = -1;
-            leap = isLeapYear(currentYear) ? 1 : 0;
-        }
-        return getDateFromDoy(currentYear, 365 + leap + offset);
-    }
+    long julianDay = getJulianDay(day, month, year);
+    return getDateFromJulianDay(julianDay + offset);
 }
 
 
 int Crit3DDate::daysTo(const Crit3DDate& myDate) const
 {
-    Crit3DDate first = min(*this, myDate);
-    Crit3DDate last = max(*this, myDate);
-
-    int leap;
-    int delta = - getDoyFromDate(first);
-    int year = first.year;
-    while (year < last.year)
-    {
-        leap = isLeapYear(year) ? 1 : 0;
-        delta += (365 + leap);
-        year++;
-        if (year == 0) year = 1;
-    }
-    delta += getDoyFromDate(last);
-
-    if (last == myDate)
-        return delta;
-    else
-        return -delta;
+    long j1 = getJulianDay(this->day, this->month, this->year);
+    long j2 = getJulianDay(myDate.day, myDate.month, myDate.year);
+    return j2-j1;
 }
 
 
@@ -254,25 +213,28 @@ Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2)
 Crit3DDate getDateFromDoy(int year, int doy)
 {
     if (doy < 1) return NO_DATE;
+    short month;
 
-    int leap = isLeapYear(year) ? 1 : 0;
-
-    if (doy > (365 + leap)) return NO_DATE;
-
-    int firstDoy, lastDoy = 0;
-    for(int month = 1; month <= 12; month++)
+    // before 29 february
+    if (doy <= 59)
     {
-        firstDoy = lastDoy;
-        lastDoy += daysInMonth[month-1];
-        if (month == 2) lastDoy += leap;
-
-        if (doy <= lastDoy)
-        {
-            return Crit3DDate(doy-firstDoy, month, year);
-        }
+        month = (doy <= 31) ? 1 : 2;
+        return Crit3DDate(doy-doyMonth[month-1], month, year);
     }
 
-    return NO_DATE;
+    const short leap = isLeapYear(year) ? 1 : 0;
+    if (doy > (365 + leap)) return NO_DATE;
+
+    // 29 february
+    if (doy == 60 && leap == 1)
+        return Crit3DDate(29, 2, year);
+
+    // after
+    month = 3;
+    while (month <= 12 && doy > (doyMonth[month]+leap))
+        month++;
+
+    return Crit3DDate(doy-(doyMonth[month-1]+leap), month, year);
 }
 
 
@@ -300,7 +262,9 @@ bool isLeapYear(int year)
     if (year < 1)
         ++year;
 
-    return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
+    if (year % 4 != 0) return false;
+    if (year % 100 != 0) return true;
+    return (year % 400 == 0);
 }
 
 
@@ -312,6 +276,55 @@ int getDoyFromDate(const Crit3DDate& myDate)
             doy++;
 
     return doy;
+}
+
+
+static inline long floordiv(long a, long b)
+{
+    return (a - (a < 0 ? b - 1 : 0)) / b;
+}
+
+inline long getJulianDay(int day, int month, int year)
+{
+    // Adjust for no year 0
+    if (year < 0)
+        ++year;
+
+    /*
+     * Math from The Calendar FAQ at http://www.tondering.dk/claus/cal/julperiod.php
+     * This formula is correct for all julian days, when using mathematical integer
+     * division (round to negative infinity), not c++11 integer division (round to zero)
+     */
+    const long a = floordiv(14 - month, 12);
+    const long y = year + 4800 - a;
+    const int  m = month + 12 * a - 3;
+    return day + floordiv(153 * m + 2, 5) + 365 * y + floordiv(y, 4) - floordiv(y, 100) + floordiv(y, 400) - 32045;
+}
+
+
+Crit3DDate getDateFromJulianDay(long julianDay)
+{
+    /*
+     * Math from The Calendar FAQ at http://www.tondering.dk/claus/cal/julperiod.php
+     * This formula is correct for all julian days, when using mathematical integer
+     * division (round to negative infinity), not c++11 integer division (round to zero)
+     */
+
+    const long a = julianDay + 32044;
+    const long b = floordiv(4 * a + 3, 146097);
+    const int  c = a - floordiv(146097 * b, 4);
+    const int  d = floordiv(4 * c + 3, 1461);
+    const int  e = c - floordiv(1461 * d, 4);
+    const int  m = floordiv(5 * e + 2, 153);
+    const int  day = e - floordiv(153 * m + 2, 5) + 1;
+    const int  month = m + 3 - 12 * floordiv(m, 10);
+    int  year = 100 * b + d - 4800 + floordiv(m, 10);
+
+    // Adjust for no year 0
+    if (year <= 0)
+        --year ;
+
+    return { day, month, year };
 }
 
 

@@ -95,5 +95,8 @@
 
     int difference(Crit3DDate firstDate, Crit3DDate lastDate);
 
+    inline long getJulianDay(int day, int month, int year);
+    Crit3DDate getDateFromJulianDay(long julianDay);
+
 
 #endif // CRIT3DDATE_H
