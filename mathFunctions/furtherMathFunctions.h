@@ -98,6 +98,7 @@
         double determinant(double** a,int n);
         void minorMatrix(double** b,double** a,int i,int n);
         int eigenSystemMatrix2x2(double** a, double* eigenvalueA, double** eigenvectorA, int n);
+        bool inverseGaussJordan(double** a,double** d,int n);
     }
 
     namespace distribution
