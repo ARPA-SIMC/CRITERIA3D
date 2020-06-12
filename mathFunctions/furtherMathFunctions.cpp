@@ -1270,7 +1270,7 @@ namespace matricial
 
     double determinant(double** a,int n)
     {
-        //	calculate determinte of matrix
+        //	calculate determinant of matrix
         int i;
         double sum=0;
         if (n == 1)
@@ -1299,13 +1299,10 @@ namespace matricial
         double** b;
         double** c;
         b = (double**)calloc(n, sizeof(double*));
-        for (int i=0;i<n;i++)
-        {
-            b[i]= (double*)calloc(n, sizeof(double));
-        }
         c = (double**)calloc(n, sizeof(double*));
         for (int i=0;i<n;i++)
         {
+            b[i]= (double*)calloc(n, sizeof(double));
             c[i]= (double*)calloc(n, sizeof(double));
         }
         //int l,h,m,k,i,j;
@@ -1354,9 +1351,57 @@ namespace matricial
         if(determinantOfMatrix == 0)
             printf("\nInverse of Entered Matrix is not possible\n");
         else if(n == 1)
-            d[0][0] = 1;
+            d[0][0] = 1/a[0][0];
         else
             matricial::cofactor(a,d,n,determinantOfMatrix);
+    }
+
+    bool inverseGaussJordan(double** a,double** d,int n)
+    {
+        if (fabs(determinant(a,n))<EPSILON)
+        {
+            printf("\nInverse of Entered Matrix is not possible\n");
+            return false;
+        }
+        for (int i=0;i<n;i++)
+        {
+            d[i][i]=1;
+            for (int j=i+1;j<n;j++)
+            {
+                d[j][i] = d[i][j] = 0.;
+            }
+        }
+        for (int i=0;i<n;i++)
+        {
+            if (a[i][i] == 0)
+            {
+                printf("\nInverse of Entered Matrix is not possible\n");
+                return false;
+            }
+            double ratio;
+            for(int j=0;j<n;j++)
+            {
+               if(i!=j)
+               {
+                    ratio = a[j][i]/a[i][i];
+                    for(int k=0;k<n;k++)
+                    {
+                        a[j][k] = a[j][k] - ratio*a[i][k];
+                        d[j][k] = d[j][k] - ratio*d[i][k];
+                    }
+               }
+            }
+        }
+
+        for (int i=0;i<n;i++)
+        {
+            for (int j=0;j<n;j++)
+            {
+                a[i][j] = a[i][j]/a[i][i];
+                d[i][j] = d[i][j]/a[i][i];
+            }
+        }
+        return true;
     }
 
     int eigenSystemMatrix2x2(double** a, double* eigenvalueA, double** eigenvectorA, int n)
