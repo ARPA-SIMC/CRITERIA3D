@@ -340,6 +340,15 @@ Crit3DMeteoWidget::~Crit3DMeteoWidget()
 
 }
 
+
+void Crit3DMeteoWidget::setDateInterval(QDate date0, QDate date1)
+{
+    firstDailyDate = date0;
+    firstHourlyDate = date0;
+    lastDailyDate = date1;
+    lastHourlyDate = date1;
+}
+
 void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
 {
     firstDate->blockSignals(true);
@@ -552,8 +561,8 @@ void Crit3DMeteoWidget::drawDailyVar()
     double minLine = -NODATA;
 
     Crit3DDate firstCrit3DDate = getCrit3DDate(firstDate->date());
-    Crit3DDate lastfirstCrit3DDate = getCrit3DDate(lastDate->date());
-    nDays = firstCrit3DDate.daysTo(lastfirstCrit3DDate)+1;
+    Crit3DDate lastCrit3DDate = getCrit3DDate(lastDate->date());
+    nDays = firstCrit3DDate.daysTo(lastCrit3DDate)+1;
 
     categories.clear();
     categoriesVirtual.clear();
