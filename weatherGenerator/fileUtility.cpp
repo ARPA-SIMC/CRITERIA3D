@@ -10,6 +10,7 @@
 
 bool readMeteoDataCsv (QString namefile, char separator, double noData, TinputObsData* inputData)
 {
+    clearInputData(inputData);
 
     QFile file(namefile);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -38,7 +39,7 @@ bool readMeteoDataCsv (QString namefile, char separator, double noData, TinputOb
         //check format
         if (line.split(separator).count() < 5)
         {
-            qDebug() << "Error!" << "\nfile =" << namefile << "\nline =" << indexLine+2;;
+            qDebug() << "ERROR!" << "\nfile =" << namefile << "\nline =" << indexLine+2;;
             qDebug() << "missing data / invalid format / invalid separator";
             qDebug() << "required separator =" << separator <<"\n";
             return false;
@@ -116,6 +117,8 @@ bool readMeteoDataCsv (QString namefile, char separator, double noData, TinputOb
         indexLine++;
     }
 
+    file.close();
+
     // save and check the last date
     inputData->inputLastDate = tempDate;
     if (inputData->inputLastDate.year == 0)
@@ -141,10 +144,9 @@ bool readMeteoDataCsv (QString namefile, char separator, double noData, TinputOb
     }
 
     inputData->dataLenght = listDate.length();
-
-    inputData->inputTMin = (float*) malloc( inputData->dataLenght *sizeof(float));
-    inputData->inputTMax = (float*) malloc( inputData->dataLenght *sizeof(float));
-    inputData->inputPrecip = (float*) malloc( inputData->dataLenght *sizeof(float));
+    inputData->inputTMin.resize(inputData->dataLenght);
+    inputData->inputTMax.resize(inputData->dataLenght);
+    inputData->inputPrecip.resize(inputData->dataLenght);
 
     for (int i = 0; i < inputData->dataLenght; i++)
     {
@@ -156,13 +158,17 @@ bool readMeteoDataCsv (QString namefile, char separator, double noData, TinputOb
         if ((inputData->inputTMin[i] != noData) && (inputData->inputTMax[i] != noData)
              && (inputData->inputTMin[i] > inputData->inputTMax[i]))
         {
-            qDebug() << "WARNING: TMIN > TMAX: " << listDate[i];
+            //qDebug() << "Warning: TMIN > TMAX: " << listDate[i];
             // switch
             inputData->inputTMin[i] = listTMax[i].toFloat();
             inputData->inputTMax[i] = listTMin[i].toFloat();
         }
-
     }
+
+    listTMax.clear();
+    listTMin.clear();
+    listPrecip.clear();
+
     return true;
 }
 

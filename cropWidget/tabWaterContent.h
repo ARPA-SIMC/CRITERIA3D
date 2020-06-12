@@ -1,10 +1,7 @@
 #ifndef TABWATERCONTENT_H
 #define TABWATERCONTENT_H
 
-
 #include <QtWidgets>
-#include <QtCharts>
-
 #include "criteria1DCase.h"
 #include "qcustomplot.h"
 

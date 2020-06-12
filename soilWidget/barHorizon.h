@@ -55,6 +55,7 @@
         void selectItem(int index);
         void deselectAll(int index);
         void draw(soil::Crit3DSoil *soil);
+        QColor getColor(int index);
 
     };
 

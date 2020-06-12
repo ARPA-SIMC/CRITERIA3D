@@ -39,6 +39,7 @@
 #endif
 
 const long daysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+const long doyMonth[13] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
 
 
 // index: 1 - 12
@@ -46,9 +47,10 @@ int getDaysInMonth(int month, int year)
 {
     if (month < 1 || month > 12) return NODATA;
 
-    if(month == 2 && isLeapYear(year)) return 29;
-
-    else return daysInMonth[month-1];
+    if(month == 2 && isLeapYear(year))
+        return 29;
+    else
+        return daysInMonth[month-1];
 }
 
 
@@ -169,60 +171,20 @@ Crit3DDate& operator -- (Crit3DDate& myDate)
 }
 
 
-Crit3DDate Crit3DDate::addDays(long nrDays) const
+Crit3DDate Crit3DDate::addDays(long offset) const
 {
-    Crit3DDate myDate = *this;
+    if (offset == 0) return (*this);
 
-    if (nrDays >= 0)
-    {
-        while (nrDays > 365)
-        {
-            int currentDoy = getDoyFromDate(myDate);
-            int endYearDoy = getDoyFromDate(Crit3DDate(31, 12, myDate.year));
-            nrDays -= (endYearDoy - currentDoy + 1);
-            myDate.setDate(1, 1, myDate.year + 1);
-        }
-        for (int i = 0; i < nrDays; i++)
-            ++myDate;
-    }
-    else
-    {
-        while (abs(nrDays) > 365)
-        {
-            nrDays += getDoyFromDate(myDate);
-            myDate.setDate(31, 12, myDate.year - 1);
-        }
-        for (int i = 0; i > nrDays; i--)
-            --myDate;
-    }
-
-    return myDate;
+    long julianDay = getJulianDay(day, month, year);
+    return getDateFromJulianDay(julianDay + offset);
 }
 
 
 int Crit3DDate::daysTo(const Crit3DDate& myDate) const
 {
-    Crit3DDate first = min(*this, myDate);
-    Crit3DDate last = max(*this, myDate);
-
-    int delta = 0;
-    while (first.year < last.year)
-    {
-        int currentDoy = getDoyFromDate(first);
-        int endYearDoy = getDoyFromDate(Crit3DDate(31, 12, first.year));
-        delta += (endYearDoy - currentDoy + 1);
-        first.setDate(1, 1, first.year + 1);
-    }
-    while (first < last)
-    {
-        delta++;
-        ++first;
-    }
-
-    if (last == myDate)
-        return delta;
-    else
-        return -delta;
+    long j1 = getJulianDay(this->day, this->month, this->year);
+    long j2 = getJulianDay(myDate.day, myDate.month, myDate.year);
+    return j2-j1;
 }
 
 
@@ -248,21 +210,33 @@ Crit3DDate min(const Crit3DDate& myDate1, const Crit3DDate& myDate2)
 }
 
 
-Crit3DDate getDateFromDoy(int myYear, int myDoy)
+Crit3DDate getDateFromDoy(int year, int doy)
 {
-    if (myDoy > 366)
-    {
-        return NO_DATE;
-    }
-    if (myDoy == 366 && isLeapYear(myYear) == false)
-    {
-        return NO_DATE;
-    }
-    Crit3DDate myDate(1, 1, myYear);
-    myDate = myDate.addDays(myDoy - 1);
+    if (doy < 1) return NO_DATE;
+    short month;
 
-    return myDate;
+    // before 29 february
+    if (doy <= 59)
+    {
+        month = (doy <= 31) ? 1 : 2;
+        return Crit3DDate(doy-doyMonth[month-1], month, year);
+    }
+
+    const short leap = isLeapYear(year) ? 1 : 0;
+    if (doy > (365 + leap)) return NO_DATE;
+
+    // 29 february
+    if (doy == 60 && leap == 1)
+        return Crit3DDate(29, 2, year);
+
+    // after
+    month = 3;
+    while (month <= 12 && doy > (doyMonth[month]+leap))
+        month++;
+
+    return Crit3DDate(doy-(doyMonth[month-1]+leap), month, year);
 }
+
 
 Crit3DDate getNullDate()
 {
@@ -278,49 +252,79 @@ bool isNullDate(Crit3DDate myDate)
 
 int difference(Crit3DDate firstDate, Crit3DDate lastDate)
 {
-    int delta = 0;
-
-    while (firstDate.year < lastDate.year)
-    {
-        int currentDoy = getDoyFromDate(firstDate);
-        int endYearDoy = getDoyFromDate(Crit3DDate(31, 12, firstDate.year));
-        delta += (endYearDoy - currentDoy + 1);
-        firstDate.setDate(1, 1, firstDate.year + 1);
-    }
-    while (firstDate < lastDate)
-    {
-        delta++;
-        ++firstDate;
-    }
-
-    return delta;
+    return firstDate.daysTo(lastDate);
 }
 
 
 bool isLeapYear(int year)
 {
-    bool isLeap = false ;
-    if (year%4 == 0)
-    {
-      isLeap = true;
-      if (year%100 == 0)
-          if (! (year%400 == 0)) isLeap = false;
-    }
-    return isLeap ;
+    // No year 0 in Gregorian calendar, so -1, -5, -9 etc are leap years
+    if (year < 1)
+        ++year;
+
+    if (year % 4 != 0) return false;
+    if (year % 100 != 0) return true;
+    return (year % 400 == 0);
 }
 
 
 int getDoyFromDate(const Crit3DDate& myDate)
 {
-    int myDoy = 0;
-    for(int month = 1; month < myDate.month; month++)
-    {
-        myDoy += getDaysInMonth(month, myDate.year);
-    }
+    int doy = doyMonth[myDate.month-1] + myDate.day;
+    if (myDate.month > 2)
+        if (isLeapYear(myDate.year))
+            doy++;
 
-    myDoy += myDate.day;
+    return doy;
+}
 
-    return myDoy;
+
+static inline long floordiv(long a, long b)
+{
+    return (a - (a < 0 ? b - 1 : 0)) / b;
+}
+
+inline long getJulianDay(int day, int month, int year)
+{
+    // Adjust for no year 0
+    if (year < 0)
+        ++year;
+
+    /*
+     * Math from The Calendar FAQ at http://www.tondering.dk/claus/cal/julperiod.php
+     * This formula is correct for all julian days, when using mathematical integer
+     * division (round to negative infinity), not c++11 integer division (round to zero)
+     */
+    const long a = floordiv(14 - month, 12);
+    const long y = year + 4800 - a;
+    const int  m = month + 12 * a - 3;
+    return day + floordiv(153 * m + 2, 5) + 365 * y + floordiv(y, 4) - floordiv(y, 100) + floordiv(y, 400) - 32045;
+}
+
+
+Crit3DDate getDateFromJulianDay(long julianDay)
+{
+    /*
+     * Math from The Calendar FAQ at http://www.tondering.dk/claus/cal/julperiod.php
+     * This formula is correct for all julian days, when using mathematical integer
+     * division (round to negative infinity), not c++11 integer division (round to zero)
+     */
+
+    const long a = julianDay + 32044;
+    const long b = floordiv(4 * a + 3, 146097);
+    const int  c = a - floordiv(146097 * b, 4);
+    const int  d = floordiv(4 * c + 3, 1461);
+    const int  e = c - floordiv(1461 * d, 4);
+    const int  m = floordiv(5 * e + 2, 153);
+    const int  day = e - floordiv(153 * m + 2, 5) + 1;
+    const int  month = m + 3 - 12 * floordiv(m, 10);
+    int  year = 100 * b + d - 4800 + floordiv(m, 10);
+
+    // Adjust for no year 0
+    if (year <= 0)
+        --year ;
+
+    return { day, month, year };
 }
 
 

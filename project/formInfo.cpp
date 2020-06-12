@@ -1,31 +1,39 @@
 #include "formInfo.h"
-#include "ui_formInfo.h"
+
+#include <QApplication>
+#include <QVBoxLayout>
 
 
-FormInfo::FormInfo(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::formInfo)
+FormInfo::FormInfo()
 {
-    ui->setupUi(this);
-}
+    this->resize(500, 180);
+    this->label = new(QLabel);
+    this->progressBar = new(QProgressBar);
 
-FormInfo::~FormInfo()
-{
-    delete ui;
+    // font size
+    QFont font = this->label->font();
+    font.setPointSize(9);
+    this->label->setFont(font);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout();
+    mainLayout->addWidget(this->label);
+    mainLayout->addWidget(this->progressBar);
+
+    this->setLayout(mainLayout);
 }
 
 
 int FormInfo::start(QString info, int nrValues)
 {
-    this->ui->label->setText(info);
+    this->label->setText(info);
 
     if (nrValues <= 0)
-        this->ui->progressBar->setVisible(false);
+        this->progressBar->setVisible(false);
     else
     {
-        this->ui->progressBar->setMaximum(nrValues);
-        this->ui->progressBar->setValue(0);
-        this->ui->progressBar->setVisible(true);
+        this->progressBar->setMaximum(nrValues);
+        this->progressBar->setValue(0);
+        this->progressBar->setVisible(true);
     }
 
     this->show();
@@ -36,20 +44,20 @@ int FormInfo::start(QString info, int nrValues)
 
 void FormInfo::setValue(int myValue)
 {
-    this->ui->progressBar->setValue(myValue);
+    this->progressBar->setValue(myValue);
     qApp->processEvents();
 }
 
 void FormInfo::setText(QString myText)
 {
-    this->ui->label->setText(myText);
+    this->label->setText(myText);
     qApp->processEvents();
 }
 
 void FormInfo::showInfo(QString info)
 {
-    this->ui->label->setText(info);
-    this->ui->progressBar->setVisible(false);
+    this->label->setText(info);
+    this->progressBar->setVisible(false);
 
     this->show();
     qApp->processEvents();
