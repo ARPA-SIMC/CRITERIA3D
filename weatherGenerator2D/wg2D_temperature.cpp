@@ -334,11 +334,18 @@ void weatherGenerator2D::computeTemperatureParameters()
         /*
         for (int i=0;i<365;i++)
         {
-            printf("%.1f %.1f %.1f\n",temperatureCoefficients[iStation].minTDry.averageEstimation[i],temperatureCoefficients[iStation].maxTDry.averageEstimation[i],temperatureCoefficients[iStation].maxTWet.averageEstimation[i]);
+            printf("%d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.stdDevEstimation[i],temperatureCoefficients[iStation].minTWet.stdDevEstimation[i],temperatureCoefficients[iStation].maxTDry.stdDevEstimation[i],temperatureCoefficients[iStation].maxTWet.stdDevEstimation[i]);
         }
         getchar();
         */
-        weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,temperatureCoefficients[iStation].maxTWet.averageEstimation,temperatureCoefficients[iStation].maxTDry.stdDevEstimation,temperatureCoefficients[iStation].maxTWet.stdDevEstimation,temperatureCoefficients[iStation].minTDry.averageEstimation,temperatureCoefficients[iStation].minTWet.averageEstimation,temperatureCoefficients[iStation].minTDry.stdDevEstimation,temperatureCoefficients[iStation].minTWet.stdDevEstimation,iStation);
+        weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,
+                                             temperatureCoefficients[iStation].maxTWet.averageEstimation,
+                                             temperatureCoefficients[iStation].maxTDry.stdDevEstimation,
+                                             temperatureCoefficients[iStation].maxTWet.stdDevEstimation,
+                                             temperatureCoefficients[iStation].minTDry.averageEstimation,
+                                             temperatureCoefficients[iStation].minTWet.averageEstimation,
+                                             temperatureCoefficients[iStation].minTDry.stdDevEstimation,
+                                             temperatureCoefficients[iStation].minTWet.stdDevEstimation,iStation);
 
         int matrixRang = 2;
         double** matrixCovarianceLag0 = (double **) calloc(matrixRang, sizeof(double*));
@@ -540,7 +547,10 @@ void weatherGenerator2D::harmonicsFourier(double* variable, double *par,int nrPa
 
 }
 
-void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* averageTMaxWet,double* stdDevTMaxDry,double* stdDevTMaxWet,double* averageTMinDry,double* averageTMinWet,double* stdDevTMinDry,double* stdDevTMinWet,int idStation)
+void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* averageTMaxWet,
+                                          double* stdDevTMaxDry,double* stdDevTMaxWet,
+                                          double* averageTMinDry,double* averageTMinWet,
+                                          double* stdDevTMinDry,double* stdDevTMinWet,int idStation)
 {
     for (int i=0; i<nrData; i++)
     {

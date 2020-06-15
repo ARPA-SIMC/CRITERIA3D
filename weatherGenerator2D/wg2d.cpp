@@ -418,7 +418,7 @@ void weatherGenerator2D::precipitationP00P10()
 
         for(int i=0;i<nrData-1;i++)
         {
-            if ((obsDataD[idStation][i].prec != NODATA && obsDataD[idStation][i+1].prec != NODATA))
+            if ((obsDataD[idStation][i].prec >= 0 && obsDataD[idStation][i+1].prec >= 0))
             {
                 for (int month=1;month<13;month++)
                 {
