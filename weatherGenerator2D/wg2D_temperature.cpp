@@ -1221,7 +1221,7 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             ksi[1][j] = residuals[1];
             //printf("%.1f %.1f\n",ksi[0][j],ksi[1][j]);
             //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].A[0][0],temperatureCoefficients[i].A[0][1],temperatureCoefficients[i].A[1][0],temperatureCoefficients[i].A[1][1]);
-            residuals[0] = residuals[1]=0;
+            //residuals[0] = residuals[1]=0;
         }
         //getchar();
         double** cAverage = (double**)calloc(2, sizeof(double*));
