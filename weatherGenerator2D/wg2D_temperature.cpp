@@ -334,7 +334,8 @@ void weatherGenerator2D::computeTemperatureParameters()
         /*
         for (int i=0;i<365;i++)
         {
-            printf("%d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.stdDevEstimation[i],temperatureCoefficients[iStation].minTWet.stdDevEstimation[i],temperatureCoefficients[iStation].maxTDry.stdDevEstimation[i],temperatureCoefficients[iStation].maxTWet.stdDevEstimation[i]);
+            //printf("std %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.stdDevEstimation[i],temperatureCoefficients[iStation].minTWet.stdDevEstimation[i],temperatureCoefficients[iStation].maxTDry.stdDevEstimation[i],temperatureCoefficients[iStation].maxTWet.stdDevEstimation[i]);
+            //printf("ave %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.averageEstimation[i],temperatureCoefficients[iStation].minTWet.averageEstimation[i],temperatureCoefficients[iStation].maxTDry.averageEstimation[i],temperatureCoefficients[iStation].maxTWet.averageEstimation[i]);
         }
         getchar();
         */
@@ -1002,10 +1003,11 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
         for (int j=0;j<nrStations;j++)
         {
             dummyMatrix[i][j] = correlationMatrixTemperature.minT[i][j];
+            printf("%f ",correlationMatrixTemperature.minT[i][j]);
         }
-
+        printf("\n");
     }
-
+    getchar();
     isLowerDiagonal = false;
     matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,isLowerDiagonal);
     matricial::transposedMatrix(dummyMatrix,nrStations,nrStations,dummyMatrix2);
@@ -1219,11 +1221,13 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             residuals[1] += temperatureCoefficients[i].B[1][0]*eps[0][j] + temperatureCoefficients[i].B[1][1]*eps[1][j];
             ksi[0][j] = residuals[0];
             ksi[1][j] = residuals[1];
-            //printf("%.1f %.1f\n",ksi[0][j],ksi[1][j]);
-            //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].A[0][0],temperatureCoefficients[i].A[0][1],temperatureCoefficients[i].A[1][0],temperatureCoefficients[i].A[1][1]);
+            //printf("%.1f %.1f\n",eps[0][j],eps[1][j]);
+            printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].A[0][0],temperatureCoefficients[i].A[0][1],temperatureCoefficients[i].A[1][0],temperatureCoefficients[i].A[1][1]);
             //residuals[0] = residuals[1]=0;
+            //printf("%.1f %.1f\n",residuals[0],residuals[1]);
+            //getchar();
         }
-        //getchar();
+        getchar();
         double** cAverage = (double**)calloc(2, sizeof(double*));
         double** cStdDev = (double**)calloc(2, sizeof(double*));
         double** Xp = (double**)calloc(2, sizeof(double*));
@@ -1263,7 +1267,7 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
                 Xp[0][j] = ksi[0][j]*cStdDev[0][j] + cAverage[0][j];
                 Xp[1][j] = ksi[1][j]*sqrt(cStdDev[1][j]*cStdDev[1][j] - cStdDev[0][j]*cStdDev[0][j]) - (cAverage[0][j] - cAverage[1][j]) + Xp[0][j];
             }
-            // printf("%.1f %.1f\n",cStdDev[0][j],cStdDev[1][j]);
+             //printf("%.1f %.1f\n",ksi[0][j],ksi[1][j]);
         }
         //getchar();
 

@@ -418,7 +418,7 @@ void weatherGenerator2D::precipitationP00P10()
 
         for(int i=0;i<nrData-1;i++)
         {
-            if ((obsDataD[idStation][i].prec >= 0 && obsDataD[idStation][i+1].prec >= 0))
+            if ((obsDataD[idStation][i].prec >= 0 && obsDataD[idStation][i+1].prec >= 0) && isPrecipitationRecordOK(obsDataD[idStation][i+1].prec) && isPrecipitationRecordOK(obsDataD[idStation][i].prec))
             {
                 for (int month=1;month<13;month++)
                 {
@@ -1001,5 +1001,15 @@ int weatherGenerator2D::doyFromDate(int day,int month,int year)
     return doy;
 }
 
+bool weatherGenerator2D::isPrecipitationRecordOK(double value)
+{
+    if (value < 0) return false;
+    else if (value > RAINFALL_THRESHOLD) return false;
+    else return true;
+}
 
-
+bool weatherGenerator2D::isTemperatureRecordOK(double value)
+{
+    if (fabs(value) > TEMPERATURE_THRESHOLD) return false;
+    else return true;
+}
