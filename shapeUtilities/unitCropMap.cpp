@@ -92,3 +92,27 @@ bool computeUCMprevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Cri
 
     return isOk;
 }
+
+bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
+                 std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
+                 QString ucmFileName, std::string *error, bool showInfo)
+{
+    if (crop == nullptr)
+    {
+        // interseco soil e meteo ed aggiungo idCrop
+    }
+    else if (soil == nullptr)
+    {
+        // interseco crop e meteo ed aggiungo idSoil
+    }
+    else if (meteo == nullptr)
+    {
+        // interseco crop e soil ed aggiungo idMeteo
+    }
+    else
+    {
+        // interseco soil e meteo, lo shape risultante interseca crop
+    }
+    // TO DO
+    return true;
+}
