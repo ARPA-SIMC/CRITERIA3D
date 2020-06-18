@@ -12,6 +12,7 @@
     bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                      std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
                      QString ucmFileName, std::string *error, bool showInfo);
+    bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *firstHandler, Crit3DShapeHandler *secondHandler, std::string *error, bool showInfo);
 
 
 #endif // UNITCROPMAP_H

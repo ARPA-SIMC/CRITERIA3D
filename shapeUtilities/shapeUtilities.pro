@@ -7,7 +7,7 @@
 #--------------------------------------------------------
 
 QT    -= gui
-QT    += core widgets sql
+QT    += core widgets sql positioning
 
 unix:{
     CONFIG(debug, debug|release) {
