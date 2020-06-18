@@ -489,7 +489,7 @@ void weatherGenerator2D::precipitationCorrelationMatrices()
                 {
                     if (obsDataD[j][k].date.month == (iMonth+1) && obsDataD[i][k].date.month == (iMonth+1))
                     {
-                        if (((obsDataD[j][k].prec - NODATA) > EPSILON) && ((obsDataD[i][k].prec - NODATA) > EPSILON))
+                        if (((isPrecipitationRecordOK( obsDataD[j][k].prec))) && (isPrecipitationRecordOK(obsDataD[i][k].prec)))
                         {
                             counter++;
                             if (obsDataD[j][k].prec > parametersModel.precipitationThreshold)
@@ -521,7 +521,7 @@ void weatherGenerator2D::precipitationCorrelationMatrices()
                 {
                     if (obsDataD[j][k].date.month == (iMonth+1) && obsDataD[i][k].date.month == (iMonth+1))
                     {
-                        if ((obsDataD[j][k].prec != NODATA) && (obsDataD[i][k].prec != NODATA))
+                        if ((isPrecipitationRecordOK( obsDataD[j][k].prec)) && (isPrecipitationRecordOK( obsDataD[i][k].prec)))
                         {
                             double value1,value2;
                             if (obsDataD[j][k].prec <= parametersModel.precipitationThreshold) value1 = 0.;
