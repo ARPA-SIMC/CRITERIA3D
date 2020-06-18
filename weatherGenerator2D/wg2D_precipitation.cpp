@@ -170,7 +170,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
           obsPrecDataD[i][j].date.month = obsDataD[i][j].date.month;
           obsPrecDataD[i][j].date.year = obsDataD[i][j].date.year;
           obsPrecDataD[i][j].prec = obsDataD[i][j].prec;
-          if (obsPrecDataD[i][j].prec == NODATA)
+          if (!isPrecipitationRecordOK(obsPrecDataD[i][j].prec))
           {
               obsPrecDataD[i][j].amounts = NODATA;
               obsPrecDataD[i][j].occurrences = NODATA;
