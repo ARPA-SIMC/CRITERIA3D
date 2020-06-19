@@ -331,14 +331,14 @@ void weatherGenerator2D::computeTemperatureParameters()
         weatherGenerator2D::harmonicsFourier(stdDevTMinWet,par,nrPar,temperatureCoefficients[iStation].minTWet.stdDevEstimation,365);
         // free memory of parameters, variable par[]
         free(par);
-        /*
+
         for (int i=0;i<365;i++)
         {
             //printf("std %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.stdDevEstimation[i],temperatureCoefficients[iStation].minTWet.stdDevEstimation[i],temperatureCoefficients[iStation].maxTDry.stdDevEstimation[i],temperatureCoefficients[iStation].maxTWet.stdDevEstimation[i]);
             //printf("ave %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.averageEstimation[i],temperatureCoefficients[iStation].minTWet.averageEstimation[i],temperatureCoefficients[iStation].maxTDry.averageEstimation[i],temperatureCoefficients[iStation].maxTWet.averageEstimation[i]);
         }
-        getchar();
-        */
+        //getchar();
+
         weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,
                                              temperatureCoefficients[iStation].maxTWet.averageEstimation,
                                              temperatureCoefficients[iStation].maxTDry.stdDevEstimation,
@@ -381,8 +381,45 @@ void weatherGenerator2D::computeTemperatureParameters()
         }
         weatherGenerator2D::covarianceOfResiduals(matrixCovarianceLag0,0);
         weatherGenerator2D::covarianceOfResiduals(matrixCovarianceLag1,1);
+        double ratioLag1 = 0;
+        double ratioLag0 = 0;
+        if (matrixCovarianceLag1[1][1] > 0.9)
+        {
+            ratioLag1 = 0.9/matrixCovarianceLag1[1][1];
+            for (int j=0;j<matrixRang;j++)
+            {
+                for (int k=0;k<matrixRang;k++)
+                {
+                    matrixCovarianceLag1[j][k] *= ratioLag1;
+                }
+            }
+        }
+        if (matrixCovarianceLag0[0][1] > 0.8)
+        {
+            matrixCovarianceLag0[0][1] = matrixCovarianceLag0[1][0] = 0.8;
+        }
+
+        for (int j=0;j<matrixRang;j++)
+        {
+            for (int k=0;k<matrixRang;k++)
+            {
+                printf("%f  ",matrixCovarianceLag0[j][k]);
+            }
+            printf("\n");
+        }
+        printf("\n");
+        for (int j=0;j<matrixRang;j++)
+        {
+            for (int k=0;k<matrixRang;k++)
+            {
+                printf("%f  ",matrixCovarianceLag1[j][k]);
+            }
+            printf("\n");
+        }
+        getchar();
 
         matricial::inverse(matrixCovarianceLag0,matrixC,matrixRang); // matrixC becomes temporarely the inverse of lag0
+
         matricial::matrixProduct(matrixCovarianceLag1,matrixC,matrixRang,matrixRang,matrixRang,matrixRang,matrixA);
         matricial::transposedSquareMatrix(matrixCovarianceLag1,matrixRang);
         matricial::matrixProduct(matrixA,matrixCovarianceLag1,matrixRang,matrixRang,matrixRang,matrixRang,matrixC);
@@ -562,8 +599,10 @@ void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* average
         dailyResidual[i].maxT = 0.;
         dailyResidual[i].minT = 0.;
     }
+    double maxResidual = NODATA;
     for (int i = 0; i< nrData ; i++)
     {
+
         int currentDayOfYear;
         currentDayOfYear = weatherGenerator2D::doyFromDate(obsDataD[idStation][i].date.day,obsDataD[idStation][i].date.month,obsDataD[idStation][i].date.year);
 
@@ -578,10 +617,12 @@ void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* average
             if(obsDataD[idStation][i].prec > parametersModel.precipitationThreshold)
             {
                 dailyResidual[i].maxTWet = (obsDataD[idStation][i].tMax - averageTMaxWet[currentDayOfYear])/stdDevTMaxWet[currentDayOfYear];
+                //dailyResidual[i].maxTWet = MINVALUE(dailyResidual[i].maxTWet,3);
             }
             else
             {
                 dailyResidual[i].maxTDry = (obsDataD[idStation][i].tMax - averageTMaxDry[currentDayOfYear])/stdDevTMaxDry[currentDayOfYear];
+                //dailyResidual[i].maxTDry = MINVALUE(dailyResidual[i].maxTDry,3);
             }
         }
         if ((isTemperatureRecordOK(obsDataD[idStation][i].tMin)) && (fabs(obsDataD[idStation][i].tMin)> EPSILON) && (obsDataD[idStation][i].prec >= 0))
@@ -589,17 +630,26 @@ void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* average
             if(obsDataD[idStation][i].prec > parametersModel.precipitationThreshold)
             {
                 dailyResidual[i].minTWet = (obsDataD[idStation][i].tMin - averageTMinWet[currentDayOfYear])/stdDevTMinWet[currentDayOfYear];
+                //dailyResidual[i].minTWet = MINVALUE(dailyResidual[i].minTWet,3);
             }
             else
             {
                 dailyResidual[i].minTDry = (obsDataD[idStation][i].tMin - averageTMinDry[currentDayOfYear])/stdDevTMinDry[currentDayOfYear];
+                //dailyResidual[i].minTDry = MINVALUE(dailyResidual[i].minTDry,3);
             }
         }
         dailyResidual[i].maxT = dailyResidual[i].maxTWet + dailyResidual[i].maxTDry;
         dailyResidual[i].minT = dailyResidual[i].minTWet + dailyResidual[i].minTDry;
-        //printf("%d  %f  %f\n",i,dailyResidual[i].minT,dailyResidual[i].maxT);
-        //getchar();
+        maxResidual = MAXVALUE(maxResidual,dailyResidual[i].minT * dailyResidual[i].maxT);
+        /*if (fabs(dailyResidual[i].maxT) > EPSILON)
+        {
+            printf("%d  %f\n",i,dailyResidual[i].minT * dailyResidual[i].maxT);
+            getchar();
+        }*/
+
     }
+    //printf("%f\n",maxResidual);
+    //getchar();
 }
 
 void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int lag)
@@ -624,7 +674,9 @@ void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int la
         {
             covarianceMatrix[0][1] /= denominator;
         }
+
         covarianceMatrix[1][0] =  covarianceMatrix[0][1];
+
     }
     else
     {
@@ -659,6 +711,9 @@ void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int la
                 covarianceMatrix[1][1] += dailyResidual[i].minT*dailyResidual[i+1].minT;
             }
         }
+        //printf("%d %d %d %d\n",covarianceMatrix[0][0],covarianceMatrix[0][1],covarianceMatrix[1][0],covarianceMatrix[1][1]);
+        //printf("%d %d %d %d\n",denominator11,denominator12,denominator21,denominator22);
+
         if (denominator11 != 0)
         {
             covarianceMatrix[0][0] /= denominator11;
@@ -675,6 +730,7 @@ void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int la
         {
             covarianceMatrix[1][1] /= denominator22;
         }
+
     }
 
 }
@@ -1228,6 +1284,7 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             ksi[1][j] = residuals[1] = res1;
             //printf("%.1f %.1f\n",eps[0][j],eps[1][j]);
             //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].B[0][0],temperatureCoefficients[i].B[0][1],temperatureCoefficients[i].B[1][0],temperatureCoefficients[i].B[1][1]);
+            //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].A[0][0],temperatureCoefficients[i].A[0][1],temperatureCoefficients[i].A[1][0],temperatureCoefficients[i].A[1][1]);
             //residuals[0] = residuals[1]=0;
             //printf("%.1f %.1f\n",residuals[0],residuals[1]);
             //getchar();
