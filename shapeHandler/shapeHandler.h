@@ -27,6 +27,7 @@
         bool open(std::string filename);
         bool openDBF(std::string filename);
         bool openSHP(std::string filename);
+        void newFile(std::string filename, int nShapeType);
         bool isWGS84Proj(std::string prjFileName);
         bool setUTMzone(std::string prjFileName);
         void close();
@@ -61,6 +62,7 @@
         bool deleteRecord(int shapeNumber);
         //bool addRecord(std::vector<std::string> fields);
 
+        bool addShape(std::vector<double> coordinates);
         bool addField(const char * fieldName, int type, int nWidth, int nDecimals );
         bool removeField(int iField);
 

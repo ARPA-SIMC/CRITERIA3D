@@ -105,6 +105,14 @@ bool Crit3DShapeHandler::open(std::string filename)
     return true;
 }
 
+void Crit3DShapeHandler::newFile(std::string filename, int nShapeType)
+{
+    SHPHandle hSHP;
+    hSHP = SHPCreate(filename.c_str(), nShapeType);
+    DBFHandle hDBF;
+    hDBF = DBFCreate(filename.c_str());
+}
+
 bool Crit3DShapeHandler::openDBF(std::string filename)
 {
     closeDBF();
@@ -409,6 +417,11 @@ bool Crit3DShapeHandler::addRecord(std::vector<std::string> fields)
     return true;
 }
 */
+bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
+{
+    // TO DO
+    // shpadd m_filepath coordinates
+}
 
 bool Crit3DShapeHandler::addField(const char * fieldName, int type, int nWidth, int nDecimals )
 {

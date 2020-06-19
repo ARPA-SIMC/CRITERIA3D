@@ -99,6 +99,20 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
                  std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
                  QString ucmFileName, std::string *error, bool showInfo)
 {
+
+    // PolygonShapefile
+    int type = 2;
+
+    ucm->newFile(ucmFileName.toStdString(), type);
+    // add ID CASE
+    ucm->addField("ID_CASE", FTString, 20, 0);
+    // add ID SOIL
+    ucm->addField("ID_SOIL", FTString, 5, 0);
+    // add ID CROP
+    ucm->addField("ID_CROP", FTString, 5, 0);
+    // add ID METEO
+    ucm->addField("ID_METEO", FTString, 5, 0);
+
     if (crop == nullptr)
     {
         // interseco soil e meteo ed aggiungo idCrop
@@ -119,7 +133,7 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     return true;
 }
 
-bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *firstHandler, Crit3DShapeHandler *secondHandler, std::string *error, bool showInfo)
+bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *firstHandler, Crit3DShapeHandler *secondHandler, std::string fieldNameFirst, std::string fieldNameSecond, std::string *error, bool showInfo)
 {
     ShapeObject myFirstShape;
     ShapeObject mySecondShape;
@@ -127,30 +141,40 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
     Box<double> secondBounds;
     int nrFirstShape = firstHandler->getShapeCount();
     int nrSecondShape = secondHandler->getShapeCount();
-    std::vector< std::vector<ShapeObject::Part>> shapeParts;
+    int nIntersections = 0;
+    std::vector< std::vector<ShapeObject::Part>> firstShapeParts;
+    std::vector< std::vector<ShapeObject::Part>> secondShapeParts;
 
     QPolygonF firstPolygon;
+    QPolygonF secondPolygon;
+    QPolygonF intersectionPolygon;
+
+    int IDfirstShape = firstHandler->getFieldPos(fieldNameFirst);
+    int IDsecondShape = secondHandler->getFieldPos(fieldNameSecond);
+    int IDCloneFirst = intersecHandler->getFieldPos(fieldNameFirst);
+    int IDCloneSecond = intersecHandler->getFieldPos(fieldNameSecond);
 
     for (unsigned int firstShapeIndex = 0; firstShapeIndex < nrFirstShape; firstShapeIndex++)
     {
 
+        firstPolygon.clear();
         firstHandler->getShape(firstShapeIndex, myFirstShape);
+        std::string fieldFirst = firstHandler->readStringAttribute(firstShapeIndex, IDfirstShape);  //Field to copy
         // get bounds
         firstBounds = myFirstShape.getBounds();
-        shapeParts[firstShapeIndex] = myFirstShape.getParts();
-        for (unsigned int partIndex = 0; partIndex < shapeParts[firstShapeIndex].size(); partIndex++)
+        firstShapeParts[firstShapeIndex] = myFirstShape.getParts();
+        for (unsigned int partIndex = 0; partIndex < firstShapeParts[firstShapeIndex].size(); partIndex++)
         {
             Box<double> partBB = myFirstShape.getPart(partIndex).boundsPart;
             int offset = myFirstShape.getPart(partIndex).offset;
             int length = myFirstShape.getPart(partIndex).length;
 
-            if (shapeParts[firstShapeIndex][partIndex].hole)
+            if (firstShapeParts[firstShapeIndex][partIndex].hole)
             {
                 continue;
             }
             else
             {
-                firstPolygon.clear();
                 for (unsigned long v = 0; v < length; v++)
                 {
                     Point<double> vertex = myFirstShape.getVertex(v+offset);
@@ -158,6 +182,59 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
                     firstPolygon.append(point);
                 }
                 // check holes TO DO
+            }
+        }
+        for (unsigned int secondShapeIndex = 0; secondShapeIndex < nrSecondShape; secondShapeIndex++)
+        {
+
+            secondPolygon.clear();
+            secondHandler->getShape(secondShapeIndex, mySecondShape);
+            std::string fieldSecond = secondHandler->readStringAttribute(secondShapeIndex, IDsecondShape); //Field to copy
+            // get bounds
+            secondBounds = mySecondShape.getBounds();
+            bool noOverlap = firstBounds.xmin > secondBounds.xmax ||
+                                 secondBounds.xmin > firstBounds.xmax ||
+                                 firstBounds.ymin > secondBounds.ymax ||
+                                 secondBounds.ymin > firstBounds.ymax;
+            if (noOverlap)
+            {
+                continue;
+            }
+            else
+            {
+                secondShapeParts[secondShapeIndex] = mySecondShape.getParts();
+                for (unsigned int partIndex = 0; partIndex < secondShapeParts[secondShapeIndex].size(); partIndex++)
+                {
+                    Box<double> partBB = mySecondShape.getPart(partIndex).boundsPart;
+                    int offset = mySecondShape.getPart(partIndex).offset;
+                    int length = mySecondShape.getPart(partIndex).length;
+
+                    if (secondShapeParts[secondShapeIndex][partIndex].hole)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        nIntersections = nIntersections + 1;
+                        for (unsigned long v = 0; v < length; v++)
+                        {
+                            Point<double> vertex = mySecondShape.getVertex(v+offset);
+                            QPoint point(vertex.x, vertex.y);
+                            secondPolygon.append(point);
+                        }
+                        // check holes TO DO
+                    }
+                }
+                intersectionPolygon = firstPolygon.intersected(secondPolygon);
+                std::vector<double> coordinates;
+                for (int i = 0; i<intersectionPolygon.size(); i++)
+                {
+                    coordinates.push_back(intersectionPolygon[i].x());
+                    coordinates.push_back(intersectionPolygon[i].y());
+                }
+                intersecHandler->addShape(coordinates);
+                intersecHandler->writeStringAttribute(nIntersections, IDCloneFirst, fieldFirst.c_str());
+                intersecHandler->writeStringAttribute(nIntersections, IDCloneSecond, fieldSecond.c_str());
             }
         }
     }
