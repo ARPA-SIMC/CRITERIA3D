@@ -2,13 +2,15 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
-//#include <QPolygon>
+
 #include <QFile>
 #include <QFileInfo>
 
-#include <gdal/gdal_priv.h>
-#include <gdal/ogrsf_frmts.h>
-#include <geos/geom.h>
+#ifdef Q_OS_LINUX
+    #include <gdal/gdal_priv.h>
+    #include <gdal/ogrsf_frmts.h>
+    #include <geos/geom.h>
+#endif
 #include <qdebug.h>
 
 
