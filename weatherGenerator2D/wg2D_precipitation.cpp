@@ -223,11 +223,9 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
        {
            moran[ijk][qq] = (double*)calloc(numberObservedMax, sizeof(double));
            rainfallLessThreshold[ijk][qq] = (double*)calloc(numberObservedMax, sizeof(double));
-       }
-       for (int qq=0;qq<4;qq++)
-       {
            for (int i=0;i<numberObservedMax;i++)
            {
+               // initialize the two vectors
                moran[ijk][qq][i] = NODATA;
                rainfallLessThreshold[ijk][qq][i] = NODATA;
            }

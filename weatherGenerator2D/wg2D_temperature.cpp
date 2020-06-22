@@ -398,7 +398,7 @@ void weatherGenerator2D::computeTemperatureParameters()
         {
             matrixCovarianceLag0[0][1] = matrixCovarianceLag0[1][0] = 0.8;
         }
-
+        /*
         for (int j=0;j<matrixRang;j++)
         {
             for (int k=0;k<matrixRang;k++)
@@ -417,9 +417,8 @@ void weatherGenerator2D::computeTemperatureParameters()
             printf("\n");
         }
         getchar();
-
+        */
         matricial::inverse(matrixCovarianceLag0,matrixC,matrixRang); // matrixC becomes temporarely the inverse of lag0
-
         matricial::matrixProduct(matrixCovarianceLag1,matrixC,matrixRang,matrixRang,matrixRang,matrixRang,matrixA);
         matricial::transposedSquareMatrix(matrixCovarianceLag1,matrixRang);
         matricial::matrixProduct(matrixA,matrixCovarianceLag1,matrixRang,matrixRang,matrixRang,matrixRang,matrixC);

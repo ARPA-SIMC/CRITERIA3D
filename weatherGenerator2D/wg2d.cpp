@@ -583,7 +583,7 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
            matrixOccurrence[i][j]= NODATA;
         }
         normalizedTransitionProbability[i][0]= NODATA;
-        normalizedTransitionProbability[i][1]= NODATA;        
+        normalizedTransitionProbability[i][1]= NODATA;
     }
     // random Occurrence structure. Used from step 3 on
 
@@ -682,7 +682,7 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
         // free memory
         for (int i=0;i<nrStations;i++)
         {
-            free(normalizedRandomMatrix[i]);            
+            free(normalizedRandomMatrix[i]);
         }
         free(normalizedRandomMatrix);
         time_t rawtime;
