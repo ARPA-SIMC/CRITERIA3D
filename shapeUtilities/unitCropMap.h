@@ -13,6 +13,7 @@
                      std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
                      QString ucmFileName, std::string *error, bool showInfo);
     bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *firstHandler, Crit3DShapeHandler *secondHandler, std::string fieldNameFirst, std::string fieldNameSecond, std::string *error, bool showInfo);
+    bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo);
 
 
 #endif // UNITCROPMAP_H

@@ -6,6 +6,8 @@
 #include <QFile>
 #include <QFileInfo>
 
+#include <qdebug.h>
+
 
 bool computeUCMprevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
@@ -51,12 +53,6 @@ bool computeUCMprevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Cri
     delete rasterVal;
     if (! isOk) return false;
 
-    // read indexes
-    int nShape = ucm->getShapeCount();
-    int cropIndex = ucm->getFieldPos(idCrop);
-    int soilIndex = ucm->getFieldPos(idSoil);
-    int meteoIndex = ucm->getFieldPos(idMeteo);
-
     // add ID CASE
     ucm->addField("ID_CASE", FTString, 20, 0);
     int idCaseIndex = ucm->getFieldPos("ID_CASE");
@@ -65,6 +61,12 @@ bool computeUCMprevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Cri
     bool existIdCrop = ucm->existField("ID_CROP");
     if (! existIdCrop) ucm->addField("ID_CROP", FTString, 5, 0);
     int idCropIndex = ucm->getFieldPos("ID_CROP");
+
+    // read indexes
+    int nShape = ucm->getShapeCount();
+    int cropIndex = ucm->getFieldPos(idCrop);
+    int soilIndex = ucm->getFieldPos(idSoil);
+    int meteoIndex = ucm->getFieldPos(idMeteo);
 
     // FILL ID_CROP and ID_CASE
     for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
@@ -108,26 +110,88 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     ucm->addField("ID_CASE", FTString, 20, 0);
     // add ID SOIL
     ucm->addField("ID_SOIL", FTString, 5, 0);
+    int soilIndex = ucm->getFieldPos("ID_SOIL");
     // add ID CROP
     ucm->addField("ID_CROP", FTString, 5, 0);
+    int cropIndex = ucm->getFieldPos("ID_CROP");
     // add ID METEO
     ucm->addField("ID_METEO", FTString, 5, 0);
+    int meteoIndex = ucm->getFieldPos("ID_METEO");
+
+    int nShape = ucm->getShapeCount();
+
+    qDebug() << "idCrop " << QString::fromStdString(idCrop);
+    qDebug() << "idSoil " << QString::fromStdString(idSoil);
+    qDebug() << "idMeteo " << QString::fromStdString(idMeteo);
 
     if (crop == nullptr)
     {
         // soil and meteo intersection, add constant idCrop
+        if (!shapeIntersection(ucm, soil, meteo, idSoil, idMeteo, error, showInfo))
+        {
+            *error = "Failed soil and meteo intersection";
+            return false;
+        }
+        for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
+        {
+            ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
+        }
     }
     else if (soil == nullptr)
     {
         // crop and meteo intersection, add constant idSoil
+        if (!shapeIntersection(ucm, crop, meteo, idCrop, idMeteo, error, showInfo))
+        {
+            *error = "Failed crop and meteo intersection";
+            return false;
+        }
+        for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
+        {
+            ucm->writeStringAttribute(shapeIndex, soilIndex, idSoil.c_str());
+        }
     }
     else if (meteo == nullptr)
     {
         // crop and soil intersection, add constant idMeteo
+        if (!shapeIntersection(ucm, crop, soil, idCrop, idSoil, error, showInfo))
+        {
+            *error = "Failed crop and soil intersection";
+            return false;
+        }
+        for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
+        {
+            ucm->writeStringAttribute(shapeIndex, meteoIndex, idMeteo.c_str());
+        }
     }
     else
     {
+        /*
+        Crit3DShapeHandler *temp = new(Crit3DShapeHandler);
+        temp->newFile("temp", type);
+        temp->open("temp");
+        // add ID SOIL
+        temp->addField("ID_SOIL", FTString, 5, 0);
+        // add ID METEO
+        temp->addField("ID_METEO", FTString, 5, 0);
         // soil and meteo intersection, shape result and crop intersection
+        if (!shapeIntersection(temp, soil, meteo, idSoil, idMeteo, error, showInfo))
+        {
+            *error = "Failed soil and meteo intersection";
+            delete temp;
+            return false;
+        }
+        if (!shapeIntersection(ucm, temp, crop, idSoil, idCrop, error, showInfo))
+        {
+            *error = "Failed crop intersection";
+            return false;
+        }
+        */
+
+    }
+    if (!fillIDCase(ucm, idCrop, idSoil, idMeteo))
+    {
+        *error = "Failed to fill ID CASE";
+        return false;
     }
     return true;
 }
@@ -231,13 +295,59 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
                     coordinates.push_back(intersectionPolygon[i].x());
                     coordinates.push_back(intersectionPolygon[i].y());
                 }
-                intersecHandler->addShape(coordinates);
-                intersecHandler->writeStringAttribute(nIntersections, IDCloneFirst, fieldFirst.c_str());
-                intersecHandler->writeStringAttribute(nIntersections, IDCloneSecond, fieldSecond.c_str());
+                if (!intersecHandler->addShape(coordinates))
+                {
+                    return false;
+                }
+                if (!intersecHandler->writeStringAttribute(nIntersections, IDCloneFirst, fieldFirst.c_str()))
+                {
+                    return false;
+                }
+                if (!intersecHandler->writeStringAttribute(nIntersections, IDCloneSecond, fieldSecond.c_str()))
+                {
+                    return false;
+                }
             }
         }
     }
 
+    return true;
+}
+
+// FILL ID_CASE
+bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo)
+{
+    if (!ucm->existField("ID_CASE"))
+    {
+        return false;
+    }
+    // read indexes
+    int nShape = ucm->getShapeCount();
+    int cropIndex = ucm->getFieldPos(idCrop);
+    int soilIndex = ucm->getFieldPos(idSoil);
+    int meteoIndex = ucm->getFieldPos(idMeteo);
+    int idCaseIndex = ucm->getFieldPos("ID_CASE");
+
+    for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
+    {
+        std::string cropStr = ucm->readStringAttribute(shapeIndex, cropIndex);
+        if (cropStr == "-9999") cropStr = "";
+
+        std::string soilStr = ucm->readStringAttribute(shapeIndex, soilIndex);
+        if (soilStr == "-9999") soilStr = "";
+
+        std::string meteoStr = ucm->readStringAttribute(shapeIndex, meteoIndex);
+        if (meteoStr == "-9999") meteoStr = "";
+
+        std::string caseStr = "";
+        if (meteoStr != "" && soilStr != "" && cropStr != "")
+            caseStr = "M" + meteoStr + "S" + soilStr + "C" + cropStr;
+
+        ucm->writeStringAttribute(shapeIndex, idCaseIndex, caseStr.c_str());
+
+        if (caseStr == "")
+            ucm->deleteRecord(shapeIndex);
+    }
     return true;
 }
 
