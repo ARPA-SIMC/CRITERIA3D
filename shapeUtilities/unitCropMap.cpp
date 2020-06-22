@@ -2,10 +2,13 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
-#include <QPolygon>
+//#include <QPolygon>
 #include <QFile>
 #include <QFileInfo>
 
+#include <gdal/gdal_priv.h>
+#include <gdal/ogrsf_frmts.h>
+#include <geos/geom.h>
 #include <qdebug.h>
 
 
@@ -124,14 +127,17 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     qDebug() << "idSoil " << QString::fromStdString(idSoil);
     qDebug() << "idMeteo " << QString::fromStdString(idMeteo);
 
+    //geos::geom::MultiPolygon *mp = ;
     if (crop == nullptr)
     {
+        /*
         // soil and meteo intersection, add constant idCrop
         if (!shapeIntersection(ucm, soil, meteo, idSoil, idMeteo, error, showInfo))
         {
             *error = "Failed soil and meteo intersection";
             return false;
         }
+        */
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
@@ -139,12 +145,14 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     }
     else if (soil == nullptr)
     {
+        /*
         // crop and meteo intersection, add constant idSoil
         if (!shapeIntersection(ucm, crop, meteo, idCrop, idMeteo, error, showInfo))
         {
             *error = "Failed crop and meteo intersection";
             return false;
         }
+        */
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             ucm->writeStringAttribute(shapeIndex, soilIndex, idSoil.c_str());
@@ -152,12 +160,14 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     }
     else if (meteo == nullptr)
     {
+        /*
         // crop and soil intersection, add constant idMeteo
         if (!shapeIntersection(ucm, crop, soil, idCrop, idSoil, error, showInfo))
         {
             *error = "Failed crop and soil intersection";
             return false;
         }
+        */
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             ucm->writeStringAttribute(shapeIndex, meteoIndex, idMeteo.c_str());
@@ -196,6 +206,7 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     return true;
 }
 
+/*
 bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *firstHandler, Crit3DShapeHandler *secondHandler, std::string fieldNameFirst, std::string fieldNameSecond, std::string *error, bool showInfo)
 {
     ShapeObject myFirstShape;
@@ -313,6 +324,7 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
 
     return true;
 }
+*/
 
 // FILL ID_CASE
 bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo)

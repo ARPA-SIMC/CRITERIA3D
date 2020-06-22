@@ -106,6 +106,7 @@ bool Crit3DShapeHandler::open(std::string filename)
     return true;
 }
 
+
 void Crit3DShapeHandler::newFile(std::string filename, int nShapeType)
 {
     SHPHandle hSHP;
@@ -113,6 +114,7 @@ void Crit3DShapeHandler::newFile(std::string filename, int nShapeType)
     DBFHandle hDBF;
     hDBF = DBFCreate(filename.c_str());
 }
+
 
 bool Crit3DShapeHandler::openDBF(std::string filename)
 {
@@ -418,14 +420,16 @@ bool Crit3DShapeHandler::addRecord(std::vector<std::string> fields)
     return true;
 }
 */
+// LC MAI testata
+/*
 bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
 {
     if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
     // shpadd shp_file [[x y] [+]]
 
-    /* -------------------------------------------------------------------- */
-    /*	Build a vertex/part list from the command line arguments.	*/
-    /* -------------------------------------------------------------------- */
+    // --------------------------------------------------------------------
+    //	Build a vertex/part list from the command line arguments.
+    // --------------------------------------------------------------------
         int nVMax = 1000;
         int		nVertices, *panParts, i;
         double	*padfX, *padfY;
@@ -475,9 +479,9 @@ bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
 
         }
 
-    /* -------------------------------------------------------------------- */
-    /*      Write the new entity to the shape file.                         */
-    /* -------------------------------------------------------------------- */
+    // --------------------------------------------------------------------
+    //      Write the new entity to the shape file.
+    // --------------------------------------------------------------------
         psObject = SHPCreateObject( m_type, -1, nParts, panParts, NULL,
                                     nVertices, padfX, padfY, NULL, NULL );
         SHPWriteObject( m_handle, -1, psObject );
@@ -491,6 +495,7 @@ bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
 
         return 0;
 }
+*/
 
 
 bool Crit3DShapeHandler::addField(const char * fieldName, int type, int nWidth, int nDecimals )
