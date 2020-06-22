@@ -2,7 +2,6 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
-//#include <QGeoPolygon>
 #include <QPolygon>
 #include <QFile>
 #include <QFileInfo>
@@ -104,6 +103,7 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     int type = 2;
 
     ucm->newFile(ucmFileName.toStdString(), type);
+    ucm->open(ucmFileName.toStdString());
     // add ID CASE
     ucm->addField("ID_CASE", FTString, 20, 0);
     // add ID SOIL
@@ -115,21 +115,20 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
     if (crop == nullptr)
     {
-        // interseco soil e meteo ed aggiungo idCrop
+        // soil and meteo intersection, add constant idCrop
     }
     else if (soil == nullptr)
     {
-        // interseco crop e meteo ed aggiungo idSoil
+        // crop and meteo intersection, add constant idSoil
     }
     else if (meteo == nullptr)
     {
-        // interseco crop e soil ed aggiungo idMeteo
+        // crop and soil intersection, add constant idMeteo
     }
     else
     {
-        // interseco soil e meteo, lo shape risultante interseca crop
+        // soil and meteo intersection, shape result and crop intersection
     }
-    // TO DO
     return true;
 }
 
@@ -239,104 +238,6 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
         }
     }
 
-
-    /*
-    QGeoPolygon firstPolygon;
-    QGeoPolygon secondPolygon;
-
-    for (unsigned int firstShapeIndex = 0; firstShapeIndex < nFirstShape; firstShapeIndex++)
-    {
-
-        firstHandler->getShape(firstShapeIndex, firstObject);
-        // get bounds
-        firstBounds = firstObject.getBounds();
-        for (unsigned int partIndex = 0; partIndex < firstObject.getPartCount(); partIndex++)
-        {
-            Box<double> partBB = firstObject.getPart(partIndex).boundsPart;
-            int offset = firstObject.getPart(partIndex).offset;
-            int length = firstObject.getPart(partIndex).length;
-            QList<QGeoCoordinate> list;
-            QGeoCoordinate point;
-            Point<double> vertex;
-            if (firstObject.isHole(partIndex))
-            {
-                list.clear();
-                for (int i = 0; i<length; i++)
-                {
-                    vertex = firstObject.getVertex(i+offset);
-                    point.setLongitude(vertex.x);
-                    point.setLongitude(vertex.y);
-                    list.push_back(point);
-                }
-                firstPolygon.addHole(list);
-            }
-            else
-            {
-                list.clear();
-                for (int i = 0; i<length; i++)
-                {
-                    vertex = firstObject.getVertex(i+offset);
-                    point.setLongitude(vertex.x);
-                    point.setLongitude(vertex.y);
-                    list.push_back(point);
-                }
-                firstPolygon.setPath(list);
-            }
-        }
-
-        for (int secondShapeIndex = 0; secondShapeIndex < nSecondShape; secondShapeIndex++)
-        {
-            secondHandler->getShape(secondShapeIndex, secondObject);
-            secondBounds = secondObject.getBounds();
-            bool noOverlap = firstBounds.xmin > secondBounds.xmax ||
-                                 secondBounds.xmin > firstBounds.xmax ||
-                                 firstBounds.ymin > secondBounds.ymax ||
-                                 secondBounds.ymin > firstBounds.ymax;
-            if (noOverlap)
-            {
-                continue;
-            }
-            else
-            {
-                // BB overlap
-                for (unsigned int partIndex = 0; partIndex < secondObject.getPartCount(); partIndex++)
-                {
-                    Box<double> partBB = secondObject.getPart(partIndex).boundsPart;
-                    int offset = secondObject.getPart(partIndex).offset;
-                    int length = secondObject.getPart(partIndex).length;
-                    QList<QGeoCoordinate> list;
-                    QGeoCoordinate point;
-                    Point<double> vertex;
-                    if (secondObject.isHole(partIndex))
-                    {
-                        list.clear();
-                        for (int i = 0; i<length; i++)
-                        {
-                            vertex = secondObject.getVertex(i+offset);
-                            point.setLongitude(vertex.x);
-                            point.setLongitude(vertex.y);
-                            list.push_back(point);
-                        }
-                        secondPolygon.addHole(list);
-                    }
-                    else
-                    {
-                        list.clear();
-                        for (int i = 0; i<length; i++)
-                        {
-                            vertex = secondObject.getVertex(i+offset);
-                            point.setLongitude(vertex.x);
-                            point.setLongitude(vertex.y);
-                            list.push_back(point);
-                        }
-                        secondPolygon.setPath(list);
-                    }
-                }
-            }
-        }
-
-    }
-    */
     return true;
 }
 
