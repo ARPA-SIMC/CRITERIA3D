@@ -100,14 +100,28 @@ bool computeUCMprevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Cri
 }
 
 bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
-                 std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
-                 QString ucmFileName, std::string *error, bool showInfo)
+                 std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
 {
 
     // PolygonShapefile
     int type = 2;
 
-    ucm->newFile(ucmFileName.toStdString(), type);
+    ucm->newShapeFile(ucmFileName.toStdString(), type);
+    // copy .prj
+    QFileInfo refFileInfo;
+    if (crop != nullptr)
+    {
+        refFileInfo.setFile(QString::fromStdString(crop->getFilepath()));
+    }
+    else if(soil!=nullptr)
+    {
+        refFileInfo.setFile(QString::fromStdString(soil->getFilepath()));
+    }
+    QString refFile = refFileInfo.absolutePath() + "/" + refFileInfo.baseName();
+    QFileInfo ucmFileInfo(ucmFileName);
+    QString ucmFile = ucmFileInfo.absolutePath() + "/" + ucmFileInfo.baseName();
+    QFile::copy(refFile +".prj", ucmFile +".prj");
+
     ucm->open(ucmFileName.toStdString());
     // add ID CASE
     ucm->addField("ID_CASE", FTString, 20, 0);

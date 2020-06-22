@@ -27,7 +27,7 @@
         bool open(std::string filename);
         bool openDBF(std::string filename);
         bool openSHP(std::string filename);
-        void newFile(std::string filename, int nShapeType);
+        void newShapeFile(std::string filename, int nShapeType);
         bool isWGS84Proj(std::string prjFileName);
         bool setUTMzone(std::string prjFileName);
         void close();

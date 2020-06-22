@@ -107,12 +107,11 @@ bool Crit3DShapeHandler::open(std::string filename)
 }
 
 
-void Crit3DShapeHandler::newFile(std::string filename, int nShapeType)
+void Crit3DShapeHandler::newShapeFile(std::string filename, int nShapeType)
 {
-    SHPHandle hSHP;
-    hSHP = SHPCreate(filename.c_str(), nShapeType);
-    DBFHandle hDBF;
-    hDBF = DBFCreate(filename.c_str());
+    m_handle = SHPCreate(filename.c_str(), nShapeType);
+    m_dbf = DBFCreate(filename.c_str());
+    m_filepath = filename;
 }
 
 
