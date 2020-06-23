@@ -6,11 +6,10 @@
 #include <QFile>
 #include <QFileInfo>
 
-#ifdef Q_OS_LINUX
-    #include <gdal/gdal_priv.h>
-    #include <gdal/ogrsf_frmts.h>
-    #include <geos/geom.h>
-#endif
+#include <gdal_priv.h>
+#include <ogrsf_frmts.h>
+#include <geos_c.h>
+
 #include <qdebug.h>
 
 

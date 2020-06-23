@@ -3,7 +3,6 @@
 #   shapeUtilities
 #   This project is part of CRITERIA-3D distribution
 #
-#
 #--------------------------------------------------------
 
 QT    -= gui
@@ -19,6 +18,7 @@ unix:{
 win32:{
     TARGET = shapeUtilities
 }
+
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -47,8 +47,4 @@ HEADERS += \
     zonalStatistic.h   \
     ucmDb.h
 
-
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-} 
+include(../gdal.pri)
