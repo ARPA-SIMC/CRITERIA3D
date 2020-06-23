@@ -427,13 +427,13 @@ void weatherGenerator2D::precipitationP00P10()
                         if (obsDataD[idStation][i].prec > parametersModel.precipitationThreshold)
                         {
                             daysWithRain[month-1]++;
-                            if (obsDataD[idStation][i+1].prec <= parametersModel.precipitationThreshold)
+                            if (obsDataD[idStation][i+1].prec < parametersModel.precipitationThreshold)
                                 occurrence10[month-1]++;
                         }
                         else
                         {
                             daysWithoutRain[month-1]++;
-                            if (obsDataD[idStation][i+1].prec <= parametersModel.precipitationThreshold)
+                            if (obsDataD[idStation][i+1].prec < parametersModel.precipitationThreshold)
                                 occurrence00[month-1]++;
                         }
                     }
@@ -453,7 +453,9 @@ void weatherGenerator2D::precipitationP00P10()
                 precOccurence[idStation][month].p10 = 0.0;
 
             precOccurence[idStation][month].month = month +1;
+            //printf("%d %f\n",month+1,1-precOccurence[idStation][month].p10);
         }
+        //pressEnterToContinue();
     }
 
 }
@@ -848,7 +850,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
             meanValue /= lengthSeries;
             for (int j=0;j<lengthSeries;j++)
             {
-                myDiff = (dummyMatrix3[i][j]- meanValue);
+                myDiff = (dummyMatrix3[i][j] - meanValue);
                 stdDevValue += (myDiff)*(myDiff);
             }
             stdDevValue /= (lengthSeries-1);
@@ -856,7 +858,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
 
             for (int j=0;j<lengthSeries;j++)
             {
-                normRandom[i][j]= (dummyMatrix3[i][j]-meanValue)/stdDevValue;
+                normRandom[i][j]= (dummyMatrix3[i][j] - meanValue)/stdDevValue;
             }
         }
 
@@ -873,10 +875,14 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 if(fabs(occurrences[i][j-1]) < EPSILON)
                 {
                     if(normRandom[i][j]> transitionNormal[i][0]) occurrences[i][j] = 1.;
+                    //printf("%f  %f",normRandom[i][j],transitionNormal[i][0]);
+                    //pressEnterToContinue();
                 }
                 else
                 {
                     if(normRandom[i][j]> transitionNormal[i][1]) occurrences[i][j] = 1.;
+                    //printf("%f  %f",normRandom[i][j],transitionNormal[i][1]);
+                    //pressEnterToContinue();
                 }
             }
         }

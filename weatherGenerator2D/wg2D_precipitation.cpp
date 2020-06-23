@@ -1299,7 +1299,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                {
                    if (parametersModel.distributionPrecipitation == 1)
                    {
-                       simulatedPrecipitationAmountsSeasonal[i][j] =-log(1-uniformRandomVar)/phatAlpha[i][j] + parametersModel.precipitationThreshold;
+                       simulatedPrecipitationAmountsSeasonal[i][j] =-log(1-uniformRandomVar)/phatAlpha[i][j]+ parametersModel.precipitationThreshold;
                    }
                    else if (parametersModel.distributionPrecipitation == 2)
                    {
