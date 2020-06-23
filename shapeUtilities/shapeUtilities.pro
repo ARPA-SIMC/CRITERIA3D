@@ -51,5 +51,6 @@ HEADERS += \
 unix {
     target.path = /usr/lib
     INSTALLS += target
+}
 
 include(../gdal.pri)
