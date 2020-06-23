@@ -1,4 +1,12 @@
-# GDAL LIBRARY
+#------------------------------------------------------------------------------
+#   GDAL LIBRARY
+#
+#   Info for Windows-msvc:
+#   - install gdal (32 or 64 bit) with OSGeo4W: https://trac.osgeo.org/osgeo4w/
+#   - add GDAL_PATH to system variables (example: C:\OSGeo4W64)
+#   - add OSGeo4W bin directory (example: C:\OSGeo4W64\bin) to system path
+#
+#------------------------------------------------------------------------------
 
 unix:!macx {
     LIBS += -L/usr/lib -lgdal
@@ -19,7 +27,9 @@ win32-msvc {
 }
 
 win32-g++ {
-# TODO
+    # TODO
+    INCLUDEPATH += $$(GDAL_PATH)/include
+    DEPENDPATH += $$(GDAL_PATH)/include
 }
 
 mac {
