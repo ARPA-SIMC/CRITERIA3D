@@ -8,10 +8,7 @@
 
 #include <gdal_priv.h>
 #include <ogrsf_frmts.h>
-
-#ifdef Q_OS_LINUX
-    #include <geos/geom.h>
-#endif
+#include <geos_c.h>
 
 #include <qdebug.h>
 
