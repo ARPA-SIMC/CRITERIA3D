@@ -51,20 +51,6 @@ HEADERS += \
 unix {
     target.path = /usr/lib
     INSTALLS += target
-} 
-
-unix:!macx {
-    LIBS += -lgdal
-
-    INCLUDEPATH += /usr/include/gdal
-    DEPENDPATH += /usr/include/gdal
 }
 
-win32-msvc {
-    LIBS += $$(GDAL_PATH)/lib/gdal_i.lib
-
-    INCLUDEPATH += $$(GDAL_PATH)/include
-    DEPENDPATH += $$(GDAL_PATH)/include
-
-    PRE_TARGETDEPS += $$(GDAL_PATH)/lib/gdal_i.lib
-}
+include(../gdal.pri)
