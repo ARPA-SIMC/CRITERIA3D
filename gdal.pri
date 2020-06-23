@@ -1,7 +1,9 @@
 # GDAL LIBRARY
 
 unix:!macx {
-    LIBS += -lgdal
+    LIBS += -L/usr/lib -lgdal
+    LIBS += -L/usr/lib/x86_64-linux-gnu -lgeos_c
+
 
     INCLUDEPATH += /usr/include/gdal
     DEPENDPATH += /usr/include/gdal
