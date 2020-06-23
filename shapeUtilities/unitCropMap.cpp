@@ -2,13 +2,9 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
-
 #include <QFile>
 #include <QFileInfo>
 
-#include <gdal_priv.h>
-#include <ogrsf_frmts.h>
-#include <geos_c.h>
 
 #include <qdebug.h>
 
@@ -377,4 +373,6 @@ bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil,
     }
     return true;
 }
+
+
 

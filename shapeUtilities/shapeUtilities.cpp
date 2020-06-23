@@ -1,7 +1,8 @@
 #include "shapeUtilities.h"
 #include <QFile>
 #include <QFileInfo>
-
+#include <gdal_priv.h>
+#include <ogrsf_frmts.h>
 
 // make a copy of shapefile and return cloned shapefile path
 QString cloneShapeFile(QString refFileName, QString newFileName)
@@ -53,4 +54,65 @@ bool cleanShapeFile(Crit3DShapeHandler *shapeHandler)
     QFile::remove(tmpFile + ".shx");
 
     return shapeHandler->open(shapeHandler->getFilepath());
+}
+
+/*
+GEOSGeometry *SHPObject_to_LineString(SHPObject *object)
+{
+    // Create a Coordinate sequence with object->nVertices coordinates of 2 dimensions.
+    GEOSCoordSequence *coords = GEOSCoordSeq_create(object->nVertices,2);
+    int i;
+
+    assert(object->nParts == 1);
+    for (i=0; i<object->nVertices; i++)
+    {
+        GEOSCoordSeq_setX(coords,i,object->padfX[i]);
+        GEOSCoordSeq_setY(coords,i,object->padfY[i]);
+    }
+    return GEOSGeom_createLineString(coords);
+}
+*/
+GEOSGeometry * SHPObject_to_GeosPolygon_NoHoles(SHPObject *object)
+{
+    GEOSGeometry *lr;
+    // Create a Coordinate sequence with object->nVertices coordinates of 2 dimensions.
+    GEOSCoordSequence *coords = GEOSCoordSeq_create(object->nVertices,2);
+
+    for (int i=0; i<object->nVertices; i++)
+    {
+        GEOSCoordSeq_setX(coords,i,object->padfX[i]);
+        GEOSCoordSeq_setY(coords,i,object->padfY[i]);
+    }
+    // create LinearRing
+    lr = GEOSGeom_createLinearRing(coords);
+    // create Polygon from LinearRing (assuming no holes)
+    return GEOSGeom_createPolygon(lr,NULL,0);
+}
+
+GEOSGeometry *load_shapefile_as_collection(char *pathname)
+{
+    SHPHandle shape;
+    int type, nobjs, i;
+    double minBounds[4], maxBounds[4];
+    GEOSGeometry **geometries;
+    GEOSGeometry *collection;
+
+    shape = SHPOpen(pathname,"rb");
+
+    SHPGetInfo(shape,&nobjs,&type,minBounds,maxBounds);
+    assert((type % 10) == SHPT_ARC);
+
+    assert(geometries = (GEOSGeometry **) malloc(nobjs*sizeof(GEOSGeometry *)));
+
+    for (i=0; i<nobjs ;i++)
+    {
+        SHPObject *object = SHPReadObject(shape,i);
+        geometries[i] = SHPObject_to_GeosPolygon_NoHoles(object);
+    }
+
+    SHPClose(shape);
+
+    collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, nobjs);
+
+    return collection;
 }
