@@ -47,10 +47,4 @@ HEADERS += \
     zonalStatistic.h   \
     ucmDb.h
 
-
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}
-
 include(../gdal.pri)
