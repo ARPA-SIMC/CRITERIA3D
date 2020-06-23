@@ -17,7 +17,9 @@ win32-msvc {
 }
 
 win32-g++ {
-# TODO
+    # TODO
+    INCLUDEPATH += $$(GDAL_PATH)/include
+    DEPENDPATH += $$(GDAL_PATH)/include
 }
 
 mac {
