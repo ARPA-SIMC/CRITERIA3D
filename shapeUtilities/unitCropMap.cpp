@@ -160,11 +160,14 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
            else
               qDebug() << "meteoPolygon is NOT Valid";
         GEOSGeometry *inteserctionGeom = GEOSIntersection(soilPolygon, meteoPolygon);
-        if ( GEOSisValid(inteserctionGeom) )
-              qDebug() << "inteserctionGeom isValid";
-           else
-              qDebug() << "inteserctionGeom is NOT Valid";
-        qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
+        if ( !inteserctionGeom )
+        {
+            if ( GEOSisValid(inteserctionGeom) )
+                  qDebug() << "inteserctionGeom isValid";
+               else
+                  qDebug() << "inteserctionGeom is NOT Valid";
+            qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
+        }
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
