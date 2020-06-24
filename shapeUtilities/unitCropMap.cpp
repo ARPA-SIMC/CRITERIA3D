@@ -2,18 +2,14 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
-
 #include <QFile>
 #include <QFileInfo>
 
-#include <gdal_priv.h>
-#include <ogrsf_frmts.h>
-#include <geos_c.h>
 
 #include <qdebug.h>
 
 
-bool computeUCMprevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
+bool computeUcmPrevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
                  QString ucmFileName, std::string *error, bool showInfo)
 {
@@ -100,7 +96,7 @@ bool computeUCMprevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Cri
     return isOk;
 }
 
-bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
+bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
 {
 
@@ -142,7 +138,6 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     qDebug() << "idSoil " << QString::fromStdString(idSoil);
     qDebug() << "idMeteo " << QString::fromStdString(idMeteo);
 
-    //geos::geom::MultiPolygon *mp = ;
     if (crop == nullptr)
     {
         /*
@@ -153,6 +148,23 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
             return false;
         }
         */
+        GEOSGeometry *soilGeom = loadShapeAsPolygon(soil);
+        if ( GEOSisValid(soilGeom) )
+              qDebug() << "soilGeom isValid";
+           else
+              qDebug() << "soilGeom is NOT Valid";
+
+        GEOSGeometry *meteoGeom = loadShapeAsPolygon(meteo);
+        if ( GEOSisValid(meteoGeom) )
+              qDebug() << "meteoGeom isValid";
+           else
+              qDebug() << "meteoGeom is NOT Valid";
+        GEOSGeometry *inteserctionGeom = GEOSIntersection(soilGeom, meteoGeom);
+        if ( GEOSisValid(inteserctionGeom) )
+              qDebug() << "inteserctionGeom isValid";
+           else
+              qDebug() << "inteserctionGeom is NOT Valid";
+        qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
@@ -377,4 +389,6 @@ bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil,
     }
     return true;
 }
+
+
 

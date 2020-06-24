@@ -9,7 +9,8 @@
 #------------------------------------------------------------------------------
 
 unix:!macx {
-    LIBS += -lgdal
+    LIBS += -L/usr/lib -lgdal
+    LIBS += -L/usr/lib/x86_64-linux-gnu -lgeos_c
 
     INCLUDEPATH += /usr/include/gdal
     DEPENDPATH += /usr/include/gdal
@@ -17,15 +18,17 @@ unix:!macx {
 
 win32-msvc {
     LIBS += $$(GDAL_PATH)/lib/gdal_i.lib
+    LIBS += $$(GDAL_PATH)/lib/geos_c.lib
 
     INCLUDEPATH += $$(GDAL_PATH)/include
     DEPENDPATH += $$(GDAL_PATH)/include
 
     PRE_TARGETDEPS += $$(GDAL_PATH)/lib/gdal_i.lib
+    PRE_TARGETDEPS += $$(GDAL_PATH)/lib/geos_c.lib
 }
 
 win32-g++ {
-    # TODO
+    # TODO LIB
     INCLUDEPATH += $$(GDAL_PATH)/include
     DEPENDPATH += $$(GDAL_PATH)/include
 }

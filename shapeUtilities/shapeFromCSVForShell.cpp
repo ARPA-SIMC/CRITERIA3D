@@ -11,7 +11,7 @@
  * deficit,DEFICIT,FLOAT,10,1
  * forecast7daysIRR,FcstIrr7d,FLOAT,10,1
 */
-bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape,
+bool shapeFromCsvForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape,
                   QString fileCSV, QString fileCSVRef, QString outputName, std::string *error)
 {
     int CSVRefRequiredInfo = 5;
