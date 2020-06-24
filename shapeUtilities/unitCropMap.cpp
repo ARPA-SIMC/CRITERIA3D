@@ -138,7 +138,6 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     qDebug() << "idSoil " << QString::fromStdString(idSoil);
     qDebug() << "idMeteo " << QString::fromStdString(idMeteo);
 
-    //geos::geom::MultiPolygon *mp = ;
     if (crop == nullptr)
     {
         /*
@@ -149,6 +148,9 @@ bool computeUCMintersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
             return false;
         }
         */
+        GEOSGeometry *soilGeom = loadShapeAsPolygon(soil);
+        GEOSGeometry *meteoGeom = loadShapeAsPolygon(soil);
+        GEOSGeometry *inteserctionGeom = GEOSIntersection(soilGeom, meteoGeom);
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
