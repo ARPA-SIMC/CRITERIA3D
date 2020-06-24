@@ -33,7 +33,7 @@ long getFileLenght(QString fileName)
 }
 
 
-bool writeUCMListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error)
+bool writeUcmListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error)
 {
     UcmDb* unitList = new UcmDb(dbName);
 

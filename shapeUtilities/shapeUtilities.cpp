@@ -205,5 +205,5 @@ GEOSGeometry *loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         // create Polygon from LinearRing
         geometries[i] = GEOSGeom_createPolygon(lr,holes,nHoles);
     }
-    return GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, nShapes);
+    return GEOSGeom_createCollection(GEOS_POLYGON, geometries, nShapes);
 }
