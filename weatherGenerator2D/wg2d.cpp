@@ -630,10 +630,16 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
                p10 have to be recalculated according to a normal number*/
             normalizedTransitionProbability[i][0]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].p00)));
             normalizedTransitionProbability[i][1]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].p10)));
+            //normalizedTransitionProbability[i][0] = statistics::functionQuantileCauchy(2,0,precOccurence[i][iMonth].p00);
+            //normalizedTransitionProbability[i][1] = statistics::functionQuantileCauchy(2,0,precOccurence[i][iMonth].p10);
+
             for (int jCount=0;jCount<nrDaysIterativeProcessMonthly[iMonth];jCount++)
             {
                normalizedRandomMatrix[i][jCount]= myrandom::normalRandom(&gasDevIset,&gasDevGset);
+               //normalizedRandomMatrix[i][jCount]= myrandom::cauchyRandom(&gasDevIset,&gasDevGset,2);
             }
+            //printf("%d  %f  %f %f\n",i,normalizedTransitionProbability[i][0],normalizedTransitionProbability[i][1],normalizedRandomMatrix[i][0]);
+            //getchar();
         }
         // !! questa parte è stata aggiunta per fare uno studio comparativo tra weather generaotr in Matlab e in C usando gli stessi numeri random
         //double* arrayRandomNormalNumbers = (double *)calloc(nrStations*nrDaysIterativeProcessMonthly[iMonth], sizeof(double));

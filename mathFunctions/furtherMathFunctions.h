@@ -110,6 +110,7 @@
     {
         //float ran1(long *idum);
         //float gasdev(long *idum);
+        double cauchyRandom(int *gasDevIset,double *gasDevGset,double gamma);
         float normalRandom(int *gasDevIset,float *gasDevGset);
         double normalRandom(int *gasDevIset,double *gasDevGset);
         double normalRandomLongSeries(int *gasDevIset,double *gasDevGset,int* randomNumberInitial);
@@ -126,7 +127,9 @@
         double tabulatedERFC(double x);
         double inverseTabulatedERF(double value);
         double inverseTabulatedERFC(double value);
-
+        double functionCDFCauchy(double gamma,double x0, double x);
+        double functionPDFCauchy(double gamma,double x0, double x);
+        double functionQuantileCauchy(double gamma,double x0, double F);
     }
 
 
