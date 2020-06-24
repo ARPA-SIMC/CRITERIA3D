@@ -148,18 +148,18 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
             return false;
         }
         */
-        GEOSGeometry *soilGeom = loadShapeAsPolygon(soil);
-        if ( GEOSisValid(soilGeom) )
-              qDebug() << "soilGeom isValid";
+        GEOSGeometry* soilPolygon = loadShapeAsPolygon(soil);
+        if ( GEOSisValid(soilPolygon) )
+              qDebug() << "soilPolygon isValid";
            else
-              qDebug() << "soilGeom is NOT Valid";
+              qDebug() << "soilPolygon is NOT Valid";
 
-        GEOSGeometry *meteoGeom = loadShapeAsPolygon(meteo);
-        if ( GEOSisValid(meteoGeom) )
-              qDebug() << "meteoGeom isValid";
+        GEOSGeometry *meteoPolygon = loadShapeAsPolygon(meteo);
+        if ( GEOSisValid(meteoPolygon) )
+              qDebug() << "meteoPolygon isValid";
            else
-              qDebug() << "meteoGeom is NOT Valid";
-        GEOSGeometry *inteserctionGeom = GEOSIntersection(soilGeom, meteoGeom);
+              qDebug() << "meteoPolygon is NOT Valid";
+        GEOSGeometry *inteserctionGeom = GEOSIntersection(soilPolygon, meteoPolygon);
         if ( GEOSisValid(inteserctionGeom) )
               qDebug() << "inteserctionGeom isValid";
            else

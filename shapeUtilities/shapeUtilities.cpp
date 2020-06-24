@@ -119,7 +119,7 @@ GEOSGeometry *load_shapefile_as_collection(char *pathname)
     return collection;
 }
 
-GEOSGeometry *loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
+GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 {
 
     // Init GEOS
@@ -204,6 +204,8 @@ GEOSGeometry *loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         }
         // create Polygon from LinearRing
         geometries[i] = GEOSGeom_createPolygon(lr,holes,nHoles);
+        free(holes);
     }
-    return GEOSGeom_createCollection(GEOS_POLYGON, geometries, nShapes);
+    collection = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, geometries, nShapes);
+    return collection;
 }
