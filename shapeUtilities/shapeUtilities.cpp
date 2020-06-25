@@ -202,6 +202,10 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             GEOSCoordSeq_setY(coords,j,yVertex[j]);
         }
         lr = GEOSGeom_createLinearRing(coords);
+        if (lr == NULL)
+        {
+            qDebug() << "lr is NULL, i = " << i;
+        }
 
         for (int holeIndex = 0; holeIndex < nHoles; holeIndex++)
         {
@@ -215,9 +219,18 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         }
         // create Polygon from LinearRing
         geometries[i] = GEOSGeom_createPolygon(lr,holes,nHoles);
+        if (geometries[i] == NULL)
+        {
+            qDebug() << "geometries[i] is NULL, i = " << i;
+        }
 
     }
+    qDebug() << "nShapes = " << nShapes;
     GEOSGeometry *collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, nShapes);
+    if (collection == NULL)
+    {
+        qDebug() << "collection is NULL";
+    }
     delete [] geometries;
     delete [] holes;
     return collection;
