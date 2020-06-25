@@ -23,13 +23,10 @@ unix:!macx {
 }
 
 win32-msvc {
-    LIBS += $$(GDAL_PATH)/lib/gdal_i.lib
-    LIBS += $$(GDAL_PATH)/lib/geos_c.lib
+    LIBS += -L$$(GDAL_PATH)/lib/ -lgdal_i -lgeos_c
 
     INCLUDEPATH += $$(GDAL_PATH)/include
     DEPENDPATH += $$(GDAL_PATH)/include
-
-    #PRE_TARGETDEPS += $$(GDAL_PATH)/lib/gdal_i.lib
 }
 
 win32-g++ {
@@ -37,9 +34,6 @@ win32-g++ {
 
     INCLUDEPATH += $$(MSYS_PATH)/include
     DEPENDPATH += $$(MSYS_PATH)/include
-
-    #PRE_TARGETDEPS += $$(MSYS_PATH)/lib/libgdal.a
-    #PRE_TARGETDEPS += $$(MSYS_PATH)/lib/libgeos_c.dll.a
 }
 
 mac {
