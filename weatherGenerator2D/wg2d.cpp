@@ -438,6 +438,8 @@ void weatherGenerator2D::precipitationP00P10()
                             {
                                 occurrence10[month-1]++;
                                 ++precOccurrenceGlobal[month-1].p10;
+                                //printf("%f\n",precOccurrenceGlobal[month-1].p10);
+                                //getchar();
                             }
                         }
                         else
@@ -446,14 +448,16 @@ void weatherGenerator2D::precipitationP00P10()
                             if (obsDataD[idStation][i+1].prec < parametersModel.precipitationThreshold)
                             {
                                 occurrence00[month-1]++;
-                                ++precOccurrenceGlobal[month-1].p10;
+                                ++precOccurrenceGlobal[month-1].p00;
                             }
                         }
                     }
                 }
             }
         }
-
+        /*for (int i=0;i<12;i++)
+            printf("%d %f %f\n",i,precOccurrenceGlobal[i].p00,precOccurrenceGlobal[i].p10);
+        getchar();*/
         for (int month=0;month<12;month++)
         {
             daysWithoutRainGlobal[month] += daysWithoutRain[month];
@@ -473,12 +477,13 @@ void weatherGenerator2D::precipitationP00P10()
         //pressEnterToContinue();
     }
 
-    for (int i=0;i<12;i++)
+    /*for (int i=0;i<12;i++)
     {
         precOccurrenceGlobal[i].p00 /= daysWithoutRainGlobal[i];
         precOccurrenceGlobal[i].p10 /= daysWithRainGlobal[i];
+        printf("%d %f %f\n",i,precOccurrenceGlobal[i].p00,precOccurrenceGlobal[i].p10);
     }
-
+    getchar();*/
 }
 
 
@@ -628,8 +633,10 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
     // arrays initialization
     for (int iMonth=0; iMonth<12; iMonth++)
     {
-        //double syntheticP10,syntheticP01;
-        //syntheticP01 = syntheticP10 = 0.0;
+        double syntheticP10,syntheticP01;
+        double wetDays,dryDays;
+        syntheticP01 = syntheticP10 = 0.0;
+        wetDays = dryDays = 0.0;
         // initialization and definition of the random matrix
         double** normalizedRandomMatrix;
         normalizedRandomMatrix = (double **)calloc(nrStations, sizeof(double*));
@@ -654,7 +661,7 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
             normalizedTransitionProbability[i][0]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].p00)));
             normalizedTransitionProbability[i][1]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].p10)));
 
-            printf("gauss %d %f  %f \n",i,normalizedTransitionProbability[i][0],normalizedTransitionProbability[i][1]);
+            //printf("gauss %d %f  %f \n",i,normalizedTransitionProbability[i][0],normalizedTransitionProbability[i][1]);
             //normalizedTransitionProbability[i][0] = statistics::functionQuantileCauchy(0.7,0,precOccurence[i][iMonth].p00);
             //normalizedTransitionProbability[i][1] = statistics::functionQuantileCauchy(0.7,0,precOccurence[i][iMonth].p10);
             //printf("cauchy %d %f  %f \n",i,normalizedTransitionProbability[i][0],normalizedTransitionProbability[i][1]);
@@ -671,19 +678,34 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
         }
 
         weatherGenerator2D::spatialIterationOccurrence(randomMatrix[iMonth].matrixM,randomMatrix[iMonth].matrixK,randomMatrix[iMonth].matrixOccurrences,matrixOccurrence,normalizedRandomMatrix,normalizedTransitionProbability,nrDaysIterativeProcessMonthly[iMonth]);
-        /*for (int iStations=0;iStations<nrStations;iStations++)
+        for (int iStations=0;iStations<nrStations;iStations++)
         {
             for (int iLength=0;iLength<nrDaysIterativeProcessMonthly[iMonth]-1;iLength++)
             {
-                if (randomMatrix[iMonth].matrixOccurrences[iLength] > ONELESSEPSILON && randomMatrix[iMonth].matrixOccurrences[iLength+1] > EPSILON)
-                    syntheticP10++;
-                if (randomMatrix[iMonth].matrixOccurrences[iLength+1] > ONELESSEPSILON && randomMatrix[iMonth].matrixOccurrences[iLength] > EPSILON)
-                    syntheticP01++;
+                if ((randomMatrix[iMonth].matrixOccurrences[iStations][iLength] > 0.5))
+                {
+                    wetDays++;
+                    if ((randomMatrix[iMonth].matrixOccurrences[iStations][iLength+1]) < 0.5)
+                    {
+                        syntheticP10++;
+                    }
+                }
+
+                if (randomMatrix[iMonth].matrixOccurrences[iStations][iLength] < 0.5)
+                {
+                    dryDays++;
+                    if (randomMatrix[iMonth].matrixOccurrences[iStations][iLength+1] > 0.5)
+                    {
+                        syntheticP01++;
+                    }
+                }
             }
         }
-        syntheticP01 /= (nrStations*(nrDaysIterativeProcessMonthly[iMonth]-1));
-        syntheticP10 /= (nrStations*(nrDaysIterativeProcessMonthly[iMonth]-1));
-        */
+
+        syntheticP01 /= dryDays;
+        syntheticP10 /= wetDays;
+        printf("%f %f\n",syntheticP10,syntheticP01);
+        getchar();
 
         randomMatrix[iMonth].month = iMonth + 1;
         // free memory
