@@ -78,12 +78,21 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, QString* 
     }
 
     // Initialize
-    myRaster->initializeGrid();
+    myRaster->initializeGrid(1);
+
+    // TODO read data type (float or byte)
 
     // read data (band 1)
     int xSize = band->GetXSize();
     int ySize = band->GetYSize();
-    band->RasterIO(GF_Read, 0, 0, xSize, ySize, myRaster->value, xSize, ySize, GDT_Float32, 0, 0);
+    float* data = (float *) CPLMalloc(sizeof(float) * xSize * ySize);
+    band->RasterIO(GF_Read, 0, 0, xSize, ySize, data, xSize, ySize, GDT_Float32, 0, 0);
+
+    for (int row = 0; row < myRaster->header->nrRows; row++)
+        for (int col = 0; col < myRaster->header->nrCols; col++)
+            myRaster->value[row][col] = data[row*xSize+col];
+
+    CPLFree(data);
 
     updateMinMaxRasterGrid(myRaster);
 
