@@ -170,7 +170,7 @@
         TObsPrecDataD** obsPrecDataD;
         TprecOccurrence** precOccurence;
         TcorrelationMatrix *correlationMatrix;
-
+        TprecOccurrence precOccurrenceGlobal[12];
 
         TrandomMatrix *randomMatrix;
         ToccurrenceIndexSeasonal* occurrenceIndexSeasonal;

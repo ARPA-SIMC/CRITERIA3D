@@ -409,6 +409,13 @@ void weatherGenerator2D::initializeRandomNumbers(double *vector)
 void weatherGenerator2D::precipitationP00P10()
 {
     // initialization
+    for (int iCount=0; iCount<12; iCount++)
+    {
+        precOccurrenceGlobal[iCount].p00 = 0;
+        precOccurrenceGlobal[iCount].p10 = 0;
+    }
+    int daysWithRainGlobal[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+    int daysWithoutRainGlobal[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
     for (int idStation=0;idStation<nrStations;idStation++)
     {
         int daysWithoutRain[12]={0,0,0,0,0,0,0,0,0,0,0,0};
@@ -428,13 +435,19 @@ void weatherGenerator2D::precipitationP00P10()
                         {
                             daysWithRain[month-1]++;
                             if (obsDataD[idStation][i+1].prec < parametersModel.precipitationThreshold)
+                            {
                                 occurrence10[month-1]++;
+                                ++precOccurrenceGlobal[month-1].p10;
+                            }
                         }
                         else
                         {
                             daysWithoutRain[month-1]++;
                             if (obsDataD[idStation][i+1].prec < parametersModel.precipitationThreshold)
+                            {
                                 occurrence00[month-1]++;
+                                ++precOccurrenceGlobal[month-1].p10;
+                            }
                         }
                     }
                 }
@@ -443,6 +456,8 @@ void weatherGenerator2D::precipitationP00P10()
 
         for (int month=0;month<12;month++)
         {
+            daysWithoutRainGlobal[month] += daysWithoutRain[month];
+            daysWithRainGlobal[month] += daysWithRain[month];
             if (daysWithoutRain[month] != 0)
                 precOccurence[idStation][month].p00 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence00[month])/daysWithoutRain[month]));
             else
@@ -456,6 +471,12 @@ void weatherGenerator2D::precipitationP00P10()
             //printf("%d %f\n",month+1,1-precOccurence[idStation][month].p10);
         }
         //pressEnterToContinue();
+    }
+
+    for (int i=0;i<12;i++)
+    {
+        precOccurrenceGlobal[i].p00 /= daysWithoutRainGlobal[i];
+        precOccurrenceGlobal[i].p10 /= daysWithRainGlobal[i];
     }
 
 }
@@ -607,6 +628,8 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
     // arrays initialization
     for (int iMonth=0; iMonth<12; iMonth++)
     {
+        //double syntheticP10,syntheticP01;
+        //syntheticP01 = syntheticP10 = 0.0;
         // initialization and definition of the random matrix
         double** normalizedRandomMatrix;
         normalizedRandomMatrix = (double **)calloc(nrStations, sizeof(double*));
@@ -630,62 +653,38 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
                p10 have to be recalculated according to a normal number*/
             normalizedTransitionProbability[i][0]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].p00)));
             normalizedTransitionProbability[i][1]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].p10)));
-            //normalizedTransitionProbability[i][0] = statistics::functionQuantileCauchy(2,0,precOccurence[i][iMonth].p00);
-            //normalizedTransitionProbability[i][1] = statistics::functionQuantileCauchy(2,0,precOccurence[i][iMonth].p10);
 
+            printf("gauss %d %f  %f \n",i,normalizedTransitionProbability[i][0],normalizedTransitionProbability[i][1]);
+            //normalizedTransitionProbability[i][0] = statistics::functionQuantileCauchy(0.7,0,precOccurence[i][iMonth].p00);
+            //normalizedTransitionProbability[i][1] = statistics::functionQuantileCauchy(0.7,0,precOccurence[i][iMonth].p10);
+            //printf("cauchy %d %f  %f \n",i,normalizedTransitionProbability[i][0],normalizedTransitionProbability[i][1]);
+            //getchar();
             for (int jCount=0;jCount<nrDaysIterativeProcessMonthly[iMonth];jCount++)
             {
                normalizedRandomMatrix[i][jCount]= myrandom::normalRandom(&gasDevIset,&gasDevGset);
-               //normalizedRandomMatrix[i][jCount]= myrandom::cauchyRandom(&gasDevIset,&gasDevGset,2);
+               //normalizedRandomMatrix[i][jCount]= myrandom::cauchyRandom(&gasDevIset,&gasDevGset,0.85);
+               //printf("%d  %f \n",i,normalizedRandomMatrix[i][jCount]);
+               //getchar();
             }
             //printf("%d  %f  %f %f\n",i,normalizedTransitionProbability[i][0],normalizedTransitionProbability[i][1],normalizedRandomMatrix[i][0]);
             //getchar();
         }
-        // !! questa parte è stata aggiunta per fare uno studio comparativo tra weather generaotr in Matlab e in C usando gli stessi numeri random
-        //double* arrayRandomNormalNumbers = (double *)calloc(nrStations*nrDaysIterativeProcessMonthly[iMonth], sizeof(double));
-        //randomSet(arrayRandomNormalNumbers,nrStations*nrDaysIterativeProcessMonthly[iMonth]);
-        //int countRandom = 0;
-        //for (int i=0;i<nrStations;i++)
-        //{
-            //for (int j=0;j<nrDaysIterativeProcessMonthly[iMonth];j++)
-            //{
-                //normalizedRandomMatrix[i][j] = arrayRandomNormalNumbers[countRandom];
-                //countRandom++;
-                //printf("%f  ",normalizedRandomMatrix[i][j]);
-            //}
-            //printf("\n");
-        //}
-        //free(arrayRandomNormalNumbers);
-        // fine parte da togliere
-
-        // initialization outputs of weatherGenerator2D::spatialIterationOccurrence
-        //double** M;
-        //double** K;
-        //double** occurrences;
-        //M = (double **)calloc(nrStations, sizeof(double*));
-        //K = (double **)calloc(nrStations, sizeof(double*));
-        //occurrences = (double **)calloc(nrStations, sizeof(double*));
-
-        //for (int i=0;i<nrStations;i++)
-        //{
-            //M[i] = (double *)calloc(nrStations, sizeof(double));
-            //K[i] = (double *)calloc(nrStations, sizeof(double));
-            //for (int j=0;j<nrStations;j++)
-            //{
-                //M[i][j]= NODATA;
-                //K[i][j]= NODATA;
-            //}
-        //}
-        //for (int i=0;i<nrStations;i++)
-        //{
-          //occurrences[i] = (double *)calloc(nrDaysIterativeProcessMonthly[iMonth], sizeof(double));
-          //for (int j=0;j<nrDaysIterativeProcessMonthly[iMonth];j++)
-          //{
-              //occurrences[i][j]= NODATA;
-          //}
-        //}
 
         weatherGenerator2D::spatialIterationOccurrence(randomMatrix[iMonth].matrixM,randomMatrix[iMonth].matrixK,randomMatrix[iMonth].matrixOccurrences,matrixOccurrence,normalizedRandomMatrix,normalizedTransitionProbability,nrDaysIterativeProcessMonthly[iMonth]);
+        /*for (int iStations=0;iStations<nrStations;iStations++)
+        {
+            for (int iLength=0;iLength<nrDaysIterativeProcessMonthly[iMonth]-1;iLength++)
+            {
+                if (randomMatrix[iMonth].matrixOccurrences[iLength] > ONELESSEPSILON && randomMatrix[iMonth].matrixOccurrences[iLength+1] > EPSILON)
+                    syntheticP10++;
+                if (randomMatrix[iMonth].matrixOccurrences[iLength+1] > ONELESSEPSILON && randomMatrix[iMonth].matrixOccurrences[iLength] > EPSILON)
+                    syntheticP01++;
+            }
+        }
+        syntheticP01 /= (nrStations*(nrDaysIterativeProcessMonthly[iMonth]-1));
+        syntheticP10 /= (nrStations*(nrDaysIterativeProcessMonthly[iMonth]-1));
+        */
+
         randomMatrix[iMonth].month = iMonth + 1;
         // free memory
         for (int i=0;i<nrStations;i++)
@@ -859,7 +858,8 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 myDiff = (dummyMatrix3[i][j] - meanValue);
                 stdDevValue += (myDiff)*(myDiff);
             }
-            stdDevValue /= (lengthSeries-1);
+            if (lengthSeries > 1) stdDevValue /= (lengthSeries);
+            else stdDevValue /= (lengthSeries-1);
             stdDevValue = sqrt(stdDevValue);
 
             for (int j=0;j<lengthSeries;j++)
@@ -880,14 +880,14 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
             {
                 if(fabs(occurrences[i][j-1]) < EPSILON)
                 {
-                    if(normRandom[i][j]> transitionNormal[i][0]) occurrences[i][j] = 1.;
-                    //printf("%f  %f",normRandom[i][j],transitionNormal[i][0]);
+                    if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
+                    //printf("%f  %f",statistics::functionCDFCauchy(2,0,normRandom[i][j]),transitionNormal[i][0]);
                     //pressEnterToContinue();
                 }
                 else
                 {
                     if(normRandom[i][j]> transitionNormal[i][1]) occurrences[i][j] = 1.;
-                    //printf("%f  %f",normRandom[i][j],transitionNormal[i][1]);
+                    //printf("%f  %f",statistics::functionCDFCauchy(2,0,normRandom[i][j]),transitionNormal[i][1]);
                     //pressEnterToContinue();
                 }
             }
