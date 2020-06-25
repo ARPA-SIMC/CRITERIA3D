@@ -27,6 +27,8 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, QString* 
 
     // size
     qDebug() << "Size = " << dataset->GetRasterXSize() << dataset->GetRasterYSize() << dataset->GetRasterCount();
+    myRaster->header->nrCols = dataset->GetRasterXSize();
+    myRaster->header->nrRows = dataset->GetRasterYSize();
 
     // projection
     if (dataset->GetProjectionRef() != nullptr)
@@ -37,49 +39,53 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, QString* 
     spatialReference.SetWellKnownGeogCS("WGS84");
     // TODO check utm zone
 
-    // Origin and size
+    // Origin (top left) and size
     if (dataset->GetGeoTransform(adfGeoTransform) == CE_None)
     {
         qDebug() << "Origin = " << adfGeoTransform[0] << adfGeoTransform[3];
         qDebug() << "Pixel Size = " << adfGeoTransform[1] << adfGeoTransform[5];
     }
+    if (adfGeoTransform[1] != -adfGeoTransform[5])
+    {
+        *myError = "Not regular pixel size!";
+        return false;
+    }
+    myRaster->header->cellSize = adfGeoTransform[1];
+    myRaster->header->llCorner.x = adfGeoTransform[0];
+    myRaster->header->llCorner.y = adfGeoTransform[3] - myRaster->header->cellSize * myRaster->header->nrRows;
 
     // TODO select band
     qDebug() << "Nr. band: " << dataset->GetRasterCount();
     GDALRasterBand* band = dataset->GetRasterBand(1);
-
     if(band == nullptr)
     {
-        *myError = "Band 1 is void!";
+        *myError = "Missing data!";
         return false;
     }
 
     // NODATA
-    if (band)
+    int success;
+    double nodataValue = band->GetNoDataValue(&success);
+    if (success)
     {
-        int success;
-        double nodataValue = band->GetNoDataValue(&success);
-        if (success)
-        {
-            qDebug() << "Nodata: " << QString::number(nodataValue);
-            myRaster->header->flag = float(nodataValue);
-        }
-        else
-        {
-            qDebug() << "Missing NODATA";
-            myRaster->header->flag = NODATA;
-        }
+        qDebug() << "Nodata: " << QString::number(nodataValue);
+        myRaster->header->flag = float(nodataValue);
+    }
+    else
+    {
+        qDebug() << "Missing NODATA";
+        myRaster->header->flag = NODATA;
     }
 
-    // SIZE
-    myRaster->header->nrCols = dataset->GetRasterXSize();
-    myRaster->header->nrRows = dataset->GetRasterYSize();
+    // Initialize
+    myRaster->initializeGrid();
 
-    //myRaster->initializeGrid();
+    // read data (band 1)
+    int xSize = band->GetXSize();
+    int ySize = band->GetYSize();
+    band->RasterIO(GF_Read, 0, 0, xSize, ySize, myRaster->value, xSize, ySize, GDT_Float32, 0, 0);
 
-    // TODO read xll position
-    // read data
-    // updateMinmax
+    updateMinMaxRasterGrid(myRaster);
 
     return true;
 }
