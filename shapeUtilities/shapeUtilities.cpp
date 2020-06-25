@@ -74,6 +74,8 @@ GEOSGeometry *SHPObject_to_LineString(SHPObject *object)
     return GEOSGeom_createLineString(coords);
 }
 */
+
+/*
 GEOSGeometry * SHPObject_to_GeosPolygon_NoHoles(SHPObject *object)
 {
     GEOSGeometry *lr;
@@ -90,7 +92,9 @@ GEOSGeometry * SHPObject_to_GeosPolygon_NoHoles(SHPObject *object)
     // create Polygon from LinearRing (assuming no holes)
     return GEOSGeom_createPolygon(lr,NULL,0);
 }
+*/
 
+/*
 GEOSGeometry *load_shapefile_as_collection(char *pathname)
 {
     SHPHandle shape;
@@ -118,6 +122,8 @@ GEOSGeometry *load_shapefile_as_collection(char *pathname)
 
     return collection;
 }
+*/
+
 
 GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 {
@@ -127,7 +133,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     initGEOS(notice_function, error_function);
 
     GEOSGeometry **geometries;
-    GEOSGeometry *collection;
     ShapeObject shapeObj;
 
     int nShapes = shapeHandler->getShapeCount();
@@ -142,7 +147,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     GEOSCoordSequence *coords;
     GEOSCoordSequence *coordsHoles;
     GEOSGeometry *lr;
-    GEOSGeometry **holes;
+    GEOSGeometry **holes = nullptr;
 
     for (unsigned int i = 0; i < nShapes; i++)
     {
@@ -159,6 +164,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             int length = shapeObj.getPart(partIndex).length;
             if (shapeParts[i][partIndex].hole)
             {
+
                 std::vector<double> x;
                 std::vector<double> y;
                 for (unsigned long v = 0; v < length; v++)
@@ -169,6 +175,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
                 xVertexHoles.push_back(x);
                 yVertexHoles.push_back(y);
                 nHoles = nHoles + 1;
+
             }
             else
             {
@@ -195,6 +202,10 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             GEOSCoordSeq_setY(coords,j,yVertex[j]);
         }
         lr = GEOSGeom_createLinearRing(coords);
+        if (lr == NULL)
+        {
+            qDebug() << "lr is NULL, i = " << i;
+        }
 
         for (int holeIndex = 0; holeIndex < nHoles; holeIndex++)
         {
@@ -208,8 +219,111 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         }
         // create Polygon from LinearRing
         geometries[i] = GEOSGeom_createPolygon(lr,holes,nHoles);
-        free(holes);
+        if (geometries[i] == NULL)
+        {
+            qDebug() << "geometries[i] is NULL, i = " << i;
+        }
+
     }
-    collection = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, geometries, nShapes);
+    qDebug() << "nShapes = " << nShapes;
+    GEOSGeometry *collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, nShapes);
+    if (collection == NULL)
+    {
+        qDebug() << "collection is NULL";
+    }
+    delete [] geometries;
+    delete [] holes;
     return collection;
 }
+
+
+/*
+GEOSGeometry * testIntersection()
+{
+// Init GEOS
+    GEOSMessageHandler error_function = nullptr, notice_function = nullptr;
+    initGEOS(notice_function, error_function);
+
+    GEOSCoordSeq coordseq = NULL, coordseqSecond = NULL, coordseqIntersection = NULL;
+    GEOSGeom area_1 = NULL, area_2 = NULL, intersection = NULL;
+    GEOSGeometry *pol1;
+    GEOSGeometry *pol2;
+
+    coordseq = (GEOSCoordSeq) GEOSCoordSeq_create(5, 2);   //5 pointsbi-dimensional
+
+    GEOSCoordSeq_setX(coordseq, 0, 42.46);    //upper left
+    GEOSCoordSeq_setY(coordseq, 0, 131.80);
+    GEOSCoordSeq_setX(coordseq, 1, 42.46);    //upper right
+    GEOSCoordSeq_setY(coordseq, 1, 112.91);
+    GEOSCoordSeq_setX(coordseq, 2, 21.96);    //lower right
+    GEOSCoordSeq_setY(coordseq, 2, 112.91);
+    GEOSCoordSeq_setX(coordseq, 3, 21.96);    //lower left
+    GEOSCoordSeq_setY(coordseq, 3, 131.80);
+    GEOSCoordSeq_setX(coordseq, 4, 42.46 );    //upper left
+    GEOSCoordSeq_setY(coordseq, 4, 131.80);
+
+    area_1 = GEOSGeom_createLinearRing(coordseq);
+
+    pol1 = GEOSGeom_createPolygon(area_1, NULL, 0);
+
+    if((GEOSisEmpty(area_1) != 0) || (GEOSisValid(area_1) != 1)) {
+        printf("No valid intersection found.\n");
+        exit(2);    //invalid input parameter
+    }
+
+    coordseqSecond = (GEOSCoordSeq) GEOSCoordSeq_create(5, 2);   //5 pointsbi-dimensional
+
+    GEOSCoordSeq_setX(coordseqSecond, 0, 43.22);    //upper left
+    GEOSCoordSeq_setY(coordseqSecond, 0, 125.52);
+    GEOSCoordSeq_setX(coordseqSecond, 1, 43.22);    //upper right
+    GEOSCoordSeq_setY(coordseqSecond, 1, 106.47);
+    GEOSCoordSeq_setX(coordseqSecond, 2, 22.71);    //lower right
+    GEOSCoordSeq_setY(coordseqSecond, 2, 106.47);
+    GEOSCoordSeq_setX(coordseqSecond, 3, 22.71);    //lower left
+    GEOSCoordSeq_setY(coordseqSecond, 3, 125.52);
+    GEOSCoordSeq_setX(coordseqSecond, 4, 43.22);    //upper left
+    GEOSCoordSeq_setY(coordseqSecond, 4, 125.52);
+
+    area_2 = GEOSGeom_createLinearRing(coordseqSecond);
+
+    pol2 = GEOSGeom_createPolygon(area_2, NULL, 0);
+
+    if((GEOSisEmpty(area_2) != 0) || (GEOSisValid(area_2) != 1)) {
+        printf("No valid intersection found.\n");
+        exit(2);    //invalid input parameter
+    }
+
+
+    intersection = GEOSIntersection(pol1, pol2);
+
+    if((GEOSisEmpty(intersection) != 0) || (GEOSisValid(intersection) !=1)) {
+        printf("No valid intersection found.\n");
+        exit(2);    //invalid input parameter
+    }
+
+    //Getting coords for the vertex
+    unsigned int num;
+    double xPoints[4];
+    double yPoints[4];
+
+    GEOSGeom geom;
+
+    num = GEOSGetNumGeometries(intersection);
+    printf("Geometries: %d\n",num);
+
+    //GEOSCoordSeq_destroy(coordseq);
+    coordseqIntersection = (GEOSCoordSeq) GEOSCoordSeq_create(2, 2);   //2 pointsbi-dimensional
+
+    for(int i=0; i < num; i++) {
+        geom = (GEOSGeom) GEOSGetGeometryN(intersection, i);
+
+        coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(geom);
+
+        GEOSCoordSeq_getX(coordseqIntersection, 0, &xPoints[i]);
+        GEOSCoordSeq_getY(coordseqIntersection, 0, &yPoints[i]);
+    }
+
+    // Finalizzo GEOS
+    finishGEOS();
+}
+*/
