@@ -148,23 +148,26 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
             return false;
         }
         */
-        GEOSGeometry *soilGeom = loadShapeAsPolygon(soil);
-        if ( GEOSisValid(soilGeom) )
-              qDebug() << "soilGeom isValid";
+        GEOSGeometry* soilPolygon = loadShapeAsPolygon(soil);
+        if ( GEOSisValid(soilPolygon) )
+              qDebug() << "soilPolygon isValid";
            else
-              qDebug() << "soilGeom is NOT Valid";
+              qDebug() << "soilPolygon is NOT Valid";
 
-        GEOSGeometry *meteoGeom = loadShapeAsPolygon(meteo);
-        if ( GEOSisValid(meteoGeom) )
-              qDebug() << "meteoGeom isValid";
+        GEOSGeometry *meteoPolygon = loadShapeAsPolygon(meteo);
+        if ( GEOSisValid(meteoPolygon) )
+              qDebug() << "meteoPolygon isValid";
            else
-              qDebug() << "meteoGeom is NOT Valid";
-        GEOSGeometry *inteserctionGeom = GEOSIntersection(soilGeom, meteoGeom);
-        if ( GEOSisValid(inteserctionGeom) )
-              qDebug() << "inteserctionGeom isValid";
-           else
-              qDebug() << "inteserctionGeom is NOT Valid";
-        qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
+              qDebug() << "meteoPolygon is NOT Valid";
+        GEOSGeometry *inteserctionGeom = GEOSIntersection(soilPolygon, meteoPolygon);
+        if ( !inteserctionGeom )
+        {
+            if ( GEOSisValid(inteserctionGeom) )
+                  qDebug() << "inteserctionGeom isValid";
+               else
+                  qDebug() << "inteserctionGeom is NOT Valid";
+            qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
+        }
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());

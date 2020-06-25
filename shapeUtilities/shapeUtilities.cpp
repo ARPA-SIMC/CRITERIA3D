@@ -119,7 +119,7 @@ GEOSGeometry *load_shapefile_as_collection(char *pathname)
     return collection;
 }
 
-GEOSGeometry *loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
+GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 {
 
     // Init GEOS
@@ -143,12 +143,16 @@ GEOSGeometry *loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     GEOSCoordSequence *coordsHoles;
     GEOSGeometry *lr;
     GEOSGeometry **holes;
-    int nHoles = 0;
 
     for (unsigned int i = 0; i < nShapes; i++)
     {
         shapeHandler->getShape(i, shapeObj);
         shapeParts.push_back(shapeObj.getParts());
+        int nHoles = 0;
+        xVertex.clear();
+        yVertex.clear();
+        xVertexHoles.clear();
+        yVertexHoles.clear();
         for (unsigned int partIndex = 0; partIndex < shapeParts[i].size(); partIndex++)
         {
             int offset = shapeObj.getPart(partIndex).offset;
@@ -204,6 +208,8 @@ GEOSGeometry *loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         }
         // create Polygon from LinearRing
         geometries[i] = GEOSGeom_createPolygon(lr,holes,nHoles);
+        free(holes);
     }
-    return GEOSGeom_createCollection(GEOS_POLYGON, geometries, nShapes);
+    collection = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, geometries, nShapes);
+    return collection;
 }

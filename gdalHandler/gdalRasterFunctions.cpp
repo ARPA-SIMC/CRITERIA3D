@@ -26,15 +26,24 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, QString* 
     const char* projRef = dataset->GetProjectionRef();
     qDebug(projRef);
 
+    // TODO read utm zone
+
     int nBands = dataset->GetRasterCount();
     qDebug() << "Nr. band: " << QString::number(nBands);
 
     // TODO select band
-    GDALRasterBand* first = dataset->GetRasterBand(1);
-    if (first)
+    GDALRasterBand* band = dataset->GetRasterBand(1);
+    if(band == nullptr)
+    {
+        *myError = "Band 1 is void!";
+        return false;
+    }
+
+    // NODATA
+    if (band)
     {
         int success;
-        double nodataValue = first->GetNoDataValue(&success);
+        double nodataValue = band->GetNoDataValue(&success);
         if (success)
         {
             qDebug() << "Nodata: " << QString::number(nodataValue);
@@ -47,12 +56,13 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, QString* 
         }
     }
 
-    // dimension
+    // SIZE
     myRaster->header->nrCols = dataset->GetRasterXSize();
     myRaster->header->nrRows = dataset->GetRasterYSize();
 
+    //myRaster->initializeGrid();
+
     // TODO read xll position
-    // raster initialize
     // read data
     // updateMinmax
 
