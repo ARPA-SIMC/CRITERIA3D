@@ -87,7 +87,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
            endYear =  MAXVALUE(endYear,obsDataD[i][j].date.year);
        }
    }
-   int totalNumberWetDays = 0;
+
    for (int i=0;i<nrStations;i++)
    {
        int counterMonth = 11;
@@ -95,7 +95,6 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
        for (int j=0;j<lengthSeason[0]*parametersModel.yearOfSimulation;j++)
        {
                occurrenceMatrixSeasonDJF[i][j] = randomMatrix[counterMonth].matrixOccurrences[i][nrDaysOfMonth];
-               if (occurrenceMatrixSeasonDJF[i][j]> 0.5) totalNumberWetDays++;
                nrDaysOfMonth++;
                if (nrDaysOfMonth >= lengthMonth[counterMonth]*parametersModel.yearOfSimulation)
                {
@@ -113,7 +112,6 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
        for (int j=0;j<lengthSeason[1]*parametersModel.yearOfSimulation;j++)
        {
                occurrenceMatrixSeasonMAM[i][j] = randomMatrix[counterMonth].matrixOccurrences[i][nrDaysOfMonth];
-               if (occurrenceMatrixSeasonMAM[i][j]> 0.5) totalNumberWetDays++;
                nrDaysOfMonth++;
                if (nrDaysOfMonth >= lengthMonth[counterMonth]*parametersModel.yearOfSimulation)
                {
@@ -131,7 +129,6 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
        for (int j=0;j<lengthSeason[2]*parametersModel.yearOfSimulation;j++)
        {
                occurrenceMatrixSeasonJJA[i][j] = randomMatrix[counterMonth].matrixOccurrences[i][nrDaysOfMonth];
-               if (occurrenceMatrixSeasonJJA[i][j]> 0.5) totalNumberWetDays++;
                nrDaysOfMonth++;
                if (nrDaysOfMonth >= lengthMonth[counterMonth]*parametersModel.yearOfSimulation)
                {
@@ -148,7 +145,6 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
        for (int j=0;j<lengthSeason[3]*parametersModel.yearOfSimulation;j++)
        {
                occurrenceMatrixSeasonSON[i][j] = randomMatrix[counterMonth].matrixOccurrences[i][nrDaysOfMonth];
-               if (occurrenceMatrixSeasonSON[i][j]> 0.5) totalNumberWetDays++;
                nrDaysOfMonth++;
                if (nrDaysOfMonth >= lengthMonth[counterMonth]*parametersModel.yearOfSimulation)
                {
@@ -158,7 +154,6 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
                }
        }
    }
-   printf("tot wet days %d\n",totalNumberWetDays );
    statistics::correlationsMatrix(nrStations,occurrenceMatrixSeasonDJF,lengthSeason[0]*parametersModel.yearOfSimulation,wDJF);
    statistics::correlationsMatrix(nrStations,occurrenceMatrixSeasonMAM,lengthSeason[1]*parametersModel.yearOfSimulation,wMAM);
    statistics::correlationsMatrix(nrStations,occurrenceMatrixSeasonJJA,lengthSeason[2]*parametersModel.yearOfSimulation,wJJA);
@@ -915,17 +910,15 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
       timeinfo = localtime ( &rawtime );
       printf ( "Current local time and date: %s", asctime (timeinfo) );
       printf("step 9/9 substep %d/4\n",iSeason+1);
-      int numberOfWetDays=0;
       for (int i=0;i<nrStations;i++)
       {
            for (int j=0;j<lengthSeason[iSeason]*parametersModel.yearOfSimulation;j++)
            {
                simulatedPrecipitationAmounts[iSeason].matrixAmounts[i][j]= simulatedPrecipitationAmountsSeasonal[i][j];
-                if (simulatedPrecipitationAmounts[iSeason].matrixAmounts[i][j] > parametersModel.precipitationThreshold) numberOfWetDays++;
+
            }
       }
-      printf("giorni piovosi %d\n",numberOfWetDays);
-      getchar();
+
       // free memory
       for (int i=0;i<nrStations;i++)
       {
@@ -1163,7 +1156,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
    for (int i=0;i<nrStations;i++)
    {
        dummyMatrix[i]= (double*)calloc(nrStations, sizeof(double));
-       dummyMatrix2[i]= (double*)calloc(nrStations, sizeof(double));       
+       dummyMatrix2[i]= (double*)calloc(nrStations, sizeof(double));
        initialAmountsCorrelationMatrix[i]= (double*)calloc(nrStations, sizeof(double));
        for (int j=0;j<nrStations;j++)
        {
@@ -1306,7 +1299,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                {
                    if (parametersModel.distributionPrecipitation == 1)
                    {
-                       simulatedPrecipitationAmountsSeasonal[i][j] =-log(1-uniformRandomVar)/phatAlpha[i][j]+ parametersModel.precipitationThreshold+EPSILON*2;
+                       simulatedPrecipitationAmountsSeasonal[i][j] =-log(1-uniformRandomVar)/phatAlpha[i][j]+ parametersModel.precipitationThreshold;
                    }
                    else if (parametersModel.distributionPrecipitation == 2)
                    {
@@ -1463,7 +1456,7 @@ void weatherGenerator2D::createAmountOutputSerie()
     double* october =(double*)calloc(31*parametersModel.yearOfSimulation, sizeof(double));
     double* november =(double*)calloc(30*parametersModel.yearOfSimulation, sizeof(double));
     double* december =(double*)calloc(31*parametersModel.yearOfSimulation, sizeof(double));
-    int giorniDipioggia =0;
+
     for(int j=0;j<nrStations;j++)
     {
             for (int k=0;k<31*parametersModel.yearOfSimulation;k++)
@@ -1532,8 +1525,6 @@ void weatherGenerator2D::createAmountOutputSerie()
                 {
                     amountsPrecGenerated[i][j] = january[count[month-1]];
                     ++count[month-1];
-                    if (amountsPrecGenerated[i][j] > parametersModel.precipitationThreshold)
-                        giorniDipioggia++;
                 }
                 if ( month == 2)
                 {
@@ -1590,10 +1581,8 @@ void weatherGenerator2D::createAmountOutputSerie()
                     amountsPrecGenerated[i][j] = december[count[month-1]];
                     ++count[month-1];
                 }
-
             }
     }
-    printf("frazione giorni di pioggia %f\n",1.0*giorniDipioggia/(31*parametersModel.yearOfSimulation));
     free(january);
     free(february);
     free(march);

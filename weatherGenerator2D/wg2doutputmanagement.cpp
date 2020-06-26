@@ -105,7 +105,6 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
         outputFileName = "outputData/wgSimulation_station_" + QString::number(iStation) + ".txt";
         counter = 0;
         counterSeason[3] = counterSeason[2] = counterSeason[1] = counterSeason[0] = 0;
-        int countRain = 0;
         for (int iYear=1;iYear<=parametersModel.yearOfSimulation;iYear++)
         {
             for (int iDoy=0; iDoy<365; iDoy++)
@@ -144,12 +143,11 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
             }
         }
         counter = 0;
-
         for (int i=0;i<nrDays;i++)
         {
             inputTMin[i]= (float)(outputWeatherData[iStation].minT[counter]);
             inputTMax[i]= (float)(outputWeatherData[iStation].maxT[counter]);
-            inputPrec[i]= (float)(outputWeatherData[iStation].precipitation[counter]);            
+            inputPrec[i]= (float)(outputWeatherData[iStation].precipitation[counter]);
             if (isLeapYear(outputWeatherData[iStation].yearSimulated[counter]) && outputWeatherData[iStation].monthSimulated[counter] == 2 && outputWeatherData[iStation].daySimulated[counter] == 28)
             {
                 ++i;
@@ -159,7 +157,6 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
 
             }
             counter++;
-            if (counter < 31 && inputPrec[i]> parametersModel.precipitationThreshold) countRain++;
         }
         if(computeStatistics)
         {
@@ -167,7 +164,6 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
             /*for (int iMonth=0;iMonth<12;iMonth++)
                 printf("%d  %d  %f\n",iStation,iMonth,monthlySimulatedAveragePrecipitation[iStation]);
             getchar();*/
-            printf("giorni di pioggia %f\n",1.0*countRain/31);
         }
 
     }
@@ -218,7 +214,8 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
             {
                 //outputWeatherData[iStation].precipitation[iDate] = MAXVALUE(parametersModel.precipitationThreshold + EPSILON,outputWeatherData[iStation].precipitation[iDate]* monthlyClimateAveragePrecipitationInternalFunction[iStation][monthCurrent-1] / monthlySimulatedAveragePrecipitationInternalFunction[iStation][monthCurrent-1]);
                 outputWeatherData[iStation].precipitation[iDate] = outputWeatherData[iStation].precipitation[iDate]* monthlyClimateAveragePrecipitationInternalFunction[iStation][monthCurrent-1] / monthlySimulatedAveragePrecipitationInternalFunction[iStation][monthCurrent-1];
-                if (outputWeatherData[iStation].precipitation[iDate] < parametersModel.precipitationThreshold) outputWeatherData[iStation].precipitation[iDate] = 0;
+                if (outputWeatherData[iStation].precipitation[iDate] < parametersModel.precipitationThreshold && outputWeatherData[iStation].precipitation[iDate]> EPSILON) outputWeatherData[iStation].precipitation[iDate] = parametersModel.precipitationThreshold + EPSILON;
+
             }
 
         }
