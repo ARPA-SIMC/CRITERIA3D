@@ -102,6 +102,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
     QPainterPath* path;
     QPainterPath* inner;
     QColor color;
+    std::vector<unsigned int> myHoles;
 
     myPainter->setPen(QColor(64, 64, 64));
     myPainter->setBrush(Qt::NoBrush);
@@ -139,7 +140,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
 
             setPolygon(i, j, &polygon);
 
-            std::vector<unsigned int> myHoles = shapePointer->getHoles(i, j);
+            myHoles = shapePointer->getHoles(i, j);
 
             if (myHoles.size() == 0)
             {
@@ -163,6 +164,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
                 delete inner;
                 delete path;
             }
+            myHoles.clear();
         }
     }
 }
