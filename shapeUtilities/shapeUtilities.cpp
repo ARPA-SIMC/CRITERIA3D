@@ -136,6 +136,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     ShapeObject shapeObj;
 
     int nShapes = shapeHandler->getShapeCount();
+
     std::vector< std::vector<ShapeObject::Part>> shapeParts;
     geometries = (GEOSGeometry **) malloc(nShapes*sizeof(GEOSGeometry *));
 

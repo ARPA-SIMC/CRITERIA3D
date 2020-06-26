@@ -103,6 +103,35 @@ bool Crit3DShapeHandler::open(std::string filename)
     isWGS84Proj(filePrj);
     setUTMzone(filePrj);
 
+    // save holes inside parts
+    ShapeObject myShape;
+    Point<double> point;
+    holes.resize(m_count);
+    for (unsigned int i = 0; i < m_count; i++)
+    {
+        getShape(int(i), myShape);
+        shapeParts[i] = myShape.getParts();
+
+        unsigned int nrParts = myShape.getPartCount();
+        holes[i].resize(nrParts);
+
+        for (unsigned int j = 0; j < nrParts; j++)
+        {
+            // holes
+            if (shapeParts[i][j].hole)
+            {
+                // check first point
+                unsigned long offset = shapeParts[i][j].offset;
+                point = myShape.getVertex(offset);
+                int index = myShape.getIndexPart(point.x, point.y);
+                if (index != NODATA)
+                {
+                    holes[i][unsigned(index)].push_back(j);
+                }
+            }
+        }
+    }
+
     return true;
 }
 
@@ -607,6 +636,16 @@ void Crit3DShapeHandler::packSHP(std::string newFile)
     }
 
     SHPClose(hSHP);
+}
+
+std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int partNumber)
+{
+    if (shapeNumber > m_count || partNumber > holes[shapeNumber].size())
+    {
+        std::vector<unsigned int> emptyVector;
+        return emptyVector;
+    }
+    return holes[unsigned(shapeNumber)][unsigned(partNumber)];
 }
 
 std::string Crit3DShapeHandler::getFilepath() const
