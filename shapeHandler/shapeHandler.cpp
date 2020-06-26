@@ -106,20 +106,25 @@ bool Crit3DShapeHandler::open(std::string filename)
     // save holes inside parts
     ShapeObject myShape;
     Point<double> point;
+    int nrHoles = 0;
+    int nrParts = 0;
+
     holes.resize(m_count);
     for (unsigned int i = 0; i < m_count; i++)
     {
         getShape(int(i), myShape);
-        shapeParts[i] = myShape.getParts();
+        shapeParts.push_back(myShape.getParts());
 
         unsigned int nrParts = myShape.getPartCount();
         holes[i].resize(nrParts);
 
         for (unsigned int j = 0; j < nrParts; j++)
         {
+            nrParts = nrParts + 1;
             // holes
             if (shapeParts[i][j].hole)
             {
+                nrHoles = nrHoles + 1;
                 // check first point
                 unsigned long offset = shapeParts[i][j].offset;
                 point = myShape.getVertex(offset);
@@ -131,6 +136,8 @@ bool Crit3DShapeHandler::open(std::string filename)
             }
         }
     }
+    m_parts = nrParts;
+    m_holes = nrHoles;
 
     return true;
 }
@@ -666,4 +673,14 @@ int Crit3DShapeHandler::nWidthField(int fieldIndex)
 int Crit3DShapeHandler::nDecimalsField(int fieldIndex)
 {
     return m_dbf->panFieldDecimals[fieldIndex];
+}
+
+int Crit3DShapeHandler::getNrParts() const
+{
+    return m_parts;
+}
+
+int Crit3DShapeHandler::getNrHoles() const
+{
+    return m_holes;
 }

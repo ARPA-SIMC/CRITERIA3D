@@ -58,6 +58,136 @@ bool cleanShapeFile(Crit3DShapeHandler *shapeHandler)
     return shapeHandler->open(shapeHandler->getFilepath());
 }
 
+
+GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
+{
+
+    // Init GEOS
+    GEOSMessageHandler error_function = nullptr, notice_function = nullptr;
+    initGEOS(notice_function, error_function);
+
+    GEOSGeometry **geometries;
+    ShapeObject shapeObj;
+
+    int nShapes = shapeHandler->getShapeCount();
+    std::vector< std::vector<ShapeObject::Part>> shapeParts;
+    unsigned long sizeGeometries = shapeHandler->getNrParts() - shapeHandler->getNrHoles();
+    geometries = (GEOSGeometry **) malloc(sizeGeometries*sizeof(GEOSGeometry *));
+
+    std::vector<double> xVertex;
+    std::vector<double> yVertex;
+    std::vector<std::vector <double> > xVertexHoles;
+    std::vector<std::vector <double> > yVertexHoles;
+
+    GEOSCoordSequence *coords;
+    GEOSCoordSequence *coordsHoles;
+    GEOSGeometry *lr;
+    GEOSGeometry **holes = nullptr;
+    int multiPolygon = 0;
+
+    for (unsigned int i = 0; i < nShapes; i++)
+    {
+        shapeHandler->getShape(i, shapeObj);
+        shapeParts.push_back(shapeObj.getParts());
+
+        for (unsigned int partIndex = 0; partIndex < shapeParts[i].size(); partIndex++)
+        {
+            //qDebug() << "shapeParts[i].size() " << shapeParts[i].size();
+            int nHoles = 0;
+            xVertex.clear();
+            yVertex.clear();
+            xVertexHoles.clear();
+            yVertexHoles.clear();
+
+            std::vector<unsigned int> holesParts = shapeHandler->getHoles(i,partIndex);
+            int offset = shapeObj.getPart(partIndex).offset;
+            int length = shapeObj.getPart(partIndex).length;
+            if (!shapeParts[i][partIndex].hole)
+            {
+                multiPolygon = multiPolygon+1;
+                for (unsigned long v = 0; v < length; v++)
+                {
+                    xVertex.push_back(shapeObj.getVertex(v+offset).x);
+                    yVertex.push_back(shapeObj.getVertex(v+offset).y);
+                }
+                if ( xVertex[offset] != xVertex[offset+length-1] )
+                {
+                    // Ring not closed add missing vertex
+                    xVertex.push_back(xVertex[offset]);
+                    yVertex.push_back(yVertex[offset]);
+                }
+                for (int holesIndex = 0; holesIndex < holesParts.size(); holesIndex++)
+                {
+                    int offset = shapeObj.getPart(holesParts[holesIndex]).offset;
+                    int length = shapeObj.getPart(holesParts[holesIndex]).length;
+                    std::vector<double> x;
+                    std::vector<double> y;
+                    for (unsigned long v = 0; v < length; v++)
+                    {
+                        x.push_back(shapeObj.getVertex(v+offset).x);
+                        y.push_back(shapeObj.getVertex(v+offset).y);
+                    }
+                    xVertexHoles.push_back(x);
+                    yVertexHoles.push_back(y);
+                    nHoles = nHoles + 1;
+                }
+                if (nHoles == 0)
+                {
+                    holes = NULL;
+                }
+                else
+                {
+                    holes = (GEOSGeometry **) malloc(nHoles * sizeof(GEOSGeometry *));
+                }
+                coords = GEOSCoordSeq_create(xVertex.size(),2);
+                for (int j=0; j<xVertex.size(); j++)
+                {
+                    GEOSCoordSeq_setX(coords,j,xVertex[j]);
+                    GEOSCoordSeq_setY(coords,j,yVertex[j]);
+                }
+                lr = GEOSGeom_createLinearRing(coords);
+                for (int holeIndex = 0; holeIndex < nHoles; holeIndex++)
+                {
+                    coordsHoles = GEOSCoordSeq_create(xVertexHoles[holeIndex].size(),2);
+                    for (int j=0; j<xVertexHoles[holeIndex].size(); j++)
+                    {
+                        GEOSCoordSeq_setX(coordsHoles,j,xVertexHoles[holeIndex][j]);
+                        GEOSCoordSeq_setY(coordsHoles,j,yVertexHoles[holeIndex][j]);
+                    }
+                    holes[holeIndex] = GEOSGeom_createLinearRing(coordsHoles);
+                }
+                if (lr != NULL)
+                {
+                    // create Polygon from LinearRing
+                    geometries[multiPolygon] = GEOSGeom_createPolygon(lr,holes,nHoles);
+                    if (geometries[multiPolygon] == NULL)
+                    {
+                        qDebug() << "geometries[multiPolygon] is NULL, i = " << i;
+                    }
+                }
+                else
+                {
+                    qDebug() << "lr is NULL, i = " << i;
+                }
+                delete [] holes;
+            }
+            else
+            {
+                continue;
+            }
+
+        }
+    }
+    GEOSGeometry *collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, multiPolygon);
+    if (collection == NULL)
+    {
+        qDebug() << "collection is NULL";
+    }
+    delete [] geometries;
+    return collection;
+}
+
+
 /*
 GEOSGeometry *SHPObject_to_LineString(SHPObject *object)
 {
@@ -125,6 +255,8 @@ GEOSGeometry *load_shapefile_as_collection(char *pathname)
 */
 
 
+// OLD problem MultiPolygon
+/*
 GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 {
 
@@ -136,7 +268,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     ShapeObject shapeObj;
 
     int nShapes = shapeHandler->getShapeCount();
-
     std::vector< std::vector<ShapeObject::Part>> shapeParts;
     geometries = (GEOSGeometry **) malloc(nShapes*sizeof(GEOSGeometry *));
 
@@ -246,9 +377,10 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     delete [] holes;
     return collection;
 }
-
+*/
 
 /*
+ * // Simple numeric test
 GEOSGeometry * testIntersection()
 {
 // Init GEOS

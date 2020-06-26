@@ -21,6 +21,8 @@
         std::vector< std::vector<ShapeObject::Part>> shapeParts;
         bool        m_isWGS84;
         int         m_utmZone;
+        int         m_parts;
+        int         m_holes;
 
     public:
         Crit3DShapeHandler();
@@ -85,6 +87,8 @@
         std::string getStringValue(int shapeNumber, std::string fieldName);
 
         std::vector<unsigned int> getHoles(int shapeNumber, int partNumber);
+        int getNrParts() const;
+        int getNrHoles() const;
     };
 
 
