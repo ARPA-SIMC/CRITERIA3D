@@ -156,8 +156,8 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
            else
               qDebug() << "meteoPolygon is NOT Valid";
 
-        if((GEOSisEmpty(soilPolygon)) || (GEOSisEmpty(meteoPolygon))) {
-            qDebug() << "No valid intersection found";
+        if(soilPolygon == NULL || meteoPolygon == NULL) {
+            qDebug() << "NULL polygon";
             return false;    //invalid input parameter
         }
         GEOSGeometry *inteserctionGeom = GEOSIntersection(soilPolygon, meteoPolygon);
@@ -190,8 +190,8 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
            else
               qDebug() << "meteoPolygon is NOT Valid";
 
-        if((GEOSisEmpty(cropPolygon)) || (GEOSisEmpty(meteoPolygon))) {
-            qDebug() << "No valid intersection found";
+        if(cropPolygon == NULL || meteoPolygon == NULL) {
+            qDebug() << "NULL polygon";
             return false;    //invalid input parameter
         }
         GEOSGeometry *inteserctionGeom = GEOSIntersection(cropPolygon, meteoPolygon);
@@ -224,8 +224,8 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
            else
               qDebug() << "soilPolygon is NOT Valid";
 
-        if((GEOSisEmpty(cropPolygon)) || (GEOSisEmpty(soilPolygon))) {
-            qDebug() << "No valid intersection found";
+        if(cropPolygon == NULL || soilPolygon == NULL) {
+            qDebug() << "NULL polygon";
             return false;    //invalid input parameter
         }
         GEOSGeometry *inteserctionGeom = GEOSIntersection(cropPolygon, soilPolygon);

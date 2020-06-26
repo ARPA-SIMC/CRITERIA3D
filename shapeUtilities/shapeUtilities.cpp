@@ -158,8 +158,10 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         yVertex.clear();
         xVertexHoles.clear();
         yVertexHoles.clear();
+
         for (unsigned int partIndex = 0; partIndex < shapeParts[i].size(); partIndex++)
         {
+            //qDebug() << "shapeParts[i].size() " << shapeParts[i].size();
             int offset = shapeObj.getPart(partIndex).offset;
             int length = shapeObj.getPart(partIndex).length;
             if (shapeParts[i][partIndex].hole)
@@ -184,6 +186,12 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
                     xVertex.push_back(shapeObj.getVertex(v+offset).x);
                     yVertex.push_back(shapeObj.getVertex(v+offset).y);
                 }
+                if ( xVertex[offset] != xVertex[offset+length-1] )
+                {
+                // Ring not closed add missing vertex
+                 xVertex.push_back(xVertex[offset]);
+                 yVertex.push_back(yVertex[offset]);
+               }
             }
         }
         if (nHoles == 0)
@@ -202,10 +210,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             GEOSCoordSeq_setY(coords,j,yVertex[j]);
         }
         lr = GEOSGeom_createLinearRing(coords);
-        if (lr == NULL)
-        {
-            qDebug() << "lr is NULL, i = " << i;
-        }
 
         for (int holeIndex = 0; holeIndex < nHoles; holeIndex++)
         {
@@ -217,15 +221,21 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             }
             holes[holeIndex] = GEOSGeom_createLinearRing(coordsHoles);
         }
-        // create Polygon from LinearRing
-        geometries[i] = GEOSGeom_createPolygon(lr,holes,nHoles);
-        if (geometries[i] == NULL)
+        if (lr != NULL)
         {
-            qDebug() << "geometries[i] is NULL, i = " << i;
+            // create Polygon from LinearRing
+            geometries[i] = GEOSGeom_createPolygon(lr,holes,nHoles);
+            if (geometries[i] == NULL)
+            {
+                qDebug() << "geometries[i] is NULL, i = " << i;
+            }
+        }
+        else
+        {
+            qDebug() << "lr is NULL, i = " << i;
         }
 
     }
-    qDebug() << "nShapes = " << nShapes;
     GEOSGeometry *collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, nShapes);
     if (collection == NULL)
     {
