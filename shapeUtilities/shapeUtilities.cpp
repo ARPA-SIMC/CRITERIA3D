@@ -70,7 +70,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     ShapeObject shapeObj;
 
     int nShapes = shapeHandler->getShapeCount();
-    std::vector< std::vector<ShapeObject::Part>> shapeParts;
+    std::vector<ShapeObject::Part> shapeParts;
     unsigned long sizeGeometries = shapeHandler->getNrParts() - shapeHandler->getNrHoles();
     geometries = (GEOSGeometry **) malloc(sizeGeometries*sizeof(GEOSGeometry *));
 
@@ -88,11 +88,11 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     for (unsigned int i = 0; i < nShapes; i++)
     {
         shapeHandler->getShape(i, shapeObj);
-        shapeParts.push_back(shapeObj.getParts());
+        shapeParts = shapeObj.getParts();
 
-        for (unsigned int partIndex = 0; partIndex < shapeParts[i].size(); partIndex++)
+        for (unsigned int partIndex = 0; partIndex < shapeParts.size(); partIndex++)
         {
-            //qDebug() << "shapeParts[i].size() " << shapeParts[i].size();
+            //qDebug() << "shapeParts.size() " << shapeParts.size();
             int nHoles = 0;
             xVertex.clear();
             yVertex.clear();
@@ -102,7 +102,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             std::vector<unsigned int> holesParts = shapeHandler->getHoles(i,partIndex);
             int offset = shapeObj.getPart(partIndex).offset;
             int length = shapeObj.getPart(partIndex).length;
-            if (!shapeParts[i][partIndex].hole)
+            if (!shapeParts[partIndex].hole)
             {
                 multiPolygon = multiPolygon+1;
                 for (unsigned long v = 0; v < length; v++)
@@ -177,6 +177,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             }
 
         }
+        shapeParts.clear();
     }
     GEOSGeometry *collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, multiPolygon);
     if (collection == NULL)
