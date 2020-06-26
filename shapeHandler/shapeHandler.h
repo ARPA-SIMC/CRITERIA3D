@@ -18,7 +18,6 @@
         std::vector<std::string> m_fieldsList;
         std::vector<DBFFieldType> m_fieldsTypeList;
         std::vector< std::vector<std::vector<unsigned int>>> holes;
-        std::vector< std::vector<ShapeObject::Part>> shapeParts;
         bool        m_isWGS84;
         int         m_utmZone;
         int         m_parts;

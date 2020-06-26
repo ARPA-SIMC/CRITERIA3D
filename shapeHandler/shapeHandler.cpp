@@ -106,27 +106,32 @@ bool Crit3DShapeHandler::open(std::string filename)
     // save holes inside parts
     ShapeObject myShape;
     Point<double> point;
-    int nrHoles = 0;
-    int nrParts = 0;
 
+    m_parts = 0;
+    m_holes = 0;
+    holes.clear();
     holes.resize(m_count);
+
+    std::vector<ShapeObject::Part> shapeParts;
+
     for (unsigned int i = 0; i < m_count; i++)
     {
         getShape(int(i), myShape);
-        shapeParts.push_back(myShape.getParts());
+        shapeParts = myShape.getParts();
 
         unsigned int nrParts = myShape.getPartCount();
+        m_parts += nrParts;
+
         holes[i].resize(nrParts);
 
         for (unsigned int j = 0; j < nrParts; j++)
         {
-            nrParts = nrParts + 1;
             // holes
-            if (shapeParts[i][j].hole)
+            if (shapeParts[j].hole)
             {
-                nrHoles = nrHoles + 1;
+                m_holes++;
                 // check first point
-                unsigned long offset = shapeParts[i][j].offset;
+                unsigned long offset = shapeParts[j].offset;
                 point = myShape.getVertex(offset);
                 int index = myShape.getIndexPart(point.x, point.y);
                 if (index != NODATA)
@@ -135,9 +140,8 @@ bool Crit3DShapeHandler::open(std::string filename)
                 }
             }
         }
+        shapeParts.clear();
     }
-    m_parts = nrParts;
-    m_holes = nrHoles;
 
     return true;
 }
