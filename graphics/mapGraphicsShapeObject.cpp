@@ -102,6 +102,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
     QPainterPath* path;
     QPainterPath* inner;
     QColor color;
+    std::vector<unsigned int> myHoles;
 
     myPainter->setPen(QColor(64, 64, 64));
     myPainter->setBrush(Qt::NoBrush);
@@ -139,20 +140,22 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
 
             setPolygon(i, j, &polygon);
 
-            if (holes[i][j].size() == 0)
+            myHoles = shapePointer->getHoles(i, j);
+
+            if (myHoles.size() == 0)
             {
                 myPainter->drawPolygon(polygon);
             }
             else
             {
                 path = new QPainterPath();
-                inner = new QPainterPath();
-
                 path->addPolygon(polygon);
 
-                for (unsigned int k = 0; k < holes[i][j].size(); k++)
+                // holes
+                inner = new QPainterPath();
+                for (unsigned int k = 0; k < myHoles.size(); k++)
                 {
-                    setPolygon(i, holes[i][j][k], &polygon);
+                    setPolygon(i, myHoles[k], &polygon);
                     inner->addPolygon(polygon);
                 }
 
@@ -161,6 +164,7 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
                 delete inner;
                 delete path;
             }
+            myHoles.clear();
         }
     }
 }
@@ -181,7 +185,6 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
 
     nrShapes = unsigned(shapePointer->getShapeCount());
     shapeParts.resize(nrShapes);
-    holes.resize(nrShapes);
     geoBounds.resize(nrShapes);
     geoPoints.resize(nrShapes);
     values.resize(nrShapes);
@@ -201,7 +204,6 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
         values[i] = NODATA;
 
         unsigned int nrParts = myShape.getPartCount();
-        holes[i].resize(nrParts);
         geoBounds[i].resize(nrParts);
 
         for (unsigned int j = 0; j < nrParts; j++)
@@ -215,19 +217,6 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
             gis::utmToLatLon(zoneNumber, refLatitude, bounds->xmax, bounds->ymax, &lat, &lon);
             geoBounds[i][j].v1.lat = lat;
             geoBounds[i][j].v1.lon = lon;
-
-            // holes
-            if (shapeParts[i][j].hole)
-            {
-                // check first point
-                unsigned long offset = shapeParts[i][j].offset;
-                point = myShape.getVertex(offset);
-                int index = myShape.getIndexPart(point.x, point.y);
-                if (index != NODATA)
-                {
-                    holes[i][unsigned(index)].push_back(j);
-                }
-            }
         }
 
         // vertices
@@ -367,12 +356,11 @@ void MapGraphicsShapeObject::clear()
     for (unsigned int i = 0; i < nrShapes; i++)
     {
         shapeParts[i].clear();
-        holes[i].clear();
         geoBounds[i].clear();
         geoPoints[i].clear();
     }
+
     shapeParts.clear();
-    holes.clear();
     geoBounds.clear();
     geoPoints.clear();
 

@@ -170,7 +170,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
           obsPrecDataD[i][j].date.month = obsDataD[i][j].date.month;
           obsPrecDataD[i][j].date.year = obsDataD[i][j].date.year;
           obsPrecDataD[i][j].prec = obsDataD[i][j].prec;
-          if (obsPrecDataD[i][j].prec == NODATA)
+          if (!isPrecipitationRecordOK(obsPrecDataD[i][j].prec))
           {
               obsPrecDataD[i][j].amounts = NODATA;
               obsPrecDataD[i][j].occurrences = NODATA;
@@ -223,11 +223,9 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
        {
            moran[ijk][qq] = (double*)calloc(numberObservedMax, sizeof(double));
            rainfallLessThreshold[ijk][qq] = (double*)calloc(numberObservedMax, sizeof(double));
-       }
-       for (int qq=0;qq<4;qq++)
-       {
            for (int i=0;i<numberObservedMax;i++)
            {
+               // initialize the two vectors
                moran[ijk][qq][i] = NODATA;
                rainfallLessThreshold[ijk][qq][i] = NODATA;
            }
@@ -1301,7 +1299,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                {
                    if (parametersModel.distributionPrecipitation == 1)
                    {
-                       simulatedPrecipitationAmountsSeasonal[i][j] =-log(1-uniformRandomVar)/phatAlpha[i][j] + parametersModel.precipitationThreshold;
+                       simulatedPrecipitationAmountsSeasonal[i][j] =-log(1-uniformRandomVar)/phatAlpha[i][j]+ parametersModel.precipitationThreshold;
                    }
                    else if (parametersModel.distributionPrecipitation == 2)
                    {

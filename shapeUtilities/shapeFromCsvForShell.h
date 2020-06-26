@@ -6,6 +6,6 @@
 #endif
 #include <QString>
 
-bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape, QString fileCSV, QString fileCSVRef, QString outputName, std::string *error);
+bool shapeFromCsvForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape, QString fileCsv, QString fileCsvRef, QString outputName, std::string *error);
 
 #endif // SHAPEFROMCSVFORSHELL_H

@@ -13,7 +13,8 @@
     #define TOLERANCE_MULGETS 0.001
     #define MAX_ITERATION_MULGETS 180
     #define ONELESSEPSILON 0.999999
-
+    #define TEMPERATURE_THRESHOLD 60
+    #define RAINFALL_THRESHOLD 1000
 
     enum Tseason {DJF,MAM,JJA,SON};
 
@@ -169,7 +170,7 @@
         TObsPrecDataD** obsPrecDataD;
         TprecOccurrence** precOccurence;
         TcorrelationMatrix *correlationMatrix;
-
+        TprecOccurrence precOccurrenceGlobal[12];
 
         TrandomMatrix *randomMatrix;
         ToccurrenceIndexSeasonal* occurrenceIndexSeasonal;
@@ -191,6 +192,10 @@
         Tvariable* precipitationAmount;
         TseasonPrec* seasonPrec;
         double** precGenerated;
+
+
+        bool isTemperatureRecordOK(double value);
+        bool isPrecipitationRecordOK(double value);
         void initializePrecipitationAmountParameters();
         void computeprecipitationAmountParameters();
         void getSeasonalMeanPrecipitation(int iStation, int iSeason, double* meanPrec);

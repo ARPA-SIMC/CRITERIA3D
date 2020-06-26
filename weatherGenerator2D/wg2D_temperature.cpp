@@ -187,12 +187,12 @@ void weatherGenerator2D::computeTemperatureParameters()
             {
                 if (obsDataD[iStation][iDatum].prec > parametersModel.precipitationThreshold)
                 {
-                    if ((fabs((obsDataD[iStation][iDatum].tMax)- NODATA))> EPSILON)
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax))
                     {
                         ++countTMaxWet[dayOfYear];
                         averageTMaxWet[dayOfYear] += obsDataD[iStation][iDatum].tMax;
                     }
-                    if ((fabs(obsDataD[iStation][iDatum].tMin - NODATA))> EPSILON)
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
                     {
                         ++countTMinWet[dayOfYear];
                         averageTMinWet[dayOfYear] += obsDataD[iStation][iDatum].tMin;
@@ -331,14 +331,22 @@ void weatherGenerator2D::computeTemperatureParameters()
         weatherGenerator2D::harmonicsFourier(stdDevTMinWet,par,nrPar,temperatureCoefficients[iStation].minTWet.stdDevEstimation,365);
         // free memory of parameters, variable par[]
         free(par);
-        /*
+
         for (int i=0;i<365;i++)
         {
-            printf("%.1f %.1f %.1f\n",temperatureCoefficients[iStation].minTDry.averageEstimation[i],temperatureCoefficients[iStation].maxTDry.averageEstimation[i],temperatureCoefficients[iStation].maxTWet.averageEstimation[i]);
+            //printf("std %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.stdDevEstimation[i],temperatureCoefficients[iStation].minTWet.stdDevEstimation[i],temperatureCoefficients[iStation].maxTDry.stdDevEstimation[i],temperatureCoefficients[iStation].maxTWet.stdDevEstimation[i]);
+            //printf("ave %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.averageEstimation[i],temperatureCoefficients[iStation].minTWet.averageEstimation[i],temperatureCoefficients[iStation].maxTDry.averageEstimation[i],temperatureCoefficients[iStation].maxTWet.averageEstimation[i]);
         }
-        getchar();
-        */
-        weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,temperatureCoefficients[iStation].maxTWet.averageEstimation,temperatureCoefficients[iStation].maxTDry.stdDevEstimation,temperatureCoefficients[iStation].maxTWet.stdDevEstimation,temperatureCoefficients[iStation].minTDry.averageEstimation,temperatureCoefficients[iStation].minTWet.averageEstimation,temperatureCoefficients[iStation].minTDry.stdDevEstimation,temperatureCoefficients[iStation].minTWet.stdDevEstimation,iStation);
+        //getchar();
+
+        weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,
+                                             temperatureCoefficients[iStation].maxTWet.averageEstimation,
+                                             temperatureCoefficients[iStation].maxTDry.stdDevEstimation,
+                                             temperatureCoefficients[iStation].maxTWet.stdDevEstimation,
+                                             temperatureCoefficients[iStation].minTDry.averageEstimation,
+                                             temperatureCoefficients[iStation].minTWet.averageEstimation,
+                                             temperatureCoefficients[iStation].minTDry.stdDevEstimation,
+                                             temperatureCoefficients[iStation].minTWet.stdDevEstimation,iStation);
 
         int matrixRang = 2;
         double** matrixCovarianceLag0 = (double **) calloc(matrixRang, sizeof(double*));
@@ -373,7 +381,43 @@ void weatherGenerator2D::computeTemperatureParameters()
         }
         weatherGenerator2D::covarianceOfResiduals(matrixCovarianceLag0,0);
         weatherGenerator2D::covarianceOfResiduals(matrixCovarianceLag1,1);
-
+        double ratioLag1 = 0;
+        double ratioLag0 = 0;
+        if (matrixCovarianceLag1[1][1] > 0.9)
+        {
+            ratioLag1 = 0.9/matrixCovarianceLag1[1][1];
+            for (int j=0;j<matrixRang;j++)
+            {
+                for (int k=0;k<matrixRang;k++)
+                {
+                    matrixCovarianceLag1[j][k] *= ratioLag1;
+                }
+            }
+        }
+        if (matrixCovarianceLag0[0][1] > 0.8)
+        {
+            matrixCovarianceLag0[0][1] = matrixCovarianceLag0[1][0] = 0.8;
+        }
+        /*
+        for (int j=0;j<matrixRang;j++)
+        {
+            for (int k=0;k<matrixRang;k++)
+            {
+                printf("%f  ",matrixCovarianceLag0[j][k]);
+            }
+            printf("\n");
+        }
+        printf("\n");
+        for (int j=0;j<matrixRang;j++)
+        {
+            for (int k=0;k<matrixRang;k++)
+            {
+                printf("%f  ",matrixCovarianceLag1[j][k]);
+            }
+            printf("\n");
+        }
+        getchar();
+        */
         matricial::inverse(matrixCovarianceLag0,matrixC,matrixRang); // matrixC becomes temporarely the inverse of lag0
         matricial::matrixProduct(matrixCovarianceLag1,matrixC,matrixRang,matrixRang,matrixRang,matrixRang,matrixA);
         matricial::transposedSquareMatrix(matrixCovarianceLag1,matrixRang);
@@ -540,7 +584,10 @@ void weatherGenerator2D::harmonicsFourier(double* variable, double *par,int nrPa
 
 }
 
-void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* averageTMaxWet,double* stdDevTMaxDry,double* stdDevTMaxWet,double* averageTMinDry,double* averageTMinWet,double* stdDevTMinDry,double* stdDevTMinWet,int idStation)
+void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* averageTMaxWet,
+                                          double* stdDevTMaxDry,double* stdDevTMaxWet,
+                                          double* averageTMinDry,double* averageTMinWet,
+                                          double* stdDevTMinDry,double* stdDevTMinWet,int idStation)
 {
     for (int i=0; i<nrData; i++)
     {
@@ -551,8 +598,10 @@ void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* average
         dailyResidual[i].maxT = 0.;
         dailyResidual[i].minT = 0.;
     }
+    double maxResidual = NODATA;
     for (int i = 0; i< nrData ; i++)
     {
+
         int currentDayOfYear;
         currentDayOfYear = weatherGenerator2D::doyFromDate(obsDataD[idStation][i].date.day,obsDataD[idStation][i].date.month,obsDataD[idStation][i].date.year);
 
@@ -562,31 +611,44 @@ void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* average
         {
             currentDayOfYear-- ;
         }
-        if ((fabs(obsDataD[idStation][i].tMax - NODATA)> EPSILON) && (fabs(obsDataD[idStation][i].tMax)> EPSILON) && (obsDataD[idStation][i].prec >= 0))
+        if ((isTemperatureRecordOK(obsDataD[idStation][i].tMax)) && (fabs(obsDataD[idStation][i].tMax)> EPSILON) && (obsDataD[idStation][i].prec >= 0))
         {
             if(obsDataD[idStation][i].prec > parametersModel.precipitationThreshold)
             {
                 dailyResidual[i].maxTWet = (obsDataD[idStation][i].tMax - averageTMaxWet[currentDayOfYear])/stdDevTMaxWet[currentDayOfYear];
+                //dailyResidual[i].maxTWet = MINVALUE(dailyResidual[i].maxTWet,3);
             }
             else
             {
                 dailyResidual[i].maxTDry = (obsDataD[idStation][i].tMax - averageTMaxDry[currentDayOfYear])/stdDevTMaxDry[currentDayOfYear];
+                //dailyResidual[i].maxTDry = MINVALUE(dailyResidual[i].maxTDry,3);
             }
         }
-        if ((fabs(obsDataD[idStation][i].tMin - NODATA)> EPSILON) && (fabs(obsDataD[idStation][i].tMin)> EPSILON) && (obsDataD[idStation][i].prec >= 0))
+        if ((isTemperatureRecordOK(obsDataD[idStation][i].tMin)) && (fabs(obsDataD[idStation][i].tMin)> EPSILON) && (obsDataD[idStation][i].prec >= 0))
         {
             if(obsDataD[idStation][i].prec > parametersModel.precipitationThreshold)
             {
                 dailyResidual[i].minTWet = (obsDataD[idStation][i].tMin - averageTMinWet[currentDayOfYear])/stdDevTMinWet[currentDayOfYear];
+                //dailyResidual[i].minTWet = MINVALUE(dailyResidual[i].minTWet,3);
             }
             else
             {
                 dailyResidual[i].minTDry = (obsDataD[idStation][i].tMin - averageTMinDry[currentDayOfYear])/stdDevTMinDry[currentDayOfYear];
+                //dailyResidual[i].minTDry = MINVALUE(dailyResidual[i].minTDry,3);
             }
         }
         dailyResidual[i].maxT = dailyResidual[i].maxTWet + dailyResidual[i].maxTDry;
         dailyResidual[i].minT = dailyResidual[i].minTWet + dailyResidual[i].minTDry;
+        maxResidual = MAXVALUE(maxResidual,dailyResidual[i].minT * dailyResidual[i].maxT);
+        /*if (fabs(dailyResidual[i].maxT) > EPSILON)
+        {
+            printf("%d  %f\n",i,dailyResidual[i].minT * dailyResidual[i].maxT);
+            getchar();
+        }*/
+
     }
+    //printf("%f\n",maxResidual);
+    //getchar();
 }
 
 void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int lag)
@@ -601,7 +663,7 @@ void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int la
 
         for (int i=0; i<nrData; i++)
         {
-            if ((fabs(dailyResidual[i].maxT)> EPSILON) && (fabs(dailyResidual[i].minT)> EPSILON))
+            if ((fabs(dailyResidual[i].maxT) > EPSILON) && (fabs(dailyResidual[i].minT) > EPSILON))
             {
                 denominator++;
                 covarianceMatrix[0][1] += dailyResidual[i].maxT * dailyResidual[i].minT;
@@ -611,7 +673,9 @@ void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int la
         {
             covarianceMatrix[0][1] /= denominator;
         }
+
         covarianceMatrix[1][0] =  covarianceMatrix[0][1];
+
     }
     else
     {
@@ -625,7 +689,7 @@ void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int la
         int denominator22 = -2;
         for (int i=0; i<nrData-1; i++)
         {
-            if ((fabs(dailyResidual[i].maxT)> EPSILON) && (fabs(dailyResidual[i+1].maxT)> EPSILON))
+            if ((fabs(dailyResidual[i].maxT) > EPSILON) && (fabs(dailyResidual[i+1].maxT) > EPSILON))
             {
                 denominator11++;
                 covarianceMatrix[0][0] += dailyResidual[i].maxT*dailyResidual[i+1].maxT;
@@ -646,6 +710,9 @@ void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int la
                 covarianceMatrix[1][1] += dailyResidual[i].minT*dailyResidual[i+1].minT;
             }
         }
+        //printf("%d %d %d %d\n",covarianceMatrix[0][0],covarianceMatrix[0][1],covarianceMatrix[1][0],covarianceMatrix[1][1]);
+        //printf("%d %d %d %d\n",denominator11,denominator12,denominator21,denominator22);
+
         if (denominator11 != 0)
         {
             covarianceMatrix[0][0] /= denominator11;
@@ -662,6 +729,7 @@ void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int la
         {
             covarianceMatrix[1][1] /= denominator22;
         }
+
     }
 
 }
@@ -691,7 +759,7 @@ void weatherGenerator2D::temperaturesCorrelationMatrices()
 
             for (int k=0; k<nrData;k++) // compute the monthly means
             {
-                if (((obsDataD[j][k].tMax - NODATA) > EPSILON) && ((obsDataD[i][k].tMax - NODATA) > EPSILON))
+                if ((fabs(obsDataD[j][k].tMax - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMax - NODATA) > EPSILON))
                 {
                     counterMaxT++;
                     maxT.meanValue1 += obsDataD[j][k].tMax ;
@@ -708,7 +776,7 @@ void weatherGenerator2D::temperaturesCorrelationMatrices()
             // compute the monthly rho off-diagonal elements
             for (int k=0; k<nrData;k++)
             {
-                if (((obsDataD[j][k].tMax - NODATA) > EPSILON) && ((obsDataD[i][k].tMax - NODATA) > EPSILON))
+                if ((fabs(obsDataD[j][k].tMax - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMax - NODATA) > EPSILON))
                 {
                     double value1,value2;
                     value1 = obsDataD[j][k].tMax;
@@ -736,7 +804,7 @@ void weatherGenerator2D::temperaturesCorrelationMatrices()
 
             for (int k=0; k<nrData;k++) // compute the monthly means
             {
-                if (((obsDataD[j][k].tMin - NODATA) > EPSILON) && ((obsDataD[i][k].tMin - NODATA) > EPSILON))
+                if ((fabs(obsDataD[j][k].tMin - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMin - NODATA) > EPSILON))
                 {
                     counterMinT++;
                     minT.meanValue1 += obsDataD[j][k].tMin ;
@@ -744,7 +812,7 @@ void weatherGenerator2D::temperaturesCorrelationMatrices()
 
                 }
             }
-            if (counterMaxT != 0)
+            if (counterMinT != 0)
             {
                 minT.meanValue1 /= counterMinT;
                 minT.meanValue2 /= counterMinT;
@@ -752,7 +820,7 @@ void weatherGenerator2D::temperaturesCorrelationMatrices()
             // compute the monthly rho off-diagonal elements
             for (int k=0; k<nrData;k++)
             {
-                if (((obsDataD[j][k].tMin - NODATA) > EPSILON) && ((obsDataD[i][k].tMin - NODATA) > EPSILON))
+                if ((fabs(obsDataD[j][k].tMin - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMin - NODATA) > EPSILON))
                 {
                     double value1,value2;
                     value1 = obsDataD[j][k].tMin;
@@ -885,14 +953,14 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
     }*/
     isLowerDiagonal = false;
     matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,isLowerDiagonal);
-    for (int iProva=0; iProva<nrStations; iProva++)
+    /*for (int iProva=0; iProva<nrStations; iProva++)
     {
         for (int jProva=0; jProva<nrStations; jProva++)
         {
             //printf("%d %d %f\n",iProva, jProva,dummyMatrix[iProva][jProva]);
         }
         //getchar();
-    }
+    }*/
     matricial::transposedMatrix(dummyMatrix,nrStations,nrStations,dummyMatrix2);
     matricial::matrixProduct(dummyMatrix2,dummyMatrix,nrStations,nrStations,nrStations,nrStations,dummyMatrix3);
     isLowerDiagonal = true;
@@ -992,10 +1060,11 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
         for (int j=0;j<nrStations;j++)
         {
             dummyMatrix[i][j] = correlationMatrixTemperature.minT[i][j];
+            //printf("%f ",correlationMatrixTemperature.minT[i][j]);
         }
-
+        //printf("\n");
     }
-
+    //getchar();
     isLowerDiagonal = false;
     matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,isLowerDiagonal);
     matricial::transposedMatrix(dummyMatrix,nrStations,nrStations,dummyMatrix2);
@@ -1198,20 +1267,26 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             //printf("%.1f %.1f\n",eps[0][j],eps[1][j]);
         }
         //getchar();
+        double res0,res1;
+        res1 = res0 = 0;
         for (int j=0;j<lengthOfRandomSeries;j++)
         {
 
 
             //printf("%.1f %.1f\n",residuals[0],residuals[1]);
-            residuals[0] = temperatureCoefficients[i].A[0][0]*residuals[0] + temperatureCoefficients[i].A[0][1]*residuals[1];
-            residuals[0] += temperatureCoefficients[i].B[0][0]*eps[0][j] + temperatureCoefficients[i].B[0][1]*eps[1][j];
-            residuals[1] = temperatureCoefficients[i].A[1][0]*residuals[0] + temperatureCoefficients[i].A[1][1]*residuals[1];
-            residuals[1] += temperatureCoefficients[i].B[1][0]*eps[0][j] + temperatureCoefficients[i].B[1][1]*eps[1][j];
-            ksi[0][j] = residuals[0];
-            ksi[1][j] = residuals[1];
-            //printf("%.1f %.1f\n",ksi[0][j],ksi[1][j]);
+
+            res0 = temperatureCoefficients[i].A[0][0]*residuals[0] + temperatureCoefficients[i].A[0][1]*residuals[1];
+            res0 += temperatureCoefficients[i].B[0][0]*eps[0][j] + temperatureCoefficients[i].B[0][1]*eps[1][j];
+            res1 = temperatureCoefficients[i].A[1][0]*residuals[0] + temperatureCoefficients[i].A[1][1]*residuals[1];
+            res1 += temperatureCoefficients[i].B[1][0]*eps[0][j] + temperatureCoefficients[i].B[1][1]*eps[1][j];
+            ksi[0][j] = residuals[0] = res0;
+            ksi[1][j] = residuals[1] = res1;
+            //printf("%.1f %.1f\n",eps[0][j],eps[1][j]);
+            //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].B[0][0],temperatureCoefficients[i].B[0][1],temperatureCoefficients[i].B[1][0],temperatureCoefficients[i].B[1][1]);
             //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].A[0][0],temperatureCoefficients[i].A[0][1],temperatureCoefficients[i].A[1][0],temperatureCoefficients[i].A[1][1]);
-            residuals[0] = residuals[1]=0;
+            //residuals[0] = residuals[1]=0;
+            //printf("%.1f %.1f\n",residuals[0],residuals[1]);
+            //getchar();
         }
         //getchar();
         double** cAverage = (double**)calloc(2, sizeof(double*));
@@ -1253,7 +1328,7 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
                 Xp[0][j] = ksi[0][j]*cStdDev[0][j] + cAverage[0][j];
                 Xp[1][j] = ksi[1][j]*sqrt(cStdDev[1][j]*cStdDev[1][j] - cStdDev[0][j]*cStdDev[0][j]) - (cAverage[0][j] - cAverage[1][j]) + Xp[0][j];
             }
-            // printf("%.1f %.1f\n",cStdDev[0][j],cStdDev[1][j]);
+             //printf("%.1f %.1f\n",ksi[0][j],ksi[1][j]);
         }
         //getchar();
 

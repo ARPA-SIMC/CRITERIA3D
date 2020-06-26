@@ -1465,6 +1465,20 @@ namespace distribution
 
 namespace myrandom {
 
+double cauchyRandom(int *gasDevIset,double *gasDevGset, double gamma)
+{
+    double fac = 0;
+    double r = 0;
+    double cauchyRandom;
+    double temp;
+
+    temp = (double) rand() / (RAND_MAX);
+    cauchyRandom = statistics::functionQuantileCauchy(gamma,0,temp);
+    return cauchyRandom;
+}
+
+
+
 //----------------------------------------------------------------------
     // Generate a standard normally-distributed random variable
     // (See Numerical Recipes in Pascal W. H. Press, et al. 1989 p. 225)
@@ -1795,6 +1809,27 @@ namespace statistics
             return PARAMETER_ERROR;
         }
         return statistics::inverseTabulatedERF(1-value);
+    }
+
+    double functionCDFCauchy(double gamma,double x0, double x)
+    {
+        double result = 0;
+        result = 0.5 + 1 / PI * atan((x-x0)/gamma);
+        return result;
+    }
+
+    double functionPDFCauchy(double gamma,double x0, double x)
+    {
+        double result = 0;
+        result = 1.0/(PI*gamma*(1+ ((x-x0)*(x-x0)/(gamma*gamma))));
+        return result;
+    }
+
+    double functionQuantileCauchy(double gamma,double x0, double F)
+    {
+        double result = 0;
+        result = x0 + gamma*tan(PI*(F-0.5));
+        return result;
     }
 }
 
