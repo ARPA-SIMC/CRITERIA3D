@@ -1,56 +1,48 @@
 #include "tabHydraulicConductivityCurve.h"
 #include "commonConstants.h"
-#include "curvePanner.h"
-#include <qwt_point_data.h>
-#include <qwt_scale_engine.h>
-
-#include <qwt_plot_grid.h>
-#include <qwt_plot_panner.h>
-#include <qwt_plot_zoomer.h>
-#include <qwt_event_pattern.h>
-#include <qwt_picker_machine.h>
-#include <qwt_symbol.h>
 
 TabHydraulicConductivityCurve::TabHydraulicConductivityCurve()
 {
-    pick = nullptr;
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
 
-    myPlot = new QwtPlot;
-    myPlot->setAxisScaleEngine(QwtPlot::xBottom, new QwtLogScaleEngine(10));
-    myPlot->setAxisScaleEngine(QwtPlot::yLeft, new QwtLogScaleEngine(10));
-    myPlot->setAxisTitle(QwtPlot::yLeft,QString("Water conductivity [%1]").arg(QString("cm day-1")));
-    myPlot->setAxisTitle(QwtPlot::xBottom,QString("Water potential [%1]").arg(QString("kPa")));
-    myPlot->setAxisScale(QwtPlot::xBottom,xMin, xMax);
-    myPlot->setAxisScale(QwtPlot::yLeft,yMin, yMax);
+    chart = new QChart();
+    chartView = new QChartView();
+    chartView->setChart(chart);
 
-    // Left Button for panning
-    Crit3DCurvePanner* panner = new Crit3DCurvePanner(myPlot, xlogylog, dxMin, dxMax, yMin, yMax);
-    panner->setMouseButton(Qt::LeftButton);
-    QwtPlotZoomer* zoomer = new QwtPlotZoomer( QwtPlot::xBottom, QwtPlot::yLeft, myPlot->canvas()  );
-    zoomer->setRubberBandPen( QColor( Qt::black ) );
-    zoomer->setTrackerPen( QColor( Qt::red ) );
-    zoomer->setMaxStackDepth(5);
-    // CTRL+LeftButton for the zooming
-    zoomer->setMousePattern( QwtEventPattern::MouseSelect1, Qt::LeftButton, Qt::ControlModifier);
-    // CTRL+RightButton back to full size
-    zoomer->setMousePattern( QwtEventPattern::MouseSelect2, Qt::RightButton, Qt::ControlModifier);
+    axisX = new QLogValueAxis();
+    axisX->setTitleText(QString("Water potential [%1]").arg(QString("kPa")));
+    axisX->setBase(10);
+    axisX->setRange(xMin, xMax);
 
-    // grid
-    QwtPlotGrid *grid = new QwtPlotGrid();
-    grid->enableY(true);
-    grid->enableYMin(true);
-    grid->setMajorPen( Qt::darkGray, 0, Qt::SolidLine );
-    grid->setMinorPen( Qt::gray, 0 , Qt::DotLine );
-    grid->attach(myPlot);
+    axisY = new QLogValueAxis();
+    axisY->setTitleText(QString("Water conductivity [%1]").arg(QString("cm day-1")));
+    axisY->setBase(10);
+    axisY->setRange(yMin, yMax);
+
+    QFont font = axisY->titleFont();
+    font.setPointSize(11);
+    font.setBold(true);
+    axisX->setTitleFont(font);
+    axisY->setTitleFont(font);
+
+    chart->addAxis(axisX, Qt::AlignBottom);
+    chart->addAxis(axisY, Qt::AlignLeft);
+
+    chart->legend()->setVisible(false);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+    chart->setAcceptHoverEvents(true);
+
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
 
     mainLayout->addWidget(barHorizons.groupBox);
-    plotLayout->addWidget(myPlot);
+    plotLayout->addWidget(chartView);
     mainLayout->addLayout(plotLayout);
 
     setLayout(mainLayout);
     fillElement = false;
+
 }
 
 void TabHydraulicConductivityCurve::resetAll()
@@ -64,14 +56,10 @@ void TabHydraulicConductivityCurve::resetAll()
         curveList.clear();
     }
 
-    if (pick != nullptr)
-    {
-        delete pick;
-        pick = nullptr;
-    }
-
-    myPlot->detachItems( QwtPlotItem::Rtti_PlotCurve );
-    myPlot->replot();
+    chart->removeAllSeries();
+    delete m_tooltip;
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
     fillElement = false;
 
 }
@@ -88,8 +76,6 @@ void TabHydraulicConductivityCurve::setFillElement(bool value)
 
 void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
 {
-    // rescale
-    myPlot->setAxisScale(QwtPlot::xBottom, xMin, xMax);
 
     if (soil == nullptr) return;
 
@@ -99,17 +85,16 @@ void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
 
     fillElement = true;
     mySoil = soil;
-    QVector<double> xVector;
-    QVector<double> yVector;
     double x;
     double maxThetaSat = 0;
 
     for (unsigned int i = 0; i < mySoil->nrHorizons; i++)
     {
         // insert Curves
-        QwtPlotCurve *curve = new QwtPlotCurve;
-        xVector.clear();
-        yVector.clear();
+        QColor color = barHorizons.getColor(i);
+        // insert Curves
+        QLineSeries* curve = new QLineSeries();
+        curve->setColor(color);
         double factor = 1.1;
         x = dxMin;
         while (x < dxMax*factor)
@@ -117,63 +102,110 @@ void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
             double y = soil::waterConductivityFromSignPsi(-x, &mySoil->horizon[i]);
             if (y != NODATA)
             {
-                xVector.push_back(x);
-                yVector.push_back(y);
+                curve->append(x,y);
                 maxThetaSat = MAXVALUE(maxThetaSat, y);
             }
             x *= factor;
         }
-        QwtPointArrayData *data = new QwtPointArrayData(xVector,yVector);
-        curve->setSamples(data);
-        curve->attach(myPlot);
         curveList.push_back(curve);
-
+        chart->addSeries(curve);
+        curve->attachAxis(axisX);
+        curve->attachAxis(axisY);
+        connect(curve, &QXYSeries::clicked, this, &TabHydraulicConductivityCurve::curveClicked);
+        connect(curve, &QLineSeries::hovered, this, &TabHydraulicConductivityCurve::tooltipLineSeries);
     }
 
     // round maxThetaSat to first decimal
     maxThetaSat = ceil(maxThetaSat * 10) * 0.1;
 
     // rescale to maxThetaSat
-    myPlot->setAxisScale(QwtPlot::yLeft, yMin, std::max(yMax, maxThetaSat));
-
-    pick = new Crit3DCurvePicker(myPlot, curveList);
-    pick->setStateMachine(new QwtPickerClickPointMachine());
-    connect(pick, SIGNAL(clicked(int)), this, SLOT(curveClicked(int)));
+    axisY->setMax(std::max(yMax, maxThetaSat));
 
     for (int i=0; i < barHorizons.barList.size(); i++)
     {
         connect(barHorizons.barList[i], SIGNAL(clicked(int)), this, SLOT(widgetClicked(int)));
     }
-
-    myPlot->replot();
 }
 
 
 void TabHydraulicConductivityCurve::widgetClicked(int index)
 {
-    // check selection state
 
+    // check selection state
     if (barHorizons.barList[index]->getSelected())
     {
         barHorizons.deselectAll(index);
 
         // select the right curve
-        pick->setSelectedCurveIndex(index);
-        pick->highlightCurve(true);
+        indexSelected = index;
+        highlightCurve(true);
         emit horizonSelected(index);
     }
     else
     {
-        pick->highlightCurve(false);
-        pick->setSelectedCurveIndex(-1);
+        indexSelected = -1;
+        highlightCurve(false);
         emit horizonSelected(-1);
     }
 
-
 }
 
-void TabHydraulicConductivityCurve::curveClicked(int index)
+void TabHydraulicConductivityCurve::curveClicked()
 {
-    barHorizons.selectItem(index);
-    emit horizonSelected(index);
+    auto serie = qobject_cast<QLineSeries *>(sender());
+    if (serie != nullptr)
+    {
+        int index = curveList.indexOf(serie);
+        indexSelected = index;
+        highlightCurve(true);
+        barHorizons.selectItem(index);
+        emit horizonSelected(index);
+    }
 }
+
+void TabHydraulicConductivityCurve::highlightCurve( bool isHightlight )
+{
+    for ( int i = 0; i < curveList.size(); i++ )
+    {
+        QColor curveColor = curveList[i]->color();
+        if ( isHightlight && i == indexSelected)
+        {
+            QPen pen = curveList[i]->pen();
+            pen.setWidth(3);
+            pen.setBrush(QBrush(curveColor));
+            curveList[i]->setPen(pen);
+        }
+        else
+        {
+            QPen pen = curveList[i]->pen();
+            pen.setWidth(1);
+            pen.setBrush(QBrush(curveColor));
+            curveList[i]->setPen(pen);
+        }
+    }
+
+}
+
+void TabHydraulicConductivityCurve::tooltipLineSeries(QPointF point, bool state)
+{
+
+    auto serie = qobject_cast<QLineSeries *>(sender());
+    int index = curveList.indexOf(serie)+1;
+    if (state)
+    {
+        double xValue = point.x();
+        double yValue = point.y();
+
+        m_tooltip->setText(QString("Horizon %1 \n%2 %3 ").arg(index).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setSeries(serie);
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+}
+

@@ -1183,7 +1183,7 @@ double DLL_EXPORT __STDCALL getHeatConductivity(long nodeIndex)
  * \brief return instantaneous heat flux
  * \param nodeIndex
  * \param myDirection
- * \return heat flux [W]
+ * \return heat flux [W] or water flux (m3 -1)
 */
 float DLL_EXPORT __STDCALL getHeatFlux(long nodeIndex, short myDirection, int fluxType)
 {

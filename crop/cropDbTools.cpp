@@ -277,14 +277,9 @@ bool deleteCropData(QSqlDatabase* dbCrop, QString cropName, QString *error)
     return true;
 }
 
-bool updateCropLAIparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *error)
+bool updateCropLAIparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error)
 {
     QSqlQuery qry(*dbCrop);
-    if (idCrop.isEmpty())
-    {
-        *error = "id_crop missing";
-        return false;
-    }
     qry.prepare( "UPDATE crop SET sowing_doy = :sowing_doy, plant_cycle_max_duration = :max_cycle, lai_min = :lai_min, lai_max = :lai_max, lai_grass = :lai_grass, "
                  "thermal_threshold = :thermal_threshold, upper_thermal_threshold = :upper_thermal_threshold, degree_days_emergence = :degree_days_emergence, "
                  "degree_days_lai_increase = :degree_days_lai_increase, degree_days_lai_decrease = :degree_days_lai_decrease, "
@@ -313,7 +308,7 @@ bool updateCropLAIparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop
     qry.bindValue(":lai_curve_factor_b", myCrop->LAIcurve_b);
     qry.bindValue(":kc_max", myCrop->kcMax);
 
-    qry.bindValue(":id_crop", idCrop);
+    qry.bindValue(":id_crop", QString::fromStdString(myCrop->idCrop));
 
     if( !qry.exec() )
     {
@@ -323,14 +318,10 @@ bool updateCropLAIparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop
     return true;
 }
 
-bool updateCropRootparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *error)
+bool updateCropRootparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error)
 {
     QSqlQuery qry(*dbCrop);
-    if (idCrop.isEmpty())
-    {
-        *error = "id_crop missing";
-        return false;
-    }
+
     qry.prepare( "UPDATE crop SET root_depth_zero = :root_depth_zero, "
                  "root_depth_max = :root_depth_max, root_shape_deformation = :root_shape_deformation, degree_days_root_increase = :degree_days_root_increase"
                  " WHERE id_crop = :id_crop");
@@ -340,7 +331,7 @@ bool updateCropRootparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCro
     qry.bindValue(":root_shape_deformation", myCrop->roots.shapeDeformation);
     qry.bindValue(":degree_days_root_increase", myCrop->roots.degreeDaysRootGrowth);
 
-    qry.bindValue(":id_crop", idCrop);
+    qry.bindValue(":id_crop", QString::fromStdString(myCrop->idCrop));
 
     if( !qry.exec() )
     {
@@ -350,14 +341,10 @@ bool updateCropRootparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCro
     return true;
 }
 
-bool updateCropIrrigationparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *error)
+bool updateCropIrrigationparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error)
 {
     QSqlQuery qry(*dbCrop);
-    if (idCrop.isEmpty())
-    {
-        *error = "id_crop missing";
-        return false;
-    }
+
     qry.prepare( "UPDATE crop SET irrigation_shift = :irrigation_shift, irrigation_volume = :irrigation_volume, "
                  "degree_days_start_irrigation = :degree_days_start_irrigation, degree_days_end_irrigation = :degree_days_end_irrigation, "
                  "psi_leaf = :psi_leaf, raw_fraction = :raw_fraction, stress_tolerance = :stress_tolerance"
@@ -382,13 +369,14 @@ bool updateCropIrrigationparam(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop*
     qry.bindValue(":raw_fraction", myCrop->fRAW);
     qry.bindValue(":stress_tolerance", myCrop->stressTolerance);
 
-    qry.bindValue(":id_crop", idCrop);
+    qry.bindValue(":id_crop", QString::fromStdString(myCrop->idCrop));
 
     if( !qry.exec() )
     {
         *error = qry.lastError().text();
         return false;
     }
+
     return true;
 }
 

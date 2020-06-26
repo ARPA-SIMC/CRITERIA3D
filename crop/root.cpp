@@ -423,12 +423,19 @@ namespace root
 
     bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers)
     {
-        unsigned int i, layer;
+        // check soil
         unsigned int nrLayers = unsigned(soilLayers.size());
-        double soilDepth = 0;
-        if (nrLayers > 0) soilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
+        if (nrLayers == 0)
+        {
+            myCrop->roots.firstRootLayer = NODATA;
+            myCrop->roots.lastRootLayer = NODATA;
+            return false;
+        }
+
+        double soilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
         // Initialize
+        unsigned int i, layer;
         for (i = 0; i < nrLayers; i++)
         {
             myCrop->roots.rootDensity[i] = 0.0;

@@ -675,25 +675,30 @@ namespace interpolation
     }
 
 
-    double cubicSpline(double x , double *firstColumn , double *secondColumn, int dim)
+    double cubicSpline(double x, double *firstColumn, double *secondColumn, int dim)
     {
-        double a,b,c,d,y ;
-        int i = 0 ;
+        double a,b,c,d,y;
+        int i = 0;
         double *secondDerivative = (double *) calloc(dim, sizeof(double));
+
         for (int i=0 ; i < dim; i++)
         {
             secondDerivative[i] = NODATA;
         }
-        punctualSecondDerivative(dim,firstColumn,secondColumn,secondDerivative);
-        while (x > firstColumn[i]) i++ ;
-        double step;
-        step = (firstColumn[i]- firstColumn[i-1]);
-        a = (firstColumn[i] - x)/ step ;
-        b = 1 - a ;
+
+        punctualSecondDerivative(dim, firstColumn, secondColumn, secondDerivative);
+
+        while (x > firstColumn[i])
+            i++;
+
+        double step = (firstColumn[i]- firstColumn[i-1]);
+        a = (firstColumn[i] - x)/ step;
+        b = 1 - a;
         d = c = step*step/6;
         c *= (a*a*a - a);
         d *= (b*b*b - b);
         y = a*secondColumn[i-1]+b*secondColumn[i]+c*secondDerivative[i-1]+d*secondDerivative[i];
+
         free(secondDerivative);
         return y ;
     }
@@ -707,6 +712,7 @@ namespace interpolation
         double *diagonal =  (double *) calloc(matrixDimension, sizeof(double));
         double *subDiagonal =  (double *) calloc(matrixDimension, sizeof(double));
         double *superDiagonal =  (double *) calloc(matrixDimension, sizeof(double));
+
         for (int i=0 ; i < matrixDimension; i++)
         {
             y2[i] = 0;
@@ -716,11 +722,15 @@ namespace interpolation
             constantTerm[i] = (secondColumn[i+2]-secondColumn[i+1])/(firstColumn[i+2]-firstColumn[i+1])
                     -(secondColumn[i+1]-secondColumn[i])/(firstColumn[i+1]-firstColumn[i]);
         }
+
         tridiagonalThomasAlgorithm(matrixDimension,subDiagonal,diagonal,superDiagonal,constantTerm,y2);
+
         for (int i = 0 ; i < dim ; i++) secondDerivative[i]= 0;
         for (int i = 1 ; i < dim-1 ; i++) secondDerivative[i] = y2[i-1];
+
         free(y2);
         free(constantTerm);
+        free(diagonal);
         free(subDiagonal);
         free(superDiagonal);
 
@@ -728,33 +738,32 @@ namespace interpolation
 
     void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output)
     {
+        // * n - number of equations
+        // * subDiagonal - sub-diagonal (means it is the diagonal below the main diagonal) -- indexed from 1..n-1
+        // * b - the main diagonal
+        // * c - sup-diagonal (means it is the diagonal above the main diagonal) -- indexed from 0..n-2
+        // * v - right part
+        // * output - the answer
 
-            // * n - number of equations
-            // * subDiagonal - sub-diagonal (means it is the diagonal below the main diagonal) -- indexed from 1..n-1
-            // * b - the main diagonal
-            // * c - sup-diagonal (means it is the diagonal above the main diagonal) -- indexed from 0..n-2
-            // * v - right part
-            // * output - the answer
+        double *newDiagonal, *newConstantTerm;
+        newDiagonal = (double *) calloc(n, sizeof(double));
+        newConstantTerm =   (double *) calloc(n, sizeof(double));
 
-            double *newDiagonal, *newConstantTerm;
-            newDiagonal = (double *) calloc(n, sizeof(double));
-            newConstantTerm =   (double *) calloc(n, sizeof(double));
+        newDiagonal[0] = mainDiagonal[0];
+        newConstantTerm[0]= constantTerm[0];
+        for (int i = 1; i < n; i++)
+        {
+                double m = subDiagonal[i]/mainDiagonal[i-1];
+                newDiagonal[i] = mainDiagonal[i] - m*superDiagonal[i-1];
+                newConstantTerm[i] = constantTerm[i] - m*constantTerm[i-1];
+        }
 
-            newDiagonal[0] = mainDiagonal[0];
-            newConstantTerm[0]= constantTerm[0];
-            for (int i = 1; i < n; i++)
-            {
-                    double m = subDiagonal[i]/mainDiagonal[i-1];
-                    newDiagonal[i] = mainDiagonal[i] - m*superDiagonal[i-1];
-                    newConstantTerm[i] = constantTerm[i] - m*constantTerm[i-1];
-            }
+        output[n-1] = newConstantTerm[n-1]/newDiagonal[n-1];
+        for (int i = n - 2; i >= 0; i--)
+                output[i]=(newConstantTerm[i]-superDiagonal[i]*output[i+1])/newDiagonal[i];
 
-            output[n-1] = newConstantTerm[n-1]/newDiagonal[n-1];
-            for (int i = n - 2; i >= 0; i--)
-                    output[i]=(newConstantTerm[i]-superDiagonal[i]*output[i+1])/newDiagonal[i];
-
-            free(newDiagonal);
-            free(newConstantTerm);
+        free(newDiagonal);
+        free(newConstantTerm);
     }
 
 
@@ -1261,7 +1270,7 @@ namespace matricial
 
     double determinant(double** a,int n)
     {
-        //	calculate determinte of matrix
+        //	calculate determinant of matrix
         int i;
         double sum=0;
         if (n == 1)
@@ -1290,13 +1299,10 @@ namespace matricial
         double** b;
         double** c;
         b = (double**)calloc(n, sizeof(double*));
-        for (int i=0;i<n;i++)
-        {
-            b[i]= (double*)calloc(n, sizeof(double));
-        }
         c = (double**)calloc(n, sizeof(double*));
         for (int i=0;i<n;i++)
         {
+            b[i]= (double*)calloc(n, sizeof(double));
             c[i]= (double*)calloc(n, sizeof(double));
         }
         //int l,h,m,k,i,j;
@@ -1345,9 +1351,57 @@ namespace matricial
         if(determinantOfMatrix == 0)
             printf("\nInverse of Entered Matrix is not possible\n");
         else if(n == 1)
-            d[0][0] = 1;
+            d[0][0] = 1/a[0][0];
         else
             matricial::cofactor(a,d,n,determinantOfMatrix);
+    }
+
+    bool inverseGaussJordan(double** a,double** d,int n)
+    {
+        if (fabs(determinant(a,n))<EPSILON)
+        {
+            printf("\nInverse of Entered Matrix is not possible\n");
+            return false;
+        }
+        for (int i=0;i<n;i++)
+        {
+            d[i][i]=1;
+            for (int j=i+1;j<n;j++)
+            {
+                d[j][i] = d[i][j] = 0.;
+            }
+        }
+        for (int i=0;i<n;i++)
+        {
+            if (a[i][i] == 0)
+            {
+                printf("\nInverse of Entered Matrix is not possible\n");
+                return false;
+            }
+            double ratio;
+            for(int j=0;j<n;j++)
+            {
+               if(i!=j)
+               {
+                    ratio = a[j][i]/a[i][i];
+                    for(int k=0;k<n;k++)
+                    {
+                        a[j][k] = a[j][k] - ratio*a[i][k];
+                        d[j][k] = d[j][k] - ratio*d[i][k];
+                    }
+               }
+            }
+        }
+
+        for (int i=0;i<n;i++)
+        {
+            for (int j=0;j<n;j++)
+            {
+                a[i][j] = a[i][j]/a[i][i];
+                d[i][j] = d[i][j]/a[i][i];
+            }
+        }
+        return true;
     }
 
     int eigenSystemMatrix2x2(double** a, double* eigenvalueA, double** eigenvectorA, int n)

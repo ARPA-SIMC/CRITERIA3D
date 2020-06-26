@@ -13,9 +13,9 @@
     {
         Crit3DDate inputFirstDate;
         Crit3DDate inputLastDate;
-        float *inputTMin;
-        float *inputTMax;
-        float *inputPrecip;
+        std::vector<float> inputTMin;
+        std::vector<float> inputTMax;
+        std::vector<float> inputPrecip;
         int dataLenght;
     };
 

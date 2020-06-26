@@ -2,12 +2,11 @@
 #define TABWATERRETENTIONCURVE_H
 
     #include <QtWidgets>
+    #include <QtCharts>
     #include <QMap>
-    #include <qwt_plot_curve.h>
-    #include <qwt_plot.h>
     #include "soil.h"
     #include "barHorizon.h"
-    #include "curvePicker.h"
+    #include "callout.h"
 
 
     class TabWaterRetentionCurve: public QWidget
@@ -19,16 +18,23 @@
         void resetAll();
         bool getFillElement() const;
         void setFillElement(bool value);
+        void highlightCurve(bool isHightlight);
+        void tooltipLineSeries(QPointF point, bool state);
+        void tooltipScatterSeries(QPointF point, bool state);
 
     private:
         BarHorizonList barHorizons;
 
         soil::Crit3DSoil* mySoil;
-        QwtPlot *myPlot;
-        QList<QwtPlotCurve*> curveList;
-        QMap< int, QwtPlotCurve* > curveMarkerMap;
-        Crit3DCurvePicker *pick;
+        QChartView *chartView;
+        QChart *chart;
+        QList<QLineSeries*> curveList;
+        QValueAxis *axisY;
+        QLogValueAxis *axisX;
+        QMap< int, QScatterSeries* > curveMarkerMap;
+        Callout *m_tooltip;
         bool fillElement;
+        int indexSelected;
 
         double dxMin = 0.001;
         double dxMax = 10000000;
@@ -42,7 +48,8 @@
 
     private slots:
         void widgetClicked(int index);
-        void curveClicked(int index);
+        void curveClicked();
+        void markerClicked();
 
     signals:
         void horizonSelected(int nHorizon);

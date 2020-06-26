@@ -102,7 +102,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
 
     for (int iStation=0;iStation<nrStations;iStation++)
     {
-        outputFileName = "wgSimulation_station_" + QString::number(iStation) + ".txt";
+        outputFileName = "outputData/wgSimulation_station_" + QString::number(iStation) + ".txt";
         counter = 0;
         counterSeason[3] = counterSeason[2] = counterSeason[1] = counterSeason[0] = 0;
         for (int iYear=1;iYear<=parametersModel.yearOfSimulation;iYear++)
@@ -177,7 +177,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
         // compute climate statistics from observed data
         for (int iStation=0;iStation<nrStations;iStation++)
         {
-            outputFileName = "wgClimate_station_" + QString::number(iStation) + ".txt";
+            outputFileName = "outputData/wgClimate_station_" + QString::number(iStation) + ".txt";
             inputFirstDate.day = obsDataD[iStation][0].date.day;
             inputFirstDate.month = obsDataD[iStation][0].date.month;
             inputFirstDate.year = obsDataD[iStation][0].date.year;
@@ -229,7 +229,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
 
         for (int iStation=0;iStation<nrStations;iStation++)
         {
-            outputFileName = "wgSimulation_station_" + QString::number(iStation) + ".txt";
+            outputFileName = "outputData/wgSimulation_station_" + QString::number(iStation) + ".txt";
             counter = 0;
             for (int i=0;i<nrDays;i++)
             {
@@ -377,7 +377,7 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
 
     }
     FILE* fp;
-    fp = fopen("correlationMatrices.txt","w");
+    fp = fopen("outputData/correlationMatrices.txt","w");
     for (int iMonth=0;iMonth<12;iMonth++)
     {
         fprintf(fp,"month %d \nsimulated - observed\n",iMonth+1);

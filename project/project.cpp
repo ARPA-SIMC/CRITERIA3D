@@ -1569,7 +1569,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 
     if (! interpolationReady)
     {
-        logError("Interpolation: error in function preInterpolation");   
+        logError("Interpolation: error in function preInterpolation");
         return false;
     }
 
@@ -1765,9 +1765,14 @@ bool Project::loadProjectSettings(QString settingsFileName)
             if(myPath.left(1) == ".")
             {
                 newProjectPath = getProjectPath() + myPath;
-                newProjectPath = QDir::cleanPath(newProjectPath);
+            }
+           else if(myPath.left(5) == "$HOME")
+            {
+                newProjectPath = QDir::homePath() + myPath.right(myPath.length()-5);
             }
             else newProjectPath = myPath;
+
+            newProjectPath = QDir::cleanPath(newProjectPath);
 
             if (newProjectPath.right(1) != "/") newProjectPath += "/";
             setProjectPath(newProjectPath);
@@ -1798,6 +1803,8 @@ bool Project::searchDefaultPath(QString* defaultPath)
 {
     QString myPath = getApplicationPath();
     QString myRoot = QDir::rootPath();
+    // windows: installation on other volume (for example D:)
+    QString myVolume = myPath.left(3);
 
     bool isFound = false;
     while (! isFound)
@@ -1807,7 +1814,7 @@ bool Project::searchDefaultPath(QString* defaultPath)
             isFound = true;
             break;
         }
-        if (QDir::cleanPath(myPath) == myRoot)
+        if (QDir::cleanPath(myPath) == myRoot || QDir::cleanPath(myPath) == myVolume)
             break;
 
         myPath = QFileInfo(myPath).dir().absolutePath();
@@ -2244,7 +2251,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath);
         if (!meteoWidgetGridList.isEmpty())
         {
-            meteoWidgetId = meteoWidgetGridList[meteoWidgetGridList.size()-1]->getMeteoWidgetID()+1;
+             meteoWidgetId = meteoWidgetGridList[meteoWidgetGridList.size()-1]->getMeteoWidgetID()+1;
         }
         else
         {
@@ -2269,6 +2276,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         unsigned col;
         if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
         {
+            meteoWidgetGrid->setDateInterval(firstDate, lastDate);
             meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
         }
         return;

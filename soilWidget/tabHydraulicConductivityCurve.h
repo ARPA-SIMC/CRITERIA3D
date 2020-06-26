@@ -2,11 +2,10 @@
 #define TABHYDRAULICCONDUCTIVITYCURVE_H
 
     #include <QtWidgets>
-    #include <qwt_plot_curve.h>
-    #include <qwt_plot.h>
+    #include <QtCharts>
     #include "soil.h"
     #include "barHorizon.h"
-    #include "curvePicker.h"
+    #include "callout.h"
 
     class TabHydraulicConductivityCurve: public QWidget
     {
@@ -17,14 +16,20 @@
         void resetAll();
         bool getFillElement() const;
         void setFillElement(bool value);
+        void highlightCurve( bool isHightlight );
+        void tooltipLineSeries(QPointF point, bool state);
 
     private:
         BarHorizonList barHorizons;
         soil::Crit3DSoil* mySoil;
-        QwtPlot *myPlot;
-        QList<QwtPlotCurve*> curveList;
-        Crit3DCurvePicker *pick;
+        QChartView *chartView;
+        QChart *chart;
+        QList<QLineSeries*> curveList;
+        QLogValueAxis *axisX;
+        QLogValueAxis *axisY;
+        Callout *m_tooltip;
         bool fillElement;
+        int indexSelected;
 
         double dxMin = 0.001;
         double dxMax = 10000000;
@@ -36,7 +41,7 @@
 
     private slots:
         void widgetClicked(int index);
-        void curveClicked(int index);
+        void curveClicked();
 
     signals:
         void horizonSelected(int nHorizon);

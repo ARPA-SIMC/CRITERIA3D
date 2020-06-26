@@ -305,3 +305,11 @@ void BarHorizonList::deselectAll(int index)
     }
 }
 
+QColor BarHorizonList::getColor(int index)
+{
+    if (index < barList.size())
+    {
+        return barList[index]->palette().color(QPalette::Background);
+    }
+}
+

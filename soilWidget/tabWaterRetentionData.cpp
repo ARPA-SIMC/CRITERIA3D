@@ -374,4 +374,3 @@ void TabWaterRetentionData::widgetClicked(int index)
     emit horizonSelected(index);
 
 }
-

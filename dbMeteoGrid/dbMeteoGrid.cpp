@@ -928,7 +928,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
     if (_tableDaily.exists)
     {
-        QString statement = QString("SELECT MIN(`%1`) as minDate, MAX(`%1`) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
+        QString statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
         if( !qry.exec(statement) )
         {
             while( qry.lastError().number() == tableNotFoundError
@@ -957,12 +957,12 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
                 statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
                 qry.exec(statement);
             }
+        }
 
-            if ( !qry.lastError().type() == QSqlError::NoError && qry.lastError().number() != tableNotFoundError)
-            {
-                *myError = qry.lastError().text();
-                return false;
-            }
+        if ( qry.lastError().type() != QSqlError::NoError )
+        {
+            *myError = qry.lastError().text();
+            return false;
         }
         else
         {
