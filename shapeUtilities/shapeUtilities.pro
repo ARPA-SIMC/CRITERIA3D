@@ -3,7 +3,6 @@
 #   shapeUtilities
 #   This project is part of CRITERIA-3D distribution
 #
-#
 #--------------------------------------------------------
 
 QT    -= gui
@@ -20,6 +19,7 @@ win32:{
     TARGET = shapeUtilities
 }
 
+
 TEMPLATE = lib
 CONFIG += staticlib
 
@@ -28,7 +28,7 @@ DEFINES += _CRT_SECURE_NO_WARNINGS
 INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project
 
 SOURCES += \
-    shapeFromCSVForShell.cpp \
+    shapeFromCsvForShell.cpp \
     shapeToRaster.cpp    \
     shapeUtilities.cpp   \
     ucmUtilities.cpp     \
@@ -39,7 +39,7 @@ SOURCES += \
 
 
 HEADERS += \
-    shapeFromCSVForShell.h \
+    shapeFromCsvForShell.h \
     shapeToRaster.h    \
     shapeUtilities.h   \
     ucmUtilities.h     \
@@ -47,8 +47,4 @@ HEADERS += \
     zonalStatistic.h   \
     ucmDb.h
 
-
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-} 
+include(../gdal.pri)

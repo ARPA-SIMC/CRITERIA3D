@@ -1,26 +1,26 @@
-#include "shapeFromCSVForShell.h"
+#include "shapeFromCsvForShell.h"
 #include "shapeUtilities.h"
 #include "commonConstants.h"
 
 #include <QtSql>
 
 /* output format file:
- * CSVfieldName, ShapeFieldName, type, lenght, decimals nr
+ * CsvFieldName, ShapeFieldName, type, lenght, decimals nr
  * example:
  * CROP,CROP,STRING,20,
  * deficit,DEFICIT,FLOAT,10,1
  * forecast7daysIRR,FcstIrr7d,FLOAT,10,1
 */
-bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape,
-                  QString fileCSV, QString fileCSVRef, QString outputName, std::string *error)
+bool shapeFromCsvForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* outputShape,
+                  QString fileCsv, QString fileCsvRef, QString outputName, std::string *error)
 {
-    int CSVRefRequiredInfo = 5;
+    int csvRefRequiredInfo = 5;
     int defaultStringLenght = 20;
     int defaultDoubleLenght = 10;
     int defaultDoubleDecimals = 2;
 
     QString refFileName = QString::fromStdString(shapeHandler->getFilepath());
-    QFileInfo csvFileInfo(fileCSV);
+    QFileInfo csvFileInfo(fileCsv);
     QFileInfo refFileInfo(refFileName);
 
     // make a copy of shapefile and return cloned shapefile complete path
@@ -32,9 +32,9 @@ bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* 
         return false;
     }
 
-    // read fileCSVRef and fill MapCSVShapeFields
-    QMap<QString, QStringList> MapCSVShapeFields;
-    QFile fileRef(fileCSVRef);
+    // read fileCsvRef and fill MapCsvShapeFields
+    QMap<QString, QStringList> MapCsvShapeFields;
+    QFile fileRef(fileCsvRef);
     if ( !fileRef.open(QFile::ReadOnly | QFile::Text) ) {
         qDebug() << "File not exists";
     }
@@ -45,7 +45,7 @@ bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* 
         {
             QString line = in.readLine();
             QStringList items = line.split(",");
-            if (items.size() < CSVRefRequiredInfo)
+            if (items.size() < csvRefRequiredInfo)
             {
                 *error = "invalid output format CSV, missing reference data";
                 return false;
@@ -57,16 +57,16 @@ bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* 
                 *error = "invalid output format CSV, missing field name";
                 return false;
             }
-            MapCSVShapeFields.insert(key,items);
+            MapCsvShapeFields.insert(key,items);
         }
     }
 
     int nShape = outputShape->getShapeCount();
 
-    QFile file(fileCSV);
+    QFile file(fileCsv);
     if ( !file.open(QFile::ReadOnly | QFile::Text) )
     {
-        qDebug() << "data file not exists:" << fileCSV;
+        qDebug() << "data file not exists:" << fileCsv;
         return false;
     }
 
@@ -83,17 +83,17 @@ bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* 
     QMap<int, int> myPosMap;
 
     int idCaseIndex = outputShape->getFieldPos("ID_CASE");
-    int idCaseCSV = NODATA;
+    int idCaseCsv = NODATA;
 
     for (int i = 0; i < newFields.size(); i++)
     {
         if (newFields[i] == "ID_CASE")
         {
-            idCaseCSV = i;
+            idCaseCsv = i;
         }
-        if (MapCSVShapeFields.contains(newFields[i]))
+        if (MapCsvShapeFields.contains(newFields[i]))
         {
-            QStringList valuesList = MapCSVShapeFields.value(newFields[i]);
+            QStringList valuesList = MapCsvShapeFields.value(newFields[i]);
             QString field = valuesList[0];
             if (valuesList[1] == "STRING")
             {
@@ -134,7 +134,7 @@ bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* 
 
     }
 
-    if (idCaseCSV == NODATA)
+    if (idCaseCsv == NODATA)
     {
         *error = "invalid CSV, missing ID_CASE";
         return false;
@@ -153,7 +153,7 @@ bool shapeFromCSVForShell(Crit3DShapeHandler* shapeHandler, Crit3DShapeHandler* 
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             // check right ID_CASE
-            if (outputShape->readStringAttribute(shapeIndex, idCaseIndex) == items[idCaseCSV].toStdString())
+            if (outputShape->readStringAttribute(shapeIndex, idCaseIndex) == items[idCaseCsv].toStdString())
             {
                 QMapIterator<int, int> i(myPosMap);
                 while (i.hasNext()) {

@@ -2251,7 +2251,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath);
         if (!meteoWidgetGridList.isEmpty())
         {
-            meteoWidgetId = meteoWidgetGridList[meteoWidgetGridList.size()-1]->getMeteoWidgetID()+1;
+             meteoWidgetId = meteoWidgetGridList[meteoWidgetGridList.size()-1]->getMeteoWidgetID()+1;
         }
         else
         {
@@ -2276,6 +2276,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         unsigned col;
         if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
         {
+            meteoWidgetGrid->setDateInterval(firstDate, lastDate);
             meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
         }
         return;

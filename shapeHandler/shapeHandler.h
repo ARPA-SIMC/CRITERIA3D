@@ -17,8 +17,11 @@
         std::string m_filepath;
         std::vector<std::string> m_fieldsList;
         std::vector<DBFFieldType> m_fieldsTypeList;
+        std::vector< std::vector<std::vector<unsigned int>>> holes;
         bool        m_isWGS84;
         int         m_utmZone;
+        int         m_parts;
+        int         m_holes;
 
     public:
         Crit3DShapeHandler();
@@ -27,6 +30,7 @@
         bool open(std::string filename);
         bool openDBF(std::string filename);
         bool openSHP(std::string filename);
+        void newShapeFile(std::string filename, int nShapeType);
         bool isWGS84Proj(std::string prjFileName);
         bool setUTMzone(std::string prjFileName);
         void close();
@@ -61,6 +65,7 @@
         bool deleteRecord(int shapeNumber);
         //bool addRecord(std::vector<std::string> fields);
 
+        //bool addShape(std::vector<double> coordinates);
         bool addField(const char * fieldName, int type, int nWidth, int nDecimals );
         bool removeField(int iField);
 
@@ -79,6 +84,10 @@
 
         double getNumericValue(int shapeNumber, std::string fieldName);
         std::string getStringValue(int shapeNumber, std::string fieldName);
+
+        std::vector<unsigned int> getHoles(int shapeNumber, int partNumber);
+        int getNrParts() const;
+        int getNrHoles() const;
     };
 
 

@@ -36,7 +36,6 @@
 
         unsigned int nrShapes;
         std::vector< std::vector<ShapeObject::Part>> shapeParts;
-        std::vector< std::vector<std::vector<unsigned int>>> holes;
         std::vector< std::vector<GeoBounds>> geoBounds;
         std::vector< std::vector<LatLonPoint>> geoPoints;
 

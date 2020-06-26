@@ -20,6 +20,7 @@
             ~Crit3DMeteoWidget();
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
+            void setDateInterval(QDate date0, QDate date1);
             void draw(Crit3DMeteoPoint mp);
             void resetValues();
             void drawDailyVar();
@@ -35,6 +36,7 @@
             void tooltipBar(bool state, int index, QBarSet *barset);
             void handleMarkerClicked();
             void closeEvent(QCloseEvent *event);
+
 
     private:
             int meteoWidgetID;

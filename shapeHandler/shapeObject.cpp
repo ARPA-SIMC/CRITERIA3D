@@ -141,6 +141,9 @@ void ShapeObject::assign(const SHPObject* obj)
                 part->boundsPart.ymin = MINVALUE(part->boundsPart.ymin, obj->padfY[k]);
                 part->boundsPart.ymax = MAXVALUE(part->boundsPart.ymax, obj->padfY[k]);
             }
+            // save part coordination
+            //part->padfXPart = obj->padfX+part->offset;
+            //part->padfYPart = obj->padfY+part->offset;
             parts.push_back(*part);
             ps++;
             pt++;
