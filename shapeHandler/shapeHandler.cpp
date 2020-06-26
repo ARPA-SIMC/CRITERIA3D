@@ -103,6 +103,46 @@ bool Crit3DShapeHandler::open(std::string filename)
     isWGS84Proj(filePrj);
     setUTMzone(filePrj);
 
+    // save holes inside parts
+    ShapeObject myShape;
+    Point<double> point;
+
+    m_parts = 0;
+    m_holes = 0;
+    holes.clear();
+    holes.resize(m_count);
+
+    std::vector<ShapeObject::Part> shapeParts;
+
+    for (unsigned int i = 0; i < m_count; i++)
+    {
+        getShape(int(i), myShape);
+        shapeParts = myShape.getParts();
+
+        unsigned int nrParts = myShape.getPartCount();
+        m_parts += nrParts;
+
+        holes[i].resize(nrParts);
+
+        for (unsigned int j = 0; j < nrParts; j++)
+        {
+            // holes
+            if (shapeParts[j].hole)
+            {
+                m_holes++;
+                // check first point
+                unsigned long offset = shapeParts[j].offset;
+                point = myShape.getVertex(offset);
+                int index = myShape.getIndexPart(point.x, point.y);
+                if (index != NODATA)
+                {
+                    holes[i][unsigned(index)].push_back(j);
+                }
+            }
+        }
+        shapeParts.clear();
+    }
+
     return true;
 }
 
@@ -609,6 +649,16 @@ void Crit3DShapeHandler::packSHP(std::string newFile)
     SHPClose(hSHP);
 }
 
+std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int partNumber)
+{
+    if (shapeNumber > m_count || partNumber > holes[shapeNumber].size())
+    {
+        std::vector<unsigned int> emptyVector;
+        return emptyVector;
+    }
+    return holes[unsigned(shapeNumber)][unsigned(partNumber)];
+}
+
 std::string Crit3DShapeHandler::getFilepath() const
 {
     return m_filepath;
@@ -627,4 +677,14 @@ int Crit3DShapeHandler::nWidthField(int fieldIndex)
 int Crit3DShapeHandler::nDecimalsField(int fieldIndex)
 {
     return m_dbf->panFieldDecimals[fieldIndex];
+}
+
+int Crit3DShapeHandler::getNrParts() const
+{
+    return m_parts;
+}
+
+int Crit3DShapeHandler::getNrHoles() const
+{
+    return m_holes;
 }

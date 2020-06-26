@@ -17,8 +17,11 @@
         std::string m_filepath;
         std::vector<std::string> m_fieldsList;
         std::vector<DBFFieldType> m_fieldsTypeList;
+        std::vector< std::vector<std::vector<unsigned int>>> holes;
         bool        m_isWGS84;
         int         m_utmZone;
+        int         m_parts;
+        int         m_holes;
 
     public:
         Crit3DShapeHandler();
@@ -81,6 +84,10 @@
 
         double getNumericValue(int shapeNumber, std::string fieldName);
         std::string getStringValue(int shapeNumber, std::string fieldName);
+
+        std::vector<unsigned int> getHoles(int shapeNumber, int partNumber);
+        int getNrParts() const;
+        int getNrHoles() const;
     };
 
 
