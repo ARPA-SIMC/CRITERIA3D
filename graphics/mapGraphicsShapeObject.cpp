@@ -185,7 +185,6 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
 
     nrShapes = unsigned(shapePointer->getShapeCount());
     shapeParts.resize(nrShapes);
-    holes.resize(nrShapes);
     geoBounds.resize(nrShapes);
     geoPoints.resize(nrShapes);
     values.resize(nrShapes);
@@ -205,7 +204,6 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
         values[i] = NODATA;
 
         unsigned int nrParts = myShape.getPartCount();
-        holes[i].resize(nrParts);
         geoBounds[i].resize(nrParts);
 
         for (unsigned int j = 0; j < nrParts; j++)
@@ -219,19 +217,6 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
             gis::utmToLatLon(zoneNumber, refLatitude, bounds->xmax, bounds->ymax, &lat, &lon);
             geoBounds[i][j].v1.lat = lat;
             geoBounds[i][j].v1.lon = lon;
-
-            // holes
-            if (shapeParts[i][j].hole)
-            {
-                // check first point
-                unsigned long offset = shapeParts[i][j].offset;
-                point = myShape.getVertex(offset);
-                int index = myShape.getIndexPart(point.x, point.y);
-                if (index != NODATA)
-                {
-                    holes[i][unsigned(index)].push_back(j);
-                }
-            }
         }
 
         // vertices
@@ -371,12 +356,11 @@ void MapGraphicsShapeObject::clear()
     for (unsigned int i = 0; i < nrShapes; i++)
     {
         shapeParts[i].clear();
-        holes[i].clear();
         geoBounds[i].clear();
         geoPoints[i].clear();
     }
+
     shapeParts.clear();
-    holes.clear();
     geoBounds.clear();
     geoPoints.clear();
 
