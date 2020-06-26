@@ -139,20 +139,22 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
 
             setPolygon(i, j, &polygon);
 
-            if (holes[i][j].size() == 0)
+            std::vector<unsigned int> myHoles = shapePointer->getHoles(i, j);
+
+            if (myHoles.size() == 0)
             {
                 myPainter->drawPolygon(polygon);
             }
             else
             {
                 path = new QPainterPath();
-                inner = new QPainterPath();
-
                 path->addPolygon(polygon);
 
-                for (unsigned int k = 0; k < holes[i][j].size(); k++)
+                // holes
+                inner = new QPainterPath();
+                for (unsigned int k = 0; k < myHoles.size(); k++)
                 {
-                    setPolygon(i, holes[i][j][k], &polygon);
+                    setPolygon(i, myHoles[k], &polygon);
                     inner->addPolygon(polygon);
                 }
 
