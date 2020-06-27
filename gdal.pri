@@ -34,6 +34,10 @@ win32-g++ {
 
     INCLUDEPATH += $$(MSYS_PATH)/include
     DEPENDPATH += $$(MSYS_PATH)/include
+
+    PRE_TARGETDEPS += $$(MSYS_PATH)/lib/libgdal.a
+    PRE_TARGETDEPS += $$(MSYS_PATH)/lib/libgeos.dll.a
+    PRE_TARGETDEPS += $$(MSYS_PATH)/lib/libgeos_c.dll.a
 }
 
 mac {
