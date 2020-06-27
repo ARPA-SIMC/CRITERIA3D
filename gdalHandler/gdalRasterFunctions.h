@@ -6,7 +6,7 @@
     #endif
     class QString;
 
-    bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, QString* myError);
+    bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int *utmZone, QString* myError);
 
 
 #endif // GDALRASTERFUNCTIONS_H

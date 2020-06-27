@@ -28,14 +28,14 @@ QStringList getGdalExtensions(GdalFileType type, GdalFileIO io)
 
     int count = GetGDALDriverManager()->GetDriverCount();
 
-    for(int i=0; i < count; i++)
+    for (int i=0; i < count; i++)
     {
         GDALDriver *driver = GetGDALDriverManager()->GetDriver(i);
-        if(driver)
+        if (driver)
         {
-            if(std::strncmp(driver->GetDescription(), "Memory", 32) != 0)
+            if (std::strncmp(driver->GetDescription(), "Memory", 32) != 0)
             {
-                if(driver->GetMetadataItem(gdalType) != nullptr)
+                if (driver->GetMetadataItem(gdalType) != nullptr)
                 {
                     bool canRead = (driver->GetMetadataItem(GDAL_DCAP_OPEN) != nullptr);
                     bool canWrite = (driver->GetMetadataItem(GDAL_DCAP_CREATE) != nullptr) &&
