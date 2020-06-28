@@ -100,9 +100,9 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
         qDebug() << "Band has a color table. Nr. of entries =" << band->GetColorTable()->GetColorEntryCount();
 
     // nodataValue
-    int success;
-    double nodataValue = band->GetNoDataValue(&success);
-    if (! success)
+    int noDataOk;
+    double nodataValue = band->GetNoDataValue(&noDataOk);
+    if (! noDataOk)
     {
         qDebug() << "Missing NODATA: will be set on minimum value.";
         nodataValue = adfMinMax[0];
@@ -144,7 +144,16 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
     CPLFree(data);
     GDALClose(dataset);
 
-    updateMinMaxRasterGrid(myRaster);
+    if (noDataOk)
+    {
+        myRaster->minimum = float(adfMinMax[0]);
+        myRaster->maximum = float(adfMinMax[1]);
+    }
+    else
+    {
+        updateMinMaxRasterGrid(myRaster);
+    }
+
     return true;
 }
 

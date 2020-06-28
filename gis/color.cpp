@@ -284,7 +284,22 @@ bool setRadiationScale(Crit3DColorScale* myScale)
     myScale->keyColor[2] = Crit3DColor(255, 0, 0);
     myScale->keyColor[3] = Crit3DColor(128, 0, 128);       /*!< violet */
 
-    return(myScale->classify());
+    return myScale->classify();
+}
+
+
+bool setGrayScale(Crit3DColorScale* myScale)
+{
+    myScale->nrKeyColors = 2;
+    myScale->nrColors = 256;
+    myScale->keyColor = new Crit3DColor[unsigned(myScale->nrKeyColors)];
+    myScale->color = new Crit3DColor[unsigned(myScale->nrColors)];
+    myScale->classification = classificationMethod::EqualInterval;
+
+    myScale->keyColor[0] = Crit3DColor(0, 0, 0);
+    myScale->keyColor[1] = Crit3DColor(255, 255, 255);
+
+    return myScale->classify();
 }
 
 
