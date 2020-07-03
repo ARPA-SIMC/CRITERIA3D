@@ -11,9 +11,15 @@
 #include <QDebug>
 
 
+/*! readGdalRaster
+ * open a raster with GDAL library
+ */
 bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZone, QString* myError)
 {
+    // check
     if (myRaster == nullptr) return false;
+    if (fileName == "") return false;
+
     myRaster->isLoaded = false;
 
     GDALDataset* dataset = (GDALDataset*) GDALOpen(fileName.toStdString().data(), GA_ReadOnly);
@@ -41,6 +47,8 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
     {
         qDebug() << "Projection =" << dataset->GetProjectionRef();
         spatialReference = new OGRSpatialReference(dataset->GetProjectionRef());
+
+        // TODO geo projection?
         if (! spatialReference->IsProjected())
         {
             *myError = "Not projected data";
@@ -48,13 +56,15 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
             return false;
         }
 
-        // TODO: check WGS84
+        // TODO: check WGS84 -> convert
 
+        // UTM zone
         *utmZone = spatialReference->GetUTMZone();
         qDebug() << "UTM zone =" << spatialReference->GetUTMZone();
     }
     else
     {
+        qDebug() << "Projection is missing! It will use WGS84 UTM zone:" << *utmZone;
         spatialReference->SetWellKnownGeogCS("WGS84");
     }
 
@@ -69,6 +79,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
         *myError = "Not regular pixel size! Will be used x size.";
     }
 
+    // TODO choose band
     // read band 1
     GDALRasterBand* band = dataset->GetRasterBand(1);
     if(band == nullptr)
@@ -89,7 +100,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
     // min e max
     if( ! (bGotMin && bGotMax) )
     {
-        GDALComputeRasterMinMax((GDALRasterBandH)band, TRUE, adfMinMax);
+        GDALComputeRasterMinMax(GDALRasterBandH(band), TRUE, adfMinMax);
     }
     qDebug() << "Min =" << adfMinMax[0] << " Max =" << adfMinMax[1];
 
@@ -99,7 +110,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
     if (band->GetColorTable() != nullptr)
         qDebug() << "Band has a color table. Nr. of entries =" << band->GetColorTable()->GetColorEntryCount();
 
-    // nodataValue
+    // nodata value
     int noDataOk;
     double nodataValue = band->GetNoDataValue(&noDataOk);
     if (! noDataOk)
@@ -109,7 +120,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
     }
     qDebug() << "Nodata =" << QString::number(nodataValue);
 
-    // Initialize
+    // initialize raster
     myRaster->header->nrCols = dataset->GetRasterXSize();
     myRaster->header->nrRows = dataset->GetRasterYSize();
     myRaster->header->cellSize = adfGeoTransform[1];
@@ -141,9 +152,11 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
         for (int col = 0; col < myRaster->header->nrCols; col++)
             myRaster->value[row][col] = data[row*xSize+col];
 
+    // free memory
     CPLFree(data);
     GDALClose(dataset);
 
+    // min & max
     if (noDataOk)
     {
         myRaster->minimum = float(adfMinMax[0]);
