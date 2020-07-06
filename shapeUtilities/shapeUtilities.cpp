@@ -66,13 +66,13 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     GEOSMessageHandler error_function = nullptr, notice_function = nullptr;
     initGEOS(notice_function, error_function);
 
-    GEOSGeometry **geometries;
     ShapeObject shapeObj;
 
     int nShapes = shapeHandler->getShapeCount();
     std::vector<ShapeObject::Part> shapeParts;
-    unsigned long sizeGeometries = shapeHandler->getNrParts() - shapeHandler->getNrHoles();
-    geometries = (GEOSGeometry **) malloc(sizeGeometries*sizeof(GEOSGeometry *));
+
+    QVector<GEOSGeometry *> geometries;
+    QVector<GEOSGeometry *> holes;
 
     std::vector<double> xVertex;
     std::vector<double> yVertex;
@@ -82,8 +82,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     GEOSCoordSequence *coords;
     GEOSCoordSequence *coordsHoles;
     GEOSGeometry *lr;
-    GEOSGeometry **holes = nullptr;
-    int multiPolygon = 0;
 
     for (unsigned int i = 0; i < nShapes; i++)
     {
@@ -92,7 +90,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 
         for (unsigned int partIndex = 0; partIndex < shapeParts.size(); partIndex++)
         {
-            //qDebug() << "shapeParts.size() " << shapeParts.size();
+
             int nHoles = 0;
             xVertex.clear();
             yVertex.clear();
@@ -104,17 +102,16 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             int length = shapeObj.getPart(partIndex).length;
             if (!shapeParts[partIndex].hole)
             {
-                multiPolygon = multiPolygon+1;
                 for (unsigned long v = 0; v < length; v++)
                 {
                     xVertex.push_back(shapeObj.getVertex(v+offset).x);
                     yVertex.push_back(shapeObj.getVertex(v+offset).y);
                 }
-                if ( xVertex[offset] != xVertex[offset+length-1] )
+                if ( xVertex[0] != xVertex[xVertex.size()-1] )
                 {
                     // Ring not closed add missing vertex
-                    xVertex.push_back(xVertex[offset]);
-                    yVertex.push_back(yVertex[offset]);
+                    xVertex.push_back(xVertex[0]);
+                    yVertex.push_back(yVertex[0]);
                 }
                 for (int holesIndex = 0; holesIndex < holesParts.size(); holesIndex++)
                 {
@@ -131,14 +128,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
                     yVertexHoles.push_back(y);
                     nHoles = nHoles + 1;
                 }
-                if (nHoles == 0)
-                {
-                    holes = NULL;
-                }
-                else
-                {
-                    holes = (GEOSGeometry **) malloc(nHoles * sizeof(GEOSGeometry *));
-                }
                 coords = GEOSCoordSeq_create(xVertex.size(),2);
                 for (int j=0; j<xVertex.size(); j++)
                 {
@@ -154,22 +143,17 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
                         GEOSCoordSeq_setX(coordsHoles,j,xVertexHoles[holeIndex][j]);
                         GEOSCoordSeq_setY(coordsHoles,j,yVertexHoles[holeIndex][j]);
                     }
-                    holes[holeIndex] = GEOSGeom_createLinearRing(coordsHoles);
+                    holes.append(GEOSGeom_createLinearRing(coordsHoles));
                 }
                 if (lr != NULL)
                 {
                     // create Polygon from LinearRing
-                    geometries[multiPolygon] = GEOSGeom_createPolygon(lr,holes,nHoles);
-                    if (geometries[multiPolygon] == NULL)
-                    {
-                        qDebug() << "geometries[multiPolygon] is NULL, i = " << i;
-                    }
+                    geometries.append(GEOSGeom_createPolygon(lr,holes.data(),nHoles));
                 }
                 else
                 {
                     qDebug() << "lr is NULL, i = " << i;
                 }
-                delete [] holes;
             }
             else
             {
@@ -179,13 +163,25 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         }
         shapeParts.clear();
     }
-    GEOSGeometry *collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, multiPolygon);
-    if (collection == NULL)
+
+    GEOSGeometry *collection = nullptr;
+    if ( !geometries.isEmpty() )
     {
-        qDebug() << "collection is NULL";
-    }
-    delete [] geometries;
-    return collection;
+        if ( geometries.count() > 1 )
+        {
+            collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries.data(), geometries.count());
+        }
+        else
+        {
+            collection = geometries[0];
+        }
+   }
+   if (collection == NULL)
+   {
+        return nullptr;
+   }
+   return collection;
+
 }
 
 
