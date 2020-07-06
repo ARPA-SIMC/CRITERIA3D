@@ -484,7 +484,7 @@ bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
 
         nVertices = 0;
 
-        if( (panParts = (int *) malloc(sizeof(int) * 1000 )) == NULL )
+        if( (panParts = (int *) malloc(sizeof(int) * 1000 )) == nullptr )
         {
             printf( "Out of memory\n" );
             exit( 1 );
