@@ -268,6 +268,22 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
           qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
         }
 
+        /*
+        Crit3DShapeHandler *temp = new(Crit3DShapeHandler);
+        temp->newShapeFile("temp", type);
+        temp->open("temp");
+        // add ID SOIL
+        temp->addField("ID_SOIL", FTString, 5, 0);
+        // add ID CROP
+        temp->addField("ID_ECM", FTString, 5, 0);
+        // soil and meteo intersection, shape result and crop intersection
+        if (!shapeIntersection(temp, soil, crop, idSoil, idCrop, error, showInfo))
+        {
+            *error = "Failed soil and meteo intersection";
+            delete temp;
+            return false;
+        }
+        */
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             ucm->writeStringAttribute(shapeIndex, meteoIndex, idMeteo.c_str());

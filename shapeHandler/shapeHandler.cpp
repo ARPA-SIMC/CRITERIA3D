@@ -467,6 +467,7 @@ bool Crit3DShapeHandler::addRecord(std::vector<std::string> fields)
 // LC MAI testata
 bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
 {
+    /*
     if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
     // shpadd shp_file [[x y] [+]]
 
@@ -535,7 +536,7 @@ bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
         free( panParts );
         free( padfX );
         free( padfY );
-
+*/
         return 0;
 }
 
