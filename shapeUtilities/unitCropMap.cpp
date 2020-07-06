@@ -223,7 +223,9 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
         if (GEOSisValid(cropPolygon) !=1)
         {
               qDebug() << "cropPolygon is NOT Valid";
+              qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(cropPolygon);
               cropPolygon = GEOSMakeValid(cropPolygon);
+              qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(cropPolygon);
               //return false;
         }
        else
@@ -239,7 +241,9 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
         if (GEOSisValid(soilPolygon) !=1)
         {
               qDebug() << "soilPolygon is NOT Valid";
+              qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(soilPolygon);
               soilPolygon = GEOSMakeValid(soilPolygon);
+              qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(soilPolygon);
               //return false;
         }
        else
@@ -268,6 +272,38 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
           qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
         }
 
+        //Getting coords for the vertex
+        unsigned int num;
+        double xPoint;
+        double yPoint;
+        GEOSGeom geom;
+        num = GEOSGetNumGeometries(inteserctionGeom);
+        printf("Geometries: %d\n",num);
+
+        GEOSCoordSeq coordseqIntersection = NULL;
+        coordseqIntersection = (GEOSCoordSeq) GEOSCoordSeq_create(2, 2);   //2 pointsbi-dimensional
+        std::vector<double> coordinates;
+
+        for(int i=0; i < num; i++)
+        {
+            coordinates.clear();
+            geom = (GEOSGeom) GEOSGetGeometryN(inteserctionGeom, i);
+
+            coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(geom);
+
+            GEOSCoordSeq_getX(coordseqIntersection, 0, &xPoint);
+            GEOSCoordSeq_getY(coordseqIntersection, 0, &yPoint);
+
+            coordinates.push_back(xPoint);
+            coordinates.push_back(yPoint);
+            if (!ucm->addShape(coordinates))
+            {
+                return false;
+            }
+        }
+
+        // Finalizzo GEOS
+        finishGEOS();
         /*
         Crit3DShapeHandler *temp = new(Crit3DShapeHandler);
         temp->newShapeFile("temp", type);
