@@ -465,7 +465,6 @@ bool Crit3DShapeHandler::addRecord(std::vector<std::string> fields)
 }
 */
 // LC MAI testata
-/*
 bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
 {
     if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
@@ -539,7 +538,6 @@ bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
 
         return 0;
 }
-*/
 
 
 bool Crit3DShapeHandler::addField(const char * fieldName, int type, int nWidth, int nDecimals )

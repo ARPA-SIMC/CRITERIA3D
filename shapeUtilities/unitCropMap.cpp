@@ -4,7 +4,8 @@
 #include "shapeUtilities.h"
 #include <QFile>
 #include <QFileInfo>
-
+#include <QPolygon>
+#include <geos/operation/valid/MakeValid.h>
 
 #include <qdebug.h>
 
@@ -216,13 +217,14 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
         if((GEOSisEmpty(cropPolygon)))
         {
             qDebug() << "cropPolygon empty";
-            return false;
+            //return false;
         }
 
         if (GEOSisValid(cropPolygon) !=1)
         {
               qDebug() << "cropPolygon is NOT Valid";
-              return false;
+              cropPolygon = GEOSMakeValid(cropPolygon);
+              //return false;
         }
        else
           qDebug() << "cropPolygon is Valid";
@@ -231,27 +233,41 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
         if((GEOSisEmpty(soilPolygon)))
         {
             qDebug() << "soilPolygon empty";
-            return false;
+            //return false;
         }
 
         if (GEOSisValid(soilPolygon) !=1)
         {
               qDebug() << "soilPolygon is NOT Valid";
-              return false;
+              soilPolygon = GEOSMakeValid(soilPolygon);
+              //return false;
         }
        else
           qDebug() << "soilPolygon is Valid";
 
         GEOSGeometry *inteserctionGeom = GEOSIntersection(cropPolygon, soilPolygon);
-        if((GEOSisEmpty(inteserctionGeom) != 0) || (GEOSisValid(inteserctionGeom) !=1))
+        if (inteserctionGeom == NULL)
         {
-            qDebug() << "inteserctionGeom is NOT Valid";
+            qDebug() << "inteserctionGeom NULL";
+            return false;
         }
-        else
+        if((GEOSisEmpty(inteserctionGeom)))
         {
-            qDebug() << "inteserctionGeom is Valid";
-            qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
+            qDebug() << "inteserctionGeom empty";
+            //return false;
         }
+
+        if (GEOSisValid(inteserctionGeom) !=1)
+        {
+              qDebug() << "inteserctionGeom is NOT Valid";
+              //return false;
+        }
+       else
+        {
+          qDebug() << "inteserctionGeom is Valid";
+          qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
+        }
+
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
             ucm->writeStringAttribute(shapeIndex, meteoIndex, idMeteo.c_str());
@@ -290,7 +306,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     return true;
 }
 
-/*
+
 bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *firstHandler, Crit3DShapeHandler *secondHandler, std::string fieldNameFirst, std::string fieldNameSecond, std::string *error, bool showInfo)
 {
     ShapeObject myFirstShape;
@@ -298,12 +314,16 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
     Box<double> firstBounds;
     Box<double> secondBounds;
     int nrFirstShape = firstHandler->getShapeCount();
+    std::vector<ShapeObject::Part> shapeFirstParts;
+    std::vector<ShapeObject::Part> shapeSecondParts;
     int nrSecondShape = secondHandler->getShapeCount();
     int nIntersections = 0;
     std::vector< std::vector<ShapeObject::Part>> firstShapeParts;
     std::vector< std::vector<ShapeObject::Part>> secondShapeParts;
 
     QPolygonF firstPolygon;
+    QPolygonF firstHolePolygon;
+    QPolygonF secondHolePolygon;
     QPolygonF secondPolygon;
     QPolygonF intersectionPolygon;
 
@@ -317,6 +337,7 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
 
         firstPolygon.clear();
         firstHandler->getShape(firstShapeIndex, myFirstShape);
+        shapeFirstParts = myFirstShape.getParts();
         std::string fieldFirst = firstHandler->readStringAttribute(firstShapeIndex, IDfirstShape);  //Field to copy
         // get bounds
         firstBounds = myFirstShape.getBounds();
@@ -326,6 +347,7 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
             Box<double> partBB = myFirstShape.getPart(partIndex).boundsPart;
             int offset = myFirstShape.getPart(partIndex).offset;
             int length = myFirstShape.getPart(partIndex).length;
+            std::vector<unsigned int> holesFirstParts = firstHandler->getHoles(firstShapeIndex,partIndex);
 
             if (firstShapeParts[firstShapeIndex][partIndex].hole)
             {
@@ -339,7 +361,22 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
                     QPoint point(vertex.x, vertex.y);
                     firstPolygon.append(point);
                 }
-                // check holes TO DO
+                // check holes
+                for (int holesIndex = 0; holesIndex < holesFirstParts.size(); holesIndex++)
+                {
+                    firstHolePolygon.clear();
+                    int offset = myFirstShape.getPart(holesFirstParts[holesIndex]).offset;
+                    int length = myFirstShape.getPart(holesFirstParts[holesIndex]).length;
+                    std::vector<double> x;
+                    std::vector<double> y;
+                    for (unsigned long v = 0; v < length; v++)
+                    {
+                        Point<double> holeVertex = myFirstShape.getVertex(v+offset);
+                        QPoint point(holeVertex.x, holeVertex.y);
+                        firstHolePolygon.append(point);
+                    }
+                    firstPolygon = firstPolygon.subtracted(firstHolePolygon);
+                }
             }
         }
         for (unsigned int secondShapeIndex = 0; secondShapeIndex < nrSecondShape; secondShapeIndex++)
@@ -367,6 +404,7 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
                     int offset = mySecondShape.getPart(partIndex).offset;
                     int length = mySecondShape.getPart(partIndex).length;
 
+                    std::vector<unsigned int> holesSecondParts = secondHandler->getHoles(secondShapeIndex,partIndex);
                     if (secondShapeParts[secondShapeIndex][partIndex].hole)
                     {
                         continue;
@@ -380,7 +418,22 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
                             QPoint point(vertex.x, vertex.y);
                             secondPolygon.append(point);
                         }
-                        // check holes TO DO
+                        // check holes
+                        for (int holesIndex = 0; holesIndex < holesSecondParts.size(); holesIndex++)
+                        {
+                            secondHolePolygon.clear();
+                            int offset = mySecondShape.getPart(holesSecondParts[holesIndex]).offset;
+                            int length = mySecondShape.getPart(holesSecondParts[holesIndex]).length;
+                            std::vector<double> x;
+                            std::vector<double> y;
+                            for (unsigned long v = 0; v < length; v++)
+                            {
+                                Point<double> holeVertex = mySecondShape.getVertex(v+offset);
+                                QPoint point(holeVertex.x, holeVertex.y);
+                                secondHolePolygon.append(point);
+                            }
+                            secondPolygon = secondPolygon.subtracted(secondHolePolygon);
+                        }
                     }
                 }
                 intersectionPolygon = firstPolygon.intersected(secondPolygon);
@@ -408,7 +461,7 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
 
     return true;
 }
-*/
+
 
 // FILL ID_CASE
 bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo)
