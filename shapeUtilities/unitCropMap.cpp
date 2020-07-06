@@ -213,13 +213,13 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
         // crop and soil intersection, add constant idMeteo
         GEOSGeometry* cropPolygon = loadShapeAsPolygon(crop);
-        if ( GEOSisValid(cropPolygon) )
+        if((GEOSisEmpty(cropPolygon) != 0) || (GEOSisValid(cropPolygon) !=1))
               qDebug() << "cropPolygon isValid";
            else
               qDebug() << "cropPolygon is NOT Valid";
 
         GEOSGeometry *soilPolygon = loadShapeAsPolygon(soil);
-        if ( GEOSisValid(soilPolygon) )
+        if((GEOSisEmpty(soilPolygon) != 0) || (GEOSisValid(soilPolygon) !=1))
               qDebug() << "soilPolygon isValid";
            else
               qDebug() << "soilPolygon is NOT Valid";
@@ -229,12 +229,9 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
             return false;    //invalid input parameter
         }
         GEOSGeometry *inteserctionGeom = GEOSIntersection(cropPolygon, soilPolygon);
-        if ( !inteserctionGeom )
+        if((GEOSisEmpty(inteserctionGeom) != 0) || (GEOSisValid(inteserctionGeom) !=1))
         {
-            if ( GEOSisValid(inteserctionGeom) )
-                  qDebug() << "inteserctionGeom isValid";
-               else
-                  qDebug() << "inteserctionGeom is NOT Valid";
+            qDebug() << "inteserctionGeom is Valid";
             qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
         }
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
