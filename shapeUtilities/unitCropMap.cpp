@@ -289,6 +289,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
             coordinates.clear();
             geom = (GEOSGeom) GEOSGetGeometryN(inteserctionGeom, i);
             type = GEOSGeomType(geom);
+            qDebug() << "type " << QString::fromStdString(type);
             coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(geom);
 
             numPoints = GEOSGeomGetNumPoints(geom);

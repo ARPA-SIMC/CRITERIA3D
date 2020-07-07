@@ -473,7 +473,7 @@ bool Crit3DShapeHandler::addShape(int iShape, std::string type, std::vector<doub
 
     int shpType = 0;
 
-    if (type == "Linestring")
+    if (type == "LineString")
     {
         shpType = 3; // SHPT_ARC
     }
@@ -522,16 +522,20 @@ bool Crit3DShapeHandler::addShape(int iShape, std::string type, std::vector<doub
     // --------------------------------------------------------------------
         psObject = SHPCreateObject( shpType, iShape, nParts, panParts, NULL,
                                     nVertices, padfX, padfY, NULL, NULL );
-        SHPWriteObject( m_handle, -1, psObject );
+        int ret = SHPWriteObject( m_handle, -1, psObject );
         SHPDestroyObject( psObject );
 
+        if (ret == -1)
+        {
+            return false;
+        }
         SHPClose( m_handle );
 
         free( panParts );
         free( padfX );
         free( padfY );
 
-        return 0;
+        return true;
 }
 
 
