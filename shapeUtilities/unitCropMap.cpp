@@ -5,7 +5,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QPolygon>
-#include <geos/operation/valid/MakeValid.h>
+//#include <geos/operation/valid/MakeValid.h>
 
 #include <qdebug.h>
 
