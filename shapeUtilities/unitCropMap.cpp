@@ -5,7 +5,6 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QPolygon>
-//#include <geos/operation/valid/MakeValid.h>
 
 #include <qdebug.h>
 
@@ -283,12 +282,13 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
         GEOSCoordSeq coordseqIntersection = NULL;
         coordseqIntersection = (GEOSCoordSeq) GEOSCoordSeq_create(2, 2);   //2 pointsbi-dimensional
         std::vector<double> coordinates;
+        std::string type;
 
         for(int i=0; i < num; i++)
         {
             coordinates.clear();
             geom = (GEOSGeom) GEOSGetGeometryN(inteserctionGeom, i);
-qDebug() << GEOSGeomType(geom);
+            type = GEOSGeomType(geom);
             coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(geom);
 
             numPoints = GEOSGeomGetNumPoints(geom);
@@ -303,7 +303,7 @@ qDebug() << GEOSGeomType(geom);
                 coordinates.push_back(xPoint);
                 coordinates.push_back(yPoint);
             }
-            if (!ucm->addShape(i, coordinates))
+            if (!ucm->addShape(i, type, coordinates))
             {
                 return false;
             }
@@ -368,6 +368,7 @@ qDebug() << GEOSGeomType(geom);
 
 bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *firstHandler, Crit3DShapeHandler *secondHandler, std::string fieldNameFirst, std::string fieldNameSecond, std::string *error, bool showInfo)
 {
+    /*
     ShapeObject myFirstShape;
     ShapeObject mySecondShape;
     Box<double> firstBounds;
@@ -519,7 +520,7 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
             }
         }
     }
-
+*/
     return true;
 }
 
