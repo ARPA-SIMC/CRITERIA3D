@@ -274,8 +274,8 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
         //Getting coords for the vertex
         unsigned int num;
-        double xPoint;
-        double yPoint;
+        int numPoints;
+
         GEOSGeom geom;
         num = GEOSGetNumGeometries(inteserctionGeom);
         printf("Geometries: %d\n",num);
@@ -288,15 +288,22 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
         {
             coordinates.clear();
             geom = (GEOSGeom) GEOSGetGeometryN(inteserctionGeom, i);
-
+qDebug() << GEOSGeomType(geom);
             coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(geom);
 
-            GEOSCoordSeq_getX(coordseqIntersection, 0, &xPoint);
-            GEOSCoordSeq_getY(coordseqIntersection, 0, &yPoint);
+            numPoints = GEOSGeomGetNumPoints(geom);
+            for (int p=0; p < numPoints; p++)
+            {
+                double xPoint;
+                double yPoint;
 
-            coordinates.push_back(xPoint);
-            coordinates.push_back(yPoint);
-            if (!ucm->addShape(coordinates))
+                GEOSCoordSeq_getX(coordseqIntersection, 0, &xPoint);
+                GEOSCoordSeq_getY(coordseqIntersection, 0, &yPoint);
+
+                coordinates.push_back(xPoint);
+                coordinates.push_back(yPoint);
+            }
+            if (!ucm->addShape(i, coordinates))
             {
                 return false;
             }
@@ -383,6 +390,7 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
     int IDsecondShape = secondHandler->getFieldPos(fieldNameSecond);
     int IDCloneFirst = intersecHandler->getFieldPos(fieldNameFirst);
     int IDCloneSecond = intersecHandler->getFieldPos(fieldNameSecond);
+    int iShape = 0;
 
     for (unsigned int firstShapeIndex = 0; firstShapeIndex < nrFirstShape; firstShapeIndex++)
     {
@@ -495,10 +503,11 @@ bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *
                     coordinates.push_back(intersectionPolygon[i].x());
                     coordinates.push_back(intersectionPolygon[i].y());
                 }
-                if (!intersecHandler->addShape(coordinates))
+                if (!intersecHandler->addShape(iShape, coordinates))
                 {
                     return false;
                 }
+                iShape = iShape + 1;
                 if (!intersecHandler->writeStringAttribute(nIntersections, IDCloneFirst, fieldFirst.c_str()))
                 {
                     return false;
