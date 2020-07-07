@@ -156,8 +156,8 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
            else
               qDebug() << "meteoPolygon is NOT Valid";
 
-        if(soilPolygon == NULL || meteoPolygon == NULL) {
-            qDebug() << "NULL polygon";
+        if(soilPolygon == nullptr || meteoPolygon == nullptr) {
+            qDebug() << "nullptr polygon";
             return false;    //invalid input parameter
         }
         GEOSGeometry *inteserctionGeom = GEOSIntersection(soilPolygon, meteoPolygon);
@@ -190,8 +190,8 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
            else
               qDebug() << "meteoPolygon is NOT Valid";
 
-        if(cropPolygon == NULL || meteoPolygon == NULL) {
-            qDebug() << "NULL polygon";
+        if(cropPolygon == nullptr || meteoPolygon == nullptr) {
+            qDebug() << "nullptr polygon";
             return false;    //invalid input parameter
         }
         GEOSGeometry *inteserctionGeom = GEOSIntersection(cropPolygon, meteoPolygon);
@@ -249,9 +249,9 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
           qDebug() << "soilPolygon is Valid";
 
         GEOSGeometry *inteserctionGeom = GEOSIntersection(cropPolygon, soilPolygon);
-        if (inteserctionGeom == NULL)
+        if (inteserctionGeom == nullptr)
         {
-            qDebug() << "inteserctionGeom NULL";
+            qDebug() << "inteserctionGeom nullptr";
             return false;
         }
         if((GEOSisEmpty(inteserctionGeom)))
@@ -279,7 +279,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
         num = GEOSGetNumGeometries(inteserctionGeom);
         printf("Geometries: %d\n",num);
 
-        GEOSCoordSeq coordseqIntersection = NULL;
+        GEOSCoordSeq coordseqIntersection = nullptr;
         coordseqIntersection = (GEOSCoordSeq) GEOSCoordSeq_create(2, 2);   //2 pointsbi-dimensional
         std::vector<double> coordinates;
         std::string type;
