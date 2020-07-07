@@ -101,7 +101,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 {
 
     // PolygonShapefile
-    int type = 2;
+    int type = 5;
 
     ucm->newShapeFile(ucmFileName.toStdString(), type);
     // copy .prj
@@ -132,7 +132,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     ucm->addField("ID_METEO", FTString, 5, 0);
     int meteoIndex = ucm->getFieldPos("ID_METEO");
 
-    int nShape = ucm->getShapeCount();
+
 
     qDebug() << "idCrop " << QString::fromStdString(idCrop);
     qDebug() << "idSoil " << QString::fromStdString(idSoil);
@@ -169,10 +169,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
                   qDebug() << "inteserctionGeom is NOT Valid";
             qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
         }
-        for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
-        {
-            ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
-        }
+
     }
     else if (soil == nullptr)
     {
@@ -202,10 +199,6 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
                else
                   qDebug() << "inteserctionGeom is NOT Valid";
             qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
-        }
-        for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
-        {
-            ucm->writeStringAttribute(shapeIndex, soilIndex, idSoil.c_str());
         }
     }
     else if (meteo == nullptr)
@@ -280,33 +273,42 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
         printf("Geometries: %d\n",num);
 
         GEOSCoordSeq coordseqIntersection = nullptr;
+        const GEOSGeometry *ring;
         coordseqIntersection = (GEOSCoordSeq) GEOSCoordSeq_create(2, 2);   //2 pointsbi-dimensional
         std::vector<double> coordinates;
         std::string type;
 
+        int nValidShape = 0;
         for(int i=0; i < num; i++)
         {
             coordinates.clear();
             geom = (GEOSGeom) GEOSGetGeometryN(inteserctionGeom, i);
             type = GEOSGeomType(geom);
-            qDebug() << "type " << QString::fromStdString(type);
-            coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(geom);
-
-            numPoints = GEOSGeomGetNumPoints(geom);
-            for (int p=0; p < numPoints; p++)
+            if (type != "Polygon")
             {
-                double xPoint;
-                double yPoint;
-
-                GEOSCoordSeq_getX(coordseqIntersection, 0, &xPoint);
-                GEOSCoordSeq_getY(coordseqIntersection, 0, &yPoint);
-
-                coordinates.push_back(xPoint);
-                coordinates.push_back(yPoint);
+                continue;
             }
-            if (!ucm->addShape(i, type, coordinates))
+            ring = GEOSGetExteriorRing(geom);
+
+            if (ring)
             {
-                return false;
+                numPoints = GEOSGeomGetNumPoints(ring);
+                coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(ring);
+                for (int p=0; p < numPoints; p++)
+                {
+                    double xPoint;
+                    double yPoint;
+
+                    GEOSCoordSeq_getX(coordseqIntersection, 0, &xPoint);
+                    GEOSCoordSeq_getY(coordseqIntersection, 0, &yPoint);
+
+                    coordinates.push_back(xPoint);
+                    coordinates.push_back(yPoint);
+                }
+                if (ucm->addShape(nValidShape, type, coordinates))
+                {
+                    nValidShape = nValidShape + 1;
+                }
             }
         }
 
@@ -328,8 +330,11 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
             return false;
         }
         */
+        int nShape = ucm->getShapeCount();
         for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
         {
+            ucm->writeStringAttribute(shapeIndex, soilIndex, idSoil.c_str());
+            ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
             ucm->writeStringAttribute(shapeIndex, meteoIndex, idMeteo.c_str());
         }
     }
@@ -358,11 +363,13 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
         */
 
     }
+
     if (!fillIDCase(ucm, idCrop, idSoil, idMeteo))
     {
         *error = "Failed to fill ID CASE";
         return false;
     }
+
     return true;
 }
 

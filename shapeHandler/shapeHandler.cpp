@@ -468,18 +468,15 @@ bool Crit3DShapeHandler::addRecord(std::vector<std::string> fields)
 bool Crit3DShapeHandler::addShape(int iShape, std::string type, std::vector<double> coordinates)
 {
 
+    openSHP(m_filepath);
     if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
     // shpadd shp_file [[x y] [+]]
 
-    int shpType = 0;
+    int shpType = 5; // SHPT_POLYGON
 
-    if (type == "LineString")
+    if (type != "Polygon")
     {
-        shpType = 3; // SHPT_ARC
-    }
-    else if (type == "Polygon")
-    {
-        shpType = 5; // SHPT_POLYGON
+        return false;
     }
     // --------------------------------------------------------------------
     //	Build a vertex/part list
@@ -520,8 +517,9 @@ bool Crit3DShapeHandler::addShape(int iShape, std::string type, std::vector<doub
     // --------------------------------------------------------------------
     //      Write the new entity to the shape file.
     // --------------------------------------------------------------------
-        psObject = SHPCreateObject( shpType, iShape, nParts, panParts, NULL,
-                                    nVertices, padfX, padfY, NULL, NULL );
+        //psObject = SHPCreateObject( shpType, iShape, nParts, panParts, NULL, nVertices, padfX, padfY, NULL, NULL );
+
+        psObject = SHPCreateSimpleObject( shpType, nVertices, padfX, padfY, NULL);
         int ret = SHPWriteObject( m_handle, -1, psObject );
         SHPDestroyObject( psObject );
 
@@ -529,8 +527,8 @@ bool Crit3DShapeHandler::addShape(int iShape, std::string type, std::vector<doub
         {
             return false;
         }
-        SHPClose( m_handle );
 
+        closeSHP();
         free( panParts );
         free( padfX );
         free( padfY );
