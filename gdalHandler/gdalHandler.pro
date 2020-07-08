@@ -32,11 +32,13 @@ INCLUDEPATH += ../mathFunctions ../crit3dDate ../gis ../shapeHandler ../shapeHan
 
 SOURCES += \
     gdalExtensions.cpp \
-    gdalRasterFunctions.cpp
+    gdalRasterFunctions.cpp \
+    gdalShapeFunctions.cpp
 
 HEADERS += \
     gdalExtensions.h \
-    gdalRasterFunctions.h
+    gdalRasterFunctions.h \
+    gdalShapeFunctions.h
 
 
 include(../gdal.pri)

@@ -25,7 +25,7 @@ CONFIG += staticlib
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
-INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project
+INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project ../gdalHandler
 
 SOURCES += \
     shapeFromCsvForShell.cpp \
