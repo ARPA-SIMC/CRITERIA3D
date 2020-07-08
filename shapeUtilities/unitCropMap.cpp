@@ -294,13 +294,14 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
             {
                 numPoints = GEOSGeomGetNumPoints(ring);
                 coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(ring);
+                double xPoint;
+                double yPoint;
+
                 for (int p=0; p < numPoints; p++)
                 {
-                    double xPoint;
-                    double yPoint;
 
-                    GEOSCoordSeq_getX(coordseqIntersection, 0, &xPoint);
-                    GEOSCoordSeq_getY(coordseqIntersection, 0, &yPoint);
+                    GEOSCoordSeq_getX(coordseqIntersection, p, &xPoint);
+                    GEOSCoordSeq_getY(coordseqIntersection, p, &yPoint);
 
                     coordinates.push_back(xPoint);
                     coordinates.push_back(yPoint);
