@@ -253,7 +253,7 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
     {
           qDebug() << "firstPolygon is NOT Valid";
           qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(firstPolygon);
-          firstPolygon = GEOSMakeValid(firstPolygon);
+          //firstPolygon = GEOSMakeValid(firstPolygon);
           qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(firstPolygon);
     }
    else
@@ -270,7 +270,7 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
     {
           qDebug() << "secondPolygon is NOT Valid";
           qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(secondPolygon);
-          secondPolygon = GEOSMakeValid(secondPolygon);
+          //secondPolygon = GEOSMakeValid(secondPolygon);
           qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(secondPolygon);
     }
    else
@@ -291,7 +291,7 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
     if (GEOSisValid(*inteserctionGeom) !=1)
     {
           qDebug() << "inteserctionGeom is NOT Valid";
-          //return false;
+          return false;
     }
    else
     {
@@ -309,7 +309,7 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
 
     GEOSGeom geom;
     num = GEOSGetNumGeometries(inteserctionGeom);
-    printf("Geometries: %d\n",num);
+    qDebug () << "Geometries: " << num;
 
     GEOSCoordSeq coordseqIntersection = nullptr;
     const GEOSGeometry *ring;
@@ -344,6 +344,25 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
 
                 coordinates.push_back(xPoint);
                 coordinates.push_back(yPoint);
+            }
+            qDebug () << "GEOSGetNumInteriorRings( geom ) " << GEOSGetNumInteriorRings( geom );
+
+            //interior rings
+            for ( int numInner = 0; numInner < GEOSGetNumInteriorRings( geom ); numInner++ )
+            {
+                ring = GEOSGetInteriorRingN( geom, numInner );
+                numPoints = GEOSGeomGetNumPoints(ring);
+                coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(ring);
+
+                 for ( unsigned int j = 0; j < numPoints; j++ )
+                 {
+                     GEOSCoordSeq_getX(coordseqIntersection, j, &xPoint);
+                     GEOSCoordSeq_getY(coordseqIntersection, j, &yPoint);
+
+                     coordinates.push_back(xPoint);
+                     coordinates.push_back(yPoint);
+                 }
+
             }
             if (ucm->addShape(nValidShape, type, coordinates))
             {
