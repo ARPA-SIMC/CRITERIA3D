@@ -252,9 +252,9 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
     if (GEOSisValid(firstPolygon) !=1)
     {
           qDebug() << "firstPolygon is NOT Valid";
-          qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(firstPolygon);
-          //firstPolygon = GEOSMakeValid(firstPolygon);
-          qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(firstPolygon);
+          //qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(firstPolygon);
+          firstPolygon = GEOSMakeValid(firstPolygon);
+          //qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(firstPolygon);
     }
    else
       qDebug() << "firstPolygon is Valid";
@@ -269,15 +269,15 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
     if (GEOSisValid(secondPolygon) !=1)
     {
           qDebug() << "secondPolygon is NOT Valid";
-          qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(secondPolygon);
-          //secondPolygon = GEOSMakeValid(secondPolygon);
-          qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(secondPolygon);
+          //qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(secondPolygon);
+          secondPolygon = GEOSMakeValid(secondPolygon);
+          //qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(secondPolygon);
     }
    else
       qDebug() << "soilPolygon is Valid";
 
     *inteserctionGeom = GEOSIntersection(firstPolygon, secondPolygon);
-    if (inteserctionGeom == nullptr)
+    if ((*inteserctionGeom) == nullptr)
     {
         qDebug() << "inteserctionGeom nullptr";
         return false;
@@ -285,7 +285,7 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
     if((GEOSisEmpty(*inteserctionGeom)))
     {
         qDebug() << "inteserctionGeom empty";
-        //return false;
+        return false;
     }
 
     if (GEOSisValid(*inteserctionGeom) !=1)
