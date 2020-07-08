@@ -347,7 +347,8 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
             }
             qDebug () << "GEOSGetNumInteriorRings( geom ) " << GEOSGetNumInteriorRings( geom );
 
-            //interior rings
+            //interior rings TBC
+            /*
             for ( int numInner = 0; numInner < GEOSGetNumInteriorRings( geom ); numInner++ )
             {
                 ring = GEOSGetInteriorRingN( geom, numInner );
@@ -364,6 +365,7 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
                  }
 
             }
+            */
             if (ucm->addShape(nValidShape, type, coordinates))
             {
                 nValidShape = nValidShape + 1;
