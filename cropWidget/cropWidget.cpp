@@ -1106,7 +1106,6 @@ void Crit3DCropWidget::updateMeteoPointValues()
     }
     myCase.meteoPoint.initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
-    qDebug() << "myCase.meteoPoint.id " << QString::fromStdString(myCase.meteoPoint.id);
     if (onlyOneYear)
     {
         if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(lastYear), &error))
