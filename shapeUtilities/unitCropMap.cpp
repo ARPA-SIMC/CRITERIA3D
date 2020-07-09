@@ -189,12 +189,16 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     }
     */
 
+    /*
     if (!fillIDCase(ucm, idCrop, idSoil, idMeteo))
     {
         *error = "Failed to fill ID CASE";
         return false;
     }
+    */
 
+    ucm->close();
+    ucm->open(ucm->getFilepath());
     return true;
 }
 
@@ -348,7 +352,6 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
             qDebug () << "GEOSGetNumInteriorRings( geom ) " << GEOSGetNumInteriorRings( geom );
 
             //interior rings TBC
-            /*
             for ( int numInner = 0; numInner < GEOSGetNumInteriorRings( geom ); numInner++ )
             {
                 ring = GEOSGetInteriorRingN( geom, numInner );
@@ -365,13 +368,13 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
                  }
 
             }
-            */
             if (ucm->addShape(nValidShape, type, coordinates))
             {
                 nValidShape = nValidShape + 1;
             }
         }
     }
+    return true;
 }
 
 
