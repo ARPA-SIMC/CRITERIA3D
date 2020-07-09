@@ -16,6 +16,7 @@
 
 Crit1DIrrigationForecast::Crit1DIrrigationForecast()
 {
+    isXmlGrid = false;
     isSeasonalForecast = false;
     firstSeasonMonth = NODATA;
     nrSeasonalForecasts = 0;

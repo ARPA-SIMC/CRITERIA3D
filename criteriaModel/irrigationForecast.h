@@ -26,6 +26,8 @@
         QSqlDatabase dbForecast;
         QSqlDatabase dbOutput;
 
+        bool isXmlGrid;
+
         Crit1DCase myCase;
         QString outputString;
 
