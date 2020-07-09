@@ -1020,6 +1020,10 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
             pos = pos + 1;
         }
     }
+    if (yearList.size() == 1)
+    {
+        yearList.insert(0,QString::number(yearList[0].toInt()-1));
+    }
 
     // add year if exists previous year
     for (int i = 1; i<yearList.size(); i++)
@@ -1075,6 +1079,7 @@ void Crit3DCropWidget::on_actionChooseLastYear(QString year)
 
 void Crit3DCropWidget::updateMeteoPointValues()
 {
+    // TO DO aggiungere caso 1 solo anno, anno precedente con valori replicati
     QString error;
 
     // clear previous meteoPoint

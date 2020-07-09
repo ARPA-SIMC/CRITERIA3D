@@ -3,7 +3,6 @@
 #include <QFileInfo>
 #include <gdal_priv.h>
 #include <ogrsf_frmts.h>
-
 #include <qdebug.h>
 
 // make a copy of shapefile and return cloned shapefile path
