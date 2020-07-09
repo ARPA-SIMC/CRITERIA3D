@@ -25,6 +25,7 @@ Crit1DIrrigationForecast::Crit1DIrrigationForecast()
     daysOfForecast = NODATA;
     useAllMeteoData = true;
     firstDate = QDate(1800,1,1);
+    lastDate = QDate(1800,1,1);
 
     outputString = "";
 }
@@ -166,11 +167,35 @@ bool Crit1DIrrigationForecast::setSoil(QString soilCode, QString &myError)
     return true;
 }
 
+
 bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForecast, QString *myError)
 {
     // TODO LAURA
-    // controllare se c'è una cella con quell'id, altrimenti return false
-    // leggere lat e lon dall'anagrafica e inserirle nel meteopoint
+    // check:
+    // 1) controllare se esiste cella idMeteo, else return false (*myError = missing observed meteo cell)
+    // 2) controllare se ha dati da this->firstdate a this->lastdate else return false (*myError = missing observed data)
+    // if (this->isShortTermForecast):
+    // 3) controllare se esiste cella idForecast else return false (*myError = missing forecast meteo cell)
+    // 4) controllare se ha dati da this->lastdate+1 a this->lastdate+this->daysOfForecast else return false (*myError = missing forecast data)
+
+    // leggere lat e lon dall'anagrafica e inserirle in myCase.meteoPoint
+    // nrdays = lastdate-firstdate+1
+    // if (this->isShortTermForecast) nrdays += this->daysOfForecast
+    // myCase.meteoPoint.initializeObsDataD(nrdays)
+
+    // caricare in myCase.meteoPoint i dati (da handler observed) da this->firstDate a this->lastDate
+    // if (this->isShortTermForecast): caricare i dati (da handler forecast) da this->lastdate+1 a this->lastdate+this->daysOfForecast
+
+    // dati da caricare: tmin, tmax, tmed, prec
+    // se tmed nulla: tmed = (tmax+tmin)/2
+    // gestione altri dati mancanti: per ora niente (inserisci NODATA nella variabile) non dovrebbe succedere su grid
+    // se ci dovessero essere (il modello salta, se ci sono nodata), avvisa Gabri e vedete come comportarvi
+    // per un minimo di gestione 'buchi' puoi guardare come si comporta readDailyDataCriteria1D
+
+    // DEBUG finale:
+    // quando tutto funzia fai una prova più lunga, ad es dal 1 gennaio 2001: firstDate si cambia nel .ini
+    // e prove di previsioni 'nel passato' (la grid forecast contiene anche previsioni passate, credo fino a qualche anno fa):
+    // in questo caso inserisci la date of forecast direttamente nel main come secondo argomento (vedi caso TEST_SQLITE)
 
     return true;
 }

@@ -35,9 +35,10 @@
         soil::Crit3DTextureClass soilTexture[13];
         soil::Crit3DFittingOptions fittingOptions;
 
-        // firstDate
+        // dates
         bool useAllMeteoData;
         QDate firstDate;
+        QDate lastDate;
 
         // seasonal forecast
         bool isSeasonalForecast;
