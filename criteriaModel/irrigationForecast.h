@@ -56,7 +56,9 @@
     private:
 
         bool setSoil(QString soilCode, QString &myError);
-        bool setMeteo(QString idMeteo, QString idForecast, QString *myError);
+
+        bool setMeteoSqlite(QString idMeteo, QString idForecast, QString *myError);
+        bool setMeteoXmlGrid(QString idMeteo, QString idForecast, QString *myError);
 
         void initializeSeasonalForecast(const Crit3DDate& firstDate, const Crit3DDate& lastDate);
 

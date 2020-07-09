@@ -80,8 +80,23 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myErr
     if (! setSoil(myUnit.idSoil, myError))
         return false;
 
-    if (! setMeteo(myUnit.idMeteo, myUnit.idForecast, &myError))
+    if (isXmlGrid)
+    {
+        if (! setMeteoXmlGrid(myUnit.idMeteo, myUnit.idForecast, &myError))
+            return false;
+    }
+    else
+    {
+        if (! setMeteoSqlite(myUnit.idMeteo, myUnit.idForecast, &myError))
+            return false;
+    }
+
+    // check meteo data
+    if (myCase.meteoPoint.nrObsDataDaysD == 0)
+    {
+        myError = "Missing meteo data.";
         return false;
+    }
 
     if (! loadCropParameters(myUnit.idCrop, &(myCase.myCrop), &(dbCrop), &myError))
         return false;
@@ -151,8 +166,17 @@ bool Crit1DIrrigationForecast::setSoil(QString soilCode, QString &myError)
     return true;
 }
 
+bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForecast, QString *myError)
+{
+    // TODO LAURA
+    // controllare se c'è una cella con quell'id, altrimenti return false
+    // leggere lat e lon dall'anagrafica e inserirle nel meteopoint
 
-bool Crit1DIrrigationForecast::setMeteo(QString idMeteo, QString idForecast, QString *myError)
+    return true;
+}
+
+
+bool Crit1DIrrigationForecast::setMeteoSqlite(QString idMeteo, QString idForecast, QString *myError)
 {
     QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo + "'";
     QSqlQuery query = dbMeteo.exec(queryString);
@@ -171,7 +195,7 @@ bool Crit1DIrrigationForecast::setMeteo(QString idMeteo, QString idForecast, QSt
                 *myError = "dbMeteo error: " + query.lastError().text();
             else
                 *myError = "Missing meteo location:" + idMeteo;
-            return(false);
+            return false;
         }
     }
 
@@ -209,7 +233,7 @@ bool Crit1DIrrigationForecast::setMeteo(QString idMeteo, QString idForecast, QSt
 
     unsigned nrDays = unsigned(firstObsDate.daysTo(lastObsDate)) + 1;
 
-    // Is Forecast: increase nr of days
+    // Forecast: increase nr of days
     if (this->isShortTermForecast)
         nrDays += unsigned(this->daysOfForecast);
 
