@@ -69,6 +69,7 @@
             bool cropChanged;
             double meteoLatBackUp;
             QStringList yearList;
+            bool onlyOneYear;
 
             std::vector<Crit1DUnit> unitList;
 
