@@ -201,6 +201,9 @@ bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForeca
     // in questo caso inserisci la dateOfForecast direttamente nel main, come secondo argomento (vedi caso TEST_SQLITE)
     // - una prova su tutta la regione (inserisci i due xml in incolto.ini e chiami quello invece di incolto_cut_xml.ini)
 
+    // PS: nei casi senza previsione non produce il .csv ma solo il .db, quindi non ti spaventare se non lo vedi. :-)
+    // negli altri casi controlla invece che abbia prodotto il csv con dati sensati (magari falli vedere a gabri/giulia per capire se sono giusti)
+
     return true;
 }
 
