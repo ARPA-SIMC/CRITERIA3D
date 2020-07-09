@@ -193,13 +193,13 @@ bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForeca
     // per un minimo di gestione 'buchi' puoi guardare come si comporta readDailyDataCriteria1D
 
     // DEBUG finale:
-    // quando tutto funzia fai delle prove diverse:
-    // - una prova con un nr diverso di giorni di previsione (daysOfForecast nel .ini) prova ad es 10 invece di 7
+    // quando tutto funzia fai queste prove:
+    // - una prova con un nr diverso di giorni di previsione (daysOfForecast nel .ini) prova ad es. 10 invece di 7
     // - una prova senza previsioni (solo osservati): metti isShortTermForecast=false nel .ini
     // - una prova più lunga, ad es dal 1 gennaio 2001, sempre senza previsioni: cambia firstDate nel .ini
     // - una prova di previsioni 'nel passato' (la grid forecast contiene anche previsioni passate):
-    // in questo caso inserisci la date of forecast direttamente nel main, come secondo argomento (vedi caso TEST_SQLITE)
-    // - una prova su tutta la regione (inserisci i due xml in incolto.ini e chiami quello invece di incolto_cut)
+    // in questo caso inserisci la dateOfForecast direttamente nel main, come secondo argomento (vedi caso TEST_SQLITE)
+    // - una prova su tutta la regione (inserisci i due xml in incolto.ini e chiami quello invece di incolto_cut_xml.ini)
 
     return true;
 }
