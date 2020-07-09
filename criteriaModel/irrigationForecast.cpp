@@ -183,8 +183,8 @@ bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForeca
     // if (this->isShortTermForecast) nrdays += this->daysOfForecast
     // myCase.meteoPoint.initializeObsDataD(nrdays)
 
-    // caricare in myCase.meteoPoint i dati (da handler observed) da this->firstDate a this->lastDate
-    // if (this->isShortTermForecast): caricare i dati (da handler forecast) da this->lastdate+1 a this->lastdate+this->daysOfForecast
+    // caricare in myCase.meteoPoint (da handler observed) i dati da this->firstDate a this->lastDate
+    // if (this->isShortTermForecast): da handler forecast caricare i dati da this->lastdate+1 a this->lastdate+this->daysOfForecast
 
     // dati da caricare: tmin, tmax, tmed, prec
     // se tmed nulla: tmed = (tmax+tmin)/2
