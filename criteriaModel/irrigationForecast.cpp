@@ -22,6 +22,8 @@ Crit1DIrrigationForecast::Crit1DIrrigationForecast()
 
     isShortTermForecast = false;
     daysOfForecast = NODATA;
+    useAllMeteoData = true;
+    firstDate = QDate(1800,1,1);
 
     outputString = "";
 }

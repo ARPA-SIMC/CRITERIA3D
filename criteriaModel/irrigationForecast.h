@@ -10,6 +10,9 @@
     #ifndef QSQLDATABASE_H
         #include <QSqlDatabase>
     #endif
+    #ifndef QDATETIME_H
+        #include <QDate>
+    #endif
 
 
     class Crit1DIrrigationForecast
@@ -29,6 +32,10 @@
         // soil
         soil::Crit3DTextureClass soilTexture[13];
         soil::Crit3DFittingOptions fittingOptions;
+
+        // firstDate
+        bool useAllMeteoData;
+        QDate firstDate;
 
         // seasonal forecast
         bool isSeasonalForecast;
