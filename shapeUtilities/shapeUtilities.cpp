@@ -88,6 +88,11 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         shapeHandler->getShape(i, shapeObj);
         shapeParts = shapeObj.getParts();
 
+        if (shapeObj.getType() != SHPT_POLYGON)
+        {
+            continue;
+        }
+
         for (unsigned int partIndex = 0; partIndex < shapeParts.size(); partIndex++)
         {
 
@@ -123,6 +128,12 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
                     {
                         x.push_back(shapeObj.getVertex(v+offset).x);
                         y.push_back(shapeObj.getVertex(v+offset).y);
+                    }
+                    if ( x[0] != x[x.size()-1] )
+                    {
+                        // Ring not closed add missing vertex
+                        x.push_back(x[0]);
+                        y.push_back(y[0]);
                     }
                     xVertexHoles.push_back(x);
                     yVertexHoles.push_back(y);
@@ -170,6 +181,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         if ( geometries.count() > 1 )
         {
             collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries.data(), geometries.count());
+            //collection = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, geometries.data(), geometries.count());
         }
         else
         {
