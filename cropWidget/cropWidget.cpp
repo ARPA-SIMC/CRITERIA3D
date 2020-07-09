@@ -1022,7 +1022,12 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     }
     if (yearList.size() == 1)
     {
+        onlyOneYear = true;
         yearList.insert(0,QString::number(yearList[0].toInt()-1));
+    }
+    else
+    {
+        onlyOneYear = false;
     }
 
     // add year if exists previous year
@@ -1079,7 +1084,7 @@ void Crit3DCropWidget::on_actionChooseLastYear(QString year)
 
 void Crit3DCropWidget::updateMeteoPointValues()
 {
-    // TO DO aggiungere caso 1 solo anno, anno precedente con valori replicati
+
     QString error;
 
     // clear previous meteoPoint
@@ -1101,13 +1106,37 @@ void Crit3DCropWidget::updateMeteoPointValues()
     }
     myCase.meteoPoint.initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
-    // fill meteoPoint
-    for (int year = firstYear; year <= lastYear; year++)
+    if (onlyOneYear)
     {
-        if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(year), &error))
+        if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(lastYear), &error))
         {
             QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
             return;
+        }
+        // copy values to prev years
+        Crit3DDate myDate = getCrit3DDate(lastDate);
+        Crit3DDate prevDate = getCrit3DDate(firstDate);
+        for (int i = 0; i < lastDate.daysInYear(); i++)
+        {
+            prevDate = prevDate.addDays(i);
+            myDate = myDate.addDays(i);
+            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMin, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin));
+            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMax, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax));
+            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureAvg, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureAvg));
+            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyPrecipitation, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyPrecipitation));
+            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyWaterTableDepth, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
+        }
+    }
+    else
+    {
+        // fill meteoPoint
+        for (int year = firstYear; year <= lastYear; year++)
+        {
+            if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(year), &error))
+            {
+                QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
+                return;
+            }
         }
     }
 
