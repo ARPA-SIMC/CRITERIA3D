@@ -1106,6 +1106,7 @@ void Crit3DCropWidget::updateMeteoPointValues()
     }
     myCase.meteoPoint.initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
+    qDebug() << "myCase.meteoPoint.id " << QString::fromStdString(myCase.meteoPoint.id);
     if (onlyOneYear)
     {
         if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(lastYear), &error))
@@ -1118,8 +1119,8 @@ void Crit3DCropWidget::updateMeteoPointValues()
         Crit3DDate prevDate = getCrit3DDate(firstDate);
         for (int i = 0; i < lastDate.daysInYear(); i++)
         {
-            prevDate = prevDate.addDays(i);
-            myDate = myDate.addDays(i);
+            prevDate = getCrit3DDate(firstDate).addDays(i);
+            myDate = getCrit3DDate(lastDate).addDays(i);
             myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMin, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin));
             myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMax, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax));
             myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureAvg, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureAvg));
