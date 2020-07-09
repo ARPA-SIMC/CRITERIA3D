@@ -196,6 +196,7 @@ bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForeca
     // quando tutto funzia fai una prova più lunga, ad es dal 1 gennaio 2001: firstDate si cambia nel .ini
     // e prove di previsioni 'nel passato' (la grid forecast contiene anche previsioni passate, credo fino a qualche anno fa):
     // in questo caso inserisci la date of forecast direttamente nel main come secondo argomento (vedi caso TEST_SQLITE)
+    // infine una prova su tutta la regione (inserisci i due xml in incolto.ini e chiami quello invece del cut)
 
     return true;
 }
