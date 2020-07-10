@@ -30,7 +30,7 @@ win32-msvc {
 }
 
 win32-g++ {
-    LIBS += -L$$(MSYS_PATH)/lib/ -lgdal -lgeos_c
+    LIBS += -L$$(MSYS_PATH)/lib/ -lgdal -lgeos -lgeos_c
 
     INCLUDEPATH += $$(MSYS_PATH)/include
     DEPENDPATH += $$(MSYS_PATH)/include
