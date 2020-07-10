@@ -465,81 +465,76 @@ bool Crit3DShapeHandler::addRecord(std::vector<std::string> fields)
 }
 */
 // LC MAI testata
-/*
-bool Crit3DShapeHandler::addShape(std::vector<double> coordinates)
+bool Crit3DShapeHandler::addShape(int iShape, std::string type, std::vector<double> coordinates)
 {
+
+    openSHP(m_filepath);
     if ( (m_handle == nullptr) || (m_dbf == nullptr)) return false;
     // shpadd shp_file [[x y] [+]]
 
+    int shpType = 5; // SHPT_POLYGON
+
+    if (type != "Polygon")
+    {
+        return false;
+    }
     // --------------------------------------------------------------------
-    //	Build a vertex/part list from the command line arguments.
+    //	Build a vertex/part list
     // --------------------------------------------------------------------
-        int nVMax = 1000;
-        int		nVertices, *panParts, i;
+        int		nVertices, *panParts;
         double	*padfX, *padfY;
         SHPObject	*psObject;
 
-        padfX = (double *) malloc(sizeof(double) * nVMax);
-        padfY = (double *) malloc(sizeof(double) * nVMax);
+        unsigned int sizeCoord = coordinates.size();
+
+        padfX = (double *) malloc(sizeof(double) * sizeCoord);
+        padfY = (double *) malloc(sizeof(double) * sizeCoord);
 
         nVertices = 0;
 
-        if( (panParts = (int *) malloc(sizeof(int) * 1000 )) == NULL )
-        {
-            printf( "Out of memory\n" );
-            exit( 1 );
-        }
+        panParts = (int *) malloc(sizeof(int) * sizeCoord );
 
         int nParts = 1;
         panParts[0] = 0;
 
-        for( i = 0; i < coordinates.size();  i++)
+        for( unsigned int i = 0; i < sizeCoord;  i++)
         {
-
-            if( nVertices == nVMax )
-            {
-                nVMax = nVMax * 2;
-                padfX = (double *) realloc(padfX,sizeof(double)*nVMax);
-                padfY = (double *) realloc(padfY,sizeof(double)*nVMax);
-            }
-
-            std::string coord = std::to_string(coordinates[i]);
-            char char_array[coord.length() + 1];
-            // copying the contents of the string to char array
-            strcpy(char_array, coord.c_str());
 
             if (i%2 == 0) // X coord
             {
-                sscanf( char_array, "%lg", padfX+nVertices );
+                padfX[nVertices] = coordinates[i];
             }
             else // Y coord
             {
-                sscanf( char_array, "%lg", padfY+nVertices );
+                padfY[nVertices] = coordinates[i];
                 nVertices += 1;
                 panParts[nParts] = nVertices;
                 nParts++;
             }
-            memset(char_array, 0, sizeof char_array);
 
         }
 
     // --------------------------------------------------------------------
     //      Write the new entity to the shape file.
     // --------------------------------------------------------------------
-        psObject = SHPCreateObject( m_type, -1, nParts, panParts, NULL,
-                                    nVertices, padfX, padfY, NULL, NULL );
-        SHPWriteObject( m_handle, -1, psObject );
+        //psObject = SHPCreateObject( shpType, iShape, nParts, panParts, NULL, nVertices, padfX, padfY, NULL, NULL );
+
+        psObject = SHPCreateSimpleObject( shpType, nVertices, padfX, padfY, NULL);
+        int ret = SHPWriteObject( m_handle, -1, psObject );
         SHPDestroyObject( psObject );
 
-        SHPClose( m_handle );
+        if (ret == -1)
+        {
+            return false;
+        }
 
+        closeSHP();
         free( panParts );
         free( padfX );
         free( padfY );
 
-        return 0;
+        return true;
 }
-*/
 
 
 bool Crit3DShapeHandler::addField(const char * fieldName, int type, int nWidth, int nDecimals )

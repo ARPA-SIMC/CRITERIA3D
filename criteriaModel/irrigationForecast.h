@@ -10,6 +10,9 @@
     #ifndef QSQLDATABASE_H
         #include <QSqlDatabase>
     #endif
+    #ifndef QDATETIME_H
+        #include <QDate>
+    #endif
 
 
     class Crit1DIrrigationForecast
@@ -23,12 +26,19 @@
         QSqlDatabase dbForecast;
         QSqlDatabase dbOutput;
 
+        bool isXmlGrid;
+
         Crit1DCase myCase;
         QString outputString;
 
         // soil
         soil::Crit3DTextureClass soilTexture[13];
         soil::Crit3DFittingOptions fittingOptions;
+
+        // dates
+        bool useAllMeteoData;
+        QDate firstDate;
+        QDate lastDate;
 
         // seasonal forecast
         bool isSeasonalForecast;
@@ -47,7 +57,9 @@
     private:
 
         bool setSoil(QString soilCode, QString &myError);
-        bool setMeteo(QString idMeteo, QString idForecast, QString *myError);
+
+        bool setMeteoSqlite(QString idMeteo, QString idForecast, QString *myError);
+        bool setMeteoXmlGrid(QString idMeteo, QString idForecast, QString *myError);
 
         void initializeSeasonalForecast(const Crit3DDate& firstDate, const Crit3DDate& lastDate);
 

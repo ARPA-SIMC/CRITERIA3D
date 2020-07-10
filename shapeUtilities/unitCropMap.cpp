@@ -2,9 +2,9 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
+//#include "gdalShapeFunctions.h"
 #include <QFile>
 #include <QFileInfo>
-
 
 #include <qdebug.h>
 
@@ -101,7 +101,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 {
 
     // PolygonShapefile
-    int type = 2;
+    int type = 5;
 
     ucm->newShapeFile(ucmFileName.toStdString(), type);
     // copy .prj
@@ -132,268 +132,76 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     ucm->addField("ID_METEO", FTString, 5, 0);
     int meteoIndex = ucm->getFieldPos("ID_METEO");
 
-    int nShape = ucm->getShapeCount();
 
     qDebug() << "idCrop " << QString::fromStdString(idCrop);
     qDebug() << "idSoil " << QString::fromStdString(idSoil);
     qDebug() << "idMeteo " << QString::fromStdString(idMeteo);
 
-    //testIntersection();
-    //return true;
+    GEOSGeometry *inteserctionGeom = nullptr ;
+
     if (crop == nullptr)
     {
 
         // soil and meteo intersection, add constant idCrop
-        GEOSGeometry* soilPolygon = loadShapeAsPolygon(soil);
-        if ( GEOSisValid(soilPolygon) )
-              qDebug() << "soilPolygon isValid";
-           else
-              qDebug() << "soilPolygon is NOT Valid";
-
-        GEOSGeometry *meteoPolygon = loadShapeAsPolygon(meteo);
-        if ( GEOSisValid(meteoPolygon) )
-              qDebug() << "meteoPolygon isValid";
-           else
-              qDebug() << "meteoPolygon is NOT Valid";
-
-        if(soilPolygon == NULL || meteoPolygon == NULL) {
-            qDebug() << "NULL polygon";
-            return false;    //invalid input parameter
-        }
-        GEOSGeometry *inteserctionGeom = GEOSIntersection(soilPolygon, meteoPolygon);
-        if ( !inteserctionGeom )
+        if (!shapeIntersection(soil, meteo, &inteserctionGeom))
         {
-            if ( GEOSisValid(inteserctionGeom) )
-                  qDebug() << "inteserctionGeom isValid";
-               else
-                  qDebug() << "inteserctionGeom is NOT Valid";
-            qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
+            return false;
         }
-        for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
-        {
-            ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
-        }
+
     }
     else if (soil == nullptr)
     {
 
         // crop and meteo intersection, add constant idSoil
-        GEOSGeometry* cropPolygon = loadShapeAsPolygon(crop);
-        if ( GEOSisValid(cropPolygon) )
-              qDebug() << "cropPolygon isValid";
-           else
-              qDebug() << "cropPolygon is NOT Valid";
-
-        GEOSGeometry *meteoPolygon = loadShapeAsPolygon(meteo);
-        if ( GEOSisValid(meteoPolygon) )
-              qDebug() << "meteoPolygon isValid";
-           else
-              qDebug() << "meteoPolygon is NOT Valid";
-
-        if(cropPolygon == NULL || meteoPolygon == NULL) {
-            qDebug() << "NULL polygon";
-            return false;    //invalid input parameter
-        }
-        GEOSGeometry *inteserctionGeom = GEOSIntersection(cropPolygon, meteoPolygon);
-        if ( !inteserctionGeom )
+        if (!shapeIntersection(crop, meteo, &inteserctionGeom))
         {
-            if ( GEOSisValid(inteserctionGeom) )
-                  qDebug() << "inteserctionGeom isValid";
-               else
-                  qDebug() << "inteserctionGeom is NOT Valid";
-            qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
-        }
-        for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
-        {
-            ucm->writeStringAttribute(shapeIndex, soilIndex, idSoil.c_str());
+            return false;
         }
     }
     else if (meteo == nullptr)
     {
 
         // crop and soil intersection, add constant idMeteo
-        GEOSGeometry* cropPolygon = loadShapeAsPolygon(crop);
-        if ( GEOSisValid(cropPolygon) )
-              qDebug() << "cropPolygon isValid";
-           else
-              qDebug() << "cropPolygon is NOT Valid";
-
-        GEOSGeometry *soilPolygon = loadShapeAsPolygon(soil);
-        if ( GEOSisValid(soilPolygon) )
-              qDebug() << "soilPolygon isValid";
-           else
-              qDebug() << "soilPolygon is NOT Valid";
-
-        if(cropPolygon == NULL || soilPolygon == NULL) {
-            qDebug() << "NULL polygon";
-            return false;    //invalid input parameter
-        }
-        GEOSGeometry *inteserctionGeom = GEOSIntersection(cropPolygon, soilPolygon);
-        if ( !inteserctionGeom )
+        if (!shapeIntersection(crop, soil, &inteserctionGeom))
         {
-            if ( GEOSisValid(inteserctionGeom) )
-                  qDebug() << "inteserctionGeom isValid";
-               else
-                  qDebug() << "inteserctionGeom is NOT Valid";
-            qDebug() << "Resulting geometry is " << GEOSGeomToWKT(inteserctionGeom);
-        }
-        for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
-        {
-            ucm->writeStringAttribute(shapeIndex, meteoIndex, idMeteo.c_str());
+            return false;
         }
     }
     else
     {
-        /*
-        Crit3DShapeHandler *temp = new(Crit3DShapeHandler);
-        temp->newFile("temp", type);
-        temp->open("temp");
-        // add ID SOIL
-        temp->addField("ID_SOIL", FTString, 5, 0);
-        // add ID METEO
-        temp->addField("ID_METEO", FTString, 5, 0);
-        // soil and meteo intersection, shape result and crop intersection
-        if (!shapeIntersection(temp, soil, meteo, idSoil, idMeteo, error, showInfo))
-        {
-            *error = "Failed soil and meteo intersection";
-            delete temp;
-            return false;
-        }
-        if (!shapeIntersection(ucm, temp, crop, idSoil, idCrop, error, showInfo))
-        {
-            *error = "Failed crop intersection";
-            return false;
-        }
-        */
-
+        // TO DO
     }
+
+    if (!getShapeFromGeom(inteserctionGeom, ucm))
+    {
+        return false;
+    }
+
+    // Finalizzo GEOS
+    finishGEOS();
+    /*
+    int nShape = ucm->getShapeCount();
+    for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
+    {
+        ucm->writeStringAttribute(shapeIndex, soilIndex, idSoil.c_str());
+        ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
+        ucm->writeStringAttribute(shapeIndex, meteoIndex, idMeteo.c_str());
+    }
+    */
+
+    /*
     if (!fillIDCase(ucm, idCrop, idSoil, idMeteo))
     {
         *error = "Failed to fill ID CASE";
         return false;
     }
+    */
+
+    ucm->close();
+    ucm->open(ucm->getFilepath());
     return true;
 }
 
-/*
-bool shapeIntersection(Crit3DShapeHandler *intersecHandler, Crit3DShapeHandler *firstHandler, Crit3DShapeHandler *secondHandler, std::string fieldNameFirst, std::string fieldNameSecond, std::string *error, bool showInfo)
-{
-    ShapeObject myFirstShape;
-    ShapeObject mySecondShape;
-    Box<double> firstBounds;
-    Box<double> secondBounds;
-    int nrFirstShape = firstHandler->getShapeCount();
-    int nrSecondShape = secondHandler->getShapeCount();
-    int nIntersections = 0;
-    std::vector< std::vector<ShapeObject::Part>> firstShapeParts;
-    std::vector< std::vector<ShapeObject::Part>> secondShapeParts;
-
-    QPolygonF firstPolygon;
-    QPolygonF secondPolygon;
-    QPolygonF intersectionPolygon;
-
-    int IDfirstShape = firstHandler->getFieldPos(fieldNameFirst);
-    int IDsecondShape = secondHandler->getFieldPos(fieldNameSecond);
-    int IDCloneFirst = intersecHandler->getFieldPos(fieldNameFirst);
-    int IDCloneSecond = intersecHandler->getFieldPos(fieldNameSecond);
-
-    for (unsigned int firstShapeIndex = 0; firstShapeIndex < nrFirstShape; firstShapeIndex++)
-    {
-
-        firstPolygon.clear();
-        firstHandler->getShape(firstShapeIndex, myFirstShape);
-        std::string fieldFirst = firstHandler->readStringAttribute(firstShapeIndex, IDfirstShape);  //Field to copy
-        // get bounds
-        firstBounds = myFirstShape.getBounds();
-        firstShapeParts[firstShapeIndex] = myFirstShape.getParts();
-        for (unsigned int partIndex = 0; partIndex < firstShapeParts[firstShapeIndex].size(); partIndex++)
-        {
-            Box<double> partBB = myFirstShape.getPart(partIndex).boundsPart;
-            int offset = myFirstShape.getPart(partIndex).offset;
-            int length = myFirstShape.getPart(partIndex).length;
-
-            if (firstShapeParts[firstShapeIndex][partIndex].hole)
-            {
-                continue;
-            }
-            else
-            {
-                for (unsigned long v = 0; v < length; v++)
-                {
-                    Point<double> vertex = myFirstShape.getVertex(v+offset);
-                    QPoint point(vertex.x, vertex.y);
-                    firstPolygon.append(point);
-                }
-                // check holes TO DO
-            }
-        }
-        for (unsigned int secondShapeIndex = 0; secondShapeIndex < nrSecondShape; secondShapeIndex++)
-        {
-
-            secondPolygon.clear();
-            secondHandler->getShape(secondShapeIndex, mySecondShape);
-            std::string fieldSecond = secondHandler->readStringAttribute(secondShapeIndex, IDsecondShape); //Field to copy
-            // get bounds
-            secondBounds = mySecondShape.getBounds();
-            bool noOverlap = firstBounds.xmin > secondBounds.xmax ||
-                                 secondBounds.xmin > firstBounds.xmax ||
-                                 firstBounds.ymin > secondBounds.ymax ||
-                                 secondBounds.ymin > firstBounds.ymax;
-            if (noOverlap)
-            {
-                continue;
-            }
-            else
-            {
-                secondShapeParts[secondShapeIndex] = mySecondShape.getParts();
-                for (unsigned int partIndex = 0; partIndex < secondShapeParts[secondShapeIndex].size(); partIndex++)
-                {
-                    Box<double> partBB = mySecondShape.getPart(partIndex).boundsPart;
-                    int offset = mySecondShape.getPart(partIndex).offset;
-                    int length = mySecondShape.getPart(partIndex).length;
-
-                    if (secondShapeParts[secondShapeIndex][partIndex].hole)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        nIntersections = nIntersections + 1;
-                        for (unsigned long v = 0; v < length; v++)
-                        {
-                            Point<double> vertex = mySecondShape.getVertex(v+offset);
-                            QPoint point(vertex.x, vertex.y);
-                            secondPolygon.append(point);
-                        }
-                        // check holes TO DO
-                    }
-                }
-                intersectionPolygon = firstPolygon.intersected(secondPolygon);
-                std::vector<double> coordinates;
-                for (int i = 0; i<intersectionPolygon.size(); i++)
-                {
-                    coordinates.push_back(intersectionPolygon[i].x());
-                    coordinates.push_back(intersectionPolygon[i].y());
-                }
-                if (!intersecHandler->addShape(coordinates))
-                {
-                    return false;
-                }
-                if (!intersecHandler->writeStringAttribute(nIntersections, IDCloneFirst, fieldFirst.c_str()))
-                {
-                    return false;
-                }
-                if (!intersecHandler->writeStringAttribute(nIntersections, IDCloneSecond, fieldSecond.c_str()))
-                {
-                    return false;
-                }
-            }
-        }
-    }
-
-    return true;
-}
-*/
 
 // FILL ID_CASE
 bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo)
@@ -409,6 +217,10 @@ bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil,
     int meteoIndex = ucm->getFieldPos(idMeteo);
     int idCaseIndex = ucm->getFieldPos("ID_CASE");
 
+    if (cropIndex == -1 || soilIndex == -1 || meteoIndex == -1)
+    {
+        return false;
+    }
     for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
     {
         std::string cropStr = ucm->readStringAttribute(shapeIndex, cropIndex);
@@ -432,5 +244,137 @@ bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil,
     return true;
 }
 
+bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
+{
+    GEOSGeometry* firstPolygon = loadShapeAsPolygon(first);
+    if((GEOSisEmpty(firstPolygon)))
+    {
+        qDebug() << "cropPolygon empty";
+        return false;
+    }
+
+    if (GEOSisValid(firstPolygon) !=1)
+    {
+          qDebug() << "firstPolygon is NOT Valid";
+          qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(firstPolygon);
+          firstPolygon = GEOSMakeValid(firstPolygon);
+          qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(firstPolygon);
+    }
+   else
+      qDebug() << "firstPolygon is Valid";
+
+    GEOSGeometry *secondPolygon = loadShapeAsPolygon(second);
+    if((GEOSisEmpty(secondPolygon)))
+    {
+        qDebug() << "secondPolygon empty";
+        return false;
+    }
+
+    if (GEOSisValid(secondPolygon) !=1)
+    {
+          qDebug() << "secondPolygon is NOT Valid";
+          qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(secondPolygon);
+          secondPolygon = GEOSMakeValid(secondPolygon);
+          qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(secondPolygon);
+    }
+   else
+      qDebug() << "soilPolygon is Valid";
+
+    *inteserctionGeom = GEOSIntersection(firstPolygon, secondPolygon);
+    if ((*inteserctionGeom) == nullptr)
+    {
+        qDebug() << "inteserctionGeom nullptr";
+        return false;
+    }
+    if((GEOSisEmpty(*inteserctionGeom)))
+    {
+        qDebug() << "inteserctionGeom empty";
+        return false;
+    }
+
+    if (GEOSisValid(*inteserctionGeom) !=1)
+    {
+          qDebug() << "inteserctionGeom is NOT Valid";
+          return false;
+    }
+   else
+    {
+      qDebug() << "inteserctionGeom is Valid";
+      qDebug() << "Resulting geometry is " << GEOSGeomToWKT(*inteserctionGeom);
+      return true;
+    }
+}
+
+bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
+{
+    //Getting coords for the vertex
+    unsigned int num;
+    int numPoints;
+
+    GEOSGeom geom;
+    num = GEOSGetNumGeometries(inteserctionGeom);
+    qDebug () << "Geometries: " << num;
+
+    GEOSCoordSeq coordseqIntersection = nullptr;
+    const GEOSGeometry *ring;
+    coordseqIntersection = (GEOSCoordSeq) GEOSCoordSeq_create(2, 2);   //2 pointsbi-dimensional
+    std::vector<double> coordinates;
+    std::string type;
+
+    int nValidShape = 0;
+    for(int i=0; i < num; i++)
+    {
+        coordinates.clear();
+        geom = (GEOSGeom) GEOSGetGeometryN(inteserctionGeom, i);
+        type = GEOSGeomType(geom);
+        if (type != "Polygon")
+        {
+            continue;
+        }
+        ring = GEOSGetExteriorRing(geom);
+
+        if (ring)
+        {
+            numPoints = GEOSGeomGetNumPoints(ring);
+            coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(ring);
+            double xPoint;
+            double yPoint;
+
+            for (int p=0; p < numPoints; p++)
+            {
+
+                GEOSCoordSeq_getX(coordseqIntersection, p, &xPoint);
+                GEOSCoordSeq_getY(coordseqIntersection, p, &yPoint);
+
+                coordinates.push_back(xPoint);
+                coordinates.push_back(yPoint);
+            }
+            qDebug () << "GEOSGetNumInteriorRings( geom ) " << GEOSGetNumInteriorRings( geom );
+
+            //interior rings TBC
+            for ( int numInner = 0; numInner < GEOSGetNumInteriorRings( geom ); numInner++ )
+            {
+                ring = GEOSGetInteriorRingN( geom, numInner );
+                numPoints = GEOSGeomGetNumPoints(ring);
+                coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(ring);
+
+                 for ( unsigned int j = 0; j < numPoints; j++ )
+                 {
+                     GEOSCoordSeq_getX(coordseqIntersection, j, &xPoint);
+                     GEOSCoordSeq_getY(coordseqIntersection, j, &yPoint);
+
+                     coordinates.push_back(xPoint);
+                     coordinates.push_back(yPoint);
+                 }
+
+            }
+            if (ucm->addShape(nValidShape, type, coordinates))
+            {
+                nValidShape = nValidShape + 1;
+            }
+        }
+    }
+    return true;
+}
 
 

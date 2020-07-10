@@ -65,7 +65,7 @@
         bool deleteRecord(int shapeNumber);
         //bool addRecord(std::vector<std::string> fields);
 
-        //bool addShape(std::vector<double> coordinates);
+        bool addShape(int iShape, std::string type, std::vector<double> coordinates);
         bool addField(const char * fieldName, int type, int nWidth, int nDecimals );
         bool removeField(int iField);
 
