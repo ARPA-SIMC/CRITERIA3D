@@ -439,7 +439,6 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
 
 void RasterObject::updateCenter()
 {
-
     if (! isDrawing) return;
 
     QPointF newCenter;

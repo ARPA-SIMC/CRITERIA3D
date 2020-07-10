@@ -147,7 +147,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
         {
             inputTMin[i]= (float)(outputWeatherData[iStation].minT[counter]);
             inputTMax[i]= (float)(outputWeatherData[iStation].maxT[counter]);
-            inputPrec[i]= (float)(outputWeatherData[iStation].precipitation[counter]);            
+            inputPrec[i]= (float)(outputWeatherData[iStation].precipitation[counter]);
             if (isLeapYear(outputWeatherData[iStation].yearSimulated[counter]) && outputWeatherData[iStation].monthSimulated[counter] == 2 && outputWeatherData[iStation].daySimulated[counter] == 28)
             {
                 ++i;
@@ -214,7 +214,8 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
             {
                 //outputWeatherData[iStation].precipitation[iDate] = MAXVALUE(parametersModel.precipitationThreshold + EPSILON,outputWeatherData[iStation].precipitation[iDate]* monthlyClimateAveragePrecipitationInternalFunction[iStation][monthCurrent-1] / monthlySimulatedAveragePrecipitationInternalFunction[iStation][monthCurrent-1]);
                 outputWeatherData[iStation].precipitation[iDate] = outputWeatherData[iStation].precipitation[iDate]* monthlyClimateAveragePrecipitationInternalFunction[iStation][monthCurrent-1] / monthlySimulatedAveragePrecipitationInternalFunction[iStation][monthCurrent-1];
-                if (outputWeatherData[iStation].precipitation[iDate] < parametersModel.precipitationThreshold) outputWeatherData[iStation].precipitation[iDate] = 0;
+                if (outputWeatherData[iStation].precipitation[iDate] < parametersModel.precipitationThreshold && outputWeatherData[iStation].precipitation[iDate]> EPSILON) outputWeatherData[iStation].precipitation[iDate] = parametersModel.precipitationThreshold + EPSILON;
+
             }
 
         }

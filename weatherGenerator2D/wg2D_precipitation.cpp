@@ -1156,7 +1156,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
    for (int i=0;i<nrStations;i++)
    {
        dummyMatrix[i]= (double*)calloc(nrStations, sizeof(double));
-       dummyMatrix2[i]= (double*)calloc(nrStations, sizeof(double));       
+       dummyMatrix2[i]= (double*)calloc(nrStations, sizeof(double));
        initialAmountsCorrelationMatrix[i]= (double*)calloc(nrStations, sizeof(double));
        for (int j=0;j<nrStations;j++)
        {

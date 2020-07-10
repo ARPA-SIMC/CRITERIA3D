@@ -42,6 +42,7 @@
     bool setZeroCenteredScale(Crit3DColorScale* myScale);
     bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounded);
     bool reverseColorScale(Crit3DColorScale* myScale);
+    bool setGrayScale(Crit3DColorScale* myScale);
 
 
 #endif // CRIT3DCOLOR_H

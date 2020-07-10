@@ -81,7 +81,7 @@ QPointF MapGraphicsShapeObject::getPixel(const LatLonPoint &geoPoint)
 
 void MapGraphicsShapeObject::setPolygon(unsigned int i, unsigned int j, QPolygonF* polygon)
 {
-    QPointF point;
+    QPointF point, oldPoint;
 
     polygon->clear();
     unsigned long offset = shapeParts[i][j].offset;
@@ -91,7 +91,11 @@ void MapGraphicsShapeObject::setPolygon(unsigned int i, unsigned int j, QPolygon
     {
         j = offset + v;
         point = getPixel(geoPoints[i][j]);
-        polygon->append(point);
+        if (point != oldPoint)
+        {
+            polygon->append(point);
+            oldPoint = point;
+        }
     }
 }
 

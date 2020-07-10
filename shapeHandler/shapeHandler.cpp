@@ -47,6 +47,11 @@ void Crit3DShapeHandler::close()
         SHPClose(m_handle);
         DBFClose(m_dbf);
     }
+
+    m_fieldsList.clear();
+    m_fieldsTypeList.clear();
+    holes.clear();
+
     m_handle = nullptr;
     m_dbf = nullptr;
 }
@@ -110,11 +115,11 @@ bool Crit3DShapeHandler::open(std::string filename)
     m_parts = 0;
     m_holes = 0;
     holes.clear();
-    holes.resize(m_count);
+    holes.resize(unsigned(m_count));
 
     std::vector<ShapeObject::Part> shapeParts;
 
-    for (unsigned int i = 0; i < m_count; i++)
+    for (unsigned int i = 0; i < unsigned(m_count); i++)
     {
         getShape(int(i), myShape);
         shapeParts = myShape.getParts();

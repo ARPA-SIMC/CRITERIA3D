@@ -477,13 +477,13 @@ void weatherGenerator2D::precipitationP00P10()
         //pressEnterToContinue();
     }
 
-    /*for (int i=0;i<12;i++)
+    for (int i=0;i<12;i++)
     {
         precOccurrenceGlobal[i].p00 /= daysWithoutRainGlobal[i];
         precOccurrenceGlobal[i].p10 /= daysWithRainGlobal[i];
-        printf("%d %f %f\n",i,precOccurrenceGlobal[i].p00,precOccurrenceGlobal[i].p10);
+        //printf("%d %f %f\n",i,precOccurrenceGlobal[i].p00,precOccurrenceGlobal[i].p10);
     }
-    getchar();*/
+    //getchar();*/
 }
 
 
@@ -678,7 +678,7 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
         }
 
         weatherGenerator2D::spatialIterationOccurrence(randomMatrix[iMonth].matrixM,randomMatrix[iMonth].matrixK,randomMatrix[iMonth].matrixOccurrences,matrixOccurrence,normalizedRandomMatrix,normalizedTransitionProbability,nrDaysIterativeProcessMonthly[iMonth]);
-        for (int iStations=0;iStations<nrStations;iStations++)
+        for (int iStations=0;iStations<1;iStations++)
         {
             for (int iLength=0;iLength<nrDaysIterativeProcessMonthly[iMonth]-1;iLength++)
             {
@@ -704,8 +704,10 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
 
         syntheticP01 /= dryDays;
         syntheticP10 /= wetDays;
-        printf("%f %f\n",syntheticP10,syntheticP01);
-        getchar();
+        //printf("%d %f %f\n",iMonth,precOccurrenceGlobal[iMonth].p00,precOccurrenceGlobal[iMonth].p10);
+        //printf("giorni di pioggia prima %d %f\n",iMonth,wetDays/(wetDays+dryDays));
+        //printf("P01 %d %f %f\n",iMonth,1 - precOccurrenceGlobal[iMonth].p00,syntheticP01);
+
 
         randomMatrix[iMonth].month = iMonth + 1;
         // free memory
@@ -719,8 +721,8 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
 
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
-        printf ( "Current local time and date: %s", asctime (timeinfo) );
-        printf("step 3/9 step %d/12\n",iMonth+1);
+        //printf ( "Current local time and date: %s", asctime (timeinfo) );
+        //printf("step 3/9 substep %d/12\n",iMonth+1);
     }
 
 
@@ -732,7 +734,7 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
     }
     free(matrixOccurrence);
     free(normalizedTransitionProbability);
-
+    //getchar();
 }
 
 
