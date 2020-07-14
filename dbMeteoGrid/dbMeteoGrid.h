@@ -56,6 +56,7 @@
         ~Crit3DMeteoGridDbHandler();
 
         bool openDatabase(QString *myError);
+        bool openDatabase(QString *myError, QString connectionName);
         void closeDatabase();
         bool parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc, QString *error);
         bool checkXML(QString *myError);
