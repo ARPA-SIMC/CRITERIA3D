@@ -186,6 +186,7 @@ bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForeca
         if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstDate, lastDate))
         {
             //*myError = "Missing observed data " + firstDate.toString() + "-" + lastDate.toString();
+            *myError = "Missing observed data";
             return false;
         }
     }
