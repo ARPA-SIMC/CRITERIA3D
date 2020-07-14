@@ -185,8 +185,8 @@ bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForeca
     {
         if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstDate, lastDate))
         {
-            //*myError = "Missing observed data " + firstDate.toString() + "-" + lastDate.toString();
-            *myError = "Missing observed data";
+            *myError = "Missing observed data " + firstDate.toString() + "-" + lastDate.toString();
+            //*myError = "Missing observed data";
             return false;
         }
     }
@@ -248,7 +248,6 @@ bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForeca
     myCase.meteoPoint.latitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->latitude;
     myCase.meteoPoint.longitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->longitude;
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstDate));
-
     // caricare in myCase.meteoPoint (da handler observed) i dati da this->firstDate a this->lastDate
     float tmin, tmax, tavg, prec;
     for (int i = 0; i< firstDate.daysTo(lastDate)+1; i++)
