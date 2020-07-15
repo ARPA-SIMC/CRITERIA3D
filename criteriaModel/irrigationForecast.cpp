@@ -302,8 +302,7 @@ bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForeca
 
     // DEBUG finale:
     // quando tutto funzia fai queste prove:
-    // - una prova con un nr diverso di giorni di previsione (daysOfForecast nel .ini) prova ad es. 10 invece di 7
-
+    // - una prova con un nr diverso di giorni di previsione (daysOfForecast nel .ini) prova ad es. 10 invece di 7  OK
     // - una prova senza previsioni (solo osservati): metti isShortTermForecast=false nel .ini   OK
     // - una prova più lunga, ad es dal 1 gennaio 2001, sempre senza previsioni: cambia firstDate nel .ini OK 1gen2008
 
