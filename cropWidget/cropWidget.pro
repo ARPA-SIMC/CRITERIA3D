@@ -5,7 +5,7 @@
 #
 #----------------------------------------------------
 
-QT  += widgets sql charts printsupport
+QT  += widgets sql xml charts printsupport
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -30,7 +30,7 @@ win32:{
     TARGET = cropWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../soil ../crop ../qcustomplot ../criteriaModel ../project
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../dbMeteoGrid ../soil ../crop ../qcustomplot ../criteriaModel ../project
 
 
 SOURCES += \

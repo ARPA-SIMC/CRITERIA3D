@@ -727,18 +727,40 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
 {
 
     QString error;
-    if (! openDbMeteo(dbMeteoName, &dbMeteo, &error))
-    {
-        QMessageBox::critical(nullptr, "Error DB meteo", error);
-        return;
-    }
-
-    // read id_meteo list
     QStringList idMeteoList;
-    if (! getMeteoPointList(&dbMeteo, &idMeteoList, &error))
+    if (isXmlMeteoGrid)
     {
-        QMessageBox::critical(nullptr, "Error!", error);
-        return;
+        if (! xmlMeteoGrid.parseXMLGrid(dbMeteoName, &error))
+        {
+            QMessageBox::critical(nullptr, "Error XML meteo grid", error);
+            return;
+        }
+        if (! xmlMeteoGrid.openDatabase(&error, "observed"))
+        {
+            QMessageBox::critical(nullptr, "Error DB Grid", error);
+            return;
+        }
+        if (! xmlMeteoGrid.loadCellProperties(&error))
+        {
+            QMessageBox::critical(nullptr, "Error load properties DB Grid", error);
+            return;
+        }
+        // TO DO
+    }
+    else
+    {
+        if (! openDbMeteo(dbMeteoName, &dbMeteo, &error))
+        {
+            QMessageBox::critical(nullptr, "Error DB meteo", error);
+            return;
+        }
+
+        // read id_meteo list
+        if (! getMeteoPointList(&dbMeteo, &idMeteoList, &error))
+        {
+            QMessageBox::critical(nullptr, "Error!", error);
+            return;
+        }
     }
 
     // show id_meteo list
