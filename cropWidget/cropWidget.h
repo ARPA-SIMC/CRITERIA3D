@@ -70,6 +70,7 @@
             double meteoLatBackUp;
             QStringList yearList;
             bool onlyOneYear;
+            bool isXmlMeteoGrid;
 
             std::vector<Crit1DUnit> unitList;
 

@@ -529,6 +529,10 @@ void Crit3DCropWidget::on_actionOpenProject()
     QString dbMeteoName = projectSettings->value("db_meteo","").toString();
     if (dbMeteoName.left(1) == ".")
         dbMeteoName = QDir::cleanPath(path + dbMeteoName);
+    if (dbMeteoName.right(3) == "xml")
+        isXmlMeteoGrid = true;
+    else
+        isXmlMeteoGrid = false;
 
     QString dbSoilName = projectSettings->value("db_soil","").toString();
     if (dbSoilName.left(1) == ".")
@@ -705,11 +709,17 @@ void Crit3DCropWidget::openCropDB(QString newDbCropName)
 void Crit3DCropWidget::on_actionOpenMeteoDB()
 {
 
-    QString dbMeteoName = QFileDialog::getOpenFileName(this, tr("Open meteo database"), "", tr("SQLite files (*.db)"));
+    QString dbMeteoName = QFileDialog::getOpenFileName(this, tr("Open meteo database"), "", tr("SQLite files or XML (*.db *xml)"));
     if (dbMeteoName == "")
         return;
     else
+    {
+        if (dbMeteoName.right(3) == "xml")
+            isXmlMeteoGrid = true;
+        else
+            isXmlMeteoGrid = false;
         openMeteoDB(dbMeteoName);
+    }
 }
 
 
