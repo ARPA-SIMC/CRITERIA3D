@@ -745,7 +745,17 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
             QMessageBox::critical(nullptr, "Error load properties DB Grid", error);
             return;
         }
-        // TO DO
+        int j;
+        QString idMeteo;
+        for (int i = 0; i < xmlMeteoGrid.gridStructure().header().nrRows; i++)
+        {
+            for (j = 0; j < xmlMeteoGrid.gridStructure().header().nrCols; j++)
+            {
+                idMeteo = QString::fromStdString(xmlMeteoGrid.meteoGrid()->meteoPoints()[i][j]->id);
+                idMeteoList.append(idMeteo);
+            }
+            j = 0;
+        }
     }
     else
     {
@@ -1025,31 +1035,50 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
 
     myCase.meteoPoint.setId(idMeteo.toStdString());
     QString error, lat, lon;
+    unsigned row;
+    unsigned col;
 
-    if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
+    if (isXmlMeteoGrid)
     {
+        if (!xmlMeteoGrid.meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
+        {
+            error = "Missing observed meteo cell";
+            return;
+        }
+        lat = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->latitude;
         latValue->setValue(lat.toDouble());
         meteoLatBackUp = lat.toDouble();
+        tableMeteo = xmlMeteoGrid.tableDaily().prefix + idMeteo + xmlMeteoGrid.tableDaily().postFix;
+        // TO getYearList
+
     }
-
-    tableMeteo = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);
-
-    if (!getYearList(&dbMeteo, tableMeteo, &yearList, &error))
+    else
     {
-        QMessageBox::critical(nullptr, "Error!", error);
-        return;
-    }
-
-    int pos = 0;
-    for (int i = 0; i<yearList.size(); i++)
-    {
-        if ( !checkYear(&dbMeteo, tableMeteo, yearList[i], &error))
+        if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
         {
-            yearList.removeAt(pos);
+            latValue->setValue(lat.toDouble());
+            meteoLatBackUp = lat.toDouble();
         }
-        else
+
+        tableMeteo = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);
+
+        if (!getYearList(&dbMeteo, tableMeteo, &yearList, &error))
         {
-            pos = pos + 1;
+            QMessageBox::critical(nullptr, "Error!", error);
+            return;
+        }
+
+        int pos = 0;
+        for (int i = 0; i<yearList.size(); i++)
+        {
+            if ( !checkYear(&dbMeteo, tableMeteo, yearList[i], &error))
+            {
+                yearList.removeAt(pos);
+            }
+            else
+            {
+                pos = pos + 1;
+            }
         }
     }
     if (yearList.size() == 1)
