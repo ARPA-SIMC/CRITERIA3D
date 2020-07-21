@@ -329,11 +329,10 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     QString PREC_MIN = "0.0";
 
     // count valid temp and prec
-    QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE_FORMAT(`%1`,'%Y') = `%3` AND `%4` NOT LIKE '' AND `%5` NOT LIKE '' AND `%6` NOT LIKE ''").arg(fieldTime).arg(tableD).arg(year).arg(fieldTmin).arg(fieldTmax).arg(fieldPrec);
-    statement = statement + QString(" AND `%1` >= %2 AND `%1` <= %3)").arg(fieldTmin).arg(TMIN_MIN).arg(TMIN_MAX);
-    statement = statement + QString(" AND `%1` >= %2 AND `%1` <= %3 AND `%4` >= %5").arg(fieldTmax).arg(TMAX_MIN).arg(TMAX_MAX).arg(fieldPrec).arg(PREC_MIN);
+    QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE_FORMAT(`%1`,'%Y') = '%3' AND `%4` NOT LIKE '' AND `%5` NOT LIKE '' AND `%6` NOT LIKE ''").arg(fieldTime).arg(tableD).arg(year).arg(fieldTmin).arg(fieldTmax).arg(fieldPrec);
+    statement = statement + QString(" AND `%1` >= '%2' AND `%1` <= '%3'").arg(fieldTmin).arg(TMIN_MIN).arg(TMIN_MAX);
+    statement = statement + QString(" AND `%1` >= '%2' AND `%1` <= '%3' AND `%4` >= '%5'").arg(fieldTmax).arg(TMAX_MIN).arg(TMAX_MAX).arg(fieldPrec).arg(PREC_MIN);
 
-    qDebug() << "statement " << statement;
     if( !qry.exec(statement) )
     {
         *error = qry.lastError().text();
@@ -360,7 +359,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
 
     // check consecutive missing days (1 missing day allowed for temperature)
 
-    statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = `%3`").arg(tableD).arg(fieldTime).arg(year);
+    statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3'").arg(tableD).arg(fieldTime).arg(year);
     if( !qry.exec(statement) )
     {
         *error = qry.lastError().text();
@@ -392,10 +391,10 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
 
     do
     {
-        getValue(qry.value("date"), &date);
-        getValue(qry.value("tmin"), &tmin);
-        getValue(qry.value("tmax"), &tmax);
-        getValue(qry.value("prec"), &prec);
+        getValue(qry.value(fieldTime), &date);
+        getValue(qry.value(fieldTmin), &tmin);
+        getValue(qry.value(fieldTmax), &tmax);
+        getValue(qry.value(fieldPrec), &prec);
         // 2 days missing
         if (previousDate.daysTo(date) > (MAX_MISSING_CONSECUTIVE_DAYS_T+1))
         {
