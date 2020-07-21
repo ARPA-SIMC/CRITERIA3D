@@ -740,6 +740,7 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
             QMessageBox::critical(nullptr, "Error DB Grid", error);
             return;
         }
+        dbMeteo = xmlMeteoGrid.db();
         if (! xmlMeteoGrid.loadCellProperties(&error))
         {
             QMessageBox::critical(nullptr, "Error load properties DB Grid", error);
@@ -1043,10 +1044,26 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
         lat = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->latitude;
         latValue->setValue(lat.toDouble());
         meteoLatBackUp = lat.toDouble();
+        tableMeteo = xmlMeteoGrid.tableDaily().prefix + idMeteo + xmlMeteoGrid.tableDaily().postFix;
         if (!xmlMeteoGrid.getYearList(&error, idMeteo, &yearList))
         {
             QMessageBox::critical(nullptr, "Error!", error);
             return;
+        }
+        int pos = 0;
+        QString fieldTmin = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMin);
+        QString fieldTmax = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMax);
+        QString fieldPrec = xmlMeteoGrid.getDailyVarField(dailyPrecipitation);
+        for (int i = 0; i<yearList.size(); i++)
+        {
+            if ( !checkYearMeteoGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
+            {
+                yearList.removeAt(pos);
+            }
+            else
+            {
+                pos = pos + 1;
+            }
         }
     }
     else
