@@ -745,16 +745,11 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
             QMessageBox::critical(nullptr, "Error load properties DB Grid", error);
             return;
         }
-        int j;
-        QString idMeteo;
-        for (int i = 0; i < xmlMeteoGrid.gridStructure().header().nrRows; i++)
+
+        if (!xmlMeteoGrid.idDailyList(&error, &idMeteoList))
         {
-            for (j = 0; j < xmlMeteoGrid.gridStructure().header().nrCols; j++)
-            {
-                idMeteo = QString::fromStdString(xmlMeteoGrid.meteoGrid()->meteoPoints()[i][j]->id);
-                idMeteoList.append(idMeteo);
-            }
-            j = 0;
+            QMessageBox::critical(nullptr, "Error daily table list", error);
+            return;
         }
     }
     else

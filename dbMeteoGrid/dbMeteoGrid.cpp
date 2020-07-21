@@ -847,7 +847,6 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
         tableCellsProp = qry.value(0).toString();
     }
 
-    //qry.prepare( "SELECT * FROM CellsProperties ORDER BY Code" );
     QString statement = QString("SELECT * FROM `%1` ORDER BY Code").arg(tableCellsProp);
 
     if( !qry.exec(statement) )
@@ -2202,6 +2201,53 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridHourlyFF(QString *myError, QSt
         }
     }
 
+    return true;
+}
+
+/*
+bool Crit3DMeteoGridDbHandler::tableIdDailyExists(QString *myError, QString meteoPoint)
+{
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
+
+    QString statement = QString("SHOW TABLES LIKE '%1'").arg(tableD);
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        if (qry.size() == 0)
+        {
+            return false;
+        }
+        return true;
+    }
+}
+*/
+
+
+bool Crit3DMeteoGridDbHandler::idDailyList(QString *myError, QStringList* idMeteoList)
+{
+    QSqlQuery qry(_db);
+
+    QString statement = QString("SHOW TABLES LIKE '%1%%2'").arg(_tableDaily.prefix).arg(_tableDaily.postFix);
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        while( qry.next() )
+        {
+            QString tableName = qry.value(0).toString();
+            tableName.remove(0,_tableDaily.prefix.size());
+            tableName.remove(tableName.size()-_tableDaily.postFix.size(),_tableDaily.prefix.size());
+            idMeteoList->append(tableName);
+        }
+    }
     return true;
 }
 
