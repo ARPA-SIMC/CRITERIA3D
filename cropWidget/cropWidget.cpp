@@ -1048,9 +1048,11 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
         lat = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->latitude;
         latValue->setValue(lat.toDouble());
         meteoLatBackUp = lat.toDouble();
-        tableMeteo = xmlMeteoGrid.tableDaily().prefix + idMeteo + xmlMeteoGrid.tableDaily().postFix;
-        // TO getYearList
-
+        if (!xmlMeteoGrid.getYearList(&error, idMeteo, &yearList))
+        {
+            QMessageBox::critical(nullptr, "Error!", error);
+            return;
+        }
     }
     else
     {

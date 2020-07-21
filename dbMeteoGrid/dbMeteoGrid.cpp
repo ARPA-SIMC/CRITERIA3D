@@ -2205,6 +2205,33 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridHourlyFF(QString *myError, QSt
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::getYearList(QString *myError, QString meteoPoint, QStringList* yearList)
+{
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
+
+    QString statement = QString("SELECT `%1`, DATE_FORMAT(`%1`,'%Y') as Year FROM `%2` ORDER BY `%1`").arg(_tableDaily.fieldTime).arg(tableD);
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        QString year;
+        while (qry.next())
+        {
+            getValue(qry.value("Year"), &year);
+            if (year != "" && !yearList->contains(year))
+            {
+                yearList->append(year);
+            }
+        }
+
+    }
+    return true;
+}
+
 
 QDate Crit3DMeteoGridDbHandler::firstDate() const
 {
