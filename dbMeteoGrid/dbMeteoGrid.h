@@ -92,6 +92,7 @@
         std::string getHourlyPragaName(meteoVariable meteoVar);
 
         bool loadCellProperties(QString *myError);
+        bool loadIdMeteoProperties(QString *myError, QString idMeteo);
         bool updateGridDate(QString *myError);
         bool loadGridDailyData(QString *myError, QString meteoPoint, QDate first, QDate last);
         bool loadGridDailyDataFixedFields(QString *myError, QString meteoPoint, QDate first, QDate last);

@@ -741,11 +741,6 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
             return;
         }
         dbMeteo = xmlMeteoGrid.db();
-        if (! xmlMeteoGrid.loadCellProperties(&error))
-        {
-            QMessageBox::critical(nullptr, "Error load properties DB Grid", error);
-            return;
-        }
 
         if (!xmlMeteoGrid.idDailyList(&error, &idMeteoList))
         {
@@ -1030,20 +1025,23 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     this->firstYearListComboBox.blockSignals(false);
 
     myCase.meteoPoint.setId(idMeteo.toStdString());
-    QString error, lat, lon;
-    unsigned row;
-    unsigned col;
+    QString error;
 
     if (isXmlMeteoGrid)
     {
-        if (!xmlMeteoGrid.meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
+        if (! xmlMeteoGrid.loadIdMeteoProperties(&error, idMeteo))
+        {
+            QMessageBox::critical(nullptr, "Error load properties DB Grid", error);
+            return;
+        }
+        double lat;
+        if (!xmlMeteoGrid.meteoGrid()->getLatFromId(idMeteo.toStdString(), &lat) )
         {
             error = "Missing observed meteo cell";
             return;
         }
-        lat = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->latitude;
-        latValue->setValue(lat.toDouble());
-        meteoLatBackUp = lat.toDouble();
+        latValue->setValue(lat);
+        meteoLatBackUp = lat;
         tableMeteo = xmlMeteoGrid.tableDaily().prefix + idMeteo + xmlMeteoGrid.tableDaily().postFix;
         if (!xmlMeteoGrid.getYearList(&error, idMeteo, &yearList))
         {
@@ -1069,6 +1067,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     }
     else
     {
+        QString lat,lon;
         if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
         {
             latValue->setValue(lat.toDouble());

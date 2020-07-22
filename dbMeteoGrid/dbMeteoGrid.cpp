@@ -915,6 +915,92 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *myError, QString idMeteo)
+{
+    QSqlQuery qry(_db);
+    int row, col, active, height;
+    QString code, name, tableCellsProp;
+
+    qry.prepare( "SHOW TABLES LIKE '%ells%roperties'" );
+    if( !qry.exec() )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        qry.next();
+        tableCellsProp = qry.value(0).toString();
+    }
+
+    QString statement = QString("SELECT * FROM `%1` WHERE `Code` = '%2'").arg(tableCellsProp).arg(idMeteo);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        bool hasHeight = true;
+        while (qry.next())
+        {
+
+            if (! getValue(qry.value("Code"), &code))
+            {
+                *myError = "Missing data: Code";
+                return false;
+            }
+
+            // facoltativa
+            if (! getValue(qry.value("Name"), &name))
+            {
+                name = code;
+            }
+
+            if (! getValue(qry.value("Row"), &row))
+            {
+                *myError = "Missing data: Row";
+                return false;
+            }
+
+            if (! getValue(qry.value("Col"), &col))
+            {
+                *myError = "Missing data: Col";
+                return false;
+            }
+
+            // height: facoltativa
+            height = NODATA;
+            if (hasHeight)
+            {
+                if (! qry.value("Height").isValid())
+                    hasHeight = false;
+                else
+                    getValue(qry.value("Height"), &height);
+            }
+
+            if (! getValue(qry.value("Active"), &active))
+            {
+                *myError = "Missing data: Active";
+                return false;
+            }
+
+            if (row < _meteoGrid->gridStructure().header().nrRows
+                && col < _meteoGrid->gridStructure().header().nrCols)
+            {
+                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), height, active);
+            }
+            else
+            {
+                *myError = "Row or Col > nrRows or nrCols";
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 
 bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 {
