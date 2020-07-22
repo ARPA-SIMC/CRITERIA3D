@@ -358,8 +358,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     }
 
     // check consecutive missing days (1 missing day allowed for temperature)
-
-    statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3'").arg(tableD).arg(fieldTime).arg(year);
+    statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3' ORDER BY `%2`").arg(tableD).arg(fieldTime).arg(year);
     if( !qry.exec(statement) )
     {
         *error = qry.lastError().text();

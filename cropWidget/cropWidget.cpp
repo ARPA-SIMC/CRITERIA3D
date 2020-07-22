@@ -1059,6 +1059,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
             if ( !checkYearMeteoGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
             {
                 yearList.removeAt(pos);
+                i = i - 1;
             }
             else
             {
@@ -1088,6 +1089,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
             if ( !checkYear(&dbMeteo, tableMeteo, yearList[i], &error))
             {
                 yearList.removeAt(pos);
+                i = i - 1;
             }
             else
             {
