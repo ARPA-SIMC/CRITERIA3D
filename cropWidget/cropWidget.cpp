@@ -1182,36 +1182,108 @@ void Crit3DCropWidget::updateMeteoPointValues()
     }
     myCase.meteoPoint.initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
-    if (onlyOneYear)
+    if (isXmlMeteoGrid)
     {
-        if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(lastYear), &error))
+        unsigned row;
+        unsigned col;
+        if (!xmlMeteoGrid.meteoGrid()->findMeteoPointFromId(&row, &col, myCase.meteoPoint.id) )
         {
-            QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
+            error = "Missing observed meteo cell";
+            QMessageBox::critical(nullptr, "Error!", error);
             return;
         }
-        // copy values to prev years
-        Crit3DDate myDate = getCrit3DDate(lastDate);
-        Crit3DDate prevDate = getCrit3DDate(firstDate);
-        for (int i = 0; i < lastDate.daysInYear(); i++)
+
+        if (!xmlMeteoGrid.gridStructure().isFixedFields())
         {
-            prevDate = getCrit3DDate(firstDate).addDays(i);
-            myDate = getCrit3DDate(lastDate).addDays(i);
-            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMin, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin));
-            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMax, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax));
-            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureAvg, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureAvg));
-            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyPrecipitation, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyPrecipitation));
-            myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyWaterTableDepth, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
+            if (!xmlMeteoGrid.loadGridDailyData(&error, QString::fromStdString(myCase.meteoPoint.id), firstDate, lastDate))
+            {
+                error = "Missing observed data";
+                QMessageBox::critical(nullptr, "Error!", error);
+                return;
+            }
+        }
+        else
+        {
+            if (!xmlMeteoGrid.loadGridDailyDataFixedFields(&error, QString::fromStdString(myCase.meteoPoint.id), firstDate, lastDate))
+            {
+                error = "Missing observed data";
+                QMessageBox::critical(nullptr, "Error!", error);
+                return;
+            }
+        }
+        float tmin, tmax, tavg, prec, waterDepth;
+        for (int i = 0; i< firstDate.daysTo(lastDate)+1; i++)
+        {
+            Crit3DDate myDate = getCrit3DDate(firstDate.addDays(i));
+            tmin = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+            myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmin);
+
+            tmax = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+            myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMax, tmax);
+
+            tavg = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
+            if (tavg == NODATA)
+            {
+                tavg = (tmax + tmin)/2;
+            }
+            myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureAvg, tavg);
+
+            prec = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
+            myCase.meteoPoint.setMeteoPointValueD(myDate, dailyPrecipitation, prec);
+
+            waterDepth = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyWaterTableDepth);
+            myCase.meteoPoint.setMeteoPointValueD(myDate, dailyWaterTableDepth, waterDepth);
+        }
+        if (onlyOneYear)
+        {
+            // copy values to prev years
+            Crit3DDate myDate = getCrit3DDate(lastDate);
+            Crit3DDate prevDate = getCrit3DDate(firstDate);
+            for (int i = 0; i < lastDate.daysInYear(); i++)
+            {
+                prevDate = getCrit3DDate(firstDate).addDays(i);
+                myDate = getCrit3DDate(lastDate).addDays(i);
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMin, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin));
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMax, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax));
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureAvg, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureAvg));
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyPrecipitation, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyPrecipitation));
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyWaterTableDepth, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
+            }
         }
     }
     else
     {
-        // fill meteoPoint
-        for (int year = firstYear; year <= lastYear; year++)
+        if (onlyOneYear)
         {
-            if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(year), &error))
+            if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(lastYear), &error))
             {
                 QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
                 return;
+            }
+            // copy values to prev years
+            Crit3DDate myDate = getCrit3DDate(lastDate);
+            Crit3DDate prevDate = getCrit3DDate(firstDate);
+            for (int i = 0; i < lastDate.daysInYear(); i++)
+            {
+                prevDate = getCrit3DDate(firstDate).addDays(i);
+                myDate = getCrit3DDate(lastDate).addDays(i);
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMin, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMin));
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureMax, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureMax));
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyAirTemperatureAvg, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyAirTemperatureAvg));
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyPrecipitation, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyPrecipitation));
+                myCase.meteoPoint.setMeteoPointValueD(prevDate, dailyWaterTableDepth, myCase.meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
+            }
+        }
+        else
+        {
+            // fill meteoPoint
+            for (int year = firstYear; year <= lastYear; year++)
+            {
+                if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(year), &error))
+                {
+                    QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
+                    return;
+                }
             }
         }
     }
