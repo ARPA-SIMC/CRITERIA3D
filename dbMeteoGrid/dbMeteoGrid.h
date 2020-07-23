@@ -92,6 +92,7 @@
         std::string getHourlyPragaName(meteoVariable meteoVar);
 
         bool loadCellProperties(QString *myError);
+        bool loadIdMeteoProperties(QString *myError, QString idMeteo);
         bool updateGridDate(QString *myError);
         bool loadGridDailyData(QString *myError, QString meteoPoint, QDate first, QDate last);
         bool loadGridDailyDataFixedFields(QString *myError, QString meteoPoint, QDate first, QDate last);
@@ -101,6 +102,9 @@
         std::vector<float> loadGridDailyVarFixedFields(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB);
         std::vector<float> loadGridHourlyVar(QString *myError, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB);
         std::vector<float> loadGridHourlyVarFixedFields(QString *myError, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB);
+        bool getYearList(QString *myError, QString meteoPoint, QStringList* yearList);
+        //bool tableIdDailyExists(QString *myError, QString meteoPoint);
+        bool idDailyList(QString *myError, QStringList* idMeteoList);
 
         bool saveGridData(QString *myError, QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList);
         bool saveGridHourlyData(QString *myError, QDateTime firstDate, QDateTime lastDate, QList<meteoVariable> meteoVariableList);
