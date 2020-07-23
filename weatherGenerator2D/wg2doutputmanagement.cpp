@@ -418,6 +418,42 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
         }
     }
     fclose(fp);
+
+    fp = fopen("outputData/correlationMatricesStats.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        double maxCorrelationAnomaly = 0;
+        int occurrenceAnomaly[21];
+        for (int i=0;i<21;i++)
+        {
+            occurrenceAnomaly[i] = 0;
+        }
+        fprintf(fp,"month %d \n",iMonth+1);
+        double value = -0.095;
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                maxCorrelationAnomaly = MAXVALUE(maxCorrelationAnomaly,fabs(correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]));
+                int counter = 0;
+                value = -0.095;
+                while (correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]> value && counter<20)
+                {
+                    value += 0.01;
+                    counter++;
+                }
+                ++occurrenceAnomaly[counter];
+            }
+        }
+        fprintf(fp,"maxValue %f \n", maxCorrelationAnomaly);
+        for (int i=0;i<21;i++)
+        {
+            fprintf(fp,"%f,%d \n",-0.1 + i*0.01, occurrenceAnomaly[i]);
+        }
+    }
+
+    fclose(fp);
+
     for (int iMonth=0;iMonth<12;iMonth++)
     {
         for (int i=0;i<nrStations;i++)
