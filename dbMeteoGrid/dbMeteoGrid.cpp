@@ -2329,8 +2329,14 @@ bool Crit3DMeteoGridDbHandler::idDailyList(QString *myError, QStringList* idMete
         while( qry.next() )
         {
             QString tableName = qry.value(0).toString();
-            tableName.remove(0,_tableDaily.prefix.size());
-            tableName.remove(tableName.size()-_tableDaily.postFix.size(),_tableDaily.prefix.size());
+            if (!_tableDaily.prefix.isEmpty())
+            {
+                tableName.remove(0,_tableDaily.prefix.size());
+            }
+            if (!_tableDaily.postFix.isEmpty())
+            {
+                tableName.remove(tableName.size()-_tableDaily.postFix.size(),_tableDaily.postFix.size());
+            }
             idMeteoList->append(tableName);
         }
     }
