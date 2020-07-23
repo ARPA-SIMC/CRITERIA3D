@@ -474,10 +474,10 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     QString PREC_MIN = "0.0";
 
     // count valid temp and prec
-    // TO DO   QString statement = QString("SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`").arg(tableD).arg(varCode).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
-    QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE_FORMAT(`%1`,'%Y') = '%3' AND `%4` NOT LIKE '' AND `%5` NOT LIKE '' AND `%6` NOT LIKE ''").arg(fieldTime).arg(tableD).arg(year).arg(varCodeTmin).arg(varCodeTmax).arg(varCodePrec);
-    statement = statement + QString(" AND `%1` >= '%2' AND `%1` <= '%3'").arg(varCodeTmin).arg(TMIN_MIN).arg(TMIN_MAX);
-    statement = statement + QString(" AND `%1` >= '%2' AND `%1` <= '%3' AND `%4` >= '%5'").arg(varCodeTmax).arg(TMAX_MIN).arg(TMAX_MAX).arg(varCodePrec).arg(PREC_MIN);
+    QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE_FORMAT(`%1`,'%Y') = '%3'").arg(fieldTime).arg(tableD).arg(year);
+    statement = statement + QString(" AND ( (VariableCode = '%1' AND Value >= '%2' AND Value <= '%3')").arg(varCodeTmin).arg(TMIN_MIN).arg(TMIN_MAX);
+    statement = statement + QString(" OR ( VariableCode = '%1' AND Value >= '%2' AND Value <= '%3') ").arg(varCodeTmax).arg(TMAX_MIN).arg(TMAX_MAX).arg(varCodePrec).arg(PREC_MIN);
+    statement = statement + QString(" OR ( VariableCode = '%1' AND Value >= '%2') )").arg(varCodePrec).arg(PREC_MIN);
 
     if( !qry.exec(statement) )
     {
@@ -497,7 +497,8 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     QDate temp(year.toInt(), 1, 1);
     int daysInYear = temp.daysInYear();
 
-    if (count < (daysInYear-MAX_MISSING_TOT_DAYS))
+    // 3 variables
+    if (count/3 < (daysInYear-MAX_MISSING_TOT_DAYS))
     {
         *error = "incomplete year, valid data missing more than MAX_MISSING_DAYS";
         return false;
@@ -524,6 +525,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     float tmin = NODATA;
     float tmax = NODATA;
     float prec = NODATA;
+    float variableCode = NODATA;
     float tmin_min = TMIN_MIN.toFloat();
     float tmin_max = TMIN_MAX.toFloat();
 
@@ -537,9 +539,21 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     do
     {
         getValue(qry.value(fieldTime), &date);
-        getValue(qry.value(varCodeTmin), &tmin);
-        getValue(qry.value(varCodeTmax), &tmax);
-        getValue(qry.value(varCodePrec), &prec);
+        getValue(qry.value("VariableCode"), &variableCode);
+
+        if (variableCode == varCodeTmin)
+        {
+            getValue(qry.value("Value"), &tmin);
+        }
+        else if (variableCode == varCodeTmax)
+        {
+            getValue(qry.value("Value"), &tmax);
+        }
+        else if (variableCode == varCodePrec)
+        {
+            getValue(qry.value("Value"), &prec);
+        }
+
         // 2 days missing
         if (previousDate.daysTo(date) > (MAX_MISSING_CONSECUTIVE_DAYS_T+1))
         {
