@@ -1054,14 +1054,21 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
         QString fieldPrec = xmlMeteoGrid.getDailyVarField(dailyPrecipitation);
         for (int i = 0; i<yearList.size(); i++)
         {
-            if ( !checkYearMeteoGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
+            if (xmlMeteoGrid.gridStructure().isFixedFields())
             {
-                yearList.removeAt(pos);
-                i = i - 1;
+                if ( !checkYearMeteoGridFixedFields(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
+                {
+                    yearList.removeAt(pos);
+                    i = i - 1;
+                }
+                else
+                {
+                    pos = pos + 1;
+                }
             }
             else
             {
-                pos = pos + 1;
+                // TO DO
             }
         }
     }

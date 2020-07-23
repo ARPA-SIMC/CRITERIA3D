@@ -313,7 +313,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     return true;
 }
 
-bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, QString fieldTmin, QString fieldTmax, QString fieldPrec, QString year, QString *error)
+bool checkYearMeteoGridFixedFields(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, QString fieldTmin, QString fieldTmax, QString fieldPrec, QString year, QString *error)
 {
 
     QSqlQuery qry(dbMeteo);
