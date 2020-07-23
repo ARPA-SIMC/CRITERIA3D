@@ -1049,27 +1049,51 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
             return;
         }
         int pos = 0;
-        QString fieldTmin = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMin);
-        QString fieldTmax = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMax);
-        QString fieldPrec = xmlMeteoGrid.getDailyVarField(dailyPrecipitation);
-        for (int i = 0; i<yearList.size(); i++)
+        if (xmlMeteoGrid.gridStructure().isFixedFields())
         {
-            if (xmlMeteoGrid.gridStructure().isFixedFields())
+            QString fieldTmin = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMin);
+            QString fieldTmax = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMax);
+            QString fieldPrec = xmlMeteoGrid.getDailyVarField(dailyPrecipitation);
+
+            for (int i = 0; i<yearList.size(); i++)
             {
-                if ( !checkYearMeteoGridFixedFields(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
-                {
-                    yearList.removeAt(pos);
-                    i = i - 1;
-                }
-                else
-                {
-                    pos = pos + 1;
-                }
-            }
-            else
+
+                    if ( !checkYearMeteoGridFixedFields(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
+                    {
+                        yearList.removeAt(pos);
+                        i = i - 1;
+                    }
+                    else
+                    {
+                        pos = pos + 1;
+                    }
+             }
+        }
+        else
+        {
+            int varCodeTmin = xmlMeteoGrid.getDailyVarCode(dailyAirTemperatureMin);
+            int varCodeTmax = xmlMeteoGrid.getDailyVarCode(dailyAirTemperatureMax);
+            int varCodePrec = xmlMeteoGrid.getDailyVarCode(dailyPrecipitation);
+            if (varCodeTmin == NODATA || varCodeTmax == NODATA || varCodePrec == NODATA)
             {
-                // TO DO
+                error = "Variable not existing";
+                QMessageBox::critical(nullptr, "Error!", error);
+                return;
             }
+
+            for (int i = 0; i<yearList.size(); i++)
+            {
+
+                    if ( !checkYearMeteoGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, varCodeTmin, varCodeTmax, varCodePrec, yearList[i], &error))
+                    {
+                        yearList.removeAt(pos);
+                        i = i - 1;
+                    }
+                    else
+                    {
+                        pos = pos + 1;
+                    }
+             }
         }
     }
     else
