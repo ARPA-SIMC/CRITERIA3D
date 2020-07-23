@@ -1195,7 +1195,7 @@ void Crit3DCropWidget::updateMeteoPointValues()
 
         if (!xmlMeteoGrid.gridStructure().isFixedFields())
         {
-            if (!xmlMeteoGrid.loadGridDailyData(&error, QString::fromStdString(myCase.meteoPoint.id), firstDate, lastDate))
+            if (!xmlMeteoGrid.loadGridDailyData(&error, QString::fromStdString(myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
             {
                 error = "Missing observed data";
                 QMessageBox::critical(nullptr, "Error!", error);
@@ -1204,7 +1204,7 @@ void Crit3DCropWidget::updateMeteoPointValues()
         }
         else
         {
-            if (!xmlMeteoGrid.loadGridDailyDataFixedFields(&error, QString::fromStdString(myCase.meteoPoint.id), firstDate, lastDate))
+            if (!xmlMeteoGrid.loadGridDailyDataFixedFields(&error, QString::fromStdString(myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
             {
                 error = "Missing observed data";
                 QMessageBox::critical(nullptr, "Error!", error);
