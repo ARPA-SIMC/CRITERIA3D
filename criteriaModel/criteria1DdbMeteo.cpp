@@ -505,7 +505,9 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     }
 
     // check consecutive missing days (1 missing day allowed for temperature)
-    statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3' ORDER BY `%2`").arg(tableD).arg(fieldTime).arg(year);
+    statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3' AND "
+                        "( VariableCode = '%4' OR VariableCode = '%5' OR VariableCode = '%6') "
+                        "ORDER BY `%2`").arg(tableD).arg(fieldTime).arg(year).arg(varCodeTmin).arg(varCodeTmax).arg(varCodePrec);
     if( !qry.exec(statement) )
     {
         *error = qry.lastError().text();
@@ -520,7 +522,9 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     }
 
     QDate date;
-    QDate previousDate(year.toInt()-1, 12, 31);
+    QDate previousDateTmin(year.toInt()-1, 12, 31);
+    QDate previousDateTmax(year.toInt()-1, 12, 31);
+    QDate previousDatePrec(year.toInt()-1, 12, 31);
     QDate lastDate(year.toInt(), 12, 31);
     float tmin = NODATA;
     float tmax = NODATA;
@@ -533,7 +537,8 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     float tmax_max = TMAX_MAX.toFloat();
     float prec_min = PREC_MIN.toFloat();
 
-    int invalidTemp = 0;
+    int invalidTempMin = 0;
+    int invalidTempMax = 0;
     int invalidPrec = 0;
 
     do
@@ -544,67 +549,99 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
         if (variableCode == varCodeTmin)
         {
             getValue(qry.value("Value"), &tmin);
-        }
-        else if (variableCode == varCodeTmax)
-        {
-            getValue(qry.value("Value"), &tmax);
-        }
-        else if (variableCode == varCodePrec)
-        {
-            getValue(qry.value("Value"), &prec);
-        }
-
-        // 2 days missing
-        if (previousDate.daysTo(date) > (MAX_MISSING_CONSECUTIVE_DAYS_T+1))
-        {
-            *error = "incomplete year, missing more than 1 consecutive days";
-            return false;
-        }
-        // 1 day missing, the next one invalid temp
-        if ( (previousDate.daysTo(date) == (MAX_MISSING_CONSECUTIVE_DAYS_T+1)) && (tmin < tmin_min || tmin > tmin_max || tmax < tmax_min || tmax > tmax_max ) )
-        {
-            *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
-            return false;
-        }
-        // no day missing, check valid temp
-        if (tmin < tmin_min || tmin > tmin_max || tmax < tmax_min || tmax > tmax_max )
-        {
-            invalidTemp = invalidTemp + 1;
-            if (invalidTemp > 1)
+            // 2 days missing
+            if (previousDateTmin.daysTo(date) > (MAX_MISSING_CONSECUTIVE_DAYS_T+1))
+            {
+                *error = "incomplete year, missing more than 1 consecutive days";
+                return false;
+            }
+            // 1 day missing, the next one invalid temp
+            if ( (previousDateTmin.daysTo(date) == (MAX_MISSING_CONSECUTIVE_DAYS_T+1)) && (tmin < tmin_min || tmin > tmin_max) )
             {
                 *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
                 return false;
             }
-        }
-        else
-        {
-            invalidTemp = 0;
-        }
-
-        // check valid prec
-        if (prec < prec_min )
-        {
-            invalidPrec = invalidPrec + previousDate.daysTo(date);
-            // 7 day missing, the next one invalid temp
-            if ( invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC )
+            // no day missing, check valid temp
+            if (tmin < tmin_min || tmin > tmin_max)
             {
-                 *error = "incomplete year, missing valid data (prec) more than 7 consecutive days";
-                 return false;
+                invalidTempMin = invalidTempMin + 1;
+                if (invalidTempMin > 1)
+                {
+                    *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
+                    return false;
+                }
             }
+            else
+            {
+                invalidTempMin = 0;
+            }
+            previousDateTmin = date;
         }
-        else
+        else if (variableCode == varCodeTmax)
         {
-            invalidPrec = 0;
+            getValue(qry.value("Value"), &tmax);
+            // 2 days missing
+            if (previousDateTmax.daysTo(date) > (MAX_MISSING_CONSECUTIVE_DAYS_T+1))
+            {
+                *error = "incomplete year, missing more than 1 consecutive days";
+                return false;
+            }
+            // 1 day missing, the next one invalid temp
+            if ( (previousDateTmax.daysTo(date) == (MAX_MISSING_CONSECUTIVE_DAYS_T+1)) && (tmax < tmax_min || tmax > tmax_max) )
+            {
+                *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
+                return false;
+            }
+            // no day missing, check valid temp
+            if (tmax < tmax_min || tmax > tmax_max)
+            {
+                invalidTempMax = invalidTempMax + 1;
+                if (invalidTempMax > 1)
+                {
+                    *error = "incomplete year, missing valid data (temp) more than 1 consecutive days";
+                    return false;
+                }
+            }
+            else
+            {
+                invalidTempMax = 0;
+            }
+            previousDateTmax = date;
         }
-        previousDate = date;
+        else if (variableCode == varCodePrec)
+        {
+            getValue(qry.value("Value"), &prec);
+            // check valid prec
+            if (prec < prec_min )
+            {
+                invalidPrec = invalidPrec + previousDatePrec.daysTo(date);
+                // 7 day missing, the next one invalid temp
+                if ( invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC )
+                {
+                     *error = "incomplete year, missing valid data (prec) more than 7 consecutive days";
+                     return false;
+                }
+            }
+            else
+            {
+                invalidPrec = 0;
+            }
+            previousDatePrec = date;
+        }
 
     }
     while(qry.next());
 
-    // check last day (temp)
-    if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_T || (date.daysTo(lastDate) == MAX_MISSING_CONSECUTIVE_DAYS_T && invalidTemp > 0) )
+    // check last day (tempMin)
+    if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_T || (date.daysTo(lastDate) == MAX_MISSING_CONSECUTIVE_DAYS_T && invalidTempMin > 0) )
     {
-        *error = "incomplete year, missing more than 1 consecutive days (temp)";
+        *error = "incomplete year, missing more than 1 consecutive days (tempMin)";
+        return false;
+    }
+    // check last day (tempMax)
+    if (date.daysTo(lastDate) > MAX_MISSING_CONSECUTIVE_DAYS_T || (date.daysTo(lastDate) == MAX_MISSING_CONSECUTIVE_DAYS_T && invalidTempMax > 0) )
+    {
+        *error = "incomplete year, missing more than 1 consecutive days (tempMax)";
         return false;
     }
 
