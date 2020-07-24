@@ -476,9 +476,9 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     // count valid temp and prec
     QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE_FORMAT(`%1`,'%Y') = '%3'").arg(fieldTime).arg(tableD).arg(year);
     statement = statement + QString(" AND ( (VariableCode = '%1' AND Value >= '%2' AND Value <= '%3')").arg(varCodeTmin).arg(TMIN_MIN).arg(TMIN_MAX);
-    statement = statement + QString(" OR ( VariableCode = '%1' AND Value >= '%2' AND Value <= '%3') ").arg(varCodeTmax).arg(TMAX_MIN).arg(TMAX_MAX).arg(varCodePrec).arg(PREC_MIN);
+    statement = statement + QString(" OR ( VariableCode = '%1' AND Value >= '%2' AND Value <= '%3') ").arg(varCodeTmax).arg(TMAX_MIN).arg(TMAX_MAX);
     statement = statement + QString(" OR ( VariableCode = '%1' AND Value >= '%2') )").arg(varCodePrec).arg(PREC_MIN);
-
+//qDebug() << "statement " << statement;
     if( !qry.exec(statement) )
     {
         *error = qry.lastError().text();

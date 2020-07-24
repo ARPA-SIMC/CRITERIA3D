@@ -1243,7 +1243,7 @@ void Crit3DCropWidget::updateMeteoPointValues()
             }
         }
         float tmin, tmax, tavg, prec, waterDepth;
-        for (int i = 0; i< firstDate.daysTo(lastDate)+1; i++)
+        for (int i = 0; i < firstDate.daysTo(QDate(lastDate.year(),12,31))+1; i++)
         {
             Crit3DDate myDate = getCrit3DDate(firstDate.addDays(i));
             tmin = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
