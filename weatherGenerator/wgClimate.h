@@ -20,7 +20,7 @@
 
     bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin, float *inputTMax,
                           float *inputPrec, float precThreshold, float minPrecData,
-                          TweatherGenClimate* wGen, bool writeOutput, QString outputFileName, float* monthlyPrecipitation);
+                          TweatherGenClimate* wGen, bool writeOutput,bool outputForStats, QString outputFileName, float* monthlyPrecipitation);
 
 #endif // WGCLIMATE_H
 

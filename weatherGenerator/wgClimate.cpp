@@ -162,7 +162,7 @@ bool computeWGClimate(int nrDays, Crit3DDate inputFirstDate, const std::vector<f
 
 bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin, float *inputTMax,
                       float *inputPrec, float precThreshold, float minPrecData,
-                      TweatherGenClimate* wGen, bool writeOutput, QString outputFileName, float* monthlyPrecipitation)
+                      TweatherGenClimate* wGen, bool writeOutput,bool outputForStats, QString outputFileName, float* monthlyPrecipitation)
 {
     long nValidData = 0;
     float dataPresence = 0;
@@ -269,30 +269,60 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
 
     if (writeOutput)
     {
-        cout << "...Write WG climate file -->" << outputFileName.toStdString() << "\n";
-
-        QFile file(outputFileName);
-        file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
-
-        QTextStream stream( &file );
-        stream << "----------------- CLIMATE ----------------\n";
-        for (m=0; m<12; m++)
+        if (!outputForStats)
         {
-            stream << "month = " << m +1 << endl;
-            stream << "wGen->monthly.monthlyTmin = " << wGen->monthly.monthlyTmin[m] << endl;
-            stream << "wGen->monthly.monthlyTmax = " << wGen->monthly.monthlyTmax[m] << endl;
-            stream << "wGen->monthly.sumPrec = " << wGen->monthly.sumPrec[m] << endl;
-            stream << "wGen->monthly.stDevTmin = " << wGen->monthly.stDevTmin[m] << endl;
-            stream << "wGen->monthly.stDevTmax = " << wGen->monthly.stDevTmax[m] << endl;
-            stream << "wGen->monthly.fractionWetDays = " << wGen->monthly.fractionWetDays[m] << endl;
-            stream << "wGen->monthly.probabilityWetWet = " << wGen->monthly.probabilityWetWet[m] << endl;
-            stream << "wGen->monthly.dw_Tmax = " << wGen->monthly.dw_Tmax[m] << endl;
-            stream << "wGen->monthly.monthlyTminDry = " << wGen->monthly.monthlyTminDry[m] << endl;
-            stream << "wGen->monthly.monthlyTmaxDry = " << wGen->monthly.monthlyTmaxDry[m] << endl;
-            stream << "wGen->monthly.monthlyTminWet = " << wGen->monthly.monthlyTminWet[m] << endl;
-            stream << "wGen->monthly.monthlyTmaxWet = " << wGen->monthly.monthlyTmaxWet[m] << endl;
+            cout << "...Write WG climate file -->" << outputFileName.toStdString() << "\n";
 
-            stream << "-------------------------------------------" << endl;
+            QFile file(outputFileName);
+            file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+
+            QTextStream stream( &file );
+            stream << "----------------- CLIMATE ----------------\n";
+            for (m=0; m<12; m++)
+            {
+                stream << "month = " << m +1 << endl;
+                stream << "wGen->monthly.monthlyTmin = " << wGen->monthly.monthlyTmin[m] << endl;
+                stream << "wGen->monthly.monthlyTmax = " << wGen->monthly.monthlyTmax[m] << endl;
+                stream << "wGen->monthly.sumPrec = " << wGen->monthly.sumPrec[m] << endl;
+                stream << "wGen->monthly.stDevTmin = " << wGen->monthly.stDevTmin[m] << endl;
+                stream << "wGen->monthly.stDevTmax = " << wGen->monthly.stDevTmax[m] << endl;
+                stream << "wGen->monthly.fractionWetDays = " << wGen->monthly.fractionWetDays[m] << endl;
+                stream << "wGen->monthly.probabilityWetWet = " << wGen->monthly.probabilityWetWet[m] << endl;
+                stream << "wGen->monthly.dw_Tmax = " << wGen->monthly.dw_Tmax[m] << endl;
+                stream << "wGen->monthly.monthlyTminDry = " << wGen->monthly.monthlyTminDry[m] << endl;
+                stream << "wGen->monthly.monthlyTmaxDry = " << wGen->monthly.monthlyTmaxDry[m] << endl;
+                stream << "wGen->monthly.monthlyTminWet = " << wGen->monthly.monthlyTminWet[m] << endl;
+                stream << "wGen->monthly.monthlyTmaxWet = " << wGen->monthly.monthlyTmaxWet[m] << endl;
+
+                stream << "-------------------------------------------" << endl;
+            }
+        }
+        else
+        {
+            cout << "...Write WG climate file -->" << outputFileName.toStdString() << "\n";
+
+            QFile file(outputFileName);
+            file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
+
+            QTextStream stream( &file );
+            for (m=0; m<12; m++)
+            {
+                stream << m +1 << endl;
+                stream <<  wGen->monthly.monthlyTmin[m] << endl;
+                stream <<  wGen->monthly.monthlyTmax[m] << endl;
+                stream <<  wGen->monthly.sumPrec[m] << endl;
+                stream <<  wGen->monthly.stDevTmin[m] << endl;
+                stream <<  wGen->monthly.stDevTmax[m] << endl;
+                stream <<  wGen->monthly.fractionWetDays[m] << endl;
+                stream <<  wGen->monthly.probabilityWetWet[m] << endl;
+                stream <<  wGen->monthly.dw_Tmax[m] << endl;
+                stream <<  wGen->monthly.monthlyTminDry[m] << endl;
+                stream <<  wGen->monthly.monthlyTmaxDry[m] << endl;
+                stream <<  wGen->monthly.monthlyTminWet[m] << endl;
+                stream <<  wGen->monthly.monthlyTmaxWet[m] << endl;
+
+
+            }
         }
     }
 

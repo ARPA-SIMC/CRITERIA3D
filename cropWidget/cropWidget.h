@@ -4,6 +4,9 @@
 #ifndef MAX_YEARS
     #define MAX_YEARS 10
 #endif
+#ifndef DBMETEOGRID_H
+    #include "dbMeteoGrid.h"
+#endif
 
     #include <QWidget>
     #include <QComboBox>
@@ -70,6 +73,8 @@
             double meteoLatBackUp;
             QStringList yearList;
             bool onlyOneYear;
+            bool isXmlMeteoGrid;
+            Crit3DMeteoGridDbHandler xmlMeteoGrid;
 
             std::vector<Crit1DUnit> unitList;
 

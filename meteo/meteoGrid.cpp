@@ -413,6 +413,24 @@ bool Crit3DMeteoGrid::findMeteoPointFromId(unsigned* row, unsigned* col, const s
     return false;
 }
 
+bool Crit3DMeteoGrid::getLatFromId(std::string id, double* lat)
+{
+    unsigned i,j;
+
+    for (i = 0; i < unsigned(_gridStructure.header().nrRows); i++)
+    {
+        for (j = 0; j < unsigned(_gridStructure.header().nrCols); j++)
+        {
+            if (_meteoPoints[i][j]->id == id)
+            {
+                *lat = _meteoPoints[i][j]->latitude;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string* id)
 {
     if (row < _gridStructure.header().nrRows && col < _gridStructure.header().nrCols)

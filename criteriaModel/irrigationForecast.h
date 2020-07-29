@@ -13,9 +13,13 @@
     #ifndef QDATETIME_H
         #include <QDate>
     #endif
+    #ifndef DBMETEOGRID_H
+        #include "dbMeteoGrid.h"
+    #endif
 
 
-    class Crit1DIrrigationForecast
+
+class Crit1DIrrigationForecast
     {
 
     public:
@@ -25,6 +29,9 @@
         QSqlDatabase dbMeteo;
         QSqlDatabase dbForecast;
         QSqlDatabase dbOutput;
+
+        Crit3DMeteoGridDbHandler* observedMeteoGrid;
+        Crit3DMeteoGridDbHandler* forecastMeteoGrid;
 
         bool isXmlGrid;
 

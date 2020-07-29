@@ -40,6 +40,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
     Crit3DDate inputFirstDate;
     TweatherGenClimate weatherGenClimate;
     QString outputFileName;
+    QString outputFileName2;
 
 
     float *inputTMin = nullptr;
@@ -160,7 +161,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
         }
         if(computeStatistics)
         {
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,false,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
             //for (int iMonth=0;iMonth<12;iMonth++)
                 //printf("%d  %d  %f\n",iStation,iMonth,monthlySimulatedAveragePrecipitation[iStation]);
             //getchar();
@@ -184,6 +185,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
         for (int iStation=0;iStation<nrStations;iStation++)
         {
             outputFileName = "outputData/wgClimate_station_" + QString::number(iStation) + ".txt";
+            outputFileName2 = "outputData/statistics_wgClimate_station_" + QString::number(iStation) + ".txt";
             inputFirstDate.day = obsDataD[iStation][0].date.day;
             inputFirstDate.month = obsDataD[iStation][0].date.month;
             inputFirstDate.year = obsDataD[iStation][0].date.year;
@@ -194,7 +196,8 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 inputTMax[i] = obsDataD[iStation][i].tMax;
                 inputPrec[i] = obsDataD[iStation][i].prec;
             }
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlyClimateAveragePrecipitation[iStation]);
         }
         free(inputTMin);
         free(inputTMax);
@@ -257,6 +260,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
         for (int iStation=0;iStation<nrStations;iStation++)
         {
             outputFileName = "outputData/wgSimulation_station_" + QString::number(iStation) + ".txt";
+            outputFileName2 = "outputData/statistics_wgSimulation_station_" + QString::number(iStation) + ".txt";
             counter = 0;
             for (int i=0;i<nrDays;i++)
             {
@@ -275,7 +279,8 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 counter++;
             }
 
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlySimulatedAveragePrecipitation[iStation]);
         }
         free(inputTMin);
         free(inputTMax);
@@ -418,6 +423,42 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
         }
     }
     fclose(fp);
+
+    fp = fopen("outputData/correlationMatricesStats.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        double maxCorrelationAnomaly = 0;
+        int occurrenceAnomaly[21];
+        for (int i=0;i<21;i++)
+        {
+            occurrenceAnomaly[i] = 0;
+        }
+        fprintf(fp,"month %d \n",iMonth+1);
+        double value = -0.095;
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                maxCorrelationAnomaly = MAXVALUE(maxCorrelationAnomaly,fabs(correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]));
+                int counter = 0;
+                value = -0.095;
+                while (correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]> value && counter<20)
+                {
+                    value += 0.01;
+                    counter++;
+                }
+                ++occurrenceAnomaly[counter];
+            }
+        }
+        fprintf(fp,"maxValue %f \n", maxCorrelationAnomaly);
+        for (int i=0;i<21;i++)
+        {
+            fprintf(fp,"%f,%d \n",-0.1 + i*0.01, occurrenceAnomaly[i]);
+        }
+    }
+
+    fclose(fp);
+
     for (int iMonth=0;iMonth<12;iMonth++)
     {
         for (int i=0;i<nrStations;i++)

@@ -795,6 +795,28 @@ bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError)
        return true;
 }
 
+bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError, QString connectionName)
+{
+
+    if (_connection.provider.toUpper() == "MYSQL")
+    {
+        _db = QSqlDatabase::addDatabase("QMYSQL", connectionName);
+    }
+
+    _db.setHostName(_connection.server);
+    _db.setDatabaseName(_connection.name);
+    _db.setUserName(_connection.user);
+    _db.setPassword(_connection.password);
+
+    if (!_db.open())
+    {
+       *myError = "Connection with database fail.\n" + _db.lastError().text();
+       return false;
+    }
+    else
+       return true;
+}
+
 
 void Crit3DMeteoGridDbHandler::closeDatabase()
 {
@@ -825,8 +847,93 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
         tableCellsProp = qry.value(0).toString();
     }
 
-    //qry.prepare( "SELECT * FROM CellsProperties ORDER BY Code" );
     QString statement = QString("SELECT * FROM `%1` ORDER BY Code").arg(tableCellsProp);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        bool hasHeight = true;
+        while (qry.next())
+        {
+
+            if (! getValue(qry.value("Code"), &code))
+            {
+                *myError = "Missing data: Code";
+                return false;
+            }
+
+            // facoltativa
+            if (! getValue(qry.value("Name"), &name))
+            {
+                name = code;
+            }
+
+            if (! getValue(qry.value("Row"), &row))
+            {
+                *myError = "Missing data: Row";
+                return false;
+            }
+
+            if (! getValue(qry.value("Col"), &col))
+            {
+                *myError = "Missing data: Col";
+                return false;
+            }
+
+            // height: facoltativa
+            height = NODATA;
+            if (hasHeight)
+            {
+                if (! qry.value("Height").isValid())
+                    hasHeight = false;
+                else
+                    getValue(qry.value("Height"), &height);
+            }
+
+            if (! getValue(qry.value("Active"), &active))
+            {
+                *myError = "Missing data: Active";
+                return false;
+            }
+
+            if (row < _meteoGrid->gridStructure().header().nrRows
+                && col < _meteoGrid->gridStructure().header().nrCols)
+            {
+                _meteoGrid->fillMeteoPoint(row, col, code.toStdString(), name.toStdString(), height, active);
+            }
+            else
+            {
+                *myError = "Row or Col > nrRows or nrCols";
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *myError, QString idMeteo)
+{
+    QSqlQuery qry(_db);
+    int row, col, active, height;
+    QString code, name, tableCellsProp;
+
+    qry.prepare( "SHOW TABLES LIKE '%ells%roperties'" );
+    if( !qry.exec() )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        qry.next();
+        tableCellsProp = qry.value(0).toString();
+    }
+
+    QString statement = QString("SELECT * FROM `%1` WHERE `Code` = '%2'").arg(tableCellsProp).arg(idMeteo);
 
     if( !qry.exec(statement) )
     {
@@ -2180,6 +2287,86 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridHourlyFF(QString *myError, QSt
         }
     }
 
+    return true;
+}
+
+/*
+bool Crit3DMeteoGridDbHandler::tableIdDailyExists(QString *myError, QString meteoPoint)
+{
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
+
+    QString statement = QString("SHOW TABLES LIKE '%1'").arg(tableD);
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        if (qry.size() == 0)
+        {
+            return false;
+        }
+        return true;
+    }
+}
+*/
+
+
+bool Crit3DMeteoGridDbHandler::idDailyList(QString *myError, QStringList* idMeteoList)
+{
+    QSqlQuery qry(_db);
+
+    QString statement = QString("SHOW TABLES LIKE '%1%%2'").arg(_tableDaily.prefix).arg(_tableDaily.postFix);
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        while( qry.next() )
+        {
+            QString tableName = qry.value(0).toString();
+            if (!_tableDaily.prefix.isEmpty())
+            {
+                tableName.remove(0,_tableDaily.prefix.size());
+            }
+            if (!_tableDaily.postFix.isEmpty())
+            {
+                tableName.remove(tableName.size()-_tableDaily.postFix.size(),_tableDaily.postFix.size());
+            }
+            idMeteoList->append(tableName);
+        }
+    }
+    return true;
+}
+
+bool Crit3DMeteoGridDbHandler::getYearList(QString *myError, QString meteoPoint, QStringList* yearList)
+{
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
+
+    QString statement = QString("SELECT `%1`, DATE_FORMAT(`%1`,'%Y') as Year FROM `%2` ORDER BY `%1`").arg(_tableDaily.fieldTime).arg(tableD);
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        QString year;
+        while (qry.next())
+        {
+            getValue(qry.value("Year"), &year);
+            if (year != "" && !yearList->contains(year))
+            {
+                yearList->append(year);
+            }
+        }
+
+    }
     return true;
 }
 
