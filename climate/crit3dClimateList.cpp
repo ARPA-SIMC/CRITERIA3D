@@ -217,22 +217,9 @@ void Crit3DClimateList::parserElaboration()
              _listClimateElab.replace(i, "NULL");
         }
 
-        meteoVariable var;
-        if (words[pos] == "")
-        {
-            var = noMeteoVar;
-        }
-        else
-        {
-            try
-            {
-                var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, words[pos].toStdString());
-            }
-            catch (const std::out_of_range& )
-            {
-              var = noMeteoVar;
-            }
-        }
+        meteoVariable var = noMeteoVar;
+        if (words[pos] != "")
+            var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, words[pos].toStdString());
 
         _listVariable.push_back(var);
 
