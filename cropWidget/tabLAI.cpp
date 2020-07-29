@@ -141,7 +141,7 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
 
         // display only interval firstYear lastYear
         if (myDate.year >= firstYear)
-        {
+        {         
             x.setDate(QDate(myDate.year, myDate.month, myDate.day));
             doy = getDoyFromDate(myDate);
             // ET0

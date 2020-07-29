@@ -74,6 +74,7 @@
             QStringList yearList;
             bool onlyOneYear;
             bool isXmlMeteoGrid;
+            QDate lastDBMeteoDate;
             Crit3DMeteoGridDbHandler xmlMeteoGrid;
 
             std::vector<Crit1DUnit> unitList;

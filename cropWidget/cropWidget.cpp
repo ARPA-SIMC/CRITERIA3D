@@ -1055,7 +1055,8 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
             QString fieldTmax = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMax);
             QString fieldPrec = xmlMeteoGrid.getDailyVarField(dailyPrecipitation);
 
-            for (int i = 0; i<yearList.size(); i++)
+            // last year can be incomplete
+            for (int i = 0; i<yearList.size()-1; i++)
             {
 
                     if ( !checkYearMeteoGridFixedFields(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
@@ -1067,7 +1068,9 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
                     {
                         pos = pos + 1;
                     }
-             }
+            }
+            // store last Date
+            getLastDateGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &lastDBMeteoDate, &error);
         }
         else
         {
@@ -1081,7 +1084,8 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
                 return;
             }
 
-            for (int i = 0; i<yearList.size(); i++)
+            // last year can be incomplete
+            for (int i = 0; i<yearList.size()-1; i++)
             {
 
                     if ( !checkYearMeteoGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, varCodeTmin, varCodeTmax, varCodePrec, yearList[i], &error))
@@ -1094,6 +1098,8 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
                         pos = pos + 1;
                     }
              }
+            // store last Date
+            getLastDateGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &lastDBMeteoDate, &error);
         }
     }
     else
@@ -1114,7 +1120,9 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
         }
 
         int pos = 0;
-        for (int i = 0; i<yearList.size(); i++)
+
+        // last year can be incomplete
+        for (int i = 0; i<yearList.size()-1; i++)
         {
             if ( !checkYear(&dbMeteo, tableMeteo, yearList[i], &error))
             {
@@ -1126,6 +1134,8 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
                 pos = pos + 1;
             }
         }
+        // store last Date
+        getLastDate(&dbMeteo, tableMeteo, yearList[yearList.size()-1], &lastDBMeteoDate, &error);
     }
     if (yearList.size() == 1)
     {

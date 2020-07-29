@@ -313,6 +313,26 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     return true;
 }
 
+bool getLastDate(QSqlDatabase* dbMeteo, QString table, QString year, QDate* date, QString *error)
+{
+    *error = "";
+
+    QString queryString = "SELECT * FROM '" + table +"'" + "WHERE strftime('%Y',date) = '" + year +"' ORDER BY date DESC";
+    QSqlQuery query = dbMeteo->exec(queryString);
+
+    query.first();
+    if (! query.isValid())
+    {
+        *error = query.lastError().text();
+        return false;
+    }
+    else
+    {
+        getValue(query.value("date"), date);
+        return true;
+    }
+}
+
 bool checkYearMeteoGridFixedFields(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, QString fieldTmin, QString fieldTmax, QString fieldPrec, QString year, QString *error)
 {
 
@@ -456,6 +476,25 @@ bool checkYearMeteoGridFixedFields(QSqlDatabase dbMeteo, QString tableD, QString
     }
 
     return true;
+}
+
+bool getLastDateGrid(QSqlDatabase dbMeteo, QString table, QString fieldTime, QString year, QDate* date, QString *error)
+{
+    *error = "";
+    QSqlQuery qry(dbMeteo);
+
+    QString statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3' ORDER BY `%2` DESC").arg(table).arg(fieldTime).arg(year);
+    if( !qry.exec(statement) )
+    {
+        *error = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        qry.first();
+        getValue(qry.value(fieldTime), date);
+        return true;
+    }
 }
 
 bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, int varCodeTmin, int varCodeTmax, int varCodePrec, QString year, QString *error)
