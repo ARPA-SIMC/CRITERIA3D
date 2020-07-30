@@ -73,6 +73,9 @@ TabLAI::TabLAI()
     seriesMaxTransp->attachAxis(axisYdx);
 
     chart->legend()->setVisible(true);
+    QFont legendFont = chart->legend()->font();
+    legendFont.setPointSize(11);
+    chart->legend()->setFont(legendFont);
     chart->legend()->setAlignment(Qt::AlignBottom);
     chart->setAcceptHoverEvents(true);
 
