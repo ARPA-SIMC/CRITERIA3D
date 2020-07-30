@@ -67,7 +67,7 @@ TabWaterContent::TabWaterContent()
     setLayout(mainLayout);
 }
 
-void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int lastYear, bool isVolumetricWaterContent)
+void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int lastYear, QDate lastDBMeteoDate, bool isVolumetricWaterContent)
 {
 
     FormInfo formInfo;
@@ -91,23 +91,24 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     int prevYear = firstYear - 1;
 
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
-    Crit3DDate lastDate = Crit3DDate(31, 12, lastYear);
+    Crit3DDate lastDate;
+    if (lastYear != lastDBMeteoDate.year())
+    {
+        lastDate = Crit3DDate(31, 12, lastYear);
+    }
+    else
+    {
+        lastDate = Crit3DDate(lastDBMeteoDate.day(), lastDBMeteoDate.month(), lastYear);
+    }
 
     // update axes and colorMap size
     QDateTime first(QDate(firstYear, 1, 1), QTime(0, 0, 0));
-    QDateTime last(QDate(lastYear, 12, 31), QTime(23, 0, 0));
+    QDateTime last(QDate(lastDate.year, lastDate.month, lastDate.day), QTime(23, 0, 0));
     double firstDouble = first.toTime_t();
     double lastDouble = last.toTime_t();
     graphic->xAxis->setRange(firstDouble, lastDouble);
-    QDateTime myDate = first;
-    unsigned int numberDays = 0;
 
-    while (myDate.date().year() <= last.date().year())
-    {
-        numberDays = numberDays + myDate.date().daysInYear();
-        myDate.setDate(QDate(myDate.date().year()+1, 1, 1));
-    }
-    nx = numberDays;
+    nx = first.date().daysTo(last.date())+1;
     ny = (nrLayers-1);
 
     colorMap->data()->setSize(nx, ny);
