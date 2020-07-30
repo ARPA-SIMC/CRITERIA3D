@@ -48,8 +48,7 @@ TabIrrigation::TabIrrigation()
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
     axisXvirtual->setTickCount(13);
 
-    QFont font = axisY->titleFont();
-    font.setPointSize(9);
+    QFont font = axisX->titleFont();
     font.setBold(true);
     axisY->setTitleText("LAI [m2 m-2] - Crop transpiration [mm]");
     axisY->setTitleFont(font);
@@ -57,6 +56,7 @@ TabIrrigation::TabIrrigation()
     axisY->setTickCount(9);
 
     axisYdx->setTitleText("Prec - Irrigation [mm]");
+    axisYdx->setTitleFont(font);
     axisYdx->setRange(0,40);
     axisYdx->setTickCount(9);
 

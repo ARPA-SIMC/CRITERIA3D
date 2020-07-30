@@ -47,9 +47,7 @@ TabLAI::TabLAI()
     seriesMaxEvap->attachAxis(axisX);
     seriesMaxTransp->attachAxis(axisX);
 
-    QFont font = axisY->titleFont();
-    font.setPointSize(9);
-    font.setBold(true);
+    QFont font = axisX->titleFont();
 
     axisY->setTitleText("Leaf Area Index [m2 m-2]");
     axisY->setTitleFont(font);
