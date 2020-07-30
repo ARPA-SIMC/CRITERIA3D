@@ -56,6 +56,7 @@
         float frequencyPositive(std::vector<float> values, int nValue);
         float trend(std::vector<float> values, int nValues, float myFirstYear);
         float mannKendall(std::vector<float> values, int nValues);
+        bool rollingAverage(double* arrayInput, int sizeArray, int lag,double* arrayOutput);
 
         double meanNoCheck(double *myList, int nrList);
         double varianceNoCheck(double *myList, int nrList);
