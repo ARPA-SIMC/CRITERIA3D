@@ -96,7 +96,7 @@ TabLAI::TabLAI()
     setLayout(mainLayout);
 }
 
-void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, const std::vector<soil::Crit3DLayer> &soilLayers)
+void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
     unsigned int nrLayers = unsigned(soilLayers.size());
     double totalSoilDepth = 0;
@@ -108,7 +108,15 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
     std::string error;
 
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
-    Crit3DDate lastDate = Crit3DDate(31, 12, lastYear);
+    Crit3DDate lastDate;
+    if (lastYear != lastDBMeteoDate.year())
+    {
+        lastDate = Crit3DDate(31, 12, lastYear);
+    }
+    else
+    {
+        lastDate = Crit3DDate(lastDBMeteoDate.day(), lastDBMeteoDate.month(), lastYear);
+    }
     double tmin;
     double tmax;
     QDateTime x;
@@ -155,7 +163,7 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
 
     // update x axis
     QDate first(firstYear, 1, 1);
-    QDate last(lastYear, 12, 31);
+    QDate last(lastDate.year, lastDate.month, lastDate.day);
     axisX->setMin(QDateTime(first, QTime(0,0,0)));
     axisX->setMax(QDateTime(last, QTime(0,0,0)));
 

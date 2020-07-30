@@ -1628,7 +1628,7 @@ void Crit3DCropWidget::updateTabLAI()
 {
     if (!myCase.myCrop.idCrop.empty() && !myCase.meteoPoint.id.empty())
     {
-        tabLAI->computeLAI(&(myCase.myCrop), &(myCase.meteoPoint), firstYearListComboBox.currentText().toInt(), lastYearListComboBox.currentText().toInt(), myCase.soilLayers);
+        tabLAI->computeLAI(&(myCase.myCrop), &(myCase.meteoPoint), firstYearListComboBox.currentText().toInt(), lastYearListComboBox.currentText().toInt(), lastDBMeteoDate, myCase.soilLayers);
     }
 }
 
