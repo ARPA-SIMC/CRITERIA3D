@@ -106,7 +106,7 @@ TabIrrigation::TabIrrigation()
 }
 
 
-void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int lastYear)
+void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int lastYear, QDate lastDBMeteoDate)
 {
     FormInfo formInfo;
 
@@ -119,7 +119,15 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
     std::string error;
 
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
-    Crit3DDate lastDate = Crit3DDate(31, 12, lastYear);
+    Crit3DDate lastDate;
+    if (lastYear != lastDBMeteoDate.year())
+    {
+        lastDate = Crit3DDate(31, 12, lastYear);
+    }
+    else
+    {
+        lastDate = Crit3DDate(lastDBMeteoDate.day(), lastDBMeteoDate.month(), lastYear);
+    }
 
     axisX->clear();
     seriesLAI->clear();
@@ -182,7 +190,7 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
 
     // update virtual x axis
     QDate first(firstYear, 1, 1);
-    QDate last(lastYear, 12, 31);
+    QDate last(lastDate.year, lastDate.month, lastDate.day);
     axisXvirtual->setMin(QDateTime(first, QTime(0,0,0)));
     axisXvirtual->setMax(QDateTime(last, QTime(0,0,0)));
 

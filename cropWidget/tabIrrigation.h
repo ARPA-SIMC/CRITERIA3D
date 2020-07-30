@@ -11,7 +11,7 @@ class TabIrrigation : public QWidget
     Q_OBJECT
 public:
     TabIrrigation();
-    void computeIrrigation(Crit1DCase myCase, int firstYear, int lastYear);
+    void computeIrrigation(Crit1DCase myCase, int firstYear, int lastYear, QDate lastDBMeteoDate);
     void tooltipLAI(QPointF point, bool state);
     void tooltipMT(QPointF point, bool state);
     void tooltipRT(QPointF point, bool state);
