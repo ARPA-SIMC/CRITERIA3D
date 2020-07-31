@@ -8,6 +8,8 @@
         #include <QSqlDatabase>
     #endif
 
+    #include <vector>
+
     class Crit1DUnit
     {
     public:
@@ -21,11 +23,10 @@
         int idSoilNumber;
 
         Crit1DUnit();
-
-        bool load(QSqlDatabase* dbUnits, QString idCase, QString *error);
     };
 
-    bool openDbUnits(QString dbName, QSqlDatabase* dbUnits, QString* error);
+
+    bool loadUnitList(QString dbUnitsName, std::vector<Crit1DUnit> &unitList, QString &myError);
 
 
 #endif // CRITERIA1DUNIT_H

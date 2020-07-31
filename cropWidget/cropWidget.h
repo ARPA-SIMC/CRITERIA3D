@@ -15,13 +15,13 @@
     #include <QLabel>
     #include <QSqlDatabase>
 
-    #include "criteria1DCase.h"
+    #include "criteria1DSimulation.h"
     #include "tabLAI.h"
     #include "tabRootDepth.h"
     #include "tabRootDensity.h"
     #include "tabIrrigation.h"
     #include "tabWaterContent.h"
-    #include "criteria1DUnit.h"
+
 
     class Crit3DCropWidget : public QWidget
     {
