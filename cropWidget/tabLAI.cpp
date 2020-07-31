@@ -178,6 +178,11 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
     seriesMaxEvap->attachAxis(axisYdx);
     seriesMaxTransp->attachAxis(axisYdx);
 
+    foreach(QLegendMarker* marker, chart->legend()->markers())
+    {
+        QObject::connect(marker, &QLegendMarker::clicked, this, &TabLAI::handleMarkerClicked);
+    }
+
 }
 
 void TabLAI::tooltipLAI(QPointF point, bool state)
