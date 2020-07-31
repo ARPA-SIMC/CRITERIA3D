@@ -74,7 +74,7 @@ TabLAI::TabLAI()
 
     chart->legend()->setVisible(true);
     QFont legendFont = chart->legend()->font();
-    legendFont.setPointSize(10);
+    legendFont.setPointSize(8);
     legendFont.setBold(true);
     chart->legend()->setFont(legendFont);
     chart->legend()->setAlignment(Qt::AlignBottom);

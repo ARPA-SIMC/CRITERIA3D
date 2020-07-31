@@ -83,7 +83,7 @@ TabIrrigation::TabIrrigation()
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
     QFont legendFont = chart->legend()->font();
-    legendFont.setPointSize(10);
+    legendFont.setPointSize(8);
     legendFont.setBold(true);
     chart->legend()->setFont(legendFont);
     chartView->setRenderHint(QPainter::Antialiasing);

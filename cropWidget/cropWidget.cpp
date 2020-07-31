@@ -51,7 +51,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     // font
     QFont myFont = this->font();
-    myFont.setPointSize(9);
+    myFont.setPointSize(8);
     this->setFont(myFont);
 
     // layout
