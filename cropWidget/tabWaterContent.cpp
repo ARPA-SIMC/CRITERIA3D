@@ -175,6 +175,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     graphic->rescaleAxes();
 
     colorScale->axis()->setLabel(title);
+    colorScale->axis()->setLabelFont(QFont("Noto Sans",10,QFont::Bold));
     graphic->replot();
 }
 

@@ -14,10 +14,10 @@ TabRootDepth::TabRootDepth()
     chart->setTitle("Root Depth");
     chartView->setChart(chart);
     seriesRootDepth = new QLineSeries();
-    seriesRootDepth->setName("rooth depth");
+    seriesRootDepth->setName("rooth depth [m]");
     seriesRootDepth->setColor(QColor(Qt::red));
     seriesRootDepthMin = new QLineSeries();
-    seriesRootDepthMin->setName("root depht zero");
+    seriesRootDepthMin->setName("root depht zero [m]");
     seriesRootDepthMin->setColor(QColor(Qt::green));
     axisX = new QDateTimeAxis();
     axisY = new QValueAxis();
@@ -46,7 +46,8 @@ TabRootDepth::TabRootDepth()
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
     QFont legendFont = chart->legend()->font();
-    legendFont.setPointSize(11);
+    legendFont.setPointSize(10);
+    legendFont.setBold(true);
     chart->legend()->setFont(legendFont);
 
     chart->setAcceptHoverEvents(true);

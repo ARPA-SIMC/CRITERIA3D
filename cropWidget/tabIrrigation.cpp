@@ -24,8 +24,8 @@ TabIrrigation::TabIrrigation()
 
     seriesPrecIrr = new QBarSeries();
 
-    setPrec = new QBarSet("Precipitation");
-    setIrrigation = new QBarSet("Irrigation");
+    setPrec = new QBarSet("Precipitation [mm]");
+    setIrrigation = new QBarSet("Irrigation [mm]");
     setPrec->setColor(QColor(Qt::blue));
     setPrec->setBorderColor(QColor(Qt::blue));
     setIrrigation->setColor(QColor(Qt::cyan));
@@ -83,7 +83,8 @@ TabIrrigation::TabIrrigation()
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
     QFont legendFont = chart->legend()->font();
-    legendFont.setPointSize(11);
+    legendFont.setPointSize(10);
+    legendFont.setBold(true);
     chart->legend()->setFont(legendFont);
     chartView->setRenderHint(QPainter::Antialiasing);
     axisX->hide();
