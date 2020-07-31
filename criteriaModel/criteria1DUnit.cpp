@@ -3,7 +3,6 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVariant>
-#include <QUuid>
 
 
 Crit1DUnit::Crit1DUnit()

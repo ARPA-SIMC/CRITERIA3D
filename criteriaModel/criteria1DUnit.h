@@ -1,12 +1,13 @@
 #ifndef CRITERIA1DUNIT_H
 #define CRITERIA1DUNIT_H
 
-    #ifndef QSTRING_H
-        #include <QString>
-    #endif
-
+    #include <QString>
     #include <vector>
 
+    /*!
+    * \brief computation unit of Criteria1D
+    * \note Unit = distinct crop, soil, meteo
+    */
     class Crit1DUnit
     {
     public:
