@@ -45,6 +45,9 @@ TabRootDepth::TabRootDepth()
 
     chart->legend()->setVisible(true);
     chart->legend()->setAlignment(Qt::AlignBottom);
+    QFont legendFont = chart->legend()->font();
+    legendFont.setPointSize(11);
+    chart->legend()->setFont(legendFont);
 
     chart->setAcceptHoverEvents(true);
     m_tooltip = new Callout(chart);

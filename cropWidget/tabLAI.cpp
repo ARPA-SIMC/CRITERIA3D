@@ -47,9 +47,7 @@ TabLAI::TabLAI()
     seriesMaxEvap->attachAxis(axisX);
     seriesMaxTransp->attachAxis(axisX);
 
-    QFont font = axisY->titleFont();
-    font.setPointSize(9);
-    font.setBold(true);
+    QFont font = axisX->titleFont();
 
     axisY->setTitleText("Leaf Area Index [m2 m-2]");
     axisY->setTitleFont(font);
@@ -75,6 +73,9 @@ TabLAI::TabLAI()
     seriesMaxTransp->attachAxis(axisYdx);
 
     chart->legend()->setVisible(true);
+    QFont legendFont = chart->legend()->font();
+    legendFont.setPointSize(11);
+    chart->legend()->setFont(legendFont);
     chart->legend()->setAlignment(Qt::AlignBottom);
     chart->setAcceptHoverEvents(true);
 
@@ -176,6 +177,11 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
     seriesPotentialEvap->attachAxis(axisYdx);
     seriesMaxEvap->attachAxis(axisYdx);
     seriesMaxTransp->attachAxis(axisYdx);
+
+    foreach(QLegendMarker* marker, chart->legend()->markers())
+    {
+        QObject::connect(marker, &QLegendMarker::clicked, this, &TabLAI::handleMarkerClicked);
+    }
 
 }
 

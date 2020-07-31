@@ -22,6 +22,7 @@ TabWaterContent::TabWaterContent()
     double lastDouble = last.toTime_t();
     graphic->xAxis->setRange(firstDouble, lastDouble);
     graphic->xAxis->setVisible(true);
+    graphic->yAxis->setLabelFont(QFont("Noto Sans",10,QFont::Bold));
     graphic->yAxis->setLabel("Depth [m]");
     graphic->yAxis->setRangeReversed(true);
 
