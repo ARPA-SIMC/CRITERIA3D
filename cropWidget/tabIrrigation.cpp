@@ -142,14 +142,14 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
     if (setPrec!= nullptr)
     {
         seriesPrecIrr->remove(setPrec);
-        setPrec = new QBarSet("Precipitation");
+        setPrec = new QBarSet("Precipitation [mm]");
         setPrec->setColor(QColor(Qt::blue));
         setPrec->setBorderColor(QColor(Qt::blue));
     }
     if (setIrrigation!= nullptr)
     {
         seriesPrecIrr->remove(setIrrigation);
-        setIrrigation = new QBarSet("Irrigation");
+        setIrrigation = new QBarSet("Irrigation [mm]");
         setIrrigation->setColor(QColor(Qt::cyan));
         setIrrigation->setBorderColor(QColor(Qt::cyan));
     }
@@ -283,13 +283,13 @@ void TabIrrigation::tooltipPrecIrr(bool state, int index, QBarSet *barset)
         xDate = xDate.addDays(index);
 
         QString valueStr;
-        if (barset->label() == "Precipitation")
+        if (barset->label() == "Precipitation [mm]")
         {
-            valueStr = QString("%1 \nPrecipitationl %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
+            valueStr = QString("%1 \nPrecipitation [mm] %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
         }
-        else if (barset->label() == "Irrigation")
+        else if (barset->label() == "Irrigation [mm]")
         {
-            valueStr = QString("%1 \nIrrigation %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
+            valueStr = QString("%1 \nIrrigation [mm] %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(barset->at(index), 0, 'f', 1);
         }
 
         m_tooltip->setText(valueStr);
