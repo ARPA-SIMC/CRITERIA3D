@@ -4,9 +4,6 @@
     #ifndef QSTRING_H
         #include <QString>
     #endif
-    #ifndef QSQLDATABASE_H
-        #include <QSqlDatabase>
-    #endif
 
     #include <vector>
 
