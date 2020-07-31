@@ -1016,13 +1016,18 @@ namespace statistics
 
     bool rollingAverage(double* arrayInput, int sizeArray, int lag,double* arrayOutput)
     {
+        if (lag < 0 )
+        {
+            return false;
+        }
         for (int i=0;i<sizeArray;i++)
         {
-            arrayOutput[i] = NODATA;
+            arrayOutput[i] = 0;
         }
         int counter = 0;
         for (int i=0;i<sizeArray;i++)
         {
+            counter = 0;
             if (arrayInput[i] != NODATA)
             {
                 arrayOutput[i]+= arrayInput[i];
@@ -1030,14 +1035,14 @@ namespace statistics
             }
             if (lag > 0)
             {
-                for (int j=1; j<lag;j++)
+                for (int j=1; j<=lag;j++)
                 {
                     if (((i-j)>=0) && (arrayInput[i-j] != NODATA))
                     {
                         arrayOutput[i] += arrayInput[i-j];
                         counter++;
                     }
-                    if (((i+j) <sizeArray) && (arrayInput[i+j] != NODATA))
+                    if (((i+j) < sizeArray) && (arrayInput[i+j] != NODATA))
                     {
                         arrayOutput[i] += arrayInput[i+j];
                         counter++;
