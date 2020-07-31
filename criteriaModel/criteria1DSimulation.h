@@ -1,14 +1,11 @@
-#ifndef IRRIGATIONFORECAST_H
-#define IRRIGATIONFORECAST_H
+#ifndef CRITERIA1DSIMULATION_H
+#define CRITERIA1DSIMULATION_H
 
     #ifndef CRITERIA1DCASE_H
         #include "criteria1DCase.h"
     #endif
     #ifndef CRITERIA1DUNIT_H
         #include "criteria1DUnit.h"
-    #endif
-    #ifndef QSQLDATABASE_H
-        #include <QSqlDatabase>
     #endif
     #ifndef QDATETIME_H
         #include <QDate>
@@ -18,8 +15,7 @@
     #endif
 
 
-
-class Crit1DIrrigationForecast
+class Crit1DSimulation
     {
 
     public:
@@ -57,7 +53,7 @@ class Crit1DIrrigationForecast
         bool isShortTermForecast;
         int daysOfForecast;
 
-        Crit1DIrrigationForecast();
+        Crit1DSimulation();
 
         bool runModel(const Crit1DUnit &myUnit, QString &myError);
 
@@ -83,4 +79,4 @@ class Crit1DIrrigationForecast
     QString getId5Char(QString id);
 
 
-#endif // IRRIGATIONFORECAST_H
+#endif // CRITERIA1DSIMULATION_H

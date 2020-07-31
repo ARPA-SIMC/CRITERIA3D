@@ -1,13 +1,13 @@
 #ifndef CRITERIA1DUNIT_H
 #define CRITERIA1DUNIT_H
 
-    #ifndef QSTRING_H
-        #include <QString>
-    #endif
-    #ifndef QSQLDATABASE_H
-        #include <QSqlDatabase>
-    #endif
+    #include <QString>
+    #include <vector>
 
+    /*!
+    * \brief computation unit of Criteria1D
+    * \note Unit = distinct crop, soil, meteo
+    */
     class Crit1DUnit
     {
     public:
@@ -21,11 +21,10 @@
         int idSoilNumber;
 
         Crit1DUnit();
-
-        bool load(QSqlDatabase* dbUnits, QString idCase, QString *error);
     };
 
-    bool openDbUnits(QString dbName, QSqlDatabase* dbUnits, QString* error);
+
+    bool loadUnitList(QString dbUnitsName, std::vector<Crit1DUnit> &unitList, QString &myError);
 
 
 #endif // CRITERIA1DUNIT_H

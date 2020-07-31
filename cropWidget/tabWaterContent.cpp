@@ -22,7 +22,7 @@ TabWaterContent::TabWaterContent()
     double lastDouble = last.toTime_t();
     graphic->xAxis->setRange(firstDouble, lastDouble);
     graphic->xAxis->setVisible(true);
-    graphic->yAxis->setLabelFont(QFont("Noto Sans",10,QFont::Bold));
+    graphic->yAxis->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
     graphic->yAxis->setLabel("Depth [m]");
     graphic->yAxis->setRangeReversed(true);
 
@@ -175,6 +175,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     graphic->rescaleAxes();
 
     colorScale->axis()->setLabel(title);
+    colorScale->axis()->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
     graphic->replot();
 }
 

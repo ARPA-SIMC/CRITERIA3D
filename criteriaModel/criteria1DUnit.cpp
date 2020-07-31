@@ -3,7 +3,6 @@
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVariant>
-#include <QUuid>
 
 
 Crit1DUnit::Crit1DUnit()
@@ -20,42 +19,51 @@ Crit1DUnit::Crit1DUnit()
 }
 
 
-bool Crit1DUnit::load(QSqlDatabase* dbUnits, QString idCase, QString *error)
+// load computation units list
+bool loadUnitList(QString dbUnitsName, std::vector<Crit1DUnit> &unitList, QString &myError)
 {
-    QString queryString = "SELECT * FROM units WHERE ID_CASE='" + idCase +"'";
+    QSqlDatabase dbUnits = QSqlDatabase::addDatabase("QSQLITE", "units");
+    dbUnits.setDatabaseName(dbUnitsName);
+    if (! dbUnits.open())
+    {
+        myError = "dbUnits error: " + dbUnits.lastError().text();
+        return false;
+    }
 
-    QSqlQuery query = dbUnits->exec(queryString);
+    QString queryString = "SELECT DISTINCT ID_CASE, ID_CROP, ID_SOIL, ID_METEO FROM units";
+    queryString += " ORDER BY ID_CROP, ID_SOIL, ID_METEO";
+
+    QSqlQuery query = dbUnits.exec(queryString);
     query.last();
     if (! query.isValid())
     {
         if (query.lastError().nativeErrorCode() != "")
-            *error = "dbUnits error: " + query.lastError().nativeErrorCode() + " - " + query.lastError().text();
+        {
+            myError = "dbUnits error: " + query.lastError().nativeErrorCode() + " - " + query.lastError().text();
+        }
         else
-            *error = "Missing units";
+        {
+            myError = "Missing units";
+        }
         return false;
     }
 
-    idCase = query.value("ID_CASE").toString();
-    idCropClass = query.value("ID_CROP").toString();
-    idMeteo = query.value("ID_METEO").toString();
-    idForecast = query.value("ID_METEO").toString();
-    idSoilNumber = query.value("ID_SOIL").toInt();
+    int nrUnits = query.at() + 1;     // SQLITE doesn't support SIZE
+    unitList.clear();
+    unitList.resize(nrUnits);
 
-    return true;
-}
-
-
-bool openDbUnits(QString dbName, QSqlDatabase* dbUnits, QString* error)
-{
-
-    *dbUnits = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
-    dbUnits->setDatabaseName(dbName);
-
-    if (!dbUnits->open())
+    int i = 0;
+    query.first();
+    do
     {
-       *error = "Connection with database fail";
-       return false;
-    }
+        unitList[i].idCase = query.value("ID_CASE").toString();
+        unitList[i].idCropClass = query.value("ID_CROP").toString();
+        unitList[i].idMeteo = query.value("ID_METEO").toString();
+        unitList[i].idForecast = query.value("ID_METEO").toString();
+        unitList[i].idSoilNumber = query.value("ID_SOIL").toInt();
+        i++;
+
+    } while(query.next());
 
     return true;
 }

@@ -1,9 +1,9 @@
-#include "irrigationForecast.h"
+#include "criteria1DSimulation.h"
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "soilDbTools.h"
 #include "cropDbTools.h"
-#include "criteria1DdbMeteo.h"
+#include "criteria1DMeteo.h"
 #include "water1D.h"
 #include "utilities.h"
 
@@ -12,7 +12,7 @@
 #include <QVariant>
 #include <QSqlQuery>
 
-Crit1DIrrigationForecast::Crit1DIrrigationForecast()
+Crit1DSimulation::Crit1DSimulation()
 {
     isXmlGrid = false;
     isSeasonalForecast = false;
@@ -30,7 +30,7 @@ Crit1DIrrigationForecast::Crit1DIrrigationForecast()
 
 
 // update values of annual irrigation
-void Crit1DIrrigationForecast::updateSeasonalForecast(Crit3DDate myDate, int* index)
+void Crit1DSimulation::updateSeasonalForecast(Crit3DDate myDate, int* index)
 {
     bool isInsideSeason = false;
 
@@ -72,7 +72,7 @@ void Crit1DIrrigationForecast::updateSeasonalForecast(Crit3DDate myDate, int* in
 }
 
 
-bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myError)
+bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
 {
     myCase.idCase = myUnit.idCase;
 
@@ -150,7 +150,7 @@ bool Crit1DIrrigationForecast::runModel(const Crit1DUnit& myUnit, QString &myErr
 }
 
 
-bool Crit1DIrrigationForecast::setSoil(QString soilCode, QString &myError)
+bool Crit1DSimulation::setSoil(QString soilCode, QString &myError)
 {
     if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), soilTexture, &fittingOptions, &myError))
         return false;
@@ -166,7 +166,7 @@ bool Crit1DIrrigationForecast::setSoil(QString soilCode, QString &myError)
 }
 
 
-bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForecast, QString *myError)
+bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QString *myError)
 {
 
     unsigned row;
@@ -290,7 +290,7 @@ bool Crit1DIrrigationForecast::setMeteoXmlGrid(QString idMeteo, QString idForeca
 }
 
 
-bool Crit1DIrrigationForecast::setMeteoSqlite(QString idMeteo, QString idForecast, QString *myError)
+bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QString *myError)
 {
     QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo + "'";
     QSqlQuery query = dbMeteo.exec(queryString);
@@ -459,7 +459,7 @@ bool Crit1DIrrigationForecast::setMeteoSqlite(QString idMeteo, QString idForecas
 
 
 // alloc memory for annual values of irrigation
-void Crit1DIrrigationForecast::initializeSeasonalForecast(const Crit3DDate& firstDate, const Crit3DDate& lastDate)
+void Crit1DSimulation::initializeSeasonalForecast(const Crit3DDate& firstDate, const Crit3DDate& lastDate)
 {
     if (isSeasonalForecast)
     {
@@ -476,7 +476,7 @@ void Crit1DIrrigationForecast::initializeSeasonalForecast(const Crit3DDate& firs
 }
 
 
-bool Crit1DIrrigationForecast::createOutputTable(QString &myError)
+bool Crit1DSimulation::createOutputTable(QString &myError)
 {
     QString queryString = "DROP TABLE '" + myCase.idCase + "'";
     QSqlQuery myQuery = this->dbOutput.exec(queryString);
@@ -497,7 +497,7 @@ bool Crit1DIrrigationForecast::createOutputTable(QString &myError)
 }
 
 
-void Crit1DIrrigationForecast::prepareOutput(Crit3DDate myDate, bool isFirst)
+void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
 {
     if (isFirst)
     {
@@ -531,7 +531,7 @@ void Crit1DIrrigationForecast::prepareOutput(Crit3DDate myDate, bool isFirst)
 }
 
 
-bool Crit1DIrrigationForecast::saveOutput(QString &myError)
+bool Crit1DSimulation::saveOutput(QString &myError)
 {
     QSqlQuery myQuery = dbOutput.exec(outputString);
     outputString.clear();

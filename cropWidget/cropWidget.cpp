@@ -25,7 +25,7 @@
 #include "cropWidget.h"
 #include "dialogNewCrop.h"
 #include "cropDbTools.h"
-#include "criteria1DdbMeteo.h"
+#include "criteria1DMeteo.h"
 #include "soilDbTools.h"
 #include "utilities.h"
 #include "commonConstants.h"
@@ -51,7 +51,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     // font
     QFont myFont = this->font();
-    myFont.setPointSize(9);
+    myFont.setPointSize(8);
     this->setFont(myFont);
 
     // layout
@@ -604,65 +604,22 @@ void Crit3DCropWidget::checkCropUpdate()
 
 
 void Crit3DCropWidget::openUnitsDB(QString dbUnitsName)
-{
-    unitList.clear();
-
-    if (dbUnitsName == "")
-    {
-        QMessageBox::critical(nullptr, "Error", "Missing DB Units");
-        return;
-    }
-
+{  
     QString error;
-    if (! openDbUnits(dbUnitsName, &dbUnits, &error))
+    if (! loadUnitList(dbUnitsName, unitList, error))
     {
-        QMessageBox::critical(nullptr, "Error in DB Units", error);
+        QMessageBox::critical(nullptr, "Error in DB Units:", error);
         return;
     }
-
-    // read case list
-    QStringList caseStringList;
-    QString queryString = "SELECT DISTINCT ID_CASE, ID_CROP, ID_SOIL, ID_METEO FROM units";
-    queryString += " ORDER BY ID_CASE";
-
-    QSqlQuery query = dbUnits.exec(queryString);
-    query.last();
-    if (! query.isValid())
-    {
-        error = query.lastError().nativeErrorCode();
-        if (error != "")
-            QMessageBox::critical(nullptr, "Error in DB Units", error);
-        else
-            QMessageBox::critical(nullptr, "Error in DB Units", "Missing units");
-        return;
-    }
-
-    int nr = query.at() + 1;     // SQLITE doesn't support SIZE
-    unitList.resize(nr);
-
-    int i = 0;
-    query.first();
-    do
-    {
-        unitList[i].idCase = query.value("ID_CASE").toString();
-        caseStringList.append(unitList[i].idCase);
-
-        unitList[i].idCropClass = query.value("ID_CROP").toString();
-        unitList[i].idMeteo = query.value("ID_METEO").toString();
-        unitList[i].idForecast = query.value("ID_METEO").toString();
-        unitList[i].idSoilNumber = query.value("ID_SOIL").toInt();
-
-        i++;
-    } while(query.next());
 
     // unit list
     this->caseListComboBox.blockSignals(true);
     this->caseListComboBox.clear();
     this->caseListComboBox.blockSignals(false);
 
-    for (int i = 0; i < caseStringList.size(); i++)
+    for (unsigned int i = 0; i < unitList.size(); i++)
     {
-        this->caseListComboBox.addItem(caseStringList[i]);
+        this->caseListComboBox.addItem(unitList[i].idCase);
     }
 }
 

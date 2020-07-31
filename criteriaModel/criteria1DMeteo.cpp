@@ -7,7 +7,7 @@
 
 #include "commonConstants.h"
 #include "crit3dDate.h"
-#include "criteria1DdbMeteo.h"
+#include "criteria1DMeteo.h"
 #include "utilities.h"
 #include "meteoPoint.h"
 #include "qdebug.h" //debug

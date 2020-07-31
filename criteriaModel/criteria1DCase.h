@@ -10,16 +10,14 @@
     #ifndef METEOPOINT_H
         #include "meteoPoint.h"
     #endif
-    #ifndef QSTRING_H
-        #include <QString>
-    #endif
 
+    #include <QString>
     #include <vector>
 
     /*!
-         * \brief daily output of Criteria1D
-         * \note all variables are in [mm]
-         */
+    * \brief daily output of Criteria1D
+    * \note all variables are in [mm]
+    */
     class Crit1DOutput
     {
     public:
@@ -78,7 +76,6 @@
 
     bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers,
                     Crit1DOutput &myOutput, bool optimizeIrrigation, std::string &myError);
-
 
 
 #endif // CRITERIA1DCASE_H
