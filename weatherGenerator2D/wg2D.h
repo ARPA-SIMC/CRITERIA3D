@@ -193,7 +193,7 @@
         TseasonPrec* seasonPrec;
         double** precGenerated;
 
-
+        void initializeTemperatureVariables();
         bool isTemperatureRecordOK(double value);
         bool isPrecipitationRecordOK(double value);
         void initializePrecipitationAmountParameters();
@@ -206,6 +206,7 @@
 
         // variables only for temperatures
         TtemperatureCoefficients* temperatureCoefficients;
+        TtemperatureCoefficients* temperatureCoefficientsFourier;
         TdailyResidual* dailyResidual;
         TcorrelationMatrixTemperature correlationMatrixTemperature;
         double** normRandomMaxT;

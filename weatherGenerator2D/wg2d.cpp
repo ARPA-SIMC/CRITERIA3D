@@ -333,7 +333,7 @@ void weatherGenerator2D::temperatureCompute()
     time ( &rawtime );
     timeinfo = localtime ( &rawtime );
     printf ( "Current local time and date: %s", asctime (timeinfo) );
-
+    weatherGenerator2D::initializeTemperatureVariables();
     weatherGenerator2D::computeTemperatureParameters();
     printf("step 5/9\n");
     time ( &rawtime );
