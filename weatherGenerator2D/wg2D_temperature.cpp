@@ -237,6 +237,7 @@ void weatherGenerator2D::computeTemperatureParameters()
             rollingAverageTMinWet[i] = NODATA;
         }
         double inputT[385];
+        int lag = 10;
         // t min dry
         for (int i=0;i<10;i++)
         {
@@ -247,7 +248,7 @@ void weatherGenerator2D::computeTemperatureParameters()
         {
             inputT[i+10]= averageTMinDry[i];
         }
-        statistics::rollingAverage(inputT,385,10,rollingAverageTMinDry);
+        statistics::rollingAverage(inputT,385,lag,rollingAverageTMinDry);
         for (int i=0;i<365;i++)
         {
             temperatureCoefficients[iStation].minTDry.averageEstimation[i] = rollingAverageTMinDry[i+10];
@@ -262,7 +263,7 @@ void weatherGenerator2D::computeTemperatureParameters()
         {
             inputT[i+10]= averageTMaxDry[i];
         }
-        statistics::rollingAverage(inputT,385,10,rollingAverageTMaxDry);
+        statistics::rollingAverage(inputT,385,lag,rollingAverageTMaxDry);
         for (int i=0;i<365;i++)
         {
             temperatureCoefficients[iStation].maxTDry.averageEstimation[i] = rollingAverageTMaxDry[i+10];
@@ -277,7 +278,7 @@ void weatherGenerator2D::computeTemperatureParameters()
         {
             inputT[i+10]= averageTMinWet[i];
         }
-        statistics::rollingAverage(inputT,385,10,rollingAverageTMinWet);
+        statistics::rollingAverage(inputT,385,lag,rollingAverageTMinWet);
         for (int i=0;i<365;i++)
         {
             temperatureCoefficients[iStation].minTWet.averageEstimation[i] = rollingAverageTMinWet[i+10];
@@ -292,7 +293,7 @@ void weatherGenerator2D::computeTemperatureParameters()
         {
             inputT[i+10]= averageTMaxWet[i];
         }
-        statistics::rollingAverage(inputT,385,10,rollingAverageTMaxWet);
+        statistics::rollingAverage(inputT,385,lag,rollingAverageTMaxWet);
         for (int i=0;i<365;i++)
         {
             temperatureCoefficients[iStation].maxTWet.averageEstimation[i] = rollingAverageTMaxWet[i+10];
@@ -410,11 +411,11 @@ void weatherGenerator2D::computeTemperatureParameters()
         // free memory of parameters, variable par[]
         free(par);
 
-        for (int i=0;i<365;i++)
-        {
+        //for (int i=0;i<365;i++)
+        //{
             //printf("std %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.stdDevEstimation[i],temperatureCoefficients[iStation].minTWet.stdDevEstimation[i],temperatureCoefficients[iStation].maxTDry.stdDevEstimation[i],temperatureCoefficients[iStation].maxTWet.stdDevEstimation[i]);
             //printf("ave %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.averageEstimation[i],temperatureCoefficients[iStation].minTWet.averageEstimation[i],temperatureCoefficients[iStation].maxTDry.averageEstimation[i],temperatureCoefficients[iStation].maxTWet.averageEstimation[i]);
-        }
+        //}
         //getchar();
 
         weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,
