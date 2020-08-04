@@ -419,7 +419,7 @@
 
 
         // warning: if isSortValues is true, list will be modified
-        float getPercentileFromValue(std::vector<float> &list, float value, bool sortValues)
+        float percentileRank(std::vector<float> &list, float value, bool sortValues)
         {
             if (sortValues)
             {
