@@ -335,9 +335,9 @@
         double percentile(double* list, int* nList, double perc, bool sortValues)
         {
             // check
-            if (*nList == 0 || perc <= 0.0 || perc >= 100.0)
+            if (*nList == 0 || perc <= 0 || perc >= 100)
                 return (NODATA);
-            perc /= 100.0;
+            perc /= 100;
 
             if (sortValues)
             {
@@ -360,12 +360,12 @@
                 quicksortAscendingDouble(list, 0, *nList - 1);
             }
 
-            double rank = (*nList * perc) - 1.;
+            double rank = (*nList * perc) - 1;
 
             // return percentile
-            if ((rank + 1.) > (*nList - 1))
+            if ((rank + 1) > (*nList - 1))
                 return list[*nList - 1];
-            else if (rank < 0.)
+            else if (rank < 0)
                 return list[0];
             else
                 return ((rank - int(rank)) * (list[int(rank) + 1] - list[int(rank)])) + list[int(rank)];
@@ -375,10 +375,10 @@
         float percentile(std::vector<float> &list, int* nList, float perc, bool sortValues)
         {
             // check
-            if (*nList == 0 || perc <= 0.f || perc >= 100.f)
+            if (*nList == 0 || perc <= 0 || perc >= 100)
                 return NODATA;
 
-            perc /= 100.f;
+            perc /= 100;
 
             if (sortValues)
             {
@@ -406,12 +406,12 @@
                 list = cleanList;
             }
 
-            float rank = (*nList * perc) - 1.f;
+            float rank = (*nList * perc) - 1;
 
             // return percentile
-            if ((rank + 1.f) > (*nList - 1))
+            if ((rank + 1) > (*nList - 1))
                 return list[unsigned(*nList - 1)];
-            else if (rank < 0.f)
+            else if (rank < 0)
                 return list[0];
             else
                 return ((rank - int(rank)) * (list[unsigned(rank) + 1] - list[unsigned(rank)])) + list[unsigned(rank)];
