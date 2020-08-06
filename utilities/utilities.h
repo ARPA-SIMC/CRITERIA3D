@@ -1,14 +1,12 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-    #ifndef CRIT3DDATE_H
-        #include "crit3dDate.h"
-    #endif
     #ifndef _VECTOR_
         #include <vector>
     #endif
-    #include <QDir>
 
+    class Crit3DDate;
+    class Crit3DTime;
     class QDate;
     class QDateTime;
     class QVariant;
@@ -47,5 +45,6 @@
     bool removeDirectory(QString myPath);
     bool searchDocPath(QString* docPath);
     bool searchDataPath(QString* dataPath);
+
 
 #endif // UTILITIES_H

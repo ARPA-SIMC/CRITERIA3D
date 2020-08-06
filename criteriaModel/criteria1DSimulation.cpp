@@ -97,7 +97,7 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
         return false;
     }
 
-    if (! loadCropParameters(myUnit.idCrop, &(myCase.myCrop), &(dbCrop), &myError))
+    if (! loadCropParameters(&dbCrop, myUnit.idCrop, &(myCase.myCrop), &myError))
         return false;
 
     if (! isSeasonalForecast)

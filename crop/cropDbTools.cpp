@@ -4,12 +4,10 @@
 #include "utilities.h"
 
 #include <QString>
-#include <QSqlQuery>
-#include <QSqlError>
-#include <QUuid>
-#include <QVariant>
+#include <QtSql>
 
-bool openDbCrop(QString dbName, QSqlDatabase* dbCrop, QString* error)
+
+bool openDbCrop(QSqlDatabase* dbCrop, QString dbName, QString* error)
 {
 
     *dbCrop = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
@@ -24,56 +22,8 @@ bool openDbCrop(QString dbName, QSqlDatabase* dbCrop, QString* error)
     return true;
 }
 
-bool getCropIdList(QSqlDatabase* dbCrop, QStringList* cropIdList, QString* error)
-{
-    // query crop list
-    QString queryString = "SELECT id_crop FROM crop";
-    QSqlQuery query = dbCrop->exec(queryString);
 
-    query.first();
-    if (! query.isValid())
-    {
-        *error = query.lastError().text();
-        return false;
-    }
-
-    QString cropId;
-    do
-    {
-        getValue(query.value("id_crop"), &cropId);
-        if (cropId != "")
-        {
-            cropIdList->append(cropId);
-        }
-    }
-    while(query.next());
-
-    return true;
-}
-
-QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myError)
-{
-    *myError = "";
-    QString queryString = "SELECT * FROM crop WHERE crop_name='" + cropName +"'";
-
-    QSqlQuery query = dbCrop->exec(queryString);
-    query.last();
-
-    if (! query.isValid())
-    {
-        *myError = query.lastError().text();
-        return "";
-    }
-
-    QString idCrop;
-    getValue(query.value("id_crop"), &idCrop);
-
-    return idCrop;
-}
-
-
-
-bool loadCropParameters(QString idCrop, Crit3DCrop* myCrop, QSqlDatabase* dbCrop, QString *myError)
+bool loadCropParameters(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *myError)
 {
     myCrop->clear();
 
@@ -162,99 +112,6 @@ bool loadCropParameters(QString idCrop, Crit3DCrop* myCrop, QSqlDatabase* dbCrop
 }
 
 
-QString getCropFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString *myError)
-{
-    *myError = "";
-    QString queryString = "SELECT * FROM " + cropClassTable + " WHERE " + cropClassField + " = '" + idCropClass + "'";
-
-    QSqlQuery query = dbCrop->exec(queryString);
-    query.last();
-
-    if (! query.isValid())
-    {
-        if (query.lastError().isValid())
-            *myError = query.lastError().text();
-        return "";
-    }
-
-    QString myCrop;
-    getValue(query.value("id_crop"), &myCrop);
-
-    return myCrop;
-}
-
-
-QString getCropFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString *myError)
-{
-    *myError = "";
-    QString queryString = "SELECT * FROM " + cropClassTable + " WHERE " + cropIdField + " = " + QString::number(cropId);
-
-    QSqlQuery query = dbCrop->exec(queryString);
-    query.last();
-
-    if (! query.isValid())
-    {
-        if (query.lastError().isValid())
-            *myError = query.lastError().text();
-        return "";
-    }
-
-    QString myCrop;
-    getValue(query.value("id_crop"), &myCrop);
-
-    return myCrop;
-}
-
-
-float getIrriRatioFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField, QString idCrop, QString *myError)
-{
-    *myError = "";
-
-    QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropClassField + " = '" + idCrop + "'";
-
-    QSqlQuery query = dbCrop->exec(queryString);
-    query.last();
-
-    if (! query.isValid())
-    {
-        if (query.lastError().isValid())
-            *myError = query.lastError().text();
-        return(NODATA);
-    }
-
-    float myRatio = 0;
-
-    if (getValue(query.value("irri_ratio"), &(myRatio)))
-        return myRatio;
-    else
-        return NODATA;
-}
-
-
-float getIrriRatioFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString *myError)
-{
-    *myError = "";
-
-    QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropIdField + " = " + QString::number(cropId);
-
-    QSqlQuery query = dbCrop->exec(queryString);
-    query.last();
-
-    if (! query.isValid())
-    {
-        if (query.lastError().isValid())
-            *myError = query.lastError().text();
-        return(NODATA);
-    }
-
-    float myRatio = 0;
-
-    if (getValue(query.value("irri_ratio"), &(myRatio)))
-        return myRatio;
-    else
-        return NODATA;
-}
-
 bool deleteCropData(QSqlDatabase* dbCrop, QString cropName, QString *error)
 {
 
@@ -276,6 +133,7 @@ bool deleteCropData(QSqlDatabase* dbCrop, QString cropName, QString *error)
     }
     return true;
 }
+
 
 bool updateCropLAIparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error)
 {
@@ -318,6 +176,7 @@ bool updateCropLAIparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error
     return true;
 }
 
+
 bool updateCropRootparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error)
 {
     QSqlQuery qry(*dbCrop);
@@ -340,6 +199,7 @@ bool updateCropRootparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *erro
     }
     return true;
 }
+
 
 bool updateCropIrrigationparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error)
 {
@@ -379,6 +239,4 @@ bool updateCropIrrigationparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString
 
     return true;
 }
-
-
 

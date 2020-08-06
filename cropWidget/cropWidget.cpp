@@ -25,6 +25,7 @@
 #include "cropWidget.h"
 #include "dialogNewCrop.h"
 #include "cropDbTools.h"
+#include "cropDbQuery.h"
 #include "criteria1DMeteo.h"
 #include "soilDbTools.h"
 #include "utilities.h"
@@ -636,7 +637,7 @@ void Crit3DCropWidget::openCropDB(QString newDbCropName)
     clearCrop();
 
     QString error;
-    if (! openDbCrop(newDbCropName, &dbCrop, &error))
+    if (! openDbCrop(&dbCrop, newDbCropName, &error))
     {
         QMessageBox::critical(nullptr, "Error DB crop", error);
         return;
@@ -861,7 +862,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString idCrop)
 void Crit3DCropWidget::updateCropParam(QString idCrop)
 {
     QString error;
-    if (!loadCropParameters(idCrop, &(myCase.myCrop), &dbCrop, &error))
+    if (!loadCropParameters(&dbCrop, idCrop, &(myCase.myCrop), &error))
     {
         if (error.contains("Empty"))
         {
