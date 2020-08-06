@@ -243,7 +243,8 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstDate));
 
     float tmin, tmax, tavg, prec;
-    for (int i = 0; i< firstDate.daysTo(lastDate)+1; i++)
+    int lastIndex = firstDate.daysTo(lastDate)+1;
+    for (int i = 0; i < lastIndex; i++)
     {
         Crit3DDate myDate = getCrit3DDate(firstDate.addDays(i));
         tmin = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
