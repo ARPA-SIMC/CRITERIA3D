@@ -18,7 +18,7 @@ DialogNewCrop::DialogNewCrop(Crit3DCrop *newCrop)
     QLabel *typeCropLabel = new QLabel(tr("Select crop type: "));
     QComboBox* typeCropComboBox = new QComboBox();
 
-    for (int i=0; i<numSpeciesType; i++)
+    for (int i=0; i < NR_CROP_SPECIES; i++)
     {
         speciesType type = (speciesType) i;
         typeCropComboBox->addItem(QString::fromStdString(getCropTypeString(type)));

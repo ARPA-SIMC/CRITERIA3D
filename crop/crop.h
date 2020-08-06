@@ -12,7 +12,7 @@
     #endif
 
     enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FALLOW, FRUIT_TREE};
-    const int numSpeciesType = 6;
+    #define NR_CROP_SPECIES 6
 
     /*!
      * \brief The Crit3DCrop class
