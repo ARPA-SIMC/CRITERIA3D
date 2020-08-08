@@ -94,9 +94,8 @@ void MapGraphicsObject::setPos(const QPointF & nPos)
 
     if (_constructed)
         this->posChanged();
-    // problemi con molti oggetti
-    /*else
-        QTimer::singleShot(1, this, SIGNAL(posChanged()));*/
+    else
+        QTimer::singleShot(1, this, SIGNAL(posChanged()));
 }
 
 qreal MapGraphicsObject::rotation() const
