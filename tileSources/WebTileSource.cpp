@@ -99,8 +99,7 @@ QString WebTileSource::tileFileExtension() const
     if (_tileType == OPEN_STREET_MAP ||
         _tileType == ESRI_WorldImagery ||
         _tileType == STAMEN_Terrain ||
-        _tileType == GOOGLE_MAP ||
-        _tileType == GOOGLE_Skeleton)
+        _tileType == GOOGLE_MAP)
         return "png";
     else
         return "jpg";
@@ -122,27 +121,22 @@ void WebTileSource::fetchTile(quint32 x, quint32 y, quint8 z)
     }
     else if (_tileType == GOOGLE_MAP)
     {
-        host = "http://mt2.google.com/vt/lyrs=m&";
+        host = "http://mt.google.com/vt/lyrs=m&";
         url = "x=%2&y=%3&z=%1";
     }
     else if (_tileType == GOOGLE_Satellite)
     {
-        host = "http://mt2.google.com/vt/lyrs=s&";
+        host = "http://mt.google.com/vt/lyrs=s&";
         url = "x=%2&y=%3&z=%1";
     }
     else if (_tileType == GOOGLE_Hybrid_Satellite)
     {
-        host = "http://mt2.google.com/vt/lyrs=y&";
+        host = "http://mt.google.com/vt/lyrs=y&";
         url = "x=%2&y=%3&z=%1";
     }
     else if (_tileType == GOOGLE_Terrain)
     {
-        host = "http://mt2.google.com/vt/lyrs=p&";
-        url = "x=%2&y=%3&z=%1";
-    }
-    else if (_tileType == GOOGLE_Skeleton)
-    {
-        host = "http://mt2.google.com/vt/lyrs=r&";
+        host = "http://mt.google.com/vt/lyrs=p&";
         url = "x=%2&y=%3&z=%1";
     }
     else if (_tileType == STAMEN_Terrain)

@@ -21,8 +21,7 @@ public:
         GOOGLE_MAP,
         GOOGLE_Satellite,
         GOOGLE_Hybrid_Satellite,
-        GOOGLE_Skeleton,
-        GOOGLE_Terrain,
+        GOOGLE_Terrain
     };
 
 public:
