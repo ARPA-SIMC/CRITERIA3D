@@ -1,9 +1,10 @@
-#include "zonalStatistic.h"
-#include "shapeToRaster.h"
-#include "commonConstants.h"
 #include <float.h>
 #include <algorithm>
 #include <math.h>
+
+#include "commonConstants.h"
+#include "zonalStatistic.h"
+#include "shapeToRaster.h"
 #include "formInfo.h"
 
 

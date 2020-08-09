@@ -1,9 +1,13 @@
 #include "shapeUtilities.h"
 #include <QFile>
 #include <QFileInfo>
-#include <gdal_priv.h>
-#include <ogrsf_frmts.h>
 #include <qdebug.h>
+
+#ifdef GDAL
+    #include <gdal_priv.h>
+    #include <ogrsf_frmts.h>
+#endif
+
 
 // make a copy of shapefile and return cloned shapefile path
 QString cloneShapeFile(QString refFileName, QString newFileName)
@@ -58,9 +62,9 @@ bool cleanShapeFile(Crit3DShapeHandler *shapeHandler)
 }
 
 
+#ifdef GDAL
 GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 {
-
     // Init GEOS
     GEOSMessageHandler error_function = nullptr, notice_function = nullptr;
     initGEOS(notice_function, error_function);
@@ -478,3 +482,4 @@ GEOSGeometry * testIntersection()
     finishGEOS();
 }
 */
+#endif //GDAL
