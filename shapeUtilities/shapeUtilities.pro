@@ -45,8 +45,8 @@ HEADERS += \
     ucmDb.h
 
 
-# uncomment for GDAL extension
-#CONFIG += GDAL
+# comment to compile without GDAL library
+CONFIG += GDAL
 
 GDAL {
     DEFINES += GDAL
