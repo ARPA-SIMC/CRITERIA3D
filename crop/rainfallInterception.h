@@ -16,9 +16,7 @@ namespace canopy
 
     double canopyInterceptionHydrall(double laiCanopy,double laiUnderstorey, double prec);
     double canopyNoInterceptedRainfallHydrall(double laiCanopy,double laiUnderstorey, double prec);
-
 }
-
 
 
 #endif // RAINFALLINTERCEPTION_H

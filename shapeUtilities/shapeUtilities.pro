@@ -19,13 +19,12 @@ win32:{
     TARGET = shapeUtilities
 }
 
-
 TEMPLATE = lib
 CONFIG += staticlib
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
-INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project ../gdalHandler
+INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project
 
 SOURCES += \
     shapeToRaster.cpp    \
@@ -45,4 +44,13 @@ HEADERS += \
     zonalStatistic.h   \
     ucmDb.h
 
-include(../gdal.pri)
+
+# comment to compile without GDAL library
+CONFIG += GDAL
+
+GDAL {
+    DEFINES += GDAL
+    INCLUDEPATH += ../gdalHandler
+    include(../gdal.pri)
+}
+

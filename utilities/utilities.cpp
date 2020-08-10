@@ -9,6 +9,7 @@
 #include <QSqlDatabase>
 #include <QSqlDriver>
 #include <QSqlRecord>
+#include <QDir>
 
 
 QStringList getFields(QSqlDatabase* db_, QString tableName)
@@ -376,6 +377,7 @@ QStringList FloatVectorToStringList(std::vector <float> myVector)
 
     return myList;
 }
+
 
 bool removeDirectory(QString myPath)
 {

@@ -213,5 +213,7 @@
     #define RAD_TO_DEG 57.2957795
     #define SQRT_2 1.41421356237
 
+    #define MINIMUM_PERCENTILE_DATA 3
+
 
 #endif // COMMONCONSTANTS_H

@@ -1,10 +1,7 @@
 #ifndef UCMDB_H
 #define UCMDB_H
 
-    #ifndef QOBJECT_H
-        #include <QObject>
-    #endif
-
+    #include <QObject>
     #include <QString>
     #include <QSqlDatabase>
 
@@ -17,7 +14,7 @@
         ~UcmDb();
 
         void createUnitsTable();
-        //bool writeUnitsTable(QString idCase, QString idCrop, QString idMeteo, QString idSoil, double ha);
+
         bool writeListToUnitsTable(QStringList idCase, QStringList idCrop, QStringList idMeteo,
                                    QStringList idSoil, QList<double> ha);
         QString getError() const;
@@ -26,5 +23,6 @@
         QString error;
         QSqlDatabase db;
     };
+
 
 #endif // UCMDB_H

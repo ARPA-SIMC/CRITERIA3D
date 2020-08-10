@@ -22,8 +22,8 @@ Crit1DSimulation::Crit1DSimulation()
     isShortTermForecast = false;
     daysOfForecast = NODATA;
     useAllMeteoData = true;
-    firstDate = QDate(1800,1,1);
-    lastDate = QDate(1800,1,1);
+    firstSimulationDate = QDate(1800,1,1);
+    lastSimulationDate = QDate(1800,1,1);
 
     outputString = "";
 }
@@ -97,7 +97,7 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
         return false;
     }
 
-    if (! loadCropParameters(myUnit.idCrop, &(myCase.myCrop), &(dbCrop), &myError))
+    if (! loadCropParameters(&dbCrop, myUnit.idCrop, &(myCase.myCrop), &myError))
         return false;
 
     if (! isSeasonalForecast)
@@ -171,7 +171,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
 
     unsigned row;
     unsigned col;
-    unsigned nrDays = unsigned(firstDate.daysTo(lastDate)) + 1;
+    unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
 
     if (!this->observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
     {
@@ -181,7 +181,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
 
     if (!this->observedMeteoGrid->gridStructure().isFixedFields())
     {
-        if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstDate, lastDate))
+        if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstSimulationDate, lastSimulationDate))
         {
             *myError = "Missing observed data";
             return false;
@@ -189,7 +189,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     }
     else
     {
-        if (!this->observedMeteoGrid->loadGridDailyDataFixedFields(myError, idMeteo, firstDate, lastDate))
+        if (!this->observedMeteoGrid->loadGridDailyDataFixedFields(myError, idMeteo, firstSimulationDate, lastSimulationDate))
         {
             if (*myError == "Missing MeteoPoint id")
             {
@@ -207,7 +207,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     {
         if (!this->forecastMeteoGrid->gridStructure().isFixedFields())
         {
-            if (!this->forecastMeteoGrid->loadGridDailyData(myError, idForecast, lastDate.addDays(1), lastDate.addDays(daysOfForecast)))
+            if (!this->forecastMeteoGrid->loadGridDailyData(myError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (*myError == "Missing MeteoPoint id")
                 {
@@ -222,7 +222,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
         }
         else
         {
-            if (!this->forecastMeteoGrid->loadGridDailyDataFixedFields(myError, idForecast, lastDate.addDays(1), lastDate.addDays(daysOfForecast)))
+            if (!this->forecastMeteoGrid->loadGridDailyDataFixedFields(myError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (*myError == "Missing MeteoPoint id")
                 {
@@ -240,12 +240,13 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
 
     myCase.meteoPoint.latitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->latitude;
     myCase.meteoPoint.longitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->longitude;
-    myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstDate));
+    myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstSimulationDate));
 
     float tmin, tmax, tavg, prec;
-    for (int i = 0; i< firstDate.daysTo(lastDate)+1; i++)
+    int lastIndex = firstSimulationDate.daysTo(lastSimulationDate)+1;
+    for (int i = 0; i < lastIndex; i++)
     {
-        Crit3DDate myDate = getCrit3DDate(firstDate.addDays(i));
+        Crit3DDate myDate = getCrit3DDate(firstSimulationDate.addDays(i));
         tmin = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmin);
 
@@ -264,8 +265,8 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     }
     if (isShortTermForecast)
     {
-        QDate start = lastDate.addDays(1);
-        QDate end = lastDate.addDays(daysOfForecast);
+        QDate start = lastSimulationDate.addDays(1);
+        QDate end = lastSimulationDate.addDays(daysOfForecast);
         for (int i = 0; i< start.daysTo(end)+1; i++)
         {
             Crit3DDate myDate = getCrit3DDate(start.addDays(i));

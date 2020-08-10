@@ -28,6 +28,7 @@ win32:{
 INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../soil ../utilities
 
 SOURCES += crop.cpp \
+    cropDbQuery.cpp \
     cropDbTools.cpp \
     rainfallInterception.cpp \
     root.cpp \
@@ -36,6 +37,7 @@ SOURCES += crop.cpp \
 
 HEADERS += crop.h \
     biomass.h \
+    cropDbQuery.h \
     cropDbTools.h \
     rainfallInterception.h \
     root.h \

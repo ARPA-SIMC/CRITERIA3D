@@ -2,10 +2,9 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
-//#include "gdalShapeFunctions.h"
+
 #include <QFile>
 #include <QFileInfo>
-
 #include <qdebug.h>
 
 
@@ -96,112 +95,6 @@ bool computeUcmPrevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Cri
     return isOk;
 }
 
-bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
-                 std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
-{
-
-    // PolygonShapefile
-    int type = 5;
-
-    ucm->newShapeFile(ucmFileName.toStdString(), type);
-    // copy .prj
-    QFileInfo refFileInfo;
-    if (crop != nullptr)
-    {
-        refFileInfo.setFile(QString::fromStdString(crop->getFilepath()));
-    }
-    else if(soil!=nullptr)
-    {
-        refFileInfo.setFile(QString::fromStdString(soil->getFilepath()));
-    }
-    QString refFile = refFileInfo.absolutePath() + "/" + refFileInfo.baseName();
-    QFileInfo ucmFileInfo(ucmFileName);
-    QString ucmFile = ucmFileInfo.absolutePath() + "/" + ucmFileInfo.baseName();
-    QFile::copy(refFile +".prj", ucmFile +".prj");
-
-    ucm->open(ucmFileName.toStdString());
-    // add ID CASE
-    ucm->addField("ID_CASE", FTString, 20, 0);
-    // add ID SOIL
-    ucm->addField("ID_SOIL", FTString, 5, 0);
-    int soilIndex = ucm->getFieldPos("ID_SOIL");
-    // add ID CROP
-    ucm->addField("ID_CROP", FTString, 5, 0);
-    int cropIndex = ucm->getFieldPos("ID_CROP");
-    // add ID METEO
-    ucm->addField("ID_METEO", FTString, 5, 0);
-    int meteoIndex = ucm->getFieldPos("ID_METEO");
-
-
-    qDebug() << "idCrop " << QString::fromStdString(idCrop);
-    qDebug() << "idSoil " << QString::fromStdString(idSoil);
-    qDebug() << "idMeteo " << QString::fromStdString(idMeteo);
-
-    GEOSGeometry *inteserctionGeom = nullptr ;
-
-    if (crop == nullptr)
-    {
-
-        // soil and meteo intersection, add constant idCrop
-        if (!shapeIntersection(soil, meteo, &inteserctionGeom))
-        {
-            return false;
-        }
-
-    }
-    else if (soil == nullptr)
-    {
-
-        // crop and meteo intersection, add constant idSoil
-        if (!shapeIntersection(crop, meteo, &inteserctionGeom))
-        {
-            return false;
-        }
-    }
-    else if (meteo == nullptr)
-    {
-
-        // crop and soil intersection, add constant idMeteo
-        if (!shapeIntersection(crop, soil, &inteserctionGeom))
-        {
-            return false;
-        }
-    }
-    else
-    {
-        // TO DO
-    }
-
-    if (!getShapeFromGeom(inteserctionGeom, ucm))
-    {
-        return false;
-    }
-
-    // Finalizzo GEOS
-    finishGEOS();
-    /*
-    int nShape = ucm->getShapeCount();
-    for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
-    {
-        ucm->writeStringAttribute(shapeIndex, soilIndex, idSoil.c_str());
-        ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
-        ucm->writeStringAttribute(shapeIndex, meteoIndex, idMeteo.c_str());
-    }
-    */
-
-    /*
-    if (!fillIDCase(ucm, idCrop, idSoil, idMeteo))
-    {
-        *error = "Failed to fill ID CASE";
-        return false;
-    }
-    */
-
-    ucm->close();
-    ucm->open(ucm->getFilepath());
-    return true;
-}
-
 
 // FILL ID_CASE
 bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo)
@@ -244,6 +137,117 @@ bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil,
     return true;
 }
 
+
+bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
+                 std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
+{
+
+    // PolygonShapefile
+    int type = 5;
+
+    ucm->newShapeFile(ucmFileName.toStdString(), type);
+    // copy .prj
+    QFileInfo refFileInfo;
+    if (crop != nullptr)
+    {
+        refFileInfo.setFile(QString::fromStdString(crop->getFilepath()));
+    }
+    else if(soil!=nullptr)
+    {
+        refFileInfo.setFile(QString::fromStdString(soil->getFilepath()));
+    }
+    QString refFile = refFileInfo.absolutePath() + "/" + refFileInfo.baseName();
+    QFileInfo ucmFileInfo(ucmFileName);
+    QString ucmFile = ucmFileInfo.absolutePath() + "/" + ucmFileInfo.baseName();
+    QFile::copy(refFile +".prj", ucmFile +".prj");
+
+    ucm->open(ucmFileName.toStdString());
+    // add ID CASE
+    ucm->addField("ID_CASE", FTString, 20, 0);
+    // add ID SOIL
+    ucm->addField("ID_SOIL", FTString, 5, 0);
+    int soilIndex = ucm->getFieldPos("ID_SOIL");
+    // add ID CROP
+    ucm->addField("ID_CROP", FTString, 5, 0);
+    int cropIndex = ucm->getFieldPos("ID_CROP");
+    // add ID METEO
+    ucm->addField("ID_METEO", FTString, 5, 0);
+    int meteoIndex = ucm->getFieldPos("ID_METEO");
+
+    qDebug() << "idCrop " << QString::fromStdString(idCrop);
+    qDebug() << "idSoil " << QString::fromStdString(idSoil);
+    qDebug() << "idMeteo " << QString::fromStdString(idMeteo);
+
+    #ifdef GDAL
+    GEOSGeometry *inteserctionGeom = nullptr ;
+
+    if (crop == nullptr)
+    {
+
+        // soil and meteo intersection, add constant idCrop
+        if (!shapeIntersection(soil, meteo, &inteserctionGeom))
+        {
+            return false;
+        }
+
+    }
+    else if (soil == nullptr)
+    {
+
+        // crop and meteo intersection, add constant idSoil
+        if (!shapeIntersection(crop, meteo, &inteserctionGeom))
+        {
+            return false;
+        }
+    }
+    else if (meteo == nullptr)
+    {
+
+        // crop and soil intersection, add constant idMeteo
+        if (!shapeIntersection(crop, soil, &inteserctionGeom))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        // TO DO
+    }
+
+    if (!getShapeFromGeom(inteserctionGeom, ucm))
+    {
+        return false;
+    }
+
+    // Finalizzo GEOS
+    finishGEOS();
+    #endif //GDAL
+
+    /*
+    int nShape = ucm->getShapeCount();
+    for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
+    {
+        ucm->writeStringAttribute(shapeIndex, soilIndex, idSoil.c_str());
+        ucm->writeStringAttribute(shapeIndex, cropIndex, idCrop.c_str());
+        ucm->writeStringAttribute(shapeIndex, meteoIndex, idMeteo.c_str());
+    }
+    */
+
+    /*
+    if (!fillIDCase(ucm, idCrop, idSoil, idMeteo))
+    {
+        *error = "Failed to fill ID CASE";
+        return false;
+    }
+    */
+
+    ucm->close();
+    ucm->open(ucm->getFilepath());
+    return true;
+}
+
+
+#ifdef GDAL
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
 {
     GEOSGeometry* firstPolygon = loadShapeAsPolygon(first);
@@ -376,5 +380,7 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
     }
     return true;
 }
+
+#endif // GDAL
 
 

@@ -49,31 +49,6 @@ void UcmDb::createUnitsTable()
 }
 
 
-/*
-bool UcmDb::writeUnitsTable(QString idCase, QString idCrop, QString idMeteo, QString idSoil, double ha)
-{
-    QSqlQuery qry(db);
-
-    qry.prepare( "INSERT INTO units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, HA)"
-                                      " VALUES (:idCase, :idCrop, :idMeteo, :idSoil, :ha)" );
-
-    qry.bindValue(":idCase", idCase);
-    qry.bindValue(":idCrop", idCrop);
-    qry.bindValue(":idMeteo", idMeteo);
-    qry.bindValue(":idSoil", idSoil);
-    qry.bindValue(":ha", ha);
-
-    if( !qry.exec() )
-    {
-        error = qry.lastError().text();
-        return false;
-    }
-
-    return true;
-}
-*/
-
-
 bool UcmDb::writeListToUnitsTable(QStringList idCase, QStringList idCrop, QStringList idMeteo,
                                   QStringList idSoil, QList<double> ha)
 {

@@ -38,7 +38,7 @@ void Logger::writeInfo(const QString &value)
     QString text = value;
     if (m_showDate)
     {
-        text = QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm") + text;
+        text = QDateTime::currentDateTime().toString("yyyy-MM-dd hh.mm") + " " + text;
     }
     if (logFileName != "")
     {

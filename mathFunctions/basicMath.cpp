@@ -332,59 +332,60 @@
         }
 
 
-        double percentile(double* list, int* nList, double perc, bool sortValues)
+        // warning: if isSortValues is true, list will be modified
+        double percentile(double* list, int* nrList, double perc, bool isSortValues)
         {
             // check
-            if (*nList == 0 || perc <= 0.0 || perc >= 100.0)
-                return (NODATA);
-            perc /= 100.0;
+            if (*nrList < MINIMUM_PERCENTILE_DATA || perc <= 0 || perc >= 100) return NODATA;
 
-            if (sortValues)
+            perc /= 100.;
+
+            if (isSortValues)
             {
                 // clean missing data
-                double* cleanList = new double[unsigned(*nList)];
+                double* cleanList = new double[unsigned(*nrList)];
                 int n = 0;
-                for (int i = 0; i < *nList; i++)
+                for (int i = 0; i < *nrList; i++)
                     if (list[i] != NODATA)
                         cleanList[n++] = list[i];
 
                 // switch
-                *nList = n;
+                *nrList = n;
                 *list = *cleanList;
 
                 // check on data presence
-                if (*nList == 0)
-                    return (NODATA);
+                if (*nrList < MINIMUM_PERCENTILE_DATA)
+                    return NODATA;
 
                 // sort
-                quicksortAscendingDouble(list, 0, *nList - 1);
+                quicksortAscendingDouble(list, 0, *nrList - 1);
             }
 
-            double rank = (*nList * perc) - 1.;
+            double rank = double(*nrList) * perc - 1;
 
             // return percentile
-            if ((rank + 1.) > (*nList - 1))
-                return list[*nList - 1];
-            else if (rank < 0.)
+            if ((rank + 1) > (*nrList - 1))
+                return list[*nrList - 1];
+            else if (rank < 0)
                 return list[0];
             else
                 return ((rank - int(rank)) * (list[int(rank) + 1] - list[int(rank)])) + list[int(rank)];
         }
 
 
-        float percentile(std::vector<float> &list, int* nList, float perc, bool sortValues)
+        // warning: if isSortValues is true, list will be modified
+        float percentile(std::vector<float> &list, int* nrList, float perc, bool isSortValues)
         {
             // check
-            if (*nList == 0 || perc <= 0.f || perc >= 100.f)
-                return NODATA;
+            if (*nrList < MINIMUM_PERCENTILE_DATA || perc <= 0 || perc >= 100) return NODATA;
 
             perc /= 100.f;
 
-            if (sortValues)
+            if (isSortValues)
             {
                 // clean nodata
                 std::vector<float> cleanList;
-                for (unsigned int i = 0; i < unsigned(*nList); i++)
+                for (unsigned int i = 0; i < unsigned(*nrList); i++)
                 {
                     if (int(list[i]) != int(NODATA))
                     {
@@ -392,29 +393,80 @@
                     }
                 }
 
-                // switch
-                *nList = int(cleanList.size());
-
                 // check on data presence
-                if (*nList == 0)
-                    return (NODATA);
+                if (cleanList.size() < MINIMUM_PERCENTILE_DATA)
+                    return NODATA;
 
                 // sort
-                quicksortAscendingFloat(cleanList, 0, unsigned(*nList - 1));
+                quicksortAscendingFloat(cleanList, 0, cleanList.size() - 1);
 
-                list.erase(list.begin(),list.end());
+                // switch
+                *nrList = cleanList.size();
+                list.clear();
                 list = cleanList;
             }
 
-            float rank = (*nList * perc) - 1.f;
+            float rank = float(*nrList) * perc - 1;
 
             // return percentile
-            if ((rank + 1.f) > (*nList - 1))
-                return list[unsigned(*nList - 1)];
-            else if (rank < 0.f)
+            if ((rank + 1) > (*nrList - 1))
+                return list[unsigned(*nrList - 1)];
+            else if (rank < 0)
                 return list[0];
             else
                 return ((rank - int(rank)) * (list[unsigned(rank) + 1] - list[unsigned(rank)])) + list[unsigned(rank)];
+        }
+
+
+        // warning: if isSortValues is true, list will be modified
+        float percentileRank(std::vector<float> &list, float value, bool sortValues)
+        {
+            if (sortValues)
+            {
+                // clean nodata
+                std::vector<float> cleanList;
+                for (unsigned int i = 0; i < list.size(); i++)
+                {
+                    if (int(list[i]) != int(NODATA))
+                    {
+                        cleanList.push_back(list[i]);
+                    }
+                }
+
+                // check on data presence
+                if (cleanList.size() < MINIMUM_PERCENTILE_DATA)
+                    return NODATA;
+
+                // sort
+                quicksortAscendingFloat(cleanList, 0, cleanList.size()-1);
+
+                list.clear();
+                list = cleanList;
+            }
+
+            float nrValuesF = float(list.size());
+            unsigned int lastIndex = list.size() - 1;
+
+            // return rank
+            if (value <= list[0]) return 0;
+            if (value >= list[lastIndex]) return 100;
+
+            for (unsigned int i = 0; i < list.size(); i++)
+            {
+                if (value == list[i])
+                {
+                    float rank = float(i + 1) / nrValuesF;
+                    return rank * 100;
+                }
+                if (i < lastIndex && list[i] < value && list[i+1] > value)
+                {
+                    float rank = float(i + 1) / nrValuesF;
+                    rank += (value - list[i]) / (list[i+1] - list[i]) / nrValuesF;
+                    return rank * 100;
+                }
+            }
+
+            return NODATA;
         }
 
     }
