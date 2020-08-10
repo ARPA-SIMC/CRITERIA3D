@@ -24,9 +24,9 @@ win32:{
 DEFINES += MAPGRAPHICS_LIBRARY
 
 SOURCES += \
-    tileSources/OSMTileSource.cpp \
-    tileSources/GridTileSource.cpp \
     tileSources/CompositeTileSource.cpp \
+    tileSources/GridTileSource.cpp \
+    tileSources/WebTileSource.cpp \
     guts/PrivateQGraphicsScene.cpp \
     guts/PrivateQGraphicsObject.cpp \
     guts/Conversions.cpp \
@@ -43,12 +43,13 @@ SOURCES += \
     PolygonObject.cpp \
     Position.cpp \
     LineObject.cpp \
-    CircleObject.cpp \
+    CircleObject.cpp
+
 
 HEADERS += \
-    tileSources/GridTileSource.h \
-    tileSources/OSMTileSource.h \
     tileSources/CompositeTileSource.h \
+    tileSources/GridTileSource.h \
+    tileSources/WebTileSource.h \
     guts/MapTileLayerListModel.h \
     guts/MapTileSourceDelegate.h \
     guts/MapGraphicsNetwork.h \
@@ -67,6 +68,5 @@ HEADERS += \
     Position.h \
     LineObject.h \
     CircleObject.h
-
 
 

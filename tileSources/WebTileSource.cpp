@@ -1,5 +1,4 @@
-#include "OSMTileSource.h"
-
+#include "WebTileSource.h"
 #include "guts/MapGraphicsNetwork.h"
 
 #include <cmath>
@@ -8,22 +7,23 @@
 #include <QtDebug>
 #include <QNetworkReply>
 
+
 const qreal PI = 3.14159265358979323846;
 const qreal deg2rad = PI / 180.0;
 const qreal rad2deg = 180.0 / PI;
 
-OSMTileSource::OSMTileSource(OSMTileType tileType) :
+WebTileSource::WebTileSource(WebTileType tileType) :
     MapTileSource(), _tileType(tileType)
 {
     this->setCacheMode(MapTileSource::DiskAndMemCaching);
 }
 
-OSMTileSource::~OSMTileSource()
+WebTileSource::~WebTileSource()
 {
     qDebug() << this << this->name() << "Destructing";
 }
 
-QPointF OSMTileSource::ll2qgs(const QPointF &ll, quint8 zoomLevel) const
+QPointF WebTileSource::ll2qgs(const QPointF &ll, quint8 zoomLevel) const
 {
     const qreal tilesOnOneEdge = pow(2.0,zoomLevel);
     const quint16 tileSize = this->tileSize();
@@ -33,7 +33,7 @@ QPointF OSMTileSource::ll2qgs(const QPointF &ll, quint8 zoomLevel) const
     return QPoint(int(x), int(y));
 }
 
-QPointF OSMTileSource::qgs2ll(const QPointF &qgs, quint8 zoomLevel) const
+QPointF WebTileSource::qgs2ll(const QPointF &qgs, quint8 zoomLevel) const
 {
     const qreal tilesOnOneEdge = pow(2.0,zoomLevel);
     const quint16 tileSize = this->tileSize();
@@ -43,56 +43,70 @@ QPointF OSMTileSource::qgs2ll(const QPointF &qgs, quint8 zoomLevel) const
     return QPointF(longitude, latitude);
 }
 
-quint64 OSMTileSource::tilesOnZoomLevel(quint8 zoomLevel) const
+quint64 WebTileSource::tilesOnZoomLevel(quint8 zoomLevel) const
 {
     return quint64(pow(4.0, zoomLevel));
 }
 
-quint16 OSMTileSource::tileSize() const
+quint16 WebTileSource::tileSize() const
 {
     return 256;
 }
 
-quint8 OSMTileSource::minZoomLevel(QPointF ll)
+quint8 WebTileSource::minZoomLevel(QPointF ll)
 {
     Q_UNUSED(ll)
     return 0;
 }
 
-quint8 OSMTileSource::maxZoomLevel(QPointF ll)
+quint8 WebTileSource::maxZoomLevel(QPointF ll)
 {
     Q_UNUSED(ll)
     return 18;
 }
 
-QString OSMTileSource::name() const
+QString WebTileSource::name() const
 {
     switch(_tileType)
     {
-    case OSMTiles:
+    case OPEN_STREET_MAP:
         return "OpenStreetMap standard tiles";
 
-    case ESRIWorldImagery:
+    case GOOGLE_MAP:
+        return "Google Map Tiles";
+
+    case GOOGLE_Satellite:
+        return "Google Satellite Tiles";
+
+    case GOOGLE_Hybrid_Satellite:
+        return "Google Hybrid Satellite Map Tiles";
+
+    case GOOGLE_Terrain:
+        return "Google Terrain Tiles";
+
+    case ESRI_WorldImagery:
         return "ESRI - World Imagery tiles";
 
-    case Terrain:
-        return "Stamen Terrain tiles";
-
-    default:
-        return "Unknown tiles";
+    case STAMEN_Terrain:
+        return "Stamen Terrain tiles";   
     }
+
+    return "Unknown tiles";
 }
 
-QString OSMTileSource::tileFileExtension() const
+QString WebTileSource::tileFileExtension() const
 {
-    if ((_tileType == OSMTiles) || (_tileType == ESRIWorldImagery))
+    if (_tileType == OPEN_STREET_MAP ||
+        _tileType == ESRI_WorldImagery ||
+        _tileType == STAMEN_Terrain ||
+        _tileType == GOOGLE_MAP)
         return "png";
     else
         return "jpg";
 }
 
 //protected
-void OSMTileSource::fetchTile(quint32 x, quint32 y, quint8 z)
+void WebTileSource::fetchTile(quint32 x, quint32 y, quint8 z)
 {
     MapGraphicsNetwork * network = MapGraphicsNetwork::getInstance();
 
@@ -100,24 +114,44 @@ void OSMTileSource::fetchTile(quint32 x, quint32 y, quint8 z)
     QString url;
 
     //Figure out which server to request from based on our desired tile type
-    if (_tileType == OSMTiles)
+    if (_tileType == OPEN_STREET_MAP)
     {
-        host = "http://b.tile.openstreetmap.org";
+        host = "http://c.tile.openstreetmap.org";
         url = "/%1/%2/%3.png";
     }
-    else if (_tileType == ESRIWorldImagery)
+    else if (_tileType == GOOGLE_MAP)
     {
-        host = "http://server.arcgisonline.com";
-        url = "/arcgis/rest/services/World_Imagery/MapServer/tile/%1/%3/%2.png";
+        host = "http://mt.google.com/vt/lyrs=m&";
+        url = "x=%2&y=%3&z=%1";
     }
-    else if (_tileType == Terrain)
+    else if (_tileType == GOOGLE_Satellite)
+    {
+        host = "http://mt.google.com/vt/lyrs=s&";
+        url = "x=%2&y=%3&z=%1";
+    }
+    else if (_tileType == GOOGLE_Hybrid_Satellite)
+    {
+        host = "http://mt.google.com/vt/lyrs=y&";
+        url = "x=%2&y=%3&z=%1";
+    }
+    else if (_tileType == GOOGLE_Terrain)
+    {
+        host = "http://mt.google.com/vt/lyrs=p&";
+        url = "x=%2&y=%3&z=%1";
+    }
+    else if (_tileType == STAMEN_Terrain)
     {
         host = "http://tile.stamen.com";
         url = "/terrain/%1/%2/%3.png";
     }
+    else if (_tileType == ESRI_WorldImagery)
+    {
+        host = "http://server.arcgisonline.com";
+        url = "/arcgis/rest/services/World_Imagery/MapServer/tile/%1/%3/%2.png";
+    }
     else
     {
-        //default openstreetmap
+        // default
         host = "http://b.tile.openstreetmap.org";
         url = "/%1/%2/%3.png";
     }
@@ -146,7 +180,7 @@ void OSMTileSource::fetchTile(quint32 x, quint32 y, quint8 z)
 }
 
 //private slot
-void OSMTileSource::handleNetworkRequestFinished()
+void WebTileSource::handleNetworkRequestFinished()
 {
     QObject * sender = QObject::sender();
     QNetworkReply * reply = qobject_cast<QNetworkReply *>(sender);

@@ -1,5 +1,5 @@
-#ifndef OSMTILESOURCE_H
-#define OSMTILESOURCE_H
+#ifndef WEBTILESOURCE_H
+#define WEBTILESOURCE_H
 
 #include "MapTileSource.h"
 #include "MapGraphics_global.h"
@@ -9,20 +9,24 @@
 //Forward declaration so that projects that import us as a library don't necessarily have to use QT += network
 class QNetworkReply;
 
-class MAPGRAPHICSSHARED_EXPORT OSMTileSource : public MapTileSource
+class MAPGRAPHICSSHARED_EXPORT WebTileSource : public MapTileSource
 {
     Q_OBJECT
 public:
-    enum OSMTileType
+    enum WebTileType
     {
-        OSMTiles,
-        ESRIWorldImagery,
-        Terrain
+        OPEN_STREET_MAP,
+        ESRI_WorldImagery,
+        STAMEN_Terrain,
+        GOOGLE_MAP,
+        GOOGLE_Satellite,
+        GOOGLE_Hybrid_Satellite,
+        GOOGLE_Terrain
     };
 
 public:
-    explicit OSMTileSource(OSMTileSource::OSMTileType tileType = OSMTiles);
-    virtual ~OSMTileSource();
+    explicit WebTileSource(WebTileSource::WebTileType tileType = OPEN_STREET_MAP);
+    virtual ~WebTileSource();
 
     virtual QPointF ll2qgs(const QPointF& ll, quint8 zoomLevel) const;
 
@@ -46,7 +50,7 @@ protected:
                            quint8 z);
 
 private:
-    OSMTileSource::OSMTileType _tileType;
+    WebTileSource::WebTileType _tileType;
 
     //Set used to ensure a tile with a certain cacheID isn't requested twice
     QSet<QString> _pendingRequests;
@@ -63,4 +67,4 @@ private slots:
     
 };
 
-#endif // OSMTILESOURCE_H
+#endif // WEBTILESOURCE_H
