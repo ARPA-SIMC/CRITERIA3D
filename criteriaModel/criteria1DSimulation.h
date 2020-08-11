@@ -41,7 +41,7 @@ class Crit1DSimulation
         // dates
         bool useAllMeteoData;
         QDate firstSimulationDate;
-        QDate lastSimulationDate;
+        QDate lastObservedDate;
 
         // seasonal forecast
         bool isSeasonalForecast;
