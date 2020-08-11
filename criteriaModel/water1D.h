@@ -25,6 +25,7 @@
     double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth);
     double getSoilWaterDeficit(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth);
     double getSoilAvailableWater(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth);
+    double getSoilFractionAW(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth);
     double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit3DLayer> &soilLayers);
 
 

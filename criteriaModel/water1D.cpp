@@ -636,6 +636,43 @@ double getSoilAvailableWater(const std::vector<soil::Crit3DLayer> &soilLayers, d
 
 
 /*!
+ * \brief getSoilFractionAW
+ * \param soilLayers
+ * \param computationSoilDepth = computation depth  [m]
+ * \return fraction of available water from zero to computationSoilDepth (mm)
+ */
+double getSoilFractionAW(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
+{
+    double lowerDepth, upperDepth;      // [m]
+    double depthFraction;               // [-]
+    double availableWaterSum = 0;       // [mm]
+    double potentialAWSum = 0;          // [mm]
+
+    unsigned int i = 1;
+    bool isDepthLower = true;
+    while (i < soilLayers.size() && isDepthLower)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+
+        if (lowerDepth < computationSoilDepth)
+            depthFraction = 1;
+        else
+        {
+            depthFraction = (computationSoilDepth - upperDepth) / soilLayers[i].thickness;
+            isDepthLower = false;
+        }
+
+        availableWaterSum += (soilLayers[i].waterContent - soilLayers[i].WP) * depthFraction;
+        potentialAWSum += (soilLayers[i].FC - soilLayers[i].WP) * depthFraction;
+        i++;
+    }
+
+    return availableWaterSum / potentialAWSum;
+}
+
+
+/*!
  * \brief getReadilyAvailableWater
  * \param myCrop
  * \param soilLayers

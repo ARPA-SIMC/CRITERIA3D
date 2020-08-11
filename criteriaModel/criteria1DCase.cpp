@@ -214,6 +214,7 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
     myOutput.dailyWaterDeficit = getSoilWaterDeficit(soilLayers, 1.0);
     myOutput.dailyWaterDeficit_25 = getSoilWaterDeficit(soilLayers, 0.25);
     myOutput.dailyAvailableWater = getSoilAvailableWater(soilLayers, 1.0);
+    myOutput.dailyFractionAW = getSoilFractionAW(soilLayers, 1.0);
     myOutput.dailyReadilyAW = getReadilyAvailableWater(myCrop, soilLayers);
 
     return true;
