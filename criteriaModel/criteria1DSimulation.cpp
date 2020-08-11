@@ -484,7 +484,8 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
 
     queryString = "CREATE TABLE '" + myCase.idCase + "'"
                   + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
-                  + " RAW REAL, DEFICIT REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
+                  + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
+                  + " DEFICIT REAL, DEFICIT_25 REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
                   + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOTDEPTH REAL )";
     myQuery = this->dbOutput.exec(queryString);
 
@@ -503,7 +504,9 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
     if (isFirst)
     {
         outputString = "INSERT INTO '" + myCase.idCase + "'"
-                       + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, RAW, DEFICIT, DRAINAGE, RUNOFF, ET0,"
+                       + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, "
+                       + " AVAILABLE_WATER, READILY_AW, FRACTION_AW, "
+                       + " DEFICIT, DEFICIT_25, DRAINAGE, RUNOFF, ET0, "
                        + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOTDEPTH) "
                        + " VALUES ";
     }
@@ -518,7 +521,10 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailySoilWaterContent, 'g', 5)
                     + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 4)
                     + "," + QString::number(myCase.output.dailyCropAvailableWater, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyCropAvailableWater, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyCropAvailableWater, 'g', 4)
                     + "," + QString::number(myCase.output.dailyWaterDeficit, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyWaterDeficit_25, 'g', 4)
                     + "," + QString::number(myCase.output.dailyDrainage, 'g', 4)
                     + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 4)
                     + "," + QString::number(myCase.output.dailyEt0, 'g', 3)

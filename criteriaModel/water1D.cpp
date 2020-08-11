@@ -573,25 +573,34 @@ double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers)
 /*!
  * \brief getSoilWaterDeficit
  * \param soilLayers
- * \return sum of water deficit (mm) in the first meter of soil
+ * \param computationSoilDepth = computation depth  [m]
+ * \return sum of water deficit (mm)
  */
-double getSoilWaterDeficit(const std::vector<soil::Crit3DLayer> &soilLayers)
+double getSoilWaterDeficit(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
 {
-    const double computationSoilDepth = 1.0;      // [m]
-
     // surface water content
     double waterDeficitSum = -soilLayers[0].waterContent;
 
     for (unsigned int i = 1; i < soilLayers.size(); i++)
     {
-        if (soilLayers[i].depth > computationSoilDepth)
-            return waterDeficitSum;
-
-        waterDeficitSum += soilLayers[i].FC - soilLayers[i].waterContent;
+        double layerDepthMax = soilLayers[i].depth + soilLayers[i].thickness / 2.0;
+        if (layerDepthMax < computationSoilDepth)
+        {
+            waterDeficitSum += soilLayers[i].FC - soilLayers[i].waterContent;
+        }
+        else
+        {
+            // fraction of last layer
+            double layerDepthMin = soilLayers[i].depth - soilLayers[i].thickness / 2.0;
+            double layerDeficit = soilLayers[i].FC - soilLayers[i].waterContent;
+            double depthFraction = (computationSoilDepth - layerDepthMin) / soilLayers[i].thickness;
+            return waterDeficitSum + layerDeficit * depthFraction;
+        }
     }
 
     return waterDeficitSum;
 }
+
 
 /*!
  * \brief getCropReadilyAvailableWater

@@ -55,6 +55,7 @@ void Crit1DOutput::initialize()
     this->dailyTranspiration = NODATA;
     this->dailyCropAvailableWater = NODATA;
     this->dailyWaterDeficit = NODATA;
+    this->dailyWaterDeficit_25 = NODATA;
     this->dailyCapillaryRise = NODATA;
     this->dailyWaterTable = NODATA;
 }
@@ -208,7 +209,8 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
     // output variables
     myOutput.dailySurfaceWaterContent = soilLayers[0].waterContent;
     myOutput.dailySoilWaterContent = getSoilWaterContent(soilLayers);
-    myOutput.dailyWaterDeficit = getSoilWaterDeficit(soilLayers);
+    myOutput.dailyWaterDeficit = getSoilWaterDeficit(soilLayers, 1.0);
+    myOutput.dailyWaterDeficit_25 = getSoilWaterDeficit(soilLayers, 0.25);
     myOutput.dailyCropAvailableWater = getCropReadilyAvailableWater(myCrop, soilLayers);
 
     return true;
