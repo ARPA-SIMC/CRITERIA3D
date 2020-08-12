@@ -299,19 +299,11 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
 
     if (! query.isValid())
     {
-        QString idMeteo5char = getId5Char(idMeteo);
-        queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo5char + "'";
-        query = dbMeteo.exec(queryString);
-        query.last();
-
-        if (! query.isValid())
-        {
-            if (query.lastError().text() != "")
-                *myError = "dbMeteo error: " + query.lastError().text();
-            else
-                *myError = "Missing meteo location:" + idMeteo;
-            return false;
-        }
+        if (query.lastError().text() != "")
+            *myError = "dbMeteo error: " + query.lastError().text();
+        else
+            *myError = "Missing meteo location:" + idMeteo;
+        return false;
     }
 
     QString tableName = query.value("table_name").toString();
@@ -356,6 +348,7 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstObsDate));
 
     // Read observed data
+    // TODO read from firstdaste to lastdate
     if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), myError)) return false;
 
     // Add Short-Term forecast
