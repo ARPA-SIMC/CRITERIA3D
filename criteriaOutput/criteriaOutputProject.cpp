@@ -392,11 +392,18 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
         {
 
             int selectRes = selectSimpleVar(dbData, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector);
-            if (selectRes != CRIT3D_OK)
+            if (selectRes == ERROR_INCOMPLETE_DATA)
+            {
+                res = NODATA;
+            }
+            else if(selectRes != CRIT3D_OK)
             {
                 return selectRes;
             }
-            res = resVector[0];
+            else
+            {
+                res = resVector[0];
+            }
         }
         else
         {
@@ -410,7 +417,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
             }
             int DTXRes = computeDTX(dbData, idCase, periodTDX, computation, firstDate, lastDate, &resVector);
             // check errors in computeDTX
-            if (DTXRes == ERROR_INCOMPLETE_DTX)
+            if (DTXRes == ERROR_INCOMPLETE_DATA)
             {
                 res = NODATA;
             }
@@ -418,7 +425,10 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
             {
                 return DTXRes;
             }
-            res = resVector[0];
+            else
+            {
+                res = resVector[0];
+            }
 
         }
         if (res == NODATA)
@@ -480,12 +490,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
                         {
                             // ALL CASES
                             selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector);
-                        }
-                        else
-                        {
-                            // TDX
-                            selectRes = computeDTX(dbDataHistorical, idCase, periodTDX , computation, firstDate, lastDate, &resVector);
-                            if (selectRes == ERROR_INCOMPLETE_DTX)
+                            if (selectRes == ERROR_INCOMPLETE_DATA)
                             {
                                 if (year != historicalFirstDate.year())
                                 {
@@ -495,7 +500,21 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
                                 }
                             }
                         }
-                        if (selectRes != CRIT3D_OK && selectRes != ERROR_INCOMPLETE_DTX)
+                        else
+                        {
+                            // TDX
+                            selectRes = computeDTX(dbDataHistorical, idCase, periodTDX , computation, firstDate, lastDate, &resVector);
+                            if (selectRes == ERROR_INCOMPLETE_DATA)
+                            {
+                                if (year != historicalFirstDate.year())
+                                {
+                                    res = NODATA;
+                                    skip = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (selectRes != CRIT3D_OK && selectRes != ERROR_INCOMPLETE_DATA)
                         {
                             return selectRes;
                         }
@@ -560,7 +579,7 @@ int CriteriaOutputProject::selectSimpleVar(QSqlDatabase db, QString idCase, QStr
     getValue(qry.value(0), &count);
     if (count < firstDate.daysTo(lastDate)+1)
     {
-        return NODATA;
+        return ERROR_INCOMPLETE_DATA;
     }
     else
     {
@@ -623,7 +642,7 @@ int CriteriaOutputProject::computeDTX(QSqlDatabase db, QString idCase, int perio
         if (count+count2 < period*2)
         {
             dtx.push_back(NODATA);
-            return ERROR_INCOMPLETE_DTX;
+            return ERROR_INCOMPLETE_DATA;
         }
         statement = QString("SELECT SUM(TRANSP_MAX),SUM(TRANSP) FROM `%1` WHERE DATE >= '%2' AND DATE <= '%3'").arg(idCase).arg(start.toString("yyyy-MM-dd")).arg(end.toString("yyyy-MM-dd"));
         if( !qry.exec(statement) )
