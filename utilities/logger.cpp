@@ -22,7 +22,7 @@ bool Logger::setLog(QString path, QString fileName)
         QString myDate = QDateTime().currentDateTime().toString("yyyy-MM-dd hh.mm");
         QString completefileName = fileName + "_" + myDate + ".txt";
         logFileName = path + "log/" + completefileName;
-        std::cout << "SWB PROCESSOR - log file created:\n" << logFileName.toStdString() << std::endl;
+        std::cout << "Log file created: " << logFileName.toStdString() << std::endl;
         file->setFileName(logFileName);
         return file->open(QIODevice::Append | QIODevice::Text);
     }
