@@ -33,8 +33,11 @@
         double dailyEvaporation;
         double dailyMaxTranspiration;
         double dailyTranspiration;
-        double dailyCropAvailableWater;
+        double dailyAvailableWater;
+        double dailyFractionAW;
+        double dailyReadilyAW;
         double dailyWaterDeficit;
+        double dailyWaterDeficit_25;
         double dailyWaterTable;
         double dailyCapillaryRise;
 

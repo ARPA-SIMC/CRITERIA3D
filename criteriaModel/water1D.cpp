@@ -541,28 +541,27 @@ double computeOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, doub
 /*!
  * \brief getSoilWaterContent
  * \param soilLayers
- * \return sum of water content (mm) in the first meter of soil
+ * \param computationSoilDepth = computation depth  [m]
+ * \return sum of water content from zero to computationSoilDepth (mm)
  */
-double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers)
+double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
 {
-    const double maxDepth = 1.0;            // [m]
     double lowerDepth, upperDepth;          // [m]
-    double depthRatio;                      // [-]
     double waterContentSum = 0;             // [mm]
 
-    unsigned int nrLayers = unsigned(soilLayers.size());
-
-    for (unsigned int i = 1; i < nrLayers; i++)
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
     {
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
-        if (lowerDepth < maxDepth)
+
+        if (lowerDepth < computationSoilDepth)
+        {
             waterContentSum += soilLayers[i].waterContent;
+        }
         else
         {
             upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
-            depthRatio = (maxDepth - upperDepth) / soilLayers[i].thickness;
-            waterContentSum += soilLayers[i].waterContent * depthRatio;
-            break;
+            double depthFraction = (computationSoilDepth - upperDepth) / soilLayers[i].thickness;
+            return waterContentSum + soilLayers[i].waterContent * depthFraction;
         }
     }
 
@@ -573,32 +572,113 @@ double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers)
 /*!
  * \brief getSoilWaterDeficit
  * \param soilLayers
- * \return sum of water deficit (mm) in the first meter of soil
+ * \param computationSoilDepth = computation depth  [m]
+ * \return sum of water deficit from zero to computationSoilDepth (mm)
  */
-double getSoilWaterDeficit(const std::vector<soil::Crit3DLayer> &soilLayers)
+double getSoilWaterDeficit(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
 {
-    const double computationSoilDepth = 1.0;      // [m]
-
-    // surface water content
-    double waterDeficitSum = -soilLayers[0].waterContent;
+    double lowerDepth, upperDepth;          // [m]
+    double waterDeficitSum = 0;             // [mm]
 
     for (unsigned int i = 1; i < soilLayers.size(); i++)
     {
-        if (soilLayers[i].depth > computationSoilDepth)
-            return waterDeficitSum;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
 
-        waterDeficitSum += soilLayers[i].FC - soilLayers[i].waterContent;
+        if (lowerDepth < computationSoilDepth)
+        {
+            waterDeficitSum += soilLayers[i].FC - soilLayers[i].waterContent;
+        }
+        else
+        {
+            // fraction of last layer
+            upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+            double layerDeficit = soilLayers[i].FC - soilLayers[i].waterContent;
+            double depthFraction = (computationSoilDepth - upperDepth) / soilLayers[i].thickness;
+            return waterDeficitSum + layerDeficit * depthFraction;
+        }
     }
 
     return waterDeficitSum;
 }
 
+
 /*!
- * \brief getCropReadilyAvailableWater
- * \param myCrop, soilLayers
- * \return sum of readily available water (mm) in the rooting zone
+ * \brief getSoilAvailableWater
+ * \param soilLayers
+ * \param computationSoilDepth = computation depth  [m]
+ * \return sum of available water from zero to computationSoilDepth (mm)
  */
-double getCropReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit3DLayer> &soilLayers)
+double getSoilAvailableWater(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
+{
+    double lowerDepth, upperDepth;      // [m]
+    double availableWaterSum = 0;       // [mm]
+
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    {
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+
+        if (lowerDepth < computationSoilDepth)
+        {
+            availableWaterSum += soilLayers[i].waterContent - soilLayers[i].WP;
+        }
+        else
+        {
+            // fraction of last layer
+            upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+            double layerAW = soilLayers[i].waterContent - soilLayers[i].WP;
+            double depthFraction = (computationSoilDepth - upperDepth) / soilLayers[i].thickness;
+            return availableWaterSum + layerAW * depthFraction;
+        }
+    }
+
+    return availableWaterSum;
+}
+
+
+/*!
+ * \brief getSoilFractionAW
+ * \param soilLayers
+ * \param computationSoilDepth = computation depth  [m]
+ * \return fraction of available water from zero to computationSoilDepth (mm)
+ */
+double getSoilFractionAW(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
+{
+    double lowerDepth, upperDepth;      // [m]
+    double depthFraction;               // [-]
+    double availableWaterSum = 0;       // [mm]
+    double potentialAWSum = 0;          // [mm]
+
+    unsigned int i = 1;
+    bool isDepthLower = true;
+    while (i < soilLayers.size() && isDepthLower)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+
+        if (lowerDepth < computationSoilDepth)
+            depthFraction = 1;
+        else
+        {
+            depthFraction = (computationSoilDepth - upperDepth) / soilLayers[i].thickness;
+            isDepthLower = false;
+        }
+
+        availableWaterSum += (soilLayers[i].waterContent - soilLayers[i].WP) * depthFraction;
+        potentialAWSum += (soilLayers[i].FC - soilLayers[i].WP) * depthFraction;
+        i++;
+    }
+
+    return availableWaterSum / potentialAWSum;
+}
+
+
+/*!
+ * \brief getReadilyAvailableWater
+ * \param myCrop
+ * \param soilLayers
+ * \return sum of readily available water in the rooting zone (mm)
+ */
+double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
     if (! myCrop.isLiving) return NODATA;
     if (myCrop.roots.rootDepth <= myCrop.roots.rootDepthMin) return NODATA;
