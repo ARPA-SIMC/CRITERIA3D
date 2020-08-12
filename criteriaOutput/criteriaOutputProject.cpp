@@ -441,7 +441,14 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
         {
             if (outputVariable.climateComputation[i].isEmpty())
             {
-                results.append(QString::number(res,'f',1));
+                if (outputVariable.varName[i] == "FRACTION_AW")
+                {
+                    results.append(QString::number(res,'f',3));
+                }
+                else
+                {
+                    results.append(QString::number(res,'f',1));
+                }
             }
             else
             {
@@ -539,7 +546,14 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
                             bool sortValues = true;
                             std::vector<float> historicalVector = resAllYearsVector.toStdVector();
                             res = sorting::percentileRank(historicalVector, res, sortValues);
-                            results.append(QString::number(res,'f',1));
+                            if (outputVariable.varName[i] == "FRACTION_AW")
+                            {
+                                results.append(QString::number(res,'f',3));
+                            }
+                            else
+                            {
+                                results.append(QString::number(res,'f',1));
+                            }
                         }
                     }
                 }
