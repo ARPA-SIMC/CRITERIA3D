@@ -84,7 +84,6 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
 
     logger.setLog(path,projectName);
 
-
     if (isCsv)
     {
         // check DB Crop
@@ -210,28 +209,31 @@ bool CriteriaOutputProject::readSettings()
     }
     projectSettings->endGroup();
 
-    projectSettings->beginGroup("shapefile");
-    // UCM
-    ucmFileName = projectSettings->value("UCM","").toString();
-    if (ucmFileName.left(1) == ".")
+    if (! isCsv)
     {
-        ucmFileName = path + QDir::cleanPath(ucmFileName);
+        projectSettings->beginGroup("shapefile");
+        // UCM
+        ucmFileName = projectSettings->value("UCM","").toString();
+        if (ucmFileName.left(1) == ".")
+        {
+            ucmFileName = path + QDir::cleanPath(ucmFileName);
+        }
+
+        // Field list
+        fieldListFileName = projectSettings->value("field_list", "").toString();
+        if (fieldListFileName.left(1) == ".")
+        {
+            fieldListFileName = path + QDir::cleanPath(fieldListFileName);
+        }
+
+        // Shapefile
+        QString shapePath = getFilePath(csvFileName) + dateStr;
+        QDir myDir;
+        if (! myDir.exists(shapePath)) myDir.mkdir(shapePath);
+        shapeFileName = shapePath + "/" + getFileName(csvFileName) + ".shp";
+
+        projectSettings->endGroup();
     }
-
-    // Field list
-    fieldListFileName = projectSettings->value("field_list", "").toString();
-    if (fieldListFileName.left(1) == ".")
-    {
-        fieldListFileName = path + QDir::cleanPath(fieldListFileName);
-    }
-
-    // Shapefile
-    QString shapePath = getFilePath(csvFileName) + dateStr;
-    QDir myDir;
-    if (! myDir.exists(shapePath)) myDir.mkdir(shapePath);
-    shapeFileName = shapePath + "/" + getFileName(csvFileName) + ".shp";
-
-    projectSettings->endGroup();
 
     return true;
 }
