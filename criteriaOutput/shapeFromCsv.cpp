@@ -183,7 +183,7 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
         return false;
     }
 
-    // Reads the data up to the end of file
+    // Reads the data and write to shapefile
     QString line;
     QStringList items;
     std::string idCaseStr;

@@ -387,7 +387,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
         }
 
         // QUERY
-        //simple variable
+        // simple variable
         if (varName.left(2) != "DT")
         {
 
@@ -429,8 +429,8 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
             {
                 res = resVector[0];
             }
-
         }
+
         if (res == NODATA)
         {
             results.append(QString::number(res));
@@ -444,10 +444,10 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
             else
             {
                 // db_data_historical comparison
-                if (outputVariable.param1[i]!=NODATA && res < outputVariable.param1[i])
+                if (outputVariable.param1[i] != NODATA && res < outputVariable.param1[i])
                 {
                     // skip historical analysis
-                    results.append(" ");
+                    results.append(QString::number(NODATA));
                 }
                 else
                 {
@@ -471,7 +471,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
                     getValue(qry.value("MAX(DATE)"), &historicalLastDate);
 
                     QVector<float> resAllYearsVector;
-                    if (outputVariable.param2[i]!=NODATA)
+                    if (outputVariable.param2[i] != NODATA)
                     {
                         firstDate = firstDate.addDays(-outputVariable.param2[i]);
                         lastDate = lastDate.addDays(outputVariable.param2[i]);
@@ -528,7 +528,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
                     if (skip)
                     {
                         // incomplete data
-                        results.append(QString::number(NODATA,'f',1));
+                        results.append(QString::number(NODATA));
                     }
                     else
                     {
@@ -544,6 +544,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
             }
         }
     }
+
     // write CSV
     QTextStream out(&outputFile);
     out << dateComputation.toString("yyyy-MM-dd");
