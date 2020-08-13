@@ -581,11 +581,11 @@ int CriteriaOutputProject::selectSimpleVar(QSqlDatabase db, QString idCase, QStr
     int count = 0;
     QString statement;
     float result = NODATA;
-    statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE >= '%3' AND DATE <= '%4'").arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
+    statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'").arg(computation).arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
     if( !qry.exec(statement) )
     {
-        projectError = "Wrong variable: " + varName + "\n" + qry.lastError().text();
-        return ERROR_OUTPUT_VARIABLES;
+        projectError = "Wrong computation: " + computation + "\n" + qry.lastError().text();
+        return ERROR_OUTPUT_VARIABLES ;
     }
     qry.first();
     if (!qry.isValid())
@@ -593,38 +593,27 @@ int CriteriaOutputProject::selectSimpleVar(QSqlDatabase db, QString idCase, QStr
         projectError = qry.lastError().text();
         return ERROR_OUTPUT_VARIABLES ;
     }
-    getValue(qry.value(0), &count);
+    do
+    {
+        getValue(qry.value(0), &result);
+        count = count+1;
+        if (varName == "IRRIGATION")
+        {
+            result = result * irriRatio;
+        }
+        resVector->push_back(result);
+
+    }
+    while(qry.next());
+
+
     if (count < firstDate.daysTo(lastDate)+1)
     {
         return ERROR_INCOMPLETE_DATA;
     }
-    else
-    {
-        statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'").arg(computation).arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
-        if( !qry.exec(statement) )
-        {
-            projectError = "Wrong computation: " + computation + "\n" + qry.lastError().text();
-            return ERROR_OUTPUT_VARIABLES ;
-        }
-        qry.first();
-        if (!qry.isValid())
-        {
-            projectError = qry.lastError().text();
-            return ERROR_OUTPUT_VARIABLES ;
-        }
-        do
-        {
-            getValue(qry.value(0), &result);
-            if (varName == "IRRIGATION")
-            {
-                result = result * irriRatio;
-            }
-            resVector->push_back(result);
 
-        }
-        while(qry.next());
-    }
     return CRIT3D_OK;
+
 }
 
 int CriteriaOutputProject::computeDTX(QSqlDatabase db, QString idCase, int period, QString computation, QDate firstDate, QDate lastDate, QVector<float>* resVector)
