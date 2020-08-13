@@ -479,80 +479,88 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
                     getValue(qry.value("MIN(DATE)"), &historicalFirstDate);
                     getValue(qry.value("MAX(DATE)"), &historicalLastDate);
 
-                    QVector<float> resAllYearsVector;
-                    if (outputVariable.param2[i] != NODATA)
-                    {
-                        firstDate = firstDate.addDays(-outputVariable.param2[i]);
-                        lastDate = lastDate.addDays(outputVariable.param2[i]);
-                    }
-
-                    int year = historicalFirstDate.year();
-                    bool skip = false;
-                    while(year <= historicalLastDate.year())
-                    {
-                        resVector.clear();
-                        firstDate.setDate(year,firstDate.month(),firstDate.day());
-                        lastDate.setDate(year,lastDate.month(),lastDate.day());
-                        int selectRes;
-
-                        if (varName.left(2) != "DT")
-                        {
-                            // ALL CASES
-                            selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector);
-                            if (selectRes == ERROR_INCOMPLETE_DATA)
-                            {
-                                if (year != historicalFirstDate.year())
-                                {
-                                    res = NODATA;
-                                    skip = true;
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // TDX
-                            selectRes = computeDTX(dbDataHistorical, idCase, periodTDX , computation, firstDate, lastDate, &resVector);
-                            if (selectRes == ERROR_INCOMPLETE_DATA)
-                            {
-                                if (year != historicalFirstDate.year())
-                                {
-                                    res = NODATA;
-                                    skip = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (selectRes != CRIT3D_OK && selectRes != ERROR_INCOMPLETE_DATA)
-                        {
-                            return selectRes;
-                        }
-                        else
-                        {
-                            resAllYearsVector.append(resVector);
-                        }
-                        year = year+1;
-                    }
-                    resVector.clear();
-                    if (skip)
+                    if (!historicalFirstDate.isValid() || !historicalLastDate.isValid())
                     {
                         // incomplete data
                         results.append(QString::number(NODATA));
                     }
                     else
                     {
-                        if (outputVariable.climateComputation[i] == "PERCENTILE")
+                        QVector<float> resAllYearsVector;
+                        if (outputVariable.param2[i] != NODATA)
                         {
-                            bool sortValues = true;
-                            std::vector<float> historicalVector = resAllYearsVector.toStdVector();
-                            res = sorting::percentileRank(historicalVector, res, sortValues);
-                            if (outputVariable.varName[i] == "FRACTION_AW")
+                            firstDate = firstDate.addDays(-outputVariable.param2[i]);
+                            lastDate = lastDate.addDays(outputVariable.param2[i]);
+                        }
+
+                        int year = historicalFirstDate.year();
+                        bool skip = false;
+                        while(year <= historicalLastDate.year())
+                        {
+                            resVector.clear();
+                            firstDate.setDate(year,firstDate.month(),firstDate.day());
+                            lastDate.setDate(year,lastDate.month(),lastDate.day());
+                            int selectRes;
+
+                            if (varName.left(2) != "DT")
                             {
-                                results.append(QString::number(res,'f',3));
+                                // ALL CASES
+                                selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector);
+                                if (selectRes == ERROR_INCOMPLETE_DATA)
+                                {
+                                    if (year != historicalFirstDate.year())
+                                    {
+                                        res = NODATA;
+                                        skip = true;
+                                        break;
+                                    }
+                                }
                             }
                             else
                             {
-                                results.append(QString::number(res,'f',1));
+                                // TDX
+                                selectRes = computeDTX(dbDataHistorical, idCase, periodTDX , computation, firstDate, lastDate, &resVector);
+                                if (selectRes == ERROR_INCOMPLETE_DATA)
+                                {
+                                    if (year != historicalFirstDate.year())
+                                    {
+                                        res = NODATA;
+                                        skip = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (selectRes != CRIT3D_OK && selectRes != ERROR_INCOMPLETE_DATA)
+                            {
+                                return selectRes;
+                            }
+                            else
+                            {
+                                resAllYearsVector.append(resVector);
+                            }
+                            year = year+1;
+                        }
+                        resVector.clear();
+                        if (skip)
+                        {
+                            // incomplete data
+                            results.append(QString::number(NODATA));
+                        }
+                        else
+                        {
+                            if (outputVariable.climateComputation[i] == "PERCENTILE")
+                            {
+                                bool sortValues = true;
+                                std::vector<float> historicalVector = resAllYearsVector.toStdVector();
+                                res = sorting::percentileRank(historicalVector, res, sortValues);
+                                if (outputVariable.varName[i] == "FRACTION_AW")
+                                {
+                                    results.append(QString::number(res,'f',3));
+                                }
+                                else
+                                {
+                                    results.append(QString::number(res,'f',1));
+                                }
                             }
                         }
                     }
