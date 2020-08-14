@@ -35,21 +35,22 @@ public:
     QString projectName;
     QString configFileName;
     QString projectError;
+    QString ucmFileName;
+    QString shapeFileName;
+    QString fieldListFileName;
+    QString variableListFileName;
+    QString csvFileName;
+
+    QDate dateComputation;
 
     QString dbUnitsName;
     QString dbDataName;
     QString dbCropName;
     QString dbDataHistoricalName;
+
     QSqlDatabase dbCrop;
     QSqlDatabase dbData;
     QSqlDatabase dbDataHistorical;
-    QString variableListFileName;
-    QString csvFileName;
-    QDate dateComputation;
-
-    QString ucmFileName;
-    QString shapeFileName;
-    QString fieldListFileName;
 
     int nrUnits;
     std::vector<Crit1DUnit> unitList;
@@ -61,14 +62,18 @@ public:
     Logger logger;
 
     CriteriaOutputProject();
+
     void initialize();
     void closeProject();
     int initializeProject(QString settingsFileName, QDate dateComputation, bool isCsv);
     bool readSettings();
+
+    int createCsvFile();
+    int createShapeFile();
+
     bool initializeCsvOutputFile();
-    bool createShapeFile();
-    int writeCsvOutput();
     int writeCsvOutputUnit(unsigned int unitIndex);
+
     int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString computation, QDate firstDate, QDate lastDate, float irriRatio, QVector<float> *resVector);
     int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation, QDate firstDate, QDate lastDate, QVector<float>* resVector);
 

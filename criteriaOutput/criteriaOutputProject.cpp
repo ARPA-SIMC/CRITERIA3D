@@ -43,6 +43,16 @@ void CriteriaOutputProject::closeProject()
     if (isProjectLoaded)
     {
         logger.writeInfo("Close Project...");
+
+        initialize();
+
+        unitList.clear();
+        outputFile.close();
+        logFile.close();
+        dbData.close();
+        dbCrop.close();
+        dbDataHistorical.close();
+
         isProjectLoaded = false;
     }
 }
@@ -239,6 +249,67 @@ bool CriteriaOutputProject::readSettings()
 }
 
 
+int CriteriaOutputProject::createCsvFile()
+{
+    // load computation unit list
+    if (! loadUnitList(dbUnitsName, unitList, projectError))
+    {
+        return ERROR_READ_UNITS;
+    }
+    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+
+    // initialize output
+    if (!initializeCsvOutputFile())
+    {
+        return ERROR_PARSERCSV;
+    }
+
+    // write output
+    for (unsigned int i=0; i < unitList.size(); i++)
+    {
+        int myResult = writeCsvOutputUnit(i);
+        if (myResult != CRIT3D_OK)
+        {
+            return myResult;
+        }
+    }
+
+    return CRIT3D_OK;
+}
+
+
+int CriteriaOutputProject::createShapeFile()
+{
+    // check CSV
+    if (! QDir(csvFileName).exists())
+    {
+        int myResult = createCsvFile();
+        if (myResult != CRIT3D_OK) return myResult;
+    }
+
+    Crit3DShapeHandler inputShape, outputShape;
+
+    if (!inputShape.open(ucmFileName.toStdString()))
+    {
+        projectError = "Wrong shapefile: " + ucmFileName;
+        return ERROR_SHAPEFILE;
+    }
+
+    logger.writeInfo("UCM shapefile: " + ucmFileName);
+    logger.writeInfo("CSV data: " + csvFileName);
+    logger.writeInfo("Shape field list: " + fieldListFileName);
+    logger.writeInfo("Write shapefile...");
+
+    if (! shapeFromCsv(&inputShape, &outputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
+    {
+        return ERROR_SHAPEFILE;
+    }
+
+    logger.writeInfo("Output shapefile: " + shapeFileName);
+    return CRIT3D_OK;
+}
+
+
 bool CriteriaOutputProject::initializeCsvOutputFile()
 {
     outputFile.setFileName(csvFileName);
@@ -264,45 +335,6 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
     return true;
 }
 
-
-bool CriteriaOutputProject::createShapeFile()
-{
-    Crit3DShapeHandler inputShape, outputShape;
-
-    if (!inputShape.open(ucmFileName.toStdString()))
-    {
-        logger.writeError("Wrong shapefile: " + ucmFileName);
-        return false;
-    }
-
-    logger.writeInfo("UCM shapefile: " + ucmFileName);
-    logger.writeInfo("CSV data: " + csvFileName);
-    logger.writeInfo("Shape field list: " + fieldListFileName);
-    logger.writeInfo("Write shapefile...");
-
-    if (! shapeFromCsv(&inputShape, &outputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
-    {
-        logger.writeError(projectError);
-        return false;
-    }
-
-    logger.writeInfo("Output shapefile: " + shapeFileName);
-    return true;
-}
-
-
-int CriteriaOutputProject::writeCsvOutput()
-{
-    for (unsigned int i=0; i<unitList.size(); i++)
-    {
-        int myResult = writeCsvOutputUnit(i);
-        if (myResult!=CRIT3D_OK)
-        {
-            return myResult;
-        }
-    }
-    return CRIT3D_OK;
-}
 
 int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
 {
