@@ -45,12 +45,3 @@ HEADERS += \
     ucmDb.h
 
 
-# comment to compile without GDAL library
-# CONFIG += GDAL
-
-GDAL {
-    DEFINES += GDAL
-    INCLUDEPATH += ../gdalHandler
-    include(../gdal.pri)
-}
-
