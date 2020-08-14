@@ -254,6 +254,8 @@ bool CriteriaOutputProject::readSettings()
 
 int CriteriaOutputProject::createCsvFile()
 {
+    logger.writeInfo("Create CSV...");
+
     // load computation unit list
     if (! loadUnitList(dbUnitsName, unitList, projectError))
     {
@@ -293,6 +295,8 @@ int CriteriaOutputProject::createShapeFile()
         }
     }
 
+    logger.writeInfo("Create SHAPEFILE...");
+
     Crit3DShapeHandler inputShape, outputShape;
 
     if (!inputShape.open(ucmFileName.toStdString()))
@@ -324,12 +328,15 @@ int CriteriaOutputProject::createAggregationFile()
 {
     if (! QDir(shapeFileName).exists())
     {
+        // create shapefile
         int myResult = createShapeFile();
         if (myResult != CRIT3D_OK)
         {
             return myResult;
         }
     }
+
+    logger.writeInfo("Create AGGREGATION...");
 
 
     // TODO
