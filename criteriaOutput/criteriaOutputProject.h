@@ -71,6 +71,7 @@ public:
 
     int createCsvFile();
     int createShapeFile();
+    int createAggregationFile();
 
     bool initializeCsvOutputFile();
     int writeCsvOutputUnit(unsigned int unitIndex);

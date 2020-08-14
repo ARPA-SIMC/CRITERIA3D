@@ -323,6 +323,25 @@ int CriteriaOutputProject::createShapeFile()
 }
 
 
+int CriteriaOutputProject::createAggregationFile()
+{
+    if (! QDir(shapeFileName).exists())
+    {
+        int myResult = createShapeFile();
+        if (myResult != CRIT3D_OK)
+        {
+            return myResult;
+        }
+    }
+
+
+    // TODO
+
+
+    return CRIT3D_OK;
+}
+
+
 bool CriteriaOutputProject::initializeCsvOutputFile()
 {
     outputFile.setFileName(csvFileName);
