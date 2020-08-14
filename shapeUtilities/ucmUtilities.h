@@ -8,6 +8,6 @@
 
     bool writeUcmListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error);
     bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputShapeFile, QString csvFileName,
-                      QString fieldListFileName, QString outputFileName, QString &error, bool showInfo);
+                      QString fieldListFileName, QString outputFileName, QString &error);
 
 #endif // UCMUTILITIES_H

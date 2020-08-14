@@ -4,9 +4,6 @@
 #include "commonConstants.h"
 
 #include <QtSql>
-#include "formInfo.h"
-
-
 
 long getFileLenght(QString fileName)
 {
@@ -50,7 +47,7 @@ long getFileLenght(QString fileName)
  * \return true if all is correct
 */
 bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputShapeFile, QString csvFileName,
-                  QString fieldListFileName, QString outputFileName, QString &error, bool showInfo)
+                  QString fieldListFileName, QString outputFileName, QString &error)
 {
     int csvRefRequiredInfo = 5;
     int defaultStringLenght = 20;
@@ -185,15 +182,6 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
         return false;
     }
 
-    // show info
-    FormInfo formInfo;
-    long count = 0;
-    int step = 0;
-    if (showInfo)
-    {
-        step = formInfo.start("Create shape... ", nrRows);
-    }
-
     // Reads the data and write to shapefile
     QString line;
     QStringList items;
@@ -203,9 +191,6 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
 
     while (!inputStream.atEnd())
     {
-        count++;
-        if (showInfo && (count%step == 0)) formInfo.setValue(count);
-
         line = inputStream.readLine();
         items = line.split(",");
         idCaseStr = items[idCaseIndexCsv].toStdString();
@@ -232,8 +217,6 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
             }
         }
     }
-
-    if (showInfo) formInfo.close();
 
     file.close();
     return true;

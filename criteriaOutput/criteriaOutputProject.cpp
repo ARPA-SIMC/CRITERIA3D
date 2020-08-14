@@ -280,7 +280,7 @@ bool CriteriaOutputProject::createShapeFile()
     logger.writeInfo("Shape field list: " + fieldListFileName);
     logger.writeInfo("Write shapefile...");
 
-    if (! shapeFromCsv(&inputShape, &outputShape, csvFileName, fieldListFileName, shapeFileName, projectError, false))
+    if (! shapeFromCsv(&inputShape, &outputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
     {
         logger.writeError(projectError);
         return false;
