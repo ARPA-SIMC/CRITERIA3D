@@ -57,6 +57,64 @@ void CriteriaOutputProject::closeProject()
     }
 }
 
+
+int CriteriaOutputProject::initializeProjectCsv()
+{
+    // check DB Crop
+    logger.writeInfo("DB Crop: " + dbCropName);
+    if (!QFile(dbCropName).exists())
+    {
+        projectError = "DB Crop file doesn't exist";
+        return ERROR_DBPARAMETERS;
+    }
+    // open DB Crop
+    dbCrop = QSqlDatabase::addDatabase("QSQLITE", "crop");
+    dbCrop.setDatabaseName(dbCropName);
+    if (! dbCrop.open())
+    {
+        projectError = "Open Crop DB failed: " + dbCrop.lastError().text();
+        return ERROR_DBPARAMETERS;
+    }
+
+    // check DB data
+    logger.writeInfo("DB Data: " + dbDataName);
+    if (!QFile(dbDataName).exists())
+    {
+        projectError = "DB data file doesn't exist";
+        return ERROR_DBPARAMETERS;
+    }
+    // open DB Data
+    dbData = QSqlDatabase::addDatabase("QSQLITE", "data");
+    dbData.setDatabaseName(dbDataName);
+    if (! dbData.open())
+    {
+        projectError = "Open DB data failed: " + dbData.lastError().text();
+        return ERROR_DBPARAMETERS;
+    }
+
+    // open DB Data Historical
+    if(!dbDataHistoricalName.isEmpty())
+    {
+        logger.writeInfo("DB data historical: " + dbDataHistoricalName);
+        if (!QFile(dbDataHistoricalName).exists())
+        {
+            projectError = "DB data historical doesn't exist";
+            return ERROR_DBPARAMETERS;
+        }
+
+        dbDataHistorical = QSqlDatabase::addDatabase("QSQLITE", "dataHistorical");
+        dbDataHistorical.setDatabaseName(dbDataHistoricalName);
+        if (! dbDataHistorical.open())
+        {
+            projectError = "Open DB data historical failed: " + dbDataHistorical.lastError().text();
+            return ERROR_DBPARAMETERS;
+        }
+    }
+
+    return CRIT3D_OK;
+}
+
+
 int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dateComputation, bool isCsv)
 {
     closeProject();
@@ -96,55 +154,7 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
 
     if (isCsv)
     {
-        // check DB Crop
-        logger.writeInfo("DB Crop: " + dbCropName);
-        if (!QFile(dbCropName).exists())
-        {
-            projectError = "DB Crop file doesn't exist";
-            return ERROR_DBPARAMETERS;
-        }
-        // open DB Crop
-        dbCrop = QSqlDatabase::addDatabase("QSQLITE", "crop");
-        dbCrop.setDatabaseName(dbCropName);
-        if (! dbCrop.open())
-        {
-            projectError = "Open Crop DB failed: " + dbCrop.lastError().text();
-            return ERROR_DBPARAMETERS;
-        }
-        // check DB data
-        logger.writeInfo("DB Data: " + dbDataName);
-        if (!QFile(dbDataName).exists())
-        {
-            projectError = "DB data file doesn't exist";
-            return ERROR_DBPARAMETERS;
-        }
-        // open DB Data
-        dbData = QSqlDatabase::addDatabase("QSQLITE", "data");
-        dbData.setDatabaseName(dbDataName);
-        if (! dbData.open())
-        {
-            projectError = "Open DB data failed: " + dbData.lastError().text();
-            return ERROR_DBPARAMETERS;
-        }
-
-        // open DB Data Historical
-        if(!dbDataHistoricalName.isEmpty())
-        {
-            logger.writeInfo("DB data historical: " + dbDataHistoricalName);
-            if (!QFile(dbDataHistoricalName).exists())
-            {
-                projectError = "DB data historical doesn't exist";
-                return ERROR_DBPARAMETERS;
-            }
-
-            dbDataHistorical = QSqlDatabase::addDatabase("QSQLITE", "dataHistorical");
-            dbDataHistorical.setDatabaseName(dbDataHistoricalName);
-            if (! dbDataHistorical.open())
-            {
-                projectError = "Open DB data historical failed: " + dbDataHistorical.lastError().text();
-                return ERROR_DBPARAMETERS;
-            }
-        }
+        initializeProjectCsv();
     }
 
     isProjectLoaded = true;
@@ -258,7 +268,6 @@ int CriteriaOutputProject::createCsvFile()
     }
     logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
 
-    // initialize output
     if (!initializeCsvOutputFile())
     {
         return ERROR_PARSERCSV;
@@ -280,11 +289,15 @@ int CriteriaOutputProject::createCsvFile()
 
 int CriteriaOutputProject::createShapeFile()
 {
-    // check CSV
     if (! QDir(csvFileName).exists())
     {
+        // create CSV
+        initializeProjectCsv();
         int myResult = createCsvFile();
-        if (myResult != CRIT3D_OK) return myResult;
+        if (myResult != CRIT3D_OK)
+        {
+            return myResult;
+        }
     }
 
     Crit3DShapeHandler inputShape, outputShape;

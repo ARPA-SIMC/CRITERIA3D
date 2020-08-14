@@ -66,6 +66,7 @@ public:
     void initialize();
     void closeProject();
     int initializeProject(QString settingsFileName, QDate dateComputation, bool isCsv);
+    int initializeProjectCsv();
     bool readSettings();
 
     int createCsvFile();
