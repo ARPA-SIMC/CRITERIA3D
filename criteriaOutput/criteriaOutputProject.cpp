@@ -370,7 +370,7 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
 
 int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
 {
-    //IRRIRATIO
+    // IRRI RATIO
     float irriRatio = getIrriRatioFromClass(&(dbCrop), "crop_class", "id_class", unitList[unitIndex].idCropClass, &(projectError));
 
     QString idCase = unitList[unitIndex].idCase;
@@ -662,8 +662,8 @@ int CriteriaOutputProject::selectSimpleVar(QSqlDatabase db, QString idCase, QStr
     qry.first();
     if (!qry.isValid())
     {
-        projectError = qry.lastError().text();
-        return ERROR_OUTPUT_VARIABLES ;
+        projectError = "Missing data: " + statement;
+        return ERROR_MISSING_DATA ;
     }
     do
     {
@@ -681,6 +681,7 @@ int CriteriaOutputProject::selectSimpleVar(QSqlDatabase db, QString idCase, QStr
 
     if (count < firstDate.daysTo(lastDate)+1)
     {
+        projectError = "Incomplete data: " + statement;
         return ERROR_INCOMPLETE_DATA;
     }
 
