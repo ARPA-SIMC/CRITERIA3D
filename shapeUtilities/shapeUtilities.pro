@@ -27,6 +27,7 @@ DEFINES += _CRT_SECURE_NO_WARNINGS
 INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project
 
 SOURCES += \
+    ../project/formInfo.cpp \
     shapeToRaster.cpp    \
     shapeUtilities.cpp   \
     ucmUtilities.cpp     \
@@ -37,6 +38,7 @@ SOURCES += \
 
 
 HEADERS += \
+    ../project/formInfo.h \
     shapeToRaster.h    \
     shapeUtilities.h   \
     ucmUtilities.h     \

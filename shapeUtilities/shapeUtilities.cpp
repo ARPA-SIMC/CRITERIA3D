@@ -1,10 +1,11 @@
 #include "shapeUtilities.h"
 #include <QFile>
 #include <QFileInfo>
-#include <qdebug.h>
 
 
-// make a copy of shapefile and return cloned shapefile path
+/*! cloneShapeFile
+ * \brief make a copy of shapefile and return filename of the cloned shapefile
+ */
 QString cloneShapeFile(QString refFileName, QString newFileName)
 {
     QFileInfo refFileInfo(refFileName);

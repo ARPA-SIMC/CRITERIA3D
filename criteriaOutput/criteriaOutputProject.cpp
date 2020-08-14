@@ -5,7 +5,7 @@
 #include "utilities.h"
 #include "cropDbQuery.h"
 #include "shapeHandler.h"
-#include "shapeFromCsv.h"
+#include "ucmUtilities.h"
 
 #include <QtSql>
 #include <iostream>
@@ -280,7 +280,7 @@ bool CriteriaOutputProject::createShapeFile()
     logger.writeInfo("Shape field list: " + fieldListFileName);
     logger.writeInfo("Write shapefile...");
 
-    if (! shapeFromCsv(&inputShape, &outputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
+    if (! shapeFromCsv(&inputShape, &outputShape, csvFileName, fieldListFileName, shapeFileName, projectError, false))
     {
         logger.writeError(projectError);
         return false;

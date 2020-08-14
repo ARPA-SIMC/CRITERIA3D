@@ -9,7 +9,7 @@
 #-----------------------------------------------------------
 
 QT -= gui
-QT += core sql
+QT += core widgets sql
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -44,15 +44,13 @@ SOURCES += \
     ../../agrolib/criteriaModel/criteria1DUnit.cpp \
     ../../agrolib/crop/cropDbQuery.cpp \
     criteriaOutputProject.cpp \
-    criteriaOutputVariable.cpp \
-    shapeFromCsv.cpp
+    criteriaOutputVariable.cpp
 
 HEADERS += \
     criteriaOutputProject.h \
-    criteriaOutputVariable.h \
-    shapeFromCsv.h
+    criteriaOutputVariable.h
 
 
-INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../crop \
-                ../criteriaModel ../utilities ../shapeHandler
+INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../crop ../gis \
+                ../criteriaModel ../utilities ../shapeHandler ../shapeUtilities
 
