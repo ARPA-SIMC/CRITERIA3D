@@ -115,7 +115,7 @@ int CriteriaOutputProject::initializeProjectCsv()
 }
 
 
-int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dateComputation, bool isCsv)
+int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dateComputation)
 {
     closeProject();
     initialize();
@@ -150,11 +150,6 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
     }
 
     logger.setLog(path,projectName);
-
-    if (isCsv)
-    {
-        initializeProjectCsv();
-    }
 
     isProjectLoaded = true;
     return CRIT3D_OK;
@@ -256,6 +251,8 @@ int CriteriaOutputProject::createCsvFile()
 {
     logger.writeInfo("Create CSV...");
 
+    initializeProjectCsv();
+
     // load computation unit list
     if (! loadUnitList(dbUnitsName, unitList, projectError))
     {
@@ -287,7 +284,6 @@ int CriteriaOutputProject::createShapeFile()
     if (! QDir(csvFileName).exists())
     {
         // create CSV
-        initializeProjectCsv();
         int myResult = createCsvFile();
         if (myResult != CRIT3D_OK)
         {
