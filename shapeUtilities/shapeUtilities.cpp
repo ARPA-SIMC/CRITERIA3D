@@ -3,11 +3,6 @@
 #include <QFileInfo>
 #include <qdebug.h>
 
-#ifdef GDAL
-    #include <gdal_priv.h>
-    #include <ogrsf_frmts.h>
-#endif
-
 
 // make a copy of shapefile and return cloned shapefile path
 QString cloneShapeFile(QString refFileName, QString newFileName)
