@@ -19,7 +19,6 @@ CriteriaOutputProject::CriteriaOutputProject()
 void CriteriaOutputProject::initialize()
 {
     isProjectLoaded = false;
-    isCsv = false;
 
     projectName = "";
     dbUnitsName = "";
@@ -32,6 +31,7 @@ void CriteriaOutputProject::initialize()
 
     ucmFileName = "";
     shapeFileName = "";
+    shapeFilePath = "";
     fieldListFileName = "";
 
     projectError = "";
@@ -120,7 +120,6 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
     closeProject();
     initialize();
     this->dateComputation = dateComputation;
-    this->isCsv = isCsv;
 
     if (settingsFileName == "")
     {
@@ -158,7 +157,6 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
     }
 
     isProjectLoaded = true;
-
     return CRIT3D_OK;
 }
 
@@ -229,31 +227,26 @@ bool CriteriaOutputProject::readSettings()
     }
     projectSettings->endGroup();
 
-    if (! isCsv)
+    projectSettings->beginGroup("shapefile");
+    // UCM
+    ucmFileName = projectSettings->value("UCM","").toString();
+    if (ucmFileName.left(1) == ".")
     {
-        projectSettings->beginGroup("shapefile");
-        // UCM
-        ucmFileName = projectSettings->value("UCM","").toString();
-        if (ucmFileName.left(1) == ".")
-        {
-            ucmFileName = path + QDir::cleanPath(ucmFileName);
-        }
-
-        // Field list
-        fieldListFileName = projectSettings->value("field_list", "").toString();
-        if (fieldListFileName.left(1) == ".")
-        {
-            fieldListFileName = path + QDir::cleanPath(fieldListFileName);
-        }
-
-        // Shapefile
-        QString shapePath = getFilePath(csvFileName) + dateStr;
-        QDir myDir;
-        if (! myDir.exists(shapePath)) myDir.mkdir(shapePath);
-        shapeFileName = shapePath + "/" + getFileName(csvFileName) + ".shp";
-
-        projectSettings->endGroup();
+        ucmFileName = path + QDir::cleanPath(ucmFileName);
     }
+
+    // Field list
+    fieldListFileName = projectSettings->value("field_list", "").toString();
+    if (fieldListFileName.left(1) == ".")
+    {
+        fieldListFileName = path + QDir::cleanPath(fieldListFileName);
+    }
+
+    // Shapefile
+    shapeFilePath = getFilePath(csvFileName) + dateStr;
+    shapeFileName = shapeFilePath + "/" + getFileName(csvFileName) + ".shp";
+
+    projectSettings->endGroup();
 
     return true;
 }
@@ -313,6 +306,10 @@ int CriteriaOutputProject::createShapeFile()
     logger.writeInfo("Shape field list: " + fieldListFileName);
     logger.writeInfo("Write shapefile...");
 
+    if (! QDir(shapeFilePath).exists())
+    {
+        QDir().mkdir(shapeFilePath);
+    }
     if (! shapeFromCsv(&inputShape, &outputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
     {
         return ERROR_SHAPEFILE;

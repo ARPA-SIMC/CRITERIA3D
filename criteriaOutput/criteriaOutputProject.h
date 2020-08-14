@@ -29,7 +29,6 @@ class CriteriaOutputProject
 {
 public:
     bool isProjectLoaded;
-    bool isCsv;
 
     QString path;
     QString dataPath;
@@ -38,6 +37,7 @@ public:
     QString projectError;
     QString ucmFileName;
     QString shapeFileName;
+    QString shapeFilePath;
     QString fieldListFileName;
     QString variableListFileName;
     QString csvFileName;
