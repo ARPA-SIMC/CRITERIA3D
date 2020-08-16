@@ -41,6 +41,11 @@ public:
     QString fieldListFileName;
     QString variableListFileName;
     QString csvFileName;
+    QString aggregationShape;
+    QString shapeFieldName;
+    QString aggregationListFileName;
+    int aggregationCellSize;
+    QString csvAggregationOutputFileName;
 
     QDate dateComputation;
 

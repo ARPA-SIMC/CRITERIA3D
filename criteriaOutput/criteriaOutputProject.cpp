@@ -34,6 +34,9 @@ void CriteriaOutputProject::initialize()
     shapeFilePath = "";
     fieldListFileName = "";
 
+    aggregationShape = "";
+    shapeFieldName = "";
+
     projectError = "";
     nrUnits = 0;
 }
@@ -240,6 +243,56 @@ bool CriteriaOutputProject::readSettings()
     // Shapefile
     shapeFilePath = getFilePath(csvFileName) + dateStr;
     shapeFileName = shapeFilePath + "/" + getFileName(csvFileName) + ".shp";
+
+    projectSettings->endGroup();
+
+    projectSettings->beginGroup("aggregation");
+    // Aggregation Shape
+    aggregationShape = projectSettings->value("aggregation_shape","").toString();
+    if (aggregationShape.left(1) == ".")
+    {
+        aggregationShape = path + QDir::cleanPath(aggregationShape);
+    }
+
+    // Shape Field
+    shapeFieldName = projectSettings->value("shape_field", "").toString();
+    if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
+    {
+        projectError = "Missing shape field name";
+        return false;
+    }
+
+    // Aggregation List
+    aggregationListFileName = projectSettings->value("aggregation_list","").toString();
+    if (aggregationListFileName.left(1) == ".")
+    {
+        aggregationListFileName = path + QDir::cleanPath(aggregationListFileName);
+    }
+
+    // Aggregation cell size
+    bool ok;
+    aggregationCellSize = projectSettings->value("aggregation_cellsize","").toString().toInt(&ok, 10);
+    if (!ok)
+    {
+        projectError = "Invalid aggregation cell size";
+        return false;
+    }
+
+    addDate = projectSettings->value("add_date_to_filename","").toBool();
+
+    // aggregation output
+    csvAggregationOutputFileName = projectSettings->value("aggregation_output","").toString();
+    if (csvAggregationOutputFileName.right(4) == ".csv")
+    {
+        csvAggregationOutputFileName = csvAggregationOutputFileName.left(csvAggregationOutputFileName.length()-4);
+    }
+    if (addDate) csvAggregationOutputFileName += "_" + dateStr;
+    csvAggregationOutputFileName += ".csv";
+
+    if (csvAggregationOutputFileName.left(1) == ".")
+    {
+        csvAggregationOutputFileName = path + QDir::cleanPath(csvAggregationOutputFileName);
+    }
 
     projectSettings->endGroup();
 
