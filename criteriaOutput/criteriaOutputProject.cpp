@@ -2,6 +2,7 @@
 #include "basicMath.h"
 #include "gis.h"
 #include "criteriaOutputProject.h"
+#include "criteriaOutputElaboration.h"
 #include "logger.h"
 #include "utilities.h"
 #include "cropDbQuery.h"
@@ -64,36 +65,11 @@ void CriteriaOutputProject::closeProject()
 }
 
 
-int CriteriaOutputProject::initializeProjectDtx()
-{
-    // open DB Data Historical
-    if(!dbDataHistoricalName.isEmpty())
-    {
-        logger.writeInfo("DB data historical: " + dbDataHistoricalName);
-        if (! QFile(dbDataHistoricalName).exists())
-        {
-            projectError = "DB data historical doesn't exist";
-            return ERROR_DBPARAMETERS;
-        }
-
-        dbDataHistorical = QSqlDatabase::addDatabase("QSQLITE", "dataHistorical");
-        dbDataHistorical.setDatabaseName(dbDataHistoricalName);
-        if (! dbDataHistorical.open())
-        {
-            projectError = "Open DB data historical failed: " + dbDataHistorical.lastError().text();
-            return ERROR_DBPARAMETERS;
-        }
-    }
-
-    return CRIT3D_OK;
-}
-
-
 int CriteriaOutputProject::initializeProjectCsv()
 {
     // check DB Crop
     logger.writeInfo("DB Crop: " + dbCropName);
-    if (! QFile(dbCropName).exists())
+    if (!QFile(dbCropName).exists())
     {
         projectError = "DB Crop file doesn't exist";
         return ERROR_DBPARAMETERS;
@@ -109,7 +85,7 @@ int CriteriaOutputProject::initializeProjectCsv()
 
     // check DB data
     logger.writeInfo("DB Data: " + dbDataName);
-    if (! QFile(dbDataName).exists())
+    if (!QFile(dbDataName).exists())
     {
         projectError = "DB data file doesn't exist";
         return ERROR_DBPARAMETERS;
@@ -127,7 +103,7 @@ int CriteriaOutputProject::initializeProjectCsv()
     if(!dbDataHistoricalName.isEmpty())
     {
         logger.writeInfo("DB data historical: " + dbDataHistoricalName);
-        if (! QFile(dbDataHistoricalName).exists())
+        if (!QFile(dbDataHistoricalName).exists())
         {
             projectError = "DB data historical doesn't exist";
             return ERROR_DBPARAMETERS;
@@ -318,45 +294,13 @@ bool CriteriaOutputProject::readSettings()
 }
 
 
-int CriteriaOutputProject::precomputeDtx()
-{
-    logger.writeInfo("PRECOMPUTE DTX");
-
-    int myResult = initializeProjectDtx();
-    if (myResult != CRIT3D_OK)
-    {
-        return myResult;
-    }
-
-    // load computation unit list
-    logger.writeInfo("DB computation units: " + dbUnitsName);
-    if (! loadUnitList(dbUnitsName, unitList, projectError))
-    {
-        return ERROR_READ_UNITS;
-    }
-    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
-    logger.writeInfo("Compute dtx...");
-
-
-    // TODO
-
-    return CRIT3D_OK;
-}
-
-
-
 int CriteriaOutputProject::createCsvFile()
 {
-    logger.writeInfo("Create CSV");
+    logger.writeInfo("Create CSV...");
 
-    int myResult = initializeProjectCsv();
-    if (myResult != CRIT3D_OK)
-    {
-        return myResult;
-    }
+    initializeProjectCsv();
 
     // load computation unit list
-    logger.writeInfo("DB computation units: " + dbUnitsName);
     if (! loadUnitList(dbUnitsName, unitList, projectError))
     {
         return ERROR_READ_UNITS;
@@ -368,12 +312,10 @@ int CriteriaOutputProject::createCsvFile()
         return ERROR_PARSERCSV;
     }
 
-    logger.writeInfo("Write csv...");
-
     // write output
     for (unsigned int i=0; i < unitList.size(); i++)
     {
-        myResult = writeCsvOutputUnit(i);
+        int myResult = writeCsvOutputUnit(i);
         if (myResult != CRIT3D_OK)
         {
             return myResult;
@@ -396,7 +338,7 @@ int CriteriaOutputProject::createShapeFile()
         }
     }
 
-    logger.writeInfo("Create SHAPEFILE");
+    logger.writeInfo("Create SHAPEFILE...");
 
     Crit3DShapeHandler inputShape, outputShape;
 
@@ -409,7 +351,6 @@ int CriteriaOutputProject::createShapeFile()
     logger.writeInfo("UCM shapefile: " + ucmFileName);
     logger.writeInfo("CSV data: " + csvFileName);
     logger.writeInfo("Shape field list: " + fieldListFileName);
-    logger.writeInfo("Output shapefile: " + shapeFileName);
     logger.writeInfo("Write shapefile...");
 
     if (! QDir(shapeFilePath).exists())
@@ -421,6 +362,7 @@ int CriteriaOutputProject::createShapeFile()
         return ERROR_SHAPEFILE;
     }
 
+    logger.writeInfo("Output shapefile: " + shapeFileName);
     return CRIT3D_OK;
 }
 
@@ -458,7 +400,7 @@ int CriteriaOutputProject::createAggregationFile()
         }
     }
 
-    logger.writeInfo("Create AGGREGATION");
+    logger.writeInfo("Create AGGREGATION...");
 
     if (!shapeVal.open(shapeFileName.toStdString()))
     {
@@ -511,7 +453,7 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
     }
     else
     {
-        logger.writeInfo("Output file: " + csvFileName);
+        logger.writeInfo("Output file: " + csvFileName + "\n");
     }
 
     if (!outputVariable.parserOutputVariable(variableListFileName, projectError))
@@ -616,7 +558,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
         if (varName.left(2) != "DT")
         {
 
-            int selectRes = selectSimpleVar(dbData, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector);
+            int selectRes = selectSimpleVar(dbData, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector, &projectError);
             if (selectRes == ERROR_INCOMPLETE_DATA)
             {
                 res = NODATA;
@@ -640,7 +582,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
                 projectError = "Parser CSV error";
                 return ERROR_PARSERCSV;
             }
-            int DTXRes = computeDTX(dbData, idCase, periodTDX, computation, firstDate, lastDate, &resVector);
+            int DTXRes = computeDTX(dbData, idCase, periodTDX, computation, firstDate, lastDate, &resVector, &projectError);
             // check errors in computeDTX
             if (DTXRes == ERROR_INCOMPLETE_DATA)
             {
@@ -728,7 +670,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
                             if (varName.left(2) != "DT")
                             {
                                 // ALL CASES
-                                selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector);
+                                selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector, &projectError);
                                 if (selectRes == ERROR_INCOMPLETE_DATA)
                                 {
                                     if (year != historicalFirstDate.year())
@@ -742,7 +684,7 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
                             else
                             {
                                 // TDX
-                                selectRes = computeDTX(dbDataHistorical, idCase, periodTDX , computation, firstDate, lastDate, &resVector);
+                                selectRes = computeDTX(dbDataHistorical, idCase, periodTDX , computation, firstDate, lastDate, &resVector, &projectError);
                                 if (selectRes == ERROR_INCOMPLETE_DATA)
                                 {
                                     if (year != historicalFirstDate.year())
@@ -802,134 +744,5 @@ int CriteriaOutputProject::writeCsvOutputUnit(unsigned int unitIndex)
 
     outputFile.flush();
 
-    return CRIT3D_OK;
-}
-
-int CriteriaOutputProject::selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString computation, QDate firstDate, QDate lastDate, float irriRatio, QVector<float>* resVector)
-{
-
-    QSqlQuery qry(db);
-    int count = 0;
-    QString statement;
-    float result = NODATA;
-    statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'").arg(computation).arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
-    if( !qry.exec(statement) )
-    {
-        projectError = "Wrong computation: " + computation + "\n" + qry.lastError().text();
-        return ERROR_OUTPUT_VARIABLES ;
-    }
-    qry.first();
-    if (!qry.isValid())
-    {
-        projectError = "Missing data: " + statement;
-        return ERROR_MISSING_DATA ;
-    }
-    do
-    {
-        getValue(qry.value(0), &result);
-        count = count+1;
-        if (varName == "IRRIGATION")
-        {
-            result = result * irriRatio;
-        }
-        resVector->push_back(result);
-
-    }
-    while(qry.next());
-
-
-    if (count < firstDate.daysTo(lastDate)+1)
-    {
-        projectError = "Incomplete data: " + statement;
-        return ERROR_INCOMPLETE_DATA;
-    }
-
-    return CRIT3D_OK;
-
-}
-
-int CriteriaOutputProject::computeDTX(QSqlDatabase db, QString idCase, int period, QString computation, QDate firstDate, QDate lastDate, QVector<float>* resVector)
-{
-
-    QSqlQuery qry(db);
-    QString statement;
-    float res = NODATA;
-    QVector<float> dtx;
-    int count = 0;
-    int count2 = 0;
-    float var1, var2;
-    QDate end = firstDate;
-    QDate start;
-    while (end <= lastDate)
-    {
-        start = end.addDays(-period+1);
-        statement = QString("SELECT COUNT(TRANSP_MAX),COUNT(TRANSP) FROM `%1` WHERE DATE >= '%2' AND DATE <= '%3'").arg(idCase).arg(start.toString("yyyy-MM-dd")).arg(end.toString("yyyy-MM-dd"));
-        if( !qry.exec(statement) )
-        {
-            projectError = qry.lastError().text();
-            return ERROR_OUTPUT_VARIABLES;
-        }
-        qry.first();
-        if (!qry.isValid())
-        {
-            projectError = qry.lastError().text();
-            return ERROR_OUTPUT_VARIABLES ;
-        }
-        getValue(qry.value(0), &count);
-        getValue(qry.value(1), &count2);
-        if (count+count2 < period*2)
-        {
-            dtx.push_back(NODATA);
-            return ERROR_INCOMPLETE_DATA;
-        }
-        statement = QString("SELECT SUM(TRANSP_MAX),SUM(TRANSP) FROM `%1` WHERE DATE >= '%2' AND DATE <= '%3'").arg(idCase).arg(start.toString("yyyy-MM-dd")).arg(end.toString("yyyy-MM-dd"));
-        if( !qry.exec(statement) )
-        {
-            projectError = qry.lastError().text();
-            return ERROR_OUTPUT_VARIABLES ;
-        }
-        qry.first();
-        if (!qry.isValid())
-        {
-            projectError = qry.lastError().text();
-            return ERROR_OUTPUT_VARIABLES ;
-        }
-        getValue(qry.value("SUM(TRANSP_MAX)"), &var1);
-        getValue(qry.value("SUM(TRANSP)"), &var2);
-        dtx.push_back((var1 - var2));
-        end = end.addDays(1);
-    }
-    if (computation.isEmpty())
-    {
-        resVector->append(dtx);
-        return CRIT3D_OK;
-    }
-    else if (computation == "SUM")
-    {
-        res = 0;
-        for(int i=0; i<dtx.size();i++)
-        {
-            res = res + dtx[i];
-        }
-    }
-    else if (computation == "AVG")
-    {
-        res = 0;
-        for(int i=0; i<dtx.size();i++)
-        {
-            res = res + dtx[i];
-        }
-        res = res/dtx.size();
-    }
-    else if (computation == "MAX")
-    {
-        res = *std::max_element(dtx.begin(), dtx.end());
-    }
-    else if (computation == "MIN")
-    {
-        res = *std::min_element(dtx.begin(), dtx.end());
-    }
-
-    resVector->push_back(res);
     return CRIT3D_OK;
 }
