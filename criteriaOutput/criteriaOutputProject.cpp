@@ -151,7 +151,7 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
 
     if (!readSettings())
     {
-        projectError = "Read settings error";
+        projectError = "Read settings: " + projectError;
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
