@@ -469,6 +469,7 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
     QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName.join(",");
     QTextStream out(&outputFile);
     out << header << "\n";
+    outputFile.close();
 
     return true;
 }

@@ -274,11 +274,9 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
     }
 
     // write CSV
-
-    // TO DO sistemare la scrittura del file in modo che vada in append a quanto già scritto
     QFile outputFile;
     outputFile.setFileName(csvFileName);
-    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Append))
     {
         *projectError = "Open failure: " + csvFileName;
         return false;
