@@ -46,7 +46,7 @@ public:
     QString aggregationShape;
     QString shapeFieldName;
     QString aggregationListFileName;
-    int aggregationCellSize;
+    QString aggregationCellSize;
     QString csvAggregationOutputFileName;
 
     Crit3DShapeHandler shapeVal;

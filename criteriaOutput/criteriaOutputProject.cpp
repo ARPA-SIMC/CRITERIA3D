@@ -260,11 +260,6 @@ bool CriteriaOutputProject::readSettings()
 
     // Shape Field
     shapeFieldName = projectSettings->value("shape_field", "").toString();
-    if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
-    {
-        projectError = "Missing shape field name";
-        return false;
-    }
 
     // Aggregation List
     aggregationListFileName = projectSettings->value("aggregation_list","").toString();
@@ -274,27 +269,16 @@ bool CriteriaOutputProject::readSettings()
     }
 
     // Aggregation cell size
-    bool ok;
-    aggregationCellSize = projectSettings->value("aggregation_cellsize","").toString().toInt(&ok, 10);
-    if (!ok)
-    {
-        projectError = "Invalid aggregation cell size";
-        return false;
-    }
+    aggregationCellSize = projectSettings->value("aggregation_cellsize","").toString();
 
     addDate = projectSettings->value("add_date_to_filename","").toBool();
-
     // aggregation output
     csvAggregationOutputFileName = projectSettings->value("aggregation_output","").toString();
     if (csvAggregationOutputFileName.right(4) == ".csv")
     {
         csvAggregationOutputFileName = csvAggregationOutputFileName.left(csvAggregationOutputFileName.length()-4);
     }
-    else
-    {
-        projectError = "aggregation output is not a csv file";
-        return false;
-    }
+
     if (addDate) csvAggregationOutputFileName += "_" + dateStr;
     csvAggregationOutputFileName += ".csv";
 
@@ -384,6 +368,27 @@ int CriteriaOutputProject::createShapeFile()
 
 int CriteriaOutputProject::createAggregationFile()
 {
+    if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
+    {
+        projectError = "Missing shape field name";
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+
+    // Aggregation cell size
+    bool ok;
+    int cellSize = aggregationCellSize.toInt(&ok, 10);
+    if (!ok)
+    {
+        projectError = "Invalid aggregation cell size";
+        return ERROR_SETTINGS_WRONGFILENAME;
+    }
+
+    if (csvAggregationOutputFileName.right(4) != ".csv")
+    {
+        projectError = "aggregation output is not a csv file";
+        return ERROR_SETTINGS_WRONGFILENAME;
+    }
+
     if (! QFile(shapeFileName).exists())
     {
         // create shapefile
@@ -428,8 +433,8 @@ int CriteriaOutputProject::createAggregationFile()
     /*
     gis::Crit3DRasterGrid* rasterRef = new(gis::Crit3DRasterGrid);
     gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
-    initializeRasterFromShape(&shapeRef, rasterRef, aggregationCellSize);
-    initializeRasterFromShape(&shapeVal, rasterVal, aggregationCellSize);
+    initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
+    initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
     */
 
 
