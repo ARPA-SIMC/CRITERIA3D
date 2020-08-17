@@ -43,10 +43,12 @@ DEFINES += _CRT_SECURE_NO_WARNINGS
 SOURCES += \
     ../../agrolib/criteriaModel/criteria1DUnit.cpp \
     ../../agrolib/crop/cropDbQuery.cpp \
+    criteriaAggregationVariable.cpp \
     criteriaOutputProject.cpp \
     criteriaOutputVariable.cpp
 
 HEADERS += \
+    criteriaAggregationVariable.h \
     criteriaOutputProject.h \
     criteriaOutputVariable.h
 

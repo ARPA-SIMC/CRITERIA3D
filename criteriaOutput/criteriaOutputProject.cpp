@@ -1,5 +1,6 @@
 #include "commonConstants.h"
 #include "basicMath.h"
+#include "gis.h"
 #include "criteriaOutputProject.h"
 #include "logger.h"
 #include "utilities.h"
@@ -7,6 +8,7 @@
 #include "shapeHandler.h"
 #include "ucmUtilities.h"
 #include "shapeUtilities.h"
+#include "shapeToRaster.h"
 
 #include <QtSql>
 #include <iostream>
@@ -414,6 +416,21 @@ int CriteriaOutputProject::createAggregationFile()
         projectError = "Load shapefile failed: " + shapeRefFileName;
         return ERROR_SHAPEFILE;
     }
+
+    // parser aggregation list
+    if (!aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
+    {
+        projectError = "Open failure: " + aggregationListFileName + "\n" + projectError;
+        return false;
+    }
+
+    //shape to raster
+    /*
+    gis::Crit3DRasterGrid* rasterRef = new(gis::Crit3DRasterGrid);
+    gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
+    initializeRasterFromShape(&shapeRef, rasterRef, aggregationCellSize);
+    initializeRasterFromShape(&shapeVal, rasterVal, aggregationCellSize);
+    */
 
 
     // TODO

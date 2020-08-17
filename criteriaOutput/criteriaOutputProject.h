@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "criteria1DUnit.h"
 #include "criteriaOutputVariable.h"
+#include "criteriaAggregationVariable.h"
 #include "shapeHandler.h"
 
 #define ERROR_SETTINGS_MISSING -1
@@ -65,6 +66,7 @@ public:
     int nrUnits;
     std::vector<Crit1DUnit> unitList;
     CriteriaOutputVariable outputVariable;
+    CriteriaAggregationVariable aggregationVariable;
 
     QFile outputFile;
     QString logFileName;
