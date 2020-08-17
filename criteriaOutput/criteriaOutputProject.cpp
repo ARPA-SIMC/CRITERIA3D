@@ -68,7 +68,7 @@ int CriteriaOutputProject::initializeProjectCsv()
 {
     // check DB Crop
     logger.writeInfo("DB Crop: " + dbCropName);
-    if (!QFile(dbCropName).exists())
+    if (! QFile(dbCropName).exists())
     {
         projectError = "DB Crop file doesn't exist";
         return ERROR_DBPARAMETERS;
@@ -84,7 +84,7 @@ int CriteriaOutputProject::initializeProjectCsv()
 
     // check DB data
     logger.writeInfo("DB Data: " + dbDataName);
-    if (!QFile(dbDataName).exists())
+    if (! QFile(dbDataName).exists())
     {
         projectError = "DB data file doesn't exist";
         return ERROR_DBPARAMETERS;
@@ -102,7 +102,7 @@ int CriteriaOutputProject::initializeProjectCsv()
     if(!dbDataHistoricalName.isEmpty())
     {
         logger.writeInfo("DB data historical: " + dbDataHistoricalName);
-        if (!QFile(dbDataHistoricalName).exists())
+        if (! QFile(dbDataHistoricalName).exists())
         {
             projectError = "DB data historical doesn't exist";
             return ERROR_DBPARAMETERS;
@@ -295,9 +295,13 @@ bool CriteriaOutputProject::readSettings()
 
 int CriteriaOutputProject::createCsvFile()
 {
-    logger.writeInfo("Create CSV...");
+    logger.writeInfo("Create CSV");
 
-    initializeProjectCsv();
+    int myResult = initializeProjectCsv();
+    if (myResult != CRIT3D_OK)
+    {
+        return myResult;
+    }
 
     // load computation unit list
     if (! loadUnitList(dbUnitsName, unitList, projectError))
@@ -311,10 +315,12 @@ int CriteriaOutputProject::createCsvFile()
         return ERROR_PARSERCSV;
     }
 
+    logger.writeInfo("Write csv...");
+
     // write output
     for (unsigned int i=0; i < unitList.size(); i++)
     {
-        int myResult = writeCsvOutputUnit(i);
+        myResult = writeCsvOutputUnit(i);
         if (myResult != CRIT3D_OK)
         {
             return myResult;
@@ -337,7 +343,7 @@ int CriteriaOutputProject::createShapeFile()
         }
     }
 
-    logger.writeInfo("Create SHAPEFILE...");
+    logger.writeInfo("Create SHAPEFILE");
 
     Crit3DShapeHandler inputShape, outputShape;
 
@@ -350,6 +356,7 @@ int CriteriaOutputProject::createShapeFile()
     logger.writeInfo("UCM shapefile: " + ucmFileName);
     logger.writeInfo("CSV data: " + csvFileName);
     logger.writeInfo("Shape field list: " + fieldListFileName);
+    logger.writeInfo("Output shapefile: " + shapeFileName);
     logger.writeInfo("Write shapefile...");
 
     if (! QDir(shapeFilePath).exists())
@@ -361,7 +368,6 @@ int CriteriaOutputProject::createShapeFile()
         return ERROR_SHAPEFILE;
     }
 
-    logger.writeInfo("Output shapefile: " + shapeFileName);
     return CRIT3D_OK;
 }
 
@@ -399,7 +405,7 @@ int CriteriaOutputProject::createAggregationFile()
         }
     }
 
-    logger.writeInfo("Create AGGREGATION...");
+    logger.writeInfo("Create AGGREGATION");
 
     if (!shapeVal.open(shapeFileName.toStdString()))
     {

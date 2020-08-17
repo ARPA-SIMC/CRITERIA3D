@@ -54,6 +54,14 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
     int defaultDoubleLenght = 10;
     int defaultDoubleDecimals = 2;
 
+    // check csv data
+    long nrRows = getFileLenght(csvFileName);
+    if (nrRows < 2)
+    {
+        error = "CSV data file is void: " + csvFileName;
+        return false;
+    }
+
     QString refFileName = QString::fromStdString(refShapeFile->getFilepath());
     QFileInfo csvFileInfo(csvFileName);
     QFileInfo refFileInfo(refFileName);
@@ -99,17 +107,10 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
         }
     }
 
-    long nrRows = getFileLenght(csvFileName);
-    if (nrRows < 2)
-    {
-        error = "CSV data is void: " + csvFileName;
-        return false;
-    }
-
     QFile file(csvFileName);
     if ( !file.open(QFile::ReadOnly | QFile::Text) )
     {
-        error = "CSV data not exists: " + csvFileName;
+        error = "CSV data file not exists: " + csvFileName;
         return false;
     }
 

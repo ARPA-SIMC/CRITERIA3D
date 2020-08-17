@@ -2,7 +2,7 @@
 #
 #   criteriaOutput
 #   post-processing of CRITERIA-1D output
-#   to csv or shapefile
+#   to csv or shapefile or aggregation (csv) file
 #
 #   This project is part of CRITERIA-1D distribution
 #
