@@ -64,6 +64,31 @@ void CriteriaOutputProject::closeProject()
 }
 
 
+int CriteriaOutputProject::initializeProjectDtx()
+{
+    // open DB Data Historical
+    if(!dbDataHistoricalName.isEmpty())
+    {
+        logger.writeInfo("DB data historical: " + dbDataHistoricalName);
+        if (! QFile(dbDataHistoricalName).exists())
+        {
+            projectError = "DB data historical doesn't exist";
+            return ERROR_DBPARAMETERS;
+        }
+
+        dbDataHistorical = QSqlDatabase::addDatabase("QSQLITE", "dataHistorical");
+        dbDataHistorical.setDatabaseName(dbDataHistoricalName);
+        if (! dbDataHistorical.open())
+        {
+            projectError = "Open DB data historical failed: " + dbDataHistorical.lastError().text();
+            return ERROR_DBPARAMETERS;
+        }
+    }
+
+    return CRIT3D_OK;
+}
+
+
 int CriteriaOutputProject::initializeProjectCsv()
 {
     // check DB Crop
@@ -291,6 +316,32 @@ bool CriteriaOutputProject::readSettings()
 
     return true;
 }
+
+
+int CriteriaOutputProject::precomputeDtx()
+{
+    logger.writeInfo("PRECOMPUTE DTX");
+
+    int myResult = initializeProjectDtx();
+    if (myResult != CRIT3D_OK)
+    {
+        return myResult;
+    }
+
+    // load computation unit list
+    if (! loadUnitList(dbUnitsName, unitList, projectError))
+    {
+        return ERROR_READ_UNITS;
+    }
+    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+    logger.writeInfo("Compute dtx...");
+
+
+    // TODO
+
+    return CRIT3D_OK;
+}
+
 
 
 int CriteriaOutputProject::createCsvFile()

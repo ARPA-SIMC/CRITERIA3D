@@ -78,9 +78,12 @@ public:
     void initialize();
     void closeProject();
     int initializeProject(QString settingsFileName, QDate dateComputation);
+    int initializeProjectDtx();
     int initializeProjectCsv();
+
     bool readSettings();
 
+    int precomputeDtx();
     int createCsvFile();
     int createShapeFile();
     int createAggregationFile();
