@@ -329,6 +329,7 @@ int CriteriaOutputProject::precomputeDtx()
     }
 
     // load computation unit list
+    logger.writeInfo("DB computation units: " + dbUnitsName);
     if (! loadUnitList(dbUnitsName, unitList, projectError))
     {
         return ERROR_READ_UNITS;
@@ -355,6 +356,7 @@ int CriteriaOutputProject::createCsvFile()
     }
 
     // load computation unit list
+    logger.writeInfo("DB computation units: " + dbUnitsName);
     if (! loadUnitList(dbUnitsName, unitList, projectError))
     {
         return ERROR_READ_UNITS;
