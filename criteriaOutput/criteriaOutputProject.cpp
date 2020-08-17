@@ -430,13 +430,10 @@ int CriteriaOutputProject::createAggregationFile()
     }
 
     //shape to raster
-    /*
     gis::Crit3DRasterGrid* rasterRef = new(gis::Crit3DRasterGrid);
     gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
     initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
     initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
-    */
-
 
     // TODO
 
