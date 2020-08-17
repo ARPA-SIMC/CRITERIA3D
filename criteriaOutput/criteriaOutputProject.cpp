@@ -6,6 +6,7 @@
 #include "cropDbQuery.h"
 #include "shapeHandler.h"
 #include "ucmUtilities.h"
+#include "shapeUtilities.h"
 
 #include <QtSql>
 #include <iostream>
@@ -233,7 +234,7 @@ bool CriteriaOutputProject::readSettings()
         ucmFileName = path + QDir::cleanPath(ucmFileName);
     }
 
-    // Field list
+    // Field listgetFileNamegetFileName
     fieldListFileName = projectSettings->value("field_list", "").toString();
     if (fieldListFileName.left(1) == ".")
     {
@@ -242,7 +243,8 @@ bool CriteriaOutputProject::readSettings()
 
     // Shapefile
     shapeFilePath = getFilePath(csvFileName) + dateStr;
-    shapeFileName = shapeFilePath + "/" + getFileName(csvFileName) + ".shp";
+    QFileInfo csvFileInfo(csvFileName);
+    shapeFileName = shapeFilePath + "/" + csvFileInfo.baseName() + ".shp";
 
     projectSettings->endGroup();
 
@@ -285,6 +287,11 @@ bool CriteriaOutputProject::readSettings()
     if (csvAggregationOutputFileName.right(4) == ".csv")
     {
         csvAggregationOutputFileName = csvAggregationOutputFileName.left(csvAggregationOutputFileName.length()-4);
+    }
+    else
+    {
+        projectError = "aggregation output is not a csv file";
+        return false;
     }
     if (addDate) csvAggregationOutputFileName += "_" + dateStr;
     csvAggregationOutputFileName += ".csv";
@@ -334,7 +341,7 @@ int CriteriaOutputProject::createCsvFile()
 
 int CriteriaOutputProject::createShapeFile()
 {
-    if (! QDir(csvFileName).exists())
+    if (! QFile(csvFileName).exists())
     {
         // create CSV
         int myResult = createCsvFile();
@@ -375,7 +382,7 @@ int CriteriaOutputProject::createShapeFile()
 
 int CriteriaOutputProject::createAggregationFile()
 {
-    if (! QDir(shapeFileName).exists())
+    if (! QFile(shapeFileName).exists())
     {
         // create shapefile
         int myResult = createShapeFile();
@@ -386,6 +393,27 @@ int CriteriaOutputProject::createAggregationFile()
     }
 
     logger.writeInfo("Create AGGREGATION...");
+
+    if (!shapeVal.open(shapeFileName.toStdString()))
+    {
+        projectError = "Load shapefile failed: " + shapeFileName;
+        return ERROR_SHAPEFILE;
+    }
+
+    QFileInfo aggFileInfo(csvAggregationOutputFileName);
+    QString shapeRefPath = shapeFilePath + "/" + aggFileInfo.baseName();
+
+    if (! QFile(aggregationShape).exists())
+    {
+        projectError = aggregationShape + " not exists";
+        return ERROR_SHAPEFILE;
+    }
+    QString shapeRefFileName = cloneShapeFile(aggregationShape, shapeRefPath);
+    if (!shapeRef.open(shapeRefFileName.toStdString()))
+    {
+        projectError = "Load shapefile failed: " + shapeRefFileName;
+        return ERROR_SHAPEFILE;
+    }
 
 
     // TODO

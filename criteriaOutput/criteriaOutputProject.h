@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "criteria1DUnit.h"
 #include "criteriaOutputVariable.h"
+#include "shapeHandler.h"
 
 #define ERROR_SETTINGS_MISSING -1
 #define ERROR_SETTINGS_WRONGFILENAME -2
@@ -46,6 +47,9 @@ public:
     QString aggregationListFileName;
     int aggregationCellSize;
     QString csvAggregationOutputFileName;
+
+    Crit3DShapeHandler shapeVal;
+    Crit3DShapeHandler shapeRef;
 
     QDate dateComputation;
 
