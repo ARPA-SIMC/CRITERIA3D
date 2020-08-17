@@ -458,7 +458,7 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
     }
     else
     {
-        logger.writeInfo("Output file: " + csvFileName + "\n");
+        logger.writeInfo("Output file: " + csvFileName);
     }
 
     if (!outputVariable.parserOutputVariable(variableListFileName, projectError))
