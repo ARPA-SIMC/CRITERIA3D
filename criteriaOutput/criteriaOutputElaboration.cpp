@@ -145,7 +145,7 @@ int addDtxUnit(QString idCase, QSqlDatabase dbDataHistorical, QString* projectEr
     QVector<float> dtx180;
     period = 180;
 
-    if (dtxQueries(idCase, dbDataHistorical, period, end, historicalLastDate, &dtx30, projectError) == CRIT3D_OK)
+    if (dtxQueries(idCase, dbDataHistorical, period, end, historicalLastDate, &dtx180, projectError) == CRIT3D_OK)
     {
         for (int i = 0; i < nrDays; i++)
         {
