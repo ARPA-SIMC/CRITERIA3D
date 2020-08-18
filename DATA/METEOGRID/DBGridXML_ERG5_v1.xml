@@ -1,0 +1,120 @@
+<xml version="1.0" encoding="ISO-8859-1">
+
+	<connection>
+		<provider>mysql</provider>
+		<server>agrosql-smr.metarpa</server>
+		<name>GIAS</name>
+		<user>root</user>
+		<password>Praga</password>
+	</connection>
+	
+	<gridstructure isregular="true" isutm="false" istin="false" isfixedfields="true">
+		<xll>9.102</xll>
+		<yll>43.62</yll>
+		<nrows>40</nrows>
+		<ncols>60</ncols>
+		<xwidth>0.06305</xwidth>
+		<ywidth>0.045</ywidth>
+	</gridstructure>
+
+	<tabledaily>
+		<fieldtime>tempo</fieldtime>
+		<prefix>q</prefix>
+		<postfix>g</postfix>
+		
+        <varcode>
+			<varfield>ET_H_SMR</varfield>
+			<varcode>323</varcode>
+			<varpraganame>DAILY_ET0_HS</varpraganame>
+		</varcode>
+                <varcode>
+			<varfield>VENTO_SMR</varfield>
+			<varpraganame>DAILY_W_VEC_INT_AVG</varpraganame>
+			<varcode>227</varcode>
+		</varcode>
+                <varcode>
+			<varfield>VD_SMR</varfield>
+			<varcode>230</varcode>
+			<varpraganame>DAILY_W_VEC_DIR_PREV</varpraganame>
+		</varcode>
+                <varcode>
+			<varfield>VMAX_SMR</varfield>
+			<varcode>229</varcode>
+			<varpraganame>DAILY_W_VEC_INT_MAX</varpraganame>
+		</varcode>
+                <varcode>
+			<varfield>TEMP_MIN_SMR</varfield>
+			<varcode>232</varcode>
+			<varpraganame>DAILY_TMIN</varpraganame>
+		</varcode>
+		<varcode>
+			<varfield>TEMP_MEDIA_SMR</varfield>
+			<varcode>231</varcode>
+			<varpraganame>DAILY_TAVG</varpraganame>
+		</varcode>
+		<varcode>
+			<varfield>TEMP_MAX_SMR</varfield>
+			<varcode>233</varcode>
+			<varpraganame>DAILY_TMAX</varpraganame>
+		</varcode>
+                <varcode>
+			<varfield>UMIN_SMR</varfield>
+			<varcode>241</varcode>
+			<varpraganame>DAILY_RHMIN</varpraganame>
+		</varcode>
+		<varcode>
+			<varfield>UMAX_SMR</varfield>
+			<varcode>242</varcode>
+			<varpraganame>DAILY_RHMAX</varpraganame>
+		</varcode>
+                <varcode>
+			<varfield>U_R_SMR</varfield>
+			<varcode>240</varcode>
+			<varpraganame>DAILY_RHAVG</varpraganame>
+		</varcode>
+		<varcode>
+			<varfield>PREC_SMR</varfield>
+			<varcode>250</varcode>
+			<varpraganame>DAILY_PREC</varpraganame>
+		</varcode>
+		<varcode>
+			<varfield>rad_smr</varfield>
+			<varcode>246</varcode>
+			<varpraganame>DAILY_RAD</varpraganame>
+		</varcode>
+	</tabledaily>
+
+	<tablehourly>
+		<fieldtime>tempo</fieldtime>
+		<prefix>q</prefix>
+		<postfix>h</postfix>
+		
+		<varcode>
+			<varfield>TEMP_C_SMR</varfield>
+			<varcode>78</varcode>
+			<varpraganame>TAVG</varpraganame>
+		</varcode>
+		<varcode>
+			<varfield>PREC_SMR</varfield>
+			<varcode>160</varcode>
+			<varpraganame>PREC</varpraganame>
+		</varcode>
+		<varcode>
+			<varfield>U_R_SMR</varfield>
+			<varcode>140</varcode>
+			<varpraganame>RHAVG</varpraganame>
+		</varcode>
+		<varcode>
+			<varfield>BAGNAT_SMR</varfield>
+			<varcode>144</varcode>
+			<varpraganame>LEAFW</varpraganame>
+		</varcode>
+		<varcode>
+			<varfield>RAD_SMR</varfield>
+			<varcode>409</varcode>
+			<varpraganame>RAD</varpraganame>
+		</varcode>
+		
+	</tablehourly>
+
+</xml>

@@ -1,0 +1,37 @@
+﻿<xml version="1.0" encoding="ISO-8859-1">
+
+	<connection>
+		<provider>mysql</provider>
+		<server>agrosql-smr.metarpa</server>
+		<name>ERG5_Eraclito4</name>
+		<user>root</user>
+		<password>Praga</password>
+	</connection>
+	
+	<gridstructure isregular="true" isutm="false" istin="false" isfixedfields="false">
+		<xll>9.102</xll>
+		<yll>43.62</yll>
+		<nrows>40</nrows>
+		<ncols>60</ncols>
+		<xwidth>0.06305</xwidth>
+		<ywidth>0.045</ywidth>
+	</gridstructure>
+	
+	<tabledaily>
+		<postFix>_d</postFix>
+		<fieldtime>PragaTime</fieldtime>
+		<varcode>
+			<varcode>1</varcode>
+			<varpraganame>DAILY_TMIN</varpraganame>
+		</varcode>
+		<varcode>
+			<varcode>2</varcode>
+			<varpraganame>DAILY_TMAX</varpraganame>
+		</varcode>
+		<varcode>
+			<varcode>3</varcode>
+			<varpraganame>DAILY_PREC</varpraganame>
+		</varcode>
+	</tabledaily>
+	
+</xml>
