@@ -65,6 +65,31 @@ void CriteriaOutputProject::closeProject()
 }
 
 
+int CriteriaOutputProject::initializeProjectDtx()
+{
+    // open DB Data Historical
+    if(!dbDataHistoricalName.isEmpty())
+    {
+        logger.writeInfo("DB data historical: " + dbDataHistoricalName);
+        if (! QFile(dbDataHistoricalName).exists())
+        {
+            projectError = "DB data historical doesn't exist";
+            return ERROR_DBPARAMETERS;
+        }
+
+        dbDataHistorical = QSqlDatabase::addDatabase("QSQLITE", "dataHistorical");
+        dbDataHistorical.setDatabaseName(dbDataHistoricalName);
+        if (! dbDataHistorical.open())
+        {
+            projectError = "Open DB data historical failed: " + dbDataHistorical.lastError().text();
+            return ERROR_DBPARAMETERS;
+        }
+    }
+
+    return CRIT3D_OK;
+}
+
+
 int CriteriaOutputProject::initializeProjectCsv()
 {
     // check DB Crop
@@ -294,18 +319,47 @@ bool CriteriaOutputProject::readSettings()
 }
 
 
+int CriteriaOutputProject::precomputeDtx()
+{
+    logger.writeInfo("PRECOMPUTE DTX");
+
+    int myResult = initializeProjectDtx();
+    if (myResult != CRIT3D_OK)
+    {
+        return myResult;
+    }
+
+    // load computation unit list
+    logger.writeInfo("DB computation units: " + dbUnitsName);
+    if (! loadUnitList(dbUnitsName, unitList, projectError))
+    {
+        return ERROR_READ_UNITS;
+    }
+
+    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+    logger.writeInfo("Compute dtx...");
+
+
+    // TODO
+
+    return CRIT3D_OK;
+}
+
+
 int CriteriaOutputProject::createCsvFile()
 {
-    logger.writeInfo("Create CSV...");
+    logger.writeInfo("Create CSV");
 
     initializeProjectCsv();
 
     // load computation unit list
+    logger.writeInfo("DB computation units: " + dbUnitsName);
     if (! loadUnitList(dbUnitsName, unitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
     logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+    logger.writeInfo("Write csv...");
 
     if (!initializeCsvOutputFile())
     {
@@ -343,7 +397,7 @@ int CriteriaOutputProject::createShapeFile()
         }
     }
 
-    logger.writeInfo("Create SHAPEFILE...");
+    logger.writeInfo("Create SHAPEFILE");
 
     Crit3DShapeHandler inputShape, outputShape;
 
@@ -405,7 +459,7 @@ int CriteriaOutputProject::createAggregationFile()
         }
     }
 
-    logger.writeInfo("Create AGGREGATION...");
+    logger.writeInfo("Create AGGREGATION");
 
     if (!shapeVal.open(shapeFileName.toStdString()))
     {
@@ -458,7 +512,7 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
     }
     else
     {
-        logger.writeInfo("Output file: " + csvFileName + "\n");
+        logger.writeInfo("Output file: " + csvFileName);
     }
 
     if (!outputVariable.parserOutputVariable(variableListFileName, projectError))

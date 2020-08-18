@@ -89,7 +89,6 @@ public:
     int createAggregationFile();
 
     bool initializeCsvOutputFile();
-    //int writeCsvOutputUnit(unsigned int unitIndex);
 
 };
 
