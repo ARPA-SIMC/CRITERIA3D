@@ -27,29 +27,20 @@ Algorithms for the spatialization of meteorological data.
 
 ## License
 agrolib has been developed under contract issued by 
-[ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy: http://www.arpae.it/sim/
+[ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy.
 
 agrolib is released under the GNU LGPL license.
 
 ## Authors
-Fausto Tomei <ftomei@arpae.it>
-
-Gabriele Antolini	 <gantolini@arpae.it>
-
-Laura Costantini  <laura.costantini0@gmail.com>
-
-Antonio Volta		<antonio.volta@agromet.it>
+- Fausto Tomei <ftomei@arpae.it>
+- Gabriele Antolini	 <gantolini@arpae.it>
+- Antonio Volta		<antonio.volta@arpae.it>
+- Laura Costantini  <laura.costantini0@gmail.com>
 
 ### Contributions
-
-Marco Bittelli   <marco.bittelli@unibo.it>
-
-Vittorio Marletto <vmarletto@arpae.it>
-
-Alberto Pistocchi	 <alberto.pistocchi@jrc.ec.europa.eu>
-
-Tomaso Tonelli <ttonelli@arpae.it>
-
-Margot Van Soetendaal <margot@farnet.eu>
-
-Franco Zinoni <fzinoni@arpae.it>
+- Marco Bittelli   <marco.bittelli@unibo.it>
+- Vittorio Marletto <vmarletto@arpae.it>
+- Alberto Pistocchi	 <alberto.pistocchi@jrc.ec.europa.eu>
+- Tomaso Tonelli <ttonelli@arpae.it>
+- Margot Van Soetendaal <margot@farnet.eu>
+- Franco Zinoni <fzinoni@arpae.it>
