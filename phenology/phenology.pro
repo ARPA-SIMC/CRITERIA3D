@@ -1,9 +1,9 @@
-#----------------------------------------------------
+#------------------------------------------------------
 #
 #   phenology (library)
-#   this project is part of CRITERIA-3D distribution
+#   this project is part of ARPAE agrolib distribution
 #
-#----------------------------------------------------
+#------------------------------------------------------
 
 QT       -= core gui
 
