@@ -337,6 +337,18 @@ int CriteriaOutputProject::precomputeDtx()
     logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
     logger.writeInfo("Compute dtx...");
 
+    QString idCase;
+    for (unsigned int i=0; i < unitList.size(); i++)
+    {
+        idCase = unitList[i].idCase;
+
+        int myResult = addDtxUnit(idCase, dbDataHistorical, &projectError);
+        if (myResult != CRIT3D_OK)
+        {
+            return myResult;
+        }
+    }
+
 
     // TODO
 
