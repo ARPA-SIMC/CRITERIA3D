@@ -32,7 +32,7 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
         {
             line = in.readLine();
             QStringList items = line.split(",");
-            if (items.size() < CSVREQUIREDINFO)
+            if (items.size() < REQUIREDAGGREGATIONINFO)
             {
                 error = "invalid output format CSV, missing reference data";
                 return false;

@@ -4,7 +4,7 @@
     #include <QString>
     #include <QStringList>
 
-    #define CSVREQUIREDINFO 3
+    #define REQUIREDAGGREGATIONINFO 3
 
     class CriteriaAggregationVariable
     {
