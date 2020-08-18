@@ -26,8 +26,8 @@
         gis::Crit3DRasterGrid* getSnowSurfaceTempMap();
         gis::Crit3DRasterGrid* getAgeOfSnowMap();
 
-        static float computeSurfaceInternalEnergy(float initSnowSurfaceTemp,int bulkDensity, float initSWE, float snowSkinThickness);
-        static float computeInternalEnergyMap(float initSoilPackTemp,int bulkDensity, float initSWE);
+        static double computeSurfaceInternalEnergy(double initSnowSurfaceTemp,int bulkDensity, double initSWE, double snowSkinThickness);
+        static double computeInternalEnergyMap(double initSoilPackTemp,int bulkDensity, double initSWE);
 
     private:
         gis::Crit3DRasterGrid* _snowFallMap;
@@ -40,8 +40,8 @@
         gis::Crit3DRasterGrid* _snowSurfaceTempMap;
         gis::Crit3DRasterGrid* _ageOfSnowMap;
 
-        float _initSoilPackTemp;
-        float _initSnowSurfaceTemp;
+        double _initSoilPackTemp;
+        double _initSnowSurfaceTemp;
         bool _isLoaded;
     };
 

@@ -31,67 +31,67 @@
 
 
     struct snowParameters {
-        float snowSkinThickness;              /*!<  [m] */
-        float soilAlbedo;                     /*!<  [-] bare soil */
-        float snowVegetationHeight;           /*!<  [m] height of vegetation */
-        float snowWaterHoldingCapacity;       /*!<  [-] percentuale di acqua libera che il manto nevoso può trattenere */
-        float snowMaxWaterContent;            /*!<  [m] acqua libera (torrenti, laghetti) */
-        float tempMaxWithSnow;                /*!<  [°C] */
-        float tempMinWithRain;                /*!<  [°C] */
+        double snowSkinThickness;              /*!<  [m] */
+        double soilAlbedo;                     /*!<  [-] bare soil */
+        double snowVegetationHeight;           /*!<  [m] height of vegetation */
+        double snowWaterHoldingCapacity;       /*!<  [-] percentuale di acqua libera che il manto nevoso può trattenere */
+        double snowMaxWaterContent;            /*!<  [m] acqua libera (torrenti, laghetti) */
+        double tempMaxWithSnow;                /*!<  [°C] */
+        double tempMinWithRain;                /*!<  [°C] */
     };
 
     class Crit3DSnowPoint
     {
     public:
-        Crit3DSnowPoint(struct TradPoint* radpoint, float temp, float prec, float relHum, float windInt, float clearSkyTransmissivity);
+        Crit3DSnowPoint(struct TradPoint* radpoint, double temp, double prec, double relHum, double windInt, double clearSkyTransmissivity);
         ~Crit3DSnowPoint();
 
         bool checkValidPoint();
         void computeSnowFall();
         void computeSnowBrooksModel();
 
-        float getSnowFall();
-        float getSnowMelt();
-        float getSnowWaterEquivalent();
-        float getIceContent();
-        float getLWContent();
-        float getInternalEnergy();
-        float getSurfaceInternalEnergy();
-        float getSnowSurfaceTemp();
-        float getAgeOfSnow();
+        double getSnowFall();
+        double getSnowMelt();
+        double getSnowWaterEquivalent();
+        double getIceContent();
+        double getLWContent();
+        double getInternalEnergy();
+        double getSurfaceInternalEnergy();
+        double getSnowSurfaceTemp();
+        double getAgeOfSnow();
 
-        float getSnowSkinThickness();
-        float getSoilAlbedo();
-        float getSnowVegetationHeight();
-        float getSnowWaterHoldingCapacity();
-        float getSnowMaxWaterContent();
-        float getTempMaxWithSnow();
-        float getTempMinWithRain();
+        double getSnowSkinThickness();
+        double getSoilAlbedo();
+        double getSnowVegetationHeight();
+        double getSnowWaterHoldingCapacity();
+        double getSnowMaxWaterContent();
+        double getTempMaxWithSnow();
+        double getTempMinWithRain();
 
-        static float aerodynamicResistanceCampbell77(bool isSnow , float zRefWind, float myWindSpeed, float vegetativeHeight);
+        static double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double myWindSpeed, double vegetativeHeight);
 
     private:
         /*! input */
         TradPoint* _radpoint;
-        float _clearSkyTransmissivity;      /*!<   [-] */
-        float _prec;                        /*!<   [mm] */
-        float _airT;                        /*!<   [°C] */
-        float _airRH;                       /*!<   [%] */
-        float _windInt;                     /*!<   [m/s] */
-        float _waterContent;
-        float _evaporation;
+        double _clearSkyTransmissivity;      /*!<   [-] */
+        double _prec;                        /*!<   [mm] */
+        double _airT;                        /*!<   [°C] */
+        double _airRH;                       /*!<   [%] */
+        double _windInt;                     /*!<   [m/s] */
+        double _waterContent;
+        double _evaporation;
         struct snowParameters* _parameters;
 
         /*! output */
-        float _snowFall;
-        float _snowMelt;
-        float _snowWaterEquivalent;
-        float _iceContent;
-        float _lWContent;
-        float _internalEnergy;
-        float _surfaceInternalEnergy;
-        float _snowSurfaceTemp;
-        float _ageOfSnow;
+        double _snowFall;
+        double _snowMelt;
+        double _snowWaterEquivalent;
+        double _iceContent;
+        double _lWContent;
+        double _internalEnergy;
+        double _surfaceInternalEnergy;
+        double _snowSurfaceTemp;
+        double _ageOfSnow;
     };
 
 #endif // SNOWPOINT_H
