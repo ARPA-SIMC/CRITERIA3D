@@ -44,3 +44,4 @@ agrolib is released under the GNU LGPL license.
 - Tomaso Tonelli <ttonelli@arpae.it>
 - Margot Van Soetendaal <margot@farnet.eu>
 - Franco Zinoni <fzinoni@arpae.it>
+- Fabrizio Nerozzi <fnerozzi@arpae.it>
