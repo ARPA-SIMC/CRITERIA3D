@@ -349,9 +349,6 @@ int CriteriaOutputProject::precomputeDtx()
         }
     }
 
-
-    // TODO
-
     return CRIT3D_OK;
 }
 
