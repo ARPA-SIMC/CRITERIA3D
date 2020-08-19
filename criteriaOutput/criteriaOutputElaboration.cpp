@@ -439,6 +439,18 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                             lastDate.setDate(year,lastDate.month(),lastDate.day());
                             int selectRes;
 
+                            selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector, projectError);
+                            if (selectRes == ERROR_INCOMPLETE_DATA)
+                            {
+                                if (year != historicalFirstDate.year())
+                                {
+                                    res = NODATA;
+                                    skip = true;
+                                    break;
+                                }
+                            }
+
+                            /*
                             if (varName.left(2) != "DT")
                             {
                                 // ALL CASES
@@ -467,6 +479,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                                     }
                                 }
                             }
+                            */
                             if (selectRes != CRIT3D_OK && selectRes != ERROR_INCOMPLETE_DATA)
                             {
                                 return selectRes;
@@ -537,6 +550,14 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
     statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'").arg(computation).arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
     if( !qry.exec(statement) )
     {
+        if (varName.left(2) == "DT")
+        {
+            if (qry.lastError().text().contains("no such column"))
+            {
+                *projectError = "Precompute DTX before: " + computation + "\n" + qry.lastError().text();
+                return ERROR_MISSING_PRECOMPUTE_DTX ;
+            }
+        }
         *projectError = "Wrong computation: " + computation + "\n" + qry.lastError().text();
         return ERROR_OUTPUT_VARIABLES ;
     }
