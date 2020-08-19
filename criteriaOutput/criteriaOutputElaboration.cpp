@@ -246,6 +246,53 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, QDate firstDate, std::vector<
 }
 
 
+bool writeDtxToDB2(QSqlDatabase db, QString idCase, QDate firstDate, std::vector<double>& dt30,
+                   std::vector<double>& dt90, std::vector<double>& dt180, QString& projectError)
+{
+    // read all data
+    QSqlQuery qry(db);
+    QString statement = QString("SELECT * FROM `%1`").arg(idCase);
+
+    // error check
+    if(!qry.exec(statement))
+    {
+        projectError = qry.lastError().text();
+        return ERROR_OUTPUT_VARIABLES;
+    }
+    qry.first();
+    do
+    {
+        int nr = qry.size();
+        for (int i = 0; i < nr; i++)
+        {
+
+        }
+    }
+    while (qry.next());
+
+    QDate date = firstDate;
+
+    // assume equal size of all dtx vectors
+    for (unsigned long i = 0; i < dt30.size(); i++)
+    {
+        QString statement = "UPDATE " + idCase;
+        statement += " SET DT30 = " + getNumberStr(dt30[i]) + "'";
+        statement += ", DT90 = " + getNumberStr(dt90[i]) + "'";
+        statement += ", DT180 = " + getNumberStr(dt180[i]) + "'";
+        statement += " WHERE DATE = '" + date.toString("yyyy-MM-dd") + "'";
+
+        if( !qry.exec(statement) )
+        {
+            projectError = "UPDATE error: " + qry.lastError().text();
+            return false;
+        }
+        date = date.addDays(1);
+    }
+
+    return true;
+}
+
+
 
 int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData, QSqlDatabase dbCrop, QSqlDatabase dbDataHistorical,
                        QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString* projectError)
