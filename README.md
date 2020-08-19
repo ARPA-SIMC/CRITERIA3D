@@ -2,7 +2,7 @@
 Libraries for agrometeorological modelling and climate analysis. 
 They include a numerical solution for three-dimensional water and heat flow in the soil, 
 water balance 1D, meteorological data interpolation, daily weather generator (1D and 2D), radiation budget, 
-snow accumulation and melt, plant development, root development, rainfall interception and plant water uptake.
+snow accumulation and melt, phenology, plant development, root development, rainfall interception and plant water uptake.
 
 ## soilFluxes3D library
 SoilFluxes3D is a numerical solution for flow equations of water and heat in the soil, in a three-dimensional domain.
@@ -44,3 +44,4 @@ agrolib is released under the GNU LGPL license.
 - Tomaso Tonelli <ttonelli@arpae.it>
 - Margot Van Soetendaal <margot@farnet.eu>
 - Franco Zinoni <fzinoni@arpae.it>
+- Fabrizio Nerozzi <fnerozzi@arpae.it>

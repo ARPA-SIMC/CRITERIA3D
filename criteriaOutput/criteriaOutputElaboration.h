@@ -7,7 +7,7 @@
 #include "criteriaOutputVariable.h"
 
 int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString& projectError);
-int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, QDate firstDate, QString& projectError);
+int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, QDate firstDate, std::vector<double> &dtx, QString& projectError);
 bool writeDtxToDB(QSqlDatabase db, QString idCase, QDate date, unsigned int period, double dtx, QString& projectError);
 bool writeDtxToDB2(QSqlDatabase db, QString idCase, unsigned int period, std::vector<double>& dtx, QString& projectError);
 
