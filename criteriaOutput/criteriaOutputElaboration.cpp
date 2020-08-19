@@ -229,10 +229,10 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, QDate firstDate, std::vector<
     for (unsigned long i = 0; i < dt30.size(); i++)
     {
         QString statement = "UPDATE " + idCase;
-        statement += " SET DT30 = " + getNumberStr(dt30[i]);
-        statement += ", DT90 = " + getNumberStr(dt90[i]);
-        statement += ", DT180 = " + getNumberStr(dt180[i]);
-        statement += " WHERE DATE = " + date.toString("yyyy-MM-dd");
+        statement += " SET DT30 = " + getNumberStr(dt30[i]) + "'";
+        statement += ", DT90 = " + getNumberStr(dt90[i]) + "'";
+        statement += ", DT180 = " + getNumberStr(dt180[i]) + "'";
+        statement += " WHERE DATE = '" + date.toString("yyyy-MM-dd") + "'";
 
         if( !qry.exec(statement) )
         {
