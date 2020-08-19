@@ -224,13 +224,15 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, QDate firstDate, std::vector<
 {
     QSqlQuery qry(db);
     QDate date = firstDate;
+
+    // assume equal size of all dtx vectors
     for (unsigned long i = 0; i < dt30.size(); i++)
     {
         QString statement = "UPDATE " + idCase;
         statement += " SET DT30 = " + getNumberStr(dt30[i]);
         statement += ", DT90 = " + getNumberStr(dt90[i]);
         statement += ", DT180 = " + getNumberStr(dt180[i]);
-        statement += " WHERE DATE = " + date.toString();
+        statement += " WHERE DATE = " + date.toString("yyyy-MM-dd");
 
         if( !qry.exec(statement) )
         {
@@ -249,7 +251,6 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                        QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString* projectError)
 {
     // IRRI RATIO
-    //float irriRatio = getIrriRatioFromClass(&(dbCrop), "crop_class", "id_class", unitList[unitIndex].idCropClass, &(projectError));
     float irriRatio = getIrriRatioFromClass(&(dbCrop), "crop_class", "id_class", idCropClass, projectError);
 
     //QString idCase = unitList[unitIndex].idCase;
