@@ -395,7 +395,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
             }
             else
             {
-                // db_data_historical comparison
+                // db_data_historical comparison (threshold)
                 if (outputVariable.param1[i] != NODATA && res < outputVariable.param1[i])
                 {
                     // skip historical analysis
@@ -403,7 +403,6 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                 }
                 else
                 {
-
                     QDate historicalFirstDate;
                     QDate historicalLastDate;
                     QSqlQuery qry(dbDataHistorical);
@@ -430,6 +429,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                     else
                     {
                         QVector<float> resAllYearsVector;
+                        // second parameter (timewindow)
                         if (outputVariable.param2[i] != NODATA)
                         {
                             firstDate = firstDate.addDays(-outputVariable.param2[i]);
