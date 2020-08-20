@@ -8,6 +8,7 @@
 #include "ucmUtilities.h"
 #include "shapeUtilities.h"
 #include "shapeToRaster.h"
+#include "zonalStatistic.h"
 
 #include <QtSql>
 #include <iostream>
@@ -501,6 +502,17 @@ int CriteriaOutputProject::createAggregationFile()
     gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
     initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
     initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
+
+    for(int i=0; i<aggregationVariable.outputVarName.size(); i++)
+    {
+        std::string error;
+        bool isOk = zonalStatisticsShape(&shapeRef, &shapeVal, rasterRef, rasterVal, aggregationVariable.inputField[i].toStdString(), aggregationVariable.outputVarName[i].toStdString(), AVG, &error, false);
+        if (!isOk)
+        {
+            projectError = QString::fromStdString(error);
+            return ERROR_ZONAL_STATISTICS_SHAPE;
+        }
+    }
 
     // TODO
 

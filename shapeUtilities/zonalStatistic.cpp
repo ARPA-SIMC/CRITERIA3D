@@ -171,7 +171,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
 
     // save right matrix element for each shape
     std::vector<int> indexVector;
-    int maxValue;
+    int maxValue = 0;
 
     if (type == MAJORITY)
     {
