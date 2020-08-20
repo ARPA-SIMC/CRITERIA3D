@@ -14,34 +14,14 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
     {
         return CRIT3D_OK;
     }
-    QDate firstDate, lastDate;
-    QSqlQuery qry(db);
-    QString statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
-    if( !qry.exec(statement) )
-    {
-        projectError = qry.lastError().text();
-        return ERROR_DBHISTORICAL;
-    }
-    qry.first();
-    if (!qry.isValid())
-    {
-        projectError = qry.lastError().text();
-        return ERROR_DBHISTORICAL ;
-    }
-    getValue(qry.value("MIN(DATE)"), &firstDate);
-    getValue(qry.value("MAX(DATE)"), &lastDate);
 
-    if (!firstDate.isValid() || !lastDate.isValid())
-    {
-        projectError = "Wrong DATE format";
-        return ERROR_DBHISTORICAL;
-    }
+    QSqlQuery qry(db);
 
     // check if DTX column should be added
     bool insertTD30Col = true;
     bool insertTD90Col = true;
     bool insertTD180Col = true;
-    statement = QString("PRAGMA table_info(`%1`)").arg(idCase);
+    QString statement = QString("PRAGMA table_info(`%1`)").arg(idCase);
     QString name;
     if( !qry.exec(statement) )
     {
@@ -72,7 +52,6 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
     }
     while(qry.next());
 
-
     // add column DT30, DT90, DT180
     if (insertTD30Col)
     {
@@ -83,7 +62,6 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
             return ERROR_DBHISTORICAL;
         }
     }
-
     if (insertTD90Col)
     {
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT90 REAL").arg(idCase);
@@ -93,7 +71,6 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
             return ERROR_DBHISTORICAL;
         }
     }
-
     if (insertTD180Col)
     {
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT180 REAL").arg(idCase);
@@ -103,6 +80,15 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
             return ERROR_DBHISTORICAL;
         }
     }
+
+    // check if table is full (skip otherwise)
+    qry.prepare("SELECT * FROM " + idCase);
+    qry.exec();
+    if (!qry.first())
+    {
+        return CRIT3D_OK;
+    }
+    qry.clear();
 
     // compute DTX30
     std::vector<double> dt30;
