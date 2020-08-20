@@ -9,8 +9,7 @@
 
 int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString& projectError);
 int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, std::vector<double> &dtx, QString& projectError);
-bool writeDtxToDB(QSqlDatabase db, QString idCase, QDate firstDate, std::vector<double>& dt30,
-                   std::vector<double>& dt90, std::vector<double>& dt180, QString& projectError);
+bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30, std::vector<double>& dt90, std::vector<double>& dt180, QString& projectError);
 
 int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData, QSqlDatabase dbCrop, QSqlDatabase dbDataHistorical,
                        QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString* projectError);

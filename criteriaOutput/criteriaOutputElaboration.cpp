@@ -127,7 +127,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
     }
 
     // write data
-    if (! writeDtxToDB(db, idCase, firstDate, dt30, dt90, dt180, projectError))
+    if (! writeDtxToDB(db, idCase, dt30, dt90, dt180, projectError))
     {
         return ERROR_TDXWRITE;
     }
@@ -219,28 +219,74 @@ QString getNumberStr(double value)
 }
 
 
-bool writeDtxToDB(QSqlDatabase db, QString idCase, QDate firstDate, std::vector<double>& dt30,
-                   std::vector<double>& dt90, std::vector<double>& dt180, QString& projectError)
+bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
+                  std::vector<double>& dt90, std::vector<double>& dt180, QString& projectError)
 {
     QSqlQuery qry(db);
-    QDate date = firstDate;
-
-    // assume equal size of all dtx vectors
-    for (unsigned long i = 0; i < dt30.size(); i++)
+    qry.prepare("SELECT * FROM " + idCase + " ORDER BY DATE");
+    if( !qry.exec())
     {
-        QString statement = "UPDATE " + idCase;
-        statement += " SET DT30 = '" + getNumberStr(dt30[i]) + "'";
-        statement += ", DT90 = '" + getNumberStr(dt90[i]) + "'";
-        statement += ", DT180 = '" + getNumberStr(dt180[i]) + "'";
-        statement += " WHERE DATE = '" + date.toString("yyyy-MM-dd") + "'";
-
-        if( !qry.exec(statement) )
-        {
-            projectError = "UPDATE error: " + qry.lastError().text();
-            return false;
-        }
-        date = date.addDays(1);
+        projectError = "DB error: " + qry.lastError().text();
+        return false;
     }
+
+    int nrColumns = qry.record().count();
+    QString insertQuery = "INSERT INTO " + idCase + " VALUES ";
+
+    qry.first();
+    unsigned int index = 0;
+    do
+    {
+        insertQuery += "(";
+        for (int i = 0; i < nrColumns; i++)
+        {
+            if (i < nrColumns-3)
+            {
+                insertQuery += "'" + qry.value(i).toString() + "'";
+            }
+            else if (i == nrColumns-3)
+            {
+                insertQuery += "'" + getNumberStr(dt30[index]) + "'";
+            }
+            else if (i == nrColumns-2)
+            {
+                insertQuery += "'" + getNumberStr(dt90[index]) + "'";
+            }
+            else if (i == nrColumns-1)
+            {
+                insertQuery += "'" + getNumberStr(dt180[index]) + "'";
+            }
+            if (i < nrColumns - 1)
+            {
+                insertQuery += ",";
+            }
+        }
+        insertQuery += ")";
+
+        if (index < dt30.size()-1)
+        {
+            insertQuery += ",";
+        }
+        index++;
+    }
+    while (qry.next());
+
+    qry.clear();
+
+    if( !qry.exec("DELETE FROM " + idCase))
+    {
+        projectError = "DELETE error: " + qry.lastError().text();
+        return false;
+    }
+
+    if( !qry.exec(insertQuery))
+    {
+        projectError = "INSERT error: " + qry.lastError().text();
+        return false;
+    }
+
+    qry.clear();
+    insertQuery.clear();
 
     return true;
 }
