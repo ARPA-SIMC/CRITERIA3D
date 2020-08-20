@@ -360,7 +360,11 @@ int CriteriaOutputProject::createCsvFile()
 {
     logger.writeInfo("Create CSV");
 
-    initializeProjectCsv();
+    int myResult = initializeProjectCsv();
+    if (myResult != CRIT3D_OK)
+    {
+        return myResult;
+    }
 
     // load computation unit list
     logger.writeInfo("DB computation units: " + dbUnitsName);
@@ -384,7 +388,7 @@ int CriteriaOutputProject::createCsvFile()
         idCase = unitList[i].idCase;
         idCropClass = unitList[i].idCropClass;
 
-        int myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, &projectError);
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, &projectError);
         if (myResult != CRIT3D_OK)
         {
             return myResult;
@@ -525,6 +529,21 @@ int CriteriaOutputProject::createAggregationFile()
 
 bool CriteriaOutputProject::initializeCsvOutputFile()
 {
+    // parse output variables
+    if (!outputVariable.parserOutputVariable(variableListFileName, projectError))
+    {
+        projectError = "Open failure: " + variableListFileName + "\n" + projectError;
+        return false;
+    }
+
+    // check output csv directory
+    QString csvFilePath = getFilePath(csvFileName);
+    if (! QDir(csvFilePath).exists())
+    {
+        QDir().mkdir(csvFilePath);
+    }
+
+    // open csvFileName
     outputFile.setFileName(csvFileName);
     if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
@@ -536,11 +555,6 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
         logger.writeInfo("Output file: " + csvFileName);
     }
 
-    if (!outputVariable.parserOutputVariable(variableListFileName, projectError))
-    {
-        projectError = "Open failure: " + variableListFileName + "\n" + projectError;
-        return false;
-    }
     QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName.join(",");
     QTextStream out(&outputFile);
     out << header << "\n";

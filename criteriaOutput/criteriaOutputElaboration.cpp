@@ -249,7 +249,7 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, QDate firstDate, std::vector<
 int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData, QSqlDatabase dbCrop, QSqlDatabase dbDataHistorical,
                        QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString* projectError)
 {
-    // IRRI RATIO
+    // IRRI RATIO (parameter for elaboration on IRRIGATION variable)
     float irriRatio = getIrriRatioFromClass(&(dbCrop), "crop_class", "id_class", idCropClass, projectError);
 
     QStringList results;
@@ -284,7 +284,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
             else
             {
                 // nrDays can be a number to add or subtract to referenceDate, otherwise can be a starting date (es. format YYYY-01-01)
-                // the interval goes from starting date to referenceDate (dateComputation+/-referenceDay)
+                // the interval goes from starting date to referenceDate (dateComputation +- referenceDay)
                 if (outputVariable.nrDays[i].left(4) == "YYYY")
                 {
                     // outputVariable.nrDays is a starting point
@@ -299,7 +299,8 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                 }
                 else
                 {
-                    // outputVariable.nrDays is a number, it should be added or subtracted to referenceDate (given by dateComputation+/- referenceDay)
+                    // outputVariable.nrDays should be added or subtracted to referenceDate
+                    // (given by dateComputation +- referenceDay)
                     bool ok;
                     int nrDays = outputVariable.nrDays[i].toInt(&ok, 10);
                     if (!ok)
@@ -331,7 +332,6 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         // computation is empty, there is no interval but a single date, firstDate = lastDate
         else
         {
-            // there is no computation, queries
             firstDate = dateComputation.addDays(outputVariable.referenceDay[i]);
             lastDate = firstDate;
         }
@@ -387,9 +387,10 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         }
         else
         {
-            // there is no db_data_historical to compare variable to past
+            // there is no climate computation
             if (outputVariable.climateComputation[i].isEmpty())
             {
+                // fraction of available water [0-1] 3 decimal digits
                 if (outputVariable.varName[i] == "FRACTION_AW")
                 {
                     results.append(QString::number(res,'f',3));
@@ -401,7 +402,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
             }
             else
             {
-                // db_data_historical comparison (threshold)
+                // first parameter for  historical analysis (threshold)
                 if (outputVariable.param1[i] != NODATA && res < outputVariable.param1[i])
                 {
                     // skip historical analysis
@@ -436,7 +437,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                     else
                     {
                         QVector<float> resAllYearsVector;
-                        // second parameter (timewindow)
+                        // second parameter for  historical analysis (timewindow)
                         if (outputVariable.param2[i] != NODATA)
                         {
                             // historical period to compare, if outputVariable.param2[i] is empty, current value should be compare
@@ -486,20 +487,13 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                         else
                         {
                             // comparison between current value (res) and historical values during timewindow (resAllYearsVector)
-                            // compute percentile
                             if (outputVariable.climateComputation[i] == "PERCENTILE")
                             {
+                                // compute percentile
                                 bool sortValues = true;
                                 std::vector<float> historicalVector = resAllYearsVector.toStdVector();
                                 res = sorting::percentileRank(historicalVector, res, sortValues);
-                                if (outputVariable.varName[i] == "FRACTION_AW")
-                                {
-                                    results.append(QString::number(res,'f',3));
-                                }
-                                else
-                                {
-                                    results.append(QString::number(res,'f',1));
-                                }
+                                results.append(QString::number(res,'f',1));
                             }
                         }
                     }
