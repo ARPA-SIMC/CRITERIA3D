@@ -252,7 +252,6 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
     // IRRI RATIO
     float irriRatio = getIrriRatioFromClass(&(dbCrop), "crop_class", "id_class", idCropClass, projectError);
 
-    //QString idCase = unitList[unitIndex].idCase;
     QStringList results;
     QString statement;
     QDate firstDate, lastDate;
@@ -274,6 +273,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         QString computation = outputVariable.computation[i];
         if (!computation.isEmpty())
         {
+            // nrDays is required, because the computation should be done between values into interval referenceDate+-nrDays
             if (outputVariable.nrDays[i].isEmpty())
             {
                 // write NODATA
@@ -283,8 +283,11 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
             }
             else
             {
+                // nrDays can be a number to add or subtract to referenceDate, otherwise can be a starting date (es. format YYYY-01-01)
+                // the interval goes from starting date to referenceDate (dateComputation+/-referenceDay)
                 if (outputVariable.nrDays[i].left(4) == "YYYY")
                 {
+                    // outputVariable.nrDays is a starting point
                     lastDate = dateComputation.addDays(outputVariable.referenceDay[i]);
                     QString tmp = outputVariable.nrDays[i];
                     tmp.replace("YYYY",QString::number(lastDate.year()));
@@ -296,6 +299,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                 }
                 else
                 {
+                    // outputVariable.nrDays is a number, it should be added or subtracted to referenceDate (given by dateComputation+/- referenceDay)
                     bool ok;
                     int nrDays = outputVariable.nrDays[i].toInt(&ok, 10);
                     if (!ok)
@@ -324,15 +328,16 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                 }
             }
         }
-        // computation is empty
+        // computation is empty, there is no interval but a single date, firstDate = lastDate
         else
         {
+            // there is no computation, queries
             firstDate = dateComputation.addDays(outputVariable.referenceDay[i]);
             lastDate = firstDate;
         }
 
         // QUERY
-        // simple variable
+        // All cases except DTX
         if (varName.left(2) != "DT")
         {
 
@@ -352,7 +357,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         }
         else
         {
-            // DTX
+            // DTX case
             bool ok;
             periodTDX = varName.right(varName.size()-2).toInt(&ok, 10);
             if (!ok)
