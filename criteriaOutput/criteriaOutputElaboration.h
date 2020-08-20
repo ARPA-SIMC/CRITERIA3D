@@ -5,6 +5,7 @@
 #include <QDate>
 #include <QSqlDatabase>
 #include "criteriaOutputVariable.h"
+#include "vector"
 
 int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString& projectError);
 int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, std::vector<double> &dtx, QString& projectError);

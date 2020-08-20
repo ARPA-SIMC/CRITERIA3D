@@ -456,36 +456,6 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                                 }
                             }
 
-                            /*
-                            if (varName.left(2) != "DT")
-                            {
-                                // ALL CASES
-                                selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector, projectError);
-                                if (selectRes == ERROR_INCOMPLETE_DATA)
-                                {
-                                    if (year != historicalFirstDate.year())
-                                    {
-                                        res = NODATA;
-                                        skip = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // TDX
-                                selectRes = computeDTX(dbDataHistorical, idCase, periodTDX , computation, firstDate, lastDate, &resVector, projectError);
-                                if (selectRes == ERROR_INCOMPLETE_DATA)
-                                {
-                                    if (year != historicalFirstDate.year())
-                                    {
-                                        res = NODATA;
-                                        skip = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            */
                             if (selectRes != CRIT3D_OK && selectRes != ERROR_INCOMPLETE_DATA)
                             {
                                 return selectRes;
