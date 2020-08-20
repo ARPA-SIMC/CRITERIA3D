@@ -127,9 +127,12 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
     }
 
     // write data
-    if (! writeDtxToDB(db, idCase, dt30, dt90, dt180, projectError))
+    if (dt30.size() > 0)
     {
-        return ERROR_TDXWRITE;
+        if (! writeDtxToDB(db, idCase, dt30, dt90, dt180, projectError))
+        {
+            return ERROR_TDXWRITE;
+        }
     }
 
     return CRIT3D_OK;
@@ -223,17 +226,21 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
                   std::vector<double>& dt90, std::vector<double>& dt180, QString& projectError)
 {
     QSqlQuery qry(db);
-    qry.prepare("SELECT * FROM " + idCase + " ORDER BY DATE");
+    qry.prepare("SELECT * FROM " + idCase);
     if( !qry.exec())
     {
         projectError = "DB error: " + qry.lastError().text();
         return false;
     }
+    if (!qry.first())
+    {
+        // table void
+        return true;
+    }
 
     int nrColumns = qry.record().count();
     QString insertQuery = "INSERT INTO " + idCase + " VALUES ";
 
-    qry.first();
     unsigned int index = 0;
     do
     {
