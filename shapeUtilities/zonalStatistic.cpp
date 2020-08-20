@@ -5,13 +5,164 @@
 #include "commonConstants.h"
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
-#include "formInfo.h"
 
+std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
+                          gis::Crit3DRasterGrid *rasterRef, gis::Crit3DRasterGrid *rasterVal,
+                          std::string* error)
+{
+    /*
+     * move check before call
+    // check shape type
+    if ( shapeRef->getTypeString() != shapeVal->getTypeString() || shapeRef->getTypeString() != "2D Polygon" )
+    {
+        *error = "shape type error: not 2D Polygon type" ;
+        return false;
+    }
+
+    // check proj
+    if (shapeRef->getIsWGS84() == false || shapeVal->getIsWGS84() == false)
+    {
+        *error = "projection error: not WGS84" ;
+        return false;
+    }
+
+    // check utm zone
+    if (shapeRef->getUtmZone() != shapeVal->getUtmZone())
+    {
+        *error = "utm zone: different utm zones" ;
+        return false;
+    }
+    */
+    unsigned int nrRefShapes = unsigned(shapeRef->getShapeCount());
+    unsigned int nrValShapes = unsigned(shapeVal->getShapeCount());
+
+    // analysis matrix
+   std::vector <std::vector<int> > matrix(nrRefShapes, std::vector<int>(nrValShapes));
+   std::vector <int> vectorNull(nrRefShapes, 0);
+
+   for (int row = 0; row < rasterRef->header->nrRows; row++)
+   {
+       for (int col = 0; col < rasterRef->header->nrCols; col++)
+       {
+           int refIndex = int(rasterRef->value[row][col]);
+           int valIndex = int(rasterVal->value[row][col]);
+
+           if (refIndex != NODATA)
+           {
+               if (valIndex != NODATA)
+                   matrix[unsigned(refIndex)][unsigned(valIndex)]++;
+               else
+                   vectorNull[unsigned(refIndex)]++;
+           }
+       }
+   }
+   return matrix;
+}
 
 bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
+                          std::vector <std::vector<int> > matrix, std::vector <int> vectorNull,
+                          std::string valField, std::string valFieldOutput, opType aggregationType,
+                          std::string* error)
+{
+
+    //check if valField exists
+    int fieldIndex = shapeVal->getDBFFieldIndex(valField.c_str());
+    if (fieldIndex == -1)
+    {
+        *error = shapeVal->getFilepath() + "has not field called " + valField.c_str();
+        return false;
+    }
+
+    // add new field to shapeRef
+    DBFFieldType fieldType = shapeVal->getFieldType(fieldIndex);
+    shapeRef->addField(valFieldOutput.c_str(), fieldType, shapeVal->nWidthField(fieldIndex), shapeVal->nDecimalsField(fieldIndex));
+
+    unsigned int nrRefShapes = unsigned(shapeRef->getShapeCount());
+    unsigned int nrValShapes = unsigned(shapeVal->getShapeCount());
+    double value = 0.0;
+    double validPoint = 0.0;
+    double sumValues = 0;
+    std::vector<double> validPoints;
+    std::vector <int> aggregationResults(nrRefShapes, 0);
+    int nValues = 0;
+
+    for (unsigned int row = 0; row < nrRefShapes; row++)
+    {
+        for (unsigned int col = 0; col < nrValShapes; col++)
+        {
+            if (matrix[row][col] > 0)
+            {
+                if (fieldType == FTInteger)
+                {
+                    value = (double)shapeVal->readIntAttribute(col,fieldIndex);
+                }
+                else if (fieldType == FTDouble)
+                {
+                    value = shapeVal->readDoubleAttribute(col,fieldIndex);
+                }
+                if (value == NODATA)
+                {
+                    vectorNull[row] = vectorNull[row] + matrix[row][col];
+                }
+                else if (aggregationType == AVG)
+                {
+                    validPoint = validPoint + matrix[row][col];
+                    sumValues = sumValues + value*matrix[row][col];
+                    nValues = nValues + 1;
+                }
+            }
+        }
+        aggregationResults.push_back(sumValues/nValues);
+        validPoints.push_back(validPoint);
+        //reset
+        validPoint = 0;
+        sumValues = 0;
+        nValues = 0;
+    }
+
+    // save value of the new field
+    // each row of matrix is a shape of shapeRef
+    double valueToSave = 0.0;
+    for (unsigned int shapeIndex = 0; shapeIndex < nrRefShapes; shapeIndex++)
+    {
+        if (validPoints[shapeIndex] < vectorNull[shapeIndex])
+        {
+            valueToSave = NODATA;
+        }
+        else
+        {
+            valueToSave = aggregationResults[shapeIndex];
+        }
+        if (fieldType == FTInteger)
+        {
+            shapeRef->writeIntAttribute(shapeIndex, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), (int)valueToSave);
+        }
+        else if (fieldType == FTDouble)
+        {
+            shapeRef->writeDoubleAttribute(shapeIndex, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), valueToSave);
+        }
+    }
+
+    // close and re-open to write also the last shape
+    shapeRef->close();
+    shapeRef->open(shapeRef->getFilepath());
+
+    return true;
+}
+
+bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
+                          std::vector <std::vector<int> > matrix, std::vector <int> vectorNull,
+                          std::string valField, std::string valFieldOutput, opType aggregationType,
+                          std::string* error)
+{
+    // TO DO
+}
+
+/////////////////// OLD VERSION ////////////////////////////////////
+bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
                           gis::Crit3DRasterGrid *rasterRef, gis::Crit3DRasterGrid *rasterVal,
-                          std::string valField, std::string valFieldOutput, opType type,
-                          std::string* error, bool showInfo)
+                          std::string valField, std::string valFieldOutput, opType aggregationType,
+                          std::string* error)
 {
     // check shape type
     if ( shapeRef->getTypeString() != shapeVal->getTypeString() || shapeRef->getTypeString() != "2D Polygon" )
@@ -40,12 +191,6 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
     {
         *error = shapeVal->getFilepath() + "has not field called " + valField.c_str();
         return false;
-    }
-
-    FormInfo formInfo;
-    if (showInfo)
-    {
-        formInfo.start("Zonal statistics...", 0);
     }
 
     unsigned int nrRefShapes = unsigned(shapeRef->getShapeCount());
@@ -173,7 +318,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
     std::vector<int> indexVector;
     int maxValue = 0;
 
-    if (type == MAJORITY)
+    if (aggregationType == MAJORITY)
     {
         for (unsigned int row = 0; row < nrRefShapes; row++)
         {
@@ -194,21 +339,21 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
             }
         }
     }
-    else if (type == MIN)
+    else if (aggregationType == MIN)
     {
         for (unsigned int row = 0; row < nrRefShapes; row++)
         {
             // TO DO
         }
     }
-    else if (type == MAX)
+    else if (aggregationType == MAX)
     {
         for (unsigned int row = 0; row < nrRefShapes; row++)
         {
             // TO DO
         }
     }
-    else if (type == AVG)
+    else if (aggregationType == AVG)
     {
         for (unsigned int row = 0; row < nrRefShapes; row++)
         {
@@ -256,8 +401,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
     shapeRef->close();
     shapeRef->open(shapeRef->getFilepath());
 
-    if (showInfo) formInfo.close();
-
     return true;
 }
+
 

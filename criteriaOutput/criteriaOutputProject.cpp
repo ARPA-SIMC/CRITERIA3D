@@ -509,6 +509,7 @@ int CriteriaOutputProject::createAggregationFile()
     initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
     initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
 
+    /*
     for(int i=0; i<aggregationVariable.outputVarName.size(); i++)
     {
         std::string error;
@@ -519,6 +520,7 @@ int CriteriaOutputProject::createAggregationFile()
             return ERROR_ZONAL_STATISTICS_SHAPE;
         }
     }
+    */
 
     // TODO
 

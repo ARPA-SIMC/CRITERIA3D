@@ -34,13 +34,13 @@ bool computeUcmPrevailing(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Cri
 
     // zonal statistic on meteo grid
     fillRasterWithShapeNumber(rasterVal, meteo, showInfo);
-    bool isOk = zonalStatisticsShape(ucm, meteo, rasterRef, rasterVal, idMeteo, "ID_METEO", MAJORITY, error, showInfo);
+    bool isOk = zonalStatisticsShape(ucm, meteo, rasterRef, rasterVal, idMeteo, "ID_METEO", MAJORITY, error);
 
     // zonal statistic on soil map
     if (isOk)
     {
         fillRasterWithShapeNumber(rasterVal, soil, showInfo);
-        isOk = zonalStatisticsShape(ucm, soil, rasterRef, rasterVal, idSoil, "ID_SOIL", MAJORITY, error, showInfo);
+        isOk = zonalStatisticsShape(ucm, soil, rasterRef, rasterVal, idSoil, "ID_SOIL", MAJORITY, error);
     }
 
     if (! isOk)
