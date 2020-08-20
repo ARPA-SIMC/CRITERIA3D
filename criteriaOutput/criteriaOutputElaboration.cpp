@@ -387,6 +387,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         }
         else
         {
+            // there is no db_data_historical to compare variable to past
             if (outputVariable.climateComputation[i].isEmpty())
             {
                 if (outputVariable.varName[i] == "FRACTION_AW")
@@ -408,6 +409,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                 }
                 else
                 {
+                    // find historical period available
                     QDate historicalFirstDate;
                     QDate historicalLastDate;
                     QSqlQuery qry(dbDataHistorical);
@@ -428,7 +430,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
 
                     if (!historicalFirstDate.isValid() || !historicalLastDate.isValid())
                     {
-                        // incomplete data
+                        // incomplete data, there is not historical period to analyze
                         results.append(QString::number(NODATA));
                     }
                     else
@@ -437,6 +439,8 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                         // second parameter (timewindow)
                         if (outputVariable.param2[i] != NODATA)
                         {
+                            // historical period to compare, if outputVariable.param2[i] is empty, current value should be compare
+                            // with previous value in the same day (firstDate = lastDate for all the year available into DB)
                             firstDate = firstDate.addDays(-outputVariable.param2[i]);
                             lastDate = lastDate.addDays(outputVariable.param2[i]);
                         }
@@ -453,6 +457,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                             selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector, projectError);
                             if (selectRes == ERROR_INCOMPLETE_DATA)
                             {
+                                // only first year can be incomplete, otherwise the comparison is not valid and can be terminated
                                 if (year != historicalFirstDate.year())
                                 {
                                     res = NODATA;
@@ -463,6 +468,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
 
                             if (selectRes != CRIT3D_OK && selectRes != ERROR_INCOMPLETE_DATA)
                             {
+                                // something wrong happened (if ERROR_INCOMPLETE_DATA res is NODATA)
                                 return selectRes;
                             }
                             else
@@ -479,6 +485,8 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                         }
                         else
                         {
+                            // comparison between current value (res) and historical values during timewindow (resAllYearsVector)
+                            // compute percentile
                             if (outputVariable.climateComputation[i] == "PERCENTILE")
                             {
                                 bool sortValues = true;
