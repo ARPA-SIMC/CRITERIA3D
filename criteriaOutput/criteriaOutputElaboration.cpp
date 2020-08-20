@@ -6,34 +6,35 @@
 #include "cropDbQuery.h"
 #include <QtSql>
 
-int addDtxUnit(QString idCase, QSqlDatabase dbDataHistorical, QString* projectError)
+
+int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
 {
     // check if table exist (skip otherwise)
-    if (! dbDataHistorical.tables().contains(idCase))
+    if (! db.tables().contains(idCase))
     {
         return CRIT3D_OK;
     }
-    QDate historicalFirstDate, historicalLastDate;
-    QSqlQuery qry(dbDataHistorical);
+    QDate firstDate, lastDate;
+    QSqlQuery qry(db);
     QString statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
     if( !qry.exec(statement) )
     {
-        *projectError = qry.lastError().text();
+        projectError = qry.lastError().text();
         return ERROR_DBHISTORICAL;
     }
     qry.first();
     if (!qry.isValid())
     {
-        *projectError = qry.lastError().text();
+        projectError = qry.lastError().text();
         return ERROR_DBHISTORICAL ;
     }
-    getValue(qry.value("MIN(DATE)"), &historicalFirstDate);
-    getValue(qry.value("MAX(DATE)"), &historicalLastDate);
+    getValue(qry.value("MIN(DATE)"), &firstDate);
+    getValue(qry.value("MAX(DATE)"), &lastDate);
 
-    if (!historicalFirstDate.isValid() || !historicalLastDate.isValid())
+    if (!firstDate.isValid() || !lastDate.isValid())
     {
-        // check if data exist (skip otherwise)
-        return CRIT3D_OK;
+        projectError = "Wrong DATE format";
+        return ERROR_DBHISTORICAL;
     }
 
     // check if DTX column should be added
@@ -44,13 +45,13 @@ int addDtxUnit(QString idCase, QSqlDatabase dbDataHistorical, QString* projectEr
     QString name;
     if( !qry.exec(statement) )
     {
-        *projectError = qry.lastError().text();
+        projectError = qry.lastError().text();
         return ERROR_DBHISTORICAL;
     }
     qry.first();
     if (!qry.isValid())
     {
-        *projectError = qry.lastError().text();
+        projectError = qry.lastError().text();
         return ERROR_DBHISTORICAL ;
     }
     do
@@ -78,7 +79,7 @@ int addDtxUnit(QString idCase, QSqlDatabase dbDataHistorical, QString* projectEr
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT30 REAL").arg(idCase);
         if( !qry.exec(statement) )
         {
-            *projectError = qry.lastError().text();
+            projectError = qry.lastError().text();
             return ERROR_DBHISTORICAL;
         }
     }
@@ -88,7 +89,7 @@ int addDtxUnit(QString idCase, QSqlDatabase dbDataHistorical, QString* projectEr
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT90 REAL").arg(idCase);
         if( !qry.exec(statement) )
         {
-            *projectError = qry.lastError().text();
+            projectError = qry.lastError().text();
             return ERROR_DBHISTORICAL;
         }
     }
@@ -98,152 +99,157 @@ int addDtxUnit(QString idCase, QSqlDatabase dbDataHistorical, QString* projectEr
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT180 REAL").arg(idCase);
         if( !qry.exec(statement) )
         {
-            *projectError = qry.lastError().text();
+            projectError = qry.lastError().text();
             return ERROR_DBHISTORICAL;
         }
     }
 
-    QDate end = historicalFirstDate;
-
-    //DTX30
-    QVector<float> dtx30;
-    int period = 30;
-    bool error = false;
-    int nrDays = historicalFirstDate.daysTo(historicalLastDate) + 1;
-
-    if (dtxQueries(idCase, dbDataHistorical, period, end, historicalLastDate, &dtx30, projectError) == CRIT3D_OK)
+    // compute DTX30
+    std::vector<double> dt30;
+    int myResult = computeAllDtxPeriod(db, idCase, 30, dt30, projectError);
+    if (myResult != CRIT3D_OK)
     {
-        for (int i = 0; i < nrDays; i++)
-        {
-            QDate date = historicalFirstDate.addDays(i);
-            // write DT30
-            if (!writeDtxToDB(idCase, dbDataHistorical, date, period, dtx30[i], projectError))
-            {
-                error = true;
-            }
-            date = date.addDays(i);
-        }
+        return myResult;
     }
-    //DTX90
-    QVector<float> dtx90;
-    period = 90;
-    if (dtxQueries(idCase, dbDataHistorical, period, end, historicalLastDate, &dtx90, projectError) == CRIT3D_OK)
+    // compute DTX90
+    std::vector<double> dt90;
+    myResult = computeAllDtxPeriod(db, idCase, 90, dt90, projectError);
+    if (myResult != CRIT3D_OK)
     {
-        for (int i = 0; i < nrDays; i++)
-        {
-            QDate date = historicalFirstDate.addDays(i);
-            // write DT90
-            if (!writeDtxToDB(idCase, dbDataHistorical, date, period, dtx90[i], projectError))
-            {
-                error = true;
-            }
-            date = date.addDays(i);
-        }
+        return myResult;
+    }
+    // compute DTX180
+    std::vector<double> dt180;
+    myResult = computeAllDtxPeriod(db, idCase, 180, dt180, projectError);
+    if (myResult != CRIT3D_OK)
+    {
+        return myResult;
     }
 
-    //DTX180
-    QVector<float> dtx180;
-    period = 180;
-
-    if (dtxQueries(idCase, dbDataHistorical, period, end, historicalLastDate, &dtx180, projectError) == CRIT3D_OK)
+    // write data
+    if (! writeDtxToDB(db, idCase, firstDate, dt30, dt90, dt180, projectError))
     {
-        for (int i = 0; i < nrDays; i++)
-        {
-            QDate date = historicalFirstDate.addDays(i);
-            // write DT180
-            if (!writeDtxToDB(idCase, dbDataHistorical, date, period, dtx180[i], projectError))
-            {
-                error = true;
-            }
-            date = date.addDays(i);
-        }
+        return ERROR_TDXWRITE;
     }
 
-    if (error == false)
-    {
-        return CRIT3D_OK;
-    }
-    else
-    {
-        ERROR_TDXWRITE;
-    }
-
-}
-
-int dtxQueries(QString idCase, QSqlDatabase dbDataHistorical, int period, QDate end, QDate historicalLastDate, QVector<float>* dtx, QString* projectError)
-{
-
-    QSqlQuery qry(dbDataHistorical);
-    int count = 0;
-    int count2 = 0;
-    float var1, var2;
-    QDate start;
-    QString statement;
-    while (end <= historicalLastDate)
-    {
-        start = end.addDays(-period+1);
-        statement = QString("SELECT COUNT(TRANSP_MAX),COUNT(TRANSP) FROM `%1` WHERE DATE >= '%2' AND DATE <= '%3'").arg(idCase).arg(start.toString("yyyy-MM-dd")).arg(end.toString("yyyy-MM-dd"));
-        if( !qry.exec(statement) )
-        {
-            *projectError = qry.lastError().text();
-            return ERROR_OUTPUT_VARIABLES;
-        }
-        qry.first();
-        if (!qry.isValid())
-        {
-            *projectError = qry.lastError().text();
-            return ERROR_OUTPUT_VARIABLES ;
-        }
-        getValue(qry.value(0), &count);
-        getValue(qry.value(1), &count2);
-        if (count+count2 < period*2)
-        {
-            dtx->push_back(NODATA);
-        }
-        else
-        {
-            statement = QString("SELECT SUM(TRANSP_MAX),SUM(TRANSP) FROM `%1` WHERE DATE >= '%2' AND DATE <= '%3'").arg(idCase).arg(start.toString("yyyy-MM-dd")).arg(end.toString("yyyy-MM-dd"));
-            if( !qry.exec(statement) )
-            {
-                *projectError = qry.lastError().text();
-                return ERROR_OUTPUT_VARIABLES ;
-            }
-            qry.first();
-            if (!qry.isValid())
-            {
-                *projectError = qry.lastError().text();
-                return ERROR_OUTPUT_VARIABLES ;
-            }
-            getValue(qry.value("SUM(TRANSP_MAX)"), &var1);
-            getValue(qry.value("SUM(TRANSP)"), &var2);
-            dtx->push_back((var1 - var2));
-        }
-        end = end.addDays(1);
-    }
     return CRIT3D_OK;
 }
 
-int writeDtxToDB(QString idCase, QSqlDatabase dbDataHistorical, QDate date, int period, float dtx, QString* projectError)
-{
-    QSqlQuery qry(dbDataHistorical);
-    QString column = "DT"+QString::number(period);
-    qry.prepare(QString("UPDATE `%1` SET %2 = :value WHERE DATE = :date").arg(idCase).arg(column));
-    qry.addBindValue(dtx);
-    qry.addBindValue(date);
-    if( !qry.exec() )
-    {
-        *projectError = qry.lastError().text();
-        return false;
-    }
-    return true;
 
+int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, std::vector<double>& dtx, QString& projectError)
+{
+    // read all data
+    QSqlQuery qry(db);
+    QString statement = QString("SELECT TRANSP_MAX, TRANSP FROM `%1`").arg(idCase);
+
+    // error check
+    if(!qry.exec(statement))
+    {
+        projectError = qry.lastError().text();
+        return ERROR_OUTPUT_VARIABLES;
+    }
+    qry.first();
+    if (!qry.isValid())
+    {
+        projectError = qry.lastError().text();
+        return ERROR_OUTPUT_VARIABLES ;
+    }
+
+    // compute daily tranpiration deficit
+    std::vector<double> dailyDt;
+    double transpMax, transpReal;
+    do
+    {
+        getValue(qry.value("TRANSP_MAX"), &transpMax);
+        getValue(qry.value("TRANSP"), &transpReal);
+
+        if (transpMax != NODATA && transpReal != NODATA)
+        {
+            dailyDt.push_back(transpMax - transpReal);
+        }
+        else
+        {
+            dailyDt.push_back(NODATA);
+        }
+    }
+    while (qry.next());
+    qry.clear();
+
+    // compute DTX
+    // it assumes that data are complete (no missing dates)
+    dtx.resize(dailyDt.size());
+    for (unsigned long i = 0; i < dtx.size(); i++)
+    {
+        if (i < period-1)
+        {
+            dtx[i] = NODATA;
+        }
+        else
+        {
+            dtx[i] = 0;
+            unsigned j = 0;
+            while (j < period && dailyDt[i-j] != NODATA)
+            {
+                dtx[i] += dailyDt[i-j];
+                j++;
+            }
+
+            if (j < period && dailyDt[i-j] == NODATA)
+            {
+                dtx[i] = NODATA;
+            }
+        }
+    }
+    dailyDt.clear();
+
+    return CRIT3D_OK;
 }
+
+
+QString getNumberStr(double value)
+{
+    if (value == NODATA)
+    {
+        return QString::number(NODATA);
+    }
+    else
+    {
+        return QString::number(value,'f',1);
+    }
+}
+
+
+bool writeDtxToDB(QSqlDatabase db, QString idCase, QDate firstDate, std::vector<double>& dt30,
+                   std::vector<double>& dt90, std::vector<double>& dt180, QString& projectError)
+{
+    QSqlQuery qry(db);
+    QDate date = firstDate;
+
+    // assume equal size of all dtx vectors
+    for (unsigned long i = 0; i < dt30.size(); i++)
+    {
+        QString statement = "UPDATE " + idCase;
+        statement += " SET DT30 = '" + getNumberStr(dt30[i]) + "'";
+        statement += ", DT90 = '" + getNumberStr(dt90[i]) + "'";
+        statement += ", DT180 = '" + getNumberStr(dt180[i]) + "'";
+        statement += " WHERE DATE = '" + date.toString("yyyy-MM-dd") + "'";
+
+        if( !qry.exec(statement) )
+        {
+            projectError = "UPDATE error: " + qry.lastError().text();
+            return false;
+        }
+        date = date.addDays(1);
+    }
+
+    return true;
+}
+
 
 int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData, QSqlDatabase dbCrop, QSqlDatabase dbDataHistorical,
                        QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString* projectError)
 {
     // IRRI RATIO
-    //float irriRatio = getIrriRatioFromClass(&(dbCrop), "crop_class", "id_class", unitList[unitIndex].idCropClass, &(projectError));
     float irriRatio = getIrriRatioFromClass(&(dbCrop), "crop_class", "id_class", idCropClass, projectError);
 
     //QString idCase = unitList[unitIndex].idCase;
@@ -389,7 +395,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
             }
             else
             {
-                // db_data_historical comparison
+                // db_data_historical comparison (threshold)
                 if (outputVariable.param1[i] != NODATA && res < outputVariable.param1[i])
                 {
                     // skip historical analysis
@@ -397,7 +403,6 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                 }
                 else
                 {
-
                     QDate historicalFirstDate;
                     QDate historicalLastDate;
                     QSqlQuery qry(dbDataHistorical);
@@ -424,6 +429,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                     else
                     {
                         QVector<float> resAllYearsVector;
+                        // second parameter (timewindow)
                         if (outputVariable.param2[i] != NODATA)
                         {
                             firstDate = firstDate.addDays(-outputVariable.param2[i]);

@@ -342,10 +342,12 @@ int CriteriaOutputProject::precomputeDtx()
     for (unsigned int i=0; i < unitList.size(); i++)
     {
         idCase = unitList[i].idCase;
+        logger.writeInfo(QString::number(i) + " ID CASE: " + idCase);
 
-        int myResult = addDtxUnit(idCase, dbDataHistorical, &projectError);
+        int myResult = computeAllDtxUnit(dbDataHistorical, idCase, projectError);
         if (myResult != CRIT3D_OK)
         {
+            projectError = "ID CASE: " + idCase + "\n" + projectError;
             return myResult;
         }
     }
