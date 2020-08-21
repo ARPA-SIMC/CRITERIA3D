@@ -525,16 +525,16 @@ int CriteriaOutputProject::createAggregationFile()
     }
 
     //shape to raster
-    gis::Crit3DRasterGrid* rasterRef = new(gis::Crit3DRasterGrid);
-    gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
-    initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
-    initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
+    gis::Crit3DRasterGrid rasterRef;
+    gis::Crit3DRasterGrid rasterVal;
+    initializeRasterFromShape(&shapeRef, &rasterRef, cellSize);
+    initializeRasterFromShape(&shapeVal, &rasterVal, cellSize);
 
-    fillRasterWithShapeNumber(rasterRef, &shapeRef);
-    fillRasterWithShapeNumber(rasterVal, &shapeVal);
+    fillRasterWithShapeNumber(&rasterRef, &shapeRef);
+    fillRasterWithShapeNumber(&rasterVal, &shapeVal);
 
     std::vector <int> vectorNull;
-    std::vector <std::vector<int> > matrix = computeMatrixAnalysis(&shapeRef, &shapeVal, rasterRef, rasterVal, vectorNull);
+    std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeRef, shapeVal, rasterRef, rasterVal, vectorNull);
 
     for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
     {
@@ -542,28 +542,28 @@ int CriteriaOutputProject::createAggregationFile()
         bool isOk;
         if (aggregationVariable.aggregationType[i] == "MAJORITY")
         {
-            isOk = zonalStatisticsShapeMajority(&shapeRef, &shapeVal, matrix, vectorNull,
+            isOk = zonalStatisticsShapeMajority(shapeRef, shapeVal, matrix, vectorNull,
                                                 aggregationVariable.inputField[i].toStdString(),
-                                                aggregationVariable.outputVarName[i].toStdString(), &error);
+                                                aggregationVariable.outputVarName[i].toStdString(), error);
         }
         else
         {
-            isOk = zonalStatisticsShape(&shapeRef, &shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(),
+            isOk = zonalStatisticsShape(shapeRef, shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(),
                                         aggregationVariable.outputVarName[i].toStdString(),
-                                        aggregationVariable.aggregationType[i].toStdString(), &error);
+                                        aggregationVariable.aggregationType[i].toStdString(), error);
         }
 
         if (!isOk)
         {
             projectError = QString::fromStdString(error);
-            delete rasterRef;
-            delete rasterVal;
+            rasterRef.clear();
+            rasterVal.clear();
             return ERROR_ZONAL_STATISTICS_SHAPE;
         }
     }
 
-    delete rasterRef;
-    delete rasterVal;
+    rasterRef.clear();
+    rasterVal.clear();
     return CRIT3D_OK;
 }
 
