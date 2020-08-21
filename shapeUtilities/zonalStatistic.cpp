@@ -90,7 +90,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
             {
                 if (fieldType == FTInteger)
                 {
-                    value = (double)shapeVal.readIntAttribute(col,fieldIndex);
+                    value = double(shapeVal.readIntAttribute(col,fieldIndex));
                 }
                 else if (fieldType == FTDouble)
                 {
@@ -151,11 +151,11 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
         }
         if (fieldType == FTInteger)
         {
-            shapeRef.writeIntAttribute(shapeIndex, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), (int)valueToSave);
+            shapeRef.writeIntAttribute(int(shapeIndex), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), int(valueToSave));
         }
         else if (fieldType == FTDouble)
         {
-            shapeRef.writeDoubleAttribute(shapeIndex, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), valueToSave);
+            shapeRef.writeDoubleAttribute(int(shapeIndex), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), valueToSave);
         }
     }
 
@@ -207,7 +207,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
             {
                 if (fieldType == FTInteger)
                 {
-                    int value = shapeVal.readIntAttribute(col,fieldIndex);
+                    int value = shapeVal.readIntAttribute(int(col), fieldIndex);
                     if (value == NODATA)
                     {
                         vectorNull[row] += nrValues;
@@ -224,7 +224,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                         }
                         else
                         {
-                            int k = it - vectorValuesInt.begin();
+                            unsigned int k = it - vectorValuesInt.begin();
                             vectorNrElements[k] += nrValues;
                         }
                     }
@@ -248,7 +248,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                         }
                         else
                         {
-                            int k = it - vectorValuesDouble.begin();
+                            unsigned int k = it - vectorValuesDouble.begin();
                             vectorNrElements[k] += nrValues;
                         }
                     }
@@ -272,7 +272,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                         }
                         else
                         {
-                            int k = it - vectorValuesString.begin();
+                            unsigned int k = it - vectorValuesString.begin();
                             vectorNrElements[k] += nrValues;
                         }
                     }
