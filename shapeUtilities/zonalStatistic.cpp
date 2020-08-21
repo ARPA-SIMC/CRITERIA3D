@@ -82,9 +82,8 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
     double value = 0.0;
     double validPoint = 0.0;
     double sumValues = 0;
-    std::vector<double> validPoints;
+    std::vector<double> validPoints(nrRefShapes, 0);
     std::vector <int> aggregationResults(nrRefShapes, 0);
-    int nValues = 0;
 
     for (unsigned int row = 0; row < nrRefShapes; row++)
     {
@@ -108,16 +107,14 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
                 {
                     validPoint = validPoint + matrix[row][col];
                     sumValues = sumValues + value*matrix[row][col];
-                    nValues = nValues + 1;
                 }
             }
         }
-        aggregationResults.push_back(sumValues/nValues);
+        aggregationResults.push_back(sumValues/validPoint);
         validPoints.push_back(validPoint);
         //reset
         validPoint = 0;
         sumValues = 0;
-        nValues = 0;
     }
 
     // save value of the new field
@@ -155,7 +152,157 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
                           std::string valField, std::string valFieldOutput, opType aggregationType,
                           std::string* error)
 {
-    // TO DO
+
+    //check if valField exists
+    int fieldIndex = shapeVal->getDBFFieldIndex(valField.c_str());
+    if (fieldIndex == -1)
+    {
+        *error = shapeVal->getFilepath() + "has not field called " + valField.c_str();
+        return false;
+    }
+
+    // add new field to shapeRef
+    DBFFieldType fieldType = shapeVal->getFieldType(fieldIndex);
+    shapeRef->addField(valFieldOutput.c_str(), fieldType, shapeVal->nWidthField(fieldIndex), shapeVal->nDecimalsField(fieldIndex));
+
+
+    unsigned int nrRefShapes = unsigned(shapeRef->getShapeCount());
+    unsigned int nrValShapes = unsigned(shapeVal->getShapeCount());
+
+    std::vector<std::string> vectorValuesString;
+    std::vector<double> vectorValuesDouble;
+    std::vector<int> vectorValuesInt;
+    std::vector<int> vectorNrElements;
+    std::vector<int> validPoints(nrRefShapes, 0);
+    //size_t varFieldVectorSize = 0;
+
+    for (unsigned int row = 0; row < nrRefShapes; row++)
+    {
+        vectorValuesString.clear();
+        vectorValuesDouble.clear();
+        vectorValuesInt.clear();
+        vectorNrElements.clear();
+        for (unsigned int col = 0; col < nrValShapes; col++)
+        {
+            if (matrix[row][col] > 0)
+            {
+                if (fieldType == FTInteger)
+                {
+                    int value = shapeVal->readIntAttribute(col,fieldIndex);
+                    if (value == NODATA)
+                    {
+                        vectorNull[row] = vectorNull[row] + matrix[row][col];
+                    }
+                    else
+                    {
+                        std::vector<int>::iterator it;
+                        it = std::find (vectorValuesInt.begin(), vectorValuesInt.end(), value);
+                        if ( it == vectorValuesInt.end())
+                        {
+                            // not found
+                            vectorValuesInt.push_back(value);
+                            vectorNrElements.push_back(0);
+                        }
+                        else
+                        {
+                            vectorNrElements.push_back(it - vectorValuesInt.begin());
+                        }
+                    }
+                }
+                else if (fieldType == FTDouble)
+                {
+                    double value = shapeVal->readDoubleAttribute(col,fieldIndex);
+                    if (value == NODATA)
+                    {
+                        vectorNull[row] = vectorNull[row] + matrix[row][col];
+                    }
+                    else
+                    {
+                        std::vector<double>::iterator it;
+                        it = std::find (vectorValuesDouble.begin(), vectorValuesDouble.end(), value);
+                        if ( it == vectorValuesDouble.end())
+                        {
+                            // not found
+                            vectorValuesDouble.push_back(value);
+                            vectorNrElements.push_back(0);
+                        }
+                        else
+                        {
+                            vectorNrElements.push_back(it - vectorValuesDouble.begin());
+                        }
+                    }
+                }
+                else if (fieldType == FTString)
+                {
+                    std::string value = shapeVal->readStringAttribute(col,fieldIndex);
+                    if (value == "")
+                    {
+                        vectorNull[row] = vectorNull[row] + matrix[row][col];
+                    }
+                    else
+                    {
+                        std::vector<std::string>::iterator it;
+                        it = std::find (vectorValuesString.begin(), vectorValuesString.end(), value);
+                        if ( it == vectorValuesString.end())
+                        {
+                            // not found
+                            vectorValuesString.push_back(value);
+                            vectorNrElements.push_back(0);
+                        }
+                        else
+                        {
+                            vectorNrElements.push_back(it - vectorValuesString.begin());
+                        }
+                        vectorNrElements[row] = vectorNrElements[row] + matrix[row][col]; // corretto? nella mail era vectorNrElements[k] += N ma k è il valore memorizzato
+                        validPoints[row] = validPoints[row] + matrix[row][col];
+                    }
+                }
+
+            }
+        } // end column loop
+        int index = *max_element(vectorNrElements.begin(), vectorNrElements.end());
+        if (fieldType == FTInteger)
+        {
+            int valueToSave = 0;
+            if (validPoints[row] < vectorNull[row])
+            {
+                valueToSave = NODATA;
+            }
+            else
+            {
+                valueToSave = vectorValuesInt[index];
+            }
+            shapeRef->writeIntAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), valueToSave);
+        }
+        else if (fieldType == FTDouble)
+        {
+            double valueToSave = 0;
+            if (validPoints[row] < vectorNull[row])
+            {
+                valueToSave = NODATA;
+            }
+            else
+            {
+                valueToSave = vectorValuesDouble[index];
+            }
+            shapeRef->writeDoubleAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), valueToSave);
+        }
+        else if (fieldType == FTString)
+        {
+            std::string valueToSave;
+            if (validPoints[row] < vectorNull[row])
+            {
+                valueToSave = "-9999";
+            }
+            else
+            {
+                valueToSave = vectorValuesString[index];
+            }
+            shapeRef->writeStringAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), valueToSave.c_str());
+        }
+
+    }
+
 }
 
 /////////////////// OLD VERSION ////////////////////////////////////
