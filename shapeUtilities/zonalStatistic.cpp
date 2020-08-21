@@ -214,6 +214,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                     }
                     else
                     {
+                        validPoints[row] += nrValues;
                         std::vector<int>::iterator it;
                         it = std::find (vectorValuesInt.begin(), vectorValuesInt.end(), value);
                         if ( it == vectorValuesInt.end())
@@ -238,6 +239,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                     }
                     else
                     {
+                        validPoints[row] += nrValues;
                         std::vector<double>::iterator it;
                         it = std::find (vectorValuesDouble.begin(), vectorValuesDouble.end(), value);
                         if ( it == vectorValuesDouble.end())
@@ -262,6 +264,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                     }
                     else
                     {
+                        validPoints[row] += nrValues;
                         std::vector<std::string>::iterator it;
                         it = std::find (vectorValuesString.begin(), vectorValuesString.end(), value);
                         if ( it == vectorValuesString.end())

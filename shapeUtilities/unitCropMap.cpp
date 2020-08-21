@@ -33,7 +33,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     FormInfo formInfo;
 
     // CROP --> reference
-    if (showInfo) formInfo.start("Rasterize crop...", 0);
+    if (showInfo) formInfo.start("Rasterize crop (reference)...", 0);
     fillRasterWithShapeNumber(&rasterRef, &ucm);
 
     // meteo grid

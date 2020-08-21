@@ -44,13 +44,11 @@ gis::Crit3DRasterGrid* initializeRasterFromShape(Crit3DShapeHandler* shape, gis:
 void fillRasterWithShapeNumber(gis::Crit3DRasterGrid* raster, Crit3DShapeHandler *shapeHandler)
 {
     ShapeObject object;
-    FormInfo formInfo;
+
     double x, y;
     Box<double> bounds;
     int r0, r1, c0, c1;
     int nShape = shapeHandler->getShapeCount();
-
-    QString fileName = QString::fromStdString(shapeHandler->getFilepath());
 
     raster->emptyGrid();
 
