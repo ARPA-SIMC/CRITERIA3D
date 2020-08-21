@@ -281,7 +281,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
         } // end column loop
 
         // check valid values
-        if (validPoints[row] < vectorNull[row])
+        if (validPoints[row] == 0 || validPoints[row] < vectorNull[row])
         {
             // write NODATA or null string
             if (fieldType == FTInteger)
