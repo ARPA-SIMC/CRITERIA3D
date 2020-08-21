@@ -496,23 +496,6 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_SHAPEFILE;
     }
 
-    // parser aggregation list
-    if (!aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
-    {
-        projectError = "Open failure: " + aggregationListFileName + "\n" + projectError;
-        return false;
-    }
-
-    //shape to raster
-    gis::Crit3DRasterGrid* rasterRef = new(gis::Crit3DRasterGrid);
-    gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
-    initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
-    initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
-
-    // LC necessario togliere showInfo anche qui
-    //fillRasterWithShapeNumber(rasterRef, &shapeRef, false);
-    //fillRasterWithShapeNumber(rasterVal, &shapeVal, false);
-
     // check shape type
     if ( shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
     {
@@ -533,6 +516,23 @@ int CriteriaOutputProject::createAggregationFile()
         projectError = "utm zone: different utm zones" ;
         return false;
     }
+
+    // parser aggregation list
+    if (!aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
+    {
+        projectError = "Open failure: " + aggregationListFileName + "\n" + projectError;
+        return false;
+    }
+
+    //shape to raster
+    gis::Crit3DRasterGrid* rasterRef = new(gis::Crit3DRasterGrid);
+    gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
+    initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
+    initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
+
+    // LC necessario togliere showInfo anche qui
+    fillRasterWithShapeNumber(rasterRef, &shapeRef);
+    fillRasterWithShapeNumber(rasterVal, &shapeVal);
 
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(&shapeRef, &shapeVal, rasterRef, rasterVal, &vectorNull);

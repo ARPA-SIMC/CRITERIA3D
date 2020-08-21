@@ -41,7 +41,7 @@ gis::Crit3DRasterGrid* initializeRasterFromShape(Crit3DShapeHandler* shape, gis:
 }
 
 
-void fillRasterWithShapeNumber(gis::Crit3DRasterGrid* raster, Crit3DShapeHandler *shapeHandler, bool showInfo)
+void fillRasterWithShapeNumber(gis::Crit3DRasterGrid* raster, Crit3DShapeHandler *shapeHandler)
 {
     ShapeObject object;
     FormInfo formInfo;
@@ -52,17 +52,10 @@ void fillRasterWithShapeNumber(gis::Crit3DRasterGrid* raster, Crit3DShapeHandler
 
     QString fileName = QString::fromStdString(shapeHandler->getFilepath());
 
-    if (showInfo)
-    {
-        formInfo.start("Rasterize shape " + fileName, nShape);
-    }
-
     raster->emptyGrid();
 
     for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
     {
-        if (showInfo) formInfo.setValue(shapeIndex);
-
         shapeHandler->getShape(shapeIndex, object);
 
         // get bounds
@@ -90,8 +83,6 @@ void fillRasterWithShapeNumber(gis::Crit3DRasterGrid* raster, Crit3DShapeHandler
             }
         }
     }
-
-    if (showInfo) formInfo.close();
 }
 
 
