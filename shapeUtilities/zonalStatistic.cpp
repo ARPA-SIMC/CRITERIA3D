@@ -103,13 +103,16 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
                 }
                 else
                 {
+                    validPoints[row] += nrPoints;
+
                     if (currentValue == NODATA)
+                    {
                         currentValue = value;
+                    }
 
                     if (aggregationType == "AVG")
                     {
                         sumValues += value;
-                        validPoints[row] += nrPoints;
                     }
                     else if (aggregationType == "MIN")
                     {
@@ -124,16 +127,20 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
         }
 
         // aggregation values
-        if (aggregationType == "AVG")
+        if (validPoints[row] == 0 || validPoints[row] < vectorNull[row])
         {
-            if (validPoints[row] > 0)
+            aggregationValues[row] = NODATA;
+        }
+        else
+        {
+            if (aggregationType == "AVG")
             {
                 aggregationValues[row] = sumValues / validPoints[row];
             }
-        }
-        else if (aggregationType == "MIN" || aggregationType == "MAX")
-        {
-            aggregationValues[row] = currentValue;
+            else if (aggregationType == "MIN" || aggregationType == "MAX")
+            {
+                aggregationValues[row] = currentValue;
+            }
         }
     }
 
@@ -202,31 +209,31 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
 
         for (unsigned int col = 0; col < nrValShapes; col++)
         {
-            int nrValues = int(matrix[row][col]);
-            if (nrValues > 0)
+            int nrPoints = int(matrix[row][col]);
+            if (nrPoints > 0)
             {
                 if (fieldType == FTInteger)
                 {
                     int value = shapeVal.readIntAttribute(int(col), fieldIndex);
                     if (value == NODATA)
                     {
-                        vectorNull[row] += nrValues;
+                        vectorNull[row] += nrPoints;
                     }
                     else
                     {
-                        validPoints[row] += nrValues;
+                        validPoints[row] += nrPoints;
                         std::vector<int>::iterator it;
                         it = std::find (vectorValuesInt.begin(), vectorValuesInt.end(), value);
                         if ( it == vectorValuesInt.end())
                         {
                             // not found . append new value
                             vectorValuesInt.push_back(value);
-                            vectorNrElements.push_back(nrValues);
+                            vectorNrElements.push_back(nrPoints);
                         }
                         else
                         {
                             unsigned int k = it - vectorValuesInt.begin();
-                            vectorNrElements[k] += nrValues;
+                            vectorNrElements[k] += nrPoints;
                         }
                     }
                 }
@@ -235,23 +242,23 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                     double value = shapeVal.readDoubleAttribute(col,fieldIndex);
                     if (value == NODATA)
                     {
-                        vectorNull[row] += nrValues;
+                        vectorNull[row] += nrPoints;
                     }
                     else
                     {
-                        validPoints[row] += nrValues;
+                        validPoints[row] += nrPoints;
                         std::vector<double>::iterator it;
                         it = std::find (vectorValuesDouble.begin(), vectorValuesDouble.end(), value);
                         if ( it == vectorValuesDouble.end())
                         {
                             // not found . append new value
                             vectorValuesDouble.push_back(value);
-                            vectorNrElements.push_back(nrValues);
+                            vectorNrElements.push_back(nrPoints);
                         }
                         else
                         {
                             unsigned int k = it - vectorValuesDouble.begin();
-                            vectorNrElements[k] += nrValues;
+                            vectorNrElements[k] += nrPoints;
                         }
                     }
                 }
@@ -260,23 +267,23 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                     std::string value = shapeVal.readStringAttribute(col,fieldIndex);
                     if (value == "" || value == "-9999")
                     {
-                        vectorNull[row] += nrValues;
+                        vectorNull[row] += nrPoints;
                     }
                     else
                     {
-                        validPoints[row] += nrValues;
+                        validPoints[row] += nrPoints;
                         std::vector<std::string>::iterator it;
                         it = std::find (vectorValuesString.begin(), vectorValuesString.end(), value);
                         if ( it == vectorValuesString.end())
                         {
                             // not found . append new value
                             vectorValuesString.push_back(value);
-                            vectorNrElements.push_back(nrValues);
+                            vectorNrElements.push_back(nrPoints);
                         }
                         else
                         {
                             unsigned int k = it - vectorValuesString.begin();
-                            vectorNrElements[k] += nrValues;
+                            vectorNrElements[k] += nrPoints;
                         }
                     }
                 }
