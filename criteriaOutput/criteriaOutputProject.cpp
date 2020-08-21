@@ -535,11 +535,11 @@ int CriteriaOutputProject::createAggregationFile()
 
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeRef, shapeVal, rasterRef, rasterVal, vectorNull);
+    bool isOk;
 
     for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
     {
         std::string error;
-        bool isOk;
         if (aggregationVariable.aggregationType[i] == "MAJORITY")
         {
             isOk = zonalStatisticsShapeMajority(shapeRef, shapeVal, matrix, vectorNull,
@@ -553,18 +553,22 @@ int CriteriaOutputProject::createAggregationFile()
                                         aggregationVariable.aggregationType[i].toStdString(), error);
         }
 
-        if (!isOk)
-        {
-            projectError = QString::fromStdString(error);
-            rasterRef.clear();
-            rasterVal.clear();
-            return ERROR_ZONAL_STATISTICS_SHAPE;
-        }
+        if (!isOk) break;
     }
 
     rasterRef.clear();
     rasterVal.clear();
-    return CRIT3D_OK;
+    vectorNull.clear();
+    matrix.clear();
+
+    if (!isOk)
+    {
+        return ERROR_ZONAL_STATISTICS_SHAPE;
+    }
+    else
+    {
+        return CRIT3D_OK;
+    }
 }
 
 
