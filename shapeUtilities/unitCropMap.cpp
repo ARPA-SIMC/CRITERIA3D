@@ -54,7 +54,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
         fillRasterWithShapeNumber(&rasterVal, &soil);
 
         if (showInfo) formInfo.start("Compute matrix...", 0);
-        matrix = computeMatrixAnalysis(ucm, meteo, rasterRef, rasterVal, vectorNull);
+        matrix = computeMatrixAnalysis(ucm, soil, rasterRef, rasterVal, vectorNull);
 
         if (showInfo) formInfo.start("Zonal statistic...", 0);
         isOk = zonalStatisticsShapeMajority(ucm, soil, matrix, vectorNull, idSoil, "ID_SOIL", error);
