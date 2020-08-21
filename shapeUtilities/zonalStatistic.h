@@ -24,7 +24,7 @@
 
     bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
                               std::vector <std::vector<int> > matrix, std::vector <int> vectorNull,
-                              std::string valField, std::string valFieldOutput, opType aggregationType,
+                              std::string valField, std::string valFieldOutput,
                               std::string* error);
 
 #endif // ZONALSTATISTIC_H

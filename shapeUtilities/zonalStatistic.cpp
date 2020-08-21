@@ -140,12 +140,12 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
     return true;
 }
 
+
 bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
                           std::vector <std::vector<int> > matrix, std::vector <int> vectorNull,
-                          std::string valField, std::string valFieldOutput, opType aggregationType,
+                          std::string valField, std::string valFieldOutput,
                           std::string* error)
 {
-
     //check if valField exists
     int fieldIndex = shapeVal->getDBFFieldIndex(valField.c_str());
     if (fieldIndex == -1)
@@ -158,7 +158,6 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
     DBFFieldType fieldType = shapeVal->getFieldType(fieldIndex);
     shapeRef->addField(valFieldOutput.c_str(), fieldType, shapeVal->nWidthField(fieldIndex), shapeVal->nDecimalsField(fieldIndex));
 
-
     unsigned int nrRefShapes = unsigned(shapeRef->getShapeCount());
     unsigned int nrValShapes = unsigned(shapeVal->getShapeCount());
 
@@ -167,7 +166,6 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
     std::vector<int> vectorValuesInt;
     std::vector<int> vectorNrElements;
     std::vector<int> validPoints(nrRefShapes, 0);
-    //size_t varFieldVectorSize = 0;
 
     for (unsigned int row = 0; row < nrRefShapes; row++)
     {
@@ -175,16 +173,18 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
         vectorValuesDouble.clear();
         vectorValuesInt.clear();
         vectorNrElements.clear();
+
         for (unsigned int col = 0; col < nrValShapes; col++)
         {
-            if (matrix[row][col] > 0)
+            int nrValues = int(matrix[row][col]);
+            if (nrValues > 0)
             {
                 if (fieldType == FTInteger)
                 {
                     int value = shapeVal->readIntAttribute(col,fieldIndex);
                     if (value == NODATA)
                     {
-                        vectorNull[row] = vectorNull[row] + matrix[row][col];
+                        vectorNull[row] += nrValues;
                     }
                     else
                     {
@@ -192,13 +192,14 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
                         it = std::find (vectorValuesInt.begin(), vectorValuesInt.end(), value);
                         if ( it == vectorValuesInt.end())
                         {
-                            // not found
+                            // not found -> append new value
                             vectorValuesInt.push_back(value);
-                            vectorNrElements.push_back(0);
+                            vectorNrElements.push_back(nrValues);
                         }
                         else
                         {
-                            vectorNrElements.push_back(it - vectorValuesInt.begin());
+                            int k = it - vectorValuesInt.begin();
+                            vectorNrElements[k] += nrValues;
                         }
                     }
                 }
@@ -207,7 +208,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
                     double value = shapeVal->readDoubleAttribute(col,fieldIndex);
                     if (value == NODATA)
                     {
-                        vectorNull[row] = vectorNull[row] + matrix[row][col];
+                        vectorNull[row] += nrValues;
                     }
                     else
                     {
@@ -215,22 +216,23 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
                         it = std::find (vectorValuesDouble.begin(), vectorValuesDouble.end(), value);
                         if ( it == vectorValuesDouble.end())
                         {
-                            // not found
+                            // not found -> append new value
                             vectorValuesDouble.push_back(value);
-                            vectorNrElements.push_back(0);
+                            vectorNrElements.push_back(nrValues);
                         }
                         else
                         {
-                            vectorNrElements.push_back(it - vectorValuesDouble.begin());
+                            int k = it - vectorValuesDouble.begin();
+                            vectorNrElements[k] += nrValues;
                         }
                     }
                 }
                 else if (fieldType == FTString)
                 {
                     std::string value = shapeVal->readStringAttribute(col,fieldIndex);
-                    if (value == "")
+                    if (value == "" || value == "-9999")
                     {
-                        vectorNull[row] = vectorNull[row] + matrix[row][col];
+                        vectorNull[row] += nrValues;
                     }
                     else
                     {
@@ -238,65 +240,66 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
                         it = std::find (vectorValuesString.begin(), vectorValuesString.end(), value);
                         if ( it == vectorValuesString.end())
                         {
-                            // not found
+                            // not found -> append new value
                             vectorValuesString.push_back(value);
-                            vectorNrElements.push_back(0);
+                            vectorNrElements.push_back(nrValues);
                         }
                         else
                         {
-                            vectorNrElements.push_back(it - vectorValuesString.begin());
+                            int k = it - vectorValuesString.begin();
+                            vectorNrElements[k] += nrValues;
                         }
-                        vectorNrElements[row] = vectorNrElements[row] + matrix[row][col]; // corretto? nella mail era vectorNrElements[k] += N ma k è il valore memorizzato
-                        validPoints[row] = validPoints[row] + matrix[row][col];
                     }
                 }
-
             }
         } // end column loop
-        int index = *max_element(vectorNrElements.begin(), vectorNrElements.end());
-        if (fieldType == FTInteger)
-        {
-            int valueToSave = 0;
-            if (validPoints[row] < vectorNull[row])
-            {
-                valueToSave = NODATA;
-            }
-            else
-            {
-                valueToSave = vectorValuesInt[index];
-            }
-            shapeRef->writeIntAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), valueToSave);
-        }
-        else if (fieldType == FTDouble)
-        {
-            double valueToSave = 0;
-            if (validPoints[row] < vectorNull[row])
-            {
-                valueToSave = NODATA;
-            }
-            else
-            {
-                valueToSave = vectorValuesDouble[index];
-            }
-            shapeRef->writeDoubleAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), valueToSave);
-        }
-        else if (fieldType == FTString)
-        {
-            std::string valueToSave;
-            if (validPoints[row] < vectorNull[row])
-            {
-                valueToSave = "-9999";
-            }
-            else
-            {
-                valueToSave = vectorValuesString[index];
-            }
-            shapeRef->writeStringAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), valueToSave.c_str());
-        }
 
+        // check valid values
+        if (validPoints[row] < vectorNull[row])
+        {
+            // write NODATA or null string
+            if (fieldType == FTInteger)
+            {
+                shapeRef->writeIntAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), NODATA);
+            }
+            else if (fieldType == FTDouble)
+            {
+                shapeRef->writeDoubleAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), NODATA);
+            }
+            else if (fieldType == FTString)
+            {
+                shapeRef->writeStringAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), "");
+            }
+        }
+        else
+        {
+            // write prevailing value
+            int index = *max_element(vectorNrElements.begin(), vectorNrElements.end());
+
+            if (fieldType == FTInteger)
+            {
+                shapeRef->writeIntAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesInt[index]);
+            }
+            else if (fieldType == FTDouble)
+            {
+                shapeRef->writeDoubleAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesInt[index]);
+            }
+            else if (fieldType == FTString)
+            {
+                shapeRef->writeStringAttribute(row, shapeRef->getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesString[index].c_str());
+            }
+        }
     }
 
+    vectorValuesString.clear();
+    vectorValuesDouble.clear();
+    vectorValuesInt.clear();
+    vectorNrElements.clear();
+    validPoints.clear();
+
+    return true;
 }
+
 
 /////////////////// OLD VERSION ////////////////////////////////////
 bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
