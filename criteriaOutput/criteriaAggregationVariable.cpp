@@ -64,15 +64,14 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
                 return false;
             }
 
-
             pos = header.indexOf("computation");
             if (pos == -1)
             {
                 error = "missing computation";
                 return false;
             }
-            computation.push_back(items[pos]);
-            if (computation.isEmpty())
+            aggregationType.push_back(items[pos]);
+            if (aggregationType.isEmpty())
             {
                 error = "missing computation";
                 return false;

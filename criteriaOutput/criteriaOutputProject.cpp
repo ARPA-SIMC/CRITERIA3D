@@ -535,10 +535,24 @@ int CriteriaOutputProject::createAggregationFile()
 
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(&shapeRef, &shapeVal, rasterRef, rasterVal, vectorNull);
-    for(int i=0; i<aggregationVariable.outputVarName.size(); i++)
+
+    for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
     {
         std::string error;
-        bool isOk = zonalStatisticsShape(&shapeRef, &shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(), aggregationVariable.outputVarName[i].toStdString(), AVG, &error);
+        bool isOk;
+        if (aggregationVariable.aggregationType[i] == "MAJORITY")
+        {
+            isOk = zonalStatisticsShapeMajority(&shapeRef, &shapeVal, matrix, vectorNull,
+                                                aggregationVariable.inputField[i].toStdString(),
+                                                aggregationVariable.outputVarName[i].toStdString(), &error);
+        }
+        else
+        {
+            isOk = zonalStatisticsShape(&shapeRef, &shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(),
+                                        aggregationVariable.outputVarName[i].toStdString(),
+                                        aggregationVariable.aggregationType[i].toStdString(), &error);
+        }
+
         if (!isOk)
         {
             projectError = QString::fromStdString(error);

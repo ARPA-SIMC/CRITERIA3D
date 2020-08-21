@@ -11,7 +11,7 @@
     public:
         QStringList outputVarName;
         QStringList inputField;
-        QStringList computation;
+        QStringList aggregationType;
 
         CriteriaAggregationVariable();
         bool parserAggregationVariable(QString fileName, QString &error);

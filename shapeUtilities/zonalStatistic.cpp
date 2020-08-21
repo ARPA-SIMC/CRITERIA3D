@@ -53,12 +53,11 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler* shapeR
 
 
 bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
-                          std::vector <std::vector<int> > matrix, std::vector <int> vectorNull,
-                          std::string valField, std::string valFieldOutput, opType aggregationType,
+                          std::vector <std::vector<int> >& matrix, std::vector <int> vectorNull,
+                          std::string valField, std::string valFieldOutput, std::string aggregationType,
                           std::string* error)
 {
-
-    //check if valField exists
+    // check if valField exists
     int fieldIndex = shapeVal->getDBFFieldIndex(valField.c_str());
     if (fieldIndex == -1)
     {
@@ -72,17 +71,20 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
 
     unsigned int nrRefShapes = unsigned(shapeRef->getShapeCount());
     unsigned int nrValShapes = unsigned(shapeVal->getShapeCount());
-    double value = 0.0;
-    double validPoint = 0.0;
+    double value, currentValue;
     double sumValues = 0;
-    std::vector<double> validPoints(nrRefShapes, 0);
-    std::vector <int> aggregationResults(nrRefShapes, 0);
+    std::vector<int> validPoints(nrRefShapes, 0);
+    std::vector<double> aggregationValues(nrRefShapes, NODATA);
 
     for (unsigned int row = 0; row < nrRefShapes; row++)
     {
+        sumValues = 0;
+        currentValue = NODATA;
+
         for (unsigned int col = 0; col < nrValShapes; col++)
         {
-            if (matrix[row][col] > 0)
+            int nrPoints = int(matrix[row][col]);
+            if (nrPoints > 0)
             {
                 if (fieldType == FTInteger)
                 {
@@ -92,26 +94,48 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
                 {
                     value = shapeVal->readDoubleAttribute(col,fieldIndex);
                 }
+
                 if (value == NODATA)
                 {
-                    vectorNull[row] = vectorNull[row] + matrix[row][col];
+                    vectorNull[row] += nrPoints;
                 }
-                else if (aggregationType == AVG)
+                else
                 {
-                    validPoint = validPoint + matrix[row][col];
-                    sumValues = sumValues + value*matrix[row][col];
+                    if (currentValue == NODATA)
+                        currentValue = value;
+
+                    if (aggregationType == "AVG")
+                    {
+                        sumValues += value;
+                        validPoints[row] += nrPoints;
+                    }
+                    else if (aggregationType == "MIN")
+                    {
+                        currentValue = MINVALUE(value, currentValue);
+                    }
+                    else if (aggregationType == "MAX")
+                    {
+                        currentValue = MAXVALUE(value, currentValue);
+                    }
                 }
             }
         }
-        aggregationResults.push_back(sumValues/validPoint);
-        validPoints.push_back(validPoint);
-        //reset
-        validPoint = 0;
-        sumValues = 0;
+
+        // aggregation values
+        if (aggregationType == "AVG")
+        {
+            if (validPoints[row] > 0)
+            {
+                aggregationValues[row] = sumValues / validPoints[row];
+            }
+        }
+        else if (aggregationType == "MIN" || aggregationType == "MAX")
+        {
+            aggregationValues[row] = currentValue;
+        }
     }
 
-    // save value of the new field
-    // each row of matrix is a shape of shapeRef
+    // save aggregation values: each row of matrix is a shape of shapeRef
     double valueToSave = 0.0;
     for (unsigned int shapeIndex = 0; shapeIndex < nrRefShapes; shapeIndex++)
     {
@@ -121,7 +145,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shap
         }
         else
         {
-            valueToSave = aggregationResults[shapeIndex];
+            valueToSave = aggregationValues[shapeIndex];
         }
         if (fieldType == FTInteger)
         {
@@ -146,7 +170,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
                           std::string valField, std::string valFieldOutput,
                           std::string* error)
 {
-    //check if valField exists
+    // check if valField exists
     int fieldIndex = shapeVal->getDBFFieldIndex(valField.c_str());
     if (fieldIndex == -1)
     {
@@ -297,12 +321,16 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler* shapeRef, Crit3DShapeHandl
     vectorNrElements.clear();
     validPoints.clear();
 
+    // close and re-open to write also the last shape
+    shapeRef->close();
+    shapeRef->open(shapeRef->getFilepath());
+
     return true;
 }
 
 
 /////////////////// OLD VERSION ////////////////////////////////////
-bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
+bool zonalStatisticsShapeOld(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
                           gis::Crit3DRasterGrid *rasterRef, gis::Crit3DRasterGrid *rasterVal,
                           std::string valField, std::string valFieldOutput, opType aggregationType,
                           std::string* error)
