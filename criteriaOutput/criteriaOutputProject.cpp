@@ -530,7 +530,6 @@ int CriteriaOutputProject::createAggregationFile()
     initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
     initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
 
-    // LC necessario togliere showInfo anche qui
     fillRasterWithShapeNumber(rasterRef, &shapeRef);
     fillRasterWithShapeNumber(rasterVal, &shapeVal);
 
