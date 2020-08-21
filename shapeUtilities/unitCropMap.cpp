@@ -2,6 +2,7 @@
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
+#include "formInfo.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -29,21 +30,33 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     initializeRasterFromShape(&ucm, &rasterRef, cellSize);
     initializeRasterFromShape(&ucm, &rasterVal, cellSize);
 
-    // ECM --> reference
+    FormInfo formInfo;
+
+    // CROP --> reference
+    if (showInfo) formInfo.start("Rasterize crop...", 0);
     fillRasterWithShapeNumber(&rasterRef, &ucm);
 
-    // zonal statistic on meteo grid
+    // meteo grid
+    if (showInfo) formInfo.start("Rasterize meteo grid...", 0);
     fillRasterWithShapeNumber(&rasterVal, &meteo);
 
+    if (showInfo) formInfo.start("Compute matrix...", 0);
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(ucm, meteo, rasterRef, rasterVal, vectorNull);
 
+    if (showInfo) formInfo.start("Zonal statistic...", 0);
     bool isOk = zonalStatisticsShapeMajority(ucm, meteo, matrix, vectorNull, idMeteo, "ID_METEO", error);
 
     // zonal statistic on soil map
     if (isOk)
     {
+        if (showInfo) formInfo.start("Rasterize soil...", 0);
         fillRasterWithShapeNumber(&rasterVal, &soil);
+
+        if (showInfo) formInfo.start("Compute matrix...", 0);
+        matrix = computeMatrixAnalysis(ucm, meteo, rasterRef, rasterVal, vectorNull);
+
+        if (showInfo) formInfo.start("Zonal statistic...", 0);
         isOk = zonalStatisticsShapeMajority(ucm, soil, matrix, vectorNull, idSoil, "ID_SOIL", error);
     }
 
@@ -54,7 +67,16 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
 
     rasterRef.clear();
     rasterVal.clear();
-    if (! isOk) return false;
+    matrix.clear();
+    vectorNull.clear();
+
+    if (! isOk)
+    {
+        if (showInfo) formInfo.close();
+        return false;
+    }
+
+    if (showInfo) formInfo.start("Write UCM...", 0);
 
     // add ID CASE
     ucm.addField("ID_CASE", FTString, 20, 0);
@@ -94,6 +116,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
             ucm.deleteRecord(shapeIndex);
     }
 
+    if (showInfo) formInfo.close();
     cleanShapeFile(&ucm);
 
     return isOk;

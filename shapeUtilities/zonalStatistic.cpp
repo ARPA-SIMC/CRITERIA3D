@@ -14,6 +14,8 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
     unsigned int nrValShapes = unsigned(shapeVal.getShapeCount());
 
     // analysis matrix
+    vectorNull.clear();
+    vectorNull.resize(nrRefShapes, 0);
     std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrValShapes, 0));
 
     for (int row = 0; row < rasterRef.header->nrRows; row++)
