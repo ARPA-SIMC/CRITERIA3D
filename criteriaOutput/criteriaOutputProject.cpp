@@ -508,6 +508,11 @@ int CriteriaOutputProject::createAggregationFile()
     gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
     initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
     initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
+
+    // LC necessario togliere showInfo anche qui
+    //fillRasterWithShapeNumber(rasterRef, &shapeRef, false);
+    //fillRasterWithShapeNumber(rasterVal, &shapeVal, false);
+
     // check shape type
     if ( shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
     {
