@@ -5,57 +5,52 @@
 #include "commonConstants.h"
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
+#include "gis.h"
 
 std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
-                          gis::Crit3DRasterGrid *rasterRef, gis::Crit3DRasterGrid *rasterVal, std::vector <int>* vectorNull)
+                          gis::Crit3DRasterGrid* rasterRef, gis::Crit3DRasterGrid* rasterVal, std::vector<int>& vectorNull)
 {
-    /*
-     * move check before call
-    // check shape type
-    if ( shapeRef->getTypeString() != shapeVal->getTypeString() || shapeRef->getTypeString() != "2D Polygon" )
-    {
-        *error = "shape type error: not 2D Polygon type" ;
-        return false;
-    }
-
-    // check proj
-    if (shapeRef->getIsWGS84() == false || shapeVal->getIsWGS84() == false)
-    {
-        *error = "projection error: not WGS84" ;
-        return false;
-    }
-
-    // check utm zone
-    if (shapeRef->getUtmZone() != shapeVal->getUtmZone())
-    {
-        *error = "utm zone: different utm zones" ;
-        return false;
-    }
-    */
     unsigned int nrRefShapes = unsigned(shapeRef->getShapeCount());
     unsigned int nrValShapes = unsigned(shapeVal->getShapeCount());
 
     // analysis matrix
-   std::vector <std::vector<int> > matrix(nrRefShapes, std::vector<int>(nrValShapes, 0));
+    std::vector <std::vector<int>> matrix(nrRefShapes, std::vector<int>(nrValShapes, 0));
 
-   for (int row = 0; row < rasterRef->header->nrRows; row++)
-   {
+    for (int row = 0; row < rasterRef->header->nrRows; row++)
+    {
        for (int col = 0; col < rasterRef->header->nrCols; col++)
        {
            int refIndex = int(rasterRef->value[row][col]);
-           int valIndex = int(rasterVal->value[row][col]);
-
            if (refIndex != NODATA)
            {
-               if (valIndex != NODATA)
-                   matrix[unsigned(refIndex)][unsigned(valIndex)]++;
+               double x, y;
+               rasterRef->getXY(row, col, &x, &y);
+               if (! gis::isOutOfGridXY(x, y, rasterVal->header))
+               {
+                    int rowVal, colVal;
+                    gis::getRowColFromXY(*(rasterVal->header), x, y, &rowVal, &colVal);
+
+                    int valIndex = int(rasterVal->value[rowVal][colVal]);
+                    if (valIndex != NODATA)
+                    {
+                        matrix[unsigned(refIndex)][unsigned(valIndex)]++;
+                    }
+                    else
+                    {
+                        vectorNull[unsigned(refIndex)]++;
+                    }
+               }
                else
-                   vectorNull->at(unsigned(refIndex)) = vectorNull->at(unsigned(refIndex)) + 1;
+               {
+                   vectorNull[unsigned(refIndex)]++;
+               }
            }
        }
    }
+
    return matrix;
 }
+
 
 bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
                           std::vector <std::vector<int> > matrix, std::vector <int> vectorNull,

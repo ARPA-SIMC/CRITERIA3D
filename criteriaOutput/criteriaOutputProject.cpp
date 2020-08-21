@@ -534,7 +534,7 @@ int CriteriaOutputProject::createAggregationFile()
     fillRasterWithShapeNumber(rasterVal, &shapeVal);
 
     std::vector <int> vectorNull;
-    std::vector <std::vector<int> > matrix = computeMatrixAnalysis(&shapeRef, &shapeVal, rasterRef, rasterVal, &vectorNull);
+    std::vector <std::vector<int> > matrix = computeMatrixAnalysis(&shapeRef, &shapeVal, rasterRef, rasterVal, vectorNull);
     for(int i=0; i<aggregationVariable.outputVarName.size(); i++)
     {
         std::string error;
