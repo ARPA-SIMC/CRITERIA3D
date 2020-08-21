@@ -309,8 +309,14 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
         }
         else
         {
-            // write prevailing value
-            int index = *max_element(vectorNrElements.begin(), vectorNrElements.end());
+            // search index of prevailing value
+            int maxvalue = 0;
+            unsigned int index = 0;
+            for (unsigned int i = 0; i < vectorNrElements.size(); i++)
+            {
+                if (vectorNrElements[i] > maxvalue)
+                    index = i;
+            }
 
             if (fieldType == FTInteger)
             {
