@@ -508,23 +508,44 @@ int CriteriaOutputProject::createAggregationFile()
     gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
     initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
     initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
+    // check shape type
+    if ( shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
+    {
+        projectError = "shape type error: not 2D Polygon type" ;
+        return false;
+    }
 
-    /*
+    // check proj
+    if (shapeRef.getIsWGS84() == false || shapeVal.getIsWGS84() == false)
+    {
+        projectError = "projection error: not WGS84" ;
+        return false;
+    }
+
+    // check utm zone
+    if (shapeRef.getUtmZone() != shapeVal.getUtmZone())
+    {
+        projectError = "utm zone: different utm zones" ;
+        return false;
+    }
+
+    std::vector <int> vectorNull;
+    std::vector <std::vector<int> > matrix = computeMatrixAnalysis(&shapeRef, &shapeVal, rasterRef, rasterVal, &vectorNull);
     for(int i=0; i<aggregationVariable.outputVarName.size(); i++)
     {
         std::string error;
-        bool isOk = zonalStatisticsShape(&shapeRef, &shapeVal, rasterRef, rasterVal, aggregationVariable.inputField[i].toStdString(), aggregationVariable.outputVarName[i].toStdString(), AVG, &error, false);
+        bool isOk = zonalStatisticsShape(&shapeRef, &shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(), aggregationVariable.outputVarName[i].toStdString(), AVG, &error);
         if (!isOk)
         {
             projectError = QString::fromStdString(error);
+            delete rasterRef;
+            delete rasterVal;
             return ERROR_ZONAL_STATISTICS_SHAPE;
         }
     }
-    */
 
-    // TODO
-
-
+    delete rasterRef;
+    delete rasterVal;
     return CRIT3D_OK;
 }
 

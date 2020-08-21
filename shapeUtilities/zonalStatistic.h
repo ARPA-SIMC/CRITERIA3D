@@ -11,8 +11,7 @@
     enum opType{MAJORITY, MIN, MAX, AVG};
 
     std::vector <std::vector<int>> computeMatrixAnalysis(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
-                              gis::Crit3DRasterGrid *rasterRef, gis::Crit3DRasterGrid *rasterVal,
-                              std::string* error);
+                              gis::Crit3DRasterGrid *rasterRef, gis::Crit3DRasterGrid *rasterVal, std::vector<int> *vectorNull);
 
     bool zonalStatisticsShape(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
                               std::vector <std::vector<int> > matrix, std::vector <int> vectorNull,

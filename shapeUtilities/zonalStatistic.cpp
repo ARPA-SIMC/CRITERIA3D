@@ -7,8 +7,7 @@
 #include "shapeToRaster.h"
 
 std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler* shapeRef, Crit3DShapeHandler* shapeVal,
-                          gis::Crit3DRasterGrid *rasterRef, gis::Crit3DRasterGrid *rasterVal,
-                          std::string* error)
+                          gis::Crit3DRasterGrid *rasterRef, gis::Crit3DRasterGrid *rasterVal, std::vector <int>* vectorNull)
 {
     /*
      * move check before call
@@ -38,7 +37,6 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler* shapeR
 
     // analysis matrix
    std::vector <std::vector<int> > matrix(nrRefShapes, std::vector<int>(nrValShapes));
-   std::vector <int> vectorNull(nrRefShapes, 0);
 
    for (int row = 0; row < rasterRef->header->nrRows; row++)
    {
@@ -52,7 +50,7 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler* shapeR
                if (valIndex != NODATA)
                    matrix[unsigned(refIndex)][unsigned(valIndex)]++;
                else
-                   vectorNull[unsigned(refIndex)]++;
+                   vectorNull->at(unsigned(refIndex)) = vectorNull->at(unsigned(refIndex)) + 1;
            }
        }
    }
