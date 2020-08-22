@@ -473,7 +473,7 @@ int CriteriaOutputProject::createAggregationFile()
         }
     }
 
-    logger.writeInfo("Create AGGREGATION");
+    logger.writeInfo("Create AGGREGATION...");
 
     if (!shapeVal.open(shapeFileName.toStdString()))
     {
