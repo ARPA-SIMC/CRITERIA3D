@@ -3,6 +3,7 @@
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
 #include "formInfo.h"
+#include "ucmDb.h"
 
 #include <QFile>
 #include <QFileInfo>
@@ -123,8 +124,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
 }
 
 
-// FILL ID_CASE
-bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo)
+bool fillUcmIdCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo)
 {
     if (!ucm->existField("ID_CASE"))
     {
@@ -162,4 +162,41 @@ bool fillIDCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil,
             ucm->deleteRecord(shapeIndex);
     }
     return true;
+}
+
+
+bool writeUcmListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error)
+{
+    UcmDb* unitList = new UcmDb(dbName);
+
+    QStringList idCase, idCrop, idMeteo, idSoil;
+    QList<double> ha;
+
+    int nShape = shapeHandler->getShapeCount();
+
+    for (int i = 0; i < nShape; i++)
+    {
+        QString key = QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CASE"));
+        if (key.isEmpty()) continue;
+
+        if ( !idCase.contains(key) )
+        {
+            idCase << key;
+            idCrop << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CROP"));
+            idMeteo << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_METEO"));
+            idSoil << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_SOIL"));
+            ha << shapeHandler->getNumericValue(signed(i), "HA");
+        }
+        else
+        {
+            // TODO search value and sum ha
+        }
+    }
+
+    bool res = unitList->writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha);
+    *error = unitList->getError().toStdString();
+
+    delete unitList;
+
+    return res;
 }

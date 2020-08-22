@@ -1,6 +1,5 @@
-#include "ucmUtilities.h"
+#include "shapeFromCsv.h"
 #include "shapeUtilities.h"
-#include "ucmDb.h"
 #include "commonConstants.h"
 
 #include <QtSql>
@@ -59,19 +58,6 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
     if (nrRows < 2)
     {
         error = "CSV data file is void: " + csvFileName;
-        return false;
-    }
-
-    QString refFileName = QString::fromStdString(refShapeFile->getFilepath());
-    QFileInfo csvFileInfo(csvFileName);
-    QFileInfo refFileInfo(refFileName);
-
-    // make a copy of shapefile and return cloned shapefile complete path
-    QString ucmShapeFile = cloneShapeFile(refFileName, outputFileName);
-
-    if (!outputShapeFile->open(ucmShapeFile.toStdString()))
-    {
-        error = "Load shapefile failed: " + ucmShapeFile;
         return false;
     }
 
@@ -183,7 +169,17 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
         return false;
     }
 
-    // Reads the data and write to shapefile
+    // make a copy of shapefile and return cloned shapefile complete path
+    QString refShapeFileName = QString::fromStdString(refShapeFile->getFilepath());
+    QString ucmShapeFile = cloneShapeFile(refShapeFileName, outputFileName);
+
+    if (!outputShapeFile->open(ucmShapeFile.toStdString()))
+    {
+        error = "Load shapefile failed: " + ucmShapeFile;
+        return false;
+    }
+
+    // Reads the data and write to output shapefile
     QString line;
     QStringList items;
     std::string idCaseStr;
@@ -222,43 +218,4 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
     file.close();
     return true;
 }
-
-
-bool writeUcmListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error)
-{
-    UcmDb* unitList = new UcmDb(dbName);
-
-    QStringList idCase, idCrop, idMeteo, idSoil;
-    QList<double> ha;
-
-    int nShape = shapeHandler->getShapeCount();
-
-    for (int i = 0; i < nShape; i++)
-    {
-        QString key = QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CASE"));
-        if (key.isEmpty()) continue;
-
-        if ( !idCase.contains(key) )
-        {
-            idCase << key;
-            idCrop << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CROP"));
-            idMeteo << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_METEO"));
-            idSoil << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_SOIL"));
-            ha << shapeHandler->getNumericValue(signed(i), "HA");
-        }
-        else
-        {
-            // TODO search value and sum ha
-        }
-    }
-
-    bool res = unitList->writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha);
-    *error = unitList->getError().toStdString();
-
-    delete unitList;
-
-    return res;
-}
-
-
 

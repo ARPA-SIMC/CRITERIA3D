@@ -347,6 +347,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
 }
 
 
+/*
 /////////////////// OLD VERSION ////////////////////////////////////
 bool zonalStatisticsShapeOld(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                           gis::Crit3DRasterGrid &rasterRef, gis::Crit3DRasterGrid &rasterVal,
@@ -592,5 +593,6 @@ bool zonalStatisticsShapeOld(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &s
 
     return true;
 }
+*/
 
 

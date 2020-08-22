@@ -28,9 +28,9 @@ INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project
 
 SOURCES += \
     ../project/formInfo.cpp \
+    shapeFromCsv.cpp \
     shapeToRaster.cpp    \
     shapeUtilities.cpp   \
-    ucmUtilities.cpp     \
     unitCropMap.cpp      \
     zonalStatistic.cpp   \
     ucmDb.cpp
@@ -39,9 +39,9 @@ SOURCES += \
 
 HEADERS += \
     ../project/formInfo.h \
+    shapeFromCsv.h \
     shapeToRaster.h    \
     shapeUtilities.h   \
-    ucmUtilities.h     \
     unitCropMap.h      \
     zonalStatistic.h   \
     ucmDb.h
