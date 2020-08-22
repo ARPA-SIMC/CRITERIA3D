@@ -24,7 +24,7 @@ CONFIG += staticlib
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
-INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project ../utilities
+INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler  ../utilities ../project
 
 SOURCES += \
     ../project/formInfo.cpp \
