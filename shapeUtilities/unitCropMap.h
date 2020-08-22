@@ -12,6 +12,6 @@
 
     bool fillUcmIdCase(Crit3DShapeHandler &ucm, std::string idCrop, std::string idSoil, std::string idMeteo);
 
-    bool writeUcmListToDb(Crit3DShapeHandler& shapeHandler, QString dbName, std::string &error);
+    bool writeUcmListToDb(Crit3DShapeHandler& shapeHandler, QString dbName, QString &error);
 
 #endif // UNITCROPMAP_H

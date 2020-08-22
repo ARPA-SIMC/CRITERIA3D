@@ -35,7 +35,6 @@ SOURCES += \
     zonalStatistic.cpp
 
 
-
 HEADERS += \
     ../project/formInfo.h \
     shapeFromCsv.h \

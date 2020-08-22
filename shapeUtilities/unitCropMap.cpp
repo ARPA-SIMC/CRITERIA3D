@@ -163,14 +163,19 @@ bool fillUcmIdCase(Crit3DShapeHandler &ucm, std::string idCrop, std::string idSo
 }
 
 
-bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, std::string &error)
+bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString &error)
 {
+    int nrShape = shapeHandler.getShapeCount();
+    if (nrShape <= 0)
+    {
+        error = "Shapefile is void.";
+        return false;
+    }
+
     QStringList idCase, idCrop, idMeteo, idSoil;
     QList<double> ha;
 
-    int nShape = shapeHandler.getShapeCount();
-
-    for (int i = 0; i < nShape; i++)
+    for (int i = 0; i < nrShape; i++)
     {
         QString key = QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CASE"));
         if (key.isEmpty()) continue;
@@ -189,11 +194,10 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, std::str
         }
     }
 
-    ComputationUnitsDB unitsDb(dbName);
+    ComputationUnitsDB unitsDb(dbName, error);
+    if (error != "")
+        return false;
 
-    bool writeResult = unitsDb.writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha);
-    error = unitsDb.getError().toStdString();
-    unitsDb.clear();
+    return unitsDb.writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, error);
 
-    return writeResult;
 }
