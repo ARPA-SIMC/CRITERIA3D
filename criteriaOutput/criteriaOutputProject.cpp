@@ -5,7 +5,7 @@
 #include "logger.h"
 #include "utilities.h"
 #include "shapeHandler.h"
-#include "ucmUtilities.h"
+#include "shapeFromCsv.h"
 #include "shapeUtilities.h"
 #include "shapeToRaster.h"
 #include "zonalStatistic.h"
@@ -430,7 +430,7 @@ int CriteriaOutputProject::createShapeFile()
     {
         QDir().mkdir(shapeFilePath);
     }
-    if (! shapeFromCsv(&inputShape, &outputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
+    if (! shapeFromCsv(inputShape, outputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
     {
         return ERROR_SHAPEFILE;
     }

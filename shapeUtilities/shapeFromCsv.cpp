@@ -45,7 +45,7 @@ long getFileLenght(QString fileName)
  *
  * \return true if all is correct
 */
-bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, Crit3DShapeHandler &outputShapeFile, QString csvFileName,
+bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                   QString fieldListFileName, QString outputFileName, QString &error)
 {
     int csvRefRequiredInfo = 5;
@@ -97,6 +97,16 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, Crit3DShapeHandler &outputSh
     if ( !file.open(QFile::ReadOnly | QFile::Text) )
     {
         error = "CSV data file not exists: " + csvFileName;
+        return false;
+    }
+
+    // make a copy of shapefile and return cloned shapefile complete path
+    QString refShapeFileName = QString::fromStdString(refShapeFile.getFilepath());
+    cloneShapeFile(refShapeFileName, outputFileName);
+    Crit3DShapeHandler outputShapeFile;
+    if (!outputShapeFile.open(outputFileName.toStdString()))
+    {
+        error = "Load shapefile failed: " + outputFileName;
         return false;
     }
 
@@ -166,16 +176,6 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, Crit3DShapeHandler &outputSh
     if (idCaseIndexCsv == NODATA)
     {
         error = "invalid CSV: missing ID_CASE";
-        return false;
-    }
-
-    // make a copy of shapefile and return cloned shapefile complete path
-    QString refShapeFileName = QString::fromStdString(refShapeFile.getFilepath());
-    QString ucmShapeFile = cloneShapeFile(refShapeFileName, outputFileName);
-
-    if (!outputShapeFile.open(ucmShapeFile.toStdString()))
-    {
-        error = "Load shapefile failed: " + ucmShapeFile;
         return false;
     }
 

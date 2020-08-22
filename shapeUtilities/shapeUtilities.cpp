@@ -4,7 +4,8 @@
 
 
 /*! cloneShapeFile
- * \brief make a copy of shapefile and return filename of the cloned shapefile
+ * \brief make a copy of shapefile (delete old version)
+ * and return filename of the cloned shapefile
  */
 QString cloneShapeFile(QString refFileName, QString newFileName)
 {

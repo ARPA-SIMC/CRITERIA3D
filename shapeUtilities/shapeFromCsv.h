@@ -6,7 +6,7 @@
     #endif
     #include <QString>
 
-    bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, Crit3DShapeHandler &outputShapeFile, QString csvFileName,
+    bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                       QString fieldListFileName, QString outputFileName, QString &error);
 
 #endif // SHAPEFROMCSV_H
