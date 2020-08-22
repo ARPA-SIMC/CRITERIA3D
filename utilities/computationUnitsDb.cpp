@@ -41,6 +41,7 @@ ComputationUnitsDB::~ComputationUnitsDB()
     {
         QString connection = db.connectionName();
         db.close();
+        db = QSqlDatabase::addDatabase("QSQLITE");
         QSqlDatabase::removeDatabase(connection);
     }
 }
