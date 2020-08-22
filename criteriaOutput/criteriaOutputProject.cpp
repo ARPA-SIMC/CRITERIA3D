@@ -413,7 +413,7 @@ int CriteriaOutputProject::createShapeFile()
 
     logger.writeInfo("Create SHAPEFILE");
 
-    Crit3DShapeHandler inputShape, outputShape;
+    Crit3DShapeHandler inputShape;
 
     if (!inputShape.open(ucmFileName.toStdString()))
     {
@@ -430,7 +430,7 @@ int CriteriaOutputProject::createShapeFile()
     {
         QDir().mkdir(shapeFilePath);
     }
-    if (! shapeFromCsv(inputShape, outputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
+    if (! shapeFromCsv(inputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
     {
         return ERROR_SHAPEFILE;
     }
@@ -527,11 +527,11 @@ int CriteriaOutputProject::createAggregationFile()
     //shape to raster
     gis::Crit3DRasterGrid rasterRef;
     gis::Crit3DRasterGrid rasterVal;
-    initializeRasterFromShape(&shapeRef, &rasterRef, cellSize);
-    initializeRasterFromShape(&shapeVal, &rasterVal, cellSize);
+    initializeRasterFromShape(shapeRef, rasterRef, cellSize);
+    initializeRasterFromShape(shapeVal, rasterVal, cellSize);
 
-    fillRasterWithShapeNumber(&rasterRef, &shapeRef);
-    fillRasterWithShapeNumber(&rasterVal, &shapeVal);
+    fillRasterWithShapeNumber(rasterRef, shapeRef);
+    fillRasterWithShapeNumber(rasterVal, shapeVal);
 
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeRef, shapeVal, rasterRef, rasterVal, vectorNull);
