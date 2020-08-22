@@ -1,17 +1,15 @@
-#ifndef UCMDB_H
-#define UCMDB_H
+#ifndef COMPUTATIONUNITSDB_H
+#define COMPUTATIONUNITSDB_H
 
-    #include <QObject>
     #include <QString>
     #include <QSqlDatabase>
 
-    class UcmDb : public QObject
+    class ComputationUnitsDB
     {
-        Q_OBJECT
-
     public:
-        UcmDb(QString dbname);
-        ~UcmDb();
+        ComputationUnitsDB(QString dbname);
+
+        void clear();
 
         void createUnitsTable();
 
@@ -19,10 +17,12 @@
                                    QStringList idSoil, QList<double> ha);
         QString getError() const;
 
+
+
     private:
         QString error;
         QSqlDatabase db;
     };
 
 
-#endif // UCMDB_H
+#endif // COMPUTATIONUNITSDB_H

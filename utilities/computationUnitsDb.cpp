@@ -1,8 +1,8 @@
-#include "ucmDb.h"
+#include "computationUnitsDb.h"
 #include <QtSql>
 
 
-UcmDb::UcmDb(QString dbname)
+ComputationUnitsDB::ComputationUnitsDB(QString dbname)
 {
     error = "";
 
@@ -26,18 +26,17 @@ UcmDb::UcmDb(QString dbname)
 
 }
 
-UcmDb::~UcmDb()
+void ComputationUnitsDB::clear()
 {
     if ((db.isValid()) && (db.isOpen()))
     {
         QString connection = db.connectionName();
         db.close();
-        db = QSqlDatabase();
         QSqlDatabase::removeDatabase(connection);
     }
 }
 
-void UcmDb::createUnitsTable()
+void ComputationUnitsDB::createUnitsTable()
 {
 
     QSqlQuery qry(db);
@@ -49,7 +48,7 @@ void UcmDb::createUnitsTable()
 }
 
 
-bool UcmDb::writeListToUnitsTable(QStringList idCase, QStringList idCrop, QStringList idMeteo,
+bool ComputationUnitsDB::writeListToUnitsTable(QStringList idCase, QStringList idCrop, QStringList idMeteo,
                                   QStringList idSoil, QList<double> ha)
 {
 
@@ -76,10 +75,7 @@ bool UcmDb::writeListToUnitsTable(QStringList idCase, QStringList idCrop, QStrin
 }
 
 
-QString UcmDb::getError() const
+QString ComputationUnitsDB::getError() const
 {
     return error;
 }
-
-
-

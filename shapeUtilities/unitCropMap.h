@@ -10,8 +10,8 @@
                  std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
                  QString ucmFileName, std::string &error, bool showInfo);
 
-    bool fillUcmIdCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo);
+    bool fillUcmIdCase(Crit3DShapeHandler &ucm, std::string idCrop, std::string idSoil, std::string idMeteo);
 
-    bool writeUcmListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error);
+    bool writeUcmListToDb(Crit3DShapeHandler& shapeHandler, QString dbName, std::string &error);
 
 #endif // UNITCROPMAP_H

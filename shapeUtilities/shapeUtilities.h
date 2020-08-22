@@ -7,6 +7,6 @@
     #include <QString>
 
     QString cloneShapeFile(QString refFileName, QString newFileName);
-    bool cleanShapeFile(Crit3DShapeHandler *shapeHandler);
+    bool cleanShapeFile(Crit3DShapeHandler &shapeHandler);
 
 #endif // SHAPEUTILITIES_H

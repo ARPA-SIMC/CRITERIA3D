@@ -3,11 +3,9 @@
 #include "shapeToRaster.h"
 #include "shapeUtilities.h"
 #include "formInfo.h"
-#include "ucmDb.h"
+#include "computationUnitsDb.h"
 
 #include <QFile>
-#include <QFileInfo>
-#include <qdebug.h>
 
 
 bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Crit3DShapeHandler &soil, Crit3DShapeHandler &meteo,
@@ -28,36 +26,36 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     // create reference and value raster
     gis::Crit3DRasterGrid rasterRef;
     gis::Crit3DRasterGrid rasterVal;
-    initializeRasterFromShape(&ucm, &rasterRef, cellSize);
-    initializeRasterFromShape(&ucm, &rasterVal, cellSize);
+    initializeRasterFromShape(ucm, rasterRef, cellSize);
+    initializeRasterFromShape(ucm, rasterVal, cellSize);
 
     FormInfo formInfo;
 
-    // CROP --> reference
+    // CROP (reference shape)
     if (showInfo) formInfo.start("[1/8] Rasterize crop (reference)...", 0);
-    fillRasterWithShapeNumber(&rasterRef, &ucm);
+    fillRasterWithShapeNumber(rasterRef, ucm);
 
     // meteo grid
-    if (showInfo) formInfo.start("[2/8] Rasterize meteo grid...", 0);
-    fillRasterWithShapeNumber(&rasterVal, &meteo);
+    if (showInfo) formInfo.setText("[2/8] Rasterize meteo grid...");
+    fillRasterWithShapeNumber(rasterVal, meteo);
 
-    if (showInfo) formInfo.start("[3/8] Compute matrix crop/meteo...", 0);
+    if (showInfo) formInfo.setText("[3/8] Compute matrix crop/meteo...");
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(ucm, meteo, rasterRef, rasterVal, vectorNull);
 
-    if (showInfo) formInfo.start("[4/8] Zonal statistic crop/meteo...", 0);
+    if (showInfo) formInfo.setText("[4/8] Zonal statistic crop/meteo...");
     bool isOk = zonalStatisticsShapeMajority(ucm, meteo, matrix, vectorNull, idMeteo, "ID_METEO", error);
 
     // zonal statistic on soil map
     if (isOk)
     {
-        if (showInfo) formInfo.start("[5/8] Rasterize soil...", 0);
-        fillRasterWithShapeNumber(&rasterVal, &soil);
+        if (showInfo) formInfo.setText("[5/8] Rasterize soil...");
+        fillRasterWithShapeNumber(rasterVal, soil);
 
-        if (showInfo) formInfo.start("[6/8] Compute matrix crop/soil...", 0);
+        if (showInfo) formInfo.setText("[6/8] Compute matrix crop/soil...");
         matrix = computeMatrixAnalysis(ucm, soil, rasterRef, rasterVal, vectorNull);
 
-        if (showInfo) formInfo.start("[7/8] Zonal statistic crop/soil...", 0);
+        if (showInfo) formInfo.setText("[7/8] Zonal statistic crop/soil...");
         isOk = zonalStatisticsShapeMajority(ucm, soil, matrix, vectorNull, idSoil, "ID_SOIL", error);
     }
 
@@ -77,7 +75,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
         return false;
     }
 
-    if (showInfo) formInfo.start("[8/8] Write UCM...", 0);
+    if (showInfo) formInfo.setText("[8/8] Write UCM...");
 
     // add ID CASE
     ucm.addField("ID_CASE", FTString, 20, 0);
@@ -118,24 +116,24 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     }
 
     if (showInfo) formInfo.close();
-    cleanShapeFile(&ucm);
+    cleanShapeFile(ucm);
 
     return isOk;
 }
 
 
-bool fillUcmIdCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSoil, std::string idMeteo)
+bool fillUcmIdCase(Crit3DShapeHandler &ucm, std::string idCrop, std::string idSoil, std::string idMeteo)
 {
-    if (!ucm->existField("ID_CASE"))
+    if (!ucm.existField("ID_CASE"))
     {
         return false;
     }
     // read indexes
-    int nShape = ucm->getShapeCount();
-    int cropIndex = ucm->getFieldPos(idCrop);
-    int soilIndex = ucm->getFieldPos(idSoil);
-    int meteoIndex = ucm->getFieldPos(idMeteo);
-    int idCaseIndex = ucm->getFieldPos("ID_CASE");
+    int nShape = ucm.getShapeCount();
+    int cropIndex = ucm.getFieldPos(idCrop);
+    int soilIndex = ucm.getFieldPos(idSoil);
+    int meteoIndex = ucm.getFieldPos(idMeteo);
+    int idCaseIndex = ucm.getFieldPos("ID_CASE");
 
     if (cropIndex == -1 || soilIndex == -1 || meteoIndex == -1)
     {
@@ -143,60 +141,59 @@ bool fillUcmIdCase(Crit3DShapeHandler *ucm, std::string idCrop, std::string idSo
     }
     for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
     {
-        std::string cropStr = ucm->readStringAttribute(shapeIndex, cropIndex);
+        std::string cropStr = ucm.readStringAttribute(shapeIndex, cropIndex);
         if (cropStr == "-9999") cropStr = "";
 
-        std::string soilStr = ucm->readStringAttribute(shapeIndex, soilIndex);
+        std::string soilStr = ucm.readStringAttribute(shapeIndex, soilIndex);
         if (soilStr == "-9999") soilStr = "";
 
-        std::string meteoStr = ucm->readStringAttribute(shapeIndex, meteoIndex);
+        std::string meteoStr = ucm.readStringAttribute(shapeIndex, meteoIndex);
         if (meteoStr == "-9999") meteoStr = "";
 
         std::string caseStr = "";
         if (meteoStr != "" && soilStr != "" && cropStr != "")
             caseStr = "M" + meteoStr + "S" + soilStr + "C" + cropStr;
 
-        ucm->writeStringAttribute(shapeIndex, idCaseIndex, caseStr.c_str());
+        ucm.writeStringAttribute(shapeIndex, idCaseIndex, caseStr.c_str());
 
         if (caseStr == "")
-            ucm->deleteRecord(shapeIndex);
+            ucm.deleteRecord(shapeIndex);
     }
     return true;
 }
 
 
-bool writeUcmListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error)
+bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, std::string &error)
 {
-    UcmDb* unitList = new UcmDb(dbName);
-
     QStringList idCase, idCrop, idMeteo, idSoil;
     QList<double> ha;
 
-    int nShape = shapeHandler->getShapeCount();
+    int nShape = shapeHandler.getShapeCount();
 
     for (int i = 0; i < nShape; i++)
     {
-        QString key = QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CASE"));
+        QString key = QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CASE"));
         if (key.isEmpty()) continue;
 
         if ( !idCase.contains(key) )
         {
             idCase << key;
-            idCrop << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CROP"));
-            idMeteo << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_METEO"));
-            idSoil << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_SOIL"));
-            ha << shapeHandler->getNumericValue(signed(i), "HA");
+            idCrop << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CROP"));
+            idMeteo << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_METEO"));
+            idSoil << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_SOIL"));
+            ha << shapeHandler.getNumericValue(signed(i), "HA");
         }
         else
         {
-            // TODO search value and sum ha
+            // TODO search id_case and sum ectars
         }
     }
 
-    bool res = unitList->writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha);
-    *error = unitList->getError().toStdString();
+    ComputationUnitsDB unitsDb(dbName);
 
-    delete unitList;
+    bool writeResult = unitsDb.writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha);
+    error = unitsDb.getError().toStdString();
+    unitsDb.clear();
 
-    return res;
+    return writeResult;
 }

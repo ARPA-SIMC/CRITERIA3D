@@ -24,7 +24,7 @@ CONFIG += staticlib
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
-INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project
+INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler ../project ../utilities
 
 SOURCES += \
     ../project/formInfo.cpp \
@@ -32,8 +32,7 @@ SOURCES += \
     shapeToRaster.cpp    \
     shapeUtilities.cpp   \
     unitCropMap.cpp      \
-    zonalStatistic.cpp   \
-    ucmDb.cpp
+    zonalStatistic.cpp
 
 
 
@@ -43,7 +42,6 @@ HEADERS += \
     shapeToRaster.h    \
     shapeUtilities.h   \
     unitCropMap.h      \
-    zonalStatistic.h   \
-    ucmDb.h
+    zonalStatistic.h
 
 
