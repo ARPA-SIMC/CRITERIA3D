@@ -33,30 +33,30 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     FormInfo formInfo;
 
     // CROP --> reference
-    if (showInfo) formInfo.start("Rasterize crop (reference)...", 0);
+    if (showInfo) formInfo.start("[1/8] Rasterize crop (reference)...", 0);
     fillRasterWithShapeNumber(&rasterRef, &ucm);
 
     // meteo grid
-    if (showInfo) formInfo.start("Rasterize meteo grid...", 0);
+    if (showInfo) formInfo.start("[2/8] Rasterize meteo grid...", 0);
     fillRasterWithShapeNumber(&rasterVal, &meteo);
 
-    if (showInfo) formInfo.start("Compute matrix...", 0);
+    if (showInfo) formInfo.start("[3/8] Compute matrix crop/meteo...", 0);
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(ucm, meteo, rasterRef, rasterVal, vectorNull);
 
-    if (showInfo) formInfo.start("Zonal statistic...", 0);
+    if (showInfo) formInfo.start("[4/8] Zonal statistic crop/meteo...", 0);
     bool isOk = zonalStatisticsShapeMajority(ucm, meteo, matrix, vectorNull, idMeteo, "ID_METEO", error);
 
     // zonal statistic on soil map
     if (isOk)
     {
-        if (showInfo) formInfo.start("Rasterize soil...", 0);
+        if (showInfo) formInfo.start("[5/8] Rasterize soil...", 0);
         fillRasterWithShapeNumber(&rasterVal, &soil);
 
-        if (showInfo) formInfo.start("Compute matrix...", 0);
+        if (showInfo) formInfo.start("[6/8] Compute matrix crop/soil...", 0);
         matrix = computeMatrixAnalysis(ucm, soil, rasterRef, rasterVal, vectorNull);
 
-        if (showInfo) formInfo.start("Zonal statistic...", 0);
+        if (showInfo) formInfo.start("[7/8] Zonal statistic crop/soil...", 0);
         isOk = zonalStatisticsShapeMajority(ucm, soil, matrix, vectorNull, idSoil, "ID_SOIL", error);
     }
 
@@ -76,7 +76,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
         return false;
     }
 
-    if (showInfo) formInfo.start("Write UCM...", 0);
+    if (showInfo) formInfo.start("[8/8] Write UCM...", 0);
 
     // add ID CASE
     ucm.addField("ID_CASE", FTString, 20, 0);

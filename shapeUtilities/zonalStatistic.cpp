@@ -10,8 +10,8 @@
 std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                           gis::Crit3DRasterGrid &rasterRef, gis::Crit3DRasterGrid &rasterVal, std::vector<int> &vectorNull)
 {
-    unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
-    unsigned int nrValShapes = unsigned(shapeVal.getShapeCount());
+    int nrRefShapes = shapeRef.getShapeCount();
+    int nrValShapes = shapeVal.getShapeCount();
 
     // analysis matrix
     vectorNull.clear();
@@ -23,7 +23,7 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
        for (int col = 0; col < rasterRef.header->nrCols; col++)
        {
            int refIndex = int(rasterRef.value[row][col]);
-           if (refIndex != NODATA)
+           if (refIndex != NODATA && refIndex < nrRefShapes)
            {
                double x, y;
                rasterRef.getXY(row, col, &x, &y);
@@ -33,7 +33,7 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
                     gis::getRowColFromXY(*(rasterVal.header), x, y, &rowVal, &colVal);
 
                     int valIndex = int(rasterVal.value[rowVal][colVal]);
-                    if (valIndex != NODATA)
+                    if (valIndex != NODATA && valIndex < nrValShapes)
                     {
                         matrix[unsigned(refIndex)][unsigned(valIndex)]++;
                     }
@@ -324,7 +324,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
             }
             else if (fieldType == FTDouble)
             {
-                shapeRef.writeDoubleAttribute(row, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesInt[index]);
+                shapeRef.writeDoubleAttribute(row, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesDouble[index]);
             }
             else if (fieldType == FTString)
             {
