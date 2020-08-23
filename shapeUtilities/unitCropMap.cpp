@@ -94,13 +94,13 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
         error = "Missing idCrop: " + idCrop;
         return false;
     }
-    int soilIndex = ucm.getFieldPos(idSoil);
+    int soilIndex = ucm.getFieldPos("ID_SOIL");
     if(soilIndex == -1)
     {
         error = "Missing idSoil: " + idSoil;
         return false;
     }
-    int meteoIndex = ucm.getFieldPos(idMeteo);
+    int meteoIndex = ucm.getFieldPos("ID_METEO");
     if(meteoIndex == -1)
     {
         error = "Missing idMeteo: " + idMeteo;
