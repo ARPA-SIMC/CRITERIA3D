@@ -305,7 +305,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         return CRIT3D_OK;
     }
 
-    for (int i = 0; i<outputVariable.varName.size(); i++)
+    for (int i = 0; i < outputVariable.varName.size(); i++)
     {
         resVector.clear();
         QString varName = outputVariable.varName[i];
@@ -379,7 +379,6 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         // All cases except DTX
         if (varName.left(2) != "DT")
         {
-
             int selectRes = selectSimpleVar(dbData, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector, projectError);
             if (selectRes == ERROR_INCOMPLETE_DATA)
             {
@@ -569,6 +568,12 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
     int count = 0;
     QString statement;
     float result = NODATA;
+
+    if (computation != "")
+    {
+        // TODO: check on count
+    }
+
     statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'").arg(computation).arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
     if( !qry.exec(statement) )
     {
@@ -602,11 +607,14 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
     }
     while(qry.next());
 
-
-    if (count < firstDate.daysTo(lastDate)+1)
+    // check for simple queries
+    if (computation == "")
     {
-        *projectError = "Incomplete data: " + statement;
-        return ERROR_INCOMPLETE_DATA;
+        if (count < firstDate.daysTo(lastDate)+1)
+        {
+            *projectError = "Incomplete data: " + statement;
+            return ERROR_INCOMPLETE_DATA;
+        }
     }
 
     return CRIT3D_OK;
