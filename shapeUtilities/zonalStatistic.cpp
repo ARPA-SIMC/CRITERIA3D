@@ -73,7 +73,8 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
 
     unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
     unsigned int nrValShapes = unsigned(shapeVal.getShapeCount());
-    double value, currentValue;
+    double value = 0;
+    double currentValue = 0;
     double sumValues = 0;
     std::vector<int> validPoints(nrRefShapes, 0);
     std::vector<double> aggregationValues(nrRefShapes, NODATA);
