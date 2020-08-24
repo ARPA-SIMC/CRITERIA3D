@@ -571,9 +571,26 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
 
     if (computation != "")
     {
-        // TODO: check on count
+        statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE >= '%3' AND DATE <= '%4'").arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
+        if( !qry.exec(statement) )
+        {
+            *projectError = "Wrong variable: " + varName + "\n" + qry.lastError().text();
+            return ERROR_OUTPUT_VARIABLES;
+        }
+        qry.first();
+        if (!qry.isValid())
+        {
+            *projectError = qry.lastError().text();
+            return ERROR_OUTPUT_VARIABLES ;
+        }
+        getValue(qry.value(0), &count);
+        if (count < firstDate.daysTo(lastDate)+1)
+        {
+            return ERROR_INCOMPLETE_DATA;
+        }
     }
 
+    count = 0;
     statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'").arg(computation).arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
     if( !qry.exec(statement) )
     {
