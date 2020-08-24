@@ -69,6 +69,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
 
     // add new field to shapeRef
     DBFFieldType fieldType = shapeVal.getFieldType(fieldIndex);
+    // limit of 10 characters for valFieldOutput
     shapeRef.addField(valFieldOutput.c_str(), fieldType, shapeVal.nWidthField(fieldIndex), shapeVal.nDecimalsField(fieldIndex));
 
     unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
