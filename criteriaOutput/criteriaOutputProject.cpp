@@ -536,7 +536,7 @@ int CriteriaOutputProject::createAggregationFile()
 
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeRef, shapeVal, rasterRef, rasterVal, vectorNull);
-    bool isOk;
+    bool isOk = false;
 
     for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
     {

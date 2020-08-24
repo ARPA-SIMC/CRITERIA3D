@@ -69,11 +69,13 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
 
     // add new field to shapeRef
     DBFFieldType fieldType = shapeVal.getFieldType(fieldIndex);
+    // limit of 10 characters for valFieldOutput
     shapeRef.addField(valFieldOutput.c_str(), fieldType, shapeVal.nWidthField(fieldIndex), shapeVal.nDecimalsField(fieldIndex));
 
     unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
     unsigned int nrValShapes = unsigned(shapeVal.getShapeCount());
-    double value, currentValue;
+    double value = 0;
+    double currentValue = 0;
     double sumValues = 0;
     std::vector<int> validPoints(nrRefShapes, 0);
     std::vector<double> aggregationValues(nrRefShapes, NODATA);
@@ -310,12 +312,15 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
         else
         {
             // search index of prevailing value
-            int maxvalue = 0;
+            int maxValue = 0;
             unsigned int index = 0;
             for (unsigned int i = 0; i < vectorNrElements.size(); i++)
             {
-                if (vectorNrElements[i] > maxvalue)
+                if (vectorNrElements[i] > maxValue)
+                {
+                    maxValue = vectorNrElements[i];
                     index = i;
+                }
             }
 
             if (fieldType == FTInteger)

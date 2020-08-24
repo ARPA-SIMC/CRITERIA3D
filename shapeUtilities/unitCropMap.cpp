@@ -89,8 +89,23 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     // read indexes
     int nShape = ucm.getShapeCount();
     int cropIndex = ucm.getFieldPos(idCrop);
-    int soilIndex = ucm.getFieldPos(idSoil);
-    int meteoIndex = ucm.getFieldPos(idMeteo);
+    if(cropIndex == -1)
+    {
+        error = "Missing idCrop: " + idCrop;
+        return false;
+    }
+    int soilIndex = ucm.getFieldPos("ID_SOIL");
+    if(soilIndex == -1)
+    {
+        error = "Missing idSoil: " + idSoil;
+        return false;
+    }
+    int meteoIndex = ucm.getFieldPos("ID_METEO");
+    if(meteoIndex == -1)
+    {
+        error = "Missing idMeteo: " + idMeteo;
+        return false;
+    }
 
     // FILL ID_CROP and ID_CASE
     for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
