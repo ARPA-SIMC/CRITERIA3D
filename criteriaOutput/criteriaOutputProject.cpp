@@ -373,12 +373,13 @@ int CriteriaOutputProject::createCsvFile()
         return ERROR_READ_UNITS;
     }
     logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
-    logger.writeInfo("Write csv...");
 
     if (!initializeCsvOutputFile())
     {
         return ERROR_PARSERCSV;
     }
+
+    logger.writeInfo("Write csv...");
 
     // write output
     QString idCase;
@@ -424,6 +425,7 @@ int CriteriaOutputProject::createShapeFile()
     logger.writeInfo("UCM shapefile: " + ucmFileName);
     logger.writeInfo("CSV data: " + csvFileName);
     logger.writeInfo("Shape field list: " + fieldListFileName);
+    logger.writeInfo("Output shapefile: " + shapeFileName);
     logger.writeInfo("Write shapefile...");
 
     if (! QDir(shapeFilePath).exists())
@@ -435,7 +437,6 @@ int CriteriaOutputProject::createShapeFile()
         return ERROR_SHAPEFILE;
     }
 
-    logger.writeInfo("Output shapefile: " + shapeFileName);
     return CRIT3D_OK;
 }
 
