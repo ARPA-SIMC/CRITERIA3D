@@ -202,19 +202,27 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                 {
                     iterator.next();
                     QString valueToWrite = items[iterator.key()];
+                    bool writeOK = false;
                     if (outputShapeFile.getFieldType(iterator.value()) == FTString)
                     {
-                        outputShapeFile.writeStringAttribute(shapeIndex, iterator.value(), valueToWrite.toStdString().c_str());
+                        writeOK = outputShapeFile.writeStringAttribute(shapeIndex, iterator.value(), valueToWrite.toStdString().c_str());
                     }
                     else
                     {
-                        outputShapeFile.writeDoubleAttribute(shapeIndex, iterator.value(), valueToWrite.toDouble());
+                        writeOK = outputShapeFile.writeDoubleAttribute(shapeIndex, iterator.value(), valueToWrite.toDouble());
+                    }
+                    if (!writeOK)
+                    {
+                        outputShapeFile.close();
+                        file.close();
+                        return false;
                     }
                 }
             }
         }
     }
 
+    outputShapeFile.close();
     file.close();
     return true;
 }
