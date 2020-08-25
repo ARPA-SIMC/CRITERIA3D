@@ -8,9 +8,9 @@
         #include "gis.h"
     #endif
 
-    gis::Crit3DRasterGrid *initializeRasterFromShape(Crit3DShapeHandler *shape, gis::Crit3DRasterGrid *raster, double cellSize);
-    void fillRasterWithShapeNumber(gis::Crit3DRasterGrid* raster, Crit3DShapeHandler* shapePointer, bool showInfo);
-    void fillRasterWithField(gis::Crit3DRasterGrid* raster, Crit3DShapeHandler* shape, std::string valField, bool showInfo);
+    bool initializeRasterFromShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid &raster, double cellSize);
+    bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shape);
+    bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shape, std::string valField);
 
 
 #endif // SHAPETORASTER_H

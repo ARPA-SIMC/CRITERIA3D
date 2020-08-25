@@ -44,7 +44,8 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
                 error = "missing output variable";
                 return false;
             }
-            outputVarName.push_back(items[pos]);
+            // remove whitespace
+            outputVarName.push_back(items[pos].toUpper().trimmed());
             if (outputVarName.isEmpty())
             {
                 error = "missing output variable";
@@ -57,13 +58,13 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
                 error = "missing input field (shape)";
                 return false;
             }
-            inputField.push_back(items[pos].toUpper());
+            // remove whitespace
+            inputField.push_back(items[pos].toUpper().trimmed());
             if (inputField.isEmpty())
             {
                 error = "missing input field";
                 return false;
             }
-
 
             pos = header.indexOf("computation");
             if (pos == -1)
@@ -71,8 +72,9 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
                 error = "missing computation";
                 return false;
             }
-            computation.push_back(items[pos]);
-            if (computation.isEmpty())
+            // remove whitespace
+            aggregationType.push_back(items[pos].toUpper().trimmed());
+            if (aggregationType.isEmpty())
             {
                 error = "missing computation";
                 return false;

@@ -5,9 +5,10 @@
 #include "logger.h"
 #include "utilities.h"
 #include "shapeHandler.h"
-#include "ucmUtilities.h"
+#include "shapeFromCsv.h"
 #include "shapeUtilities.h"
 #include "shapeToRaster.h"
+#include "zonalStatistic.h"
 
 #include <QtSql>
 #include <iostream>
@@ -341,16 +342,15 @@ int CriteriaOutputProject::precomputeDtx()
     for (unsigned int i=0; i < unitList.size(); i++)
     {
         idCase = unitList[i].idCase;
+        logger.writeInfo(QString::number(i) + " ID CASE: " + idCase);
 
-        int myResult = addDtxUnit(idCase, dbDataHistorical, &projectError);
+        int myResult = computeAllDtxUnit(dbDataHistorical, idCase, projectError);
         if (myResult != CRIT3D_OK)
         {
+            projectError = "ID CASE: " + idCase + "\n" + projectError;
             return myResult;
         }
     }
-
-
-    // TODO
 
     return CRIT3D_OK;
 }
@@ -360,7 +360,11 @@ int CriteriaOutputProject::createCsvFile()
 {
     logger.writeInfo("Create CSV");
 
-    initializeProjectCsv();
+    int myResult = initializeProjectCsv();
+    if (myResult != CRIT3D_OK)
+    {
+        return myResult;
+    }
 
     // load computation unit list
     logger.writeInfo("DB computation units: " + dbUnitsName);
@@ -369,12 +373,13 @@ int CriteriaOutputProject::createCsvFile()
         return ERROR_READ_UNITS;
     }
     logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
-    logger.writeInfo("Write csv...");
 
     if (!initializeCsvOutputFile())
     {
         return ERROR_PARSERCSV;
     }
+
+    logger.writeInfo("Write csv...");
 
     // write output
     QString idCase;
@@ -384,7 +389,7 @@ int CriteriaOutputProject::createCsvFile()
         idCase = unitList[i].idCase;
         idCropClass = unitList[i].idCropClass;
 
-        int myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, &projectError);
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, &projectError);
         if (myResult != CRIT3D_OK)
         {
             return myResult;
@@ -409,7 +414,7 @@ int CriteriaOutputProject::createShapeFile()
 
     logger.writeInfo("Create SHAPEFILE");
 
-    Crit3DShapeHandler inputShape, outputShape;
+    Crit3DShapeHandler inputShape;
 
     if (!inputShape.open(ucmFileName.toStdString()))
     {
@@ -420,18 +425,18 @@ int CriteriaOutputProject::createShapeFile()
     logger.writeInfo("UCM shapefile: " + ucmFileName);
     logger.writeInfo("CSV data: " + csvFileName);
     logger.writeInfo("Shape field list: " + fieldListFileName);
+    logger.writeInfo("Output shapefile: " + shapeFileName);
     logger.writeInfo("Write shapefile...");
 
     if (! QDir(shapeFilePath).exists())
     {
         QDir().mkdir(shapeFilePath);
     }
-    if (! shapeFromCsv(&inputShape, &outputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
+    if (! shapeFromCsv(inputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
     {
         return ERROR_SHAPEFILE;
     }
 
-    logger.writeInfo("Output shapefile: " + shapeFileName);
     return CRIT3D_OK;
 }
 
@@ -469,7 +474,7 @@ int CriteriaOutputProject::createAggregationFile()
         }
     }
 
-    logger.writeInfo("Create AGGREGATION");
+    logger.writeInfo("Create AGGREGATION...");
 
     if (!shapeVal.open(shapeFileName.toStdString()))
     {
@@ -492,6 +497,27 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_SHAPEFILE;
     }
 
+    // check shape type
+    if ( shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
+    {
+        projectError = "shape type error: not 2D Polygon type" ;
+        return false;
+    }
+
+    // check proj
+    if (shapeRef.getIsWGS84() == false || shapeVal.getIsWGS84() == false)
+    {
+        projectError = "projection error: not WGS84" ;
+        return false;
+    }
+
+    // check utm zone
+    if (shapeRef.getUtmZone() != shapeVal.getUtmZone())
+    {
+        projectError = "utm zone: different utm zones" ;
+        return false;
+    }
+
     // parser aggregation list
     if (!aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
     {
@@ -500,20 +526,70 @@ int CriteriaOutputProject::createAggregationFile()
     }
 
     //shape to raster
-    gis::Crit3DRasterGrid* rasterRef = new(gis::Crit3DRasterGrid);
-    gis::Crit3DRasterGrid* rasterVal = new(gis::Crit3DRasterGrid);
-    initializeRasterFromShape(&shapeRef, rasterRef, cellSize);
-    initializeRasterFromShape(&shapeVal, rasterVal, cellSize);
+    gis::Crit3DRasterGrid rasterRef;
+    gis::Crit3DRasterGrid rasterVal;
+    initializeRasterFromShape(shapeRef, rasterRef, cellSize);
+    initializeRasterFromShape(shapeVal, rasterVal, cellSize);
 
-    // TODO
+    fillRasterWithShapeNumber(rasterRef, shapeRef);
+    fillRasterWithShapeNumber(rasterVal, shapeVal);
 
+    std::vector <int> vectorNull;
+    std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeRef, shapeVal, rasterRef, rasterVal, vectorNull);
+    bool isOk = false;
 
-    return CRIT3D_OK;
+    for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
+    {
+        std::string error;
+        if (aggregationVariable.aggregationType[i] == "MAJORITY")
+        {
+            isOk = zonalStatisticsShapeMajority(shapeRef, shapeVal, matrix, vectorNull,
+                                                aggregationVariable.inputField[i].toStdString(),
+                                                aggregationVariable.outputVarName[i].toStdString(), error);
+        }
+        else
+        {
+            isOk = zonalStatisticsShape(shapeRef, shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(),
+                                        aggregationVariable.outputVarName[i].toStdString(),
+                                        aggregationVariable.aggregationType[i].toStdString(), error);
+        }
+
+        if (!isOk) break;
+    }
+
+    rasterRef.clear();
+    rasterVal.clear();
+    vectorNull.clear();
+    matrix.clear();
+
+    if (!isOk)
+    {
+        return ERROR_ZONAL_STATISTICS_SHAPE;
+    }
+    else
+    {
+        return writeCsvAggrFromShape(shapeRef, csvAggregationOutputFileName, dateComputation, aggregationVariable.outputVarName, shapeFieldName, projectError);
+    }
 }
 
 
 bool CriteriaOutputProject::initializeCsvOutputFile()
 {
+    // parse output variables
+    if (!outputVariable.parserOutputVariable(variableListFileName, projectError))
+    {
+        projectError = "Open failure: " + variableListFileName + "\n" + projectError;
+        return false;
+    }
+
+    // check output csv directory
+    QString csvFilePath = getFilePath(csvFileName);
+    if (! QDir(csvFilePath).exists())
+    {
+        QDir().mkdir(csvFilePath);
+    }
+
+    // open csvFileName
     outputFile.setFileName(csvFileName);
     if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
@@ -525,11 +601,6 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
         logger.writeInfo("Output file: " + csvFileName);
     }
 
-    if (!outputVariable.parserOutputVariable(variableListFileName, projectError))
-    {
-        projectError = "Open failure: " + variableListFileName + "\n" + projectError;
-        return false;
-    }
     QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName.join(",");
     QTextStream out(&outputFile);
     out << header << "\n";

@@ -1,6 +1,5 @@
-#include "ucmUtilities.h"
+#include "shapeFromCsv.h"
 #include "shapeUtilities.h"
-#include "ucmDb.h"
 #include "commonConstants.h"
 
 #include <QtSql>
@@ -46,7 +45,7 @@ long getFileLenght(QString fileName)
  *
  * \return true if all is correct
 */
-bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputShapeFile, QString csvFileName,
+bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                   QString fieldListFileName, QString outputFileName, QString &error)
 {
     int csvRefRequiredInfo = 5;
@@ -59,19 +58,6 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
     if (nrRows < 2)
     {
         error = "CSV data file is void: " + csvFileName;
-        return false;
-    }
-
-    QString refFileName = QString::fromStdString(refShapeFile->getFilepath());
-    QFileInfo csvFileInfo(csvFileName);
-    QFileInfo refFileInfo(refFileName);
-
-    // make a copy of shapefile and return cloned shapefile complete path
-    QString ucmShapeFile = cloneShapeFile(refFileName, outputFileName);
-
-    if (!outputShapeFile->open(ucmShapeFile.toStdString()))
-    {
-        error = "Load shapefile failed: " + ucmShapeFile;
         return false;
     }
 
@@ -114,6 +100,16 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
         return false;
     }
 
+    // make a copy of shapefile and return cloned shapefile complete path
+    QString refShapeFileName = QString::fromStdString(refShapeFile.getFilepath());
+    cloneShapeFile(refShapeFileName, outputFileName);
+    Crit3DShapeHandler outputShapeFile;
+    if (!outputShapeFile.open(outputFileName.toStdString()))
+    {
+        error = "Load shapefile failed: " + outputFileName;
+        return false;
+    }
+
     // Create a thread to retrieve data from a file
     QTextStream inputStream(&file);
     // read first row (header)
@@ -126,7 +122,7 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
 
     QMap<int, int> myPosMap;
 
-    int idCaseIndexShape = outputShapeFile->getFieldPos("ID_CASE");
+    int idCaseIndexShape = outputShapeFile.getFieldPos("ID_CASE");
     int idCaseIndexCsv = NODATA;
 
     for (int i = 0; i < newFields.size(); i++)
@@ -172,8 +168,8 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
                     nDecimals = valuesList[3].toInt();
                 }
             }
-            outputShapeFile->addField(field.toStdString().c_str(), type, nWidth, nDecimals);
-            myPosMap.insert(i,outputShapeFile->getFieldPos(field.toStdString()));
+            outputShapeFile.addField(field.toStdString().c_str(), type, nWidth, nDecimals);
+            myPosMap.insert(i,outputShapeFile.getFieldPos(field.toStdString()));
         }
     }
 
@@ -183,11 +179,11 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
         return false;
     }
 
-    // Reads the data and write to shapefile
+    // Reads the data and write to output shapefile
     QString line;
     QStringList items;
     std::string idCaseStr;
-    int nrShapes = outputShapeFile->getShapeCount();
+    int nrShapes = outputShapeFile.getShapeCount();
     QMapIterator<int, int> iterator(myPosMap);
 
     while (!inputStream.atEnd())
@@ -199,66 +195,35 @@ bool shapeFromCsv(Crit3DShapeHandler* refShapeFile, Crit3DShapeHandler* outputSh
         for (int shapeIndex = 0; shapeIndex < nrShapes; shapeIndex++)
         {
             // check ID_CASE
-            if (outputShapeFile->readStringAttribute(shapeIndex, idCaseIndexShape) == idCaseStr)
+            if (outputShapeFile.readStringAttribute(shapeIndex, idCaseIndexShape) == idCaseStr)
             {
                 iterator.toFront();
                 while (iterator.hasNext())
                 {
                     iterator.next();
                     QString valueToWrite = items[iterator.key()];
-                    if (outputShapeFile->getFieldType(iterator.value()) == FTString)
+                    bool writeOK = false;
+                    if (outputShapeFile.getFieldType(iterator.value()) == FTString)
                     {
-                        outputShapeFile->writeStringAttribute(shapeIndex, iterator.value(), valueToWrite.toStdString().c_str());
+                        writeOK = outputShapeFile.writeStringAttribute(shapeIndex, iterator.value(), valueToWrite.toStdString().c_str());
                     }
                     else
                     {
-                        outputShapeFile->writeDoubleAttribute(shapeIndex, iterator.value(), valueToWrite.toDouble());
+                        writeOK = outputShapeFile.writeDoubleAttribute(shapeIndex, iterator.value(), valueToWrite.toDouble());
+                    }
+                    if (!writeOK)
+                    {
+                        outputShapeFile.close();
+                        file.close();
+                        return false;
                     }
                 }
             }
         }
     }
 
+    outputShapeFile.close();
     file.close();
     return true;
 }
-
-
-bool writeUcmListToDb(Crit3DShapeHandler* shapeHandler, QString dbName, std::string *error)
-{
-    UcmDb* unitList = new UcmDb(dbName);
-
-    QStringList idCase, idCrop, idMeteo, idSoil;
-    QList<double> ha;
-
-    int nShape = shapeHandler->getShapeCount();
-
-    for (int i = 0; i < nShape; i++)
-    {
-        QString key = QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CASE"));
-        if (key.isEmpty()) continue;
-
-        if ( !idCase.contains(key) )
-        {
-            idCase << key;
-            idCrop << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_CROP"));
-            idMeteo << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_METEO"));
-            idSoil << QString::fromStdString(shapeHandler->getStringValue(signed(i), "ID_SOIL"));
-            ha << shapeHandler->getNumericValue(signed(i), "HA");
-        }
-        else
-        {
-            // TODO search value and sum ha
-        }
-    }
-
-    bool res = unitList->writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha);
-    *error = unitList->getError().toStdString();
-
-    delete unitList;
-
-    return res;
-}
-
-
 

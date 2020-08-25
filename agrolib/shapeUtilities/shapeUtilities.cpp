@@ -4,7 +4,8 @@
 
 
 /*! cloneShapeFile
- * \brief make a copy of shapefile and return filename of the cloned shapefile
+ * \brief make a copy of shapefile (delete old version)
+ * and return filename of the cloned shapefile
  */
 QString cloneShapeFile(QString refFileName, QString newFileName)
 {
@@ -30,17 +31,17 @@ QString cloneShapeFile(QString refFileName, QString newFileName)
 }
 
 
-bool cleanShapeFile(Crit3DShapeHandler *shapeHandler)
+bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
 {
-    if (! shapeHandler->existRecordDeleted()) return true;
+    if (! shapeHandler.existRecordDeleted()) return true;
 
-    QFileInfo fileInfo(QString::fromStdString(shapeHandler->getFilepath()));
+    QFileInfo fileInfo(QString::fromStdString(shapeHandler.getFilepath()));
     QString refFile = fileInfo.absolutePath() + "/" + fileInfo.baseName();
     QString tmpFile = refFile + "_temp";
 
-    shapeHandler->packSHP(tmpFile.toStdString());
-    shapeHandler->packDBF(tmpFile.toStdString());
-    shapeHandler->close();
+    shapeHandler.packSHP(tmpFile.toStdString());
+    shapeHandler.packDBF(tmpFile.toStdString());
+    shapeHandler.close();
 
     QFile::remove(refFile + ".dbf");
     QFile::copy(tmpFile + ".dbf", refFile + ".dbf");
@@ -54,5 +55,5 @@ bool cleanShapeFile(Crit3DShapeHandler *shapeHandler)
     QFile::copy(tmpFile + ".shx", refFile + ".shx");
     QFile::remove(tmpFile + ".shx");
 
-    return shapeHandler->open(shapeHandler->getFilepath());
+    return shapeHandler.open(shapeHandler.getFilepath());
 }
