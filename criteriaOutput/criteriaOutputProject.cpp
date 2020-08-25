@@ -568,7 +568,7 @@ int CriteriaOutputProject::createAggregationFile()
     }
     else
     {
-        return CRIT3D_OK;
+        return writeCsvAggrFromShape(shapeRef, csvAggregationOutputFileName, dateComputation, aggregationVariable.outputVarName, projectError);
     }
 }
 

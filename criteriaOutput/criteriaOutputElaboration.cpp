@@ -723,3 +723,65 @@ int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation,
     resVector->push_back(res);
     return CRIT3D_OK;
 }
+
+int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, QDate dateComputation, QStringList outputVarName, QString &error)
+{
+    QList<QStringList> valuesFromShape;
+    // write CSV
+    QFile outputFile;
+    outputFile.setFileName(csvFileName);
+    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Append))
+    {
+        error = "Open failure: " + csvFileName;
+        return ERROR_WRITECSV;
+    }
+
+    int nrRefShapes = refShapeFile.getShapeCount();
+    QStringList values;
+    for (int row = 0; row < nrRefShapes; row++)
+    {
+        values.clear();
+        for (int field = 0; field < outputVarName.size(); field++)
+        {
+            std::string valField = outputVarName[field].toStdString();
+            int fieldIndex = refShapeFile.getDBFFieldIndex(valField.c_str());
+            if (fieldIndex == -1)
+            {
+                error = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + outputVarName[field];
+                return ERROR_SHAPEFILE;
+            }
+            DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
+            if (fieldType == FTInteger)
+            {
+                values.push_back(QString::number(refShapeFile.readIntAttribute(row,fieldIndex)));
+            }
+            else if (fieldType == FTDouble)
+            {
+                values.push_back(QString::number(refShapeFile.readDoubleAttribute(row,fieldIndex)));
+            }
+            else if (fieldType == FTString)
+            {
+                values.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row,fieldIndex)));
+            }
+        }
+        valuesFromShape.push_back(values);
+    }
+
+    refShapeFile.close();
+
+    QString header = "DATE,ZONE NR," + outputVarName.join(",");
+    QTextStream out(&outputFile);
+    out << header << "\n";
+
+    for (int row = 0; row < nrRefShapes; row++)
+    {
+        out << dateComputation.toString("yyyy-MM-dd");
+        out << "," << QString::number(row+1);
+        out << "," << valuesFromShape[row].join(",");
+        out << "\n";
+    }
+
+    outputFile.flush();
+
+    return CRIT3D_OK;
+}
