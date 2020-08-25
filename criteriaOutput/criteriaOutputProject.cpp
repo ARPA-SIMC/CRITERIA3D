@@ -568,7 +568,7 @@ int CriteriaOutputProject::createAggregationFile()
     }
     else
     {
-        return writeCsvAggrFromShape(shapeRef, csvAggregationOutputFileName, dateComputation, aggregationVariable.outputVarName, projectError);
+        return writeCsvAggrFromShape(shapeRef, csvAggregationOutputFileName, dateComputation, aggregationVariable.outputVarName, shapeFieldName, projectError);
     }
 }
 
