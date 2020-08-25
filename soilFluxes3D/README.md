@@ -6,4 +6,5 @@ equation for the unsaturated zone and by three-dimensional Darcy’s law for the
 
 Water fluxes equations may be coupled with the heat flux equations, which include diffusive, latent and advective terms. 
 Atmospheric data (net irradiance, air temperature and relative humidity, wind speed) could be used as top boundary conditions. 
+
 See [CRITERIA3D](http://www.sciencedirect.com/science/article/pii/S0309170809001754) for more information.
