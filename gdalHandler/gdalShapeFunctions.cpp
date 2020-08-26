@@ -1,6 +1,8 @@
 #include "gdalShapeFunctions.h"
 #include <QFileInfo>
 #include <qdebug.h>
+#include <ogrsf_frmts.h>
+#include <gdal_utils.h>
 
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
@@ -663,6 +665,33 @@ GEOSGeometry * testIntersection()
 }
 */
 
+int shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTIFFName, std::string* errorStr)
+{
+    int error = 0;
+    GDALAllRegister();
+    const char* shape = shapeFileName.toStdString().c_str();
+    const char* tiff = geoTIFFName.toStdString().c_str();
+    char* field = &shapeField[0];
+    GDALDataset* shpDS;
+    GDALDatasetH rasterizeDS;
+    shpDS = (GDALDataset*)GDALOpenEx(shape, GDAL_OF_VECTOR, NULL, NULL, NULL);
+    if( shpDS == NULL )
+    {
+        *errorStr = "Open failed";
+        return -1;
+    }
+    char *options[] = {"-a",field};
+    const GDALRasterizeOptions* psOptions = nullptr;
+    GDALRasterizeOptions* psOptionsToFree = nullptr;
+    psOptionsToFree = GDALRasterizeOptionsNew(options, nullptr);
+    psOptions = psOptionsToFree;
 
+    rasterizeDS = GDALRasterize(tiff,NULL,shpDS,psOptions,&error);
 
+    GDALRasterizeOptionsFree(psOptionsToFree);
+    GDALClose(shpDS);
+    GDALClose(rasterizeDS);
+
+    return error;
+}
 
