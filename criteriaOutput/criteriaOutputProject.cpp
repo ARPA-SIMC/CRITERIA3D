@@ -452,7 +452,7 @@ int CriteriaOutputProject::createAggregationFile()
 {
     if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
     {
-        projectError = "Missing shape field name";
+        projectError = "Missing shape field name.";
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
@@ -467,7 +467,7 @@ int CriteriaOutputProject::createAggregationFile()
 
     if (outputAggrCsvFileName.right(4) != ".csv")
     {
-        projectError = "aggregation output is not a csv file";
+        projectError = "aggregation output is not a csv file.";
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
@@ -494,6 +494,7 @@ int CriteriaOutputProject::createAggregationFile()
     QString outputAggrShapePath = outputShapeFilePath + "/" + aggrFileInfo.baseName();
 
     logger.writeInfo("Aggregation shapefile: " + aggregationShapeFileName);
+
     if (! QFile(aggregationShapeFileName).exists())
     {
         projectError = aggregationShapeFileName + " not exists";
@@ -537,7 +538,7 @@ int CriteriaOutputProject::createAggregationFile()
     }
 
     logger.writeInfo("output shapefile: " + outputAggrShapeFileName);
-    logger.writeInfo("output file: " + outputAggrCsvFileName);
+    logger.writeInfo("output csv file: " + outputAggrCsvFileName);
     logger.writeInfo("Compute aggregation...");
 
     //shape to raster
@@ -575,14 +576,20 @@ int CriteriaOutputProject::createAggregationFile()
     rasterVal.clear();
     vectorNull.clear();
     matrix.clear();
+    shapeVal.close();
 
     if (!isOk)
     {
+        shapeRef.close();
         return ERROR_ZONAL_STATISTICS_SHAPE;
     }
 
-    return writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
+    // write csv aggragation data
+    int myResult = writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
                                  aggregationVariable.outputVarName, shapeFieldName, projectError);
+
+    shapeRef.close();
+    return myResult;
 }
 
 

@@ -725,7 +725,7 @@ int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation,
 }
 
 
-int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, QDate dateComputation, QStringList outputVarName, QString shapeField, QString &error)
+int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName, QDate dateComputation, QStringList outputVarName, QString shapeField, QString &error)
 {
     QList<QStringList> valuesFromShape;
     // write CSV
@@ -792,8 +792,6 @@ int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, 
         }
         valuesFromShape.push_back(values);
     }
-
-    refShapeFile.close();
 
     QString header = "DATE,ZONE ID," + outputVarName.join(",");
     QTextStream out(&outputFile);
