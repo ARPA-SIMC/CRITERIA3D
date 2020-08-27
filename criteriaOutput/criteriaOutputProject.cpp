@@ -580,7 +580,7 @@ int CriteriaOutputProject::createAggregationFile()
 
     logger.writeInfo("Aggregation csv ouptut: " + outputAggrCsvFileName);
     return writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
-                                 aggregationVariable.outputVarName, projectError);
+                                 aggregationVariable.outputVarName, shapeFieldName, projectError);
 }
 
 

@@ -725,7 +725,7 @@ int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation,
 }
 
 
-int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, QDate dateComputation, QStringList outputVarName, QString &error)
+int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, QDate dateComputation, QStringList outputVarName, QString shapeField, QString &error)
 {
     QList<QStringList> valuesFromShape;
     // write CSV
@@ -738,14 +738,39 @@ int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, 
     }
 
     int nrRefShapes = refShapeFile.getShapeCount();
+    std::string shapeFieldStdString = shapeField.toStdString();
+
     QStringList values;
+    QStringList shapeFieldList;
+    int fieldIndex = -1;
     for (int row = 0; row < nrRefShapes; row++)
     {
+        // read shapeField
+        fieldIndex = refShapeFile.getDBFFieldIndex(shapeFieldStdString.c_str());
+        if (fieldIndex == -1)
+        {
+            error = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + shapeField;
+            return ERROR_SHAPEFILE;
+        }
+        DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
+        if (fieldType == FTInteger)
+        {
+            shapeFieldList.push_back(QString::number(refShapeFile.readIntAttribute(row,fieldIndex)));
+        }
+        else if (fieldType == FTDouble)
+        {
+            shapeFieldList.push_back(QString::number(refShapeFile.readDoubleAttribute(row,fieldIndex)));
+        }
+        else if (fieldType == FTString)
+        {
+            shapeFieldList.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row,fieldIndex)));
+        }
+        // read outputVarName
         values.clear();
         for (int field = 0; field < outputVarName.size(); field++)
         {
             std::string valField = outputVarName[field].toStdString();
-            int fieldIndex = refShapeFile.getDBFFieldIndex(valField.c_str());
+            fieldIndex = refShapeFile.getDBFFieldIndex(valField.c_str());
             if (fieldIndex == -1)
             {
                 error = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + outputVarName[field];
@@ -770,14 +795,14 @@ int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, 
 
     refShapeFile.close();
 
-    QString header = "DATE,ZONE NR," + outputVarName.join(",");
+    QString header = "DATE,ZONE ID," + outputVarName.join(",");
     QTextStream out(&outputFile);
     out << header << "\n";
 
     for (int row = 0; row < nrRefShapes; row++)
     {
         out << dateComputation.toString("yyyy-MM-dd");
-        out << "," << QString::number(row+1);
+        out << "," << shapeFieldList[row];
         out << "," << valuesFromShape[row].join(",");
         out << "\n";
     }

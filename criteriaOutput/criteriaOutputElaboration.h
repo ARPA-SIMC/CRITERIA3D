@@ -21,6 +21,6 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
 
 int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation, QDate firstDate, QDate lastDate, QVector<float>* resVector, QString *projectError);
 
-int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, QDate dateComputation, QStringList outputVarName, QString &error);
+int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, QDate dateComputation, QStringList outputVarName, QString shapeField, QString &error);
 
 #endif // CRITERIAOUTPUTELABORATION_H
