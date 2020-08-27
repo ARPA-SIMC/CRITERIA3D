@@ -724,13 +724,14 @@ int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation,
     return CRIT3D_OK;
 }
 
+
 int writeCsvAggrFromShape(Crit3DShapeHandler refShapeFile, QString csvFileName, QDate dateComputation, QStringList outputVarName, QString &error)
 {
     QList<QStringList> valuesFromShape;
     // write CSV
     QFile outputFile;
     outputFile.setFileName(csvFileName);
-    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Append))
+    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
         error = "Open failure: " + csvFileName;
         return ERROR_WRITECSV;

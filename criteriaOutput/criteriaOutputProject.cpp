@@ -23,26 +23,32 @@ void CriteriaOutputProject::initialize()
 {
     isProjectLoaded = false;
 
+    path = "";
     projectName = "";
     dbUnitsName = "";
     dbDataName = "";
     dbDataHistoricalName = "";
     dbCropName = "";
-
     variableListFileName = "";
-    csvFileName = "";
-
     ucmFileName = "";
-    shapeFileName = "";
-    shapeFilePath = "";
+    aggregationShapeFileName = "";
+    shapeFieldName = "";
     fieldListFileName = "";
 
-    aggregationShape = "";
-    shapeFieldName = "";
+    outputCsvFileName = "";
+    outputShapeFileName = "";
+    outputShapeFilePath = "";
+    outputAggrCsvFileName = "";
+
+    dbUnitsName = "";
+    dbDataName = "";
+    dbCropName = "";
+    dbDataHistoricalName = "";
 
     projectError = "";
     nrUnits = 0;
 }
+
 
 void CriteriaOutputProject::closeProject()
 {
@@ -239,17 +245,17 @@ bool CriteriaOutputProject::readSettings()
     bool addDate = projectSettings->value("add_date_to_filename","").toBool();
 
     // csv output
-    csvFileName = projectSettings->value("csv_output","").toString();
-    if (csvFileName.right(4) == ".csv")
+    outputCsvFileName = projectSettings->value("csv_output","").toString();
+    if (outputCsvFileName.right(4) == ".csv")
     {
-        csvFileName = csvFileName.left(csvFileName.length()-4);
+        outputCsvFileName = outputCsvFileName.left(outputCsvFileName.length()-4);
     }
-    if (addDate) csvFileName += "_" + dateStr;
-    csvFileName += ".csv";
+    if (addDate) outputCsvFileName += "_" + dateStr;
+    outputCsvFileName += ".csv";
 
-    if (csvFileName.left(1) == ".")
+    if (outputCsvFileName.left(1) == ".")
     {
-        csvFileName = path + QDir::cleanPath(csvFileName);
+        outputCsvFileName = path + QDir::cleanPath(outputCsvFileName);
     }
     projectSettings->endGroup();
 
@@ -269,18 +275,18 @@ bool CriteriaOutputProject::readSettings()
     }
 
     // Shapefile
-    shapeFilePath = getFilePath(csvFileName) + dateStr;
-    QFileInfo csvFileInfo(csvFileName);
-    shapeFileName = shapeFilePath + "/" + csvFileInfo.baseName() + ".shp";
+    outputShapeFilePath = getFilePath(outputCsvFileName) + dateStr;
+    QFileInfo csvFileInfo(outputCsvFileName);
+    outputShapeFileName = outputShapeFilePath + "/" + csvFileInfo.baseName() + ".shp";
 
     projectSettings->endGroup();
 
     projectSettings->beginGroup("aggregation");
     // Aggregation Shape
-    aggregationShape = projectSettings->value("aggregation_shape","").toString();
-    if (aggregationShape.left(1) == ".")
+    aggregationShapeFileName = projectSettings->value("aggregation_shape","").toString();
+    if (aggregationShapeFileName.left(1) == ".")
     {
-        aggregationShape = path + QDir::cleanPath(aggregationShape);
+        aggregationShapeFileName = path + QDir::cleanPath(aggregationShapeFileName);
     }
 
     // Shape Field
@@ -298,18 +304,18 @@ bool CriteriaOutputProject::readSettings()
 
     addDate = projectSettings->value("add_date_to_filename","").toBool();
     // aggregation output
-    csvAggregationOutputFileName = projectSettings->value("aggregation_output","").toString();
-    if (csvAggregationOutputFileName.right(4) == ".csv")
+    outputAggrCsvFileName = projectSettings->value("aggregation_output","").toString();
+    if (outputAggrCsvFileName.right(4) == ".csv")
     {
-        csvAggregationOutputFileName = csvAggregationOutputFileName.left(csvAggregationOutputFileName.length()-4);
+        outputAggrCsvFileName = outputAggrCsvFileName.left(outputAggrCsvFileName.length()-4);
     }
 
-    if (addDate) csvAggregationOutputFileName += "_" + dateStr;
-    csvAggregationOutputFileName += ".csv";
+    if (addDate) outputAggrCsvFileName += "_" + dateStr;
+    outputAggrCsvFileName += ".csv";
 
-    if (csvAggregationOutputFileName.left(1) == ".")
+    if (outputAggrCsvFileName.left(1) == ".")
     {
-        csvAggregationOutputFileName = path + QDir::cleanPath(csvAggregationOutputFileName);
+        outputAggrCsvFileName = path + QDir::cleanPath(outputAggrCsvFileName);
     }
 
     projectSettings->endGroup();
@@ -389,7 +395,7 @@ int CriteriaOutputProject::createCsvFile()
         idCase = unitList[i].idCase;
         idCropClass = unitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, &projectError);
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, outputCsvFileName, &projectError);
         if (myResult != CRIT3D_OK)
         {
             return myResult;
@@ -402,7 +408,7 @@ int CriteriaOutputProject::createCsvFile()
 
 int CriteriaOutputProject::createShapeFile()
 {
-    if (! QFile(csvFileName).exists())
+    if (! QFile(outputCsvFileName).exists())
     {
         // create CSV
         int myResult = createCsvFile();
@@ -423,16 +429,16 @@ int CriteriaOutputProject::createShapeFile()
     }
 
     logger.writeInfo("UCM shapefile: " + ucmFileName);
-    logger.writeInfo("CSV data: " + csvFileName);
+    logger.writeInfo("CSV data: " + outputCsvFileName);
     logger.writeInfo("Shape field list: " + fieldListFileName);
-    logger.writeInfo("Output shapefile: " + shapeFileName);
+    logger.writeInfo("Output shapefile: " + outputShapeFileName);
     logger.writeInfo("Write shapefile...");
 
-    if (! QDir(shapeFilePath).exists())
+    if (! QDir(outputShapeFilePath).exists())
     {
-        QDir().mkdir(shapeFilePath);
+        QDir().mkdir(outputShapeFilePath);
     }
-    if (! shapeFromCsv(inputShape, csvFileName, fieldListFileName, shapeFileName, projectError))
+    if (! shapeFromCsv(inputShape, outputCsvFileName, fieldListFileName, outputShapeFileName, projectError))
     {
         return ERROR_SHAPEFILE;
     }
@@ -454,17 +460,17 @@ int CriteriaOutputProject::createAggregationFile()
     int cellSize = aggregationCellSize.toInt(&ok, 10);
     if (!ok)
     {
-        projectError = "Invalid aggregation cell size";
+        projectError = "Invalid aggregation cellsize: " + aggregationCellSize;
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
-    if (csvAggregationOutputFileName.right(4) != ".csv")
+    if (outputAggrCsvFileName.right(4) != ".csv")
     {
         projectError = "aggregation output is not a csv file";
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
-    if (! QFile(shapeFileName).exists())
+    if (! QFile(outputShapeFileName).exists())
     {
         // create shapefile
         int myResult = createShapeFile();
@@ -474,26 +480,30 @@ int CriteriaOutputProject::createAggregationFile()
         }
     }
 
-    logger.writeInfo("Create AGGREGATION...");
+    logger.writeInfo("AGGREGATION");
+    Crit3DShapeHandler shapeVal, shapeRef;
 
-    if (!shapeVal.open(shapeFileName.toStdString()))
+    if (!shapeVal.open(outputShapeFileName.toStdString()))
     {
-        projectError = "Load shapefile failed: " + shapeFileName;
+        projectError = "Load shapefile failed: " + outputShapeFileName;
         return ERROR_SHAPEFILE;
     }
 
-    QFileInfo aggFileInfo(csvAggregationOutputFileName);
-    QString shapeRefPath = shapeFilePath + "/" + aggFileInfo.baseName();
+    QFileInfo aggrFileInfo(outputAggrCsvFileName);
+    QString outputAggrShapePath = outputShapeFilePath + "/" + aggrFileInfo.baseName();
 
-    if (! QFile(aggregationShape).exists())
+    logger.writeInfo("Aggregation shapefile: " + aggregationShapeFileName);
+    if (! QFile(aggregationShapeFileName).exists())
     {
-        projectError = aggregationShape + " not exists";
+        projectError = aggregationShapeFileName + " not exists";
         return ERROR_SHAPEFILE;
     }
-    QString shapeRefFileName = cloneShapeFile(aggregationShape, shapeRefPath);
-    if (!shapeRef.open(shapeRefFileName.toStdString()))
+
+    QString outputAggrShapeFileName = cloneShapeFile(aggregationShapeFileName, outputAggrShapePath);
+
+    if (!shapeRef.open(outputAggrShapeFileName.toStdString()))
     {
-        projectError = "Load shapefile failed: " + shapeRefFileName;
+        projectError = "Load shapefile failed: " + outputAggrShapeFileName;
         return ERROR_SHAPEFILE;
     }
 
@@ -525,6 +535,8 @@ int CriteriaOutputProject::createAggregationFile()
         return false;
     }
 
+    logger.writeInfo("Compute aggregation...");
+
     //shape to raster
     gis::Crit3DRasterGrid rasterRef;
     gis::Crit3DRasterGrid rasterVal;
@@ -537,7 +549,6 @@ int CriteriaOutputProject::createAggregationFile()
     std::vector <int> vectorNull;
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeRef, shapeVal, rasterRef, rasterVal, vectorNull);
     bool isOk = false;
-
     for(int i=0; i < aggregationVariable.outputVarName.size(); i++)
     {
         std::string error;
@@ -566,10 +577,10 @@ int CriteriaOutputProject::createAggregationFile()
     {
         return ERROR_ZONAL_STATISTICS_SHAPE;
     }
-    else
-    {
-        return writeCsvAggrFromShape(shapeRef, csvAggregationOutputFileName, dateComputation, aggregationVariable.outputVarName, projectError);
-    }
+
+    logger.writeInfo("Aggregation csv ouptut: " + outputAggrCsvFileName);
+    return writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
+                                 aggregationVariable.outputVarName, projectError);
 }
 
 
@@ -583,22 +594,22 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
     }
 
     // check output csv directory
-    QString csvFilePath = getFilePath(csvFileName);
+    QString csvFilePath = getFilePath(outputCsvFileName);
     if (! QDir(csvFilePath).exists())
     {
         QDir().mkdir(csvFilePath);
     }
 
-    // open csvFileName
-    outputFile.setFileName(csvFileName);
+    // open outputCsvFileName
+    outputFile.setFileName(outputCsvFileName);
     if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
-        projectError = "Open failure: " + csvFileName;
+        projectError = "Open failure: " + outputCsvFileName;
         return false;
     }
     else
     {
-        logger.writeInfo("Output file: " + csvFileName);
+        logger.writeInfo("Output file: " + outputCsvFileName);
     }
 
     QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName.join(",");

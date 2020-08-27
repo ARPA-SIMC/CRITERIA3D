@@ -36,24 +36,21 @@ public:
     bool isProjectLoaded;
 
     QString path;
-    QString dataPath;
     QString projectName;
     QString configFileName;
     QString projectError;
     QString ucmFileName;
-    QString shapeFileName;
-    QString shapeFilePath;
     QString fieldListFileName;
     QString variableListFileName;
-    QString csvFileName;
-    QString aggregationShape;
+    QString aggregationShapeFileName;
     QString shapeFieldName;
-    QString aggregationListFileName;
     QString aggregationCellSize;
-    QString csvAggregationOutputFileName;
+    QString aggregationListFileName;
 
-    Crit3DShapeHandler shapeVal;
-    Crit3DShapeHandler shapeRef;
+    QString outputCsvFileName;
+    QString outputShapeFileName;
+    QString outputShapeFilePath;
+    QString outputAggrCsvFileName;
 
     QDate dateComputation;
 
