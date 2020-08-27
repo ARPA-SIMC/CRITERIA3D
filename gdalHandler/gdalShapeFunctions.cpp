@@ -678,21 +678,21 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
         *errorStr = "Open failed";
         return false;
     }
-
-    std::string optionsStr("-a "+shapeField);
-    char **options = new char*[optionsStr.length()];
-    options[0] = &optionsStr[0];
-    qDebug() << "options[0]" << *options;
+    char *options[] = {strdup("-a"), strdup(shapeField.c_str()), nullptr};
 
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
-    rasterizeDS = GDALRasterize(tiff,NULL,shpDS,psOptions,&error);
 
+    if( psOptions == NULL )
+    {
+        qDebug() << "psOptions is null"" << *options";
+    }
+
+
+    rasterizeDS = GDALRasterize(tiff,NULL,shpDS,psOptions,&error);
 
     GDALClose(shpDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
-
-    delete[] options;
 
     if (rasterizeDS == NULL || error == 0)
     {
