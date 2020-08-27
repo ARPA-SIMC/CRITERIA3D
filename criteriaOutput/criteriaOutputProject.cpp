@@ -398,6 +398,7 @@ int CriteriaOutputProject::createCsvFile()
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, outputCsvFileName, &projectError);
         if (myResult != CRIT3D_OK)
         {
+            QDir().remove(outputCsvFileName);
             return myResult;
         }
     }
@@ -535,6 +536,8 @@ int CriteriaOutputProject::createAggregationFile()
         return false;
     }
 
+    logger.writeInfo("output shapefile: " + outputAggrShapeFileName);
+    logger.writeInfo("output file: " + outputAggrCsvFileName);
     logger.writeInfo("Compute aggregation...");
 
     //shape to raster
@@ -578,7 +581,6 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_ZONAL_STATISTICS_SHAPE;
     }
 
-    logger.writeInfo("Aggregation csv ouptut: " + outputAggrCsvFileName);
     return writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
                                  aggregationVariable.outputVarName, shapeFieldName, projectError);
 }
