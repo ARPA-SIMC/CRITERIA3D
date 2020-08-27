@@ -665,33 +665,39 @@ GEOSGeometry * testIntersection()
 }
 */
 
-int shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTIFFName, std::string* errorStr)
+bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTIFFName, std::string* errorStr)
 {
-    int error = 0;
+    int error = -1;
     GDALAllRegister();
-    const char* shape = shapeFileName.toStdString().c_str();
     const char* tiff = geoTIFFName.toStdString().c_str();
-    char* field = &shapeField[0];
     GDALDataset* shpDS;
     GDALDatasetH rasterizeDS;
-    shpDS = (GDALDataset*)GDALOpenEx(shape, GDAL_OF_VECTOR, NULL, NULL, NULL);
+    shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, NULL, NULL, NULL);
     if( shpDS == NULL )
     {
         *errorStr = "Open failed";
-        return -1;
+        return false;
     }
-    char *options[] = {"-a",field};
-    const GDALRasterizeOptions* psOptions = nullptr;
-    GDALRasterizeOptions* psOptionsToFree = nullptr;
-    psOptionsToFree = GDALRasterizeOptionsNew(options, nullptr);
-    psOptions = psOptionsToFree;
 
+    std::string optionsStr("-a "+shapeField);
+    char **options = new char*[optionsStr.length()];
+    options[0] = &optionsStr[0];
+    qDebug() << "options[0]" << *options;
+
+    GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     rasterizeDS = GDALRasterize(tiff,NULL,shpDS,psOptions,&error);
 
-    GDALRasterizeOptionsFree(psOptionsToFree);
+
     GDALClose(shpDS);
     GDALClose(rasterizeDS);
+    GDALRasterizeOptionsFree(psOptions);
 
-    return error;
+    delete[] options;
+
+    if (rasterizeDS == NULL || error == 0)
+    {
+        return false;
+    }
+    return true;
 }
 
