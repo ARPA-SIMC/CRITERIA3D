@@ -698,6 +698,7 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     }
 
     // size
+    /*
     double adfGeoTransform[6];
     double width = 0;
     double height = 0;
@@ -710,14 +711,16 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     else
     {
         *errorStr = "No transform can be fetched";
-        //return false;
     }
-
-    std::string widthStr = std::to_string(width);
-    std::string heightStr = std::to_string(height);
-
+*/
+    int resX = 100; //test
+    int resY = 100; //test
+    std::string resXStr = std::to_string(resX);
+    std::string resYStr = std::to_string(resY);
+    //std::string bbox = "515700.0499, 4848473.214, 801309.9574, 4998589.706";// test
+    qDebug() << "pszProjection " << pszProjection;
     // set options shapefield, reprojection and size
-    char *options[] = {strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-ts"), strdup(widthStr.c_str()), strdup(heightStr.c_str()), nullptr};
+    char *options[] = {strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
 
     /*
     OGRFeature *poFeature;
@@ -750,7 +753,7 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
 
     if( psOptions == NULL )
     {
-        qDebug() << "psOptions is null" << *options;
+        qDebug() << "psOptions is null";
     }
 
 
