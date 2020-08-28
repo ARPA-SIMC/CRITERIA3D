@@ -678,13 +678,79 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
         *errorStr = "Open failed";
         return false;
     }
-    char *options[] = {strdup("-a"), strdup(shapeField.c_str()), nullptr};
+
+    // projection
+    OGRSpatialReference srs;
+    OGRSpatialReference * pOrigSrs = shpDS->GetLayer(0)->GetSpatialRef();
+    char *pszProjection = nullptr;
+    if ( pOrigSrs )
+    {
+        srs = *pOrigSrs;
+    }
+    if ( srs.IsProjected() )
+    {
+        srs.exportToWkt( &pszProjection );
+    }
+    else
+    {
+        *errorStr = "Missing projection";
+        return false;
+    }
+
+    // size
+    double adfGeoTransform[6];
+    double width = 0;
+    double height = 0;
+    if (shpDS->GetGeoTransform(adfGeoTransform) == CE_None)
+    {
+        qDebug() << "Origin =" << adfGeoTransform[0] << adfGeoTransform[3];
+        width = adfGeoTransform[1];
+        height = adfGeoTransform[5];
+    }
+    else
+    {
+        *errorStr = "No transform can be fetched";
+        //return false;
+    }
+
+    std::string widthStr = std::to_string(width);
+    std::string heightStr = std::to_string(height);
+
+    // set options shapefield, reprojection and size
+    char *options[] = {strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-ts"), strdup(widthStr.c_str()), strdup(heightStr.c_str()), nullptr};
+
+    /*
+    OGRFeature *poFeature;
+    poFeature = shpDS->GetLayer(0)->GetNextFeature();
+    OGRGeometry *poGeometry = poFeature->GetGeometryRef();
+
+    std::string resXStr;
+    std::string resYStr;
+    if( poGeometry != NULL
+            && wkbFlatten(poGeometry->getGeometryType()) == wkbPoint )
+    {
+        OGRPoint *poPoint = (OGRPoint *) poGeometry;
+
+        printf( "%.3f,%3.f\n", poPoint->getX(), poPoint->getY() );
+        std::string resXStr = std::to_string(poPoint->getX());
+        std::string resYStr = std::to_string(poPoint->getY());
+    }
+    else
+    {
+        printf( "no point geometry\n" );
+    }
+
+
+    OGRFeature::DestroyFeature( poFeature );
+    // set options shapefield, reprojection and size
+    char *options[] = {strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
+*/
 
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
 
     if( psOptions == NULL )
     {
-        qDebug() << "psOptions is null"" << *options";
+        qDebug() << "psOptions is null" << *options;
     }
 
 
@@ -693,8 +759,9 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     GDALClose(shpDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
+    CPLFree( pszProjection );
 
-    if (rasterizeDS == NULL || error == 0)
+    if (rasterizeDS == NULL || error == 1)
     {
         return false;
     }
