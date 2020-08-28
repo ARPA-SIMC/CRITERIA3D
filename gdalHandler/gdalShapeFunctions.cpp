@@ -748,18 +748,30 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     // set options shapefield, reprojection and size
     char *options[] = {strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
 */
+    // create output
+    const char *pszFormat = "GTiff";
+    GDALDriver *poDriver;
+    GDALDataset* hDstDS;
+    poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
+    if( poDriver == NULL )
+    {
+        return false;
+    }
+    char **papszOptions = NULL;
+    hDstDS =  poDriver->Create(tiff, 512, 512, 1, GDT_Float64, papszOptions);
+
 
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
-
     if( psOptions == NULL )
     {
         qDebug() << "psOptions is null";
     }
 
 
-    rasterizeDS = GDALRasterize(tiff,NULL,shpDS,psOptions,&error);
+    rasterizeDS = GDALRasterize(tiff,hDstDS,shpDS,psOptions,&error);
 
     GDALClose(shpDS);
+    GDALClose(hDstDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
     CPLFree( pszProjection );
