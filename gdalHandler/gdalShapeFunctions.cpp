@@ -746,7 +746,8 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     //std::string bbox = "515700.0499, 4848473.214, 801309.9574, 4998589.706";// test
     qDebug() << "pszProjection " << pszProjection;
     // set options shapefield, reprojection and size
-    char *options[] = {strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
+    char *options[] = {strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
+                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
 
     /*
     OGRFeature *poFeature;
@@ -777,14 +778,14 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     // create output
     const char *pszFormat = "GTiff";
     GDALDriver *poDriver;
-    GDALDataset* hDstDS;
+    //GDALDataset* hDstDS;
     poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
     if( poDriver == NULL )
     {
         return false;
     }
     char **papszOptions = NULL;
-    hDstDS =  poDriver->Create(tiff, 512, 512, 1, GDT_Float64, papszOptions);
+    //hDstDS =  poDriver->Create(tiff, 512, 512, 1, GDT_Float64, papszOptions);
 
     GDALRasterizeOptionsForBinary* psOptionsForBinary = GDALRasterizeOptionsForBinaryNew();
     psOptionsForBinary->pszSource = strdup(shapeField.c_str());
@@ -795,12 +796,18 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     if( psOptions == NULL )
     {
         qDebug() << "psOptions is null";
+        return false;
     }
-
-    rasterizeDS = GDALRasterize(tiff,hDstDS,shpDS,psOptions,&error);
+    /*
+    if( !(psOptionsForBinary->bQuiet) )
+    {
+        GDALRasterizeOptionsSetProgress(psOptions, GDALTermProgress, nullptr);
+    }
+    */
+    rasterizeDS = GDALRasterize(tiff,NULL,shpDS,psOptions,&error);
 
     GDALClose(shpDS);
-    GDALClose(hDstDS);
+    //GDALClose(hDstDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
     GDALRasterizeOptionsForBinaryFree(psOptionsForBinary);
