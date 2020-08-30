@@ -2,7 +2,33 @@
 #include <QFileInfo>
 #include <qdebug.h>
 #include <ogrsf_frmts.h>
+#include <gdal_priv.h>
 #include <gdal_utils.h>
+#include "gdal_utils_priv.h"
+
+/************************************************************************/
+/*                       GDALRasterizeOptionsForBinaryNew()             */
+/************************************************************************/
+
+static GDALRasterizeOptionsForBinary *GDALRasterizeOptionsForBinaryNew(void)
+{
+    return (GDALRasterizeOptionsForBinary*) CPLCalloc(  1, sizeof(GDALRasterizeOptionsForBinary) );
+}
+
+/************************************************************************/
+/*                       GDALRasterizeOptionsForBinaryFree()            */
+/************************************************************************/
+
+static void GDALRasterizeOptionsForBinaryFree( GDALRasterizeOptionsForBinary* psOptionsForBinary )
+{
+    if( psOptionsForBinary )
+    {
+        CPLFree(psOptionsForBinary->pszSource);
+        CPLFree(psOptionsForBinary->pszDest);
+        CPLFree(psOptionsForBinary->pszFormat);
+        CPLFree(psOptionsForBinary);
+    }
+}
 
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
@@ -720,7 +746,7 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     //std::string bbox = "515700.0499, 4848473.214, 801309.9574, 4998589.706";// test
     qDebug() << "pszProjection " << pszProjection;
     // set options shapefield, reprojection and size
-    char *options[] = {strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
+    char *options[] = {strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
 
     /*
     OGRFeature *poFeature;
@@ -760,13 +786,16 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     char **papszOptions = NULL;
     hDstDS =  poDriver->Create(tiff, 512, 512, 1, GDT_Float64, papszOptions);
 
-
-    GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
+    GDALRasterizeOptionsForBinary* psOptionsForBinary = GDALRasterizeOptionsForBinaryNew();
+    psOptionsForBinary->pszSource = strdup(shapeField.c_str());
+    psOptionsForBinary->pszDest = strdup(geoTIFFName.toStdString().c_str());
+    psOptionsForBinary->pszFormat = "GTiff";
+    psOptionsForBinary->bCreateOutput = true;
+    GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, psOptionsForBinary);
     if( psOptions == NULL )
     {
         qDebug() << "psOptions is null";
     }
-
 
     rasterizeDS = GDALRasterize(tiff,hDstDS,shpDS,psOptions,&error);
 
@@ -774,6 +803,7 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     GDALClose(hDstDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
+    GDALRasterizeOptionsForBinaryFree(psOptionsForBinary);
     CPLFree( pszProjection );
 
     if (rasterizeDS == NULL || error == 1)
