@@ -695,7 +695,7 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
 {
     int error = -1;
     GDALAllRegister();
-    const char* tiff = geoTIFFName.toStdString().c_str();
+    std::string outputStd = geoTIFFName.toStdString();
     GDALDataset* shpDS;
     GDALDatasetH rasterizeDS;
     shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, NULL, NULL, NULL);
@@ -746,24 +746,22 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     //std::string bbox = "515700.0499, 4848473.214, 801309.9574, 4998589.706";// test
     qDebug() << "pszProjection " << pszProjection;
     // set options shapefield, reprojection and size
-    char *options[] = {strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
-                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
+    //char *options[] = {strdup("-at"), strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
+    //                   strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), strdup("-te"), strdup("515700.0499"), strdup("4848473.214"), strdup("801309.9574"), strdup("4998589.706"), nullptr};
 
+    char *options[] = {strdup("-at"), strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
+                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
     /*
     OGRFeature *poFeature;
     poFeature = shpDS->GetLayer(0)->GetNextFeature();
     OGRGeometry *poGeometry = poFeature->GetGeometryRef();
 
-    std::string resXStr;
-    std::string resYStr;
-    if( poGeometry != NULL
-            && wkbFlatten(poGeometry->getGeometryType()) == wkbPoint )
+    if( poGeometry != NULL)
     {
         OGRPoint *poPoint = (OGRPoint *) poGeometry;
 
-        printf( "%.3f,%3.f\n", poPoint->getX(), poPoint->getY() );
-        std::string resXStr = std::to_string(poPoint->getX());
-        std::string resYStr = std::to_string(poPoint->getY());
+        qDebug() << "poPoint->getX() " << poPoint->getX();
+        qDebug() << "poPoint->getY() " << poPoint->getY();
     }
     else
     {
@@ -776,16 +774,17 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     char *options[] = {strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
 */
     // create output
+    /*
     const char *pszFormat = "GTiff";
     GDALDriver *poDriver;
-    //GDALDataset* hDstDS;
+    GDALDataset* hDstDS;
     poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
     if( poDriver == NULL )
     {
         return false;
     }
     char **papszOptions = NULL;
-    //hDstDS =  poDriver->Create(tiff, 512, 512, 1, GDT_Float64, papszOptions);
+    //hDstDS =  poDriver->Create(strdup(outputStd.c_str()), 512, 512, 1, GDT_Float64, papszOptions);
 
     GDALRasterizeOptionsForBinary* psOptionsForBinary = GDALRasterizeOptionsForBinaryNew();
     psOptionsForBinary->pszSource = strdup(shapeField.c_str());
@@ -793,9 +792,11 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
     psOptionsForBinary->pszFormat = "GTiff";
     psOptionsForBinary->bCreateOutput = true;
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, psOptionsForBinary);
+    */
+    GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     if( psOptions == NULL )
     {
-        qDebug() << "psOptions is null";
+        *errorStr = "psOptions is null";
         return false;
     }
     /*
@@ -804,13 +805,13 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
         GDALRasterizeOptionsSetProgress(psOptions, GDALTermProgress, nullptr);
     }
     */
-    rasterizeDS = GDALRasterize(tiff,NULL,shpDS,psOptions,&error);
+    rasterizeDS = GDALRasterize(strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
 
     GDALClose(shpDS);
     //GDALClose(hDstDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
-    GDALRasterizeOptionsForBinaryFree(psOptionsForBinary);
+    //GDALRasterizeOptionsForBinaryFree(psOptionsForBinary);
     CPLFree( pszProjection );
 
     if (rasterizeDS == NULL || error == 1)
