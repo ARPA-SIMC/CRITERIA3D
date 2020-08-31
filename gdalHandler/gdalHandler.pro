@@ -38,8 +38,7 @@ SOURCES += \
 HEADERS += \
     gdalExtensions.h \
     gdalRasterFunctions.h \
-    gdalShapeFunctions.h \
-    gdal_utils_priv.h
+    gdalShapeFunctions.h
 
 
 include(../gdal.pri)

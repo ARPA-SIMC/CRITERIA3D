@@ -4,31 +4,6 @@
 #include <ogrsf_frmts.h>
 #include <gdal_priv.h>
 #include <gdal_utils.h>
-#include "gdal_utils_priv.h"
-
-/************************************************************************/
-/*                       GDALRasterizeOptionsForBinaryNew()             */
-/************************************************************************/
-
-static GDALRasterizeOptionsForBinary *GDALRasterizeOptionsForBinaryNew(void)
-{
-    return (GDALRasterizeOptionsForBinary*) CPLCalloc(  1, sizeof(GDALRasterizeOptionsForBinary) );
-}
-
-/************************************************************************/
-/*                       GDALRasterizeOptionsForBinaryFree()            */
-/************************************************************************/
-
-static void GDALRasterizeOptionsForBinaryFree( GDALRasterizeOptionsForBinary* psOptionsForBinary )
-{
-    if( psOptionsForBinary )
-    {
-        CPLFree(psOptionsForBinary->pszSource);
-        CPLFree(psOptionsForBinary->pszDest);
-        CPLFree(psOptionsForBinary->pszFormat);
-        CPLFree(psOptionsForBinary);
-    }
-}
 
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
@@ -723,95 +698,28 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
         return false;
     }
 
-    // size
-    /*
-    double adfGeoTransform[6];
-    double width = 0;
-    double height = 0;
-    if (shpDS->GetGeoTransform(adfGeoTransform) == CE_None)
-    {
-        qDebug() << "Origin =" << adfGeoTransform[0] << adfGeoTransform[3];
-        width = adfGeoTransform[1];
-        height = adfGeoTransform[5];
-    }
-    else
-    {
-        *errorStr = "No transform can be fetched";
-    }
-*/
     int resX = 100; //test
     int resY = 100; //test
     std::string resXStr = std::to_string(resX);
     std::string resYStr = std::to_string(resY);
-    //std::string bbox = "515700.0499, 4848473.214, 801309.9574, 4998589.706";// test
-    qDebug() << "pszProjection " << pszProjection;
-    // set options shapefield, reprojection and size
-    //char *options[] = {strdup("-at"), strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
-    //                   strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), strdup("-te"), strdup("515700.0499"), strdup("4848473.214"), strdup("801309.9574"), strdup("4998589.706"), nullptr};
 
+    qDebug() << "pszProjection " << pszProjection;
+    // set options
     char *options[] = {strdup("-at"), strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
                        strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
-    /*
-    OGRFeature *poFeature;
-    poFeature = shpDS->GetLayer(0)->GetNextFeature();
-    OGRGeometry *poGeometry = poFeature->GetGeometryRef();
 
-    if( poGeometry != NULL)
-    {
-        OGRPoint *poPoint = (OGRPoint *) poGeometry;
-
-        qDebug() << "poPoint->getX() " << poPoint->getX();
-        qDebug() << "poPoint->getY() " << poPoint->getY();
-    }
-    else
-    {
-        printf( "no point geometry\n" );
-    }
-
-
-    OGRFeature::DestroyFeature( poFeature );
-    // set options shapefield, reprojection and size
-    char *options[] = {strdup("-a"), strdup(shapeField.c_str()), strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
-*/
-    // create output
-    /*
-    const char *pszFormat = "GTiff";
-    GDALDriver *poDriver;
-    GDALDataset* hDstDS;
-    poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
-    if( poDriver == NULL )
-    {
-        return false;
-    }
-    char **papszOptions = NULL;
-    //hDstDS =  poDriver->Create(strdup(outputStd.c_str()), 512, 512, 1, GDT_Float64, papszOptions);
-
-    GDALRasterizeOptionsForBinary* psOptionsForBinary = GDALRasterizeOptionsForBinaryNew();
-    psOptionsForBinary->pszSource = strdup(shapeField.c_str());
-    psOptionsForBinary->pszDest = strdup(geoTIFFName.toStdString().c_str());
-    psOptionsForBinary->pszFormat = "GTiff";
-    psOptionsForBinary->bCreateOutput = true;
-    GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, psOptionsForBinary);
-    */
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     if( psOptions == NULL )
     {
         *errorStr = "psOptions is null";
         return false;
     }
-    /*
-    if( !(psOptionsForBinary->bQuiet) )
-    {
-        GDALRasterizeOptionsSetProgress(psOptions, GDALTermProgress, nullptr);
-    }
-    */
+
     rasterizeDS = GDALRasterize(strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
 
     GDALClose(shpDS);
-    //GDALClose(hDstDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
-    //GDALRasterizeOptionsForBinaryFree(psOptionsForBinary);
     CPLFree( pszProjection );
 
     if (rasterizeDS == NULL || error == 1)
