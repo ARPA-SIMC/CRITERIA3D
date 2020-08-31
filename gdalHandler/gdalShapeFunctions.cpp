@@ -5,6 +5,7 @@
 #include <gdal_priv.h>
 #include <gdal_utils.h>
 
+
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
 {
@@ -45,12 +46,10 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     qDebug() << "idSoil " << QString::fromStdString(idSoil);
     qDebug() << "idMeteo " << QString::fromStdString(idMeteo);
 
-    #ifdef GDAL
     GEOSGeometry *inteserctionGeom = nullptr ;
 
     if (crop == nullptr)
     {
-
         // soil and meteo intersection, add constant idCrop
         if (!shapeIntersection(soil, meteo, &inteserctionGeom))
         {
@@ -60,7 +59,6 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     }
     else if (soil == nullptr)
     {
-
         // crop and meteo intersection, add constant idSoil
         if (!shapeIntersection(crop, meteo, &inteserctionGeom))
         {
@@ -69,7 +67,6 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     }
     else if (meteo == nullptr)
     {
-
         // crop and soil intersection, add constant idMeteo
         if (!shapeIntersection(crop, soil, &inteserctionGeom))
         {
@@ -88,7 +85,6 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
     // Finalizzo GEOS
     finishGEOS();
-    #endif //GDAL
 
     /*
     int nShape = ucm->getShapeCount();
