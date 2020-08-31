@@ -666,7 +666,7 @@ GEOSGeometry * testIntersection()
 }
 */
 
-bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTIFFName, std::string* errorStr)
+bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString resolution, QString geoTIFFName, std::string* errorStr)
 {
     int error = -1;
     GDALAllRegister();
@@ -698,15 +698,12 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString geoTI
         return false;
     }
 
-    int resX = 100; //test
-    int resY = 100; //test
-    std::string resXStr = std::to_string(resX);
-    std::string resYStr = std::to_string(resY);
+    std::string res = resolution.toStdString();
 
     qDebug() << "pszProjection " << pszProjection;
     // set options
     char *options[] = {strdup("-at"), strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
-                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(resXStr.c_str()), strdup(resYStr.c_str()), nullptr};
+                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(res.c_str()), strdup(res.c_str()), nullptr};
 
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     if( psOptions == NULL )
