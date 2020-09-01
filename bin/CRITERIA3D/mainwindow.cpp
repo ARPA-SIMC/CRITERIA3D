@@ -1001,16 +1001,27 @@ void MainWindow::on_actionMapESRISatellite_triggered()
 }
 
 
+void MainWindow::on_actionMapGoogle_hybrid_satellite_triggered()
+{
+    this->setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
+}
+
+
 void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 {
     // set menu
     ui->actionMapOpenStreetMap->setChecked(false);
     ui->actionMapTerrain->setChecked(false);
     ui->actionMapESRISatellite->setChecked(false);
+    ui->actionMapGoogle_hybrid_satellite->setChecked(false);
 
     if (tileSource == WebTileSource::OPEN_STREET_MAP)
     {
         ui->actionMapOpenStreetMap->setChecked(true);
+    }
+    else if (tileSource == WebTileSource::GOOGLE_Hybrid_Satellite)
+    {
+        ui->actionMapGoogle_hybrid_satellite->setChecked(true);
     }
     else if (tileSource == WebTileSource::GOOGLE_Terrain)
     {
@@ -1302,4 +1313,6 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOut
     myProject.logInfo("End of run.");
     return true;
 }
+
+
 

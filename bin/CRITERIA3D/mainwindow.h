@@ -81,6 +81,7 @@
         void on_actionMapOpenStreetMap_triggered();
         void on_actionMapESRISatellite_triggered();
         void on_actionMapTerrain_triggered();
+        void on_actionMapGoogle_hybrid_satellite_triggered();
 
         void on_actionCriteria3D_Initialize_triggered();
         void on_viewer3DClosed();

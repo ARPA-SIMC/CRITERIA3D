@@ -2895,6 +2895,7 @@
       <string>&amp;Map</string>
      </property>
      <addaction name="actionMapOpenStreetMap"/>
+     <addaction name="actionMapGoogle_hybrid_satellite"/>
      <addaction name="actionMapTerrain"/>
      <addaction name="actionMapESRISatellite"/>
     </widget>
@@ -3202,6 +3203,14 @@
   <action name="actionHide_soil_map">
    <property name="text">
     <string>Hide soil map</string>
+   </property>
+  </action>
+  <action name="actionMapGoogle_hybrid_satellite">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Google hybrid satellite</string>
    </property>
   </action>
  </widget>
