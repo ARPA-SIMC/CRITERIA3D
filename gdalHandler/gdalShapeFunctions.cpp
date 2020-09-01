@@ -696,10 +696,9 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString resol
 
     std::string res = resolution.toStdString();
 
-    qDebug() << "pszProjection " << pszProjection;
     // set options
     char *options[] = {strdup("-at"), strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
-                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(res.c_str()), strdup(res.c_str()), nullptr};
+                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(res.c_str()), strdup(res.c_str()), strdup("-co"), strdup("COMPRESS=LZW"), nullptr};
 
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     if( psOptions == NULL )
