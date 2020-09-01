@@ -669,8 +669,8 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString resol
     std::string outputStd = geoTIFFName.toStdString();
     GDALDataset* shpDS;
     GDALDatasetH rasterizeDS;
-    shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, NULL, NULL, NULL);
-    if( shpDS == NULL )
+    shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
+    if( shpDS == nullptr )
     {
         *errorStr = "Open failed";
         return false;
@@ -697,24 +697,24 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString resol
     std::string res = resolution.toStdString();
 
     // set options
-    char *options[] = {strdup("-at"), strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
-                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(res.c_str()), strdup(res.c_str()), strdup("-co"), strdup("COMPRESS=LZW"), nullptr};
+    char *options[] = {_strdup("-at"), _strdup("-of"), _strdup("GTiff"), _strdup("-a"), _strdup(shapeField.c_str()), _strdup("-a_nodata"), _strdup("-9999"),
+                       _strdup("-a_srs"), pszProjection, _strdup("-tr"), _strdup(res.c_str()), _strdup(res.c_str()), _strdup("-co"), _strdup("COMPRESS=LZW"), nullptr};
 
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
-    if( psOptions == NULL )
+    if( psOptions == nullptr )
     {
         *errorStr = "psOptions is null";
         return false;
     }
 
-    rasterizeDS = GDALRasterize(strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
+    rasterizeDS = GDALRasterize(_strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
 
     GDALClose(shpDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
     CPLFree( pszProjection );
 
-    if (rasterizeDS == NULL || error == 1)
+    if (rasterizeDS == nullptr || error == 1)
     {
         return false;
     }
