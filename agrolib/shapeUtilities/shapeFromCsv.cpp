@@ -182,6 +182,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     // Reads the data and write to output shapefile
     QString line;
     QStringList items;
+    QString idCase;
     std::string idCaseStr;
     int nrShapes = outputShapeFile.getShapeCount();
     QMapIterator<int, int> iterator(myPosMap);
@@ -190,7 +191,8 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     {
         line = inputStream.readLine();
         items = line.split(",");
-        idCaseStr = items[idCaseIndexCsv].toStdString();
+        idCase = items[idCaseIndexCsv];
+        idCaseStr = idCase.toStdString();
 
         for (int shapeIndex = 0; shapeIndex < nrShapes; shapeIndex++)
         {
@@ -213,6 +215,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                     }
                     if (!writeOK)
                     {
+                        error = "Error in write this cases: " + idCase;
                         outputShapeFile.close();
                         file.close();
                         return false;
