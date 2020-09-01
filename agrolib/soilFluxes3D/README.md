@@ -7,4 +7,4 @@ The available boundary conditions are surface runoff, culvert runoff, free drain
 
 Water fluxes equations may be coupled with the heat flux equations, which include diffusive, latent and advective terms. Atmospheric data (net irradiance, air temperature and relative humidity, wind speed) could be used as top boundary conditions.
 
-See [Development and testing of a physically based, three-dimensional model of surface and subsurface hydrology](http://www.sciencedirect.com/science/article/pii/S0309170809001754) for more information.
+For more detail, see [Development and testing of a physically based, three-dimensional model of surface and subsurface hydrology](http://www.sciencedirect.com/science/article/pii/S0309170809001754)
