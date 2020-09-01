@@ -109,6 +109,7 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 
     ui->groupBoxOutput->move(x1, ui->groupBoxMeteoPoints->y() + ui->groupBoxMeteoPoints->height() + MAPBORDER*2);
     ui->groupBoxOutput->resize(TOOLSWIDTH, ui->groupBoxOutput->height());
+    this->updateMaps();
 }
 
 
