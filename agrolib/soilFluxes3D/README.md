@@ -9,9 +9,14 @@ Water fluxes equations may be coupled with the heat flux equations, which includ
 
 ## Authors
 - Fausto Tomei      ftomei@arpae.it
+- Gabriele Antolini 
+- Antonio Volta 
 - Alberto Pistocchi  
-- Gabriele Antolini gantolini@arpae.it
-- marco Bittelli    marco.bittelli@unibo.it
+- Marco Bittelli   
+
+## License
+SoilFluxes3D has been developed under contract issued by [ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy.
+The library is released under the the terms of the GNU LGPL license.
 
 ## References
 [Development and testing of a physically based, three-dimensional model of surface and subsurface hydrology](http://www.sciencedirect.com/science/article/pii/S0309170809001754)
