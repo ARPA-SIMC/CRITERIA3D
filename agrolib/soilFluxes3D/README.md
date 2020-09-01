@@ -7,6 +7,8 @@ The available boundary conditions are surface runoff, culvert runoff, free drain
 
 Water fluxes equations may be coupled with the heat flux equations, which include diffusive, latent and advective terms. Atmospheric data (net irradiance, air temperature and relative humidity, wind speed) could be used as top boundary conditions.
 
+![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/ravone.png)
+
 ## Authors
 - Fausto Tomei      ftomei@arpae.it
 - Gabriele Antolini 
