@@ -685,7 +685,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
     if( shpDS == nullptr )
     {
-        errorStr = "Open failed";
+        errorStr = "Open shapefile failed";
         return false;
     }
 
