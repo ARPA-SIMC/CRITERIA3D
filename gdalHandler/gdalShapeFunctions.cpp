@@ -662,11 +662,24 @@ GEOSGeometry * testIntersection()
 }
 */
 
-bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString resolution, QString geoTIFFName, std::string* errorStr)
+bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, std::string* errorStr)
 {
     int error = -1;
     GDALAllRegister();
-    std::string outputStd = geoTIFFName.toStdString();
+    QFileInfo file(outputName);
+    QString ext = file.completeSuffix();
+
+    std::string formatOption;
+    if (mapExtensionShortName.contains(ext))
+    {
+        *errorStr = "Unknown output format";
+        formatOption = mapExtensionShortName.value(ext).toStdString();
+    }
+    else
+    {
+        return false;
+    }
+    std::string outputStd = outputName.toStdString();
     GDALDataset* shpDS;
     GDALDatasetH rasterizeDS;
     shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
@@ -697,7 +710,7 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString resol
     std::string res = resolution.toStdString();
 
     // set options
-    char *options[] = {strdup("-at"), strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
+    char *options[] = {strdup("-at"), strdup("-of"), strdup(formatOption.c_str()), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
                        strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(res.c_str()), strdup(res.c_str()), strdup("-co"), strdup("COMPRESS=LZW"), nullptr};
 
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
