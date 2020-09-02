@@ -111,6 +111,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
 {
+
     GEOSGeometry* firstPolygon = loadShapeAsPolygon(first);
     if((GEOSisEmpty(firstPolygon)))
     {
@@ -169,6 +170,70 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
       return true;
     }
 }
+
+/*
+bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
+{
+    GEOSGeometry* firstPolygon = loadShapeAsPolygon(first);
+    if((GEOSisEmpty(firstPolygon)))
+    {
+        qDebug() << "cropPolygon empty";
+        return false;
+    }
+
+    if (GEOSisValid(firstPolygon) !=1)
+    {
+          qDebug() << "firstPolygon is NOT Valid";
+          qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(firstPolygon);
+          firstPolygon = GEOSMakeValid(firstPolygon);
+          qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(firstPolygon);
+    }
+   else
+      qDebug() << "firstPolygon is Valid";
+
+    GEOSGeometry *secondPolygon = loadShapeAsPolygon(second);
+    if((GEOSisEmpty(secondPolygon)))
+    {
+        qDebug() << "secondPolygon empty";
+        return false;
+    }
+
+    if (GEOSisValid(secondPolygon) !=1)
+    {
+          qDebug() << "secondPolygon is NOT Valid";
+          qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(secondPolygon);
+          secondPolygon = GEOSMakeValid(secondPolygon);
+          qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(secondPolygon);
+    }
+   else
+      qDebug() << "soilPolygon is Valid";
+
+    *inteserctionGeom = GEOSIntersection(firstPolygon, secondPolygon);
+    if ((*inteserctionGeom) == nullptr)
+    {
+        qDebug() << "inteserctionGeom nullptr";
+        return false;
+    }
+    if((GEOSisEmpty(*inteserctionGeom)))
+    {
+        qDebug() << "inteserctionGeom empty";
+        return false;
+    }
+
+    if (GEOSisValid(*inteserctionGeom) !=1)
+    {
+          qDebug() << "inteserctionGeom is NOT Valid";
+          return false;
+    }
+   else
+    {
+      qDebug() << "inteserctionGeom is Valid";
+      qDebug() << "Resulting geometry is " << GEOSGeomToWKT(*inteserctionGeom);
+      return true;
+    }
+}
+*/
+
 
 bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
 {
