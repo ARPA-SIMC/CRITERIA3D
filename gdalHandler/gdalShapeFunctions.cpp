@@ -1,10 +1,10 @@
 #include "gdalShapeFunctions.h"
 #include <QFileInfo>
+#include <string.h>
 #include <qdebug.h>
 #include <ogrsf_frmts.h>
 #include <gdal_priv.h>
 #include <gdal_utils.h>
-
 
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
@@ -697,8 +697,8 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString resol
     std::string res = resolution.toStdString();
 
     // set options
-    char *options[] = {_strdup("-at"), _strdup("-of"), _strdup("GTiff"), _strdup("-a"), _strdup(shapeField.c_str()), _strdup("-a_nodata"), _strdup("-9999"),
-                       _strdup("-a_srs"), pszProjection, _strdup("-tr"), _strdup(res.c_str()), _strdup(res.c_str()), _strdup("-co"), _strdup("COMPRESS=LZW"), nullptr};
+    char *options[] = {strdup("-at"), strdup("-of"), strdup("GTiff"), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
+                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(res.c_str()), strdup(res.c_str()), strdup("-co"), strdup("COMPRESS=LZW"), nullptr};
 
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     if( psOptions == nullptr )
@@ -707,7 +707,7 @@ bool shapeToGeoTIFF(QString shapeFileName, std::string shapeField, QString resol
         return false;
     }
 
-    rasterizeDS = GDALRasterize(_strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
+    rasterizeDS = GDALRasterize(strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
 
     GDALClose(shpDS);
     GDALClose(rasterizeDS);
