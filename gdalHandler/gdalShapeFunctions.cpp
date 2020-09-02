@@ -727,7 +727,7 @@ GEOSGeometry * testIntersection()
 }
 */
 
-bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, std::string* errorStr)
+bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, QString &errorStr)
 {
     int error = -1;
     GDALAllRegister();
@@ -737,7 +737,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     std::string formatOption;
     if (mapExtensionShortName.contains(ext))
     {
-        *errorStr = "Unknown output format";
+        errorStr = "Unknown output format";
         formatOption = mapExtensionShortName.value(ext).toStdString();
     }
     else
@@ -750,7 +750,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
     if( shpDS == nullptr )
     {
-        *errorStr = "Open failed";
+        errorStr = "Open shapefile failed";
         return false;
     }
 
@@ -768,7 +768,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
     else
     {
-        *errorStr = "Missing projection";
+        errorStr = "Missing projection";
         return false;
     }
 
@@ -781,7 +781,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     if( psOptions == nullptr )
     {
-        *errorStr = "psOptions is null";
+        errorStr = "psOptions is null";
         return false;
     }
 
