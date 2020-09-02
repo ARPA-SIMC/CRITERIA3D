@@ -40,7 +40,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom);
 bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm);
 GEOSGeometry *loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler);
-bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, std::string* errorStr);
+bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, QString &errorStr);
 
 //GEOSGeometry * SHPObject_to_GeosPolygon_NoHoles(SHPObject *object);
 //GEOSGeometry *load_shapefile_as_collection(char *pathname);
