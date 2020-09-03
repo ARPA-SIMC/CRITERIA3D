@@ -464,7 +464,7 @@ int CriteriaOutputProject::createMaps()
     // check map list
     if (! QFile(mapListFileName).exists())
     {
-        projectError = "Missing map list.";
+        projectError = "Missing map list: " + mapListFileName;
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
@@ -476,6 +476,8 @@ int CriteriaOutputProject::createMaps()
         projectError = "Invalid map cellsize: " + mapCellSize;
         return ERROR_SETTINGS_MISSINGDATA;
     }
+
+    // TODO check format and projection
 
     // check shapefile
     if (! QFile(outputShapeFileName).exists())
