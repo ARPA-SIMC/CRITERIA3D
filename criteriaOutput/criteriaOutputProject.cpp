@@ -38,6 +38,13 @@ void CriteriaOutputProject::initialize()
     aggregationShapeFileName = "";
     shapeFieldName = "";
     fieldListFileName = "";
+    aggregationListFileName = "";
+    aggregationCellSize = "";
+
+    mapListFilename = "";
+    mapCellSize = "";
+    mapFormat = "";
+    mapProjection = "";
 
     outputCsvFileName = "";
     outputShapeFileName = "";
@@ -461,6 +468,15 @@ int CriteriaOutputProject::createMaps()
         return ERROR_SETTINGS_MISSINGDATA;
     }*/
 
+    // check cellsize
+    bool ok;
+    int cellSize = mapCellSize.toInt(&ok, 10);
+    if (!ok)
+    {
+        projectError = "Invalid map cellsize: " + mapCellSize;
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+
     // check shapefile
     if (! QFile(outputShapeFileName).exists())
     {
@@ -475,7 +491,8 @@ int CriteriaOutputProject::createMaps()
 
     #ifdef GDAL
 
-    // TODO: ciclo sulle mappe in output -> shapeToRaster
+    // TODO: ciclo sui campi in mapListFileName -> shapeToRaster, a cui va aggiunta riproiezione
+    // outputName = outputShapeFilePath + mapName in mapListFileName
 
     #endif
 
@@ -497,7 +514,7 @@ int CriteriaOutputProject::createAggregationFile()
     if (!ok)
     {
         projectError = "Invalid aggregation cellsize: " + aggregationCellSize;
-        return ERROR_SETTINGS_WRONGFILENAME;
+        return ERROR_SETTINGS_MISSINGDATA;
     }
 
     // check aggregation output (csv)

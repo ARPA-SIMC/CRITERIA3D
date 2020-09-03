@@ -46,8 +46,13 @@ public:
     QString variableListFileName;
     QString aggregationShapeFileName;
     QString shapeFieldName;
-    QString aggregationCellSize;
     QString aggregationListFileName;
+    QString aggregationCellSize;
+
+    QString mapListFilename;
+    QString mapCellSize;
+    QString mapFormat;
+    QString mapProjection;
 
     QString outputCsvFileName;
     QString outputShapeFileName;
