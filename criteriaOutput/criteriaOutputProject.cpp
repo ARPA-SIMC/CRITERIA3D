@@ -10,6 +10,10 @@
 #include "shapeToRaster.h"
 #include "zonalStatistic.h"
 
+#ifdef GDAL
+    #include "gdalShapeFunctions.h"
+#endif
+
 #include <QtSql>
 #include <iostream>
 
@@ -448,6 +452,37 @@ int CriteriaOutputProject::createShapeFile()
 }
 
 
+int CriteriaOutputProject::createMaps()
+{
+    // TODO check settings parameters
+    /*if ()
+    {
+        projectError = "Missing ...";
+        return ERROR_SETTINGS_MISSINGDATA;
+    }*/
+
+    // check shapefile
+    if (! QFile(outputShapeFileName).exists())
+    {
+        int myResult = createShapeFile();
+        if (myResult != CRIT3D_OK)
+        {
+            return myResult;
+        }
+    }
+
+    logger.writeInfo("MAPS");
+
+    #ifdef GDAL
+
+    // TODO: ciclo sulle mappe in output -> shapeToRaster
+
+    #endif
+
+    return CRIT3D_OK;
+}
+
+
 int CriteriaOutputProject::createAggregationFile()
 {
     if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
@@ -456,7 +491,7 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
-    // Aggregation cell size
+    // check aggregation cell size
     bool ok;
     int cellSize = aggregationCellSize.toInt(&ok, 10);
     if (!ok)
@@ -465,12 +500,14 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
+    // check aggregation output (csv)
     if (outputAggrCsvFileName.right(4) != ".csv")
     {
         projectError = "aggregation output is not a csv file.";
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
+    // check shapefile
     if (! QFile(outputShapeFileName).exists())
     {
         // create shapefile
