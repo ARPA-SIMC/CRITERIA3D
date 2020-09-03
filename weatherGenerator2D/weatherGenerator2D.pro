@@ -10,8 +10,8 @@
 #
 #---------------------------------------------------------------------
 
-QT      -= gui
-QT      +=  xml
+QT  -= gui
+QT  += xml
 
 unix:{
     CONFIG(debug, debug|release) {

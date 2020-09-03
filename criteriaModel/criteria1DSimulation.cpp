@@ -23,7 +23,7 @@ Crit1DSimulation::Crit1DSimulation()
     daysOfForecast = NODATA;
     useAllMeteoData = true;
     firstSimulationDate = QDate(1800,1,1);
-    lastSimulationDate = QDate(1800,1,1);
+    lastObservedDate = QDate(1800,1,1);
 
     outputString = "";
 }
@@ -171,7 +171,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
 
     unsigned row;
     unsigned col;
-    unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
+    unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastObservedDate)) + 1;
 
     if (!this->observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
     {
@@ -181,7 +181,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
 
     if (!this->observedMeteoGrid->gridStructure().isFixedFields())
     {
-        if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstSimulationDate, lastSimulationDate))
+        if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstSimulationDate, lastObservedDate))
         {
             *myError = "Missing observed data";
             return false;
@@ -189,7 +189,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     }
     else
     {
-        if (!this->observedMeteoGrid->loadGridDailyDataFixedFields(myError, idMeteo, firstSimulationDate, lastSimulationDate))
+        if (!this->observedMeteoGrid->loadGridDailyDataFixedFields(myError, idMeteo, firstSimulationDate, lastObservedDate))
         {
             if (*myError == "Missing MeteoPoint id")
             {
@@ -207,7 +207,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     {
         if (!this->forecastMeteoGrid->gridStructure().isFixedFields())
         {
-            if (!this->forecastMeteoGrid->loadGridDailyData(myError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
+            if (!this->forecastMeteoGrid->loadGridDailyData(myError, idForecast, lastObservedDate.addDays(1), lastObservedDate.addDays(daysOfForecast)))
             {
                 if (*myError == "Missing MeteoPoint id")
                 {
@@ -222,7 +222,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
         }
         else
         {
-            if (!this->forecastMeteoGrid->loadGridDailyDataFixedFields(myError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
+            if (!this->forecastMeteoGrid->loadGridDailyDataFixedFields(myError, idForecast, lastObservedDate.addDays(1), lastObservedDate.addDays(daysOfForecast)))
             {
                 if (*myError == "Missing MeteoPoint id")
                 {
@@ -243,7 +243,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstSimulationDate));
 
     float tmin, tmax, tavg, prec;
-    int lastIndex = firstSimulationDate.daysTo(lastSimulationDate)+1;
+    int lastIndex = firstSimulationDate.daysTo(lastObservedDate)+1;
     for (int i = 0; i < lastIndex; i++)
     {
         Crit3DDate myDate = getCrit3DDate(firstSimulationDate.addDays(i));
@@ -265,8 +265,8 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     }
     if (isShortTermForecast)
     {
-        QDate start = lastSimulationDate.addDays(1);
-        QDate end = lastSimulationDate.addDays(daysOfForecast);
+        QDate start = lastObservedDate.addDays(1);
+        QDate end = lastObservedDate.addDays(daysOfForecast);
         for (int i = 0; i< start.daysTo(end)+1; i++)
         {
             Crit3DDate myDate = getCrit3DDate(start.addDays(i));
@@ -299,19 +299,11 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
 
     if (! query.isValid())
     {
-        QString idMeteo5char = getId5Char(idMeteo);
-        queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo5char + "'";
-        query = dbMeteo.exec(queryString);
-        query.last();
-
-        if (! query.isValid())
-        {
-            if (query.lastError().text() != "")
-                *myError = "dbMeteo error: " + query.lastError().text();
-            else
-                *myError = "Missing meteo location:" + idMeteo;
-            return false;
-        }
+        if (query.lastError().text() != "")
+            *myError = "dbMeteo error: " + query.lastError().text();
+        else
+            *myError = "Missing meteo location:" + idMeteo;
+        return false;
     }
 
     QString tableName = query.value("table_name").toString();
@@ -356,6 +348,7 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstObsDate));
 
     // Read observed data
+    // TODO read from firstdaste to lastdate
     if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), myError)) return false;
 
     // Add Short-Term forecast
@@ -484,7 +477,8 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
 
     queryString = "CREATE TABLE '" + myCase.idCase + "'"
                   + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
-                  + " RAW REAL, DEFICIT REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
+                  + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
+                  + " DEFICIT REAL, DEFICIT_25 REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
                   + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOTDEPTH REAL )";
     myQuery = this->dbOutput.exec(queryString);
 
@@ -503,7 +497,9 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
     if (isFirst)
     {
         outputString = "INSERT INTO '" + myCase.idCase + "'"
-                       + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, RAW, DEFICIT, DRAINAGE, RUNOFF, ET0,"
+                       + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, "
+                       + " AVAILABLE_WATER, READILY_AW, FRACTION_AW, "
+                       + " DEFICIT, DEFICIT_25, DRAINAGE, RUNOFF, ET0, "
                        + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOTDEPTH) "
                        + " VALUES ";
     }
@@ -517,8 +513,11 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailyIrrigation, 'g', 4)
                     + "," + QString::number(myCase.output.dailySoilWaterContent, 'g', 5)
                     + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyCropAvailableWater, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyReadilyAW, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 4)
                     + "," + QString::number(myCase.output.dailyWaterDeficit, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyWaterDeficit_25, 'g', 4)
                     + "," + QString::number(myCase.output.dailyDrainage, 'g', 4)
                     + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 4)
                     + "," + QString::number(myCase.output.dailyEt0, 'g', 3)

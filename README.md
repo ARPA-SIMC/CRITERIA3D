@@ -1,7 +1,8 @@
+# agrolib
 Libraries for agrometeorological modelling and climate analysis. 
 They include a numerical solution for three-dimensional water and heat flow in the soil, 
-water balance, meteorological data interpolation, daily weather generator, radiation budget, 
-snow accumulation and melt, plant development and plant water uptake.
+water balance 1D, meteorological data interpolation, daily weather generator (1D and 2D), radiation budget, 
+snow accumulation and melt, phenology, plant development, root development, rainfall interception and plant water uptake.
 
 ## soilFluxes3D library
 SoilFluxes3D is a numerical solution for flow equations of water and heat in the soil, in a three-dimensional domain.
@@ -24,31 +25,23 @@ Algorithms for potential/actual solar radiation computation.
 ## interpolation library
 Algorithms for the spatialization of meteorological data.
 
-# License
+## License
 agrolib has been developed under contract issued by 
-ARPAE Hydro-Meteo-Climate Service, Emilia-Romagna, Italy: http://www.arpae.it/sim/
+[ARPAE Hydro-Meteo-Climate Service](https://github.com/ARPA-SIMC), Emilia-Romagna, Italy.
 
 agrolib is released under the GNU LGPL license.
 
-# Authors
-Fausto Tomei <ftomei@arpae.it>
+## Authors
+- Fausto Tomei <ftomei@arpae.it>
+- Gabriele Antolini	 <gantolini@arpae.it>
+- Antonio Volta		<antonio.volta@arpae.it>
+- Laura Costantini  <laura.costantini0@gmail.com>
 
-Gabriele Antolini	 <gantolini@arpae.it>
-
-Laura Costantini  <laura.costantini0@gmail.com>
-
-Antonio Volta		<antonio.volta@agromet.it>
-
-## Contributions
-
-Marco Bittelli   <marco.bittelli@unibo.it>
-
-Vittorio Marletto <vmarletto@arpae.it>
-
-Alberto Pistocchi	 <alberto.pistocchi@jrc.ec.europa.eu>
-
-Tomaso Tonelli <ttonelli@arpae.it>
-
-Margot Van Soetendaal <margot@farnet.eu>
-
-Franco Zinoni <fzinoni@arpae.it>
+### Contributions
+- Marco Bittelli   <marco.bittelli@unibo.it>
+- Vittorio Marletto <vmarletto@arpae.it>
+- Alberto Pistocchi	 <alberto.pistocchi@jrc.ec.europa.eu>
+- Tomaso Tonelli <ttonelli@arpae.it>
+- Margot Van Soetendaal <margot@farnet.eu>
+- Franco Zinoni <fzinoni@arpae.it>
+- Fabrizio Nerozzi <fnerozzi@arpae.it>

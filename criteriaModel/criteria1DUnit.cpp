@@ -1,5 +1,6 @@
 #include "criteria1DUnit.h"
 #include "commonConstants.h"
+#include <QFile>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVariant>
@@ -22,11 +23,17 @@ Crit1DUnit::Crit1DUnit()
 // load computation units list
 bool loadUnitList(QString dbUnitsName, std::vector<Crit1DUnit> &unitList, QString &myError)
 {
+    if (! QFile(dbUnitsName).exists())
+    {
+        myError = "DB units doesn't exist.";
+        return false;
+    }
+
     QSqlDatabase dbUnits = QSqlDatabase::addDatabase("QSQLITE", "units");
     dbUnits.setDatabaseName(dbUnitsName);
     if (! dbUnits.open())
     {
-        myError = "dbUnits error: " + dbUnits.lastError().text();
+        myError = "Open DB Units failed.";
         return false;
     }
 
