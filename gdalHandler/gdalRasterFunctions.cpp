@@ -3,8 +3,6 @@
 #include "commonConstants.h"
 
 #include <iostream>
-#include <gdal_priv.h>
-#include <cstring>
 #include <cmath>
 
 #include <QString>
@@ -12,22 +10,35 @@
 
 
 /*! readGdalRaster
- * open a raster with GDAL library
+ * \brief open a raster file with GDAL library
+ * \return GDALDataset
  */
-bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZone, QString* myError)
+bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &error)
 {
     // check
     if (myRaster == nullptr) return false;
     if (fileName == "") return false;
 
-    myRaster->isLoaded = false;
-
     GDALDataset* dataset = (GDALDataset*) GDALOpen(fileName.toStdString().data(), GA_ReadOnly);
     if(! dataset)
     {
-        *myError = "Load raster failed!";
+        error = "Load raster failed!";
         return false;
     }
+
+    bool myResult = convertGdalRaster(dataset, myRaster, utmZone, error);
+    GDALClose(dataset);
+
+    return myResult;
+}
+
+
+/*! convertGdalRaster
+ * \brief convert a GDAL dataset in a Crit3DRasterGrid
+ */
+bool convertGdalRaster(GDALDataset* dataset, gis::Crit3DRasterGrid* myRaster, int &utmZone, QString &error)
+{
+    myRaster->isLoaded = false;
 
     // Driver
     double adfGeoTransform[6];
@@ -51,20 +62,19 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
         // TODO geo projection?
         if (! spatialReference->IsProjected())
         {
-            *myError = "Not projected data";
-            GDALClose(dataset);
+            error = "Not projected data";
             return false;
         }
 
         // TODO: check WGS84 -> convert
 
         // UTM zone
-        *utmZone = spatialReference->GetUTMZone();
+        utmZone = spatialReference->GetUTMZone();
         qDebug() << "UTM zone =" << spatialReference->GetUTMZone();
     }
     else
     {
-        qDebug() << "Projection is missing! It will use WGS84 UTM zone:" << *utmZone;
+        qDebug() << "Projection is missing! It will use WGS84 UTM zone:" << utmZone;
         spatialReference->SetWellKnownGeogCS("WGS84");
     }
 
@@ -76,7 +86,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
     }
     if (adfGeoTransform[1] != fabs(adfGeoTransform[5]))
     {
-        *myError = "Not regular pixel size! Will be used x size.";
+        error = "Not regular pixel size! Will be used x size.";
     }
 
     // TODO choose band
@@ -84,8 +94,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
     GDALRasterBand* band = dataset->GetRasterBand(1);
     if(band == nullptr)
     {
-        *myError = "Missing data!";
-        GDALClose(dataset);
+        error = "Missing data!";
         return false;
     }
 
@@ -130,7 +139,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
 
     if (! myRaster->initializeGrid(myRaster->header->flag))
     {
-        *myError = "Memory error: file too big.";
+        error = "Memory error: file too big.";
         return false;
     }
 
@@ -142,7 +151,7 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
 
     if (errGdal > CE_Warning)
     {
-        *myError = "Error in RasterIO";
+        error = "Error in RasterIO";
         CPLFree(data);
         return false;
     }
@@ -154,7 +163,6 @@ bool readGdalRaster(QString fileName, gis::Crit3DRasterGrid* myRaster, int* utmZ
 
     // free memory
     CPLFree(data);
-    GDALClose(dataset);
 
     // min & max
     if (noDataOk)

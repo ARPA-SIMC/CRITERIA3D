@@ -182,6 +182,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     // Reads the data and write to output shapefile
     QString line;
     QStringList items;
+    QString idCase;
     std::string idCaseStr;
     int nrShapes = outputShapeFile.getShapeCount();
     QMapIterator<int, int> iterator(myPosMap);
@@ -190,7 +191,8 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     {
         line = inputStream.readLine();
         items = line.split(",");
-        idCaseStr = items[idCaseIndexCsv].toStdString();
+        idCase = items[idCaseIndexCsv];
+        idCaseStr = idCase.toStdString();
 
         for (int shapeIndex = 0; shapeIndex < nrShapes; shapeIndex++)
         {
@@ -202,19 +204,28 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                 {
                     iterator.next();
                     QString valueToWrite = items[iterator.key()];
+                    bool writeOK = false;
                     if (outputShapeFile.getFieldType(iterator.value()) == FTString)
                     {
-                        outputShapeFile.writeStringAttribute(shapeIndex, iterator.value(), valueToWrite.toStdString().c_str());
+                        writeOK = outputShapeFile.writeStringAttribute(shapeIndex, iterator.value(), valueToWrite.toStdString().c_str());
                     }
                     else
                     {
-                        outputShapeFile.writeDoubleAttribute(shapeIndex, iterator.value(), valueToWrite.toDouble());
+                        writeOK = outputShapeFile.writeDoubleAttribute(shapeIndex, iterator.value(), valueToWrite.toDouble());
+                    }
+                    if (!writeOK)
+                    {
+                        error = "Error in write this cases: " + idCase;
+                        outputShapeFile.close();
+                        file.close();
+                        return false;
                     }
                 }
             }
         }
     }
 
+    outputShapeFile.close();
     file.close();
     return true;
 }

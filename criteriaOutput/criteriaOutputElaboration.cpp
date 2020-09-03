@@ -305,7 +305,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         return CRIT3D_OK;
     }
 
-    for (int i = 0; i<outputVariable.varName.size(); i++)
+    for (int i = 0; i < outputVariable.varName.size(); i++)
     {
         resVector.clear();
         QString varName = outputVariable.varName[i];
@@ -379,7 +379,6 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         // All cases except DTX
         if (varName.left(2) != "DT")
         {
-
             int selectRes = selectSimpleVar(dbData, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector, projectError);
             if (selectRes == ERROR_INCOMPLETE_DATA)
             {
@@ -569,6 +568,29 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
     int count = 0;
     QString statement;
     float result = NODATA;
+
+    if (computation != "")
+    {
+        statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE >= '%3' AND DATE <= '%4'").arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
+        if( !qry.exec(statement) )
+        {
+            *projectError = "Wrong variable: " + varName + "\n" + qry.lastError().text();
+            return ERROR_OUTPUT_VARIABLES;
+        }
+        qry.first();
+        if (!qry.isValid())
+        {
+            *projectError = qry.lastError().text();
+            return ERROR_OUTPUT_VARIABLES ;
+        }
+        getValue(qry.value(0), &count);
+        if (count < firstDate.daysTo(lastDate)+1)
+        {
+            return ERROR_INCOMPLETE_DATA;
+        }
+    }
+
+    count = 0;
     statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'").arg(computation).arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
     if( !qry.exec(statement) )
     {
@@ -602,11 +624,14 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
     }
     while(qry.next());
 
-
-    if (count < firstDate.daysTo(lastDate)+1)
+    // check for simple queries
+    if (computation == "")
     {
-        *projectError = "Incomplete data: " + statement;
-        return ERROR_INCOMPLETE_DATA;
+        if (count < firstDate.daysTo(lastDate)+1)
+        {
+            *projectError = "Incomplete data: " + statement;
+            return ERROR_INCOMPLETE_DATA;
+        }
     }
 
     return CRIT3D_OK;
@@ -696,5 +721,91 @@ int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation,
     }
 
     resVector->push_back(res);
+    return CRIT3D_OK;
+}
+
+
+int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName, QDate dateComputation, QStringList outputVarName, QString shapeField, QString &error)
+{
+    QList<QStringList> valuesFromShape;
+    // write CSV
+    QFile outputFile;
+    outputFile.setFileName(csvFileName);
+    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    {
+        error = "Open failure: " + csvFileName;
+        return ERROR_WRITECSV;
+    }
+
+    int nrRefShapes = refShapeFile.getShapeCount();
+    std::string shapeFieldStdString = shapeField.toStdString();
+
+    QStringList values;
+    QStringList shapeFieldList;
+    int fieldIndex = -1;
+    for (int row = 0; row < nrRefShapes; row++)
+    {
+        // read shapeField
+        fieldIndex = refShapeFile.getDBFFieldIndex(shapeFieldStdString.c_str());
+        if (fieldIndex == -1)
+        {
+            error = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + shapeField;
+            return ERROR_SHAPEFILE;
+        }
+        DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
+        if (fieldType == FTInteger)
+        {
+            shapeFieldList.push_back(QString::number(refShapeFile.readIntAttribute(row,fieldIndex)));
+        }
+        else if (fieldType == FTDouble)
+        {
+            shapeFieldList.push_back(QString::number(refShapeFile.readDoubleAttribute(row,fieldIndex)));
+        }
+        else if (fieldType == FTString)
+        {
+            shapeFieldList.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row,fieldIndex)));
+        }
+        // read outputVarName
+        values.clear();
+        for (int field = 0; field < outputVarName.size(); field++)
+        {
+            std::string valField = outputVarName[field].toStdString();
+            fieldIndex = refShapeFile.getDBFFieldIndex(valField.c_str());
+            if (fieldIndex == -1)
+            {
+                error = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + outputVarName[field];
+                return ERROR_SHAPEFILE;
+            }
+            DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
+            if (fieldType == FTInteger)
+            {
+                values.push_back(QString::number(refShapeFile.readIntAttribute(row,fieldIndex)));
+            }
+            else if (fieldType == FTDouble)
+            {
+                values.push_back(QString::number(refShapeFile.readDoubleAttribute(row,fieldIndex)));
+            }
+            else if (fieldType == FTString)
+            {
+                values.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row,fieldIndex)));
+            }
+        }
+        valuesFromShape.push_back(values);
+    }
+
+    QString header = "DATE,ZONE ID," + outputVarName.join(",");
+    QTextStream out(&outputFile);
+    out << header << "\n";
+
+    for (int row = 0; row < nrRefShapes; row++)
+    {
+        out << dateComputation.toString("yyyy-MM-dd");
+        out << "," << shapeFieldList[row];
+        out << "," << valuesFromShape[row].join(",");
+        out << "\n";
+    }
+
+    outputFile.flush();
+
     return CRIT3D_OK;
 }

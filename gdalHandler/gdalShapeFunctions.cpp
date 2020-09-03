@@ -1,6 +1,10 @@
 #include "gdalShapeFunctions.h"
 #include <QFileInfo>
+#include <string.h>
 #include <qdebug.h>
+#include <ogrsf_frmts.h>
+#include <gdal_priv.h>
+#include <gdal_utils.h>
 
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
@@ -42,12 +46,10 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     qDebug() << "idSoil " << QString::fromStdString(idSoil);
     qDebug() << "idMeteo " << QString::fromStdString(idMeteo);
 
-    #ifdef GDAL
     GEOSGeometry *inteserctionGeom = nullptr ;
 
     if (crop == nullptr)
     {
-
         // soil and meteo intersection, add constant idCrop
         if (!shapeIntersection(soil, meteo, &inteserctionGeom))
         {
@@ -57,7 +59,6 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     }
     else if (soil == nullptr)
     {
-
         // crop and meteo intersection, add constant idSoil
         if (!shapeIntersection(crop, meteo, &inteserctionGeom))
         {
@@ -66,7 +67,6 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     }
     else if (meteo == nullptr)
     {
-
         // crop and soil intersection, add constant idMeteo
         if (!shapeIntersection(crop, soil, &inteserctionGeom))
         {
@@ -85,7 +85,6 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
     // Finalizzo GEOS
     finishGEOS();
-    #endif //GDAL
 
     /*
     int nShape = ucm->getShapeCount();
@@ -112,6 +111,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
 {
+
     GEOSGeometry* firstPolygon = loadShapeAsPolygon(first);
     if((GEOSisEmpty(firstPolygon)))
     {
@@ -663,6 +663,75 @@ GEOSGeometry * testIntersection()
 }
 */
 
+bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, QString &errorStr)
+{
+    int error = -1;
+    GDALAllRegister();
+    QFileInfo file(outputName);
+    QString ext = file.completeSuffix();
 
+    std::string formatOption;
+    if (mapExtensionShortName.contains(ext))
+    {
+        errorStr = "Unknown output format";
+        formatOption = mapExtensionShortName.value(ext).toStdString();
+    }
+    else
+    {
+        return false;
+    }
+    std::string outputStd = outputName.toStdString();
+    GDALDataset* shpDS;
+    GDALDatasetH rasterizeDS;
+    shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
+    if( shpDS == nullptr )
+    {
+        errorStr = "Open shapefile failed";
+        return false;
+    }
 
+    // projection
+    OGRSpatialReference srs;
+    OGRSpatialReference * pOrigSrs = shpDS->GetLayer(0)->GetSpatialRef();
+    char *pszProjection = nullptr;
+    if ( pOrigSrs )
+    {
+        srs = *pOrigSrs;
+    }
+    if ( srs.IsProjected() )
+    {
+        srs.exportToWkt( &pszProjection );
+    }
+    else
+    {
+        errorStr = "Missing projection";
+        return false;
+    }
+
+    std::string res = resolution.toStdString();
+
+    // set options
+    char *options[] = {strdup("-at"), strdup("-of"), strdup(formatOption.c_str()), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
+                       strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(res.c_str()), strdup(res.c_str()), strdup("-co"), strdup("COMPRESS=LZW"), nullptr};
+
+    GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
+    if( psOptions == nullptr )
+    {
+        errorStr = "psOptions is null";
+        return false;
+    }
+
+    rasterizeDS = GDALRasterize(strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
+
+    GDALClose(shpDS);
+    GDALClose(rasterizeDS);
+    GDALRasterizeOptionsFree(psOptions);
+    CPLFree( pszProjection );
+
+    if (rasterizeDS == nullptr || error == 1)
+    {
+        return false;
+    }
+    return true;
+}
 
