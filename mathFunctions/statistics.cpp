@@ -1028,7 +1028,7 @@ namespace statistics
         for (int i=0;i<sizeArray;i++)
         {
             counter = 0;
-            if (arrayInput[i] != NODATA)
+            if (fabs(arrayInput[i] - NODATA)>EPSILON)
             {
                 arrayOutput[i]+= arrayInput[i];
                 counter++;
@@ -1037,12 +1037,12 @@ namespace statistics
             {
                 for (int j=1; j<=lag;j++)
                 {
-                    if (((i-j)>=0) && (arrayInput[i-j] != NODATA))
+                    if (((i-j)>=0) && (fabs(arrayInput[i-j] - NODATA) > EPSILON))
                     {
                         arrayOutput[i] += arrayInput[i-j];
                         counter++;
                     }
-                    if (((i+j) < sizeArray) && (arrayInput[i+j] != NODATA))
+                    if (((i+j) < sizeArray) && (fabs(arrayInput[i+j] - NODATA)> EPSILON))
                     {
                         arrayOutput[i] += arrayInput[i+j];
                         counter++;

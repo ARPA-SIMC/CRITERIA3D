@@ -114,7 +114,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
 
                     if (aggregationType == "AVG")
                     {
-                        sumValues += value;
+                        sumValues += nrPoints*value;
                     }
                     else if (aggregationType == "MIN")
                     {
