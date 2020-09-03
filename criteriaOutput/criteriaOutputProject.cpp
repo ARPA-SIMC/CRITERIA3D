@@ -491,8 +491,8 @@ int CriteriaOutputProject::createMaps()
 
     #ifdef GDAL
 
-    // TODO: ciclo sui campi in mapListFileName -> shapeToRaster, a cui va aggiunta riproiezione
-    // outputName = outputShapeFilePath + mapName in mapListFileName
+    // TODO: ciclo sulle righe di mapListFileName -> chiamare shapeToRaster, a cui va aggiunta riproiezione
+    // outputName = outputShapeFilePath + output map name
 
     #endif
 
