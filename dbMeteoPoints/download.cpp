@@ -247,9 +247,10 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
             QString dateStr, idPoint, flag;
             int idArkimet, idVar;
             double value;
-
+            bool emptyLine = true;
             for (QString line = QString(reply->readLine()); !(line.isNull() || line.isEmpty());  line = QString(reply->readLine()))
             {
+                emptyLine = false;
                 fields = line.split(",");
 
                 // warning: ref date arkimet: hour 00 of day+1
@@ -291,8 +292,10 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
                 }
             }
-
-            downloadOk = _dbMeteo->saveDailyData(startDate, endDate);
+            if (!emptyLine)
+            {
+                downloadOk = _dbMeteo->saveDailyData(startDate, endDate);
+            }
 
             delete reply;
             delete manager;
