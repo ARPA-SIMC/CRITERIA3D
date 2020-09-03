@@ -49,7 +49,7 @@ public:
     QString aggregationListFileName;
     QString aggregationCellSize;
 
-    QString mapListFilename;
+    QString mapListFileName;
     QString mapCellSize;
     QString mapFormat;
     QString mapProjection;

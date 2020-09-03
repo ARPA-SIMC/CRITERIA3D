@@ -41,7 +41,7 @@ void CriteriaOutputProject::initialize()
     aggregationListFileName = "";
     aggregationCellSize = "";
 
-    mapListFilename = "";
+    mapListFileName = "";
     mapCellSize = "";
     mapFormat = "";
     mapProjection = "";
@@ -461,12 +461,12 @@ int CriteriaOutputProject::createShapeFile()
 
 int CriteriaOutputProject::createMaps()
 {
-    // TODO check settings parameters
-    /*if ()
+    // check map list
+    if (! QFile(mapListFileName).exists())
     {
-        projectError = "Missing ...";
+        projectError = "Missing map list.";
         return ERROR_SETTINGS_MISSINGDATA;
-    }*/
+    }
 
     // check cellsize
     bool ok;
