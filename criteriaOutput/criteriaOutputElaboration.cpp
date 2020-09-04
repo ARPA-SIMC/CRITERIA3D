@@ -380,7 +380,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
         if (varName.left(2) != "DT")
         {
             int selectRes = selectSimpleVar(dbData, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector, projectError);
-            if (selectRes == ERROR_INCOMPLETE_DATA)
+            if (selectRes == ERROR_DB_INCOMPLETE_DATA)
             {
                 res = NODATA;
             }
@@ -405,7 +405,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
             }
             int DTXRes = computeDTX(dbData, idCase, periodTDX, computation, firstDate, lastDate, &resVector, projectError);
             // check errors in computeDTX
-            if (DTXRes == ERROR_INCOMPLETE_DATA)
+            if (DTXRes == ERROR_DB_INCOMPLETE_DATA)
             {
                 res = NODATA;
             }
@@ -494,7 +494,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                             int selectRes;
 
                             selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, &resVector, projectError);
-                            if (selectRes == ERROR_INCOMPLETE_DATA)
+                            if (selectRes == ERROR_DB_INCOMPLETE_DATA)
                             {
                                 // only first year can be incomplete, otherwise the comparison is not valid and can be terminated
                                 if (year != historicalFirstDate.year())
@@ -505,9 +505,9 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                                 }
                             }
 
-                            if (selectRes != CRIT3D_OK && selectRes != ERROR_INCOMPLETE_DATA)
+                            if (selectRes != CRIT3D_OK && selectRes != ERROR_DB_INCOMPLETE_DATA)
                             {
-                                // something wrong happened (if ERROR_INCOMPLETE_DATA res is NODATA)
+                                // something wrong happened (if ERROR_DB_INCOMPLETE_DATA res is NODATA)
                                 return selectRes;
                             }
                             else
@@ -586,7 +586,7 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
         getValue(qry.value(0), &count);
         if (count < firstDate.daysTo(lastDate)+1)
         {
-            return ERROR_INCOMPLETE_DATA;
+            return ERROR_DB_INCOMPLETE_DATA;
         }
     }
 
@@ -599,7 +599,7 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
             if (qry.lastError().text().contains("no such column"))
             {
                 *projectError = "Precompute DTX before: " + computation + "\n" + qry.lastError().text();
-                return ERROR_MISSING_PRECOMPUTE_DTX ;
+                return ERROR_DB_MISSING_PRECOMPUTED_DTX ;
             }
         }
         *projectError = "Wrong computation: " + computation + "\n" + qry.lastError().text();
@@ -609,7 +609,7 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
     if (!qry.isValid())
     {
         *projectError = "Missing data: " + statement;
-        return ERROR_MISSING_DATA ;
+        return ERROR_DB_MISSING_DATA ;
     }
     do
     {
@@ -630,7 +630,7 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
         if (count < firstDate.daysTo(lastDate)+1)
         {
             *projectError = "Incomplete data: " + statement;
-            return ERROR_INCOMPLETE_DATA;
+            return ERROR_DB_INCOMPLETE_DATA;
         }
     }
 
@@ -670,7 +670,7 @@ int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation,
         if (count+count2 < period*2)
         {
             dtx.push_back(NODATA);
-            return ERROR_INCOMPLETE_DATA;
+            return ERROR_DB_INCOMPLETE_DATA;
         }
         statement = QString("SELECT SUM(TRANSP_MAX),SUM(TRANSP) FROM `%1` WHERE DATE >= '%2' AND DATE <= '%3'").arg(idCase).arg(start.toString("yyyy-MM-dd")).arg(end.toString("yyyy-MM-dd"));
         if( !qry.exec(statement) )

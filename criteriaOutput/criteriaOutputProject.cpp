@@ -10,6 +10,10 @@
 #include "shapeToRaster.h"
 #include "zonalStatistic.h"
 
+#ifdef GDAL
+    #include "gdalShapeFunctions.h"
+#endif
+
 #include <QtSql>
 #include <iostream>
 
@@ -34,6 +38,13 @@ void CriteriaOutputProject::initialize()
     aggregationShapeFileName = "";
     shapeFieldName = "";
     fieldListFileName = "";
+    aggregationListFileName = "";
+    aggregationCellSize = "";
+
+    mapListFileName = "";
+    mapCellSize = "";
+    mapFormat = "";
+    mapProjection = "";
 
     outputCsvFileName = "";
     outputShapeFileName = "";
@@ -448,6 +459,49 @@ int CriteriaOutputProject::createShapeFile()
 }
 
 
+int CriteriaOutputProject::createMaps()
+{
+    // check map list
+    if (! QFile(mapListFileName).exists())
+    {
+        projectError = "Missing map list: " + mapListFileName;
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+
+    // check cellsize
+    bool ok;
+    int cellSize = mapCellSize.toInt(&ok, 10);
+    if (!ok)
+    {
+        projectError = "Invalid map cellsize: " + mapCellSize;
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+
+    // TODO check format and projection
+
+    // check shapefile
+    if (! QFile(outputShapeFileName).exists())
+    {
+        int myResult = createShapeFile();
+        if (myResult != CRIT3D_OK)
+        {
+            return myResult;
+        }
+    }
+
+    logger.writeInfo("MAPS");
+
+    #ifdef GDAL
+
+    // TODO: ciclo sulle righe di mapListFileName -> chiamare shapeToRaster, a cui va aggiunta riproiezione
+    // outputName = outputShapeFilePath + output map name
+
+    #endif
+
+    return CRIT3D_OK;
+}
+
+
 int CriteriaOutputProject::createAggregationFile()
 {
     if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
@@ -456,21 +510,23 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
-    // Aggregation cell size
+    // check aggregation cell size
     bool ok;
     int cellSize = aggregationCellSize.toInt(&ok, 10);
     if (!ok)
     {
         projectError = "Invalid aggregation cellsize: " + aggregationCellSize;
-        return ERROR_SETTINGS_WRONGFILENAME;
+        return ERROR_SETTINGS_MISSINGDATA;
     }
 
+    // check aggregation output (csv)
     if (outputAggrCsvFileName.right(4) != ".csv")
     {
         projectError = "aggregation output is not a csv file.";
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
+    // check shapefile
     if (! QFile(outputShapeFileName).exists())
     {
         // create shapefile
