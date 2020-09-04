@@ -13,8 +13,8 @@
 #   win32-g++ (MinGW)
 #   Unfortunately it doesn't seem to work at the moment
 #   - install and update MSYS2 from https://www.msys2.org/
-#   - run MSYS2 shell and install GDAL package - example: pacman -S mingw-w64-x86_64-gdal
-#   - add MSYS_PATH to system variables     - example: MSYS_PATH = C:\msys64\mingw64
+#   - run MSYS2 shell and install GDAL package  - example: pacman -S mingw-w64-x86_64-gdal
+#   - add MSYS_PATH to system variables         - example: MSYS_PATH = C:\msys64\mingw64
 #   - add msys\mingw\bin to the system path
 #
 #------------------------------------------------------------------------------------------
