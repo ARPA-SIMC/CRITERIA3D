@@ -1,4 +1,4 @@
-   ## GDAL library on windows
+   ## Use GDAL library on windows
 
    #### win32-msvc (Microsoft Visual C)
    - install GDAL (32 or 64 bit) from OSGeo4W https://trac.osgeo.org/osgeo4w/
