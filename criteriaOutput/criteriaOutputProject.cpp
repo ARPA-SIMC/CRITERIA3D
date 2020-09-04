@@ -331,6 +331,23 @@ bool CriteriaOutputProject::readSettings()
 
     projectSettings->endGroup();
 
+    projectSettings->beginGroup("maps");
+    // MAPS
+    mapListFileName = projectSettings->value("map_list","").toString();
+    if (mapListFileName.left(1) == ".")
+    {
+        mapListFileName = path + QDir::cleanPath(mapListFileName);
+    }
+
+    // format
+    mapFormat = projectSettings->value("format", "").toString();
+    // projection
+    mapProjection = projectSettings->value("projection", "").toString();
+    // map cell size
+    mapCellSize = projectSettings->value("cellsize","").toString();
+
+    projectSettings->endGroup();
+
     return true;
 }
 
