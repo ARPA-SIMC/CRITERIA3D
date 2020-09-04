@@ -1,4 +1,4 @@
-   ## Use GDAL library on windows
+   ## GDAL library on windows
 
    #### win32-msvc (Microsoft Visual C)
    - install GDAL (32 or 64 bit) from OSGeo4W https://trac.osgeo.org/osgeo4w/
@@ -8,7 +8,7 @@
    - add OSGeo4W\bin to the system path
 
    #### win32-g++ (MinGW)
-   (Unfortunately it doesn't seem to work at the moment)
+   Unfortunately it doesn't seem to work at the moment
    - install and update MSYS2 from https://www.msys2.org/
    - run MSYS2 shell and install GDAL package - example: pacman -S mingw-w64-x86_64-gdal
    - add MSYS_PATH to system variables     - example: MSYS_PATH = C:\msys64\mingw64
