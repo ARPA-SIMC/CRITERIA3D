@@ -3,8 +3,10 @@
 #include <string.h>
 #include <qdebug.h>
 #include <ogrsf_frmts.h>
+#include "ogr_spatialref.h"
 #include <gdal_priv.h>
 #include <gdal_utils.h>
+#include <gdalwarper.h>
 
 
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
@@ -668,7 +670,7 @@ GEOSGeometry * testIntersection()
 */
 
 
-bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, QString &errorStr)
+bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj, QString outputName, QString &errorStr)
 {
     int error = -1;
     GDALAllRegister();
@@ -696,9 +698,9 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
 
     // projection
+    char *pszProjection = nullptr;
     OGRSpatialReference srs;
     OGRSpatialReference * pOrigSrs = shpDS->GetLayer(0)->GetSpatialRef();
-    char *pszProjection = nullptr;
     if ( pOrigSrs )
     {
         srs = *pOrigSrs;
@@ -728,15 +730,75 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
 
     rasterizeDS = GDALRasterize(strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
 
+    if (rasterizeDS == nullptr || error == 1)
+    {
+        GDALClose(shpDS);
+        GDALClose(rasterizeDS);
+        GDALRasterizeOptionsFree(psOptions);
+        CPLFree( pszProjection );
+        return false;
+    }
+
+    proj = "EPSG:4326"; //test
+    // reprojection
+    if (!proj.isEmpty())
+    {
+        GDALDatasetH hDstDS;
+        GDALDriverH hDriver;
+        GDALDataType eDT;
+        // Create output with same datatype as first input band.
+        eDT = GDALGetRasterDataType(GDALGetRasterBand(rasterizeDS,1));
+
+        // Get output driver (GeoTIFF format)
+        hDriver = GDALGetDriverByName( "GTiff" );
+        CPLAssert( hDriver != NULL );
+
+        // Get Source coordinate system.
+        char *pszDstWKT = nullptr;
+        // Setup output coordinate system that is UTM 11 WGS84.
+        //OGRSpatialReference oSRS;
+        //oSRS.SetWellKnownGeogCS("EPSG:4326");
+        //oSRS.exportToWkt( &pszDstWKT );
+
+        pszDstWKT = strdup(proj.toStdString().c_str());
+        // Create a transformer that maps from source pixel/line coordinates
+        // to destination georeferenced coordinates (not destination
+        // pixel line).  We do that by omitting the destination dataset
+        // handle (setting it to NULL).
+        void *hTransformArg;
+        hTransformArg =
+            GDALCreateGenImgProjTransformer( rasterizeDS, pszProjection, NULL, pszDstWKT,
+                                             FALSE, 0, 1 );
+        CPLAssert( hTransformArg != NULL );
+
+        // Get approximate output georeferenced bounds and resolution for file.
+        double adfDstGeoTransform[6];
+        int nPixels=0, nLines=0;
+        CPLErr eErr;
+        eErr = GDALSuggestedWarpOutput( rasterizeDS,
+                                        GDALGenImgProjTransform, hTransformArg,
+                                        adfDstGeoTransform, &nPixels, &nLines );
+        CPLAssert( eErr == CE_None );
+        GDALDestroyGenImgProjTransformer( hTransformArg );
+
+        // Create the output file.
+        hDstDS = GDALCreate( hDriver, "/home/laura/shapeProve/reprojected.tif", nPixels, nLines,
+                             GDALGetRasterCount(rasterizeDS), eDT, NULL );
+        CPLAssert( hDstDS != NULL );
+
+        // Write out the projection definition.
+        GDALSetProjection( hDstDS, pszDstWKT );
+        GDALSetGeoTransform( hDstDS, adfDstGeoTransform );
+
+        // Initialize and execute the warp operation.
+        GDALWarpOperation oOperation;
+        oOperation.ChunkAndWarpImage( 0, 0, GDALGetRasterXSize( hDstDS ), GDALGetRasterYSize( hDstDS ) );
+        GDALClose( hDstDS );
+    }
     GDALClose(shpDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
     CPLFree( pszProjection );
-
-    if (rasterizeDS == nullptr || error == 1)
-    {
-        return false;
-    }
     return true;
 }
 
