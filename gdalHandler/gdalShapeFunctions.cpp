@@ -6,8 +6,9 @@
 #include <gdal_priv.h>
 #include <gdal_utils.h>
 
+
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
-                 std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
+                 std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error)
 {
 
     // PolygonShapefile
@@ -109,6 +110,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     return true;
 }
 
+
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
 {
 
@@ -170,6 +172,7 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
       return true;
     }
 }
+
 
 bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
 {
@@ -242,6 +245,7 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
     }
     return true;
 }
+
 
 GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 {
@@ -339,14 +343,14 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
                     }
                     holes.append(GEOSGeom_createLinearRing(coordsHoles));
                 }
-                if (lr != NULL)
+                if (lr != nullptr)
                 {
                     // create Polygon from LinearRing
                     geometries.append(GEOSGeom_createPolygon(lr,holes.data(),nHoles));
                 }
                 else
                 {
-                    qDebug() << "lr is NULL, i = " << i;
+                    qDebug() << "lr is nullptr, i = " << i;
                 }
             }
             else
@@ -371,7 +375,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             collection = geometries[0];
         }
    }
-   if (collection == NULL)
+   if (collection == nullptr)
    {
         return nullptr;
    }
@@ -412,7 +416,7 @@ GEOSGeometry * SHPObject_to_GeosPolygon_NoHoles(SHPObject *object)
     // create LinearRing
     lr = GEOSGeom_createLinearRing(coords);
     // create Polygon from LinearRing (assuming no holes)
-    return GEOSGeom_createPolygon(lr,NULL,0);
+    return GEOSGeom_createPolygon(lr,nullptr,0);
 }
 */
 
@@ -520,7 +524,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         }
         if (nHoles == 0)
         {
-            holes = NULL;
+            holes = nullptr;
         }
         else
         {
@@ -545,25 +549,25 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             }
             holes[holeIndex] = GEOSGeom_createLinearRing(coordsHoles);
         }
-        if (lr != NULL)
+        if (lr != nullptr)
         {
             // create Polygon from LinearRing
             geometries[i] = GEOSGeom_createPolygon(lr,holes,nHoles);
-            if (geometries[i] == NULL)
+            if (geometries[i] == nullptr)
             {
-                qDebug() << "geometries[i] is NULL, i = " << i;
+                qDebug() << "geometries[i] is nullptr, i = " << i;
             }
         }
         else
         {
-            qDebug() << "lr is NULL, i = " << i;
+            qDebug() << "lr is nullptr, i = " << i;
         }
 
     }
     GEOSGeometry *collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, nShapes);
-    if (collection == NULL)
+    if (collection == nullptr)
     {
-        qDebug() << "collection is NULL";
+        qDebug() << "collection is nullptr";
     }
     delete [] geometries;
     delete [] holes;
@@ -579,8 +583,8 @@ GEOSGeometry * testIntersection()
     GEOSMessageHandler error_function = nullptr, notice_function = nullptr;
     initGEOS(notice_function, error_function);
 
-    GEOSCoordSeq coordseq = NULL, coordseqSecond = NULL, coordseqIntersection = NULL;
-    GEOSGeom area_1 = NULL, area_2 = NULL, intersection = NULL;
+    GEOSCoordSeq coordseq = nullptr, coordseqSecond = nullptr, coordseqIntersection = nullptr;
+    GEOSGeom area_1 = nullptr, area_2 = nullptr, intersection = nullptr;
     GEOSGeometry *pol1;
     GEOSGeometry *pol2;
 
@@ -599,7 +603,7 @@ GEOSGeometry * testIntersection()
 
     area_1 = GEOSGeom_createLinearRing(coordseq);
 
-    pol1 = GEOSGeom_createPolygon(area_1, NULL, 0);
+    pol1 = GEOSGeom_createPolygon(area_1, nullptr, 0);
 
     if((GEOSisEmpty(area_1) != 0) || (GEOSisValid(area_1) != 1)) {
         printf("No valid intersection found.\n");
@@ -621,7 +625,7 @@ GEOSGeometry * testIntersection()
 
     area_2 = GEOSGeom_createLinearRing(coordseqSecond);
 
-    pol2 = GEOSGeom_createPolygon(area_2, NULL, 0);
+    pol2 = GEOSGeom_createPolygon(area_2, nullptr, 0);
 
     if((GEOSisEmpty(area_2) != 0) || (GEOSisValid(area_2) != 1)) {
         printf("No valid intersection found.\n");
@@ -662,6 +666,7 @@ GEOSGeometry * testIntersection()
     finishGEOS();
 }
 */
+
 
 bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, QString &errorStr)
 {
