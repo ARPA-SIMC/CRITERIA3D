@@ -389,9 +389,11 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
 
             _dbMeteo->createTmpTableHourly();
             bool isVarOk, isFirstData = true;
+            bool emptyLine = true;
 
             for (line = QString(reply->readLine()); !(line.isNull() || line.isEmpty());  line = QString(reply->readLine()))
             {
+                emptyLine = false;
                 fields = line.split(",");
                 dateTime = QString("%1-%2-%3 %4:%5:00").arg(fields[0].left(4))
                                                            .arg(fields[0].mid(4, 2))
@@ -434,7 +436,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
                 }
             }
 
-            if (_dbMeteo->queryString != "")
+            if (_dbMeteo->queryString != "" && !emptyLine)
             {
                _dbMeteo->saveHourlyData();
             }
