@@ -13,4 +13,3 @@
    - run MSYS2 shell and install GDAL package - example: pacman -S mingw-w64-x86_64-gdal
    - add MSYS_PATH to system variables     - example: MSYS_PATH = C:\msys64\mingw64
    - add msys\mingw\bin to the system path - example: add C:\msys64\mingw64\bin
-   - ...
