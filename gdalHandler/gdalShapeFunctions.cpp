@@ -679,12 +679,12 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
 
     std::string formatOption;
     if (mapExtensionShortName.contains(ext))
-    {
-        errorStr = "Unknown output format";
+    {  
         formatOption = mapExtensionShortName.value(ext).toStdString();
     }
     else
     {
+        errorStr = "Unknown output format";
         return false;
     }
     std::string outputStd = outputName.toStdString();
@@ -751,7 +751,11 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
 
         // Get output driver (GeoTIFF format)
         hDriver = GDALGetDriverByName( "GTiff" );
-        CPLAssert( hDriver != NULL );
+        if (hDriver == NULL)
+        {
+            errorStr = "Error GDALGetDriverByName";
+            return false;
+        }
 
         // Get Source coordinate system.
         char *pszDstWKT = nullptr;
@@ -769,7 +773,11 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         hTransformArg =
             GDALCreateGenImgProjTransformer( rasterizeDS, pszProjection, NULL, pszDstWKT,
                                              FALSE, 0, 1 );
-        CPLAssert( hTransformArg != NULL );
+        if ( hTransformArg == NULL )
+        {
+            errorStr = "Error GDALCreateGenImgProjTransformer";
+            return false;
+        }
 
         // Get approximate output georeferenced bounds and resolution for file.
         double adfDstGeoTransform[6];
@@ -778,21 +786,42 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         eErr = GDALSuggestedWarpOutput( rasterizeDS,
                                         GDALGenImgProjTransform, hTransformArg,
                                         adfDstGeoTransform, &nPixels, &nLines );
-        CPLAssert( eErr == CE_None );
+        if( eErr != CE_None )
+        {
+            errorStr = "Error GDALSuggestedWarpOutput";
+            return false;
+        }
         GDALDestroyGenImgProjTransformer( hTransformArg );
 
         // Create the output file.
         hDstDS = GDALCreate( hDriver, "/home/laura/shapeProve/reprojected.tif", nPixels, nLines,
                              GDALGetRasterCount(rasterizeDS), eDT, NULL );
-        CPLAssert( hDstDS != NULL );
+        if( hDstDS == NULL )
+        {
+            errorStr = "Error GDALCreate output reprojected";
+            return false;
+        }
 
         // Write out the projection definition.
         GDALSetProjection( hDstDS, pszDstWKT );
         GDALSetGeoTransform( hDstDS, adfDstGeoTransform );
 
         // Initialize and execute the warp operation.
-        GDALWarpOperation oOperation;
-        oOperation.ChunkAndWarpImage( 0, 0, GDALGetRasterXSize( hDstDS ), GDALGetRasterYSize( hDstDS ) );
+        eErr = GDALReprojectImage(rasterizeDS, pszProjection,
+                                  hDstDS, pszDstWKT,
+                                  GRA_Bilinear,
+                                  0.0, 0.0,
+                                  GDALTermProgress, NULL,
+                                  NULL);
+        if (eErr != CE_None)
+        {
+            errorStr =  CPLGetLastErrorMsg();
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
         GDALClose( hDstDS );
     }
     GDALClose(shpDS);
