@@ -672,10 +672,23 @@ GEOSGeometry * testIntersection()
 
 bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj, QString outputName, QString &errorStr)
 {
+    proj = "EPSG:4326"; //test
+
     int error = -1;
     GDALAllRegister();
     QFileInfo file(outputName);
     QString ext = file.completeSuffix();
+
+    std::string outputNoReprojStd;
+    if (proj.isEmpty())
+    {
+        outputNoReprojStd = outputName.toStdString();   // there is no reprojection to do
+    }
+    else
+    {
+        QString fileName = file.absolutePath() + "/" + file.baseName() + "_noreproj." + ext;
+        outputNoReprojStd = fileName.toStdString();
+    }
 
     std::string formatOption;
     if (mapExtensionShortName.contains(ext))
@@ -687,7 +700,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         errorStr = "Unknown output format";
         return false;
     }
-    std::string outputStd = outputName.toStdString();
+
     GDALDataset* shpDS;
     GDALDatasetH rasterizeDS;
     shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
@@ -711,6 +724,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
     else
     {
+        GDALClose(shpDS);
         errorStr = "Missing projection";
         return false;
     }
@@ -724,22 +738,21 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     if( psOptions == nullptr )
     {
+        GDALClose(shpDS);
         errorStr = "psOptions is null";
         return false;
     }
 
-    rasterizeDS = GDALRasterize(strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
+    rasterizeDS = GDALRasterize(strdup(outputNoReprojStd.c_str()),nullptr,shpDS,psOptions,&error);
 
     if (rasterizeDS == nullptr || error == 1)
     {
         GDALClose(shpDS);
-        GDALClose(rasterizeDS);
         GDALRasterizeOptionsFree(psOptions);
         CPLFree( pszProjection );
         return false;
     }
 
-    proj = "EPSG:4326"; //test
     // reprojection
     if (!proj.isEmpty())
     {
@@ -754,6 +767,10 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         if (hDriver == NULL)
         {
             errorStr = "Error GDALGetDriverByName";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
             return false;
         }
 
@@ -776,6 +793,10 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         if ( hTransformArg == NULL )
         {
             errorStr = "Error GDALCreateGenImgProjTransformer";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
             return false;
         }
 
@@ -789,16 +810,24 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         if( eErr != CE_None )
         {
             errorStr = "Error GDALSuggestedWarpOutput";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
             return false;
         }
         GDALDestroyGenImgProjTransformer( hTransformArg );
 
         // Create the output file.
-        hDstDS = GDALCreate( hDriver, "/home/laura/shapeProve/reprojected.tif", nPixels, nLines,
+        hDstDS = GDALCreate( hDriver, strdup(outputName.toStdString().c_str()) , nPixels, nLines,
                              GDALGetRasterCount(rasterizeDS), eDT, NULL );
         if( hDstDS == NULL )
         {
             errorStr = "Error GDALCreate output reprojected";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
             return false;
         }
 
