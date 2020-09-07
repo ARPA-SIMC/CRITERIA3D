@@ -494,7 +494,18 @@ int CriteriaOutputProject::createMaps()
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
-    // TODO check format and projection
+    // check format and projection
+    if (mapProjection.isEmpty())
+    {
+        projectError = "Missing projection ";
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+
+    if (!mapExtensionShortName.contains(mapFormat))
+    {
+        projectError = "Unknown output format ";
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
 
     // check shapefile
     if (! QFile(outputShapeFileName).exists())
@@ -510,7 +521,7 @@ int CriteriaOutputProject::createMaps()
 
     #ifdef GDAL
 
-    // TODO: ciclo sulle righe di mapListFileName -> chiamare shapeToRaster, a cui va aggiunta riproiezione
+    // TODO: ciclo sulle righe di mapListFileName -> chiamare shapeToRaster
     // outputName = outputShapeFilePath + output map name
 
     #endif

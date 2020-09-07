@@ -1,5 +1,5 @@
-#ifndef CSVTOSHAPEPROJECT_H
-#define CSVTOSHAPEPROJECT_H
+#ifndef CRITERIAOUTPUTPROJECT_H
+#define CRITERIAOUTPUTPROJECT_H
 
 #include <QString>
 #include <fstream>
@@ -101,4 +101,4 @@ public:
 };
 
 
-#endif // CSVTOSHAPEPROJECT_H
+#endif // CRITERIAOUTPUTPROJECT_H
