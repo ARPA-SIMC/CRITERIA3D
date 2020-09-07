@@ -63,7 +63,7 @@ CONFIG += GDAL
 
 GDAL {
     DEFINES += GDAL
-    INCLUDEPATH += ../../agrolib/gdalHandler
-    include(../../agrolib/gdal.pri)
+    INCLUDEPATH += ../gdalHandler
+    include(../gdal.pri)
 }
 

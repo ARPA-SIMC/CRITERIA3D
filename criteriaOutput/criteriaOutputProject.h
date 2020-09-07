@@ -10,6 +10,8 @@
 #include "criteriaAggregationVariable.h"
 #include "shapeHandler.h"
 
+#define REQUIREDMAPLISTCSVINFO 2
+
 #define ERROR_SETTINGS_MISSING -1
 #define ERROR_SETTINGS_WRONGFILENAME -2
 #define ERROR_SETTINGS_MISSINGDATA -3

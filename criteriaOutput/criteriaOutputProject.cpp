@@ -521,12 +521,92 @@ int CriteriaOutputProject::createMaps()
 
     #ifdef GDAL
 
-    // TODO: ciclo sulle righe di mapListFileName -> chiamare shapeToRaster
-    // outputName = outputShapeFilePath + output map name
+    // parser csv file mapListFileName
+    QStringList inputField;
+    QStringList outputName;
+    QFile mapList(mapListFileName);
+    if ( !mapList.open(QFile::ReadOnly | QFile::Text) )
+    {
+        projectError = "Map List csv file not exists: " + mapListFileName;
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+    else
+    {
+        QTextStream in(&mapList);
+        //skip header
+        QString line = in.readLine();
+        QStringList header = line.split(",");
+        // whitespace removed from the start and the end.
+        QMutableListIterator<QString> it(header);
+        while (it.hasNext()) {
+            it.next();
+            it.value() = it.value().trimmed();
+        }
+        while (!in.atEnd())
+        {
+            line = in.readLine();
+            QStringList items = line.split(",");
+            if (items.size() < REQUIREDMAPLISTCSVINFO)
+            {
+                projectError = "invalid map list format CSV, input field and output file name required";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+            int pos = header.indexOf("input field (shapefile)");
+            if (pos == -1)
+            {
+                projectError = "missing input field";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+            // remove whitespace
+            inputField.push_back(items[pos].toUpper().trimmed());
+            if (inputField.isEmpty())
+            {
+                projectError = "missing input field";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+
+            pos = header.indexOf("output map name");
+            if (pos == -1)
+            {
+                projectError = "missing output map name";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+            // remove whitespace
+            outputName.push_back(items[pos].toUpper().trimmed());
+            if (outputName.isEmpty())
+            {
+                projectError = "missing output map name";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+        }
+
+    }
+
+    int rasterOK = 0;
+
+    for (int i=0; i<inputField.size(); i++)
+    {
+        QString mapName = outputShapeFilePath + "/" + outputName[i]+ "." + mapFormat;
+        std::string inputFieldStd = inputField[i].toStdString();
+        if (shapeToRaster(outputShapeFileName, inputFieldStd, mapCellSize, mapProjection, mapName, projectError))
+        {
+            rasterOK = rasterOK + 1;
+        }
+    }
 
     #endif
 
-    return CRIT3D_OK;
+    if (rasterOK == inputField.size())
+    {
+        return CRIT3D_OK;
+    }
+    else
+    {
+        int nRasterError = inputField.size() - rasterOK;
+        projectError = QString::number(nRasterError) + " invalid raster " ;
+        return false;
+    }
+
 }
 
 
