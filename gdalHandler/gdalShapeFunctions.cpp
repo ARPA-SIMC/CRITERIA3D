@@ -721,7 +721,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
     std::string outputNoReprojStd;
 
-    if (proj.isEmpty() || proj == noProj)
+    if (proj.isEmpty())
     {
         outputNoReprojStd = outputName.toStdString();   // there is no reprojection to do
     }
@@ -756,7 +756,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
 
     // reprojection
-    if (!proj.isEmpty() && proj != noProj)
+    if (!proj.isEmpty())
     {
         GDALDatasetH hDstDS;
         GDALDriverH hDriver;
