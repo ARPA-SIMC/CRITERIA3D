@@ -672,23 +672,11 @@ GEOSGeometry * testIntersection()
 
 bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj, QString outputName, QString &errorStr)
 {
-    proj = "EPSG:4326"; //test
 
     int error = -1;
     GDALAllRegister();
     QFileInfo file(outputName);
     QString ext = file.completeSuffix();
-
-    std::string outputNoReprojStd;
-    if (proj.isEmpty())
-    {
-        outputNoReprojStd = outputName.toStdString();   // there is no reprojection to do
-    }
-    else
-    {
-        QString fileName = file.absolutePath() + "/" + file.baseName() + "_noreproj." + ext;
-        outputNoReprojStd = fileName.toStdString();
-    }
 
     std::string formatOption;
     if (mapExtensionShortName.contains(ext))
@@ -711,6 +699,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
 
     // projection
+    QString noProj;
     char *pszProjection = nullptr;
     OGRSpatialReference srs;
     OGRSpatialReference * pOrigSrs = shpDS->GetLayer(0)->GetSpatialRef();
@@ -724,9 +713,22 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
     else
     {
-        GDALClose(shpDS);
-        errorStr = "Missing projection";
-        return false;
+        noProj = "EPSG:4326";
+        pszProjection = strdup(noProj.toStdString().c_str());
+        //GDALClose(shpDS);
+        //errorStr = "Missing projection";
+        //return false;
+    }
+    std::string outputNoReprojStd;
+
+    if (proj.isEmpty() || proj == noProj)
+    {
+        outputNoReprojStd = outputName.toStdString();   // there is no reprojection to do
+    }
+    else
+    {
+        QString fileName = file.absolutePath() + "/" + file.baseName() + "_noreproj." + ext;
+        outputNoReprojStd = fileName.toStdString();
     }
 
     std::string res = resolution.toStdString();
@@ -754,7 +756,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
 
     // reprojection
-    if (!proj.isEmpty())
+    if (!proj.isEmpty() && proj != noProj)
     {
         GDALDatasetH hDstDS;
         GDALDriverH hDriver;
@@ -776,11 +778,6 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
 
         // Get Source coordinate system.
         char *pszDstWKT = nullptr;
-        // Setup output coordinate system that is UTM 11 WGS84.
-        //OGRSpatialReference oSRS;
-        //oSRS.SetWellKnownGeogCS("EPSG:4326");
-        //oSRS.exportToWkt( &pszDstWKT );
-
         pszDstWKT = strdup(proj.toStdString().c_str());
         // Create a transformer that maps from source pixel/line coordinates
         // to destination georeferenced coordinates (not destination
