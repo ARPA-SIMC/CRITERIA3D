@@ -1,5 +1,5 @@
-#ifndef CSVTOSHAPEPROJECT_H
-#define CSVTOSHAPEPROJECT_H
+#ifndef CRITERIAOUTPUTPROJECT_H
+#define CRITERIAOUTPUTPROJECT_H
 
 #include <QString>
 #include <fstream>
@@ -9,6 +9,8 @@
 #include "criteriaOutputVariable.h"
 #include "criteriaAggregationVariable.h"
 #include "shapeHandler.h"
+
+#define REQUIREDMAPLISTCSVINFO 2
 
 #define ERROR_SETTINGS_MISSING -1
 #define ERROR_SETTINGS_WRONGFILENAME -2
@@ -21,13 +23,15 @@
 #define ERROR_PARSERCSV -12
 #define ERROR_READ_UNITS -15
 
+#define ERROR_DB_MISSING_DATA -20
+#define ERROR_DB_INCOMPLETE_DATA -21
+#define ERROR_DB_MISSING_PRECOMPUTED_DTX -22
+
 #define ERROR_WRITECSV -50
 #define ERROR_OUTPUT_VARIABLES -60
-#define ERROR_MISSING_DATA -70
-#define ERROR_INCOMPLETE_DATA -80
-#define ERROR_MISSING_PRECOMPUTE_DTX -90
-#define ERROR_SHAPEFILE -95
-#define ERROR_ZONAL_STATISTICS_SHAPE -99
+#define ERROR_SHAPEFILE -70
+#define ERROR_ZONAL_STATISTICS_SHAPE -80
+#define ERROR_MISSING_GDAL -100
 
 
 class CriteriaOutputProject
@@ -44,8 +48,13 @@ public:
     QString variableListFileName;
     QString aggregationShapeFileName;
     QString shapeFieldName;
-    QString aggregationCellSize;
     QString aggregationListFileName;
+    QString aggregationCellSize;
+
+    QString mapListFileName;
+    QString mapCellSize;
+    QString mapFormat;
+    QString mapProjection;
 
     QString outputCsvFileName;
     QString outputShapeFileName;
@@ -87,10 +96,11 @@ public:
     int createCsvFile();
     int createShapeFile();
     int createAggregationFile();
+    int createMaps();
 
     bool initializeCsvOutputFile();
 
 };
 
 
-#endif // CSVTOSHAPEPROJECT_H
+#endif // CRITERIAOUTPUTPROJECT_H

@@ -3,11 +3,14 @@
 #include <string.h>
 #include <qdebug.h>
 #include <ogrsf_frmts.h>
+#include "ogr_spatialref.h"
 #include <gdal_priv.h>
 #include <gdal_utils.h>
+#include <gdalwarper.h>
+
 
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
-                 std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error, bool showInfo)
+                 std::string idCrop, std::string idSoil, std::string idMeteo, QString ucmFileName, std::string *error)
 {
 
     // PolygonShapefile
@@ -109,6 +112,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
     return true;
 }
 
+
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
 {
 
@@ -170,6 +174,7 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
       return true;
     }
 }
+
 
 bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
 {
@@ -242,6 +247,7 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
     }
     return true;
 }
+
 
 GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 {
@@ -339,14 +345,14 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
                     }
                     holes.append(GEOSGeom_createLinearRing(coordsHoles));
                 }
-                if (lr != NULL)
+                if (lr != nullptr)
                 {
                     // create Polygon from LinearRing
                     geometries.append(GEOSGeom_createPolygon(lr,holes.data(),nHoles));
                 }
                 else
                 {
-                    qDebug() << "lr is NULL, i = " << i;
+                    qDebug() << "lr is nullptr, i = " << i;
                 }
             }
             else
@@ -371,7 +377,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             collection = geometries[0];
         }
    }
-   if (collection == NULL)
+   if (collection == nullptr)
    {
         return nullptr;
    }
@@ -412,7 +418,7 @@ GEOSGeometry * SHPObject_to_GeosPolygon_NoHoles(SHPObject *object)
     // create LinearRing
     lr = GEOSGeom_createLinearRing(coords);
     // create Polygon from LinearRing (assuming no holes)
-    return GEOSGeom_createPolygon(lr,NULL,0);
+    return GEOSGeom_createPolygon(lr,nullptr,0);
 }
 */
 
@@ -520,7 +526,7 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         }
         if (nHoles == 0)
         {
-            holes = NULL;
+            holes = nullptr;
         }
         else
         {
@@ -545,25 +551,25 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             }
             holes[holeIndex] = GEOSGeom_createLinearRing(coordsHoles);
         }
-        if (lr != NULL)
+        if (lr != nullptr)
         {
             // create Polygon from LinearRing
             geometries[i] = GEOSGeom_createPolygon(lr,holes,nHoles);
-            if (geometries[i] == NULL)
+            if (geometries[i] == nullptr)
             {
-                qDebug() << "geometries[i] is NULL, i = " << i;
+                qDebug() << "geometries[i] is nullptr, i = " << i;
             }
         }
         else
         {
-            qDebug() << "lr is NULL, i = " << i;
+            qDebug() << "lr is nullptr, i = " << i;
         }
 
     }
     GEOSGeometry *collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, nShapes);
-    if (collection == NULL)
+    if (collection == nullptr)
     {
-        qDebug() << "collection is NULL";
+        qDebug() << "collection is nullptr";
     }
     delete [] geometries;
     delete [] holes;
@@ -579,8 +585,8 @@ GEOSGeometry * testIntersection()
     GEOSMessageHandler error_function = nullptr, notice_function = nullptr;
     initGEOS(notice_function, error_function);
 
-    GEOSCoordSeq coordseq = NULL, coordseqSecond = NULL, coordseqIntersection = NULL;
-    GEOSGeom area_1 = NULL, area_2 = NULL, intersection = NULL;
+    GEOSCoordSeq coordseq = nullptr, coordseqSecond = nullptr, coordseqIntersection = nullptr;
+    GEOSGeom area_1 = nullptr, area_2 = nullptr, intersection = nullptr;
     GEOSGeometry *pol1;
     GEOSGeometry *pol2;
 
@@ -599,7 +605,7 @@ GEOSGeometry * testIntersection()
 
     area_1 = GEOSGeom_createLinearRing(coordseq);
 
-    pol1 = GEOSGeom_createPolygon(area_1, NULL, 0);
+    pol1 = GEOSGeom_createPolygon(area_1, nullptr, 0);
 
     if((GEOSisEmpty(area_1) != 0) || (GEOSisValid(area_1) != 1)) {
         printf("No valid intersection found.\n");
@@ -621,7 +627,7 @@ GEOSGeometry * testIntersection()
 
     area_2 = GEOSGeom_createLinearRing(coordseqSecond);
 
-    pol2 = GEOSGeom_createPolygon(area_2, NULL, 0);
+    pol2 = GEOSGeom_createPolygon(area_2, nullptr, 0);
 
     if((GEOSisEmpty(area_2) != 0) || (GEOSisValid(area_2) != 1)) {
         printf("No valid intersection found.\n");
@@ -663,8 +669,10 @@ GEOSGeometry * testIntersection()
 }
 */
 
-bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, QString &errorStr)
+
+bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj, QString outputName, QString &errorStr)
 {
+
     int error = -1;
     GDALAllRegister();
     QFileInfo file(outputName);
@@ -672,15 +680,15 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
 
     std::string formatOption;
     if (mapExtensionShortName.contains(ext))
-    {
-        errorStr = "Unknown output format";
+    {  
         formatOption = mapExtensionShortName.value(ext).toStdString();
     }
     else
     {
+        errorStr = "Unknown output format";
         return false;
     }
-    std::string outputStd = outputName.toStdString();
+
     GDALDataset* shpDS;
     GDALDatasetH rasterizeDS;
     shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
@@ -691,9 +699,10 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
 
     // projection
+    QString noProj;
+    char *pszProjection = nullptr;
     OGRSpatialReference srs;
     OGRSpatialReference * pOrigSrs = shpDS->GetLayer(0)->GetSpatialRef();
-    char *pszProjection = nullptr;
     if ( pOrigSrs )
     {
         srs = *pOrigSrs;
@@ -704,8 +713,22 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
     else
     {
-        errorStr = "Missing projection";
-        return false;
+        noProj = "EPSG:4326";
+        pszProjection = strdup(noProj.toStdString().c_str());
+        //GDALClose(shpDS);
+        //errorStr = "Missing projection";
+        //return false;
+    }
+    std::string outputNoReprojStd;
+
+    if (proj.isEmpty())
+    {
+        outputNoReprojStd = outputName.toStdString();   // there is no reprojection to do
+    }
+    else
+    {
+        QString fileName = file.absolutePath() + "/" + file.baseName() + "_noreproj." + ext;
+        outputNoReprojStd = fileName.toStdString();
     }
 
     std::string res = resolution.toStdString();
@@ -717,21 +740,120 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     if( psOptions == nullptr )
     {
+        GDALClose(shpDS);
         errorStr = "psOptions is null";
         return false;
     }
 
-    rasterizeDS = GDALRasterize(strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
+    rasterizeDS = GDALRasterize(strdup(outputNoReprojStd.c_str()),nullptr,shpDS,psOptions,&error);
 
+    if (rasterizeDS == nullptr || error == 1)
+    {
+        GDALClose(shpDS);
+        GDALRasterizeOptionsFree(psOptions);
+        CPLFree( pszProjection );
+        return false;
+    }
+
+    // reprojection
+    if (!proj.isEmpty())
+    {
+        GDALDatasetH hDstDS;
+        GDALDriverH hDriver;
+        GDALDataType eDT;
+        // Create output with same datatype as first input band.
+        eDT = GDALGetRasterDataType(GDALGetRasterBand(rasterizeDS,1));
+
+        // Get output driver (GeoTIFF format)
+        hDriver = GDALGetDriverByName( "GTiff" );
+        if (hDriver == NULL)
+        {
+            errorStr = "Error GDALGetDriverByName";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
+
+        // Get Source coordinate system.
+        char *pszDstWKT = nullptr;
+        pszDstWKT = strdup(proj.toStdString().c_str());
+        // Create a transformer that maps from source pixel/line coordinates
+        // to destination georeferenced coordinates (not destination
+        // pixel line).  We do that by omitting the destination dataset
+        // handle (setting it to NULL).
+        void *hTransformArg;
+        hTransformArg =
+            GDALCreateGenImgProjTransformer( rasterizeDS, pszProjection, NULL, pszDstWKT,
+                                             FALSE, 0, 1 );
+        if ( hTransformArg == NULL )
+        {
+            errorStr = "Error GDALCreateGenImgProjTransformer";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
+
+        // Get approximate output georeferenced bounds and resolution for file.
+        double adfDstGeoTransform[6];
+        int nPixels=0, nLines=0;
+        CPLErr eErr;
+        eErr = GDALSuggestedWarpOutput( rasterizeDS,
+                                        GDALGenImgProjTransform, hTransformArg,
+                                        adfDstGeoTransform, &nPixels, &nLines );
+        if( eErr != CE_None )
+        {
+            errorStr = "Error GDALSuggestedWarpOutput";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
+        GDALDestroyGenImgProjTransformer( hTransformArg );
+
+        // Create the output file.
+        hDstDS = GDALCreate( hDriver, strdup(outputName.toStdString().c_str()) , nPixels, nLines,
+                             GDALGetRasterCount(rasterizeDS), eDT, NULL );
+        if( hDstDS == NULL )
+        {
+            errorStr = "Error GDALCreate output reprojected";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
+
+        // Write out the projection definition.
+        GDALSetProjection( hDstDS, pszDstWKT );
+        GDALSetGeoTransform( hDstDS, adfDstGeoTransform );
+
+        // Initialize and execute the warp operation.
+        eErr = GDALReprojectImage(rasterizeDS, pszProjection,
+                                  hDstDS, pszDstWKT,
+                                  GRA_Bilinear,
+                                  0.0, 0.0,
+                                  GDALTermProgress, NULL,
+                                  NULL);
+        if (eErr != CE_None)
+        {
+            errorStr =  CPLGetLastErrorMsg();
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
+        GDALClose( hDstDS );
+    }
     GDALClose(shpDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
     CPLFree( pszProjection );
-
-    if (rasterizeDS == nullptr || error == 1)
-    {
-        return false;
-    }
     return true;
 }
 
