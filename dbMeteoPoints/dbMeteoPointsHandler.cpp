@@ -161,6 +161,8 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
     QSqlQuery qry(_db);
     QStringList tables;
     QDateTime firstDate;
+    QDate myDate;
+    QTime myTime;
 
     QString dayHour;
     if (frequency == daily)
@@ -202,7 +204,9 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
                     }
                     else if (frequency == hourly)
                     {
-                        date = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
+                        myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+                        myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+                        QDateTime date(QDateTime(myDate, myTime, Qt::UTC));
                     }
 
                     if (firstDate.isNull() || date < firstDate)
@@ -247,6 +251,8 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
     }
 
     QDateTime date;
+    QDate myDate;
+    QTime myTime;
     QString dateStr, statement;
     foreach (QString table, tables)
     {
@@ -264,7 +270,9 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
                     }
                     else if (frequency == hourly)
                     {
-                        date = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
+                        myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+                        myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+                        QDateTime date(QDateTime(myDate, myTime, Qt::UTC));
                     }
 
                     if (lastDate.isNull() || date > lastDate)
@@ -284,7 +292,8 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
 QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency, std::string idMeteoPoint)
 {
     QDateTime firstDate;
-
+    QDate myDate;
+    QTime myTime;
     QString tableName;
     if (frequency == daily)
         tableName = QString::fromStdString(idMeteoPoint + "_D");
@@ -307,7 +316,9 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency, std:
                 }
                 else if (frequency == hourly)
                 {
-                    firstDate = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
+                    myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+                    myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+                    QDateTime firstDate(QDateTime(myDate, myTime, Qt::UTC));
                 }
             }
         }
@@ -321,7 +332,8 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency, std:
 QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency, std::string idMeteoPoint)
 {
     QDateTime lastDate;
-
+    QDate myDate;
+    QTime myTime;
     QString tableName;
     if (frequency == daily)
         tableName = QString::fromStdString(idMeteoPoint + "_D");
@@ -344,7 +356,9 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency, std::
                 }
                 else if (frequency == hourly)
                 {
-                    lastDate = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
+                    myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+                    myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+                    QDateTime lastDate(QDateTime(myDate, myTime, Qt::UTC));
                 }
             }
         }
@@ -416,9 +430,11 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
 {
     QString dateStr;
     meteoVariable variable;
-    QDateTime d;
     int idVar;
     float value;
+
+    QDate myDate;
+    QTime myTime;
 
     int numberOfDays = difference(dateStart, dateEnd)+1;
     int myHourlyFraction = 1;
@@ -443,7 +459,9 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
         while (qry.next())
         {
             dateStr = qry.value(0).toString();
-            d = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
+            myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+            myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+            QDateTime d(QDateTime(myDate, myTime, Qt::UTC));
 
             idVar = qry.value(1).toInt();
             try {
@@ -538,7 +556,9 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadDailyVar(QString *myError, me
 std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, meteoVariable variable, Crit3DDate dateStart, Crit3DDate dateEnd, QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint)
 {
     QString dateStr;
-    QDateTime d, previousDate;
+    QDateTime previousDate;
+    QDate myDate;
+    QTime myTime;
     float value;
     std::vector<float> hourlyVarList;
     bool firstRow = true;
@@ -565,7 +585,11 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, m
             if (firstRow)
             {
                 dateStr = qry.value(0).toString();
-                *firstDateDB = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
+                myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+                myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+                QDateTime d(QDateTime(myDate, myTime, Qt::UTC));
+
+                *firstDateDB = d;
                 previousDate = *firstDateDB;
 
                 value = qry.value(2).toFloat();
@@ -576,7 +600,9 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, m
             else
             {
                 dateStr = qry.value(0).toString();
-                d = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
+                myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+                myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+                QDateTime d(QDateTime(myDate, myTime, Qt::UTC));
 
                 int missingDate = previousDate.daysTo(d);
                 for (int i =1; i<missingDate; i++)
@@ -590,6 +616,7 @@ std::vector<float> Crit3DMeteoPointsDbHandler::loadHourlyVar(QString *myError, m
             }
         }
     }
+
     return hourlyVarList;
 }
 
