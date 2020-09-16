@@ -246,8 +246,9 @@ bool weatherGenerator2D::initializeData(int lengthDataSeries, int stations)
     return 0;
 }
 
-void weatherGenerator2D::initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D,bool computeStats)
+void weatherGenerator2D::initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D,bool computeStats,TaverageTempMethod tempMethod)
 {
+    averageTempMethod = tempMethod;
     computeStatistics = computeStats;
     isPrecWG2D = computePrecWG2D;
     isTempWG2D = computeTempWG2D;

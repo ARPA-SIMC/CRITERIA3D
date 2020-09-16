@@ -383,33 +383,30 @@ void weatherGenerator2D::computeTemperatureParameters()
         double *par;
         int nrPar = 11;
         par = (double *) calloc(nrPar, sizeof(double));
-        /*for (int i=0;i<nrPar;i++)
+        if (averageTempMethod == FOURIER_HARMONICS_AVERAGE)
         {
-            par[i] = NODATA;
+            for (int i=0;i<nrPar;i++)
+            {
+                par[i] = NODATA;
+            }
+            weatherGenerator2D::harmonicsFourier(averageTMaxDry,par,nrPar,temperatureCoefficients[iStation].maxTDry.averageEstimation,365);
+            for (int i=0;i<nrPar;i++)
+            {
+                par[i] = NODATA;
+            }
+            weatherGenerator2D::harmonicsFourier(averageTMinDry,par,nrPar,temperatureCoefficients[iStation].minTDry.averageEstimation,365);
+            for (int i=0;i<nrPar;i++)
+            {
+                par[i] = NODATA;
+            }
+            weatherGenerator2D::harmonicsFourier(averageTMaxWet,par,nrPar,temperatureCoefficients[iStation].maxTWet.averageEstimation,365);
+            for (int i=0;i<nrPar;i++)
+            {
+                par[i] = NODATA;
+            }
+            weatherGenerator2D::harmonicsFourier(averageTMinWet,par,nrPar,temperatureCoefficients[iStation].minTWet.averageEstimation,365);
         }
-        weatherGenerator2D::harmonicsFourier(averageTMaxDry,par,nrPar,temperatureCoefficients[iStation].maxTDry.averageEstimation,365);
-        */
-        /*
-        for (int i=0;i<nrPar;i++)
-        {
-            par[i] = NODATA;
-        }
-        weatherGenerator2D::harmonicsFourier(averageTMinDry,par,nrPar,temperatureCoefficients[iStation].minTDry.averageEstimation,365);
-        */
-        /*
-        for (int i=0;i<nrPar;i++)
-        {
-            par[i] = NODATA;
-        }
-        weatherGenerator2D::harmonicsFourier(averageTMaxWet,par,nrPar,temperatureCoefficients[iStation].maxTWet.averageEstimation,365);
-        */
-        /*
-        for (int i=0;i<nrPar;i++)
-        {
-            par[i] = NODATA;
-        }
-        weatherGenerator2D::harmonicsFourier(averageTMinWet,par,nrPar,temperatureCoefficients[iStation].minTWet.averageEstimation,365);
-        */
+
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
