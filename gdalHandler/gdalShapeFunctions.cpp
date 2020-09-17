@@ -812,9 +812,11 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         }
         GDALDestroyGenImgProjTransformer( hTransformArg );
 
+        char *createOptions[] = {strdup("COMPRESS=LZW"), nullptr};
         // Create the output file.
         hDstDS = GDALCreate( hDriver, strdup(outputName.toStdString().c_str()) , nPixels, nLines,
-                             GDALGetRasterCount(rasterizeDS), eDT, NULL );
+                             GDALGetRasterCount(rasterizeDS), eDT, createOptions );
+
         if( hDstDS == NULL )
         {
             errorStr = "Error GDALCreate output reprojected";
@@ -829,22 +831,39 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         GDALSetProjection( hDstDS, pszDstWKT );
         GDALSetGeoTransform( hDstDS, adfDstGeoTransform );
 
+        // Setup warp options.
+        GDALWarpOptions *psWarpOptions = GDALCreateWarpOptions();
+        psWarpOptions->hSrcDS = rasterizeDS;
+        double dfNoData = -9999.0;
+        psWarpOptions->padfDstNoDataReal =
+                    (double*) CPLMalloc( sizeof( double ) );
+
+        psWarpOptions->padfDstNoDataReal[0] = dfNoData;
+
+        psWarpOptions->pTransformerArg = hTransformArg;
+        psWarpOptions->papszWarpOptions =
+                    CSLSetNameValue( psWarpOptions->papszWarpOptions,
+                                    "INIT_DEST", "NO_DATA" );
+        CPLFetchBool( psWarpOptions->papszWarpOptions, "OPTIMIZE_SIZE", true );
+
         // Initialize and execute the warp operation.
         eErr = GDALReprojectImage(rasterizeDS, pszProjection,
                                   hDstDS, pszDstWKT,
                                   GRA_Bilinear,
                                   0.0, 0.0,
                                   GDALTermProgress, NULL,
-                                  NULL);
+                                  psWarpOptions);
         if (eErr != CE_None)
         {
             errorStr =  CPLGetLastErrorMsg();
             GDALClose(shpDS);
             GDALClose(rasterizeDS);
             GDALRasterizeOptionsFree(psOptions);
+            GDALDestroyWarpOptions( psWarpOptions );
             CPLFree( pszProjection );
             return false;
         }
+        GDALDestroyWarpOptions( psWarpOptions );
         GDALClose( hDstDS );
     }
     GDALClose(shpDS);
