@@ -680,7 +680,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
 
     std::string formatOption;
     if (mapExtensionShortName.contains(ext))
-    {  
+    {
         formatOption = mapExtensionShortName.value(ext).toStdString();
     }
     else
@@ -834,16 +834,24 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         // Setup warp options.
         GDALWarpOptions *psWarpOptions = GDALCreateWarpOptions();
         psWarpOptions->hSrcDS = rasterizeDS;
+
         double dfNoData = -9999.0;
+        psWarpOptions->padfSrcNoDataReal =
+                    (double*) CPLMalloc( sizeof( double ) );
         psWarpOptions->padfDstNoDataReal =
                     (double*) CPLMalloc( sizeof( double ) );
 
+        psWarpOptions->padfSrcNoDataReal[0] = dfNoData;
         psWarpOptions->padfDstNoDataReal[0] = dfNoData;
+
 
         psWarpOptions->pTransformerArg = hTransformArg;
         psWarpOptions->papszWarpOptions =
                     CSLSetNameValue( psWarpOptions->papszWarpOptions,
                                     "INIT_DEST", "NO_DATA" );
+        psWarpOptions->papszWarpOptions =
+                    CSLSetNameValue( psWarpOptions->papszWarpOptions,
+                                    "WRITE_FLUSH", "YES" );
         CPLFetchBool( psWarpOptions->papszWarpOptions, "OPTIMIZE_SIZE", true );
 
         // Initialize and execute the warp operation.
@@ -872,4 +880,3 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     CPLFree( pszProjection );
     return true;
 }
-
