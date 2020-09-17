@@ -699,7 +699,6 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
 
     // projection
-    QString noProj;
     char *pszProjection = nullptr;
     OGRSpatialReference srs;
     OGRSpatialReference * pOrigSrs = shpDS->GetLayer(0)->GetSpatialRef();
@@ -713,11 +712,9 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
     else
     {
-        noProj = "EPSG:4326";
-        pszProjection = strdup(noProj.toStdString().c_str());
-        //GDALClose(shpDS);
-        //errorStr = "Missing projection";
-        //return false;
+        GDALClose(shpDS);
+        errorStr = "Missing projection";
+        return false;
     }
     std::string outputNoReprojStd;
 
