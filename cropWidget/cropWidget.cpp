@@ -792,6 +792,7 @@ void Crit3DCropWidget::on_actionChooseCase()
     if (idSoil != "")
     {
         soilListComboBox.setCurrentText(idSoil);
+        this->on_actionChooseSoil(idSoil);
     }
     else
     {
