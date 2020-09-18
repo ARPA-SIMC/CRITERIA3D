@@ -487,7 +487,7 @@ int CriteriaOutputProject::createMaps()
 
     // check cellsize
     bool ok;
-    int cellSize = mapCellSize.toInt(&ok, 10);
+    mapCellSize.toInt(&ok, 10);
     if (!ok)
     {
         projectError = "Invalid map cellsize: " + mapCellSize;
@@ -584,7 +584,7 @@ int CriteriaOutputProject::createMaps()
 
     int rasterOK = 0;
 
-    for (int i=0; i<inputField.size(); i++)
+    for (int i=0; i < inputField.size(); i++)
     {
         QString mapName = outputShapeFilePath + "/" + outputName[i]+ "." + mapFormat;
         std::string inputFieldStd = inputField[i].toStdString();
@@ -603,7 +603,7 @@ int CriteriaOutputProject::createMaps()
     else
     {
         int nRasterError = inputField.size() - rasterOK;
-        projectError = QString::number(nRasterError) + " invalid raster " ;
+        projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
         return false;
     }
 
