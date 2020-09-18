@@ -850,85 +850,6 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         }
 
         /* -------------------------------------------------------------------- */
-        /*      Set source nodata values if the source dataset seems to have    */
-        /*      any. Same for target nodata values                              */
-        /* -------------------------------------------------------------------- */
-/*
-        for( int iBand = 0; iBand < psWarpOptions->nBandCount; iBand++ )
-        {
-            GDALRasterBandH hBand = GDALGetRasterBand( rasterizeDS, iBand+1 );
-            int             bGotNoData = FALSE;
-            double          dfNoDataValue;
-
-            dfNoDataValue = GDALGetRasterNoDataValue( hBand, &bGotNoData );
-            if( bGotNoData )
-            {
-
-                if( psWarpOptions->padfSrcNoDataReal == NULL )
-                {
-                    int  ii;
-
-                    psWarpOptions->padfSrcNoDataReal = (double *)
-                        CPLMalloc(sizeof(double) * psWarpOptions->nBandCount);
-                    psWarpOptions->padfSrcNoDataImag = (double *)
-                        CPLMalloc(sizeof(double) * psWarpOptions->nBandCount);
-
-                    for( ii = 0; ii < psWarpOptions->nBandCount; ii++ )
-                    {
-                        psWarpOptions->padfSrcNoDataReal[ii] = -1.1e20;
-                        psWarpOptions->padfSrcNoDataImag[ii] = 0.0;
-                    }
-                }
-                psWarpOptions->padfSrcNoDataReal[iBand] = dfNoDataValue;
-            }
-
-            // Deal with target band
-            hBand = GDALGetRasterBand( hDstDS, iBand+1 );
-
-            dfNoDataValue = GDALGetRasterNoDataValue( hBand, &bGotNoData );
-            if( bGotNoData )
-            {
-                if( psWarpOptions->padfDstNoDataReal == NULL )
-                {
-                    int  ii;
-
-                    psWarpOptions->padfDstNoDataReal = (double *)
-                        CPLMalloc(sizeof(double) * psWarpOptions->nBandCount);
-                    psWarpOptions->padfDstNoDataImag = (double *)
-                        CPLMalloc(sizeof(double) * psWarpOptions->nBandCount);
-
-                    for( ii = 0; ii < psWarpOptions->nBandCount; ii++ )
-                    {
-                        //psWarpOptions->padfDstNoDataReal[ii] = -1.1e20;
-                        psWarpOptions->padfDstNoDataReal[ii] = dfNoDataValue;
-                        psWarpOptions->padfDstNoDataImag[ii] = 0.0;
-                    }
-                }
-
-                psWarpOptions->padfDstNoDataReal[iBand] = dfNoDataValue;
-            }
-        }
-*/
-        /*
-
-        psWarpOptions->padfSrcNoDataReal =
-                    (double*) CPLMalloc( sizeof( double ) );
-        psWarpOptions->padfSrcNoDataImag =
-                    (double*) CPLMalloc( sizeof( double ) );
-        psWarpOptions->padfDstNoDataReal =
-                    (double*) CPLMalloc( sizeof( double ) );
-        psWarpOptions->padfDstNoDataImag =
-                    (double*) CPLMalloc( sizeof( double ) );
-
-        psWarpOptions->padfSrcNoDataReal[0] = dfNoData;
-        psWarpOptions->padfSrcNoDataImag[0] = 0.0;
-        psWarpOptions->padfDstNoDataReal[0] = dfNoData;
-        psWarpOptions->padfDstNoDataImag[0] = 0.0;
-*/
-
-        double dfNoData = -9999.0;
-        //GDALWarpInitNoDataReal(psWarpOptions, dfNoData);
-        /* -------------------------------------------------------------------- */
         /*      Setup no data values                                            */
         /* -------------------------------------------------------------------- */
         for ( int i = 0; i < psWarpOptions->nBandCount; i++ )
@@ -949,7 +870,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
             if ( !bClamped )
             {
               GDALWarpInitNoDataReal( psWarpOptions, -1e10 );
-
+              GDALSetRasterNoDataValue( GDALGetRasterBand(psWarpOptions->hDstDS, i+1), noDataValue);
               psWarpOptions->padfSrcNoDataReal[i] = noDataValue;
               psWarpOptions->padfDstNoDataReal[i] = noDataValue;
             }
@@ -968,6 +889,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         psWarpOptions->pfnTransformer = GDALGenImgProjTransform;
 
         // Initialize and execute the warp operation.
+        /*
         GDALWarpOperation  oWarper;
         eErr = oWarper.Initialize( psWarpOptions );
 
@@ -981,6 +903,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
             CPLFree( pszProjection );
             return false;
         }
+        */
         // Initialize and execute the warp operation.
         eErr = GDALReprojectImage(rasterizeDS, pszProjection,
                                   hDstDS, pszDstWKT,
