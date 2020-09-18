@@ -1728,9 +1728,9 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
     }
     // water needs
     if( cropFromDB.kcMax != maxKcValue->text().toDouble()
-       || cropFromDB.stressTolerance != stressToleranceValue->text().toDouble()
        || cropFromDB.psiLeaf != psiLeafValue->text().toDouble()
-       || cropFromDB.fRAW != rawFractionValue->text().toDouble() )
+       || cropFromDB.fRAW != rawFractionValue->value()
+       || cropFromDB.stressTolerance != stressToleranceValue->value() )
     {
         cropChanged = true;
         return cropChanged;
