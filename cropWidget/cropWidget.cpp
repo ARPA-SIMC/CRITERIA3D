@@ -42,8 +42,6 @@
 #include <QSqlQuery>
 #include <QSqlError>
 
-#include <QDebug>
-
 
 Crit3DCropWidget::Crit3DCropWidget()
 {
@@ -1522,8 +1520,8 @@ bool Crit3DCropWidget::updateCrop()
     }
     // water stress
     myCase.myCrop.psiLeaf = psiLeafValue->text().toDouble();
-    myCase.myCrop.fRAW = rawFractionValue->text().toDouble();
-    myCase.myCrop.stressTolerance = stressToleranceValue->text().toDouble();
+    myCase.myCrop.fRAW = rawFractionValue->value();
+    myCase.myCrop.stressTolerance = stressToleranceValue->value();
 
     cropChanged = true;
 
