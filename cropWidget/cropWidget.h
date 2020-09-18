@@ -48,7 +48,6 @@
             void updateMeteoPointValues();
             void updateCropParam(QString idCrop);
             bool updateCrop();
-            bool updateMeteoPoint();
             void updateTabLAI();
             void updateTabRootDepth();
             void updateTabRootDensity();
@@ -70,7 +69,6 @@
             soil::Crit3DFittingOptions fittingOptions;
             QString tableMeteo;
             bool cropChanged;
-            double meteoLatBackUp;
             QStringList yearList;
             bool onlyOneYear;
             bool isXmlMeteoGrid;
@@ -101,7 +99,6 @@
             QLabel cropCycleMax;
             QSpinBox *cropSowingValue;
             QSpinBox* cropCycleMaxValue;
-            QDoubleSpinBox* latValue;
             QDoubleSpinBox* LAIminValue;
             QDoubleSpinBox* LAImaxValue;
             QLabel *LAIgrass;
