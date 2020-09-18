@@ -810,7 +810,6 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
             CPLFree( pszProjection );
             return false;
         }
-        GDALDestroyGenImgProjTransformer( hTransformArg );
 
         char *createOptions[] = {strdup("COMPRESS=LZW"), nullptr};
         // Create the output file.
@@ -835,16 +834,99 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         // Setup warp options.
         GDALWarpOptions *psWarpOptions = GDALCreateWarpOptions();
         psWarpOptions->hSrcDS = rasterizeDS;
+        psWarpOptions->hDstDS = hDstDS;
+        psWarpOptions->nBandCount = MIN(GDALGetRasterCount(rasterizeDS),
+                                     GDALGetRasterCount(hDstDS));
+
+        psWarpOptions->panSrcBands = (int *)
+            CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
+        psWarpOptions->panDstBands = (int *)
+            CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
+
+        for( int iBand = 0; iBand < psWarpOptions->nBandCount; iBand++ )
+        {
+            psWarpOptions->panSrcBands[iBand] = iBand+1;
+            psWarpOptions->panDstBands[iBand] = iBand+1;
+        }
+
+        /* -------------------------------------------------------------------- */
+        /*      Set source nodata values if the source dataset seems to have    */
+        /*      any. Same for target nodata values                              */
+        /* -------------------------------------------------------------------- */
+
+        for( int iBand = 0; iBand < psWarpOptions->nBandCount; iBand++ )
+        {
+            GDALRasterBandH hBand = GDALGetRasterBand( rasterizeDS, iBand+1 );
+            int             bGotNoData = FALSE;
+            double          dfNoDataValue;
+
+            dfNoDataValue = GDALGetRasterNoDataValue( hBand, &bGotNoData );
+            if( bGotNoData )
+            {
+
+                if( psWarpOptions->padfSrcNoDataReal == NULL )
+                {
+                    int  ii;
+
+                    psWarpOptions->padfSrcNoDataReal = (double *)
+                        CPLMalloc(sizeof(double) * psWarpOptions->nBandCount);
+                    psWarpOptions->padfSrcNoDataImag = (double *)
+                        CPLMalloc(sizeof(double) * psWarpOptions->nBandCount);
+
+                    for( ii = 0; ii < psWarpOptions->nBandCount; ii++ )
+                    {
+                        psWarpOptions->padfSrcNoDataReal[ii] = -1.1e20;
+                        psWarpOptions->padfSrcNoDataImag[ii] = 0.0;
+                    }
+                }
+                psWarpOptions->padfSrcNoDataReal[iBand] = dfNoDataValue;
+            }
+
+            // Deal with target band
+            hBand = GDALGetRasterBand( hDstDS, iBand+1 );
+
+            dfNoDataValue = GDALGetRasterNoDataValue( hBand, &bGotNoData );
+            if( bGotNoData )
+            {
+                if( psWarpOptions->padfDstNoDataReal == NULL )
+                {
+                    int  ii;
+
+                    psWarpOptions->padfDstNoDataReal = (double *)
+                        CPLMalloc(sizeof(double) * psWarpOptions->nBandCount);
+                    psWarpOptions->padfDstNoDataImag = (double *)
+                        CPLMalloc(sizeof(double) * psWarpOptions->nBandCount);
+
+                    for( ii = 0; ii < psWarpOptions->nBandCount; ii++ )
+                    {
+                        //psWarpOptions->padfDstNoDataReal[ii] = -1.1e20;
+                        psWarpOptions->padfDstNoDataReal[ii] = dfNoDataValue;
+                        psWarpOptions->padfDstNoDataImag[ii] = 0.0;
+                    }
+                }
+
+                psWarpOptions->padfDstNoDataReal[iBand] = dfNoDataValue;
+            }
+        }
 
         double dfNoData = -9999.0;
+/*
         psWarpOptions->padfSrcNoDataReal =
+                    (double*) CPLMalloc( sizeof( double ) );
+        psWarpOptions->padfSrcNoDataImag =
                     (double*) CPLMalloc( sizeof( double ) );
         psWarpOptions->padfDstNoDataReal =
                     (double*) CPLMalloc( sizeof( double ) );
+        psWarpOptions->padfDstNoDataImag =
+                    (double*) CPLMalloc( sizeof( double ) );
 
         psWarpOptions->padfSrcNoDataReal[0] = dfNoData;
+        psWarpOptions->padfSrcNoDataImag[0] = 0.0;
         psWarpOptions->padfDstNoDataReal[0] = dfNoData;
+        psWarpOptions->padfDstNoDataImag[0] = 0.0;
+*/
 
+//        GDALWarpInitNoDataReal(psWarpOptions, dfNoData);
 
         psWarpOptions->pTransformerArg = hTransformArg;
         psWarpOptions->papszWarpOptions =
@@ -855,6 +937,22 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
                                     "WRITE_FLUSH", "YES" );
         CPLFetchBool( psWarpOptions->papszWarpOptions, "OPTIMIZE_SIZE", true );
 
+        psWarpOptions->pfnTransformer = GDALGenImgProjTransform;
+
+        GDALWarpOperation  oWarper;
+
+        eErr = oWarper.Initialize( psWarpOptions );
+
+        if( eErr != CE_None )
+        {
+            errorStr =  CPLGetLastErrorMsg();
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            GDALDestroyWarpOptions( psWarpOptions );
+            CPLFree( pszProjection );
+            return false;
+        }
         // Initialize and execute the warp operation.
         eErr = GDALReprojectImage(rasterizeDS, pszProjection,
                                   hDstDS, pszDstWKT,
@@ -865,6 +963,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         if (eErr != CE_None)
         {
             errorStr =  CPLGetLastErrorMsg();
+            GDALDestroyGenImgProjTransformer( hTransformArg );
             GDALClose(shpDS);
             GDALClose(rasterizeDS);
             GDALRasterizeOptionsFree(psOptions);
@@ -872,6 +971,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
             CPLFree( pszProjection );
             return false;
         }
+        GDALDestroyGenImgProjTransformer( hTransformArg );
         GDALDestroyWarpOptions( psWarpOptions );
         GDALClose( hDstDS );
     }
