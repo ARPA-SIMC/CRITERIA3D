@@ -54,7 +54,7 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     dbSoilType = DB_SQLITE;
     fittingOptions = new soil::Crit3DFittingOptions();
 
-    this->setWindowTitle(QStringLiteral("Soil"));
+    this->setWindowTitle(QStringLiteral("Criteria - Soil Editor"));
     this->resize(1240, 700);
 
     // layout
