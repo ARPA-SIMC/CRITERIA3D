@@ -828,6 +828,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         }
 
         // Write out the projection definition.
+        GDALSetSpatialRef( hDstDS, reinterpret_cast<OGRSpatialReferenceH>(pOrigSrs) );
         GDALSetProjection( hDstDS, pszDstWKT );
         GDALSetGeoTransform( hDstDS, adfDstGeoTransform );
 
