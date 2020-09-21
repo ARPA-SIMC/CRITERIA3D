@@ -763,7 +763,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
 
         // Get output driver (GeoTIFF format)
         hDriver = GDALGetDriverByName( "GTiff" );
-        if (hDriver == NULL)
+        if (hDriver == nullptr)
         {
             errorStr = "Error GDALGetDriverByName";
             GDALClose(shpDS);
@@ -781,12 +781,12 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         // Create a transformer that maps from source pixel/line coordinates
         // to destination georeferenced coordinates (not destination
         // pixel line).  We do that by omitting the destination dataset
-        // handle (setting it to NULL).
+        // handle (setting it to nullptr).
         void *hTransformArg;
         hTransformArg =
-            GDALCreateGenImgProjTransformer( rasterizeDS, pszProjection, NULL, pszDstWKT,
+            GDALCreateGenImgProjTransformer( rasterizeDS, pszProjection, nullptr, pszDstWKT,
                                              FALSE, 0, 1 );
-        if ( hTransformArg == NULL )
+        if ( hTransformArg == nullptr )
         {
             errorStr = "Error GDALCreateGenImgProjTransformer";
             GDALClose(shpDS);
@@ -818,7 +818,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         hDstDS = GDALCreate( hDriver, strdup(outputName.toStdString().c_str()) , nPixels, nLines,
                              GDALGetRasterCount(rasterizeDS), eDT, createOptions );
 
-        if( hDstDS == NULL )
+        if( hDstDS == nullptr )
         {
             errorStr = "Error GDALCreate output reprojected";
             GDALClose(shpDS);
@@ -910,7 +910,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
                                   hDstDS, pszDstWKT,
                                   GRA_Bilinear,
                                   0.0, 0.0,
-                                  GDALTermProgress, NULL,
+                                  GDALTermProgress, nullptr,
                                   psWarpOptions);
         if (eErr != CE_None)
         {
