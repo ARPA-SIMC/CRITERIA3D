@@ -775,7 +775,9 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
 
         // Get Source coordinate system.
         char *pszDstWKT = nullptr;
-        pszDstWKT = strdup(proj.toStdString().c_str());
+        OGRSpatialReference oSRS;
+        oSRS.SetWellKnownGeogCS(proj.toStdString().c_str());
+        oSRS.exportToWkt( &pszDstWKT );
         // Create a transformer that maps from source pixel/line coordinates
         // to destination georeferenced coordinates (not destination
         // pixel line).  We do that by omitting the destination dataset
@@ -827,7 +829,6 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         }
 
         // Write out the projection definition.
-        GDALSetSpatialRef( hDstDS, reinterpret_cast<OGRSpatialReferenceH>(pOrigSrs) );
         GDALSetProjection( hDstDS, pszDstWKT );
         GDALSetGeoTransform( hDstDS, adfDstGeoTransform );
 
