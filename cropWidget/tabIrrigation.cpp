@@ -1,6 +1,8 @@
 #include "tabIrrigation.h"
 #include "commonConstants.h"
 #include "formInfo.h"
+#include "math.h"
+
 
 TabIrrigation::TabIrrigation()
 {
@@ -214,7 +216,7 @@ void TabIrrigation::tooltipLAI(QPointF point, bool state)
     if (state)
     {
         QDate xDate(firstYear, 1, 1);
-        int doy = point.x(); //start from 0
+        int doy = int(round(point.x())); // start from 0
         xDate = xDate.addDays(doy);
         m_tooltip->setText(QString("%1 \nLAI %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
@@ -233,7 +235,7 @@ void TabIrrigation::tooltipMT(QPointF point, bool state)
     if (state)
     {
         QDate xDate(firstYear, 1, 1);
-        int doy = point.x();
+        int doy = int(round(point.x()));
         xDate = xDate.addDays(doy);
         m_tooltip->setText(QString("%1 \nTransp max %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
@@ -253,7 +255,7 @@ void TabIrrigation::tooltipRT(QPointF point, bool state)
     if (state)
     {
         QDate xDate(firstYear, 1, 1);
-        int doy = point.x();
+        int doy = int(round(point.x()));
         xDate = xDate.addDays(doy);
         m_tooltip->setText(QString("%1 \nTransp real %2 ").arg(xDate.toString("yyyy-MM-dd")).arg(point.y(), 0, 'f', 1));
         m_tooltip->setAnchor(point);
@@ -276,8 +278,8 @@ void TabIrrigation::tooltipPrecIrr(bool state, int index, QBarSet *barset)
         QPoint point = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(point);
         QPointF pointF = chart->mapToValue(mapPoint,seriesPrecIrr);
-        int ratio = axisYdx->max()/axisY->max();
-        pointF.setY(pointF.y()/ratio);
+        double ratio = axisYdx->max() / axisY->max();
+        pointF.setY(pointF.y() / ratio);
 
         QDate xDate(firstYear, 1, 1);
         xDate = xDate.addDays(index);

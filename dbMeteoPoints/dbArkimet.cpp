@@ -167,10 +167,9 @@ void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QStringL
 void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QStringList stations)
 {
     // start from 01:00
-    QDateTime startTime = QDateTime(startDate);
-    startTime = startTime.addSecs(3600);
+    QDateTime startTime(startDate, QTime(1,0,0), Qt::UTC);
 
-    QDateTime endTime = QDateTime(endDate);
+    QDateTime endTime(endDate, QTime(0,0,0), Qt::UTC);
     endTime = endTime.addSecs(3600 * 24);
 
     for (int i = 0; i < stations.size(); i++)

@@ -1,5 +1,5 @@
-#ifndef CSVTOSHAPEPROJECT_H
-#define CSVTOSHAPEPROJECT_H
+#ifndef CRITERIAOUTPUTPROJECT_H
+#define CRITERIAOUTPUTPROJECT_H
 
 #include <QString>
 #include <fstream>
@@ -9,6 +9,8 @@
 #include "criteriaOutputVariable.h"
 #include "criteriaAggregationVariable.h"
 #include "shapeHandler.h"
+
+#define REQUIREDMAPLISTCSVINFO 2
 
 #define ERROR_SETTINGS_MISSING -1
 #define ERROR_SETTINGS_WRONGFILENAME -2
@@ -101,4 +103,4 @@ public:
 };
 
 
-#endif // CSVTOSHAPEPROJECT_H
+#endif // CRITERIAOUTPUTPROJECT_H

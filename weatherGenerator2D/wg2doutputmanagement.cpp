@@ -40,7 +40,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
     Crit3DDate inputFirstDate;
     TweatherGenClimate weatherGenClimate;
     QString outputFileName;
-    QString outputFileName2;
+   //QString outputFileName2;
 
 
     float *inputTMin = nullptr;
@@ -185,7 +185,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
         for (int iStation=0;iStation<nrStations;iStation++)
         {
             outputFileName = "outputData/wgClimate_station_" + QString::number(iStation) + ".txt";
-            outputFileName2 = "outputData/statistics_wgClimate_station_" + QString::number(iStation) + ".txt";
+            //outputFileName2 = "outputData/statistics_wgClimate_station_" + QString::number(iStation) + ".txt";
             inputFirstDate.day = obsDataD[iStation][0].date.day;
             inputFirstDate.month = obsDataD[iStation][0].date.month;
             inputFirstDate.year = obsDataD[iStation][0].date.year;
@@ -197,7 +197,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 inputPrec[i] = obsDataD[iStation][i].prec;
             }
             computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlyClimateAveragePrecipitation[iStation]);
+            //computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlyClimateAveragePrecipitation[iStation]);
         }
         free(inputTMin);
         free(inputTMax);
@@ -260,7 +260,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
         for (int iStation=0;iStation<nrStations;iStation++)
         {
             outputFileName = "outputData/wgSimulation_station_" + QString::number(iStation) + ".txt";
-            outputFileName2 = "outputData/statistics_wgSimulation_station_" + QString::number(iStation) + ".txt";
+            //outputFileName2 = "outputData/statistics_wgSimulation_station_" + QString::number(iStation) + ".txt";
             counter = 0;
             for (int i=0;i<nrDays;i++)
             {
@@ -280,7 +280,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
             }
 
             computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlySimulatedAveragePrecipitation[iStation]);
+            //computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlySimulatedAveragePrecipitation[iStation]);
         }
         free(inputTMin);
         free(inputTMax);
@@ -423,7 +423,7 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
         }
     }
     fclose(fp);
-
+    /*
     fp = fopen("outputData/correlationMatricesStats.txt","w");
     for (int iMonth=0;iMonth<12;iMonth++)
     {
@@ -458,7 +458,7 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
     }
 
     fclose(fp);
-
+    */
     for (int iMonth=0;iMonth<12;iMonth++)
     {
         for (int i=0;i<nrStations;i++)

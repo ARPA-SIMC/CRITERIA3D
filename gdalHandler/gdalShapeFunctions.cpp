@@ -3,8 +3,10 @@
 #include <string.h>
 #include <qdebug.h>
 #include <ogrsf_frmts.h>
+#include "ogr_spatialref.h"
 #include <gdal_priv.h>
 #include <gdal_utils.h>
+#include <gdalwarper.h>
 
 
 bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, Crit3DShapeHandler *soil, Crit3DShapeHandler *meteo,
@@ -668,8 +670,9 @@ GEOSGeometry * testIntersection()
 */
 
 
-bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString outputName, QString &errorStr)
+bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj, QString outputName, QString &errorStr)
 {
+
     int error = -1;
     GDALAllRegister();
     QFileInfo file(outputName);
@@ -678,14 +681,14 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     std::string formatOption;
     if (mapExtensionShortName.contains(ext))
     {
-        errorStr = "Unknown output format";
         formatOption = mapExtensionShortName.value(ext).toStdString();
     }
     else
     {
+        errorStr = "Unknown output format";
         return false;
     }
-    std::string outputStd = outputName.toStdString();
+
     GDALDataset* shpDS;
     GDALDatasetH rasterizeDS;
     shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
@@ -696,9 +699,9 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
 
     // projection
+    char *pszProjection = nullptr;
     OGRSpatialReference srs;
     OGRSpatialReference * pOrigSrs = shpDS->GetLayer(0)->GetSpatialRef();
-    char *pszProjection = nullptr;
     if ( pOrigSrs )
     {
         srs = *pOrigSrs;
@@ -709,8 +712,20 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
     else
     {
+        GDALClose(shpDS);
         errorStr = "Missing projection";
         return false;
+    }
+    std::string outputNoReprojStd;
+
+    if (proj.isEmpty())
+    {
+        outputNoReprojStd = outputName.toStdString();   // there is no reprojection to do
+    }
+    else
+    {
+        QString fileName = file.absolutePath() + "/" + file.baseName() + "_noreproj." + ext;
+        outputNoReprojStd = fileName.toStdString();
     }
 
     std::string res = resolution.toStdString();
@@ -722,21 +737,205 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
     if( psOptions == nullptr )
     {
+        GDALClose(shpDS);
         errorStr = "psOptions is null";
         return false;
     }
 
-    rasterizeDS = GDALRasterize(strdup(outputStd.c_str()),nullptr,shpDS,psOptions,&error);
+    rasterizeDS = GDALRasterize(strdup(outputNoReprojStd.c_str()),nullptr,shpDS,psOptions,&error);
 
+    if (rasterizeDS == nullptr || error == 1)
+    {
+        GDALClose(shpDS);
+        GDALRasterizeOptionsFree(psOptions);
+        CPLFree( pszProjection );
+        return false;
+    }
+
+    // reprojection
+    if (!proj.isEmpty())
+    {
+        GDALDatasetH hDstDS;
+        GDALDriverH hDriver;
+        GDALDataType eDT;
+        // Create output with same datatype as first input band.
+        eDT = GDALGetRasterDataType(GDALGetRasterBand(rasterizeDS,1));
+
+        // Get output driver (GeoTIFF format)
+        hDriver = GDALGetDriverByName( "GTiff" );
+        if (hDriver == NULL)
+        {
+            errorStr = "Error GDALGetDriverByName";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
+
+        // Get Source coordinate system.
+        char *pszDstWKT = nullptr;
+        OGRSpatialReference oSRS;
+        oSRS.SetWellKnownGeogCS(proj.toStdString().c_str());
+        oSRS.exportToWkt( &pszDstWKT );
+        // Create a transformer that maps from source pixel/line coordinates
+        // to destination georeferenced coordinates (not destination
+        // pixel line).  We do that by omitting the destination dataset
+        // handle (setting it to NULL).
+        void *hTransformArg;
+        hTransformArg =
+            GDALCreateGenImgProjTransformer( rasterizeDS, pszProjection, NULL, pszDstWKT,
+                                             FALSE, 0, 1 );
+        if ( hTransformArg == NULL )
+        {
+            errorStr = "Error GDALCreateGenImgProjTransformer";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
+
+        // Get approximate output georeferenced bounds and resolution for file.
+        double adfDstGeoTransform[6];
+        int nPixels=0, nLines=0;
+        CPLErr eErr;
+        eErr = GDALSuggestedWarpOutput( rasterizeDS,
+                                        GDALGenImgProjTransform, hTransformArg,
+                                        adfDstGeoTransform, &nPixels, &nLines );
+        if( eErr != CE_None )
+        {
+            errorStr = "Error GDALSuggestedWarpOutput";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
+
+        char *createOptions[] = {strdup("COMPRESS=LZW"), nullptr};
+        // Create the output file.
+        hDstDS = GDALCreate( hDriver, strdup(outputName.toStdString().c_str()) , nPixels, nLines,
+                             GDALGetRasterCount(rasterizeDS), eDT, createOptions );
+
+        if( hDstDS == NULL )
+        {
+            errorStr = "Error GDALCreate output reprojected";
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            CPLFree( pszProjection );
+            return false;
+        }
+
+        // Write out the projection definition.
+        GDALSetProjection( hDstDS, pszDstWKT );
+        GDALSetGeoTransform( hDstDS, adfDstGeoTransform );
+
+        // Setup warp options.
+        GDALWarpOptions *psWarpOptions = GDALCreateWarpOptions();
+        psWarpOptions->hSrcDS = rasterizeDS;
+        psWarpOptions->hDstDS = hDstDS;
+        psWarpOptions->nBandCount = MIN(GDALGetRasterCount(rasterizeDS),
+                                     GDALGetRasterCount(hDstDS));
+
+        psWarpOptions->panSrcBands = (int *)
+            CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
+        psWarpOptions->panDstBands = (int *)
+            CPLMalloc(sizeof(int) * psWarpOptions->nBandCount);
+
+        for( int iBand = 0; iBand < psWarpOptions->nBandCount; iBand++ )
+        {
+            psWarpOptions->panSrcBands[iBand] = iBand+1;
+            psWarpOptions->panDstBands[iBand] = iBand+1;
+        }
+
+        /* -------------------------------------------------------------------- */
+        /*      Setup no data values                                            */
+        /* -------------------------------------------------------------------- */
+        for ( int i = 0; i < psWarpOptions->nBandCount; i++ )
+        {
+          GDALRasterBandH rasterBand = GDALGetRasterBand( psWarpOptions->hSrcDS, psWarpOptions->panSrcBands[i] );
+
+          int hasNoDataValue;
+          double noDataValue = GDALGetRasterNoDataValue( rasterBand, &hasNoDataValue );
+
+          if ( hasNoDataValue )
+          {
+            // Check if the nodata value is out of range
+            int bClamped = FALSE;
+            int bRounded = FALSE;
+            CPL_IGNORE_RET_VAL(
+              GDALAdjustValueToDataType( GDALGetRasterDataType( rasterBand ),
+                                         noDataValue, &bClamped, &bRounded ) );
+            if ( !bClamped )
+            {
+              GDALWarpInitNoDataReal( psWarpOptions, -1e10 );
+              GDALSetRasterNoDataValue( GDALGetRasterBand(psWarpOptions->hDstDS, i+1), noDataValue);
+              psWarpOptions->padfSrcNoDataReal[i] = noDataValue;
+              psWarpOptions->padfDstNoDataReal[i] = noDataValue;
+            }
+          }
+        }
+
+        psWarpOptions->pTransformerArg = hTransformArg;
+        psWarpOptions->papszWarpOptions =
+                    CSLSetNameValue( psWarpOptions->papszWarpOptions,
+                                    "INIT_DEST", "NO_DATA" );
+        psWarpOptions->papszWarpOptions =
+                    CSLSetNameValue( psWarpOptions->papszWarpOptions,
+                                    "WRITE_FLUSH", "YES" );
+        CPLFetchBool( psWarpOptions->papszWarpOptions, "OPTIMIZE_SIZE", true );
+
+        psWarpOptions->pfnTransformer = GDALGenImgProjTransform;
+
+        // Initialize and execute the warp operation.
+        /*
+        GDALWarpOperation  oWarper;
+        eErr = oWarper.Initialize( psWarpOptions );
+
+        if( eErr != CE_None )
+        {
+            errorStr =  CPLGetLastErrorMsg();
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            GDALDestroyWarpOptions( psWarpOptions );
+            CPLFree( pszProjection );
+            return false;
+        }
+        */
+        // Initialize and execute the warp operation.
+        eErr = GDALReprojectImage(rasterizeDS, pszProjection,
+                                  hDstDS, pszDstWKT,
+                                  GRA_Bilinear,
+                                  0.0, 0.0,
+                                  GDALTermProgress, NULL,
+                                  psWarpOptions);
+        if (eErr != CE_None)
+        {
+            errorStr =  CPLGetLastErrorMsg();
+            GDALDestroyGenImgProjTransformer( hTransformArg );
+            GDALClose(shpDS);
+            GDALClose(rasterizeDS);
+            GDALRasterizeOptionsFree(psOptions);
+            GDALDestroyWarpOptions( psWarpOptions );
+            CPLFree( pszProjection );
+            return false;
+        }
+        GDALDestroyGenImgProjTransformer( hTransformArg );
+        GDALDestroyWarpOptions( psWarpOptions );
+        GDALClose( hDstDS );
+        GDALClose(shpDS);
+        GDALClose(rasterizeDS);
+        GDALRasterizeOptionsFree(psOptions);
+        CPLFree( pszProjection );
+        QFile::remove(QString::fromStdString(outputNoReprojStd));
+        return true;
+    }
     GDALClose(shpDS);
     GDALClose(rasterizeDS);
     GDALRasterizeOptionsFree(psOptions);
     CPLFree( pszProjection );
-
-    if (rasterizeDS == nullptr || error == 1)
-    {
-        return false;
-    }
     return true;
 }
-

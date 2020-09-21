@@ -17,7 +17,7 @@
     #define RAINFALL_THRESHOLD 1000
 
     enum Tseason {DJF,MAM,JJA,SON};
-
+    enum TaverageTempMethod{ROLLING_AVERAGE,FOURIER_HARMONICS_AVERAGE};
     struct TseasonPrec{
         double* DJF;
         double* MAM;
@@ -166,6 +166,7 @@
         int numberObservedDJF,numberObservedMAM,numberObservedJJA,numberObservedSON;
         int numberObservedMax;
         bool computeStatistics;
+        TaverageTempMethod averageTempMethod;
         TObsDataD** obsDataD;
         TObsPrecDataD** obsPrecDataD;
         TprecOccurrence** precOccurence;
@@ -267,7 +268,7 @@
         //functions
         weatherGenerator2D() {}
         bool initializeData(int lengthDataSeries, int nrStations);
-        void initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D, bool computeStatistics);
+        void initializeParameters(float thresholdPrecipitation, int simulatedYears, int distributionType, bool computePrecWG2D, bool computeTempWG2D, bool computeStatistics, TaverageTempMethod tempMethod);
         void setObservedData(TObsDataD** observations);
         void computeWeatherGenerator2D();
         void pressEnterToContinue();
