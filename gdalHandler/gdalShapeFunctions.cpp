@@ -925,6 +925,12 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         GDALDestroyGenImgProjTransformer( hTransformArg );
         GDALDestroyWarpOptions( psWarpOptions );
         GDALClose( hDstDS );
+        GDALClose(shpDS);
+        GDALClose(rasterizeDS);
+        GDALRasterizeOptionsFree(psOptions);
+        CPLFree( pszProjection );
+        QFile::remove(QString::fromStdString(outputNoReprojStd));
+        return true;
     }
     GDALClose(shpDS);
     GDALClose(rasterizeDS);
