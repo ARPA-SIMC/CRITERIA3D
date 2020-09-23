@@ -115,6 +115,37 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
 {
+    /*
+    QString error;
+    OGRGeometry* firstPolygon = loadShapeAsPolygon(first, error);
+    if (firstPolygon == nullptr || firstPolygon->IsEmpty())
+    {
+        qDebug() << "firstPolygon empty";
+        return false;
+    }
+    if (!OGR_G_IsValid(firstPolygon))
+    {
+        OGR_G_MakeValid(firstPolygon);
+        qDebug() << "firstPolygon not Valid";
+    }
+    OGRGeometry* secondPolygon = loadShapeAsPolygon(second, error);
+    if (secondPolygon == nullptr || secondPolygon->IsEmpty())
+    {
+        qDebug() << "secondPolygon empty";
+        return false;
+    }
+    if (!OGR_G_IsValid(secondPolygon))
+    {
+        OGR_G_MakeValid(secondPolygon);
+        qDebug() << "secondPolygon not Valid";
+    }
+    OGRGeometry* poClipped = firstPolygon->Intersection(secondPolygon);
+    if (poClipped == nullptr || poClipped->IsEmpty())
+    {
+        OGRGeometryFactory::destroyGeometry(poClipped);
+        return false;
+    }
+    */
 
     GEOSGeometry* firstPolygon = loadShapeAsPolygon(first);
     if((GEOSisEmpty(firstPolygon)))
@@ -150,6 +181,18 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
    else
       qDebug() << "soilPolygon is Valid";
 
+    /*
+    GEOSContextHandle_t hGEOSCtxt = OGRGeometry::createGEOSContext();
+    OGRGeometry* firstOGR = OGRGeometryFactory::createFromGEOS( hGEOSCtxt, firstPolygon );
+    OGRGeometry* secondOGR = OGRGeometryFactory::createFromGEOS( hGEOSCtxt, secondPolygon );
+    OGRGeometry* ogrIntersection = firstOGR->Intersection(secondOGR);
+    if (ogrIntersection == nullptr || ogrIntersection->IsEmpty())
+    {
+        OGRGeometryFactory::destroyGeometry(ogrIntersection);
+        return false;
+    }
+    *inteserctionGeom = ogrIntersection->exportToGEOS(hGEOSCtxt);
+    * */
     *inteserctionGeom = GEOSIntersection(firstPolygon, secondPolygon);
     if ((*inteserctionGeom) == nullptr)
     {
@@ -164,18 +207,19 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
 
     if (GEOSisValid(*inteserctionGeom) !=1)
     {
-          qDebug() << "inteserctionGeom is NOT Valid";
-          return false;
+        qDebug() << "inteserctionGeom is NOT Valid";
+        return false;
     }
-   else
+    else
     {
-      qDebug() << "inteserctionGeom is Valid";
-      qDebug() << "Resulting geometry is " << GEOSGeomToWKT(*inteserctionGeom);
-      return true;
+        qDebug() << "inteserctionGeom is Valid";
+        //qDebug() << "Resulting geometry is " << GEOSGeomToWKT(*inteserctionGeom);
+        return true;
     }
+
 }
 
-
+// OK controllata
 bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
 {
     //Getting coords for the vertex
@@ -220,9 +264,8 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
                 coordinates.push_back(xPoint);
                 coordinates.push_back(yPoint);
             }
-            qDebug () << "GEOSGetNumInteriorRings( geom ) " << GEOSGetNumInteriorRings( geom );
 
-            //interior rings TBC
+            //interior rings
             for ( int numInner = 0; numInner < GEOSGetNumInteriorRings( geom ); numInner++ )
             {
                 ring = GEOSGetInteriorRingN( geom, numInner );
@@ -248,6 +291,66 @@ bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm)
     return true;
 }
 
+OGRGeometry* loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler, QString &errorStr)
+{
+
+    OGRDataSource *poDS = (OGRDataSource*)GDALOpenEx(shapeHandler->getFilepath().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
+    if( poDS == nullptr )
+    {
+        errorStr = "Open shapefile failed";
+        return nullptr;
+    }
+    OGRLayer *poLyr = poDS->GetLayer(0);
+    if (poLyr == nullptr)
+    {
+        errorStr = "Failed to identify source layer from datasource.";
+        OGRDataSource::DestroyDataSource(poDS);
+        return nullptr;
+    }
+
+    OGRFeature *poFeat;
+    OGRGeometry *poGeom = nullptr;
+    while ((poFeat = poLyr->GetNextFeature()) != nullptr)
+    {
+        OGRGeometry* poSrcGeom = poFeat->GetGeometryRef();
+        if (poSrcGeom)
+        {
+            OGRwkbGeometryType eType = wkbFlatten( poSrcGeom->getGeometryType() );
+
+            if (poGeom == nullptr)
+                poGeom = OGRGeometryFactory::createGeometry( wkbMultiPolygon );
+
+            if( eType == wkbPolygon )
+                ((OGRGeometryCollection*)poGeom)->addGeometry( poSrcGeom );
+            else if( eType == wkbMultiPolygon )
+            {
+                int iGeom;
+                int nGeomCount = OGR_G_GetGeometryCount( (OGRGeometryH)poSrcGeom );
+
+                for( iGeom = 0; iGeom < nGeomCount; iGeom++ )
+                {
+                    ((OGRGeometryCollection*)poGeom)->addGeometry(
+                                ((OGRGeometryCollection*)poSrcGeom)->getGeometryRef(iGeom) );
+                }
+            }
+            else
+            {
+                errorStr = "ERROR: Geometry not of polygon type.\n";
+                OGRGeometryFactory::destroyGeometry(poGeom);
+                OGRFeature::DestroyFeature(poFeat);
+                OGRDataSource::DestroyDataSource(poDS);
+                return nullptr;
+            }
+        }
+
+        OGRFeature::DestroyFeature(poFeat);
+    }
+
+    OGRDataSource::DestroyDataSource(poDS);
+
+    return poGeom;
+
+}
 
 GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 {
@@ -369,8 +472,8 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
     {
         if ( geometries.count() > 1 )
         {
-            collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries.data(), geometries.count());
-            //collection = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, geometries.data(), geometries.count());
+            //collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries.data(), geometries.count());
+            collection = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, geometries.data(), geometries.count());
         }
         else
         {
@@ -889,22 +992,6 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
 
         psWarpOptions->pfnTransformer = GDALGenImgProjTransform;
 
-        // Initialize and execute the warp operation.
-        /*
-        GDALWarpOperation  oWarper;
-        eErr = oWarper.Initialize( psWarpOptions );
-
-        if( eErr != CE_None )
-        {
-            errorStr =  CPLGetLastErrorMsg();
-            GDALClose(shpDS);
-            GDALClose(rasterizeDS);
-            GDALRasterizeOptionsFree(psOptions);
-            GDALDestroyWarpOptions( psWarpOptions );
-            CPLFree( pszProjection );
-            return false;
-        }
-        */
         // Initialize and execute the warp operation.
         eErr = GDALReprojectImage(rasterizeDS, pszProjection,
                                   hDstDS, pszDstWKT,

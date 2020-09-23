@@ -7,6 +7,7 @@
 #include <QString>
 #include <QMap>
 #include <geos_c.h>
+#include <ogr_p.h>
 
 static QMap<QString, QString> mapExtensionShortName
 {
@@ -40,6 +41,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom);
 bool getShapeFromGeom(GEOSGeometry *inteserctionGeom, Crit3DShapeHandler *ucm);
 GEOSGeometry *loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler);
+OGRGeometry* loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler, QString &errorStr);
 bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj, QString outputName, QString &errorStr);
 
 //GEOSGeometry * SHPObject_to_GeosPolygon_NoHoles(SHPObject *object);
