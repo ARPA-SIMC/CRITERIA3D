@@ -115,7 +115,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
 {
-
+/*
     QString error;
     OGRGeometry* firstPolygon = loadShapeAsPolygon(first, error);
     if (firstPolygon == nullptr || firstPolygon->IsEmpty())
@@ -145,8 +145,8 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
         OGRGeometryFactory::destroyGeometry(ogrIntersection);
         return false;
     }
+*/
 
-/*
     GEOSGeometry* firstPolygon = loadShapeAsPolygon(first);
     if((GEOSisEmpty(firstPolygon)))
     {
@@ -180,8 +180,8 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
     }
    else
       qDebug() << "soilPolygon is Valid";
-*/
-/*
+
+
     GEOSContextHandle_t hGEOSCtxt = OGRGeometry::createGEOSContext();
     OGRGeometry* firstOGR = OGRGeometryFactory::createFromGEOS( hGEOSCtxt, firstPolygon );
     OGRGeometry* secondOGR = OGRGeometryFactory::createFromGEOS( hGEOSCtxt, secondPolygon );
@@ -191,8 +191,8 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
         OGRGeometryFactory::destroyGeometry(ogrIntersection);
         return false;
     }
-    */
-    GEOSContextHandle_t hGEOSCtxt = OGRGeometry::createGEOSContext();
+
+    //GEOSContextHandle_t hGEOSCtxt = OGRGeometry::createGEOSContext();
     *inteserctionGeom = ogrIntersection->exportToGEOS(hGEOSCtxt);
 
     //*inteserctionGeom = GEOSIntersection(firstPolygon, secondPolygon);
