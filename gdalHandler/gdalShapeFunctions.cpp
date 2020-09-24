@@ -150,37 +150,36 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
     GEOSGeometry* firstPolygon = loadShapeAsPolygon(first);
     if((GEOSisEmpty(firstPolygon)))
     {
-        qDebug() << "cropPolygon empty";
+        qDebug() << "first Polygon empty";
         return false;
     }
 
     if (GEOSisValid(firstPolygon) !=1)
     {
-          qDebug() << "firstPolygon is NOT Valid";
+          qDebug() << "first Polygon is NOT Valid";
           qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(firstPolygon);
           firstPolygon = GEOSMakeValid(firstPolygon);
           qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(firstPolygon);
     }
    else
-      qDebug() << "firstPolygon is Valid";
+      qDebug() << "first Polygon is Valid";
 
     GEOSGeometry *secondPolygon = loadShapeAsPolygon(second);
     if((GEOSisEmpty(secondPolygon)))
     {
-        qDebug() << "secondPolygon empty";
+        qDebug() << "second Polygon empty";
         return false;
     }
 
     if (GEOSisValid(secondPolygon) !=1)
     {
-          qDebug() << "secondPolygon is NOT Valid";
+          qDebug() << "second Polygon is NOT Valid";
           qDebug() << "Resulting geometry before is " << GEOSGeomToWKT(secondPolygon);
           secondPolygon = GEOSMakeValid(secondPolygon);
           qDebug() << "Resulting geometry after is " << GEOSGeomToWKT(secondPolygon);
     }
    else
-      qDebug() << "soilPolygon is Valid";
-
+      qDebug() << "second Polygon is Valid";
 
     GEOSContextHandle_t hGEOSCtxt = OGRGeometry::createGEOSContext();
     OGRGeometry* firstOGR = OGRGeometryFactory::createFromGEOS( hGEOSCtxt, firstPolygon );
