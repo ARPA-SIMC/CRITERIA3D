@@ -115,7 +115,7 @@ bool computeUcmIntersection(Crit3DShapeHandler *ucm, Crit3DShapeHandler *crop, C
 
 bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GEOSGeometry **inteserctionGeom)
 {
-    /*
+
     QString error;
     OGRGeometry* firstPolygon = loadShapeAsPolygon(first, error);
     if (firstPolygon == nullptr || firstPolygon->IsEmpty())
@@ -139,14 +139,14 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
         OGR_G_MakeValid(secondPolygon);
         qDebug() << "secondPolygon not Valid";
     }
-    OGRGeometry* poClipped = firstPolygon->Intersection(secondPolygon);
-    if (poClipped == nullptr || poClipped->IsEmpty())
+    OGRGeometry* ogrIntersection = firstPolygon->Intersection(secondPolygon);
+    if (ogrIntersection == nullptr || ogrIntersection->IsEmpty())
     {
-        OGRGeometryFactory::destroyGeometry(poClipped);
+        OGRGeometryFactory::destroyGeometry(ogrIntersection);
         return false;
     }
-    */
 
+/*
     GEOSGeometry* firstPolygon = loadShapeAsPolygon(first);
     if((GEOSisEmpty(firstPolygon)))
     {
@@ -180,8 +180,8 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
     }
    else
       qDebug() << "soilPolygon is Valid";
-
-    /*
+*/
+/*
     GEOSContextHandle_t hGEOSCtxt = OGRGeometry::createGEOSContext();
     OGRGeometry* firstOGR = OGRGeometryFactory::createFromGEOS( hGEOSCtxt, firstPolygon );
     OGRGeometry* secondOGR = OGRGeometryFactory::createFromGEOS( hGEOSCtxt, secondPolygon );
@@ -191,9 +191,11 @@ bool shapeIntersection(Crit3DShapeHandler *first, Crit3DShapeHandler *second, GE
         OGRGeometryFactory::destroyGeometry(ogrIntersection);
         return false;
     }
+    */
+    GEOSContextHandle_t hGEOSCtxt = OGRGeometry::createGEOSContext();
     *inteserctionGeom = ogrIntersection->exportToGEOS(hGEOSCtxt);
-    * */
-    *inteserctionGeom = GEOSIntersection(firstPolygon, secondPolygon);
+
+    //*inteserctionGeom = GEOSIntersection(firstPolygon, secondPolygon);
     if ((*inteserctionGeom) == nullptr)
     {
         qDebug() << "inteserctionGeom nullptr";
@@ -495,7 +497,6 @@ GEOSGeometry *SHPObject_to_LineString(SHPObject *object)
     // Create a Coordinate sequence with object->nVertices coordinates of 2 dimensions.
     GEOSCoordSequence *coords = GEOSCoordSeq_create(object->nVertices,2);
     int i;
-
     assert(object->nParts == 1);
     for (i=0; i<object->nVertices; i++)
     {
@@ -512,7 +513,6 @@ GEOSGeometry * SHPObject_to_GeosPolygon_NoHoles(SHPObject *object)
     GEOSGeometry *lr;
     // Create a Coordinate sequence with object->nVertices coordinates of 2 dimensions.
     GEOSCoordSequence *coords = GEOSCoordSeq_create(object->nVertices,2);
-
     for (int i=0; i<object->nVertices; i++)
     {
         GEOSCoordSeq_setX(coords,i,object->padfX[i]);
@@ -533,24 +533,17 @@ GEOSGeometry *load_shapefile_as_collection(char *pathname)
     double minBounds[4], maxBounds[4];
     GEOSGeometry **geometries;
     GEOSGeometry *collection;
-
     shape = SHPOpen(pathname,"rb");
-
     SHPGetInfo(shape,&nobjs,&type,minBounds,maxBounds);
     assert((type % 10) == SHPT_ARC);
-
     assert(geometries = (GEOSGeometry **) malloc(nobjs*sizeof(GEOSGeometry *)));
-
     for (i=0; i<nobjs ;i++)
     {
         SHPObject *object = SHPReadObject(shape,i);
         geometries[i] = SHPObject_to_GeosPolygon_NoHoles(object);
     }
-
     SHPClose(shape);
-
     collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, nobjs);
-
     return collection;
 }
 */
@@ -560,28 +553,22 @@ GEOSGeometry *load_shapefile_as_collection(char *pathname)
 /*
 GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
 {
-
     // Init GEOS
     GEOSMessageHandler error_function = nullptr, notice_function = nullptr;
     initGEOS(notice_function, error_function);
-
     GEOSGeometry **geometries;
     ShapeObject shapeObj;
-
     int nShapes = shapeHandler->getShapeCount();
     std::vector< std::vector<ShapeObject::Part>> shapeParts;
     geometries = (GEOSGeometry **) malloc(nShapes*sizeof(GEOSGeometry *));
-
     std::vector<double> xVertex;
     std::vector<double> yVertex;
     std::vector<std::vector <double> > xVertexHoles;
     std::vector<std::vector <double> > yVertexHoles;
-
     GEOSCoordSequence *coords;
     GEOSCoordSequence *coordsHoles;
     GEOSGeometry *lr;
     GEOSGeometry **holes = nullptr;
-
     for (unsigned int i = 0; i < nShapes; i++)
     {
         shapeHandler->getShape(i, shapeObj);
@@ -591,7 +578,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         yVertex.clear();
         xVertexHoles.clear();
         yVertexHoles.clear();
-
         for (unsigned int partIndex = 0; partIndex < shapeParts[i].size(); partIndex++)
         {
             //qDebug() << "shapeParts[i].size() " << shapeParts[i].size();
@@ -599,7 +585,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             int length = shapeObj.getPart(partIndex).length;
             if (shapeParts[i][partIndex].hole)
             {
-
                 std::vector<double> x;
                 std::vector<double> y;
                 for (unsigned long v = 0; v < length; v++)
@@ -610,7 +595,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
                 xVertexHoles.push_back(x);
                 yVertexHoles.push_back(y);
                 nHoles = nHoles + 1;
-
             }
             else
             {
@@ -635,7 +619,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         {
             holes = (GEOSGeometry **) malloc(nHoles * sizeof(GEOSGeometry *));
         }
-
         coords = GEOSCoordSeq_create(xVertex.size(),2);
         for (int j=0; j<xVertex.size(); j++)
         {
@@ -643,7 +626,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
             GEOSCoordSeq_setY(coords,j,yVertex[j]);
         }
         lr = GEOSGeom_createLinearRing(coords);
-
         for (int holeIndex = 0; holeIndex < nHoles; holeIndex++)
         {
             coordsHoles = GEOSCoordSeq_create(xVertexHoles[holeIndex].size(),2);
@@ -667,7 +649,6 @@ GEOSGeometry * loadShapeAsPolygon(Crit3DShapeHandler *shapeHandler)
         {
             qDebug() << "lr is nullptr, i = " << i;
         }
-
     }
     GEOSGeometry *collection = GEOSGeom_createCollection(GEOS_MULTIPOLYGON, geometries, nShapes);
     if (collection == nullptr)
@@ -687,14 +668,11 @@ GEOSGeometry * testIntersection()
 // Init GEOS
     GEOSMessageHandler error_function = nullptr, notice_function = nullptr;
     initGEOS(notice_function, error_function);
-
     GEOSCoordSeq coordseq = nullptr, coordseqSecond = nullptr, coordseqIntersection = nullptr;
     GEOSGeom area_1 = nullptr, area_2 = nullptr, intersection = nullptr;
     GEOSGeometry *pol1;
     GEOSGeometry *pol2;
-
     coordseq = (GEOSCoordSeq) GEOSCoordSeq_create(5, 2);   //5 pointsbi-dimensional
-
     GEOSCoordSeq_setX(coordseq, 0, 42.46);    //upper left
     GEOSCoordSeq_setY(coordseq, 0, 131.80);
     GEOSCoordSeq_setX(coordseq, 1, 42.46);    //upper right
@@ -705,18 +683,13 @@ GEOSGeometry * testIntersection()
     GEOSCoordSeq_setY(coordseq, 3, 131.80);
     GEOSCoordSeq_setX(coordseq, 4, 42.46 );    //upper left
     GEOSCoordSeq_setY(coordseq, 4, 131.80);
-
     area_1 = GEOSGeom_createLinearRing(coordseq);
-
     pol1 = GEOSGeom_createPolygon(area_1, nullptr, 0);
-
     if((GEOSisEmpty(area_1) != 0) || (GEOSisValid(area_1) != 1)) {
         printf("No valid intersection found.\n");
         exit(2);    //invalid input parameter
     }
-
     coordseqSecond = (GEOSCoordSeq) GEOSCoordSeq_create(5, 2);   //5 pointsbi-dimensional
-
     GEOSCoordSeq_setX(coordseqSecond, 0, 43.22);    //upper left
     GEOSCoordSeq_setY(coordseqSecond, 0, 125.52);
     GEOSCoordSeq_setX(coordseqSecond, 1, 43.22);    //upper right
@@ -727,46 +700,32 @@ GEOSGeometry * testIntersection()
     GEOSCoordSeq_setY(coordseqSecond, 3, 125.52);
     GEOSCoordSeq_setX(coordseqSecond, 4, 43.22);    //upper left
     GEOSCoordSeq_setY(coordseqSecond, 4, 125.52);
-
     area_2 = GEOSGeom_createLinearRing(coordseqSecond);
-
     pol2 = GEOSGeom_createPolygon(area_2, nullptr, 0);
-
     if((GEOSisEmpty(area_2) != 0) || (GEOSisValid(area_2) != 1)) {
         printf("No valid intersection found.\n");
         exit(2);    //invalid input parameter
     }
-
-
     intersection = GEOSIntersection(pol1, pol2);
-
     if((GEOSisEmpty(intersection) != 0) || (GEOSisValid(intersection) !=1)) {
         printf("No valid intersection found.\n");
         exit(2);    //invalid input parameter
     }
-
     //Getting coords for the vertex
     unsigned int num;
     double xPoints[4];
     double yPoints[4];
-
     GEOSGeom geom;
-
     num = GEOSGetNumGeometries(intersection);
     printf("Geometries: %d\n",num);
-
     //GEOSCoordSeq_destroy(coordseq);
     coordseqIntersection = (GEOSCoordSeq) GEOSCoordSeq_create(2, 2);   //2 pointsbi-dimensional
-
     for(int i=0; i < num; i++) {
         geom = (GEOSGeom) GEOSGetGeometryN(intersection, i);
-
         coordseqIntersection = (GEOSCoordSeq) GEOSGeom_getCoordSeq(geom);
-
         GEOSCoordSeq_getX(coordseqIntersection, 0, &xPoints[i]);
         GEOSCoordSeq_getY(coordseqIntersection, 0, &yPoints[i]);
     }
-
     // Finalizzo GEOS
     finishGEOS();
 }
