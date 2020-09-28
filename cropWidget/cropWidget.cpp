@@ -596,7 +596,7 @@ void Crit3DCropWidget::checkCropUpdate()
 void Crit3DCropWidget::openUnitsDB(QString dbUnitsName)
 {  
     QString error;
-    if (! loadUnitList(dbUnitsName, unitList, error))
+    if (! readUnitList(dbUnitsName, unitList, error))
     {
         QMessageBox::critical(nullptr, "Error in DB Units:", error);
         return;
