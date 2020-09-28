@@ -25,7 +25,7 @@ ComputationUnitsDB::ComputationUnitsDB(QString dbname, QString &error)
         db.close();
     }
 
-    db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    db = QSqlDatabase::addDatabase("QSQLITE", "Units");
     db.setDatabaseName(dbname);
 
     if (!db.open())
@@ -39,10 +39,7 @@ ComputationUnitsDB::~ComputationUnitsDB()
 {
     if ((db.isValid()) && (db.isOpen()))
     {
-        QString connection = db.connectionName();
         db.close();
-        db = QSqlDatabase::addDatabase("QSQLITE");
-        QSqlDatabase::removeDatabase(connection);
     }
 }
 
