@@ -40,4 +40,7 @@
     };
 
 
+    bool readUnitList(QString dbUnitsName, std::vector<Crit1DUnit> &unitList, QString &error);
+
+
 #endif // COMPUTATIONUNITSDB_H

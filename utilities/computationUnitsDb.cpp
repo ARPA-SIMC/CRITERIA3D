@@ -122,3 +122,19 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
     return true;
 }
 
+
+bool readUnitList(QString dbUnitsName, std::vector<Crit1DUnit> &unitList, QString &error)
+{
+    ComputationUnitsDB dbUnits(dbUnitsName, error);
+    if (error != "")
+    {
+        return false;
+    }
+    if (! dbUnits.readUnitList(unitList, error))
+    {
+        return false;
+    }
+
+    return true;
+}
+
