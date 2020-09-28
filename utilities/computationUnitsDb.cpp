@@ -2,7 +2,7 @@
 #include "commonConstants.h"
 #include <QtSql>
 
-
+/*
 Crit1DUnit::Crit1DUnit()
 {
     this->idCase = "";
@@ -15,6 +15,7 @@ Crit1DUnit::Crit1DUnit()
     this->idSoilNumber = NODATA;
     this->idCropNumber = NODATA;
 }
+*/
 
 
 ComputationUnitsDB::ComputationUnitsDB(QString dbname, QString &error)
