@@ -41,7 +41,6 @@ DEFINES += _CRT_SECURE_NO_WARNINGS
 
 
 SOURCES += \
-    ../../agrolib/criteriaModel/criteria1DUnit.cpp \
     ../../agrolib/crop/cropDbQuery.cpp \
     criteriaAggregationVariable.cpp \
     criteriaOutputElaboration.cpp \
@@ -56,7 +55,7 @@ HEADERS += \
 
 
 INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../crop ../gis \
-                ../criteriaModel ../utilities ../shapeHandler ../shapeUtilities
+                ../utilities ../shapeHandler ../shapeUtilities
 
 # comment to compile without GDAL library
 CONFIG += GDAL

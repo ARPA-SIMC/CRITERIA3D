@@ -9,6 +9,7 @@
 #include "shapeUtilities.h"
 #include "shapeToRaster.h"
 #include "zonalStatistic.h"
+#include "computationUnitsDb.h"
 
 #ifdef GDAL
     #include "gdalShapeFunctions.h"
@@ -362,14 +363,14 @@ int CriteriaOutputProject::precomputeDtx()
         return myResult;
     }
 
-    // load computation unit list
+    // read unit list
     logger.writeInfo("DB computation units: " + dbUnitsName);
-    if (! loadUnitList(dbUnitsName, unitList, projectError))
+    if (! readUnitList(dbUnitsName, unitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
-
     logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+
     logger.writeInfo("Compute dtx...");
 
     QString idCase;
@@ -400,9 +401,9 @@ int CriteriaOutputProject::createCsvFile()
         return myResult;
     }
 
-    // load computation unit list
+    // read unit list
     logger.writeInfo("DB computation units: " + dbUnitsName);
-    if (! loadUnitList(dbUnitsName, unitList, projectError))
+    if (! readUnitList(dbUnitsName, unitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
