@@ -12,7 +12,7 @@ CONFIG += staticlib
 
 CONFIG += debug_and_release
 
-DEFINES += _CRT_SECURE_NO_WARNINGS
+DEFINES += _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE
 
 
 unix:{
@@ -33,12 +33,14 @@ INCLUDEPATH += ../mathFunctions ../crit3dDate ../gis ../shapeHandler ../shapeHan
 SOURCES += \
     gdalExtensions.cpp \
     gdalRasterFunctions.cpp \
-    gdalShapeFunctions.cpp
+    gdalShapeFunctions.cpp \
+    gdalShapeIntersection.cpp
 
 HEADERS += \
     gdalExtensions.h \
     gdalRasterFunctions.h \
-    gdalShapeFunctions.h
+    gdalShapeFunctions.h \
+    gdalShapeIntersection.h
 
 
 include(../gdal.pri)

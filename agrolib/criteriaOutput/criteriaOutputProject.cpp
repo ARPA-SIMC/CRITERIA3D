@@ -9,6 +9,11 @@
 #include "shapeUtilities.h"
 #include "shapeToRaster.h"
 #include "zonalStatistic.h"
+#include "computationUnitsDb.h"
+
+#ifdef GDAL
+    #include "gdalShapeFunctions.h"
+#endif
 
 #include <QtSql>
 #include <iostream>
@@ -34,6 +39,13 @@ void CriteriaOutputProject::initialize()
     aggregationShapeFileName = "";
     shapeFieldName = "";
     fieldListFileName = "";
+    aggregationListFileName = "";
+    aggregationCellSize = "";
+
+    mapListFileName = "";
+    mapCellSize = "";
+    mapFormat = "";
+    mapProjection = "";
 
     outputCsvFileName = "";
     outputShapeFileName = "";
@@ -320,6 +332,23 @@ bool CriteriaOutputProject::readSettings()
 
     projectSettings->endGroup();
 
+    projectSettings->beginGroup("maps");
+    // MAPS
+    mapListFileName = projectSettings->value("map_list","").toString();
+    if (mapListFileName.left(1) == ".")
+    {
+        mapListFileName = path + QDir::cleanPath(mapListFileName);
+    }
+
+    // format
+    mapFormat = projectSettings->value("format", "").toString();
+    // projection
+    mapProjection = projectSettings->value("projection", "").toString();
+    // map cell size
+    mapCellSize = projectSettings->value("cellsize","").toString();
+
+    projectSettings->endGroup();
+
     return true;
 }
 
@@ -334,14 +363,14 @@ int CriteriaOutputProject::precomputeDtx()
         return myResult;
     }
 
-    // load computation unit list
+    // read unit list
     logger.writeInfo("DB computation units: " + dbUnitsName);
-    if (! loadUnitList(dbUnitsName, unitList, projectError))
+    if (! readUnitList(dbUnitsName, unitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
-
     logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+
     logger.writeInfo("Compute dtx...");
 
     QString idCase;
@@ -372,9 +401,9 @@ int CriteriaOutputProject::createCsvFile()
         return myResult;
     }
 
-    // load computation unit list
+    // read unit list
     logger.writeInfo("DB computation units: " + dbUnitsName);
-    if (! loadUnitList(dbUnitsName, unitList, projectError))
+    if (! readUnitList(dbUnitsName, unitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
@@ -448,6 +477,140 @@ int CriteriaOutputProject::createShapeFile()
 }
 
 
+int CriteriaOutputProject::createMaps()
+{
+    // check map list
+    if (! QFile(mapListFileName).exists())
+    {
+        projectError = "Missing map list: " + mapListFileName;
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+
+    // check cellsize
+    bool ok;
+    mapCellSize.toInt(&ok, 10);
+    if (!ok)
+    {
+        projectError = "Invalid map cellsize: " + mapCellSize;
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+
+    // check format and projection
+    if (mapProjection.isEmpty())
+    {
+        projectError = "Missing projection ";
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+
+    if (!mapExtensionShortName.contains(mapFormat))
+    {
+        projectError = "Unknown output format ";
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+
+    // check shapefile
+    if (! QFile(outputShapeFileName).exists())
+    {
+        int myResult = createShapeFile();
+        if (myResult != CRIT3D_OK)
+        {
+            return myResult;
+        }
+    }
+
+    logger.writeInfo("MAPS");
+
+    #ifdef GDAL
+
+    // parser csv file mapListFileName
+    QStringList inputField;
+    QStringList outputName;
+    QFile mapList(mapListFileName);
+    if ( !mapList.open(QFile::ReadOnly | QFile::Text) )
+    {
+        projectError = "Map List csv file not exists: " + mapListFileName;
+        return ERROR_SETTINGS_MISSINGDATA;
+    }
+    else
+    {
+        QTextStream in(&mapList);
+        //skip header
+        QString line = in.readLine();
+        QStringList header = line.split(",");
+        // whitespace removed from the start and the end.
+        QMutableListIterator<QString> it(header);
+        while (it.hasNext()) {
+            it.next();
+            it.value() = it.value().trimmed();
+        }
+        while (!in.atEnd())
+        {
+            line = in.readLine();
+            QStringList items = line.split(",");
+            if (items.size() < REQUIREDMAPLISTCSVINFO)
+            {
+                projectError = "invalid map list format CSV, input field and output file name required";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+            int pos = header.indexOf("input field (shapefile)");
+            if (pos == -1)
+            {
+                projectError = "missing input field";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+            // remove whitespace
+            inputField.push_back(items[pos].toUpper().trimmed());
+            if (inputField.isEmpty())
+            {
+                projectError = "missing input field";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+
+            pos = header.indexOf("output map name");
+            if (pos == -1)
+            {
+                projectError = "missing output map name";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+            // remove whitespace
+            outputName.push_back(items[pos].toUpper().trimmed());
+            if (outputName.isEmpty())
+            {
+                projectError = "missing output map name";
+                return ERROR_SETTINGS_MISSINGDATA;
+            }
+        }
+
+    }
+
+    int rasterOK = 0;
+
+    for (int i=0; i < inputField.size(); i++)
+    {
+        QString mapName = outputShapeFilePath + "/" + outputName[i]+ "." + mapFormat;
+        std::string inputFieldStd = inputField[i].toStdString();
+        if (shapeToRaster(outputShapeFileName, inputFieldStd, mapCellSize, mapProjection, mapName, projectError))
+        {
+            rasterOK = rasterOK + 1;
+        }
+    }
+
+    #endif
+
+    if (rasterOK == inputField.size())
+    {
+        return CRIT3D_OK;
+    }
+    else
+    {
+        int nRasterError = inputField.size() - rasterOK;
+        projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
+        return false;
+    }
+
+}
+
+
 int CriteriaOutputProject::createAggregationFile()
 {
     if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
@@ -456,21 +619,23 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
-    // Aggregation cell size
+    // check aggregation cell size
     bool ok;
     int cellSize = aggregationCellSize.toInt(&ok, 10);
     if (!ok)
     {
         projectError = "Invalid aggregation cellsize: " + aggregationCellSize;
-        return ERROR_SETTINGS_WRONGFILENAME;
+        return ERROR_SETTINGS_MISSINGDATA;
     }
 
+    // check aggregation output (csv)
     if (outputAggrCsvFileName.right(4) != ".csv")
     {
         projectError = "aggregation output is not a csv file.";
         return ERROR_SETTINGS_WRONGFILENAME;
     }
 
+    // check shapefile
     if (! QFile(outputShapeFileName).exists())
     {
         // create shapefile
@@ -627,4 +792,64 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
     outputFile.close();
 
     return true;
+}
+
+bool CriteriaOutputProject::getAllDbVariable(QString &projectError)
+{
+    // open DB Data
+    dbData = QSqlDatabase::addDatabase("QSQLITE", "data");
+    dbData.setDatabaseName(dbDataName);
+    if (! dbData.open())
+    {
+        projectError = "Open DB data failed: " + dbData.lastError().text();
+        return false;
+    }
+    QSqlQuery qry(dbData);
+    QString statement = QString("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%' ESCAPE '^'");
+    QString tableName;
+    QStringList varList;
+    if( !qry.exec(statement) )
+    {
+        projectError = qry.lastError().text();
+        return false;
+    }
+    qry.first();
+    if (!qry.isValid())
+    {
+        projectError = qry.lastError().text();
+        return false ;
+    }
+    getValue(qry.value("name"), &tableName);
+    statement = QString("PRAGMA table_info(`%1`)").arg(tableName);
+    QString name;
+    if( !qry.exec(statement) )
+    {
+        projectError = qry.lastError().text();
+        return false;
+    }
+    qry.first();
+    if (!qry.isValid())
+    {
+        projectError = qry.lastError().text();
+        return false;
+    }
+    do
+    {
+        getValue(qry.value("name"), &name);
+        if (name != "DATE")
+        {
+            varList<<name;
+        }
+    }
+    while(qry.next());
+
+    if (varList.isEmpty())
+    {
+        return false;
+    }
+    else
+    {
+        outputVariable.varName = varList;
+        return true;
+    }
 }

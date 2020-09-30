@@ -36,14 +36,12 @@ SOURCES += \
     criteria1DCase.cpp \
     criteria1DMeteo.cpp \
     criteria1DSimulation.cpp \
-    criteria1DUnit.cpp \
     water1D.cpp
 
 HEADERS += \
     criteria1DCase.h \
     criteria1DMeteo.h \
     criteria1DSimulation.h \
-    criteria1DUnit.h \
     water1D.h
 
 unix {

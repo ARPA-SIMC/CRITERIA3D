@@ -247,9 +247,10 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
             QString dateStr, idPoint, flag;
             int idArkimet, idVar;
             double value;
-
+            bool emptyLine = true;
             for (QString line = QString(reply->readLine()); !(line.isNull() || line.isEmpty());  line = QString(reply->readLine()))
             {
+                emptyLine = false;
                 fields = line.split(",");
 
                 // warning: ref date arkimet: hour 00 of day+1
@@ -291,8 +292,10 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
                 }
             }
-
-            downloadOk = _dbMeteo->saveDailyData(startDate, endDate);
+            if (!emptyLine)
+            {
+                downloadOk = _dbMeteo->saveDailyData(startDate, endDate);
+            }
 
             delete reply;
             delete manager;
@@ -322,12 +325,9 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
     }
 
     // start from 01:00
-    QDateTime startTime((QDateTime(startDate)));
-    startTime.setTimeSpec(Qt::UTC);
-    startTime = startTime.addSecs(3600);
+    QDateTime startTime(startDate, QTime(1,0,0), Qt::UTC);
 
-    QDateTime endTime((QDateTime(endDate)));
-    endTime.setTimeSpec(Qt::UTC);
+    QDateTime endTime(endDate, QTime(0,0,0), Qt::UTC);
     endTime = endTime.addSecs(3600 * 24);
 
     // reftime
@@ -386,9 +386,11 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
 
             _dbMeteo->createTmpTableHourly();
             bool isVarOk, isFirstData = true;
+            bool emptyLine = true;
 
             for (line = QString(reply->readLine()); !(line.isNull() || line.isEmpty());  line = QString(reply->readLine()))
             {
+                emptyLine = false;
                 fields = line.split(",");
                 dateTime = QString("%1-%2-%3 %4:%5:00").arg(fields[0].left(4))
                                                            .arg(fields[0].mid(4, 2))
@@ -431,7 +433,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
                 }
             }
 
-            if (_dbMeteo->queryString != "")
+            if (_dbMeteo->queryString != "" && !emptyLine)
             {
                _dbMeteo->saveHourlyData();
             }

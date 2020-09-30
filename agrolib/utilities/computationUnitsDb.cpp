@@ -25,7 +25,7 @@ ComputationUnitsDB::ComputationUnitsDB(QString dbname, QString &error)
         db.close();
     }
 
-    db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    db = QSqlDatabase::addDatabase("QSQLITE", "Units");
     db.setDatabaseName(dbname);
 
     if (!db.open())
@@ -39,10 +39,7 @@ ComputationUnitsDB::~ComputationUnitsDB()
 {
     if ((db.isValid()) && (db.isOpen()))
     {
-        QString connection = db.connectionName();
         db.close();
-        db = QSqlDatabase::addDatabase("QSQLITE");
-        QSqlDatabase::removeDatabase(connection);
     }
 }
 
@@ -118,6 +115,22 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
         i++;
     }
     while(query.next());
+
+    return true;
+}
+
+
+bool readUnitList(QString dbUnitsName, std::vector<Crit1DUnit> &unitList, QString &error)
+{
+    ComputationUnitsDB dbUnits(dbUnitsName, error);
+    if (error != "")
+    {
+        return false;
+    }
+    if (! dbUnits.readUnitList(unitList, error))
+    {
+        return false;
+    }
 
     return true;
 }

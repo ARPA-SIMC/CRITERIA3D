@@ -30,6 +30,26 @@ QString cloneShapeFile(QString refFileName, QString newFileName)
     return(newFile + ".shp");
 }
 
+/*! copyShapeFile
+ * \brief make a copy of shapefile (keep original version)
+ * and return filename of the cloned shapefile
+ */
+QString copyShapeFile(QString refFileName, QString newFileName)
+{
+    QFileInfo refFileInfo(refFileName);
+    QFileInfo newFileInfo(newFileName);
+
+    QString refFile = refFileInfo.absolutePath() + "/" + refFileInfo.baseName();
+    QString newFile = newFileInfo.absolutePath() + "/" + newFileInfo.baseName();
+
+    QFile::copy(refFile +".dbf", newFile +".dbf");
+    QFile::copy(refFile +".shp", newFile +".shp");
+    QFile::copy(refFile +".shx", newFile +".shx");
+    QFile::copy(refFile +".prj", newFile +".prj");
+
+    return(newFile + ".shp");
+}
+
 
 bool cleanShapeFile(Crit3DShapeHandler &shapeHandler)
 {
