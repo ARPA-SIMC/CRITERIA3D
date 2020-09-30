@@ -99,6 +99,7 @@ public:
     int createMaps();
 
     bool initializeCsvOutputFile();
+    bool getAllDbVariable(QString &projectError);
 
 };
 

@@ -34,4 +34,5 @@
     int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName, QDate dateComputation,
                               QStringList outputVarName, QString shapeField, QString &error);
 
+
 #endif // CRITERIAOUTPUTELABORATION_H
