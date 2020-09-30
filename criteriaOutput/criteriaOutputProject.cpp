@@ -793,3 +793,63 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
 
     return true;
 }
+
+bool CriteriaOutputProject::getAllDbVariable(QString &projectError)
+{
+    // open DB Data
+    dbData = QSqlDatabase::addDatabase("QSQLITE", "data");
+    dbData.setDatabaseName(dbDataName);
+    if (! dbData.open())
+    {
+        projectError = "Open DB data failed: " + dbData.lastError().text();
+        return false;
+    }
+    QSqlQuery qry(dbData);
+    QString statement = QString("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%' ESCAPE '^'");
+    QString tableName;
+    QStringList varList;
+    if( !qry.exec(statement) )
+    {
+        projectError = qry.lastError().text();
+        return false;
+    }
+    qry.first();
+    if (!qry.isValid())
+    {
+        projectError = qry.lastError().text();
+        return false ;
+    }
+    getValue(qry.value("name"), &tableName);
+    statement = QString("PRAGMA table_info(`%1`)").arg(tableName);
+    QString name;
+    if( !qry.exec(statement) )
+    {
+        projectError = qry.lastError().text();
+        return false;
+    }
+    qry.first();
+    if (!qry.isValid())
+    {
+        projectError = qry.lastError().text();
+        return false;
+    }
+    do
+    {
+        getValue(qry.value("name"), &name);
+        if (name != "DATE")
+        {
+            varList<<name;
+        }
+    }
+    while(qry.next());
+
+    if (varList.isEmpty())
+    {
+        return false;
+    }
+    else
+    {
+        outputVariable.varName = varList;
+        return true;
+    }
+}
