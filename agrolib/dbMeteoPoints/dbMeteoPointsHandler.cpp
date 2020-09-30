@@ -206,7 +206,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
                     {
                         myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
                         myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-                        QDateTime date(QDateTime(myDate, myTime, Qt::UTC));
+                        date = QDateTime(myDate, myTime, Qt::UTC);
                     }
 
                     if (firstDate.isNull() || date < firstDate)
@@ -270,9 +270,10 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
                     }
                     else if (frequency == hourly)
                     {
+                        //date = QDateTime::fromString(dateStr,"yyyy-MM-dd HH:mm:ss");
                         myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
                         myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-                        QDateTime date(QDateTime(myDate, myTime, Qt::UTC));
+                        date = QDateTime(myDate, myTime, Qt::UTC);
                     }
 
                     if (lastDate.isNull() || date > lastDate)
@@ -318,7 +319,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency, std:
                 {
                     myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
                     myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-                    QDateTime firstDate(QDateTime(myDate, myTime, Qt::UTC));
+                    firstDate = QDateTime(myDate, myTime, Qt::UTC);
                 }
             }
         }
@@ -358,7 +359,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency, std::
                 {
                     myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
                     myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-                    QDateTime lastDate(QDateTime(myDate, myTime, Qt::UTC));
+                    lastDate = QDateTime(myDate, myTime, Qt::UTC);
                 }
             }
         }
