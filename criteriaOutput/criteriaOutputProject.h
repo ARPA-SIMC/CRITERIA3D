@@ -99,7 +99,8 @@ public:
     int createMaps();
 
     bool initializeCsvOutputFile();
-    bool getAllDbVariable(QString &projectError);
+    bool getAllDbVariable(QString &projectError);   
+    int createCsvFileFromGUI(QDate dateComputation, QString csvFileName);
 
 };
 
