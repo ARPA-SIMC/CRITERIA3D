@@ -882,6 +882,7 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
             QDir().remove(csvFileName);
             return myResult;
         }
+        outputCsvFileName = csvFileName;
     }
     return CRIT3D_OK;
 }
