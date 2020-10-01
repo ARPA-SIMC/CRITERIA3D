@@ -1,0 +1,3 @@
+[submodule "qt_zoomable_chart_widget"]
+	path = qt_zoomable_chart_widget
+	url = https://github.com/martonmiklos/qt_zoomable_chart_widget.git
