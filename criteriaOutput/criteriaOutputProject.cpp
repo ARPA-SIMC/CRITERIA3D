@@ -427,7 +427,10 @@ int CriteriaOutputProject::createCsvFile()
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, outputCsvFileName, &projectError);
         if (myResult != CRIT3D_OK)
         {
-            QDir().remove(outputCsvFileName);
+            if (QFile(outputCsvFileName).exists())
+            {
+                QDir().remove(outputCsvFileName);
+            }
             return myResult;
         }
     }
@@ -879,10 +882,13 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, &projectError);
         if (myResult != CRIT3D_OK)
         {
-            QDir().remove(csvFileName);
+            if (QFile(csvFileName).exists())
+            {
+                QDir().remove(csvFileName);
+            }
             return myResult;
         }
-        outputCsvFileName = csvFileName;
     }
+    outputCsvFileName = csvFileName;
     return CRIT3D_OK;
 }
