@@ -869,6 +869,21 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     {
         return myResult;
     }
+
+    outputCsvFileName = csvFileName;
+    // open outputCsvFileName and write header
+    outputFile.setFileName(outputCsvFileName);
+    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    {
+        projectError = "Open failure: " + outputCsvFileName;
+        return ERROR_CSVFILE;
+    }
+
+    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName[0];
+    QTextStream out(&outputFile);
+    out << header << "\n";
+    outputFile.close();
+
     // read unit list
     if (! readUnitList(dbUnitsName, unitList, projectError))
     {
@@ -893,6 +908,5 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
             return myResult;
         }
     }
-    outputCsvFileName = csvFileName;
     return CRIT3D_OK;
 }
