@@ -228,6 +228,10 @@ bool CriteriaOutputProject::readSettings()
     }
 
     dbDataName = projectSettings->value("db_data","").toString();
+    if (dbDataName.isEmpty())
+    {
+        dbDataName = projectSettings->value("db_output","").toString();
+    }
     if (dbDataName.left(1) == ".")
     {
         dbDataName = path + QDir::cleanPath(dbDataName);
