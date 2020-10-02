@@ -427,7 +427,10 @@ int CriteriaOutputProject::createCsvFile()
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, outputCsvFileName, &projectError);
         if (myResult != CRIT3D_OK)
         {
-            QDir().remove(outputCsvFileName);
+            if (QFile(outputCsvFileName).exists())
+            {
+                QDir().remove(outputCsvFileName);
+            }
             return myResult;
         }
     }
@@ -852,4 +855,40 @@ bool CriteriaOutputProject::getAllDbVariable(QString &projectError)
         outputVariable.varName = varList;
         return true;
     }
+}
+
+int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString csvFileName)
+{
+
+    int myResult = initializeProjectCsv();
+    if (myResult != CRIT3D_OK)
+    {
+        return myResult;
+    }
+    // read unit list
+    if (! readUnitList(dbUnitsName, unitList, projectError))
+    {
+        return ERROR_READ_UNITS;
+    }
+
+    // write output
+    QString idCase;
+    QString idCropClass;
+    for (unsigned int i=0; i < unitList.size(); i++)
+    {
+        idCase = unitList[i].idCase;
+        idCropClass = unitList[i].idCropClass;
+
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, &projectError);
+        if (myResult != CRIT3D_OK)
+        {
+            if (QFile(csvFileName).exists())
+            {
+                QDir().remove(csvFileName);
+            }
+            return myResult;
+        }
+    }
+    outputCsvFileName = csvFileName;
+    return CRIT3D_OK;
 }
