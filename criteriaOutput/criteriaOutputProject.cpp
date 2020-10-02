@@ -910,3 +910,36 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     }
     return CRIT3D_OK;
 }
+
+int CriteriaOutputProject::createShapeFileFromGUI(QDate dateComputation, QString csvFileName)
+{
+    if (! QFile(outputCsvFileName).exists())
+    {
+        // create CSV
+        int myResult = createCsvFileFromGUI(dateComputation, csvFileName);
+        if (myResult != CRIT3D_OK)
+        {
+            return myResult;
+        }
+    }
+
+    Crit3DShapeHandler inputShape;
+
+    if (!inputShape.open(ucmFileName.toStdString()))
+    {
+        projectError = "Wrong shapefile: " + ucmFileName;
+        return ERROR_SHAPEFILE;
+    }
+
+    fieldListFileName = "";
+    outputShapeFilePath = getFilePath(outputCsvFileName);
+    QFileInfo csvFileInfo(outputCsvFileName);
+    outputShapeFileName = outputShapeFilePath + "/" + csvFileInfo.baseName() + ".shp";
+
+    if (! shapeFromCsv(inputShape, outputCsvFileName, fieldListFileName, outputShapeFileName, projectError))
+    {
+        return ERROR_SHAPEFILE;
+    }
+
+    return CRIT3D_OK;
+}
