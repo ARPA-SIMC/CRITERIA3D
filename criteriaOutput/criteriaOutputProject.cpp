@@ -484,6 +484,7 @@ int CriteriaOutputProject::createShapeFile()
 }
 
 
+#ifdef GDAL
 int CriteriaOutputProject::createMaps()
 {
     // check map list
@@ -526,8 +527,6 @@ int CriteriaOutputProject::createMaps()
     }
 
     logger.writeInfo("MAPS");
-
-    #ifdef GDAL
 
     // parser csv file mapListFileName
     QStringList inputField;
@@ -602,8 +601,6 @@ int CriteriaOutputProject::createMaps()
         }
     }
 
-    #endif
-
     if (rasterOK == inputField.size())
     {
         return CRIT3D_OK;
@@ -614,8 +611,8 @@ int CriteriaOutputProject::createMaps()
         projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
         return false;
     }
-
 }
+#endif
 
 
 int CriteriaOutputProject::createAggregationFile()
