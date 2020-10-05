@@ -861,6 +861,61 @@ bool CriteriaOutputProject::getAllDbVariable(QString &projectError)
     }
 }
 
+bool CriteriaOutputProject::getDbDataDates(QDate* firstDate, QDate* lastDate, QString &projectError)
+{
+    QStringList tablesList = dbData.tables();
+    if (tablesList.isEmpty())
+    {
+        projectError = "Db is empty";
+        return false;
+    }
+
+    QSqlQuery qry(dbData);
+    QString idCase;
+    QString statement;
+    QDate firstTmp;
+    QDate lastTmp;
+
+    *firstDate = QDate::currentDate();
+    *lastDate = QDate(1800,1,1);
+
+    for (int i = 0; i < tablesList.size(); i++)
+    {
+        idCase = tablesList[i];
+        statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
+        if( !qry.exec(statement) )
+        {
+            projectError = qry.lastError().text();
+            return false;
+        }
+        qry.first();
+        if (!qry.isValid())
+        {
+            projectError = qry.lastError().text();
+            return false ;
+        }
+        getValue(qry.value("MIN(DATE)"), &firstTmp);
+        getValue(qry.value("MAX(DATE)"), &lastTmp);
+
+        if (firstTmp < *firstDate)
+        {
+            *firstDate = firstTmp;
+        }
+        if (lastTmp > *lastDate)
+        {
+            *lastDate = lastTmp;
+        }
+    }
+
+    if (!firstDate->isValid() || !lastDate->isValid())
+    {
+        projectError = "Invalid date";
+        return false;
+    }
+
+    return true;
+}
+
 int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString csvFileName)
 {
 
