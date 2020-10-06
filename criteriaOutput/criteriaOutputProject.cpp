@@ -164,7 +164,7 @@ int CriteriaOutputProject::initializeProjectCsv()
 }
 
 
-int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dateComputation)
+int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dateComputation, bool isLog)
 {
     closeProject();
     initialize();
@@ -198,7 +198,10 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
-    logger.setLog(path,projectName);
+    if (isLog)
+    {
+        logger.setLog(path,projectName);
+    }
 
     isProjectLoaded = true;
     return CRIT3D_OK;

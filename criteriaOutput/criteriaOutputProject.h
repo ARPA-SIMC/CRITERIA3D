@@ -87,7 +87,7 @@ public:
 
     void initialize();
     void closeProject();
-    int initializeProject(QString settingsFileName, QDate dateComputation);
+    int initializeProject(QString settingsFileName, QDate dateComputation, bool isLog);
     int initializeProjectDtx();
     int initializeProjectCsv();
 
