@@ -15,7 +15,6 @@ QMAKE_CXXFLAGS += -std=c++11
 
 unix:{
     CONFIG += release
-    CONFIG += staticlib
     TARGET = release/MapGraphics
 }
 win32:{
