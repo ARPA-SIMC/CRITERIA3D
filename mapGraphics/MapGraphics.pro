@@ -11,18 +11,21 @@
 QT       += widgets network sql
 
 TEMPLATE = lib
-QMAKE_CXXFLAGS += -std=c++11
+CONFIG += staticlib
 
 unix:{
-    CONFIG += release
-    TARGET = release/MapGraphics
+    CONFIG(debug, debug|release) {
+        TARGET = debug/MapGraphics
+    } else {
+        TARGET = release/MapGraphics
+    }
 }
 win32:{
     TARGET = MapGraphics
 }
 
-DEFINES += MAPGRAPHICS_LIBRARY
-
+# uncomment for dynamic linking
+#DEFINES += MAPGRAPHICS_LIBRARY
 
 SOURCES += \
     tileSources/CompositeTileSource.cpp \
@@ -69,5 +72,4 @@ HEADERS += \
     Position.h \
     LineObject.h \
     CircleObject.h
-
 

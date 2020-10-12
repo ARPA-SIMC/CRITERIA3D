@@ -182,8 +182,8 @@ void MapGraphicsObject::setSelected(bool sel)
 
     if (_constructed)
         this->selectedChanged();
-    else
-        QTimer::singleShot(1, this, SIGNAL(selectedChanged()));
+    /*else
+        QTimer::singleShot(1, this, SIGNAL(selectedChanged()));*/
 }
 
 QString MapGraphicsObject::toolTip() const
