@@ -254,13 +254,17 @@ void MainWindow::setProjectTileMap()
 {
     if (myProject.currentTileMap != "")
     {
-        if (myProject.currentTileMap.toUpper() == "ESRI" || myProject.currentTileMap == "ESRIWorldImagery")
+        if (myProject.currentTileMap.toUpper() == "ESRI")
         {
             this->setTileMapSource(WebTileSource::ESRI_WorldImagery);
         }
         else if (myProject.currentTileMap.toUpper() == "TERRAIN")
         {
             this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
+        }
+        else if (myProject.currentTileMap.toUpper() == "GOOGLE")
+        {
+            this->setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
         }
         else
         {
