@@ -28,19 +28,9 @@ INCLUDEPATH +=  ./shared  \
                 ../../agrolib/meteoWidget
 
 
-win32:{
-    CONFIG(debug, debug|release) {
-        LIBS += -L../../mapGraphics/debug -lMapGraphics
-    } else {
-        LIBS += -L../../mapGraphics/release -lMapGraphics
-    }
-}
-unix:{
-    LIBS += -L../../mapGraphics/release -lMapGraphics
-}
-
 
 CONFIG(debug, debug|release) {
+    LIBS += -L../../mapGraphics/debug -lMapGraphics
     LIBS += -L../../agrolib/project/debug -lproject
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
     LIBS += -L../../agrolib/dbMeteoGrid/debug -ldbMeteoGrid
@@ -58,6 +48,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/crit3dDate/debug -lcrit3dDate
 
 } else {
+    LIBS += -L../../mapGraphics/release -lMapGraphics
     LIBS += -L../../agrolib/project/release -lproject
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
     LIBS += -L../../agrolib/dbMeteoGrid/release -ldbMeteoGrid
