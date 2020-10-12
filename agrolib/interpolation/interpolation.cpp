@@ -1078,7 +1078,9 @@ void topographicDistanceOptimize(meteoVariable myVar,
     float avgError, bestError, bestK;
     float kh, kz;
 
-    kh = kz = 0;
+    kh = 0;
+    kz = 0;
+    bestK = kz;
 
     bestError = NODATA;
 
