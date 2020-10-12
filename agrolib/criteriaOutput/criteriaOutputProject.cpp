@@ -164,7 +164,7 @@ int CriteriaOutputProject::initializeProjectCsv()
 }
 
 
-int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dateComputation)
+int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dateComputation, bool isLog)
 {
     closeProject();
     initialize();
@@ -198,7 +198,10 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
-    logger.setLog(path,projectName);
+    if (isLog)
+    {
+        logger.setLog(path,projectName);
+    }
 
     isProjectLoaded = true;
     return CRIT3D_OK;
@@ -228,6 +231,10 @@ bool CriteriaOutputProject::readSettings()
     }
 
     dbDataName = projectSettings->value("db_data","").toString();
+    if (dbDataName.isEmpty())
+    {
+        dbDataName = projectSettings->value("db_output","").toString();
+    }
     if (dbDataName.left(1) == ".")
     {
         dbDataName = path + QDir::cleanPath(dbDataName);
@@ -427,7 +434,10 @@ int CriteriaOutputProject::createCsvFile()
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, outputCsvFileName, &projectError);
         if (myResult != CRIT3D_OK)
         {
-            QDir().remove(outputCsvFileName);
+            if (QFile(outputCsvFileName).exists())
+            {
+                QDir().remove(outputCsvFileName);
+            }
             return myResult;
         }
     }
@@ -477,6 +487,7 @@ int CriteriaOutputProject::createShapeFile()
 }
 
 
+#ifdef GDAL
 int CriteriaOutputProject::createMaps()
 {
     // check map list
@@ -519,8 +530,6 @@ int CriteriaOutputProject::createMaps()
     }
 
     logger.writeInfo("MAPS");
-
-    #ifdef GDAL
 
     // parser csv file mapListFileName
     QStringList inputField;
@@ -595,8 +604,6 @@ int CriteriaOutputProject::createMaps()
         }
     }
 
-    #endif
-
     if (rasterOK == inputField.size())
     {
         return CRIT3D_OK;
@@ -607,8 +614,8 @@ int CriteriaOutputProject::createMaps()
         projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
         return false;
     }
-
 }
+#endif
 
 
 int CriteriaOutputProject::createAggregationFile()
@@ -854,6 +861,61 @@ bool CriteriaOutputProject::getAllDbVariable(QString &projectError)
     }
 }
 
+bool CriteriaOutputProject::getDbDataDates(QDate* firstDate, QDate* lastDate, QString &projectError)
+{
+    QStringList tablesList = dbData.tables();
+    if (tablesList.isEmpty())
+    {
+        projectError = "Db is empty";
+        return false;
+    }
+
+    QSqlQuery qry(dbData);
+    QString idCase;
+    QString statement;
+    QDate firstTmp;
+    QDate lastTmp;
+
+    *firstDate = QDate::currentDate();
+    *lastDate = QDate(1800,1,1);
+
+    for (int i = 0; i < tablesList.size(); i++)
+    {
+        idCase = tablesList[i];
+        statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
+        if( !qry.exec(statement) )
+        {
+            projectError = qry.lastError().text();
+            return false;
+        }
+        qry.first();
+        if (!qry.isValid())
+        {
+            projectError = qry.lastError().text();
+            return false ;
+        }
+        getValue(qry.value("MIN(DATE)"), &firstTmp);
+        getValue(qry.value("MAX(DATE)"), &lastTmp);
+
+        if (firstTmp < *firstDate)
+        {
+            *firstDate = firstTmp;
+        }
+        if (lastTmp > *lastDate)
+        {
+            *lastDate = lastTmp;
+        }
+    }
+
+    if (!firstDate->isValid() || !lastDate->isValid())
+    {
+        projectError = "Invalid date";
+        return false;
+    }
+
+    return true;
+}
+
 int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString csvFileName)
 {
 
@@ -862,6 +924,21 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     {
         return myResult;
     }
+
+    outputCsvFileName = csvFileName;
+    // open outputCsvFileName and write header
+    outputFile.setFileName(outputCsvFileName);
+    if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
+    {
+        projectError = "Open failure: " + outputCsvFileName;
+        return ERROR_CSVFILE;
+    }
+
+    QString header = "date,ID_CASE,CROP," + outputVariable.outputVarName[0];
+    QTextStream out(&outputFile);
+    out << header << "\n";
+    outputFile.close();
+
     // read unit list
     if (! readUnitList(dbUnitsName, unitList, projectError))
     {
@@ -879,10 +956,45 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, &projectError);
         if (myResult != CRIT3D_OK)
         {
-            QDir().remove(csvFileName);
+            if (QFile(csvFileName).exists())
+            {
+                QDir().remove(csvFileName);
+            }
             return myResult;
         }
-        outputCsvFileName = csvFileName;
     }
+    return CRIT3D_OK;
+}
+
+int CriteriaOutputProject::createShapeFileFromGUI(QDate dateComputation, QString csvFileName)
+{
+    if (! QFile(outputCsvFileName).exists())
+    {
+        // create CSV
+        int myResult = createCsvFileFromGUI(dateComputation, csvFileName);
+        if (myResult != CRIT3D_OK)
+        {
+            return myResult;
+        }
+    }
+
+    Crit3DShapeHandler inputShape;
+
+    if (!inputShape.open(ucmFileName.toStdString()))
+    {
+        projectError = "Wrong shapefile: " + ucmFileName;
+        return ERROR_SHAPEFILE;
+    }
+
+    fieldListFileName = "";
+    outputShapeFilePath = getFilePath(outputCsvFileName);
+    QFileInfo csvFileInfo(outputCsvFileName);
+    outputShapeFileName = outputShapeFilePath + "/" + csvFileInfo.baseName() + ".shp";
+
+    if (! shapeFromCsv(inputShape, outputCsvFileName, fieldListFileName, outputShapeFileName, projectError))
+    {
+        return ERROR_SHAPEFILE;
+    }
+
     return CRIT3D_OK;
 }

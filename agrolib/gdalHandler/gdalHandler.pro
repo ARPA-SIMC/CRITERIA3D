@@ -34,13 +34,13 @@ SOURCES += \
     gdalExtensions.cpp \
     gdalRasterFunctions.cpp \
     gdalShapeFunctions.cpp \
-    gdalShapeIntersection.cpp
+#    gdalShapeIntersection.cpp
 
 HEADERS += \
     gdalExtensions.h \
     gdalRasterFunctions.h \
     gdalShapeFunctions.h \
-    gdalShapeIntersection.h
+#    gdalShapeIntersection.h
 
 
 include(../gdal.pri)

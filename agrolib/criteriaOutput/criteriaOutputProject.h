@@ -29,6 +29,7 @@
 
 #define ERROR_WRITECSV -50
 #define ERROR_OUTPUT_VARIABLES -60
+#define ERROR_CSVFILE -65
 #define ERROR_SHAPEFILE -70
 #define ERROR_ZONAL_STATISTICS_SHAPE -80
 #define ERROR_MISSING_GDAL -100
@@ -86,7 +87,7 @@ public:
 
     void initialize();
     void closeProject();
-    int initializeProject(QString settingsFileName, QDate dateComputation);
+    int initializeProject(QString settingsFileName, QDate dateComputation, bool isLog);
     int initializeProjectDtx();
     int initializeProjectCsv();
 
@@ -100,7 +101,9 @@ public:
 
     bool initializeCsvOutputFile();
     bool getAllDbVariable(QString &projectError);   
+    bool getDbDataDates(QDate* firstDate, QDate* lastDate, QString &projectError);
     int createCsvFileFromGUI(QDate dateComputation, QString csvFileName);
+    int createShapeFileFromGUI(QDate dateComputation, QString csvFileName);
 
 };
 
