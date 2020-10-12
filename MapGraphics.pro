@@ -14,6 +14,7 @@ TEMPLATE = lib
 QMAKE_CXXFLAGS += -std=c++11
 
 unix:{
+    CONFIG += staticlib
     CONFIG += release
     TARGET = release/MapGraphics
 }
