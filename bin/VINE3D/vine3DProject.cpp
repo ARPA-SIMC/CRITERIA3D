@@ -1041,8 +1041,11 @@ bool Vine3DProject::loadObsDataHourly(int indexPoint, QDate d1, QDate d2, QStrin
     }
     Crit3DMeteoPoint* myPoint = &(meteoPoints[indexPoint]);
 
+<<<<<<< HEAD
     int hourlyFraction = 1;
 
+=======
+>>>>>>> 311921a4246525b85232747d88d7837ea06c841b
     if (useAggrCodes)
         queryString = "SELECT date_, hour_, id_variable, obs_value FROM " + tableName;
     else
@@ -1084,7 +1087,11 @@ bool Vine3DProject::loadObsDataHourly(int indexPoint, QDate d1, QDate d2, QStrin
         {
             isValid = false;
             if (getValue(myQuery.value(4), &myFlag))
+<<<<<<< HEAD
                 if (myFlag >= 0.5) isValid = true;
+=======
+                if (myFlag >= 0.5f) isValid = true;
+>>>>>>> 311921a4246525b85232747d88d7837ea06c841b
         }
 
         if (isValid)

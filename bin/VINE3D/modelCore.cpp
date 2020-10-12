@@ -105,7 +105,10 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
     int myTimeStep = int(myProject->getTimeStep());
     myFirstTime = Crit3DTime(myDate, myTimeStep);
     myLastTime = Crit3DTime(myDate, nrHours * 3600);
+<<<<<<< HEAD
     int nrStep = (nrHours * 3600) / myTimeStep;
+=======
+>>>>>>> 311921a4246525b85232747d88d7837ea06c841b
     bool isNewModelCase;
     int modelCaseIndex;
     double* myProfile;
@@ -221,7 +224,11 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
                     getStatePlantToMap(row, col, myProject, &(myProject->statePlant));
 
                     myProfile = myProject->grapevine.getExtractedWater(&(myProject->modelCases[modelCaseIndex]));
+<<<<<<< HEAD
                     for (int layer=0; layer < myProject->nrLayers; layer++)
+=======
+                    for (unsigned int layer=0; layer < myProject->nrLayers; layer++)
+>>>>>>> 311921a4246525b85232747d88d7837ea06c841b
                         myProject->outputPlantMaps->transpirationLayerMaps[layer]->value[row][col] = float(myProfile[layer]);
 
                     vineTranspiration = myProject->grapevine.getRealTranspirationGrapevine(&(myProject->modelCases[modelCaseIndex]));
@@ -231,13 +238,17 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
                     {
                         myProject->outputPlantMaps->vineyardTranspirationMap->value[row][col] = float(vineTranspiration);
                         myProject->outputPlantMaps->grassTranspirationMap->value[row][col] = float(grassTranspiration);
+<<<<<<< HEAD
                         myProject->outputPlantMaps->vineStressMap->value[row][col] = float(myProject->grapevine.getStressCoefficient());
+=======
+>>>>>>> 311921a4246525b85232747d88d7837ea06c841b
                     }
                     else
                     {
                         // summed values
                         myProject->outputPlantMaps->vineyardTranspirationMap->value[row][col] += float(vineTranspiration);
                         myProject->outputPlantMaps->grassTranspirationMap->value[row][col] += float(grassTranspiration);
+<<<<<<< HEAD
                         myProject->outputPlantMaps->vineStressMap->value[row][col] += float(myProject->grapevine.getStressCoefficient());
                     }
 
@@ -245,6 +256,14 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
                     {
                         // average values
                         myProject->outputPlantMaps->vineStressMap->value[row][col] /= nrStep;
+=======
+                    }
+
+                    // vine stress (midday)
+                    if (myCurrentTime.getHour() == 12)
+                    {
+                        myProject->outputPlantMaps->vineStressMap->value[row][col] = float(myProject->grapevine.getStressCoefficient());
+>>>>>>> 311921a4246525b85232747d88d7837ea06c841b
                     }
                 }
             }
