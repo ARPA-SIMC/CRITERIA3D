@@ -164,7 +164,7 @@ void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QStringL
 }
 
 
-void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QStringList stations)
+void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QStringList stations, QList<QString> idVar)
 {
     // start from 01:00
     QDateTime startTime(startDate, QTime(1,0,0), Qt::UTC);
@@ -179,8 +179,8 @@ void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QString
         QSqlQuery qry(statement, _db);
         qry.exec();
 
-        statement = QString("DELETE FROM `%1_H` WHERE date_time >= DATETIME('%2') AND date_time <= DATETIME('%3')")
-                        .arg(stations[i]).arg(startTime.toString("yyyy-MM-dd hh:mm")).arg(endTime.toString("yyyy-MM-dd hh:mm"));
+        statement = QString("DELETE FROM `%1_H` WHERE date_time >= DATETIME('%2') AND date_time <= DATETIME('%3') AND id_variable IN ('%4')")
+                        .arg(stations[i]).arg(startTime.toString("yyyy-MM-dd hh:mm")).arg(endTime.toString("yyyy-MM-dd hh:mm")).arg(idVar.join(","));
 
         qry = QSqlQuery(statement, _db);
         qry.exec();

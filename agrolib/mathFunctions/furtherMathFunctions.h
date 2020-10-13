@@ -110,7 +110,7 @@
     {
         //float ran1(long *idum);
         //float gasdev(long *idum);
-        double cauchyRandom(int *gasDevIset,double *gasDevGset,double gamma);
+        double cauchyRandom(double gamma);
         float normalRandom(int *gasDevIset,float *gasDevGset);
         double normalRandom(int *gasDevIset,double *gasDevGset);
         double normalRandomLongSeries(int *gasDevIset,double *gasDevGset,int* randomNumberInitial);

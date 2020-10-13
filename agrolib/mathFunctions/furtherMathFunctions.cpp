@@ -1045,7 +1045,7 @@ namespace matricial
 
             int a=0;
             // TODO check: b is unused
-            int b=0;
+            //int b=0;
             int c=0;
             int d=0;
             int e=0;
@@ -1465,18 +1465,11 @@ namespace distribution
 
 namespace myrandom {
 
-double cauchyRandom(int *gasDevIset,double *gasDevGset, double gamma)
+double cauchyRandom(double gamma)
 {
-    double fac = 0;
-    double r = 0;
-    double cauchyRandom;
-    double temp;
-
-    temp = (double) rand() / (RAND_MAX);
-    cauchyRandom = statistics::functionQuantileCauchy(gamma,0,temp);
-    return cauchyRandom;
+    double temp = (double) rand() / (RAND_MAX);
+    return statistics::functionQuantileCauchy(gamma, 0, temp);
 }
-
 
 
 //----------------------------------------------------------------------
