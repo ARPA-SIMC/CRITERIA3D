@@ -180,7 +180,7 @@ void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QString
         qry.exec();
 
         statement = QString("DELETE FROM `%1_H` WHERE date_time >= DATETIME('%2') AND date_time <= DATETIME('%3') AND id_variable IN ('%4')")
-                        .arg(stations[i]).arg(startTime.toString("yyyy-MM-dd hh:mm")).arg(endTime.toString("yyyy-MM-dd hh:mm")).arg(idVar.join(""));
+                        .arg(stations[i]).arg(startTime.toString("yyyy-MM-dd hh:mm")).arg(endTime.toString("yyyy-MM-dd hh:mm")).arg(idVar.join(","));
 
         qry = QSqlQuery(statement, _db);
         qry.exec();
