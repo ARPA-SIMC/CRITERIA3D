@@ -312,10 +312,15 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
 bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString dataset, QStringList stations, QList<int> variables)
 {
-    // create station tables
-    _dbMeteo->initStationsHourlyTables(startDate, endDate, stations);
 
     QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
+    QList<QString> idVar;
+    for (int i = 0; i < variableList.size(); i++)
+    {
+        idVar.append(QString::number(variableList[i].id()));
+    }
+    // create station tables
+    _dbMeteo->initStationsHourlyTables(startDate, endDate, stations, idVar);
 
     QString product = QString(";product: VM2,%1").arg(variables[0]);
 
