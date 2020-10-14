@@ -424,6 +424,8 @@ bool searchDataPath(QString* dataPath)
 {
     QString myPath = QDir::currentPath();
     QString myRoot = QDir::rootPath();
+    // only for win: application can run on a different drive (i.e. D:\)
+    QString winRoot = myPath.left(3);
 
     bool isFound = false;
     while (! isFound)
@@ -434,7 +436,7 @@ bool searchDataPath(QString* dataPath)
             break;
         }
 
-        if (QDir::cleanPath(myPath) == myRoot)
+        if (QDir::cleanPath(myPath) == myRoot || QDir::cleanPath(myPath) == winRoot)
             break;
 
         myPath = QFileInfo(myPath).dir().absolutePath();
