@@ -29,7 +29,7 @@
             QList<int> getId(QString VarName);
             QList<VariablesList> getVariableProperties(QList<int> id);
 
-            void initStationsDailyTables(QDate startDate, QDate endDate, QStringList stations);
+            void initStationsDailyTables(QDate startDate, QDate endDate, QStringList stations, QList<QString> idVar);
             void initStationsHourlyTables(QDate startDate, QDate endDate, QStringList stations, QList<QString> idVar);
 
             void createTmpTableHourly();
@@ -38,7 +38,7 @@
             void deleteTmpTableDaily();
 
             bool saveHourlyData();
-            bool saveDailyData(QDate startDate, QDate endDate);
+            bool saveDailyData();
 
             void appendQueryHourly(QString dateTime, QString idPoint, QString idVar, QString value, bool isFirstData);
             void appendQueryDaily(QString date, QString idPoint, QString idVar, QString value, bool isFirstData);
