@@ -143,7 +143,7 @@ QList<int> DbArkimet::getHourlyVar()
 
 
 
-void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QStringList stations)
+void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QStringList stations, QList<QString> idVar)
 {
 
     for (int i = 0; i < stations.size(); i++)
@@ -172,6 +172,12 @@ void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QString
     QDateTime endTime(endDate, QTime(0,0,0), Qt::UTC);
     endTime = endTime.addSecs(3600 * 24);
 
+    for (short i=0; i<idVar.size(); i++)
+    {
+        idVar[i].insert(0,"'");
+        idVar[i].insert(idVar[i].size(),"'");
+    }
+
     for (int i = 0; i < stations.size(); i++)
     {
         QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_H` (date_time TEXT, id_variable INTEGER, value REAL, PRIMARY KEY(date_time,id_variable))").arg(stations[i]);
@@ -179,8 +185,8 @@ void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QString
         QSqlQuery qry(statement, _db);
         qry.exec();
 
-        statement = QString("DELETE FROM `%1_H` WHERE date_time >= DATETIME('%2') AND date_time <= DATETIME('%3') AND id_variable IN ('%4')")
-                        .arg(stations[i]).arg(startTime.toString("yyyy-MM-dd hh:mm")).arg(endTime.toString("yyyy-MM-dd hh:mm")).arg(idVar.join(","));
+        statement = QString("DELETE FROM `%1_H` WHERE date_time >= DATETIME('%2') AND date_time <= DATETIME('%3') AND id_variable IN (%4)")
+                        .arg(stations[i]).arg(startTime.toString("yyyy-MM-dd hh:mm:ss")).arg(endTime.toString("yyyy-MM-dd hh:mm:ss")).arg(idVar.join(","));
 
         qry = QSqlQuery(statement, _db);
         qry.exec();
@@ -270,7 +276,7 @@ void DbArkimet::appendQueryDaily(QString date, QString idPoint, QString idVar, Q
 }
 
 
-bool DbArkimet::saveDailyData(QDate startDate, QDate endDate)
+bool DbArkimet::saveDailyData()
 {
 
     if (queryString == "")
@@ -287,9 +293,6 @@ bool DbArkimet::saveDailyData(QDate startDate, QDate endDate)
     QStringList stations;
     while (qry.next())
         stations.append(qry.value(0).toString());
-
-    // create station tables
-    initStationsDailyTables(startDate, endDate, stations);
 
     // insert data
     foreach (QString id_point, stations)
