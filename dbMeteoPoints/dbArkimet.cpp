@@ -146,6 +146,12 @@ QList<int> DbArkimet::getHourlyVar()
 void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QStringList stations, QList<QString> idVar)
 {
 
+    for (short i=0; i<idVar.size(); i++)
+    {
+        idVar[i].insert(0,"'");
+        idVar[i].insert(idVar[i].size(),"'");
+    }
+
     for (int i = 0; i < stations.size(); i++)
     {
         QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_D` "
@@ -154,8 +160,8 @@ void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QStringL
         QSqlQuery qry(statement, _db);
         qry.exec();
 
-        statement = QString("DELETE FROM `%1_D` WHERE date_time >= DATE('%2') AND date_time < DATE('%3', '+1 day')")
-                        .arg(stations[i]).arg(startDate.toString("yyyy-MM-dd")).arg(endDate.toString("yyyy-MM-dd"));
+        statement = QString("DELETE FROM `%1_D` WHERE date_time >= DATE('%2') AND date_time < DATE('%3', '+1 day') AND id_variable IN (%4)")
+                        .arg(stations[i]).arg(startDate.toString("yyyy-MM-dd")).arg(endDate.toString("yyyy-MM-dd")).arg(idVar.join(","));
 
         qry = QSqlQuery(statement, _db);
         qry.exec();
