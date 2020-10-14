@@ -15,7 +15,7 @@ CONFIG += staticlib
 
 unix:{
     CONFIG(debug, debug|release) {
-        TARGET = debug/MapGraphics
+        TARGET = release/MapGraphics
     } else {
         TARGET = release/MapGraphics
     }
