@@ -64,8 +64,8 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
     QDomNode ancestor = xmlDoc.documentElement().firstChild();
     QString myTag;
     QString mySecondTag;
-    int nRow;
-    int nCol;
+    int nRow = 0;
+    int nCol = 0;
 
     _tableDaily.exists = false;
     _tableHourly.exists = false;
@@ -1038,7 +1038,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
         QString statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
         if( !qry.exec(statement) )
         {
-            while( qry.lastError().number() == tableNotFoundError
+            while( qry.lastError().nativeErrorCode() == tableNotFoundError
                    && (col < _gridStructure.header().nrCols-1
                        || row < _gridStructure.header().nrRows-1))
             {
@@ -1111,7 +1111,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
         QString statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
         if( !qry.exec(statement) )
         {
-            while( qry.lastError().number() == tableNotFoundError)
+            while( qry.lastError().nativeErrorCode() == tableNotFoundError)
             {
 
                 if ( col < _gridStructure.header().nrCols-1)
@@ -1135,7 +1135,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
                 statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
                 qry.exec(statement);
             }
-            if ( !qry.lastError().type() == QSqlError::NoError && qry.lastError().number() != tableNotFoundError)
+            if ( qry.lastError().type() != QSqlError::NoError && qry.lastError().nativeErrorCode() != tableNotFoundError)
             {
                 *myError = qry.lastError().text();
                 return false;

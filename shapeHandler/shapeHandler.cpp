@@ -464,8 +464,9 @@ bool Crit3DShapeHandler::addRecord(std::vector<std::string> fields)
     return true;
 }
 */
+
 // LC MAI testata
-bool Crit3DShapeHandler::addShape(int iShape, std::string type, std::vector<double> coordinates)
+bool Crit3DShapeHandler::addShape(std::string type, std::vector<double> coordinates)
 {
 
     openSHP(m_filepath);
@@ -651,7 +652,7 @@ void Crit3DShapeHandler::packSHP(std::string newFile)
 
 std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int partNumber)
 {
-    if (shapeNumber > m_count || partNumber > holes[shapeNumber].size())
+    if (shapeNumber > m_count || partNumber > int(holes[shapeNumber].size()))
     {
         std::vector<unsigned int> emptyVector;
         return emptyVector;
