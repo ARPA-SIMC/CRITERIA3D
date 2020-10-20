@@ -74,6 +74,7 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     }
     else
     {
+        // default appimage linux
         picPath = QCoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "textural_soil.png";
         saveButtonPath = QCoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "saveButton.png";
     }
