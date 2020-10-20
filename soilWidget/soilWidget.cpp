@@ -47,6 +47,7 @@
 #include <QMessageBox>
 #include <QFileInfo>
 #include <QDebug>
+//#include <QCoreApplication>
 
 
 Crit3DSoilWidget::Crit3DSoilWidget()
@@ -66,7 +67,6 @@ Crit3DSoilWidget::Crit3DSoilWidget()
 
     // check triangle pic and save button pic
     QString docPath, saveButtonPath;
-    /*
     if (searchDocPath(&docPath))
     {
         picPath = docPath + "img/textural_soil.png";
@@ -74,13 +74,9 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     }
     else
     {
-        picPath = "../img/textural_soil.png";
-        saveButtonPath = "../img/saveButton.png";
+        picPath = QCoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "textural_soil.png";
+        saveButtonPath = QCoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "saveButton.png";
     }
-    */
-    // TEST LC
-    picPath = CoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "textural_soil.png";
-    saveButtonPath = CoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "saveButton.png";
 
     pic.load(picPath);
     labelPic = new QLabel();
