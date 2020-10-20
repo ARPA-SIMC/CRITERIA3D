@@ -66,6 +66,7 @@ Crit3DSoilWidget::Crit3DSoilWidget()
 
     // check triangle pic and save button pic
     QString docPath, saveButtonPath;
+    /*
     if (searchDocPath(&docPath))
     {
         picPath = docPath + "img/textural_soil.png";
@@ -76,6 +77,10 @@ Crit3DSoilWidget::Crit3DSoilWidget()
         picPath = "../img/textural_soil.png";
         saveButtonPath = "../img/saveButton.png";
     }
+    */
+    // TEST LC
+    picPath = CoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "textural_soil.png";
+    saveButtonPath = CoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "saveButton.png";
 
     pic.load(picPath);
     labelPic = new QLabel();
