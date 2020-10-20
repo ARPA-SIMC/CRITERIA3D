@@ -79,8 +79,8 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     }
     */
     // TEST LC
-    picPath = CoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "textural_soil.png";
-    saveButtonPath = CoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "saveButton.png";
+    picPath = QCoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "textural_soil.png";
+    saveButtonPath = QCoreApplication::applicationDirPath() + QString("/../share/") + "CRITERIA1D" + QString("images") + "saveButton.png";
 
     pic.load(picPath);
     labelPic = new QLabel();
