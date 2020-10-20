@@ -47,7 +47,6 @@
 #include <QMessageBox>
 #include <QFileInfo>
 #include <QDebug>
-//#include <QCoreApplication>
 
 
 Crit3DSoilWidget::Crit3DSoilWidget()
