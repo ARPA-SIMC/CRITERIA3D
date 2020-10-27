@@ -966,18 +966,8 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     return CRIT3D_OK;
 }
 
-int CriteriaOutputProject::createShapeFileFromGUI(QDate dateComputation, QString csvFileName)
+int CriteriaOutputProject::createShapeFileFromGUI()
 {
-    if (! QFile(outputCsvFileName).exists())
-    {
-        // create CSV
-        int myResult = createCsvFileFromGUI(dateComputation, csvFileName);
-        if (myResult != CRIT3D_OK)
-        {
-            return myResult;
-        }
-    }
-
     Crit3DShapeHandler inputShape;
 
     if (!inputShape.open(ucmFileName.toStdString()))
