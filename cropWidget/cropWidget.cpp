@@ -77,8 +77,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     }
     else
     {
-        saveButtonPath = "../img/saveButton.png";
-        updateButtonPath = "../img/updateButton.png";
+        // default appimage linux
+        saveButtonPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/saveButton.png";
+        updateButtonPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/updateButton.png";
     }
 
     QPixmap savePixmap;

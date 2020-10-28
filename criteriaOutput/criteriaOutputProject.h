@@ -103,7 +103,7 @@ public:
     bool getAllDbVariable(QString &projectError);   
     bool getDbDataDates(QDate* firstDate, QDate* lastDate, QString &projectError);
     int createCsvFileFromGUI(QDate dateComputation, QString csvFileName);
-    int createShapeFileFromGUI(QDate dateComputation, QString csvFileName);
+    int createShapeFileFromGUI();
 
 };
 

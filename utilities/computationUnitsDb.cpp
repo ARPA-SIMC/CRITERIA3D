@@ -99,11 +99,11 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
         return false;
     }
 
-    int nrUnits = query.at() + 1;     // SQLITE doesn't support SIZE
+    unsigned int nrUnits = unsigned(query.at() + 1);     // SQLITE doesn't support SIZE
     unitList.clear();
     unitList.resize(nrUnits);
 
-    int i = 0;
+    unsigned int i = 0;
     query.first();
     do
     {
