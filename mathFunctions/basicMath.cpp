@@ -346,7 +346,7 @@
                 double* cleanList = new double[unsigned(*nrList)];
                 int n = 0;
                 for (int i = 0; i < *nrList; i++)
-                    if (list[i] != NODATA)
+                    if (int(list[i]) != int(NODATA))
                         cleanList[n++] = list[i];
 
                 // switch
@@ -398,10 +398,10 @@
                     return NODATA;
 
                 // sort
-                quicksortAscendingFloat(cleanList, 0, cleanList.size() - 1);
+                quicksortAscendingFloat(cleanList, 0, unsigned(cleanList.size() - 1));
 
                 // switch
-                *nrList = cleanList.size();
+                *nrList = int(cleanList.size());
                 list.clear();
                 list = cleanList;
             }
@@ -438,14 +438,14 @@
                     return NODATA;
 
                 // sort
-                quicksortAscendingFloat(cleanList, 0, cleanList.size()-1);
+                quicksortAscendingFloat(cleanList, 0, unsigned(cleanList.size()-1));
 
                 list.clear();
                 list = cleanList;
             }
 
             float nrValuesF = float(list.size());
-            unsigned int lastIndex = list.size() - 1;
+            unsigned int lastIndex = unsigned(list.size() - 1);
 
             // return rank
             if (value <= list[0]) return 0;

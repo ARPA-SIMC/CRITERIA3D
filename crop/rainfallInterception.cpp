@@ -129,8 +129,8 @@ namespace canopy {
         // double *soilWater (mm) total rainfall water falling on soil
 
         double actualCover,actualStorage,grossStorage,drainage;
-        double interception;
-        double freeRainfall, stemFlow;
+        double interception, freeRainfall;
+
         actualCover = plantCover(lai,extinctionCoefficient,laiMin);
         actualStorage = waterStorageCapacity(lai,leafStorage,stemStorage);
         freeRainfall = freeRainThroughfall(rainfall,actualCover);
@@ -138,9 +138,13 @@ namespace canopy {
         grossStorage = *storedWater + interception;
         grossStorage -= evaporationFromCanopy(waterFreeEvaporation,actualStorage,grossStorage);
         drainage = drainageFromTree(grossStorage,actualStorage);
-        stemFlow = (drainage)*stemFlowRate(maxStemFlowRate);
+
+        // TODO check: not used
+        double stemFlow = (drainage)*stemFlowRate(maxStemFlowRate);
+
         *soilWater = freeRainfall + drainage;
         *storedWater = grossStorage - (drainage);
+
         return true;
     }
 }

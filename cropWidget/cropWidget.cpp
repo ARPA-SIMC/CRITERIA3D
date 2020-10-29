@@ -46,7 +46,7 @@
 Crit3DCropWidget::Crit3DCropWidget()
 {
     this->setWindowTitle(QStringLiteral("CRITERIA 1D - Crop Editor"));
-    this->resize(1400, 700);
+    this->resize(1240, 700);
 
     // font
     QFont myFont = this->font();
@@ -77,8 +77,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     }
     else
     {
-        saveButtonPath = "../img/saveButton.png";
-        updateButtonPath = "../img/updateButton.png";
+        // default appimage linux
+        saveButtonPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/saveButton.png";
+        updateButtonPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/updateButton.png";
     }
 
     QPixmap savePixmap;
@@ -596,7 +597,7 @@ void Crit3DCropWidget::checkCropUpdate()
 void Crit3DCropWidget::openUnitsDB(QString dbUnitsName)
 {  
     QString error;
-    if (! loadUnitList(dbUnitsName, unitList, error))
+    if (! readUnitList(dbUnitsName, unitList, error))
     {
         QMessageBox::critical(nullptr, "Error in DB Units:", error);
         return;
