@@ -803,14 +803,21 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
 
 bool CriteriaOutputProject::getAllDbVariable(QString &projectError)
 {
-    // open DB Data
+    // check DB
+    if (!QFile(dbDataName).exists())
+    {
+        projectError = "missing file: " + dbDataName;
+        return false;
+    }
+    // open DB
     dbData = QSqlDatabase::addDatabase("QSQLITE", "data");
     dbData.setDatabaseName(dbDataName);
     if (! dbData.open())
     {
-        projectError = "Open DB data failed: " + dbData.lastError().text();
+        projectError = "open DB data failed: " + dbData.lastError().text();
         return false;
     }
+
     QSqlQuery qry(dbData);
     QString statement = QString("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%' ESCAPE '^'");
     QString tableName;
