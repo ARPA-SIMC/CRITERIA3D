@@ -768,17 +768,9 @@ bool Crit3DMeteoPointsDbHandler::loadVariableProperties()
             getValue(qry.value("id_variable"), &id_variable);
             getValue(qry.value("variable"), &variable);
             varStdString = variable.toStdString();
-            try {
-              meteoVar = MapDailyMeteoVar.at(varStdString);
-            }
-            catch (const std::out_of_range& ) {
-                try {
-                    meteoVar = MapHourlyMeteoVar.at(varStdString);
-                }
-                catch (const std::out_of_range& ) {
-                    meteoVar = noMeteoVar;
-                }
-            }
+
+            meteoVar = getMeteoVar(varStdString);
+
             if (meteoVar != noMeteoVar)
             {
                 ret = _mapIdMeteoVar.insert(std::pair<int, meteoVariable>(id_variable, meteoVar));
