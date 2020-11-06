@@ -14,10 +14,10 @@ float findThreshold(meteoVariable myVar, float value, float stdDev, float nrStdD
         || myVar == dailyPrecipitation)
     {
         distWeight = MAXVALUE(1.f, minDistance / 2000.f);
-        if (value < float(PREC_THRESHOLD))
+        if (value <= float(PREC_THRESHOLD))
             threshold = MAXVALUE(5.f, distWeight + stdDev * (nrStdDev + 1));
         else
-            return 800.f;
+            return 900.f;
     }
     else if (   myVar == airTemperature
              || myVar == airDewTemperature
@@ -53,10 +53,18 @@ float findThreshold(meteoVariable myVar, float value, float stdDev, float nrStdD
         distWeight = minDistance / 2000.f;
         threshold += zWeight + distWeight + stdDev * nrStdDev;
     }
-    else if (   myVar == globalIrradiance
-             || myVar == dailyGlobalRadiation )
-        threshold = MAXVALUE(stdDev * (nrStdDev + 1.f), 5.f);
-
+    else if (   myVar == globalIrradiance)
+    {
+        threshold = 500;
+        distWeight = minDistance / 5000.f;
+        threshold += distWeight + stdDev * (nrStdDev + 1.f);
+    }
+    else if (   myVar ==  dailyGlobalRadiation)
+    {
+        threshold = 10;
+        distWeight = minDistance / 5000.f;
+        threshold += distWeight + stdDev * (nrStdDev + 1.f);
+    }
     else if (myVar == atmTransmissivity)
         threshold = MAXVALUE(stdDev * nrStdDev, 0.5f);
     else
@@ -239,7 +247,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
     myQuality->syntacticQualityControl(myVar, meteoPoints, nrMeteoPoints);
 
     // quality control - spatial
-    if (checkSpatial && myVar != precipitation && myVar != dailyPrecipitation)
+    if (checkSpatial && myVar != precipitation && myVar != dailyPrecipitation && myVar != windVectorDirection && myVar != dailyWindVectorDirectionPrevailing)
     {
         spatialQualityControl(myVar, meteoPoints, nrMeteoPoints, spatialQualityInterpolationSettings, myClimate, myTime);
     }
