@@ -1822,7 +1822,7 @@ bool Project::searchDefaultPath(QString* defaultPath)
 
     if (! isFound)
     {
-        logError("DATA directory is missing");
+        logError("PRAGA/DATA directory is missing");
         return false;
     }
 

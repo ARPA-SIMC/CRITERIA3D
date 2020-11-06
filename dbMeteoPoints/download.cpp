@@ -1,7 +1,6 @@
 #include "download.h"
 
 #include <QtNetwork>
-#include <QDebug>
 
 
 const QByteArray Download::_authorization = QString("Basic " + QString("ugo:Ul1ss&").toLocal8Bit().toBase64()).toLocal8Bit();
@@ -13,7 +12,6 @@ Download::Download(QString dbName, QObject* parent) : QObject(parent)
 
 Download::~Download()
 {
-    qDebug() << "download obj destruction";
     delete _dbMeteo;
 }
 

@@ -691,8 +691,10 @@ frequencyType getVarFrequency(meteoVariable myVar)
     // todo: create maps of hourly and monthly variables
     if (MapDailyMeteoVarToString.find(myVar) != MapDailyMeteoVarToString.end())
         return daily;
-    else
+    else if (MapHourlyMeteoVarToString.find(myVar) != MapHourlyMeteoVarToString.end())
         return hourly;
+    else
+        return noFrequency;
 }
 
 meteoVariable getMeteoVar(std::string varString)
