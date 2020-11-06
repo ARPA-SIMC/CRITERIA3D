@@ -620,6 +620,20 @@ int CriteriaOutputProject::createMaps()
 
 int CriteriaOutputProject::createAggregationFile()
 {
+    logger.writeInfo("AGGREGATION");
+
+    // check aggregation file
+    QString aggregationPath = getFilePath(outputAggrCsvFileName);
+    if (! QDir(aggregationPath).exists())
+    {
+        QDir().mkdir(aggregationPath);
+    }
+    if (QFile(outputAggrCsvFileName).exists())
+    {
+        logger.writeInfo("Remove old aggregation: " + outputAggrCsvFileName);
+        QFile().remove(outputAggrCsvFileName);
+    }
+
     if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
     {
         projectError = "Missing shape field name.";
@@ -635,13 +649,6 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
-    // check aggregation output (csv)
-    if (outputAggrCsvFileName.right(4) != ".csv")
-    {
-        projectError = "aggregation output is not a csv file.";
-        return ERROR_SETTINGS_WRONGFILENAME;
-    }
-
     // check shapefile
     if (! QFile(outputShapeFileName).exists())
     {
@@ -653,7 +660,6 @@ int CriteriaOutputProject::createAggregationFile()
         }
     }
 
-    logger.writeInfo("AGGREGATION");
     Crit3DShapeHandler shapeVal, shapeRef;
 
     if (!shapeVal.open(outputShapeFileName.toStdString()))
