@@ -606,7 +606,7 @@ bool Project::loadParameters(QString parametersFileName)
 
             myProxy->setProxyTable(parameters->value("table").toString().toStdString());
             myProxy->setProxyField(parameters->value("field").toString().toStdString());
-            myProxy->setGridName(parameters->value("raster").toString().toStdString());
+            myProxy->setGridName(getCompleteFileName(parameters->value("raster").toString(), PATH_GEO).toStdString());
             myProxy->setForQualityControl(parameters->value("use_for_spatial_quality_control").toBool());
 
             if (! parameters->contains("active"))
@@ -642,7 +642,7 @@ bool Project::loadParameters(QString parametersFileName)
             int nrGrids = parameters->beginReadArray("grids");
             for (int i = 0; i < nrGrids; ++i) {
                 parameters->setArrayIndex(i);
-                proxyGridSeriesNames.push_back(parameters->value("name").toString());
+                proxyGridSeriesNames.push_back(getCompleteFileName(parameters->value("name").toString(), PATH_GEO));
                 proxyGridSeriesYears.push_back(parameters->value("year").toUInt());
             }
             parameters->endArray();
