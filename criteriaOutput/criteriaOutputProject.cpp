@@ -620,6 +620,20 @@ int CriteriaOutputProject::createMaps()
 
 int CriteriaOutputProject::createAggregationFile()
 {
+    logger.writeInfo("AGGREGATION");
+
+    // check aggregation file
+    QString aggregationPath = getFilePath(outputAggrCsvFileName);
+    if (! QDir(aggregationPath).exists())
+    {
+        QDir().mkdir(aggregationPath);
+    }
+    if (QFile(outputAggrCsvFileName).exists())
+    {
+        logger.writeInfo("Remove old aggregation: " + outputAggrCsvFileName);
+        QFile().remove(outputAggrCsvFileName);
+    }
+
     if (shapeFieldName.isNull() || shapeFieldName.isEmpty())
     {
         projectError = "Missing shape field name.";
@@ -635,13 +649,6 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
-    // check aggregation output (csv)
-    if (outputAggrCsvFileName.right(4) != ".csv")
-    {
-        projectError = "aggregation output is not a csv file.";
-        return ERROR_SETTINGS_WRONGFILENAME;
-    }
-
     // check shapefile
     if (! QFile(outputShapeFileName).exists())
     {
@@ -653,7 +660,6 @@ int CriteriaOutputProject::createAggregationFile()
         }
     }
 
-    logger.writeInfo("AGGREGATION");
     Crit3DShapeHandler shapeVal, shapeRef;
 
     if (!shapeVal.open(outputShapeFileName.toStdString()))
@@ -803,14 +809,21 @@ bool CriteriaOutputProject::initializeCsvOutputFile()
 
 bool CriteriaOutputProject::getAllDbVariable(QString &projectError)
 {
-    // open DB Data
+    // check DB
+    if (!QFile(dbDataName).exists())
+    {
+        projectError = "missing file: " + dbDataName;
+        return false;
+    }
+    // open DB
     dbData = QSqlDatabase::addDatabase("QSQLITE", "data");
     dbData.setDatabaseName(dbDataName);
     if (! dbData.open())
     {
-        projectError = "Open DB data failed: " + dbData.lastError().text();
+        projectError = "open DB data failed: " + dbData.lastError().text();
         return false;
     }
+
     QSqlQuery qry(dbData);
     QString statement = QString("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%' ESCAPE '^'");
     QString tableName;

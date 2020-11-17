@@ -486,7 +486,7 @@ bool Crit3DShapeHandler::addShape(std::string type, std::vector<double> coordina
         double	*padfX, *padfY;
         SHPObject	*psObject;
 
-        unsigned int sizeCoord = coordinates.size();
+        unsigned int sizeCoord = unsigned(coordinates.size());
 
         padfX = (double *) malloc(sizeof(double) * sizeCoord);
         padfY = (double *) malloc(sizeof(double) * sizeCoord);
