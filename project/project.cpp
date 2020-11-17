@@ -904,6 +904,7 @@ bool Project::loadDEM(QString myFileName)
     checkMeteoPointsDEM();
 
     logInfo("DEM = " + myFileName);
+
     return true;
 }
 
@@ -968,7 +969,7 @@ bool Project::loadMeteoPointsDB(QString dbName)
     // load proxy values for detrending
     if (! readProxyValues())
     {
-        logInfo("Error reading proxy values");
+        logError("Error reading proxy values");
     }
 
     //position with respect to DEM
@@ -1306,7 +1307,7 @@ bool Project::loadProxyGrids()
     {
         Crit3DProxy* myProxy = interpolationSettings.getProxy(i);
 
-        logInfo("Loading grid for proxy: " + QString::fromStdString(myProxy->getName()));
+        logInfoGUI("Loading grid for proxy: " + QString::fromStdString(myProxy->getName()));
 
         if (interpolationSettings.getSelectedCombination().getValue(i) || myProxy->getForQualityControl())
         {
@@ -2335,7 +2336,7 @@ bool Project::setLogFile(QString myFileName)
     logFile.open(currentFileName.toStdString().c_str());
     if (logFile.is_open())
     {
-        logInfo("LogFile: " + currentFileName);
+        logInfo("LogFile = " + currentFileName);
         return true;
     }
     else
@@ -2362,7 +2363,8 @@ void Project::logInfoGUI(QString myStr)
 {
     if (modality == MODE_GUI)
     {
-        QMessageBox::information(nullptr, "Information", myStr);
+        FormInfo formInfo;
+        formInfo.showInfo(myStr);
     }
     else
     {
