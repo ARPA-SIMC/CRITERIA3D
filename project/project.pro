@@ -29,7 +29,7 @@ win32:{
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo   \
             ../solarRadiation ../interpolation ../utilities     \
-            ../netcdfHandler ../dbMeteoPoints ../dbMeteoGrid ../meteoWidget
+            ../netcdfHandler ../dbMeteoPoints ../dbMeteoGrid ../meteoWidget ../commonDialogs
 
 
 SOURCES += \
