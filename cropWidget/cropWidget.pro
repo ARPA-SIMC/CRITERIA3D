@@ -30,11 +30,11 @@ win32:{
     TARGET = cropWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../dbMeteoGrid ../soil ../crop ../qcustomplot ../criteriaModel ../project
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../dbMeteoGrid  \
+            ../soil ../crop ../qcustomplot ../criteriaModel ../commonDialogs
 
 
 SOURCES += \
-    ../../agrolib/project/formInfo.cpp \
     callout.cpp \
     cropWidget.cpp \
     dialogNewCrop.cpp \
@@ -45,7 +45,6 @@ SOURCES += \
     tabWaterContent.cpp
 
 HEADERS += \
-    ../../agrolib/project/formInfo.h \
     callout.h \
     cropWidget.h \
     dialogNewCrop.h \
