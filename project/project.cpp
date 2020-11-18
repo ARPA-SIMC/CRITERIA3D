@@ -791,6 +791,18 @@ void Project::getMeteoPointsRange(float *minimum, float *maximum)
     }
 }
 
+void Project::cleanMeteoPointsData()
+{
+    if (nrMeteoPoints > 0 && meteoPoints != nullptr)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            meteoPoints[i].cleanObsDataH();
+            meteoPoints[i].cleanObsDataD();
+            meteoPoints[i].cleanObsDataM();
+        }
+    }
+}
 
 void Project::clearMeteoPoints()
 {
@@ -1062,6 +1074,45 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
 
         if (loadDaily)
             if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
+    }
+
+    if (showInfo) myInfo.close();
+
+    return isData;
+}
+
+bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, QString dataset, bool showInfo)
+{
+    //check
+    if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
+
+    bool isData = false;
+    FormInfo myInfo;
+    int step = 0;
+
+    QString infoStr = "Load data: " + firstDate.toString();
+
+    if (firstDate != lastDate)
+        infoStr += " - " + lastDate.toString();
+
+    if (showInfo)
+        step = myInfo.start(infoStr, nrMeteoPoints);
+
+    for (int i=0; i < nrMeteoPoints; i++)
+    {
+        if (showInfo)
+        {
+            if ((i % step) == 0) myInfo.setValue(i);
+        }
+
+        if (meteoPoints[i].dataset == dataset.toStdString())
+        {
+            if (loadHourly)
+                if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
+
+            if (loadDaily)
+                if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
+        }
     }
 
     if (showInfo) myInfo.close();

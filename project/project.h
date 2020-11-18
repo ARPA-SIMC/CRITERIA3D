@@ -159,10 +159,12 @@
 
         void closeMeteoPointsDB();
         void closeMeteoGridDB();
+        void cleanMeteoPointsData();
 
         bool loadDEM(QString myFileName);
         void closeDEM();
         bool loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo);
+        bool loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, QString dataset, bool showInfo);
         bool loadMeteoPointsDB(QString dbName);
         bool loadMeteoGridDB(QString xmlName);
         bool loadAggregationdDB(QString dbName);
