@@ -21,12 +21,14 @@ INCLUDEPATH +=  ../../mapGraphics \
                 ../../agrolib/soilFluxes3D/header ../../agrolib/crop ../../agrolib/grapevine \
                 ../../agrolib/utilities ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
                 ../../agrolib/project ../../agrolib/graphics  ../../agrolib/commonDialogs \
-                ../../mapGraphics ../../agrolib/meteoWidget ../CRITERIA3D/shared
+                ../../mapGraphics ../../agrolib/meteoWidget ../../agrolib/graphics \
+                ../CRITERIA3D/shared
 
 CONFIG += debug_and_release
 
 
 CONFIG(debug, debug|release) {
+    LIBS += -L../../agrolib/graphics/debug -lgraphics
     LIBS += -L../../mapGraphics/debug -lMapGraphics
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/debug -commonDialogs
@@ -44,6 +46,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/crit3dDate/debug -lcrit3dDate
     LIBS += -L../../agrolib/mathFunctions/debug -lmathFunctions
 } else {
+    LIBS += -L../../agrolib/graphics/release -lgraphics
     LIBS += -L../../mapGraphics/release -lMapGraphics
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/release -lcommonDialogs
@@ -63,10 +66,6 @@ CONFIG(debug, debug|release) {
 }
 
 SOURCES += \
-    ../../agrolib/graphics/rubberBand.cpp \
-    ../../agrolib/graphics/colorLegend.cpp \
-    ../../agrolib/graphics/mapGraphicsRasterObject.cpp \
-    ../../agrolib/graphics/stationMarker.cpp \
     atmosphere.cpp \
     dataHandler.cpp \
     disease.cpp \
@@ -81,10 +80,6 @@ SOURCES += \
 
 
 HEADERS += \
-    ../../agrolib/graphics/rubberBand.h \
-    ../../agrolib/graphics/colorLegend.h \
-    ../../agrolib/graphics/mapGraphicsRasterObject.h \
-    ../../agrolib/graphics/stationMarker.h \
     atmosphere.h \
     dataHandler.h \
     disease.h \
