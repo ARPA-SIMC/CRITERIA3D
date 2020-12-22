@@ -73,10 +73,10 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     }
     else
     {
-        picPath = "../img/textural_soil.png";
-        saveButtonPath = "../img/saveButton.png";
+        // default appimage linux
+        picPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/textural_soil.png";
+        saveButtonPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/saveButton.png";
     }
-
     pic.load(picPath);
     labelPic = new QLabel();
     labelPic->setPixmap(pic);

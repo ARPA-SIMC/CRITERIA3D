@@ -10,8 +10,8 @@
 std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                           gis::Crit3DRasterGrid &rasterRef, gis::Crit3DRasterGrid &rasterVal, std::vector<int> &vectorNull)
 {
-    int nrRefShapes = shapeRef.getShapeCount();
-    int nrValShapes = shapeVal.getShapeCount();
+    unsigned int nrRefShapes = unsigned(shapeRef.getShapeCount());
+    unsigned int nrValShapes = unsigned(shapeVal.getShapeCount());
 
     // analysis matrix
     vectorNull.clear();
@@ -23,7 +23,7 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
        for (int col = 0; col < rasterRef.header->nrCols; col++)
        {
            int refIndex = int(rasterRef.value[row][col]);
-           if (refIndex != NODATA && refIndex < nrRefShapes)
+           if (refIndex != NODATA && refIndex < signed(nrRefShapes))
            {
                double x, y;
                rasterRef.getXY(row, col, &x, &y);
@@ -33,7 +33,7 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
                     gis::getRowColFromXY(*(rasterVal.header), x, y, &rowVal, &colVal);
 
                     int valIndex = int(rasterVal.value[rowVal][colVal]);
-                    if (valIndex != NODATA && valIndex < nrValShapes)
+                    if (valIndex != NODATA && valIndex < signed(nrValShapes))
                     {
                         matrix[unsigned(refIndex)][unsigned(valIndex)]++;
                     }
@@ -87,19 +87,19 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
 
         for (unsigned int col = 0; col < nrValShapes; col++)
         {
-            int nrPoints = int(matrix[row][col]);
+            int nrPoints = int(matrix[row][unsigned(col)]);
             if (nrPoints > 0)
             {
                 if (fieldType == FTInteger)
                 {
-                    value = double(shapeVal.readIntAttribute(col,fieldIndex));
+                    value = double(shapeVal.readIntAttribute(signed(col), fieldIndex));
                 }
                 else if (fieldType == FTDouble)
                 {
-                    value = shapeVal.readDoubleAttribute(col,fieldIndex);
+                    value = shapeVal.readDoubleAttribute(signed(col), fieldIndex);
                 }
 
-                if (value == NODATA)
+                if (int(value) == NODATA)
                 {
                     vectorNull[row] += nrPoints;
                 }
@@ -107,7 +107,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
                 {
                     validPoints[row] += nrPoints;
 
-                    if (currentValue == NODATA)
+                    if (int(currentValue) == NODATA)
                     {
                         currentValue = value;
                     }
@@ -241,8 +241,8 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                 }
                 else if (fieldType == FTDouble)
                 {
-                    double value = shapeVal.readDoubleAttribute(col,fieldIndex);
-                    if (value == NODATA)
+                    double value = shapeVal.readDoubleAttribute(signed(col), fieldIndex);
+                    if (int(value) == int(NODATA))
                     {
                         vectorNull[row] += nrPoints;
                     }
@@ -266,7 +266,7 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                 }
                 else if (fieldType == FTString)
                 {
-                    std::string value = shapeVal.readStringAttribute(col,fieldIndex);
+                    std::string value = shapeVal.readStringAttribute(signed(col),fieldIndex);
                     if (value == "" || value == "-9999")
                     {
                         vectorNull[row] += nrPoints;
@@ -298,15 +298,15 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
             // write NODATA or null string
             if (fieldType == FTInteger)
             {
-                shapeRef.writeIntAttribute(row, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), NODATA);
+                shapeRef.writeIntAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), NODATA);
             }
             else if (fieldType == FTDouble)
             {
-                shapeRef.writeDoubleAttribute(row, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), NODATA);
+                shapeRef.writeDoubleAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), NODATA);
             }
             else if (fieldType == FTString)
             {
-                shapeRef.writeStringAttribute(row, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), "");
+                shapeRef.writeStringAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), "");
             }
         }
         else
@@ -325,15 +325,15 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
 
             if (fieldType == FTInteger)
             {
-                shapeRef.writeIntAttribute(row, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesInt[index]);
+                shapeRef.writeIntAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesInt[index]);
             }
             else if (fieldType == FTDouble)
             {
-                shapeRef.writeDoubleAttribute(row, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesDouble[index]);
+                shapeRef.writeDoubleAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesDouble[index]);
             }
             else if (fieldType == FTString)
             {
-                shapeRef.writeStringAttribute(row, shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesString[index].c_str());
+                shapeRef.writeStringAttribute(signed(row), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), vectorValuesString[index].c_str());
             }
         }
     }

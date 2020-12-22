@@ -37,7 +37,7 @@ bool getCropIdList(QSqlDatabase* dbCrop, QStringList* cropIdList, QString* error
 QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myError)
 {
     *myError = "";
-    QString queryString = "SELECT * FROM crop WHERE crop_name='" + cropName +"'";
+    QString queryString = "SELECT * FROM crop WHERE crop_name='" + cropName +"' COLLATE NOCASE";
 
     QSqlQuery query = dbCrop->exec(queryString);
     query.last();
@@ -58,7 +58,9 @@ QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myErr
 QString getCropFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString *myError)
 {
     *myError = "";
-    QString queryString = "SELECT * FROM " + cropClassTable + " WHERE " + cropClassField + " = '" + idCropClass + "'";
+    QString queryString = "SELECT * FROM " + cropClassTable
+                          + " WHERE " + cropClassField + " = '" + idCropClass + "'"
+                          + " COLLATE NOCASE";
 
     QSqlQuery query = dbCrop->exec(queryString);
     query.last();

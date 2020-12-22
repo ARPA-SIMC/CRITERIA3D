@@ -759,7 +759,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         }
         else if (fieldType == FTDouble)
         {
-            shapeFieldList.push_back(QString::number(refShapeFile.readDoubleAttribute(row,fieldIndex)));
+            shapeFieldList.push_back(QString::number(refShapeFile.readDoubleAttribute(row,fieldIndex),'f',1));
         }
         else if (fieldType == FTString)
         {
