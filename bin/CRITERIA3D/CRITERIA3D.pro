@@ -24,15 +24,16 @@ INCLUDEPATH +=  ./shared  \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation  \
                 ../../agrolib/soilWidget ../../agrolib/utilities  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
-                ../../agrolib/project ../../agrolib/graphics \
-                ../../agrolib/meteoWidget
-
+                ../../agrolib/project ../../agrolib/graphics  ../../agrolib/commonDialogs \
+                ../../mapGraphics ../../agrolib/meteoWidget
 
 
 CONFIG(debug, debug|release) {
+    LIBS += -L../../agrolib/graphics/debug -lgraphics
     LIBS += -L../../mapGraphics/debug -lMapGraphics
     LIBS += -L../../agrolib/project/debug -lproject
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
+    LIBS += -L../../agrolib/commonDialogs/debug -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/debug -ldbMeteoGrid
     LIBS += -L../../agrolib/dbMeteoPoints/debug -ldbMeteoPoints
     LIBS += -L../../agrolib/soilWidget/debug -lsoilWidget
@@ -48,9 +49,11 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/crit3dDate/debug -lcrit3dDate
 
 } else {
+    LIBS += -L../../agrolib/graphics/release -lgraphics
     LIBS += -L../../mapGraphics/release -lMapGraphics
     LIBS += -L../../agrolib/project/release -lproject
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
+    LIBS += -L../../agrolib/commonDialogs/release -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/release -ldbMeteoGrid
     LIBS += -L../../agrolib/dbMeteoPoints/release -ldbMeteoPoints
     LIBS += -L../../agrolib/soilWidget/release -lsoilWidget
@@ -68,9 +71,6 @@ CONFIG(debug, debug|release) {
 
 
 SOURCES += mainwindow.cpp \
-    ../../agrolib/graphics/colorLegend.cpp \
-    ../../agrolib/graphics/mapGraphicsRasterObject.cpp \
-    ../../agrolib/graphics/stationMarker.cpp \
     criteria3DProject.cpp \
     shared/project3D.cpp \
     viewer3d.cpp \
@@ -78,9 +78,6 @@ SOURCES += mainwindow.cpp \
 
 
 HEADERS += mainwindow.h \
-    ../../agrolib/graphics/colorLegend.h \
-    ../../agrolib/graphics/mapGraphicsRasterObject.h \
-    ../../agrolib/graphics/stationMarker.h \
     criteria3DProject.h \
     shared/project3D.h \
     viewer3d.h

@@ -21,7 +21,7 @@ INCLUDEPATH +=  ../../mapGraphics \
                 ../../agrolib/soilFluxes3D/header ../../agrolib/crop ../../agrolib/grapevine \
                 ../../agrolib/utilities ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
                 ../../agrolib/project ../../agrolib/graphics  ../../agrolib/commonDialogs \
-                ../../mapGraphics ../../agrolib/meteoWidget ../../agrolib/graphics \
+                ../../mapGraphics ../../agrolib/meteoWidget \
                 ../CRITERIA3D/shared
 
 CONFIG += debug_and_release
