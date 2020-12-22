@@ -28,7 +28,7 @@
             void showDailyGraph();
             void showHourlyGraph();
             void updateSeries();
-            void updateDate();
+            void redraw();
             void showTable();
             void showVar();
             void tooltipLineSeries(QPointF point, bool state);
