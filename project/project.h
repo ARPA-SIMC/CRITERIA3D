@@ -36,6 +36,12 @@
         #include "meteoWidget.h"
     #endif
 
+    #define ERROR_NONE 0
+    #define ERROR_SETTINGS 1
+    #define ERROR_DEM 2
+    #define ERROR_DBPOINT 3
+    #define ERROR_DBGRID 4
+
     class Project : public QObject {
         Q_OBJECT
 
@@ -62,6 +68,7 @@
 
         bool requestedExit;
         QString errorString;
+        int errorType;
 
         QString logFileName;
         QString demFileName;

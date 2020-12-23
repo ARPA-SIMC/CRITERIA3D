@@ -44,6 +44,7 @@ void Project::initializeProject()
     requestedExit = false;
     logFileName = "";
     errorString = "";
+    errorType = ERROR_NONE;
     currentTileMap = "";
 
     nrMeteoPoints = 0;
@@ -2113,18 +2114,31 @@ bool Project::loadProject()
 
     if (! loadParameters(parametersFileName))
     {
+        errorType = ERROR_SETTINGS;
         logError();
         return false;
     }
 
     if (demFileName != "")
-        if (! loadDEM(demFileName)) return false;
+        if (! loadDEM(demFileName))
+        {
+            errorType = ERROR_DEM;
+            return false;
+        }
 
     if (dbPointsFileName != "")
-        if (! loadMeteoPointsDB(dbPointsFileName)) return false;
+        if (! loadMeteoPointsDB(dbPointsFileName))
+        {
+            errorType = ERROR_DBPOINT;
+            return false;
+        }
 
     if (dbGridXMLFileName != "")
-        if (! loadMeteoGridDB(dbGridXMLFileName)) return false;
+        if (! loadMeteoGridDB(dbGridXMLFileName))
+        {
+            errorType = ERROR_DBGRID;
+            return false;
+        }
 
     return true;
 }
