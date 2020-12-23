@@ -806,6 +806,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     QDate myDate = firstDate->date();
     Crit3DDate myCrit3DDate;
     QDateTime myDateTime;
+
     for (int d = 0; d < nrDays; d++)
     {
         myCrit3DDate = getCrit3DDate(myDate);
