@@ -58,7 +58,10 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
         return false;
 
     if (! loadProject())
-        return false;
+    {
+        if (errorType != ERROR_DBGRID)
+            return false;
+    }
 
     // soil map and data
     if (soilMapFileName != "") loadSoilMap(soilMapFileName);
@@ -66,6 +69,7 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
 
     // soiluse map and data
     // TODO soilUse map
+
     if (cropDbFileName != "") loadCropDatabase(cropDbFileName);
 
     if (projectName != "")
@@ -364,7 +368,7 @@ bool Crit3DProject::initializeCriteria3DModel()
     }
 
     isCriteria3DInitialized = true;
-    logInfoGUI("Criteria3D model initialized");
+    logInfo("Criteria3D model initialized");
 
     return true;
 }

@@ -29,13 +29,8 @@
 #include "commonConstants.h"
 #include "formInfo.h"
 
-#include <QMessageBox>
 #include <QLayout>
-#include <QMenu>
-#include <QMenuBar>
-#include <QPushButton>
 #include <QDate>
-#include <QtGlobal>
 
 
 Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
@@ -819,6 +814,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
         {
             index = d*24+h;
             // set categories
+            categories.append(QString::number(index));
             if (index == round(nextIndex))
             {
                 myDateTime.setDate(myDate);
@@ -878,7 +874,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     if (isBar)
     {
-        for (int mp=0; mp<nMeteoPoints;mp++)
+        for (int mp=0; mp < nMeteoPoints; mp++)
         {
             QBarSeries* barMpSeries = new QBarSeries();
             for (int i = 0; i < nameBar.size(); i++)
@@ -908,17 +904,14 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
     if (isLine)
     {
-        for (int mp=0; mp<nMeteoPoints;mp++)
+        for (int mp=0; mp < nMeteoPoints; mp++)
         {
-            if (isLine)
+            for (int i = 0; i < nameLines.size(); i++)
             {
-                for (int i = 0; i < nameLines.size(); i++)
-                {
-                    chart->addSeries(lineSeries[mp][i]);
-                    lineSeries[mp][i]->attachAxis(axisX);
-                    lineSeries[mp][i]->attachAxis(axisY);
-                    connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
-                }
+                chart->addSeries(lineSeries[mp][i]);
+                lineSeries[mp][i]->attachAxis(axisX);
+                lineSeries[mp][i]->attachAxis(axisY);
+                connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
             }
         }
 
@@ -1449,6 +1442,4 @@ void Crit3DMeteoWidget::setMeteoWidgetID(int value)
 {
     meteoWidgetID = value;
 }
-
-
 

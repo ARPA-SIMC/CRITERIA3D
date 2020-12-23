@@ -3,10 +3,6 @@
 
     #include <QtWidgets>
     #include <QtCharts>
-    #include <QComboBox>
-    #include <QGroupBox>
-    #include <QLineEdit>
-    #include <QLabel>
     #include "meteoPoint.h"
     #include "callout.h"
 

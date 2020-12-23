@@ -376,6 +376,7 @@ void MainWindow::on_actionOpenProject_triggered()
 
     if (! myProject.loadCriteria3DProject(fileName))
     {
+        myProject.logError("Error opening project: " + myProject.errorString);
         myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
     }
 
@@ -1245,7 +1246,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOut
     int hour1 = firstTime.time().hour();
     int hour2 = lastTime.time().hour();
 
-    myProject.logInfo("Load meteo data...");
+    myProject.logInfoGUI("Load meteo data...");
     if (! myProject.loadMeteoPointsData(firstDate.addDays(-1), lastDate.addDays(+1), true, false, false))
     {
         myProject.logError();
@@ -1256,7 +1257,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOut
     bool isInitialState = true;
     QString outputPathHourly;
     int firstHour, lastHour;
-    myProject.logInfo("\nRun models from: " + firstTime.toString() + " to: " + lastTime.toString());
+    myProject.logInfoGUI("\nRun models from: " + firstTime.toString() + " to: " + lastTime.toString());
 
     for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1))
     {
@@ -1268,7 +1269,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOut
             // previousDate =
             if (! loadStates(previousDate))
             {
-                myProject.logInfo("Previous state not found, model will be initialized.");
+                myProject.logInfoGUI("Previous state not found, model will be initialized.");
                 isInitialState = true;
             }
         }*/
@@ -1314,7 +1315,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOut
         }
     }
 
-    myProject.logInfo("End of run.");
+    myProject.logInfoGUI("End of run.");
     return true;
 }
 
