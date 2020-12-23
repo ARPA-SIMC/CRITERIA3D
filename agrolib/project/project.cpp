@@ -1,5 +1,4 @@
 #include "project.h"
-#include "formInfo.h"
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "spatialControl.h"
@@ -25,6 +24,7 @@ Project::Project()
     quality = new Crit3DQuality();
     meteoPointsColorScale = new Crit3DColorScale();
     meteoGridDbHandler = nullptr;
+    formLog = nullptr;
 
     // They not change after loading default settings
     appPath = "";
@@ -871,6 +871,8 @@ bool Project::loadDEM(QString myFileName)
         return false;
     }
 
+    logInfoGUI("Load DEM = " + myFileName);
+
     this->demFileName = myFileName;
     myFileName = getCompleteFileName(myFileName, PATH_DEM);
 
@@ -915,8 +917,6 @@ bool Project::loadDEM(QString myFileName)
 
     //check points position with respect to DEM
     checkMeteoPointsDEM();
-
-    logInfo("DEM = " + myFileName);
 
     return true;
 }
@@ -2140,6 +2140,7 @@ bool Project::loadProject()
             return false;
         }
 
+    closeLogInfo();
     return true;
 }
 
@@ -2428,8 +2429,11 @@ void Project::logInfoGUI(QString myStr)
 {
     if (modality == MODE_GUI)
     {
-        FormInfo formInfo;
-        formInfo.showInfo(myStr);
+        if (formLog == nullptr)
+        {
+            formLog = new FormInfo();
+        }
+        formLog->showInfo(myStr);
     }
     else
     {
@@ -2439,6 +2443,15 @@ void Project::logInfoGUI(QString myStr)
     if (logFile.is_open())
     {
         logFile << myStr.toStdString() << std::endl;
+    }
+}
+
+
+void Project::closeLogInfo()
+{
+    if ((modality == MODE_GUI) && (formLog != nullptr))
+    {
+        formLog->close();
     }
 }
 

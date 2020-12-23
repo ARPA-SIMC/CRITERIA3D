@@ -891,6 +891,9 @@ void MainWindow::setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *my
 
 void MainWindow::showMeteoVariable(meteoVariable var)
 {
+    if (myProject.hourlyMeteoMaps == nullptr)
+        return;
+
     switch(var)
     {
     case airTemperature:

@@ -35,6 +35,9 @@
     #ifndef METEOWIDGET_H
         #include "meteoWidget.h"
     #endif
+    #ifndef FORMINFO_H
+        #include "formInfo.h"
+    #endif
 
     #define ERROR_NONE 0
     #define ERROR_SETTINGS 1
@@ -49,6 +52,7 @@
         QString appPath;
         QString defaultPath;
         QString projectPath;
+        FormInfo* formLog;
 
         void clearMeteoPoints();
         bool createDefaultProject(QString fileName);
@@ -162,6 +166,7 @@
         void logError(QString myStr);
         void logInfo(QString myStr);
         void logInfoGUI(QString myStr);
+        void closeLogInfo();
         void logError();
 
         void closeMeteoPointsDB();
