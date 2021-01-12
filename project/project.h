@@ -32,18 +32,15 @@
     #ifndef _FSTREAM_
         #include <fstream>
     #endif
-    #ifndef METEOWIDGET_H
-        #include "meteoWidget.h"
-    #endif
-    #ifndef FORMINFO_H
-        #include "formInfo.h"
-    #endif
 
     #define ERROR_NONE 0
     #define ERROR_SETTINGS 1
     #define ERROR_DEM 2
     #define ERROR_DBPOINT 3
     #define ERROR_DBGRID 4
+
+    class Crit3DMeteoWidget;
+    class FormInfo;
 
     class Project : public QObject {
         Q_OBJECT

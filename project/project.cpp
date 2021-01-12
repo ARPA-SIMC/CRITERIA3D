@@ -9,6 +9,8 @@
 #include "transmissivity.h"
 #include "utilities.h"
 #include "aggregation.h"
+#include "formInfo.h"
+#include "meteoWidget.h"
 
 #include <iostream>
 #include <QDir>
