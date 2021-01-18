@@ -1,26 +1,26 @@
 /*!
-    \copyright 2016 Fausto Tomei, Gabriele Antolini,
+    \copyright 2020 Fausto Tomei, Gabriele Antolini,
     Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
 
-    This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by ARPAE Emilia-Romagna
+    This file is part of AGROLIB.
+    AGROLIB has been developed under contract issued by ARPAE Emilia-Romagna
 
-    CRITERIA3D is free software: you can redistribute it and/or modify
+    AGROLIB is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CRITERIA3D is distributed in the hope that it will be useful,
+    AGROLIB is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
+    along with AGROLIB.  If not, see <http://www.gnu.org/licenses/>.
 
     contacts:
-    fausto.tomei@gmail.com
     ftomei@arpae.it
+    gantolini@arpae.it
 */
 
 
@@ -70,6 +70,11 @@ std::string NetCDFVariable::getVarName()
 NetCDFHandler::NetCDFHandler()
 {
     ncId = NODATA;
+    idX = NODATA;
+    idY = NODATA;
+    idLat = NODATA;
+    idLon = NODATA;
+    idTime = NODATA;
 
     x = nullptr;
     y = nullptr;
@@ -352,12 +357,12 @@ bool NetCDFHandler::readProperties(string fileName)
            nrY = int(length);
            isLatLon = false;
        }
-       else if (lowerCase(string(name)) == "lat" || lowerCase(string(name)) == "latitude")
+       else if (lowerCase(string(name)) == "lat" || lowerCase(string(name)) == "rlat" || lowerCase(string(name)) == "latitude")
        {
            nrLat = int(length);
            isLatLon = true;
        }
-       else if (lowerCase(string(name)) == "lon" || lowerCase(string(name)) == "longitude")
+       else if (lowerCase(string(name)) == "lon" || lowerCase(string(name)) == "rlon" || lowerCase(string(name)) == "longitude")
        {
            nrLon = int(length);
            isLatLon = true;
@@ -405,10 +410,16 @@ bool NetCDFHandler::readProperties(string fileName)
            idX = v;
        else if (lowerCase(string(varName)) == "y")
            idY = v;
-       else if (lowerCase(string(varName)) == "lat" || lowerCase(string(varName)) == "latitude")
-           idLat = v;
-       else if (lowerCase(string(varName)) == "lon" || lowerCase(string(varName)) == "longitude")
-           idLon = v;
+       else if (lowerCase(string(varName)) == "lat" || lowerCase(string(name)) == "rlat" || lowerCase(string(varName)) == "latitude")
+       {
+           if (idLat == NODATA)
+                idLat = v;
+       }
+       else if (lowerCase(string(varName)) == "lon" || lowerCase(string(name)) == "rlon" || lowerCase(string(varName)) == "longitude")
+       {
+           if (idLon== NODATA)
+                idLon = v;
+       }
 
        metadata << endl << v  << "\t" << varName << "\t" << typeName << "\t dims: ";
        for (int d = 0; d < nrVarDimensions; d++)
@@ -437,10 +448,11 @@ bool NetCDFHandler::readProperties(string fileName)
                 {
                     if (lowerCase(string(attrName)) == "units")
                     {
-                        if (lowerCase(myString).substr(0, 18) == "seconds since 1970")
+                        if (lowerCase(myString).substr(0, 13) == "seconds since")
                         {
                             isStandardTime = true;
-                            firstDate = Crit3DDate(1, 1, 1970);
+                            std::string dateStr = lowerCase(myString).substr(14, 23);
+                            firstDate = Crit3DDate(dateStr);
                         }
                         else if (lowerCase(myString).substr(0, 11) == "hours since")
                         {
