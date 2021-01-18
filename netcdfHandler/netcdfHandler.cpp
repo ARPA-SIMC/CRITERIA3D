@@ -410,15 +410,15 @@ bool NetCDFHandler::readProperties(string fileName)
            idX = v;
        else if (lowerCase(string(varName)) == "y")
            idY = v;
-       else if (lowerCase(string(varName)) == "lat" || lowerCase(string(name)) == "rlat" || lowerCase(string(varName)) == "latitude")
+       else if (lowerCase(string(varName)) == "lat" || lowerCase(string(varName)) == "rlat" || lowerCase(string(varName)) == "latitude")
        {
            if (idLat == NODATA)
-                idLat = v;
+               idLat = v;
        }
-       else if (lowerCase(string(varName)) == "lon" || lowerCase(string(name)) == "rlon" || lowerCase(string(varName)) == "longitude")
+       else if (lowerCase(string(varName)) == "lon" || lowerCase(string(varName)) == "rlon" || lowerCase(string(varName)) == "longitude")
        {
-           if (idLon== NODATA)
-                idLon = v;
+           if (idLon == NODATA)
+               idLon = v;
        }
 
        metadata << endl << v  << "\t" << varName << "\t" << typeName << "\t dims: ";
