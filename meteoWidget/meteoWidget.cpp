@@ -241,6 +241,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
     addVarButton = new QPushButton(tr("+/- var"));
     tableButton = new QPushButton(tr("view table"));
     redrawButton = new QPushButton(tr("redraw"));
+    shiftPreviousButton = new QPushButton(tr("<"));
+    shiftFollowingButton = new QPushButton(tr(">"));
     QLabel *labelFirstDate = new QLabel(tr("Start Date: "));
     QLabel *labelEndDate = new QLabel(tr("End Date: "));
     firstDate = new QDateTimeEdit(QDate::currentDate());
@@ -250,9 +252,13 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
     addVarButton->setMaximumWidth(100);
     tableButton->setMaximumWidth(100);
     redrawButton->setMaximumWidth(100);
+    shiftPreviousButton->setMaximumWidth(30);
+    shiftFollowingButton->setMaximumWidth(30);
 
     firstDate->setDisplayFormat("yyyy-MM-dd");
+    firstDate->setCalendarPopup(true);
     lastDate->setDisplayFormat("yyyy-MM-dd");
+    lastDate->setCalendarPopup(true);
     firstDate->setMaximumWidth(120);
     lastDate->setMaximumWidth(120);
     firstDate->setMinimumWidth(firstDate->width()-firstDate->width()*0.3);
@@ -276,6 +282,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
     buttonLayout->addWidget(firstDate);
     buttonLayout->addWidget(labelEndDate);
     buttonLayout->addWidget(lastDate);
+    buttonLayout->addWidget(shiftPreviousButton);
+    buttonLayout->addWidget(shiftFollowingButton);
     buttonLayout->addWidget(redrawButton);
     buttonLayout->addWidget(tableButton);
     buttonLayout->setAlignment(Qt::AlignLeft);
@@ -319,6 +327,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
     connect(tableButton, &QPushButton::clicked, [=](){ showTable(); });
     connect(redrawButton, &QPushButton::clicked, [=](){ redraw(); });
+    connect(shiftPreviousButton, &QPushButton::clicked, [=](){ shiftPrevious(); });
+    connect(shiftFollowingButton, &QPushButton::clicked, [=](){ shiftFollowing(); });
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -1131,6 +1141,23 @@ void Crit3DMeteoWidget::redraw()
         drawHourlyVar();
     }
 
+}
+
+void Crit3DMeteoWidget::shiftPrevious()
+{
+    int nDays = firstDate->date().daysTo(lastDate->date())+1;
+    firstDate->setDate(firstDate->date().addDays(-nDays));
+    lastDate->setDate(lastDate->date().addDays(-nDays));
+    redraw();
+
+}
+
+void Crit3DMeteoWidget::shiftFollowing()
+{
+    int nDays = firstDate->date().daysTo(lastDate->date())+1;
+    firstDate->setDate(firstDate->date().addDays(nDays));
+    lastDate->setDate(lastDate->date().addDays(nDays));
+    redraw();
 }
 
 void Crit3DMeteoWidget::showTable()
