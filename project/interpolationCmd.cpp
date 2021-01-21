@@ -1,7 +1,6 @@
 #include <QDate>
 #include <QString>
 
-#include "formInfo.h"
 #include "gis.h"
 #include "utilities.h"
 #include "interpolation.h"
