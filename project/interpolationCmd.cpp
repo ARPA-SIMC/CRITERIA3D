@@ -143,21 +143,11 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
 
 
 bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
-                        gis::Crit3DRasterGrid* myGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar, bool showInfo)
+                        gis::Crit3DRasterGrid* myGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar)
 {
     if (! myGrid->initializeGrid(raster))
-        return false;
-
-    FormInfo myInfo;
-    int infoStep = 1;
-    QString infoStr;
-
-    if (showInfo)
     {
-        infoStr = "Interpolating ";
-        infoStr += QString::fromStdString(getVariableString(myVar));
-        infoStr += " on DEM...";
-        infoStep = myInfo.start(infoStr, myGrid->header->nrRows);
+        return false;
     }
 
     float myX, myY;
@@ -166,9 +156,6 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
 
     for (long myRow = 0; myRow < myGrid->header->nrRows ; myRow++)
     {
-        if (showInfo && (myRow % infoStep) == 0)
-            myInfo.setValue(myRow);
-
         for (long myCol = 0; myCol < myGrid->header->nrCols; myCol++)
         {
             gis::getUtmXYFromRowColSinglePrecision(*myGrid, myRow, myCol, &myX, &myY);
@@ -181,10 +168,10 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
         }
     }
 
-    if (showInfo) myInfo.close();
-
     if (! gis::updateMinMaxRasterGrid(myGrid))
+    {
         return false;
+    }
 
     return true;
 }

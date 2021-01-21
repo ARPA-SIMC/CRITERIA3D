@@ -1048,28 +1048,32 @@ bool Project::loadAggregationdDB(QString dbName)
     return true;
 }
 
+
 bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
 
     bool isData = false;
-    FormInfo myInfo;
     int step = 0;
 
     QString infoStr = "Load data: " + firstDate.toString();
 
     if (firstDate != lastDate)
+    {
         infoStr += " - " + lastDate.toString();
+    }
 
     if (showInfo)
-        step = myInfo.start(infoStr, nrMeteoPoints);
+    {
+        step = setProgressBar(infoStr, nrMeteoPoints);
+    }
 
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (showInfo)
         {
-            if ((i % step) == 0) myInfo.setValue(i);
+            if ((i % step) == 0) updateProgressBar(i);
         }
 
         if (loadHourly)
@@ -1079,10 +1083,11 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
             if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
 
     return isData;
 }
+
 
 bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, QString dataset, bool showInfo)
 {
@@ -1090,7 +1095,6 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
 
     bool isData = false;
-    FormInfo myInfo;
     int step = 0;
 
     QString infoStr = "Load data: " + firstDate.toString();
@@ -1099,13 +1103,15 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
         infoStr += " - " + lastDate.toString();
 
     if (showInfo)
-        step = myInfo.start(infoStr, nrMeteoPoints);
+    {
+        step = setProgressBar(infoStr, nrMeteoPoints);
+    }
 
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (showInfo)
         {
-            if ((i % step) == 0) myInfo.setValue(i);
+            if ((i % step) == 0) updateProgressBar(i);
         }
 
         if (meteoPoints[i].dataset == dataset.toStdString())
@@ -1118,7 +1124,7 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
         }
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
 
     return isData;
 }
@@ -1599,7 +1605,7 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime)
 }
 
 
-bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo)
+bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
@@ -1612,15 +1618,8 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    FormInfo myInfo;
-    if (showInfo && modality == MODE_GUI)
-        myInfo.start("Preparing interpolation...", 0);
-
     //detrending and checking precipitation
     bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
-
-    if (showInfo && modality == MODE_GUI)
-        myInfo.close();
 
     if (! interpolationReady)
     {
@@ -1629,7 +1628,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     }
 
     // Interpolate
-    if (! interpolationRaster(interpolationPoints, &interpolationSettings, myRaster, DEM, myVar, showInfo && modality == MODE_GUI))
+    if (! interpolationRaster(interpolationPoints, &interpolationSettings, myRaster, DEM, myVar))
     {
         logError("Interpolation: error in function interpolationRaster");
         return false;
@@ -1641,7 +1640,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 }
 
 
-bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo)
+bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
@@ -1672,7 +1671,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
 
     preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, atmTransmissivity, myTime);
 
-    if (! interpolationRaster(interpolationPoints, &interpolationSettings, this->radiationMaps->transmissivityMap, DEM, atmTransmissivity, showInfo))
+    if (! interpolationRaster(interpolationPoints, &interpolationSettings, this->radiationMaps->transmissivityMap, DEM, atmTransmissivity))
     {
         logError("Function interpolateRasterRadiation: error interpolating transmissivity.");
         return false;
@@ -1693,7 +1692,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
 }
 
 
-bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo)
+bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     if (! DEM.isLoaded)
     {
@@ -1716,11 +1715,11 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (myVar == globalIrradiance)
     {
         Crit3DTime halfHour = myTime.addSeconds(-1800);
-        return interpolateDemRadiation(halfHour, myRaster, showInfo);
+        return interpolateDemRadiation(halfHour, myRaster);
     }
     else
     {
-        return interpolationDem(myVar, myTime, myRaster, showInfo);
+        return interpolationDem(myVar, myTime, myRaster);
     }
 }
 
@@ -2483,5 +2482,52 @@ void Project::logError()
 }
 
 
+int Project::setProgressBar(QString myStr, int nrValues)
+{
+    if (modality == MODE_GUI)
+    {
+        if (formLog == nullptr)
+        {
+            formLog = new FormInfo();
+        }
+        return formLog->start(myStr, nrValues);
+    }
+    else
+    {
+        std::cout << myStr.toStdString() << std::endl;
+        return std::max(1, int(nrValues / 50));
+    }
+}
 
+
+void Project::updateProgressBar(int value)
+{
+    if (modality == MODE_GUI)
+    {
+        if (formLog != nullptr)
+        {
+            formLog->setValue(value);
+        }
+    }
+    else
+    {
+        std::cout << "*";
+    }
+}
+
+
+void Project::closeProgressBar()
+{
+    if (modality == MODE_GUI)
+    {
+        if (formLog != nullptr)
+        {
+            formLog->close();
+        }
+    }
+    else
+    {
+        std::cout << std::endl;
+    }
+}
 

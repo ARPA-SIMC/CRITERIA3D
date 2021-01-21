@@ -166,6 +166,10 @@
         void closeLogInfo();
         void logError();
 
+        int setProgressBar(QString myStr, int nrValues);
+        void updateProgressBar(int value);
+        void closeProgressBar();
+
         void closeMeteoPointsDB();
         void closeMeteoGridDB();
         void cleanMeteoPointsData();
@@ -196,9 +200,9 @@
         bool writeTopographicDistanceMaps(bool onlyWithData);
         bool loadTopographicDistanceMaps(bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime);
-        bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
-        bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
-        bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
+        bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         frequencyType getCurrentFrequency() const;
         void setCurrentFrequency(const frequencyType &value);
 
