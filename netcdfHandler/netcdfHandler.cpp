@@ -69,13 +69,6 @@ std::string NetCDFVariable::getVarName()
 
 NetCDFHandler::NetCDFHandler()
 {
-    ncId = NODATA;
-    idX = NODATA;
-    idY = NODATA;
-    idLat = NODATA;
-    idLon = NODATA;
-    idTime = NODATA;
-
     x = nullptr;
     y = nullptr;
     lat = nullptr;
@@ -109,6 +102,7 @@ void NetCDFHandler::clear()
 
     utmZone = NODATA;
 
+    ncId = NODATA;
     nrX = NODATA;
     nrY = NODATA;
     nrLat = NODATA;
@@ -121,7 +115,10 @@ void NetCDFHandler::clear()
     idLon = NODATA;
     idTime = NODATA;
 
+    isUTM = false;
     isLatLon = false;
+    isRotatedLatLon = false;
+
     isLatDecreasing = false;
     isStandardTime = false;
     isHourly = false;
@@ -350,22 +347,32 @@ bool NetCDFHandler::readProperties(string fileName)
        else if (lowerCase(string(name)) == "x")
        {
            nrX = int(length);
-           isLatLon = false;
+           isUTM = true;
        }
        else if (lowerCase(string(name)) == "y")
        {
            nrY = int(length);
-           isLatLon = false;
+           isUTM = true;
        }
-       else if (lowerCase(string(name)) == "lat" || lowerCase(string(name)) == "rlat" || lowerCase(string(name)) == "latitude")
+       else if (lowerCase(string(name)) == "lat" || lowerCase(string(name)) == "latitude")
        {
            nrLat = int(length);
            isLatLon = true;
        }
-       else if (lowerCase(string(name)) == "lon" || lowerCase(string(name)) == "rlon" || lowerCase(string(name)) == "longitude")
+       else if (lowerCase(string(name)) == "lon" || lowerCase(string(name)) == "longitude")
        {
            nrLon = int(length);
            isLatLon = true;
+       }
+       else if (lowerCase(string(name)) == "rlat")
+       {
+           nrLat = int(length);
+           isRotatedLatLon = true;
+       }
+       else if (lowerCase(string(name)) == "rlon")
+       {
+           nrLon = int(length);
+           isRotatedLatLon = true;
        }
 
        metadata << i << " - " << name << "\t values: " << length << endl;
@@ -373,11 +380,22 @@ bool NetCDFHandler::readProperties(string fileName)
 
    if (isLatLon)
    {
+       metadata <<"\nLat Lon grid";
        metadata <<"\n(lon,lat) = "<< nrLon << "," <<nrLat << endl;
+   }
+   else if (isRotatedLatLon)
+   {
+       metadata <<"\nRotated pole grid";
+       metadata <<"\n(rlon, rlat) = "<< nrLon << "," <<nrLat << endl;
+   }
+   else if (isUTM)
+   {
+       metadata <<"\nUTM grid";
+       metadata <<"\n(x,y) = "<< nrX << "," << nrY << endl;
    }
    else
    {
-       metadata <<"\n(x,y) = "<< nrX << "," << nrY << endl;
+       metadata <<"\n WARNING: missing spatial dimension!";
    }
 
    // VARIABLES
@@ -406,18 +424,25 @@ bool NetCDFHandler::readProperties(string fileName)
            idTime = v;
            nc_inq_vartype(ncId, v, &timeType);
        }
-       else if (lowerCase(string(varName)) == "x")
-           idX = v;
-       else if (lowerCase(string(varName)) == "y")
-           idY = v;
-       else if (lowerCase(string(varName)) == "lat" || lowerCase(string(varName)) == "rlat" || lowerCase(string(varName)) == "latitude")
+       if (isUTM)
        {
-           if (idLat == NODATA)
-               idLat = v;
+            if (lowerCase(string(varName)) == "x")
+                idX = v;
+            else if (lowerCase(string(varName)) == "y")
+                idY = v;
        }
-       else if (lowerCase(string(varName)) == "lon" || lowerCase(string(varName)) == "rlon" || lowerCase(string(varName)) == "longitude")
+       if (isLatLon)
        {
-           if (idLon == NODATA)
+           if (lowerCase(string(varName)) == "lat" || lowerCase(string(varName)) == "latitude")
+               idLat = v;
+           else if (lowerCase(string(varName)) == "lon" || lowerCase(string(varName)) == "longitude")
+               idLon = v;
+       }
+       if (isRotatedLatLon)
+       {
+           if (lowerCase(string(varName)) == "rlat")
+               idLat = v;
+           else if (lowerCase(string(varName)) == "rlon")
                idLon = v;
        }
 
@@ -486,7 +511,7 @@ bool NetCDFHandler::readProperties(string fileName)
         }
     }
 
-    if (isLatLon)
+    if (isLatLon || isRotatedLatLon)
     {
         if (idLat != NODATA && idLon != NODATA)
         {
@@ -535,7 +560,7 @@ bool NetCDFHandler::readProperties(string fileName)
             dataGrid.initializeGrid(0);
         }
     }
-    else
+    else if (isUTM)
     {
         if (idX != NODATA && idY != NODATA)
         {
