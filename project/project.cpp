@@ -1397,6 +1397,8 @@ bool Project::loadProxyGrids()
                 proxyGrid.clear();
             }
         }
+
+        closeLogInfo();
     }
 
     return true;
