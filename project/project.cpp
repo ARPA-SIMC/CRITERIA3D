@@ -1147,20 +1147,21 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
     std::string id;
     int count = 0;
 
-    FormInfo myInfo;
     int infoStep = 1;
 
     if (showInfo)
     {
         QString infoStr = "Load meteo grid daily data: " + firstDate.toString();
         if (firstDate != lastDate) infoStr += " - " + lastDate.toString();
-        infoStep = myInfo.start(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
+        infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
     }
 
     for (int row = 0; row < this->meteoGridDbHandler->gridStructure().header().nrRows; row++)
     {
         if (showInfo && (row % infoStep) == 0)
-            myInfo.setValue(row);
+        {
+            updateProgressBar(row);
+        }
 
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
@@ -1184,7 +1185,7 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
         }
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
 
     if (count == 0)
     {
@@ -1200,7 +1201,6 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
 {
     std::string id;
     int count = 0;
-    FormInfo myInfo;
     int infoStep = 1;
 
     if (! meteoGridDbHandler->tableHourly().exists) return false;
@@ -1208,13 +1208,15 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
     if (showInfo)
     {
         QString infoStr = "Load meteo grid hourly data: " + firstDate.toString("yyyy-MM-dd:hh") + " - " + lastDate.toString("yyyy-MM-dd:hh");
-        infoStep = myInfo.start(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
+        infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
     }
 
     for (int row = 0; row < this->meteoGridDbHandler->gridStructure().header().nrRows; row++)
     {
         if (showInfo && (row % infoStep) == 0)
-            myInfo.setValue(row);
+        {
+            updateProgressBar(row);
+        }
 
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
@@ -1238,7 +1240,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
         }
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
 
     if (count == 0)
     {
@@ -1468,7 +1470,7 @@ bool Project::updateProxy()
     return true;
 }
 
-bool Project::writeTopographicDistanceMaps(bool onlyWithData)
+bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
     if (nrMeteoPoints == 0)
     {
@@ -1486,9 +1488,12 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData)
     if (! QDir(mapsFolder).exists())
         QDir().mkdir(mapsFolder);
 
-    FormInfo myInfo;
     QString infoStr = "Computing topographic distance maps...";
-    int infoStep = myInfo.start(infoStr, nrMeteoPoints);
+    int infoStep = 0;
+    if (showInfo)
+    {
+        infoStep = setProgressBar(infoStr, nrMeteoPoints);
+    }
 
     std::string myError;
     std::string fileName;
@@ -1497,7 +1502,10 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData)
 
     for (int i=0; i < nrMeteoPoints; i++)
     {
-        if ((i % infoStep) == 0) myInfo.setValue(i);
+        if (showInfo)
+        {
+            if ((i % infoStep) == 0) updateProgressBar(i);
+        }
 
         if (meteoPoints[i].active)
         {
@@ -1522,7 +1530,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData)
         }
     }
 
-    myInfo.close();
+    if (showInfo) closeProgressBar();
 
     return true;
 }
@@ -1543,12 +1551,11 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
         return false;
     }
 
-    FormInfo myInfo;
     int infoStep = 0;
     if (showInfo)
     {
         QString infoStr = "Loading topographic distance maps...";
-        infoStep = myInfo.start(infoStr, nrMeteoPoints);
+        infoStep = setProgressBar(infoStr, nrMeteoPoints);
     }
 
     std::string myError;
@@ -1560,7 +1567,7 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
         if (showInfo)
         {
             if ((i % infoStep) == 0)
-                myInfo.setValue(i);
+                updateProgressBar(i);
         }
 
         if (meteoPoints[i].active)
@@ -1575,7 +1582,7 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
         }
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
 
     return true;
 }
