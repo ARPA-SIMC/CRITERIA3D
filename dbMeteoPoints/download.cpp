@@ -200,7 +200,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         product = product % QString(" or VM2,%1").arg(variables[i]);
     }
 
-    //QEventLoop loop;
+    QEventLoop loop;
 
     int maxStationSize = 100;
     int j = 0;
@@ -225,7 +225,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         }
 
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
-        //connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+        connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
         url = QUrl(QString("%1/query?query=%2%3%4&style=postprocess")
                    .arg(_dbMeteo->getDatasetURL(dataset)).arg(refTime).arg(area).arg(product));
@@ -238,7 +238,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         // GET
         QNetworkReply* reply = manager->get(request);
         downloadOk = true;
-        //loop.exec();
+        loop.exec();
 
         if (reply->error() != QNetworkReply::NoError)
         {
@@ -343,7 +343,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
     // reftime
     QString refTime = QString("reftime:>=%1,<=%2").arg(startTime.toString("yyyy-MM-dd hh:mm")).arg(endTime.toString("yyyy-MM-dd hh:mm"));
 
-    //QEventLoop loop;
+    QEventLoop loop;
 
     int maxStationSize = 100;
     int j = 0;
@@ -367,7 +367,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
             j = j+1;
         }
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
-        //connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+        connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
         url = QUrl(QString("%1/query?query=%2%3%4&style=postprocess").arg(_dbMeteo->getDatasetURL(dataset)).arg(refTime).arg(area).arg(product));
         request.setUrl(url);
@@ -376,7 +376,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
         //qDebug() << url.toString();
 
         QNetworkReply* reply = manager->get(request);  // GET
-        //loop.exec();
+        loop.exec();
 
         if (reply->error() != QNetworkReply::NoError)
         {
