@@ -7,7 +7,7 @@
         #include "soil.h"
     #endif
 
-    #define MAX_EVAPORATION_DEPTH 0.15
+    #define MAX_EVAPORATION_DEPTH 0.2
 
     class Crit3DCrop;
 
