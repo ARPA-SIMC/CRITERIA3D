@@ -409,7 +409,7 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
 
     }
     FILE* fp;
-    fp = fopen("outputData/correlationMatrices.txt","w");
+    fp = fopen("outputData/correlationMatricesAmountAnomaly.txt","w");
     for (int iMonth=0;iMonth<12;iMonth++)
     {
         fprintf(fp,"month %d \nsimulated - observed\n",iMonth+1);
@@ -423,13 +423,41 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
         }
     }
     fclose(fp);
-    /*
-    fp = fopen("outputData/correlationMatricesStats.txt","w");
+    fp = fopen("outputData/correlationMatricesAmountSimulation.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d \nsimulated\n",iMonth+1);
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                fprintf(fp,"%.2f ", correlationMatrixSimulation[iMonth].amount[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+    fp = fopen("outputData/correlationMatricesAmountObserved.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d \nobserved\n",iMonth+1);
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                fprintf(fp,"%.2f ", correlationMatrix[iMonth].amount[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+
+    fp = fopen("outputData/correlationMatricesAmountStats.txt","w");
     for (int iMonth=0;iMonth<12;iMonth++)
     {
         double maxCorrelationAnomaly = 0;
-        int occurrenceAnomaly[21];
-        for (int i=0;i<21;i++)
+        int occurrenceAnomaly[41];
+        for (int i=0;i<41;i++)
         {
             occurrenceAnomaly[i] = 0;
         }
@@ -451,14 +479,93 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
             }
         }
         fprintf(fp,"maxValue %f \n", maxCorrelationAnomaly);
-        for (int i=0;i<21;i++)
+        for (int i=0;i<41;i++)
         {
             fprintf(fp,"%f,%d \n",-0.1 + i*0.01, occurrenceAnomaly[i]);
         }
     }
 
     fclose(fp);
-    */
+       // occurrences
+    fp = fopen("outputData/correlationMatricesOccurrenceAnomaly.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d \nsimulated - observed\n",iMonth+1);
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                fprintf(fp,"%.2f ", correlationMatrixSimulation[iMonth].occurrence[j][i]-correlationMatrix[iMonth].occurrence[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+    fp = fopen("outputData/correlationMatricesOccurrenceSimulation.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d \nsimulated\n",iMonth+1);
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                fprintf(fp,"%.2f ", correlationMatrixSimulation[iMonth].occurrence[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+    fp = fopen("outputData/correlationMatricesOccurrenceObserved.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d \nobserved\n",iMonth+1);
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                fprintf(fp,"%.2f ", correlationMatrix[iMonth].occurrence[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+
+    fp = fopen("outputData/correlationMatricesOccurrenceStats.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        double maxCorrelationAnomaly = 0;
+        int occurrenceAnomaly[41];
+        for (int i=0;i<41;i++)
+        {
+            occurrenceAnomaly[i] = 0;
+        }
+        fprintf(fp,"month %d \n",iMonth+1);
+        double value = -0.095;
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                maxCorrelationAnomaly = MAXVALUE(maxCorrelationAnomaly,fabs(correlationMatrixSimulation[iMonth].occurrence[j][i]-correlationMatrix[iMonth].occurrence[j][i]));
+                int counter = 0;
+                value = -0.095;
+                while (correlationMatrixSimulation[iMonth].occurrence[j][i]-correlationMatrix[iMonth].occurrence[j][i]> value && counter<20)
+                {
+                    value += 0.01;
+                    counter++;
+                }
+                ++occurrenceAnomaly[counter];
+            }
+        }
+        fprintf(fp,"maxValue %f \n", maxCorrelationAnomaly);
+        for (int i=0;i<41;i++)
+        {
+            fprintf(fp,"%f,%d \n",-0.1 + i*0.01, occurrenceAnomaly[i]);
+        }
+    }
+
+    fclose(fp);
+
+
     for (int iMonth=0;iMonth<12;iMonth++)
     {
         for (int i=0;i<nrStations;i++)
