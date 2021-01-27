@@ -1589,8 +1589,7 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
     QString mapsFolder = projectPath + PATH_TD;
     if (! QDir(mapsFolder).exists())
     {
-        logError("TD folder not found. Please create TD Maps.");
-        return false;
+        QDir().mkdir(mapsFolder);
     }
 
     int infoStep = 0;
