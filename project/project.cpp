@@ -1521,7 +1521,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
             {
                 if (gis::topographicDistanceMap(meteoPoints[i].point, DEM, &myMap))
                 {
-                    fileName = mapsFolder.toStdString() + "TD_" + meteoPoints[i].id;
+                    fileName = mapsFolder.toStdString() + "TD_" + demFileName.toStdString() + "_" + meteoPoints[i].id;
                     if (! gis::writeEsriGrid(fileName, &myMap, &myError))
                     {
                         logError(QString::fromStdString(myError));
@@ -1574,7 +1574,7 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
 
         if (meteoPoints[i].active)
         {
-            fileName = mapsFolder.toStdString() + "TD_" + meteoPoints[i].id;
+            fileName = mapsFolder.toStdString() + "TD_" + demFileName.toStdString() + "_" + meteoPoints[i].id;
             meteoPoints[i].topographicDistance = new gis::Crit3DRasterGrid();
             if (! gis::readEsriGrid(fileName, meteoPoints[i].topographicDistance, &myError))
             {
