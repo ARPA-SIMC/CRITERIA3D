@@ -628,6 +628,7 @@ int CriteriaOutputProject::createAggregationFile()
     {
         QDir().mkdir(aggregationPath);
     }
+
     if (QFile(outputAggrCsvFileName).exists())
     {
         logger.writeInfo("Remove old aggregation: " + outputAggrCsvFileName);
@@ -767,6 +768,13 @@ int CriteriaOutputProject::createAggregationFile()
                                  aggregationVariable.outputVarName, shapeFieldName, projectError);
 
     shapeRef.close();
+
+    bool reorder = true;  // enable/disable csv reorder
+    if (reorder)
+    {
+        return orderCsvByField(outputAggrCsvFileName,"ZONE ID",projectError);
+    }
+
     return myResult;
 }
 
