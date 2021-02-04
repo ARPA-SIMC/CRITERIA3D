@@ -259,7 +259,7 @@ void Crit3DInterpolationSettings::initialize()
     currentDEM = nullptr;
     interpolationMethod = idw;
     useThermalInversion = true;
-    useTAD = false;
+    useTD = false;
     useDewPoint = true;
     useInterpolatedTForRH = true;
     useBestDetrending = false;
@@ -302,8 +302,8 @@ std::string getKeyStringInterpolationMethod(TInterpolationMethod value)
 TInterpolationMethod Crit3DInterpolationSettings::getInterpolationMethod()
 { return interpolationMethod;}
 
-bool Crit3DInterpolationSettings::getUseTAD()
-{ return useTAD;}
+bool Crit3DInterpolationSettings::getUseTD()
+{ return useTD;}
 
 float Crit3DInterpolationSettings::getMaxHeightInversion()
 { return maxHeightInversion;}
@@ -317,8 +317,8 @@ void Crit3DInterpolationSettings::setUseThermalInversion(bool myValue)
     selectedCombination.setUseThermalInversion(myValue);
 }
 
-void Crit3DInterpolationSettings::setUseTAD(bool myValue)
-{ useTAD = myValue;}
+void Crit3DInterpolationSettings::setUseTD(bool myValue)
+{ useTD = myValue;}
 
 void Crit3DInterpolationSettings::setUseDewPoint(bool myValue)
 { useDewPoint = myValue;}

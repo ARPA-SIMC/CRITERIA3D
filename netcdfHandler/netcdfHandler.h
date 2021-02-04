@@ -45,7 +45,9 @@
 
     public:
         int ncId;
+        bool isUTM;
         bool isLatLon;
+        bool isRotatedLatLon;
 
         std::vector<NetCDFVariable> variables;
         gis::Crit3DRasterGrid dataGrid;

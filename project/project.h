@@ -32,18 +32,15 @@
     #ifndef _FSTREAM_
         #include <fstream>
     #endif
-    #ifndef METEOWIDGET_H
-        #include "meteoWidget.h"
-    #endif
-    #ifndef FORMINFO_H
-        #include "formInfo.h"
-    #endif
 
     #define ERROR_NONE 0
     #define ERROR_SETTINGS 1
     #define ERROR_DEM 2
     #define ERROR_DBPOINT 3
     #define ERROR_DBGRID 4
+
+    class Crit3DMeteoWidget;
+    class FormInfo;
 
     class Project : public QObject {
         Q_OBJECT
@@ -169,6 +166,10 @@
         void closeLogInfo();
         void logError();
 
+        int setProgressBar(QString myStr, int nrValues);
+        void updateProgressBar(int value);
+        void closeProgressBar();
+
         void closeMeteoPointsDB();
         void closeMeteoGridDB();
         void cleanMeteoPointsData();
@@ -196,12 +197,13 @@
         bool readProxyValues();
         bool updateProxy();
         void checkMeteoPointsDEM();
-        bool writeTopographicDistanceMaps(bool onlyWithData);
+        bool writeTopographicDistanceMaps(bool onlyWithData, bool showInfo);
+        bool writeTopographicDistanceMap(std::string meteoPointId);
         bool loadTopographicDistanceMaps(bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime);
-        bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
-        bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
-        bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
+        bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         frequencyType getCurrentFrequency() const;
         void setCurrentFrequency(const frequencyType &value);
 

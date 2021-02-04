@@ -97,13 +97,13 @@
     class Crit3DInterpolationSettings
     {
     private:
-        gis::Crit3DRasterGrid* currentDEM; //for TAD
+        gis::Crit3DRasterGrid* currentDEM; //for TD
 
         TInterpolationMethod interpolationMethod;
 
         float minRegressionR2;
         bool useThermalInversion;
-        bool useTAD;
+        bool useTD;
         bool useLapseRateCode;
         bool useBestDetrending;
         bool useDewPoint;
@@ -148,8 +148,8 @@
         void setUseThermalInversion(bool myValue);
         bool getUseThermalInversion();
 
-        void setUseTAD(bool myValue);
-        bool getUseTAD();
+        void setUseTD(bool myValue);
+        bool getUseTD();
 
         void setUseDewPoint(bool myValue);
         bool getUseDewPoint();
