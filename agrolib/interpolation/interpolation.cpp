@@ -155,7 +155,7 @@ void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint>
             myPoints[i].distance = gis::computeDistance(x, y, float((myPoints[i]).point->utm.x) , float((myPoints[i]).point->utm.y));
             myPoints[i].deltaZ = float(fabs(myPoints[i].point->z - z));
 
-            if (mySettings->getUseTAD() && getUseTadVar(myVar))
+            if (mySettings->getUseTD() && getUseTdVar(myVar))
             {
                 float topoDistance = 0.;
                 float kh = mySettings->getTopoDist_Kh();
@@ -904,7 +904,7 @@ bool getUseDetrendingVar(meteoVariable myVar)
         return false;
 }
 
-bool getUseTadVar(meteoVariable myVar)
+bool getUseTdVar(meteoVariable myVar)
 {
     //exclude large scale variables
     if (myVar == globalIrradiance ||
@@ -1147,7 +1147,7 @@ void optimalDetrending(meteoVariable myVar,
             detrending(interpolationPoints, myCombination, mySettings, myClimate, myVar, myTime);
             mySettings->setCurrentCombination(&myCombination);
 
-            if (mySettings->getUseTAD() && getUseTadVar(myVar))
+            if (mySettings->getUseTD() && getUseTdVar(myVar))
                 topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, myTime);
 
             if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, true, true))
@@ -1204,7 +1204,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         }
     }
 
-    if (mySettings->getUseTAD() && getUseTadVar(myVar))
+    if (mySettings->getUseTD() && getUseTdVar(myVar))
         topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, myTime);
 
     return (true);

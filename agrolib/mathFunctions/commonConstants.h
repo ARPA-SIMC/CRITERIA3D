@@ -48,7 +48,7 @@
     #define PATH_PROJECT "PROJECT/"
     #define PATH_TEMPLATE "TEMPLATE/"
     #define PATH_SETTINGS "SETTINGS/"
-    #define PATH_TAD "TAD/"
+    #define PATH_TD "TD/"
 
     // --------------- soilFluxes3D ----------------
     #define NOLINK -1
@@ -68,6 +68,7 @@
     #define MISSING_DATA_ERROR -9999
     #define PARAMETER_ERROR -7777
 
+    #define CRIT1D_OK 0
     #define CRIT3D_OK 1
 
     #define VANGENUCHTEN 0

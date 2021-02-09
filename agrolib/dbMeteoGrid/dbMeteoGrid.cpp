@@ -1013,7 +1013,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
     int row = 0;
     int col = 0;
-    int tableNotFoundError = 1146;
+    QString tableNotFoundError = "1146";
     std::string id;
 
     if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))

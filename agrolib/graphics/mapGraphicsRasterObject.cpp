@@ -49,6 +49,7 @@ RasterObject::RasterObject(MapGraphicsView* _view, MapGraphicsObject *parent) :
     isLoaded = false;
     isLatLon = false;
     isGrid = false;
+    isNetcdf = false;
     geoMap = new gis::Crit3DGeoMap();
     referencePixel = QPointF(NODATA, NODATA);
     isDrawing = false;
@@ -79,6 +80,16 @@ void RasterObject::clear()
     utmZone = NODATA;
 }
 
+
+void RasterObject::setNetCDF(bool value)
+{
+    isNetcdf = value;
+}
+
+bool RasterObject::isNetCDF()
+{
+    return isNetcdf;
+}
 
 void RasterObject::setDrawing(bool value)
 {

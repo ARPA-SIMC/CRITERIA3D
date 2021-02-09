@@ -25,6 +25,8 @@
             void showHourlyGraph();
             void updateSeries();
             void redraw();
+            void shiftPrevious();
+            void shiftFollowing();
             void showTable();
             void showVar();
             void tooltipLineSeries(QPointF point, bool state);
@@ -42,6 +44,8 @@
             QPushButton *hourlyButton;
             QPushButton *tableButton;
             QPushButton *redrawButton;
+            QPushButton *shiftPreviousButton;
+            QPushButton *shiftFollowingButton;
             QDateTimeEdit *firstDate;
             QDateTimeEdit *lastDate;
             QChartView *chartView;
