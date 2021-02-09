@@ -94,7 +94,7 @@
         bool aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod myAggregation, const Crit3DDate& myDate,
                                       const QString& dailyPath, const QString& hourlyPath, const QString& myArea);
 
-        bool interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& myTime, bool showInfo);
+        bool interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& myTime);
         double computeEvaporation(int row, int col, double lai);
         bool computeWaterSinkSource();
         void computeWaterBalance3D(double timeStep);

@@ -267,7 +267,7 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
         myInfo.start("Computing air temperature...", 6);
     }
 
-    if (! interpolateHourlyMeteoVar(airTemperature, myTime, false))
+    if (! interpolateHourlyMeteoVar(airTemperature, myTime))
         return false;
 
     if (showInfo)
@@ -276,7 +276,7 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
         myInfo.setValue(1);
     }
 
-    if (! interpolateHourlyMeteoVar(airRelHumidity, myTime, false))
+    if (! interpolateHourlyMeteoVar(airRelHumidity, myTime))
         return false;
 
     if (showInfo)
@@ -285,7 +285,7 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
         myInfo.setValue(2);
     }
 
-    if (! interpolateHourlyMeteoVar(precipitation, myTime, false))
+    if (! interpolateHourlyMeteoVar(precipitation, myTime))
         return false;
 
     if (showInfo)
@@ -294,7 +294,7 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
         myInfo.setValue(3);
     }
 
-    if (! interpolateHourlyMeteoVar(windScalarIntensity, myTime, false))
+    if (! interpolateHourlyMeteoVar(windScalarIntensity, myTime))
         return false;
 
     if (showInfo)
@@ -303,7 +303,7 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
         myInfo.setValue(4);
     }
 
-    if (! interpolateHourlyMeteoVar(globalIrradiance, myTime, false))
+    if (! interpolateHourlyMeteoVar(globalIrradiance, myTime))
         return false;
 
     if (showInfo)

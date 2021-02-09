@@ -28,6 +28,7 @@
 #include "soilDbTools.h"
 #include "math.h"
 #include "utilities.h"
+#include <QUuid>
 
 
 Project3D::Project3D() : Project()
@@ -876,7 +877,7 @@ bool Project3D::computeCrop(QDateTime myTime)
 }
 
 
-bool Project3D::interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& myTime, bool showInfo)
+bool Project3D::interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& myTime)
 {
     if (myVar == airRelHumidity && interpolationSettings.getUseDewPoint())
     {
@@ -884,7 +885,7 @@ bool Project3D::interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& 
             passInterpolatedTemperatureToHumidityPoints(getCrit3DTime(myTime));
 
         // TODO check on airTemperatureMap
-        if (! interpolationDem(airDewTemperature, getCrit3DTime(myTime), hourlyMeteoMaps->mapHourlyTdew, showInfo))
+        if (! interpolationDem(airDewTemperature, getCrit3DTime(myTime), hourlyMeteoMaps->mapHourlyTdew))
             return false;
 
         if (! hourlyMeteoMaps->computeRelativeHumidityMap(hourlyMeteoMaps->mapHourlyRelHum))
@@ -895,7 +896,7 @@ bool Project3D::interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& 
         gis::Crit3DRasterGrid* myRaster = getHourlyMeteoRaster(myVar);
         if (myRaster == nullptr) return false;
 
-        if (! interpolationDemMain(myVar, getCrit3DTime(myTime), myRaster, showInfo))
+        if (! interpolationDemMain(myVar, getCrit3DTime(myTime), myRaster))
         {
             QString timeStr = myTime.toString("yyyy-MM-dd hh:mm");
             QString varStr = QString::fromStdString(MapHourlyMeteoVarToString.at(myVar));
@@ -911,7 +912,7 @@ bool Project3D::interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& 
 bool Project3D::interpolateAndSaveHourlyMeteo(meteoVariable myVar, const QDateTime& myTime,
                                               const QString& outputPath, bool saveOutput)
 {
-    if (! interpolateHourlyMeteoVar(myVar, myTime, false))
+    if (! interpolateHourlyMeteoVar(myVar, myTime))
         return false;
 
     if (saveOutput)

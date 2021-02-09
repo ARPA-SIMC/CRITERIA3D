@@ -443,7 +443,7 @@ void MainWindow::interpolateDemGUI()
 {
     meteoVariable myVar = myProject.getCurrentVariable();
 
-    if (myProject.interpolateHourlyMeteoVar(myVar, myProject.getCurrentTime(), true))
+    if (myProject.interpolateHourlyMeteoVar(myVar, myProject.getCurrentTime()))
     {
         showMeteoVariable(myProject.getCurrentVariable());
     }
