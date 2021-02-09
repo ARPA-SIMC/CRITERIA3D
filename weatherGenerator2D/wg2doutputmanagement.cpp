@@ -196,7 +196,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 inputTMax[i] = obsDataD[iStation][i].tMax;
                 inputPrec[i] = obsDataD[iStation][i].prec;
             }
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
             //computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlyClimateAveragePrecipitation[iStation]);
         }
         free(inputTMin);
@@ -279,7 +279,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 counter++;
             }
 
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
             //computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlySimulatedAveragePrecipitation[iStation]);
         }
         free(inputTMin);
@@ -409,7 +409,7 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
 
     }
     FILE* fp;
-    fp = fopen("outputData/correlationMatrices.txt","w");
+    fp = fopen("outputData/correlationMatricesAmountAnomaly.txt","w");
     for (int iMonth=0;iMonth<12;iMonth++)
     {
         fprintf(fp,"month %d \nsimulated - observed\n",iMonth+1);
@@ -423,26 +423,95 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
         }
     }
     fclose(fp);
-    /*
-    fp = fopen("outputData/correlationMatricesStats.txt","w");
+    fp = fopen("outputData/correlationMatricesAmountSimulation.txt","w");
     for (int iMonth=0;iMonth<12;iMonth++)
     {
-        double maxCorrelationAnomaly = 0;
-        int occurrenceAnomaly[21];
-        for (int i=0;i<21;i++)
-        {
-            occurrenceAnomaly[i] = 0;
-        }
-        fprintf(fp,"month %d \n",iMonth+1);
-        double value = -0.095;
+        fprintf(fp,"month %d \nsimulated\n",iMonth+1);
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++)
             {
-                maxCorrelationAnomaly = MAXVALUE(maxCorrelationAnomaly,fabs(correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]));
+                fprintf(fp,"%.2f ", correlationMatrixSimulation[iMonth].amount[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+    fp = fopen("outputData/correlationMatricesAmountObserved.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d \nobserved\n",iMonth+1);
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                fprintf(fp,"%.2f ", correlationMatrix[iMonth].amount[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+    fp = fopen("outputData/correlationMatricesAmountMatrixDistribution.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d\n",iMonth+1);
+        double bins[20];
+        int counterBin[20];
+        for (int i=0;i<20;i++)
+        {
+            counterBin[i] = 0;
+        }
+        for (int i=0;i<nrStations-1;i++)
+        {
+            for (int j=i+1;j<nrStations;j++)
+            {
+                int counter=0;
+                double value = 0;
+                bool isTheRightBin = false;
+                do{
+                    value += 0.05;
+                    if (counter > 19) isTheRightBin = true;
+                    if(!isTheRightBin && correlationMatrix[iMonth].amount[j][i] < value)
+                    {
+                        counterBin[counter] = counterBin[counter] + 1;
+                        isTheRightBin = true;
+                    }
+                    counter++;
+
+                } while (!isTheRightBin);
+
+            }
+        }
+        for (int i=0;i<20;i++)
+        {
+            fprintf(fp,"%f,%d \n", 0.025 + i*0.05, counterBin[i]);
+        }
+
+    }
+
+    fclose(fp);
+
+    fp = fopen("outputData/correlationMatricesAmountStats.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        double maxCorrelationAnomaly = 0;
+        double minCorrelationAnomaly = 0;
+        int occurrenceAnomaly[61];
+        for (int i=0;i<61;i++)
+        {
+            occurrenceAnomaly[i] = 0;
+        }
+        fprintf(fp,"month %d \n",iMonth+1);
+        double value = -0.295;
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                maxCorrelationAnomaly = MAXVALUE(maxCorrelationAnomaly,correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]);
+                minCorrelationAnomaly = MINVALUE(minCorrelationAnomaly,correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]);
                 int counter = 0;
-                value = -0.095;
-                while (correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]> value && counter<20)
+                value = -0.295;
+                while (correlationMatrixSimulation[iMonth].amount[j][i]-correlationMatrix[iMonth].amount[j][i]> value && counter<60)
                 {
                     value += 0.01;
                     counter++;
@@ -450,15 +519,98 @@ void weatherGenerator2D::precipitationCorrelationMatricesSimulation()
                 ++occurrenceAnomaly[counter];
             }
         }
-        fprintf(fp,"maxValue %f \n", maxCorrelationAnomaly);
-        for (int i=0;i<21;i++)
+        fprintf(fp,"maxValue %f minValue %f\n", maxCorrelationAnomaly, minCorrelationAnomaly);
+
+
+        for (int i=0;i<61;i++)
         {
-            fprintf(fp,"%f,%d \n",-0.1 + i*0.01, occurrenceAnomaly[i]);
+            fprintf(fp,"%f,%d \n",-0.3 + i*0.01, occurrenceAnomaly[i]);
         }
     }
 
     fclose(fp);
-    */
+       // occurrences
+    fp = fopen("outputData/correlationMatricesOccurrenceAnomaly.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d \nsimulated - observed\n",iMonth+1);
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                fprintf(fp,"%.2f ", correlationMatrixSimulation[iMonth].occurrence[j][i]-correlationMatrix[iMonth].occurrence[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+    fp = fopen("outputData/correlationMatricesOccurrenceSimulation.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d \nsimulated\n",iMonth+1);
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                fprintf(fp,"%.2f ", correlationMatrixSimulation[iMonth].occurrence[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+    fp = fopen("outputData/correlationMatricesOccurrenceObserved.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        fprintf(fp,"month %d \nobserved\n",iMonth+1);
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                fprintf(fp,"%.2f ", correlationMatrix[iMonth].occurrence[j][i]);
+            }
+            fprintf(fp,"\n");
+        }
+    }
+    fclose(fp);
+
+    fp = fopen("outputData/correlationMatricesOccurrenceStats.txt","w");
+    for (int iMonth=0;iMonth<12;iMonth++)
+    {
+        double maxCorrelationAnomaly = 0;
+        double minCorrelationAnomaly = 0;
+        int occurrenceAnomaly[61];
+        for (int i=0;i<61;i++)
+        {
+            occurrenceAnomaly[i] = 0;
+        }
+        fprintf(fp,"month %d \n",iMonth+1);
+        double value = -0.295;
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                maxCorrelationAnomaly = MAXVALUE(maxCorrelationAnomaly,correlationMatrixSimulation[iMonth].occurrence[j][i]-correlationMatrix[iMonth].occurrence[j][i]);
+                minCorrelationAnomaly = MINVALUE(minCorrelationAnomaly,correlationMatrixSimulation[iMonth].occurrence[j][i]-correlationMatrix[iMonth].occurrence[j][i]);
+                int counter = 0;
+                value = -0.295;
+                while (correlationMatrixSimulation[iMonth].occurrence[j][i]-correlationMatrix[iMonth].occurrence[j][i]> value && counter<60)
+                {
+                    value += 0.01;
+                    counter++;
+                }
+                ++occurrenceAnomaly[counter];
+            }
+        }
+        fprintf(fp,"maxValue %f minValue %f\n", maxCorrelationAnomaly,minCorrelationAnomaly);
+        for (int i=0;i<61;i++)
+        {
+            fprintf(fp,"%f,%d \n",-0.3 + i*0.01, occurrenceAnomaly[i]);
+        }
+    }
+
+    fclose(fp);
+
+
     for (int iMonth=0;iMonth<12;iMonth++)
     {
         for (int i=0;i<nrStations;i++)
