@@ -140,7 +140,7 @@ bool vine3DInterpolationDem(Vine3DProject* myProject, meteoVariable myVar,
         myMap = &(myProject->dataRaster);
     }
 
-    if (! myProject->interpolationDem(myVar, myCrit3DTime, myMap, false))
+    if (! myProject->interpolationDem(myVar, myCrit3DTime, myMap))
         return false;
 
     if (postInterpolation(myVar, myMap))
@@ -225,7 +225,7 @@ bool vine3DInterpolationDemRadiation(Vine3DProject* myProject, const Crit3DTime&
     }
 
     if (preInterpolation(interpolationPoints, &(myProject->interpolationSettings), &(myProject->climateParameters), myProject->meteoPoints, myProject->nrMeteoPoints, atmTransmissivity, myCrit3DTime))
-        if (! interpolationRaster(interpolationPoints, &(myProject->interpolationSettings), myProject->radiationMaps->transmissivityMap, myProject->DEM, atmTransmissivity, false))
+        if (! interpolationRaster(interpolationPoints, &(myProject->interpolationSettings), myProject->radiationMaps->transmissivityMap, myProject->DEM, atmTransmissivity))
         {
             myProject->errorString = "Function vine3DInterpolationDemRadiation: error interpolating transmissivity";
             return false;

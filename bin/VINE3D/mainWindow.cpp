@@ -392,7 +392,7 @@ void MainWindow::interpolateDemGUI()
 {
     meteoVariable myVar = myProject.getCurrentVariable();
 
-    if (myProject.interpolationDemMain(myVar, myProject.getCrit3DCurrentTime(), &(myProject.dataRaster), true))
+    if (myProject.interpolationDemMain(myVar, myProject.getCrit3DCurrentTime(), &(myProject.dataRaster)))
     {
         setColorScale(myVar, myProject.dataRaster.colorScale);
         setCurrentRaster(&(myProject.dataRaster));
