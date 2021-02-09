@@ -1,7 +1,6 @@
 #include "commonConstants.h"
 
 #include "basicMath.h"
-#include "formInfo.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "criteria3DProject.h"
@@ -614,13 +613,12 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 
 bool MainWindow::loadMeteoPointsDB(QString dbName)
 {
-    FormInfo myInfo;
-    myInfo.showInfo("Load " + dbName);
-
+    myProject.logInfoGUI("Load " + dbName);
     bool success = myProject.loadMeteoPointsDB(dbName);
-    myInfo.close();
+    myProject.closeLogInfo();
 
-    if (success) drawMeteoPoints();
+    if (success)
+        drawMeteoPoints();
 
     return success;
 }

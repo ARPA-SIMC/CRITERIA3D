@@ -168,6 +168,7 @@
 
         int setProgressBar(QString myStr, int nrValues);
         void updateProgressBar(int value);
+        void updateProgressBarText(QString myStr);
         void closeProgressBar();
 
         void closeMeteoPointsDB();

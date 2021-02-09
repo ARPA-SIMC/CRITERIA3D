@@ -2572,6 +2572,22 @@ void Project::updateProgressBar(int value)
 }
 
 
+void Project::updateProgressBarText(QString myStr)
+{
+    if (modality == MODE_GUI)
+    {
+        if (formLog != nullptr)
+        {
+            formLog->setText(myStr);
+        }
+    }
+    else
+    {
+        std::cout << myStr.toStdString();
+    }
+}
+
+
 void Project::closeProgressBar()
 {
     if (modality == MODE_GUI)

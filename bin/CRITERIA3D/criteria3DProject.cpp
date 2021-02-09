@@ -26,7 +26,6 @@
 
 
 #include "commonConstants.h"
-#include "formInfo.h"
 #include "utilities.h"
 #include "criteria3DProject.h"
 #include "soilDbTools.h"
@@ -261,10 +260,9 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
 
     this->hourlyMeteoMaps->setComputed(false);
 
-    FormInfo myInfo;
     if (showInfo)
     {
-        myInfo.start("Computing air temperature...", 6);
+        setProgressBar("Computing air temperature...", 6);
     }
 
     if (! interpolateHourlyMeteoVar(airTemperature, myTime))
@@ -272,8 +270,8 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
 
     if (showInfo)
     {
-        myInfo.setText("Computing air relative humidity...");
-        myInfo.setValue(1);
+        updateProgressBarText("Computing air relative humidity...");
+        updateProgressBar(1);
     }
 
     if (! interpolateHourlyMeteoVar(airRelHumidity, myTime))
@@ -281,8 +279,8 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
 
     if (showInfo)
     {
-        myInfo.setText("Computing precipitation...");
-        myInfo.setValue(2);
+        updateProgressBarText("Computing precipitation...");
+        updateProgressBar(2);
     }
 
     if (! interpolateHourlyMeteoVar(precipitation, myTime))
@@ -290,8 +288,8 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
 
     if (showInfo)
     {
-        myInfo.setText("Computing wind intensity...");
-        myInfo.setValue(3);
+        updateProgressBarText("Computing wind intensity...");
+        updateProgressBar(3);
     }
 
     if (! interpolateHourlyMeteoVar(windScalarIntensity, myTime))
@@ -299,8 +297,8 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
 
     if (showInfo)
     {
-        myInfo.setText("Computing global irradiance...");
-        myInfo.setValue(4);
+        updateProgressBarText("Computing global irradiance...");
+        updateProgressBar(4);
     }
 
     if (! interpolateHourlyMeteoVar(globalIrradiance, myTime))
@@ -308,14 +306,14 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
 
     if (showInfo)
     {
-        myInfo.setText("Computing ET0...");
-        myInfo.setValue(5);
+        updateProgressBarText("Computing ET0...");
+        updateProgressBar(5);
     }
 
     if (! this->hourlyMeteoMaps->computeET0PMMap(this->DEM, this->radiationMaps))
         return false;
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
 
     this->hourlyMeteoMaps->setComputed(true);
 
