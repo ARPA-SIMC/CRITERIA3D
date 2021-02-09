@@ -68,7 +68,8 @@
     #define MISSING_DATA_ERROR -9999
     #define PARAMETER_ERROR -7777
 
-    #define CRIT3D_OK 0
+    #define CRIT1D_OK 0
+    #define CRIT3D_OK 1
 
     #define VANGENUCHTEN 0
     #define MODIFIEDVANGENUCHTEN 1

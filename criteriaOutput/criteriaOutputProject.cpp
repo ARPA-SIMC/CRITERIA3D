@@ -103,7 +103,7 @@ int CriteriaOutputProject::initializeProjectDtx()
         }
     }
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -160,7 +160,7 @@ int CriteriaOutputProject::initializeProjectCsv()
         }
     }
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -204,7 +204,7 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
     }
 
     isProjectLoaded = true;
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -365,7 +365,7 @@ int CriteriaOutputProject::precomputeDtx()
     logger.writeInfo("PRECOMPUTE DTX");
 
     int myResult = initializeProjectDtx();
-    if (myResult != CRIT3D_OK)
+    if (myResult != CRIT1D_OK)
     {
         return myResult;
     }
@@ -387,14 +387,14 @@ int CriteriaOutputProject::precomputeDtx()
         logger.writeInfo(QString::number(i) + " ID CASE: " + idCase);
 
         int myResult = computeAllDtxUnit(dbDataHistorical, idCase, projectError);
-        if (myResult != CRIT3D_OK)
+        if (myResult != CRIT1D_OK)
         {
             projectError = "ID CASE: " + idCase + "\n" + projectError;
             return myResult;
         }
     }
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -403,7 +403,7 @@ int CriteriaOutputProject::createCsvFile()
     logger.writeInfo("Create CSV");
 
     int myResult = initializeProjectCsv();
-    if (myResult != CRIT3D_OK)
+    if (myResult != CRIT1D_OK)
     {
         return myResult;
     }
@@ -432,7 +432,7 @@ int CriteriaOutputProject::createCsvFile()
         idCropClass = unitList[i].idCropClass;
 
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, outputCsvFileName, &projectError);
-        if (myResult != CRIT3D_OK)
+        if (myResult != CRIT1D_OK)
         {
             if (QFile(outputCsvFileName).exists())
             {
@@ -442,7 +442,7 @@ int CriteriaOutputProject::createCsvFile()
         }
     }
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -452,7 +452,7 @@ int CriteriaOutputProject::createShapeFile()
     {
         // create CSV
         int myResult = createCsvFile();
-        if (myResult != CRIT3D_OK)
+        if (myResult != CRIT1D_OK)
         {
             return myResult;
         }
@@ -483,7 +483,7 @@ int CriteriaOutputProject::createShapeFile()
         return ERROR_SHAPEFILE;
     }
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -523,7 +523,7 @@ int CriteriaOutputProject::createMaps()
     if (! QFile(outputShapeFileName).exists())
     {
         int myResult = createShapeFile();
-        if (myResult != CRIT3D_OK)
+        if (myResult != CRIT1D_OK)
         {
             return myResult;
         }
@@ -606,7 +606,7 @@ int CriteriaOutputProject::createMaps()
 
     if (rasterOK == inputField.size())
     {
-        return CRIT3D_OK;
+        return CRIT1D_OK;
     }
     else
     {
@@ -655,7 +655,7 @@ int CriteriaOutputProject::createAggregationFile()
     {
         // create shapefile
         int myResult = createShapeFile();
-        if (myResult != CRIT3D_OK)
+        if (myResult != CRIT1D_OK)
         {
             return myResult;
         }
@@ -941,7 +941,7 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
 {
 
     int myResult = initializeProjectCsv();
-    if (myResult != CRIT3D_OK)
+    if (myResult != CRIT1D_OK)
     {
         return myResult;
     }
@@ -975,7 +975,7 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
         idCropClass = unitList[i].idCropClass;
 
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, &projectError);
-        if (myResult != CRIT3D_OK)
+        if (myResult != CRIT1D_OK)
         {
             if (QFile(csvFileName).exists())
             {
@@ -984,7 +984,7 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
             return myResult;
         }
     }
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 int CriteriaOutputProject::createShapeFileFromGUI()
@@ -1007,5 +1007,5 @@ int CriteriaOutputProject::createShapeFileFromGUI()
         return ERROR_SHAPEFILE;
     }
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }

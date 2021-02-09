@@ -12,7 +12,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
     // check if table exist (skip otherwise)
     if (! db.tables().contains(idCase))
     {
-        return CRIT3D_OK;
+        return CRIT1D_OK;
     }
 
     QSqlQuery qry(db);
@@ -86,28 +86,28 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
     qry.exec();
     if (!qry.first())
     {
-        return CRIT3D_OK;
+        return CRIT1D_OK;
     }
     qry.clear();
 
     // compute DTX30
     std::vector<double> dt30;
     int myResult = computeAllDtxPeriod(db, idCase, 30, dt30, projectError);
-    if (myResult != CRIT3D_OK)
+    if (myResult != CRIT1D_OK)
     {
         return myResult;
     }
     // compute DTX90
     std::vector<double> dt90;
     myResult = computeAllDtxPeriod(db, idCase, 90, dt90, projectError);
-    if (myResult != CRIT3D_OK)
+    if (myResult != CRIT1D_OK)
     {
         return myResult;
     }
     // compute DTX180
     std::vector<double> dt180;
     myResult = computeAllDtxPeriod(db, idCase, 180, dt180, projectError);
-    if (myResult != CRIT3D_OK)
+    if (myResult != CRIT1D_OK)
     {
         return myResult;
     }
@@ -121,7 +121,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &projectError)
         }
     }
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -191,7 +191,7 @@ int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, st
     }
     dailyDt.clear();
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -302,7 +302,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
     // check if table exist (skip otherwise)
     if (! dbData.tables().contains(idCase))
     {
-        return CRIT3D_OK;
+        return CRIT1D_OK;
     }
 
     for (int i = 0; i < outputVariable.varName.size(); i++)
@@ -384,7 +384,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
             {
                 res = NODATA;
             }
-            else if(selectRes != CRIT3D_OK)
+            else if(selectRes != CRIT1D_OK)
             {
                 return selectRes;
             }
@@ -409,7 +409,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
             {
                 res = NODATA;
             }
-            else if (DTXRes != CRIT3D_OK)
+            else if (DTXRes != CRIT1D_OK)
             {
                 return DTXRes;
             }
@@ -505,7 +505,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
                                 }
                             }
 
-                            if (selectRes != CRIT3D_OK && selectRes != ERROR_DB_INCOMPLETE_DATA)
+                            if (selectRes != CRIT1D_OK && selectRes != ERROR_DB_INCOMPLETE_DATA)
                             {
                                 // something wrong happened (if ERROR_DB_INCOMPLETE_DATA res is NODATA)
                                 return selectRes;
@@ -557,7 +557,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase dbData,
 
     outputFile.flush();
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -634,7 +634,7 @@ int selectSimpleVar(QSqlDatabase db, QString idCase, QString varName, QString co
         }
     }
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 
 }
 
@@ -692,7 +692,7 @@ int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation,
     if (computation.isEmpty())
     {
         resVector->append(dtx);
-        return CRIT3D_OK;
+        return CRIT1D_OK;
     }
     else if (computation == "SUM")
     {
@@ -721,7 +721,7 @@ int computeDTX(QSqlDatabase db, QString idCase, int period, QString computation,
     }
 
     resVector->push_back(res);
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 
@@ -807,7 +807,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
 
     outputFile.flush();
 
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
 
 int orderCsvByField(QString csvFileName, QString field, QString &error)
@@ -902,5 +902,5 @@ int orderCsvByField(QString csvFileName, QString field, QString &error)
     }
 
     fileCsv.flush();
-    return CRIT3D_OK;
+    return CRIT1D_OK;
 }
