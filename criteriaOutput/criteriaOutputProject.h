@@ -85,6 +85,7 @@ public:
     QString logFileName;
     std::ofstream logFile;
     Logger logger;
+    bool addDateTimeLogFile;
 
     CriteriaOutputProject();
 

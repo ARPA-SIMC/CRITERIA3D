@@ -59,6 +59,9 @@ void CriteriaOutputProject::initialize()
 
     projectError = "";
     nrUnits = 0;
+
+    logFileName = "";
+    addDateTimeLogFile = false;
 }
 
 
@@ -200,7 +203,7 @@ int CriteriaOutputProject::initializeProject(QString settingsFileName, QDate dat
 
     if (isLog)
     {
-        logger.setLog(path,projectName);
+        logger.setLog(path, projectName, addDateTimeLogFile);
     }
 
     isProjectLoaded = true;
@@ -212,13 +215,14 @@ bool CriteriaOutputProject::readSettings()
 {
     QSettings* projectSettings;
     projectSettings = new QSettings(configFileName, QSettings::IniFormat);
+
+    // PROJECT
     projectSettings->beginGroup("project");
 
     QString dateStr = dateComputation.toString("yyyy-MM-dd");
 
     projectName = projectSettings->value("name","").toString();
 
-    // unit list
     dbUnitsName = projectSettings->value("db_units","").toString();
     if (dbUnitsName.left(1) == ".")
     {
@@ -251,10 +255,13 @@ bool CriteriaOutputProject::readSettings()
     {
         dbDataHistoricalName = path + QDir::cleanPath(dbDataHistoricalName);
     }
+
+    addDateTimeLogFile = projectSettings->value("add_date_to_log","").toBool();
     projectSettings->endGroup();
 
+    // CSV
     projectSettings->beginGroup("csv");
-    // variables list
+
     variableListFileName = projectSettings->value("variable_list","").toString();
     if (variableListFileName.left(1) == ".")
     {
@@ -263,7 +270,6 @@ bool CriteriaOutputProject::readSettings()
 
     bool addDate = projectSettings->value("add_date_to_filename","").toBool();
 
-    // csv output
     outputCsvFileName = projectSettings->value("csv_output","").toString();
     if (outputCsvFileName.right(4) == ".csv")
     {
@@ -278,56 +284,54 @@ bool CriteriaOutputProject::readSettings()
     }
     projectSettings->endGroup();
 
+    // SHAPEFILE
     projectSettings->beginGroup("shapefile");
-    // UCM
+
     ucmFileName = projectSettings->value("UCM","").toString();
     if (ucmFileName.left(1) == ".")
     {
         ucmFileName = path + QDir::cleanPath(ucmFileName);
     }
 
-    // Field listgetFileNamegetFileName
     fieldListFileName = projectSettings->value("field_list", "").toString();
     if (fieldListFileName.left(1) == ".")
     {
         fieldListFileName = path + QDir::cleanPath(fieldListFileName);
     }
 
-    // Shapefile
+    // output shapefile
     outputShapeFilePath = getFilePath(outputCsvFileName) + dateStr;
     QFileInfo csvFileInfo(outputCsvFileName);
     outputShapeFileName = outputShapeFilePath + "/" + csvFileInfo.baseName() + ".shp";
 
     projectSettings->endGroup();
 
+    // AGGREGATION
     projectSettings->beginGroup("aggregation");
-    // Aggregation Shape
+
     aggregationShapeFileName = projectSettings->value("aggregation_shape","").toString();
     if (aggregationShapeFileName.left(1) == ".")
     {
         aggregationShapeFileName = path + QDir::cleanPath(aggregationShapeFileName);
     }
 
-    // Shape Field
     shapeFieldName = projectSettings->value("shape_field", "").toString();
 
-    // Aggregation List
     aggregationListFileName = projectSettings->value("aggregation_list","").toString();
     if (aggregationListFileName.left(1) == ".")
     {
         aggregationListFileName = path + QDir::cleanPath(aggregationListFileName);
     }
 
-    // Aggregation cell size
     aggregationCellSize = projectSettings->value("aggregation_cellsize","").toString();
 
-    addDate = projectSettings->value("add_date_to_filename","").toBool();
-    // aggregation output
     outputAggrCsvFileName = projectSettings->value("aggregation_output","").toString();
     if (outputAggrCsvFileName.right(4) == ".csv")
     {
         outputAggrCsvFileName = outputAggrCsvFileName.left(outputAggrCsvFileName.length()-4);
     }
+
+    addDate = projectSettings->value("add_date_to_filename","").toBool();
 
     if (addDate) outputAggrCsvFileName += "_" + dateStr;
     outputAggrCsvFileName += ".csv";
@@ -336,11 +340,11 @@ bool CriteriaOutputProject::readSettings()
     {
         outputAggrCsvFileName = path + QDir::cleanPath(outputAggrCsvFileName);
     }
-
     projectSettings->endGroup();
 
-    projectSettings->beginGroup("maps");
     // MAPS
+    projectSettings->beginGroup("maps");
+
     mapListFileName = projectSettings->value("map_list","").toString();
     if (mapListFileName.left(1) == ".")
     {
