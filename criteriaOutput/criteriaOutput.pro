@@ -54,15 +54,21 @@ HEADERS += \
     criteriaOutputVariable.h
 
 
+#INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../crop ../gis \
+#                ../utilities ../shapeHandler ../shapeUtilities
+
+## comment to compile without GDAL library
+#CONFIG += GDAL
+
+#GDAL {
+#    DEFINES += GDAL
+#    INCLUDEPATH += ../gdalHandler
+#    include(../gdal.pri)
+#}
+
 INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../crop ../gis \
-                ../utilities ../shapeHandler ../shapeUtilities
+                ../utilities ../shapeHandler ../shapeUtilities ../gdalHandler
 
-# comment to compile without GDAL library
-CONFIG += GDAL
-
-GDAL {
-    DEFINES += GDAL
-    INCLUDEPATH += ../gdalHandler
-    include(../gdal.pri)
-}
+DEFINES += GDAL
+include(../gdal.pri)
 
