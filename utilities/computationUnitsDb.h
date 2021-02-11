@@ -33,7 +33,7 @@
         ~ComputationUnitsDB();
 
         bool writeListToUnitsTable(QStringList idCase, QStringList idCrop, QStringList idMeteo,
-                                   QStringList idSoil, QList<double> ha, QString &error);
+                                   QStringList idSoil, QList<double> hectares, QString &error);
 
         bool readUnitList(std::vector<Crit1DUnit> &unitList, QString &error);
 
