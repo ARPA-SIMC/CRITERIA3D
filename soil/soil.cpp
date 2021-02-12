@@ -324,11 +324,11 @@ namespace soil
         double specificDensity = estimateSpecificDensity(horizon->organicMatter);
         double refBulkDensity = (1 - totalPorosity) * specificDensity;
 
-        // increase/decrease with depth, reference theta sat at 33cm
+        // increase/decrease with depth, reference theta sat at 30cm
         if (increaseWithDepth)
         {
             double depth = (horizon->upperDepth + horizon->lowerDepth) * 0.5;
-            double depthCoeff = (depth - 0.33) * 0.1;
+            double depthCoeff = (depth - 0.30) * 0.05;
             refBulkDensity *= (1.0 + depthCoeff);
         }
 
@@ -747,26 +747,27 @@ namespace soil
         horizon->waterConductivity = textureClassList[horizon->texture.classUSDA].waterConductivity;
         horizon->Driessen = textureClassList[horizon->texture.classNL].Driessen;
 
-        // bulk density [g cm-3]
-        horizon->bulkDensity = NODATA;
-        if (horizon->dbData.bulkDensity > 0 && horizon->dbData.bulkDensity < QUARTZ_DENSITY)
-        {
-            horizon->bulkDensity = horizon->dbData.bulkDensity;
-        }
-
-        // check theta sat [m3 m-3]
+        // theta sat [m3 m-3] - first check
         if (horizon->dbData.thetaSat != NODATA && horizon->dbData.thetaSat > 0 && horizon->dbData.thetaSat < 1)
         {
             horizon->vanGenuchten.thetaS = horizon->dbData.thetaSat;
         }
-        else if(horizon->bulkDensity != NODATA)
+
+        // bulk density [g cm-3]
+        horizon->bulkDensity = NODATA;
+        if (horizon->dbData.bulkDensity != NODATA && horizon->dbData.bulkDensity > 0 && horizon->dbData.bulkDensity < QUARTZ_DENSITY)
         {
-            horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
+            horizon->bulkDensity = horizon->dbData.bulkDensity;
+        }
+        else
+        {
+            horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, true);
         }
 
-        if (horizon->bulkDensity == NODATA)
+        // theta sat [m3 m-3] from bulk density
+        if(horizon->dbData.thetaSat == NODATA)
         {
-            horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, false);
+            horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
         }
 
         // Ksat = saturated water conductivity [cm day-1]
