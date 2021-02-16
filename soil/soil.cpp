@@ -287,7 +287,7 @@ namespace soil
             return NODATA;
 
         /*! heavy clay */
-        if (clay >= 65) return 12;
+        if (clay >= 60) return 12;
 
         if (clay > 40)
         {
