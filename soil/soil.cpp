@@ -747,7 +747,7 @@ namespace soil
         horizon->waterConductivity = textureClassList[horizon->texture.classUSDA].waterConductivity;
         horizon->Driessen = textureClassList[horizon->texture.classNL].Driessen;
 
-        // theta sat [m3 m-3] - first check
+        // theta sat [m3 m-3]
         if (horizon->dbData.thetaSat != NODATA && horizon->dbData.thetaSat > 0 && horizon->dbData.thetaSat < 1)
         {
             horizon->vanGenuchten.thetaS = horizon->dbData.thetaSat;
@@ -758,16 +758,24 @@ namespace soil
         if (horizon->dbData.bulkDensity != NODATA && horizon->dbData.bulkDensity > 0 && horizon->dbData.bulkDensity < QUARTZ_DENSITY)
         {
             horizon->bulkDensity = horizon->dbData.bulkDensity;
-        }
-        else
-        {
-            horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, true);
+
+            // theta sat [m3 m-3] from bulk density
+            if(horizon->dbData.thetaSat == NODATA)
+            {
+                horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
+            }
         }
 
-        // theta sat [m3 m-3] from bulk density
-        if(horizon->dbData.thetaSat == NODATA)
+        // fitting (Marquardt)
+        if (fittingOptions->useWaterRetentionData && horizon->dbData.waterRetention.size() > 0)
         {
-            horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
+            fittingWaterRetentionCurve(horizon, fittingOptions);
+        }
+
+        // bulk density [g cm-3] from theta sat [m3 m-3]
+        if (horizon->bulkDensity == NODATA)
+        {
+            horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, true);
         }
 
         // Ksat = saturated water conductivity [cm day-1]
@@ -792,11 +800,6 @@ namespace soil
         else
         {
             horizon->waterConductivity.kSat = soil::estimateSaturatedConductivity(horizon, horizon->bulkDensity);
-        }
-
-        if (fittingOptions->useWaterRetentionData && horizon->dbData.waterRetention.size() > 0)
-        {
-            fittingWaterRetentionCurve(horizon, fittingOptions);
         }
 
         // update with coarse fragment (TODO check altre parti del codice!)
