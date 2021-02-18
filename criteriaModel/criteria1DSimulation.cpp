@@ -299,10 +299,7 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
 
     if (! query.isValid())
     {
-        if (query.lastError().text() != "")
-            *myError = "dbMeteo error: " + query.lastError().text();
-        else
-            *myError = "Missing meteo location:" + idMeteo;
+        *myError = "Missing meteo location: " + idMeteo;
         return false;
     }
 
@@ -320,7 +317,7 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     if (getValue(query.value(("longitude")), &myLon))
         myCase.meteoPoint.longitude = myLon;
 
-    queryString = "SELECT * FROM " + tableName + " ORDER BY [date]";
+    queryString = "SELECT * FROM '" + tableName + "' ORDER BY [date]";
     query = this->dbMeteo.exec(queryString);
     query.last();
 
