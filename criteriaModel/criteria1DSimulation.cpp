@@ -72,7 +72,7 @@ void Crit1DSimulation::updateSeasonalForecast(Crit3DDate myDate, int* index)
 }
 
 
-bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
+bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, bool isSaveState, QString &myError)
 {
     myCase.idCase = myUnit.idCase;
 
@@ -476,7 +476,7 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
                   + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
                   + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
                   + " DEFICIT REAL, DEFICIT_25 REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
-                  + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOTDEPTH REAL )";
+                  + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOT_DEPTH REAL )";
     myQuery = this->dbOutput.exec(queryString);
 
     if (myQuery.lastError().isValid())
@@ -497,7 +497,7 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                        + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, "
                        + " AVAILABLE_WATER, READILY_AW, FRACTION_AW, "
                        + " DEFICIT, DEFICIT_25, DRAINAGE, RUNOFF, ET0, "
-                       + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOTDEPTH) "
+                       + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH) "
                        + " VALUES ";
     }
     else

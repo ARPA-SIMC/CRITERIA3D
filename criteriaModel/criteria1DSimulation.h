@@ -55,7 +55,7 @@ class Crit1DSimulation
 
         Crit1DSimulation();
 
-        bool runModel(const Crit1DUnit &myUnit, QString &myError);
+        bool runModel(const Crit1DUnit &myUnit, bool isSaveState, QString &myError);
 
     private:
 
