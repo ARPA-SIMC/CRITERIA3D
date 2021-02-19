@@ -42,9 +42,11 @@ class Crit1DSimulation
         // dates
         bool useAllMeteoData;
         QDate firstSimulationDate;
+        QDate computationDate;
         QDate lastObservedDate;
 
         // seasonal forecast
+        bool isSaveState;
         bool isSeasonalForecast;
         int firstSeasonMonth;
         std::vector<float> seasonalForecasts;
@@ -56,7 +58,8 @@ class Crit1DSimulation
 
         Crit1DSimulation();
 
-        bool runModel(const Crit1DUnit &myUnit, bool isSaveState, QString &myError);
+        bool runModel(const Crit1DUnit &myUnit, QString &myError);
+        bool createState(QString &myError);
 
     private:
 
@@ -70,7 +73,7 @@ class Crit1DSimulation
         void updateSeasonalForecast(Crit3DDate myDate, int *index);
 
         bool createOutputTable(QString &myError);
-        bool createState(Crit3DDate lastDate, QString &myError);
+
         bool saveState(QString &myError);
         bool restoreState(QString dbStateToRestoreName, QString &myError);
         void prepareOutput(Crit3DDate myDate, bool isFirst);

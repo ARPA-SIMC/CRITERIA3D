@@ -17,6 +17,7 @@ Crit1DSimulation::Crit1DSimulation()
 {
     isXmlGrid = false;
     isSeasonalForecast = false;
+    isSaveState = false;
     firstSeasonMonth = NODATA;
     nrSeasonalForecasts = 0;
 
@@ -25,6 +26,7 @@ Crit1DSimulation::Crit1DSimulation()
     useAllMeteoData = true;
     firstSimulationDate = QDate(1800,1,1);
     lastObservedDate = QDate(1800,1,1);
+    computationDate = QDate(1800,1,1);
 
     outputString = "";
 }
@@ -73,7 +75,7 @@ void Crit1DSimulation::updateSeasonalForecast(Crit3DDate myDate, int* index)
 }
 
 
-bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, bool isSaveState, QString &myError)
+bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
 {
     myCase.idCase = myUnit.idCase;
 
@@ -112,12 +114,6 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, bool isSaveState, QStr
     unsigned long lastIndex = unsigned(myCase.meteoPoint.nrObsDataDaysD-1);
     firstDate = myCase.meteoPoint.obsDataD[0].date;
     lastDate = myCase.meteoPoint.obsDataD[lastIndex].date;
-
-    if (isSaveState)
-    {
-        if (! createState(lastDate, myError))
-            return false;
-    }
 
     if (isSeasonalForecast) initializeSeasonalForecast(firstDate, lastDate);
     int indexSeasonalForecast = NODATA;
@@ -501,13 +497,12 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
     return true;
 }
 
-bool Crit1DSimulation::createState(Crit3DDate lastDate, QString &myError)
+bool Crit1DSimulation::createState(QString &myError)
 {
     // create db state
-    QString date = QString::fromStdString(lastDate.toStdString());
-    date.replace("-","_");
+    QString date = computationDate.toString("yyyy_MM_dd");
     QString outputDbPath = getFilePath(dbOutput.databaseName());
-    QString dbStateName = outputDbPath+"state_"+date;
+    QString dbStateName = outputDbPath + "state_" + date + ".db";
     if (QFile::exists(dbStateName))
     {
         QFile::remove(dbStateName);
