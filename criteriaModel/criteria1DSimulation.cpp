@@ -150,6 +150,12 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, bool isSaveState, QStr
         }
     }
 
+    if (isSaveState)
+    {
+        if (! saveState(myError))
+            return false;
+    }
+
     if (isSeasonalForecast)
         return true;
     else
@@ -537,6 +543,47 @@ bool Crit1DSimulation::createState(Crit3DDate lastDate, QString &myError)
     }
 
     return true;
+}
+
+bool Crit1DSimulation::saveState(QString &myError)
+{
+    QSqlQuery qry(dbState);
+    qry.prepare( "INSERT INTO variables ( ID_CASE, LAI, ROOT_DEPTH, DEGREE_DAYS, DAYS_SINCE_IRR ) VALUES (:id_case, :lai, :root_depth, :degree_days, :days_since_irr)" );
+
+    qry.bindValue(":id_case", myCase.idCase);
+    qry.bindValue(":lai", myCase.myCrop.LAI);
+    qry.bindValue(":root_depth", myCase.myCrop.roots.rootDepth);
+    qry.bindValue(":degree_days", myCase.myCrop.degreeDays);
+    qry.bindValue(":days_since_irr", myCase.myCrop.daysSinceIrrigation);
+
+    if( !qry.exec() )
+    {
+        myError = "Error in saving variables state:\n" + qry.lastError().text();
+        return false;
+    }
+
+    qry.clear();
+    qry.prepare( "INSERT INTO waterContent ( ID_CASE, NR_LAYER, WC ) VALUES (?, ?, ?)" );
+    QVariantList id_case;
+    QVariantList nr_layer;
+    QVariantList wc;
+    for (unsigned int i = 0; i<myCase.soilLayers.size(); i++)
+    {
+        id_case << myCase.idCase;
+        nr_layer << i;
+        wc << myCase.soilLayers[i].waterContent;
+    }
+    qry.addBindValue(id_case);
+    qry.addBindValue(nr_layer);
+    qry.addBindValue(wc);
+
+    if( !qry.execBatch() )
+    {
+        myError = "Error in saving waterContent state:\n" + qry.lastError().text();
+        return false;
+    }
+    else
+        return true;
 }
 
 
