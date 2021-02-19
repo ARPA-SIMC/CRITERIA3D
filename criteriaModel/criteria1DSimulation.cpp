@@ -545,6 +545,112 @@ bool Crit1DSimulation::createState(Crit3DDate lastDate, QString &myError)
     return true;
 }
 
+bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myError)
+{
+    if (!QFile::exists(dbStateToRestoreName))
+    {
+        myError = "DB state: " +dbStateToRestoreName+" does not exist";
+        return false;
+    }
+    QSqlDatabase dbStateToRestore = QSqlDatabase::addDatabase("QSQLITE", "state");
+    dbStateToRestore.setDatabaseName(dbStateToRestoreName);
+
+    if (! dbStateToRestore.open())
+    {
+        myError = "Open state DB failed: " + dbStateToRestore.lastError().text();
+        return false;
+    }
+    QSqlQuery qry(dbStateToRestore);
+    qry.prepare( "SELECT * FROM variables WHERE ID_CASE = :id_case");
+    qry.bindValue(":id_case", myCase.idCase);
+
+    if( !qry.exec() )
+    {
+        myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        double lai;
+        double rootDepth;
+        double degreeDays;
+        int daySinceIrr;
+        if (qry.next())
+        {
+            if (!getValue(qry.value("LAI"), &lai))
+            {
+                myError = "LAI not found";
+                return false;
+            }
+            myCase.myCrop.LAI = lai;
+            if (!getValue(qry.value("ROOT_DEPTH"), &rootDepth))
+            {
+                myError = "ROOT_DEPTH not found";
+                return false;
+            }
+            myCase.myCrop.roots.rootDepth = rootDepth;
+            if (!getValue(qry.value("DEGREE_DAYS"), &degreeDays))
+            {
+                myError = "DEGREE_DAYS not found";
+                return false;
+            }
+            myCase.myCrop.degreeDays = degreeDays;
+            if (!getValue(qry.value("DAYS_SINCE_IRR"), &daySinceIrr))
+            {
+                myError = "DAYS_SINCE_IRR not found";
+                return false;
+            }
+            myCase.myCrop.daysSinceIrrigation = daySinceIrr;
+        }
+        else
+        {
+            myError = "variables table: idCase not found";
+            return false;
+        }
+    }
+    qry.clear();
+    qry.prepare( "SELECT * FROM waterContent WHERE ID_CASE = :id_case");
+    qry.bindValue(":id_case", myCase.idCase);
+
+    if( !qry.exec() )
+    {
+        myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        int nrLayer = -1;
+        double wc;
+        while (qry.next())
+        {
+            if (!getValue(qry.value("NR_LAYER"), &nrLayer))
+            {
+                myError = "NR_LAYER not found";
+                return false;
+            }
+            if (!getValue(qry.value("WC"), &wc))
+            {
+                myError = "WC not found";
+                return false;
+            }
+            if (nrLayer<0 || (unsigned)nrLayer>=myCase.soilLayers.size())
+            {
+                myError = "Invalid NR_LAYER";
+                return false;
+            }
+            myCase.soilLayers[nrLayer].waterContent = wc;
+        }
+        if (nrLayer == -1)
+        {
+            myError = "waterContent table: idCase not found";
+            return false;
+        }
+    }
+
+
+    return true;
+}
+
 bool Crit1DSimulation::saveState(QString &myError)
 {
     QSqlQuery qry(dbState);

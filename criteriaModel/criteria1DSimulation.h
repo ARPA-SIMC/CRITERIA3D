@@ -72,6 +72,7 @@ class Crit1DSimulation
         bool createOutputTable(QString &myError);
         bool createState(Crit3DDate lastDate, QString &myError);
         bool saveState(QString &myError);
+        bool restoreState(QString dbStateToRestoreName, QString &myError);
         void prepareOutput(Crit3DDate myDate, bool isFirst);
         bool saveOutput(QString &myError);
 
