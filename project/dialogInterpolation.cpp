@@ -37,7 +37,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     // topographic distances
     topographicDistanceEdit = new QCheckBox(tr("use topographic distance"));
-    topographicDistanceEdit->setChecked(_interpolationSettings->getUseTAD());
+    topographicDistanceEdit->setChecked(_interpolationSettings->getUseTD());
     layoutMain->addWidget(topographicDistanceEdit);
 
     // dew point
@@ -176,7 +176,7 @@ void DialogInterpolation::accept()
     QString aggrString = gridAggregationMethodEdit.itemData(gridAggregationMethodEdit.currentIndex()).toString();
     _interpolationSettings->setMeteoGridAggrMethod(aggregationMethodToString.at(aggrString.toStdString()));
 
-    _interpolationSettings->setUseTAD(topographicDistanceEdit->isChecked());
+    _interpolationSettings->setUseTD(topographicDistanceEdit->isChecked());
     _interpolationSettings->setUseLapseRateCode(lapseRateCodeEdit->isChecked());
     _interpolationSettings->setUseBestDetrending(optimalDetrendingEdit->isChecked());
     _interpolationSettings->setUseThermalInversion(thermalInversionEdit->isChecked());

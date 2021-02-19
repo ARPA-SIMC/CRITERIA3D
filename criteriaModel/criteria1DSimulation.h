@@ -4,8 +4,8 @@
     #ifndef CRITERIA1DCASE_H
         #include "criteria1DCase.h"
     #endif
-    #ifndef CRITERIA1DUNIT_H
-        #include "criteria1DUnit.h"
+    #ifndef COMPUTATIONUNITSDB_H
+        #include "computationUnitsDb.h"
     #endif
     #ifndef QDATETIME_H
         #include <QDate>

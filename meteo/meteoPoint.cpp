@@ -509,6 +509,8 @@ void Crit3DMeteoPoint::cleanObsDataH()
         }
         delete [] obsDataH;
     }
+
+    nrObsDataDaysH = 0;
 }
 
 

@@ -1,5 +1,4 @@
 #include "project.h"
-#include "formInfo.h"
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "spatialControl.h"
@@ -10,6 +9,8 @@
 #include "transmissivity.h"
 #include "utilities.h"
 #include "aggregation.h"
+#include "formInfo.h"
+#include "meteoWidget.h"
 
 #include <iostream>
 #include <QDir>
@@ -25,6 +26,7 @@ Project::Project()
     quality = new Crit3DQuality();
     meteoPointsColorScale = new Crit3DColorScale();
     meteoGridDbHandler = nullptr;
+    formLog = nullptr;
 
     // They not change after loading default settings
     appPath = "";
@@ -44,6 +46,7 @@ void Project::initializeProject()
     requestedExit = false;
     logFileName = "";
     errorString = "";
+    errorType = ERROR_NONE;
     currentTileMap = "";
 
     nrMeteoPoints = 0;
@@ -545,7 +548,7 @@ bool Project::loadParameters(QString parametersFileName)
             }
 
             if (parameters->contains("topographicDistance"))
-                interpolationSettings.setUseTAD(parameters->value("topographicDistance").toBool());
+                interpolationSettings.setUseTD(parameters->value("topographicDistance").toBool());
 
             if (parameters->contains("lapseRateCode"))
             {
@@ -606,7 +609,7 @@ bool Project::loadParameters(QString parametersFileName)
 
             myProxy->setProxyTable(parameters->value("table").toString().toStdString());
             myProxy->setProxyField(parameters->value("field").toString().toStdString());
-            myProxy->setGridName(parameters->value("raster").toString().toStdString());
+            myProxy->setGridName(getCompleteFileName(parameters->value("raster").toString(), PATH_GEO).toStdString());
             myProxy->setForQualityControl(parameters->value("use_for_spatial_quality_control").toBool());
 
             if (! parameters->contains("active"))
@@ -642,7 +645,7 @@ bool Project::loadParameters(QString parametersFileName)
             int nrGrids = parameters->beginReadArray("grids");
             for (int i = 0; i < nrGrids; ++i) {
                 parameters->setArrayIndex(i);
-                proxyGridSeriesNames.push_back(parameters->value("name").toString());
+                proxyGridSeriesNames.push_back(getCompleteFileName(parameters->value("name").toString(), PATH_GEO));
                 proxyGridSeriesYears.push_back(parameters->value("year").toUInt());
             }
             parameters->endArray();
@@ -791,6 +794,18 @@ void Project::getMeteoPointsRange(float *minimum, float *maximum)
     }
 }
 
+void Project::cleanMeteoPointsData()
+{
+    if (nrMeteoPoints > 0 && meteoPoints != nullptr)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            meteoPoints[i].cleanObsDataH();
+            meteoPoints[i].cleanObsDataD();
+            meteoPoints[i].cleanObsDataM();
+        }
+    }
+}
 
 void Project::clearMeteoPoints()
 {
@@ -858,6 +873,8 @@ bool Project::loadDEM(QString myFileName)
         return false;
     }
 
+    logInfoGUI("Load DEM = " + myFileName);
+
     this->demFileName = myFileName;
     myFileName = getCompleteFileName(myFileName, PATH_DEM);
 
@@ -903,7 +920,6 @@ bool Project::loadDEM(QString myFileName)
     //check points position with respect to DEM
     checkMeteoPointsDEM();
 
-    logInfo("DEM = " + myFileName);
     return true;
 }
 
@@ -968,7 +984,7 @@ bool Project::loadMeteoPointsDB(QString dbName)
     // load proxy values for detrending
     if (! readProxyValues())
     {
-        logInfo("Error reading proxy values");
+        logError("Error reading proxy values");
     }
 
     //position with respect to DEM
@@ -1032,28 +1048,32 @@ bool Project::loadAggregationdDB(QString dbName)
     return true;
 }
 
+
 bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
 
     bool isData = false;
-    FormInfo myInfo;
     int step = 0;
 
     QString infoStr = "Load data: " + firstDate.toString();
 
     if (firstDate != lastDate)
+    {
         infoStr += " - " + lastDate.toString();
+    }
 
     if (showInfo)
-        step = myInfo.start(infoStr, nrMeteoPoints);
+    {
+        step = setProgressBar(infoStr, nrMeteoPoints);
+    }
 
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (showInfo)
         {
-            if ((i % step) == 0) myInfo.setValue(i);
+            if ((i % step) == 0) updateProgressBar(i);
         }
 
         if (loadHourly)
@@ -1063,7 +1083,48 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
             if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
+
+    return isData;
+}
+
+
+bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, QString dataset, bool showInfo)
+{
+    //check
+    if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
+
+    bool isData = false;
+    int step = 0;
+
+    QString infoStr = "Load data: " + firstDate.toString();
+
+    if (firstDate != lastDate)
+        infoStr += " - " + lastDate.toString();
+
+    if (showInfo)
+    {
+        step = setProgressBar(infoStr, nrMeteoPoints);
+    }
+
+    for (int i=0; i < nrMeteoPoints; i++)
+    {
+        if (showInfo)
+        {
+            if ((i % step) == 0) updateProgressBar(i);
+        }
+
+        if (meteoPoints[i].dataset == dataset.toStdString())
+        {
+            if (loadHourly)
+                if (meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
+
+            if (loadDaily)
+                if (meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &(meteoPoints[i]))) isData = true;
+        }
+    }
+
+    if (showInfo) closeProgressBar();
 
     return isData;
 }
@@ -1086,20 +1147,21 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
     std::string id;
     int count = 0;
 
-    FormInfo myInfo;
     int infoStep = 1;
 
     if (showInfo)
     {
         QString infoStr = "Load meteo grid daily data: " + firstDate.toString();
         if (firstDate != lastDate) infoStr += " - " + lastDate.toString();
-        infoStep = myInfo.start(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
+        infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
     }
 
     for (int row = 0; row < this->meteoGridDbHandler->gridStructure().header().nrRows; row++)
     {
         if (showInfo && (row % infoStep) == 0)
-            myInfo.setValue(row);
+        {
+            updateProgressBar(row);
+        }
 
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
@@ -1123,7 +1185,7 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
         }
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
 
     if (count == 0)
     {
@@ -1139,7 +1201,6 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
 {
     std::string id;
     int count = 0;
-    FormInfo myInfo;
     int infoStep = 1;
 
     if (! meteoGridDbHandler->tableHourly().exists) return false;
@@ -1147,13 +1208,15 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
     if (showInfo)
     {
         QString infoStr = "Load meteo grid hourly data: " + firstDate.toString("yyyy-MM-dd:hh") + " - " + lastDate.toString("yyyy-MM-dd:hh");
-        infoStep = myInfo.start(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
+        infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
     }
 
     for (int row = 0; row < this->meteoGridDbHandler->gridStructure().header().nrRows; row++)
     {
         if (showInfo && (row % infoStep) == 0)
-            myInfo.setValue(row);
+        {
+            updateProgressBar(row);
+        }
 
         for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
         {
@@ -1177,7 +1240,7 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
         }
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
 
     if (count == 0)
     {
@@ -1306,7 +1369,7 @@ bool Project::loadProxyGrids()
     {
         Crit3DProxy* myProxy = interpolationSettings.getProxy(i);
 
-        logInfo("Loading grid for proxy: " + QString::fromStdString(myProxy->getName()));
+        logInfoGUI("Loading grid for proxy: " + QString::fromStdString(myProxy->getName()));
 
         if (interpolationSettings.getSelectedCombination().getValue(i) || myProxy->getForQualityControl())
         {
@@ -1334,6 +1397,8 @@ bool Project::loadProxyGrids()
                 proxyGrid.clear();
             }
         }
+
+        closeLogInfo();
     }
 
     return true;
@@ -1407,7 +1472,7 @@ bool Project::updateProxy()
     return true;
 }
 
-bool Project::writeTopographicDistanceMaps(bool onlyWithData)
+bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
     if (nrMeteoPoints == 0)
     {
@@ -1421,13 +1486,16 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData)
         return false;
     }
 
-    QString mapsFolder = projectPath + PATH_TAD;
+    QString mapsFolder = projectPath + PATH_TD;
     if (! QDir(mapsFolder).exists())
         QDir().mkdir(mapsFolder);
 
-    FormInfo myInfo;
     QString infoStr = "Computing topographic distance maps...";
-    int infoStep = myInfo.start(infoStr, nrMeteoPoints);
+    int infoStep = 0;
+    if (showInfo)
+    {
+        infoStep = setProgressBar(infoStr, nrMeteoPoints);
+    }
 
     std::string myError;
     std::string fileName;
@@ -1436,7 +1504,10 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData)
 
     for (int i=0; i < nrMeteoPoints; i++)
     {
-        if ((i % infoStep) == 0) myInfo.setValue(i);
+        if (showInfo)
+        {
+            if ((i % infoStep) == 0) updateProgressBar(i);
+        }
 
         if (meteoPoints[i].active)
         {
@@ -1450,7 +1521,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData)
             {
                 if (gis::topographicDistanceMap(meteoPoints[i].point, DEM, &myMap))
                 {
-                    fileName = mapsFolder.toStdString() + "TAD_" + meteoPoints[i].id;
+                    fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
                     if (! gis::writeEsriGrid(fileName, &myMap, &myError))
                     {
                         logError(QString::fromStdString(myError));
@@ -1461,11 +1532,51 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData)
         }
     }
 
-    myInfo.close();
+    if (showInfo) closeProgressBar();
 
     return true;
 }
 
+bool Project::writeTopographicDistanceMap(std::string meteoPointId)
+{
+    if (nrMeteoPoints == 0)
+    {
+        logError("Open a meteo points DB before.");
+        return false;
+    }
+
+    if (! DEM.isLoaded)
+    {
+        logError("Load a Digital Elevation Map before.");
+        return false;
+    }
+
+    QString mapsFolder = projectPath + PATH_TD;
+    if (! QDir(mapsFolder).exists())
+        QDir().mkdir(mapsFolder);
+
+    std::string myError;
+    std::string fileName;
+    gis::Crit3DRasterGrid myMap;
+
+    for (int i=0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].id == meteoPointId && meteoPoints[i].active)
+        {
+            if (gis::topographicDistanceMap(meteoPoints[i].point, DEM, &myMap))
+            {
+                fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
+                if (! gis::writeEsriGrid(fileName, &myMap, &myError))
+                {
+                    logError(QString::fromStdString(myError));
+                    return false;
+                }
+            }
+            break;
+        }
+    }
+    return true;
+}
 
 bool Project::loadTopographicDistanceMaps(bool showInfo)
 {
@@ -1475,19 +1586,17 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
         return false;
     }
 
-    QString mapsFolder = projectPath + PATH_TAD;
+    QString mapsFolder = projectPath + PATH_TD;
     if (! QDir(mapsFolder).exists())
     {
-        logError("TAD folder not found. Please create TAD Maps.");
-        return false;
+        QDir().mkdir(mapsFolder);
     }
 
-    FormInfo myInfo;
     int infoStep = 0;
     if (showInfo)
     {
         QString infoStr = "Loading topographic distance maps...";
-        infoStep = myInfo.start(infoStr, nrMeteoPoints);
+        infoStep = setProgressBar(infoStr, nrMeteoPoints);
     }
 
     std::string myError;
@@ -1499,12 +1608,20 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
         if (showInfo)
         {
             if ((i % infoStep) == 0)
-                myInfo.setValue(i);
+                updateProgressBar(i);
         }
 
         if (meteoPoints[i].active)
         {
-            fileName = mapsFolder.toStdString() + "TAD_" + meteoPoints[i].id;
+            fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
+            if (!QFile::exists(QString::fromStdString(fileName + ".flt")))
+            {
+                if (!writeTopographicDistanceMap(meteoPoints[i].id))
+                {
+                    return false;
+                }
+                logInfoGUI(QString::fromStdString(fileName) + " successfully created!");
+            }
             meteoPoints[i].topographicDistance = new gis::Crit3DRasterGrid();
             if (! gis::readEsriGrid(fileName, meteoPoints[i].topographicDistance, &myError))
             {
@@ -1514,7 +1631,7 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
         }
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo) closeProgressBar();
 
     return true;
 }
@@ -1544,7 +1661,7 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime)
 }
 
 
-bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo)
+bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
@@ -1557,15 +1674,8 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    FormInfo myInfo;
-    if (showInfo && modality == MODE_GUI)
-        myInfo.start("Preparing interpolation...", 0);
-
     //detrending and checking precipitation
     bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
-
-    if (showInfo && modality == MODE_GUI)
-        myInfo.close();
 
     if (! interpolationReady)
     {
@@ -1574,7 +1684,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     }
 
     // Interpolate
-    if (! interpolationRaster(interpolationPoints, &interpolationSettings, myRaster, DEM, myVar, showInfo && modality == MODE_GUI))
+    if (! interpolationRaster(interpolationPoints, &interpolationSettings, myRaster, DEM, myVar))
     {
         logError("Interpolation: error in function interpolationRaster");
         return false;
@@ -1586,7 +1696,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 }
 
 
-bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo)
+bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
@@ -1617,7 +1727,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
 
     preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, atmTransmissivity, myTime);
 
-    if (! interpolationRaster(interpolationPoints, &interpolationSettings, this->radiationMaps->transmissivityMap, DEM, atmTransmissivity, showInfo))
+    if (! interpolationRaster(interpolationPoints, &interpolationSettings, this->radiationMaps->transmissivityMap, DEM, atmTransmissivity))
     {
         logError("Function interpolateRasterRadiation: error interpolating transmissivity.");
         return false;
@@ -1638,7 +1748,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
 }
 
 
-bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo)
+bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     if (! DEM.isLoaded)
     {
@@ -1661,11 +1771,11 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     if (myVar == globalIrradiance)
     {
         Crit3DTime halfHour = myTime.addSeconds(-1800);
-        return interpolateDemRadiation(halfHour, myRaster, showInfo);
+        return interpolateDemRadiation(halfHour, myRaster);
     }
     else
     {
-        return interpolationDem(myVar, myTime, myRaster, showInfo);
+        return interpolationDem(myVar, myTime, myRaster);
     }
 }
 
@@ -1822,7 +1932,7 @@ bool Project::searchDefaultPath(QString* defaultPath)
 
     if (! isFound)
     {
-        logError("DATA directory is missing");
+        logError("PRAGA/DATA directory is missing");
         return false;
     }
 
@@ -1894,7 +2004,7 @@ void Project::saveInterpolationParameters()
         parameters->setValue("algorithm", QString::fromStdString(getKeyStringInterpolationMethod(interpolationSettings.getInterpolationMethod())));
         parameters->setValue("lapseRateCode", interpolationSettings.getUseLapseRateCode());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
-        parameters->setValue("topographicDistance", interpolationSettings.getUseTAD());
+        parameters->setValue("topographicDistance", interpolationSettings.getUseTD());
         parameters->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
         parameters->setValue("useDewPoint", interpolationSettings.getUseDewPoint());
         parameters->setValue("useInterpolationTemperatureForRH", interpolationSettings.getUseInterpolatedTForRH());
@@ -2061,19 +2171,33 @@ bool Project::loadProject()
 
     if (! loadParameters(parametersFileName))
     {
+        errorType = ERROR_SETTINGS;
         logError();
         return false;
     }
 
     if (demFileName != "")
-        if (! loadDEM(demFileName)) return false;
+        if (! loadDEM(demFileName))
+        {
+            errorType = ERROR_DEM;
+            return false;
+        }
 
     if (dbPointsFileName != "")
-        if (! loadMeteoPointsDB(dbPointsFileName)) return false;
+        if (! loadMeteoPointsDB(dbPointsFileName))
+        {
+            errorType = ERROR_DBPOINT;
+            return false;
+        }
 
     if (dbGridXMLFileName != "")
-        if (! loadMeteoGridDB(dbGridXMLFileName)) return false;
+        if (! loadMeteoGridDB(dbGridXMLFileName))
+        {
+            errorType = ERROR_DBGRID;
+            return false;
+        }
 
+    closeLogInfo();
     return true;
 }
 
@@ -2335,7 +2459,7 @@ bool Project::setLogFile(QString myFileName)
     logFile.open(currentFileName.toStdString().c_str());
     if (logFile.is_open())
     {
-        logInfo("LogFile: " + currentFileName);
+        logInfo("LogFile = " + currentFileName);
         return true;
     }
     else
@@ -2362,7 +2486,11 @@ void Project::logInfoGUI(QString myStr)
 {
     if (modality == MODE_GUI)
     {
-        QMessageBox::information(nullptr, "Information", myStr);
+        if (formLog == nullptr)
+        {
+            formLog = new FormInfo();
+        }
+        formLog->showInfo(myStr);
     }
     else
     {
@@ -2372,6 +2500,15 @@ void Project::logInfoGUI(QString myStr)
     if (logFile.is_open())
     {
         logFile << myStr.toStdString() << std::endl;
+    }
+}
+
+
+void Project::closeLogInfo()
+{
+    if ((modality == MODE_GUI) && (formLog != nullptr))
+    {
+        formLog->close();
     }
 }
 
@@ -2401,5 +2538,68 @@ void Project::logError()
 }
 
 
+int Project::setProgressBar(QString myStr, int nrValues)
+{
+    if (modality == MODE_GUI)
+    {
+        if (formLog == nullptr)
+        {
+            formLog = new FormInfo();
+        }
+        return formLog->start(myStr, nrValues);
+    }
+    else
+    {
+        std::cout << myStr.toStdString() << std::endl;
+        return std::max(1, int(nrValues / 50));
+    }
+}
 
+
+void Project::updateProgressBar(int value)
+{
+    if (modality == MODE_GUI)
+    {
+        if (formLog != nullptr)
+        {
+            formLog->setValue(value);
+        }
+    }
+    else
+    {
+        std::cout << "*";
+    }
+}
+
+
+void Project::updateProgressBarText(QString myStr)
+{
+    if (modality == MODE_GUI)
+    {
+        if (formLog != nullptr)
+        {
+            formLog->setText(myStr);
+        }
+    }
+    else
+    {
+        std::cout << myStr.toStdString();
+    }
+}
+
+
+void Project::closeProgressBar()
+{
+    if (modality == MODE_GUI)
+    {
+        if (formLog != nullptr)
+        {
+            formLog->close();
+        }
+    }
+    else
+    {
+        std::cout << std::endl;
+    }
+}
 

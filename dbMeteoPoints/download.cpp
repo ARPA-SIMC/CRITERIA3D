@@ -1,7 +1,6 @@
 #include "download.h"
 
 #include <QtNetwork>
-#include <QDebug>
 
 
 const QByteArray Download::_authorization = QString("Basic " + QString("ugo:Ul1ss&").toLocal8Bit().toBase64()).toLocal8Bit();
@@ -13,7 +12,6 @@ Download::Download(QString dbName, QObject* parent) : QObject(parent)
 
 Download::~Download()
 {
-    qDebug() << "download obj destruction";
     delete _dbMeteo;
 }
 
@@ -185,6 +183,13 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
     // variable properties
     QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
 
+    QList<QString> idVar;
+    for (int i = 0; i < variableList.size(); i++)
+        idVar.append(QString::number(variableList[i].id()));
+
+    // create station tables
+    _dbMeteo->initStationsDailyTables(startDate, endDate, stations, idVar);
+
     // attenzione: il reference time dei giornalieri è a fine giornata (ore 00 di day+1)
     refTime = QString("reftime:>%1,<=%2").arg(startDate.toString("yyyy-MM-dd")).arg(endDate.addDays(1).toString("yyyy-MM-dd"));
 
@@ -294,7 +299,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
             }
             if (!emptyLine)
             {
-                downloadOk = _dbMeteo->saveDailyData(startDate, endDate);
+                downloadOk = _dbMeteo->saveDailyData();
             }
 
             delete reply;
@@ -312,10 +317,15 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 
 bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString dataset, QStringList stations, QList<int> variables)
 {
-    // create station tables
-    _dbMeteo->initStationsHourlyTables(startDate, endDate, stations);
 
     QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
+    QList<QString> idVar;
+
+    for (int i = 0; i < variableList.size(); i++)
+        idVar.append(QString::number(variableList[i].id()));
+
+    // create station tables
+    _dbMeteo->initStationsHourlyTables(startDate, endDate, stations, idVar);
 
     QString product = QString(";product: VM2,%1").arg(variables[0]);
 
@@ -325,12 +335,9 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
     }
 
     // start from 01:00
-    QDateTime startTime((QDateTime(startDate)));
-    startTime.setTimeSpec(Qt::UTC);
-    startTime = startTime.addSecs(3600);
+    QDateTime startTime(startDate, QTime(1,0,0), Qt::UTC);
 
-    QDateTime endTime((QDateTime(endDate)));
-    endTime.setTimeSpec(Qt::UTC);
+    QDateTime endTime(endDate, QTime(0,0,0), Qt::UTC);
     endTime = endTime.addSecs(3600 * 24);
 
     // reftime

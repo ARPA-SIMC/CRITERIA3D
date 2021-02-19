@@ -5,12 +5,15 @@
 #include <fstream>
 #include <QSqlDatabase>
 #include "logger.h"
-#include "criteria1DUnit.h"
 #include "criteriaOutputVariable.h"
 #include "criteriaAggregationVariable.h"
+#include "computationUnitsDb.h"
 #include "shapeHandler.h"
 
 #define REQUIREDMAPLISTCSVINFO 2
+
+#define ERROR_MISSINGPARAMETERS -900
+#define ERROR_WRONGPARAMETER -901
 
 #define ERROR_SETTINGS_MISSING -1
 #define ERROR_SETTINGS_WRONGFILENAME -2
@@ -29,6 +32,7 @@
 
 #define ERROR_WRITECSV -50
 #define ERROR_OUTPUT_VARIABLES -60
+#define ERROR_CSVFILE -65
 #define ERROR_SHAPEFILE -70
 #define ERROR_ZONAL_STATISTICS_SHAPE -80
 #define ERROR_MISSING_GDAL -100
@@ -81,12 +85,13 @@ public:
     QString logFileName;
     std::ofstream logFile;
     Logger logger;
+    bool addDateTimeLogFile;
 
     CriteriaOutputProject();
 
     void initialize();
     void closeProject();
-    int initializeProject(QString settingsFileName, QDate dateComputation);
+    int initializeProject(QString settingsFileName, QDate dateComputation, bool isLog);
     int initializeProjectDtx();
     int initializeProjectCsv();
 
@@ -99,6 +104,10 @@ public:
     int createMaps();
 
     bool initializeCsvOutputFile();
+    bool getAllDbVariable(QString &projectError);   
+    bool getDbDataDates(QDate* firstDate, QDate* lastDate, QString &projectError);
+    int createCsvFileFromGUI(QDate dateComputation, QString csvFileName);
+    int createShapeFileFromGUI();
 
 };
 

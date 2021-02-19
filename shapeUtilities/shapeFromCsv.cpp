@@ -61,35 +61,39 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         return false;
     }
 
-    // read fieldList and fill mapCsvShapeFields
+    // fill mapCsvShapeFields
     QMap<QString, QStringList> mapCsvShapeFields;
-    QFile fileRef(fieldListFileName);
-    if ( !fileRef.open(QFile::ReadOnly | QFile::Text) ) {
-        error = "Field list not exists: " + fieldListFileName;
-        return false;
-    }
-    else
+    if (!fieldListFileName.isEmpty())
     {
-        QTextStream in(&fileRef);
-        // skip header
-        QString line = in.readLine();
-        while (!in.atEnd())
+        // read fieldList and
+        QFile fileRef(fieldListFileName);
+        if ( !fileRef.open(QFile::ReadOnly | QFile::Text) ) {
+            error = "Field list not exists: " + fieldListFileName;
+            return false;
+        }
+        else
         {
+            QTextStream in(&fileRef);
+            // skip header
             QString line = in.readLine();
-            QStringList items = line.split(",");
-            if (items.size() < csvRefRequiredInfo)
+            while (!in.atEnd())
             {
-                error = "invalid field list: missing parameters";
-                return false;
+                QString line = in.readLine();
+                QStringList items = line.split(",");
+                if (items.size() < csvRefRequiredInfo)
+                {
+                    error = "invalid field list: missing parameters";
+                    return false;
+                }
+                QString key = items[1];
+                items.removeAt(1);
+                if (key.isEmpty() || items[0].isEmpty())
+                {
+                    error = "invalid field list: missing field name";
+                    return false;
+                }
+                mapCsvShapeFields.insert(key,items);
             }
-            QString key = items[1];
-            items.removeAt(1);
-            if (key.isEmpty() || items[0].isEmpty())
-            {
-                error = "invalid field list: missing field name";
-                return false;
-            }
-            mapCsvShapeFields.insert(key,items);
         }
     }
 
@@ -115,6 +119,23 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     // read first row (header)
     QString firstRow = inputStream.readLine();
     QStringList newFields = firstRow.split(",");
+
+    if (fieldListFileName.isEmpty())
+    {
+        // fill mapCsvShapeFields with default values
+        QString key = newFields.last();
+        QStringList items;
+        items << "outputVar" << "FLOAT" << "8";
+        if (key == "FRACTION_AW")
+        {
+            items << "3";
+        }
+        else
+        {
+            items << "1";
+        }
+        mapCsvShapeFields.insert(key,items);
+    }
 
     int type;
     int nWidth;

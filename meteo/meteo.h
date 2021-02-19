@@ -185,7 +185,14 @@
         { windVectorY, "W_VEC_Y" },
         { windScalarIntensity, "W_SCAL_INT" },
         { referenceEvapotranspiration, "ET0" },
-        { leafWetness, "LEAFW" }
+        { leafWetness, "LEAFW" },
+        { thom, "THOM"},
+        { directIrradiance, "DIRECT_RAD"},
+        { diffuseIrradiance, "DIFFUSE_RAD"},
+        { reflectedIrradiance, "REFLEC_RAD"},
+        { atmTransmissivity, "ATM_TRANSMIT"},
+        { atmPressure, "ATM_PRESSURE"},
+        { actualEvaporation, "ACTUAL_EVAPO"}
     };
 
 

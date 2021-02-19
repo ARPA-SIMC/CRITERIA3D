@@ -24,10 +24,9 @@ CONFIG += staticlib
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
-INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler  ../utilities ../project
+INCLUDEPATH =  ../crit3dDate ../mathFunctions ../gis ../shapeHandler  ../utilities ../commonDialogs
 
 SOURCES += \
-    ../project/formInfo.cpp \
     shapeFromCsv.cpp \
     shapeToRaster.cpp    \
     shapeUtilities.cpp   \
@@ -36,7 +35,6 @@ SOURCES += \
 
 
 HEADERS += \
-    ../project/formInfo.h \
     shapeFromCsv.h \
     shapeToRaster.h    \
     shapeUtilities.h   \

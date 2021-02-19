@@ -64,8 +64,8 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
     QDomNode ancestor = xmlDoc.documentElement().firstChild();
     QString myTag;
     QString mySecondTag;
-    int nRow;
-    int nCol;
+    int nRow = 0;
+    int nCol = 0;
 
     _tableDaily.exists = false;
     _tableHourly.exists = false;
@@ -1013,7 +1013,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
     int row = 0;
     int col = 0;
-    int tableNotFoundError = 1146;
+    QString tableNotFoundError = "1146";
     std::string id;
 
     if (!_meteoGrid->findFirstActiveMeteoPoint(&id, &row, &col))
@@ -1038,7 +1038,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
         QString statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableDaily.fieldTime).arg(tableD);
         if( !qry.exec(statement) )
         {
-            while( qry.lastError().number() == tableNotFoundError
+            while( qry.lastError().nativeErrorCode() == tableNotFoundError
                    && (col < _gridStructure.header().nrCols-1
                        || row < _gridStructure.header().nrRows-1))
             {
@@ -1111,7 +1111,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
         QString statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
         if( !qry.exec(statement) )
         {
-            while( qry.lastError().number() == tableNotFoundError)
+            while( qry.lastError().nativeErrorCode() == tableNotFoundError)
             {
 
                 if ( col < _gridStructure.header().nrCols-1)
@@ -1135,7 +1135,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
                 statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
                 qry.exec(statement);
             }
-            if ( !qry.lastError().type() == QSqlError::NoError && qry.lastError().number() != tableNotFoundError)
+            if ( qry.lastError().type() != QSqlError::NoError && qry.lastError().nativeErrorCode() != tableNotFoundError)
             {
                 *myError = qry.lastError().text();
                 return false;
@@ -1429,91 +1429,6 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString *myError, Q
 
     return true;
 }
-
-
-/*
-std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
-{
-    QSqlQuery qry(_db);
-    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
-    QDate date, previousDate;
-
-    std::vector<float> dailyVarList;
-
-    float value;
-    unsigned row;
-    unsigned col;
-    bool firstRow = true;
-
-    int varCode = getDailyVarCode(variable);
-
-    if (varCode == NODATA)
-    {
-        *myError = "Variable not existing";
-        return dailyVarList;
-    }
-
-    if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
-    {
-        *myError = "Missing MeteoPoint id";
-        return dailyVarList;
-    }
-
-    QString statement = QString("SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`").arg(tableD).arg(varCode).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
-    if( !qry.exec(statement) )
-    {
-        *myError = qry.lastError().text();
-    }
-    else
-    {
-
-        while (qry.next())
-        {
-            if (firstRow)
-            {
-                if (!getValue(qry.value(_tableDaily.fieldTime), firstDateDB))
-                {
-                    *myError = "Missing fieldTime";
-                    return dailyVarList;
-                }
-
-                if (!getValue(qry.value("Value"), &value))
-                {
-                    *myError = "Missing Value";
-                }
-                dailyVarList.push_back(value);
-                previousDate = *firstDateDB;
-                firstRow = false;
-            }
-            else
-            {
-                if (!getValue(qry.value(_tableDaily.fieldTime), &date))
-                {
-                    *myError = "Missing fieldTime";
-                    return dailyVarList;
-                }
-
-                int missingDate = previousDate.daysTo(date);
-                for (int i =1; i<missingDate; i++)
-                {
-                    dailyVarList.push_back(NODATA);
-                }
-
-                if (!getValue(qry.value("Value"), &value))
-                {
-                    *myError = "Missing Value";
-                }
-                dailyVarList.push_back(value);
-                previousDate = date;
-            }
-
-
-        }
-
-    }
-
-    return dailyVarList;
-} */
 
 
 std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, QString meteoPoint,
@@ -2289,30 +2204,6 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridHourlyFF(QString *myError, QSt
 
     return true;
 }
-
-/*
-bool Crit3DMeteoGridDbHandler::tableIdDailyExists(QString *myError, QString meteoPoint)
-{
-    QSqlQuery qry(_db);
-    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
-
-    QString statement = QString("SHOW TABLES LIKE '%1'").arg(tableD);
-    if( !qry.exec(statement) )
-    {
-        *myError = qry.lastError().text();
-        return false;
-    }
-    else
-    {
-        if (qry.size() == 0)
-        {
-            return false;
-        }
-        return true;
-    }
-}
-*/
-
 
 bool Crit3DMeteoGridDbHandler::idDailyList(QString *myError, QStringList* idMeteoList)
 {

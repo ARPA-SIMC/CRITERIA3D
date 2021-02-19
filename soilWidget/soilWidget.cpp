@@ -46,7 +46,7 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QFileInfo>
-#include <QDebug> //debug
+#include <QDebug>
 
 
 Crit3DSoilWidget::Crit3DSoilWidget()
@@ -54,7 +54,7 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     dbSoilType = DB_SQLITE;
     fittingOptions = new soil::Crit3DFittingOptions();
 
-    this->setWindowTitle(QStringLiteral("Soil"));
+    this->setWindowTitle(QStringLiteral("CRITERIA - Soil Editor"));
     this->resize(1240, 700);
 
     // layout
@@ -73,10 +73,10 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     }
     else
     {
-        picPath = "../img/textural_soil.png";
-        saveButtonPath = "../img/saveButton.png";
+        // default appimage linux
+        picPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/textural_soil.png";
+        saveButtonPath = QCoreApplication::applicationDirPath() + "/../share/CRITERIA1D/images/saveButton.png";
     }
-
     pic.load(picPath);
     labelPic = new QLabel();
     labelPic->setPixmap(pic);

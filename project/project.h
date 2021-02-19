@@ -32,9 +32,15 @@
     #ifndef _FSTREAM_
         #include <fstream>
     #endif
-    #ifndef METEOWIDGET_H
-        #include "meteoWidget.h"
-    #endif
+
+    #define ERROR_NONE 0
+    #define ERROR_SETTINGS 1
+    #define ERROR_DEM 2
+    #define ERROR_DBPOINT 3
+    #define ERROR_DBGRID 4
+
+    class Crit3DMeteoWidget;
+    class FormInfo;
 
     class Project : public QObject {
         Q_OBJECT
@@ -43,6 +49,7 @@
         QString appPath;
         QString defaultPath;
         QString projectPath;
+        FormInfo* formLog;
 
         void clearMeteoPoints();
         bool createDefaultProject(QString fileName);
@@ -62,6 +69,7 @@
 
         bool requestedExit;
         QString errorString;
+        int errorType;
 
         QString logFileName;
         QString demFileName;
@@ -155,14 +163,22 @@
         void logError(QString myStr);
         void logInfo(QString myStr);
         void logInfoGUI(QString myStr);
+        void closeLogInfo();
         void logError();
+
+        int setProgressBar(QString myStr, int nrValues);
+        void updateProgressBar(int value);
+        void updateProgressBarText(QString myStr);
+        void closeProgressBar();
 
         void closeMeteoPointsDB();
         void closeMeteoGridDB();
+        void cleanMeteoPointsData();
 
         bool loadDEM(QString myFileName);
         void closeDEM();
         bool loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo);
+        bool loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, QString dataset, bool showInfo);
         bool loadMeteoPointsDB(QString dbName);
         bool loadMeteoGridDB(QString xmlName);
         bool loadAggregationdDB(QString dbName);
@@ -182,12 +198,13 @@
         bool readProxyValues();
         bool updateProxy();
         void checkMeteoPointsDEM();
-        bool writeTopographicDistanceMaps(bool onlyWithData);
+        bool writeTopographicDistanceMaps(bool onlyWithData, bool showInfo);
+        bool writeTopographicDistanceMap(std::string meteoPointId);
         bool loadTopographicDistanceMaps(bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime);
-        bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
-        bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
-        bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster, bool showInfo);
+        bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         frequencyType getCurrentFrequency() const;
         void setCurrentFrequency(const frequencyType &value);
 
