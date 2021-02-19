@@ -11,6 +11,7 @@
 #include <QDate>
 #include <QVariant>
 #include <QSqlQuery>
+#include <QFile>
 
 Crit1DSimulation::Crit1DSimulation()
 {
@@ -111,6 +112,12 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, bool isSaveState, QStr
     unsigned long lastIndex = unsigned(myCase.meteoPoint.nrObsDataDaysD-1);
     firstDate = myCase.meteoPoint.obsDataD[0].date;
     lastDate = myCase.meteoPoint.obsDataD[lastIndex].date;
+
+    if (isSaveState)
+    {
+        if (! createState(lastDate, myError))
+            return false;
+    }
 
     if (isSeasonalForecast) initializeSeasonalForecast(firstDate, lastDate);
     int indexSeasonalForecast = NODATA;
@@ -482,6 +489,50 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
     if (myQuery.lastError().isValid())
     {
         myError = "Error in creating table: " + myCase.idCase + "\n" + myQuery.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+bool Crit1DSimulation::createState(Crit3DDate lastDate, QString &myError)
+{
+    // create db state
+    QString date = QString::fromStdString(lastDate.toStdString());
+    date.replace("-","_");
+    QString outputDbPath = getFilePath(dbOutput.databaseName());
+    QString dbStateName = outputDbPath+"state_"+date;
+    if (QFile::exists(dbStateName))
+    {
+        QFile::remove(dbStateName);
+    }
+    dbState = QSqlDatabase::addDatabase("QSQLITE", "state");
+    dbState.setDatabaseName(dbStateName);
+
+    if (! dbState.open())
+    {
+        myError = "Open state DB failed: " + dbState.lastError().text();
+        return false;
+    }
+
+    // create tables
+    QString queryString;
+    QSqlQuery myQuery;
+    queryString = "CREATE TABLE variables ( ID_CASE TEXT, LAI REAL, ROOT_DEPTH REAL, DEGREE_DAYS REAL, DAYS_SINCE_IRR INTEGER )";
+    myQuery = dbState.exec(queryString);
+
+    if (myQuery.lastError().isValid())
+    {
+        myError = "Error in creating variables table \n" + myQuery.lastError().text();
+        return false;
+    }
+
+    queryString = "CREATE TABLE waterContent ( ID_CASE TEXT, NR_LAYER INTEGER, WC REAL )";
+    myQuery = dbState.exec(queryString);
+
+    if (myQuery.lastError().isValid())
+    {
+        myError = "Error in creating waterContent table \n" + myQuery.lastError().text();
         return false;
     }
 

@@ -25,6 +25,7 @@ class Crit1DSimulation
         QSqlDatabase dbMeteo;
         QSqlDatabase dbForecast;
         QSqlDatabase dbOutput;
+        QSqlDatabase dbState;
 
         Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
@@ -69,6 +70,7 @@ class Crit1DSimulation
         void updateSeasonalForecast(Crit3DDate myDate, int *index);
 
         bool createOutputTable(QString &myError);
+        bool createState(Crit3DDate lastDate, QString &myError);
         void prepareOutput(Crit3DDate myDate, bool isFirst);
         bool saveOutput(QString &myError);
 
