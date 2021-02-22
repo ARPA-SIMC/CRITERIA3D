@@ -25,7 +25,6 @@ Crit1DSimulation::Crit1DSimulation()
 
     isShortTermForecast = false;
     daysOfForecast = NODATA;
-    useAllMeteoData = true;
     firstSimulationDate = QDate(1800,1,1);
     lastObservedDate = QDate(1800,1,1);
     computationDate = QDate(1800,1,1);

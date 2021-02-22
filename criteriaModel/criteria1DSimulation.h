@@ -40,7 +40,6 @@ class Crit1DSimulation
         soil::Crit3DFittingOptions fittingOptions;
 
         // dates
-        bool useAllMeteoData;
         QDate firstSimulationDate;
         QDate computationDate;
         QDate lastObservedDate;
