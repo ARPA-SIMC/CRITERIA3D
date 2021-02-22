@@ -12,6 +12,7 @@
 #include <QVariant>
 #include <QSqlQuery>
 #include <QFile>
+#include <QDebug>
 
 Crit1DSimulation::Crit1DSimulation()
 {
@@ -648,7 +649,10 @@ bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myErr
 
 bool Crit1DSimulation::saveState(QString &myError)
 {
+    QString queryString;
+
     QSqlQuery qry(dbState);
+    /*
     qry.prepare( "INSERT INTO variables ( ID_CASE, LAI, ROOT_DEPTH, DEGREE_DAYS, DAYS_SINCE_IRR ) VALUES (:id_case, :lai, :root_depth, :degree_days, :days_since_irr)" );
 
     qry.bindValue(":id_case", myCase.idCase);
@@ -656,14 +660,36 @@ bool Crit1DSimulation::saveState(QString &myError)
     qry.bindValue(":root_depth", myCase.myCrop.roots.rootDepth);
     qry.bindValue(":degree_days", myCase.myCrop.degreeDays);
     qry.bindValue(":days_since_irr", myCase.myCrop.daysSinceIrrigation);
+*/
 
-    if( !qry.exec() )
+    queryString = "INSERT INTO variables ( ID_CASE, LAI, ROOT_DEPTH, DEGREE_DAYS, DAYS_SINCE_IRR ) VALUES ";
+    queryString += "('" + myCase.idCase + "'," + QString::number(myCase.myCrop.LAI, 'g', 4) + "," + QString::number(myCase.myCrop.roots.rootDepth, 'g', 4);
+    queryString += "," + QString::number(myCase.myCrop.degreeDays, 'g', 4) + "," + QString::number(myCase.myCrop.daysSinceIrrigation, 'g', 4)+ ")";
+    if( !qry.exec(queryString) )
     {
         myError = "Error in saving variables state:\n" + qry.lastError().text();
         return false;
     }
+    qry.clear();
+
+    queryString = "INSERT INTO waterContent ( ID_CASE, NR_LAYER, WC ) VALUES ";
+    for (unsigned int i = 0; i<myCase.soilLayers.size(); i++)
+    {
+        queryString += "('" + myCase.idCase + "','" + QString::number(i, 'g', 4) + "','" + QString::number(myCase.soilLayers[i].waterContent, 'g', 4)+"')";
+        if (i < (myCase.soilLayers.size()-1))
+            queryString += ",";
+    }
+
+    if( !qry.exec(queryString))
+    {
+        myError = "Error in saving waterContent state:\n" + qry.lastError().text();
+        return false;
+    }
 
     qry.clear();
+    return true;
+
+    /*
     qry.prepare( "INSERT INTO waterContent ( ID_CASE, NR_LAYER, WC ) VALUES (?, ?, ?)" );
     QVariantList id_case;
     QVariantList nr_layer;
@@ -685,6 +711,7 @@ bool Crit1DSimulation::saveState(QString &myError)
     }
     else
         return true;
+    */
 }
 
 
