@@ -380,6 +380,39 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
 }
 
 
+bool Crit3DCrop::restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
+                         double currentWaterTable, std::string &myError)
+{
+    myError = "";
+    if (idCrop == "") return false;
+
+    unsigned int nrLayers = unsigned(soilLayers.size());
+
+    // check start/end crop cycle (update isLiving)
+    if (needReset(myDate, latitude, currentWaterTable))
+    {
+        resetCrop(nrLayers);
+    }
+
+    if (isLiving)
+    {
+        int currentDoy = getDoyFromDate(myDate);
+
+        if ( !updateLAI(latitude, nrLayers, currentDoy))
+        {
+            myError = "Error in updating LAI for crop " + idCrop;
+            return false;
+        }
+
+        // update roots
+        root::computeRootDepth(this, degreeDays, currentWaterTable);
+        root::computeRootDensity(this, soilLayers);
+    }
+
+    return true;
+}
+
+
 // Liangxia Zhang, Zhongmin Hu, Jiangwen Fan, Decheng Zhou & Fengpei Tang, 2014
 // A meta-analysis of the canopy light extinction coefficient in terrestrial ecosystems
 // "Cropland had the highest value of K (0.62), followed by broadleaf forest (0.59),

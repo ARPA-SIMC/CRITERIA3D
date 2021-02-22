@@ -126,6 +126,24 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
     std::string errorString;
     bool isFirstDay = true;
 
+    // restart
+    if (isRestart)
+    {
+        QString stateDbName; // TODO
+        if (! restoreState(stateDbName, myError))
+        {
+            return false;
+        }
+
+        double currentWaterTable = double(myCase.meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
+        if (! myCase.myCrop.restore(myDate, myCase.meteoPoint.latitude, myCase.soilLayers, currentWaterTable, errorString))
+        {
+            myError = QString::fromStdString(errorString);
+            return false;
+        }
+    }
+
+    // daily cycle
     for (myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! myCase.computeDailyModel(myDate, errorString))
@@ -641,7 +659,6 @@ bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myErr
             return false;
         }
     }
-
 
     return true;
 }
