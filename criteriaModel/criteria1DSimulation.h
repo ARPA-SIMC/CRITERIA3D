@@ -47,6 +47,7 @@ class Crit1DSimulation
 
         // seasonal forecast
         bool isSaveState;
+        bool isRestart;
         bool isSeasonalForecast;
         int firstSeasonMonth;
         std::vector<float> seasonalForecasts;

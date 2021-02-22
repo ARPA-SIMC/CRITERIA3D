@@ -19,6 +19,7 @@ Crit1DSimulation::Crit1DSimulation()
     isXmlGrid = false;
     isSeasonalForecast = false;
     isSaveState = false;
+    isRestart = false;
     firstSeasonMonth = NODATA;
     nrSeasonalForecasts = 0;
 
