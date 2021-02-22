@@ -26,8 +26,7 @@ Crit1DSimulation::Crit1DSimulation()
     isShortTermForecast = false;
     daysOfForecast = NODATA;
     firstSimulationDate = QDate(1800,1,1);
-    lastObservedDate = QDate(1800,1,1);
-    computationDate = QDate(1800,1,1);
+    lastSimulationDate = QDate(1800,1,1);
 
     outputString = "";
 }
@@ -181,7 +180,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
 
     unsigned row;
     unsigned col;
-    unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastObservedDate)) + 1;
+    unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
 
     if (!this->observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
     {
@@ -191,7 +190,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
 
     if (!this->observedMeteoGrid->gridStructure().isFixedFields())
     {
-        if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstSimulationDate, lastObservedDate))
+        if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstSimulationDate, lastSimulationDate))
         {
             *myError = "Missing observed data";
             return false;
@@ -199,7 +198,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     }
     else
     {
-        if (!this->observedMeteoGrid->loadGridDailyDataFixedFields(myError, idMeteo, firstSimulationDate, lastObservedDate))
+        if (!this->observedMeteoGrid->loadGridDailyDataFixedFields(myError, idMeteo, firstSimulationDate, lastSimulationDate))
         {
             if (*myError == "Missing MeteoPoint id")
             {
@@ -217,7 +216,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     {
         if (!this->forecastMeteoGrid->gridStructure().isFixedFields())
         {
-            if (!this->forecastMeteoGrid->loadGridDailyData(myError, idForecast, lastObservedDate.addDays(1), lastObservedDate.addDays(daysOfForecast)))
+            if (!this->forecastMeteoGrid->loadGridDailyData(myError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (*myError == "Missing MeteoPoint id")
                 {
@@ -232,7 +231,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
         }
         else
         {
-            if (!this->forecastMeteoGrid->loadGridDailyDataFixedFields(myError, idForecast, lastObservedDate.addDays(1), lastObservedDate.addDays(daysOfForecast)))
+            if (!this->forecastMeteoGrid->loadGridDailyDataFixedFields(myError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (*myError == "Missing MeteoPoint id")
                 {
@@ -253,7 +252,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstSimulationDate));
 
     float tmin, tmax, tavg, prec;
-    int lastIndex = firstSimulationDate.daysTo(lastObservedDate)+1;
+    int lastIndex = firstSimulationDate.daysTo(lastSimulationDate)+1;
     for (int i = 0; i < lastIndex; i++)
     {
         Crit3DDate myDate = getCrit3DDate(firstSimulationDate.addDays(i));
@@ -275,8 +274,8 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     }
     if (isShortTermForecast)
     {
-        QDate start = lastObservedDate.addDays(1);
-        QDate end = lastObservedDate.addDays(daysOfForecast);
+        QDate start = lastSimulationDate.addDays(1);
+        QDate end = lastSimulationDate.addDays(daysOfForecast);
         for (int i = 0; i< start.daysTo(end)+1; i++)
         {
             Crit3DDate myDate = getCrit3DDate(start.addDays(i));
@@ -501,7 +500,7 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
 bool Crit1DSimulation::createState(QString &myError)
 {
     // create db state
-    QString date = computationDate.toString("yyyy_MM_dd");
+    QString date = lastSimulationDate.addDays(1).toString("yyyy_MM_dd");
     QString outputDbPath = getFilePath(dbOutput.databaseName());
     QString dbStateName = outputDbPath + "state_" + date + ".db";
     if (QFile::exists(dbStateName))

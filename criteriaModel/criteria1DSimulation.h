@@ -41,8 +41,7 @@ class Crit1DSimulation
 
         // dates
         QDate firstSimulationDate;
-        QDate computationDate;
-        QDate lastObservedDate;
+        QDate lastSimulationDate;
 
         // seasonal forecast
         bool isSaveState;
