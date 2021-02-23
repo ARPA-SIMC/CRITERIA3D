@@ -689,7 +689,7 @@ bool Crit1DSimulation::saveState(QString &myError)
     for (unsigned int i = 0; i<myCase.soilLayers.size(); i++)
     {
         queryString += "('" + myCase.idCase + "'," + QString::number(i) + ","
-                    + QString::number(myCase.soilLayers[i].waterContent, 'g', 5) + ")";
+                    + QString::number(myCase.soilLayers[i].waterContent, 'g', 6) + ")";
         if (i < (myCase.soilLayers.size()-1))
             queryString += ",";
     }
