@@ -373,7 +373,7 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     {
         if (firstSimulationDate < firstObsDate || lastSimulationDate > lastObsDate)
         {
-            *myError = "Missing meteo data period " + firstSimulationDate.toString("yyyy-MM-dd") + " " + lastSimulationDate.toString("yyyy-MM-dd");
+            *myError = "Missing meteo data. Required period: " + firstSimulationDate.toString("yyyy-MM-dd") + " " + lastSimulationDate.toString("yyyy-MM-dd");
             return false;
         }
         // load just the period firstSimulationDate - lastSimulationDate
@@ -603,13 +603,10 @@ bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myErr
     }
     else
     {
-        double lai;
-        double rootDepth;
         double degreeDays;
         int daySinceIrr;
         if (qry.next())
         {
-            myCase.myCrop.roots.rootDepth = rootDepth;
             if (!getValue(qry.value("DEGREE_DAYS"), &degreeDays))
             {
                 myError = "DEGREE_DAYS not found";
