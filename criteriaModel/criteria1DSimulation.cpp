@@ -129,7 +129,9 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
     // restart
     if (isRestart)
     {
-        QString stateDbName; // TODO
+
+        QString outputDbPath = getFilePath(dbOutput.databaseName());
+        QString stateDbName = outputDbPath + "state_"+firstSimulationDate.toString("yyyy_MM_dd")+".db";
         if (! restoreState(stateDbName, myError))
         {
             return false;
