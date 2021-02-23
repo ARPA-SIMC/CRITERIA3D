@@ -373,7 +373,7 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     {
         if (firstSimulationDate < firstObsDate || lastSimulationDate > lastObsDate)
         {
-            *myError = "Missing meteo data. Required period: " + firstSimulationDate.toString("yyyy-MM-dd") + " " + lastSimulationDate.toString("yyyy-MM-dd");
+            *myError = "Missing meteo data: required period " + firstSimulationDate.toString("yyyy-MM-dd") + " " + lastSimulationDate.toString("yyyy-MM-dd");
             return false;
         }
         // load just the period firstSimulationDate - lastSimulationDate

@@ -397,6 +397,8 @@ bool removeDirectory(QString myPath)
 
 bool searchDocPath(QString* docPath)
 {
+    *docPath = "";
+
     QString myPath = QDir::currentPath();
     QString myRoot = QDir::rootPath();
     // only for win: application can run on a different drive (i.e. D:\)
@@ -425,6 +427,8 @@ bool searchDocPath(QString* docPath)
 
 bool searchDataPath(QString* dataPath)
 {
+    *dataPath = "";
+
     QString myPath = QDir::currentPath();
     QString myRoot = QDir::rootPath();
     // only for win: application can run on a different drive (i.e. D:\)
