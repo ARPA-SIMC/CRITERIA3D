@@ -584,7 +584,7 @@ bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myErr
         myError = "DB state: " +dbStateToRestoreName+" does not exist";
         return false;
     }
-    QSqlDatabase dbStateToRestore = QSqlDatabase::addDatabase("QSQLITE", "state");
+    QSqlDatabase dbStateToRestore = QSqlDatabase::addDatabase("QSQLITE", "stateToRestore");
     dbStateToRestore.setDatabaseName(dbStateToRestoreName);
 
     if (! dbStateToRestore.open())
