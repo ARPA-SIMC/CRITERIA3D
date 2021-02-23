@@ -556,7 +556,7 @@ bool Crit1DSimulation::createState(QString &myError)
     // create tables
     QString queryString;
     QSqlQuery myQuery;
-    queryString = "CREATE TABLE variables ( ID_CASE TEXT, LAI REAL, ROOT_DEPTH REAL, DEGREE_DAYS REAL, DAYS_SINCE_IRR INTEGER )";
+    queryString = "CREATE TABLE variables ( ID_CASE TEXT, DEGREE_DAYS REAL, DAYS_SINCE_IRR INTEGER )";
     myQuery = dbState.exec(queryString);
 
     if (myQuery.lastError().isValid())
@@ -609,17 +609,6 @@ bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myErr
         int daySinceIrr;
         if (qry.next())
         {
-            if (!getValue(qry.value("LAI"), &lai))
-            {
-                myError = "LAI not found";
-                return false;
-            }
-            myCase.myCrop.LAI = lai;
-            if (!getValue(qry.value("ROOT_DEPTH"), &rootDepth))
-            {
-                myError = "ROOT_DEPTH not found";
-                return false;
-            }
             myCase.myCrop.roots.rootDepth = rootDepth;
             if (!getValue(qry.value("DEGREE_DAYS"), &degreeDays))
             {
@@ -688,10 +677,8 @@ bool Crit1DSimulation::saveState(QString &myError)
     QString queryString;
     QSqlQuery qry(dbState);
 
-    queryString = "INSERT INTO variables ( ID_CASE, LAI, ROOT_DEPTH, DEGREE_DAYS, DAYS_SINCE_IRR ) VALUES ";
+    queryString = "INSERT INTO variables ( ID_CASE, DEGREE_DAYS, DAYS_SINCE_IRR ) VALUES ";
     queryString += "('" + myCase.idCase + "'"
-                + "," + QString::number(myCase.myCrop.LAI, 'g', 4)
-                + "," + QString::number(myCase.myCrop.roots.rootDepth, 'g', 4)
                 + "," + QString::number(myCase.myCrop.degreeDays, 'g', 4)
                 + "," + QString::number(myCase.myCrop.daysSinceIrrigation) + ")";
     if( !qry.exec(queryString) )
