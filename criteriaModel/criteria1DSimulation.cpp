@@ -361,8 +361,26 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     QDate firstObsDate = query.value("date").toDate();
     query.last();
     QDate lastObsDate = query.value("date").toDate();
-
-    unsigned nrDays = unsigned(firstObsDate.daysTo(lastObsDate)) + 1;
+    unsigned nrDays;
+    if (firstSimulationDate.toString("yyyy-MM-dd") == "1800-01-01" || lastSimulationDate.toString("yyyy-MM-dd") == "1800-01-01")
+    {
+        // missing firstSimulationDate or lastSimulationDate, take the all period stored into db
+        nrDays = unsigned(firstObsDate.daysTo(lastObsDate)) + 1;
+    }
+    else
+    {
+        if (firstSimulationDate < firstObsDate || lastSimulationDate > lastObsDate)
+        {
+            *myError = "Missing meteo data period " + firstSimulationDate.toString("yyyy-MM-dd") + " " + lastSimulationDate.toString("yyyy-MM-dd");
+            return false;
+        }
+        // load just the period firstSimulationDate - lastSimulationDate
+        firstObsDate = firstSimulationDate;
+        lastObsDate = lastSimulationDate;
+        nrDays = firstSimulationDate.daysTo(lastSimulationDate)+1;
+        queryString = "SELECT * FROM '" + tableName + "' WHERE date BETWEEN '"+firstSimulationDate.toString("yyyy-MM-dd")+"' AND '"+lastSimulationDate.toString("yyyy-MM-dd")+"'";
+        query = this->dbMeteo.exec(queryString);
+    }
 
     // Forecast: increase nr of days
     if (this->isShortTermForecast)
@@ -372,7 +390,6 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstObsDate));
 
     // Read observed data
-    // TODO read from firstdaste to lastdate
     if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), myError)) return false;
 
     // Add Short-Term forecast
