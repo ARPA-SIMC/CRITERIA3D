@@ -615,10 +615,12 @@ bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myErr
             myCase.myCrop.degreeDays = degreeDays;
             if (!getValue(qry.value("DAYS_SINCE_IRR"), &daySinceIrr))
             {
-                myError = "DAYS_SINCE_IRR not found";
-                return false;
+                myCase.myCrop.daysSinceIrrigation = NODATA;
             }
-            myCase.myCrop.daysSinceIrrigation = daySinceIrr;
+            else
+            {
+                myCase.myCrop.daysSinceIrrigation = daySinceIrr;
+            }
         }
         else
         {
@@ -676,7 +678,7 @@ bool Crit1DSimulation::saveState(QString &myError)
 
     queryString = "INSERT INTO variables ( ID_CASE, DEGREE_DAYS, DAYS_SINCE_IRR ) VALUES ";
     queryString += "('" + myCase.idCase + "'"
-                + "," + QString::number(myCase.myCrop.degreeDays, 'g', 4)
+                + "," + QString::number(myCase.myCrop.degreeDays)
                 + "," + QString::number(myCase.myCrop.daysSinceIrrigation) + ")";
     if( !qry.exec(queryString) )
     {
@@ -689,7 +691,7 @@ bool Crit1DSimulation::saveState(QString &myError)
     for (unsigned int i = 0; i<myCase.soilLayers.size(); i++)
     {
         queryString += "('" + myCase.idCase + "'," + QString::number(i) + ","
-                    + QString::number(myCase.soilLayers[i].waterContent, 'g', 6) + ")";
+                    + QString::number(myCase.soilLayers[i].waterContent) + ")";
         if (i < (myCase.soilLayers.size()-1))
             queryString += ",";
     }
