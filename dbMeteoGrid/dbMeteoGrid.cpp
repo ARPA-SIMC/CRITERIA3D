@@ -5,6 +5,8 @@
 
 #include <iostream>
 #include <QtSql>
+#include <random>    // cancellare
+#include <QRandomGenerator> // cancellare
 
 
 Crit3DMeteoGridDbHandler::Crit3DMeteoGridDbHandler()
@@ -171,6 +173,14 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
                 return false;
             }
 
+            if (ancestor.toElement().attribute("isensemble").toUpper() == "TRUE")
+            {
+                _gridStructure.setIsEnsemble(true);
+            }
+            else
+            {
+                _gridStructure.setIsEnsemble(false);
+            }
 
             child = ancestor.firstChild();
             gis::Crit3DGridHeader header;
@@ -2260,61 +2270,6 @@ bool Crit3DMeteoGridDbHandler::getYearList(QString *myError, QString meteoPoint,
     }
     return true;
 }
-
-// test ECWF cancellare poi
-/*
-bool Crit3DMeteoGridDbHandler::addMemberNrColumn(QString *myError)
-{
-    QSqlQuery qry(_db);
-    QStringList tableNameList;
-    QString tableName;
-
-    // dailyTab
-    QString statement = QString("SHOW TABLES LIKE '%1%%2'").arg(_tableDaily.prefix).arg(_tableDaily.postFix);
-    if( !qry.exec(statement) )
-    {
-        *myError = qry.lastError().text();
-        return false;
-    }
-    else
-    {
-        while( qry.next() )
-        {
-            tableName = qry.value(0).toString();
-            tableNameList.append(tableName);
-            tableName.clear();
-        }
-    }
-    // hourlyTab
-    statement = QString("SHOW TABLES LIKE '%1%%2'").arg(_tableHourly.prefix).arg(_tableHourly.postFix);
-    if( !qry.exec(statement) )
-    {
-        *myError = qry.lastError().text();
-        return false;
-    }
-    else
-    {
-        while( qry.next() )
-        {
-            tableName = qry.value(0).toString();
-            tableNameList.append(tableName);
-            tableName.clear();
-        }
-    }
-    for (int i = 0; i<tableNameList.size(); i++)
-    {
-        statement = QString("ALTER TABLE `%1` ADD COLUMN MemberNr INT NOT NULL;").arg(tableNameList[i]);
-        if( !qry.exec(statement) )
-        {
-            *myError = qry.lastError().text();
-            return false;
-        }
-        statement.clear();
-    }
-    return true;
-}
-*/
-
 
 QDate Crit3DMeteoGridDbHandler::firstDate() const
 {
