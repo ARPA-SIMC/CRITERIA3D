@@ -1289,7 +1289,7 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyDataEnsemble(QString *myError, QStri
     int numberOfDays = first.daysTo(last) + 1;
     _meteoGrid->meteoPointPointer(row,col)->initializeObsDataD(numberOfDays, getCrit3DDate(first));
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `%2`>= '%3' AND `%2`<= '%4' AND MemberNr = '%5' ORDER BY `%2`").arg(tableD).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd")).arg(QString::number(memberNr));
+    QString statement = QString("SELECT * FROM `%1` WHERE `%2`>= '%3' AND `%2`<= '%4' AND MemberNr = '%5' ORDER BY `%2`").arg(tableD).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd")).arg(memberNr);
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();
@@ -1865,6 +1865,51 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyData(QString *myError, QString m
                     int varCode = getDailyVarCode(meteoVar);
 
                     statement += QString(" ('%1','%2',%3),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueS);
+                }
+            }
+
+        statement = statement.left(statement.length() - 1);
+
+        if( !qry.exec(statement) )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataEnsemble(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
+                                                     QList<meteoVariable> meteoVariableList, int memberNr)
+{
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
+
+    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), MemberNr int(11), PRIMARY KEY(%2,VariableCode))").arg(tableD).arg(_tableDaily.fieldTime);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        statement =  QString(("REPLACE INTO `%1` VALUES")).arg(tableD);
+
+        foreach (meteoVariable meteoVar, meteoVariableList)
+            if (getVarFrequency(meteoVar) == daily)
+            {
+                for (QDate date = firstDate; date <= lastDate; date = date.addDays(1))
+                {
+                    float value = meteoGrid()->meteoPoint(row, col).getMeteoPointValueD(getCrit3DDate(date), meteoVar);
+                    QString valueS = QString("'%1'").arg(value);
+                    if (isEqual(value, NODATA)) valueS = "NULL";
+
+                    int varCode = getDailyVarCode(meteoVar);
+
+                    statement += QString(" ('%1','%2',%3, %4),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueS).arg(memberNr);
                 }
             }
 
