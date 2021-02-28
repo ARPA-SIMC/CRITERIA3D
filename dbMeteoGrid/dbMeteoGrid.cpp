@@ -1263,6 +1263,71 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString *myError, QString meteo
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::loadGridDailyDataEnsemble(QString *myError, QString meteoPoint, int memberNr, QDate first, QDate last)
+{
+
+    if (!_meteoGrid->gridStructure().isEnsemble())
+    {
+        *myError = "Grid structure has not ensemble field";
+        return false;
+    }
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
+    QDate date;
+    int varCode;
+    float value;
+
+    unsigned row;
+    unsigned col;
+
+    if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
+    {
+        *myError = "Missing MeteoPoint id";
+        return false;
+    }
+
+    int numberOfDays = first.daysTo(last) + 1;
+    _meteoGrid->meteoPointPointer(row,col)->initializeObsDataD(numberOfDays, getCrit3DDate(first));
+
+    QString statement = QString("SELECT * FROM `%1` WHERE `%2`>= '%3' AND `%2`<= '%4' AND MemberNr = '%5' ORDER BY `%2`").arg(tableD).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd")).arg(QString::number(memberNr));
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            if (!getValue(qry.value(_tableDaily.fieldTime), &date))
+            {
+                *myError = "Missing fieldTime";
+                return false;
+            }
+
+            if (!getValue(qry.value("VariableCode"), &varCode))
+            {
+                *myError = "Missing VariableCode";
+                return false;
+            }
+
+            if (!getValue(qry.value("Value"), &value))
+            {
+                *myError = "Missing Value";
+            }
+
+            meteoVariable variable = getDailyVarEnum(varCode);
+
+            if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueD(getCrit3DDate(date), variable, value))
+                return false;
+
+        }
+
+    }
+
+    return true;
+}
+
 
 bool Crit3DMeteoGridDbHandler::loadGridDailyDataFixedFields(QString *myError, QString meteoPoint, QDate first, QDate last)
 {

@@ -96,6 +96,7 @@
         bool updateGridDate(QString *myError);
         bool loadGridDailyData(QString *myError, QString meteoPoint, QDate first, QDate last);
         bool loadGridDailyDataFixedFields(QString *myError, QString meteoPoint, QDate first, QDate last);
+        bool loadGridDailyDataEnsemble(QString *myError, QString meteoPoint, int memberNr, QDate first, QDate last);
         bool loadGridHourlyData(QString *myError, QString meteoPoint, QDateTime first, QDateTime last);
         bool loadGridHourlyDataFixedFields(QString *myError, QString meteoPoint, QDateTime first, QDateTime last);
         std::vector<float> loadGridDailyVar(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate *firstDateDB);
