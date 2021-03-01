@@ -5,8 +5,6 @@
 
 #include <iostream>
 #include <QtSql>
-#include <random>    // cancellare
-#include <QRandomGenerator> // cancellare
 
 
 Crit3DMeteoGridDbHandler::Crit3DMeteoGridDbHandler()
