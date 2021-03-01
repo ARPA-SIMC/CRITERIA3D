@@ -1175,6 +1175,12 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
     else
         _lastDate = maxDateH;
 
+    if (_firstDate > _lastDate)
+    {
+        *myError = "Missing data!";
+        return false;
+    }
+
     return true;
 
 }
