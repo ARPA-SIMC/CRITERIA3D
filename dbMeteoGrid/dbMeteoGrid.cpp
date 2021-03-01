@@ -1088,27 +1088,16 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
                     if (temp < minDateD)
                         minDateD = temp;
                 }
-                else
-                {
-                    *myError = "Missing daily fieldTime";
-                    return false;
-                }
 
                 if (getValue(qry.value("maxDate"), &temp))
                 {
                     if (temp > maxDateD)
                         maxDateD = temp;
                 }
-                else
-                {
-                    *myError = "Missing daily fieldTime";
-                    return false;
-                }
-
             }
             else
             {
-                *myError = "Error: fieldTime not found" ;
+                *myError = "Daily time field not found: " + _tableDaily.fieldTime;
                 return false;
             }
         }
@@ -1158,27 +1147,16 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
                     if (temp < minDateH)
                         minDateH = temp;
                 }
-                else
-                {
-                    *myError = "Missing hourly fieldTime";
-                    return false;
-                }
 
                 if (getValue(qry.value("maxDate"), &temp))
                 {
                     if (temp > maxDateH)
                         maxDateH = temp;
                 }
-                else
-                {
-                    *myError = "Missing hourly fieldTime";
-                    return false;
-                }
-
             }
             else
             {
-                *myError = "Error: fieldTime not found" ;
+                *myError = "Hourly time field not found: " + _tableHourly.fieldTime;
                 return false;
             }
         }
