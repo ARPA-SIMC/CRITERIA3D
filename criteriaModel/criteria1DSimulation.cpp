@@ -29,6 +29,8 @@ Crit1DSimulation::Crit1DSimulation()
     lastSimulationDate = QDate(1800,1,1);
 
     outputString = "";
+    soilMoistureDepth.clear();
+    waterPotentialDepth.clear();
 }
 
 
@@ -513,27 +515,6 @@ void Crit1DSimulation::initializeSeasonalForecast(const Crit3DDate& firstDate, c
 }
 
 
-bool Crit1DSimulation::createOutputTable(QString &myError)
-{
-    QString queryString = "DROP TABLE '" + myCase.idCase + "'";
-    QSqlQuery myQuery = this->dbOutput.exec(queryString);
-
-    queryString = "CREATE TABLE '" + myCase.idCase + "'"
-                  + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
-                  + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
-                  + " DEFICIT REAL, DEFICIT_25 REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
-                  + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOT_DEPTH REAL )";
-    myQuery = this->dbOutput.exec(queryString);
-
-    if (myQuery.lastError().isValid())
-    {
-        myError = "Error in creating table: " + myCase.idCase + "\n" + myQuery.lastError().text();
-        return false;
-    }
-
-    return true;
-}
-
 bool Crit1DSimulation::createState(QString &myError)
 {
     // create db state
@@ -576,6 +557,7 @@ bool Crit1DSimulation::createState(QString &myError)
 
     return true;
 }
+
 
 bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myError)
 {
@@ -707,6 +689,42 @@ bool Crit1DSimulation::saveState(QString &myError)
 }
 
 
+bool Crit1DSimulation::createOutputTable(QString &myError)
+{
+    QString queryString = "DROP TABLE '" + myCase.idCase + "'";
+    QSqlQuery myQuery = this->dbOutput.exec(queryString);
+
+    queryString = "CREATE TABLE '" + myCase.idCase + "'"
+                  + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
+                  + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
+                  + " DEFICIT REAL, DEFICIT_25 REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
+                  + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOT_DEPTH REAL";
+
+    // specific depth variables
+    for (unsigned int i = 0; i < soilMoistureDepth.size(); i++)
+    {
+        QString fieldName = "SM_" + QString::number(soilMoistureDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
+    for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
+    {
+        QString fieldName = "WP_" + QString::number(waterPotentialDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
+
+    queryString += ")";
+    myQuery = this->dbOutput.exec(queryString);
+
+    if (myQuery.lastError().isValid())
+    {
+        myError = "Error in creating table: " + myCase.idCase + "\n" + myQuery.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+
 void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
 {
     if (isFirst)
@@ -715,8 +733,21 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                        + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, "
                        + " AVAILABLE_WATER, READILY_AW, FRACTION_AW, "
                        + " DEFICIT, DEFICIT_25, DRAINAGE, RUNOFF, ET0, "
-                       + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH) "
-                       + " VALUES ";
+                       + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH";
+
+        // specific depth variables
+        for (unsigned int i = 0; i < soilMoistureDepth.size(); i++)
+        {
+            QString fieldName = "SM_" + QString::number(soilMoistureDepth[i]);
+            outputString += ", " + fieldName;
+        }
+        for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
+        {
+            QString fieldName = "WP_" + QString::number(waterPotentialDepth[i]);
+            outputString += ", " + fieldName;
+        }
+
+        outputString += ") VALUES ";
     }
     else
     {
@@ -741,8 +772,19 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailyMaxEvaporation, 'g', 3)
                     + "," + QString::number(myCase.output.dailyEvaporation, 'g', 3)
                     + "," + getOutputStringNullZero(myCase.myCrop.LAI)
-                    + "," + getOutputStringNullZero(myCase.myCrop.roots.rootDepth)
-                    + ")";
+                    + "," + getOutputStringNullZero(myCase.myCrop.roots.rootDepth);
+
+    // specific depth variables
+    for (unsigned int i = 0; i < soilMoistureDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getSoilMoisture(soilMoistureDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
+    {
+        outputString += "," + QString::number(waterPotentialDepth[i]);;
+    }
+
+    outputString += ")";
 }
 
 
