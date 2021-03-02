@@ -1878,7 +1878,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataEnsemble(QString *myError, Q
     }
     else
     {
-        statement =  QString(("REPLACE INTO `%1` VALUES")).arg(tableD);
+        statement =  QString(("INSERT INTO `%1` VALUES")).arg(tableD);
 
         foreach (meteoVariable meteoVar, meteoVariableList)
             if (getVarFrequency(meteoVar) == daily)
