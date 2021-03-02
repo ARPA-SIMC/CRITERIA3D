@@ -11,19 +11,22 @@
 #include <QDate>
 #include <QVariant>
 #include <QSqlQuery>
+#include <QFile>
+#include <QDebug>
 
 Crit1DSimulation::Crit1DSimulation()
 {
     isXmlGrid = false;
     isSeasonalForecast = false;
+    isSaveState = false;
+    isRestart = false;
     firstSeasonMonth = NODATA;
     nrSeasonalForecasts = 0;
 
     isShortTermForecast = false;
     daysOfForecast = NODATA;
-    useAllMeteoData = true;
     firstSimulationDate = QDate(1800,1,1);
-    lastObservedDate = QDate(1800,1,1);
+    lastSimulationDate = QDate(1800,1,1);
 
     outputString = "";
 }
@@ -123,6 +126,26 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
     std::string errorString;
     bool isFirstDay = true;
 
+    // restart
+    if (isRestart)
+    {
+
+        QString outputDbPath = getFilePath(dbOutput.databaseName());
+        QString stateDbName = outputDbPath + "state_"+firstSimulationDate.toString("yyyy_MM_dd")+".db";
+        if (! restoreState(stateDbName, myError))
+        {
+            return false;
+        }
+
+        double currentWaterTable = double(myCase.meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
+        if (! myCase.myCrop.restore(myDate, myCase.meteoPoint.latitude, myCase.soilLayers, currentWaterTable, errorString))
+        {
+            myError = QString::fromStdString(errorString);
+            return false;
+        }
+    }
+
+    // daily cycle
     for (myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! myCase.computeDailyModel(myDate, errorString))
@@ -141,6 +164,12 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
             prepareOutput(myDate, isFirstDay);
             isFirstDay = false;
         }
+    }
+
+    if (isSaveState)
+    {
+        if (! saveState(myError))
+            return false;
     }
 
     if (isSeasonalForecast)
@@ -171,7 +200,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
 
     unsigned row;
     unsigned col;
-    unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastObservedDate)) + 1;
+    unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
 
     if (!this->observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )
     {
@@ -181,7 +210,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
 
     if (!this->observedMeteoGrid->gridStructure().isFixedFields())
     {
-        if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstSimulationDate, lastObservedDate))
+        if (!this->observedMeteoGrid->loadGridDailyData(myError, idMeteo, firstSimulationDate, lastSimulationDate))
         {
             *myError = "Missing observed data";
             return false;
@@ -189,7 +218,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     }
     else
     {
-        if (!this->observedMeteoGrid->loadGridDailyDataFixedFields(myError, idMeteo, firstSimulationDate, lastObservedDate))
+        if (!this->observedMeteoGrid->loadGridDailyDataFixedFields(myError, idMeteo, firstSimulationDate, lastSimulationDate))
         {
             if (*myError == "Missing MeteoPoint id")
             {
@@ -207,7 +236,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     {
         if (!this->forecastMeteoGrid->gridStructure().isFixedFields())
         {
-            if (!this->forecastMeteoGrid->loadGridDailyData(myError, idForecast, lastObservedDate.addDays(1), lastObservedDate.addDays(daysOfForecast)))
+            if (!this->forecastMeteoGrid->loadGridDailyData(myError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (*myError == "Missing MeteoPoint id")
                 {
@@ -222,7 +251,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
         }
         else
         {
-            if (!this->forecastMeteoGrid->loadGridDailyDataFixedFields(myError, idForecast, lastObservedDate.addDays(1), lastObservedDate.addDays(daysOfForecast)))
+            if (!this->forecastMeteoGrid->loadGridDailyDataFixedFields(myError, idForecast, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (*myError == "Missing MeteoPoint id")
                 {
@@ -243,7 +272,7 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstSimulationDate));
 
     float tmin, tmax, tavg, prec;
-    int lastIndex = firstSimulationDate.daysTo(lastObservedDate)+1;
+    int lastIndex = firstSimulationDate.daysTo(lastSimulationDate)+1;
     for (int i = 0; i < lastIndex; i++)
     {
         Crit3DDate myDate = getCrit3DDate(firstSimulationDate.addDays(i));
@@ -265,8 +294,8 @@ bool Crit1DSimulation::setMeteoXmlGrid(QString idMeteo, QString idForecast, QStr
     }
     if (isShortTermForecast)
     {
-        QDate start = lastObservedDate.addDays(1);
-        QDate end = lastObservedDate.addDays(daysOfForecast);
+        QDate start = lastSimulationDate.addDays(1);
+        QDate end = lastSimulationDate.addDays(daysOfForecast);
         for (int i = 0; i< start.daysTo(end)+1; i++)
         {
             Crit3DDate myDate = getCrit3DDate(start.addDays(i));
@@ -299,10 +328,7 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
 
     if (! query.isValid())
     {
-        if (query.lastError().text() != "")
-            *myError = "dbMeteo error: " + query.lastError().text();
-        else
-            *myError = "Missing meteo location:" + idMeteo;
+        *myError = "Missing meteo location: " + idMeteo;
         return false;
     }
 
@@ -320,7 +346,7 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     if (getValue(query.value(("longitude")), &myLon))
         myCase.meteoPoint.longitude = myLon;
 
-    queryString = "SELECT * FROM " + tableName + " ORDER BY [date]";
+    queryString = "SELECT * FROM '" + tableName + "' ORDER BY [date]";
     query = this->dbMeteo.exec(queryString);
     query.last();
 
@@ -337,8 +363,26 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     QDate firstObsDate = query.value("date").toDate();
     query.last();
     QDate lastObsDate = query.value("date").toDate();
-
-    unsigned nrDays = unsigned(firstObsDate.daysTo(lastObsDate)) + 1;
+    unsigned nrDays;
+    if (firstSimulationDate.toString("yyyy-MM-dd") == "1800-01-01" || lastSimulationDate.toString("yyyy-MM-dd") == "1800-01-01")
+    {
+        // missing firstSimulationDate or lastSimulationDate, take the all period stored into db
+        nrDays = unsigned(firstObsDate.daysTo(lastObsDate)) + 1;
+    }
+    else
+    {
+        if (firstSimulationDate < firstObsDate || lastSimulationDate > lastObsDate)
+        {
+            *myError = "Missing meteo data: required period " + firstSimulationDate.toString("yyyy-MM-dd") + " " + lastSimulationDate.toString("yyyy-MM-dd");
+            return false;
+        }
+        // load just the period firstSimulationDate - lastSimulationDate
+        firstObsDate = firstSimulationDate;
+        lastObsDate = lastSimulationDate;
+        nrDays = firstSimulationDate.daysTo(lastSimulationDate)+1;
+        queryString = "SELECT * FROM '" + tableName + "' WHERE date BETWEEN '"+firstSimulationDate.toString("yyyy-MM-dd")+"' AND '"+lastSimulationDate.toString("yyyy-MM-dd")+"'";
+        query = this->dbMeteo.exec(queryString);
+    }
 
     // Forecast: increase nr of days
     if (this->isShortTermForecast)
@@ -348,7 +392,6 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstObsDate));
 
     // Read observed data
-    // TODO read from firstdaste to lastdate
     if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), myError)) return false;
 
     // Add Short-Term forecast
@@ -479,7 +522,7 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
                   + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
                   + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
                   + " DEFICIT REAL, DEFICIT_25 REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
-                  + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOTDEPTH REAL )";
+                  + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOT_DEPTH REAL )";
     myQuery = this->dbOutput.exec(queryString);
 
     if (myQuery.lastError().isValid())
@@ -488,6 +531,178 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
         return false;
     }
 
+    return true;
+}
+
+bool Crit1DSimulation::createState(QString &myError)
+{
+    // create db state
+    QString date = lastSimulationDate.addDays(1).toString("yyyy_MM_dd");
+    QString outputDbPath = getFilePath(dbOutput.databaseName());
+    QString dbStateName = outputDbPath + "state_" + date + ".db";
+    if (QFile::exists(dbStateName))
+    {
+        QFile::remove(dbStateName);
+    }
+    dbState = QSqlDatabase::addDatabase("QSQLITE", "state");
+    dbState.setDatabaseName(dbStateName);
+
+    if (! dbState.open())
+    {
+        myError = "Open state DB failed: " + dbState.lastError().text();
+        return false;
+    }
+
+    // create tables
+    QString queryString;
+    QSqlQuery myQuery;
+    queryString = "CREATE TABLE variables ( ID_CASE TEXT, DEGREE_DAYS REAL, DAYS_SINCE_IRR INTEGER )";
+    myQuery = dbState.exec(queryString);
+
+    if (myQuery.lastError().isValid())
+    {
+        myError = "Error in creating variables table \n" + myQuery.lastError().text();
+        return false;
+    }
+
+    queryString = "CREATE TABLE waterContent ( ID_CASE TEXT, NR_LAYER INTEGER, WC REAL )";
+    myQuery = dbState.exec(queryString);
+
+    if (myQuery.lastError().isValid())
+    {
+        myError = "Error in creating waterContent table \n" + myQuery.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myError)
+{
+    if (!QFile::exists(dbStateToRestoreName))
+    {
+        myError = "DB state: " +dbStateToRestoreName+" does not exist";
+        return false;
+    }
+    QSqlDatabase dbStateToRestore = QSqlDatabase::addDatabase("QSQLITE", "stateToRestore");
+    dbStateToRestore.setDatabaseName(dbStateToRestoreName);
+
+    if (! dbStateToRestore.open())
+    {
+        myError = "Open state DB failed: " + dbStateToRestore.lastError().text();
+        return false;
+    }
+    QSqlQuery qry(dbStateToRestore);
+    qry.prepare( "SELECT * FROM variables WHERE ID_CASE = :id_case");
+    qry.bindValue(":id_case", myCase.idCase);
+
+    if( !qry.exec() )
+    {
+        myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        double degreeDays;
+        int daySinceIrr;
+        if (qry.next())
+        {
+            if (!getValue(qry.value("DEGREE_DAYS"), &degreeDays))
+            {
+                myError = "DEGREE_DAYS not found";
+                return false;
+            }
+            myCase.myCrop.degreeDays = degreeDays;
+            if (!getValue(qry.value("DAYS_SINCE_IRR"), &daySinceIrr))
+            {
+                myCase.myCrop.daysSinceIrrigation = NODATA;
+            }
+            else
+            {
+                myCase.myCrop.daysSinceIrrigation = daySinceIrr;
+            }
+        }
+        else
+        {
+            myError = "variables table: idCase not found";
+            return false;
+        }
+    }
+    qry.clear();
+    qry.prepare( "SELECT * FROM waterContent WHERE ID_CASE = :id_case");
+    qry.bindValue(":id_case", myCase.idCase);
+
+    if( !qry.exec() )
+    {
+        myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        int nrLayer = -1;
+        double wc;
+        while (qry.next())
+        {
+            if (!getValue(qry.value("NR_LAYER"), &nrLayer))
+            {
+                myError = "NR_LAYER not found";
+                return false;
+            }
+            if (!getValue(qry.value("WC"), &wc))
+            {
+                myError = "WC not found";
+                return false;
+            }
+            if (nrLayer<0 || (unsigned)nrLayer>=myCase.soilLayers.size())
+            {
+                myError = "Invalid NR_LAYER";
+                return false;
+            }
+            myCase.soilLayers[nrLayer].waterContent = wc;
+        }
+        if (nrLayer == -1)
+        {
+            myError = "waterContent table: idCase not found";
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+bool Crit1DSimulation::saveState(QString &myError)
+{
+    QString queryString;
+    QSqlQuery qry(dbState);
+
+    queryString = "INSERT INTO variables ( ID_CASE, DEGREE_DAYS, DAYS_SINCE_IRR ) VALUES ";
+    queryString += "('" + myCase.idCase + "'"
+                + "," + QString::number(myCase.myCrop.degreeDays)
+                + "," + QString::number(myCase.myCrop.daysSinceIrrigation) + ")";
+    if( !qry.exec(queryString) )
+    {
+        myError = "Error in saving variables state:\n" + qry.lastError().text();
+        return false;
+    }
+    qry.clear();
+
+    queryString = "INSERT INTO waterContent ( ID_CASE, NR_LAYER, WC ) VALUES ";
+    for (unsigned int i = 0; i<myCase.soilLayers.size(); i++)
+    {
+        queryString += "('" + myCase.idCase + "'," + QString::number(i) + ","
+                    + QString::number(myCase.soilLayers[i].waterContent) + ")";
+        if (i < (myCase.soilLayers.size()-1))
+            queryString += ",";
+    }
+
+    if( !qry.exec(queryString))
+    {
+        myError = "Error in saving waterContent state:\n" + qry.lastError().text();
+        return false;
+    }
+
+    qry.clear();
     return true;
 }
 
@@ -500,7 +715,7 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                        + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, "
                        + " AVAILABLE_WATER, READILY_AW, FRACTION_AW, "
                        + " DEFICIT, DEFICIT_25, DRAINAGE, RUNOFF, ET0, "
-                       + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOTDEPTH) "
+                       + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH) "
                        + " VALUES ";
     }
     else

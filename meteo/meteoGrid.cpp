@@ -133,6 +133,16 @@ void Crit3DMeteoGridStructure::setIsDailyDataAvailable(bool isDailyDataAvailable
     _isDailyDataAvailable = isDailyDataAvailable;
 }
 
+bool Crit3DMeteoGridStructure::isEnsemble() const
+{
+    return _isEnsemble;
+}
+
+void Crit3DMeteoGridStructure::setIsEnsemble(bool isEnsemble)
+{
+    _isEnsemble = isEnsemble;
+}
+
 Crit3DMeteoGridStructure Crit3DMeteoGrid::gridStructure() const
 {
     return _gridStructure;

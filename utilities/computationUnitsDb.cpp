@@ -45,10 +45,10 @@ ComputationUnitsDB::~ComputationUnitsDB()
 
 
 bool ComputationUnitsDB::writeListToUnitsTable(QStringList idCase, QStringList idCrop, QStringList idMeteo,
-                                  QStringList idSoil, QList<double> ha, QString &error)
+                                  QStringList idSoil, QList<double> hectares, QString &error)
 {
     QSqlQuery qry(db);
-    qry.prepare("CREATE TABLE units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, HA NUMERIC, PRIMARY KEY(ID_CASE))");
+    qry.prepare("CREATE TABLE units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, hectares NUMERIC, PRIMARY KEY(ID_CASE))");
     if( !qry.exec() )
     {
         error = qry.lastError().text();
@@ -56,12 +56,12 @@ bool ComputationUnitsDB::writeListToUnitsTable(QStringList idCase, QStringList i
     }
     qry.clear();
 
-    QString myQuery = "INSERT INTO units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, HA) VALUES ";
+    QString myQuery = "INSERT INTO units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, hectares) VALUES ";
 
     for (int i = 0; i < idCase.size(); i++)
     {
         myQuery += "('" + idCase[i] + "','" + idCrop[i] + "','" + idMeteo[i] + "','" + idSoil[i];
-        myQuery += "','" + QString::number(ha[i]) +"')";
+        myQuery += "','" + QString::number(hectares[i]) +"')";
         if (i < (idCase.size()-1))
             myQuery += ",";
     }
