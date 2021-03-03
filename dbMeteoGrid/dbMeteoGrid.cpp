@@ -1869,7 +1869,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataEnsemble(QString *myError, Q
     QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
 
     QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
-                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), MemberNr int(11), PRIMARY KEY(%2,VariableCode))").arg(tableD).arg(_tableDaily.fieldTime);
+                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), MemberNr int(11), PRIMARY KEY(%2,VariableCode,MemberNr))").arg(tableD).arg(_tableDaily.fieldTime);
 
     if( !qry.exec(statement) )
     {
@@ -1878,7 +1878,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataEnsemble(QString *myError, Q
     }
     else
     {
-        statement =  QString(("REPLACE INTO `%1` VALUES")).arg(tableD);
+        statement =  QString(("REPLACE INTO `%1` (%2, VariableCode, Value, MemberNr) VALUES ")).arg(tableD).arg(_tableDaily.fieldTime);
 
         foreach (meteoVariable meteoVar, meteoVariableList)
             if (getVarFrequency(meteoVar) == daily)
@@ -1891,7 +1891,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataEnsemble(QString *myError, Q
 
                     int varCode = getDailyVarCode(meteoVar);
 
-                    statement += QString(" ('%1','%2',%3, %4),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueS).arg(memberNr);
+                    statement += QString(" ('%1','%2',%3,'%4'),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueS).arg(memberNr);
                 }
             }
 
@@ -2437,4 +2437,3 @@ QString Crit3DMeteoGridDbHandler::tableHourlyModel() const
 {
     return _tableHourlyModel;
 }
-

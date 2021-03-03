@@ -221,3 +221,26 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
 }
 
 
+// input: depth [cm]
+// output: soil moisture [-]
+double Crit1DCase::getSoilMoisture(double depth)
+{
+    depth /= 100;                                   // [m]
+    if (depth <= 0 || depth > mySoil.totalDepth)
+        return NODATA;
+
+    double upperDepth, lowerDepth;
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+        if (depth >= upperDepth && depth <= lowerDepth)
+        {
+            return soilLayers[i].waterContent / (soilLayers[i].thickness * 1000);
+        }
+    }
+
+    return NODATA;
+}
+
+

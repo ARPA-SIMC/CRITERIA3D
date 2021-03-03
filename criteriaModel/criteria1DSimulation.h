@@ -55,6 +55,10 @@ class Crit1DSimulation
         bool isShortTermForecast;
         int daysOfForecast;
 
+        // specific output
+        std::vector<int> soilMoistureDepth;
+        std::vector<int> waterPotentialDepth;
+
         Crit1DSimulation();
 
         bool runModel(const Crit1DUnit &myUnit, QString &myError);
