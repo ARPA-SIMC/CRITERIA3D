@@ -5,7 +5,6 @@
 #include <QDateTime>
 #include <QVariant>
 #include <QString>
-#include <QStringList>
 #include <QSqlDatabase>
 #include <QSqlDriver>
 #include <QSqlRecord>
@@ -157,8 +156,8 @@ QDate getQDate(const Crit3DDate& d)
 QDateTime getQDateTime(const Crit3DTime& t)
 {
     QDate myDate = QDate(t.date.year, t.date.month, t.date.day);
-    QDateTime myDateTime = QDateTime(myDate);
-
+    QDateTime myDateTime;
+    myDateTime.setDate(myDate);
     return myDateTime.addSecs(t.time);
 }
 
