@@ -781,7 +781,7 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
     }
     for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
     {
-        outputString += "," + QString::number(waterPotentialDepth[i]);;
+        outputString += "," + QString::number(myCase.getWaterPotential(waterPotentialDepth[i]), 'g', 4);
     }
 
     outputString += ")";
