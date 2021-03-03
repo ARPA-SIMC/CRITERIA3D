@@ -708,4 +708,3 @@ double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil
     return sumRAW;
 }
 
-
