@@ -179,6 +179,10 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
     double sumTmaxDry[12] = {0};
     double sumTminWet[12] = {0};
     double sumTminDry[12] = {0};
+    double sumTmaxWet2[12] = {0};
+    double sumTmaxDry2[12] = {0};
+    double sumTminWet2[12] = {0};
+    double sumTminDry2[12] = {0};
     int daysInMonth;
     bool isPreviousDayWet = false;
 
@@ -208,6 +212,8 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
                 nWetDays[m]++;
                 sumTmaxWet[m] += double(inputTMax[n]);
                 sumTminWet[m] += double(inputTMin[n]);
+                sumTmaxWet2[m] += double(inputTMax[n] * inputTMax[n]);
+                sumTminWet2[m] += double(inputTMin[n] * inputTMin[n]);
                 isPreviousDayWet = true;
             }
             else
@@ -215,6 +221,8 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
                 nDryDays[m]++;
                 sumTmaxDry[m] += double(inputTMax[n]);
                 sumTminDry[m] += double(inputTMin[n]);
+                sumTmaxDry2[m] += double(inputTMax[n] * inputTMax[n]);
+                sumTminDry2[m] += double(inputTMin[n] * inputTMin[n]);
                 isPreviousDayWet = false;
             }
         }
@@ -252,6 +260,11 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
 
             wGen->monthly.stDevTmax[m] = sqrt(MAXVALUE(nrData[m]*sumTMax2[m]-(sumTMax[m]*sumTMax[m]), 0) / (nrData[m]*(nrData[m]-1)));
             wGen->monthly.stDevTmin[m] = sqrt(MAXVALUE(nrData[m]*sumTMin2[m]-(sumTMin[m]*sumTMin[m]), 0) / (nrData[m]*(nrData[m]-1)));
+            wGen->monthly.stDevTmaxDry[m] = sqrt(MAXVALUE(nDryDays[m]*sumTmaxDry2[m]-(sumTmaxDry[m]*sumTmaxDry[m]), 0) / (nDryDays[m]*(nDryDays[m]-1)));
+            wGen->monthly.stDevTmaxWet[m] = sqrt(MAXVALUE(nWetDays[m]*sumTmaxWet2[m]-(sumTmaxWet[m]*sumTmaxWet[m]), 0) / (nWetDays[m]*(nWetDays[m]-1)));
+            wGen->monthly.stDevTminDry[m] = sqrt(MAXVALUE(nDryDays[m]*sumTminDry2[m]-(sumTminDry[m]*sumTminDry[m]), 0) / (nDryDays[m]*(nDryDays[m]-1)));
+            wGen->monthly.stDevTminWet[m] = sqrt(MAXVALUE(nWetDays[m]*sumTminWet2[m]-(sumTminWet[m]*sumTminWet[m]), 0) / (nWetDays[m]*(nWetDays[m]-1)));
+
         }
         else
         {
@@ -262,6 +275,10 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
             wGen->monthly.stDevTmax[m] = NODATA;
             wGen->monthly.stDevTmin[m] = NODATA;
             wGen->monthly.dw_Tmax[m] = NODATA;
+            wGen->monthly.stDevTmaxDry[m] = NODATA;
+            wGen->monthly.stDevTminDry[m] = NODATA;
+            wGen->monthly.stDevTmaxWet[m] = NODATA;
+            wGen->monthly.stDevTminWet[m] = NODATA;
         }
         monthlyPrecipitation[m] = wGen->monthly.sumPrec[m];
     }
@@ -293,6 +310,10 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
                 stream << "wGen->monthly.monthlyTmaxDry = " << wGen->monthly.monthlyTmaxDry[m] << endl;
                 stream << "wGen->monthly.monthlyTminWet = " << wGen->monthly.monthlyTminWet[m] << endl;
                 stream << "wGen->monthly.monthlyTmaxWet = " << wGen->monthly.monthlyTmaxWet[m] << endl;
+                stream << "wGen->monthly.stdDevTminDry = " << wGen->monthly.stDevTminDry[m] << endl;
+                stream << "wGen->monthly.stdDevTmaxDry = " << wGen->monthly.stDevTmaxDry[m] << endl;
+                stream << "wGen->monthly.stdDevTminWet = " << wGen->monthly.stDevTminWet[m] << endl;
+                stream << "wGen->monthly.stdDevTmaxWet = " << wGen->monthly.stDevTmaxWet[m] << endl;
 
                 stream << "-------------------------------------------" << endl;
             }
@@ -320,7 +341,10 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
                 stream <<  wGen->monthly.monthlyTmaxDry[m] << endl;
                 stream <<  wGen->monthly.monthlyTminWet[m] << endl;
                 stream <<  wGen->monthly.monthlyTmaxWet[m] << endl;
-
+                stream << wGen->monthly.stDevTminDry[m] << endl;
+                stream << wGen->monthly.stDevTmaxDry[m] << endl;
+                stream << wGen->monthly.stDevTminWet[m] << endl;
+                stream << wGen->monthly.stDevTmaxWet[m] << endl;
 
             }
         }
