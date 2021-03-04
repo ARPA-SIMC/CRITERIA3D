@@ -143,6 +143,16 @@ void Crit3DMeteoGridStructure::setIsEnsemble(bool isEnsemble)
     _isEnsemble = isEnsemble;
 }
 
+int Crit3DMeteoGridStructure::nrMembers() const
+{
+    return _nrMembers;
+}
+
+void Crit3DMeteoGridStructure::setNrMembers(int nrMembers)
+{
+    _nrMembers = nrMembers;
+}
+
 Crit3DMeteoGridStructure Crit3DMeteoGrid::gridStructure() const
 {
     return _gridStructure;

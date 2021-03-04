@@ -74,6 +74,7 @@
         bool initializeSoil(std::string &myError);
         bool computeDailyModel(Crit3DDate myDate, std::string &myError);
         double getSoilMoisture(double depth);
+        double getWaterPotential(double depth);
 
     };
 

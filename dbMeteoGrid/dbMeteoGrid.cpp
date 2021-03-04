@@ -180,6 +180,16 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
                 _gridStructure.setIsEnsemble(false);
             }
 
+            int nrmembers = ancestor.toElement().attribute("nrmembers").toInt();
+            if (nrmembers!=0)
+            {
+                _gridStructure.setNrMembers(nrmembers);
+            }
+            else
+            {
+                _gridStructure.setNrMembers(1);
+            }
+
             child = ancestor.firstChild();
             gis::Crit3DGridHeader header;
             /* init */

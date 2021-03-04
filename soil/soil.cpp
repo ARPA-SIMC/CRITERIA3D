@@ -619,7 +619,8 @@ namespace soil
      */
     double Crit3DLayer::getVolumetricWaterContent()
     {
-        // waterContent [mm] - thickness [m]
+        // waterContent [mm]
+        // thickness [m]
         double theta = waterContent / (thickness * soilFraction * 1000);
         return theta;
     }
