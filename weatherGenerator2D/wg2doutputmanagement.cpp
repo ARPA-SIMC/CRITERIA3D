@@ -67,6 +67,13 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
     monthlyClimateAveragePrecipitationInternalFunction = (float**)calloc(nrStations, sizeof(float*));
     meanAmountsPrecGenerated = (float**)calloc(nrStations, sizeof(float*));
     cumulatedOccurrencePrecGenerated = (float**)calloc(nrStations, sizeof(float*));
+
+    observedConsecutiveDays = (TconsecutiveDays*)calloc(nrStations,sizeof(TconsecutiveDays));
+    simulatedConsecutiveDays = (TconsecutiveDays*)calloc(nrStations,sizeof(TconsecutiveDays));
+
+    printf("consec dry %f \n", observedConsecutiveDays[0].dry[2][5]);
+    printf("consec wet %f \n", observedConsecutiveDays[0].wet[10][25]);
+    pressEnterToContinue();
     for (int iStation=0;iStation<nrStations;iStation++)
     {
         meanAmountsPrecGenerated[iStation] = (float*)calloc(12, sizeof(float));
@@ -196,7 +203,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 inputTMax[i] = obsDataD[iStation][i].tMax;
                 inputPrec[i] = obsDataD[iStation][i].prec;
             }
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
             //computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlyClimateAveragePrecipitation[iStation]);
         }
         free(inputTMin);
@@ -279,7 +286,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 counter++;
             }
 
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
             //computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlySimulatedAveragePrecipitation[iStation]);
         }
         free(inputTMin);
