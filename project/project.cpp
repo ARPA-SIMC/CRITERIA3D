@@ -2347,6 +2347,12 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         isAppend = false;
     }
 
+    if (meteoGridDbHandler->gridStructure().isEnsemble())
+    {
+        isAppend = false;
+        formInfo.showInfo("meteo grid is ensemble: append mode is not possible, a new widget is opening");
+    }
+
     if (isAppend)
     {
         formInfo.showInfo("Loading data...");
@@ -2387,6 +2393,8 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         formInfo.showInfo("Loading data...");
         if (meteoGridDbHandler->gridStructure().isEnsemble())
         {
+
+            meteoWidgetGrid->setIsEnsemble(true);
             unsigned row;
             unsigned col;
             int nMembers = meteoGridDbHandler->gridStructure().nrMembers();
