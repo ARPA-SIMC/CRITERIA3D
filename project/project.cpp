@@ -2342,7 +2342,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDateTime lastDateTime = QDateTime(lastDate.addDays(1), QTime(0,0));
 
     int meteoWidgetId = 0;
-    if (meteoWidgetGridList.isEmpty())
+    if (meteoWidgetGridList.isEmpty() || meteoGridDbHandler->gridStructure().isEnsemble())
     {
         isAppend = false;
     }
@@ -2393,6 +2393,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         formInfo.showInfo("Loading data...");
         if (meteoGridDbHandler->gridStructure().isEnsemble())
         {
+
             meteoWidgetGrid->setIsEnsemble(true);
             unsigned row;
             unsigned col;
