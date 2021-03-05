@@ -34,11 +34,12 @@
             void tooltipBar(bool state, int index, QBarSet *barset);
             void handleMarkerClicked();
             void closeEvent(QCloseEvent *event);
-
+            void setIsEnsemble(bool value);
 
     private:
             int meteoWidgetID;
             bool isGrid;
+            bool isEnsemble;
             QPushButton *addVarButton;
             QPushButton *dailyButton;
             QPushButton *hourlyButton;

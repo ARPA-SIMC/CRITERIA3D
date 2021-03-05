@@ -2342,9 +2342,15 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDateTime lastDateTime = QDateTime(lastDate.addDays(1), QTime(0,0));
 
     int meteoWidgetId = 0;
-    if (meteoWidgetGridList.isEmpty() || meteoGridDbHandler->gridStructure().isEnsemble())
+    if (meteoWidgetGridList.isEmpty())
     {
         isAppend = false;
+    }
+
+    if (meteoGridDbHandler->gridStructure().isEnsemble())
+    {
+        isAppend = false;
+        formInfo.showInfo("meteo grid is ensemble: append mode is not possible, a new widget is opening");
     }
 
     if (isAppend)
@@ -2387,6 +2393,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         formInfo.showInfo("Loading data...");
         if (meteoGridDbHandler->gridStructure().isEnsemble())
         {
+            meteoWidgetGrid->setIsEnsemble(true);
             unsigned row;
             unsigned col;
             int nMembers = meteoGridDbHandler->gridStructure().nrMembers();
