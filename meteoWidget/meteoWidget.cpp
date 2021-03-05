@@ -494,7 +494,6 @@ void Crit3DMeteoWidget::resetValues()
                     pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
                 }
                 line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
-
                 QColor lineColor = colorLine[i];
                 if (nMeteoPoints == 1)
                 {
@@ -541,7 +540,7 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
                 }
-                name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
+                name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i]+"_EnsambleNr_"+QString::number(mp+1);
                 QBarSet* set = new QBarSet(name);
                 QColor barColor = colorBar[i];
                 if (nMeteoPoints == 1)
