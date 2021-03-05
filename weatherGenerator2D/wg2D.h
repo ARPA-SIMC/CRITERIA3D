@@ -20,8 +20,10 @@
     enum TaverageTempMethod{ROLLING_AVERAGE,FOURIER_HARMONICS_AVERAGE};
 
     struct TconsecutiveDays{
-        double dry[12][30];
-        double wet[12][30];
+        //double** dry;
+        //double** wet;
+        double dry[12][91];
+        double wet[12][91];
     };
 
     struct TseasonPrec{
