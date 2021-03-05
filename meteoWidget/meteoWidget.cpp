@@ -493,14 +493,8 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
                 }
-                if (isEnsemble)
-                {
-                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]+"_EnsambleNr_"+QString::number(mp+1));
-                }
-                else
-                {
-                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
-                }
+                line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
+
                 QColor lineColor = colorLine[i];
                 if (nMeteoPoints == 1)
                 {
@@ -510,14 +504,7 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     if (isEnsemble)
                     {
-                        if (mp == 0)
-                        {
-                            lineColor.setAlpha(255);
-                        }
-                        else
-                        {
-                            lineColor.setAlpha(100);
-                        }
+                        lineColor.setAlpha(255);
                     }
                     else
                     {
@@ -554,7 +541,7 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
                 }
-                name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i]+"_EnsambleNr_"+QString::number(mp+1);
+                name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
                 QBarSet* set = new QBarSet(name);
                 QColor barColor = colorBar[i];
                 if (nMeteoPoints == 1)
@@ -565,14 +552,7 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     if (isEnsemble)
                     {
-                        if (mp == 0)
-                        {
-                            barColor.setAlpha(255);
-                        }
-                        else
-                        {
-                            barColor.setAlpha(100);
-                        }
+                        barColor.setAlpha(255);
                     }
                     else
                     {
@@ -791,14 +771,7 @@ void Crit3DMeteoWidget::drawDailyVar()
                 {
                     if (isEnsemble)
                     {
-                        if (mp == 0)
-                        {
-                            barColor.setAlpha(255);
-                        }
-                        else
-                        {
-                            barColor.setAlpha(100);
-                        }
+                        barColor.setAlpha(255);
                     }
                     else
                     {
@@ -1018,11 +991,37 @@ void Crit3DMeteoWidget::drawHourlyVar()
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
 
-    foreach(QLegendMarker* marker, chart->legend()->markers())
+    if (!isEnsemble)
     {
-        marker->setVisible(true);
-        marker->series()->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        foreach(QLegendMarker* marker, chart->legend()->markers())
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        }
+    }
+    else
+    {
+        for (int mp=0; mp<nMeteoPoints;mp++)
+        {
+            if (nameBar.size() != 0)
+            {
+                if (mp != 0)
+                {
+                    chart->legend()->markers(barSeries[mp])[0]->setVisible(false);
+                }
+            }
+            for (int i = 0; i < nameLines.size(); i++)
+            {
+                if (mp != 0)
+                {
+                    for (int i = 0; i < nameLines.size(); i++)
+                    {
+                        chart->legend()->markers(lineSeries[mp][i])[0]->setVisible(false);
+                    }
+                }
+            }
+        }
     }
 
     formInfo.close();

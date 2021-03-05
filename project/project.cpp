@@ -2393,7 +2393,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         formInfo.showInfo("Loading data...");
         if (meteoGridDbHandler->gridStructure().isEnsemble())
         {
-
             meteoWidgetGrid->setIsEnsemble(true);
             unsigned row;
             unsigned col;
