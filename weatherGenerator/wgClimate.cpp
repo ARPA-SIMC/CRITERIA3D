@@ -345,7 +345,7 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
                 stream << wGen->monthly.stDevTmaxDry[m] << endl;
                 stream << wGen->monthly.stDevTminWet[m] << endl;
                 stream << wGen->monthly.stDevTmaxWet[m] << endl;
-
+                //stream << m +1 << "\t" << wGen->monthly.stDevTmin[m] << "\t" << wGen->monthly.stDevTmax[m] << "\t" << wGen->monthly.stDevTminDry[m] << "\t" << wGen->monthly.stDevTmaxDry[m] << "\t" << wGen->monthly.stDevTminWet[m] << "\t" << wGen->monthly.stDevTmaxWet[m] << endl;
             }
         }
     }
