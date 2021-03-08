@@ -222,11 +222,11 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
 
 
 /*!
- * \brief get soil moisture at specific depth
+ * \brief get volumetric water content at specific depth
  * \param depth [cm]
- * \return soil moisture [-]
+ * \return volumetric water content [-]
  */
-double Crit1DCase::getSoilMoisture(double depth)
+double Crit1DCase::getWaterContent(double depth)
 {
     depth /= 100;                                   // [cm] --> [m]
     if (depth <= 0 || depth > mySoil.totalDepth)

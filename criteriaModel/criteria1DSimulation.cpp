@@ -29,7 +29,7 @@ Crit1DSimulation::Crit1DSimulation()
     lastSimulationDate = QDate(1800,1,1);
 
     outputString = "";
-    soilMoistureDepth.clear();
+    waterContentDepth.clear();
     waterPotentialDepth.clear();
 }
 
@@ -362,27 +362,46 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
     }
 
     query.first();
-    QDate firstObsDate = query.value("date").toDate();
+    QDate firstDate = query.value("date").toDate();
     query.last();
-    QDate lastObsDate = query.value("date").toDate();
+    QDate lastDate = query.value("date").toDate();
     unsigned nrDays;
-    if (firstSimulationDate.toString("yyyy-MM-dd") == "1800-01-01" || lastSimulationDate.toString("yyyy-MM-dd") == "1800-01-01")
+    bool subQuery = false;
+
+    // check dates
+    if (firstSimulationDate.toString("yyyy-MM-dd") != "1800-01-01")
     {
-        // missing firstSimulationDate or lastSimulationDate, take the all period stored into db
-        nrDays = unsigned(firstObsDate.daysTo(lastObsDate)) + 1;
-    }
-    else
-    {
-        if (firstSimulationDate < firstObsDate || lastSimulationDate > lastObsDate)
+        if (firstSimulationDate < firstDate)
         {
-            *myError = "Missing meteo data: required period " + firstSimulationDate.toString("yyyy-MM-dd") + " " + lastSimulationDate.toString("yyyy-MM-dd");
+            *myError = "Missing meteo data: required first date " + firstSimulationDate.toString("yyyy-MM-dd");
             return false;
         }
-        // load just the period firstSimulationDate - lastSimulationDate
-        firstObsDate = firstSimulationDate;
-        lastObsDate = lastSimulationDate;
-        nrDays = firstSimulationDate.daysTo(lastSimulationDate)+1;
-        queryString = "SELECT * FROM '" + tableName + "' WHERE date BETWEEN '"+firstSimulationDate.toString("yyyy-MM-dd")+"' AND '"+lastSimulationDate.toString("yyyy-MM-dd")+"'";
+        else
+        {
+            firstDate = firstSimulationDate;
+            subQuery = true;
+        }
+    }
+    if (lastSimulationDate.toString("yyyy-MM-dd") != "1800-01-01")
+    {
+        if (lastSimulationDate > lastDate)
+        {
+            *myError = "Missing meteo data: required last date " + lastSimulationDate.toString("yyyy-MM-dd");
+            return false;
+        }
+        else
+        {
+            lastDate = lastSimulationDate;
+            subQuery = true;
+        }
+    }
+
+    nrDays = unsigned(firstDate.daysTo(lastDate)) + 1;
+    if (subQuery)
+    {
+        query.clear();
+        queryString = "SELECT * FROM '" + tableName + "' WHERE date BETWEEN '"
+                    + firstDate.toString("yyyy-MM-dd") + "' AND '" + lastDate.toString("yyyy-MM-dd") + "'";
         query = this->dbMeteo.exec(queryString);
     }
 
@@ -391,7 +410,7 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
         nrDays += unsigned(this->daysOfForecast);
 
     // Initialize data
-    myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstObsDate));
+    myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstDate));
 
     // Read observed data
     if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), myError)) return false;
@@ -439,10 +458,10 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
         // check date
         query.first();
         QDate firstForecastDate = query.value("date").toDate();
-        if (firstForecastDate != lastObsDate.addDays(1))
+        if (firstForecastDate != lastDate.addDays(1))
         {
             // previsioni indietro di un giorno: accettato ma tolgo un giorno
-            if (firstForecastDate == lastObsDate)
+            if (firstForecastDate == lastDate)
             {
                 myCase.meteoPoint.nrObsDataDaysD--;
             }
@@ -460,8 +479,8 @@ bool Crit1DSimulation::setMeteoSqlite(QString idMeteo, QString idForecast, QStri
         // estende il dato precedente se mancante
         float previousTmin = NODATA;
         float previousTmax = NODATA;
-        long lastObservedIndex = long(firstObsDate.daysTo(lastObsDate));
-        for (unsigned long i = lastObservedIndex; i < unsigned(myCase.meteoPoint.nrObsDataDaysD); i++)
+        long lastIndex = long(firstDate.daysTo(lastDate));
+        for (unsigned long i = lastIndex; i < unsigned(myCase.meteoPoint.nrObsDataDaysD); i++)
         {
             // tmin
             if (int(myCase.meteoPoint.obsDataD[i].tMin) != int(NODATA))
@@ -701,9 +720,9 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
                   + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOT_DEPTH REAL";
 
     // specific depth variables
-    for (unsigned int i = 0; i < soilMoistureDepth.size(); i++)
+    for (unsigned int i = 0; i < waterContentDepth.size(); i++)
     {
-        QString fieldName = "SM_" + QString::number(soilMoistureDepth[i]);
+        QString fieldName = "SWC_" + QString::number(waterContentDepth[i]);
         queryString += ", " + fieldName + " REAL";
     }
     for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
@@ -736,9 +755,9 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                        + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH";
 
         // specific depth variables
-        for (unsigned int i = 0; i < soilMoistureDepth.size(); i++)
+        for (unsigned int i = 0; i < waterContentDepth.size(); i++)
         {
-            QString fieldName = "SM_" + QString::number(soilMoistureDepth[i]);
+            QString fieldName = "SWC_" + QString::number(waterContentDepth[i]);
             outputString += ", " + fieldName;
         }
         for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
@@ -775,9 +794,9 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + getOutputStringNullZero(myCase.myCrop.roots.rootDepth);
 
     // specific depth variables
-    for (unsigned int i = 0; i < soilMoistureDepth.size(); i++)
+    for (unsigned int i = 0; i < waterContentDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getSoilMoisture(soilMoistureDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getWaterContent(waterContentDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
     {
