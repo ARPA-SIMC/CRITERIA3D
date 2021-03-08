@@ -1593,6 +1593,7 @@ void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
 void Crit3DMeteoWidget::setIsEnsemble(bool value)
 {
     isEnsemble = value;
+    tableButton->setEnabled(!value);
 }
 
 void Crit3DMeteoWidget::setNrMembers(int value)
