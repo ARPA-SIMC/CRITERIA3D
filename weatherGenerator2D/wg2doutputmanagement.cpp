@@ -232,28 +232,66 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                     nrConsecutiveDryDays = 0;
                 }
             }
-            for (int j=0;j<1;j++)
+            float sumOfEventsDry[12]= {0};
+            float sumOfEventsWet[12]= {0};
+            for (int iInit=0;iInit<12;iInit++)
             {
-                printf("month %d\n",j+1);
-                for (int i=0;i<50;i++)
-                {
-                    printf("%.0f,",observedConsecutiveDays[iStation].dry[j][i]);
-                }
-                printf("\n");
-                for (int i=0;i<32;i++)
-                {
-                    printf("%.0f,",observedConsecutiveDays[iStation].wet[j][i]);
-                }
-                pressEnterToContinue();
+                sumOfEventsDry[iInit] = 0;
+                sumOfEventsWet[iInit] = 0;
             }
+
+            for (int jMonth=0;jMonth<12;jMonth++)
+            {
+                printf("month %d\n",jMonth+1);
+                for (int iMonth=0;iMonth<91;iMonth++)
+                {
+                    sumOfEventsDry[jMonth] += observedConsecutiveDays[iStation].dry[jMonth][iMonth];
+                    sumOfEventsWet[jMonth] += observedConsecutiveDays[iStation].wet[jMonth][iMonth];
+                    //printf("%.0f,",observedConsecutiveDays[iStation].dry[jMonth][iMonth]);
+                }
+                //printf("total events %f %f \n",sumOfEventsDry[jMonth],sumOfEventsWet[jMonth]);
+                for (int iMonth=0;iMonth<91;iMonth++)
+                {
+                    observedConsecutiveDays[iStation].dry[jMonth][iMonth] /= sumOfEventsDry[jMonth];
+                    observedConsecutiveDays[iStation].wet[jMonth][iMonth] /= sumOfEventsWet[jMonth];
+                    //printf("%f,",observedConsecutiveDays[iStation].dry[jMonth][iMonth]);
+                }
+            }
+            //pressEnterToContinue();
+            float **consecutiveDry,**consecutiveWet;
+            consecutiveDry = (float**)calloc(12, sizeof(float*));
+            consecutiveWet = (float**)calloc(12, sizeof(float*));
+            for (int jMonth=0;jMonth<12;jMonth++)
+            {
+                consecutiveDry[jMonth] = (float*)calloc(91, sizeof(float));
+                consecutiveWet[jMonth] = (float*)calloc(91, sizeof(float));
+            }
+            for (int j=0;j<12;j++)
+            {
+                //printf("month %d\n",j+1);
+                for (int i=0;i<91;i++)
+                {
+                    consecutiveDry[j][i] = observedConsecutiveDays[iStation].dry[j][i];
+                    consecutiveWet[j][i] = observedConsecutiveDays[iStation].wet[j][i];
+                }
+            }
+
+
             for (int i=0;i<nrDays;i++)
             {
                 inputTMin[i] = obsDataD[iStation][i].tMin;
                 inputTMax[i] = obsDataD[iStation][i].tMax;
                 inputPrec[i] = obsDataD[iStation][i].prec;
             }
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlyClimateAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName,monthlyClimateAveragePrecipitation[iStation],consecutiveDry,consecutiveWet,12,91);
             //computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlyClimateAveragePrecipitation[iStation]);
+            for (int jMonth=0;jMonth<12;jMonth++)
+            {
+                free(consecutiveDry[jMonth]);
+                free(consecutiveWet[jMonth]);
+            }
+            free(consecutiveDry);
+            free(consecutiveWet);
         }
         free(inputTMin);
         free(inputTMax);
@@ -355,23 +393,53 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                     nrConsecutiveDryDays = 0;
                 }
             }
-            for (int jMonth=0;jMonth<1;jMonth++)
+            double sumOfEventsDry[12]= {0};
+            double sumOfEventsWet[12]= {0};
+
+            for (int jMonth=0;jMonth<12;jMonth++)
             {
-                printf("month %d\n",jMonth+1);
-                for (int iMonth=0;iMonth<50;iMonth++)
+                //printf("month %d\n",jMonth+1);
+                for (int iMonth=0;iMonth<91;iMonth++)
                 {
-                    printf("%.0f,",simulatedConsecutiveDays[iStation].dry[jMonth][iMonth]);
+                    sumOfEventsDry[jMonth] += simulatedConsecutiveDays[iStation].dry[jMonth][iMonth];
+                    sumOfEventsWet[jMonth] += simulatedConsecutiveDays[iStation].wet[jMonth][iMonth];
+                    // printf("%.0f,",simulatedConsecutiveDays[iStation].dry[jMonth][iMonth]);
                 }
-                printf("\n");
-                for (int iMonth=0;iMonth<32;iMonth++)
+                //printf("%f,%f\n",sumOfEventsWet[jMonth],sumOfEventsDry[jMonth]);
+                for (int iMonth=0;iMonth<91;iMonth++)
                 {
-                    printf("%.0f,",simulatedConsecutiveDays[iStation].wet[jMonth][iMonth]);
+                    simulatedConsecutiveDays[iStation].dry[jMonth][iMonth] /= sumOfEventsDry[jMonth];
+                    simulatedConsecutiveDays[iStation].wet[jMonth][iMonth] /= sumOfEventsWet[jMonth];
                 }
-                pressEnterToContinue();
+            }
+            //pressEnterToContinue();
+            float **consecutiveDry,**consecutiveWet;
+            consecutiveDry = (float**)calloc(12, sizeof(float*));
+            consecutiveWet = (float**)calloc(12, sizeof(float*));
+            for (int jMonth=0;jMonth<12;jMonth++)
+            {
+                consecutiveDry[jMonth] = (float*)calloc(91, sizeof(float));
+                consecutiveWet[jMonth] = (float*)calloc(91, sizeof(float));
+            }
+            for (int j=0;j<12;j++)
+            {
+                //printf("month %d\n",j+1);
+                for (int i=0;i<91;i++)
+                {
+                    consecutiveDry[j][i] = simulatedConsecutiveDays[iStation].dry[j][i];
+                    consecutiveWet[j][i] = simulatedConsecutiveDays[iStation].wet[j][i];
+                }
             }
 
-            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,false,outputFileName,monthlySimulatedAveragePrecipitation[iStation]);
+            computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName,monthlySimulatedAveragePrecipitation[iStation],consecutiveDry,consecutiveWet,12,91);
             //computeWG2DClimate(nrDays,inputFirstDate,inputTMin,inputTMax,inputPrec,precThreshold,minPrecData,&weatherGenClimate,writeOutput,true,outputFileName2,monthlySimulatedAveragePrecipitation[iStation]);
+            for (int jMonth=0;jMonth<12;jMonth++)
+            {
+                free(consecutiveDry[jMonth]);
+                free(consecutiveWet[jMonth]);
+            }
+            free(consecutiveDry);
+            free(consecutiveWet);
         }
 
         free(inputTMin);
