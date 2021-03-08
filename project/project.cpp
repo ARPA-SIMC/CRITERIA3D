@@ -2394,6 +2394,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         if (meteoGridDbHandler->gridStructure().isEnsemble())
         {
             meteoWidgetGrid->setIsEnsemble(true);
+            meteoWidgetGrid->setNrMembers(meteoGridDbHandler->gridStructure().nrMembers());
             unsigned row;
             unsigned col;
             int nMembers = meteoGridDbHandler->gridStructure().nrMembers();

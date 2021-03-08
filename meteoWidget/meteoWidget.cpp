@@ -37,6 +37,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 {
     this->isGrid = isGrid;
     this->isEnsemble = false;
+    this->nrMembers = NODATA;
 
     if (this->isGrid)
     {
@@ -423,7 +424,17 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
         firstDate->setDate(minDate);
     }
 
-    redraw();
+    if (isEnsemble && nrMembers!=NODATA)
+    {
+        if(meteoPoints.size() == nrMembers)
+        {
+            redraw();
+        }
+    }
+    else
+    {
+        redraw();
+    }
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
@@ -1582,6 +1593,11 @@ void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
 void Crit3DMeteoWidget::setIsEnsemble(bool value)
 {
     isEnsemble = value;
+}
+
+void Crit3DMeteoWidget::setNrMembers(int value)
+{
+    nrMembers = value;
 }
 
 int Crit3DMeteoWidget::getMeteoWidgetID() const
