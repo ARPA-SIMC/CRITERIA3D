@@ -37,6 +37,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 {
     this->isGrid = isGrid;
     this->isEnsemble = false;
+    this->nrMembers = NODATA;
 
     if (this->isGrid)
     {
@@ -423,7 +424,17 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
         firstDate->setDate(minDate);
     }
 
-    redraw();
+    if (isEnsemble && nrMembers!=NODATA)
+    {
+        if(meteoPoints.size() == nrMembers)
+        {
+            redraw();
+        }
+    }
+    else
+    {
+        redraw();
+    }
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
@@ -493,7 +504,14 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
                 }
-                line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
+                if (isEnsemble)
+                {
+                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]+"_EnsembleNr_"+QString::number(mp+1));
+                }
+                else
+                {
+                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
+                }
                 QColor lineColor = colorLine[i];
                 if (nMeteoPoints == 1)
                 {
@@ -540,7 +558,14 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
                 }
-                name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i]+"_EnsambleNr_"+QString::number(mp+1);
+                if (isEnsemble)
+                {
+                    name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i]+"_EnsembleNr_"+QString::number(mp+1);
+                }
+                else
+                {
+                    name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
+                }
                 QBarSet* set = new QBarSet(name);
                 QColor barColor = colorBar[i];
                 if (nMeteoPoints == 1)
@@ -1568,6 +1593,12 @@ void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
 void Crit3DMeteoWidget::setIsEnsemble(bool value)
 {
     isEnsemble = value;
+    tableButton->setEnabled(!value);
+}
+
+void Crit3DMeteoWidget::setNrMembers(int value)
+{
+    nrMembers = value;
 }
 
 int Crit3DMeteoWidget::getMeteoWidgetID() const

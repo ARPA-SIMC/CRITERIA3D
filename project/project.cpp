@@ -1169,9 +1169,20 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
             {
                 if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
                 {
-                    if (this->meteoGridDbHandler->loadGridDailyData(&errorString, QString::fromStdString(id), firstDate, lastDate))
+                    if (this->meteoGridDbHandler->gridStructure().isEnsemble())
                     {
-                        count = count + 1;
+                        int memberNr = 1;
+                        if (this->meteoGridDbHandler->loadGridDailyDataEnsemble(&errorString, QString::fromStdString(id), memberNr, firstDate, lastDate))
+                        {
+                            count = count + 1;
+                        }
+                    }
+                    else
+                    {
+                        if (this->meteoGridDbHandler->loadGridDailyData(&errorString, QString::fromStdString(id), firstDate, lastDate))
+                        {
+                            count = count + 1;
+                        }
                     }
                 }
                 else
@@ -2394,6 +2405,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         if (meteoGridDbHandler->gridStructure().isEnsemble())
         {
             meteoWidgetGrid->setIsEnsemble(true);
+            meteoWidgetGrid->setNrMembers(meteoGridDbHandler->gridStructure().nrMembers());
             unsigned row;
             unsigned col;
             int nMembers = meteoGridDbHandler->gridStructure().nrMembers();
