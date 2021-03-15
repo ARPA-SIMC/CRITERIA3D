@@ -1075,48 +1075,45 @@ void topographicDistanceOptimize(meteoVariable myVar,
                                  Crit3DInterpolationSettings* mySettings,
                                  const Crit3DTime &myTime)
 {
-    float avgError, bestError, bestK;
-    float kh, kz;
+    float avgError;
 
-    kh = kz = 0;
-
-    bestError = NODATA;
-
+    float kz = 0;
+    float bestKz = 0;
+    float bestError = NODATA;
     while (kz <= 256)
     {
-        mySettings->setTopoDist_Kz(kz);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, true, true))
         {
             avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime);
             if (bestError == NODATA || avgError < bestError)
             {
                 bestError = avgError;
-                bestK = kz;
+                bestKz = kz;
             }
             kz = (kz == 0 ? 1 : kz*2);
         }
     }
 
-    mySettings->setTopoDist_Kz(bestK);
+    mySettings->setTopoDist_Kz(bestKz);
 
-    kh = 0;
+    float kh = 0;
+    float bestKh = 0;
     bestError = NODATA;
     while (kh <= 1000000)
     {
-        mySettings->setTopoDist_Kh(kh);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, true, true))
         {
             avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime);
             if (bestError == NODATA || avgError < bestError)
             {
                 bestError = avgError;
-                bestK = kh;
+                bestKh = kh;
             }
             kh = (kh == 0 ? 1 : kh*2);
         }
     }
 
-    mySettings->setTopoDist_Kh(bestK);
+    mySettings->setTopoDist_Kh(bestKh);
 
 }
 
