@@ -109,7 +109,7 @@ Crit3DQuality::Crit3DQuality()
 
     qualityDailyT = new quality::Range(-60, 60);
     qualityDailyP = new quality::Range(0, 800);
-    qualityDailyRH = new quality::Range(1, 102);
+    qualityDailyRH = new quality::Range(1, 104);
     qualityDailyWInt = new quality::Range(0, 150);
     qualityDailyWDir = new quality::Range(0, 360);
     qualityDailyGRad = new quality::Range(-20, 120);

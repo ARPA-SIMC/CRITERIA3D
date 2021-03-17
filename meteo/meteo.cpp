@@ -214,28 +214,28 @@ float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, Crit3DDate myD
 }
 
 
-float tDewFromRelHum(float rhAir, float airT)
+float tDewFromRelHum(float RH, float T)
 {
-    if (int(rhAir) == int(NODATA) || int(airT) == int(NODATA))
+    if (isEqual(RH, NODATA) || isEqual(T, NODATA) || RH == 0)
         return NODATA;
 
-    rhAir = MINVALUE(100, rhAir);
+    RH = MINVALUE(100, RH);
 
-    double mySaturatedVaporPres = exp((16.78 * double(airT) - 116.9) / (double(airT) + 237.3));
-    double actualVaporPres = double(rhAir) / 100. * mySaturatedVaporPres;
+    double mySaturatedVaporPres = exp((16.78 * double(T) - 116.9) / (double(T) + 237.3));
+    double actualVaporPres = double(RH) / 100. * mySaturatedVaporPres;
     return float((log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres)));
 }
 
 
-float relHumFromTdew(float dewT, float airT)
+float relHumFromTdew(float Td, float T)
 {
-    if (int(dewT) == int(NODATA) || int(airT) == int(NODATA))
+    if (int(Td) == int(NODATA) || int(T) == int(NODATA))
         return NODATA;
 
     double d = 237.3;
     double c = 17.2693882;
-    double esp = 1 / (double(airT) + d);
-    double myValue = pow((exp((c * double(dewT)) - ((c * double(airT) / (double(airT) + d))) * (double(dewT) + d))), esp);
+    double esp = 1 / (double(T) + d);
+    double myValue = pow((exp((c * double(Td)) - ((c * double(T) / (double(T) + d))) * (double(Td) + d))), esp);
     myValue *= 100.;
 
     if (myValue > 100.)
