@@ -4,7 +4,6 @@
 
 #include <math.h>
 
-#include <QString>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>

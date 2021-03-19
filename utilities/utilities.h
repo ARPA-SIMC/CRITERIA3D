@@ -5,13 +5,13 @@
         #include <vector>
     #endif
 
+    #include <QStringList>
+
     class Crit3DDate;
     class Crit3DTime;
     class QDate;
     class QDateTime;
     class QVariant;
-    class QString;
-    class QStringList;
     class QSqlDatabase;
 
     Crit3DDate getCrit3DDate(const QDate &myDate);

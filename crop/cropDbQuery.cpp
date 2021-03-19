@@ -2,7 +2,6 @@
 #include "commonConstants.h"
 #include "utilities.h"
 
-#include <QString>
 #include <QtSql>
 
 

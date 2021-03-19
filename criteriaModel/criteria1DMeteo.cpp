@@ -1,4 +1,3 @@
-#include <QString>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVariant>
@@ -10,7 +9,6 @@
 #include "criteria1DMeteo.h"
 #include "utilities.h"
 #include "meteoPoint.h"
-#include "qdebug.h" //debug
 
 
 bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)

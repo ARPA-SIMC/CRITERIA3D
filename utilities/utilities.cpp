@@ -4,7 +4,6 @@
 
 #include <QDateTime>
 #include <QVariant>
-#include <QString>
 #include <QSqlDatabase>
 #include <QSqlDriver>
 #include <QSqlRecord>
