@@ -221,9 +221,8 @@
     bool computeWindCartesian(float intensity, float direction, float* u, float* v);
     bool computeWindPolar(float u, float v, float* intensity, float* direction);
 
-    float relHumFromTdew(float dewT, float airT);
-
-    float tDewFromRelHum(float rhAir, float airT);
+    float relHumFromTdew(float Td, float T);
+    float tDewFromRelHum(float RH, float T);
 
     double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalSWRadiation,
                     double airTemp, double airHum, double windSpeed10);
