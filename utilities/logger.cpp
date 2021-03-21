@@ -1,8 +1,9 @@
 #include "logger.h"
-#include <iostream>
 
-#include "QDir"
+#include <iostream>
+#include <QDir>
 #include <QTextStream>
+#include <QDateTime>
 
 Logger::Logger()
 {

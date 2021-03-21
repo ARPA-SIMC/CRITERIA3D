@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "../mathFunctions/commonConstants.h"
+#include "commonConstants.h"
 #include "header/types.h"
 #include "header/balance.h"
 #include "header/soilPhysics.h"

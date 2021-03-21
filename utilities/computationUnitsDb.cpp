@@ -1,19 +1,22 @@
 #include "computationUnitsDb.h"
 #include "commonConstants.h"
+
 #include <QtSql>
 
 
 Crit1DUnit::Crit1DUnit()
 {
     this->idCase = "";
-    this->idCrop = "";
-    this->idSoil = "";
-    this->idMeteo = "";
-
     this->idCropClass = "";
-    this->idForecast = "";
+    this->idCrop = "";
+
+    this->idSoil = "";
     this->idSoilNumber = NODATA;
-    this->idCropNumber = NODATA;
+
+    this->idMeteo = "";
+    this->idForecast = "";
+
+    this->isNumeric = false;
 }
 
 

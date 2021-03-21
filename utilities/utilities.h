@@ -1,24 +1,22 @@
+/*!
+* \brief functions on date, string, files and recordset
+*/
+
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-    #ifndef _VECTOR_
-        #include <vector>
-    #endif
-
-    #include <QStringList>
+    #include <vector>
+    #include <QVariant>
+    #include <QSqlDatabase>
+    #include <QDateTime>
 
     class Crit3DDate;
     class Crit3DTime;
-    class QDate;
-    class QDateTime;
     class QVariant;
-    class QSqlDatabase;
 
     Crit3DDate getCrit3DDate(const QDate &myDate);
     Crit3DTime getCrit3DTime(const QDateTime &myTime);
     Crit3DTime getCrit3DTime(const QDate& t, int hour);
-
-    QStringList getFields(QSqlDatabase* db_, QString tableName);
 
     QDate getQDate(const Crit3DDate &myDate);
     QDateTime getQDateTime(const Crit3DTime &myCrit3DTime);
@@ -28,6 +26,8 @@
     int getSeasonFromString(QString season);
     QString getStringSeasonFromDate(QDate date);
     bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* startDate, QDate* endDate);
+
+    QStringList getFields(QSqlDatabase* db_, QString tableName);
 
     bool getValue(QVariant myRs, int* myValue);
     bool getValue(QVariant myRs, float* myValue);

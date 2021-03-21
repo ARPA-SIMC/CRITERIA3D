@@ -1,3 +1,8 @@
+/*!
+* \brief computation unit for CRITERIA-1D
+* \note Unit = distinct combination of crop, soil and meteo
+*/
+
 #ifndef COMPUTATIONUNITSDB_H
 #define COMPUTATIONUNITSDB_H
 
@@ -5,23 +10,20 @@
     #include <QSqlDatabase>
     #include <vector>
 
-    /*!
-    * \brief computation unit of Criteria1D
-    * \note Unit = distinct crop, soil, meteo
-    */
-
-
     class Crit1DUnit
     {
     public:
         QString idCase;
+        QString idCropClass;
         QString idCrop;
-        QString idSoil;
+
         QString idMeteo;
         QString idForecast;
-        QString idCropClass;
-        int idCropNumber;
+
+        QString idSoil;
         int idSoilNumber;
+
+        bool isNumeric;
 
         Crit1DUnit();
     };

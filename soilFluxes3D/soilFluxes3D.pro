@@ -28,6 +28,7 @@ win32:{
     TARGET = soilFluxes3D
 }
 
+INCLUDEPATH += ../mathFunctions
 # do not include mathFunctions to compile as dll
 
 SOURCES +=  \
