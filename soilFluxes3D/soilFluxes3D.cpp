@@ -29,7 +29,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "../mathFunctions/physics.h"
+#include "physics.h"
 #include "header/types.h"
 #include "header/memory.h"
 #include "header/soilPhysics.h"

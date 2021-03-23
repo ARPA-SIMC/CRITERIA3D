@@ -2,10 +2,8 @@
 #include "commonConstants.h"
 #include "crit3dDate.h"
 
-#include <QDateTime>
+
 #include <QVariant>
-#include <QString>
-#include <QSqlDatabase>
 #include <QSqlDriver>
 #include <QSqlRecord>
 #include <QDir>

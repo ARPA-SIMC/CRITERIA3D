@@ -1,9 +1,12 @@
+/*!
+* \brief generic logger for all distributions
+*/
+
 #ifndef LOGGER_H
 #define LOGGER_H
 
+    #include <QString>
     #include <QFile>
-    #include <QTextStream>
-    #include <QDateTime>
 
     class Logger
     {

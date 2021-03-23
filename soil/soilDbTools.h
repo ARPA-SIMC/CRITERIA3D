@@ -4,9 +4,8 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
+    #include <QStringList>
 
-    class QString;
-    class QStringList;
     class QSqlDatabase;
 
     bool loadSoilData(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil *mySoil, QString *myError);

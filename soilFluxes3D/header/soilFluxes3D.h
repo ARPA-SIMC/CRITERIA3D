@@ -1,7 +1,7 @@
 #ifndef SOILFLUXES3D
 #define SOILFLUXES3D
 
-    /*----- uncomment to compile as win32 dll -----*/
+    // Uncomment to compile as win32 dll
     // #define BUILD_DLL 1
 
     #ifdef BUILD_DLL
@@ -16,10 +16,10 @@
 	
     namespace soilFluxes3D {
 
-    //TEST
+    // TEST
     __EXTERN int DLL_EXPORT __STDCALL test();
 
-    //INITIALIZATION
+    // INITIALIZATION
     __EXTERN void DLL_EXPORT __STDCALL cleanMemory();
     __EXTERN int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLinks, bool computeWater_, bool computeHeat_, bool computeSolutes_);
     __EXTERN void DLL_EXPORT __STDCALL initializeHeat(short saveHeatFluxes_, bool computeAdvectiveHeat, bool computeLatentHeat);
@@ -28,7 +28,7 @@
                               int maxIterationNumber, int maxApproximationsNumber,
                               int errorMagnitude, float MBRMagnitude);
 
-    //TOPOLOGY
+    // TOPOLOGY
     __EXTERN int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, float z, double volume_or_area,
                                         bool isSurface, bool isBoundary, int boundaryType, float slope);
 
@@ -36,7 +36,7 @@
 
 	__EXTERN int DLL_EXPORT __STDCALL setCulvert(long myIndex, double roughness, double slope, double width, double height);
 
-    //SOIL
+    // SOIL
     __EXTERN int DLL_EXPORT __STDCALL setSoilProperties(int nrSoil, int nrHorizon, double VG_alpha,
                                         double VG_n, double VG_m, double VG_he,
                                         double ThetaR, double ThetaS, double Ksat, double L,
@@ -44,11 +44,11 @@
 
     __EXTERN int DLL_EXPORT __STDCALL setNodeSoil(long nodeIndex, int soilIndex, int horizonIndex);
 
-    //SURFACE
+    // SURFACE
     __EXTERN int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double Roughness, double minWaterLevelRunoff);
     __EXTERN int DLL_EXPORT __STDCALL setNodeSurface(long nodeIndex, int surfaceIndex);
 
-    //WATER
+    // WATER
     __EXTERN int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve, int conductivityMeanType, float horizVertRatioConductivity);
     __EXTERN int DLL_EXPORT __STDCALL setWaterContent(long index, double myWaterContent);
     __EXTERN int DLL_EXPORT __STDCALL setMatricPotential(long index, double potential);
@@ -98,9 +98,10 @@
     __EXTERN double DLL_EXPORT __STDCALL getHeatMBR();
     __EXTERN double DLL_EXPORT __STDCALL getHeatMBE();
 
-    //SOLUTES
+    // SOLUTES
+    // ...
 
-    //COMPUTATION
+    // COMPUTATION
     __EXTERN void DLL_EXPORT __STDCALL initializeBalance();
     __EXTERN void DLL_EXPORT __STDCALL computePeriod(double myPeriod);
 	__EXTERN double DLL_EXPORT __STDCALL computeStep(double maxTime);

@@ -70,7 +70,7 @@ Crit1DCase::Crit1DCase()
     minLayerThickness = 0.02;           /*!< [m] default thickness = 2 cm  */
     geometricFactor = 1.2;              /*!< [-] default factor for geometric progression  */
     isGeometricLayers = false;
-    optimizeIrrigation = false;
+    optimizeIrrigation = true;
 
     soilLayers.clear();
 }
@@ -131,6 +131,9 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
 
     // water table
     myOutput.dailyWaterTable = double(meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
+    // check
+    if (myOutput.dailyWaterTable != NODATA)
+        myOutput.dailyWaterTable = MAXVALUE(myOutput.dailyWaterTable, 0.01);
 
     // prec forecast
     double precTomorrow = double(meteoPoint.getMeteoPointValueD(myDate.addDays(1), dailyPrecipitation));
@@ -196,8 +199,8 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
     }
 
     // TRANSPIRATION
-    double waterStress;
-    myOutput.dailyTranspiration = myCrop.computeTranspiration(myOutput.dailyMaxTranspiration, soilLayers, &waterStress);
+    double waterStress = 0;
+    myOutput.dailyTranspiration = myCrop.computeTranspiration(myOutput.dailyMaxTranspiration, soilLayers, waterStress);
 
     // assign transpiration
     if (myOutput.dailyTranspiration > 0)

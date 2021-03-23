@@ -1,9 +1,8 @@
 #ifndef CROPDBQUERY_H
 #define CROPDBQUERY_H
 
+    #include <QStringList>
     class QSqlDatabase;
-    class QString;
-    class QStringList;
 
     bool getCropIdList(QSqlDatabase* dbCrop, QStringList* cropNameList, QString* error);
 

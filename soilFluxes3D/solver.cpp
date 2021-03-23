@@ -29,7 +29,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "../mathFunctions/basicMath.h"
+#include "basicMath.h"
 #include "header/types.h"
 #include "header/solver.h"
 

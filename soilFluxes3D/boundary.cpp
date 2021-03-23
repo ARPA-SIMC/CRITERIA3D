@@ -28,8 +28,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "../mathFunctions/physics.h"
-#include "../mathFunctions/commonConstants.h"
+#include "physics.h"
+#include "commonConstants.h"
 #include "header/types.h"
 #include "header/solver.h"
 #include "header/soilPhysics.h"
