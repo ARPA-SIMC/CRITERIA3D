@@ -758,25 +758,29 @@ namespace soil
         horizon->bulkDensity = NODATA;
         if (horizon->dbData.bulkDensity != NODATA && horizon->dbData.bulkDensity > 0 && horizon->dbData.bulkDensity < QUARTZ_DENSITY)
         {
-            horizon->bulkDensity = horizon->dbData.bulkDensity;
+            horizon->bulkDensity = horizon->dbData.bulkDensity;  
+        }
+        else
+        {
+            horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, true);
+        }
 
-            // theta sat [m3 m-3] from bulk density
-            if(horizon->dbData.thetaSat == NODATA)
-            {
-                horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
-            }
+        // theta sat from bulk density
+        if(horizon->dbData.thetaSat == NODATA)
+        {
+            horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
         }
 
         // fitting (Marquardt)
         if (fittingOptions->useWaterRetentionData && horizon->dbData.waterRetention.size() > 0)
         {
             fittingWaterRetentionCurve(horizon, fittingOptions);
-        }
 
-        // bulk density [g cm-3] from theta sat [m3 m-3]
-        if (horizon->bulkDensity == NODATA)
-        {
-            horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, true);
+            // bulk density from fitted theta sat
+            if (horizon->dbData.bulkDensity == NODATA)
+            {
+                horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, false);
+            }
         }
 
         // Ksat = saturated water conductivity [cm day-1]

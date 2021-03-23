@@ -273,9 +273,9 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
     unsigned int lastLayer = nrLayers-1;
     if (nrLayers == 0) return 0;
 
-    // NO WaterTable, wrong data or watertable too depth (8 meters)
+    // NO WaterTable, wrong data or watertable too depth (6 meters)
     if ( isEqual(waterTableDepth, NODATA) || waterTableDepth <= 0
-            || waterTableDepth > (soilLayers[lastLayer].depth + 8) )
+            || waterTableDepth > (soilLayers[lastLayer].depth + 6) )
     {
         // re-initialize threshold for vertical drainage
         for (unsigned int i = 1; i < nrLayers; i++)
