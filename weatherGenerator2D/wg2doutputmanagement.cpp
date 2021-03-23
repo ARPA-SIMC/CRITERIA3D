@@ -48,7 +48,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
     float *inputPrec = nullptr;
     float precThreshold = parametersModel.precipitationThreshold;
     float minPrecData = NODATA;
-    bool writeOutput = true;
+    bool writeOutput = false;
     inputTMin = (float*)calloc(nrDays, sizeof(float));
     inputTMax = (float*)calloc(nrDays, sizeof(float));
     inputPrec = (float*)calloc(nrDays, sizeof(float));
