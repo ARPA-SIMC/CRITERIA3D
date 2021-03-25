@@ -48,7 +48,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
     float *inputPrec = nullptr;
     float precThreshold = parametersModel.precipitationThreshold;
     float minPrecData = NODATA;
-    bool writeOutput = false;
+    bool writeOutput = true;
     inputTMin = (float*)calloc(nrDays, sizeof(float));
     inputTMax = (float*)calloc(nrDays, sizeof(float));
     inputPrec = (float*)calloc(nrDays, sizeof(float));
@@ -335,6 +335,10 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
             }
         }
     }
+
+    free(observedConsecutiveDays);
+    free(simulatedConsecutiveDays);
+
     if(computeStatistics)
     {
         nrDays = 365*parametersModel.yearOfSimulation;
