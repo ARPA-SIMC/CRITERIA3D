@@ -608,9 +608,9 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
             if ( ((demUR.row >= 0) && (demUR.row < myDEM->header->nrRows)) || ((demLL.row >= 0) && (demLL.row < myDEM->header->nrRows))
                  || ((demUR.col >= 0) && (demUR.col < myDEM->header->nrCols)) || ((demLL.col >= 0) && ( demLL.col < myDEM->header->nrCols)))
             {
-                for (int demRow = demUR.row; demRow < demLL.row; demRow++)
+                for (int demRow = demUR.row; demRow <= demLL.row; demRow++)
                 {
-                    for (int demCol = demLL.col; demCol < demUR.col; demCol++)
+                    for (int demCol = demLL.col; demCol <= demUR.col; demCol++)
                     {
                         gis::getUtmXYFromRowCol(*(myDEM->header), demRow, demCol, &utmX, &utmY);
                         gis::getLatLonFromUtm(_gisSettings, utmX, utmY, &pointLatLon.latitude, &pointLatLon.longitude);
