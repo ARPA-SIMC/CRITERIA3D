@@ -42,9 +42,8 @@
     };
 
     void downyMildew(TdownyMildew* downyMildewCore, bool isFirstJanuary);
-    float vapourPressureDeficit(float temp,float relativeHumidity);
-    int leafLitterMoisture(float rain,float vpd);
-    float hydrothermalTime(float temp,int llm);
+    int leafLitterMoisture(float rain, float vpd);
+    float hydrothermalTime(float temp, int llm);
     float dormancyBreaking(float htime);
     float survivalRateSporangia(float temp, float relativeHumidity);
     float incubation(float temp);

@@ -1,4 +1,5 @@
 #include "powderyMildew.h"
+#include "physics.h"
 #include <math.h>
 
 
@@ -60,7 +61,7 @@ void powderyMildew(Tmildew* mildewCore, bool isBudBreak){
     float currentDegreeDay = computeDegreeDay(tavg);
 
     // compute the vapour pressure deficit
-    float vpre = vpd(tavg, mildewCore->input.relativeHumidity);
+    float vpre = vapourPressureDeficit(tavg, mildewCore->input.relativeHumidity);
 
     // calculate the cumulative of mature ascospore
     mildewCore->state.aic += och*(ascosporesReadyFraction(mildewCore->state.degreeDays+currentDegreeDay)
@@ -170,31 +171,6 @@ float ascosporeDischargeRate(float temp,float rain,int leafWetness){
 
 }
 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-/// <summary> Vapour pressure deficit </summary>
-///
-/// <remarks> Author: Laura Costantini, 30/08/2013.
-///
-///		<para> Compute the vapour pressure deficit.</para>
-///
-///	</remarks>
-///
-/// <param name="temp"> Value of temperature </param>
-/// <param name="relativeHumidity"> Value of relative Humidity </param>
-///
-/// <returns> Vapour pressure deficit.</returns>
-///
-////////////////////////////////////////////////////////////////////////////////////////////////////
-float vpd(float temp, float relativeHumidity)
-{
-    //check relativeHumidity
-    if (relativeHumidity < 1) relativeHumidity = 1.0;
-    if (relativeHumidity > 100) relativeHumidity = 100.0;
-    relativeHumidity /= 100.f;
-
-    return (1.f-relativeHumidity)*6.1375f * exp((17.502f*temp)/(240.97f+temp));
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// <summary> Infection rate </summary>
