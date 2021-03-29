@@ -428,28 +428,28 @@ void weatherGenerator2D::precipitationP00P10()
         {
             if ((obsDataD[idStation][i].prec >= 0 && obsDataD[idStation][i+1].prec >= 0) && isPrecipitationRecordOK(obsDataD[idStation][i+1].prec) && isPrecipitationRecordOK(obsDataD[idStation][i].prec))
             {
-                for (int month=1;month<13;month++)
+                for (int iMonth=1;iMonth<13;iMonth++)
                 {
-                    if(obsDataD[idStation][i].date.month == month)
+                    if(obsDataD[idStation][i].date.month == iMonth)
                     {
                         if (obsDataD[idStation][i].prec > parametersModel.precipitationThreshold)
                         {
-                            daysWithRain[month-1]++;
+                            daysWithRain[iMonth-1]++;
                             if (obsDataD[idStation][i+1].prec < parametersModel.precipitationThreshold)
                             {
-                                occurrence10[month-1]++;
-                                ++precOccurrenceGlobal[month-1].p10;
+                                occurrence10[iMonth-1]++;
+                                ++precOccurrenceGlobal[iMonth-1].p10;
                                 //printf("%f\n",precOccurrenceGlobal[month-1].p10);
                                 //getchar();
                             }
                         }
                         else
                         {
-                            daysWithoutRain[month-1]++;
-                            if (obsDataD[idStation][i+1].prec < parametersModel.precipitationThreshold)
+                            daysWithoutRain[iMonth-1]++;
+                            if (obsDataD[idStation][i+1].prec <= parametersModel.precipitationThreshold)
                             {
-                                occurrence00[month-1]++;
-                                ++precOccurrenceGlobal[month-1].p00;
+                                occurrence00[iMonth-1]++;
+                                ++precOccurrenceGlobal[iMonth-1].p00;
                             }
                         }
                     }
@@ -459,20 +459,20 @@ void weatherGenerator2D::precipitationP00P10()
         /*for (int i=0;i<12;i++)
             printf("%d %f %f\n",i,precOccurrenceGlobal[i].p00,precOccurrenceGlobal[i].p10);
         getchar();*/
-        for (int month=0;month<12;month++)
+        for (int iMonth=0;iMonth<12;iMonth++)
         {
-            daysWithoutRainGlobal[month] += daysWithoutRain[month];
-            daysWithRainGlobal[month] += daysWithRain[month];
-            if (daysWithoutRain[month] != 0)
-                precOccurence[idStation][month].p00 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence00[month])/daysWithoutRain[month]));
+            daysWithoutRainGlobal[iMonth] += daysWithoutRain[iMonth];
+            daysWithRainGlobal[iMonth] += daysWithRain[iMonth];
+            if (daysWithoutRain[iMonth] != 0)
+                precOccurence[idStation][iMonth].p00 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence00[iMonth])/daysWithoutRain[iMonth]));
             else
-                precOccurence[idStation][month].p00 = 0.0;
-            if (daysWithRain[month] != 0)
-                precOccurence[idStation][month].p10 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence10[month])/daysWithRain[month]));
+                precOccurence[idStation][iMonth].p00 = 0.0;
+            if (daysWithRain[iMonth] != 0)
+                precOccurence[idStation][iMonth].p10 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence10[iMonth])/daysWithRain[iMonth]));
             else
-                precOccurence[idStation][month].p10 = 0.0;
+                precOccurence[idStation][iMonth].p10 = 0.0;
 
-            precOccurence[idStation][month].month = month +1;
+            precOccurence[idStation][iMonth].month = iMonth +1;
             //printf("%d %f\n",month+1,1-precOccurence[idStation][month].p10);
         }
         //pressEnterToContinue();
@@ -906,7 +906,6 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                 if(fabs(occurrences[i][j-1]) < EPSILON)
                 {
                     if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
-                    //printf("%f  %f",statistics::functionCDFCauchy(2,0,normRandom[i][j]),transitionNormal[i][0]);
                     //pressEnterToContinue();
                 }
                 else
