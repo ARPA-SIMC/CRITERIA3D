@@ -287,7 +287,7 @@ namespace soil
             return NODATA;
 
         /*! heavy clay */
-        if (clay >= 65) return 12;
+        if (clay >= 60) return 12;
 
         if (clay > 40)
         {
@@ -324,11 +324,11 @@ namespace soil
         double specificDensity = estimateSpecificDensity(horizon->organicMatter);
         double refBulkDensity = (1 - totalPorosity) * specificDensity;
 
-        // increase/decrease with depth, reference theta sat at 33cm
+        // increase/decrease with depth, reference theta sat at 30cm
         if (increaseWithDepth)
         {
             double depth = (horizon->upperDepth + horizon->lowerDepth) * 0.5;
-            double depthCoeff = (depth - 0.33) * 0.1;
+            double depthCoeff = (depth - 0.30) * 0.05;
             refBulkDensity *= (1.0 + depthCoeff);
         }
 
@@ -619,7 +619,8 @@ namespace soil
      */
     double Crit3DLayer::getVolumetricWaterContent()
     {
-        // waterContent [mm] - thickness [m]
+        // waterContent [mm]
+        // thickness [m]
         double theta = waterContent / (thickness * soilFraction * 1000);
         return theta;
     }
@@ -747,26 +748,35 @@ namespace soil
         horizon->waterConductivity = textureClassList[horizon->texture.classUSDA].waterConductivity;
         horizon->Driessen = textureClassList[horizon->texture.classNL].Driessen;
 
-        // bulk density [g cm-3]
-        horizon->bulkDensity = NODATA;
-        if (horizon->dbData.bulkDensity > 0 && horizon->dbData.bulkDensity < QUARTZ_DENSITY)
-        {
-            horizon->bulkDensity = horizon->dbData.bulkDensity;
-        }
-
-        // check theta sat [m3 m-3]
+        // theta sat [m3 m-3]
         if (horizon->dbData.thetaSat != NODATA && horizon->dbData.thetaSat > 0 && horizon->dbData.thetaSat < 1)
         {
             horizon->vanGenuchten.thetaS = horizon->dbData.thetaSat;
         }
-        else if(horizon->bulkDensity != NODATA)
+
+        // bulk density [g cm-3]
+        horizon->bulkDensity = NODATA;
+        if (horizon->dbData.bulkDensity != NODATA && horizon->dbData.bulkDensity > 0 && horizon->dbData.bulkDensity < QUARTZ_DENSITY)
         {
-            horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
+            horizon->bulkDensity = horizon->dbData.bulkDensity;
+
+            // theta sat [m3 m-3] from bulk density
+            if(horizon->dbData.thetaSat == NODATA)
+            {
+                horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
+            }
         }
 
+        // fitting (Marquardt)
+        if (fittingOptions->useWaterRetentionData && horizon->dbData.waterRetention.size() > 0)
+        {
+            fittingWaterRetentionCurve(horizon, fittingOptions);
+        }
+
+        // bulk density [g cm-3] from theta sat [m3 m-3]
         if (horizon->bulkDensity == NODATA)
         {
-            horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, false);
+            horizon->bulkDensity = soil::estimateBulkDensity(horizon, horizon->vanGenuchten.thetaS, true);
         }
 
         // Ksat = saturated water conductivity [cm day-1]
@@ -791,11 +801,6 @@ namespace soil
         else
         {
             horizon->waterConductivity.kSat = soil::estimateSaturatedConductivity(horizon, horizon->bulkDensity);
-        }
-
-        if (fittingOptions->useWaterRetentionData && horizon->dbData.waterRetention.size() > 0)
-        {
-            fittingWaterRetentionCurve(horizon, fittingOptions);
         }
 
         // update with coarse fragment (TODO check altre parti del codice!)

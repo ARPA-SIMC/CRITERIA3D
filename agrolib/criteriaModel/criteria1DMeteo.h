@@ -11,11 +11,9 @@
     #define MAX_MISSING_CONSECUTIVE_DAYS_PREC 7
 #endif
 
-
+    #include <QStringList>
     class QSqlDatabase;
     class QSqlQuery;
-    class QStringList;
-    class QString;
     class QDate;
     class Crit3DMeteoPoint;
 

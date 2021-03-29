@@ -29,8 +29,8 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "../mathFunctions/commonConstants.h"
-#include "../mathFunctions/physics.h"
+#include "commonConstants.h"
+#include "physics.h"
 #include "header/types.h"
 #include "header/heat.h"
 #include "header/soilPhysics.h"

@@ -49,6 +49,12 @@
             bool isDailyDataAvailable() const;
             void setIsDailyDataAvailable(bool isDailyDataAvailable);
 
+            bool isEnsemble() const;
+            void setIsEnsemble(bool isEnsemble);
+
+            int nrMembers() const;
+            void setNrMembers(int nrMembers);
+
     private:
             std::string _name;
             gis::Crit3DGridHeader _header;
@@ -59,6 +65,8 @@
             bool _isTIN;
             bool _isUTM;
             bool _isLoaded;
+            bool _isEnsemble;
+            int  _nrMembers;
 
             bool _isFixedFields;
             bool _isHourlyDataAvailable;

@@ -201,11 +201,11 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
             idCrop << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CROP"));
             idMeteo << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_METEO"));
             idSoil << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_SOIL"));
-            ha << shapeHandler.getNumericValue(signed(i), "HA");
+            ha << shapeHandler.getNumericValue(signed(i), "hectares");
         }
         else
         {
-            // TODO search id_case and sum ectars
+            // TODO search id_case and sum hectares
         }
     }
 

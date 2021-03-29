@@ -677,7 +677,7 @@ double getSoilFractionAW(const std::vector<soil::Crit3DLayer> &soilLayers, doubl
  * \brief getReadilyAvailableWater
  * \param myCrop
  * \param soilLayers
- * \return sum of readily available water in the rooting zone (mm)
+ * \return sum of readily available water in the rooting zone [mm]
  */
 double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
@@ -707,5 +707,4 @@ double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil
 
     return sumRAW;
 }
-
 

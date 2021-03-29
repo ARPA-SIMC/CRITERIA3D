@@ -2,11 +2,8 @@
 #include "commonConstants.h"
 #include "crit3dDate.h"
 
-#include <QDateTime>
+
 #include <QVariant>
-#include <QString>
-#include <QStringList>
-#include <QSqlDatabase>
 #include <QSqlDriver>
 #include <QSqlRecord>
 #include <QDir>
@@ -157,8 +154,8 @@ QDate getQDate(const Crit3DDate& d)
 QDateTime getQDateTime(const Crit3DTime& t)
 {
     QDate myDate = QDate(t.date.year, t.date.month, t.date.day);
-    QDateTime myDateTime = QDateTime(myDate);
-
+    QDateTime myDateTime;
+    myDateTime.setDate(myDate);
     return myDateTime.addSecs(t.time);
 }
 
@@ -397,6 +394,8 @@ bool removeDirectory(QString myPath)
 
 bool searchDocPath(QString* docPath)
 {
+    *docPath = "";
+
     QString myPath = QDir::currentPath();
     QString myRoot = QDir::rootPath();
     // only for win: application can run on a different drive (i.e. D:\)
@@ -425,6 +424,8 @@ bool searchDocPath(QString* docPath)
 
 bool searchDataPath(QString* dataPath)
 {
+    *dataPath = "";
+
     QString myPath = QDir::currentPath();
     QString myRoot = QDir::rootPath();
     // only for win: application can run on a different drive (i.e. D:\)

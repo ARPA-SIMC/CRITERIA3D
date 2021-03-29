@@ -380,6 +380,39 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
 }
 
 
+bool Crit3DCrop::restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
+                         double currentWaterTable, std::string &myError)
+{
+    myError = "";
+    if (idCrop == "") return false;
+
+    unsigned int nrLayers = unsigned(soilLayers.size());
+
+    // check start/end crop cycle (update isLiving)
+    if (needReset(myDate, latitude, currentWaterTable))
+    {
+        resetCrop(nrLayers);
+    }
+
+    if (isLiving)
+    {
+        int currentDoy = getDoyFromDate(myDate);
+
+        if ( !updateLAI(latitude, nrLayers, currentDoy))
+        {
+            myError = "Error in updating LAI for crop " + idCrop;
+            return false;
+        }
+
+        // update roots
+        root::computeRootDepth(this, degreeDays, currentWaterTable);
+        root::computeRootDensity(this, soilLayers);
+    }
+
+    return true;
+}
+
+
 // Liangxia Zhang, Zhongmin Hu, Jiangwen Fan, Decheng Zhou & Fengpei Tang, 2014
 // A meta-analysis of the canopy light extinction coefficient in terrestrial ecosystems
 // "Cropland had the highest value of K (0.62), followed by broadleaf forest (0.59),
@@ -445,7 +478,7 @@ double Crit3DCrop::getCropWaterDeficit(const std::vector<soil::Crit3DLayer> &soi
  * \return total transpiration and layerTranspiration vector [mm]
  * or percentage of water stress (if returnWaterStress = true)
  */
-double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer> &soilLayers, double* waterStress)
+double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer> &soilLayers, double& waterStress)
 {
     // check
     if (idCrop == "" || ! isLiving) return 0;
@@ -561,7 +594,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
         }
     }
 
-    *waterStress = 1 - TRs / maxTranspiration;
+    waterStress = 1 - TRs / maxTranspiration;
 
     double totalTranspiration = 0;
     for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
@@ -601,30 +634,33 @@ double Crit3DCrop::getIrrigationDemand(int doy, double currentPrec, double nextP
     double waterNeeds = irrigationVolume / irrigationShift;
     double todayWater = currentPrec + soilLayers[0].waterContent;
     double twoDaysWater = todayWater + nextPrec;
-
-    if (todayWater > waterNeeds) return 0;
-    if (twoDaysWater > 2*waterNeeds) return 0;
+    if (todayWater >= waterNeeds) return 0;
+    if (twoDaysWater >= 2*waterNeeds) return 0;
 
     // check water stress (before infiltration)
     double threshold = 1. - stressTolerance;
 
-    double waterStress;
-    this->computeTranspiration(maxTranspiration, soilLayers, &waterStress);
-    if (waterStress <= threshold) return 0;
+    double waterStress = 0;
+    this->computeTranspiration(maxTranspiration, soilLayers, waterStress);
+    if (waterStress <= threshold)
+        return 0;
 
     // check irrigation shift
     if (daysSinceIrrigation != NODATA)
     {
-        if (daysSinceIrrigation < irrigationShift)
+        // stress too high -> forced irrigation
+        if ((daysSinceIrrigation < irrigationShift) && (waterStress < (threshold + 0.1)))
             return 0;
     }
-
-    // IRRIGATION
 
     // reset irrigation shift
     daysSinceIrrigation = 0;
 
-    return irrigationVolume;
+    // return irrigationVolume
+    if (irrigationShift > 1)
+        return irrigationVolume - floor(twoDaysWater);
+    else
+        return MAXVALUE(irrigationVolume - floor(todayWater), 2);
 }
 
 

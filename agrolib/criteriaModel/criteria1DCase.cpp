@@ -70,7 +70,7 @@ Crit1DCase::Crit1DCase()
     minLayerThickness = 0.02;           /*!< [m] default thickness = 2 cm  */
     geometricFactor = 1.2;              /*!< [-] default factor for geometric progression  */
     isGeometricLayers = false;
-    optimizeIrrigation = false;
+    optimizeIrrigation = true;
 
     soilLayers.clear();
 }
@@ -131,6 +131,9 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
 
     // water table
     myOutput.dailyWaterTable = double(meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
+    // check
+    if (myOutput.dailyWaterTable != NODATA)
+        myOutput.dailyWaterTable = MAXVALUE(myOutput.dailyWaterTable, 0.01);
 
     // prec forecast
     double precTomorrow = double(meteoPoint.getMeteoPointValueD(myDate.addDays(1), dailyPrecipitation));
@@ -196,8 +199,8 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
     }
 
     // TRANSPIRATION
-    double waterStress;
-    myOutput.dailyTranspiration = myCrop.computeTranspiration(myOutput.dailyMaxTranspiration, soilLayers, &waterStress);
+    double waterStress = 0;
+    myOutput.dailyTranspiration = myCrop.computeTranspiration(myOutput.dailyMaxTranspiration, soilLayers, waterStress);
 
     // assign transpiration
     if (myOutput.dailyTranspiration > 0)
@@ -218,6 +221,58 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
     myOutput.dailyReadilyAW = getReadilyAvailableWater(myCrop, soilLayers);
 
     return true;
+}
+
+
+/*!
+ * \brief get volumetric water content at specific depth
+ * \param depth [cm]
+ * \return volumetric water content [-]
+ */
+double Crit1DCase::getWaterContent(double depth)
+{
+    depth /= 100;                                   // [cm] --> [m]
+    if (depth <= 0 || depth > mySoil.totalDepth)
+        return NODATA;
+
+    double upperDepth, lowerDepth;
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+        if (depth >= upperDepth && depth <= lowerDepth)
+        {
+            return soilLayers[i].waterContent / (soilLayers[i].thickness * 1000);
+        }
+    }
+
+    return NODATA;
+}
+
+
+/*!
+ * \brief get water potential at specific depth
+ * \param depth [cm]
+ * \return water potential [kPa]
+ */
+double Crit1DCase::getWaterPotential(double depth)
+{
+    depth /= 100;                                   // [cm] --> [m]
+    if (depth <= 0 || depth > mySoil.totalDepth)
+        return NODATA;
+
+    double upperDepth, lowerDepth;
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+        if (depth >= upperDepth && depth <= lowerDepth)
+        {
+            return soilLayers[i].getWaterPotential();
+        }
+    }
+
+    return NODATA;
 }
 
 

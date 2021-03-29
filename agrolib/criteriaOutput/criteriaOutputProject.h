@@ -2,6 +2,7 @@
 #define CRITERIAOUTPUTPROJECT_H
 
 #include <QString>
+#include <QDate>
 #include <fstream>
 #include <QSqlDatabase>
 #include "logger.h"
@@ -85,6 +86,7 @@ public:
     QString logFileName;
     std::ofstream logFile;
     Logger logger;
+    bool addDateTimeLogFile;
 
     CriteriaOutputProject();
 

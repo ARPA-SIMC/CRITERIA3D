@@ -6,8 +6,6 @@
 #endif
 #include <QString>
 #include <QMap>
-#include <geos_c.h>
-#include <ogr_p.h>
 
 static QMap<QString, QString> mapExtensionShortName
 {
@@ -34,6 +32,8 @@ static QMap<QString, QString> mapExtensionShortName
     {"bil", "EHdr"}
 };
 
-bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj, QString outputName, QString &errorStr);
+bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj,
+                   QString outputName, QString &errorStr);
+
 
 #endif // GDALSHAPEFUNCTIONS_H

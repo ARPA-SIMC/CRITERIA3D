@@ -1,14 +1,15 @@
 #include "gdalShapeFunctions.h"
 #include <QFileInfo>
 #include <string.h>
-#include <qdebug.h>
 #include <ogrsf_frmts.h>
 #include "ogr_spatialref.h"
 #include <gdal_priv.h>
 #include <gdal_utils.h>
 #include <gdalwarper.h>
 
-bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj, QString outputName, QString &errorStr)
+
+bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj,
+                   QString outputName, QString &errorStr)
 {
 
     int error = -1;

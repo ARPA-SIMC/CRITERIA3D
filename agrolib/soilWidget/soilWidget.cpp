@@ -521,11 +521,13 @@ void Crit3DSoilWidget::on_actionUseWaterRetentionData()
     {
         return;
     }
+
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
         soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, &errorString);
     }
+
     updateAll();
 }
 
@@ -790,6 +792,7 @@ void Crit3DSoilWidget::updateAll()
 {
     changed = true;
     horizonsTab->updateBarHorizon(&mySoil);
+    horizonsTab->updateTableModel(&mySoil);
     wrDataTab->insertData(&mySoil, textureClassList, fittingOptions);
     wrCurveTab->insertElements(&mySoil);
     hydraConducCurveTab->insertElements(&mySoil);

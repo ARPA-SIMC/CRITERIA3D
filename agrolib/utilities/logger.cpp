@@ -1,8 +1,9 @@
 #include "logger.h"
-#include <iostream>
 
-#include "QDir"
+#include <iostream>
+#include <QDir>
 #include <QTextStream>
+#include <QDateTime>
 
 Logger::Logger()
 {
@@ -10,7 +11,7 @@ Logger::Logger()
     file = nullptr;
 }
 
-bool Logger::setLog(QString path, QString fileName)
+bool Logger::setLog(QString path, QString fileName, bool addDateTime)
 {
     if (!QDir(path + "log").exists())
          QDir().mkdir(path + "log");
@@ -19,12 +20,18 @@ bool Logger::setLog(QString path, QString fileName)
     if (!fileName.isEmpty())
     {
         file = new QFile;
-        QString myDate = QDateTime().currentDateTime().toString("yyyy-MM-dd hh.mm");
-        QString completefileName = fileName + "_" + myDate + ".txt";
-        logFileName = path + "log/" + completefileName;
-        std::cout << "Log file created: " << logFileName.toStdString() << std::endl;
+        if (addDateTime)
+        {
+            QString myDate = QDateTime().currentDateTime().toString("yyyy-MM-dd hh.mm");
+            logFileName = path + "log/" + fileName + " " + myDate + ".txt";
+        }
+        else
+        {
+            logFileName = path + "log/" + fileName + ".txt";
+        }
         file->setFileName(logFileName);
-        return file->open(QIODevice::Append | QIODevice::Text);
+        std::cout << "Log file created: " << logFileName.toStdString() << std::endl;
+        return file->open(QIODevice::WriteOnly | QIODevice::Text);
     }
     else
     {

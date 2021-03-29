@@ -1,9 +1,12 @@
+/*!
+* \brief generic logger for all distributions
+*/
+
 #ifndef LOGGER_H
 #define LOGGER_H
 
+    #include <QString>
     #include <QFile>
-    #include <QTextStream>
-    #include <QDateTime>
 
     class Logger
     {
@@ -11,7 +14,7 @@
         Logger();
         ~Logger();
 
-        bool setLog(QString path, QString fileName);
+        bool setLog(QString path, QString fileName, bool addDateTime);
         void setShowDateTime(bool value);
         void writeInfo(const QString &value);
         void writeError(const QString &value);

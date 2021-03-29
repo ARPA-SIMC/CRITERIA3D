@@ -25,6 +25,7 @@ class Crit1DSimulation
         QSqlDatabase dbMeteo;
         QSqlDatabase dbForecast;
         QSqlDatabase dbOutput;
+        QSqlDatabase dbState;
 
         Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
@@ -39,11 +40,12 @@ class Crit1DSimulation
         soil::Crit3DFittingOptions fittingOptions;
 
         // dates
-        bool useAllMeteoData;
         QDate firstSimulationDate;
-        QDate lastObservedDate;
+        QDate lastSimulationDate;
 
         // seasonal forecast
+        bool isSaveState;
+        bool isRestart;
         bool isSeasonalForecast;
         int firstSeasonMonth;
         std::vector<float> seasonalForecasts;
@@ -53,9 +55,14 @@ class Crit1DSimulation
         bool isShortTermForecast;
         int daysOfForecast;
 
+        // specific output
+        std::vector<int> waterContentDepth;
+        std::vector<int> waterPotentialDepth;
+
         Crit1DSimulation();
 
         bool runModel(const Crit1DUnit &myUnit, QString &myError);
+        bool createState(QString &myError);
 
     private:
 
@@ -69,6 +76,9 @@ class Crit1DSimulation
         void updateSeasonalForecast(Crit3DDate myDate, int *index);
 
         bool createOutputTable(QString &myError);
+
+        bool saveState(QString &myError);
+        bool restoreState(QString dbStateToRestoreName, QString &myError);
         void prepareOutput(Crit3DDate myDate, bool isFirst);
         bool saveOutput(QString &myError);
 

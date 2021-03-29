@@ -18,6 +18,14 @@
 
     enum Tseason {DJF,MAM,JJA,SON};
     enum TaverageTempMethod{ROLLING_AVERAGE,FOURIER_HARMONICS_AVERAGE};
+
+    struct TconsecutiveDays{
+        //double** dry;
+        //double** wet;
+        double dry[12][91];
+        double wet[12][91];
+    };
+
     struct TseasonPrec{
         double* DJF;
         double* MAM;
@@ -166,6 +174,8 @@
         int numberObservedDJF,numberObservedMAM,numberObservedJJA,numberObservedSON;
         int numberObservedMax;
         bool computeStatistics;
+        TconsecutiveDays* observedConsecutiveDays;
+        TconsecutiveDays* simulatedConsecutiveDays;
         TaverageTempMethod averageTempMethod;
         TObsDataD** obsDataD;
         TObsPrecDataD** obsPrecDataD;

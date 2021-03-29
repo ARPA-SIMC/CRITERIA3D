@@ -76,6 +76,23 @@ double VolumetricLatentHeatVaporization(double myPressure, double myT)
 }
 
 
+/*!
+ * \brief vapourPressureDeficit
+ * \param air temperature (C)
+ * \param realtive humidity (%)
+ * \return Vapour pressure deficit [hPa]
+ */
+double vapourPressureDeficit(double tAir, double relativeHumidity)
+{
+    // check relative humidity
+    if (relativeHumidity < 1) relativeHumidity = 1.0;
+    if (relativeHumidity > 100) relativeHumidity = 100.0;
+    relativeHumidity /= 100.0;
+
+    return (1.0 - relativeHumidity) * 6.1375 * exp((17.502 * tAir) / (240.97 + tAir));
+}
+
+
 double VaporPressureFromConcentration(double myConcentration, double myT)
 // [Pa] convert vapor partial pressure from concentration in kg m-3
 {

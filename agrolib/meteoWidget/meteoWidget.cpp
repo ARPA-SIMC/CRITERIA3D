@@ -36,6 +36,8 @@
 Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 {
     this->isGrid = isGrid;
+    this->isEnsemble = false;
+    this->nrMembers = NODATA;
 
     if (this->isGrid)
     {
@@ -422,7 +424,17 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
         firstDate->setDate(minDate);
     }
 
-    redraw();
+    if (isEnsemble && nrMembers!=NODATA)
+    {
+        if(meteoPoints.size() == nrMembers)
+        {
+            redraw();
+        }
+    }
+    else
+    {
+        redraw();
+    }
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
@@ -492,7 +504,14 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
                 }
-                line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
+                if (isEnsemble)
+                {
+                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]+"_EnsembleNr_"+QString::number(mp+1));
+                }
+                else
+                {
+                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
+                }
                 QColor lineColor = colorLine[i];
                 if (nMeteoPoints == 1)
                 {
@@ -500,7 +519,14 @@ void Crit3DMeteoWidget::resetValues()
                 }
                 else
                 {
-                    lineColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))));
+                    if (isEnsemble)
+                    {
+                        lineColor.setAlpha(255);
+                    }
+                    else
+                    {
+                        lineColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))));
+                    }
                 }
                 line->setColor(lineColor);
                 vectorLine.append(line);
@@ -532,7 +558,14 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
                 }
-                name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
+                if (isEnsemble)
+                {
+                    name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i]+"_EnsembleNr_"+QString::number(mp+1);
+                }
+                else
+                {
+                    name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
+                }
                 QBarSet* set = new QBarSet(name);
                 QColor barColor = colorBar[i];
                 if (nMeteoPoints == 1)
@@ -541,7 +574,14 @@ void Crit3DMeteoWidget::resetValues()
                 }
                 else
                 {
-                    barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                    if (isEnsemble)
+                    {
+                        barColor.setAlpha(255);
+                    }
+                    else
+                    {
+                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                    }
                 }
                 set->setColor(barColor);
                 set->setBorderColor(barColor);
@@ -753,7 +793,14 @@ void Crit3DMeteoWidget::drawDailyVar()
                 }
                 else
                 {
-                    barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                    if (isEnsemble)
+                    {
+                        barColor.setAlpha(255);
+                    }
+                    else
+                    {
+                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                    }
                 }
                 setVector[mp][j]->setColor(barColor);
             }
@@ -767,11 +814,37 @@ void Crit3DMeteoWidget::drawDailyVar()
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
 
-    foreach(QLegendMarker* marker, chart->legend()->markers())
+    if (!isEnsemble)
     {
-        marker->setVisible(true);
-        marker->series()->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        foreach(QLegendMarker* marker, chart->legend()->markers())
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        }
+    }
+    else
+    {
+        for (int mp=0; mp<nMeteoPoints;mp++)
+        {
+            if (nameBar.size() != 0)
+            {
+                if (mp != 0)
+                {
+                    chart->legend()->markers(barSeries[mp])[0]->setVisible(false);
+                }
+            }
+            for (int i = 0; i < nameLines.size(); i++)
+            {
+                if (mp != 0)
+                {
+                    for (int i = 0; i < nameLines.size(); i++)
+                    {
+                        chart->legend()->markers(lineSeries[mp][i])[0]->setVisible(false);
+                    }
+                }
+            }
+        }
     }
 
     formInfo.close();
@@ -942,11 +1015,37 @@ void Crit3DMeteoWidget::drawHourlyVar()
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
 
-    foreach(QLegendMarker* marker, chart->legend()->markers())
+    if (!isEnsemble)
     {
-        marker->setVisible(true);
-        marker->series()->setVisible(true);
-        QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        foreach(QLegendMarker* marker, chart->legend()->markers())
+        {
+            marker->setVisible(true);
+            marker->series()->setVisible(true);
+            QObject::connect(marker, &QLegendMarker::clicked, this, &Crit3DMeteoWidget::handleMarkerClicked);
+        }
+    }
+    else
+    {
+        for (int mp=0; mp<nMeteoPoints;mp++)
+        {
+            if (nameBar.size() != 0)
+            {
+                if (mp != 0)
+                {
+                    chart->legend()->markers(barSeries[mp])[0]->setVisible(false);
+                }
+            }
+            for (int i = 0; i < nameLines.size(); i++)
+            {
+                if (mp != 0)
+                {
+                    for (int i = 0; i < nameLines.size(); i++)
+                    {
+                        chart->legend()->markers(lineSeries[mp][i])[0]->setVisible(false);
+                    }
+                }
+            }
+        }
     }
 
     formInfo.close();
@@ -1489,6 +1588,17 @@ void Crit3DMeteoWidget::closeEvent(QCloseEvent *event)
     }
     delete m_tooltip;
     event->accept();
+}
+
+void Crit3DMeteoWidget::setIsEnsemble(bool value)
+{
+    isEnsemble = value;
+    tableButton->setEnabled(!value);
+}
+
+void Crit3DMeteoWidget::setNrMembers(int value)
+{
+    nrMembers = value;
 }
 
 int Crit3DMeteoWidget::getMeteoWidgetID() const

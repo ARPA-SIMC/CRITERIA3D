@@ -10,6 +10,7 @@
     double AirVolumetricSpecificHeat(double myPressure, double myT);
     double SaturationVaporPressure(double myTCelsius);
     double SaturationSlope(double myTCelsius, double mySatVapPressure);
+    double vapourPressureDeficit(double tAir, double relativeHumidity);
     double VaporConcentrationFromPressure(double myPressure, double myT);
     double VaporPressureFromConcentration(double myConcentration, double myT);
     double getAirVaporDeficit(double myT, double myVapor);

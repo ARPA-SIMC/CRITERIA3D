@@ -30,8 +30,8 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include "../mathFunctions/physics.h"
-#include "../mathFunctions/commonConstants.h"
+#include "physics.h"
+#include "commonConstants.h"
 #include "header/types.h"
 #include "header/water.h"
 #include "header/soilPhysics.h"
