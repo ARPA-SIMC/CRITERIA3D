@@ -46,7 +46,6 @@
     float computeDegreeDay(float temp);
     float ascosporesReadyFraction(float degreeDay);
     float ascosporeDischargeRate(float temp, float rain, int leafWetness);
-    float vpd(float temp,float relativeHumidity);
     float infectionRate(float temp, float vapourPressure);
     float latencyProgress(float temp);
     float max_vector(const std::vector<float>& v);

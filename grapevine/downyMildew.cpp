@@ -1,4 +1,5 @@
 #include "downyMildew.h"
+#include "physics.h"
 #include <math.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -228,30 +229,6 @@ void downyMildew(TdownyMildew* downyMildewCore, bool isFirstJanuary){
 //*****************************************************auxiliary functions*******************************************************//
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-/// <summary> Vapour pressure deficit </summary>
-///
-/// <remarks> Author: Laura Costantini, 27/11/2013.
-///
-///		<para> Compute the vapour pressure deficit.</para>
-///
-///	</remarks>
-///
-/// <param name="tair"> Value of tairerature </param>
-/// <param name="relativeHumidity"> Value of relative Humidity </param>
-///
-/// <returns> Vapour pressure deficit.</returns> [hPa]
-///
-////////////////////////////////////////////////////////////////////////////////////////////////////
-float vapourPressureDeficit(float tair, float relativeHumidity)
-{
-    //check relativeHumidity
-    if (relativeHumidity < 1) relativeHumidity = 1.0;
-    if (relativeHumidity > 100) relativeHumidity = 100.0;
-    relativeHumidity /= 100.0;
-
-    return (float)((1.0-relativeHumidity)*6.1375 * exp((17.502*tair)/(240.97+tair)));
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// <summary> Leaf litter moisture </summary>
