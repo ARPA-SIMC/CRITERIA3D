@@ -866,7 +866,7 @@ float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 }
 
 
-bool checkPrecipitationZero(std::vector <Crit3DInterpolationDataPoint> &myPoints, int* nrPrecNotNull, bool* flatPrecipitation)
+bool checkPrecipitationZero(std::vector <Crit3DInterpolationDataPoint> &myPoints, float precThreshold, int* nrPrecNotNull, bool* flatPrecipitation)
 {
     *flatPrecipitation = true;
     *nrPrecNotNull = 0;
@@ -875,7 +875,7 @@ bool checkPrecipitationZero(std::vector <Crit3DInterpolationDataPoint> &myPoints
     for (unsigned int i = 0; i < myPoints.size(); i++)
         if (myPoints[i].isActive)
             if (int(myPoints[i].value) != int(NODATA))
-                if (myPoints[i].value >= float(PREC_THRESHOLD))
+                if (myPoints[i].value >= float(precThreshold))
                 {
                     if (*nrPrecNotNull > 0 && myPoints[i].value != myValue)
                         *flatPrecipitation = false;
@@ -1073,6 +1073,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
                                  int nrMeteoPoints,
                                  std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                  Crit3DInterpolationSettings* mySettings,
+                                 Crit3DMeteoSettings* meteoSettings,
                                  const Crit3DTime &myTime)
 {
     float avgError;
@@ -1083,7 +1084,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
     while (kz <= 256)
     {
         mySettings->setTopoDist_Kz(kz);
-        if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, true, true))
+        if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
         {
             avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime);
             if (bestError == NODATA || avgError < bestError)
@@ -1103,7 +1104,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
     while (kh <= 1000000)
     {
         mySettings->setTopoDist_Kh(kh);
-        if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, true, true))
+        if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
         {
             avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime);
             if (bestError == NODATA || avgError < bestError)
@@ -1123,7 +1124,7 @@ void optimalDetrending(meteoVariable myVar,
                     Crit3DMeteoPoint* &myMeteoPoints,
                     int nrMeteoPoints,
                     std::vector <Crit3DInterpolationDataPoint> &outInterpolationPoints,
-                    Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
+                    Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* myClimate,
                     const Crit3DTime &myTime)
 {
 
@@ -1147,9 +1148,9 @@ void optimalDetrending(meteoVariable myVar,
             mySettings->setCurrentCombination(&myCombination);
 
             if (mySettings->getUseTD() && getUseTdVar(myVar))
-                topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, myTime);
+                topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, myTime);
 
-            if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, true, true))
+            if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
             {
                 avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime);
                 if (! isEqual(avgError, NODATA) && (isEqual(minError, NODATA) || avgError < minError))
@@ -1172,15 +1173,15 @@ void optimalDetrending(meteoVariable myVar,
     return;
 }
 
-bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
-                      Crit3DMeteoPoint* myMeteoPoints, int nrMeteoPoints,
+bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings,
+                      Crit3DClimateParameters* myClimate, Crit3DMeteoPoint* myMeteoPoints, int nrMeteoPoints,
                       meteoVariable myVar, Crit3DTime myTime)
 {
     if (myVar == precipitation || myVar == dailyPrecipitation)
     {
         int nrPrecNotNull;
         bool isFlatPrecipitation;
-        if (checkPrecipitationZero(myPoints, &nrPrecNotNull, &isFlatPrecipitation))
+        if (checkPrecipitationZero(myPoints, meteoSettings->getRainfallThreshold(), &nrPrecNotNull, &isFlatPrecipitation))
         {
             mySettings->setPrecipitationAllZero(true);
             return true;
@@ -1193,7 +1194,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     {
         if (mySettings->getUseBestDetrending())
         {
-            optimalDetrending(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, myClimate, myTime);
+            optimalDetrending(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings, myClimate, myTime);
             mySettings->setCurrentCombination(mySettings->getOptimalCombinationRef());
         }
         else
@@ -1204,13 +1205,13 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     }
 
     if (mySettings->getUseTD() && getUseTdVar(myVar))
-        topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, myTime);
+        topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings, myTime);
 
     return (true);
 }
 
 
-float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings,
                   meteoVariable myVar, float myX, float myY, float myZ, std::vector <float> myProxyValues,
                   bool excludeSupplemental)
 
@@ -1244,7 +1245,7 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
 
     if (myVar == precipitation || myVar == dailyPrecipitation)
     {
-        if (myResult < float(PREC_THRESHOLD))
+        if (myResult < meteoSettings->getRainfallThreshold())
             return 0.;
     }
     else if (myVar == airRelHumidity || myVar == dailyAirRelHumidityAvg
