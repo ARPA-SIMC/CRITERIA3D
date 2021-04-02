@@ -458,7 +458,9 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
     {
         for (unsigned int col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
         {
-            if (_meteoPoints[row][col]->latitude == lat && _meteoPoints[row][col]->longitude == lon)
+            double latitude = _meteoPoints[row][col]->latitude;
+            double longitude = _meteoPoints[row][col]->longitude;
+            if (abs(lat-latitude)<0.5*_gridStructure.header().dy && abs(lon-longitude)<0.5*_gridStructure.header().dx)
             {
                 if (_meteoPoints[row][col]->active)
                 {
