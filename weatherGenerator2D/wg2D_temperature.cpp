@@ -481,9 +481,10 @@ void weatherGenerator2D::computeTemperatureParameters()
         weatherGenerator2D::covarianceOfResiduals(matrixCovarianceLag1,1);
         double ratioLag1 = 0;
         double ratioLag0 = 0;
-        if (matrixCovarianceLag1[1][1] > 0.9)
+        double thresholdLag1 = 0.9;
+        if (matrixCovarianceLag1[1][1] > thresholdLag1)  // the numeric value is thought in order to avoid too extreme values
         {
-            ratioLag1 = 0.9/matrixCovarianceLag1[1][1];
+            ratioLag1 = thresholdLag1/matrixCovarianceLag1[1][1];
             for (int j=0;j<matrixRang;j++)
             {
                 for (int k=0;k<matrixRang;k++)
@@ -492,9 +493,10 @@ void weatherGenerator2D::computeTemperatureParameters()
                 }
             }
         }
-        if (matrixCovarianceLag0[0][1] > 0.8)
+        double thresholdLag0 = 0.8;
+        if (matrixCovarianceLag0[0][1] > thresholdLag0) // the numeric value is thought in order to avoid too extreme values
         {
-            matrixCovarianceLag0[0][1] = matrixCovarianceLag0[1][0] = 0.8;
+            matrixCovarianceLag0[0][1] = matrixCovarianceLag0[1][0] = thresholdLag0;
         }
         /*
         for (int j=0;j<matrixRang;j++)
