@@ -462,17 +462,23 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
     {
         if (_gridStructure.isUTM())
         {
-            double utmEasting;
-            double utmNorthing;
-            gis::latLonToUtmForceZone(_gisSettings.utmZone, lat, lon, &utmEasting, &utmNorthing);
-            latitude = _meteoPoints[row][col]->point.utm.y;
-            longitude = _meteoPoints[row][col]->point.utm.x;
-            diffLat = std::abs(utmNorthing-latitude);
-            diffLon = std::abs(utmEasting-longitude);
-            if ( diffLat<(0.5*dy) && diffLon<(0.5*dx))
+            for (unsigned int row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
             {
-                *id = _meteoPoints[row][col]->id;
-                return true;
+                for (unsigned int col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
+                {
+                    double utmEasting;
+                    double utmNorthing;
+                    gis::latLonToUtmForceZone(_gisSettings.utmZone, lat, lon, &utmEasting, &utmNorthing);
+                    latitude = _meteoPoints[row][col]->point.utm.y;
+                    longitude = _meteoPoints[row][col]->point.utm.x;
+                    diffLat = std::abs(utmNorthing-latitude);
+                    diffLon = std::abs(utmEasting-longitude);
+                    if ( diffLat<(0.5*dy) && diffLon<(0.5*dx))
+                    {
+                        *id = _meteoPoints[row][col]->id;
+                        return true;
+                    }
+                }
             }
         }
         else
