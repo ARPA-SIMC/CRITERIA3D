@@ -74,6 +74,8 @@
     struct TcorrelationMatrixTemperature{
         double** maxT;
         double** minT;
+        double** meanT;
+        double** deltaT;
     };
 
     struct TseasonalCorrelationMatrix{
@@ -126,6 +128,12 @@
         Tvariable minTDry;
         Tvariable maxTWet;
         Tvariable maxTDry;
+
+        Tvariable meanTWet;
+        Tvariable meanTDry;
+        Tvariable deltaTWet;
+        Tvariable deltaTDry;
+
     };
 
     struct TdailyResidual{
@@ -136,6 +144,12 @@
         double maxT;
         double minT;
 
+        double meanTDry;
+        double deltaTDry;
+        double meanTWet;
+        double deltaTWet;
+        double meanT;
+        double deltaT;
     };
 
     struct TmultiOccurrenceTemperature
@@ -222,12 +236,19 @@
         TcorrelationMatrixTemperature correlationMatrixTemperature;
         double** normRandomMaxT;
         double** normRandomMinT;
+        double** normRandomMeanT;
+        double** normRandomDeltaT;
+
         TmultiOccurrenceTemperature* multiOccurrenceTemperature;
         double** maxTGenerated;
         double** minTGenerated;
         double** occurrencePrecGenerated;
         double** amountsPrecGenerated;
 
+        // new variables
+
+        double** meanTGenerated;
+        double** deltaTGenerated;
 
 
         double* normalRandomNumbers;
