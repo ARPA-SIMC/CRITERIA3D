@@ -81,6 +81,7 @@ void Crit1DSimulation::updateSeasonalForecast(Crit3DDate myDate, int* index)
 bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
 {
     myCase.idCase = myUnit.idCase;
+    myCase.isNumericalInfiltration = myUnit.isNumericalInfiltration;
 
     if (! setSoil(myUnit.idSoil, myError))
         return false;
@@ -193,6 +194,7 @@ bool Crit1DSimulation::setSoil(QString soilCode, QString &myError)
         myError = QString::fromStdString(errorString);
         return false;
     }
+
 
     return true;
 }

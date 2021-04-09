@@ -107,6 +107,8 @@ int initializeArrays()
     invariantFlux = (double *) calloc(myStructure.nrNodes, sizeof(double));
     for (n = 0; n < myStructure.nrNodes; n++) invariantFlux[n] = 0.;
 
-    if (A == nullptr) return(MEMORY_ERROR);
-    else return(CRIT3D_OK);
+    if (A == nullptr)
+        return MEMORY_ERROR;
+    else
+        return CRIT3D_OK;
 }

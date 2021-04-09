@@ -31,6 +31,7 @@
 #include "soil.h"
 #include "basicMath.h"
 #include "crop.h"
+#include "soilFluxes3D.h"
 
 
 /*!

@@ -32,6 +32,7 @@
 #include "cropDbTools.h"
 #include "water1D.h"
 #include "criteria1DCase.h"
+#include "soilFluxes3D.h"
 
 
 Crit1DOutput::Crit1DOutput()
@@ -67,11 +68,95 @@ Crit1DCase::Crit1DCase()
 
     minLayerThickness = 0.02;           /*!< [m] default thickness = 2 cm  */
     geometricFactor = 1.2;              /*!< [-] default factor for geometric progression  */
-    isGeometricLayers = false;          // TODO case properties
-    optimizeIrrigation = true;          // TODO case properties
+    isGeometricLayers = false;          // TODO add db units
+    optimizeIrrigation = true;          // TODO add db units
+    isNumericalInfiltration = false;
 
     soilLayers.clear();
 }
+
+
+bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
+{
+    int nrLayers = soilLayers.size();
+
+    int result = soilFluxes3D::initialize(nrLayers, nrLayers, 0, true, false, false);
+    if (result != CRIT3D_OK)
+    {
+        myError = "Error in initialize numerical fluxes";
+        return false;
+    }
+
+    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, 10);
+    soilFluxes3D::setNumericalParameters(1, 3600, 100, 10, 12, 3);
+
+    for (unsigned int horizonIndex = 0; horizonIndex < mySoil.nrHorizons; horizonIndex++)
+    {
+        // unit: MKS
+        soil::Crit3DHorizon horizon = mySoil.horizon[horizonIndex];
+        float soilFraction = (1.0 - horizon.coarseFragments);
+        result = soilFluxes3D::setSoilProperties(0, horizonIndex,
+                            horizon.vanGenuchten.alpha * GRAVITY,
+                            horizon.vanGenuchten.n, horizon.vanGenuchten.m,
+                            horizon.vanGenuchten.he / GRAVITY,
+                            horizon.vanGenuchten.thetaR * soilFraction,
+                            horizon.vanGenuchten.thetaS * soilFraction,
+                            horizon.waterConductivity.kSat / 100.0 / DAY_SECONDS,
+                            horizon.waterConductivity.l,
+                            horizon.organicMatter, horizon.texture.clay / 100.0);
+        if (result != CRIT3D_OK)
+        {
+            myError = "Error in setSoilProperties, horizon nr: " + std::to_string(horizonIndex);
+            return false;
+        }
+    }
+
+    soilFluxes3D::setSurfaceProperties(0, 0.024, 0.005);
+
+    return true;
+}
+/*
+
+    CRIT3DSurface = 100#                 '[m^2] surface
+
+    For i = 0 To nrLayers
+        If i = 0 Then
+            CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, suolo(i).prof, CRIT3DSurface, True, False, CRIT3D.BOUNDARY_NONE, 0#)
+            CRIT3DResult = Criteria3D.SetNodeSurface(i, 0)
+            CRIT3DResult = Criteria3D.SetNodeLink(i, i + 1, CRIT3D.DOWN, CRIT3DSurface)
+        Else
+            myProf = -(suolo(i).prof + ComputingThickness / 2#) / 100#          '[m]
+            myVolume = CRIT3DSurface * (ComputingThickness / 100#)              '[m3]
+            If i = 1 And computeHeat Then
+                CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, myProf, myVolume, False, True, CRIT3D.BOUNDARY_HEAT, 0#)
+                CRIT3DResult = Criteria3D.SetNodeLink(i, i + 1, CRIT3D.DOWN, CRIT3DSurface)
+            ElseIf i = nrLayers Then
+                If (FlagWaterTable = 1 And FlagWaterTableCase = 1) Then
+                    CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, myProf, myVolume, False, True, CRIT3D.BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, 0#)
+                Else
+                    CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, myProf, myVolume, False, True, CRIT3D.BOUNDARY_FREEDRAINAGE, 0)
+                End If
+                If computeHeat Then CRIT3DResult = Criteria3D.setFixedTemperature(i, Heat.BottomTemperature + ZERO_CELSIUS, Heat.BottomTemperatureDepth)
+            Else
+                CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, myProf, myVolume, False, False, CRIT3D.BOUNDARY_NONE, 0)
+                CRIT3DResult = Criteria3D.SetNodeLink(i, i + 1, CRIT3D.DOWN, CRIT3DSurface)
+            End If
+
+            CRIT3DResult = Criteria3D.SetNodeSoil(i, 0, suolo(i).Orizzonte)
+            CRIT3DResult = Criteria3D.SetNodeLink(i, i - 1, CRIT3D.UP, CRIT3DSurface)
+        End If
+        If CRIT3DResult <> CRIT3D.OK Or Err.Number <> 0 Then
+            MsgBox ("SetNode")
+            Exit Function
+        End If
+    Next i
+
+
+    initializeCriteria3D = True
+
+End Function
+*/
+
 
 
 bool Crit1DCase::initializeSoil(std::string &myError)
@@ -83,6 +168,12 @@ bool Crit1DCase::initializeSoil(std::string &myError)
 
     if (! mySoil.setSoilLayers(minLayerThickness, factor, soilLayers, myError))
         return false;
+
+    if (isNumericalInfiltration)
+    {
+        if (! initializeNumericalFluxes(myError))
+            return false;
+    }
 
     initializeWater(soilLayers);
 

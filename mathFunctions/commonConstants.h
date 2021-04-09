@@ -91,8 +91,8 @@
 
     #define RELAXATION 1
 
-    #define MAX_SOILS 1024
-    #define MAX_SURFACES 1024
+    #define MAX_SOILS 256
+    #define MAX_SURFACES 256
     #define MAX_HORIZONS 20
 
     // --------------- heat model -----------------

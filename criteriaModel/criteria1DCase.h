@@ -54,8 +54,10 @@
         std::vector<soil::Crit3DLayer> soilLayers;
 
         double minLayerThickness;       // [m]
-        bool isGeometricLayers;
         double geometricFactor;         // [-]
+
+        bool isGeometricLayers;
+        bool isNumericalInfiltration;
 
         // CROP
         Crit3DCrop myCrop;
@@ -74,6 +76,9 @@
         double getWaterContent(double depth);
         double getWaterPotential(double depth);
         double getSoilWaterDeficit(double depth);
+
+    private:
+        bool initializeNumericalFluxes(std::string &myError);
 
     };
 
