@@ -50,7 +50,7 @@ void Logger::writeInfo(const QString &value)
     if (logFileName != "")
     {
         QTextStream out(file);
-        out.setCodec("UTF-8");
+        //out.setCodec("UTF-8");
         out << text + "\n";
     }
     std::cout << text.toStdString() << std::endl;
@@ -68,7 +68,7 @@ void Logger::writeError(const QString &value)
     if (logFileName != "")
     {
         QTextStream out(file);
-        out.setCodec("UTF-8");
+        //out.setCodec("UTF-8");
         out << text + "\n";
     }
     std::cout << text.toStdString() << std::endl;

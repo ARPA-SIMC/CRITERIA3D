@@ -36,7 +36,7 @@
         #include "interpolationPoint.h"
     #endif
 
-    bool preInterpolation(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters* myClimate,
+    bool preInterpolation(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters* myClimate,
                           Crit3DMeteoPoint *myMeteoPoints, int nrMeteoPoints, meteoVariable myVar, Crit3DTime myTime);
 
     bool krigingEstimateVariogram(float *myDist, float *mySemiVar,int sizeMyVar, int nrMyPoints,float myMaxDistance, double *mySill, double *myNugget, double *myRange, double *mySlope, TkrigingMode *myMode, int nrPointData);
@@ -47,7 +47,7 @@
     bool neighbourhoodVariability(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints, Crit3DInterpolationSettings *mySettings, float x, float y, float z, int nMax,
                                   float* devSt, float* devStDeltaZ, float* minDistance);
 
-    float interpolate(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, meteoVariable myVar, float myX, float myY, float myZ, std::vector<float> myProxyValues, bool excludeSupplemental);
+    float interpolate(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, meteoVariable myVar, float myX, float myY, float myZ, std::vector<float> myProxyValues, bool excludeSupplemental);
     void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<float> &myValues);
     bool getUseDetrendingVar(meteoVariable myVar);
     bool getUseTdVar(meteoVariable myVar);

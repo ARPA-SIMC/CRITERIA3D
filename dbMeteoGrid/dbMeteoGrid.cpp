@@ -1982,6 +1982,48 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataEnsemble(QString *myError, Q
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::saveListDailyDataEnsemble(QString *myError, QString meteoPointID, QDate date, meteoVariable meteoVar, QList<float> values)
+{
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
+    int varCode = getDailyVarCode(meteoVar);
+
+    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), MemberNr int(11), PRIMARY KEY(%2,VariableCode,MemberNr))").arg(tableD).arg(_tableDaily.fieldTime);
+
+    qry.exec(statement);
+    statement = QString("DELETE FROM `%1` WHERE %2 = DATE('%3') AND VariableCode = '%4'")
+                            .arg(tableD).arg(_tableDaily.fieldTime).arg(date.toString("yyyy-MM-dd")).arg(varCode);
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        statement =  QString(("INSERT INTO `%1` (%2, VariableCode, Value, MemberNr) VALUES ")).arg(tableD).arg(_tableDaily.fieldTime);
+        for (int i = 0; i<values.size(); i++)
+        {
+            float value = values[i];
+            QString valueS = QString("'%1'").arg(value);
+            if (isEqual(value, NODATA)) valueS = "NULL";
+            int memberNr = values.size() - i;  // reverse order
+
+            statement += QString(" ('%1','%2',%3,'%4'),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueS).arg(memberNr);
+        }
+
+        statement = statement.left(statement.length() - 1);
+
+        if( !qry.exec(statement) )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataFF(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate)
 {
     QSqlQuery qry(_db);

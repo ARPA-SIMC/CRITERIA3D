@@ -29,6 +29,7 @@
 
     QStringList getFields(QSqlDatabase* db_, QString tableName);
 
+    bool getValue(QVariant myRs);
     bool getValue(QVariant myRs, int* myValue);
     bool getValue(QVariant myRs, float* myValue);
     bool getValue(QVariant myRs, double* myValue);

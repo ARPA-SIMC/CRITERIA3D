@@ -56,8 +56,6 @@ void Crit1DOutput::initialize()
     this->dailyAvailableWater = NODATA;
     this->dailyFractionAW = NODATA;
     this->dailyReadilyAW = NODATA;
-    this->dailyWaterDeficit = NODATA;
-    this->dailyWaterDeficit_25 = NODATA;
     this->dailyCapillaryRise = NODATA;
     this->dailyWaterTable = NODATA;
 }
@@ -214,8 +212,6 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
     // output variables
     myOutput.dailySurfaceWaterContent = soilLayers[0].waterContent;
     myOutput.dailySoilWaterContent = getSoilWaterContent(soilLayers, 1.0);
-    myOutput.dailyWaterDeficit = getSoilWaterDeficit(soilLayers, 1.0);
-    myOutput.dailyWaterDeficit_25 = getSoilWaterDeficit(soilLayers, 0.25);
     myOutput.dailyAvailableWater = getSoilAvailableWater(soilLayers, 1.0);
     myOutput.dailyFractionAW = getSoilFractionAW(soilLayers, 1.0);
     myOutput.dailyReadilyAW = getReadilyAvailableWater(myCrop, soilLayers);
@@ -226,7 +222,7 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
 
 /*!
  * \brief get volumetric water content at specific depth
- * \param depth [cm]
+ * \param depth = computation soil depth  [cm]
  * \return volumetric water content [-]
  */
 double Crit1DCase::getWaterContent(double depth)
@@ -252,7 +248,7 @@ double Crit1DCase::getWaterContent(double depth)
 
 /*!
  * \brief get water potential at specific depth
- * \param depth [cm]
+ * \param depth = computation soil depth  [cm]
  * \return water potential [kPa]
  */
 double Crit1DCase::getWaterPotential(double depth)
@@ -273,6 +269,39 @@ double Crit1DCase::getWaterPotential(double depth)
     }
 
     return NODATA;
+}
+
+
+/*!
+ * \brief getSoilWaterDeficit
+ * \param depth = computation soil depth  [cm]
+ * \return sum of water deficit from zero to depth (mm)
+ */
+double Crit1DCase::getSoilWaterDeficit(double depth)
+{
+    depth /= 100;                           // [cm] --> [m]
+    double lowerDepth, upperDepth;          // [m]
+    double waterDeficitSum = 0;             // [mm]
+
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    {
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+
+        if (lowerDepth < depth)
+        {
+            waterDeficitSum += soilLayers[i].FC - soilLayers[i].waterContent;
+        }
+        else
+        {
+            // fraction of last layer
+            upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+            double layerDeficit = soilLayers[i].FC - soilLayers[i].waterContent;
+            double depthFraction = (depth - upperDepth) / soilLayers[i].thickness;
+            return waterDeficitSum + layerDeficit * depthFraction;
+        }
+    }
+
+    return waterDeficitSum;
 }
 
 

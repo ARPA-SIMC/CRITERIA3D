@@ -140,7 +140,7 @@ namespace canopy {
         drainage = drainageFromTree(grossStorage,actualStorage);
 
         // TODO check: not used
-        double stemFlow = (drainage)*stemFlowRate(maxStemFlowRate);
+        // double stemFlow = (drainage)*stemFlowRate(maxStemFlowRate);
 
         *soilWater = freeRainfall + drainage;
         *storedWater = grossStorage - (drainage);

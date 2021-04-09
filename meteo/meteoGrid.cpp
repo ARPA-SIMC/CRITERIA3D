@@ -451,6 +451,62 @@ bool Crit3DMeteoGrid::getLatFromId(std::string id, double* lat)
     return false;
 }
 
+bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
+{
+
+    double dx = _gridStructure.header().dx;
+    double dy = _gridStructure.header().dy;
+    double latitude, longitude;
+    double diffLat, diffLon;
+    if (_gridStructure.isRegular())
+    {
+        if (_gridStructure.isUTM())
+        {
+            for (unsigned int row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
+            {
+                for (unsigned int col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
+                {
+                    double utmEasting;
+                    double utmNorthing;
+                    gis::latLonToUtmForceZone(_gisSettings.utmZone, lat, lon, &utmEasting, &utmNorthing);
+                    latitude = _meteoPoints[row][col]->point.utm.y;
+                    longitude = _meteoPoints[row][col]->point.utm.x;
+                    diffLat = std::abs(utmNorthing-latitude);
+                    diffLon = std::abs(utmEasting-longitude);
+                    if ( diffLat<(0.5*dy) && diffLon<(0.5*dx))
+                    {
+                        *id = _meteoPoints[row][col]->id;
+                        return true;
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (unsigned int row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
+            {
+                for (unsigned int col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
+                {
+                    latitude = _meteoPoints[row][col]->latitude;
+                    longitude = _meteoPoints[row][col]->longitude;
+                    diffLat = std::abs(lat-latitude);
+                    diffLon = std::abs(lon-longitude);
+                    if ( diffLat<(0.5*dy) && diffLon<(0.5*dx))
+                    {
+                        *id = _meteoPoints[row][col]->id;
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        // TO DO
+    }
+    return false;
+}
+
 bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string* id)
 {
     if (row < _gridStructure.header().nrRows && col < _gridStructure.header().nrCols)
@@ -468,11 +524,11 @@ bool Crit3DMeteoGrid::getMeteoPointActiveId(int row, int col, std::string* id)
 bool Crit3DMeteoGrid::isActiveMeteoPointFromId(const std::string& id)
 {
 
-    for (int i = 0; i < _gridStructure.header().nrRows; i++)
+    for (int row = 0; row < _gridStructure.header().nrRows; row++)
     {
-        for (int j = 0; j < _gridStructure.header().nrCols; j++)
+        for (int col = 0; col < _gridStructure.header().nrCols; col++)
         {
-            if (_meteoPoints[i][j]->id == id)
+            if (_meteoPoints[row][col]->active && _meteoPoints[row][col]->id == id)
             {
                 return true;
             }

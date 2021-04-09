@@ -1,5 +1,6 @@
 #include "computationUnitsDb.h"
 #include "commonConstants.h"
+#include "utilities.h"
 
 #include <QtSql>
 
@@ -16,7 +17,7 @@ Crit1DUnit::Crit1DUnit()
     this->idMeteo = "";
     this->idForecast = "";
 
-    this->isNumeric = false;
+    this->isNumericalInfiltration = false;
 }
 
 
@@ -86,7 +87,7 @@ bool ComputationUnitsDB::writeListToUnitsTable(QStringList idCase, QStringList i
 // load computation units list
 bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString &error)
 {
-    QString queryString = "SELECT DISTINCT ID_CASE, ID_CROP, ID_SOIL, ID_METEO FROM units";
+    QString queryString = "SELECT * FROM units";
     queryString += " ORDER BY ID_CROP, ID_SOIL, ID_METEO";
 
     QSqlQuery query = db.exec(queryString);
@@ -115,6 +116,7 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
         unitList[i].idMeteo = query.value("ID_METEO").toString();
         unitList[i].idForecast = query.value("ID_METEO").toString();
         unitList[i].idSoilNumber = query.value("ID_SOIL").toInt();
+        unitList[i].isNumericalInfiltration = getValue(query.value("numerical_infiltration"));
         i++;
     }
     while(query.next());
