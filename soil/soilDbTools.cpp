@@ -277,8 +277,6 @@ bool loadSoil(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySoil,
         return false;
     }
 
-    // TODO check nr horizons and depth
-
     std::string errorString;
     *error = "";
     for (unsigned int i = 0; i < mySoil->nrHorizons; i++)

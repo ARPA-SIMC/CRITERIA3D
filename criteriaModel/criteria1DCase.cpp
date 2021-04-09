@@ -67,8 +67,8 @@ Crit1DCase::Crit1DCase()
 
     minLayerThickness = 0.02;           /*!< [m] default thickness = 2 cm  */
     geometricFactor = 1.2;              /*!< [-] default factor for geometric progression  */
-    isGeometricLayers = false;
-    optimizeIrrigation = true;
+    isGeometricLayers = false;          // TODO case properties
+    optimizeIrrigation = true;          // TODO case properties
 
     soilLayers.clear();
 }
