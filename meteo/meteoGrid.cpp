@@ -528,7 +528,7 @@ bool Crit3DMeteoGrid::isActiveMeteoPointFromId(const std::string& id)
     {
         for (int j = 0; j < _gridStructure.header().nrCols; j++)
         {
-            if (_meteoPoints[i][j]->id == id)
+            if (_meteoPoints[row][col]->active && _meteoPoints[i][j]->id == id)
             {
                 return true;
             }
