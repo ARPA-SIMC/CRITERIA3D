@@ -458,28 +458,45 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
     double dy = _gridStructure.header().dy;
     double latitude, longitude;
     double diffLat, diffLon;
-    for (unsigned int row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
+    if (_gridStructure.isRegular())
     {
-        for (unsigned int col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
+        if (_gridStructure.isUTM())
         {
-            latitude = _meteoPoints[row][col]->latitude;
-            longitude = _meteoPoints[row][col]->longitude;
-            diffLat = std::abs(lat-latitude);
-            diffLon = std::abs(lon-longitude);
+            double utmEasting;
+            double utmNorthing;
+            gis::latLonToUtmForceZone(_gisSettings.utmZone, lat, lon, &utmEasting, &utmNorthing);
+            latitude = _meteoPoints[row][col]->point.utm.y;
+            longitude = _meteoPoints[row][col]->point.utm.x;
+            diffLat = std::abs(utmNorthing-latitude);
+            diffLon = std::abs(utmEasting-longitude);
             if ( diffLat<(0.5*dy) && diffLon<(0.5*dx))
             {
-                if (_meteoPoints[row][col]->active)
+                *id = _meteoPoints[row][col]->id;
+                return true;
+            }
+        }
+        else
+        {
+            for (unsigned int row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
+            {
+                for (unsigned int col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
                 {
-                    *id = _meteoPoints[row][col]->id;
-                    return true;
-                }
-                else
-                {
-                    *id = "-9999";
-                    return true;
+                    latitude = _meteoPoints[row][col]->latitude;
+                    longitude = _meteoPoints[row][col]->longitude;
+                    diffLat = std::abs(lat-latitude);
+                    diffLon = std::abs(lon-longitude);
+                    if ( diffLat<(0.5*dy) && diffLon<(0.5*dx))
+                    {
+                        *id = _meteoPoints[row][col]->id;
+                        return true;
+                    }
                 }
             }
         }
+    }
+    else
+    {
+        // TO DO
     }
     return false;
 }
