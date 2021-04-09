@@ -36,8 +36,6 @@
         double dailyAvailableWater;
         double dailyFractionAW;
         double dailyReadilyAW;
-        double dailyWaterDeficit;
-        double dailyWaterDeficit_25;
         double dailyWaterTable;
         double dailyCapillaryRise;
 
@@ -75,6 +73,7 @@
         bool computeDailyModel(Crit3DDate myDate, std::string &myError);
         double getWaterContent(double depth);
         double getWaterPotential(double depth);
+        double getSoilWaterDeficit(double depth);
 
     };
 

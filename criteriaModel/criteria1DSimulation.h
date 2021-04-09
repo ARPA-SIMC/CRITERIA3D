@@ -56,6 +56,7 @@ class Crit1DSimulation
         int daysOfForecast;
 
         // specific output
+        std::vector<int> waterDeficitDepth;
         std::vector<int> waterContentDepth;
         std::vector<int> waterPotentialDepth;
 
