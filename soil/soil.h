@@ -47,9 +47,9 @@
         class Crit3DTexture
         {
         public:
-            double sand;
-            double silt;
-            double clay;
+            double sand;                        /*!<   [%]         */
+            double silt;                        /*!<   [%]         */
+            double clay;                        /*!<   [%]         */
             int classUSDA;
             int classNL;
             std::string classNameUSDA;
@@ -144,7 +144,7 @@
         public:
             double depth;               /*!<   [m] */
             double thickness;           /*!<   [m] */
-            double soilFraction;        /*!<   [-]fraction of soil (1 - coarse fragment fraction) */
+            double soilFraction;        /*!<   [-] fraction of soil (1 - coarse fragment fraction) */
             double waterContent;        /*!<   [mm] */
             double SAT;                 /*!<   [mm] water content at saturation  */
             double FC;                  /*!<   [mm] water content at field capacity */

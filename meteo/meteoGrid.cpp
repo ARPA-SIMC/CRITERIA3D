@@ -27,6 +27,7 @@
 #include "basicMath.h"
 #include "meteoGrid.h"
 #include "statistics.h"
+#include "math.h"
 
 
 Crit3DMeteoGridStructure::Crit3DMeteoGridStructure()
@@ -471,8 +472,8 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
                     gis::latLonToUtmForceZone(_gisSettings.utmZone, lat, lon, &utmEasting, &utmNorthing);
                     latitude = _meteoPoints[row][col]->point.utm.y;
                     longitude = _meteoPoints[row][col]->point.utm.x;
-                    diffLat = std::abs(utmNorthing-latitude);
-                    diffLon = std::abs(utmEasting-longitude);
+                    diffLat = fabs(utmNorthing-latitude);
+                    diffLon = fabs(utmEasting-longitude);
                     if ( diffLat<(0.5*dy) && diffLon<(0.5*dx))
                     {
                         *id = _meteoPoints[row][col]->id;
@@ -489,8 +490,8 @@ bool Crit3DMeteoGrid::getIdFromLatLon(double lat, double lon, std::string* id)
                 {
                     latitude = _meteoPoints[row][col]->latitude;
                     longitude = _meteoPoints[row][col]->longitude;
-                    diffLat = std::abs(lat-latitude);
-                    diffLon = std::abs(lon-longitude);
+                    diffLat = fabs(lat-latitude);
+                    diffLon = fabs(lon-longitude);
                     if ( diffLat<(0.5*dy) && diffLon<(0.5*dx))
                     {
                         *id = _meteoPoints[row][col]->id;

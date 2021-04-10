@@ -36,8 +36,6 @@
         double dailyAvailableWater;
         double dailyFractionAW;
         double dailyReadilyAW;
-        double dailyWaterDeficit;
-        double dailyWaterDeficit_25;
         double dailyWaterTable;
         double dailyCapillaryRise;
 
@@ -56,8 +54,10 @@
         std::vector<soil::Crit3DLayer> soilLayers;
 
         double minLayerThickness;       // [m]
-        bool isGeometricLayers;
         double geometricFactor;         // [-]
+
+        bool isGeometricLayers;
+        bool isNumericalInfiltration;
 
         // CROP
         Crit3DCrop myCrop;
@@ -75,6 +75,10 @@
         bool computeDailyModel(Crit3DDate myDate, std::string &myError);
         double getWaterContent(double depth);
         double getWaterPotential(double depth);
+        double getSoilWaterDeficit(double depth);
+
+    private:
+        bool initializeNumericalFluxes(std::string &myError);
 
     };
 

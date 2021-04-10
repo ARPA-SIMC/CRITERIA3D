@@ -31,6 +31,7 @@
 #include "soil.h"
 #include "basicMath.h"
 #include "crop.h"
+#include "soilFluxes3D.h"
 
 
 /*!
@@ -569,38 +570,6 @@ double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, dou
     return waterContentSum;
 }
 
-
-/*!
- * \brief getSoilWaterDeficit
- * \param soilLayers
- * \param computationSoilDepth = computation depth  [m]
- * \return sum of water deficit from zero to computationSoilDepth (mm)
- */
-double getSoilWaterDeficit(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
-{
-    double lowerDepth, upperDepth;          // [m]
-    double waterDeficitSum = 0;             // [mm]
-
-    for (unsigned int i = 1; i < soilLayers.size(); i++)
-    {
-        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
-
-        if (lowerDepth < computationSoilDepth)
-        {
-            waterDeficitSum += soilLayers[i].FC - soilLayers[i].waterContent;
-        }
-        else
-        {
-            // fraction of last layer
-            upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
-            double layerDeficit = soilLayers[i].FC - soilLayers[i].waterContent;
-            double depthFraction = (computationSoilDepth - upperDepth) / soilLayers[i].thickness;
-            return waterDeficitSum + layerDeficit * depthFraction;
-        }
-    }
-
-    return waterDeficitSum;
-}
 
 
 /*!

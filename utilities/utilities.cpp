@@ -20,6 +20,22 @@ QStringList getFields(QSqlDatabase* db_, QString tableName)
     return fieldList;
 }
 
+// return boolean (false if recordset is not valid)
+bool getValue(QVariant myRs)
+{
+    if (! myRs.isValid() || myRs.isNull())
+    {
+        return false;
+    }
+    else
+    {
+        if (myRs == "" || myRs == "NULL")
+            return false;
+        else
+            return myRs.toBool();
+    }
+}
+
 bool getValue(QVariant myRs, int* myValue)
 {
     if (! myRs.isValid() || myRs.isNull())

@@ -474,7 +474,7 @@ float computeThomIndex(float temp, float relHum)
         float zTwb = zT;
         float zTwbPrec = -999.f;
 
-        while (abs(zTwb - zTwbPrec) > 0.1f)
+        while (fabs(zTwb - zTwbPrec) > 0.1f)
         {
             zTwbPrec = zTwb;
             float zT1 = (zT + zTwb) / 2;

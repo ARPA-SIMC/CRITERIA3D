@@ -62,27 +62,28 @@ static Tsoil Surface_List[MAX_SURFACES];
 
 namespace soilFluxes3D {
 
-	int DLL_EXPORT __STDCALL test()
-	{
-        return(CRIT3D_OK);
-	}
+int DLL_EXPORT __STDCALL test()
+{
+    return(CRIT3D_OK);
+}
 
-	void DLL_EXPORT __STDCALL cleanMemory()
-	{
-        cleanNodes();
-        cleanArrays();
-        //clean balance
-	}
+void DLL_EXPORT __STDCALL cleanMemory()
+{
+    cleanNodes();
+    cleanArrays();
+    // TODO clean balance
+}
 
-    void DLL_EXPORT __STDCALL initializeHeat(short myType, bool computeAdvectiveHeat, bool computeLatentHeat)
+void DLL_EXPORT __STDCALL initializeHeat(short myType, bool computeAdvectiveHeat, bool computeLatentHeat)
 {
     myStructure.saveHeatFluxesType = myType;
     myStructure.computeHeatAdvection = computeAdvectiveHeat;
     myStructure.computeHeatVapor = computeLatentHeat;
 }
 
-    int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLinks,
-                                        bool computeWater_, bool computeHeat_, bool computeSolutes_)
+
+int DLL_EXPORT __STDCALL initialize(long nrNodes, int nrLayers, int nrLateralLinks,
+                                    bool computeWater_, bool computeHeat_, bool computeSolutes_)
 {
     /*! clean the old data structures */
     cleanMemory();
@@ -126,103 +127,97 @@ namespace soilFluxes3D {
 
     /*! build the matrix */
     if (myNode == nullptr)
-        {return(MEMORY_ERROR);}
+        return MEMORY_ERROR;
     else
-		{return(initializeArrays());}
+        return initializeArrays();
  }
 
 
-	int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT, int maxIterationNumber,
+/*!
+   \brief Set numerical solution parameters
+*/
+int DLL_EXPORT __STDCALL setNumericalParameters(float minDeltaT, float maxDeltaT, int maxIterationNumber,
                         int maxApproximationsNumber, int ResidualTolerance, float MBRThreshold)
- {
-     /*!
-        \brief Set numerical solution parameters
-     */
+{
+    if (minDeltaT < 0.1f) minDeltaT = 0.1f;
+    if (minDeltaT > 3600) minDeltaT = 3600;
+    myParameters.delta_t_min = double(minDeltaT);
 
-        if (minDeltaT < 0.1f) minDeltaT = 0.1f;
-        if (minDeltaT > 3600) minDeltaT = 3600;
-        myParameters.delta_t_min = double(minDeltaT);
+    if (maxDeltaT < 60) maxDeltaT = 60;
+    if (maxDeltaT > 3600) maxDeltaT = 3600;
+    if (maxDeltaT < minDeltaT) maxDeltaT = minDeltaT;
+    myParameters.delta_t_max = double(maxDeltaT);
 
-        if (maxDeltaT < 60) maxDeltaT = 60;
-        if (maxDeltaT > 3600) maxDeltaT = 3600;
-        if (maxDeltaT < minDeltaT) maxDeltaT = minDeltaT;
-        myParameters.delta_t_max = double(maxDeltaT);
+    myParameters.current_delta_t = myParameters.delta_t_max;
 
-        myParameters.current_delta_t = myParameters.delta_t_max;
+    if (maxIterationNumber < 10) maxIterationNumber = 10;
+    if (maxIterationNumber > MAX_NUMBER_ITERATIONS) maxIterationNumber = MAX_NUMBER_ITERATIONS;
+    myParameters.iterazioni_max = maxIterationNumber;
 
-        if (maxIterationNumber < 10) maxIterationNumber = 10;
-        if (maxIterationNumber > MAX_NUMBER_ITERATIONS) maxIterationNumber = MAX_NUMBER_ITERATIONS;
-        myParameters.iterazioni_max = maxIterationNumber;
+    if (maxApproximationsNumber < 1) maxApproximationsNumber = 1;
 
-        if (maxApproximationsNumber < 1) maxApproximationsNumber = 1;
+    if (maxApproximationsNumber > MAX_NUMBER_APPROXIMATIONS)
+            maxApproximationsNumber = MAX_NUMBER_APPROXIMATIONS;
 
-		if (maxApproximationsNumber > MAX_NUMBER_APPROXIMATIONS)
-				maxApproximationsNumber = MAX_NUMBER_APPROXIMATIONS;
+    myParameters.maxApproximationsNumber = maxApproximationsNumber;
 
-        myParameters.maxApproximationsNumber = maxApproximationsNumber;
+    if (ResidualTolerance < 4) ResidualTolerance = 4;
+    if (ResidualTolerance > 16) ResidualTolerance = 16;
+    myParameters.ResidualTolerance = pow(double(10.), -ResidualTolerance);
 
-        if (ResidualTolerance < 4) ResidualTolerance = 4;
-        if (ResidualTolerance > 16) ResidualTolerance = 16;
-        myParameters.ResidualTolerance = pow(double(10.), -ResidualTolerance);
+    if (MBRThreshold < 1) MBRThreshold = 1;
+    if (MBRThreshold > 6) MBRThreshold = 6;
+    myParameters.MBRThreshold = pow(double(10.), double(-MBRThreshold));
 
-        if (MBRThreshold < 1) MBRThreshold = 1;
-        if (MBRThreshold > 6) MBRThreshold = 6;
-        myParameters.MBRThreshold = pow(double(10.), double(-MBRThreshold));
-
-        return(CRIT3D_OK);
- }
+    return CRIT3D_OK;
+}
 
 
-    /*!
-     * \brief Set hydraulic properties
-     *  default values:
-     *  waterRetentionCurve = MODIFIED_VANGENUCHTEN
-     *  meanType = MEAN_LOG
-     *  k_lateral_vertical_ratio = 10
-     * \param waterRetentionCurve
-     * \param conductivityMeanType
-     * \param horizVertRatioConductivity
-     * \return OK/ERROR
-     */
-
-	int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
+/*!
+ * \brief Set hydraulic properties
+ *  default values:
+ *  waterRetentionCurve = MODIFIED_VANGENUCHTEN
+ *  meanType = MEAN_LOGARITHMIC
+ *  k_lateral_vertical_ratio = 10
+ * \param waterRetentionCurve
+ * \param conductivityMeanType
+ * \param horizVertRatioConductivity
+ * \return OK or PARAMETER_ERROR
+ */
+int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
                         int conductivityMeanType, float horizVertRatioConductivity)
- {
-
-	myParameters.waterRetentionCurve = waterRetentionCurve;
-
+{
+    myParameters.waterRetentionCurve = waterRetentionCurve;
     myParameters.meanType = conductivityMeanType;
 
-	if  ((horizVertRatioConductivity >= 1) && (horizVertRatioConductivity <= 100))
+    if  ((horizVertRatioConductivity >= 1) && (horizVertRatioConductivity <= 100))
     {
         myParameters.k_lateral_vertical_ratio = horizVertRatioConductivity;
-        return(CRIT3D_OK);
+        return CRIT3D_OK;
     }
-	else
-	{
-	    myParameters.k_lateral_vertical_ratio = 10.;
-	    return(PARAMETER_ERROR);
-	}
- }
+    else
+    {
+        myParameters.k_lateral_vertical_ratio = 10.;
+        return PARAMETER_ERROR;
+    }
+}
 
-    /*!
-     * \brief Set node position and properties
-     * \param myIndex
-     * \param x
-     * \param y
-     * \param z
-     * \param volume_or_area
-     * \param isSurface
-     * \param isBoundary
-     * \param boundaryType
-     * \param slope
-     * \return
-     */
-	int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, float z, double volume_or_area, bool isSurface,
+/*!
+ * \brief Set node position and properties
+ * \param myIndex
+ * \param x
+ * \param y
+ * \param z
+ * \param volume_or_area
+ * \param isSurface
+ * \param isBoundary
+ * \param boundaryType
+ * \param slope
+ * \return
+ */
+ int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, float z, double volume_or_area, bool isSurface,
                         bool isBoundary, int boundaryType, float slope)
  {
-
-
     if (myNode == nullptr) return(MEMORY_ERROR);
     if ((myIndex < 0) || (myIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
 
@@ -247,7 +242,7 @@ namespace soilFluxes3D {
 
     myNode[myIndex].waterSinkSource = 0.;
 
-    return(CRIT3D_OK);
+    return CRIT3D_OK;
  }
 
 
