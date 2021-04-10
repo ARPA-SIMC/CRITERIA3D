@@ -250,10 +250,10 @@ void updateBoundaryWater(double deltaT)
                 Hs = MAXVALUE(avgH - (myNode[i].z + myNode[i].Soil->Pond), 0.0);
                 if (Hs > EPSILON_mm)
                 {
-                    area = myNode[i].volume_area;       //  [m^2] (surface)
-                    boundarySide = sqrt(area);          //  [m] approximation: side = sqrt(area)
-                    maxFlow = (Hs * area) / deltaT;     //  [m^3 s^-1] max available flow in time step
-                    boundaryArea = boundarySide * Hs;   //  [m^2]
+                    area = myNode[i].volume_area;       /*!<  [m^2] (surface area)  */
+                    boundarySide = sqrt(area);          /*!<  [m] approximation: side = sqrt(area)  */
+                    maxFlow = (Hs * area) / deltaT;     /*!<  [m^3 s^-1] max available flow in time step  */
+                    boundaryArea = boundarySide * Hs;   /*!<  [m^2]  */
                     // [m^3 s^-1] Manning
                     flow = boundaryArea *(pow(Hs, (2./3.)) / myNode[i].Soil->Roughness) * sqrt(myNode[i].boundary->slope);
                     myNode[i].boundary->waterFlow = -MINVALUE(flow, maxFlow);
@@ -270,9 +270,9 @@ void updateBoundaryWater(double deltaT)
             else if (myNode[i].boundary->type == BOUNDARY_FREELATERALDRAINAGE)
             {
                 // TODO approximation: boundary area equal to other lateral link
-				area = myNode[i].lateral[0].area;
+                boundaryArea = myNode[i].lateral[0].area;
                 // [m^3 s^-1] Darcy,  gradient = slope (dH=dz)
-                myNode[i].boundary->waterFlow = -myNode[i].k * area * myNode[i].boundary->slope
+                myNode[i].boundary->waterFlow = -myNode[i].k * boundaryArea * myNode[i].boundary->slope
                                             * myParameters.k_lateral_vertical_ratio;
             }
 
@@ -287,12 +287,12 @@ void updateBoundaryWater(double deltaT)
                     boundaryK = computeWaterConductivity(boundarySe, myNode[i].Soil);
                 }
                 meanK = computeMean(myNode[i].k, boundaryK);
-                myNode[i].boundary->waterFlow = meanK * (myNode[i].boundary->prescribedTotalPotential - myNode[i].H) * myNode[i].up.area;
+                boundaryArea = myNode[i].up.area;
+                myNode[i].boundary->waterFlow = meanK * (myNode[i].boundary->prescribedTotalPotential - myNode[i].H) * boundaryArea;
             }
 
             else if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)
             {
-
                 if (myStructure.computeHeat && myStructure.computeHeatVapor)
                 {
                     long upIndex;

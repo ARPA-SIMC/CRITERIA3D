@@ -83,6 +83,9 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
     myCase.idCase = myUnit.idCase;
     myCase.isNumericalInfiltration = myUnit.isNumericalInfiltration;
 
+    if (! loadCropParameters(&dbCrop, myUnit.idCrop, &(myCase.myCrop), &myError))
+        return false;
+
     if (! setSoil(myUnit.idSoil, myError))
         return false;
 
@@ -103,9 +106,6 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
         myError = "Missing meteo data.";
         return false;
     }
-
-    if (! loadCropParameters(&dbCrop, myUnit.idCrop, &(myCase.myCrop), &myError))
-        return false;
 
     if (! isSeasonalForecast)
     {
