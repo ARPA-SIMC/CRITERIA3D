@@ -1,12 +1,7 @@
-### updates
-CRITERIA-1D distribution has been moved to https://github.com/ARPA-SIMC/CRITERIA1D
-
-WG1D and WG2D have been moved to https://github.com/ARPA-SIMC/WeatherGenerator
-
 # CRITERIA-3D
 CRITERIA-3D is a three-dimensional water balance for small catchments.
 
-It includes a numerical solution for three-dimensional water and heat flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake. It needs hourly meteo data as input. 
+It includes a numerical solution for three-dimensional water and heat flow in the soil, coupled surface and subsurface flow, meteorological data interpolation, radiation budget, crop development and crop water uptake. It needs hourly meteo data as input (air temperature, precipitation, solar irradiance, air relative humidity, wind speed). 
 See [CRITERIA3D paper](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D.pdf) for more information. 
 
 ![](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/img/CRITERIA3D.png)
@@ -14,7 +9,6 @@ See [CRITERIA3D paper](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/C
 ## How to compile CRITERIA-3D
 Dependencies:
 - [Qt libraries](https://www.qt.io/download-qt-installer): Qt 5.x or following is needed (download also QtCharts).
-- Modified version of [MapGraphics library](https://github.com/raptorswing/MapGraphics): build the project *mapGraphics/MapGraphics.pro* with Qt Creator.
 
 Build:
 - Build the project *bin/Makeall_CRITERIA3D/Makeall_CRITERIA3D.pro* With Qt Creator.
