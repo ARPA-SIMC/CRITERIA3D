@@ -141,7 +141,7 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
 }
 
 
-bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings,
                         gis::Crit3DRasterGrid* myGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar)
 {
     if (! myGrid->initializeGrid(raster))
@@ -162,7 +162,7 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
             if (int(myZ) != int(myGrid->header->flag))
             {
                 if (getUseDetrendingVar(myVar)) getProxyValuesXY(myX, myY, mySettings, proxyValues);
-                myGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, myVar, myX, myY, myZ, proxyValues, true);
+                myGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
             }
         }
     }

@@ -1678,7 +1678,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 
     // check quality and pass data to interpolation
     if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
-                                         &qualityInterpolationSettings, &interpolationSettings, &climateParameters, interpolationPoints,
+                                         &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
                                          checkSpatialQuality))
     {
         logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
@@ -1686,7 +1686,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     }
 
     //detrending and checking precipitation
-    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
 
     if (! interpolationReady)
     {
@@ -1695,7 +1695,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     }
 
     // Interpolate
-    if (! interpolationRaster(interpolationPoints, &interpolationSettings, myRaster, DEM, myVar))
+    if (! interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings, myRaster, DEM, myVar))
     {
         logError("Interpolation: error in function interpolationRaster");
         return false;
@@ -1730,15 +1730,15 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
 
     if (! checkAndPassDataToInterpolation(quality, atmTransmissivity, meteoPoints, nrMeteoPoints,
                                         myTime, &qualityInterpolationSettings,
-                                        &interpolationSettings, &climateParameters, interpolationPoints, checkSpatialQuality))
+                                        &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints, checkSpatialQuality))
     {
         logError("Function interpolateRasterRadiation: not enough transmissivity data.");
         return false;
     }
 
-    preInterpolation(interpolationPoints, &interpolationSettings, &climateParameters, meteoPoints, nrMeteoPoints, atmTransmissivity, myTime);
+    preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, atmTransmissivity, myTime);
 
-    if (! interpolationRaster(interpolationPoints, &interpolationSettings, this->radiationMaps->transmissivityMap, DEM, atmTransmissivity))
+    if (! interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings, this->radiationMaps->transmissivityMap, DEM, atmTransmissivity))
     {
         logError("Function interpolateRasterRadiation: error interpolating transmissivity.");
         return false;

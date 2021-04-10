@@ -32,9 +32,6 @@ class Crit1DSimulation
 
         bool isXmlGrid;
 
-        Crit1DCase myCase;
-        QString outputString;
-
         // soil
         soil::Crit3DTextureClass soilTexture[13];
         soil::Crit3DFittingOptions fittingOptions;
@@ -56,6 +53,7 @@ class Crit1DSimulation
         int daysOfForecast;
 
         // specific output
+        std::vector<int> waterDeficitDepth;
         std::vector<int> waterContentDepth;
         std::vector<int> waterPotentialDepth;
 
@@ -65,6 +63,9 @@ class Crit1DSimulation
         bool createState(QString &myError);
 
     private:
+
+        Crit1DCase myCase;
+        QString outputString;
 
         bool setSoil(QString soilCode, QString &myError);
 

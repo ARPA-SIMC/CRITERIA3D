@@ -23,7 +23,7 @@
         QString idSoil;
         int idSoilNumber;
 
-        bool isNumeric;
+        bool isNumericalInfiltration;
 
         Crit1DUnit();
     };

@@ -29,6 +29,7 @@ Crit1DSimulation::Crit1DSimulation()
     lastSimulationDate = QDate(1800,1,1);
 
     outputString = "";
+    waterDeficitDepth.clear();
     waterContentDepth.clear();
     waterPotentialDepth.clear();
 }
@@ -80,6 +81,7 @@ void Crit1DSimulation::updateSeasonalForecast(Crit3DDate myDate, int* index)
 bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
 {
     myCase.idCase = myUnit.idCase;
+    myCase.isNumericalInfiltration = myUnit.isNumericalInfiltration;
 
     if (! setSoil(myUnit.idSoil, myError))
         return false;
@@ -192,6 +194,7 @@ bool Crit1DSimulation::setSoil(QString soilCode, QString &myError)
         myError = QString::fromStdString(errorString);
         return false;
     }
+
 
     return true;
 }
@@ -716,10 +719,15 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
     queryString = "CREATE TABLE '" + myCase.idCase + "'"
                   + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
                   + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
-                  + " DEFICIT REAL, DEFICIT_25 REAL, DRAINAGE REAL, RUNOFF REAL, ET0 REAL, "
-                  + " TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOT_DEPTH REAL";
+                  + " RUNOFF REAL, DRAINAGE REAL, LATERAL_DRAINAGE REAL, CAPILLARY_RISE REAL, "
+                  + " ET0 REAL, TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOT_DEPTH REAL";
 
     // specific depth variables
+    for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
+    {
+        QString fieldName = "DEFICIT_" + QString::number(waterDeficitDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
     for (unsigned int i = 0; i < waterContentDepth.size(); i++)
     {
         QString fieldName = "SWC_" + QString::number(waterContentDepth[i]);
@@ -751,10 +759,15 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
         outputString = "INSERT INTO '" + myCase.idCase + "'"
                        + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, "
                        + " AVAILABLE_WATER, READILY_AW, FRACTION_AW, "
-                       + " DEFICIT, DEFICIT_25, DRAINAGE, RUNOFF, ET0, "
-                       + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH";
+                       + " RUNOFF, DRAINAGE, LATERAL_DRAINAGE, CAPILLARY_RISE, "
+                       + " ET0, TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH";
 
         // specific depth variables
+        for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
+        {
+            QString fieldName = "DEFICIT_" + QString::number(waterDeficitDepth[i]);
+            outputString += ", " + fieldName;
+        }
         for (unsigned int i = 0; i < waterContentDepth.size(); i++)
         {
             QString fieldName = "SWC_" + QString::number(waterContentDepth[i]);
@@ -781,10 +794,10 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
                     + "," + QString::number(myCase.output.dailyReadilyAW, 'g', 4)
                     + "," + QString::number(myCase.output.dailyFractionAW, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyWaterDeficit, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyWaterDeficit_25, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyDrainage, 'g', 4)
                     + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyDrainage, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyLateralDrainage, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyCapillaryRise, 'g', 4)
                     + "," + QString::number(myCase.output.dailyEt0, 'g', 3)
                     + "," + QString::number(myCase.output.dailyMaxTranspiration, 'g', 3)
                     + "," + QString::number(myCase.output.dailyTranspiration, 'g', 3)
@@ -794,6 +807,10 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + getOutputStringNullZero(myCase.myCrop.roots.rootDepth);
 
     // specific depth variables
+    for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getSoilWaterDeficit(waterDeficitDepth[i]), 'g', 4);
+    }
     for (unsigned int i = 0; i < waterContentDepth.size(); i++)
     {
         outputString += "," + QString::number(myCase.getWaterContent(waterContentDepth[i]), 'g', 4);

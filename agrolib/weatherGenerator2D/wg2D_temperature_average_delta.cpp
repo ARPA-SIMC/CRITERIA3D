@@ -1,4 +1,4 @@
-#include <stdio.h>
+/*#include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
@@ -11,85 +11,41 @@
 #include "gammaFunction.h"
 #include "crit3dDate.h"
 
-void weatherGenerator2D::initializeTemperatureParameters()
+void weatherGenerator2D::initializeTemperatureParametersMeanDelta()
 {
     // initialize temp parameters
     temperatureCoefficients = (TtemperatureCoefficients *)calloc(nrStations, sizeof(TtemperatureCoefficients));
     temperatureCoefficientsFourier =  (TtemperatureCoefficients *)calloc(nrStations, sizeof(TtemperatureCoefficients));
     for (int i = 0; i < nrStations; i++)
     {
-        temperatureCoefficients[i].maxTDry.averageEstimation = (double *)calloc(365, sizeof(double));
-        temperatureCoefficientsFourier[i].maxTDry.averageEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficients[i].maxTDry.averageEstimation[j] = NODATA;
-        for (int j=0; j<365; j++) temperatureCoefficientsFourier[i].maxTDry.averageEstimation[j] = NODATA;
-        temperatureCoefficients[i].maxTDry.stdDevEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficients[i].maxTDry.stdDevEstimation[j] = NODATA;
-        /*
-        temperatureCoefficients[i].maxTDry.averageFourierParameters.a0 = NODATA;
-        temperatureCoefficients[i].maxTDry.averageFourierParameters.aCos1 = NODATA;
-        temperatureCoefficients[i].maxTDry.averageFourierParameters.aSin1 = NODATA;
-        temperatureCoefficients[i].maxTDry.averageFourierParameters.aCos2 = NODATA;
-        temperatureCoefficients[i].maxTDry.averageFourierParameters.aSin2 = NODATA;
-        temperatureCoefficients[i].maxTDry.standardDeviationFourierParameters.a0 = NODATA;
-        temperatureCoefficients[i].maxTDry.standardDeviationFourierParameters.aCos1 = NODATA;
-        temperatureCoefficients[i].maxTDry.standardDeviationFourierParameters.aSin1 = NODATA;
-        temperatureCoefficients[i].maxTDry.standardDeviationFourierParameters.aCos2 = NODATA;
-        temperatureCoefficients[i].maxTDry.standardDeviationFourierParameters.aSin2 = NODATA;
-        */
-        temperatureCoefficients[i].minTDry.averageEstimation = (double *)calloc(365, sizeof(double));
-        temperatureCoefficientsFourier[i].minTDry.averageEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficientsFourier[i].minTDry.averageEstimation[j] = NODATA;
-        for (int j=0; j<365; j++) temperatureCoefficients[i].minTDry.averageEstimation[j] = NODATA;
-        temperatureCoefficients[i].minTDry.stdDevEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficients[i].minTDry.stdDevEstimation[j] = NODATA;
-        /*
-        temperatureCoefficients[i].minTDry.averageFourierParameters.a0 = NODATA;
-        temperatureCoefficients[i].minTDry.averageFourierParameters.aCos1 = NODATA;
-        temperatureCoefficients[i].minTDry.averageFourierParameters.aSin1 = NODATA;
-        temperatureCoefficients[i].minTDry.averageFourierParameters.aCos2 = NODATA;
-        temperatureCoefficients[i].minTDry.averageFourierParameters.aSin2 = NODATA;
-        temperatureCoefficients[i].minTDry.standardDeviationFourierParameters.a0 = NODATA;
-        temperatureCoefficients[i].minTDry.standardDeviationFourierParameters.aCos1 = NODATA;
-        temperatureCoefficients[i].minTDry.standardDeviationFourierParameters.aSin1 = NODATA;
-        temperatureCoefficients[i].minTDry.standardDeviationFourierParameters.aCos2 = NODATA;
-        temperatureCoefficients[i].minTDry.standardDeviationFourierParameters.aSin2 = NODATA;
-        */
-        temperatureCoefficients[i].maxTWet.averageEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficients[i].maxTWet.averageEstimation[j] = NODATA;
-        temperatureCoefficientsFourier[i].maxTWet.averageEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficientsFourier[i].maxTWet.averageEstimation[j] = NODATA;
-        temperatureCoefficients[i].maxTWet.stdDevEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficients[i].maxTWet.stdDevEstimation[j] = NODATA;
-        /*
-        temperatureCoefficients[i].maxTWet.averageFourierParameters.a0 = NODATA;
-        temperatureCoefficients[i].maxTWet.averageFourierParameters.aCos1 = NODATA;
-        temperatureCoefficients[i].maxTWet.averageFourierParameters.aSin1 = NODATA;
-        temperatureCoefficients[i].maxTWet.averageFourierParameters.aCos2 = NODATA;
-        temperatureCoefficients[i].maxTWet.averageFourierParameters.aSin2 = NODATA;
-        temperatureCoefficients[i].maxTWet.standardDeviationFourierParameters.a0 = NODATA;
-        temperatureCoefficients[i].maxTWet.standardDeviationFourierParameters.aCos1 = NODATA;
-        temperatureCoefficients[i].maxTWet.standardDeviationFourierParameters.aSin1 = NODATA;
-        temperatureCoefficients[i].maxTWet.standardDeviationFourierParameters.aCos2 = NODATA;
-        temperatureCoefficients[i].maxTWet.standardDeviationFourierParameters.aSin2 = NODATA;
-        */
-        temperatureCoefficients[i].minTWet.averageEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficients[i].minTWet.averageEstimation[j] = NODATA;
-        temperatureCoefficientsFourier[i].minTWet.averageEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficientsFourier[i].minTWet.averageEstimation[j] = NODATA;
-        temperatureCoefficients[i].minTWet.stdDevEstimation = (double *)calloc(365, sizeof(double));
-        for (int j=0; j<365; j++) temperatureCoefficients[i].minTWet.stdDevEstimation[j] = NODATA;
-        /*
-        temperatureCoefficients[i].minTWet.averageFourierParameters.a0 = NODATA;
-        temperatureCoefficients[i].minTWet.averageFourierParameters.aCos1 = NODATA;
-        temperatureCoefficients[i].minTWet.averageFourierParameters.aSin1 = NODATA;
-        temperatureCoefficients[i].minTWet.averageFourierParameters.aCos2 = NODATA;
-        temperatureCoefficients[i].minTWet.averageFourierParameters.aSin2 = NODATA;
-        temperatureCoefficients[i].minTWet.standardDeviationFourierParameters.a0 = NODATA;
-        temperatureCoefficients[i].minTWet.standardDeviationFourierParameters.aCos1 = NODATA;
-        temperatureCoefficients[i].minTWet.standardDeviationFourierParameters.aSin1 = NODATA;
-        temperatureCoefficients[i].minTWet.standardDeviationFourierParameters.aCos2 = NODATA;
-        temperatureCoefficients[i].minTWet.standardDeviationFourierParameters.aSin2 = NODATA;
-        */
+        temperatureCoefficients[i].meanTDry.averageEstimation = (double *)calloc(365, sizeof(double));
+        temperatureCoefficientsFourier[i].meanTDry.averageEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficients[i].meanTDry.averageEstimation[j] = NODATA;
+        for (int j=0; j<365; j++) temperatureCoefficientsFourier[i].meanTDry.averageEstimation[j] = NODATA;
+        temperatureCoefficients[i].meanTDry.stdDevEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficients[i].meanTDry.stdDevEstimation[j] = NODATA;
+
+        temperatureCoefficients[i].deltaTDry.averageEstimation = (double *)calloc(365, sizeof(double));
+        temperatureCoefficientsFourier[i].deltaTDry.averageEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficientsFourier[i].deltaTDry.averageEstimation[j] = NODATA;
+        for (int j=0; j<365; j++) temperatureCoefficients[i].deltaTDry.averageEstimation[j] = NODATA;
+        temperatureCoefficients[i].deltaTDry.stdDevEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficients[i].deltaTDry.stdDevEstimation[j] = NODATA;
+
+        temperatureCoefficients[i].meanTWet.averageEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficients[i].meanTWet.averageEstimation[j] = NODATA;
+        temperatureCoefficientsFourier[i].meanTWet.averageEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficientsFourier[i].meanTWet.averageEstimation[j] = NODATA;
+        temperatureCoefficients[i].meanTWet.stdDevEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficients[i].meanTWet.stdDevEstimation[j] = NODATA;
+
+        temperatureCoefficients[i].deltaTWet.averageEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficients[i].deltaTWet.averageEstimation[j] = NODATA;
+        temperatureCoefficientsFourier[i].deltaTWet.averageEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficientsFourier[i].deltaTWet.averageEstimation[j] = NODATA;
+        temperatureCoefficients[i].deltaTWet.stdDevEstimation = (double *)calloc(365, sizeof(double));
+        for (int j=0; j<365; j++) temperatureCoefficients[i].deltaTWet.stdDevEstimation[j] = NODATA;
+
         for (int k=0; k<2; k++)
         {
             for (int j=0; j<2; j++)
@@ -102,70 +58,70 @@ void weatherGenerator2D::initializeTemperatureParameters()
     dailyResidual = (TdailyResidual*) calloc(nrData,sizeof(TdailyResidual));
     for (int i=0; i<nrData; i++)
     {
-        dailyResidual[i].maxTDry = 0;
-        dailyResidual[i].minTDry = 0;
-        dailyResidual[i].maxTWet = 0;
-        dailyResidual[i].minTWet = 0;
+        dailyResidual[i].meanTDry = 0;
+        dailyResidual[i].deltaTDry = 0;
+        dailyResidual[i].meanTWet = 0;
+        dailyResidual[i].deltaTWet = 0;
     }
 }
 
-void weatherGenerator2D::initializeTemperaturecorrelationMatrices()
+void weatherGenerator2D::initializeTemperaturecorrelationMatricesMeanDelta()
 {
-    correlationMatrixTemperature.maxT = (double **)calloc(nrStations, sizeof(double *));
-    correlationMatrixTemperature.minT = (double **)calloc(nrStations, sizeof(double *));
+    correlationMatrixTemperature.meanT = (double **)calloc(nrStations, sizeof(double *));
+    correlationMatrixTemperature.deltaT = (double **)calloc(nrStations, sizeof(double *));
     for (int i=0;i<nrStations;i++)
     {
-        correlationMatrixTemperature.maxT[i] = (double *)calloc(nrStations, sizeof(double));
-        correlationMatrixTemperature.minT[i] = (double *)calloc(nrStations, sizeof(double));
+        correlationMatrixTemperature.meanT[i] = (double *)calloc(nrStations, sizeof(double));
+        correlationMatrixTemperature.deltaT[i] = (double *)calloc(nrStations, sizeof(double));
         for (int j=0;j<nrStations;j++)
         {
-            correlationMatrixTemperature.maxT[i][j] = NODATA;
-            correlationMatrixTemperature.minT[i][j] = NODATA;
+            correlationMatrixTemperature.meanT[i][j] = NODATA;
+            correlationMatrixTemperature.deltaT[i][j] = NODATA;
         }
     }
 
 }
 
-void weatherGenerator2D::initializeTemperatureVariables()
+void weatherGenerator2D::initializeTemperatureVariablesMeanDelta()
 {
-    weatherGenerator2D::initializeMultiOccurrenceTemperature(365*parametersModel.yearOfSimulation);
-    weatherGenerator2D::initializeTemperaturesOutput(365*parametersModel.yearOfSimulation);
-    weatherGenerator2D::initializeTemperatureParameters();
+    weatherGenerator2D::initializeMultiOccurrenceTemperatureMeanDelta(365*parametersModel.yearOfSimulation);
+    weatherGenerator2D::initializeTemperaturesOutputMeanDelta(365*parametersModel.yearOfSimulation);
+    weatherGenerator2D::initializeTemperatureParametersMeanDelta();
 
 }
 
-void weatherGenerator2D::computeTemperatureParameters()
+void weatherGenerator2D::computeTemperatureParametersMeanDelta()
 {
     for (int iStation=0; iStation<nrStations; iStation++)
     {
-        double averageTMaxDry[365];
-        double averageTMaxWet[365];
-        double stdDevTMaxDry[365];
-        double stdDevTMaxWet[365];
-        double averageTMinDry[365];
-        double averageTMinWet[365];
-        double stdDevTMinDry[365];
-        double stdDevTMinWet[365];
-        int countTMaxDry[365];
-        int countTMaxWet[365];
-        int countTMinDry[365];
-        int countTMinWet[365];
+        double averageTMeanDry[365];
+        double averageTMeanWet[365];
+        double stdDevTMeanDry[365];
+        double stdDevTMeanWet[365];
+        double averageTDeltaDry[365];
+        double averageTDeltaWet[365];
+        double stdDevTDeltaDry[365];
+        double stdDevTDeltaWet[365];
+        int countTMeanDry[365];
+        int countTMeanWet[365];
+        int countTDeltaDry[365];
+        int countTDeltaWet[365];
 
         int finalDay = 365;
         for (int iDay=0;iDay<finalDay;iDay++)
         {
-            averageTMaxDry[iDay]=0;
-            averageTMaxWet[iDay]=0;
-            stdDevTMaxDry[iDay]=0;
-            stdDevTMaxWet[iDay]=0;
-            averageTMinDry[iDay]=0;
-            averageTMinWet[iDay]=0;
-            stdDevTMinDry[iDay]=0;
-            stdDevTMinWet[iDay]=0;
-            countTMaxDry[iDay] = 0;
-            countTMaxWet[iDay] = 0;
-            countTMinDry[iDay] = 0;
-            countTMinWet[iDay] = 0;
+            averageTMeanDry[iDay]=0;
+            averageTMeanWet[iDay]=0;
+            stdDevTMeanDry[iDay]=0;
+            stdDevTMeanWet[iDay]=0;
+            averageTDeltaDry[iDay]=0;
+            averageTDeltaWet[iDay]=0;
+            stdDevTDeltaDry[iDay]=0;
+            stdDevTDeltaWet[iDay]=0;
+            countTMeanDry[iDay] = 0;
+            countTMeanWet[iDay] = 0;
+            countTDeltaDry[iDay] = 0;
+            countTDeltaWet[iDay] = 0;
 
         }
         for (int iDatum=0; iDatum<nrData; iDatum++)
@@ -202,28 +158,28 @@ void weatherGenerator2D::computeTemperatureParameters()
             {
                 if (obsDataD[iStation][iDatum].prec > parametersModel.precipitationThreshold)
                 {
-                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax))
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax) && isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
                     {
-                        ++countTMaxWet[dayOfYear];
-                        averageTMaxWet[dayOfYear] += obsDataD[iStation][iDatum].tMax;
+                        ++countTMeanWet[dayOfYear];
+                        averageTMeanWet[dayOfYear] += (obsDataD[iStation][iDatum].tMax+obsDataD[iStation][iDatum].tMin)*0.5;
                     }
-                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax) && isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
                     {
-                        ++countTMinWet[dayOfYear];
-                        averageTMinWet[dayOfYear] += obsDataD[iStation][iDatum].tMin;
+                        ++countTDeltaWet[dayOfYear];
+                        averageTDeltaWet[dayOfYear] += (obsDataD[iStation][iDatum].tMax - obsDataD[iStation][iDatum].tMin);
                     }
                 }
                 else if (obsDataD[iStation][iDatum].prec <= parametersModel.precipitationThreshold)
                 {
-                    if ((fabs((obsDataD[iStation][iDatum].tMax)- NODATA))> EPSILON)
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax) && isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
                     {
-                        ++countTMaxDry[dayOfYear];
-                        averageTMaxDry[dayOfYear] += obsDataD[iStation][iDatum].tMax;
+                        ++countTMeanDry[dayOfYear];
+                        averageTMeanDry[dayOfYear] += (obsDataD[iStation][iDatum].tMax + obsDataD[iStation][iDatum].tMin) *0.5;
                     }
-                    if ((fabs((obsDataD[iStation][iDatum].tMin)- NODATA))> EPSILON)
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax) && isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
                     {
-                        ++countTMinDry[dayOfYear];
-                        averageTMinDry[dayOfYear] += obsDataD[iStation][iDatum].tMin;
+                        ++countTDeltaDry[dayOfYear];
+                        averageTDeltaDry[dayOfYear] += (obsDataD[iStation][iDatum].tMax - obsDataD[iStation][iDatum].tMin);
                     }
                 }
             }
@@ -231,93 +187,93 @@ void weatherGenerator2D::computeTemperatureParameters()
         }
         for (int iDay=0; iDay<365; iDay++)
         {
-            if (countTMaxDry[iDay] != 0) averageTMaxDry[iDay] /= countTMaxDry[iDay];
-            else averageTMaxDry[iDay] = NODATA;
-            if (countTMaxWet[iDay] != 0) averageTMaxWet[iDay] /= countTMaxWet[iDay];
-            else averageTMaxWet[iDay] = NODATA;
-            if (countTMinDry[iDay] != 0) averageTMinDry[iDay] /= countTMinDry[iDay];
-            else averageTMinDry[iDay] = NODATA;
-            if (countTMinWet[iDay] != 0) averageTMinWet[iDay] /= countTMinWet[iDay];
-            else averageTMinWet[iDay] = NODATA;
+            if (countTMeanDry[iDay] != 0) averageTMeanDry[iDay] /= countTMeanDry[iDay];
+            else averageTMeanDry[iDay] = NODATA;
+            if (countTMeanWet[iDay] != 0) averageTMeanWet[iDay] /= countTMeanWet[iDay];
+            else averageTMeanWet[iDay] = NODATA;
+            if (countTDeltaDry[iDay] != 0) averageTDeltaDry[iDay] /= countTDeltaDry[iDay];
+            else averageTDeltaDry[iDay] = NODATA;
+            if (countTDeltaWet[iDay] != 0) averageTDeltaWet[iDay] /= countTDeltaWet[iDay];
+            else averageTDeltaWet[iDay] = NODATA;
         }
-        double* rollingAverageTMinDry = (double*)calloc(385,sizeof(double));
-        double* rollingAverageTMinWet = (double*)calloc(385,sizeof(double));
-        double* rollingAverageTMaxDry = (double*)calloc(385,sizeof(double));
-        double* rollingAverageTMaxWet = (double*)calloc(385,sizeof(double));
+        double* rollingAverageTDeltaDry = (double*)calloc(385,sizeof(double));
+        double* rollingAverageTDeltaWet = (double*)calloc(385,sizeof(double));
+        double* rollingAverageTMeanDry = (double*)calloc(385,sizeof(double));
+        double* rollingAverageTMeanWet = (double*)calloc(385,sizeof(double));
         for (int i=0;i<385;i++)
         {
-            rollingAverageTMaxDry[i] = NODATA;
-            rollingAverageTMinDry[i] = NODATA;
-            rollingAverageTMaxWet[i] = NODATA;
-            rollingAverageTMinWet[i] = NODATA;
+            rollingAverageTMeanDry[i] = NODATA;
+            rollingAverageTDeltaDry[i] = NODATA;
+            rollingAverageTMeanWet[i] = NODATA;
+            rollingAverageTDeltaWet[i] = NODATA;
         }
         double inputT[385];
         int lag = 10;
-        // t min dry
+        // t delta dry
         for (int i=0;i<10;i++)
         {
-            inputT[i] = averageTMinDry[355+i];
-            inputT[384-i] = averageTMinDry[9-i];
+            inputT[i] = averageTDeltaDry[355+i];
+            inputT[384-i] = averageTDeltaDry[9-i];
         }
         for (int i=0;i<365;i++)
         {
-            inputT[i+10]= averageTMinDry[i];
+            inputT[i+10]= averageTDeltaDry[i];
         }
-        statistics::rollingAverage(inputT,385,lag,rollingAverageTMinDry);
+        statistics::rollingAverage(inputT,385,lag,rollingAverageTDeltaDry);
         for (int i=0;i<365;i++)
         {
-            temperatureCoefficients[iStation].minTDry.averageEstimation[i] = rollingAverageTMinDry[i+10];
+            temperatureCoefficients[iStation].deltaTDry.averageEstimation[i] = rollingAverageTDeltaDry[i+10];
         }
-        // t max dry
+        // t mean dry
         for (int i=0;i<10;i++)
         {
-            inputT[i] = averageTMaxDry[355+i];
-            inputT[384-i] = averageTMaxDry[9-i];
+            inputT[i] = averageTMeanDry[355+i];
+            inputT[384-i] = averageTMeanDry[9-i];
         }
         for (int i=0;i<365;i++)
         {
-            inputT[i+10]= averageTMaxDry[i];
+            inputT[i+10]= averageTMeanDry[i];
         }
-        statistics::rollingAverage(inputT,385,lag,rollingAverageTMaxDry);
+        statistics::rollingAverage(inputT,385,lag,rollingAverageTMeanDry);
         for (int i=0;i<365;i++)
         {
-            temperatureCoefficients[iStation].maxTDry.averageEstimation[i] = rollingAverageTMaxDry[i+10];
+            temperatureCoefficients[iStation].meanTDry.averageEstimation[i] = rollingAverageTMeanDry[i+10];
         }
-        // t min wet
+        // t delta wet
         for (int i=0;i<10;i++)
         {
-            inputT[i] = averageTMinWet[355+i];
-            inputT[384-i] = averageTMinWet[9-i];
+            inputT[i] = averageTDeltaWet[355+i];
+            inputT[384-i] = averageTDeltaWet[9-i];
         }
         for (int i=0;i<365;i++)
         {
-            inputT[i+10]= averageTMinWet[i];
+            inputT[i+10]= averageTDeltaWet[i];
         }
-        statistics::rollingAverage(inputT,385,lag,rollingAverageTMinWet);
+        statistics::rollingAverage(inputT,385,lag,rollingAverageTDeltaWet);
         for (int i=0;i<365;i++)
         {
-            temperatureCoefficients[iStation].minTWet.averageEstimation[i] = rollingAverageTMinWet[i+10];
+            temperatureCoefficients[iStation].deltaTWet.averageEstimation[i] = rollingAverageTDeltaWet[i+10];
         }
-        // t max wet
+        // t mean wet
         for (int i=0;i<10;i++)
         {
-            inputT[i] = averageTMaxWet[355+i];
-            inputT[384-i] = averageTMaxWet[9-i];
+            inputT[i] = averageTMeanWet[355+i];
+            inputT[384-i] = averageTMeanWet[9-i];
         }
         for (int i=0;i<365;i++)
         {
-            inputT[i+10]= averageTMaxWet[i];
+            inputT[i+10]= averageTMeanWet[i];
         }
-        statistics::rollingAverage(inputT,385,lag,rollingAverageTMaxWet);
+        statistics::rollingAverage(inputT,385,lag,rollingAverageTMeanWet);
         for (int i=0;i<365;i++)
         {
-            temperatureCoefficients[iStation].maxTWet.averageEstimation[i] = rollingAverageTMaxWet[i+10];
+            temperatureCoefficients[iStation].meanTWet.averageEstimation[i] = rollingAverageTMeanWet[i+10];
         }
 
-        free(rollingAverageTMinDry);
-        free(rollingAverageTMinWet);
-        free(rollingAverageTMaxDry);
-        free(rollingAverageTMaxWet);
+        free(rollingAverageTDeltaDry);
+        free(rollingAverageTDeltaWet);
+        free(rollingAverageTMeanDry);
+        free(rollingAverageTMeanWet);
 
         // compute standard deviation temperatures of the stations
         for (int iDatum=0; iDatum<nrData; iDatum++)
@@ -338,24 +294,28 @@ void weatherGenerator2D::computeTemperatureParameters()
             {
                 if (obsDataD[iStation][iDatum].prec > parametersModel.precipitationThreshold)
                 {
-                    if ((fabs((obsDataD[iStation][iDatum].tMax) - NODATA))> EPSILON)
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax) && isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
                     {
-                        stdDevTMaxWet[dayOfYear] += (obsDataD[iStation][iDatum].tMax - averageTMaxWet[dayOfYear])*(obsDataD[iStation][iDatum].tMax - averageTMaxWet[dayOfYear]);
+                        double meanT = (obsDataD[iStation][iDatum].tMax + obsDataD[iStation][iDatum].tMin)*0.5;
+                        stdDevTMeanWet[dayOfYear] += (meanT - averageTMeanWet[dayOfYear])*(meanT - averageTMeanWet[dayOfYear]);
                     }
-                    if ((fabs(obsDataD[iStation][iDatum].tMin - NODATA))> EPSILON)
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax) && isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
                     {
-                        stdDevTMinWet[dayOfYear] += (obsDataD[iStation][iDatum].tMin - averageTMinWet[dayOfYear])*(obsDataD[iStation][iDatum].tMin - averageTMinWet[dayOfYear]);
+                        double deltaT = obsDataD[iStation][iDatum].tMax - obsDataD[iStation][iDatum].tMin;
+                        stdDevTDeltaWet[dayOfYear] += (deltaT - averageTDeltaWet[dayOfYear])*(deltaT - averageTDeltaWet[dayOfYear]);
                     }
                 }
                 else if (obsDataD[iStation][iDatum].prec <= parametersModel.precipitationThreshold)
                 {
-                    if ((fabs((obsDataD[iStation][iDatum].tMax) - NODATA))> EPSILON)
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax) && isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
                     {
-                        stdDevTMaxDry[dayOfYear] += (obsDataD[iStation][iDatum].tMax - averageTMaxDry[dayOfYear])*(obsDataD[iStation][iDatum].tMax - averageTMaxDry[dayOfYear]);
+                        double meanT = obsDataD[iStation][iDatum].tMax + obsDataD[iStation][iDatum].tMin;
+                        stdDevTMeanDry[dayOfYear] += (meanT - averageTMeanDry[dayOfYear])*(meanT - averageTMeanDry[dayOfYear]);
                     }
-                    if ((fabs((obsDataD[iStation][iDatum].tMin) - NODATA))> EPSILON)
+                    if (isTemperatureRecordOK(obsDataD[iStation][iDatum].tMax) && isTemperatureRecordOK(obsDataD[iStation][iDatum].tMin))
                     {
-                        stdDevTMinDry[dayOfYear] += (obsDataD[iStation][iDatum].tMin - averageTMinDry[dayOfYear])*(obsDataD[iStation][iDatum].tMin - averageTMinDry[dayOfYear]);
+                        double deltaT = obsDataD[iStation][iDatum].tMax - obsDataD[iStation][iDatum].tMin;
+                        stdDevTDeltaDry[dayOfYear] += (deltaT - averageTDeltaDry[dayOfYear])*(deltaT - averageTDeltaDry[dayOfYear]);
                     }
                 }
             }
@@ -363,19 +323,19 @@ void weatherGenerator2D::computeTemperatureParameters()
         }
         for (int iDay=0; iDay<365; iDay++)
         {
-            if (countTMaxDry[iDay] != 0) stdDevTMaxDry[iDay] /= countTMaxDry[iDay];
-            else stdDevTMaxDry[iDay] = NODATA;
-            if (countTMaxWet[iDay] != 0) stdDevTMaxWet[iDay] /= countTMaxWet[iDay];
-            else stdDevTMaxWet[iDay] = NODATA;
-            if (countTMinDry[iDay] != 0) stdDevTMinDry[iDay] /= countTMinDry[iDay];
-            else stdDevTMinDry[iDay] = NODATA;
-            if (countTMinWet[iDay] != 0) stdDevTMinWet[iDay] /= countTMinWet[iDay];
-            else stdDevTMinWet[iDay] = NODATA;
+            if (countTMeanDry[iDay] != 0) stdDevTMeanDry[iDay] /= countTMeanDry[iDay];
+            else stdDevTMeanDry[iDay] = NODATA;
+            if (countTMeanWet[iDay] != 0) stdDevTMeanWet[iDay] /= countTMeanWet[iDay];
+            else stdDevTMeanWet[iDay] = NODATA;
+            if (countTDeltaDry[iDay] != 0) stdDevTDeltaDry[iDay] /= countTDeltaDry[iDay];
+            else stdDevTDeltaDry[iDay] = NODATA;
+            if (countTDeltaWet[iDay] != 0) stdDevTDeltaWet[iDay] /= countTDeltaWet[iDay];
+            else stdDevTDeltaWet[iDay] = NODATA;
 
-            if (countTMaxDry[iDay] != 0) stdDevTMaxDry[iDay] = sqrt(stdDevTMaxDry[iDay]);
-            if (countTMaxWet[iDay] != 0) stdDevTMaxWet[iDay] = sqrt(stdDevTMaxWet[iDay]);
-            if (countTMinDry[iDay] != 0) stdDevTMinDry[iDay] = sqrt(stdDevTMinDry[iDay]);
-            if (countTMinWet[iDay] != 0) stdDevTMinWet[iDay] = sqrt(stdDevTMinWet[iDay]);
+            if (countTMeanDry[iDay] != 0) stdDevTMeanDry[iDay] = sqrt(stdDevTMeanDry[iDay]);
+            if (countTMeanWet[iDay] != 0) stdDevTMeanWet[iDay] = sqrt(stdDevTMeanWet[iDay]);
+            if (countTDeltaDry[iDay] != 0) stdDevTDeltaDry[iDay] = sqrt(stdDevTDeltaDry[iDay]);
+            if (countTDeltaWet[iDay] != 0) stdDevTDeltaWet[iDay] = sqrt(stdDevTDeltaWet[iDay]);
         }
 
         // compute the Fourier coefficients
@@ -389,44 +349,44 @@ void weatherGenerator2D::computeTemperatureParameters()
             {
                 par[i] = NODATA;
             }
-            weatherGenerator2D::harmonicsFourier(averageTMaxDry,par,nrPar,temperatureCoefficients[iStation].maxTDry.averageEstimation,365);
+            weatherGenerator2D::harmonicsFourier(averageTMeanDry,par,nrPar,temperatureCoefficients[iStation].meanTDry.averageEstimation,365);
             for (int i=0;i<nrPar;i++)
             {
                 par[i] = NODATA;
             }
-            weatherGenerator2D::harmonicsFourier(averageTMinDry,par,nrPar,temperatureCoefficients[iStation].minTDry.averageEstimation,365);
+            weatherGenerator2D::harmonicsFourier(averageTDeltaDry,par,nrPar,temperatureCoefficients[iStation].deltaTDry.averageEstimation,365);
             for (int i=0;i<nrPar;i++)
             {
                 par[i] = NODATA;
             }
-            weatherGenerator2D::harmonicsFourier(averageTMaxWet,par,nrPar,temperatureCoefficients[iStation].maxTWet.averageEstimation,365);
+            weatherGenerator2D::harmonicsFourier(averageTMeanWet,par,nrPar,temperatureCoefficients[iStation].meanTWet.averageEstimation,365);
             for (int i=0;i<nrPar;i++)
             {
                 par[i] = NODATA;
             }
-            weatherGenerator2D::harmonicsFourier(averageTMinWet,par,nrPar,temperatureCoefficients[iStation].minTWet.averageEstimation,365);
+            weatherGenerator2D::harmonicsFourier(averageTDeltaWet,par,nrPar,temperatureCoefficients[iStation].deltaTWet.averageEstimation,365);
         }
 
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
-        weatherGenerator2D::harmonicsFourier(stdDevTMaxDry,par,nrPar,temperatureCoefficients[iStation].maxTDry.stdDevEstimation,365);
+        weatherGenerator2D::harmonicsFourier(stdDevTMeanDry,par,nrPar,temperatureCoefficients[iStation].meanTDry.stdDevEstimation,365);
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
-        weatherGenerator2D::harmonicsFourier(stdDevTMinDry,par,nrPar,temperatureCoefficients[iStation].minTDry.stdDevEstimation,365);
+        weatherGenerator2D::harmonicsFourier(stdDevTDeltaDry,par,nrPar,temperatureCoefficients[iStation].deltaTDry.stdDevEstimation,365);
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
-        weatherGenerator2D::harmonicsFourier(stdDevTMaxWet,par,nrPar,temperatureCoefficients[iStation].maxTWet.stdDevEstimation,365);
+        weatherGenerator2D::harmonicsFourier(stdDevTMeanWet,par,nrPar,temperatureCoefficients[iStation].meanTWet.stdDevEstimation,365);
         for (int i=0;i<nrPar;i++)
         {
             par[i] = NODATA;
         }
-        weatherGenerator2D::harmonicsFourier(stdDevTMinWet,par,nrPar,temperatureCoefficients[iStation].minTWet.stdDevEstimation,365);
+        weatherGenerator2D::harmonicsFourier(stdDevTDeltaWet,par,nrPar,temperatureCoefficients[iStation].deltaTWet.stdDevEstimation,365);
         // free memory of parameters, variable par[]
         free(par);
 
@@ -437,14 +397,14 @@ void weatherGenerator2D::computeTemperatureParameters()
         //}
         //getchar();
 
-        weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,
-                                             temperatureCoefficients[iStation].maxTWet.averageEstimation,
-                                             temperatureCoefficients[iStation].maxTDry.stdDevEstimation,
-                                             temperatureCoefficients[iStation].maxTWet.stdDevEstimation,
-                                             temperatureCoefficients[iStation].minTDry.averageEstimation,
-                                             temperatureCoefficients[iStation].minTWet.averageEstimation,
-                                             temperatureCoefficients[iStation].minTDry.stdDevEstimation,
-                                             temperatureCoefficients[iStation].minTWet.stdDevEstimation,iStation);
+        weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].meanTDry.averageEstimation,
+                                             temperatureCoefficients[iStation].meanTWet.averageEstimation,
+                                             temperatureCoefficients[iStation].meanTDry.stdDevEstimation,
+                                             temperatureCoefficients[iStation].meanTWet.stdDevEstimation,
+                                             temperatureCoefficients[iStation].deltaTDry.averageEstimation,
+                                             temperatureCoefficients[iStation].deltaTWet.averageEstimation,
+                                             temperatureCoefficients[iStation].deltaTDry.stdDevEstimation,
+                                             temperatureCoefficients[iStation].deltaTWet.stdDevEstimation,iStation);
 
         int matrixRang = 2;
         double** matrixCovarianceLag0 = (double **) calloc(matrixRang, sizeof(double*));
@@ -498,26 +458,7 @@ void weatherGenerator2D::computeTemperatureParameters()
         {
             matrixCovarianceLag0[0][1] = matrixCovarianceLag0[1][0] = thresholdLag0;
         }
-        /*
-        for (int j=0;j<matrixRang;j++)
-        {
-            for (int k=0;k<matrixRang;k++)
-            {
-                printf("%f  ",matrixCovarianceLag0[j][k]);
-            }
-            printf("\n");
-        }
-        printf("\n");
-        for (int j=0;j<matrixRang;j++)
-        {
-            for (int k=0;k<matrixRang;k++)
-            {
-                printf("%f  ",matrixCovarianceLag1[j][k]);
-            }
-            printf("\n");
-        }
-        getchar();
-        */
+
         matricial::inverse(matrixCovarianceLag0,matrixC,matrixRang); // matrixC becomes temporarely the inverse of lag0
         matricial::matrixProduct(matrixCovarianceLag1,matrixC,matrixRang,matrixRang,matrixRang,matrixRang,matrixA);
         matricial::transposedSquareMatrix(matrixCovarianceLag1,matrixRang);
@@ -586,7 +527,7 @@ void weatherGenerator2D::computeTemperatureParameters()
 
 }
 
-void weatherGenerator2D::harmonicsFourier(double* variable, double *par,int nrPar, double* estimatedVariable, int nrEstimatedVariable)
+void weatherGenerator2D::harmonicsFourierMeanDelta(double* variable, double *par,int nrPar, double* estimatedVariable, int nrEstimatedVariable)
 {
     //int maxIterations = 100000;
     //int functionCode;
@@ -684,19 +625,19 @@ void weatherGenerator2D::harmonicsFourier(double* variable, double *par,int nrPa
 
 }
 
-void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* averageTMaxWet,
-                                          double* stdDevTMaxDry,double* stdDevTMaxWet,
-                                          double* averageTMinDry,double* averageTMinWet,
-                                          double* stdDevTMinDry,double* stdDevTMinWet,int idStation)
+void weatherGenerator2D::computeResidualsMeanDelta(double* averageTMeanDry,double* averageTMeanWet,
+                                          double* stdDevTMeanDry,double* stdDevTMeanWet,
+                                          double* averageTDeltaDry,double* averageTDeltaWet,
+                                          double* stdDevTDeltaDry,double* stdDevTDeltaWet,int idStation)
 {
     for (int i=0; i<nrData; i++)
     {
-        dailyResidual[i].maxTDry = 0.;
-        dailyResidual[i].minTDry = 0.;
-        dailyResidual[i].maxTWet = 0.;
-        dailyResidual[i].minTWet = 0.;
-        dailyResidual[i].maxT = 0.;
-        dailyResidual[i].minT = 0.;
+        dailyResidual[i].meanTDry = 0.;
+        dailyResidual[i].deltaTDry = 0.;
+        dailyResidual[i].meanTWet = 0.;
+        dailyResidual[i].deltaTWet = 0.;
+        dailyResidual[i].meanT = 0.;
+        dailyResidual[i].deltaT = 0.;
     }
     double maxResidual = NODATA;
     for (int i = 0; i< nrData ; i++)
@@ -740,18 +681,13 @@ void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* average
         dailyResidual[i].maxT = dailyResidual[i].maxTWet + dailyResidual[i].maxTDry;
         dailyResidual[i].minT = dailyResidual[i].minTWet + dailyResidual[i].minTDry;
         maxResidual = MAXVALUE(maxResidual,dailyResidual[i].minT * dailyResidual[i].maxT);
-        /*if (fabs(dailyResidual[i].maxT) > EPSILON)
-        {
-            printf("%d  %f\n",i,dailyResidual[i].minT * dailyResidual[i].maxT);
-            getchar();
-        }*/
 
     }
     //printf("%f\n",maxResidual);
     //getchar();
 }
 
-void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int lag)
+void weatherGenerator2D::covarianceOfResidualsMeanDelta(double** covarianceMatrix, int lag)
 {
     if (lag == 0)
     {
@@ -834,7 +770,7 @@ void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int la
 
 }
 
-void weatherGenerator2D::temperaturesCorrelationMatrices()
+void weatherGenerator2D::temperaturesCorrelationMatricesMeanDelta()
 {
     weatherGenerator2D::initializeTemperaturecorrelationMatrices();
     TcorrelationVar maxT;
@@ -937,7 +873,7 @@ void weatherGenerator2D::temperaturesCorrelationMatrices()
     }
 }
 
-void weatherGenerator2D::initializeNormalRandomMatricesTemperatures()
+void weatherGenerator2D::initializeNormalRandomMatricesTemperaturesMeanDelta()
 {
     int lengthOfRandomSeries;
     lengthOfRandomSeries = parametersModel.yearOfSimulation*365;
@@ -958,7 +894,7 @@ void weatherGenerator2D::initializeNormalRandomMatricesTemperatures()
     }
 }
 
-void weatherGenerator2D::multisiteRandomNumbersTemperature()
+void weatherGenerator2D::multisiteRandomNumbersTemperatureMeanDelta()
 {
     weatherGenerator2D::initializeNormalRandomMatricesTemperatures();
     int gasDevIset = 0;
@@ -1043,24 +979,10 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
         }
 
     }
-    /*for (int iProva=0; iProva<nrStations; iProva++)
-    {
-        for (int jProva=0; jProva<nrStations; jProva++)
-        {
-            //printf("%d %d %f\n",iProva, jProva,dummyMatrix[iProva][jProva]);
-        }
-        //getchar();
-    }*/
+
     isLowerDiagonal = false;
     matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,isLowerDiagonal);
-    /*for (int iProva=0; iProva<nrStations; iProva++)
-    {
-        for (int jProva=0; jProva<nrStations; jProva++)
-        {
-            //printf("%d %d %f\n",iProva, jProva,dummyMatrix[iProva][jProva]);
-        }
-        //getchar();
-    }*/
+
     matricial::transposedMatrix(dummyMatrix,nrStations,nrStations,dummyMatrix2);
     matricial::matrixProduct(dummyMatrix2,dummyMatrix,nrStations,nrStations,nrStations,nrStations,dummyMatrix3);
     isLowerDiagonal = true;
@@ -1074,31 +996,7 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
             normRandom[i][j] = myrandom::normalRandom(&gasDevIset,&gasDevGset);
         }
     }
-    // !! this part was added to use "fixed" random numbers
-    /*double* arrayRandomNormalNumbers = (double *)calloc(nrStations*lengthOfRandomSeries, sizeof(double));
-    randomSet(arrayRandomNormalNumbers,lengthOfRandomSeries);
-    int countRandom = 0;
-    for (int i=0;i<nrStations;i++)
-    {
-        //randomSet(arrayRandomNormalNumbers,lengthOfRandomSeries);
-        for (int j=0;j<lengthOfRandomSeries;j++)
-        {
-            normRandom[i][j] = arrayRandomNormalNumbers[countRandom];
-            countRandom++;
-            //printf("%f  ",normalizedRandomMatrix[i][j]);
-        }
-        //printf("\n");
-    }*/
-    //free(arrayRandomNormalNumbers);
-    // fine parte da togliere
-    /*for (int iProva=0; iProva<nrStations; iProva++)
-    {
-        for (int jProva=0; jProva<nrStations; jProva++)
-        {
-            printf("%d %d %f\n",iProva, jProva,dummyMatrix3[iProva][jProva]);
-        }
-        getchar();
-    }*/
+
     matricial::matrixProduct(dummyMatrix3,normRandom,nrStations,nrStations,lengthOfRandomSeries,nrStations,normRandom2);
     matricial::transposedMatrix(normRandom2,nrStations,lengthOfRandomSeries,normRandomMaxT);
     for (int iProva=0; iProva<nrStations; iProva++)
@@ -1179,23 +1077,7 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
             normRandom[i][j] = myrandom::normalRandom(&gasDevIset,&gasDevGset);
         }
     }
-    // !! this part was added to use "fixed" random numbers
-    //double* arrayRandomNormalNumbers = (double *)calloc(lengthOfRandomSeries, sizeof(double));
-    //randomSet(arrayRandomNormalNumbers,lengthOfRandomSeries);
-    /*countRandom = 0;
-    for (int i=0;i<nrStations;i++)
-    {
-        //randomSet(arrayRandomNormalNumbers,lengthOfRandomSeries);
-        for (int j=0;j<lengthOfRandomSeries;j++)
-        {
-            normRandom[i][j] = arrayRandomNormalNumbers[countRandom];
-            countRandom++;
-            //printf("%f  ",normalizedRandomMatrix[i][j]);
-        }
-        //printf("\n");
-    }
-    free(arrayRandomNormalNumbers); */
-    // fine parte da togliere
+
 
     matricial::matrixProduct(dummyMatrix3,normRandom,nrStations,nrStations,lengthOfRandomSeries,nrStations,normRandom2);
     matricial::transposedMatrix(normRandom2,nrStations,lengthOfRandomSeries,normRandomMinT);
@@ -1228,7 +1110,7 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
     free(correlationMatrixTemperature.minT);
 }
 
-void weatherGenerator2D::initializeMultiOccurrenceTemperature(int length)
+void weatherGenerator2D::initializeMultiOccurrenceTemperatureMeanDelta(int length)
 {
     multiOccurrenceTemperature = (TmultiOccurrenceTemperature *) calloc(length, sizeof(TmultiOccurrenceTemperature));
     for (int i=0;i<length;i++)
@@ -1244,22 +1126,28 @@ void weatherGenerator2D::initializeMultiOccurrenceTemperature(int length)
     }
 }
 
-void weatherGenerator2D::initializeTemperaturesOutput(int length)
+void weatherGenerator2D::initializeTemperaturesOutputMeanDelta(int length)
 {
     maxTGenerated = (double **) calloc(length, sizeof(double *));
     minTGenerated = (double **) calloc(length, sizeof(double *));
+    meanTGenerated = (double **) calloc(length, sizeof(double *));
+    deltaTGenerated = (double **) calloc(length, sizeof(double *));
     occurrencePrecGenerated = (double **) calloc(length, sizeof(double *));
     amountsPrecGenerated = (double **) calloc(length, sizeof(double *));
     for (int i=0;i<length;i++)
     {
         maxTGenerated[i] = (double *) calloc(nrStations, sizeof(double));
         minTGenerated[i] = (double *) calloc(nrStations, sizeof(double));
+        meanTGenerated[i] = (double *) calloc(nrStations, sizeof(double));
+        deltaTGenerated[i] = (double *) calloc(nrStations, sizeof(double));
         occurrencePrecGenerated[i] = (double *) calloc(nrStations, sizeof(double));
         amountsPrecGenerated[i] = (double *) calloc(nrStations, sizeof(double));
         for(int j=0;j<nrStations;j++)
         {
             maxTGenerated[i][j] = NODATA;
             minTGenerated[i][j] = NODATA;
+            meanTGenerated[i][j] = NODATA;
+            deltaTGenerated[i][j] = NODATA;
             occurrencePrecGenerated[i][j] = NODATA;
             amountsPrecGenerated[i][j] = NODATA;
         }
@@ -1269,21 +1157,21 @@ void weatherGenerator2D::initializeTemperaturesOutput(int length)
 
 
 
-void weatherGenerator2D::multisiteTemperatureGeneration()
+void weatherGenerator2D::multisiteTemperatureGenerationMeanDelta()
 {
     int lengthOfRandomSeries;
     lengthOfRandomSeries = parametersModel.yearOfSimulation*365;
     //weatherGenerator2D::initializeMultiOccurrenceTemperature(lengthOfRandomSeries);
     // fill in the data of simulations
-    int day,month;
+    int day,monthSim;
     int counter = 0;
     for (int j=1;j<=parametersModel.yearOfSimulation;j++)
     {
         for (int i=0; i<365;i++)
         {
-            weatherGenerator2D::dateFromDoy(i+1,1,&day,&month); // 1 to avoid leap years
+            weatherGenerator2D::dateFromDoy(i+1,1,&day,&monthSim); // 1 to avoid leap years
             multiOccurrenceTemperature[counter].year_simulated = j;
-            multiOccurrenceTemperature[counter].month_simulated = month;
+            multiOccurrenceTemperature[counter].month_simulated = monthSim;
             multiOccurrenceTemperature[counter].day_simulated = day;
             counter++;
         }
@@ -1334,15 +1222,15 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             X[j] = multiOccurrenceTemperature[j].occurrence_simulated[i];
             jModulo = j%365;
 
-            averageT[0][j] = temperatureCoefficients[i].maxTDry.averageEstimation[jModulo];
-            averageT[1][j] = temperatureCoefficients[i].minTDry.averageEstimation[jModulo];
-            averageT[2][j] = temperatureCoefficients[i].maxTWet.averageEstimation[jModulo];
-            averageT[3][j] = temperatureCoefficients[i].minTWet.averageEstimation[jModulo];
+            averageT[0][j] = temperatureCoefficients[i].meanTDry.averageEstimation[jModulo];
+            averageT[1][j] = temperatureCoefficients[i].deltaTDry.averageEstimation[jModulo];
+            averageT[2][j] = temperatureCoefficients[i].meanTWet.averageEstimation[jModulo];
+            averageT[3][j] = temperatureCoefficients[i].deltaTWet.averageEstimation[jModulo];
 
-            stdDevT[0][j] = temperatureCoefficients[i].maxTDry.stdDevEstimation[jModulo];
-            stdDevT[1][j] = temperatureCoefficients[i].minTDry.stdDevEstimation[jModulo];
-            stdDevT[2][j] = temperatureCoefficients[i].maxTWet.stdDevEstimation[jModulo];
-            stdDevT[3][j] = temperatureCoefficients[i].minTWet.stdDevEstimation[jModulo];
+            stdDevT[0][j] = temperatureCoefficients[i].meanTDry.stdDevEstimation[jModulo];
+            stdDevT[1][j] = temperatureCoefficients[i].deltaTDry.stdDevEstimation[jModulo];
+            stdDevT[2][j] = temperatureCoefficients[i].meanTWet.stdDevEstimation[jModulo];
+            stdDevT[3][j] = temperatureCoefficients[i].deltaTWet.stdDevEstimation[jModulo];
 
         }
         double* residuals = (double*)calloc(2, sizeof(double));
@@ -1362,8 +1250,8 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
 
         for (int j=0;j<lengthOfRandomSeries;j++)
         {
-            eps[0][j] = normRandomMaxT[j][i];
-            eps[1][j] = normRandomMinT[j][i];
+            eps[0][j] = normRandomMeanT[j][i];
+            eps[1][j] = normRandomDeltaT[j][i];
             //printf("%.1f %.1f\n",eps[0][j],eps[1][j]);
         }
         //getchar();
@@ -1410,10 +1298,10 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
         for (int j=0;j<lengthOfRandomSeries;j++)
         {
             //X[j] = 1 - X[j]; // to come back to the original code
-            cAverage[0][j] = X[j]*averageT[2][j] + (1- X[j])*averageT[0][j]; // for Tmax
-            cAverage[1][j] = X[j]*averageT[3][j] + (1- X[j])*averageT[1][j]; // for Tmin
-            cStdDev[0][j] = X[j]*stdDevT[2][j] + (1-X[j])*stdDevT[0][j]; // for Tmax
-            cStdDev[1][j] = X[j]*stdDevT[3][j] + (1-X[j])*stdDevT[1][j]; // for Tmin
+            cAverage[0][j] = X[j]*averageT[2][j] + (1- X[j])*averageT[0][j]; // for Tmean
+            cAverage[1][j] = X[j]*averageT[3][j] + (1- X[j])*averageT[1][j]; // for Tdelta
+            cStdDev[0][j] = X[j]*stdDevT[2][j] + (1-X[j])*stdDevT[0][j]; // for Tmean
+            cStdDev[1][j] = X[j]*stdDevT[3][j] + (1-X[j])*stdDevT[1][j]; // for Tdelta
         }
         // !!!!!!
         for (int j=0;j<lengthOfRandomSeries;j++)
@@ -1439,16 +1327,15 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
                 Xp[1][j] = Xp[0][j] - 0.2*fabs(Xp[0][j]);
             }
         }
-        double averageTmax[365]={0};
-        double averageTmin[365]={0};
+        double averageTmean[365]={0};
+        double averageTdelta[365]={0};
         for (int j=0;j<lengthOfRandomSeries;j++)
         {
-            maxTGenerated[j][i] = Xp[0][j];
-            minTGenerated[j][i] = Xp[1][j];
+            meanTGenerated[j][i] = Xp[0][j];
+            deltaTGenerated[j][i] = Xp[1][j];
             occurrencePrecGenerated[j][i] = X[j];
-            averageTmax[j%365] += maxTGenerated[j][i]/parametersModel.yearOfSimulation;
-            averageTmin[j%365] += minTGenerated[j][i]/parametersModel.yearOfSimulation;
-            //printf("%.1f %d\n",maxTGenerated[j][i],parametersModel.yearOfSimulation);
+            averageTmean[j%365] += meanTGenerated[j][i]/parametersModel.yearOfSimulation;
+            averageTdelta[j%365] += deltaTGenerated[j][i]/parametersModel.yearOfSimulation;
         }
         //getchar();
         // free memory
@@ -1488,3 +1375,4 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
     free(multiOccurrenceTemperature);
 
 }
+*/
