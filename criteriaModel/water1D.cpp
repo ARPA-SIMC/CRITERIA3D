@@ -504,7 +504,7 @@ double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
  * \name computeOptimalIrrigation
  * \brief assign subirrigation to restore field capacity in the root zone
  * \param soilLayers, irrigationMax
- * \return irrigation [m]
+ * \return irrigation [mm]
  */
 double computeOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, double irrigationMax)
 {
