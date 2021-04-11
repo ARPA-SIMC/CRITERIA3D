@@ -34,7 +34,6 @@ class Crit1DSimulation
 
         // soil
         soil::Crit3DTextureClass soilTexture[13];
-        soil::Crit3DFittingOptions fittingOptions;
 
         // dates
         QDate firstSimulationDate;

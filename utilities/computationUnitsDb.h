@@ -24,6 +24,11 @@
         int idSoilNumber;
 
         bool isNumericalInfiltration;
+        bool isGeometricLayers;
+        bool isOptimalIrrigation;
+        bool useWaterTableData;
+        bool useWaterRetentionData;
+        double slope;
 
         Crit1DUnit();
     };

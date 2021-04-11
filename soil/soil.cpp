@@ -771,7 +771,7 @@ namespace soil
             horizon->vanGenuchten.thetaS = soil::estimateThetaSat(horizon, horizon->bulkDensity);
         }
 
-        // fitting (Marquardt)
+        // water retention curve fitting
         if (fittingOptions->useWaterRetentionData && horizon->dbData.waterRetention.size() > 0)
         {
             fittingWaterRetentionCurve(horizon, fittingOptions);
@@ -977,7 +977,7 @@ namespace soil
         {
             Crit3DLayer newLayer;
             newLayer.thickness = round(currentThikness*100) / 100;
-            newLayer.depth = upperDepth + newLayer.thickness / 2.0;;
+            newLayer.depth = upperDepth + newLayer.thickness * 0.5;
 
             // last layer: thickness reduced
             if ((upperDepth + newLayer.thickness) > totalDepth)

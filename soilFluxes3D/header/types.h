@@ -10,8 +10,9 @@
 
     struct Tboundary{
         short type;
-        float slope;
-        double waterFlow;                   /*!< [m3 s-1] */
+        float slope;                        /*!< [m m-1]    */
+        float boundaryArea;                 /*!< [m2] (only for surface runoff [m]) */
+        double waterFlow;                   /*!< [m3 s-1]   */
         double sumBoundaryWaterFlow;        /*!< [m3] sum of boundary water flow */
         double prescribedTotalPotential;	/*!< [m] imposed total soil-water potential (H) */
 
@@ -89,7 +90,8 @@
 
         double volume_area;         /*!< [m^3] sub-surface: volume of voxel   */
                                     /*!< [m^2] surface: area of voxel   */
-        float x, y, z;              /*!< [m] coordinates of the center of the voxel */
+        float x, y;                 /*!< [m] coordinates of the center of the voxel */
+        double z;                   /*!< [m] heigth of the center of the voxel */
 
         Tsoil *Soil;                /*!< soil pointer */
         Tboundary *boundary;        /*!< boundary pointer */
