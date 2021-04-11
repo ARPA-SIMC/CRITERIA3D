@@ -66,7 +66,6 @@
             Crit1DCase myCase;
             Crit3DCrop cropFromDB;
             soil::Crit3DTextureClass textureClassList[13];
-            soil::Crit3DFittingOptions fittingOptions;
             QString tableMeteo;
             bool cropChanged;
             QStringList yearList;

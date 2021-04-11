@@ -215,8 +215,8 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  * \param slope
  * \return
  */
- int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, float z, double volume_or_area, bool isSurface,
-                        bool isBoundary, int boundaryType, float slope)
+ int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, double z, double volume_or_area, bool isSurface,
+                        bool isBoundary, int boundaryType, float slope, float boundaryArea)
  {
     if (myNode == nullptr) return(MEMORY_ERROR);
     if ((myIndex < 0) || (myIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
@@ -224,7 +224,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 	if (isBoundary)
 	{
 		myNode[myIndex].boundary = new(Tboundary);
-		initializeBoundary(myNode[myIndex].boundary, boundaryType, slope);
+        initializeBoundary(myNode[myIndex].boundary, boundaryType, slope, boundaryArea);
 	}
 
     if ((myStructure.computeHeat || myStructure.computeSolutes) && ! isSurface)
@@ -249,10 +249,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  int DLL_EXPORT __STDCALL setNodeLink(long n, long linkIndex, short direction, float interfaceArea)
  {
     /*! error check */
-    if (myNode == nullptr) return(MEMORY_ERROR);
+    if (myNode == nullptr) return MEMORY_ERROR;
 
     if ((n < 0) || (n >= myStructure.nrNodes) || (linkIndex < 0) || (linkIndex >= myStructure.nrNodes))
-        return(INDEX_ERROR);
+        return INDEX_ERROR;
 
     short j;
     switch (direction)
@@ -297,9 +297,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
                     break;
         default :
-                    return(PARAMETER_ERROR);
+                    return PARAMETER_ERROR;
     }
-	return(CRIT3D_OK);
+    return CRIT3D_OK;
  }
 
 
@@ -318,7 +318,8 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 	 myCulvert.height = height;					// [m]
 
 	myNode[nodeIndex].boundary = new(Tboundary);
-	initializeBoundary(myNode[nodeIndex].boundary, BOUNDARY_CULVERT, float(slope));
+    double boundaryArea = width*height;
+    initializeBoundary(myNode[nodeIndex].boundary, BOUNDARY_CULVERT, float(slope), float(boundaryArea));
 
 	 return(CRIT3D_OK);
  }
@@ -633,9 +634,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
         if  (myNode[nodeIndex].isSurface)
         {
             if ((myNode[nodeIndex].H - myNode[nodeIndex].z) > 0.0001)
-                return(100.0);
+                return 100;
             else
-                return(0.0);
+                return 0;
         }
         else
             return (myNode[nodeIndex].Se*100.0);

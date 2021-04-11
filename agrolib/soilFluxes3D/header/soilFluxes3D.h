@@ -29,8 +29,8 @@
                               int errorMagnitude, float MBRMagnitude);
 
     // TOPOLOGY
-    __EXTERN int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, float z, double volume_or_area,
-                                        bool isSurface, bool isBoundary, int boundaryType, float slope);
+    __EXTERN int DLL_EXPORT __STDCALL setNode(long myIndex, float x, float y, double z, double volume_or_area,
+                                        bool isSurface, bool isBoundary, int boundaryType, float slope, float boundaryArea);
 
     __EXTERN int DLL_EXPORT __STDCALL setNodeLink(long nodeIndex, long linkIndex, short direction, float S0);
 

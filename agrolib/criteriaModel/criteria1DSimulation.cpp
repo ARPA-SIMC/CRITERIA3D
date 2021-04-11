@@ -80,8 +80,11 @@ void Crit1DSimulation::updateSeasonalForecast(Crit3DDate myDate, int* index)
 
 bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
 {
-    myCase.idCase = myUnit.idCase;
-    myCase.isNumericalInfiltration = myUnit.isNumericalInfiltration;
+    myCase.unit = myUnit;
+    myCase.fittingOptions.useWaterRetentionData = myUnit.useWaterRetentionData;
+
+    if (! loadCropParameters(&dbCrop, myUnit.idCrop, &(myCase.myCrop), &myError))
+        return false;
 
     if (! setSoil(myUnit.idSoil, myError))
         return false;
@@ -103,9 +106,6 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
         myError = "Missing meteo data.";
         return false;
     }
-
-    if (! loadCropParameters(&dbCrop, myUnit.idCrop, &(myCase.myCrop), &myError))
-        return false;
 
     if (! isSeasonalForecast)
     {
@@ -185,7 +185,7 @@ bool Crit1DSimulation::runModel(const Crit1DUnit& myUnit, QString &myError)
 
 bool Crit1DSimulation::setSoil(QString soilCode, QString &myError)
 {
-    if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), soilTexture, &fittingOptions, &myError))
+    if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), soilTexture, &(myCase.fittingOptions), &myError))
         return false;
 
     std::string errorString;
@@ -598,7 +598,7 @@ bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myErr
     }
     QSqlQuery qry(dbStateToRestore);
     qry.prepare( "SELECT * FROM variables WHERE ID_CASE = :id_case");
-    qry.bindValue(":id_case", myCase.idCase);
+    qry.bindValue(":id_case", myCase.unit.idCase);
 
     if( !qry.exec() )
     {
@@ -634,7 +634,7 @@ bool Crit1DSimulation::restoreState(QString dbStateToRestoreName, QString &myErr
     }
     qry.clear();
     qry.prepare( "SELECT * FROM waterContent WHERE ID_CASE = :id_case");
-    qry.bindValue(":id_case", myCase.idCase);
+    qry.bindValue(":id_case", myCase.unit.idCase);
 
     if( !qry.exec() )
     {
@@ -681,7 +681,7 @@ bool Crit1DSimulation::saveState(QString &myError)
     QSqlQuery qry(dbState);
 
     queryString = "INSERT INTO variables ( ID_CASE, DEGREE_DAYS, DAYS_SINCE_IRR ) VALUES ";
-    queryString += "('" + myCase.idCase + "'"
+    queryString += "('" + myCase.unit.idCase + "'"
                 + "," + QString::number(myCase.myCrop.degreeDays)
                 + "," + QString::number(myCase.myCrop.daysSinceIrrigation) + ")";
     if( !qry.exec(queryString) )
@@ -694,7 +694,7 @@ bool Crit1DSimulation::saveState(QString &myError)
     queryString = "INSERT INTO waterContent ( ID_CASE, NR_LAYER, WC ) VALUES ";
     for (unsigned int i = 0; i<myCase.soilLayers.size(); i++)
     {
-        queryString += "('" + myCase.idCase + "'," + QString::number(i) + ","
+        queryString += "('" + myCase.unit.idCase + "'," + QString::number(i) + ","
                     + QString::number(myCase.soilLayers[i].waterContent) + ")";
         if (i < (myCase.soilLayers.size()-1))
             queryString += ",";
@@ -713,10 +713,10 @@ bool Crit1DSimulation::saveState(QString &myError)
 
 bool Crit1DSimulation::createOutputTable(QString &myError)
 {
-    QString queryString = "DROP TABLE '" + myCase.idCase + "'";
+    QString queryString = "DROP TABLE '" + myCase.unit.idCase + "'";
     QSqlQuery myQuery = this->dbOutput.exec(queryString);
 
-    queryString = "CREATE TABLE '" + myCase.idCase + "'"
+    queryString = "CREATE TABLE '" + myCase.unit.idCase + "'"
                   + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
                   + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
                   + " RUNOFF REAL, DRAINAGE REAL, LATERAL_DRAINAGE REAL, CAPILLARY_RISE REAL, "
@@ -744,7 +744,7 @@ bool Crit1DSimulation::createOutputTable(QString &myError)
 
     if (myQuery.lastError().isValid())
     {
-        myError = "Error in creating table: " + myCase.idCase + "\n" + myQuery.lastError().text();
+        myError = "Error in creating table: " + myCase.unit.idCase + "\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -756,7 +756,7 @@ void Crit1DSimulation::prepareOutput(Crit3DDate myDate, bool isFirst)
 {
     if (isFirst)
     {
-        outputString = "INSERT INTO '" + myCase.idCase + "'"
+        outputString = "INSERT INTO '" + myCase.unit.idCase + "'"
                        + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, "
                        + " AVAILABLE_WATER, READILY_AW, FRACTION_AW, "
                        + " RUNOFF, DRAINAGE, LATERAL_DRAINAGE, CAPILLARY_RISE, "

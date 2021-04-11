@@ -433,28 +433,17 @@ double computeEvaporation(std::vector<soil::Crit3DLayer> &soilLayers, double max
 
 /*!
  * \brief compute surface runoff [mm]
- * \param myCrop
- * \param surface (soilLayers[0])
- * \return surfaceRunoff
  */
-double computeSurfaceRunoff(const Crit3DCrop& myCrop, std::vector<soil::Crit3DLayer> &soilLayers)
+double computeSurfaceRunoff(Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers)
 {
-    double clodHeight;          // [mm] effective height of clod
-    double roughness;           // [mm]
-    double surfaceRunoff;       // [mm]
+    double surfaceRunoff;           // [mm]
+    double maxSurfaceWater;         // [mm]
 
-    // TODO taking into account tillage and crop development
-    if (myCrop.isPluriannual())
-        clodHeight = 0.0;
-    else
-        clodHeight = 5.0;
-
-    roughness = myCrop.maxSurfacePuddle + clodHeight;
-
-    if (soilLayers[0].waterContent > roughness)
+    maxSurfaceWater = myCrop.getSurfaceWaterPonding();
+    if (soilLayers[0].waterContent > maxSurfaceWater)
     {
-       surfaceRunoff = soilLayers[0].waterContent - roughness;
-       soilLayers[0].waterContent = roughness;
+       surfaceRunoff = soilLayers[0].waterContent - maxSurfaceWater;
+       soilLayers[0].waterContent = maxSurfaceWater;
     }
     else
        surfaceRunoff = 0.0;

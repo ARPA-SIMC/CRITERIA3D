@@ -64,13 +64,8 @@ void Crit1DOutput::initialize()
 
 Crit1DCase::Crit1DCase()
 {
-    idCase = "";
-
     minLayerThickness = 0.02;           /*!< [m] default thickness = 2 cm  */
     geometricFactor = 1.2;              /*!< [-] default factor for geometric progression  */
-    isGeometricLayers = false;          // TODO add db units
-    optimizeIrrigation = true;          // TODO add db units
-    isNumericalInfiltration = false;
 
     soilLayers.clear();
 }
@@ -79,23 +74,27 @@ Crit1DCase::Crit1DCase()
 bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
 {
     int nrLayers = soilLayers.size();
+    int lastLayer = nrLayers-1;
+    int nrlateralLinks = 0;
 
-    int result = soilFluxes3D::initialize(nrLayers, nrLayers, 0, true, false, false);
+    int result = soilFluxes3D::initialize(nrLayers, nrLayers, nrlateralLinks, true, false, false);
     if (result != CRIT3D_OK)
     {
         myError = "Error in initialize numerical fluxes";
         return false;
     }
 
-    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, 10);
+    float horizontalConductivityRatio = 10.0;
+    soilFluxes3D::setHydraulicProperties(fittingOptions.waterRetentionCurve, MEAN_LOGARITHMIC, horizontalConductivityRatio);
     soilFluxes3D::setNumericalParameters(1, 3600, 100, 10, 12, 3);
 
+    // set soil properties (unit: MKS)
+    int soilIndex = 0;
     for (unsigned int horizonIndex = 0; horizonIndex < mySoil.nrHorizons; horizonIndex++)
     {
-        // unit: MKS
         soil::Crit3DHorizon horizon = mySoil.horizon[horizonIndex];
         float soilFraction = (1.0 - horizon.coarseFragments);
-        result = soilFluxes3D::setSoilProperties(0, horizonIndex,
+        result = soilFluxes3D::setSoilProperties(soilIndex, horizonIndex,
                             horizon.vanGenuchten.alpha * GRAVITY,
                             horizon.vanGenuchten.n, horizon.vanGenuchten.m,
                             horizon.vanGenuchten.he / GRAVITY,
@@ -111,52 +110,62 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
         }
     }
 
-    soilFluxes3D::setSurfaceProperties(0, 0.024, 0.005);
+    // set surface properties
+    double maxSurfaceWater = myCrop.getSurfaceWaterPonding();   // [mm]
+    maxSurfaceWater /= 1000.0;                                  // [m]
+    double roughnessManning = 0.024;                            // [s m^-0.33]
+    int surfaceIndex = 0;
+    soilFluxes3D::setSurfaceProperties(surfaceIndex, roughnessManning, maxSurfaceWater);
+
+    // field structure (baulatura)
+    float x0 = 0;
+    float y0 = 0;
+    double z0 = 0;
+    double lx = 25;                 // [m]
+    double ly = 200;                // [m]
+    double area = lx * ly;          // [m^2]
+    double slope = 0.002;           // [m m^-1]
+
+    // set surface (node 0)
+    bool isSurface = true;
+    int nodeIndex = 0;
+    soilFluxes3D::setNode(nodeIndex, x0, y0, z0, area, isSurface, true, BOUNDARY_RUNOFF, slope, ly);
+    soilFluxes3D::setNodeSurface(nodeIndex, surfaceIndex);
+    soilFluxes3D::setNodeLink(nodeIndex, nodeIndex + 1, DOWN, area);
+
+    // set nodes
+    isSurface = false;
+    for (int i = 1; i < nrLayers; i++)
+    {
+        double volume = area * soilLayers[i].thickness;             // [m^3]
+        double z = z0 - soilLayers[i].depth;                        // [m]
+        if (i == lastLayer)
+        {
+            if (unit.useWaterTableData)
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, slope, area);
+            else
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREEDRAINAGE, slope, area);
+        }
+        else
+        {
+            double boundaryArea = ly * soilLayers[i].thickness;
+            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREELATERALDRAINAGE, slope, boundaryArea);
+        }
+
+        // set soil
+        int horizonIndex = mySoil.getHorizonIndex(soilLayers[i].depth);
+        soilFluxes3D::setNodeSoil(i, soilIndex, horizonIndex);
+
+        // set links
+        soilFluxes3D::setNodeLink(i, i-1, UP, area);
+        if (i != lastLayer)
+        {
+            soilFluxes3D::setNodeLink(i, i+1, DOWN, area);
+        }
+    }
 
     return true;
 }
-/*
-
-    CRIT3DSurface = 100#                 '[m^2] surface
-
-    For i = 0 To nrLayers
-        If i = 0 Then
-            CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, suolo(i).prof, CRIT3DSurface, True, False, CRIT3D.BOUNDARY_NONE, 0#)
-            CRIT3DResult = Criteria3D.SetNodeSurface(i, 0)
-            CRIT3DResult = Criteria3D.SetNodeLink(i, i + 1, CRIT3D.DOWN, CRIT3DSurface)
-        Else
-            myProf = -(suolo(i).prof + ComputingThickness / 2#) / 100#          '[m]
-            myVolume = CRIT3DSurface * (ComputingThickness / 100#)              '[m3]
-            If i = 1 And computeHeat Then
-                CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, myProf, myVolume, False, True, CRIT3D.BOUNDARY_HEAT, 0#)
-                CRIT3DResult = Criteria3D.SetNodeLink(i, i + 1, CRIT3D.DOWN, CRIT3DSurface)
-            ElseIf i = nrLayers Then
-                If (FlagWaterTable = 1 And FlagWaterTableCase = 1) Then
-                    CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, myProf, myVolume, False, True, CRIT3D.BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, 0#)
-                Else
-                    CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, myProf, myVolume, False, True, CRIT3D.BOUNDARY_FREEDRAINAGE, 0)
-                End If
-                If computeHeat Then CRIT3DResult = Criteria3D.setFixedTemperature(i, Heat.BottomTemperature + ZERO_CELSIUS, Heat.BottomTemperatureDepth)
-            Else
-                CRIT3DResult = Criteria3D.SetNode(i, 0#, 0#, myProf, myVolume, False, False, CRIT3D.BOUNDARY_NONE, 0)
-                CRIT3DResult = Criteria3D.SetNodeLink(i, i + 1, CRIT3D.DOWN, CRIT3DSurface)
-            End If
-
-            CRIT3DResult = Criteria3D.SetNodeSoil(i, 0, suolo(i).Orizzonte)
-            CRIT3DResult = Criteria3D.SetNodeLink(i, i - 1, CRIT3D.UP, CRIT3DSurface)
-        End If
-        If CRIT3DResult <> CRIT3D.OK Or Err.Number <> 0 Then
-            MsgBox ("SetNode")
-            Exit Function
-        End If
-    Next i
-
-
-    initializeCriteria3D = True
-
-End Function
-*/
-
 
 
 bool Crit1DCase::initializeSoil(std::string &myError)
@@ -164,12 +173,12 @@ bool Crit1DCase::initializeSoil(std::string &myError)
     soilLayers.clear();
 
     double factor = 1.0;
-    if (isGeometricLayers) factor = geometricFactor;
+    if (unit.isGeometricLayers) factor = geometricFactor;
 
     if (! mySoil.setSoilLayers(minLayerThickness, factor, soilLayers, myError))
         return false;
 
-    if (isNumericalInfiltration)
+    if (unit.isNumericalInfiltration)
     {
         if (! initializeNumericalFluxes(myError))
             return false;
@@ -183,13 +192,13 @@ bool Crit1DCase::initializeSoil(std::string &myError)
 
 bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &myError)
 {
-    return dailyModel(myDate, meteoPoint, myCrop, soilLayers, output, optimizeIrrigation, myError);
+    return dailyModel(myDate, meteoPoint, myCrop, soilLayers, output, unit.isOptimalIrrigation, myError);
 }
 
 
 bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myCrop,
                        std::vector<soil::Crit3DLayer> &soilLayers, Crit1DOutput &myOutput,
-                       bool optimizeIrrigation, std::string &myError)
+                       bool isOptimalIrrigation, std::string &myError)
 {
     double ploughedSoilDepth = 0.5;     /*!< [m] depth of ploughed soil (working layer) */
 
@@ -246,7 +255,7 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
 
     // IRRIGATION
     double irrigation = myCrop.getIrrigationDemand(doy, prec, precTomorrow, myOutput.dailyMaxTranspiration, soilLayers);
-    if (optimizeIrrigation) irrigation = MINVALUE(irrigation, myCrop.getCropWaterDeficit(soilLayers));
+    if (isOptimalIrrigation) irrigation = MINVALUE(irrigation, myCrop.getCropWaterDeficit(soilLayers));
 
     // assign irrigation: optimal (subirrigation) or add to precipitation (sprinkler/drop)
     double waterInput = prec;
@@ -254,7 +263,7 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
 
     if (irrigation > 0)
     {
-        if (optimizeIrrigation)
+        if (isOptimalIrrigation)
         {
             myOutput.dailyIrrigation = computeOptimalIrrigation(soilLayers, irrigation);
         }
@@ -278,7 +287,7 @@ bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myC
     myOutput.dailySurfaceRunoff = computeSurfaceRunoff(myCrop, soilLayers);
 
     // adjust irrigation losses
-    if (! optimizeIrrigation)
+    if (! isOptimalIrrigation)
     {
         if ((myOutput.dailySurfaceRunoff > 1) && (myOutput.dailyIrrigation > 0))
         {

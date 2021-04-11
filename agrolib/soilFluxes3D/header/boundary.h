@@ -6,7 +6,7 @@
     void updateBoundary();
     void updateBoundaryHeat();
     void updateBoundaryWater(double deltaT);
-    void initializeBoundary(Tboundary *myBoundary, int myType, float slope);
+    void initializeBoundary(Tboundary *myBoundary, int myType, float slope, float boundaryArea);
 
 #endif  // BOUNDARY_H
 

@@ -10,6 +10,9 @@
     #ifndef METEOPOINT_H
         #include "meteoPoint.h"
     #endif
+    #ifndef COMPUTATIONUNITSDB_H
+        #include "computationUnitsDb.h"
+    #endif
 
     #include <QString>
     #include <vector>
@@ -47,21 +50,15 @@
     class Crit1DCase
     {
     public:
-        QString idCase;
+        Crit1DUnit unit;
 
         // SOIL
         soil::Crit3DSoil mySoil;
         std::vector<soil::Crit3DLayer> soilLayers;
-
-        double minLayerThickness;       // [m]
-        double geometricFactor;         // [-]
-
-        bool isGeometricLayers;
-        bool isNumericalInfiltration;
+        soil::Crit3DFittingOptions fittingOptions;
 
         // CROP
         Crit3DCrop myCrop;
-        bool optimizeIrrigation;
 
         // WHEATER
         Crit3DMeteoPoint meteoPoint;
@@ -78,13 +75,16 @@
         double getSoilWaterDeficit(double depth);
 
     private:
+        double minLayerThickness;       // [m]
+        double geometricFactor;         // [-]
+
         bool initializeNumericalFluxes(std::string &myError);
 
     };
 
 
     bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers,
-                    Crit1DOutput &myOutput, bool optimizeIrrigation, std::string &myError);
+                    Crit1DOutput &myOutput, bool isOptimalIrrigation, std::string &myError);
 
 
 #endif // CRITERIA1DCASE_H
