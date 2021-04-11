@@ -411,9 +411,9 @@ bool Project3D::setCrit3DTopography()
                         lateralArea = float(DEM.header->cellSize);
 
                         if (int(boundaryMap.value[row][col]) == BOUNDARY_RUNOFF)
-                            myResult = soilFluxes3D::setNode(index, float(x), float(y), float(z), area, true, true, BOUNDARY_RUNOFF, float(slope));
+                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, true, BOUNDARY_RUNOFF, slope, DEM.header->cellSize);
                         else
-                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, false, BOUNDARY_NONE, 0.0);
+                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, false, BOUNDARY_NONE, 0, 0);
                     }
                     // sub-surface
                     else
@@ -422,13 +422,18 @@ bool Project3D::setCrit3DTopography()
 
                         // last project layer or last soil layer
                         if (layer == (nrLayers - 1) || ! isWithinSoil(soilIndex, layerDepth.at(size_t(layer+1))))
-                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREEDRAINAGE, 0.0);
+                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREEDRAINAGE, 0, area);
                         else
                         {
                             if (int(boundaryMap.value[row][col]) == BOUNDARY_RUNOFF)
-                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREELATERALDRAINAGE, slope);
+                            {
+                                float boundaryArea = DEM.header->cellSize * layerThickness[layer];
+                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREELATERALDRAINAGE, slope, boundaryArea);
+                            }
                             else
-                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, false, BOUNDARY_NONE, 0.0);
+                            {
+                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, false, BOUNDARY_NONE, 0, 0);
+                            }
                         }
                     }
 
