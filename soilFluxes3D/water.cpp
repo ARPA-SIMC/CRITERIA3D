@@ -108,7 +108,7 @@ double runoff(long i, long j, TlinkedNode *link, double deltaT, unsigned long ap
     double roughness = (myNode[i].Soil->Roughness + myNode[j].Soil->Roughness) / 2.;
 
     //Manning
-    double v = pow(Hs, 2.0/3.0) * sqrt(dH/cellDistance) / roughness;
+    double v = pow(Hs, 2./3.) * sqrt(dH/cellDistance) / roughness;
     double flowArea = link->area * Hs;
 
     Courant = MAXVALUE(Courant, v * deltaT / cellDistance);
@@ -178,7 +178,7 @@ double redistribution(long i, TlinkedNode *link, int linkType)
 
 bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsigned long myApprox, int linkType)
 {
-	if ((*link).index == NOLINK) return (false);
+    if ((*link).index == NOLINK) return false;
 
     double val;
     long j = (*link).index;
@@ -216,7 +216,7 @@ bool computeFlux(long i, int matrixIndex, TlinkedNode *link, double deltaT, unsi
         invariantFlux[i] += liquidThermal;
     }
 
-    return (true);
+    return true;
 }
 
 

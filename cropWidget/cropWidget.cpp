@@ -784,32 +784,34 @@ void Crit3DCropWidget::on_actionChooseCase()
     int index = caseListComboBox.currentIndex();
     QString errorStr;
 
-    // METEO
-    QString idMeteo = unitList[index].idMeteo;
-    meteoListComboBox.setCurrentText(idMeteo);
+    myCase.unit = unitList[index];
+    myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
 
-    // SOIL
-    QString idSoil = getIdSoilString(&dbSoil, unitList[index].idSoilNumber, &errorStr);
-    if (idSoil != "")
-    {
-        soilListComboBox.setCurrentText(idSoil);
-        this->on_actionChooseSoil(idSoil);
-    }
-    else
-    {
-        QString soilNumber = QString::number(unitList[index].idSoilNumber);
-        QMessageBox::critical(nullptr, "Error!", "Missing soil nr: " + soilNumber + "\n" + errorStr);
-    }
+    // METEO
+    meteoListComboBox.setCurrentText(myCase.unit.idMeteo);
 
     // CROP
-    QString idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class", unitList[index].idCropClass, &errorStr);
-    if (idCrop != "")
+    myCase.unit.idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class", myCase.unit.idCropClass, &errorStr);
+    if (myCase.unit.idCrop != "")
     {
-        cropListComboBox.setCurrentText(idCrop);
+        cropListComboBox.setCurrentText(myCase.unit.idCrop);
     }
     else
     {
-        QMessageBox::critical(nullptr, "Error!", "Missing crop class: " + unitList[index].idCropClass + "\n" + errorStr);
+        QMessageBox::critical(nullptr, "Error!", "Missing crop class: " + myCase.unit.idCropClass + "\n" + errorStr);
+    }
+
+    // SOIL
+    myCase.unit.idSoil = getIdSoilString(&dbSoil, myCase.unit.idSoilNumber, &errorStr);
+    if (myCase.unit.idSoil != "")
+    {
+        soilListComboBox.setCurrentText(myCase.unit.idSoil);
+        on_actionChooseSoil(myCase.unit.idSoil);
+    }
+    else
+    {
+        QString soilNumber = QString::number(myCase.unit.idSoilNumber);
+        QMessageBox::critical(nullptr, "Error!", "Missing soil nr: " + soilNumber + "\n" + errorStr);
     }
 
     this->firstYearListComboBox.blockSignals(false);
@@ -1288,7 +1290,7 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
     QString error;
     myCase.mySoil.cleanSoil();
 
-    if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), textureClassList, &fittingOptions, &error))
+    if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), textureClassList, &(myCase.fittingOptions), &error))
     {
         if (error.contains("Empty"))
         {

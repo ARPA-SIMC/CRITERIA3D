@@ -250,6 +250,26 @@ bool Crit3DCrop::isPluriannual() const
 }
 
 
+/*!
+ * \brief getSurfaceWaterPonding
+ * \return maximum height of water ponding [mm]
+ */
+double Crit3DCrop::getSurfaceWaterPonding()
+{
+    // TODO taking into account tillage and crop development
+    double clodHeight;          // [mm] height of clod
+    if (isPluriannual())
+        clodHeight = 0.0;
+    else
+        clodHeight = 5.0;
+
+    if (maxSurfacePuddle == NODATA)
+        return clodHeight;
+    else
+        return maxSurfacePuddle + clodHeight;
+}
+
+
 bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTableDepth)
 {
     int currentDoy = getDoyFromDate(myDate);
@@ -712,5 +732,9 @@ double computeDegreeDays(double myTmin, double myTmax, double myLowerThreshold, 
 {
     return MAXVALUE((myTmin + MINVALUE(myTmax, myUpperThreshold)) / 2. - myLowerThreshold, 0);
 }
+
+
+
+
 
 

@@ -7,17 +7,23 @@
 
 Crit1DUnit::Crit1DUnit()
 {
-    this->idCase = "";
-    this->idCropClass = "";
-    this->idCrop = "";
+    idCase = "";
+    idCropClass = "";
+    idCrop = "";
 
-    this->idSoil = "";
-    this->idSoilNumber = NODATA;
+    idSoil = "";
+    idSoilNumber = NODATA;
 
-    this->idMeteo = "";
-    this->idForecast = "";
+    idMeteo = "";
+    idForecast = "";
 
-    this->isNumericalInfiltration = false;
+    // default values
+    isNumericalInfiltration = false;
+    isGeometricLayers = false;
+    isOptimalIrrigation = true;
+    useWaterTableData = true;
+    useWaterRetentionData = true;
+    slope = 0.002;
 }
 
 
@@ -87,7 +93,14 @@ bool ComputationUnitsDB::writeListToUnitsTable(QStringList idCase, QStringList i
 // load computation units list
 bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString &error)
 {
-    QString queryString = "SELECT * FROM units";
+    QString unitsTable = "units";
+    QStringList fieldList = getFields(&db, unitsTable);
+    bool existNumericalInfiltration = fieldList.contains("numerical_infiltration");
+    bool existWaterTable = fieldList.contains("use_water_table");
+    bool existOptimalIrrigation = fieldList.contains("optimal_irrigation");
+    // TODO others
+
+    QString queryString = "SELECT * FROM " + unitsTable;
     queryString += " ORDER BY ID_CROP, ID_SOIL, ID_METEO";
 
     QSqlQuery query = db.exec(queryString);
@@ -98,7 +111,7 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
         {
             error = "dbUnits error: " + query.lastError().nativeErrorCode() + " - " + query.lastError().text();
         }
-        else error = "Missing units";
+        else error = "Missing units data";
 
         return false;
     }
@@ -116,7 +129,14 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
         unitList[i].idMeteo = query.value("ID_METEO").toString();
         unitList[i].idForecast = query.value("ID_METEO").toString();
         unitList[i].idSoilNumber = query.value("ID_SOIL").toInt();
-        unitList[i].isNumericalInfiltration = getValue(query.value("numerical_infiltration"));
+
+        if (existNumericalInfiltration)
+            unitList[i].isNumericalInfiltration = query.value("numerical_infiltration").toBool();
+        if (existWaterTable)
+            unitList[i].useWaterTableData = query.value("use_water_table").toBool();
+        if (existOptimalIrrigation)
+            unitList[i].isOptimalIrrigation = query.value("optimal_irrigation").toBool();
+
         i++;
     }
     while(query.next());
