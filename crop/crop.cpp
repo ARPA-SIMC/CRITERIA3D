@@ -609,7 +609,6 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
                 double addLayerTransp = redistribution * (roots.rootDensity[unsigned(i)] / totRootDensityWithoutStress);
                 layerTranspiration[unsigned(i)] += addLayerTransp;
                 TRs += addLayerTransp;
-                TRe += addLayerTransp;
             }
         }
     }
