@@ -2382,6 +2382,10 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         unsigned col;
         if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
         {
+            if (meteoWidgetGridList[meteoWidgetGridList.size()-1]->getIsEnsemble())
+            {
+                qDebug() << "prev grid is ensemble";
+            }
             meteoWidgetGridList[meteoWidgetGridList.size()-1]->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
         }
         return;
