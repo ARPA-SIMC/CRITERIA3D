@@ -35,12 +35,15 @@
             void handleMarkerClicked();
             void closeEvent(QCloseEvent *event);
             void setIsEnsemble(bool value);
+            bool getIsEnsemble();
             void setNrMembers(int value);
+            void setIsAllBlack(bool value);
 
     private:
             int meteoWidgetID;
             bool isGrid;
             bool isEnsemble;
+            bool isAllBlack;
             int nrMembers;
             QPushButton *addVarButton;
             QPushButton *dailyButton;

@@ -37,6 +37,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 {
     this->isGrid = isGrid;
     this->isEnsemble = false;
+    this->isAllBlack = false;
     this->nrMembers = NODATA;
 
     if (this->isGrid)
@@ -506,29 +507,36 @@ void Crit3DMeteoWidget::resetValues()
                 }
                 if (isEnsemble)
                 {
-                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]+"_EnsembleNr_"+QString::number(mp+1));
+                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]+"_Ensemble");
                 }
                 else
                 {
                     line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
                 }
-                QColor lineColor = colorLine[i];
-                if (nMeteoPoints == 1)
+                if(isAllBlack && mp==nMeteoPoints-1)
                 {
-                    lineColor.setAlpha(255);
+                    line->setColor(Qt::black);
                 }
                 else
                 {
-                    if (isEnsemble)
+                    QColor lineColor = colorLine[i];
+                    if (nMeteoPoints == 1)
                     {
                         lineColor.setAlpha(255);
                     }
                     else
                     {
-                        lineColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))));
+                        if (isEnsemble)
+                        {
+                            lineColor.setAlpha(255);
+                        }
+                        else
+                        {
+                            lineColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))));
+                        }
                     }
+                    line->setColor(lineColor);
                 }
-                line->setColor(lineColor);
                 vectorLine.append(line);
             }
             if (vectorLine.size() != 0)
@@ -560,31 +568,39 @@ void Crit3DMeteoWidget::resetValues()
                 }
                 if (isEnsemble)
                 {
-                    name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i]+"_EnsembleNr_"+QString::number(mp+1);
+                    name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i]+"_Ensemble";
                 }
                 else
                 {
                     name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
                 }
                 QBarSet* set = new QBarSet(name);
-                QColor barColor = colorBar[i];
-                if (nMeteoPoints == 1)
+                if(isAllBlack && mp==nMeteoPoints-1)
                 {
-                    barColor.setAlpha(255);
+                    set->setColor(Qt::black);
+                    set->setBorderColor(Qt::black);
                 }
                 else
                 {
-                    if (isEnsemble)
+                    QColor barColor = colorBar[i];
+                    if (nMeteoPoints == 1)
                     {
                         barColor.setAlpha(255);
                     }
                     else
                     {
-                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                        if (isEnsemble)
+                        {
+                            barColor.setAlpha(255);
+                        }
+                        else
+                        {
+                            barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                        }
                     }
+                    set->setColor(barColor);
+                    set->setBorderColor(barColor);
                 }
-                set->setColor(barColor);
-                set->setBorderColor(barColor);
                 vectorBarSet.append(set);
             }
             if (vectorBarSet.size() != 0)
@@ -786,23 +802,30 @@ void Crit3DMeteoWidget::drawDailyVar()
             }
             else
             {
-                QColor barColor = colorBar[j];
-                if (nMeteoPoints == 1)
+                if(isAllBlack && mp==nMeteoPoints-1)
                 {
-                    barColor.setAlpha(255);
+                    setVector[mp][j]->setColor(Qt::black);
                 }
                 else
                 {
-                    if (isEnsemble)
+                    QColor barColor = colorBar[j];
+                    if (nMeteoPoints == 1)
                     {
                         barColor.setAlpha(255);
                     }
                     else
                     {
-                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                        if (isEnsemble)
+                        {
+                            barColor.setAlpha(255);
+                        }
+                        else
+                        {
+                            barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                        }
                     }
+                    setVector[mp][j]->setColor(barColor);
                 }
-                setVector[mp][j]->setColor(barColor);
             }
         }
     }
@@ -1596,9 +1619,19 @@ void Crit3DMeteoWidget::setIsEnsemble(bool value)
     tableButton->setEnabled(!value);
 }
 
+bool Crit3DMeteoWidget::getIsEnsemble()
+{
+    return isEnsemble;
+}
+
 void Crit3DMeteoWidget::setNrMembers(int value)
 {
     nrMembers = value;
+}
+
+void Crit3DMeteoWidget::setIsAllBlack(bool value)
+{
+    isAllBlack = value;
 }
 
 int Crit3DMeteoWidget::getMeteoWidgetID() const
