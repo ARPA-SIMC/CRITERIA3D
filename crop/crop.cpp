@@ -626,63 +626,6 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
 }
 
 
-double Crit3DCrop::getIrrigationDemand(int doy, double currentPrec, double nextPrec, double maxTranspiration,
-                                       const std::vector<soil::Crit3DLayer> &soilLayers)
-{
-    // update days since last irrigation
-    if (daysSinceIrrigation != NODATA)
-        daysSinceIrrigation++;
-
-    // check irrigated crop
-    if (idCrop == "" || ! isLiving || isEqual(irrigationVolume, NODATA) || isEqual(irrigationVolume, 0))
-        return 0;
-
-    // check irrigation period
-    if (doyStartIrrigation != NODATA && doyEndIrrigation != NODATA)
-    {
-        if (doy < doyStartIrrigation || doy > doyEndIrrigation)
-            return 0;
-    }
-    if (degreeDaysStartIrrigation != NODATA && degreeDaysEndIrrigation != NODATA)
-    {
-        if (degreeDays < degreeDaysStartIrrigation || degreeDays > degreeDaysEndIrrigation)
-            return 0;
-    }
-
-    // check forecast (today and tomorrow)
-    double waterNeeds = irrigationVolume / irrigationShift;
-    double todayWater = currentPrec + soilLayers[0].waterContent;
-    double twoDaysWater = todayWater + nextPrec;
-    if (todayWater >= waterNeeds) return 0;
-    if (twoDaysWater >= 2*waterNeeds) return 0;
-
-    // check water stress (before infiltration)
-    double threshold = 1. - stressTolerance;
-
-    double waterStress = 0;
-    this->computeTranspiration(maxTranspiration, soilLayers, waterStress);
-    if (waterStress <= threshold)
-        return 0;
-
-    // check irrigation shift
-    if (daysSinceIrrigation != NODATA)
-    {
-        // stress too high -> forced irrigation
-        if ((daysSinceIrrigation < irrigationShift) && (waterStress < (threshold + 0.1)))
-            return 0;
-    }
-
-    // reset irrigation shift
-    daysSinceIrrigation = 0;
-
-    // return irrigationVolume
-    if (irrigationShift > 1)
-        return irrigationVolume - floor(twoDaysWater);
-    else
-        return MAXVALUE(irrigationVolume - floor(todayWater), 2);
-}
-
-
 speciesType getCropType(std::string cropType)
 {
     // lower case
@@ -731,9 +674,5 @@ double computeDegreeDays(double myTmin, double myTmax, double myLowerThreshold, 
 {
     return MAXVALUE((myTmin + MINVALUE(myTmax, myUpperThreshold)) / 2. - myLowerThreshold, 0);
 }
-
-
-
-
 
 

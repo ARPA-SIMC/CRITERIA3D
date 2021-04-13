@@ -70,6 +70,7 @@
 
         bool initializeSoil(std::string &myError);
         bool computeDailyModel(Crit3DDate myDate, std::string &myError);
+
         double getWaterContent(double depth);
         double getWaterPotential(double depth);
         double getSoilWaterDeficit(double depth);
@@ -77,14 +78,18 @@
     private:
         double minLayerThickness;       // [m]
         double geometricFactor;         // [-]
+        double ploughedSoilDepth;       // [m]
+
+        std::vector<double> prevWaterContent;
 
         bool initializeNumericalFluxes(std::string &myError);
+        bool computeWaterFluxes(double dailyWaterInput);
+        double checkIrrigationDemand(int doy, double currentPrec, double nextPrec, double maxTranspiration);
+        void saveWaterContent();
+        void restoreWaterContent();
 
     };
 
-
-    bool dailyModel(Crit3DDate myDate, Crit3DMeteoPoint &meteoPoint, Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers,
-                    Crit1DOutput &myOutput, bool isOptimalIrrigation, std::string &myError);
 
 
 #endif // CRITERIA1DCASE_H
