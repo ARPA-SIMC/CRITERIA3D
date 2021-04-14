@@ -486,21 +486,19 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  }
 
 
-    /*!
-     * \brief Set current volumetric water content
-     * \param nodeIndex
-     * \param waterContent [m^3 m^-3]
-     * \return OK/ERROR
-     */
-	int DLL_EXPORT __STDCALL setWaterContent(long nodeIndex, double waterContent)
+/*!
+ * \brief Set current volumetric water content
+ * \param nodeIndex
+ * \param waterContent [m^3 m^-3]
+ * \return OK/ERROR
+ */
+ int DLL_EXPORT __STDCALL setWaterContent(long nodeIndex, double waterContent)
  {
+    if (myNode == nullptr) return MEMORY_ERROR;
 
+    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
 
-    if (myNode == nullptr) return(MEMORY_ERROR);
-
-    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
-
-    if (waterContent < 0.) return(PARAMETER_ERROR);
+    if (waterContent < 0.) return PARAMETER_ERROR;
 
     if (myNode[nodeIndex].isSurface)
             {
@@ -512,62 +510,59 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
             }
     else
             {
-            if (waterContent > 1.0) return(PARAMETER_ERROR);
+            if (waterContent > 1.0) return PARAMETER_ERROR;
             myNode[nodeIndex].Se = Se_from_theta(nodeIndex, waterContent);
             myNode[nodeIndex].H = myNode[nodeIndex].z - psi_from_Se(nodeIndex);
             myNode[nodeIndex].oldH = myNode[nodeIndex].H;
             myNode[nodeIndex].k = computeK(nodeIndex);
             }
 
-    return(CRIT3D_OK);
+    return CRIT3D_OK;
  }
 
 
-    /*!
-     * \brief Set current water sink/source
-     * \param nodeIndex
-     * \param waterSinkSource [m^3/sec] flow
-     * \return OK/ERROR
-     */
-	int DLL_EXPORT __STDCALL setWaterSinkSource(long nodeIndex, double waterSinkSource)
+/*!
+ * \brief Set current water sink/source
+ * \param nodeIndex
+ * \param waterSinkSource [m^3/sec] flow
+ * \return OK/ERROR
+ */
+ int DLL_EXPORT __STDCALL setWaterSinkSource(long nodeIndex, double waterSinkSource)
  {
-
-    if (myNode == nullptr) return(MEMORY_ERROR);
-    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
+    if (myNode == nullptr) return MEMORY_ERROR;
+    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
 
     myNode[nodeIndex].waterSinkSource = waterSinkSource;
 
-    return(CRIT3D_OK);
+    return CRIT3D_OK;
  }
 
 
-    /*!
-     * \brief Set prescribed Total Potential
-     * \param nodeIndex
-     * \param prescribedTotalPotential [m]
-     * \return OK/ERROR
-     */
-	int DLL_EXPORT __STDCALL setPrescribedTotalPotential(long nodeIndex, double prescribedTotalPotential)
+/*!
+ * \brief Set prescribed Total Potential
+ * \param nodeIndex
+ * \param prescribedTotalPotential [m]
+ * \return OK/ERROR
+ */
+ int DLL_EXPORT __STDCALL setPrescribedTotalPotential(long nodeIndex, double prescribedTotalPotential)
  {
-
-    if (myNode == nullptr) return(MEMORY_ERROR);
-    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
-    if (myNode[nodeIndex].boundary == nullptr) return(BOUNDARY_ERROR);
-	if (myNode[nodeIndex].boundary->type != BOUNDARY_PRESCRIBEDTOTALPOTENTIAL) return(BOUNDARY_ERROR);
+    if (myNode == nullptr) return MEMORY_ERROR;
+    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return INDEX_ERROR;
+    if (myNode[nodeIndex].boundary == nullptr) return BOUNDARY_ERROR;
+    if (myNode[nodeIndex].boundary->type != BOUNDARY_PRESCRIBEDTOTALPOTENTIAL) return BOUNDARY_ERROR;
 
     myNode[nodeIndex].boundary->prescribedTotalPotential = prescribedTotalPotential;
 
-    return(CRIT3D_OK);
+    return CRIT3D_OK;
  }
 
 
-    /*!
-     * \brief return water content
-     * \param nodeIndex
-     * \return  surface: [m] surface water level , sub-surface: [m^3 m^-3] volumetric water content
-     */
-	double DLL_EXPORT __STDCALL getWaterContent(long nodeIndex)
-
+/*!
+ * \brief return water content
+ * \param nodeIndex
+ * \return  surface: [m] surface water level , sub-surface: [m^3 m^-3] volumetric water content
+ */
+ double DLL_EXPORT __STDCALL getWaterContent(long nodeIndex)
  {
         if (myNode == nullptr) return(MEMORY_ERROR);
         if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
@@ -581,12 +576,12 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  }
 
 
-    /*!
-     * \brief return available water content (over wilting point)
-     * \param index
-     * \return  surface: [m] water level, sub-surface: [m^3 m^-3] awc
-     */
-	double DLL_EXPORT __STDCALL getAvailableWaterContent(long index)
+/*!
+ * \brief return available water content (over wilting point)
+ * \param index
+ * \return  surface: [m] water level, sub-surface: [m^3 m^-3] awc
+ */
+ double DLL_EXPORT __STDCALL getAvailableWaterContent(long index)
  {
         if (myNode == nullptr) return(MEMORY_ERROR);
         if ((index < 0) || (index >= myStructure.nrNodes)) return(INDEX_ERROR);

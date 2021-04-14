@@ -618,7 +618,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
     myCase.unit = unitList[unitIndex];
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
 
-    if (! loadCropParameters(&dbCrop, myCase.unit.idCrop, &(myCase.myCrop), &projectError))
+    if (! loadCropParameters(&dbCrop, myCase.unit.idCrop, &(myCase.crop), &projectError))
         return false;
 
     if (! setSoil(myCase.unit.idSoil, projectError))
@@ -659,7 +659,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
 
     // initialize crop
     unsigned nrLayers = unsigned(myCase.soilLayers.size());
-    myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers,
+    myCase.crop.initialize(myCase.meteoPoint.latitude, nrLayers,
                              myCase.mySoil.totalDepth, getDoyFromDate(firstDate));
 
     // restart
@@ -675,7 +675,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
         }
 
         double currentWaterTable = double(myCase.meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
-        if (! myCase.myCrop.restore(myDate, myCase.meteoPoint.latitude, myCase.soilLayers, currentWaterTable, errorString))
+        if (! myCase.crop.restore(myDate, myCase.meteoPoint.latitude, myCase.soilLayers, currentWaterTable, errorString))
         {
             projectError = QString::fromStdString(errorString);
             return false;
@@ -1041,14 +1041,14 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
                 myError = "DEGREE_DAYS not found";
                 return false;
             }
-            myCase.myCrop.degreeDays = degreeDays;
+            myCase.crop.degreeDays = degreeDays;
             if (!getValue(qry.value("DAYS_SINCE_IRR"), &daySinceIrr))
             {
-                myCase.myCrop.daysSinceIrrigation = NODATA;
+                myCase.crop.daysSinceIrrigation = NODATA;
             }
             else
             {
-                myCase.myCrop.daysSinceIrrigation = daySinceIrr;
+                myCase.crop.daysSinceIrrigation = daySinceIrr;
             }
         }
         else
@@ -1107,8 +1107,8 @@ bool Crit1DProject::saveState(QString &myError)
 
     queryString = "INSERT INTO variables ( ID_CASE, DEGREE_DAYS, DAYS_SINCE_IRR ) VALUES ";
     queryString += "('" + myCase.unit.idCase + "'"
-                + "," + QString::number(myCase.myCrop.degreeDays)
-                + "," + QString::number(myCase.myCrop.daysSinceIrrigation) + ")";
+                + "," + QString::number(myCase.crop.degreeDays)
+                + "," + QString::number(myCase.crop.daysSinceIrrigation) + ")";
     if( !qry.exec(queryString) )
     {
         myError = "Error in saving variables state:\n" + qry.lastError().text();
@@ -1228,8 +1228,8 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailyTranspiration, 'g', 3)
                     + "," + QString::number(myCase.output.dailyMaxEvaporation, 'g', 3)
                     + "," + QString::number(myCase.output.dailyEvaporation, 'g', 3)
-                    + "," + getOutputStringNullZero(myCase.myCrop.LAI)
-                    + "," + getOutputStringNullZero(myCase.myCrop.roots.rootDepth);
+                    + "," + getOutputStringNullZero(myCase.crop.LAI)
+                    + "," + getOutputStringNullZero(myCase.crop.roots.rootDepth);
 
     // specific depth variables
     for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
