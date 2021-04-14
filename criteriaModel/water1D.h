@@ -20,7 +20,7 @@
     double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers);
     double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double waterTableDepth);
 
-    double computeOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, double irrigationMax);
+    double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, double irrigationMax);
 
     double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth);
     double getSoilAvailableWater(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth);
