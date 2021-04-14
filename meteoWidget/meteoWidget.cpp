@@ -37,7 +37,6 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
 {
     this->isGrid = isGrid;
     this->isEnsemble = false;
-    this->isAllBlack = false;
     this->nrMembers = NODATA;
 
     if (this->isGrid)
@@ -142,6 +141,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
                     vectorLine.append(line);
                     currentVariables.append(key);
                     nameLines.append(key);
+                    colorLines.append(QColor(items[1]));
                 }
             }
             else if (items[0] == "bar")
@@ -427,7 +427,7 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
 
     if (isEnsemble && nrMembers!=NODATA)
     {
-        if(meteoPoints.size() == nrMembers)
+        if(meteoPointsEnsemble.size() == nrMembers)
         {
             redraw();
         }
@@ -443,7 +443,89 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
     show();
 }
 
+void Crit3DMeteoWidget::addMeteoPointsEnsemble(Crit3DMeteoPoint mp)
+{
+    meteoPointsEnsemble.append(mp);
+}
 
+/////////////////////////////////////////////////
+void Crit3DMeteoWidget::drawEnsemble()
+{
+    if (meteoPointsEnsemble.isEmpty() || meteoPointsEnsemble.size() != nrMembers)
+        return;
+
+    firstDate->blockSignals(true);
+    lastDate->blockSignals(true);
+
+    // set date
+    QDate myDailyDateFirst;
+    QDate myDailyDateLast;
+    QDate myHourlyDateFirst;
+    QDate myHourlyDateLast;
+    myDailyDateFirst.setDate(meteoPointsEnsemble[0].obsDataD[0].date.year, meteoPointsEnsemble[0].obsDataD[0].date.month, meteoPointsEnsemble[0].obsDataD[0].date.day);
+    myDailyDateLast = myDailyDateFirst.addDays(meteoPointsEnsemble[0].nrObsDataDaysD-1);
+    if (myDailyDateFirst.isValid() && myDailyDateFirst < firstDailyDate)
+    {
+        firstDailyDate = myDailyDateFirst;
+    }
+    if (myDailyDateLast.isValid() && myDailyDateLast > lastDailyDate)
+    {
+        lastDailyDate = myDailyDateLast;
+    }
+    myHourlyDateFirst.setDate(meteoPointsEnsemble[0].getMeteoPointHourlyValuesDate(0).year, meteoPointsEnsemble[0].getMeteoPointHourlyValuesDate(0).month,
+                              meteoPointsEnsemble[0].getMeteoPointHourlyValuesDate(0).day);
+    myHourlyDateLast = myHourlyDateFirst.addDays(meteoPointsEnsemble[0].nrObsDataDaysH-1);
+    if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
+    {
+        firstHourlyDate = myHourlyDateFirst;
+    }
+    if (myHourlyDateLast.isValid() && myHourlyDateLast > lastHourlyDate)
+    {
+        lastHourlyDate = myHourlyDateLast;
+    }
+
+    if (currentFreq == daily)
+    {
+        if (firstDailyDate == QDate::currentDate() && lastDailyDate == QDate(1800,1,1))
+        {
+            firstDate->setDate(QDate::currentDate());
+            lastDate->setDate(QDate::currentDate());
+        }
+        else
+        {
+            firstDate->setDate(firstDailyDate);
+            lastDate->setDate(lastDailyDate);
+        }
+    }
+    else if (currentFreq == hourly)
+    {
+        if (firstHourlyDate == QDate::currentDate() && lastHourlyDate == QDate(1800,1,1))
+        {
+            firstDate->setDate(QDate::currentDate());
+            lastDate->setDate(QDate::currentDate());
+        }
+        else
+        {
+            firstDate->setDate(firstHourlyDate);
+            lastDate->setDate(lastHourlyDate);
+        }
+    }
+
+    // check draw period (max 30 days)
+    QDate minDate = lastDate->date().addDays(-30);
+    if (firstDate->date() < minDate)
+    {
+        firstDate->setDate(minDate);
+    }
+
+    redraw();
+
+    firstDate->blockSignals(false);
+    lastDate->blockSignals(false);
+
+    show();
+}
+///
 void Crit3DMeteoWidget::resetValues()
 {
     int nMeteoPoints = meteoPoints.size();
@@ -513,30 +595,23 @@ void Crit3DMeteoWidget::resetValues()
                 {
                     line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
                 }
-                if(isAllBlack && mp==nMeteoPoints-1)
+                QColor lineColor = colorLine[i];
+                if (nMeteoPoints == 1)
                 {
-                    line->setColor(Qt::black);
+                    lineColor.setAlpha(255);
                 }
                 else
                 {
-                    QColor lineColor = colorLine[i];
-                    if (nMeteoPoints == 1)
+                    if (isEnsemble)
                     {
                         lineColor.setAlpha(255);
                     }
                     else
                     {
-                        if (isEnsemble)
-                        {
-                            lineColor.setAlpha(255);
-                        }
-                        else
-                        {
-                            lineColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))));
-                        }
+                        lineColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))));
                     }
-                    line->setColor(lineColor);
                 }
+                line->setColor(lineColor);
                 vectorLine.append(line);
             }
             if (vectorLine.size() != 0)
@@ -575,28 +650,20 @@ void Crit3DMeteoWidget::resetValues()
                     name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
                 }
                 QBarSet* set = new QBarSet(name);
-                if(isAllBlack && mp==nMeteoPoints-1)
+                QColor barColor = colorBar[i];
+                if (nMeteoPoints == 1)
                 {
-                    set->setColor(Qt::black);
-                    set->setBorderColor(Qt::black);
+                    barColor.setAlpha(255);
                 }
                 else
                 {
-                    QColor barColor = colorBar[i];
-                    if (nMeteoPoints == 1)
+                    if (isEnsemble)
                     {
                         barColor.setAlpha(255);
                     }
                     else
                     {
-                        if (isEnsemble)
-                        {
-                            barColor.setAlpha(255);
-                        }
-                        else
-                        {
-                            barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
-                        }
+                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
                     }
                     set->setColor(barColor);
                     set->setBorderColor(barColor);
@@ -611,7 +678,376 @@ void Crit3DMeteoWidget::resetValues()
     }
 }
 
+void Crit3DMeteoWidget::resetEnsembleValues()
+{
+/*
+    // clear prev series values
+    ensembleSet.clear();
+    ensembleSeries.clear();
 
+    chart->removeAllSeries();
+    delete m_tooltip;
+
+    if (isLine)
+    {
+        QVector<QLineSeries*> vectorLine;
+        // add lineSeries elements for each mp, clone lineSeries[0]
+        for (int mp=0; mp<nMeteoPoints;mp++)
+        {
+            vectorLine.clear();
+            for (int i = 0; i<nameLines.size(); i++)
+            {
+                QLineSeries* line = new QLineSeries();
+                QString pointName = QString::fromStdString(meteoPoints[mp].name);
+                QStringList elementsName = pointName.split(' ');
+                if (elementsName.size() == 1)
+                {
+                    pointName = elementsName[0].left(8);
+                }
+                else
+                {
+                    pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
+                }
+                if (isEnsemble)
+                {
+                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]+"_Ensemble");
+                }
+                else
+                {
+                    line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
+                }
+                QColor lineColor = colorLine[i];
+                if (nMeteoPoints == 1)
+                {
+                    lineColor.setAlpha(255);
+                }
+                else
+                {
+                    if (isEnsemble)
+                    {
+                        lineColor.setAlpha(255);
+                    }
+                    else
+                    {
+                        lineColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))));
+                    }
+                }
+                line->setColor(lineColor);
+                vectorLine.append(line);
+            }
+            if (vectorLine.size() != 0)
+            {
+                lineSeries.append(vectorLine);
+            }
+        }
+    }
+
+    if (isBar)
+    {
+        QVector<QBarSet*> vectorBarSet;
+        QString name;
+        // add vectorBarSet elements for each mp
+        for (int mp=0; mp<nMeteoPoints;mp++)
+        {
+            vectorBarSet.clear();
+            for (int i = 0; i < nameBar.size(); i++)
+            {
+                QString pointName = QString::fromStdString(meteoPoints[mp].name);
+                QStringList elementsName = pointName.split(' ');
+                if (elementsName.size() == 1)
+                {
+                    pointName = elementsName[0].left(8);
+                }
+                else
+                {
+                    pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
+                }
+                if (isEnsemble)
+                {
+                    name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i]+"_Ensemble";
+                }
+                else
+                {
+                    name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
+                }
+                QBarSet* set = new QBarSet(name);
+                QColor barColor = colorBar[i];
+                if (nMeteoPoints == 1)
+                {
+                    barColor.setAlpha(255);
+                }
+                else
+                {
+                    if (isEnsemble)
+                    {
+                        barColor.setAlpha(255);
+                    }
+                    else
+                    {
+                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                    }
+                    set->setColor(barColor);
+                    set->setBorderColor(barColor);
+                }
+                vectorBarSet.append(set);
+            }
+            if (vectorBarSet.size() != 0)
+            {
+                setVector.append(vectorBarSet);
+            }
+        }
+    }
+*/
+}
+/////////////////////
+void Crit3DMeteoWidget::drawEnsembleDailyVar()
+{
+    FormInfo formInfo;
+    formInfo.showInfo("Draw daily data...");
+
+    firstDate->blockSignals(true);
+    lastDate->blockSignals(true);
+
+    Crit3DDate myDate;
+    int nDays = 0;
+    double maxBar = 0;
+    double maxLine = NODATA;
+    double minLine = -NODATA;
+
+    Crit3DDate firstCrit3DDate = getCrit3DDate(firstDate->date());
+    Crit3DDate lastCrit3DDate = getCrit3DDate(lastDate->date());
+    nDays = firstCrit3DDate.daysTo(lastCrit3DDate)+1;
+
+    categories.clear();
+    categoriesVirtual.clear();
+    m_tooltip = new Callout(chart);
+    m_tooltip->hide();
+
+    // virtual x axis
+    int nrIntervals;
+    if (nDays <= 12)
+    {
+        nrIntervals = nDays;
+    }
+    else if (nDays <= 45)
+    {
+        nrIntervals = nDays/3;
+    }
+    else
+    {
+        nrIntervals = 12;
+    }
+    double step = double(nDays) / double(nrIntervals);
+    double nextIndex = step / 2 - 0.5;
+    for (int day = 0; day < nDays; day++)
+    {
+        myDate = firstCrit3DDate.addDays(day);
+        if (day == round(nextIndex))
+        {
+            categoriesVirtual.append(getQDate(myDate).toString("MMM dd <br> yyyy"));
+            nextIndex += step;
+        }
+    }
+
+    for (int day = 0; day < nDays; day++)
+    {
+        myDate = firstCrit3DDate.addDays(day);
+        categories.append(QString::number(day));
+        if (isLine)
+        {
+            for (int i = 0; i < nameLines.size(); i++)
+            {
+                meteoVariable meteoVar = MapDailyMeteoVar.at(nameLines[i].toStdString());
+                QList<double> sortedList;
+                QBoxPlotSeries *series = new QBoxPlotSeries();
+                series->setName(QString::fromStdString(meteoPointsEnsemble[0].id)+"_"+ QString::fromStdString(meteoPointsEnsemble[0].name)+"_"+nameLines[i]+"_Ensemble");
+                series->setBrush(colorLines[i]);
+                for (int mp=0; mp<nrMembers;mp++)
+                {
+                    double value = meteoPointsEnsemble[mp].getMeteoPointValueD(myDate, meteoVar);
+                    if (value != NODATA)
+                    {
+                        sortedList.append(value);
+                    }
+                    if (value > maxLine)
+                    {
+                        maxLine = value;
+                    }
+                    if (value < minLine)
+                    {
+                        minLine = value;
+                    }
+                }
+                if (!sortedList.isEmpty())
+                {
+                    std::sort(sortedList.begin(), sortedList.end());
+                    QBoxSet *box = new QBoxSet();
+                    box->setValue(QBoxSet::LowerExtreme, sortedList.first());
+                    box->setValue(QBoxSet::UpperExtreme, sortedList.last());
+                    ensembleSet.append(box); //serve?
+                    series->append(box);
+                    ensembleSeries.append(series);
+                }
+                /*
+                box->setValue(QBoxSet::Median, findMedian(0, count));
+                box->setValue(QBoxSet::LowerQuartile, findMedian(0, count / 2));
+                box->setValue(QBoxSet::UpperQuartile, findMedian(count / 2 + (count % 2), count));
+                */
+            }
+        }
+        if (isBar)
+        {
+            for (int i = 0; i < nameBar.size(); i++)
+            {
+                meteoVariable meteoVar = MapDailyMeteoVar.at(nameBar[i].toStdString());
+                QList<double> sortedList;
+                QBoxPlotSeries *series = new QBoxPlotSeries();
+                series->setName(QString::fromStdString(meteoPointsEnsemble[0].id)+"_"+ QString::fromStdString(meteoPointsEnsemble[0].name)+"_"+nameBar[i]+"_Ensemble");
+                series->setBrush(colorBar[i]);
+                for (int mp=0; mp<nrMembers;mp++)
+                {
+                    double value = meteoPointsEnsemble[mp].getMeteoPointValueD(myDate, meteoVar);
+                    if (value != NODATA)
+                    {
+                        sortedList.append(value);
+                    }
+                    if (value > maxBar)
+                    {
+                        maxBar = value;
+                    }
+                }
+                if (!sortedList.isEmpty())
+                {
+                    std::sort(sortedList.begin(), sortedList.end());
+                    QBoxSet *box = new QBoxSet();
+                    box->setValue(QBoxSet::LowerExtreme, sortedList.first());
+                    box->setValue(QBoxSet::UpperExtreme, sortedList.last());
+                    ensembleSet.append(box); //serve?
+                    series->append(box);
+                    ensembleSeries.append(series);
+                }
+                /*
+                box->setValue(QBoxSet::Median, findMedian(0, count));
+                box->setValue(QBoxSet::LowerQuartile, findMedian(0, count / 2));
+                box->setValue(QBoxSet::UpperQuartile, findMedian(count / 2 + (count % 2), count));
+                */
+            }
+        }
+    }
+
+    if(isLine)
+    {
+        axisY->setVisible(true);
+        axisY->setMax(maxLine);
+        axisY->setMin(minLine);
+    }
+    else
+    {
+        axisY->setVisible(false);
+    }
+
+    if (isBar)
+    {
+        axisYdx->setVisible(true);
+        axisYdx->setRange(0,maxBar);
+    }
+    else
+    {
+        axisYdx->setVisible(false);
+    }
+
+    int i;
+    for (i = 0; i < nameLines.size(); i++)
+    {
+        chart->addSeries(ensembleSeries[i]);
+        ensembleSeries[i]->attachAxis(axisX);
+        ensembleSeries[i]->attachAxis(axisY);
+        //connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+    }
+    for (int j = 0; j < nameBar.size(); j++)
+    {
+        chart->addSeries(ensembleSeries[i]);
+        i = i+1;
+        ensembleSeries[j]->attachAxis(axisX);
+        ensembleSeries[j]->attachAxis(axisY);
+        //connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
+    }
+
+
+/*
+    // add minimimum values required
+    if (nDays==1)
+    {
+        categories.append(QString::number(1));
+        categoriesVirtual.append(firstDate->date().addDays(1).toString("MMM dd <br> yyyy"));
+        for (int mp=0; mp<nrMembers;mp++)
+        {
+            if (isLine)
+            {
+                for (int i = 0; i < nameLines.size(); i++)
+                {
+                    lineSeries[mp][0]->append(1, NODATA);
+                }
+            }
+
+            if (isBar)
+            {
+                for (int j = 0; j < nameBar.size(); j++)
+                {
+                    *setVector[mp][j] << 0;
+                }
+            }
+        }
+    }
+
+    for (int mp=0; mp<nrMembers;mp++)
+    {
+        for (int j = 0; j < nameBar.size(); j++)
+        {
+            if (nDays < 5)
+            {
+                setVector[mp][j]->setColor(QColor("transparent"));
+            }
+            else
+            {
+                QColor barColor = colorBar[j];
+                barColor.setAlpha(255);
+                setVector[mp][j]->setColor(barColor);
+            }
+        }
+    }
+*/
+    axisX->setCategories(categories);
+    axisXvirtual->setCategories(categoriesVirtual);
+    axisXvirtual->setGridLineVisible(false);
+
+    firstDate->blockSignals(false);
+    lastDate->blockSignals(false);
+/*
+    for (int mp=0; mp<nrMembers;mp++)
+    {
+        if (nameBar.size() != 0)
+        {
+            if (mp != 0)
+            {
+                chart->legend()->markers(barSeries[mp])[0]->setVisible(false);
+            }
+        }
+        for (int i = 0; i < nameLines.size(); i++)
+        {
+            if (mp != 0)
+            {
+                for (int i = 0; i < nameLines.size(); i++)
+                {
+                    chart->legend()->markers(lineSeries[mp][i])[0]->setVisible(false);
+                }
+            }
+        }
+    }
+*/
+    formInfo.close();
+}
+/////////////////////
 void Crit3DMeteoWidget::drawDailyVar()
 {
     FormInfo formInfo;
@@ -802,30 +1238,23 @@ void Crit3DMeteoWidget::drawDailyVar()
             }
             else
             {
-                if(isAllBlack && mp==nMeteoPoints-1)
+                QColor barColor = colorBar[j];
+                if (nMeteoPoints == 1)
                 {
-                    setVector[mp][j]->setColor(Qt::black);
+                    barColor.setAlpha(255);
                 }
                 else
                 {
-                    QColor barColor = colorBar[j];
-                    if (nMeteoPoints == 1)
+                    if (isEnsemble)
                     {
                         barColor.setAlpha(255);
                     }
                     else
                     {
-                        if (isEnsemble)
-                        {
-                            barColor.setAlpha(255);
-                        }
-                        else
-                        {
-                            barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
-                        }
+                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
                     }
-                    setVector[mp][j]->setColor(barColor);
                 }
+                setVector[mp][j]->setColor(barColor);
             }
         }
     }
@@ -1252,15 +1681,36 @@ void Crit3DMeteoWidget::redraw()
         return;
     }
 
-    resetValues();
+    if (isEnsemble)
+    {
+        resetEnsembleValues();
+    }
+    else
+    {
+        resetValues();;
+    }
 
     if (currentFreq == daily)
     {
-        drawDailyVar();
+        if (isEnsemble)
+        {
+            drawEnsembleDailyVar();
+        }
+        else
+        {
+            drawDailyVar();
+        }
     }
     else if (currentFreq == hourly)
     {
-        drawHourlyVar();
+        if (isEnsemble)
+        {
+            // TO DO
+        }
+        else
+        {
+            drawHourlyVar();
+        }
     }
 
 }
@@ -1627,11 +2077,6 @@ bool Crit3DMeteoWidget::getIsEnsemble()
 void Crit3DMeteoWidget::setNrMembers(int value)
 {
     nrMembers = value;
-}
-
-void Crit3DMeteoWidget::setIsAllBlack(bool value)
-{
-    isAllBlack = value;
 }
 
 int Crit3DMeteoWidget::getMeteoWidgetID() const

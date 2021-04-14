@@ -2382,10 +2382,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         unsigned col;
         if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
         {
-            if (meteoWidgetGridList[meteoWidgetGridList.size()-1]->getIsEnsemble())
-            {
-                qDebug() << "prev grid is ensemble";
-            }
             meteoWidgetGridList[meteoWidgetGridList.size()-1]->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
         }
         return;
@@ -2425,8 +2421,9 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             for (int i = 1; i<=nMembers; i++)
             {
                 meteoGridDbHandler->loadGridDailyDataEnsemble(&errorString, QString::fromStdString(idCell), i, firstDate, lastDate);
-                meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
+                meteoWidgetGrid->addMeteoPointsEnsemble(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
             }
+            meteoWidgetGrid->drawEnsemble();
             formInfo.close();
         }
         else
@@ -2447,8 +2444,9 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
             {
                 meteoWidgetGrid->setDateInterval(firstDate, lastDate);
-                meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
+                //meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
             }
+            meteoWidgetGrid->drawEnsemble();
         }
         return;
     }

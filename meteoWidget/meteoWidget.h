@@ -18,8 +18,12 @@
             void setMeteoWidgetID(int value);
             void setDateInterval(QDate date0, QDate date1);
             void draw(Crit3DMeteoPoint mp);
+            void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
+            void drawEnsemble();
             void resetValues();
+            void resetEnsembleValues();
             void drawDailyVar();
+            void drawEnsembleDailyVar();
             void drawHourlyVar();
             void showDailyGraph();
             void showHourlyGraph();
@@ -37,13 +41,11 @@
             void setIsEnsemble(bool value);
             bool getIsEnsemble();
             void setNrMembers(int value);
-            void setIsAllBlack(bool value);
 
     private:
             int meteoWidgetID;
             bool isGrid;
             bool isEnsemble;
-            bool isAllBlack;
             int nrMembers;
             QPushButton *addVarButton;
             QPushButton *dailyButton;
@@ -65,13 +67,17 @@
             QStringList currentVariables;
             QStringList nameLines;
             QStringList nameBar;
+            QVector<QColor> colorLines;
             QVector<QColor> colorBar;
             QVector<QVector<QLineSeries*>> lineSeries;
             QVector<QBarSeries*> barSeries;
+            QVector<QBoxPlotSeries*> ensembleSeries;
+            QVector<QBoxSet*> ensembleSet;
             QVector<QVector<QBarSet*>> setVector;
             QStringList categories;
             QStringList categoriesVirtual;
             QVector<Crit3DMeteoPoint> meteoPoints;
+            QVector<Crit3DMeteoPoint> meteoPointsEnsemble;
             frequencyType currentFreq;
             QDate firstDailyDate;
             QDate lastDailyDate;
