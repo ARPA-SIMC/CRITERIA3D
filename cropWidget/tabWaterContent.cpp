@@ -116,7 +116,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     colorMap->data()->setRange(QCPRange(0, nx), QCPRange(totalSoilDepth,0));
 
     int doy = 0;
-    myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
+    myCase.crop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
 
     std::string errorString;
     double waterContent = 0.0;

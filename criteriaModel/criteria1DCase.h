@@ -41,6 +41,7 @@
         double dailyReadilyAW;
         double dailyWaterTable;             // [m]
         double dailyCapillaryRise;
+        double dailyBalance;
 
         Crit1DOutput();
         void initialize();
@@ -85,11 +86,12 @@
         std::vector<double> prevWaterContent;
 
         bool initializeNumericalFluxes(std::string &error);
-        bool computeNumericalFluxes(double dailyWaterInput, std::string &error);
-        bool computeWaterFluxes(double dailyWaterInput, std::string &error);
+        bool computeNumericalFluxes(std::string &error);
+        bool computeWaterFluxes(std::string &error);
         double checkIrrigationDemand(int doy, double currentPrec, double nextPrec, double maxTranspiration);
         void saveWaterContent();
         void restoreWaterContent();
+        double getTotalWaterContent();
 
     };
 

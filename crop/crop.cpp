@@ -114,7 +114,7 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
     // initialize root depth
     roots.rootDepth = 0;
 
-    if (roots.rootDepthMax < totalSoilDepth)
+    if (totalSoilDepth == 0 || roots.rootDepthMax < totalSoilDepth)
         roots.actualRootDepthMax = roots.rootDepthMax;
     else
         roots.actualRootDepthMax = totalSoilDepth;
@@ -216,7 +216,7 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
 
 bool Crit3DCrop::isWaterSurplusResistant() const
 {
-    return (idCrop == "RICE" || idCrop == "KIWIFRUIT" || type == GRASS || type == FALLOW);
+    return (idCrop == "RICE" || type == GRASS || type == FALLOW);
 }
 
 
