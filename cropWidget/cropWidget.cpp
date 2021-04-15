@@ -378,7 +378,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     stressToleranceValue->setMinimum(0);
     stressToleranceValue->setMaximum(1);
     stressToleranceValue->setDecimals(2);
-    stressToleranceValue->setSingleStep(0.05);
+    stressToleranceValue->setSingleStep(0.01);
 
     parametersWaterStressLayout->addWidget(psiLeaf, 0, 0);
     parametersWaterStressLayout->addWidget(psiLeafValue, 0, 1);

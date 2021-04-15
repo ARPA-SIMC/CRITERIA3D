@@ -824,31 +824,32 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
      return (balanceWholePeriod.heatMBE);
   }
 
+
  /*!
-  * \brief computes [m^3] integrated water flow from boundary over the time step
+  * \brief getBoundaryWaterFlow
   * \param nodeIndex
-  * \return result
+  * \return integrated water flow from boundary over the time step [m^3]
   */
  double DLL_EXPORT __STDCALL getBoundaryWaterFlow(long nodeIndex)
  {
+    if (myNode == nullptr)
+        return MEMORY_ERROR;
+    if (nodeIndex < 0 || nodeIndex >= myStructure.nrNodes)
+        return INDEX_ERROR;
+    if (myNode[nodeIndex].boundary == nullptr)
+        return BOUNDARY_ERROR;
 
-    if (myNode == nullptr) return(MEMORY_ERROR);
-    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
-
-	if (myNode[nodeIndex].boundary == nullptr) return(BOUNDARY_ERROR);
-
-    return(myNode[nodeIndex].boundary->sumBoundaryWaterFlow);
+    return myNode[nodeIndex].boundary->sumBoundaryWaterFlow;
  }
 
 
  /*!
-  * \brief computes [m^3] integrated water flow from boundary over the time step
+  * \brief getBoundaryWaterSumFlow
   * \param boundaryType
-  * \return result
+  * \return integrated water flow from all boundary over the time step  [m^3]
   */
  double DLL_EXPORT __STDCALL getBoundaryWaterSumFlow(int boundaryType)
  {
-
     double sumBoundaryFlow = 0.0;
 
     for (long n = 0; n < myStructure.nrNodes; n++)

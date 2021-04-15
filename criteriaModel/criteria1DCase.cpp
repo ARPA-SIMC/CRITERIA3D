@@ -202,7 +202,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
  * \brief numerical solution of soil water fluxes (soilFluxes3D library)
  * \note units of measurement are MKS
  */
-bool Crit1DCase::computeNumericalFluxes(double dailyWaterInput, std::string &error)
+bool Crit1DCase::computeNumericalFluxes(std::string &error)
 {
     int nrLayers = soilLayers.size();
     int lastLayer = nrLayers - 1;
@@ -238,7 +238,10 @@ bool Crit1DCase::computeNumericalFluxes(double dailyWaterInput, std::string &err
     soilFluxes3D::initializeBalance();
 
     // daily cycle
-    double flux = (dailyWaterInput * 0.001 * fieldSlope) / DAY_SECONDS;  // [m3 s-1]
+    double waterInput = output.dailyPrec;
+    if (! unit.isOptimalIrrigation)
+        waterInput += output.dailyIrrigation;
+    double flux = (waterInput * 0.001 * fieldSlope) / DAY_SECONDS;  // [m3 s-1]
     for (int hour=1; hour <= 24; hour++)
     {
         soilFluxes3D::setWaterSinkSource(surfaceIndex, flux);
@@ -246,34 +249,30 @@ bool Crit1DCase::computeNumericalFluxes(double dailyWaterInput, std::string &err
     }
 
     // mass balance error
-    double massBalanceError = soilFluxes3D::getWaterMBR() - 1;
+    //double massBalanceError = soilFluxes3D::getWaterMBR() - 1;
 
-    /* WATER: OUTPUT
-    'restituzione dei valori di U(L) e flux(L)
-    'unita' di misura: da [m] a [mm]
-    U(0) = Criteria3D.GetWaterContent(0) * 1000#
-    Flux(0) = -Criteria3D.GetWaterSumFlux(0, CRIT3D.DOWN) * 1000 / Criteria3D.CRIT3DSurface
-    For L = 1 To nrLayers
-        U(L) = Criteria3D.GetWaterContent(L) * (suolo(L).spess * 10#)
-        If (L = nrLayers) Then
-            Flux(L) = Criteria3D.GetBoundaryWaterFlux(L) * 1000 / Criteria3D.CRIT3DSurface
-            fluxDown = Criteria3D.GetBoundaryWaterFlux(L)
+    // output (from [m] to [mm])
+    soilLayers[surfaceIndex].waterContent = soilFluxes3D::getWaterContent(surfaceIndex) * 1000;
+    for (int i=1; i < nrLayers; i++)
+    {
+        soilLayers[i].waterContent = soilFluxes3D::getWaterContent(i) * soilLayers[i].thickness * 1000;
+    }
 
-        Else
-            fluxDown = -Criteria3D.GetWaterSumFlux(L, CRIT3D.DOWN)
-            fluxUp = Criteria3D.GetWaterSumFlux(L, CRIT3D.UP)
-            Flux(L) = fluxDown * 1000 / Criteria3D.CRIT3DSurface
-        End If
-    Next L
+    output.dailySurfaceRunoff = (soilFluxes3D::getBoundaryWaterFlow(surfaceIndex) / fieldArea) * 1000;
+    output.dailyLateralDrainage = (soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE) / fieldArea) * 1000;
 
-    // drenaggio o risalita capillare
-    if Flux(nrLayers) >= 0
-        RcTot = Flux(nrLayers)
-        DrenGG = 0
+    // drainage / capillary rise
+    double fluxBottom = (soilFluxes3D::getBoundaryWaterFlow(lastLayer) / fieldArea) * 1000;
+    if (fluxBottom > 0)
+    {
+        output.dailyCapillaryRise = fluxBottom;
+        output.dailyDrainage = 0;
+    }
     else
-        DrenGG = -Flux(nrLayers)
-        RcTot = 0
-    } */
+    {
+        output.dailyCapillaryRise = 0;
+        output.dailyDrainage = -fluxBottom;
+    }
 
     return true;
 }
@@ -303,11 +302,11 @@ void Crit1DCase::restoreWaterContent()
  * \brief compute water fluxes
  * \param dailyWaterInput [mm] sum of precipitation and irrigation
  */
-bool Crit1DCase::computeWaterFluxes(double dailyWaterInput, std::string &error)
+bool Crit1DCase::computeWaterFluxes(std::string &error)
 {
     if (unit.isNumericalInfiltration)
     {
-        return computeNumericalFluxes(dailyWaterInput, error);
+        return computeNumericalFluxes(error);
     }
     else
     {
@@ -319,7 +318,13 @@ bool Crit1DCase::computeWaterFluxes(double dailyWaterInput, std::string &error)
         }
 
         // INFILTRATION
-        output.dailyDrainage = computeInfiltration(soilLayers, dailyWaterInput, ploughedSoilDepth);
+        double waterInput = output.dailyPrec;
+        if (! unit.isOptimalIrrigation)
+            waterInput += output.dailyIrrigation;
+        output.dailyDrainage = computeInfiltration(soilLayers, waterInput, ploughedSoilDepth);
+
+        // RUNOFF
+        output.dailySurfaceRunoff = computeSurfaceRunoff(crop, soilLayers);
 
         // LATERAL DRAINAGE
         output.dailyLateralDrainage = computeLateralDrainage(soilLayers);
@@ -374,19 +379,17 @@ double Crit1DCase::checkIrrigationDemand(int doy, double currentPrec, double nex
             return 0;
     }
 
+    // Irrigation scheduled!
+    // reset irrigation shift
+    crop.daysSinceIrrigation = 0;
+
     // check irrigation quantity
     double irrigation = crop.irrigationVolume;
     if (crop.irrigationShift > 1)
         irrigation -= floor(twoDaysWater);
 
-    if (unit.isOptimalIrrigation)
-        irrigation = MINVALUE(irrigation, crop.getCropWaterDeficit(soilLayers));
-
-    // reset irrigation shift
-    crop.daysSinceIrrigation = 0;
     return irrigation;
 }
-
 
 
 /*!
@@ -396,6 +399,7 @@ double Crit1DCase::checkIrrigationDemand(int doy, double currentPrec, double nex
 bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &error)
 {
     output.initialize();
+    double prevWC = getTotalWaterContent();
 
     int doy = getDoyFromDate(myDate);
 
@@ -439,42 +443,29 @@ bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &error)
     if (! crop.dailyUpdate(myDate, meteoPoint.latitude, soilLayers, tmin, tmax, output.dailyWaterTable, error))
         return false;
 
-    // Evaporation / transpiration
+    // Maximum evaporation and transpiration
     output.dailyMaxEvaporation = crop.getMaxEvaporation(output.dailyEt0);
     output.dailyMaxTranspiration = crop.getMaxTranspiration(output.dailyEt0);
 
-    // WATER FLUXES
-    saveWaterContent();
-    if (! computeWaterFluxes(output.dailyPrec, error)) return false;
-
-    // IRRIGATION
     output.dailyIrrigation = 0;
+    // Water fluxes (first computation)
+    saveWaterContent();
+    if (! computeWaterFluxes(error)) return false;
+    // Irrigation
     double irrigation = checkIrrigationDemand(doy, prec, precTomorrow, output.dailyMaxTranspiration);
 
-    // assign irrigation: optimal (subirrigation) or add to precipitation (sprinkler)
+    // Assign irrigation: optimal (subirrigation) or add to precipitation (sprinkler)
+    // and recompute water fluxes
     if (irrigation > 0)
     {
         restoreWaterContent();
-        double totalWaterInput;
-        if (unit.isOptimalIrrigation)
-        {
-            output.dailyIrrigation = assignOptimalIrrigation(soilLayers, irrigation);
-            totalWaterInput = prec;
-        }
-        else
-        {
+        if (! unit.isOptimalIrrigation)
             output.dailyIrrigation = irrigation;
-            totalWaterInput = prec + irrigation;
-        }
-        // recompute water fluxes
-        if (! computeWaterFluxes(totalWaterInput, error)) return false;
+        else
+            output.dailyIrrigation = assignOptimalIrrigation(soilLayers, irrigation);
+
+        if (! computeWaterFluxes(error)) return false;
     }
-
-    // EVAPORATION
-    output.dailyEvaporation = computeEvaporation(soilLayers, output.dailyMaxEvaporation);
-
-    // RUNOFF (after evaporation)
-    output.dailySurfaceRunoff = computeSurfaceRunoff(crop, soilLayers);
 
     // adjust irrigation losses
     if (! unit.isOptimalIrrigation)
@@ -486,7 +477,10 @@ bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &error)
         }
     }
 
-    // TRANSPIRATION
+    // Evaporation
+    output.dailyEvaporation = computeEvaporation(soilLayers, output.dailyMaxEvaporation);
+
+    // Transpiration
     double waterStress = 0;
     output.dailyTranspiration = crop.computeTranspiration(output.dailyMaxTranspiration, soilLayers, waterStress);
 
@@ -499,6 +493,12 @@ bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &error)
         }
     }
 
+    // Water balance
+    double currentWC = getTotalWaterContent();
+    output.dailyBalance = currentWC - (prevWC + output.dailyPrec + output.dailyIrrigation + output.dailyCapillaryRise
+                                - output.dailyTranspiration - output.dailyEvaporation - output.dailySurfaceRunoff
+                                - output.dailyLateralDrainage - output.dailyDrainage);
+
     // output variables
     output.dailySurfaceWaterContent = soilLayers[0].waterContent;
     output.dailySoilWaterContent = getSoilWaterContent(soilLayers, 1.0);
@@ -507,6 +507,22 @@ bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &error)
     output.dailyReadilyAW = getReadilyAvailableWater(crop, soilLayers);
 
     return true;
+}
+
+
+/*!
+ * \brief getTotalWaterContent
+ * \return sum of water content on the profile [mm]
+ */
+double Crit1DCase::getTotalWaterContent()
+{
+    double sumWC = 0;
+    for (unsigned int i=0; i < soilLayers.size(); i++)
+    {
+        sumWC += soilLayers[i].waterContent;
+    }
+
+    return sumWC;
 }
 
 

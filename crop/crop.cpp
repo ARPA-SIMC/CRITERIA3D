@@ -530,7 +530,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
     if (isWaterSurplusResistant())
         WSS = 0.0;
     else
-        WSS = 1.0;
+        WSS = 0.5;
 
     for (unsigned int i = unsigned(roots.firstRootLayer); i <= unsigned(roots.lastRootLayer); i++)
     {
