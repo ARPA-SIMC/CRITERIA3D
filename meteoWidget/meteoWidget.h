@@ -7,6 +7,7 @@
     #include "callout.h"
 
 
+    qreal findMedian(QList<double> sortedList, int begin, int end);
     class Crit3DMeteoWidget : public QWidget
     {
         Q_OBJECT
@@ -72,7 +73,7 @@
             QVector<QVector<QLineSeries*>> lineSeries;
             QVector<QBarSeries*> barSeries;
             QVector<QBoxPlotSeries*> ensembleSeries;
-            QVector<QBoxSet*> ensembleSet;
+            QList<QBoxSet*> ensembleSet;
             QVector<QVector<QBarSet*>> setVector;
             QStringList categories;
             QStringList categoriesVirtual;
