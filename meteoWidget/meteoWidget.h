@@ -73,7 +73,7 @@
             QVector<QVector<QLineSeries*>> lineSeries;
             QVector<QBarSeries*> barSeries;
             QVector<QBoxPlotSeries*> ensembleSeries;
-            QList<QBoxSet*> ensembleSet;
+            QVector<QList<QBoxSet*>> ensembleSet;
             QVector<QVector<QBarSet*>> setVector;
             QStringList categories;
             QStringList categoriesVirtual;
