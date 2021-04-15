@@ -116,7 +116,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
 
     float horizontalConductivityRatio = 10.0;
     soilFluxes3D::setHydraulicProperties(fittingOptions.waterRetentionCurve, MEAN_LOGARITHMIC, horizontalConductivityRatio);
-    soilFluxes3D::setNumericalParameters(1, 3600, 100, 10, 12, 3);
+    soilFluxes3D::setNumericalParameters(10, 3600, 100, 10, 12, 2);
 
     // set soil properties (units of measurement: MKS)
     int soilIndex = 0;
