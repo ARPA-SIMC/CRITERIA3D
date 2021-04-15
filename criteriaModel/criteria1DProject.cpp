@@ -1145,7 +1145,8 @@ bool Crit1DProject::createOutputTable(QString &myError)
                   + " ( DATE TEXT, PREC REAL, IRRIGATION REAL, WATER_CONTENT REAL, SURFACE_WC REAL, "
                   + " AVAILABLE_WATER REAL, READILY_AW REAL, FRACTION_AW REAL, "
                   + " RUNOFF REAL, DRAINAGE REAL, LATERAL_DRAINAGE REAL, CAPILLARY_RISE REAL, "
-                  + " ET0 REAL, TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, LAI REAL, ROOT_DEPTH REAL";
+                  + " ET0 REAL, TRANSP_MAX, TRANSP REAL, EVAP_MAX REAL, EVAP REAL, "
+                  + " LAI REAL, ROOT_DEPTH REAL, BALANCE REAL";
 
     // specific depth variables
     for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
@@ -1184,8 +1185,8 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
         outputString = "INSERT INTO '" + myCase.unit.idCase + "'"
                        + " (DATE, PREC, IRRIGATION, WATER_CONTENT, SURFACE_WC, "
                        + " AVAILABLE_WATER, READILY_AW, FRACTION_AW, "
-                       + " RUNOFF, DRAINAGE, LATERAL_DRAINAGE, CAPILLARY_RISE, "
-                       + " ET0, TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH";
+                       + " RUNOFF, DRAINAGE, LATERAL_DRAINAGE, CAPILLARY_RISE, ET0, "
+                       + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH, BALANCE";
 
         // specific depth variables
         for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
@@ -1212,24 +1213,25 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
     }
 
     outputString += "('" + QString::fromStdString(myDate.toStdString()) + "'"
-                    + "," + QString::number(myCase.output.dailyPrec, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyIrrigation, 'g', 4)
-                    + "," + QString::number(myCase.output.dailySoilWaterContent, 'g', 5)
-                    + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyPrec)
+                    + "," + QString::number(myCase.output.dailyIrrigation)
+                    + "," + QString::number(myCase.output.dailySoilWaterContent, 'g', 4)
+                    + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 3)
                     + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
                     + "," + QString::number(myCase.output.dailyReadilyAW, 'g', 4)
                     + "," + QString::number(myCase.output.dailyFractionAW, 'g', 4)
-                    + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyDrainage, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyLateralDrainage, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyCapillaryRise, 'g', 4)
+                    + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 3)
+                    + "," + QString::number(myCase.output.dailyDrainage, 'g', 3)
+                    + "," + QString::number(myCase.output.dailyLateralDrainage, 'g', 3)
+                    + "," + QString::number(myCase.output.dailyCapillaryRise, 'g', 3)
                     + "," + QString::number(myCase.output.dailyEt0, 'g', 3)
                     + "," + QString::number(myCase.output.dailyMaxTranspiration, 'g', 3)
                     + "," + QString::number(myCase.output.dailyTranspiration, 'g', 3)
                     + "," + QString::number(myCase.output.dailyMaxEvaporation, 'g', 3)
                     + "," + QString::number(myCase.output.dailyEvaporation, 'g', 3)
                     + "," + getOutputStringNullZero(myCase.crop.LAI)
-                    + "," + getOutputStringNullZero(myCase.crop.roots.rootDepth);
+                    + "," + getOutputStringNullZero(myCase.crop.roots.rootDepth)
+                    + "," + QString::number(myCase.output.dailyBalance, 'g', 3);
 
     // specific depth variables
     for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
@@ -1420,7 +1422,7 @@ int Crit1DProject::openAllDatabase()
 QString getOutputStringNullZero(double value)
 {
     if (int(value) != int(NODATA))
-        return QString::number(value, 'g', 4);
+        return QString::number(value, 'g', 3);
     else
         return QString::number(0);
 }

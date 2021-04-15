@@ -68,7 +68,7 @@ Crit1DCase::Crit1DCase()
     geometricFactor = 1.2;              /*!< [-] factor for geometric progression of thickness  */
     ploughedSoilDepth = 0.5;            /*!< [m] depth of ploughed soil (working layer) */
     fieldArea = 4000;                   /*!< [m2]   */
-    fieldSlope = 0.002;                 /*!< [m2 m-1]   */
+    fieldSlope = 0.01;                  /*!< [m2 m-1]   */
 
     soilLayers.clear();
     prevWaterContent.clear();
@@ -147,14 +147,13 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     int surfaceIndex = 0;
     soilFluxes3D::setSurfaceProperties(surfaceIndex, roughnessManning, maxSurfaceWater);
 
-    // field structure (baulatura)
+    // field structure
     float x0 = 0;
     float y0 = 0;
     double z0 = 0;
     double lx = 25;                 // [m]
     double ly = 200;                // [m]
-    fieldArea = lx * ly;          // [m^2]
-    fieldSlope = 0.002;                  // [m m^-1]
+    fieldArea = lx * ly;            // [m^2]
 
     // set surface (node 0)
     bool isSurface = true;
@@ -227,12 +226,13 @@ bool Crit1DCase::computeNumericalFluxes(std::string &error)
 
     // set surface
     int surfaceIndex = 0;
-    soilFluxes3D::setWaterContent(surfaceIndex, soilLayers[surfaceIndex].waterContent * 0.001);       // [m]
+    soilFluxes3D::setWaterContent(surfaceIndex, soilLayers[surfaceIndex].waterContent * 0.001);   // [m]
 
     // set soil profile
     for (int i=1; i < nrLayers; i++)
     {
-        soilFluxes3D::setMatricPotential(i, soilLayers[i].getWaterPotential());
+        double waterPotential = soilLayers[i].getWaterPotential() / GRAVITY;   // [m]
+        soilFluxes3D::setMatricPotential(i, -waterPotential);
     }
 
     soilFluxes3D::initializeBalance();
@@ -241,7 +241,7 @@ bool Crit1DCase::computeNumericalFluxes(std::string &error)
     double waterInput = output.dailyPrec;
     if (! unit.isOptimalIrrigation)
         waterInput += output.dailyIrrigation;
-    double flux = (waterInput * 0.001 * fieldSlope) / DAY_SECONDS;  // [m3 s-1]
+    double flux = (fieldArea * waterInput * 0.001) / DAY_SECONDS;  // [m3 s-1]
     for (int hour=1; hour <= 24; hour++)
     {
         soilFluxes3D::setWaterSinkSource(surfaceIndex, flux);
@@ -258,8 +258,8 @@ bool Crit1DCase::computeNumericalFluxes(std::string &error)
         soilLayers[i].waterContent = soilFluxes3D::getWaterContent(i) * soilLayers[i].thickness * 1000;
     }
 
-    output.dailySurfaceRunoff = (soilFluxes3D::getBoundaryWaterFlow(surfaceIndex) / fieldArea) * 1000;
-    output.dailyLateralDrainage = (soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE) / fieldArea) * 1000;
+    output.dailySurfaceRunoff = -(soilFluxes3D::getBoundaryWaterFlow(surfaceIndex) / fieldArea) * 1000;
+    output.dailyLateralDrainage = -(soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE) / fieldArea) * 1000;
 
     // drainage / capillary rise
     double fluxBottom = (soilFluxes3D::getBoundaryWaterFlow(lastLayer) / fieldArea) * 1000;
@@ -399,7 +399,7 @@ double Crit1DCase::checkIrrigationDemand(int doy, double currentPrec, double nex
 bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &error)
 {
     output.initialize();
-    double prevWC = getTotalWaterContent();
+    double previousWC = getTotalWaterContent();
 
     int doy = getDoyFromDate(myDate);
 
@@ -495,7 +495,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &error)
 
     // Water balance
     double currentWC = getTotalWaterContent();
-    output.dailyBalance = currentWC - (prevWC + output.dailyPrec + output.dailyIrrigation + output.dailyCapillaryRise
+    output.dailyBalance = currentWC - (previousWC + output.dailyPrec + output.dailyIrrigation + output.dailyCapillaryRise
                                 - output.dailyTranspiration - output.dailyEvaporation - output.dailySurfaceRunoff
                                 - output.dailyLateralDrainage - output.dailyDrainage);
 

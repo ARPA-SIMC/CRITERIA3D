@@ -408,15 +408,17 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  }
 
 
-	int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double roughness, double surfacePond)
+ int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double roughness, double surfacePond)
  {
-    if ((surfaceIndex < 0) || (surfaceIndex >= MAX_SURFACES)) return(INDEX_ERROR);
-    if ((roughness < 0.) || (surfacePond < 0.)) return(PARAMETER_ERROR);
+    if ((surfaceIndex < 0) || (surfaceIndex >= MAX_SURFACES))
+        return INDEX_ERROR;
+    if ((roughness < 0.) || (surfacePond < 0.))
+        return PARAMETER_ERROR;
 
     Surface_List[surfaceIndex].Roughness = roughness;
     Surface_List[surfaceIndex].Pond = surfacePond;
 
-    return(CRIT3D_OK);
+    return CRIT3D_OK;
  }
 
 
@@ -428,12 +430,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
      */
 	int DLL_EXPORT __STDCALL setMatricPotential(long nodeIndex, double potential)
  {
-
-
      if (myNode == nullptr)
-         return(MEMORY_ERROR);
+         return MEMORY_ERROR;
      if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes))
-         return(INDEX_ERROR);
+         return INDEX_ERROR;
 
      myNode[nodeIndex].H = potential + myNode[nodeIndex].z;
      myNode[nodeIndex].oldH = myNode[nodeIndex].H;
@@ -449,7 +449,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
          myNode[nodeIndex].k = computeK(nodeIndex);
      }
 
-     return(CRIT3D_OK);
+     return CRIT3D_OK;
  }
 
 
