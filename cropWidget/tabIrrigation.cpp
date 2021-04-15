@@ -157,7 +157,7 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
     }
 
     int currentDoy = 1;
-    myCase.myCrop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
+    myCase.crop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
 
     std::string errorString;
     int step = formInfo.start("Compute model...", (lastYear-firstYear+2)*365);
@@ -177,7 +177,7 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
         {
             doy = doy+1; // if display 1 year this is the day Of year, otherwise count all days in that period
             categories.append(QString::number(doy));
-            seriesLAI->append(doy, myCase.myCrop.LAI);
+            seriesLAI->append(doy, myCase.crop.LAI);
             seriesMaxTransp->append(doy, myCase.output.dailyMaxTranspiration);
             seriesRealTransp->append(doy, myCase.output.dailyTranspiration);
             *setPrec << myCase.output.dailyPrec;
