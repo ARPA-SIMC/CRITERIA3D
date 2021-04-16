@@ -551,6 +551,7 @@ void Crit3DMeteoWidget::resetValues()
             for (int i = 0; i < lineSeries[mp].size(); i++)
             {
                 lineSeries[mp][i]->clear();
+                chart->removeSeries(lineSeries[mp][i]);
             }
             lineSeries[mp].clear();
         }
@@ -562,12 +563,12 @@ void Crit3DMeteoWidget::resetValues()
         {
             setVector[mp].clear();
             barSeries[mp]->clear();
+            chart->removeSeries(barSeries[mp]);
         }
         barSeries.clear();
         setVector.clear();
     }
 
-    chart->removeAllSeries();
     delete m_tooltip;
 
     if (isLine)
@@ -658,8 +659,11 @@ void Crit3DMeteoWidget::resetEnsembleValues()
 
     // clear prev series values
     ensembleSet.clear();
+    for (int i = 0; i < ensembleSeries.size(); i++)
+    {
+        chart->removeSeries(ensembleSeries[i]);
+    }
     ensembleSeries.clear();
-    chart->removeAllSeries();
     categories.clear();
     categoriesVirtual.clear();
 
@@ -1381,7 +1385,7 @@ void Crit3DMeteoWidget::updateSeries()
     nameBar.clear();
     isLine = false;
     isBar = false;
-    if (isEnsemble)
+    if (isEnsemble || meteoPointsEnsemble.size() != 0)
     {
         ensembleSet.clear();
         ensembleSeries.clear();
@@ -1448,33 +1452,33 @@ void Crit3DMeteoWidget::redraw()
         return;
     }
 
-    if (isEnsemble)
+    if (isEnsemble || meteoPointsEnsemble.size() != 0)
     {
         resetEnsembleValues();
     }
-    else
+    if(!isEnsemble)
     {
         resetValues();;
     }
 
     if (currentFreq == daily)
     {
-        if (isEnsemble)
+        if (isEnsemble || meteoPointsEnsemble.size() != 0)
         {
             drawEnsembleDailyVar();
         }
-        else
+        if(!isEnsemble)
         {
             drawDailyVar();
         }
     }
     else if (currentFreq == hourly)
     {
-        if (isEnsemble)
+        if (isEnsemble || meteoPointsEnsemble.size() != 0)
         {
             // TO DO
         }
-        else
+        if(!isEnsemble)
         {
             drawHourlyVar();
         }
