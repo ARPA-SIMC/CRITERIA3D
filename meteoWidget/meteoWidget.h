@@ -68,6 +68,9 @@
             QStringList currentVariables;
             QStringList nameLines;
             QStringList nameBar;
+            double maxEnsembleBar;
+            double maxEnsembleLine;
+            double minEnsembleLine;
             QVector<QColor> colorLines;
             QVector<QColor> colorBar;
             QVector<QVector<QLineSeries*>> lineSeries;

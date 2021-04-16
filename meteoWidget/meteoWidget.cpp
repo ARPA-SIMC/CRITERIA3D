@@ -51,6 +51,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
     this->isGrid = isGrid;
     this->isEnsemble = false;
     this->nrMembers = NODATA;
+    maxEnsembleBar = 0;
+    maxEnsembleLine = NODATA;
+    minEnsembleLine = -NODATA;
 
     if (this->isGrid)
     {
@@ -666,6 +669,9 @@ void Crit3DMeteoWidget::resetEnsembleValues()
     ensembleSeries.clear();
     categories.clear();
     categoriesVirtual.clear();
+    maxEnsembleBar = 0;
+    maxEnsembleLine = NODATA;
+    minEnsembleLine = -NODATA;
 
 }
 
@@ -680,9 +686,9 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
 
     Crit3DDate myDate;
     int nDays = 0;
-    double maxBar = 0;
-    double maxLine = NODATA;
-    double minLine = -NODATA;
+    maxEnsembleBar = 0;
+    maxEnsembleLine = NODATA;
+    minEnsembleLine = -NODATA;
 
     Crit3DDate firstCrit3DDate = getCrit3DDate(firstDate->date());
     Crit3DDate lastCrit3DDate = getCrit3DDate(lastDate->date());
@@ -745,13 +751,13 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                     if (value != NODATA)
                     {
                         sortedList.append(value);
-                        if (value > maxLine)
+                        if (value > maxEnsembleLine)
                         {
-                            maxLine = value;
+                            maxEnsembleLine = value;
                         }
-                        if (value < minLine)
+                        if (value < minEnsembleLine)
                         {
-                            minLine = value;
+                            minEnsembleLine = value;
                         }
                     }
                 }
@@ -801,9 +807,9 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                     if (value != NODATA)
                     {
                         sortedList.append(value);
-                        if (value > maxBar)
+                        if (value > maxEnsembleBar)
                         {
-                            maxBar = value;
+                            maxEnsembleBar = value;
                         }
                     }
                 }
@@ -836,8 +842,8 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
     if(isLine)
     {
         axisY->setVisible(true);
-        axisY->setMax(maxLine);
-        axisY->setMin(minLine);
+        axisY->setMax(maxEnsembleLine);
+        axisY->setMin(minEnsembleLine);
     }
     else
     {
@@ -847,7 +853,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
     if (isBar)
     {
         axisYdx->setVisible(true);
-        axisYdx->setRange(0,maxBar);
+        axisYdx->setRange(0,maxEnsembleBar);
     }
     else
     {
@@ -987,7 +993,14 @@ void Crit3DMeteoWidget::drawDailyVar()
             }
         }
         axisYdx->setVisible(true);
-        axisYdx->setRange(0,maxBar);
+        if (maxEnsembleBar > maxBar)
+        {
+            axisYdx->setRange(0,maxEnsembleBar);
+        }
+        else
+        {
+            axisYdx->setRange(0,maxBar);
+        }
     }
     else
     {
@@ -1009,10 +1022,24 @@ void Crit3DMeteoWidget::drawDailyVar()
                 }
             }
         }
-
         axisY->setVisible(true);
-        axisY->setMax(maxLine);
-        axisY->setMin(minLine);
+        if (maxEnsembleLine > maxLine)
+        {
+            axisY->setMax(maxEnsembleLine);
+        }
+        else
+        {
+            axisY->setMax(maxLine);
+        }
+
+        if (minEnsembleLine < minLine)
+        {
+            axisY->setMin(minEnsembleLine);
+        }
+        else
+        {
+            axisY->setMin(minLine);
+        }
     }
     else
     {
