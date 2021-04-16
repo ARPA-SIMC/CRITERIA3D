@@ -1,17 +1,12 @@
 #ifndef DBMETEOCRITERIA1D_H
 #define DBMETEOCRITERIA1D_H
 
-#ifndef MAX_MISSING_TOT_DAYS
     #define MAX_MISSING_TOT_DAYS 30
-#endif
-#ifndef MAX_MISSING_CONSECUTIVE_DAYS_T
     #define MAX_MISSING_CONSECUTIVE_DAYS_T 1
-#endif
-#ifndef MAX_MISSING_CONSECUTIVE_DAYS_PREC
     #define MAX_MISSING_CONSECUTIVE_DAYS_PREC 7
-#endif
 
     #include <QStringList>
+
     class QSqlDatabase;
     class QSqlQuery;
     class QDate;

@@ -19,7 +19,7 @@
 
     /*!
     * \brief daily output of Criteria1D
-    * \note all variables are in [mm]
+    * \note all variables are in [mm] (except dailyWaterTable [m])
     */
     class Crit1DOutput
     {
@@ -39,8 +39,9 @@
         double dailyAvailableWater;
         double dailyFractionAW;
         double dailyReadilyAW;
-        double dailyWaterTable;
+        double dailyWaterTable;             // [m]
         double dailyCapillaryRise;
+        double dailyBalance;
 
         Crit1DOutput();
         void initialize();
@@ -58,7 +59,7 @@
         soil::Crit3DFittingOptions fittingOptions;
 
         // CROP
-        Crit3DCrop myCrop;
+        Crit3DCrop crop;
 
         // WHEATER
         Crit3DMeteoPoint meteoPoint;
@@ -68,8 +69,8 @@
 
         Crit1DCase();
 
-        bool initializeSoil(std::string &myError);
-        bool computeDailyModel(Crit3DDate myDate, std::string &myError);
+        bool initializeSoil(std::string &error);
+        bool computeDailyModel(Crit3DDate myDate, std::string &error);
 
         double getWaterContent(double depth);
         double getWaterPotential(double depth);
@@ -79,14 +80,18 @@
         double minLayerThickness;       // [m]
         double geometricFactor;         // [-]
         double ploughedSoilDepth;       // [m]
+        double fieldArea;               // [m2]
+        double fieldSlope;              // [m m-1]
 
         std::vector<double> prevWaterContent;
 
-        bool initializeNumericalFluxes(std::string &myError);
-        bool computeWaterFluxes(double dailyWaterInput);
+        bool initializeNumericalFluxes(std::string &error);
+        bool computeNumericalFluxes(std::string &error);
+        bool computeWaterFluxes(std::string &error);
         double checkIrrigationDemand(int doy, double currentPrec, double nextPrec, double maxTranspiration);
         void saveWaterContent();
         void restoreWaterContent();
+        double getTotalWaterContent();
 
     };
 

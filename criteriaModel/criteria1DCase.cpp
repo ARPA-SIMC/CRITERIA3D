@@ -16,7 +16,7 @@
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
+    along with CRITERIA3D.  if not, see <http://www.gnu.org/licenses/>.
 
     contacts:
     fausto.tomei@gmail.com
@@ -67,13 +67,41 @@ Crit1DCase::Crit1DCase()
     minLayerThickness = 0.02;           /*!< [m] layer thickness (default = 2 cm)  */
     geometricFactor = 1.2;              /*!< [-] factor for geometric progression of thickness  */
     ploughedSoilDepth = 0.5;            /*!< [m] depth of ploughed soil (working layer) */
+    fieldArea = 4000;                   /*!< [m2]   */
+    fieldSlope = 0.002;                 /*!< [m2 m-1]   */
 
     soilLayers.clear();
     prevWaterContent.clear();
 }
 
 
-bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
+bool Crit1DCase::initializeSoil(std::string &error)
+{
+    soilLayers.clear();
+
+    double factor = 1.0;
+    if (unit.isGeometricLayers) factor = geometricFactor;
+
+    if (! mySoil.setSoilLayers(minLayerThickness, factor, soilLayers, error))
+        return false;
+
+    if (unit.isNumericalInfiltration)
+    {
+        if (! initializeNumericalFluxes(error))
+            return false;
+    }
+
+    initializeWater(soilLayers);
+
+    return true;
+}
+
+
+/*!
+ * \brief initalize structures for numerical solution of water fluxes
+ * (soilFluxes3D library)
+ */
+bool Crit1DCase::initializeNumericalFluxes(std::string &error)
 {
     int nrLayers = soilLayers.size();
     int lastLayer = nrLayers-1;
@@ -82,7 +110,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
     int result = soilFluxes3D::initialize(nrLayers, nrLayers, nrlateralLinks, true, false, false);
     if (result != CRIT3D_OK)
     {
-        myError = "Error in initialize numerical fluxes";
+        error = "Error in initialize numerical fluxes";
         return false;
     }
 
@@ -90,7 +118,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
     soilFluxes3D::setHydraulicProperties(fittingOptions.waterRetentionCurve, MEAN_LOGARITHMIC, horizontalConductivityRatio);
     soilFluxes3D::setNumericalParameters(1, 3600, 100, 10, 12, 3);
 
-    // set soil properties (unit: MKS)
+    // set soil properties (units of measurement: MKS)
     int soilIndex = 0;
     for (unsigned int horizonIndex = 0; horizonIndex < mySoil.nrHorizons; horizonIndex++)
     {
@@ -107,13 +135,13 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
                             horizon.organicMatter, horizon.texture.clay / 100.0);
         if (result != CRIT3D_OK)
         {
-            myError = "Error in setSoilProperties, horizon nr: " + std::to_string(horizonIndex);
+            error = "Error in setSoilProperties, horizon nr: " + std::to_string(horizonIndex);
             return false;
         }
     }
 
     // set surface properties
-    double maxSurfaceWater = myCrop.getSurfaceWaterPonding();   // [mm]
+    double maxSurfaceWater = crop.getSurfaceWaterPonding();     // [mm]
     maxSurfaceWater /= 1000.0;                                  // [m]
     double roughnessManning = 0.024;                            // [s m^-0.33]
     int surfaceIndex = 0;
@@ -125,33 +153,33 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
     double z0 = 0;
     double lx = 25;                 // [m]
     double ly = 200;                // [m]
-    double area = lx * ly;          // [m^2]
-    double slope = 0.002;           // [m m^-1]
+    fieldArea = lx * ly;          // [m^2]
+    fieldSlope = 0.002;                  // [m m^-1]
 
     // set surface (node 0)
     bool isSurface = true;
     int nodeIndex = 0;
-    soilFluxes3D::setNode(nodeIndex, x0, y0, z0, area, isSurface, true, BOUNDARY_RUNOFF, slope, ly);
+    soilFluxes3D::setNode(nodeIndex, x0, y0, z0, fieldArea, isSurface, true, BOUNDARY_RUNOFF, fieldSlope, ly);
     soilFluxes3D::setNodeSurface(nodeIndex, surfaceIndex);
-    soilFluxes3D::setNodeLink(nodeIndex, nodeIndex + 1, DOWN, area);
+    soilFluxes3D::setNodeLink(nodeIndex, nodeIndex + 1, DOWN, fieldArea);
 
     // set nodes
     isSurface = false;
     for (int i = 1; i < nrLayers; i++)
     {
-        double volume = area * soilLayers[i].thickness;             // [m^3]
+        double volume = fieldArea * soilLayers[i].thickness;      // [m^3]
         double z = z0 - soilLayers[i].depth;                        // [m]
         if (i == lastLayer)
         {
             if (unit.useWaterTableData)
-                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, slope, area);
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, fieldSlope, fieldArea);
             else
-                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREEDRAINAGE, slope, area);
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREEDRAINAGE, fieldSlope, fieldArea);
         }
         else
         {
             double boundaryArea = ly * soilLayers[i].thickness;
-            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREELATERALDRAINAGE, slope, boundaryArea);
+            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREELATERALDRAINAGE, fieldSlope, boundaryArea);
         }
 
         // set soil
@@ -159,10 +187,10 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
         soilFluxes3D::setNodeSoil(i, soilIndex, horizonIndex);
 
         // set links
-        soilFluxes3D::setNodeLink(i, i-1, UP, area);
+        soilFluxes3D::setNodeLink(i, i-1, UP, fieldArea);
         if (i != lastLayer)
         {
-            soilFluxes3D::setNodeLink(i, i+1, DOWN, area);
+            soilFluxes3D::setNodeLink(i, i+1, DOWN, fieldArea);
         }
     }
 
@@ -170,23 +198,81 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &myError)
 }
 
 
-bool Crit1DCase::initializeSoil(std::string &myError)
+/*!
+ * \brief numerical solution of soil water fluxes (soilFluxes3D library)
+ * \note units of measurement are MKS
+ */
+bool Crit1DCase::computeNumericalFluxes(std::string &error)
 {
-    soilLayers.clear();
+    int nrLayers = soilLayers.size();
+    int lastLayer = nrLayers - 1;
 
-    double factor = 1.0;
-    if (unit.isGeometricLayers) factor = geometricFactor;
-
-    if (! mySoil.setSoilLayers(minLayerThickness, factor, soilLayers, myError))
-        return false;
-
-    if (unit.isNumericalInfiltration)
+    // set bottom boundary conditions (water table)
+    if (unit.useWaterTableData)
     {
-        if (! initializeNumericalFluxes(myError))
-            return false;
+        double totalPotential;                  // [m]
+        if (output.dailyWaterTable != NODATA)
+        {
+            totalPotential = output.dailyWaterTable;
+        }
+        else
+        {
+            // total potential = depth of the last layer + water potential at field capacity
+            // this condition is equal to empirical model
+            double fieldCapacity = soil::getFieldCapacity(soilLayers[lastLayer].horizon, soil::METER);
+            totalPotential = soilLayers[lastLayer].depth + fieldCapacity;
+        }
+        soilFluxes3D::setPrescribedTotalPotential(lastLayer, -totalPotential);
     }
 
-    initializeWater(soilLayers);
+    // set surface
+    int surfaceIndex = 0;
+    soilFluxes3D::setWaterContent(surfaceIndex, soilLayers[surfaceIndex].waterContent * 0.001);       // [m]
+
+    // set soil profile
+    for (int i=1; i < nrLayers; i++)
+    {
+        soilFluxes3D::setMatricPotential(i, soilLayers[i].getWaterPotential());
+    }
+
+    soilFluxes3D::initializeBalance();
+
+    // daily cycle
+    double waterInput = output.dailyPrec;
+    if (! unit.isOptimalIrrigation)
+        waterInput += output.dailyIrrigation;
+    double flux = (waterInput * 0.001 * fieldSlope) / DAY_SECONDS;  // [m3 s-1]
+    for (int hour=1; hour <= 24; hour++)
+    {
+        soilFluxes3D::setWaterSinkSource(surfaceIndex, flux);
+        soilFluxes3D::computePeriod(HOUR_SECONDS);
+    }
+
+    // mass balance error
+    //double massBalanceError = soilFluxes3D::getWaterMBR() - 1;
+
+    // output (from [m] to [mm])
+    soilLayers[surfaceIndex].waterContent = soilFluxes3D::getWaterContent(surfaceIndex) * 1000;
+    for (int i=1; i < nrLayers; i++)
+    {
+        soilLayers[i].waterContent = soilFluxes3D::getWaterContent(i) * soilLayers[i].thickness * 1000;
+    }
+
+    output.dailySurfaceRunoff = (soilFluxes3D::getBoundaryWaterFlow(surfaceIndex) / fieldArea) * 1000;
+    output.dailyLateralDrainage = (soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE) / fieldArea) * 1000;
+
+    // drainage / capillary rise
+    double fluxBottom = (soilFluxes3D::getBoundaryWaterFlow(lastLayer) / fieldArea) * 1000;
+    if (fluxBottom > 0)
+    {
+        output.dailyCapillaryRise = fluxBottom;
+        output.dailyDrainage = 0;
+    }
+    else
+    {
+        output.dailyCapillaryRise = 0;
+        output.dailyDrainage = -fluxBottom;
+    }
 
     return true;
 }
@@ -216,11 +302,11 @@ void Crit1DCase::restoreWaterContent()
  * \brief compute water fluxes
  * \param dailyWaterInput [mm] sum of precipitation and irrigation
  */
-bool Crit1DCase::computeWaterFluxes(double dailyWaterInput)
+bool Crit1DCase::computeWaterFluxes(std::string &error)
 {
     if (unit.isNumericalInfiltration)
     {
-        // TODO
+        return computeNumericalFluxes(error);
     }
     else
     {
@@ -232,7 +318,13 @@ bool Crit1DCase::computeWaterFluxes(double dailyWaterInput)
         }
 
         // INFILTRATION
-        output.dailyDrainage = computeInfiltration(soilLayers, dailyWaterInput, ploughedSoilDepth);
+        double waterInput = output.dailyPrec;
+        if (! unit.isOptimalIrrigation)
+            waterInput += output.dailyIrrigation;
+        output.dailyDrainage = computeInfiltration(soilLayers, waterInput, ploughedSoilDepth);
+
+        // RUNOFF
+        output.dailySurfaceRunoff = computeSurfaceRunoff(crop, soilLayers);
 
         // LATERAL DRAINAGE
         output.dailyLateralDrainage = computeLateralDrainage(soilLayers);
@@ -245,77 +337,76 @@ bool Crit1DCase::computeWaterFluxes(double dailyWaterInput)
 double Crit1DCase::checkIrrigationDemand(int doy, double currentPrec, double nextPrec, double maxTranspiration)
 {
     // update days since last irrigation
-    if (myCrop.daysSinceIrrigation != NODATA)
-        myCrop.daysSinceIrrigation++;
+    if (crop.daysSinceIrrigation != NODATA)
+        crop.daysSinceIrrigation++;
 
     // check irrigated crop
-    if (myCrop.idCrop == "" || ! myCrop.isLiving || isEqual(myCrop.irrigationVolume, NODATA) || isEqual(myCrop.irrigationVolume, 0))
+    if (crop.idCrop == "" || ! crop.isLiving || isEqual(crop.irrigationVolume, NODATA) || isEqual(crop.irrigationVolume, 0))
         return 0;
 
     // check irrigation period
-    if (myCrop.doyStartIrrigation != NODATA && myCrop.doyEndIrrigation != NODATA)
+    if (crop.doyStartIrrigation != NODATA && crop.doyEndIrrigation != NODATA)
     {
-        if (doy < myCrop.doyStartIrrigation || doy > myCrop.doyEndIrrigation)
+        if (doy < crop.doyStartIrrigation || doy > crop.doyEndIrrigation)
             return 0;
     }
-    if (myCrop.degreeDaysStartIrrigation != NODATA && myCrop.degreeDaysEndIrrigation != NODATA)
+    if (crop.degreeDaysStartIrrigation != NODATA && crop.degreeDaysEndIrrigation != NODATA)
     {
-        if (myCrop.degreeDays < myCrop.degreeDaysStartIrrigation || myCrop.degreeDays > myCrop.degreeDaysEndIrrigation)
+        if (crop.degreeDays < crop.degreeDaysStartIrrigation || crop.degreeDays > crop.degreeDaysEndIrrigation)
             return 0;
     }
 
     // check forecast (today and tomorrow)
-    double waterNeeds = myCrop.irrigationVolume / myCrop.irrigationShift;
+    double waterNeeds = crop.irrigationVolume / crop.irrigationShift;
     double todayWater = currentPrec + soilLayers[0].waterContent;
     double twoDaysWater = todayWater + nextPrec;
     if (todayWater >= waterNeeds) return 0;
     if (twoDaysWater >= 2*waterNeeds) return 0;
 
     // check water stress (before infiltration)
-    double threshold = 1. - myCrop.stressTolerance;
+    double threshold = 1. - crop.stressTolerance;
 
     double waterStress = 0;
-    myCrop.computeTranspiration(maxTranspiration, soilLayers, waterStress);
+    crop.computeTranspiration(maxTranspiration, soilLayers, waterStress);
     if (waterStress <= threshold)
         return 0;
 
     // check irrigation shift
-    if (myCrop.daysSinceIrrigation != NODATA)
+    if (crop.daysSinceIrrigation != NODATA)
     {
         // stress too high -> forced irrigation
-        if ((myCrop.daysSinceIrrigation < myCrop.irrigationShift) && (waterStress < (threshold + 0.1)))
+        if ((crop.daysSinceIrrigation < crop.irrigationShift) && (waterStress < (threshold + 0.1)))
             return 0;
     }
 
+    // Irrigation scheduled!
+    // reset irrigation shift
+    crop.daysSinceIrrigation = 0;
+
     // check irrigation quantity
-    double irrigation = myCrop.irrigationVolume;
-    if (myCrop.irrigationShift > 1)
+    double irrigation = crop.irrigationVolume;
+    if (crop.irrigationShift > 1)
         irrigation -= floor(twoDaysWater);
 
-    if (unit.isOptimalIrrigation)
-        irrigation = MINVALUE(irrigation, myCrop.getCropWaterDeficit(soilLayers));
-
-    // reset irrigation shift
-    myCrop.daysSinceIrrigation = 0;
     return irrigation;
 }
-
 
 
 /*!
  * \brief run model (daily cycle)
  * \param myDate
  */
-bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &myError)
+bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &error)
 {
     output.initialize();
+    double prevWC = getTotalWaterContent();
 
     int doy = getDoyFromDate(myDate);
 
     // check daily meteo data
     if (! meteoPoint.existDailyData(myDate))
     {
-        myError = "Missing weather data: " + myDate.toStdString();
+        error = "Missing weather data: " + myDate.toStdString();
         return false;
     }
 
@@ -325,7 +416,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &myError)
 
     if (isEqual(prec, NODATA) || isEqual(tmin, NODATA) || isEqual(tmax, NODATA))
     {
-        myError = "Missing weather data: " + myDate.toStdString();
+        error = "Missing weather data: " + myDate.toStdString();
         return false;
     }
 
@@ -349,45 +440,32 @@ bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &myError)
         output.dailyEt0 = ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, meteoPoint.latitude, doy, tmax, tmin);
 
     // update LAI and root depth
-    if (! myCrop.dailyUpdate(myDate, meteoPoint.latitude, soilLayers, tmin, tmax, output.dailyWaterTable, myError))
+    if (! crop.dailyUpdate(myDate, meteoPoint.latitude, soilLayers, tmin, tmax, output.dailyWaterTable, error))
         return false;
 
-    // Evaporation / transpiration
-    output.dailyMaxEvaporation = myCrop.getMaxEvaporation(output.dailyEt0);
-    output.dailyMaxTranspiration = myCrop.getMaxTranspiration(output.dailyEt0);
+    // Maximum evaporation and transpiration
+    output.dailyMaxEvaporation = crop.getMaxEvaporation(output.dailyEt0);
+    output.dailyMaxTranspiration = crop.getMaxTranspiration(output.dailyEt0);
 
-    // WATER FLUXES
-    saveWaterContent();
-    if (! computeWaterFluxes(output.dailyPrec)) return false;
-
-    // IRRIGATION
     output.dailyIrrigation = 0;
+    // Water fluxes (first computation)
+    saveWaterContent();
+    if (! computeWaterFluxes(error)) return false;
+    // Irrigation
     double irrigation = checkIrrigationDemand(doy, prec, precTomorrow, output.dailyMaxTranspiration);
 
-    // assign irrigation: optimal (subirrigation) or add to precipitation (sprinkler)
+    // Assign irrigation: optimal (subirrigation) or add to precipitation (sprinkler)
+    // and recompute water fluxes
     if (irrigation > 0)
     {
         restoreWaterContent();
-        double totalWaterInput;
-        if (unit.isOptimalIrrigation)
-        {
-            output.dailyIrrigation = assignOptimalIrrigation(soilLayers, irrigation);
-            totalWaterInput = prec;
-        }
-        else
-        {
+        if (! unit.isOptimalIrrigation)
             output.dailyIrrigation = irrigation;
-            totalWaterInput = prec + irrigation;
-        }
-        // recompute water fluxes
-        if (! computeWaterFluxes(totalWaterInput)) return false;
+        else
+            output.dailyIrrigation = assignOptimalIrrigation(soilLayers, irrigation);
+
+        if (! computeWaterFluxes(error)) return false;
     }
-
-    // EVAPORATION
-    output.dailyEvaporation = computeEvaporation(soilLayers, output.dailyMaxEvaporation);
-
-    // RUNOFF (after evaporation)
-    output.dailySurfaceRunoff = computeSurfaceRunoff(myCrop, soilLayers);
 
     // adjust irrigation losses
     if (! unit.isOptimalIrrigation)
@@ -399,27 +477,52 @@ bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &myError)
         }
     }
 
-    // TRANSPIRATION
+    // Evaporation
+    output.dailyEvaporation = computeEvaporation(soilLayers, output.dailyMaxEvaporation);
+
+    // Transpiration
     double waterStress = 0;
-    output.dailyTranspiration = myCrop.computeTranspiration(output.dailyMaxTranspiration, soilLayers, waterStress);
+    output.dailyTranspiration = crop.computeTranspiration(output.dailyMaxTranspiration, soilLayers, waterStress);
 
     // assign transpiration
     if (output.dailyTranspiration > 0)
     {
-        for (unsigned int i = unsigned(myCrop.roots.firstRootLayer); i <= unsigned(myCrop.roots.lastRootLayer); i++)
+        for (unsigned int i = unsigned(crop.roots.firstRootLayer); i <= unsigned(crop.roots.lastRootLayer); i++)
         {
-            soilLayers[i].waterContent -= myCrop.layerTranspiration[i];
+            soilLayers[i].waterContent -= crop.layerTranspiration[i];
         }
     }
+
+    // Water balance
+    double currentWC = getTotalWaterContent();
+    output.dailyBalance = currentWC - (prevWC + output.dailyPrec + output.dailyIrrigation + output.dailyCapillaryRise
+                                - output.dailyTranspiration - output.dailyEvaporation - output.dailySurfaceRunoff
+                                - output.dailyLateralDrainage - output.dailyDrainage);
 
     // output variables
     output.dailySurfaceWaterContent = soilLayers[0].waterContent;
     output.dailySoilWaterContent = getSoilWaterContent(soilLayers, 1.0);
     output.dailyAvailableWater = getSoilAvailableWater(soilLayers, 1.0);
     output.dailyFractionAW = getSoilFractionAW(soilLayers, 1.0);
-    output.dailyReadilyAW = getReadilyAvailableWater(myCrop, soilLayers);
+    output.dailyReadilyAW = getReadilyAvailableWater(crop, soilLayers);
 
     return true;
+}
+
+
+/*!
+ * \brief getTotalWaterContent
+ * \return sum of water content on the profile [mm]
+ */
+double Crit1DCase::getTotalWaterContent()
+{
+    double sumWC = 0;
+    for (unsigned int i=0; i < soilLayers.size(); i++)
+    {
+        sumWC += soilLayers[i].waterContent;
+    }
+
+    return sumWC;
 }
 
 
