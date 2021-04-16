@@ -116,7 +116,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
 
     float horizontalConductivityRatio = 10.0;
     soilFluxes3D::setHydraulicProperties(fittingOptions.waterRetentionCurve, MEAN_LOGARITHMIC, horizontalConductivityRatio);
-    soilFluxes3D::setNumericalParameters(10, 3600, 100, 10, 12, 2);
+    soilFluxes3D::setNumericalParameters(60, 3600, 100, 10, 12, 3);
 
     // set soil properties (units of measurement: MKS)
     int soilIndex = 0;
@@ -498,6 +498,8 @@ bool Crit1DCase::computeDailyModel(Crit3DDate myDate, std::string &error)
     output.dailyBalance = currentWC - (previousWC + output.dailyPrec + output.dailyIrrigation + output.dailyCapillaryRise
                                 - output.dailyTranspiration - output.dailyEvaporation - output.dailySurfaceRunoff
                                 - output.dailyLateralDrainage - output.dailyDrainage);
+    if (fabs(output.dailyBalance) < EPSILON)
+        output.dailyBalance = 0;
 
     // output variables
     output.dailySurfaceWaterContent = soilLayers[0].waterContent;
