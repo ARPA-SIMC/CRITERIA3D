@@ -20,7 +20,7 @@ Crit1DUnit::Crit1DUnit()
     // default values
     isNumericalInfiltration = false;
     isGeometricLayers = false;
-    isOptimalIrrigation = true;
+    isOptimalIrrigation = false;
     useWaterTableData = true;
     useWaterRetentionData = true;
     slope = 0.002;
