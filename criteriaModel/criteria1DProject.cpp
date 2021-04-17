@@ -662,20 +662,26 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
     myCase.crop.initialize(myCase.meteoPoint.latitude, nrLayers,
                              myCase.mySoil.totalDepth, getDoyFromDate(firstDate));
 
+    // initialize water table
+    float waterTable = myCase.meteoPoint.getMeteoPointValueD(firstDate, dailyWaterTableDepth);
+    if (myCase.unit.useWaterTableData)
+    {
+        computeCapillaryRise(myCase.soilLayers, waterTable);
+    }
+
     // restart
     bool isFirstDay = true;
     std::string errorString;
     if (isRestart)
     {
         QString outputDbPath = getFilePath(dbOutput.databaseName());
-        QString stateDbName = outputDbPath + "state_"+firstSimulationDate.toString("yyyy_MM_dd")+".db";
+        QString stateDbName = outputDbPath + "state_" + firstSimulationDate.toString("yyyy_MM_dd")+".db";
         if (! restoreState(stateDbName, projectError))
         {
             return false;
         }
 
-        double currentWaterTable = double(myCase.meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
-        if (! myCase.crop.restore(myDate, myCase.meteoPoint.latitude, myCase.soilLayers, currentWaterTable, errorString))
+        if (! myCase.crop.restore(myDate, myCase.meteoPoint.latitude, myCase.soilLayers, waterTable, errorString))
         {
             projectError = QString::fromStdString(errorString);
             return false;

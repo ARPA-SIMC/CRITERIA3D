@@ -230,7 +230,6 @@ void updateBoundary()
 
 void updateBoundaryWater(double deltaT)
 {
-    double boundaryPsi, boundarySe, boundaryK, meanK;
     double Hs, avgH, maxFlow, flow;
     double const EPSILON_mm = 0.0001;          // 0.1 mm
 
@@ -262,14 +261,15 @@ void updateBoundaryWater(double deltaT)
             else if (myNode[i].boundary->type == BOUNDARY_FREEDRAINAGE)
             {
                 // [m^3 s^-1] Darcy unit gradient
-                // dH=dz=L  ->  q=K(h)
+                // dH=dz=L  -> dH/L=1
                 double myFlux = -myNode[i].k * myNode[i].up.area;
                 myNode[i].boundary->waterFlow = myFlux;               
             }
 
             else if (myNode[i].boundary->type == BOUNDARY_FREELATERALDRAINAGE)
             {
-                // [m^3 s^-1] Darcy,  gradient = slope (dH=dz)
+                // [m^3 s^-1] Darcy gradient=slope
+                // dH=dz slope=dz/L -> dH/L=slope
                 myNode[i].boundary->waterFlow = -myNode[i].k * myParameters.k_lateral_vertical_ratio
                                             * myNode[i].boundary->boundaryArea * myNode[i].boundary->slope;
             }
@@ -277,17 +277,21 @@ void updateBoundaryWater(double deltaT)
             else if (myNode[i].boundary->type == BOUNDARY_PRESCRIBEDTOTALPOTENTIAL)
             {
                 // water table
+                /*double boundaryK;
                 if (myNode[i].boundary->prescribedTotalPotential >= myNode[i].z)
                     boundaryK = myNode[i].Soil->K_sat;
                 else
                 {
-                    boundaryPsi = fabs(myNode[i].boundary->prescribedTotalPotential - myNode[i].z);
-                    boundarySe = computeSefromPsi(boundaryPsi, myNode[i].Soil);
+                    double boundaryPsi = fabs(myNode[i].boundary->prescribedTotalPotential - myNode[i].z);
+                    double boundarySe = computeSefromPsi(boundaryPsi, myNode[i].Soil);
                     boundaryK = computeWaterConductivity(boundarySe, myNode[i].Soil);
                 }
-                meanK = computeMean(myNode[i].k, boundaryK);
-                myNode[i].boundary->waterFlow = meanK * (myNode[i].boundary->prescribedTotalPotential - myNode[i].H)
-                                                * myNode[i].boundary->boundaryArea;
+                double meanK = computeMean(myNode[i].k, boundaryK);*/
+
+                double dH = myNode[i].boundary->prescribedTotalPotential - myNode[i].H;
+                //double L = distance(i, myNode[i].up.index);
+                double dz = MAXVALUE(0.1, myNode[i].z - myNode[i].boundary->prescribedTotalPotential);
+                myNode[i].boundary->waterFlow = myNode[i].k * myNode[i].boundary->boundaryArea * (dH / dz);
             }
 
             else if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)

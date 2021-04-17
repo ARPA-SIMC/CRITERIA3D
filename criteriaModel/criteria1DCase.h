@@ -70,7 +70,7 @@
         Crit1DCase();
 
         bool initializeSoil(std::string &error);
-        bool computeDailyModel(Crit3DDate myDate, std::string &error);
+        bool computeDailyModel(Crit3DDate &myDate, std::string &error);
 
         double getWaterContent(double depth);
         double getWaterPotential(double depth);
@@ -86,8 +86,8 @@
         std::vector<double> prevWaterContent;
 
         bool initializeNumericalFluxes(std::string &error);
-        bool computeNumericalFluxes(std::string &error);
-        bool computeWaterFluxes(std::string &error);
+        bool computeNumericalFluxes(const Crit3DDate &myDate, std::string &error);
+        bool computeWaterFluxes(const Crit3DDate &myDate, std::string &error);
         double checkIrrigationDemand(int doy, double currentPrec, double nextPrec, double maxTranspiration);
         void saveWaterContent();
         void restoreWaterContent();
