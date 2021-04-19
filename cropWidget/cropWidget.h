@@ -129,6 +129,9 @@
             QAction* restoreData;
             QPushButton *saveButton;
             QPushButton *updateButton;
+            QMenu *viewMenu;
+            QAction* viewWeather;
+            QAction* viewSoil;
 
             TabLAI* tabLAI;
             TabRootDepth* tabRootDepth;

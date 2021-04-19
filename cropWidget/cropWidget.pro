@@ -31,7 +31,7 @@ win32:{
 }
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../dbMeteoGrid  \
-            ../soil ../crop ../qcustomplot ../criteriaModel ../commonDialogs
+            ../soil ../crop ../qcustomplot ../criteriaModel ../commonDialogs ../meteoWidget ../soilWidget
 
 
 SOURCES += \

@@ -437,9 +437,12 @@ Crit3DCropWidget::Crit3DCropWidget()
     QMenuBar* menuBar = new QMenuBar();
     QMenu *fileMenu = new QMenu("File");
     QMenu *editMenu = new QMenu("Edit");
+    viewMenu = new QMenu("View Data");
+    viewMenu->setEnabled(false);
 
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(editMenu);
+    menuBar->addMenu(viewMenu);
     this->layout()->setMenuBar(menuBar);
 
     QAction* openProject = new QAction(tr("&Open CRITERIA-1D Project"), this);
@@ -465,6 +468,11 @@ Crit3DCropWidget::Crit3DCropWidget()
     editMenu->addAction(newCrop);
     editMenu->addAction(deleteCrop);
     editMenu->addAction(restoreData);
+
+    viewWeather = new QAction(tr("&Weather data"), this);
+    viewSoil = new QAction(tr("&Soil data"), this);
+    viewMenu->addAction(viewWeather);
+    viewMenu->addAction(viewSoil);
 
     cropChanged = false;
 
@@ -551,6 +559,23 @@ void Crit3DCropWidget::on_actionOpenProject()
     this->lastYearListComboBox.blockSignals(false);
 
     openUnitsDB(dbUnitsName);
+    viewMenu->setEnabled(true);
+    if (soilListComboBox.count() == 0)
+    {
+        viewSoil->setEnabled(false);
+    }
+    else
+    {
+        viewSoil->setEnabled(true);
+    }
+    if (meteoListComboBox.count() == 0)
+    {
+        viewWeather->setEnabled(false);
+    }
+    else
+    {
+        viewWeather->setEnabled(true);
+    }
 }
 
 
@@ -650,7 +675,7 @@ void Crit3DCropWidget::openCropDB(QString newDbCropName)
 
     saveChanges->setEnabled(true);
     saveButton->setEnabled(true);
-    updateButton->setEnabled(true);
+    updateButton->setEnabled(true);   
 }
 
 
@@ -722,6 +747,23 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
     saveChanges->setEnabled(true);
     saveButton->setEnabled(true);
     updateButton->setEnabled(true);
+    viewMenu->setEnabled(true);
+    if (soilListComboBox.count() == 0)
+    {
+        viewSoil->setEnabled(false);
+    }
+    else
+    {
+        viewSoil->setEnabled(true);
+    }
+    if (meteoListComboBox.count() == 0)
+    {
+        viewWeather->setEnabled(false);
+    }
+    else
+    {
+        viewWeather->setEnabled(true);
+    }
 
 }
 
@@ -772,6 +814,23 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
     for (int i = 0; i < soilStringList.size(); i++)
     {
         this->soilListComboBox.addItem(soilStringList[i]);
+    }
+    viewMenu->setEnabled(true);
+    if (soilListComboBox.count() == 0)
+    {
+        viewSoil->setEnabled(false);
+    }
+    else
+    {
+        viewSoil->setEnabled(true);
+    }
+    if (meteoListComboBox.count() == 0)
+    {
+        viewWeather->setEnabled(false);
+    }
+    else
+    {
+        viewWeather->setEnabled(true);
     }
 }
 
