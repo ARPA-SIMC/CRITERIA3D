@@ -44,6 +44,8 @@
             void on_actionNewCrop();
             void on_actionSave();
             void on_actionUpdate();
+            void on_actionViewWeather();
+            void on_actionViewSoil();
             bool saveCrop();
             void updateMeteoPointValues();
             void updateCropParam(QString idCrop);

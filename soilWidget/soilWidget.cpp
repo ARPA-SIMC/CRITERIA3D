@@ -291,7 +291,6 @@ void Crit3DSoilWidget::setDbSoil(QString dbSoilName, QString soilCode)
     soilListComboBox.setCurrentText(soilCode);
 }
 
-
 void Crit3DSoilWidget::on_actionOpenSoilDB()
 {
     QString dbSoilName = QFileDialog::getOpenFileName(this, tr("Open soil database"), "", tr("SQLite files (*.db)"));
