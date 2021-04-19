@@ -768,7 +768,7 @@ bool Crit3DMeteoPoint::existDailyData(const Crit3DDate& myDate)
 }
 
 
-float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar)
+float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar)
 {
     //check
     if (myVar == noMeteoVar) return NODATA;

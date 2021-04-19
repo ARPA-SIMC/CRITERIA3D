@@ -159,7 +159,7 @@ double computeInfiltration(std::vector<soil::Crit3DLayer> &soilLayers, double in
                 // in water surplus, aggiungo il surplus al fluxLayer
                 if (soilLayers[i].waterContent > soilLayers[i].critical)
                 {
-                    // layers in water surplus (critical point depends on watertable depth: default is FC)
+                    // layers above critical point (it depends on watertable depth: default is FC)
                     waterSurplus = soilLayers[i].waterContent - soilLayers[i].critical;
                     fluxLayer += waterSurplus;
                     soilLayers[i].waterContent -= waterSurplus;
@@ -501,12 +501,12 @@ double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
 
 
 /*!
- * \name computeOptimalIrrigation
+ * \name assignOptimalIrrigation
  * \brief assign subirrigation to restore field capacity in the root zone
  * \param soilLayers, irrigationMax
- * \return irrigation [m]
+ * \return irrigation [mm]
  */
-double computeOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, double irrigationMax)
+double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, double irrigationMax)
 {
     double residualIrrigation = irrigationMax;
     unsigned int nrLayers = unsigned(soilLayers.size());

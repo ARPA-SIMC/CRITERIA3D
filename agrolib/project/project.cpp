@@ -2378,6 +2378,12 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             meteoGridDbHandler->loadGridHourlyDataFixedFields(&errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
         }
         formInfo.close();
+        if(meteoWidgetGridList[meteoWidgetGridList.size()-1]->getIsEnsemble())
+        {
+            // an ensemble grid is already open, append on that
+            // The new one is not ensemble (otherwise append mode is not possible)
+            meteoWidgetGridList[meteoWidgetGridList.size()-1]->setIsEnsemble(false);
+        }
         unsigned row;
         unsigned col;
         if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
@@ -2421,8 +2427,9 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             for (int i = 1; i<=nMembers; i++)
             {
                 meteoGridDbHandler->loadGridDailyDataEnsemble(&errorString, QString::fromStdString(idCell), i, firstDate, lastDate);
-                meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
+                meteoWidgetGrid->addMeteoPointsEnsemble(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
             }
+            meteoWidgetGrid->drawEnsemble();
             formInfo.close();
         }
         else

@@ -93,8 +93,6 @@
         double getSurfaceWaterPonding();
 
         double getCropWaterDeficit(const std::vector<soil::Crit3DLayer>& soilLayers);
-        double getIrrigationDemand(int doy, double currentPrec, double nextPrec,
-                                   double maxTranpiration, const std::vector<soil::Crit3DLayer>& soilLayers);
 
         double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer>& soilLayers, double& waterStress);
     };

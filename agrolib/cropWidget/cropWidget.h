@@ -15,7 +15,7 @@
     #include <QLabel>
     #include <QSqlDatabase>
 
-    #include "criteria1DSimulation.h"
+    #include "criteria1DProject.h"
     #include "tabLAI.h"
     #include "tabRootDepth.h"
     #include "tabRootDensity.h"
@@ -129,6 +129,9 @@
             QAction* restoreData;
             QPushButton *saveButton;
             QPushButton *updateButton;
+            QMenu *viewMenu;
+            QAction* viewWeather;
+            QAction* viewSoil;
 
             TabLAI* tabLAI;
             TabRootDepth* tabRootDepth;
