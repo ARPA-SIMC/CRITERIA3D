@@ -1838,11 +1838,12 @@ void Crit3DCropWidget::variableWaterContentChanged()
 
 void Crit3DCropWidget::on_actionViewWeather()
 {
-
+    // TO DO
 }
 
 void Crit3DCropWidget::on_actionViewSoil()
 {
+    // TO DO
     //Crit3DSoilWidget soilWidget;
     //soilWidget.show();
 
