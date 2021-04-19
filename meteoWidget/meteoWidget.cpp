@@ -1416,7 +1416,7 @@ void Crit3DMeteoWidget::updateSeries()
     barSeries.clear();
     setVector.clear();
     lineSeries.clear();
-    chart->removeAllSeries();
+    //chart->removeAllSeries();
     nameLines.clear();
     colorLines.clear();
     nameBar.clear();
@@ -1464,7 +1464,7 @@ void Crit3DMeteoWidget::updateSeries()
             }
         }
     }
-
+/*
     if (isLine)
     {
         lineSeries.append(vectorLine);
@@ -1479,6 +1479,7 @@ void Crit3DMeteoWidget::updateSeries()
         }
         barSeries.append(barFirstSeries);
     }
+    */
 }
 
 
