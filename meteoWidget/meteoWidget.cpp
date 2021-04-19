@@ -14,7 +14,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
-    You should have received a copy of the GNU Lesser General Public License
+    You should have received a copy of the /NU Lesser General Public License
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
     contacts:
     fausto.tomei@gmail.com
@@ -535,17 +535,6 @@ void Crit3DMeteoWidget::drawEnsemble()
 void Crit3DMeteoWidget::resetValues()
 {
     int nMeteoPoints = meteoPoints.size();
-    QVector<QColor> colorLine;
-    for (int i = 0; i< nameLines.size(); i++)
-    {
-        colorLine.append(lineSeries[0][i]->color());
-    }
-
-    for (int i = 0; i < nameBar.size(); i++)
-    {
-        colorBar.append(setVector[0][i]->color());
-    }
-
     // clear prev series values
     if (isLine)
     {
@@ -595,7 +584,8 @@ void Crit3DMeteoWidget::resetValues()
                     pointName = elementsName[0].left(4)+elementsName[elementsName.size()-1].left(4);
                 }
                 line->setName(QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameLines[i]);
-                QColor lineColor = colorLine[i];
+                //QColor lineColor = colorLine[i];
+                QColor lineColor = colorLines[i];
                 if (nMeteoPoints == 1)
                 {
                     lineColor.setAlpha(255);
@@ -637,16 +627,23 @@ void Crit3DMeteoWidget::resetValues()
                 name = QString::fromStdString(meteoPoints[mp].id)+"_"+pointName+"_"+nameBar[i];
                 QBarSet* set = new QBarSet(name);
                 QColor barColor = colorBar[i];
-                if (nMeteoPoints == 1)
+                if (meteoPointsEnsemble.size() == 0)
                 {
-                    barColor.setAlpha(255);
+                    if (nMeteoPoints == 1)
+                    {
+                        barColor.setAlpha(255);
+                    }
+                    else
+                    {
+                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                    }
+                    set->setColor(barColor);
                 }
                 else
                 {
-                    barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
-                    set->setColor(barColor);
-                    set->setBorderColor(barColor);
+                    set->setColor(Qt::transparent);
                 }
+                set->setBorderColor(barColor);
                 vectorBarSet.append(set);
             }
             if (vectorBarSet.size() != 0)
@@ -1082,23 +1079,23 @@ void Crit3DMeteoWidget::drawDailyVar()
             else
             {
                 QColor barColor = colorBar[j];
-                if (nMeteoPoints == 1)
-                {
-                    barColor.setAlpha(255);
-                }
-                else
-                {
-                    barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
-                }
                 if (meteoPointsEnsemble.size() == 0)
                 {
+                    if (nMeteoPoints == 1)
+                    {
+                        barColor.setAlpha(255);
+                    }
+                    else
+                    {
+                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                    }
                     setVector[mp][j]->setColor(barColor);
                 }
                 else
                 {
                     setVector[mp][j]->setColor(Qt::transparent);
-                    setVector[mp][j]->setBorderColor(barColor);
                 }
+                setVector[mp][j]->setBorderColor(barColor);
 
             }
         }
@@ -1234,6 +1231,24 @@ void Crit3DMeteoWidget::drawHourlyVar()
             QBarSeries* barMpSeries = new QBarSeries();
             for (int i = 0; i < nameBar.size(); i++)
             {
+                QColor barColor = colorBar[i];
+                if (meteoPointsEnsemble.size() == 0)
+                {
+                    if (nMeteoPoints == 1)
+                    {
+                        barColor.setAlpha(255);
+                    }
+                    else
+                    {
+                        barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
+                    }
+                    setVector[mp][i]->setColor(barColor);
+                }
+                else
+                {
+                    setVector[mp][i]->setColor(Qt::transparent);
+                }
+                setVector[mp][i]->setBorderColor(barColor);
                 barMpSeries->append(setVector[mp][i]);
             }
             barSeries.append(barMpSeries);
@@ -1413,26 +1428,14 @@ void Crit3DMeteoWidget::showHourlyGraph()
 
 void Crit3DMeteoWidget::updateSeries()
 {
-    barSeries.clear();
-    setVector.clear();
-    lineSeries.clear();
-    chart->removeAllSeries();
     nameLines.clear();
     colorLines.clear();
     nameBar.clear();
     colorBar.clear();
     isLine = false;
     isBar = false;
-    if (isEnsemble || meteoPointsEnsemble.size() != 0)
-    {
-        ensembleSet.clear();
-        ensembleSeries.clear();
-    }
 
-    QVector<QLineSeries*> vectorLine;
-    QVector<QBarSet*> vectorBarSet;
     QMapIterator<QString, QStringList> i(MapCSVStyles);
-
     while (i.hasNext())
     {
         i.next();
@@ -1446,38 +1449,15 @@ void Crit3DMeteoWidget::updateSeries()
                     isLine = true;
                     nameLines.append(i.key());
                     colorLines.append(QColor(items[1]));
-                    QLineSeries* line = new QLineSeries();
-                    line->setName(i.key());
-                    line->setColor(QColor(items[1]));
-                    vectorLine.append(line);
                 }
                 if (items[0] == "bar")
                 {
                     isBar = true;
                     nameBar.append(i.key());
                     colorBar.append(QColor(items[1]));
-                    QBarSet* set = new QBarSet(i.key());
-                    set->setColor(QColor(items[1]));
-                    set->setBorderColor(QColor(items[1]));
-                    vectorBarSet.append(set);
                 }
             }
         }
-    }
-
-    if (isLine)
-    {
-        lineSeries.append(vectorLine);
-    }
-    if (isBar)
-    {
-        setVector.append(vectorBarSet);
-        QBarSeries* barFirstSeries = new QBarSeries();
-        for (int i = 0; i < setVector[0].size(); i++)
-        {
-            barFirstSeries->append(setVector[0][i]);
-        }
-        barSeries.append(barFirstSeries);
     }
 }
 
@@ -1496,7 +1476,7 @@ void Crit3DMeteoWidget::redraw()
     }
     if(!isEnsemble)
     {
-        resetValues();;
+        resetValues();
     }
 
     if (currentFreq == daily)
