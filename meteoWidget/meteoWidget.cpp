@@ -562,7 +562,7 @@ void Crit3DMeteoWidget::resetValues()
     }
     if (isBar)
     {
-        for (int mp = 0; mp < lineSeries.size(); mp++)
+        for (int mp = 0; mp < barSeries.size(); mp++)
         {
             setVector[mp].clear();
             barSeries[mp]->clear();
@@ -1090,7 +1090,16 @@ void Crit3DMeteoWidget::drawDailyVar()
                 {
                     barColor.setAlpha( 255-(mp*(150/(nMeteoPoints-1))) );
                 }
-                setVector[mp][j]->setColor(barColor);
+                if (meteoPointsEnsemble.size() == 0)
+                {
+                    setVector[mp][j]->setColor(barColor);
+                }
+                else
+                {
+                    setVector[mp][j]->setColor(Qt::transparent);
+                    setVector[mp][j]->setBorderColor(barColor);
+                }
+
             }
         }
     }
@@ -1409,7 +1418,9 @@ void Crit3DMeteoWidget::updateSeries()
     lineSeries.clear();
     chart->removeAllSeries();
     nameLines.clear();
+    colorLines.clear();
     nameBar.clear();
+    colorBar.clear();
     isLine = false;
     isBar = false;
     if (isEnsemble || meteoPointsEnsemble.size() != 0)
