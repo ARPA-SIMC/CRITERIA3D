@@ -1418,7 +1418,9 @@ void Crit3DMeteoWidget::updateSeries()
     lineSeries.clear();
     chart->removeAllSeries();
     nameLines.clear();
+    colorLines.clear();
     nameBar.clear();
+    colorBar.clear();
     isLine = false;
     isBar = false;
     if (isEnsemble || meteoPointsEnsemble.size() != 0)
