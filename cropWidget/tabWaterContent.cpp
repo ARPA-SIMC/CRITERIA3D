@@ -115,8 +115,8 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     colorMap->data()->setSize(nx, ny);
     colorMap->data()->setRange(QCPRange(0, nx), QCPRange(totalSoilDepth,0));
 
-    int doy = 0;
     myCase.crop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
+    myCase.initializeWaterContent(firstDate);
 
     std::string errorString;
     double waterContent = 0.0;
@@ -124,6 +124,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
 
     int step = formInfo.start("Compute model...", (lastYear-firstYear+2)*365);
     int cont = 0;
+    int doy = 0;
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         if (! myCase.computeDailyModel(myDate, errorString))
@@ -140,7 +141,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
             {
                 if (isVolumetricWaterContent)
                 {
-                    waterContent = myCase.soilLayers[i].getVolumetricWaterContent();
+                    waterContent = myCase.soilLayers[i].getVolumetricWaterContent() / myCase.soilLayers[i].soilFraction;
                     maxWaterContent = MAXVALUE(waterContent, maxWaterContent);
                 }
                 else

@@ -28,7 +28,7 @@
         bool isOptimalIrrigation;
         bool useWaterTableData;
         bool useWaterRetentionData;
-        double slope;
+        double slope;                           // [m m-1]
 
         Crit1DUnit();
     };

@@ -70,6 +70,7 @@
         Crit1DCase();
 
         bool initializeSoil(std::string &error);
+        void initializeWaterContent(Crit3DDate myDate);
         bool computeDailyModel(Crit3DDate &myDate, std::string &error);
 
         double getWaterContent(double depth);
@@ -81,7 +82,6 @@
         double geometricFactor;         // [-]
         double ploughedSoilDepth;       // [m]
         double fieldArea;               // [m2]
-        double fieldSlope;              // [m m-1]
 
         std::vector<double> prevWaterContent;
 

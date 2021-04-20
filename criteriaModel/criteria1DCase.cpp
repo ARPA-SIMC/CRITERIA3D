@@ -64,11 +64,11 @@ void Crit1DOutput::initialize()
 
 Crit1DCase::Crit1DCase()
 {
+    // deafult values
     minLayerThickness = 0.02;           /*!< [m] layer thickness (default = 2 cm)  */
     geometricFactor = 1.2;              /*!< [-] factor for geometric progression of thickness  */
     ploughedSoilDepth = 0.5;            /*!< [m] depth of ploughed soil (working layer) */
     fieldArea = 5000;                   /*!< [m2]   */
-    fieldSlope = 0.02;                  /*!< [m2 m-1]   */
 
     soilLayers.clear();
     prevWaterContent.clear();
@@ -94,6 +94,20 @@ bool Crit1DCase::initializeSoil(std::string &error)
     initializeWater(soilLayers);
 
     return true;
+}
+
+
+// meteoPoint has to be loaded
+void Crit1DCase::initializeWaterContent(Crit3DDate myDate)
+{
+    initializeWater(soilLayers);
+
+    // water table
+    if (unit.useWaterTableData)
+    {
+        float waterTable = meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth);
+        computeCapillaryRise(soilLayers, waterTable);
+    }
 }
 
 
@@ -157,7 +171,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     // set surface (node 0)
     bool isSurface = true;
     int nodeIndex = 0;
-    soilFluxes3D::setNode(nodeIndex, x0, y0, z0, fieldArea, isSurface, true, BOUNDARY_RUNOFF, fieldSlope, ly);
+    soilFluxes3D::setNode(nodeIndex, x0, y0, z0, fieldArea, isSurface, true, BOUNDARY_RUNOFF, unit.slope, ly);
     soilFluxes3D::setNodeSurface(nodeIndex, surfaceIndex);
     soilFluxes3D::setNodeLink(nodeIndex, nodeIndex + 1, DOWN, fieldArea);
 
@@ -170,14 +184,14 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
         if (i == lastLayer)
         {
             if (unit.useWaterTableData)
-                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, fieldSlope, fieldArea);
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, unit.slope, fieldArea);
             else
-                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREEDRAINAGE, fieldSlope, fieldArea);
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREEDRAINAGE, unit.slope, fieldArea);
         }
         else
         {
             double boundaryArea = ly * soilLayers[i].thickness;
-            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREELATERALDRAINAGE, fieldSlope, boundaryArea);
+            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREELATERALDRAINAGE, unit.slope, boundaryArea);
         }
 
         // set soil
@@ -218,7 +232,7 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
             // total potential = depth of the last layer + water potential at field capacity
             // this condition is similar to empirical model
             double fieldCapacity = soil::getFieldCapacity(soilLayers[lastLayer].horizon, soil::METER);
-            totalPotential = fieldCapacity -(soilLayers[lastLayer].depth + soilLayers[lastLayer].thickness);
+            totalPotential = fieldCapacity - soilLayers[lastLayer].depth;
         }
         soilFluxes3D::setPrescribedTotalPotential(lastLayer, totalPotential);
     }
@@ -251,10 +265,10 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     int irrH0 = 0;
     int irrH1 = 0;
     double irrFlux = 0;
-    if (! unit.isOptimalIrrigation)
+    if (! unit.isOptimalIrrigation && output.dailyIrrigation > 0)
     {
-        duration = int(output.dailyIrrigation / 5); // [hours]
-        irrH0 = 6;                                  // morning
+        duration = int(output.dailyIrrigation / 5);     // [hours]
+        irrH0 = 6;                                      // morning
         irrH1 = irrH0 + duration -1;
         irrFlux = (fieldArea * output.dailyIrrigation * 0.001) / (HOUR_SECONDS * duration);  // [m3 s-1]
     }
@@ -263,10 +277,10 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     for (int hour=1; hour <= 24; hour++)
     {
         double flux = 0;                            // [m3 s-1]
-        if (hour >= precH0 && hour <= precH1)
+        if (hour >= precH0 && hour <= precH1 && precFlux > 0)
             flux += precFlux;
 
-        if (hour >= irrH0 and hour <= irrH1)
+        if (hour >= irrH0 && hour <= irrH1 && irrFlux > 0)
             flux += irrFlux;
 
         soilFluxes3D::setWaterSinkSource(surfaceIndex, flux);
@@ -274,7 +288,7 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     }
 
     // mass balance error
-    //double massBalanceError = soilFluxes3D::getWaterMBR() - 1;
+    double massBalanceError = soilFluxes3D::getWaterMBR() - 1;
 
     // output (from [m] to [mm])
     soilLayers[surfaceIndex].waterContent = soilFluxes3D::getWaterContent(surfaceIndex) * 1000;
