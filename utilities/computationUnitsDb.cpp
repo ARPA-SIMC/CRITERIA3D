@@ -141,7 +141,11 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
         if (existWaterRetentionData)
             unitList[i].useWaterRetentionData = query.value("fit_soil_water_retention").toBool();
         if (existSlope)
-            unitList[i].slope = query.value("slope").toDouble();
+        {
+            double slope;
+            if (getValue(query.value("slope"), &slope))
+                unitList[i].slope = slope;
+        }
 
         i++;
     }
