@@ -23,7 +23,7 @@ Crit1DUnit::Crit1DUnit()
     isOptimalIrrigation = false;
     useWaterTableData = true;
     useWaterRetentionData = true;
-    slope = 0.02;
+    slope = 0.01;
 }
 
 
