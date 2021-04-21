@@ -927,4 +927,14 @@ void TabHorizons::copyTableModel()
     tableModel->copyAll();
 }
 
+void TabHorizons::exportTableDb(QString csvFile)
+{
+    tableDb->exportToCsv(csvFile);
+}
+
+void TabHorizons::exportTableModel(QString csvFile)
+{
+    tableModel->exportToCsv(csvFile);
+}
+
 

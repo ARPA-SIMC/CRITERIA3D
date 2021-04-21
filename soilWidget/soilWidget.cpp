@@ -627,12 +627,38 @@ void Crit3DSoilWidget::on_actionSave()
 
 void Crit3DSoilWidget::on_actionExportParamFromDbTable()
 {
-    // TO DO
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export data"), "", tr("CSV files (*.csv)"));
+    if (fileName == "")
+    {
+        return;
+    }
+    QFile csvFile(fileName);
+    if (csvFile.exists())
+    {
+        if (!csvFile.remove())
+        {
+            return;
+        }
+    }
+    horizonsTab->exportTableDb(fileName);
 }
 
 void Crit3DSoilWidget::on_actionExportEstimatedParamTable()
 {
-    // TO DO
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export data"), "", tr("CSV files (*.csv)"));
+    if (fileName == "")
+    {
+        return;
+    }
+    QFile csvFile(fileName);
+    if (csvFile.exists())
+    {
+        if (!csvFile.remove())
+        {
+            return;
+        }
+    }
+    horizonsTab->exportTableModel(fileName);
 }
 
 
