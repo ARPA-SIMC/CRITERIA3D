@@ -222,19 +222,22 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     // set bottom boundary conditions (water table)
     if (unit.useWaterTableData)
     {
-        double totalPotential;                  // [m]
+        double totalPotential;                          // [m]
+        double boundaryZ = 1.0;                         // [m]
         if (output.dailyWaterTable != NODATA)
         {
-            totalPotential = -output.dailyWaterTable;
+            totalPotential = output.dailyWaterTable;    // [m]
         }
         else
         {
-            // total potential = depth of the last layer + water potential at field capacity
+            // boundary total potential = depth of the last layer + boundaryZ + field capacity
             // this condition is similar to empirical model
-            double fieldCapacity = soil::getFieldCapacity(soilLayers[lastLayer].horizon, soil::METER);
-            totalPotential = fieldCapacity - soilLayers[lastLayer].depth;
+            double fieldCapacity = -soil::getFieldCapacity(soilLayers[lastLayer].horizon, soil::METER);     // [m]
+            double waterPotential = soilLayers[lastLayer].getWaterPotential() / GRAVITY;                    // [m]
+            totalPotential = soilLayers[lastLayer].depth + boundaryZ;                                       // [m]
+            totalPotential += MINVALUE(fieldCapacity, waterPotential);
         }
-        soilFluxes3D::setPrescribedTotalPotential(lastLayer, totalPotential);
+        soilFluxes3D::setPrescribedTotalPotential(lastLayer, -totalPotential);
     }
 
     // set surface
