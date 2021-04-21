@@ -186,7 +186,7 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     // actions
     QAction* openSoilDB = new QAction(tr("&Open dbSoil"), this);
     saveChanges = new QAction(tr("&Save Changes"), this);
-    exportParamFromDbTable = new QAction(tr("&Export parameters from DB table"), this);
+    exportParamFromDbTable = new QAction(tr("&Export table of DB parameters"), this);
     exportParamFromDbTable->setEnabled(false);
     exportEstimatedParamTable = new QAction(tr("&Export table of estimated parameters"), this);
     exportEstimatedParamTable->setEnabled(false);
@@ -195,7 +195,7 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     restoreData = new QAction(tr("&Restore Data"), this);
     addHorizon = new QAction(tr("&Add Horizon"), this);
     deleteHorizon = new QAction(tr("&Delete Horizon"), this);
-    copyParamFromDbTable = new QAction(tr("&Copy parameters from DB table"), this);
+    copyParamFromDbTable = new QAction(tr("&Copy table of DB parameters"), this);
     copyParamFromDbTable->setEnabled(false);
     copyEstimatedParamTable = new QAction(tr("&Copy table of estimated parameters"), this);
     copyEstimatedParamTable->setEnabled(false);
@@ -242,15 +242,20 @@ Crit3DSoilWidget::Crit3DSoilWidget()
 
     fileMenu->addAction(openSoilDB);
     fileMenu->addAction(saveChanges);
+    fileMenu->addSeparator();
     fileMenu->addAction(exportParamFromDbTable);
     fileMenu->addAction(exportEstimatedParamTable);
+
     editMenu->addAction(newSoil);
     editMenu->addAction(deleteSoil);
     editMenu->addAction(restoreData);
+    editMenu->addSeparator();
     editMenu->addAction(addHorizon);
     editMenu->addAction(deleteHorizon);
+    editMenu->addSeparator();
     editMenu->addAction(copyParamFromDbTable);
     editMenu->addAction(copyEstimatedParamTable);
+
     fittingMenu->addAction(useWaterRetentionData);
     fittingMenu->addAction(airEntryFixed);
     fittingMenu->addAction(parameterRestriction);
