@@ -16,6 +16,7 @@
 
         void mouseMoveEvent(QMouseEvent *event);
         void keyPressEvent(QKeyEvent *event);
+        void copyAll();
     private:
         tableType type;
 

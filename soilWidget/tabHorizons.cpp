@@ -917,3 +917,14 @@ void TabHorizons::widgetClicked(int index)
 
 }
 
+void TabHorizons::copyTableDb()
+{
+    tableDb->copyAll();
+}
+
+void TabHorizons::copyTableModel()
+{
+    tableModel->copyAll();
+}
+
+

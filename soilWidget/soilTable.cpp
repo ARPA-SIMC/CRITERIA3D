@@ -1,4 +1,6 @@
 #include <QWidget>
+#include <QClipboard>
+#include <QApplication>
 #include <qevent.h>
 #include <qtooltip.h>
 #include <qdebug.h>
@@ -81,4 +83,32 @@ void Crit3DSoilTable::keyPressEvent(QKeyEvent *event)
 {
     Q_UNUSED(event)
     return;
+}
+
+void Crit3DSoilTable::copyAll()
+{
+    int nRow = this->rowCount();
+    int nCol = this->columnCount();
+    QString text;
+    QStringList headerContents;
+    // copy header
+    for(int j=0; j<nCol; j++)
+    {
+        headerContents << this->horizontalHeaderItem(j)->text();
+    }
+    text += headerContents.join("\t");
+    text += "\n";
+
+    // copy row
+    for(int i=0; i<nRow; i++)
+    {
+        QStringList rowContents;
+        for(int j=0; j<nCol; j++)
+        {
+            rowContents << model()->index(i,j).data().toString();
+        }
+        text += rowContents.join("\t");
+        text += "\n";
+    }
+    QApplication::clipboard()->setText(text);
 }

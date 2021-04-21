@@ -62,6 +62,10 @@
             QAction* useWaterRetentionData;
             QAction* airEntryFixed;
             QAction* parameterRestriction;
+            QAction* exportEstimatedParamTable;
+            QAction* copyEstimatedParamTable;
+            QAction* exportParamFromDbTable;
+            QAction* copyParamFromDbTable;
 
             QPixmap pic;
             QString picPath;
@@ -76,8 +80,12 @@
 
             void on_actionOpenSoilDB();
             void on_actionSave();
+            void on_actionExportParamFromDbTable();
+            void on_actionExportEstimatedParamTable();
             void on_actionNewSoil();
             void on_actionDeleteSoil();
+            void on_actionCopyParamFromDbTable();
+            void on_actionCopyEstimatedParamTable();
             void on_actionUseWaterRetentionData();
             void on_actionAirEntry();
             void on_actionParameterRestriction();
