@@ -81,7 +81,8 @@
         double minLayerThickness;       // [m]
         double geometricFactor;         // [-]
         double ploughedSoilDepth;       // [m]
-        double fieldArea;               // [m2]
+        double lx, ly;                  // [m]
+        double area;                    // [m2]
 
         std::vector<double> prevWaterContent;
 
