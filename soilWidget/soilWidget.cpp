@@ -604,9 +604,14 @@ void Crit3DSoilWidget::on_actionSave()
     QString error;
     QString soilCodeChanged = QString::fromStdString(mySoil.code);
 
+    QString msg = "Are you sure you want to save " + soilCodeChanged + " ?";
+    QMessageBox::StandardButton confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+    if (confirm == QMessageBox::No)
+        return;
+
     if (!updateSoilData(&dbSoil, soilCodeChanged, &mySoil, &error))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error in update horizon table!", error);
         return;
     }
 
@@ -616,7 +621,7 @@ void Crit3DSoilWidget::on_actionSave()
     {
         if (!updateWaterRetentionData(&dbSoil, soilCodeChanged, &mySoil, horizonChanged[i]+1, &error))
         {
-            QMessageBox::critical(nullptr, "Error!", error);
+            QMessageBox::critical(nullptr, "Error in update water_retention table!", error);
             return;
         }
     }
