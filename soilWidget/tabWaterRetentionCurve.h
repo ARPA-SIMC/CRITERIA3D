@@ -6,7 +6,7 @@
     #include <QMap>
     #include "soil.h"
     #include "barHorizon.h"
-    #include "callout.h"
+    #include "soilCallout.h"
 
 
     class TabWaterRetentionCurve: public QWidget
@@ -32,7 +32,7 @@
         QValueAxis *axisY;
         QLogValueAxis *axisX;
         QMap< int, QScatterSeries* > curveMarkerMap;
-        Callout *m_tooltip;
+        SoilCallout *m_tooltip;
         bool fillElement;
         int indexSelected;
 

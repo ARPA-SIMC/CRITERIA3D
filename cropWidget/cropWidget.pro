@@ -35,7 +35,7 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../db
 
 
 SOURCES += \
-    callout.cpp \
+    cropCallout.cpp \
     cropWidget.cpp \
     dialogNewCrop.cpp \
     tabIrrigation.cpp \
@@ -45,7 +45,7 @@ SOURCES += \
     tabWaterContent.cpp
 
 HEADERS += \
-    callout.h \
+    cropCallout.h \
     cropWidget.h \
     dialogNewCrop.h \
     tabIrrigation.h \
