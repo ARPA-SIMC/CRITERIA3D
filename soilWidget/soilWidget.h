@@ -30,7 +30,7 @@
         public:
             Crit3DSoilWidget();
 
-            void setDbSoil(QString dbSoilName, QString soilCode);
+            void setDbSoil(QSqlDatabase dbOpened, QString soilCode, QString error);
 
         private:
             QComboBox soilListComboBox;

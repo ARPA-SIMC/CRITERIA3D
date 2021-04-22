@@ -1843,8 +1843,7 @@ void Crit3DCropWidget::on_actionViewWeather()
 
 void Crit3DCropWidget::on_actionViewSoil()
 {
-    // TO DO
-    //Crit3DSoilWidget soilWidget;
-    //soilWidget.show();
-
+    QString error;
+    Crit3DSoilWidget* soilWidget = new Crit3DSoilWidget();
+    soilWidget->setDbSoil(dbSoil, soilListComboBox.currentText(), error);
 }

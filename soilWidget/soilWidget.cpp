@@ -277,15 +277,10 @@ void Crit3DSoilWidget::setFittingMenu()
 }
 
 
-void Crit3DSoilWidget::setDbSoil(QString dbSoilName, QString soilCode)
+void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode, QString error)
 {
     // open soil db
-    QString error;
-    if (! openDbSoil(dbSoilName, &dbSoil, &error))
-    {
-        QMessageBox::critical(nullptr, "Error!", error);
-        return;
-    }
+    dbSoil = dbOpened;
 
     // load default VG parameters
     if (! loadVanGenuchtenParameters(&dbSoil, textureClassList, &error))
@@ -310,6 +305,7 @@ void Crit3DSoilWidget::setDbSoil(QString dbSoilName, QString soilCode)
     }
 
     soilListComboBox.setCurrentText(soilCode);
+    show();
 }
 
 void Crit3DSoilWidget::on_actionOpenSoilDB()
