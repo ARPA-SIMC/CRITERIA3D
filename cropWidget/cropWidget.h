@@ -147,6 +147,7 @@
             void openCropDB(QString dbCropName);
             void openMeteoDB(QString dbMeteoName);
             void openSoilDB(QString dbSoilName);
+            bool setMeteoSqlite(QString *error);
     };
 
 
