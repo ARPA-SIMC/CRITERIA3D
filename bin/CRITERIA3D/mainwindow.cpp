@@ -1095,17 +1095,26 @@ void MainWindow::openSoilWidget(QPoint mapPos)
     gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
     QString soilCode = myProject.getCrit3DSoilCode(x, y);
 
-    if (soilCode == "") {
+    if (soilCode == "")
+    {
         myProject.logInfoGUI("No soil.");
     }
-    else if (soilCode == "NOT FOUND") {
+    else if (soilCode == "NOT FOUND")
+    {
         myProject.logError("Soil code not found: check soil database.");
     }
-    else {
+    else
+    {
+        QString dbSoilName = myProject.getCompleteFileName(myProject.soilDbFileName, PATH_SOIL);
+        QSqlDatabase dbSoil;
+        if (! openDbSoil(dbSoilName, &dbSoil, &(myProject.errorString)))
+        {
+            myProject.logError();
+            return;
+        }
         soilWidget = new Crit3DSoilWidget();
-        QString fileName = myProject.getCompleteFileName(myProject.soilDbFileName, PATH_SOIL);
         soilWidget->show();
-        soilWidget->setDbSoil(fileName, soilCode);
+        soilWidget->setDbSoil(dbSoil, soilCode);
     }
 }
 
