@@ -1883,6 +1883,7 @@ bool Crit3DCropWidget::setMeteoSqlite(QString* error)
 
 }
 
+
 void Crit3DCropWidget::on_actionViewWeather()
 {
     QString dataPath, settingsPath;
@@ -1905,10 +1906,10 @@ void Crit3DCropWidget::on_actionViewWeather()
     meteoWidgetPoint->draw(myCase.meteoPoint);
 }
 
+
 void Crit3DCropWidget::on_actionViewSoil()
 {
-    QString error;
     Crit3DSoilWidget* soilWidget = new Crit3DSoilWidget();
-    soilWidget->setDbSoil(dbSoil, soilListComboBox.currentText(), error);
+    soilWidget->setDbSoil(dbSoil, soilListComboBox.currentText());
 }
 
