@@ -1018,7 +1018,7 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     if (!meteoGridDbHandler->updateGridDate(&errorString))
     {
-        logInfo("updateGridDate: " + errorString);
+        logInfoGUI("updateGridDate: " + errorString);
     }
 
     if (loadGridDataAtStart || ! meteoPointsLoaded)
