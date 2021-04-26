@@ -4,7 +4,7 @@
 #include <QtWidgets>
 #include <QtCharts>
 #include "criteria1DCase.h"
-#include "callout.h"
+#include "cropCallout.h"
 
 class TabIrrigation : public QWidget
 {
@@ -33,7 +33,7 @@ private:
     QBarSeries* seriesPrecIrr;
     QBarSet *setPrec;
     QBarSet *setIrrigation;
-    Callout *m_tooltip;
+    CropCallout *m_tooltip;
 
 };
 

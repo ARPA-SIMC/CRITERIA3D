@@ -1,4 +1,6 @@
 #include <QWidget>
+#include <QClipboard>
+#include <QApplication>
 #include <qevent.h>
 #include <qtooltip.h>
 #include <qdebug.h>
@@ -81,4 +83,79 @@ void Crit3DSoilTable::keyPressEvent(QKeyEvent *event)
 {
     Q_UNUSED(event)
     return;
+}
+
+void Crit3DSoilTable::copyAll()
+{
+    int nRow = this->rowCount();
+    int nCol = this->columnCount();
+    QString text;
+    QStringList headerContents;
+    // copy header
+    for(int j=0; j<nCol; j++)
+    {
+        headerContents << this->horizontalHeaderItem(j)->text();
+    }
+    text += headerContents.join("\t");
+    text += "\n";
+
+    // copy row
+    for(int i=0; i<nRow; i++)
+    {
+        QStringList rowContents;
+        for(int j=0; j<nCol; j++)
+        {
+            rowContents << model()->index(i,j).data().toString();
+        }
+        text += rowContents.join("\t");
+        text += "\n";
+    }
+    QApplication::clipboard()->setText(text);
+}
+
+void Crit3DSoilTable::exportToCsv(QString csvFile)
+{
+
+    QFile file(csvFile);
+    int nRow = this->rowCount();
+    int nCol = this->columnCount();
+    QString conTents;
+    QStringList strList;
+    // copy header
+    QHeaderView * header = this->horizontalHeader() ;
+    if (header)
+    {
+        for ( int i = 0; i < nCol; i++ )
+        {
+            QTableWidgetItem *item = this->horizontalHeaderItem(i);
+            if (!item)
+            {
+                continue;
+            }
+            conTents += item->text() + ",";
+        }
+        conTents += "\n";
+    }
+
+    if (file.open(QFile::WriteOnly | QFile::Truncate))
+    {
+        QTextStream data( &file );
+        data << strList.join(",") << "\n";
+
+        for(int i=0; i<nRow; i++)
+        {
+            for(int j=0; j<nCol; j++)
+            {
+                QTableWidgetItem* item = this->item(i, j);
+                if ( !item )
+                    continue;
+                QString str = item->text();
+                str.replace(","," ");
+                conTents += str + ",";
+            }
+            conTents += "\n";
+        }
+        data << conTents;
+        file.close();
+    }
 }

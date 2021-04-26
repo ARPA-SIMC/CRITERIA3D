@@ -23,7 +23,7 @@ Crit1DUnit::Crit1DUnit()
     isOptimalIrrigation = false;
     useWaterTableData = true;
     useWaterRetentionData = true;
-    slope = 0.002;
+    slope = 0.01;
 }
 
 
@@ -95,9 +95,11 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
 {
     QString unitsTable = "units";
     QStringList fieldList = getFields(&db, unitsTable);
-    bool existNumericalInfiltration = fieldList.contains("numerical_infiltration");
+    bool existNumericalInfiltration = fieldList.contains("numerical_solution");
+    bool existWaterRetentionData = fieldList.contains("water_retention_fitting");
     bool existWaterTable = fieldList.contains("use_water_table");
     bool existOptimalIrrigation = fieldList.contains("optimal_irrigation");
+    bool existSlope = fieldList.contains("slope");
     // TODO others
 
     QString queryString = "SELECT * FROM " + unitsTable;
@@ -131,11 +133,19 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
         unitList[i].idSoilNumber = query.value("ID_SOIL").toInt();
 
         if (existNumericalInfiltration)
-            unitList[i].isNumericalInfiltration = query.value("numerical_infiltration").toBool();
+            unitList[i].isNumericalInfiltration = query.value("numerical_solution").toBool();
         if (existWaterTable)
             unitList[i].useWaterTableData = query.value("use_water_table").toBool();
         if (existOptimalIrrigation)
             unitList[i].isOptimalIrrigation = query.value("optimal_irrigation").toBool();
+        if (existWaterRetentionData)
+            unitList[i].useWaterRetentionData = query.value("water_retention_fitting").toBool();
+        if (existSlope)
+        {
+            double slope;
+            if (getValue(query.value("slope"), &slope))
+                unitList[i].slope = slope;
+        }
 
         i++;
     }

@@ -27,8 +27,8 @@
 **
 ****************************************************************************/
 
-#ifndef CALLOUT_H
-#define CALLOUT_H
+#ifndef CROPCALLOUT_H
+#define CROPCALLOUT_H
 
 #include <QtCharts/QChartGlobal>
 #include <QtWidgets/QGraphicsItem>
@@ -40,15 +40,14 @@ QT_END_NAMESPACE
 
 QT_CHARTS_BEGIN_NAMESPACE
 class QChart;
-class QAbstractSeries;
 QT_CHARTS_END_NAMESPACE
 
 QT_CHARTS_USE_NAMESPACE
 
-class Callout : public QGraphicsItem
+class CropCallout : public QGraphicsItem
 {
 public:
-    Callout(QChart *parent);
+    CropCallout(QChart *parent);
 
     void setText(const QString &text);
     void setAnchor(QPointF point);
@@ -56,7 +55,6 @@ public:
 
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,QWidget *widget);
-    void setSeries(QAbstractSeries *series);
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -69,7 +67,6 @@ private:
     QPointF m_anchor;
     QFont m_font;
     QChart *m_chart;
-    QAbstractSeries *m_series;
 };
 
-#endif // CALLOUT_H
+#endif // CROPCALLOUT_H

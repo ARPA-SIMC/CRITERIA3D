@@ -35,7 +35,7 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../soil ../utilities
 
 SOURCES += \
     barHorizon.cpp \
-    callout.cpp \
+    soilCallout.cpp \
     soilTable.cpp \
     soilWidget.cpp \
     tabHorizons.cpp \
@@ -49,7 +49,7 @@ SOURCES += \
 
 HEADERS += \
     barHorizon.h \
-    callout.h \
+    soilCallout.h \
     soilTable.h \
     soilWidget.h \
     tabHorizons.h \

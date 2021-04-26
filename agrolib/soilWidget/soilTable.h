@@ -16,6 +16,8 @@
 
         void mouseMoveEvent(QMouseEvent *event);
         void keyPressEvent(QKeyEvent *event);
+        void copyAll();
+        void exportToCsv(QString csvFile);
     private:
         tableType type;
 

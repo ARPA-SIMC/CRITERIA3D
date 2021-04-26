@@ -44,6 +44,8 @@
             void on_actionNewCrop();
             void on_actionSave();
             void on_actionUpdate();
+            void on_actionViewWeather();
+            void on_actionViewSoil();
             bool saveCrop();
             void updateMeteoPointValues();
             void updateCropParam(QString idCrop);
@@ -145,6 +147,7 @@
             void openCropDB(QString dbCropName);
             void openMeteoDB(QString dbMeteoName);
             void openSoilDB(QString dbSoilName);
+            bool setMeteoSqlite(QString *error);
     };
 
 

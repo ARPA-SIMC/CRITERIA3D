@@ -917,3 +917,24 @@ void TabHorizons::widgetClicked(int index)
 
 }
 
+void TabHorizons::copyTableDb()
+{
+    tableDb->copyAll();
+}
+
+void TabHorizons::copyTableModel()
+{
+    tableModel->copyAll();
+}
+
+void TabHorizons::exportTableDb(QString csvFile)
+{
+    tableDb->exportToCsv(csvFile);
+}
+
+void TabHorizons::exportTableModel(QString csvFile)
+{
+    tableModel->exportToCsv(csvFile);
+}
+
+

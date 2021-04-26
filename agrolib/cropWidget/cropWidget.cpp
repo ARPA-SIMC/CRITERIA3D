@@ -30,6 +30,9 @@
 #include "soilDbTools.h"
 #include "utilities.h"
 #include "commonConstants.h"
+#include "soilWidget.h"
+#include "meteoWidget.h"
+#include "criteria1DMeteo.h"
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -50,7 +53,7 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     // font
     QFont myFont = this->font();
-    myFont.setPointSize(8);
+    myFont.setPointSize(9);
     this->setFont(myFont);
 
     // layout
@@ -493,6 +496,9 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(volWaterContent, &QRadioButton::toggled, [=](){ this->variableWaterContentChanged(); });
 
     connect(tabWidget, &QTabWidget::currentChanged, [=](int index){ this->tabChanged(index); });
+
+    connect(viewWeather, &QAction::triggered, this, &Crit3DCropWidget::on_actionViewWeather);
+    connect(viewSoil, &QAction::triggered, this, &Crit3DCropWidget::on_actionViewSoil);
 
     connect(newCrop, &QAction::triggered, this, &Crit3DCropWidget::on_actionNewCrop);
     connect(deleteCrop, &QAction::triggered, this, &Crit3DCropWidget::on_actionDeleteCrop);
@@ -1831,3 +1837,78 @@ void Crit3DCropWidget::variableWaterContentChanged()
 {
     updateTabWaterContent();
 }
+
+bool Crit3DCropWidget::setMeteoSqlite(QString* error)
+{
+
+    if (myCase.meteoPoint.id.empty())
+        return false;
+
+    QString queryString = "SELECT * FROM '" + tableMeteo + "' ORDER BY [date]";
+    QSqlQuery query = this->dbMeteo.exec(queryString);
+    query.last();
+
+    if (! query.isValid())
+    {
+        if (query.lastError().text() != "")
+            *error = "dbMeteo error: " + query.lastError().text();
+        else
+            *error = "Missing meteo table:" + tableMeteo;
+        return false;
+    }
+
+    query.first();
+    QDate firstDate = query.value("date").toDate();
+    query.last();
+    QDate lastDate = query.value("date").toDate();
+    unsigned nrDays;
+    bool subQuery = false;
+
+    nrDays = unsigned(firstDate.daysTo(lastDate)) + 1;
+    if (subQuery)
+    {
+        query.clear();
+        queryString = "SELECT * FROM '" + tableMeteo + "' WHERE date BETWEEN '"
+                    + firstDate.toString("yyyy-MM-dd") + "' AND '" + lastDate.toString("yyyy-MM-dd") + "'";
+        query = this->dbMeteo.exec(queryString);
+    }
+
+    // Initialize data
+    myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstDate));
+
+    // Read observed data
+    if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), error)) return false;
+
+    return true;
+
+}
+
+void Crit3DCropWidget::on_actionViewWeather()
+{
+    QString dataPath, settingsPath;
+    QString error;
+    if (searchDataPath(&dataPath))
+    {
+        settingsPath = dataPath + "SETTINGS";
+    }
+    else
+    {
+        QMessageBox::critical(nullptr, "error", "missing SETTINGS folder");
+        return;
+    }
+    if (!setMeteoSqlite(&error))
+    {
+        QMessageBox::critical(nullptr, "error", error);
+        return;
+    }
+    Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isXmlMeteoGrid, settingsPath);
+    meteoWidgetPoint->draw(myCase.meteoPoint);
+}
+
+void Crit3DCropWidget::on_actionViewSoil()
+{
+    QString error;
+    Crit3DSoilWidget* soilWidget = new Crit3DSoilWidget();
+    soilWidget->setDbSoil(dbSoil, soilListComboBox.currentText(), error);
+}
+

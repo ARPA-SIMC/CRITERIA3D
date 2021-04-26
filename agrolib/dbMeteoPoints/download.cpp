@@ -79,7 +79,7 @@ bool Download::getPointProperties(QStringList datasetList)
         }
          else
         {
-            qDebug() << "Invalid JSON...\n" << Qt::endl;
+            qDebug() << "Invalid JSON...\n" << endl;
             result = false;
         }
     }
@@ -98,7 +98,7 @@ void Download::downloadMetadata(QJsonObject obj)
 
     if (jsonId.isNull())
     {
-          qDebug() << "Id is empty" << Qt::endl;
+          qDebug() << "Id is empty" << endl;
           return;
     }
 
@@ -107,7 +107,7 @@ void Download::downloadMetadata(QJsonObject obj)
 
     QJsonValue jsonName = obj.value("name");
     if (jsonName.isNull())
-          qDebug() << "name is null" << Qt::endl;
+          qDebug() << "name is null" << endl;
     pointProp->name = jsonName.toString().toStdString();
 
     QJsonValue jsonNetwork = obj.value("network");
@@ -116,12 +116,12 @@ void Download::downloadMetadata(QJsonObject obj)
     QJsonValue jsonGeometry = obj.value("geometry").toObject().value("coordinates");
     QJsonValue jsonLon = jsonGeometry.toArray()[0];
     if (jsonLon.isNull() || jsonLon.toInt() < -180 || jsonLon.toInt() > 180)
-        qDebug() << "invalid Longitude" << Qt::endl;
+        qDebug() << "invalid Longitude" << endl;
     pointProp->longitude = jsonLon.toDouble();
 
     QJsonValue jsonLat = jsonGeometry.toArray()[1];
     if (jsonLat.isNull() || jsonLat.toInt() < -90 || jsonLat.toInt() > 90)
-        qDebug() << "invalid Latitude" << Qt::endl;
+        qDebug() << "invalid Latitude" << endl;
     pointProp->latitude = jsonLat.toDouble();
 
     QJsonValue jsonLatInt = obj.value("lat");

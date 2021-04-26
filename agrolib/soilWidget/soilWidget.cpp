@@ -186,11 +186,19 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     // actions
     QAction* openSoilDB = new QAction(tr("&Open dbSoil"), this);
     saveChanges = new QAction(tr("&Save Changes"), this);
+    exportParamFromDbTable = new QAction(tr("&Export table of DB parameters"), this);
+    exportParamFromDbTable->setEnabled(false);
+    exportEstimatedParamTable = new QAction(tr("&Export table of estimated parameters"), this);
+    exportEstimatedParamTable->setEnabled(false);
     QAction* newSoil = new QAction(tr("&New Soil"), this);
     QAction* deleteSoil = new QAction(tr("&Delete Soil"), this);
     restoreData = new QAction(tr("&Restore Data"), this);
     addHorizon = new QAction(tr("&Add Horizon"), this);
     deleteHorizon = new QAction(tr("&Delete Horizon"), this);
+    copyParamFromDbTable = new QAction(tr("&Copy table of DB parameters"), this);
+    copyParamFromDbTable->setEnabled(false);
+    copyEstimatedParamTable = new QAction(tr("&Copy table of estimated parameters"), this);
+    copyEstimatedParamTable->setEnabled(false);
     addHorizon->setEnabled(false);
     deleteHorizon->setEnabled(false);
     restoreData->setEnabled(false);
@@ -207,12 +215,16 @@ Crit3DSoilWidget::Crit3DSoilWidget()
 
     connect(openSoilDB, &QAction::triggered, this, &Crit3DSoilWidget::on_actionOpenSoilDB);
     connect(saveChanges, &QAction::triggered, this, &Crit3DSoilWidget::on_actionSave);
+    connect(exportParamFromDbTable, &QAction::triggered, this, &Crit3DSoilWidget::on_actionExportParamFromDbTable);
+    connect(exportEstimatedParamTable, &QAction::triggered, this, &Crit3DSoilWidget::on_actionExportEstimatedParamTable);
     connect(saveButton, &QPushButton::clicked, this, &Crit3DSoilWidget::on_actionSave);
     connect(newSoil, &QAction::triggered, this, &Crit3DSoilWidget::on_actionNewSoil);
     connect(deleteSoil, &QAction::triggered, this, &Crit3DSoilWidget::on_actionDeleteSoil);
     connect(restoreData, &QAction::triggered, this, &Crit3DSoilWidget::on_actionRestoreData);
     connect(addHorizon, &QAction::triggered, this, &Crit3DSoilWidget::on_actionAddHorizon);
     connect(deleteHorizon, &QAction::triggered, this, &Crit3DSoilWidget::on_actionDeleteHorizon);
+    connect(copyParamFromDbTable, &QAction::triggered, this, &Crit3DSoilWidget::on_actionCopyParamFromDbTable);
+    connect(copyEstimatedParamTable, &QAction::triggered, this, &Crit3DSoilWidget::on_actionCopyEstimatedParamTable);
 
     connect(useWaterRetentionData, &QAction::triggered, this, &Crit3DSoilWidget::on_actionUseWaterRetentionData);
     connect(airEntryFixed, &QAction::triggered, this, &Crit3DSoilWidget::on_actionAirEntry);
@@ -230,11 +242,20 @@ Crit3DSoilWidget::Crit3DSoilWidget()
 
     fileMenu->addAction(openSoilDB);
     fileMenu->addAction(saveChanges);
+    fileMenu->addSeparator();
+    fileMenu->addAction(exportParamFromDbTable);
+    fileMenu->addAction(exportEstimatedParamTable);
+
     editMenu->addAction(newSoil);
     editMenu->addAction(deleteSoil);
     editMenu->addAction(restoreData);
+    editMenu->addSeparator();
     editMenu->addAction(addHorizon);
     editMenu->addAction(deleteHorizon);
+    editMenu->addSeparator();
+    editMenu->addAction(copyParamFromDbTable);
+    editMenu->addAction(copyEstimatedParamTable);
+
     fittingMenu->addAction(useWaterRetentionData);
     fittingMenu->addAction(airEntryFixed);
     fittingMenu->addAction(parameterRestriction);
@@ -256,15 +277,10 @@ void Crit3DSoilWidget::setFittingMenu()
 }
 
 
-void Crit3DSoilWidget::setDbSoil(QString dbSoilName, QString soilCode)
+void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode, QString error)
 {
     // open soil db
-    QString error;
-    if (! openDbSoil(dbSoilName, &dbSoil, &error))
-    {
-        QMessageBox::critical(nullptr, "Error!", error);
-        return;
-    }
+    dbSoil = dbOpened;
 
     // load default VG parameters
     if (! loadVanGenuchtenParameters(&dbSoil, textureClassList, &error))
@@ -289,8 +305,8 @@ void Crit3DSoilWidget::setDbSoil(QString dbSoilName, QString soilCode)
     }
 
     soilListComboBox.setCurrentText(soilCode);
+    show();
 }
-
 
 void Crit3DSoilWidget::on_actionOpenSoilDB()
 {
@@ -358,6 +374,10 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
     {
         return;
     }
+    exportParamFromDbTable->setEnabled(true);
+    exportEstimatedParamTable->setEnabled(true);
+    copyParamFromDbTable->setEnabled(true);
+    copyEstimatedParamTable->setEnabled(true);
 
     QString error;
     // somethig has been modified, ask for saving
@@ -444,7 +464,7 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
             }
         }
     }
-    tabChanged(tabWidget->currentIndex());
+    tabChanged(tabWidget->currentIndex());   
 }
 
 
@@ -508,6 +528,16 @@ void Crit3DSoilWidget::on_actionDeleteSoil()
             return;
         }
     }
+}
+
+void Crit3DSoilWidget::on_actionCopyParamFromDbTable()
+{
+    horizonsTab->copyTableDb();
+}
+
+void Crit3DSoilWidget::on_actionCopyEstimatedParamTable()
+{
+    horizonsTab->copyTableModel();
 }
 
 
@@ -574,9 +604,14 @@ void Crit3DSoilWidget::on_actionSave()
     QString error;
     QString soilCodeChanged = QString::fromStdString(mySoil.code);
 
+    QString msg = "Are you sure you want to save " + soilCodeChanged + " ?";
+    QMessageBox::StandardButton confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+    if (confirm == QMessageBox::No)
+        return;
+
     if (!updateSoilData(&dbSoil, soilCodeChanged, &mySoil, &error))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error in update horizon table!", error);
         return;
     }
 
@@ -586,7 +621,7 @@ void Crit3DSoilWidget::on_actionSave()
     {
         if (!updateWaterRetentionData(&dbSoil, soilCodeChanged, &mySoil, horizonChanged[i]+1, &error))
         {
-            QMessageBox::critical(nullptr, "Error!", error);
+            QMessageBox::critical(nullptr, "Error in update water_retention table!", error);
             return;
         }
     }
@@ -594,6 +629,42 @@ void Crit3DSoilWidget::on_actionSave()
     savedSoil = mySoil;
     changed = false;
     wrDataTab->resetHorizonChanged();
+}
+
+void Crit3DSoilWidget::on_actionExportParamFromDbTable()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export data"), "", tr("CSV files (*.csv)"));
+    if (fileName == "")
+    {
+        return;
+    }
+    QFile csvFile(fileName);
+    if (csvFile.exists())
+    {
+        if (!csvFile.remove())
+        {
+            return;
+        }
+    }
+    horizonsTab->exportTableDb(fileName);
+}
+
+void Crit3DSoilWidget::on_actionExportEstimatedParamTable()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Export data"), "", tr("CSV files (*.csv)"));
+    if (fileName == "")
+    {
+        return;
+    }
+    QFile csvFile(fileName);
+    if (csvFile.exists())
+    {
+        if (!csvFile.remove())
+        {
+            return;
+        }
+    }
+    horizonsTab->exportTableModel(fileName);
 }
 
 

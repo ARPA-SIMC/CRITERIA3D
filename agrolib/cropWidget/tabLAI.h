@@ -9,7 +9,7 @@
     #include "crop.h"
 #endif
 #include <QtCharts>
-#include "callout.h"
+#include "cropCallout.h"
 
     class TabLAI : public QWidget
     {
@@ -32,7 +32,7 @@
         QDateTimeAxis *axisX;
         QValueAxis *axisY;
         QValueAxis *axisYdx;
-        Callout *m_tooltip;
+        CropCallout *m_tooltip;
     };
 
 #endif // TABLAI_H

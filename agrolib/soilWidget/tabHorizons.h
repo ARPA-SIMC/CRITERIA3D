@@ -37,6 +37,10 @@
         bool getInsertSoilElement() const;
         void setInsertSoilElement(bool value);
         void updateBarHorizon(soil::Crit3DSoil* mySoil);
+        void copyTableDb();
+        void copyTableModel();
+        void exportTableDb(QString csvFile);
+        void exportTableModel(QString csvFile);
 
     private:
         Crit3DSoilTable* tableDb;

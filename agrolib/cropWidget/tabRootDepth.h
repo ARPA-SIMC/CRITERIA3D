@@ -4,7 +4,7 @@
     #include <QtWidgets>
     #include <QtCharts>
 
-    #include "callout.h"
+    #include "cropCallout.h"
 
     #ifndef METEOPOINT_H
         #include "meteoPoint.h"
@@ -21,7 +21,7 @@
         void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers);
         void tooltipRDM(QPointF point, bool state);
         void tooltipRD(QPointF point, bool state);
-        Callout *m_tooltip;
+        CropCallout *m_tooltip;
     private:
         QChartView *chartView;
         QChart *chart;

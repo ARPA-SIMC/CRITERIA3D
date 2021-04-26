@@ -27,7 +27,7 @@
 **
 ****************************************************************************/
 
-#include "callout.h"
+#include "soilCallout.h"
 #include <QtGui/QPainter>
 #include <QtGui/QFontMetrics>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
@@ -36,14 +36,14 @@
 #include <qdebug.h>
 
 
-Callout::Callout(QChart *chart):
+SoilCallout::SoilCallout(QChart *chart):
     QGraphicsItem(chart),
     m_chart(chart)
 {
     m_series = nullptr;
 }
 
-QRectF Callout::boundingRect() const
+QRectF SoilCallout::boundingRect() const
 {
     QPointF anchor;
     if (m_series != nullptr)
@@ -62,7 +62,7 @@ QRectF Callout::boundingRect() const
     return rect;
 }
 
-void Callout::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void SoilCallout::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)
@@ -118,12 +118,12 @@ void Callout::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
     painter->drawText(m_textRect, m_text);
 }
 
-void Callout::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void SoilCallout::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     event->setAccepted(true);
 }
 
-void Callout::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void SoilCallout::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton){
         setPos(mapToParent(event->pos() - event->buttonDownPos(Qt::LeftButton)));
@@ -133,12 +133,12 @@ void Callout::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void Callout::setSeries(QAbstractSeries *series)
+void SoilCallout::setSeries(QAbstractSeries *series)
 {
     m_series = series;
 }
 
-void Callout::setText(const QString &text)
+void SoilCallout::setText(const QString &text)
 {
     m_text = text;
     QFontMetrics metrics(m_font);
@@ -148,12 +148,12 @@ void Callout::setText(const QString &text)
     m_rect = m_textRect.adjusted(-5, -5, 5, 5);
 }
 
-void Callout::setAnchor(QPointF point)
+void SoilCallout::setAnchor(QPointF point)
 {
     m_anchor = point;
 }
 
-void Callout::updateGeometry()
+void SoilCallout::updateGeometry()
 {
     prepareGeometryChange();
     if (m_series != nullptr)

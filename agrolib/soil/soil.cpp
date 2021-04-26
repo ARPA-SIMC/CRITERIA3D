@@ -405,7 +405,7 @@ namespace soil
      * \param horizon
      * \param unit [KPA | METER | CM]
      * \note author: Franco Zinoni
-     * \return Water potential at field capacity [unit]
+     * \return water potential at field capacity (with sign)
      */
     double getFieldCapacity(Crit3DHorizon* horizon, soil::units unit)
     {

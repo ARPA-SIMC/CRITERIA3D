@@ -27,20 +27,20 @@
 **
 ****************************************************************************/
 
-#include "callout.h"
+#include "cropCallout.h"
 #include <QtGui/QPainter>
 #include <QtGui/QFontMetrics>
 #include <QtWidgets/QGraphicsSceneMouseEvent>
 #include <QtGui/QMouseEvent>
 #include <QtCharts/QChart>
 
-Callout::Callout(QChart *chart):
+CropCallout::CropCallout(QChart *chart):
     QGraphicsItem(chart),
     m_chart(chart)
 {
 }
 
-QRectF Callout::boundingRect() const
+QRectF CropCallout::boundingRect() const
 {
     QPointF anchor = mapFromParent(m_chart->mapToPosition(m_anchor));
     QRectF rect;
@@ -51,7 +51,7 @@ QRectF Callout::boundingRect() const
     return rect;
 }
 
-void Callout::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void CropCallout::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)
@@ -99,12 +99,12 @@ void Callout::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, Q
     painter->drawText(m_textRect, m_text);
 }
 
-void Callout::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void CropCallout::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     event->setAccepted(true);
 }
 
-void Callout::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void CropCallout::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->buttons() & Qt::LeftButton){
         setPos(mapToParent(event->pos() - event->buttonDownPos(Qt::LeftButton)));
@@ -114,7 +114,7 @@ void Callout::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 }
 
-void Callout::setText(const QString &text)
+void CropCallout::setText(const QString &text)
 {
     m_text = text;
     QFontMetrics metrics(m_font);
@@ -124,12 +124,12 @@ void Callout::setText(const QString &text)
     m_rect = m_textRect.adjusted(-5, -5, 5, 5);
 }
 
-void Callout::setAnchor(QPointF point)
+void CropCallout::setAnchor(QPointF point)
 {
     m_anchor = point;
 }
 
-void Callout::updateGeometry()
+void CropCallout::updateGeometry()
 {
     prepareGeometryChange();
     setPos(m_chart->mapToPosition(m_anchor) + QPoint(10, -50));
