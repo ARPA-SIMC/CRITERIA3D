@@ -1,0 +1,109 @@
+# This repository adheres to the publiccode.yml standard by including this 
+# metadata file that makes public software easily discoverable.
+# More info at https://github.com/italia/publiccode.yml
+
+publiccodeYmlVersion: '0.2'
+categories:
+  - data-analytics
+  - data-visualization
+description:
+  it:
+    documentation: 'https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D.pdf'
+    features:
+      - simulation
+      - water flow
+    genericName: CRITERIA3D
+    longDescription: |
+      CRITERIA-3D is a three-dimensional water balance for small catchments.
+
+
+      It includes a numerical solution for three-dimensional water and heat 
+      flow in the soil, coupled surface and subsurface flow, meteorological 
+      data interpolation, radiation budget, crop development and crop water 
+      uptake. It needs hourly meteo data as input (air temperature, 
+      precipitation, solar irradiance, air relative humidity, wind speed). See
+      [CRITERIA3D
+      paper](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/CRITERIA3D.pdf)
+      for more information.
+
+
+      ### soilFluxes3D library
+
+
+      agrolib/soilFluxed3D is a numerical solution of flow equations of water
+      and heat in the soil, in a three-dimensional domain.
+
+
+      Surface water flow is described by the two-dimensional parabolic 
+      approximation of the St. Venant equation, using Manning’s equation of 
+      motion. Subsurface water flow is described by the three-dimensional 
+      Richards’ equation for the unsaturated zone and by three-dimensional 
+      Darcy’s law for the saturated zone, using an integrated finite  difference
+      formulation. The available boundary conditions are surface  runoff,
+      culvert runoff, free drainage (lateral or deep) and prescribed  total
+      potential.
+
+
+      Water fluxes equations may be coupled with the heat flux equations,  which
+      include diffusive, latent and advective terms. Atmospheric data  (net
+      irradiance, air temperature and relative humidity, wind speed)  could be
+      used as top boundary conditions.
+    screenshots:
+      - |-
+        https://raw.githubusercontent.com/ARPA-SIMC/CRITERIA3D/master/DOC/img/CRITERIA3D.png
+      - |-
+        https://raw.githubusercontent.com/ARPA-SIMC/CRITERIA3D/master/DOC/img/ravone.png
+    shortDescription: CRITERIA-3D is a three-dimensional water balance for small catchments.
+developmentStatus: stable
+intendedAudience:
+  scope:
+    - agriculture
+    - environment
+    - energy
+    - infrastructures
+    - research
+    - science-and-technology
+it:
+  conforme:
+    gdpr: false
+    lineeGuidaDesign: false
+    misureMinimeSicurezza: false
+    modelloInteroperabilita: false
+  countryExtensionVersion: '0.2'
+  piattaforme:
+    anpr: false
+    cie: false
+    pagopa: false
+    spid: false
+  riuso:
+    codiceIPA: arpa
+legal:
+  authorsFile: 'https://raw.githubusercontent.com/ARPA-SIMC/CRITERIA3D/master/AUTHORS'
+  license: GPL-3.0-only
+  mainCopyrightOwner: ARPA-SIMC
+localisation:
+  availableLanguages:
+    - en
+  localisationReady: false
+maintenance:
+  contacts:
+    - affiliation: ARPAE
+      email: ftomei@arpae.it
+      name: Fausto Tomei
+  type: internal
+name: CRITERIA3D
+platforms:
+  - linux
+  - mac
+  - windows
+releaseDate: '2021-04-10'
+softwareType: standalone/desktop
+softwareVersion: v0.9.0
+url: 'https://github.com/ARPA-SIMC/CRITERIA3D'
+dependsOn:
+  open:
+    - name: Qt
+      optional: false
+      version: ''
+      versionMax: ''
+      versionMin: ''
