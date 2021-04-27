@@ -24,6 +24,7 @@
         float* rhAir;
         float* tDew;
         float* irradiance;
+        float* netIrradiance;
         float* et0;
         float* windScalInt;
         float* windVecX;

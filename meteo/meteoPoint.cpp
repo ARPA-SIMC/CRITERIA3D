@@ -281,6 +281,8 @@ void Crit3DMeteoPoint::emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& d
                 obsDataH[i].tDew[j] = NODATA;
             else if (myVar == globalIrradiance)
                 obsDataH[i].irradiance[j] = NODATA;
+            else if (myVar == netIrradiance)
+                obsDataH[i].netIrradiance[j] = NODATA;
             else if (myVar == windScalarIntensity)
                 obsDataH[i].windScalInt[j] = NODATA;
             else if (myVar == windVectorX)
@@ -573,6 +575,8 @@ bool Crit3DMeteoPoint::setMeteoPointValueH(const Crit3DDate& myDate, int myHour,
         obsDataH[i].tDew[j] = myValue;
     else if (myVar == globalIrradiance)
         obsDataH[i].irradiance[j] = myValue;
+    else if (myVar == netIrradiance)
+        obsDataH[i].netIrradiance[j] = myValue;
     else if (myVar == referenceEvapotranspiration)
         obsDataH[i].et0[j] = myValue;
     else if (myVar == windScalarIntensity)
@@ -717,6 +721,8 @@ float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour
     }
     else if (myVar == globalIrradiance)
         return (obsDataH[i].irradiance[j]);
+    else if (myVar == netIrradiance)
+        return (obsDataH[i].netIrradiance[j]);
     else if (myVar == referenceEvapotranspiration)
         return (obsDataH[i].et0[j]);
     else if (myVar == windScalarIntensity)

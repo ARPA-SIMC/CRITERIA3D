@@ -556,7 +556,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case dailyBIC:
             setZeroCenteredScale(colorScale);
             break;
-        case globalIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
+        case globalIrradiance: case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
             setRadiationScale(colorScale);
             break;
         case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY: case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax: case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
@@ -614,6 +614,8 @@ std::string getVariableString(meteoVariable myVar)
         return "Solar radiation (MJ m-2)";
     else if (myVar == globalIrradiance)
         return "Solar irradiance (W m-2)";
+    else if (myVar == netIrradiance)
+        return "Solar net irradiance (W m-2)";
     else if (myVar == atmTransmissivity)
         return "Atmospheric transmissivity [-]";
     else if (myVar == windVectorIntensity)
