@@ -1983,6 +1983,52 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataEnsemble(QString *myError, Q
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::saveListHourlyData(QString *myError, QString meteoPointID, QDate date, meteoVariable meteoVar, QList<float> values)
+{
+    QSqlQuery qry(_db);
+    QString tableH = _tableHourly.prefix + meteoPointID + _tableHourly.postFix;
+    int varCode = getHourlyVarCode(meteoVar);
+
+    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                                "(%2 datetime, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2,VariableCode))").arg(tableH).arg(_tableHourly.fieldTime);
+
+    qry.exec(statement);
+    QDateTime first(date, QTime(0,0,0));
+    QDateTime last(date, QTime(0,0,0));
+    int nHours = values.size();
+    last = last.addSecs(3600*(nHours-1));
+    statement = QString("DELETE FROM `%1` WHERE %2 >= DATETIME('%3') AND %2 <= DATETIME('%4') AND VariableCode = '%5'")
+                            .arg(tableH).arg(_tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm")).arg(varCode);
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        statement =  QString(("INSERT INTO `%1` (%2, VariableCode, Value) VALUES ")).arg(tableH).arg(_tableHourly.fieldTime);
+        for (int i = 0; i<values.size(); i++)
+        {
+            float value = values[i];
+            QString valueS = QString("'%1'").arg(value);
+            QDateTime date = first.addSecs(3600*i);
+            if (isEqual(value, NODATA)) valueS = "NULL";
+
+            statement += QString(" ('%1','%2',%3),").arg(date.toString("yyyy-MM-dd hh:mm")).arg(varCode).arg(valueS);
+        }
+
+        statement = statement.left(statement.length() - 1);
+
+        if( !qry.exec(statement) )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool Crit3DMeteoGridDbHandler::saveListDailyDataEnsemble(QString *myError, QString meteoPointID, QDate date, meteoVariable meteoVar, QList<float> values)
 {
     QSqlQuery qry(_db);
