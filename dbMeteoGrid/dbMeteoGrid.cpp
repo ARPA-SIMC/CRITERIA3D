@@ -1997,8 +1997,8 @@ bool Crit3DMeteoGridDbHandler::saveListHourlyData(QString *myError, QString mete
     QDateTime last(date, QTime(0,0,0));
     int nHours = values.size();
     last = last.addSecs(3600*(nHours-1));
-    statement = QString("DELETE FROM `%1` WHERE %2 >= DATETIME('%3') AND %2 <= DATETIME('%4') AND VariableCode = '%5'")
-                            .arg(tableH).arg(_tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm")).arg(last.toString("yyyy-MM-dd hh:mm")).arg(varCode);
+    statement = QString("DELETE FROM `%1` WHERE %2 >= '%3' AND %2 <= '%4' AND VariableCode = '%5'")
+                            .arg(tableH).arg(_tableHourly.fieldTime).arg(first.toString("yyyy-MM-dd hh:mm:00")).arg(last.toString("yyyy-MM-dd hh:mm:00")).arg(varCode);
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();
@@ -2012,13 +2012,15 @@ bool Crit3DMeteoGridDbHandler::saveListHourlyData(QString *myError, QString mete
             float value = values[i];
             QString valueS = QString("'%1'").arg(value);
             QDateTime date = first.addSecs(3600*i);
-            if (isEqual(value, NODATA)) valueS = "NULL";
+            if (isEqual(value, NODATA))
+            {
+                valueS = "NULL";
+            }
 
-            statement += QString(" ('%1','%2',%3),").arg(date.toString("yyyy-MM-dd hh:mm")).arg(varCode).arg(valueS);
+            statement += QString(" ('%1','%2',%3),").arg(date.toString("yyyy-MM-dd hh:mm:00")).arg(varCode).arg(valueS);
         }
 
         statement = statement.left(statement.length() - 1);
-
         if( !qry.exec(statement) )
         {
             *myError = qry.lastError().text();
