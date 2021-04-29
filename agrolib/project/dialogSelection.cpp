@@ -205,6 +205,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
     QRadioButton RH("Air relative humidity");
     QRadioButton DewT("Air dew temperature (°C)");
     QRadioButton Irr("Solar irradiance");
+    QRadioButton IrrNet("Net irradiance");
     QRadioButton ET0PMh("Reference evapotranspiration (Penman-Monteith)");
     QRadioButton WSInt("Wind scalar intensity");
     QRadioButton WVInt("Wind vector intensity");
@@ -293,6 +294,8 @@ meteoVariable chooseMeteoVariable(Project* myProject)
             DewT.setChecked(true);
         else if (myCurrentVar == globalIrradiance)
             Irr.setChecked(true);
+        else if (myCurrentVar == netIrradiance)
+            IrrNet.setChecked(true);
         else if (myCurrentVar == referenceEvapotranspiration)
             ET0PMh.setChecked(true);
         else if (myCurrentVar == windScalarIntensity)
@@ -375,6 +378,8 @@ meteoVariable chooseMeteoVariable(Project* myProject)
            return (precipitation);
        else if (Irr.isChecked())
            return (globalIrradiance);
+       else if (IrrNet.isChecked())
+           return (netIrradiance);
        else if (WSInt.isChecked())
            return (windScalarIntensity);
        else if (WVInt.isChecked())
