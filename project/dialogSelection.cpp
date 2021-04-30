@@ -276,6 +276,7 @@ meteoVariable chooseMeteoVariable(Project* myProject)
         layoutVariable.addWidget(&RH);
         layoutVariable.addWidget(&DewT);
         layoutVariable.addWidget(&Irr);
+        layoutVariable.addWidget(&IrrNet);
         layoutVariable.addWidget(&ET0PMh);
         layoutVariable.addWidget(&WSInt);
         layoutVariable.addWidget(&WVInt);
