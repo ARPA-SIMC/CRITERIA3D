@@ -115,6 +115,7 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
         obsDataH[i].rhAir = new float[nrDailyValues];
         obsDataH[i].tDew = new float[nrDailyValues];
         obsDataH[i].irradiance = new float[nrDailyValues];
+        obsDataH[i].netIrradiance = new float[nrDailyValues];
         obsDataH[i].et0 = new float[nrDailyValues];
         obsDataH[i].windVecX = new float[nrDailyValues];
         obsDataH[i].windVecY = new float[nrDailyValues];
@@ -131,6 +132,7 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
             obsDataH[i].rhAir[j] = NODATA;
             obsDataH[i].tDew[j] = NODATA;
             obsDataH[i].irradiance[j] = NODATA;
+            obsDataH[i].netIrradiance[j] = NODATA;
             obsDataH[i].et0[j] = NODATA;
             obsDataH[i].windVecX[j] = NODATA;
             obsDataH[i].windVecY[j] = NODATA;
@@ -240,6 +242,8 @@ void Crit3DMeteoPoint::emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& m
                     obsDataH[i].tDew[j] = NODATA;
                 else if (myVar == globalIrradiance)
                     obsDataH[i].irradiance[j] = NODATA;
+                else if (myVar == netIrradiance)
+                    obsDataH[i].netIrradiance[j] = NODATA;
                 else if (myVar == windScalarIntensity)
                     obsDataH[i].windScalInt[j] = NODATA;
                 else if (myVar == windVectorX)
@@ -318,6 +322,7 @@ void Crit3DMeteoPoint::emptyObsDataH(const Crit3DDate& date1, const Crit3DDate& 
             obsDataH[i].rhAir[j] = NODATA;
             obsDataH[i].tDew[j] = NODATA;
             obsDataH[i].irradiance[j] = NODATA;
+            obsDataH[i].netIrradiance[j] = NODATA;
             obsDataH[i].windScalInt[j] = NODATA;
             obsDataH[i].windVecX[j] = NODATA;
             obsDataH[i].windVecY[j] = NODATA;
@@ -501,6 +506,7 @@ void Crit3DMeteoPoint::cleanObsDataH()
             delete [] obsDataH[i].rhAir;
             delete [] obsDataH[i].tDew;
             delete [] obsDataH[i].irradiance;
+            delete [] obsDataH[i].netIrradiance;
             delete [] obsDataH[i].windScalInt;
             delete [] obsDataH[i].windVecX;
             delete [] obsDataH[i].windVecY;
