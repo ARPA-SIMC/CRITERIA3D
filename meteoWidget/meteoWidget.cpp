@@ -758,21 +758,28 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                         }
                     }
                 }
+                QBoxSet *box = new QBoxSet();
                 if (!sortedList.isEmpty())
                 {
                     std::sort(sortedList.begin(), sortedList.end());
                     int count = sortedList.count();
-
-                    QBoxSet *box = new QBoxSet();
                     box->setValue(QBoxSet::LowerExtreme, sortedList.first());
                     box->setValue(QBoxSet::UpperExtreme, sortedList.last());
                     box->setValue(QBoxSet::Median, findMedian(sortedList, 0, count));
                     box->setValue(QBoxSet::LowerQuartile, findMedian(sortedList, 0, count / 2));
                     box->setValue(QBoxSet::UpperQuartile, findMedian(sortedList, count / 2 + (count % 2), count));
-                    box->setBrush(colorLines[i]);
-                    listBoxSet.append(box);
-                    ensembleSet.append(listBoxSet);
                 }
+                else
+                {
+                    box->setValue(QBoxSet::LowerExtreme, 0);
+                    box->setValue(QBoxSet::UpperExtreme, 0);
+                    box->setValue(QBoxSet::Median, 0);
+                    box->setValue(QBoxSet::LowerQuartile, 0);
+                    box->setValue(QBoxSet::UpperQuartile, 0);
+                }
+                box->setBrush(colorLines[i]);
+                listBoxSet.append(box);
+                ensembleSet.append(listBoxSet);
             }
             if(!ensembleSet.isEmpty())
             {
@@ -810,20 +817,28 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                         }
                     }
                 }
+                QBoxSet *box = new QBoxSet();
                 if (!sortedList.isEmpty())
                 {
                     std::sort(sortedList.begin(), sortedList.end());
                     int count = sortedList.count();
-                    QBoxSet *box = new QBoxSet();
                     box->setValue(QBoxSet::LowerExtreme, sortedList.first());
                     box->setValue(QBoxSet::UpperExtreme, sortedList.last());
                     box->setValue(QBoxSet::Median, findMedian(sortedList, 0, count));
                     box->setValue(QBoxSet::LowerQuartile, findMedian(sortedList, 0, count / 2));
                     box->setValue(QBoxSet::UpperQuartile, findMedian(sortedList, count / 2 + (count % 2), count));
-                    box->setBrush(colorBar[i]);
-                    listBoxSet.append(box);
-                    ensembleSet.append(listBoxSet);
                 }
+                else
+                {
+                    box->setValue(QBoxSet::LowerExtreme, 0);
+                    box->setValue(QBoxSet::UpperExtreme, 0);
+                    box->setValue(QBoxSet::Median, 0);
+                    box->setValue(QBoxSet::LowerQuartile, 0);
+                    box->setValue(QBoxSet::UpperQuartile, 0);
+                }
+                box->setBrush(colorBar[i]);
+                listBoxSet.append(box);
+                ensembleSet.append(listBoxSet);
             }
             if(!ensembleSet.isEmpty())
             {
