@@ -35,6 +35,7 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../co
 
 
 SOURCES += \
+    dialogChangeAxis.cpp \
     dialogMeteoTable.cpp \
     dialogSelectVar.cpp \
     meteoTable.cpp \
@@ -43,6 +44,7 @@ SOURCES += \
 
 
 HEADERS += \
+    dialogChangeAxis.h \
     dialogMeteoTable.h \
     dialogSelectVar.h \
     meteoTable.h \

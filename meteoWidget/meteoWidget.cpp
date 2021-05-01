@@ -25,6 +25,7 @@
 #include "meteoWidget.h"
 #include "dialogSelectVar.h"
 #include "dialogMeteoTable.h"
+#include "dialogChangeAxis.h"
 #include "utilities.h"
 #include "commonConstants.h"
 #include "formInfo.h"
@@ -1913,12 +1914,22 @@ void Crit3DMeteoWidget::setMeteoWidgetID(int value)
 
 void Crit3DMeteoWidget::on_actionChangeLeftAxis()
 {
-    // TO DO
+    DialogChangeAxis changeAxisDialog(true);
+    if (changeAxisDialog.result() == QDialog::Accepted)
+    {
+        axisY->setMax(changeAxisDialog.getMaxVal());
+        axisY->setMin(changeAxisDialog.getMinVal());
+    }
 }
 
 void Crit3DMeteoWidget::on_actionChangeRightAxis()
 {
-    // TO DO
+    DialogChangeAxis changeAxisDialog(false);
+    if (changeAxisDialog.result() == QDialog::Accepted)
+    {
+        axisYdx->setMax(changeAxisDialog.getMaxVal());
+        axisYdx->setMin(changeAxisDialog.getMinVal());
+    }
 }
 
 void Crit3DMeteoWidget::on_actionExportGraph()
