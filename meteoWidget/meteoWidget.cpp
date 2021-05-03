@@ -555,7 +555,7 @@ void Crit3DMeteoWidget::resetValues()
 {
     int nMeteoPoints = meteoPoints.size();
     // clear prev series values
-    if (isLine)
+    if (!lineSeries.isEmpty())
     {
         for (int mp = 0; mp < lineSeries.size(); mp++)
         {
@@ -568,7 +568,7 @@ void Crit3DMeteoWidget::resetValues()
         }
         lineSeries.clear();
     }
-    if (isBar)
+    if (!barSeries.isEmpty())
     {
         for (int mp = 0; mp < barSeries.size(); mp++)
         {
