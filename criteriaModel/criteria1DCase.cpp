@@ -398,11 +398,11 @@ double Crit1DCase::checkIrrigationDemand(int doy, double currentPrec, double nex
     }
 
     // check forecast (today and tomorrow)
-    double waterNeeds = crop.irrigationVolume / crop.irrigationShift;
+    double dailyWaterNeeds = crop.irrigationVolume / crop.irrigationShift;
     double todayWater = currentPrec + soilLayers[0].waterContent;
     double twoDaysWater = todayWater + nextPrec;
-    if (todayWater >= waterNeeds) return 0;
-    if (twoDaysWater >= 2*waterNeeds) return 0;
+    if (todayWater >= dailyWaterNeeds) return 0;
+    if (twoDaysWater >= 2*dailyWaterNeeds) return 0;
 
     // check water stress (before infiltration)
     double threshold = 1. - crop.stressTolerance;
@@ -415,19 +415,17 @@ double Crit1DCase::checkIrrigationDemand(int doy, double currentPrec, double nex
     // check irrigation shift
     if (crop.daysSinceIrrigation != NODATA)
     {
-        // stress too high -> forced irrigation
-        if ((crop.daysSinceIrrigation < crop.irrigationShift) && (waterStress < (threshold + 0.1)))
+        if (crop.daysSinceIrrigation < crop.irrigationShift)
             return 0;
     }
 
     // Irrigation scheduled!
+
+    // irrigation quantity
+    double irrigation = crop.irrigationVolume;
+
     // reset irrigation shift
     crop.daysSinceIrrigation = 0;
-
-    // check irrigation quantity
-    double irrigation = crop.irrigationVolume;
-    if (crop.irrigationShift > 1)
-        irrigation -= floor(twoDaysWater);
 
     return irrigation;
 }

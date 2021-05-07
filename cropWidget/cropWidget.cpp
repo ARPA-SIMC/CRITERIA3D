@@ -49,7 +49,7 @@
 Crit3DCropWidget::Crit3DCropWidget()
 {
     this->setWindowTitle(QStringLiteral("CRITERIA 1D - Crop Editor"));
-    this->resize(1240, 700);
+    this->resize(1400, 700);
 
     // font
     QFont myFont = this->font();
@@ -150,14 +150,15 @@ Crit3DCropWidget::Crit3DCropWidget()
     waterStressParametersGroup = new QGroupBox(tr(""));
     waterContentGroup = new QGroupBox(tr(""));
 
-    infoCaseGroup->setFixedWidth(this->width()/5);
-    infoCropGroup->setFixedWidth(this->width()/5);
-    infoMeteoGroup->setFixedWidth(this->width()/5);
-    laiParametersGroup->setFixedWidth(this->width()/5);
-    rootParametersGroup->setFixedWidth(this->width()/5);
-    irrigationParametersGroup->setFixedWidth(this->width()/5);
-    waterStressParametersGroup->setFixedWidth(this->width()/5);
-    waterContentGroup->setFixedWidth(this->width()/5);
+    float widthRatio = 0.25;
+    infoCaseGroup->setFixedWidth(this->width() * widthRatio);
+    infoCropGroup->setFixedWidth(this->width() * widthRatio);
+    infoMeteoGroup->setFixedWidth(this->width() * widthRatio);
+    laiParametersGroup->setFixedWidth(this->width() * widthRatio);
+    rootParametersGroup->setFixedWidth(this->width() * widthRatio);
+    irrigationParametersGroup->setFixedWidth(this->width() * widthRatio);
+    waterStressParametersGroup->setFixedWidth(this->width() * widthRatio);
+    waterContentGroup->setFixedWidth(this->width() * widthRatio);
 
     infoCaseGroup->setTitle("Case");
     infoCropGroup->setTitle("Crop");
