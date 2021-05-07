@@ -196,9 +196,6 @@ bool Crit1DProject::readSettings()
 
 int Crit1DProject::initializeProject(QString settingsFileName)
 {
-    closeProject();
-    initialize();
-
     if (settingsFileName == "")
     {
         logger.writeError("Missing settings File.");
