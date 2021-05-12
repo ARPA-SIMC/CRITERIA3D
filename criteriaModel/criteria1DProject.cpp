@@ -80,6 +80,8 @@ bool Crit1DProject::readSettings()
 {
     QSettings* projectSettings;
     projectSettings = new QSettings(configFileName, QSettings::IniFormat);
+
+    // PROJECT
     projectSettings->beginGroup("project");
 
     path += projectSettings->value("path","").toString();
@@ -145,30 +147,34 @@ bool Crit1DProject::readSettings()
         logger.writeInfo("WARNING: it is not possible to restart without save state (check file ini).");
     }
 
-    // FORECAST (seasonal or short-term)
     projectSettings->endGroup();
+
+    // FORECAST
     projectSettings->beginGroup("forecast");
 
-    isSeasonalForecast = projectSettings->value("isSeasonalForecast",0).toBool();
-    isShortTermForecast = projectSettings->value("isShortTermForecast",0).toBool();
-    if (isSeasonalForecast)
-    {
-        outputCsvFileName = projectSettings->value("output").toString();
-
-        if (outputCsvFileName.left(1) == ".")
-            outputCsvFileName = path + outputCsvFileName;
-
-        firstSeasonMonth = projectSettings->value("firstMonth",0).toInt();
-    }
-
-    if (isShortTermForecast)
-    {
-        daysOfForecast = projectSettings->value("daysOfForecast",0).toInt();
-    }
+        isSeasonalForecast = projectSettings->value("isSeasonalForecast",0).toBool();
+        isShortTermForecast = projectSettings->value("isShortTermForecast",0).toBool();
+        if (isShortTermForecast)
+        {
+            daysOfForecast = projectSettings->value("daysOfForecast",0).toInt();
+        }
+        if (isSeasonalForecast)
+        {
+            firstSeasonMonth = projectSettings->value("firstMonth",0).toInt();
+        }
 
     projectSettings->endGroup();
 
-    // output settings (optional)
+    if (isSeasonalForecast)
+    {
+        projectSettings->beginGroup("csv");
+            outputCsvFileName = projectSettings->value("csv_output").toString();
+            if (outputCsvFileName.at(0) == ".")
+                outputCsvFileName = path + outputCsvFileName;
+        projectSettings->endGroup();
+    }
+
+    // OUTPUT variables (optional)
     QStringList depthList;
     projectSettings->beginGroup("output");
         depthList = projectSettings->value("waterDeficit").toStringList();
@@ -190,6 +196,7 @@ bool Crit1DProject::readSettings()
             return false;
         }
     projectSettings->endGroup();
+
     return true;
 }
 
