@@ -848,6 +848,7 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
     const int MAX_MISSING_DAYS = 3;
     QDate myDate, expectedDate, previousDate;
     Crit3DDate date;
+    QString meteoID = QString::fromStdString(meteoPoint->id);
 
     float tmin = NODATA;
     float tmax = NODATA;
@@ -872,7 +873,7 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
 
         if (! myDate.isValid())
         {
-            *myError = "Wrong date format: " + query->value("date").toString();
+            *myError = meteoID + " wrong date format: " + query->value("date").toString();
             return false;
         }
 
@@ -882,7 +883,7 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
             {
                 if (expectedDate.daysTo(myDate) > MAX_MISSING_DAYS)
                 {
-                    *myError = "Wrong METEO: too many missing data." + expectedDate.toString();
+                    *myError = meteoID + " wrong METEO: too many missing data." + expectedDate.toString();
                     return false;
                 }
                 else
@@ -935,7 +936,7 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
                 }
                 else
                 {
-                    *myError = "Wrong METEO: too many missing data " + myDate.toString();
+                    *myError = meteoID + " wrong METEO: too many missing data " + myDate.toString();
                     return false;
                 }
             }
@@ -969,7 +970,7 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
             }
             else
             {
-                *myError = "Wrong METEO: index out of range.";
+                *myError = meteoID + " wrong METEO: index out of range.";
                 return false;
             }
 
