@@ -30,7 +30,6 @@ void Crit1DProject::initialize()
     projectName = "";
     logFileName = "";
     outputCsvFileName = "";
-    outputCsvPath = "";
     addDateTimeLogFile = false;
 
     dbCropName = "";
@@ -45,14 +44,17 @@ void Crit1DProject::initialize()
     unitList.clear();
 
     isXmlGrid = false;
-    isSeasonalForecast = false;
     isSaveState = false;
     isRestart = false;
+
+    isSeasonalForecast = false;
     firstSeasonMonth = NODATA;
     nrSeasonalForecasts = 0;
 
     isShortTermForecast = false;
     daysOfForecast = NODATA;
+    isMonthlyForecast = false;
+
     firstSimulationDate = QDate(1800,1,1);
     lastSimulationDate = QDate(1800,1,1);
 
@@ -154,6 +156,7 @@ bool Crit1DProject::readSettings()
 
         isSeasonalForecast = projectSettings->value("isSeasonalForecast",0).toBool();
         isShortTermForecast = projectSettings->value("isShortTermForecast",0).toBool();
+        isMonthlyForecast = projectSettings->value("isMonthlyForecast",0).toBool();
         if (isShortTermForecast)
         {
             daysOfForecast = projectSettings->value("daysOfForecast",0).toInt();
@@ -165,14 +168,27 @@ bool Crit1DProject::readSettings()
 
     projectSettings->endGroup();
 
-    if (isSeasonalForecast)
-    {
-        projectSettings->beginGroup("csv");
-            outputCsvFileName = projectSettings->value("csv_output").toString();
-            if (outputCsvFileName.at(0) == ".")
-                outputCsvFileName = path + outputCsvFileName;
-        projectSettings->endGroup();
-    }
+    projectSettings->beginGroup("csv");
+        outputCsvFileName = projectSettings->value("csv_output","").toString();
+        if (outputCsvFileName.right(4) == ".csv")
+        {
+            outputCsvFileName = outputCsvFileName.left(outputCsvFileName.length()-4);
+        }
+
+        bool addDate = projectSettings->value("add_date_to_filename","").toBool();
+        if (addDate)
+        {
+            QString dateStr = QDate::currentDate().toString("yyyy-MM-dd");
+            outputCsvFileName += "_" + dateStr;
+        }
+        outputCsvFileName += ".csv";
+
+        if (outputCsvFileName.left(1) == ".")
+        {
+            outputCsvFileName = path + QDir::cleanPath(outputCsvFileName);
+        }
+
+    projectSettings->endGroup();
 
     // OUTPUT variables (optional)
     QStringList depthList;
@@ -275,7 +291,8 @@ void Crit1DProject::checkSimulationDates()
     {
         if (isXmlGrid)
         {
-            lastSimulationDate = QDateTime::currentDateTime().date().addDays(-1);
+
+            lastSimulationDate = QDate::currentDate().addDays(-1);
             dateStr = lastSimulationDate.toString("yyyy-MM-dd");
         }
         else
@@ -383,7 +400,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstSimulationDate));
 
     float tmin, tmax, tavg, prec;
-    int lastIndex = firstSimulationDate.daysTo(lastSimulationDate)+1;
+    long lastIndex = firstSimulationDate.daysTo(lastSimulationDate) + 1;
     for (int i = 0; i < lastIndex; i++)
     {
         Crit3DDate myDate = getCrit3DDate(firstSimulationDate.addDays(i));
@@ -394,7 +411,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
         myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMax, tmax);
 
         tavg = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
-        if (tavg == NODATA)
+        if (int(tavg) == int(NODATA))
         {
             tavg = (tmax + tmin)/2;
         }
@@ -417,7 +434,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
             myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMax, tmax);
 
             tavg = this->forecastMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
-            if (tavg == NODATA)
+            if (int(tavg) == int(NODATA))
             {
                 tavg = (tmax + tmin)/2;
             }
@@ -581,7 +598,7 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
         float previousTmin = NODATA;
         float previousTmax = NODATA;
         long lastIndex = long(firstDate.daysTo(lastDate));
-        for (unsigned long i = lastIndex; i < unsigned(myCase.meteoPoint.nrObsDataDaysD); i++)
+        for (unsigned long i = unsigned(lastIndex); i < unsigned(myCase.meteoPoint.nrObsDataDaysD); i++)
         {
             // tmin
             if (int(myCase.meteoPoint.obsDataD[i].tMin) != int(NODATA))
@@ -730,9 +747,9 @@ int Crit1DProject::computeAllUnits()
     bool isErrorCrop = false;
     unsigned int nrUnitsComputed = 0;
 
-    if (isSeasonalForecast)
+    if (isSeasonalForecast || isMonthlyForecast)
     {
-        if (!setSeasonalForecastOutput())
+        if (!setPercentileOutputCsv())
             return ERROR_DBOUTPUT;
     }
 
@@ -767,7 +784,7 @@ int Crit1DProject::computeAllUnits()
             // IRRI_RATIO
             double irriRatio = double(getIrriRatioFromClass(&dbCrop, "crop_class", "id_class",
                                                             unitList[i].idCropClass, &projectError));
-            if ((isSeasonalForecast || isShortTermForecast) && (int(irriRatio) == int(NODATA)))
+            if ((isSeasonalForecast || isMonthlyForecast || isShortTermForecast) && (int(irriRatio) == int(NODATA)))
             {
                 logger.writeInfo("Unit " + unitList[i].idCase + " " + unitList[i].idCropClass + " ***** missing IRRIGATION RATIO *****");
                 continue;
@@ -791,20 +808,30 @@ int Crit1DProject::computeAllUnits()
             }
             else
             {
-                if (computeUnit(i))
+                if (isMonthlyForecast)
                 {
-                    nrUnitsComputed++;
+                    if (computeMonthlyForecast(i, irriRatio))
+                        nrUnitsComputed++;
+                    else
+                        isErrorModel = true;
                 }
                 else
                 {
-                    projectError = "Computational Unit: " + unitList[i].idCase + "\n" + projectError;
-                    logger.writeError(projectError);
-                    isErrorModel = true;
+                    if (computeUnit(i))
+                    {
+                        nrUnitsComputed++;
+                    }
+                    else
+                    {
+                        projectError = "Computational Unit: " + unitList[i].idCase + "\n" + projectError;
+                        logger.writeError(projectError);
+                        isErrorModel = true;
+                    }
                 }
             }
         }
 
-        if (isSeasonalForecast)
+        if (isSeasonalForecast || isMonthlyForecast)
         {
             outputCsvFile.close();
         }
@@ -887,6 +914,21 @@ void Crit1DProject::updateSeasonalForecastOutput(Crit3DDate myDate, int &index)
     }
 }
 
+bool Crit1DProject::computeMonthlyForecast(unsigned int index, double irriRatio)
+{
+    if (irriRatio < EPSILON)
+    {
+        // No irrigation: nothing to do
+        outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
+        outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
+        outputCsvFile << ",0,0,0,0,0\n";
+        return true;
+    }
+
+    // TODO
+    return true;
+}
+
 
 bool Crit1DProject::computeSeasonalForecast(unsigned int index, double irriRatio)
 {
@@ -924,10 +966,11 @@ bool Crit1DProject::computeSeasonalForecast(unsigned int index, double irriRatio
 }
 
 
-bool Crit1DProject::setSeasonalForecastOutput()
+bool Crit1DProject::setPercentileOutputCsv()
 {
-    if (isSeasonalForecast)
+    if (isSeasonalForecast || isMonthlyForecast)
     {
+        QString outputCsvPath = getFilePath(outputCsvFileName);
         if (! QDir(outputCsvPath).exists())
         {
             QDir().mkdir(outputCsvPath);
@@ -1397,8 +1440,8 @@ int Crit1DProject::openAllDatabase()
         }
     }
 
-    // output DB (not used in seasonal forecast)
-    if (! isSeasonalForecast)
+    // output DB (not used in seasonal/monthly forecast)
+    if ((! isSeasonalForecast) && (! isMonthlyForecast))
     {
         QFile::remove(dbOutputName);
         logger.writeInfo ("Output DB: " + dbOutputName);
