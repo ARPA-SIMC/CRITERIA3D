@@ -124,7 +124,7 @@
             bool findMeteoPointFromId(unsigned *row, unsigned *col, const std::string &code);
             bool getMeteoPointActiveId(int row, int col, std::string *id);
             bool getLatFromId(std::string id, double* lat);
-            bool getLatLonZFromId(std::string id, double* lat, double* lon, double* z);
+            bool getXYZFromId(std::string id, double* x, double* y, double* z);
             bool getIdFromLatLon(double lat, double lon, std::string* id);
             bool findFirstActiveMeteoPoint(std::string* id, int* row, int* col);
             bool isActiveMeteoPointFromId(const std::string &id);

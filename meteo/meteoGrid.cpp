@@ -452,7 +452,7 @@ bool Crit3DMeteoGrid::getLatFromId(std::string id, double* lat)
     return false;
 }
 
-bool Crit3DMeteoGrid::getLatLonZFromId(std::string id, double* lat, double* lon, double* z)
+bool Crit3DMeteoGrid::getXYZFromId(std::string id, double* x, double* y, double* z)
 {
     unsigned i,j;
 
@@ -462,8 +462,8 @@ bool Crit3DMeteoGrid::getLatLonZFromId(std::string id, double* lat, double* lon,
         {
             if (_meteoPoints[i][j]->id == id)
             {
-                *lat = _meteoPoints[i][j]->latitude;
-                *lon = _meteoPoints[i][j]->longitude;
+                *x = _meteoPoints[i][j]->point.utm.x;
+                *y = _meteoPoints[i][j]->point.utm.y;
                 *z = _meteoPoints[i][j]->point.z;
                 return true;
             }
