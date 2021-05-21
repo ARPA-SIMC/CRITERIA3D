@@ -862,3 +862,42 @@ std::vector <float> Crit3DMeteoPoint::getProxyValues()
 
     return myValues;
 }
+
+bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
+{
+    float relHumidity, prec, leafW;
+    float temperature, windSpeed, height, netRadiation;
+
+    Crit3DDate myDate = dateTime.date;
+    int myHour = dateTime.getHour();
+    bool leafWres = true;
+    bool et0res = true;
+
+    relHumidity = getMeteoPointValueH(myDate, myHour, 0, airRelHumidity);
+    prec = getMeteoPointValueH(myDate, myHour, 0, precipitation);
+
+    if (! isEqual(relHumidity, NODATA)
+            && ! isEqual(prec, NODATA))
+    {
+        leafW = 0;
+        if (prec > 0 || relHumidity > 92)
+        {
+            leafW = 1;
+        }
+        //TODO: ora precedente prec > 2mm ?
+        leafWres = setMeteoPointValueH(myDate, myHour, 0, leafWetness, leafW);
+    }
+    temperature = getMeteoPointValueH(myDate, myHour, 0, airTemperature);
+    windSpeed = getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity);
+    netRadiation = getMeteoPointValueH(myDate, myHour, 0, netIrradiance);
+    height = this->point.z;
+    float et0;
+
+    if (! isEqual(temperature, NODATA) && ! isEqual(relHumidity, NODATA) && ! isEqual(windSpeed, NODATA))
+    {
+        et0 = float(ET0_Penman_hourly_net_rad(double(height), double(netRadiation),
+                          double(temperature), double(relHumidity), double(windSpeed)));
+        et0res = setMeteoPointValueH(myDate, myHour, 0, referenceEvapotranspiration, et0);
+    }
+    return (leafWres && et0res);
+}

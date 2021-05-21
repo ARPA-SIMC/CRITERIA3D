@@ -154,6 +154,8 @@
             void setId(std::string value);
             void setName(std::string name);
 
+            bool computeDerivedVariables(Crit3DTime dateTime);
+
     private:
             TObsDataH *obsDataH;
 

@@ -435,6 +435,65 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
     return MAXVALUE(firstTerm + secondTerm, 0);
 }
 
+/*!
+ * \brief ET0_Penman_hourly_net_rad http://www.cimis.water.ca.gov/cimis/infoEtoPmEquation.jsp
+ * \param heigth elevation above mean sea level (meters)
+ * \param netRadiation net Short Wave radiation (W m-2)
+ * \param airTemp air temperature (C)
+ * \param airHum relative humidity (%)
+ * \param windSpeed10 wind speed at 10 meters (m s-1)
+ * \return result
+ */
+double ET0_Penman_hourly_net_rad(double heigth, double netRadiation, double airTemp, double airHum, double windSpeed10)
+{
+    double mySigma;                              /*!<  Steffan-Boltzman constant J m-2 h-1 K-4 */
+    double es;                                   /*!<  saturation vapor pressure (kPa) at the mean hourly air temperature in C */
+    double ea;                                   /*!<  actual vapor pressure (kPa) at the mean hourly air temperature in C */
+    double emissivity;                           /*!<  net emissivity of the surface */
+    double g;                                    /*!<  soil heat flux density (J m-2 h-1) */
+    double Cd;                                   /*!<  bulk surface resistance and aerodynamic resistance coefficient */
+    double tAirK;                                /*!<  air temperature (Kelvin) */
+    double windSpeed2;                           /*!<  wind speed at 2 meters (m s-1) */
+    double delta;                                /*!<  slope of saturation vapor pressure curve (kPa C-1) at mean air temperature */
+    double pressure;                             /*!<  barometric pressure (kPa) */
+    double lambda;                               /*!<  latent heat of vaporization in (J kg-1) */
+    double gamma;                                /*!<  psychrometric constant (kPa C-1) */
+    double firstTerm, secondTerm, denominator;
+
+
+    es = SaturationVaporPressure(airTemp) / 1000.;
+    ea = airHum * es / 100.0;
+    emissivity = emissivityFromVaporPressure(ea);
+    tAirK = airTemp + ZEROCELSIUS;
+    mySigma = STEFAN_BOLTZMANN * HOUR_SECONDS;
+
+    /*!   values for grass */
+    if (netRadiation > 0)
+    {   g = 0.1 * netRadiation;
+        Cd = 0.24;
+    }
+    else
+    {
+        g = 0.5 * netRadiation;
+        Cd = 0.96;
+    }
+
+    delta = SaturationSlope(airTemp, es);
+
+    pressure = PressureFromAltitude(heigth) / 1000.;
+
+    gamma = Psychro(pressure, airTemp);
+    lambda = LatentHeatVaporization(airTemp);
+
+    windSpeed2 = windSpeed10 * 0.748;
+
+    denominator = delta + gamma * (1 + Cd * windSpeed2);
+    firstTerm = delta * (netRadiation - g) / (lambda * denominator);
+    secondTerm = (gamma * (37 / tAirK) * windSpeed2 * (es - ea)) / denominator;
+
+    return MAXVALUE(firstTerm + secondTerm, 0);
+}
+
 
 /*!
  * \brief computes [mm d-1] potential evapotranspiration. Trange minimum: 0.25°C  equivalent to 8.5% transimissivity

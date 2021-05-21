@@ -229,6 +229,8 @@
     double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalSWRadiation,
                     double airTemp, double airHum, double windSpeed10);
 
+    double ET0_Penman_hourly_net_rad(double heigth, double netRadiation, double airTemp, double airHum, double windSpeed10);
+
     double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
                             double myTmin, double myTmax, double myTminDayAfter,
                             double myUmed, double myVmed10, double mySWGlobRad);
