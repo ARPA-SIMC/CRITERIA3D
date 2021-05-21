@@ -972,6 +972,21 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
     }
 }
 
+void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
+{
+
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+    {
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
+        {
+            if (_meteoPoints[row][col]->active)
+            {
+                _meteoPoints[row][col]->computeDerivedVariables(dateTime);
+            }
+        }
+    }
+}
+
 
 
 
