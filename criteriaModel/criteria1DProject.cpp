@@ -473,6 +473,11 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
 
     if (getValue(query.value(("longitude")), &myLon))
         myCase.meteoPoint.longitude = myLon;
+    else
+    {
+        projectError = "Missing longitude in idMeteo: " + idMeteo;
+        return false;
+    }
 
     queryString = "SELECT * FROM '" + tableName + "' ORDER BY [date]";
     query = this->dbMeteo.exec(queryString);
