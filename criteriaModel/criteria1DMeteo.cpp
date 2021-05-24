@@ -867,6 +867,9 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
     expectedDate = myDate;
     previousDate = myDate.addDays(-1);
 
+    bool existEtp = !(query->value("etp").isNull());
+    bool existWatertable = !(query->value("watertable").isNull());
+
     do
     {
         myDate = query->value("date").toDate();
@@ -950,13 +953,22 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
                  tmed = (tmin + tmax) * 0.5f;
 
             // ET0 [mm]
-            getValue(query->value("etp"), &et0);
-            if (et0 < 0.f || et0 > 10.f)
-                et0 = NODATA;
+            if (existEtp)
+            {
+                getValue(query->value("etp"), &et0);
+                if (et0 < 0.f || et0 > 10.f)
+                    et0 = NODATA;
+            }
+            else et0 = NODATA;
 
             // Watertable depth [m]
-            getValue(query->value("watertable"), &waterTable);
-            if (waterTable < 0.f) waterTable = NODATA;
+            if (existWatertable)
+            {
+                getValue(query->value("watertable"), &waterTable);
+                if (waterTable < 0.f)
+                    waterTable = NODATA;
+            }
+            else waterTable = NODATA;
 
             date = getCrit3DDate(myDate);
             if (meteoPoint->obsDataD[0].date.daysTo(date) < meteoPoint->nrObsDataDaysD)
