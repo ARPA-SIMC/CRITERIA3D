@@ -38,13 +38,13 @@ void BarHorizon::setClass(int classUSDA)
     // loamy sand
     case 2:
     {
-        linePalette.setColor(QPalette::Background, QColor(255,206,206));
+        linePalette.setColor(QPalette::Background, QColor(240,190,190));
         break;
     }
     // sandy loam
     case 3:
     {
-        linePalette.setColor(QPalette::Background, QColor(255,206,255));
+        linePalette.setColor(QPalette::Background, QColor(240,190,240));
         break;
     }
     // silt loam
@@ -92,13 +92,13 @@ void BarHorizon::setClass(int classUSDA)
     // silty clay
     case 11:
     {
-        linePalette.setColor(QPalette::Background, QColor(156,255,206));
+        linePalette.setColor(QPalette::Background, QColor(128,255,206));
         break;
     }
     // clay
     case 12:
     {
-        linePalette.setColor(QPalette::Background, QColor(255,255,156));
+        linePalette.setColor(QPalette::Background, QColor(220,220,128));
         break;
     }
 
