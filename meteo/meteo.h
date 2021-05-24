@@ -226,7 +226,7 @@
     float relHumFromTdew(float Td, float T);
     float tDewFromRelHum(float RH, float T);
 
-    double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalSWRadiation,
+    double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalIrradiance,
                     double airTemp, double airHum, double windSpeed10);
 
     double ET0_Penman_hourly_net_rad(double heigth, double netRadiation, double airTemp, double airHum, double windSpeed10);

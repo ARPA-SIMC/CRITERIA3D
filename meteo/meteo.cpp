@@ -368,13 +368,13 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
  * \brief ET0_Penman_hourly http://www.cimis.water.ca.gov/cimis/infoEtoPmEquation.jsp
  * \param heigth elevation above mean sea level (meters)
  * \param normalizedTransmissivity normalized tramissivity [0-1] ()
- * \param globalSWRadiation net Short Wave radiation (W m-2)
+ * \param globalIrradiance global surface downwelling irradiance (W m-2)
  * \param airTemp air temperature (C)
  * \param airHum relative humidity (%)
  * \param windSpeed10 wind speed at 10 meters (m s-1)
  * \return result
  */
-double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double globalSWRadiation,
+double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double globalIrradiance,
                 double airTemp, double airHum, double windSpeed10)
 {
     double mySigma;                              /*!<  Steffan-Boltzman constant J m-2 h-1 K-4 */
@@ -382,10 +382,10 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
     double ea;                                   /*!<  actual vapor pressure (kPa) at the mean hourly air temperature in C */
     double emissivity;                           /*!<  net emissivity of the surface */
     double cloudFactor;                          /*!<  cloudiness factor for long wave radiation */
-    double netRadiation;                         /*!<  net radiation (J m-2 h-1) */
-    double netLWRadiation;                       /*!<  net longwave radiation (J m-2 h-1) */
-    double netSWRadiation;                       /*!<  net shortwave radiation (J m-2 h-1) */
-    double g;                                    /*!<  soil heat flux density (J m-2 h-1) */
+    double netRadiation;                         /*!<  net radiation (J m-2) */
+    double netLWRadiation;                       /*!<  net longwave radiation (J m-2) */
+    double netSWRadiation;                       /*!<  net shortwave radiation (J m-2) */
+    double g;                                    /*!<  soil heat flux density (J m-2) */
     double Cd;                                   /*!<  bulk surface resistance and aerodynamic resistance coefficient */
     double tAirK;                                /*!<  air temperature (Kelvin) */
     double windSpeed2;                           /*!<  wind speed at 2 meters (m s-1) */
@@ -405,7 +405,7 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
     netLWRadiation = cloudFactor * emissivity * mySigma * (pow(tAirK, 4));
 
     /*!   from [W m-2] to [J h-1 m-2] */
-    netSWRadiation = (3600 * globalSWRadiation);
+    netSWRadiation = (3600 * globalIrradiance);
     netRadiation = (1 - ALBEDO_CROP_REFERENCE) * netSWRadiation - netLWRadiation;
 
     /*!   values for grass */
@@ -438,18 +438,17 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
 /*!
  * \brief ET0_Penman_hourly_net_rad http://www.cimis.water.ca.gov/cimis/infoEtoPmEquation.jsp
  * \param heigth elevation above mean sea level (meters)
- * \param netRadiation net Short Wave radiation (W m-2)
+ * \param netIrradiance net surface irradiance (W m-2)
  * \param airTemp air temperature (C)
  * \param airHum relative humidity (%)
  * \param windSpeed10 wind speed at 10 meters (m s-1)
  * \return result
  */
-double ET0_Penman_hourly_net_rad(double heigth, double netRadiation, double airTemp, double airHum, double windSpeed10)
+double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double airTemp, double airHum, double windSpeed10)
 {
-    double mySigma;                              /*!<  Steffan-Boltzman constant J m-2 h-1 K-4 */
+    double netRadiation;                         /*!<  net radiation (J m-2) */
     double es;                                   /*!<  saturation vapor pressure (kPa) at the mean hourly air temperature in C */
     double ea;                                   /*!<  actual vapor pressure (kPa) at the mean hourly air temperature in C */
-    double emissivity;                           /*!<  net emissivity of the surface */
     double g;                                    /*!<  soil heat flux density (J m-2 h-1) */
     double Cd;                                   /*!<  bulk surface resistance and aerodynamic resistance coefficient */
     double tAirK;                                /*!<  air temperature (Kelvin) */
@@ -460,12 +459,12 @@ double ET0_Penman_hourly_net_rad(double heigth, double netRadiation, double airT
     double gamma;                                /*!<  psychrometric constant (kPa C-1) */
     double firstTerm, secondTerm, denominator;
 
+    netRadiation = 3600 * netIrradiance;
 
     es = SaturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
-    emissivity = emissivityFromVaporPressure(ea);
+
     tAirK = airTemp + ZEROCELSIUS;
-    mySigma = STEFAN_BOLTZMANN * HOUR_SECONDS;
 
     /*!   values for grass */
     if (netRadiation > 0)
