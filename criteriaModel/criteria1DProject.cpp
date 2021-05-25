@@ -757,6 +757,15 @@ int Crit1DProject::computeAllUnits()
         if (!setPercentileOutputCsv())
             return ERROR_DBOUTPUT;
     }
+    else
+    {
+        if (dbOutputName == "")
+        {
+            logger.writeError("Missing output db");
+            return ERROR_DBOUTPUT;
+        }
+
+    }
 
     // create db state
     if (isSaveState)
@@ -1448,6 +1457,11 @@ int Crit1DProject::openAllDatabase()
     // output DB (not used in seasonal/monthly forecast)
     if ((! isSeasonalForecast) && (! isMonthlyForecast))
     {
+        if (dbOutputName == "")
+        {
+            logger.writeError("Missing output DB");
+                return ERROR_DBOUTPUT;
+        }
         QFile::remove(dbOutputName);
         logger.writeInfo ("Output DB: " + dbOutputName);
         dbOutput = QSqlDatabase::addDatabase("QSQLITE", "output");
@@ -1456,7 +1470,6 @@ int Crit1DProject::openAllDatabase()
         QString outputDbPath = getFilePath(dbOutputName);
         if (!QDir(outputDbPath).exists())
              QDir().mkdir(outputDbPath);
-
 
         if (! dbOutput.open())
         {
