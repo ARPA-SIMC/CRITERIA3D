@@ -1488,7 +1488,7 @@ void Crit3DCropWidget::on_actionUpdate()
         }
         else
         {
-            if (! myCase.mySoil.code.empty())
+            if ((! myCase.mySoil.code.empty()) && isRedraw)
             {
                 if (tabWidget->currentIndex() == 1)
                 {
