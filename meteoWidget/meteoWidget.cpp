@@ -1598,13 +1598,16 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 
 bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state)
 {
-    qDebug() << "series.count = " << series->count();
+
     if (state)
     {
         int doy = point.x();
         int doyRelative = point.x();
-        if (categories.size() != series->count())
+        int posCategories = categories.indexOf(QString::number(doy));
+
+        if (categories.size() != series->count() && series->at(posCategories).x() != doy)
         {
+            // missing first data into series
             int delta = categories.size() - series->count();
             doyRelative = doyRelative - delta;
         }
