@@ -865,28 +865,22 @@ std::vector <float> Crit3DMeteoPoint::getProxyValues()
 
 bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
 {
-    float relHumidity, prec, leafW;
+    float relHumidity, prec;
+    short leafW;
     float temperature, windSpeed, height, netRadiation;
 
     Crit3DDate myDate = dateTime.date;
     int myHour = dateTime.getHour();
-    bool leafWres = true;
-    bool et0res = true;
+
+    bool leafWres = false;
+    bool et0res = false;
 
     relHumidity = getMeteoPointValueH(myDate, myHour, 0, airRelHumidity);
     prec = getMeteoPointValueH(myDate, myHour, 0, precipitation);
 
-    if (! isEqual(relHumidity, NODATA)
-            && ! isEqual(prec, NODATA))
-    {
-        leafW = 0;
-        if (prec > 0 || relHumidity > 92)
-        {
-            leafW = 1;
-        }
-        //TODO: ora precedente prec > 2mm ?
+    if (computeLeafWetness(prec, relHumidity, &leafW))
         leafWres = setMeteoPointValueH(myDate, myHour, 0, leafWetness, leafW);
-    }
+
     temperature = getMeteoPointValueH(myDate, myHour, 0, airTemperature);
     windSpeed = getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity);
     netRadiation = getMeteoPointValueH(myDate, myHour, 0, netIrradiance);

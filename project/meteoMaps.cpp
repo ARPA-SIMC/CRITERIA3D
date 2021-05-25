@@ -246,7 +246,8 @@ bool Crit3DHourlyMeteoMaps::computeET0PMMap(const gis::Crit3DRasterGrid& DEM, Cr
 
 bool Crit3DHourlyMeteoMaps::computeLeafWetnessMap()
 {
-    float relHumidity, precipitation, leafWetness;
+    float relHumidity, precipitation;
+    short leafWetness;
 
     for (long row = 0; row < mapHourlyLeafW->header->nrRows; row++)
         for (long col = 0; col < mapHourlyLeafW->header->nrCols; col++)
@@ -260,14 +261,8 @@ bool Crit3DHourlyMeteoMaps::computeLeafWetnessMap()
             if (! isEqual(relHumidity, mapHourlyRelHum->header->flag)
                     && ! isEqual(precipitation, mapHourlyPrec->header->flag))
             {
-                leafWetness = 0;
-                if (precipitation > 0 || relHumidity > 92)
-                {
-                    leafWetness = 1;
-                }
-                //TODO: ora precedente prec > 2mm ?
-
-                mapHourlyLeafW->value[row][col] = leafWetness;
+                if (computeLeafWetness(precipitation, relHumidity, &leafWetness))
+                    mapHourlyLeafW->value[row][col] = leafWetness;
             }
         }
 

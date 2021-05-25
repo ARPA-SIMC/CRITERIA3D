@@ -611,7 +611,7 @@ double Crit1DCase::getWaterPotential(double depth)
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
         if (depth >= upperDepth && depth <= lowerDepth)
         {
-            return soilLayers[i].getWaterPotential();
+            return -soilLayers[i].getWaterPotential();
         }
     }
 

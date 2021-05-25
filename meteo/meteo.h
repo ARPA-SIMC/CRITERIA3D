@@ -22,6 +22,7 @@
 
     #define DEFAULT_MIN_PERCENTAGE 80
     #define DEFAULT_RAINFALL_THRESHOLD 0.2f
+    #define DEFAULT_LEAFWETNESS_RH_THRESHOLD 87
     #define DEFAULT_THOM_THRESHOLD 24
     #define DEFAULT_TRANSMISSIVITY_SAMANI 0.17f
     #define DEFAULT_HOURLY_INTERVALS 1
@@ -226,7 +227,9 @@
     float relHumFromTdew(float Td, float T);
     float tDewFromRelHum(float RH, float T);
 
-    double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalSWRadiation,
+    bool computeLeafWetness(double prec, double relHumidity, short* leafW);
+
+    double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalIrradiance,
                     double airTemp, double airHum, double windSpeed10);
 
     double ET0_Penman_hourly_net_rad(double heigth, double netRadiation, double airTemp, double airHum, double windSpeed10);
