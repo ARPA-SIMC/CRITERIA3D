@@ -279,9 +279,26 @@ double emissivityFromVaporPressure(double myVP)
     return 0.34 - 0.14 * sqrt(myVP);
 }
 
+/*!
+ * \brief hourly leaf wetness (0/1)
+ * \param prec [mm] total precipitation
+ * \param relHumidity [%] air relative humidity
+ * \return leafW
+ */
+bool computeLeafWetness(double prec, double relHumidity, short* leafW)
+{
+    *leafW = 0;
+
+    if (isEqual(relHumidity, NODATA) || isEqual(prec, NODATA)) return false;
+
+    if (prec > 0 || relHumidity > DEFAULT_LEAFWETNESS_RH_THRESHOLD)
+        *leafW = 1;
+
+    return true;
+}
 
 /*!
- * \brief 2016 GA. comments: G is ignored for now (if heat is active, should be added)
+ * \brief 2016 GA. comments: G is currently ignored (if heat flux is active, should be added)
  * \param myDOY [] day of year
  * \param myElevation
  * \param myLatitude [°] latitude in decimal degrees
