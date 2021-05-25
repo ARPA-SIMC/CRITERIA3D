@@ -757,6 +757,15 @@ int Crit1DProject::computeAllUnits()
         if (!setPercentileOutputCsv())
             return ERROR_DBOUTPUT;
     }
+    else
+    {
+        if (dbOutputName == "")
+        {
+            logger.writeError("Missing output db");
+            return ERROR_DBOUTPUT;
+        }
+
+    }
 
     // create db state
     if (isSaveState)
@@ -926,7 +935,7 @@ bool Crit1DProject::computeMonthlyForecast(unsigned int index, double irriRatio)
         // No irrigation: nothing to do
         outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
         outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
-        outputCsvFile << ",0,0,0,0,0\n";
+        outputCsvFile << ",0,0,0,0,0,0,0,0,0,0\n";
         return true;
     }
 
@@ -992,7 +1001,14 @@ bool Crit1DProject::setPercentileOutputCsv()
             logger.writeInfo("Output file: " + outputCsvFileName + "\n");
         }
 
-        outputCsvFile << "ID_CASE,CROP,SOIL,METEO,p5,p25,p50,p75,p95\n";
+        if (isSeasonalForecast)
+        {
+            outputCsvFile << "ID_CASE,CROP,SOIL,METEO,p5,p25,p50,p75,p95\n";
+        }
+        if (isMonthlyForecast)
+        {
+            outputCsvFile << "ID_CASE,CROP,SOIL,METEO,irr5,irr25,irr50,irr75,irr95,prec5,prec25,prec50,prec75,prec95\n";
+        }
     }
 
     return true;
@@ -1448,6 +1464,11 @@ int Crit1DProject::openAllDatabase()
     // output DB (not used in seasonal/monthly forecast)
     if ((! isSeasonalForecast) && (! isMonthlyForecast))
     {
+        if (dbOutputName == "")
+        {
+            logger.writeError("Missing output DB");
+                return ERROR_DBOUTPUT;
+        }
         QFile::remove(dbOutputName);
         logger.writeInfo ("Output DB: " + dbOutputName);
         dbOutput = QSqlDatabase::addDatabase("QSQLITE", "output");
@@ -1456,7 +1477,6 @@ int Crit1DProject::openAllDatabase()
         QString outputDbPath = getFilePath(dbOutputName);
         if (!QDir(outputDbPath).exists())
              QDir().mkdir(outputDbPath);
-
 
         if (! dbOutput.open())
         {
