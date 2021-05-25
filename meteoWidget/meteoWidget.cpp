@@ -1598,16 +1598,23 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 
 bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state)
 {
+    qDebug() << "series.count = " << series->count();
     if (state)
     {
-        int doy = point.x(); //start from 0
+        int doy = point.x();
+        int doyRelative = point.x();
+        if (categories.size() != series->count())
+        {
+            int delta = categories.size() - series->count();
+            doyRelative = doyRelative - delta;
+        }
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
-        QPoint pointDoY = series->at(doy).toPoint();
+        QPoint pointDoY = series->at(doyRelative).toPoint();
 
-        if (doy == 0)
+        if (doyRelative == 0)
         {
-            QPoint pointNext = series->at(doy+1).toPoint();
+            QPoint pointNext = series->at(doyRelative+1).toPoint();
             int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointNext).x());
             int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
             int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
@@ -1621,6 +1628,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                 else
                 {
                     doy = doy + 1;
+                    doyRelative = doyRelative + 1;
                 }
             }
             else
@@ -1632,10 +1640,10 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             }
 
         }
-        else if (doy > 0 && doy < series->count())
+        else if (doyRelative > 0 && doyRelative < series->count())
         {
-            QPoint pointBefore = series->at(doy-1).toPoint();
-            QPoint pointNext = series->at(doy+1).toPoint();
+            QPoint pointBefore = series->at(doyRelative-1).toPoint();
+            QPoint pointNext = series->at(doyRelative+1).toPoint();
 
             int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointNext).x());
             int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
@@ -1651,6 +1659,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                 else
                 {
                     doy = doy - 1;
+                    doyRelative = doyRelative - 1;
                 }
             }
             else if (qMin(qMin(distBefore,distDoY), distNext) == distNext)
@@ -1662,6 +1671,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                 else
                 {
                     doy = doy + 1;
+                    doyRelative = doyRelative + 1;
                 }
             }
             else
@@ -1673,10 +1683,10 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             }
 
         }
-        else if (doy == series->count())
+        else if (doyRelative == series->count())
         {
-            QPoint pointBefore = series->at(doy-1).toPoint();
-            QPoint pointDoY = series->at(doy).toPoint();
+            QPoint pointBefore = series->at(doyRelative-1).toPoint();
+            QPoint pointDoY = series->at(doyRelative).toPoint();
             int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointBefore).x());
 
             int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
@@ -1691,6 +1701,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                 else
                 {
                     doy = doy - 1;
+                    doyRelative = doyRelative -1;
                 }
             }
             else
@@ -1706,14 +1717,14 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
         if (currentFreq == daily)
         {
             QDate xDate = firstDate->date().addDays(doy);
-            double value = series->at(doy).y();
+            double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")).arg(value, 0, 'f', 1));
         }
         if (currentFreq == hourly)
         {
             QDateTime xDate(firstDate->date(),QTime(0,0,0));
             xDate = xDate.addSecs(3600*doy);
-            double value = series->at(doy).y();
+            double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")).arg(value, 0, 'f', 1));
         }
         m_tooltip->setSeries(series);
