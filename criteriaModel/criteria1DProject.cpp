@@ -933,13 +933,17 @@ bool Crit1DProject::computeMonthlyForecast(unsigned int index, double irriRatio)
     if (irriRatio < EPSILON)
     {
         // No irrigation: nothing to do
-        outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
-        outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
-        outputCsvFile << ",0,0,0,0,0,0,0,0,0,0\n";
+        outputCsvFile << unitList[index].idCase.toStdString() << ",";
+        outputCsvFile << unitList[index].idCropClass.toStdString() << ",";
+        outputCsvFile << "0,0,0,0,0,0,0,0,0,0\n";
         return true;
     }
 
     // TODO
+    outputCsvFile << unitList[index].idCase.toStdString() << ",";
+    outputCsvFile << unitList[index].idCropClass.toStdString() << ",";
+    outputCsvFile << "0,0,0,0,0,0,0,0,0,0\n";
+
     return true;
 }
 
@@ -1007,7 +1011,7 @@ bool Crit1DProject::setPercentileOutputCsv()
         }
         if (isMonthlyForecast)
         {
-            outputCsvFile << "ID_CASE,CROP,SOIL,METEO,irr5,irr25,irr50,irr75,irr95,prec5,prec25,prec50,prec75,prec95\n";
+            outputCsvFile << "ID_CASE,CROP,irr5,irr25,irr50,irr75,irr95,prec5,prec25,prec50,prec75,prec95\n";
         }
     }
 
