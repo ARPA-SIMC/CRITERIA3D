@@ -115,6 +115,7 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
         obsDataH[i].rhAir = new float[nrDailyValues];
         obsDataH[i].tDew = new float[nrDailyValues];
         obsDataH[i].irradiance = new float[nrDailyValues];
+        obsDataH[i].netIrradiance = new float[nrDailyValues];
         obsDataH[i].et0 = new float[nrDailyValues];
         obsDataH[i].windVecX = new float[nrDailyValues];
         obsDataH[i].windVecY = new float[nrDailyValues];
@@ -131,6 +132,7 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
             obsDataH[i].rhAir[j] = NODATA;
             obsDataH[i].tDew[j] = NODATA;
             obsDataH[i].irradiance[j] = NODATA;
+            obsDataH[i].netIrradiance[j] = NODATA;
             obsDataH[i].et0[j] = NODATA;
             obsDataH[i].windVecX[j] = NODATA;
             obsDataH[i].windVecY[j] = NODATA;
@@ -240,6 +242,8 @@ void Crit3DMeteoPoint::emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& m
                     obsDataH[i].tDew[j] = NODATA;
                 else if (myVar == globalIrradiance)
                     obsDataH[i].irradiance[j] = NODATA;
+                else if (myVar == netIrradiance)
+                    obsDataH[i].netIrradiance[j] = NODATA;
                 else if (myVar == windScalarIntensity)
                     obsDataH[i].windScalInt[j] = NODATA;
                 else if (myVar == windVectorX)
@@ -318,6 +322,7 @@ void Crit3DMeteoPoint::emptyObsDataH(const Crit3DDate& date1, const Crit3DDate& 
             obsDataH[i].rhAir[j] = NODATA;
             obsDataH[i].tDew[j] = NODATA;
             obsDataH[i].irradiance[j] = NODATA;
+            obsDataH[i].netIrradiance[j] = NODATA;
             obsDataH[i].windScalInt[j] = NODATA;
             obsDataH[i].windVecX[j] = NODATA;
             obsDataH[i].windVecY[j] = NODATA;
@@ -501,6 +506,7 @@ void Crit3DMeteoPoint::cleanObsDataH()
             delete [] obsDataH[i].rhAir;
             delete [] obsDataH[i].tDew;
             delete [] obsDataH[i].irradiance;
+            delete [] obsDataH[i].netIrradiance;
             delete [] obsDataH[i].windScalInt;
             delete [] obsDataH[i].windVecX;
             delete [] obsDataH[i].windVecY;
@@ -855,4 +861,37 @@ std::vector <float> Crit3DMeteoPoint::getProxyValues()
         myValues.push_back(getProxyValue(i));
 
     return myValues;
+}
+
+bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
+{
+    float relHumidity, prec;
+    short leafW;
+    float temperature, windSpeed, height, netRadiation;
+
+    Crit3DDate myDate = dateTime.date;
+    int myHour = dateTime.getHour();
+
+    bool leafWres = false;
+    bool et0res = false;
+
+    relHumidity = getMeteoPointValueH(myDate, myHour, 0, airRelHumidity);
+    prec = getMeteoPointValueH(myDate, myHour, 0, precipitation);
+
+    if (computeLeafWetness(prec, relHumidity, &leafW))
+        leafWres = setMeteoPointValueH(myDate, myHour, 0, leafWetness, leafW);
+
+    temperature = getMeteoPointValueH(myDate, myHour, 0, airTemperature);
+    windSpeed = getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity);
+    netRadiation = getMeteoPointValueH(myDate, myHour, 0, netIrradiance);
+    height = this->point.z;
+    float et0;
+
+    if (! isEqual(temperature, NODATA) && ! isEqual(relHumidity, NODATA) && ! isEqual(windSpeed, NODATA))
+    {
+        et0 = float(ET0_Penman_hourly_net_rad(double(height), double(netRadiation),
+                          double(temperature), double(relHumidity), double(windSpeed)));
+        et0res = setMeteoPointValueH(myDate, myHour, 0, referenceEvapotranspiration, et0);
+    }
+    return (leafWres && et0res);
 }

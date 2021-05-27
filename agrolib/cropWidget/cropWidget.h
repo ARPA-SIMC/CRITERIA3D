@@ -141,6 +141,8 @@
             TabIrrigation* tabIrrigation;
             TabWaterContent* tabWaterContent;
 
+            bool isRedraw;
+
             void clearCrop();
             void checkCropUpdate();
             void openUnitsDB(QString dbUnitsName);

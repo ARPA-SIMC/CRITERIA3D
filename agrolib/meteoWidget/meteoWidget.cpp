@@ -25,6 +25,7 @@
 #include "meteoWidget.h"
 #include "dialogSelectVar.h"
 #include "dialogMeteoTable.h"
+#include "dialogChangeAxis.h"
 #include "utilities.h"
 #include "commonConstants.h"
 #include "formInfo.h"
@@ -341,6 +342,21 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
     m_tooltip = new Callout(chart);
     m_tooltip->hide();
 
+    // menu
+    QMenuBar* menuBar = new QMenuBar();
+    QMenu *editMenu = new QMenu("Edit");
+
+    menuBar->addMenu(editMenu);
+    mainLayout->setMenuBar(menuBar);
+
+    QAction* changeLeftAxis = new QAction(tr("&Change axis left"), this);
+    QAction* changeRightAxis = new QAction(tr("&Change axis right"), this);
+    QAction* exportGraph = new QAction(tr("&Export graph"), this);
+
+    editMenu->addAction(changeLeftAxis);
+    editMenu->addAction(changeRightAxis);
+    editMenu->addAction(exportGraph);
+
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
     connect(hourlyButton, &QPushButton::clicked, [=](){ showHourlyGraph(); });
@@ -348,6 +364,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
     connect(redrawButton, &QPushButton::clicked, [=](){ redraw(); });
     connect(shiftPreviousButton, &QPushButton::clicked, [=](){ shiftPrevious(); });
     connect(shiftFollowingButton, &QPushButton::clicked, [=](){ shiftFollowing(); });
+    connect(changeLeftAxis, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionChangeLeftAxis);
+    connect(changeRightAxis, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionChangeRightAxis);
+    connect(exportGraph, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionExportGraph);
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -536,7 +555,7 @@ void Crit3DMeteoWidget::resetValues()
 {
     int nMeteoPoints = meteoPoints.size();
     // clear prev series values
-    if (isLine)
+    if (!lineSeries.isEmpty())
     {
         for (int mp = 0; mp < lineSeries.size(); mp++)
         {
@@ -549,7 +568,7 @@ void Crit3DMeteoWidget::resetValues()
         }
         lineSeries.clear();
     }
-    if (isBar)
+    if (!barSeries.isEmpty())
     {
         for (int mp = 0; mp < barSeries.size(); mp++)
         {
@@ -758,21 +777,28 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                         }
                     }
                 }
+                QBoxSet *box = new QBoxSet();
                 if (!sortedList.isEmpty())
                 {
                     std::sort(sortedList.begin(), sortedList.end());
                     int count = sortedList.count();
-
-                    QBoxSet *box = new QBoxSet();
                     box->setValue(QBoxSet::LowerExtreme, sortedList.first());
                     box->setValue(QBoxSet::UpperExtreme, sortedList.last());
                     box->setValue(QBoxSet::Median, findMedian(sortedList, 0, count));
                     box->setValue(QBoxSet::LowerQuartile, findMedian(sortedList, 0, count / 2));
                     box->setValue(QBoxSet::UpperQuartile, findMedian(sortedList, count / 2 + (count % 2), count));
-                    box->setBrush(colorLines[i]);
-                    listBoxSet.append(box);
-                    ensembleSet.append(listBoxSet);
                 }
+                else
+                {
+                    box->setValue(QBoxSet::LowerExtreme, 0);
+                    box->setValue(QBoxSet::UpperExtreme, 0);
+                    box->setValue(QBoxSet::Median, 0);
+                    box->setValue(QBoxSet::LowerQuartile, 0);
+                    box->setValue(QBoxSet::UpperQuartile, 0);
+                }
+                box->setBrush(colorLines[i]);
+                listBoxSet.append(box);
+                ensembleSet.append(listBoxSet);
             }
             if(!ensembleSet.isEmpty())
             {
@@ -810,20 +836,28 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                         }
                     }
                 }
+                QBoxSet *box = new QBoxSet();
                 if (!sortedList.isEmpty())
                 {
                     std::sort(sortedList.begin(), sortedList.end());
                     int count = sortedList.count();
-                    QBoxSet *box = new QBoxSet();
                     box->setValue(QBoxSet::LowerExtreme, sortedList.first());
                     box->setValue(QBoxSet::UpperExtreme, sortedList.last());
                     box->setValue(QBoxSet::Median, findMedian(sortedList, 0, count));
                     box->setValue(QBoxSet::LowerQuartile, findMedian(sortedList, 0, count / 2));
                     box->setValue(QBoxSet::UpperQuartile, findMedian(sortedList, count / 2 + (count % 2), count));
-                    box->setBrush(colorBar[i]);
-                    listBoxSet.append(box);
-                    ensembleSet.append(listBoxSet);
                 }
+                else
+                {
+                    box->setValue(QBoxSet::LowerExtreme, 0);
+                    box->setValue(QBoxSet::UpperExtreme, 0);
+                    box->setValue(QBoxSet::Median, 0);
+                    box->setValue(QBoxSet::LowerQuartile, 0);
+                    box->setValue(QBoxSet::UpperQuartile, 0);
+                }
+                box->setBrush(colorBar[i]);
+                listBoxSet.append(box);
+                ensembleSet.append(listBoxSet);
             }
             if(!ensembleSet.isEmpty())
             {
@@ -1564,16 +1598,26 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 
 bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state)
 {
+
     if (state)
     {
-        int doy = point.x(); //start from 0
+        int doy = point.x();
+        int doyRelative = point.x();
+        int posCategories = categories.indexOf(QString::number(doy));
+
+        if (categories.size() != series->count() && series->at(posCategories).x() != doy)
+        {
+            // missing first data into series
+            int delta = categories.size() - series->count();
+            doyRelative = doyRelative - delta;
+        }
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
-        QPoint pointDoY = series->at(doy).toPoint();
+        QPoint pointDoY = series->at(doyRelative).toPoint();
 
-        if (doy == 0)
+        if (doyRelative == 0)
         {
-            QPoint pointNext = series->at(doy+1).toPoint();
+            QPoint pointNext = series->at(doyRelative+1).toPoint();
             int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointNext).x());
             int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
             int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
@@ -1587,6 +1631,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                 else
                 {
                     doy = doy + 1;
+                    doyRelative = doyRelative + 1;
                 }
             }
             else
@@ -1598,10 +1643,10 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             }
 
         }
-        else if (doy > 0 && doy < series->count())
+        else if (doyRelative > 0 && doyRelative < series->count())
         {
-            QPoint pointBefore = series->at(doy-1).toPoint();
-            QPoint pointNext = series->at(doy+1).toPoint();
+            QPoint pointBefore = series->at(doyRelative-1).toPoint();
+            QPoint pointNext = series->at(doyRelative+1).toPoint();
 
             int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointNext).x());
             int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
@@ -1617,6 +1662,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                 else
                 {
                     doy = doy - 1;
+                    doyRelative = doyRelative - 1;
                 }
             }
             else if (qMin(qMin(distBefore,distDoY), distNext) == distNext)
@@ -1628,6 +1674,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                 else
                 {
                     doy = doy + 1;
+                    doyRelative = doyRelative + 1;
                 }
             }
             else
@@ -1639,10 +1686,10 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             }
 
         }
-        else if (doy == series->count())
+        else if (doyRelative == series->count())
         {
-            QPoint pointBefore = series->at(doy-1).toPoint();
-            QPoint pointDoY = series->at(doy).toPoint();
+            QPoint pointBefore = series->at(doyRelative-1).toPoint();
+            QPoint pointDoY = series->at(doyRelative).toPoint();
             int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointBefore).x());
 
             int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
@@ -1657,6 +1704,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                 else
                 {
                     doy = doy - 1;
+                    doyRelative = doyRelative -1;
                 }
             }
             else
@@ -1672,14 +1720,14 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
         if (currentFreq == daily)
         {
             QDate xDate = firstDate->date().addDays(doy);
-            double value = series->at(doy).y();
+            double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")).arg(value, 0, 'f', 1));
         }
         if (currentFreq == hourly)
         {
             QDateTime xDate(firstDate->date(),QTime(0,0,0));
             xDate = xDate.addSecs(3600*doy);
-            double value = series->at(doy).y();
+            double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")).arg(value, 0, 'f', 1));
         }
         m_tooltip->setSeries(series);
@@ -1878,5 +1926,46 @@ void Crit3DMeteoWidget::setMeteoWidgetID(int value)
     meteoWidgetID = value;
 }
 
+void Crit3DMeteoWidget::on_actionChangeLeftAxis()
+{
+    DialogChangeAxis changeAxisDialog(true);
+    if (changeAxisDialog.result() == QDialog::Accepted)
+    {
+        axisY->setMax(changeAxisDialog.getMaxVal());
+        axisY->setMin(changeAxisDialog.getMinVal());
+    }
+}
+
+void Crit3DMeteoWidget::on_actionChangeRightAxis()
+{
+    DialogChangeAxis changeAxisDialog(false);
+    if (changeAxisDialog.result() == QDialog::Accepted)
+    {
+        axisYdx->setMax(changeAxisDialog.getMaxVal());
+        axisYdx->setMin(changeAxisDialog.getMinVal());
+    }
+}
+
+void Crit3DMeteoWidget::on_actionExportGraph()
+{
+
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save current graph"), "", tr("png files (*.png)"));
+
+    if (fileName != "")
+    {
+        const auto dpr = chartView->devicePixelRatioF();
+        QPixmap buffer(chartView->width() * dpr, chartView->height() * dpr);
+        buffer.setDevicePixelRatio(dpr);
+        buffer.fill(Qt::transparent);
+
+        QPainter *paint = new QPainter(&buffer);
+        paint->setPen(*(new QColor(255,34,255,255)));
+        chartView->render(paint);
+
+        QFile file(fileName);
+        file.open(QIODevice::WriteOnly);
+        buffer.save(&file, "PNG");
+    }
+}
 
 

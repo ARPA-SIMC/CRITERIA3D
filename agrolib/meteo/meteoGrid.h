@@ -124,6 +124,8 @@
             bool findMeteoPointFromId(unsigned *row, unsigned *col, const std::string &code);
             bool getMeteoPointActiveId(int row, int col, std::string *id);
             bool getLatFromId(std::string id, double* lat);
+            bool getLatLonFromId(std::string id, double* lat, double* lon);
+            bool getXYZFromId(std::string id, double* x, double* y, double* z);
             bool getIdFromLatLon(double lat, double lon, std::string* id);
             bool findFirstActiveMeteoPoint(std::string* id, int* row, int* col);
             bool isActiveMeteoPointFromId(const std::string &id);
@@ -141,6 +143,7 @@
             void saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::vector<std::vector<int> > &meteoGridRow, std::vector<std::vector<int> > &meteoGridCol);
 
             void computeWindVectorHourly(const Crit3DDate myDate, const int myHour);
+            void computeHourlyDerivedVariables(Crit3DTime dateTime);
 
     private:
 

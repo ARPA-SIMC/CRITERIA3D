@@ -434,6 +434,25 @@ bool Crit3DMeteoGrid::findMeteoPointFromId(unsigned* row, unsigned* col, const s
     return false;
 }
 
+bool Crit3DMeteoGrid::getLatLonFromId(std::string id, double* lat, double* lon)
+{
+    unsigned i,j;
+
+    for (i = 0; i < unsigned(_gridStructure.header().nrRows); i++)
+    {
+        for (j = 0; j < unsigned(_gridStructure.header().nrCols); j++)
+        {
+            if (_meteoPoints[i][j]->id == id)
+            {
+                *lat = _meteoPoints[i][j]->latitude;
+                *lon = _meteoPoints[i][j]->longitude;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool Crit3DMeteoGrid::getLatFromId(std::string id, double* lat)
 {
     unsigned i,j;
@@ -445,6 +464,26 @@ bool Crit3DMeteoGrid::getLatFromId(std::string id, double* lat)
             if (_meteoPoints[i][j]->id == id)
             {
                 *lat = _meteoPoints[i][j]->latitude;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Crit3DMeteoGrid::getXYZFromId(std::string id, double* x, double* y, double* z)
+{
+    unsigned i,j;
+
+    for (i = 0; i < unsigned(_gridStructure.header().nrRows); i++)
+    {
+        for (j = 0; j < unsigned(_gridStructure.header().nrCols); j++)
+        {
+            if (_meteoPoints[i][j]->id == id)
+            {
+                *x = _meteoPoints[i][j]->point.utm.x;
+                *y = _meteoPoints[i][j]->point.utm.y;
+                *z = _meteoPoints[i][j]->point.z;
                 return true;
             }
         }
@@ -932,6 +971,22 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
         }
     }
 }
+
+void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
+{
+
+    for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
+    {
+        for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
+        {
+            if (_meteoPoints[row][col]->active)
+            {
+                _meteoPoints[row][col]->computeDerivedVariables(dateTime);
+            }
+        }
+    }
+}
+
 
 
 

@@ -508,7 +508,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
 
     double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
     double cropWP;                                  // [mm] wilting point specific for crop
-    double surplusThreshold;                        // [mm] water surplus stress threshold
+    double waterSurplusThreshold;                        // [mm] water surplus stress threshold
     double waterScarcityThreshold;                  // [mm] water scarcity stress threshold
     double WSS;                                     // [] water surplus stress
 
@@ -535,7 +535,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
     for (unsigned int i = unsigned(roots.firstRootLayer); i <= unsigned(roots.lastRootLayer); i++)
     {
         // [mm]
-        surplusThreshold = soilLayers[i].SAT - (WSS * (soilLayers[i].SAT - soilLayers[i].FC));
+        waterSurplusThreshold = soilLayers[i].SAT - (WSS * (soilLayers[i].SAT - soilLayers[i].FC));
 
         thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), soilLayers[i].horizon);
         // [mm]
@@ -544,11 +544,12 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
         // [mm]
         waterScarcityThreshold = soilLayers[i].FC - fRAW * (soilLayers[i].FC - cropWP);
 
-        if (soilLayers[i].waterContent > surplusThreshold)
+        if (soilLayers[i].waterContent > waterSurplusThreshold)
         {
             // WATER SURPLUS
             layerTranspiration[i] = maxTranspiration * roots.rootDensity[i] *
-                                    ((soilLayers[i].SAT - soilLayers[i].waterContent) / (soilLayers[i].SAT - surplusThreshold));
+                                    ((soilLayers[i].SAT - soilLayers[i].waterContent)
+                                     / (soilLayers[i].SAT - waterSurplusThreshold));
 
             TRe += layerTranspiration[i];
             TRs += maxTranspiration * roots.rootDensity[i];
@@ -613,7 +614,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
         }
     }
 
-    waterStress = 1 - TRs / maxTranspiration;
+    waterStress = 1 - (TRs / maxTranspiration);
 
     double totalTranspiration = 0;
     for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)

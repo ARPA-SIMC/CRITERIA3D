@@ -37,9 +37,11 @@
         QString projectName;
         QString configFileName;
 
-        // seasonal forecast
+        // save/restart
         bool isSaveState;
         bool isRestart;
+
+        // seasonal forecast
         bool isSeasonalForecast;
         int firstSeasonMonth;
         std::vector<float> seasonalForecasts;
@@ -47,7 +49,10 @@
 
         // short term forecast
         bool isShortTermForecast;
-        int daysOfForecast;
+        unsigned int daysOfForecast;
+
+        // monthly forecast
+        bool isMonthlyForecast;
 
         QString dbCropName;
         QString dbSoilName;
@@ -65,7 +70,6 @@
         bool addDateTimeLogFile;
 
         QString outputCsvFileName;
-        QString outputCsvPath;
         std::ofstream outputCsvFile;
 
         // specific output
@@ -103,10 +107,11 @@
         bool setMeteoSqlite(QString idMeteo, QString idForecast);
         bool setMeteoXmlGrid(QString idMeteo, QString idForecast);
 
-        bool setSeasonalForecastOutput();
+        bool setPercentileOutputCsv();
         void updateSeasonalForecastOutput(Crit3DDate myDate, int &index);
         void initializeSeasonalForecast(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
         bool computeSeasonalForecast(unsigned int index, double irriRatio);
+        bool computeMonthlyForecast(unsigned int index, double irriRatio);
 
         bool computeUnit(unsigned int unitIndex);
 

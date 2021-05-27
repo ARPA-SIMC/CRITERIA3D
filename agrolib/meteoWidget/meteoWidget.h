@@ -42,6 +42,9 @@
             void setIsEnsemble(bool value);
             bool getIsEnsemble();
             void setNrMembers(int value);
+            void on_actionChangeLeftAxis();
+            void on_actionChangeRightAxis();
+            void on_actionExportGraph();
 
     private:
             int meteoWidgetID;

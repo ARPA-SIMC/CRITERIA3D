@@ -45,6 +45,12 @@
 
     namespace radiation
     {
+
+        float readAlbedo(Crit3DRadiationSettings* mySettings, const gis::Crit3DPoint& myPoint);
+        float readLinke(Crit3DRadiationSettings* mySettings, const gis::Crit3DPoint& myPoint);
+        bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemperature, float myPressure, Crit3DTime myTime,
+                                       float myLinke,float myAlbedo, float myClearSkyTransmissivity, float myTransmissivity,
+                                       TsunPosition* mySunPosition, TradPoint* myPoint, const gis::Crit3DRasterGrid& myDEM);
         bool computeSunPosition(float lon, float lat, int myTimezone,
                                 int myYear,int myMonth, int myDay,
                                 int myHour, int myMinute, int mySecond,

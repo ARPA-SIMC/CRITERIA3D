@@ -48,13 +48,15 @@
 
 Crit3DCropWidget::Crit3DCropWidget()
 {
-    this->setWindowTitle(QStringLiteral("CRITERIA 1D - Crop Editor"));
-    this->resize(1240, 700);
+    setWindowTitle(QStringLiteral("CRITERIA 1D - Crop Editor"));
+    resize(1400, 700);
+
+    isRedraw = true;
 
     // font
     QFont myFont = this->font();
     myFont.setPointSize(9);
-    this->setFont(myFont);
+    setFont(myFont);
 
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
@@ -150,14 +152,15 @@ Crit3DCropWidget::Crit3DCropWidget()
     waterStressParametersGroup = new QGroupBox(tr(""));
     waterContentGroup = new QGroupBox(tr(""));
 
-    infoCaseGroup->setFixedWidth(this->width()/5);
-    infoCropGroup->setFixedWidth(this->width()/5);
-    infoMeteoGroup->setFixedWidth(this->width()/5);
-    laiParametersGroup->setFixedWidth(this->width()/5);
-    rootParametersGroup->setFixedWidth(this->width()/5);
-    irrigationParametersGroup->setFixedWidth(this->width()/5);
-    waterStressParametersGroup->setFixedWidth(this->width()/5);
-    waterContentGroup->setFixedWidth(this->width()/5);
+    float widthRatio = 0.25;
+    infoCaseGroup->setFixedWidth(this->width() * widthRatio);
+    infoCropGroup->setFixedWidth(this->width() * widthRatio);
+    infoMeteoGroup->setFixedWidth(this->width() * widthRatio);
+    laiParametersGroup->setFixedWidth(this->width() * widthRatio);
+    rootParametersGroup->setFixedWidth(this->width() * widthRatio);
+    irrigationParametersGroup->setFixedWidth(this->width() * widthRatio);
+    waterStressParametersGroup->setFixedWidth(this->width() * widthRatio);
+    waterContentGroup->setFixedWidth(this->width() * widthRatio);
 
     infoCaseGroup->setTitle("Case");
     infoCropGroup->setTitle("Crop");
@@ -514,6 +517,8 @@ Crit3DCropWidget::Crit3DCropWidget()
 
 void Crit3DCropWidget::on_actionOpenProject()
 {
+    isRedraw = false;
+
     checkCropUpdate();
     QString projFileName = QFileDialog::getOpenFileName(this, tr("Open Criteria-1D project"), "", tr("Settings files (*.ini)"));
 
@@ -582,6 +587,8 @@ void Crit3DCropWidget::on_actionOpenProject()
     {
         viewWeather->setEnabled(true);
     }
+
+    isRedraw = true;
 }
 
 
@@ -843,6 +850,7 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
 
 void Crit3DCropWidget::on_actionChooseCase()
 {
+    isRedraw = false;
     this->firstYearListComboBox.blockSignals(true);
     this->lastYearListComboBox.blockSignals(true);
 
@@ -860,6 +868,8 @@ void Crit3DCropWidget::on_actionChooseCase()
     if (myCase.unit.idCrop != "")
     {
         cropListComboBox.setCurrentText(myCase.unit.idCrop);
+        clearCrop();
+        updateCropParam(myCase.unit.idCrop);
     }
     else
     {
@@ -881,6 +891,9 @@ void Crit3DCropWidget::on_actionChooseCase()
 
     this->firstYearListComboBox.blockSignals(false);
     this->lastYearListComboBox.blockSignals(false);
+
+    isRedraw = true;
+    on_actionUpdate();
 }
 
 
@@ -914,6 +927,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString idCrop)
     clearCrop();
     updateCropParam(idCrop);
 
+    if (isRedraw) on_actionUpdate();
 }
 
 
@@ -1017,10 +1031,6 @@ void Crit3DCropWidget::updateCropParam(QString idCrop)
     rawFractionValue->setValue(myCase.crop.fRAW);
     stressToleranceValue->setValue(myCase.crop.stressTolerance);
 
-    if (!myCase.meteoPoint.id.empty() && !firstYearListComboBox.currentText().isEmpty())
-    {
-        on_actionUpdate();
-    }
     cropFromDB = myCase.crop;
 }
 
@@ -1378,7 +1388,7 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
 
     if (tabWidget->currentIndex() != 0)
     {
-        on_actionUpdate();
+        if (isRedraw) on_actionUpdate();
     }
 }
 
@@ -1478,7 +1488,7 @@ void Crit3DCropWidget::on_actionUpdate()
         }
         else
         {
-            if (! myCase.mySoil.code.empty())
+            if ((! myCase.mySoil.code.empty()) && isRedraw)
             {
                 if (tabWidget->currentIndex() == 1)
                 {
