@@ -73,9 +73,10 @@
         std::ofstream outputCsvFile;
 
         // specific output
-        std::vector<int> waterDeficitDepth;
         std::vector<int> waterContentDepth;
         std::vector<int> waterPotentialDepth;
+        std::vector<int> waterDeficitDepth;
+        std::vector<int> awcDepth;
 
         // DATABASE
         QSqlDatabase dbCrop;

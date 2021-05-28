@@ -76,6 +76,7 @@
         double getWaterContent(double depth);
         double getWaterPotential(double depth);
         double getSoilWaterDeficit(double depth);
+        double getAvailableWaterCapacity(double depth);
 
     private:
         double minLayerThickness;       // [m]
