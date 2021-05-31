@@ -287,6 +287,14 @@ bool Project::loadParameters(QString parametersFileName)
             {
                 meteoSettings->setWindIntensityDefault(parameters->value("wind_intensity_default").toInt());
             }
+            if (parameters->contains("compute_tavg") && !parameters->value("compute_tavg").toString().isEmpty())
+            {
+                meteoSettings->setAutomaticTavg(parameters->value("compute_tavg").toBool());
+            }
+            if (parameters->contains("compute_et0hs") && !parameters->value("compute_et0hs").toString().isEmpty())
+            {
+                meteoSettings->setAutomaticET0HS(parameters->value("compute_et0hs").toBool());
+            }
 
             parameters->endGroup();
         }
@@ -1647,7 +1655,7 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
     return true;
 }
 
-void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime)
+void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings* meteoSettings)
 {
     if (! hourlyMeteoMaps->mapHourlyTair->isLoaded) return;
 
@@ -1656,8 +1664,8 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime)
 
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        airRelHum = meteoPoints[i].getMeteoPointValue(myTime, airRelHumidity);
-        airT = meteoPoints[i].getMeteoPointValue(myTime, airTemperature);
+        airRelHum = meteoPoints[i].getMeteoPointValue(myTime, airRelHumidity, meteoSettings);
+        airT = meteoPoints[i].getMeteoPointValue(myTime, airTemperature, meteoSettings);
 
         if (! isEqual(airRelHum, NODATA) && isEqual(airT, NODATA))
         {
@@ -2060,6 +2068,8 @@ void Project::saveGenericParameters()
         parameters->setValue("thom_threshold", QString::number(meteoSettings->getThomThreshold()));
         parameters->setValue("wind_intensity_default", QString::number(meteoSettings->getWindIntensityDefault()));
         parameters->setValue("hourly_intervals", QString::number(meteoSettings->getHourlyIntervals()));
+        parameters->setValue("compute_tavg", meteoSettings->getAutomaticTavg());
+        parameters->setValue("compute_et0hs", meteoSettings->getAutomaticET0HS());
     parameters->endGroup();
 
     parameters->beginGroup("quality");
@@ -2320,7 +2330,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     else if (!isAppend)
     {
         bool isGrid = false;
-        Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isGrid, projectPath);
+        Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
         if (!meteoWidgetPointList.isEmpty())
         {
             meteoWidgetId = meteoWidgetPointList[meteoWidgetPointList.size()-1]->getMeteoWidgetID()+1;
@@ -2395,7 +2405,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     else if (!isAppend)
     {
         bool isGrid = true;
-        Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath);
+        Crit3DMeteoWidget* meteoWidgetGrid = new Crit3DMeteoWidget(isGrid, projectPath, meteoSettings);
         if (!meteoWidgetGridList.isEmpty())
         {
              meteoWidgetId = meteoWidgetGridList[meteoWidgetGridList.size()-1]->getMeteoWidgetID()+1;

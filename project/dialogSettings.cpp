@@ -156,6 +156,18 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
     transSamaniCoefficientEdit.setValidator(doubleValSamani);
     transSamaniCoefficientEdit.setText(QString::number(meteoSettings->getTransSamaniCoefficient()));
 
+    QHBoxLayout *TmedLayout = new QHBoxLayout;
+    QLabel *automaticTmed = new QLabel(tr("compute daily tmed from tmin and tmax when missing:"));
+    TmedLayout->addWidget(automaticTmed);
+    automaticTavgEdit.setChecked(meteoSettings->getAutomaticTavg());
+    TmedLayout->addWidget(&automaticTavgEdit);
+
+    QHBoxLayout *ETPLayout = new QHBoxLayout;
+    QLabel *automaticETP = new QLabel(tr("compute Hargreaves-Samani ET0 when missing:"));
+    ETPLayout->addWidget(automaticETP);
+    automaticET0HSEdit.setChecked(meteoSettings->getAutomaticET0HS());
+    ETPLayout->addWidget(&automaticET0HSEdit);
+
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(minimumPercentage);
     mainLayout->addWidget(&minimumPercentageEdit);
@@ -168,6 +180,9 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
 
     mainLayout->addWidget(transSamaniCoefficient);
     mainLayout->addWidget(&transSamaniCoefficientEdit);
+
+    mainLayout->addLayout(TmedLayout);
+    mainLayout->addLayout(ETPLayout);
 
     mainLayout->addStretch(1);
     setLayout(mainLayout);
@@ -242,8 +257,6 @@ bool DialogSettings::acceptValues()
         return false;
     }
 
-    ////////////////
-
     if (qualityTab->referenceClimateHeightEdit.text().isEmpty())
     {
         QMessageBox::information(nullptr, "Missing Parameter", "insert reference height for quality control");
@@ -267,8 +280,6 @@ bool DialogSettings::acceptValues()
         QMessageBox::information(nullptr, "Missing Parameter", "instrumental maximum allowed relative humidity");
         return false;
     }
-
-    ////////////////////
 
     if (metTab->minimumPercentageEdit.text().isEmpty())
     {
@@ -312,6 +323,8 @@ bool DialogSettings::acceptValues()
     project_->meteoSettings->setRainfallThreshold(metTab->rainfallThresholdEdit.text().toFloat());
     project_->meteoSettings->setThomThreshold(metTab->thomThresholdEdit.text().toFloat());
     project_->meteoSettings->setTransSamaniCoefficient(metTab->transSamaniCoefficientEdit.text().toFloat());
+    project_->meteoSettings->setAutomaticTavg(metTab->automaticTavgEdit.isChecked());
+    project_->meteoSettings->setAutomaticET0HS(metTab->automaticET0HSEdit.isChecked());
 
     project_->saveProjectSettings();
     project_->saveGenericParameters();

@@ -2,9 +2,10 @@
 #include "utilities.h"
 #include "commonConstants.h"
 
-DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QStringList currentVariables)
+DialogMeteoTable::DialogMeteoTable(Crit3DMeteoSettings *meteoSettings_, QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QStringList currentVariables)
     :meteoPoints(meteoPoints), firstDate(firstDate), lastDate(lastDate), currentFreq(currentFreq), currentVariables(currentVariables)
 {
+    meteoSettings = meteoSettings_;
 
     QString title = "Table meteo values ID: ";
     QStringList idList;
@@ -104,7 +105,7 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
                 if (currentFreq == daily)
                 {
                     meteoVariable meteoVar = MapDailyMeteoVar.at(currentVariables[varPos].toStdString());
-                    double value = meteoPoints[mpPos].getMeteoPointValueD(getCrit3DDate(myDate), meteoVar);
+                    double value = meteoPoints[mpPos].getMeteoPointValueD(getCrit3DDate(myDate), meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
                         meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));

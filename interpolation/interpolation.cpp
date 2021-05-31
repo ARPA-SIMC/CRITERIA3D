@@ -1086,7 +1086,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
         mySettings->setTopoDist_Kz(kz);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
         {
-            avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime);
+            avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
             if (bestError == NODATA || avgError < bestError)
             {
                 bestError = avgError;
@@ -1106,7 +1106,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
         mySettings->setTopoDist_Kh(kh);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
         {
-            avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime);
+            avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
             if (bestError == NODATA || avgError < bestError)
             {
                 bestError = avgError;
@@ -1152,7 +1152,7 @@ void optimalDetrending(meteoVariable myVar,
 
             if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
             {
-                avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime);
+                avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
                 if (! isEqual(avgError, NODATA) && (isEqual(minError, NODATA) || avgError < minError))
                 {
                     minError = avgError;

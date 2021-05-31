@@ -1072,7 +1072,7 @@ float dailyAverageT(float Tmin, float Tmax)
 
 }
 
-float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude)
+float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings* meteoSettings)
 {
 
     Crit3DQuality qualityCheck;
@@ -1082,7 +1082,7 @@ float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitud
     quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
     int dayOfYear = getDoyFromDate(date);
     if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-        return ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, latitude, dayOfYear, Tmax, Tmin);
+        return ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin);
     else
         return NODATA;
 
@@ -1408,7 +1408,7 @@ bool elaborateDailyAggregatedVar(meteoVariable myVar, Crit3DMeteoPoint meteoPoin
     }
     else if (aggregationFrequency == daily)
     {
-            return elaborateDailyAggregatedVarFromDaily(myVar, meteoPoint, outputValues, percValue);
+            return elaborateDailyAggregatedVarFromDaily(myVar, meteoPoint, meteoSettings, outputValues, percValue);
     }
     else
         return false;
@@ -1434,7 +1434,8 @@ frequencyType getAggregationFrequency(meteoVariable myVar)
 
 }
 
-bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, std::vector<float> &outputValues, float* percValue)
+bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, Crit3DMeteoSettings* meteoSettings,
+                                          std::vector<float> &outputValues, float* percValue)
 {
 
     float res;
@@ -1481,7 +1482,7 @@ bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint 
             }
             else
             {
-                res = dailyEtpHargreaves(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax, date, meteoPoint.latitude);
+                res = dailyEtpHargreaves(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax, date, meteoPoint.latitude, meteoSettings);
                 meteoPoint.obsDataD[index].et0_hs = res;
             }
             break;
@@ -1680,8 +1681,8 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
 {
 
     bool preElaboration = false;
-    bool automaticETP = elabSettings->getAutomaticETP();
-    bool automaticTmed = elabSettings->getAutomaticTmed();
+    bool automaticETP = meteoSettings->getAutomaticET0HS();
+    bool automaticTmed = meteoSettings->getAutomaticTavg();
 
     switch(variable)
     {

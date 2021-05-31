@@ -142,11 +142,11 @@
 
             float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar);
             bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);
-            float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar);
+            float getMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings);
             bool setMeteoPointValueD(const Crit3DDate& myDate, meteoVariable myVar, float myValue);
             bool getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH *&hourlyValues);
             Crit3DDate getMeteoPointHourlyValuesDate(int index);
-            float getMeteoPointValue(const Crit3DTime& myTime, meteoVariable myVar);
+            float getMeteoPointValue(const Crit3DTime& myTime, meteoVariable myVar, Crit3DMeteoSettings *meteoSettings);
 
             float getProxyValue(unsigned pos);
             std::vector <float> getProxyValues();
