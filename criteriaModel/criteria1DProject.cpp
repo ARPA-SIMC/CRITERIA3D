@@ -155,16 +155,27 @@ bool Crit1DProject::readSettings()
     // FORECAST
     projectSettings->beginGroup("forecast");
 
-        isSeasonalForecast = projectSettings->value("isSeasonalForecast",0).toBool();
-        isShortTermForecast = projectSettings->value("isShortTermForecast",0).toBool();
-        isMonthlyForecast = projectSettings->value("isMonthlyForecast",0).toBool();
+        isSeasonalForecast = projectSettings->value("isSeasonalForecast", 0).toBool();
+        isShortTermForecast = projectSettings->value("isShortTermForecast", 0).toBool();
+        isMonthlyForecast = projectSettings->value("isMonthlyForecast", 0).toBool();
         if (isShortTermForecast)
         {
-            daysOfForecast = projectSettings->value("daysOfForecast",0).toInt();
+            daysOfForecast = projectSettings->value("daysOfForecast", 0).toInt();
+        }
+        if (isMonthlyForecast)
+        {
+            daysOfForecast = 26;
         }
         if (isSeasonalForecast)
         {
-            firstSeasonMonth = projectSettings->value("firstMonth",0).toInt();
+            firstSeasonMonth = projectSettings->value("firstMonth", 0).toInt();
+        }
+        if ((isShortTermForecast && isMonthlyForecast)
+            || (isShortTermForecast && isSeasonalForecast)
+            || (isMonthlyForecast && isSeasonalForecast))
+        {
+            projectError = "Too many forecast types.";
+            return false;
         }
 
     projectSettings->endGroup();
@@ -313,6 +324,7 @@ void Crit1DProject::checkSimulationDates()
     }
 
     logger.writeInfo("Last simulation date: " + dateStr);
+    logger.writeInfo("Nr of forecast days: " + QString::number(daysOfForecast));
 }
 
 
@@ -333,9 +345,8 @@ bool Crit1DProject::setSoil(QString soilCode, QString &myError)
 }
 
 
-bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
+bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, int memberNr)
 {
-
     unsigned row;
     unsigned col;
     unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
@@ -405,6 +416,31 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
         nrDays += this->daysOfForecast;
     }
 
+    if (this->isMonthlyForecast)
+    {
+        if (this->forecastMeteoGrid->gridStructure().isFixedFields())
+        {
+            projectError = "DB grid fixed fields: not available";
+            return false;
+        }
+        else
+        {
+            if (!this->forecastMeteoGrid->loadGridDailyDataEnsemble(&projectError, idForecast, memberNr, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
+            {
+                if (projectError == "Missing MeteoPoint id")
+                {
+                    projectError = "Missing forecast meteo cell";
+                }
+                else
+                {
+                    projectError = "Missing forecast data";
+                }
+                return false;
+            }
+        }
+        nrDays += daysOfForecast;
+    }
+
     myCase.meteoPoint.latitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->latitude;
     myCase.meteoPoint.longitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->longitude;
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstSimulationDate));
@@ -430,7 +466,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
         prec = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
         myCase.meteoPoint.setMeteoPointValueD(myDate, dailyPrecipitation, prec);
     }
-    if (isShortTermForecast)
+    if (isShortTermForecast || isMonthlyForecast)
     {
         QDate start = lastSimulationDate.addDays(1);
         QDate end = lastSimulationDate.addDays(daysOfForecast);
@@ -649,7 +685,7 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
 }
 
 
-bool Crit1DProject::computeUnit(unsigned int unitIndex)
+bool Crit1DProject::computeUnit(unsigned int unitIndex, int memberNr)
 {
     myCase.unit = unitList[unitIndex];
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
@@ -662,7 +698,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
 
     if (isXmlGrid)
     {
-        if (! setMeteoXmlGrid(myCase.unit.idMeteo, myCase.unit.idForecast))
+        if (! setMeteoXmlGrid(myCase.unit.idMeteo, myCase.unit.idForecast, memberNr))
             return false;
     }
     else
@@ -678,7 +714,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
         return false;
     }
 
-    if (! isSeasonalForecast)
+    if ((! isSeasonalForecast) && (! isMonthlyForecast))
     {
         if (! createOutputTable(projectError))
             return false;
@@ -690,7 +726,14 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
     firstDate = myCase.meteoPoint.obsDataD[0].date;
     lastDate = myCase.meteoPoint.obsDataD[lastIndex].date;
 
-    if (isSeasonalForecast) initializeSeasonalForecast(firstDate, lastDate);
+    if (isSeasonalForecast)
+    {
+        initializeSeasonalForecast(firstDate, lastDate);
+    }
+    else if (isMonthlyForecast)
+    {
+        //initializeMonthlyForecast(firstDate, lastDate);
+    }
     int indexSeasonalForecast = NODATA;
 
     // initialize crop
@@ -735,6 +778,10 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
         {
             updateSeasonalForecastOutput(myDate, indexSeasonalForecast);
         }
+        else if (isMonthlyForecast)
+        {
+            //updateMonthlyForecastOutput(myDate);
+        }
         else
         {
             prepareOutput(myDate, isFirstDay);
@@ -748,7 +795,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
             return false;
     }
 
-    if (isSeasonalForecast)
+    if (isSeasonalForecast || isMonthlyForecast)
         return true;
     else
         return saveOutput(projectError);
@@ -841,7 +888,7 @@ int Crit1DProject::computeAllUnits()
                 }
                 else
                 {
-                    if (computeUnit(i))
+                    if (computeUnit(i, 0))
                     {
                         nrUnitsComputed++;
                     }
@@ -938,15 +985,26 @@ void Crit1DProject::updateSeasonalForecastOutput(Crit3DDate myDate, int &index)
     }
 }
 
+
 bool Crit1DProject::computeMonthlyForecast(unsigned int index, double irriRatio)
 {
-    if (irriRatio < EPSILON)
+    logger.writeInfo(unitList[index].idCase);
+
+    if (!forecastMeteoGrid->gridStructure().isEnsemble())
     {
-        // No irrigation: nothing to do
-        outputCsvFile << unitList[index].idCase.toStdString() << ",";
-        outputCsvFile << unitList[index].idCropClass.toStdString() << ",";
-        outputCsvFile << "0,0,0,0,0,0,0,0,0,0\n";
-        return true;
+        projectError = "Forecast grid is not Ensemble";
+        logger.writeError(projectError);
+        return false;
+    }
+
+    int nrMembers = forecastMeteoGrid->gridStructure().nrMembers();
+    for (int m = 1; m < nrMembers; m++)
+    {
+        if (! computeUnit(index, m))
+        {
+            logger.writeError(projectError);
+            return false;
+        }
     }
 
     // TODO
@@ -969,7 +1027,7 @@ bool Crit1DProject::computeSeasonalForecast(unsigned int index, double irriRatio
         return true;
     }
 
-    if (! computeUnit(index))
+    if (! computeUnit(index, 0))
     {
         logger.writeError(projectError);
         return false;
@@ -1450,7 +1508,7 @@ int Crit1DProject::openAllDatabase()
     }
 
     // meteo forecast
-    if (isShortTermForecast)
+    if (isShortTermForecast || isMonthlyForecast)
     {
         logger.writeInfo ("Forecast DB: " + dbForecastName);
         if (! QFile(dbForecastName).exists())
