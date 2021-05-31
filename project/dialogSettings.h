@@ -61,6 +61,8 @@
         QLineEdit rainfallThresholdEdit;
         QLineEdit thomThresholdEdit;
         QLineEdit transSamaniCoefficientEdit;
+        QCheckBox automaticTavgEdit;
+        QCheckBox automaticET0HSEdit;
 
     private:
     };
