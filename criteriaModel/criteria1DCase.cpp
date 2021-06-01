@@ -119,7 +119,7 @@ void Crit1DCase::initializeWaterContent(Crit3DDate myDate)
  */
 bool Crit1DCase::initializeNumericalFluxes(std::string &error)
 {
-    int nrLayers = soilLayers.size();
+    unsigned nrLayers = unsigned(soilLayers.size());
     int lastLayer = nrLayers-1;
     int nrlateralLinks = 0;
 
@@ -139,7 +139,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     for (unsigned int horizonIndex = 0; horizonIndex < mySoil.nrHorizons; horizonIndex++)
     {
         soil::Crit3DHorizon horizon = mySoil.horizon[horizonIndex];
-        float soilFraction = (1.0 - horizon.coarseFragments);
+        double soilFraction = (1.0 - horizon.coarseFragments);
         result = soilFluxes3D::setSoilProperties(soilIndex, horizonIndex,
                             horizon.vanGenuchten.alpha * GRAVITY,
                             horizon.vanGenuchten.n, horizon.vanGenuchten.m,
@@ -176,9 +176,9 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
 
     // set nodes
     isSurface = false;
-    for (int i = 1; i < nrLayers; i++)
+    for (unsigned int i = 1; i < nrLayers; i++)
     {
-        double volume = area * soilLayers[i].thickness;      // [m^3]
+        double volume = area * soilLayers[i].thickness;             // [m^3]
         double z = z0 - soilLayers[i].depth;                        // [m]
         if (i == lastLayer)
         {

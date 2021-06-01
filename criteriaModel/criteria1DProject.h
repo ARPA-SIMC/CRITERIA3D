@@ -108,11 +108,12 @@
 
         bool setPercentileOutputCsv();
         void updateSeasonalForecastOutput(Crit3DDate myDate, int &index);
+        void updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int forecastIndex);
         void initializeSeasonalForecast(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
-        bool computeSeasonalForecast(unsigned int index, double irriRatio);
-        bool computeMonthlyForecast(unsigned int index, double irriRatio);
+        bool computeSeasonalForecast(unsigned int index, float irriRatio);
+        bool computeMonthlyForecast(unsigned int unitIndex, float irriRatio);
 
-        bool computeUnit(unsigned int unitIndex, int memberNr);
+        bool computeUnit(unsigned int unitIndex, unsigned int forecastIndex);
 
         bool createOutputTable(QString &myError);
         bool createState(QString &myError);
