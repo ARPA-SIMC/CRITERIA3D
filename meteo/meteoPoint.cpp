@@ -801,6 +801,8 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
             return obsDataD[i].tAvg;
         else if (meteoSettings->getAutomaticTavg() && !isEqual(obsDataD[i].tMin, NODATA) && !isEqual(obsDataD[i].tMax, NODATA))
             return ((obsDataD[i].tMin / obsDataD[i].tMax) / 2);
+        else
+            return NODATA;
     }
     else if (myVar == dailyPrecipitation)
         return (obsDataD[i].prec);
@@ -818,7 +820,59 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
             return obsDataD[i].et0_hs;
         else if (meteoSettings->getAutomaticET0HS() && !isEqual(obsDataD[i].tMin, NODATA) && !isEqual(obsDataD[i].tMax, NODATA))
             return ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, getDoyFromDate(myDate), obsDataD[i].tMax, obsDataD[i].tMin);
+        else
+            return NODATA;
     }
+    else if (myVar == dailyReferenceEvapotranspirationPM)
+        return (obsDataD[i].et0_pm);
+    else if (myVar == dailyWindScalarIntensityAvg)
+        return (obsDataD[i].windScalIntAvg);
+    else if (myVar == dailyWindScalarIntensityMax)
+        return (obsDataD[i].windScalIntMax);
+    else if (myVar == dailyWindVectorIntensityAvg)
+        return (obsDataD[i].windVecIntAvg);
+    else if (myVar == dailyWindVectorIntensityMax)
+        return (obsDataD[i].windVecIntMax);
+    else if (myVar == dailyWindVectorDirectionPrevailing)
+        return (obsDataD[i].windVecDirPrev);
+    else if (myVar == dailyLeafWetness)
+        return (obsDataD[i].leafW);
+    else if (myVar == dailyWaterTableDepth)
+        return (obsDataD[i].waterTable);
+    else
+        return (NODATA);
+}
+
+
+float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar)
+{
+    //check
+    if (myVar == noMeteoVar) return NODATA;
+    if (nrObsDataDaysD == 0) return NODATA;
+
+    int index = obsDataD[0].date.daysTo(myDate);
+    if ((index < 0) || (index >= nrObsDataDaysD)) return NODATA;
+
+    unsigned i = unsigned(index);
+
+    if (myVar == dailyAirTemperatureMax)
+        return (obsDataD[i].tMax);
+    else if (myVar == dailyAirTemperatureMin)
+        return (obsDataD[i].tMin);
+    else if (myVar == dailyAirTemperatureAvg)
+        return obsDataD[i].tAvg;
+    else if (myVar == dailyPrecipitation)
+        return (obsDataD[i].prec);
+    else if (myVar == dailyAirRelHumidityMax)
+        return (obsDataD[i].rhMax);
+    else if (myVar == dailyAirRelHumidityMin)
+        return float(obsDataD[i].rhMin);
+    else if (myVar == dailyAirRelHumidityAvg)
+        return (obsDataD[i].rhAvg);
+    else if (myVar == dailyGlobalRadiation)
+        return (obsDataD[i].globRad);
+    else if (myVar == dailyReferenceEvapotranspirationHS)
+        return obsDataD[i].et0_hs;
     else if (myVar == dailyReferenceEvapotranspirationPM)
         return (obsDataD[i].et0_pm);
     else if (myVar == dailyWindScalarIntensityAvg)
