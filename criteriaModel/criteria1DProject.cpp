@@ -48,12 +48,14 @@ void Crit1DProject::initialize()
     isRestart = false;
 
     isSeasonalForecast = false;
-    firstSeasonMonth = NODATA;
-    nrSeasonalForecasts = 0;
-
-    isShortTermForecast = false;
-    daysOfForecast = NODATA;
     isMonthlyForecast = false;
+    isShortTermForecast = false;
+
+    firstSeasonMonth = NODATA;
+    daysOfForecast = NODATA;
+    nrForecasts = NODATA;
+    forecastIrr.clear();
+    forecastPrec.clear();
 
     firstSimulationDate = QDate(1800,1,1);
     lastSimulationDate = QDate(1800,1,1);
@@ -158,13 +160,14 @@ bool Crit1DProject::readSettings()
         isSeasonalForecast = projectSettings->value("isSeasonalForecast", 0).toBool();
         isShortTermForecast = projectSettings->value("isShortTermForecast", 0).toBool();
         isMonthlyForecast = projectSettings->value("isMonthlyForecast", 0).toBool();
-        if (isShortTermForecast)
+        if (isShortTermForecast || isMonthlyForecast)
         {
             daysOfForecast = projectSettings->value("daysOfForecast", 0).toInt();
-        }
-        if (isMonthlyForecast)
-        {
-            daysOfForecast = 26;
+            if (daysOfForecast == 0)
+            {
+                projectError = "Missing daysOfForecast.";
+                return false;
+            }
         }
         if (isSeasonalForecast)
         {
@@ -977,10 +980,10 @@ void Crit1DProject::updateSeasonalForecastOutput(Crit3DDate myDate, int &index)
         if (index != NODATA)
         {
             unsigned int i = unsigned(index);
-            if (int(seasonalForecasts[i]) == int(NODATA))
-                seasonalForecasts[i] = float(myCase.output.dailyIrrigation);
+            if (int(forecastIrr[i]) == int(NODATA))
+                forecastIrr[i] = float(myCase.output.dailyIrrigation);
             else
-                seasonalForecasts[i] += float(myCase.output.dailyIrrigation);
+                forecastIrr[i] += float(myCase.output.dailyIrrigation);
         }
     }
 }
@@ -1036,15 +1039,15 @@ bool Crit1DProject::computeSeasonalForecast(unsigned int index, double irriRatio
     outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
     outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
     // percentiles
-    double percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 5, true);
+    double percentile = sorting::percentile(forecastIrr, &(nrForecasts), 5, true);
     outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 25, false);
+    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 25, false);
     outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 50, false);
+    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 50, false);
     outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 75, false);
+    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 75, false);
     outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 95, false);
+    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 95, false);
     outputCsvFile << "," << percentile * irriRatio << "\n";
     outputCsvFile.flush();
 
@@ -1092,14 +1095,14 @@ void Crit1DProject::initializeSeasonalForecast(const Crit3DDate& firstDate, cons
 {
     if (isSeasonalForecast)
     {
-        seasonalForecasts.clear();
+        forecastIrr.clear();
 
-        nrSeasonalForecasts = lastDate.year - firstDate.year +1;
-        seasonalForecasts.resize(unsigned(nrSeasonalForecasts));
+        nrForecasts = lastDate.year - firstDate.year +1;
+        forecastIrr.resize(unsigned(nrForecasts));
 
-        for (unsigned int i = 0; i < unsigned(nrSeasonalForecasts); i++)
+        for (unsigned int i = 0; i < unsigned(nrForecasts); i++)
         {
-            seasonalForecasts[i] = NODATA;
+            forecastIrr[i] = NODATA;
         }
     }
 }

@@ -43,16 +43,14 @@
 
         // seasonal forecast
         bool isSeasonalForecast;
-        int firstSeasonMonth;
-        std::vector<float> seasonalForecasts;
-        int nrSeasonalForecasts;
-
-        // short term forecast
-        bool isShortTermForecast;
-        unsigned int daysOfForecast;
-
-        // monthly forecast
         bool isMonthlyForecast;
+        bool isShortTermForecast;
+
+        int firstSeasonMonth;
+        int daysOfForecast;
+        int nrForecasts;
+        std::vector<float> forecastIrr;
+        std::vector<float> forecastPrec;
 
         QString dbCropName;
         QString dbSoilName;
