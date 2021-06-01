@@ -295,11 +295,11 @@ void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const s
     }
 }
 
-void Crit3DMeteoGrid::fillCurrentDailyValue(Crit3DDate date, meteoVariable variable)
+void Crit3DMeteoGrid::fillCurrentDailyValue(Crit3DDate date, meteoVariable variable, Crit3DMeteoSettings* meteoSettings)
 {
     for (unsigned row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
         for (unsigned col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
-            _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueD(date, variable);
+            _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueD(date, variable, meteoSettings);
 }
 
 void Crit3DMeteoGrid::fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable)

@@ -44,6 +44,8 @@ void Crit3DMeteoSettings::initialize()
     transSamaniCoefficient = DEFAULT_TRANSMISSIVITY_SAMANI;
     windIntensityDefault = DEFAULT_WIND_INTENSITY;
     hourlyIntervals = DEFAULT_HOURLY_INTERVALS;
+    automaticTavg = DEFAULT_AUTOMATIC_TMED;
+    automaticET0HS = DEFAULT_AUTOMATIC_ET0HS;
 }
 
 float Crit3DMeteoSettings::getMinimumPercentage() const
@@ -106,6 +108,25 @@ void Crit3DMeteoSettings::setThomThreshold(float value)
     thomThreshold = value;
 }
 
+bool Crit3DMeteoSettings::getAutomaticTavg() const
+{
+    return automaticTavg;
+}
+
+void Crit3DMeteoSettings::setAutomaticTavg(bool value)
+{
+    automaticTavg = value;
+}
+
+bool Crit3DMeteoSettings::getAutomaticET0HS() const
+{
+    return automaticET0HS;
+}
+
+void Crit3DMeteoSettings::setAutomaticET0HS(bool value)
+{
+    automaticET0HS = value;
+}
 
 Crit3DClimateParameters::Crit3DClimateParameters()
 {

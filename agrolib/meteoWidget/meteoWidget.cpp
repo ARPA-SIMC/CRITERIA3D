@@ -47,8 +47,9 @@ qreal findMedian(QList<double> sortedList, int begin, int end)
 
 
 
-Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath)
+Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMeteoSettings* meteoSettings_)
 {
+    meteoSettings = meteoSettings_;
     this->isGrid = isGrid;
     this->isEnsemble = false;
     this->nrMembers = NODATA;
@@ -763,7 +764,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
 
                 for (int mp=0; mp<nrMembers;mp++)
                 {
-                    double value = meteoPointsEnsemble[mp].getMeteoPointValueD(myDate, meteoVar);
+                    double value = meteoPointsEnsemble[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
                         sortedList.append(value);
@@ -826,7 +827,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
                 sortedList.clear();
                 for (int mp=0; mp<nrMembers;mp++)
                 {
-                    double value = meteoPointsEnsemble[mp].getMeteoPointValueD(myDate, meteoVar);
+                    double value = meteoPointsEnsemble[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
                         sortedList.append(value);
@@ -963,7 +964,7 @@ void Crit3DMeteoWidget::drawDailyVar()
                 for (int i = 0; i < nameLines.size(); i++)
                 {
                     meteoVariable meteoVar = MapDailyMeteoVar.at(nameLines[i].toStdString());
-                    double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar);
+                    double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
                         lineSeries[mp][i]->append(day, value);
@@ -983,7 +984,7 @@ void Crit3DMeteoWidget::drawDailyVar()
                 for (int j = 0; j < nameBar.size(); j++)
                 {
                     meteoVariable meteoVar = MapDailyMeteoVar.at(nameBar[j].toStdString());
-                    double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar);
+                    double value = meteoPoints[mp].getMeteoPointValueD(myDate, meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
                         *setVector[mp][j] << value;
@@ -1587,7 +1588,7 @@ void Crit3DMeteoWidget::shiftFollowing()
 
 void Crit3DMeteoWidget::showTable()
 {
-    DialogMeteoTable meteoTable(meteoPoints, firstDate->date(), lastDate->date(), currentFreq, currentVariables);
+    DialogMeteoTable meteoTable(meteoSettings, meteoPoints, firstDate->date(), lastDate->date(), currentFreq, currentVariables);
 }
 
 void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)

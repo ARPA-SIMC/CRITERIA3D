@@ -44,7 +44,7 @@
     frequencyType getAggregationFrequency(meteoVariable myVar);
 
     bool elaborateDailyAggregatedVar(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings *meteoSettings);
-    bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, std::vector<float> &outputValues, float* percValue);
+    bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, Crit3DMeteoSettings *meteoSettings, std::vector<float> &outputValues, float* percValue);
     bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, std::vector<float> &outputValues, Crit3DMeteoSettings *meteoSettings);
     bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint *meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin, Crit3DMeteoSettings *meteoSettings);
 
@@ -78,7 +78,7 @@
 
     float dailyAverageT(float Tmin, float Tmax);
 
-    float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude);
+    float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings *meteoSettings);
 
     float dewPoint(float relHumAir, float tempAir);
 

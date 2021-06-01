@@ -126,7 +126,7 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
     return true;
 }
 
-float computeErrorCrossValidation(meteoVariable myVar, Crit3DMeteoPoint* myPoints, int nrMeteoPoints, const Crit3DTime& myTime)
+float computeErrorCrossValidation(meteoVariable myVar, Crit3DMeteoPoint* myPoints, int nrMeteoPoints, const Crit3DTime& myTime, Crit3DMeteoSettings* meteoSettings)
 {
     std::vector <float> obsValues, estValues;
     float myValue, myEstimate, myResidual;
@@ -135,7 +135,7 @@ float computeErrorCrossValidation(meteoVariable myVar, Crit3DMeteoPoint* myPoint
     {
         if (myPoints[i].active)
         {
-            myValue = myPoints[i].getMeteoPointValue(myTime, myVar);
+            myValue = myPoints[i].getMeteoPointValue(myTime, myVar, meteoSettings);
             myResidual = myPoints[i].residual;
 
             if (myValue != NODATA && myResidual != NODATA)
@@ -242,7 +242,7 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
 
     // assign data
     for (int i = 0; i < nrMeteoPoints; i++)
-        meteoPoints[i].currentValue = meteoPoints[i].getMeteoPointValue(myTime, myVar);
+        meteoPoints[i].currentValue = meteoPoints[i].getMeteoPointValue(myTime, myVar, meteoSettings);
 
     // quality control - syntactic
     myQuality->syntacticQualityControl(myVar, meteoPoints, nrMeteoPoints);
