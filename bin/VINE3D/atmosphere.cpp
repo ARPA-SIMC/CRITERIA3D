@@ -262,7 +262,7 @@ bool interpolationProjectDemMain(Vine3DProject* myProject, meteoVariable myVar, 
             }
 
             if (myProject->interpolationSettings.getUseInterpolatedTForRH())
-                myProject->passInterpolatedTemperatureToHumidityPoints(myCrit3DTime);
+                myProject->passInterpolatedTemperatureToHumidityPoints(myCrit3DTime, myProject->meteoSettings);
 
             if (vine3DInterpolationDem(myProject, airDewTemperature, myCrit3DTime, isLoadData))
             {

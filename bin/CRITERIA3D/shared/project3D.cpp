@@ -887,7 +887,7 @@ bool Project3D::interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& 
     if (myVar == airRelHumidity && interpolationSettings.getUseDewPoint())
     {
         if (interpolationSettings.getUseInterpolatedTForRH())
-            passInterpolatedTemperatureToHumidityPoints(getCrit3DTime(myTime));
+            passInterpolatedTemperatureToHumidityPoints(getCrit3DTime(myTime), meteoSettings);
 
         // TODO check on airTemperatureMap
         if (! interpolationDem(airDewTemperature, getCrit3DTime(myTime), hourlyMeteoMaps->mapHourlyTdew))
