@@ -73,9 +73,10 @@
         std::ofstream outputCsvFile;
 
         // specific output
-        std::vector<int> waterDeficitDepth;
         std::vector<int> waterContentDepth;
         std::vector<int> waterPotentialDepth;
+        std::vector<int> waterDeficitDepth;
+        std::vector<int> awcDepth;
 
         // DATABASE
         QSqlDatabase dbCrop;
@@ -105,7 +106,7 @@
         bool setSoil(QString soilCode, QString &myError);
 
         bool setMeteoSqlite(QString idMeteo, QString idForecast);
-        bool setMeteoXmlGrid(QString idMeteo, QString idForecast);
+        bool setMeteoXmlGrid(QString idMeteo, QString idForecast, int memberNr);
 
         bool setPercentileOutputCsv();
         void updateSeasonalForecastOutput(Crit3DDate myDate, int &index);
@@ -113,7 +114,7 @@
         bool computeSeasonalForecast(unsigned int index, double irriRatio);
         bool computeMonthlyForecast(unsigned int index, double irriRatio);
 
-        bool computeUnit(unsigned int unitIndex);
+        bool computeUnit(unsigned int unitIndex, int memberNr);
 
         bool createOutputTable(QString &myError);
         bool createState(QString &myError);

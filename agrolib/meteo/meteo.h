@@ -27,6 +27,8 @@
     #define DEFAULT_TRANSMISSIVITY_SAMANI 0.17f
     #define DEFAULT_HOURLY_INTERVALS 1
     #define DEFAULT_WIND_INTENSITY 2.0f
+    #define DEFAULT_AUTOMATIC_TMED true
+    #define DEFAULT_AUTOMATIC_ET0HS true
 
     #define TABLE_METEO_POINTS "point_properties"
     #define FIELD_METEO_POINT "id_point"
@@ -59,6 +61,12 @@
         float getWindIntensityDefault() const;
         void setWindIntensityDefault(float value);
 
+        bool getAutomaticTavg() const;
+        void setAutomaticTavg(bool value);
+
+        bool getAutomaticET0HS() const;
+        void setAutomaticET0HS(bool value);
+
     private:
         float minimumPercentage;
         float rainfallThreshold;
@@ -66,6 +74,8 @@
         float transSamaniCoefficient;
         int hourlyIntervals;
         float windIntensityDefault;
+        bool automaticTavg;
+        bool automaticET0HS;
     };
 
     enum lapseRateCodeType {primary, secondary, supplemental};
