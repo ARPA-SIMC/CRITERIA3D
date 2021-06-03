@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT      += core sql
+QT      += core sql xml
 QT      -= gui
 
 TEMPLATE = lib
@@ -26,9 +26,11 @@ win32:{
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../dbMeteoPoints ../dbMeteoGrid
 
-SOURCES += \
+SOURCES += importDataXML.cpp \
+    fieldXML.cpp
 
 
-HEADERS += \
+HEADERS += importDataXML.h \
+    fieldXML.h
 
 
