@@ -8,6 +8,7 @@
 #include <QString>
 #include <QList>
 #include "fieldXML.h"
+#include "variableXML.h"
 
 class ImportDataXML
 {
@@ -18,12 +19,12 @@ public:
 private:
     bool isGrid;
     QString xmlFileName;
-    bool isSinglePoint;
+    bool format_isSinglePoint;
     bool format_isFixed;
-    int headerRow;
-    float missingValue;
-    QString delimiter;
-    QString decimalSeparator;
+    int format_headerRow;
+    float format_missingValue;
+    QString format_delimiter;
+    QString format_decimalSeparator;
     QString fileName_path;
     QList<QString> fileName_pragaName;
     QList<QString> fileName_fixedText;
@@ -31,6 +32,7 @@ private:
     FieldXML time;
     FieldXML pointCode;
     FieldXML variableCode;
+    QList<VariableXML> variable;
 };
 
 #endif // IMPORTDATAXML_H

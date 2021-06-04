@@ -1,8 +1,16 @@
 #include "fieldXML.h"
+#include "commonConstants.h"
 
 FieldXML::FieldXML()
 {
-
+    type = "";
+    format = "";
+    attribute = "";
+    field = "";
+    firstChar = NODATA;
+    nrChar = NODATA;
+    alignment = "";
+    prefix = "";
 }
 
 QString FieldXML::getType() const
