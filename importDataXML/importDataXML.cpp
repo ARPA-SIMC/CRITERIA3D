@@ -2,6 +2,7 @@
 
 #include <QFile>
 
+
 ImportDataXML::ImportDataXML(bool isGrid, QString xmlFileName)
 {
     this->isGrid = isGrid;
@@ -365,10 +366,7 @@ bool ImportDataXML::parserXML(QString *myError)
                         }
                         else if (mySecondTag == "ACCEPTED" || mySecondTag == "VALUE")
                         {
-                            if (secondChild.toElement().text().toInt() == 0)
-                                variable[variable.size()-1].fieldAccepted == false;
-                            else
-                                variable[variable.size()-1].fieldAccepted == true;
+                            variable[variable.size()-1].fieldAccepted = secondChild.toElement().text().toInt();
                         }
                         secondChild = secondChild.nextSibling();
                     }
@@ -383,6 +381,7 @@ bool ImportDataXML::parserXML(QString *myError)
         ancestor = ancestor.nextSibling();
     }
     xmlDoc.clear();
+    return true;
 
 
 }
