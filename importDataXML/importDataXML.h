@@ -10,6 +10,8 @@
 #include "fieldXML.h"
 #include "variableXML.h"
 
+enum formatType{ XMLFORMATFIXED, XMLFORMATDELIMITED};
+
 class ImportDataXML
 {
 public:
@@ -19,12 +21,13 @@ public:
     bool importData(QString fileName, QString *error);
     bool importXMLDataFixed(QString *error);
     bool importXMLDataDelimited(QString *error);
+    QString parseXMLPointCode(QString text);
 
 private:
     bool isGrid;
     QString xmlFileName;
     bool format_isSinglePoint;
-    bool format_isFixed;
+    formatType format_type;
     int format_headerRow;
     float format_missingValue;
     QString format_delimiter;

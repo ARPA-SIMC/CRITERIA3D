@@ -1,6 +1,7 @@
 #include "importDataXML.h"
 #include <QTextStream>
 #include <QFile>
+#include <QFileInfo>
 
 
 ImportDataXML::ImportDataXML(bool isGrid, QString xmlFileName)
@@ -101,11 +102,12 @@ bool ImportDataXML::parserXML(QString *myError)
                 {
                     if (child.toElement().text().toUpper().simplified() == "FIXED")
                     {
-                        format_isFixed = true;
+                        format_type = XMLFORMATFIXED;
                     }
-                    else
+                    else if (child.toElement().text().toUpper().simplified() == "COMMASEPARATED" || child.toElement().text().toUpper().simplified() == "DELIMITED"
+                             || child.toElement().text().toUpper().simplified() == "CSV")
                     {
-                        format_isFixed = false;
+                        format_type = XMLFORMATDELIMITED;
                     }
                 }
                 else if (myTag == "ATTRIBUTE")
@@ -393,7 +395,7 @@ bool ImportDataXML::importData(QString fileName, QString *error)
     }
 
     dataFileName = fileName;
-    if (format_isFixed)
+    if (format_type == XMLFORMATFIXED)
     {
         return importXMLDataFixed(error);
     }
@@ -406,11 +408,23 @@ bool ImportDataXML::importData(QString fileName, QString *error)
 bool ImportDataXML::importXMLDataFixed(QString *error)
 {
     QFile myFile(dataFileName);
+    QFileInfo myFileInfo(myFile.fileName());
     if (!myFile.open(QIODevice::ReadOnly))
     {
         *error = "Open file failed:\n" + dataFileName + "\n" + myFile.errorString();
         return (false);
     }
+
+    QString myPointCode = "";
+
+    if (format_isSinglePoint)
+    {
+        if (pointCode.getType().toUpper() == "FILENAMEDEFINED")
+        {
+            myPointCode = parseXMLPointCode(myFileInfo.baseName());
+        }
+    }
+
     QTextStream in(&myFile);
     while (!in.atEnd())
     {
@@ -437,4 +451,56 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
     }
     myFile.close();
     return true;
+}
+
+QString ImportDataXML::parseXMLPointCode(QString text)
+{
+    QString myPointCode = "";
+
+    if (pointCode.getType().toUpper() == "FIELDDEFINED" || pointCode.getType().toUpper() == "FIELDEFINED")
+    {
+        if (format_type == XMLFORMATFIXED)
+        {
+            QString substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
+            for (int i =0;i<substring.size();i++)
+            {
+                if (substring[i].isDigit()) // to check if it is number!!
+                {
+                    myPointCode.append(substring[i]);
+                }
+                else if (substring[i].isLetter()) // to check if it is alphabet !!
+                {
+                    myPointCode.append("0");
+                }
+            }
+        }
+        else if (format_type == XMLFORMATDELIMITED)
+        {
+            // TO DO (anche nel vecchio vb, (use 'position')
+        }
+    }
+    else if (pointCode.getType().toUpper() == "FILENAMEDEFINED")
+    {
+        // LC quale è la differenza con il caso sopra?
+        // need to pass Filename
+        QString substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
+        for (int i =0;i<substring.size();i++)
+        {
+            if (substring[i].isDigit()) // to check if it is number!!
+            {
+                myPointCode.append(substring[i]);
+            }
+            else if (substring[i].isLetter()) // to check if it is alphabet !!
+            {
+                myPointCode.append("0");
+            }
+        }
+    }
+
+    if (myPointCode != "")
+    {
+        myPointCode = myPointCode.trimmed();
+    }
+
+    return myPointCode;
 }
