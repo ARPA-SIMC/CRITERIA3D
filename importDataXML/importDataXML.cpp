@@ -1,5 +1,5 @@
 #include "importDataXML.h"
-
+#include <QTextStream>
 #include <QFile>
 
 
@@ -382,6 +382,28 @@ bool ImportDataXML::parserXML(QString *myError)
     }
     xmlDoc.clear();
     return true;
+}
 
+bool ImportDataXML::importData(QString fileName, QString *error)
+{
+    if (fileName == "")
+    {
+        *error = "Missing data file.";
+        return false;
+    }
 
+    QFile myFile(fileName);
+    if (!myFile.open(QIODevice::ReadOnly))
+    {
+        *error = "Open file failed:\n" + fileName + "\n" + myFile.errorString();
+        return (false);
+    }
+    QTextStream in(&myFile);
+    while (!in.atEnd())
+    {
+      QString line = in.readLine();
+      // TO DO
+    }
+    myFile.close();
+    return true;
 }

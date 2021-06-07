@@ -16,6 +16,7 @@ public:
     ImportDataXML(bool isGrid, QString xmlFileName);
     bool parseXMLFile(QDomDocument* xmlDoc, QString *error);
     bool parserXML(QString *error);
+    bool importData(QString fileName, QString *error);
 private:
     bool isGrid;
     QString xmlFileName;
