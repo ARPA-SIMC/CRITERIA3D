@@ -17,6 +17,9 @@ public:
     bool parseXMLFile(QDomDocument* xmlDoc, QString *error);
     bool parserXML(QString *error);
     bool importData(QString fileName, QString *error);
+    bool importXMLDataFixed(QString *error);
+    bool importXMLDataDelimited(QString *error);
+
 private:
     bool isGrid;
     QString xmlFileName;
@@ -34,6 +37,7 @@ private:
     FieldXML pointCode;
     FieldXML variableCode;
     QList<VariableXML> variable;
+    QString dataFileName;
 };
 
 #endif // IMPORTDATAXML_H

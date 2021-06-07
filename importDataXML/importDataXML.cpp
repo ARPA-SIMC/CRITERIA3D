@@ -392,10 +392,41 @@ bool ImportDataXML::importData(QString fileName, QString *error)
         return false;
     }
 
-    QFile myFile(fileName);
+    dataFileName = fileName;
+    if (format_isFixed)
+    {
+        return importXMLDataFixed(error);
+    }
+    else
+    {
+        return importXMLDataDelimited(error);
+    }
+}
+
+bool ImportDataXML::importXMLDataFixed(QString *error)
+{
+    QFile myFile(dataFileName);
     if (!myFile.open(QIODevice::ReadOnly))
     {
-        *error = "Open file failed:\n" + fileName + "\n" + myFile.errorString();
+        *error = "Open file failed:\n" + dataFileName + "\n" + myFile.errorString();
+        return (false);
+    }
+    QTextStream in(&myFile);
+    while (!in.atEnd())
+    {
+      QString line = in.readLine();
+      // TO DO
+    }
+    myFile.close();
+    return true;
+}
+
+bool ImportDataXML::importXMLDataDelimited(QString *error)
+{
+    QFile myFile(dataFileName);
+    if (!myFile.open(QIODevice::ReadOnly))
+    {
+        *error = "Open file failed:\n" + dataFileName + "\n" + myFile.errorString();
         return (false);
     }
     QTextStream in(&myFile);
