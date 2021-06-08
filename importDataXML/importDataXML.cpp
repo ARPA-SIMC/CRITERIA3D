@@ -1,4 +1,5 @@
 #include "importDataXML.h"
+#include "commonConstants.h"
 #include <QTextStream>
 #include <QFile>
 #include <QFileInfo>
@@ -368,7 +369,7 @@ bool ImportDataXML::parserXML(QString *myError)
                         }
                         else if (mySecondTag == "ACCEPTED" || mySecondTag == "VALUE")
                         {
-                            variable[variable.size()-1].fieldAccepted = secondChild.toElement().text().toInt();
+                            variable[variable.size()-1].flagAccepted = secondChild.toElement().text();
                         }
                         secondChild = secondChild.nextSibling();
                     }
@@ -412,7 +413,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
     if (!myFile.open(QIODevice::ReadOnly))
     {
         *error = "Open file failed:\n" + dataFileName + "\n" + myFile.errorString();
-        return (false);
+        return false;
     }
 
     QString myPointCode = "";
@@ -422,14 +423,69 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
         if (pointCode.getType().toUpper() == "FILENAMEDEFINED")
         {
             myPointCode = parseXMLPointCode(myFileInfo.baseName());
+            if (myPointCode.isEmpty())
+            {
+                *error = "Point code not found for file:\n" + dataFileName + "\n";
+                return false;
+            }
         }
     }
 
     QTextStream in(&myFile);
+    int nRow = 0;
+    int myFlagAccepted;
+    int myFlag;
+
     while (!in.atEnd())
     {
       QString line = in.readLine();
-      // TO DO
+      if (nRow > format_headerRow && !line.isEmpty())
+      {
+          if (format_isSinglePoint)
+          {
+            if (myPointCode.isEmpty())
+            {
+                myPointCode = parseXMLPointCode(line);
+                if (myPointCode.isEmpty())
+                {
+                    *error = "Point code not found for file:\n" + dataFileName + "\n";
+                    return false;
+                }
+            }
+            if (time.getType().toUpper() == "DAILY")
+            {
+                QDate myDate = parseXMLDate(line);
+                if (!myDate.isValid() || myDate.year() == 1800)
+                {
+                    *error = "Date not found or not valid for file:\n" + dataFileName + "\n";
+                    return false;
+                }
+                for (int i = 0; i<variable.size(); i++)
+                {
+                    if (variable[i].nReplication > 1)
+                    {
+                        // TO DO (anche in vb)
+                    }
+                    else
+                    {
+                        // FLAG
+                        if (!variable[i].flagAccepted.isEmpty())
+                        {
+                            // LC gestire il format, perchè flagAccepted non è direttamente un int dato che poi viene convertito come tale?
+                            // TO DO
+                        }
+                        else
+                        {
+                            myFlagAccepted = 0;
+                            myFlag = 0;
+                        }
+                        // TO DO
+                    }
+                }
+            }
+          }
+      }
+      nRow = nRow + 1;
     }
     myFile.close();
     return true;
@@ -462,6 +518,7 @@ QString ImportDataXML::parseXMLPointCode(QString text)
         if (format_type == XMLFORMATFIXED)
         {
             QString substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
+            // LC gestire il format
             for (int i =0;i<substring.size();i++)
             {
                 if (substring[i].isDigit()) // to check if it is number!!
@@ -487,4 +544,14 @@ QString ImportDataXML::parseXMLPointCode(QString text)
     }
 
     return myPointCode;
+}
+
+QDate ImportDataXML::parseXMLDate(QString text)
+{
+    QDate myDate(1800,1,1);
+
+    QString myDateStr = text.mid(time.getFirstChar()-1,time.getNrChar());
+    myDate = QDate::fromString(myDateStr,time.getFormat());
+
+    return myDate;
 }
