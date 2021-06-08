@@ -5,6 +5,7 @@
 #include <QFileInfo>
 
 
+
 ImportDataXML::ImportDataXML(bool isGrid, QString xmlFileName)
 {
     this->isGrid = isGrid;
@@ -554,4 +555,29 @@ QDate ImportDataXML::parseXMLDate(QString text)
     myDate = QDate::fromString(myDateStr,time.getFormat());
 
     return myDate;
+}
+
+QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, FieldXML myField)
+{
+    QVariant myValue = NODATA;
+    QString mySubstring;
+    if (myField.getNrChar() == 0 || myField.getNrChar() == NODATA)
+    {
+        mySubstring = text;
+    }
+    else
+    {
+        mySubstring = text.mid(myField.getFirstChar()-1 + (nReplication*myField.getNrChar()),myField.getNrChar());
+    }
+    if (!mySubstring.isEmpty())
+    {
+        bool ok;
+        // LC vedere come inserire il format nella conversione
+        myValue = mySubstring.toFloat(&ok);
+        if (ok == false)
+        {
+            myValue = mySubstring;
+        }
+    }
+    return myValue;
 }

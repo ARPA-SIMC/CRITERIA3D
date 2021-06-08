@@ -8,6 +8,7 @@
 #include <QString>
 #include <QList>
 #include <QDate>
+#include <QVariant>
 #include "fieldXML.h"
 #include "variableXML.h"
 
@@ -24,6 +25,7 @@ public:
     bool importXMLDataDelimited(QString *error);
     QString parseXMLPointCode(QString text);
     QDate parseXMLDate(QString text);
+    QVariant parseXMLFixedValue(QString text, int nReplication, FieldXML myField);
 
 private:
     bool isGrid;
