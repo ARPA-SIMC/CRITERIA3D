@@ -16,8 +16,8 @@ public:
     QString getAttribute() const;
     void setAttribute(const QString &value);
 
-    QString getField() const;
-    void setField(const QString &value);
+    int getPosition() const;
+    void setPosition(int value);
 
     int getFirstChar() const;
     void setFirstChar(int value);
@@ -35,7 +35,7 @@ private:
     QString type;
     QString format;
     QString attribute;
-    QString field;
+    int position;
     int firstChar;
     int nrChar;
     QString alignment;

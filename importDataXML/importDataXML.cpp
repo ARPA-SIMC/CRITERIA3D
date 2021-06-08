@@ -167,7 +167,7 @@ bool ImportDataXML::parserXML(QString *myError)
                 }
                 else if (myTag == "FIELD" || myTag == "POSITION")
                 {
-                    pointCode.setField(child.toElement().text());
+                    pointCode.setPosition(child.toElement().text().toInt());
                 }
                 else if (myTag == "FIRST_CHAR" || myTag == "FIRSTCHAR")
                 {
@@ -208,7 +208,7 @@ bool ImportDataXML::parserXML(QString *myError)
                 }
                 else if (myTag == "FIELD" || myTag == "POSITION")
                 {
-                    time.setField(child.toElement().text());
+                    time.setPosition(child.toElement().text().toInt());
                 }
                 else if (myTag == "FIRST_CHAR" || myTag == "FIRSTCHAR")
                 {
@@ -249,7 +249,7 @@ bool ImportDataXML::parserXML(QString *myError)
                 }
                 else if (myTag == "FIELD" || myTag == "POSITION")
                 {
-                    variableCode.setField(child.toElement().text());
+                    variableCode.setPosition(child.toElement().text().toInt());
                 }
                 else if (myTag == "FIRST_CHAR" || myTag == "FIRSTCHAR")
                 {
@@ -298,7 +298,7 @@ bool ImportDataXML::parserXML(QString *myError)
                         }
                         else if (mySecondTag == "FIELD" || mySecondTag == "POSITION")
                         {
-                            variable[variable.size()-1].varField.setField(secondChild.toElement().text());
+                            variable[variable.size()-1].varField.setPosition(secondChild.toElement().text().toInt());
                         }
                         else if (mySecondTag == "FIRST_CHAR" || mySecondTag == "FIRSTCHAR")
                         {
@@ -345,7 +345,7 @@ bool ImportDataXML::parserXML(QString *myError)
                                 }
                                 else if (myThirdTag == "FIELD" || myThirdTag == "POSITION")
                                 {
-                                    variable[variable.size()-1].flagField.setField(thirdChild.toElement().text());
+                                    variable[variable.size()-1].flagField.setPosition(thirdChild.toElement().text().toInt());
                                 }
                                 else if (myThirdTag == "FIRST_CHAR" || myThirdTag == "FIRSTCHAR")
                                 {
@@ -457,7 +457,7 @@ QString ImportDataXML::parseXMLPointCode(QString text)
 {
     QString myPointCode = "";
 
-    if (pointCode.getType().toUpper() == "FIELDDEFINED" || pointCode.getType().toUpper() == "FIELDEFINED")
+    if (pointCode.getType().toUpper() == "FIELDDEFINED" || pointCode.getType().toUpper() == "FIELDEFINED" || pointCode.getType().toUpper() == "FILENAMEDEFINED")
     {
         if (format_type == XMLFORMATFIXED)
         {
@@ -468,7 +468,7 @@ QString ImportDataXML::parseXMLPointCode(QString text)
                 {
                     myPointCode.append(substring[i]);
                 }
-                else if (substring[i].isLetter()) // to check if it is alphabet !!
+                else
                 {
                     myPointCode.append("0");
                 }
@@ -477,23 +477,6 @@ QString ImportDataXML::parseXMLPointCode(QString text)
         else if (format_type == XMLFORMATDELIMITED)
         {
             // TO DO (anche nel vecchio vb, (use 'position')
-        }
-    }
-    else if (pointCode.getType().toUpper() == "FILENAMEDEFINED")
-    {
-        // LC quale è la differenza con il caso sopra?
-        // need to pass Filename
-        QString substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
-        for (int i =0;i<substring.size();i++)
-        {
-            if (substring[i].isDigit()) // to check if it is number!!
-            {
-                myPointCode.append(substring[i]);
-            }
-            else if (substring[i].isLetter()) // to check if it is alphabet !!
-            {
-                myPointCode.append("0");
-            }
         }
     }
 

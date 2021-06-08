@@ -6,7 +6,7 @@ FieldXML::FieldXML()
     type = "";
     format = "";
     attribute = "";
-    field = "";
+    position = NODATA;
     firstChar = NODATA;
     nrChar = NODATA;
     alignment = "";
@@ -41,16 +41,6 @@ QString FieldXML::getAttribute() const
 void FieldXML::setAttribute(const QString &value)
 {
     attribute = value;
-}
-
-QString FieldXML::getField() const
-{
-    return field;
-}
-
-void FieldXML::setField(const QString &value)
-{
-    field = value;
 }
 
 int FieldXML::getFirstChar() const
@@ -91,4 +81,14 @@ QString FieldXML::getPrefix() const
 void FieldXML::setPrefix(const QString &value)
 {
     prefix = value;
+}
+
+int FieldXML::getPosition() const
+{
+    return position;
+}
+
+void FieldXML::setPosition(int value)
+{
+    position = value;
 }
