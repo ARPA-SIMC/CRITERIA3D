@@ -476,7 +476,8 @@ QString ImportDataXML::parseXMLPointCode(QString text)
         }
         else if (format_type == XMLFORMATDELIMITED)
         {
-            // TO DO (anche nel vecchio vb, (use 'position')
+            QStringList list = text.split(format_delimiter);
+            myPointCode = list[pointCode.getPosition()];
         }
     }
 
