@@ -4,7 +4,7 @@
 FieldXML::FieldXML()
 {
     type = "";
-    format = "";
+    format = "%s";
     attribute = "";
     position = NODATA;
     firstChar = NODATA;

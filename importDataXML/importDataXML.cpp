@@ -519,17 +519,10 @@ QString ImportDataXML::parseXMLPointCode(QString text)
         if (format_type == XMLFORMATFIXED)
         {
             QString substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
-            // LC gestire il format
-            for (int i =0;i<substring.size();i++)
+            if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
             {
-                if (substring[i].isDigit()) // to check if it is number!!
-                {
-                    myPointCode.append(substring[i]);
-                }
-                else
-                {
-                    myPointCode.append("0");
-                }
+                // pointCode is a string
+                myPointCode = substring;
             }
         }
         else if (format_type == XMLFORMATDELIMITED)
@@ -571,12 +564,30 @@ QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, Field
     }
     if (!mySubstring.isEmpty())
     {
-        bool ok;
-        // LC vedere come inserire il format nella conversione
-        myValue = mySubstring.toFloat(&ok);
-        if (ok == false)
+        QString format = myField.getFormat();
+        if (format.isEmpty() || format == "%s")
         {
+            // is a string
             myValue = mySubstring;
+        }
+        else if (format == "%d")
+        {
+            // is a int
+            myValue = mySubstring.toInt();
+        }
+        else if (format.endsWith("f"))
+        {
+            // is a float
+            float myFloat = mySubstring.toFloat();
+            if (format.contains("."))
+            {
+                // decimals
+                int startPos = format.indexOf('.');
+                int endPos = format.indexOf('f');
+                int nDecimals = format.mid(startPos+1, endPos-1).toInt();
+                QString strFormat = QString::number(myFloat, 'f', nDecimals);
+                myValue = strFormat.toFloat();
+            }
         }
     }
     return myValue;
