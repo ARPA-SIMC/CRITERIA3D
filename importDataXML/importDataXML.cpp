@@ -6,10 +6,12 @@
 
 
 
-ImportDataXML::ImportDataXML(bool isGrid, QString xmlFileName)
+ImportDataXML::ImportDataXML(bool isGrid, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler, Crit3DMeteoGridDbHandler *meteoGridDbHandler, QString xmlFileName)
 {
     this->isGrid = isGrid;
     this->xmlFileName = xmlFileName;
+    this->meteoPointsDbHandler = meteoPointsDbHandler;
+    this->meteoGridDbHandler = meteoGridDbHandler;
 }
 
 bool ImportDataXML::parseXMLFile(QDomDocument* xmlDoc, QString *error)
@@ -429,18 +431,37 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 *error = "Point code not found for file:\n" + dataFileName + "\n";
                 return false;
             }
+            // check if myPointCode exists
+            if (isGrid)
+            {
+                if(!meteoGridDbHandler->meteoGrid()->existsMeteoPointFromId(myPointCode.toStdString()))
+                {
+                    *error = "Point code: " + myPointCode + "not exists for file:\n" + dataFileName + "\n";
+                    return false;
+                }
+            }
+            else
+            {
+                if (!meteoPointsDbHandler->existIdPoint(myPointCode))
+                {
+                    *error = "Point code: " + myPointCode + "not exists for file:\n" + dataFileName + "\n";
+                    return false;
+                }
+            }
         }
     }
 
     QTextStream in(&myFile);
     int nRow = 0;
-    int myFlagAccepted;
-    int myFlag;
+    QVariant myFlagAccepted;
+    QVariant myFlag;
+    QVariant myValue;
+    int nReplication = 0;  // LC è sempre 0,eliminare?
 
     while (!in.atEnd())
     {
       QString line = in.readLine();
-      if (nRow > format_headerRow && !line.isEmpty())
+      if (nRow >= format_headerRow && !line.isEmpty())
       {
           if (format_isSinglePoint)
           {
@@ -451,6 +472,23 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 {
                     *error = "Point code not found for file:\n" + dataFileName + "\n";
                     return false;
+                }
+                // check if myPointCode exists
+                if (isGrid)
+                {
+                    if(!meteoGridDbHandler->meteoGrid()->existsMeteoPointFromId(myPointCode.toStdString()))
+                    {
+                        *error = "Point code: " + myPointCode + "not exists for file:\n" + dataFileName + "\n";
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (!meteoPointsDbHandler->existIdPoint(myPointCode))
+                    {
+                        *error = "Point code: " + myPointCode + "not exists for file:\n" + dataFileName + "\n";
+                        return false;
+                    }
                 }
             }
             if (time.getType().toUpper() == "DAILY")
@@ -473,16 +511,47 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                         if (!variable[i].flagAccepted.isEmpty())
                         {
                             // LC gestire il format, perchè flagAccepted non è direttamente un int dato che poi viene convertito come tale?
-                            // TO DO
+                            QString format = variable[i].flagField.getFormat();
+                            if (format.isEmpty() || format == "%s")
+                            {
+                                myFlagAccepted = variable[i].flagAccepted;
+                                myFlag = parseXMLFixedValue(line, nReplication, variable[i].flagField);
+                            }
                         }
                         else
                         {
                             myFlagAccepted = 0;
                             myFlag = 0;
                         }
-                        // TO DO
+                        if (myFlag != myFlagAccepted)
+                        {
+                            myValue = format_missingValue;
+                        }
+                        else
+                        {
+                            myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
+                            if (myValue == NODATA)
+                            {
+                                return false;
+                            }
+                        }
+                    } // end flag if
+                    if (myValue != format_missingValue)
+                    {
+                        // TO DO write myValue
+                        // If Not WriteDailyData(myDataType, myPointCode, myDate, myVar, myValue) Then Exit Function
+                    }
+                    else
+                    {
+                        // TO DO write NODATA
+                        // If Not WriteDailyData(myDataType, myPointCode, myDate, myVar, NO_DATA) Then Exit Function
                     }
                 }
+            } // end daily
+            else
+            {
+                *error = "Unknown time type" + time.getType().toUpper() + "for file:\n" + dataFileName + "\n";
+                return false;
             }
           }
       }
@@ -545,14 +614,15 @@ QDate ImportDataXML::parseXMLDate(QString text)
     QDate myDate(1800,1,1);
 
     QString myDateStr = text.mid(time.getFirstChar()-1,time.getNrChar());
-    myDate = QDate::fromString(myDateStr,time.getFormat());
+    QString format = time.getFormat();
+    myDate = QDate::fromString(myDateStr,format);
 
     return myDate;
 }
 
 QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, FieldXML myField)
 {
-    QVariant myValue = NODATA;
+    QVariant myValue;
     QString mySubstring;
     if (myField.getNrChar() == 0 || myField.getNrChar() == NODATA)
     {
@@ -582,13 +652,23 @@ QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, Field
             if (format.contains("."))
             {
                 // decimals
-                int startPos = format.indexOf('.');
+                int startPos = format.indexOf('.')+1;
                 int endPos = format.indexOf('f');
-                int nDecimals = format.mid(startPos+1, endPos-1).toInt();
+                int nChar = endPos - startPos;
+                QString nDecimasStr = format.mid(startPos, nChar);
+                int nDecimals = nDecimasStr.toInt();
                 QString strFormat = QString::number(myFloat, 'f', nDecimals);
                 myValue = strFormat.toFloat();
             }
+            else
+            {
+                myValue = myFloat;
+            }
         }
+    }
+    else
+    {
+        myValue = NODATA;
     }
     return myValue;
 }

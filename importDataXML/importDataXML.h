@@ -11,13 +11,15 @@
 #include <QVariant>
 #include "fieldXML.h"
 #include "variableXML.h"
+#include "dbMeteoPointsHandler.h"
+#include "dbMeteoGrid.h"
 
 enum formatType{ XMLFORMATFIXED, XMLFORMATDELIMITED};
 
 class ImportDataXML
 {
 public:
-    ImportDataXML(bool isGrid, QString xmlFileName);
+    ImportDataXML(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QString xmlFileName);
     bool parseXMLFile(QDomDocument* xmlDoc, QString *error);
     bool parserXML(QString *error);
     bool importData(QString fileName, QString *error);
@@ -29,6 +31,8 @@ public:
 
 private:
     bool isGrid;
+    Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
+    Crit3DMeteoGridDbHandler* meteoGridDbHandler;
     QString xmlFileName;
     bool format_isSinglePoint;
     formatType format_type;

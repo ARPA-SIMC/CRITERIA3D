@@ -24,7 +24,7 @@ win32:{
     TARGET = importDataXML
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../dbMeteoPoints ../dbMeteoGrid
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../gis ../interpolation ../dbMeteoPoints ../dbMeteoGrid
 
 SOURCES += importDataXML.cpp \
     fieldXML.cpp \
