@@ -90,7 +90,7 @@ bool Crit1DProject::readSettings()
     projectSettings->beginGroup("project");
 
     path += projectSettings->value("path","").toString();
-    projectName += projectSettings->value("name","").toString();
+    projectName = projectSettings->value("name", "CRITERIA1D").toString();
 
     dbCropName = projectSettings->value("db_crop","").toString();
     if (dbCropName.left(1) == ".")
