@@ -538,8 +538,20 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                     } // end flag if
                     if (myValue != format_missingValue)
                     {
-                        // TO DO write myValue
-                        // If Not WriteDailyData(myDataType, myPointCode, myDate, myVar, myValue) Then Exit Function
+                        if (!isGrid)
+                        {
+                            // TO DO write myValue
+                            meteoVariable var = precipitation; // test cancellare
+                            if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
+                            {
+                                return false;
+                            }
+                            // If Not WriteDailyData(myDataType, myPointCode, myDate, myVar, myValue) Then Exit Function
+                        }
+                        else
+                        {
+
+                        }
                     }
                     else
                     {

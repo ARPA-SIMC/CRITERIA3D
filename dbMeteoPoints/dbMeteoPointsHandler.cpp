@@ -997,3 +997,34 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
     return true;
 }
 
+bool Crit3DMeteoPointsDbHandler::writeDailyData(QString pointCode, QDate date, meteoVariable var, float value, QString* log)
+{
+    if (!existIdPoint(pointCode))
+    {
+        *log += "\nID " + pointCode + " is not present in the point properties table.";
+        return false;
+    }
+    // create table
+    bool deletePreviousData = false;
+    QString tableName = pointCode + "_D";
+    if (! createTable(tableName, deletePreviousData))
+    {
+        *log += "\nError in create table: " + tableName + _db.lastError().text();
+        return false;
+    }
+    QString id = QString::number(getIdfromMeteoVar(var));
+    QString queryStr = QString(("INSERT INTO " + tableName + " VALUES ('%1','%2',%3)")).arg(tableName).arg(date.toString("yyyy-MM-dd")).arg(id).arg(value);
+
+    // exec query
+    QSqlQuery qry(_db);
+    qry.prepare(queryStr);
+    if (! qry.exec())
+    {
+        *log += "\nError in execute query: " + qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
