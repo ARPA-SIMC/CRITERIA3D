@@ -828,7 +828,8 @@ bool Crit3DMeteoPointsDbHandler::createTable(const QString& tableName, bool dele
         _db.exec(queryStr);
     }
 
-    queryStr = "CREATE TABLE IF NOT EXISTS " + tableName + " (date_time TEXT(20), id_variable INTEGER, value REAL, PRIMARY KEY(date_time, id_variable))";
+    queryStr = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                                "(date_time TEXT(20), id_variable INTEGER, value REAL, PRIMARY KEY(date_time, id_variable))").arg(tableName);
     QSqlQuery qry(_db);
     qry.prepare(queryStr);
 
@@ -1013,7 +1014,8 @@ bool Crit3DMeteoPointsDbHandler::writeDailyData(QString pointCode, QDate date, m
         return false;
     }
     QString id = QString::number(getIdfromMeteoVar(var));
-    QString queryStr = QString(("INSERT INTO " + tableName + " VALUES ('%1','%2',%3)")).arg(tableName).arg(date.toString("yyyy-MM-dd")).arg(id).arg(value);
+    QString queryStr = QString(("INSERT INTO `%1`"
+                                " VALUES ('%2','%3',%4)")).arg(tableName).arg(date.toString("yyyy-MM-dd")).arg(id).arg(value);
 
     // exec query
     QSqlQuery qry(_db);

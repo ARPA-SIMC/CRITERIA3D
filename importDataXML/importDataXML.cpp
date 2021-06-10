@@ -540,13 +540,12 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                     {
                         if (!isGrid)
                         {
-                            // TO DO write myValue
-                            meteoVariable var = precipitation; // test cancellare
+                            // TO DO get meteovar
+                            meteoVariable var = dailyPrecipitation; // test cancellare
                             if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
                             {
                                 return false;
                             }
-                            // If Not WriteDailyData(myDataType, myPointCode, myDate, myVar, myValue) Then Exit Function
                         }
                         else
                         {
