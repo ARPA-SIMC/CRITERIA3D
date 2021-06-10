@@ -643,11 +643,13 @@ QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, Field
         else if (format == "%d")
         {
             // is a int
+            mySubstring = mySubstring.trimmed();
             myValue = mySubstring.toInt();
         }
         else if (format.endsWith("f"))
         {
             // is a float
+            mySubstring = mySubstring.trimmed();
             float myFloat = mySubstring.toFloat();
             if (format.contains("."))
             {
@@ -657,13 +659,10 @@ QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, Field
                 int nChar = endPos - startPos;
                 QString nDecimasStr = format.mid(startPos, nChar);
                 int nDecimals = nDecimasStr.toInt();
-                QString strFormat = QString::number(myFloat, 'f', nDecimals);
-                myValue = strFormat.toFloat();
+                QString strFormat = QString("%1").arg(myFloat,0,'f',nDecimals);
+                myFloat = strFormat.toFloat();
             }
-            else
-            {
-                myValue = myFloat;
-            }
+            myValue = myFloat;
         }
     }
     else
