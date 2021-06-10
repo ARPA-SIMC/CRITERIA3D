@@ -21,19 +21,40 @@
         QString projectError;
         Logger logger;
 
+        QString path;
+
+        // database
+        QString dbCropName;
+        QString dbSoilName;
+        QString dbOutputName;
+        QString dbMeteoName;
+        QString dbForecastName;
+        QString dbUnitsName;
+
+        QSqlDatabase dbCrop;
+        QSqlDatabase dbSoil;
+        QSqlDatabase dbMeteo;
+
         // dates
         QDate firstSimulationDate;
         QDate lastSimulationDate;
 
+        bool isXmlMeteoGrid;
+
+        // soil
+        soil::Crit3DTextureClass soilTexture[13];
+
+        std::vector<Crit1DUnit> unitList;
+
         Crit1DProject();
 
+        void initialize();
         int initializeProject(QString settingsFileName);
         int computeAllUnits();
 
     private:
         bool isProjectLoaded;
 
-        QString path;
         QString projectName;
         QString configFileName;
 
@@ -52,19 +73,11 @@
         std::vector<float> forecastIrr;
         std::vector<float> forecastPrec;
 
-        QString dbCropName;
-        QString dbSoilName;
-        QString dbOutputName;
-        QString dbMeteoName;
-        QString dbForecastName;
-        QString dbUnitsName;
-
         QString outputString;
 
         QString logFileName;
         std::ofstream logFile;
 
-        bool isXmlGrid;
         bool addDateTimeLogFile;
 
         QString outputCsvFileName;
@@ -77,9 +90,6 @@
         std::vector<int> awcDepth;
 
         // DATABASE
-        QSqlDatabase dbCrop;
-        QSqlDatabase dbSoil;
-        QSqlDatabase dbMeteo;
         QSqlDatabase dbForecast;
         QSqlDatabase dbOutput;
         QSqlDatabase dbState;
@@ -87,14 +97,8 @@
         Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
 
-        std::vector<Crit1DUnit> unitList;
-
-        // soil
-        soil::Crit3DTextureClass soilTexture[13];
-
         Crit1DCase myCase;
 
-        void initialize();
         void closeProject();
         bool readSettings();
         void closeAllDatabase();
