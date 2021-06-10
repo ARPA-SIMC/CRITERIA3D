@@ -43,7 +43,7 @@ void Crit1DProject::initialize()
 
     unitList.clear();
 
-    isXmlGrid = false;
+    isXmlMeteoGrid = false;
     isSaveState = false;
     isRestart = false;
 
@@ -104,7 +104,7 @@ bool Crit1DProject::readSettings()
     if (dbMeteoName.left(1) == ".")
         dbMeteoName = path + dbMeteoName;
     if (dbMeteoName.right(3) == "xml")
-        isXmlGrid = true;
+        isXmlMeteoGrid = true;
 
     dbForecastName = projectSettings->value("db_forecast","").toString();
     if (dbForecastName.left(1) == ".")
@@ -313,7 +313,7 @@ void Crit1DProject::checkSimulationDates()
     dateStr = lastSimulationDate.toString("yyyy-MM-dd");
     if (dateStr == "1800-01-01")
     {
-        if (isXmlGrid)
+        if (isXmlMeteoGrid)
         {
 
             lastSimulationDate = QDate::currentDate().addDays(-1);
@@ -699,7 +699,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int forecastInd
     if (! setSoil(myCase.unit.idSoil, projectError))
         return false;
 
-    if (isXmlGrid)
+    if (isXmlMeteoGrid)
     {
         if (! setMeteoXmlGrid(myCase.unit.idMeteo, myCase.unit.idForecast, forecastIndex))
             return false;
@@ -1530,7 +1530,7 @@ int Crit1DProject::openAllDatabase()
         return ERROR_DBMETEO_OBSERVED;
     }
 
-    if (isXmlGrid)
+    if (isXmlMeteoGrid)
     {
         observedMeteoGrid = new Crit3DMeteoGridDbHandler();
         if (! observedMeteoGrid->parseXMLGrid(dbMeteoName, &projectError))
@@ -1569,7 +1569,7 @@ int Crit1DProject::openAllDatabase()
             return ERROR_DBMETEO_FORECAST;
         }
 
-        if (isXmlGrid)
+        if (isXmlMeteoGrid)
         {
             forecastMeteoGrid = new Crit3DMeteoGridDbHandler();
             if (! forecastMeteoGrid->parseXMLGrid(dbForecastName, &projectError))

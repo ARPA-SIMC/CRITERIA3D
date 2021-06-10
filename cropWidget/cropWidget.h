@@ -61,22 +61,17 @@
             void variableWaterContentChanged();
 
         private:
-            QSqlDatabase dbUnits;
-            QSqlDatabase dbCrop;
-            QSqlDatabase dbMeteo;
-            QSqlDatabase dbSoil;
+            Crit1DProject myProject;
             Crit1DCase myCase;
             Crit3DCrop cropFromDB;
-            soil::Crit3DTextureClass textureClassList[13];
-            QString tableMeteo;
+
+            QString meteoTableName;
             bool cropChanged;
             QStringList yearList;
             bool onlyOneYear;
-            bool isXmlMeteoGrid;
-            QDate lastDBMeteoDate;
-            Crit3DMeteoGridDbHandler xmlMeteoGrid;
 
-            std::vector<Crit1DUnit> unitList;
+            Crit3DMeteoGridDbHandler xmlMeteoGrid;
+            Crit3DMeteoSettings meteoSettings;
 
             QGroupBox *infoCaseGroup;
             QGroupBox *infoCropGroup;
