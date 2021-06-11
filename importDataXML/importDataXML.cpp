@@ -554,44 +554,43 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                         else
                         {
                             myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
-                            if (myValue == NODATA)
+                            if (myValue.toFloat() == NODATA)
                             {
                                 return false;
                             }
                         }
                     } // end flag if
-                    if (myValue == format_missingValue)
+                    if (myValue != format_missingValue)
                     {
-                        myValue = NODATA;
-                    }
-                    // write myValue
-                    meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable[i].varField.getType().toStdString());
-                    if (var == noMeteoVar)
-                    {
-                        *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
-                        return false;
-                    }
-                    if (!isGrid)
-                    {
-                        if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
+                        // write myValue
+                        meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable[i].varField.getType().toStdString());
+                        if (var == noMeteoVar)
                         {
+                            *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
                             return false;
                         }
-                    }
-                    else
-                    {
-                        if (meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
+                        if (!isGrid)
                         {
-                            if (!meteoGridDbHandler->saveCellCurrentGridDailyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
+                            if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
                             {
                                 return false;
                             }
                         }
                         else
                         {
-                            if(!meteoGridDbHandler->saveCellCurrentGridDaily(error, myPointCode, myDate, meteoGridDbHandler->getDailyVarCode(var), myValue.toFloat()))
+                            if (meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
                             {
-                                return false;
+                                if (!meteoGridDbHandler->saveCellCurrentGridDailyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
+                                {
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                if(!meteoGridDbHandler->saveCellCurrentGridDaily(error, myPointCode, myDate, meteoGridDbHandler->getDailyVarCode(var), myValue.toFloat()))
+                                {
+                                    return false;
+                                }
                             }
                         }
                     }
@@ -671,41 +670,40 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 {
                     QString myVar = variable[posVar].varField.getType();
                     myValue = parseXMLFixedValue(line, nReplication, variable[posVar].varField);
-                    if (myValue == NODATA)
+                    if (myValue.toFloat() == NODATA)
                     {
                         return false;
                     }
-                    if (myValue == format_missingValue)
+                    if (myValue != format_missingValue)
                     {
-                        myValue = NODATA;
-                    }
-                    meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, myVar.toStdString());
-                    if (var == noMeteoVar)
-                    {
-                        *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
-                        return false;
-                    }
-                    if (!isGrid)
-                    {
-                        if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
+                        meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, myVar.toStdString());
+                        if (var == noMeteoVar)
                         {
+                            *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
                             return false;
                         }
-                    }
-                    else
-                    {
-                        if (meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
+                        if (!isGrid)
                         {
-                            if (!meteoGridDbHandler->saveCellCurrentGridDailyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
+                            if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
                             {
                                 return false;
                             }
                         }
                         else
                         {
-                            if(!meteoGridDbHandler->saveCellCurrentGridDaily(error, myPointCode, myDate, meteoGridDbHandler->getDailyVarCode(var), myValue.toFloat()))
+                            if (meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
                             {
-                                return false;
+                                if (!meteoGridDbHandler->saveCellCurrentGridDailyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
+                                {
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                if(!meteoGridDbHandler->saveCellCurrentGridDaily(error, myPointCode, myDate, meteoGridDbHandler->getDailyVarCode(var), myValue.toFloat()))
+                                {
+                                    return false;
+                                }
                             }
                         }
                     }
@@ -785,7 +783,7 @@ QDate ImportDataXML::parseXMLDate(QString text)
 
 QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, FieldXML myField)
 {
-    QVariant myValue;
+    QVariant myValue = NODATA;
     QString mySubstring;
     if (myField.getNrChar() == 0 || myField.getNrChar() == NODATA)
     {
@@ -812,25 +810,25 @@ QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, Field
         else if (format.endsWith("f"))
         {
             // is a float
+            bool ok;
             mySubstring = mySubstring.trimmed();
-            float myFloat = mySubstring.toFloat();
-            if (format.contains("."))
+            float myFloat = mySubstring.toFloat(&ok);
+            if(ok)
             {
-                // decimals
-                int startPos = format.indexOf('.')+1;
-                int endPos = format.indexOf('f');
-                int nChar = endPos - startPos;
-                QString nDecimasStr = format.mid(startPos, nChar);
-                int nDecimals = nDecimasStr.toInt();
-                QString strFormat = QString("%1").arg(myFloat,0,'f',nDecimals);
-                myFloat = strFormat.toFloat();
+                if (format.contains("."))
+                {
+                    // decimals
+                    int startPos = format.indexOf('.')+1;
+                    int endPos = format.indexOf('f');
+                    int nChar = endPos - startPos;
+                    QString nDecimasStr = format.mid(startPos, nChar);
+                    int nDecimals = nDecimasStr.toInt();
+                    QString strFormat = QString("%1").arg(myFloat,0,'f',nDecimals);
+                    myFloat = strFormat.toFloat();
+                }
+                myValue = myFloat;
             }
-            myValue = myFloat;
         }
-    }
-    else
-    {
-        myValue = NODATA;
     }
     return myValue;
 }
