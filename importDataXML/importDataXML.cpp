@@ -25,7 +25,7 @@ bool ImportDataXML::parseXMLFile(QDomDocument* xmlDoc, QString *error)
     QFile myFile(xmlFileName);
     if (!myFile.open(QIODevice::ReadOnly))
     {
-        *error = "Open XML failed:\n" + xmlFileName + "\n" + myFile.errorString();
+        *error = "Open XML failed: " + xmlFileName + "\n " + myFile.errorString();
         return (false);
     }
 
@@ -415,7 +415,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
     QFileInfo myFileInfo(myFile.fileName());
     if (!myFile.open(QIODevice::ReadOnly))
     {
-        *error = "Open file failed:\n" + dataFileName + "\n" + myFile.errorString();
+        *error = "Open file failed: " + dataFileName + "\n " + myFile.errorString();
         return false;
     }
 
@@ -428,7 +428,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
             myPointCode = parseXMLPointCode(myFileInfo.baseName());
             if (myPointCode.isEmpty())
             {
-                *error = "Point code not found for file:\n" + dataFileName + "\n";
+                *error = "Point code not found for file: " + dataFileName;
                 return false;
             }
             // check if myPointCode exists
@@ -436,7 +436,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
             {
                 if(!meteoGridDbHandler->meteoGrid()->existsMeteoPointFromId(myPointCode.toStdString()))
                 {
-                    *error = "Point code: " + myPointCode + "not exists for file:\n" + dataFileName + "\n";
+                    *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
                     return false;
                 }
             }
@@ -444,7 +444,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
             {
                 if (!meteoPointsDbHandler->existIdPoint(myPointCode))
                 {
-                    *error = "Point code: " + myPointCode + "not exists for file:\n" + dataFileName + "\n";
+                    *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
                     return false;
                 }
             }
@@ -470,7 +470,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 myPointCode = parseXMLPointCode(line);
                 if (myPointCode.isEmpty())
                 {
-                    *error = "Point code not found for file:\n" + dataFileName + "\n";
+                    *error = "Point code not found for file: " + dataFileName;
                     return false;
                 }
                 // check if myPointCode exists
@@ -478,7 +478,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 {
                     if(!meteoGridDbHandler->meteoGrid()->existsMeteoPointFromId(myPointCode.toStdString()))
                     {
-                        *error = "Point code: " + myPointCode + "not exists for file:\n" + dataFileName + "\n";
+                        *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
                         return false;
                     }
                 }
@@ -486,7 +486,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 {
                     if (!meteoPointsDbHandler->existIdPoint(myPointCode))
                     {
-                        *error = "Point code: " + myPointCode + "not exists for file:\n" + dataFileName + "\n";
+                        *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
                         return false;
                     }
                 }
@@ -496,7 +496,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 QDate myDate = parseXMLDate(line);
                 if (!myDate.isValid() || myDate.year() == 1800)
                 {
-                    *error = "Date not found or not valid for file:\n" + dataFileName + "\n";
+                    *error = "Date not found or not valid for file: " + dataFileName;
                     return false;
                 }
                 for (int i = 0; i<variable.size(); i++)
@@ -544,7 +544,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                     meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable[i].varField.getType().toStdString());
                     if (var == noMeteoVar)
                     {
-                        *error = "Meteovariable not found or not valid for file:\n" + dataFileName + "\n";
+                        *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
                         return false;
                     }
                     if (!isGrid)
@@ -575,7 +575,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
             } // end daily
             else
             {
-                *error = "Unknown time type" + time.getType().toUpper() + "for file:\n" + dataFileName + "\n";
+                *error = "Unknown time type" + time.getType().toUpper() + "for file: " + dataFileName;
                 return false;
             }
           }
@@ -591,7 +591,7 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
     QFile myFile(dataFileName);
     if (!myFile.open(QIODevice::ReadOnly))
     {
-        *error = "Open file failed:\n" + dataFileName + "\n" + myFile.errorString();
+        *error = "Open file failed: " + dataFileName + "\n " + myFile.errorString();
         return (false);
     }
     QTextStream in(&myFile);
