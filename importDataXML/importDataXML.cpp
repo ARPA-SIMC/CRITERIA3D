@@ -536,26 +536,40 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                             }
                         }
                     } // end flag if
-                    if (myValue != format_missingValue)
+                    if (myValue == format_missingValue)
                     {
-                        if (!isGrid)
+                        myValue = NODATA;
+                    }
+                    // write myValue
+                    meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable[i].varField.getType().toStdString());
+                    if (var == noMeteoVar)
+                    {
+                        *error = "Meteovariable not found or not valid for file:\n" + dataFileName + "\n";
+                        return false;
+                    }
+                    if (!isGrid)
+                    {
+                        if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
                         {
-                            // TO DO get meteovar
-                            meteoVariable var = dailyPrecipitation; // test cancellare
-                            if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
+                        {
+                            if (!meteoGridDbHandler->saveCellCurrentGridDailyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
                             {
                                 return false;
                             }
                         }
                         else
                         {
-
+                            if(!meteoGridDbHandler->saveCellCurrentGridDaily(error, myPointCode, myDate, meteoGridDbHandler->getDailyVarCode(var), myValue.toFloat()))
+                            {
+                                return false;
+                            }
                         }
-                    }
-                    else
-                    {
-                        // TO DO write NODATA
-                        // If Not WriteDailyData(myDataType, myPointCode, myDate, myVar, NO_DATA) Then Exit Function
                     }
                 }
             } // end daily

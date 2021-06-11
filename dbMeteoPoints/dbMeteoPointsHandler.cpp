@@ -1014,7 +1014,7 @@ bool Crit3DMeteoPointsDbHandler::writeDailyData(QString pointCode, QDate date, m
         return false;
     }
     QString id = QString::number(getIdfromMeteoVar(var));
-    QString queryStr = QString(("INSERT INTO `%1`"
+    QString queryStr = QString(("INSERT OR REPLACE INTO `%1`"
                                 " VALUES ('%2','%3',%4)")).arg(tableName).arg(date.toString("yyyy-MM-dd")).arg(id).arg(value);
 
     // exec query
