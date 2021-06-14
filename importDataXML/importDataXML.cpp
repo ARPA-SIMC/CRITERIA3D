@@ -473,6 +473,11 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 }
             }
         }
+        else
+        {
+            *error = "Open: " + dataFileName + " format is SinglePoint but pointCode is not FILENAMEDEFINED";
+            return false;
+        }
     }
 
     QTextStream in(&myFile);
@@ -489,32 +494,6 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
       {
           if (format_isSinglePoint)
           {
-            if (myPointCode.isEmpty())
-            {
-                myPointCode = parseXMLPointCode(line);
-                if (myPointCode.isEmpty())
-                {
-                    *error = "Point code not found for file: " + dataFileName;
-                    return false;
-                }
-                // check if myPointCode exists
-                if (isGrid)
-                {
-                    if(!meteoGridDbHandler->meteoGrid()->existsMeteoPointFromId(myPointCode.toStdString()))
-                    {
-                        *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
-                        return false;
-                    }
-                }
-                else
-                {
-                    if (!meteoPointsDbHandler->existIdPoint(myPointCode))
-                    {
-                        *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
-                        return false;
-                    }
-                }
-            }
             if (time.getType().toUpper() == "DAILY")
             {
                 QDate myDate = parseXMLDate(line);
@@ -554,7 +533,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                         else
                         {
                             myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
-                            if (myValue.toFloat() == NODATA)
+                            if (myValue.toString() == "ERROR")
                             {
                                 return false;
                             }
@@ -670,7 +649,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 {
                     QString myVar = variable[posVar].varField.getType();
                     myValue = parseXMLFixedValue(line, nReplication, variable[posVar].varField);
-                    if (myValue.toFloat() == NODATA)
+                    if (myValue.toString() == "ERROR")
                     {
                         return false;
                     }
@@ -725,16 +704,144 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
 bool ImportDataXML::importXMLDataDelimited(QString *error)
 {
     QFile myFile(dataFileName);
+    QFileInfo myFileInfo(myFile.fileName());
     if (!myFile.open(QIODevice::ReadOnly))
     {
         *error = "Open file failed: " + dataFileName + "\n " + myFile.errorString();
         return (false);
     }
+
+    QString myPointCode = "";
+
+    if (format_isSinglePoint)
+    {
+        if (pointCode.getType().toUpper() == "FILENAMEDEFINED")
+        {
+            myPointCode = parseXMLPointCode(myFileInfo.baseName());
+            if (myPointCode.isEmpty())
+            {
+                *error = "Point code not found for file: " + dataFileName;
+                return false;
+            }
+            // check if myPointCode exists
+            if (isGrid)
+            {
+                if(!meteoGridDbHandler->meteoGrid()->existsMeteoPointFromId(myPointCode.toStdString()))
+                {
+                    *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
+                    return false;
+                }
+            }
+            else
+            {
+                if (!meteoPointsDbHandler->existIdPoint(myPointCode))
+                {
+                    *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            *error = "Open: " + dataFileName + " format is SinglePoint but pointCode is not FILENAMEDEFINED";
+            return false;
+        }
+    }
+
     QTextStream in(&myFile);
+    int nRow = 0;
+    QVariant myValue;
+    int nReplication = 0;  // LC è sempre 0,eliminare?
+
     while (!in.atEnd())
     {
       QString line = in.readLine();
-      // TO DO
+      if (nRow >= format_headerRow && !line.isEmpty())
+      {
+          if (format_isSinglePoint)
+          {
+            if (time.getType().toUpper() == "DAILY")
+            {
+                QList<QString> myFields = line.split(format_delimiter);
+                QDate myDate = parseXMLDate(myFields[time.getPosition()]);
+
+                if (!myDate.isValid() || myDate.year() == 1800)
+                {
+                    *error = "Date not found or not valid for file: " + dataFileName;
+                    return false;
+                }
+                for (int i = 0; i<variable.size(); i++)
+                {
+                    if (variable[i].nReplication > 1)
+                    {
+                        // TO DO (anche in vb)
+                    }
+                    else
+                    {
+                        if (myFields[variable[i].flagField.getPosition()] == variable[i].flagAccepted)
+                        {
+                            myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()], nReplication, variable[i].varField);
+                            if (myValue.toString() == "ERROR")
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            myValue = format_missingValue;
+                        }
+                        if (myValue != format_missingValue && myValue != NODATA)
+                        {
+                            // write myValue
+                            meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable[i].varField.getType().toStdString());
+                            if (var == noMeteoVar)
+                            {
+                                *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
+                                return false;
+                            }
+                            if (!isGrid)
+                            {
+                                if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
+                                {
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                if (meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
+                                {
+                                    if (!meteoGridDbHandler->saveCellCurrentGridDailyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
+                                    {
+                                        return false;
+                                    }
+                                }
+                                else
+                                {
+                                    if(!meteoGridDbHandler->saveCellCurrentGridDaily(error, myPointCode, myDate, meteoGridDbHandler->getDailyVarCode(var), myValue.toFloat()))
+                                    {
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+
+                }
+            } // end daily
+            else
+            {
+                *error = "Unknown time type" + time.getType().toUpper() + "for file: " + dataFileName;
+                return false;
+            }
+          }
+          else
+          {
+              //multipoint
+              // LC tutto commentato in vb
+          }
+      }
+      nRow = nRow + 1;
     }
     myFile.close();
     return true;
@@ -783,7 +890,7 @@ QDate ImportDataXML::parseXMLDate(QString text)
 
 QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, FieldXML myField)
 {
-    QVariant myValue = NODATA;
+    QVariant myValue = "ERROR";
     QString mySubstring;
     if (myField.getNrChar() == 0 || myField.getNrChar() == NODATA)
     {
