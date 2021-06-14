@@ -49,6 +49,7 @@ private:
     FieldXML variableCode;
     QList<VariableXML> variable;
     QString dataFileName;
+    int numVarFields;
 };
 
 #endif // IMPORTDATAXML_H
