@@ -513,7 +513,6 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                         // FLAG
                         if (!variable[i].flagAccepted.isEmpty())
                         {
-                            // LC gestire il format, perchè flagAccepted non è direttamente un int dato che poi viene convertito come tale?
                             QString format = variable[i].flagField.getFormat();
                             if (format.isEmpty() || format == "%s")
                             {
@@ -751,7 +750,7 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
     QTextStream in(&myFile);
     int nRow = 0;
     QVariant myValue;
-    int nReplication = 0;  // LC è sempre 0,eliminare?
+    int nReplication = 0;  // TO DO
 
     while (!in.atEnd())
     {
@@ -763,7 +762,12 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
             if (time.getType().toUpper() == "DAILY")
             {
                 QList<QString> myFields = line.split(format_delimiter);
-                QDate myDate = parseXMLDate(myFields[time.getPosition()]);
+                QDate myDate(1800,1,1);
+
+                if (time.getPosition()-1 < myFields.size())
+                {
+                    myDate = parseXMLDate(myFields[time.getPosition()-1]);
+                }
 
                 if (!myDate.isValid() || myDate.year() == 1800)
                 {
@@ -778,17 +782,45 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                     }
                     else
                     {
-                        if (myFields[variable[i].flagField.getPosition()] == variable[i].flagAccepted)
+                        if (!variable[i].flagAccepted.isEmpty() && variable[i].flagField.getPosition()>0 && variable[i].flagField.getPosition()-1 < myFields.size())
                         {
-                            myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()], nReplication, variable[i].varField);
-                            if (myValue.toString() == "ERROR")
+                            // check FLAG
+                            if (myFields[variable[i].flagField.getPosition()-1] == variable[i].flagAccepted)
                             {
-                                return false;
+                                if (variable[i].varField.getPosition() > 0 && variable[i].varField.getPosition()-1 < myFields.size())
+                                {
+                                    myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
+                                    if (myValue.toString() == "ERROR")
+                                    {
+                                        return false;
+                                    }
+                                }
+                                else
+                                {
+                                    *error = "Var Field position error for file:\n" + dataFileName;
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                myValue = format_missingValue;
                             }
                         }
                         else
                         {
-                            myValue = format_missingValue;
+                            if (variable[i].varField.getPosition() > 0 && variable[i].varField.getPosition()-1 < myFields.size())
+                            {
+                                myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
+                                if (myValue.toString() == "ERROR")
+                                {
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                *error = "Var Field position error for file:\n" + dataFileName;
+                                return false;
+                            }
                         }
                         if (myValue != format_missingValue && myValue != NODATA)
                         {
@@ -853,7 +885,7 @@ QString ImportDataXML::parseXMLPointCode(QString text)
 
     if (pointCode.getType().toUpper() == "FIELDDEFINED" || pointCode.getType().toUpper() == "FIELDEFINED" || pointCode.getType().toUpper() == "FILENAMEDEFINED")
     {
-        if (format_type == XMLFORMATFIXED)
+        if (format_type == XMLFORMATFIXED || (format_type == XMLFORMATDELIMITED && pointCode.getType().toUpper() == "FILENAMEDEFINED"))
         {
             QString substring = text.mid(pointCode.getFirstChar()-1,pointCode.getNrChar());
             if (pointCode.getFormat().isEmpty() || pointCode.getFormat() == "%s")
