@@ -485,6 +485,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
     QVariant myFlagAccepted;
     QVariant myFlag;
     QVariant myValue;
+    int nErrors = 0;
     int nReplication = 0;  // LC è sempre 0,eliminare?
 
     while (!in.atEnd())
@@ -534,7 +535,8 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                             myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
                             if (myValue.toString() == "ERROR")
                             {
-                                return false;
+                                nErrors = nErrors + 1;
+                                myValue = format_missingValue;
                             }
                         }
                     } // end flag if
@@ -650,7 +652,8 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                     myValue = parseXMLFixedValue(line, nReplication, variable[posVar].varField);
                     if (myValue.toString() == "ERROR")
                     {
-                        return false;
+                        nErrors = nErrors + 1;
+                        myValue = format_missingValue;
                     }
                     if (myValue != format_missingValue)
                     {
@@ -697,6 +700,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
       nRow = nRow + 1;
     }
     myFile.close();
+    *error = QString::number(nErrors);
     return true;
 }
 
@@ -751,6 +755,7 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
     int nRow = 0;
     QVariant myValue;
     int nReplication = 0;  // TO DO
+    int nErrors = 0;
 
     while (!in.atEnd())
     {
@@ -792,7 +797,8 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                                     myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
                                     if (myValue.toString() == "ERROR")
                                     {
-                                        return false;
+                                        nErrors = nErrors + 1;
+                                        myValue = format_missingValue;
                                     }
                                 }
                                 else
@@ -813,7 +819,8 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                                 myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
                                 if (myValue.toString() == "ERROR")
                                 {
-                                    return false;
+                                    nErrors = nErrors + 1;
+                                    myValue = format_missingValue;
                                 }
                             }
                             else
@@ -876,6 +883,7 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
       nRow = nRow + 1;
     }
     myFile.close();
+    *error = QString::number(nErrors);
     return true;
 }
 
