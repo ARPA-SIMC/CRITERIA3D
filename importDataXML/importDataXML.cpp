@@ -700,7 +700,10 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
       nRow = nRow + 1;
     }
     myFile.close();
-    *error = QString::number(nErrors);
+    if (nErrors != 0)
+    {
+        *error = QString::number(nErrors);
+    }
     return true;
 }
 
@@ -883,7 +886,10 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
       nRow = nRow + 1;
     }
     myFile.close();
-    *error = QString::number(nErrors);
+    if (nErrors != 0)
+    {
+        *error = QString::number(nErrors);
+    }
     return true;
 }
 
