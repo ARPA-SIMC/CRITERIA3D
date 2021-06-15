@@ -28,11 +28,13 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../meteo ../gis ../interpolation .
 
 SOURCES += importDataXML.cpp \
     fieldXML.cpp \
+    importPropertiesCSV.cpp \
     variableXML.cpp
 
 
 HEADERS += importDataXML.h \
     fieldXML.h \
+    importPropertiesCSV.h \
     variableXML.h
 
 
