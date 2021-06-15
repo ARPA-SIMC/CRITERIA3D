@@ -789,6 +789,33 @@ bool Crit3DMeteoPointsDbHandler::loadVariableProperties()
     return true;
 }
 
+bool Crit3DMeteoPointsDbHandler::getNameColumn(QString tableName, QList<QString>* columnList)
+{
+    QSqlQuery qry(_db);
+
+    int id_variable;
+    QString variable;
+    std::string varStdString;
+    meteoVariable meteoVar;
+    std::pair<std::map<int, meteoVariable>::iterator,bool> ret;
+
+    QString statement = QString( "PRAGMA table_info('%1')").arg(tableName);
+    if( !qry.exec(statement) )
+    {
+        error = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        QString name;
+        while (qry.next())
+        {
+            getValue(qry.value("name"), &name);
+            *columnList << name;
+        }
+    }
+    return true;
+}
 
 int Crit3DMeteoPointsDbHandler::getIdfromMeteoVar(meteoVariable meteoVar)
 {

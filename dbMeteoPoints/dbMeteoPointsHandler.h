@@ -56,6 +56,7 @@
         std::vector<float> loadHourlyVar(QString *myError, meteoVariable variable, Crit3DDate dateStart, Crit3DDate dateEnd, QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint);
 
         bool loadVariableProperties();
+        bool getNameColumn(QString tableName, QList<QString>* columnList);
         int getIdfromMeteoVar(meteoVariable meteoVar);
         std::map<int, meteoVariable> getMapIdMeteoVar() const;
 
