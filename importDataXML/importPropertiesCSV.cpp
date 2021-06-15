@@ -25,7 +25,7 @@ bool ImportPropertiesCSV::parserCSV(QString *error)
     }
 
     QTextStream myStream (&myFile);
-    QStringList line;
+    QList<QString> line;
     if (myStream.atEnd())
     {
         *error += "\nFile is void.";
@@ -42,8 +42,7 @@ bool ImportPropertiesCSV::parserCSV(QString *error)
 
         // skip void lines
         if (line.length() <= 2) continue;
-
-        // TO DO
+        data.append(line);
     }
 
 
@@ -54,4 +53,9 @@ bool ImportPropertiesCSV::parserCSV(QString *error)
 QList<QString> ImportPropertiesCSV::getHeader() const
 {
     return header;
+}
+
+QList<QList<QString> > ImportPropertiesCSV::getData() const
+{
+    return data;
 }

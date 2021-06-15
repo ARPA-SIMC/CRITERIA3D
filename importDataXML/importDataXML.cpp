@@ -630,7 +630,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
               if (variableCode.getType().toUpper() == "FIELDDEFINED" )
               {
                 QVariant myVarCode = parseXMLFixedValue(line, nReplication, variableCode);
-                if (myVarCode.isNull() | myVarCode.toFloat() == NODATA)
+                if ( (myVarCode.isNull()) | (myVarCode.toFloat() == NODATA))
                 {
                     *error = "varCode not found or not valid for file: " + dataFileName;
                     return false;
