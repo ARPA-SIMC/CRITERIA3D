@@ -772,14 +772,20 @@ bool Crit3DMeteoPointsDbHandler::updatePointProperties(QList<QString> columnList
     }
     queryStr.chop(1); // remove last ,
     queryStr += ") VALUES (";
-    for (int i = 0; i<valueList.size(); i++)
+    for (int i = 0; i<columnList.size(); i++)
     {
-        queryStr += "'"+valueList[i]+"',";
+        queryStr += ":"+columnList[i]+",";
     }
     queryStr.chop(1); // remove last ,
     queryStr += ")";
 
     qry.prepare(queryStr);
+
+    for (int i = 0; i<valueList.size(); i++)
+    {
+        qry.bindValue(":"+columnList[i], valueList[i]);
+    }
+
     if( !qry.exec() )
     {
         qDebug() << qry.lastError();
