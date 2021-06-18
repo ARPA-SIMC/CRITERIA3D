@@ -200,7 +200,7 @@ bool Crit1DProject::readSettings()
             }
             outputCsvFileName += ".csv";
 
-            if (outputCsvFileName.at(0) == ".")
+            if (outputCsvFileName.at(0) == '.')
             {
                 outputCsvFileName = path + QDir::cleanPath(outputCsvFileName);
             }

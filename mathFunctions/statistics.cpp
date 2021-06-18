@@ -158,7 +158,7 @@ namespace statistics
 
     float meanAbsoluteError(std::vector <float> measured, std::vector <float> simulated)
     {
-        float sum=0.;
+        double sum=0.;
         long nrValidValues = 0;
 
         if (measured.size() != simulated.size()) return NODATA;
@@ -174,7 +174,7 @@ namespace statistics
 
         if (nrValidValues == 0) return NODATA;
 
-        return sum / nrValidValues;
+        return float(sum / nrValidValues);
     }
 
     float coefficientOfVariation(float *measured , float *simulated , int nrData)

@@ -17,6 +17,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
+DEFINES += _CRT_SECURE_NO_WARNINGS
 
 unix:{
     CONFIG(debug, debug|release) {

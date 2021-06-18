@@ -280,7 +280,7 @@ double AerodynamicConductanceOpenwater(double myHeight, double myWaterBodySurfac
 float erosivityFactor(std::vector<float> values, int nValues)
 {
 
-    float erosivityFactor = NODATA;
+    double erosivityFactor = NODATA;
 
     for (int i = 0; i < nValues; i++)
     {
@@ -292,12 +292,12 @@ float erosivityFactor(std::vector<float> values, int nValues)
             }
             if ( (values[i] > 0) && (values[i] != NODATA))
             {
-                erosivityFactor = erosivityFactor + 0.11f * pow(values[i], 1.82f);
+                erosivityFactor += 0.11 * pow(values[i], 1.82);
             }
         }
     }
 
-    return erosivityFactor;
+    return float(erosivityFactor);
 }
 
 
