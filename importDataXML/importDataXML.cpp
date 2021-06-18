@@ -630,7 +630,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
               if (variableCode.getType().toUpper() == "FIELDDEFINED" )
               {
                 QVariant myVarCode = parseXMLFixedValue(line, nReplication, variableCode);
-                if (myVarCode.isNull() | myVarCode.toFloat() == NODATA)
+                if ( (myVarCode.isNull()) | (myVarCode.toFloat() == NODATA))
                 {
                     *error = "varCode not found or not valid for file: " + dataFileName;
                     return false;
@@ -700,7 +700,10 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
       nRow = nRow + 1;
     }
     myFile.close();
-    *error = QString::number(nErrors);
+    if (nErrors != 0)
+    {
+        *error = QString::number(nErrors);
+    }
     return true;
 }
 
@@ -883,7 +886,10 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
       nRow = nRow + 1;
     }
     myFile.close();
-    *error = QString::number(nErrors);
+    if (nErrors != 0)
+    {
+        *error = QString::number(nErrors);
+    }
     return true;
 }
 

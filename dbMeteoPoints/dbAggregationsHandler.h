@@ -15,7 +15,6 @@
         #include <vector>
     #endif
 
-
     class Crit3DAggregationsDbHandler
     {
     public:
