@@ -526,19 +526,17 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                             myFlagAccepted = 0;
                             myFlag = 0;
                         }
-                        if (myFlag != myFlagAccepted)
+                        myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
+                        if (myValue.toString() == "ERROR")
+                        {
+                            nErrors = nErrors + 1;
+                            myValue = format_missingValue;
+                        }
+                        else if (myFlag != myFlagAccepted)
                         {
                             myValue = format_missingValue;
                         }
-                        else
-                        {
-                            myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
-                            if (myValue.toString() == "ERROR")
-                            {
-                                nErrors = nErrors + 1;
-                                myValue = format_missingValue;
-                            }
-                        }
+
                     } // end flag if
                     if (myValue != format_missingValue)
                     {
@@ -792,25 +790,22 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                     {
                         if (!variable[i].flagAccepted.isEmpty() && variable[i].flagField.getPosition()>0 && variable[i].flagField.getPosition()-1 < myFields.size())
                         {
-                            // check FLAG
-                            if (myFields[variable[i].flagField.getPosition()-1] == variable[i].flagAccepted)
+                            if (variable[i].varField.getPosition() > 0 && variable[i].varField.getPosition()-1 < myFields.size())
                             {
-                                if (variable[i].varField.getPosition() > 0 && variable[i].varField.getPosition()-1 < myFields.size())
+                                myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
+                                if (myValue.toString() == "ERROR")
                                 {
-                                    myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
-                                    if (myValue.toString() == "ERROR")
-                                    {
-                                        nErrors = nErrors + 1;
-                                        myValue = format_missingValue;
-                                    }
-                                }
-                                else
-                                {
-                                    *error = "Var Field position error for file:\n" + dataFileName;
-                                    return false;
+                                    nErrors = nErrors + 1;
+                                    myValue = format_missingValue;
                                 }
                             }
                             else
+                            {
+                                *error = "Var Field position error for file:\n" + dataFileName;
+                                return false;
+                            }
+                            // check FLAG
+                            if (myFields[variable[i].flagField.getPosition()-1] != variable[i].flagAccepted)
                             {
                                 myValue = format_missingValue;
                             }
