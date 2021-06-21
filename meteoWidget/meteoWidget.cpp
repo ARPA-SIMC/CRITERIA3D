@@ -977,6 +977,11 @@ void Crit3DMeteoWidget::drawDailyVar()
                             minLine = value;
                         }
                     }
+                    else
+                    {
+                        //lineSeries[mp][i]->append(day, value);
+                        lineSeries[mp][i]->setPointsVisible(true);
+                    }
                 }
             }
             if (isBar)
@@ -1229,6 +1234,11 @@ void Crit3DMeteoWidget::drawHourlyVar()
                             {
                                 minLine = value;
                             }
+                        }
+                        else
+                        {
+                            //lineSeries[mp][i]->append(index, value);
+                            lineSeries[mp][i]->setPointsVisible(true);
                         }
                     }
                 }
