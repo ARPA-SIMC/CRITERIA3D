@@ -327,3 +327,31 @@ int Crit3DAggregationsDbHandler::getIdfromMeteoVar(meteoVariable meteoVar)
     return key;
 }
 
+QList<QString> Crit3DAggregationsDbHandler::getAggregations()
+{
+
+    QSqlQuery qry(_db);
+
+    qry.prepare( "SELECT * FROM aggregations");
+    QString aggregation;
+    QList<QString> aggregationList;
+
+    if( !qry.exec() )
+    {
+        _error = qry.lastError().text();
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("aggregation"), &aggregation);
+            aggregationList.append(aggregation);
+        }
+    }
+    if (aggregationList.isEmpty())
+    {
+        _error = "name not found";
+    }
+    return aggregationList;
+}
+

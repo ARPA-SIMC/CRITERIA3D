@@ -35,6 +35,7 @@
         std::map<int, meteoVariable> mapIdMeteoVar() const;
         bool loadVariableProperties();
         int getIdfromMeteoVar(meteoVariable meteoVar);
+        QList<QString> getAggregations();
 
     private:
         QSqlDatabase _db;
