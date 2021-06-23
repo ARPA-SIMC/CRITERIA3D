@@ -74,6 +74,7 @@
         QString logFileName;
         QString demFileName;
         QString dbPointsFileName;
+        QString dbAggregationFileName;
         QString dbGridXMLFileName;
         QString parametersFileName;
         std::ofstream logFile;

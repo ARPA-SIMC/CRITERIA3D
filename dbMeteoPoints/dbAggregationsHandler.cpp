@@ -127,7 +127,7 @@ void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString agg
         {
             _error = qry.lastError().text();
         }
-        statement = QString("DELETE FROM `%1_%2_%3` WHERE date_time >= DATE('%2') AND date_time < DATE('%3', '+1 day')")
+        statement = QString("DELETE FROM `%1_%2_%3` WHERE date_time >= DATE('%4') AND date_time < DATE('%5', '+1 day')")
                         .arg(i).arg(aggrType).arg(periodType).arg(startDate.toString("yyyy-MM-dd hh:mm:ss")).arg(endDate.toString("yyyy-MM-dd hh:mm:ss"));
 
         qry = QSqlQuery(statement, _db);
