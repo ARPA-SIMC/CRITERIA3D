@@ -52,7 +52,7 @@ return _mapIdMeteoVar;
 
 bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QString periodType, QDateTime startDate, QDateTime endDate, meteoVariable variable, std::vector< std::vector<float> > aggregatedValues)
 {
-    initAggregatedTables(nZones, aggrType, periodType, QDateTime(startDate), QDateTime(endDate));
+    initAggregatedTables(nZones, aggrType, periodType, QDateTime(startDate), QDateTime(endDate), variable);
     createTmpAggrTable();
     insertTmpAggr(QDateTime(startDate), QDateTime(endDate), variable, aggregatedValues, nZones);
     if (!saveTmpAggrData(aggrType, periodType, nZones))
@@ -114,9 +114,10 @@ bool Crit3DAggregationsDbHandler::getAggregationZonesReference(QString name, QSt
     }
 }
 
-void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString aggrType, QString periodType, QDateTime startDate, QDateTime endDate)
+void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString aggrType, QString periodType, QDateTime startDate, QDateTime endDate, meteoVariable variable)
 {
 
+    int idVariable = getIdfromMeteoVar(variable);
     for (int i = 1; i < numZones; i++)
     {
         QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_%2_%3` "
@@ -127,8 +128,8 @@ void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString agg
         {
             _error = qry.lastError().text();
         }
-        statement = QString("DELETE FROM `%1_%2_%3` WHERE date_time >= DATE('%4') AND date_time < DATE('%5', '+1 day')")
-                        .arg(i).arg(aggrType).arg(periodType).arg(startDate.toString("yyyy-MM-dd hh:mm:ss")).arg(endDate.toString("yyyy-MM-dd hh:mm:ss"));
+        statement = QString("DELETE FROM `%1_%2_%3` WHERE date_time >= DATE('%4') AND date_time < DATE('%5', '+1 day') AND id_variable = %6")
+                        .arg(i).arg(aggrType).arg(periodType).arg(startDate.toString("yyyy-MM-dd hh:mm:ss")).arg(endDate.toString("yyyy-MM-dd hh:mm:ss")).arg(idVariable);
 
         qry = QSqlQuery(statement, _db);
         if( !qry.exec() )
