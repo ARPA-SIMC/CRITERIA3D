@@ -16,7 +16,7 @@ Crit3DAggregationsDbHandler::Crit3DAggregationsDbHandler(QString dbname)
         _db.close();
     }
 
-    _db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    _db = QSqlDatabase::addDatabase("QSQLITE", "Aggregation");
     _db.setDatabaseName(dbname);
 
     if (!_db.open())

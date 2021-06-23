@@ -1043,13 +1043,16 @@ bool Project::loadAggregationdDB(QString dbName)
 {
     if (dbName == "") return false;
 
+    dbAggregationFileName = dbName;
+    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
+
     aggregationDbHandler = new Crit3DAggregationsDbHandler(dbName);
     if (aggregationDbHandler->error() != "")
     {
         logError(aggregationDbHandler->error());
         return false;
     }
-    if (aggregationDbHandler->loadVariableProperties())
+    if (!aggregationDbHandler->loadVariableProperties())
     {
         return false;
     }
