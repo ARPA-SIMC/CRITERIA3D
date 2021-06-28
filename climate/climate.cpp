@@ -1744,6 +1744,10 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
                     if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureMax, startDate, endDate) > 0)
                     {
                         preElaboration = elaborateDailyAggregatedVar(dailyReferenceEvapotranspirationHS, *meteoPoint, outputValues, percValue, meteoSettings);
+                        for (int outputIndex = 0; outputIndex<outputValues.size(); outputIndex++)
+                        {
+                            meteoPoint->obsDataD[outputIndex].et0_hs = outputValues[outputIndex];
+                        }
                     }
                 }
             }
