@@ -17,7 +17,7 @@ void MeteoTable::keyPressEvent(QKeyEvent *event)
 
                 QString text;
                 QItemSelectionRange range = selectionModel()->selection().first();
-                QStringList headerContents;
+                QList<QString> headerContents;
 
                 if (range.bottom() - range.top() == this->rowCount()-1)
                 {
@@ -29,7 +29,7 @@ void MeteoTable::keyPressEvent(QKeyEvent *event)
 
                 for (auto i = range.top(); i <= range.bottom(); ++i)
                 {
-                    QStringList rowContents;
+                    QList<QString> rowContents;
                     for (auto j = range.left(); j <= range.right(); ++j)
                     {
                         rowContents << model()->index(i,j).data().toString();

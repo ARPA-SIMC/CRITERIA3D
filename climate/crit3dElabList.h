@@ -12,8 +12,8 @@
     #include "crit3dClimateList.h"
 #endif
 
-#ifndef QSTRINGLIST_H
-    #include <QStringList>
+#ifndef QLIST_H
+    #include <QList>
 #endif
 #ifndef QDATETIME_H
     #include <QDateTime>
@@ -30,8 +30,8 @@ public:
     bool isMeteoGrid() const;
     void setIsMeteoGrid(bool isMeteoGrid);
 
-    QStringList listAll() const;
-    void setListAll(const QStringList &listClimateElab);
+    QList<QString> listAll() const;
+    void setListAll(const QList<QString> &listClimateElab);
 
     void reset();
     void eraseElement(unsigned int index);
@@ -96,7 +96,7 @@ public:
 
 private:
 
-    QStringList _listAll;
+    QList<QString> _listAll;
     bool _isMeteoGrid;
     std::vector<int> _listYearStart;
     std::vector<int> _listYearEnd;

@@ -38,8 +38,8 @@
         QSqlDatabase getDb() const;
         void setDb(const QSqlDatabase &db);
 
-        QStringList getDatasetsList();
-        QStringList getDatasetsActive();
+        QList<QString> getDatasetsList();
+        QList<QString> getDatasetsActive();
         void setDatasetsActive(QString active);
 
         QDateTime getFirstDate(frequencyType frequency);
@@ -63,7 +63,7 @@
 
         bool existIdPoint(const QString& idPoint);
         bool createTable(const QString& tableName, bool deletePrevious);
-        QString getNewDataEntry(int pos, const QStringList& dataStr, const QString& dateTimeStr,
+        QString getNewDataEntry(int pos, const QList<QString>& dataStr, const QString& dateTimeStr,
                             const QString& idVarStr, meteoVariable myVar,
                             int* nrMissingData, int* nrWrongData, Crit3DQuality* dataQuality);
         bool importHourlyMeteoData(QString fileNameComplete, bool deletePreviousData, QString *log);

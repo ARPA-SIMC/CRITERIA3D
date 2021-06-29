@@ -96,9 +96,9 @@ QString Crit3DMeteoPointsDbHandler::getDatasetURL(QString dataset)
 }
 
 
-QStringList Crit3DMeteoPointsDbHandler::getDatasetsActive()
+QList<QString> Crit3DMeteoPointsDbHandler::getDatasetsActive()
 {
-    QStringList activeList;
+    QList<QString> activeList;
     QSqlQuery qry(_db);
 
     qry.prepare( "SELECT dataset FROM datasets WHERE active = 1" );
@@ -132,9 +132,9 @@ void Crit3DMeteoPointsDbHandler::setDatasetsActive(QString active)
 }
 
 
-QStringList Crit3DMeteoPointsDbHandler::getDatasetsList()
+QList<QString> Crit3DMeteoPointsDbHandler::getDatasetsList()
 {
-    QStringList datasetList;
+    QList<QString> datasetList;
     QSqlQuery qry(_db);
 
     qry.prepare( "SELECT * FROM datasets" );
@@ -159,7 +159,7 @@ QStringList Crit3DMeteoPointsDbHandler::getDatasetsList()
 QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
 {
     QSqlQuery qry(_db);
-    QStringList tables;
+    QList<QString> tables;
     QDateTime firstDate;
     QDate myDate;
     QTime myTime;
@@ -225,7 +225,7 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
 QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
 {
     QSqlQuery qry(_db);
-    QStringList tables;
+    QList<QString> tables;
     QDateTime lastDate;
 
     QString dayHour;
@@ -917,7 +917,7 @@ bool Crit3DMeteoPointsDbHandler::createTable(const QString& tableName, bool dele
 }
 
 
-QString Crit3DMeteoPointsDbHandler::getNewDataEntry(int pos, const QStringList& dataStr, const QString& dateTimeStr,
+QString Crit3DMeteoPointsDbHandler::getNewDataEntry(int pos, const QList<QString>& dataStr, const QString& dateTimeStr,
                                                 const QString& idVarStr, meteoVariable myVar,
                                                 int* nrMissingData, int* nrWrongData, Crit3DQuality* dataQuality)
 {
@@ -977,7 +977,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
     else
     {
         // skip first row (header)
-        QStringList header = myStream.readLine().split(',');
+        QList<QString> header = myStream.readLine().split(',');
     }
 
     // create table
@@ -996,7 +996,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
     QString idWind = QString::number(getIdfromMeteoVar(windScalarIntensity));
 
     Crit3DQuality dataQuality;
-    QStringList line;
+    QList<QString> line;
     QDate currentDate, previousDate;
     int hour, previousHour = 0;
     QString dateTimeStr;

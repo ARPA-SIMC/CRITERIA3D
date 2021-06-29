@@ -905,7 +905,7 @@ QString ImportDataXML::parseXMLPointCode(QString text)
         }
         else if (format_type == XMLFORMATDELIMITED)
         {
-            QStringList list = text.split(format_delimiter);
+            QList<QString> list = text.split(format_delimiter);
             myPointCode = list[pointCode.getPosition()];
         }
     }

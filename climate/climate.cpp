@@ -2197,7 +2197,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
 
 QString getTable(QString elab)
 {
-    QStringList words = elab.split('_');
+    QList<QString> words = elab.split('_');
     QString periodTypeStr = words[2];
     QString tableName = "climate_"+periodTypeStr.toLower();
 
@@ -2207,7 +2207,7 @@ QString getTable(QString elab)
 int getClimateIndexFromElab(QDate myDate, QString elab)
 {
 
-    QStringList words = elab.split('_');
+    QList<QString> words = elab.split('_');
     QString periodTypeStr = words[2];
 
     period periodType = getPeriodTypeFromString(periodTypeStr);
@@ -2232,7 +2232,7 @@ int getClimateIndexFromElab(QDate myDate, QString elab)
 int getNumberClimateIndexFromElab(QString elab)
 {
 
-    QStringList words = elab.split('_');
+    QList<QString> words = elab.split('_');
     QString periodTypeStr = words[2];
 
     period periodType = getPeriodTypeFromString(periodTypeStr);

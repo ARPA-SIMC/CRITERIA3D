@@ -15,9 +15,9 @@
     bool saveAnnualElab(QSqlDatabase db, QString *myError, QString id, float result, QString elab);
     bool saveGenericElab(QSqlDatabase db, QString *myError, QString id, float result, QString elab);
 
-    bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QStringList* listElab);
-    bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString variable, QStringList* listElab);
-    bool showClimateTables(QSqlDatabase db, QString *myError, QStringList* climateTables);
+    bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QList<QString>* listElab);
+    bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString variable, QList<QString>* listElab);
+    bool showClimateTables(QSqlDatabase db, QString *myError, QList<QString>* climateTables);
 
     bool deleteElab(QSqlDatabase db, QString *myError, QString table, QString elab);
 

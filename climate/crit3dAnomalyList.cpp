@@ -24,12 +24,12 @@ void Crit3DAnomalyList::setIsMeteoGrid(bool isMeteoGrid)
     _isMeteoGrid = isMeteoGrid;
 }
 
-QStringList Crit3DAnomalyList::listAnomaly() const
+QList<QString> Crit3DAnomalyList::listAnomaly() const
 {
     return _listAll;
 }
 
-void Crit3DAnomalyList::setListAnomaly(const QStringList &listAnomaly)
+void Crit3DAnomalyList::setListAnomaly(const QList<QString> &listAnomaly)
 {
     _listAll = listAnomaly;
 }
@@ -755,12 +755,12 @@ void Crit3DAnomalyList::addAnomaly(unsigned int index)
     _listAll.append(anomalyAdded);
 }
 
-QStringList Crit3DAnomalyList::listAll() const
+QList<QString> Crit3DAnomalyList::listAll() const
 {
     return _listAll;
 }
 
-void Crit3DAnomalyList::setListAll(const QStringList &listAll)
+void Crit3DAnomalyList::setListAll(const QList<QString> &listAll)
 {
     _listAll = listAll;
 }

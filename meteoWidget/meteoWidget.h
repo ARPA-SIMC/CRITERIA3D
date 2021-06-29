@@ -67,11 +67,11 @@
             QBarCategoryAxis *axisXvirtual;
             QValueAxis *axisY;
             QValueAxis *axisYdx;
-            QMap<QString, QStringList> MapCSVDefault;
-            QMap<QString, QStringList> MapCSVStyles;
-            QStringList currentVariables;
-            QStringList nameLines;
-            QStringList nameBar;
+            QMap<QString, QList<QString>> MapCSVDefault;
+            QMap<QString, QList<QString>> MapCSVStyles;
+            QList<QString> currentVariables;
+            QList<QString> nameLines;
+            QList<QString> nameBar;
             double maxEnsembleBar;
             double maxEnsembleLine;
             double minEnsembleLine;
@@ -82,8 +82,8 @@
             QVector<QBoxPlotSeries*> ensembleSeries;
             QVector<QList<QBoxSet*>> ensembleSet;
             QVector<QVector<QBarSet*>> setVector;
-            QStringList categories;
-            QStringList categoriesVirtual;
+            QList<QString> categories;
+            QList<QString> categoriesVirtual;
             QVector<Crit3DMeteoPoint> meteoPoints;
             QVector<Crit3DMeteoPoint> meteoPointsEnsemble;
             frequencyType currentFreq;
