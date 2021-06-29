@@ -3,7 +3,7 @@
 
     #include <string>
     class QString;
-    class QStringList;
+    template <typename T> class QList;
     class Project;
 
     bool attachOutputToConsole();
@@ -11,16 +11,16 @@
     void sendEnterKey(void);
     bool isConsoleForeground();
 
-    QString getTimeStamp(QStringList argumentList);
-    QStringList getArgumentList(QString commandLine);
+    QString getTimeStamp(QList<QString> argumentList);
+    QList<QString> getArgumentList(QString commandLine);
     QString getCommandLine(QString programName);
-    QStringList getSharedCommandList();
+    QList<QString> getSharedCommandList();
 
-    bool executeSharedCommand(Project* myProject, QStringList argumentList, bool *isCommandFound);
+    bool executeSharedCommand(Project* myProject, QList<QString> argumentList, bool *isCommandFound);
 
-    bool cmdLoadDEM(Project* myProject, QStringList argumentList);
-    bool cmdLoadMeteoGrid(Project* myProject, QStringList argumentList);
-    bool cmdSetLogFile(Project* myProject, QStringList argumentList);
+    bool cmdLoadDEM(Project* myProject, QList<QString> argumentList);
+    bool cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList);
+    bool cmdSetLogFile(Project* myProject, QList<QString> argumentList);
     bool cmdExit(Project* myProject);
 
 

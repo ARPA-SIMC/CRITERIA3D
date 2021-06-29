@@ -253,7 +253,7 @@ bool Project::loadParameters(QString parametersFileName)
     std::deque <bool> proxyActiveTmp;
     std::vector <int> proxyOrder;
 
-    QStringList myList;
+    QList<QString> myList;
     std::vector <QString> proxyGridSeriesNames;
     std::vector <unsigned> proxyGridSeriesYears;
 
@@ -496,7 +496,7 @@ bool Project::loadParameters(QString parametersFileName)
 
             if (parameters->contains("linke_monthly"))
             {
-                QStringList myLinkeStr = parameters->value("linke_monthly").toStringList();
+                QList<QString> myLinkeStr = parameters->value("linke_monthly").toStringList();
                 if (myLinkeStr.size() < 12)
                 {
                     errorString = "Incomplete monthly Linke values";
@@ -508,7 +508,7 @@ bool Project::loadParameters(QString parametersFileName)
 
             if (parameters->contains("albedo_monthly"))
             {
-                QStringList myAlbedoStr = parameters->value("albedo_monthly").toStringList();
+                QList<QString> myAlbedoStr = parameters->value("albedo_monthly").toStringList();
                 if (myAlbedoStr.size() < 12)
                 {
                     errorString = "Incomplete monthly albedo values";
@@ -2277,7 +2277,7 @@ gis::Crit3DRasterGrid* Project::getHourlyMeteoRaster(meteoVariable myVar)
 void Project::importHourlyMeteoData(const QString& csvFileName, bool importAllFiles, bool deletePreviousData)
 {
     QString filePath = getFilePath(csvFileName);
-    QStringList fileList;
+    QList<QString> fileList;
 
     if (importAllFiles)
     {

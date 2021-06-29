@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <QString>
-#include <QStringList>
+#include <QList>
 
 #ifdef _WIN32
     #include "Windows.h"
@@ -117,7 +117,7 @@ void openNewConsole()
 }
 
 
-QString getTimeStamp(QStringList argumentList)
+QString getTimeStamp(QList<QString> argumentList)
 {
     QString myString = ">> ";
     myString += QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
@@ -132,10 +132,10 @@ QString getTimeStamp(QStringList argumentList)
 }
 
 
-QStringList getArgumentList(QString commandLine)
+QList<QString> getArgumentList(QString commandLine)
 {
     string str;
-    QStringList argumentList;
+    QList<QString> argumentList;
 
     istringstream stream(commandLine.toStdString());
     while (stream >> str)
@@ -158,9 +158,9 @@ QString getCommandLine(QString programName)
 }
 
 
-QStringList getSharedCommandList()
+QList<QString> getSharedCommandList()
 {
-    QStringList cmdList;
+    QList<QString> cmdList;
 
     cmdList.append("Log     | SetLogFile");
     cmdList.append("DEM     | LoadDEM");
@@ -181,7 +181,7 @@ bool cmdExit(Project* myProject)
 }
 
 
-bool cmdLoadDEM(Project* myProject, QStringList argumentList)
+bool cmdLoadDEM(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
@@ -196,7 +196,7 @@ bool cmdLoadDEM(Project* myProject, QStringList argumentList)
 }
 
 
-bool cmdLoadMeteoGrid(Project* myProject, QStringList argumentList)
+bool cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
@@ -219,7 +219,7 @@ bool cmdLoadMeteoGrid(Project* myProject, QStringList argumentList)
 }
 
 
-bool cmdSetLogFile(Project* myProject, QStringList argumentList)
+bool cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
@@ -234,7 +234,7 @@ bool cmdSetLogFile(Project* myProject, QStringList argumentList)
 }
 
 
-bool executeSharedCommand(Project* myProject, QStringList argumentList, bool* isCommandFound)
+bool executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* isCommandFound)
 {
     *isCommandFound = false;
     if (argumentList.size() == 0) return false;
