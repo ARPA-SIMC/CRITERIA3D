@@ -365,7 +365,8 @@ void MainWindow::on_actionLoad_DEM_triggered()
 
 void MainWindow::on_actionOpenProject_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open project file"), "", tr("ini files (*.ini)"));
+    QString projectPath = myProject.getDefaultPath() + PATH_PROJECT;
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open project file"), projectPath, tr("ini files (*.ini)"));
     if (fileName == "") return;
 
     if (myProject.isProjectLoaded)
