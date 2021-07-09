@@ -12,8 +12,8 @@
     #include "crit3dClimateList.h"
 #endif
 
-#ifndef QSTRINGLIST_H
-    #include <QStringList>
+#ifndef QLIST_H
+    #include <QList>
 #endif
 #ifndef QDATETIME_H
     #include <QDateTime>
@@ -30,8 +30,8 @@ public:
     bool isMeteoGrid() const;
     void setIsMeteoGrid(bool isMeteoGrid);
 
-    QStringList listAnomaly() const;
-    void setListAnomaly(const QStringList &listAnomaly);
+    QList<QString> listAnomaly() const;
+    void setListAnomaly(const QList<QString> &listAnomaly);
 
     void reset();
     void eraseElement(int signedIndex);
@@ -158,12 +158,12 @@ public:
 
     void addAnomaly(unsigned int index);
 
-    QStringList listAll() const;
-    void setListAll(const QStringList &listAll);
+    QList<QString> listAll() const;
+    void setListAll(const QList<QString> &listAll);
 
 private:
 
-    QStringList _listAll;
+    QList<QString> _listAll;
     bool _isMeteoGrid;
     std::vector<bool> _listisPercentage;
     std::vector<bool> _listIsAnomalyFromDb; // VB RefType (Period o Clima)

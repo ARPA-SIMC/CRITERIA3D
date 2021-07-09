@@ -1,6 +1,6 @@
 #include "dialogSelectVar.h"
 
-DialogSelectVar::DialogSelectVar(QStringList allVar, QStringList selectedVar)
+DialogSelectVar::DialogSelectVar(QList<QString> allVar, QList<QString> selectedVar)
 : allVar(allVar), selectedVar(selectedVar)
 {
     setWindowTitle("Add or remove variables");
@@ -87,9 +87,9 @@ void DialogSelectVar::deleteVar()
     listAllVar->addItem(item);
 }
 
-QStringList DialogSelectVar::getSelectedVariables()
+QList<QString> DialogSelectVar::getSelectedVariables()
 {
-    QStringList variableSelected;
+    QList<QString> variableSelected;
     for(int i = 0; i < listSelectedVar->count(); ++i)
     {
         QString var = listSelectedVar->item(i)->text();

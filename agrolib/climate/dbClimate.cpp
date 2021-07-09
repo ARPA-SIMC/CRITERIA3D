@@ -360,7 +360,7 @@ bool saveGenericElab(QSqlDatabase db, QString *myError, QString id, float result
     return true;
 }
 
-bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString variable, QStringList* listElab)
+bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString variable, QList<QString>* listElab)
 {
     QSqlQuery qry(db);
     QString elab;
@@ -396,7 +396,7 @@ bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString var
     return found;
 }
 
-bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QStringList* listElab)
+bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QList<QString>* listElab)
 {
     QSqlQuery qry(db);
     QString elab;
@@ -432,7 +432,7 @@ bool selectAllElab(QSqlDatabase db, QString *myError, QString table, QStringList
     return found;
 }
 
-bool showClimateTables(QSqlDatabase db, QString *myError, QStringList* climateTables)
+bool showClimateTables(QSqlDatabase db, QString *myError, QList<QString>* climateTables)
 {
     QSqlQuery qry(db);
     QString table;

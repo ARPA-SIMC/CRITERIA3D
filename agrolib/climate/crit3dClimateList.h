@@ -8,8 +8,8 @@
         #include "statistics.h"
     #endif
 
-    #ifndef QSTRINGLIST_H
-        #include <QStringList>
+    #ifndef QLIST_H
+        #include <QList>
     #endif
     #ifndef QDATETIME_H
         #include <QDateTime>
@@ -56,8 +56,8 @@
         ~Crit3DClimateList();
 
 
-        QStringList listClimateElab() const;
-        void setListClimateElab(const QStringList &listClimateElab);
+        QList<QString> listClimateElab() const;
+        void setListClimateElab(const QList<QString> &listClimateElab);
 
         void resetListClimateElab();
 
@@ -109,7 +109,7 @@
 
     private:
 
-        QStringList _listClimateElab;
+        QList<QString> _listClimateElab;
         std::vector<int> _listYearStart;
         std::vector<int> _listYearEnd;
         std::vector<meteoVariable> _listVariable;

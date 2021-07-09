@@ -1,5 +1,5 @@
 #include <QtWidgets>
-#include <QStringList>
+#include <QList>
 
 #include "project.h"
 #include "utilities.h"
@@ -337,7 +337,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
 
     QLabel *labelTableList = new QLabel(tr("table for point values"));
     layoutPointValues->addWidget(labelTableList);
-    QStringList tables_ = _project->meteoPointsDbHandler->getDb().tables();
+    QList<QString> tables_ = _project->meteoPointsDbHandler->getDb().tables();
     for (int i=0; i < tables_.size(); i++)
         _table.addItem(tables_[i]);
 
@@ -387,7 +387,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
 
 bool ProxyDialog::checkProxies(QString *error)
 {
-    QStringList fields;
+    QList<QString> fields;
     std::string table_;
 
     for (unsigned i=0; i < _proxy.size(); i++)

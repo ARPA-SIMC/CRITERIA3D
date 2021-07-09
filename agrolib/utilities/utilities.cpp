@@ -9,11 +9,11 @@
 #include <QDir>
 
 
-QStringList getFields(QSqlDatabase* db_, QString tableName)
+QList<QString> getFields(QSqlDatabase* db_, QString tableName)
 {
     QSqlDriver* driver_ = db_->driver();
     QSqlRecord record_ = driver_->record(tableName);
-    QStringList fieldList;
+    QList<QString> fieldList;
     for (int i=0; i < record_.count(); i++)
         fieldList.append(record_.fieldName(i));
 
@@ -391,11 +391,10 @@ QStringList FloatVectorToStringList(std::vector <float> myVector)
     return myList;
 }
 
-
 bool removeDirectory(QString myPath)
 {
     QDir myDir(myPath);
-    myDir.setNameFilters(QStringList() << "*.*");
+    myDir.setNameFilters(QList<QString>() << "*.*");
     myDir.setFilter(QDir::Files);
 
     // remove all files

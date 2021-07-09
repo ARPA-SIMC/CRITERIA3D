@@ -24,12 +24,12 @@ void Crit3DElabList::setIsMeteoGrid(bool isMeteoGrid)
     _isMeteoGrid = isMeteoGrid;
 }
 
-QStringList Crit3DElabList::listAll() const
+QList<QString> Crit3DElabList::listAll() const
 {
     return _listAll;
 }
 
-void Crit3DElabList::setListAll(const QStringList &listElab)
+void Crit3DElabList::setListAll(const QList<QString> &listElab)
 {
     _listAll = listElab;
 }

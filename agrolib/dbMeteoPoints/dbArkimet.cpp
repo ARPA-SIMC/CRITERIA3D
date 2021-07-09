@@ -143,7 +143,7 @@ QList<int> DbArkimet::getHourlyVar()
 
 
 
-void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QStringList stations, QList<QString> idVar)
+void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QList<QString> stations, QList<QString> idVar)
 {
 
     for (short i=0; i<idVar.size(); i++)
@@ -170,7 +170,7 @@ void DbArkimet::initStationsDailyTables(QDate startDate, QDate endDate, QStringL
 }
 
 
-void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QStringList stations, QList<QString> idVar)
+void DbArkimet::initStationsHourlyTables(QDate startDate, QDate endDate, QList<QString> stations, QList<QString> idVar)
 {
     // start from 01:00
     QDateTime startTime(startDate, QTime(1,0,0), Qt::UTC);
@@ -296,7 +296,7 @@ bool DbArkimet::saveDailyData()
     QSqlQuery qry = _db.exec(statement);
 
     // create data stations list
-    QStringList stations;
+    QList<QString> stations;
     while (qry.next())
         stations.append(qry.value(0).toString());
 
@@ -333,7 +333,7 @@ bool DbArkimet::saveHourlyData()
     QSqlQuery qry = _db.exec(statement);
 
     // create data stations list
-    QStringList stations;
+    QList<QString> stations;
     while (qry.next())
         stations.append(qry.value(0).toString());
 

@@ -122,7 +122,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
         while (!in.atEnd())
         {
             QString line = in.readLine();
-            QStringList items = line.split(",");
+            QList<QString> items = line.split(",");
             if (items.size() < CSVRequiredInfo)
             {
                 qDebug() << "invalid format CSV, missing data";
@@ -234,7 +234,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
         while (!in.atEnd())
         {
             QString line = in.readLine();
-            QStringList items = line.split(",");
+            QList<QString> items = line.split(",");
             if (items.size() < CSVRequiredInfo)
             {
                 QMessageBox::information(nullptr, "Error", "invalid format Crit3DPlotStyles.csv");
@@ -594,7 +594,7 @@ void Crit3DMeteoWidget::resetValues()
             {
                 QLineSeries* line = new QLineSeries();
                 QString pointName = QString::fromStdString(meteoPoints[mp].name);
-                QStringList elementsName = pointName.split(' ');
+                QList<QString> elementsName = pointName.split(' ');
                 if (elementsName.size() == 1)
                 {
                     pointName = elementsName[0].left(8);
@@ -635,7 +635,7 @@ void Crit3DMeteoWidget::resetValues()
             for (int i = 0; i < nameBar.size(); i++)
             {
                 QString pointName = QString::fromStdString(meteoPoints[mp].name);
-                QStringList elementsName = pointName.split(' ');
+                QList<QString> elementsName = pointName.split(' ');
                 if (elementsName.size() == 1)
                 {
                     pointName = elementsName[0].left(8);
@@ -977,6 +977,11 @@ void Crit3DMeteoWidget::drawDailyVar()
                             minLine = value;
                         }
                     }
+                    else
+                    {
+                        //lineSeries[mp][i]->append(day, value);
+                        lineSeries[mp][i]->setPointsVisible(true);
+                    }
                 }
             }
             if (isBar)
@@ -1230,6 +1235,11 @@ void Crit3DMeteoWidget::drawHourlyVar()
                                 minLine = value;
                             }
                         }
+                        else
+                        {
+                            //lineSeries[mp][i]->append(index, value);
+                            lineSeries[mp][i]->setPointsVisible(true);
+                        }
                     }
                 }
 
@@ -1361,9 +1371,9 @@ void Crit3DMeteoWidget::showVar()
             currentFreq = hourly;
         }
     }
-    QStringList allKeys = MapCSVStyles.keys();
-    QStringList selectedVar = currentVariables;
-    QStringList allVar;
+    QList<QString> allKeys = MapCSVStyles.keys();
+    QList<QString> selectedVar = currentVariables;
+    QList<QString> allVar;
     for (int i = 0; i<allKeys.size(); i++)
     {
         if (currentFreq == daily)
@@ -1400,7 +1410,7 @@ void Crit3DMeteoWidget::showDailyGraph()
     dailyButton->setEnabled(false);
     hourlyButton->setEnabled(true);
 
-    QStringList currentHourlyVar = currentVariables;
+    QList<QString> currentHourlyVar = currentVariables;
     currentVariables.clear();
 
     for (int i = 0; i<currentHourlyVar.size(); i++)
@@ -1434,7 +1444,7 @@ void Crit3DMeteoWidget::showHourlyGraph()
     hourlyButton->setEnabled(false);
     dailyButton->setEnabled(true);
 
-    QStringList currentDailyVar = currentVariables;
+    QList<QString> currentDailyVar = currentVariables;
     currentVariables.clear();
 
     for (int i = 0; i < currentDailyVar.size(); i++)
@@ -1470,7 +1480,7 @@ void Crit3DMeteoWidget::updateSeries()
     isLine = false;
     isBar = false;
 
-    QMapIterator<QString, QStringList> i(MapCSVStyles);
+    QMapIterator<QString, QList<QString>> i(MapCSVStyles);
     while (i.hasNext())
     {
         i.next();
@@ -1478,7 +1488,7 @@ void Crit3DMeteoWidget::updateSeries()
         {
             if (i.key() == currentVariables[j])
             {
-                QStringList items = i.value();
+                QList<QString> items = i.value();
                 if (items[0] == "line")
                 {
                     isLine = true;

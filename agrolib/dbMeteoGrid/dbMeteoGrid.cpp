@@ -1023,7 +1023,7 @@ bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *myError, QString i
 
 bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 {
-    QStringList tableList = _db.tables(QSql::Tables);
+    QList<QString> tableList = _db.tables(QSql::Tables);
     if (tableList.size() <= 1)
     {
         *myError = "No data.";
@@ -2516,7 +2516,7 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridHourlyFF(QString *myError, QSt
     return true;
 }
 
-bool Crit3DMeteoGridDbHandler::idDailyList(QString *myError, QStringList* idMeteoList)
+bool Crit3DMeteoGridDbHandler::idDailyList(QString *myError, QList<QString>* idMeteoList)
 {
     QSqlQuery qry(_db);
 
@@ -2545,7 +2545,7 @@ bool Crit3DMeteoGridDbHandler::idDailyList(QString *myError, QStringList* idMete
     return true;
 }
 
-bool Crit3DMeteoGridDbHandler::getYearList(QString *myError, QString meteoPoint, QStringList* yearList)
+bool Crit3DMeteoGridDbHandler::getYearList(QString *myError, QString meteoPoint, QList<QString>* yearList)
 {
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;

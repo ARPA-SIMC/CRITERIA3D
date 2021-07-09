@@ -15,7 +15,6 @@
         #include <vector>
     #endif
 
-
     class Crit3DAggregationsDbHandler
     {
     public:
@@ -26,7 +25,7 @@
 
         bool writeAggregationZonesTable(QString name, QString filename, QString field);
         bool getAggregationZonesReference(QString name, QString* filename, QString* field);
-        void initAggregatedTables(int numZones, QString aggrType, QString periodType, QDateTime startDate, QDateTime endDate);
+        void initAggregatedTables(int numZones, QString aggrType, QString periodType, QDateTime startDate, QDateTime endDate, meteoVariable variable);
         bool saveAggrData(int nZones, QString aggrType, QString periodType, QDateTime startDate, QDateTime endDate, meteoVariable variable, std::vector< std::vector<float> > aggregatedValues);
         void createTmpAggrTable();
         void deleteTmpAggrTable();
@@ -36,6 +35,7 @@
         std::map<int, meteoVariable> mapIdMeteoVar() const;
         bool loadVariableProperties();
         int getIdfromMeteoVar(meteoVariable meteoVar);
+        QList<QString> getAggregations();
 
     private:
         QSqlDatabase _db;

@@ -21,19 +21,40 @@
         QString projectError;
         Logger logger;
 
+        QString path;
+
+        // database
+        QString dbCropName;
+        QString dbSoilName;
+        QString dbOutputName;
+        QString dbMeteoName;
+        QString dbForecastName;
+        QString dbUnitsName;
+
+        QSqlDatabase dbCrop;
+        QSqlDatabase dbSoil;
+        QSqlDatabase dbMeteo;
+
         // dates
         QDate firstSimulationDate;
         QDate lastSimulationDate;
 
+        bool isXmlMeteoGrid;
+
+        // soil
+        soil::Crit3DTextureClass soilTexture[13];
+
+        std::vector<Crit1DUnit> unitList;
+
         Crit1DProject();
 
+        void initialize();
         int initializeProject(QString settingsFileName);
         int computeAllUnits();
 
     private:
         bool isProjectLoaded;
 
-        QString path;
         QString projectName;
         QString configFileName;
 
@@ -43,30 +64,20 @@
 
         // seasonal forecast
         bool isSeasonalForecast;
-        int firstSeasonMonth;
-        std::vector<float> seasonalForecasts;
-        int nrSeasonalForecasts;
-
-        // short term forecast
-        bool isShortTermForecast;
-        unsigned int daysOfForecast;
-
-        // monthly forecast
         bool isMonthlyForecast;
+        bool isShortTermForecast;
 
-        QString dbCropName;
-        QString dbSoilName;
-        QString dbOutputName;
-        QString dbMeteoName;
-        QString dbForecastName;
-        QString dbUnitsName;
+        int firstSeasonMonth;
+        int daysOfForecast;
+        int nrForecasts;
+        std::vector<float> forecastIrr;
+        std::vector<float> forecastPrec;
 
         QString outputString;
 
         QString logFileName;
         std::ofstream logFile;
 
-        bool isXmlGrid;
         bool addDateTimeLogFile;
 
         QString outputCsvFileName;
@@ -79,9 +90,6 @@
         std::vector<int> awcDepth;
 
         // DATABASE
-        QSqlDatabase dbCrop;
-        QSqlDatabase dbSoil;
-        QSqlDatabase dbMeteo;
         QSqlDatabase dbForecast;
         QSqlDatabase dbOutput;
         QSqlDatabase dbState;
@@ -89,14 +97,8 @@
         Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
 
-        std::vector<Crit1DUnit> unitList;
-
-        // soil
-        soil::Crit3DTextureClass soilTexture[13];
-
         Crit1DCase myCase;
 
-        void initialize();
         void closeProject();
         bool readSettings();
         void closeAllDatabase();
@@ -110,11 +112,12 @@
 
         bool setPercentileOutputCsv();
         void updateSeasonalForecastOutput(Crit3DDate myDate, int &index);
+        void updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int forecastIndex);
         void initializeSeasonalForecast(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
-        bool computeSeasonalForecast(unsigned int index, double irriRatio);
-        bool computeMonthlyForecast(unsigned int index, double irriRatio);
+        bool computeSeasonalForecast(unsigned int index, float irriRatio);
+        bool computeMonthlyForecast(unsigned int unitIndex, float irriRatio);
 
-        bool computeUnit(unsigned int unitIndex, int memberNr);
+        bool computeUnit(unsigned int unitIndex, unsigned int forecastIndex);
 
         bool createOutputTable(QString &myError);
         bool createState(QString &myError);

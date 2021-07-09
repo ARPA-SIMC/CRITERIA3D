@@ -122,6 +122,7 @@
             void fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable);
 
             bool findMeteoPointFromId(unsigned *row, unsigned *col, const std::string &code);
+            bool existsMeteoPointFromId(const std::string& id);
             bool getMeteoPointActiveId(int row, int col, std::string *id);
             bool getLatFromId(std::string id, double* lat);
             bool getLatLonFromId(std::string id, double* lat, double* lon);

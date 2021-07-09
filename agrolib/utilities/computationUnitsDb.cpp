@@ -54,8 +54,8 @@ ComputationUnitsDB::~ComputationUnitsDB()
 }
 
 
-bool ComputationUnitsDB::writeListToUnitsTable(QStringList idCase, QStringList idCrop, QStringList idMeteo,
-                                  QStringList idSoil, QList<double> hectares, QString &error)
+bool ComputationUnitsDB::writeListToUnitsTable(QList<QString> idCase, QList<QString> idCrop, QList<QString> idMeteo,
+                                  QList<QString> idSoil, QList<double> hectares, QString &error)
 {
     QSqlQuery qry(db);
     qry.prepare("CREATE TABLE units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, hectares NUMERIC, PRIMARY KEY(ID_CASE))");
@@ -94,7 +94,7 @@ bool ComputationUnitsDB::writeListToUnitsTable(QStringList idCase, QStringList i
 bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString &error)
 {
     QString unitsTable = "units";
-    QStringList fieldList = getFields(&db, unitsTable);
+    QList<QString> fieldList = getFields(&db, unitsTable);
     bool existNumericalInfiltration = fieldList.contains("numerical_solution");
     bool existWaterRetentionData = fieldList.contains("water_retention_fitting");
     bool existWaterTable = fieldList.contains("use_water_table");

@@ -2,20 +2,20 @@
 #include "utilities.h"
 #include "commonConstants.h"
 
-DialogMeteoTable::DialogMeteoTable(Crit3DMeteoSettings *meteoSettings_, QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QStringList currentVariables)
+DialogMeteoTable::DialogMeteoTable(Crit3DMeteoSettings *meteoSettings_, QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QList<QString> currentVariables)
     :meteoPoints(meteoPoints), firstDate(firstDate), lastDate(lastDate), currentFreq(currentFreq), currentVariables(currentVariables)
 {
     meteoSettings = meteoSettings_;
 
     QString title = "Table meteo values ID: ";
-    QStringList idList;
-    QStringList nameList;
+    QList<QString> idList;
+    QList<QString> nameList;
     for (int i=0; i<meteoPoints.size(); i++)
     {
         idList << QString::fromStdString(meteoPoints[i].id);
 
         QString pointName = QString::fromStdString(meteoPoints[i].name);
-        QStringList elementsName = pointName.split(' ');
+        QList<QString> elementsName = pointName.split(' ');
         if (elementsName.size() == 1)
         {
             pointName = elementsName[0].left(8);

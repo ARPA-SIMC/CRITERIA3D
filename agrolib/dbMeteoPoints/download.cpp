@@ -20,7 +20,7 @@ DbArkimet* Download::getDbArkimet()
     return _dbMeteo;
 }
 
-bool Download::getPointProperties(QStringList datasetList)
+bool Download::getPointProperties(QList<QString> datasetList)
 {
 
     bool result = true;
@@ -174,11 +174,11 @@ void Download::downloadMetadata(QJsonObject obj)
 }
 
 
-bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset, QStringList stations, QList<int> variables, bool prec0024)
+bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables, bool prec0024)
 {
     QString area, product, refTime;
     QDate myDate;
-    QStringList fields;
+    QList<QString> fields;
 
     // variable properties
     QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
@@ -315,7 +315,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
 }
 
 
-bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString dataset, QStringList stations, QList<int> variables)
+bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables)
 {
 
     QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
@@ -391,7 +391,7 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
 
             QString line, dateTime, idPoint, flag, varName;
             QString idVariable, value, frequency;
-            QStringList fields;
+            QList<QString> fields;
             int i, idVarArkimet;
 
             _dbMeteo->createTmpTableHourly();

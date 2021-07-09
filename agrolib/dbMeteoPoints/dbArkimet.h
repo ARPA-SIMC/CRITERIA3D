@@ -29,8 +29,8 @@
             QList<int> getId(QString VarName);
             QList<VariablesList> getVariableProperties(QList<int> id);
 
-            void initStationsDailyTables(QDate startDate, QDate endDate, QStringList stations, QList<QString> idVar);
-            void initStationsHourlyTables(QDate startDate, QDate endDate, QStringList stations, QList<QString> idVar);
+            void initStationsDailyTables(QDate startDate, QDate endDate, QList<QString> stations, QList<QString> idVar);
+            void initStationsHourlyTables(QDate startDate, QDate endDate, QList<QString> stations, QList<QString> idVar);
 
             void createTmpTableHourly();
             void deleteTmpTableHourly();

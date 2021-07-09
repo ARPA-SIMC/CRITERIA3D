@@ -27,7 +27,7 @@
     QString getStringSeasonFromDate(QDate date);
     bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* startDate, QDate* endDate);
 
-    QStringList getFields(QSqlDatabase* db_, QString tableName);
+    QList<QString> getFields(QSqlDatabase* db_, QString tableName);
 
     bool getValue(QVariant myRs);
     bool getValue(QVariant myRs, int* myValue);
