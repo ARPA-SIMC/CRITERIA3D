@@ -195,7 +195,15 @@ bool Crit1DProject::readSettings()
             bool addDate = projectSettings->value("add_date_to_filename","").toBool();
             if (addDate)
             {
-                QString dateStr = QDate::currentDate().toString("yyyy-MM-dd");
+                QString dateStr;
+                if (lastSimulationDate == QDate(1800,1,1))
+                {
+                    dateStr = QDate::currentDate().toString("yyyy-MM-dd");
+                }
+                else
+                {
+                    dateStr = lastSimulationDate.addDays(1).toString("yyyy-MM-dd");
+                }
                 outputCsvFileName += "_" + dateStr;
             }
             outputCsvFileName += ".csv";
