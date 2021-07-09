@@ -10,6 +10,7 @@
 #include "dialogInterpolation.h"
 #include "dialogSettings.h"
 #include "dialogRadiation.h"
+#include "dialogPointProperties.h"
 
 #include "utilities.h"
 #include "criteria3DProject.h"
@@ -1208,6 +1209,75 @@ void MainWindow::on_actionMeteoPointsImport_data_triggered()
 }
 
 
+void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
+{
+    QString templateFileName = myProject.getDefaultPath() + PATH_TEMPLATE + "template_meteo.db";
+    QString meteoPointsPath = myProject.getDefaultPath() + PATH_METEOPOINT;
+
+    QString dbName = QFileDialog::getSaveFileName(this, tr("Save as"), meteoPointsPath, tr("DB files (*.db)"));
+    if (dbName == "")
+    {
+        qDebug() << "missing db file name";
+        return;
+    }
+
+    QString csvFileName = QFileDialog::getOpenFileName(this, tr("Open properties csv file"), "", tr("csv files (*.csv)"));
+    if (csvFileName.isEmpty())
+        return;
+
+    myProject.closeMeteoPointsDB();
+
+    QFile dbFile(dbName);
+    if (dbFile.exists())
+    {
+        dbFile.close();
+        dbFile.setPermissions(QFile::ReadOther | QFile::WriteOther);
+        if (! dbFile.remove())
+        {
+            myProject.logError("Remove file failed: " + dbName + "\n" + dbFile.errorString());
+            return;
+        }
+    }
+
+    if (! QFile::copy(templateFileName, dbName))
+    {
+        myProject.logError("Copy file failed: " + templateFileName);
+        return;
+    }
+    myProject.meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
+
+    QList<QString> pointPropertiesList;
+    if (!myProject.meteoPointsDbHandler->getNameColumn("point_properties", &pointPropertiesList))
+    {
+        myProject.logError("Error in read table point_properties");
+        return;
+    }
+    QList<QString> csvFields;
+    if (!myProject.parseMeteoPointsPropertiesCSV(csvFileName, &csvFields))
+    {
+        myProject.logError("Error in parse properties");
+        return;
+    }
+
+    DialogPointProperties dialogPointProp(pointPropertiesList, csvFields);
+    if (dialogPointProp.result() != QDialog::Accepted)
+    {
+        return;
+    }
+    else
+    {
+        QList<QString> joinedList = dialogPointProp.getJoinedList();
+        if (! myProject.writeMeteoPointsProperties(joinedList))
+        {
+            myProject.logError("Error in write points properties");
+            return;
+        }
+    }
+
+    loadMeteoPointsDB(dbName);
+}
+
+
 void MainWindow::on_actionRun_models_triggered()
 {
     if (! myProject.isCriteria3DInitialized)
@@ -1329,6 +1399,5 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOut
     myProject.logInfoGUI("End of run.");
     return true;
 }
-
 
 

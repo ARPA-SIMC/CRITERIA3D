@@ -95,6 +95,8 @@
         void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
         void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
 
+        void on_actionNew_meteoPointsDB_from_csv_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
