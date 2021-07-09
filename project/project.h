@@ -25,6 +25,9 @@
     #ifndef METEOMAPS_H
         #include "meteoMaps.h"
     #endif
+    #ifndef IMPORTPROPERTIESCSV_H
+        #include "importPropertiesCSV.h"
+    #endif
 
     #ifndef QSETTINGS_H
         #include <QSettings>
@@ -50,6 +53,7 @@
         QString defaultPath;
         QString projectPath;
         FormInfo* formLog;
+        ImportPropertiesCSV* importProperties;
 
         void clearMeteoPoints();
         bool createDefaultProject(QString fileName);
@@ -211,6 +215,9 @@
 
         bool checkMeteoGridForExport();
         void importHourlyMeteoData(const QString& fileName, bool importAllFiles, bool deletePreviousData);
+
+        bool parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString> *csvFields);
+        bool writeMeteoPointsProperties(QList<QString> joinedList);
 
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
