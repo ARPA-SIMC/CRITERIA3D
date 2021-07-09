@@ -24,7 +24,8 @@ INCLUDEPATH +=  ./shared  \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation  \
                 ../../agrolib/soilWidget ../../agrolib/utilities  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
-                ../../agrolib/project ../../agrolib/graphics  ../../agrolib/commonDialogs \
+                ../../agrolib/importDataXML ../../agrolib/project \
+                ../../agrolib/graphics  ../../agrolib/commonDialogs \
                 ../../mapGraphics ../../agrolib/meteoWidget
 
 
