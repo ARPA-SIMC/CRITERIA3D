@@ -9,6 +9,7 @@ ImportPropertiesCSV::ImportPropertiesCSV(QString csvFileName)
 
 }
 
+
 bool ImportPropertiesCSV::parserCSV(QString *error)
 {
     if (csvFileName == "")
@@ -45,15 +46,16 @@ bool ImportPropertiesCSV::parserCSV(QString *error)
         data.append(line);
     }
 
-
     myFile.close();
     return true;
 }
+
 
 QList<QString> ImportPropertiesCSV::getHeader() const
 {
     return header;
 }
+
 
 QList<QList<QString> > ImportPropertiesCSV::getData() const
 {

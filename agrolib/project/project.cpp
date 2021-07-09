@@ -2507,6 +2507,64 @@ void Project::deleteMeteoWidgetGrid(int id)
 }
 
 
+bool Project::parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString>* csvFields)
+{
+    if (! QFile(csvFileName).exists() || ! QFileInfo(csvFileName).isFile())
+    {
+        logError("Missing file: " + csvFileName);
+        return false;
+    }
+    importProperties = new ImportPropertiesCSV(csvFileName);
+
+    errorString = "";
+    if (!importProperties->parserCSV(&errorString))
+    {
+        logError(errorString);
+        delete importProperties;
+        return false;
+    }
+    *csvFields = importProperties->getHeader();
+    return true;
+}
+
+
+bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
+{
+    QList<QString> header = importProperties->getHeader();
+    QList<QList<QString>> dataFields = importProperties->getData();
+
+    QList<QString> column;
+    QList<int> posValues;
+
+    for (int i = 0; i<joinedList.size(); i++)
+    {
+        QList<QString> couple = joinedList[i].split("-->");
+        QString pragaProperties = couple[0];
+        QString fileProperties = couple[1];
+        int pos = header.indexOf(fileProperties);
+        if (pos != -1)
+        {
+            column << pragaProperties;
+            posValues << pos;
+        }
+    }
+
+    QList<QString> values;
+
+    for (int row = 0; row<dataFields.size(); row++)
+    {
+        values.clear();
+        for (int j = 0; j<posValues.size(); j++)
+        {
+            values << dataFields[row][posValues[j]];
+        }
+        meteoPointsDbHandler->updatePointProperties(column, values);
+    }
+
+    return true;
+}
+
+
 
 /* ---------------------------------------------
  * LOG functions
@@ -2611,6 +2669,10 @@ void Project::logError()
     }
 }
 
+
+/* ---------------------------------------------
+ * Progress bar
+ * --------------------------------------------*/
 
 int Project::setProgressBar(QString myStr, int nrValues)
 {
