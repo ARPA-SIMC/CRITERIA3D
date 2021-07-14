@@ -349,7 +349,7 @@ void MapGraphicsView::handleChildViewScrollWheel(QWheelEvent *event)
     event->setAccepted(true);
 
     this->setDragMode(MapGraphicsView::ScrollHandDrag);
-    if (event->delta() > 0)
+    if (event->angleDelta().y() > 0)
         this->zoomIn(MouseZoom);
     else
         this->zoomOut(MouseZoom);
