@@ -1,5 +1,7 @@
 ## MapGraphics
 
+Forked from [raptorswing/MapGraphics](https://github.com/raptorswing/MapGraphics)
+
 A tile-based "slippy map" library written in/for C++/Qt. BSD licensed (see LICENSE). 
 It's meant to enable C++/Qt developers to easily add nice, interactive maps to their applications.
 
