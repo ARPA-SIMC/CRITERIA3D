@@ -234,6 +234,8 @@ void WebTileSource::handleNetworkRequestFinished()
 
     //Figure out how long the tile should be cached
     QDateTime expireTime;
+    expireTime = QDateTime::currentDateTimeUtc().addSecs(86400);
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     if (reply->hasRawHeader("Cache-Control"))
     {
         //We support the max-age directive only for now
@@ -248,6 +250,7 @@ void WebTileSource::handleNetworkRequestFinished()
                 expireTime = QDateTime::currentDateTimeUtc().addSecs(delta);
         }
     }
+#endif
 
     //Notify client of tile retrieval
     this->prepareNewlyReceivedTile(x,y,z, image, expireTime);

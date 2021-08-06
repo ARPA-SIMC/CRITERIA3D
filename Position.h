@@ -52,7 +52,12 @@ MAPGRAPHICSSHARED_EXPORT QDataStream& operator<<(QDataStream& stream, const Posi
 MAPGRAPHICSSHARED_EXPORT QDataStream& operator>>(QDataStream& stream, Position& pos);
 
 //Non-member method for hashing
-
-MAPGRAPHICSSHARED_EXPORT uint qHash(const Position& pos);
+/*#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    using qhash_result_t = size_t;
+#else
+    using qhash_result_t = uint;
+#endif
+MAPGRAPHICSSHARED_EXPORT qhash_result_t qHash(const Position& pos);
+*/
 
 #endif // POSITION_H

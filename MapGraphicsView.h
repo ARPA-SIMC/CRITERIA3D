@@ -20,6 +20,7 @@
 #include "guts/MapTileGraphicsObject.h"
 #include "guts/PrivateQGraphicsInfoSource.h"
 
+
 class MAPGRAPHICSSHARED_EXPORT MapGraphicsView : public QWidget, public PrivateQGraphicsInfoSource
 {
     Q_OBJECT
@@ -106,10 +107,17 @@ private:
     DragMode _dragMode;
 };
 
-inline uint qHash(const QPointF& key)
+
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    using qhash_result_t = size_t;
+#else
+    using qhash_result_t = uint;
+#endif
+inline qhash_result_t qHash(const QPointF& key, qhash_result_t seed) noexcept
 {
     const QString temp = QString::number(key.x()) % "," % QString::number(key.y());
-    return qHash(temp);
+    return qHash(temp, seed);
 }
+
 
 #endif // MAPGRAPHICSVIEW_H
