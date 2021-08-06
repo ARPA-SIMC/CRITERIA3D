@@ -15,6 +15,7 @@
 #include "guts/PrivateQGraphicsView.h"
 #include "guts/Conversions.h"
 
+
 MapGraphicsView::MapGraphicsView(MapGraphicsScene *scene, QWidget *parent) :
     QWidget(parent)
 {

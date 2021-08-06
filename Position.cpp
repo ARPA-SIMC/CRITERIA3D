@@ -182,9 +182,8 @@ QDataStream& operator>>(QDataStream& stream, Position& pos)
 }
 
 //Non-member method for hashing
-/*
 qhash_result_t qHash(const Position& pos)
 {
     return qhash_result_t(pos.lonLat().x() + pos.lonLat().y() + pos.altitude());
 }
-*/
+
