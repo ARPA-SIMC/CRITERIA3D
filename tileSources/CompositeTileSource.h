@@ -81,7 +81,11 @@ private slots:
 
 private:
     void doChildThreading(QSharedPointer<MapTileSource>);
-    QMutex * _globalMutex;
+    #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        QRecursiveMutex * _globalMutex;
+    #else
+        QMutex * _globalMutex;
+    #endif
     QList<QSharedPointer<MapTileSource> > _childSources;
     QList<qreal> _childOpacities;
     QList<bool> _childEnabledFlags;

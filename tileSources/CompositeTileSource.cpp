@@ -9,7 +9,11 @@
 CompositeTileSource::CompositeTileSource() :
     MapTileSource()
 {
-    _globalMutex = new QMutex(QMutex::Recursive);
+    #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        _globalMutex = new QRecursiveMutex();
+    #else
+        _globalMutex = new QMutex(QMutex::Recursive);
+    #endif
     this->setCacheMode(MapTileSource::NoCaching);
 }
 
