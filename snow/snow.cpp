@@ -251,6 +251,24 @@ void Crit3DSnow::computeSnowBrooksModel()
         prevLWaterContent = 0;
         _ageOfSnow = 0;
     }
+    /* altro controllo coerenza (serve?)
+    If (prev_surf_temp = Snow.SnowSurfaceTempMap.header.flag) Then
+
+        If (Previous_SWE > 0) Then
+            prev_surf_temp = Air_temp
+        Else
+            prev_surf_temp = 0
+        End If
+
+        prev_surf_int_energy = prev_surf_temp * _
+            (WATER_DENSITY * HEAT_CAPACITY_SNOW * min(Previous_SWE, SNOW_SKIN_THICKNESS) _
+            + SOIL_SPECIFIC_HEAT * max(0, SNOW_SKIN_THICKNESS - Previous_SWE) * bulk_density)
+
+        Prev_int_energy = prev_surf_temp * _
+            (WATER_DENSITY * HEAT_CAPACITY_SNOW * Previous_SWE + _
+             bulk_density * SNOW_DAMPING_DEPTH * SOIL_SPECIFIC_HEAT)
+    End If
+    */
 
     /*! \brief Vapor Density and Roughness Calculations */
 
@@ -266,7 +284,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     AirActualVapDensity = double(exp((16.78 * dewPoint - 116.9) / (dewPoint + 237.3))
                               / ((ZEROCELSIUS + dewPoint) * THERMO_WATER_VAPOR) );
 
-    // over water ( over snow?)
+    // over water
     WaterActualVapDensity = double( exp((16.78 * prevSurfacetemp - 116.9) / (prevSurfacetemp + 237.3))
                                 / ((ZEROCELSIUS + prevSurfacetemp) * THERMO_WATER_VAPOR) );
 
@@ -274,8 +292,10 @@ void Crit3DSnow::computeSnowBrooksModel()
     // LC: controllare
     // non trovo riferimenti a questa formula
     if (prevInternalEnergy <= 0)
-    WaterActualVapDensity *= exp(MH2O * LATENT_HEAT_FUSION * (prevSurfacetemp + ZEROCELSIUS)
-                                 / (R_GAS * pow(prevSurfacetemp + ZEROCELSIUS, 2) / 1000.));
+    {
+        WaterActualVapDensity *= exp(MH2O * LATENT_HEAT_FUSION * prevSurfacetemp * 1000
+                                 / (R_GAS * pow(prevSurfacetemp + ZEROCELSIUS, 2)));
+    }
 
     /*!
     * \brief Atmospheric Emissivity Calculations for Longwave Radiation
@@ -288,9 +308,9 @@ void Crit3DSnow::computeSnowBrooksModel()
     /*! Age of snow & albedo */
 
     if ( _snowFall > 0 && _prec <= 0)
-        _ageOfSnow = 1 / 24;
+        _ageOfSnow = 1. / 24.;
     else if (previousSWE > 0)
-        _ageOfSnow = _ageOfSnow + 1 / 24;
+        _ageOfSnow = _ageOfSnow + 1. / 24.;
     else
         _ageOfSnow = 0;
 
@@ -305,12 +325,12 @@ void Crit3DSnow::computeSnowBrooksModel()
     /*! \brief Incoming Energy Fluxes */
 
     // pag. 52 (3.22) considerando i 2 contributi invece che solo uno
-    QPrecipW = (HEAT_CAPACITY_WATER / 1000) * (_prec / 1000) * (MAXVALUE(0, _airT) - prevSurfacetemp);
-    QPrecipS = (HEAT_CAPACITY_SNOW / 1000) * (_snowFall / 1000) * (MINVALUE(0, _airT) - prevSurfacetemp);
+    QPrecipW = (HEAT_CAPACITY_WATER / 1000.) * (_prec / 1000.) * (MAXVALUE(0, _airT) - prevSurfacetemp);
+    QPrecipS = (HEAT_CAPACITY_SNOW / 1000.) * (_snowFall / 1000.) * (MINVALUE(0, _airT) - prevSurfacetemp);
     QPrecip = QPrecipW + QPrecipS;
 
     // temperatura dell'acqua: almeno 1 grado
-    QWaterHeat = (HEAT_CAPACITY_WATER / 1000) * (_surfaceWaterContent / 1000) * (MAXVALUE(1, (prevSurfacetemp + _airT) / 2) - prevSurfacetemp);
+    QWaterHeat = (HEAT_CAPACITY_WATER / 1000.) * (_surfaceWaterContent / 1000.) * (MAXVALUE(1., (prevSurfacetemp + _airT) / 2.) - prevSurfacetemp);
 
     // energia acqua libera
     QWaterKinetic = 0;
@@ -337,7 +357,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     */
 
     // pag. 50 (3.14)
-    QSolar = (1 - albedo) * (solarRadTot * 3600) / 1000;
+    QSolar = (1. - albedo) * (solarRadTot * 3600.) / 1000.;
 
     if (previousSWE > SNOW_MINIMUM_HEIGHT)
         myEmissivity = double(SNOW_EMISSIVITY);
@@ -349,14 +369,14 @@ void Crit3DSnow::computeSnowBrooksModel()
               - myEmissivity * pow ((prevSurfacetemp + ZEROCELSIUS), 4.0)));
 
     // pag. 50 (3.17)
-    QTempGradient = 3600 * (HEAT_CAPACITY_AIR / 1000) * (_airT - prevSurfacetemp) / aerodynamicResistance;
+    QTempGradient = (3600. * (HEAT_CAPACITY_AIR / 1000.) * (_airT - prevSurfacetemp)) / aerodynamicResistance;
 
     // FT calcolare solo se c'e' manto nevoso
     if (previousSWE > SNOW_MINIMUM_HEIGHT)
     {
         // LC: pag. 51 (3.19)
         // assume WATER_DENSITY = 1 ?
-        QVaporGradient = 3600 * (LATENT_HEAT_VAPORIZATION + LATENT_HEAT_FUSION) * (AirActualVapDensity - WaterActualVapDensity) / aerodynamicResistance;
+        QVaporGradient = 3600. * (LATENT_HEAT_VAPORIZATION + LATENT_HEAT_FUSION) * (AirActualVapDensity - WaterActualVapDensity) / aerodynamicResistance;
     }
     else
     {
@@ -370,7 +390,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     if (previousSWE > SNOW_MINIMUM_HEIGHT)
     {
         // pag 51 (3.21)
-        EvapCond = QVaporGradient / ((LATENT_HEAT_FUSION + LATENT_HEAT_VAPORIZATION) * WATER_DENSITY) * 1000;
+        EvapCond = QVaporGradient / ((LATENT_HEAT_FUSION + LATENT_HEAT_VAPORIZATION) * WATER_DENSITY) * 1000.;
         if (EvapCond < 0)
         {
             //controllo aggiunto: può evaporare al massimo la neve presente
@@ -392,8 +412,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     if (previousSWE > SNOW_MINIMUM_HEIGHT)
     {
         // pag. 53 (3.25) (3.26) (3.24)
-        double wFreeze = std::min((_prec + prevLWaterContent), MAXVALUE(0, -1000 / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal)));
-        double wThaw =  std::min((_snowFall + prevIceContent + EvapCond), MAXVALUE(0, 1000 / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal)));
+        double wFreeze = std::min((_prec + prevLWaterContent), MAXVALUE(0., -1000. / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal)));
+        double wThaw =  std::min((_snowFall + prevIceContent + EvapCond), MAXVALUE(0., 1000. / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal)));
         refreeze = wFreeze - wThaw;
     }
     else
@@ -402,7 +422,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     }
 
     /*! Internal energy */
-    _internalEnergy = prevInternalEnergy + QTotal + (refreeze / 1000) * LATENT_HEAT_FUSION * WATER_DENSITY;
+    _internalEnergy = prevInternalEnergy + QTotal + (refreeze / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY;
 
     /*! \brief Snow Pack Mass */
 
@@ -437,16 +457,17 @@ void Crit3DSnow::computeSnowBrooksModel()
     else
     {
         if (_snowWaterEquivalent > 0)
-            _surfaceInternalEnergy = MINVALUE(0, prevSurfaceIntEnergy + (QTotal + (refreeze / 1000) * LATENT_HEAT_FUSION * WATER_DENSITY) * (std::min(_snowWaterEquivalent / 1000, snowParameters.snowSkinThickness) / SNOW_DAMPING_DEPTH + MAXVALUE(snowParameters.snowSkinThickness - (_snowWaterEquivalent / 1000), 0) / SOIL_DAMPING_DEPTH));
+            _surfaceInternalEnergy = MINVALUE(0., prevSurfaceIntEnergy + (QTotal + (refreeze / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY)
+                                    * (std::min(_snowWaterEquivalent / 1000., snowParameters.snowSkinThickness) / SNOW_DAMPING_DEPTH + MAXVALUE(snowParameters.snowSkinThickness - (_snowWaterEquivalent / 1000.), 0.) / SOIL_DAMPING_DEPTH));
         else
-            _surfaceInternalEnergy = prevSurfaceIntEnergy + (QTotal + (refreeze / 1000) * LATENT_HEAT_FUSION * WATER_DENSITY) * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
+            _surfaceInternalEnergy = prevSurfaceIntEnergy + (QTotal + (refreeze / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY) * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
     }
 
     // TODO passare bulk density
     bulk_density = DEFAULT_BULK_DENSITY;
 
-    _snowSurfaceTemp = _surfaceInternalEnergy / ((HEAT_CAPACITY_SNOW / 1000) * MINVALUE(_snowWaterEquivalent / 1000, snowParameters.snowSkinThickness)
-                   + SOIL_SPECIFIC_HEAT * MAXVALUE(0, snowParameters.snowSkinThickness - _snowWaterEquivalent / 1000) * bulk_density);
+    _snowSurfaceTemp = _surfaceInternalEnergy / ((HEAT_CAPACITY_SNOW / 1000.) * MINVALUE(_snowWaterEquivalent / 1000., snowParameters.snowSkinThickness)
+                   + SOIL_SPECIFIC_HEAT * MAXVALUE(0., snowParameters.snowSkinThickness - _snowWaterEquivalent / 1000.) * bulk_density);
 
 }
 

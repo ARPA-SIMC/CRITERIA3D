@@ -20,14 +20,14 @@
     /*!
      * heat of fusion for ice at 0 °C
     */
-    #define LATENT_HEAT_FUSION  335             /*!<  [kJ/kg] */
-    #define LATENT_HEAT_VAPORIZATION 2500       /*!<  [kJ/kg] */
+    #define LATENT_HEAT_FUSION  335.             /*!<  [kJ/kg] */
+    #define LATENT_HEAT_VAPORIZATION 2500.       /*!<  [kJ/kg] */
 
     #define SOIL_SPECIFIC_HEAT 2.1              /*!<  [KJ/kg/°C] */
-    #define DEFAULT_BULK_DENSITY 1350           /*!<  [kg/m^3] */
+    #define DEFAULT_BULK_DENSITY 1350.          /*!<  [kg/m^3] */
     #define SOIL_DAMPING_DEPTH 0.3              /*!<  [m] */
     #define SNOW_DAMPING_DEPTH 0.05             /*!<  [m] */
-    #define SNOW_MINIMUM_HEIGHT 2               /*!<  [mm] */
+    #define SNOW_MINIMUM_HEIGHT 2.              /*!<  [mm] */
 
 
     class Crit3DSnowParameters
