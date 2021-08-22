@@ -62,6 +62,7 @@
         void setAllHourlyMeteoMapsComputed(bool value);
 
         bool saveDailyOutput(QDate myDate, const QString& outputPathHourly);
+        bool saveModelState();
     };
 
 

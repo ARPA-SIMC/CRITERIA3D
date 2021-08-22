@@ -1618,10 +1618,21 @@ void MainWindow::on_buttonModelStart_clicked()
 
 void MainWindow::on_actionSave_state_triggered()
 {
-
+    if (myProject.isProjectLoaded)
+    {
+        if (myProject.saveModelState())
+        {
+            myProject.logInfoGUI("Snow model successfully saved.");
+        }
+    }
+    else
+    {
+        myProject.logError("Open a project before");
+    }
+    return;
 }
 
 void MainWindow::on_actionLoad_state_triggered()
 {
-
+    // TO DO
 }
