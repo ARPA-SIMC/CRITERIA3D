@@ -1634,5 +1634,17 @@ void MainWindow::on_actionSave_state_triggered()
 
 void MainWindow::on_actionLoad_state_triggered()
 {
-    // TO DO
+    if (myProject.isProjectLoaded)
+    {
+        QList<QString> stateList = myProject.getAllSavedState();
+        for (int i = 0; i<stateList.size(); i++)
+        {
+            qDebug() << "stateList " << stateList[i];
+        }
+    }
+    else
+    {
+        myProject.logError("Open a project before");
+    }
+    return;
 }

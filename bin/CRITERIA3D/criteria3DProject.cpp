@@ -694,3 +694,32 @@ bool Crit3DProject::saveModelState()
     return true;
 }
 
+QList<QString> Crit3DProject::getAllSavedState()
+{
+    QList<QString> states;
+    QString projectPath = getDefaultPath() + PATH_PROJECT;
+    QString statePath = projectPath+projectName+"/STATES";
+    QDir dir(statePath);
+    if (!dir.exists())
+    {
+        logError("empty states");
+        return states;
+    }
+    QFileInfoList list = dir.entryInfoList(QDir::AllDirs | QDir::NoDot | QDir::NoDotDot | QDir::NoSymLinks);
+    for (int i=0; i<list.size(); i++)
+    {
+        if (list[i].baseName().size() == 12)
+        {
+            states << list[i].baseName();
+        }
+    }
+    return states;
+}
+
+bool Crit3DProject::loadModelState()
+{
+    // TO DO
+    return true;
+
+}
+
