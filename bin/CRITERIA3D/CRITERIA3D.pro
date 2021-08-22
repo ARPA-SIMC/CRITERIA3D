@@ -81,6 +81,7 @@ CONFIG(debug, debug|release) {
 
 SOURCES += mainwindow.cpp \
     criteria3DProject.cpp \
+    dialogLoadState.cpp \
     dialogSnowSettings.cpp \
     shared/project3D.cpp \
     main.cpp
@@ -88,6 +89,7 @@ SOURCES += mainwindow.cpp \
 
 HEADERS += mainwindow.h \
     criteria3DProject.h \
+    dialogLoadState.h \
     dialogSnowSettings.h \
     shared/project3D.h
 

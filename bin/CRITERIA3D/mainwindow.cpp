@@ -14,6 +14,7 @@
 #include "formPeriod.h"
 #include "criteria3DProject.h"
 #include "dialogSnowSettings.h"
+#include "dialogLoadState.h"
 
 #include <QDebug>
 
@@ -1637,9 +1638,14 @@ void MainWindow::on_actionLoad_state_triggered()
     if (myProject.isProjectLoaded)
     {
         QList<QString> stateList = myProject.getAllSavedState();
-        for (int i = 0; i<stateList.size(); i++)
+        DialogLoadState dialogLoadState(stateList);
+        if (dialogLoadState.result() != QDialog::Accepted)
         {
-            qDebug() << "stateList " << stateList[i];
+            return;
+        }
+        else
+        {
+            myProject.loadModelState(dialogLoadState.getSelectedState());
         }
     }
     else

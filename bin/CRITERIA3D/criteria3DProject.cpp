@@ -716,8 +716,9 @@ QList<QString> Crit3DProject::getAllSavedState()
     return states;
 }
 
-bool Crit3DProject::loadModelState()
+bool Crit3DProject::loadModelState(QString state)
 {
+    qDebug() << "state:" << state;
     // TO DO
     return true;
 

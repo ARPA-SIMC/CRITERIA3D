@@ -63,7 +63,7 @@
 
         bool saveDailyOutput(QDate myDate, const QString& outputPathHourly);
         bool saveModelState();
-        bool loadModelState();
+        bool loadModelState(QString state);
         QList<QString> getAllSavedState();
     };
 

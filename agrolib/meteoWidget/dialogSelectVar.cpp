@@ -11,9 +11,6 @@ DialogSelectVar::DialogSelectVar(QList<QString> allVar, QList<QString> selectedV
     QHBoxLayout *layoutOk = new QHBoxLayout;
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
-    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(true); });
-    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(false); });
-
     layoutOk->addWidget(&buttonBox);
     listAllVar = new QListWidget;
     listSelectedVar = new QListWidget;
@@ -46,7 +43,6 @@ DialogSelectVar::DialogSelectVar(QList<QString> allVar, QList<QString> selectedV
     connect(deleteButton, &QPushButton::clicked, [=](){ deleteVar(); });
     connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(true); });
     connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(false); });
-
 
     show();
     exec();
