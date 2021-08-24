@@ -10,7 +10,7 @@
 
 void weatherGenerator2D::initializeOutputData(int* nrDays)
 {
-    int length = 365*parametersModel.yearOfSimulation;
+    int length = 365*parametersModel.yearOfSimulation; // to quit
     for (int i=1; i<= parametersModel.yearOfSimulation;i++)
     {
         if (isLeapYear(i)) length++;
