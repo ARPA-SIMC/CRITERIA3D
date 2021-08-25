@@ -251,24 +251,6 @@ void Crit3DSnow::computeSnowBrooksModel()
         prevLWaterContent = 0;
         _ageOfSnow = 0;
     }
-    /* altro controllo coerenza (serve?)
-    If (prev_surf_temp = Snow.SnowSurfaceTempMap.header.flag) Then
-
-        If (Previous_SWE > 0) Then
-            prev_surf_temp = Air_temp
-        Else
-            prev_surf_temp = 0
-        End If
-
-        prev_surf_int_energy = prev_surf_temp * _
-            (WATER_DENSITY * HEAT_CAPACITY_SNOW * min(Previous_SWE, SNOW_SKIN_THICKNESS) _
-            + SOIL_SPECIFIC_HEAT * max(0, SNOW_SKIN_THICKNESS - Previous_SWE) * bulk_density)
-
-        Prev_int_energy = prev_surf_temp * _
-            (WATER_DENSITY * HEAT_CAPACITY_SNOW * Previous_SWE + _
-             bulk_density * SNOW_DAMPING_DEPTH * SOIL_SPECIFIC_HEAT)
-    End If
-    */
 
     /*! \brief Vapor Density and Roughness Calculations */
 
@@ -374,8 +356,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     // FT calcolare solo se c'e' manto nevoso
     if (previousSWE > SNOW_MINIMUM_HEIGHT)
     {
-        // LC: pag. 51 (3.19)
-        // assume WATER_DENSITY = 1 ?
+        // LC: pag. 51 (eq. 3.19)
+        // FT: tolta WATER_DENSITY dall'eq. (non corrispondevano le unità di misura)
         QVaporGradient = 3600. * (LATENT_HEAT_VAPORIZATION + LATENT_HEAT_FUSION) * (AirActualVapDensity - WaterActualVapDensity) / aerodynamicResistance;
     }
     else
@@ -393,7 +375,7 @@ void Crit3DSnow::computeSnowBrooksModel()
         EvapCond = QVaporGradient / ((LATENT_HEAT_FUSION + LATENT_HEAT_VAPORIZATION) * WATER_DENSITY) * 1000.;
         if (EvapCond < 0)
         {
-            //controllo aggiunto: può evaporare al massimo la neve presente
+            //FT: controllo aggiunto: può evaporare al massimo la neve presente
             EvapCond = -std::min(previousSWE + _snowFall, -EvapCond);
         }
     }
@@ -423,11 +405,18 @@ void Crit3DSnow::computeSnowBrooksModel()
 
     /*! Internal energy */
     _internalEnergy = prevInternalEnergy + QTotal + (refreeze / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY;
+    // FT: aggiunto per stabilità numerica
+    if (abs(_internalEnergy) < 0.00001)
+    {
+        _internalEnergy = 0.;
+    }
 
     /*! \brief Snow Pack Mass */
 
+    double waterHoldingCapacity = snowParameters.snowWaterHoldingCapacity / (1 - snowParameters.snowWaterHoldingCapacity); // [%]
+
     /*! Ice content */
-    if (_internalEnergy > 0.001)
+    if (_internalEnergy > 0.)
     {
         _iceContent = 0;
     }
@@ -436,10 +425,8 @@ void Crit3DSnow::computeSnowBrooksModel()
         _iceContent = std::max(prevIceContent + _snowFall + refreeze + EvapCond, 0.);
     }
 
-    double waterHoldingCapacity = snowParameters.snowWaterHoldingCapacity / (1 - snowParameters.snowWaterHoldingCapacity); //[%]
-
     /*! Liquid water content */
-    if (abs(_internalEnergy) < 0.001)
+    if (_internalEnergy == 0.)
     {
         _liquidWaterContent = std::min(waterHoldingCapacity * _iceContent, prevLWaterContent + _prec + _surfaceWaterContent - refreeze);
         _liquidWaterContent = std::max(0., _liquidWaterContent);
@@ -456,13 +443,13 @@ void Crit3DSnow::computeSnowBrooksModel()
     _snowMelt = previousSWE + _snowFall + EvapCond - _snowWaterEquivalent;
 
     /*! Snow surface energy */
-    if (abs(_internalEnergy) < 0.001)
+    if (_internalEnergy == 0.)
     {
-        _surfaceInternalEnergy = 0;
+        _surfaceInternalEnergy = 0.;
     }
     else
     {
-        if (_snowWaterEquivalent > 0)
+        if (_snowWaterEquivalent > 0.)
             _surfaceInternalEnergy = std::min(0., prevSurfaceIntEnergy + (QTotal + (refreeze / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY)
                                     * (std::min(_snowWaterEquivalent / 1000., snowParameters.snowSkinThickness) / SNOW_DAMPING_DEPTH
                                        + std::max(snowParameters.snowSkinThickness - (_snowWaterEquivalent / 1000.), 0.) / SOIL_DAMPING_DEPTH));
