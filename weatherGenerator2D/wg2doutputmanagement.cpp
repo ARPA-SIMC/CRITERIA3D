@@ -10,7 +10,7 @@
 
 void weatherGenerator2D::initializeOutputData(int* nrDays)
 {
-    int length = 365*parametersModel.yearOfSimulation; // to quit
+    int length = 365*parametersModel.yearOfSimulation;
     for (int i=1; i<= parametersModel.yearOfSimulation;i++)
     {
         if (isLeapYear(i)) length++;
@@ -70,26 +70,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
 
     observedConsecutiveDays = (TconsecutiveDays*)calloc(nrStations,sizeof(TconsecutiveDays));
     simulatedConsecutiveDays = (TconsecutiveDays*)calloc(nrStations,sizeof(TconsecutiveDays));
-    /*for (int i=0; i<nrStations;i++)
-    {
-        observedConsecutiveDays[i].dry = (double**)calloc(12,sizeof(double*));
-        observedConsecutiveDays[i].wet = (double**)calloc(12,sizeof(double*));
-        simulatedConsecutiveDays[i].dry = (double**)calloc(12,sizeof(double*));
-        simulatedConsecutiveDays[i].wet = (double**)calloc(12,sizeof(double*));
 
-        for (int j=0; j<12;j++)
-        {
-            observedConsecutiveDays[nrStations].dry[j]=(double*)calloc(91,sizeof(double));
-            observedConsecutiveDays[nrStations].wet[j]=(double*)calloc(91,sizeof(double));
-            simulatedConsecutiveDays[nrStations].dry[j]=(double*)calloc(91,sizeof(double));
-            simulatedConsecutiveDays[nrStations].wet[j]=(double*)calloc(91,sizeof(double));
-        }
-    }*/
-
-
-    //printf("consec dry %f \n", observedConsecutiveDays[0].dry[2][5]);
-    //printf("consec wet %f \n", observedConsecutiveDays[0].wet[10][25]);
-    //pressEnterToContinue();
     for (int iStation=0;iStation<nrStations;iStation++)
     {
         meanAmountsPrecGenerated[iStation] = (float*)calloc(12, sizeof(float));
@@ -337,7 +318,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
     }
 
     free(observedConsecutiveDays);
-    free(simulatedConsecutiveDays);
+    //free(simulatedConsecutiveDays);
 
     if(computeStatistics)
     {
@@ -455,15 +436,29 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
             free(consecutiveDry);
             free(consecutiveWet);
 
+            free(monthlySimulatedAveragePrecipitation[iStation]);
+            free(monthlyClimateAveragePrecipitation[iStation]);
+            free(monthlySimulatedAveragePrecipitationInternalFunction[iStation]);
+            free(monthlyClimateAveragePrecipitationInternalFunction[iStation]);
+            free(meanAmountsPrecGenerated[iStation]);
+            free(cumulatedOccurrencePrecGenerated[iStation]);
+
         }
 
+
+        free(monthlySimulatedAveragePrecipitation);
+        free(monthlyClimateAveragePrecipitation);
+        free(monthlySimulatedAveragePrecipitationInternalFunction);
+        free(monthlyClimateAveragePrecipitationInternalFunction);
+        free(meanAmountsPrecGenerated);
+        free(cumulatedOccurrencePrecGenerated);
         free(inputTMin);
         free(inputTMax);
         free(inputPrec);
 
         weatherGenerator2D::precipitationCorrelationMatricesSimulation();
     }
-
+    free(simulatedConsecutiveDays);
 
 
     //printf("%f\n",outputWeatherData[3].minT[5]);
