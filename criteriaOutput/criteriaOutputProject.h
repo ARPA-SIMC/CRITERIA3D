@@ -63,6 +63,7 @@ public:
     QString mapCellSize;
     QString mapFormat;
     QString mapProjection;
+    QString mapAreaName;
 
     QString outputCsvFileName;
     QString outputShapeFileName;
@@ -114,7 +115,7 @@ public:
     bool getDbDataDates(QDate &firstDate, QDate &lastDate);
     int createCsvFileFromGUI(QDate dateComputation, QString csvFileName);
     int createShapeFileFromGUI();
-    bool convertShapeToNetcdf(Crit3DShapeHandler &shape, QString outputFileName, QString field, double cellSize);
+    bool convertShapeToNetcdf(Crit3DShapeHandler &shape, QString outputFileName, QString field, double cellSize, QDate computationDate);
 
 };
 

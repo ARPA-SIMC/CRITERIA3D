@@ -337,7 +337,25 @@ std::string Crit3DDate::toStdString()
 }
 
 
+std::string Crit3DDate::toStdString() const
+{
+    char myStr[11];
+    sprintf (myStr, "%d-%02d-%02d", this->year, this->month, this->day);
+
+    return std::string(myStr);
+}
+
+
 std::string Crit3DDate::toString()
+{
+    char myStr[9];
+    sprintf (myStr, "%d%02d%02d", this->year, this->month, this->day);
+
+    return std::string(myStr);
+}
+
+
+std::string Crit3DDate::toString() const
 {
     char myStr[9];
     sprintf (myStr, "%d%02d%02d", this->year, this->month, this->day);

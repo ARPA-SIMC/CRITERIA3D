@@ -841,6 +841,100 @@ bool NetCDFHandler::writeGeoDimensions(const gis::Crit3DGridHeader& latLonHeader
 }
 
 
+bool NetCDFHandler::writeGeoAndDateDimensions(const gis::Crit3DGridHeader& latLonHeader, const string& variableName, const Crit3DDate& myDate)
+{
+    if (ncId == NODATA) return false;
+
+    nrLat = latLonHeader.nrRows;
+    nrLon = latLonHeader.nrCols;
+    int varLat, varLon, varDate;
+
+    // def dimensions (lat/lon/date)
+    int status = nc_def_dim(ncId, "latitude", unsigned(nrLat), &idLat);
+    if (status != NC_NOERR) return false;
+
+    status = nc_def_dim(ncId, "longitude", unsigned(nrLon), &idLon);
+    if (status != NC_NOERR) return false;
+
+    status = nc_def_dim(ncId, "date", unsigned(1), &idTime);
+    if (status != NC_NOERR) return false;
+
+    // def dim variables (lat/lon/date)
+    status = nc_def_var (ncId, "latitude", NC_FLOAT, 1, &idLat, &varLat);
+    if (status != NC_NOERR) return false;
+
+    status = nc_def_var (ncId, "longitude", NC_FLOAT, 1, &idLon, &varLon);
+    if (status != NC_NOERR) return false;
+
+    status = nc_def_var (ncId, "date", NC_STRING, 1, &idTime, &varDate);
+    if (status != NC_NOERR) return false;
+
+    // def generic variable
+    variables.resize(1);
+    int varDimId[2];
+    varDimId[0] = idLat;
+    varDimId[1] = idLon;
+    status = nc_def_var (ncId, variableName.c_str(), NC_FLOAT, 2, varDimId, &(variables[0].id));
+    if (status != NC_NOERR) return false;
+
+    // compression
+    int shuffle = NC_SHUFFLE;
+    int deflate = 1;
+    int deflate_level = 1;
+    status = nc_def_var_deflate(ncId, variables[0].id, shuffle, deflate, deflate_level);
+    if (status != NC_NOERR) return false;
+
+    // attributes
+    status = nc_put_att_text(ncId, varLat, "units", 13, "degrees_north");
+    if (status != NC_NOERR) return false;
+
+    status = nc_put_att_text(ncId, varLon, "units", 12, "degrees_east");
+    if (status != NC_NOERR) return false;
+
+    // valid range
+//    float range[] = {-1000.0, 1000.0};
+//    status = nc_put_att_float(ncId, variables[0].id, "valid_range", NC_FLOAT, 2, range);
+//    if (status != NC_NOERR) return false;
+
+    // no data
+    float missing[] = {latLonHeader.flag};
+    status = nc_put_att_float(ncId, variables[0].id, "missing_value", NC_FLOAT, 1, missing);
+    if (status != NC_NOERR) return false;
+
+    // end of metadata
+    status = nc_enddef(ncId);
+    if (status != NC_NOERR) return false;
+
+    // set lat/lon arrays
+    lat = new float[unsigned(nrLat)];
+    lon = new float[unsigned(nrLon)];
+
+    for (int row = 0; row < nrLat; row++)
+    {
+        lat[row] = float(latLonHeader.llCorner.latitude + latLonHeader.dy * (latLonHeader.nrRows - row - 0.5));
+    }
+    for (int col = 0; col < nrLon; col++)
+    {
+        lon[col] = float(latLonHeader.llCorner.longitude + latLonHeader.dx * (col + 0.5));
+    }
+
+    // write lat/lon vectors
+    status = nc_put_var_float(ncId, varLat, lat);
+    if (status != NC_NOERR) return false;
+
+    status = nc_put_var_float(ncId, varLon, lon);
+    if (status != NC_NOERR) return false;
+
+    // write date
+    const char **dateStr = new const char*;
+    *dateStr = myDate.toStdString().c_str();
+    status = nc_put_var_string(ncId, varDate, dateStr);
+    if (status != NC_NOERR) return false;
+
+    return true;
+}
+
+
 bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
 {
 

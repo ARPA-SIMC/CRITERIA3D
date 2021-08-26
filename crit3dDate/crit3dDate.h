@@ -46,7 +46,9 @@
         Crit3DDate addDays(long offset) const;
         int daysTo(const Crit3DDate& myDate) const;
         std::string toStdString();
+        std::string toStdString() const;
         std::string toString();
+        std::string toString() const;
     };
 
 
