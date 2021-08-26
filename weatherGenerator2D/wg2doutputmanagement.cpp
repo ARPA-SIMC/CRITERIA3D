@@ -370,24 +370,31 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
 
             int nrConsecutiveDryDays = 0;
             int nrConsecutiveWetDays = 0;
-/*
+
             for (int iDays=0;iDays<nrDays;iDays++)
             {
 
                 if (outputWeatherData[iStation].precipitation[iDays] < precThreshold)
                 {
                     nrConsecutiveDryDays++;
-                    ++(simulatedConsecutiveDays[iStation].dry[outputWeatherData[iStation].monthSimulated[iDays]-1][MINVALUE(nrConsecutiveDryDays,90)]);
+                    if (nrConsecutiveDryDays < 90)
+                    {
+                        ++(simulatedConsecutiveDays[iStation].dry[outputWeatherData[iStation].monthSimulated[iDays]-1][MINVALUE(nrConsecutiveDryDays,90)]);
+                    }
                     nrConsecutiveWetDays = 0;
                 }
                 if (outputWeatherData[iStation].precipitation[iDays] >= precThreshold)
                 {
                     nrConsecutiveWetDays++;
-                    ++(simulatedConsecutiveDays[iStation].wet[outputWeatherData[iStation].monthSimulated[iDays]-1][MINVALUE(nrConsecutiveWetDays,90)]);
+                    if (nrConsecutiveWetDays < 90)
+                    {
+                        ++(simulatedConsecutiveDays[iStation].wet[outputWeatherData[iStation].monthSimulated[iDays]-1][MINVALUE(nrConsecutiveWetDays,90)]);
+                    }
                     nrConsecutiveDryDays = 0;
                 }
 
             }
+
             double sumOfEventsDry[12]= {0};
             double sumOfEventsWet[12]= {0};
 
@@ -415,6 +422,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 }
             }
             //pressEnterToContinue();
+
             float **consecutiveDry,**consecutiveWet;
             consecutiveDry = (float**)calloc(12, sizeof(float*));
             consecutiveWet = (float**)calloc(12, sizeof(float*));
@@ -423,6 +431,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 consecutiveDry[jMonth] = (float*)calloc(91, sizeof(float));
                 consecutiveWet[jMonth] = (float*)calloc(91, sizeof(float));
             }
+
             for (int j=0;j<12;j++)
             {
                 //printf("month %d\n",j+1);
@@ -447,7 +456,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
             free(monthlySimulatedAveragePrecipitationInternalFunction[iStation]);
             free(meanAmountsPrecGenerated[iStation]);
             free(cumulatedOccurrencePrecGenerated[iStation]);
-*/
+
         }
 
 
