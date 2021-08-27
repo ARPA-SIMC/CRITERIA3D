@@ -1371,7 +1371,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 
     firstTime = myProject.getCurrentTime();
     lastTime = myProject.getCurrentTime();
-    firstTime.setTime(QTime(0,0,0));
+    //firstTime.setTime(QTime(0,0,0));
     lastTime.setTime(QTime(23,0,0));
 
     QDateTime firstDateH = myProject.meteoPointsDbHandler->getFirstDate(hourly);
@@ -1646,6 +1646,7 @@ void MainWindow::on_actionLoad_state_triggered()
         else
         {
             myProject.loadModelState(dialogLoadState.getSelectedState());
+            updateDateTime();
         }
     }
     else

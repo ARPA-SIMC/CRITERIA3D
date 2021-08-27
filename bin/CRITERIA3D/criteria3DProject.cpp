@@ -717,11 +717,36 @@ QList<QString> Crit3DProject::getAllSavedState()
     return states;
 }
 
-bool Crit3DProject::loadModelState(QString state)
+bool Crit3DProject::loadModelState(QString stateStr)
 {
-    qDebug() << "state:" << state;
-    // TO DO
-    return true;
+    // state folder
+    QString projectPath = getDefaultPath() + PATH_PROJECT;
+    QString statePath = projectPath + projectName + "/STATES/" + stateStr;
+    QDir stateDir(statePath);
+    if (!stateDir.exists())
+    {
+        logError("missing state");
+        return false;
+    }
 
+    // set current date/hour
+    int year = stateStr.mid(0,4).toInt();
+    int month = stateStr.mid(4,2).toInt();
+    int day = stateStr.mid(6,2).toInt();
+    int hour = stateStr.mid(10,2).toInt();
+    setCurrentDate(QDate(year, month, day));
+    setCurrentHour(hour);
+
+    // snow model
+    QString snowPath = statePath + "/snow";
+    QDir snowDir(snowPath);
+    if (snowDir.exists())
+    {
+        if (! initializeSnowModel())
+            return false;
+        // load snow state
+    }
+
+    return true;
 }
 
