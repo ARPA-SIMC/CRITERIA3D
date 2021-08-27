@@ -1640,14 +1640,18 @@ void MainWindow::on_actionLoad_state_triggered()
         QList<QString> stateList = myProject.getAllSavedState();
         DialogLoadState dialogLoadState(stateList);
         if (dialogLoadState.result() != QDialog::Accepted)
-        {
             return;
+
+        if (myProject.loadModelState(dialogLoadState.getSelectedState()))
+        {
+            updateDateTime();
+            myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString() + " H:" + QString::number(myProject.getCurrentHour()));
         }
         else
         {
-            myProject.loadModelState(dialogLoadState.getSelectedState());
-            updateDateTime();
+            myProject.logError();
         }
+
     }
     else
     {

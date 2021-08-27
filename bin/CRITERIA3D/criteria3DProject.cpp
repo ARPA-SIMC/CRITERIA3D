@@ -749,12 +749,63 @@ bool Crit3DProject::loadModelState(QString stateStr)
         std::string error;
         std::string fileName;
 
-        fileName = snowPath.toStdString() + "SWE.flt";
+        fileName = snowPath.toStdString() + "/SWE";
         if (! gis::readEsriGrid(fileName, snowMaps.getSnowWaterEquivalentMap(), &error))
         {
-            errorString = QString::fromStdString(error);
+            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            snowMaps.isInitialized = false;
             return false;
         }
+
+        fileName = snowPath.toStdString() + "/AgeOfSnow";
+        if (! gis::readEsriGrid(fileName, snowMaps.getAgeOfSnowMap(), &error))
+        {
+            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            snowMaps.isInitialized = false;
+            return false;
+        }
+
+        fileName = snowPath.toStdString() + "/IceContent";
+        if (! gis::readEsriGrid(fileName, snowMaps.getIceContentMap(), &error))
+        {
+            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            snowMaps.isInitialized = false;
+            return false;
+        }
+
+        fileName = snowPath.toStdString() + "/InternalEnergy";
+        if (! gis::readEsriGrid(fileName, snowMaps.getInternalEnergyMap(), &error))
+        {
+            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            snowMaps.isInitialized = false;
+            return false;
+        }
+
+        fileName = snowPath.toStdString() + "/LWContent";
+        if (! gis::readEsriGrid(fileName, snowMaps.getLWContentMap(), &error))
+        {
+            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            snowMaps.isInitialized = false;
+            return false;
+        }
+
+        fileName = snowPath.toStdString() + "/SnowSurfaceTemp";
+        if (! gis::readEsriGrid(fileName, snowMaps.getSnowSurfaceTempMap(), &error))
+        {
+            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            snowMaps.isInitialized = false;
+            return false;
+        }
+
+        fileName = snowPath.toStdString() + "/SurfaceInternalEnergy";
+        if (! gis::readEsriGrid(fileName, snowMaps.getSurfaceInternalEnergyMap(), &error))
+        {
+            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            snowMaps.isInitialized = false;
+            return false;
+        }
+
+
     }
 
     return true;
