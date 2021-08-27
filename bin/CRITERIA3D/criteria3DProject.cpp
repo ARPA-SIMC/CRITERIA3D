@@ -631,6 +631,12 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
 
 bool Crit3DProject::saveModelState()
 {
+    if (! snowMaps.isInitialized)
+    {
+        logError("Snow model is not initialized");
+        return false;
+    }
+
     QString projectPath = getDefaultPath() + PATH_PROJECT;
     QString statePath = projectPath+projectName+"/STATES";
     if (!QDir(statePath).exists())
@@ -646,52 +652,44 @@ bool Crit3DProject::saveModelState()
         QDir().mkdir(statePath+"/"+dateFolder);
     }
 
-    if (snowMaps.isInitialized)
-    {
-        QString snowPath = statePath + "/" + dateFolder + "/snow";
-        QDir().mkdir(snowPath);
+    QString snowPath = statePath + "/" + dateFolder + "/snow";
+    QDir().mkdir(snowPath);
 
-        logInfo("Saving snow state...");
-        std::string error;
-        if (!gis::writeEsriGrid((snowPath+"/SWE").toStdString(), snowMaps.getSnowWaterEquivalentMap(), &error))
-        {
-            logError("Error saving water equivalent map: " + QString::fromStdString(error));
-            return false;
-        }
-        if (!gis::writeEsriGrid((snowPath+"/AgeOfSnow").toStdString(), snowMaps.getAgeOfSnowMap(), &error))
-        {
-            logError("Error saving age of snow map: " + QString::fromStdString(error));
-            return false;
-        }
-        if (!gis::writeEsriGrid((snowPath+"/SnowSurfaceTemp").toStdString(), snowMaps.getSnowSurfaceTempMap(), &error))
-        {
-            logError("Error saving snow surface temp map: " + QString::fromStdString(error));
-            return false;
-        }
-        if (!gis::writeEsriGrid((snowPath+"/IceContent").toStdString(), snowMaps.getIceContentMap(), &error))
-        {
-            logError("Error saving ice content map: " + QString::fromStdString(error));
-            return false;
-        }
-        if (!gis::writeEsriGrid((snowPath+"/LWContent").toStdString(), snowMaps.getLWContentMap(), &error))
-        {
-            logError("Error saving LW content map: " + QString::fromStdString(error));
-            return false;
-        }
-        if (!gis::writeEsriGrid((snowPath+"/InternalEnergy").toStdString(), snowMaps.getInternalEnergyMap(), &error))
-        {
-            logError("Error saving internal energy map: " + QString::fromStdString(error));
-            return false;
-        }
-        if (!gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceInternalEnergyMap(), &error))
-        {
-            logError("Error saving surface internal energy map: " + QString::fromStdString(error));
-            return false;
-        }
-    }
-    else
+    logInfo("Saving snow state...");
+    std::string error;
+    if (!gis::writeEsriGrid((snowPath+"/SWE").toStdString(), snowMaps.getSnowWaterEquivalentMap(), &error))
     {
-        logError("snow Maps not initialized");
+        logError("Error saving water equivalent map: " + QString::fromStdString(error));
+        return false;
+    }
+    if (!gis::writeEsriGrid((snowPath+"/AgeOfSnow").toStdString(), snowMaps.getAgeOfSnowMap(), &error))
+    {
+        logError("Error saving age of snow map: " + QString::fromStdString(error));
+        return false;
+    }
+    if (!gis::writeEsriGrid((snowPath+"/SnowSurfaceTemp").toStdString(), snowMaps.getSnowSurfaceTempMap(), &error))
+    {
+        logError("Error saving snow surface temp map: " + QString::fromStdString(error));
+        return false;
+    }
+    if (!gis::writeEsriGrid((snowPath+"/IceContent").toStdString(), snowMaps.getIceContentMap(), &error))
+    {
+        logError("Error saving ice content map: " + QString::fromStdString(error));
+        return false;
+    }
+    if (!gis::writeEsriGrid((snowPath+"/LWContent").toStdString(), snowMaps.getLWContentMap(), &error))
+    {
+        logError("Error saving LW content map: " + QString::fromStdString(error));
+        return false;
+    }
+    if (!gis::writeEsriGrid((snowPath+"/InternalEnergy").toStdString(), snowMaps.getInternalEnergyMap(), &error))
+    {
+        logError("Error saving internal energy map: " + QString::fromStdString(error));
+        return false;
+    }
+    if (!gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceInternalEnergyMap(), &error))
+    {
+        logError("Error saving surface internal energy map: " + QString::fromStdString(error));
         return false;
     }
 
