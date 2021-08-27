@@ -1623,7 +1623,7 @@ void MainWindow::on_actionSave_state_triggered()
     {
         if (myProject.saveModelState())
         {
-            myProject.logInfoGUI("Snow model successfully saved.");
+            myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString() + " H:" + QString::number(myProject.getCurrentHour()));
         }
     }
     else
