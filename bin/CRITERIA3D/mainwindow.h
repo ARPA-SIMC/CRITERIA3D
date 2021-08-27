@@ -119,6 +119,8 @@
 
         void on_actionLoad_state_triggered();
 
+        void on_flag_save_state_daily_step_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

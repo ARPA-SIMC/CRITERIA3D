@@ -2942,7 +2942,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="palette">
@@ -3541,6 +3541,7 @@
     <addaction name="actionInitialize_snow"/>
     <addaction name="actionRun_snow_model"/>
     <addaction name="separator"/>
+    <addaction name="flag_save_state_daily_step"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
@@ -3801,13 +3802,16 @@
    </property>
   </action>
   <action name="actionSnow_settings">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Snow settings...</string>
    </property>
   </action>
   <action name="actionRun_snow_model">
    <property name="text">
-    <string>Run model</string>
+    <string>Run model...</string>
    </property>
   </action>
   <action name="actionView_Snow_water_equivalent">
@@ -3841,6 +3845,17 @@
   <action name="actionView_Snow_surface_internal_energy">
    <property name="text">
     <string>Energy content surface layer</string>
+   </property>
+  </action>
+  <action name="flag_save_state_daily_step">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>automatic save state (daily step)</string>
    </property>
   </action>
  </widget>

@@ -85,6 +85,8 @@ MainWindow::MainWindow(QWidget *parent) :
     this->updateVariable();
     this->updateDateTime();
 
+    myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
+
     this->setMouseTracking(true);
 }
 
@@ -1487,7 +1489,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 
         if (myProject.saveDailyState)
         {
-            //save model state
+            myProject.saveModelState();
         }
     }
 
@@ -1623,7 +1625,8 @@ void MainWindow::on_actionSave_state_triggered()
     {
         if (myProject.saveModelState())
         {
-            myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString() + " H:" + QString::number(myProject.getCurrentHour()));
+            myProject.logInfoGUI("State model successfully saved: " + myProject.getCurrentDate().toString()
+                                 + " H:" + QString::number(myProject.getCurrentHour()));
         }
     }
     else
@@ -1645,7 +1648,8 @@ void MainWindow::on_actionLoad_state_triggered()
         if (myProject.loadModelState(dialogLoadState.getSelectedState()))
         {
             updateDateTime();
-            myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString() + " H:" + QString::number(myProject.getCurrentHour()));
+            myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString()
+                                 + " H:" + QString::number(myProject.getCurrentHour()));
         }
         else
         {
@@ -1658,4 +1662,10 @@ void MainWindow::on_actionLoad_state_triggered()
         myProject.logError("Open a project before");
     }
     return;
+}
+
+
+void MainWindow::on_flag_save_state_daily_step_triggered()
+{
+    myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
 }

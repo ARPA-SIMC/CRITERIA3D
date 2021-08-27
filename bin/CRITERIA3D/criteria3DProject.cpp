@@ -649,13 +649,13 @@ bool Crit3DProject::saveModelState()
     QString dateFolder = currentDate.toString("yyyyMMdd") + "_H" + hourStr;
     if (!QDir(statePath+"/"+dateFolder).exists())
     {
-        QDir().mkdir(statePath+"/"+dateFolder);
+        QDir().mkdir(statePath + "/" + dateFolder);
     }
 
     QString snowPath = statePath + "/" + dateFolder + "/snow";
     QDir().mkdir(snowPath);
 
-    logInfo("Saving snow state...");
+    logInfo("Saving snow state: " + dateFolder);
     std::string error;
     if (!gis::writeEsriGrid((snowPath+"/SWE").toStdString(), snowMaps.getSnowWaterEquivalentMap(), &error))
     {
