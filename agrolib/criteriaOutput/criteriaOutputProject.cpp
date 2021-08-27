@@ -11,6 +11,7 @@
 #include "zonalStatistic.h"
 #include "computationUnitsDb.h"
 #include "netcdfHandler.h"
+#include "utilities.h"
 
 #ifdef GDAL
     #include "gdalShapeFunctions.h"
@@ -48,6 +49,7 @@ void CriteriaOutputProject::initialize()
     mapCellSize = "";
     mapFormat = "";
     mapProjection = "";
+    mapAreaName = "";
 
     outputCsvFileName = "";
     outputShapeFileName = "";
@@ -361,6 +363,8 @@ bool CriteriaOutputProject::readSettings()
     mapProjection = projectSettings->value("projection", "").toString();
     // map cell size
     mapCellSize = projectSettings->value("cellsize","").toString();
+    // map area name
+    mapAreaName = projectSettings->value("area_name","").toString();
 
     projectSettings->endGroup();
 
@@ -843,9 +847,9 @@ int CriteriaOutputProject::createNetcdf()
     foreach (QList<QString> valuesList, fieldList)
     {
         QString field = valuesList[0];
-        QString fileName = outputShapeFilePath + "/" + field + ".nc";
+        QString fileName = outputShapeFilePath + "/" + mapAreaName + "_" + field + ".nc";
         logger.writeInfo("Export file: " + fileName);
-        if (! convertShapeToNetcdf(shapeHandler, fileName, field, cellSize))
+        if (! convertShapeToNetcdf(shapeHandler, fileName, field, cellSize, dateComputation))
         {
             projectError = "Error in export to NetCDF: " + projectError;
             return ERROR_NETCDF;
@@ -856,7 +860,7 @@ int CriteriaOutputProject::createNetcdf()
 }
 
 
-bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, QString outputFileName, QString field, double cellSize)
+bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, QString outputFileName, QString field, double cellSize, QDate computationDate)
 {
     if (! shape.getIsWGS84())
     {
@@ -911,7 +915,10 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, QStr
     NetCDFHandler myNetCDF;
     myNetCDF.createNewFile(outputFileName.toStdString());
 
-    if (! myNetCDF.writeGeoDimensions(latLonHeader))
+    Crit3DDate myDate = getCrit3DDate(computationDate);
+    std::string variableName = field.left(4).toStdString();
+
+    if (! myNetCDF.writeGeoAndDateDimensions(latLonHeader, variableName, myDate))
     {
         projectError = "Error in write dimensions to netcdf.";
         myNetCDF.close();

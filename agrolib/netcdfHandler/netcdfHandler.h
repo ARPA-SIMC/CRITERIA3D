@@ -38,6 +38,7 @@
         bool isStandardTime;
         bool isHourly;
         bool isDaily;
+
         Crit3DDate firstDate;
 
         std::stringstream metadata;
@@ -83,6 +84,7 @@
 
         bool createNewFile(std::string fileName);
         bool writeGeoDimensions(const gis::Crit3DGridHeader& latLonHeader);
+        bool writeGeoAndDateDimensions(const gis::Crit3DGridHeader& latLonHeader, const std::string &variableName, const Crit3DDate &myDate);
         bool writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid);
     };
 
