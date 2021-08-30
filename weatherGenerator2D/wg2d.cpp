@@ -1167,16 +1167,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         ii++;
         nrEigenvaluesLessThan0 = 0;
         counter = 0;
-        /*for (int i=0;i<nrStations;i++)
-        {
-            for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
-            {
-                //printf("%f  ",M[i][j]);
 
-            }
-            //printf("\n");
-        }*/
-        //pressEnterToContinue();
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
@@ -1291,9 +1282,6 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                         nrConsecutiveDays++;
                         count--;
                     }
-                    //printf("%d,%d,%f,%f\n",count,nrConsecutiveDays,normRandom[i][j], transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]);
-                    //getchar();
-                    //if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
                     transitionNormalAugmentedMemory[i][0][0] = transitionNormalAugmentedMemory[i][0][1] = transitionNormal[i][0];
                     if(normRandom[i][j]  > transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]) occurrences[i][j] = 1.;
                 }
