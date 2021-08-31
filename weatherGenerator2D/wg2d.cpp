@@ -1167,7 +1167,16 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
         ii++;
         nrEigenvaluesLessThan0 = 0;
         counter = 0;
+        /*for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
+            {
+                //printf("%f  ",M[i][j]);
 
+            }
+            //printf("\n");
+        }*/
+        //pressEnterToContinue();
         for (int i=0;i<nrStations;i++)
         {
             for (int j=0;j<nrStations;j++) // avoid solutions with correlation coefficient greater than 1
@@ -1282,8 +1291,9 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                         nrConsecutiveDays++;
                         count--;
                     }
+                    if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
                     transitionNormalAugmentedMemory[i][0][0] = transitionNormalAugmentedMemory[i][0][1] = transitionNormal[i][0];
-                    if(normRandom[i][j]  > transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    //if(normRandom[i][j]  > transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]) occurrences[i][j] = 1.;
                 }
                 else
                 {
@@ -1295,8 +1305,8 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                         count--;
                     }
                     transitionNormalAugmentedMemory[i][1][0] = transitionNormalAugmentedMemory[i][1][1] = transitionNormal[i][1];
-                    //if(normRandom[i][j]> transitionNormal[i][1]) occurrences[i][j] = 1.;
-                    if(normRandom[i][j]> transitionNormalAugmentedMemory[i][1][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    if(normRandom[i][j]> transitionNormal[i][1]) occurrences[i][j] = 1.;
+                    //if(normRandom[i][j]> transitionNormalAugmentedMemory[i][1][nrConsecutiveDays]) occurrences[i][j] = 1.;
                 }
 
             }
