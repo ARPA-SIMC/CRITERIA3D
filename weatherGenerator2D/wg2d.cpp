@@ -594,8 +594,9 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
                 {
                     precOccurence[idStation][iMonth].pDry[i] = 0.0;
                 }
+                printf("month %d, step %d, occurrence %d\n",iMonth,i,occurrence0[iMonth][i]);
             }
-
+            getchar();
 
             double* occurrenceFitting;
             double* occurrenceFitted;
@@ -1291,9 +1292,15 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                         nrConsecutiveDays++;
                         count--;
                     }
-                    if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
-                    transitionNormalAugmentedMemory[i][0][0] = transitionNormalAugmentedMemory[i][0][1] = transitionNormal[i][0];
-                    //if(normRandom[i][j]  > transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    if (nrConsecutiveDays<10)
+                    {
+                        if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
+                    }
+                    else
+                    {
+                        transitionNormalAugmentedMemory[i][0][0] = transitionNormalAugmentedMemory[i][0][1] = transitionNormal[i][0];
+                        if(normRandom[i][j]  > transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    }
                 }
                 else
                 {
@@ -1304,9 +1311,15 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                         nrConsecutiveDays++;
                         count--;
                     }
-                    transitionNormalAugmentedMemory[i][1][0] = transitionNormalAugmentedMemory[i][1][1] = transitionNormal[i][1];
-                    if(normRandom[i][j]> transitionNormal[i][1]) occurrences[i][j] = 1.;
-                    //if(normRandom[i][j]> transitionNormalAugmentedMemory[i][1][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    //if (nrConsecutiveDays < 100)
+                    //{
+                    if(normRandom[i][j]> transitionNormal[i][1]) occurrences[i][j] = 1.; // suposing that you can't establish a trend with rain days, this is valid in Emilia-Romagna
+                    //}
+                    //else
+                    //{
+                        //transitionNormalAugmentedMemory[i][1][0] = transitionNormalAugmentedMemory[i][1][1] = transitionNormal[i][1];
+                        //if(normRandom[i][j]> transitionNormalAugmentedMemory[i][1][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    //}
                 }
 
             }
