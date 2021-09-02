@@ -411,7 +411,9 @@ void weatherGenerator2D::initializeRandomNumbers(double *vector)
 void weatherGenerator2D::precipitationP00P10()
 {
     // initialization
+    int consecutiveDayTransition = 10;
     precipitationPDryUntilNSteps();
+
     for (int iCount=0; iCount<12; iCount++)
     {
         precOccurrenceGlobal[iCount].p00 = 0;
@@ -477,6 +479,16 @@ void weatherGenerator2D::precipitationP00P10()
             precOccurence[idStation][iMonth].month = iMonth +1;
             //printf("%d %f\n",month+1,1-precOccurence[idStation][month].p10);
         }
+
+        for (int iMonth=0;iMonth<12;iMonth++)
+        {
+            printf("before %d %f\n",iMonth+1,precOccurence[idStation][iMonth].p00);
+            precOccurence[idStation][iMonth].p00 = (precOccurence[idStation][iMonth].p00)/(1-precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition]) - (precOccurence[idStation][iMonth].pDry[consecutiveDayTransition]) * (precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition])/(1-precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition]);
+            //printf("after %d %f\n",iMonth+1,precOccurence[idStation][iMonth].p00);
+            printf("after %d %f %f %f\n",iMonth+1,precOccurence[idStation][iMonth].pDry[consecutiveDayTransition],precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition],precOccurence[idStation][iMonth].p00);
+            getchar();
+        }
+
         //pressEnterToContinue();
     }
 
@@ -594,9 +606,13 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
                 {
                     precOccurence[idStation][iMonth].pDry[i] = 0.0;
                 }
-                printf("month %d, step %d, occurrence %d\n",iMonth,i,occurrence0[iMonth][i]);
+                if (occurrence0[iMonth][0] != 0)
+                    precOccurence[idStation][iMonth].pDryWeight[i] = 1.0*occurrence0[iMonth][i]/occurrence0[iMonth][0];
+                else
+                    precOccurence[idStation][iMonth].pDryWeight[i] = 0;
+                //printf("month %d, step %d, occurrence %d weight %f\n",iMonth,i,occurrence0[iMonth][i],precOccurence[idStation][iMonth].pDryWeight[i]);
             }
-            getchar();
+            //getchar();
 
             double* occurrenceFitting;
             double* occurrenceFitted;
@@ -635,7 +651,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
         for (int iMonth=0;iMonth<12;iMonth++)
         {
             int iMaxForInterpolation=0;
-            printf("month %d\n",iMonth+1);
+            //printf("month %d\n",iMonth+1);
             for (int i=0;i<nrSteps;i++)
             {
                 int numberOfWetDays;
@@ -688,7 +704,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
             for(int i=0;i<nrSteps;i++)
             {
                 precOccurence[idStation][iMonth].pWet[i] = MAXVALUE(0.000001, 1 - precOccurence[idStation][iMonth].pWet[i]);
-                printf("%d %f %f\n",i,precOccurence[idStation][iMonth].pDry[i],precOccurence[idStation][iMonth].pWet[i]);
+                //printf("%d %f %f\n",i,precOccurence[idStation][iMonth].pDry[i],precOccurence[idStation][iMonth].pWet[i]);
             }
         }
         //getchar();
@@ -716,6 +732,7 @@ void weatherGenerator2D::precipitationP000P100P010P110()
         precOccurrenceGlobal[iCount].p00 = 0;
         precOccurrenceGlobal[iCount].p10 = 0;
     }*/
+    int consecutiveDayTransition = 10;
     precipitationPDryUntilNSteps();
     int daysWithRainGlobal[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
     int daysWithoutRainGlobal[12] = {0,0,0,0,0,0,0,0,0,0,0,0};

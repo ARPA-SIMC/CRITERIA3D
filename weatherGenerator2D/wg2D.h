@@ -59,6 +59,8 @@
         double pDry[60];
         double pWet[60];
 
+        double pDryWeight[60];
+
         int month;
     };
 
