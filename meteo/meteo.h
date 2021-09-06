@@ -83,18 +83,19 @@
 
     enum lapseRateCodeType {primary, secondary, supplemental};
 
-    enum meteoVariable {airTemperature, dailyAirTemperatureMin, dailyAirTemperatureMax, dailyAirTemperatureAvg, dailyAirTemperatureRange,
-                    precipitation, dailyPrecipitation,
+    enum meteoVariable {airTemperature, dailyAirTemperatureMin, monthlyAirTemperatureMin, dailyAirTemperatureMax, monthlyAirTemperatureMax,
+                    dailyAirTemperatureAvg, monthlyAirTemperatureAvg, dailyAirTemperatureRange,
+                    precipitation, dailyPrecipitation, monthlyPrecipitation,
                     airRelHumidity, dailyAirRelHumidityMin, dailyAirRelHumidityMax, dailyAirRelHumidityAvg,
                     airDewTemperature, dailyAirDewTemperatureMin, dailyAirDewTemperatureMax, dailyAirDewTemperatureAvg,
                     thom, dailyThomMax, dailyThomAvg, dailyThomHoursAbove, dailyThomDaytime, dailyThomNighttime,
                     globalIrradiance, netIrradiance, directIrradiance, diffuseIrradiance, reflectedIrradiance, atmTransmissivity,
-                    dailyGlobalRadiation, dailyDirectRadiation, dailyDiffuseRadiation, dailyReflectedRadiation,
+                    dailyGlobalRadiation, monthlyGlobalRadiation, dailyDirectRadiation, dailyDiffuseRadiation, dailyReflectedRadiation,
                     windScalarIntensity, windVectorIntensity, windVectorDirection, windVectorX, windVectorY,
                     dailyWindVectorIntensityAvg, dailyWindVectorIntensityMax, dailyWindVectorDirectionPrevailing, dailyWindScalarIntensityAvg, dailyWindScalarIntensityMax,
                     leafWetness, dailyLeafWetness, atmPressure,
-                    referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
-                    dailyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
+                    referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, monthlyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
+                    dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
                     dailyWaterTableDepth,
                     snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceInternalEnergy,
                     anomaly, noMeteoTerrain, noMeteoVar};
@@ -214,6 +215,16 @@
         { atmTransmissivity, "ATM_TRANSMIT"},
         { atmPressure, "ATM_PRESSURE"},
         { actualEvaporation, "ACTUAL_EVAPO"}
+    };
+
+    const std::map<std::string, meteoVariable> MapMonthlyMeteoVar = {
+      { "MONTHLY_TAVG", monthlyAirTemperatureAvg },
+      { "MONTHLY_TMIN", monthlyAirTemperatureMin },
+      { "MONTHLY_TMAX", monthlyAirTemperatureMax },
+      { "MONTHLY_PREC", monthlyPrecipitation },
+      { "MONTHLY_ET0_HS", monthlyReferenceEvapotranspirationHS },
+      { "MONTHLY_BIC", monthlyBIC },
+      { "MONTHLY_RAD", monthlyGlobalRadiation }
     };
 
 

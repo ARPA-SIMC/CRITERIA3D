@@ -368,6 +368,59 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
             }
 
         }
+        else if (ancestor.toElement().tagName().toUpper() == "TABLEMONTHLY")
+        {
+            _tableMonthly.exists = true;
+
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "NAME")
+                {
+                    _tableMonthly.name = child.toElement().text();
+                    // remove white spaces
+                    _tableMonthly.name = _tableMonthly.name.simplified();
+                }
+                if (myTag == "VARCODE")
+                {
+                    secondChild = child.firstChild();
+                    _tableMonthly.varcode.push_back(varTable);
+
+                    while( !secondChild.isNull())
+                    {
+                        mySecondTag = secondChild.toElement().tagName().toUpper();
+
+
+                        if (mySecondTag == "VARFIELD")
+                        {
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varField = secondChild.toElement().text();
+
+                        }
+
+                        else if (mySecondTag == "VARCODE")
+                        {
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varCode = secondChild.toElement().text().toInt();
+
+                        }
+
+                        else if (mySecondTag == "VARPRAGANAME")
+                        {
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varPragaName = secondChild.toElement().text();
+                            // remove white spaces
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varPragaName = _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varPragaName.simplified();
+                        }
+                        else
+                        {
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varCode = NODATA;
+                        }
+
+                        secondChild = secondChild.nextSibling();
+                    }
+                }
+                child = child.nextSibling();
+            }
+        }
 
         ancestor = ancestor.nextSibling();
     }
@@ -406,6 +459,21 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
         catch (const std::out_of_range& oor)
         {
             QString errMess = QString("%1 does not exist" ).arg(_tableHourly.varcode[i].varPragaName);
+            *myError = oor.what() + errMess;
+        }
+    }
+
+    for (unsigned int i=0; i < _tableMonthly.varcode.size(); i++)
+    {
+        try
+        {
+            meteoVariable gridMeteoKey = MapMonthlyMeteoVar.at(_tableMonthly.varcode[i].varPragaName.toStdString());
+            _gridMonthlyVar.insert(gridMeteoKey, _tableMonthly.varcode[i].varCode);
+            _gridMonthlyVarField.insert(gridMeteoKey, _tableMonthly.varcode[i].varField);
+        }
+        catch (const std::out_of_range& oor)
+        {
+            QString errMess = QString("%1 does not exist" ).arg(_tableMonthly.varcode[i].varPragaName);
             *myError = oor.what() + errMess;
         }
     }

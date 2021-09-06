@@ -66,8 +66,9 @@
         float tMax;
         float tAvg;
         float prec;
-        float et0;
+        float et0_hs;
         float globRad;
+        float bic;
     };
 
     class Crit3DMeteoPoint {

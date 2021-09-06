@@ -40,6 +40,7 @@
     {
          bool exists;
          QString fieldTime;
+         QString name;           // only monthly
          QString fieldVarCode;
          QString fieldValue;
          QString prefix;
@@ -139,18 +140,23 @@
 
         TXMLTable _tableDaily;
         TXMLTable _tableHourly;
+        TXMLTable _tableMonthly;
 
         QMap<meteoVariable, int> _gridDailyVar;
         QMap<meteoVariable, int> _gridHourlyVar;
+        QMap<meteoVariable, int> _gridMonthlyVar;
 
         QMap<meteoVariable, QString> _gridDailyVarField;
         QMap<meteoVariable, QString> _gridHourlyVarField;
+        QMap<meteoVariable, QString> _gridMonthlyVarField;
 
         QString _tableDailyModel;
         QString _tableHourlyModel;
+        QString _tableMonthlyModel;
 
         QMap<meteoVariable, QString> _mapDailyMySqlVarType;
         QMap<meteoVariable, QString> _mapHourlyMySqlVarType;
+        QMap<meteoVariable, QString> _mapMonthlyMySqlVarType;
 
     };
 

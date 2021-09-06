@@ -216,8 +216,9 @@ void Crit3DMeteoPoint::initializeObsDataM(unsigned int numberOfMonths, unsigned 
         obsDataM[i].tMin = NODATA;
         obsDataM[i].tAvg = NODATA;
         obsDataM[i].prec = NODATA;
-        obsDataM[i].et0 = NODATA;
+        obsDataM[i].et0_hs = NODATA;
         obsDataM[i].globRad = NODATA;
+        obsDataM[i].bic = NODATA;
     }
 }
 
