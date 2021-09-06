@@ -654,6 +654,30 @@ bool Crit3DMeteoGridDbHandler::checkXML(QString *myError)
         }
     }
 
+    /* table monthly */
+    if (_tableMonthly.exists)
+    {
+        if (_tableMonthly.name.isNull() || _tableHourly.name.isEmpty())
+        {
+            *myError = "Missing table Monthly name";
+            return false;
+        }
+
+        for (unsigned int i=0; i < _tableMonthly.varcode.size(); i++)
+        {
+            if (_tableMonthly.varcode[i].varCode == NODATA)
+            {
+                *myError = "Missing monthly var code";
+                return false;
+            }
+            if (_tableMonthly.varcode[i].varPragaName.isNull() || _tableMonthly.varcode[i].varPragaName.isEmpty())
+            {
+                *myError = "Missing monthly varPragaName";
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 
@@ -827,6 +851,92 @@ meteoVariable Crit3DMeteoGridDbHandler::getHourlyVarFieldEnum(QString varField)
 
 }
 
+int Crit3DMeteoGridDbHandler::getMonthlyVarCode(meteoVariable meteoGridMonthlyVar)
+{
+
+    int varCode = NODATA;
+    //check
+    if (meteoGridMonthlyVar == noMeteoVar)
+    {
+        return varCode;
+    }
+    if (_gridMonthlyVar.empty())
+    {
+        return varCode;
+    }
+    if(_gridMonthlyVar.contains(meteoGridMonthlyVar))
+    {
+        varCode = _gridMonthlyVar[meteoGridMonthlyVar];
+    }
+
+    return varCode;
+
+}
+
+QString Crit3DMeteoGridDbHandler::getMonthlyVarField(meteoVariable meteoGridMonthlyVar)
+{
+
+    QString varField = "";
+    //check
+    if (meteoGridMonthlyVar == noMeteoVar)
+    {
+        return varField;
+    }
+    if (_gridMonthlyVar.empty())
+    {
+        return varField;
+    }
+    if(_gridMonthlyVar.contains(meteoGridMonthlyVar))
+    {
+        varField = _gridMonthlyVar[meteoGridMonthlyVar];
+    }
+
+    return varField;
+
+}
+
+meteoVariable Crit3DMeteoGridDbHandler::getMonthlyVarEnum(int varCode)
+{
+
+    if (varCode == NODATA)
+    {
+        return noMeteoVar;
+    }
+
+    QMapIterator<meteoVariable, int> i(_gridMonthlyVar);
+    while (i.hasNext()) {
+        i.next();
+        if (i.value() == varCode)
+        {
+            return i.key();
+        }
+    }
+
+    return noMeteoVar;
+
+}
+
+meteoVariable Crit3DMeteoGridDbHandler::getMonthlyVarFieldEnum(QString varField)
+{
+
+    if (varField == "")
+    {
+        return noMeteoVar;
+    }
+
+    QMapIterator<meteoVariable, QString> i(_gridMonthlyVarField);
+    while (i.hasNext()) {
+        i.next();
+        if (i.value() == varField)
+        {
+            return i.key();
+        }
+    }
+
+    return noMeteoVar;
+
+}
+
 std::string Crit3DMeteoGridDbHandler::getDailyPragaName(meteoVariable meteoVar)
 {
 
@@ -851,6 +961,23 @@ std::string Crit3DMeteoGridDbHandler::getHourlyPragaName(meteoVariable meteoVar)
     std::string key = "";
 
     for (it = MapHourlyMeteoVar.begin(); it != MapHourlyMeteoVar.end(); ++it)
+    {
+        if (it->second == meteoVar)
+        {
+            key = it->first;
+            break;
+        }
+    }
+    return key;
+}
+
+std::string Crit3DMeteoGridDbHandler::getMonthlyPragaName(meteoVariable meteoVar)
+{
+
+    std::map<std::string, meteoVariable>::const_iterator it;
+    std::string key = "";
+
+    for (it = MapMonthlyMeteoVar.begin(); it != MapMonthlyMeteoVar.end(); ++it)
     {
         if (it->second == meteoVar)
         {

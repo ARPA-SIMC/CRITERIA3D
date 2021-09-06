@@ -85,12 +85,20 @@
         QString getDailyVarField(meteoVariable meteoGridDailyVar);
         meteoVariable getDailyVarEnum(int varCode);
         meteoVariable getDailyVarFieldEnum(QString varField);
+
         int getHourlyVarCode(meteoVariable meteoGridHourlyVar);
         QString getHourlyVarField(meteoVariable meteoGridHourlyVar);
         meteoVariable getHourlyVarEnum(int varCode);
         meteoVariable getHourlyVarFieldEnum(QString varField);
+
+        int getMonthlyVarCode(meteoVariable meteoGridMonthlyVar);
+        QString getMonthlyVarField(meteoVariable meteoGridMonthlyVar);
+        meteoVariable getMonthlyVarEnum(int varCode);
+        meteoVariable getMonthlyVarFieldEnum(QString varField);
+
         std::string getDailyPragaName(meteoVariable meteoVar);
         std::string getHourlyPragaName(meteoVariable meteoVar);
+        std::string getMonthlyPragaName(meteoVariable meteoVar);
 
         bool loadCellProperties(QString *myError);
         bool loadIdMeteoProperties(QString *myError, QString idMeteo);
@@ -152,11 +160,9 @@
 
         QString _tableDailyModel;
         QString _tableHourlyModel;
-        QString _tableMonthlyModel;
 
         QMap<meteoVariable, QString> _mapDailyMySqlVarType;
         QMap<meteoVariable, QString> _mapHourlyMySqlVarType;
-        QMap<meteoVariable, QString> _mapMonthlyMySqlVarType;
 
     };
 
