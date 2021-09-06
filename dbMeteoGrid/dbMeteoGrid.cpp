@@ -376,12 +376,6 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
             while( !child.isNull())
             {
                 myTag = child.toElement().tagName().toUpper();
-                if (myTag == "NAME")
-                {
-                    _tableMonthly.name = child.toElement().text();
-                    // remove white spaces
-                    _tableMonthly.name = _tableMonthly.name.simplified();
-                }
                 if (myTag == "VARCODE")
                 {
                     secondChild = child.firstChild();
@@ -657,11 +651,6 @@ bool Crit3DMeteoGridDbHandler::checkXML(QString *myError)
     /* table monthly */
     if (_tableMonthly.exists)
     {
-        if (_tableMonthly.name.isNull() || _tableHourly.name.isEmpty())
-        {
-            *myError = "Missing table Monthly name";
-            return false;
-        }
 
         for (unsigned int i=0; i < _tableMonthly.varcode.size(); i++)
         {

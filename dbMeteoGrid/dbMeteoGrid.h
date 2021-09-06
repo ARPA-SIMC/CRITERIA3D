@@ -40,7 +40,6 @@
     {
          bool exists;
          QString fieldTime;
-         QString name;           // only monthly
          QString fieldVarCode;
          QString fieldValue;
          QString prefix;
