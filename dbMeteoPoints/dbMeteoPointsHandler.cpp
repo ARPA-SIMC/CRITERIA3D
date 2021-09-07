@@ -19,7 +19,7 @@ Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler(QString provider_, QStrin
         _db.close();
     }
 
-    _db = QSqlDatabase::addDatabase(provider_, "MeteoPoints");
+    _db = QSqlDatabase::addDatabase(provider_, QUuid::createUuid().toString());
     _db.setDatabaseName(dbname_);
 
     if (provider_ != "QSQLITE")
@@ -46,7 +46,7 @@ Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler(QString dbname_)
         _db.close();
     }
 
-    _db = QSqlDatabase::addDatabase("QSQLITE", "MeteoPoints");
+    _db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
     _db.setDatabaseName(dbname_);
 
     if (!_db.open())
