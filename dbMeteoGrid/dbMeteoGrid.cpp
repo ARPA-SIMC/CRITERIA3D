@@ -1748,6 +1748,84 @@ bool Crit3DMeteoGridDbHandler::loadGridHourlyDataFixedFields(QString *myError, Q
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString *myError, QString meteoPoint, QDate first, QDate last)
+{
+    QSqlQuery qry(_db);
+    QString table = "MonthlyData";
+    QDate date;
+    int year;
+    int month;
+    int varCode;
+    float value;
+
+    unsigned row;
+    unsigned col;
+
+    if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
+    {
+        *myError = "Missing MeteoPoint id";
+        return false;
+    }
+
+    int numberOfMonths = (last.year()-first.year())*12+last.month()-(first.month()-1);
+    _meteoGrid->meteoPointPointer(row,col)->initializeObsDataM(numberOfMonths, first.month(), first.year());
+
+    QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear`>= '%2' AND `PragaYear`<= '%3'  AND 'PointCode' = '%4' ORDER BY `PragaYear`").arg(table).arg(first.year()).arg(last.year()).arg(meteoPoint);
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            if (!getValue(qry.value("PragaYear"), &year))
+            {
+                *myError = "Missing PragaYear";
+                return false;
+            }
+
+            if (!getValue(qry.value("PragaMonth"), &month))
+            {
+                *myError = "Missing PragaMonth";
+                return false;
+            }
+
+            date.setDate(year,month, first.day());
+            if (date < first)
+            {
+                continue;
+            }
+            date.setDate(year,month, last.day());
+            if (date > last)
+            {
+                continue;
+            }
+
+            if (!getValue(qry.value("VariableCode"), &varCode))
+            {
+                *myError = "Missing VariableCode";
+                return false;
+            }
+
+            if (!getValue(qry.value("Value"), &value))
+            {
+                *myError = "Missing Value";
+            }
+
+            meteoVariable variable = getMonthlyVarEnum(varCode);
+
+            if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueM(getCrit3DDate(date), variable, value))
+                return false;
+
+        }
+
+    }
+
+    return true;
+}
+
 
 std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, QString meteoPoint,
                                     meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
@@ -2414,6 +2492,51 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyFF(QString *myError, QStr
         }
 
     }
+
+    return true;
+}
+
+bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
+                                                     QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings* meteoSettings)
+{
+    QSqlQuery qry(_db);
+//    QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
+
+//    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
+//                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2,VariableCode))").arg(tableD).arg(_tableDaily.fieldTime);
+
+//    if( !qry.exec(statement) )
+//    {
+//        *myError = qry.lastError().text();
+//        return false;
+//    }
+//    else
+//    {
+//        statement =  QString(("REPLACE INTO `%1` VALUES")).arg(tableD);
+
+//        foreach (meteoVariable meteoVar, meteoVariableList)
+//            if (getVarFrequency(meteoVar) == daily)
+//            {
+//                for (QDate date = firstDate; date <= lastDate; date = date.addDays(1))
+//                {
+//                    float value = meteoGrid()->meteoPoint(row, col).getMeteoPointValueD(getCrit3DDate(date), meteoVar, meteoSettings);
+//                    QString valueS = QString("'%1'").arg(value);
+//                    if (isEqual(value, NODATA)) valueS = "NULL";
+
+//                    int varCode = getDailyVarCode(meteoVar);
+
+//                    statement += QString(" ('%1','%2',%3),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueS);
+//                }
+//            }
+
+//        statement = statement.left(statement.length() - 1);
+
+//        if( !qry.exec(statement) )
+//        {
+//            *myError = qry.lastError().text();
+//            return false;
+//        }
+//    }
 
     return true;
 }
