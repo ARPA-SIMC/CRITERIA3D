@@ -430,13 +430,6 @@ void weatherGenerator2D::computeTemperatureParameters()
         // free memory of parameters, variable par[]
         free(par);
 
-        //for (int i=0;i<365;i++)
-        //{
-            //printf("std %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.stdDevEstimation[i],temperatureCoefficients[iStation].minTWet.stdDevEstimation[i],temperatureCoefficients[iStation].maxTDry.stdDevEstimation[i],temperatureCoefficients[iStation].maxTWet.stdDevEstimation[i]);
-            //printf("ave %d %.1f %.1f %.1f %.1f\n",iStation, temperatureCoefficients[iStation].minTDry.averageEstimation[i],temperatureCoefficients[iStation].minTWet.averageEstimation[i],temperatureCoefficients[iStation].maxTDry.averageEstimation[i],temperatureCoefficients[iStation].maxTWet.averageEstimation[i]);
-        //}
-        //getchar();
-
         weatherGenerator2D::computeResiduals(temperatureCoefficients[iStation].maxTDry.averageEstimation,
                                              temperatureCoefficients[iStation].maxTWet.averageEstimation,
                                              temperatureCoefficients[iStation].maxTDry.stdDevEstimation,
@@ -740,15 +733,7 @@ void weatherGenerator2D::computeResiduals(double* averageTMaxDry,double* average
         dailyResidual[i].maxT = dailyResidual[i].maxTWet + dailyResidual[i].maxTDry;
         dailyResidual[i].minT = dailyResidual[i].minTWet + dailyResidual[i].minTDry;
         maxResidual = MAXVALUE(maxResidual,dailyResidual[i].minT * dailyResidual[i].maxT);
-        /*if (fabs(dailyResidual[i].maxT) > EPSILON)
-        {
-            printf("%d  %f\n",i,dailyResidual[i].minT * dailyResidual[i].maxT);
-            getchar();
-        }*/
-
     }
-    //printf("%f\n",maxResidual);
-    //getchar();
 }
 
 void weatherGenerator2D::covarianceOfResiduals(double** covarianceMatrix, int lag)
