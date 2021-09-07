@@ -368,6 +368,53 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
             }
 
         }
+        else if (ancestor.toElement().tagName().toUpper() == "TABLEMONTHLY")
+        {
+            _tableMonthly.exists = true;
+
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "VARCODE")
+                {
+                    secondChild = child.firstChild();
+                    _tableMonthly.varcode.push_back(varTable);
+
+                    while( !secondChild.isNull())
+                    {
+                        mySecondTag = secondChild.toElement().tagName().toUpper();
+
+
+                        if (mySecondTag == "VARFIELD")
+                        {
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varField = secondChild.toElement().text();
+
+                        }
+
+                        else if (mySecondTag == "VARCODE")
+                        {
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varCode = secondChild.toElement().text().toInt();
+
+                        }
+
+                        else if (mySecondTag == "VARPRAGANAME")
+                        {
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varPragaName = secondChild.toElement().text();
+                            // remove white spaces
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varPragaName = _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varPragaName.simplified();
+                        }
+                        else
+                        {
+                            _tableMonthly.varcode[_tableMonthly.varcode.size()-1].varCode = NODATA;
+                        }
+
+                        secondChild = secondChild.nextSibling();
+                    }
+                }
+                child = child.nextSibling();
+            }
+        }
 
         ancestor = ancestor.nextSibling();
     }
@@ -406,6 +453,21 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
         catch (const std::out_of_range& oor)
         {
             QString errMess = QString("%1 does not exist" ).arg(_tableHourly.varcode[i].varPragaName);
+            *myError = oor.what() + errMess;
+        }
+    }
+
+    for (unsigned int i=0; i < _tableMonthly.varcode.size(); i++)
+    {
+        try
+        {
+            meteoVariable gridMeteoKey = MapMonthlyMeteoVar.at(_tableMonthly.varcode[i].varPragaName.toStdString());
+            _gridMonthlyVar.insert(gridMeteoKey, _tableMonthly.varcode[i].varCode);
+            _gridMonthlyVarField.insert(gridMeteoKey, _tableMonthly.varcode[i].varField);
+        }
+        catch (const std::out_of_range& oor)
+        {
+            QString errMess = QString("%1 does not exist" ).arg(_tableMonthly.varcode[i].varPragaName);
             *myError = oor.what() + errMess;
         }
     }
@@ -586,6 +648,24 @@ bool Crit3DMeteoGridDbHandler::checkXML(QString *myError)
         }
     }
 
+    /* table monthly */
+    if (_tableMonthly.exists)
+    {
+        for (unsigned int i=0; i < _tableMonthly.varcode.size(); i++)
+        {
+            if (_tableMonthly.varcode[i].varCode == NODATA)
+            {
+                *myError = "Missing monthly var code";
+                return false;
+            }
+            if (_tableMonthly.varcode[i].varPragaName.isNull() || _tableMonthly.varcode[i].varPragaName.isEmpty())
+            {
+                *myError = "Missing monthly varPragaName";
+                return false;
+            }
+        }
+    }
+
     return true;
 }
 
@@ -759,6 +839,92 @@ meteoVariable Crit3DMeteoGridDbHandler::getHourlyVarFieldEnum(QString varField)
 
 }
 
+int Crit3DMeteoGridDbHandler::getMonthlyVarCode(meteoVariable meteoGridMonthlyVar)
+{
+
+    int varCode = NODATA;
+    //check
+    if (meteoGridMonthlyVar == noMeteoVar)
+    {
+        return varCode;
+    }
+    if (_gridMonthlyVar.empty())
+    {
+        return varCode;
+    }
+    if(_gridMonthlyVar.contains(meteoGridMonthlyVar))
+    {
+        varCode = _gridMonthlyVar[meteoGridMonthlyVar];
+    }
+
+    return varCode;
+
+}
+
+QString Crit3DMeteoGridDbHandler::getMonthlyVarField(meteoVariable meteoGridMonthlyVar)
+{
+
+    QString varField = "";
+    //check
+    if (meteoGridMonthlyVar == noMeteoVar)
+    {
+        return varField;
+    }
+    if (_gridMonthlyVar.empty())
+    {
+        return varField;
+    }
+    if(_gridMonthlyVar.contains(meteoGridMonthlyVar))
+    {
+        varField = _gridMonthlyVar[meteoGridMonthlyVar];
+    }
+
+    return varField;
+
+}
+
+meteoVariable Crit3DMeteoGridDbHandler::getMonthlyVarEnum(int varCode)
+{
+
+    if (varCode == NODATA)
+    {
+        return noMeteoVar;
+    }
+
+    QMapIterator<meteoVariable, int> i(_gridMonthlyVar);
+    while (i.hasNext()) {
+        i.next();
+        if (i.value() == varCode)
+        {
+            return i.key();
+        }
+    }
+
+    return noMeteoVar;
+
+}
+
+meteoVariable Crit3DMeteoGridDbHandler::getMonthlyVarFieldEnum(QString varField)
+{
+
+    if (varField == "")
+    {
+        return noMeteoVar;
+    }
+
+    QMapIterator<meteoVariable, QString> i(_gridMonthlyVarField);
+    while (i.hasNext()) {
+        i.next();
+        if (i.value() == varField)
+        {
+            return i.key();
+        }
+    }
+
+    return noMeteoVar;
+
+}
+
 std::string Crit3DMeteoGridDbHandler::getDailyPragaName(meteoVariable meteoVar)
 {
 
@@ -783,6 +949,23 @@ std::string Crit3DMeteoGridDbHandler::getHourlyPragaName(meteoVariable meteoVar)
     std::string key = "";
 
     for (it = MapHourlyMeteoVar.begin(); it != MapHourlyMeteoVar.end(); ++it)
+    {
+        if (it->second == meteoVar)
+        {
+            key = it->first;
+            break;
+        }
+    }
+    return key;
+}
+
+std::string Crit3DMeteoGridDbHandler::getMonthlyPragaName(meteoVariable meteoVar)
+{
+
+    std::map<std::string, meteoVariable>::const_iterator it;
+    std::string key = "";
+
+    for (it = MapMonthlyMeteoVar.begin(); it != MapMonthlyMeteoVar.end(); ++it)
     {
         if (it->second == meteoVar)
         {
