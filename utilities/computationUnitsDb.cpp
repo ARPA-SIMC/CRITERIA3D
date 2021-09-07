@@ -35,7 +35,7 @@ ComputationUnitsDB::ComputationUnitsDB(QString dbname, QString &error)
         db.close();
     }
 
-    db = QSqlDatabase::addDatabase("QSQLITE", "Units");
+    db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
     db.setDatabaseName(dbname);
 
     if (!db.open())
