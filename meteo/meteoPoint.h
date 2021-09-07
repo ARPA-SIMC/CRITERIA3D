@@ -124,6 +124,7 @@
             void emptyVarObsDataH(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
             void emptyObsDataH(const Crit3DDate& date1, const Crit3DDate& date2);
             void emptyObsDataD(const Crit3DDate& date1, const Crit3DDate& date2);
+            void emptyObsDataM(const Crit3DDate& date1, const Crit3DDate& date2);
 
             void cleanObsDataH();
             void cleanObsDataD();
@@ -137,7 +138,9 @@
             void initializeObsDataD(unsigned int numberOfDays, const Crit3DDate& firstDate);
             void emptyVarObsDataD(meteoVariable myVar, const Crit3DDate& date1, const Crit3DDate& date2);
             bool isDateLoadedD(const Crit3DDate& myDate);
+            bool isDateLoadedM(const Crit3DDate& myDate);
             bool isDateIntervalLoadedD(const Crit3DDate& date1, const Crit3DDate& date2);
+            bool isDateIntervalLoadedM(const Crit3DDate& date1, const Crit3DDate& date2);
 
             void initializeObsDataM(unsigned int numberOfMonths, unsigned int month, int year);
 
@@ -151,6 +154,8 @@
             bool getMeteoPointValueDayH(const Crit3DDate& myDate, TObsDataH *&hourlyValues);
             Crit3DDate getMeteoPointHourlyValuesDate(int index);
             float getMeteoPointValue(const Crit3DTime& myTime, meteoVariable myVar, Crit3DMeteoSettings *meteoSettings);
+            float getMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar);
+            bool setMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar, float myValue);
 
             float getProxyValue(unsigned pos);
             std::vector <float> getProxyValues();

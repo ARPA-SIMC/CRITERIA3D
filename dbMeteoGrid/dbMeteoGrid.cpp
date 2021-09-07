@@ -651,7 +651,6 @@ bool Crit3DMeteoGridDbHandler::checkXML(QString *myError)
     /* table monthly */
     if (_tableMonthly.exists)
     {
-
         for (unsigned int i=0; i < _tableMonthly.varcode.size(); i++)
         {
             if (_tableMonthly.varcode[i].varCode == NODATA)
