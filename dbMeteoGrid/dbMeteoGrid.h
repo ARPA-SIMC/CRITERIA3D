@@ -124,7 +124,7 @@
         bool saveCellGridDailyDataEnsemble(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
                                                              QList<meteoVariable> meteoVariableList, int memberNr, Crit3DMeteoSettings *meteoSettings);
         bool saveCellGridMonthlyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
-                                                             QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings* meteoSettings);
+                                                             QList<meteoVariable> meteoVariableList);
         bool saveListDailyDataEnsemble(QString *myError, QString meteoPointID, QDate date, meteoVariable meteoVar, QList<float> values);
         bool cleanDailyOldData(QString *myError, QDate date);
         bool saveListHourlyData(QString *myError, QString meteoPointID, QDateTime firstDateTime, meteoVariable meteoVar, QList<float> values);
