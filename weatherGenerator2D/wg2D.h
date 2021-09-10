@@ -183,6 +183,8 @@
         double* maxT;
         double* minT;
         double* precipitation;
+        double* maxTClimate;
+        double* minTClimate;
 
     };
 
