@@ -310,6 +310,8 @@
         void createAmountOutputSerie();
         void prepareWeatherGeneratorOutput();
 
+        void initializeTemperatureParametersMeanDelta();
+
         void initializeOutputData(int* nrDays);
         void randomSet(double *arrayNormal,int dimArray);
 
