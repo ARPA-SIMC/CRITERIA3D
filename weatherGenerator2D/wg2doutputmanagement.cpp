@@ -26,6 +26,8 @@ void weatherGenerator2D::initializeOutputData(int* nrDays)
         outputWeatherData[iStation].maxT = (double*)calloc(length, sizeof(double));
         outputWeatherData[iStation].minT = (double*)calloc(length, sizeof(double));
         outputWeatherData[iStation].precipitation = (double*)calloc(length, sizeof(double));
+        outputWeatherData[iStation].maxTClimate = (double*)calloc(length, sizeof(double));
+        outputWeatherData[iStation].minTClimate = (double*)calloc(length, sizeof(double));
     }
 }
 
@@ -123,6 +125,8 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
                 {
                     outputWeatherData[iStation].maxT[counter] = maxTGenerated[counter][iStation];
                     outputWeatherData[iStation].minT[counter] = minTGenerated[counter][iStation];
+                    outputWeatherData[iStation].maxTClimate[counter] = temperatureCoefficients[iStation].maxTDry.averageEstimation[iDoy];
+                    outputWeatherData[iStation].minTClimate[counter] = temperatureCoefficients[iStation].minTDry.averageEstimation[iDoy];
                 }
                 else
                 {

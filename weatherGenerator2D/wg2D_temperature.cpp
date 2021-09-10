@@ -551,8 +551,11 @@ void weatherGenerator2D::computeTemperatureParameters()
             {
                 temperatureCoefficients[iStation].A[i][j] = matrixA[i][j];
                 temperatureCoefficients[iStation].B[i][j] = matrixB[i][j];
+                //printf("%f  ",temperatureCoefficients[iStation].B[i][j]);
             }
+            //printf("\n");
         }
+        //getchar();
 
         for (int i=0;i<matrixRang;i++)
         {
