@@ -138,6 +138,9 @@
     struct TtemperatureCoefficients{
         double A[2][2];
         double B[2][2];
+        double A_mean_delta[2][2];
+        double B_mean_delta[2][2];
+
         Tvariable minTWet;
         Tvariable minTDry;
         Tvariable maxTWet;
@@ -299,8 +302,10 @@
         int  dateFromDoy(int doy, int year, int *day, int *month);
         void harmonicsFourier(double* variable, double *par, int nrPar, double* estimatedVariable, int nrEstimatedVariable);
         void computeResiduals(double* averageTMaxDry,double* averageTMaxWet,double* stdDevTMaxDry,double* stdDevTMaxWet,double* averageTMinDry,double* averageTMinWet,double* stdDevTMinDry,double* stdDevTMinWet,int idStation);
+        void weatherGenerator2D::computeResidualsMeanDelta(double* averageTMeanDry, double* averageTMeanWet, double* stdDevTMeanDry, double* stdDevTMeanWet, double* averageTDeltaDry, double* averageTDeltaWet, double* stdDevTDeltaDry, double* stdDevTDeltaWet, int idStation);
         void temperaturesCorrelationMatrices();
         void covarianceOfResiduals(double** covarianceMatrix, int lag);
+        void weatherGenerator2D::covarianceOfResidualsMeanDelta(double** covarianceMatrix, int lag);
         void initializeTemperaturecorrelationMatrices();
         void multisiteRandomNumbersTemperature();
         void initializeNormalRandomMatricesTemperatures();
@@ -310,7 +315,7 @@
         void createAmountOutputSerie();
         void prepareWeatherGeneratorOutput();
 
-        void initializeTemperatureParametersMeanDelta();
+        //void initializeTemperatureParametersMeanDelta();
 
         void initializeOutputData(int* nrDays);
         void randomSet(double *arrayNormal,int dimArray);
