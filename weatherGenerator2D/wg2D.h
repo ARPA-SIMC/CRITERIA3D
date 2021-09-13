@@ -138,6 +138,9 @@
     struct TtemperatureCoefficients{
         double A[2][2];
         double B[2][2];
+        double A_mean_delta[2][2];
+        double B_mean_delta[2][2];
+
         Tvariable minTWet;
         Tvariable minTDry;
         Tvariable maxTWet;
@@ -310,7 +313,7 @@
         void createAmountOutputSerie();
         void prepareWeatherGeneratorOutput();
 
-        void initializeTemperatureParametersMeanDelta();
+        //void initializeTemperatureParametersMeanDelta();
 
         void initializeOutputData(int* nrDays);
         void randomSet(double *arrayNormal,int dimArray);
