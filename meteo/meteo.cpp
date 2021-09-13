@@ -679,11 +679,11 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
 
 std::string getVariableString(meteoVariable myVar)
 {
-    if (myVar == airTemperature || myVar == dailyAirTemperatureAvg)
+    if (myVar == airTemperature || myVar == dailyAirTemperatureAvg || myVar == monthlyAirTemperatureAvg)
         return "Air temperature (°C)";
-    else if (myVar == dailyAirTemperatureMax)
+    else if (myVar == dailyAirTemperatureMax || myVar == monthlyAirTemperatureMax)
         return "Maximum air temperature (°C)";
-    else if (myVar == dailyAirTemperatureMin)
+    else if (myVar == dailyAirTemperatureMin || myVar == monthlyAirTemperatureMin)
         return "Minimum air temperature (°C)";
     else if (myVar == dailyAirTemperatureRange)
         return "Air temperature range (°C)";
@@ -707,9 +707,9 @@ std::string getVariableString(meteoVariable myVar)
         return "Night Thom index ()";
     else if (myVar == dailyThomHoursAbove)
         return "Hours with Thom index above (h)";
-    else if ((myVar == dailyPrecipitation ||  myVar == precipitation))
+    else if ((myVar == dailyPrecipitation ||  myVar == precipitation || myVar == monthlyPrecipitation))
         return "Precipitation (mm)";
-    else if (myVar == dailyGlobalRadiation)
+    else if (myVar == dailyGlobalRadiation || myVar == monthlyGlobalRadiation)
         return "Solar radiation (MJ m-2)";
     else if (myVar == globalIrradiance)
         return "Solar irradiance (W m-2)";
@@ -739,12 +739,13 @@ std::string getVariableString(meteoVariable myVar)
         return "Maximum wind scalar intensity (m s-1)";
     else if (myVar == referenceEvapotranspiration ||
              myVar == dailyReferenceEvapotranspirationHS ||
+             myVar == monthlyReferenceEvapotranspirationHS ||
              myVar == dailyReferenceEvapotranspirationPM ||
              myVar == actualEvaporation)
         return "Reference evapotranspiration (mm)";
     else if (myVar == leafWetness || myVar == dailyLeafWetness)
         return "Leaf wetness (h)";
-    else if (myVar == dailyBIC)
+    else if (myVar == dailyBIC || myVar == monthlyBIC)
         return "Hydroclimatic balance (mm)";
     else if (myVar == dailyWaterTableDepth)
         return "Water table depth (mm)";
@@ -1036,7 +1037,7 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
         if (myVar == dailyAirTemperatureAvg || myVar == airTemperature)
             return monthlyAirTemperatureAvg;
         else if (myVar == monthlyPrecipitation || myVar == precipitation)
-            return dailyPrecipitation;
+            return monthlyPrecipitation;
         else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM || myVar == referenceEvapotranspiration)
             return monthlyReferenceEvapotranspirationHS;
         else if (myVar == globalIrradiance || myVar == dailyGlobalRadiation)

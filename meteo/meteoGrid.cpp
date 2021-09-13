@@ -309,6 +309,13 @@ void Crit3DMeteoGrid::fillCurrentHourlyValue(Crit3DDate date, int hour, int minu
             _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueH(date, hour, minute, variable);
 }
 
+void Crit3DMeteoGrid::fillCurrentMonthlyValue(Crit3DDate date, meteoVariable variable)
+{
+    for (int row = 0; row < _gridStructure.header().nrRows; row++)
+        for(int col = 0; col < _gridStructure.header().nrCols; col++)
+            _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueM(date, variable);
+}
+
 void Crit3DMeteoGrid::fillMeteoRaster()
 {
     for (int i = 0; i < dataMeteoGrid.header->nrRows; i++)
