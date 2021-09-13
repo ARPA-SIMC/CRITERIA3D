@@ -2526,7 +2526,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString *myError, QString
 
                     int varCode = getMonthlyVarCode(meteoVar);
 
-                    statement += QString(" ('%1','%2','%3','%4','%5'),").arg(date.year()).arg(date.month()).arg(meteoPointID).arg(varCode).arg(valueS);
+                    statement += QString(" (%1,%2,%3,'%4',%5),").arg(date.year()).arg(date.month()).arg(meteoPointID).arg(varCode).arg(valueS);
                 }
             }
 

@@ -227,6 +227,16 @@
       { "MONTHLY_RAD", monthlyGlobalRadiation }
     };
 
+    const std::map<meteoVariable, std::string> MapMonthlyMeteoVarToString = {
+        { monthlyAirTemperatureAvg, "MONTHLY_TAVG"} ,
+        { monthlyAirTemperatureMin, "MONTHLY_TMIN" },
+        { monthlyAirTemperatureMax, "MONTHLY_TMAX" },
+        { monthlyPrecipitation, "MONTHLY_PREC" },
+        { monthlyReferenceEvapotranspirationHS, "MONTHLY_ET0_HS" },
+        { monthlyBIC, "MONTHLY_BIC" },
+        { monthlyGlobalRadiation, "MONTHLY_RAD" }
+    };
+
 
     enum frequencyType {hourly, daily, monthly, noFrequency};
 
