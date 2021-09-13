@@ -72,6 +72,7 @@
         QDate lastDate() const;
         TXMLTable tableDaily() const;
         TXMLTable tableHourly() const;
+        TXMLTable tableMonthly() const;
         QString tableDailyModel() const;
         QString tableHourlyModel() const;
 

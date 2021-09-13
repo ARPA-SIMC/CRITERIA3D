@@ -1770,7 +1770,7 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString *myError, QString met
     int numberOfMonths = (last.year()-first.year())*12+last.month()-(first.month()-1);
     _meteoGrid->meteoPointPointer(row,col)->initializeObsDataM(numberOfMonths, first.month(), first.year());
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear`>= '%2' AND `PragaYear`<= '%3'  AND 'PointCode' = '%4' ORDER BY `PragaYear`").arg(table).arg(first.year()).arg(last.year()).arg(meteoPoint);
+    QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear` BETWEEN %2 AND %3 AND 'PointCode' = '%4' ORDER BY `PragaYear`").arg(table).arg(first.year()).arg(last.year()).arg(meteoPoint);
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();
@@ -2526,7 +2526,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString *myError, QString
 
                     int varCode = getMonthlyVarCode(meteoVar);
 
-                    statement += QString(" (%1,%2,%3,'%4',%5),").arg(date.year()).arg(date.month()).arg(meteoPointID).arg(varCode).arg(valueS);
+                    statement += QString(" (%1,%2,'%3','%4',%5),").arg(date.year()).arg(date.month()).arg(meteoPointID).arg(varCode).arg(valueS);
                 }
             }
 
@@ -2971,6 +2971,11 @@ TXMLTable Crit3DMeteoGridDbHandler::tableDaily() const
 TXMLTable Crit3DMeteoGridDbHandler::tableHourly() const
 {
     return _tableHourly;
+}
+
+TXMLTable Crit3DMeteoGridDbHandler::tableMonthly() const
+{
+    return _tableMonthly;
 }
 
 QString Crit3DMeteoGridDbHandler::tableDailyModel() const

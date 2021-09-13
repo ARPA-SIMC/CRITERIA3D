@@ -1149,6 +1149,7 @@ void Project::loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo)
     {
         this->loadMeteoGridDailyData(firstDate, lastDate, showInfo);
         this->loadMeteoGridHourlyData(QDateTime(firstDate, QTime(1,0)), QDateTime(lastDate.addDays(1), QTime(0,0)), showInfo);
+        this->loadMeteoGridMonthlyData(firstDate, lastDate, showInfo);
     }
 }
 
@@ -1274,6 +1275,54 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
     else
         return true;
 }
+
+bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool showInfo)
+{
+    if (! meteoGridDbHandler->tableMonthly().exists) return false;
+
+    std::string id;
+    int count = 0;
+
+    int infoStep = 1;
+
+    if (showInfo)
+    {
+        QString infoStr = "Load meteo grid monthly data: " + firstDate.toString();
+        if (firstDate != lastDate) infoStr += " - " + lastDate.toString();
+        infoStep = setProgressBar(infoStr, this->meteoGridDbHandler->gridStructure().header().nrRows);
+    }
+
+    for (int row = 0; row < this->meteoGridDbHandler->gridStructure().header().nrRows; row++)
+    {
+        if (showInfo && (row % infoStep) == 0)
+        {
+            updateProgressBar(row);
+        }
+
+        for (int col = 0; col < this->meteoGridDbHandler->gridStructure().header().nrCols; col++)
+        {
+            if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
+            {
+
+                if (this->meteoGridDbHandler->loadGridMonthlyData(&errorString, QString::fromStdString(id), firstDate, lastDate))
+                {
+                    count = count + 1;
+                }
+            }
+        }
+    }
+
+    if (showInfo) closeProgressBar();
+
+    if (count == 0)
+    {
+        errorString = "No Data Available";
+        return false;
+    }
+    else
+        return true;
+}
+
 
 
 QDateTime Project::findDbPointLastTime()
