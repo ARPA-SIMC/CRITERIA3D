@@ -842,7 +842,7 @@ void weatherGenerator2D::computeTemperatureParameters()
         weatherGenerator2D::covarianceOfResidualsMeanDelta(matrixCovarianceLag1,1);
         ratioLag1 = 0;
         //double ratioLag0 = 0;
-        thresholdLag1 = 0.9; // to check !!!
+        //thresholdLag1 = 0.9; // to check !!!
         if (matrixCovarianceLag1[1][1] > thresholdLag1)  // the numeric value is thought in order to avoid too extreme values
         {
             ratioLag1 = thresholdLag1/matrixCovarianceLag1[1][1];
@@ -854,31 +854,12 @@ void weatherGenerator2D::computeTemperatureParameters()
                 }
             }
         }
-        thresholdLag0 = 0.8; // to check !!!
+        //thresholdLag0 = 0.8; // to check !!!
         if (matrixCovarianceLag0[0][1] > thresholdLag0) // the numeric value is thought in order to avoid too extreme values
         {
             matrixCovarianceLag0[0][1] = matrixCovarianceLag0[1][0] = thresholdLag0;
         }
-        /*
-        for (int j=0;j<matrixRang;j++)
-        {
-            for (int k=0;k<matrixRang;k++)
-            {
-                printf("%f  ",matrixCovarianceLag0[j][k]);
-            }
-            printf("\n");
-        }
-        printf("\n");
-        for (int j=0;j<matrixRang;j++)
-        {
-            for (int k=0;k<matrixRang;k++)
-            {
-                printf("%f  ",matrixCovarianceLag1[j][k]);
-            }
-            printf("\n");
-        }
-        getchar();
-        */
+
         matricial::inverse(matrixCovarianceLag0,matrixC,matrixRang); // matrixC becomes temporarely the inverse of lag0
         matricial::matrixProduct(matrixCovarianceLag1,matrixC,matrixRang,matrixRang,matrixRang,matrixRang,matrixA);
         matricial::transposedSquareMatrix(matrixCovarianceLag1,matrixRang);
@@ -919,12 +900,12 @@ void weatherGenerator2D::computeTemperatureParameters()
             {
                 temperatureCoefficients[iStation].A_mean_delta[i][j] = matrixA[i][j];
                 temperatureCoefficients[iStation].B_mean_delta[i][j] = matrixB[i][j];
-                //printf("%f  ",temperatureCoefficients[iStation].B[i][j]);
+                //printf("%f  ",temperatureCoefficients[iStation].A_mean_delta[i][j]);
             }
             //printf("\n");
         }
 
-
+        //getchar();
 
 
         for (int i=0;i<matrixRang;i++)
@@ -1434,6 +1415,106 @@ void weatherGenerator2D::temperaturesCorrelationMatrices()
             correlationMatrixTemperature.minT[i][j] = correlationMatrixTemperature.minT[j][i];
         }
     }
+
+
+    TcorrelationVar meanT;
+    TcorrelationVar deltaT;
+    int counterMeanT = 0;
+    int counterDeltaT = 0;
+    for (int j=0; j<nrStations;j++)
+    {
+        correlationMatrixTemperature.meanT[j][j] = 1;
+        correlationMatrixTemperature.deltaT[j][j] = 1;
+    }
+
+    // compute correlation for tmean
+    for (int j=0; j<nrStations-1;j++)
+    {
+        for (int i=j+1; i<nrStations;i++)
+        {
+            counterMeanT = 0;
+            meanT.meanValue1=0.;
+            meanT.meanValue2=0.;
+            meanT.covariance = meanT.variance1 = meanT.variance2 = 0.;
+
+            for (int k=0; k<nrData;k++) // compute the monthly means
+            {
+                if ((fabs(obsDataD[j][k].tMax - NODATA) > EPSILON) && (fabs(obsDataD[j][k].tMin - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMax - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMin - NODATA) > EPSILON))
+                {
+                    counterMeanT++;
+                    meanT.meanValue1 += 0.5*(obsDataD[j][k].tMax + obsDataD[j][k].tMin) ;
+                    meanT.meanValue2 += 0.5*(obsDataD[i][k].tMax + obsDataD[i][k].tMin);
+
+                }
+            }
+            if (counterMeanT != 0)
+            {
+                meanT.meanValue1 /= counterMeanT;
+                meanT.meanValue2 /= counterMeanT;
+            }
+
+            // compute the monthly rho off-diagonal elements
+            for (int k=0; k<nrData;k++)
+            {
+                if ((fabs(obsDataD[j][k].tMax - NODATA) > EPSILON) && (fabs(obsDataD[j][k].tMin - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMax - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMin - NODATA) > EPSILON))
+                {
+                    double value1,value2;
+                    value1 = 0.5*(obsDataD[j][k].tMax + obsDataD[j][k].tMin);
+                    value2 = 0.5*(obsDataD[i][k].tMax + obsDataD[i][k].tMin);
+
+                    meanT.covariance += (value1 - meanT.meanValue1)*(value2 - meanT.meanValue2);
+                    meanT.variance1 += (value1 - meanT.meanValue1)*(value1 - meanT.meanValue1);
+                    meanT.variance2 += (value2 - meanT.meanValue2)*(value2 - meanT.meanValue2);
+                }
+            }
+            correlationMatrixTemperature.meanT[j][i]= meanT.covariance / sqrt(meanT.variance1*meanT.variance2);
+            correlationMatrixTemperature.meanT[i][j] = correlationMatrixTemperature.meanT[j][i];
+        }
+    }
+
+    // compute correlation for tdelta
+    for (int j=0; j<nrStations-1;j++)
+    {
+        for (int i=j+1; i<nrStations;i++)
+        {
+            counterDeltaT = 0;
+            deltaT.meanValue1=0.;
+            deltaT.meanValue2=0.;
+            deltaT.covariance = deltaT.variance1 = deltaT.variance2 = 0.;
+
+            for (int k=0; k<nrData;k++) // compute the monthly means
+            {
+                if ((fabs(obsDataD[j][k].tMin - NODATA) > EPSILON) && (fabs(obsDataD[j][k].tMax - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMin - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMax - NODATA) > EPSILON))
+                {
+                    counterDeltaT++;
+                    deltaT.meanValue1 += obsDataD[j][k].tMax - obsDataD[j][k].tMin ;
+                    deltaT.meanValue2 += obsDataD[i][k].tMax - obsDataD[i][k].tMin;
+
+                }
+            }
+            if (counterMinT != 0)
+            {
+                deltaT.meanValue1 /= counterDeltaT;
+                deltaT.meanValue2 /= counterDeltaT;
+            }
+            // compute the monthly rho off-diagonal elements
+            for (int k=0; k<nrData;k++)
+            {
+                if ((fabs(obsDataD[j][k].tMin - NODATA) > EPSILON) && (fabs(obsDataD[j][k].tMax - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMin - NODATA) > EPSILON) && (fabs(obsDataD[i][k].tMax - NODATA) > EPSILON))
+                {
+                    double value1,value2;
+                    value1 = obsDataD[j][k].tMax - obsDataD[j][k].tMin;
+                    value2 = obsDataD[i][k].tMax - obsDataD[i][k].tMin;
+
+                    deltaT.covariance += (value1 - deltaT.meanValue1)*(value2 - deltaT.meanValue2);
+                    deltaT.variance1 += (value1 - deltaT.meanValue1)*(value1 - deltaT.meanValue1);
+                    deltaT.variance2 += (value2 - deltaT.meanValue2)*(value2 - deltaT.meanValue2);
+                }
+            }
+            correlationMatrixTemperature.deltaT[j][i]= deltaT.covariance / sqrt(deltaT.variance1*deltaT.variance2);
+            correlationMatrixTemperature.deltaT[i][j] = correlationMatrixTemperature.deltaT[j][i];
+        }
+    }
 }
 
 void weatherGenerator2D::initializeNormalRandomMatricesTemperatures()
@@ -1442,10 +1523,15 @@ void weatherGenerator2D::initializeNormalRandomMatricesTemperatures()
     lengthOfRandomSeries = parametersModel.yearOfSimulation*365;
     normRandomMaxT = (double**)calloc(lengthOfRandomSeries, sizeof(double*));
     normRandomMinT = (double**)calloc(lengthOfRandomSeries, sizeof(double*));
+    normRandomMeanT = (double**)calloc(lengthOfRandomSeries, sizeof(double*));
+    normRandomDeltaT = (double**)calloc(lengthOfRandomSeries, sizeof(double*));
+
     for (int i=0;i<lengthOfRandomSeries;i++)
     {
         normRandomMaxT[i] = (double*)calloc(nrStations, sizeof(double));
         normRandomMinT[i] = (double*)calloc(nrStations, sizeof(double));
+        normRandomMeanT[i] = (double*)calloc(nrStations, sizeof(double));
+        normRandomDeltaT[i] = (double*)calloc(nrStations, sizeof(double));
     }
     for (int i=0; i<nrStations;i++)
     {
@@ -1453,6 +1539,8 @@ void weatherGenerator2D::initializeNormalRandomMatricesTemperatures()
         {
             normRandomMaxT[j][i] = NODATA;
             normRandomMinT[j][i] = NODATA;
+            normRandomMeanT[j][i] = NODATA;
+            normRandomDeltaT[j][i] = NODATA;
         }
     }
 }
@@ -1542,24 +1630,9 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
         }
 
     }
-    /*for (int iProva=0; iProva<nrStations; iProva++)
-    {
-        for (int jProva=0; jProva<nrStations; jProva++)
-        {
-            //printf("%d %d %f\n",iProva, jProva,dummyMatrix[iProva][jProva]);
-        }
-        //getchar();
-    }*/
+
     isLowerDiagonal = false;
     matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,isLowerDiagonal);
-    /*for (int iProva=0; iProva<nrStations; iProva++)
-    {
-        for (int jProva=0; jProva<nrStations; jProva++)
-        {
-            //printf("%d %d %f\n",iProva, jProva,dummyMatrix[iProva][jProva]);
-        }
-        //getchar();
-    }*/
     matricial::transposedMatrix(dummyMatrix,nrStations,nrStations,dummyMatrix2);
     matricial::matrixProduct(dummyMatrix2,dummyMatrix,nrStations,nrStations,nrStations,nrStations,dummyMatrix3);
     isLowerDiagonal = true;
@@ -1573,42 +1646,9 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
             normRandom[i][j] = myrandom::normalRandom(&gasDevIset,&gasDevGset);
         }
     }
-    // !! this part was added to use "fixed" random numbers
-    /*double* arrayRandomNormalNumbers = (double *)calloc(nrStations*lengthOfRandomSeries, sizeof(double));
-    randomSet(arrayRandomNormalNumbers,lengthOfRandomSeries);
-    int countRandom = 0;
-    for (int i=0;i<nrStations;i++)
-    {
-        //randomSet(arrayRandomNormalNumbers,lengthOfRandomSeries);
-        for (int j=0;j<lengthOfRandomSeries;j++)
-        {
-            normRandom[i][j] = arrayRandomNormalNumbers[countRandom];
-            countRandom++;
-            //printf("%f  ",normalizedRandomMatrix[i][j]);
-        }
-        //printf("\n");
-    }*/
-    //free(arrayRandomNormalNumbers);
-    // fine parte da togliere
-    /*for (int iProva=0; iProva<nrStations; iProva++)
-    {
-        for (int jProva=0; jProva<nrStations; jProva++)
-        {
-            printf("%d %d %f\n",iProva, jProva,dummyMatrix3[iProva][jProva]);
-        }
-        getchar();
-    }*/
+
     matricial::matrixProduct(dummyMatrix3,normRandom,nrStations,nrStations,lengthOfRandomSeries,nrStations,normRandom2);
     matricial::transposedMatrix(normRandom2,nrStations,lengthOfRandomSeries,normRandomMaxT);
-    for (int iProva=0; iProva<nrStations; iProva++)
-    {
-        for (int jProva=0; jProva<lengthOfRandomSeries; jProva++)
-        {
-            //printf("%d %d %f\n",iProva, jProva,normRandom2[iProva][jProva]);
-        }
-        //getchar();
-    }
-
 
     // for Tmin
     counter = 0;
@@ -1659,11 +1699,9 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
         for (int j=0;j<nrStations;j++)
         {
             dummyMatrix[i][j] = correlationMatrixTemperature.minT[i][j];
-            //printf("%f ",correlationMatrixTemperature.minT[i][j]);
         }
-        //printf("\n");
     }
-    //getchar();
+
     isLowerDiagonal = false;
     matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,isLowerDiagonal);
     matricial::transposedMatrix(dummyMatrix,nrStations,nrStations,dummyMatrix2);
@@ -1678,26 +1716,152 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
             normRandom[i][j] = myrandom::normalRandom(&gasDevIset,&gasDevGset);
         }
     }
-    // !! this part was added to use "fixed" random numbers
-    //double* arrayRandomNormalNumbers = (double *)calloc(lengthOfRandomSeries, sizeof(double));
-    //randomSet(arrayRandomNormalNumbers,lengthOfRandomSeries);
-    /*countRandom = 0;
-    for (int i=0;i<nrStations;i++)
-    {
-        //randomSet(arrayRandomNormalNumbers,lengthOfRandomSeries);
-        for (int j=0;j<lengthOfRandomSeries;j++)
-        {
-            normRandom[i][j] = arrayRandomNormalNumbers[countRandom];
-            countRandom++;
-            //printf("%f  ",normalizedRandomMatrix[i][j]);
-        }
-        //printf("\n");
-    }
-    free(arrayRandomNormalNumbers); */
-    // fine parte da togliere
+
 
     matricial::matrixProduct(dummyMatrix3,normRandom,nrStations,nrStations,lengthOfRandomSeries,nrStations,normRandom2);
     matricial::transposedMatrix(normRandom2,nrStations,lengthOfRandomSeries,normRandomMinT);
+
+    // for tmean
+    for (int i=0; i<nrStations;i++)
+    {
+        for (int j=0; j<nrStations;j++)
+        {
+            correlationArray[counter] = correlationMatrixTemperature.meanT[i][j];
+            eigenvectors[counter] = NODATA;
+            counter++;
+        }
+        for (int j=0; j<lengthOfRandomSeries;j++)
+        {
+            normRandom[i][j] = NODATA;
+            normRandom2[i][j] = NODATA;
+        }
+        eigenvalues[i]= NODATA;
+    }
+
+    eigenproblem::rs(nrStations,correlationArray,eigenvalues,true,eigenvectors);
+    counter = 0;
+    for (int i=0; i<nrStations;i++)
+    {
+        if (eigenvalues[i] < 0)
+        {
+            counter++;
+            eigenvalues[i] = 0.000001;
+        }
+    }
+
+    if (counter > 0)
+    {
+        counter=0;
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                dummyMatrix[j][i]= eigenvectors[counter];
+                dummyMatrix2[i][j]= eigenvectors[counter]*eigenvalues[i];
+                counter++;
+            }
+        }
+        matricial::matrixProduct(dummyMatrix,dummyMatrix2,nrStations,nrStations,nrStations,nrStations,correlationMatrixTemperature.meanT);
+    }
+
+    for (int i=0;i<nrStations;i++)
+    {
+        for (int j=0;j<nrStations;j++)
+        {
+            dummyMatrix[i][j] = correlationMatrixTemperature.meanT[i][j];
+        }
+
+    }
+
+    isLowerDiagonal = false;
+    matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,isLowerDiagonal);
+    matricial::transposedMatrix(dummyMatrix,nrStations,nrStations,dummyMatrix2);
+    matricial::matrixProduct(dummyMatrix2,dummyMatrix,nrStations,nrStations,nrStations,nrStations,dummyMatrix3);
+    isLowerDiagonal = true;
+    matricial::choleskyDecompositionTriangularMatrix(dummyMatrix3,nrStations,isLowerDiagonal);
+
+
+    for (int i=0;i<nrStations;i++)
+    {
+        for (int j=0;j<lengthOfRandomSeries;j++)
+        {
+            normRandom[i][j] = myrandom::normalRandom(&gasDevIset,&gasDevGset);
+        }
+    }
+
+    matricial::matrixProduct(dummyMatrix3,normRandom,nrStations,nrStations,lengthOfRandomSeries,nrStations,normRandom2);
+    matricial::transposedMatrix(normRandom2,nrStations,lengthOfRandomSeries,normRandomMeanT);
+
+    // for Tdelta
+    counter = 0;
+    for (int i=0; i<nrStations;i++)
+    {
+        for (int j=0; j<nrStations;j++)
+        {
+            correlationArray[counter] = correlationMatrixTemperature.deltaT[i][j];
+            eigenvectors[counter] = NODATA;
+            counter++;
+        }
+        for (int j=0; j<lengthOfRandomSeries;j++)
+        {
+            normRandom[i][j] = NODATA;
+            normRandom2[i][j] = NODATA;
+        }
+        eigenvalues[i]= NODATA;
+    }
+
+    eigenproblem::rs(nrStations,correlationArray,eigenvalues,true,eigenvectors);
+    counter = 0;
+    for (int i=0; i<nrStations;i++)
+    {
+        if (eigenvalues[i] < 0)
+        {
+            counter++;
+            eigenvalues[i] = 0.000001;
+        }
+    }
+
+    if (counter > 0)
+    {
+        counter=0;
+        for (int i=0;i<nrStations;i++)
+        {
+            for (int j=0;j<nrStations;j++)
+            {
+                dummyMatrix[j][i]= eigenvectors[counter];
+                dummyMatrix2[i][j]= eigenvectors[counter]*eigenvalues[i];
+                counter++;
+            }
+        }
+        matricial::matrixProduct(dummyMatrix,dummyMatrix2,nrStations,nrStations,nrStations,nrStations,correlationMatrixTemperature.deltaT);
+    }
+
+    for (int i=0;i<nrStations;i++)
+    {
+        for (int j=0;j<nrStations;j++)
+        {
+            dummyMatrix[i][j] = correlationMatrixTemperature.deltaT[i][j];
+        }
+    }
+
+    isLowerDiagonal = false;
+    matricial::choleskyDecompositionTriangularMatrix(dummyMatrix,nrStations,isLowerDiagonal);
+    matricial::transposedMatrix(dummyMatrix,nrStations,nrStations,dummyMatrix2);
+    matricial::matrixProduct(dummyMatrix2,dummyMatrix,nrStations,nrStations,nrStations,nrStations,dummyMatrix3);
+    isLowerDiagonal = true;
+    matricial::choleskyDecompositionTriangularMatrix(dummyMatrix3,nrStations,isLowerDiagonal);
+
+    for (int i=0;i<nrStations;i++)
+    {
+        for (int j=0;j<lengthOfRandomSeries;j++)
+        {
+            normRandom[i][j] = myrandom::normalRandom(&gasDevIset,&gasDevGset);
+        }
+    }
+
+
+    matricial::matrixProduct(dummyMatrix3,normRandom,nrStations,nrStations,lengthOfRandomSeries,nrStations,normRandom2);
+    matricial::transposedMatrix(normRandom2,nrStations,lengthOfRandomSeries,normRandomDeltaT);
 
     for (int i=0;i<nrStations;i++)
     {
