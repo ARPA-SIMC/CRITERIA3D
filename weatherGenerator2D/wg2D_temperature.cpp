@@ -1897,6 +1897,7 @@ void weatherGenerator2D::multisiteRandomNumbersTemperature()
     }
     free(correlationMatrixTemperature.meanT);
     free(correlationMatrixTemperature.deltaT);
+    printf("abcd\n");
 }
 
 void weatherGenerator2D::initializeMultiOccurrenceTemperature(int length)
