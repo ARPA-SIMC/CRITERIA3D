@@ -1235,6 +1235,8 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
     QString tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
     QString tableH = _tableHourly.prefix + QString::fromStdString(id) + _tableHourly.postFix;
+    QString tableM = "MonthlyData";
+
     QSqlQuery qry(_db);
 
     if (_tableDaily.exists)
@@ -1356,6 +1358,34 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
                 return false;
             }
         }
+    }
+
+    if (_tableMonthly.exists)
+    {
+        int minPragaYear;
+        int maxPragaYear;
+        QString statement = QString("SELECT MIN(%1) as minYear, MAX(%1) as maxYear FROM `%2`").arg("PragaYear").arg(tableM);
+        qry.exec(statement);
+
+        if ( qry.lastError().type() != QSqlError::NoError )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+        else
+        {
+            if (qry.next())
+            {
+                getValue(qry.value("minYear"), &minPragaYear);
+                getValue(qry.value("maxYear"), &maxPragaYear);
+            }
+            else
+            {
+                *myError = "PragaYear field not found";
+                return false;
+            }
+        }
+        // TO DO
     }
 
     // the last hourly day is always incomplete, there is just 00.00 value
