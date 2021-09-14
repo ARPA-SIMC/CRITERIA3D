@@ -1947,16 +1947,16 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
     lengthOfRandomSeries = parametersModel.yearOfSimulation*365;
     //weatherGenerator2D::initializeMultiOccurrenceTemperature(lengthOfRandomSeries);
     // fill in the data of simulations
-    int day,month;
+    int daySimulated,monthSimulated;
     int counter = 0;
     for (int j=1;j<=parametersModel.yearOfSimulation;j++)
     {
         for (int i=0; i<365;i++)
         {
-            weatherGenerator2D::dateFromDoy(i+1,1,&day,&month); // 1 to avoid leap years
+            weatherGenerator2D::dateFromDoy(i+1,1,&daySimulated,&monthSimulated); // 1 to avoid leap years
             multiOccurrenceTemperature[counter].year_simulated = j;
-            multiOccurrenceTemperature[counter].month_simulated = month;
-            multiOccurrenceTemperature[counter].day_simulated = day;
+            multiOccurrenceTemperature[counter].month_simulated = monthSimulated;
+            multiOccurrenceTemperature[counter].day_simulated = daySimulated;
             counter++;
         }
     }
@@ -2120,6 +2120,226 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             occurrencePrecGenerated[j][i] = X[j];
             averageTmax[j%365] += maxTGenerated[j][i]/parametersModel.yearOfSimulation;
             averageTmin[j%365] += minTGenerated[j][i]/parametersModel.yearOfSimulation;
+            //printf("%.1f %d\n",maxTGenerated[j][i],parametersModel.yearOfSimulation);
+        }
+        //getchar();
+        // free memory
+        free(ksi[0]);
+        free(ksi[1]);
+        free(eps[0]);
+        free(eps[1]);
+        free(cAverage[0]);
+        free(cAverage[1]);
+        free(cStdDev[0]);
+        free(cStdDev[1]);
+        free(Xp[0]);
+        free(Xp[1]);
+        free(ksi);
+        free(eps);
+        free(cAverage);
+        free(cStdDev);
+        free(residuals);
+        free(Xp);
+    }
+
+    for (int i=0;i<4;i++)
+    {
+        free(averageT[i]);
+        free(stdDevT[i]);
+    }
+
+    free(averageT);
+    free(stdDevT);
+    free(X);
+
+    // free class memory
+    for (int j=0;j<lengthOfRandomSeries;j++)
+    {
+        free(multiOccurrenceTemperature[j].occurrence_simulated);
+    }
+    free(multiOccurrenceTemperature);
+
+}
+
+void weatherGenerator2D::multisiteTemperatureGenerationMeanDelta()
+{
+    int lengthOfRandomSeries;
+    lengthOfRandomSeries = parametersModel.yearOfSimulation*365;
+    //weatherGenerator2D::initializeMultiOccurrenceTemperature(lengthOfRandomSeries);
+    // fill in the data of simulations
+    int daySimulated,monthSimulated;
+    int counter = 0;
+    for (int j=1;j<=parametersModel.yearOfSimulation;j++)
+    {
+        for (int i=0; i<365;i++)
+        {
+            weatherGenerator2D::dateFromDoy(i+1,1,&daySimulated,&monthSimulated); // 1 to avoid leap years
+            multiOccurrenceTemperature[counter].year_simulated = j;
+            multiOccurrenceTemperature[counter].month_simulated = monthSimulated;
+            multiOccurrenceTemperature[counter].day_simulated = daySimulated;
+            counter++;
+        }
+    }
+
+    for (int j=0;j<12;j++)
+    {
+        int counter2 = 0;
+        counter = 0;
+        for (int k=0; k<lengthOfRandomSeries; k++)
+        {
+            if (multiOccurrenceTemperature[counter].month_simulated == (j+1))
+            {
+                for (int i=0;i<nrStations;i++)
+                {
+                    multiOccurrenceTemperature[counter].occurrence_simulated[i] = randomMatrix[j].matrixOccurrences[i][counter2];
+                }
+                counter2++;
+            }
+            counter++;
+        }
+    }
+
+    //weatherGenerator2D::initializeTemperaturesOutput(lengthOfRandomSeries);
+    double* X = (double*)calloc(lengthOfRandomSeries, sizeof(double));
+    double** averageT = (double**)calloc(4, sizeof(double*));
+    double** stdDevT = (double**)calloc(4, sizeof(double*));
+    for (int i=0;i<4;i++)
+    {
+        averageT[i] = (double*)calloc(lengthOfRandomSeries, sizeof(double));
+        stdDevT[i] = (double*)calloc(lengthOfRandomSeries, sizeof(double));
+        for (int j=0; j<lengthOfRandomSeries;j++)
+        {
+            averageT[i][j] = NODATA;
+            stdDevT[i][j] = NODATA;
+        }
+    }
+
+    for (int i=0; i<lengthOfRandomSeries ; i++)
+    {
+        X[i] = NODATA;
+    }
+    for (int i=0;i<nrStations;i++)
+    {
+        int jModulo;
+        for (int j=0;j<lengthOfRandomSeries;j++)
+        {
+            X[j] = multiOccurrenceTemperature[j].occurrence_simulated[i];
+            jModulo = j%365;
+
+            averageT[0][j] = temperatureCoefficients[i].meanTDry.averageEstimation[jModulo];
+            averageT[1][j] = temperatureCoefficients[i].deltaTDry.averageEstimation[jModulo];
+            averageT[2][j] = temperatureCoefficients[i].meanTWet.averageEstimation[jModulo];
+            averageT[3][j] = temperatureCoefficients[i].deltaTWet.averageEstimation[jModulo];
+
+            stdDevT[0][j] = temperatureCoefficients[i].meanTDry.stdDevEstimation[jModulo];
+            stdDevT[1][j] = temperatureCoefficients[i].deltaTDry.stdDevEstimation[jModulo];
+            stdDevT[2][j] = temperatureCoefficients[i].meanTWet.stdDevEstimation[jModulo];
+            stdDevT[3][j] = temperatureCoefficients[i].deltaTWet.stdDevEstimation[jModulo];
+
+        }
+        double* residuals = (double*)calloc(2, sizeof(double));
+        residuals[0] = residuals[1] = 0;
+        double** ksi = (double**)calloc(2, sizeof(double*));
+        double** eps = (double**)calloc(2, sizeof(double*));
+        for (int j=0;j<2;j++)
+        {
+            ksi[j] = (double*)calloc(lengthOfRandomSeries, sizeof(double));
+            eps[j] = (double*)calloc(lengthOfRandomSeries, sizeof(double));
+            for (int k=0;k<lengthOfRandomSeries;k++)
+            {
+               ksi[j][k] = 0;  // initialization
+               eps[j][k] = 0;  // initialization
+            }
+        }
+
+        for (int j=0;j<lengthOfRandomSeries;j++)
+        {
+            eps[0][j] = normRandomMeanT[j][i];
+            eps[1][j] = normRandomDeltaT[j][i];
+            //printf("%.1f %.1f\n",eps[0][j],eps[1][j]);
+        }
+        //getchar();
+        double res0,res1;
+        res1 = res0 = 0;
+        for (int j=0;j<lengthOfRandomSeries;j++)
+        {
+
+
+            //printf("%.1f %.1f\n",residuals[0],residuals[1]);
+
+            res0 = temperatureCoefficients[i].A_mean_delta[0][0]*residuals[0] + temperatureCoefficients[i].A_mean_delta[0][1]*residuals[1];
+            res0 += temperatureCoefficients[i].B_mean_delta[0][0]*eps[0][j] + temperatureCoefficients[i].B_mean_delta[0][1]*eps[1][j];
+            res1 = temperatureCoefficients[i].A_mean_delta[1][0]*residuals[0] + temperatureCoefficients[i].A_mean_delta[1][1]*residuals[1];
+            res1 += temperatureCoefficients[i].B_mean_delta[1][0]*eps[0][j] + temperatureCoefficients[i].B_mean_delta[1][1]*eps[1][j];
+            ksi[0][j] = residuals[0] = res0;
+            ksi[1][j] = residuals[1] = res1;
+            //printf("%.1f %.1f\n",eps[0][j],eps[1][j]);
+            //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].B[0][0],temperatureCoefficients[i].B[0][1],temperatureCoefficients[i].B[1][0],temperatureCoefficients[i].B[1][1]);
+            //printf("%d %.1f %.1f %.1f %.1f\n",i, temperatureCoefficients[i].A[0][0],temperatureCoefficients[i].A[0][1],temperatureCoefficients[i].A[1][0],temperatureCoefficients[i].A[1][1]);
+            //residuals[0] = residuals[1]=0;
+            //printf("%.1f %.1f\n",residuals[0],residuals[1]);
+            //getchar();
+        }
+        //getchar();
+        double** cAverage = (double**)calloc(2, sizeof(double*));
+        double** cStdDev = (double**)calloc(2, sizeof(double*));
+        double** Xp = (double**)calloc(2, sizeof(double*));
+
+        for (int j=0;j<2;j++)
+        {
+            cAverage[j] = (double*)calloc(lengthOfRandomSeries, sizeof(double));
+            cStdDev[j] = (double*)calloc(lengthOfRandomSeries, sizeof(double));
+            Xp[j] = (double*)calloc(lengthOfRandomSeries, sizeof(double));
+
+            for (int k=0;k<lengthOfRandomSeries;k++)
+            {
+                cAverage[j][k] = NODATA;
+                cStdDev[j][k] = NODATA;
+                Xp[j][k] = NODATA;
+            }
+        }
+        // !!!!!! this part has been changed from the original one. To be verified with authors and colleagues!
+        for (int j=0;j<lengthOfRandomSeries;j++)
+        {
+            //X[j] = 1 - X[j]; // to come back to the original code
+            cAverage[0][j] = X[j]*averageT[2][j] + (1- X[j])*averageT[0][j]; // for Tmax
+            cAverage[1][j] = X[j]*averageT[3][j] + (1- X[j])*averageT[1][j]; // for Tmin
+            cStdDev[0][j] = X[j]*stdDevT[2][j] + (1-X[j])*stdDevT[0][j]; // for Tmax
+            cStdDev[1][j] = X[j]*stdDevT[3][j] + (1-X[j])*stdDevT[1][j]; // for Tmin
+        }
+        // !!!!!!
+        for (int j=0;j<lengthOfRandomSeries;j++)
+        {
+            if(cStdDev[0][j] >= cStdDev[1][j])
+            {
+                Xp[1][j] = ksi[1][j]*cStdDev[1][j] + cAverage[1][j];
+                Xp[0][j] = ksi[0][j]*sqrt(cStdDev[0][j]*cStdDev[0][j] - cStdDev[1][j]*cStdDev[1][j]) + (cAverage[0][j] - cAverage[1][j]) + Xp[1][j];
+            }
+            else
+            {
+                Xp[0][j] = ksi[0][j]*cStdDev[0][j] + cAverage[0][j];
+                Xp[1][j] = ksi[1][j]*sqrt(cStdDev[1][j]*cStdDev[1][j] - cStdDev[0][j]*cStdDev[0][j]) - (cAverage[0][j] - cAverage[1][j]) + Xp[0][j];
+            }
+             //printf("%.1f %.1f\n",ksi[0][j],ksi[1][j]);
+        }
+        //getchar();
+
+        for (int j=0;j<lengthOfRandomSeries;j++)
+        {
+            if (Xp[0][j] <= Xp[1][j])
+            {
+                Xp[1][j] = Xp[0][j] - 0.2*fabs(Xp[0][j]);
+            }
+        }
+        double averageTmean[365]={0};
+        double averageTdelta[365]={0};
+        for (int j=0;j<lengthOfRandomSeries;j++)
+        {
+            meanTGenerated[j][i] = Xp[0][j];
+            deltaTGenerated[j][i] = Xp[1][j];
+            occurrencePrecGenerated[j][i] = X[j];
+            averageTmean[j%365] += meanTGenerated[j][i]/parametersModel.yearOfSimulation;
+            averageTdelta[j%365] += deltaTGenerated[j][i]/parametersModel.yearOfSimulation;
             //printf("%.1f %d\n",maxTGenerated[j][i],parametersModel.yearOfSimulation);
         }
         //getchar();
