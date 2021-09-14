@@ -191,25 +191,24 @@ void Crit3DMeteoPoint::initializeObsDataM(unsigned int numberOfMonths, unsigned 
 
     quality = quality::missing_data;
     residual = NODATA;
-    int addYear = -1;
+    int addYear = 0;
 
-    for (unsigned int i = month; i <= numberOfMonths; i++)
+    for (unsigned int i = month; i < month+numberOfMonths; i++)
     {
-        if (i < 12)
+        if (i <= 12)
         {
             obsDataM[i-month]._month = i;   // obsDataM start from 0
             obsDataM[i-month]._year = year;
         }
-        else if (i%12 == 0)
-        {
-            addYear = addYear+1;
-            obsDataM[i-month]._month = 12;
-            obsDataM[i-month]._year = year + addYear;
-        }
         else
         {
             obsDataM[i-month]._month = i%12;
-            obsDataM[i-month]._year = year + addYear + 1;
+            if (i%13 == 0)
+            {
+                // new year
+                addYear = addYear + 1;
+            }
+            obsDataM[i-month]._year = year + addYear;
         }
 
         obsDataM[i-month].tMax = NODATA;
@@ -744,7 +743,22 @@ bool Crit3DMeteoPoint::setMeteoPointValueM(const Crit3DDate &myDate, meteoVariab
     if (myVar == noMeteoVar) return NODATA;
     if (nrObsDataDaysM == 0) return NODATA;
 
-    int index = (myDate.year - obsDataM[0]._year)*12 + myDate.month-1;
+    int index;
+    if (myDate.year == obsDataM[0]._year)
+    {
+        // same year of first data
+        index = myDate.month-obsDataM[0]._month;
+    }
+    else if (myDate.year == obsDataM[0]._year+1)
+    {
+        // second year
+        index = 12-obsDataM[0]._month + myDate.month;
+    }
+    else
+    {
+        // other years
+        index = (myDate.year - obsDataM[0]._year -1)*12+(12-obsDataM[0]._month) + myDate.month;
+    }
     if ((index < 0) || (index >= nrObsDataDaysM)) return NODATA;
 
     unsigned i = unsigned(index);
@@ -1000,7 +1014,22 @@ float Crit3DMeteoPoint::getMeteoPointValueM(const Crit3DDate &myDate, meteoVaria
     if (myVar == noMeteoVar) return NODATA;
     if (nrObsDataDaysM == 0) return NODATA;
 
-    int index = (myDate.year - obsDataM[0]._year)*12 + myDate.month-1;
+    int index;
+    if (myDate.year == obsDataM[0]._year)
+    {
+        // same year of first data
+        index = myDate.month-obsDataM[0]._month;
+    }
+    else if (myDate.year == obsDataM[0]._year+1)
+    {
+        // second year
+        index = 12-obsDataM[0]._month + myDate.month;
+    }
+    else
+    {
+        // other years
+        index = (myDate.year - obsDataM[0]._year -1)*12+(12-obsDataM[0]._month) + myDate.month;
+    }
     if ((index < 0) || (index >= nrObsDataDaysM)) return NODATA;
 
     unsigned i = unsigned(index);

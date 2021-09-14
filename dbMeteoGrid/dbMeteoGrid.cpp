@@ -2515,10 +2515,14 @@ bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString *myError, QString
     {
         statement =  QString(("REPLACE INTO `%1` VALUES")).arg(table);
 
+        // set day=1 to better comparison
+        firstDate.setDate(firstDate.year(),firstDate.month(),1);
+        lastDate.setDate(lastDate.year(),lastDate.month(),1);
+
         foreach (meteoVariable meteoVar, meteoVariableList)
             if (getVarFrequency(meteoVar) == monthly)
             {
-                for (QDate date = firstDate; date.year() == lastDate.year() && date.month() <= lastDate.month(); date = date.addMonths(1))
+                for (QDate date = firstDate; date<=lastDate; date = date.addMonths(1))
                 {
                     float value = meteoGrid()->meteoPoint(row, col).getMeteoPointValueM(getCrit3DDate(date), meteoVar);
                     QString valueS = QString("'%1'").arg(value);
