@@ -921,7 +921,7 @@ void weatherGenerator2D::computeTemperatureParameters()
                 temperatureCoefficients[iStation].B_mean_delta[i][j] = matrixB[i][j];
                 //printf("%f  ",temperatureCoefficients[iStation].B[i][j]);
             }
-            //printf("\n");
+            printf("\n");
         }
 
 
