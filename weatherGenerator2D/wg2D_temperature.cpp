@@ -1920,18 +1920,24 @@ void weatherGenerator2D::initializeTemperaturesOutput(int length)
 {
     maxTGenerated = (double **) calloc(length, sizeof(double *));
     minTGenerated = (double **) calloc(length, sizeof(double *));
+    meanTGenerated = (double **) calloc(length, sizeof(double *));
+    deltaTGenerated = (double **) calloc(length, sizeof(double *));
     occurrencePrecGenerated = (double **) calloc(length, sizeof(double *));
     amountsPrecGenerated = (double **) calloc(length, sizeof(double *));
     for (int i=0;i<length;i++)
     {
         maxTGenerated[i] = (double *) calloc(nrStations, sizeof(double));
         minTGenerated[i] = (double *) calloc(nrStations, sizeof(double));
+        meanTGenerated[i] = (double *) calloc(nrStations, sizeof(double));
+        deltaTGenerated[i] = (double *) calloc(nrStations, sizeof(double));
         occurrencePrecGenerated[i] = (double *) calloc(nrStations, sizeof(double));
         amountsPrecGenerated[i] = (double *) calloc(nrStations, sizeof(double));
         for(int j=0;j<nrStations;j++)
         {
             maxTGenerated[i][j] = NODATA;
             minTGenerated[i][j] = NODATA;
+            meanTGenerated[i][j] = NODATA;
+            deltaTGenerated[i][j] = NODATA;
             occurrencePrecGenerated[i][j] = NODATA;
             amountsPrecGenerated[i][j] = NODATA;
         }
@@ -2338,6 +2344,8 @@ void weatherGenerator2D::multisiteTemperatureGenerationMeanDelta()
             meanTGenerated[j][i] = Xp[0][j];
             deltaTGenerated[j][i] = Xp[1][j];
             occurrencePrecGenerated[j][i] = X[j];
+            minTGenerated[j][i] = meanTGenerated[j][i] - 0.5*deltaTGenerated[j][i];
+            maxTGenerated[j][i] = meanTGenerated[j][i] + 0.5*deltaTGenerated[j][i];
             averageTmean[j%365] += meanTGenerated[j][i]/parametersModel.yearOfSimulation;
             averageTdelta[j%365] += deltaTGenerated[j][i]/parametersModel.yearOfSimulation;
             //printf("%.1f %d\n",maxTGenerated[j][i],parametersModel.yearOfSimulation);
