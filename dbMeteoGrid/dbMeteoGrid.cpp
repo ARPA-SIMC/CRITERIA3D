@@ -1231,6 +1231,9 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
     QDate maxDateH(QDate(1800, 1, 1));
     QDate minDateH(QDate(7800, 12, 31));
+
+    QDate maxDateM(QDate(1800, 1, 1));
+    QDate minDateM(QDate(7800, 12, 31));
     QDate temp;
 
     QString tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
@@ -1364,6 +1367,8 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
     {
         int minPragaYear;
         int maxPragaYear;
+        int minPragaMonth;
+        int maxPragaMonth;
         QString statement = QString("SELECT MIN(%1) as minYear, MAX(%1) as maxYear FROM `%2`").arg("PragaYear").arg(tableM);
         qry.exec(statement);
 
@@ -1385,21 +1390,99 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
                 return false;
             }
         }
-        // TO DO
+        statement = QString("SELECT MIN(%1) as minMonth FROM `%2` WHERE PragaYear=%3 ").arg("PragaMonth").arg(tableM).arg(minPragaYear);
+        qry.exec(statement);
+
+        if ( qry.lastError().type() != QSqlError::NoError )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+        else
+        {
+            if (qry.next())
+            {
+                getValue(qry.value("minMonth"), &minPragaMonth);
+            }
+            else
+            {
+                *myError = "PragaMonth field not found";
+                return false;
+            }
+        }
+
+        statement = QString("SELECT MAX(%1) as maxMonth FROM `%2` WHERE PragaYear=%3 ").arg("PragaMonth").arg(tableM).arg(maxPragaYear);
+        qry.exec(statement);
+
+        if ( qry.lastError().type() != QSqlError::NoError )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+        else
+        {
+            if (qry.next())
+            {
+                getValue(qry.value("maxMonth"), &maxPragaMonth);
+            }
+            else
+            {
+                *myError = "PragaMonth field not found";
+                return false;
+            }
+        }
+        maxDateM.setDate(maxPragaYear, maxPragaMonth, 1);
+        minDateM.setDate(minPragaYear, minPragaMonth, 1);
     }
 
     // the last hourly day is always incomplete, there is just 00.00 value
     maxDateH = maxDateH.addDays(-1);
 
     if (minDateD < minDateH)
-        _firstDate = minDateD;
+    {
+        if (_tableMonthly.exists && minDateM < minDateD)
+        {
+            _firstDate = minDateM;
+        }
+        else
+        {
+            _firstDate = minDateD;
+        }
+    }
     else
-        _firstDate = minDateH;
+    {
+        if (_tableMonthly.exists && minDateM < minDateH)
+        {
+            _firstDate = minDateM;
+        }
+        else
+        {
+            _firstDate = minDateH;
+        }
+    }
 
     if (maxDateD > maxDateH)
-        _lastDate = maxDateD;
+    {
+        if (_tableMonthly.exists && maxDateM > maxDateD)
+        {
+            _lastDate = maxDateM;
+        }
+        else
+        {
+            _lastDate = maxDateD;
+        }
+    }
     else
-        _lastDate = maxDateH;
+    {
+        if (_tableMonthly.exists && maxDateM > maxDateH)
+        {
+            _lastDate = maxDateM;
+        }
+        else
+        {
+            _lastDate = maxDateH;
+        }
+    }
 
     if (_firstDate > _lastDate)
     {
