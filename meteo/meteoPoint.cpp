@@ -1113,3 +1113,9 @@ bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
     }
     return (leafWres && et0res);
 }
+
+bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar)
+{
+    int nrMonths = (lastDate.year-firstDate.year)*12+lastDate.month-(firstDate.month-1);
+    // TO DO
+}

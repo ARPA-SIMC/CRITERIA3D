@@ -93,7 +93,7 @@
     float computeCorrectedSum(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Crit3DDate finishDate, float param, float minimumPercentage);
 
     bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid, meteoVariable variable, meteoComputation elab1,
-        QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings *meteoSettings, Crit3DElaborationSettings *elabSettings);
+        QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings *meteoSettings);
 
     float loadDailyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler *meteoPointsDbHandler,
                              Crit3DMeteoGridDbHandler *meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint,
@@ -137,6 +137,8 @@
     bool appendXMLElaboration(Crit3DElabList *listXMLElab, QString xmlFileName, QString *myError);
 
     bool appendXMLAnomaly(Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QString *myError);
+
+    void monthlyAggregateDataGrid(Crit3DDate firstDate, Crit3DDate lastDate, std::vector<meteoVariable> monthlyMeteoVar);
 
     //int getClimateIndexFromDate(QDate myDate, period periodType);
 
