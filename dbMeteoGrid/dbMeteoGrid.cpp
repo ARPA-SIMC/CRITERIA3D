@@ -1883,7 +1883,7 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString *myError, QString met
     int numberOfMonths = (last.year()-first.year())*12+last.month()-(first.month()-1);
     _meteoGrid->meteoPointPointer(row,col)->initializeObsDataM(numberOfMonths, first.month(), first.year());
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear` BETWEEN %2 AND %3 AND 'PointCode' = '%4' ORDER BY `PragaYear`").arg(table).arg(first.year()).arg(last.year()).arg(meteoPoint);
+    QString statement = QString("SELECT * FROM `%1` WHERE `PragaYear` BETWEEN %2 AND %3 AND PointCode = '%4' ORDER BY `PragaYear`").arg(table).arg(first.year()).arg(last.year()).arg(meteoPoint);
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();
@@ -2616,7 +2616,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString *myError, QString
     QString table = "MonthlyData";
 
     QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
-                                "(PragaYear smallint(4) UNSIGNED, PragaMonth tinyint(2) UNSIGNED, PointCode smallint(5) UNSIGNED, "
+                                "(PragaYear smallint(4) UNSIGNED, PragaMonth tinyint(2) UNSIGNED, PointCode CHAR(5), "
                                 "VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(PragaYear,PragaMonth,PointCode,VariableCode))").arg(table);
 
     if( !qry.exec(statement) )
