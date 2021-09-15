@@ -358,6 +358,7 @@ void weatherGenerator2D::temperatureCompute()
 
     // step 4 of temperature WG2D
     weatherGenerator2D::multisiteTemperatureGeneration();
+    //weatherGenerator2D::multisiteTemperatureGenerationMeanDelta();
     printf("end temperature module\n");
     }
 
