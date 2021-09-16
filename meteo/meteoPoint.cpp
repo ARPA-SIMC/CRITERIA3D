@@ -1127,7 +1127,6 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
 
     for (Crit3DDate actualDate = firstDate; actualDate<=lastDate; actualDate=actualDate.addDays(1))
     {
-
         float myDailyValue = getMeteoPointValueD(actualDate, dailyMeteoVar, meteoSettings);
         if (myDailyValue != NODATA)
         {
