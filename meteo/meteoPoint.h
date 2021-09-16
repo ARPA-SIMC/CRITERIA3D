@@ -164,7 +164,7 @@
             void setName(std::string name);
 
             bool computeDerivedVariables(Crit3DTime dateTime);
-            bool computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar);
+            bool computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar, Crit3DMeteoSettings *meteoSettings);
 
     private:
             TObsDataH *obsDataH;

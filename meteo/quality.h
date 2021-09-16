@@ -83,6 +83,8 @@
         float getRelHumTolerance() const;
 
         void setRelHumTolerance(float value);
+
+        quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, float myValue, int month, int height);
     };
 
 

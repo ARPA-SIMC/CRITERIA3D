@@ -223,3 +223,19 @@ quality::qualityType Crit3DQuality::syntacticQualitySingleValue(meteoVariable my
             return quality::accepted;
     }
 }
+
+quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, float myValue, int month, int height)
+{
+    /*
+    if (int(myValue) == int(NODATA))
+        return quality::missing_data;
+    else if ()
+    {
+            return quality::wrong_syntactic;
+    }
+    else
+    {
+        return quality::accepted;
+    }
+    */
+}

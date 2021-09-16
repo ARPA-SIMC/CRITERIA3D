@@ -1114,8 +1114,59 @@ bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
     return (leafWres && et0res);
 }
 
-bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar)
+bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar, Crit3DMeteoSettings* meteoSettings)
 {
-    int nrMonths = (lastDate.year-firstDate.year)*12+lastDate.month-(firstDate.month-1);
-    // TO DO
+
+    int currentMonth = firstDate.month;
+    int nrDays = getDaysInMonth(currentMonth, firstDate.year);
+
+    float sum = 0;
+    int nrValid = 0;
+    int indexMonth = 0;
+    bool aggregateDailyInMonthly = false;
+
+    for (Crit3DDate actualDate = firstDate; actualDate<=lastDate; actualDate=actualDate.addDays(1))
+    {
+
+        float myDailyValue = getMeteoPointValueD(actualDate, dailyMeteoVar, meteoSettings);
+        if (myDailyValue != NODATA)
+        {
+            sum = sum + myDailyValue;
+            nrValid = nrValid + 1;
+        }
+        if (actualDate.day == nrDays || actualDate == lastDate)
+        {
+            indexMonth = indexMonth + 1;
+            if ((nrValid/nrDays*100) >= meteoSettings->getMinimumPercentage())
+            {
+                aggregateDailyInMonthly = true;
+                if (dailyMeteoVar == dailyAirTemperatureMin || dailyMeteoVar == dailyAirTemperatureMax || dailyMeteoVar == dailyAirTemperatureAvg)
+                {
+                    if (nrValid != 0)
+                    {
+                        setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),sum/nrValid);
+                    }
+                    else
+                    {
+                        setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),NODATA);
+                    }
+                }
+                else if (dailyMeteoVar == dailyPrecipitation || dailyMeteoVar == dailyReferenceEvapotranspirationHS
+                         || dailyMeteoVar == dailyReferenceEvapotranspirationPM || dailyMeteoVar == dailyGlobalRadiation)
+                {
+                    setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),sum);
+                }
+            }
+            else
+            {
+                setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),NODATA);
+            }
+            sum = 0;
+            nrValid = 0;
+            currentMonth = actualDate.addDays(1).month;
+            nrDays = getDaysInMonth(currentMonth, actualDate.year);
+        }
+
+    }
+    return aggregateDailyInMonthly;
 }

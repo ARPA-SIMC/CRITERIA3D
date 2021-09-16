@@ -938,7 +938,6 @@ meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod 
     return noMeteoVar;
 }
 
-
 meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
 {
     if (myFreq == daily)
