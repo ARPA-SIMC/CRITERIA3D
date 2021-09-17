@@ -29,6 +29,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "meteoPoint.h"
+#include "quality.h"
 
 
 Crit3DMeteoPoint::Crit3DMeteoPoint()
@@ -1125,10 +1126,13 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
     int indexMonth = 0;
     bool aggregateDailyInMonthly = false;
 
+    Crit3DQuality qualityCheck;
+
     for (Crit3DDate actualDate = firstDate; actualDate<=lastDate; actualDate=actualDate.addDays(1))
     {
         float myDailyValue = getMeteoPointValueD(actualDate, dailyMeteoVar, meteoSettings);
-        if (myDailyValue != NODATA)
+        quality::qualityType qualityT = qualityCheck.checkFastValueDaily_SingleValue(dailyMeteoVar, myDailyValue, currentMonth, this->point.z);
+        if (qualityT == quality::accepted)
         {
             sum = sum + myDailyValue;
             nrValid = nrValid + 1;
