@@ -4151,7 +4151,7 @@ void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
     int nrMonths = (lastDate.year()-firstDate.year())*12+lastDate.month()-(firstDate.month()-1);
     QString myError;
     bool isMeteoGrid = true;
-    Crit3DMeteoPoint meteoPointTemp;
+    Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
     float percValue;
     std::vector<float> outputValues;
     QList<meteoVariable> meteoVariableList;
@@ -4164,11 +4164,20 @@ void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
             if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->active)
             {
                 meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->initializeObsDataM(nrMonths, firstDate.month(), firstDate.year());
+                meteoPointTemp->initializeObsDataM(nrMonths, firstDate.month(), firstDate.year());
+                // copy id to MPTemp
+                meteoPointTemp->id = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id;
+                // meteoPointTemp should be init
+                meteoPointTemp->nrObsDataDaysH = 0;
+                meteoPointTemp->nrObsDataDaysD = 0;
+                //meteoPointTemp->nrObsDataDaysM = 0;
+
                 for(int i = 0; i < dailyMeteoVar.size(); i++)
                 {
-                    if (preElaboration(&myError, nullptr, meteoGridDbHandler, &meteoPointTemp, isMeteoGrid, dailyMeteoVar[i], noMeteoComp, firstDate, lastDate, outputValues, &percValue, meteoSettings))
+                    if (preElaboration(&myError, nullptr, meteoGridDbHandler, meteoPointTemp, isMeteoGrid, dailyMeteoVar[i], noMeteoComp, firstDate, lastDate, outputValues, &percValue, meteoSettings))
                     {
-                        if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[i], meteoSettings))
+                        //if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[i], meteoSettings))
+                        if (meteoPointTemp->computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[i], meteoSettings))
                         {
                             meteoVariable monthlyVar = updateMeteoVariable(dailyMeteoVar[i], monthly);
                             if (monthlyVar != noMeteoVar)
@@ -4178,6 +4187,8 @@ void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
                         }
                     }
                 }
+                // copy meteoPoint Temp valus
+                meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->obsDataM = meteoPointTemp->obsDataM ;
                 if (!meteoVariableList.isEmpty())
                 {
                     meteoGridDbHandler->saveCellGridMonthlyData(&myError, QString::fromStdString(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id), row, col, firstDate, lastDate, meteoVariableList);
@@ -4185,6 +4196,7 @@ void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
             }
         }
     }
+    delete meteoPointTemp;
 }
 
 

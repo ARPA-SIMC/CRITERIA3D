@@ -1034,7 +1034,11 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
 
     if (myFreq == monthly)
     {
-        if (myVar == dailyAirTemperatureAvg || myVar == airTemperature)
+        if (myVar == dailyAirTemperatureMin)
+            return monthlyAirTemperatureMin;
+        else if (myVar == dailyAirTemperatureMax)
+            return monthlyAirTemperatureMax;
+        else if (myVar == dailyAirTemperatureAvg || myVar == airTemperature)
             return monthlyAirTemperatureAvg;
         else if (myVar == monthlyPrecipitation || myVar == precipitation)
             return monthlyPrecipitation;
