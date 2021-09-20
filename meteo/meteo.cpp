@@ -819,7 +819,19 @@ meteoVariable getMeteoVar(std::string varString)
     else
     {
         search = MapHourlyMeteoVar.find(varString);
-        if (search != MapHourlyMeteoVar.end()) return search->second;
+        if (search != MapHourlyMeteoVar.end())
+        {
+            return search->second;
+        }
+        else
+        {
+            search = MapMonthlyMeteoVar.find(varString);
+            if (search != MapMonthlyMeteoVar.end())
+            {
+                return search->second;
+            }
+        }
+
     }
 
     return noMeteoVar;
@@ -946,6 +958,12 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
         if (myVar == airTemperature || myVar == monthlyAirTemperatureAvg)
             return dailyAirTemperatureAvg;
 
+        else if (myVar == monthlyAirTemperatureMin)
+            return dailyAirTemperatureMin;
+
+        else if (myVar == monthlyAirTemperatureMax)
+            return dailyAirTemperatureMax;
+
         else if (myVar == precipitation || myVar == monthlyPrecipitation)
             return dailyPrecipitation;
 
@@ -1040,7 +1058,7 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
             return monthlyAirTemperatureMax;
         else if (myVar == dailyAirTemperatureAvg || myVar == airTemperature)
             return monthlyAirTemperatureAvg;
-        else if (myVar == monthlyPrecipitation || myVar == precipitation)
+        else if (myVar == dailyPrecipitation || myVar == precipitation)
             return monthlyPrecipitation;
         else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM || myVar == referenceEvapotranspiration)
             return monthlyReferenceEvapotranspirationHS;
