@@ -296,6 +296,7 @@
 
 
         void temperatureCompute();
+        void computeMonthlyTemperatures();
         void computeTemperatureParameters();
         void initializeTemperatureParameters();
         int  doyFromDate(int day,int month,int year);
