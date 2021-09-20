@@ -4170,13 +4170,11 @@ void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
                 // meteoPointTemp should be init
                 meteoPointTemp->nrObsDataDaysH = 0;
                 meteoPointTemp->nrObsDataDaysD = 0;
-                //meteoPointTemp->nrObsDataDaysM = 0;
 
                 for(int i = 0; i < dailyMeteoVar.size(); i++)
                 {
                     if (preElaboration(&myError, nullptr, meteoGridDbHandler, meteoPointTemp, isMeteoGrid, dailyMeteoVar[i], noMeteoComp, firstDate, lastDate, outputValues, &percValue, meteoSettings))
                     {
-                        //if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[i], meteoSettings))
                         if (meteoPointTemp->computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[i], meteoSettings))
                         {
                             meteoVariable monthlyVar = updateMeteoVariable(dailyMeteoVar[i], monthly);
