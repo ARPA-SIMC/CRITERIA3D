@@ -5,7 +5,8 @@
 #
 #-----------------------------------------------------
 
-QT       -= core gui
+QT       -= gui
+QT       += sql xml
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -25,9 +26,11 @@ win32:{
     TARGET = drought
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions 
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../interpolation ../dbMeteoPoints
 
-SOURCES +=  
+SOURCES +=   \
+    drought.cpp
 
-HEADERS += 
+HEADERS +=  \
+    drought.h
 
