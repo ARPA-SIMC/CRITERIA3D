@@ -27,9 +27,6 @@ public:
     int getLastYear() const;
     void setLastYear(int value);
 
-    bool getUseClima() const;
-    void setUseClima(bool value);
-
     bool getComputeAll() const;
     void setComputeAll(bool value);
 
@@ -45,7 +42,6 @@ private:
     int timeScale;
     int firstYear;
     int lastYear;
-    bool useClima;
     bool computeAll;
 
 };

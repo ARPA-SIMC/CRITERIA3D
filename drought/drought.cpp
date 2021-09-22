@@ -56,16 +56,6 @@ void Drought::setLastYear(int value)
     lastYear = value;
 }
 
-bool Drought::getUseClima() const
-{
-    return useClima;
-}
-
-void Drought::setUseClima(bool value)
-{
-    useClima = value;
-}
-
 bool Drought::getComputeAll() const
 {
     return computeAll;
@@ -122,12 +112,6 @@ bool Drought::computeSpiParameters()
     // int firstYearStation = std::max(meteoPoint->obsDataM[indexStart]._year, firstYear); // LC non viene mai usata nel codice vb
     int lastYearStation = std::min(meteoPoint->obsDataM[meteoPoint->nrObsDataDaysM-1]._year, lastYear);
 
-    if (useClima)
-    {
-        // TO DO
-        // computePercentilesCurrentMonthlySeries Definitions.MONTHLY_PREC, 50
-    }
-
     int n = 0;
     float count = 0;
     int nTot = 0;
@@ -151,17 +135,9 @@ bool Drought::computeSpiParameters()
                 }
                 else
                 {
-                    if (useClima)
-                    {
-                        // TO DO
-                        //mySums(n) = mySums(n) + currentPercentiles(monthlySeries(j - i).mese)
-                    }
-                    else
-                    {
                         mySums[n] = NODATA;
                         count = 0;
                         break;
-                    }
                 }
             }
             if (count / nTot < meteoSettings->getMinimumPercentage() / 100)
