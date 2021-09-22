@@ -1,5 +1,6 @@
 #include "drought.h"
 #include "commonConstants.h"
+#include <ctime>
 
 Drought::Drought()
 {
@@ -82,7 +83,99 @@ float Drought::computeDroughtIndex()
             return NODATA;
         }
     }
-    // TO DO
+    int start;
+    int end;
+    std::vector<float> mySum(meteoPoint->nrObsDataDaysM);
+    std::vector<float> myResults(meteoPoint->nrObsDataDaysM);
+    if (computeAll)
+    {
+        start = timeScale;
+        end = meteoPoint->nrObsDataDaysM;
+        for (int i = 0; i < timeScale; i++)
+        {
+            mySum[i] = NODATA;
+            myResults[i] = NODATA;
+        }
+    }
+    else
+    {
+        time_t now = time(0);
+        tm *ltm = localtime(&now);
+        int currentYear = 1900 + ltm->tm_year;
+        int currentMonth = 1 + ltm->tm_mon;
+        end = (currentYear - meteoPoint->obsDataM[0]._year)*12 + currentMonth-meteoPoint->obsDataM[0]._month;
+        start = end;
+        if (end > meteoPoint->nrObsDataDaysM)
+        {
+            return NODATA;
+        }
+        for (int i = 0; i < start-timeScale; i++)
+        {
+            mySum[i] = NODATA;
+            myResults[i] = NODATA;
+        }
+    }
+
+    for (int j = start; j <= end; j++)
+    {
+        mySum[j] = 0;
+        for(int i = 0; i<timeScale; i++)
+        {
+            if ((j-i)>0 && j<=meteoPoint->nrObsDataDaysM)
+            {
+                if (index == INDEX_SPI)
+                {
+                    if (meteoPoint->obsDataM[j-i].prec != NODATA)
+                    {
+                        mySum[j] = mySum[j] + meteoPoint->obsDataM[j-i].prec;
+                    }
+                    else
+                    {
+                        mySum[j] = NODATA;
+                        break;
+                    }
+                }
+                else if(index == INDEX_SPEI)
+                {
+                    if (meteoPoint->obsDataM[j-i].prec != NODATA && meteoPoint->obsDataM[j-i].et0_hs != NODATA)
+                    {
+                        mySum[j] = mySum[j] + meteoPoint->obsDataM[j-i].prec - meteoPoint->obsDataM[j-i].et0_hs;
+                    }
+                    else
+                    {
+                        mySum[j] = NODATA;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                mySum[j] = NODATA;
+            }
+        }
+    }
+
+    for (int j = start; j <= end; j++)
+    {
+        int myMonthIndex = ((j - 1) % 12);
+        myResults[j] = NODATA;
+
+        if (mySum[j] != NODATA)
+        {
+            if (index == INDEX_SPI)
+            {
+                // TO DO
+                // myResults[j] = standardGaussianInvCDF(math.gammaCDF(mySum(j), currentGamma(myMonthIndex)))
+            }
+            else if(index == INDEX_SPEI)
+            {
+                // TO DO
+                // myResults[j] = standardGaussianInvCDF(math.logLogisticCDF(mySum(j), currentLogLogistic(myMonthIndex)))
+            }
+        }
+    }
+
+    return myResults[end];
 }
 
 bool Drought::computeSpiParameters()
@@ -160,7 +253,12 @@ bool Drought::computeSpiParameters()
         currentGamma[myMonth].Beta = NODATA;
         currentGamma[myMonth].Gamma = NODATA;
         currentGamma[myMonth].Pzero = NODATA;
+        LC non serve che siano array, usa solo il dato singolo da passare alla gammaFitting
         */
+        float beta = NODATA;
+        float gamma = NODATA;
+        float pZero = NODATA;
+
         for (int j=i; j<mySums.size(); j=j+12)
         {
             if (mySums[j] != NODATA)
@@ -173,6 +271,7 @@ bool Drought::computeSpiParameters()
         {
             // TO DO
             // gammaFitting monthSeries, n, currentGamma(myMonth), average
+            // gammaFitting monthSeries, n, beta, gamma, pZero average
         }
     }
     return true;
