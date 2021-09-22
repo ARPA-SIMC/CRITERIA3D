@@ -33,8 +33,13 @@ public:
     bool getComputeAll() const;
     void setComputeAll(bool value);
 
+    float computeDroughtIndex();
+    bool computeSpiParameters();
+    bool computeSpeiParameters();
+
 private:
     Crit3DMeteoPoint* meteoPoint;
+    Crit3DMeteoSettings* meteoSettings;
     meteoVariable var;
     droughtIndex index;
     int timeScale;
