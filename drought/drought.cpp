@@ -279,6 +279,105 @@ bool Drought::computeSpiParameters()
 
 bool Drought::computeSpeiParameters()
 {
-    // TO DO
+    if (meteoPoint->obsDataM[0]._year > lastYear || meteoPoint->obsDataM[meteoPoint->nrObsDataDaysM-1]._year < firstYear)
+    {
+        return false;
+    }
+    int indexStart;
+    if (firstYear == meteoPoint->obsDataM[0]._year)
+    {
+        indexStart = timeScale;
+    }
+    else
+    {
+        indexStart = (firstYear - meteoPoint->obsDataM[0]._year)*12 - (meteoPoint->obsDataM[0]._month-1);
+        if (indexStart < timeScale)
+        {
+            indexStart = timeScale;
+        }
+    }
+    if (meteoPoint->obsDataM[indexStart]._year > lastYear)
+    {
+        return false;
+    }
+
+    // int firstYearStation = std::max(meteoPoint->obsDataM[indexStart]._year, firstYear); // LC non viene mai usata nel codice vb
+    int lastYearStation = std::min(meteoPoint->obsDataM[meteoPoint->nrObsDataDaysM-1]._year, lastYear);
+
+    int n = 0;
+    float count = 0;
+    int nTot = 0;
+    std::vector<float> mySums;
+    std::vector<float> monthSeries;
+
+    for (int j = indexStart; j<meteoPoint->nrObsDataDaysM; j++)
+    {
+        if (meteoPoint->obsDataM[j]._year <= lastYearStation)
+        {
+            count = 0;
+            nTot = 0;
+            mySums.push_back(0);
+            for(int i = 0; i<timeScale; i++)
+            {
+                nTot = nTot + 1;
+                if (meteoPoint->obsDataM[j-i].prec != NODATA && meteoPoint->obsDataM[j-i].et0_hs != NODATA)
+                {
+                    mySums[n] = mySums[n] + meteoPoint->obsDataM[j-i].prec - meteoPoint->obsDataM[j-i].et0_hs;
+                    count = count + 1;
+                }
+                else
+                {
+                        mySums[n] = NODATA;
+                        count = 0;
+                        break;
+                }
+            }
+            if (count / nTot < meteoSettings->getMinimumPercentage() / 100)
+            {
+                mySums[n] = NODATA;
+            }
+            n = n + 1;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    for (int i = 0; i<12; i++)
+    {
+        int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12;
+        /*
+         * TO DO
+        currentGamma[myMonth].Beta = NODATA;
+        currentGamma[myMonth].Gamma = NODATA;
+        currentGamma[myMonth].alpha = NODATA;
+        LC non serve che siano array, usa solo il dato singolo da passare alla gammaFitting
+        */
+        float beta = NODATA;
+        float gamma = NODATA;
+        float alpha = NODATA;
+
+        for (int j=i; j<mySums.size(); j=j+12)
+        {
+            if (mySums[j] != NODATA)
+            {
+                monthSeries.push_back(mySums[j]);
+            }
+        }
+
+        if (monthSeries.size() / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
+        {
+            // TO DO
+            /*
+                ' Sort values
+                math.QuickSort monthSeries, 1, UBound(monthSeries)
+                ' Compute probability weighted moments
+                math.probabilityWeightedMoments monthSeries, n, PWM, 0, 0, False
+                ' Fit a Log Logistic probability function
+                math.logLogisticFitting PWM, currentLogLogistic(myMonth)
+            */
+        }
+    }
     return true;
 }
