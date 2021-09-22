@@ -214,24 +214,7 @@ float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, flo
     else if (myVar == dailyAirTemperatureAvg)
         return (tmax[indexMonth] + tmin[indexMonth]) / 2;
     else
-    {
-        float myTmin, myTmax;
-        if (myVar == airTemperature)
-        {
-            myTmin = tmin[indexMonth];
-            myTmax = tmax[indexMonth];
-        }
-        else if (myVar == airDewTemperature)
-        {
-            myTmin = tdmin[indexMonth];
-            myTmax = tdmax[indexMonth];
-        }
-        else
-            return NODATA;
-
-        float tminWeight = computeTminHourlyWeight(month);
-        return (myTmin * tminWeight + myTmax * (1 - tminWeight));
-    }
+        return NODATA;
 }
 
 
