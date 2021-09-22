@@ -1,5 +1,6 @@
 #include "drought.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include <ctime>
 
 Drought::Drought()
@@ -369,9 +370,10 @@ bool Drought::computeSpeiParameters()
         if (monthSeries.size() / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
         {
             // TO DO
-            /*
-                ' Sort values
-                math.QuickSort monthSeries, 1, UBound(monthSeries)
+                // Sort values
+                // math.QuickSort monthSeries, 1, UBound(monthSeries)
+                sorting::quicksortAscendingFloat(monthSeries, 0, unsigned(monthSeries.size() - 1));
+                /*
                 ' Compute probability weighted moments
                 math.probabilityWeightedMoments monthSeries, n, PWM, 0, 0, False
                 ' Fit a Log Logistic probability function
