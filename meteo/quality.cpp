@@ -105,6 +105,8 @@ Crit3DQuality::Crit3DQuality()
     qualityHourlyWInt = new quality::Range(0, 150);
     qualityHourlyWDir = new quality::Range(0, 360);
     qualityHourlyGIrr = new quality::Range(-20, 1353);
+    qualityHourlyET0 = new quality::Range(0, 5);
+
     qualityTransmissivity = new quality::Range(0, 1);
 
     qualityDailyT = new quality::Range(-60, 60);
@@ -113,6 +115,7 @@ Crit3DQuality::Crit3DQuality()
     qualityDailyWInt = new quality::Range(0, 150);
     qualityDailyWDir = new quality::Range(0, 360);
     qualityDailyGRad = new quality::Range(-20, 120);
+    qualityDailyET0 = new quality::Range(0, 20);
 
     initialize();
 }
@@ -137,6 +140,7 @@ quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
         return qualityHourlyWDir;
     else if (myVar == airDewTemperature)
         return qualityHourlyTd;
+    else if (myVar == referenceEvapotranspiration);
 
     // daily
     else if (myVar == dailyAirTemperatureMax
@@ -158,6 +162,8 @@ quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
     else if (myVar == dailyWindScalarIntensityAvg || myVar == dailyWindScalarIntensityMax || myVar == dailyWindVectorIntensityAvg || myVar == dailyWindVectorIntensityMax)
         return qualityDailyWInt;
 
+    else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM)
+        return qualityDailyET0;
     else
         return nullptr;
 }
@@ -230,122 +236,44 @@ quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariabl
     if (int(myValue) == int(NODATA))
         return quality::missing_data;
     else if (wrongValueDaily_SingleValue(myVar, myValue, month, height))
-    {
-        return quality::wrong_spatial; // LC in vb è Quality.qualityWrongData
-    }
+        return quality::wrong_spatial;
     else
-    {
-        return quality::accepted; // LC in vb Quality.qualityGoodData
-    }
-
+        return quality::accepted;
 }
 
 bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, float myValue, int month, int height)
 {
     Crit3DClimateParameters climateParam;
-    Crit3DDate myDate(1,month,2020); // LC serve solo il mese, non ha piu' senso che la getClimateVar prenda solo il mese?
-    int myHour = 0; // LC quale è il valore di default?
+    Crit3DDate myDate(1,month,2020);
 
-    float tMinClima = climateParam.getClimateVar(dailyAirTemperatureMin, myDate, myHour);
-    float tMaxClima = climateParam.getClimateVar(dailyAirTemperatureMax, myDate, myHour);
+    float tminClima = climateParam.getClimateVar(dailyAirTemperatureMin, month, height);
+    float tmaxClima = climateParam.getClimateVar(dailyAirTemperatureMax, month, height);
+
     if (myVar == dailyAirTemperatureMin || myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureAvg)
-    {
-        if ( tMinClima == NODATA || tMaxClima == NODATA)
-        {
+        if ( tminClima == NODATA || tmaxClima == NODATA)
             return false;
-        }
-    }
+
     if (myVar == dailyAirTemperatureMin)
     {
-        /*
-        If (dato < TMINclima + quality_range.tmin_range.red.min) Or _
-                        (dato > TMAXclima + quality_range.tmax_range.red.max) Then
-                        WrongValueDaily_SingleValue = True
-                        qualityError = qualityError + InfoMsg.OutOfRange
-                    End If
-                    */
-        // LC quality_range.tmax_range.red.max ?? red?
-        if (myValue < tMinClima + getQualityRange(myVar)->getMin() || myValue > tMinClima + getQualityRange(myVar)->getMax())
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
-            return true;
-        }
+        if (myValue < tminClima - getDeltaTWrong() ||
+            myValue > tminClima + getDeltaTWrong()) return true;
     }
     else if (myVar == dailyAirTemperatureAvg)
     {
-        if (myValue < tMinClima + getQualityRange(dailyAirTemperatureMin)->getMin() || myValue > tMaxClima + getQualityRange(dailyAirTemperatureMax)->getMax())
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
-            return true;
-        }
+        if (myValue < tminClima - getDeltaTWrong() ||
+            myValue > tmaxClima + getDeltaTWrong()) return true;
     }
     else if (myVar == dailyAirTemperatureMax)
     {
-        if (myValue < tMaxClima + getQualityRange(myVar)->getMin() || myValue > tMaxClima + getQualityRange(myVar)->getMax())
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
-            return true;
-        }
+        if (myValue < tmaxClima - getDeltaTWrong() ||
+            myValue > tmaxClima + getDeltaTWrong()) return true;
     }
-    else if (myVar == dailyPrecipitation)
-    {
-        if (myValue < 0 || myValue > getQualityRange(myVar)->getMax())
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
-            return true;
-        }
-    }
-    else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM)
-    {
-        // LC non c'è la referenceEvap in getQualituRange
-        if (myValue < getQualityRange(myVar)->getMin() || myValue > getQualityRange(myVar)->getMax())
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
-            return true;
-        }
-    }
-    else if (myVar == dailyAirRelHumidityMin || myVar == dailyAirRelHumidityMax || dailyAirRelHumidityAvg)
+    else
     {
         if (myValue < getQualityRange(myVar)->getMin() || myValue > getQualityRange(myVar)->getMax())
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
             return true;
-        }
     }
-    else if (myVar == dailyWindScalarIntensityAvg)
-    {
-        // Case Definitions.DAILY_VMED_INT, Definitions.DAILY_VMED_X, Definitions.DAILY_VMED_Y a quali variabili corrispondono ??
-        if (myValue < getQualityRange(myVar)->getMin() || myValue > getQualityRange(myVar)->getMax())
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
-            return true;
-        }
-    }
-    else if (myVar == dailyWindVectorDirectionPrevailing)
-    {
-        if (myValue < 0 || myValue > 360)
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
-            return true;
-        }
-    }
-    else if (myVar == dailyGlobalRadiation)
-    {
-        if (myValue < getQualityRange(myVar)->getMin() || myValue > getQualityRange(myVar)->getMax())
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
-            return true;
-        }
-    }
-    else if (myVar == dailyLeafWetness)
-    {
-        // LC la getQualityRange non ha questa var
-        if (myValue < getQualityRange(myVar)->getMin() || myValue > getQualityRange(myVar)->getMax())
-        {
-            // qualityError = qualityError + InfoMsg.OutOfRange  LC dobbiamo salvare questa info?
-            return true;
-        }
-    }
+
     return false;
 
 }

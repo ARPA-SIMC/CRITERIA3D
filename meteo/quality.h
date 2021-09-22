@@ -7,8 +7,8 @@
 
     // TODO: move in options/quality db
     #define DEF_VALUE_REF_HEIGHT 300
-    #define DEF_VALUE_DELTA_T_SUSP 26
-    #define DEF_VALUE_DELTA_T_WRONG 13
+    #define DEF_VALUE_DELTA_T_SUSP 13
+    #define DEF_VALUE_DELTA_T_WRONG 26
     #define DEF_VALUE_REL_HUM_TOLERANCE 102
 
 
@@ -43,6 +43,7 @@
         quality::Range* qualityHourlyWDir;
         quality::Range* qualityHourlyGIrr;
         quality::Range* qualityTransmissivity;
+        quality::Range* qualityHourlyET0;
 
         quality::Range* qualityDailyT;
         quality::Range* qualityDailyP;
@@ -50,6 +51,8 @@
         quality::Range* qualityDailyWInt;
         quality::Range* qualityDailyWDir;
         quality::Range* qualityDailyGRad;
+        quality::Range* qualityDailyET0;
+
         float referenceHeight;
         float deltaTSuspect;
         float deltaTWrong;

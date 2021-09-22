@@ -257,7 +257,7 @@
         std::vector <float> tdMaxLapseRate;
 
         float getClimateLapseRate(meteoVariable myVar, Crit3DTime myTime);
-        float getClimateVar(meteoVariable myVar, Crit3DDate myDate, int myHour);
+        float getClimateVar(meteoVariable myVar, int month, float height);
     };
 
     bool computeWindCartesian(float intensity, float direction, float* u, float* v);
