@@ -87,9 +87,9 @@
 
         void setRelHumTolerance(float value);
 
-        quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, float myValue, int month, int height);
+        quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam, float myValue, int month, int height);
 
-        bool wrongValueDaily_SingleValue(meteoVariable myVar, float myValue, int month, int height);
+        bool wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam, float myValue, int month, int height);
     };
 
 

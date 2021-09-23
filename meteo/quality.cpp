@@ -230,24 +230,23 @@ quality::qualityType Crit3DQuality::syntacticQualitySingleValue(meteoVariable my
     }
 }
 
-quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, float myValue, int month, int height)
+quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
 {
 
     if (int(myValue) == int(NODATA))
         return quality::missing_data;
-    else if (wrongValueDaily_SingleValue(myVar, myValue, month, height))
+    else if (wrongValueDaily_SingleValue(myVar, climateParam, myValue, month, height))
         return quality::wrong_spatial;
     else
         return quality::accepted;
 }
 
-bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, float myValue, int month, int height)
+bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
 {
-    Crit3DClimateParameters climateParam;
     Crit3DDate myDate(1,month,2020);
 
-    float tminClima = climateParam.getClimateVar(dailyAirTemperatureMin, month, height);
-    float tmaxClima = climateParam.getClimateVar(dailyAirTemperatureMax, month, height);
+    float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
+    float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
 
     if (myVar == dailyAirTemperatureMin || myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureAvg)
         if ( tminClima == NODATA || tmaxClima == NODATA)

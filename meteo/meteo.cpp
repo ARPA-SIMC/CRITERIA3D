@@ -202,19 +202,41 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTi
     }
 }
 
-
-float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, float height)
+float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, int month)
 {
+    // TODO improve!
+    if (month == NODATA)
+        return -0.006f;
+
     unsigned int indexMonth = unsigned(month - 1);
 
     if (myVar == dailyAirTemperatureMin)
-        return tmin[indexMonth];
+        return tminLapseRate[indexMonth];
     else if (myVar == dailyAirTemperatureMax)
-        return tmax[indexMonth];
+        return tmaxLapseRate[indexMonth];
     else if (myVar == dailyAirTemperatureAvg)
-        return (tmax[indexMonth] + tmin[indexMonth]) / 2;
+        return (tmaxLapseRate[indexMonth] + tminLapseRate[indexMonth]) / 2;
     else
         return NODATA;
+}
+
+float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, float height, float refHeight)
+{
+    unsigned int indexMonth = unsigned(month - 1);
+
+    float climateVar = NODATA;
+
+    if (myVar == dailyAirTemperatureMin)
+        climateVar = tmin[indexMonth];
+    else if (myVar == dailyAirTemperatureMax)
+        climateVar = tmax[indexMonth];
+    else
+        return NODATA;
+
+    if (climateVar != NODATA && height != NODATA)
+        climateVar += getClimateLapseRate(myVar, month) * (height - refHeight);
+
+    return climateVar;
 }
 
 
