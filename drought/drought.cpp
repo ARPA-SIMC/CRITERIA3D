@@ -3,19 +3,15 @@
 #include "basicMath.h"
 #include <ctime>
 
-Drought::Drought()
+Drought::Drought(droughtIndex index, int firstYear, int lastYear, Crit3DMeteoPoint* meteoPoint, Crit3DMeteoSettings* meteoSettings)
 {
-
-}
-
-meteoVariable Drought::getVar() const
-{
-    return var;
-}
-
-void Drought::setVar(const meteoVariable &value)
-{
-    var = value;
+    this->index = index;
+    this->firstYear = firstYear;
+    this->lastYear = lastYear;
+    this->meteoPoint = meteoPoint;
+    this->meteoSettings = meteoSettings;
+    this->timeScale = 0; //default
+    this->computeAll = true;  //default
 }
 
 droughtIndex Drought::getIndex() const
@@ -92,7 +88,7 @@ float Drought::computeDroughtIndex()
     {
         start = timeScale;
         end = meteoPoint->nrObsDataDaysM;
-        for (int i = 0; i < timeScale; i++)
+        for (int i = 0; i <= timeScale; i++)
         {
             mySum[i] = NODATA;
             myResults[i] = NODATA;
@@ -120,7 +116,7 @@ float Drought::computeDroughtIndex()
     for (int j = start; j <= end; j++)
     {
         mySum[j] = 0;
-        for(int i = 0; i<timeScale; i++)
+        for(int i = 0; i<=timeScale; i++)
         {
             if ((j-i)>0 && j<=meteoPoint->nrObsDataDaysM)
             {
@@ -181,6 +177,11 @@ float Drought::computeDroughtIndex()
 
 bool Drought::computeSpiParameters()
 {
+    if (meteoPoint->nrObsDataDaysM == 0)
+    {
+        return false;
+    }
+
     if (meteoPoint->obsDataM[0]._year > lastYear || meteoPoint->obsDataM[meteoPoint->nrObsDataDaysM-1]._year < firstYear)
     {
         return false;
@@ -219,7 +220,7 @@ bool Drought::computeSpiParameters()
             count = 0;
             nTot = 0;
             mySums.push_back(0);
-            for(int i = 0; i<timeScale; i++)
+            for(int i = 0; i<= timeScale; i++)
             {
                 nTot = nTot + 1;
                 if (meteoPoint->obsDataM[j-i].prec != NODATA)
@@ -234,7 +235,7 @@ bool Drought::computeSpiParameters()
                         break;
                 }
             }
-            if (count / nTot < meteoSettings->getMinimumPercentage() / 100)
+            if ( (count / nTot) < (meteoSettings->getMinimumPercentage() / 100) )
             {
                 mySums[n] = NODATA;
             }
@@ -280,6 +281,11 @@ bool Drought::computeSpiParameters()
 
 bool Drought::computeSpeiParameters()
 {
+    if (meteoPoint->nrObsDataDaysM == 0)
+    {
+        return false;
+    }
+
     if (meteoPoint->obsDataM[0]._year > lastYear || meteoPoint->obsDataM[meteoPoint->nrObsDataDaysM-1]._year < firstYear)
     {
         return false;
@@ -318,7 +324,7 @@ bool Drought::computeSpeiParameters()
             count = 0;
             nTot = 0;
             mySums.push_back(0);
-            for(int i = 0; i<timeScale; i++)
+            for(int i = 0; i<=timeScale; i++)
             {
                 nTot = nTot + 1;
                 if (meteoPoint->obsDataM[j-i].prec != NODATA && meteoPoint->obsDataM[j-i].et0_hs != NODATA)
@@ -333,7 +339,7 @@ bool Drought::computeSpeiParameters()
                         break;
                 }
             }
-            if (count / nTot < meteoSettings->getMinimumPercentage() / 100)
+            if ( (count / nTot) < (meteoSettings->getMinimumPercentage() / 100))
             {
                 mySums[n] = NODATA;
             }
@@ -387,4 +393,9 @@ bool Drought::computeSpeiParameters()
 void Drought::setMeteoPoint(Crit3DMeteoPoint *value)
 {
     meteoPoint = value;
+}
+
+Crit3DMeteoSettings *Drought::getMeteoSettings() const
+{
+    return meteoSettings;
 }
