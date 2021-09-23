@@ -10,8 +10,8 @@ Drought::Drought(droughtIndex index, int firstYear, int lastYear, Crit3DMeteoPoi
     this->lastYear = lastYear;
     this->meteoPoint = meteoPoint;
     this->meteoSettings = meteoSettings;
-    this->timeScale = 0; //default
-    this->computeAll = true;  //default
+    this->timeScale = 3; //default
+    this->computeAll = false;  //default
 }
 
 droughtIndex Drought::getIndex() const
@@ -100,25 +100,25 @@ float Drought::computeDroughtIndex()
         tm *ltm = localtime(&now);
         int currentYear = 1900 + ltm->tm_year;
         int currentMonth = 1 + ltm->tm_mon;
-        end = (currentYear - meteoPoint->obsDataM[0]._year)*12 + currentMonth-meteoPoint->obsDataM[0]._month;
-        start = end;
+        end = (currentYear - meteoPoint->obsDataM[0]._year)*12 + currentMonth-meteoPoint->obsDataM[0]._month + 1; // come nel caso precedente end al massimo è pari a meteoPoint->nrObsDataDaysM
+        start = end - 1;
         if (end > meteoPoint->nrObsDataDaysM)
         {
             return NODATA;
         }
-        for (int i = 0; i < start-timeScale; i++)
+        for (int i = 0; i <= start-timeScale; i++)
         {
             mySum[i] = NODATA;
             myResults[i] = NODATA;
         }
     }
 
-    for (int j = start; j <= end; j++)
+    for (int j = start; j < end; j++)
     {
         mySum[j] = 0;
         for(int i = 0; i<=timeScale; i++)
         {
-            if ((j-i)>0 && j<=meteoPoint->nrObsDataDaysM)
+            if ((j-i)>=0 && j < meteoPoint->nrObsDataDaysM)
             {
                 if (index == INDEX_SPI)
                 {
@@ -152,9 +152,9 @@ float Drought::computeDroughtIndex()
         }
     }
 
-    for (int j = start; j <= end; j++)
+    for (int j = start; j < end; j++)
     {
-        int myMonthIndex = ((j - 1) % 12);
+        int myMonthIndex = (j % 12)+1;  //start from 1
         myResults[j] = NODATA;
 
         if (mySum[j] != NODATA)
@@ -171,8 +171,7 @@ float Drought::computeDroughtIndex()
             }
         }
     }
-
-    return myResults[end];
+    return myResults[end-1];
 }
 
 bool Drought::computeSpiParameters()
@@ -249,7 +248,7 @@ bool Drought::computeSpiParameters()
 
     for (int i = 0; i<12; i++)
     {
-        int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12;
+        int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12;  //start from 1
         /*
          * TO DO
         currentGamma[myMonth].Beta = NODATA;
@@ -353,7 +352,7 @@ bool Drought::computeSpeiParameters()
 
     for (int i = 0; i<12; i++)
     {
-        int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12;
+        int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12; //start from 1
         /*
          * TO DO
         currentGamma[myMonth].Beta = NODATA;
