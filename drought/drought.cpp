@@ -383,3 +383,8 @@ bool Drought::computeSpeiParameters()
     }
     return true;
 }
+
+void Drought::setMeteoPoint(Crit3DMeteoPoint *value)
+{
+    meteoPoint = value;
+}
