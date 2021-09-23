@@ -34,6 +34,8 @@ public:
     bool computeSpiParameters();
     bool computeSpeiParameters();
 
+    void setMeteoPoint(Crit3DMeteoPoint *value);
+
 private:
     Crit3DMeteoPoint* meteoPoint;
     Crit3DMeteoSettings* meteoSettings;
