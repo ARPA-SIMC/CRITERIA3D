@@ -66,6 +66,7 @@ void Drought::setComputeAll(bool value)
 
 float Drought::computeDroughtIndex()
 {
+    timeScale = timeScale - 1; // index start from 0
     if (index == INDEX_SPI)
     {
         if (!computeSpiParameters())
