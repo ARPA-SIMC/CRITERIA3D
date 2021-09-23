@@ -138,7 +138,7 @@
 
     bool appendXMLAnomaly(Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QString *myError);
 
-    void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDate firstDate, QDate lastDate, std::vector<meteoVariable> dailyMeteoVar, Crit3DMeteoSettings* meteoSettings);
+    void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDate firstDate, QDate lastDate, std::vector<meteoVariable> dailyMeteoVar, Crit3DMeteoSettings* meteoSettings, Crit3DQuality *qualityCheck, Crit3DClimateParameters *climateParam);
 
     //int getClimateIndexFromDate(QDate myDate, period periodType);
 
