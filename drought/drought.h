@@ -10,7 +10,7 @@ enum droughtIndex {INDEX_SPI, INDEX_SPEI, INDEX_DECILES};
 class Drought
 {
 public:
-    Drought(droughtIndex index, int firstYear, int lastYear, Crit3DMeteoPoint* meteoPoint, Crit3DMeteoSettings* meteoSettings);
+    Drought(droughtIndex index, int firstYear, int lastYear, Crit3DDate date, Crit3DMeteoPoint* meteoPoint, Crit3DMeteoSettings* meteoSettings);
 
     droughtIndex getIndex() const;
     void setIndex(const droughtIndex &value);
@@ -35,9 +35,13 @@ public:
 
     Crit3DMeteoSettings *getMeteoSettings() const;
 
+    Crit3DDate getDate() const;
+    void setDate(const Crit3DDate &value);
+
 private:
     Crit3DMeteoPoint* meteoPoint;
     Crit3DMeteoSettings* meteoSettings;
+    Crit3DDate date;
     droughtIndex index;
     int timeScale;
     int firstYear;

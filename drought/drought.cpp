@@ -1,13 +1,13 @@
 #include "drought.h"
 #include "commonConstants.h"
 #include "basicMath.h"
-#include <ctime>
 
-Drought::Drought(droughtIndex index, int firstYear, int lastYear, Crit3DMeteoPoint* meteoPoint, Crit3DMeteoSettings* meteoSettings)
+Drought::Drought(droughtIndex index, int firstYear, int lastYear, Crit3DDate date, Crit3DMeteoPoint* meteoPoint, Crit3DMeteoSettings* meteoSettings)
 {
     this->index = index;
     this->firstYear = firstYear;
     this->lastYear = lastYear;
+    this->date = date;
     this->meteoPoint = meteoPoint;
     this->meteoSettings = meteoSettings;
     this->timeScale = 3; //default
@@ -97,10 +97,8 @@ float Drought::computeDroughtIndex()
     }
     else
     {
-        time_t now = time(0);
-        tm *ltm = localtime(&now);
-        int currentYear = 1900 + ltm->tm_year;
-        int currentMonth = 1 + ltm->tm_mon;
+        int currentYear = date.year;
+        int currentMonth = date.month;
         end = (currentYear - meteoPoint->obsDataM[0]._year)*12 + currentMonth-meteoPoint->obsDataM[0]._month + 1; // come nel caso precedente end al massimo è pari a meteoPoint->nrObsDataDaysM
         start = end - 1;
         if (end > meteoPoint->nrObsDataDaysM)
@@ -398,4 +396,14 @@ void Drought::setMeteoPoint(Crit3DMeteoPoint *value)
 Crit3DMeteoSettings *Drought::getMeteoSettings() const
 {
     return meteoSettings;
+}
+
+Crit3DDate Drought::getDate() const
+{
+    return date;
+}
+
+void Drought::setDate(const Crit3DDate &value)
+{
+    date = value;
 }
