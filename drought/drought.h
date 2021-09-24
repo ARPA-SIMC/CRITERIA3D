@@ -5,8 +5,6 @@
     #include "meteoPoint.h"
 #endif
 
-enum droughtIndex {INDEX_SPI, INDEX_SPEI, INDEX_DECILES};
-
 class Drought
 {
 public:

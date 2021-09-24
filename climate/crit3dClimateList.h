@@ -8,9 +8,6 @@
         #include "statistics.h"
     #endif
 
-    #ifndef QLIST_H
-        #include <QList>
-    #endif
     #ifndef QDATETIME_H
         #include <QDateTime>
     #endif

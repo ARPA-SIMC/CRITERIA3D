@@ -242,6 +242,8 @@
 
     enum surfaceType   {SurfaceTypeWater, SurfaceTypeSoil, SurfaceTypeCrop};
 
+    enum droughtIndex {INDEX_SPI, INDEX_SPEI, INDEX_DECILES};
+
     class Crit3DClimateParameters
     {
     public:
