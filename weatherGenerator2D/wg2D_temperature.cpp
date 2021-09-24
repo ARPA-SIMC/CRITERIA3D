@@ -197,12 +197,7 @@ void weatherGenerator2D::computeMonthlyTemperatures()
     int** countTmin;
     int** countTmax;
     //int** countTmean;
-    double* monthlyAverageOverYearsAverageTmax;
-    double* monthlyAverageOverYearsAverageTmin;
-    double* monthlyAverageOverYearsAverageTmean;
-    double* monthlyStdDevOverYearsAverageTmax;
-    double* monthlyStdDevOverYearsAverageTmin;
-    double* monthlyStdDevOverYearsAverageTmean;
+
     monthlyAverageTmax = (double**)calloc(12,sizeof(double*));
     monthlyAverageTmin = (double**)calloc(12,sizeof(double*));
     monthlyAverageTmean = (double**)calloc(12,sizeof(double*));
@@ -284,16 +279,16 @@ void weatherGenerator2D::computeMonthlyTemperatures()
         monthlyStdDevOverYearsAverageTmean[i] = sqrt(statistics::variance(monthlyAverageTmean[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
     }
 
-    float* parGauss = (float*)calloc(2,sizeof(float));
-    parGauss[0] = monthlyAverageOverYearsAverageTmax[0];
-    parGauss[1] = monthlyStdDevOverYearsAverageTmax[0];
+    //float* parGauss = (float*)calloc(2,sizeof(float));
+    //parGauss[0] = monthlyAverageOverYearsAverageTmax[0];
+    //parGauss[1] = monthlyStdDevOverYearsAverageTmax[0];
     //TfunctionInput functionInput;
     //functionInput.par = (float*)calloc(2,sizeof(float));
     //functionInput.par[0] = parGauss[0];
     //functionInput.par[1] = parGauss[1];
-    float risultato;
-    risultato = integration::qsimpParametric(gaussianFunction,2,parGauss,-1000,1000,0.001);
-    free(parGauss);
+    //float risultato;
+    //risultato = integration::qsimpParametric(gaussianFunction,2,parGauss,-1000,1000,0.001);
+    //free(parGauss);
     //free(functionInput.par);
     //pressEnterToContinue();
     for (int i=0;i<12;i++)
@@ -311,12 +306,12 @@ void weatherGenerator2D::computeMonthlyTemperatures()
     free(countTmax);
     free(countTmin);
     //free(countTmean);
-    free(monthlyAverageOverYearsAverageTmax);
-    free(monthlyAverageOverYearsAverageTmin);
-    free(monthlyAverageOverYearsAverageTmean);
-    free(monthlyStdDevOverYearsAverageTmax);
-    free(monthlyStdDevOverYearsAverageTmin);
-    free(monthlyStdDevOverYearsAverageTmean);
+    //free(monthlyAverageOverYearsAverageTmax);
+    //free(monthlyAverageOverYearsAverageTmin);
+    //free(monthlyAverageOverYearsAverageTmean);
+    //free(monthlyStdDevOverYearsAverageTmax);
+    //free(monthlyStdDevOverYearsAverageTmin);
+    //free(monthlyStdDevOverYearsAverageTmean);
 
 
 }
