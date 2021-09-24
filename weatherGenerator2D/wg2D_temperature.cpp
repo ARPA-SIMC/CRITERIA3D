@@ -283,12 +283,6 @@ void weatherGenerator2D::computeMonthlyTemperatures()
         monthlyStdDevOverYearsAverageTmin[i] = sqrt(statistics::variance(monthlyAverageTmin[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
         monthlyStdDevOverYearsAverageTmean[i] = sqrt(statistics::variance(monthlyAverageTmean[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
     }
-    /*
-    for (int i=0;i<12;i++)
-    {
-        printf("%.2f  %.2f  %.2f\n",monthlyStdDevOverYearsAverageTmin[i],monthlyStdDevOverYearsAverageTmean[i],monthlyStdDevOverYearsAverageTmax[i]);
-    }
-    */
 
     float* parGauss = (float*)calloc(2,sizeof(float));
     parGauss[0] = monthlyAverageOverYearsAverageTmax[0];
