@@ -32,6 +32,7 @@ INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../gis ../meteo ../interpolation 
 
 SOURCES += \
     climate.cpp \
+    crit3dDroughtList.cpp \
     elaborationSettings.cpp \
     crit3dClimate.cpp \
     dbClimate.cpp \
@@ -40,6 +41,7 @@ SOURCES += \
     crit3dAnomalyList.cpp
 
 HEADERS += \
+    crit3dDroughtList.h \
     dbClimate.h \
     climate.h \
     elaborationSettings.h \
