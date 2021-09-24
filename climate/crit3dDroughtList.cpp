@@ -129,7 +129,7 @@ void Crit3DDroughtList::addDrought(unsigned int index)
 
     QString yearStart = QString::number(_listYearStart[index]);
     QString yearEnd = QString::number(_listYearEnd[index]);
-    QString date = _listDate[index].toString();
+    QString date = _listDate[index].toString("dd/MM/yyyy");
 
     int timeScale = _listTimescale[index];
     droughtIndex thisIndex = _listIndex[index];
@@ -147,7 +147,7 @@ void Crit3DDroughtList::addDrought(unsigned int index)
         indexStr = "DECILES";
     }
 
-    QString droughtAdded = indexStr + "_TIMESCALE" + timeScale +  + "_" + yearStart + "-" + yearEnd + "_" + date ;
+    QString droughtAdded = indexStr + "_TIMESCALE" + QString::number(timeScale) +  + "_" + yearStart + "-" + yearEnd + "_" + date ;
     if(std::find(_listAll.begin(), _listAll.end(), droughtAdded) != _listAll.end())
     {
         return;
