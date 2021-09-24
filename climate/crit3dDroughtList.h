@@ -11,6 +11,9 @@ class Crit3DDroughtList
 {
 public:
     Crit3DDroughtList();
+    void reset();
+    void addDrought(unsigned int index);
+    void eraseElement(unsigned int index);
 
     void setIsMeteoGrid(bool isMeteoGrid);
     void insertYearStart(int yearStart);
@@ -27,9 +30,11 @@ public:
     std::vector<QDate> listDate() const;
     std::vector<int> listTimescale() const;
     std::vector<QString> listFileName() const;
+    std::vector<QString> listAll() const;
 
 private:
     bool _isMeteoGrid;
+    std::vector<QString> _listAll;
     std::vector<int> _listYearStart;
     std::vector<int> _listYearEnd;
     std::vector<droughtIndex> _listIndex;

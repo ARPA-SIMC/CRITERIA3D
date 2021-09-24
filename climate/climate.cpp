@@ -2497,8 +2497,10 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
 
     int nElab = 0;
     int nAnomaly = 0;
+    int nDrought = 0;
     bool errorElab = false;
     bool errorAnomaly = false;
+    bool errorDrought = false;
 
     while(!ancestor.isNull())
     {
@@ -3088,13 +3090,126 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
         else if (ancestor.toElement().tagName().toUpper() == "DROUGHT")
         {
             qDebug() << "DROUGHT ";
-              // TO DO
-//            child = ancestor.firstChild();
-//            while( !child.isNull())
-//            {
+            QString dataTypeAttribute = ancestor.toElement().attribute("Datatype").toUpper();
+            if ( dataTypeAttribute == "GRID")
+            {
+                listXMLDrought->setIsMeteoGrid(true);
+            }
+            else if (dataTypeAttribute == "POINT")
+            {
+                listXMLDrought->setIsMeteoGrid(false);
+            }
+            else if (dataTypeAttribute.isEmpty() || (dataTypeAttribute != "GRID" && dataTypeAttribute != "POINT"))
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "INDEX")
+                {
+                    QString index = child.toElement().text();
+                    if (index == "SPI")
+                    {
+                        listXMLDrought->insertIndex(INDEX_SPI);
+                    }
+                    else if (index == "SPEI")
+                    {
+                        listXMLDrought->insertIndex(INDEX_SPEI);
+                    }
+                    else if (index == "DECILES")
+                    {
+                        listXMLDrought->insertIndex(INDEX_DECILES);
+                    }
+                    else
+                    {
+                        listXMLDrought->eraseElement(nDrought);
+                        qDebug() << "noIndex ";
+                        errorDrought = true;
+                    }
 
-//            }
-//            child = child.nextSibling();
+                }
+                if (myTag == "REFINTERVAL")
+                {
+                    firstYear = child.toElement().attribute("yearini");
+                    lastYear = child.toElement().attribute("yearfin");
+                    listXMLDrought->insertYearStart(firstYear.toInt());
+                    listXMLDrought->insertYearEnd(lastYear.toInt());
+                    if (checkYears(firstYear, lastYear) == false)
+                    {
+                        listXMLDrought->eraseElement(nDrought);
+                        qDebug() << "checkYears ";
+                        errorDrought = true;
+                    }
+                }
+                if (myTag == "DATE")
+                {
+                    QString dateStr = child.toElement().text();
+                    QDate date = QDate::fromString(dateStr,"dd/MM/yyyy");
+                    if (date.isValid())
+                    {
+                        listXMLDrought->insertDate(date);
+                    }
+                    else
+                    {
+                        listXMLDrought->eraseElement(nDrought);
+                        qDebug() << "invalid date ";
+                        errorDrought = true;
+                    }
+                }
+                if (myTag == "TIMESCALE")
+                {
+                    bool ok;
+                    QString timescaleStr = child.toElement().text();
+                    int timeScale = timescaleStr.toInt(&ok);
+                    if (ok)
+                    {
+                        listXMLDrought->insertTimescale(timeScale);
+                    }
+                    else
+                    {
+                        listXMLDrought->eraseElement(nDrought);
+                        qDebug() << "invalid timescale ";
+                        errorDrought = true;
+                    }
+                }
+                if (myTag == "EXPORT")
+                {
+                    secondChild = child.firstChild();
+                    while( !secondChild.isNull())
+                    {
+                        mySecondTag = secondChild.toElement().tagName().toUpper();
+                        if (mySecondTag == "FILENAME")
+                        {
+                            filename = secondChild.toElement().text();
+                            if (filename.isEmpty())
+                            {
+                                listXMLDrought->insertFileName("");
+                            }
+                            else
+                            {
+                                listXMLDrought->insertFileName(filename);
+                            }
+                        }
+                        secondChild = secondChild.nextSibling();
+                    }
+                }
+                if (errorDrought)
+                {
+                    errorDrought = false;
+                    child = child.lastChild();
+                    child = child.nextSibling();
+                    nDrought = nDrought - 1;
+                }
+                else
+                {
+                    child = child.nextSibling();
+                }
+            }
+            nDrought = nDrought + 1;
+            qDebug() << "nDrought " << nDrought;
         }
 
         ancestor = ancestor.nextSibling();
@@ -3110,6 +3225,11 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     {
         listXMLAnomaly->addAnomaly(i);
         qDebug() << "anomaly: " << listXMLAnomaly->listAll()[i];
+    }
+    for (int i = 0; i < nDrought; i++)
+    {
+        listXMLDrought->addDrought(i);
+        qDebug() << "drought: " << listXMLDrought->listAll()[i];
     }
     return true;
 }
