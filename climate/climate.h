@@ -22,6 +22,9 @@
     #ifndef CRIT3DANOMALYLIST_H
         #include "crit3dAnomalyList.h"
     #endif
+    #ifndef CRIT3DDROUGHTLIST_H
+        #include "crit3dDroughtList.h"
+    #endif
 
 
     const std::map<std::string, int> MapElabWithParam = {
@@ -121,7 +124,7 @@
 
     int nParameters(meteoComputation elab);
 
-    bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QString *myError);
+    bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, Crit3DDroughtList *listXMLDrought, QString xmlFileName, QString *myError);
 
     bool parseXMLPeriodType(QDomNode ancestor, QString attributePeriod, Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, bool isAnomaly, bool isRefPeriod,
                             QString* period, QString *myError);

@@ -2432,7 +2432,7 @@ int nParameters(meteoComputation elab)
 
 }
 
-bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QString *myError)
+bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, Crit3DDroughtList *listXMLDrought, QString xmlFileName, QString *myError)
 {
 
     QDomDocument xmlDoc;
@@ -3113,7 +3113,6 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     }
     return true;
 }
-
 
 bool parseXMLPeriodType(QDomNode ancestor, QString attributePeriod, Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, bool isAnomaly, bool isRefPeriod,
                         QString* period, QString *myError)
