@@ -25,6 +25,21 @@
 
 #include "math.h"
 
+phenoCrop getKeyMapPhenoCrop(std::map<phenoCrop, std::string> map, const std::string& value)
+{
+    std::map<phenoCrop, std::string>::const_iterator it;
+    phenoCrop key = invalidCrop;
+
+    for (it = map.begin(); it != map.end(); ++it)
+    {
+        if (it->second == value)
+        {
+            key = it->first;
+            break;
+        }
+    }
+    return key;
+}
 
 void feno( float soglia, int coltura, int varieta, char* logfile, int max_giorni_interpolazione,
            float dato_mancante, int tipoScala, int giornoInizio, int meseInizio, int annoInizio,

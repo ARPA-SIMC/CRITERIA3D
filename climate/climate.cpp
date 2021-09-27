@@ -2432,7 +2432,7 @@ int nParameters(meteoComputation elab)
 
 }
 
-bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, Crit3DDroughtList *listXMLDrought, QString xmlFileName, QString *myError)
+bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, Crit3DDroughtList *listXMLDrought, Crit3DPhenologyList *listXMLPhenology, QString xmlFileName, QString *myError)
 {
 
     QDomDocument xmlDoc;
@@ -2498,9 +2498,11 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     int nElab = 0;
     int nAnomaly = 0;
     int nDrought = 0;
+    int nPhenology = 0;
     bool errorElab = false;
     bool errorAnomaly = false;
     bool errorDrought = false;
+    bool errorPhenology = false;
 
     while(!ancestor.isNull())
     {
@@ -3078,13 +3080,50 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
         else if (ancestor.toElement().tagName().toUpper() == "PHENOLOGY")
         {
             qDebug() << "PHENOLOGY ";
-              // TO DO
-//            child = ancestor.firstChild();
-//            while( !child.isNull())
-//            {
-
-//            }
-//            child = child.nextSibling();
+            QString dataTypeAttribute = ancestor.toElement().attribute("Datatype").toUpper();
+            if ( dataTypeAttribute == "GRID")
+            {
+                listXMLPhenology->setIsMeteoGrid(true);
+            }
+            else if (dataTypeAttribute == "POINT")
+            {
+                listXMLPhenology->setIsMeteoGrid(false);
+            }
+            else if (dataTypeAttribute.isEmpty() || (dataTypeAttribute != "GRID" && dataTypeAttribute != "POINT"))
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            QString computationType = ancestor.toElement().attribute("computationType").toUpper();
+            if ( computationType == "CURRENTSTAGE" || "CURRENT")
+            {
+                listXMLPhenology->insertComputation(currentStage);
+            }
+            else if (computationType == "ANOMALYDAYS")
+            {
+                listXMLPhenology->insertComputation(anomalyDays);
+            }
+            else if (computationType == "DIFFERENCESTAGES")
+            {
+                listXMLPhenology->insertComputation(differenceStages);
+            }
+            else
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            QString crop = ancestor.toElement().attribute("crop").toUpper();
+            phenoCrop = getKeyMapPhenoCrop(MapPhenoCropToString, crop.toStdString());
+            if (phenoCrop == invalidCrop)
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            else
+            {
+                listXMLPhenology->insertCrop(phenoCrop);
+            }
+            // TO DO
         }
 
         else if (ancestor.toElement().tagName().toUpper() == "DROUGHT")
