@@ -198,22 +198,22 @@ void weatherGenerator2D::computeMonthlyTemperatures()
     int** countTmax;
     //int** countTmean;
 
-    monthlyAverageTmax = (double**)calloc(12,sizeof(double*));
-    monthlyAverageTmin = (double**)calloc(12,sizeof(double*));
-    monthlyAverageTmean = (double**)calloc(12,sizeof(double*));
-    countTmin = (int**)calloc(12,sizeof(int*));
-    countTmax = (int**)calloc(12,sizeof(int*));
+    monthlyAverageTmax = (double**)calloc(36,sizeof(double*));
+    monthlyAverageTmin = (double**)calloc(36,sizeof(double*));
+    monthlyAverageTmean = (double**)calloc(36,sizeof(double*));
+    countTmin = (int**)calloc(36,sizeof(int*));
+    countTmax = (int**)calloc(36,sizeof(int*));
     //countTmean = (int**)calloc(12,sizeof(int*));
-    monthlyAverageOverYearsAverageTmax = (double*)calloc(12,sizeof(double));
-    monthlyAverageOverYearsAverageTmin = (double*)calloc(12,sizeof(double));
-    monthlyAverageOverYearsAverageTmean = (double*)calloc(12,sizeof(double));
-    monthlyStdDevOverYearsAverageTmax = (double*)calloc(12,sizeof(double));
-    monthlyStdDevOverYearsAverageTmin = (double*)calloc(12,sizeof(double));
-    monthlyStdDevOverYearsAverageTmean = (double*)calloc(12,sizeof(double));
+    monthlyAverageOverYearsAverageTmax = (double*)calloc(36,sizeof(double));
+    monthlyAverageOverYearsAverageTmin = (double*)calloc(36,sizeof(double));
+    monthlyAverageOverYearsAverageTmean = (double*)calloc(36,sizeof(double));
+    monthlyStdDevOverYearsAverageTmax = (double*)calloc(36,sizeof(double));
+    monthlyStdDevOverYearsAverageTmin = (double*)calloc(36,sizeof(double));
+    monthlyStdDevOverYearsAverageTmean = (double*)calloc(36,sizeof(double));
 
 
 
-    for (int i=0;i<12;i++)
+    for (int i=0;i<36;i++)
     {
         monthlyAverageTmax[i]= (double*)calloc(obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year,sizeof(double));
         monthlyAverageTmin[i]= (double*)calloc(obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year,sizeof(double));
@@ -245,22 +245,26 @@ void weatherGenerator2D::computeMonthlyTemperatures()
         {
             if(fabs(obsDataD[iStation][iDatum].tMax) > 60) obsDataD[iStation][iDatum].tMax = NODATA;
             if(fabs(obsDataD[iStation][iDatum].tMin) > 60) obsDataD[iStation][iDatum].tMin = NODATA;
+            int decadalLag;
+            if (obsDataD[iStation][iDatum].date.day <10) decadalLag =0;
+            else if (obsDataD[iStation][iDatum].date.day >=20) decadalLag =2;
+            else decadalLag = 1;
             if (fabs(obsDataD[iStation][iDatum].tMin-NODATA) > EPSILON)
             {
-                monthlyAverageTmin[obsDataD[iStation][iDatum].date.month-1][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year]+= obsDataD[iStation][iDatum].tMin;
-                ++countTmin[obsDataD[iStation][iDatum].date.month-1][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year];
+                monthlyAverageTmin[(obsDataD[iStation][iDatum].date.month-1)*3 + decadalLag][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year]+= obsDataD[iStation][iDatum].tMin;
+                ++countTmin[(obsDataD[iStation][iDatum].date.month-1)*3+decadalLag][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year];
             }
             if (fabs(obsDataD[iStation][iDatum].tMax-NODATA) > EPSILON)
             {
-                monthlyAverageTmax[obsDataD[iStation][iDatum].date.month-1][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year]+= obsDataD[iStation][iDatum].tMax;
-                ++countTmax[obsDataD[iStation][iDatum].date.month-1][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year];
+                monthlyAverageTmax[(obsDataD[iStation][iDatum].date.month-1)*3+decadalLag][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year]+= obsDataD[iStation][iDatum].tMax;
+                ++countTmax[(obsDataD[iStation][iDatum].date.month-1)*3+decadalLag][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year];
             }
 
         }
 
     }
 
-    for (int i=0;i<12;i++)
+    for (int i=0;i<36;i++)
     {
         for (int j=0;j<obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;j++)
         {
@@ -278,20 +282,38 @@ void weatherGenerator2D::computeMonthlyTemperatures()
         monthlyStdDevOverYearsAverageTmin[i] = sqrt(statistics::variance(monthlyAverageTmin[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
         monthlyStdDevOverYearsAverageTmean[i] = sqrt(statistics::variance(monthlyAverageTmean[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
     }
+    srand (time(nullptr));
+    double temp = (double) rand() / (RAND_MAX);
+    /*for (int i=0;i<12;i++)
+    {
+        temp = (double) rand() / (RAND_MAX);
+        //printf("rand %f \n",temp);
+    }
+    */
+    float* parGauss = (float*)calloc(2,sizeof(float));
+    float** monthlyRandomDeviationTmean= (float**)calloc(parametersModel.yearOfSimulation,sizeof(float*));
+    for (int i=0;i<parametersModel.yearOfSimulation;i++)
+    {
+        monthlyRandomDeviationTmean[i]=(float*)calloc(36,sizeof(float));
+    }
+    for  (int j=0;j<36;j++)
+    {
+        parGauss[0] = monthlyAverageOverYearsAverageTmax[j];
+        parGauss[1] = monthlyStdDevOverYearsAverageTmax[j];
+        //randomDeviation = integration::qsimpParametric(gaussianFunction,2,parGauss,-5*parGauss[1],5*parGauss[1],0.001);
+        for (int i=0;i<parametersModel.yearOfSimulation;i++)
+        {
+            temp = (double) rand() / (RAND_MAX);
+            monthlyRandomDeviationTmean[i][j] = parGauss[1] * SQRT_2 * statistics::inverseTabulatedERF(2*temp -1);
+            printf("rand %f \n",monthlyRandomDeviationTmean[i][j]);
+        }
+    }
+    free(parGauss);
 
-    //float* parGauss = (float*)calloc(2,sizeof(float));
-    //parGauss[0] = monthlyAverageOverYearsAverageTmax[0];
-    //parGauss[1] = monthlyStdDevOverYearsAverageTmax[0];
-    //TfunctionInput functionInput;
-    //functionInput.par = (float*)calloc(2,sizeof(float));
-    //functionInput.par[0] = parGauss[0];
-    //functionInput.par[1] = parGauss[1];
-    //float risultato;
-    //risultato = integration::qsimpParametric(gaussianFunction,2,parGauss,-1000,1000,0.001);
-    //free(parGauss);
-    //free(functionInput.par);
     //pressEnterToContinue();
-    for (int i=0;i<12;i++)
+
+
+    for (int i=0;i<36;i++)
     {
         //free(monthlyAverageTmax[i]);
         //free(monthlyAverageTmin[i]);
