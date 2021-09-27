@@ -3112,18 +3112,121 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
                 continue;
             }
-            QString crop = ancestor.toElement().attribute("crop").toUpper();
-            phenoCrop = getKeyMapPhenoCrop(MapPhenoCropToString, crop.toStdString());
-            if (phenoCrop == invalidCrop)
+            QString cropStr = ancestor.toElement().attribute("crop").toUpper();
+            phenoCrop crop = getKeyMapPhenoCrop(MapPhenoCropToString, cropStr.toStdString());
+            if (crop == invalidCrop)
             {
                 ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
                 continue;
             }
             else
             {
-                listXMLPhenology->insertCrop(phenoCrop);
+                listXMLPhenology->insertCrop(crop);
             }
-            // TO DO
+            QString variety = ancestor.toElement().attribute("variety").toUpper();
+            // LC Classe 500 a cosa corrisponde?
+            if ( variety == "PRECOCISSIMA" || variety == "classe 500")
+            {
+                listXMLPhenology->insertVariety(precocissima);
+            }
+            else if (variety == "PRECOCE")
+            {
+                listXMLPhenology->insertVariety(precoce);
+            }
+            else if (variety == "MEDIA")
+            {
+                listXMLPhenology->insertVariety(media);
+            }
+            else if (variety == "TARDIVE")
+            {
+                listXMLPhenology->insertVariety(tardive);
+            }
+            else
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            bool ok;
+            int vernalization = ancestor.toElement().attribute("vernalization").toUpper().toInt(&ok);
+            if (ok)
+            {
+                listXMLPhenology->insertVernalization(vernalization);
+            }
+            else
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            QString scale = ancestor.toElement().attribute("scale").toUpper();
+            if (scale == "BBCH")
+            {
+                listXMLPhenology->insertScale(BBCH);
+            }
+            else if (scale == "ARPA")
+            {
+                listXMLPhenology->insertScale(ARPA);
+            }
+            else
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "PERIOD")
+                {
+                    QDate startDate = QDate::fromString(child.toElement().attribute("ini"), "dd/MM/yyyy");
+                    QDate endDate = QDate::fromString(child.toElement().attribute("fin"), "dd/MM/yyyy");
+                    if (!endDate.isValid() || !startDate.isValid() || endDate<startDate)
+                    {
+                        listXMLPhenology->eraseElement(nPhenology);
+                        qDebug() << "Invalid date";
+                        errorPhenology = true;
+                    }
+                    else
+                    {
+                        listXMLPhenology->insertDateStart(startDate);
+                        listXMLPhenology->insertDateEnd(endDate);
+                    }
+                }
+                if (myTag == "EXPORT")
+                {
+                    secondChild = child.firstChild();
+                    while( !secondChild.isNull())
+                    {
+                        mySecondTag = secondChild.toElement().tagName().toUpper();
+                        if (mySecondTag == "FILENAME")
+                        {
+                            filename = secondChild.toElement().text();
+                            if (filename.isEmpty())
+                            {
+                                listXMLPhenology->insertFileName("");
+                            }
+                            else
+                            {
+                                listXMLPhenology->insertFileName(filename);
+                            }
+                        }
+                        secondChild = secondChild.nextSibling();
+                    }
+                }
+                if (errorPhenology)
+                {
+                    errorPhenology = false;
+                    child = child.lastChild();
+                    child = child.nextSibling();
+                    nPhenology = nPhenology - 1;
+                }
+                else
+                {
+                    child = child.nextSibling();
+                }
+            }
+            nPhenology = nPhenology + 1;
+            qDebug() << "nPhenology " << nPhenology;
+
         }
 
         else if (ancestor.toElement().tagName().toUpper() == "DROUGHT")
