@@ -3,6 +3,7 @@
 #include <limits.h>             // required for LONG_MAX
 #include "commonConstants.h"
 #include "gammaFunction.h"
+#include "furtherMathFunctions.h"
 
 
     static long double xSmall_x(long double x, long double nu);
@@ -1205,4 +1206,11 @@
             return true;
         }
 
+    }
+
+    float standardGaussianInvCDF(float prob)
+    {
+        double  resul;
+        resul = SQRT_2 * statistics::inverseTabulatedERF(2*prob -1);
+        return resul;
     }

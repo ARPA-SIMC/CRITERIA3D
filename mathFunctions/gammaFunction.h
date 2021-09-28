@@ -32,6 +32,8 @@
     double Ln_Gamma_Function(double x);
     long double xLn_Gamma_Function(long double x);
 
+    float standardGaussianInvCDF(float prob);
+
     namespace gammaDistributions
     {
         double gammaNaturalLogarithm(double value);
