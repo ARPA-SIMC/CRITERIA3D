@@ -3095,7 +3095,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 continue;
             }
             QString computationType = ancestor.toElement().attribute("computationType").toUpper();
-            if ( computationType == "CURRENTSTAGE" || "CURRENT")
+            if ( computationType == "CURRENTSTAGE" || computationType == "CURRENT")
             {
                 listXMLPhenology->insertComputation(currentStage);
             }
@@ -3125,7 +3125,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
             }
             QString variety = ancestor.toElement().attribute("variety").toUpper();
             // LC Classe 500 a cosa corrisponde?
-            if ( variety == "PRECOCISSIMA" || variety == "classe 500")
+            if ( variety == "PRECOCISSIMA" || variety == "CLASSE 500")
             {
                 listXMLPhenology->insertVariety(precocissima);
             }
@@ -3360,18 +3360,31 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
 
     for (int i = 0; i < nElab; i++)
     {
-        listXMLElab->addElab(i);
-        qDebug() << "elab: " << listXMLElab->listAll()[i];
+        if (listXMLElab->addElab(i))
+        {
+            qDebug() << "elab: " << listXMLElab->listAll()[i].back();
+        }
     }
     for (int i = 0; i < nAnomaly; i++)
     {
-        listXMLAnomaly->addAnomaly(i);
-        qDebug() << "anomaly: " << listXMLAnomaly->listAll()[i];
+        if (listXMLAnomaly->addAnomaly(i))
+        {
+            qDebug() << "anomaly: " << listXMLAnomaly->listAll().back();
+        }
     }
     for (int i = 0; i < nDrought; i++)
     {
-        listXMLDrought->addDrought(i);
-        qDebug() << "drought: " << listXMLDrought->listAll()[i];
+        if (listXMLDrought->addDrought(i))
+        {
+            qDebug() << "drought: " << listXMLDrought->listAll().back();
+        }
+    }
+    for (int i = 0; i < nPhenology; i++)
+    {
+        if (listXMLPhenology->addPhenology(i))
+        {
+            qDebug() << "phenology: " << listXMLPhenology->listAll().back();
+        }
     }
     return true;
 }

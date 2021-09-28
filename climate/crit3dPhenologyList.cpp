@@ -154,22 +154,65 @@ void Crit3DPhenologyList::eraseElement(unsigned int index)
 
 }
 
-void Crit3DPhenologyList::addPhenology(unsigned int index)
+bool Crit3DPhenologyList::addPhenology(unsigned int index)
 {
-    // TO DO
-    /*
+
     QString dateStart = _listDateStart[index].toString("dd/MM/yyyy");
     QString dateEnd = _listDateEnd[index].toString("dd/MM/yyyy");
+    QString computation;
+    QString variety;
+    QString scale;
 
-    QString phenologyAdded = _listComputation[index] + "_" + _listCrop[index] + "_" + _listVariety[index] + "_" + _listScale[index] + "_VERN:" + _listVernalization[index] + "_" + dateStart + "_"+ dateEnd;
+    if (_listComputation[index] == currentStage)
+    {
+        computation = "Current";
+    }
+    else if(_listComputation[index] == anomalyDays)
+    {
+        computation = "Anomaly";
+    }
+    else if(_listComputation[index] == differenceStages)
+    {
+        computation = "Difference";
+    }
+
+    if (_listVariety[index] == precocissima)
+    {
+        variety = "precocissima";
+    }
+    else if(_listVariety[index] == precoce)
+    {
+        variety = "precoce";
+    }
+    else if(_listVariety[index] == media)
+    {
+        variety = "media";
+    }
+    else if(_listVariety[index] == tardive)
+    {
+        variety = "tardive";
+    }
+
+    if (_listScale[index] == ARPA)
+    {
+        scale = "ARPA";
+    }
+    else if(_listScale[index] == BBCH)
+    {
+        scale = "BBCH";
+    }
+
+    QString crop = QString::fromStdString(getStringMapPhenoCrop(MapPhenoCropToString, _listCrop[index]));
+
+    QString phenologyAdded = computation + "_" + crop + "_" + variety + "_" + scale + "_VERN:" + QString::number(_listVernalization[index]) + "_" + dateStart + "_"+ dateEnd;
     if(std::find(_listAll.begin(), _listAll.end(), phenologyAdded) != _listAll.end())
     {
-        return;
+        return false;
     }
     else
     {
         _listAll.push_back(phenologyAdded);
+        return true;
     }
-    */
 
 }

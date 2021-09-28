@@ -124,7 +124,7 @@ void Crit3DDroughtList::eraseElement(unsigned int index)
 
 }
 
-void Crit3DDroughtList::addDrought(unsigned int index)
+bool Crit3DDroughtList::addDrought(unsigned int index)
 {
 
     QString yearStart = QString::number(_listYearStart[index]);
@@ -150,11 +150,12 @@ void Crit3DDroughtList::addDrought(unsigned int index)
     QString droughtAdded = indexStr + "_TIMESCALE" + QString::number(timeScale) +  + "_" + yearStart + "-" + yearEnd + "_" + date ;
     if(std::find(_listAll.begin(), _listAll.end(), droughtAdded) != _listAll.end())
     {
-        return;
+        return false;
     }
     else
     {
         _listAll.push_back(droughtAdded);
+        return true;
     }
 
 }

@@ -12,7 +12,7 @@ class Crit3DDroughtList
 public:
     Crit3DDroughtList();
     void reset();
-    void addDrought(unsigned int index);
+    bool addDrought(unsigned int index);
     void eraseElement(unsigned int index);
 
     void setIsMeteoGrid(bool isMeteoGrid);

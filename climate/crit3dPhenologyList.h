@@ -16,7 +16,7 @@ class Crit3DPhenologyList
 public:
     Crit3DPhenologyList();
     void reset();
-    void addPhenology(unsigned int index);
+    bool addPhenology(unsigned int index);
     void eraseElement(unsigned int index);
 
     void setIsMeteoGrid(bool isMeteoGrid);

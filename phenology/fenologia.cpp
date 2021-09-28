@@ -41,6 +41,16 @@ phenoCrop getKeyMapPhenoCrop(std::map<phenoCrop, std::string> map, const std::st
     return key;
 }
 
+std::string getStringMapPhenoCrop(std::map<phenoCrop, std::string> map, phenoCrop crop)
+{
+    auto search = map.find(crop);
+
+    if (search != map.end())
+        return search->second;
+
+    return "";
+}
+
 void feno( float soglia, int coltura, int varieta, char* logfile, int max_giorni_interpolazione,
            float dato_mancante, int tipoScala, int giornoInizio, int meseInizio, int annoInizio,
            int numeroGiorni, char* nome, char* codice, int lat_gradi, int lat_primi, float lat_secondi,

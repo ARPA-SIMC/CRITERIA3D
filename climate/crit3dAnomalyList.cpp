@@ -649,7 +649,7 @@ void Crit3DAnomalyList::insertRefParam2(float refParam2)
     _listRefParam2.push_back(refParam2);
 }
 
-void Crit3DAnomalyList::addAnomaly(unsigned int index)
+bool Crit3DAnomalyList::addAnomaly(unsigned int index)
 {
 
     bool isPercentage = _listisPercentage[index];
@@ -749,10 +749,11 @@ void Crit3DAnomalyList::addAnomaly(unsigned int index)
 
     if (_listAll.contains(anomalyAdded)!= 0)
     {
-        return;
+        return false;
     }
 
     _listAll.append(anomalyAdded);
+    return true;
 }
 
 QList<QString> Crit3DAnomalyList::listAll() const

@@ -40,6 +40,7 @@
     };
 
     phenoCrop getKeyMapPhenoCrop(std::map<phenoCrop, std::string> map, const std::string& value);
+    std::string getStringMapPhenoCrop(std::map<phenoCrop, std::string> map, phenoCrop crop);
     // chiamata principale
     void feno( const float soglia, const int coltura, const int varieta, const char* logfile,
            const int max_giorni_interpolazione, const float dato_mancante, const int tipoScala,
