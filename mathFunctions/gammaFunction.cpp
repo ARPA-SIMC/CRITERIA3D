@@ -1143,7 +1143,7 @@
             return gammaIncomplete;
         }
 
-        bool gammaFitting(std::vector<float> &series, int n, double *beta, double *gamma,  double *pZero, double *average)
+        bool gammaFitting(std::vector<float> &series, int n, double *beta, double *gamma,  double *pZero)
         {
             if (n<=0)
             {
@@ -1153,7 +1153,7 @@
             double sumLog = 0;
             double alpha;
             int nAct = 0;
-            *average = 0;
+            double average = 0;
 
             // compute sums
             for (int i = 0; i<n; i++)
@@ -1174,7 +1174,7 @@
             }
             if (nAct > 0)
             {
-                *average = sum / nAct;
+                average = sum / nAct;
             }
 
             if (nAct == 1)
@@ -1183,7 +1183,7 @@
                 *pZero = 0;
                 alpha = 0;
                 *gamma = 1;
-                *beta = *average;
+                *beta = average;
             }
             else if (*pZero == n)
             {
@@ -1191,15 +1191,15 @@
                 *pZero = 1;
                 alpha = 0;
                 *gamma = 1;
-                *beta = *average;
+                *beta = average;
             }
             else
             {
                 // Use MLE
                 *pZero = *pZero/n;
-                alpha = log(*average) - sumLog / nAct;
+                alpha = log(average) - sumLog / nAct;
                 *gamma = (1 + sqrt(1 + 4 * alpha / 3)) / (4 * alpha);
-                *beta = (*average) / (*gamma);
+                *beta = average / (*gamma);
             }
 
             return true;

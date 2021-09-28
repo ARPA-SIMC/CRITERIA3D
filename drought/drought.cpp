@@ -1,6 +1,7 @@
 #include "drought.h"
 #include "commonConstants.h"
 #include "basicMath.h"
+#include "gammaFunction.h"
 
 Drought::Drought(droughtIndex index, int firstYear, int lastYear, Crit3DDate date, Crit3DMeteoPoint* meteoPoint, Crit3DMeteoSettings* meteoSettings)
 {
@@ -264,9 +265,7 @@ bool Drought::computeSpiParameters()
 
         if (monthSeries.size() / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
         {
-            // TO DO
-            // gammaFitting monthSeries, n, currentGamma(myMonth), average
-            // gammaFitting monthSeries, n, beta, gamma, pZero average
+            gammaDistributions::gammaFitting(monthSeries, n, &(currentGamma[myMonth].beta), &(currentGamma[myMonth].gamma),  &(currentGamma[myMonth].pzero));
         }
     }
     return true;
@@ -365,12 +364,11 @@ bool Drought::computeSpeiParameters()
         {
             // TO DO
                 // Sort values
-                // math.QuickSort monthSeries, 1, UBound(monthSeries)
                 sorting::quicksortAscendingFloat(monthSeries, 0, unsigned(monthSeries.size() - 1));
                 /*
-                ' Compute probability weighted moments
+                // Compute probability weighted moments
                 math.probabilityWeightedMoments monthSeries, n, PWM, 0, 0, False
-                ' Fit a Log Logistic probability function
+                // Fit a Log Logistic probability function
                 math.logLogisticFitting PWM, currentLogLogistic(myMonth)
             */
         }

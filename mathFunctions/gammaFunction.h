@@ -39,7 +39,7 @@
         void gammaIncompleteComplementaryFunction(double *gammaComplementaryFunction, double alpha, double x, double *gammaLn);
         double incompleteGamma(double alpha, double x, double *lnGammaValue); // incomplete + complete
         double incompleteGamma(double alpha, double x); // only incomplete
-        bool gammaFitting(std::vector<float> &series, int n, double* beta, double* gamma,  double* pZero, double *average);
+        bool gammaFitting(std::vector<float> &series, int n, double* beta, double* gamma,  double* pZero);
     }
 
 
