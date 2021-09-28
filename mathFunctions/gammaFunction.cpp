@@ -1214,3 +1214,130 @@
         resul = SQRT_2 * statistics::inverseTabulatedERF(2*prob -1);
         return resul;
     }
+
+    /*
+    Compute probability of a<=x using incomplete gamma parameters.
+    Input:     beta, gamma (gamma parameters)
+               pzero (probability of zero)
+               x (value)
+    Output:    GammaCDF (probability  a<=x)
+    ?? LC tradotta da vb, richiama la GammaP
+    */
+    float gammaCDF(float x, double beta, double gamma,  double pZero)
+    {
+
+        float gammaCDF = NODATA;
+
+        if (x == NODATA || beta == NODATA || gamma == NODATA || pZero == NODATA || beta == 0)
+        {
+            return gammaCDF;
+        }
+
+        if (x <= 0)
+        {
+            gammaCDF = pZero;
+        }
+        else
+        {
+            //gammaCDF = pZero + (1 - pZero) * GammaP(gamma, x / beta);
+        }
+        return gammaCDF;
+
+    }
+
+    // Evaluate the incomplete gamma function P(a,x), choosing the most
+    // appropriate representation.
+    /*
+     * TO DO
+    float gammaP(a, x)
+    {
+        If x < a + 1 Then
+            GammaP = GammaIncompleteSeries(a, x)
+        Else
+            GammaP = 1 - GammaIncompleteFractional(a, x)
+        End If
+
+    }
+    */
+
+    /*
+    // Calculates the first three probability weighted moments of a sample (WITHOUT NODATA),
+    // using either the unbiased estimator (when A=B=0)
+    // or a plotting position formula (when A<=B<=0).
+    // This are alpha PWMs, following Rao & Hamed 2000, eqs. 3.1.4 and 3.1.6
+    */
+
+    void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta)
+    {
+
+        float f;
+        std::vector<float> sum{0,0,0};
+
+        if (a == 0 && b == 0)
+        {
+            // use unbiased estimator
+            for (int i = 0; i < n; i++)
+            {
+                sum[0] = sum[0] + series[i];
+                if (!isBeta)
+                {
+                    // compute alpha PWMs
+                    sum[1] = sum[1] + series[i] * (n - i);
+                    sum[2] = sum[2] + series[i] * (n - i) * (n - i - 1);
+                }
+                else
+                {
+                    // compute beta PWMs
+                    sum[1] = sum[1] + series[i] * (i - 1);
+                    sum[2] = sum[2] + series[i] * (i - 1) * (i - 2);
+                }
+            }
+        }
+        else
+        {
+            // use plotting-position (biased) estimator
+            for (int i = 0; i < n; i++)
+            {
+                sum[0] = sum[0] + series[i];
+                f = (i + a) / (n + b);
+                if (!isBeta)
+                {
+                    // compute alpha PWMs
+                    sum[1] = sum[1] + series[i] * (1 - f);
+                    sum[2] = sum[2] + series[i] * (1 - f) * (1 - f);
+                }
+                else
+                {
+                    // compute beta PWMs
+                    sum[1] = sum[1] + series[i] * f;
+                    sum[2] = sum[2] + series[i] * f * f;
+                 }
+            }
+        }
+
+        probWeightedMoments[0] = sum[0] / n ;
+        probWeightedMoments[1] = sum[1] / n / (n - 1) ;
+        probWeightedMoments[2] = sum[2] / n / ((n - 1) * (n - 2)) ;
+
+    }
+
+    // Estimates the parameters of a log-logistic distribution function
+    void logLogisticFitting(std::vector<float> probWeightedMoments, double *alpha, double *beta, double *gamma)
+    {
+        float g1;
+        float g2;
+        *gamma = (2 * probWeightedMoments[1] - probWeightedMoments[0]) / (6 * probWeightedMoments[1] - probWeightedMoments[0] - 6 * probWeightedMoments[2]);
+        g1 = exp(Ln_Gamma_Function(1 + 1 / (*gamma)));
+        g2 = exp(Ln_Gamma_Function(1 - 1 / (*gamma)));
+        *alpha = (probWeightedMoments[0] - 2 * probWeightedMoments[1]) * (*gamma) / (g1 * g2);
+        *beta = probWeightedMoments[0] - (*alpha) * g1 * g2;
+    }
+
+    // Gives the cumulative distribution function of input "myValue",
+    // following a LogLogistic distribution
+    float logLogisticCDF(float myValue, double alpha, double beta, double gamma)
+    {
+        float logLogisticCDF = 1 / (1 + (pow((alpha / (myValue - beta)), gamma)));
+
+        return logLogisticCDF;
+    }

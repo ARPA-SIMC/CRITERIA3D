@@ -33,6 +33,10 @@
     long double xLn_Gamma_Function(long double x);
 
     float standardGaussianInvCDF(float prob);
+    float gammaCDF(float x, double beta, double gamma,  double pZero) ;
+    void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta);
+    void logLogisticFitting(std::vector<float> probWeightedMoments, double *alpha, double *beta, double *gamma);
+    float logLogisticCDF(float myValue, double alpha, double beta, double gamma);
 
     namespace gammaDistributions
     {

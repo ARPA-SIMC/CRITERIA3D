@@ -161,13 +161,11 @@ float Drought::computeDroughtIndex()
         {
             if (index == INDEX_SPI)
             {
-                // TO DO
-                // myResults[j] = standardGaussianInvCDF(math.gammaCDF(mySum(j), currentGamma(myMonthIndex))) // già presente in math
+                myResults[j] = standardGaussianInvCDF(gammaCDF(mySum[j], currentGamma[myMonthIndex].beta, currentGamma[myMonthIndex].gamma, currentGamma[myMonthIndex].pzero));
             }
             else if(index == INDEX_SPEI)
             {
-                // TO DO
-                // myResults[j] = standardGaussianInvCDF(math.logLogisticCDF(mySum(j), currentLogLogistic(myMonthIndex))) // già presente in math
+                myResults[j] = standardGaussianInvCDF(logLogisticCDF(mySum[j], currentLogLogistic[myMonthIndex].alpha, currentLogLogistic[myMonthIndex].beta, currentLogLogistic[myMonthIndex].gamma));
             }
         }
     }
@@ -203,7 +201,6 @@ bool Drought::computeSpiParameters()
         return false;
     }
 
-    // int firstYearStation = std::max(meteoPoint->obsDataM[indexStart]._year, firstYear); // LC non viene mai usata nel codice vb
     int lastYearStation = std::min(meteoPoint->obsDataM[meteoPoint->nrObsDataDaysM-1]._year, lastYear);
 
     int n = 0;
@@ -300,7 +297,6 @@ bool Drought::computeSpeiParameters()
         return false;
     }
 
-    // int firstYearStation = std::max(meteoPoint->obsDataM[indexStart]._year, firstYear); // LC non viene mai usata nel codice vb
     int lastYearStation = std::min(meteoPoint->obsDataM[meteoPoint->nrObsDataDaysM-1]._year, lastYear);
 
     int n = 0;
@@ -308,6 +304,7 @@ bool Drought::computeSpeiParameters()
     int nTot = 0;
     std::vector<float> mySums;
     std::vector<float> monthSeries;
+    std::vector<float> pwm;
 
     for (int j = indexStart; j<meteoPoint->nrObsDataDaysM; j++)
     {
@@ -360,17 +357,16 @@ bool Drought::computeSpeiParameters()
             }
         }
 
+        n = monthSeries.size() - 1;
+
         if (monthSeries.size() / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
         {
-            // TO DO
-                // Sort values
-                sorting::quicksortAscendingFloat(monthSeries, 0, unsigned(monthSeries.size() - 1));
-                /*
-                // Compute probability weighted moments
-                math.probabilityWeightedMoments monthSeries, n, PWM, 0, 0, False
-                // Fit a Log Logistic probability function
-                math.logLogisticFitting PWM, currentLogLogistic(myMonth)
-            */
+            // Sort values
+            sorting::quicksortAscendingFloat(monthSeries, 0, unsigned(n));
+            // Compute probability weighted moments
+            probabilityWeightedMoments(monthSeries, n, pwm, 0, 0, false);
+            // Fit a Log Logistic probability function
+            logLogisticFitting(pwm, &currentLogLogistic[myMonth].alpha, &currentLogLogistic[myMonth].beta, &currentLogLogistic[myMonth].gamma);
         }
     }
     return true;
