@@ -161,12 +161,12 @@ float Drought::computeDroughtIndex()
             if (index == INDEX_SPI)
             {
                 // TO DO
-                // myResults[j] = standardGaussianInvCDF(math.gammaCDF(mySum(j), currentGamma(myMonthIndex)))
+                // myResults[j] = standardGaussianInvCDF(math.gammaCDF(mySum(j), currentGamma(myMonthIndex))) // già presente in math
             }
             else if(index == INDEX_SPEI)
             {
                 // TO DO
-                // myResults[j] = standardGaussianInvCDF(math.logLogisticCDF(mySum(j), currentLogLogistic(myMonthIndex)))
+                // myResults[j] = standardGaussianInvCDF(math.logLogisticCDF(mySum(j), currentLogLogistic(myMonthIndex))) // già presente in math
             }
         }
     }
@@ -248,16 +248,11 @@ bool Drought::computeSpiParameters()
     for (int i = 0; i<12; i++)
     {
         int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12;  //start from 1
-        /*
-         * TO DO
-        currentGamma[myMonth].Beta = NODATA;
-        currentGamma[myMonth].Gamma = NODATA;
-        currentGamma[myMonth].Pzero = NODATA;
-        LC non serve che siano array, usa solo il dato singolo da passare alla gammaFitting
-        */
-        float beta = NODATA;
-        float gamma = NODATA;
-        float pZero = NODATA;
+
+        gammaStruct.beta = NODATA;
+        gammaStruct.gamma = NODATA;
+        gammaStruct.pzero = NODATA;
+        currentGamma.push_back(gammaStruct);
 
         for (int j=i; j<mySums.size(); j=j+12)
         {
@@ -352,16 +347,11 @@ bool Drought::computeSpeiParameters()
     for (int i = 0; i<12; i++)
     {
         int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12; //start from 1
-        /*
-         * TO DO
-        currentGamma[myMonth].Beta = NODATA;
-        currentGamma[myMonth].Gamma = NODATA;
-        currentGamma[myMonth].alpha = NODATA;
-        LC non serve che siano array, usa solo il dato singolo da passare alla gammaFitting
-        */
-        float beta = NODATA;
-        float gamma = NODATA;
-        float alpha = NODATA;
+
+        logLogisticStruct.beta = NODATA;
+        logLogisticStruct.gamma = NODATA;
+        logLogisticStruct.alpha = NODATA;
+        currentLogLogistic.push_back(logLogisticStruct);
 
         for (int j=i; j<mySums.size(); j=j+12)
         {

@@ -1143,4 +1143,66 @@
             return gammaIncomplete;
         }
 
+        bool gammaFitting(std::vector<float> &series, int n, double *beta, double *gamma,  double *pZero, double *average)
+        {
+            if (n<=0)
+            {
+                return false;
+            }
+            double sum = 0;
+            double sumLog = 0;
+            double alpha;
+            int nAct = 0;
+            *average = 0;
+
+            // compute sums
+            for (int i = 0; i<n; i++)
+            {
+                if (series[i] != NODATA)
+                {
+                    if (series[i] > 0)
+                    {
+                        sum = sum + series[i];
+                        sumLog = sumLog + log(series[i]);
+                        nAct = nAct + 1;
+                    }
+                    else
+                    {
+                        *pZero = *pZero + 1;
+                    }
+                }
+            }
+            if (nAct > 0)
+            {
+                *average = sum / nAct;
+            }
+
+            if (nAct == 1)
+            {
+                // Bogus data array but do something reasonable
+                *pZero = 0;
+                alpha = 0;
+                *gamma = 1;
+                *beta = *average;
+            }
+            else if (*pZero == n)
+            {
+                // They were all zeroes
+                *pZero = 1;
+                alpha = 0;
+                *gamma = 1;
+                *beta = *average;
+            }
+            else
+            {
+                // Use MLE
+                *pZero = *pZero/n;
+                alpha = log(*average) - sumLog / nAct;
+                *gamma = (1 + sqrt(1 + 4 * alpha / 3)) / (4 * alpha);
+                *beta = (*average) / (*gamma);
+            }
+
+            return true;
+        }
+
     }

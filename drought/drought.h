@@ -5,6 +5,20 @@
     #include "meteoPoint.h"
 #endif
 
+//SPI Gamma Distribution
+struct gammaParam {
+    double beta;
+    double gamma;
+    double pzero;
+};
+
+// SPEI Log-Logistic Distribution
+struct logLogisticParam {
+    double alpha;
+    double beta;
+    double gamma;
+};
+
 class Drought
 {
 public:
@@ -45,6 +59,10 @@ private:
     int firstYear;
     int lastYear;
     bool computeAll;
+    gammaParam gammaStruct;
+    logLogisticParam logLogisticStruct;
+    std::vector<gammaParam> currentGamma;
+    std::vector<logLogisticParam> currentLogLogistic;
 
 };
 

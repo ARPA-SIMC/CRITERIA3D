@@ -1,6 +1,10 @@
 #ifndef GAMMAFUNCTION
 #define GAMMAFUNCTION
 
+#ifndef _VECTOR_
+    #include <vector>
+#endif
+
     /*!
      * code from http://www.mymathlib.com/
      * Copyright © 2004 RLH. All rights reserved.
@@ -35,6 +39,7 @@
         void gammaIncompleteComplementaryFunction(double *gammaComplementaryFunction, double alpha, double x, double *gammaLn);
         double incompleteGamma(double alpha, double x, double *lnGammaValue); // incomplete + complete
         double incompleteGamma(double alpha, double x); // only incomplete
+        bool gammaFitting(std::vector<float> &series, int n, double* beta, double* gamma,  double* pZero, double *average);
     }
 
 
