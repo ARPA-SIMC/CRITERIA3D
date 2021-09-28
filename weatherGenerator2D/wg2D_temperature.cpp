@@ -189,6 +189,7 @@ void weatherGenerator2D::initializeTemperatureVariables()
 
 }
 
+
 void weatherGenerator2D::computeMonthlyTemperatures()
 {
     double** monthlyAverageTmax;
@@ -305,7 +306,7 @@ void weatherGenerator2D::computeMonthlyTemperatures()
         {
             temp = (double) rand() / (RAND_MAX);
             monthlyRandomDeviationTmean[i][j] = parGauss[1] * SQRT_2 * statistics::inverseTabulatedERF(2*temp -1);
-            printf("rand %f \n",monthlyRandomDeviationTmean[i][j]);
+            //printf("rand %f \n",monthlyRandomDeviationTmean[i][j]);
         }
     }
     free(parGauss);
@@ -334,6 +335,8 @@ void weatherGenerator2D::computeMonthlyTemperatures()
     //free(monthlyStdDevOverYearsAverageTmax);
     //free(monthlyStdDevOverYearsAverageTmin);
     //free(monthlyStdDevOverYearsAverageTmean);
+
+
 
 
 }
