@@ -1112,7 +1112,7 @@
             */
             double gammaIncompleteCF;
             double gammaIncomplete;
-            if (x > alpha)
+            if (x > alpha + 1)
             {
                 gammaIncompleteComplementaryFunction(&gammaIncompleteCF,alpha,x,lnGammaValue);
                 gammaIncomplete = 1 - gammaIncompleteCF;
@@ -1133,7 +1133,7 @@
             double gammaIncompleteCF;
             double gammaIncomplete;
             double lnGammaValue;
-            if (x > alpha)
+            if (x > alpha + 1)
             {
                 gammaIncompleteComplementaryFunction(&gammaIncompleteCF,alpha,x,&lnGammaValue);
                 gammaIncomplete = 1 - gammaIncompleteCF;
@@ -1221,7 +1221,6 @@
                pzero (probability of zero)
                x (value)
     Output:    GammaCDF (probability  a<=x)
-    ?? LC tradotta da vb, richiama la GammaP
     */
     float gammaCDF(float x, double beta, double gamma,  double pZero)
     {
@@ -1239,33 +1238,11 @@
         }
         else
         {
-            //gammaCDF = pZero + (1 - pZero) * GammaP(gamma, x / beta);
+            gammaCDF = pZero + (1 - pZero) * gammaDistributions::incompleteGamma(gamma, x / beta);
         }
         return gammaCDF;
 
     }
-
-    // Evaluate the incomplete gamma function P(a,x), choosing the most
-    // appropriate representation.
-    /*
-     * TO DO
-    float gammaP(a, x)
-    {
-        If x < a + 1 Then
-            GammaP = GammaIncompleteSeries(a, x)
-        Else
-            GammaP = 1 - GammaIncompleteFractional(a, x)
-        End If
-
-    }
-    */
-
-    /*
-    // Calculates the first three probability weighted moments of a sample (WITHOUT NODATA),
-    // using either the unbiased estimator (when A=B=0)
-    // or a plotting position formula (when A<=B<=0).
-    // This are alpha PWMs, following Rao & Hamed 2000, eqs. 3.1.4 and 3.1.6
-    */
 
     void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta)
     {
