@@ -13,6 +13,17 @@ Drought::Drought(droughtIndex index, int firstYear, int lastYear, Crit3DDate dat
     this->meteoSettings = meteoSettings;
     this->timeScale = 3; //default
     this->computeAll = false;  //default
+    gammaStruct.beta = NODATA;
+    gammaStruct.gamma = NODATA;
+    gammaStruct.pzero = NODATA;
+    logLogisticStruct.alpha = NODATA;
+    logLogisticStruct.beta = NODATA;
+    logLogisticStruct.gamma = NODATA;
+    for (int i = 0; i<12; i++)
+    {
+        currentGamma.push_back(gammaStruct);
+        currentLogLogistic.push_back(logLogisticStruct);
+    }
 }
 
 droughtIndex Drought::getIndex() const
@@ -161,11 +172,11 @@ float Drought::computeDroughtIndex()
         {
             if (index == INDEX_SPI)
             {
-                myResults[j] = standardGaussianInvCDF(gammaCDF(mySum[j], currentGamma[myMonthIndex].beta, currentGamma[myMonthIndex].gamma, currentGamma[myMonthIndex].pzero));
+                myResults[j] = standardGaussianInvCDF(gammaCDF(mySum[j], currentGamma[myMonthIndex-1].beta, currentGamma[myMonthIndex-1].gamma, currentGamma[myMonthIndex-1].pzero));
             }
             else if(index == INDEX_SPEI)
             {
-                myResults[j] = standardGaussianInvCDF(logLogisticCDF(mySum[j], currentLogLogistic[myMonthIndex].alpha, currentLogLogistic[myMonthIndex].beta, currentLogLogistic[myMonthIndex].gamma));
+                myResults[j] = standardGaussianInvCDF(logLogisticCDF(mySum[j], currentLogLogistic[myMonthIndex-1].alpha, currentLogLogistic[myMonthIndex-1].beta, currentLogLogistic[myMonthIndex-1].gamma));
             }
         }
     }
@@ -246,11 +257,6 @@ bool Drought::computeSpiParameters()
     for (int i = 0; i<12; i++)
     {
         int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12;  //start from 1
-
-        gammaStruct.beta = NODATA;
-        gammaStruct.gamma = NODATA;
-        gammaStruct.pzero = NODATA;
-        currentGamma.push_back(gammaStruct);
 
         for (int j=i; j<mySums.size(); j=j+12)
         {
@@ -344,11 +350,6 @@ bool Drought::computeSpeiParameters()
     {
         int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12; //start from 1
 
-        logLogisticStruct.beta = NODATA;
-        logLogisticStruct.gamma = NODATA;
-        logLogisticStruct.alpha = NODATA;
-        currentLogLogistic.push_back(logLogisticStruct);
-
         for (int j=i; j<mySums.size(); j=j+12)
         {
             if (mySums[j] != NODATA)
@@ -366,7 +367,7 @@ bool Drought::computeSpeiParameters()
             // Compute probability weighted moments
             probabilityWeightedMoments(monthSeries, n, pwm, 0, 0, false);
             // Fit a Log Logistic probability function
-            logLogisticFitting(pwm, &currentLogLogistic[myMonth].alpha, &currentLogLogistic[myMonth].beta, &currentLogLogistic[myMonth].gamma);
+            logLogisticFitting(pwm, &currentLogLogistic[myMonth-1].alpha, &currentLogLogistic[myMonth-1].beta, &currentLogLogistic[myMonth-1].gamma);
         }
     }
     return true;
