@@ -1015,198 +1015,196 @@
        return lngamma + sum;
     }
 
-    namespace gammaDistributions
+
+    double gammaNaturalLogarithm(double value)
+    //Returns the value ln[Γ(xx)] for xx > 0.
     {
-        double gammaNaturalLogarithm(double value)
-        //Returns the value ln[Γ(xx)] for xx > 0.
-        {
-        //Internal arithmetic will be done in double precision, a nicety that you can omit if five-figure
-        //accuracy is good enough.
-            double x,y,tmp,series;
-            static double coefficients[6]={76.18009172947146,-86.50532032941677,
-            24.01409824083091,-1.231739572450155,
-            0.1208650973866179e-2,-0.5395239384953e-5};
-            int j;
-            y=x=value;
-            tmp=x+5.5;
-            tmp -= (x+0.5)*log(tmp);
-            series=1.000000000190015;
-            for (j=0;j<=5;j++) series += coefficients[j]/++y;
-            return -tmp+log(2.5066282746310005*series/x);
-        }
-
-
-        void gammaIncompleteP(double *gammaDevelopmentSeries, double alpha, double x, double *gammaLn)
-        //Returns the incomplete gamma function P(a, x) evaluated by its series representation as gamser.
-        //Also returns ln Γ(a) as gln.
-        {
-            //double gammaNaturalLogarithm(double value);
-
-
-            //void nrerror(char error_text[]);
-            int n;
-            double sum,del,ap;
-            *gammaLn=gammaNaturalLogarithm(alpha);
-            if (x <= 0.0)
-            {
-                //if (x < 0.0) printf("x less than 0 in routine gammaIncompleteP");
-                *gammaDevelopmentSeries=0.0;
-                return;
-            }
-            else
-            {
-                ap=alpha;
-                del=sum=1.0/alpha;
-                for (n=1;n<=ITERATIONSMAX;n++)
-                {
-                    ++ap;
-                    del *= x/ap;
-                    sum += del;
-                    if (fabs(del) < fabs(sum)*EPSTHRESHOLD)
-                    {
-                        *gammaDevelopmentSeries=sum*exp(-x+alpha*log(x)-(*gammaLn));
-                        return;
-                    }
-                }
-                //printf("a too large, ITERATIONSMAX too small in routine gammaIncompleteP");
-                return;
-            }
-        }
-
-        void gammaIncompleteComplementaryFunction(double *gammaComplementaryFunction, double alpha, double x, double *gammaLn)
-        //Returns the incomplete gamma function Q(a, x) evaluated by its continued fraction representation
-        //as gammcf. Also returns lnΓ(a) as gln.
-        {
-            //double gammaNaturalLogarithm(double value);
-            //void nrerror(char error_text[]);
-            int i;
-            double an,b,c,d,del,h;
-            *gammaLn=gammaNaturalLogarithm(alpha);
-            b=x+1.0-alpha; //Set up for evaluating continued fraction by modified Lentz’s method (§5.2)with b0 = 0.
-            c=1.0/FPMINIMUM;
-            d=1.0/b;
-            h=d;
-            for (i=1;i<=ITERATIONSMAX;i++)
-            { //Iterate to convergence.
-                an = -i*(i-alpha);
-                b += 2.0;
-                d=an*d+b;
-                if (fabs(d) < FPMINIMUM) d=FPMINIMUM;
-                c=b+an/c;
-                if (fabs(c) < FPMINIMUM) c=FPMINIMUM;
-                d=1.0/d;
-                del=d*c;
-                h *= del;
-                if (fabs(del-1.0) < EPSTHRESHOLD) break;
-            }            
-            *gammaComplementaryFunction=exp(-x+alpha*log(x)-(*gammaLn))*h; //Put factors in front.
-        }
-
-        double incompleteGamma(double alpha, double x, double *lnGammaValue)
-        {
-            /* this function returns
-             * 1) the value of the normalized incomplete gamma function
-             * 2) the natural logarithm of the complete gamma function
-             * pay attention to the inputs: input variable x is actually beta*x or x/theta
-             * written by Antonio Volta avolta@arpae.it
-            */
-            double gammaIncompleteCF;
-            double gammaIncomplete;
-            if (x > alpha + 1)
-            {
-                gammaIncompleteComplementaryFunction(&gammaIncompleteCF,alpha,x,lnGammaValue);
-                gammaIncomplete = 1 - gammaIncompleteCF;
-            }
-            else
-                gammaIncompleteP(&gammaIncomplete,alpha,x,lnGammaValue);
-
-            return gammaIncomplete;
-        }
-
-        double incompleteGamma(double alpha, double x)
-        {
-            /* this function returns
-             * 1) the value of the normalized incomplete gamma function
-             * pay attention to the inputs: input variable x is actually beta*x or x/theta
-             * written by Antonio Volta avolta@arpae.it
-            */
-            double gammaIncompleteCF;
-            double gammaIncomplete;
-            double lnGammaValue;
-            if (x > alpha + 1)
-            {
-                gammaIncompleteComplementaryFunction(&gammaIncompleteCF,alpha,x,&lnGammaValue);
-                gammaIncomplete = 1 - gammaIncompleteCF;
-            }
-            else
-                gammaIncompleteP(&gammaIncomplete,alpha,x,&lnGammaValue);
-
-            return gammaIncomplete;
-        }
-
-        bool gammaFitting(std::vector<float> &series, int n, double *beta, double *gamma,  double *pZero)
-        {
-            if (n<=0)
-            {
-                return false;
-            }
-            double sum = 0;
-            double sumLog = 0;
-            double alpha;
-            int nAct = 0;
-            double average = 0;
-
-            // compute sums
-            for (int i = 0; i<n; i++)
-            {
-                if (series[i] != NODATA)
-                {
-                    if (series[i] > 0)
-                    {
-                        sum = sum + series[i];
-                        sumLog = sumLog + log(series[i]);
-                        nAct = nAct + 1;
-                    }
-                    else
-                    {
-                        *pZero = *pZero + 1;
-                    }
-                }
-            }
-            if (nAct > 0)
-            {
-                average = sum / nAct;
-            }
-
-            if (nAct == 1)
-            {
-                // Bogus data array but do something reasonable
-                *pZero = 0;
-                alpha = 0;
-                *gamma = 1;
-                *beta = average;
-            }
-            else if (*pZero == n)
-            {
-                // They were all zeroes
-                *pZero = 1;
-                alpha = 0;
-                *gamma = 1;
-                *beta = average;
-            }
-            else
-            {
-                // Use MLE
-                *pZero = *pZero/n;
-                alpha = log(average) - sumLog / nAct;
-                *gamma = (1 + sqrt(1 + 4 * alpha / 3)) / (4 * alpha);
-                *beta = average / (*gamma);
-            }
-
-            return true;
-        }
-
+    //Internal arithmetic will be done in double precision, a nicety that you can omit if five-figure
+    //accuracy is good enough.
+        double x,y,tmp,series;
+        static double coefficients[6]={76.18009172947146,-86.50532032941677,
+        24.01409824083091,-1.231739572450155,
+        0.1208650973866179e-2,-0.5395239384953e-5};
+        int j;
+        y=x=value;
+        tmp=x+5.5;
+        tmp -= (x+0.5)*log(tmp);
+        series=1.000000000190015;
+        for (j=0;j<=5;j++) series += coefficients[j]/++y;
+        return -tmp+log(2.5066282746310005*series/x);
     }
+
+
+    void gammaIncompleteP(double *gammaDevelopmentSeries, double alpha, double x, double *gammaLn)
+    //Returns the incomplete gamma function P(a, x) evaluated by its series representation as gamser.
+    //Also returns ln Γ(a) as gln.
+    {
+        //double gammaNaturalLogarithm(double value);
+
+
+        //void nrerror(char error_text[]);
+        int n;
+        double sum,del,ap;
+        *gammaLn=gammaNaturalLogarithm(alpha);
+        if (x <= 0.0)
+        {
+            //if (x < 0.0) printf("x less than 0 in routine gammaIncompleteP");
+            *gammaDevelopmentSeries=0.0;
+            return;
+        }
+        else
+        {
+            ap=alpha;
+            del=sum=1.0/alpha;
+            for (n=1;n<=ITERATIONSMAX;n++)
+            {
+                ++ap;
+                del *= x/ap;
+                sum += del;
+                if (fabs(del) < fabs(sum)*EPSTHRESHOLD)
+                {
+                    *gammaDevelopmentSeries=sum*exp(-x+alpha*log(x)-(*gammaLn));
+                    return;
+                }
+            }
+            //printf("a too large, ITERATIONSMAX too small in routine gammaIncompleteP");
+            return;
+        }
+    }
+
+    void gammaIncompleteComplementaryFunction(double *gammaComplementaryFunction, double alpha, double x, double *gammaLn)
+    //Returns the incomplete gamma function Q(a, x) evaluated by its continued fraction representation
+    //as gammcf. Also returns lnΓ(a) as gln.
+    {
+        //double gammaNaturalLogarithm(double value);
+        //void nrerror(char error_text[]);
+        int i;
+        double an,b,c,d,del,h;
+        *gammaLn=gammaNaturalLogarithm(alpha);
+        b=x+1.0-alpha; //Set up for evaluating continued fraction by modified Lentz’s method (§5.2)with b0 = 0.
+        c=1.0/FPMINIMUM;
+        d=1.0/b;
+        h=d;
+        for (i=1;i<=ITERATIONSMAX;i++)
+        { //Iterate to convergence.
+            an = -i*(i-alpha);
+            b += 2.0;
+            d=an*d+b;
+            if (fabs(d) < FPMINIMUM) d=FPMINIMUM;
+            c=b+an/c;
+            if (fabs(c) < FPMINIMUM) c=FPMINIMUM;
+            d=1.0/d;
+            del=d*c;
+            h *= del;
+            if (fabs(del-1.0) < EPSTHRESHOLD) break;
+        }
+        *gammaComplementaryFunction=exp(-x+alpha*log(x)-(*gammaLn))*h; //Put factors in front.
+    }
+
+    double incompleteGamma(double alpha, double x, double *lnGammaValue)
+    {
+        /* this function returns
+         * 1) the value of the normalized incomplete gamma function
+         * 2) the natural logarithm of the complete gamma function
+         * pay attention to the inputs: input variable x is actually beta*x or x/theta
+         * written by Antonio Volta avolta@arpae.it
+        */
+        double gammaIncompleteCF;
+        double gammaIncomplete;
+        if (x > alpha + 1)
+        {
+            gammaIncompleteComplementaryFunction(&gammaIncompleteCF,alpha,x,lnGammaValue);
+            gammaIncomplete = 1 - gammaIncompleteCF;
+        }
+        else
+            gammaIncompleteP(&gammaIncomplete,alpha,x,lnGammaValue);
+
+        return gammaIncomplete;
+    }
+
+    double incompleteGamma(double alpha, double x)
+    {
+        /* this function returns
+         * 1) the value of the normalized incomplete gamma function
+         * pay attention to the inputs: input variable x is actually beta*x or x/theta
+         * written by Antonio Volta avolta@arpae.it
+        */
+        double gammaIncompleteCF;
+        double gammaIncomplete;
+        double lnGammaValue;
+        if (x > alpha + 1)
+        {
+            gammaIncompleteComplementaryFunction(&gammaIncompleteCF,alpha,x,&lnGammaValue);
+            gammaIncomplete = 1 - gammaIncompleteCF;
+        }
+        else
+            gammaIncompleteP(&gammaIncomplete,alpha,x,&lnGammaValue);
+
+        return gammaIncomplete;
+    }
+
+    bool gammaFitting(std::vector<float> &series, int n, double *beta, double *gamma,  double *pZero)
+    {
+        if (n<=0)
+        {
+            return false;
+        }
+        double sum = 0;
+        double sumLog = 0;
+        double alpha;
+        int nAct = 0;
+        double average = 0;
+
+        // compute sums
+        for (int i = 0; i<n; i++)
+        {
+            if (series[i] != NODATA)
+            {
+                if (series[i] > 0)
+                {
+                    sum = sum + series[i];
+                    sumLog = sumLog + log(series[i]);
+                    nAct = nAct + 1;
+                }
+                else
+                {
+                    *pZero = *pZero + 1;
+                }
+            }
+        }
+        if (nAct > 0)
+        {
+            average = sum / nAct;
+        }
+
+        if (nAct == 1)
+        {
+            // Bogus data array but do something reasonable
+            *pZero = 0;
+            alpha = 0;
+            *gamma = 1;
+            *beta = average;
+        }
+        else if (*pZero == n)
+        {
+            // They were all zeroes
+            *pZero = 1;
+            alpha = 0;
+            *gamma = 1;
+            *beta = average;
+        }
+        else
+        {
+            // Use MLE
+            *pZero = *pZero/n;
+            alpha = log(average) - sumLog / nAct;
+            *gamma = (1 + sqrt(1 + 4 * alpha / 3)) / (4 * alpha);
+            *beta = average / (*gamma);
+        }
+
+        return true;
+    }
+
 
     float standardGaussianInvCDF(float prob)
     {
@@ -1238,7 +1236,7 @@
         }
         else
         {
-            gammaCDF = pZero + (1 - pZero) * gammaDistributions::incompleteGamma(gamma, x / beta);
+            gammaCDF = pZero + (1 - pZero) * incompleteGamma(gamma, x / beta);
         }
         return gammaCDF;
 

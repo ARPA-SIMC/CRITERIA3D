@@ -38,15 +38,14 @@
     void logLogisticFitting(std::vector<float> probWeightedMoments, double *alpha, double *beta, double *gamma);
     float logLogisticCDF(float myValue, double alpha, double beta, double gamma);
 
-    namespace gammaDistributions
-    {
-        double gammaNaturalLogarithm(double value);
-        void gammaIncompleteP(double *gammaDevelopmentSeries, double alpha, double x, double *gammaLn);
-        void gammaIncompleteComplementaryFunction(double *gammaComplementaryFunction, double alpha, double x, double *gammaLn);
-        double incompleteGamma(double alpha, double x, double *lnGammaValue); // incomplete + complete
-        double incompleteGamma(double alpha, double x); // only incomplete
-        bool gammaFitting(std::vector<float> &series, int n, double* beta, double* gamma,  double* pZero);
-    }
+
+    double gammaNaturalLogarithm(double value);
+    void gammaIncompleteP(double *gammaDevelopmentSeries, double alpha, double x, double *gammaLn);
+    void gammaIncompleteComplementaryFunction(double *gammaComplementaryFunction, double alpha, double x, double *gammaLn);
+    double incompleteGamma(double alpha, double x, double *lnGammaValue); // incomplete + complete
+    double incompleteGamma(double alpha, double x); // only incomplete
+    bool gammaFitting(std::vector<float> &series, int n, double* beta, double* gamma,  double* pZero);
+
 
 
 #endif // GAMMAFUNCTION
