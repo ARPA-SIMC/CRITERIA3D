@@ -1026,6 +1026,8 @@ bool Project::loadMeteoGridDB(QString xmlName)
 
     if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
 
+    if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
+
     if (!meteoGridDbHandler->updateGridDate(&errorString))
     {
         logInfoGUI("updateGridDate: " + errorString);

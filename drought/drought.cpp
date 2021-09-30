@@ -111,8 +111,8 @@ float Drought::computeDroughtIndex()
     {
         int currentYear = date.year;
         int currentMonth = date.month;
-        end = (currentYear - meteoPoint->obsDataM[0]._year)*12 + currentMonth-meteoPoint->obsDataM[0]._month + 1; // come nel caso precedente end al massimo è pari a meteoPoint->nrObsDataDaysM
-        start = end - 1;
+        end = (currentYear - meteoPoint->obsDataM[0]._year)*12 + currentMonth-meteoPoint->obsDataM[0]._month + 1; // starts from 1, end al massimo è pari a meteoPoint->nrObsDataDaysM
+        start = end - 1; // parte da 0
         if (end > meteoPoint->nrObsDataDaysM)
         {
             return NODATA;
@@ -165,7 +165,7 @@ float Drought::computeDroughtIndex()
 
     for (int j = start; j < end; j++)
     {
-        int myMonthIndex = (j % 12)+1;  //start from 1
+        int myMonthIndex = ((j - 1) % 12)+1;  //start from 1
         myResults[j] = NODATA;
 
         if (mySum[j] != NODATA)
@@ -256,7 +256,7 @@ bool Drought::computeSpiParameters()
 
     for (int i = 0; i<12; i++)
     {
-        int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12;  //start from 1
+        int myMonth = ((meteoPoint->obsDataM[indexStart]._month + i -1) % 12)+1;  //start from 1
         n = 0;
 
         for (int j=i; j<mySums.size(); j=j+12)
@@ -270,7 +270,7 @@ bool Drought::computeSpiParameters()
 
         if (n / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
         {
-            gammaFitting(monthSeries, n, &(currentGamma[myMonth].beta), &(currentGamma[myMonth].gamma),  &(currentGamma[myMonth].pzero));
+            gammaFitting(monthSeries, n, &(currentGamma[myMonth-1].beta), &(currentGamma[myMonth-1].gamma),  &(currentGamma[myMonth-1].pzero));
         }
     }
     return true;
@@ -350,7 +350,8 @@ bool Drought::computeSpeiParameters()
 
     for (int i = 0; i<12; i++)
     {
-        int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12; //start from 1
+
+        int myMonth = ((meteoPoint->obsDataM[indexStart]._month + i -1) % 12)+1;  //start from 1
         n = 0;
         for (int j=i; j<mySums.size(); j=j+12)
         {
