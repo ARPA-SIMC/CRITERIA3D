@@ -257,16 +257,18 @@ bool Drought::computeSpiParameters()
     for (int i = 0; i<12; i++)
     {
         int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12;  //start from 1
+        n = 0;
 
         for (int j=i; j<mySums.size(); j=j+12)
         {
             if (mySums[j] != NODATA)
             {
                 monthSeries.push_back(mySums[j]);
+                n = n + 1;
             }
         }
 
-        if (monthSeries.size() / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
+        if (n / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
         {
             gammaFitting(monthSeries, n, &(currentGamma[myMonth].beta), &(currentGamma[myMonth].gamma),  &(currentGamma[myMonth].pzero));
         }
@@ -349,21 +351,20 @@ bool Drought::computeSpeiParameters()
     for (int i = 0; i<12; i++)
     {
         int myMonth = (meteoPoint->obsDataM[indexStart]._month + i) % 12; //start from 1
-
+        n = 0;
         for (int j=i; j<mySums.size(); j=j+12)
         {
             if (mySums[j] != NODATA)
             {
                 monthSeries.push_back(mySums[j]);
+                n = n + 1;
             }
         }
 
-        n = monthSeries.size() - 1;
-
-        if (monthSeries.size() / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
+        if (n / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
         {
             // Sort values
-            sorting::quicksortAscendingFloat(monthSeries, 0, unsigned(n));
+            sorting::quicksortAscendingFloat(monthSeries, 0, monthSeries.size()-1);
             // Compute probability weighted moments
             probabilityWeightedMoments(monthSeries, n, pwm, 0, 0, false);
             // Fit a Log Logistic probability function
