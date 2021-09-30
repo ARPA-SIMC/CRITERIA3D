@@ -1151,6 +1151,7 @@
         }
         double sum = 0;
         double sumLog = 0;
+        *pZero = 0;
         double alpha;
         int nAct = 0;
         double average = 0;
