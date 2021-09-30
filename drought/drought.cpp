@@ -111,20 +111,20 @@ float Drought::computeDroughtIndex()
     {
         int currentYear = date.year;
         int currentMonth = date.month;
-        end = (currentYear - meteoPoint->obsDataM[0]._year)*12 + currentMonth-meteoPoint->obsDataM[0]._month + 1; // starts from 1, end al massimo è pari a meteoPoint->nrObsDataDaysM
-        start = end - 1; // parte da 0
-        if (end > meteoPoint->nrObsDataDaysM)
+        end = (currentYear - meteoPoint->obsDataM[0]._year)*12 + currentMonth-meteoPoint->obsDataM[0]._month; // starts from 0
+        start = end; // parte da 0
+        if (end >= meteoPoint->nrObsDataDaysM)
         {
             return NODATA;
         }
-        for (int i = 0; i <= start-timeScale; i++)
+        for (int i = 0; i < start-timeScale; i++)
         {
             mySum[i] = NODATA;
             myResults[i] = NODATA;
         }
     }
 
-    for (int j = start; j < end; j++)
+    for (int j = start; j <= end; j++)
     {
         mySum[j] = 0;
         for(int i = 0; i<=timeScale; i++)
@@ -163,7 +163,7 @@ float Drought::computeDroughtIndex()
         }
     }
 
-    for (int j = start; j < end; j++)
+    for (int j = start; j <= end; j++)
     {
         int myMonthIndex = ((j - 1) % 12)+1;  //start from 1
         myResults[j] = NODATA;
@@ -180,7 +180,7 @@ float Drought::computeDroughtIndex()
             }
         }
     }
-    return myResults[end-1];
+    return myResults[end];
 }
 
 bool Drought::computeSpiParameters()

@@ -1207,7 +1207,7 @@
     }
 
 
-    float standardGaussianInvCDF(float prob)
+    double standardGaussianInvCDF(double prob)
     {
         double  resul;
         resul = SQRT_2 * statistics::inverseTabulatedERF(2*prob -1);
