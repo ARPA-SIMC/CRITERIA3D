@@ -1874,6 +1874,10 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString *myError, QString met
     unsigned row;
     unsigned col;
 
+    // set day to 1 to better comparison
+    first.setDate(first.year(), first.month(), 1);
+    last.setDate(last.year(), last.month(), 1);
+
     if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
         *myError = "Missing MeteoPoint id";
@@ -1905,13 +1909,8 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString *myError, QString met
                 return false;
             }
 
-            date.setDate(year,month, first.day());
-            if (date < first)
-            {
-                continue;
-            }
-            date.setDate(year,month, last.day());
-            if (date > last)
+            date.setDate(year,month, 1);
+            if (date < first || date > last)
             {
                 continue;
             }

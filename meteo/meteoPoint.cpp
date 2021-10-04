@@ -203,8 +203,15 @@ void Crit3DMeteoPoint::initializeObsDataM(unsigned int numberOfMonths, unsigned 
         }
         else
         {
-            obsDataM[i-month]._month = i%12;
-            if (i%13 == 0)
+            if (i%12 == 0)
+            {
+                obsDataM[i-month]._month = 12;
+            }
+            else
+            {
+                obsDataM[i-month]._month = i%12;
+            }
+            if (obsDataM[i-month]._month == 1)
             {
                 // new year
                 addYear = addYear + 1;
