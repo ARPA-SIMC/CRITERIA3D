@@ -63,6 +63,7 @@ private:
     logLogisticParam logLogisticStruct;
     std::vector<gammaParam> currentGamma;
     std::vector<logLogisticParam> currentLogLogistic;
+    std::vector<float> droughtResults;
 
 };
 

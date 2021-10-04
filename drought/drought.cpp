@@ -96,7 +96,11 @@ float Drought::computeDroughtIndex()
     int start;
     int end;
     std::vector<float> mySum(meteoPoint->nrObsDataDaysM);
-    std::vector<float> myResults(meteoPoint->nrObsDataDaysM);
+    for (int i = 0; i<meteoPoint->nrObsDataDaysM; i++)
+    {
+        droughtResults.push_back(NODATA);
+    }
+
     if (computeAll)
     {
         start = timeScale;
@@ -104,7 +108,6 @@ float Drought::computeDroughtIndex()
         for (int i = 0; i <= timeScale; i++)
         {
             mySum[i] = NODATA;
-            myResults[i] = NODATA;
         }
     }
     else
@@ -120,7 +123,6 @@ float Drought::computeDroughtIndex()
         for (int i = 0; i < start-timeScale; i++)
         {
             mySum[i] = NODATA;
-            myResults[i] = NODATA;
         }
     }
 
@@ -166,7 +168,6 @@ float Drought::computeDroughtIndex()
     for (int j = start; j <= end; j++)
     {
         int myMonthIndex = ((j - 1) % 12)+1;  //start from 1
-        myResults[j] = NODATA;
 
         if (mySum[j] != NODATA)
         {
@@ -175,7 +176,7 @@ float Drought::computeDroughtIndex()
                 float gammaCDFRes = gammaCDF(mySum[j], currentGamma[myMonthIndex-1].beta, currentGamma[myMonthIndex-1].gamma, currentGamma[myMonthIndex-1].pzero);
                 if (gammaCDFRes > 0 && gammaCDFRes < 1)
                 {
-                    myResults[j] = standardGaussianInvCDF(gammaCDFRes);
+                    droughtResults[j] = standardGaussianInvCDF(gammaCDFRes);
                 }
             }
             else if(index == INDEX_SPEI)
@@ -183,12 +184,13 @@ float Drought::computeDroughtIndex()
                 float logLogisticRes = logLogisticCDF(mySum[j], currentLogLogistic[myMonthIndex-1].alpha, currentLogLogistic[myMonthIndex-1].beta, currentLogLogistic[myMonthIndex-1].gamma);
                 if (logLogisticRes > 0 && logLogisticRes < 1)
                 {
-                    myResults[j] = standardGaussianInvCDF(logLogisticRes);
+                    droughtResults[j] = standardGaussianInvCDF(logLogisticRes);
                 }
             }
         }
     }
-    return myResults[end];
+    // LC perchè droughtResults è un array se non vengono utilizzati i valori != end?
+    return droughtResults[end];
 }
 
 bool Drought::computeSpiParameters()
