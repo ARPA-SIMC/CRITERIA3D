@@ -78,6 +78,7 @@ void Drought::setComputeAll(bool value)
 
 float Drought::computeDroughtIndex()
 {
+
     timeScale = timeScale - 1; // index start from 0
     if (index == INDEX_SPI)
     {
@@ -167,7 +168,7 @@ float Drought::computeDroughtIndex()
 
     for (int j = start; j <= end; j++)
     {
-        int myMonthIndex = ((j - 1) % 12)+1;  //start from 1
+        int myMonthIndex = (j % 12)+1;  //start from 1
 
         if (mySum[j] != NODATA)
         {
@@ -268,6 +269,7 @@ bool Drought::computeSpiParameters()
         int myMonth = ((meteoPoint->obsDataM[indexStart]._month + i -1) % 12)+1;  //start from 1
         n = 0;
 
+        monthSeries.clear();
         for (int j=i; j<mySums.size(); j=j+12)
         {
             if (mySums[j] != NODATA)
@@ -362,6 +364,7 @@ bool Drought::computeSpeiParameters()
 
         int myMonth = ((meteoPoint->obsDataM[indexStart]._month + i -1) % 12)+1;  //start from 1
         n = 0;
+        monthSeries.clear();
         for (int j=i; j<mySums.size(); j=j+12)
         {
             if (mySums[j] != NODATA)
