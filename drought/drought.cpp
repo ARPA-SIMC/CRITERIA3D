@@ -189,7 +189,6 @@ float Drought::computeDroughtIndex()
             }
         }
     }
-    // LC perchè droughtResults è un array se non vengono utilizzati i valori != end?
     return droughtResults[end];
 }
 
