@@ -78,7 +78,6 @@ void Drought::setComputeAll(bool value)
 
 float Drought::computeDroughtIndex()
 {
-
     timeScale = timeScale - 1; // index start from 0
     if (index == INDEX_SPI)
     {
@@ -204,18 +203,10 @@ bool Drought::computeSpiParameters()
     {
         return false;
     }
-    int indexStart;
-    if (firstYear == meteoPoint->obsDataM[0]._year)
+    int indexStart  = (firstYear - meteoPoint->obsDataM[0]._year)*12;
+    if (indexStart < timeScale)
     {
         indexStart = timeScale;
-    }
-    else
-    {
-        indexStart = (firstYear - meteoPoint->obsDataM[0]._year)*12 - (meteoPoint->obsDataM[0]._month-1);
-        if (indexStart < timeScale)
-        {
-            indexStart = timeScale;
-        }
     }
     if (meteoPoint->obsDataM[indexStart]._year > lastYear)
     {
