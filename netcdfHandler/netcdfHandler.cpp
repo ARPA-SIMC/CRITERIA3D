@@ -847,26 +847,26 @@ bool NetCDFHandler::writeGeoAndDateDimensions(const gis::Crit3DGridHeader& latLo
 
     nrLat = latLonHeader.nrRows;
     nrLon = latLonHeader.nrCols;
-    int varLat, varLon, varDate;
+    int varLat, varLon, varDate, status;
 
-    // def dimensions (lat/lon/date)
-    int status = nc_def_dim(ncId, "latitude", unsigned(nrLat), &idLat);
+    // def dimensions (date/lat/lon)
+    status = nc_def_dim(ncId, "date or time", unsigned(1), &idTime);
+    if (status != NC_NOERR) return false;
+
+    status = nc_def_dim(ncId, "latitude", unsigned(nrLat), &idLat);
     if (status != NC_NOERR) return false;
 
     status = nc_def_dim(ncId, "longitude", unsigned(nrLon), &idLon);
     if (status != NC_NOERR) return false;
 
-    status = nc_def_dim(ncId, "date", unsigned(1), &idTime);
+    // def dim variables (date/lat/lon)
+    status = nc_def_var (ncId, "date or time", NC_STRING, 1, &idTime, &varDate);
     if (status != NC_NOERR) return false;
 
-    // def dim variables (lat/lon/date)
     status = nc_def_var (ncId, "latitude", NC_FLOAT, 1, &idLat, &varLat);
     if (status != NC_NOERR) return false;
 
     status = nc_def_var (ncId, "longitude", NC_FLOAT, 1, &idLon, &varLon);
-    if (status != NC_NOERR) return false;
-
-    status = nc_def_var (ncId, "date", NC_STRING, 1, &idTime, &varDate);
     if (status != NC_NOERR) return false;
 
     // def generic variable
@@ -905,6 +905,12 @@ bool NetCDFHandler::writeGeoAndDateDimensions(const gis::Crit3DGridHeader& latLo
     status = nc_enddef(ncId);
     if (status != NC_NOERR) return false;
 
+    // write date
+    const char **dateStr = new const char*;
+    *dateStr = myDate.toStdString().c_str();
+    status = nc_put_var_string(ncId, varDate, dateStr);
+    if (status != NC_NOERR) return false;
+
     // set lat/lon arrays
     lat = new float[unsigned(nrLat)];
     lon = new float[unsigned(nrLon)];
@@ -923,12 +929,6 @@ bool NetCDFHandler::writeGeoAndDateDimensions(const gis::Crit3DGridHeader& latLo
     if (status != NC_NOERR) return false;
 
     status = nc_put_var_float(ncId, varLon, lon);
-    if (status != NC_NOERR) return false;
-
-    // write date
-    const char **dateStr = new const char*;
-    *dateStr = myDate.toStdString().c_str();
-    status = nc_put_var_string(ncId, varDate, dateStr);
     if (status != NC_NOERR) return false;
 
     return true;
