@@ -2,6 +2,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "gammaFunction.h"
+#include <algorithm>
 
 Drought::Drought(droughtIndex index, int firstYear, int lastYear, Crit3DDate date, Crit3DMeteoPoint* meteoPoint, Crit3DMeteoSettings* meteoSettings)
 {

@@ -2,6 +2,7 @@
 #include "olivo.h"
 
 #include "math.h"
+#include <algorithm>
 
 
 void Olivo::InduzioneFiorale(const Stazione& stazione) 
