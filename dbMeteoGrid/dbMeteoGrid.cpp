@@ -876,7 +876,7 @@ QString Crit3DMeteoGridDbHandler::getMonthlyVarField(meteoVariable meteoGridMont
     }
     if(_gridMonthlyVar.contains(meteoGridMonthlyVar))
     {
-        varField = _gridMonthlyVar[meteoGridMonthlyVar];
+        varField = QString::number(_gridMonthlyVar[meteoGridMonthlyVar]);
     }
 
     return varField;
