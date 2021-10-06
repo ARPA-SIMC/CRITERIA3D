@@ -290,18 +290,11 @@ bool Drought::computeSpeiParameters()
     {
         return false;
     }
-    int indexStart;
-    if (firstYear == meteoPoint->obsDataM[0]._year)
+
+    int indexStart  = (firstYear - meteoPoint->obsDataM[0]._year)*12;
+    if (indexStart < timeScale)
     {
         indexStart = timeScale;
-    }
-    else
-    {
-        indexStart = (firstYear - meteoPoint->obsDataM[0]._year)*12 - (meteoPoint->obsDataM[0]._month-1);
-        if (indexStart < timeScale)
-        {
-            indexStart = timeScale;
-        }
     }
     if (meteoPoint->obsDataM[indexStart]._year > lastYear)
     {
@@ -315,7 +308,7 @@ bool Drought::computeSpeiParameters()
     int nTot = 0;
     std::vector<float> mySums;
     std::vector<float> monthSeries;
-    std::vector<float> pwm;
+    std::vector<float> pwm(3);
 
     for (int j = indexStart; j<meteoPoint->nrObsDataDaysM; j++)
     {

@@ -1252,41 +1252,41 @@
         if (a == 0 && b == 0)
         {
             // use unbiased estimator
-            for (int i = 0; i < n; i++)
+            for (int i = 1; i <= n; i++)
             {
-                sum[0] = sum[0] + series[i];
+                sum[0] = sum[0] + series[i-1];
                 if (!isBeta)
                 {
                     // compute alpha PWMs
-                    sum[1] = sum[1] + series[i] * (n - i);
-                    sum[2] = sum[2] + series[i] * (n - i) * (n - i - 1);
+                    sum[1] = sum[1] + series[i-1] * (n - i);
+                    sum[2] = sum[2] + series[i-1] * (n - i) * (n - i - 1);
                 }
                 else
                 {
                     // compute beta PWMs
-                    sum[1] = sum[1] + series[i] * (i - 1);
-                    sum[2] = sum[2] + series[i] * (i - 1) * (i - 2);
+                    sum[1] = sum[1] + series[i-1] * (i - 1);
+                    sum[2] = sum[2] + series[i-1] * (i - 1) * (i - 2);
                 }
             }
         }
         else
         {
             // use plotting-position (biased) estimator
-            for (int i = 0; i < n; i++)
+            for (int i = 1; i <= n; i++)
             {
-                sum[0] = sum[0] + series[i];
+                sum[0] = sum[0] + series[i-1];
                 f = (i + a) / (n + b);
                 if (!isBeta)
                 {
                     // compute alpha PWMs
-                    sum[1] = sum[1] + series[i] * (1 - f);
-                    sum[2] = sum[2] + series[i] * (1 - f) * (1 - f);
+                    sum[1] = sum[1] + series[i-1] * (1 - f);
+                    sum[2] = sum[2] + series[i-1] * (1 - f) * (1 - f);
                 }
                 else
                 {
                     // compute beta PWMs
-                    sum[1] = sum[1] + series[i] * f;
-                    sum[2] = sum[2] + series[i] * f * f;
+                    sum[1] = sum[1] + series[i-1] * f;
+                    sum[2] = sum[2] + series[i-1] * f * f;
                  }
             }
         }
