@@ -371,6 +371,7 @@ bool Drought::computeSpeiParameters()
 
 bool Drought::computePercentileValuesCurrentDay()
 {
+
     if (myVar == noMeteoVar)
     {
         return false;
@@ -385,12 +386,12 @@ bool Drought::computePercentileValuesCurrentDay()
         return false;
     }
     int lastYearStation = std::min(meteoPoint->obsDataM[meteoPoint->nrObsDataDaysM-1]._year, lastYear);
-    int myMonth = meteoPoint->obsDataM[indexStart + date.month]._month;
+    int myMonth = meteoPoint->obsDataM[indexStart + date.month - 1]._month;
     std::vector<float> myValues;
     int nValid = 0;
     int nTot = 0;
 
-    for (int j = indexStart+myMonth; j < meteoPoint->nrObsDataDaysM ; j=j+12)
+    for (int j = indexStart+myMonth-1; j < meteoPoint->nrObsDataDaysM ; j=j+12)
     {
         if (meteoPoint->obsDataM[j]._year > lastYearStation)
         {

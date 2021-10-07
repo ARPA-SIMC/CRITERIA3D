@@ -3252,7 +3252,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 myTag = child.toElement().tagName().toUpper();
                 if (myTag == "INDEX")
                 {
-                    QString index = child.toElement().text();
+                    QString index = child.toElement().text().toUpper();
                     if (index == "SPI")
                     {
                         listXMLDrought->insertIndex(INDEX_SPI);
@@ -3264,6 +3264,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                     else if (index == "DECILES")
                     {
                         listXMLDrought->insertIndex(INDEX_DECILES);
+                        listXMLDrought->insertTimescale(0);  // Deciles has not timescale
                     }
                     else
                     {
