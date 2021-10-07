@@ -371,7 +371,6 @@ bool Drought::computeSpeiParameters()
 
 bool Drought::computePercentileValuesCurrentDay()
 {
-
     if (myVar == noMeteoVar)
     {
         return false;
@@ -421,7 +420,7 @@ bool Drought::computePercentileValuesCurrentDay()
                 float myValue = meteoPoint->getMeteoPointValueM(mydate, myVar);
                 if (myValue != NODATA)
                 {
-                    currentPercentileValue = sorting::percentileRank(myValues, myValue, false);
+                    currentPercentileValue = sorting::percentileRank(myValues, myValue, true);
                 }
             }
         }
