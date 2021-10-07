@@ -764,7 +764,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
 {
     if (ncId == NODATA) return false;
 
-    bool dateDimensionExists = (myDate == NO_DATE);
+    bool dateDimensionExists = (myDate != NO_DATE);
     nrLat = latLonHeader.nrRows;
     nrLon = latLonHeader.nrCols;
     int varLat, varLon, varDate, status;
