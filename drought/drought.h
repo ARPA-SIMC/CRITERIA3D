@@ -42,19 +42,21 @@ public:
     float computeDroughtIndex();
     bool computeSpiParameters();
     bool computeSpeiParameters();
+    bool computePercentileValuesCurrentDay();
 
     void setMeteoPoint(Crit3DMeteoPoint *value);
-
     Crit3DMeteoSettings *getMeteoSettings() const;
-
     Crit3DDate getDate() const;
     void setDate(const Crit3DDate &value);
+    float getCurrentPercentileValue() const;
+    void setMyVar(const meteoVariable &value);
 
 private:
     Crit3DMeteoPoint* meteoPoint;
     Crit3DMeteoSettings* meteoSettings;
     Crit3DDate date;
     droughtIndex index;
+    meteoVariable myVar;
     int timeScale;
     int firstYear;
     int lastYear;
@@ -64,6 +66,7 @@ private:
     std::vector<gammaParam> currentGamma;
     std::vector<logLogisticParam> currentLogLogistic;
     std::vector<float> droughtResults;
+    float currentPercentileValue;
 
 };
 
