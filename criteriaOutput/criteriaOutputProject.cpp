@@ -917,10 +917,11 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, QStr
 
     Crit3DDate myDate = getCrit3DDate(computationDate);
     std::string variableName = field.left(4).toStdString();
+    std::string title = projectName.toStdString();
 
-    if (! myNetCDF.writeGeoAndDateDimensions(latLonHeader, variableName, myDate))
+    if (! myNetCDF.writeMetadata(latLonHeader, title, variableName, myDate))
     {
-        projectError = "Error in write dimensions to netcdf.";
+        projectError = "Error in write metadata to netcdf.";
         myNetCDF.close();
         return false;
     }

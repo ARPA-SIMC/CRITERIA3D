@@ -83,8 +83,8 @@
         bool extractVariableMap(int idVar, Crit3DTime myTime, gis::Crit3DRasterGrid* myDataGrid, std::string *error);
 
         bool createNewFile(std::string fileName);
-        bool writeGeoDimensions(const gis::Crit3DGridHeader& latLonHeader);
-        bool writeGeoAndDateDimensions(const gis::Crit3DGridHeader& latLonHeader, const std::string &variableName, const Crit3DDate &myDate);
+        bool writeMetadata(const gis::Crit3DGridHeader& latLonHeader, const std::string &title,
+                           const std::string &variableName, const Crit3DDate &myDate);
         bool writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid);
     };
 
