@@ -147,6 +147,10 @@ void Crit3DDroughtList::eraseElement(unsigned int index)
 bool Crit3DDroughtList::addDrought(unsigned int index)
 {
 
+    if (index >= _listYearStart.size() || index >= _listYearEnd.size())
+    {
+        return false;
+    }
     QString yearStart = QString::number(_listYearStart[index]);
     QString yearEnd = QString::number(_listYearEnd[index]);
     QString date = _listDate[index].toString("ddMMyyyy");
@@ -169,11 +173,19 @@ bool Crit3DDroughtList::addDrought(unsigned int index)
     QString droughtAdded;
     if (thisIndex == INDEX_SPI || thisIndex == INDEX_SPEI)
     {
+        if (index >= _listTimescale.size())
+        {
+            return false;
+        }
         int timeScale = _listTimescale[index];
         droughtAdded = indexStr + "_TIMESCALE" + QString::number(timeScale) + "_" + yearStart + "-" + yearEnd + "_" + date ;
     }
     else
     {
+        if (index >= _listVariable.size())
+        {
+            return false;
+        }
         meteoVariable var = _listVariable[index];
         if (var != noMeteoVar)
         {
