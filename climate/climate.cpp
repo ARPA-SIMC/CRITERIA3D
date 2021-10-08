@@ -3256,15 +3256,18 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                     if (index == "SPI")
                     {
                         listXMLDrought->insertIndex(INDEX_SPI);
+                        listXMLDrought->insertVariable(noMeteoVar); // SPI has not variable
                     }
                     else if (index == "SPEI")
                     {
                         listXMLDrought->insertIndex(INDEX_SPEI);
+                        listXMLDrought->insertVariable(noMeteoVar); // SPEI has not variable
                     }
                     else if (index == "DECILES")
                     {
                         listXMLDrought->insertIndex(INDEX_DECILES);
                         listXMLDrought->insertTimescale(0);  // Deciles has not timescale
+                        listXMLDrought->insertVariable(noMeteoVar);
                     }
                     else
                     {
@@ -3316,6 +3319,15 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                         listXMLDrought->eraseElement(nDrought);
                         qDebug() << "invalid timescale ";
                         errorDrought = true;
+                    }
+                }
+                if (myTag == "VARIABLE")
+                {
+                    QString variable = child.toElement().text();
+                    meteoVariable var = getKeyMeteoVarMeteoMap(MapMonthlyMeteoVarToString, variable.toStdString());
+                    if (var != noMeteoVar)
+                    {
+                        listXMLDrought->updateVariable(var, listXMLDrought->listVariable().size() - 1);   //change var
                     }
                 }
                 if (myTag == "EXPORT")
