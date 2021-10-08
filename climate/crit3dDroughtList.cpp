@@ -14,6 +14,7 @@ void Crit3DDroughtList::reset()
     _listFileName.clear();
     _listDate.clear();
     _listTimescale.clear();
+    _listVariable.clear();
 }
 
 bool Crit3DDroughtList::isMeteoGrid() const
@@ -56,6 +57,11 @@ void Crit3DDroughtList::insertTimescale(int timescale)
     _listTimescale.push_back(timescale);
 }
 
+void Crit3DDroughtList::insertVariable(meteoVariable variable)
+{
+    _listVariable.push_back(variable);
+}
+
 std::vector<int> Crit3DDroughtList::listYearStart() const
 {
     return _listYearStart;
@@ -79,6 +85,11 @@ std::vector<QDate> Crit3DDroughtList::listDate() const
 std::vector<int> Crit3DDroughtList::listTimescale() const
 {
     return _listTimescale;
+}
+
+std::vector<meteoVariable> Crit3DDroughtList::listVariable() const
+{
+    return _listVariable;
 }
 
 std::vector<QString> Crit3DDroughtList::listFileName() const
@@ -121,6 +132,10 @@ void Crit3DDroughtList::eraseElement(unsigned int index)
     {
         _listTimescale.erase(_listTimescale.begin() + index);
     }
+    if (_listVariable.size() > index)
+    {
+        _listVariable.erase(_listVariable.begin() + index);
+    }
 
 }
 
@@ -129,7 +144,7 @@ bool Crit3DDroughtList::addDrought(unsigned int index)
 
     QString yearStart = QString::number(_listYearStart[index]);
     QString yearEnd = QString::number(_listYearEnd[index]);
-    QString date = _listDate[index].toString("dd/MM/yyyy");
+    QString date = _listDate[index].toString("ddMMyyyy");
 
     droughtIndex thisIndex = _listIndex[index];
     QString indexStr;
@@ -150,11 +165,20 @@ bool Crit3DDroughtList::addDrought(unsigned int index)
     if (thisIndex == INDEX_SPI || thisIndex == INDEX_SPEI)
     {
         int timeScale = _listTimescale[index];
-        droughtAdded = indexStr + "_TIMESCALE" + QString::number(timeScale) +  + "_" + yearStart + "-" + yearEnd + "_" + date ;
+        droughtAdded = indexStr + "_TIMESCALE" + QString::number(timeScale) + "_" + yearStart + "-" + yearEnd + "_" + date ;
     }
     else
     {
-        droughtAdded = indexStr + "_" + yearStart + "-" + yearEnd + "_" + date ;
+        meteoVariable var = _listVariable[index];
+        if (var != noMeteoVar)
+        {
+            std::string varString = getKeyStringMeteoMap(MapMonthlyMeteoVar, var);
+            droughtAdded = indexStr + "_VAR" + QString::fromStdString(varString) + "_" + yearStart + "-" + yearEnd + "_" + date ;
+        }
+        else
+        {
+            droughtAdded = indexStr + "_" + yearStart + "-" + yearEnd + "_" + date ;
+        }
     }
 
     if(std::find(_listAll.begin(), _listAll.end(), droughtAdded) != _listAll.end())

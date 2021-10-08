@@ -22,6 +22,7 @@ public:
     void insertFileName(QString filename);
     void insertDate(QDate date);
     void insertTimescale(int timescale);
+    void insertVariable(meteoVariable variable);
 
     bool isMeteoGrid() const;
     std::vector<int> listYearStart() const;
@@ -29,6 +30,7 @@ public:
     std::vector<droughtIndex> listIndex() const;
     std::vector<QDate> listDate() const;
     std::vector<int> listTimescale() const;
+    std::vector<meteoVariable> listVariable() const;
     std::vector<QString> listFileName() const;
     std::vector<QString> listAll() const;
 
@@ -41,6 +43,7 @@ private:
     std::vector<QDate> _listDate;
     std::vector<int> _listTimescale;
     std::vector<QString> _listFileName;
+    std::vector<meteoVariable> _listVariable;
 
 };
 
