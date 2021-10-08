@@ -31,7 +31,7 @@
 
     //double Ln_Gamma_Function(double x);
     //long double xLn_Gamma_Function(long double x);
-
+    double factorial(int n);
     double standardGaussianInvCDF(double prob);
     float gammaCDF(float x, double beta, double gamma,  double pZero) ;
     void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta);
