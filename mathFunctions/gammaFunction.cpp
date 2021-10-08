@@ -5,7 +5,7 @@
 #include "gammaFunction.h"
 #include "furtherMathFunctions.h"
 
-
+    /*
     static long double xSmall_x(long double x, long double nu);
     static long double xMedium_x(long double x, long double nu);
     static long double xLarge_x(long double x, long double nu);
@@ -251,7 +251,7 @@
     ////////////////////////////////////////////////////////////////////////////////
 
     //#include <float.h>                         // required for DBL_MAX
-
+    */
     //                         Internally Defined Routines                        //
     /*
     double Factorial(int n);
@@ -474,7 +474,7 @@
        return (double) factorials[n];
     }
 
-
+    /*
     ////////////////////////////////////////////////////////////////////////////////
     // long double xFactorial( int n )                                            //
     //                                                                            //
@@ -917,7 +917,7 @@
     }
 
 
-    /*//////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
     // long double xLn_Gamma_Function( long double x )                            //
     //                                                                            //
     //  Description:                                                              //
@@ -943,7 +943,7 @@
     //     long double g;                                                         //
     //                                                                            //
     //     g = xLn_Gamma_Function( x );                                           //
-    //////////////////////////////////////////////////////////////////////////////*/
+    ///////////////////////////////////////////////////////////////////////////////
     long double xLn_Gamma_Function(long double x)
     {
 
@@ -958,7 +958,7 @@
     }
 
 
-    /*//////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////
     // static long double xLnGamma_Asymptotic_Expansion( long double x )          //
     //                                                                            //
     //  Description:                                                              //
@@ -980,7 +980,7 @@
     //     long double g;                                                         //
     //                                                                            //
     //     g = xlnGamma_Asymptotic_Expansion( x );                                //
-    //////////////////////////////////////////////////////////////////////////////*/
+    ///////////////////////////////////////////////////////////////////////////////
 
     //static long double const pi = 3.14159265358979323846264338L;
 
@@ -1014,7 +1014,11 @@
        for (i = m - 1; i >= 0; i--) sum += term[i];
        return lngamma + sum;
     }
-
+    */
+    double gammaFunction(double value)
+    {
+        return exp(gammaNaturalLogarithm(value));
+    }
 
     double gammaNaturalLogarithm(double value)
     //Returns the value ln[Γ(xx)] for xx > 0.
@@ -1039,10 +1043,6 @@
     //Returns the incomplete gamma function P(a, x) evaluated by its series representation as gamser.
     //Also returns ln Γ(a) as gln.
     {
-        //double gammaNaturalLogarithm(double value);
-
-
-        //void nrerror(char error_text[]);
         int n;
         double sum,del,ap;
         *gammaLn=gammaNaturalLogarithm(alpha);
@@ -1076,8 +1076,6 @@
     //Returns the incomplete gamma function Q(a, x) evaluated by its continued fraction representation
     //as gammcf. Also returns lnΓ(a) as gln.
     {
-        //double gammaNaturalLogarithm(double value);
-        //void nrerror(char error_text[]);
         int i;
         double an,b,c,d,del,h;
         *gammaLn=gammaNaturalLogarithm(alpha);
@@ -1303,8 +1301,10 @@
         float g1;
         float g2;
         *gamma = (2 * probWeightedMoments[1] - probWeightedMoments[0]) / (6 * probWeightedMoments[1] - probWeightedMoments[0] - 6 * probWeightedMoments[2]);
-        g1 = exp(Ln_Gamma_Function(1 + 1 / (*gamma)));
-        g2 = exp(Ln_Gamma_Function(1 - 1 / (*gamma)));
+        //g1 = exp(Ln_Gamma_Function(1 + 1 / (*gamma)));
+        //g2 = exp(Ln_Gamma_Function(1 - 1 / (*gamma)));
+        g1 = gammaFunction(1 + 1 / (*gamma));
+        g2 = gammaFunction(1 - 1 / (*gamma));
         *alpha = (probWeightedMoments[0] - 2 * probWeightedMoments[1]) * (*gamma) / (g1 * g2);
         *beta = probWeightedMoments[0] - (*alpha) * g1 * g2;
     }
