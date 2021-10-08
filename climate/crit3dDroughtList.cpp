@@ -62,6 +62,11 @@ void Crit3DDroughtList::insertVariable(meteoVariable variable)
     _listVariable.push_back(variable);
 }
 
+void Crit3DDroughtList::updateVariable(meteoVariable variable, int index)
+{
+    _listVariable[index] = variable;
+}
+
 std::vector<int> Crit3DDroughtList::listYearStart() const
 {
     return _listYearStart;
@@ -173,7 +178,7 @@ bool Crit3DDroughtList::addDrought(unsigned int index)
         if (var != noMeteoVar)
         {
             std::string varString = getKeyStringMeteoMap(MapMonthlyMeteoVar, var);
-            droughtAdded = indexStr + "_VAR" + QString::fromStdString(varString) + "_" + yearStart + "-" + yearEnd + "_" + date ;
+            droughtAdded = indexStr + "_" + QString::fromStdString(varString) + "_" + yearStart + "-" + yearEnd + "_" + date ;
         }
         else
         {

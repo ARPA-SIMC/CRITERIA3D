@@ -23,6 +23,7 @@ public:
     void insertDate(QDate date);
     void insertTimescale(int timescale);
     void insertVariable(meteoVariable variable);
+    void updateVariable(meteoVariable variable, int index);
 
     bool isMeteoGrid() const;
     std::vector<int> listYearStart() const;
