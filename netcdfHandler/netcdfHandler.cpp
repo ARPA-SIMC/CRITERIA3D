@@ -826,14 +826,27 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
 
     // generic variable
     variables.resize(1);
-    int nrDims = 3;
-    int varDimId[nrDims];
-    varDimId[0] = idTime;
-    varDimId[1] = idLat;
-    varDimId[2] = idLon;
+    if (timeDimensionExists)
+    {
+        int nrDims = 3;
+        int varDimId[nrDims];
+        varDimId[0] = idTime;
+        varDimId[1] = idLat;
+        varDimId[2] = idLon;
 
-    status = nc_def_var (ncId, variableName.c_str(), NC_FLOAT, nrDims, varDimId, &(variables[0].id));
-    if (status != NC_NOERR) return false;
+        status = nc_def_var (ncId, variableName.c_str(), NC_FLOAT, nrDims, varDimId, &(variables[0].id));
+        if (status != NC_NOERR) return false;
+    }
+    else
+    {
+        int nrDims = 2;
+        int varDimId[nrDims];
+        varDimId[0] = idLat;
+        varDimId[1] = idLon;
+
+        status = nc_def_var (ncId, variableName.c_str(), NC_FLOAT, nrDims, varDimId, &(variables[0].id));
+        if (status != NC_NOERR) return false;
+    }
 
     // atributes
     status = nc_put_att_text(ncId, variables[0].id, "long_name", variableName.length(), variableName.c_str());
