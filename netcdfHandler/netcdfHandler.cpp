@@ -829,7 +829,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     if (timeDimensionExists)
     {
         int nrDims = 3;
-        int varDimId[nrDims];
+        int varDimId[3];
         varDimId[0] = idTime;
         varDimId[1] = idLat;
         varDimId[2] = idLon;
@@ -840,7 +840,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     else
     {
         int nrDims = 2;
-        int varDimId[nrDims];
+        int varDimId[2];
         varDimId[0] = idLat;
         varDimId[1] = idLon;
 
