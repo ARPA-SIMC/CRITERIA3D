@@ -24,6 +24,7 @@
 */
 
 #include <math.h>
+#include <algorithm>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -785,6 +786,26 @@ std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteo
         }
     }
     return key;
+}
+
+std::string getUnitFromVariable(meteoVariable var)
+{
+
+    std::string unit = "";
+    std::map<std::vector<meteoVariable>, std::string>::const_iterator it;
+    std::vector<meteoVariable> key;
+
+    for (it = MapVarUnit.begin(); it != MapVarUnit.end(); ++it)
+    {
+        key = it->first;
+        if(std::find(key.begin(), key.end(), var) != key.end())
+        {
+            unit = it->second;
+            break;
+        }
+        key.clear();
+    }
+    return unit;
 }
 
 meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string& value)
