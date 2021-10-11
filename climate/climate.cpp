@@ -3375,7 +3375,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     {
         if (listXMLElab->addElab(i))
         {
-            qDebug() << "elab: " << listXMLElab->listAll()[i].back();
+            qDebug() << "elab: " << listXMLElab->listAll().back();
         }
     }
     for (int i = 0; i < nAnomaly; i++)
