@@ -69,6 +69,7 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
 
     _tableDaily.exists = false;
     _tableHourly.exists = false;
+    _tableMonthly.exists = false;
 
     while(!ancestor.isNull())
     {
