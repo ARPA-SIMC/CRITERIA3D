@@ -496,10 +496,14 @@ namespace root
             for (i=1 ; i < nrLayers; i++)
             {
                 b = MAXVALUE(soilLayers[i].depth + soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // right extreme
-                if (b>0)
+                if (b>0 && b< myCrop->roots.rootLength)
                 {
                     a = MAXVALUE(soilLayers[i].depth - soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // left extreme
                     myCrop->roots.rootDensity[i] = incompleteGamma(kappa,b/theta) - incompleteGamma(kappa,a/theta); // incompleteGamma is already normalized by gamma(kappa)
+                }
+                else
+                {
+                    myCrop->roots.rootDensity[i] = 0;
                 }
             }
         }
