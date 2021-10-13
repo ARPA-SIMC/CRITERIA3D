@@ -29,6 +29,13 @@
 #include "furtherMathFunctions.h"
 
 
+float gaussianFunction(TfunctionInput fInput)
+{
+    float y;
+    y = 1/(fInput.par[1]*sqrt(2*PI))*exp(-0.5*(fInput.x-fInput.par[0])*(fInput.x-fInput.par[0])/(fInput.par[1]*fInput.par[1]));
+    return y;
+}
+
 float errorFunctionPrimitive(float x)
 {
     return expf(-x*x);

@@ -24,6 +24,7 @@
 */
 
 #include <math.h>
+#include <algorithm>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -202,36 +203,41 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTi
     }
 }
 
-
-float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, Crit3DDate myDate, int myHour)
+float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, int month)
 {
-    unsigned int indexMonth = unsigned(myDate.month - 1);
+    // TODO improve!
+    if (month == NODATA)
+        return -0.006f;
+
+    unsigned int indexMonth = unsigned(month - 1);
 
     if (myVar == dailyAirTemperatureMin)
-        return tmin[indexMonth];
+        return tminLapseRate[indexMonth];
     else if (myVar == dailyAirTemperatureMax)
-        return tmax[indexMonth];
+        return tmaxLapseRate[indexMonth];
     else if (myVar == dailyAirTemperatureAvg)
-        return (tmax[indexMonth] + tmin[indexMonth]) / 2;
+        return (tmaxLapseRate[indexMonth] + tminLapseRate[indexMonth]) / 2;
     else
-    {
-        float myTmin, myTmax;
-        if (myVar == airTemperature)
-        {
-            myTmin = tmin[indexMonth];
-            myTmax = tmax[indexMonth];
-        }
-        else if (myVar == airDewTemperature)
-        {
-            myTmin = tdmin[indexMonth];
-            myTmax = tdmax[indexMonth];
-        }
-        else
-            return NODATA;
+        return NODATA;
+}
 
-        float tminWeight = computeTminHourlyWeight(myHour);
-        return (myTmin * tminWeight + myTmax * (1 - tminWeight));
-    }
+float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, float height, float refHeight)
+{
+    unsigned int indexMonth = unsigned(month - 1);
+
+    float climateVar = NODATA;
+
+    if (myVar == dailyAirTemperatureMin)
+        climateVar = tmin[indexMonth];
+    else if (myVar == dailyAirTemperatureMax)
+        climateVar = tmax[indexMonth];
+    else
+        return NODATA;
+
+    if (climateVar != NODATA && height != NODATA)
+        climateVar += getClimateLapseRate(myVar, month) * (height - refHeight);
+
+    return climateVar;
 }
 
 
@@ -679,11 +685,11 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
 
 std::string getVariableString(meteoVariable myVar)
 {
-    if (myVar == airTemperature || myVar == dailyAirTemperatureAvg)
+    if (myVar == airTemperature || myVar == dailyAirTemperatureAvg || myVar == monthlyAirTemperatureAvg)
         return "Air temperature (°C)";
-    else if (myVar == dailyAirTemperatureMax)
+    else if (myVar == dailyAirTemperatureMax || myVar == monthlyAirTemperatureMax)
         return "Maximum air temperature (°C)";
-    else if (myVar == dailyAirTemperatureMin)
+    else if (myVar == dailyAirTemperatureMin || myVar == monthlyAirTemperatureMin)
         return "Minimum air temperature (°C)";
     else if (myVar == dailyAirTemperatureRange)
         return "Air temperature range (°C)";
@@ -707,9 +713,9 @@ std::string getVariableString(meteoVariable myVar)
         return "Night Thom index ()";
     else if (myVar == dailyThomHoursAbove)
         return "Hours with Thom index above (h)";
-    else if ((myVar == dailyPrecipitation ||  myVar == precipitation))
+    else if ((myVar == dailyPrecipitation ||  myVar == precipitation || myVar == monthlyPrecipitation))
         return "Precipitation (mm)";
-    else if (myVar == dailyGlobalRadiation)
+    else if (myVar == dailyGlobalRadiation || myVar == monthlyGlobalRadiation)
         return "Solar radiation (MJ m-2)";
     else if (myVar == globalIrradiance)
         return "Solar irradiance (W m-2)";
@@ -739,12 +745,13 @@ std::string getVariableString(meteoVariable myVar)
         return "Maximum wind scalar intensity (m s-1)";
     else if (myVar == referenceEvapotranspiration ||
              myVar == dailyReferenceEvapotranspirationHS ||
+             myVar == monthlyReferenceEvapotranspirationHS ||
              myVar == dailyReferenceEvapotranspirationPM ||
              myVar == actualEvaporation)
         return "Reference evapotranspiration (mm)";
     else if (myVar == leafWetness || myVar == dailyLeafWetness)
         return "Leaf wetness (h)";
-    else if (myVar == dailyBIC)
+    else if (myVar == dailyBIC || myVar == monthlyBIC)
         return "Hydroclimatic balance (mm)";
     else if (myVar == dailyWaterTableDepth)
         return "Water table depth (mm)";
@@ -781,6 +788,26 @@ std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteo
     return key;
 }
 
+std::string getUnitFromVariable(meteoVariable var)
+{
+
+    std::string unit = "";
+    std::map<std::vector<meteoVariable>, std::string>::const_iterator it;
+    std::vector<meteoVariable> key;
+
+    for (it = MapVarUnit.begin(); it != MapVarUnit.end(); ++it)
+    {
+        key = it->first;
+        if(std::find(key.begin(), key.end(), var) != key.end())
+        {
+            unit = it->second;
+            break;
+        }
+        key.clear();
+    }
+    return unit;
+}
+
 meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string& value)
 {
     std::map<meteoVariable, std::string>::const_iterator it;
@@ -799,11 +826,12 @@ meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, co
 
 frequencyType getVarFrequency(meteoVariable myVar)
 {
-    // todo: create maps of hourly and monthly variables
     if (MapDailyMeteoVarToString.find(myVar) != MapDailyMeteoVarToString.end())
         return daily;
     else if (MapHourlyMeteoVarToString.find(myVar) != MapHourlyMeteoVarToString.end())
         return hourly;
+    else if (MapMonthlyMeteoVarToString.find(myVar) != MapMonthlyMeteoVarToString.end())
+        return monthly;
     else
         return noFrequency;
 }
@@ -817,7 +845,19 @@ meteoVariable getMeteoVar(std::string varString)
     else
     {
         search = MapHourlyMeteoVar.find(varString);
-        if (search != MapHourlyMeteoVar.end()) return search->second;
+        if (search != MapHourlyMeteoVar.end())
+        {
+            return search->second;
+        }
+        else
+        {
+            search = MapMonthlyMeteoVar.find(varString);
+            if (search != MapMonthlyMeteoVar.end())
+            {
+                return search->second;
+            }
+        }
+
     }
 
     return noMeteoVar;
@@ -936,19 +976,24 @@ meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod 
     return noMeteoVar;
 }
 
-
 meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
 {
     if (myFreq == daily)
     {
         //check
-        if (myVar == airTemperature)
+        if (myVar == airTemperature || myVar == monthlyAirTemperatureAvg)
             return dailyAirTemperatureAvg;
 
-        else if (myVar == precipitation)
+        else if (myVar == monthlyAirTemperatureMin)
+            return dailyAirTemperatureMin;
+
+        else if (myVar == monthlyAirTemperatureMax)
+            return dailyAirTemperatureMax;
+
+        else if (myVar == precipitation || myVar == monthlyPrecipitation)
             return dailyPrecipitation;
 
-        else if (myVar == globalIrradiance)
+        else if (myVar == globalIrradiance || myVar == monthlyGlobalRadiation)
             return dailyGlobalRadiation;
 
         else if (myVar == airRelHumidity)
@@ -972,8 +1017,11 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
         else if (myVar == leafWetness)
             return dailyLeafWetness;
 
-        else if (myVar == referenceEvapotranspiration)
+        else if (myVar == referenceEvapotranspiration || myVar == monthlyReferenceEvapotranspirationHS)
             return dailyReferenceEvapotranspirationHS;
+
+        else if (myVar == monthlyBIC)
+            return dailyBIC;
 
         else
             return noMeteoVar;
@@ -982,7 +1030,8 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
     if (myFreq == hourly)
     {
         //check
-        if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureMin || myVar == dailyAirTemperatureRange)
+        if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureMin || myVar == dailyAirTemperatureRange
+                || myVar == monthlyAirTemperatureAvg || myVar == monthlyAirTemperatureMax || myVar == monthlyAirTemperatureMin)
             return airTemperature;
 
         else if (myVar == dailyAirRelHumidityAvg || myVar == dailyAirRelHumidityMax || myVar == dailyAirRelHumidityMin)
@@ -991,10 +1040,10 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
         else if (myVar == dailyAirDewTemperatureAvg || myVar == dailyAirDewTemperatureMax || myVar == dailyAirDewTemperatureMin)
             return airDewTemperature;
 
-        else if (myVar == dailyPrecipitation)
+        else if (myVar == dailyPrecipitation || myVar == monthlyPrecipitation)
             return precipitation;
 
-        else if (myVar == dailyGlobalRadiation)
+        else if (myVar == dailyGlobalRadiation || myVar == monthlyGlobalRadiation)
             return globalIrradiance;
 
         else if (myVar == dailyDirectRadiation)
@@ -1021,8 +1070,28 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
         else if (myVar == dailyLeafWetness)
             return leafWetness;
 
-        else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM)
+        else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM || myVar == monthlyReferenceEvapotranspirationHS)
             return referenceEvapotranspiration;
+        else
+            return noMeteoVar;
+    }
+
+    if (myFreq == monthly)
+    {
+        if (myVar == dailyAirTemperatureMin)
+            return monthlyAirTemperatureMin;
+        else if (myVar == dailyAirTemperatureMax)
+            return monthlyAirTemperatureMax;
+        else if (myVar == dailyAirTemperatureAvg || myVar == airTemperature)
+            return monthlyAirTemperatureAvg;
+        else if (myVar == dailyPrecipitation || myVar == precipitation)
+            return monthlyPrecipitation;
+        else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM || myVar == referenceEvapotranspiration)
+            return monthlyReferenceEvapotranspirationHS;
+        else if (myVar == globalIrradiance || myVar == dailyGlobalRadiation)
+            return monthlyGlobalRadiation;
+        else if (myVar == dailyBIC)
+            return monthlyBIC;
         else
             return noMeteoVar;
     }

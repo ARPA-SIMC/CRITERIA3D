@@ -72,6 +72,7 @@
         QDate lastDate() const;
         TXMLTable tableDaily() const;
         TXMLTable tableHourly() const;
+        TXMLTable tableMonthly() const;
         QString tableDailyModel() const;
         QString tableHourlyModel() const;
 
@@ -84,12 +85,20 @@
         QString getDailyVarField(meteoVariable meteoGridDailyVar);
         meteoVariable getDailyVarEnum(int varCode);
         meteoVariable getDailyVarFieldEnum(QString varField);
+
         int getHourlyVarCode(meteoVariable meteoGridHourlyVar);
         QString getHourlyVarField(meteoVariable meteoGridHourlyVar);
         meteoVariable getHourlyVarEnum(int varCode);
         meteoVariable getHourlyVarFieldEnum(QString varField);
+
+        int getMonthlyVarCode(meteoVariable meteoGridMonthlyVar);
+        QString getMonthlyVarField(meteoVariable meteoGridMonthlyVar);
+        meteoVariable getMonthlyVarEnum(int varCode);
+        meteoVariable getMonthlyVarFieldEnum(QString varField);
+
         std::string getDailyPragaName(meteoVariable meteoVar);
         std::string getHourlyPragaName(meteoVariable meteoVar);
+        std::string getMonthlyPragaName(meteoVariable meteoVar);
 
         bool loadCellProperties(QString *myError);
         bool loadIdMeteoProperties(QString *myError, QString idMeteo);
@@ -100,6 +109,7 @@
         bool loadGridHourlyData(QString *myError, QString meteoPoint, QDateTime first, QDateTime last);
         bool loadGridHourlyDataFixedFields(QString *myError, QString meteoPoint, QDateTime first, QDateTime last);
         bool loadGridHourlyDataEnsemble(QString *myError, QString meteoPoint, int memberNr, QDateTime first, QDateTime last);
+        bool loadGridMonthlyData(QString *myError, QString meteoPoint, QDate first, QDate last);
         std::vector<float> loadGridDailyVar(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate *firstDateDB);
         std::vector<float> loadGridDailyVarFixedFields(QString *myError, QString meteoPoint, meteoVariable variable, QDate first, QDate last, QDate* firstDateDB);
         std::vector<float> loadGridHourlyVar(QString *myError, QString meteoPoint, meteoVariable variable, QDateTime first, QDateTime last, QDateTime* firstDateDB);
@@ -114,6 +124,8 @@
         bool saveCellGridDailyDataFF(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate, Crit3DMeteoSettings *meteoSettings);
         bool saveCellGridDailyDataEnsemble(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
                                                              QList<meteoVariable> meteoVariableList, int memberNr, Crit3DMeteoSettings *meteoSettings);
+        bool saveCellGridMonthlyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
+                                                             QList<meteoVariable> meteoVariableList);
         bool saveListDailyDataEnsemble(QString *myError, QString meteoPointID, QDate date, meteoVariable meteoVar, QList<float> values);
         bool cleanDailyOldData(QString *myError, QDate date);
         bool saveListHourlyData(QString *myError, QString meteoPointID, QDateTime firstDateTime, meteoVariable meteoVar, QList<float> values);
@@ -139,12 +151,15 @@
 
         TXMLTable _tableDaily;
         TXMLTable _tableHourly;
+        TXMLTable _tableMonthly;
 
         QMap<meteoVariable, int> _gridDailyVar;
         QMap<meteoVariable, int> _gridHourlyVar;
+        QMap<meteoVariable, int> _gridMonthlyVar;
 
         QMap<meteoVariable, QString> _gridDailyVarField;
         QMap<meteoVariable, QString> _gridHourlyVarField;
+        QMap<meteoVariable, QString> _gridMonthlyVarField;
 
         QString _tableDailyModel;
         QString _tableHourlyModel;

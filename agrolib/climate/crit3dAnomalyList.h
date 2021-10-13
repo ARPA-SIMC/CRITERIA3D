@@ -156,7 +156,7 @@ public:
     void setListRefParam2(const std::vector<float> &listRefParam2);
     void insertRefParam2(float refParam2);
 
-    void addAnomaly(unsigned int index);
+    bool addAnomaly(unsigned int index);
 
     QList<QString> listAll() const;
     void setListAll(const QList<QString> &listAll);

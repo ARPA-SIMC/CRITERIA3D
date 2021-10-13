@@ -29,6 +29,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "meteoPoint.h"
+#include "quality.h"
 
 
 Crit3DMeteoPoint::Crit3DMeteoPoint()
@@ -191,33 +192,40 @@ void Crit3DMeteoPoint::initializeObsDataM(unsigned int numberOfMonths, unsigned 
 
     quality = quality::missing_data;
     residual = NODATA;
-    int addYear = -1;
+    int addYear = 0;
 
-    for (unsigned int i = month; i <= numberOfMonths; i++)
+    for (unsigned int i = month; i < month+numberOfMonths; i++)
     {
-        if (i < 12)
+        if (i <= 12)
         {
-            obsDataM[i]._month = i;
-            obsDataM[i]._year = year;
-        }
-        else if (i%12 == 0)
-        {
-            addYear = addYear+1;
-            obsDataM[i]._month = 12;
-            obsDataM[i]._year = year + addYear;
+            obsDataM[i-month]._month = i;   // obsDataM start from 0
+            obsDataM[i-month]._year = year;
         }
         else
         {
-            obsDataM[i]._month = i%12;
-            obsDataM[i]._year = year + addYear + 1;
+            if (i%12 == 0)
+            {
+                obsDataM[i-month]._month = 12;
+            }
+            else
+            {
+                obsDataM[i-month]._month = i%12;
+            }
+            if (obsDataM[i-month]._month == 1)
+            {
+                // new year
+                addYear = addYear + 1;
+            }
+            obsDataM[i-month]._year = year + addYear;
         }
 
-        obsDataM[i].tMax = NODATA;
-        obsDataM[i].tMin = NODATA;
-        obsDataM[i].tAvg = NODATA;
-        obsDataM[i].prec = NODATA;
-        obsDataM[i].et0 = NODATA;
-        obsDataM[i].globRad = NODATA;
+        obsDataM[i-month].tMax = NODATA;
+        obsDataM[i-month].tMin = NODATA;
+        obsDataM[i-month].tAvg = NODATA;
+        obsDataM[i-month].prec = NODATA;
+        obsDataM[i-month].et0_hs = NODATA;
+        obsDataM[i-month].globRad = NODATA;
+        obsDataM[i-month].bic = NODATA;
     }
 }
 
@@ -413,6 +421,25 @@ void Crit3DMeteoPoint::emptyObsDataD(const Crit3DDate& date1, const Crit3DDate& 
     }
 }
 
+void Crit3DMeteoPoint::emptyObsDataM(const Crit3DDate& date1, const Crit3DDate& date2)
+{
+    if (! isDateIntervalLoadedM(date1, date2)) return;
+
+    int indexIni = (date1.year - obsDataM[0]._year)*12 + date1.month-1;
+    int indexFin = (date2.year - obsDataM[0]._year)*12 + date2.month-1;
+
+    for (unsigned int i = indexIni; i <= unsigned(indexFin); i++)
+    {
+        obsDataM[i].tMax = NODATA;
+        obsDataM[i].tMin = NODATA;
+        obsDataM[i].tAvg = NODATA;
+        obsDataM[i].prec = NODATA;
+        obsDataM[i].et0_hs = NODATA;
+        obsDataM[i].globRad = NODATA;
+        obsDataM[i].bic = NODATA;
+    }
+}
+
 bool Crit3DMeteoPoint::isDateLoadedH(const Crit3DDate& myDate)
 {
     if (nrObsDataDaysH == 0)
@@ -445,6 +472,20 @@ bool Crit3DMeteoPoint::isDateLoadedD(const Crit3DDate& myDate)
         return true;
 }
 
+bool Crit3DMeteoPoint::isDateLoadedM(const Crit3DDate& myDate)
+{
+    if (nrObsDataDaysM == 0)
+        return false;
+    else if ( (myDate.year < obsDataM[0]._year ) || (myDate.year > obsDataM[unsigned(nrObsDataDaysM-1)]._year))
+        return false;
+    else if (myDate.year == obsDataM[0]._year && myDate.month < obsDataM[0]._month)
+        return false;
+    else if (myDate.year == obsDataM[unsigned(nrObsDataDaysM-1)]._year && myDate.month > obsDataM[unsigned(nrObsDataDaysM-1)]._month)
+        return false;
+    else
+        return true;
+}
+
 bool Crit3DMeteoPoint::isDateIntervalLoadedD(const Crit3DDate& date1, const Crit3DDate& date2)
 {
     if (nrObsDataDaysD == 0)
@@ -455,6 +496,22 @@ bool Crit3DMeteoPoint::isDateIntervalLoadedD(const Crit3DDate& date1, const Crit
         return false;
     else
         return (true);
+}
+
+bool Crit3DMeteoPoint::isDateIntervalLoadedM(const Crit3DDate& date1, const Crit3DDate& date2)
+{
+    if (nrObsDataDaysM == 0)
+        return false;
+    else if (date1 > date2)
+        return false;
+    else if ( (date1.year < obsDataM[0]._year ) || (date2.year > obsDataM[unsigned(nrObsDataDaysM-1)]._year))
+        return false;
+    else if (date1.year == obsDataM[0]._year && date1.month < obsDataM[0]._month)
+        return false;
+    else if (date2.year == obsDataM[unsigned(nrObsDataDaysM-1)]._year && date2.month > obsDataM[unsigned(nrObsDataDaysM-1)]._month)
+        return false;
+    else
+        return true;
 }
 
 bool Crit3DMeteoPoint::isDateIntervalLoadedH(const Crit3DTime& timeIni, const Crit3DTime& timeFin)
@@ -688,6 +745,52 @@ bool Crit3DMeteoPoint::setMeteoPointValueD(const Crit3DDate& myDate, meteoVariab
     return true;
 }
 
+bool Crit3DMeteoPoint::setMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar, float myValue)
+{
+    //check
+    if (myVar == noMeteoVar) return NODATA;
+    if (nrObsDataDaysM == 0) return NODATA;
+
+    int index;
+    if (myDate.year == obsDataM[0]._year)
+    {
+        // same year of first data
+        index = myDate.month-obsDataM[0]._month;
+    }
+    else if (myDate.year == obsDataM[0]._year+1)
+    {
+        // second year
+        index = 12-obsDataM[0]._month + myDate.month;
+    }
+    else
+    {
+        // other years
+        index = (myDate.year - obsDataM[0]._year -1)*12+(12-obsDataM[0]._month) + myDate.month;
+    }
+    if ((index < 0) || (index >= nrObsDataDaysM)) return NODATA;
+
+    unsigned i = unsigned(index);
+
+    if (myVar == monthlyAirTemperatureMax)
+        obsDataM[i].tMax = myValue;
+    else if (myVar == monthlyAirTemperatureMin)
+        obsDataM[i].tMin = myValue;
+    else if (myVar == monthlyAirTemperatureAvg)
+        obsDataM[i].tAvg = myValue;
+    else if (myVar == monthlyPrecipitation)
+        obsDataM[i].prec = myValue;
+    else if (myVar == monthlyReferenceEvapotranspirationHS)
+        obsDataM[i].et0_hs = myValue;
+    else if (myVar == monthlyGlobalRadiation)
+        obsDataM[i].globRad = myValue;
+    else if (myVar == monthlyBIC)
+        obsDataM[i].bic = myValue;
+    else
+        return false;
+
+    return true;
+}
+
 float Crit3DMeteoPoint::getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar)
 {
     //check
@@ -913,6 +1016,50 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
         return (NODATA);
 }
 
+float Crit3DMeteoPoint::getMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar)
+{
+    //check
+    if (myVar == noMeteoVar) return NODATA;
+    if (nrObsDataDaysM == 0) return NODATA;
+
+    int index;
+    if (myDate.year == obsDataM[0]._year)
+    {
+        // same year of first data
+        index = myDate.month-obsDataM[0]._month;
+    }
+    else if (myDate.year == obsDataM[0]._year+1)
+    {
+        // second year
+        index = 12-obsDataM[0]._month + myDate.month;
+    }
+    else
+    {
+        // other years
+        index = (myDate.year - obsDataM[0]._year -1)*12+(12-obsDataM[0]._month) + myDate.month;
+    }
+    if ((index < 0) || (index >= nrObsDataDaysM)) return NODATA;
+
+    unsigned i = unsigned(index);
+
+    if (myVar == monthlyAirTemperatureMax)
+        return (obsDataM[i].tMax);
+    else if (myVar == monthlyAirTemperatureMin)
+        return (obsDataM[i].tMin);
+    else if (myVar == monthlyAirTemperatureAvg)
+        return obsDataM[i].tAvg;
+    else if (myVar == monthlyPrecipitation)
+        return (obsDataM[i].prec);
+    else if (myVar == monthlyReferenceEvapotranspirationHS)
+        return (obsDataM[i].et0_hs);
+    else if (myVar == monthlyGlobalRadiation)
+        return (obsDataM[i].globRad);
+    else if (myVar == monthlyBIC)
+        return (obsDataM[i].bic);
+    else
+        return (NODATA);
+}
+
 
 float Crit3DMeteoPoint::getMeteoPointValue(const Crit3DTime& myTime, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings)
 {
@@ -973,4 +1120,63 @@ bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
         et0res = setMeteoPointValueH(myDate, myHour, 0, referenceEvapotranspiration, et0);
     }
     return (leafWres && et0res);
+}
+
+bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar,
+                                               Crit3DMeteoSettings* meteoSettings, Crit3DQuality* qualityCheck,
+                                               Crit3DClimateParameters* climateParam)
+{
+
+    int currentMonth = firstDate.month;
+    int nrDays = getDaysInMonth(currentMonth, firstDate.year);
+
+    float sum = 0;
+    int nrValid = 0;
+    int indexMonth = 0;
+    bool aggregateDailyInMonthly = false;
+
+    for (Crit3DDate actualDate = firstDate; actualDate<=lastDate; actualDate=actualDate.addDays(1))
+    {
+        float myDailyValue = getMeteoPointValueD(actualDate, dailyMeteoVar, meteoSettings);
+        quality::qualityType qualityT = qualityCheck->checkFastValueDaily_SingleValue(dailyMeteoVar, climateParam, myDailyValue, currentMonth, this->point.z);
+        if (qualityT == quality::accepted)
+        {
+            sum = sum + myDailyValue;
+            nrValid = nrValid + 1;
+        }
+        if (actualDate.day == nrDays || actualDate == lastDate)
+        {
+            indexMonth = indexMonth + 1;
+            if ((nrValid/nrDays*100) >= meteoSettings->getMinimumPercentage())
+            {
+                aggregateDailyInMonthly = true;
+                if (dailyMeteoVar == dailyAirTemperatureMin || dailyMeteoVar == dailyAirTemperatureMax || dailyMeteoVar == dailyAirTemperatureAvg)
+                {
+                    if (nrValid != 0)
+                    {
+                        setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),sum/nrValid);
+                    }
+                    else
+                    {
+                        setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),NODATA);
+                    }
+                }
+                else if (dailyMeteoVar == dailyPrecipitation || dailyMeteoVar == dailyReferenceEvapotranspirationHS
+                         || dailyMeteoVar == dailyReferenceEvapotranspirationPM || dailyMeteoVar == dailyGlobalRadiation)
+                {
+                    setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),sum);
+                }
+            }
+            else
+            {
+                setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),NODATA);
+            }
+            sum = 0;
+            nrValid = 0;
+            currentMonth = actualDate.addDays(1).month;
+            nrDays = getDaysInMonth(currentMonth, actualDate.year);
+        }
+
+    }
+    return aggregateDailyInMonthly;
 }

@@ -83,18 +83,19 @@
 
     enum lapseRateCodeType {primary, secondary, supplemental};
 
-    enum meteoVariable {airTemperature, dailyAirTemperatureMin, dailyAirTemperatureMax, dailyAirTemperatureAvg, dailyAirTemperatureRange,
-                    precipitation, dailyPrecipitation,
+    enum meteoVariable {airTemperature, dailyAirTemperatureMin, monthlyAirTemperatureMin, dailyAirTemperatureMax, monthlyAirTemperatureMax,
+                    dailyAirTemperatureAvg, monthlyAirTemperatureAvg, dailyAirTemperatureRange,
+                    precipitation, dailyPrecipitation, monthlyPrecipitation,
                     airRelHumidity, dailyAirRelHumidityMin, dailyAirRelHumidityMax, dailyAirRelHumidityAvg,
                     airDewTemperature, dailyAirDewTemperatureMin, dailyAirDewTemperatureMax, dailyAirDewTemperatureAvg,
                     thom, dailyThomMax, dailyThomAvg, dailyThomHoursAbove, dailyThomDaytime, dailyThomNighttime,
                     globalIrradiance, netIrradiance, directIrradiance, diffuseIrradiance, reflectedIrradiance, atmTransmissivity,
-                    dailyGlobalRadiation, dailyDirectRadiation, dailyDiffuseRadiation, dailyReflectedRadiation,
+                    dailyGlobalRadiation, monthlyGlobalRadiation, dailyDirectRadiation, dailyDiffuseRadiation, dailyReflectedRadiation,
                     windScalarIntensity, windVectorIntensity, windVectorDirection, windVectorX, windVectorY,
                     dailyWindVectorIntensityAvg, dailyWindVectorIntensityMax, dailyWindVectorDirectionPrevailing, dailyWindScalarIntensityAvg, dailyWindScalarIntensityMax,
                     leafWetness, dailyLeafWetness, atmPressure,
-                    referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
-                    dailyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
+                    referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, monthlyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
+                    dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
                     dailyWaterTableDepth,
                     snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceInternalEnergy,
                     anomaly, noMeteoTerrain, noMeteoVar};
@@ -216,10 +217,55 @@
         { actualEvaporation, "ACTUAL_EVAPO"}
     };
 
+    const std::map<std::string, meteoVariable> MapMonthlyMeteoVar = {
+      { "MONTHLY_TAVG", monthlyAirTemperatureAvg },
+      { "MONTHLY_TMIN", monthlyAirTemperatureMin },
+      { "MONTHLY_TMAX", monthlyAirTemperatureMax },
+      { "MONTHLY_PREC", monthlyPrecipitation },
+      { "MONTHLY_ET0_HS", monthlyReferenceEvapotranspirationHS },
+      { "MONTHLY_BIC", monthlyBIC },
+      { "MONTHLY_RAD", monthlyGlobalRadiation }
+    };
+
+    const std::map<meteoVariable, std::string> MapMonthlyMeteoVarToString = {
+        { monthlyAirTemperatureAvg, "MONTHLY_TAVG"} ,
+        { monthlyAirTemperatureMin, "MONTHLY_TMIN" },
+        { monthlyAirTemperatureMax, "MONTHLY_TMAX" },
+        { monthlyPrecipitation, "MONTHLY_PREC" },
+        { monthlyReferenceEvapotranspirationHS, "MONTHLY_ET0_HS" },
+        { monthlyBIC, "MONTHLY_BIC" },
+        { monthlyGlobalRadiation, "MONTHLY_RAD" }
+    };
+
+    const std::map<std::vector<meteoVariable>, std::string> MapVarUnit = {
+        { {dailyAirTemperatureMin,airTemperature,monthlyAirTemperatureMin}, "°C"} ,
+        { {dailyAirTemperatureMax,monthlyAirTemperatureMax}, "°C"} ,
+        { {dailyAirTemperatureAvg,dailyAirTemperatureRange,monthlyAirTemperatureAvg}, "°C"} ,
+        { {dailyPrecipitation,precipitation,monthlyPrecipitation}, "mm"} ,
+        { {dailyReferenceEvapotranspirationHS,dailyReferenceEvapotranspirationPM,referenceEvapotranspiration,monthlyReferenceEvapotranspirationHS}, "mm"} ,
+        { {dailyAirRelHumidityMin,dailyAirRelHumidityMax,dailyAirRelHumidityAvg,airRelHumidity}, "%"} ,
+        { {dailyGlobalRadiation,monthlyGlobalRadiation}, "MJ m-2"} ,
+        { {globalIrradiance,netIrradiance}, "W m-2"} ,
+        { {dailyBIC,monthlyBIC}, "mm"} ,
+        { {dailyWindScalarIntensityAvg,dailyWindVectorIntensityAvg,dailyWindScalarIntensityMax, windScalarIntensity}, "m s-1"} ,
+        { {dailyWindVectorDirectionPrevailing, dailyWindVectorIntensityMax, windVectorDirection}, "deg"} ,
+        { {windVectorIntensity, windVectorX, windVectorY}, "m s-1"} ,
+        { {dailyLeafWetness,leafWetness}, "h"} ,
+        { {dailyHeatingDegreeDays,dailyCoolingDegreeDays}, "°D"} ,
+        { {airRelHumidity,dailyAirRelHumidityMin,dailyAirRelHumidityMax,dailyAirRelHumidityAvg}, "%"} ,
+        { {dailyAirDewTemperatureMin,dailyAirDewTemperatureMax,dailyAirDewTemperatureAvg,airDewTemperature}, "°C"} ,
+        { {dailyThomAvg,dailyThomDaytime,dailyThomNighttime,thom}, "-"} ,
+        { {dailyWaterTableDepth,snowWaterEquivalent,snowFall}, "mm"} ,
+        { {snowSurfaceTemperature}, "°C"} ,
+        { {snowInternalEnergy,snowSurfaceInternalEnergy}, "kJ m-2"} ,
+    };
+
 
     enum frequencyType {hourly, daily, monthly, noFrequency};
 
     enum surfaceType   {SurfaceTypeWater, SurfaceTypeSoil, SurfaceTypeCrop};
+
+    enum droughtIndex {INDEX_SPI, INDEX_SPEI, INDEX_DECILES};
 
     class Crit3DClimateParameters
     {
@@ -236,7 +282,8 @@
         std::vector <float> tdMaxLapseRate;
 
         float getClimateLapseRate(meteoVariable myVar, Crit3DTime myTime);
-        float getClimateVar(meteoVariable myVar, Crit3DDate myDate, int myHour);
+        float getClimateLapseRate(meteoVariable myVar, int month);
+        float getClimateVar(meteoVariable myVar, int month, float height, float refHeight);
     };
 
     bool computeWindCartesian(float intensity, float direction, float* u, float* v);
@@ -265,6 +312,7 @@
     frequencyType getVarFrequency(meteoVariable myVar);
 
     std::string getVariableString(meteoVariable myVar);
+    std::string getUnitFromVariable(meteoVariable var);
     std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteoVariable value);
     meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string &value);
     meteoVariable getMeteoVar(std::string varString);

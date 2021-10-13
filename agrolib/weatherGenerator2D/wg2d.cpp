@@ -358,6 +358,7 @@ void weatherGenerator2D::temperatureCompute()
 
     // step 4 of temperature WG2D
     weatherGenerator2D::multisiteTemperatureGeneration();
+    //weatherGenerator2D::multisiteTemperatureGenerationMeanDelta();
     printf("end temperature module\n");
     }
 
@@ -411,7 +412,9 @@ void weatherGenerator2D::initializeRandomNumbers(double *vector)
 void weatherGenerator2D::precipitationP00P10()
 {
     // initialization
+    int consecutiveDayTransition = 10;
     precipitationPDryUntilNSteps();
+
     for (int iCount=0; iCount<12; iCount++)
     {
         precOccurrenceGlobal[iCount].p00 = 0;
@@ -477,6 +480,16 @@ void weatherGenerator2D::precipitationP00P10()
             precOccurence[idStation][iMonth].month = iMonth +1;
             //printf("%d %f\n",month+1,1-precOccurence[idStation][month].p10);
         }
+
+        for (int iMonth=0;iMonth<12;iMonth++)
+        {
+            //printf("before %d %f\n",iMonth+1,precOccurence[idStation][iMonth].p00);
+            precOccurence[idStation][iMonth].p00 = (precOccurence[idStation][iMonth].p00)/(1-precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition]) - (precOccurence[idStation][iMonth].pDry[consecutiveDayTransition]) * (precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition])/(1-precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition]);
+            //printf("after %d %f\n",iMonth+1,precOccurence[idStation][iMonth].p00);
+            //printf("after %d %f %f %f\n",iMonth+1,precOccurence[idStation][iMonth].pDry[consecutiveDayTransition],precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition],precOccurence[idStation][iMonth].p00);
+            //getchar();
+        }
+
         //pressEnterToContinue();
     }
 
@@ -594,8 +607,13 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
                 {
                     precOccurence[idStation][iMonth].pDry[i] = 0.0;
                 }
+                if (occurrence0[iMonth][0] != 0)
+                    precOccurence[idStation][iMonth].pDryWeight[i] = 1.0*occurrence0[iMonth][i]/occurrence0[iMonth][0];
+                else
+                    precOccurence[idStation][iMonth].pDryWeight[i] = 0;
+                //printf("month %d, step %d, occurrence %d weight %f\n",iMonth,i,occurrence0[iMonth][i],precOccurence[idStation][iMonth].pDryWeight[i]);
             }
-
+            //getchar();
 
             double* occurrenceFitting;
             double* occurrenceFitted;
@@ -634,7 +652,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
         for (int iMonth=0;iMonth<12;iMonth++)
         {
             int iMaxForInterpolation=0;
-            printf("month %d\n",iMonth+1);
+            //printf("month %d\n",iMonth+1);
             for (int i=0;i<nrSteps;i++)
             {
                 int numberOfWetDays;
@@ -687,7 +705,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
             for(int i=0;i<nrSteps;i++)
             {
                 precOccurence[idStation][iMonth].pWet[i] = MAXVALUE(0.000001, 1 - precOccurence[idStation][iMonth].pWet[i]);
-                printf("%d %f %f\n",i,precOccurence[idStation][iMonth].pDry[i],precOccurence[idStation][iMonth].pWet[i]);
+                //printf("%d %f %f\n",i,precOccurence[idStation][iMonth].pDry[i],precOccurence[idStation][iMonth].pWet[i]);
             }
         }
         //getchar();
@@ -715,6 +733,7 @@ void weatherGenerator2D::precipitationP000P100P010P110()
         precOccurrenceGlobal[iCount].p00 = 0;
         precOccurrenceGlobal[iCount].p10 = 0;
     }*/
+    int consecutiveDayTransition = 10;
     precipitationPDryUntilNSteps();
     int daysWithRainGlobal[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
     int daysWithoutRainGlobal[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
@@ -1291,11 +1310,15 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                         nrConsecutiveDays++;
                         count--;
                     }
-                    //printf("%d,%d,%f,%f\n",count,nrConsecutiveDays,normRandom[i][j], transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]);
-                    //getchar();
-                    //if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
-                    transitionNormalAugmentedMemory[i][0][0] = transitionNormalAugmentedMemory[i][0][1] = transitionNormal[i][0];
-                    if(normRandom[i][j]  > transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    if (nrConsecutiveDays<10)
+                    {
+                        if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
+                    }
+                    else
+                    {
+                        transitionNormalAugmentedMemory[i][0][0] = transitionNormalAugmentedMemory[i][0][1] = transitionNormal[i][0];
+                        if(normRandom[i][j]  > transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    }
                 }
                 else
                 {
@@ -1306,9 +1329,15 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                         nrConsecutiveDays++;
                         count--;
                     }
-                    transitionNormalAugmentedMemory[i][1][0] = transitionNormalAugmentedMemory[i][1][1] = transitionNormal[i][1];
-                    //if(normRandom[i][j]> transitionNormal[i][1]) occurrences[i][j] = 1.;
-                    if(normRandom[i][j]> transitionNormalAugmentedMemory[i][1][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    //if (nrConsecutiveDays < 100)
+                    //{
+                    if(normRandom[i][j]> transitionNormal[i][1]) occurrences[i][j] = 1.; // suposing that you can't establish a trend with rain days, this is valid in Emilia-Romagna
+                    //}
+                    //else
+                    //{
+                        //transitionNormalAugmentedMemory[i][1][0] = transitionNormalAugmentedMemory[i][1][1] = transitionNormal[i][1];
+                        //if(normRandom[i][j]> transitionNormalAugmentedMemory[i][1][nrConsecutiveDays]) occurrences[i][j] = 1.;
+                    //}
                 }
 
             }

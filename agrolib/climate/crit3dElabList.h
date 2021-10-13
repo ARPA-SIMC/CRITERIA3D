@@ -92,7 +92,7 @@ public:
     void setListParam2(const std::vector<float> &listParam2);
     void insertParam2(float param2);
 
-    void addElab(unsigned int index);
+    bool addElab(unsigned int index);
 
     std::vector<QString> listFileName() const;
     void setListFileName(const std::vector<QString> &listFileName);

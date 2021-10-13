@@ -105,6 +105,8 @@ Crit3DQuality::Crit3DQuality()
     qualityHourlyWInt = new quality::Range(0, 150);
     qualityHourlyWDir = new quality::Range(0, 360);
     qualityHourlyGIrr = new quality::Range(-20, 1353);
+    qualityHourlyET0 = new quality::Range(0, 5);
+
     qualityTransmissivity = new quality::Range(0, 1);
 
     qualityDailyT = new quality::Range(-60, 60);
@@ -113,6 +115,7 @@ Crit3DQuality::Crit3DQuality()
     qualityDailyWInt = new quality::Range(0, 150);
     qualityDailyWDir = new quality::Range(0, 360);
     qualityDailyGRad = new quality::Range(-20, 120);
+    qualityDailyET0 = new quality::Range(0, 20);
 
     initialize();
 }
@@ -137,6 +140,7 @@ quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
         return qualityHourlyWDir;
     else if (myVar == airDewTemperature)
         return qualityHourlyTd;
+    else if (myVar == referenceEvapotranspiration);
 
     // daily
     else if (myVar == dailyAirTemperatureMax
@@ -158,6 +162,8 @@ quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
     else if (myVar == dailyWindScalarIntensityAvg || myVar == dailyWindScalarIntensityMax || myVar == dailyWindVectorIntensityAvg || myVar == dailyWindVectorIntensityMax)
         return qualityDailyWInt;
 
+    else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM)
+        return qualityDailyET0;
     else
         return nullptr;
 }
@@ -222,4 +228,51 @@ quality::qualityType Crit3DQuality::syntacticQualitySingleValue(meteoVariable my
         else
             return quality::accepted;
     }
+}
+
+quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+{
+
+    if (int(myValue) == int(NODATA))
+        return quality::missing_data;
+    else if (wrongValueDaily_SingleValue(myVar, climateParam, myValue, month, height))
+        return quality::wrong_spatial;
+    else
+        return quality::accepted;
+}
+
+bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+{
+    Crit3DDate myDate(1,month,2020);
+
+    float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
+    float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
+
+    if (myVar == dailyAirTemperatureMin || myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureAvg)
+        if ( tminClima == NODATA || tmaxClima == NODATA)
+            return false;
+
+    if (myVar == dailyAirTemperatureMin)
+    {
+        if (myValue < tminClima - getDeltaTWrong() ||
+            myValue > tminClima + getDeltaTWrong()) return true;
+    }
+    else if (myVar == dailyAirTemperatureAvg)
+    {
+        if (myValue < tminClima - getDeltaTWrong() ||
+            myValue > tmaxClima + getDeltaTWrong()) return true;
+    }
+    else if (myVar == dailyAirTemperatureMax)
+    {
+        if (myValue < tmaxClima - getDeltaTWrong() ||
+            myValue > tmaxClima + getDeltaTWrong()) return true;
+    }
+    else
+    {
+        if (myValue < getQualityRange(myVar)->getMin() || myValue > getQualityRange(myVar)->getMax())
+            return true;
+    }
+
+    return false;
+
 }

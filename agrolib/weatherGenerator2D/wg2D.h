@@ -59,6 +59,8 @@
         double pDry[60];
         double pWet[60];
 
+        double pDryWeight[60];
+
         int month;
     };
 
@@ -136,6 +138,9 @@
     struct TtemperatureCoefficients{
         double A[2][2];
         double B[2][2];
+        double A_mean_delta[2][2];
+        double B_mean_delta[2][2];
+
         Tvariable minTWet;
         Tvariable minTDry;
         Tvariable maxTWet;
@@ -181,6 +186,8 @@
         double* maxT;
         double* minT;
         double* precipitation;
+        double* maxTClimate;
+        double* minTClimate;
 
     };
 
@@ -265,6 +272,14 @@
 
         double* normalRandomNumbers;
 
+
+        double* monthlyAverageOverYearsAverageTmax;
+        double* monthlyAverageOverYearsAverageTmin;
+        double* monthlyAverageOverYearsAverageTmean;
+        double* monthlyStdDevOverYearsAverageTmax;
+        double* monthlyStdDevOverYearsAverageTmin;
+        double* monthlyStdDevOverYearsAverageTmean;
+
         //functions
         void commonModuleCompute();
         void precipitationCompute();
@@ -289,22 +304,28 @@
 
 
         void temperatureCompute();
+        void computeMonthlyTemperatures();
         void computeTemperatureParameters();
         void initializeTemperatureParameters();
         int  doyFromDate(int day,int month,int year);
         int  dateFromDoy(int doy, int year, int *day, int *month);
         void harmonicsFourier(double* variable, double *par, int nrPar, double* estimatedVariable, int nrEstimatedVariable);
         void computeResiduals(double* averageTMaxDry,double* averageTMaxWet,double* stdDevTMaxDry,double* stdDevTMaxWet,double* averageTMinDry,double* averageTMinWet,double* stdDevTMinDry,double* stdDevTMinWet,int idStation);
+        void computeResidualsMeanDelta(double* averageTMeanDry, double* averageTMeanWet, double* stdDevTMeanDry, double* stdDevTMeanWet, double* averageTDeltaDry, double* averageTDeltaWet, double* stdDevTDeltaDry, double* stdDevTDeltaWet, int idStation);
         void temperaturesCorrelationMatrices();
         void covarianceOfResiduals(double** covarianceMatrix, int lag);
+        void covarianceOfResidualsMeanDelta(double** covarianceMatrix, int lag);
         void initializeTemperaturecorrelationMatrices();
         void multisiteRandomNumbersTemperature();
         void initializeNormalRandomMatricesTemperatures();
         void multisiteTemperatureGeneration();
+        void multisiteTemperatureGenerationMeanDelta();
         void initializeMultiOccurrenceTemperature(int length);
         void initializeTemperaturesOutput(int length);
         void createAmountOutputSerie();
         void prepareWeatherGeneratorOutput();
+
+        //void initializeTemperatureParametersMeanDelta();
 
         void initializeOutputData(int* nrDays);
         void randomSet(double *arrayNormal,int dimArray);

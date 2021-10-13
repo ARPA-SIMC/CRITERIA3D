@@ -2,7 +2,7 @@
 #include "pomodoro.h"
 
 #include "math.h"
-
+#include <algorithm>
 
 double Pomodoro::Dday(Stazione& stazione, const long& i)
 {

@@ -2,7 +2,7 @@
 #include "vite.h"
 
 #include "math.h"
-
+#include <algorithm>
 
 double Vite::GradiGiorno(const long& i, const Stazione& stazione)
 {

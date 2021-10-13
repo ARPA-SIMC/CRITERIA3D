@@ -57,7 +57,7 @@ void Crit3DElabList::eraseElement(unsigned int index)
 {
     if (_listAll.size() > index)
     {
-        _listAll.removeAt(index);
+        _listAll.erase(_listAll.begin() + index);
     }
     if (_listElab1.size() > index)
     {
@@ -328,7 +328,7 @@ void Crit3DElabList::insertParam2(float param2)
     _listParam2.push_back(param2);
 }
 
-void Crit3DElabList::addElab(unsigned int index)
+bool Crit3DElabList::addElab(unsigned int index)
 {
 
     QString yearStart = QString::number(_listYearStart[index]);
@@ -375,10 +375,11 @@ void Crit3DElabList::addElab(unsigned int index)
 
     if (_listAll.contains(elabAdded)!= 0)
     {
-        return;
+        return false;
     }
 
     _listAll.append(elabAdded);
+    return true;
 }
 
 std::vector<QString> Crit3DElabList::listFileName() const

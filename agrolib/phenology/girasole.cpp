@@ -2,7 +2,7 @@
 #include "girasole.h"
 
 #include "math.h"
-
+#include <algorithm>
 
 void Girasole::Emergenza(const Stazione& stazione) 
 {

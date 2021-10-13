@@ -1402,7 +1402,7 @@ double weatherGenerator2D::inverseGammaFunction(double valueProbability, double 
    double leftBound = 0.0;
    int counter = 0;
    do {
-       y = gammaDistributions::incompleteGamma(alpha,rightBound/beta);
+       y = incompleteGamma(alpha,rightBound/beta);
        if (valueProbability>y)
        {
            rightBound *= 2;
@@ -1412,7 +1412,7 @@ double weatherGenerator2D::inverseGammaFunction(double valueProbability, double 
    } while ((valueProbability>y));
 
    x = (rightBound + leftBound)*0.5;
-   y = gammaDistributions::incompleteGamma(alpha,x/beta);
+   y = incompleteGamma(alpha,x/beta);
    while ((fabs(valueProbability - y) > accuracy) && (counter < 200))
    {
        if (y > valueProbability)
@@ -1424,7 +1424,7 @@ double weatherGenerator2D::inverseGammaFunction(double valueProbability, double 
            leftBound = x;
        }
        x = (rightBound + leftBound)*0.5;
-       y = gammaDistributions::incompleteGamma(alpha,x/beta);
+       y = incompleteGamma(alpha,x/beta);
        ++counter;
    }
    x = (rightBound + leftBound)*0.5;
