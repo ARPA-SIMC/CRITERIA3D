@@ -1941,7 +1941,8 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
         return cropChanged;
     }
 
-    // irrigation parameters (TODO caso irrigazioni annullate)
+    // irrigation parameters
+    // TODO gestire caso irrigazioni azzerate
     if(irrigationShiftValue->isVisible())
     {
         if( cropFromDB.irrigationVolume != irrigationVolumeValue->text().toDouble()
