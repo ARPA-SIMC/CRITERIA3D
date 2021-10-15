@@ -10,7 +10,7 @@
 
 bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Crit3DShapeHandler &soil, Crit3DShapeHandler &meteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
-                 QString ucmFileName, std::string &error, bool showInfo)
+                 QString ucmFileName, double threshold, std::string &error, bool showInfo)
 {
 
     // make a copy of shapefile and return cloned shapefile complete path
@@ -44,7 +44,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(ucm, meteo, rasterRef, rasterVal, vectorNull);
 
     if (showInfo) formInfo.setText("[4/8] Zonal statistic crop/meteo...");
-    bool isOk = zonalStatisticsShapeMajority(ucm, meteo, matrix, vectorNull, idMeteo, "ID_METEO", error);
+    bool isOk = zonalStatisticsShapeMajority(ucm, meteo, matrix, vectorNull, idMeteo, "ID_METEO", threshold, error);
 
     // zonal statistic on soil map
     if (isOk)
@@ -56,7 +56,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
         matrix = computeMatrixAnalysis(ucm, soil, rasterRef, rasterVal, vectorNull);
 
         if (showInfo) formInfo.setText("[7/8] Zonal statistic crop/soil...");
-        isOk = zonalStatisticsShapeMajority(ucm, soil, matrix, vectorNull, idSoil, "ID_SOIL", error);
+        isOk = zonalStatisticsShapeMajority(ucm, soil, matrix, vectorNull, idSoil, "ID_SOIL", threshold, error);
     }
 
     if (! isOk)
