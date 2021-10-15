@@ -159,14 +159,8 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
     double valueToSave = 0.0;
     for (unsigned int shapeIndex = 0; shapeIndex < nrRefShapes; shapeIndex++)
     {
-        if (validPoints[shapeIndex] < vectorNull[shapeIndex])
-        {
-            valueToSave = NODATA;
-        }
-        else
-        {
-            valueToSave = aggregationValues[shapeIndex];
-        }
+        valueToSave = aggregationValues[shapeIndex];
+
         if (fieldType == FTInteger)
         {
             shapeRef.writeIntAttribute(int(shapeIndex), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), int(valueToSave));
