@@ -280,7 +280,7 @@
         double* monthlyStdDevOverYearsAverageTmax;
         double* monthlyStdDevOverYearsAverageTmin;
         double* monthlyStdDevOverYearsAverageTmean;
-
+        float** monthlyRandomDeviationTmean;
         //functions
         void commonModuleCompute();
         void precipitationCompute();
