@@ -164,8 +164,8 @@ quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
 
     else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM)
         return qualityDailyET0;
-    else
-        return nullptr;
+
+    return nullptr;
 }
 
 

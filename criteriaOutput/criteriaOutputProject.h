@@ -59,6 +59,7 @@ public:
     QString shapeFieldName;
     QString aggregationListFileName;
     QString aggregationCellSize;
+    QString aggregationThreshold;
 
     QString mapListFileName;
     QString mapCellSize;
