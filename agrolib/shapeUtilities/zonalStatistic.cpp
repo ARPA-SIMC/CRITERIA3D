@@ -57,7 +57,7 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
 bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shapeVal,
                           std::vector <std::vector<int> > &matrix, std::vector<int> &vectorNull,
                           std::string valField, std::string valFieldOutput, std::string aggregationType,
-                          std::string& error)
+                          double threshold, std::string& error)
 {
     // check if valField exists
     int fieldIndex = shapeVal.getDBFFieldIndex(valField.c_str());
@@ -128,8 +128,17 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
             }
         }
 
+        // check percentage of valid values
+        bool isValid = false;
+        if (validPoints[row] > 0)
+        {
+            double validPercentage = double(validPoints[row]) / double(validPoints[row] + vectorNull[row]);
+            if (validPercentage >= threshold)
+                isValid = true;
+        }
+
         // aggregation values
-        if (validPoints[row] == 0 || validPoints[row] < vectorNull[row])
+        if (! isValid)
         {
             aggregationValues[row] = NODATA;
         }
@@ -150,14 +159,8 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
     double valueToSave = 0.0;
     for (unsigned int shapeIndex = 0; shapeIndex < nrRefShapes; shapeIndex++)
     {
-        if (validPoints[shapeIndex] < vectorNull[shapeIndex])
-        {
-            valueToSave = NODATA;
-        }
-        else
-        {
-            valueToSave = aggregationValues[shapeIndex];
-        }
+        valueToSave = aggregationValues[shapeIndex];
+
         if (fieldType == FTInteger)
         {
             shapeRef.writeIntAttribute(int(shapeIndex), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), int(valueToSave));
@@ -179,7 +182,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
 bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                           std::vector <std::vector<int> >&matrix, std::vector<int> &vectorNull,
                           std::string valField, std::string valFieldOutput,
-                          std::string &error)
+                          double threshold, std::string &error)
 {
     // check if valField exists
     int fieldIndex = shapeVal.getDBFFieldIndex(valField.c_str());
@@ -293,7 +296,15 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
         } // end column loop
 
         // check valid values
-        if (validPoints[row] == 0 || validPoints[row] < vectorNull[row])
+        bool isValid = false;
+        if (validPoints[row] > 0)
+        {
+            double validPercentage = double(validPoints[row]) / double(validPoints[row] + vectorNull[row]);
+            if (validPercentage >= threshold)
+                isValid = true;
+        }
+
+        if (! isValid)
         {
             // write NODATA or null string
             if (fieldType == FTInteger)

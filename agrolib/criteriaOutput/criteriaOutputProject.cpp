@@ -44,6 +44,7 @@ void CriteriaOutputProject::initialize()
     fieldListFileName = "";
     aggregationListFileName = "";
     aggregationCellSize = "";
+    aggregationThreshold = "";
 
     mapListFileName = "";
     mapCellSize = "";
@@ -330,6 +331,9 @@ bool CriteriaOutputProject::readSettings()
     }
 
     aggregationCellSize = projectSettings->value("aggregation_cellsize","").toString();
+    aggregationThreshold = projectSettings->value("aggregation_threshold","").toString();
+    // default threshold
+    if (aggregationThreshold == "") aggregationThreshold = "0.5";
 
     outputAggrCsvFileName = projectSettings->value("aggregation_output","").toString();
     if (outputAggrCsvFileName.right(4) == ".csv")
@@ -659,8 +663,21 @@ int CriteriaOutputProject::createAggregationFile()
     int cellSize = aggregationCellSize.toInt(&ok, 10);
     if (!ok)
     {
-        projectError = "Invalid aggregation cellsize: " + aggregationCellSize;
-        return ERROR_SETTINGS_MISSINGDATA;
+        projectError = "Invalid aggregation_cellsize: " + aggregationCellSize;
+        return ERROR_WRONGPARAMETER;
+    }
+
+    // check aggregation threshold
+    double threshold = aggregationThreshold.toDouble(&ok);
+    if (!ok)
+    {
+        projectError = "Invalid aggregation_threshold: " + aggregationThreshold;
+        return ERROR_WRONGPARAMETER;
+    }
+    if (threshold < 0 || threshold > 1)
+    {
+        projectError = "Invalid aggregation_threshold (must be between 0 and 1): " + aggregationThreshold;
+        return ERROR_WRONGPARAMETER;
     }
 
     // check shapefile
@@ -752,13 +769,15 @@ int CriteriaOutputProject::createAggregationFile()
         {
             isOk = zonalStatisticsShapeMajority(shapeRef, shapeVal, matrix, vectorNull,
                                                 aggregationVariable.inputField[i].toStdString(),
-                                                aggregationVariable.outputVarName[i].toStdString(), error);
+                                                aggregationVariable.outputVarName[i].toStdString(),
+                                                threshold, error);
         }
         else
         {
             isOk = zonalStatisticsShape(shapeRef, shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(),
                                         aggregationVariable.outputVarName[i].toStdString(),
-                                        aggregationVariable.aggregationType[i].toStdString(), error);
+                                        aggregationVariable.aggregationType[i].toStdString(),
+                                        threshold, error);
         }
 
         if (!isOk) break;
@@ -776,7 +795,7 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_ZONAL_STATISTICS_SHAPE;
     }
 
-    // write csv aggragation data
+    // write csv aggregation data
     int myResult = writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
                                  aggregationVariable.outputVarName, shapeFieldName, projectError);
 
