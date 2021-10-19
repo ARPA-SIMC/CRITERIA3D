@@ -2276,8 +2276,8 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
         {
             int getDecadal = (multiOccurrenceTemperature[j].month_simulated-1)*3 + floor(MINVALUE(multiOccurrenceTemperature[j].day_simulated,29)/10.);
             int getYear = floor(1.*j/365.);
-            maxTGenerated[j][i] = Xp[0][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*0.5; //multiOccurrenceTemperature[j].;
-            minTGenerated[j][i] = Xp[1][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*0.5;
+            maxTGenerated[j][i] = Xp[0][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0; //multiOccurrenceTemperature[j].;
+            minTGenerated[j][i] = Xp[1][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0;
             occurrencePrecGenerated[j][i] = X[j];
             averageTmax[j%365] += maxTGenerated[j][i]/parametersModel.yearOfSimulation;
             averageTmin[j%365] += minTGenerated[j][i]/parametersModel.yearOfSimulation;
