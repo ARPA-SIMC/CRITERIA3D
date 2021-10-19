@@ -207,6 +207,7 @@
         int numberObservedDJF,numberObservedMAM,numberObservedJJA,numberObservedSON;
         int numberObservedMax;
         bool computeStatistics;
+        int consecutiveDayTransition;
         TconsecutiveDays* observedConsecutiveDays;
         TconsecutiveDays* simulatedConsecutiveDays;
         TaverageTempMethod averageTempMethod;
@@ -279,14 +280,13 @@
         double* monthlyStdDevOverYearsAverageTmax;
         double* monthlyStdDevOverYearsAverageTmin;
         double* monthlyStdDevOverYearsAverageTmean;
-
+        float** monthlyRandomDeviationTmean;
         //functions
         void commonModuleCompute();
         void precipitationCompute();
         void precipitation29February(int idStation);
         void precipitationAmountsOccurences(int idStation, double* precipitationAmountsD,bool* precipitationOccurencesD);
         void precipitationP00P10();
-        void precipitationP000P100P010P110();
         void precipitationPDryUntilNSteps();
         int recursiveAccountDryDays(int idStation, int i, int iMonth,int step, int** consecutiveDays, int** occurrence,int nrFollowingSteps);
         int recursiveAccountWetDays(int idStation, int i, int iMonth,int step, int** consecutiveDays, int** occurrence, int nrFollowingSteps);

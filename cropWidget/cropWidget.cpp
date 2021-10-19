@@ -35,6 +35,7 @@
 #include "meteoWidget.h"
 #include "criteria1DMeteo.h"
 #include "utilities.h"
+#include "basicMath.h"
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -1933,14 +1934,26 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
     // water needs
     if( cropFromDB.kcMax != maxKcValue->text().toDouble()
        || cropFromDB.psiLeaf != psiLeafValue->text().toDouble()
-       || cropFromDB.fRAW != rawFractionValue->value()
-       || cropFromDB.stressTolerance != stressToleranceValue->value() )
+       || ! isEqual(cropFromDB.fRAW, rawFractionValue->value())
+       || ! isEqual(cropFromDB.stressTolerance, stressToleranceValue->value()) )
     {
         cropChanged = true;
         return cropChanged;
     }
 
-    // TODO check irrigation parameters
+    // irrigation parameters
+    // TODO gestire caso irrigazioni azzerate
+    if(irrigationShiftValue->isVisible())
+    {
+        if( cropFromDB.irrigationVolume != irrigationVolumeValue->text().toDouble()
+           || cropFromDB.irrigationShift != irrigationShiftValue->value()
+           || cropFromDB.degreeDaysStartIrrigation != degreeDaysStartValue->text().toInt()
+           || cropFromDB.degreeDaysEndIrrigation != degreeDaysEndValue->text().toInt() )
+        {
+            cropChanged = true;
+            return cropChanged;
+        }
+    }
 
     cropChanged = false;
     return cropChanged;
@@ -1960,11 +1973,11 @@ void Crit3DCropWidget::irrigationVolumeChanged()
     else if (irrigationVolumeValue->text().toDouble() > 0)
     {
         irrigationShiftValue->setEnabled(true);
-        irrigationShiftValue->setValue(myCase.crop.irrigationShift);
+        irrigationShiftValue->setValue(cropFromDB.irrigationShift);
         degreeDaysStartValue->setEnabled(true);
-        degreeDaysStartValue->setText(QString::number(myCase.crop.degreeDaysStartIrrigation));
+        degreeDaysStartValue->setText(QString::number(cropFromDB.degreeDaysStartIrrigation));
         degreeDaysEndValue->setEnabled(true);
-        degreeDaysEndValue->setText(QString::number(myCase.crop.degreeDaysEndIrrigation));
+        degreeDaysEndValue->setText(QString::number(cropFromDB.degreeDaysEndIrrigation));
     }
 }
 

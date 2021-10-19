@@ -7,7 +7,7 @@
     #include <QString>
 
     bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Crit3DShapeHandler &soil, Crit3DShapeHandler &meteo,
-                 std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
+                 std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize, double threshold,
                  QString ucmFileName, std::string &error, bool showInfo);
 
     bool fillUcmIdCase(Crit3DShapeHandler &ucm, std::string idCrop, std::string idSoil, std::string idMeteo);
