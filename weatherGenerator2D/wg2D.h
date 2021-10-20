@@ -244,7 +244,6 @@
         void initializePrecipitationAmountParameters();
         void computeprecipitationAmountParameters();
         void getSeasonalMeanPrecipitation(int iStation, int iSeason, double* meanPrec);
-        void getPrecipitationAmount();
         void spatialIterationAmountsMonthly(int iMonth, double** correlationMatrixSimulatedData,double ** amountsCorrelationMatrix , double** randomMatrix, int lengthSeries, double** occurrences, double** simulatedPrecipitationAmountsSeasonal);
         void precipitationCorrelationMatricesSimulation();
         void precipitationMonthlyAverage(float** averageSimulation, float** averageClimate);
