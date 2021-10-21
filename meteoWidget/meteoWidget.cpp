@@ -391,81 +391,85 @@ void Crit3DMeteoWidget::setDateInterval(QDate first, QDate last)
     lastHourlyDate = last;
 }
 
-void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
+void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp, bool isAppend)
 {
-    firstDate->blockSignals(true);
-    lastDate->blockSignals(true);
-
     meteoPoints.append(mp);
-    QDate myDailyDateFirst;
-    QDate myDailyDateLast;
-    QDate myHourlyDateFirst;
-    QDate myHourlyDateLast;
-    // search bigger data interval to show between meteoPoints
-    for (int i = 0; i < meteoPoints.size(); i++)
-    {
-        myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year, meteoPoints[i].obsDataD[0].date.month, meteoPoints[i].obsDataD[0].date.day);
-        myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD-1);
-        if (myDailyDateFirst.isValid() && myDailyDateFirst < firstDailyDate)
-        {
-            firstDailyDate = myDailyDateFirst;
-        }
-        if (myDailyDateLast.isValid() && myDailyDateLast > lastDailyDate)
-        {
-            lastDailyDate = myDailyDateLast;
-        }
-        myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year, meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
-                                  meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
-        myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH-1);
-        if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
-        {
-            firstHourlyDate = myHourlyDateFirst;
-        }
-        if (myHourlyDateLast.isValid() && myHourlyDateLast > lastHourlyDate)
-        {
-            lastHourlyDate = myHourlyDateLast;
-        }
-    }
 
-    if (currentFreq == daily)
+    if (! isAppend)
     {
-        if (firstDailyDate == QDate::currentDate() && lastDailyDate == QDate(1800,1,1))
-        {
-            firstDate->setDate(QDate::currentDate());
-            lastDate->setDate(QDate::currentDate());
-        }
-        else
-        {
-            firstDate->setDate(firstDailyDate);
-            lastDate->setDate(lastDailyDate);
-        }
-    }
-    else if (currentFreq == hourly)
-    {
-        if (firstHourlyDate == QDate::currentDate() && lastHourlyDate == QDate(1800,1,1))
-        {
-            firstDate->setDate(QDate::currentDate());
-            lastDate->setDate(QDate::currentDate());
-        }
-        else
-        {
-            firstDate->setDate(firstHourlyDate);
-            lastDate->setDate(lastHourlyDate);
-        }
-    }
+        // set dates
+        firstDate->blockSignals(true);
+        lastDate->blockSignals(true);
 
-    // check draw period (max 30 days)
-    QDate minDate = lastDate->date().addDays(-30);
-    if (firstDate->date() < minDate)
-    {
-        firstDate->setDate(minDate);
+        QDate myDailyDateFirst;
+        QDate myDailyDateLast;
+        QDate myHourlyDateFirst;
+        QDate myHourlyDateLast;
+        // search bigger data interval to show between meteoPoints
+        for (int i = 0; i < meteoPoints.size(); i++)
+        {
+            myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year, meteoPoints[i].obsDataD[0].date.month, meteoPoints[i].obsDataD[0].date.day);
+            myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD-1);
+            if (myDailyDateFirst.isValid() && myDailyDateFirst < firstDailyDate)
+            {
+                firstDailyDate = myDailyDateFirst;
+            }
+            if (myDailyDateLast.isValid() && myDailyDateLast > lastDailyDate)
+            {
+                lastDailyDate = myDailyDateLast;
+            }
+            myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year, meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
+                                      meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
+            myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH-1);
+            if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
+            {
+                firstHourlyDate = myHourlyDateFirst;
+            }
+            if (myHourlyDateLast.isValid() && myHourlyDateLast > lastHourlyDate)
+            {
+                lastHourlyDate = myHourlyDateLast;
+            }
+        }
+
+        if (currentFreq == daily)
+        {
+            if (firstDailyDate == QDate::currentDate() && lastDailyDate == QDate(1800,1,1))
+            {
+                firstDate->setDate(QDate::currentDate());
+                lastDate->setDate(QDate::currentDate());
+            }
+            else
+            {
+                firstDate->setDate(firstDailyDate);
+                lastDate->setDate(lastDailyDate);
+            }
+        }
+        else if (currentFreq == hourly)
+        {
+            if (firstHourlyDate == QDate::currentDate() && lastHourlyDate == QDate(1800,1,1))
+            {
+                firstDate->setDate(QDate::currentDate());
+                lastDate->setDate(QDate::currentDate());
+            }
+            else
+            {
+                firstDate->setDate(firstHourlyDate);
+                lastDate->setDate(lastHourlyDate);
+            }
+        }
+
+        // check draw period (max 30 days)
+        QDate minDate = lastDate->date().addDays(-30);
+        if (firstDate->date() < minDate)
+        {
+            firstDate->setDate(minDate);
+        }
+
+        firstDate->blockSignals(false);
+        lastDate->blockSignals(false);
     }
 
     redraw();
-
-    firstDate->blockSignals(false);
-    lastDate->blockSignals(false);
-
     show();
 }
 
@@ -1609,7 +1613,6 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 
 bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state)
 {
-
     if (state)
     {
         int doy = point.x();
