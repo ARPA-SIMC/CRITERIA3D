@@ -2376,6 +2376,24 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         return;
     }
 
+    // set minimum and maximum dates
+    QDate firstDate, lastDate;
+    if (hasDailyData)
+    {
+        firstDate = firstDaily;
+        lastDate = lastDaily;
+        if (hasHourlyData)
+        {
+            firstDate = std::min(firstDate, firstHourly.date());
+            lastDate = std::max(lastDaily, lastHourly.date());
+        }
+    }
+    else if (hasHourlyData)
+    {
+        firstDate = firstHourly.date();
+        lastDate = lastHourly.date();
+    }
+
     int meteoWidgetId = 0;
     if (meteoWidgetPointList.isEmpty())
     {
@@ -2390,7 +2408,7 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
     {
         meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
         meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
-        meteoWidgetPointList[meteoWidgetPointList.size()-1]->draw(mp);
+        meteoWidgetPointList[meteoWidgetPointList.size()-1]->draw(mp, isAppend);
     }
     else if (!isAppend)
     {
@@ -2409,7 +2427,9 @@ void Project::showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoi
         QObject::connect(meteoWidgetPoint, SIGNAL(closeWidgetPoint(int)), this, SLOT(deleteMeteoWidgetPoint(int)));
         meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
         meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
-        meteoWidgetPoint->draw(mp);
+
+        meteoWidgetPoint->setDateInterval(firstDate, lastDate);
+        meteoWidgetPoint->draw(mp, isAppend);
     }
 
     closeLogInfo();
@@ -2460,7 +2480,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         unsigned col;
         if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
         {
-            meteoWidgetGridList[meteoWidgetGridList.size()-1]->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
+            meteoWidgetGridList[meteoWidgetGridList.size()-1]->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col), isAppend);
         }
         return;
     }
@@ -2522,7 +2542,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
             {
                 meteoWidgetGrid->setDateInterval(firstDate, lastDate);
-                meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
+                meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col), isAppend);
             }
         }
         return;
