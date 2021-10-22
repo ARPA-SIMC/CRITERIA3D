@@ -381,14 +381,9 @@ void weatherGenerator2D::precipitationCompute()
     printf ( "Current local time and date: %s", asctime (timeinfo) );
 
     // step 5 of precipitation WG2D
-    if (parametersModel.distributionPrecipitation == 3)
-    {
-        weatherGenerator2D::getPrecipitationAmount();
-    }
-    else
-    {
-        weatherGenerator2D::precipitationMultisiteAmountsGeneration(); // generation of synthetic series
-    }
+
+    weatherGenerator2D::precipitationMultisiteAmountsGeneration(); // generation of synthetic series
+
     if (!isPrecWG2D) printf("step 8/9 & 9/9 not computed\n");
     time ( &rawtime );
     timeinfo = localtime ( &rawtime );
