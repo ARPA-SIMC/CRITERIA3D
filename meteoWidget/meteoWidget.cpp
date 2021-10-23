@@ -1630,27 +1630,28 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                     break;
                 }
             }
-        }
-        if (!valueExist)
-        {
-            // missing data
-            if (currentFreq == daily)
+
+            if (!valueExist)
             {
-                QDate xDate = firstDate->date().addDays(doy);
-                m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")));
+                // missing data
+                if (currentFreq == daily)
+                {
+                    QDate xDate = firstDate->date().addDays(doy);
+                    m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")));
+                }
+                if (currentFreq == hourly)
+                {
+                    QDateTime xDate(firstDate->date(),QTime(0,0,0));
+                    xDate = xDate.addSecs(3600*doy);
+                    m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")));
+                }
+                m_tooltip->setSeries(series);
+                m_tooltip->setAnchor(point);
+                m_tooltip->setZValue(11);
+                m_tooltip->updateGeometry();
+                m_tooltip->show();
+                return true;
             }
-            if (currentFreq == hourly)
-            {
-                QDateTime xDate(firstDate->date(),QTime(0,0,0));
-                xDate = xDate.addSecs(3600*doy);
-                m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")));
-            }
-            m_tooltip->setSeries(series);
-            m_tooltip->setAnchor(point);
-            m_tooltip->setZValue(11);
-            m_tooltip->updateGeometry();
-            m_tooltip->show();
-            return true;
         }
 
         QPoint CursorPoint = QCursor::pos();
