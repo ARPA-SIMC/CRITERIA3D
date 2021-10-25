@@ -2376,7 +2376,7 @@ bool Crit3DMeteoGridDbHandler::saveListHourlyData(QString *myError, QString mete
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();
-        //return false;
+        return false;
     }
     else
     {
@@ -2420,7 +2420,7 @@ bool Crit3DMeteoGridDbHandler::saveListDailyDataEnsemble(QString *myError, QStri
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();
-        //return false;
+        return false;
     }
     else
     {
