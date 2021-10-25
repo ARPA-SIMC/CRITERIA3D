@@ -2272,16 +2272,20 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
         }
         double averageTmax[365]={0};
         double averageTmin[365]={0};
+        srand(time(nullptr));
         for (int j=0;j<lengthOfRandomSeries;j++)
         {
             int getDecadal = (multiOccurrenceTemperature[j].month_simulated-1)*3 + floor(MINVALUE(multiOccurrenceTemperature[j].day_simulated,29)/10.);
             int getYear = floor(1.*j/365.);
-            maxTGenerated[j][i] = Xp[0][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0; //multiOccurrenceTemperature[j].;
-            minTGenerated[j][i] = Xp[1][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0;
+            double random1,random2;
+            random1 = 0.5*((double) rand() / (RAND_MAX) -0.5);
+            random2 = 0.5*((double) rand() / (RAND_MAX) -0.5);
+            maxTGenerated[j][i] = Xp[0][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0 + random1; //multiOccurrenceTemperature[j].;
+            minTGenerated[j][i] = Xp[1][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0 + random2;
             occurrencePrecGenerated[j][i] = X[j];
             averageTmax[j%365] += maxTGenerated[j][i]/parametersModel.yearOfSimulation;
             averageTmin[j%365] += minTGenerated[j][i]/parametersModel.yearOfSimulation;
-            //printf("%d %d\n",getDecadal,getYear);
+            //printf("random1 %f random2 %f\n",random1,random2);
         }
         //pressEnterToContinue();
         // free memory
