@@ -70,6 +70,8 @@
                             int* nrMissingData, int* nrWrongData, Crit3DQuality* dataQuality);
         bool importHourlyMeteoData(QString fileNameComplete, bool deletePreviousData, QString *log);
         bool writeDailyData(QString pointCode, QDate date, meteoVariable var, float value, QString* log);
+        bool setAllPointsActive();
+        bool setAllPointsNotActive();
 
 
     protected:

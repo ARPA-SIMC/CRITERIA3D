@@ -131,6 +131,40 @@ void Crit3DMeteoPointsDbHandler::setDatasetsActive(QString active)
     _db.exec(statement);
 }
 
+bool Crit3DMeteoPointsDbHandler::setAllPointsActive()
+{
+    QSqlQuery qry(_db);
+
+    qry.prepare( "UPDATE point_properties SET is_active = 1" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+bool Crit3DMeteoPointsDbHandler::setAllPointsNotActive()
+{
+    QSqlQuery qry(_db);
+
+    qry.prepare( "UPDATE point_properties SET is_active = 0" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 
 QList<QString> Crit3DMeteoPointsDbHandler::getDatasetsList()
 {
