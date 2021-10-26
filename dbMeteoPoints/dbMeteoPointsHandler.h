@@ -72,6 +72,8 @@
         bool writeDailyData(QString pointCode, QDate date, meteoVariable var, float value, QString* log);
         bool setAllPointsActive();
         bool setAllPointsNotActive();
+        bool setGeoPointsListActiveState(QList<gis::Crit3DGeoPoint> pointList, bool activeState);
+        bool setIdPointListActiveState(QList<QString> pointList, bool activeState);
 
 
     protected:

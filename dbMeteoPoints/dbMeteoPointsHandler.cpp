@@ -165,6 +165,46 @@ bool Crit3DMeteoPointsDbHandler::setAllPointsNotActive()
     }
 }
 
+bool Crit3DMeteoPointsDbHandler::setGeoPointsListActiveState(QList<gis::Crit3DGeoPoint> pointList, bool activeState)
+{
+    QSqlQuery qry(_db);
+    for (int i = 0; i<pointList.size(); i++)
+    {
+        double latitude = pointList.at(i).latitude;
+        double longitude = pointList.at(i).longitude;
+        qry.prepare( "UPDATE point_properties SET is_active = :activeState WHERE latitude = :latitude AND longitude = :longitude" );
+        qry.bindValue(":activeState", activeState);
+        qry.bindValue(":latitude", latitude);
+        qry.bindValue(":longitude", longitude);
+
+        if( !qry.exec() )
+        {
+            qDebug() << "(lon,lat)" << longitude << latitude << qry.lastError();
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Crit3DMeteoPointsDbHandler::setIdPointListActiveState(QList<QString> pointList, bool activeState)
+{
+    QSqlQuery qry(_db);
+    for (int i = 0; i<pointList.size(); i++)
+    {
+        QString id_point = pointList.at(i);
+        qry.prepare( "UPDATE point_properties SET is_active = :activeState WHERE id_point = :id_point" );
+        qry.bindValue(":activeState", activeState);
+        qry.bindValue(":id_point", id_point);
+
+        if( !qry.exec() )
+        {
+            qDebug() << "id_point " << id_point << qry.lastError();
+            return false;
+        }
+    }
+    return true;
+}
+
 
 QList<QString> Crit3DMeteoPointsDbHandler::getDatasetsList()
 {
