@@ -74,6 +74,8 @@
         bool setAllPointsNotActive();
         bool setGeoPointsListActiveState(QList<gis::Crit3DGeoPoint> pointList, bool activeState);
         bool setIdPointListActiveState(QList<QString> pointList, bool activeState);
+        bool deleteAllPointsFromIdList(QList<QString> pointList);
+        bool deleteAllPointsFromGeoPointList(QList<gis::Crit3DGeoPoint> pointList);
 
 
     protected:
