@@ -2280,9 +2280,12 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             double random1,random2;
             random1 = 0.5*((double) rand() / (RAND_MAX) -0.5);
             random2 = 0.5*((double) rand() / (RAND_MAX) -0.5);
-            maxTGenerated[j][i] = Xp[0][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0 + random1; //multiOccurrenceTemperature[j].;
-            minTGenerated[j][i] = Xp[1][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0 + random2;
+            maxTGenerated[j][i] = Xp[0][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0;// + random1; //multiOccurrenceTemperature[j].;
+            minTGenerated[j][i] = Xp[1][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0;// + random2;
             occurrencePrecGenerated[j][i] = X[j];
+            //maxTGenerated[j][i] = Xp[0][j];
+            //minTGenerated[j][i] = Xp[1][j];
+            //occurrencePrecGenerated[j][i] = X[j];
             averageTmax[j%365] += maxTGenerated[j][i]/parametersModel.yearOfSimulation;
             averageTmin[j%365] += minTGenerated[j][i]/parametersModel.yearOfSimulation;
             //printf("random1 %f random2 %f\n",random1,random2);
