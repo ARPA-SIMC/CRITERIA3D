@@ -2370,8 +2370,9 @@ bool Crit3DMeteoGridDbHandler::saveListHourlyData(QString *myError, QString mete
 
     qry.exec(statement);
     int nHours = values.size();
+
     QDateTime last = firstDateTime.addSecs(3600*(nHours-1));
-    statement = QString("DELETE FROM `%1` WHERE %2 >= '%3' AND %2 <= '%4' AND VariableCode = '%5'")
+    statement = QString("DELETE FROM `%1` WHERE %2 BETWEEN CAST('%3' AS DATETIME) AND CAST('%4' AS DATETIME) AND VariableCode = '%5'")
                             .arg(tableH).arg(_tableHourly.fieldTime).arg(firstDateTime.toString("yyyy-MM-dd hh:mm:00")).arg(last.toString("yyyy-MM-dd hh:mm:00")).arg(varCode);
     if( !qry.exec(statement) )
     {
