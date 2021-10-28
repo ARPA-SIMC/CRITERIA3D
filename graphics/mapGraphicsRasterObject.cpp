@@ -423,7 +423,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
                 value = myRaster->value[row][col];
             else
             {
-                value = INDEX_ERROR;
+                value = NODATA;
                 if (this->matrix[row][col].row != NODATA)
                     value = myRaster->value[matrix[row][col].row][matrix[row][col].col];
             }
