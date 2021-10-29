@@ -406,7 +406,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     /*! Internal energy */
     _internalEnergy = prevInternalEnergy + QTotal + (refreeze / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY;
     // FT: aggiunto per stabilità numerica
-    if (abs(_internalEnergy) < 0.00001)
+    if (abs(_internalEnergy) < 0.001)
     {
         _internalEnergy = 0.;
     }
