@@ -2280,8 +2280,8 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             double random1,random2;
             random1 = 0.5*((double) rand() / (RAND_MAX) -0.5);
             random2 = 0.5*((double) rand() / (RAND_MAX) -0.5);
-            maxTGenerated[j][i] = Xp[0][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0;// + random1; //multiOccurrenceTemperature[j].;
-            minTGenerated[j][i] = Xp[1][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0;// + random2;
+            maxTGenerated[j][i] = Xp[0][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0; //multiOccurrenceTemperature[j].;
+            minTGenerated[j][i] = Xp[1][j] + monthlyRandomDeviationTmean[getYear][getDecadal]*1.0;
             occurrencePrecGenerated[j][i] = X[j];
             //maxTGenerated[j][i] = Xp[0][j];
             //minTGenerated[j][i] = Xp[1][j];
