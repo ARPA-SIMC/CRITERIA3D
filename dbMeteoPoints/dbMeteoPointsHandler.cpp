@@ -398,7 +398,7 @@ bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myF
     {
         QString firstStr = first.toString("yyyy-MM-dd");
         QString lastStr = last.toString("yyyy-MM-dd");
-        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATETIME('%2 00:00:00') AND DATETIME('%3 23:00:00')")
+        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATETIME('%2 00:00:00') AND DATETIME('%3 23:30:00')")
                                 .arg(tableName).arg(firstStr).arg(lastStr);
     }
 
@@ -438,7 +438,7 @@ bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myF
     {
         QString firstStr = first.toString("yyyy-MM-dd");
         QString lastStr = last.toString("yyyy-MM-dd");
-        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATETIME('%2 00:00:00') AND DATETIME('%3 23:00:00') AND DATE('%3') AND `%4` IN (%5)")
+        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATETIME('%2 00:00:00') AND DATETIME('%3 23:30:00') AND DATE('%3') AND `%4` IN (%5)")
                                 .arg(tableName).arg(firstStr).arg(lastStr).arg(FIELD_METEO_VARIABLE).arg(idList);
     }
 
