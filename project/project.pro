@@ -36,6 +36,7 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo   \
 SOURCES += \
     aggregation.cpp \
     dialogInterpolation.cpp \
+    dialogPointDeleteData.cpp \
     dialogPointProperties.cpp \
     dialogProject.cpp \
     dialogRadiation.cpp \
@@ -50,6 +51,7 @@ SOURCES += \
 HEADERS += \
     aggregation.h \
     dialogInterpolation.h \
+    dialogPointDeleteData.h \
     dialogPointProperties.h \
     dialogProject.h \
     dialogRadiation.h \

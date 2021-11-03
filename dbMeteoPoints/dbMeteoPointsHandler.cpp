@@ -412,6 +412,46 @@ bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myF
     }
 }
 
+bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myFreq, QList<meteoVariable> varList, QDate first, QDate last)
+{
+
+    QString tableName = pointCode + ((myFreq == daily) ?  "_D" : "_H");
+    QString idList;
+    QString id;
+    for (int i = 0; i<varList.size(); i++)
+    {
+        id = QString::number(getIdfromMeteoVar(varList[i]));
+        idList += id + ",";
+    }
+    idList = idList.left(idList.length() - 1);
+
+    QSqlQuery qry(_db);
+    QString statement;
+    if (myFreq == daily)
+    {
+        QString firstStr = first.toString("yyyy-MM-dd");
+        QString lastStr = last.toString("yyyy-MM-dd");
+        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATE('%2') AND DATE('%3') AND `%4` IN (%5)")
+                                .arg(tableName).arg(firstStr).arg(lastStr).arg(FIELD_METEO_VARIABLE).arg(idList);
+    }
+    else
+    {
+        QString firstStr = first.toString("yyyy-MM-dd");
+        QString lastStr = last.toString("yyyy-MM-dd");
+        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATETIME('%2 00:00:00') AND DATETIME('%3 23:00:00') AND DATE('%3') AND `%4` IN (%5)")
+                                .arg(tableName).arg(firstStr).arg(lastStr).arg(FIELD_METEO_VARIABLE).arg(idList);
+    }
+
+    if( !qry.exec(statement) )
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 bool Crit3DMeteoPointsDbHandler::deleteAllData(frequencyType myFreq)
 {
     QSqlQuery qry(_db);

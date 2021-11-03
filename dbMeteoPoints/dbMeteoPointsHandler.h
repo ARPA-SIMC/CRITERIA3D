@@ -49,6 +49,7 @@
 
         bool existData(Crit3DMeteoPoint *meteoPoint, frequencyType myFreq);
         bool deleteData(QString pointCode, frequencyType myFreq, QDate first, QDate last);
+        bool deleteData(QString pointCode, frequencyType myFreq, QList<meteoVariable> varList, QDate first, QDate last);
         bool deleteAllData(frequencyType myFreq);
         bool writePointProperties(Crit3DMeteoPoint* pointProp);
         bool updatePointProperties(QList<QString> columnList, QList<QString> valueList);
