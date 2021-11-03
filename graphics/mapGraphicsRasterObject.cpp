@@ -255,7 +255,7 @@ bool RasterObject::initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Cri
             if (! gis::isOutOfGridXY(x, y, myRaster->header))
             {
                 gis::getRowColFromXY(*(myRaster->header), x, y, &utmRow, &utmCol);
-                if (isGrid || myRaster->getValueFromRowCol(utmRow, utmCol) != myRaster->header->flag)
+                if (isGrid || ! isEqual(myRaster->getValueFromRowCol(utmRow, utmCol), myRaster->header->flag))
                 {
                     matrix[row][col].row = utmRow;
                     matrix[row][col].col = utmCol;

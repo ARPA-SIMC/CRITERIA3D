@@ -406,7 +406,7 @@ namespace gis
             for (int myCol = 0; myCol < myGrid->header->nrCols; myCol++)
             {
                 myValue = myGrid->value[myRow][myCol];
-                if (myValue != myGrid->header->flag)
+                if (! isEqual(myValue, myGrid->header->flag)  && ! isEqual(myValue, NODATA))
                 {
                     if (isFirstValue)
                     {
@@ -423,12 +423,18 @@ namespace gis
             }
 
         /*!  no values */
-        if (isFirstValue) return(false);
+        if (isFirstValue) return false;
 
         myGrid->maximum = maximum;
         myGrid->minimum = minimum;
-        myGrid->colorScale->maximum = myGrid->maximum;
-        myGrid->colorScale->minimum = myGrid->minimum;
+        if (isEqual (maximum, minimum))
+        {
+            maximum += fabs(maximum) * 0.01f;
+            minimum -= fabs(minimum) * 0.01f;
+        }
+        myGrid->colorScale->maximum = maximum;
+        myGrid->colorScale->minimum = minimum;
+
         return true;
     }
 
@@ -455,7 +461,7 @@ namespace gis
             for (int myCol = col0; myCol <= col1; myCol++)
             {
                 myValue = myGrid->value[myRow][myCol];
-                if ( (myValue != myGrid->header->flag) && (myValue != NODATA))
+                if (! isEqual(myValue, myGrid->header->flag) && ! isEqual(myValue, NODATA))
                 {
                     if (isFirstValue)
                     {
@@ -471,12 +477,23 @@ namespace gis
                 }
             }
 
+        //  no values
+        if (isFirstValue)
+        {
+            myGrid->colorScale->maximum = NODATA;
+            myGrid->colorScale->minimum = NODATA;
+            return false;
+        }
+
+        if (isEqual (maximum, minimum))
+        {
+            maximum += fabs(maximum) * 0.01f;
+            minimum -= fabs(minimum) * 0.01f;
+        }
         myGrid->colorScale->maximum = maximum;
         myGrid->colorScale->minimum = minimum;
-        //  no values
-        if (isFirstValue) return(false);
 
-        return(true);
+        return true;
     }
 
 
