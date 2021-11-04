@@ -101,7 +101,8 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
         {
             myValue = meteoPoints[i].currentValue;
 
-            interpolatedValue = interpolate(interpolationPoints, settings, meteoSettings, myVar, float(meteoPoints[i].point.utm.x),
+            interpolatedValue = interpolate(interpolationPoints, settings, meteoSettings, myVar,
+                                            float(meteoPoints[i].point.utm.x),
                                             float(meteoPoints[i].point.utm.y),
                                             float(meteoPoints[i].point.z),
                                             myProxyValues, false);

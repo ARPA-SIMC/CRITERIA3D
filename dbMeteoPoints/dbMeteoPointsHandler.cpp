@@ -746,9 +746,9 @@ std::map<int, meteoVariable> Crit3DMeteoPointsDbHandler::getMapIdMeteoVar() cons
     return _mapIdMeteoVar;
 }
 
-QList<Crit3DMeteoPoint> Crit3DMeteoPointsDbHandler::getPropertiesFromDb(const gis::Crit3DGisSettings& gisSettings, QString *errorString)
+bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
+                                        const gis::Crit3DGisSettings& gisSettings, QString& errorString)
 {
-    QList<Crit3DMeteoPoint> meteoPointsList;
     Crit3DMeteoPoint meteoPoint;
     QSqlQuery qry(_db);
     bool isPositionOk;
@@ -757,7 +757,7 @@ QList<Crit3DMeteoPoint> Crit3DMeteoPointsDbHandler::getPropertiesFromDb(const gi
 
     if( !qry.exec() )
     {
-        *errorString = qry.lastError().text();
+        errorString = qry.lastError().text();
     }
     else
     {
@@ -783,9 +783,16 @@ QList<Crit3DMeteoPoint> Crit3DMeteoPointsDbHandler::getPropertiesFromDb(const gi
 
             // check position
             isPositionOk = false;
-            if ((int(meteoPoint.latitude) != int(NODATA) || int(meteoPoint.longitude) != int(NODATA))
+            if ((int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
                 && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
             {
+                double xTemp, yTemp;
+                gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude, &xTemp, &yTemp);
+                if (fabs(xTemp - meteoPoint.point.utm.x) > 10 || fabs(yTemp - meteoPoint.point.utm.y) > 10)
+                {
+                    errorString = "Wrong UTM XY point: " + QString::fromStdString(meteoPoint.name);
+                    return false;
+                }
                 isPositionOk = true;
             }
             else if ((int(meteoPoint.latitude) == int(NODATA) || int(meteoPoint.longitude) == int(NODATA))
@@ -795,8 +802,8 @@ QList<Crit3DMeteoPoint> Crit3DMeteoPointsDbHandler::getPropertiesFromDb(const gi
                                         &(meteoPoint.latitude), &(meteoPoint.longitude));
                 isPositionOk = true;
             }
-            else if ((int(meteoPoint.latitude) != int(NODATA) || int(meteoPoint.longitude) != int(NODATA))
-                     && (int(meteoPoint.point.utm.x) == int(NODATA) && int(meteoPoint.point.utm.y) == int(NODATA)))
+            else if ((int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
+                     && (int(meteoPoint.point.utm.x) == int(NODATA) || int(meteoPoint.point.utm.y) == int(NODATA)))
             {
                 gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude,
                                           &(meteoPoint.point.utm.x), &(meteoPoint.point.utm.y));
@@ -814,10 +821,15 @@ QList<Crit3DMeteoPoint> Crit3DMeteoPointsDbHandler::getPropertiesFromDb(const gi
                 meteoPoint.lapseRateCode = lapseRateCodeType((qry.value("orog_code").toInt()));
                 meteoPointsList << meteoPoint;
             }
+            else
+            {
+                errorString = "Wrong UTM XY point: " + QString::fromStdString(meteoPoint.name);
+                return false;
+            }
         }
     }
 
-    return meteoPointsList;
+    return true;
 }
 
 
