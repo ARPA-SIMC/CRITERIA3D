@@ -20,7 +20,7 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool active, Crit3DMeteoPoi
     selectionMode.addItem("state");
     selectionMode.addItem("dataset");
     selectionMode.addItem("name");
-    selectionMode.addItem("id");
+    selectionMode.addItem("id_point");
     selectionMode.addItem("altitude");
     selectionMode.addItem("DEM distance");
     selectionLayout.addWidget(&selectionMode);
