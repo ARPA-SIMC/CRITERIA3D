@@ -1493,3 +1493,29 @@ QList<QString> Crit3DMeteoPointsDbHandler::getDatasetList()
     return datasetList;
 }
 
+bool Crit3DMeteoPointsDbHandler::setActiveStateIfCondition(bool activeState, QString condition)
+{
+    QSqlQuery qry(_db);
+    QString statement;
+
+    if (activeState)
+    {
+        statement = QString("UPDATE point_properties SET is_active = 1 WHERE %1 ").arg(condition);
+    }
+    else
+    {
+        statement = QString("UPDATE point_properties SET is_active = 0 WHERE %1 ").arg(condition);
+    }
+
+    if( !qry.exec(statement) )
+    {
+        qDebug() << qry.lastError();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+
+}
+

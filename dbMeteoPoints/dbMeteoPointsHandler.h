@@ -82,6 +82,7 @@
         QList<QString> getRegionList();
         QList<QString> getStateList();
         QList<QString> getDatasetList();
+        bool setActiveStateIfCondition(bool activeState, QString condition);
 
 
 
