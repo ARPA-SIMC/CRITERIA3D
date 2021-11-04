@@ -160,3 +160,31 @@ QString DialogSelectionMeteoPoint::getItem()
         return editItems.toPlainText();
     }
 }
+
+void DialogSelectionMeteoPoint::done(bool res)
+{
+
+    if(res)  // ok was pressed
+    {
+        if (selectionMode.currentText() == "altitude" || selectionMode.currentText() == "DEM distance")
+        {
+            // value should be a number
+            bool ok;
+            editItems.toPlainText().toDouble(&ok);
+            if (!ok)
+            {
+                QMessageBox::information(nullptr, "Invalid value", "Enter a numeric value");
+                return;
+            }
+        }
+        QDialog::done(QDialog::Accepted);
+        return;
+    }
+    else    // cancel, close or exc was pressed
+    {
+        QDialog::done(QDialog::Rejected);
+        return;
+    }
+
+}
+
