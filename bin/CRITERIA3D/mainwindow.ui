@@ -1103,7 +1103,7 @@
       <x>0</x>
       <y>380</y>
       <width>271</width>
-      <height>111</height>
+      <height>121</height>
      </rect>
     </property>
     <property name="palette">
@@ -1611,7 +1611,7 @@
        <x>1</x>
        <y>60</y>
        <width>266</width>
-       <height>42</height>
+       <height>51</height>
       </rect>
      </property>
      <property name="font">
@@ -3779,11 +3779,6 @@
     <string>Run model...</string>
    </property>
   </action>
-  <action name="actionHide_soil_map">
-   <property name="text">
-    <string>Hide soil map</string>
-   </property>
-  </action>
   <action name="actionMapGoogle_hybrid_satellite">
    <property name="checkable">
     <bool>true</bool>
@@ -3809,7 +3804,7 @@
   </action>
   <action name="actionSnow_settings">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
     <string>Snow settings...</string>
