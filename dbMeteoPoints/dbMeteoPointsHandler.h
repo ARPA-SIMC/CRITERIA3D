@@ -49,6 +49,7 @@
 
         bool existData(Crit3DMeteoPoint *meteoPoint, frequencyType myFreq);
         bool deleteData(QString pointCode, frequencyType myFreq, QDate first, QDate last);
+        bool deleteData(QString pointCode, frequencyType myFreq, QList<meteoVariable> varList, QDate first, QDate last);
         bool deleteAllData(frequencyType myFreq);
         bool writePointProperties(Crit3DMeteoPoint* pointProp);
         bool updatePointProperties(QList<QString> columnList, QList<QString> valueList);
@@ -70,6 +71,19 @@
                             int* nrMissingData, int* nrWrongData, Crit3DQuality* dataQuality);
         bool importHourlyMeteoData(QString fileNameComplete, bool deletePreviousData, QString *log);
         bool writeDailyData(QString pointCode, QDate date, meteoVariable var, float value, QString* log);
+        bool setAllPointsActive();
+        bool setAllPointsNotActive();
+        bool setGeoPointsListActiveState(QList<gis::Crit3DGeoPoint> pointList, bool activeState);
+        bool setIdPointListActiveState(QList<QString> pointList, bool activeState);
+        bool deleteAllPointsFromIdList(QList<QString> pointList);
+        bool deleteAllPointsFromGeoPointList(QList<gis::Crit3DGeoPoint> pointList);
+        QList<QString> getMunicipalityList();
+        QList<QString> getProvinceList();
+        QList<QString> getRegionList();
+        QList<QString> getStateList();
+        QList<QString> getDatasetList();
+        bool setActiveStateIfCondition(bool activeState, QString condition);
+
 
 
     protected:

@@ -33,6 +33,7 @@ HEADERS += \
     dbArkimet.h \
     dbMeteoPointsHandler.h \
     download.h \
+    meteoPointsManagment.h \
     variablesList.h
 
 SOURCES += \
@@ -40,6 +41,7 @@ SOURCES += \
     dbArkimet.cpp \
     dbMeteoPointsHandler.cpp \
     download.cpp \
+    meteoPointsManagment.cpp \
     variablesList.cpp
 
 
