@@ -29,6 +29,7 @@ public:
     QString getSelection();
     QString getOperation();
     QString getItem();
+    void done(bool res);
 };
 
 #endif // DIALOGSELECTIONMETEOPOINT_H
