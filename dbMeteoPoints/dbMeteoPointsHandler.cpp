@@ -1357,3 +1357,139 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(QList<gis::Crit
     }
     return deleteAllPointsFromIdList(idPointList);
 }
+
+QList<QString> Crit3DMeteoPointsDbHandler::getMunicipalityList()
+{
+    QList<QString> municipalityList;
+    QSqlQuery qry(_db);
+    QString municipality;
+
+    qry.prepare( "SELECT municipality from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return municipalityList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("municipality"), &municipality);
+            if (!municipalityList.contains(municipality))
+            {
+                municipalityList << municipality;
+            }
+        }
+    }
+    return municipalityList;
+}
+
+QList<QString> Crit3DMeteoPointsDbHandler::getProvinceList()
+{
+    QList<QString> provinceList;
+    QSqlQuery qry(_db);
+    QString province;
+
+    qry.prepare( "SELECT province from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return provinceList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("province"), &province);
+            if (!provinceList.contains(province))
+            {
+                provinceList << province;
+            }
+        }
+    }
+    return provinceList;
+}
+
+QList<QString> Crit3DMeteoPointsDbHandler::getRegionList()
+{
+    QList<QString> regionList;
+    QSqlQuery qry(_db);
+    QString region;
+
+    qry.prepare( "SELECT region from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return regionList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("region"), &region);
+            if (!regionList.contains(region))
+            {
+                regionList << region;
+            }
+        }
+    }
+    return regionList;
+}
+
+QList<QString> Crit3DMeteoPointsDbHandler::getStateList()
+{
+    QList<QString> stateList;
+    QSqlQuery qry(_db);
+    QString state;
+
+    qry.prepare( "SELECT state from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return stateList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("state"), &state);
+            if (!stateList.contains(state))
+            {
+                stateList << state;
+            }
+        }
+    }
+    return stateList;
+}
+
+QList<QString> Crit3DMeteoPointsDbHandler::getDatasetList()
+{
+    QList<QString> datasetList;
+    QSqlQuery qry(_db);
+    QString dataset;
+
+    qry.prepare( "SELECT dataset from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return datasetList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("dataset"), &dataset);
+            if (!datasetList.contains(dataset))
+            {
+                datasetList << dataset;
+            }
+        }
+    }
+    return datasetList;
+}
+

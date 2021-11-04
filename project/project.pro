@@ -41,6 +41,7 @@ SOURCES += \
     dialogProject.cpp \
     dialogRadiation.cpp \
     dialogSelection.cpp \
+    dialogSelectionMeteoPoint.cpp \
     dialogSettings.cpp \
     interpolationCmd.cpp \
     meteoMaps.cpp \
@@ -56,6 +57,7 @@ HEADERS += \
     dialogProject.h \
     dialogRadiation.h \
     dialogSelection.h \
+    dialogSelectionMeteoPoint.h \
     dialogSettings.h \
     interpolationCmd.h \
     meteoMaps.h \
