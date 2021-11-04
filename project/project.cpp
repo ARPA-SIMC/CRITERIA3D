@@ -957,12 +957,20 @@ bool Project::loadMeteoPointsDB(QString dbName)
         closeMeteoPointsDB();
         return false;
     }
-    QList<Crit3DMeteoPoint> listMeteoPoints = meteoPointsDbHandler->getPropertiesFromDb(gisSettings, &errorString);
+
+    QList<Crit3DMeteoPoint> listMeteoPoints;
+    if (! meteoPointsDbHandler->getPropertiesFromDb(listMeteoPoints, gisSettings, errorString))
+    {
+        errorString = "Wrong data in the point properties table:\n" + errorString;
+        logError();
+        closeMeteoPointsDB();
+        return false;
+    }
 
     nrMeteoPoints = listMeteoPoints.size();
     if (nrMeteoPoints == 0)
     {
-        errorString = "Error in reading the point properties:\n" + errorString;
+        errorString = "Missing data in the point properties table:\n" + errorString;
         logError();
         closeMeteoPointsDB();
         return false;
