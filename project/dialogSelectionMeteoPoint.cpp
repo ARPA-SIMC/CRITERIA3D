@@ -120,7 +120,7 @@ void DialogSelectionMeteoPoint::selectionModeChanged()
         selectionItems.setVisible(true);
         itemFromList = true;
     }
-    else if (selectionMode.currentText() == "name" || selectionMode.currentText() == "id")
+    else if (selectionMode.currentText() == "name" || selectionMode.currentText() == "id_point")
     {
         selectionOperation.addItem("Like");
         selectionItems.setVisible(false);
