@@ -751,81 +751,82 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& me
 {
     Crit3DMeteoPoint meteoPoint;
     QSqlQuery qry(_db);
-    bool isPositionOk;
+    bool isLocationOk;
 
     qry.prepare( "SELECT id_point, name, dataset, latitude, longitude, utm_x, utm_y, altitude, state, region, province, municipality, is_active, is_utc, orog_code from point_properties ORDER BY id_point" );
 
     if( !qry.exec() )
     {
         errorString = qry.lastError().text();
+        return false;
     }
-    else
+
+    while (qry.next())
     {
-        while (qry.next())
+        //initialize
+        meteoPoint = *(new Crit3DMeteoPoint());
+
+        meteoPoint.id = qry.value("id_point").toString().toStdString();
+        meteoPoint.name = qry.value("name").toString().toStdString();
+        meteoPoint.dataset = qry.value("dataset").toString().toStdString();
+
+        if (qry.value("latitude") != "")
+            meteoPoint.latitude = qry.value("latitude").toDouble();
+        if (qry.value("longitude") != "")
+            meteoPoint.longitude = qry.value("longitude").toDouble();
+        if (qry.value("utm_x") != "")
+            meteoPoint.point.utm.x = qry.value("utm_x").toDouble();
+        if (qry.value("utm_y") != "")
+            meteoPoint.point.utm.y = qry.value("utm_y").toDouble();
+        if (qry.value("altitude") != "")
+            meteoPoint.point.z = qry.value("altitude").toDouble();
+
+        // check position
+        if ((int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
+            && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
         {
-            //initialize
-            meteoPoint = *(new Crit3DMeteoPoint());
-
-            meteoPoint.id = qry.value("id_point").toString().toStdString();
-            meteoPoint.name = qry.value("name").toString().toStdString();
-            meteoPoint.dataset = qry.value("dataset").toString().toStdString();
-
-            if (qry.value("latitude") != "")
-                meteoPoint.latitude = qry.value("latitude").toDouble();
-            if (qry.value("longitude") != "")
-                meteoPoint.longitude = qry.value("longitude").toDouble();
-            if (qry.value("utm_x") != "")
-                meteoPoint.point.utm.x = qry.value("utm_x").toDouble();
-            if (qry.value("utm_y") != "")
-                meteoPoint.point.utm.y = qry.value("utm_y").toDouble();
-            if (qry.value("altitude") != "")
-                meteoPoint.point.z = qry.value("altitude").toDouble();
-
-            // check position
-            isPositionOk = false;
-            if ((int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
-                && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
+            double xTemp, yTemp;
+            gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude, &xTemp, &yTemp);
+            if (fabs(xTemp - meteoPoint.point.utm.x) < 10 && fabs(yTemp - meteoPoint.point.utm.y) < 10)
             {
-                double xTemp, yTemp;
-                gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude, &xTemp, &yTemp);
-                if (fabs(xTemp - meteoPoint.point.utm.x) > 10 || fabs(yTemp - meteoPoint.point.utm.y) > 10)
-                {
-                    errorString = "Wrong UTM XY point: " + QString::fromStdString(meteoPoint.name);
-                    return false;
-                }
-                isPositionOk = true;
-            }
-            else if ((int(meteoPoint.latitude) == int(NODATA) || int(meteoPoint.longitude) == int(NODATA))
-                && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
-            {
-                gis::getLatLonFromUtm(gisSettings, meteoPoint.point.utm.x, meteoPoint.point.utm.y,
-                                        &(meteoPoint.latitude), &(meteoPoint.longitude));
-                isPositionOk = true;
-            }
-            else if ((int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
-                     && (int(meteoPoint.point.utm.x) == int(NODATA) || int(meteoPoint.point.utm.y) == int(NODATA)))
-            {
-                gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude,
-                                          &(meteoPoint.point.utm.x), &(meteoPoint.point.utm.y));
-                isPositionOk = true;
-            }
-
-            if (isPositionOk)
-            {
-                meteoPoint.state = qry.value("state").toString().toStdString();
-                meteoPoint.region = qry.value("region").toString().toStdString();
-                meteoPoint.province = qry.value("province").toString().toStdString();
-                meteoPoint.municipality = qry.value("municipality").toString().toStdString();
-                meteoPoint.active = qry.value("is_active").toBool();
-                meteoPoint.isUTC = qry.value("is_utc").toBool();
-                meteoPoint.lapseRateCode = lapseRateCodeType((qry.value("orog_code").toInt()));
-                meteoPointsList << meteoPoint;
+                isLocationOk = true;
             }
             else
             {
-                errorString = "Wrong UTM XY point: " + QString::fromStdString(meteoPoint.name);
-                return false;
+                errorString = "Wrong location! UTM does not match with lat/lon: " + QString::fromStdString(meteoPoint.name);
+                isLocationOk = false;
             }
+        }
+        else if ((int(meteoPoint.latitude) == int(NODATA) || int(meteoPoint.longitude) == int(NODATA))
+            && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
+        {
+            gis::getLatLonFromUtm(gisSettings, meteoPoint.point.utm.x, meteoPoint.point.utm.y,
+                                    &(meteoPoint.latitude), &(meteoPoint.longitude));
+            isLocationOk = true;
+        }
+        else if ((int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
+                 && (int(meteoPoint.point.utm.x) == int(NODATA) || int(meteoPoint.point.utm.y) == int(NODATA)))
+        {
+            gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude,
+                                      &(meteoPoint.point.utm.x), &(meteoPoint.point.utm.y));
+            isLocationOk = true;
+        }
+        else
+        {
+            errorString = "Missing location (lat/lon or UTM): " + QString::fromStdString(meteoPoint.name);
+            isLocationOk = false;
+        }
+
+        if (isLocationOk)
+        {
+            meteoPoint.state = qry.value("state").toString().toStdString();
+            meteoPoint.region = qry.value("region").toString().toStdString();
+            meteoPoint.province = qry.value("province").toString().toStdString();
+            meteoPoint.municipality = qry.value("municipality").toString().toStdString();
+            meteoPoint.active = qry.value("is_active").toBool();
+            meteoPoint.isUTC = qry.value("is_utc").toBool();
+            meteoPoint.lapseRateCode = lapseRateCodeType((qry.value("orog_code").toInt()));
+            meteoPointsList << meteoPoint;
         }
     }
 
