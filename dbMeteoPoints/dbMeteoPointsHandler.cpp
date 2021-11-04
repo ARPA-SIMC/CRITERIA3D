@@ -787,13 +787,13 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& me
         {
             double xTemp, yTemp;
             gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude, &xTemp, &yTemp);
-            if (fabs(xTemp - meteoPoint.point.utm.x) < 10 && fabs(yTemp - meteoPoint.point.utm.y) < 10)
+            if (fabs(xTemp - meteoPoint.point.utm.x) < 30 && fabs(yTemp - meteoPoint.point.utm.y) < 30)
             {
                 isLocationOk = true;
             }
             else
             {
-                errorString = "Wrong location! UTM does not match with lat/lon: " + QString::fromStdString(meteoPoint.name);
+                errorString += "\nWrong location! UTM does not match with lat/lon: " + QString::fromStdString(meteoPoint.name);
                 isLocationOk = false;
             }
         }
@@ -813,7 +813,7 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& me
         }
         else
         {
-            errorString = "Missing location (lat/lon or UTM): " + QString::fromStdString(meteoPoint.name);
+            errorString += "\nMissing location (lat/lon or UTM): " + QString::fromStdString(meteoPoint.name);
             isLocationOk = false;
         }
 
