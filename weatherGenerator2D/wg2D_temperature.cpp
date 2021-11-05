@@ -2278,12 +2278,15 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             int getDecadal = (multiOccurrenceTemperature[j].month_simulated-1)*3 + floor(MINVALUE(multiOccurrenceTemperature[j].day_simulated,29)/10.);
             int getYear = floor(1.*j/365.);
             double random1,random2;
-            random1 = 0.5*((double) rand() / (RAND_MAX) -0.5) + monthlyRandomDeviationTmean[getYear][getDecadal];
-            random2 = 0.5*((double) rand() / (RAND_MAX) -0.5)+ monthlyRandomDeviationTmean[getYear][getDecadal];
-            random1 = MINVALUE(MAXVALUE(random1,-5),5);
-            random2 = MINVALUE(MAXVALUE(random2,-5),5);
-            maxTGenerated[j][i] = Xp[0][j] +random1;
-            minTGenerated[j][i] = Xp[1][j]  + random2;
+            //random1 = 0.5*((double) rand() / (RAND_MAX) -0.5) + monthlyRandomDeviationTmean[getYear][getDecadal];
+            //random2 = 0.5*((double) rand() / (RAND_MAX) -0.5)+ monthlyRandomDeviationTmean[getYear][getDecadal];
+            random1 = monthlyRandomDeviationTmean[getYear][getDecadal];
+            random2 = monthlyRandomDeviationTmean[getYear][getDecadal];
+            double thresholdVariation = 7;
+            random1 = MINVALUE(MAXVALUE(random1,-thresholdVariation),thresholdVariation);
+            random2 = MINVALUE(MAXVALUE(random2,-thresholdVariation),thresholdVariation);
+            maxTGenerated[j][i] = Xp[0][j] + random1;
+            minTGenerated[j][i] = Xp[1][j] + random2;
             double tempTemp;
             if (maxTGenerated[j][i] < minTGenerated[j][i])
             {
