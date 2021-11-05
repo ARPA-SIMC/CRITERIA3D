@@ -124,9 +124,8 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 void MainWindow::updateMaps()
 {
     rasterDEM->updateCenter();
-    inputRasterColorLegend->repaint();
     rasterOutput->updateCenter();
-    outputRasterColorLegend->repaint();
+
     *startCenter = rasterDEM->getCurrentCenter();
 }
 
@@ -706,7 +705,6 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
 }
 
 
-
 void MainWindow::on_actionInterpolationSettings_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
@@ -752,12 +750,12 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 }
 
 
+// 3d VIEW (TODO)
 /*
 void MainWindow::on_viewer3DClosed()
 {
     this->viewer3D = nullptr;
 }
-
 
 bool MainWindow::initializeViewer3D()
 {
@@ -774,7 +772,6 @@ bool MainWindow::initializeViewer3D()
         return true;
     }
 }
-
 
 void MainWindow::on_actionView_3D_triggered()
 {
@@ -794,9 +791,6 @@ void MainWindow::on_actionView_3D_triggered()
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
 }
 */
-
-
-
 
 
 void MainWindow::on_actionView_Boundary_triggered()
@@ -1014,12 +1008,25 @@ void MainWindow::on_actionView_Transmissivity_triggered()
     showMeteoVariable(atmTransmissivity);
 }
 
-void MainWindow::on_actionView_Global_radiation_triggered()
+void MainWindow::on_actionView_Global_irradiance_triggered()
 {
     showMeteoVariable(globalIrradiance);
 }
 
-//netIrradiance, directIrradiance, diffuseIrradiance, reflectedIrradiance
+void MainWindow::on_actionView_Beam_irradiance_triggered()
+{
+    showMeteoVariable(directIrradiance);
+}
+
+void MainWindow::on_actionView_Diffuse_irradiance_triggered()
+{
+    showMeteoVariable(diffuseIrradiance);
+}
+
+void MainWindow::on_actionView_Reflected_irradiance_triggered()
+{
+    showMeteoVariable(reflectedIrradiance);
+}
 
 void MainWindow::on_actionView_ET0_triggered()
 {
@@ -1741,4 +1748,3 @@ void MainWindow::on_flag_view_SoilMap_triggered()
     }
 
 }
-
