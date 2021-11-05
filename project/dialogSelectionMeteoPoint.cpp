@@ -22,7 +22,7 @@ DialogSelectionMeteoPoint::DialogSelectionMeteoPoint(bool active, Crit3DMeteoPoi
     selectionMode.addItem("name");
     selectionMode.addItem("id_point");
     selectionMode.addItem("altitude");
-    selectionMode.addItem("DEM distance");
+    selectionMode.addItem("DEM distance [m]");
     selectionLayout.addWidget(&selectionMode);
 
     selectionOperation.addItem("=");
@@ -127,7 +127,7 @@ void DialogSelectionMeteoPoint::selectionModeChanged()
         editItems.setVisible(true);
         itemFromList = false;
     }
-    else if (selectionMode.currentText() == "altitude" || selectionMode.currentText() == "DEM distance")
+    else if (selectionMode.currentText() == "altitude" || selectionMode.currentText() == "DEM distance [m]")
     {
         selectionOperation.addItem("=");
         selectionOperation.addItem("!=");
@@ -166,7 +166,7 @@ void DialogSelectionMeteoPoint::done(bool res)
 
     if(res)  // ok was pressed
     {
-        if (selectionMode.currentText() == "altitude" || selectionMode.currentText() == "DEM distance")
+        if (selectionMode.currentText() == "altitude" || selectionMode.currentText() == "DEM distance [m]")
         {
             // value should be a number
             bool ok;
