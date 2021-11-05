@@ -913,7 +913,6 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
 
 bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
 {
-
     if (ncId == NODATA) return false;
 
     float* var = new float[unsigned(nrLat*nrLon)];
@@ -922,7 +921,12 @@ bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
     {
         for (int col = 0; col < nrLon; col++)
         {
-            var[row*nrLon + col] = myDataGrid.value[row][col];
+            float value = myDataGrid.value[row][col];
+            // check on not active cells (for meteo grid)
+            if (isEqual(value, NO_ACTIVE))
+                value = myDataGrid.header->flag;
+
+            var[row*nrLon + col] = value;
         }
     }
 
