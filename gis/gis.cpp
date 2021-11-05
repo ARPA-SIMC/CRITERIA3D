@@ -397,19 +397,19 @@ namespace gis
 
     void checkMinimumRange(float& minimum, float& maximum)
     {
-        if (isEqual (maximum, 0) and isEqual (maximum, 0))
+        if (isEqual(maximum, 0) && isEqual(maximum, 0))
         {
-            maximum = 0.01;
+            maximum = 0.01f;
             return;
         }
 
-        float avg = (maximum + minimum) *0.5;
-        float minRange = std::max(0.01, fabs(avg) * 0.01);
+        float avg = (maximum + minimum) * 0.5f;
+        float minRange = std::max(0.01f, fabs(avg) * 0.01f);
 
         if ((maximum - minimum) < minRange)
         {
-            minimum = avg - minRange * 0.5;
-            maximum = avg + minRange * 0.5;
+            minimum = avg - minRange * 0.5f;
+            maximum = avg + minRange * 0.5f;
             return;
         }
     }
