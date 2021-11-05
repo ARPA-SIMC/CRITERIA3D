@@ -404,7 +404,7 @@ namespace gis
         }
 
         float avg = (maximum + minimum) * 0.5f;
-        float minRange = std::max(0.01f, fabs(avg) * 0.01f);
+        float minRange = std::max(0.01f, float(fabs(avg)) * 0.01f);
 
         if ((maximum - minimum) < minRange)
         {
