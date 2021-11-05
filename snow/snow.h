@@ -97,7 +97,8 @@
 
         /*! output */
         double _evaporation;                /*!<   [mm] */
-        double _snowFall;                   /*!<   [mm] */
+        double _precRain;                   /*!<   [mm] */
+        double _precSnow;                   /*!<   [mm] */
         double _snowMelt;                   /*!<   [mm] */
 
         double _snowWaterEquivalent;        /*!<   [mm] */
