@@ -1364,6 +1364,42 @@ namespace gis
         return true;
     }
 
+    float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& myDEM)
+    {
+
+        int row, col;
+        float closestDistanceFromGrid;
+        float distance;
+        double gridX, gridY;
+        float demValue;
+
+        demValue = gis::getValueFromXY(myDEM, myPoint.utm.x, myPoint.utm.y);
+        if (demValue != myDEM.header->flag)
+        {
+            return 0;
+        }
+
+        closestDistanceFromGrid = NODATA;
+        for (row = 0; row < myDEM.header->nrRows; row++)
+        {
+            for (col = 0; col < myDEM.header->nrCols; col++)
+            {
+
+                if (!isEqual(myDEM.getValueFromRowCol(row,col), myDEM.header->flag))
+                {
+                    gis::getUtmXYFromRowCol(myDEM, row, col, &gridX, &gridY);
+                    distance = computeDistance(float(gridX), float(gridY), float(myPoint.utm.x), float(myPoint.utm.y));
+                    if (closestDistanceFromGrid == NODATA || distance < closestDistanceFromGrid)
+                    {
+                        closestDistanceFromGrid = distance;
+                    }
+                }
+            }
+        }
+        return closestDistanceFromGrid;
+    }
+
+
     bool compareGrids(const gis::Crit3DRasterGrid& first, const gis::Crit3DRasterGrid& second)
     {
         return (first.header->nrRows == second.header->nrRows &&

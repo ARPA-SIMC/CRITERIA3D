@@ -228,6 +228,7 @@
         float topographicDistance(float X1, float Y1, float Z1, float X2, float Y2, float Z2, float distance,
                                   const gis::Crit3DRasterGrid& myDEM);
         bool topographicDistanceMap(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& myDEM, Crit3DRasterGrid* myMap);
+        float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& myDEM);
         bool compareGrids(const gis::Crit3DRasterGrid& first, const gis::Crit3DRasterGrid& second);
         void resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
                           const Crit3DRasterHeader &header, aggregationMethod elab, float nodataThreshold);
