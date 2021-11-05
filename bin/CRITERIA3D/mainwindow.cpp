@@ -931,6 +931,21 @@ void MainWindow::showMeteoVariable(meteoVariable var)
             setMeteoVariable(globalIrradiance, myProject.radiationMaps->globalRadiationMap);
         break;
 
+    case directIrradiance:
+        if (checkMapVariable(myProject.radiationMaps->getComputed()))
+            setMeteoVariable(directIrradiance, myProject.radiationMaps->beamRadiationMap);
+        break;
+
+    case diffuseIrradiance:
+        if (checkMapVariable(myProject.radiationMaps->getComputed()))
+            setMeteoVariable(diffuseIrradiance, myProject.radiationMaps->diffuseRadiationMap);
+        break;
+
+    case reflectedIrradiance:
+        if (checkMapVariable(myProject.radiationMaps->getComputed()))
+            setMeteoVariable(reflectedIrradiance, myProject.radiationMaps->reflectedRadiationMap);
+        break;
+
     case atmTransmissivity:
         if (checkMapVariable(myProject.radiationMaps->getComputed()))
             setMeteoVariable(atmTransmissivity, myProject.radiationMaps->transmissivityMap);
