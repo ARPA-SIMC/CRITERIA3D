@@ -1004,6 +1004,8 @@ void MainWindow::on_actionView_Global_radiation_triggered()
     showMeteoVariable(globalIrradiance);
 }
 
+//netIrradiance, directIrradiance, diffuseIrradiance, reflectedIrradiance
+
 void MainWindow::on_actionView_ET0_triggered()
 {
     showMeteoVariable(referenceEvapotranspiration);
