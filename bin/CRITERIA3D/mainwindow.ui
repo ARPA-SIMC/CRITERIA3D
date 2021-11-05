@@ -512,7 +512,7 @@
       <x>0</x>
       <y>260</y>
       <width>271</width>
-      <height>111</height>
+      <height>112</height>
      </rect>
     </property>
     <property name="palette">
@@ -1103,7 +1103,7 @@
       <x>0</x>
       <y>380</y>
       <width>271</width>
-      <height>121</height>
+      <height>112</height>
      </rect>
     </property>
     <property name="palette">
@@ -1611,7 +1611,7 @@
        <x>1</x>
        <y>60</y>
        <width>266</width>
-       <height>51</height>
+       <height>42</height>
       </rect>
      </property>
      <property name="font">
@@ -3853,7 +3853,7 @@
     <bool>true</bool>
    </property>
    <property name="checked">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
     <string>automatic save state (daily step)</string>
