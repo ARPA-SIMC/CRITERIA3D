@@ -82,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->rasterOutput->setColorLegend(this->outputRasterColorLegend);
     this->mapView->scene()->addObject(this->rasterOutput);
 
-    this->updateVariable();
+    this->updateCurrentVariable();
     this->updateDateTime();
 
     myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
@@ -478,7 +478,7 @@ void MainWindow::resetMeteoPoints()
 void MainWindow::on_actionVariableQualitySpatial_triggered()
 {
     myProject.checkSpatialQuality = ui->actionVariableQualitySpatial->isChecked();
-    updateVariable();
+    updateCurrentVariable();
 }
 
 
@@ -493,7 +493,7 @@ void MainWindow::interpolateDemGUI()
 }
 
 
-void MainWindow::updateVariable()
+void MainWindow::updateCurrentVariable()
 {
     std::string myString = getVariableString(myProject.getCurrentVariable());
     ui->labelVariable->setText(QString::fromStdString(myString));
@@ -662,7 +662,7 @@ void MainWindow::on_variableButton_clicked()
 {
     myProject.setCurrentVariable(chooseMeteoVariable(&myProject));
     this->currentPointsVisualization = showCurrentVariable;
-    this->updateVariable();
+    this->updateCurrentVariable();
 }
 
 
@@ -871,18 +871,14 @@ bool MainWindow::checkMapVariable(bool isComputed)
 
 void MainWindow::setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
 {   
+    setOutputVariable(myVar, myGrid);
     myProject.setCurrentVariable(myVar);
-
-    setColorScale(myVar, myGrid->colorScale);
-    setCurrentRasterOutput(myGrid);
-    ui->labelOutputRaster->setText(QString::fromStdString(getVariableString(myVar)));
-
     currentPointsVisualization = showCurrentVariable;
-    updateVariable();
+    updateCurrentVariable();
 }
 
 
-void MainWindow::setSnowVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
+void MainWindow::setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
 {
     setColorScale(myVar, myGrid->colorScale);
     setCurrentRasterOutput(myGrid);
@@ -973,23 +969,35 @@ void MainWindow::showSnowVariable(meteoVariable var)
     switch(var)
     {
     case snowWaterEquivalent:
-        setSnowVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
+        setOutputVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
         break;
 
     case snowFall:
-        setSnowVariable(snowFall, myProject.snowMaps.getSnowFallMap());
+        setOutputVariable(snowFall, myProject.snowMaps.getSnowFallMap());
         break;
 
     case snowSurfaceTemperature:
-        setSnowVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
+        setOutputVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
         break;
 
     case snowInternalEnergy:
-        setSnowVariable(snowInternalEnergy, myProject.snowMaps.getInternalEnergyMap());
+        setOutputVariable(snowInternalEnergy, myProject.snowMaps.getInternalEnergyMap());
         break;
 
     case snowSurfaceInternalEnergy:
-        setSnowVariable(snowSurfaceInternalEnergy, myProject.snowMaps.getSurfaceInternalEnergyMap());
+        setOutputVariable(snowSurfaceInternalEnergy, myProject.snowMaps.getSurfaceInternalEnergyMap());
+        break;
+
+    case snowLiquidWaterContent:
+        setOutputVariable(snowLiquidWaterContent, myProject.snowMaps.getLWContentMap());
+        break;
+
+    case snowAge:
+        setOutputVariable(snowAge, myProject.snowMaps.getAgeOfSnowMap());
+        break;
+
+    case snowMelt:
+        setOutputVariable(snowMelt, myProject.snowMaps.getSnowMeltMap());
         break;
 
     default:
@@ -1071,6 +1079,16 @@ void MainWindow::on_actionView_Snow_internal_energy_triggered()
 void MainWindow::on_actionView_Snow_surface_internal_energy_triggered()
 {
     showSnowVariable(snowSurfaceInternalEnergy);
+}
+
+void MainWindow::on_actionView_Snow_liquid_water_content_triggered()
+{
+    showSnowVariable(snowLiquidWaterContent);
+}
+
+void MainWindow::on_actionView_Snow_age_triggered()
+{
+    showSnowVariable(snowAge);
 }
 
 
@@ -1169,7 +1187,7 @@ void MainWindow::on_actionCompute_solar_radiation_triggered()
 
     myProject.setCurrentVariable(globalIrradiance);
     this->currentPointsVisualization = showCurrentVariable;
-    this->updateVariable();
+    this->updateCurrentVariable();
 
     this->interpolateDemGUI();
 }

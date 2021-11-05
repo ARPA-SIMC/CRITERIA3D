@@ -114,6 +114,10 @@
         void on_actionLoad_state_triggered();
         void on_flag_save_state_daily_step_triggered();
 
+        void on_actionView_Snow_liquid_water_content_triggered();
+
+        void on_actionView_Snow_age_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -158,7 +162,7 @@
         QPoint getMapPos(const QPoint& pos);
         bool isInsideMap(const QPoint& pos);
 
-        void updateVariable();
+        void updateCurrentVariable();
         void updateDateTime();
         void resetMeteoPoints();
         void redrawMeteoPoints(visualizationType myType, bool updateColorSCale);
@@ -187,7 +191,7 @@
         void clearMeteoPoints_GUI();
 
         void setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
-        void setSnowVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
+        void setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
 
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);

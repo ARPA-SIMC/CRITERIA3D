@@ -3522,6 +3522,8 @@
      <addaction name="actionView_Snow_surface_temperature"/>
      <addaction name="actionView_Snow_internal_energy"/>
      <addaction name="actionView_Snow_surface_internal_energy"/>
+     <addaction name="actionView_Snow_liquid_water_content"/>
+     <addaction name="actionView_Snow_age"/>
     </widget>
     <addaction name="menuPoints"/>
     <addaction name="menuMeteo_variables"/>
@@ -3883,6 +3885,16 @@
   <action name="actionView_Reflected_irradiance">
    <property name="text">
     <string>Reflected</string>
+   </property>
+  </action>
+  <action name="actionView_Snow_liquid_water_content">
+   <property name="text">
+    <string>Liquid water content</string>
+   </property>
+  </action>
+  <action name="actionView_Snow_age">
+   <property name="text">
+    <string>Age of snow</string>
    </property>
   </action>
  </widget>
