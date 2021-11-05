@@ -42,6 +42,7 @@ Crit3DRadiationMaps::Crit3DRadiationMaps()
     globalRadiationMap = new gis::Crit3DRasterGrid;
     beamRadiationMap = new gis::Crit3DRasterGrid;
     diffuseRadiationMap = new gis::Crit3DRasterGrid;
+    reflectedRadiationMap = new gis::Crit3DRasterGrid;
     sunElevationMap = new gis::Crit3DRasterGrid;
 
     /*
@@ -78,6 +79,9 @@ Crit3DRadiationMaps::Crit3DRadiationMaps(const gis::Crit3DRasterGrid& myDEM, con
 
     diffuseRadiationMap = new gis::Crit3DRasterGrid;
     diffuseRadiationMap->initializeGrid(myDEM);
+
+    reflectedRadiationMap = new gis::Crit3DRasterGrid;
+    reflectedRadiationMap->initializeGrid(myDEM);
 
     sunElevationMap = new gis::Crit3DRasterGrid;
     sunElevationMap->initializeGrid(myDEM);
@@ -117,6 +121,7 @@ void Crit3DRadiationMaps::clear()
     globalRadiationMap->clear();
     beamRadiationMap->clear();
     diffuseRadiationMap->clear();
+    reflectedRadiationMap->clear();
     sunElevationMap->clear();
 
     /*
@@ -136,6 +141,7 @@ void Crit3DRadiationMaps::clear()
     delete globalRadiationMap;
     delete beamRadiationMap;
     delete diffuseRadiationMap;
+    delete reflectedRadiationMap;
     delete sunElevationMap;
 
     /*
@@ -847,6 +853,7 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
                     radiationMaps->globalRadiationMap->value[myRow][myCol] = float(myRadPoint.global);
                     radiationMaps->beamRadiationMap->value[myRow][myCol] = float(myRadPoint.beam);
                     radiationMaps->diffuseRadiationMap->value[myRow][myCol] = float(myRadPoint.diffuse);
+                    radiationMaps->reflectedRadiationMap->value[myRow][myCol] = float(myRadPoint.reflected);
 
                 }
             }
@@ -856,20 +863,21 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
         gis::updateMinMaxRasterGrid(radiationMaps->sunAzimuthMap);
         gis::updateMinMaxRasterGrid(radiationMaps->sunIncidenceMap);
         gis::updateMinMaxRasterGrid(radiationMaps->sunShadowMap);
-        gis::updateMinMaxRasterGrid(radiationMaps->reflectedRadiationMap);
         */
 
         gis::updateMinMaxRasterGrid(radiationMaps->sunElevationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->transmissivityMap);
-        gis::updateMinMaxRasterGrid(radiationMaps->globalRadiationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->beamRadiationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->diffuseRadiationMap);
+        gis::updateMinMaxRasterGrid(radiationMaps->reflectedRadiationMap);
+        gis::updateMinMaxRasterGrid(radiationMaps->globalRadiationMap);
 
-
+        radiationMaps->sunElevationMap->setMapTime(myTime);
         radiationMaps->transmissivityMap->setMapTime(myTime);
-        radiationMaps->globalRadiationMap->setMapTime(myTime);
         radiationMaps->beamRadiationMap->setMapTime(myTime);
         radiationMaps->diffuseRadiationMap->setMapTime(myTime);
+        radiationMaps->reflectedRadiationMap->setMapTime(myTime);
+        radiationMaps->globalRadiationMap->setMapTime(myTime);
 
         radiationMaps->setComputed(true);
         return true;
