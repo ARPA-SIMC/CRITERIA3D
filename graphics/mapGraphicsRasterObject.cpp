@@ -428,13 +428,13 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
                     value = myRaster->value[matrix[row][col].row][matrix[row][col].col];
             }
 
-            if (this->isGrid && isDrawBorder)
+            if (this->isGrid && isDrawBorder && ! isEqual(value, NO_ACTIVE))
             {
                 myPainter->setPen(QColor(64, 64, 64));
                 myPainter->setBrush(Qt::NoBrush);
                 myPainter->drawRect(x0, y0, lx, ly);
             }
-            else if (! isEqual(value, myRaster->header->flag) && ! isEqual(value, NODATA))
+            else if (! isEqual(value, myRaster->header->flag) && ! isEqual(value, NODATA) && ! isEqual(value, NO_ACTIVE))
             {
                 myColor = myRaster->colorScale->getColor(value);
                 myQColor = QColor(myColor->red, myColor->green, myColor->blue);
