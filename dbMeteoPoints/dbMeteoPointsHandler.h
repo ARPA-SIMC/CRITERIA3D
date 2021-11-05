@@ -49,14 +49,20 @@
 
         bool existData(Crit3DMeteoPoint *meteoPoint, frequencyType myFreq);
         bool deleteData(QString pointCode, frequencyType myFreq, QDate first, QDate last);
+        bool deleteData(QString pointCode, frequencyType myFreq, QList<meteoVariable> varList, QDate first, QDate last);
         bool deleteAllData(frequencyType myFreq);
         bool writePointProperties(Crit3DMeteoPoint* pointProp);
         bool updatePointProperties(QList<QString> columnList, QList<QString> valueList);
-        QList<Crit3DMeteoPoint> getPropertiesFromDb(const gis::Crit3DGisSettings& gisSettings, QString *errorString);
+        bool getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
+                                 const gis::Crit3DGisSettings& gisSettings, QString& errorString);
         bool loadDailyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint);
-        std::vector<float> loadDailyVar(QString *myError, meteoVariable variable, Crit3DDate dateStart, Crit3DDate dateEnd, QDate* firstDateDB, Crit3DMeteoPoint *meteoPoint);
+        std::vector<float> loadDailyVar(QString *myError, meteoVariable variable,
+                                        Crit3DDate dateStart, Crit3DDate dateEnd,
+                                        QDate* firstDateDB, Crit3DMeteoPoint *meteoPoint);
         bool loadHourlyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint);
-        std::vector<float> loadHourlyVar(QString *myError, meteoVariable variable, Crit3DDate dateStart, Crit3DDate dateEnd, QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint);
+        std::vector<float> loadHourlyVar(QString *myError, meteoVariable variable,
+                                         Crit3DDate dateStart, Crit3DDate dateEnd,
+                                         QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint);
 
         bool loadVariableProperties();
         bool getNameColumn(QString tableName, QList<QString>* columnList);
@@ -76,6 +82,13 @@
         bool setIdPointListActiveState(QList<QString> pointList, bool activeState);
         bool deleteAllPointsFromIdList(QList<QString> pointList);
         bool deleteAllPointsFromGeoPointList(QList<gis::Crit3DGeoPoint> pointList);
+        QList<QString> getMunicipalityList();
+        QList<QString> getProvinceList();
+        QList<QString> getRegionList();
+        QList<QString> getStateList();
+        QList<QString> getDatasetList();
+        bool setActiveStateIfCondition(bool activeState, QString condition);
+
 
 
     protected:
