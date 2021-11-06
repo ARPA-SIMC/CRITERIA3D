@@ -342,7 +342,19 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
 
     if (nrIntervals < 1) return false;
 
-    if (isEqual(myScale->minimum, myScale->maximum)) return false;
+    if (isEqual(myScale->minimum, myScale->maximum))
+    {
+        if (isEqual(myScale->minimum, 0))
+        {
+            myScale->maximum += 0.1;
+        }
+        else
+        {
+            myScale->minimum -= 0.1;
+            myScale->maximum += 0.1;
+        }
+        return true;
+    }
 
     double avg = myScale->minimum + (myScale->maximum - myScale->minimum) / 2;
     double level = (myScale->maximum - myScale->minimum) / nrIntervals;
