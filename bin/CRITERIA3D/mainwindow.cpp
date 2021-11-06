@@ -792,6 +792,35 @@ void MainWindow::on_actionView_3D_triggered()
 }
 */
 
+void MainWindow::showSoilMap()
+{
+    if (myProject.soilMap.isLoaded)
+    {
+        ui->flag_view_SoilMap->setChecked(true);
+        setColorScale(airTemperature, myProject.soilMap.colorScale);
+        setCurrentRasterOutput(&(myProject.soilMap));
+        ui->labelOutputRaster->setText("Soil index");
+    }
+    else
+    {
+        myProject.logError("Load a soil map before.");
+    }
+}
+
+
+void MainWindow::on_flag_view_SoilMap_triggered()
+{
+    if (ui->flag_view_SoilMap->isChecked())
+    {
+        showSoilMap();
+    }
+    else
+    {
+        if (ui->labelOutputRaster->text() == "Soil index")
+            setOutputRasterVisible(false);
+    }
+}
+
 
 void MainWindow::on_actionView_Boundary_triggered()
 {
@@ -1089,6 +1118,11 @@ void MainWindow::on_actionView_Snow_liquid_water_content_triggered()
 void MainWindow::on_actionView_Snow_age_triggered()
 {
     showSnowVariable(snowAge);
+}
+
+void MainWindow::on_actionView_Snowmelt_triggered()
+{
+    showSnowVariable(snowMelt);
 }
 
 
@@ -1591,7 +1625,7 @@ void MainWindow::on_actionRun_models_triggered()
 
 //----------------- SNOW MODEL -----------------
 
-void MainWindow::on_actionInitialize_snow_triggered()
+void MainWindow::on_actionSnow_initialize_triggered()
 {
     if (myProject.initializeSnowModel())
     {
@@ -1600,7 +1634,7 @@ void MainWindow::on_actionInitialize_snow_triggered()
 }
 
 
-void MainWindow::on_actionRun_snow_model_triggered()
+void MainWindow::on_actionSnow_run_model_triggered()
 {
     if (! myProject.snowMaps.isInitialized)
     {
@@ -1616,6 +1650,23 @@ void MainWindow::on_actionRun_snow_model_triggered()
     myProject.isWater = false;
     myProject.isSnow = true;
     startModels(firstTime, lastTime);
+}
+
+
+void MainWindow::on_actionSnow_compute_current_hour_triggered()
+{
+    if (! myProject.snowMaps.isInitialized)
+    {
+        if (! myProject.initializeSnowModel())
+            return;
+    }
+
+    QDateTime currentTime = myProject.getCurrentTime();
+
+    myProject.isCrop = false;
+    myProject.isWater = false;
+    myProject.isSnow = true;
+    startModels(currentTime, currentTime);
 }
 
 
@@ -1736,33 +1787,3 @@ void MainWindow::on_flag_save_state_daily_step_triggered()
     myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
 }
 
-
-void MainWindow::showSoilMap()
-{
-    if (myProject.soilMap.isLoaded)
-    {
-        ui->flag_view_SoilMap->setChecked(true);
-        setColorScale(airTemperature, myProject.soilMap.colorScale);
-        setCurrentRasterOutput(&(myProject.soilMap));
-        ui->labelOutputRaster->setText("Soil index");
-    }
-    else
-    {
-        myProject.logError("Load a soil map before.");
-    }
-}
-
-
-void MainWindow::on_flag_view_SoilMap_triggered()
-{
-    if (ui->flag_view_SoilMap->isChecked())
-    {
-        showSoilMap();
-    }
-    else
-    {
-        if (ui->labelOutputRaster->text() == "Soil index")
-            setOutputRasterVisible(false);
-    }
-
-}

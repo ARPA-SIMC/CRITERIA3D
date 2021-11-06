@@ -96,15 +96,19 @@
         void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
         void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
 
-        void on_actionRun_snow_model_triggered();
-        void on_actionInitialize_snow_triggered();
         void on_actionSnow_settings_triggered();
+        void on_actionSnow_initialize_triggered();
+        void on_actionSnow_compute_current_hour_triggered();
+        void on_actionSnow_run_model_triggered();
 
         void on_actionView_Snow_water_equivalent_triggered();
         void on_actionView_Snow_surface_temperature_triggered();
         void on_actionView_Snow_internal_energy_triggered();
         void on_actionView_Snow_fall_triggered();
         void on_actionView_Snow_surface_internal_energy_triggered();
+        void on_actionView_Snow_liquid_water_content_triggered();
+        void on_actionView_Snow_age_triggered();
+        void on_actionView_Snowmelt_triggered();
 
         void on_buttonModelPause_clicked();
         void on_buttonModelStop_clicked();
@@ -114,9 +118,6 @@
         void on_actionLoad_state_triggered();
         void on_flag_save_state_daily_step_triggered();
 
-        void on_actionView_Snow_liquid_water_content_triggered();
-
-        void on_actionView_Snow_age_triggered();
 
     protected:
         /*!

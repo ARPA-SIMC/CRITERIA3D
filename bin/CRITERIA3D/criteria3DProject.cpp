@@ -568,6 +568,8 @@ bool Crit3DProject::computeSnowModel()
         }
     }
 
+    snowMaps.updateRangeMaps();
+
     return true;
 }
 

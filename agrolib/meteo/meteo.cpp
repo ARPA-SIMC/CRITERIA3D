@@ -653,13 +653,16 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             break;
         case precipitation: case dailyPrecipitation: case referenceEvapotranspiration:
         case dailyReferenceEvapotranspirationHS: case dailyReferenceEvapotranspirationPM: case actualEvaporation:
+        case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
         case dailyWaterTableDepth:
-    case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
             setPrecipitationScale(colorScale);
-            break;
+            colorScale->minimum = 0;
+            break;  
         case snowAge:
             setGrayScale(colorScale);
             reverseColorScale(colorScale);
+            colorScale->minimum = 0;
+            colorScale->maximum = 30;
             break;
         case dailyBIC:
             setZeroCenteredScale(colorScale);
@@ -777,11 +780,11 @@ std::string getVariableString(meteoVariable myVar)
     else if (myVar == snowAge)
         return "Snow age (days)";
     else if (myVar == snowSurfaceTemperature)
-        return "Snow surface temperature (°C)";
+        return "Surface temperature (°C)";
     else if (myVar == snowInternalEnergy)
-        return "Snow energy content (kJ m-2)";
+        return "Energy content (kJ m-2)";
     else if (myVar == snowSurfaceInternalEnergy)
-        return "Snow energy content surface layer (kJ m-2)";
+        return "Energy content surface layer (kJ m-2)";
     else if (myVar == noMeteoTerrain)
         return "Elevation (m)";
     else

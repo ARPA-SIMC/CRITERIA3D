@@ -3519,11 +3519,12 @@
      </property>
      <addaction name="actionView_Snow_fall"/>
      <addaction name="actionView_Snow_water_equivalent"/>
-     <addaction name="actionView_Snow_surface_temperature"/>
      <addaction name="actionView_Snow_internal_energy"/>
      <addaction name="actionView_Snow_surface_internal_energy"/>
+     <addaction name="actionView_Snow_surface_temperature"/>
      <addaction name="actionView_Snow_liquid_water_content"/>
      <addaction name="actionView_Snow_age"/>
+     <addaction name="actionView_Snowmelt"/>
     </widget>
     <addaction name="menuPoints"/>
     <addaction name="menuMeteo_variables"/>
@@ -3543,8 +3544,9 @@
     <addaction name="actionLoad_state"/>
     <addaction name="actionSave_state"/>
     <addaction name="separator"/>
-    <addaction name="actionInitialize_snow"/>
-    <addaction name="actionRun_snow_model"/>
+    <addaction name="actionSnow_initialize"/>
+    <addaction name="actionSnow_compute_current_hour"/>
+    <addaction name="actionSnow_run_model"/>
     <addaction name="separator"/>
     <addaction name="flag_save_state_daily_step"/>
    </widget>
@@ -3815,7 +3817,7 @@
     <string>Snow settings...</string>
    </property>
   </action>
-  <action name="actionRun_snow_model">
+  <action name="actionSnow_run_model">
    <property name="text">
     <string>Run model...</string>
    </property>
@@ -3827,15 +3829,15 @@
   </action>
   <action name="actionView_Snow_surface_temperature">
    <property name="text">
-    <string>Snow surface temperature</string>
+    <string>Surface temperature</string>
    </property>
   </action>
   <action name="actionView_Snow_internal_energy">
    <property name="text">
-    <string>Energy content</string>
+    <string>Energy content of the snow pack</string>
    </property>
   </action>
-  <action name="actionInitialize_snow">
+  <action name="actionSnow_initialize">
    <property name="text">
     <string>Initialize</string>
    </property>
@@ -3861,7 +3863,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>automatic save state (daily step)</string>
+    <string>Automatic save state (daily step)</string>
    </property>
   </action>
   <action name="actionMapGoogle_satellite">
@@ -3895,6 +3897,16 @@
   <action name="actionView_Snow_age">
    <property name="text">
     <string>Age of snow</string>
+   </property>
+  </action>
+  <action name="actionSnow_compute_current_hour">
+   <property name="text">
+    <string>Compute current hour</string>
+   </property>
+  </action>
+  <action name="actionView_Snowmelt">
+   <property name="text">
+    <string>Snowmelt</string>
    </property>
   </action>
  </widget>
