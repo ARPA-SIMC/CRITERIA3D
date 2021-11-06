@@ -569,7 +569,7 @@ namespace radiation
         //in attesa di studi mirati (Bristow and Campbell, 1985)
         maximumDiffuseTransmissivity = 0.6f / (myClearSkyTransmissivity - 0.4f);
         *Tt = MAXVALUE(MINVALUE(transmissivity, myClearSkyTransmissivity), 0.00001f);
-        *td = (*Tt) * (1 - exp(maximumDiffuseTransmissivity - (maximumDiffuseTransmissivity * myClearSkyTransmissivity) / (*Tt)));
+        *td = (*Tt) * (1.f - exp(maximumDiffuseTransmissivity - (maximumDiffuseTransmissivity * myClearSkyTransmissivity) / (*Tt)));
 
         /*! FT 0.12 stimato da Settefonti agosto 2007 */
         if ((*Tt) > 0.6f) *td = MAXVALUE(*td, 0.1f);
@@ -619,7 +619,7 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
             return false;
 
         /*! Shadowing */
-        isPointIlluminated = isIlluminated(localTime.time, (*mySunPosition).rise, (*mySunPosition).set, (*mySunPosition).elevationRefr);
+        isPointIlluminated = isIlluminated(float(localTime.time), (*mySunPosition).rise, (*mySunPosition).set, (*mySunPosition).elevationRefr);
         if (mySettings->getShadowing())
         {
             if (gis::isOutOfGridXY(myPoint->x, myPoint->y, myDEM.header))
@@ -980,7 +980,7 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
                                         + getCosDecimalDegree(float(myPoint->slope)) * sin(elevationAngle)));
 
         float Tt = myClearSkyTransmissivity;
-        float td = float(0.1);
+        float td = 0.1f;
         if (mySettings->getRealSky())
         {
             if (myTransmissivity != NODATA)
@@ -1003,7 +1003,7 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
             radBeam = extraTerrestrialRad * coeffBH * MAXVALUE(0, sin(incidenceAngle) / sin(elevationAngle));
             //aggiungere Snow albedo!
             //Muneer 1997
-            radReflected = extraTerrestrialRad * Tt * 0.2 * (1 - getCosDecimalDegree(myPoint->slope)) / 2.0;
+            radReflected = extraTerrestrialRad * Tt * 0.2 * (1.0 - getCosDecimalDegree(float(myPoint->slope))) / 2.0;
         }
 
         radTotal = radDiffuse + radBeam + radReflected;
