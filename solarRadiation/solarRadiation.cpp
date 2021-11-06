@@ -492,13 +492,13 @@ namespace radiation
 
     bool computeShadow(TradPoint* myPoint, TsunPosition* mySunPosition, const gis::Crit3DRasterGrid& myDEM)
     {
-        float sunMaskStepX, sunMaskStepY;
-        float sunMaskStepZ, maxDeltaH;
-        float x, y, z;
+        double sunMaskStepX, sunMaskStepY;
+        double sunMaskStepZ, maxDeltaH;
+        double x, y, z, x0, y0, z0;
+        double cosElev, sinElev, tgElev;
+        double step, stepCount, maxDistCount;
+        double zDEM;
         int row, col;
-        bool shadowComputed;
-        float cosElev, sinElev, tgElev;
-        float step, stepCount, maxDistCount;
 
         /* INPUT
         azimuth
@@ -507,61 +507,58 @@ namespace radiation
         inizializzazione a sole visibile
         */
 
-        shadowComputed = false;
-        x = float(myPoint->x);
-        y = float(myPoint->y);
-        z = float(myPoint->height);
-        sunMaskStepX = float(SHADOW_FACTOR * getSinDecimalDegree(mySunPosition->azimuth) * myDEM.header->cellSize);
-        sunMaskStepY = float(SHADOW_FACTOR * getCosDecimalDegree(mySunPosition->azimuth) * myDEM.header->cellSize);
+        x0 = myPoint->x;
+        y0 = myPoint->y;
+        z0 = myPoint->height;
+
+        sunMaskStepX = SHADOW_FACTOR * getSinDecimalDegree(mySunPosition->azimuth) * myDEM.header->cellSize;
+        sunMaskStepY = SHADOW_FACTOR * getCosDecimalDegree(mySunPosition->azimuth) * myDEM.header->cellSize;
         cosElev = getCosDecimalDegree(mySunPosition->elevation);
         sinElev = getSinDecimalDegree(mySunPosition->elevation);
         tgElev = sinElev / cosElev;
-        sunMaskStepZ = float(myDEM.header->cellSize * SHADOW_FACTOR * tgElev);
-        maxDeltaH = float(myDEM.header->cellSize * SHADOW_FACTOR * 2);
+        sunMaskStepZ = myDEM.header->cellSize * SHADOW_FACTOR * tgElev;
+
+        maxDeltaH = myDEM.header->cellSize * SHADOW_FACTOR * 2;
 
         if (sunMaskStepZ == 0)
-            maxDistCount = myDEM.maximum - z;
+            maxDistCount = myDEM.maximum - z0 / EPSILON;
         else
-            maxDistCount = (myDEM.maximum - z) / sunMaskStepZ;
+            maxDistCount = (myDEM.maximum - z0) / sunMaskStepZ;
 
         stepCount = 0;
         step = 1;
-
-        bool output= false;
         do
         {
-            x += sunMaskStepX * step;
-            y += sunMaskStepY * step;
-            z += sunMaskStepZ * step;
             stepCount += step;
-
-            if (stepCount > maxDistCount) shadowComputed = true ;
+            x = x0 + sunMaskStepX * stepCount;
+            y = y0 + sunMaskStepY * stepCount;
+            z = z0 + sunMaskStepZ * stepCount;
 
             gis::getRowColFromXY(myDEM, x, y, &row, &col);
-            if (! gis::isOutOfGridRowCol(row, col, myDEM))
+            if (gis::isOutOfGridRowCol(row, col, myDEM))
             {
-                float matrixElement = myDEM.value[row][col];
-                if (matrixElement != myDEM.header->flag)
-                {
-                    if ((matrixElement - z) > 0.1f)
-                    {
-                        // shadowed - exit
-                        shadowComputed = true ;
-                        output = true ;
-                    }
-                    else
-                    {
-                        step = (z - matrixElement) / maxDeltaH;
-                        if (step < 1) step = 1;
-                    }
-                }
-                else shadowComputed = true;
+                // not shadowed - exit
+                return false ;
             }
-            else
-                shadowComputed = true;
 
-        } while(! shadowComputed);
-        return output;
+            zDEM = myDEM.value[row][col];
+            if (zDEM != myDEM.header->flag)
+            {
+                if ((zDEM - z) > 0.5)
+                {
+                    // shadowed - exit
+                    return true ;
+                }
+                else
+                {
+                    step = (z - zDEM) / maxDeltaH;
+                    if (step < 1) step = 1;
+                }
+            }
+
+        } while(stepCount < maxDistCount);
+
+        return false;
     }
 
 
