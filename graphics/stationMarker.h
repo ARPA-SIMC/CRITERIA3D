@@ -25,6 +25,8 @@
             void setMunicipality(const std::string &municipality);
             void setQuality(const quality::qualityType &quality);
             void setCurrentValue(float currentValue);
+            bool active() const;
+            void setActive(bool active);
 
     private:
             MapGraphicsView* _view;
@@ -35,6 +37,7 @@
             std::string _municipality;
             float _currentValue;
             quality::qualityType _quality;
+            bool _active;
 
         protected:
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
