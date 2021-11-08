@@ -21,7 +21,7 @@
     ftomei@arpae.it
 */
 
-
+#include "meteo.h"
 #include "proxyWidget.h"
 #include "utilities.h"
 #include "commonConstants.h"
@@ -30,8 +30,8 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints)
-:interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints)
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDateTime currentDateTime)
+:interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentFrequency(currentFrequency), currentDateTime(currentDateTime)
 {
     
     this->setWindowTitle("Statistics");
@@ -67,6 +67,29 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     
     QLabel *variableLabel = new QLabel(tr("Variable"));
     QLabel *axisXLabel = new QLabel(tr("Axis X"));
+
+    std::vector<Crit3DProxy> proxy = interpolationSettings->getCurrentProxy();
+
+    for(int i=0; i<proxy.size(); i++)
+    {
+        axisX.addItem(QString::fromStdString(proxy[i].getName()));
+    }
+
+    std::map<meteoVariable, std::string>::const_iterator it;
+    if (currentFrequency == daily)
+    {
+        for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
+        {
+            variable.addItem(QString::fromStdString(it->second));
+        }
+    }
+    else if (currentFrequency == hourly)
+    {
+        for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
+        {
+            variable.addItem(QString::fromStdString(it->second));
+        }
+    }
     
     selectionChartLayout->addWidget(variableLabel);
     selectionChartLayout->addWidget(&variable);

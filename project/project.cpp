@@ -2651,7 +2651,8 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 
 void Project::showProxyGraph()
 {
-    Crit3DProxyWidget* proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints);
+    QDateTime currentDateTime = getCurrentTime();
+    Crit3DProxyWidget* proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDateTime);
 }
 
 
