@@ -11,12 +11,13 @@
         Q_OBJECT
 
         public:
-            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint*> meteoPointList);
+            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints);
             ~Crit3DProxyWidget();
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
-            QList<Crit3DMeteoPoint*> meteoPointList;
+            Crit3DMeteoPoint* meteoPoints;
+            int nrMeteoPoints;
             QComboBox variable;
             QComboBox axisX;
             QCheckBox detrended;
@@ -26,6 +27,8 @@
             QTextEdit r2;
             QTextEdit lapseRate;
             QTextEdit r2ThermalLevels;
+            QChartView *chartView;
+            QChart *chart;
             
     signals:
     };

@@ -10,6 +10,7 @@
 #include "utilities.h"
 #include "aggregation.h"
 #include "meteoWidget.h"
+#include "proxyWidget.h"
 #include "formInfo.h"
 
 #include <iostream>
@@ -2646,6 +2647,11 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
     }
 
     return true;
+}
+
+void Project::showProxyGraph()
+{
+    Crit3DProxyWidget* proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints);
 }
 
 
