@@ -11,7 +11,7 @@
 #include "dialogRadiation.h"
 #include "dialogPointProperties.h"
 #include "utilities.h"
-#include "formPeriod.h"
+#include "formTimePeriod.h"
 #include "criteria3DProject.h"
 #include "dialogSnowSettings.h"
 #include "dialogLoadState.h"
@@ -1479,12 +1479,12 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
     QDateTime firstDateH = myProject.meteoPointsDbHandler->getFirstDate(hourly);
     QDateTime lastDateH = myProject.meteoPointsDbHandler->getLastDate(hourly);
 
-    formPeriod myForm(&firstTime, &lastTime);
-    myForm.setMinimumDate(firstDateH.date());
-    myForm.setMaximumDate(lastDateH.date());
-    myForm.show();
+    FormTimePeriod formTimePeriod(&firstTime, &lastTime);
+    formTimePeriod.setMinimumDate(firstDateH.date());
+    formTimePeriod.setMaximumDate(lastDateH.date());
+    formTimePeriod.show();
 
-    if (myForm.exec() == QDialog::Rejected)
+    if (formTimePeriod.exec() == QDialog::Rejected)
         return false;
 
     if (lastTime < firstTime)

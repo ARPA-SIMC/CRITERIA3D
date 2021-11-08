@@ -27,7 +27,7 @@
 #include "dialogRadiation.h"
 #include "dialogSettings.h"
 #include "dialogSelection.h"
-#include "formPeriod.h"
+#include "formTimePeriod.h"
 #include "mainWindow.h"
 #include "ui_mainWindow.h"
 
@@ -337,9 +337,9 @@ void MainWindow::on_actionRun_models_triggered()
     QDateTime timeIni(QDateTime::currentDateTime());
     QDateTime timeFin(QDateTime::currentDateTime());
 
-    FormPeriod formPeriod(&timeIni, &timeFin);
-    formPeriod.show();
-    int myReturn = formPeriod.exec();
+    FormTimePeriod formTimePeriod(&timeIni, &timeFin);
+    formTimePeriod.show();
+    int myReturn = formTimePeriod.exec();
     if (myReturn == QDialog::Rejected) return;
 
     myProject.runModels(timeIni, timeFin, true, true, myProject.idArea);

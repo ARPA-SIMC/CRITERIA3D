@@ -1,11 +1,11 @@
-#include "formPeriod.h"
-#include "ui_FormPeriod.h"
+#include "formTimePeriod.h"
+#include "ui_formTimePeriod.h"
 #include <QDateTime>
 
 
-FormPeriod::FormPeriod(QDateTime *timeIni, QDateTime *timeFin, QWidget * parent) :
+FormTimePeriod::FormTimePeriod(QDateTime *timeIni, QDateTime *timeFin, QWidget * parent) :
     QDialog(parent),
-    ui(new Ui::FormPeriod)
+    ui(new Ui::frmTimePeriod)
 {
     if (timeIni == nullptr || timeFin == nullptr) return;
 
@@ -18,27 +18,27 @@ FormPeriod::FormPeriod(QDateTime *timeIni, QDateTime *timeFin, QWidget * parent)
     ui->dateTimeEditLast->setDateTime(*dateTimeLast);
 }
 
-FormPeriod::~FormPeriod()
+FormTimePeriod::~FormTimePeriod()
 {
     delete ui;
 }
 
 
-void FormPeriod::setMinimumDate(QDate myDate)
+void FormTimePeriod::setMinimumDate(QDate myDate)
 {
     ui->dateTimeEditFirst->setMinimumDate(myDate);
     ui->dateTimeEditLast->setMinimumDate(myDate);
 }
 
 
-void FormPeriod::setMaximumDate(QDate myDate)
+void FormTimePeriod::setMaximumDate(QDate myDate)
 {
     ui->dateTimeEditFirst->setMaximumDate(myDate);
     ui->dateTimeEditLast->setMaximumDate(myDate);
 }
 
 
-void FormPeriod::on_buttonBox_accepted()
+void FormTimePeriod::on_buttonBox_accepted()
 {
     *dateTimeFirst = ui->dateTimeEditFirst->dateTime();
     *dateTimeLast = ui->dateTimeEditLast->dateTime();

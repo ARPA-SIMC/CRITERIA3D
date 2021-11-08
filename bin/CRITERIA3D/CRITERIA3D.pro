@@ -98,4 +98,3 @@ HEADERS += mainwindow.h \
 
 FORMS += mainwindow.ui
 
-
