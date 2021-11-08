@@ -21,7 +21,7 @@
     ftomei@arpae.it
 */
 
-
+#include "meteo.h"
 #include "proxyWidget.h"
 #include "utilities.h"
 #include "commonConstants.h"
@@ -30,8 +30,8 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint*> meteoPointList)
-:interpolationSettings(interpolationSettings), meteoPointList(meteoPointList)
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDateTime currentDateTime)
+:interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentFrequency(currentFrequency), currentDateTime(currentDateTime)
 {
     
     this->setWindowTitle("Statistics");
@@ -42,7 +42,11 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QGroupBox *horizontalGroupBox = new QGroupBox();
-    QGridLayout *selectionLayout = new QGridLayout;
+    QHBoxLayout *selectionLayout = new QHBoxLayout;
+    QHBoxLayout *selectionChartLayout = new QHBoxLayout;
+    QVBoxLayout *selectionOptionLayout = new QVBoxLayout;
+    QHBoxLayout *selectionOptionBoxLayout = new QHBoxLayout;
+    QHBoxLayout *selectionOptionEditLayout = new QHBoxLayout;
     QVBoxLayout *plotLayout = new QVBoxLayout;
 
     detrended.setText("Detrended data");
@@ -54,31 +58,65 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
     QLabel *r2ThermalLevelsLabel = new QLabel(tr("R2 thermal levels"));
     
-    r2.setMaximumWidth(100);
+    r2.setMaximumWidth(50);
     r2.setMaximumHeight(30);
-    lapseRate.setMaximumWidth(100);
+    lapseRate.setMaximumWidth(50);
     lapseRate.setMaximumHeight(30);
-    r2ThermalLevels.setMaximumWidth(100);
+    r2ThermalLevels.setMaximumWidth(50);
     r2ThermalLevels.setMaximumHeight(30);
     
     QLabel *variableLabel = new QLabel(tr("Variable"));
     QLabel *axisXLabel = new QLabel(tr("Axis X"));
+
+    std::vector<Crit3DProxy> proxy = interpolationSettings->getCurrentProxy();
+
+    for(int i=0; i<proxy.size(); i++)
+    {
+        axisX.addItem(QString::fromStdString(proxy[i].getName()));
+    }
+
+    std::map<meteoVariable, std::string>::const_iterator it;
+    if (currentFrequency == daily)
+    {
+        for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
+        {
+            variable.addItem(QString::fromStdString(it->second));
+        }
+    }
+    else if (currentFrequency == hourly)
+    {
+        for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
+        {
+            variable.addItem(QString::fromStdString(it->second));
+        }
+    }
     
-    selectionLayout->addWidget(variableLabel,0,0);
-    selectionLayout->addWidget(&variable,1,0);
-    selectionLayout->addWidget(axisXLabel,0,1);
-    selectionLayout->addWidget(&axisX,1,1);
+    selectionChartLayout->addWidget(variableLabel);
+    selectionChartLayout->addWidget(&variable);
+    selectionChartLayout->addWidget(axisXLabel);
+    selectionChartLayout->addWidget(&axisX);
     
-    selectionLayout->addWidget(&detrended,0,2);
-    selectionLayout->addWidget(&climatologyLR,0,3);
-    selectionLayout->addWidget(&modelLP,0,4);
-    selectionLayout->addWidget(&zeroIntercept,1,2);
-    selectionLayout->addWidget(r2Label,1,3);
-    selectionLayout->addWidget(&r2,1,4);
-    selectionLayout->addWidget(lapseRateLabel,2,1);
-    selectionLayout->addWidget(&lapseRate,2,2);
-    selectionLayout->addWidget(r2ThermalLevelsLabel,2,3);
-    selectionLayout->addWidget(&r2ThermalLevels,2,4);
+    selectionOptionBoxLayout->addWidget(&detrended);
+    selectionOptionBoxLayout->addWidget(&climatologyLR);
+    selectionOptionBoxLayout->addWidget(&modelLP);
+    selectionOptionBoxLayout->addWidget(&zeroIntercept);
+
+    selectionOptionEditLayout->addWidget(r2Label);
+    selectionOptionEditLayout->addWidget(&r2);
+    selectionOptionEditLayout->addSpacing(200);
+    selectionOptionEditLayout->addWidget(lapseRateLabel);
+    selectionOptionEditLayout->addWidget(&lapseRate);
+    selectionOptionEditLayout->addSpacing(200);
+    selectionOptionEditLayout->addWidget(r2ThermalLevelsLabel);
+    selectionOptionEditLayout->addWidget(&r2ThermalLevels);
+    selectionOptionEditLayout->addSpacing(200);
+
+    selectionOptionLayout->addLayout(selectionOptionBoxLayout);
+    selectionOptionLayout->addLayout(selectionOptionEditLayout);
+
+    selectionLayout->addLayout(selectionChartLayout);
+    selectionLayout->addSpacing(50);
+    selectionLayout->addLayout(selectionOptionLayout);
     
 
     // menu
@@ -98,12 +136,18 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     editMenu->addAction(exportGraph);
     */
 
+    chart = new QChart();
+    chartView = new QChartView(chart);
+    chartView->setChart(chart);
+    plotLayout->addWidget(chartView);
 
-//    plotLayout->addWidget(chartView);
+    horizontalGroupBox->setMaximumSize(1240, 130);
     horizontalGroupBox->setLayout(selectionLayout);
     mainLayout->addWidget(horizontalGroupBox);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
+
+    show();
 
 }
 

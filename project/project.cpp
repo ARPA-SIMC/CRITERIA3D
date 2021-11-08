@@ -10,6 +10,7 @@
 #include "utilities.h"
 #include "aggregation.h"
 #include "meteoWidget.h"
+#include "proxyWidget.h"
 #include "formInfo.h"
 
 #include <iostream>
@@ -751,11 +752,13 @@ void Project::setCurrentDate(QDate myDate)
         this->previousDate = this->currentDate;
         this->currentDate = myDate;
     }
+    emit changeDateTime(getCurrentTime());
 }
 
 QDate Project::getCurrentDate()
 {
     return this->currentDate;
+    emit changeDateTime(getCurrentTime());
 }
 
 void Project::setCurrentHour(int myHour)
@@ -2041,6 +2044,7 @@ frequencyType Project::getCurrentFrequency() const
 void Project::setCurrentFrequency(const frequencyType &value)
 {
     currentFrequency = value;
+    emit changeFrequency(currentFrequency);
 }
 
 void Project::saveProjectSettings()
@@ -2646,6 +2650,12 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
     }
 
     return true;
+}
+
+void Project::showProxyGraph()
+{
+    QDateTime currentDateTime = getCurrentTime();
+    Crit3DProxyWidget* proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDateTime);
 }
 
 
