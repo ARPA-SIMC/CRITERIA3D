@@ -18,6 +18,7 @@ StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillC
     _altitude = NODATA;
     _municipality = "";
     _currentValue = NODATA;
+    _active = true;
 
 }
 
@@ -59,6 +60,16 @@ void StationMarker::setQuality(const quality::qualityType &quality)
 void StationMarker::setCurrentValue(float currentValue)
 {
     _currentValue = currentValue;
+}
+
+bool StationMarker::active() const
+{
+    return _active;
+}
+
+void StationMarker::setActive(bool active)
+{
+    _active = active;
 }
 
 
