@@ -16,13 +16,14 @@ TEMPLATE = app
 DEFINES += VINE3D
 
 INCLUDEPATH +=  ../../mapGraphics \
-                ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/gis ../../agrolib/meteo \
-                ../../agrolib/interpolation ../../agrolib/solarRadiation ../../agrolib/soil  \
-                ../../agrolib/soilFluxes3D/header ../../agrolib/crop ../../agrolib/grapevine \
+                ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/soilFluxes3D/header \
+                ../../agrolib/gis ../../agrolib/meteo ../../agrolib/interpolation \
+                ../../agrolib/solarRadiation ../../agrolib/soil  \
+                ../../agrolib/crop ../../agrolib/grapevine \
                 ../../agrolib/utilities ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
-                ../../agrolib/importDataXML ../../agrolib/proxyWidget ../../agrolib/project \
-                ../../agrolib/graphics  ../../agrolib/commonDialogs \
-                ../../mapGraphics ../../agrolib/meteoWidget \
+                ../../agrolib/importDataXML ../../agrolib/proxyWidget \
+                ../../agrolib/commonDialogs ../../agrolib/project \
+                ../../agrolib/graphics ../../agrolib/meteoWidget ../../mapGraphics  \
                 ../CRITERIA3D/shared
 
 CONFIG += debug_and_release
@@ -35,17 +36,18 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/proxyWidget/debug -lproxyWidget
     LIBS += -L../../agrolib/importDataXML/debug -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
-    LIBS += -L../../agrolib/commonDialogs/debug -commonDialogs
-    LIBS += -L../../agrolib/soil/debug -lsoil
-    LIBS += -L../../agrolib/soilFluxes3D/debug -lsoilFluxes3D
-    LIBS += -L../../agrolib/grapevine/debug -lgrapevine
+    LIBS += -L../../agrolib/commonDialogs/debug -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/debug -ldbMeteoGrid
     LIBS += -L../../agrolib/dbMeteoPoints/debug -ldbMeteoPoints
     LIBS += -L../../agrolib/utilities/debug -lutilities
+    LIBS += -L../../agrolib/grapevine/debug -lgrapevine
+    LIBS += -L../../agrolib/soil/debug -lsoil
+    LIBS += -L../../agrolib/crop/debug -lcrop
     LIBS += -L../../agrolib/solarRadiation/debug -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/debug -linterpolation
     LIBS += -L../../agrolib/meteo/debug -lmeteo
     LIBS += -L../../agrolib/gis/debug -lgis
+    LIBS += -L../../agrolib/soilFluxes3D/debug -lsoilFluxes3D
     LIBS += -L../../agrolib/crit3dDate/debug -lcrit3dDate
     LIBS += -L../../agrolib/mathFunctions/debug -lmathFunctions
 } else {
@@ -56,16 +58,17 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/importDataXML/release -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/release -lcommonDialogs
-    LIBS += -L../../agrolib/soil/release -lsoil
-    LIBS += -L../../agrolib/soilFluxes3D/release -lsoilFluxes3D
-    LIBS += -L../../agrolib/grapevine/release -lgrapevine
     LIBS += -L../../agrolib/dbMeteoGrid/release -ldbMeteoGrid
     LIBS += -L../../agrolib/dbMeteoPoints/release -ldbMeteoPoints
     LIBS += -L../../agrolib/utilities/release -lutilities
+    LIBS += -L../../agrolib/grapevine/release -lgrapevine
+    LIBS += -L../../agrolib/soil/release -lsoil
+    LIBS += -L../../agrolib/crop/release -lcrop
     LIBS += -L../../agrolib/solarRadiation/release -lsolarRadiation
     LIBS += -L../../agrolib/interpolation/release -linterpolation
     LIBS += -L../../agrolib/meteo/release -lmeteo
     LIBS += -L../../agrolib/gis/release -lgis
+    LIBS += -L../../agrolib/soilFluxes3D/release -lsoilFluxes3D
     LIBS += -L../../agrolib/crit3dDate/release -lcrit3dDate
     LIBS += -L../../agrolib/mathFunctions/release -lmathFunctions
 }

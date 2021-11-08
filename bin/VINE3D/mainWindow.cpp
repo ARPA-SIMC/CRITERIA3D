@@ -27,7 +27,6 @@
 #include "dialogRadiation.h"
 #include "dialogSettings.h"
 #include "dialogSelection.h"
-#include "formInfo.h"
 #include "formPeriod.h"
 #include "mainWindow.h"
 #include "ui_mainWindow.h"
@@ -338,9 +337,9 @@ void MainWindow::on_actionRun_models_triggered()
     QDateTime timeIni(QDateTime::currentDateTime());
     QDateTime timeFin(QDateTime::currentDateTime());
 
-    formPeriod myForm(&timeIni, &timeFin);
-    myForm.show();
-    int myReturn = myForm.exec();
+    FormPeriod formPeriod(&timeIni, &timeFin);
+    formPeriod.show();
+    int myReturn = formPeriod.exec();
     if (myReturn == QDialog::Rejected) return;
 
     myProject.runModels(timeIni, timeFin, true, true, myProject.idArea);
@@ -653,12 +652,11 @@ void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 
 void MainWindow::on_actionInterpolation_to_DEM_triggered()
 {
-    FormInfo myInfo;
-    myInfo.start("Interpolation...", 0);
+    myProject.logInfoGUI("Interpolation...");
 
     interpolateDemGUI();
 
-    myInfo.close();
+    myProject.closeLogInfo();
 }
 
 void MainWindow::on_actionInterpolationSettings_triggered()

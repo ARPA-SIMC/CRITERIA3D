@@ -2,19 +2,19 @@
 #define FORMPERIOD_H
 
     #include <QDialog>
-    #include <QDateTime>
+    class QDateTime;
 
     namespace Ui {
-        class formPeriod;
+        class FormPeriod;
     }
 
-    class formPeriod : public QDialog
+    class FormPeriod : public QDialog
     {
         Q_OBJECT
 
     public:
-        formPeriod(QDateTime* timeIni, QDateTime* timeFin, QWidget * parent = nullptr);
-        ~formPeriod();
+        FormPeriod(QDateTime* timeIni, QDateTime* timeFin, QWidget * parent = nullptr);
+        ~FormPeriod() override;
 
         void setMinimumDate(QDate myDate);
         void setMaximumDate(QDate myDate);
@@ -23,7 +23,7 @@
         void on_buttonBox_accepted();
 
     private:
-        Ui::formPeriod *ui;
+        Ui::FormPeriod *ui;
 
         QDateTime* dateTimeFirst;
         QDateTime* dateTimeLast;

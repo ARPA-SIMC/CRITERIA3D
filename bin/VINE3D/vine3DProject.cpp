@@ -8,7 +8,6 @@
 #include <iostream>
 #include <math.h>
 
-#include "formInfo.h"
 #include "utilities.h"
 #include "commonConstants.h"
 #include "meteo.h"
@@ -1198,23 +1197,23 @@ bool Vine3DProject::loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo)
     bool isObsDataBoundaryLoaded = false;
     bool isObsDataWMSLoaded = false;
     bool isForecast = false;
-    int nrDays = d1.daysTo(d2) + 1;
+    long nrDays = long(d1.daysTo(d2)) + 1;
     int hourlyFraction = 1;
 
     int step = 1;
-    FormInfo myInfo;
     QString infoStr;
 
     if (showInfo)
     {
         infoStr = "Loading data from " + d1.toString() + " to " + d2.toString();
-        step = myInfo.start(infoStr, nrMeteoPoints);
+        setProgressBar(infoStr, nrMeteoPoints);
     }
 
     for (int i = 0; i < nrMeteoPoints; i++)
     {
         if (showInfo)
-            if ((i % step) == 0) myInfo.setValue(i);
+            if ((i % step) == 0)
+                updateProgressBar(i);
 
         meteoPoints[i].initializeObsDataH(hourlyFraction, nrDays, getCrit3DDate(d1));
 
@@ -1234,7 +1233,8 @@ bool Vine3DProject::loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo)
 
     }
 
-    if (showInfo) myInfo.close();
+    if (showInfo)
+        closeProgressBar();
 
     isObsDataLoaded = (isObsDataBoundaryLoaded || isObsDataWMSLoaded || isForecast);
 
