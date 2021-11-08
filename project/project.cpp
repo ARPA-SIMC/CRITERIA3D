@@ -752,11 +752,13 @@ void Project::setCurrentDate(QDate myDate)
         this->previousDate = this->currentDate;
         this->currentDate = myDate;
     }
+    emit changeDateTime(getCurrentTime());
 }
 
 QDate Project::getCurrentDate()
 {
     return this->currentDate;
+    emit changeDateTime(getCurrentTime());
 }
 
 void Project::setCurrentHour(int myHour)
@@ -2042,6 +2044,7 @@ frequencyType Project::getCurrentFrequency() const
 void Project::setCurrentFrequency(const frequencyType &value)
 {
     currentFrequency = value;
+    emit changeFrequency(currentFrequency);
 }
 
 void Project::saveProjectSettings()

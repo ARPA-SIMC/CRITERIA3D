@@ -230,6 +230,10 @@
         void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid(int id);
 
+    signals:
+        void changeFrequency(frequencyType);
+        void changeDateTime(QDateTime);
+
     };
 
 
