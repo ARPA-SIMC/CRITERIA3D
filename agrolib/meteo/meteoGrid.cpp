@@ -203,7 +203,7 @@ bool Crit3DMeteoGrid::createRasterGrid()
 
     dataMeteoGrid.header->nrCols = _gridStructure.header().nrCols;
     dataMeteoGrid.header->nrRows = _gridStructure.header().nrRows;
-    dataMeteoGrid.header->flag = NODATA;
+    dataMeteoGrid.header->flag = NO_ACTIVE;
 
     dataMeteoGrid.initializeGrid(NODATA);
 

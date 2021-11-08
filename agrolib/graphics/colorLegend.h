@@ -13,12 +13,12 @@
 
     public:
         explicit ColorLegend(QWidget *parent = nullptr);
-        ~ColorLegend();
+        ~ColorLegend() override;
 
         Crit3DColorScale *colorScale;
 
     private:
-        void paintEvent(QPaintEvent *event);
+        void paintEvent(QPaintEvent *event) override;
     };
 
 #endif // COLORLEGEND_H
