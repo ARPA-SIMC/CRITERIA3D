@@ -40,6 +40,8 @@ Crit3DProject::Crit3DProject() : Project3D()
 {
     saveOutput = false;
     saveDailyState = false;
+    isMeteo = false;
+    isRadiation = false;
     isCrop = false;
     isWater = false;
     isSnow = false;
@@ -576,24 +578,26 @@ bool Crit3DProject::computeSnowModel()
 
 bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutputPath)
 {
-    //logInfoGUI("\nCompute " + myTime.toString("yyyy-MM-dd hh:mm"));
-
-    if (! interpolateAndSaveHourlyMeteo(airTemperature, myTime, hourlyOutputPath, saveOutput)) return false;
-    qApp->processEvents();
-    if (! interpolateAndSaveHourlyMeteo(precipitation, myTime, hourlyOutputPath, saveOutput)) return false;
-    qApp->processEvents();
-    if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myTime, hourlyOutputPath, saveOutput)) return false;
-    qApp->processEvents();
-    if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myTime, hourlyOutputPath, saveOutput)) return false;
-    qApp->processEvents();
+    if (isMeteo)
+    {
+        if (! interpolateAndSaveHourlyMeteo(airTemperature, myTime, hourlyOutputPath, saveOutput)) return false;
+        qApp->processEvents();
+        if (! interpolateAndSaveHourlyMeteo(precipitation, myTime, hourlyOutputPath, saveOutput)) return false;
+        qApp->processEvents();
+        if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myTime, hourlyOutputPath, saveOutput)) return false;
+        qApp->processEvents();
+        if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myTime, hourlyOutputPath, saveOutput)) return false;
+        qApp->processEvents();
+        hourlyMeteoMaps->setComputed(true);
+    }
 
     // radiation model
-    if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, saveOutput)) return false;
-    qApp->processEvents();
+    if (isRadiation)
+    {
+        if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, saveOutput)) return false;
+        qApp->processEvents();
+    }
 
-    hourlyMeteoMaps->setComputed(true);
-
-    // compute ET0
     if (isCrop)
     {
         if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
@@ -605,7 +609,9 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         qApp->processEvents();
 
         computeCrop(myTime);
-        // compute evap/transp
+
+        // TODO compute evap/transp
+
         qApp->processEvents();
     }
 

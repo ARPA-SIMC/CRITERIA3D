@@ -482,7 +482,7 @@ void MainWindow::on_actionVariableQualitySpatial_triggered()
 }
 
 
-void MainWindow::interpolateDemGUI()
+void MainWindow::interpolateCurrentVariable()
 {
     meteoVariable myVar = myProject.getCurrentVariable();
 
@@ -718,13 +718,6 @@ void MainWindow::on_actionInterpolationSettings_triggered()
 }
 
 
-void MainWindow::on_actionRadiationSettings_triggered()
-{
-    DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
-    myDialogRadiation->close();
-}
-
-
 void MainWindow::on_actionProjectSettings_triggered()
 {
     DialogSettings* settingsDialog = new DialogSettings(&myProject);
@@ -743,11 +736,6 @@ void MainWindow::on_actionProjectSettings_triggered()
     }
 }
 
-
-void MainWindow::on_actionCriteria3D_Initialize_triggered()
-{
-    myProject.initializeCriteria3DModel();
-}
 
 
 // 3d VIEW (TODO)
@@ -1211,22 +1199,6 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 }
 
 
-void MainWindow::on_actionCompute_solar_radiation_triggered()
-{
-    if (myProject.nrMeteoPoints == 0)
-    {
-        myProject.logInfoGUI("Open a Meteo Points DB before.");
-        return;
-    }
-
-    myProject.setCurrentVariable(globalIrradiance);
-    this->currentPointsVisualization = showCurrentVariable;
-    this->updateCurrentVariable();
-
-    this->interpolateDemGUI();
-}
-
-
 void MainWindow::on_actionCompute_AllMeteoMaps_triggered()
 {
     if (! myProject.DEM.isLoaded)
@@ -1598,32 +1570,58 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 }
 
 
-//-----------------  WATER FLUXES  -----------------
+//------------------- SOLAR RADIATION MODEL -----------------
 
-
-void MainWindow::on_actionRun_models_triggered()
+void MainWindow::on_actionRadiation_settings_triggered()
 {
-    if (! myProject.isCriteria3DInitialized)
-    {
-        myProject.logError("Initialize 3D water fluxes before");
-        return;
-    }
-
-    QDateTime firstTime, lastTime;
-    if (! selectDates(firstTime, lastTime))
-        return;
-
-    myProject.isCrop = true;
-    myProject.isWater = true;
-    myProject.isSnow = false;
-    runModels(firstTime, lastTime);
-
-    updateDateTime();
-    updateMaps();
+    DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
+    myDialogRadiation->close();
 }
 
 
-//----------------- SNOW MODEL -----------------
+bool MainWindow::setRadiationAsCurrentVariable()
+{
+    if (myProject.nrMeteoPoints == 0)
+    {
+        myProject.logInfoGUI("Open a Meteo Points DB before.");
+        return false;
+    }
+
+    myProject.setCurrentVariable(globalIrradiance);
+    currentPointsVisualization = showCurrentVariable;
+    updateCurrentVariable();
+
+    return true;
+}
+
+void MainWindow::on_actionRadiation_compute_current_hour_triggered()
+{
+    if (! setRadiationAsCurrentVariable())
+        return;
+
+    this->interpolateCurrentVariable();
+}
+
+
+void MainWindow::on_actionRadiation_run_model_triggered()
+{
+    if (! setRadiationAsCurrentVariable())
+        return;
+
+    QDateTime firstTime, lastTime;
+    if (! selectDates (firstTime, lastTime))
+        return;
+
+    myProject.isMeteo = false;
+    myProject.isRadiation = true;
+    myProject.isSnow = false;
+    myProject.isCrop = false;
+    myProject.isWater = false;
+    startModels(firstTime, lastTime);
+}
+
+
+//-------------------- SNOW MODEL -----------------------
 
 void MainWindow::on_actionSnow_initialize_triggered()
 {
@@ -1646,9 +1644,11 @@ void MainWindow::on_actionSnow_run_model_triggered()
     if (! selectDates (firstTime, lastTime))
         return;
 
+    myProject.isMeteo = true;
+    myProject.isRadiation = true;
+    myProject.isSnow = true;
     myProject.isCrop = false;
     myProject.isWater = false;
-    myProject.isSnow = true;
     startModels(firstTime, lastTime);
 }
 
@@ -1708,6 +1708,46 @@ void MainWindow::on_actionSnow_settings_triggered()
 }
 
 
+//-----------------  WATER FLUXES  -----------------
+
+
+void MainWindow::on_actionCriteria3D_settings_triggered()
+{
+    // TODO
+}
+
+
+void MainWindow::on_actionCriteria3D_Initialize_triggered()
+{
+    myProject.initializeCriteria3DModel();
+}
+
+
+void MainWindow::on_actionCriteria3D_run_models_triggered()
+{
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logError("Initialize 3D water fluxes before");
+        return;
+    }
+
+    QDateTime firstTime, lastTime;
+    if (! selectDates(firstTime, lastTime))
+        return;
+
+    myProject.isMeteo = true;
+    myProject.isRadiation = true;
+    myProject.isSnow = true;
+    myProject.isCrop = true;
+    myProject.isWater = true;
+    runModels(firstTime, lastTime);
+
+    updateDateTime();
+    updateMaps();
+}
+
+
+//------------------- MODEL STOP/START ----------------------
 
 void MainWindow::on_buttonModelPause_clicked()
 {
@@ -1735,6 +1775,9 @@ void MainWindow::on_buttonModelStart_clicked()
         runModels(newFirstTime, myProject.modelLastTime);
     }
 }
+
+
+//------------------- STATES ----------------------
 
 void MainWindow::on_actionSave_state_triggered()
 {
@@ -1786,4 +1829,6 @@ void MainWindow::on_flag_save_state_daily_step_triggered()
 {
     myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
 }
+
+
 

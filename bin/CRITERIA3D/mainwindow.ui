@@ -486,7 +486,7 @@
     <property name="geometry">
      <rect>
       <x>290</x>
-      <y>40</y>
+      <y>10</y>
       <width>721</width>
       <height>491</height>
      </rect>
@@ -3428,13 +3428,11 @@
     <property name="title">
      <string>Data spatialization</string>
     </property>
-    <addaction name="actionInterpolationSettings"/>
-    <addaction name="actionCompute_AllMeteoMaps"/>
-    <addaction name="separator"/>
-    <addaction name="actionRadiationSettings"/>
-    <addaction name="actionCompute_solar_radiation"/>
-    <addaction name="separator"/>
     <addaction name="actionVariableQualitySpatial"/>
+    <addaction name="separator"/>
+    <addaction name="actionInterpolationSettings"/>
+    <addaction name="separator"/>
+    <addaction name="actionCompute_AllMeteoMaps"/>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuGIS_settings">
@@ -3462,7 +3460,7 @@
     <addaction name="actionCriteria3D_settings"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Initialize"/>
-    <addaction name="actionRun_models"/>
+    <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuShow">
@@ -3497,12 +3495,6 @@
      <addaction name="actionView_Precipitation"/>
      <addaction name="actionView_Wind_intensity"/>
      <addaction name="separator"/>
-     <addaction name="actionView_Global_irradiance"/>
-     <addaction name="actionView_Beam_irradiance"/>
-     <addaction name="actionView_Diffuse_irradiance"/>
-     <addaction name="actionView_Reflected_irradiance"/>
-     <addaction name="actionView_Transmissivity"/>
-     <addaction name="separator"/>
      <addaction name="actionView_ET0"/>
      <addaction name="separator"/>
      <addaction name="actionViewMeteoVariable_None"/>
@@ -3526,8 +3518,20 @@
      <addaction name="actionView_Snow_age"/>
      <addaction name="actionView_Snowmelt"/>
     </widget>
+    <widget class="QMenu" name="menuSolar_radiation_model">
+     <property name="title">
+      <string>Solar radiation model</string>
+     </property>
+     <addaction name="actionView_Global_irradiance"/>
+     <addaction name="actionView_Beam_irradiance"/>
+     <addaction name="actionView_Diffuse_irradiance"/>
+     <addaction name="actionView_Reflected_irradiance"/>
+     <addaction name="actionView_Transmissivity"/>
+    </widget>
     <addaction name="menuPoints"/>
     <addaction name="menuMeteo_variables"/>
+    <addaction name="separator"/>
+    <addaction name="menuSolar_radiation_model"/>
     <addaction name="separator"/>
     <addaction name="menuSnow"/>
     <addaction name="separator"/>
@@ -3550,9 +3554,20 @@
     <addaction name="separator"/>
     <addaction name="flag_save_state_daily_step"/>
    </widget>
+   <widget class="QMenu" name="menuSolar_radiation_model_2">
+    <property name="title">
+     <string>Solar radiation model</string>
+    </property>
+    <addaction name="actionRadiation_settings"/>
+    <addaction name="separator"/>
+    <addaction name="actionRadiation_compute_current_hour"/>
+    <addaction name="actionRadiation_run_model"/>
+    <addaction name="separator"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
    <addaction name="menuVariable"/>
+   <addaction name="menuSolar_radiation_model_2"/>
    <addaction name="menuSnow_model"/>
    <addaction name="menuCriteria3D"/>
    <addaction name="menuGIS_settings"/>
@@ -3700,14 +3715,14 @@
     <string>Potential Evapotranspiration</string>
    </property>
   </action>
-  <action name="actionCompute_solar_radiation">
+  <action name="actionRadiation_compute_current_hour">
    <property name="text">
-    <string>Compute solar radiation</string>
+    <string>Compute current hour</string>
    </property>
   </action>
   <action name="actionCompute_AllMeteoMaps">
    <property name="text">
-    <string>Interpolate all variables</string>
+    <string>Interpolate all meteo variables</string>
    </property>
   </action>
   <action name="actionView_Global_irradiance">
@@ -3735,7 +3750,7 @@
     <string>Wind intensity</string>
    </property>
   </action>
-  <action name="actionRadiationSettings">
+  <action name="actionRadiation_settings">
    <property name="text">
     <string>Solar radiation settings...</string>
    </property>
@@ -3781,7 +3796,7 @@
     <string>None</string>
    </property>
   </action>
-  <action name="actionRun_models">
+  <action name="actionCriteria3D_run_models">
    <property name="text">
     <string>Run model...</string>
    </property>
@@ -3907,6 +3922,11 @@
   <action name="actionView_Snowmelt">
    <property name="text">
     <string>Snowmelt</string>
+   </property>
+  </action>
+  <action name="actionRadiation_run_model">
+   <property name="text">
+    <string>Run model...</string>
    </property>
   </action>
  </widget>

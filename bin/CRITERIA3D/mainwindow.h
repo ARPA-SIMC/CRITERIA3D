@@ -54,14 +54,6 @@
         void on_opacitySliderRasterInput_sliderMoved(int position);
         void on_opacitySliderRasterOutput_sliderMoved(int position);
 
-        void on_actionProjectSettings_triggered();
-        void on_actionVariableQualitySpatial_triggered();
-        void on_actionInterpolationSettings_triggered();
-        void on_actionRadiationSettings_triggered();
-
-        void on_actionCompute_solar_radiation_triggered();
-        void on_actionCompute_AllMeteoMaps_triggered();
-
         void on_flag_view_SoilMap_triggered();
 
         void on_actionView_Boundary_triggered();
@@ -90,11 +82,17 @@
         void on_actionMapGoogle_hybrid_satellite_triggered();
         void on_actionMapGoogle_satellite_triggered();
 
-        void on_actionCriteria3D_Initialize_triggered();
-        void on_actionRun_models_triggered();
+        void on_actionProjectSettings_triggered();
+        void on_actionVariableQualitySpatial_triggered();
+        void on_actionInterpolationSettings_triggered();
+        void on_actionCompute_AllMeteoMaps_triggered();
 
         void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
         void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
+
+        void on_actionRadiation_settings_triggered();
+        void on_actionRadiation_compute_current_hour_triggered();
+        void on_actionRadiation_run_model_triggered();
 
         void on_actionSnow_settings_triggered();
         void on_actionSnow_initialize_triggered();
@@ -110,13 +108,17 @@
         void on_actionView_Snow_age_triggered();
         void on_actionView_Snowmelt_triggered();
 
-        void on_buttonModelPause_clicked();
-        void on_buttonModelStop_clicked();
-        void on_buttonModelStart_clicked();
-
         void on_actionSave_state_triggered();
         void on_actionLoad_state_triggered();
         void on_flag_save_state_daily_step_triggered();
+
+        void on_actionCriteria3D_settings_triggered();
+        void on_actionCriteria3D_Initialize_triggered();
+        void on_actionCriteria3D_run_models_triggered();
+
+        void on_buttonModelPause_clicked();
+        void on_buttonModelStop_clicked();
+        void on_buttonModelStart_clicked();
 
 
     protected:
@@ -172,7 +174,7 @@
         bool loadMeteoGridDB(QString xmlName);
         void setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster);
         void setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster);
-        void interpolateDemGUI();
+        void interpolateCurrentVariable();
         bool initializeViewer3D();
         bool checkMapVariable(bool isComputed);
 
@@ -197,6 +199,7 @@
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);
 
+        bool setRadiationAsCurrentVariable();
         bool startModels(QDateTime firstTime, QDateTime lastTime);
         bool runModels(QDateTime firstTime, QDateTime lastTime);
     };
