@@ -20,7 +20,7 @@ INCLUDEPATH +=  ../../mapGraphics \
                 ../../agrolib/interpolation ../../agrolib/solarRadiation ../../agrolib/soil  \
                 ../../agrolib/soilFluxes3D/header ../../agrolib/crop ../../agrolib/grapevine \
                 ../../agrolib/utilities ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
-                ../../agrolib/importDataXML ../../agrolib/project \
+                ../../agrolib/importDataXML ../../agrolib/proxyWidget ../../agrolib/project \
                 ../../agrolib/graphics  ../../agrolib/commonDialogs \
                 ../../mapGraphics ../../agrolib/meteoWidget \
                 ../CRITERIA3D/shared
@@ -32,6 +32,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/graphics/debug -lgraphics
     LIBS += -L../../mapGraphics/debug -lMapGraphics
     LIBS += -L../../agrolib/project/debug -lproject
+    LIBS += -L../../agrolib/proxyWidget/debug -lproxyWidget
     LIBS += -L../../agrolib/importDataXML/debug -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/debug -commonDialogs
@@ -51,6 +52,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/graphics/release -lgraphics
     LIBS += -L../../mapGraphics/release -lMapGraphics
     LIBS += -L../../agrolib/project/release -lproject
+    LIBS += -L../../agrolib/proxyWidget/release -lproxyWidget
     LIBS += -L../../agrolib/importDataXML/release -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
     LIBS += -L../../agrolib/commonDialogs/release -lcommonDialogs
