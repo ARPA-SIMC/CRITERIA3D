@@ -2,6 +2,7 @@
 #include "soia.h"
 
 #include "math.h"
+#include <algorithm>
 
 
 double Soia::M(const long& i, const long& j, double& T, Stazione& stazione, const Parametri& parametri)

@@ -301,10 +301,7 @@ void weatherGenerator2D::commonModuleCompute()
     printf ( "Current local time and date: %s", asctime (timeinfo) );
 
     weatherGenerator2D::precipitationP00P10(); // it computes the monthly probabilities p00 and p10
-    //weatherGenerator2D::precipitationP000P100P010P110();
     printf("step 2/9 \n");
-    //time_t rawtime;
-    //struct tm * timeinfo;
 
     time ( &rawtime );
     timeinfo = localtime ( &rawtime );
@@ -313,8 +310,6 @@ void weatherGenerator2D::commonModuleCompute()
     // step 2 of precipitation WG2D
     weatherGenerator2D::precipitationCorrelationMatrices(); // computation of monthly correlation amongst stations
     printf("step 3/9 \n");
-    //time_t rawtime;
-    //struct tm * timeinfo;
 
     time ( &rawtime );
     timeinfo = localtime ( &rawtime );
@@ -386,14 +381,9 @@ void weatherGenerator2D::precipitationCompute()
     printf ( "Current local time and date: %s", asctime (timeinfo) );
 
     // step 5 of precipitation WG2D
-    if (parametersModel.distributionPrecipitation == 3)
-    {
-        weatherGenerator2D::getPrecipitationAmount();
-    }
-    else
-    {
-        weatherGenerator2D::precipitationMultisiteAmountsGeneration(); // generation of synthetic series
-    }
+
+    weatherGenerator2D::precipitationMultisiteAmountsGeneration(); // generation of synthetic series
+
     if (!isPrecWG2D) printf("step 8/9 & 9/9 not computed\n");
     time ( &rawtime );
     timeinfo = localtime ( &rawtime );
@@ -412,7 +402,7 @@ void weatherGenerator2D::initializeRandomNumbers(double *vector)
 void weatherGenerator2D::precipitationP00P10()
 {
     // initialization
-    int consecutiveDayTransition = 10;
+    consecutiveDayTransition = 10;
     precipitationPDryUntilNSteps();
 
     for (int iCount=0; iCount<12; iCount++)
@@ -681,12 +671,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
             }
             occurrenceFitting[0] = occurrenceFitting[1];
             statistics::rollingAverage(occurrenceFitting,iMaxForInterpolation,1,occurrenceFitted);
-/*
-            for (int i=0;i<iMaxForInterpolation;i++)
-            {
-                printf("%d) %.2f %.2f \n",i,occurrenceFitted[i],occurrenceFitting[i]);
-            }
-*/
+
             int i;
             for (i=0;i<iMaxForInterpolation;i++)
             {
@@ -724,138 +709,6 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
     }
     //getchar();
 }
-
-void weatherGenerator2D::precipitationP000P100P010P110()
-{
-    // initialization
-    /*for (int iCount=0; iCount<12; iCount++)
-    {
-        precOccurrenceGlobal[iCount].p00 = 0;
-        precOccurrenceGlobal[iCount].p10 = 0;
-    }*/
-    int consecutiveDayTransition = 10;
-    precipitationPDryUntilNSteps();
-    int daysWithRainGlobal[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-    int daysWithoutRainGlobal[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-    for (int idStation=0;idStation<nrStations;idStation++)
-    {
-        int daysWithoutRain[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int daysWithRain[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int daysWetWet[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int daysWetDry[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int daysDryDry[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int daysDryWet[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int daysDryDryDry[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int daysDryDryDryDry[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int occurrence000[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int occurrence100[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int occurrence010[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int occurrence110[12]={0,0,0,0,0,0,0,0,0,0,0,0};
-        int occurrence0000[12]= {0,0,0,0,0,0,0,0,0,0,0,0};
-        int occurrence00000[12]= {0,0,0,0,0,0,0,0,0,0,0,0};
-
-        for(int i=0;i<nrData-2;i++)
-        {
-            if ((obsDataD[idStation][i].prec >= 0 && obsDataD[idStation][i+1].prec >= 0 && obsDataD[idStation][i+2].prec >= 0) && isPrecipitationRecordOK(obsDataD[idStation][i+2].prec) && isPrecipitationRecordOK(obsDataD[idStation][i+1].prec) && isPrecipitationRecordOK(obsDataD[idStation][i].prec))
-            {
-                for (int iMonth=1;iMonth<13;iMonth++)
-                {
-                    if(obsDataD[idStation][i].date.month == iMonth)
-                    {
-                        if (obsDataD[idStation][i].prec > parametersModel.precipitationThreshold)
-                        {
-                            daysWithRain[iMonth-1]++;
-                            if (obsDataD[idStation][i+1].prec < parametersModel.precipitationThreshold)
-                            {
-                                daysWetDry[iMonth-1]++;
-                                if (obsDataD[idStation][i+2].prec < parametersModel.precipitationThreshold)
-                                    occurrence100[iMonth-1]++;
-                            }
-                            else
-                            {
-                                daysWetWet[iMonth-1]++;
-                                if (obsDataD[idStation][i+2].prec < parametersModel.precipitationThreshold)
-                                    occurrence110[iMonth-1]++;
-                            }
-
-                        }
-                        else
-                        {
-                            daysWithoutRain[iMonth-1]++;
-                            if (obsDataD[idStation][i+1].prec <= parametersModel.precipitationThreshold)
-                            {
-                                daysDryDry[iMonth-1]++;
-                                if (obsDataD[idStation][i+2].prec <= parametersModel.precipitationThreshold)
-                                {
-                                    daysDryDryDry[iMonth-1]++;
-                                    if (i < nrData-3 && obsDataD[idStation][i+3].prec <= parametersModel.precipitationThreshold)
-                                    {
-                                        daysDryDryDryDry[iMonth-1]++;
-                                        if (i < nrData-4 && obsDataD[idStation][i+4].prec <= parametersModel.precipitationThreshold)
-                                        {
-                                            occurrence00000[iMonth-1]++;
-                                        }
-                                        occurrence0000[iMonth-1]++;
-                                    }
-                                    occurrence000[iMonth-1]++;
-                                }
-                            }
-                            else
-                            {
-                                daysDryWet[iMonth-1]++;
-                                if (obsDataD[idStation][i+2].prec <= parametersModel.precipitationThreshold)
-                                    occurrence010[iMonth-1]++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        /*for (int i=0;i<12;i++)
-            printf("%d %f %f\n",i,precOccurrenceGlobal[i].p00,precOccurrenceGlobal[i].p10);
-        getchar();*/
-        for (int iMonth=0;iMonth<12;iMonth++)
-        {
-            daysWithoutRainGlobal[iMonth] += daysWithoutRain[iMonth];
-            daysWithRainGlobal[iMonth] += daysWithRain[iMonth];
-            if (daysWithoutRain[iMonth] != 0)
-            {
-                precOccurence[idStation][iMonth].p00000 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence00000[iMonth])/daysDryDryDryDry[iMonth]));
-                precOccurence[idStation][iMonth].p0000 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence0000[iMonth])/daysDryDryDry[iMonth]));
-                precOccurence[idStation][iMonth].p000 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence000[iMonth])/daysDryDry[iMonth]));
-                precOccurence[idStation][iMonth].p100 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence100[iMonth])/daysWetDry[iMonth]));
-            }
-            else
-            {
-                precOccurence[idStation][iMonth].p00000 = 0.0;
-                precOccurence[idStation][iMonth].p0000 = 0.0;
-                precOccurence[idStation][iMonth].p000 = 0.0;
-                precOccurence[idStation][iMonth].p100 = 0.0;
-            }
-            if (daysWithRain[iMonth] != 0)
-            {
-                precOccurence[idStation][iMonth].p010 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence010[iMonth])/daysDryWet[iMonth]));
-                precOccurence[idStation][iMonth].p110 = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence110[iMonth])/daysWetWet[iMonth]));
-            }
-            else
-            {
-                precOccurence[idStation][iMonth].p010 = 0.0;
-                precOccurence[idStation][iMonth].p110 = 0.0;
-            }
-            precOccurence[idStation][iMonth].month = iMonth +1;
-            //printf("%d %f\n",month+1,1-precOccurence[idStation][month].p10);
-        }
-        //pressEnterToContinue();
-    }
-
-    /*for (int i=0;i<12;i++)
-    {
-        precOccurrenceGlobal[i].p00 /= daysWithoutRainGlobal[i];
-        precOccurrenceGlobal[i].p10 /= daysWithRainGlobal[i];
-        //printf("%d %f %f\n",i,precOccurrenceGlobal[i].p00,precOccurrenceGlobal[i].p10);
-    }*/
-}
-
 
 void weatherGenerator2D::precipitationCorrelationMatrices()
 {
@@ -1310,13 +1163,13 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                         nrConsecutiveDays++;
                         count--;
                     }
-                    if (nrConsecutiveDays<10)
+                    if (nrConsecutiveDays<consecutiveDayTransition)
                     {
                         if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
                     }
                     else
                     {
-                        transitionNormalAugmentedMemory[i][0][0] = transitionNormalAugmentedMemory[i][0][1] = transitionNormal[i][0];
+                        //transitionNormalAugmentedMemory[i][0][0] = transitionNormalAugmentedMemory[i][0][1] = transitionNormal[i][0];
                         if(normRandom[i][j]  > transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]) occurrences[i][j] = 1.;
                     }
                 }

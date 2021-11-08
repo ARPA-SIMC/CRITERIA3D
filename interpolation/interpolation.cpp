@@ -56,11 +56,10 @@ float getMaxHeight(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool us
     float zMax;
     zMax = NODATA;
 
-    for (unsigned i = 1; i < myPoints.size(); i++)
+    for (unsigned i = 0; i < myPoints.size(); i++)
         if (myPoints[i].value != NODATA && myPoints[i].isActive && checkLapseRateCode(myPoints[i].lapseRateCode, useLapseRateCode, true))
             if (zMax == NODATA || (myPoints[i]).point->z > zMax)
                 zMax = float(myPoints[i].point->z);
-
 
     return zMax;
 }
@@ -384,11 +383,8 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
     maxPointsZ = getMaxHeight(myPoints, mySettings->getUseLapseRateCode());
     heightInf = getMinHeight(myPoints, mySettings->getUseLapseRateCode());
 
-    if (maxPointsZ == heightInf)
-        return false;
-
     /*! not enough data to define a curve (use climate) */
-    if (myPoints.size() < MIN_REGRESSION_POINTS)
+    if ((maxPointsZ == heightInf) || (myPoints.size() < MIN_REGRESSION_POINTS))
         return true;
 
     /*! find intervals averages */

@@ -111,7 +111,7 @@
         gis::Crit3DGeoMap* geoMap;
         QPointF referencePixel;
         ColorLegend* colorScaleLegend;
-        bool drawBorder;
+        bool isDrawBorder;
         RowCol **matrix;
         gis::Crit3DGridHeader latLonHeader;
         double longitudeShift;
@@ -127,7 +127,7 @@
         void setMapExtents();
         bool getCurrentWindow(gis::Crit3DRasterWindow* window);
         int getCurrentStep(const gis::Crit3DRasterWindow& window);
-        bool drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter, bool drawBorder);
+        bool drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter);
 
     };
 

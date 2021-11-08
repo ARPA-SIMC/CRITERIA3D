@@ -69,6 +69,7 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
 
     _tableDaily.exists = false;
     _tableHourly.exists = false;
+    _tableMonthly.exists = false;
 
     while(!ancestor.isNull())
     {
@@ -876,7 +877,7 @@ QString Crit3DMeteoGridDbHandler::getMonthlyVarField(meteoVariable meteoGridMont
     }
     if(_gridMonthlyVar.contains(meteoGridMonthlyVar))
     {
-        varField = _gridMonthlyVar[meteoGridMonthlyVar];
+        varField = QString::number(_gridMonthlyVar[meteoGridMonthlyVar]);
     }
 
     return varField;
@@ -1874,6 +1875,10 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString *myError, QString met
     unsigned row;
     unsigned col;
 
+    // set day to 1 to better comparison
+    first.setDate(first.year(), first.month(), 1);
+    last.setDate(last.year(), last.month(), 1);
+
     if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
         *myError = "Missing MeteoPoint id";
@@ -1905,13 +1910,8 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString *myError, QString met
                 return false;
             }
 
-            date.setDate(year,month, first.day());
-            if (date < first)
-            {
-                continue;
-            }
-            date.setDate(year,month, last.day());
-            if (date > last)
+            date.setDate(year,month, 1);
+            if (date < first || date > last)
             {
                 continue;
             }
@@ -2370,8 +2370,9 @@ bool Crit3DMeteoGridDbHandler::saveListHourlyData(QString *myError, QString mete
 
     qry.exec(statement);
     int nHours = values.size();
+
     QDateTime last = firstDateTime.addSecs(3600*(nHours-1));
-    statement = QString("DELETE FROM `%1` WHERE %2 >= '%3' AND %2 <= '%4' AND VariableCode = '%5'")
+    statement = QString("DELETE FROM `%1` WHERE %2 BETWEEN CAST('%3' AS DATETIME) AND CAST('%4' AS DATETIME) AND VariableCode = '%5'")
                             .arg(tableH).arg(_tableHourly.fieldTime).arg(firstDateTime.toString("yyyy-MM-dd hh:mm:00")).arg(last.toString("yyyy-MM-dd hh:mm:00")).arg(varCode);
     if( !qry.exec(statement) )
     {

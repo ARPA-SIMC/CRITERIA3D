@@ -391,81 +391,85 @@ void Crit3DMeteoWidget::setDateInterval(QDate first, QDate last)
     lastHourlyDate = last;
 }
 
-void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp)
+void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp, bool isAppend)
 {
-    firstDate->blockSignals(true);
-    lastDate->blockSignals(true);
-
     meteoPoints.append(mp);
-    QDate myDailyDateFirst;
-    QDate myDailyDateLast;
-    QDate myHourlyDateFirst;
-    QDate myHourlyDateLast;
-    // search bigger data interval to show between meteoPoints
-    for (int i = 0; i < meteoPoints.size(); i++)
-    {
-        myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year, meteoPoints[i].obsDataD[0].date.month, meteoPoints[i].obsDataD[0].date.day);
-        myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD-1);
-        if (myDailyDateFirst.isValid() && myDailyDateFirst < firstDailyDate)
-        {
-            firstDailyDate = myDailyDateFirst;
-        }
-        if (myDailyDateLast.isValid() && myDailyDateLast > lastDailyDate)
-        {
-            lastDailyDate = myDailyDateLast;
-        }
-        myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year, meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
-                                  meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
-        myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH-1);
-        if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
-        {
-            firstHourlyDate = myHourlyDateFirst;
-        }
-        if (myHourlyDateLast.isValid() && myHourlyDateLast > lastHourlyDate)
-        {
-            lastHourlyDate = myHourlyDateLast;
-        }
-    }
 
-    if (currentFreq == daily)
+    if (! isAppend)
     {
-        if (firstDailyDate == QDate::currentDate() && lastDailyDate == QDate(1800,1,1))
-        {
-            firstDate->setDate(QDate::currentDate());
-            lastDate->setDate(QDate::currentDate());
-        }
-        else
-        {
-            firstDate->setDate(firstDailyDate);
-            lastDate->setDate(lastDailyDate);
-        }
-    }
-    else if (currentFreq == hourly)
-    {
-        if (firstHourlyDate == QDate::currentDate() && lastHourlyDate == QDate(1800,1,1))
-        {
-            firstDate->setDate(QDate::currentDate());
-            lastDate->setDate(QDate::currentDate());
-        }
-        else
-        {
-            firstDate->setDate(firstHourlyDate);
-            lastDate->setDate(lastHourlyDate);
-        }
-    }
+        // set dates
+        firstDate->blockSignals(true);
+        lastDate->blockSignals(true);
 
-    // check draw period (max 30 days)
-    QDate minDate = lastDate->date().addDays(-30);
-    if (firstDate->date() < minDate)
-    {
-        firstDate->setDate(minDate);
+        QDate myDailyDateFirst;
+        QDate myDailyDateLast;
+        QDate myHourlyDateFirst;
+        QDate myHourlyDateLast;
+        // search bigger data interval to show between meteoPoints
+        for (int i = 0; i < meteoPoints.size(); i++)
+        {
+            myDailyDateFirst.setDate(meteoPoints[i].obsDataD[0].date.year, meteoPoints[i].obsDataD[0].date.month, meteoPoints[i].obsDataD[0].date.day);
+            myDailyDateLast = myDailyDateFirst.addDays(meteoPoints[i].nrObsDataDaysD-1);
+            if (myDailyDateFirst.isValid() && myDailyDateFirst < firstDailyDate)
+            {
+                firstDailyDate = myDailyDateFirst;
+            }
+            if (myDailyDateLast.isValid() && myDailyDateLast > lastDailyDate)
+            {
+                lastDailyDate = myDailyDateLast;
+            }
+            myHourlyDateFirst.setDate(meteoPoints[i].getMeteoPointHourlyValuesDate(0).year, meteoPoints[i].getMeteoPointHourlyValuesDate(0).month,
+                                      meteoPoints[i].getMeteoPointHourlyValuesDate(0).day);
+            myHourlyDateLast = myHourlyDateFirst.addDays(meteoPoints[i].nrObsDataDaysH-1);
+            if (myHourlyDateFirst.isValid() && myHourlyDateFirst < firstHourlyDate)
+            {
+                firstHourlyDate = myHourlyDateFirst;
+            }
+            if (myHourlyDateLast.isValid() && myHourlyDateLast > lastHourlyDate)
+            {
+                lastHourlyDate = myHourlyDateLast;
+            }
+        }
+
+        if (currentFreq == daily)
+        {
+            if (firstDailyDate == QDate::currentDate() && lastDailyDate == QDate(1800,1,1))
+            {
+                firstDate->setDate(QDate::currentDate());
+                lastDate->setDate(QDate::currentDate());
+            }
+            else
+            {
+                firstDate->setDate(firstDailyDate);
+                lastDate->setDate(lastDailyDate);
+            }
+        }
+        else if (currentFreq == hourly)
+        {
+            if (firstHourlyDate == QDate::currentDate() && lastHourlyDate == QDate(1800,1,1))
+            {
+                firstDate->setDate(QDate::currentDate());
+                lastDate->setDate(QDate::currentDate());
+            }
+            else
+            {
+                firstDate->setDate(firstHourlyDate);
+                lastDate->setDate(lastHourlyDate);
+            }
+        }
+
+        // check draw period (max 30 days)
+        QDate minDate = lastDate->date().addDays(-30);
+        if (firstDate->date() < minDate)
+        {
+            firstDate->setDate(minDate);
+        }
+
+        firstDate->blockSignals(false);
+        lastDate->blockSignals(false);
     }
 
     redraw();
-
-    firstDate->blockSignals(false);
-    lastDate->blockSignals(false);
-
     show();
 }
 
@@ -1609,19 +1613,47 @@ void Crit3DMeteoWidget::tooltipLineSeries(QPointF point, bool state)
 
 bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state)
 {
-
     if (state)
     {
         int doy = point.x();
         int doyRelative = point.x();
-        int posCategories = categories.indexOf(QString::number(doy));
+        bool valueExist = false;
 
-        if (categories.size() != series->count() && series->at(posCategories).x() != doy)
+        if (categories.size() != series->count())
         {
-            // missing first data into series
-            int delta = categories.size() - series->count();
-            doyRelative = doyRelative - delta;
+            for(int i = 0; i < series->count(); i++)
+            {
+                if (series->at(i).x() == doy)
+                {
+                    doyRelative = i;
+                    valueExist = true;
+                    break;
+                }
+            }
+
+            if (!valueExist)
+            {
+                // missing data
+                if (currentFreq == daily)
+                {
+                    QDate xDate = firstDate->date().addDays(doy);
+                    m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")));
+                }
+                if (currentFreq == hourly)
+                {
+                    QDateTime xDate(firstDate->date(),QTime(0,0,0));
+                    xDate = xDate.addSecs(3600*doy);
+                    m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")));
+                }
+                m_tooltip->setSeries(series);
+                m_tooltip->setAnchor(point);
+                m_tooltip->setZValue(11);
+                m_tooltip->updateGeometry();
+                m_tooltip->show();
+                return true;
+            }
         }
+
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
         QPoint pointDoY = series->at(doyRelative).toPoint();
@@ -1632,17 +1664,16 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             int distStep = qAbs(chart->mapToPosition(pointDoY).x()-chart->mapToPosition(pointNext).x());
             int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
             int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
-
-            if (qMin(distDoY, distNext) == distNext)
+            int minDist = qMin(distDoY, distNext);
+            if (minDist !=  distDoY)
             {
-                if (distNext > distStep/10)
+                if (distStep > 0 && distNext > distStep/10)
                 {
                     return false;
                 }
                 else
                 {
                     doy = doy + 1;
-                    doyRelative = doyRelative + 1;
                 }
             }
             else
@@ -1664,33 +1695,35 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
             int distNext = qAbs(mapPoint.x()-chart->mapToPosition(pointNext).x());
             int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
 
-            if (qMin(qMin(distBefore,distDoY), distNext) == distBefore)
+            int minDist = qMin(qMin(distBefore,distDoY), distNext);
+            if ( minDist != distDoY)
             {
-                if (distBefore > distStep/10)
+                if (minDist == distBefore)
                 {
-                    return false;
+                    if (distStep > 0 && distBefore > distStep/10)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        doy = doy - 1;
+                    }
                 }
-                else
+                else if (minDist == distNext)
                 {
-                    doy = doy - 1;
-                    doyRelative = doyRelative - 1;
-                }
-            }
-            else if (qMin(qMin(distBefore,distDoY), distNext) == distNext)
-            {
-                if (distNext > distStep/10)
-                {
-                    return false;
-                }
-                else
-                {
-                    doy = doy + 1;
-                    doyRelative = doyRelative + 1;
+                    if (distStep > 0 && distNext > distStep/10)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        doy = doy + 1;
+                    }
                 }
             }
             else
             {
-                if (distDoY > distStep/10)
+                if (distStep > 0 && distDoY > distStep/10)
                 {
                     return false;
                 }
@@ -1705,22 +1738,21 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
 
             int distBefore = qAbs(mapPoint.x()-chart->mapToPosition(pointBefore).x());
             int distDoY = qAbs(mapPoint.x()-chart->mapToPosition(pointDoY).x());
-
-            if (qMin(distDoY, distBefore) == distBefore)
+            int minDist = qMin(distDoY, distBefore);
+            if (minDist != distDoY)
             {
-                if (distBefore > distStep/10)
+                if (distStep > 0 && distBefore > distStep/10)
                 {
                     return false;
                 }
                 else
                 {
                     doy = doy - 1;
-                    doyRelative = doyRelative -1;
                 }
             }
             else
             {
-                if (distDoY > distStep/10)
+                if (distStep > 0 && distDoY > distStep/10)
                 {
                     return false;
                 }
@@ -1731,6 +1763,14 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
         if (currentFreq == daily)
         {
             QDate xDate = firstDate->date().addDays(doy);
+            for(int i = 0; i < series->count(); i++)
+            {
+                if (series->at(i).x() == doy)
+                {
+                    doyRelative = i;
+                    break;
+                }
+            }
             double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy")).arg(value, 0, 'f', 1));
         }
@@ -1738,6 +1778,14 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
         {
             QDateTime xDate(firstDate->date(),QTime(0,0,0));
             xDate = xDate.addSecs(3600*doy);
+            for(int i = 0; i < series->count(); i++)
+            {
+                if (series->at(i).x() == doy)
+                {
+                    doyRelative = i;
+                    break;
+                }
+            }
             double value = series->at(doyRelative).y();
             m_tooltip->setText(QString("%1 \n%2 %3 ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")).arg(value, 0, 'f', 1));
         }

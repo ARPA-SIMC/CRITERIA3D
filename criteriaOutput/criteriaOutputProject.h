@@ -11,6 +11,7 @@
 #include "criteriaAggregationVariable.h"
 #include "computationUnitsDb.h"
 #include "shapeHandler.h"
+#include "crit3dDate.h"
 
 #define REQUIREDMAPLISTCSVINFO 2
 
@@ -58,6 +59,7 @@ public:
     QString shapeFieldName;
     QString aggregationListFileName;
     QString aggregationCellSize;
+    QString aggregationThreshold;
 
     QString mapListFileName;
     QString mapCellSize;
@@ -115,7 +117,9 @@ public:
     bool getDbDataDates(QDate &firstDate, QDate &lastDate);
     int createCsvFileFromGUI(QDate dateComputation, QString csvFileName);
     int createShapeFileFromGUI();
-    bool convertShapeToNetcdf(Crit3DShapeHandler &shape, QString outputFileName, QString field, double cellSize, QDate computationDate);
+    bool convertShapeToNetcdf(Crit3DShapeHandler &shape, std::string outputFileName,
+                              std::string field, std::string variableName, std::string variableUnit, double cellSize,
+                              Crit3DDate computationDate, Crit3DDate firstDate, Crit3DDate lastDate);
 
 };
 

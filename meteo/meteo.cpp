@@ -24,6 +24,7 @@
 */
 
 #include <math.h>
+#include <algorithm>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -202,36 +203,41 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTi
     }
 }
 
-
-float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, Crit3DDate myDate, int myHour)
+float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, int month)
 {
-    unsigned int indexMonth = unsigned(myDate.month - 1);
+    // TODO improve!
+    if (month == NODATA)
+        return -0.006f;
+
+    unsigned int indexMonth = unsigned(month - 1);
 
     if (myVar == dailyAirTemperatureMin)
-        return tmin[indexMonth];
+        return tminLapseRate[indexMonth];
     else if (myVar == dailyAirTemperatureMax)
-        return tmax[indexMonth];
+        return tmaxLapseRate[indexMonth];
     else if (myVar == dailyAirTemperatureAvg)
-        return (tmax[indexMonth] + tmin[indexMonth]) / 2;
+        return (tmaxLapseRate[indexMonth] + tminLapseRate[indexMonth]) / 2;
     else
-    {
-        float myTmin, myTmax;
-        if (myVar == airTemperature)
-        {
-            myTmin = tmin[indexMonth];
-            myTmax = tmax[indexMonth];
-        }
-        else if (myVar == airDewTemperature)
-        {
-            myTmin = tdmin[indexMonth];
-            myTmax = tdmax[indexMonth];
-        }
-        else
-            return NODATA;
+        return NODATA;
+}
 
-        float tminWeight = computeTminHourlyWeight(myHour);
-        return (myTmin * tminWeight + myTmax * (1 - tminWeight));
-    }
+float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, float height, float refHeight)
+{
+    unsigned int indexMonth = unsigned(month - 1);
+
+    float climateVar = NODATA;
+
+    if (myVar == dailyAirTemperatureMin)
+        climateVar = tmin[indexMonth];
+    else if (myVar == dailyAirTemperatureMax)
+        climateVar = tmax[indexMonth];
+    else
+        return NODATA;
+
+    if (climateVar != NODATA && height != NODATA)
+        climateVar += getClimateLapseRate(myVar, month) * (height - refHeight);
+
+    return climateVar;
 }
 
 
@@ -647,14 +653,22 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             break;
         case precipitation: case dailyPrecipitation: case referenceEvapotranspiration:
         case dailyReferenceEvapotranspirationHS: case dailyReferenceEvapotranspirationPM: case actualEvaporation:
+        case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
         case dailyWaterTableDepth:
-        case snowFall: case snowWaterEquivalent:
             setPrecipitationScale(colorScale);
+            colorScale->minimum = 0;
+            break;  
+        case snowAge:
+            setGrayScale(colorScale);
+            reverseColorScale(colorScale);
+            colorScale->minimum = 0;
+            colorScale->maximum = 30;
             break;
         case dailyBIC:
             setZeroCenteredScale(colorScale);
             break;
-        case globalIrradiance: case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
+        case globalIrradiance: case directIrradiance: case diffuseIrradiance: case reflectedIrradiance:
+        case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
         case snowInternalEnergy: case snowSurfaceInternalEnergy:
             setRadiationScale(colorScale);
             break;
@@ -712,7 +726,13 @@ std::string getVariableString(meteoVariable myVar)
     else if (myVar == dailyGlobalRadiation || myVar == monthlyGlobalRadiation)
         return "Solar radiation (MJ m-2)";
     else if (myVar == globalIrradiance)
-        return "Solar irradiance (W m-2)";
+        return "Global solar irradiance (W m-2)";
+    else if (myVar == directIrradiance)
+        return "Direct solar irradiance (W m-2)";
+    else if (myVar == diffuseIrradiance)
+        return "Diffuse solar irradiance (W m-2)";
+    else if (myVar == reflectedIrradiance)
+        return "Reflected solar irradiance (W m-2)";
     else if (myVar == netIrradiance)
         return "Solar net irradiance (W m-2)";
     else if (myVar == atmTransmissivity)
@@ -753,12 +773,18 @@ std::string getVariableString(meteoVariable myVar)
         return "Snow water equivalent (mm)";
     else if (myVar == snowFall)
         return "Snow fall (mm)";
+    else if (myVar == snowMelt)
+        return "Snowmelt (mm)";
+    else if (myVar == snowLiquidWaterContent)
+        return "Snow liquid water content (mm)";
+    else if (myVar == snowAge)
+        return "Snow age (days)";
     else if (myVar == snowSurfaceTemperature)
-        return "Snow surface temperature (°C)";
+        return "Surface temperature (°C)";
     else if (myVar == snowInternalEnergy)
-        return "Snow energy content (kJ m-2)";
+        return "Energy content (kJ m-2)";
     else if (myVar == snowSurfaceInternalEnergy)
-        return "Snow energy content surface layer (kJ m-2)";
+        return "Energy content surface layer (kJ m-2)";
     else if (myVar == noMeteoTerrain)
         return "Elevation (m)";
     else
@@ -780,6 +806,26 @@ std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteo
         }
     }
     return key;
+}
+
+std::string getUnitFromVariable(meteoVariable var)
+{
+
+    std::string unit = "";
+    std::map<std::vector<meteoVariable>, std::string>::const_iterator it;
+    std::vector<meteoVariable> key;
+
+    for (it = MapVarUnit.begin(); it != MapVarUnit.end(); ++it)
+    {
+        key = it->first;
+        if(std::find(key.begin(), key.end(), var) != key.end())
+        {
+            unit = it->second;
+            break;
+        }
+        key.clear();
+    }
+    return unit;
 }
 
 meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string& value)

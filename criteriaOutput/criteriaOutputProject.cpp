@@ -44,6 +44,7 @@ void CriteriaOutputProject::initialize()
     fieldListFileName = "";
     aggregationListFileName = "";
     aggregationCellSize = "";
+    aggregationThreshold = "";
 
     mapListFileName = "";
     mapCellSize = "";
@@ -330,6 +331,9 @@ bool CriteriaOutputProject::readSettings()
     }
 
     aggregationCellSize = projectSettings->value("aggregation_cellsize","").toString();
+    aggregationThreshold = projectSettings->value("aggregation_threshold","").toString();
+    // default threshold
+    if (aggregationThreshold == "") aggregationThreshold = "0.5";
 
     outputAggrCsvFileName = projectSettings->value("aggregation_output","").toString();
     if (outputAggrCsvFileName.right(4) == ".csv")
@@ -659,8 +663,21 @@ int CriteriaOutputProject::createAggregationFile()
     int cellSize = aggregationCellSize.toInt(&ok, 10);
     if (!ok)
     {
-        projectError = "Invalid aggregation cellsize: " + aggregationCellSize;
-        return ERROR_SETTINGS_MISSINGDATA;
+        projectError = "Invalid aggregation_cellsize: " + aggregationCellSize;
+        return ERROR_WRONGPARAMETER;
+    }
+
+    // check aggregation threshold
+    double threshold = aggregationThreshold.toDouble(&ok);
+    if (!ok)
+    {
+        projectError = "Invalid aggregation_threshold: " + aggregationThreshold;
+        return ERROR_WRONGPARAMETER;
+    }
+    if (threshold < 0 || threshold > 1)
+    {
+        projectError = "Invalid aggregation_threshold (must be between 0 and 1): " + aggregationThreshold;
+        return ERROR_WRONGPARAMETER;
     }
 
     // check shapefile
@@ -752,13 +769,15 @@ int CriteriaOutputProject::createAggregationFile()
         {
             isOk = zonalStatisticsShapeMajority(shapeRef, shapeVal, matrix, vectorNull,
                                                 aggregationVariable.inputField[i].toStdString(),
-                                                aggregationVariable.outputVarName[i].toStdString(), error);
+                                                aggregationVariable.outputVarName[i].toStdString(),
+                                                threshold, error);
         }
         else
         {
             isOk = zonalStatisticsShape(shapeRef, shapeVal, matrix, vectorNull, aggregationVariable.inputField[i].toStdString(),
                                         aggregationVariable.outputVarName[i].toStdString(),
-                                        aggregationVariable.aggregationType[i].toStdString(), error);
+                                        aggregationVariable.aggregationType[i].toStdString(),
+                                        threshold, error);
         }
 
         if (!isOk) break;
@@ -776,7 +795,7 @@ int CriteriaOutputProject::createAggregationFile()
         return ERROR_ZONAL_STATISTICS_SHAPE;
     }
 
-    // write csv aggragation data
+    // write csv aggregation data
     int myResult = writeCsvAggrFromShape(shapeRef, outputAggrCsvFileName, dateComputation,
                                  aggregationVariable.outputVarName, shapeFieldName, projectError);
 
@@ -848,8 +867,16 @@ int CriteriaOutputProject::createNetcdf()
     {
         QString field = valuesList[0];
         QString fileName = outputShapeFilePath + "/" + mapAreaName + "_" + field + ".nc";
+        std::string variableName = field.left(4).toStdString();         // TODO inserire var name nel file
+        std::string variableUnit = "mm";                                // TODO inserire var unit nel file
+        Crit3DDate computationDate = getCrit3DDate(dateComputation);
+        Crit3DDate date1 = computationDate;
+        int nrDays = 28;                                                // TODO inserire var nr days nel file
+        Crit3DDate date2 = getCrit3DDate(dateComputation.addDays(nrDays));
+
         logger.writeInfo("Export file: " + fileName);
-        if (! convertShapeToNetcdf(shapeHandler, fileName, field, cellSize, dateComputation))
+        if (! convertShapeToNetcdf(shapeHandler, fileName.toStdString(), field.toStdString(), variableName,
+                                   variableUnit, cellSize, computationDate, date1, date2))
         {
             projectError = "Error in export to NetCDF: " + projectError;
             return ERROR_NETCDF;
@@ -860,7 +887,9 @@ int CriteriaOutputProject::createNetcdf()
 }
 
 
-bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, QString outputFileName, QString field, double cellSize, QDate computationDate)
+bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std::string outputFileName,
+                                                 std::string field, std::string variableName, std::string variableUnit, double cellSize,
+                                                 Crit3DDate computationDate, Crit3DDate firstDate, Crit3DDate lastDate)
 {
     if (! shape.getIsWGS84())
     {
@@ -870,7 +899,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, QStr
 
     // rasterize shape
     gis::Crit3DRasterGrid myRaster;
-    if (! rasterizeShape(shape, myRaster, field.toStdString(), cellSize))
+    if (! rasterizeShape(shape, myRaster, field, cellSize))
     {
         projectError = "Error in rasterize shape.";
         return false;
@@ -913,14 +942,13 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, QStr
 
     // create netcdf
     NetCDFHandler myNetCDF;
-    myNetCDF.createNewFile(outputFileName.toStdString());
+    myNetCDF.createNewFile(outputFileName);
 
-    Crit3DDate myDate = getCrit3DDate(computationDate);
-    std::string variableName = field.left(4).toStdString();
+    std::string title = projectName.toStdString();
 
-    if (! myNetCDF.writeGeoAndDateDimensions(latLonHeader, variableName, myDate))
+    if (! myNetCDF.writeMetadata(latLonHeader, title, variableName, variableUnit, computationDate, firstDate, lastDate))
     {
-        projectError = "Error in write dimensions to netcdf.";
+        projectError = "Error in write metadata to netcdf.";
         myNetCDF.close();
         return false;
     }

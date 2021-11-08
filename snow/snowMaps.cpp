@@ -117,6 +117,20 @@ void Crit3DSnowMaps::updateMap(Crit3DSnow &snowPoint, int row, int col)
 }
 
 
+void Crit3DSnowMaps::updateRangeMaps()
+{
+    gis::updateMinMaxRasterGrid(_snowWaterEquivalentMap);
+    gis::updateMinMaxRasterGrid(_snowFallMap);
+    gis::updateMinMaxRasterGrid(_snowMeltMap);
+    gis::updateMinMaxRasterGrid(_iceContentMap);
+    gis::updateMinMaxRasterGrid(_liquidWaterContentMap);
+    gis::updateMinMaxRasterGrid(_internalEnergyMap);
+    gis::updateMinMaxRasterGrid(_surfaceInternalEnergyMap);
+    gis::updateMinMaxRasterGrid(_snowSurfaceTempMap);
+    gis::updateMinMaxRasterGrid(_ageOfSnowMap);
+}
+
+
 void Crit3DSnowMaps::setPoint(Crit3DSnow &snowPoint, int row, int col)
 {
     snowPoint.setSnowWaterEquivalent(_snowWaterEquivalentMap->value[row][col]);
@@ -148,7 +162,7 @@ void Crit3DSnowMaps::resetSnowModel(double snowSkinThickness)
                 _snowMeltMap->value[row][col] = 0;
                 _iceContentMap->value[row][col] = 0;
                 _liquidWaterContentMap->value[row][col] = 0;
-                _ageOfSnowMap->value[row][col] = 0;
+                _ageOfSnowMap->value[row][col] = NODATA;
 
                 _snowSurfaceTempMap->value[row][col] = float(_initSnowSurfaceTemp);
 

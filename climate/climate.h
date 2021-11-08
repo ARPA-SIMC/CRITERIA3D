@@ -22,6 +22,12 @@
     #ifndef CRIT3DANOMALYLIST_H
         #include "crit3dAnomalyList.h"
     #endif
+    #ifndef CRIT3DDROUGHTLIST_H
+        #include "crit3dDroughtList.h"
+    #endif
+    #ifndef CRIT3DPHENOLOGYLIST_H
+        #include "crit3dPhenologyList.h"
+    #endif
 
 
     const std::map<std::string, int> MapElabWithParam = {
@@ -121,7 +127,7 @@
 
     int nParameters(meteoComputation elab);
 
-    bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QString *myError);
+    bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, Crit3DDroughtList *listXMLDrought, Crit3DPhenologyList *listXMLPhenology, QString xmlFileName, QString *myError);
 
     bool parseXMLPeriodType(QDomNode ancestor, QString attributePeriod, Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, bool isAnomaly, bool isRefPeriod,
                             QString* period, QString *myError);
@@ -138,7 +144,7 @@
 
     bool appendXMLAnomaly(Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QString *myError);
 
-    void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDate firstDate, QDate lastDate, std::vector<meteoVariable> dailyMeteoVar, Crit3DMeteoSettings* meteoSettings);
+    void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDate firstDate, QDate lastDate, std::vector<meteoVariable> dailyMeteoVar, Crit3DMeteoSettings* meteoSettings, Crit3DQuality *qualityCheck, Crit3DClimateParameters *climateParam);
 
     //int getClimateIndexFromDate(QDate myDate, period periodType);
 

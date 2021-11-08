@@ -203,8 +203,15 @@ void Crit3DMeteoPoint::initializeObsDataM(unsigned int numberOfMonths, unsigned 
         }
         else
         {
-            obsDataM[i-month]._month = i%12;
-            if (i%13 == 0)
+            if (i%12 == 0)
+            {
+                obsDataM[i-month]._month = 12;
+            }
+            else
+            {
+                obsDataM[i-month]._month = i%12;
+            }
+            if (obsDataM[i-month]._month == 1)
             {
                 // new year
                 addYear = addYear + 1;
@@ -1115,7 +1122,9 @@ bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
     return (leafWres && et0res);
 }
 
-bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar, Crit3DMeteoSettings* meteoSettings)
+bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar,
+                                               Crit3DMeteoSettings* meteoSettings, Crit3DQuality* qualityCheck,
+                                               Crit3DClimateParameters* climateParam)
 {
 
     int currentMonth = firstDate.month;
@@ -1126,12 +1135,10 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
     int indexMonth = 0;
     bool aggregateDailyInMonthly = false;
 
-    Crit3DQuality qualityCheck;
-
     for (Crit3DDate actualDate = firstDate; actualDate<=lastDate; actualDate=actualDate.addDays(1))
     {
         float myDailyValue = getMeteoPointValueD(actualDate, dailyMeteoVar, meteoSettings);
-        quality::qualityType qualityT = qualityCheck.checkFastValueDaily_SingleValue(dailyMeteoVar, myDailyValue, currentMonth, this->point.z);
+        quality::qualityType qualityT = qualityCheck->checkFastValueDaily_SingleValue(dailyMeteoVar, climateParam, myDailyValue, currentMonth, this->point.z);
         if (qualityT == quality::accepted)
         {
             sum = sum + myDailyValue;
