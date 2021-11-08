@@ -2285,6 +2285,7 @@ void weatherGenerator2D::multisiteTemperatureGeneration()
             double thresholdVariation = 7;
             random1 = MINVALUE(MAXVALUE(random1,-thresholdVariation),thresholdVariation);
             random2 = MINVALUE(MAXVALUE(random2,-thresholdVariation),thresholdVariation);
+            random1 = random2 = 0;
             maxTGenerated[j][i] = Xp[0][j] + random1;
             minTGenerated[j][i] = Xp[1][j] + random2;
             double tempTemp;
