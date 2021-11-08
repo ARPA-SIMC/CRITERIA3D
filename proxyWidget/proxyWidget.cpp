@@ -64,21 +64,21 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QLabel *variableLabel = new QLabel(tr("Variable"));
     QLabel *axisXLabel = new QLabel(tr("Axis X"));
     
-    selectionLayout.addWidget(variableLabel,0,0);
-    selectionLayout.addWidget(&variable,1,0);
-    selectionLayout.addWidget(axisXLabel,0,1);
-    selectionLayout.addWidget(&axisX,1,1);
+    selectionLayout->addWidget(variableLabel,0,0);
+    selectionLayout->addWidget(&variable,1,0);
+    selectionLayout->addWidget(axisXLabel,0,1);
+    selectionLayout->addWidget(&axisX,1,1);
     
-    selectionLayout.addWidget(&detrended,0,2);
-    selectionLayout.addWidget(&climatologyLR,0,3);
-    selectionLayout.addWidget(&modelLP,0,4);
-    selectionLayout.addWidget(&zeroIntercept,1,2);
-    selectionLayout.addWidget(r2Label,1,3);
-    selectionLayout.addWidget(&r2,1,4);
-    selectionLayout.addWidget(lapseRateLabel,2,1);
-    selectionLayout.addWidget(&lapseRate,2,2);
-    selectionLayout.addWidget(r2ThermalLevelsLabel,2,3);
-    selectionLayout.addWidget(&r2ThermalLevels,2,4);
+    selectionLayout->addWidget(&detrended,0,2);
+    selectionLayout->addWidget(&climatologyLR,0,3);
+    selectionLayout->addWidget(&modelLP,0,4);
+    selectionLayout->addWidget(&zeroIntercept,1,2);
+    selectionLayout->addWidget(r2Label,1,3);
+    selectionLayout->addWidget(&r2,1,4);
+    selectionLayout->addWidget(lapseRateLabel,2,1);
+    selectionLayout->addWidget(&lapseRate,2,2);
+    selectionLayout->addWidget(r2ThermalLevelsLabel,2,3);
+    selectionLayout->addWidget(&r2ThermalLevels,2,4);
     
 
     // menu
@@ -99,7 +99,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     */
 
 
-    plotLayout->addWidget(chartView);
+//    plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(selectionLayout);
     mainLayout->addWidget(horizontalGroupBox);
     mainLayout->addLayout(plotLayout);

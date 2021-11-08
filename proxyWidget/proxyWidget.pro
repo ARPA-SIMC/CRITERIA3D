@@ -31,7 +31,7 @@ win32:{
     TARGET = proxyWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../commonDialogs
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../commonDialogs ../interpolation
 
 
 SOURCES += \

@@ -4,6 +4,7 @@
     #include <QtWidgets>
     #include <QtCharts>
     #include "meteoPoint.h"
+    #include "interpolationSettings.h"
 
     class Crit3DProxyWidget : public QWidget
     {
