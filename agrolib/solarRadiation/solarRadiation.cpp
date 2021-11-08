@@ -42,6 +42,7 @@ Crit3DRadiationMaps::Crit3DRadiationMaps()
     globalRadiationMap = new gis::Crit3DRasterGrid;
     beamRadiationMap = new gis::Crit3DRasterGrid;
     diffuseRadiationMap = new gis::Crit3DRasterGrid;
+    reflectedRadiationMap = new gis::Crit3DRasterGrid;
     sunElevationMap = new gis::Crit3DRasterGrid;
 
     /*
@@ -78,6 +79,9 @@ Crit3DRadiationMaps::Crit3DRadiationMaps(const gis::Crit3DRasterGrid& myDEM, con
 
     diffuseRadiationMap = new gis::Crit3DRasterGrid;
     diffuseRadiationMap->initializeGrid(myDEM);
+
+    reflectedRadiationMap = new gis::Crit3DRasterGrid;
+    reflectedRadiationMap->initializeGrid(myDEM);
 
     sunElevationMap = new gis::Crit3DRasterGrid;
     sunElevationMap->initializeGrid(myDEM);
@@ -117,6 +121,7 @@ void Crit3DRadiationMaps::clear()
     globalRadiationMap->clear();
     beamRadiationMap->clear();
     diffuseRadiationMap->clear();
+    reflectedRadiationMap->clear();
     sunElevationMap->clear();
 
     /*
@@ -136,6 +141,7 @@ void Crit3DRadiationMaps::clear()
     delete globalRadiationMap;
     delete beamRadiationMap;
     delete diffuseRadiationMap;
+    delete reflectedRadiationMap;
     delete sunElevationMap;
 
     /*
@@ -486,13 +492,13 @@ namespace radiation
 
     bool computeShadow(TradPoint* myPoint, TsunPosition* mySunPosition, const gis::Crit3DRasterGrid& myDEM)
     {
-        float sunMaskStepX, sunMaskStepY;
-        float sunMaskStepZ, maxDeltaH;
-        float x, y, z;
+        double sunMaskStepX, sunMaskStepY;
+        double sunMaskStepZ, maxDeltaH;
+        double x, y, z, x0, y0, z0;
+        double cosElev, sinElev, tgElev;
+        double step, stepCount, maxDistCount;
+        double zDEM;
         int row, col;
-        bool shadowComputed;
-        float cosElev, sinElev, tgElev;
-        float step, stepCount, maxDistCount;
 
         /* INPUT
         azimuth
@@ -501,61 +507,58 @@ namespace radiation
         inizializzazione a sole visibile
         */
 
-        shadowComputed = false;
-        x = float(myPoint->x);
-        y = float(myPoint->y);
-        z = float(myPoint->height);
-        sunMaskStepX = float(SHADOW_FACTOR * getSinDecimalDegree(mySunPosition->azimuth) * myDEM.header->cellSize);
-        sunMaskStepY = float(SHADOW_FACTOR * getCosDecimalDegree(mySunPosition->azimuth) * myDEM.header->cellSize);
+        x0 = myPoint->x;
+        y0 = myPoint->y;
+        z0 = myPoint->height;
+
+        sunMaskStepX = SHADOW_FACTOR * getSinDecimalDegree(mySunPosition->azimuth) * myDEM.header->cellSize;
+        sunMaskStepY = SHADOW_FACTOR * getCosDecimalDegree(mySunPosition->azimuth) * myDEM.header->cellSize;
         cosElev = getCosDecimalDegree(mySunPosition->elevation);
         sinElev = getSinDecimalDegree(mySunPosition->elevation);
         tgElev = sinElev / cosElev;
-        sunMaskStepZ = float(myDEM.header->cellSize * SHADOW_FACTOR * tgElev);
-        maxDeltaH = float(myDEM.header->cellSize * SHADOW_FACTOR * 2);
+        sunMaskStepZ = myDEM.header->cellSize * SHADOW_FACTOR * tgElev;
+
+        maxDeltaH = myDEM.header->cellSize * SHADOW_FACTOR * 2;
 
         if (sunMaskStepZ == 0)
-            maxDistCount = myDEM.maximum - z;
+            maxDistCount = myDEM.maximum - z0 / EPSILON;
         else
-            maxDistCount = (myDEM.maximum - z) / sunMaskStepZ;
+            maxDistCount = (myDEM.maximum - z0) / sunMaskStepZ;
 
         stepCount = 0;
         step = 1;
-
-        bool output= false;
         do
         {
-            x += sunMaskStepX * step;
-            y += sunMaskStepY * step;
-            z += sunMaskStepZ * step;
             stepCount += step;
-
-            if (stepCount > maxDistCount) shadowComputed = true ;
+            x = x0 + sunMaskStepX * stepCount;
+            y = y0 + sunMaskStepY * stepCount;
+            z = z0 + sunMaskStepZ * stepCount;
 
             gis::getRowColFromXY(myDEM, x, y, &row, &col);
-            if (! gis::isOutOfGridRowCol(row, col, myDEM))
+            if (gis::isOutOfGridRowCol(row, col, myDEM))
             {
-                float matrixElement = myDEM.value[row][col];
-                if (matrixElement != myDEM.header->flag)
-                {
-                    if ((matrixElement - z) > 0.1f)
-                    {
-                        // shadowed - exit
-                        shadowComputed = true ;
-                        output = true ;
-                    }
-                    else
-                    {
-                        step = (z - matrixElement) / maxDeltaH;
-                        if (step < 1) step = 1;
-                    }
-                }
-                else shadowComputed = true;
+                // not shadowed - exit
+                return false ;
             }
-            else
-                shadowComputed = true;
 
-        } while(! shadowComputed);
-        return output;
+            zDEM = myDEM.value[row][col];
+            if (zDEM != myDEM.header->flag)
+            {
+                if ((zDEM - z) > 0.5)
+                {
+                    // shadowed - exit
+                    return true ;
+                }
+                else
+                {
+                    step = (z - zDEM) / maxDeltaH;
+                    if (step < 1) step = 1;
+                }
+            }
+
+        } while(stepCount < maxDistCount);
+
+        return false;
     }
 
 
@@ -566,7 +569,7 @@ namespace radiation
         //in attesa di studi mirati (Bristow and Campbell, 1985)
         maximumDiffuseTransmissivity = 0.6f / (myClearSkyTransmissivity - 0.4f);
         *Tt = MAXVALUE(MINVALUE(transmissivity, myClearSkyTransmissivity), 0.00001f);
-        *td = (*Tt) * (1 - exp(maximumDiffuseTransmissivity - (maximumDiffuseTransmissivity * myClearSkyTransmissivity) / (*Tt)));
+        *td = (*Tt) * (1.f - exp(maximumDiffuseTransmissivity - (maximumDiffuseTransmissivity * myClearSkyTransmissivity) / (*Tt)));
 
         /*! FT 0.12 stimato da Settefonti agosto 2007 */
         if ((*Tt) > 0.6f) *td = MAXVALUE(*td, 0.1f);
@@ -616,7 +619,7 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
             return false;
 
         /*! Shadowing */
-        isPointIlluminated = isIlluminated(localTime.time, (*mySunPosition).rise, (*mySunPosition).set, (*mySunPosition).elevationRefr);
+        isPointIlluminated = isIlluminated(float(localTime.time), (*mySunPosition).rise, (*mySunPosition).set, (*mySunPosition).elevationRefr);
         if (mySettings->getShadowing())
         {
             if (gis::isOutOfGridXY(myPoint->x, myPoint->y, myDEM.header))
@@ -847,6 +850,7 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
                     radiationMaps->globalRadiationMap->value[myRow][myCol] = float(myRadPoint.global);
                     radiationMaps->beamRadiationMap->value[myRow][myCol] = float(myRadPoint.beam);
                     radiationMaps->diffuseRadiationMap->value[myRow][myCol] = float(myRadPoint.diffuse);
+                    radiationMaps->reflectedRadiationMap->value[myRow][myCol] = float(myRadPoint.reflected);
 
                 }
             }
@@ -856,20 +860,21 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
         gis::updateMinMaxRasterGrid(radiationMaps->sunAzimuthMap);
         gis::updateMinMaxRasterGrid(radiationMaps->sunIncidenceMap);
         gis::updateMinMaxRasterGrid(radiationMaps->sunShadowMap);
-        gis::updateMinMaxRasterGrid(radiationMaps->reflectedRadiationMap);
         */
 
         gis::updateMinMaxRasterGrid(radiationMaps->sunElevationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->transmissivityMap);
-        gis::updateMinMaxRasterGrid(radiationMaps->globalRadiationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->beamRadiationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->diffuseRadiationMap);
+        gis::updateMinMaxRasterGrid(radiationMaps->reflectedRadiationMap);
+        gis::updateMinMaxRasterGrid(radiationMaps->globalRadiationMap);
 
-
+        radiationMaps->sunElevationMap->setMapTime(myTime);
         radiationMaps->transmissivityMap->setMapTime(myTime);
-        radiationMaps->globalRadiationMap->setMapTime(myTime);
         radiationMaps->beamRadiationMap->setMapTime(myTime);
         radiationMaps->diffuseRadiationMap->setMapTime(myTime);
+        radiationMaps->reflectedRadiationMap->setMapTime(myTime);
+        radiationMaps->globalRadiationMap->setMapTime(myTime);
 
         radiationMaps->setComputed(true);
         return true;
@@ -975,7 +980,7 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
                                         + getCosDecimalDegree(float(myPoint->slope)) * sin(elevationAngle)));
 
         float Tt = myClearSkyTransmissivity;
-        float td = float(0.1);
+        float td = 0.1f;
         if (mySettings->getRealSky())
         {
             if (myTransmissivity != NODATA)
@@ -998,7 +1003,7 @@ bool computeRadiationPointRsun(Crit3DRadiationSettings* mySettings, float myTemp
             radBeam = extraTerrestrialRad * coeffBH * MAXVALUE(0, sin(incidenceAngle) / sin(elevationAngle));
             //aggiungere Snow albedo!
             //Muneer 1997
-            radReflected = extraTerrestrialRad * Tt * 0.2 * (1 - getCosDecimalDegree(myPoint->slope)) / 2.0;
+            radReflected = extraTerrestrialRad * Tt * 0.2 * (1.0 - getCosDecimalDegree(float(myPoint->slope))) / 2.0;
         }
 
         radTotal = radDiffuse + radBeam + radReflected;

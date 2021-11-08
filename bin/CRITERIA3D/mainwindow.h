@@ -32,6 +32,10 @@
 
     private slots:
 
+        void mouseMove(const QPoint &eventPos);
+        void updateMaps();
+        void updateGUI();
+
         void on_actionOpenProject_triggered();
         void on_actionCloseProject_triggered();
         void on_actionLoad_DEM_triggered();
@@ -40,6 +44,8 @@
         void on_actionLoad_Crop_data_triggered();
         void on_actionLoad_MeteoPoints_triggered();
         void on_actionMeteoPointsImport_data_triggered();
+
+        void on_actionNew_meteoPointsDB_from_csv_triggered();
 
         void on_dateEdit_dateChanged(const QDate &date);
         void on_timeEdit_valueChanged(int myHour);
@@ -56,6 +62,8 @@
         void on_actionCompute_solar_radiation_triggered();
         void on_actionCompute_AllMeteoMaps_triggered();
 
+        void on_flag_view_SoilMap_triggered();
+
         void on_actionView_Boundary_triggered();
         void on_actionView_Slope_triggered();
         void on_actionView_Aspect_triggered();
@@ -64,7 +72,10 @@
         void on_actionView_PointsCurrentVariable_triggered();
 
         void on_actionView_Transmissivity_triggered();
-        void on_actionView_Global_radiation_triggered();
+        void on_actionView_Global_irradiance_triggered();
+        void on_actionView_Beam_irradiance_triggered();
+        void on_actionView_Diffuse_irradiance_triggered();
+        void on_actionView_Reflected_irradiance_triggered();
         void on_actionView_Air_temperature_triggered();
         void on_actionView_Precipitation_triggered();
         void on_actionView_Air_relative_humidity_triggered();
@@ -77,51 +88,36 @@
         void on_actionMapESRISatellite_triggered();
         void on_actionMapTerrain_triggered();
         void on_actionMapGoogle_hybrid_satellite_triggered();
+        void on_actionMapGoogle_satellite_triggered();
 
         void on_actionCriteria3D_Initialize_triggered();
-
         void on_actionRun_models_triggered();
-
-        void updateMaps();
-        void updateGUI();
-        void mouseMove(const QPoint &eventPos);
 
         void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
         void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
 
-        void on_actionNew_meteoPointsDB_from_csv_triggered();
-
-        void on_actionRun_snow_model_triggered();
-
-        void on_actionInitialize_snow_triggered();
-
         void on_actionSnow_settings_triggered();
+        void on_actionSnow_initialize_triggered();
+        void on_actionSnow_compute_current_hour_triggered();
+        void on_actionSnow_run_model_triggered();
 
         void on_actionView_Snow_water_equivalent_triggered();
-
         void on_actionView_Snow_surface_temperature_triggered();
-
         void on_actionView_Snow_internal_energy_triggered();
+        void on_actionView_Snow_fall_triggered();
+        void on_actionView_Snow_surface_internal_energy_triggered();
+        void on_actionView_Snow_liquid_water_content_triggered();
+        void on_actionView_Snow_age_triggered();
+        void on_actionView_Snowmelt_triggered();
 
         void on_buttonModelPause_clicked();
-
         void on_buttonModelStop_clicked();
-
         void on_buttonModelStart_clicked();
 
-        void on_actionView_Snow_fall_triggered();
-
-        void on_actionView_Snow_surface_internal_energy_triggered();
-
         void on_actionSave_state_triggered();
-
         void on_actionLoad_state_triggered();
-
         void on_flag_save_state_daily_step_triggered();
 
-        void on_flag_view_SoilMap_triggered();
-
-        void on_actionMapGoogle_satellite_triggered();
 
     protected:
         /*!
@@ -167,7 +163,7 @@
         QPoint getMapPos(const QPoint& pos);
         bool isInsideMap(const QPoint& pos);
 
-        void updateVariable();
+        void updateCurrentVariable();
         void updateDateTime();
         void resetMeteoPoints();
         void redrawMeteoPoints(visualizationType myType, bool updateColorSCale);
@@ -196,7 +192,7 @@
         void clearMeteoPoints_GUI();
 
         void setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
-        void setSnowVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
+        void setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
 
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);

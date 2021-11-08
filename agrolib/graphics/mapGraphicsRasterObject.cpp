@@ -53,7 +53,7 @@ RasterObject::RasterObject(MapGraphicsView* _view, MapGraphicsObject *parent) :
     geoMap = new gis::Crit3DGeoMap();
     referencePixel = QPointF(NODATA, NODATA);
     isDrawing = false;
-    drawBorder = false;
+    isDrawBorder = false;
     utmZone = NODATA;
 
     longitudeShift = 0;
@@ -76,7 +76,7 @@ void RasterObject::clear()
     isLatLon = false;
     isLoaded = false;
     isDrawing = false;
-    drawBorder = false;
+    isDrawBorder = false;
     utmZone = NODATA;
 }
 
@@ -99,7 +99,7 @@ void RasterObject::setDrawing(bool value)
 
 void RasterObject::setDrawBorders(bool value)
 {
-    drawBorder = value;
+    isDrawBorder = value;
 }
 
 void RasterObject::setColorLegend(ColorLegend* myLegend)
@@ -155,7 +155,7 @@ QPointF RasterObject::getLatLon(const QPointF &pos)
         setMapExtents();
 
         if (rasterPointer != nullptr)
-            drawRaster(rasterPointer, painter, drawBorder);
+            drawRaster(rasterPointer, painter);
 
         if (colorScaleLegend != nullptr)
             colorScaleLegend->update();
@@ -352,7 +352,7 @@ int RasterObject::getCurrentStep(const gis::Crit3DRasterWindow& window)
 }
 
 
-bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter, bool drawBorder)
+bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter)
 {
     if (myRaster == nullptr) return false;
     if (! myRaster->isLoaded) return false;
@@ -428,13 +428,13 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
                     value = myRaster->value[matrix[row][col].row][matrix[row][col].col];
             }
 
-            if (this->isGrid && drawBorder && ! isEqual(value, myRaster->header->flag))
+            if (this->isGrid && isDrawBorder && ! isEqual(value, NO_ACTIVE))
             {
                 myPainter->setPen(QColor(64, 64, 64));
                 myPainter->setBrush(Qt::NoBrush);
                 myPainter->drawRect(x0, y0, lx, ly);
             }
-            else if (! isEqual(value, myRaster->header->flag) && ! isEqual(value, NODATA) && ! isEqual(value, INDEX_ERROR))
+            else if (! isEqual(value, myRaster->header->flag) && ! isEqual(value, NODATA) && ! isEqual(value, NO_ACTIVE))
             {
                 myColor = myRaster->colorScale->getColor(value);
                 myQColor = QColor(myColor->red, myColor->green, myColor->blue);
@@ -465,9 +465,6 @@ void RasterObject::updateCenter()
     if (isDrawing)
     {
         setPos(newCenter);
-
-        if (this->colorScaleLegend != nullptr)
-            this->colorScaleLegend->repaint();
     }
 }
 

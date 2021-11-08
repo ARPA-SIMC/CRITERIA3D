@@ -224,6 +224,7 @@
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
+        void showProxyGraph();
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

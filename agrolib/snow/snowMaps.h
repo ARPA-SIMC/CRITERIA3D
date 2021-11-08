@@ -20,6 +20,8 @@
         void updateMap(Crit3DSnow &snowPoint, int row, int col);
         void setPoint(Crit3DSnow &snowPoint, int row, int col);
 
+        void updateRangeMaps();
+
         gis::Crit3DRasterGrid* getSnowWaterEquivalentMap();
         gis::Crit3DRasterGrid* getSnowFallMap();
         gis::Crit3DRasterGrid* getSnowMeltMap();

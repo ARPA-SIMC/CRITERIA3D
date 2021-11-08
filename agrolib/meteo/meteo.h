@@ -96,8 +96,9 @@
                     leafWetness, dailyLeafWetness, atmPressure,
                     referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, monthlyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
                     dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
-                    dailyWaterTableDepth,
                     snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceInternalEnergy,
+                    snowAge, snowLiquidWaterContent, snowMelt,
+                    dailyWaterTableDepth,
                     anomaly, noMeteoTerrain, noMeteoVar};
 
 
@@ -245,7 +246,7 @@
         { {dailyReferenceEvapotranspirationHS,dailyReferenceEvapotranspirationPM,referenceEvapotranspiration,monthlyReferenceEvapotranspirationHS}, "mm"} ,
         { {dailyAirRelHumidityMin,dailyAirRelHumidityMax,dailyAirRelHumidityAvg,airRelHumidity}, "%"} ,
         { {dailyGlobalRadiation,monthlyGlobalRadiation}, "MJ m-2"} ,
-        { {globalIrradiance,netIrradiance}, "W m-2"} ,
+        { {globalIrradiance,netIrradiance,directIrradiance,diffuseIrradiance,reflectedIrradiance}, "W m-2"} ,
         { {dailyBIC,monthlyBIC}, "mm"} ,
         { {dailyWindScalarIntensityAvg,dailyWindVectorIntensityAvg,dailyWindScalarIntensityMax, windScalarIntensity}, "m s-1"} ,
         { {dailyWindVectorDirectionPrevailing, dailyWindVectorIntensityMax, windVectorDirection}, "deg"} ,
@@ -255,7 +256,7 @@
         { {airRelHumidity,dailyAirRelHumidityMin,dailyAirRelHumidityMax,dailyAirRelHumidityAvg}, "%"} ,
         { {dailyAirDewTemperatureMin,dailyAirDewTemperatureMax,dailyAirDewTemperatureAvg,airDewTemperature}, "°C"} ,
         { {dailyThomAvg,dailyThomDaytime,dailyThomNighttime,thom}, "-"} ,
-        { {dailyWaterTableDepth,snowWaterEquivalent,snowFall}, "mm"} ,
+        { {dailyWaterTableDepth,snowWaterEquivalent,snowFall,snowMelt,snowLiquidWaterContent}, "mm"} ,
         { {snowSurfaceTemperature}, "°C"} ,
         { {snowInternalEnergy,snowSurfaceInternalEnergy}, "kJ m-2"} ,
     };

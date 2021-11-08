@@ -512,7 +512,7 @@
       <x>0</x>
       <y>260</y>
       <width>271</width>
-      <height>111</height>
+      <height>112</height>
      </rect>
     </property>
     <property name="palette">
@@ -1101,9 +1101,9 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>380</y>
+      <y>385</y>
       <width>271</width>
-      <height>121</height>
+      <height>115</height>
      </rect>
     </property>
     <property name="palette">
@@ -1609,9 +1609,9 @@
      <property name="geometry">
       <rect>
        <x>1</x>
-       <y>60</y>
+       <y>70</y>
        <width>266</width>
-       <height>51</height>
+       <height>42</height>
       </rect>
      </property>
      <property name="font">
@@ -1630,8 +1630,8 @@
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>40</y>
-       <width>241</width>
+       <y>45</y>
+       <width>248</width>
        <height>21</height>
       </rect>
      </property>
@@ -3479,7 +3479,7 @@
     </widget>
     <widget class="QMenu" name="menuDEM">
      <property name="title">
-      <string>Spatial data</string>
+      <string>Geography</string>
      </property>
      <addaction name="actionView_Slope"/>
      <addaction name="actionView_Aspect"/>
@@ -3497,7 +3497,10 @@
      <addaction name="actionView_Precipitation"/>
      <addaction name="actionView_Wind_intensity"/>
      <addaction name="separator"/>
-     <addaction name="actionView_Global_radiation"/>
+     <addaction name="actionView_Global_irradiance"/>
+     <addaction name="actionView_Beam_irradiance"/>
+     <addaction name="actionView_Diffuse_irradiance"/>
+     <addaction name="actionView_Reflected_irradiance"/>
      <addaction name="actionView_Transmissivity"/>
      <addaction name="separator"/>
      <addaction name="actionView_ET0"/>
@@ -3506,28 +3509,31 @@
     </widget>
     <widget class="QMenu" name="menuSoil">
      <property name="title">
-      <string>Soil</string>
+      <string>Soil data</string>
      </property>
      <addaction name="flag_view_SoilMap"/>
     </widget>
     <widget class="QMenu" name="menuSnow">
      <property name="title">
-      <string>Snow</string>
+      <string>Snow model</string>
      </property>
      <addaction name="actionView_Snow_fall"/>
      <addaction name="actionView_Snow_water_equivalent"/>
-     <addaction name="actionView_Snow_surface_temperature"/>
      <addaction name="actionView_Snow_internal_energy"/>
      <addaction name="actionView_Snow_surface_internal_energy"/>
+     <addaction name="actionView_Snow_surface_temperature"/>
+     <addaction name="actionView_Snow_liquid_water_content"/>
+     <addaction name="actionView_Snow_age"/>
+     <addaction name="actionView_Snowmelt"/>
     </widget>
     <addaction name="menuPoints"/>
     <addaction name="menuMeteo_variables"/>
     <addaction name="separator"/>
+    <addaction name="menuSnow"/>
+    <addaction name="separator"/>
     <addaction name="menuDEM"/>
     <addaction name="separator"/>
     <addaction name="menuSoil"/>
-    <addaction name="separator"/>
-    <addaction name="menuSnow"/>
    </widget>
    <widget class="QMenu" name="menuSnow_model">
     <property name="title">
@@ -3538,8 +3544,9 @@
     <addaction name="actionLoad_state"/>
     <addaction name="actionSave_state"/>
     <addaction name="separator"/>
-    <addaction name="actionInitialize_snow"/>
-    <addaction name="actionRun_snow_model"/>
+    <addaction name="actionSnow_initialize"/>
+    <addaction name="actionSnow_compute_current_hour"/>
+    <addaction name="actionSnow_run_model"/>
     <addaction name="separator"/>
     <addaction name="flag_save_state_daily_step"/>
    </widget>
@@ -3685,12 +3692,12 @@
   </action>
   <action name="actionView_Transmissivity">
    <property name="text">
-    <string>Atm. transmissivity</string>
+    <string>Atmospheric transmissivity</string>
    </property>
   </action>
   <action name="actionView_ET0">
    <property name="text">
-    <string>Pot. EvapoTranspiration</string>
+    <string>Potential Evapotranspiration</string>
    </property>
   </action>
   <action name="actionCompute_solar_radiation">
@@ -3703,9 +3710,9 @@
     <string>Interpolate all variables</string>
    </property>
   </action>
-  <action name="actionView_Global_radiation">
+  <action name="actionView_Global_irradiance">
    <property name="text">
-    <string>Global radiation</string>
+    <string>Global irradiance</string>
    </property>
   </action>
   <action name="actionView_Air_temperature">
@@ -3810,7 +3817,7 @@
     <string>Snow settings...</string>
    </property>
   </action>
-  <action name="actionRun_snow_model">
+  <action name="actionSnow_run_model">
    <property name="text">
     <string>Run model...</string>
    </property>
@@ -3822,15 +3829,15 @@
   </action>
   <action name="actionView_Snow_surface_temperature">
    <property name="text">
-    <string>Snow surface temperature</string>
+    <string>Surface temperature</string>
    </property>
   </action>
   <action name="actionView_Snow_internal_energy">
    <property name="text">
-    <string>Energy content</string>
+    <string>Energy content of the snow pack</string>
    </property>
   </action>
-  <action name="actionInitialize_snow">
+  <action name="actionSnow_initialize">
    <property name="text">
     <string>Initialize</string>
    </property>
@@ -3853,10 +3860,10 @@
     <bool>true</bool>
    </property>
    <property name="checked">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="text">
-    <string>automatic save state (daily step)</string>
+    <string>Automatic save state (daily step)</string>
    </property>
   </action>
   <action name="actionMapGoogle_satellite">
@@ -3865,6 +3872,41 @@
    </property>
    <property name="text">
     <string>Google satellite</string>
+   </property>
+  </action>
+  <action name="actionView_Beam_irradiance">
+   <property name="text">
+    <string>Beam</string>
+   </property>
+  </action>
+  <action name="actionView_Diffuse_irradiance">
+   <property name="text">
+    <string>Diffuse</string>
+   </property>
+  </action>
+  <action name="actionView_Reflected_irradiance">
+   <property name="text">
+    <string>Reflected</string>
+   </property>
+  </action>
+  <action name="actionView_Snow_liquid_water_content">
+   <property name="text">
+    <string>Liquid water content</string>
+   </property>
+  </action>
+  <action name="actionView_Snow_age">
+   <property name="text">
+    <string>Age of snow</string>
+   </property>
+  </action>
+  <action name="actionSnow_compute_current_hour">
+   <property name="text">
+    <string>Compute current hour</string>
+   </property>
+  </action>
+  <action name="actionView_Snowmelt">
+   <property name="text">
+    <string>Snowmelt</string>
    </property>
   </action>
  </widget>

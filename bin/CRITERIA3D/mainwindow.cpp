@@ -82,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->rasterOutput->setColorLegend(this->outputRasterColorLegend);
     this->mapView->scene()->addObject(this->rasterOutput);
 
-    this->updateVariable();
+    this->updateCurrentVariable();
     this->updateDateTime();
 
     myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
@@ -124,9 +124,8 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 void MainWindow::updateMaps()
 {
     rasterDEM->updateCenter();
-    inputRasterColorLegend->repaint();
     rasterOutput->updateCenter();
-    outputRasterColorLegend->repaint();
+
     *startCenter = rasterDEM->getCurrentCenter();
 }
 
@@ -479,7 +478,7 @@ void MainWindow::resetMeteoPoints()
 void MainWindow::on_actionVariableQualitySpatial_triggered()
 {
     myProject.checkSpatialQuality = ui->actionVariableQualitySpatial->isChecked();
-    updateVariable();
+    updateCurrentVariable();
 }
 
 
@@ -494,7 +493,7 @@ void MainWindow::interpolateDemGUI()
 }
 
 
-void MainWindow::updateVariable()
+void MainWindow::updateCurrentVariable()
 {
     std::string myString = getVariableString(myProject.getCurrentVariable());
     ui->labelVariable->setText(QString::fromStdString(myString));
@@ -663,7 +662,7 @@ void MainWindow::on_variableButton_clicked()
 {
     myProject.setCurrentVariable(chooseMeteoVariable(&myProject));
     this->currentPointsVisualization = showCurrentVariable;
-    this->updateVariable();
+    this->updateCurrentVariable();
 }
 
 
@@ -704,7 +703,6 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
     emit rasterOutput->redrawRequested();
     updateMaps();
 }
-
 
 
 void MainWindow::on_actionInterpolationSettings_triggered()
@@ -752,12 +750,12 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 }
 
 
+// 3d VIEW (TODO)
 /*
 void MainWindow::on_viewer3DClosed()
 {
     this->viewer3D = nullptr;
 }
-
 
 bool MainWindow::initializeViewer3D()
 {
@@ -774,7 +772,6 @@ bool MainWindow::initializeViewer3D()
         return true;
     }
 }
-
 
 void MainWindow::on_actionView_3D_triggered()
 {
@@ -795,8 +792,34 @@ void MainWindow::on_actionView_3D_triggered()
 }
 */
 
+void MainWindow::showSoilMap()
+{
+    if (myProject.soilMap.isLoaded)
+    {
+        ui->flag_view_SoilMap->setChecked(true);
+        setColorScale(airTemperature, myProject.soilMap.colorScale);
+        setCurrentRasterOutput(&(myProject.soilMap));
+        ui->labelOutputRaster->setText("Soil index");
+    }
+    else
+    {
+        myProject.logError("Load a soil map before.");
+    }
+}
 
 
+void MainWindow::on_flag_view_SoilMap_triggered()
+{
+    if (ui->flag_view_SoilMap->isChecked())
+    {
+        showSoilMap();
+    }
+    else
+    {
+        if (ui->labelOutputRaster->text() == "Soil index")
+            setOutputRasterVisible(false);
+    }
+}
 
 
 void MainWindow::on_actionView_Boundary_triggered()
@@ -877,18 +900,14 @@ bool MainWindow::checkMapVariable(bool isComputed)
 
 void MainWindow::setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
 {   
+    setOutputVariable(myVar, myGrid);
     myProject.setCurrentVariable(myVar);
-
-    setColorScale(myVar, myGrid->colorScale);
-    setCurrentRasterOutput(myGrid);
-    ui->labelOutputRaster->setText(QString::fromStdString(getVariableString(myVar)));
-
     currentPointsVisualization = showCurrentVariable;
-    updateVariable();
+    updateCurrentVariable();
 }
 
 
-void MainWindow::setSnowVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
+void MainWindow::setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
 {
     setColorScale(myVar, myGrid->colorScale);
     setCurrentRasterOutput(myGrid);
@@ -931,6 +950,21 @@ void MainWindow::showMeteoVariable(meteoVariable var)
             setMeteoVariable(globalIrradiance, myProject.radiationMaps->globalRadiationMap);
         break;
 
+    case directIrradiance:
+        if (checkMapVariable(myProject.radiationMaps->getComputed()))
+            setMeteoVariable(directIrradiance, myProject.radiationMaps->beamRadiationMap);
+        break;
+
+    case diffuseIrradiance:
+        if (checkMapVariable(myProject.radiationMaps->getComputed()))
+            setMeteoVariable(diffuseIrradiance, myProject.radiationMaps->diffuseRadiationMap);
+        break;
+
+    case reflectedIrradiance:
+        if (checkMapVariable(myProject.radiationMaps->getComputed()))
+            setMeteoVariable(reflectedIrradiance, myProject.radiationMaps->reflectedRadiationMap);
+        break;
+
     case atmTransmissivity:
         if (checkMapVariable(myProject.radiationMaps->getComputed()))
             setMeteoVariable(atmTransmissivity, myProject.radiationMaps->transmissivityMap);
@@ -964,23 +998,35 @@ void MainWindow::showSnowVariable(meteoVariable var)
     switch(var)
     {
     case snowWaterEquivalent:
-        setSnowVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
+        setOutputVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
         break;
 
     case snowFall:
-        setSnowVariable(snowFall, myProject.snowMaps.getSnowFallMap());
+        setOutputVariable(snowFall, myProject.snowMaps.getSnowFallMap());
         break;
 
     case snowSurfaceTemperature:
-        setSnowVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
+        setOutputVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
         break;
 
     case snowInternalEnergy:
-        setSnowVariable(snowInternalEnergy, myProject.snowMaps.getInternalEnergyMap());
+        setOutputVariable(snowInternalEnergy, myProject.snowMaps.getInternalEnergyMap());
         break;
 
     case snowSurfaceInternalEnergy:
-        setSnowVariable(snowSurfaceInternalEnergy, myProject.snowMaps.getSurfaceInternalEnergyMap());
+        setOutputVariable(snowSurfaceInternalEnergy, myProject.snowMaps.getSurfaceInternalEnergyMap());
+        break;
+
+    case snowLiquidWaterContent:
+        setOutputVariable(snowLiquidWaterContent, myProject.snowMaps.getLWContentMap());
+        break;
+
+    case snowAge:
+        setOutputVariable(snowAge, myProject.snowMaps.getAgeOfSnowMap());
+        break;
+
+    case snowMelt:
+        setOutputVariable(snowMelt, myProject.snowMaps.getSnowMeltMap());
         break;
 
     default:
@@ -999,9 +1045,24 @@ void MainWindow::on_actionView_Transmissivity_triggered()
     showMeteoVariable(atmTransmissivity);
 }
 
-void MainWindow::on_actionView_Global_radiation_triggered()
+void MainWindow::on_actionView_Global_irradiance_triggered()
 {
     showMeteoVariable(globalIrradiance);
+}
+
+void MainWindow::on_actionView_Beam_irradiance_triggered()
+{
+    showMeteoVariable(directIrradiance);
+}
+
+void MainWindow::on_actionView_Diffuse_irradiance_triggered()
+{
+    showMeteoVariable(diffuseIrradiance);
+}
+
+void MainWindow::on_actionView_Reflected_irradiance_triggered()
+{
+    showMeteoVariable(reflectedIrradiance);
 }
 
 void MainWindow::on_actionView_ET0_triggered()
@@ -1047,6 +1108,21 @@ void MainWindow::on_actionView_Snow_internal_energy_triggered()
 void MainWindow::on_actionView_Snow_surface_internal_energy_triggered()
 {
     showSnowVariable(snowSurfaceInternalEnergy);
+}
+
+void MainWindow::on_actionView_Snow_liquid_water_content_triggered()
+{
+    showSnowVariable(snowLiquidWaterContent);
+}
+
+void MainWindow::on_actionView_Snow_age_triggered()
+{
+    showSnowVariable(snowAge);
+}
+
+void MainWindow::on_actionView_Snowmelt_triggered()
+{
+    showSnowVariable(snowMelt);
 }
 
 
@@ -1145,7 +1221,7 @@ void MainWindow::on_actionCompute_solar_radiation_triggered()
 
     myProject.setCurrentVariable(globalIrradiance);
     this->currentPointsVisualization = showCurrentVariable;
-    this->updateVariable();
+    this->updateCurrentVariable();
 
     this->interpolateDemGUI();
 }
@@ -1549,7 +1625,7 @@ void MainWindow::on_actionRun_models_triggered()
 
 //----------------- SNOW MODEL -----------------
 
-void MainWindow::on_actionInitialize_snow_triggered()
+void MainWindow::on_actionSnow_initialize_triggered()
 {
     if (myProject.initializeSnowModel())
     {
@@ -1558,7 +1634,7 @@ void MainWindow::on_actionInitialize_snow_triggered()
 }
 
 
-void MainWindow::on_actionRun_snow_model_triggered()
+void MainWindow::on_actionSnow_run_model_triggered()
 {
     if (! myProject.snowMaps.isInitialized)
     {
@@ -1574,6 +1650,23 @@ void MainWindow::on_actionRun_snow_model_triggered()
     myProject.isWater = false;
     myProject.isSnow = true;
     startModels(firstTime, lastTime);
+}
+
+
+void MainWindow::on_actionSnow_compute_current_hour_triggered()
+{
+    if (! myProject.snowMaps.isInitialized)
+    {
+        if (! myProject.initializeSnowModel())
+            return;
+    }
+
+    QDateTime currentTime = myProject.getCurrentTime();
+
+    myProject.isCrop = false;
+    myProject.isWater = false;
+    myProject.isSnow = true;
+    startModels(currentTime, currentTime);
 }
 
 
@@ -1692,36 +1785,5 @@ void MainWindow::on_actionLoad_state_triggered()
 void MainWindow::on_flag_save_state_daily_step_triggered()
 {
     myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
-}
-
-
-void MainWindow::showSoilMap()
-{
-    if (myProject.soilMap.isLoaded)
-    {
-        ui->flag_view_SoilMap->setChecked(true);
-        setColorScale(airTemperature, myProject.soilMap.colorScale);
-        setCurrentRasterOutput(&(myProject.soilMap));
-        ui->labelOutputRaster->setText("Soil index");
-    }
-    else
-    {
-        myProject.logError("Load a soil map before.");
-    }
-}
-
-
-void MainWindow::on_flag_view_SoilMap_triggered()
-{
-    if (ui->flag_view_SoilMap->isChecked())
-    {
-        showSoilMap();
-    }
-    else
-    {
-        if (ui->labelOutputRaster->text() == "Soil index")
-            setOutputRasterVisible(false);
-    }
-
 }
 
