@@ -47,6 +47,9 @@ Crit3DProject::Crit3DProject() : Project3D()
     isSnow = false;
     modelPause = false;
     modelStop = false;
+
+    modelFirstTime.setTimeSpec(Qt::UTC);
+    modelLastTime.setTimeSpec(Qt::UTC);
 }
 
 

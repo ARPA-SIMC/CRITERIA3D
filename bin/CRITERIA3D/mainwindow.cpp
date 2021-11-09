@@ -1540,7 +1540,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
         for (int hour = firstHour; hour <= lastHour; hour++)
         {
             myProject.setCurrentHour(hour);
-            QDateTime myTime = QDateTime(myDate, QTime(hour, 0, 0));
+            QDateTime myTime = QDateTime(myDate, QTime(hour, 0, 0), Qt::UTC);
 
             if (! myProject.modelHourlyCycle(myTime, outputPathHourly))
             {
@@ -1770,7 +1770,7 @@ void MainWindow::on_buttonModelStart_clicked()
         myProject.modelPause = false;
         ui->buttonModelPause->setEnabled(true);
         ui->buttonModelStart->setDisabled(true);
-        QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0));
+        QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
         newFirstTime = newFirstTime.addSecs(3600);
         runModels(newFirstTime, myProject.modelLastTime);
     }
