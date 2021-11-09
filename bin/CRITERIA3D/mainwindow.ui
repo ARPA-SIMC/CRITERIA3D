@@ -3839,7 +3839,7 @@
   </action>
   <action name="actionView_Snow_water_equivalent">
    <property name="text">
-    <string>Snow water equivalent</string>
+    <string>Snow Water Equivalent</string>
    </property>
   </action>
   <action name="actionView_Snow_surface_temperature">
