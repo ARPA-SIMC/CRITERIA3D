@@ -1444,8 +1444,8 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
     }
 
     firstTime = myProject.getCurrentTime();
-    lastTime = myProject.getCurrentTime();
-    //firstTime.setTime(QTime(0,0,0));
+    firstTime = firstTime.addSecs(3600);
+    lastTime = firstTime;
     lastTime.setTime(QTime(23,0,0));
 
     QDateTime firstDateH = myProject.meteoPointsDbHandler->getFirstDate(hourly);
@@ -1663,9 +1663,11 @@ void MainWindow::on_actionSnow_compute_current_hour_triggered()
 
     QDateTime currentTime = myProject.getCurrentTime();
 
+    myProject.isMeteo = true;
+    myProject.isRadiation = true;
+    myProject.isSnow = true;
     myProject.isCrop = false;
     myProject.isWater = false;
-    myProject.isSnow = true;
     startModels(currentTime, currentTime);
 }
 

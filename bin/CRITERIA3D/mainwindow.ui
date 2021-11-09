@@ -3849,7 +3849,7 @@
   </action>
   <action name="actionView_Snow_internal_energy">
    <property name="text">
-    <string>Energy content of the snow pack</string>
+    <string>Energy content (snow pack or soil)</string>
    </property>
   </action>
   <action name="actionSnow_initialize">
