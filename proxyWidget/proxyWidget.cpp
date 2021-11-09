@@ -156,6 +156,26 @@ Crit3DProxyWidget::~Crit3DProxyWidget()
 
 }
 
+void Crit3DProxyWidget::updateDateTime(QDateTime newDateTime)
+{
+    currentDateTime = newDateTime;
+    qDebug() << "updateDateTime";
+    // TO DO replot
+}
+
+void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
+{
+    currentFrequency = newFrequency;
+    qDebug() << "updateFrequency";
+    // TO DO replot
+}
+
+void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
+{
+    emit closeProxyWidget();
+    event->accept();
+
+}
 
 
 
