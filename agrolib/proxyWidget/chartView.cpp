@@ -10,17 +10,13 @@ ChartView::ChartView(QWidget *parent) :
     series1 = new QScatterSeries();
     series1->setName("Primary");
     series1->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    //QBrush brush1;
-    //brush1.setColor(Qt::red);
-    //series1->setBrush(brush1);
+    series1->setColor(Qt::red);
     series1->setMarkerSize(15.0);
 
     series2 = new QScatterSeries();
     series2->setName("Secondary");
     series2->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    //QBrush brush2;
-    //brush2.setColor(Qt::black);
-    //series2->setBrush(brush2);
+    series2->setColor(Qt::black);
     series2->setMarkerSize(15.0);
 
     setRenderHint(QPainter::Antialiasing);
