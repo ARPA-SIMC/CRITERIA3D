@@ -10,7 +10,6 @@
 #include "utilities.h"
 #include "aggregation.h"
 #include "meteoWidget.h"
-#include "proxyWidget.h"
 #include "formInfo.h"
 
 #include <iostream>
@@ -88,6 +87,7 @@ void Project::initializeProject()
     loadGridDataAtStart = false;
 
     proxyGridSeries.clear();
+    proxyWidget = nullptr;
 }
 
 void Project::clearProject()
@@ -752,13 +752,19 @@ void Project::setCurrentDate(QDate myDate)
         this->previousDate = this->currentDate;
         this->currentDate = myDate;
     }
-    emit changeDateTime(getCurrentTime());
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateDateTime(getCurrentTime());
+    }
 }
 
 QDate Project::getCurrentDate()
 {
     return this->currentDate;
-    emit changeDateTime(getCurrentTime());
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateDateTime(getCurrentTime());
+    }
 }
 
 void Project::setCurrentHour(int myHour)
@@ -778,7 +784,7 @@ Crit3DTime Project::getCrit3DCurrentTime()
 
 QDateTime Project::getCurrentTime()
 {
-    return QDateTime(this->currentDate, QTime(this->currentHour, 0, 0));
+    return QDateTime(this->currentDate, QTime(this->currentHour, 0, 0), Qt::UTC);
 }
 
 void Project::getMeteoPointsRange(float *minimum, float *maximum)
@@ -1169,7 +1175,7 @@ void Project::loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo)
     if (this->meteoGridDbHandler != nullptr)
     {
         this->loadMeteoGridDailyData(firstDate, lastDate, showInfo);
-        this->loadMeteoGridHourlyData(QDateTime(firstDate, QTime(1,0)), QDateTime(lastDate.addDays(1), QTime(0,0)), showInfo);
+        this->loadMeteoGridHourlyData(QDateTime(firstDate, QTime(1,0), Qt::UTC), QDateTime(lastDate.addDays(1), QTime(0,0), Qt::UTC), showInfo);
         this->loadMeteoGridMonthlyData(firstDate, lastDate, showInfo);
     }
 }
@@ -1349,6 +1355,7 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
 QDateTime Project::findDbPointLastTime()
 {
     QDateTime lastTime;
+    lastTime.setTimeSpec(Qt::UTC);
 
     QDateTime lastDateD = meteoPointsDbHandler->getLastDate(daily);
     if (! lastDateD.isNull()) lastTime = lastDateD;
@@ -1368,6 +1375,7 @@ QDateTime Project::findDbPointLastTime()
 QDateTime Project::findDbPointFirstTime()
 {
     QDateTime firstTime;
+    firstTime.setTimeSpec(Qt::UTC);
 
     QDateTime firstDateD = meteoPointsDbHandler->getFirstDate(daily);
     if (! firstDateD.isNull()) firstTime = firstDateD;
@@ -2044,7 +2052,10 @@ frequencyType Project::getCurrentFrequency() const
 void Project::setCurrentFrequency(const frequencyType &value)
 {
     currentFrequency = value;
-    emit changeFrequency(currentFrequency);
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateFrequency(currentFrequency);
+    }
 }
 
 void Project::saveProjectSettings()
@@ -2461,8 +2472,8 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDate firstDate = meteoGridDbHandler->firstDate();
     QDate lastDate = meteoGridDbHandler->lastDate();
 
-    QDateTime firstDateTime = QDateTime(firstDate, QTime(1,0));
-    QDateTime lastDateTime = QDateTime(lastDate.addDays(1), QTime(0,0));
+    QDateTime firstDateTime = QDateTime(firstDate, QTime(1,0), Qt::UTC);
+    QDateTime lastDateTime = QDateTime(lastDate.addDays(1), QTime(0,0), Qt::UTC);
 
     int meteoWidgetId = 0;
     if (meteoWidgetGridList.isEmpty() || meteoGridDbHandler->gridStructure().isEnsemble())
@@ -2594,6 +2605,10 @@ void Project::deleteMeteoWidgetGrid(int id)
     }
 }
 
+void Project::deleteProxyWidget()
+{
+    proxyWidget = nullptr;
+}
 
 bool Project::parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString>* csvFields)
 {
@@ -2655,7 +2670,9 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 void Project::showProxyGraph()
 {
     QDateTime currentDateTime = getCurrentTime();
-    Crit3DProxyWidget* proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDateTime);
+    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDateTime);
+    QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
+    return;
 }
 
 
@@ -2677,7 +2694,10 @@ bool Project::setLogFile(QString myFileName)
          QDir().mkdir(filePath);
     }
 
-    QString myDate = QDateTime().currentDateTime().toString("yyyyMMdd_HHmm");
+    QDate myQDate = QDateTime().currentDateTime().date();
+    QTime myQTime = QDateTime().currentDateTime().time();
+    QString myDate = QDateTime(myQDate, myQTime, Qt::UTC).currentDateTime().toString("yyyyMMdd_HHmm");
+
     fileName = myDate + "_" + fileName;
 
     QString currentFileName = filePath + fileName;

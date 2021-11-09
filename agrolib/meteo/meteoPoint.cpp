@@ -425,8 +425,8 @@ void Crit3DMeteoPoint::emptyObsDataM(const Crit3DDate& date1, const Crit3DDate& 
 {
     if (! isDateIntervalLoadedM(date1, date2)) return;
 
-    int indexIni = (date1.year - obsDataM[0]._year)*12 + date1.month-1;
-    int indexFin = (date2.year - obsDataM[0]._year)*12 + date2.month-1;
+    int indexIni = (date1.year - obsDataM[0]._year)*12 + date1.month-obsDataM[0]._month;
+    int indexFin = (date2.year - obsDataM[0]._year)*12 + date2.month-obsDataM[0]._month;
 
     for (unsigned int i = indexIni; i <= unsigned(indexFin); i++)
     {

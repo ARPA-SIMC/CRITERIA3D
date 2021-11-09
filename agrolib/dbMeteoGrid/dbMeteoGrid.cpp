@@ -2103,6 +2103,8 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVar(QString *myError,
     QSqlQuery qry(_db);
     QString tableH = _tableHourly.prefix + meteoPoint + _tableHourly.postFix;
     QDateTime dateTime, previousDateTime;
+    dateTime.setTimeSpec(Qt::UTC);
+    previousDateTime.setTimeSpec((Qt::UTC));
 
     std::vector<float> hourlyVarList;
 

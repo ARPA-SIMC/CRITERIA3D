@@ -28,6 +28,9 @@
     #ifndef IMPORTPROPERTIESCSV_H
         #include "importPropertiesCSV.h"
     #endif
+    #ifndef PROXYWIDGET_H
+        #include "proxyWidget.h"
+    #endif
 
     #ifndef QSETTINGS_H
         #include <QSettings>
@@ -121,6 +124,8 @@
 
         QList<Crit3DMeteoWidget*> meteoWidgetPointList;
         QList<Crit3DMeteoWidget*> meteoWidgetGridList;
+
+        Crit3DProxyWidget* proxyWidget;
 
         Project();
 
@@ -229,10 +234,7 @@
     private slots:
         void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid(int id);
-
-    signals:
-        void changeFrequency(frequencyType);
-        void changeDateTime(QDateTime);
+        void deleteProxyWidget();
 
     };
 
