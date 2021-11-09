@@ -70,7 +70,7 @@ DialogMeteoTable::DialogMeteoTable(Crit3DMeteoSettings *meteoSettings_, QVector<
     }
 
     QDate myDate;
-    QDateTime firstDateTime(firstDate, QTime(0,0,0));
+    QDateTime firstDateTime(firstDate, QTime(0,0,0), Qt::UTC);
     QDateTime myDateTime;
 
     for (int row=0; row < rowNumber; row++)

@@ -1153,6 +1153,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
         }
 
         // don't use QDateTime because it has a bug at the end of March (vs2015 version)
+        // fixed (GA 11/2021)
         char timeStr[10];
         sprintf (timeStr, " %02d:00:00", hour);
         dateTimeStr = currentDate.toString("yyyy-MM-dd") + timeStr;
