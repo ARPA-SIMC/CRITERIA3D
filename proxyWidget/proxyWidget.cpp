@@ -139,9 +139,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     editMenu->addAction(exportGraph);
     */
 
-    chart = new QChart();
-    chartView = new QChartView(chart);
-    chartView->setChart(chart);
+    chartView = new ChartView();
     plotLayout->addWidget(chartView);
 
     horizontalGroupBox->setMaximumSize(1240, 130);
@@ -164,6 +162,7 @@ void Crit3DProxyWidget::updateDateTime(QDateTime newDateTime)
     currentDateTime = newDateTime;
     qDebug() << "updateDateTime";
     // TO DO replot
+    plot();
 }
 
 void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
@@ -191,6 +190,7 @@ void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
         variable.adjustSize();
     }
     // TO DO replot
+    plot();
 }
 
 void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
@@ -200,5 +200,28 @@ void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
 
 }
 
+void Crit3DProxyWidget::plot()
+{
+    //test random
+    QList<QPointF> point_vector;
+    QList<QPointF> point_vector2;
+    qsrand(QDateTime::currentMSecsSinceEpoch());
+
+    const int max_points = 20;
+
+    while(point_vector.size() < max_points)
+    {
+        QPointF point(qrand() % 27, qrand() % 4);
+        if(!point_vector.contains(point))
+        {
+            point_vector.append(point);
+            point_vector2.append(point+point);
+        }
+    }
+
+    qDebug() << point_vector;
+    chartView->appendPointSeries1(point_vector);
+    chartView->appendPointSeries2(point_vector2);
+}
 
 
