@@ -10,7 +10,6 @@
 #include "utilities.h"
 #include "aggregation.h"
 #include "meteoWidget.h"
-#include "proxyWidget.h"
 #include "formInfo.h"
 
 #include <iostream>
@@ -88,6 +87,7 @@ void Project::initializeProject()
     loadGridDataAtStart = false;
 
     proxyGridSeries.clear();
+    proxyWidget = nullptr;
 }
 
 void Project::clearProject()
@@ -752,13 +752,19 @@ void Project::setCurrentDate(QDate myDate)
         this->previousDate = this->currentDate;
         this->currentDate = myDate;
     }
-    emit changeDateTime(getCurrentTime());
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateDateTime(getCurrentTime());
+    }
 }
 
 QDate Project::getCurrentDate()
 {
     return this->currentDate;
-    emit changeDateTime(getCurrentTime());
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateDateTime(getCurrentTime());
+    }
 }
 
 void Project::setCurrentHour(int myHour)
@@ -2046,7 +2052,10 @@ frequencyType Project::getCurrentFrequency() const
 void Project::setCurrentFrequency(const frequencyType &value)
 {
     currentFrequency = value;
-    emit changeFrequency(currentFrequency);
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateFrequency(currentFrequency);
+    }
 }
 
 void Project::saveProjectSettings()
@@ -2596,6 +2605,10 @@ void Project::deleteMeteoWidgetGrid(int id)
     }
 }
 
+void Project::deleteProxyWidget()
+{
+    proxyWidget = nullptr;
+}
 
 bool Project::parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString>* csvFields)
 {
@@ -2657,7 +2670,9 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 void Project::showProxyGraph()
 {
     QDateTime currentDateTime = getCurrentTime();
-    Crit3DProxyWidget* proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDateTime);
+    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDateTime);
+    QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
+    return;
 }
 
 

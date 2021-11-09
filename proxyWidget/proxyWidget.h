@@ -1,4 +1,4 @@
-#ifndef PROXYWIDGET_H
+﻿#ifndef PROXYWIDGET_H
 #define PROXYWIDGET_H
 
     #include <QtWidgets>
@@ -13,6 +13,9 @@
         public:
             Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDateTime currentDateTime);
             ~Crit3DProxyWidget();
+            void closeEvent(QCloseEvent *event);
+            void updateDateTime(QDateTime newDateTime);
+            void updateFrequency(frequencyType newFrequency);
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
@@ -33,6 +36,7 @@
             QChart *chart;
             
     signals:
+        void closeProxyWidget();
     };
 
 
