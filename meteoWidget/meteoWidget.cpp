@@ -1215,6 +1215,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
             {
                 myDateTime.setDate(myDate);
                 myDateTime.setTime(QTime(h, 0, 0));
+                myDateTime.setTimeSpec(Qt::UTC);
                 categoriesVirtual.append(myDateTime.toString("MMM dd <br> yyyy <br> hh:mm"));
                 nextIndex += step;
             }
@@ -1641,7 +1642,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
                 }
                 if (currentFreq == hourly)
                 {
-                    QDateTime xDate(firstDate->date(),QTime(0,0,0));
+                    QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
                     xDate = xDate.addSecs(3600*doy);
                     m_tooltip->setText(QString("%1 \n%2 nan ").arg(series->name()).arg(xDate.toString("MMM dd yyyy hh:mm")));
                 }
@@ -1776,7 +1777,7 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
         }
         if (currentFreq == hourly)
         {
-            QDateTime xDate(firstDate->date(),QTime(0,0,0));
+            QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
             xDate = xDate.addSecs(3600*doy);
             for(int i = 0; i < series->count(); i++)
             {
@@ -1843,7 +1844,7 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
         if (currentFreq == hourly)
         {
 
-            QDateTime xDate(firstDate->date(),QTime(0,0,0));
+            QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
             xDate = xDate.addSecs(3600*index);
             valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy hh:mm")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
         }

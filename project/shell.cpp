@@ -121,7 +121,10 @@ void openNewConsole()
 QString getTimeStamp(QList<QString> argumentList)
 {
     QString myString = ">> ";
-    myString += QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+
+    QDate myDate = QDateTime::currentDateTime().date();
+    QTime myTime = QDateTime::currentDateTime().time();
+    myString += QDateTime(myDate, myTime, Qt::UTC).toString("yyyy-MM-dd hh:mm:ss");
     myString += " >>";
 
     for (int i = 0; i < argumentList.size(); i++)

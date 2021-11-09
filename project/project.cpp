@@ -784,7 +784,7 @@ Crit3DTime Project::getCrit3DCurrentTime()
 
 QDateTime Project::getCurrentTime()
 {
-    return QDateTime(this->currentDate, QTime(this->currentHour, 0, 0));
+    return QDateTime(this->currentDate, QTime(this->currentHour, 0, 0), Qt::UTC);
 }
 
 void Project::getMeteoPointsRange(float *minimum, float *maximum)
@@ -2694,7 +2694,10 @@ bool Project::setLogFile(QString myFileName)
          QDir().mkdir(filePath);
     }
 
-    QString myDate = QDateTime().currentDateTime().toString("yyyyMMdd_HHmm");
+    QDate myQDate = QDateTime().currentDateTime().date();
+    QTime myQTime = QDateTime().currentDateTime().time();
+    QString myDate = QDateTime(myQDate, myQTime, Qt::UTC).currentDateTime().toString("yyyyMMdd_HHmm");
+
     fileName = myDate + "_" + fileName;
 
     QString currentFileName = filePath + fileName;
