@@ -3,6 +3,7 @@
 
     #include <QtWidgets>
     #include <QtCharts>
+    #include "chartView.h"
     #include "meteoPoint.h"
     #include "interpolationSettings.h"
 
@@ -16,6 +17,7 @@
             void closeEvent(QCloseEvent *event);
             void updateDateTime(QDateTime newDateTime);
             void updateFrequency(frequencyType newFrequency);
+            void plot();
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
@@ -32,9 +34,8 @@
             QTextEdit r2;
             QTextEdit lapseRate;
             QTextEdit r2ThermalLevels;
-            QChartView *chartView;
-            QChart *chart;
-            
+            ChartView *chartView;
+
     signals:
         void closeProxyWidget();
     };
