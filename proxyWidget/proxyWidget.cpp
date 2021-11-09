@@ -74,6 +74,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     {
         axisX.addItem(QString::fromStdString(proxy[i].getName()));
     }
+    axisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
 
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
@@ -90,6 +91,8 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
             variable.addItem(QString::fromStdString(it->second));
         }
     }
+    variable.setMinimumWidth(130);
+    variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     
     selectionChartLayout->addWidget(variableLabel);
     selectionChartLayout->addWidget(&variable);
@@ -165,8 +168,28 @@ void Crit3DProxyWidget::updateDateTime(QDateTime newDateTime)
 
 void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
 {
-    currentFrequency = newFrequency;
-    qDebug() << "updateFrequency";
+    if (newFrequency != currentFrequency)
+    {
+        currentFrequency = newFrequency;
+        variable.clear();
+        qDebug() << "updateFrequency";
+        std::map<meteoVariable, std::string>::const_iterator it;
+        if (currentFrequency == daily)
+        {
+            for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
+            {
+                variable.addItem(QString::fromStdString(it->second));
+            }
+        }
+        else if (currentFrequency == hourly)
+        {
+            for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
+            {
+                variable.addItem(QString::fromStdString(it->second));
+            }
+        }
+        variable.adjustSize();
+    }
     // TO DO replot
 }
 
