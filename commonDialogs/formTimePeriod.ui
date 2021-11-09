@@ -40,12 +40,29 @@
    </property>
    <property name="dateTime">
     <datetime>
-     <hour>1</hour>
+     <hour>23</hour>
      <minute>0</minute>
      <second>0</second>
-     <year>2014</year>
-     <month>1</month>
-     <day>1</day>
+     <year>2013</year>
+     <month>12</month>
+     <day>31</day>
+    </datetime>
+   </property>
+   <property name="time">
+    <time>
+     <hour>23</hour>
+     <minute>0</minute>
+     <second>0</second>
+    </time>
+   </property>
+   <property name="minimumDateTime">
+    <datetime>
+     <hour>23</hour>
+     <minute>0</minute>
+     <second>0</second>
+     <year>1900</year>
+     <month>12</month>
+     <day>31</day>
     </datetime>
    </property>
    <property name="displayFormat">
@@ -53,6 +70,9 @@
    </property>
    <property name="calendarPopup">
     <bool>true</bool>
+   </property>
+   <property name="timeSpec">
+    <enum>Qt::UTC</enum>
    </property>
   </widget>
   <widget class="QDateTimeEdit" name="dateTimeEditLast">
@@ -66,19 +86,19 @@
    </property>
    <property name="dateTime">
     <datetime>
-     <hour>0</hour>
+     <hour>23</hour>
      <minute>0</minute>
      <second>0</second>
      <year>2014</year>
      <month>1</month>
-     <day>2</day>
+     <day>1</day>
     </datetime>
    </property>
    <property name="date">
     <date>
      <year>2014</year>
      <month>1</month>
-     <day>2</day>
+     <day>1</day>
     </date>
    </property>
    <property name="displayFormat">
@@ -86,6 +106,9 @@
    </property>
    <property name="calendarPopup">
     <bool>true</bool>
+   </property>
+   <property name="timeSpec">
+    <enum>Qt::UTC</enum>
    </property>
   </widget>
   <widget class="QLabel" name="label">
