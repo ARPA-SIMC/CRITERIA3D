@@ -75,11 +75,13 @@ MainWindow::MainWindow(QWidget *parent) :
     this->rasterDEM = new RasterObject(this->mapView);
     this->rasterDEM->setOpacity(this->ui->opacitySliderRasterInput->value() / 100.0);
     this->rasterDEM->setColorLegend(this->inputRasterColorLegend);
+    this->rasterDEM->setVisible(false);
     this->mapView->scene()->addObject(this->rasterDEM);
 
     this->rasterOutput = new RasterObject(this->mapView);
     this->rasterOutput->setOpacity(this->ui->opacitySliderRasterOutput->value() / 100.0);
     this->rasterOutput->setColorLegend(this->outputRasterColorLegend);
+    this->rasterOutput->setVisible(false);
     this->mapView->scene()->addObject(this->rasterOutput);
 
     this->updateCurrentVariable();
@@ -125,6 +127,7 @@ void MainWindow::updateMaps()
 {
     rasterDEM->updateCenter();
     rasterOutput->updateCenter();
+    outputRasterColorLegend->update();
 
     *startCenter = rasterDEM->getCurrentCenter();
 }
@@ -151,8 +154,25 @@ void MainWindow::mouseMove(const QPoint& eventPos)
         return;
     }*/
 
-    Position geoPoint = this->mapView->mapToScene(eventPos);
-    this->ui->statusBar->showMessage(QString::number(geoPoint.latitude()) + " " + QString::number(geoPoint.longitude()));
+    Position pos = this->mapView->mapToScene(eventPos);
+
+    QString infoStr = "Lat:"+QString::number(pos.latitude())
+                      + "  Lon:" + QString::number(pos.longitude());
+
+    float value = NODATA;
+    if (rasterOutput->visible())
+    {
+        value = rasterOutput->getValue(pos);
+    }
+    else if (rasterDEM->visible())
+    {
+        value = rasterDEM->getValue(pos);
+    }
+    if (! isEqual(value, NODATA))
+        infoStr += "  Value:" + QString::number(double(value));
+
+    this->ui->statusBar->showMessage(infoStr);
+
 }
 
 
@@ -332,7 +352,7 @@ void MainWindow::drawProject()
 }
 
 
-void MainWindow::clearDEM_GUI()
+void MainWindow::clearMaps_GUI()
 {
     rasterDEM->clear();
     rasterOutput->clear();
@@ -413,7 +433,7 @@ void MainWindow::on_actionOpenProject_triggered()
     if (myProject.isProjectLoaded)
     {
         clearMeteoPoints_GUI();
-        clearDEM_GUI();
+        clearMaps_GUI();
     }
 
     if (! myProject.loadCriteria3DProject(fileName))
@@ -431,7 +451,7 @@ void MainWindow::on_actionCloseProject_triggered()
     if (! myProject.isProjectLoaded) return;
 
     clearMeteoPoints_GUI();
-    clearDEM_GUI();
+    clearMaps_GUI();
 
     myProject.loadCriteria3DProject(myProject.getApplicationPath() + "default.ini");
 

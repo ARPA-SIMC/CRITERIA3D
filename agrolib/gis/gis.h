@@ -189,6 +189,7 @@
         void getLatLonFromRowCol(const Crit3DGridHeader &latLonHeader, int myRow, int myCol, double* lat, double* lon);
         void getLatLonFromRowCol(const Crit3DGridHeader &latLonHeader, const Crit3DRasterCell& v, Crit3DGeoPoint* p);
         float getValueFromXY(const Crit3DRasterGrid& myGrid, double x, double y);
+        float getValueFromUTMPoint(const Crit3DRasterGrid& myGrid, Crit3DUtmPoint& utmPoint);
 
         bool isOutOfGridXY(double x, double y, Crit3DRasterHeader* header);
         bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DGridHeader& header);
