@@ -30,8 +30,8 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &secondaryList, frequencyType currentFrequency, QDateTime currentDateTime)
-:interpolationSettings(interpolationSettings), primaryList(primaryList), secondaryList(secondaryList), currentFrequency(currentFrequency), currentDateTime(currentDateTime)
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &secondaryList, QList<Crit3DMeteoPoint> &supplementalList, frequencyType currentFrequency, QDateTime currentDateTime)
+:interpolationSettings(interpolationSettings), primaryList(primaryList), secondaryList(secondaryList), supplementalList(supplementalList), currentFrequency(currentFrequency), currentDateTime(currentDateTime)
 {
     
     this->setWindowTitle("Statistics");
@@ -50,7 +50,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QVBoxLayout *plotLayout = new QVBoxLayout;
 
     detrended.setText("Detrended data");
-    climatologyLR.setText("Climatology lapse rate");
+    climatologicalLR.setText("Climatological lapse rate");
     modelLP.setText("Model lapse rate");
     zeroIntercept.setText("Zero intercept");
     
@@ -103,7 +103,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     selectionChartLayout->addWidget(&axisX);
     
     selectionOptionBoxLayout->addWidget(&detrended);
-    selectionOptionBoxLayout->addWidget(&climatologyLR);
+    selectionOptionBoxLayout->addWidget(&climatologicalLR);
     selectionOptionBoxLayout->addWidget(&modelLP);
     selectionOptionBoxLayout->addWidget(&zeroIntercept);
 
@@ -126,7 +126,10 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     
     connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
+    connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
 
+    // compute highest station index
+    computeHighestStationIndex();
     // menu
     QMenuBar* menuBar = new QMenuBar();
     QMenu *editMenu = new QMenu("Edit");
@@ -237,6 +240,7 @@ void Crit3DProxyWidget::plot()
 {
     QList<QPointF> point_vector;
     QList<QPointF> point_vector2;
+    QList<QPointF> point_vector3;
     QPointF point;
 
     for (int i = 0; i<primaryList.size(); i++)
@@ -278,8 +282,101 @@ void Crit3DProxyWidget::plot()
         }
 
     }
-    chartView->appendPointSeriesPrimary(point_vector);
-    chartView->appendPointSeriesSecondary(point_vector2);
+    for (int i = 0; i<supplementalList.size(); i++)
+    {
+        float proxyVal = supplementalList[i].getProxyValue(proxyPos);
+        float varVal;
+        if (currentFrequency == daily)
+        {
+            varVal = supplementalList[i].getMeteoPointValueD(getCrit3DDate(currentDateTime.date()), myVar);
+        }
+        else if (currentFrequency == hourly)
+        {
+            varVal = supplementalList[i].getMeteoPointValueH(getCrit3DDate(currentDateTime.date()), currentDateTime.time().hour(), currentDateTime.time().minute(), myVar);
+        }
+        if (proxyVal != NODATA && varVal != NODATA)
+        {
+            point.setX(proxyVal);
+            point.setY(varVal);
+            point_vector3.append(point);
+        }
+
+    }
+    chartView->drawPointSeriesPrimary(point_vector);
+    chartView->drawPointSeriesSecondary(point_vector2);
+    chartView->drawPointSeriesSupplemental(point_vector3);
 }
 
+void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
+{
+    chartView->cleanClimLapseRate();
+    if (toggled)
+    {
+        chartView->drawClimLapseRate();
+    }
+}
+
+void Crit3DProxyWidget::computeHighestStationIndex()
+{
+    double zMaxPrimary = 0;
+    double zMaxSecondary = 0;
+    double zMaxSupplemental = 0;
+    double highestStationIndexPrimary = 0;
+    double highestStationIndexSecodary = 0;
+    double highestStationIndexSupplemental = 0;
+
+    for (int i = 0; i<primaryList.size(); i++)
+    {
+        if (primaryList[i].point.z > zMaxPrimary)
+        {
+            highestStationIndexPrimary = i;
+            zMaxPrimary = primaryList[i].point.z;
+        }
+    }
+
+    for (int i = 0; i<secondaryList.size(); i++)
+    {
+        if (secondaryList[i].point.z > zMaxSecondary)
+        {
+            highestStationIndexSecodary = i;
+            zMaxSecondary = secondaryList[i].point.z;
+        }
+    }
+
+    for (int i = 0; i<supplementalList.size(); i++)
+    {
+        if (supplementalList[i].point.z > zMaxSupplemental)
+        {
+            highestStationIndexSupplemental = i;
+            zMaxSupplemental = supplementalList[i].point.z;
+        }
+    }
+
+    if (std::max(zMaxPrimary, zMaxSecondary) == zMaxPrimary)
+    {
+        if (std::max(zMaxPrimary, zMaxSupplemental) == zMaxPrimary)
+        {
+            listHighestStation = 0;
+            zMax = zMaxPrimary;
+        }
+        else
+        {
+            listHighestStation = 2;
+            zMax = zMaxSupplemental;
+        }
+    }
+    else
+    {
+        if (std::max(zMaxSecondary, zMaxSupplemental) == zMaxSecondary)
+        {
+            listHighestStation = 1;
+            zMax = zMaxSecondary;
+        }
+        else
+        {
+            listHighestStation = 2;
+            zMax = zMaxSupplemental;
+        }
+    }
+}
 
