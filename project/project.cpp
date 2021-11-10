@@ -2672,6 +2672,7 @@ void Project::showProxyGraph()
     QDateTime currentDateTime = getCurrentTime();
     QList<Crit3DMeteoPoint> primaryList;
     QList<Crit3DMeteoPoint> secondaryList;
+    QList<Crit3DMeteoPoint> supplementalList;
     for (int i=0; i<nrMeteoPoints; i++)
     {
         if (meteoPoints[i].active)
@@ -2684,9 +2685,13 @@ void Project::showProxyGraph()
             {
                 secondaryList.append(meteoPoints[i]);
             }
+            else if (meteoPoints[i].lapseRateCode == supplemental)
+            {
+                supplementalList.append(meteoPoints[i]);
+            }
         }
     }
-    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, primaryList, secondaryList, currentFrequency, currentDateTime);
+    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, primaryList, secondaryList, supplementalList, currentFrequency, currentDateTime);
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
     return;
 }
