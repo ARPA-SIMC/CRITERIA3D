@@ -30,7 +30,7 @@ ChartView::ChartView(QWidget *parent) :
     chart()->legend()->setMarkerShape(QLegend::MarkerShapeFromSeries);
 }
 
-void ChartView::appendPointSeries1(QList<QPointF> pointList)
+void ChartView::appendPointSeriesPrimary(QList<QPointF> pointList)
 {
     chart()->removeSeries(series1);
     series1->clear();
@@ -42,7 +42,7 @@ void ChartView::appendPointSeries1(QList<QPointF> pointList)
     chart()->createDefaultAxes();
 }
 
-void ChartView::appendPointSeries2(QList<QPointF> pointList)
+void ChartView::appendPointSeriesSecondary(QList<QPointF> pointList)
 {
     chart()->removeSeries(series2);
     series2->clear();

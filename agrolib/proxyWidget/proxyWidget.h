@@ -12,17 +12,19 @@
         Q_OBJECT
 
         public:
-            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDateTime currentDateTime);
+            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &secondaryList, frequencyType currentFrequency, QDateTime currentDateTime);
             ~Crit3DProxyWidget();
             void closeEvent(QCloseEvent *event);
             void updateDateTime(QDateTime newDateTime);
             void updateFrequency(frequencyType newFrequency);
+            void changeProxyPos(const QString proxyName);
+            void changeVar(const QString varName);
             void plot();
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
-            Crit3DMeteoPoint* meteoPoints;
-            int nrMeteoPoints;
+            QList<Crit3DMeteoPoint> primaryList;
+            QList<Crit3DMeteoPoint> secondaryList;
             frequencyType currentFrequency;
             QDateTime currentDateTime;
             QComboBox variable;
@@ -35,6 +37,8 @@
             QTextEdit lapseRate;
             QTextEdit r2ThermalLevels;
             ChartView *chartView;
+            meteoVariable myVar;
+            int proxyPos;
 
     signals:
         void closeProxyWidget();
