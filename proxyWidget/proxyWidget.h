@@ -12,7 +12,7 @@
         Q_OBJECT
 
         public:
-            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDateTime currentDateTime);
+            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &secondaryList, frequencyType currentFrequency, QDateTime currentDateTime);
             ~Crit3DProxyWidget();
             void closeEvent(QCloseEvent *event);
             void updateDateTime(QDateTime newDateTime);
@@ -21,8 +21,8 @@
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
-            Crit3DMeteoPoint* meteoPoints;
-            int nrMeteoPoints;
+            QList<Crit3DMeteoPoint> primaryList;
+            QList<Crit3DMeteoPoint> secondaryList;
             frequencyType currentFrequency;
             QDateTime currentDateTime;
             QComboBox variable;

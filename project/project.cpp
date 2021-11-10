@@ -2670,7 +2670,23 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 void Project::showProxyGraph()
 {
     QDateTime currentDateTime = getCurrentTime();
-    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDateTime);
+    QList<Crit3DMeteoPoint> primaryList;
+    QList<Crit3DMeteoPoint> secondaryList;
+    for (int i=0; i<nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].active)
+        {
+            if (meteoPoints[i].lapseRateCode == primary)
+            {
+                primaryList.append(meteoPoints[i]);
+            }
+            else if (meteoPoints[i].lapseRateCode == secondary)
+            {
+                secondaryList.append(meteoPoints[i]);
+            }
+        }
+    }
+    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, primaryList, secondaryList, currentFrequency, currentDateTime);
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
     return;
 }
