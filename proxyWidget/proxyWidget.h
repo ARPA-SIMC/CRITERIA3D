@@ -17,6 +17,8 @@
             void closeEvent(QCloseEvent *event);
             void updateDateTime(QDateTime newDateTime);
             void updateFrequency(frequencyType newFrequency);
+            void changeProxyPos(const QString proxyName);
+            void changeVar(const QString varName);
             void plot();
 
     private:
@@ -35,6 +37,8 @@
             QTextEdit lapseRate;
             QTextEdit r2ThermalLevels;
             ChartView *chartView;
+            meteoVariable myVar;
+            int proxyPos;
 
     signals:
         void closeProxyWidget();

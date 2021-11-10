@@ -11,8 +11,8 @@ class ChartView : public QChartView
     Q_OBJECT
 public:
     explicit ChartView(QWidget *parent = 0);
-    void appendPointSeries1(QList<QPointF> pointList);
-    void appendPointSeries2(QList<QPointF> pointList);
+    void appendPointSeriesPrimary(QList<QPointF> pointList);
+    void appendPointSeriesSecondary(QList<QPointF> pointList);
 private:
     QScatterSeries *series1;
     QScatterSeries *series2;

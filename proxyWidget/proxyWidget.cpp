@@ -74,6 +74,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     {
         axisX.addItem(QString::fromStdString(proxy[i].getName()));
     }
+    proxyPos = 0;
     axisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
 
     std::map<meteoVariable, std::string>::const_iterator it;
@@ -83,6 +84,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
         {
             variable.addItem(QString::fromStdString(it->second));
         }
+        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
     }
     else if (currentFrequency == hourly)
     {
@@ -90,6 +92,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
         {
             variable.addItem(QString::fromStdString(it->second));
         }
+        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
     }
     variable.setMinimumWidth(130);
     variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
@@ -121,6 +124,8 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     selectionLayout->addSpacing(50);
     selectionLayout->addLayout(selectionOptionLayout);
     
+    connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
+    connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
 
     // menu
     QMenuBar* menuBar = new QMenuBar();
@@ -157,11 +162,37 @@ Crit3DProxyWidget::~Crit3DProxyWidget()
 
 }
 
+void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
+{
+    for (int pos=0; pos < interpolationSettings->getProxyNr(); pos++)
+    {
+        QString myProxy = QString::fromStdString(interpolationSettings->getProxy(pos)->getName());
+        if (myProxy == proxyName)
+        {
+            proxyPos = pos;
+            break;
+        }
+    }
+    plot();
+}
+
+void Crit3DProxyWidget::changeVar(const QString varName)
+{
+    if (currentFrequency == daily)
+    {
+        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
+    }
+    else if (currentFrequency == hourly)
+    {
+        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
+    }
+    plot();
+}
+
 void Crit3DProxyWidget::updateDateTime(QDateTime newDateTime)
 {
     currentDateTime = newDateTime;
     qDebug() << "updateDateTime";
-    // TO DO replot
     plot();
 }
 
@@ -179,6 +210,7 @@ void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
             {
                 variable.addItem(QString::fromStdString(it->second));
             }
+            myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
         }
         else if (currentFrequency == hourly)
         {
@@ -186,10 +218,11 @@ void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
             {
                 variable.addItem(QString::fromStdString(it->second));
             }
+            myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
         }
         variable.adjustSize();
     }
-    // TO DO replot
+
     plot();
 }
 
@@ -202,26 +235,51 @@ void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
 
 void Crit3DProxyWidget::plot()
 {
-    //test random
     QList<QPointF> point_vector;
     QList<QPointF> point_vector2;
-    qsrand(QDateTime::currentMSecsSinceEpoch());
+    QPointF point;
 
-    const int max_points = 20;
-
-    while(point_vector.size() < max_points)
+    for (int i = 0; i<primaryList.size(); i++)
     {
-        QPointF point(qrand() % 27, qrand() % 4);
-        if(!point_vector.contains(point))
+        float proxyVal = primaryList[i].getProxyValue(proxyPos);
+        float varVal;
+        if (currentFrequency == daily)
         {
+            varVal = primaryList[i].getMeteoPointValueD(getCrit3DDate(currentDateTime.date()), myVar);
+        }
+        else if (currentFrequency == hourly)
+        {
+            varVal = primaryList[i].getMeteoPointValueH(getCrit3DDate(currentDateTime.date()), currentDateTime.time().hour(), currentDateTime.time().minute(), myVar);
+        }
+        if (proxyVal != NODATA && varVal != NODATA)
+        {
+            point.setX(proxyVal);
+            point.setY(varVal);
             point_vector.append(point);
-            point_vector2.append(point+point);
         }
     }
+    for (int i = 0; i<secondaryList.size(); i++)
+    {
+        float proxyVal = secondaryList[i].getProxyValue(proxyPos);
+        float varVal;
+        if (currentFrequency == daily)
+        {
+            varVal = secondaryList[i].getMeteoPointValueD(getCrit3DDate(currentDateTime.date()), myVar);
+        }
+        else if (currentFrequency == hourly)
+        {
+            varVal = secondaryList[i].getMeteoPointValueH(getCrit3DDate(currentDateTime.date()), currentDateTime.time().hour(), currentDateTime.time().minute(), myVar);
+        }
+        if (proxyVal != NODATA && varVal != NODATA)
+        {
+            point.setX(proxyVal);
+            point.setY(varVal);
+            point_vector2.append(point);
+        }
 
-    qDebug() << point_vector;
-    chartView->appendPointSeries1(point_vector);
-    chartView->appendPointSeries2(point_vector2);
+    }
+    chartView->appendPointSeriesPrimary(point_vector);
+    chartView->appendPointSeriesSecondary(point_vector2);
 }
 
 
