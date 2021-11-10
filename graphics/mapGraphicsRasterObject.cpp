@@ -352,6 +352,32 @@ int RasterObject::getCurrentStep(const gis::Crit3DRasterWindow& window)
 }
 
 
+float RasterObject::getValue(Position& myPos)
+{
+    gis::Crit3DGeoPoint geoPoint;
+    geoPoint.latitude = myPos.latitude();
+    geoPoint.longitude = myPos.longitude();
+    return getValue(geoPoint);
+}
+
+
+float RasterObject::getValue(gis::Crit3DGeoPoint& geoPoint)
+{
+    if (rasterPointer == nullptr) return NODATA;
+    if (! rasterPointer->isLoaded) return NODATA;
+
+    gis::Crit3DUtmPoint utmPoint;
+    gis::getUtmFromLatLon(utmZone, geoPoint, &utmPoint);
+
+    float value = gis::getValueFromUTMPoint(*rasterPointer, utmPoint);
+
+    if (isEqual(value, rasterPointer->header->flag))
+        return NODATA;
+    else
+        return value;
+}
+
+
 bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter)
 {
     if (myRaster == nullptr) return false;

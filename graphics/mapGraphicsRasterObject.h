@@ -87,6 +87,8 @@
 
         gis::Crit3DGridHeader getLatLonHeader() const;
         bool getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col);
+        float getValue(gis::Crit3DGeoPoint& geoPoint);
+        float getValue(Position& myPos);
 
     protected:
         //virtual from MapGraphicsObject
