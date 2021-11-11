@@ -12,10 +12,10 @@
         Q_OBJECT
 
         public:
-            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &supplementalList, QList<Crit3DMeteoPoint> &secondaryList, frequencyType currentFrequency, QDateTime currentDateTime);
+            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &supplementalList, QList<Crit3DMeteoPoint> &secondaryList, frequencyType currentFrequency, QDate currentDate, int currentHour);
             ~Crit3DProxyWidget();
             void closeEvent(QCloseEvent *event);
-            void updateDateTime(QDateTime newDateTime);
+            void updateDateTime(QDate newDate, int newHour);
             void updateFrequency(frequencyType newFrequency);
             void changeProxyPos(const QString proxyName);
             void changeVar(const QString varName);
@@ -30,7 +30,8 @@
             QList<Crit3DMeteoPoint> secondaryList;
             QList<Crit3DMeteoPoint> supplementalList;
             frequencyType currentFrequency;
-            QDateTime currentDateTime;
+            QDate currentDate;
+            int currentHour;
             QComboBox variable;
             QComboBox axisX;
             QCheckBox detrended;

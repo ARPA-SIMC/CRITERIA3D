@@ -754,7 +754,7 @@ void Project::setCurrentDate(QDate myDate)
     }
     if (proxyWidget != nullptr)
     {
-        proxyWidget->updateDateTime(getCurrentTime());
+        proxyWidget->updateDateTime(currentDate, currentHour);
     }
 }
 
@@ -768,7 +768,7 @@ void Project::setCurrentHour(int myHour)
     this->currentHour = myHour;
     if (proxyWidget != nullptr)
     {
-        proxyWidget->updateDateTime(getCurrentTime());
+        proxyWidget->updateDateTime(currentDate, currentHour);
     }
 }
 
@@ -1148,6 +1148,7 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
                 }
             }
         }
+        qDebug() << "Project::loadMeteoPointsData";
         proxyWidget->updatePointList(primaryList, secondaryList, supplementalList);
     }
 
@@ -2694,7 +2695,6 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 
 void Project::showProxyGraph()
 {
-    QDateTime currentDateTime = getCurrentTime();
     QList<Crit3DMeteoPoint> primaryList;
     QList<Crit3DMeteoPoint> secondaryList;
     QList<Crit3DMeteoPoint> supplementalList;
@@ -2717,7 +2717,7 @@ void Project::showProxyGraph()
             }
         }
     }
-    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, primaryList, secondaryList, supplementalList, currentFrequency, currentDateTime);
+    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, primaryList, secondaryList, supplementalList, currentFrequency, currentDate, currentHour);
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
     return;
 }
