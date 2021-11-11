@@ -3459,8 +3459,9 @@
     <addaction name="actionInterpolationSettings"/>
     <addaction name="separator"/>
     <addaction name="actionProxy_analysis"/>
-    <addaction name="actionCompute_AllMeteoMaps"/>
     <addaction name="separator"/>
+    <addaction name="actionCompute_hour_meteoVariables"/>
+    <addaction name="actionComputePeriod_meteoVariables"/>
    </widget>
    <widget class="QMenu" name="menuGIS_settings">
     <property name="title">
@@ -3747,9 +3748,9 @@
     <string>Compute current hour</string>
    </property>
   </action>
-  <action name="actionCompute_AllMeteoMaps">
+  <action name="actionCompute_hour_meteoVariables">
    <property name="text">
-    <string>Interpolate all meteo variables</string>
+    <string>Compute current hour (all meteo variables)</string>
    </property>
   </action>
   <action name="actionView_Global_irradiance">
@@ -3959,6 +3960,11 @@
   <action name="actionProxy_analysis">
    <property name="text">
     <string>Proxy analysis...</string>
+   </property>
+  </action>
+  <action name="actionComputePeriod_meteoVariables">
+   <property name="text">
+    <string>Compute period...</string>
    </property>
   </action>
  </widget>

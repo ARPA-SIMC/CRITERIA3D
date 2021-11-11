@@ -57,6 +57,7 @@
         ~Crit3DHourlyMeteoMaps();
 
         void clear();
+        void initialize();
 
         gis::Crit3DRasterGrid* getMapFromVar(meteoVariable myVar);
         bool computeET0PMMap(const gis::Crit3DRasterGrid &DEM, Crit3DRadiationMaps *radMaps);

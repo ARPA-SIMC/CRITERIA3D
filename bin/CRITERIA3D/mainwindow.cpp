@@ -24,6 +24,10 @@ extern Crit3DProject myProject;
 #define MAPBORDER 10
 #define TOOLSWIDTH 270
 
+#define MISSING_DB_ERROR_STR "Load a meteo points DB before."
+#define MISSING_DEM_ERROR_STR "Load a Digital Elevation Model (DEM) before."
+#define MISSING_PROJECT_ERROR_STR "Open a project before."
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -738,11 +742,11 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
 
 void MainWindow::on_actionInterpolationSettings_triggered()
 {
-    if (myProject.meteoPointsDbHandler == nullptr)
+    /*if (myProject.meteoPointsDbHandler == nullptr)
     {
-        myProject.logInfoGUI("Open a Meteo Points DB before.");
+        myProject.logError(MISSING_DB_ERROR_STR);
         return;
-    }
+    }*/
 
     DialogInterpolation* myInterpolationDialog = new DialogInterpolation(&myProject);
     myInterpolationDialog->close();
@@ -770,21 +774,16 @@ void MainWindow::on_actionProjectSettings_triggered()
 
 void MainWindow::on_actionProxy_analysis_triggered()
 {
-    if (myProject.proxyWidget != nullptr)
-    {
-        QMessageBox::critical(nullptr, "Proxy analysis", "Proxy widget already open");
-        return;
-    }
     if (myProject.meteoPointsDbHandler == nullptr)
     {
-        QMessageBox::critical(nullptr, "Proxy analysis", "No meteo points DB open");
+        myProject.logError(MISSING_DB_ERROR_STR);
         return;
     }
 
     std::vector<Crit3DProxy> proxy = myProject.interpolationSettings.getCurrentProxy();
     if (proxy.size() == 0)
     {
-        QMessageBox::critical(nullptr, "Proxy analysis", "No proxy loaded");
+        myProject.logError("No proxy loaded");
         return;
     }
 
@@ -819,7 +818,7 @@ void MainWindow::on_actionView_3D_triggered()
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logInfoGUI("Load a Digital Elevation Model before.");
+        myProject.logError(MISSING_DEM_ERROR_STR);
         return;
     }
 
@@ -874,7 +873,7 @@ void MainWindow::on_actionView_Boundary_triggered()
     }
     else
     {
-        myProject.logInfoGUI("Initialize 3D Model before.");
+        myProject.logError("Initialize 3D Model before.");
         return;
     }
 }
@@ -900,7 +899,7 @@ void MainWindow::on_actionView_Slope_triggered()
     }
     else
     {
-        myProject.logInfoGUI("Load a Digital Elevation Model before.");
+        myProject.logError(MISSING_DEM_ERROR_STR);
         return;
     }
 }
@@ -916,7 +915,7 @@ void MainWindow::on_actionView_Aspect_triggered()
     }
     else
     {
-        myProject.logInfoGUI("Load a Digital Elevation Model before.");
+        myProject.logError(MISSING_DEM_ERROR_STR);
         return;
     }
 }
@@ -926,13 +925,13 @@ bool MainWindow::checkMapVariable(bool isComputed)
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logInfoGUI("Load a Digital Elevation Model before.");
+        myProject.logError(MISSING_DEM_ERROR_STR);
         return false;
     }
 
     if (! isComputed)
     {
-        myProject.logInfoGUI("Interpolate variables before.");
+        myProject.logError("Compute meteo variables before.");
         return false;
     }
 
@@ -961,7 +960,7 @@ void MainWindow::showMeteoVariable(meteoVariable var)
 {
     if (myProject.hourlyMeteoMaps == nullptr)
     {
-        myProject.logInfoGUI("Open a project before.");
+        myProject.logError(MISSING_PROJECT_ERROR_STR);
         return;
     }
 
@@ -1025,15 +1024,9 @@ void MainWindow::showMeteoVariable(meteoVariable var)
 
 void MainWindow::showSnowVariable(meteoVariable var)
 {
-    if (! myProject.DEM.isLoaded)
-    {
-        myProject.logInfoGUI("Load a Digital Elevation Model before.");
-        return;
-    }
-
     if (! myProject.snowMaps.isInitialized)
     {
-        myProject.logInfoGUI("Initialize snow model before.");
+        myProject.logError("Initialize snow model before.");
         return;
     }
 
@@ -1253,32 +1246,6 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 }
 
 
-void MainWindow::on_actionCompute_AllMeteoMaps_triggered()
-{
-    if (! myProject.DEM.isLoaded)
-    {
-        myProject.logInfoGUI("Load a Digital Elevation Model before.");
-        return;
-    }
-
-    if (myProject.nrMeteoPoints == 0)
-    {
-        myProject.logInfoGUI("Open a meteo points DB before.");
-        return;
-    }
-
-    setOutputRasterVisible(false);
-
-    if (! myProject.computeAllMeteoMaps(myProject.getCurrentTime(), true))
-    {
-        myProject.logError();
-        return;
-    }
-
-    showMeteoVariable(myProject.getCurrentVariable());
-}
-
-
 bool MainWindow::isSoil(QPoint mapPos)
 {
     if (! myProject.soilMap.isLoaded)
@@ -1302,7 +1269,7 @@ void MainWindow::openSoilWidget(QPoint mapPos)
 
     if (soilCode == "")
     {
-        myProject.logInfoGUI("No soil.");
+        myProject.logError("No soil.");
     }
     else if (soilCode == "NOT FOUND")
     {
@@ -1352,7 +1319,7 @@ void MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
                 openSoilWidget(mapPos);
             }
             else {
-                myProject.logInfoGUI("Load soil database before.");
+                myProject.logError("Load soil database before.");
             }
         }
     }
@@ -1405,7 +1372,7 @@ void MainWindow::on_actionMeteoPointsImport_data_triggered()
 {
     if (! myProject.meteoPointsLoaded)
     {
-        myProject.logInfoGUI("Load meteo points database before.");
+        myProject.logError(MISSING_DB_ERROR_STR);
         return;
     }
 
@@ -1427,10 +1394,7 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
 
     QString dbName = QFileDialog::getSaveFileName(this, tr("Save as"), meteoPointsPath, tr("DB files (*.db)"));
     if (dbName == "")
-    {
-        qDebug() << "missing db file name";
         return;
-    }
 
     QString csvFileName = QFileDialog::getOpenFileName(this, tr("Open properties csv file"), "", tr("csv files (*.csv)"));
     if (csvFileName.isEmpty())
@@ -1493,7 +1457,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 {
     if (! myProject.meteoPointsLoaded)
     {
-        myProject.logError("Load meteo points db before.");
+        myProject.logError(MISSING_DB_ERROR_STR);
         return false;
     }
 
@@ -1525,6 +1489,12 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 
 bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 {
+    if (! myProject.DEM.isLoaded)
+    {
+        myProject.logError(MISSING_DEM_ERROR_STR);
+        return false;
+    }
+
     if (myProject.isWater && (! myProject.isCriteria3DInitialized))
     {
         myProject.logError("Initialize 3D water fluxes or load a state before.");
@@ -1564,6 +1534,16 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 
 bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 {
+    if (! myProject.DEM.isLoaded)
+    {
+        myProject.logError(MISSING_DEM_ERROR_STR);
+        return false;
+    }
+
+    // initialize
+    myProject.hourlyMeteoMaps->initialize();
+    myProject.radiationMaps->initialize();
+
     QDate firstDate = firstTime.date();
     QDate lastDate = lastTime.date();
     int hour1 = firstTime.time().hour();
@@ -1624,6 +1604,44 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 }
 
 
+//------------------- INTERPOLATION -----------------
+
+void MainWindow::on_actionCompute_hour_meteoVariables_triggered()
+{
+    if (myProject.nrMeteoPoints == 0)
+    {
+        myProject.logError(MISSING_DB_ERROR_STR);
+        return;
+    }
+
+    setOutputRasterVisible(false);
+
+    if (! myProject.computeAllMeteoMaps(myProject.getCurrentTime(), true))
+    {
+        myProject.logError();
+        return;
+    }
+
+    showMeteoVariable(myProject.getCurrentVariable());
+}
+
+
+void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
+{
+    QDateTime firstTime, lastTime;
+    if (! selectDates (firstTime, lastTime))
+        return;
+
+    myProject.isMeteo = true;
+    myProject.isRadiation = false;
+    myProject.isSnow = false;
+    myProject.isCrop = false;
+    myProject.isWater = false;
+
+    startModels(firstTime, lastTime);
+}
+
+
 //------------------- SOLAR RADIATION MODEL -----------------
 
 void MainWindow::on_actionRadiation_settings_triggered()
@@ -1637,7 +1655,7 @@ bool MainWindow::setRadiationAsCurrentVariable()
 {
     if (myProject.nrMeteoPoints == 0)
     {
-        myProject.logInfoGUI("Open a Meteo Points DB before.");
+        myProject.logError(MISSING_DB_ERROR_STR);
         return false;
     }
 
@@ -1847,37 +1865,40 @@ void MainWindow::on_actionSave_state_triggered()
     }
     else
     {
-        myProject.logError("Open a project before");
+        myProject.logError(MISSING_PROJECT_ERROR_STR);
     }
     return;
 }
 
 void MainWindow::on_actionLoad_state_triggered()
 {
-    if (myProject.isProjectLoaded)
+    if (! myProject.isProjectLoaded)
     {
-        QList<QString> stateList = myProject.getAllSavedState();
-        DialogLoadState dialogLoadState(stateList);
-        if (dialogLoadState.result() != QDialog::Accepted)
-            return;
+        myProject.logError(MISSING_PROJECT_ERROR_STR);
+        return;
+    }
 
-        if (myProject.loadModelState(dialogLoadState.getSelectedState()))
-        {
-            updateDateTime();
-            myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString()
-                                 + " H:" + QString::number(myProject.getCurrentHour()));
-        }
-        else
-        {
-            myProject.logError();
-        }
+    QList<QString> stateList = myProject.getAllSavedState();
+    if (stateList.size() == 0)
+    {
+        myProject.logError();
+        return;
+    }
 
+    DialogLoadState dialogLoadState(stateList);
+    if (dialogLoadState.result() != QDialog::Accepted)
+        return;
+
+    if (myProject.loadModelState(dialogLoadState.getSelectedState()))
+    {
+        updateDateTime();
+        myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString()
+                             + " H:" + QString::number(myProject.getCurrentHour()));
     }
     else
     {
-        myProject.logError("Open a project before");
+        myProject.logError();
     }
-    return;
 }
 
 

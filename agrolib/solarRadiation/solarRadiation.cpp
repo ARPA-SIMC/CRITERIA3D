@@ -48,7 +48,6 @@ Crit3DRadiationMaps::Crit3DRadiationMaps()
     /*
     linkeMap = new gis::Crit3DRasterGrid;
     albedoMap = new gis::Crit3DRasterGrid;
-    reflectedRadiationMap = new gis::Crit3DRasterGrid;
     sunAzimuthMap = new gis::Crit3DRasterGrid;
     sunIncidenceMap = new gis::Crit3DRasterGrid;
     sunShadowMap = new gis::Crit3DRasterGrid;
@@ -89,14 +88,12 @@ Crit3DRadiationMaps::Crit3DRadiationMaps(const gis::Crit3DRasterGrid& myDEM, con
     /*
     albedoMap = new gis::Crit3DRasterGrid;
     linkeMap = new gis::Crit3DRasterGrid;
-    reflectedRadiationMap = new gis::Crit3DRasterGrid;
     sunAzimuthMap = new gis::Crit3DRasterGrid;
     sunIncidenceMap = new gis::Crit3DRasterGrid;
     sunShadowMap = new gis::Crit3DRasterGrid;
 
     linkeMap->initializeGrid(myDEM);
     albedoMap->initializeGrid(myDEM);
-    reflectedRadiationMap->initializeGrid(myDEM);
     sunAzimuthMap->initializeGrid(myDEM);
     sunIncidenceMap->initializeGrid(myDEM);
     sunShadowMap->initializeGrid(myDEM);
@@ -127,7 +124,6 @@ void Crit3DRadiationMaps::clear()
     /*
     albedoMap->clear();
     linkeMap->clear();
-    reflectedRadiationMap->clear();
     sunAzimuthMap->clear();
     sunIncidenceMap->clear();
     sunShadowMap->clear();
@@ -147,7 +143,6 @@ void Crit3DRadiationMaps::clear()
     /*
     delete albedoMap;
     delete linkeMap;
-    delete reflectedRadiationMap;
     delete sunAzimuthMap;
     delete sunIncidenceMap;
     delete sunShadowMap;
@@ -155,6 +150,20 @@ void Crit3DRadiationMaps::clear()
 
     isComputed = false;
 }
+
+
+void Crit3DRadiationMaps::initialize()
+{
+    transmissivityMap->emptyGrid();
+    globalRadiationMap->emptyGrid();
+    beamRadiationMap->emptyGrid();
+    diffuseRadiationMap->emptyGrid();
+    reflectedRadiationMap->emptyGrid();
+    sunElevationMap->emptyGrid();
+
+    isComputed = false;
+}
+
 
 bool Crit3DRadiationMaps::getComputed()
 {
