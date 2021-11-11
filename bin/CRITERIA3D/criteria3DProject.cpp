@@ -659,7 +659,7 @@ bool Crit3DProject::saveModelState()
     }
 
     QString hourStr;
-    hourStr.sprintf("%00d", currentHour);
+    hourStr.sprintf("%02d", currentHour);
     QString dateFolder = currentDate.toString("yyyyMMdd") + "_H" + hourStr;
     if (!QDir(statePath+"/"+dateFolder).exists())
     {
@@ -723,6 +723,13 @@ QList<QString> Crit3DProject::getAllSavedState()
         return states;
     }
     QFileInfoList list = dir.entryInfoList(QDir::AllDirs | QDir::NoDot | QDir::NoDotDot | QDir::NoSymLinks);
+
+    if (list.size() == 0)
+    {
+        errorString = "STATES directory is empty.";
+        return states;
+    }
+
     for (int i=0; i<list.size(); i++)
     {
         if (list[i].baseName().size() == 12)
