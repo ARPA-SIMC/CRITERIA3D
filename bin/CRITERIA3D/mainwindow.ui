@@ -2161,7 +2161,7 @@
       <rect>
        <x>50</x>
        <y>30</y>
-       <width>111</width>
+       <width>101</width>
        <height>31</height>
       </rect>
      </property>
@@ -2394,9 +2394,9 @@
     <widget class="QSpinBox" name="timeEdit">
      <property name="geometry">
       <rect>
-       <x>210</x>
+       <x>200</x>
        <y>30</y>
-       <width>51</width>
+       <width>41</width>
        <height>31</height>
       </rect>
      </property>
@@ -2423,7 +2423,7 @@
     <widget class="QPushButton" name="dayAfterButton">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>150</x>
        <y>30</y>
        <width>31</width>
        <height>31</height>
