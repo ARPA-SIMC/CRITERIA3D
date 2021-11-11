@@ -757,6 +757,29 @@ void MainWindow::on_actionProjectSettings_triggered()
 }
 
 
+void MainWindow::on_actionProxy_analysis_triggered()
+{
+    if (myProject.proxyWidget != nullptr)
+    {
+        QMessageBox::critical(nullptr, "Proxy analysis", "Proxy widget already open");
+        return;
+    }
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        QMessageBox::critical(nullptr, "Proxy analysis", "No meteo points DB open");
+        return;
+    }
+
+    std::vector<Crit3DProxy> proxy = myProject.interpolationSettings.getCurrentProxy();
+    if (proxy.size() == 0)
+    {
+        QMessageBox::critical(nullptr, "Proxy analysis", "No proxy loaded");
+        return;
+    }
+
+    return myProject.showProxyGraph();
+}
+
 
 // 3d VIEW (TODO)
 /*
@@ -1851,6 +1874,5 @@ void MainWindow::on_flag_save_state_daily_step_triggered()
 {
     myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
 }
-
 
 

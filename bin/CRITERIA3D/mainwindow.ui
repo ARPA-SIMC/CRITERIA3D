@@ -3432,6 +3432,7 @@
     <addaction name="separator"/>
     <addaction name="actionInterpolationSettings"/>
     <addaction name="separator"/>
+    <addaction name="actionProxy_analysis"/>
     <addaction name="actionCompute_AllMeteoMaps"/>
     <addaction name="separator"/>
    </widget>
@@ -3927,6 +3928,11 @@
   <action name="actionRadiation_run_model">
    <property name="text">
     <string>Run model...</string>
+   </property>
+  </action>
+  <action name="actionProxy_analysis">
+   <property name="text">
+    <string>Proxy analysis...</string>
    </property>
   </action>
  </widget>

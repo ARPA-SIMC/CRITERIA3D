@@ -86,6 +86,7 @@
         void on_actionVariableQualitySpatial_triggered();
         void on_actionInterpolationSettings_triggered();
         void on_actionCompute_AllMeteoMaps_triggered();
+        void on_actionProxy_analysis_triggered();
 
         void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
         void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
@@ -119,7 +120,6 @@
         void on_buttonModelPause_clicked();
         void on_buttonModelStop_clicked();
         void on_buttonModelStart_clicked();
-
 
     protected:
         /*!
