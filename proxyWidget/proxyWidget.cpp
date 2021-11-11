@@ -30,8 +30,8 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &secondaryList, QList<Crit3DMeteoPoint> &supplementalList, frequencyType currentFrequency, QDateTime currentDateTime)
-:interpolationSettings(interpolationSettings), primaryList(primaryList), secondaryList(secondaryList), supplementalList(supplementalList), currentFrequency(currentFrequency), currentDateTime(currentDateTime)
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &secondaryList, QList<Crit3DMeteoPoint> &supplementalList, frequencyType currentFrequency, QDate currentDate, int currentHour)
+:interpolationSettings(interpolationSettings), primaryList(primaryList), secondaryList(secondaryList), supplementalList(supplementalList), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour)
 {
     
     this->setWindowTitle("Statistics");
@@ -197,9 +197,10 @@ void Crit3DProxyWidget::changeVar(const QString varName)
     plot();
 }
 
-void Crit3DProxyWidget::updateDateTime(QDateTime newDateTime)
+void Crit3DProxyWidget::updateDateTime(QDate newDate, int newHour)
 {
-    currentDateTime = newDateTime;
+    currentDate = newDate;
+    currentHour = newHour;
     plot();
 }
 
@@ -250,11 +251,11 @@ void Crit3DProxyWidget::plot()
         float varVal;
         if (currentFrequency == daily)
         {
-            varVal = primaryList[i].getMeteoPointValueD(getCrit3DDate(currentDateTime.date()), myVar);
+            varVal = primaryList[i].getMeteoPointValueD(getCrit3DDate(currentDate), myVar);
         }
         else if (currentFrequency == hourly)
         {
-            varVal = primaryList[i].getMeteoPointValueH(getCrit3DDate(currentDateTime.date()), currentDateTime.time().hour(), currentDateTime.time().minute(), myVar);
+            varVal = primaryList[i].getMeteoPointValueH(getCrit3DDate(currentDate), currentHour, 0, myVar);
         }
         if (proxyVal != NODATA && varVal != NODATA)
         {
@@ -269,11 +270,11 @@ void Crit3DProxyWidget::plot()
         float varVal;
         if (currentFrequency == daily)
         {
-            varVal = secondaryList[i].getMeteoPointValueD(getCrit3DDate(currentDateTime.date()), myVar);
+            varVal = secondaryList[i].getMeteoPointValueD(getCrit3DDate(currentDate), myVar);
         }
         else if (currentFrequency == hourly)
         {
-            varVal = secondaryList[i].getMeteoPointValueH(getCrit3DDate(currentDateTime.date()), currentDateTime.time().hour(), currentDateTime.time().minute(), myVar);
+            varVal = secondaryList[i].getMeteoPointValueH(getCrit3DDate(currentDate), currentHour, 0, myVar);
         }
         if (proxyVal != NODATA && varVal != NODATA)
         {
@@ -289,11 +290,11 @@ void Crit3DProxyWidget::plot()
         float varVal;
         if (currentFrequency == daily)
         {
-            varVal = supplementalList[i].getMeteoPointValueD(getCrit3DDate(currentDateTime.date()), myVar);
+            varVal = supplementalList[i].getMeteoPointValueD(getCrit3DDate(currentDate), myVar);
         }
         else if (currentFrequency == hourly)
         {
-            varVal = supplementalList[i].getMeteoPointValueH(getCrit3DDate(currentDateTime.date()), currentDateTime.time().hour(), currentDateTime.time().minute(), myVar);
+            varVal = supplementalList[i].getMeteoPointValueH(getCrit3DDate(currentDate), currentHour, 0, myVar);
         }
         if (proxyVal != NODATA && varVal != NODATA)
         {
