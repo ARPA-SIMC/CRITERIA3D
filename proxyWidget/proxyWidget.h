@@ -42,9 +42,10 @@
             ChartView *chartView;
             meteoVariable myVar;
             int proxyPos;
+
             int highestStationIndex;
             double zMax;
-            int listHighestStation;
+            int highestStationBelongToList;
 
     signals:
         void closeProxyWidget();

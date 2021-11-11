@@ -195,7 +195,6 @@ void Crit3DProxyWidget::changeVar(const QString varName)
 void Crit3DProxyWidget::updateDateTime(QDateTime newDateTime)
 {
     currentDateTime = newDateTime;
-    qDebug() << "updateDateTime";
     plot();
 }
 
@@ -205,7 +204,7 @@ void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
     {
         currentFrequency = newFrequency;
         variable.clear();
-        qDebug() << "updateFrequency";
+
         std::map<meteoVariable, std::string>::const_iterator it;
         if (currentFrequency == daily)
         {
@@ -321,9 +320,10 @@ void Crit3DProxyWidget::computeHighestStationIndex()
     double zMaxPrimary = 0;
     double zMaxSecondary = 0;
     double zMaxSupplemental = 0;
-    double highestStationIndexPrimary = 0;
-    double highestStationIndexSecodary = 0;
-    double highestStationIndexSupplemental = 0;
+
+    int highestStationIndexPrimary = 0;
+    int highestStationIndexSecondary = 0;
+    int highestStationIndexSupplemental = 0;
 
     for (int i = 0; i<primaryList.size(); i++)
     {
@@ -338,7 +338,7 @@ void Crit3DProxyWidget::computeHighestStationIndex()
     {
         if (secondaryList[i].point.z > zMaxSecondary)
         {
-            highestStationIndexSecodary = i;
+            highestStationIndexSecondary = i;
             zMaxSecondary = secondaryList[i].point.z;
         }
     }
@@ -356,12 +356,14 @@ void Crit3DProxyWidget::computeHighestStationIndex()
     {
         if (std::max(zMaxPrimary, zMaxSupplemental) == zMaxPrimary)
         {
-            listHighestStation = 0;
+            highestStationBelongToList = 0;
+            highestStationIndex = highestStationIndexPrimary;
             zMax = zMaxPrimary;
         }
         else
         {
-            listHighestStation = 2;
+            highestStationBelongToList = 2;
+            highestStationIndex = highestStationIndexSupplemental;
             zMax = zMaxSupplemental;
         }
     }
@@ -369,12 +371,14 @@ void Crit3DProxyWidget::computeHighestStationIndex()
     {
         if (std::max(zMaxSecondary, zMaxSupplemental) == zMaxSecondary)
         {
-            listHighestStation = 1;
+            highestStationBelongToList = 1;
+            highestStationIndex = highestStationIndexSecondary;
             zMax = zMaxSecondary;
         }
         else
         {
-            listHighestStation = 2;
+            highestStationBelongToList = 2;
+            highestStationIndex = highestStationIndexSupplemental;
             zMax = zMaxSupplemental;
         }
     }

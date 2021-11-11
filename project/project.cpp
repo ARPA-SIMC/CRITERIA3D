@@ -761,15 +761,15 @@ void Project::setCurrentDate(QDate myDate)
 QDate Project::getCurrentDate()
 {
     return this->currentDate;
-    if (proxyWidget != nullptr)
-    {
-        proxyWidget->updateDateTime(getCurrentTime());
-    }
 }
 
 void Project::setCurrentHour(int myHour)
 {
     this->currentHour = myHour;
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateDateTime(getCurrentTime());
+    }
 }
 
 int Project::getCurrentHour()
