@@ -533,13 +533,24 @@ void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 {
     if (date != myProject.getCurrentDate())
     {
-        myProject.setCurrentDate(date);
         myProject.loadMeteoPointsData(date, date, true, true, true);
         myProject.loadMeteoGridData(date, date, true);
         myProject.setAllHourlyMeteoMapsComputed(false);
+        myProject.setCurrentDate(date);
     }
 
     redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_dayBeforeButton_clicked()
+{
+     this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(-1));
+}
+
+void MainWindow::on_dayAfterButton_clicked()
+{
+     this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(1));
 }
 
 

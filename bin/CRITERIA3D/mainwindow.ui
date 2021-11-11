@@ -2159,7 +2159,7 @@
     <widget class="QDateEdit" name="dateEdit">
      <property name="geometry">
       <rect>
-       <x>20</x>
+       <x>50</x>
        <y>30</y>
        <width>111</width>
        <height>31</height>
@@ -2394,7 +2394,7 @@
     <widget class="QSpinBox" name="timeEdit">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>210</x>
        <y>30</y>
        <width>51</width>
        <height>31</height>
@@ -2405,6 +2405,32 @@
      </property>
      <property name="maximum">
       <number>24</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="dayBeforeButton">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&lt;</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="dayAfterButton">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>30</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&gt;</string>
      </property>
     </widget>
    </widget>

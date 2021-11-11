@@ -121,6 +121,10 @@
         void on_buttonModelStop_clicked();
         void on_buttonModelStart_clicked();
 
+        void on_dayBeforeButton_clicked();
+
+        void on_dayAfterButton_clicked();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
