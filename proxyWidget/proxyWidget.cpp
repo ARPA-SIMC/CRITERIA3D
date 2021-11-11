@@ -36,6 +36,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     
     this->setWindowTitle("Proxy analysis");
     this->resize(1240, 700);
+    this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
     
 
@@ -109,19 +110,19 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
 
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
-    selectionOptionEditLayout->addSpacing(200);
+    selectionOptionEditLayout->addStretch(200);
     selectionOptionEditLayout->addWidget(lapseRateLabel);
     selectionOptionEditLayout->addWidget(&lapseRate);
-    selectionOptionEditLayout->addSpacing(200);
+    selectionOptionEditLayout->addStretch(200);
     selectionOptionEditLayout->addWidget(r2ThermalLevelsLabel);
     selectionOptionEditLayout->addWidget(&r2ThermalLevels);
-    selectionOptionEditLayout->addSpacing(200);
+    selectionOptionEditLayout->addStretch(200);
 
     selectionOptionLayout->addLayout(selectionOptionBoxLayout);
     selectionOptionLayout->addLayout(selectionOptionEditLayout);
 
     selectionLayout->addLayout(selectionChartLayout);
-    selectionLayout->addSpacing(50);
+    selectionLayout->addStretch(50);
     selectionLayout->addLayout(selectionOptionLayout);
     
     connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
