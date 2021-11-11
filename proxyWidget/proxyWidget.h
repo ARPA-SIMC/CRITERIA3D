@@ -22,6 +22,7 @@
             void plot();
             void climatologicalLRClicked(int toggled);
             void computeHighestStationIndex();
+            void updatePointList(const QList<Crit3DMeteoPoint> &primaryValue, const QList<Crit3DMeteoPoint> &secondaryValue, const QList<Crit3DMeteoPoint> &supplementalValue );
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;

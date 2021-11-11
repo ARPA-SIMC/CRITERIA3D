@@ -156,6 +156,11 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 
+    if (currentFrequency != noFrequency)
+    {
+        plot();
+    }
+
     show();
 
 }
@@ -200,30 +205,27 @@ void Crit3DProxyWidget::updateDateTime(QDateTime newDateTime)
 
 void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
 {
-    if (newFrequency != currentFrequency)
-    {
-        currentFrequency = newFrequency;
-        variable.clear();
+    currentFrequency = newFrequency;
+    variable.clear();
 
-        std::map<meteoVariable, std::string>::const_iterator it;
-        if (currentFrequency == daily)
+    std::map<meteoVariable, std::string>::const_iterator it;
+    if (currentFrequency == daily)
+    {
+        for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
         {
-            for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
-            {
-                variable.addItem(QString::fromStdString(it->second));
-            }
-            myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+            variable.addItem(QString::fromStdString(it->second));
         }
-        else if (currentFrequency == hourly)
-        {
-            for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
-            {
-                variable.addItem(QString::fromStdString(it->second));
-            }
-            myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
-        }
-        variable.adjustSize();
+        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
     }
+    else if (currentFrequency == hourly)
+    {
+        for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
+        {
+            variable.addItem(QString::fromStdString(it->second));
+        }
+        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
+    }
+    variable.adjustSize();
 
     plot();
 }
@@ -382,5 +384,15 @@ void Crit3DProxyWidget::computeHighestStationIndex()
             zMax = zMaxSupplemental;
         }
     }
+}
+
+void Crit3DProxyWidget::updatePointList(const QList<Crit3DMeteoPoint> &primaryValue, const QList<Crit3DMeteoPoint> &secondaryValue, const QList<Crit3DMeteoPoint> &supplementalValue )
+{
+    primaryList.clear();
+    secondaryList.clear();
+    supplementalList.clear();
+    primaryList = primaryValue;
+    secondaryList = secondaryValue;
+    supplementalList = supplementalValue;
 }
 

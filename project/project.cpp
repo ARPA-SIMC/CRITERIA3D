@@ -1125,6 +1125,32 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
 
     if (showInfo) closeProgressBar();
 
+    if (proxyWidget != nullptr)
+    {
+        QList<Crit3DMeteoPoint> primaryList;
+        QList<Crit3DMeteoPoint> secondaryList;
+        QList<Crit3DMeteoPoint> supplementalList;
+        for (int i=0; i<nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].active)
+            {
+                if (meteoPoints[i].lapseRateCode == primary)
+                {
+                    primaryList.append(meteoPoints[i]);
+                }
+                else if (meteoPoints[i].lapseRateCode == secondary)
+                {
+                    secondaryList.append(meteoPoints[i]);
+                }
+                else if (meteoPoints[i].lapseRateCode == supplemental)
+                {
+                    supplementalList.append(meteoPoints[i]);
+                }
+            }
+        }
+        proxyWidget->updatePointList(primaryList, secondaryList, supplementalList);
+    }
+
     return isData;
 }
 
@@ -1165,7 +1191,6 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
     }
 
     if (showInfo) closeProgressBar();
-
     return isData;
 }
 
@@ -2673,6 +2698,7 @@ void Project::showProxyGraph()
     QList<Crit3DMeteoPoint> primaryList;
     QList<Crit3DMeteoPoint> secondaryList;
     QList<Crit3DMeteoPoint> supplementalList;
+
     for (int i=0; i<nrMeteoPoints; i++)
     {
         if (meteoPoints[i].active)
