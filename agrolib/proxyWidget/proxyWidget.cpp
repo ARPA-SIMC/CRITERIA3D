@@ -156,6 +156,11 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 
+    if (currentFrequency != noFrequency)
+    {
+        plot();
+    }
+
     show();
 
 }
@@ -195,36 +200,32 @@ void Crit3DProxyWidget::changeVar(const QString varName)
 void Crit3DProxyWidget::updateDateTime(QDateTime newDateTime)
 {
     currentDateTime = newDateTime;
-    qDebug() << "updateDateTime";
     plot();
 }
 
 void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
 {
-    if (newFrequency != currentFrequency)
+    currentFrequency = newFrequency;
+    variable.clear();
+
+    std::map<meteoVariable, std::string>::const_iterator it;
+    if (currentFrequency == daily)
     {
-        currentFrequency = newFrequency;
-        variable.clear();
-        qDebug() << "updateFrequency";
-        std::map<meteoVariable, std::string>::const_iterator it;
-        if (currentFrequency == daily)
+        for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
         {
-            for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
-            {
-                variable.addItem(QString::fromStdString(it->second));
-            }
-            myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+            variable.addItem(QString::fromStdString(it->second));
         }
-        else if (currentFrequency == hourly)
-        {
-            for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
-            {
-                variable.addItem(QString::fromStdString(it->second));
-            }
-            myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
-        }
-        variable.adjustSize();
+        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
     }
+    else if (currentFrequency == hourly)
+    {
+        for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
+        {
+            variable.addItem(QString::fromStdString(it->second));
+        }
+        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
+    }
+    variable.adjustSize();
 
     plot();
 }
@@ -321,9 +322,10 @@ void Crit3DProxyWidget::computeHighestStationIndex()
     double zMaxPrimary = 0;
     double zMaxSecondary = 0;
     double zMaxSupplemental = 0;
-    double highestStationIndexPrimary = 0;
-    double highestStationIndexSecodary = 0;
-    double highestStationIndexSupplemental = 0;
+
+    int highestStationIndexPrimary = 0;
+    int highestStationIndexSecondary = 0;
+    int highestStationIndexSupplemental = 0;
 
     for (int i = 0; i<primaryList.size(); i++)
     {
@@ -338,7 +340,7 @@ void Crit3DProxyWidget::computeHighestStationIndex()
     {
         if (secondaryList[i].point.z > zMaxSecondary)
         {
-            highestStationIndexSecodary = i;
+            highestStationIndexSecondary = i;
             zMaxSecondary = secondaryList[i].point.z;
         }
     }
@@ -356,12 +358,14 @@ void Crit3DProxyWidget::computeHighestStationIndex()
     {
         if (std::max(zMaxPrimary, zMaxSupplemental) == zMaxPrimary)
         {
-            listHighestStation = 0;
+            highestStationBelongToList = 0;
+            highestStationIndex = highestStationIndexPrimary;
             zMax = zMaxPrimary;
         }
         else
         {
-            listHighestStation = 2;
+            highestStationBelongToList = 2;
+            highestStationIndex = highestStationIndexSupplemental;
             zMax = zMaxSupplemental;
         }
     }
@@ -369,14 +373,26 @@ void Crit3DProxyWidget::computeHighestStationIndex()
     {
         if (std::max(zMaxSecondary, zMaxSupplemental) == zMaxSecondary)
         {
-            listHighestStation = 1;
+            highestStationBelongToList = 1;
+            highestStationIndex = highestStationIndexSecondary;
             zMax = zMaxSecondary;
         }
         else
         {
-            listHighestStation = 2;
+            highestStationBelongToList = 2;
+            highestStationIndex = highestStationIndexSupplemental;
             zMax = zMaxSupplemental;
         }
     }
+}
+
+void Crit3DProxyWidget::updatePointList(const QList<Crit3DMeteoPoint> &primaryValue, const QList<Crit3DMeteoPoint> &secondaryValue, const QList<Crit3DMeteoPoint> &supplementalValue )
+{
+    primaryList.clear();
+    secondaryList.clear();
+    supplementalList.clear();
+    primaryList = primaryValue;
+    secondaryList = secondaryValue;
+    supplementalList = supplementalValue;
 }
 
