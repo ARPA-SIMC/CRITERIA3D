@@ -34,7 +34,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
 :interpolationSettings(interpolationSettings), primaryList(primaryList), secondaryList(secondaryList), supplementalList(supplementalList), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour)
 {
     
-    this->setWindowTitle("Statistics");
+    this->setWindowTitle("Proxy analysis");
     this->resize(1240, 700);
     this->setAttribute(Qt::WA_DeleteOnClose);
     
