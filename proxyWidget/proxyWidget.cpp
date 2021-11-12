@@ -305,9 +305,7 @@ void Crit3DProxyWidget::plot()
         }
 
     }
-    chartView->drawPointSeriesPrimary(point_vector);
-    chartView->drawPointSeriesSecondary(point_vector2);
-    chartView->drawPointSeriesSupplemental(point_vector3);
+    chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
 }
 
 void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
