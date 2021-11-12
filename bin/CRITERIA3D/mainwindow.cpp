@@ -909,7 +909,7 @@ void MainWindow::on_actionView_Aspect_triggered()
 {
     if (myProject.DEM.isLoaded)
     {
-        setColorScale(airRelHumidity, myProject.radiationMaps->aspectMap->colorScale);
+        setColorScale(noMeteoTerrain, myProject.radiationMaps->aspectMap->colorScale);
         setCurrentRasterOutput(myProject.radiationMaps->aspectMap);
         ui->labelOutputRaster->setText("Aspect °");
     }
