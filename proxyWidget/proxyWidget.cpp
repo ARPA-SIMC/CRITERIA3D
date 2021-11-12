@@ -244,6 +244,10 @@ void Crit3DProxyWidget::plot()
     QList<QPointF> point_vector;
     QList<QPointF> point_vector2;
     QList<QPointF> point_vector3;
+    QMap< QString, QPointF > idPointMap;
+    QMap< QString, QPointF > idPointMap2;
+    QMap< QString, QPointF > idPointMap3;
+
     QPointF point;
 
     for (int i = 0; i<primaryList.size(); i++)
@@ -263,6 +267,7 @@ void Crit3DProxyWidget::plot()
             point.setX(proxyVal);
             point.setY(varVal);
             point_vector.append(point);
+            idPointMap.insert("id: "+QString::fromStdString(primaryList[i].id) + "\nname: "+QString::fromStdString(primaryList[i].name), point);
         }
     }
     for (int i = 0; i<secondaryList.size(); i++)
@@ -282,6 +287,7 @@ void Crit3DProxyWidget::plot()
             point.setX(proxyVal);
             point.setY(varVal);
             point_vector2.append(point);
+            idPointMap2.insert("id: "+QString::fromStdString(secondaryList[i].id) + "\nname: "+QString::fromStdString(secondaryList[i].name), point);
         }
 
     }
@@ -302,9 +308,11 @@ void Crit3DProxyWidget::plot()
             point.setX(proxyVal);
             point.setY(varVal);
             point_vector3.append(point);
+            idPointMap3.insert("id: "+QString::fromStdString(supplementalList[i].id) + "\nname: "+QString::fromStdString(supplementalList[i].name), point);
         }
 
     }
+    chartView->setIdPointMap(idPointMap,idPointMap2,idPointMap3);
     chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
 }
 
