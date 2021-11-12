@@ -662,7 +662,6 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             setGrayScale(colorScale);
             reverseColorScale(colorScale);
             colorScale->minimum = 0;
-            colorScale->maximum = 30;
             break;
         case dailyBIC:
             setZeroCenteredScale(colorScale);
