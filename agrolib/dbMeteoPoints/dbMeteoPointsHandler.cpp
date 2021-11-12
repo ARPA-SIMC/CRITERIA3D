@@ -793,7 +793,9 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& me
             }
             else
             {
-                errorString += "\nWrong location! UTM does not match with lat/lon: " + QString::fromStdString(meteoPoint.name);
+                errorString += "\nWrong location! "
+                               + QString::fromStdString(meteoPoint.id) + " "
+                               + QString::fromStdString(meteoPoint.name);
                 isLocationOk = false;
             }
         }
@@ -813,7 +815,9 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& me
         }
         else
         {
-            errorString += "\nMissing location (lat/lon or UTM): " + QString::fromStdString(meteoPoint.name);
+            errorString += "\nMissing location (lat/lon or UTM): "
+                           + QString::fromStdString(meteoPoint.id) + " "
+                           + QString::fromStdString(meteoPoint.name);
             isLocationOk = false;
         }
 
