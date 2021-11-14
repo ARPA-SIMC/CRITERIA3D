@@ -45,9 +45,10 @@
             meteoVariable myVar;
             int proxyPos;
 
-            int highestStationIndex;
+            //int highestStationIndex;
             double zMax;
-            int highestStationBelongToList;
+            double zMin;
+            //int highestStationBelongToList;
 
     signals:
         void closeProxyWidget();

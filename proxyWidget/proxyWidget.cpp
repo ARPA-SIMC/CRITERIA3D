@@ -130,6 +130,8 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
 
     // compute highest station index
+    zMin = std::numeric_limits<int>::max();
+    zMax = std::numeric_limits<int>::min();
     computeHighestStationIndex();
     // menu
     QMenuBar* menuBar = new QMenuBar();
@@ -327,6 +329,7 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
 
 void Crit3DProxyWidget::computeHighestStationIndex()
 {
+    /*
     double zMaxPrimary = 0;
     double zMaxSecondary = 0;
     double zMaxSupplemental = 0;
@@ -392,6 +395,15 @@ void Crit3DProxyWidget::computeHighestStationIndex()
             zMax = zMaxSupplemental;
         }
     }
+    */
+    QList<Crit3DMeteoPoint> list = primaryList;
+    list.append(secondaryList);
+    list.append(supplementalList);
+    foreach (Crit3DMeteoPoint mp, list) {
+        zMin = qMin(zMin, mp.point.z);
+        zMax = qMax(zMax, mp.point.z);
+    }
+
 }
 
 void Crit3DProxyWidget::updatePointList(const QList<Crit3DMeteoPoint> &primaryValue, const QList<Crit3DMeteoPoint> &secondaryValue, const QList<Crit3DMeteoPoint> &supplementalValue )
