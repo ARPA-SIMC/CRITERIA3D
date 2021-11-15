@@ -3450,7 +3450,7 @@
     <addaction name="menuInput"/>
     <addaction name="separator"/>
    </widget>
-   <widget class="QMenu" name="menuVariable">
+   <widget class="QMenu" name="menuDataSpatialization">
     <property name="title">
      <string>Data spatialization</string>
     </property>
@@ -3594,7 +3594,7 @@
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
-   <addaction name="menuVariable"/>
+   <addaction name="menuDataSpatialization"/>
    <addaction name="menuSolar_radiation_model_2"/>
    <addaction name="menuSnow_model"/>
    <addaction name="menuCriteria3D"/>
