@@ -6,13 +6,14 @@
     #include "chartView.h"
     #include "meteoPoint.h"
     #include "interpolationSettings.h"
+    #include "interpolationPoint.h"
 
     class Crit3DProxyWidget : public QWidget
     {
         Q_OBJECT
 
         public:
-            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &supplementalList, QList<Crit3DMeteoPoint> &secondaryList, frequencyType currentFrequency, QDate currentDate, int currentHour);
+            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DInterpolationDataPoint> &primaryList, QList<Crit3DInterpolationDataPoint> &supplementalList, QList<Crit3DInterpolationDataPoint> &secondaryList, frequencyType currentFrequency, QDate currentDate, int currentHour);
             ~Crit3DProxyWidget();
             void closeEvent(QCloseEvent *event);
             void updateDateTime(QDate newDate, int newHour);
@@ -22,13 +23,13 @@
             void plot();
             void climatologicalLRClicked(int toggled);
             void computeHighestStationIndex();
-            void updatePointList(const QList<Crit3DMeteoPoint> &primaryValue, const QList<Crit3DMeteoPoint> &secondaryValue, const QList<Crit3DMeteoPoint> &supplementalValue );
+            void updatePointList(const QList<Crit3DInterpolationDataPoint> &primaryValue, const QList<Crit3DInterpolationDataPoint> &secondaryValue, const QList<Crit3DInterpolationDataPoint> &supplementalValue );
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
-            QList<Crit3DMeteoPoint> primaryList;
-            QList<Crit3DMeteoPoint> secondaryList;
-            QList<Crit3DMeteoPoint> supplementalList;
+            QList<Crit3DInterpolationDataPoint> primaryList;
+            QList<Crit3DInterpolationDataPoint> secondaryList;
+            QList<Crit3DInterpolationDataPoint> supplementalList;
             frequencyType currentFrequency;
             QDate currentDate;
             int currentHour;

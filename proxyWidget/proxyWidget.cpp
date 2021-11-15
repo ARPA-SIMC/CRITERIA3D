@@ -30,7 +30,7 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &secondaryList, QList<Crit3DMeteoPoint> &supplementalList, frequencyType currentFrequency, QDate currentDate, int currentHour)
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DInterpolationDataPoint> &primaryList, QList<Crit3DInterpolationDataPoint> &secondaryList, QList<Crit3DInterpolationDataPoint> &supplementalList, frequencyType currentFrequency, QDate currentDate, int currentHour)
 :interpolationSettings(interpolationSettings), primaryList(primaryList), secondaryList(secondaryList), supplementalList(supplementalList), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour)
 {
     
@@ -243,6 +243,7 @@ void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
 
 void Crit3DProxyWidget::plot()
 {
+    /*
     QList<QPointF> point_vector;
     QList<QPointF> point_vector2;
     QList<QPointF> point_vector3;
@@ -316,6 +317,7 @@ void Crit3DProxyWidget::plot()
     }
     chartView->setIdPointMap(idPointMap,idPointMap2,idPointMap3);
     chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
+    */
 }
 
 void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
@@ -396,17 +398,17 @@ void Crit3DProxyWidget::computeHighestStationIndex()
         }
     }
     */
-    QList<Crit3DMeteoPoint> list = primaryList;
+    QList<Crit3DInterpolationDataPoint> list = primaryList;
     list.append(secondaryList);
     list.append(supplementalList);
-    foreach (Crit3DMeteoPoint mp, list) {
-        zMin = qMin(zMin, mp.point.z);
-        zMax = qMax(zMax, mp.point.z);
+    foreach (Crit3DInterpolationDataPoint mp, list) {
+        zMin = qMin(zMin, mp.point->z);
+        zMax = qMax(zMax, mp.point->z);
     }
 
 }
 
-void Crit3DProxyWidget::updatePointList(const QList<Crit3DMeteoPoint> &primaryValue, const QList<Crit3DMeteoPoint> &secondaryValue, const QList<Crit3DMeteoPoint> &supplementalValue )
+void Crit3DProxyWidget::updatePointList(const QList<Crit3DInterpolationDataPoint> &primaryValue, const QList<Crit3DInterpolationDataPoint> &secondaryValue, const QList<Crit3DInterpolationDataPoint> &supplementalValue )
 {
     primaryList.clear();
     secondaryList.clear();

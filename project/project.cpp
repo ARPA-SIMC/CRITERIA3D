@@ -1125,33 +1125,6 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
 
     if (showInfo) closeProgressBar();
 
-    if (proxyWidget != nullptr)
-    {
-        QList<Crit3DMeteoPoint> primaryList;
-        QList<Crit3DMeteoPoint> secondaryList;
-        QList<Crit3DMeteoPoint> supplementalList;
-        for (int i=0; i<nrMeteoPoints; i++)
-        {
-            if (meteoPoints[i].active)
-            {
-                if (meteoPoints[i].lapseRateCode == primary)
-                {
-                    primaryList.append(meteoPoints[i]);
-                }
-                else if (meteoPoints[i].lapseRateCode == secondary)
-                {
-                    secondaryList.append(meteoPoints[i]);
-                }
-                else if (meteoPoints[i].lapseRateCode == supplemental)
-                {
-                    supplementalList.append(meteoPoints[i]);
-                }
-            }
-        }
-        qDebug() << "Project::loadMeteoPointsData";
-        proxyWidget->updatePointList(primaryList, secondaryList, supplementalList);
-    }
-
     return isData;
 }
 
@@ -2695,25 +2668,28 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 
 void Project::showProxyGraph()
 {
-    QList<Crit3DMeteoPoint> primaryList;
-    QList<Crit3DMeteoPoint> secondaryList;
-    QList<Crit3DMeteoPoint> supplementalList;
+    std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
+    passDataToInterpolation(meteoPoints, nrMeteoPoints, outInterpolationPoints, &interpolationSettings);
 
-    for (int i=0; i<nrMeteoPoints; i++)
+    QList<Crit3DInterpolationDataPoint> primaryList;
+    QList<Crit3DInterpolationDataPoint> secondaryList;
+    QList<Crit3DInterpolationDataPoint> supplementalList;
+
+    for (int i = 0; i<outInterpolationPoints.size(); i++)
     {
-        if (meteoPoints[i].active)
+        if (outInterpolationPoints[i].isActive)
         {
-            if (meteoPoints[i].lapseRateCode == primary)
+            if (outInterpolationPoints[i].lapseRateCode == primary)
             {
-                primaryList.append(meteoPoints[i]);
+                primaryList.append(outInterpolationPoints[i]);
             }
-            else if (meteoPoints[i].lapseRateCode == secondary)
+            else if (outInterpolationPoints[i].lapseRateCode == secondary)
             {
-                secondaryList.append(meteoPoints[i]);
+                secondaryList.append(outInterpolationPoints[i]);
             }
-            else if (meteoPoints[i].lapseRateCode == supplemental)
+            else if (outInterpolationPoints[i].lapseRateCode == supplemental)
             {
-                supplementalList.append(meteoPoints[i]);
+                supplementalList.append(outInterpolationPoints[i]);
             }
         }
     }
@@ -2722,6 +2698,39 @@ void Project::showProxyGraph()
     return;
 }
 
+void Project::updateProxyWidgetPoints()
+{
+    if (proxyWidget == nullptr)
+    {
+        return;
+    }
+    std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
+    passDataToInterpolation(meteoPoints, nrMeteoPoints, outInterpolationPoints, &interpolationSettings);
+
+    QList<Crit3DInterpolationDataPoint> primaryList;
+    QList<Crit3DInterpolationDataPoint> secondaryList;
+    QList<Crit3DInterpolationDataPoint> supplementalList;
+
+    for (int i = 0; i<outInterpolationPoints.size(); i++)
+    {
+        if (outInterpolationPoints[i].isActive)
+        {
+            if (outInterpolationPoints[i].lapseRateCode == primary)
+            {
+                primaryList.append(outInterpolationPoints[i]);
+            }
+            else if (outInterpolationPoints[i].lapseRateCode == secondary)
+            {
+                secondaryList.append(outInterpolationPoints[i]);
+            }
+            else if (outInterpolationPoints[i].lapseRateCode == supplemental)
+            {
+                supplementalList.append(outInterpolationPoints[i]);
+            }
+        }
+    }
+    proxyWidget->updatePointList(primaryList, secondaryList, supplementalList);
+}
 
 
 /* ---------------------------------------------
