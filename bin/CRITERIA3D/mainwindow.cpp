@@ -207,7 +207,6 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent * event)
 }
 
 
-
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton)
@@ -279,6 +278,7 @@ void MainWindow::addMeteoPoints()
     }
 }
 
+
 void MainWindow::callNewMeteoWidget(std::string id, std::string name, bool isGrid)
 {
     bool isAppend = false;
@@ -292,6 +292,7 @@ void MainWindow::callNewMeteoWidget(std::string id, std::string name, bool isGri
     }
     return;
 }
+
 
 void MainWindow::callAppendMeteoWidget(std::string id, std::string name, bool isGrid)
 {
@@ -620,14 +621,44 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         case showLocation:
         {
             this->ui->actionView_PointsLocation->setChecked(true);
+            bool isSelected;
             for (int i = 0; i < myProject.nrMeteoPoints; i++)
             {
-                    myProject.meteoPoints[i].currentValue = NODATA;
-                    pointList[i]->setFillColor(QColor(Qt::white));
-                    pointList[i]->setRadius(5);
-                    pointList[i]->setCurrentValue(NODATA);
-                    pointList[i]->setToolTip();
-                    pointList[i]->setVisible(true);
+                myProject.meteoPoints[i].currentValue = NODATA;
+                pointList[i]->setRadius(5);
+                pointList[i]->setCurrentValue(NODATA);
+                pointList[i]->setToolTip();
+
+                isSelected = false;
+                for (int j = 0; j < myProject.meteoPointsSelected.size(); j++)
+                {
+                    if (myProject.meteoPoints[i].latitude == myProject.meteoPointsSelected[j].latitude && myProject.meteoPoints[i].longitude == myProject.meteoPointsSelected[j].longitude)
+                    {
+                        isSelected = true;
+                        break;
+                    }
+                }
+
+                // color
+                if (isSelected)
+                {
+                    pointList[i]->setFillColor(QColor(Qt::yellow));
+                }
+                else
+                {
+                    if (myProject.meteoPoints[i].active)
+                    {
+                        pointList[i]->setFillColor(QColor(Qt::white));
+                    }
+                    else if (! myProject.meteoPoints[i].active)
+                    {
+                        pointList[i]->setFillColor(QColor(Qt::red));
+                    }
+                }
+
+                // hide not active points
+                bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
+                pointList[i]->setVisible(isVisible);
             }
 
             myProject.meteoPointsColorScale->setRange(NODATA, NODATA);
@@ -646,7 +677,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             if (updateColorSCale)
             {
                 float minimum, maximum;
-                myProject.getMeteoPointsRange(&minimum, &maximum);
+                myProject.getMeteoPointsRange(minimum, maximum);
 
                 myProject.meteoPointsColorScale->setRange(minimum, maximum);
             }
@@ -677,7 +708,10 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     pointList[i]->setCurrentValue(myProject.meteoPoints[i].currentValue);
                     pointList[i]->setQuality(myProject.meteoPoints[i].quality);
                     pointList[i]->setToolTip();
-                    pointList[i]->setVisible(true);
+
+                    // hide not active points
+                    bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
+                    pointList[i]->setVisible(isVisible);
                 }
             }
 
