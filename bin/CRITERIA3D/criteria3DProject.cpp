@@ -340,7 +340,7 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
 {
     if (! this->DEM.isLoaded)
     {
-        errorString = "Load a Digital Elevation Model before.";
+        errorString = "Load a Digital Elevation Model (DEM) before.";
         return false;
     }
     if (this->hourlyMeteoMaps == nullptr)
@@ -581,6 +581,9 @@ bool Crit3DProject::computeSnowModel()
 
 bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutputPath)
 {
+    hourlyMeteoMaps->setComputed(false);
+    radiationMaps->setComputed(false);
+
     if (isMeteo)
     {
         if (! interpolateAndSaveHourlyMeteo(airTemperature, myTime, hourlyOutputPath, saveOutput)) return false;
@@ -644,7 +647,7 @@ bool Crit3DProject::saveModelState()
 {
     if (! snowMaps.isInitialized)
     {
-        logError("Snow model is not initialized");
+        logError("Initialize snow model before.");
         return false;
     }
 
@@ -656,7 +659,7 @@ bool Crit3DProject::saveModelState()
     }
 
     QString hourStr;
-    hourStr.sprintf("%00d", currentHour);
+    hourStr.sprintf("%02d", currentHour);
     QString dateFolder = currentDate.toString("yyyyMMdd") + "_H" + hourStr;
     if (!QDir(statePath+"/"+dateFolder).exists())
     {
@@ -707,6 +710,7 @@ bool Crit3DProject::saveModelState()
     return true;
 }
 
+
 QList<QString> Crit3DProject::getAllSavedState()
 {
     QList<QString> states;
@@ -715,10 +719,17 @@ QList<QString> Crit3DProject::getAllSavedState()
     QDir dir(statePath);
     if (!dir.exists())
     {
-        logError("empty states");
+        errorString = "STATES directory is missing.";
         return states;
     }
     QFileInfoList list = dir.entryInfoList(QDir::AllDirs | QDir::NoDot | QDir::NoDotDot | QDir::NoSymLinks);
+
+    if (list.size() == 0)
+    {
+        errorString = "STATES directory is empty.";
+        return states;
+    }
+
     for (int i=0; i<list.size(); i++)
     {
         if (list[i].baseName().size() == 12)
@@ -729,6 +740,7 @@ QList<QString> Crit3DProject::getAllSavedState()
     return states;
 }
 
+
 bool Crit3DProject::loadModelState(QString stateStr)
 {
     // state folder
@@ -737,7 +749,7 @@ bool Crit3DProject::loadModelState(QString stateStr)
     QDir stateDir(statePath);
     if (!stateDir.exists())
     {
-        logError("missing state");
+        errorString = "STATES directory is missing.";
         return false;
     }
 

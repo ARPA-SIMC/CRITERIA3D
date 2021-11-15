@@ -2159,9 +2159,9 @@
     <widget class="QDateEdit" name="dateEdit">
      <property name="geometry">
       <rect>
-       <x>20</x>
+       <x>50</x>
        <y>30</y>
-       <width>111</width>
+       <width>101</width>
        <height>31</height>
       </rect>
      </property>
@@ -2394,9 +2394,9 @@
     <widget class="QSpinBox" name="timeEdit">
      <property name="geometry">
       <rect>
-       <x>150</x>
+       <x>200</x>
        <y>30</y>
-       <width>51</width>
+       <width>41</width>
        <height>31</height>
       </rect>
      </property>
@@ -2405,6 +2405,32 @@
      </property>
      <property name="maximum">
       <number>24</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="dayBeforeButton">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>30</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&lt;</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="dayAfterButton">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>30</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>&gt;</string>
      </property>
     </widget>
    </widget>
@@ -3432,8 +3458,10 @@
     <addaction name="separator"/>
     <addaction name="actionInterpolationSettings"/>
     <addaction name="separator"/>
-    <addaction name="actionCompute_AllMeteoMaps"/>
+    <addaction name="actionProxy_analysis"/>
     <addaction name="separator"/>
+    <addaction name="actionCompute_hour_meteoVariables"/>
+    <addaction name="actionComputePeriod_meteoVariables"/>
    </widget>
    <widget class="QMenu" name="menuGIS_settings">
     <property name="title">
@@ -3720,9 +3748,9 @@
     <string>Compute current hour</string>
    </property>
   </action>
-  <action name="actionCompute_AllMeteoMaps">
+  <action name="actionCompute_hour_meteoVariables">
    <property name="text">
-    <string>Interpolate all meteo variables</string>
+    <string>Compute current hour (all meteo variables)</string>
    </property>
   </action>
   <action name="actionView_Global_irradiance">
@@ -3927,6 +3955,16 @@
   <action name="actionRadiation_run_model">
    <property name="text">
     <string>Run model...</string>
+   </property>
+  </action>
+  <action name="actionProxy_analysis">
+   <property name="text">
+    <string>Proxy analysis...</string>
+   </property>
+  </action>
+  <action name="actionComputePeriod_meteoVariables">
+   <property name="text">
+    <string>Compute period...</string>
    </property>
   </action>
  </widget>

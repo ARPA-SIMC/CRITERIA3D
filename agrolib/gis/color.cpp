@@ -68,26 +68,26 @@ bool Crit3DColorScale::setRange(float myMinimum, float myMaximum)
 
 bool Crit3DColorScale::classify()
 {
-    int i, j, n, nrIntervals;
-    float step, dRed, dGreen, dBlue;
+    int i, j, n, nrIntervals, nrStep;
+    float dRed, dGreen, dBlue;
 
     if (classification == classificationMethod::EqualInterval)
     {
-        nrIntervals = nrKeyColors - 1;
-        step = float(nrColors) / float(nrIntervals);
+        nrIntervals = std::max(nrKeyColors - 1, 1);
+        nrStep = nrColors / nrIntervals;
 
         for (i = 0; i < nrIntervals; i++)
         {
-            dRed = (keyColor[i+1].red - keyColor[i].red) / step;
-            dGreen = (keyColor[i+1].green - keyColor[i].green) / step;
-            dBlue = (keyColor[i+1].blue - keyColor[i].blue) / step;
+            dRed = float(keyColor[i+1].red - keyColor[i].red) / float(nrStep);
+            dGreen = float(keyColor[i+1].green - keyColor[i].green) / float(nrStep);
+            dBlue = float(keyColor[i+1].blue - keyColor[i].blue) / float(nrStep);
 
-            for (j = 0; j < step; j++)
+            for (j = 0; j < nrStep; j++)
             {
-                n = int(step) * i + j;
-                color[n].red = keyColor[i].red + short(dRed * j);
-                color[n].green = keyColor[i].green + short(dGreen * j);
-                color[n].blue = keyColor[i].blue + short(dBlue * j);
+                n = nrStep * i + j;
+                color[n].red = keyColor[i].red + short(dRed * float(j));
+                color[n].green = keyColor[i].green + short(dGreen * float(j));
+                color[n].blue = keyColor[i].blue + short(dBlue * float(j));
             }
         }
         color[nrColors-1] = keyColor[nrKeyColors -1];
@@ -113,7 +113,7 @@ Crit3DColor* Crit3DColorScale::getColor(float myValue)
     {
         if (classification == classificationMethod::EqualInterval)
         {
-            myIndex = int(round((nrColors-1) * ((myValue - minimum) / (maximum - minimum))));
+            myIndex = int(float(nrColors-1) * ((myValue - minimum) / (maximum - minimum)));
         }
     }
 
@@ -128,7 +128,7 @@ int Crit3DColorScale::getColorIndex(float myValue)
     else if (myValue >= maximum)
         return nrColors-1;
     else if (classification == classificationMethod::EqualInterval)
-        return int(round((nrColors-1) * ((myValue - minimum) / (maximum - minimum))));
+        return int(float(nrColors-1) * ((myValue - minimum) / (maximum - minimum)));
     else return 0;
 }
 
@@ -320,6 +320,7 @@ bool reverseColorScale(Crit3DColorScale* myScale)
     }
 
     // reclassify
+    delete [] oldKeyColor;
     return(myScale->classify());
 }
 
@@ -346,24 +347,24 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
     {
         if (isEqual(myScale->minimum, 0))
         {
-            myScale->maximum += 0.1;
+            myScale->maximum += 1;
         }
         else
         {
-            myScale->minimum -= 0.1;
-            myScale->maximum += 0.1;
+            myScale->minimum -= 1;
+            myScale->maximum += 1;
         }
         return true;
     }
 
-    double avg = myScale->minimum + (myScale->maximum - myScale->minimum) / 2;
-    double level = (myScale->maximum - myScale->minimum) / nrIntervals;
+    double avg = double(myScale->minimum) + double(myScale->maximum - myScale->minimum) / 2;
+    double level = double(myScale->maximum - myScale->minimum) / double(nrIntervals);
     double logLevel = log10(level);
 
     double myExp;
     double roundAvg = avg;
 
-    if (avg == 0.f)
+    if (isEqual(avg, 0))
     {
         myExp = floor(logLevel)-1;
     }
@@ -383,8 +384,10 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
     double pow10 = pow(10, myExp);
     double roundLevel = ceil(level / pow10) * pow10;
 
-    if (avg != 0.f)
+    if (! isEqual(avg, 0))
+    {
         roundAvg = round(avg / pow10) * pow10;
+    }
 
     if (myScale->minimum == 0.f)
     {

@@ -30,12 +30,13 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &secondaryList, QList<Crit3DMeteoPoint> &supplementalList, frequencyType currentFrequency, QDateTime currentDateTime)
-:interpolationSettings(interpolationSettings), primaryList(primaryList), secondaryList(secondaryList), supplementalList(supplementalList), currentFrequency(currentFrequency), currentDateTime(currentDateTime)
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DMeteoPoint> &primaryList, QList<Crit3DMeteoPoint> &secondaryList, QList<Crit3DMeteoPoint> &supplementalList, frequencyType currentFrequency, QDate currentDate, int currentHour)
+:interpolationSettings(interpolationSettings), primaryList(primaryList), secondaryList(secondaryList), supplementalList(supplementalList), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour)
 {
     
-    this->setWindowTitle("Statistics");
+    this->setWindowTitle("Proxy analysis");
     this->resize(1240, 700);
+    this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
     
 
@@ -109,19 +110,19 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
 
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
-    selectionOptionEditLayout->addSpacing(200);
+    selectionOptionEditLayout->addStretch(200);
     selectionOptionEditLayout->addWidget(lapseRateLabel);
     selectionOptionEditLayout->addWidget(&lapseRate);
-    selectionOptionEditLayout->addSpacing(200);
+    selectionOptionEditLayout->addStretch(200);
     selectionOptionEditLayout->addWidget(r2ThermalLevelsLabel);
     selectionOptionEditLayout->addWidget(&r2ThermalLevels);
-    selectionOptionEditLayout->addSpacing(200);
+    selectionOptionEditLayout->addStretch(200);
 
     selectionOptionLayout->addLayout(selectionOptionBoxLayout);
     selectionOptionLayout->addLayout(selectionOptionEditLayout);
 
     selectionLayout->addLayout(selectionChartLayout);
-    selectionLayout->addSpacing(50);
+    selectionLayout->addStretch(50);
     selectionLayout->addLayout(selectionOptionLayout);
     
     connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
@@ -197,9 +198,10 @@ void Crit3DProxyWidget::changeVar(const QString varName)
     plot();
 }
 
-void Crit3DProxyWidget::updateDateTime(QDateTime newDateTime)
+void Crit3DProxyWidget::updateDateTime(QDate newDate, int newHour)
 {
-    currentDateTime = newDateTime;
+    currentDate = newDate;
+    currentHour = newHour;
     plot();
 }
 
@@ -242,6 +244,10 @@ void Crit3DProxyWidget::plot()
     QList<QPointF> point_vector;
     QList<QPointF> point_vector2;
     QList<QPointF> point_vector3;
+    QMap< QString, QPointF > idPointMap;
+    QMap< QString, QPointF > idPointMap2;
+    QMap< QString, QPointF > idPointMap3;
+
     QPointF point;
 
     for (int i = 0; i<primaryList.size(); i++)
@@ -250,17 +256,18 @@ void Crit3DProxyWidget::plot()
         float varVal;
         if (currentFrequency == daily)
         {
-            varVal = primaryList[i].getMeteoPointValueD(getCrit3DDate(currentDateTime.date()), myVar);
+            varVal = primaryList[i].getMeteoPointValueD(getCrit3DDate(currentDate), myVar);
         }
         else if (currentFrequency == hourly)
         {
-            varVal = primaryList[i].getMeteoPointValueH(getCrit3DDate(currentDateTime.date()), currentDateTime.time().hour(), currentDateTime.time().minute(), myVar);
+            varVal = primaryList[i].getMeteoPointValueH(getCrit3DDate(currentDate), currentHour, 0, myVar);
         }
         if (proxyVal != NODATA && varVal != NODATA)
         {
             point.setX(proxyVal);
             point.setY(varVal);
             point_vector.append(point);
+            idPointMap.insert("id: "+QString::fromStdString(primaryList[i].id) + "\nname: "+QString::fromStdString(primaryList[i].name), point);
         }
     }
     for (int i = 0; i<secondaryList.size(); i++)
@@ -269,17 +276,18 @@ void Crit3DProxyWidget::plot()
         float varVal;
         if (currentFrequency == daily)
         {
-            varVal = secondaryList[i].getMeteoPointValueD(getCrit3DDate(currentDateTime.date()), myVar);
+            varVal = secondaryList[i].getMeteoPointValueD(getCrit3DDate(currentDate), myVar);
         }
         else if (currentFrequency == hourly)
         {
-            varVal = secondaryList[i].getMeteoPointValueH(getCrit3DDate(currentDateTime.date()), currentDateTime.time().hour(), currentDateTime.time().minute(), myVar);
+            varVal = secondaryList[i].getMeteoPointValueH(getCrit3DDate(currentDate), currentHour, 0, myVar);
         }
         if (proxyVal != NODATA && varVal != NODATA)
         {
             point.setX(proxyVal);
             point.setY(varVal);
             point_vector2.append(point);
+            idPointMap2.insert("id: "+QString::fromStdString(secondaryList[i].id) + "\nname: "+QString::fromStdString(secondaryList[i].name), point);
         }
 
     }
@@ -289,23 +297,23 @@ void Crit3DProxyWidget::plot()
         float varVal;
         if (currentFrequency == daily)
         {
-            varVal = supplementalList[i].getMeteoPointValueD(getCrit3DDate(currentDateTime.date()), myVar);
+            varVal = supplementalList[i].getMeteoPointValueD(getCrit3DDate(currentDate), myVar);
         }
         else if (currentFrequency == hourly)
         {
-            varVal = supplementalList[i].getMeteoPointValueH(getCrit3DDate(currentDateTime.date()), currentDateTime.time().hour(), currentDateTime.time().minute(), myVar);
+            varVal = supplementalList[i].getMeteoPointValueH(getCrit3DDate(currentDate), currentHour, 0, myVar);
         }
         if (proxyVal != NODATA && varVal != NODATA)
         {
             point.setX(proxyVal);
             point.setY(varVal);
             point_vector3.append(point);
+            idPointMap3.insert("id: "+QString::fromStdString(supplementalList[i].id) + "\nname: "+QString::fromStdString(supplementalList[i].name), point);
         }
 
     }
-    chartView->drawPointSeriesPrimary(point_vector);
-    chartView->drawPointSeriesSecondary(point_vector2);
-    chartView->drawPointSeriesSupplemental(point_vector3);
+    chartView->setIdPointMap(idPointMap,idPointMap2,idPointMap3);
+    chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
 }
 
 void Crit3DProxyWidget::climatologicalLRClicked(int toggled)

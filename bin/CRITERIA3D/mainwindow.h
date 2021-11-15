@@ -49,6 +49,8 @@
 
         void on_dateEdit_dateChanged(const QDate &date);
         void on_timeEdit_valueChanged(int myHour);
+        void on_dayBeforeButton_clicked();
+        void on_dayAfterButton_clicked();
 
         void on_variableButton_clicked();
         void on_opacitySliderRasterInput_sliderMoved(int position);
@@ -83,9 +85,12 @@
         void on_actionMapGoogle_satellite_triggered();
 
         void on_actionProjectSettings_triggered();
+
         void on_actionVariableQualitySpatial_triggered();
         void on_actionInterpolationSettings_triggered();
-        void on_actionCompute_AllMeteoMaps_triggered();
+        void on_actionProxy_analysis_triggered();
+        void on_actionComputePeriod_meteoVariables_triggered();
+        void on_actionCompute_hour_meteoVariables_triggered();
 
         void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
         void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
@@ -119,7 +124,6 @@
         void on_buttonModelPause_clicked();
         void on_buttonModelStop_clicked();
         void on_buttonModelStart_clicked();
-
 
     protected:
         /*!

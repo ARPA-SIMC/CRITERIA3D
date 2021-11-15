@@ -28,7 +28,6 @@
         /*
         gis::Crit3DRasterGrid* linkeMap;
         gis::Crit3DRasterGrid* albedoMap;
-        gis::Crit3DRasterGrid* reflectedRadiationMap;
         gis::Crit3DRasterGrid* sunAzimuthMap;
         gis::Crit3DRasterGrid* sunIncidenceMap;
         gis::Crit3DRasterGrid* sunShadowMap;
@@ -39,6 +38,7 @@
         ~Crit3DRadiationMaps();
 
         void clear();
+        void initialize();
         bool getComputed();
         void setComputed(bool value);
     };
