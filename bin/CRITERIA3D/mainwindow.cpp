@@ -41,6 +41,8 @@ MainWindow::MainWindow(QWidget *parent) :
     this->mapScene = new MapGraphicsScene(this);
     this->mapView = new MapGraphicsView(mapScene, this->ui->widgetMap);
 
+    this->rubberBand = new RubberBand(QRubberBand::Rectangle, this->mapView);
+
     this->inputRasterColorLegend = new ColorLegend(ui->colorScaleInputRaster);
     this->inputRasterColorLegend->resize(ui->colorScaleInputRaster->size());
 
@@ -146,17 +148,18 @@ void MainWindow::updateGUI()
 }
 
 
+// ------------------- SLOT -----------------------
 void MainWindow::mouseMove(const QPoint& eventPos)
 {
     if (! isInsideMap(eventPos)) return;
 
     // rubber band
-    /*
-    if (myRubberBand != nullptr && myRubberBand->isActive)
+    if (rubberBand != nullptr && rubberBand->isActive)
     {
-        myRubberBand->setGeometry(QRect(myRubberBand->getOrigin(), eventPos).normalized());
+        QPoint widgetPos = eventPos + QPoint(MAPBORDER, MAPBORDER);
+        rubberBand->setGeometry(QRect(rubberBand->getOrigin(), widgetPos).normalized());
         return;
-    }*/
+    }
 
     Position pos = this->mapView->mapToScene(eventPos);
 
@@ -176,14 +179,114 @@ void MainWindow::mouseMove(const QPoint& eventPos)
         infoStr += "  Value:" + QString::number(double(value));
 
     this->ui->statusBar->showMessage(infoStr);
+}
 
+
+bool MainWindow::updateSelection(const QPoint& position)
+{
+    if (rubberBand == nullptr || !rubberBand->isActive || !rubberBand->isVisible() )
+        return false;
+
+    QPoint lastCornerOffset = getMapPos(position);
+    QPoint firstCornerOffset = rubberBand->getOrigin() - QPoint(MAPBORDER, MAPBORDER);
+    QPoint pixelTopLeft;
+    QPoint pixelBottomRight;
+    bool isAdd = false;
+
+    if (firstCornerOffset.y() > lastCornerOffset.y())
+    {
+        if (firstCornerOffset.x() > lastCornerOffset.x())
+        {
+            // bottom to left
+            pixelTopLeft = lastCornerOffset;
+            pixelBottomRight = firstCornerOffset;
+            isAdd = false;
+        }
+        else
+        {
+            // bottom to right
+            pixelTopLeft = QPoint(firstCornerOffset.x(), lastCornerOffset.y());
+            pixelBottomRight = QPoint(lastCornerOffset.x(), firstCornerOffset.y());
+            isAdd = true;
+        }
+    }
+    else
+    {
+        if (firstCornerOffset.x() > lastCornerOffset.x())
+        {
+            // top to left
+            pixelTopLeft = QPoint(lastCornerOffset.x(), firstCornerOffset.y());
+            pixelBottomRight = QPoint(firstCornerOffset.x(), lastCornerOffset.y());
+            isAdd = false;
+        }
+        else
+        {
+            // top to right
+            pixelTopLeft = firstCornerOffset;
+            pixelBottomRight = lastCornerOffset;
+            isAdd = true;
+        }
+    }
+
+    QPointF topLeft = this->mapView->mapToScene(pixelTopLeft);
+    QPointF bottomRight = this->mapView->mapToScene(pixelBottomRight);
+    QRectF rectF(topLeft, bottomRight);
+    gis::Crit3DGeoPoint pointSelected;
+
+    foreach (StationMarker* marker, pointList)
+    {
+        if (rectF.contains(marker->longitude(), marker->latitude()))
+        {
+            pointSelected.latitude = marker->latitude();
+            pointSelected.longitude = marker->longitude();
+
+            if (isAdd)
+            {
+                bool found = false;
+                for (int i = 0; i < myProject.meteoPointsSelected.size(); i++)
+                {
+                    if (isEqual(myProject.meteoPointsSelected[i].latitude, pointSelected.latitude)
+                        && isEqual(myProject.meteoPointsSelected[i].longitude, pointSelected.longitude))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    myProject.meteoPointsSelected << pointSelected;
+                }
+            }
+            else if (!isAdd)
+            {
+                // remove
+                for (int i = 0; i<myProject.meteoPointsSelected.size(); i++)
+                {
+                    if (isEqual(myProject.meteoPointsSelected.at(i).latitude, pointSelected.latitude)
+                        && isEqual(myProject.meteoPointsSelected.at(i).longitude, pointSelected.longitude))
+                    {
+                        myProject.meteoPointsSelected.removeAt(i);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    rubberBand->isActive = false;
+    rubberBand->hide();
+    return true;
 }
 
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_UNUSED(event)
-    updateMaps();
+    this->updateMaps();
+    if (this->updateSelection(event->pos()))
+    {
+        this->redrawMeteoPoints(currentPointsVisualization, false);
+    }
 }
 
 
@@ -211,18 +314,31 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton)
     {
-        contextMenuRequested(event->pos(), event->globalPos());
+        if (contextMenuRequested(event->pos(), event->globalPos()))
+            return;
+
+        if (rubberBand != nullptr)
+        {
+            QPoint mapPos = getMapPos(event->pos());
+            QPoint widgetPos = mapPos + QPoint(MAPBORDER, MAPBORDER);
+            rubberBand->setOrigin(widgetPos);
+            rubberBand->setGeometry(QRect(widgetPos, QSize()));
+            rubberBand->isActive = true;
+            rubberBand->show();
+            return;
+        }
     }
 }
 
 
-void MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
+bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
 {
     QMenu submenu;
     int nrItems = 0;
 
     QPoint mapPos = getMapPos(localPos);
-    if (! isInsideMap(mapPos)) return;
+    if (! isInsideMap(mapPos))
+        return false;
 
     if (myProject.soilMap.isLoaded)
     {
@@ -232,7 +348,8 @@ void MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
             nrItems++;
         }
     }
-    if (nrItems == 0) return;
+    if (nrItems == 0)
+        return false;
 
     QAction* myAction = submenu.exec(globalPos);
 
@@ -248,6 +365,8 @@ void MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
             }
         }
     }
+
+    return true;
 }
 
 

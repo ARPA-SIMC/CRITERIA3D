@@ -9,6 +9,7 @@
     #include "mapGraphicsRasterObject.h"
     #include "stationMarker.h"
     #include "colorLegend.h"
+    #include "rubberBand.h"
 
     #include <QMainWindow>
 
@@ -158,6 +159,8 @@
         ColorLegend *outputRasterColorLegend;
         ColorLegend *meteoPointsLegend;
 
+        RubberBand *rubberBand;
+
         QActionGroup *showPointsGroup;
 
         visualizationType currentPointsVisualization;
@@ -171,6 +174,7 @@
         QPoint getMapPos(const QPoint& pos);
         bool isInsideMap(const QPoint& pos);
 
+        bool updateSelection(const QPoint& position);
         void updateCurrentVariable();
         void updateDateTime();
         void resetMeteoPoints();
@@ -186,7 +190,7 @@
         bool isSoil(QPoint mapPos);
         void openSoilWidget(QPoint mapPos);
         void showSoilMap();
-        void contextMenuRequested(QPoint localPos, QPoint globalPos);
+        bool contextMenuRequested(QPoint localPos, QPoint globalPos);
 
         void setInputRasterVisible(bool value);
         void setOutputRasterVisible(bool value);
