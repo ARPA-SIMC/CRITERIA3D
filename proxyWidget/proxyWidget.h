@@ -22,7 +22,6 @@
             void changeVar(const QString varName);
             void plot();
             void climatologicalLRClicked(int toggled);
-            void computeHighestStationIndex();
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
@@ -36,6 +35,7 @@
             frequencyType currentFrequency;
             QDate currentDate;
             int currentHour;
+            std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
             QComboBox variable;
             QComboBox axisX;
             QCheckBox detrended;
@@ -49,10 +49,8 @@
             meteoVariable myVar;
             int proxyPos;
 
-            //int highestStationIndex;
-            double zMax;
-            double zMin;
-            //int highestStationBelongToList;
+            float zMax;
+            float zMin;
 
     signals:
         void closeProxyWidget();

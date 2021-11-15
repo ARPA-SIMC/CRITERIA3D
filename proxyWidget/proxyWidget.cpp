@@ -24,6 +24,7 @@
 #include "meteo.h"
 #include "proxyWidget.h"
 #include "utilities.h"
+#include "interpolation.h"
 #include "spatialControl.h"
 #include "commonConstants.h"
 #include "formInfo.h"
@@ -133,7 +134,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     // compute highest station index
     zMin = std::numeric_limits<int>::max();
     zMax = std::numeric_limits<int>::min();
-    computeHighestStationIndex();
+
     // menu
     QMenuBar* menuBar = new QMenuBar();
     QMenu *editMenu = new QMenu("Edit");
@@ -244,7 +245,7 @@ void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
 
 void Crit3DProxyWidget::plot()
 {
-    std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
+    outInterpolationPoints.clear();
     checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
 
     QList<QPointF> point_vector;
@@ -302,89 +303,12 @@ void Crit3DProxyWidget::plot()
 void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
 {
     chartView->cleanClimLapseRate();
-    if (toggled)
+    if (toggled && outInterpolationPoints.size() != 0)
     {
+        zMax = getMaxHeight(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
+        zMin = getMinHeight(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
         chartView->drawClimLapseRate();
     }
 }
 
-void Crit3DProxyWidget::computeHighestStationIndex()
-{
-    /*
-    double zMaxPrimary = 0;
-    double zMaxSecondary = 0;
-    double zMaxSupplemental = 0;
-
-    int highestStationIndexPrimary = 0;
-    int highestStationIndexSecondary = 0;
-    int highestStationIndexSupplemental = 0;
-
-    for (int i = 0; i<primaryList.size(); i++)
-    {
-        if (primaryList[i].point.z > zMaxPrimary)
-        {
-            highestStationIndexPrimary = i;
-            zMaxPrimary = primaryList[i].point.z;
-        }
-    }
-
-    for (int i = 0; i<secondaryList.size(); i++)
-    {
-        if (secondaryList[i].point.z > zMaxSecondary)
-        {
-            highestStationIndexSecondary = i;
-            zMaxSecondary = secondaryList[i].point.z;
-        }
-    }
-
-    for (int i = 0; i<supplementalList.size(); i++)
-    {
-        if (supplementalList[i].point.z > zMaxSupplemental)
-        {
-            highestStationIndexSupplemental = i;
-            zMaxSupplemental = supplementalList[i].point.z;
-        }
-    }
-
-    if (std::max(zMaxPrimary, zMaxSecondary) == zMaxPrimary)
-    {
-        if (std::max(zMaxPrimary, zMaxSupplemental) == zMaxPrimary)
-        {
-            highestStationBelongToList = 0;
-            highestStationIndex = highestStationIndexPrimary;
-            zMax = zMaxPrimary;
-        }
-        else
-        {
-            highestStationBelongToList = 2;
-            highestStationIndex = highestStationIndexSupplemental;
-            zMax = zMaxSupplemental;
-        }
-    }
-    else
-    {
-        if (std::max(zMaxSecondary, zMaxSupplemental) == zMaxSecondary)
-        {
-            highestStationBelongToList = 1;
-            highestStationIndex = highestStationIndexSecondary;
-            zMax = zMaxSecondary;
-        }
-        else
-        {
-            highestStationBelongToList = 2;
-            highestStationIndex = highestStationIndexSupplemental;
-            zMax = zMaxSupplemental;
-        }
-    }
-
-    QList<Crit3DInterpolationDataPoint> list = primaryList;
-    list.append(secondaryList);
-    list.append(supplementalList);
-    foreach (Crit3DInterpolationDataPoint mp, list) {
-        zMin = qMin(zMin, mp.point->z);
-        zMax = qMax(zMax, mp.point->z);
-    }
-    */
-
-}
 
