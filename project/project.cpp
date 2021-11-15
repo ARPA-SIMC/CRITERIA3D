@@ -2668,70 +2668,10 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 
 void Project::showProxyGraph()
 {
-    std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
-    passDataToInterpolation(meteoPoints, nrMeteoPoints, outInterpolationPoints, &interpolationSettings);
-
-    QList<Crit3DInterpolationDataPoint> primaryList;
-    QList<Crit3DInterpolationDataPoint> secondaryList;
-    QList<Crit3DInterpolationDataPoint> supplementalList;
-
-    for (int i = 0; i<outInterpolationPoints.size(); i++)
-    {
-        if (outInterpolationPoints[i].isActive)
-        {
-            if (outInterpolationPoints[i].lapseRateCode == primary)
-            {
-                primaryList.append(outInterpolationPoints[i]);
-            }
-            else if (outInterpolationPoints[i].lapseRateCode == secondary)
-            {
-                secondaryList.append(outInterpolationPoints[i]);
-            }
-            else if (outInterpolationPoints[i].lapseRateCode == supplemental)
-            {
-                supplementalList.append(outInterpolationPoints[i]);
-            }
-        }
-    }
-    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, primaryList, secondaryList, supplementalList, currentFrequency, currentDate, currentHour);
+    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
     return;
 }
-
-void Project::updateProxyWidgetPoints()
-{
-    if (proxyWidget == nullptr)
-    {
-        return;
-    }
-    std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
-    passDataToInterpolation(meteoPoints, nrMeteoPoints, outInterpolationPoints, &interpolationSettings);
-
-    QList<Crit3DInterpolationDataPoint> primaryList;
-    QList<Crit3DInterpolationDataPoint> secondaryList;
-    QList<Crit3DInterpolationDataPoint> supplementalList;
-
-    for (int i = 0; i<outInterpolationPoints.size(); i++)
-    {
-        if (outInterpolationPoints[i].isActive)
-        {
-            if (outInterpolationPoints[i].lapseRateCode == primary)
-            {
-                primaryList.append(outInterpolationPoints[i]);
-            }
-            else if (outInterpolationPoints[i].lapseRateCode == secondary)
-            {
-                secondaryList.append(outInterpolationPoints[i]);
-            }
-            else if (outInterpolationPoints[i].lapseRateCode == supplemental)
-            {
-                supplementalList.append(outInterpolationPoints[i]);
-            }
-        }
-    }
-    proxyWidget->updatePointList(primaryList, secondaryList, supplementalList);
-}
-
 
 /* ---------------------------------------------
  * LOG functions

@@ -24,14 +24,15 @@
 #include "meteo.h"
 #include "proxyWidget.h"
 #include "utilities.h"
+#include "spatialControl.h"
 #include "commonConstants.h"
 #include "formInfo.h"
 
 #include <QLayout>
 #include <QDate>
 
-Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DInterpolationDataPoint> &primaryList, QList<Crit3DInterpolationDataPoint> &secondaryList, QList<Crit3DInterpolationDataPoint> &supplementalList, frequencyType currentFrequency, QDate currentDate, int currentHour)
-:interpolationSettings(interpolationSettings), primaryList(primaryList), secondaryList(secondaryList), supplementalList(supplementalList), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour)
+Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
+:interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
 {
     
     this->setWindowTitle("Proxy analysis");
@@ -243,7 +244,9 @@ void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
 
 void Crit3DProxyWidget::plot()
 {
-    /*
+    std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
+    checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
+
     QList<QPointF> point_vector;
     QList<QPointF> point_vector2;
     QList<QPointF> point_vector3;
@@ -252,72 +255,48 @@ void Crit3DProxyWidget::plot()
     QMap< QString, QPointF > idPointMap3;
 
     QPointF point;
-
-    for (int i = 0; i<primaryList.size(); i++)
+    for (int i = 0; i<outInterpolationPoints.size(); i++)
     {
-        float proxyVal = primaryList[i].getProxyValue(proxyPos);
-        float varVal;
-        if (currentFrequency == daily)
+        if (outInterpolationPoints[i].lapseRateCode == primary)
         {
-            varVal = primaryList[i].getMeteoPointValueD(getCrit3DDate(currentDate), myVar);
+            float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
+            float varVal = outInterpolationPoints[i].value;
+            if (proxyVal != NODATA && varVal != NODATA)
+            {
+                point.setX(proxyVal);
+                point.setY(varVal);
+                point_vector.append(point);
+                idPointMap.insert("id: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\nname: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name), point);
+            }
         }
-        else if (currentFrequency == hourly)
+        else if (outInterpolationPoints[i].lapseRateCode == secondary)
         {
-            varVal = primaryList[i].getMeteoPointValueH(getCrit3DDate(currentDate), currentHour, 0, myVar);
+            float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
+            float varVal = outInterpolationPoints[i].value;
+            if (proxyVal != NODATA && varVal != NODATA)
+            {
+                point.setX(proxyVal);
+                point.setY(varVal);
+                point_vector2.append(point);
+                idPointMap2.insert("id: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\nname: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name), point);
+            }
         }
-        if (proxyVal != NODATA && varVal != NODATA)
+        else if (outInterpolationPoints[i].lapseRateCode == supplemental)
         {
-            point.setX(proxyVal);
-            point.setY(varVal);
-            point_vector.append(point);
-            idPointMap.insert("id: "+QString::fromStdString(primaryList[i].id) + "\nname: "+QString::fromStdString(primaryList[i].name), point);
+            float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
+            float varVal = outInterpolationPoints[i].value;
+            if (proxyVal != NODATA && varVal != NODATA)
+            {
+                point.setX(proxyVal);
+                point.setY(varVal);
+                point_vector3.append(point);
+                idPointMap3.insert("id: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\nname: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name), point);
+            }
         }
-    }
-    for (int i = 0; i<secondaryList.size(); i++)
-    {
-        float proxyVal = secondaryList[i].getProxyValue(proxyPos);
-        float varVal;
-        if (currentFrequency == daily)
-        {
-            varVal = secondaryList[i].getMeteoPointValueD(getCrit3DDate(currentDate), myVar);
-        }
-        else if (currentFrequency == hourly)
-        {
-            varVal = secondaryList[i].getMeteoPointValueH(getCrit3DDate(currentDate), currentHour, 0, myVar);
-        }
-        if (proxyVal != NODATA && varVal != NODATA)
-        {
-            point.setX(proxyVal);
-            point.setY(varVal);
-            point_vector2.append(point);
-            idPointMap2.insert("id: "+QString::fromStdString(secondaryList[i].id) + "\nname: "+QString::fromStdString(secondaryList[i].name), point);
-        }
-
-    }
-    for (int i = 0; i<supplementalList.size(); i++)
-    {
-        float proxyVal = supplementalList[i].getProxyValue(proxyPos);
-        float varVal;
-        if (currentFrequency == daily)
-        {
-            varVal = supplementalList[i].getMeteoPointValueD(getCrit3DDate(currentDate), myVar);
-        }
-        else if (currentFrequency == hourly)
-        {
-            varVal = supplementalList[i].getMeteoPointValueH(getCrit3DDate(currentDate), currentHour, 0, myVar);
-        }
-        if (proxyVal != NODATA && varVal != NODATA)
-        {
-            point.setX(proxyVal);
-            point.setY(varVal);
-            point_vector3.append(point);
-            idPointMap3.insert("id: "+QString::fromStdString(supplementalList[i].id) + "\nname: "+QString::fromStdString(supplementalList[i].name), point);
-        }
-
     }
     chartView->setIdPointMap(idPointMap,idPointMap2,idPointMap3);
     chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
-    */
+
 }
 
 void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
@@ -397,7 +376,7 @@ void Crit3DProxyWidget::computeHighestStationIndex()
             zMax = zMaxSupplemental;
         }
     }
-    */
+
     QList<Crit3DInterpolationDataPoint> list = primaryList;
     list.append(secondaryList);
     list.append(supplementalList);
@@ -405,16 +384,7 @@ void Crit3DProxyWidget::computeHighestStationIndex()
         zMin = qMin(zMin, mp.point->z);
         zMax = qMax(zMax, mp.point->z);
     }
+    */
 
-}
-
-void Crit3DProxyWidget::updatePointList(const QList<Crit3DInterpolationDataPoint> &primaryValue, const QList<Crit3DInterpolationDataPoint> &secondaryValue, const QList<Crit3DInterpolationDataPoint> &supplementalValue )
-{
-    primaryList.clear();
-    secondaryList.clear();
-    supplementalList.clear();
-    primaryList = primaryValue;
-    secondaryList = secondaryValue;
-    supplementalList = supplementalValue;
 }
 
