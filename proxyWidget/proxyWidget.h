@@ -13,7 +13,7 @@
         Q_OBJECT
 
         public:
-            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, QList<Crit3DInterpolationDataPoint> &primaryList, QList<Crit3DInterpolationDataPoint> &supplementalList, QList<Crit3DInterpolationDataPoint> &secondaryList, frequencyType currentFrequency, QDate currentDate, int currentHour);
+            Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality* quality,  Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality);
             ~Crit3DProxyWidget();
             void closeEvent(QCloseEvent *event);
             void updateDateTime(QDate newDate, int newHour);
@@ -22,17 +22,20 @@
             void changeVar(const QString varName);
             void plot();
             void climatologicalLRClicked(int toggled);
-            void computeHighestStationIndex();
-            void updatePointList(const QList<Crit3DInterpolationDataPoint> &primaryValue, const QList<Crit3DInterpolationDataPoint> &secondaryValue, const QList<Crit3DInterpolationDataPoint> &supplementalValue );
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
-            QList<Crit3DInterpolationDataPoint> primaryList;
-            QList<Crit3DInterpolationDataPoint> secondaryList;
-            QList<Crit3DInterpolationDataPoint> supplementalList;
+            Crit3DQuality* quality;
+            Crit3DInterpolationSettings* SQinterpolationSettings;
+            Crit3DMeteoSettings *meteoSettings;
+            Crit3DMeteoPoint* meteoPoints;
+            Crit3DClimateParameters *climateParam;
+            int nrMeteoPoints;
+            bool checkSpatialQuality;
             frequencyType currentFrequency;
             QDate currentDate;
             int currentHour;
+            std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
             QComboBox variable;
             QComboBox axisX;
             QCheckBox detrended;
@@ -46,10 +49,8 @@
             meteoVariable myVar;
             int proxyPos;
 
-            //int highestStationIndex;
-            double zMax;
-            double zMin;
-            //int highestStationBelongToList;
+            float zMax;
+            float zMin;
 
     signals:
         void closeProxyWidget();
