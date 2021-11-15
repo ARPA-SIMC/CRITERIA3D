@@ -230,6 +230,7 @@
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
+        void updateProxyWidgetPoints();
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
