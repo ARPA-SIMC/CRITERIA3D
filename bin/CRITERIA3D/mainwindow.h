@@ -56,14 +56,15 @@
         void on_opacitySliderRasterInput_sliderMoved(int position);
         void on_opacitySliderRasterOutput_sliderMoved(int position);
 
-        void on_flag_view_SoilMap_triggered();
-
-        void on_actionView_Boundary_triggered();
-        void on_actionView_Slope_triggered();
-        void on_actionView_Aspect_triggered();
         void on_actionView_PointsHide_triggered();
         void on_actionView_PointsLocation_triggered();
         void on_actionView_PointsCurrentVariable_triggered();
+        void on_actionView_not_active_points_toggled(bool state);
+
+        void on_flag_view_SoilMap_triggered();
+        void on_actionView_Boundary_triggered();
+        void on_actionView_Slope_triggered();
+        void on_actionView_Aspect_triggered();
 
         void on_actionView_Transmissivity_triggered();
         void on_actionView_Global_irradiance_triggered();
@@ -160,6 +161,7 @@
         QActionGroup *showPointsGroup;
 
         visualizationType currentPointsVisualization;
+        bool viewNotActivePoints;
 
         Crit3DSoilWidget *soilWidget;
 
@@ -174,8 +176,7 @@
         void resetMeteoPoints();
         void redrawMeteoPoints(visualizationType myType, bool updateColorSCale);
 
-        bool loadMeteoPointsDB(QString dbName);
-        bool loadMeteoGridDB(QString xmlName);
+        bool loadMeteoPointsDB_GUI(QString dbName);
         void setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster);
         void setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster);
         void interpolateCurrentVariable();
@@ -207,6 +208,8 @@
         bool startModels(QDateTime firstTime, QDateTime lastTime);
         bool runModels(QDateTime firstTime, QDateTime lastTime);
     };
+
+    bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
 
 
 #endif // MAINWINDOW_H

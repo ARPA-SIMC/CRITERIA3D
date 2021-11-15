@@ -3499,6 +3499,8 @@
      <property name="title">
       <string>Meteo points</string>
      </property>
+     <addaction name="actionView_not_active_points"/>
+     <addaction name="separator"/>
      <addaction name="actionView_PointsHide"/>
      <addaction name="actionView_PointsLocation"/>
      <addaction name="actionView_PointsCurrentVariable"/>
@@ -3965,6 +3967,17 @@
   <action name="actionComputePeriod_meteoVariables">
    <property name="text">
     <string>Compute period...</string>
+   </property>
+  </action>
+  <action name="actionView_not_active_points">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>View not active points</string>
    </property>
   </action>
  </widget>
