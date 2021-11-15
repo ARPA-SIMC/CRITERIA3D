@@ -805,10 +805,10 @@ QDateTime Project::getCurrentTime()
     }
 }
 
-void Project::getMeteoPointsRange(float *minimum, float *maximum)
+void Project::getMeteoPointsRange(float& minimum, float& maximum)
 {
-    *minimum = NODATA;
-    *maximum = NODATA;
+    minimum = NODATA;
+    maximum = NODATA;
 
     if (currentFrequency == noFrequency || currentVariable == noMeteoVar)
         return;
@@ -816,17 +816,19 @@ void Project::getMeteoPointsRange(float *minimum, float *maximum)
     float v;
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        v = meteoPoints[i].currentValue;
-
-        if (int(v) != int(NODATA) && meteoPoints[i].quality == quality::accepted)
+        if (meteoPoints[i].active)
         {
-            if (int(*minimum) == int(NODATA))
+            v = meteoPoints[i].currentValue;
+            if (! isEqual(v, NODATA) && meteoPoints[i].quality == quality::accepted)
             {
-                *minimum = v;
-                *maximum = v;
+                if (isEqual(minimum, NODATA))
+                {
+                    minimum = v;
+                    maximum = v;
+                }
+                else if (v < minimum) minimum = v;
+                else if (v > maximum) maximum = v;
             }
-            else if (v < *minimum) *minimum = v;
-            else if (v > *maximum) *maximum = v;
         }
     }
 }
