@@ -127,6 +127,10 @@
         void on_buttonModelStop_clicked();
         void on_buttonModelStart_clicked();
 
+        void on_actionDelete_Points_Selected_triggered();
+
+        void on_actionDelete_Points_NotActive_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

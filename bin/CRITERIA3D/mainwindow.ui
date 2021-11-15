@@ -3458,10 +3458,10 @@
     <addaction name="separator"/>
     <addaction name="actionInterpolationSettings"/>
     <addaction name="separator"/>
-    <addaction name="actionProxy_analysis"/>
-    <addaction name="separator"/>
     <addaction name="actionCompute_hour_meteoVariables"/>
     <addaction name="actionComputePeriod_meteoVariables"/>
+    <addaction name="separator"/>
+    <addaction name="actionProxy_analysis"/>
    </widget>
    <widget class="QMenu" name="menuGIS_settings">
     <property name="title">
@@ -3594,8 +3594,22 @@
     <addaction name="actionRadiation_run_model"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuMeteo_points_2">
+    <property name="title">
+     <string>Meteo points</string>
+    </property>
+    <widget class="QMenu" name="menuDelete_points">
+     <property name="title">
+      <string>Delete points</string>
+     </property>
+     <addaction name="actionDelete_Points_Selected"/>
+     <addaction name="actionDelete_Points_NotActive"/>
+    </widget>
+    <addaction name="menuDelete_points"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
+   <addaction name="menuMeteo_points_2"/>
    <addaction name="menuDataSpatialization"/>
    <addaction name="menuSolar_radiation_model_2"/>
    <addaction name="menuSnow_model"/>
@@ -3978,6 +3992,16 @@
    </property>
    <property name="text">
     <string>View not active points</string>
+   </property>
+  </action>
+  <action name="actionDelete_Points_Selected">
+   <property name="text">
+    <string>Selected</string>
+   </property>
+  </action>
+  <action name="actionDelete_Points_NotActive">
+   <property name="text">
+    <string>Not active</string>
    </property>
   </action>
  </widget>
