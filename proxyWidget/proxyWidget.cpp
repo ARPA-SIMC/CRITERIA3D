@@ -305,8 +305,10 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
     chartView->cleanClimLapseRate();
     if (toggled && outInterpolationPoints.size() != 0)
     {
-        zMax = getMaxHeight(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
-        zMin = getMinHeight(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
+        zMax = getZmax(outInterpolationPoints);
+        zMin = getZmin(outInterpolationPoints);
+        // TO DO
+        // float lapseRate = climateParam->getClimateLapseRate(myVar, currentDate.month());
         chartView->drawClimLapseRate();
     }
 }
