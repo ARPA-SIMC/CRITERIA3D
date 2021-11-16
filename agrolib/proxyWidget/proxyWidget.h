@@ -22,6 +22,7 @@
             void changeVar(const QString varName);
             void plot();
             void climatologicalLRClicked(int toggled);
+            void modelLRClicked(int toggled);
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
