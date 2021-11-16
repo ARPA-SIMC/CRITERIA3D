@@ -1271,6 +1271,7 @@ bool Crit3DMeteoPointsDbHandler::setAllPointsNotActive()
     }
 }
 
+/*
 bool Crit3DMeteoPointsDbHandler::setGeoPointsListActiveState(QList<gis::Crit3DGeoPoint> pointList, bool activeState)
 {
     QSqlQuery qry(_db);
@@ -1291,6 +1292,7 @@ bool Crit3DMeteoPointsDbHandler::setGeoPointsListActiveState(QList<gis::Crit3DGe
     }
     return true;
 }
+*/
 
 
 bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& pointList, bool activeState, QString& error)
