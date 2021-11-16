@@ -55,5 +55,6 @@
     void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<float> &myValues);
     bool getUseDetrendingVar(meteoVariable myVar);
     bool getUseTdVar(meteoVariable myVar);
+    float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
 
 #endif // INTERPOLATION_H
