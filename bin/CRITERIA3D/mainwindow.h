@@ -57,10 +57,10 @@
         void on_opacitySliderRasterInput_sliderMoved(int position);
         void on_opacitySliderRasterOutput_sliderMoved(int position);
 
+        void on_flag_View_not_active_points_toggled(bool state);
         void on_actionView_PointsHide_triggered();
         void on_actionView_PointsLocation_triggered();
         void on_actionView_PointsCurrentVariable_triggered();
-        void on_actionView_not_active_points_toggled(bool state);
 
         void on_flag_view_SoilMap_triggered();
         void on_actionView_Boundary_triggered();
@@ -127,9 +127,12 @@
         void on_buttonModelStop_clicked();
         void on_buttonModelStart_clicked();
 
+        // menu meteo points
         void on_actionDelete_Points_Selected_triggered();
-
         void on_actionDelete_Points_NotActive_triggered();
+        void on_actionPoints_activate_all_triggered();
+        void on_actionPoints_deactivate_all_triggered();
+
 
     protected:
         /*!

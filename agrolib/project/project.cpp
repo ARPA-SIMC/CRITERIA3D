@@ -805,7 +805,7 @@ QDateTime Project::getCurrentTime()
     }
 }
 
-void Project::getMeteoPointsRange(float& minimum, float& maximum)
+void Project::getMeteoPointsRange(float& minimum, float& maximum, bool useNotActivePoints)
 {
     minimum = NODATA;
     maximum = NODATA;
@@ -816,7 +816,7 @@ void Project::getMeteoPointsRange(float& minimum, float& maximum)
     float v;
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        if (meteoPoints[i].active)
+        if (meteoPoints[i].active || useNotActivePoints)
         {
             v = meteoPoints[i].currentValue;
             if (! isEqual(v, NODATA) && meteoPoints[i].quality == quality::accepted)

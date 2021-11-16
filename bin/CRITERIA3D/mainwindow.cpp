@@ -16,8 +16,6 @@
 #include "dialogSnowSettings.h"
 #include "dialogLoadState.h"
 
-#include <QDebug>
-
 
 extern Crit3DProject myProject;
 
@@ -56,8 +54,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // initialize
     ui->labelInputRaster->setText("");
     ui->labelOutputRaster->setText("");
+    ui->flag_save_state_daily_step->setChecked(false);
+    ui->flag_View_not_active_points->setChecked(true);
     this->currentPointsVisualization = notShown;
-    this->viewNotActivePoints = false;
 
     // show menu
     showPointsGroup = new QActionGroup(this);
@@ -483,7 +482,7 @@ void MainWindow::setProjectTileMap()
 
 void MainWindow::drawProject()
 {
-    setProjectTileMap();
+    this->setProjectTileMap();
 
     if (myProject.DEM.isLoaded)
     {
@@ -497,7 +496,7 @@ void MainWindow::drawProject()
         mapView->setZoomLevel(8);
     }
 
-    drawMeteoPoints();
+    this->drawMeteoPoints();
     // drawMeteoGrid();
 
     QString title = "CRITERIA3D";
@@ -529,7 +528,7 @@ void MainWindow::clearMaps_GUI()
 
 void MainWindow::clearMeteoPoints_GUI()
 {
-    resetMeteoPoints();
+    this->resetMeteoPoints();
     meteoPointsLegend->setVisible(false);
     showPointsGroup->setEnabled(false);
 }
@@ -545,7 +544,7 @@ void MainWindow::renderDEM()
     ui->opacitySliderRasterInput->setEnabled(true);
     ui->opacitySliderRasterOutput->setEnabled(true);
 
-    setCurrentRasterInput(&(myProject.DEM));
+    this->setCurrentRasterInput(&(myProject.DEM));
     ui->labelInputRaster->setText(QString::fromStdString(getVariableString(noMeteoTerrain)));
 
     // center map
@@ -558,7 +557,7 @@ void MainWindow::renderDEM()
     mapView->setZoomLevel(quint8(size));
     mapView->centerOn(qreal(center->longitude), qreal(center->latitude));
 
-    updateMaps();
+    this->updateMaps();
 
     /*
     if (viewer3D != nullptr)
@@ -796,7 +795,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             if (updateColorSCale)
             {
                 float minimum, maximum;
-                myProject.getMeteoPointsRange(minimum, maximum);
+                myProject.getMeteoPointsRange(minimum, maximum, viewNotActivePoints);
 
                 myProject.meteoPointsColorScale->setRange(minimum, maximum);
             }
@@ -962,7 +961,7 @@ void MainWindow::on_actionView_3D_triggered()
 
 // ---------------- SHOW METEOPOINTS --------------------------------
 
-void MainWindow::on_actionView_not_active_points_toggled(bool state)
+void MainWindow::on_flag_View_not_active_points_toggled(bool state)
 {
     viewNotActivePoints = state;
     redrawMeteoPoints(currentPointsVisualization, true);
@@ -1555,16 +1554,9 @@ void MainWindow::on_actionLoad_Crop_data_triggered()
 }
 
 
-//------------------- INTERPOLATION -----------------
-
+//------------------- MENU INTERPOLATION --------------------
 void MainWindow::on_actionInterpolationSettings_triggered()
 {
-    /*if (myProject.meteoPointsDbHandler == nullptr)
-    {
-        myProject.logError(MISSING_DB_ERROR_STR);
-        return;
-    }*/
-
     DialogInterpolation* myInterpolationDialog = new DialogInterpolation(&myProject);
     myInterpolationDialog->close();
 }
@@ -1622,10 +1614,7 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
 }
 
 
-
-
-// ------------------------ MODELS ----------------------------------
-
+// ------------------------ MODEL CYCLE ----------------------------
 bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 {
     if (! myProject.meteoPointsLoaded)
@@ -1803,8 +1792,7 @@ void MainWindow::on_buttonModelStart_clicked()
 }
 
 
-//------------------- SOLAR RADIATION MODEL -----------------
-
+//------------------- MENU SOLAR RADIATION MODEL -----------------
 void MainWindow::on_actionRadiation_settings_triggered()
 {
     DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
@@ -1852,8 +1840,7 @@ void MainWindow::on_actionRadiation_run_model_triggered()
 }
 
 
-//-------------------- SNOW MODEL -----------------------
-
+//-------------------- MENU SNOW MODEL -----------------------
 void MainWindow::on_actionSnow_initialize_triggered()
 {
     if (myProject.initializeSnowModel())
@@ -1938,8 +1925,7 @@ void MainWindow::on_actionSnow_settings_triggered()
 }
 
 
-//-----------------  WATER FLUXES  -----------------
-
+//----------------- MENU WATER FLUXES  -----------------
 void MainWindow::on_actionCriteria3D_settings_triggered()
 {
     // TODO
@@ -1975,7 +1961,6 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 
 
 //------------------- STATES ----------------------
-
 void MainWindow::on_actionSave_state_triggered()
 {
     if (myProject.isProjectLoaded)
@@ -2030,6 +2015,55 @@ void MainWindow::on_flag_save_state_daily_step_triggered()
 }
 
 
+//-------------------- MENU METEO POINTS -----------------------------
+void MainWindow::on_actionPoints_activate_all_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(MISSING_DB_ERROR_STR);
+        return;
+    }
+
+    if (!myProject.meteoPointsDbHandler->setAllPointsActive())
+    {
+        myProject.logError("Failed to activate all points.");
+        return;
+    }
+
+    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    {
+        myProject.meteoPoints[i].active = true;
+    }
+
+    myProject.meteoPointsSelected.clear();
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionPoints_deactivate_all_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(MISSING_DB_ERROR_STR);
+        return;
+    }
+
+    if (!myProject.meteoPointsDbHandler->setAllPointsNotActive())
+    {
+        myProject.logError("Failed to deactivate all points.");
+        return;
+    }
+
+    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    {
+        myProject.meteoPoints[i].active = false;
+    }
+
+    myProject.meteoPointsSelected.clear();
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
 void MainWindow::on_actionDelete_Points_Selected_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
@@ -2067,7 +2101,6 @@ void MainWindow::on_actionDelete_Points_Selected_triggered()
         this->loadMeteoPointsDB_GUI(dbName);
     }
 }
-
 
 void MainWindow::on_actionDelete_Points_NotActive_triggered()
 {
