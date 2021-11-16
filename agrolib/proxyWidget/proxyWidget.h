@@ -41,7 +41,6 @@
             QCheckBox detrended;
             QCheckBox climatologicalLR;
             QCheckBox modelLP;
-            QCheckBox zeroIntercept;
             QTextEdit r2;
             QTextEdit lapseRate;
             QTextEdit r2ThermalLevels;

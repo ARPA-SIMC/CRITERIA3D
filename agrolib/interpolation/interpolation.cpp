@@ -64,6 +64,27 @@ float getMaxHeight(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool us
     return zMax;
 }
 
+float getZmin(std::vector <Crit3DInterpolationDataPoint> &myPoints)
+{
+    float myZmin = NODATA;
+
+    for (unsigned i = 0; i < myPoints.size(); i++)
+        if (myPoints[i].point->z != NODATA)
+            if (myZmin == NODATA || myPoints[i].point->z < myZmin)
+                myZmin = float(myPoints[i].point->z);
+    return myZmin;
+}
+
+float getZmax(std::vector <Crit3DInterpolationDataPoint> &myPoints)
+{
+    float myZmax = 0;
+
+    for (unsigned i = 0; i < myPoints.size(); i++)
+        if (myPoints[i].point->z > myZmax)
+            myZmax = float(myPoints[i].point->z);
+    return myZmax;
+}
+
 unsigned sortPointsByDistance(unsigned maxIndex, vector <Crit3DInterpolationDataPoint> &myPoints, vector <Crit3DInterpolationDataPoint> &myValidPoints)
 {   
     unsigned i;
