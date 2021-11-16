@@ -1302,3 +1302,19 @@ void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings,
     }
 }
 
+float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode)
+{
+    float maxPointsZ = getMaxHeight(myPoints, useLapseRateCode);
+    float lowerHeight = getZmin(myPoints);
+    float higherHeight = lowerHeight;
+    float getFirstIntervalHeightValue = NODATA;
+
+    while (getFirstIntervalHeightValue == NODATA && higherHeight < maxPointsZ)
+    {
+        higherHeight = std::min(higherHeight + 50, maxPointsZ);
+        getFirstIntervalHeightValue = findHeightIntervalAvgValue(useLapseRateCode, myPoints,
+                                                                 lowerHeight, higherHeight, maxPointsZ);
+    }
+    return getFirstIntervalHeightValue;
+}
+

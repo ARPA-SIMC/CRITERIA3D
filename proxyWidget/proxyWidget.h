@@ -50,6 +50,7 @@
 
             float zMax;
             float zMin;
+            float firstIntervalHeightValue;
 
     signals:
         void closeProxyWidget();

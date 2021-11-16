@@ -129,9 +129,10 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
 
-    // compute highest station index
-    zMin = std::numeric_limits<int>::max();
-    zMax = std::numeric_limits<int>::min();
+    // init
+    zMin = NODATA;
+    zMax = NODATA;
+    firstIntervalHeightValue = NODATA;
 
     // menu
     QMenuBar* menuBar = new QMenuBar();
@@ -303,10 +304,14 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
     chartView->cleanClimLapseRate();
     if (toggled && outInterpolationPoints.size() != 0)
     {
-        zMax = getZmax(outInterpolationPoints);
-        zMin = getZmin(outInterpolationPoints);
+        if (zMax == zMin == NODATA)
+        {
+            zMax = getZmax(outInterpolationPoints);
+            zMin = getZmin(outInterpolationPoints);
+            firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
+        }
+        float lapseRate = climateParam->getClimateLapseRate(myVar, getCrit3DTime(currentDate, currentHour));
         // TO DO
-        // float lapseRate = climateParam->getClimateLapseRate(myVar, currentDate.month());
         chartView->drawClimLapseRate();
     }
 }
