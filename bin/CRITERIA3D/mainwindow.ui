@@ -3610,7 +3610,7 @@
       <string>Activate points</string>
      </property>
      <addaction name="actionPoints_activate_all"/>
-     <addaction name="actionSelected"/>
+     <addaction name="actionPoints_activate_selected"/>
      <addaction name="actionFrom_point_list"/>
      <addaction name="actionWith_criteria"/>
     </widget>
@@ -3619,7 +3619,7 @@
       <string>Deactivate points</string>
      </property>
      <addaction name="actionPoints_deactivate_all"/>
-     <addaction name="actionSelected_2"/>
+     <addaction name="actionPoints_deactivate_selected"/>
      <addaction name="actionWith_criteria_2"/>
      <addaction name="actionWith_no_data"/>
     </widget>
@@ -4042,12 +4042,12 @@
     <string>All</string>
    </property>
   </action>
-  <action name="actionSelected">
+  <action name="actionPoints_activate_selected">
    <property name="text">
     <string>Selected</string>
    </property>
   </action>
-  <action name="actionSelected_2">
+  <action name="actionPoints_deactivate_selected">
    <property name="text">
     <string>Selected</string>
    </property>

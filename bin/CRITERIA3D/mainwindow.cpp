@@ -280,7 +280,6 @@ bool MainWindow::updateSelection(const QPoint& position)
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    Q_UNUSED(event)
     this->updateMaps();
     if (this->updateSelection(event->pos()))
     {
@@ -2064,6 +2063,56 @@ void MainWindow::on_actionPoints_deactivate_all_triggered()
 }
 
 
+
+void MainWindow::on_actionPoints_activate_selected_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(MISSING_DB_ERROR_STR);
+        return;
+    }
+
+    if (myProject.meteoPointsSelected.isEmpty())
+    {
+        myProject.logError("No meteo points selected.");
+        return;
+    }
+
+    myProject.logInfoGUI("Activate points...");
+
+    QList<QString> selectedPointList;
+    for (int j = 0; j < myProject.meteoPointsSelected.size(); j++)
+    {
+        for (int i = 0; i < myProject.nrMeteoPoints; i++)
+        {
+            if (myProject.meteoPoints[i].latitude == myProject.meteoPointsSelected[j].latitude && myProject.meteoPoints[i].longitude == myProject.meteoPointsSelected[j].longitude)
+            {
+                myProject.meteoPoints[i].active = true;
+                selectedPointList << QString::fromStdString(myProject.meteoPoints[i].id);
+            }
+        }
+    }
+
+    if (!myProject.meteoPointsDbHandler->setIdPointListActiveState(selectedPointList, true))
+    {
+        myProject.logError("Failed to activate selected points.");
+        return;
+    }
+
+    myProject.closeLogInfo();
+
+    myProject.meteoPointsSelected.clear();
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionPoints_deactivate_selected_triggered()
+{
+
+}
+
+
+
 void MainWindow::on_actionDelete_Points_Selected_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
@@ -2146,5 +2195,6 @@ void MainWindow::on_actionDelete_Points_NotActive_triggered()
         this->loadMeteoPointsDB_GUI(dbName);
     }
 }
+
 
 
