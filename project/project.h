@@ -45,6 +45,10 @@
     #define ERROR_DBPOINT 3
     #define ERROR_DBGRID 4
 
+    #define ERROR_STR_MISSING_DB "Load a meteo points DB before."
+    #define ERROR_STR_MISSING_DEM "Load a Digital Elevation Model (DEM) before."
+    #define ERROR_STR_MISSING_PROJECT "Open a project before."
+
     class Crit3DMeteoWidget;
     class FormInfo;
 
@@ -230,6 +234,9 @@
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
+
+        bool setActiveStateSelectedPoints(bool isActive);
+        bool setActiveStatePointList(QString fileName, bool isActive);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

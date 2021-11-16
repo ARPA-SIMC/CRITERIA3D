@@ -1271,6 +1271,7 @@ bool Crit3DMeteoPointsDbHandler::setAllPointsNotActive()
     }
 }
 
+/*
 bool Crit3DMeteoPointsDbHandler::setGeoPointsListActiveState(QList<gis::Crit3DGeoPoint> pointList, bool activeState)
 {
     QSqlQuery qry(_db);
@@ -1292,6 +1293,7 @@ bool Crit3DMeteoPointsDbHandler::setGeoPointsListActiveState(QList<gis::Crit3DGe
     return true;
 }
 
+
 bool Crit3DMeteoPointsDbHandler::setIdPointListActiveState(QList<QString> pointList, bool activeState)
 {
     QSqlQuery qry(_db);
@@ -1310,6 +1312,36 @@ bool Crit3DMeteoPointsDbHandler::setIdPointListActiveState(QList<QString> pointL
     }
     return true;
 }
+*/
+
+
+bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& pointList, bool activeState, QString& error)
+{
+    QString idList = "";
+    for (int i = 0; i < pointList.size(); i++)
+    {
+        QString id_point = pointList.at(i);
+        if (id_point != "")
+        {
+            if (idList != "")
+                idList += ",";
+            idList += id_point;
+        }
+    }
+
+    QString sqlStr = "UPDATE point_properties SET is_active = " + QString::number(activeState);
+    sqlStr+= " WHERE id_point IN (" + idList + ")";
+
+    QSqlQuery qry(_db);
+    if( !qry.exec(sqlStr))
+    {
+        error = qry.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
 
 bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromIdList(QList<QString> pointList)
 {
