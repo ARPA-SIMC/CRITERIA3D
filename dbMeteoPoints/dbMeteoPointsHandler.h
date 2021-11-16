@@ -79,7 +79,6 @@
 
         bool setAllPointsActive();
         bool setAllPointsNotActive();
-        bool setIdPointListActiveState(QList<QString> pointList, bool activeState);
         bool setActiveStatePointList(const QList<QString> &pointList, bool activeState, QString& error);
 
         bool deleteAllPointsFromIdList(QList<QString> pointList);
