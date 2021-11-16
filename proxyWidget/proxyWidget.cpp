@@ -131,6 +131,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
+    connect(&modelLP, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
 
     // init
     zMin = NODATA;
@@ -332,6 +333,24 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
         QPointF firstPoint(zMin, firstIntervalHeightValue);
         QPointF lastPoint(zMax, firstIntervalHeightValue + lapseRate*(zMax - zMin));
         chartView->drawClimLapseRate(firstPoint, lastPoint);
+    }
+}
+
+void Crit3DProxyWidget::modelLRClicked(int toggled)
+{
+    chartView->cleanModelLapseRate();
+    if (toggled && outInterpolationPoints.size() != 0)
+    {
+        if (axisX.currentText() == "elevation")
+        {
+            if (zMax == NODATA || zMin == NODATA)
+            {
+                zMax = getZmax(outInterpolationPoints);
+                zMin = getZmin(outInterpolationPoints);
+            }
+            // TO DO
+        }
+        chartView->drawModelLapseRate();
     }
 }
 
