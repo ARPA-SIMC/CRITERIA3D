@@ -75,6 +75,14 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     }
     proxyPos = 0;
     axisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    if (axisX.currentText() != "elevation")
+    {
+        climatologicalLR.setVisible(false);
+    }
+    else
+    {
+        climatologicalLR.setVisible(true);
+    }
 
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
@@ -178,6 +186,14 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
             proxyPos = pos;
             break;
         }
+    }
+    if (proxyName != "elevation")
+    {
+        climatologicalLR.setVisible(false);
+    }
+    else
+    {
+        climatologicalLR.setVisible(true);
     }
     plot();
 }
@@ -309,6 +325,10 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
         }
         float firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
         float lapseRate = climateParam->getClimateLapseRate(myVar, getCrit3DTime(currentDate, currentHour));
+        if (lapseRate == NODATA)
+        {
+            return;
+        }
         QPointF firstPoint(zMin, firstIntervalHeightValue);
         QPointF lastPoint(zMax, firstIntervalHeightValue + lapseRate*(zMax - zMin));
         chartView->drawClimLapseRate(firstPoint, lastPoint);
