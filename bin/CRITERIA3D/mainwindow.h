@@ -132,11 +132,11 @@
         void on_actionDelete_Points_NotActive_triggered();
         void on_actionPoints_activate_all_triggered();
         void on_actionPoints_deactivate_all_triggered();
-
-
         void on_actionPoints_activate_selected_triggered();
-
         void on_actionPoints_deactivate_selected_triggered();
+        void on_actionPoints_activate_from_point_list_triggered();
+
+        void on_actionPoints_deactivate_from_point_list_triggered();
 
     protected:
         /*!

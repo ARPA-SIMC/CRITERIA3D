@@ -15,16 +15,13 @@
 #include "criteria3DProject.h"
 #include "dialogSnowSettings.h"
 #include "dialogLoadState.h"
+#include "utilities.h"
 
 
 extern Crit3DProject myProject;
 
 #define MAPBORDER 10
 #define TOOLSWIDTH 270
-
-#define MISSING_DB_ERROR_STR "Load a meteo points DB before."
-#define MISSING_DEM_ERROR_STR "Load a Digital Elevation Model (DEM) before."
-#define MISSING_PROJECT_ERROR_STR "Open a project before."
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -943,7 +940,7 @@ void MainWindow::on_actionView_3D_triggered()
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return;
     }
 
@@ -996,7 +993,7 @@ void MainWindow::on_actionView_Slope_triggered()
     }
     else
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return;
     }
 }
@@ -1011,7 +1008,7 @@ void MainWindow::on_actionView_Aspect_triggered()
     }
     else
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return;
     }
 }
@@ -1038,7 +1035,7 @@ bool MainWindow::checkMapVariable(bool isComputed)
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -1070,7 +1067,7 @@ void MainWindow::showMeteoVariable(meteoVariable var)
 {
     if (myProject.hourlyMeteoMaps == nullptr)
     {
-        myProject.logError(MISSING_PROJECT_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
         return;
     }
 
@@ -1438,7 +1435,7 @@ void MainWindow::on_actionMeteoPointsImport_data_triggered()
 {
     if (! myProject.meteoPointsLoaded)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return;
     }
 
@@ -1564,7 +1561,7 @@ void MainWindow::on_actionProxy_analysis_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return;
     }
 
@@ -1582,7 +1579,7 @@ void MainWindow::on_actionCompute_hour_meteoVariables_triggered()
 {
     if (myProject.nrMeteoPoints == 0)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return;
     }
 
@@ -1618,7 +1615,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 {
     if (! myProject.meteoPointsLoaded)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -1651,7 +1648,7 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -1695,7 +1692,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -1802,7 +1799,7 @@ bool MainWindow::setRadiationAsCurrentVariable()
 {
     if (myProject.nrMeteoPoints == 0)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -1972,7 +1969,7 @@ void MainWindow::on_actionSave_state_triggered()
     }
     else
     {
-        myProject.logError(MISSING_PROJECT_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
     }
     return;
 }
@@ -1981,7 +1978,7 @@ void MainWindow::on_actionLoad_state_triggered()
 {
     if (! myProject.isProjectLoaded)
     {
-        myProject.logError(MISSING_PROJECT_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
         return;
     }
 
@@ -2019,7 +2016,7 @@ void MainWindow::on_actionPoints_activate_all_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return;
     }
 
@@ -2043,7 +2040,7 @@ void MainWindow::on_actionPoints_deactivate_all_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return;
     }
 
@@ -2063,61 +2060,57 @@ void MainWindow::on_actionPoints_deactivate_all_triggered()
 }
 
 
-
 void MainWindow::on_actionPoints_activate_selected_triggered()
 {
-    if (myProject.meteoPointsDbHandler == nullptr)
-    {
-        myProject.logError(MISSING_DB_ERROR_STR);
-        return;
-    }
-
-    if (myProject.meteoPointsSelected.isEmpty())
-    {
-        myProject.logError("No meteo points selected.");
-        return;
-    }
-
-    myProject.logInfoGUI("Activate points...");
-
-    QList<QString> selectedPointList;
-    for (int j = 0; j < myProject.meteoPointsSelected.size(); j++)
-    {
-        for (int i = 0; i < myProject.nrMeteoPoints; i++)
-        {
-            if (myProject.meteoPoints[i].latitude == myProject.meteoPointsSelected[j].latitude && myProject.meteoPoints[i].longitude == myProject.meteoPointsSelected[j].longitude)
-            {
-                myProject.meteoPoints[i].active = true;
-                selectedPointList << QString::fromStdString(myProject.meteoPoints[i].id);
-            }
-        }
-    }
-
-    if (!myProject.meteoPointsDbHandler->setIdPointListActiveState(selectedPointList, true))
-    {
-        myProject.logError("Failed to activate selected points.");
-        return;
-    }
-
-    myProject.closeLogInfo();
-
-    myProject.meteoPointsSelected.clear();
-    redrawMeteoPoints(currentPointsVisualization, true);
+    if (myProject.setActiveStateSelectedPoints(true))
+        redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 
 void MainWindow::on_actionPoints_deactivate_selected_triggered()
 {
-
+    if (myProject.setActiveStateSelectedPoints(false))
+        redrawMeteoPoints(currentPointsVisualization, true);
 }
 
+
+void MainWindow::on_actionPoints_activate_from_point_list_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open point list file"), "", tr("text files (*.txt)"));
+    if (fileName == "") return;
+
+    if (myProject.setActiveStatePointList(fileName, true))
+        redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionPoints_deactivate_from_point_list_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open point list file"), "", tr("text files (*.txt)"));
+    if (fileName == "") return;
+
+    if (myProject.setActiveStatePointList(fileName, false))
+        redrawMeteoPoints(currentPointsVisualization, true);
+}
 
 
 void MainWindow::on_actionDelete_Points_Selected_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return;
     }
 
@@ -2155,7 +2148,7 @@ void MainWindow::on_actionDelete_Points_NotActive_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return;
     }
 
@@ -2195,6 +2188,5 @@ void MainWindow::on_actionDelete_Points_NotActive_triggered()
         this->loadMeteoPointsDB_GUI(dbName);
     }
 }
-
 
 

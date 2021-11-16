@@ -3611,7 +3611,7 @@
      </property>
      <addaction name="actionPoints_activate_all"/>
      <addaction name="actionPoints_activate_selected"/>
-     <addaction name="actionFrom_point_list"/>
+     <addaction name="actionPoints_activate_from_point_list"/>
      <addaction name="actionWith_criteria"/>
     </widget>
     <widget class="QMenu" name="menuDeactivate_points">
@@ -3620,6 +3620,7 @@
      </property>
      <addaction name="actionPoints_deactivate_all"/>
      <addaction name="actionPoints_deactivate_selected"/>
+     <addaction name="actionPoints_deactivate_from_point_list"/>
      <addaction name="actionWith_criteria_2"/>
      <addaction name="actionWith_no_data"/>
     </widget>
@@ -4052,7 +4053,7 @@
     <string>Selected</string>
    </property>
   </action>
-  <action name="actionFrom_point_list">
+  <action name="actionPoints_activate_from_point_list">
    <property name="text">
     <string>From point list</string>
    </property>
@@ -4080,6 +4081,11 @@
   <action name="actionNot_active">
    <property name="text">
     <string>Not active</string>
+   </property>
+  </action>
+  <action name="actionPoints_deactivate_from_point_list">
+   <property name="text">
+    <string>From point list</string>
    </property>
   </action>
  </widget>
