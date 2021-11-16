@@ -779,16 +779,7 @@ int Project::getCurrentHour()
 
 Crit3DTime Project::getCrit3DCurrentTime()
 {
-    if (this->currentHour < 24)
-    {
-        return getCrit3DTime(this->currentDate, this->currentHour);
-    }
-    else
-    {
-        int nrDays = this->currentHour / 24;
-        int newHour = this->currentHour % 24;
-        return getCrit3DTime(this->currentDate.addDays(nrDays), newHour);
-    }
+     return getCrit3DTime(this->currentDate, this->currentHour);
 }
 
 QDateTime Project::getCurrentTime()
