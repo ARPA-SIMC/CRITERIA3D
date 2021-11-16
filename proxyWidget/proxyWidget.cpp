@@ -55,7 +55,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     detrended.setText("Detrended data");
     climatologicalLR.setText("Climatological lapse rate");
     modelLP.setText("Model lapse rate");
-    zeroIntercept.setText("Zero intercept");
     
     QLabel *r2Label = new QLabel(tr("R2"));
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
@@ -108,7 +107,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     selectionOptionBoxLayout->addWidget(&detrended);
     selectionOptionBoxLayout->addWidget(&climatologicalLR);
     selectionOptionBoxLayout->addWidget(&modelLP);
-    selectionOptionBoxLayout->addWidget(&zeroIntercept);
 
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
