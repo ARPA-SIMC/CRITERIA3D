@@ -43,14 +43,12 @@
             QCheckBox modelLP;
             QTextEdit r2;
             QTextEdit lapseRate;
-            QTextEdit r2ThermalLevels;
             ChartView *chartView;
             meteoVariable myVar;
             int proxyPos;
 
             float zMax;
             float zMin;
-            float firstIntervalHeightValue;
 
     signals:
         void closeProxyWidget();
