@@ -58,14 +58,11 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     
     QLabel *r2Label = new QLabel(tr("R2"));
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
-    QLabel *r2ThermalLevelsLabel = new QLabel(tr("R2 thermal levels"));
     
     r2.setMaximumWidth(50);
     r2.setMaximumHeight(30);
     lapseRate.setMaximumWidth(50);
     lapseRate.setMaximumHeight(30);
-    r2ThermalLevels.setMaximumWidth(50);
-    r2ThermalLevels.setMaximumHeight(30);
     
     QLabel *variableLabel = new QLabel(tr("Variable"));
     QLabel *axisXLabel = new QLabel(tr("Axis X"));
@@ -78,6 +75,14 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     }
     proxyPos = 0;
     axisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    if (axisX.currentText() != "elevation")
+    {
+        climatologicalLR.setVisible(false);
+    }
+    else
+    {
+        climatologicalLR.setVisible(true);
+    }
 
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
@@ -114,8 +119,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     selectionOptionEditLayout->addWidget(lapseRateLabel);
     selectionOptionEditLayout->addWidget(&lapseRate);
     selectionOptionEditLayout->addStretch(200);
-    selectionOptionEditLayout->addWidget(r2ThermalLevelsLabel);
-    selectionOptionEditLayout->addWidget(&r2ThermalLevels);
     selectionOptionEditLayout->addStretch(200);
 
     selectionOptionLayout->addLayout(selectionOptionBoxLayout);
@@ -129,9 +132,9 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
 
-    // compute highest station index
-    zMin = std::numeric_limits<int>::max();
-    zMax = std::numeric_limits<int>::min();
+    // init
+    zMin = NODATA;
+    zMax = NODATA;
 
     // menu
     QMenuBar* menuBar = new QMenuBar();
@@ -184,6 +187,14 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
             break;
         }
     }
+    if (proxyName != "elevation")
+    {
+        climatologicalLR.setVisible(false);
+    }
+    else
+    {
+        climatologicalLR.setVisible(true);
+    }
     plot();
 }
 
@@ -198,6 +209,10 @@ void Crit3DProxyWidget::changeVar(const QString varName)
         myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
     }
     plot();
+    if (climatologicalLR.isChecked())
+    {
+        climatologicalLRClicked(1);
+    }
 }
 
 void Crit3DProxyWidget::updateDateTime(QDate newDate, int newHour)
@@ -303,11 +318,20 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
     chartView->cleanClimLapseRate();
     if (toggled && outInterpolationPoints.size() != 0)
     {
-        zMax = getZmax(outInterpolationPoints);
-        zMin = getZmin(outInterpolationPoints);
-        // TO DO
-        // float lapseRate = climateParam->getClimateLapseRate(myVar, currentDate.month());
-        chartView->drawClimLapseRate();
+        if (zMax == NODATA || zMin == NODATA)
+        {
+            zMax = getZmax(outInterpolationPoints);
+            zMin = getZmin(outInterpolationPoints);
+        }
+        float firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
+        float lapseRate = climateParam->getClimateLapseRate(myVar, getCrit3DTime(currentDate, currentHour));
+        if (lapseRate == NODATA)
+        {
+            return;
+        }
+        QPointF firstPoint(zMin, firstIntervalHeightValue);
+        QPointF lastPoint(zMax, firstIntervalHeightValue + lapseRate*(zMax - zMin));
+        chartView->drawClimLapseRate(firstPoint, lastPoint);
     }
 }
 

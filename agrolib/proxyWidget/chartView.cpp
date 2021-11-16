@@ -118,10 +118,13 @@ void ChartView::cleanClimLapseRate()
     climLapseRatelineSeries->clear();
 }
 
-void ChartView::drawClimLapseRate()
+void ChartView::drawClimLapseRate(QPointF firstPoint, QPointF lastPoint)
 {
-    // TO DO
+    climLapseRatelineSeries->append(firstPoint);
+    climLapseRatelineSeries->append(lastPoint);
     chart()->addSeries(climLapseRatelineSeries);
+    climLapseRatelineSeries->attachAxis(axisX);
+    climLapseRatelineSeries->attachAxis(axisY);
 }
 
 void ChartView::setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental)
