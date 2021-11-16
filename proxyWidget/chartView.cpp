@@ -31,6 +31,9 @@ ChartView::ChartView(QWidget *parent) :
     climLapseRatelineSeries = new QLineSeries();
     climLapseRatelineSeries->setName("Climatological Lapse Rate");
 
+    modelLapseRatelineSeries = new QLineSeries();
+    modelLapseRatelineSeries->setName("Model lapse rate");
+
     setRenderHint(QPainter::Antialiasing);
     chart()->addSeries(series1);
     chart()->addSeries(series2);
@@ -125,6 +128,20 @@ void ChartView::drawClimLapseRate(QPointF firstPoint, QPointF lastPoint)
     chart()->addSeries(climLapseRatelineSeries);
     climLapseRatelineSeries->attachAxis(axisX);
     climLapseRatelineSeries->attachAxis(axisY);
+}
+
+void ChartView::cleanModelLapseRate()
+{
+    chart()->removeSeries(modelLapseRatelineSeries);
+    modelLapseRatelineSeries->clear();
+}
+
+void ChartView::drawModelLapseRate()
+{
+    // TO DO
+    chart()->addSeries(modelLapseRatelineSeries);
+    modelLapseRatelineSeries->attachAxis(axisX);
+    modelLapseRatelineSeries->attachAxis(axisY);
 }
 
 void ChartView::setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental)
