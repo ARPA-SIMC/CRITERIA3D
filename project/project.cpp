@@ -2677,6 +2677,75 @@ void Project::showProxyGraph()
     return;
 }
 
+
+bool Project::setActiveStateSelectedPoints(bool isActive)
+{
+    if (meteoPointsDbHandler == nullptr)
+    {
+        logError(ERROR_STR_MISSING_DB);
+        return false;
+    }
+
+    if (meteoPointsSelected.isEmpty())
+    {
+        logError("No meteo points selected.");
+        return false;
+    }
+
+    QList<QString> selectedPointList;
+    for (int j = 0; j < meteoPointsSelected.size(); j++)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].latitude == meteoPointsSelected[j].latitude && meteoPoints[i].longitude == meteoPointsSelected[j].longitude)
+            {
+                meteoPoints[i].active = isActive;
+                selectedPointList << QString::fromStdString(meteoPoints[i].id);
+            }
+        }
+    }
+
+    if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive, errorString))
+    {
+        logError("Failed to activate selected points:\n" + errorString);
+        return false;
+    }
+
+    meteoPointsSelected.clear();
+    return true;
+}
+
+
+bool Project::setActiveStatePointList(QString fileName, bool isActive)
+{
+    QList<QString> pointList = readListSingleColumn(fileName, errorString);
+    if (pointList.size() == 0)
+    {
+        logError();
+        return false;
+    }
+
+    if (!meteoPointsDbHandler->setActiveStatePointList(pointList, isActive, errorString))
+    {
+        logError("Failed to activate/deactivate point list:\n" + errorString);
+        return false;
+    }
+
+    for (int j = 0; j < pointList.size(); j++)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].id == pointList[j].toStdString())
+            {
+                meteoPoints[i].active = isActive;
+            }
+        }
+    }
+
+    return true;
+}
+
+
 /* ---------------------------------------------
  * LOG functions
  * --------------------------------------------*/

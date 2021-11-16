@@ -42,6 +42,7 @@
 
     std::vector <float> StringListToFloat(QStringList myList);
     QStringList FloatVectorToStringList(std::vector <float> myVector);
+    QList<QString> readListSingleColumn(QString fileName, QString& error);
 
     bool removeDirectory(QString myPath);
     bool searchDocPath(QString* docPath);
