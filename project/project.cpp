@@ -784,16 +784,9 @@ Crit3DTime Project::getCrit3DCurrentTime()
 
 QDateTime Project::getCurrentTime()
 {
-    if (this->currentHour < 24)
-    {
-        return QDateTime(this->currentDate, QTime(this->currentHour, 0, 0), Qt::UTC);
-    }
-    else
-    {
-        int nrDays = this->currentHour / 24;
-        int newHour = this->currentHour % 24;
-        return QDateTime(this->currentDate.addDays(nrDays), QTime(newHour, 0, 0), Qt::UTC);
-    }
+    QDateTime myTime;
+    myTime.setDate(this->currentDate);
+    return myTime.addSecs(this->currentHour * HOUR_SECONDS);
 }
 
 void Project::getMeteoPointsRange(float& minimum, float& maximum, bool useNotActivePoints)
