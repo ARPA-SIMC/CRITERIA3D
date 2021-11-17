@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <vector>
+#include <algorithm>
 
 #include "commonConstants.h"
 #include "basicMath.h"
