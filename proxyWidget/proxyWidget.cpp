@@ -340,6 +340,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
 {
     chartView->cleanModelLapseRate();
     QList<QPointF> point_vector;
+    QPointF point;
     if (toggled && outInterpolationPoints.size() != 0)
     {
         if (axisX.currentText() == "elevation")
@@ -349,22 +350,21 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                 zMax = getZmax(outInterpolationPoints);
                 zMin = getZmin(outInterpolationPoints);
             }
-            // TO DO
-            /*
-             * If Me.ChkDetrend.Value = vbUnchecked Then
-            isOK = Interpolation.regressionOrography(CurrentVariable)
-            Else
-                isOK = Interpolation.regressionOrography(CurrentVariable)
-            End If
-            If Not isOK Then Exit Sub
-            */
+
             if (interpolationSettings->getProxy(proxyPos)->getInversionIsSignificative())
             {
                 if (zMin < interpolationSettings->getProxy(proxyPos)->getLapseRateH0())
                 {
-                   // QPointF point(zMin, Interpolation.LapseRateT0);
+                    point.setX(zMin);
+                    //point.setY(Interpolation.LapseRateT0);
                    // point_vector.append(point);
                 }
+                point.setX(interpolationSettings->getProxy(proxyPos)->getLapseRateH0());
+                //point.setT(Interpolation.LapseRateT0);
+                point_vector.append(point);
+                point.setX(interpolationSettings->getProxy(proxyPos)->getLapseRateH1());
+                //point.setT(Interpolation.LapseRateT1);
+                point_vector.append(point);
             }
         }
         chartView->drawModelLapseRate();
