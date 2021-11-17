@@ -957,6 +957,11 @@ bool Project::loadMeteoPointsDB(QString dbName)
 
     dbPointsFileName = dbName;
     dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
+    if (! QFile(dbName).exists())
+    {
+        logError("Meteo points db does not exists:\n" + dbName);
+        return false;
+    }
 
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
     if (meteoPointsDbHandler->error != "")
