@@ -2,11 +2,11 @@
 #include "commonConstants.h"
 #include "crit3dDate.h"
 
-
 #include <QVariant>
 #include <QSqlDriver>
 #include <QSqlRecord>
 #include <QDir>
+#include <QTextStream>
 
 
 QList<QString> getFields(QSqlDatabase* db_, QString tableName)
@@ -481,4 +481,29 @@ void clearDir( const QString path )
         QDir subDir( dir.absoluteFilePath( dirItem ) );
         subDir.removeRecursively();
     }
+}
+
+
+QList<QString> readListSingleColumn(QString fileName, QString& error)
+{
+    QFile listFile(fileName);
+    QList<QString> myList;
+    if (listFile.open(QFile::ReadOnly | QFile::Text))
+    {
+        QTextStream sIn(&listFile);
+        while (!sIn.atEnd())
+        {
+            QString newValue = sIn.readLine();
+            if (newValue != "" && myList.contains(newValue) == 0)
+            {
+                myList << newValue;
+            }
+        }
+    }
+    else
+    {
+        error = "Error opening list file: " + fileName;
+    }
+
+    return myList;
 }

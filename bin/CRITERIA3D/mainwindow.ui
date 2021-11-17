@@ -3450,7 +3450,7 @@
     <addaction name="menuInput"/>
     <addaction name="separator"/>
    </widget>
-   <widget class="QMenu" name="menuVariable">
+   <widget class="QMenu" name="menuDataSpatialization">
     <property name="title">
      <string>Data spatialization</string>
     </property>
@@ -3458,10 +3458,10 @@
     <addaction name="separator"/>
     <addaction name="actionInterpolationSettings"/>
     <addaction name="separator"/>
-    <addaction name="actionProxy_analysis"/>
-    <addaction name="separator"/>
     <addaction name="actionCompute_hour_meteoVariables"/>
     <addaction name="actionComputePeriod_meteoVariables"/>
+    <addaction name="separator"/>
+    <addaction name="actionProxy_analysis"/>
    </widget>
    <widget class="QMenu" name="menuGIS_settings">
     <property name="title">
@@ -3483,7 +3483,7 @@
    </widget>
    <widget class="QMenu" name="menuCriteria3D">
     <property name="title">
-     <string>3D water fluxes</string>
+     <string>Water fluxes</string>
     </property>
     <addaction name="actionCriteria3D_settings"/>
     <addaction name="separator"/>
@@ -3499,6 +3499,8 @@
      <property name="title">
       <string>Meteo points</string>
      </property>
+     <addaction name="flag_View_not_active_points"/>
+     <addaction name="separator"/>
      <addaction name="actionView_PointsHide"/>
      <addaction name="actionView_PointsLocation"/>
      <addaction name="actionView_PointsCurrentVariable"/>
@@ -3584,7 +3586,7 @@
    </widget>
    <widget class="QMenu" name="menuSolar_radiation_model_2">
     <property name="title">
-     <string>Solar radiation model</string>
+     <string>Solar radiation</string>
     </property>
     <addaction name="actionRadiation_settings"/>
     <addaction name="separator"/>
@@ -3592,9 +3594,52 @@
     <addaction name="actionRadiation_run_model"/>
     <addaction name="separator"/>
    </widget>
+   <widget class="QMenu" name="menuMeteo_points_2">
+    <property name="title">
+     <string>Meteo points</string>
+    </property>
+    <widget class="QMenu" name="menuDelete_points">
+     <property name="title">
+      <string>Delete points</string>
+     </property>
+     <addaction name="actionDelete_Points_Selected"/>
+     <addaction name="actionDelete_Points_NotActive"/>
+    </widget>
+    <widget class="QMenu" name="menuActivate_points">
+     <property name="title">
+      <string>Activate points</string>
+     </property>
+     <addaction name="actionPoints_activate_all"/>
+     <addaction name="actionPoints_activate_selected"/>
+     <addaction name="actionPoints_activate_from_point_list"/>
+     <addaction name="actionWith_criteria"/>
+    </widget>
+    <widget class="QMenu" name="menuDeactivate_points">
+     <property name="title">
+      <string>Deactivate points</string>
+     </property>
+     <addaction name="actionPoints_deactivate_all"/>
+     <addaction name="actionPoints_deactivate_selected"/>
+     <addaction name="actionPoints_deactivate_from_point_list"/>
+     <addaction name="actionWith_criteria_2"/>
+     <addaction name="actionWith_no_data"/>
+    </widget>
+    <widget class="QMenu" name="menuDelete_data">
+     <property name="title">
+      <string>Delete data</string>
+     </property>
+     <addaction name="actionSelected_3"/>
+     <addaction name="actionNot_active"/>
+    </widget>
+    <addaction name="menuActivate_points"/>
+    <addaction name="menuDeactivate_points"/>
+    <addaction name="menuDelete_points"/>
+    <addaction name="menuDelete_data"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
-   <addaction name="menuVariable"/>
+   <addaction name="menuMeteo_points_2"/>
+   <addaction name="menuDataSpatialization"/>
    <addaction name="menuSolar_radiation_model_2"/>
    <addaction name="menuSnow_model"/>
    <addaction name="menuCriteria3D"/>
@@ -3954,7 +3999,7 @@
   </action>
   <action name="actionRadiation_run_model">
    <property name="text">
-    <string>Run model...</string>
+    <string>Compute period...</string>
    </property>
   </action>
   <action name="actionProxy_analysis">
@@ -3965,6 +4010,82 @@
   <action name="actionComputePeriod_meteoVariables">
    <property name="text">
     <string>Compute period...</string>
+   </property>
+  </action>
+  <action name="flag_View_not_active_points">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>View not active points</string>
+   </property>
+  </action>
+  <action name="actionDelete_Points_Selected">
+   <property name="text">
+    <string>Selected</string>
+   </property>
+  </action>
+  <action name="actionDelete_Points_NotActive">
+   <property name="text">
+    <string>Not active</string>
+   </property>
+  </action>
+  <action name="actionPoints_activate_all">
+   <property name="text">
+    <string>All</string>
+   </property>
+  </action>
+  <action name="actionPoints_deactivate_all">
+   <property name="text">
+    <string>All</string>
+   </property>
+  </action>
+  <action name="actionPoints_activate_selected">
+   <property name="text">
+    <string>Selected</string>
+   </property>
+  </action>
+  <action name="actionPoints_deactivate_selected">
+   <property name="text">
+    <string>Selected</string>
+   </property>
+  </action>
+  <action name="actionPoints_activate_from_point_list">
+   <property name="text">
+    <string>From point list</string>
+   </property>
+  </action>
+  <action name="actionWith_criteria">
+   <property name="text">
+    <string>With criteria</string>
+   </property>
+  </action>
+  <action name="actionWith_criteria_2">
+   <property name="text">
+    <string>With criteria</string>
+   </property>
+  </action>
+  <action name="actionWith_no_data">
+   <property name="text">
+    <string>With no data</string>
+   </property>
+  </action>
+  <action name="actionSelected_3">
+   <property name="text">
+    <string>Selected</string>
+   </property>
+  </action>
+  <action name="actionNot_active">
+   <property name="text">
+    <string>Not active</string>
+   </property>
+  </action>
+  <action name="actionPoints_deactivate_from_point_list">
+   <property name="text">
+    <string>From point list</string>
    </property>
   </action>
  </widget>

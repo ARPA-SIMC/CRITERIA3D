@@ -16,7 +16,9 @@ public:
     explicit ChartView(QWidget *parent = 0);
     void drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3);
     void cleanClimLapseRate();
-    void drawClimLapseRate();
+    void drawClimLapseRate(QPointF firstPoint, QPointF lastPoint);
+    void cleanModelLapseRate();
+    void drawModelLapseRate();
     void tooltipScatterSeries(QPointF point, bool state);
     void setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental);
 
@@ -25,6 +27,7 @@ private:
     QScatterSeries *series2;
     QScatterSeries *series3;
     QLineSeries* climLapseRatelineSeries;
+    QLineSeries* modelLapseRatelineSeries;
     QValueAxis* axisX;
     QValueAxis* axisY;
     ProxyCallout *m_tooltip;

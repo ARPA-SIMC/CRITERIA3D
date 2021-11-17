@@ -9,6 +9,7 @@
     #include "mapGraphicsRasterObject.h"
     #include "stationMarker.h"
     #include "colorLegend.h"
+    #include "rubberBand.h"
 
     #include <QMainWindow>
 
@@ -56,14 +57,15 @@
         void on_opacitySliderRasterInput_sliderMoved(int position);
         void on_opacitySliderRasterOutput_sliderMoved(int position);
 
-        void on_flag_view_SoilMap_triggered();
-
-        void on_actionView_Boundary_triggered();
-        void on_actionView_Slope_triggered();
-        void on_actionView_Aspect_triggered();
+        void on_flag_View_not_active_points_toggled(bool state);
         void on_actionView_PointsHide_triggered();
         void on_actionView_PointsLocation_triggered();
         void on_actionView_PointsCurrentVariable_triggered();
+
+        void on_flag_view_SoilMap_triggered();
+        void on_actionView_Boundary_triggered();
+        void on_actionView_Slope_triggered();
+        void on_actionView_Aspect_triggered();
 
         void on_actionView_Transmissivity_triggered();
         void on_actionView_Global_irradiance_triggered();
@@ -125,6 +127,17 @@
         void on_buttonModelStop_clicked();
         void on_buttonModelStart_clicked();
 
+        // menu meteo points
+        void on_actionDelete_Points_Selected_triggered();
+        void on_actionDelete_Points_NotActive_triggered();
+        void on_actionPoints_activate_all_triggered();
+        void on_actionPoints_deactivate_all_triggered();
+        void on_actionPoints_activate_selected_triggered();
+        void on_actionPoints_deactivate_selected_triggered();
+        void on_actionPoints_activate_from_point_list_triggered();
+
+        void on_actionPoints_deactivate_from_point_list_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -157,9 +170,12 @@
         ColorLegend *outputRasterColorLegend;
         ColorLegend *meteoPointsLegend;
 
+        RubberBand *rubberBand;
+
         QActionGroup *showPointsGroup;
 
         visualizationType currentPointsVisualization;
+        bool viewNotActivePoints;
 
         Crit3DSoilWidget *soilWidget;
 
@@ -169,13 +185,13 @@
         QPoint getMapPos(const QPoint& pos);
         bool isInsideMap(const QPoint& pos);
 
+        bool updateSelection(const QPoint& position);
         void updateCurrentVariable();
         void updateDateTime();
         void resetMeteoPoints();
         void redrawMeteoPoints(visualizationType myType, bool updateColorSCale);
 
-        bool loadMeteoPointsDB(QString dbName);
-        bool loadMeteoGridDB(QString xmlName);
+        bool loadMeteoPointsDB_GUI(QString dbName);
         void setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster);
         void setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster);
         void interpolateCurrentVariable();
@@ -185,7 +201,7 @@
         bool isSoil(QPoint mapPos);
         void openSoilWidget(QPoint mapPos);
         void showSoilMap();
-        void contextMenuRequested(QPoint localPos, QPoint globalPos);
+        bool contextMenuRequested(QPoint localPos, QPoint globalPos);
 
         void setInputRasterVisible(bool value);
         void setOutputRasterVisible(bool value);
@@ -207,6 +223,8 @@
         bool startModels(QDateTime firstTime, QDateTime lastTime);
         bool runModels(QDateTime firstTime, QDateTime lastTime);
     };
+
+    bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
 
 
 #endif // MAINWINDOW_H

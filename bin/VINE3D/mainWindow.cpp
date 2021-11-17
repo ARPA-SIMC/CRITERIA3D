@@ -519,7 +519,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             if (updateColorSCale)
             {
                 float minimum, maximum;
-                myProject.getMeteoPointsRange(&minimum, &maximum);
+                myProject.getMeteoPointsRange(minimum, maximum, true);
 
                 myProject.meteoPointsColorScale->setRange(minimum, maximum);
             }

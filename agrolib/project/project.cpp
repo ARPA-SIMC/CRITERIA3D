@@ -779,18 +779,20 @@ int Project::getCurrentHour()
 
 Crit3DTime Project::getCrit3DCurrentTime()
 {
-    return getCrit3DTime(this->currentDate, this->currentHour);
+     return getCrit3DTime(this->currentDate, this->currentHour);
 }
 
 QDateTime Project::getCurrentTime()
 {
-    return QDateTime(this->currentDate, QTime(this->currentHour, 0, 0), Qt::UTC);
+    QDateTime myTime;
+    myTime.setDate(this->currentDate);
+    return myTime.addSecs(this->currentHour * HOUR_SECONDS);
 }
 
-void Project::getMeteoPointsRange(float *minimum, float *maximum)
+void Project::getMeteoPointsRange(float& minimum, float& maximum, bool useNotActivePoints)
 {
-    *minimum = NODATA;
-    *maximum = NODATA;
+    minimum = NODATA;
+    maximum = NODATA;
 
     if (currentFrequency == noFrequency || currentVariable == noMeteoVar)
         return;
@@ -798,17 +800,19 @@ void Project::getMeteoPointsRange(float *minimum, float *maximum)
     float v;
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        v = meteoPoints[i].currentValue;
-
-        if (int(v) != int(NODATA) && meteoPoints[i].quality == quality::accepted)
+        if (meteoPoints[i].active || useNotActivePoints)
         {
-            if (int(*minimum) == int(NODATA))
+            v = meteoPoints[i].currentValue;
+            if (! isEqual(v, NODATA) && meteoPoints[i].quality == quality::accepted)
             {
-                *minimum = v;
-                *maximum = v;
+                if (isEqual(minimum, NODATA))
+                {
+                    minimum = v;
+                    maximum = v;
+                }
+                else if (v < minimum) minimum = v;
+                else if (v > maximum) maximum = v;
             }
-            else if (v < *minimum) *minimum = v;
-            else if (v > *maximum) *maximum = v;
         }
     }
 }
@@ -1124,33 +1128,6 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
     }
 
     if (showInfo) closeProgressBar();
-
-    if (proxyWidget != nullptr)
-    {
-        QList<Crit3DMeteoPoint> primaryList;
-        QList<Crit3DMeteoPoint> secondaryList;
-        QList<Crit3DMeteoPoint> supplementalList;
-        for (int i=0; i<nrMeteoPoints; i++)
-        {
-            if (meteoPoints[i].active)
-            {
-                if (meteoPoints[i].lapseRateCode == primary)
-                {
-                    primaryList.append(meteoPoints[i]);
-                }
-                else if (meteoPoints[i].lapseRateCode == secondary)
-                {
-                    secondaryList.append(meteoPoints[i]);
-                }
-                else if (meteoPoints[i].lapseRateCode == supplemental)
-                {
-                    supplementalList.append(meteoPoints[i]);
-                }
-            }
-        }
-        qDebug() << "Project::loadMeteoPointsData";
-        proxyWidget->updatePointList(primaryList, secondaryList, supplementalList);
-    }
 
     return isData;
 }
@@ -2695,33 +2672,78 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 
 void Project::showProxyGraph()
 {
-    QList<Crit3DMeteoPoint> primaryList;
-    QList<Crit3DMeteoPoint> secondaryList;
-    QList<Crit3DMeteoPoint> supplementalList;
-
-    for (int i=0; i<nrMeteoPoints; i++)
-    {
-        if (meteoPoints[i].active)
-        {
-            if (meteoPoints[i].lapseRateCode == primary)
-            {
-                primaryList.append(meteoPoints[i]);
-            }
-            else if (meteoPoints[i].lapseRateCode == secondary)
-            {
-                secondaryList.append(meteoPoints[i]);
-            }
-            else if (meteoPoints[i].lapseRateCode == supplemental)
-            {
-                supplementalList.append(meteoPoints[i]);
-            }
-        }
-    }
-    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, primaryList, secondaryList, supplementalList, currentFrequency, currentDate, currentHour);
+    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
     return;
 }
 
+
+bool Project::setActiveStateSelectedPoints(bool isActive)
+{
+    if (meteoPointsDbHandler == nullptr)
+    {
+        logError(ERROR_STR_MISSING_DB);
+        return false;
+    }
+
+    if (meteoPointsSelected.isEmpty())
+    {
+        logError("No meteo points selected.");
+        return false;
+    }
+
+    QList<QString> selectedPointList;
+    for (int j = 0; j < meteoPointsSelected.size(); j++)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].latitude == meteoPointsSelected[j].latitude && meteoPoints[i].longitude == meteoPointsSelected[j].longitude)
+            {
+                meteoPoints[i].active = isActive;
+                selectedPointList << QString::fromStdString(meteoPoints[i].id);
+            }
+        }
+    }
+
+    if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive, errorString))
+    {
+        logError("Failed to activate selected points:\n" + errorString);
+        return false;
+    }
+
+    meteoPointsSelected.clear();
+    return true;
+}
+
+
+bool Project::setActiveStatePointList(QString fileName, bool isActive)
+{
+    QList<QString> pointList = readListSingleColumn(fileName, errorString);
+    if (pointList.size() == 0)
+    {
+        logError();
+        return false;
+    }
+
+    if (!meteoPointsDbHandler->setActiveStatePointList(pointList, isActive, errorString))
+    {
+        logError("Failed to activate/deactivate point list:\n" + errorString);
+        return false;
+    }
+
+    for (int j = 0; j < pointList.size(); j++)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].id == pointList[j].toStdString())
+            {
+                meteoPoints[i].active = isActive;
+            }
+        }
+    }
+
+    return true;
+}
 
 
 /* ---------------------------------------------

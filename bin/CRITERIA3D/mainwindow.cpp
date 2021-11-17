@@ -15,18 +15,13 @@
 #include "criteria3DProject.h"
 #include "dialogSnowSettings.h"
 #include "dialogLoadState.h"
-
-#include <QDebug>
+#include "utilities.h"
 
 
 extern Crit3DProject myProject;
 
 #define MAPBORDER 10
 #define TOOLSWIDTH 270
-
-#define MISSING_DB_ERROR_STR "Load a meteo points DB before."
-#define MISSING_DEM_ERROR_STR "Load a Digital Elevation Model (DEM) before."
-#define MISSING_PROJECT_ERROR_STR "Open a project before."
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -41,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->mapScene = new MapGraphicsScene(this);
     this->mapView = new MapGraphicsView(mapScene, this->ui->widgetMap);
 
+    this->rubberBand = new RubberBand(QRubberBand::Rectangle, this->mapView);
 
     this->inputRasterColorLegend = new ColorLegend(ui->colorScaleInputRaster);
     this->inputRasterColorLegend->resize(ui->colorScaleInputRaster->size());
@@ -55,6 +51,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // initialize
     ui->labelInputRaster->setText("");
     ui->labelOutputRaster->setText("");
+    ui->flag_save_state_daily_step->setChecked(false);
+    ui->flag_View_not_active_points->setChecked(true);
     this->currentPointsVisualization = notShown;
 
     // show menu
@@ -146,17 +144,18 @@ void MainWindow::updateGUI()
 }
 
 
+// ------------------- SLOT -----------------------
 void MainWindow::mouseMove(const QPoint& eventPos)
 {
     if (! isInsideMap(eventPos)) return;
 
     // rubber band
-    /*
-    if (myRubberBand != nullptr && myRubberBand->isActive)
+    if (rubberBand != nullptr && rubberBand->isActive)
     {
-        myRubberBand->setGeometry(QRect(myRubberBand->getOrigin(), eventPos).normalized());
+        QPoint widgetPos = eventPos + QPoint(MAPBORDER, MAPBORDER);
+        rubberBand->setGeometry(QRect(rubberBand->getOrigin(), widgetPos).normalized());
         return;
-    }*/
+    }
 
     Position pos = this->mapView->mapToScene(eventPos);
 
@@ -176,14 +175,113 @@ void MainWindow::mouseMove(const QPoint& eventPos)
         infoStr += "  Value:" + QString::number(double(value));
 
     this->ui->statusBar->showMessage(infoStr);
+}
 
+
+bool MainWindow::updateSelection(const QPoint& position)
+{
+    if (rubberBand == nullptr || !rubberBand->isActive || !rubberBand->isVisible() )
+        return false;
+
+    QPoint lastCornerOffset = getMapPos(position);
+    QPoint firstCornerOffset = rubberBand->getOrigin() - QPoint(MAPBORDER, MAPBORDER);
+    QPoint pixelTopLeft;
+    QPoint pixelBottomRight;
+    bool isAdd = false;
+
+    if (firstCornerOffset.y() > lastCornerOffset.y())
+    {
+        if (firstCornerOffset.x() > lastCornerOffset.x())
+        {
+            // bottom to left
+            pixelTopLeft = lastCornerOffset;
+            pixelBottomRight = firstCornerOffset;
+            isAdd = false;
+        }
+        else
+        {
+            // bottom to right
+            pixelTopLeft = QPoint(firstCornerOffset.x(), lastCornerOffset.y());
+            pixelBottomRight = QPoint(lastCornerOffset.x(), firstCornerOffset.y());
+            isAdd = true;
+        }
+    }
+    else
+    {
+        if (firstCornerOffset.x() > lastCornerOffset.x())
+        {
+            // top to left
+            pixelTopLeft = QPoint(lastCornerOffset.x(), firstCornerOffset.y());
+            pixelBottomRight = QPoint(firstCornerOffset.x(), lastCornerOffset.y());
+            isAdd = false;
+        }
+        else
+        {
+            // top to right
+            pixelTopLeft = firstCornerOffset;
+            pixelBottomRight = lastCornerOffset;
+            isAdd = true;
+        }
+    }
+
+    QPointF topLeft = this->mapView->mapToScene(pixelTopLeft);
+    QPointF bottomRight = this->mapView->mapToScene(pixelBottomRight);
+    QRectF rectF(topLeft, bottomRight);
+    gis::Crit3DGeoPoint pointSelected;
+
+    foreach (StationMarker* marker, pointList)
+    {
+        if (rectF.contains(marker->longitude(), marker->latitude()))
+        {
+            pointSelected.latitude = marker->latitude();
+            pointSelected.longitude = marker->longitude();
+
+            if (isAdd)
+            {
+                bool found = false;
+                for (int i = 0; i < myProject.meteoPointsSelected.size(); i++)
+                {
+                    if (isEqual(myProject.meteoPointsSelected[i].latitude, pointSelected.latitude)
+                        && isEqual(myProject.meteoPointsSelected[i].longitude, pointSelected.longitude))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    myProject.meteoPointsSelected << pointSelected;
+                }
+            }
+            else if (!isAdd)
+            {
+                // remove
+                for (int i = 0; i<myProject.meteoPointsSelected.size(); i++)
+                {
+                    if (isEqual(myProject.meteoPointsSelected.at(i).latitude, pointSelected.latitude)
+                        && isEqual(myProject.meteoPointsSelected.at(i).longitude, pointSelected.longitude))
+                    {
+                        myProject.meteoPointsSelected.removeAt(i);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    rubberBand->isActive = false;
+    rubberBand->hide();
+    return true;
 }
 
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
-    Q_UNUSED(event)
-    updateMaps();
+    this->updateMaps();
+    if (this->updateSelection(event->pos()))
+    {
+        this->redrawMeteoPoints(currentPointsVisualization, false);
+    }
 }
 
 
@@ -207,13 +305,63 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent * event)
 }
 
 
-
 void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton)
     {
-        contextMenuRequested(event->pos(), event->globalPos());
+        if (contextMenuRequested(event->pos(), event->globalPos()))
+            return;
+
+        if (rubberBand != nullptr)
+        {
+            QPoint mapPos = getMapPos(event->pos());
+            QPoint widgetPos = mapPos + QPoint(MAPBORDER, MAPBORDER);
+            rubberBand->setOrigin(widgetPos);
+            rubberBand->setGeometry(QRect(widgetPos, QSize()));
+            rubberBand->isActive = true;
+            rubberBand->show();
+            return;
+        }
     }
+}
+
+
+bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
+{
+    QMenu submenu;
+    int nrItems = 0;
+
+    QPoint mapPos = getMapPos(localPos);
+    if (! isInsideMap(mapPos))
+        return false;
+
+    if (myProject.soilMap.isLoaded)
+    {
+        if (isSoil(mapPos))
+        {
+            submenu.addAction("Show soil data");
+            nrItems++;
+        }
+    }
+    if (nrItems == 0)
+        return false;
+
+    QAction* myAction = submenu.exec(globalPos);
+
+    if (myAction)
+    {
+        if (myAction->text().contains("Show soil data") )
+        {
+            if (myProject.nrSoils > 0) {
+                openSoilWidget(mapPos);
+            }
+            else {
+                myProject.logError("Load soil database before.");
+            }
+        }
+    }
+
+    return true;
 }
 
 
@@ -244,6 +392,7 @@ void MainWindow::addMeteoPoints()
     }
 }
 
+
 void MainWindow::callNewMeteoWidget(std::string id, std::string name, bool isGrid)
 {
     bool isAppend = false;
@@ -257,6 +406,7 @@ void MainWindow::callNewMeteoWidget(std::string id, std::string name, bool isGri
     }
     return;
 }
+
 
 void MainWindow::callAppendMeteoWidget(std::string id, std::string name, bool isGrid)
 {
@@ -328,7 +478,7 @@ void MainWindow::setProjectTileMap()
 
 void MainWindow::drawProject()
 {
-    setProjectTileMap();
+    this->setProjectTileMap();
 
     if (myProject.DEM.isLoaded)
     {
@@ -342,7 +492,7 @@ void MainWindow::drawProject()
         mapView->setZoomLevel(8);
     }
 
-    drawMeteoPoints();
+    this->drawMeteoPoints();
     // drawMeteoGrid();
 
     QString title = "CRITERIA3D";
@@ -374,7 +524,7 @@ void MainWindow::clearMaps_GUI()
 
 void MainWindow::clearMeteoPoints_GUI()
 {
-    resetMeteoPoints();
+    this->resetMeteoPoints();
     meteoPointsLegend->setVisible(false);
     showPointsGroup->setEnabled(false);
 }
@@ -390,7 +540,7 @@ void MainWindow::renderDEM()
     ui->opacitySliderRasterInput->setEnabled(true);
     ui->opacitySliderRasterOutput->setEnabled(true);
 
-    setCurrentRasterInput(&(myProject.DEM));
+    this->setCurrentRasterInput(&(myProject.DEM));
     ui->labelInputRaster->setText(QString::fromStdString(getVariableString(noMeteoTerrain)));
 
     // center map
@@ -403,7 +553,7 @@ void MainWindow::renderDEM()
     mapView->setZoomLevel(quint8(size));
     mapView->centerOn(qreal(center->longitude), qreal(center->latitude));
 
-    updateMaps();
+    this->updateMaps();
 
     /*
     if (viewer3D != nullptr)
@@ -416,6 +566,50 @@ void MainWindow::renderDEM()
 }
 
 
+// ----------------- DATE/TIME EDIT ---------------------------
+
+void MainWindow::updateDateTime()
+{
+    this->ui->dateEdit->setDate(myProject.getCurrentDate());
+    this->ui->timeEdit->setValue(myProject.getCurrentHour());
+}
+
+void MainWindow::on_dateEdit_dateChanged(const QDate &date)
+{
+    if (date != myProject.getCurrentDate())
+    {
+        myProject.loadMeteoPointsData(date, date, true, true, true);
+        myProject.loadMeteoGridData(date, date, true);
+        myProject.setAllHourlyMeteoMapsComputed(false);
+        myProject.setCurrentDate(date);
+    }
+
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+void MainWindow::on_dayBeforeButton_clicked()
+{
+    this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(-1));
+}
+
+void MainWindow::on_dayAfterButton_clicked()
+{
+    this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(1));
+}
+
+void MainWindow::on_timeEdit_valueChanged(int myHour)
+{
+    if (myHour != myProject.getCurrentHour())
+    {
+        myProject.setCurrentHour(myHour);
+        myProject.setAllHourlyMeteoMapsComputed(false);
+    }
+
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+
 void MainWindow::on_actionLoad_DEM_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), "", tr("ESRI grid files (*.flt)"));
@@ -426,7 +620,6 @@ void MainWindow::on_actionLoad_DEM_triggered()
 
     this->renderDEM();
 }
-
 
 void MainWindow::on_actionOpenProject_triggered()
 {
@@ -449,7 +642,6 @@ void MainWindow::on_actionOpenProject_triggered()
     drawProject();
 }
 
-
 void MainWindow::on_actionCloseProject_triggered()
 {
     if (! myProject.isProjectLoaded) return;
@@ -462,7 +654,6 @@ void MainWindow::on_actionCloseProject_triggered()
     drawProject();
 }
 
-
 QPoint MainWindow::getMapPos(const QPoint& pos)
 {
     QPoint mapPoint;
@@ -473,7 +664,6 @@ QPoint MainWindow::getMapPos(const QPoint& pos)
 
     return mapPoint;
 }
-
 
 bool MainWindow::isInsideMap(const QPoint& pos)
 {
@@ -486,7 +676,6 @@ bool MainWindow::isInsideMap(const QPoint& pos)
     else return false;
 }
 
-
 void MainWindow::resetMeteoPoints()
 {
     for (int i = 0; i < pointList.size(); i++)
@@ -498,13 +687,11 @@ void MainWindow::resetMeteoPoints()
     pointList.clear();
 }
 
-
 void MainWindow::on_actionVariableQualitySpatial_triggered()
 {
     myProject.checkSpatialQuality = ui->actionVariableQualitySpatial->isChecked();
     updateCurrentVariable();
 }
-
 
 void MainWindow::interpolateCurrentVariable()
 {
@@ -516,7 +703,6 @@ void MainWindow::interpolateCurrentVariable()
     }
 }
 
-
 void MainWindow::updateCurrentVariable()
 {
     std::string myString = getVariableString(myProject.getCurrentVariable());
@@ -524,51 +710,6 @@ void MainWindow::updateCurrentVariable()
 
     redrawMeteoPoints(currentPointsVisualization, true);
 }
-
-
-void MainWindow::updateDateTime()
-{
-    this->ui->dateEdit->setDate(myProject.getCurrentDate());
-    this->ui->timeEdit->setValue(myProject.getCurrentHour());
-}
-
-
-void MainWindow::on_dateEdit_dateChanged(const QDate &date)
-{
-    if (date != myProject.getCurrentDate())
-    {
-        myProject.loadMeteoPointsData(date, date, true, true, true);
-        myProject.loadMeteoGridData(date, date, true);
-        myProject.setAllHourlyMeteoMapsComputed(false);
-        myProject.setCurrentDate(date);
-    }
-
-    redrawMeteoPoints(currentPointsVisualization, true);
-}
-
-
-void MainWindow::on_dayBeforeButton_clicked()
-{
-     this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(-1));
-}
-
-void MainWindow::on_dayAfterButton_clicked()
-{
-     this->ui->dateEdit->setDate(this->ui->dateEdit->date().addDays(1));
-}
-
-
-void MainWindow::on_timeEdit_valueChanged(int myHour)
-{
-    if (myHour != myProject.getCurrentHour())
-    {
-        myProject.setCurrentHour(myHour);
-        myProject.setAllHourlyMeteoMapsComputed(false);
-    }
-
-    redrawMeteoPoints(currentPointsVisualization, true);
-}
-
 
 void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCale)
 {
@@ -594,14 +735,44 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         case showLocation:
         {
             this->ui->actionView_PointsLocation->setChecked(true);
+            bool isSelected;
             for (int i = 0; i < myProject.nrMeteoPoints; i++)
             {
-                    myProject.meteoPoints[i].currentValue = NODATA;
-                    pointList[i]->setFillColor(QColor(Qt::white));
-                    pointList[i]->setRadius(5);
-                    pointList[i]->setCurrentValue(NODATA);
-                    pointList[i]->setToolTip();
-                    pointList[i]->setVisible(true);
+                myProject.meteoPoints[i].currentValue = NODATA;
+                pointList[i]->setRadius(5);
+                pointList[i]->setCurrentValue(NODATA);
+                pointList[i]->setToolTip();
+
+                isSelected = false;
+                for (int j = 0; j < myProject.meteoPointsSelected.size(); j++)
+                {
+                    if (myProject.meteoPoints[i].latitude == myProject.meteoPointsSelected[j].latitude && myProject.meteoPoints[i].longitude == myProject.meteoPointsSelected[j].longitude)
+                    {
+                        isSelected = true;
+                        break;
+                    }
+                }
+
+                // color
+                if (isSelected)
+                {
+                    pointList[i]->setFillColor(QColor(Qt::yellow));
+                }
+                else
+                {
+                    if (myProject.meteoPoints[i].active)
+                    {
+                        pointList[i]->setFillColor(QColor(Qt::white));
+                    }
+                    else if (! myProject.meteoPoints[i].active)
+                    {
+                        pointList[i]->setFillColor(QColor(Qt::red));
+                    }
+                }
+
+                // hide not active points
+                bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
+                pointList[i]->setVisible(isVisible);
             }
 
             myProject.meteoPointsColorScale->setRange(NODATA, NODATA);
@@ -620,7 +791,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             if (updateColorSCale)
             {
                 float minimum, maximum;
-                myProject.getMeteoPointsRange(&minimum, &maximum);
+                myProject.getMeteoPointsRange(minimum, maximum, viewNotActivePoints);
 
                 myProject.meteoPointsColorScale->setRange(minimum, maximum);
             }
@@ -651,7 +822,10 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     pointList[i]->setCurrentValue(myProject.meteoPoints[i].currentValue);
                     pointList[i]->setQuality(myProject.meteoPoints[i].quality);
                     pointList[i]->setToolTip();
-                    pointList[i]->setVisible(true);
+
+                    // hide not active points
+                    bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
+                    pointList[i]->setVisible(isVisible);
                 }
             }
 
@@ -667,31 +841,15 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
     }
 }
 
-
-bool MainWindow::loadMeteoPointsDB(QString dbName)
-{
-    myProject.logInfoGUI("Load " + dbName);
-    bool success = myProject.loadMeteoPointsDB(dbName);
-    myProject.closeLogInfo();
-
-    if (success)
-        drawMeteoPoints();
-
-    return success;
-}
-
-
 void MainWindow::on_opacitySliderRasterInput_sliderMoved(int position)
 {
     this->rasterDEM->setOpacity(position / 100.0);
 }
 
-
 void MainWindow::on_opacitySliderRasterOutput_sliderMoved(int position)
 {
     this->rasterOutput->setOpacity(position / 100.0);
 }
-
 
 void MainWindow::on_variableButton_clicked()
 {
@@ -699,7 +857,6 @@ void MainWindow::on_variableButton_clicked()
     this->currentPointsVisualization = showCurrentVariable;
     this->updateCurrentVariable();
 }
-
 
 void MainWindow::setInputRasterVisible(bool value)
 {
@@ -715,7 +872,6 @@ void MainWindow::setOutputRasterVisible(bool value)
     rasterOutput->setVisible(value);
 }
 
-
 void MainWindow::setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster)
 {
     setInputRasterVisible(true);
@@ -727,7 +883,6 @@ void MainWindow::setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster)
     emit rasterDEM->redrawRequested();
 }
 
-
 void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
 {
     setOutputRasterVisible(true);
@@ -738,20 +893,6 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
     emit rasterOutput->redrawRequested();
     updateMaps();
 }
-
-
-void MainWindow::on_actionInterpolationSettings_triggered()
-{
-    /*if (myProject.meteoPointsDbHandler == nullptr)
-    {
-        myProject.logError(MISSING_DB_ERROR_STR);
-        return;
-    }*/
-
-    DialogInterpolation* myInterpolationDialog = new DialogInterpolation(&myProject);
-    myInterpolationDialog->close();
-}
-
 
 void MainWindow::on_actionProjectSettings_triggered()
 {
@@ -772,26 +913,7 @@ void MainWindow::on_actionProjectSettings_triggered()
 }
 
 
-void MainWindow::on_actionProxy_analysis_triggered()
-{
-    if (myProject.meteoPointsDbHandler == nullptr)
-    {
-        myProject.logError(MISSING_DB_ERROR_STR);
-        return;
-    }
-
-    std::vector<Crit3DProxy> proxy = myProject.interpolationSettings.getCurrentProxy();
-    if (proxy.size() == 0)
-    {
-        myProject.logError("No proxy loaded");
-        return;
-    }
-
-    return myProject.showProxyGraph();
-}
-
-
-// 3d VIEW (TODO)
+// ---------  3D VIEW (TODO)
 /*
 void MainWindow::on_viewer3DClosed()
 {
@@ -818,7 +940,7 @@ void MainWindow::on_actionView_3D_triggered()
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return;
     }
 
@@ -833,35 +955,63 @@ void MainWindow::on_actionView_3D_triggered()
 }
 */
 
-void MainWindow::showSoilMap()
+// ---------------- SHOW METEOPOINTS --------------------------------
+
+void MainWindow::on_flag_View_not_active_points_toggled(bool state)
 {
-    if (myProject.soilMap.isLoaded)
+    viewNotActivePoints = state;
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+void MainWindow::on_actionView_PointsHide_triggered()
+{
+    redrawMeteoPoints(notShown, true);
+}
+
+void MainWindow::on_actionView_PointsLocation_triggered()
+{
+    redrawMeteoPoints(showLocation, true);
+}
+
+void MainWindow::on_actionView_PointsCurrentVariable_triggered()
+{
+    redrawMeteoPoints(showCurrentVariable, true);
+}
+
+void MainWindow::on_actionView_None_triggered()
+{
+    setOutputRasterVisible(false);
+}
+
+void MainWindow::on_actionView_Slope_triggered()
+{
+    if (myProject.DEM.isLoaded)
     {
-        ui->flag_view_SoilMap->setChecked(true);
-        setColorScale(airTemperature, myProject.soilMap.colorScale);
-        setCurrentRasterOutput(&(myProject.soilMap));
-        ui->labelOutputRaster->setText("Soil index");
+        setColorScale(noMeteoTerrain, myProject.radiationMaps->slopeMap->colorScale);
+        setCurrentRasterOutput(myProject.radiationMaps->slopeMap);
+        ui->labelOutputRaster->setText("Slope °");
     }
     else
     {
-        myProject.logError("Load a soil map before.");
+        myProject.logError(ERROR_STR_MISSING_DEM);
+        return;
     }
 }
 
-
-void MainWindow::on_flag_view_SoilMap_triggered()
+void MainWindow::on_actionView_Aspect_triggered()
 {
-    if (ui->flag_view_SoilMap->isChecked())
+    if (myProject.DEM.isLoaded)
     {
-        showSoilMap();
+        setColorScale(noMeteoTerrain, myProject.radiationMaps->aspectMap->colorScale);
+        setCurrentRasterOutput(myProject.radiationMaps->aspectMap);
+        ui->labelOutputRaster->setText("Aspect °");
     }
     else
     {
-        if (ui->labelOutputRaster->text() == "Soil index")
-            setOutputRasterVisible(false);
+        myProject.logError(ERROR_STR_MISSING_DEM);
+        return;
     }
 }
-
 
 void MainWindow::on_actionView_Boundary_triggered()
 {
@@ -879,53 +1029,13 @@ void MainWindow::on_actionView_Boundary_triggered()
 }
 
 
-void MainWindow::on_actionView_None_triggered()
-{
-    setOutputRasterVisible(false);
-}
-
-void MainWindow::on_actionViewMeteoVariable_None_triggered()
-{
-    setOutputRasterVisible(false);
-}
-
-void MainWindow::on_actionView_Slope_triggered()
-{
-    if (myProject.DEM.isLoaded)
-    {
-        setColorScale(noMeteoTerrain, myProject.radiationMaps->slopeMap->colorScale);
-        setCurrentRasterOutput(myProject.radiationMaps->slopeMap);
-        ui->labelOutputRaster->setText("Slope °");
-    }
-    else
-    {
-        myProject.logError(MISSING_DEM_ERROR_STR);
-        return;
-    }
-}
-
-
-void MainWindow::on_actionView_Aspect_triggered()
-{
-    if (myProject.DEM.isLoaded)
-    {
-        setColorScale(noMeteoTerrain, myProject.radiationMaps->aspectMap->colorScale);
-        setCurrentRasterOutput(myProject.radiationMaps->aspectMap);
-        ui->labelOutputRaster->setText("Aspect °");
-    }
-    else
-    {
-        myProject.logError(MISSING_DEM_ERROR_STR);
-        return;
-    }
-}
-
+// -------------------- METEO VARIABLES -------------------------
 
 bool MainWindow::checkMapVariable(bool isComputed)
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -938,7 +1048,6 @@ bool MainWindow::checkMapVariable(bool isComputed)
     return true;
 }
 
-
 void MainWindow::setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
 {   
     setOutputVariable(myVar, myGrid);
@@ -947,7 +1056,6 @@ void MainWindow::setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *my
     updateCurrentVariable();
 }
 
-
 void MainWindow::setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
 {
     setColorScale(myVar, myGrid->colorScale);
@@ -955,12 +1063,11 @@ void MainWindow::setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *m
     ui->labelOutputRaster->setText(QString::fromStdString(getVariableString(myVar)));
 }
 
-
 void MainWindow::showMeteoVariable(meteoVariable var)
 {
     if (myProject.hourlyMeteoMaps == nullptr)
     {
-        myProject.logError(MISSING_PROJECT_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
         return;
     }
 
@@ -1021,54 +1128,10 @@ void MainWindow::showMeteoVariable(meteoVariable var)
     }
 }
 
-
-void MainWindow::showSnowVariable(meteoVariable var)
+void MainWindow::on_actionViewMeteoVariable_None_triggered()
 {
-    if (! myProject.snowMaps.isInitialized)
-    {
-        myProject.logError("Initialize snow model before.");
-        return;
-    }
-
-    switch(var)
-    {
-    case snowWaterEquivalent:
-        setOutputVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
-        break;
-
-    case snowFall:
-        setOutputVariable(snowFall, myProject.snowMaps.getSnowFallMap());
-        break;
-
-    case snowSurfaceTemperature:
-        setOutputVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
-        break;
-
-    case snowInternalEnergy:
-        setOutputVariable(snowInternalEnergy, myProject.snowMaps.getInternalEnergyMap());
-        break;
-
-    case snowSurfaceInternalEnergy:
-        setOutputVariable(snowSurfaceInternalEnergy, myProject.snowMaps.getSurfaceInternalEnergyMap());
-        break;
-
-    case snowLiquidWaterContent:
-        setOutputVariable(snowLiquidWaterContent, myProject.snowMaps.getLWContentMap());
-        break;
-
-    case snowAge:
-        setOutputVariable(snowAge, myProject.snowMaps.getAgeOfSnowMap());
-        break;
-
-    case snowMelt:
-        setOutputVariable(snowMelt, myProject.snowMaps.getSnowMeltMap());
-        break;
-
-    default:
-        {}
-    }
+    setOutputRasterVisible(false);
 }
-
 
 void MainWindow::on_actionView_Air_temperature_triggered()
 {
@@ -1120,6 +1183,56 @@ void MainWindow::on_actionView_Wind_intensity_triggered()
     showMeteoVariable(windScalarIntensity);
 }
 
+
+// ------------------ SNOW VARIABLES ------------------------------
+
+void MainWindow::showSnowVariable(meteoVariable var)
+{
+    if (! myProject.snowMaps.isInitialized)
+    {
+        myProject.logError("Initialize snow model before.");
+        return;
+    }
+
+    switch(var)
+    {
+    case snowWaterEquivalent:
+        setOutputVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
+        break;
+
+    case snowFall:
+        setOutputVariable(snowFall, myProject.snowMaps.getSnowFallMap());
+        break;
+
+    case snowSurfaceTemperature:
+        setOutputVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
+        break;
+
+    case snowInternalEnergy:
+        setOutputVariable(snowInternalEnergy, myProject.snowMaps.getInternalEnergyMap());
+        break;
+
+    case snowSurfaceInternalEnergy:
+        setOutputVariable(snowSurfaceInternalEnergy, myProject.snowMaps.getSurfaceInternalEnergyMap());
+        break;
+
+    case snowLiquidWaterContent:
+        setOutputVariable(snowLiquidWaterContent, myProject.snowMaps.getLWContentMap());
+        break;
+
+    case snowAge:
+        setOutputVariable(snowAge, myProject.snowMaps.getAgeOfSnowMap());
+        break;
+
+    case snowMelt:
+        setOutputVariable(snowMelt, myProject.snowMaps.getSnowMeltMap());
+        break;
+
+    default:
+    {}
+    }
+}
+
 void MainWindow::on_actionView_Snow_water_equivalent_triggered()
 {
     showSnowVariable(snowWaterEquivalent);
@@ -1160,54 +1273,32 @@ void MainWindow::on_actionView_Snowmelt_triggered()
     showSnowVariable(snowMelt);
 }
 
-
-void MainWindow::on_actionView_PointsHide_triggered()
-{
-    redrawMeteoPoints(notShown, true);
-}
-
-
-void MainWindow::on_actionView_PointsLocation_triggered()
-{
-    redrawMeteoPoints(showLocation, true);
-}
-
-
-void MainWindow::on_actionView_PointsCurrentVariable_triggered()
-{
-    redrawMeteoPoints(showCurrentVariable, true);
-}
-
+// ------------- TILES -----------------------------
 
 void MainWindow::on_actionMapTerrain_triggered()
 {
     this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
 }
 
-
 void MainWindow::on_actionMapOpenStreetMap_triggered()
 {
     this->setTileMapSource(WebTileSource::OPEN_STREET_MAP);
 }
-
 
 void MainWindow::on_actionMapESRISatellite_triggered()
 {
     this->setTileMapSource(WebTileSource::ESRI_WorldImagery);
 }
 
-
 void MainWindow::on_actionMapGoogle_satellite_triggered()
 {
     this->setTileMapSource(WebTileSource::GOOGLE_Satellite);
 }
 
-
 void MainWindow::on_actionMapGoogle_hybrid_satellite_triggered()
 {
     this->setTileMapSource(WebTileSource::GOOGLE_Hybrid_Satellite);
 }
-
 
 void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 {
@@ -1246,6 +1337,8 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 }
 
 
+// --------------- SHOW SOIL --------------------------------
+
 bool MainWindow::isSoil(QPoint mapPos)
 {
     if (! myProject.soilMap.isLoaded)
@@ -1259,6 +1352,33 @@ bool MainWindow::isSoil(QPoint mapPos)
     return (idSoil != NODATA);
 }
 
+void MainWindow::showSoilMap()
+{
+    if (myProject.soilMap.isLoaded)
+    {
+        ui->flag_view_SoilMap->setChecked(true);
+        setColorScale(airTemperature, myProject.soilMap.colorScale);
+        setCurrentRasterOutput(&(myProject.soilMap));
+        ui->labelOutputRaster->setText("Soil index");
+    }
+    else
+    {
+        myProject.logError("Load a soil map before.");
+    }
+}
+
+void MainWindow::on_flag_view_SoilMap_triggered()
+{
+    if (ui->flag_view_SoilMap->isChecked())
+    {
+        showSoilMap();
+    }
+    else
+    {
+        if (ui->labelOutputRaster->text() == "Soil index")
+            setOutputRasterVisible(false);
+    }
+}
 
 void MainWindow::openSoilWidget(QPoint mapPos)
 {
@@ -1291,88 +1411,31 @@ void MainWindow::openSoilWidget(QPoint mapPos)
 }
 
 
-void MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
+// --------------- METEOPOINTS DB ----------------------------------
+
+bool MainWindow::loadMeteoPointsDB_GUI(QString dbName)
 {
-    QMenu submenu;
-    int nrItems = 0;
+    myProject.logInfoGUI("Load " + dbName);
+    bool success = myProject.loadMeteoPointsDB(dbName);
+    myProject.closeLogInfo();
 
-    QPoint mapPos = getMapPos(localPos);
-    if (! isInsideMap(mapPos)) return;
+    if (success)
+        drawMeteoPoints();
 
-    if (myProject.soilMap.isLoaded)
-    {
-        if (isSoil(mapPos))
-        {
-            submenu.addAction("Show soil data");
-            nrItems++;
-        }
-    }
-    if (nrItems == 0) return;
-
-    QAction* myAction = submenu.exec(globalPos);
-
-    if (myAction)
-    {
-        if (myAction->text().contains("Show soil data") )
-        {
-            if (myProject.nrSoils > 0) {
-                openSoilWidget(mapPos);
-            }
-            else {
-                myProject.logError("Load soil database before.");
-            }
-        }
-    }
+    return success;
 }
-
-
-void MainWindow::on_actionLoad_soil_map_triggered()
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), "", tr("ESRI grid files (*.flt)"));
-    if (fileName == "") return;
-
-    if (myProject.loadSoilMap(fileName))
-    {
-        ui->flag_view_SoilMap->setEnabled(true);
-        showSoilMap();
-    }
-    else
-    {
-        ui->flag_view_SoilMap->setEnabled(false);
-    }
-}
-
-
-void MainWindow::on_actionLoad_soil_data_triggered()
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open DB soil"), "", tr("SQLite files (*.db)"));
-    if (fileName == "") return;
-
-    myProject.loadSoilDatabase(fileName);
-}
-
-
-void MainWindow::on_actionLoad_Crop_data_triggered()
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open DB Crop"), "", tr("SQLite files (*.db)"));
-    if (fileName == "") return;
-
-    myProject.loadCropDatabase(fileName);
-}
-
 
 void MainWindow::on_actionLoad_MeteoPoints_triggered()
 {
     QString dbName = QFileDialog::getOpenFileName(this, tr("Open meteo points DB"), "", tr("DB files (*.db)"));
-    if (dbName != "") loadMeteoPointsDB(dbName);
+    if (dbName != "") this->loadMeteoPointsDB_GUI(dbName);
 }
-
 
 void MainWindow::on_actionMeteoPointsImport_data_triggered()
 {
     if (! myProject.meteoPointsLoaded)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return;
     }
 
@@ -1385,7 +1448,6 @@ void MainWindow::on_actionMeteoPointsImport_data_triggered()
     bool importAllFiles = (reply == QMessageBox::Yes);
     myProject.importHourlyMeteoData(fileName, importAllFiles, true);
 }
-
 
 void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
 {
@@ -1449,15 +1511,111 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
         }
     }
 
-    loadMeteoPointsDB(dbName);
+    this->loadMeteoPointsDB_GUI(dbName);
 }
 
 
+// --------------- LOAD DATA ------------------------------------
+
+void MainWindow::on_actionLoad_soil_map_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), "", tr("ESRI grid files (*.flt)"));
+    if (fileName == "") return;
+
+    if (myProject.loadSoilMap(fileName))
+    {
+        ui->flag_view_SoilMap->setEnabled(true);
+        showSoilMap();
+    }
+    else
+    {
+        ui->flag_view_SoilMap->setEnabled(false);
+    }
+}
+
+void MainWindow::on_actionLoad_soil_data_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open DB soil"), "", tr("SQLite files (*.db)"));
+    if (fileName == "") return;
+
+    myProject.loadSoilDatabase(fileName);
+}
+
+void MainWindow::on_actionLoad_Crop_data_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open DB Crop"), "", tr("SQLite files (*.db)"));
+    if (fileName == "") return;
+
+    myProject.loadCropDatabase(fileName);
+}
+
+
+//------------------- MENU INTERPOLATION --------------------
+void MainWindow::on_actionInterpolationSettings_triggered()
+{
+    DialogInterpolation* myInterpolationDialog = new DialogInterpolation(&myProject);
+    myInterpolationDialog->close();
+}
+
+void MainWindow::on_actionProxy_analysis_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    std::vector<Crit3DProxy> proxy = myProject.interpolationSettings.getCurrentProxy();
+    if (proxy.size() == 0)
+    {
+        myProject.logError("No proxy loaded");
+        return;
+    }
+
+    return myProject.showProxyGraph();
+}
+
+void MainWindow::on_actionCompute_hour_meteoVariables_triggered()
+{
+    if (myProject.nrMeteoPoints == 0)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    setOutputRasterVisible(false);
+
+    if (! myProject.computeAllMeteoMaps(myProject.getCurrentTime(), true))
+    {
+        myProject.logError();
+        return;
+    }
+
+    showMeteoVariable(myProject.getCurrentVariable());
+}
+
+void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
+{
+    QDateTime firstTime, lastTime;
+    if (! selectDates (firstTime, lastTime))
+        return;
+
+    myProject.isMeteo = true;
+    myProject.isRadiation = false;
+    myProject.isSnow = false;
+    myProject.isCrop = false;
+    myProject.isWater = false;
+
+    startModels(firstTime, lastTime);
+}
+
+
+// ------------------------ MODEL CYCLE ----------------------------
 bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 {
     if (! myProject.meteoPointsLoaded)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -1486,12 +1644,11 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
     return true;
 }
 
-
 bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -1531,12 +1688,11 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     return runModels(firstTime, lastTime);
 }
 
-
 bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 {
     if (! myProject.DEM.isLoaded)
     {
-        myProject.logError(MISSING_DEM_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DEM);
         return false;
     }
 
@@ -1582,10 +1738,12 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
                 return false;
             }
 
-            updateGUI();
+            this->updateGUI();
 
             if (myProject.modelPause || myProject.modelStop)
+            {
                 return true;
+            }
         }
 
         if (myProject.saveOutput && firstHour <=1 && lastHour >= 23)
@@ -1603,59 +1761,45 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
     return true;
 }
 
-
-//------------------- INTERPOLATION -----------------
-
-void MainWindow::on_actionCompute_hour_meteoVariables_triggered()
+void MainWindow::on_buttonModelPause_clicked()
 {
-    if (myProject.nrMeteoPoints == 0)
+    myProject.modelPause = true;
+    ui->buttonModelPause->setDisabled(true);
+    ui->buttonModelStart->setEnabled(true);
+}
+
+void MainWindow::on_buttonModelStop_clicked()
+{
+    myProject.modelStop = true;
+    ui->groupBoxModel->setDisabled(true);
+}
+
+void MainWindow::on_buttonModelStart_clicked()
+{
+    if (myProject.modelPause)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
-        return;
+        myProject.modelPause = false;
+        ui->buttonModelPause->setEnabled(true);
+        ui->buttonModelStart->setDisabled(true);
+        QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
+        newFirstTime = newFirstTime.addSecs(3600);
+        runModels(newFirstTime, myProject.modelLastTime);
     }
-
-    setOutputRasterVisible(false);
-
-    if (! myProject.computeAllMeteoMaps(myProject.getCurrentTime(), true))
-    {
-        myProject.logError();
-        return;
-    }
-
-    showMeteoVariable(myProject.getCurrentVariable());
 }
 
 
-void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
-{
-    QDateTime firstTime, lastTime;
-    if (! selectDates (firstTime, lastTime))
-        return;
-
-    myProject.isMeteo = true;
-    myProject.isRadiation = false;
-    myProject.isSnow = false;
-    myProject.isCrop = false;
-    myProject.isWater = false;
-
-    startModels(firstTime, lastTime);
-}
-
-
-//------------------- SOLAR RADIATION MODEL -----------------
-
+//------------------- MENU SOLAR RADIATION MODEL -----------------
 void MainWindow::on_actionRadiation_settings_triggered()
 {
     DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
     myDialogRadiation->close();
 }
 
-
 bool MainWindow::setRadiationAsCurrentVariable()
 {
     if (myProject.nrMeteoPoints == 0)
     {
-        myProject.logError(MISSING_DB_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_DB);
         return false;
     }
 
@@ -1673,7 +1817,6 @@ void MainWindow::on_actionRadiation_compute_current_hour_triggered()
 
     this->interpolateCurrentVariable();
 }
-
 
 void MainWindow::on_actionRadiation_run_model_triggered()
 {
@@ -1693,8 +1836,7 @@ void MainWindow::on_actionRadiation_run_model_triggered()
 }
 
 
-//-------------------- SNOW MODEL -----------------------
-
+//-------------------- MENU SNOW MODEL -----------------------
 void MainWindow::on_actionSnow_initialize_triggered()
 {
     if (myProject.initializeSnowModel())
@@ -1702,7 +1844,6 @@ void MainWindow::on_actionSnow_initialize_triggered()
         myProject.logInfoGUI("Snow model successfully initialized.");
     }
 }
-
 
 void MainWindow::on_actionSnow_run_model_triggered()
 {
@@ -1724,7 +1865,6 @@ void MainWindow::on_actionSnow_run_model_triggered()
     startModels(firstTime, lastTime);
 }
 
-
 void MainWindow::on_actionSnow_compute_current_hour_triggered()
 {
     if (! myProject.snowMaps.isInitialized)
@@ -1742,7 +1882,6 @@ void MainWindow::on_actionSnow_compute_current_hour_triggered()
     myProject.isWater = false;
     startModels(currentTime, currentTime);
 }
-
 
 void MainWindow::on_actionSnow_settings_triggered()
 {
@@ -1782,20 +1921,16 @@ void MainWindow::on_actionSnow_settings_triggered()
 }
 
 
-//-----------------  WATER FLUXES  -----------------
-
-
+//----------------- MENU WATER FLUXES  -----------------
 void MainWindow::on_actionCriteria3D_settings_triggered()
 {
     // TODO
 }
 
-
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
     myProject.initializeCriteria3DModel();
 }
-
 
 void MainWindow::on_actionCriteria3D_run_models_triggered()
 {
@@ -1821,38 +1956,7 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 }
 
 
-//------------------- MODEL STOP/START ----------------------
-
-void MainWindow::on_buttonModelPause_clicked()
-{
-    myProject.modelPause = true;
-    ui->buttonModelPause->setDisabled(true);
-    ui->buttonModelStart->setEnabled(true);
-}
-
-
-void MainWindow::on_buttonModelStop_clicked()
-{
-    myProject.modelStop = true;
-    ui->groupBoxModel->setDisabled(true);
-}
-
-void MainWindow::on_buttonModelStart_clicked()
-{
-    if (myProject.modelPause)
-    {
-        myProject.modelPause = false;
-        ui->buttonModelPause->setEnabled(true);
-        ui->buttonModelStart->setDisabled(true);
-        QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
-        newFirstTime = newFirstTime.addSecs(3600);
-        runModels(newFirstTime, myProject.modelLastTime);
-    }
-}
-
-
 //------------------- STATES ----------------------
-
 void MainWindow::on_actionSave_state_triggered()
 {
     if (myProject.isProjectLoaded)
@@ -1865,7 +1969,7 @@ void MainWindow::on_actionSave_state_triggered()
     }
     else
     {
-        myProject.logError(MISSING_PROJECT_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
     }
     return;
 }
@@ -1874,7 +1978,7 @@ void MainWindow::on_actionLoad_state_triggered()
 {
     if (! myProject.isProjectLoaded)
     {
-        myProject.logError(MISSING_PROJECT_ERROR_STR);
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
         return;
     }
 
@@ -1901,10 +2005,188 @@ void MainWindow::on_actionLoad_state_triggered()
     }
 }
 
-
 void MainWindow::on_flag_save_state_daily_step_triggered()
 {
     myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
+}
+
+
+//-------------------- MENU METEO POINTS -----------------------------
+void MainWindow::on_actionPoints_activate_all_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    if (!myProject.meteoPointsDbHandler->setAllPointsActive())
+    {
+        myProject.logError("Failed to activate all points.");
+        return;
+    }
+
+    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    {
+        myProject.meteoPoints[i].active = true;
+    }
+
+    myProject.meteoPointsSelected.clear();
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionPoints_deactivate_all_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    if (!myProject.meteoPointsDbHandler->setAllPointsNotActive())
+    {
+        myProject.logError("Failed to deactivate all points.");
+        return;
+    }
+
+    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    {
+        myProject.meteoPoints[i].active = false;
+    }
+
+    myProject.meteoPointsSelected.clear();
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionPoints_activate_selected_triggered()
+{
+    if (myProject.setActiveStateSelectedPoints(true))
+        redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionPoints_deactivate_selected_triggered()
+{
+    if (myProject.setActiveStateSelectedPoints(false))
+        redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionPoints_activate_from_point_list_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open point list file"), "", tr("text files (*.txt)"));
+    if (fileName == "") return;
+
+    if (myProject.setActiveStatePointList(fileName, true))
+        redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionPoints_deactivate_from_point_list_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open point list file"), "", tr("text files (*.txt)"));
+    if (fileName == "") return;
+
+    if (myProject.setActiveStatePointList(fileName, false))
+        redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
+void MainWindow::on_actionDelete_Points_Selected_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    if (myProject.meteoPointsSelected.isEmpty())
+    {
+        myProject.logError("No meteo points selected");
+        return;
+    }
+
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Are you sure?" ,
+                                  QString::number(myProject.meteoPointsSelected.size()) + " selected points will be deleted",
+                                  QMessageBox::Yes|QMessageBox::No);
+
+    if (reply == QMessageBox::Yes)
+    {
+        myProject.logInfoGUI("Deleting points...");
+
+        if (!myProject.meteoPointsDbHandler->deleteAllPointsFromGeoPointList(myProject.meteoPointsSelected))
+        {
+            myProject.closeLogInfo();
+            myProject.logError("Failed to delete selected points");
+            return;
+        }
+        myProject.closeLogInfo();
+
+        // reload meteoPoint, point properties table is changed
+        QString dbName = myProject.dbPointsFileName;
+        myProject.closeMeteoPointsDB();
+        this->loadMeteoPointsDB_GUI(dbName);
+    }
+}
+
+void MainWindow::on_actionDelete_Points_NotActive_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    QList<QString> idNotActive;
+    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    {
+        if (!myProject.meteoPoints[i].active)
+        {
+            idNotActive << QString::fromStdString(myProject.meteoPoints[i].id);
+        }
+    }
+    if (idNotActive.isEmpty())
+    {
+        myProject.logError("All points are active");
+        return;
+    }
+
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Are you sure?",
+                                  QString::number(idNotActive.size()) + " not active points will be deleted",
+                                  QMessageBox::Yes|QMessageBox::No);
+
+    if (reply == QMessageBox::Yes)
+    {
+        myProject.logInfoGUI("Deleting points...");
+        if (!myProject.meteoPointsDbHandler->deleteAllPointsFromIdList(idNotActive))
+        {
+            myProject.closeLogInfo();
+            myProject.logError("Failed to delete not active points");
+            return;
+        }
+        myProject.closeLogInfo();
+
+        // reload meteoPoint, point properties table is changed
+        QString dbName = myProject.dbPointsFileName;
+        myProject.closeMeteoPointsDB();
+        this->loadMeteoPointsDB_GUI(dbName);
+    }
 }
 
 
