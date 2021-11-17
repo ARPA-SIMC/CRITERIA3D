@@ -748,8 +748,8 @@ bool Crit3DMeteoPoint::setMeteoPointValueD(const Crit3DDate& myDate, meteoVariab
 bool Crit3DMeteoPoint::setMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar, float myValue)
 {
     //check
-    if (myVar == noMeteoVar) return NODATA;
-    if (nrObsDataDaysM == 0) return NODATA;
+    if (myVar == noMeteoVar) return false;
+    if (nrObsDataDaysM == 0) return false;
 
     int index;
     if (myDate.year == obsDataM[0]._year)
@@ -767,7 +767,7 @@ bool Crit3DMeteoPoint::setMeteoPointValueM(const Crit3DDate &myDate, meteoVariab
         // other years
         index = (myDate.year - obsDataM[0]._year -1)*12+(12-obsDataM[0]._month) + myDate.month;
     }
-    if ((index < 0) || (index >= nrObsDataDaysM)) return NODATA;
+    if ((index < 0) || (index >= nrObsDataDaysM)) return false;
 
     unsigned i = unsigned(index);
 
