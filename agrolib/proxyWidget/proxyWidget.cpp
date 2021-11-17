@@ -54,7 +54,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
 
     detrended.setText("Detrended data");
     climatologicalLR.setText("Climatological lapse rate");
-    modelLP.setText("Model lapse rate");
+    modelLR.setText("Model lapse rate");
     
     QLabel *r2Label = new QLabel(tr("R2"));
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
@@ -111,7 +111,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     
     selectionOptionBoxLayout->addWidget(&detrended);
     selectionOptionBoxLayout->addWidget(&climatologicalLR);
-    selectionOptionBoxLayout->addWidget(&modelLP);
+    selectionOptionBoxLayout->addWidget(&modelLR);
 
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
@@ -131,7 +131,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
-    connect(&modelLP, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
+    connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
 
     // init
     zMin = NODATA;
@@ -213,6 +213,10 @@ void Crit3DProxyWidget::changeVar(const QString varName)
     if (climatologicalLR.isChecked())
     {
         climatologicalLRClicked(1);
+    }
+    if (modelLR.isChecked())
+    {
+        modelLRClicked(1);
     }
 }
 
@@ -340,6 +344,9 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
 {
     chartView->cleanModelLapseRate();
     QList<QPointF> point_vector;
+    QPointF point;
+    float xMin;
+    float xMax;
     if (toggled && outInterpolationPoints.size() != 0)
     {
         if (axisX.currentText() == "elevation")
@@ -349,25 +356,99 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
                 zMax = getZmax(outInterpolationPoints);
                 zMin = getZmin(outInterpolationPoints);
             }
-            // TO DO
-            /*
-             * If Me.ChkDetrend.Value = vbUnchecked Then
-            isOK = Interpolation.regressionOrography(CurrentVariable)
-            Else
-                isOK = Interpolation.regressionOrography(CurrentVariable)
-            End If
-            If Not isOK Then Exit Sub
-            */
+            xMin = zMin;
+            xMax = zMax;
+
+            float lapseRateH0 = interpolationSettings->getProxy(proxyPos)->getLapseRateH0();
+            float lapseRateH1 = interpolationSettings->getProxy(proxyPos)->getLapseRateH1();
+            float lapseRateT0 = interpolationSettings->getProxy(proxyPos)->getLapseRateT0();
+            float lapseRateT1 = interpolationSettings->getProxy(proxyPos)->getLapseRateT1();
+            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
+
             if (interpolationSettings->getProxy(proxyPos)->getInversionIsSignificative())
             {
-                if (zMin < interpolationSettings->getProxy(proxyPos)->getLapseRateH0())
+                if (xMin < interpolationSettings->getProxy(proxyPos)->getLapseRateH0())
                 {
-                   // QPointF point(zMin, Interpolation.LapseRateT0);
-                   // point_vector.append(point);
+                    point.setX(xMin);
+                    point.setY(lapseRateT0);
+                    point_vector.append(point);
                 }
+                point.setX(lapseRateH0);
+                point.setY(lapseRateT0);
+                point_vector.append(point);
+
+                point.setX(lapseRateH1);
+                point.setY(lapseRateT1);
+                point_vector.append(point);
+
+                float myY = lapseRateT1 + regressionSlope * (xMax - lapseRateH1);
+                point.setX(xMax);
+                point.setY(myY);
+                point_vector.append(point);
             }
+            else
+            {
+                float myY = lapseRateT0 + regressionSlope * xMin;
+                point.setX(xMin);
+                point.setY(myY);
+                point_vector.append(point);
+
+                myY = lapseRateT0 + regressionSlope * xMax;
+                point.setX(xMax);
+                point.setY(myY);
+                point_vector.append(point);
+            }
+            if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+            {
+                r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 4));
+            }
+            lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
         }
-        chartView->drawModelLapseRate();
+        else if (axisX.currentText() == "urbanFraction")
+        {
+            xMin = 0;
+            //xMax =
+        }
+        else if (axisX.currentText() == "orogIndex")
+        {
+            xMin = -1;
+            //xMax =
+        }
+        else if (axisX.currentText() == "seaDistance")
+        {
+            //xMin = ;
+            //xMax = ;
+        }
+        /*
+        else if (axisX.currentText() == "Generic") // non esiste
+        {
+            //xMin = ;
+            //xMax = ;
+        }
+        */
+        else if (axisX.currentText() == "aspect")
+        {
+            xMin = 0;
+            xMax = 360;
+            bool isZeroIntercept = false;
+            regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept);
+            // devo controllare cosa restituisce regressionGeneric?
+            point.setX(xMin);
+            //point.setY(Interpolation.AspectIntercept + Interpolation.AspectCoefficient * xMin);
+            point_vector.append(point);
+            point.setX(xMax);
+            //point.setY(Interpolation.AspectIntercept + Interpolation.AspectCoefficient * xMax);
+            point_vector.append(point);
+
+            // Me.TxtR2.Text = format(Interpolation.AspectR2, "0.0000") corrisponde a sotto? Il controllo sul NODATA va aggiunto?
+            /*
+            if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+            {
+                r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 4));
+            }
+            */
+        }
+        chartView->drawModelLapseRate(point_vector);
     }
 }
 

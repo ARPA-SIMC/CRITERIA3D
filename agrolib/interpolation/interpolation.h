@@ -56,5 +56,7 @@
     bool getUseDetrendingVar(meteoVariable myVar);
     bool getUseTdVar(meteoVariable myVar);
     float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
+    bool regressionGeneric(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
+                           int proxyPos, bool isZeroIntercept);
 
 #endif // INTERPOLATION_H
