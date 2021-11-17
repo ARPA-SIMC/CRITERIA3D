@@ -138,6 +138,10 @@
 
         void on_actionPoints_deactivate_from_point_list_triggered();
 
+        void on_actionPoints_activate_with_criteria_triggered();
+
+        void on_actionPoints_deactivate_with_criteria_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

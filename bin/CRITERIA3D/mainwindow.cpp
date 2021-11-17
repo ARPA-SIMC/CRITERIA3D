@@ -2035,7 +2035,6 @@ void MainWindow::on_actionPoints_activate_all_triggered()
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
-
 void MainWindow::on_actionPoints_deactivate_all_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
@@ -2059,20 +2058,17 @@ void MainWindow::on_actionPoints_deactivate_all_triggered()
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
-
 void MainWindow::on_actionPoints_activate_selected_triggered()
 {
     if (myProject.setActiveStateSelectedPoints(true))
         redrawMeteoPoints(currentPointsVisualization, true);
 }
 
-
 void MainWindow::on_actionPoints_deactivate_selected_triggered()
 {
     if (myProject.setActiveStateSelectedPoints(false))
         redrawMeteoPoints(currentPointsVisualization, true);
 }
-
 
 void MainWindow::on_actionPoints_activate_from_point_list_triggered()
 {
@@ -2089,7 +2085,6 @@ void MainWindow::on_actionPoints_activate_from_point_list_triggered()
         redrawMeteoPoints(currentPointsVisualization, true);
 }
 
-
 void MainWindow::on_actionPoints_deactivate_from_point_list_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
@@ -2105,6 +2100,27 @@ void MainWindow::on_actionPoints_deactivate_from_point_list_triggered()
         redrawMeteoPoints(currentPointsVisualization, true);
 }
 
+void MainWindow::on_actionPoints_activate_with_criteria_triggered()
+{
+    if (myProject.setActiveStateWithCriteria(true))
+    {
+        // reload meteoPoint, point properties table is changed
+        QString dbName = myProject.dbPointsFileName;
+        myProject.closeMeteoPointsDB();
+        this->loadMeteoPointsDB_GUI(dbName);
+    }
+}
+
+void MainWindow::on_actionPoints_deactivate_with_criteria_triggered()
+{
+    if (myProject.setActiveStateWithCriteria(false))
+    {
+        // reload meteoPoint, point properties table is changed
+        QString dbName = myProject.dbPointsFileName;
+        myProject.closeMeteoPointsDB();
+        this->loadMeteoPointsDB_GUI(dbName);
+    }
+}
 
 void MainWindow::on_actionDelete_Points_Selected_triggered()
 {
@@ -2170,23 +2186,24 @@ void MainWindow::on_actionDelete_Points_NotActive_triggered()
     reply = QMessageBox::question(this, "Are you sure?",
                                   QString::number(idNotActive.size()) + " not active points will be deleted",
                                   QMessageBox::Yes|QMessageBox::No);
+    if (reply == QMessageBox::No)
+        return;
 
-    if (reply == QMessageBox::Yes)
+    myProject.logInfoGUI("Deleting points...");
+    bool isOk = myProject.meteoPointsDbHandler->deleteAllPointsFromIdList(idNotActive);
+    myProject.closeLogInfo();
+
+    if (!isOk)
     {
-        myProject.logInfoGUI("Deleting points...");
-        if (!myProject.meteoPointsDbHandler->deleteAllPointsFromIdList(idNotActive))
-        {
-            myProject.closeLogInfo();
-            myProject.logError("Failed to delete not active points");
-            return;
-        }
-        myProject.closeLogInfo();
-
-        // reload meteoPoint, point properties table is changed
-        QString dbName = myProject.dbPointsFileName;
-        myProject.closeMeteoPointsDB();
-        this->loadMeteoPointsDB_GUI(dbName);
+        myProject.logError("Failed to delete not active points.");
+        return;
     }
+
+    // reload meteoPoint, point properties table is changed
+    QString dbName = myProject.dbPointsFileName;
+    myProject.closeMeteoPointsDB();
+    this->loadMeteoPointsDB_GUI(dbName);
 }
+
 
 

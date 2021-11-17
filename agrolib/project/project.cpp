@@ -10,6 +10,7 @@
 #include "utilities.h"
 #include "aggregation.h"
 #include "meteoWidget.h"
+#include "dialogSelectionMeteoPoint.h"
 #include "formInfo.h"
 
 #include <iostream>
@@ -2744,6 +2745,98 @@ bool Project::setActiveStatePointList(QString fileName, bool isActive)
 
     return true;
 }
+
+
+bool Project::setActiveStateWithCriteria(bool isActive)
+{
+    if (meteoPointsDbHandler == nullptr)
+    {
+        logError(ERROR_STR_MISSING_DB);
+        return false;
+    }
+
+    DialogSelectionMeteoPoint dialogPointSelection(isActive, meteoPointsDbHandler);
+    if (dialogPointSelection.result() != QDialog::Accepted)
+        return false;
+
+    QString selection = dialogPointSelection.getSelection();
+    QString operation = dialogPointSelection.getOperation();
+    QString item = dialogPointSelection.getItem();
+    QString condition;
+    if (operation != "Like")
+    {
+        condition = selection + " " + operation + " '" +item +"'";
+    }
+    else
+    {
+        condition = selection + " " + operation + " '%" +item +"%'";
+    }
+    if (selection != "DEM distance [m]")
+    {
+        meteoPointsDbHandler->setActiveStateIfCondition(isActive, condition);
+    }
+    else
+    {
+        if (!DEM.isLoaded)
+        {
+            QMessageBox::critical(nullptr, "DEM distance", "No DEM open");
+            return false;
+        }
+        QList<QString> points;
+        setProgressBar("Checking distance...", nrMeteoPoints);
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            updateProgressBar(i);
+            if (!meteoPoints[i].active)
+            {
+                float distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
+                if (operation == "=")
+                {
+                    if (distance == item.toDouble())
+                    {
+                        points.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+                else if (operation == "!=")
+                {
+                    if (distance != item.toDouble())
+                    {
+                        points.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+                else if (operation == ">")
+                {
+                    if (distance > item.toDouble())
+                    {
+                        points.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+                else if (operation == "<")
+                {
+                    if (distance < item.toDouble())
+                    {
+                        points.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+            }
+        }
+        closeProgressBar();
+
+        if (points.isEmpty())
+        {
+            logError("No points fit your requirements.");
+            return false;
+        }
+        if (!meteoPointsDbHandler->setActiveStatePointList(points, isActive, errorString))
+        {
+            logError("Failed to activate/deactivate points selected");
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
 
 /* ---------------------------------------------
