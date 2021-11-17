@@ -359,6 +359,12 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             xMin = zMin;
             xMax = zMax;
 
+            if (!regressionOrography(outInterpolationPoints,*(interpolationSettings->getCurrentCombination()), interpolationSettings, climateParam,
+                                                               getCrit3DTime(currentDate, currentHour), myVar, proxyPos))
+            {
+                return;
+            }
+
             float lapseRateH0 = interpolationSettings->getProxy(proxyPos)->getLapseRateH0();
             float lapseRateH1 = interpolationSettings->getProxy(proxyPos)->getLapseRateH1();
             float lapseRateT0 = interpolationSettings->getProxy(proxyPos)->getLapseRateT0();
