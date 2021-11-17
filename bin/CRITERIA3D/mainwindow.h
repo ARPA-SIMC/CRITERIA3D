@@ -142,6 +142,12 @@
 
         void on_actionPoints_deactivate_with_criteria_triggered();
 
+        void on_actionPoints_delete_data_selected_triggered();
+
+        void on_actionPoints_clear_selection_triggered();
+
+        void on_actionPoints_delete_data_not_active_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

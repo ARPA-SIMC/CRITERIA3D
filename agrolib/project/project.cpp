@@ -11,6 +11,7 @@
 #include "aggregation.h"
 #include "meteoWidget.h"
 #include "dialogSelectionMeteoPoint.h"
+#include "dialogPointDeleteData.h"
 #include "formInfo.h"
 
 #include <iostream>
@@ -2679,6 +2680,32 @@ void Project::showProxyGraph()
 }
 
 
+void Project::clearSelectedPoints()
+{
+    meteoPointsSelected.clear();
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        meteoPoints[i].selected = false;
+    }
+}
+
+
+void Project::updateSelectedPoints()
+{
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPointsSelected.isEmpty())
+        {
+            meteoPoints[i].selected = false;
+        }
+        else
+        {
+            meteoPoints[i].selected = getMeteoPointSelected(i);
+        }
+    }
+}
+
+
 bool Project::setActiveStateSelectedPoints(bool isActive)
 {
     if (meteoPointsDbHandler == nullptr)
@@ -2687,32 +2714,29 @@ bool Project::setActiveStateSelectedPoints(bool isActive)
         return false;
     }
 
-    if (meteoPointsSelected.isEmpty())
+    QList<QString> selectedPointList;
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].selected)
+        {
+            meteoPoints[i].active = isActive;
+            selectedPointList << QString::fromStdString(meteoPoints[i].id);
+        }
+    }
+
+    if (selectedPointList.isEmpty())
     {
         logError("No meteo points selected.");
         return false;
     }
 
-    QList<QString> selectedPointList;
-    for (int j = 0; j < meteoPointsSelected.size(); j++)
-    {
-        for (int i = 0; i < nrMeteoPoints; i++)
-        {
-            if (meteoPoints[i].latitude == meteoPointsSelected[j].latitude && meteoPoints[i].longitude == meteoPointsSelected[j].longitude)
-            {
-                meteoPoints[i].active = isActive;
-                selectedPointList << QString::fromStdString(meteoPoints[i].id);
-            }
-        }
-    }
-
     if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive, errorString))
     {
-        logError("Failed to activate selected points:\n" + errorString);
+        logError("Failed to activate/deactivate selected points:\n" + errorString);
         return false;
     }
 
-    meteoPointsSelected.clear();
+    clearSelectedPoints();
     return true;
 }
 
@@ -2833,6 +2857,77 @@ bool Project::setActiveStateWithCriteria(bool isActive)
             return false;
         }
     }
+
+    return true;
+}
+
+
+bool Project::deleteDataMeteoPoints(const QList<QString>& pointList)
+{
+    if (pointList.isEmpty())
+    {
+        logError("No data to delete.");
+        return false;
+    }
+
+    DialogPointDeleteData dialogPointDelete;
+    if (dialogPointDelete.result() != QDialog::Accepted)
+        return false;
+
+    QList<meteoVariable> dailyVarList = dialogPointDelete.getVarD();
+    QList<meteoVariable> hourlyVarList = dialogPointDelete.getVarH();
+    QDate startDate = dialogPointDelete.getFirstDate();
+    QDate endDate = dialogPointDelete.getLastDate();
+    bool allDaily = dialogPointDelete.getAllDailyVar();
+    bool allHourly = dialogPointDelete.getAllHourlyVar();
+
+    setProgressBar("Deleting data...", pointList.size());
+    for (int i = 0; i < pointList.size(); i++)
+    {
+        updateProgressBar(i);
+
+        if (allDaily)
+        {
+            if (!meteoPointsDbHandler->deleteData(pointList[i], daily, startDate, endDate))
+            {
+                closeProgressBar();
+                return false;
+            }
+        }
+        else
+        {
+            if (!dailyVarList.isEmpty())
+            {
+                if (!meteoPointsDbHandler->deleteData(QString::fromStdString(meteoPoints[i].id),
+                                                      daily, dailyVarList, startDate, endDate))
+                {
+                    closeProgressBar();
+                    return false;
+                }
+            }
+        }
+        if (allHourly)
+        {
+            if (!meteoPointsDbHandler->deleteData(QString::fromStdString(meteoPoints[i].id), hourly, startDate, endDate))
+            {
+                closeProgressBar();
+                return false;
+            }
+        }
+        else
+        {
+            if (!hourlyVarList.isEmpty())
+            {
+                if (!meteoPointsDbHandler->deleteData(QString::fromStdString(meteoPoints[i].id),
+                                                      hourly, hourlyVarList, startDate, endDate))
+                {
+                    closeProgressBar();
+                    return false;
+                }
+            }
+        }
+    }
+    closeProgressBar();
 
     return true;
 }

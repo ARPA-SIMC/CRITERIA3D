@@ -235,9 +235,12 @@
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
 
+        void clearSelectedPoints();
+        void updateSelectedPoints();
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
         bool setActiveStateWithCriteria(bool isActive);
+        bool deleteDataMeteoPoints(const QList<QString>& pointList);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

@@ -3624,17 +3624,18 @@
      <addaction name="actionPoints_deactivate_with_criteria"/>
      <addaction name="actionWith_no_data"/>
     </widget>
-    <widget class="QMenu" name="menuDelete_data">
+    <widget class="QMenu" name="menuPoints_delete">
      <property name="title">
       <string>Delete data</string>
      </property>
-     <addaction name="actionSelected_3"/>
-     <addaction name="actionNot_active"/>
+     <addaction name="actionPoints_delete_data_selected"/>
+     <addaction name="actionPoints_delete_data_not_active"/>
     </widget>
+    <addaction name="actionPoints_clear_selection"/>
     <addaction name="menuActivate_points"/>
     <addaction name="menuDeactivate_points"/>
     <addaction name="menuDelete_points"/>
-    <addaction name="menuDelete_data"/>
+    <addaction name="menuPoints_delete"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
@@ -4076,12 +4077,12 @@
     <string>With no data</string>
    </property>
   </action>
-  <action name="actionSelected_3">
+  <action name="actionPoints_delete_data_selected">
    <property name="text">
     <string>Selected</string>
    </property>
   </action>
-  <action name="actionNot_active">
+  <action name="actionPoints_delete_data_not_active">
    <property name="text">
     <string>Not active</string>
    </property>
@@ -4089,6 +4090,11 @@
   <action name="actionPoints_deactivate_from_point_list">
    <property name="text">
     <string>From point list</string>
+   </property>
+  </action>
+  <action name="actionPoints_clear_selection">
+   <property name="text">
+    <string>Clear selection</string>
    </property>
   </action>
  </widget>

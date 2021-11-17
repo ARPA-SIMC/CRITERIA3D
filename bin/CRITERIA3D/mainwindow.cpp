@@ -269,8 +269,10 @@ bool MainWindow::updateSelection(const QPoint& position)
         }
     }
 
+    myProject.updateSelectedPoints();
     rubberBand->isActive = false;
     rubberBand->hide();
+
     return true;
 }
 
@@ -367,7 +369,8 @@ bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
 
 void MainWindow::addMeteoPoints()
 {
-    myProject.meteoPointsSelected.clear();
+    myProject.clearSelectedPoints();
+
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
         StationMarker* point = new StationMarker(5.0, true, QColor((Qt::white)), this->mapView);
@@ -579,7 +582,7 @@ void MainWindow::on_dateEdit_dateChanged(const QDate &date)
     if (date != myProject.getCurrentDate())
     {
         myProject.loadMeteoPointsData(date, date, true, true, true);
-        myProject.loadMeteoGridData(date, date, true);
+        //myProject.loadMeteoGridData(date, date, true);
         myProject.setAllHourlyMeteoMapsComputed(false);
         myProject.setCurrentDate(date);
     }
@@ -735,7 +738,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         case showLocation:
         {
             this->ui->actionView_PointsLocation->setChecked(true);
-            bool isSelected;
+
             for (int i = 0; i < myProject.nrMeteoPoints; i++)
             {
                 myProject.meteoPoints[i].currentValue = NODATA;
@@ -743,18 +746,8 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 pointList[i]->setCurrentValue(NODATA);
                 pointList[i]->setToolTip();
 
-                isSelected = false;
-                for (int j = 0; j < myProject.meteoPointsSelected.size(); j++)
-                {
-                    if (myProject.meteoPoints[i].latitude == myProject.meteoPointsSelected[j].latitude && myProject.meteoPoints[i].longitude == myProject.meteoPointsSelected[j].longitude)
-                    {
-                        isSelected = true;
-                        break;
-                    }
-                }
-
                 // color
-                if (isSelected)
+                if (myProject.meteoPoints[i].selected)
                 {
                     pointList[i]->setFillColor(QColor(Qt::yellow));
                 }
@@ -2012,6 +2005,12 @@ void MainWindow::on_flag_save_state_daily_step_triggered()
 
 
 //-------------------- MENU METEO POINTS -----------------------------
+void MainWindow::on_actionPoints_clear_selection_triggered()
+{
+    myProject.clearSelectedPoints();
+    redrawMeteoPoints(currentPointsVisualization, false);
+}
+
 void MainWindow::on_actionPoints_activate_all_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
@@ -2031,7 +2030,7 @@ void MainWindow::on_actionPoints_activate_all_triggered()
         myProject.meteoPoints[i].active = true;
     }
 
-    myProject.meteoPointsSelected.clear();
+    myProject.clearSelectedPoints();
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
@@ -2054,7 +2053,7 @@ void MainWindow::on_actionPoints_deactivate_all_triggered()
         myProject.meteoPoints[i].active = false;
     }
 
-    myProject.meteoPointsSelected.clear();
+    myProject.clearSelectedPoints();
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
@@ -2130,22 +2129,30 @@ void MainWindow::on_actionDelete_Points_Selected_triggered()
         return;
     }
 
-    if (myProject.meteoPointsSelected.isEmpty())
+    QList<QString> pointList;
+    for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
-        myProject.logError("No meteo points selected");
+        if (myProject.meteoPoints[i].selected)
+        {
+            pointList << QString::fromStdString(myProject.meteoPoints[i].id);
+        }
+    }
+    if (pointList.isEmpty())
+    {
+        myProject.logError("No meteo point selected.");
         return;
     }
 
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "Are you sure?" ,
-                                  QString::number(myProject.meteoPointsSelected.size()) + " selected points will be deleted",
+                                  QString::number(pointList.size()) + " selected points will be deleted",
                                   QMessageBox::Yes|QMessageBox::No);
 
     if (reply == QMessageBox::Yes)
     {
         myProject.logInfoGUI("Deleting points...");
 
-        if (!myProject.meteoPointsDbHandler->deleteAllPointsFromGeoPointList(myProject.meteoPointsSelected))
+        if (!myProject.meteoPointsDbHandler->deleteAllPointsFromIdList(pointList))
         {
             myProject.closeLogInfo();
             myProject.logError("Failed to delete selected points");
@@ -2206,4 +2213,66 @@ void MainWindow::on_actionDelete_Points_NotActive_triggered()
 }
 
 
+void MainWindow::on_actionPoints_delete_data_selected_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    QList<QString> pointList;
+    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    {
+        if (myProject.meteoPoints[i].selected)
+        {
+            pointList << QString::fromStdString(myProject.meteoPoints[i].id);
+        }
+    }
+
+    if (pointList.isEmpty())
+    {
+        myProject.logError("No meteo points selected.");
+        return;
+    }
+
+    if (!myProject.deleteDataMeteoPoints(pointList))
+    {
+        myProject.logError("Failed to delete data.");
+    }
+    QDate currentDate = myProject.getCurrentDate();
+    myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
+}
+
+
+void MainWindow::on_actionPoints_delete_data_not_active_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    QList<QString> pointList;
+    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    {
+        if (!myProject.meteoPoints[i].active)
+        {
+            pointList << QString::fromStdString(myProject.meteoPoints[i].id);
+        }
+    }
+
+    if (pointList.isEmpty())
+    {
+        myProject.logError("All meteo points are active.");
+        return;
+    }
+
+    if (!myProject.deleteDataMeteoPoints(pointList))
+    {
+        myProject.logError("Failed to delete data.");
+    }
+    QDate currentDate = myProject.getCurrentDate();
+    myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
+}
 
