@@ -433,6 +433,16 @@ void Crit3DProxy::setLapseRateT1(float newLapseRateT1)
     lapseRateT1 = newLapseRateT1;
 }
 
+float Crit3DProxy::getRegressionIntercept() const
+{
+    return regressionIntercept;
+}
+
+void Crit3DProxy::setRegressionIntercept(float newRegressionIntercept)
+{
+    regressionIntercept = newRegressionIntercept;
+}
+
 Crit3DProxy::Crit3DProxy()
 {
     name = "";
@@ -522,6 +532,7 @@ void Crit3DProxy::initializeOrography()
     setLapseRateT1(NODATA);
     setInversionLapseRate(NODATA);
     setRegressionSlope(NODATA);
+    setRegressionIntercept(NODATA);
     setRegressionR2(NODATA);
     setInversionIsSignificative(false);
 
