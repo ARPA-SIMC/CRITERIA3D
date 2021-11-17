@@ -404,35 +404,15 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             }
             lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
         }
-        else if (axisX.currentText() == "urbanFraction")
-        {
-            xMin = 0;
-            //xMax =
-        }
-        else if (axisX.currentText() == "orogIndex")
-        {
-            xMin = -1;
-            //xMax =
-        }
-        else if (axisX.currentText() == "seaDistance")
-        {
-            //xMin = ;
-            //xMax = ;
-        }
-        /*
-        else if (axisX.currentText() == "Generic") // non esiste
-        {
-            //xMin = ;
-            //xMax = ;
-        }
-        */
-        else if (axisX.currentText() == "aspect")
+        else
         {
             xMin = 0;
             xMax = 360;
             bool isZeroIntercept = false;
-            regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept);
-            // devo controllare cosa restituisce regressionGeneric?
+            if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
+            {
+                return;
+            }
             point.setX(xMin);
             //point.setY(Interpolation.AspectIntercept + Interpolation.AspectCoefficient * xMin);
             point_vector.append(point);
