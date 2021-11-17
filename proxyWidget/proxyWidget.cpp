@@ -411,7 +411,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             bool isZeroIntercept = false;
             if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
             {
-                return false;
+                return;
             }
             point.setX(xMin);
             //point.setY(Interpolation.AspectIntercept + Interpolation.AspectCoefficient * xMin);
