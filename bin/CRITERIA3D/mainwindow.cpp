@@ -337,7 +337,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
     if (! isInsideMap(mapPos))
         return false;
 
-    if (myProject.soilMap.isLoaded)
+    if (myProject.soilMap.isLoaded && ui->flag_view_SoilMap->isChecked())
     {
         if (isSoil(mapPos))
         {
@@ -345,6 +345,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
             nrItems++;
         }
     }
+
     if (nrItems == 0)
         return false;
 
