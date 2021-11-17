@@ -237,6 +237,7 @@
 
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
+        bool setActiveStateWithCriteria(bool isActive);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
