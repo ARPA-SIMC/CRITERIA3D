@@ -412,27 +412,26 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
         }
         else
         {
-            xMin = 0;
-            xMax = 360;
+            xMin = getProxyMinValue(outInterpolationPoints);
+            xMax = getProxyMaxValue(outInterpolationPoints);
+            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
+            float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
             bool isZeroIntercept = false;
             if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
             {
                 return;
             }
             point.setX(xMin);
-            //point.setY(Interpolation.AspectIntercept + Interpolation.AspectCoefficient * xMin);
+            point.setY(regressionIntercept + regressionSlope * xMin);
             point_vector.append(point);
             point.setX(xMax);
-            //point.setY(Interpolation.AspectIntercept + Interpolation.AspectCoefficient * xMax);
+            point.setY(regressionIntercept + regressionSlope * xMax);
             point_vector.append(point);
 
-            // Me.TxtR2.Text = format(Interpolation.AspectR2, "0.0000") corrisponde a sotto? Il controllo sul NODATA va aggiunto?
-            /*
             if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
             {
                 r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 4));
             }
-            */
         }
         chartView->drawModelLapseRate(point_vector);
     }

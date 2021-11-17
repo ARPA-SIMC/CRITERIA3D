@@ -86,6 +86,28 @@ float getZmax(std::vector <Crit3DInterpolationDataPoint> &myPoints)
     return myZmax;
 }
 
+float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints)
+{
+    float maxValue = NODATA;
+
+    for (unsigned i = 0; i < myPoints.size(); i++)
+        if (myPoints[i].value != NODATA)
+            if (maxValue == NODATA || myPoints[i].value > maxValue)
+                maxValue = myPoints[i].value;
+    return maxValue;
+}
+
+float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints)
+{
+    float minValue = NODATA;
+
+    for (unsigned i = 0; i < myPoints.size(); i++)
+        if (myPoints[i].value != NODATA)
+            if (minValue == NODATA || myPoints[i].value < minValue)
+                minValue = myPoints[i].value;
+    return minValue;
+}
+
 unsigned sortPointsByDistance(unsigned maxIndex, vector <Crit3DInterpolationDataPoint> &myPoints, vector <Crit3DInterpolationDataPoint> &myValidPoints)
 {   
     unsigned i;
