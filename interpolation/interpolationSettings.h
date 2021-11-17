@@ -35,6 +35,8 @@
         //orography
         float lapseRateH1;
         float lapseRateH0;
+        float lapseRateT0;
+        float lapseRateT1;
         float inversionLapseRate;
         bool inversionIsSignificative;
 
@@ -72,6 +74,10 @@
         void setProxyField(const std::string &value);
         std::vector<gis::Crit3DRasterGrid *> getGridSeries() const;
         void setGridSeries(const std::vector<gis::Crit3DRasterGrid *> &value);
+        float getLapseRateT0() const;
+        void setLapseRateT0(float newLapseRateT0);
+        float getLapseRateT1() const;
+        void setLapseRateT1(float newLapseRateT1);
     };
 
     class Crit3DProxyCombination
