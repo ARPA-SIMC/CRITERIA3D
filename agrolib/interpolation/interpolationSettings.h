@@ -31,6 +31,7 @@
 
         float regressionR2;
         float regressionSlope;
+        float regressionIntercept;
 
         //orography
         float lapseRateH1;
@@ -78,6 +79,8 @@
         void setLapseRateT0(float newLapseRateT0);
         float getLapseRateT1() const;
         void setLapseRateT1(float newLapseRateT1);
+        float getRegressionIntercept() const;
+        void setRegressionIntercept(float newRegressionIntercept);
     };
 
     class Crit3DProxyCombination

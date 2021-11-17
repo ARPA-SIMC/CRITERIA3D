@@ -305,6 +305,7 @@ bool regressionGeneric(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cri
 
     Crit3DProxy* myProxy = mySettings->getProxy(proxyPos);
     myProxy->setRegressionSlope(m);
+    myProxy->setRegressionIntercept(q);
     myProxy->setRegressionR2(r2);
     myProxy->setLapseRateT0(q);
     return (r2 >= mySettings->getMinRegressionR2());
