@@ -18,7 +18,7 @@ public:
     void cleanClimLapseRate();
     void drawClimLapseRate(QPointF firstPoint, QPointF lastPoint);
     void cleanModelLapseRate();
-    void drawModelLapseRate();
+    void drawModelLapseRate(QList<QPointF> pointList);
     void tooltipScatterSeries(QPointF point, bool state);
     void setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental);
 

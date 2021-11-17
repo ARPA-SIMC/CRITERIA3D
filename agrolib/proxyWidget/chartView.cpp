@@ -136,9 +136,12 @@ void ChartView::cleanModelLapseRate()
     modelLapseRatelineSeries->clear();
 }
 
-void ChartView::drawModelLapseRate()
+void ChartView::drawModelLapseRate(QList<QPointF> pointList)
 {
-    // TO DO
+    for (int i = 0; i < pointList.size(); i++)
+    {
+        modelLapseRatelineSeries->append(pointList[i]);
+    }
     chart()->addSeries(modelLapseRatelineSeries);
     modelLapseRatelineSeries->attachAxis(axisX);
     modelLapseRatelineSeries->attachAxis(axisY);
