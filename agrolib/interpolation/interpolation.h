@@ -40,6 +40,8 @@
     float getMaxHeight(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
     float getZmin(std::vector <Crit3DInterpolationDataPoint> &myPoints);
     float getZmax(std::vector <Crit3DInterpolationDataPoint> &myPoints);
+    float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints);
+    float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints);
     bool preInterpolation(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters* myClimate,
                           Crit3DMeteoPoint *myMeteoPoints, int nrMeteoPoints, meteoVariable myVar, Crit3DTime myTime);
 
@@ -58,5 +60,8 @@
     float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
     bool regressionGeneric(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
                            int proxyPos, bool isZeroIntercept);
+    bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
+                             Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
+                             Crit3DTime myTime, meteoVariable myVar, int orogProxyPos);
 
 #endif // INTERPOLATION_H
