@@ -41,7 +41,7 @@
             QComboBox axisX;
             QCheckBox detrended;
             QCheckBox climatologicalLR;
-            QCheckBox modelLP;
+            QCheckBox modelLR;
             QTextEdit r2;
             QTextEdit lapseRate;
             ChartView *chartView;
