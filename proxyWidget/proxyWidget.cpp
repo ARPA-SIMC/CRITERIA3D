@@ -256,7 +256,7 @@ void Crit3DProxyWidget::plot()
     {
         outInterpolationPoints.clear();
         checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
-        detrending(outInterpolationPoints, *(interpolationSettings->getCurrentCombination()), interpolationSettings, climateParam, myVar,
+        detrending(outInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar,
                    getCrit3DTime(currentDate, currentHour));
     }
     else
@@ -375,7 +375,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             xMin = zMin;
             xMax = zMax;
 
-            if (!regressionOrography(outInterpolationPoints,*(interpolationSettings->getCurrentCombination()), interpolationSettings, climateParam,
+            if (!regressionOrography(outInterpolationPoints,interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam,
                                                                getCrit3DTime(currentDate, currentHour), myVar, proxyPos))
             {
                 return;
