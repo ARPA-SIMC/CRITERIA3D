@@ -61,8 +61,10 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     
     r2.setMaximumWidth(60);
     r2.setMaximumHeight(30);
+    r2.setEnabled(false);
     lapseRate.setMaximumWidth(60);
     lapseRate.setMaximumHeight(30);
+    lapseRate.setEnabled(false);
     
     QLabel *variableLabel = new QLabel(tr("Variable"));
     QLabel *axisXLabel = new QLabel(tr("Axis X"));
@@ -343,6 +345,8 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
 void Crit3DProxyWidget::modelLRClicked(int toggled)
 {
     chartView->cleanModelLapseRate();
+    r2.clear();
+    lapseRate.clear();
     QList<QPointF> point_vector;
     QPointF point;
     float xMin;
