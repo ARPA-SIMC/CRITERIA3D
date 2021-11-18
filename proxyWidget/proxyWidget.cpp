@@ -112,22 +112,22 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     selectionChartLayout->addWidget(&axisX);
     
     selectionOptionBoxLayout->addWidget(&detrended);
-    selectionOptionBoxLayout->addWidget(&climatologicalLR);
     selectionOptionBoxLayout->addWidget(&modelLR);
+    selectionOptionBoxLayout->addWidget(&climatologicalLR);
 
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
-    selectionOptionEditLayout->addStretch(200);
+    selectionOptionEditLayout->addStretch(150);
     selectionOptionEditLayout->addWidget(lapseRateLabel);
     selectionOptionEditLayout->addWidget(&lapseRate);
-    selectionOptionEditLayout->addStretch(200);
-    selectionOptionEditLayout->addStretch(200);
+    selectionOptionEditLayout->addStretch(150);
+    selectionOptionEditLayout->addStretch(150);
 
     selectionOptionLayout->addLayout(selectionOptionBoxLayout);
     selectionOptionLayout->addLayout(selectionOptionEditLayout);
 
     selectionLayout->addLayout(selectionChartLayout);
-    selectionLayout->addStretch(50);
+    selectionLayout->addStretch(30);
     selectionLayout->addLayout(selectionOptionLayout);
     
     connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
