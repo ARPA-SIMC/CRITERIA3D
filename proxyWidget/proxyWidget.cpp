@@ -193,6 +193,7 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
     }
     if (proxyName != "elevation")
     {
+        climatologicalLR.setChecked(false);
         climatologicalLR.setVisible(false);
     }
     else
@@ -200,6 +201,14 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
         climatologicalLR.setVisible(true);
     }
     plot();
+    if (climatologicalLR.isChecked())
+    {
+        climatologicalLRClicked(1);
+    }
+    if (modelLR.isChecked())
+    {
+        modelLRClicked(1);
+    }
 }
 
 void Crit3DProxyWidget::changeVar(const QString varName)
