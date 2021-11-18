@@ -59,9 +59,9 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QLabel *r2Label = new QLabel(tr("R2"));
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
     
-    r2.setMaximumWidth(50);
+    r2.setMaximumWidth(60);
     r2.setMaximumHeight(30);
-    lapseRate.setMaximumWidth(50);
+    lapseRate.setMaximumWidth(60);
     lapseRate.setMaximumHeight(30);
     
     QLabel *variableLabel = new QLabel(tr("Variable"));
