@@ -30,9 +30,11 @@ ChartView::ChartView(QWidget *parent) :
 
     climLapseRatelineSeries = new QLineSeries();
     climLapseRatelineSeries->setName("Climatological Lapse Rate");
+    climLapseRatelineSeries->setColor(Qt::blue);
 
     modelLapseRatelineSeries = new QLineSeries();
     modelLapseRatelineSeries->setName("Model lapse rate");
+    modelLapseRatelineSeries->setColor(Qt::red);
 
     setRenderHint(QPainter::Antialiasing);
     chart()->addSeries(series1);
@@ -98,8 +100,8 @@ void ChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF
     double deltaY = yRange/100;
     axisX->setMax(xMax+deltaX);
     axisX->setMin(xMin-deltaX);
-    axisY->setMax(yMax+deltaY);
-    axisY->setMin(yMin-deltaY);
+    axisY->setMax(yMax+3*deltaY);
+    axisY->setMin(yMin-3*deltaY);
 
     chart()->addSeries(series1);
     chart()->addSeries(series2);
