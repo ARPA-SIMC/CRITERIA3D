@@ -193,6 +193,7 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
     }
     if (proxyName != "elevation")
     {
+        chartView->cleanClimLapseRate();
         climatologicalLR.setChecked(false);
         climatologicalLR.setVisible(false);
     }
