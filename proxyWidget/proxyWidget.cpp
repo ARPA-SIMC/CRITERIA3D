@@ -191,20 +191,19 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
             break;
         }
     }
+    plot();
     if (proxyName != "elevation")
     {
         chartView->cleanClimLapseRate();
-        climatologicalLR.setChecked(false);
         climatologicalLR.setVisible(false);
     }
     else
     {
         climatologicalLR.setVisible(true);
-    }
-    plot();
-    if (climatologicalLR.isChecked())
-    {
-        climatologicalLRClicked(1);
+        if (climatologicalLR.isChecked())
+        {
+            climatologicalLRClicked(1);
+        }
     }
     if (modelLR.isChecked())
     {
