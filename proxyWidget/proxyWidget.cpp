@@ -134,6 +134,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
+    connect(&detrended, &QCheckBox::toggled, [=](int toggled){ this->detrendedClicked(toggled); });
 
     // init
     zMin = NODATA;
@@ -265,6 +266,7 @@ void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
 
 void Crit3DProxyWidget::plot()
 {
+    chartView->cleanScatterSeries();
     outInterpolationPoints.clear();
     checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
 
@@ -441,4 +443,28 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
     }
 }
 
+void Crit3DProxyWidget::detrendedClicked(int toggled)
+{
+    chartView->cleanModelLapseRate();
+    chartView->cleanScatterSeries();
+    r2.clear();
+    lapseRate.clear();
+    if (toggled && outInterpolationPoints.size() != 0)
+    {
+        //passaggioDati.PassingDataOrClimaToInterpolation CurrentVariable, False
+        detrending(outInterpolationPoints, *(interpolationSettings->getCurrentCombination()), interpolationSettings, climateParam, myVar,
+                   getCrit3DTime(currentDate, currentHour));
+        //GetInterpolationPoints
+    }
+    else
+    {
+        //passaggioDati.PassingDataOrClimaToStatisticsGeo CurrentVariable
+    }
+    // TO DO
+    plot();
+    if (modelLR.isChecked())
+    {
+        modelLRClicked(1);
+    }
+}
 
