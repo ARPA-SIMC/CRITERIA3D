@@ -134,7 +134,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
-    connect(&detrended, &QCheckBox::toggled, [=](int toggled){ this->detrendedClicked(toggled); });
+    connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
 
     // init
     zMin = NODATA;
@@ -192,23 +192,6 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
         }
     }
     plot();
-    if (proxyName != "elevation")
-    {
-        chartView->cleanClimLapseRate();
-        climatologicalLR.setVisible(false);
-    }
-    else
-    {
-        climatologicalLR.setVisible(true);
-        if (climatologicalLR.isChecked())
-        {
-            climatologicalLRClicked(1);
-        }
-    }
-    if (modelLR.isChecked())
-    {
-        modelLRClicked(1);
-    }
 }
 
 void Crit3DProxyWidget::changeVar(const QString varName)
@@ -222,14 +205,6 @@ void Crit3DProxyWidget::changeVar(const QString varName)
         myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
     }
     plot();
-    if (climatologicalLR.isChecked())
-    {
-        climatologicalLRClicked(1);
-    }
-    if (modelLR.isChecked())
-    {
-        modelLRClicked(1);
-    }
 }
 
 void Crit3DProxyWidget::updateDateTime(QDate newDate, int newHour)
@@ -277,8 +252,17 @@ void Crit3DProxyWidget::plot()
 {
     chartView->cleanScatterSeries();
     outInterpolationPoints.clear();
-    checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
-
+    if (detrended.isChecked())
+    {
+        outInterpolationPoints.clear();
+        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
+        detrending(outInterpolationPoints, *(interpolationSettings->getCurrentCombination()), interpolationSettings, climateParam, myVar,
+                   getCrit3DTime(currentDate, currentHour));
+    }
+    else
+    {
+        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
+    }
     QList<QPointF> point_vector;
     QList<QPointF> point_vector2;
     QList<QPointF> point_vector3;
@@ -328,6 +312,23 @@ void Crit3DProxyWidget::plot()
     }
     chartView->setIdPointMap(idPointMap,idPointMap2,idPointMap3);
     chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
+    if (axisX.currentText() != "elevation")
+    {
+        chartView->cleanClimLapseRate();
+        climatologicalLR.setVisible(false);
+    }
+    else
+    {
+        climatologicalLR.setVisible(true);
+        if (climatologicalLR.isChecked())
+        {
+            climatologicalLRClicked(1);
+        }
+    }
+    if (modelLR.isChecked())
+    {
+        modelLRClicked(1);
+    }
 
 }
 
@@ -452,28 +453,4 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
     }
 }
 
-void Crit3DProxyWidget::detrendedClicked(int toggled)
-{
-    chartView->cleanModelLapseRate();
-    chartView->cleanScatterSeries();
-    r2.clear();
-    lapseRate.clear();
-    if (toggled && outInterpolationPoints.size() != 0)
-    {
-        //passaggioDati.PassingDataOrClimaToInterpolation CurrentVariable, False
-        detrending(outInterpolationPoints, *(interpolationSettings->getCurrentCombination()), interpolationSettings, climateParam, myVar,
-                   getCrit3DTime(currentDate, currentHour));
-        //GetInterpolationPoints
-    }
-    else
-    {
-        //passaggioDati.PassingDataOrClimaToStatisticsGeo CurrentVariable
-    }
-    // TO DO
-    plot();
-    if (modelLR.isChecked())
-    {
-        modelLRClicked(1);
-    }
-}
 

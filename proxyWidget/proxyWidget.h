@@ -23,7 +23,6 @@
             void plot();
             void climatologicalLRClicked(int toggled);
             void modelLRClicked(int toggled);
-            void detrendedClicked(int toggled);
 
     private:
             Crit3DInterpolationSettings* interpolationSettings;
