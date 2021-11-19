@@ -136,10 +136,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
 
-    // init
-    zMin = NODATA;
-    zMax = NODATA;
-
     chartView = new ChartView();
     plotLayout->addWidget(chartView);
 
@@ -320,11 +316,8 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
     chartView->cleanClimLapseRate();
     if (toggled && outInterpolationPoints.size() != 0)
     {
-        if (zMax == NODATA || zMin == NODATA)
-        {
-            zMax = getZmax(outInterpolationPoints);
-            zMin = getZmin(outInterpolationPoints);
-        }
+        float zMax = getZmax(outInterpolationPoints);
+        float zMin = getZmin(outInterpolationPoints);
         float firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
         float lapseRate = climateParam->getClimateLapseRate(myVar, getCrit3DTime(currentDate, currentHour));
         if (lapseRate == NODATA)
@@ -350,13 +343,8 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
     {
         if (axisX.currentText() == "elevation")
         {
-            if (zMax == NODATA || zMin == NODATA)
-            {
-                zMax = getZmax(outInterpolationPoints);
-                zMin = getZmin(outInterpolationPoints);
-            }
-            xMin = zMin;
-            xMax = zMax;
+            xMin = getZmin(outInterpolationPoints);
+            xMax = getZmax(outInterpolationPoints);
 
             if (!regressionOrography(outInterpolationPoints,interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam,
                                                                getCrit3DTime(currentDate, currentHour), myVar, proxyPos))
@@ -413,13 +401,13 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
         {
             xMin = getProxyMinValue(outInterpolationPoints);
             xMax = getProxyMaxValue(outInterpolationPoints);
-            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
-            float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
             bool isZeroIntercept = false;
             if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
             {
                 return;
             }
+            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
+            float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
             point.setX(xMin);
             point.setY(regressionIntercept + regressionSlope * xMin);
             point_vector.append(point);
