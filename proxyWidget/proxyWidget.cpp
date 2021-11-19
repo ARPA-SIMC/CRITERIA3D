@@ -140,23 +140,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     zMin = NODATA;
     zMax = NODATA;
 
-    // menu
-    QMenuBar* menuBar = new QMenuBar();
-    QMenu *editMenu = new QMenu("Edit");
-
-    menuBar->addMenu(editMenu);
-    mainLayout->setMenuBar(menuBar);
-
-    /*
-    QAction* changeLeftAxis = new QAction(tr("&Change axis left"), this);
-    QAction* changeRightAxis = new QAction(tr("&Change axis right"), this);
-    QAction* exportGraph = new QAction(tr("&Export graph"), this);
-
-    editMenu->addAction(changeLeftAxis);
-    editMenu->addAction(changeRightAxis);
-    editMenu->addAction(exportGraph);
-    */
-
     chartView = new ChartView();
     plotLayout->addWidget(chartView);
 
