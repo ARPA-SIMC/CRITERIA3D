@@ -94,8 +94,8 @@ void ChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF
         yMax = qMax(yMax, p.y());
     }
 
-    double xRange = xMax - abs(xMin);
-    double yRange = yMax - abs(yMin);
+    double xRange = xMax - xMin;
+    double yRange = yMax - yMin;
     double deltaX = xRange/100;
     double deltaY = yRange/100;
     axisX->setMax(xMax+3*deltaX);
