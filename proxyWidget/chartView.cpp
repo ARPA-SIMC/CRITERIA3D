@@ -56,12 +56,21 @@ ChartView::ChartView(QWidget *parent) :
 
 void ChartView::cleanScatterSeries()
 {
-    chart()->removeSeries(series1);
-    series1->clear();
-    chart()->removeSeries(series2);
-    series2->clear();
-    chart()->removeSeries(series3);
-    series3->clear();
+    if (chart()->series().contains(series1))
+    {
+        chart()->removeSeries(series1);
+        series1->clear();
+    }
+    if (chart()->series().contains(series2))
+    {
+        chart()->removeSeries(series2);
+        series2->clear();
+    }
+    if (chart()->series().contains(series3))
+    {
+        chart()->removeSeries(series3);
+        series3->clear();
+    }
 }
 
 void ChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3)
@@ -123,8 +132,11 @@ void ChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF
 
 void ChartView::cleanClimLapseRate()
 {
-    chart()->removeSeries(climLapseRatelineSeries);
-    climLapseRatelineSeries->clear();
+    if (chart()->series().contains(climLapseRatelineSeries))
+    {
+        chart()->removeSeries(climLapseRatelineSeries);
+        climLapseRatelineSeries->clear();
+    }
 }
 
 void ChartView::drawClimLapseRate(QPointF firstPoint, QPointF lastPoint)
@@ -138,8 +150,11 @@ void ChartView::drawClimLapseRate(QPointF firstPoint, QPointF lastPoint)
 
 void ChartView::cleanModelLapseRate()
 {
-    chart()->removeSeries(modelLapseRatelineSeries);
-    modelLapseRatelineSeries->clear();
+    if (chart()->series().contains(modelLapseRatelineSeries))
+    {
+        chart()->removeSeries(modelLapseRatelineSeries);
+        modelLapseRatelineSeries->clear();
+    }
 }
 
 void ChartView::drawModelLapseRate(QList<QPointF> pointList)
