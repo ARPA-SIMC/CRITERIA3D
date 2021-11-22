@@ -2122,6 +2122,7 @@ void MainWindow::on_actionPoints_deactivate_with_criteria_triggered()
     }
 }
 
+
 void MainWindow::on_actionDelete_Points_Selected_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)
@@ -2148,25 +2149,13 @@ void MainWindow::on_actionDelete_Points_Selected_triggered()
     reply = QMessageBox::question(this, "Are you sure?" ,
                                   QString::number(pointList.size()) + " selected points will be deleted",
                                   QMessageBox::Yes|QMessageBox::No);
-
     if (reply == QMessageBox::Yes)
     {
-        myProject.logInfoGUI("Deleting points...");
-
-        if (!myProject.meteoPointsDbHandler->deleteAllPointsFromIdList(pointList))
-        {
-            myProject.closeLogInfo();
-            myProject.logError("Failed to delete selected points");
-            return;
-        }
-        myProject.closeLogInfo();
-
-        // reload meteoPoint, point properties table is changed
-        QString dbName = myProject.dbPointsFileName;
-        myProject.closeMeteoPointsDB();
-        this->loadMeteoPointsDB_GUI(dbName);
+        if (myProject.deleteMeteoPoints(pointList))
+            drawMeteoPoints();
     }
 }
+
 
 void MainWindow::on_actionDelete_Points_NotActive_triggered()
 {
@@ -2176,15 +2165,15 @@ void MainWindow::on_actionDelete_Points_NotActive_triggered()
         return;
     }
 
-    QList<QString> idNotActive;
+    QList<QString> pointList;
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
         if (!myProject.meteoPoints[i].active)
         {
-            idNotActive << QString::fromStdString(myProject.meteoPoints[i].id);
+            pointList << QString::fromStdString(myProject.meteoPoints[i].id);
         }
     }
-    if (idNotActive.isEmpty())
+    if (pointList.isEmpty())
     {
         myProject.logError("All points are active");
         return;
@@ -2192,25 +2181,13 @@ void MainWindow::on_actionDelete_Points_NotActive_triggered()
 
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "Are you sure?",
-                                  QString::number(idNotActive.size()) + " not active points will be deleted",
+                                  QString::number(pointList.size()) + " not active points will be deleted",
                                   QMessageBox::Yes|QMessageBox::No);
-    if (reply == QMessageBox::No)
-        return;
-
-    myProject.logInfoGUI("Deleting points...");
-    bool isOk = myProject.meteoPointsDbHandler->deleteAllPointsFromIdList(idNotActive);
-    myProject.closeLogInfo();
-
-    if (!isOk)
+    if (reply == QMessageBox::Yes)
     {
-        myProject.logError("Failed to delete not active points.");
-        return;
+        if (myProject.deleteMeteoPoints(pointList))
+            drawMeteoPoints();
     }
-
-    // reload meteoPoint, point properties table is changed
-    QString dbName = myProject.dbPointsFileName;
-    myProject.closeMeteoPointsDB();
-    this->loadMeteoPointsDB_GUI(dbName);
 }
 
 
@@ -2237,10 +2214,11 @@ void MainWindow::on_actionPoints_delete_data_selected_triggered()
         return;
     }
 
-    if (!myProject.deleteDataMeteoPoints(pointList))
+    if (!myProject.deleteMeteoPointsData(pointList))
     {
         myProject.logError("Failed to delete data.");
     }
+
     QDate currentDate = myProject.getCurrentDate();
     myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
 }
@@ -2269,10 +2247,11 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
         return;
     }
 
-    if (!myProject.deleteDataMeteoPoints(pointList))
+    if (!myProject.deleteMeteoPointsData(pointList))
     {
         myProject.logError("Failed to delete data.");
     }
+
     QDate currentDate = myProject.getCurrentDate();
     myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
 }

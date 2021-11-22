@@ -658,8 +658,8 @@ bool Crit3DProject::saveModelState()
         QDir().mkdir(statePath);
     }
 
-    QString hourStr;
-    hourStr.sprintf("%02d", currentHour);
+    char hourStr[3];
+    sprintf(hourStr, "%02d", currentHour);
     QString dateFolder = currentDate.toString("yyyyMMdd") + "_H" + hourStr;
     if (!QDir(statePath+"/"+dateFolder).exists())
     {

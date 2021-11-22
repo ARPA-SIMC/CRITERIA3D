@@ -240,7 +240,8 @@
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
         bool setActiveStateWithCriteria(bool isActive);
-        bool deleteDataMeteoPoints(const QList<QString>& pointList);
+        bool deleteMeteoPoints(const QList<QString>& pointList);
+        bool deleteMeteoPointsData(const QList<QString>& pointList);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
