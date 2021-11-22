@@ -59,10 +59,12 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QLabel *r2Label = new QLabel(tr("R2"));
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
     
-    r2.setMaximumWidth(50);
+    r2.setMaximumWidth(60);
     r2.setMaximumHeight(30);
-    lapseRate.setMaximumWidth(50);
+    r2.setEnabled(false);
+    lapseRate.setMaximumWidth(60);
     lapseRate.setMaximumHeight(30);
+    lapseRate.setEnabled(false);
     
     QLabel *variableLabel = new QLabel(tr("Variable"));
     QLabel *axisXLabel = new QLabel(tr("Axis X"));
@@ -110,49 +112,29 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     selectionChartLayout->addWidget(&axisX);
     
     selectionOptionBoxLayout->addWidget(&detrended);
-    selectionOptionBoxLayout->addWidget(&climatologicalLR);
     selectionOptionBoxLayout->addWidget(&modelLR);
+    selectionOptionBoxLayout->addWidget(&climatologicalLR);
 
     selectionOptionEditLayout->addWidget(r2Label);
     selectionOptionEditLayout->addWidget(&r2);
-    selectionOptionEditLayout->addStretch(200);
+    selectionOptionEditLayout->addStretch(150);
     selectionOptionEditLayout->addWidget(lapseRateLabel);
     selectionOptionEditLayout->addWidget(&lapseRate);
-    selectionOptionEditLayout->addStretch(200);
-    selectionOptionEditLayout->addStretch(200);
+    selectionOptionEditLayout->addStretch(150);
+    selectionOptionEditLayout->addStretch(150);
 
     selectionOptionLayout->addLayout(selectionOptionBoxLayout);
     selectionOptionLayout->addLayout(selectionOptionEditLayout);
 
     selectionLayout->addLayout(selectionChartLayout);
-    selectionLayout->addStretch(50);
+    selectionLayout->addStretch(30);
     selectionLayout->addLayout(selectionOptionLayout);
     
     connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
-
-    // init
-    zMin = NODATA;
-    zMax = NODATA;
-
-    // menu
-    QMenuBar* menuBar = new QMenuBar();
-    QMenu *editMenu = new QMenu("Edit");
-
-    menuBar->addMenu(editMenu);
-    mainLayout->setMenuBar(menuBar);
-
-    /*
-    QAction* changeLeftAxis = new QAction(tr("&Change axis left"), this);
-    QAction* changeRightAxis = new QAction(tr("&Change axis right"), this);
-    QAction* exportGraph = new QAction(tr("&Export graph"), this);
-
-    editMenu->addAction(changeLeftAxis);
-    editMenu->addAction(changeRightAxis);
-    editMenu->addAction(exportGraph);
-    */
+    connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
 
     chartView = new ChartView();
     plotLayout->addWidget(chartView);
@@ -188,14 +170,6 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
             break;
         }
     }
-    if (proxyName != "elevation")
-    {
-        climatologicalLR.setVisible(false);
-    }
-    else
-    {
-        climatologicalLR.setVisible(true);
-    }
     plot();
 }
 
@@ -210,14 +184,6 @@ void Crit3DProxyWidget::changeVar(const QString varName)
         myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
     }
     plot();
-    if (climatologicalLR.isChecked())
-    {
-        climatologicalLRClicked(1);
-    }
-    if (modelLR.isChecked())
-    {
-        modelLRClicked(1);
-    }
 }
 
 void Crit3DProxyWidget::updateDateTime(QDate newDate, int newHour)
@@ -263,9 +229,19 @@ void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
 
 void Crit3DProxyWidget::plot()
 {
+    chartView->cleanScatterSeries();
     outInterpolationPoints.clear();
-    checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
-
+    if (detrended.isChecked())
+    {
+        outInterpolationPoints.clear();
+        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
+        detrending(outInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar,
+                   getCrit3DTime(currentDate, currentHour));
+    }
+    else
+    {
+        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
+    }
     QList<QPointF> point_vector;
     QList<QPointF> point_vector2;
     QList<QPointF> point_vector3;
@@ -315,6 +291,23 @@ void Crit3DProxyWidget::plot()
     }
     chartView->setIdPointMap(idPointMap,idPointMap2,idPointMap3);
     chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
+    if (axisX.currentText() != "elevation")
+    {
+        chartView->cleanClimLapseRate();
+        climatologicalLR.setVisible(false);
+    }
+    else
+    {
+        climatologicalLR.setVisible(true);
+        if (climatologicalLR.isChecked())
+        {
+            climatologicalLRClicked(1);
+        }
+    }
+    if (modelLR.isChecked())
+    {
+        modelLRClicked(1);
+    }
 
 }
 
@@ -323,11 +316,8 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
     chartView->cleanClimLapseRate();
     if (toggled && outInterpolationPoints.size() != 0)
     {
-        if (zMax == NODATA || zMin == NODATA)
-        {
-            zMax = getZmax(outInterpolationPoints);
-            zMin = getZmin(outInterpolationPoints);
-        }
+        float zMax = getZmax(outInterpolationPoints);
+        float zMin = getZmin(outInterpolationPoints);
         float firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
         float lapseRate = climateParam->getClimateLapseRate(myVar, getCrit3DTime(currentDate, currentHour));
         if (lapseRate == NODATA)
@@ -343,6 +333,8 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
 void Crit3DProxyWidget::modelLRClicked(int toggled)
 {
     chartView->cleanModelLapseRate();
+    r2.clear();
+    lapseRate.clear();
     QList<QPointF> point_vector;
     QPointF point;
     float xMin;
@@ -351,15 +343,10 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
     {
         if (axisX.currentText() == "elevation")
         {
-            if (zMax == NODATA || zMin == NODATA)
-            {
-                zMax = getZmax(outInterpolationPoints);
-                zMin = getZmin(outInterpolationPoints);
-            }
-            xMin = zMin;
-            xMax = zMax;
+            xMin = getZmin(outInterpolationPoints);
+            xMax = getZmax(outInterpolationPoints);
 
-            if (!regressionOrography(outInterpolationPoints,*(interpolationSettings->getCurrentCombination()), interpolationSettings, climateParam,
+            if (!regressionOrography(outInterpolationPoints,interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam,
                                                                getCrit3DTime(currentDate, currentHour), myVar, proxyPos))
             {
                 return;
@@ -414,13 +401,13 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
         {
             xMin = getProxyMinValue(outInterpolationPoints);
             xMax = getProxyMaxValue(outInterpolationPoints);
-            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
-            float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
             bool isZeroIntercept = false;
             if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
             {
                 return;
             }
+            float regressionSlope = interpolationSettings->getProxy(proxyPos)->getRegressionSlope();
+            float regressionIntercept = interpolationSettings->getProxy(proxyPos)->getRegressionIntercept();
             point.setX(xMin);
             point.setY(regressionIntercept + regressionSlope * xMin);
             point_vector.append(point);

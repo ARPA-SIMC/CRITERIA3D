@@ -48,9 +48,6 @@
             meteoVariable myVar;
             int proxyPos;
 
-            float zMax;
-            float zMin;
-
     signals:
         void closeProxyWidget();
     };

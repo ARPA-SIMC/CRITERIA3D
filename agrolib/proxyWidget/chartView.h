@@ -14,6 +14,7 @@ class ChartView : public QChartView
     Q_OBJECT
 public:
     explicit ChartView(QWidget *parent = 0);
+    void cleanScatterSeries();
     void drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3);
     void cleanClimLapseRate();
     void drawClimLapseRate(QPointF firstPoint, QPointF lastPoint);
