@@ -79,10 +79,11 @@
 
         bool setAllPointsActive();
         bool setAllPointsNotActive();
-        bool setActiveStatePointList(const QList<QString> &pointList, bool activeState, QString& error);
+        bool setActiveStatePointList(const QList<QString> &pointList, bool activeState);
 
-        bool deleteAllPointsFromIdList(QList<QString> pointList);
-        bool deleteAllPointsFromGeoPointList(QList<gis::Crit3DGeoPoint> pointList);
+        bool deleteAllPointsFromIdList(const QList<QString> &pointList);
+        bool deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint>& pointList);
+
         QList<QString> getMunicipalityList();
         QList<QString> getProvinceList();
         QList<QString> getRegionList();

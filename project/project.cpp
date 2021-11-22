@@ -2735,9 +2735,9 @@ bool Project::setActiveStateSelectedPoints(bool isActive)
         return false;
     }
 
-    if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive, errorString))
+    if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive))
     {
-        logError("Failed to activate/deactivate selected points:\n" + errorString);
+        logError("Failed to activate/deactivate selected points:\n" + meteoPointsDbHandler->error);
         return false;
     }
 
@@ -2755,9 +2755,9 @@ bool Project::setActiveStatePointList(QString fileName, bool isActive)
         return false;
     }
 
-    if (!meteoPointsDbHandler->setActiveStatePointList(pointList, isActive, errorString))
+    if (!meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
     {
-        logError("Failed to activate/deactivate point list:\n" + errorString);
+        logError("Failed to activate/deactivate point list:\n" + meteoPointsDbHandler->error);
         return false;
     }
 
@@ -2821,28 +2821,28 @@ bool Project::setActiveStateWithCriteria(bool isActive)
                 float distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
                 if (operation == "=")
                 {
-                    if (distance == item.toDouble())
+                    if (isEqual(distance, item.toFloat()))
                     {
                         points.append(QString::fromStdString(meteoPoints[i].id));
                     }
                 }
                 else if (operation == "!=")
                 {
-                    if (distance != item.toDouble())
+                    if (! isEqual(distance, item.toFloat()))
                     {
                         points.append(QString::fromStdString(meteoPoints[i].id));
                     }
                 }
                 else if (operation == ">")
                 {
-                    if (distance > item.toDouble())
+                    if (distance > item.toFloat())
                     {
                         points.append(QString::fromStdString(meteoPoints[i].id));
                     }
                 }
                 else if (operation == "<")
                 {
-                    if (distance < item.toDouble())
+                    if (distance < item.toFloat())
                     {
                         points.append(QString::fromStdString(meteoPoints[i].id));
                     }
@@ -2856,9 +2856,9 @@ bool Project::setActiveStateWithCriteria(bool isActive)
             logError("No points fit your requirements.");
             return false;
         }
-        if (!meteoPointsDbHandler->setActiveStatePointList(points, isActive, errorString))
+        if (!meteoPointsDbHandler->setActiveStatePointList(points, isActive))
         {
-            logError("Failed to activate/deactivate points selected");
+            logError("Failed to activate/deactivate points selected:\n" + meteoPointsDbHandler->error);
             return false;
         }
     }
@@ -2867,7 +2867,32 @@ bool Project::setActiveStateWithCriteria(bool isActive)
 }
 
 
-bool Project::deleteDataMeteoPoints(const QList<QString>& pointList)
+bool Project::deleteMeteoPoints(const QList<QString>& pointList)
+{
+    logInfoGUI("Deleting points...");
+        bool isOk = meteoPointsDbHandler->deleteAllPointsFromIdList(pointList);
+    closeLogInfo();
+
+    if (!isOk)
+    {
+        logError("Failed to delete points:" + meteoPointsDbHandler->error);
+        return false;
+    }
+
+    if (meteoPointsDbHandler->error != "")
+    {
+        logError("WARNING: " + meteoPointsDbHandler->error);
+    }
+
+    // reload meteoPoint, point properties table is changed
+    QString dbName = dbPointsFileName;
+    closeMeteoPointsDB();
+
+    return loadMeteoPointsDB(dbName);
+}
+
+
+bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
 {
     if (pointList.isEmpty())
     {
@@ -2903,8 +2928,7 @@ bool Project::deleteDataMeteoPoints(const QList<QString>& pointList)
         {
             if (!dailyVarList.isEmpty())
             {
-                if (!meteoPointsDbHandler->deleteData(QString::fromStdString(meteoPoints[i].id),
-                                                      daily, dailyVarList, startDate, endDate))
+                if (!meteoPointsDbHandler->deleteData(pointList[i], daily, dailyVarList, startDate, endDate))
                 {
                     closeProgressBar();
                     return false;
@@ -2913,7 +2937,7 @@ bool Project::deleteDataMeteoPoints(const QList<QString>& pointList)
         }
         if (allHourly)
         {
-            if (!meteoPointsDbHandler->deleteData(QString::fromStdString(meteoPoints[i].id), hourly, startDate, endDate))
+            if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, startDate, endDate))
             {
                 closeProgressBar();
                 return false;
@@ -2923,8 +2947,7 @@ bool Project::deleteDataMeteoPoints(const QList<QString>& pointList)
         {
             if (!hourlyVarList.isEmpty())
             {
-                if (!meteoPointsDbHandler->deleteData(QString::fromStdString(meteoPoints[i].id),
-                                                      hourly, hourlyVarList, startDate, endDate))
+                if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, hourlyVarList, startDate, endDate))
                 {
                     closeProgressBar();
                     return false;
@@ -2936,7 +2959,6 @@ bool Project::deleteDataMeteoPoints(const QList<QString>& pointList)
 
     return true;
 }
-
 
 
 /* ---------------------------------------------

@@ -383,7 +383,6 @@ bool Crit3DMeteoPointsDbHandler::existData(Crit3DMeteoPoint *meteoPoint, frequen
 
 bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myFreq, QDate first, QDate last)
 {
-
     QString tableName = pointCode + ((myFreq == daily) ?  "_D" : "_H");
     QSqlQuery qry(_db);
     QString statement;
@@ -402,19 +401,12 @@ bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myF
                                 .arg(tableName).arg(firstStr).arg(lastStr);
     }
 
-    if( !qry.exec(statement) )
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
+    return qry.exec(statement);
 }
+
 
 bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myFreq, QList<meteoVariable> varList, QDate first, QDate last)
 {
-
     QString tableName = pointCode + ((myFreq == daily) ?  "_D" : "_H");
     QString idList;
     QString id;
@@ -438,19 +430,16 @@ bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myF
     {
         QString firstStr = first.toString("yyyy-MM-dd");
         QString lastStr = last.toString("yyyy-MM-dd");
-        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATETIME('%2 00:00:00') AND DATETIME('%3 23:30:00') AND DATE('%3') AND `%4` IN (%5)")
-                                .arg(tableName).arg(firstStr).arg(lastStr).arg(FIELD_METEO_VARIABLE).arg(idList);
+        statement = QString( "DELETE FROM `%1` WHERE date_time "
+                            "BETWEEN DATETIME('%2 00:00:00') "
+                            "AND DATETIME('%3 23:30:00') "
+                            "AND `%4` IN (%5)")
+                            .arg(tableName).arg(firstStr).arg(lastStr).arg(FIELD_METEO_VARIABLE).arg(idList);
     }
 
-    if( !qry.exec(statement) )
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
+    return qry.exec(statement);
 }
+
 
 bool Crit3DMeteoPointsDbHandler::deleteAllData(frequencyType myFreq)
 {
@@ -1315,7 +1304,7 @@ bool Crit3DMeteoPointsDbHandler::setIdPointListActiveState(QList<QString> pointL
 */
 
 
-bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& pointList, bool activeState, QString& error)
+bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& pointList, bool activeState)
 {
     QString idList = "";
     for (int i = 0; i < pointList.size(); i++)
@@ -1343,40 +1332,43 @@ bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& p
 }
 
 
-bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromIdList(QList<QString> pointList)
+bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromIdList(const QList<QString>& pointList)
 {
     QSqlQuery qry(_db);
 
-    for (int i = 0; i<pointList.size(); i++)
+    error = "";
+    for (int i = 0; i < pointList.size(); i++)
     {
-        QString id_point = pointList.at(i);
-        qry.prepare( "DELETE from point_properties WHERE id_point = :id_point" );
+        QString id_point = pointList[i];
+        qry.prepare( "DELETE FROM point_properties WHERE id_point = :id_point" );
         qry.bindValue(":id_point", id_point);
         if( !qry.exec() )
         {
-            qDebug() << qry.lastError();
+            error += id_point + " " + qry.lastError().text();
             return false;
         }
-        // remove also table
-        QString table = id_point+"_H";
-        qry.prepare( "DROP table IF EXISTS 'table = :table'" );
-        qry.bindValue(":table", table);
-        if( !qry.exec() )
+
+        // remove also tables
+        QString table = id_point + "_H";
+        QString queryStr = "DROP TABLE IF EXISTS '" + table +"'";
+        if( !qry.exec(queryStr))
         {
-            qDebug() << qry.lastError();
+            error += "\n" + qry.lastError().text();
         }
-        table = id_point+"_D";
-        qry.prepare( "DROP table IF EXISTS 'table = :table'" );
-        qry.bindValue(":table", table);
-        if( !qry.exec() )
+
+        table = id_point + "_D";
+        queryStr = "DROP TABLE IF EXISTS '" + table +"'";
+        if( !qry.exec(queryStr))
         {
-            qDebug() << qry.lastError();
+            error += "\n" + qry.lastError().text();
         }
     }
+
     return true;
 }
 
-bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(QList<gis::Crit3DGeoPoint> pointList)
+
+bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint> &pointList)
 {
     QSqlQuery qry(_db);
     QList<QString> idPointList;
@@ -1405,8 +1397,10 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(QList<gis::Crit
             }
         }
     }
+
     return deleteAllPointsFromIdList(idPointList);
 }
+
 
 QList<QString> Crit3DMeteoPointsDbHandler::getMunicipalityList()
 {
