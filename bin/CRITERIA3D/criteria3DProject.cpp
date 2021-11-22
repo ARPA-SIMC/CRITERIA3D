@@ -651,8 +651,7 @@ bool Crit3DProject::saveModelState()
         return false;
     }
 
-    QString projectPath = getDefaultPath() + PATH_PROJECT;
-    QString statePath = projectPath+projectName+"/STATES";
+    QString statePath = getProjectPath() + "/STATES";
     if (!QDir(statePath).exists())
     {
         QDir().mkdir(statePath);
