@@ -148,6 +148,8 @@
 
         void on_actionPoints_delete_data_not_active_triggered();
 
+        void on_actionPoints_deactivate_with_no_data_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

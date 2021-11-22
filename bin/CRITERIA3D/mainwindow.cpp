@@ -2123,6 +2123,62 @@ void MainWindow::on_actionPoints_deactivate_with_criteria_triggered()
 }
 
 
+
+void MainWindow::on_actionPoints_deactivate_with_no_data_triggered()
+{
+    if (myProject.meteoPointsDbHandler == nullptr)
+    {
+        myProject.logError(ERROR_STR_MISSING_DB);
+        return;
+    }
+
+    QList<QString> pointList;
+    myProject.setProgressBar("Checking points...", myProject.nrMeteoPoints);
+    for (int i = 0; i < myProject.nrMeteoPoints; i++)
+    {
+        myProject.updateProgressBar(i);
+        if (myProject.meteoPoints[i].active)
+        {
+            bool existData = myProject.meteoPointsDbHandler->existData(&myProject.meteoPoints[i], daily) || myProject.meteoPointsDbHandler->existData(&myProject.meteoPoints[i], hourly);
+            if (!existData)
+            {
+                pointList.append(QString::fromStdString(myProject.meteoPoints[i].id));
+            }
+        }
+    }
+    myProject.closeProgressBar();
+
+    if (pointList.isEmpty())
+    {
+        myProject.logError("All active points have valid data.");
+        return;
+    }
+
+    myProject.logInfoGUI("Deactive points...");
+    bool isOk = myProject.meteoPointsDbHandler->setActiveStatePointList(pointList, false);
+    myProject.closeLogInfo();
+
+    if (! isOk)
+    {
+        myProject.logError("Failed to set to not active NODATA points");
+        return;
+    }
+
+    for (int j = 0; j < pointList.size(); j++)
+    {
+        for (int i = 0; i < myProject.nrMeteoPoints; i++)
+        {
+            if (myProject.meteoPoints[i].id == pointList[j].toStdString())
+            {
+                myProject.meteoPoints[i].active = false;
+            }
+        }
+    }
+
+    redrawMeteoPoints(currentPointsVisualization, true);
+}
+
+
 void MainWindow::on_actionDelete_Points_Selected_triggered()
 {
     if (myProject.meteoPointsDbHandler == nullptr)

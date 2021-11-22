@@ -1283,23 +1283,37 @@ bool Crit3DMeteoPointsDbHandler::setGeoPointsListActiveState(QList<gis::Crit3DGe
 }
 
 
-bool Crit3DMeteoPointsDbHandler::setIdPointListActiveState(QList<QString> pointList, bool activeState)
+bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint> &pointList)
 {
     QSqlQuery qry(_db);
+    QList<QString> idPointList;
+    QString idPoint;
+
     for (int i = 0; i<pointList.size(); i++)
     {
-        QString id_point = pointList.at(i);
-        qry.prepare( "UPDATE point_properties SET is_active = :activeState WHERE id_point = :id_point" );
-        qry.bindValue(":activeState", activeState);
-        qry.bindValue(":id_point", id_point);
+        double latitude = pointList.at(i).latitude;
+        double longitude = pointList.at(i).longitude;
+
+        qry.prepare( "SELECT * from point_properties WHERE latitude = :latitude AND longitude = :longitude" );
+        qry.bindValue(":latitude", latitude);
+        qry.bindValue(":longitude", longitude);
 
         if( !qry.exec() )
         {
-            qDebug() << "id_point " << id_point << qry.lastError();
+            qDebug() << qry.lastError();
             return false;
         }
+        else
+        {
+            while (qry.next())
+            {
+                getValue(qry.value("id_point"), &idPoint);
+                idPointList << idPoint;
+            }
+        }
     }
-    return true;
+
+    return deleteAllPointsFromIdList(idPointList);
 }
 */
 
@@ -1365,40 +1379,6 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromIdList(const QList<QString>&
     }
 
     return true;
-}
-
-
-bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint> &pointList)
-{
-    QSqlQuery qry(_db);
-    QList<QString> idPointList;
-    QString idPoint;
-
-    for (int i = 0; i<pointList.size(); i++)
-    {
-        double latitude = pointList.at(i).latitude;
-        double longitude = pointList.at(i).longitude;
-
-        qry.prepare( "SELECT * from point_properties WHERE latitude = :latitude AND longitude = :longitude" );
-        qry.bindValue(":latitude", latitude);
-        qry.bindValue(":longitude", longitude);
-
-        if( !qry.exec() )
-        {
-            qDebug() << qry.lastError();
-            return false;
-        }
-        else
-        {
-            while (qry.next())
-            {
-                getValue(qry.value("id_point"), &idPoint);
-                idPointList << idPoint;
-            }
-        }
-    }
-
-    return deleteAllPointsFromIdList(idPointList);
 }
 
 

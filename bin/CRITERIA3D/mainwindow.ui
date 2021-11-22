@@ -3622,7 +3622,7 @@
      <addaction name="actionPoints_deactivate_selected"/>
      <addaction name="actionPoints_deactivate_from_point_list"/>
      <addaction name="actionPoints_deactivate_with_criteria"/>
-     <addaction name="actionWith_no_data"/>
+     <addaction name="actionPoints_deactivate_with_no_data"/>
     </widget>
     <widget class="QMenu" name="menuPoints_delete">
      <property name="title">
@@ -4069,9 +4069,9 @@
     <string>With criteria</string>
    </property>
   </action>
-  <action name="actionWith_no_data">
+  <action name="actionPoints_deactivate_with_no_data">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>With no data</string>

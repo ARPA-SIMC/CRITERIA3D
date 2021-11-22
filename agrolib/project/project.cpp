@@ -683,7 +683,11 @@ bool Project::loadParameters(QString parametersFileName)
 
 bool Project::getMeteoPointSelected(int i)
 {
-    if (meteoPointsSelected.isEmpty()) return true;
+    if (i >= nrMeteoPoints)
+        return false;
+
+    if (meteoPointsSelected.isEmpty())
+        return true;
 
     for (int j = 0; j < meteoPointsSelected.size(); j++)
     {
