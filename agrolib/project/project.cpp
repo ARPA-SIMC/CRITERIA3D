@@ -681,25 +681,6 @@ bool Project::loadParameters(QString parametersFileName)
 }
 
 
-bool Project::getMeteoPointSelected(int i)
-{
-    if (i >= nrMeteoPoints)
-        return false;
-
-    if (meteoPointsSelected.isEmpty())
-        return true;
-
-    for (int j = 0; j < meteoPointsSelected.size(); j++)
-    {
-        if (isEqual(meteoPoints[i].latitude, meteoPointsSelected[j].latitude)
-            && isEqual(meteoPoints[i].longitude, meteoPointsSelected[j].longitude))
-            return true;
-    }
-
-    return false;
-}
-
-
 void Project::setApplicationPath(QString myPath)
 {
     this->appPath = myPath;
@@ -2703,13 +2684,15 @@ void Project::updateSelectedPoints()
 {
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        if (meteoPointsSelected.isEmpty())
+        meteoPoints[i].selected = false;
+        for (int j = 0; j < meteoPointsSelected.size(); j++)
         {
-            meteoPoints[i].selected = false;
-        }
-        else
-        {
-            meteoPoints[i].selected = getMeteoPointSelected(i);
+            if ( isEqual(meteoPoints[i].latitude, meteoPointsSelected[j].latitude)
+                    && isEqual(meteoPoints[i].longitude, meteoPointsSelected[j].longitude) )
+            {
+                meteoPoints[i].selected = true;
+                break;
+            }
         }
     }
 }

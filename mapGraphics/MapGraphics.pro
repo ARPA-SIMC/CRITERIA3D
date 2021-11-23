@@ -51,6 +51,7 @@ SOURCES += \
 
 
 HEADERS += \
+    SquareObject.h \
     tileSources/CompositeTileSource.h \
     tileSources/GridTileSource.h \
     tileSources/WebTileSource.h \
