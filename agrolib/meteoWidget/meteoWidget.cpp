@@ -567,7 +567,10 @@ void Crit3DMeteoWidget::resetValues()
             for (int i = 0; i < lineSeries[mp].size(); i++)
             {
                 lineSeries[mp][i]->clear();
-                chart->removeSeries(lineSeries[mp][i]);
+                if (chart->series().contains(lineSeries[mp][i]))
+                {
+                    chart->removeSeries(lineSeries[mp][i]);
+                }
             }
             lineSeries[mp].clear();
         }
@@ -579,7 +582,10 @@ void Crit3DMeteoWidget::resetValues()
         {
             setVector[mp].clear();
             barSeries[mp]->clear();
-            chart->removeSeries(barSeries[mp]);
+            if (chart->series().contains(barSeries[mp]))
+            {
+                chart->removeSeries(barSeries[mp]);
+            }
         }
         barSeries.clear();
         setVector.clear();
@@ -685,7 +691,10 @@ void Crit3DMeteoWidget::resetEnsembleValues()
     ensembleSet.clear();
     for (int i = 0; i < ensembleSeries.size(); i++)
     {
-        chart->removeSeries(ensembleSeries[i]);
+        if (chart->series().contains(ensembleSeries[i]))
+        {
+            chart->removeSeries(ensembleSeries[i]);
+        }
     }
     ensembleSeries.clear();
     categories.clear();
