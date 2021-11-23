@@ -28,6 +28,7 @@ win32:{
 #DEFINES += MAPGRAPHICS_LIBRARY
 
 SOURCES += \
+    SquareObject.cpp \
     tileSources/CompositeTileSource.cpp \
     tileSources/GridTileSource.cpp \
     tileSources/WebTileSource.cpp \
@@ -51,6 +52,7 @@ SOURCES += \
 
 
 HEADERS += \
+    SquareObject.h \
     tileSources/CompositeTileSource.h \
     tileSources/GridTileSource.h \
     tileSources/WebTileSource.h \
