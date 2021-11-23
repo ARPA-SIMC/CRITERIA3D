@@ -585,6 +585,7 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
                     myProxyOrog->setRegressionSlope(MINVALUE(m2, float(0.0)));
                     myProxyOrog->setLapseRateT0(q2 + myProxyOrog->getLapseRateH1() * myProxyOrog->getRegressionSlope());
                     myProxyOrog->setLapseRateT1(myProxyOrog->getLapseRateT0());;
+                    myProxyOrog->setRegressionR2(r2);
                     return true;
                 }
             }
