@@ -1180,3 +1180,17 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
     }
     return aggregateDailyInMonthly;
 }
+
+
+// ---- end class
+
+bool isSelectionPointsActive(Crit3DMeteoPoint* meteoPoints,int nrMeteoPoints)
+{
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].selected)
+            return true;
+    }
+
+    return false;
+}

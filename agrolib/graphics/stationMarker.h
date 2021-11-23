@@ -15,9 +15,7 @@
         public:
             explicit StationMarker(qreal radius, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
             void setId(std::string id);
-            //void setToolTip(Crit3DMeteoPoint* meteoPoint_);
             void setToolTip();
-            //QString getToolTipText();
             std::string id() const;
             void setName(const std::string &name);
             void setDataset(const std::string &dataset);
