@@ -93,7 +93,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setMouseTracking(true);
 
-    this->testOutputPoints();
+    //this->testOutputPoints();
 }
 
 
