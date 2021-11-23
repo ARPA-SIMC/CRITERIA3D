@@ -4,7 +4,7 @@
 #include <QKeyEvent>
 
 CircleObject::CircleObject(qreal radius,bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent) :
-    MapGraphicsObject(sizeIsZoomInvariant,parent), _fillColor(fillColor)
+    MapGraphicsObject(sizeIsZoomInvariant, parent), _fillColor(fillColor)
 {
     _radius = qMax<qreal>(radius,0.01);
 
@@ -44,7 +44,7 @@ qreal CircleObject::radius() const
 void CircleObject::setRadius(qreal radius)
 {
     _radius = radius;
-    this->redrawRequested();
+    emit this->redrawRequested();
 }
 
 QColor CircleObject::color() const
@@ -58,7 +58,7 @@ void CircleObject::setFillColor(const QColor &color)
         return;
 
     _fillColor = color;
-    this->redrawRequested();
+    emit this->redrawRequested();
 }
 
 

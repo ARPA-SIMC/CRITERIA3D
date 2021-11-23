@@ -8,6 +8,7 @@
     #include "MapGraphicsScene.h"
     #include "mapGraphicsRasterObject.h"
     #include "stationMarker.h"
+    #include "SquareMarker.h"
     #include "colorLegend.h"
     #include "rubberBand.h"
 
@@ -176,7 +177,8 @@
 
         RasterObject* rasterDEM;
         RasterObject* rasterOutput;
-        QList<StationMarker*> pointList;
+        QList<StationMarker*> meteoPointList;
+        QList<SquareMarker*> outputPointList;
 
         ColorLegend *inputRasterColorLegend;
         ColorLegend *outputRasterColorLegend;
@@ -234,6 +236,8 @@
         bool setRadiationAsCurrentVariable();
         bool startModels(QDateTime firstTime, QDateTime lastTime);
         bool runModels(QDateTime firstTime, QDateTime lastTime);
+
+        void testOutputPoints();
     };
 
     bool selectDates(QDateTime &firstTime, QDateTime &lastTime);

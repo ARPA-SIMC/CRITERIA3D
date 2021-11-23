@@ -92,6 +92,8 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
 
     this->setMouseTracking(true);
+
+    this->testOutputPoints();
 }
 
 
@@ -229,7 +231,7 @@ bool MainWindow::updateSelection(const QPoint& position)
     QRectF rectF(topLeft, bottomRight);
     gis::Crit3DGeoPoint pointSelected;
 
-    foreach (StationMarker* marker, pointList)
+    foreach (StationMarker* marker, meteoPointList)
     {
         if (rectF.contains(marker->longitude(), marker->latitude()))
         {
@@ -368,6 +370,20 @@ bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
 }
 
 
+void MainWindow::testOutputPoints()
+{
+    SquareMarker* point = new SquareMarker(9, true, QColor((Qt::white)));
+    point->setLatitude(44.5);
+    point->setLongitude(11.5);
+    point->setId("01");
+    point->setCurrentValue(25);
+
+    this->outputPointList.append(point);
+    this->mapView->scene()->addObject(this->outputPointList[0]);
+    outputPointList[0]->setToolTip();
+}
+
+
 void MainWindow::addMeteoPoints()
 {
     myProject.clearSelectedPoints();
@@ -387,8 +403,8 @@ void MainWindow::addMeteoPoints()
         point->setCurrentValue(myProject.meteoPoints[i].currentValue);
         point->setQuality(myProject.meteoPoints[i].quality);
 
-        this->pointList.append(point);
-        this->mapView->scene()->addObject(this->pointList[i]);
+        this->meteoPointList.append(point);
+        this->mapView->scene()->addObject(this->meteoPointList[i]);
 
         point->setToolTip();
         connect(point, SIGNAL(newStationClicked(std::string, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, bool)));
@@ -682,13 +698,13 @@ bool MainWindow::isInsideMap(const QPoint& pos)
 
 void MainWindow::resetMeteoPoints()
 {
-    for (int i = 0; i < pointList.size(); i++)
+    for (int i = 0; i < meteoPointList.size(); i++)
     {
-        mapView->scene()->removeObject(pointList[i]);
-        delete pointList[i];
+        mapView->scene()->removeObject(meteoPointList[i]);
+        delete meteoPointList[i];
     }
 
-    pointList.clear();
+    meteoPointList.clear();
 }
 
 void MainWindow::on_actionVariableQualitySpatial_triggered()
@@ -724,7 +740,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 
     // hide all meteo points
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
-        pointList[i]->setVisible(false);
+        meteoPointList[i]->setVisible(false);
 
     meteoPointsLegend->setVisible(true);
 
@@ -743,30 +759,30 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             for (int i = 0; i < myProject.nrMeteoPoints; i++)
             {
                 myProject.meteoPoints[i].currentValue = NODATA;
-                pointList[i]->setRadius(5);
-                pointList[i]->setCurrentValue(NODATA);
-                pointList[i]->setToolTip();
+                meteoPointList[i]->setRadius(5);
+                meteoPointList[i]->setCurrentValue(NODATA);
+                meteoPointList[i]->setToolTip();
 
                 // color
                 if (myProject.meteoPoints[i].selected)
                 {
-                    pointList[i]->setFillColor(QColor(Qt::yellow));
+                    meteoPointList[i]->setFillColor(QColor(Qt::yellow));
                 }
                 else
                 {
                     if (myProject.meteoPoints[i].active)
                     {
-                        pointList[i]->setFillColor(QColor(Qt::white));
+                        meteoPointList[i]->setFillColor(QColor(Qt::white));
                     }
                     else if (! myProject.meteoPoints[i].active)
                     {
-                        pointList[i]->setFillColor(QColor(Qt::red));
+                        meteoPointList[i]->setFillColor(QColor(Qt::red));
                     }
                 }
 
                 // hide not active points
                 bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
-                pointList[i]->setVisible(isVisible);
+                meteoPointList[i]->setVisible(isVisible);
             }
 
             myProject.meteoPointsColorScale->setRange(NODATA, NODATA);
@@ -800,26 +816,26 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 {
                     if (myProject.meteoPoints[i].quality == quality::accepted)
                     {
-                        pointList[i]->setRadius(5);
+                        meteoPointList[i]->setRadius(5);
                         myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
-                        pointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
-                        pointList[i]->setOpacity(1.0);
+                        meteoPointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
+                        meteoPointList[i]->setOpacity(1.0);
                     }
                     else
                     {
                         // Wrong data
-                        pointList[i]->setRadius(10);
-                        pointList[i]->setFillColor(QColor(Qt::black));
-                        pointList[i]->setOpacity(0.5);
+                        meteoPointList[i]->setRadius(10);
+                        meteoPointList[i]->setFillColor(QColor(Qt::black));
+                        meteoPointList[i]->setOpacity(0.5);
                     }
 
-                    pointList[i]->setCurrentValue(myProject.meteoPoints[i].currentValue);
-                    pointList[i]->setQuality(myProject.meteoPoints[i].quality);
-                    pointList[i]->setToolTip();
+                    meteoPointList[i]->setCurrentValue(myProject.meteoPoints[i].currentValue);
+                    meteoPointList[i]->setQuality(myProject.meteoPoints[i].quality);
+                    meteoPointList[i]->setToolTip();
 
                     // hide not active points
                     bool isVisible = (myProject.meteoPoints[i].active || viewNotActivePoints);
-                    pointList[i]->setVisible(isVisible);
+                    meteoPointList[i]->setVisible(isVisible);
                 }
             }
 
