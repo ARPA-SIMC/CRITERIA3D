@@ -43,7 +43,6 @@
         signals:
             void newStationClicked(std::string, std::string, bool);
             void appendStationClicked(std::string, std::string, bool);
-            void openCropClicked(std::string);
 
     };
 
