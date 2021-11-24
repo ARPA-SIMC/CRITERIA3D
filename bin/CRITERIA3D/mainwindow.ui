@@ -3432,19 +3432,8 @@
       <addaction name="actionLoad_MeteoPoints"/>
       <addaction name="actionMeteoPointsImport_data"/>
      </widget>
-     <widget class="QMenu" name="menuOutput_points_2">
-      <property name="title">
-       <string>Output points</string>
-      </property>
-      <addaction name="actionOutputPoints_newFile"/>
-      <addaction name="actionOutputPoints_load"/>
-      <addaction name="separator"/>
-      <addaction name="actionOutputDB_new"/>
-      <addaction name="actionOutputDB_open"/>
-     </widget>
      <addaction name="actionLoad_DEM"/>
      <addaction name="menuMeteo_points"/>
-     <addaction name="menuOutput_points_2"/>
      <addaction name="actionLoad_soil_map"/>
      <addaction name="actionLoad_soil_data"/>
      <addaction name="actionLoad_Crop_data"/>
@@ -3456,10 +3445,32 @@
      <addaction name="actionOpenProject"/>
      <addaction name="actionCloseProject"/>
     </widget>
+    <widget class="QMenu" name="menuOutput">
+     <property name="title">
+      <string>Output</string>
+     </property>
+     <widget class="QMenu" name="menuOutput_db">
+      <property name="title">
+       <string>Output db</string>
+      </property>
+      <addaction name="actionOutputDB_new"/>
+      <addaction name="actionOutputDB_open"/>
+     </widget>
+     <widget class="QMenu" name="menuOutput_points_4">
+      <property name="title">
+       <string>Output points</string>
+      </property>
+      <addaction name="actionOutputPoints_newFile"/>
+      <addaction name="actionOutputPoints_load"/>
+     </widget>
+     <addaction name="menuOutput_points_4"/>
+     <addaction name="menuOutput_db"/>
+    </widget>
     <addaction name="menuOpen_project"/>
     <addaction name="separator"/>
     <addaction name="menuInput"/>
     <addaction name="separator"/>
+    <addaction name="menuOutput"/>
    </widget>
    <widget class="QMenu" name="menuDataSpatialization">
     <property name="title">
@@ -4153,12 +4164,12 @@
   </action>
   <action name="actionOutputPoints_newFile">
    <property name="text">
-    <string>New point list (csv file)...</string>
+    <string>New list (csv file)...</string>
    </property>
   </action>
   <action name="actionOutputPoints_load">
    <property name="text">
-    <string>Load point list...</string>
+    <string>Load list...</string>
    </property>
   </action>
   <action name="actionOutputPoints_activate_all">
@@ -4193,12 +4204,12 @@
   </action>
   <action name="actionOutputDB_new">
    <property name="text">
-    <string>New output DB...</string>
+    <string>New...</string>
    </property>
   </action>
   <action name="actionOutputDB_open">
    <property name="text">
-    <string>Open output DB...</string>
+    <string>Open...</string>
    </property>
   </action>
   <action name="actionOutputPoints_clear_selection">
