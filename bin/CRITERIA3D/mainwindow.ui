@@ -3542,9 +3542,10 @@
     </widget>
     <widget class="QMenu" name="menuSoil">
      <property name="title">
-      <string>Soil data</string>
+      <string>Soil</string>
      </property>
      <addaction name="actionView_SoilMap"/>
+     <addaction name="actionHide_soil_map"/>
     </widget>
     <widget class="QMenu" name="menuSnow">
      <property name="title">
@@ -4222,6 +4223,11 @@
    </property>
    <property name="text">
     <string>View not active</string>
+   </property>
+  </action>
+  <action name="actionHide_soil_map">
+   <property name="text">
+    <string>Hide soil map</string>
    </property>
   </action>
  </widget>

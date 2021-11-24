@@ -166,6 +166,8 @@
 
         void on_actionOutputPoints_activate_selected_triggered();
 
+        void on_actionHide_soil_map_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

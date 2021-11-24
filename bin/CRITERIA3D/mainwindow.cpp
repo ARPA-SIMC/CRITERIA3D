@@ -1101,6 +1101,15 @@ void MainWindow::on_actionView_SoilMap_triggered()
     showSoilMap();
 }
 
+
+void MainWindow::on_actionHide_soil_map_triggered()
+{
+    if (ui->labelOutputRaster->text() == "Soil")
+    {
+        setOutputRasterVisible(false);
+    }
+}
+
 // -------------------- METEO VARIABLES -------------------------
 
 bool MainWindow::checkMapVariable(bool isComputed)
@@ -2448,4 +2457,5 @@ void MainWindow::on_actionOutputPoints_activate_selected_triggered()
     myProject.clearSelectedOutputPoints();
     redrawOutputPoints();
 }
+
 
