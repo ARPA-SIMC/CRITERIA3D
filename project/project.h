@@ -91,6 +91,10 @@
         QString parametersFileName;
         std::ofstream logFile;
 
+        // output points
+        QString outputPointsFileName;
+        QString currentDbOutputFileName;
+
         QSettings* parameters;
         QSettings* projectSettings;
 
