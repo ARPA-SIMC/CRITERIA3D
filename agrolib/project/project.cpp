@@ -97,7 +97,6 @@ void Project::clearProject()
     if (logFile.is_open()) logFile.close();
 
     meteoPointsColorScale->setRange(NODATA, NODATA);
-    meteoPointsSelected.clear();
 
     delete parameters;
     delete projectSettings;
@@ -850,7 +849,6 @@ void Project::closeMeteoPointsDB()
     }
 
     clearMeteoPoints();
-    meteoPointsSelected.clear();
 
     dbPointsFileName = "";
     meteoPointsLoaded = false;
@@ -2672,28 +2670,9 @@ void Project::showProxyGraph()
 
 void Project::clearSelectedPoints()
 {
-    meteoPointsSelected.clear();
     for (int i = 0; i < nrMeteoPoints; i++)
     {
         meteoPoints[i].selected = false;
-    }
-}
-
-
-void Project::updateSelectedPoints()
-{
-    for (int i = 0; i < nrMeteoPoints; i++)
-    {
-        meteoPoints[i].selected = false;
-        for (int j = 0; j < meteoPointsSelected.size(); j++)
-        {
-            if ( isEqual(meteoPoints[i].latitude, meteoPointsSelected[j].latitude)
-                    && isEqual(meteoPoints[i].longitude, meteoPointsSelected[j].longitude) )
-            {
-                meteoPoints[i].selected = true;
-                break;
-            }
-        }
     }
 }
 
