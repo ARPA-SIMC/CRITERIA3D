@@ -364,6 +364,8 @@ bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
 
 void MainWindow::addOutputPointsGUI()
 {
+    resetOutputPointMarkers();
+
     for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
     {
         SquareMarker* point = new SquareMarker(9, true, QColor((Qt::white)));
@@ -375,6 +377,8 @@ void MainWindow::addOutputPointsGUI()
         this->mapView->scene()->addObject(this->outputPointList[i]);
         outputPointList[i]->setToolTip();
     }
+
+    redrawOutputPoints();
 }
 
 
@@ -453,7 +457,7 @@ void MainWindow::callAppendMeteoWidget(std::string id, std::string name, bool is
 
 void MainWindow::drawMeteoPoints()
 {
-    resetMeteoPoints();
+    resetMeteoPointMarkers();
 
     if (! myProject.meteoPointsLoaded || myProject.nrMeteoPoints == 0)
     {
@@ -552,7 +556,7 @@ void MainWindow::clearMaps_GUI()
 
 void MainWindow::clearMeteoPoints_GUI()
 {
-    this->resetMeteoPoints();
+    resetMeteoPointMarkers();
     meteoPointsLegend->setVisible(false);
     showPointsGroup->setEnabled(false);
 }
@@ -704,7 +708,7 @@ bool MainWindow::isInsideMap(const QPoint& pos)
     else return false;
 }
 
-void MainWindow::resetMeteoPoints()
+void MainWindow::resetMeteoPointMarkers()
 {
     for (int i = 0; i < meteoPointList.size(); i++)
     {
@@ -714,6 +718,19 @@ void MainWindow::resetMeteoPoints()
 
     meteoPointList.clear();
 }
+
+
+void MainWindow::resetOutputPointMarkers()
+{
+    for (int i = 0; i < outputPointList.size(); i++)
+    {
+        mapView->scene()->removeObject(outputPointList[i]);
+        delete outputPointList[i];
+    }
+
+    outputPointList.clear();
+}
+
 
 void MainWindow::on_actionVariableQualitySpatial_triggered()
 {

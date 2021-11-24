@@ -205,7 +205,7 @@
         bool updateSelection(const QPoint& position);
         void updateCurrentVariable();
         void updateDateTime();
-        void resetMeteoPoints();
+        void resetMeteoPointMarkers();
         void redrawMeteoPoints(visualizationType myType, bool updateColorSCale);
 
         bool loadMeteoPointsDB_GUI(QString dbName);
@@ -243,6 +243,7 @@
         void testOutputPoints();
         void addOutputPointsGUI();
         void redrawOutputPoints();
+        void resetOutputPointMarkers();
     };
 
     bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
