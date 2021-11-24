@@ -52,8 +52,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->labelInputRaster->setText("");
     ui->labelOutputRaster->setText("");
     ui->flag_save_state_daily_step->setChecked(false);
-    ui->flag_View_not_active_points->setChecked(true);
+    this->viewNotActivePoints = true;
+    ui->flag_View_not_active_points->setChecked(this->viewNotActivePoints);
     this->currentPointsVisualization = notShown;
+    this->viewOutputPoints = true;
 
     // show menu
     showPointsGroup = new QActionGroup(this);
@@ -93,7 +95,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setMouseTracking(true);
 
-    //this->testOutputPoints();
+    this->testOutputPoints();
 }
 
 
@@ -231,47 +233,36 @@ bool MainWindow::updateSelection(const QPoint& position)
     QRectF rectF(topLeft, bottomRight);
     gis::Crit3DGeoPoint pointSelected;
 
-    foreach (StationMarker* marker, meteoPointList)
+    for (int i = 0; i < meteoPointList.size(); i++)
     {
-        if (rectF.contains(marker->longitude(), marker->latitude()))
+        if (rectF.contains(meteoPointList[i]->longitude(), meteoPointList[i]->latitude()))
         {
-            pointSelected.latitude = marker->latitude();
-            pointSelected.longitude = marker->longitude();
-
             if (isAdd)
             {
-                bool found = false;
-                for (int i = 0; i < myProject.meteoPointsSelected.size(); i++)
-                {
-                    if (isEqual(myProject.meteoPointsSelected[i].latitude, pointSelected.latitude)
-                        && isEqual(myProject.meteoPointsSelected[i].longitude, pointSelected.longitude))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    myProject.meteoPointsSelected << pointSelected;
-                }
+                myProject.meteoPoints[i].selected = true;
             }
-            else if (!isAdd)
+            else
             {
-                // remove
-                for (int i = 0; i<myProject.meteoPointsSelected.size(); i++)
-                {
-                    if (isEqual(myProject.meteoPointsSelected.at(i).latitude, pointSelected.latitude)
-                        && isEqual(myProject.meteoPointsSelected.at(i).longitude, pointSelected.longitude))
-                    {
-                        myProject.meteoPointsSelected.removeAt(i);
-                        break;
-                    }
-                }
+                myProject.meteoPoints[i].selected = false;
             }
         }
     }
 
-    myProject.updateSelectedPoints();
+    for (int i = 0; i < outputPointList.size(); i++)
+    {
+        if (rectF.contains(outputPointList[i]->longitude(), outputPointList[i]->latitude()))
+        {
+            if (isAdd)
+            {
+                myProject.outputPoints[i].selected = true;
+            }
+            else
+            {
+                myProject.outputPoints[i].selected = false;
+            }
+        }
+    }
+
     rubberBand->isActive = false;
     rubberBand->hide();
 
@@ -285,6 +276,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event)
     if (this->updateSelection(event->pos()))
     {
         this->redrawMeteoPoints(currentPointsVisualization, false);
+        this->redrawOutputPoints();
     }
 }
 
@@ -370,17 +362,33 @@ bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
 }
 
 
+void MainWindow::addOutputPointsGUI()
+{
+    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+    {
+        SquareMarker* point = new SquareMarker(9, true, QColor((Qt::white)));
+        point->setId(myProject.outputPoints[i].id);
+        point->setLatitude(myProject.outputPoints[i].latitude);
+        point->setLongitude(myProject.outputPoints[i].longitude);
+
+        this->outputPointList.append(point);
+        this->mapView->scene()->addObject(this->outputPointList[i]);
+        outputPointList[i]->setToolTip();
+    }
+}
+
+
 void MainWindow::testOutputPoints()
 {
-    SquareMarker* point = new SquareMarker(9, true, QColor((Qt::white)));
-    point->setLatitude(44.5);
-    point->setLongitude(11.5);
-    point->setId("01");
-    point->setCurrentValue(25);
+    myProject.outputPoints.clear();
 
-    this->outputPointList.append(point);
-    this->mapView->scene()->addObject(this->outputPointList[0]);
-    outputPointList[0]->setToolTip();
+    gis::Crit3DOutputPoint p;
+    p.initialize("01", true, 44.5, 11.5, 50, myProject.gisSettings.utmZone);
+    myProject.outputPoints.push_back(p);
+    p.initialize("02", true, 44.6, 11.6, 50, myProject.gisSettings.utmZone);
+    myProject.outputPoints.push_back(p);
+
+    addOutputPointsGUI();
 }
 
 
@@ -731,6 +739,32 @@ void MainWindow::updateCurrentVariable()
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
+
+void MainWindow::redrawOutputPoints()
+{
+    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+    {
+        if (myProject.outputPoints[i].selected)
+        {
+            outputPointList[i]->setFillColor(QColor(Qt::yellow));
+        }
+        else
+        {
+            if (myProject.outputPoints[i].active)
+            {
+                outputPointList[i]->setFillColor(QColor(Qt::white));
+            }
+            else
+            {
+                outputPointList[i]->setFillColor(QColor(Qt::red));
+            }
+        }
+
+        outputPointList[i]->setVisible(this->viewOutputPoints);
+    }
+}
+
+
 void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCale)
 {
     currentPointsVisualization = myType;
@@ -850,6 +884,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         }
     }
 }
+
 
 void MainWindow::on_opacitySliderRasterInput_sliderMoved(int position)
 {
@@ -2326,5 +2361,12 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
 
     QDate currentDate = myProject.getCurrentDate();
     myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
+}
+
+
+void MainWindow::on_flagOutputPoints_hide_toggled(bool state)
+{
+    this->viewOutputPoints = !state;
+    redrawOutputPoints();
 }
 

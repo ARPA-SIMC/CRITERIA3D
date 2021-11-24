@@ -3432,8 +3432,19 @@
       <addaction name="actionLoad_MeteoPoints"/>
       <addaction name="actionMeteoPointsImport_data"/>
      </widget>
+     <widget class="QMenu" name="menuOutput_points_2">
+      <property name="title">
+       <string>Output points</string>
+      </property>
+      <addaction name="actionOutputPoints_newFile"/>
+      <addaction name="actionOutputPoints_load"/>
+      <addaction name="separator"/>
+      <addaction name="actionOutputDB_new"/>
+      <addaction name="actionOutputDB_open"/>
+     </widget>
      <addaction name="actionLoad_DEM"/>
      <addaction name="menuMeteo_points"/>
+     <addaction name="menuOutput_points_2"/>
      <addaction name="actionLoad_soil_map"/>
      <addaction name="actionLoad_soil_data"/>
      <addaction name="actionLoad_Crop_data"/>
@@ -3607,7 +3618,7 @@
     </widget>
     <widget class="QMenu" name="menuActivate_points">
      <property name="title">
-      <string>Activate points</string>
+      <string>Activate</string>
      </property>
      <addaction name="actionPoints_activate_all"/>
      <addaction name="actionPoints_activate_selected"/>
@@ -3616,7 +3627,7 @@
     </widget>
     <widget class="QMenu" name="menuDeactivate_points">
      <property name="title">
-      <string>Deactivate points</string>
+      <string>Deactivate</string>
      </property>
      <addaction name="actionPoints_deactivate_all"/>
      <addaction name="actionPoints_deactivate_selected"/>
@@ -3637,6 +3648,37 @@
     <addaction name="menuDelete_points"/>
     <addaction name="menuPoints_delete"/>
    </widget>
+   <widget class="QMenu" name="menuOutput_points">
+    <property name="title">
+     <string>Output points</string>
+    </property>
+    <widget class="QMenu" name="menuActivate_outputPoints">
+     <property name="title">
+      <string>Activate</string>
+     </property>
+     <addaction name="actionOutputPoints_activate_all"/>
+     <addaction name="actionOutputPoints_activate_selected"/>
+    </widget>
+    <widget class="QMenu" name="menuDeactivate_outputPoints">
+     <property name="title">
+      <string>Deactivate</string>
+     </property>
+     <addaction name="actionOutputPoints_deactivate_all"/>
+     <addaction name="actionOutputPoints_deactivate_selected"/>
+    </widget>
+    <widget class="QMenu" name="menuDelete">
+     <property name="title">
+      <string>Delete</string>
+     </property>
+     <addaction name="actionOutputPoints_delete_selected"/>
+    </widget>
+    <addaction name="flagOutputPoints_hide"/>
+    <addaction name="separator"/>
+    <addaction name="actionOutputPoints_add"/>
+    <addaction name="menuActivate_outputPoints"/>
+    <addaction name="menuDeactivate_outputPoints"/>
+    <addaction name="menuDelete"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
    <addaction name="menuMeteo_points_2"/>
@@ -3644,6 +3686,7 @@
    <addaction name="menuSolar_radiation_model_2"/>
    <addaction name="menuSnow_model"/>
    <addaction name="menuCriteria3D"/>
+   <addaction name="menuOutput_points"/>
    <addaction name="menuGIS_settings"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -4056,17 +4099,17 @@
   </action>
   <action name="actionPoints_activate_from_point_list">
    <property name="text">
-    <string>From point list</string>
+    <string>From point list...</string>
    </property>
   </action>
   <action name="actionPoints_activate_with_criteria">
    <property name="text">
-    <string>With criteria</string>
+    <string>With criteria...</string>
    </property>
   </action>
   <action name="actionPoints_deactivate_with_criteria">
    <property name="text">
-    <string>With criteria</string>
+    <string>With criteria...</string>
    </property>
   </action>
   <action name="actionPoints_deactivate_with_no_data">
@@ -4089,12 +4132,70 @@
   </action>
   <action name="actionPoints_deactivate_from_point_list">
    <property name="text">
-    <string>From point list</string>
+    <string>From point list...</string>
    </property>
   </action>
   <action name="actionPoints_clear_selection">
    <property name="text">
     <string>Clear selection</string>
+   </property>
+  </action>
+  <action name="flagOutputPoints_hide">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hide</string>
+   </property>
+  </action>
+  <action name="actionOutputPoints_newFile">
+   <property name="text">
+    <string>New point list (csv file)...</string>
+   </property>
+  </action>
+  <action name="actionOutputPoints_load">
+   <property name="text">
+    <string>Load point list...</string>
+   </property>
+  </action>
+  <action name="actionOutputPoints_activate_all">
+   <property name="text">
+    <string>All</string>
+   </property>
+  </action>
+  <action name="actionOutputPoints_activate_selected">
+   <property name="text">
+    <string>Selected</string>
+   </property>
+  </action>
+  <action name="actionOutputPoints_deactivate_all">
+   <property name="text">
+    <string>All</string>
+   </property>
+  </action>
+  <action name="actionOutputPoints_deactivate_selected">
+   <property name="text">
+    <string>Selected</string>
+   </property>
+  </action>
+  <action name="actionOutputPoints_delete_selected">
+   <property name="text">
+    <string>Selected</string>
+   </property>
+  </action>
+  <action name="actionOutputPoints_add">
+   <property name="text">
+    <string>Add...</string>
+   </property>
+  </action>
+  <action name="actionOutputDB_new">
+   <property name="text">
+    <string>New output DB...</string>
+   </property>
+  </action>
+  <action name="actionOutputDB_open">
+   <property name="text">
+    <string>Open output DB...</string>
    </property>
   </action>
  </widget>

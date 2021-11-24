@@ -125,11 +125,32 @@ namespace gis
         this->z = NODATA;
     }
 
-    Crit3DPoint::Crit3DPoint(double myX, double myY, double myZ)
+    Crit3DPoint::Crit3DPoint(double utmX, double utmY, double _z)
     {
-        utm.x = myX;
-        utm.y = myY;
-        z = myZ;
+        this->utm.x = utmX;
+        this->utm.y = utmY;
+        this->z = _z;
+    }
+
+    Crit3DOutputPoint::Crit3DOutputPoint()
+    {
+        this->id = "";
+        this->latitude = NODATA;
+        this->longitude = NODATA;
+        this->active = false;
+        this->selected = false;
+        this->currentValue = NODATA;
+    }
+
+    void Crit3DOutputPoint::initialize(const std::string& _id, bool isActive, double _latitude, double _longitude,
+                                  double _z, int zoneNumber)
+    {
+        this->id = _id;
+        this->latitude = _latitude;
+        this->longitude = _longitude;
+        this->z = _z;
+        this->active = isActive;
+        latLonToUtmForceZone(zoneNumber, latitude, longitude, &(utm.x), &(utm.y));
     }
 
     Crit3DRasterHeader::Crit3DRasterHeader()

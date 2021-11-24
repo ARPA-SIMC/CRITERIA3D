@@ -151,6 +151,8 @@
 
         void on_actionPoints_deactivate_with_no_data_triggered();
 
+        void on_flagOutputPoints_hide_toggled(bool state);
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -190,6 +192,7 @@
 
         visualizationType currentPointsVisualization;
         bool viewNotActivePoints;
+        bool viewOutputPoints;
 
         Crit3DSoilWidget *soilWidget;
 
@@ -238,6 +241,8 @@
         bool runModels(QDateTime firstTime, QDateTime lastTime);
 
         void testOutputPoints();
+        void addOutputPointsGUI();
+        void redrawOutputPoints();
     };
 
     bool selectDates(QDateTime &firstTime, QDateTime &lastTime);
