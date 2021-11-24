@@ -1169,7 +1169,6 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                     }
                     else
                     {
-                        //transitionNormalAugmentedMemory[i][0][0] = transitionNormalAugmentedMemory[i][0][1] = transitionNormal[i][0];
                         if(normRandom[i][j]  > transitionNormalAugmentedMemory[i][0][nrConsecutiveDays]) occurrences[i][j] = 1.;
                     }
                 }

@@ -13,10 +13,10 @@
     #include "kriging.h"
 
     /*! global variables */
-    short mode;
-    int dim;
-    double range, nugget, sill, sill_nugget, slope;
-    double *D, *V, *weight, *VM, *pos, *val;
+    static short mode;
+    static int dim;
+    static double range, nugget, sill, sill_nugget, slope;
+    static double *D, *V, *weight, *VM, *pos, *val;
 
 
     /*!

@@ -187,6 +187,20 @@ void Crit3DHourlyMeteoMaps::clear()
 }
 
 
+void Crit3DHourlyMeteoMaps::initialize()
+{
+    mapHourlyTair->emptyGrid();
+    mapHourlyPrec->emptyGrid();
+    mapHourlyRelHum->emptyGrid();
+    mapHourlyWindScalarInt->emptyGrid();
+    mapHourlyTdew->emptyGrid();
+    mapHourlyET0->emptyGrid();
+    mapHourlyLeafW->emptyGrid();
+
+    isComputed = false;
+}
+
+
 gis::Crit3DRasterGrid* Crit3DHourlyMeteoMaps::getMapFromVar(meteoVariable myVar)
 {
     if (myVar == airTemperature)

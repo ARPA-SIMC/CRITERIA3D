@@ -395,6 +395,26 @@ namespace gis
     }
 
 
+    void checkMinimumRange(float& minimum, float& maximum)
+    {
+        if (isEqual(maximum, 0) && isEqual(maximum, 0))
+        {
+            maximum = 0.01f;
+            return;
+        }
+
+        float avg = (maximum + minimum) * 0.5f;
+        float minRange = std::max(0.01f, float(fabs(avg)) * 0.01f);
+
+        if ((maximum - minimum) < minRange)
+        {
+            minimum = avg - minRange * 0.5f;
+            maximum = avg + minRange * 0.5f;
+            return;
+        }
+    }
+
+
     bool updateMinMaxRasterGrid(Crit3DRasterGrid* myGrid)
     {
         float myValue;
@@ -406,7 +426,7 @@ namespace gis
             for (int myCol = 0; myCol < myGrid->header->nrCols; myCol++)
             {
                 myValue = myGrid->value[myRow][myCol];
-                if (myValue != myGrid->header->flag)
+                if (! isEqual(myValue, myGrid->header->flag)  && ! isEqual(myValue, NODATA))
                 {
                     if (isFirstValue)
                     {
@@ -423,12 +443,15 @@ namespace gis
             }
 
         /*!  no values */
-        if (isFirstValue) return(false);
+        if (isFirstValue) return false;
 
         myGrid->maximum = maximum;
         myGrid->minimum = minimum;
-        myGrid->colorScale->maximum = myGrid->maximum;
-        myGrid->colorScale->minimum = myGrid->minimum;
+
+        checkMinimumRange(minimum, maximum);
+        myGrid->colorScale->maximum = maximum;
+        myGrid->colorScale->minimum = minimum;
+
         return true;
     }
 
@@ -455,7 +478,7 @@ namespace gis
             for (int myCol = col0; myCol <= col1; myCol++)
             {
                 myValue = myGrid->value[myRow][myCol];
-                if ( (myValue != myGrid->header->flag) && (myValue != NODATA))
+                if (! isEqual(myValue, myGrid->header->flag) && ! isEqual(myValue, NODATA))
                 {
                     if (isFirstValue)
                     {
@@ -471,12 +494,19 @@ namespace gis
                 }
             }
 
+        //  no values
+        if (isFirstValue)
+        {
+            myGrid->colorScale->maximum = NODATA;
+            myGrid->colorScale->minimum = NODATA;
+            return false;
+        }
+
+        checkMinimumRange(minimum, maximum);
         myGrid->colorScale->maximum = maximum;
         myGrid->colorScale->minimum = minimum;
-        //  no values
-        if (isFirstValue) return(false);
 
-        return(true);
+        return true;
     }
 
 
@@ -587,6 +617,11 @@ namespace gis
     {
             p->longitude = latLonHeader.llCorner.longitude + latLonHeader.dx * (v.col + 0.5);
             p->latitude = latLonHeader.llCorner.latitude + latLonHeader.dy * (latLonHeader.nrRows - v.row - 0.5);
+    }
+
+    float getValueFromUTMPoint(const Crit3DRasterGrid& myGrid, Crit3DUtmPoint& utmPoint)
+    {
+        return getValueFromXY(myGrid, utmPoint.x, utmPoint.y);
     }
 
     float getValueFromXY(const Crit3DRasterGrid& myGrid, double x, double y)
@@ -1346,6 +1381,42 @@ namespace gis
 
         return true;
     }
+
+    float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& myDEM)
+    {
+
+        int row, col;
+        float closestDistanceFromGrid;
+        float distance;
+        double gridX, gridY;
+        float demValue;
+
+        demValue = gis::getValueFromXY(myDEM, myPoint.utm.x, myPoint.utm.y);
+        if (demValue != myDEM.header->flag)
+        {
+            return 0;
+        }
+
+        closestDistanceFromGrid = NODATA;
+        for (row = 0; row < myDEM.header->nrRows; row++)
+        {
+            for (col = 0; col < myDEM.header->nrCols; col++)
+            {
+
+                if (!isEqual(myDEM.getValueFromRowCol(row,col), myDEM.header->flag))
+                {
+                    gis::getUtmXYFromRowCol(myDEM, row, col, &gridX, &gridY);
+                    distance = computeDistance(float(gridX), float(gridY), float(myPoint.utm.x), float(myPoint.utm.y));
+                    if (closestDistanceFromGrid == NODATA || distance < closestDistanceFromGrid)
+                    {
+                        closestDistanceFromGrid = distance;
+                    }
+                }
+            }
+        }
+        return closestDistanceFromGrid;
+    }
+
 
     bool compareGrids(const gis::Crit3DRasterGrid& first, const gis::Crit3DRasterGrid& second)
     {

@@ -768,7 +768,8 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     bool timeDimensionExists = (myDate != NO_DATE);
     nrLat = latLonHeader.nrRows;
     nrLon = latLonHeader.nrCols;
-    int varLat, varLon, varTime, status;
+    int varLat, varLon, status;
+    int varTime = 0;
 
     // global attributes
     status = nc_put_att_text(ncId, NC_GLOBAL, "title", title.length(), title.c_str());
@@ -856,7 +857,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     if (status != NC_NOERR) return false;
 
     // no data
-    float missing[] = {latLonHeader.flag};
+    float missing[] = {NODATA};
     status = nc_put_att_float(ncId, variables[0].id, "missing_value", NC_FLOAT, 1, missing);
     if (status != NC_NOERR) return false;
 
@@ -913,7 +914,6 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
 
 bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
 {
-
     if (ncId == NODATA) return false;
 
     float* var = new float[unsigned(nrLat*nrLon)];
@@ -922,7 +922,12 @@ bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
     {
         for (int col = 0; col < nrLon; col++)
         {
-            var[row*nrLon + col] = myDataGrid.value[row][col];
+            float value = myDataGrid.value[row][col];
+            // check on not active cells (for meteo grid)
+            if (isEqual(value, myDataGrid.header->flag) || isEqual(value, NO_ACTIVE))
+                value = NODATA;
+
+            var[row*nrLon + col] = value;
         }
     }
 

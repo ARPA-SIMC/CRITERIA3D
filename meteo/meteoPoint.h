@@ -171,5 +171,6 @@
 
     };
 
+    bool isSelectionPointsActive(Crit3DMeteoPoint* meteoPoints,int nrMeteoPoints);
 
 #endif // METEOPOINT_H

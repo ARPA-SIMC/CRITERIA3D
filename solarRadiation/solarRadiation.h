@@ -18,6 +18,7 @@
         gis::Crit3DRasterGrid* aspectMap;
         gis::Crit3DRasterGrid* beamRadiationMap;
         gis::Crit3DRasterGrid* diffuseRadiationMap;
+        gis::Crit3DRasterGrid* reflectedRadiationMap;
         gis::Crit3DRasterGrid* transmissivityMap;
         gis::Crit3DRasterGrid* globalRadiationMap;
 
@@ -27,7 +28,6 @@
         /*
         gis::Crit3DRasterGrid* linkeMap;
         gis::Crit3DRasterGrid* albedoMap;
-        gis::Crit3DRasterGrid* reflectedRadiationMap;
         gis::Crit3DRasterGrid* sunAzimuthMap;
         gis::Crit3DRasterGrid* sunIncidenceMap;
         gis::Crit3DRasterGrid* sunShadowMap;
@@ -38,6 +38,7 @@
         ~Crit3DRadiationMaps();
 
         void clear();
+        void initialize();
         bool getComputed();
         void setComputed(bool value);
     };
@@ -64,11 +65,6 @@
 
         float computePointTransmissivity(Crit3DRadiationSettings *mySettings, const gis::Crit3DPoint& myPoint, Crit3DTime myTime, float* measuredRad,
                                          int windowWidth, int timeStepSecond, const gis::Crit3DRasterGrid& myDEM);
-
-        gis::Crit3DRasterGrid* getBeamRadiationMap();
-        gis::Crit3DRasterGrid* getDiffuseRadiationMap();
-        gis::Crit3DRasterGrid* getReflectedRadiationMap();
-        gis::Crit3DRasterGrid* getGlobalRadiationMap();
 
         bool isGridPointComputable(Crit3DRadiationSettings* mySettings, int row, int col, const gis::Crit3DRasterGrid& myDEM, Crit3DRadiationMaps* radiationMaps);
     }

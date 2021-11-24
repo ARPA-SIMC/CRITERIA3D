@@ -203,13 +203,15 @@ bool Crit3DMeteoGrid::createRasterGrid()
 
     dataMeteoGrid.header->nrCols = _gridStructure.header().nrCols;
     dataMeteoGrid.header->nrRows = _gridStructure.header().nrRows;
-    dataMeteoGrid.header->flag = INDEX_ERROR;
+    dataMeteoGrid.header->flag = NO_ACTIVE;
 
     dataMeteoGrid.initializeGrid(NODATA);
 
+    // not active cells
     for (size_t i=0; i < size_t(_gridStructure.header().nrRows); i++)
         for (size_t j=0; j < size_t(_gridStructure.header().nrCols); j++)
-             if (! _meteoPoints[i][j]->active) dataMeteoGrid.value[size_t(_gridStructure.header().nrRows)-1-i][j] = dataMeteoGrid.header->flag;
+             if (! _meteoPoints[i][j]->active)
+                 dataMeteoGrid.value[size_t(_gridStructure.header().nrRows)-1-i][j] = NO_ACTIVE;
 
     dataMeteoGrid.isLoaded = true;
     return true;

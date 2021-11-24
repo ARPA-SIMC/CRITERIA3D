@@ -425,8 +425,8 @@ void Crit3DMeteoPoint::emptyObsDataM(const Crit3DDate& date1, const Crit3DDate& 
 {
     if (! isDateIntervalLoadedM(date1, date2)) return;
 
-    int indexIni = (date1.year - obsDataM[0]._year)*12 + date1.month-1;
-    int indexFin = (date2.year - obsDataM[0]._year)*12 + date2.month-1;
+    int indexIni = (date1.year - obsDataM[0]._year)*12 + date1.month-obsDataM[0]._month;
+    int indexFin = (date2.year - obsDataM[0]._year)*12 + date2.month-obsDataM[0]._month;
 
     for (unsigned int i = indexIni; i <= unsigned(indexFin); i++)
     {
@@ -748,8 +748,8 @@ bool Crit3DMeteoPoint::setMeteoPointValueD(const Crit3DDate& myDate, meteoVariab
 bool Crit3DMeteoPoint::setMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar, float myValue)
 {
     //check
-    if (myVar == noMeteoVar) return NODATA;
-    if (nrObsDataDaysM == 0) return NODATA;
+    if (myVar == noMeteoVar) return false;
+    if (nrObsDataDaysM == 0) return false;
 
     int index;
     if (myDate.year == obsDataM[0]._year)
@@ -767,7 +767,7 @@ bool Crit3DMeteoPoint::setMeteoPointValueM(const Crit3DDate &myDate, meteoVariab
         // other years
         index = (myDate.year - obsDataM[0]._year -1)*12+(12-obsDataM[0]._month) + myDate.month;
     }
-    if ((index < 0) || (index >= nrObsDataDaysM)) return NODATA;
+    if ((index < 0) || (index >= nrObsDataDaysM)) return false;
 
     unsigned i = unsigned(index);
 
@@ -1179,4 +1179,18 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
 
     }
     return aggregateDailyInMonthly;
+}
+
+
+// ---- end class
+
+bool isSelectionPointsActive(Crit3DMeteoPoint* meteoPoints,int nrMeteoPoints)
+{
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].selected)
+            return true;
+    }
+
+    return false;
 }

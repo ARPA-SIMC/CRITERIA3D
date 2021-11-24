@@ -101,7 +101,8 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
         {
             myValue = meteoPoints[i].currentValue;
 
-            interpolatedValue = interpolate(interpolationPoints, settings, meteoSettings, myVar, float(meteoPoints[i].point.utm.x),
+            interpolatedValue = interpolate(interpolationPoints, settings, meteoSettings, myVar,
+                                            float(meteoPoints[i].point.utm.x),
                                             float(meteoPoints[i].point.utm.y),
                                             float(meteoPoints[i].point.z),
                                             myProxyValues, false);
@@ -271,18 +272,20 @@ bool checkAndPassDataToInterpolation(Crit3DQuality* myQuality, meteoVariable myV
     return passDataToInterpolation(meteoPoints, nrMeteoPoints, myInterpolationPoints, interpolationSettings);
 }
 
+
 bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
                             std::vector <Crit3DInterpolationDataPoint> &myInterpolationPoints,
                             Crit3DInterpolationSettings* mySettings)
 {
     int nrValid = 0;
     float xMin=NODATA, xMax, yMin, yMax;
+    bool isSelection = isSelectionPointsActive(meteoPoints, nrMeteoPoints);
 
     myInterpolationPoints.clear();
 
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        if (meteoPoints[i].active && meteoPoints[i].quality == quality::accepted)
+        if (meteoPoints[i].active && meteoPoints[i].quality == quality::accepted && (! isSelection || meteoPoints[i].selected))
         {
             Crit3DInterpolationDataPoint myPoint;
 

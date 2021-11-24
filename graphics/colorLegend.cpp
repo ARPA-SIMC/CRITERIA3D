@@ -36,7 +36,7 @@ void ColorLegend::paintEvent(QPaintEvent *event)
     const int DELTA = 18;
     int legendWidth = painter.window().width() - DELTA*2;
     int nrStep = this->colorScale->nrColors;
-    float step = (colorScale->maximum - colorScale->minimum) / nrStep;
+    float step = (colorScale->maximum - colorScale->minimum) / float(nrStep);
     double dx = double(legendWidth) / double(nrStep+1);
     int stepText = MAXVALUE(nrStep / 4, 1);
     QString valueStr;

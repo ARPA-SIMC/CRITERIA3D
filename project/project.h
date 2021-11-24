@@ -28,6 +28,9 @@
     #ifndef IMPORTPROPERTIESCSV_H
         #include "importPropertiesCSV.h"
     #endif
+    #ifndef PROXYWIDGET_H
+        #include "proxyWidget.h"
+    #endif
 
     #ifndef QSETTINGS_H
         #include <QSettings>
@@ -41,6 +44,10 @@
     #define ERROR_DEM 2
     #define ERROR_DBPOINT 3
     #define ERROR_DBGRID 4
+
+    #define ERROR_STR_MISSING_DB "Load a meteo points DB before."
+    #define ERROR_STR_MISSING_DEM "Load a Digital Elevation Model (DEM) before."
+    #define ERROR_STR_MISSING_PROJECT "Open a project before."
 
     class Crit3DMeteoWidget;
     class FormInfo;
@@ -122,6 +129,8 @@
         QList<Crit3DMeteoWidget*> meteoWidgetPointList;
         QList<Crit3DMeteoWidget*> meteoWidgetGridList;
 
+        Crit3DProxyWidget* proxyWidget;
+
         Project();
 
         void initializeProject();
@@ -195,9 +204,7 @@
         QDateTime findDbPointLastTime();
         QDateTime findDbPointFirstTime();
 
-        void getMeteoPointsRange(float *minimum, float *maximum);
-        bool getMeteoPointSelected(int i);
-
+        void getMeteoPointsRange(float& minimum, float& maximum, bool useNotActivePoints);
         float meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeIni, const Crit3DTime& timeFin);
 
         bool loadProxyGrids();
@@ -224,10 +231,20 @@
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
+        void showProxyGraph();
+
+        void clearSelectedPoints();
+        void updateSelectedPoints();
+        bool setActiveStateSelectedPoints(bool isActive);
+        bool setActiveStatePointList(QString fileName, bool isActive);
+        bool setActiveStateWithCriteria(bool isActive);
+        bool deleteMeteoPoints(const QList<QString>& pointList);
+        bool deleteMeteoPointsData(const QList<QString>& pointList);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid(int id);
+        void deleteProxyWidget();
 
     };
 

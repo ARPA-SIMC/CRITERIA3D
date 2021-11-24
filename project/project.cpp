@@ -10,6 +10,8 @@
 #include "utilities.h"
 #include "aggregation.h"
 #include "meteoWidget.h"
+#include "dialogSelectionMeteoPoint.h"
+#include "dialogPointDeleteData.h"
 #include "formInfo.h"
 
 #include <iostream>
@@ -87,6 +89,7 @@ void Project::initializeProject()
     loadGridDataAtStart = false;
 
     proxyGridSeries.clear();
+    proxyWidget = nullptr;
 }
 
 void Project::clearProject()
@@ -678,21 +681,6 @@ bool Project::loadParameters(QString parametersFileName)
 }
 
 
-bool Project::getMeteoPointSelected(int i)
-{
-    if (meteoPointsSelected.isEmpty()) return true;
-
-    for (int j = 0; j < meteoPointsSelected.size(); j++)
-    {
-        if (isEqual(meteoPoints[i].latitude, meteoPointsSelected[j].latitude)
-            && isEqual(meteoPoints[i].longitude, meteoPointsSelected[j].longitude))
-            return true;
-    }
-
-    return false;
-}
-
-
 void Project::setApplicationPath(QString myPath)
 {
     this->appPath = myPath;
@@ -751,6 +739,10 @@ void Project::setCurrentDate(QDate myDate)
         this->previousDate = this->currentDate;
         this->currentDate = myDate;
     }
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateDateTime(currentDate, currentHour);
+    }
 }
 
 QDate Project::getCurrentDate()
@@ -761,6 +753,10 @@ QDate Project::getCurrentDate()
 void Project::setCurrentHour(int myHour)
 {
     this->currentHour = myHour;
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateDateTime(currentDate, currentHour);
+    }
 }
 
 int Project::getCurrentHour()
@@ -770,18 +766,20 @@ int Project::getCurrentHour()
 
 Crit3DTime Project::getCrit3DCurrentTime()
 {
-    return getCrit3DTime(this->currentDate, this->currentHour);
+     return getCrit3DTime(this->currentDate, this->currentHour);
 }
 
 QDateTime Project::getCurrentTime()
 {
-    return QDateTime(this->currentDate, QTime(this->currentHour, 0, 0));
+    QDateTime myTime;
+    myTime.setDate(this->currentDate);
+    return myTime.addSecs(this->currentHour * HOUR_SECONDS);
 }
 
-void Project::getMeteoPointsRange(float *minimum, float *maximum)
+void Project::getMeteoPointsRange(float& minimum, float& maximum, bool useNotActivePoints)
 {
-    *minimum = NODATA;
-    *maximum = NODATA;
+    minimum = NODATA;
+    maximum = NODATA;
 
     if (currentFrequency == noFrequency || currentVariable == noMeteoVar)
         return;
@@ -789,17 +787,19 @@ void Project::getMeteoPointsRange(float *minimum, float *maximum)
     float v;
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        v = meteoPoints[i].currentValue;
-
-        if (int(v) != int(NODATA) && meteoPoints[i].quality == quality::accepted)
+        if (meteoPoints[i].active || useNotActivePoints)
         {
-            if (int(*minimum) == int(NODATA))
+            v = meteoPoints[i].currentValue;
+            if (! isEqual(v, NODATA) && meteoPoints[i].quality == quality::accepted)
             {
-                *minimum = v;
-                *maximum = v;
+                if (isEqual(minimum, NODATA))
+                {
+                    minimum = v;
+                    maximum = v;
+                }
+                else if (v < minimum) minimum = v;
+                else if (v > maximum) maximum = v;
             }
-            else if (v < *minimum) *minimum = v;
-            else if (v > *maximum) *maximum = v;
         }
     }
 }
@@ -942,6 +942,11 @@ bool Project::loadMeteoPointsDB(QString dbName)
 
     dbPointsFileName = dbName;
     dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
+    if (! QFile(dbName).exists())
+    {
+        logError("Meteo points db does not exists:\n" + dbName);
+        return false;
+    }
 
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
     if (meteoPointsDbHandler->error != "")
@@ -957,15 +962,31 @@ bool Project::loadMeteoPointsDB(QString dbName)
         closeMeteoPointsDB();
         return false;
     }
-    QList<Crit3DMeteoPoint> listMeteoPoints = meteoPointsDbHandler->getPropertiesFromDb(gisSettings, &errorString);
+
+    QList<Crit3DMeteoPoint> listMeteoPoints;
+    errorString = "";
+    if (! meteoPointsDbHandler->getPropertiesFromDb(listMeteoPoints, gisSettings, errorString))
+    {
+        errorString = "Error in reading table 'point_properties'\n" + errorString;
+        logError();
+        closeMeteoPointsDB();
+        return false;
+    }
 
     nrMeteoPoints = listMeteoPoints.size();
     if (nrMeteoPoints == 0)
     {
-        errorString = "Error in reading the point properties:\n" + errorString;
+        errorString = "Missing data in the table 'point_properties'\n" + errorString;
         logError();
         closeMeteoPointsDB();
         return false;
+    }
+
+    // warning
+    if (errorString != "")
+    {
+        logError();
+        errorString = "";
     }
 
     meteoPoints = new Crit3DMeteoPoint[unsigned(nrMeteoPoints)];
@@ -1140,7 +1161,6 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
     }
 
     if (showInfo) closeProgressBar();
-
     return isData;
 }
 
@@ -1150,7 +1170,7 @@ void Project::loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo)
     if (this->meteoGridDbHandler != nullptr)
     {
         this->loadMeteoGridDailyData(firstDate, lastDate, showInfo);
-        this->loadMeteoGridHourlyData(QDateTime(firstDate, QTime(1,0)), QDateTime(lastDate.addDays(1), QTime(0,0)), showInfo);
+        this->loadMeteoGridHourlyData(QDateTime(firstDate, QTime(1,0), Qt::UTC), QDateTime(lastDate.addDays(1), QTime(0,0), Qt::UTC), showInfo);
         this->loadMeteoGridMonthlyData(firstDate, lastDate, showInfo);
     }
 }
@@ -1330,6 +1350,7 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
 QDateTime Project::findDbPointLastTime()
 {
     QDateTime lastTime;
+    lastTime.setTimeSpec(Qt::UTC);
 
     QDateTime lastDateD = meteoPointsDbHandler->getLastDate(daily);
     if (! lastDateD.isNull()) lastTime = lastDateD;
@@ -1349,6 +1370,7 @@ QDateTime Project::findDbPointLastTime()
 QDateTime Project::findDbPointFirstTime()
 {
     QDateTime firstTime;
+    firstTime.setTimeSpec(Qt::UTC);
 
     QDateTime firstDateD = meteoPointsDbHandler->getFirstDate(daily);
     if (! firstDateD.isNull()) firstTime = firstDateD;
@@ -2025,6 +2047,10 @@ frequencyType Project::getCurrentFrequency() const
 void Project::setCurrentFrequency(const frequencyType &value)
 {
     currentFrequency = value;
+    if (proxyWidget != nullptr)
+    {
+        proxyWidget->updateFrequency(currentFrequency);
+    }
 }
 
 void Project::saveProjectSettings()
@@ -2441,8 +2467,8 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     QDate firstDate = meteoGridDbHandler->firstDate();
     QDate lastDate = meteoGridDbHandler->lastDate();
 
-    QDateTime firstDateTime = QDateTime(firstDate, QTime(1,0));
-    QDateTime lastDateTime = QDateTime(lastDate.addDays(1), QTime(0,0));
+    QDateTime firstDateTime = QDateTime(firstDate, QTime(1,0), Qt::UTC);
+    QDateTime lastDateTime = QDateTime(lastDate.addDays(1), QTime(0,0), Qt::UTC);
 
     int meteoWidgetId = 0;
     if (meteoWidgetGridList.isEmpty() || meteoGridDbHandler->gridStructure().isEnsemble())
@@ -2574,6 +2600,10 @@ void Project::deleteMeteoWidgetGrid(int id)
     }
 }
 
+void Project::deleteProxyWidget()
+{
+    proxyWidget = nullptr;
+}
 
 bool Project::parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString>* csvFields)
 {
@@ -2632,6 +2662,290 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
     return true;
 }
 
+void Project::showProxyGraph()
+{
+    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
+    return;
+}
+
+
+void Project::clearSelectedPoints()
+{
+    meteoPointsSelected.clear();
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        meteoPoints[i].selected = false;
+    }
+}
+
+
+void Project::updateSelectedPoints()
+{
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        meteoPoints[i].selected = false;
+        for (int j = 0; j < meteoPointsSelected.size(); j++)
+        {
+            if ( isEqual(meteoPoints[i].latitude, meteoPointsSelected[j].latitude)
+                    && isEqual(meteoPoints[i].longitude, meteoPointsSelected[j].longitude) )
+            {
+                meteoPoints[i].selected = true;
+                break;
+            }
+        }
+    }
+}
+
+
+bool Project::setActiveStateSelectedPoints(bool isActive)
+{
+    if (meteoPointsDbHandler == nullptr)
+    {
+        logError(ERROR_STR_MISSING_DB);
+        return false;
+    }
+
+    QList<QString> selectedPointList;
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].selected)
+        {
+            meteoPoints[i].active = isActive;
+            selectedPointList << QString::fromStdString(meteoPoints[i].id);
+        }
+    }
+
+    if (selectedPointList.isEmpty())
+    {
+        logError("No meteo points selected.");
+        return false;
+    }
+
+    if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive))
+    {
+        logError("Failed to activate/deactivate selected points:\n" + meteoPointsDbHandler->error);
+        return false;
+    }
+
+    clearSelectedPoints();
+    return true;
+}
+
+
+bool Project::setActiveStatePointList(QString fileName, bool isActive)
+{
+    QList<QString> pointList = readListSingleColumn(fileName, errorString);
+    if (pointList.size() == 0)
+    {
+        logError();
+        return false;
+    }
+
+    if (!meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
+    {
+        logError("Failed to activate/deactivate point list:\n" + meteoPointsDbHandler->error);
+        return false;
+    }
+
+    for (int j = 0; j < pointList.size(); j++)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].id == pointList[j].toStdString())
+            {
+                meteoPoints[i].active = isActive;
+            }
+        }
+    }
+
+    return true;
+}
+
+
+bool Project::setActiveStateWithCriteria(bool isActive)
+{
+    if (meteoPointsDbHandler == nullptr)
+    {
+        logError(ERROR_STR_MISSING_DB);
+        return false;
+    }
+
+    DialogSelectionMeteoPoint dialogPointSelection(isActive, meteoPointsDbHandler);
+    if (dialogPointSelection.result() != QDialog::Accepted)
+        return false;
+
+    QString selection = dialogPointSelection.getSelection();
+    QString operation = dialogPointSelection.getOperation();
+    QString item = dialogPointSelection.getItem();
+    QString condition;
+    if (operation != "Like")
+    {
+        condition = selection + " " + operation + " '" +item +"'";
+    }
+    else
+    {
+        condition = selection + " " + operation + " '%" +item +"%'";
+    }
+    if (selection != "DEM distance [m]")
+    {
+        meteoPointsDbHandler->setActiveStateIfCondition(isActive, condition);
+    }
+    else
+    {
+        if (!DEM.isLoaded)
+        {
+            QMessageBox::critical(nullptr, "DEM distance", "No DEM open");
+            return false;
+        }
+        QList<QString> points;
+        setProgressBar("Checking distance...", nrMeteoPoints);
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            updateProgressBar(i);
+            if (!meteoPoints[i].active)
+            {
+                float distance = gis::closestDistanceFromGrid(meteoPoints[i].point, DEM);
+                if (operation == "=")
+                {
+                    if (isEqual(distance, item.toFloat()))
+                    {
+                        points.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+                else if (operation == "!=")
+                {
+                    if (! isEqual(distance, item.toFloat()))
+                    {
+                        points.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+                else if (operation == ">")
+                {
+                    if (distance > item.toFloat())
+                    {
+                        points.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+                else if (operation == "<")
+                {
+                    if (distance < item.toFloat())
+                    {
+                        points.append(QString::fromStdString(meteoPoints[i].id));
+                    }
+                }
+            }
+        }
+        closeProgressBar();
+
+        if (points.isEmpty())
+        {
+            logError("No points fit your requirements.");
+            return false;
+        }
+        if (!meteoPointsDbHandler->setActiveStatePointList(points, isActive))
+        {
+            logError("Failed to activate/deactivate points selected:\n" + meteoPointsDbHandler->error);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+bool Project::deleteMeteoPoints(const QList<QString>& pointList)
+{
+    logInfoGUI("Deleting points...");
+        bool isOk = meteoPointsDbHandler->deleteAllPointsFromIdList(pointList);
+    closeLogInfo();
+
+    if (!isOk)
+    {
+        logError("Failed to delete points:" + meteoPointsDbHandler->error);
+        return false;
+    }
+
+    if (meteoPointsDbHandler->error != "")
+    {
+        logError("WARNING: " + meteoPointsDbHandler->error);
+    }
+
+    // reload meteoPoint, point properties table is changed
+    QString dbName = dbPointsFileName;
+    closeMeteoPointsDB();
+
+    return loadMeteoPointsDB(dbName);
+}
+
+
+bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
+{
+    if (pointList.isEmpty())
+    {
+        logError("No data to delete.");
+        return false;
+    }
+
+    DialogPointDeleteData dialogPointDelete;
+    if (dialogPointDelete.result() != QDialog::Accepted)
+        return false;
+
+    QList<meteoVariable> dailyVarList = dialogPointDelete.getVarD();
+    QList<meteoVariable> hourlyVarList = dialogPointDelete.getVarH();
+    QDate startDate = dialogPointDelete.getFirstDate();
+    QDate endDate = dialogPointDelete.getLastDate();
+    bool allDaily = dialogPointDelete.getAllDailyVar();
+    bool allHourly = dialogPointDelete.getAllHourlyVar();
+
+    setProgressBar("Deleting data...", pointList.size());
+    for (int i = 0; i < pointList.size(); i++)
+    {
+        updateProgressBar(i);
+
+        if (allDaily)
+        {
+            if (!meteoPointsDbHandler->deleteData(pointList[i], daily, startDate, endDate))
+            {
+                closeProgressBar();
+                return false;
+            }
+        }
+        else
+        {
+            if (!dailyVarList.isEmpty())
+            {
+                if (!meteoPointsDbHandler->deleteData(pointList[i], daily, dailyVarList, startDate, endDate))
+                {
+                    closeProgressBar();
+                    return false;
+                }
+            }
+        }
+        if (allHourly)
+        {
+            if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, startDate, endDate))
+            {
+                closeProgressBar();
+                return false;
+            }
+        }
+        else
+        {
+            if (!hourlyVarList.isEmpty())
+            {
+                if (!meteoPointsDbHandler->deleteData(pointList[i], hourly, hourlyVarList, startDate, endDate))
+                {
+                    closeProgressBar();
+                    return false;
+                }
+            }
+        }
+    }
+    closeProgressBar();
+
+    return true;
+}
 
 
 /* ---------------------------------------------
@@ -2651,7 +2965,10 @@ bool Project::setLogFile(QString myFileName)
          QDir().mkdir(filePath);
     }
 
-    QString myDate = QDateTime().currentDateTime().toString("yyyyMMdd_HHmm");
+    QDate myQDate = QDateTime().currentDateTime().date();
+    QTime myQTime = QDateTime().currentDateTime().time();
+    QString myDate = QDateTime(myQDate, myQTime, Qt::UTC).currentDateTime().toString("yyyyMMdd_HHmm");
+
     fileName = myDate + "_" + fileName;
 
     QString currentFileName = filePath + fileName;

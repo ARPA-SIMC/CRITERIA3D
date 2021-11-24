@@ -39,6 +39,7 @@ SOURCES += \
     mapGraphicsRasterObject.cpp \
     mapGraphicsShapeObject.cpp \
     rubberBand.cpp \
+    squareMarker.cpp \
     stationMarker.cpp
 
 
@@ -47,5 +48,6 @@ HEADERS += \
     mapGraphicsRasterObject.h \
     mapGraphicsShapeObject.h \
     rubberBand.h \
+    squareMarker.h \
     stationMarker.h
 

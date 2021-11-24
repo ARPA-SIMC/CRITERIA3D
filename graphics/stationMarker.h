@@ -15,9 +15,7 @@
         public:
             explicit StationMarker(qreal radius, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
             void setId(std::string id);
-            //void setToolTip(Crit3DMeteoPoint* meteoPoint_);
             void setToolTip();
-            //QString getToolTipText();
             std::string id() const;
             void setName(const std::string &name);
             void setDataset(const std::string &dataset);
@@ -25,6 +23,8 @@
             void setMunicipality(const std::string &municipality);
             void setQuality(const quality::qualityType &quality);
             void setCurrentValue(float currentValue);
+            bool active() const;
+            void setActive(bool active);
 
     private:
             MapGraphicsView* _view;
@@ -35,6 +35,7 @@
             std::string _municipality;
             float _currentValue;
             quality::qualityType _quality;
+            bool _active;
 
         protected:
             void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -42,7 +43,6 @@
         signals:
             void newStationClicked(std::string, std::string, bool);
             void appendStationClicked(std::string, std::string, bool);
-            void openCropClicked(std::string);
 
     };
 

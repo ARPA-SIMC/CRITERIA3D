@@ -132,6 +132,8 @@ void Crit3DMeteoPointsDbHandler::setDatasetsActive(QString active)
 }
 
 
+
+
 QList<QString> Crit3DMeteoPointsDbHandler::getDatasetsList()
 {
     QList<QString> datasetList;
@@ -154,7 +156,6 @@ QList<QString> Crit3DMeteoPointsDbHandler::getDatasetsList()
 
     return datasetList;
 }
-
 
 QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
 {
@@ -220,7 +221,6 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
 
     return firstDate;
 }
-
 
 QDateTime Crit3DMeteoPointsDbHandler::getLastDate(frequencyType frequency)
 {
@@ -383,7 +383,6 @@ bool Crit3DMeteoPointsDbHandler::existData(Crit3DMeteoPoint *meteoPoint, frequen
 
 bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myFreq, QDate first, QDate last)
 {
-
     QString tableName = pointCode + ((myFreq == daily) ?  "_D" : "_H");
     QSqlQuery qry(_db);
     QString statement;
@@ -398,19 +397,49 @@ bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myF
     {
         QString firstStr = first.toString("yyyy-MM-dd");
         QString lastStr = last.toString("yyyy-MM-dd");
-        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATETIME('%2 00:00:00') AND DATETIME('%3 23:00:00')")
+        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATETIME('%2 00:00:00') AND DATETIME('%3 23:30:00')")
                                 .arg(tableName).arg(firstStr).arg(lastStr);
     }
 
-    if( !qry.exec(statement) )
+    return qry.exec(statement);
+}
+
+
+bool Crit3DMeteoPointsDbHandler::deleteData(QString pointCode, frequencyType myFreq, QList<meteoVariable> varList, QDate first, QDate last)
+{
+    QString tableName = pointCode + ((myFreq == daily) ?  "_D" : "_H");
+    QString idList;
+    QString id;
+    for (int i = 0; i<varList.size(); i++)
     {
-        return false;
+        id = QString::number(getIdfromMeteoVar(varList[i]));
+        idList += id + ",";
+    }
+    idList = idList.left(idList.length() - 1);
+
+    QSqlQuery qry(_db);
+    QString statement;
+    if (myFreq == daily)
+    {
+        QString firstStr = first.toString("yyyy-MM-dd");
+        QString lastStr = last.toString("yyyy-MM-dd");
+        statement = QString( "DELETE FROM `%1` WHERE date_time BETWEEN DATE('%2') AND DATE('%3') AND `%4` IN (%5)")
+                                .arg(tableName).arg(firstStr).arg(lastStr).arg(FIELD_METEO_VARIABLE).arg(idList);
     }
     else
     {
-        return true;
+        QString firstStr = first.toString("yyyy-MM-dd");
+        QString lastStr = last.toString("yyyy-MM-dd");
+        statement = QString( "DELETE FROM `%1` WHERE date_time "
+                            "BETWEEN DATETIME('%2 00:00:00') "
+                            "AND DATETIME('%3 23:30:00') "
+                            "AND `%4` IN (%5)")
+                            .arg(tableName).arg(firstStr).arg(lastStr).arg(FIELD_METEO_VARIABLE).arg(idList);
     }
+
+    return qry.exec(statement);
 }
+
 
 bool Crit3DMeteoPointsDbHandler::deleteAllData(frequencyType myFreq)
 {
@@ -706,78 +735,95 @@ std::map<int, meteoVariable> Crit3DMeteoPointsDbHandler::getMapIdMeteoVar() cons
     return _mapIdMeteoVar;
 }
 
-QList<Crit3DMeteoPoint> Crit3DMeteoPointsDbHandler::getPropertiesFromDb(const gis::Crit3DGisSettings& gisSettings, QString *errorString)
+bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
+                                        const gis::Crit3DGisSettings& gisSettings, QString& errorString)
 {
-    QList<Crit3DMeteoPoint> meteoPointsList;
     Crit3DMeteoPoint meteoPoint;
     QSqlQuery qry(_db);
-    bool isPositionOk;
+    bool isLocationOk;
 
     qry.prepare( "SELECT id_point, name, dataset, latitude, longitude, utm_x, utm_y, altitude, state, region, province, municipality, is_active, is_utc, orog_code from point_properties ORDER BY id_point" );
 
     if( !qry.exec() )
     {
-        *errorString = qry.lastError().text();
+        errorString = qry.lastError().text();
+        return false;
     }
-    else
+
+    while (qry.next())
     {
-        while (qry.next())
+        //initialize
+        meteoPoint = *(new Crit3DMeteoPoint());
+
+        meteoPoint.id = qry.value("id_point").toString().toStdString();
+        meteoPoint.name = qry.value("name").toString().toStdString();
+        meteoPoint.dataset = qry.value("dataset").toString().toStdString();
+
+        if (qry.value("latitude") != "")
+            meteoPoint.latitude = qry.value("latitude").toDouble();
+        if (qry.value("longitude") != "")
+            meteoPoint.longitude = qry.value("longitude").toDouble();
+        if (qry.value("utm_x") != "")
+            meteoPoint.point.utm.x = qry.value("utm_x").toDouble();
+        if (qry.value("utm_y") != "")
+            meteoPoint.point.utm.y = qry.value("utm_y").toDouble();
+        if (qry.value("altitude") != "")
+            meteoPoint.point.z = qry.value("altitude").toDouble();
+
+        // check position
+        if ((int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
+            && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
         {
-            //initialize
-            meteoPoint = *(new Crit3DMeteoPoint());
-
-            meteoPoint.id = qry.value("id_point").toString().toStdString();
-            meteoPoint.name = qry.value("name").toString().toStdString();
-            meteoPoint.dataset = qry.value("dataset").toString().toStdString();
-
-            if (qry.value("latitude") != "")
-                meteoPoint.latitude = qry.value("latitude").toDouble();
-            if (qry.value("longitude") != "")
-                meteoPoint.longitude = qry.value("longitude").toDouble();
-            if (qry.value("utm_x") != "")
-                meteoPoint.point.utm.x = qry.value("utm_x").toDouble();
-            if (qry.value("utm_y") != "")
-                meteoPoint.point.utm.y = qry.value("utm_y").toDouble();
-            if (qry.value("altitude") != "")
-                meteoPoint.point.z = qry.value("altitude").toDouble();
-
-            // check position
-            isPositionOk = false;
-            if ((int(meteoPoint.latitude) != int(NODATA) || int(meteoPoint.longitude) != int(NODATA))
-                && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
+            double xTemp, yTemp;
+            gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude, &xTemp, &yTemp);
+            if (fabs(xTemp - meteoPoint.point.utm.x) < 30 && fabs(yTemp - meteoPoint.point.utm.y) < 30)
             {
-                isPositionOk = true;
+                isLocationOk = true;
             }
-            else if ((int(meteoPoint.latitude) == int(NODATA) || int(meteoPoint.longitude) == int(NODATA))
-                && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
+            else
             {
-                gis::getLatLonFromUtm(gisSettings, meteoPoint.point.utm.x, meteoPoint.point.utm.y,
-                                        &(meteoPoint.latitude), &(meteoPoint.longitude));
-                isPositionOk = true;
+                errorString += "\nWrong location! "
+                               + QString::fromStdString(meteoPoint.id) + " "
+                               + QString::fromStdString(meteoPoint.name);
+                isLocationOk = false;
             }
-            else if ((int(meteoPoint.latitude) != int(NODATA) || int(meteoPoint.longitude) != int(NODATA))
-                     && (int(meteoPoint.point.utm.x) == int(NODATA) && int(meteoPoint.point.utm.y) == int(NODATA)))
-            {
-                gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude,
-                                          &(meteoPoint.point.utm.x), &(meteoPoint.point.utm.y));
-                isPositionOk = true;
-            }
+        }
+        else if ((int(meteoPoint.latitude) == int(NODATA) || int(meteoPoint.longitude) == int(NODATA))
+            && (int(meteoPoint.point.utm.x) != int(NODATA) && int(meteoPoint.point.utm.y) != int(NODATA)))
+        {
+            gis::getLatLonFromUtm(gisSettings, meteoPoint.point.utm.x, meteoPoint.point.utm.y,
+                                    &(meteoPoint.latitude), &(meteoPoint.longitude));
+            isLocationOk = true;
+        }
+        else if ((int(meteoPoint.latitude) != int(NODATA) && int(meteoPoint.longitude) != int(NODATA))
+                 && (int(meteoPoint.point.utm.x) == int(NODATA) || int(meteoPoint.point.utm.y) == int(NODATA)))
+        {
+            gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude,
+                                      &(meteoPoint.point.utm.x), &(meteoPoint.point.utm.y));
+            isLocationOk = true;
+        }
+        else
+        {
+            errorString += "\nMissing location (lat/lon or UTM): "
+                           + QString::fromStdString(meteoPoint.id) + " "
+                           + QString::fromStdString(meteoPoint.name);
+            isLocationOk = false;
+        }
 
-            if (isPositionOk)
-            {
-                meteoPoint.state = qry.value("state").toString().toStdString();
-                meteoPoint.region = qry.value("region").toString().toStdString();
-                meteoPoint.province = qry.value("province").toString().toStdString();
-                meteoPoint.municipality = qry.value("municipality").toString().toStdString();
-                meteoPoint.active = qry.value("is_active").toBool();
-                meteoPoint.isUTC = qry.value("is_utc").toBool();
-                meteoPoint.lapseRateCode = lapseRateCodeType((qry.value("orog_code").toInt()));
-                meteoPointsList << meteoPoint;
-            }
+        if (isLocationOk)
+        {
+            meteoPoint.state = qry.value("state").toString().toStdString();
+            meteoPoint.region = qry.value("region").toString().toStdString();
+            meteoPoint.province = qry.value("province").toString().toStdString();
+            meteoPoint.municipality = qry.value("municipality").toString().toStdString();
+            meteoPoint.active = qry.value("is_active").toBool();
+            meteoPoint.isUTC = qry.value("is_utc").toBool();
+            meteoPoint.lapseRateCode = lapseRateCodeType((qry.value("orog_code").toInt()));
+            meteoPointsList << meteoPoint;
         }
     }
 
-    return meteoPointsList;
+    return true;
 }
 
 
@@ -1100,6 +1146,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
         }
 
         // don't use QDateTime because it has a bug at the end of March (vs2015 version)
+        // fixed (GA 11/2021)
         char timeStr[10];
         sprintf (timeStr, " %02d:00:00", hour);
         dateTimeStr = currentDate.toString("yyyy-MM-dd") + timeStr;
@@ -1178,3 +1225,321 @@ bool Crit3DMeteoPointsDbHandler::writeDailyData(QString pointCode, QDate date, m
         return true;
     }
 }
+
+bool Crit3DMeteoPointsDbHandler::setAllPointsActive()
+{
+    QSqlQuery qry(_db);
+
+    qry.prepare( "UPDATE point_properties SET is_active = 1" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+bool Crit3DMeteoPointsDbHandler::setAllPointsNotActive()
+{
+    QSqlQuery qry(_db);
+
+    qry.prepare( "UPDATE point_properties SET is_active = 0" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+/*
+bool Crit3DMeteoPointsDbHandler::setGeoPointsListActiveState(QList<gis::Crit3DGeoPoint> pointList, bool activeState)
+{
+    QSqlQuery qry(_db);
+    for (int i = 0; i<pointList.size(); i++)
+    {
+        double latitude = pointList.at(i).latitude;
+        double longitude = pointList.at(i).longitude;
+        qry.prepare( "UPDATE point_properties SET is_active = :activeState WHERE latitude = :latitude AND longitude = :longitude" );
+        qry.bindValue(":activeState", activeState);
+        qry.bindValue(":latitude", latitude);
+        qry.bindValue(":longitude", longitude);
+
+        if( !qry.exec() )
+        {
+            qDebug() << "(lon,lat)" << longitude << latitude << qry.lastError();
+            return false;
+        }
+    }
+    return true;
+}
+
+
+bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint> &pointList)
+{
+    QSqlQuery qry(_db);
+    QList<QString> idPointList;
+    QString idPoint;
+
+    for (int i = 0; i<pointList.size(); i++)
+    {
+        double latitude = pointList.at(i).latitude;
+        double longitude = pointList.at(i).longitude;
+
+        qry.prepare( "SELECT * from point_properties WHERE latitude = :latitude AND longitude = :longitude" );
+        qry.bindValue(":latitude", latitude);
+        qry.bindValue(":longitude", longitude);
+
+        if( !qry.exec() )
+        {
+            qDebug() << qry.lastError();
+            return false;
+        }
+        else
+        {
+            while (qry.next())
+            {
+                getValue(qry.value("id_point"), &idPoint);
+                idPointList << idPoint;
+            }
+        }
+    }
+
+    return deleteAllPointsFromIdList(idPointList);
+}
+*/
+
+
+bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& pointList, bool activeState)
+{
+    QString idList = "";
+    for (int i = 0; i < pointList.size(); i++)
+    {
+        QString id_point = pointList.at(i);
+        if (id_point != "")
+        {
+            if (idList != "")
+                idList += ",";
+            idList += id_point;
+        }
+    }
+
+    QString sqlStr = "UPDATE point_properties SET is_active = " + QString::number(activeState);
+    sqlStr+= " WHERE id_point IN (" + idList + ")";
+
+    QSqlQuery qry(_db);
+    if( !qry.exec(sqlStr))
+    {
+        error = qry.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+
+bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromIdList(const QList<QString>& pointList)
+{
+    QSqlQuery qry(_db);
+
+    error = "";
+    for (int i = 0; i < pointList.size(); i++)
+    {
+        QString id_point = pointList[i];
+        qry.prepare( "DELETE FROM point_properties WHERE id_point = :id_point" );
+        qry.bindValue(":id_point", id_point);
+        if( !qry.exec() )
+        {
+            error += id_point + " " + qry.lastError().text();
+            return false;
+        }
+
+        // remove also tables
+        QString table = id_point + "_H";
+        QString queryStr = "DROP TABLE IF EXISTS '" + table +"'";
+        if( !qry.exec(queryStr))
+        {
+            error += "\n" + qry.lastError().text();
+        }
+
+        table = id_point + "_D";
+        queryStr = "DROP TABLE IF EXISTS '" + table +"'";
+        if( !qry.exec(queryStr))
+        {
+            error += "\n" + qry.lastError().text();
+        }
+    }
+
+    return true;
+}
+
+
+QList<QString> Crit3DMeteoPointsDbHandler::getMunicipalityList()
+{
+    QList<QString> municipalityList;
+    QSqlQuery qry(_db);
+    QString municipality;
+
+    qry.prepare( "SELECT municipality from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return municipalityList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("municipality"), &municipality);
+            if (!municipalityList.contains(municipality))
+            {
+                municipalityList << municipality;
+            }
+        }
+    }
+    return municipalityList;
+}
+
+QList<QString> Crit3DMeteoPointsDbHandler::getProvinceList()
+{
+    QList<QString> provinceList;
+    QSqlQuery qry(_db);
+    QString province;
+
+    qry.prepare( "SELECT province from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return provinceList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("province"), &province);
+            if (!provinceList.contains(province))
+            {
+                provinceList << province;
+            }
+        }
+    }
+    return provinceList;
+}
+
+QList<QString> Crit3DMeteoPointsDbHandler::getRegionList()
+{
+    QList<QString> regionList;
+    QSqlQuery qry(_db);
+    QString region;
+
+    qry.prepare( "SELECT region from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return regionList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("region"), &region);
+            if (!regionList.contains(region))
+            {
+                regionList << region;
+            }
+        }
+    }
+    return regionList;
+}
+
+QList<QString> Crit3DMeteoPointsDbHandler::getStateList()
+{
+    QList<QString> stateList;
+    QSqlQuery qry(_db);
+    QString state;
+
+    qry.prepare( "SELECT state from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return stateList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("state"), &state);
+            if (!stateList.contains(state))
+            {
+                stateList << state;
+            }
+        }
+    }
+    return stateList;
+}
+
+QList<QString> Crit3DMeteoPointsDbHandler::getDatasetList()
+{
+    QList<QString> datasetList;
+    QSqlQuery qry(_db);
+    QString dataset;
+
+    qry.prepare( "SELECT dataset from point_properties" );
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return datasetList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("dataset"), &dataset);
+            if (!datasetList.contains(dataset))
+            {
+                datasetList << dataset;
+            }
+        }
+    }
+    return datasetList;
+}
+
+bool Crit3DMeteoPointsDbHandler::setActiveStateIfCondition(bool activeState, QString condition)
+{
+    QSqlQuery qry(_db);
+    QString statement;
+
+    if (activeState)
+    {
+        statement = QString("UPDATE point_properties SET is_active = 1 WHERE %1 ").arg(condition);
+    }
+    else
+    {
+        statement = QString("UPDATE point_properties SET is_active = 0 WHERE %1 ").arg(condition);
+    }
+
+    if( !qry.exec(statement) )
+    {
+        qDebug() << qry.lastError();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+
+}
+

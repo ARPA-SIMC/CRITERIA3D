@@ -1261,7 +1261,7 @@ void Vine3D_Grapevine::setRootDensity(Crit3DModelCase* modelCase, soil::Crit3DSo
             {
                 a = layerDepth.at(size_t(i)) - layerThickness.at(size_t(i)) * 0.5;
                 b = layerDepth.at(size_t(i)) + layerThickness.at(size_t(i)) * 0.5;
-                modelCase->rootDensity[i] = gammaDistributions::incompleteGamma(kappa, (b - depthWithoutRoots) / theta) - gammaDistributions::incompleteGamma(kappa, (a - depthWithoutRoots)/ theta);
+                modelCase->rootDensity[i] = incompleteGamma(kappa, (b - depthWithoutRoots) / theta) - incompleteGamma(kappa, (a - depthWithoutRoots)/ theta);
 
                 //skeleton
                 indexHorizon = soil::getHorizonIndex(mySoil, layerDepth.at(size_t(i)));

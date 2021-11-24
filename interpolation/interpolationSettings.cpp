@@ -413,6 +413,36 @@ void Crit3DProxy::setProxyField(const std::string &value)
     proxyField = value;
 }
 
+float Crit3DProxy::getLapseRateT0() const
+{
+    return lapseRateT0;
+}
+
+void Crit3DProxy::setLapseRateT0(float newLapseRateT0)
+{
+    lapseRateT0 = newLapseRateT0;
+}
+
+float Crit3DProxy::getLapseRateT1() const
+{
+    return lapseRateT1;
+}
+
+void Crit3DProxy::setLapseRateT1(float newLapseRateT1)
+{
+    lapseRateT1 = newLapseRateT1;
+}
+
+float Crit3DProxy::getRegressionIntercept() const
+{
+    return regressionIntercept;
+}
+
+void Crit3DProxy::setRegressionIntercept(float newRegressionIntercept)
+{
+    regressionIntercept = newRegressionIntercept;
+}
+
 Crit3DProxy::Crit3DProxy()
 {
     name = "";
@@ -425,6 +455,8 @@ Crit3DProxy::Crit3DProxy()
     regressionSlope = NODATA;
     lapseRateH0 = NODATA;
     lapseRateH1 = NODATA;
+    lapseRateT0 = NODATA;
+    lapseRateT1 = NODATA;
     inversionLapseRate = NODATA;
     inversionIsSignificative = false;
 
@@ -496,8 +528,11 @@ void Crit3DProxy::initializeOrography()
 {
     setLapseRateH0(0.);
     setLapseRateH1(NODATA);
+    setLapseRateT0(NODATA);
+    setLapseRateT1(NODATA);
     setInversionLapseRate(NODATA);
     setRegressionSlope(NODATA);
+    setRegressionIntercept(NODATA);
     setRegressionR2(NODATA);
     setInversionIsSignificative(false);
 
