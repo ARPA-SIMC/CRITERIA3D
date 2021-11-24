@@ -2677,6 +2677,15 @@ void Project::clearSelectedPoints()
 }
 
 
+void Project::clearSelectedOutputPoints()
+{
+    for (unsigned int i = 0; i < outputPoints.size(); i++)
+    {
+        outputPoints[i].selected = false;
+    }
+}
+
+
 bool Project::setActiveStateSelectedPoints(bool isActive)
 {
     if (meteoPointsDbHandler == nullptr)
