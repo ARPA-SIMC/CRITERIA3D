@@ -231,7 +231,6 @@ bool MainWindow::updateSelection(const QPoint& position)
     QPointF topLeft = this->mapView->mapToScene(pixelTopLeft);
     QPointF bottomRight = this->mapView->mapToScene(pixelBottomRight);
     QRectF rectF(topLeft, bottomRight);
-    gis::Crit3DGeoPoint pointSelected;
 
     for (int i = 0; i < meteoPointList.size(); i++)
     {
