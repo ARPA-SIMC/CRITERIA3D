@@ -58,7 +58,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->flagView_not_active_outputPoints->setChecked(this->viewNotActiveOutputPoints);
     this->currentPointsVisualization = notShown;
 
-
     // show menu
     showPointsGroup = new QActionGroup(this);
     showPointsGroup->setExclusive(true);
@@ -97,7 +96,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setMouseTracking(true);
 
-    this->testOutputPoints();
+    //this->testOutputPoints();
 }
 
 
@@ -393,6 +392,8 @@ void MainWindow::testOutputPoints()
     p.initialize("02", true, 44.6, 11.6, 50, myProject.gisSettings.utmZone);
     myProject.outputPoints.push_back(p);
     p.initialize("03", true, 44.6, 11.4, 50, myProject.gisSettings.utmZone);
+    myProject.outputPoints.push_back(p);
+    p.initialize("04", true, 44.7, 11.5, 50, myProject.gisSettings.utmZone);
     myProject.outputPoints.push_back(p);
 
     addOutputPointsGUI();
