@@ -34,7 +34,7 @@
 
     private slots:
 
-        void mouseMove(const QPoint &eventPos);
+        void mouseMove(QPoint eventPos);
         void updateMaps();
         void updateGUI();
 

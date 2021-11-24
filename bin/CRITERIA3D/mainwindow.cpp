@@ -74,7 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->mapView->setZoomLevel(8);
     this->mapView->centerOn(startCenter->lonLat());
     connect(this->mapView, SIGNAL(zoomLevelChanged(quint8)), this, SLOT(updateMaps()));
-    connect(this->mapView, SIGNAL(mouseMoveSignal(const QPoint&)), this, SLOT(mouseMove(const QPoint&)));
+    connect(this->mapView, SIGNAL(mouseMoveSignal(QPoint)), this, SLOT(mouseMove(QPoint)));
 
     // Set raster objects
     this->rasterDEM = new RasterObject(this->mapView);
@@ -150,7 +150,7 @@ void MainWindow::updateGUI()
 
 
 // ------------------- SLOT -----------------------
-void MainWindow::mouseMove(const QPoint& eventPos)
+void MainWindow::mouseMove(QPoint eventPos)
 {
     if (! isInsideMap(eventPos)) return;
 
