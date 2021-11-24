@@ -3510,7 +3510,7 @@
      <property name="title">
       <string>Meteo points</string>
      </property>
-     <addaction name="flag_View_not_active_points"/>
+     <addaction name="flagView_not_active_points"/>
      <addaction name="separator"/>
      <addaction name="actionView_PointsHide"/>
      <addaction name="actionView_PointsLocation"/>
@@ -3544,7 +3544,7 @@
      <property name="title">
       <string>Soil data</string>
      </property>
-     <addaction name="flag_view_SoilMap"/>
+     <addaction name="actionView_SoilMap"/>
     </widget>
     <widget class="QMenu" name="menuSnow">
      <property name="title">
@@ -3569,7 +3569,17 @@
      <addaction name="actionView_Reflected_irradiance"/>
      <addaction name="actionView_Transmissivity"/>
     </widget>
+    <widget class="QMenu" name="menuOutput_points_3">
+     <property name="title">
+      <string>Output points</string>
+     </property>
+     <addaction name="flagView_not_active_outputPoints"/>
+     <addaction name="separator"/>
+     <addaction name="flagHide_outputPoints"/>
+    </widget>
     <addaction name="menuPoints"/>
+    <addaction name="menuOutput_points_3"/>
+    <addaction name="separator"/>
     <addaction name="menuMeteo_variables"/>
     <addaction name="separator"/>
     <addaction name="menuSolar_radiation_model"/>
@@ -3593,7 +3603,7 @@
     <addaction name="actionSnow_compute_current_hour"/>
     <addaction name="actionSnow_run_model"/>
     <addaction name="separator"/>
-    <addaction name="flag_save_state_daily_step"/>
+    <addaction name="flagSave_state_daily_step"/>
    </widget>
    <widget class="QMenu" name="menuSolar_radiation_model_2">
     <property name="title">
@@ -3672,9 +3682,9 @@
      </property>
      <addaction name="actionOutputPoints_delete_selected"/>
     </widget>
-    <addaction name="flagOutputPoints_hide"/>
-    <addaction name="separator"/>
     <addaction name="actionOutputPoints_add"/>
+    <addaction name="separator"/>
+    <addaction name="actionOutputPoints_clear_selection"/>
     <addaction name="menuActivate_outputPoints"/>
     <addaction name="menuDeactivate_outputPoints"/>
     <addaction name="menuDelete"/>
@@ -3682,11 +3692,11 @@
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
    <addaction name="menuMeteo_points_2"/>
+   <addaction name="menuOutput_points"/>
    <addaction name="menuDataSpatialization"/>
    <addaction name="menuSolar_radiation_model_2"/>
    <addaction name="menuSnow_model"/>
    <addaction name="menuCriteria3D"/>
-   <addaction name="menuOutput_points"/>
    <addaction name="menuGIS_settings"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -3872,12 +3882,12 @@
     <string>Solar radiation settings...</string>
    </property>
   </action>
-  <action name="flag_view_SoilMap">
+  <action name="actionView_SoilMap">
    <property name="checkable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
     <string>Soil map</string>
@@ -3987,7 +3997,7 @@
     <string>Energy content surface layer</string>
    </property>
   </action>
-  <action name="flag_save_state_daily_step">
+  <action name="flagSave_state_daily_step">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -4056,7 +4066,7 @@
     <string>Compute period...</string>
    </property>
   </action>
-  <action name="flag_View_not_active_points">
+  <action name="flagView_not_active_points">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -4064,7 +4074,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>View not active points</string>
+    <string>View not active</string>
    </property>
   </action>
   <action name="actionDelete_Points_Selected">
@@ -4140,14 +4150,6 @@
     <string>Clear selection</string>
    </property>
   </action>
-  <action name="flagOutputPoints_hide">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Hide</string>
-   </property>
-  </action>
   <action name="actionOutputPoints_newFile">
    <property name="text">
     <string>New point list (csv file)...</string>
@@ -4196,6 +4198,30 @@
   <action name="actionOutputDB_open">
    <property name="text">
     <string>Open output DB...</string>
+   </property>
+  </action>
+  <action name="actionOutputPoints_clear_selection">
+   <property name="text">
+    <string>Clear selection</string>
+   </property>
+  </action>
+  <action name="flagHide_outputPoints">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hide</string>
+   </property>
+  </action>
+  <action name="flagView_not_active_outputPoints">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>View not active</string>
    </property>
   </action>
  </widget>

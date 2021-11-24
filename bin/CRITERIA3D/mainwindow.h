@@ -58,12 +58,11 @@
         void on_opacitySliderRasterInput_sliderMoved(int position);
         void on_opacitySliderRasterOutput_sliderMoved(int position);
 
-        void on_flag_View_not_active_points_toggled(bool state);
+        void on_flagView_not_active_points_toggled(bool state);
         void on_actionView_PointsHide_triggered();
         void on_actionView_PointsLocation_triggered();
         void on_actionView_PointsCurrentVariable_triggered();
 
-        void on_flag_view_SoilMap_triggered();
         void on_actionView_Boundary_triggered();
         void on_actionView_Slope_triggered();
         void on_actionView_Aspect_triggered();
@@ -118,7 +117,7 @@
 
         void on_actionSave_state_triggered();
         void on_actionLoad_state_triggered();
-        void on_flag_save_state_daily_step_triggered();
+        void on_flagSave_state_daily_step_toggled(bool isChecked);
 
         void on_actionCriteria3D_settings_triggered();
         void on_actionCriteria3D_Initialize_triggered();
@@ -151,7 +150,21 @@
 
         void on_actionPoints_deactivate_with_no_data_triggered();
 
-        void on_flagOutputPoints_hide_toggled(bool state);
+        void on_actionOutputPoints_clear_selection_triggered();
+
+        void on_actionOutputPoints_deactivate_all_triggered();
+
+        void on_actionOutputPoints_deactivate_selected_triggered();
+
+        void on_actionView_SoilMap_triggered();
+
+        void on_flagHide_outputPoints_toggled(bool isChecked);
+
+        void on_flagView_not_active_outputPoints_toggled(bool isChecked);
+
+        void on_actionOutputPoints_activate_all_triggered();
+
+        void on_actionOutputPoints_activate_selected_triggered();
 
     protected:
         /*!
@@ -193,6 +206,7 @@
         visualizationType currentPointsVisualization;
         bool viewNotActivePoints;
         bool viewOutputPoints;
+        bool viewNotActiveOutputPoints;
 
         Crit3DSoilWidget *soilWidget;
 

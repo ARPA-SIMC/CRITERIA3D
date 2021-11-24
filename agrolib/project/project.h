@@ -240,6 +240,7 @@
         void showProxyGraph();
 
         void clearSelectedPoints();
+        void clearSelectedOutputPoints();
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
         bool setActiveStateWithCriteria(bool isActive);

@@ -50,11 +50,14 @@ MainWindow::MainWindow(QWidget *parent) :
     // initialize
     ui->labelInputRaster->setText("");
     ui->labelOutputRaster->setText("");
-    ui->flag_save_state_daily_step->setChecked(false);
+    ui->flagSave_state_daily_step->setChecked(false);
     this->viewNotActivePoints = true;
-    ui->flag_View_not_active_points->setChecked(this->viewNotActivePoints);
-    this->currentPointsVisualization = notShown;
+    ui->flagView_not_active_points->setChecked(this->viewNotActivePoints);
     this->viewOutputPoints = true;
+    this->viewNotActiveOutputPoints = true;
+    ui->flagView_not_active_outputPoints->setChecked(this->viewNotActiveOutputPoints);
+    this->currentPointsVisualization = notShown;
+
 
     // show menu
     showPointsGroup = new QActionGroup(this);
@@ -90,7 +93,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->updateCurrentVariable();
     this->updateDateTime();
 
-    myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
+    myProject.saveDailyState = ui->flagSave_state_daily_step->isChecked();
 
     this->setMouseTracking(true);
 
@@ -329,7 +332,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
     if (! isInsideMap(mapPos))
         return false;
 
-    if (myProject.soilMap.isLoaded && ui->flag_view_SoilMap->isChecked())
+    if (myProject.soilMap.isLoaded && ui->labelOutputRaster->text() == "Soil")
     {
         if (isSoil(mapPos))
         {
@@ -366,7 +369,7 @@ void MainWindow::addOutputPointsGUI()
 
     for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
     {
-        SquareMarker* point = new SquareMarker(9, true, QColor((Qt::white)));
+        SquareMarker* point = new SquareMarker(7, true, QColor((Qt::green)));
         point->setId(myProject.outputPoints[i].id);
         point->setLatitude(myProject.outputPoints[i].latitude);
         point->setLongitude(myProject.outputPoints[i].longitude);
@@ -388,6 +391,8 @@ void MainWindow::testOutputPoints()
     p.initialize("01", true, 44.5, 11.5, 50, myProject.gisSettings.utmZone);
     myProject.outputPoints.push_back(p);
     p.initialize("02", true, 44.6, 11.6, 50, myProject.gisSettings.utmZone);
+    myProject.outputPoints.push_back(p);
+    p.initialize("03", true, 44.6, 11.4, 50, myProject.gisSettings.utmZone);
     myProject.outputPoints.push_back(p);
 
     addOutputPointsGUI();
@@ -530,9 +535,6 @@ void MainWindow::drawProject()
         title += " - " + myProject.projectName;
 
     this->setWindowTitle(title);
-
-    ui->flag_view_SoilMap->setEnabled(myProject.soilMap.isLoaded);
-    ui->flag_view_SoilMap->setChecked(false);
 }
 
 
@@ -759,6 +761,8 @@ void MainWindow::redrawOutputPoints()
 {
     for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
     {
+        outputPointList[i]->setVisible(this->viewOutputPoints);
+
         if (myProject.outputPoints[i].selected)
         {
             outputPointList[i]->setFillColor(QColor(Qt::yellow));
@@ -767,15 +771,19 @@ void MainWindow::redrawOutputPoints()
         {
             if (myProject.outputPoints[i].active)
             {
-                outputPointList[i]->setFillColor(QColor(Qt::white));
+                outputPointList[i]->setFillColor(QColor(Qt::green));
             }
             else
             {
                 outputPointList[i]->setFillColor(QColor(Qt::red));
+                if (! this->viewNotActiveOutputPoints)
+                {
+                    outputPointList[i]->setVisible(false);
+                }
             }
         }
 
-        outputPointList[i]->setVisible(this->viewOutputPoints);
+
     }
 }
 
@@ -1017,9 +1025,9 @@ void MainWindow::on_actionView_3D_triggered()
 
 // ---------------- SHOW METEOPOINTS --------------------------------
 
-void MainWindow::on_flag_View_not_active_points_toggled(bool state)
+void MainWindow::on_flagView_not_active_points_toggled(bool isChecked)
 {
-    viewNotActivePoints = state;
+    this->viewNotActivePoints = isChecked;
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
@@ -1088,6 +1096,10 @@ void MainWindow::on_actionView_Boundary_triggered()
     }
 }
 
+void MainWindow::on_actionView_SoilMap_triggered()
+{
+    showSoilMap();
+}
 
 // -------------------- METEO VARIABLES -------------------------
 
@@ -1416,10 +1428,9 @@ void MainWindow::showSoilMap()
 {
     if (myProject.soilMap.isLoaded)
     {
-        ui->flag_view_SoilMap->setChecked(true);
         setColorScale(airTemperature, myProject.soilMap.colorScale);
         setCurrentRasterOutput(&(myProject.soilMap));
-        ui->labelOutputRaster->setText("Soil index");
+        ui->labelOutputRaster->setText("Soil");
     }
     else
     {
@@ -1427,18 +1438,6 @@ void MainWindow::showSoilMap()
     }
 }
 
-void MainWindow::on_flag_view_SoilMap_triggered()
-{
-    if (ui->flag_view_SoilMap->isChecked())
-    {
-        showSoilMap();
-    }
-    else
-    {
-        if (ui->labelOutputRaster->text() == "Soil index")
-            setOutputRasterVisible(false);
-    }
-}
 
 void MainWindow::openSoilWidget(QPoint mapPos)
 {
@@ -1584,12 +1583,7 @@ void MainWindow::on_actionLoad_soil_map_triggered()
 
     if (myProject.loadSoilMap(fileName))
     {
-        ui->flag_view_SoilMap->setEnabled(true);
         showSoilMap();
-    }
-    else
-    {
-        ui->flag_view_SoilMap->setEnabled(false);
     }
 }
 
@@ -2017,6 +2011,12 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 
 
 //------------------- STATES ----------------------
+
+void MainWindow::on_flagSave_state_daily_step_toggled(bool isChecked)
+{
+    myProject.saveDailyState = isChecked;
+}
+
 void MainWindow::on_actionSave_state_triggered()
 {
     if (myProject.isProjectLoaded)
@@ -2063,11 +2063,6 @@ void MainWindow::on_actionLoad_state_triggered()
     {
         myProject.logError();
     }
-}
-
-void MainWindow::on_flag_save_state_daily_step_triggered()
-{
-    myProject.saveDailyState = ui->flag_save_state_daily_step->isChecked();
 }
 
 
@@ -2378,10 +2373,79 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
     myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
 }
 
-
-void MainWindow::on_flagOutputPoints_hide_toggled(bool state)
+void MainWindow::on_flagHide_outputPoints_toggled(bool isChecked)
 {
-    this->viewOutputPoints = !state;
+    viewOutputPoints = !isChecked;
+    redrawOutputPoints();
+}
+
+void MainWindow::on_flagView_not_active_outputPoints_toggled(bool isChecked)
+{
+    viewNotActiveOutputPoints = isChecked;
+    redrawOutputPoints();
+}
+
+void MainWindow::on_actionOutputPoints_clear_selection_triggered()
+{
+    myProject.clearSelectedOutputPoints();
+    redrawOutputPoints();
+}
+
+void MainWindow::on_actionOutputPoints_deactivate_all_triggered()
+{
+    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+    {
+        myProject.outputPoints[i].active = false;
+    }
+
+    // TODO Laura update file
+
+    myProject.clearSelectedOutputPoints();
+    redrawOutputPoints();
+}
+
+void MainWindow::on_actionOutputPoints_deactivate_selected_triggered()
+{
+    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+    {
+        if (myProject.outputPoints[i].selected)
+        {
+            myProject.outputPoints[i].active = false;
+        }
+    }
+
+    // TODO Laura update file
+
+    myProject.clearSelectedOutputPoints();
+    redrawOutputPoints();
+}
+
+void MainWindow::on_actionOutputPoints_activate_all_triggered()
+{
+    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+    {
+        myProject.outputPoints[i].active = true;
+    }
+
+    // TODO Laura update file
+
+    myProject.clearSelectedOutputPoints();
+    redrawOutputPoints();
+}
+
+void MainWindow::on_actionOutputPoints_activate_selected_triggered()
+{
+    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+    {
+        if (myProject.outputPoints[i].selected)
+        {
+            myProject.outputPoints[i].active = true;
+        }
+    }
+
+    // TODO Laura update file
+
+    myProject.clearSelectedOutputPoints();
     redrawOutputPoints();
 }
 
