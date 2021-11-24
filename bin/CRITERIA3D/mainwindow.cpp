@@ -10,7 +10,6 @@
 #include "dialogSettings.h"
 #include "dialogRadiation.h"
 #include "dialogPointProperties.h"
-#include "utilities.h"
 #include "formTimePeriod.h"
 #include "criteria3DProject.h"
 #include "dialogSnowSettings.h"
