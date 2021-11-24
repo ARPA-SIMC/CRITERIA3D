@@ -399,8 +399,8 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
         }
         else
         {
-            xMin = getProxyMinValue(outInterpolationPoints);
-            xMax = getProxyMaxValue(outInterpolationPoints);
+            xMin = getProxyMinValue(outInterpolationPoints, interpolationSettings, proxyPos);
+            xMax = getProxyMaxValue(outInterpolationPoints, interpolationSettings, proxyPos);
             bool isZeroIntercept = false;
             if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
             {
@@ -419,7 +419,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             {
                 r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 4));
             }
-            lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
+            lapseRate.setText(QString("%1").arg(regressionSlope, 0, 'f', 2));
         }
         chartView->drawModelLapseRate(point_vector);
     }
