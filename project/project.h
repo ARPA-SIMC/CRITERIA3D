@@ -97,9 +97,12 @@
         bool meteoPointsLoaded;
         int nrMeteoPoints;
         Crit3DMeteoPoint* meteoPoints;
+        QList<gis::Crit3DGeoPoint> meteoPointsSelected;
+        std::vector<gis::Crit3DOutputPoint> outputPoints;
+
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
         Crit3DAggregationsDbHandler* aggregationDbHandler;
-        QList<gis::Crit3DGeoPoint> meteoPointsSelected;
+
         Crit3DColorScale* meteoPointsColorScale;
 
         bool meteoGridLoaded;

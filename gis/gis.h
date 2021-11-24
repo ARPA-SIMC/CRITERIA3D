@@ -62,7 +62,26 @@
             double z;
 
             Crit3DPoint();
-            Crit3DPoint(double, double, double);
+            Crit3DPoint(double utmX, double utmY, double _z);
+        };
+
+
+        class  Crit3DOutputPoint : Crit3DPoint
+        {
+        public:
+            Crit3DOutputPoint();
+
+            std::string id;
+            double latitude;
+            double longitude;
+
+            bool active;
+            bool selected;
+
+            float currentValue;
+
+            void initialize(const std::string& _id, bool isActive, double _latitude, double _longitude,
+                            double _z, int zoneNumber);
         };
 
 
