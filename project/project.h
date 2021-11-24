@@ -101,7 +101,6 @@
         bool meteoPointsLoaded;
         int nrMeteoPoints;
         Crit3DMeteoPoint* meteoPoints;
-        QList<gis::Crit3DGeoPoint> meteoPointsSelected;
         std::vector<gis::Crit3DOutputPoint> outputPoints;
 
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
@@ -241,7 +240,6 @@
         void showProxyGraph();
 
         void clearSelectedPoints();
-        void updateSelectedPoints();
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
         bool setActiveStateWithCriteria(bool isActive);
