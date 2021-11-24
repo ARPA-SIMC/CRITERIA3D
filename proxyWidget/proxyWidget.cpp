@@ -399,8 +399,8 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
         }
         else
         {
-            xMin = getProxyMinValue(outInterpolationPoints);
-            xMax = getProxyMaxValue(outInterpolationPoints);
+            xMin = getProxyMinValue(outInterpolationPoints, interpolationSettings, proxyPos);
+            xMax = getProxyMaxValue(outInterpolationPoints, interpolationSettings, proxyPos);
             bool isZeroIntercept = false;
             if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
             {
