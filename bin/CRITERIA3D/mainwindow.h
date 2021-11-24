@@ -8,7 +8,7 @@
     #include "MapGraphicsScene.h"
     #include "mapGraphicsRasterObject.h"
     #include "stationMarker.h"
-    #include "SquareMarker.h"
+    #include "squareMarker.h"
     #include "colorLegend.h"
     #include "rubberBand.h"
 
