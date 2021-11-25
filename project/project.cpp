@@ -2980,6 +2980,48 @@ bool Project::loadOutputPointList(QString fileName)
     return true;
 }
 
+bool Project::writeOutputPointList(QString fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing csv filename");
+        return false;
+    }
+    errorString.clear();
+
+    fileName = getCompleteFileName(fileName, PATH_OUTPUT);
+    if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
+    {
+        logError("Missing csv file: " + fileName);
+        return false;
+    }
+    QList<QList<QString>> data;
+    QList<QString> pointData;
+    for (int i = 0; i<outputPoints.size(); i++)
+    {
+        pointData.clear();
+        pointData.append(QString::fromStdString(outputPoints[i].id));
+        pointData.append(QString::number(outputPoints[i].latitude));
+        pointData.append(QString::number(outputPoints[i].longitude));
+        pointData.append(QString::number(outputPoints[i].getZ()));
+        if (outputPoints[i].active)
+        {
+            pointData.append("1");
+        }
+        else
+        {
+            pointData.append("0");
+        }
+        data.append(pointData);
+    }
+    if (writeCsvOutputPointList(fileName, data, &errorString))
+    {
+        logError("Error writing output list to csv: " + errorString);
+        return false;
+    }
+    return true;
+}
+
 
 /* ---------------------------------------------
  * LOG functions

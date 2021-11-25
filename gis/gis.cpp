@@ -153,6 +153,11 @@ namespace gis
         latLonToUtmForceZone(zoneNumber, latitude, longitude, &(utm.x), &(utm.y));
     }
 
+    double Crit3DOutputPoint::getZ()
+    {
+        return this->z;
+    }
+
     Crit3DRasterHeader::Crit3DRasterHeader()
     {
         nrRows = 0;

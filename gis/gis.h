@@ -82,6 +82,7 @@
 
             void initialize(const std::string& _id, bool isActive, double _latitude, double _longitude,
                             double _z, int zoneNumber);
+            double getZ();
         };
 
 
