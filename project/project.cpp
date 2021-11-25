@@ -2935,6 +2935,51 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
     return true;
 }
 
+bool Project::loadOutputPointList(QString fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing csv filename");
+        return false;
+    }
+    errorString.clear();
+    outputPoints.clear();
+    this->outputPointsFileName = fileName;
+    fileName = getCompleteFileName(fileName, PATH_OUTPUT);
+    if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
+    {
+        logError("Missing csv file: " + fileName);
+        return false;
+    }
+    QList<QList<QString>> data;
+    if (!importOutputPoint(fileName, data, &errorString))
+    {
+        logError("Error importing output list: " + errorString);
+        return false;
+    }
+    for (int i = 0; i<data.size(); i++)
+    {
+        gis::Crit3DOutputPoint p;
+        QString id = data.at(i)[0];
+        QString lat = data.at(i)[1];
+        QString lon = data.at(i)[2];
+        QString z = data.at(i)[3];
+        QString activeStr = data.at(i)[4];
+        bool active;
+        if (activeStr.trimmed() == "0")
+        {
+            active = false;
+        }
+        else if (activeStr.trimmed() == "1")
+        {
+            active = true;
+        }
+        p.initialize(id.toStdString(), active, lat.toDouble(), lon.toDouble(), z.toDouble(), gisSettings.utmZone);
+        outputPoints.push_back(p);
+    }
+    return true;
+}
+
 
 /* ---------------------------------------------
  * LOG functions
