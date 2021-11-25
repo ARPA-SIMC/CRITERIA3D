@@ -168,6 +168,14 @@
 
         void on_actionHide_soil_map_triggered();
 
+        void on_actionOutputPoints_newFile_triggered();
+
+        void on_actionOutputPoints_load_triggered();
+
+        void on_actionOutputDB_new_triggered();
+
+        void on_actionOutputDB_open_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

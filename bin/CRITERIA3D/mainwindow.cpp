@@ -2460,3 +2460,64 @@ void MainWindow::on_actionOutputPoints_activate_selected_triggered()
 }
 
 
+
+void MainWindow::on_actionOutputPoints_newFile_triggered()
+{
+    if (!myProject.outputPoints.empty())
+    {
+        QMessageBox::StandardButton closeBox;
+        closeBox = QMessageBox::question(this, "close output points" ,
+                                      "existing output points will be closed",
+                                      QMessageBox::Yes|QMessageBox::No);
+        if (closeBox == QMessageBox::Yes)
+        {
+            resetOutputPointMarkers();
+        }
+        else
+        {
+            return;
+        }
+    }
+    QString csvName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getDefaultPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
+    if (csvName == "")
+    {
+        return;
+    }
+    QFile csvFile(csvName);
+    if (csvFile.exists())
+    {
+        if (!csvFile.remove())
+        {
+            myProject.logError("Failed to remove existing csv file.");
+            return;
+        }
+    }
+    if (csvFile.open(QIODevice::ReadWrite))
+    {
+        QTextStream outStream(&csvFile);
+        outStream << "id, latitude, longitude, height, active" << "\n";
+        csvFile.close();
+    }
+    else
+    {
+        myProject.logError("Failed to open csv file.");
+        return;
+    }
+
+    myProject.outputPointsFileName = csvName;
+}
+
+void MainWindow::on_actionOutputPoints_load_triggered()
+{
+
+}
+
+void MainWindow::on_actionOutputDB_new_triggered()
+{
+
+}
+
+void MainWindow::on_actionOutputDB_open_triggered()
+{
+
+}
