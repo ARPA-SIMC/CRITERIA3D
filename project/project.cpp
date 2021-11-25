@@ -2943,7 +2943,7 @@ bool Project::loadOutputPointList(QString fileName)
         return false;
     }
     errorString.clear();
-    outputPoints.clear(); // LC questa va fatta in ogni caso, ma se ci sono già dati? deve chiedere se cancellarli come per la new?
+    outputPoints.clear();
     this->outputPointsFileName = fileName;
     fileName = getCompleteFileName(fileName, PATH_OUTPUT);
     if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
