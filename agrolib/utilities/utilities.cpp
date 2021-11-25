@@ -599,3 +599,32 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
     myFile.close();
     return true;
 }
+
+bool writeCsvOutputPointList(QString csvFileName, QList<QList<QString>> data, QString *error)
+{
+    if (csvFileName == "")
+    {
+        *error = "Missing CSV file.";
+        return false;
+    }
+
+    QFile myFile(csvFileName);
+    if (!myFile.open(QIODevice::WriteOnly | QFile::Truncate))
+    {
+        *error = "Open CSV failed: " + csvFileName + "\n " + myFile.errorString();
+        return false;
+    }
+
+    QTextStream myStream (&myFile);
+
+    QString header = "id,latitude,longitude,height,active";
+    myStream << header << "\n";
+
+    for (int i = 0; i<data.size(); i++)
+    {
+        myStream << data[i].join(",") << "\n";
+    }
+
+    myFile.close();
+    return true;
+}

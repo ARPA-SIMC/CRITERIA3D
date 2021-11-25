@@ -247,6 +247,7 @@
         bool deleteMeteoPoints(const QList<QString>& pointList);
         bool deleteMeteoPointsData(const QList<QString>& pointList);
         bool loadOutputPointList(QString fileName);
+        bool writeOutputPointList(QString fileName);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
