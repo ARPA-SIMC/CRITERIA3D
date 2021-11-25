@@ -2522,10 +2522,28 @@ void MainWindow::on_actionOutputPoints_load_triggered()
 
 void MainWindow::on_actionOutputDB_new_triggered()
 {
-
+    QString dbName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getDefaultPath() + PATH_OUTPUT, tr("DB files (*.db)"));
+    if (dbName == "")
+    {
+        return;
+    }
+    myProject.currentDbOutputFileName = dbName;
+    QFile outputDb(dbName);
+    if (outputDb.exists())
+    {
+        if (!outputDb.remove())
+        {
+            myProject.logError("Failed to remove existing output db.");
+            return;
+        }
+    }
 }
 
 void MainWindow::on_actionOutputDB_open_triggered()
 {
+    QString dbName = QFileDialog::getOpenFileName(this, tr("Open output db"), myProject.getDefaultPath() + PATH_OUTPUT, tr("DB files (*.db)"));
 
+    if (dbName == "") return;
+
+    myProject.currentDbOutputFileName = dbName;
 }
