@@ -97,7 +97,6 @@ void Project::clearProject()
     if (logFile.is_open()) logFile.close();
 
     meteoPointsColorScale->setRange(NODATA, NODATA);
-    meteoPointsSelected.clear();
 
     delete parameters;
     delete projectSettings;
@@ -850,7 +849,6 @@ void Project::closeMeteoPointsDB()
     }
 
     clearMeteoPoints();
-    meteoPointsSelected.clear();
 
     dbPointsFileName = "";
     meteoPointsLoaded = false;
@@ -2672,7 +2670,6 @@ void Project::showProxyGraph()
 
 void Project::clearSelectedPoints()
 {
-    meteoPointsSelected.clear();
     for (int i = 0; i < nrMeteoPoints; i++)
     {
         meteoPoints[i].selected = false;
@@ -2680,20 +2677,11 @@ void Project::clearSelectedPoints()
 }
 
 
-void Project::updateSelectedPoints()
+void Project::clearSelectedOutputPoints()
 {
-    for (int i = 0; i < nrMeteoPoints; i++)
+    for (unsigned int i = 0; i < outputPoints.size(); i++)
     {
-        meteoPoints[i].selected = false;
-        for (int j = 0; j < meteoPointsSelected.size(); j++)
-        {
-            if ( isEqual(meteoPoints[i].latitude, meteoPointsSelected[j].latitude)
-                    && isEqual(meteoPoints[i].longitude, meteoPointsSelected[j].longitude) )
-            {
-                meteoPoints[i].selected = true;
-                break;
-            }
-        }
+        outputPoints[i].selected = false;
     }
 }
 
@@ -2944,6 +2932,93 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
     }
     closeProgressBar();
 
+    return true;
+}
+
+bool Project::loadOutputPointList(QString fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing csv filename");
+        return false;
+    }
+    errorString.clear();
+    outputPoints.clear();
+    this->outputPointsFileName = fileName;
+    fileName = getCompleteFileName(fileName, PATH_OUTPUT);
+    if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
+    {
+        logError("Missing csv file: " + fileName);
+        return false;
+    }
+    QList<QList<QString>> data;
+    if (!importOutputPoint(fileName, data, &errorString))
+    {
+        logError("Error importing output list: " + errorString);
+        return false;
+    }
+    for (int i = 0; i<data.size(); i++)
+    {
+        gis::Crit3DOutputPoint p;
+        QString id = data.at(i)[0];
+        QString lat = data.at(i)[1];
+        QString lon = data.at(i)[2];
+        QString z = data.at(i)[3];
+        QString activeStr = data.at(i)[4];
+        bool active;
+        if (activeStr.trimmed() == "0")
+        {
+            active = false;
+        }
+        else if (activeStr.trimmed() == "1")
+        {
+            active = true;
+        }
+        p.initialize(id.toStdString(), active, lat.toDouble(), lon.toDouble(), z.toDouble(), gisSettings.utmZone);
+        outputPoints.push_back(p);
+    }
+    return true;
+}
+
+bool Project::writeOutputPointList(QString fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing csv filename");
+        return false;
+    }
+    errorString.clear();
+
+    fileName = getCompleteFileName(fileName, PATH_OUTPUT);
+    if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
+    {
+        logError("Missing csv file: " + fileName);
+        return false;
+    }
+    QList<QList<QString>> data;
+    QList<QString> pointData;
+    for (int i = 0; i<outputPoints.size(); i++)
+    {
+        pointData.clear();
+        pointData.append(QString::fromStdString(outputPoints[i].id));
+        pointData.append(QString::number(outputPoints[i].latitude));
+        pointData.append(QString::number(outputPoints[i].longitude));
+        pointData.append(QString::number(outputPoints[i].getZ()));
+        if (outputPoints[i].active)
+        {
+            pointData.append("1");
+        }
+        else
+        {
+            pointData.append("0");
+        }
+        data.append(pointData);
+    }
+    if (writeCsvOutputPointList(fileName, data, &errorString))
+    {
+        logError("Error writing output list to csv: " + errorString);
+        return false;
+    }
     return true;
 }
 

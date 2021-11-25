@@ -86,25 +86,27 @@ float getZmax(std::vector <Crit3DInterpolationDataPoint> &myPoints)
     return myZmax;
 }
 
-float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints)
+float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, unsigned pos)
 {
     float maxValue = NODATA;
+    Crit3DProxy* myProxy = mySettings->getProxy(pos);
 
     for (unsigned i = 0; i < myPoints.size(); i++)
-        if (myPoints[i].value != NODATA)
-            if (maxValue == NODATA || myPoints[i].value > maxValue)
-                maxValue = myPoints[i].value;
+        if (myPoints[i].getProxyValue(pos) != NODATA)
+            if (maxValue == NODATA || myPoints[i].getProxyValue(pos) > maxValue)
+                maxValue = myPoints[i].getProxyValue(pos);
     return maxValue;
 }
 
-float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints)
+float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, unsigned pos)
 {
     float minValue = NODATA;
+    Crit3DProxy* myProxy = mySettings->getProxy(pos);
 
     for (unsigned i = 0; i < myPoints.size(); i++)
-        if (myPoints[i].value != NODATA)
-            if (minValue == NODATA || myPoints[i].value < minValue)
-                minValue = myPoints[i].value;
+        if (myPoints[i].getProxyValue(pos) != NODATA)
+            if (minValue == NODATA || myPoints[i].getProxyValue(pos) < minValue)
+                minValue = myPoints[i].getProxyValue(pos);
     return minValue;
 }
 

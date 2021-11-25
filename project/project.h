@@ -91,15 +91,21 @@
         QString parametersFileName;
         std::ofstream logFile;
 
+        // output points
+        QString outputPointsFileName;
+        QString currentDbOutputFileName;
+
         QSettings* parameters;
         QSettings* projectSettings;
 
         bool meteoPointsLoaded;
         int nrMeteoPoints;
         Crit3DMeteoPoint* meteoPoints;
+        std::vector<gis::Crit3DOutputPoint> outputPoints;
+
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
         Crit3DAggregationsDbHandler* aggregationDbHandler;
-        QList<gis::Crit3DGeoPoint> meteoPointsSelected;
+
         Crit3DColorScale* meteoPointsColorScale;
 
         bool meteoGridLoaded;
@@ -234,12 +240,14 @@
         void showProxyGraph();
 
         void clearSelectedPoints();
-        void updateSelectedPoints();
+        void clearSelectedOutputPoints();
         bool setActiveStateSelectedPoints(bool isActive);
         bool setActiveStatePointList(QString fileName, bool isActive);
         bool setActiveStateWithCriteria(bool isActive);
         bool deleteMeteoPoints(const QList<QString>& pointList);
         bool deleteMeteoPointsData(const QList<QString>& pointList);
+        bool loadOutputPointList(QString fileName);
+        bool writeOutputPointList(QString fileName);
 
     private slots:
         void deleteMeteoWidgetPoint(int id);

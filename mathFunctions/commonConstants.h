@@ -48,6 +48,7 @@
     #define PATH_PROJECT "PROJECT/"
     #define PATH_TEMPLATE "TEMPLATE/"
     #define PATH_SETTINGS "SETTINGS/"
+    #define PATH_OUTPUT "OUTPUT/"
     #define PATH_TD "TD/"
 
     // --------------- soilFluxes3D ----------------

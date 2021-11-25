@@ -1320,6 +1320,7 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromGeoPointList(const QList<gis
 
 bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& pointList, bool activeState)
 {
+    error = "";
     QString idList = "";
     for (int i = 0; i < pointList.size(); i++)
     {
@@ -1328,7 +1329,7 @@ bool Crit3DMeteoPointsDbHandler::setActiveStatePointList(const QList<QString>& p
         {
             if (idList != "")
                 idList += ",";
-            idList += id_point;
+            idList += "'" + id_point + "'";
         }
     }
 
