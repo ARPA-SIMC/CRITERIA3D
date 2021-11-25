@@ -48,6 +48,7 @@
     bool searchDocPath(QString* docPath);
     bool searchDataPath(QString* dataPath);
     void clearDir( const QString path );
+    bool importOutputPoint(QString csvFileName, QList<QList<QString> > &data, QString *error);
 
 
 #endif // UTILITIES_H

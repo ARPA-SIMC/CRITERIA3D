@@ -2509,7 +2509,15 @@ void MainWindow::on_actionOutputPoints_newFile_triggered()
 
 void MainWindow::on_actionOutputPoints_load_triggered()
 {
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open output point list"), myProject.getDefaultPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
 
+    if (fileName == "") return;
+
+    if (! myProject.loadOutputPointList(fileName))
+    {
+        return;
+    }
+    addOutputPointsGUI();
 }
 
 void MainWindow::on_actionOutputDB_new_triggered()
