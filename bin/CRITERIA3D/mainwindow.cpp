@@ -2408,7 +2408,10 @@ void MainWindow::on_actionOutputPoints_deactivate_all_triggered()
         myProject.outputPoints[i].active = false;
     }
 
-    // TODO Laura update file
+    if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
+    {
+        return;
+    }
 
     myProject.clearSelectedOutputPoints();
     redrawOutputPoints();
@@ -2424,7 +2427,10 @@ void MainWindow::on_actionOutputPoints_deactivate_selected_triggered()
         }
     }
 
-    // TODO Laura update file
+    if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
+    {
+        return;
+    }
 
     myProject.clearSelectedOutputPoints();
     redrawOutputPoints();
@@ -2437,7 +2443,10 @@ void MainWindow::on_actionOutputPoints_activate_all_triggered()
         myProject.outputPoints[i].active = true;
     }
 
-    // TODO Laura update file
+    if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
+    {
+        return;
+    }
 
     myProject.clearSelectedOutputPoints();
     redrawOutputPoints();
@@ -2453,7 +2462,10 @@ void MainWindow::on_actionOutputPoints_activate_selected_triggered()
         }
     }
 
-    // TODO Laura update file
+    if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
+    {
+        return;
+    }
 
     myProject.clearSelectedOutputPoints();
     redrawOutputPoints();
