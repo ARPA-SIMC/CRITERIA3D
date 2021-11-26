@@ -2473,25 +2473,49 @@ void MainWindow::on_actionOutputPoints_activate_selected_triggered()
 
 void MainWindow::on_actionOutputPoints_delete_selected_triggered()
 {
+    unsigned int n = 0;
     for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
     {
         if (myProject.outputPoints[i].selected)
         {
-            myProject.outputPoints.erase(myProject.outputPoints.begin()+i);
-            mapView->scene()->removeObject(outputPointList[i]);
-            delete outputPointList[i];
-            outputPointList.removeAt(i);
-            i = i-1;
+            n = n + 1;
         }
     }
 
-    if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
+    if (n == 0)
     {
+        myProject.logError("No meteo point selected.");
         return;
     }
 
-    myProject.clearSelectedOutputPoints();
-    redrawOutputPoints();
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Are you sure?" ,
+                                  QString::number(n) + " selected points will be deleted",
+                                  QMessageBox::Yes|QMessageBox::No);
+
+    if (reply == QMessageBox::Yes)
+    {
+        for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+        {
+            if (myProject.outputPoints[i].selected)
+            {
+                myProject.outputPoints.erase(myProject.outputPoints.begin()+i);
+                mapView->scene()->removeObject(outputPointList[i]);
+                delete outputPointList[i];
+                outputPointList.removeAt(i);
+                i = i-1;
+            }
+        }
+
+        if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
+        {
+            return;
+        }
+
+        myProject.clearSelectedOutputPoints();
+        redrawOutputPoints();
+    }
+    return;
 }
 
 void MainWindow::on_actionOutputPoints_newFile_triggered()
