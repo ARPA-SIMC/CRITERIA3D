@@ -4199,7 +4199,7 @@
   </action>
   <action name="actionOutputPoints_add">
    <property name="text">
-    <string>Add...</string>
+    <string>Add new point...</string>
    </property>
   </action>
   <action name="actionOutputDB_new">
