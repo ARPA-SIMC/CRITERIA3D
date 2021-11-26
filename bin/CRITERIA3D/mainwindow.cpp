@@ -254,11 +254,11 @@ bool MainWindow::updateSelection(const QPoint& position)
         {
             if (isAdd)
             {
-                myProject.outputPoints[i].selected = true;
+                myProject.outputPoints[unsigned(i)].selected = true;
             }
             else
             {
-                myProject.outputPoints[i].selected = false;
+                myProject.outputPoints[unsigned(i)].selected = false;
             }
         }
     }
