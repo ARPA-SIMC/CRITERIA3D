@@ -85,7 +85,7 @@
         bool isWithinSoil(int soilIndex, double depth);
 
         bool interpolateAndSaveHourlyMeteo(meteoVariable myVar, const QDateTime& myTime,
-                                           const QString& outputPath, bool saveOutput);
+                                           const QString& outputPath, bool isSaveOutput);
 
         bool saveHourlyMeteoOutput(meteoVariable myVar, const QString& myPath, QDateTime myTime, const QString& myArea);
         bool aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod myAggregation, const Crit3DDate& myDate,

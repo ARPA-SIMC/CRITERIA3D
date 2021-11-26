@@ -1419,7 +1419,7 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 }
 
 
-// --------------- SHOW SOIL --------------------------------
+// --------------- SOIL --------------------------------
 
 bool MainWindow::isSoil(QPoint mapPos)
 {
@@ -1716,6 +1716,12 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
         return false;
     }
 
+    if (myProject.isSnow && (! myProject.snowMaps.isInitialized))
+    {
+        myProject.logError("Initialize Snow model or load a state before.");
+        return false;
+    }
+
     if (myProject.isWater && (! myProject.isCriteria3DInitialized))
     {
         myProject.logError("Initialize 3D water fluxes or load a state before.");
@@ -1723,12 +1729,6 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     }
 
     // TODO: check on crop
-
-    if (myProject.isSnow && (! myProject.snowMaps.isInitialized))
-    {
-        myProject.logError("Initialize Snow model or load a state before.");
-        return false;
-    }
 
     myProject.logInfoGUI("Loading meteo data...");
     if (! myProject.loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
@@ -1742,6 +1742,7 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     myProject.modelLastTime = lastTime;
     myProject.modelPause = false;
     myProject.modelStop = false;
+
     ui->groupBoxModel->setEnabled(true);
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
@@ -1769,21 +1770,20 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
     int hour1 = firstTime.time().hour();
     int hour2 = lastTime.time().hour();
 
-    QString outputPathHourly;
-
     // cycle on days
+    QString currentOutputPath;
     for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1))
     {
         myProject.setCurrentDate(myDate);
 
-        if (myProject.saveOutput)
+        if (myProject.saveOutputRaster)
         {
-            // create output directory
-            outputPathHourly = myProject.getProjectPath() + "OUTPUT/hourly/" + myDate.toString("yyyy/MM/dd/");
-            if (! QDir().mkpath(outputPathHourly))
+            // create directory for hourly raster output
+            currentOutputPath = myProject.getProjectPath() + PATH_OUTPUT + myDate.toString("yyyy/MM/dd/");
+            if (! QDir().mkpath(currentOutputPath))
             {
-                myProject.logError("Creation hourly output directory failed." );
-                myProject.saveOutput = false;
+                myProject.logError("Creation of directory for hourly raster output failed:" + currentOutputPath);
+                myProject.saveOutputRaster = false;
             }
         }
 
@@ -1796,7 +1796,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
             myProject.setCurrentHour(hour);
             QDateTime myTime = QDateTime(myDate, QTime(hour, 0, 0), Qt::UTC);
 
-            if (! myProject.modelHourlyCycle(myTime, outputPathHourly))
+            if (! myProject.modelHourlyCycle(myTime, currentOutputPath))
             {
                 myProject.logError();
                 return false;
@@ -1808,11 +1808,6 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
             {
                 return true;
             }
-        }
-
-        if (myProject.saveOutput && firstHour <=1 && lastHour >= 23)
-        {
-            myProject.saveDailyOutput(myDate, outputPathHourly);
         }
 
         if (myProject.saveDailyState)

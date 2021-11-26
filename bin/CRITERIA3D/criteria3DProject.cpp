@@ -38,7 +38,8 @@
 
 Crit3DProject::Crit3DProject() : Project3D()
 {
-    saveOutput = false;
+    saveOutputRaster = false;
+    saveOutputPoint = false;
     saveDailyState = false;
     isMeteo = false;
     isRadiation = false;
@@ -586,21 +587,30 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
 
     if (isMeteo)
     {
-        if (! interpolateAndSaveHourlyMeteo(airTemperature, myTime, hourlyOutputPath, saveOutput)) return false;
+        if (! interpolateAndSaveHourlyMeteo(airTemperature, myTime, hourlyOutputPath, this->saveOutputRaster))
+            return false;
         qApp->processEvents();
-        if (! interpolateAndSaveHourlyMeteo(precipitation, myTime, hourlyOutputPath, saveOutput)) return false;
+
+        if (! interpolateAndSaveHourlyMeteo(precipitation, myTime, hourlyOutputPath, this->saveOutputRaster))
+            return false;
         qApp->processEvents();
-        if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myTime, hourlyOutputPath, saveOutput)) return false;
+
+        if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myTime, hourlyOutputPath, this->saveOutputRaster))
+            return false;
         qApp->processEvents();
-        if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myTime, hourlyOutputPath, saveOutput)) return false;
+
+        if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myTime, hourlyOutputPath, this->saveOutputRaster))
+            return false;
         qApp->processEvents();
+
         hourlyMeteoMaps->setComputed(true);
     }
 
     // radiation model
     if (isRadiation)
     {
-        if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, saveOutput)) return false;
+        if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, this->saveOutputRaster))
+            return false;
         qApp->processEvents();
     }
 
@@ -608,7 +618,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
     {
         if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
             return false;
-        if (saveOutput)
+        if (this->saveOutputRaster)
         {
             saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myTime, "");
         }

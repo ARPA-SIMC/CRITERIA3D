@@ -30,7 +30,7 @@
         Crit3DSnowMaps snowMaps;
         Crit3DSnow snowModel;
 
-        bool saveOutput, saveDailyState;
+        bool saveOutputRaster, saveOutputPoint, saveDailyState;
         bool isMeteo, isRadiation, isCrop, isWater, isSnow;
         bool modelPause, modelStop;
         QDateTime modelFirstTime, modelLastTime;
