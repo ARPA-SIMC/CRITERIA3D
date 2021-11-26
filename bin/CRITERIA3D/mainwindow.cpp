@@ -2471,7 +2471,28 @@ void MainWindow::on_actionOutputPoints_activate_selected_triggered()
     redrawOutputPoints();
 }
 
+void MainWindow::on_actionOutputPoints_delete_selected_triggered()
+{
+    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+    {
+        if (myProject.outputPoints[i].selected)
+        {
+            myProject.outputPoints.erase(myProject.outputPoints.begin()+i);
+            mapView->scene()->removeObject(outputPointList[i]);
+            delete outputPointList[i];
+            outputPointList.removeAt(i);
+            i = i-1;
+        }
+    }
 
+    if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
+    {
+        return;
+    }
+
+    myProject.clearSelectedOutputPoints();
+    redrawOutputPoints();
+}
 
 void MainWindow::on_actionOutputPoints_newFile_triggered()
 {
