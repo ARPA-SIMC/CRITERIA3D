@@ -2952,7 +2952,7 @@ bool Project::loadOutputPointList(QString fileName)
         return false;
     }
     QList<QList<QString>> data;
-    if (!importOutputPoint(fileName, data, &errorString))
+    if (!importOutputPoint(fileName, data, errorString))
     {
         logError("Error importing output list: " + errorString);
         return false;
@@ -3014,7 +3014,7 @@ bool Project::writeOutputPointList(QString fileName)
         }
         data.append(pointData);
     }
-    if (!writeCsvOutputPointList(fileName, data, &errorString))
+    if (!writeCsvOutputPointList(fileName, data, errorString))
     {
         logError("Error writing output list to csv: " + errorString);
         return false;

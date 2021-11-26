@@ -508,18 +508,18 @@ QList<QString> readListSingleColumn(QString fileName, QString& error)
     return myList;
 }
 
-bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString *error)
+bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString &error)
 {
     if (csvFileName == "")
     {
-        *error = "Missing CSV file.";
+        error = "Missing CSV file.";
         return false;
     }
 
     QFile myFile(csvFileName);
     if (!myFile.open(QIODevice::ReadOnly))
     {
-        *error = "Open CSV failed: " + csvFileName + "\n " + myFile.errorString();
+        error = "Open CSV failed: " + csvFileName + "\n " + myFile.errorString();
         return (false);
     }
 
@@ -529,7 +529,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
     int CSVRequiredInfo = 5;
     if (myStream.atEnd())
     {
-        *error += "\nFile is void.";
+        error += "\nFile is void.";
         myFile.close();
         return false;
     }
@@ -537,7 +537,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
     QList<QString> header = myStream.readLine().split(',');
     if (header[0].trimmed() != "id" || header[1].trimmed() != "latitude" || header[2].trimmed() != "longitude" || header[3].trimmed() != "height" || header[4].trimmed() != "active")
     {
-        *error += "invalid CSV header";
+        error += "invalid CSV header";
         myFile.close();
         return false;
     }
@@ -546,7 +546,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
         line = myStream.readLine().split(',');
         if (line.size() < CSVRequiredInfo)
         {
-            *error += "invalid format CSV, missing data";
+            error += "invalid format CSV, missing data";
             myFile.close();
             return false;
         }
@@ -554,7 +554,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
         // id
         if (line[0].isEmpty())
         {
-            *error += "id is empty";
+            error += "id is empty";
             myFile.close();
             return false;
         }
@@ -563,7 +563,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
         double lat = line[1].toDouble(&isOk);
         if (!isOk || abs(lat) > 90.f)
         {
-            *error += "invalid latitude";
+            error += "invalid latitude";
             myFile.close();
             return false;
         }
@@ -572,7 +572,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
         double lon = line[2].toDouble(&isOk);
         if (!isOk || abs(lon) > 180.f)
         {
-            *error += "invalid longitude";
+            error += "invalid longitude";
             myFile.close();
             return false;
         }
@@ -581,7 +581,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
         double height = line[3].toDouble(&isOk);
         if (!isOk)
         {
-            *error += "invalid height";
+            error += "invalid height";
             myFile.close();
             return false;
         }
@@ -590,7 +590,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
         int active = line[4].toInt(&isOk);
         if (!isOk || (active != 0 && active != 1))
         {
-            *error += "invalid active";
+            error += "invalid active";
             myFile.close();
             return false;
         }
@@ -600,18 +600,18 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
     return true;
 }
 
-bool writeCsvOutputPointList(QString csvFileName, QList<QList<QString>> data, QString *error)
+bool writeCsvOutputPointList(QString csvFileName, QList<QList<QString>> data, QString &error)
 {
     if (csvFileName == "")
     {
-        *error = "Missing CSV file.";
+        error = "Missing CSV file.";
         return false;
     }
 
     QFile myFile(csvFileName);
     if (!myFile.open(QIODevice::WriteOnly | QFile::Truncate))
     {
-        *error = "Open CSV failed: " + csvFileName + "\n " + myFile.errorString();
+        error = "Open CSV failed: " + csvFileName + "\n " + myFile.errorString();
         return false;
     }
 
