@@ -3669,6 +3669,7 @@
     <addaction name="menuDeactivate_points"/>
     <addaction name="menuDelete_points"/>
     <addaction name="menuPoints_delete"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuOutput_points">
     <property name="title">
@@ -3700,6 +3701,9 @@
     <addaction name="menuActivate_outputPoints"/>
     <addaction name="menuDeactivate_outputPoints"/>
     <addaction name="menuDelete"/>
+    <addaction name="separator"/>
+    <addaction name="flagOutputPoints_save_output"/>
+    <addaction name="flagOutputPoints_use_not_active"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
@@ -4239,6 +4243,22 @@
   <action name="actionHide_soil_map">
    <property name="text">
     <string>Hide soil map</string>
+   </property>
+  </action>
+  <action name="flagOutputPoints_save_output">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Save model output</string>
+   </property>
+  </action>
+  <action name="flagOutputPoints_use_not_active">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Use not active</string>
    </property>
   </action>
  </widget>

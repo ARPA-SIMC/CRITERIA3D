@@ -20,6 +20,8 @@
     class Crit3DProject : public Project3D
     {
     private:
+       bool saveOutputRaster, saveOnOutputPoints, useOutputPointsNotActive, saveDailyState;
+
         void clearCriteria3DProject();
         bool setSoilIndexMap();
 
@@ -30,7 +32,6 @@
         Crit3DSnowMaps snowMaps;
         Crit3DSnow snowModel;
 
-        bool saveOutputRaster, saveOutputPoint, saveDailyState;
         bool isMeteo, isRadiation, isCrop, isWater, isSnow;
         bool modelPause, modelStop;
         QDateTime modelFirstTime, modelLastTime;
@@ -38,6 +39,16 @@
         Crit3DProject();
 
         bool initializeCriteria3DModel();
+
+        void setSaveDailyState(bool isSave);
+        bool isSaveDailyState();
+
+        void setSaveOutputRaster(bool isSave);
+        bool isSaveOutputRaster();
+
+        void setSaveOutputPoints(bool isSave);
+        void setUseOutputPointsNotActive(bool isUse);
+        bool isSaveOutputPoints();
 
         bool loadCriteria3DProject(QString myFileName);
         bool loadCriteria3DSettings();

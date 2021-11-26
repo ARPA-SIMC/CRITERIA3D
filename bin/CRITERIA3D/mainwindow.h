@@ -178,6 +178,10 @@
 
         void on_actionOutputPoints_delete_selected_triggered();
 
+        void on_flagOutputPoints_save_output_toggled(bool isChecked);
+
+        void on_flagOutputPoints_use_not_active_toggled(bool isChecked);
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

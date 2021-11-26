@@ -83,6 +83,8 @@ void Project::initializeProject()
     dbAggregationFileName = "";
     aggregationPath = "";
     dbGridXMLFileName = "";
+    outputPointsFileName = "";
+    currentDbOutputFileName = "";
 
     meteoPointsLoaded = false;
     meteoGridLoaded = false;
@@ -114,6 +116,11 @@ void Project::clearProject()
 
     closeMeteoPointsDB();
     closeMeteoGridDB();
+
+    outputPoints.clear();
+    outputPointsFileName = "";
+    currentDbOutputFileName = "";
+    // close output points DB
 
     isProjectLoaded = false;
 }
@@ -2942,21 +2949,24 @@ bool Project::loadOutputPointList(QString fileName)
         logError("Missing csv filename");
         return false;
     }
-    errorString.clear();
     outputPoints.clear();
     this->outputPointsFileName = fileName;
+
     fileName = getCompleteFileName(fileName, PATH_OUTPUT);
     if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
     {
         logError("Missing csv file: " + fileName);
         return false;
     }
+
     QList<QList<QString>> data;
+    errorString.clear();
     if (!importOutputPoint(fileName, data, errorString))
     {
         logError("Error importing output list: " + errorString);
         return false;
     }
+
     for (int i = 0; i<data.size(); i++)
     {
         gis::Crit3DOutputPoint p;
@@ -2965,7 +2975,8 @@ bool Project::loadOutputPointList(QString fileName)
         QString lon = data.at(i)[2];
         QString z = data.at(i)[3];
         QString activeStr = data.at(i)[4];
-        bool active;
+
+        bool active = false;
         if (activeStr.trimmed() == "0")
         {
             active = false;
@@ -2974,9 +2985,11 @@ bool Project::loadOutputPointList(QString fileName)
         {
             active = true;
         }
+
         p.initialize(id.toStdString(), active, lat.toDouble(), lon.toDouble(), z.toDouble(), gisSettings.utmZone);
         outputPoints.push_back(p);
     }
+
     return true;
 }
 
@@ -2995,9 +3008,10 @@ bool Project::writeOutputPointList(QString fileName)
         logError("Missing csv file: " + fileName);
         return false;
     }
+
     QList<QList<QString>> data;
     QList<QString> pointData;
-    for (int i = 0; i<outputPoints.size(); i++)
+    for (unsigned int i = 0; i < outputPoints.size(); i++)
     {
         pointData.clear();
         pointData.append(QString::fromStdString(outputPoints[i].id));
@@ -3014,6 +3028,7 @@ bool Project::writeOutputPointList(QString fileName)
         }
         data.append(pointData);
     }
+
     if (!writeCsvOutputPointList(fileName, data, errorString))
     {
         logError("Error writing output list to csv: " + errorString);

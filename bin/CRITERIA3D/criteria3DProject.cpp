@@ -39,18 +39,70 @@
 Crit3DProject::Crit3DProject() : Project3D()
 {
     saveOutputRaster = false;
-    saveOutputPoint = false;
+    saveOnOutputPoints = false;
+    useOutputPointsNotActive = false;
     saveDailyState = false;
+
     isMeteo = false;
     isRadiation = false;
     isCrop = false;
     isWater = false;
     isSnow = false;
+
     modelPause = false;
     modelStop = false;
 
     modelFirstTime.setTimeSpec(Qt::UTC);
     modelLastTime.setTimeSpec(Qt::UTC);
+}
+
+
+void Crit3DProject::setSaveDailyState(bool isSave)
+{
+    saveDailyState = isSave;
+}
+
+bool Crit3DProject::isSaveDailyState()
+{
+    return saveDailyState;
+}
+
+void Crit3DProject::setSaveOutputRaster(bool isSave)
+{
+    saveOutputRaster = isSave;
+}
+
+bool Crit3DProject::isSaveOutputRaster()
+{
+    return saveOutputRaster;
+}
+
+void Crit3DProject::setSaveOutputPoints(bool isSave)
+{
+    saveOnOutputPoints = isSave;
+}
+
+void Crit3DProject::setUseOutputPointsNotActive(bool isUse)
+{
+    useOutputPointsNotActive = isUse;
+}
+
+// true if at least one point available
+bool Crit3DProject::isSaveOutputPoints()
+{
+    if (! saveOnOutputPoints || outputPoints.empty())
+        return false;
+
+    if (useOutputPointsNotActive)
+        return true;
+
+    for (unsigned int i = 0; i < outputPoints.size(); i++)
+    {
+        if (outputPoints[i].active)
+            return true;
+    }
+
+    return false;
 }
 
 
@@ -842,4 +894,6 @@ bool Crit3DProject::loadModelState(QString stateStr)
 
     return true;
 }
+
+
 

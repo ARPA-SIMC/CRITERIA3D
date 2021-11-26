@@ -92,7 +92,13 @@ MainWindow::MainWindow(QWidget *parent) :
     this->updateCurrentVariable();
     this->updateDateTime();
 
-    myProject.saveDailyState = ui->flagSave_state_daily_step->isChecked();
+    myProject.setSaveDailyState(false);
+    ui->flagSave_state_daily_step->setChecked(myProject.isSaveDailyState());
+
+    myProject.setSaveOutputPoints(false);
+    myProject.setUseOutputPointsNotActive(false);
+    ui->flagOutputPoints_save_output->setChecked(false);
+    ui->flagOutputPoints_use_not_active->setChecked(false);
 
     this->setMouseTracking(true);
 
@@ -558,6 +564,7 @@ void MainWindow::clearMaps_GUI()
 void MainWindow::clearMeteoPoints_GUI()
 {
     resetMeteoPointMarkers();
+    resetOutputPointMarkers();
     meteoPointsLegend->setVisible(false);
     showPointsGroup->setEnabled(false);
 }
@@ -660,11 +667,8 @@ void MainWindow::on_actionOpenProject_triggered()
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open project file"), projectPath, tr("ini files (*.ini)"));
     if (fileName == "") return;
 
-    if (myProject.isProjectLoaded)
-    {
-        clearMeteoPoints_GUI();
-        clearMaps_GUI();
-    }
+    clearMeteoPoints_GUI();
+    clearMaps_GUI();
 
     if (! myProject.loadCriteria3DProject(fileName))
     {
@@ -677,8 +681,6 @@ void MainWindow::on_actionOpenProject_triggered()
 
 void MainWindow::on_actionCloseProject_triggered()
 {
-    if (! myProject.isProjectLoaded) return;
-
     clearMeteoPoints_GUI();
     clearMaps_GUI();
 
@@ -1710,6 +1712,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 
 bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 {
+    // checks
     if (! myProject.DEM.isLoaded)
     {
         myProject.logError(ERROR_STR_MISSING_DEM);
@@ -1730,12 +1733,14 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 
     // TODO: check on crop
 
+    // Load meteo data
     myProject.logInfoGUI("Loading meteo data...");
     if (! myProject.loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
     {
         myProject.logError();
         return false;
     }
+    myProject.closeLogInfo();
 
     // set model interface
     myProject.modelFirstTime = firstTime;
@@ -1747,20 +1752,17 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
 
-    //myProject.logInfoGUI("Run models from: " + firstTime.toString() + " to: " + lastTime.toString());
-    myProject.closeLogInfo();
+    if (myProject.isSaveOutputPoints())
+    {
+        // write tables
+        myProject.logError("write tables");
+    }
 
     return runModels(firstTime, lastTime);
 }
 
 bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 {
-    if (! myProject.DEM.isLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_DEM);
-        return false;
-    }
-
     // initialize
     myProject.hourlyMeteoMaps->initialize();
     myProject.radiationMaps->initialize();
@@ -1776,14 +1778,14 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
     {
         myProject.setCurrentDate(myDate);
 
-        if (myProject.saveOutputRaster)
+        if (myProject.isSaveOutputRaster())
         {
             // create directory for hourly raster output
             currentOutputPath = myProject.getProjectPath() + PATH_OUTPUT + myDate.toString("yyyy/MM/dd/");
             if (! QDir().mkpath(currentOutputPath))
             {
                 myProject.logError("Creation of directory for hourly raster output failed:" + currentOutputPath);
-                myProject.saveOutputRaster = false;
+                myProject.setSaveOutputRaster(false);
             }
         }
 
@@ -1810,7 +1812,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
             }
         }
 
-        if (myProject.saveDailyState)
+        if (myProject.isSaveDailyState())
         {
             myProject.saveModelState();
         }
@@ -2008,10 +2010,7 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     myProject.isSnow = true;
     myProject.isCrop = true;
     myProject.isWater = true;
-    runModels(firstTime, lastTime);
-
-    updateDateTime();
-    updateMaps();
+    startModels(firstTime, lastTime);
 }
 
 
@@ -2019,7 +2018,7 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 
 void MainWindow::on_flagSave_state_daily_step_toggled(bool isChecked)
 {
-    myProject.saveDailyState = isChecked;
+    myProject.setSaveDailyState(isChecked);
 }
 
 void MainWindow::on_actionSave_state_triggered()
@@ -2599,3 +2598,15 @@ void MainWindow::on_actionOutputDB_open_triggered()
 
     myProject.currentDbOutputFileName = dbName;
 }
+
+
+void MainWindow::on_flagOutputPoints_save_output_toggled(bool isChecked)
+{
+    myProject.setSaveOutputPoints(isChecked);
+}
+
+void MainWindow::on_flagOutputPoints_use_not_active_toggled(bool isChecked)
+{
+    myProject.setUseOutputPointsNotActive(isChecked);
+}
+

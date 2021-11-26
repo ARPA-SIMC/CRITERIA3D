@@ -561,7 +561,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
         // lat
         bool isOk = false;
         double lat = line[1].toDouble(&isOk);
-        if (!isOk || abs(lat) > 90.f)
+        if (!isOk || abs(lat) > 90.)
         {
             error += "invalid latitude";
             myFile.close();
@@ -570,7 +570,7 @@ bool importOutputPoint(QString csvFileName, QList<QList<QString>> &data, QString
         // lon
         isOk = false;
         double lon = line[2].toDouble(&isOk);
-        if (!isOk || abs(lon) > 180.f)
+        if (!isOk || abs(lon) > 180.)
         {
             error += "invalid longitude";
             myFile.close();
