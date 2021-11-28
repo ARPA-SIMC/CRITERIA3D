@@ -10,6 +10,9 @@
     #ifndef OUTPUTPOINTS_H
         #include "outputPoints.h"
     #endif
+    #ifndef DBOUTPUTPOINTSHANDLER_H
+        #include "dbOutputPointsHandler.h"
+    #endif
     #ifndef DBMETEOPOINTS_H
         #include "dbMeteoPointsHandler.h"
     #endif
@@ -107,6 +110,7 @@
         std::vector<Crit3DOutputPoint> outputPoints;
 
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
+        Crit3DOutputPointsDbHandler* outputPointsDbHandler;
         Crit3DAggregationsDbHandler* aggregationDbHandler;
 
         Crit3DColorScale* meteoPointsColorScale;
@@ -198,6 +202,8 @@
         void closeMeteoPointsDB();
         void closeMeteoGridDB();
         void cleanMeteoPointsData();
+
+        void closeOutputPointsDB();
 
         bool loadDEM(QString myFileName);
         void closeDEM();
