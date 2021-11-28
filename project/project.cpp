@@ -2952,42 +2952,18 @@ bool Project::loadOutputPointList(QString fileName)
     outputPoints.clear();
     this->outputPointsFileName = fileName;
 
-    fileName = getCompleteFileName(fileName, PATH_OUTPUT);
-    if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
+    QString csvFileName = getCompleteFileName(fileName, PATH_OUTPUT);
+    if (! QFile(csvFileName).exists() || ! QFileInfo(csvFileName).isFile())
     {
-        logError("Missing csv file: " + fileName);
+        logError("Missing csv file: " + csvFileName);
         return false;
     }
 
-    QList<QList<QString>> data;
-    errorString.clear();
-    if (!importOutputPoint(fileName, data, errorString))
+    if (!loadOutputPointListCsv(csvFileName, outputPoints, gisSettings.utmZone, errorString))
     {
         logError("Error importing output list: " + errorString);
+        errorString.clear();
         return false;
-    }
-
-    for (int i = 0; i<data.size(); i++)
-    {
-        gis::Crit3DOutputPoint p;
-        QString id = data.at(i)[0];
-        QString lat = data.at(i)[1];
-        QString lon = data.at(i)[2];
-        QString z = data.at(i)[3];
-        QString activeStr = data.at(i)[4];
-
-        bool active = false;
-        if (activeStr.trimmed() == "0")
-        {
-            active = false;
-        }
-        else if (activeStr.trimmed() == "1")
-        {
-            active = true;
-        }
-
-        p.initialize(id.toStdString(), active, lat.toDouble(), lon.toDouble(), z.toDouble(), gisSettings.utmZone);
-        outputPoints.push_back(p);
     }
 
     return true;
@@ -3000,40 +2976,21 @@ bool Project::writeOutputPointList(QString fileName)
         logError("Missing csv filename");
         return false;
     }
-    errorString.clear();
 
-    fileName = getCompleteFileName(fileName, PATH_OUTPUT);
-    if (! QFile(fileName).exists() || ! QFileInfo(fileName).isFile())
+    QString csvFileName = getCompleteFileName(fileName, PATH_OUTPUT);
+    if (! QFile(csvFileName).exists() || ! QFileInfo(csvFileName).isFile())
     {
-        logError("Missing csv file: " + fileName);
+        logError("Missing csv file: " + csvFileName);
         return false;
     }
 
-    QList<QList<QString>> data;
-    QList<QString> pointData;
-    for (unsigned int i = 0; i < outputPoints.size(); i++)
-    {
-        pointData.clear();
-        pointData.append(QString::fromStdString(outputPoints[i].id));
-        pointData.append(QString::number(outputPoints[i].latitude));
-        pointData.append(QString::number(outputPoints[i].longitude));
-        pointData.append(QString::number(outputPoints[i].getZ()));
-        if (outputPoints[i].active)
-        {
-            pointData.append("1");
-        }
-        else
-        {
-            pointData.append("0");
-        }
-        data.append(pointData);
-    }
-
-    if (!writeCsvOutputPointList(fileName, data, errorString))
+    if (!writeOutputPointListCsv(csvFileName, outputPoints, errorString))
     {
         logError("Error writing output list to csv: " + errorString);
+        errorString.clear();
         return false;
     }
+
     return true;
 }
 
