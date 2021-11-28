@@ -14,11 +14,11 @@
         void closeDatabase();
         QSqlDatabase getDb() const;
         QString getDbName();
-        QString getLastError();
+        QString getErrorString();
 
-    protected:
-
+    private:
         QSqlDatabase _db;
+        QString errorString;
     };
 
 

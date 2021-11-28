@@ -2503,6 +2503,7 @@ void MainWindow::on_actionOutputPoints_newFile_triggered()
         if (closeBox == QMessageBox::Yes)
         {
             resetOutputPointMarkers();
+
         }
         else
         {
@@ -2538,29 +2539,16 @@ void MainWindow::on_actionOutputPoints_newFile_triggered()
         return;
     }
 
-    myProject.outputPointsFileName = csvName;
+    myProject.loadOutputPointList(csvName);
 }
 
 
 void MainWindow::on_actionOutputDB_new_triggered()
 {
     QString dbName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getDefaultPath() + PATH_OUTPUT, tr("DB files (*.db)"));
-    if (dbName == "")
-    {
-        return;
-    }
+    if (dbName == "") return;
 
-    QFile outputDb(dbName);
-    if (outputDb.exists())
-    {
-        if (!outputDb.remove())
-        {
-            myProject.logError("Failed to remove existing output db.");
-            return;
-        }
-    }
-
-    myProject.loadOutputPointsDB(dbName);
+    myProject.newOutputPointsDB(dbName);
 }
 
 void MainWindow::on_actionOutputDB_open_triggered()
