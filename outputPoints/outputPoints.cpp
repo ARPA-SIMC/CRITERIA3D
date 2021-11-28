@@ -134,7 +134,7 @@ bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QSt
     QList<QString> header = myStream.readLine().split(',');
     if (header[0].trimmed() != "id" || header[1].trimmed() != "latitude" || header[2].trimmed() != "longitude" || header[3].trimmed() != "height" || header[4].trimmed() != "active")
     {
-        errorString += "invalid CSV header";
+        errorString += "invalid CSV header.";
         myFile.close();
         return false;
     }
@@ -146,7 +146,7 @@ bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QSt
         line = myStream.readLine().split(',');
         if (line.size() < CSVRequiredInfo)
         {
-            errorString += "invalid format CSV, missing data";
+            errorString += "invalid format CSV, missing data.";
             myFile.close();
             return false;
         }
@@ -154,7 +154,7 @@ bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QSt
         // check id
         if (line[0].isEmpty())
         {
-            errorString += "id field is empty \nLine nr:" + QString::number(nrLine);
+            errorString += "id field is empty, \nLine nr: " + QString::number(nrLine);
             myFile.close();
             return false;
         }
@@ -164,7 +164,7 @@ bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QSt
         double lat = line[1].toDouble(&isOk);
         if (!isOk || abs(lat) > 90.)
         {
-            errorString += "invalid latitude \nLine nr:" + QString::number(nrLine);
+            errorString += "invalid latitude. \nLine nr: " + QString::number(nrLine);
             myFile.close();
             return false;
         }
@@ -174,7 +174,7 @@ bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QSt
         double lon = line[2].toDouble(&isOk);
         if (!isOk || abs(lon) > 180.)
         {
-            errorString += "invalid longitude \nLine nr:" + QString::number(nrLine);
+            errorString += "invalid longitude. \nLine nr: " + QString::number(nrLine);
             myFile.close();
             return false;
         }
@@ -184,7 +184,7 @@ bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QSt
         line[3].toDouble(&isOk);
         if (!isOk)
         {
-            errorString += "invalid height \nLine nr:" + QString::number(nrLine);
+            errorString += "invalid height. \nLine nr: " + QString::number(nrLine);
             myFile.close();
             return false;
         }
@@ -194,7 +194,7 @@ bool importOutputPointsCsv(QString csvFileName, QList<QList<QString>> &data, QSt
         int active = line[4].toInt(&isOk);
         if (!isOk || (active != 0 && active != 1))
         {
-            errorString += "invalid value in field active \nLine nr:" + QString::number(nrLine);
+            errorString += "invalid value in field active. \nLine nr: " + QString::number(nrLine);
             myFile.close();
             return false;
         }
