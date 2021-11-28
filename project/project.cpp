@@ -54,6 +54,7 @@ void Project::initializeProject()
     nrMeteoPoints = 0;
     meteoPoints = nullptr;
     meteoPointsDbHandler = nullptr;
+    outputPointsDbHandler = nullptr;
     meteoGridDbHandler = nullptr;
     aggregationDbHandler = nullptr;
 
@@ -117,10 +118,9 @@ void Project::clearProject()
     closeMeteoPointsDB();
     closeMeteoGridDB();
 
+    closeOutputPointsDB();
     outputPoints.clear();
     outputPointsFileName = "";
-    currentDbOutputFileName = "";
-    // close output points DB
 
     isProjectLoaded = false;
 }
@@ -859,6 +859,18 @@ void Project::closeMeteoPointsDB()
 
     dbPointsFileName = "";
     meteoPointsLoaded = false;
+}
+
+
+void Project::closeOutputPointsDB()
+{
+    if (outputPointsDbHandler != nullptr)
+    {
+        delete outputPointsDbHandler;
+        outputPointsDbHandler = nullptr;
+    }
+
+    currentDbOutputFileName = "";
 }
 
 

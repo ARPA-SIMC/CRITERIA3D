@@ -29,10 +29,12 @@ win32:{
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo
 
 HEADERS += \
+    dbOutputPointsHandler.h \
     outputPoints.h
 
 
 SOURCES += \
+    dbOutputPointsHandler.cpp \
     outputPoints.cpp
 
 
