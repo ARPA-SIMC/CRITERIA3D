@@ -2509,11 +2509,13 @@ void MainWindow::on_actionOutputPoints_newFile_triggered()
             return;
         }
     }
+
     QString csvName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getDefaultPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
     if (csvName == "")
     {
         return;
     }
+
     QFile csvFile(csvName);
     if (csvFile.exists())
     {
@@ -2523,6 +2525,7 @@ void MainWindow::on_actionOutputPoints_newFile_triggered()
             return;
         }
     }
+
     if (csvFile.open(QIODevice::ReadWrite))
     {
         QTextStream outStream(&csvFile);
@@ -2546,7 +2549,7 @@ void MainWindow::on_actionOutputDB_new_triggered()
     {
         return;
     }
-    myProject.currentDbOutputFileName = dbName;
+
     QFile outputDb(dbName);
     if (outputDb.exists())
     {
@@ -2556,6 +2559,8 @@ void MainWindow::on_actionOutputDB_new_triggered()
             return;
         }
     }
+
+    myProject.loadOutputPointsDB(dbName);
 }
 
 void MainWindow::on_actionOutputDB_open_triggered()
@@ -2564,7 +2569,7 @@ void MainWindow::on_actionOutputDB_open_triggered()
 
     if (dbName == "") return;
 
-    myProject.currentDbOutputFileName = dbName;
+    myProject.loadOutputPointsDB(dbName);
 }
 
 

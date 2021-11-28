@@ -1046,6 +1046,32 @@ bool Project::loadMeteoPointsDB(QString dbName)
 }
 
 
+bool Project::loadOutputPointsDB(QString dbName)
+{
+    if (dbName == "") return false;
+
+    closeOutputPointsDB();
+
+    currentDbOutputFileName = dbName;
+    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
+    if (! QFile(dbName).exists())
+    {
+        logError("Output points db does not exists:\n" + dbName);
+        return false;
+    }
+
+    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbName);
+    if (outputPointsDbHandler->getLastError() != "")
+    {
+        logError("Function loadOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getLastError());
+        closeOutputPointsDB();
+        return false;
+    }
+
+    return true;
+}
+
+
 bool Project::loadMeteoGridDB(QString xmlName)
 {
     if (xmlName == "") return false;
