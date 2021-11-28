@@ -2538,18 +2538,6 @@ void MainWindow::on_actionOutputPoints_newFile_triggered()
     myProject.outputPointsFileName = csvName;
 }
 
-void MainWindow::on_actionOutputPoints_load_triggered()
-{
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open output point list"), myProject.getDefaultPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
-
-    if (fileName == "") return;
-
-    if (! myProject.loadOutputPointList(fileName))
-    {
-        return;
-    }
-    addOutputPointsGUI();
-}
 
 void MainWindow::on_actionOutputDB_new_triggered()
 {
@@ -2590,4 +2578,20 @@ void MainWindow::on_flagCompute_only_points_toggled(bool isChecked)
 {
     myProject.setComputeOnlyPoints(isChecked);
 }
+
+
+void MainWindow::on_actionLoad_OutputPoints_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open output point list"), myProject.getDefaultPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
+    if (fileName == "") return;
+
+    if (! myProject.loadOutputPointList(fileName))
+    {
+        resetOutputPointMarkers();
+        return;
+    }
+
+    addOutputPointsGUI();
+}
+
 

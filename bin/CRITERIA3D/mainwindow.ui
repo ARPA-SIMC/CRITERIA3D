@@ -3461,7 +3461,7 @@
        <string>Output points</string>
       </property>
       <addaction name="actionOutputPoints_newFile"/>
-      <addaction name="actionOutputPoints_load"/>
+      <addaction name="actionLoad_OutputPoints"/>
      </widget>
      <addaction name="menuOutput_points_4"/>
      <addaction name="menuOutput_db"/>
@@ -4171,7 +4171,7 @@
     <string>New list (csv file)...</string>
    </property>
   </action>
-  <action name="actionOutputPoints_load">
+  <action name="actionLoad_OutputPoints">
    <property name="text">
     <string>Load list...</string>
    </property>
