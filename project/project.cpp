@@ -1046,6 +1046,37 @@ bool Project::loadMeteoPointsDB(QString dbName)
 }
 
 
+bool Project::newOutputPointsDB(QString dbName)
+{
+    if (dbName == "") return false;
+
+    closeOutputPointsDB();
+    currentDbOutputFileName = dbName;
+
+    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
+    QFile outputDb(dbName);
+    if (outputDb.exists())
+    {
+        if (!outputDb.remove())
+        {
+            logError("Failed to remove existing output db.");
+            currentDbOutputFileName = "";
+            return false;
+        }
+    }
+
+    outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbName);
+    if (outputPointsDbHandler->getErrorString() != "")
+    {
+        logError("Function newOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getErrorString());
+        closeOutputPointsDB();
+        return false;
+    }
+
+    return true;
+}
+
+
 bool Project::loadOutputPointsDB(QString dbName)
 {
     if (dbName == "") return false;
@@ -1061,9 +1092,9 @@ bool Project::loadOutputPointsDB(QString dbName)
     }
 
     outputPointsDbHandler = new Crit3DOutputPointsDbHandler(dbName);
-    if (outputPointsDbHandler->getLastError() != "")
+    if (outputPointsDbHandler->getErrorString() != "")
     {
-        logError("Function loadOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getLastError());
+        logError("Function loadOutputPointsDB:\n" + dbName + "\n" + outputPointsDbHandler->getErrorString());
         closeOutputPointsDB();
         return false;
     }

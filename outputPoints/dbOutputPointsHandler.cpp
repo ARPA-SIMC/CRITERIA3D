@@ -12,9 +12,14 @@ Crit3DOutputPointsDbHandler::Crit3DOutputPointsDbHandler(QString dbname_)
     {
         _db.close();
     }
+    errorString = "";
 
     _db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
     _db.setDatabaseName(dbname_);
+    if (! _db.open())
+    {
+        errorString = _db.lastError().text();
+    }
 }
 
 
@@ -35,7 +40,7 @@ QString Crit3DOutputPointsDbHandler::getDbName()
     return _db.databaseName();
 }
 
-QString Crit3DOutputPointsDbHandler::getLastError()
+QString Crit3DOutputPointsDbHandler::getErrorString()
 {
-    return _db.lastError().text();
+    return errorString;
 }
