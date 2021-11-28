@@ -39,9 +39,9 @@
 Crit3DProject::Crit3DProject() : Project3D()
 {
     saveOutputRaster = false;
-    saveOnOutputPoints = false;
-    useOutputPointsNotActive = false;
+    saveOutputPoints = false;
     saveDailyState = false;
+    computeOnlyPoints = false;
 
     isMeteo = false;
     isRadiation = false;
@@ -79,22 +79,24 @@ bool Crit3DProject::isSaveOutputRaster()
 
 void Crit3DProject::setSaveOutputPoints(bool isSave)
 {
-    saveOnOutputPoints = isSave;
+    saveOutputPoints = isSave;
 }
 
-void Crit3DProject::setUseOutputPointsNotActive(bool isUse)
+void Crit3DProject::setComputeOnlyPoints(bool isUse)
 {
-    useOutputPointsNotActive = isUse;
+    computeOnlyPoints = isUse;
 }
 
-// true if at least one point available
+bool Crit3DProject::isComputeOnlyPoints()
+{
+    return computeOnlyPoints;
+}
+
+// true if at least one point is active
 bool Crit3DProject::isSaveOutputPoints()
 {
-    if (! saveOnOutputPoints || outputPoints.empty())
+    if (! saveOutputPoints || outputPoints.empty())
         return false;
-
-    if (useOutputPointsNotActive)
-        return true;
 
     for (unsigned int i = 0; i < outputPoints.size(); i++)
     {

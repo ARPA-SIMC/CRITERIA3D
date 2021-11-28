@@ -180,7 +180,7 @@
 
         void on_flagOutputPoints_save_output_toggled(bool isChecked);
 
-        void on_flagOutputPoints_use_not_active_toggled(bool isChecked);
+        void on_flagCompute_only_points_toggled(bool isChecked);
 
     protected:
         /*!

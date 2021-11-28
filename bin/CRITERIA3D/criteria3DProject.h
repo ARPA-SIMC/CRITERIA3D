@@ -20,7 +20,7 @@
     class Crit3DProject : public Project3D
     {
     private:
-       bool saveOutputRaster, saveOnOutputPoints, useOutputPointsNotActive, saveDailyState;
+       bool saveOutputRaster, saveOutputPoints, computeOnlyPoints, saveDailyState;
 
         void clearCriteria3DProject();
         bool setSoilIndexMap();
@@ -47,7 +47,8 @@
         bool isSaveOutputRaster();
 
         void setSaveOutputPoints(bool isSave);
-        void setUseOutputPointsNotActive(bool isUse);
+        void setComputeOnlyPoints(bool isUse);
+        bool isComputeOnlyPoints();
         bool isSaveOutputPoints();
 
         bool loadCriteria3DProject(QString myFileName);

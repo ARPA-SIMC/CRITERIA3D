@@ -7,6 +7,9 @@
     #ifndef GIS_H
         #include "gis.h"
     #endif
+    #ifndef OUTPUTPOINTS_H
+        #include "outputPoints.h"
+    #endif
     #ifndef DBMETEOPOINTS_H
         #include "dbMeteoPointsHandler.h"
     #endif
@@ -101,7 +104,7 @@
         bool meteoPointsLoaded;
         int nrMeteoPoints;
         Crit3DMeteoPoint* meteoPoints;
-        std::vector<gis::Crit3DOutputPoint> outputPoints;
+        std::vector<Crit3DOutputPoint> outputPoints;
 
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
         Crit3DAggregationsDbHandler* aggregationDbHandler;

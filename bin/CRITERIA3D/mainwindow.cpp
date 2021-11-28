@@ -96,13 +96,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->flagSave_state_daily_step->setChecked(myProject.isSaveDailyState());
 
     myProject.setSaveOutputPoints(false);
-    myProject.setUseOutputPointsNotActive(false);
-    ui->flagOutputPoints_save_output->setChecked(false);
-    ui->flagOutputPoints_use_not_active->setChecked(false);
+    myProject.setComputeOnlyPoints(false);
+    ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
+    ui->flagCompute_only_points->setChecked(myProject.isComputeOnlyPoints());
 
     this->setMouseTracking(true);
-
-    //this->testOutputPoints();
 }
 
 
@@ -385,24 +383,6 @@ void MainWindow::addOutputPointsGUI()
     }
 
     redrawOutputPoints();
-}
-
-
-void MainWindow::testOutputPoints()
-{
-    myProject.outputPoints.clear();
-
-    gis::Crit3DOutputPoint p;
-    p.initialize("01", true, 44.5, 11.5, 50, myProject.gisSettings.utmZone);
-    myProject.outputPoints.push_back(p);
-    p.initialize("02", true, 44.6, 11.6, 50, myProject.gisSettings.utmZone);
-    myProject.outputPoints.push_back(p);
-    p.initialize("03", true, 44.6, 11.4, 50, myProject.gisSettings.utmZone);
-    myProject.outputPoints.push_back(p);
-    p.initialize("04", true, 44.7, 11.5, 50, myProject.gisSettings.utmZone);
-    myProject.outputPoints.push_back(p);
-
-    addOutputPointsGUI();
 }
 
 
@@ -2605,8 +2585,9 @@ void MainWindow::on_flagOutputPoints_save_output_toggled(bool isChecked)
     myProject.setSaveOutputPoints(isChecked);
 }
 
-void MainWindow::on_flagOutputPoints_use_not_active_toggled(bool isChecked)
+
+void MainWindow::on_flagCompute_only_points_toggled(bool isChecked)
 {
-    myProject.setUseOutputPointsNotActive(isChecked);
+    myProject.setComputeOnlyPoints(isChecked);
 }
 

@@ -3703,7 +3703,7 @@
     <addaction name="menuDelete"/>
     <addaction name="separator"/>
     <addaction name="flagOutputPoints_save_output"/>
-    <addaction name="flagOutputPoints_use_not_active"/>
+    <addaction name="flagCompute_only_points"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
@@ -4250,15 +4250,15 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Save model output</string>
+    <string>Save output on points</string>
    </property>
   </action>
-  <action name="flagOutputPoints_use_not_active">
+  <action name="flagCompute_only_points">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Use not active</string>
+    <string>Compute only points</string>
    </property>
   </action>
  </widget>
