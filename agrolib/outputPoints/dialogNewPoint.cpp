@@ -6,7 +6,6 @@ DialogNewPoint::DialogNewPoint(QList<QString> idList, gis::Crit3DRasterGrid DEM)
     setWindowTitle("New point");
     this->resize(400, 180);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    this->setAttribute(Qt::WA_DeleteOnClose);
 
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QHBoxLayout *idLayout = new QHBoxLayout();
@@ -35,10 +34,19 @@ DialogNewPoint::DialogNewPoint(QList<QString> idList, gis::Crit3DRasterGrid DEM)
     lat.setMaximumHeight(30);
     lon.setMaximumWidth(60);
     lon.setMaximumHeight(30);
+    QDoubleValidator *doubleValLat = new QDoubleValidator( -90.0, 90.0, 5, this );
+    doubleValLat->setNotation(QDoubleValidator::StandardNotation);
+    lat.setValidator(doubleValLat);
+    QDoubleValidator *doubleValLon = new QDoubleValidator( -180.0, 180.0, 5, this );
+    doubleValLon->setNotation(QDoubleValidator::StandardNotation);
+    lon.setValidator(doubleValLon);
 
     QLabel *heightLabel = new QLabel("Height");
     height.setMaximumWidth(60);
     height.setMaximumHeight(30);
+    QDoubleValidator *doubleValHeight = new QDoubleValidator( -9999.0, 9999.0, 5, this );
+    doubleValHeight->setNotation(QDoubleValidator::StandardNotation);
+    height.setValidator(doubleValHeight);
 
     idLayout->addWidget(idLabel);
     idLayout->addWidget(&id);
@@ -71,6 +79,60 @@ DialogNewPoint::DialogNewPoint(QList<QString> idList, gis::Crit3DRasterGrid DEM)
     connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(true); });
     connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(false); });
 
-    show();
     exec();
+}
+
+DialogNewPoint::~DialogNewPoint()
+{
+    close();
+}
+
+void DialogNewPoint::done(bool res)
+{
+    if (res) // ok
+    {
+        if (id.text().isEmpty())
+        {
+            QMessageBox::information(nullptr, "Missing id point ", "Insert id point");
+            return;
+        }
+        if (idList.contains(id.text()))
+        {
+            QMessageBox::information(nullptr, "id point already used", "Change id point");
+            return;
+        }
+
+        if (lat.text().isEmpty())
+        {
+            QMessageBox::information(nullptr, "Missing latitude ", "Insert latitude");
+            return;
+        }
+        else if (lat.text().toDouble() < -90 || lat.text().toDouble() > 90)
+        {
+            QMessageBox::information(nullptr, "Invalid latitude ", "Insert a value between -90 and 90");
+            return;
+        }
+        if (lon.text().isEmpty())
+        {
+            QMessageBox::information(nullptr, "Missing longitude ", "Insert longitude");
+            return;
+        }
+        else if (lon.text().toDouble() < -180 || lon.text().toDouble() > 180)
+        {
+            QMessageBox::information(nullptr, "Invalid longitude ", "Insert a value between -180 and 180");
+            return;
+        }
+        if (height.text().isEmpty())
+        {
+            QMessageBox::information(nullptr, "Missing height ", "Insert height");
+            return;
+        }
+        QDialog::done(QDialog::Accepted);
+        return;
+    }
+    else    // cancel, close or exc was pressed
+    {
+        QDialog::done(QDialog::Rejected);
+        return;
+    }
 }
