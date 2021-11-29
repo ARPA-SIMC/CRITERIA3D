@@ -14,6 +14,7 @@
 #include "criteria3DProject.h"
 #include "dialogSnowSettings.h"
 #include "dialogLoadState.h"
+#include "dialogNewPoint.h"
 #include "utilities.h"
 
 
@@ -2588,3 +2589,23 @@ void MainWindow::on_actionLoad_OutputPoints_triggered()
 }
 
 
+
+void MainWindow::on_actionOutputPoints_add_triggered()
+{
+    if (myProject.outputPointsFileName.isEmpty())
+    {
+        myProject.logError("Load an output point list before");
+        return;
+    }
+    QList<QString> idPoints;
+    for (int i = 0; i< myProject.outputPoints.size(); i++)
+    {
+        idPoints.append(QString::fromStdString(myProject.outputPoints[i].id));
+    }
+    DialogNewPoint newPointDialog(idPoints, myProject.DEM);
+    if (newPointDialog.result() == QDialog::Accepted)
+    {
+        // TO DO
+    }
+    return;
+}

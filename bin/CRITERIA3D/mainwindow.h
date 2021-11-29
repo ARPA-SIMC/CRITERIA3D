@@ -182,6 +182,8 @@
 
         void on_actionLoad_OutputPoints_triggered();
 
+        void on_actionOutputPoints_add_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

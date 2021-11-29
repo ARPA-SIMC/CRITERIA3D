@@ -5,7 +5,7 @@
 #
 #------------------------------------------------------
 
-QT       += network sql
+QT       += network sql widgets
 
 QT       -= gui
 
@@ -30,11 +30,13 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo
 
 HEADERS += \
     dbOutputPointsHandler.h \
+    dialogNewPoint.h \
     outputPoints.h
 
 
 SOURCES += \
     dbOutputPointsHandler.cpp \
+    dialogNewPoint.cpp \
     outputPoints.cpp
 
 
