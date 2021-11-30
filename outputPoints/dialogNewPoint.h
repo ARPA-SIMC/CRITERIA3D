@@ -9,12 +9,15 @@ class DialogNewPoint : public QDialog
 {
      Q_OBJECT
 public:
-    DialogNewPoint(QList<QString> idList, gis::Crit3DRasterGrid DEM);
+    DialogNewPoint(QList<QString> idList, gis::Crit3DRasterGrid DEM, gis::Crit3DGisSettings gisSettings);
     ~DialogNewPoint();
     void done(bool res);
+    void computeUTM();
+    void getFromDEM();
 private:
     QList<QString> idList;
     gis::Crit3DRasterGrid DEM;
+    gis::Crit3DGisSettings gisSettings;
     QLineEdit id;
     QLineEdit utmx;
     QLineEdit utmy;
