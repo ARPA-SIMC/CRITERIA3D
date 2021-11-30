@@ -2605,7 +2605,14 @@ void MainWindow::on_actionOutputPoints_add_triggered()
     DialogNewPoint newPointDialog(idPoints, myProject.DEM, myProject.gisSettings);
     if (newPointDialog.result() == QDialog::Accepted)
     {
-        // TO DO
+        Crit3DOutputPoint newPoint;
+        newPoint.initialize(newPointDialog.getId().toStdString(), true, newPointDialog.getLat(), newPointDialog.getLon(), newPointDialog.getHeight(), myProject.gisSettings.utmZone);
+        myProject.outputPoints.push_back(newPoint);
+        if (!myProject.writeOutputPointList(myProject.outputPointsFileName))
+        {
+            return;
+        }
+        addOutputPointsGUI();
     }
     return;
 }
