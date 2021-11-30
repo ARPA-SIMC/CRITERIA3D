@@ -130,7 +130,7 @@ void Crit3DSnow::computeSnowFall()
 
     if (liquidWater > 0)
     {
-        if (_airT < snowParameters.tempMinWithRain)
+        if (_airT <= snowParameters.tempMinWithRain)
         {
             liquidWater = 0;
         }
@@ -138,9 +138,9 @@ void Crit3DSnow::computeSnowFall()
         {
             liquidWater *= (_airT - snowParameters.tempMinWithRain) / (snowParameters.tempMaxWithSnow - snowParameters.tempMinWithRain);
         }
-     }
+    }
 
-    _precSnow = _prec - liquidWater;
+    _precSnow = MAXVALUE(_prec - liquidWater, 0);
     _precRain = liquidWater;
 }
 
@@ -464,7 +464,7 @@ double Crit3DSnow::getSnowFall()
 
 double Crit3DSnow::getSnowMelt()
 {
-    return _snowMelt;
+    return MAXVALUE(_snowMelt, 0);
 }
 
 double Crit3DSnow::getSnowWaterEquivalent()

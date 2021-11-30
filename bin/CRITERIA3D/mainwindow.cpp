@@ -150,6 +150,7 @@ void MainWindow::updateGUI()
     updateDateTime();
     emit rasterDEM->redrawRequested();
     emit rasterOutput->redrawRequested();
+    outputRasterColorLegend->update();
     qApp->processEvents();
 }
 
