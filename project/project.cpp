@@ -951,17 +951,19 @@ bool Project::loadDEM(QString myFileName)
 }
 
 
-bool Project::loadMeteoPointsDB(QString dbName)
+bool Project::loadMeteoPointsDB(QString fileName)
 {
-    if (dbName == "") return false;
+    if (fileName == "") return false;
+
+    logInfoGUI("Load meteo points DB = " + fileName);
 
     closeMeteoPointsDB();
 
-    dbPointsFileName = dbName;
-    dbName = getCompleteFileName(dbName, PATH_METEOPOINT);
+    dbPointsFileName = fileName;
+    QString dbName = getCompleteFileName(fileName, PATH_METEOPOINT);
     if (! QFile(dbName).exists())
     {
-        logError("Meteo points db does not exists:\n" + dbName);
+        logError("Meteo points DB does not exists:\n" + dbName);
         return false;
     }
 
@@ -1013,19 +1015,21 @@ bool Project::loadMeteoPointsDB(QString dbName)
 
     listMeteoPoints.clear();
 
-    // find last date
-    QDateTime dbLastTime = findDbPointLastTime();
-    if (! dbLastTime.isNull())
+    // find dates
+    meteoPointsDbFirstTime = findDbPointFirstTime();
+    meteoPointsDbLastTime = findDbPointLastTime();
+
+    if (! meteoPointsDbLastTime.isNull())
     {
-        if (dbLastTime.time().hour() == 00)
+        if (meteoPointsDbLastTime.time().hour() == 00)
         {
-            setCurrentDate(dbLastTime.date().addDays(-1));
+            setCurrentDate(meteoPointsDbLastTime.date().addDays(-1));
             setCurrentHour(24);
         }
         else
         {
-            setCurrentDate(dbLastTime.date());
-            setCurrentHour(dbLastTime.time().hour());
+            setCurrentDate(meteoPointsDbLastTime.date());
+            setCurrentHour(meteoPointsDbLastTime.time().hour());
         }
     }
 
@@ -1418,8 +1422,6 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
     else
         return true;
 }
-
-
 
 QDateTime Project::findDbPointLastTime()
 {
