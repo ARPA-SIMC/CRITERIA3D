@@ -2602,7 +2602,7 @@ void MainWindow::on_actionOutputPoints_add_triggered()
     {
         idPoints.append(QString::fromStdString(myProject.outputPoints[i].id));
     }
-    DialogNewPoint newPointDialog(idPoints, myProject.DEM);
+    DialogNewPoint newPointDialog(idPoints, myProject.DEM, myProject.gisSettings);
     if (newPointDialog.result() == QDialog::Accepted)
     {
         // TO DO
