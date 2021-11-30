@@ -1733,6 +1733,7 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     {
         // write tables
         myProject.logError("write tables");
+
     }
 
     return runModels(firstTime, lastTime);
@@ -2563,7 +2564,13 @@ void MainWindow::on_actionOutputDB_open_triggered()
 
 void MainWindow::on_flagOutputPoints_save_output_toggled(bool isChecked)
 {
+    if (isChecked && myProject.outputPointsDbHandler == nullptr)
+    {
+        myProject.logError("Open output DB before.");
+        isChecked = false;
+    }
     myProject.setSaveOutputPoints(isChecked);
+    ui->flagOutputPoints_save_output->setChecked(isChecked);
 }
 
 

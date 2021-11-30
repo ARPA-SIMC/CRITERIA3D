@@ -35,6 +35,11 @@ Crit3DOutputPointsDbHandler::~Crit3DOutputPointsDbHandler()
 }
 
 
+bool Crit3DOutputPointsDbHandler::isOpen()
+{
+    return _db.isOpen();
+}
+
 QString Crit3DOutputPointsDbHandler::getDbName()
 {
     return _db.databaseName();
@@ -43,4 +48,23 @@ QString Crit3DOutputPointsDbHandler::getDbName()
 QString Crit3DOutputPointsDbHandler::getErrorString()
 {
     return errorString;
+}
+
+
+bool Crit3DOutputPointsDbHandler::createTable(QString tableName, QString dateTimeField)
+{
+    // TODO check exist table
+
+    QString queryString = "CREATE TABLE '" + tableName + "'";
+    queryString += " (" + dateTimeField + " TEXT)";
+
+    QSqlQuery myQuery = _db.exec(queryString);
+
+    if (myQuery.lastError().isValid())
+    {
+        errorString = "Error in creating table: " + tableName + "\n" + myQuery.lastError().text();
+        return false;
+    }
+
+    return true;
 }
