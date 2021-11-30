@@ -743,17 +743,17 @@ void MainWindow::updateCurrentVariable()
 
 void MainWindow::redrawOutputPoints()
 {
-    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+    for (int i = 0; i < int(myProject.outputPoints.size()); i++)
     {
         outputPointList[i]->setVisible(this->viewOutputPoints);
 
-        if (myProject.outputPoints[i].selected)
+        if (myProject.outputPoints[unsigned(i)].selected)
         {
             outputPointList[i]->setFillColor(QColor(Qt::yellow));
         }
         else
         {
-            if (myProject.outputPoints[i].active)
+            if (myProject.outputPoints[unsigned(i)].active)
             {
                 outputPointList[i]->setFillColor(QColor(Qt::green));
             }
@@ -766,8 +766,6 @@ void MainWindow::redrawOutputPoints()
                 }
             }
         }
-
-
     }
 }
 
@@ -1671,12 +1669,9 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
     lastTime = firstTime;
     lastTime.setTime(QTime(23,0,0));
 
-    QDateTime firstDateH = myProject.meteoPointsDbHandler->getFirstDate(hourly);
-    QDateTime lastDateH = myProject.meteoPointsDbHandler->getLastDate(hourly);
-
     FormTimePeriod formTimePeriod(&firstTime, &lastTime);
-    formTimePeriod.setMinimumDate(firstDateH.date());
-    formTimePeriod.setMaximumDate(lastDateH.date());
+    formTimePeriod.setMinimumDate(myProject.meteoPointsDbFirstTime.date());
+    formTimePeriod.setMaximumDate(myProject.meteoPointsDbLastTime.date());
     formTimePeriod.show();
 
     if (formTimePeriod.exec() == QDialog::Rejected)
@@ -2041,8 +2036,11 @@ void MainWindow::on_actionLoad_state_triggered()
     if (myProject.loadModelState(dialogLoadState.getSelectedState()))
     {
         updateDateTime();
-        myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString()
-                             + " H:" + QString::number(myProject.getCurrentHour()));
+        myProject.loadMeteoPointsData(myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+        redrawMeteoPoints(currentPointsVisualization, true);
+
+        //myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString()
+        //                     + " H:" + QString::number(myProject.getCurrentHour()));
     }
     else
     {

@@ -112,6 +112,7 @@
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
         Crit3DOutputPointsDbHandler* outputPointsDbHandler;
         Crit3DAggregationsDbHandler* aggregationDbHandler;
+        QDateTime meteoPointsDbFirstTime, meteoPointsDbLastTime;
 
         Crit3DColorScale* meteoPointsColorScale;
 

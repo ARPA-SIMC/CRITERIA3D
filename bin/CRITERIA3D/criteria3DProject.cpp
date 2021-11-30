@@ -777,8 +777,7 @@ bool Crit3DProject::saveModelState()
 QList<QString> Crit3DProject::getAllSavedState()
 {
     QList<QString> states;
-    QString projectPath = getDefaultPath() + PATH_PROJECT;
-    QString statePath = projectPath+projectName+"/STATES";
+    QString statePath = getProjectPath() + "/STATES";
     QDir dir(statePath);
     if (!dir.exists())
     {
@@ -800,6 +799,7 @@ QList<QString> Crit3DProject::getAllSavedState()
             states << list[i].baseName();
         }
     }
+
     return states;
 }
 
@@ -807,8 +807,7 @@ QList<QString> Crit3DProject::getAllSavedState()
 bool Crit3DProject::loadModelState(QString stateStr)
 {
     // state folder
-    QString projectPath = getDefaultPath() + PATH_PROJECT;
-    QString statePath = projectPath + projectName + "/STATES/" + stateStr;
+    QString statePath = getProjectPath() + "/STATES/" + stateStr;
     QDir stateDir(statePath);
     if (!stateDir.exists())
     {
@@ -890,8 +889,6 @@ bool Crit3DProject::loadModelState(QString stateStr)
             snowMaps.isInitialized = false;
             return false;
         }
-
-
     }
 
     return true;
