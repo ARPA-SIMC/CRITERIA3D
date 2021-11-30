@@ -15,6 +15,9 @@
         QSqlDatabase getDb() const;
         QString getDbName();
         QString getErrorString();
+        bool isOpen();
+
+        bool createTable(QString tableName, QString dateTimeField);
 
     private:
         QSqlDatabase _db;
