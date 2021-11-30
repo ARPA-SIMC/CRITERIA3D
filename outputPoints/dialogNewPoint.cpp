@@ -215,3 +215,23 @@ void DialogNewPoint::done(bool res)
         return;
     }
 }
+
+QString DialogNewPoint::getId()
+{
+    return id.text();
+}
+
+double DialogNewPoint::getLat()
+{
+    return lat.text().toDouble();
+}
+
+double DialogNewPoint::getLon()
+{
+    return lon.text().toDouble();
+}
+
+double DialogNewPoint::getHeight()
+{
+    return height.text().toDouble();
+}

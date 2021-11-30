@@ -14,6 +14,10 @@ public:
     void done(bool res);
     void computeUTM();
     void getFromDEM();
+    QString getId();
+    double getLat();
+    double getLon();
+    double getHeight();
 private:
     QList<QString> idList;
     gis::Crit3DRasterGrid DEM;
