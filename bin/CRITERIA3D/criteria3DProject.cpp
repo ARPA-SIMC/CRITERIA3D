@@ -895,4 +895,35 @@ bool Crit3DProject::loadModelState(QString stateStr)
 }
 
 
+bool Crit3DProject::writeOutputTables()
+{
+    for (unsigned int i = 0; i < outputPoints.size(); i++)
+    {
+        if (outputPoints[i].active)
+        {
+            QString tableName = QString::fromStdString(outputPoints[i].id);
+            if (! outputPointsDbHandler->createTable(tableName)) return false;
+
+            if (isMeteo)
+            {
+                if (! outputPointsDbHandler->addColumn(tableName, airTemperature)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, precipitation)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, airRelHumidity)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, windScalarIntensity)) return false;
+            }
+            if (isRadiation)
+            {
+                if (! outputPointsDbHandler->addColumn(tableName, atmTransmissivity)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, globalIrradiance)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, directIrradiance)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, diffuseIrradiance)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, reflectedIrradiance)) return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+
 

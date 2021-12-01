@@ -26,7 +26,7 @@ win32:{
     TARGET = outputPoints
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities
 
 HEADERS += \
     dbOutputPointsHandler.h \

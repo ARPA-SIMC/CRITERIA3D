@@ -1729,11 +1729,13 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
 
-    if (myProject.isSaveOutputPoints())
+    if (myProject.isSaveOutputPoints() && myProject.outputPointsDbHandler != nullptr)
     {
-        // write tables
-        myProject.logError("write tables");
-
+        if (! myProject.writeOutputTables())
+        {
+            myProject.logError(myProject.outputPointsDbHandler->getErrorString());
+            return false;
+        }
     }
 
     return runModels(firstTime, lastTime);
@@ -2512,7 +2514,7 @@ void MainWindow::on_actionOutputPoints_newFile_triggered()
         }
     }
 
-    QString csvName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getDefaultPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
+    QString csvName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getProjectPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
     if (csvName == "")
     {
         return;
@@ -2546,7 +2548,7 @@ void MainWindow::on_actionOutputPoints_newFile_triggered()
 
 void MainWindow::on_actionOutputDB_new_triggered()
 {
-    QString dbName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getDefaultPath() + PATH_OUTPUT, tr("DB files (*.db)"));
+    QString dbName = QFileDialog::getSaveFileName(this, tr("Save as"), myProject.getProjectPath() + PATH_OUTPUT, tr("DB files (*.db)"));
     if (dbName == "") return;
 
     myProject.newOutputPointsDB(dbName);
@@ -2554,7 +2556,7 @@ void MainWindow::on_actionOutputDB_new_triggered()
 
 void MainWindow::on_actionOutputDB_open_triggered()
 {
-    QString dbName = QFileDialog::getOpenFileName(this, tr("Open output db"), myProject.getDefaultPath() + PATH_OUTPUT, tr("DB files (*.db)"));
+    QString dbName = QFileDialog::getOpenFileName(this, tr("Open output db"), myProject.getProjectPath() + PATH_OUTPUT, tr("DB files (*.db)"));
 
     if (dbName == "") return;
 
@@ -2582,7 +2584,7 @@ void MainWindow::on_flagCompute_only_points_toggled(bool isChecked)
 
 void MainWindow::on_actionLoad_OutputPoints_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open output point list"), myProject.getDefaultPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open output point list"), myProject.getProjectPath() + PATH_OUTPUT, tr("csv files (*.csv)"));
     if (fileName == "") return;
 
     if (! myProject.loadOutputPointList(fileName))
@@ -2603,12 +2605,15 @@ void MainWindow::on_actionOutputPoints_add_triggered()
         myProject.logError("Load an output point list before");
         return;
     }
+
     QList<QString> idPoints;
-    for (int i = 0; i< myProject.outputPoints.size(); i++)
+    for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
     {
         idPoints.append(QString::fromStdString(myProject.outputPoints[i].id));
     }
-    DialogNewPoint newPointDialog(idPoints, myProject.DEM, myProject.gisSettings);
+
+    gis::Crit3DRasterGrid myGrid;
+    DialogNewPoint newPointDialog(idPoints, myProject.gisSettings, &(myProject.DEM));
     if (newPointDialog.result() == QDialog::Accepted)
     {
         Crit3DOutputPoint newPoint;
@@ -2620,5 +2625,4 @@ void MainWindow::on_actionOutputPoints_add_triggered()
         }
         addOutputPointsGUI();
     }
-    return;
 }

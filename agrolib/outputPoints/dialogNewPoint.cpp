@@ -1,18 +1,20 @@
 #include "dialogNewPoint.h"
 
-DialogNewPoint::DialogNewPoint(QList<QString> idList, gis::Crit3DRasterGrid DEM, gis::Crit3DGisSettings gisSettings)
-:idList(idList), DEM(DEM), gisSettings(gisSettings)
+DialogNewPoint::DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DGisSettings& _gisSettings, gis::Crit3DRasterGrid *_DEMptr)
+:idList(_idList), gisSettings(_gisSettings), DEMpointer(_DEMptr)
 {
+
     setWindowTitle("New point");
-    this->resize(500, 180);
+    this->resize(300, 180);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     QVBoxLayout *mainLayout = new QVBoxLayout();
-    QHBoxLayout *idLayout = new QHBoxLayout();
-    QHBoxLayout *utmxLayout = new QHBoxLayout();
-    QHBoxLayout *utmyLayout = new QHBoxLayout();
-    QHBoxLayout *latLonLayout = new QHBoxLayout();
-    QHBoxLayout *heightLayout = new QHBoxLayout;
+    QVBoxLayout *idLayout = new QVBoxLayout();
+    QVBoxLayout *utmxLayout = new QVBoxLayout();
+    QVBoxLayout *utmyLayout = new QVBoxLayout();
+    QVBoxLayout *latLayout = new QVBoxLayout();
+    QVBoxLayout *lonLayout = new QVBoxLayout();
+    QVBoxLayout *heightLayout = new QVBoxLayout;
     QHBoxLayout *layoutOk = new QHBoxLayout;
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -21,6 +23,7 @@ DialogNewPoint::DialogNewPoint(QList<QString> idList, gis::Crit3DRasterGrid DEM,
     QLabel *idLabel = new QLabel("Id point");
     id.setMaximumWidth(80);
     id.setMaximumHeight(30);
+
     QLabel *utmxLabel = new QLabel("UTM X");
     QLabel *utmyLabel = new QLabel("UTM Y");
     utmx.setMaximumWidth(80);
@@ -54,28 +57,29 @@ DialogNewPoint::DialogNewPoint(QList<QString> idList, gis::Crit3DRasterGrid DEM,
 
     idLayout->addWidget(idLabel);
     idLayout->addWidget(&id);
+
     utmxLayout->addWidget(utmxLabel);
     utmxLayout->addWidget(&utmx);
     utmyLayout->addWidget(utmyLabel);
     utmyLayout->addWidget(&utmy);
+    latLayout->addWidget(latLabel);
+    latLayout->addWidget(&lat);
+    lonLayout->addWidget(lonLabel);
+    lonLayout->addWidget(&lon);
 
-    latLonLayout->addWidget(latLabel);
-    latLonLayout->addWidget(&lat);
-    latLonLayout->addWidget(lonLabel);
-    latLonLayout->addWidget(&lon);
+    computeUTMButton.setText("Compute lat/lon from UTM xy");
+    lonLayout->addWidget(&computeUTMButton);
 
-    computeUTMButton.setText("Compute from UTMxy");
-    latLonLayout->addWidget(&computeUTMButton);
-
+    getFromDEMButton.setText("Get height from Digital Elevation Map");
+    heightLayout->addWidget(&getFromDEMButton);
     heightLayout->addWidget(heightLabel);
     heightLayout->addWidget(&height);
-    getFromDEMButton.setText("Get from Digital Elevation Map");
-    heightLayout->addWidget(&getFromDEMButton);
 
     mainLayout->addLayout(idLayout);
+    mainLayout->addLayout(latLayout);
+    mainLayout->addLayout(lonLayout);
     mainLayout->addLayout(utmxLayout);
     mainLayout->addLayout(utmyLayout);
-    mainLayout->addLayout(latLonLayout);
     mainLayout->addLayout(heightLayout);
     mainLayout->addLayout(layoutOk);
     setLayout(mainLayout);
@@ -83,8 +87,8 @@ DialogNewPoint::DialogNewPoint(QList<QString> idList, gis::Crit3DRasterGrid DEM,
     connect(&computeUTMButton, &QPushButton::clicked, [=](){ computeUTM(); });
     connect(&getFromDEMButton, &QPushButton::clicked, [=](){ getFromDEM(); });
 
-    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(true); });
-    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(false); });
+    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(QDialog::Accepted); });
+    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(QDialog::Rejected); });
 
     exec();
 }
@@ -109,7 +113,10 @@ void DialogNewPoint::computeUTM()
 
 void DialogNewPoint::getFromDEM()
 {
-    if (!DEM.isLoaded)
+    if (DEMpointer == nullptr)
+        return;
+
+    if (! DEMpointer->isLoaded)
     {
         QMessageBox::information(nullptr, "DEM not loaded", "Load DEM");
         return;
@@ -125,19 +132,20 @@ void DialogNewPoint::getFromDEM()
         gis::Crit3DGeoPoint point(lat.text().toDouble(), lon.text().toDouble());
         gis::Crit3DUtmPoint utmPoint;
         gis::getUtmFromLatLon(gisSettings.utmZone, point, &utmPoint);
-        demValue = gis::getValueFromXY(DEM, utmPoint.x, utmPoint.y);
+        demValue = gis::getValueFromXY(*DEMpointer, utmPoint.x, utmPoint.y);
     }
     else
     {
-        demValue = gis::getValueFromXY(DEM, utmx.text().toDouble(), utmy.text().toDouble());
+        demValue = gis::getValueFromXY(*DEMpointer, utmx.text().toDouble(), utmy.text().toDouble());
     }
-    if (demValue != DEM.header->flag)
+
+    if (demValue != DEMpointer->header->flag)
     {
         height.setText(QString::number(demValue));
     }
 }
 
-void DialogNewPoint::done(bool res)
+void DialogNewPoint::done(int res)
 {
     if (res) // ok
     {
@@ -148,7 +156,7 @@ void DialogNewPoint::done(bool res)
         }
         if (idList.contains(id.text()))
         {
-            QMessageBox::information(nullptr, "id point already used", "Change id point");
+            QMessageBox::information(nullptr, "Change id point", "id point already used.");
             return;
         }
 
@@ -177,7 +185,8 @@ void DialogNewPoint::done(bool res)
             QMessageBox::information(nullptr, "Missing height ", "Insert height");
             return;
         }
-        if (DEM.isLoaded)
+
+        if (DEMpointer->isLoaded)
         {
             float demValue;
             if (utmx.text().isEmpty() || utmy.text().isEmpty())
@@ -185,15 +194,16 @@ void DialogNewPoint::done(bool res)
                 gis::Crit3DGeoPoint point(lat.text().toDouble(), lon.text().toDouble());
                 gis::Crit3DUtmPoint utmPoint;
                 gis::getUtmFromLatLon(gisSettings.utmZone, point, &utmPoint);
-                demValue = gis::getValueFromXY(DEM, utmPoint.x, utmPoint.y);
+                demValue = gis::getValueFromXY(*DEMpointer, utmPoint.x, utmPoint.y);
             }
             else
             {
-                demValue = gis::getValueFromXY(DEM, utmx.text().toDouble(), utmy.text().toDouble());
+                demValue = gis::getValueFromXY(*DEMpointer, utmx.text().toDouble(), utmy.text().toDouble());
             }
-            if (demValue != DEM.header->flag)
+
+            if (demValue != DEMpointer->header->flag)
             {
-                if (height.text().toDouble() < demValue || height.text().toDouble() > demValue+2)
+                if ((height.text().toDouble() < demValue) || (height.text().toDouble() > demValue+2))
                 {
                     QMessageBox::StandardButton reply;
                     reply = QMessageBox::question(this, "Are you sure?" ,

@@ -77,6 +77,9 @@
         bool saveModelState();
         bool loadModelState(QString stateStr);
         QList<QString> getAllSavedState();
+
+        bool writeOutputTables();
+
     };
 
 
