@@ -4,6 +4,9 @@
     #ifndef QSQLDATABASE_H
         #include <QSqlDatabase>
     #endif
+    #ifndef METEO_H
+        #include "meteo.h"
+    #endif
 
     class Crit3DOutputPointsDbHandler
     {
@@ -17,7 +20,8 @@
         QString getErrorString();
         bool isOpen();
 
-        bool createTable(QString tableName, QString dateTimeField);
+        bool createTable(QString tableName);
+        bool addColumn(QString tableName, meteoVariable myVar);
 
     private:
         QSqlDatabase _db;
