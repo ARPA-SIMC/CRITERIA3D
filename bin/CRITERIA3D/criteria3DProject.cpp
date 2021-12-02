@@ -919,6 +919,15 @@ bool Crit3DProject::writeOutputTables()
                 if (! outputPointsDbHandler->addColumn(tableName, diffuseIrradiance)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, reflectedIrradiance)) return false;
             }
+            if (isSnow)
+            {
+                if (! outputPointsDbHandler->addColumn(tableName, snowWaterEquivalent)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowFall)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowMelt)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceTemperature)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceEnergy)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowInternalEnergy)) return false;
+            }
         }
     }
 

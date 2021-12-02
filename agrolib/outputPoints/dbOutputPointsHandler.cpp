@@ -97,3 +97,31 @@ bool Crit3DOutputPointsDbHandler::addColumn(QString tableName, meteoVariable myV
     return true;
 }
 
+
+bool Crit3DOutputPointsDbHandler::saveHourlyData(QString tableName, QDateTime myTime,
+                                                  std::vector<meteoVariable> varList, std::vector<float> values)
+{
+    QString timeStr = myTime.toString("yyyy-MM-dd HH:mm:ss");
+    // todo delete row
+
+    // todo elenco field
+    QString fieldList = "DATE_TIME";
+    // todo elenco values
+    QString valuesList = "";
+
+    QString queryString = "INSERT INTO '" + tableName + "'"
+                          + " (" + fieldList + ")"
+                          + " VALUES (" + valuesList +")";
+
+    QSqlQuery myQuery = _db.exec(queryString);
+    if (myQuery.lastError().isValid())
+    {
+        errorString = "Error saving values in table: " + tableName + "\n"
+                      + timeStr + "\n" + myQuery.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
+
