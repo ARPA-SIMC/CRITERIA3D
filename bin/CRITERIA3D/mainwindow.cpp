@@ -1276,8 +1276,8 @@ void MainWindow::showSnowVariable(meteoVariable var)
         setOutputVariable(snowInternalEnergy, myProject.snowMaps.getInternalEnergyMap());
         break;
 
-    case snowSurfaceInternalEnergy:
-        setOutputVariable(snowSurfaceInternalEnergy, myProject.snowMaps.getSurfaceInternalEnergyMap());
+    case snowSurfaceEnergy:
+        setOutputVariable(snowSurfaceEnergy, myProject.snowMaps.getSurfaceInternalEnergyMap());
         break;
 
     case snowLiquidWaterContent:
@@ -1319,7 +1319,7 @@ void MainWindow::on_actionView_Snow_internal_energy_triggered()
 
 void MainWindow::on_actionView_Snow_surface_internal_energy_triggered()
 {
-    showSnowVariable(snowSurfaceInternalEnergy);
+    showSnowVariable(snowSurfaceEnergy);
 }
 
 void MainWindow::on_actionView_Snow_liquid_water_content_triggered()

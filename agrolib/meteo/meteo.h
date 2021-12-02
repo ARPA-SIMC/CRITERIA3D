@@ -96,7 +96,7 @@
                     leafWetness, dailyLeafWetness, atmPressure,
                     referenceEvapotranspiration, dailyReferenceEvapotranspirationHS, monthlyReferenceEvapotranspirationHS, dailyReferenceEvapotranspirationPM, actualEvaporation,
                     dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
-                    snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceInternalEnergy,
+                    snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceEnergy,
                     snowAge, snowLiquidWaterContent, snowMelt,
                     dailyWaterTableDepth,
                     anomaly, noMeteoTerrain, noMeteoVar};
@@ -215,7 +215,13 @@
         { reflectedIrradiance, "REFLEC_RAD"},
         { atmTransmissivity, "ATM_TRANSMIT"},
         { atmPressure, "ATM_PRESSURE"},
-        { actualEvaporation, "ACTUAL_EVAPO"}
+        { actualEvaporation, "ACTUAL_EVAPO"},
+        { snowWaterEquivalent, "SWE"},
+        { snowFall, "SNOWFALL"},
+        { snowMelt, "SNOWMELT"},
+        { snowSurfaceTemperature, "SNOW_SURF_TEMP"},
+        { snowSurfaceEnergy, "SNOW_SURF_ENERGY"},
+        { snowInternalEnergy, "SNOW_INT_ENERGY"}
     };
 
     const std::map<std::string, meteoVariable> MapMonthlyMeteoVar = {
@@ -258,7 +264,7 @@
         { {dailyThomAvg,dailyThomDaytime,dailyThomNighttime,thom}, "-"} ,
         { {dailyWaterTableDepth,snowWaterEquivalent,snowFall,snowMelt,snowLiquidWaterContent}, "mm"} ,
         { {snowSurfaceTemperature}, "°C"} ,
-        { {snowInternalEnergy,snowSurfaceInternalEnergy}, "kJ m-2"} ,
+        { {snowInternalEnergy,snowSurfaceEnergy}, "kJ m-2"} ,
     };
 
 
