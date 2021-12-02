@@ -16,7 +16,7 @@
                             winkler, huglin, fregoni,
                             correctedDegreeDaysSum, erosivityFactorElab, rainIntensityElab, noMeteoComp};
 
-    enum aggregationMethod {noAggrMethod, aggrAverage, aggrMedian, aggrStdDeviation, aggrMin, aggrMax, aggrSum, aggrPrevailing, aggrIntegral, aggrCenter};
+    enum aggregationMethod {noAggrMethod, aggrAverage, aggrMedian, aggrStdDeviation, aggrMin, aggrMax, aggrSum, aggrPrevailing, aggrIntegral, aggrCenter, aggr95Perc};
 
     float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float rainfallThreshold);
 
