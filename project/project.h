@@ -50,6 +50,7 @@
     #define ERROR_DEM 2
     #define ERROR_DBPOINT 3
     #define ERROR_DBGRID 4
+    #define ERROR_OUTPUTPOINTLIST 5
 
     #define ERROR_STR_MISSING_DB "Load a meteo points DB before."
     #define ERROR_STR_MISSING_DEM "Load a Digital Elevation Model (DEM) before."

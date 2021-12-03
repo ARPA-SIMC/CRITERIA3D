@@ -2064,6 +2064,7 @@ bool Project::loadProjectSettings(QString settingsFileName)
         projectName = projectSettings->value("name").toString();
         demFileName = projectSettings->value("dem").toString();
         dbPointsFileName = projectSettings->value("meteo_points").toString();
+        outputPointsFileName = projectSettings->value("output_points").toString();
         dbAggregationFileName = projectSettings->value("aggregation_points").toString();
         // for Criteria projects
         if (dbPointsFileName == "")
@@ -2143,6 +2144,7 @@ void Project::saveProjectSettings()
         projectSettings->setValue("name", projectName);
         projectSettings->setValue("dem", getRelativePath(demFileName));
         projectSettings->setValue("meteo_points", getRelativePath(dbPointsFileName));
+        projectSettings->setValue("output_points", getRelativePath(outputPointsFileName));
         projectSettings->setValue("aggregation_points", getRelativePath(dbAggregationFileName));
         projectSettings->setValue("meteo_grid", getRelativePath(dbGridXMLFileName));
         projectSettings->setValue("load_grid_data_at_start", loadGridDataAtStart);
@@ -2384,6 +2386,13 @@ bool Project::loadProject()
         if (! loadMeteoGridDB(dbGridXMLFileName))
         {
             errorType = ERROR_DBGRID;
+            return false;
+        }
+
+    if (outputPointsFileName != "")
+        if (! loadOutputPointList(outputPointsFileName))
+        {
+            errorType = ERROR_OUTPUTPOINTLIST;
             return false;
         }
 
@@ -3021,7 +3030,7 @@ bool Project::loadOutputPointList(QString fileName)
         return false;
     }
     outputPoints.clear();
-    this->outputPointsFileName = fileName;
+    outputPointsFileName = fileName;
 
     QString csvFileName = getCompleteFileName(fileName, PATH_OUTPUT);
     if (! QFile(csvFileName).exists() || ! QFileInfo(csvFileName).isFile())

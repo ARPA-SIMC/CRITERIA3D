@@ -51,7 +51,7 @@ QString Crit3DOutputPointsDbHandler::getErrorString()
 }
 
 
-bool Crit3DOutputPointsDbHandler::createTable(QString tableName)
+bool Crit3DOutputPointsDbHandler::createTable(QString tableName, QString& errorStr)
 {
     QString queryString = "CREATE TABLE IF NOT EXISTS '" + tableName + "'";
     queryString += " (DATE_TIME TEXT, PRIMARY KEY(DATE_TIME))";
@@ -60,7 +60,7 @@ bool Crit3DOutputPointsDbHandler::createTable(QString tableName)
 
     if (myQuery.lastError().isValid())
     {
-        errorString = "Error in creating table: " + tableName + "\n" + myQuery.lastError().text();
+        errorStr = "Error in creating table: " + tableName + "\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -68,20 +68,22 @@ bool Crit3DOutputPointsDbHandler::createTable(QString tableName)
 }
 
 
-bool Crit3DOutputPointsDbHandler::addColumn(QString tableName, meteoVariable myVar)
+bool Crit3DOutputPointsDbHandler::addColumn(QString tableName, meteoVariable myVar, QString& errorStr)
 {
     // column name
     QString newField = QString::fromStdString(getMeteoVarName(myVar));
     if (newField == "")
     {
-        errorString = "Missing variable name.";
+        errorStr = "Missing variable name.";
         return false;
     }
 
     // column exists already
     QList<QString> fieldList = getFields(&_db, tableName);
     if (fieldList.contains(newField))
+    {
         return true;
+    }
 
     // add column
     QString queryString = "ALTER TABLE '" + tableName + "'";
@@ -90,7 +92,7 @@ bool Crit3DOutputPointsDbHandler::addColumn(QString tableName, meteoVariable myV
     QSqlQuery myQuery = _db.exec(queryString);
     if (myQuery.lastError().isValid())
     {
-        errorString = "Error in add column: " + newField + "\n" + myQuery.lastError().text();
+        errorStr = "Error in add column: " + newField + "\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -98,30 +100,59 @@ bool Crit3DOutputPointsDbHandler::addColumn(QString tableName, meteoVariable myV
 }
 
 
-bool Crit3DOutputPointsDbHandler::saveHourlyData(QString tableName, QDateTime myTime,
-                                                  std::vector<meteoVariable> varList, std::vector<float> values)
+bool Crit3DOutputPointsDbHandler::saveHourlyData(QString tableName, const QDateTime& myTime,
+                                                 const std::vector<meteoVariable>& varList,
+                                                 const std::vector<float>& values,
+                                                 QString& errorStr)
 {
-    QString timeStr = myTime.toString("yyyy-MM-dd HH:mm:ss");
-    // todo delete row
-
-    // todo elenco field
-    QString fieldList = "DATE_TIME";
-    // todo elenco values
-    QString valuesList = "";
-
-    QString queryString = "INSERT INTO '" + tableName + "'"
-                          + " (" + fieldList + ")"
-                          + " VALUES (" + valuesList +")";
-
-    QSqlQuery myQuery = _db.exec(queryString);
-    if (myQuery.lastError().isValid())
+    if (varList.size() != values.size())
     {
-        errorString = "Error saving values in table: " + tableName + "\n"
-                      + timeStr + "\n" + myQuery.lastError().text();
+        errorStr = "Error saving values: number of variables is different from values";
+        return false;
+    }
+
+    QSqlQuery qry(_db);
+    QString timeStr = myTime.toString("yyyy-MM-dd HH:mm:ss");
+    QString queryString = QString("DELETE FROM '%1' WHERE DATE_TIME ='%2'").arg(tableName, timeStr);
+
+    if (! qry.exec(queryString))
+    {
+        errorStr = QString("Error deleting values in table:%1 Time:%2\n%3")
+                            .arg(tableName, timeStr, qry.lastError().text());
+        return false;
+    }
+
+    // field list
+    QString fieldList = "'DATE_TIME'";
+    for (unsigned int i = 0; i < varList.size(); i++)
+    {
+        QString newField = QString::fromStdString(getMeteoVarName(varList[i]));
+        if (newField != "")
+        {
+            fieldList += ",'" + newField + "'";
+        }
+        else
+        {
+            errorStr = "Error saving values: missing variable name.";
+            return false;
+        }
+    }
+
+    // values list
+    QString valuesList = "'" + timeStr + "'";
+    for (unsigned int i = 0; i < varList.size(); i++)
+    {
+        valuesList += "," + QString::number(values[i], 'f', 2);
+    }
+
+    queryString = QString("INSERT INTO '%1' (%2) VALUES (%3)").arg(tableName, fieldList, valuesList);
+    if (! qry.exec(queryString))
+    {
+        errorStr = QString("Error saving values in table:%1 Time:%2\n%3")
+                              .arg(tableName, timeStr, qry.lastError().text());
         return false;
     }
 
     return true;
 }
-
 
