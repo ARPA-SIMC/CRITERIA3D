@@ -38,10 +38,10 @@
 
 Crit3DProject::Crit3DProject() : Project3D()
 {
-    saveOutputRaster = false;
-    saveOutputPoints = false;
-    saveDailyState = false;
-    computeOnlyPoints = false;
+    _saveOutputRaster = false;
+    _saveOutputPoints = false;
+    _saveDailyState = false;
+    _computeOnlyPoints = false;
 
     isMeteo = false;
     isRadiation = false;
@@ -59,43 +59,43 @@ Crit3DProject::Crit3DProject() : Project3D()
 
 void Crit3DProject::setSaveDailyState(bool isSave)
 {
-    saveDailyState = isSave;
+    _saveDailyState = isSave;
 }
 
 bool Crit3DProject::isSaveDailyState()
 {
-    return saveDailyState;
+    return _saveDailyState;
 }
 
 void Crit3DProject::setSaveOutputRaster(bool isSave)
 {
-    saveOutputRaster = isSave;
+    _saveOutputRaster = isSave;
 }
 
 bool Crit3DProject::isSaveOutputRaster()
 {
-    return saveOutputRaster;
+    return _saveOutputRaster;
 }
 
 void Crit3DProject::setSaveOutputPoints(bool isSave)
 {
-    saveOutputPoints = isSave;
+    _saveOutputPoints = isSave;
 }
 
 void Crit3DProject::setComputeOnlyPoints(bool isUse)
 {
-    computeOnlyPoints = isUse;
+    _computeOnlyPoints = isUse;
 }
 
 bool Crit3DProject::isComputeOnlyPoints()
 {
-    return computeOnlyPoints;
+    return _computeOnlyPoints;
 }
 
 // true if at least one point is active
 bool Crit3DProject::isSaveOutputPoints()
 {
-    if (! saveOutputPoints || outputPoints.empty())
+    if (! _saveOutputPoints || outputPoints.empty())
         return false;
 
     for (unsigned int i = 0; i < outputPoints.size(); i++)
@@ -641,19 +641,19 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
 
     if (isMeteo)
     {
-        if (! interpolateAndSaveHourlyMeteo(airTemperature, myTime, hourlyOutputPath, this->saveOutputRaster))
+        if (! interpolateAndSaveHourlyMeteo(airTemperature, myTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
 
-        if (! interpolateAndSaveHourlyMeteo(precipitation, myTime, hourlyOutputPath, this->saveOutputRaster))
+        if (! interpolateAndSaveHourlyMeteo(precipitation, myTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
 
-        if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myTime, hourlyOutputPath, this->saveOutputRaster))
+        if (! interpolateAndSaveHourlyMeteo(airRelHumidity, myTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
 
-        if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myTime, hourlyOutputPath, this->saveOutputRaster))
+        if (! interpolateAndSaveHourlyMeteo(windScalarIntensity, myTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
 
@@ -663,7 +663,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
     // radiation model
     if (isRadiation)
     {
-        if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, this->saveOutputRaster))
+        if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
     }
@@ -672,7 +672,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
     {
         if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
             return false;
-        if (this->saveOutputRaster)
+        if (isSaveOutputRaster())
         {
             saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myTime, "");
         }
@@ -764,9 +764,9 @@ bool Crit3DProject::saveModelState()
         logError("Error saving internal energy map: " + QString::fromStdString(error));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceInternalEnergyMap(), &error))
+    if (!gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceEnergyMap(), &error))
     {
-        logError("Error saving surface internal energy map: " + QString::fromStdString(error));
+        logError("Error saving surface energy map: " + QString::fromStdString(error));
         return false;
     }
 
@@ -837,7 +837,7 @@ bool Crit3DProject::loadModelState(QString stateStr)
         fileName = snowPath.toStdString() + "/SWE";
         if (! gis::readEsriGrid(fileName, snowMaps.getSnowWaterEquivalentMap(), &error))
         {
-            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow SWE map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
             return false;
         }
@@ -845,7 +845,7 @@ bool Crit3DProject::loadModelState(QString stateStr)
         fileName = snowPath.toStdString() + "/AgeOfSnow";
         if (! gis::readEsriGrid(fileName, snowMaps.getAgeOfSnowMap(), &error))
         {
-            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow AgeOfSnow map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
             return false;
         }
@@ -853,7 +853,7 @@ bool Crit3DProject::loadModelState(QString stateStr)
         fileName = snowPath.toStdString() + "/IceContent";
         if (! gis::readEsriGrid(fileName, snowMaps.getIceContentMap(), &error))
         {
-            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow IceContent map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
             return false;
         }
@@ -861,7 +861,7 @@ bool Crit3DProject::loadModelState(QString stateStr)
         fileName = snowPath.toStdString() + "/InternalEnergy";
         if (! gis::readEsriGrid(fileName, snowMaps.getInternalEnergyMap(), &error))
         {
-            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow InternalEnergy map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
             return false;
         }
@@ -869,7 +869,7 @@ bool Crit3DProject::loadModelState(QString stateStr)
         fileName = snowPath.toStdString() + "/LWContent";
         if (! gis::readEsriGrid(fileName, snowMaps.getLWContentMap(), &error))
         {
-            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow LWContent map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
             return false;
         }
@@ -877,15 +877,15 @@ bool Crit3DProject::loadModelState(QString stateStr)
         fileName = snowPath.toStdString() + "/SnowSurfaceTemp";
         if (! gis::readEsriGrid(fileName, snowMaps.getSnowSurfaceTempMap(), &error))
         {
-            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow SurfaceTemp map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
             return false;
         }
 
         fileName = snowPath.toStdString() + "/SurfaceInternalEnergy";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSurfaceInternalEnergyMap(), &error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getSurfaceEnergyMap(), &error))
         {
-            errorString = "Wrong snow map:\n" + QString::fromStdString(error);
+            errorString = "Wrong Snow SurfaceInternalEnergy map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
             return false;
         }
@@ -895,38 +895,45 @@ bool Crit3DProject::loadModelState(QString stateStr)
 }
 
 
-bool Crit3DProject::writeOutputTables()
+bool Crit3DProject::writeOutputPointsTables()
 {
+    if (outputPointsDbHandler == nullptr)
+    {
+        errorString = "Open output DB before.";
+        return false;
+    }
+
     for (unsigned int i = 0; i < outputPoints.size(); i++)
     {
         if (outputPoints[i].active)
         {
             QString tableName = QString::fromStdString(outputPoints[i].id);
-            if (! outputPointsDbHandler->createTable(tableName)) return false;
+            if (! outputPointsDbHandler->createTable(tableName, errorString))
+                return false;
 
             if (isMeteo)
             {
-                if (! outputPointsDbHandler->addColumn(tableName, airTemperature)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, precipitation)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, airRelHumidity)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, windScalarIntensity)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, airTemperature, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, precipitation, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, airRelHumidity, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, windScalarIntensity, errorString)) return false;
             }
             if (isRadiation)
             {
-                if (! outputPointsDbHandler->addColumn(tableName, atmTransmissivity)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, globalIrradiance)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, directIrradiance)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, diffuseIrradiance)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, reflectedIrradiance)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, atmTransmissivity, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, globalIrradiance, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, directIrradiance, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, diffuseIrradiance, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, reflectedIrradiance, errorString)) return false;
             }
             if (isSnow)
             {
-                if (! outputPointsDbHandler->addColumn(tableName, snowWaterEquivalent)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowFall)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowMelt)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceTemperature)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceEnergy)) return false;
-                if (! outputPointsDbHandler->addColumn(tableName, snowInternalEnergy)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowWaterEquivalent, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowFall, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowMelt, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceTemperature, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceEnergy, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, snowInternalEnergy, errorString)) return false;
             }
         }
     }
@@ -935,4 +942,66 @@ bool Crit3DProject::writeOutputTables()
 }
 
 
+bool Crit3DProject::writeOutputPointsData()
+{
+    QString tableName;
+    std::vector<meteoVariable> varList;
+    std::vector<float> valuesList;
+
+    for (unsigned int i = 0; i < outputPoints.size(); i++)
+    {
+        if (outputPoints[i].active)
+        {
+            float x = outputPoints[i].utm.x;
+            float y = outputPoints[i].utm.y;
+            tableName = QString::fromStdString(outputPoints[i].id);
+            if (isMeteo)
+            {
+                varList.push_back(airTemperature);
+                valuesList.push_back(hourlyMeteoMaps->mapHourlyTair->getFastValueXY(x, y));
+                varList.push_back(precipitation);
+                valuesList.push_back(hourlyMeteoMaps->mapHourlyPrec->getFastValueXY(x, y));
+                varList.push_back(airRelHumidity);
+                valuesList.push_back(hourlyMeteoMaps->mapHourlyRelHum->getFastValueXY(x, y));
+                varList.push_back(windScalarIntensity);
+                valuesList.push_back(hourlyMeteoMaps->mapHourlyWindScalarInt->getFastValueXY(x, y));
+            }
+            if (isRadiation)
+            {
+                varList.push_back(atmTransmissivity);
+                valuesList.push_back(radiationMaps->transmissivityMap->getFastValueXY(x, y));
+                varList.push_back(globalIrradiance);
+                valuesList.push_back(radiationMaps->globalRadiationMap->getFastValueXY(x, y));
+                varList.push_back(directIrradiance);
+                valuesList.push_back(radiationMaps->beamRadiationMap->getFastValueXY(x, y));
+                varList.push_back(diffuseIrradiance);
+                valuesList.push_back(radiationMaps->diffuseRadiationMap->getFastValueXY(x, y));
+                varList.push_back(reflectedIrradiance);
+                valuesList.push_back(radiationMaps->reflectedRadiationMap->getFastValueXY(x, y));
+            }
+            if (isSnow)
+            {
+                varList.push_back(snowWaterEquivalent);
+                valuesList.push_back(snowMaps.getSnowWaterEquivalentMap()->getFastValueXY(x, y));
+                varList.push_back(snowFall);
+                valuesList.push_back(snowMaps.getSnowFallMap()->getFastValueXY(x, y));
+                varList.push_back(snowMelt);
+                valuesList.push_back(snowMaps.getSnowMeltMap()->getFastValueXY(x, y));
+                varList.push_back(snowSurfaceTemperature);
+                valuesList.push_back(snowMaps.getSnowSurfaceTempMap()->getFastValueXY(x, y));
+                varList.push_back(snowSurfaceEnergy);
+                valuesList.push_back(snowMaps.getSurfaceEnergyMap()->getFastValueXY(x, y));
+                varList.push_back(snowInternalEnergy);
+                valuesList.push_back(snowMaps.getInternalEnergyMap()->getFastValueXY(x, y));
+            }
+
+            if (! outputPointsDbHandler->saveHourlyData(tableName, getCurrentTime(), varList, valuesList, errorString))
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
 

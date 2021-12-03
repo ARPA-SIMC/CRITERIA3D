@@ -3708,11 +3708,11 @@
    <addaction name="menuFile"/>
    <addaction name="menuShow"/>
    <addaction name="menuMeteo_points_2"/>
-   <addaction name="menuOutput_points"/>
    <addaction name="menuDataSpatialization"/>
    <addaction name="menuSolar_radiation_model_2"/>
    <addaction name="menuSnow_model"/>
    <addaction name="menuCriteria3D"/>
+   <addaction name="menuOutput_points"/>
    <addaction name="menuGIS_settings"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>

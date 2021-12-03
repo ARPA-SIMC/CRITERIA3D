@@ -518,6 +518,7 @@ void MainWindow::drawProject()
 
     this->drawMeteoPoints();
     // drawMeteoGrid();
+    this->addOutputPointsGUI();
 
     QString title = "CRITERIA3D";
     if (myProject.projectName != "")
@@ -1277,7 +1278,7 @@ void MainWindow::showSnowVariable(meteoVariable var)
         break;
 
     case snowSurfaceEnergy:
-        setOutputVariable(snowSurfaceEnergy, myProject.snowMaps.getSurfaceInternalEnergyMap());
+        setOutputVariable(snowSurfaceEnergy, myProject.snowMaps.getSurfaceEnergyMap());
         break;
 
     case snowLiquidWaterContent:
@@ -1719,6 +1720,16 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     }
     myProject.closeLogInfo();
 
+    // output points
+    if (myProject.isSaveOutputPoints())
+    {
+        if (! myProject.writeOutputPointsTables())
+        {
+            myProject.logError();
+            return false;
+        }
+    }
+
     // set model interface
     myProject.modelFirstTime = firstTime;
     myProject.modelLastTime = lastTime;
@@ -1728,15 +1739,6 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     ui->groupBoxModel->setEnabled(true);
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
-
-    if (myProject.isSaveOutputPoints() && myProject.outputPointsDbHandler != nullptr)
-    {
-        if (! myProject.writeOutputTables())
-        {
-            myProject.logError(myProject.outputPointsDbHandler->getErrorString());
-            return false;
-        }
-    }
 
     return runModels(firstTime, lastTime);
 }
@@ -1785,6 +1787,16 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
             }
 
             this->updateGUI();
+
+            // output points
+            if (myProject.isSaveOutputPoints())
+            {
+                if (! myProject.writeOutputPointsData())
+                {
+                    myProject.logError();
+                    return false;
+                }
+            }
 
             if (myProject.modelPause || myProject.modelStop)
             {
@@ -2568,7 +2580,7 @@ void MainWindow::on_flagOutputPoints_save_output_toggled(bool isChecked)
 {
     if (isChecked && myProject.outputPointsDbHandler == nullptr)
     {
-        myProject.logError("Open output DB before.");
+        myProject.logError("Open or create a new output DB before.");
         isChecked = false;
     }
     myProject.setSaveOutputPoints(isChecked);

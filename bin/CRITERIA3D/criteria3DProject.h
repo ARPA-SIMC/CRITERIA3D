@@ -20,7 +20,7 @@
     class Crit3DProject : public Project3D
     {
     private:
-       bool saveOutputRaster, saveOutputPoints, computeOnlyPoints, saveDailyState;
+       bool _saveOutputRaster, _saveOutputPoints, _computeOnlyPoints, _saveDailyState;
 
         void clearCriteria3DProject();
         bool setSoilIndexMap();
@@ -78,7 +78,8 @@
         bool loadModelState(QString stateStr);
         QList<QString> getAllSavedState();
 
-        bool writeOutputTables();
+        bool writeOutputPointsTables();
+        bool writeOutputPointsData();
 
     };
 

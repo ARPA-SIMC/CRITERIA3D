@@ -70,7 +70,7 @@
         double getIceContent();
         double getLiquidWaterContent();
         double getInternalEnergy();
-        double getSurfaceInternalEnergy();
+        double getSurfaceEnergy();
         double getSnowSurfaceTemp();
         double getAgeOfSnow();
 
@@ -78,7 +78,7 @@
         void setIceContent(float value);
         void setLiquidWaterContent(float value);
         void setInternalEnergy(float value);
-        void setSurfaceInternalEnergy(float value);
+        void setSurfaceEnergy(float value);
         void setSnowSurfaceTemp(float value);
         void setAgeOfSnow(float value);
 
@@ -105,7 +105,7 @@
         double _iceContent;                 /*!<   [mm] */
         double _liquidWaterContent;         /*!<   [mm] */
         double _internalEnergy;
-        double _surfaceInternalEnergy;
+        double _surfaceEnergy;
         double _snowSurfaceTemp;            /*!<   [°C] */
         double _ageOfSnow;                  /*!<   [days] */
     };
@@ -113,7 +113,7 @@
 
     double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double myWindSpeed, double vegetativeHeight);
     double computeInternalEnergy(double initSoilPackTemp,int bulkDensity, double initSWE);
-    double computeSurfaceInternalEnergy(double initSnowSurfaceTemp,int bulkDensity, double initSWE, double snowSkinThickness);
+    double computeSurfaceEnergy(double initSnowSurfaceTemp,int bulkDensity, double initSWE, double snowSkinThickness);
 
 
 #endif // SNOW_H
