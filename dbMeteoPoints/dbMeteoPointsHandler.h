@@ -33,7 +33,6 @@
         void dbManager();
         QString getDatasetURL(QString dataset);
         QString getDbName();
-        void closeDatabase();
 
         QSqlDatabase getDb() const;
         void setDb(const QSqlDatabase &db);
@@ -90,7 +89,6 @@
         QList<QString> getStateList();
         QList<QString> getDatasetList();
         bool setActiveStateIfCondition(bool activeState, QString condition);
-
 
 
     protected:

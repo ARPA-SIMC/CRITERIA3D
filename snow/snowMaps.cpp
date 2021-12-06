@@ -41,7 +41,7 @@ Crit3DSnowMaps::Crit3DSnowMaps()
     _iceContentMap = new gis::Crit3DRasterGrid;
     _liquidWaterContentMap = new gis::Crit3DRasterGrid;
     _internalEnergyMap = new gis::Crit3DRasterGrid;
-    _surfaceInternalEnergyMap = new gis::Crit3DRasterGrid;
+    _surfaceEnergyMap = new gis::Crit3DRasterGrid;
     _snowSurfaceTempMap = new gis::Crit3DRasterGrid;
     _ageOfSnowMap = new gis::Crit3DRasterGrid;
 
@@ -66,7 +66,7 @@ void Crit3DSnowMaps::clear()
     _iceContentMap->clear();
     _liquidWaterContentMap->clear();
     _internalEnergyMap->clear();
-    _surfaceInternalEnergyMap->clear();
+    _surfaceEnergyMap->clear();
     _snowSurfaceTempMap->clear();
     _ageOfSnowMap->clear();
 
@@ -84,7 +84,7 @@ void Crit3DSnowMaps::initialize(const gis::Crit3DRasterGrid& dtm, double snowSki
     _iceContentMap->initializeGrid(dtm);
     _liquidWaterContentMap->initializeGrid(dtm);
     _internalEnergyMap->initializeGrid(dtm);
-    _surfaceInternalEnergyMap->initializeGrid(dtm);
+    _surfaceEnergyMap->initializeGrid(dtm);
     _snowSurfaceTempMap->initializeGrid(dtm);
     _ageOfSnowMap->initializeGrid(dtm);
 
@@ -111,7 +111,7 @@ void Crit3DSnowMaps::updateMap(Crit3DSnow &snowPoint, int row, int col)
     _iceContentMap->value[row][col] = float(snowPoint.getIceContent());
     _liquidWaterContentMap->value[row][col] = float(snowPoint.getLiquidWaterContent());
     _internalEnergyMap->value[row][col] = float(snowPoint.getInternalEnergy());
-    _surfaceInternalEnergyMap->value[row][col] = float(snowPoint.getSurfaceInternalEnergy());
+    _surfaceEnergyMap->value[row][col] = float(snowPoint.getSurfaceEnergy());
     _snowSurfaceTempMap->value[row][col] = float(snowPoint.getSnowSurfaceTemp());
     _ageOfSnowMap->value[row][col] = float(snowPoint.getAgeOfSnow());
 }
@@ -125,7 +125,7 @@ void Crit3DSnowMaps::updateRangeMaps()
     gis::updateMinMaxRasterGrid(_iceContentMap);
     gis::updateMinMaxRasterGrid(_liquidWaterContentMap);
     gis::updateMinMaxRasterGrid(_internalEnergyMap);
-    gis::updateMinMaxRasterGrid(_surfaceInternalEnergyMap);
+    gis::updateMinMaxRasterGrid(_surfaceEnergyMap);
     gis::updateMinMaxRasterGrid(_snowSurfaceTempMap);
     gis::updateMinMaxRasterGrid(_ageOfSnowMap);
 }
@@ -137,7 +137,7 @@ void Crit3DSnowMaps::setPoint(Crit3DSnow &snowPoint, int row, int col)
     snowPoint.setIceContent(_iceContentMap->value[row][col]);
     snowPoint.setLiquidWaterContent(_liquidWaterContentMap->value[row][col]);
     snowPoint.setInternalEnergy(_internalEnergyMap->value[row][col]);
-    snowPoint.setSurfaceInternalEnergy(_surfaceInternalEnergyMap->value[row][col]);
+    snowPoint.setSurfaceEnergy(_surfaceEnergyMap->value[row][col]);
     snowPoint.setSnowSurfaceTemp(_snowSurfaceTempMap->value[row][col]);
     snowPoint.setAgeOfSnow(_ageOfSnowMap->value[row][col]);
 }
@@ -169,7 +169,7 @@ void Crit3DSnowMaps::resetSnowModel(double snowSkinThickness)
                 /*! from [mm] to [m] */
                 initSWE /=  1000;
 
-                _surfaceInternalEnergyMap->value[row][col] = float(computeSurfaceInternalEnergy(_initSnowSurfaceTemp, surfaceBulkDensity, initSWE, snowSkinThickness));
+                _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergy(_initSnowSurfaceTemp, surfaceBulkDensity, initSWE, snowSkinThickness));
 
                 _internalEnergyMap->value[row][col] = float(computeInternalEnergy(_initSoilPackTemp, surfaceBulkDensity, initSWE));
             }
@@ -208,9 +208,9 @@ gis::Crit3DRasterGrid* Crit3DSnowMaps::getInternalEnergyMap()
     return _internalEnergyMap;
 }
 
-gis::Crit3DRasterGrid* Crit3DSnowMaps::getSurfaceInternalEnergyMap()
+gis::Crit3DRasterGrid* Crit3DSnowMaps::getSurfaceEnergyMap()
 {
-    return _surfaceInternalEnergyMap;
+    return _surfaceEnergyMap;
 }
 
 gis::Crit3DRasterGrid* Crit3DSnowMaps::getSnowSurfaceTempMap()
