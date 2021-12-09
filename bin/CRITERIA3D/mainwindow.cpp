@@ -16,6 +16,7 @@
 #include "dialogLoadState.h"
 #include "dialogNewPoint.h"
 #include "utilities.h"
+#include <QDebug>
 
 
 extern Crit3DProject myProject;
@@ -1786,8 +1787,6 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
                 return false;
             }
 
-            this->updateGUI();
-
             // output points
             if (myProject.isSaveOutputPoints())
             {
@@ -1797,6 +1796,8 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
                     return false;
                 }
             }
+
+            this->updateGUI();
 
             if (myProject.modelPause || myProject.modelStop)
             {
