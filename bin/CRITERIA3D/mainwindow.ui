@@ -3522,6 +3522,7 @@
       <string>Meteo points</string>
      </property>
      <addaction name="flagView_not_active_points"/>
+     <addaction name="flagView_values"/>
      <addaction name="separator"/>
      <addaction name="actionView_PointsHide"/>
      <addaction name="actionView_PointsLocation"/>
@@ -4090,7 +4091,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>View not active</string>
+    <string>Show not active</string>
    </property>
   </action>
   <action name="actionDelete_Points_Selected">
@@ -4259,6 +4260,14 @@
    </property>
    <property name="text">
     <string>Compute only points</string>
+   </property>
+  </action>
+  <action name="flagView_values">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show values</string>
    </property>
   </action>
  </widget>

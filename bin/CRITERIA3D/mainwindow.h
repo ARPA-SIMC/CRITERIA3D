@@ -184,6 +184,8 @@
 
         void on_actionOutputPoints_add_triggered();
 
+        void on_flagView_values_toggled(bool arg1);
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -225,6 +227,7 @@
         bool viewNotActivePoints;
         bool viewOutputPoints;
         bool viewNotActiveOutputPoints;
+        bool viewMeteoPointValues;
 
         Crit3DSoilWidget *soilWidget;
 

@@ -15,7 +15,6 @@ StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillC
     _dataset = "";
     _altitude = NODATA;
     _municipality = "";
-    _currentValue = NODATA;
     _active = true;
 }
 
@@ -54,11 +53,6 @@ void StationMarker::setQuality(const quality::qualityType &quality)
     _quality = quality;
 }
 
-void StationMarker::setCurrentValue(float currentValue)
-{
-    _currentValue = currentValue;
-}
-
 bool StationMarker::active() const
 {
     return _active;
@@ -80,9 +74,9 @@ void StationMarker::setToolTip()
     QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5")
                             .arg(name, idpoint, dataset, altitude, municipality);
 
-    if (_currentValue != NODATA)
+    if (currentValue() != NODATA)
     {
-        QString value = QString::number(double(_currentValue));
+        QString value = QString::number(currentValue());
 
         QString myQuality = "";
         if (_quality == quality::wrong_syntactic)
