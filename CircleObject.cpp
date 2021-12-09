@@ -2,11 +2,14 @@
 
 #include <QtDebug>
 #include <QKeyEvent>
+#define NODATA -9999
 
-CircleObject::CircleObject(qreal radius,bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent) :
+CircleObject::CircleObject(qreal radius, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent) :
     MapGraphicsObject(sizeIsZoomInvariant, parent), _fillColor(fillColor)
 {
-    _radius = qMax<qreal>(radius,0.01);
+    _radius = qMax<qreal>(radius, 0.01);
+    _currentValue = NODATA;
+    _isShowValue = false;
 
     this->setFlag(MapGraphicsObject::ObjectIsSelectable);
     this->setFlag(MapGraphicsObject::ObjectIsMovable);
@@ -19,9 +22,9 @@ CircleObject::~CircleObject()
 
 QRectF CircleObject::boundingRect() const
 {
-    return QRectF(-1*_radius,
+    return QRectF(-3*_radius,
                   -1*_radius,
-                  2*_radius,
+                  6*_radius,
                   2*_radius);
 }
 
@@ -30,10 +33,21 @@ void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     Q_UNUSED(option)
     Q_UNUSED(widget)
     painter->setRenderHint(QPainter::Antialiasing,true);
-    painter->setBrush(_fillColor);
-    painter->drawEllipse(QPointF(0,0),
-                         _radius,
-                         _radius);
+    if (_isShowValue)
+    {
+        QString valueStr = "";
+        if (_currentValue != NODATA)
+        {
+            valueStr = QString::number(_currentValue);
+        }
+        painter->scale(1,-1);
+        painter->drawText(-3*_radius, _radius, valueStr);
+    }
+    else
+    {
+        painter->setBrush(_fillColor);
+        painter->drawEllipse(QPointF(0,0), _radius, _radius);
+    }
 }
 
 qreal CircleObject::radius() const
@@ -44,6 +58,23 @@ qreal CircleObject::radius() const
 void CircleObject::setRadius(qreal radius)
 {
     _radius = radius;
+    emit this->redrawRequested();
+}
+
+qreal CircleObject::currentValue() const
+{
+    return _currentValue;
+}
+
+void CircleObject::setCurrentValue(qreal currentValue)
+{
+    _currentValue = currentValue;
+    emit this->redrawRequested();
+}
+
+void CircleObject::setShowValue(bool isShowValue)
+{
+    _isShowValue = isShowValue;
     emit this->redrawRequested();
 }
 

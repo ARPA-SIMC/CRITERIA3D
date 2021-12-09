@@ -18,9 +18,12 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
     qreal radius() const;
+    qreal currentValue() const;
     QColor color() const;
     void setRadius(qreal radius);
     void setFillColor(const QColor& color);
+    void setCurrentValue(qreal currentValue);
+    void setShowValue(bool isShowValue);
     
 signals:
     
@@ -32,7 +35,9 @@ protected:
 
 private:
     qreal _radius;
+    qreal _currentValue;
     QColor _fillColor;
+    bool _isShowValue;
     
 };
 
