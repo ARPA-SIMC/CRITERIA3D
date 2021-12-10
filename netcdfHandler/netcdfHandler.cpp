@@ -114,6 +114,7 @@ void NetCDFHandler::clear()
     idLat = NODATA;
     idLon = NODATA;
     idTime = NODATA;
+    idTimeBnds = NODATA;
 
     isUTM = false;
     isLatLon = false;
@@ -766,10 +767,16 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     if (ncId == NODATA) return false;
 
     bool timeDimensionExists = (myDate != NO_DATE);
+    bool boundsExist = false;
+    if (firstDate != NO_DATE && lastDate != NO_DATE)
+    {
+        boundsExist = true;
+    }
     nrLat = latLonHeader.nrRows;
     nrLon = latLonHeader.nrCols;
     int varLat, varLon, status;
     int varTime = 0;
+    int varTimeBounds = 0;
 
     // global attributes
     status = nc_put_att_text(ncId, NC_GLOBAL, "title", title.length(), title.c_str());
@@ -795,10 +802,20 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
         status = nc_put_att_text(ncId, varTime, "units", timeUnits.length(), timeUnits.c_str());
         if (status != NC_NOERR) return false;
 
-        /*
-        status = nc_put_att_text(ncId, varTime, "bounds", 9, "time_bnds");
-        if (status != NC_NOERR) return false;
-        */
+        if (boundsExist)
+        {
+            status = nc_def_dim(ncId, "bnds", unsigned(2), &idTimeBnds);
+            if (status != NC_NOERR) return false;
+
+            int time_bnds_dims[2];
+            time_bnds_dims[0] = idTime;
+            time_bnds_dims[1] = idTimeBnds;
+            status = nc_def_var (ncId, "time_bnds", NC_INT, 2, time_bnds_dims, &varTimeBounds);
+            if (status != NC_NOERR) return false;
+
+            status = nc_put_att_text(ncId, varTime, "bounds", 9, "time_bnds");
+            if (status != NC_NOERR) return false;
+        }
     }
 
     // lat

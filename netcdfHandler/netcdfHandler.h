@@ -28,7 +28,7 @@
     private:
         int utmZone;
         long nrX, nrY, nrLat, nrLon, nrTime;
-        int idTime, idX, idY, idLat, idLon;
+        int idTime, idTimeBnds, idX, idY, idLat, idLon;
 
         float *x, *y;
         float *lat, *lon;
