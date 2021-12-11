@@ -762,13 +762,13 @@ bool NetCDFHandler::createNewFile(std::string fileName)
 
 bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, const string& title,
                                   const string& variableName, const string& variableUnit,
-                                  const Crit3DDate& myDate, const Crit3DDate& firstDate, const Crit3DDate& lastDate)
+                                  const Crit3DDate& myDate, int nDays, const string& elab)
 {
     if (ncId == NODATA) return false;
 
     bool timeDimensionExists = (myDate != NO_DATE);
     bool boundsExist = false;
-    if (firstDate != NO_DATE && lastDate != NO_DATE)
+    if (nDays != 0)
     {
         boundsExist = true;
     }
@@ -792,7 +792,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
         status = nc_def_dim(ncId, "time", unsigned(1), &idTime);
         if (status != NC_NOERR) return false;
 
-        status = nc_def_var (ncId, "time", NC_INT, 1, &idTime, &varTime);
+        status = nc_def_var (ncId, "time", NC_FLOAT, 1, &idTime, &varTime);
         if (status != NC_NOERR) return false;
 
         status = nc_put_att_text(ncId, varTime, "standard_name", 4, "time");
@@ -810,7 +810,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
             int time_bnds_dims[2];
             time_bnds_dims[0] = idTime;
             time_bnds_dims[1] = idTimeBnds;
-            status = nc_def_var (ncId, "time_bnds", NC_INT, 2, time_bnds_dims, &varTimeBounds);
+            status = nc_def_var (ncId, "time_bnds", NC_FLOAT, 2, time_bnds_dims, &varTimeBounds);
             if (status != NC_NOERR) return false;
 
             status = nc_put_att_text(ncId, varTime, "bounds", 9, "time_bnds");
@@ -899,11 +899,20 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     // write time
     if (timeDimensionExists)
     {
-        int timeInt[1] = {0};
-        status = nc_put_var_int(ncId, varTime, timeInt);
-        if (status != NC_NOERR) return false;
 
+        float timeValue[1];
+        timeValue[0] = (float)(nDays+1)/2.0;
+        status = nc_put_var_float(ncId, varTime, &timeValue[0]);
+        if (status != NC_NOERR) return false;
         // time bounds
+        if (boundsExist)
+        {
+            float boundsValue[2];
+            boundsValue[0] = 0.0;
+            boundsValue[1] = (float)nDays;
+            status = nc_put_var_float(ncId, varTimeBounds, &boundsValue[0]);
+            if (status != NC_NOERR) return false;
+        }
     }
 
     // set lat/lon arrays

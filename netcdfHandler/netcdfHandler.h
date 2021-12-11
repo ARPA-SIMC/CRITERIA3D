@@ -85,7 +85,7 @@
         bool createNewFile(std::string fileName);
         bool writeMetadata(const gis::Crit3DGridHeader& latLonHeader, const std::string &title,
                            const std::string &variableName, const std::string &variableUnit,
-                           const Crit3DDate &myDate, const Crit3DDate &firstDate, const Crit3DDate &lastDate);
+                           const Crit3DDate &myDate, int nDays, const std::string &elab);
         bool writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid);
     };
 
