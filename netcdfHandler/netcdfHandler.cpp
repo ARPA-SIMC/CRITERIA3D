@@ -866,6 +866,13 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
         if (status != NC_NOERR) return false;
     }
 
+    if (elab != "")
+    {
+        std::string cellMethods = "time: " + elab;
+        status = nc_put_att_text(ncId, variables[0].id, "cell_methods", cellMethods.length(), cellMethods.c_str());
+        if (status != NC_NOERR) return false;
+    }
+
     // atributes
     status = nc_put_att_text(ncId, variables[0].id, "long_name", variableName.length(), variableName.c_str());
     if (status != NC_NOERR) return false;
