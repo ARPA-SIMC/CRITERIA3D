@@ -908,7 +908,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     {
 
         float timeValue[1];
-        timeValue[0] = (float)nDays/2.0;
+        timeValue[0] = (float)(nDays+1)/2.0;
         status = nc_put_var_float(ncId, varTime, &timeValue[0]);
         if (status != NC_NOERR) return false;
         // time bounds
