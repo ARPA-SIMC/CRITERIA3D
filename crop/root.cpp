@@ -76,7 +76,22 @@ namespace root
             case (5):
                 return GAMMA_DISTRIBUTION;
             default:
-                return GAMMA_DISTRIBUTION;
+                return CARDIOID_DISTRIBUTION;
+         }
+    }
+
+    int getRootDistributionNumber(rootDistributionType rootShape)
+    {
+        switch (rootShape)
+        {
+            case (CYLINDRICAL_DISTRIBUTION):
+                return 1;
+            case (CARDIOID_DISTRIBUTION):
+                return 4;
+            case (GAMMA_DISTRIBUTION):
+                return 5;
+            default:
+                return 4;
          }
     }
 
