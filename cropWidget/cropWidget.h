@@ -36,6 +36,7 @@
             void on_actionChooseCrop(QString idCrop);
             void on_actionOpenMeteoDB();
             void on_actionOpenSoilDB();
+            void on_actionExecuteCase();
             void on_actionChooseMeteo(QString idMeteo);
             void on_actionChooseFirstYear(QString year);
             void on_actionChooseLastYear(QString year);

@@ -708,9 +708,23 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
 }
 
 
-bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int forecastIndex)
+bool Crit1DProject::computeUnit(const Crit1DUnit& myUnit)
+{
+    myCase.unit = myUnit;
+    return computeCase(0);
+}
+
+
+bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int memberNr)
 {
     myCase.unit = unitList[unitIndex];
+    return computeCase(memberNr);
+}
+
+
+// use memberNr = 0 for deterministic run
+bool Crit1DProject::computeCase(unsigned int memberNr)
+{
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
 
     if (! loadCropParameters(&dbCrop, myCase.unit.idCrop, &(myCase.crop), &projectError))
@@ -721,7 +735,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int forecastInd
 
     if (isXmlMeteoGrid)
     {
-        if (! setMeteoXmlGrid(myCase.unit.idMeteo, myCase.unit.idForecast, forecastIndex))
+        if (! setMeteoXmlGrid(myCase.unit.idMeteo, myCase.unit.idForecast, memberNr))
             return false;
     }
     else
@@ -799,7 +813,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int forecastInd
         }
         else if (isMonthlyForecast)
         {
-            updateMonthlyForecastOutput(myDate, forecastIndex);
+            updateMonthlyForecastOutput(myDate, memberNr);
         }
         else
         {
@@ -963,19 +977,19 @@ int Crit1DProject::computeAllUnits()
 
 
 // update values of monthly forecast
-void Crit1DProject::updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int forecastIndex)
+void Crit1DProject::updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int memberNr)
 {
     QDate myQdate = getQDate(myDate);
 
     if (myQdate == lastSimulationDate)
     {
-        forecastIrr[forecastIndex] = 0;
-        forecastPrec[forecastIndex] = 0;
+        forecastIrr[memberNr] = 0;
+        forecastPrec[memberNr] = 0;
     }
     else if (myQdate > lastSimulationDate)
     {
-        forecastIrr[forecastIndex] += float(myCase.output.dailyIrrigation);
-        forecastPrec[forecastIndex] += float(myCase.output.dailyPrec);
+        forecastIrr[memberNr] += float(myCase.output.dailyIrrigation);
+        forecastPrec[memberNr] += float(myCase.output.dailyPrec);
     }
 }
 
@@ -1044,9 +1058,9 @@ bool Crit1DProject::computeMonthlyForecast(unsigned int unitIndex, float irriRat
 
     forecastIrr.resize(unsigned(nrForecasts));
     forecastPrec.resize(unsigned(nrForecasts));
-    for (unsigned int forecastIndex = 1; forecastIndex < unsigned(nrForecasts); forecastIndex++)
+    for (unsigned int memberNr = 1; memberNr < unsigned(nrForecasts); memberNr++)
     {
-        if (! computeUnit(unitIndex, forecastIndex))
+        if (! computeUnit(unitIndex, memberNr))
         {
             logger.writeError(projectError);
             return false;

@@ -306,7 +306,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     rootShapeComboBox = new QComboBox();
     rootShapeComboBox->setMaximumWidth(rootParametersGroup->width()/3);
 
-    for (int i=0; i<numRootDistributionType; i++)
+    for (int i=0; i < numRootDistributionType; i++)
     {
         rootDistributionType type = rootDistributionType(i);
         rootShapeComboBox->addItem(QString::fromStdString(root::getRootDistributionTypeString(type)));
@@ -459,9 +459,10 @@ Crit3DCropWidget::Crit3DCropWidget()
     QAction* openCropDB = new QAction(tr("&Open dbCrop"), this);
     QAction* openMeteoDB = new QAction(tr("&Open dbMeteo"), this);
     QAction* openSoilDB = new QAction(tr("&Open dbSoil"), this);
-    saveChanges = new QAction(tr("&Save Changes"), this);
 
+    saveChanges = new QAction(tr("&Save Changes"), this);
     saveChanges->setEnabled(false);
+    QAction* executeCase = new QAction(tr("&Execute case"), this);
 
     QAction* newCrop = new QAction(tr("&New Crop"), this);
     QAction* deleteCrop = new QAction(tr("&Delete Crop"), this);
@@ -475,6 +476,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     fileMenu->addAction(openSoilDB);
     fileMenu->addSeparator();
     fileMenu->addAction(saveChanges);
+    fileMenu->addSeparator();
+    fileMenu->addAction(executeCase);
 
     editMenu->addAction(newCrop);
     editMenu->addAction(deleteCrop);
@@ -515,6 +518,8 @@ Crit3DCropWidget::Crit3DCropWidget()
 
     connect(saveButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionSave);
     connect(updateButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionUpdate);
+
+    connect(executeCase, &QAction::triggered, this, &Crit3DCropWidget::on_actionExecuteCase);
 
     //set current tab
     tabChanged(0);
@@ -970,6 +975,25 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
     else
     {
         viewWeather->setEnabled(true);
+    }
+}
+
+
+void Crit3DCropWidget::on_actionExecuteCase()
+{
+    if (! myProject.isProjectLoaded)
+    {
+        QMessageBox::warning(nullptr, "Warning", "Open a project before.");
+        return;
+    }
+
+    if (!myProject.computeUnit(myCase.unit))
+    {
+        QMessageBox::critical(nullptr, "Error!", myProject.projectError);
+    }
+    else
+    {
+        QMessageBox::warning(nullptr, "Case executed: "+ myCase.unit.idCase, "Output:\n" + QDir().cleanPath(myProject.dbOutputName));
     }
 }
 
