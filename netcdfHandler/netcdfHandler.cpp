@@ -876,7 +876,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
         std::string cellMethods;
         if (referenceIntervalExists)
         {
-            cellMethods = "time: " + elab + " ,reference interval [ "+ std::to_string(refYearStart) + ", "+ std::to_string(refYearEnd);
+            cellMethods = "time: " + elab + " , reference interval ["+ std::to_string(refYearStart) + ", "+ std::to_string(refYearEnd)+"]";
         }
         else
         {
@@ -887,7 +887,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     }
     else if (referenceIntervalExists)
     {
-        std::string cellMethods = "reference interval [ "+ std::to_string(refYearStart) + ", "+ std::to_string(refYearEnd);
+        std::string cellMethods = "reference interval ["+ std::to_string(refYearStart) + ", "+ std::to_string(refYearEnd)+"]";
         status = nc_put_att_text(ncId, variables[0].id, "cell_methods", cellMethods.length(), cellMethods.c_str());
         if (status != NC_NOERR) return false;
     }
