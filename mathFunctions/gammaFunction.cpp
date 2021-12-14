@@ -485,8 +485,7 @@
     // Estimates the parameters of a log-logistic distribution function
     void logLogisticFitting(std::vector<float> probWeightedMoments, double *alpha, double *beta, double *gamma)
     {
-        float g1;
-        float g2;
+        double g1, g2;
         *gamma = (2 * probWeightedMoments[1] - probWeightedMoments[0]) / (6 * probWeightedMoments[1] - probWeightedMoments[0] - 6 * probWeightedMoments[2]);
         //g1 = exp(Ln_Gamma_Function(1 + 1 / (*gamma)));
         //g2 = exp(Ln_Gamma_Function(1 - 1 / (*gamma)));
@@ -500,7 +499,7 @@
     // following a LogLogistic distribution
     float logLogisticCDF(float myValue, double alpha, double beta, double gamma)
     {
-        float logLogisticCDF = 1 / (1 + (pow((alpha / (myValue - beta)), gamma)));
+        double logLogisticCDF = 1. / (1. + (pow((alpha / (double(myValue) - beta)), gamma)));
 
-        return logLogisticCDF;
+        return float(logLogisticCDF);
     }
