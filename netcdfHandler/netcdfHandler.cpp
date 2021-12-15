@@ -893,12 +893,6 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
         status = nc_put_att_text(ncId, variables[0].id, "cell_methods", cellMethods.length(), cellMethods.c_str());
         if (status != NC_NOERR) return false;
     }
-    else if (referenceIntervalExists)
-    {
-        std::string cellMethods = " (interval: "+ std::to_string(refYearStart) + ", "+ std::to_string(refYearEnd)+")";
-        status = nc_put_att_text(ncId, variables[0].id, "cell_methods", cellMethods.length(), cellMethods.c_str());
-        if (status != NC_NOERR) return false;
-    }
 
     // atributes
     status = nc_put_att_text(ncId, variables[0].id, "long_name", variableName.length(), variableName.c_str());
