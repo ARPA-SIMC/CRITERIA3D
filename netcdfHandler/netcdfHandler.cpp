@@ -769,11 +769,12 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     bool timeDimensionExists = (myDate != NO_DATE);
     bool boundsExist = false;
     bool referenceIntervalExists = false;
-    if (nDays != 0)
+    if (nDays != 0 && nDays != NODATA)
     {
         boundsExist = true;
     }
-    if (refYearStart != 0 && refYearEnd != 0)
+    if (refYearStart != 0 && refYearStart != NODATA
+        && refYearEnd != 0 && refYearEnd != NODATA)
     {
         referenceIntervalExists = true;
     }
