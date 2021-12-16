@@ -773,7 +773,8 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     {
         boundsExist = true;
     }
-    if (refYearStart != 0 && refYearEnd != 0)
+    if (refYearStart != 0 && refYearStart != NODATA
+        && refYearEnd != 0 && refYearEnd != NODATA)
     {
         referenceIntervalExists = true;
     }

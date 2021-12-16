@@ -119,7 +119,7 @@ public:
     int createShapeFileFromGUI();
     bool convertShapeToNetcdf(Crit3DShapeHandler &shape, std::string outputFileName,
                               std::string field, std::string variableName, std::string variableUnit, double cellSize,
-                              Crit3DDate computationDate, Crit3DDate firstDate, Crit3DDate lastDate);
+                              Crit3DDate computationDate, int nrDays);
 
 };
 
