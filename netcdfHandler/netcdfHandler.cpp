@@ -762,13 +762,9 @@ bool NetCDFHandler::createNewFile(std::string fileName)
 
 bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, const string& title,
                                   const string& variableName, const string& variableUnit,
-                                  const Crit3DDate& myDate, int nDays, string& elab, int refYearStart, int refYearEnd)
+                                  const Crit3DDate& myDate, int nDays, int refYearStart, int refYearEnd)
 {
     if (ncId == NODATA) return false;
-    if (elab == "average")
-    {
-        elab = "mean";
-    }
 
     bool timeDimensionExists = (myDate != NO_DATE);
     bool boundsExist = false;
@@ -879,21 +875,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
         if (status != NC_NOERR) return false;
     }
 
-    if (elab != "")
-    {
-        std::string cellMethods;
-        if (referenceIntervalExists)
-        {
-            cellMethods = "time: " + elab + " (interval: "+ std::to_string(refYearStart) + ", "+ std::to_string(refYearEnd)+")";
-        }
-        else
-        {
-            cellMethods = "time: " + elab;
-        }
-        status = nc_put_att_text(ncId, variables[0].id, "cell_methods", cellMethods.length(), cellMethods.c_str());
-        if (status != NC_NOERR) return false;
-    }
-    else if (referenceIntervalExists)
+    if (referenceIntervalExists)
     {
         std::string referenceYearStart = std::to_string(refYearStart);
         status = nc_put_att_text(ncId, variables[0].id, "reference_start_year", referenceYearStart.length(), referenceYearStart.c_str());
