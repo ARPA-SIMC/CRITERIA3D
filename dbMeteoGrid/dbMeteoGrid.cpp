@@ -2612,6 +2612,57 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyFF(QString *myError, QStr
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyListFF(QString *myError, QString meteoPointID, QList<QDate> dateList,  QList<QString> varPragaNameList, QList<float> valueList)
+{
+    // TO DO
+    /*
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
+    QString tableFields;
+    QString varField;
+
+    for (unsigned int i=0; i < _tableDaily.varcode.size(); i++)
+    {
+        QString var = _tableDaily.varcode[i].varPragaName;
+        if (var == varPragaNameList)
+        {
+            varField = _tableDaily.varcode[i].varField;
+        }
+        QString type = _mapDailyMySqlVarType[getMeteoVar(var.toStdString())];
+
+        QString varFieldItem = _tableDaily.varcode[i].varField;
+        tableFields = tableFields  + ", " + varFieldItem.toLower() + " " + type;
+    }
+
+
+    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`").arg(tableD) + QString("(%1 date ").arg(_tableDaily.fieldTime) + tableFields + QString(", PRIMARY KEY(%1))").arg(_tableDaily.fieldTime);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+
+        QString valueS = QString("'%1'").arg(valueList);
+        if (valueList == NODATA)
+            valueS = "NULL";
+
+        statement = QString("INSERT INTO `%1` (`%2`, `%3`) VALUES ('%4',%5) ON DUPLICATE KEY UPDATE `%3`= %5").arg(tableD).arg(_tableDaily.fieldTime).arg(varField.toLower()).arg(dateList.toString("yyyy-MM-dd")).arg(valueS);
+
+        if( !qry.exec(statement) )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+
+    }
+
+    return true;
+    */
+}
+
 bool Crit3DMeteoGridDbHandler::saveCellGridMonthlyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
                                                      QList<meteoVariable> meteoVariableList)
 {

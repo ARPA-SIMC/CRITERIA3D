@@ -1226,6 +1226,46 @@ bool Crit3DMeteoPointsDbHandler::writeDailyData(QString pointCode, QDate date, m
     }
 }
 
+bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QDate> dateList, QList<meteoVariable> varList, QList<float> valueList, QString* log)
+{
+    if (!existIdPoint(pointCode))
+    {
+        *log += "\nID " + pointCode + " is not present in the point properties table.";
+        return false;
+    }
+    // create table
+    bool deletePreviousData = false;
+    QString tableName = pointCode + "_D";
+    if (! createTable(tableName, deletePreviousData))
+    {
+        *log += "\nError in create table: " + tableName + _db.lastError().text();
+        return false;
+    }
+
+    QString queryStr = QString(("INSERT OR REPLACE INTO `%1`"
+                                " VALUES ")).arg(tableName);
+
+    QList<QString> listEntries;
+    for (int i = 0; i < dateList.size(); i++)
+    {
+        listEntries.push_back(QString("('%1',%2,%3)").arg(dateList[i].toString("yyyy-MM-dd")).arg(getIdfromMeteoVar(varList[i])).arg(valueList[i]));
+    }
+    queryStr = queryStr + listEntries.join(",");
+
+    // exec query
+    QSqlQuery qry(_db);
+    qry.prepare(queryStr);
+    if (! qry.exec())
+    {
+        *log += "\nError in execute query: " + qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 bool Crit3DMeteoPointsDbHandler::setAllPointsActive()
 {
     QSqlQuery qry(_db);

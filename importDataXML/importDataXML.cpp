@@ -488,6 +488,10 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
     int nErrors = 0;
     int nReplication = 0;  // LC è sempre 0,eliminare?
 
+    QList<QDate> dateList;
+    QList<meteoVariable> varList;
+    QList<float> valueList;
+
     while (!in.atEnd())
     {
       QString line = in.readLine();
@@ -547,14 +551,11 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                             *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
                             return false;
                         }
-                        if (!isGrid)
-                        {
-                            if (!meteoPointsDbHandler->writeDailyData(myPointCode, myDate, var, myValue.toFloat(), error))
-                            {
-                                return false;
-                            }
-                        }
-                        else
+                        dateList.push_back(myDate);
+                        varList.push_back(var);
+                        valueList.push_back(myValue.toFloat());
+                        // TO DO modificare in modo che scriva la lista
+                        if (isGrid)
                         {
                             if (meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
                             {
@@ -698,6 +699,14 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
       nRow = nRow + 1;
     }
     myFile.close();
+    // TO DO aggiungere qui anche le altre casistiche
+    if (format_isSinglePoint && !isGrid)
+    {
+        if (!meteoPointsDbHandler->writeDailyDataList(myPointCode, dateList, varList, valueList, error))
+        {
+            return false;
+        }
+    }
     if (nErrors != 0)
     {
         *error = QString::number(nErrors);
