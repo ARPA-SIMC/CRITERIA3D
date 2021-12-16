@@ -769,16 +769,6 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     {
         elab = "mean";
     }
-/*
-    std::vector<string> cellMethodAccepted = {"point", "sum", "maximum", "maximum_absolute_value", "median", "mid_range", "minimum", "minimum_absolute_value",
-                                             "mean", "mean_absolute_value", "mean_of_upper_decile", "mode", "range", "root_mean_square", "standard_deviation",
-                                             "sum_of_squares", "variance"};
-
-    if (std::find(cellMethodAccepted.begin(), cellMethodAccepted.end(), elab) == cellMethodAccepted.end())
-    {
-        elab = "";
-    }
-*/
 
     bool timeDimensionExists = (myDate != NO_DATE);
     bool boundsExist = false;
