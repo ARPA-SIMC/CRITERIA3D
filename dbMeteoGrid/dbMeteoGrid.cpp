@@ -2612,7 +2612,8 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyFF(QString *myError, QStr
     return true;
 }
 
-    /*bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyListFF(QString *myError, QString meteoPointID, QList<QDate> dateList,  QList<QString> varPragaNameList, QList<float> valueList)
+
+/*bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyListFF(QString *myError, QString meteoPointID, QList<QDate> dateList,  QList<QString> varPragaNameList, QList<float> valueList)
 {
     // TO DO
     QSqlQuery qry(_db);
