@@ -36,9 +36,6 @@ win32:{
 macx:{
     INCLUDEPATH += /usr/local/include/
 }
-unix:{
-    INCLUDEPATH += /usr/include
-}
 
 SOURCES += \
     netcdfHandler.cpp
