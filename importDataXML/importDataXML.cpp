@@ -550,7 +550,21 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                             *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
                             return false;
                         }
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                        if (isGrid)
+                        {
+                            if (time.getType().toUpper() == "DAILY")
+                            {
+                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoGridDbHandler->getDailyVarCode(var)).arg(myValue.toFloat()));
+                            }
+                            else if (time.getType().toUpper() == "HOURLY")
+                            {
+                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
+                            }
+                        }
+                        else
+                        {
+                            listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                        }
                         mapIdValues.insert(myPointCode, listEntries);
                         // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
                         if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
@@ -650,7 +664,21 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                             *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
                             return false;
                         }
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                        if (isGrid)
+                        {
+                            if (time.getType().toUpper() == "DAILY")
+                            {
+                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoGridDbHandler->getDailyVarCode(var)).arg(myValue.toFloat()));
+                            }
+                            else if (time.getType().toUpper() == "HOURLY")
+                            {
+                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
+                            }
+                        }
+                        else
+                        {
+                            listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                        }
                         mapIdValues.insert(myPointCode, listEntries);
                         // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
                         if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
@@ -837,7 +865,21 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                                 *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
                                 return false;
                             }
-                            listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                            if (isGrid)
+                            {
+                                if (time.getType().toUpper() == "DAILY")
+                                {
+                                    listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoGridDbHandler->getDailyVarCode(var)).arg(myValue.toFloat()));
+                                }
+                                else if (time.getType().toUpper() == "HOURLY")
+                                {
+                                    listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
+                                }
+                            }
+                            else
+                            {
+                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                            }
                             mapIdValues.insert(myPointCode, listEntries);
                             // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
                             if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
