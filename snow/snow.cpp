@@ -86,7 +86,7 @@ void Crit3DSnow::initialize()
     _iceContent = NODATA;
     _liquidWaterContent = NODATA;
     _internalEnergy = NODATA;
-    _surfaceInternalEnergy = NODATA;
+    _surfaceEnergy = NODATA;
     _snowSurfaceTemp = NODATA;
     _ageOfSnow = NODATA;
     _evaporation = NODATA;
@@ -187,7 +187,7 @@ void Crit3DSnow::computeSnowBrooksModel()
         _iceContent = NODATA;
         _liquidWaterContent = NODATA;
         _snowWaterEquivalent = NODATA;
-        _surfaceInternalEnergy = NODATA;
+        _surfaceEnergy = NODATA;
         _snowSurfaceTemp = NODATA;
         _ageOfSnow = NODATA;
         return;
@@ -215,7 +215,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     double prevSurfacetemp = _snowSurfaceTemp;
     double previousSWE = _snowWaterEquivalent;
     double prevInternalEnergy = _internalEnergy;
-    double prevSurfaceIntEnergy = _surfaceInternalEnergy;
+    double prevSurfaceEnergy = _surfaceEnergy;
 
     /*--------------------------------------------------------------------
     // COERENZA
@@ -237,7 +237,7 @@ void Crit3DSnow::computeSnowBrooksModel()
             // stato: neve recente prossima alla fusione, con una settimana di età
             _ageOfSnow = 7;
             prevSurfacetemp = std::min(prevSurfacetemp, -0.1);
-            prevSurfaceIntEnergy = std::min(prevSurfaceIntEnergy, -0.1);
+            prevSurfaceEnergy = std::min(prevSurfaceEnergy, -0.1);
         }
 
         /*! check on sum */
@@ -439,19 +439,19 @@ void Crit3DSnow::computeSnowBrooksModel()
     /*! Snow surface energy */
     if (_snowWaterEquivalent > 0.)
     {
-        _surfaceInternalEnergy = std::min(0., prevSurfaceIntEnergy + (QTotal + (freezeOrMelt / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY)
+        _surfaceEnergy = std::min(0., prevSurfaceEnergy + (QTotal + (freezeOrMelt / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY)
                                 * (std::min(_snowWaterEquivalent / 1000., snowParameters.snowSkinThickness) / SNOW_DAMPING_DEPTH
                                 + std::max(snowParameters.snowSkinThickness - (_snowWaterEquivalent / 1000.), 0.) / SOIL_DAMPING_DEPTH));
     }
     else
     {
-        _surfaceInternalEnergy = prevSurfaceIntEnergy + (QTotal + (freezeOrMelt / 1000.)
+        _surfaceEnergy = prevSurfaceEnergy + (QTotal + (freezeOrMelt / 1000.)
                                 * LATENT_HEAT_FUSION * WATER_DENSITY) * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
     }
 
     // TODO passare bulk density
     bulk_density = DEFAULT_BULK_DENSITY;
-    _snowSurfaceTemp = _surfaceInternalEnergy / ((HEAT_CAPACITY_SNOW / 1000.) * std::min(_snowWaterEquivalent / 1000., snowParameters.snowSkinThickness)
+    _snowSurfaceTemp = _surfaceEnergy / ((HEAT_CAPACITY_SNOW / 1000.) * std::min(_snowWaterEquivalent / 1000., snowParameters.snowSkinThickness)
                    + SOIL_SPECIFIC_HEAT * std::max(0., snowParameters.snowSkinThickness - _snowWaterEquivalent / 1000.) * bulk_density);
 
 }
@@ -505,14 +505,14 @@ void Crit3DSnow::setInternalEnergy(float value)
     _internalEnergy = double(value);
 }
 
-double Crit3DSnow::getSurfaceInternalEnergy()
+double Crit3DSnow::getSurfaceEnergy()
 {
-    return _surfaceInternalEnergy;
+    return _surfaceEnergy;
 }
 
-void Crit3DSnow::setSurfaceInternalEnergy(float value)
+void Crit3DSnow::setSurfaceEnergy(float value)
 {
-    _surfaceInternalEnergy = double(value);
+    _surfaceEnergy = double(value);
 }
 
 double Crit3DSnow::getSnowSurfaceTemp()
@@ -591,7 +591,7 @@ double computeInternalEnergy(double initSoilPackTemp,int bulkDensity, double ini
 
 
 // LC: è la formula 3.27 a pag. 54 in cui ha diviso la surface come la somma dei contributi della parte "water" e di quella "soil"
-double computeSurfaceInternalEnergy(double initSnowSurfaceTemp,int bulkDensity, double initSWE, double snowSkinThickness)
+double computeSurfaceEnergy(double initSnowSurfaceTemp,int bulkDensity, double initSWE, double snowSkinThickness)
 {
     return initSnowSurfaceTemp * (HEAT_CAPACITY_SNOW / 1000. * std::min(initSWE, snowSkinThickness)
                                   + SOIL_SPECIFIC_HEAT * std::max(0., snowSkinThickness - initSWE) * bulkDensity);

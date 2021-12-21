@@ -668,7 +668,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             break;
         case globalIrradiance: case directIrradiance: case diffuseIrradiance: case reflectedIrradiance:
         case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
-        case snowInternalEnergy: case snowSurfaceInternalEnergy:
+        case snowInternalEnergy: case snowSurfaceEnergy:
             setRadiationScale(colorScale);
             break;
         case windVectorIntensity: case windScalarIntensity: case windVectorX: case windVectorY: case dailyWindVectorIntensityAvg: case dailyWindVectorIntensityMax: case dailyWindScalarIntensityAvg: case dailyWindScalarIntensityMax:
@@ -782,7 +782,7 @@ std::string getVariableString(meteoVariable myVar)
         return "Surface temperature (°C)";
     else if (myVar == snowInternalEnergy)
         return "Energy content (kJ m-2)";
-    else if (myVar == snowSurfaceInternalEnergy)
+    else if (myVar == snowSurfaceEnergy)
         return "Energy content surface layer (kJ m-2)";
     else if (myVar == noMeteoTerrain)
         return "Elevation (m)";

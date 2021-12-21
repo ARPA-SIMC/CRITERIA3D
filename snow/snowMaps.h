@@ -28,7 +28,7 @@
         gis::Crit3DRasterGrid* getIceContentMap();
         gis::Crit3DRasterGrid* getLWContentMap();
         gis::Crit3DRasterGrid* getInternalEnergyMap();
-        gis::Crit3DRasterGrid* getSurfaceInternalEnergyMap();
+        gis::Crit3DRasterGrid* getSurfaceEnergyMap();
         gis::Crit3DRasterGrid* getSnowSurfaceTempMap();
         gis::Crit3DRasterGrid* getAgeOfSnowMap();
 
@@ -39,7 +39,7 @@
         gis::Crit3DRasterGrid* _iceContentMap;
         gis::Crit3DRasterGrid* _liquidWaterContentMap;
         gis::Crit3DRasterGrid* _internalEnergyMap;
-        gis::Crit3DRasterGrid* _surfaceInternalEnergyMap;
+        gis::Crit3DRasterGrid* _surfaceEnergyMap;
         gis::Crit3DRasterGrid* _snowSurfaceTempMap;
         gis::Crit3DRasterGrid* _ageOfSnowMap;
 

@@ -870,13 +870,11 @@ int CriteriaOutputProject::createNetcdf()
         std::string variableName = field.left(4).toStdString();         // TODO inserire var name nel file
         std::string variableUnit = "mm";                                // TODO inserire var unit nel file
         Crit3DDate computationDate = getCrit3DDate(dateComputation);
-        Crit3DDate date1 = computationDate;
         int nrDays = 28;                                                // TODO inserire var nr days nel file
-        Crit3DDate date2 = getCrit3DDate(dateComputation.addDays(nrDays));
 
         logger.writeInfo("Export file: " + fileName);
         if (! convertShapeToNetcdf(shapeHandler, fileName.toStdString(), field.toStdString(), variableName,
-                                   variableUnit, cellSize, computationDate, date1, date2))
+                                   variableUnit, cellSize, computationDate, nrDays))
         {
             projectError = "Error in export to NetCDF: " + projectError;
             return ERROR_NETCDF;
@@ -889,7 +887,7 @@ int CriteriaOutputProject::createNetcdf()
 
 bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std::string outputFileName,
                                                  std::string field, std::string variableName, std::string variableUnit, double cellSize,
-                                                 Crit3DDate computationDate, Crit3DDate firstDate, Crit3DDate lastDate)
+                                                 Crit3DDate computationDate, int nrDays)
 {
     if (! shape.getIsWGS84())
     {
@@ -946,7 +944,8 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
 
     std::string title = projectName.toStdString();
 
-    if (! myNetCDF.writeMetadata(latLonHeader, title, variableName, variableUnit, computationDate, firstDate, lastDate))
+    if (! myNetCDF.writeMetadata(latLonHeader, title, variableName, variableUnit,
+                                computationDate, nrDays, NODATA, NODATA))
     {
         projectError = "Error in write metadata to netcdf.";
         myNetCDF.close();

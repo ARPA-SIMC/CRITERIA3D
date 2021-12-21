@@ -16,7 +16,8 @@
         { "MAX", aggrMax },
         { "SUM", aggrSum },
         { "PREVAILING", aggrPrevailing },
-        { "CENTER", aggrCenter }
+        { "CENTER", aggrCenter },
+        { "PERC95", aggr95Perc }
     };
 
     const std::map<aggregationMethod, std::string> aggregationStringToMethod = {
@@ -27,7 +28,8 @@
         { aggrMax, "MAX" },
         { aggrSum, "SUM" },
         { aggrPrevailing, "PREVAILING" },
-        { aggrCenter, "CENTER" }
+        { aggrCenter, "CENTER" },
+        { aggr95Perc, "PERC95" }
     };
 
     std::string getKeyStringAggregationMethod(aggregationMethod value);

@@ -18,6 +18,7 @@
     {
 
     public:
+        bool isProjectLoaded;
         QString projectError;
         Logger logger;
 
@@ -51,10 +52,9 @@
         void initialize();
         int initializeProject(QString settingsFileName);
         int computeAllUnits();
+        bool computeUnit(const Crit1DUnit& myUnit);
 
     private:
-        bool isProjectLoaded;
-
         QString projectName;
         QString configFileName;
 
@@ -112,12 +112,13 @@
 
         bool setPercentileOutputCsv();
         void updateSeasonalForecastOutput(Crit3DDate myDate, int &index);
-        void updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int forecastIndex);
+        void updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int memberNr);
         void initializeSeasonalForecast(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
         bool computeSeasonalForecast(unsigned int index, float irriRatio);
         bool computeMonthlyForecast(unsigned int unitIndex, float irriRatio);
 
-        bool computeUnit(unsigned int unitIndex, unsigned int forecastIndex);
+        bool computeCase(unsigned int memberNr);
+        bool computeUnit(unsigned int unitIndex, unsigned int memberNr);
 
         bool createOutputTable(QString &myError);
         bool createState(QString &myError);
