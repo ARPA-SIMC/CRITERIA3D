@@ -503,3 +503,65 @@
 
         return float(logLogisticCDF);
     }
+
+    double meanValueWeibull(double lambda, double kappa)
+    {
+        double value;
+        value = (lambda/kappa)*gammaFunction(1./kappa);
+        return value;
+    }
+
+    double varianceValueWeibull(double lambda, double kappa)
+    {
+        double value;
+        value = 2.*lambda*lambda/kappa*gammaFunction(2./kappa) - pow(meanValueWeibull(lambda,kappa),2);
+        return value;
+    }
+
+    double functionValue(double mean, double variance, double kappa)
+    {
+        double func;
+        func = 2*mean*mean*(kappa)/pow(gammaFunction(1./(kappa)),2)*gammaFunction(2./(kappa))- mean*mean - variance;
+        return func;
+    }
+
+    void parametersWeibullFromObservations(double mean, double variance, double* lambda, double* kappa)
+    {
+        double rightK =2;
+        double leftK = 1;
+        double funcRight,funcLeft;
+        funcRight = functionValue(mean,variance,rightK);
+        funcLeft = functionValue(mean,variance,leftK);
+        int counter = 0;
+        while (funcRight*funcLeft > 0 && counter < 1000)
+        {
+            rightK += 0.01;
+            leftK -= 0.01;
+            if (leftK < 0.1) leftK = 0.1;
+            counter++;
+        }
+        counter = 0;
+        double precision = 0.001;
+        double k;
+        double func;
+        double deltaFunc = fabs(funcLeft-funcRight);
+        while (deltaFunc > precision && counter < 10000)
+        {
+            k = (rightK + leftK)*0.5;
+            func = functionValue(mean,variance,k);
+            if (funcRight*func >0)
+            {
+                rightK = k;
+                funcRight=functionValue(mean,variance,k);
+            }
+            else
+            {
+                leftK = k;
+                funcLeft = functionValue(mean,variance,k);
+            }
+            deltaFunc = fabs(funcLeft-funcRight);
+            counter++;
+        }
+        *kappa = k;
+        *lambda = mean*k/gammaFunction(1./k);
+    }

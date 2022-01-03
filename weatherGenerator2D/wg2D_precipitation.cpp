@@ -364,7 +364,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
            {
                bins[i]=bins2[i];
                nrBins[i-1] = 0;
-               if (bins2[i] != NODATA)
+               if (fabs(bins2[i] - NODATA) > EPSILON)
                {
                    bincenter[i-1]= (bins2[i-1] + bins[i])*0.5; //?????
                    newCounter++;
@@ -432,7 +432,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
            int nrBincenter=0;
            for (int i=0;i<(lengthBins-1);i++)
            {
-               if(bincenter[i] != NODATA)
+               if(fabs(bincenter[i] - NODATA) > EPSILON)
                    nrBincenter++;
            }
            double* meanPFit = (double *) calloc(nrBincenter, sizeof(double));
@@ -447,8 +447,9 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
 
            interpolation::fittingMarquardt(parMin,parMax,par,nrPar,parDelta,maxIterations,epsilon,functionCode,binCenter,meanPFit,nrBincenter);
 
-           // con marquardt stimo già tutti i parametri compreso l'esponente quindi il ciclo
-           // for da 2 a 20 (presente nel codice originale) risulta inutile nel codice tradotto
+           // Unless the original Mulgets, in this version we make use of Marquardt algorithm for best fitting
+           // of all parameters. For this reason the "for" cycle from
+           // from 2 to 20 to get the best exponent has not been translated
            for (int i=0;i<nrBincenter;i++)
            {
                meanPFit[i] = par[0]+par[1]* pow(binCenter[i],par[2]);
@@ -511,7 +512,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
 
                    moranArray[i] += occurrenceMatrixSeason[j][i]* wSeason[ijk][j];
                }
-               if (weightSum == 0) moranArray[i] = 0;
+               if (fabs(weightSum) < EPSILON) moranArray[i] = 0;
                else moranArray[i] /= weightSum;
                if (occurrenceMatrixSeason[ijk][i] > (ONELESSEPSILON)) counterMoranPrec++ ;
 
@@ -599,7 +600,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
            {
                for (int i=0;i<nrBincenter;i++)
                {
-                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][0]=meanPFit[i]*meanPFit[i]/(PstdDev[i]*PstdDev[i]);
+                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][0]= meanPFit[i]*meanPFit[i]/(PstdDev[i]*PstdDev[i]);
                    occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][1]=(PstdDev[i]*PstdDev[i])/meanPFit[i];
                }
            }
