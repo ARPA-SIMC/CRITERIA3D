@@ -385,7 +385,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
                    }
                }
                Pmean[i] /= nrBins[i];  // mean for each bin
-               if (parametersModel.distributionPrecipitation == 2)
+               if (parametersModel.distributionPrecipitation > 1)
                {
                    for (int j=0;j<numberObservedMax;j++)
                    {
@@ -456,7 +456,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
            }
 
 
-           if (parametersModel.distributionPrecipitation == 2)
+           if (parametersModel.distributionPrecipitation >1 )
            {
                interpolation::fittingMarquardt(parMin,parMax,par,nrPar,parDelta,maxIterations,epsilon,functionCode,binCenter,stdDevFit,nrBincenter);
 
@@ -604,13 +604,31 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
                    occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][1]=(PstdDev[i]*PstdDev[i])/meanPFit[i];
                }
            }
+           else if (parametersModel.distributionPrecipitation == 3)
+           {
+               for (int i=0;i<nrBincenter;i++)
+               {
+                   double mean,variance;
+                   double lambdaWeibull,kappaWeibull;
+                   double rightBound,leftBound;
+                   rightBound = 10;
+                   leftBound = 0.2;
+                   mean = meanPFit[i];
+                   variance = PstdDev[i]*PstdDev[i];
+                   parametersWeibullFromObservations(mean,variance, &lambdaWeibull,&kappaWeibull,leftBound,rightBound);
+                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][0] = mean;
+                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][1] = kappaWeibull;
+               }
+           }
+
+
 
            for (int i=0;i<nrBincenter;i++)
            {
                occurrenceIndexSeasonal[ijk].meanP[qq][i] = Pmean[i];
                occurrenceIndexSeasonal[ijk].meanFit[qq][i] = meanFit[i];
                occurrenceIndexSeasonal[ijk].binCenter[qq][i] = binCenter[i];
-               if (parametersModel.distributionPrecipitation == 2)
+               if (parametersModel.distributionPrecipitation > 1)
                {
                    occurrenceIndexSeasonal[ijk].stdDevP[qq][i] = PstdDev[i];
                    occurrenceIndexSeasonal[ijk].stdDevFit[qq][i] = stdDevFit[i];
@@ -885,7 +903,7 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
                    if ((moranRandom[i][j] > occurrenceIndexSeasonal[i].bin[iSeason][k]) && (moranRandom[i][j] <= occurrenceIndexSeasonal[i].bin[iSeason][k+1]))
                    {
                        phatAlpha[i][j] = occurrenceIndexSeasonal[i].parMultiexp[iSeason][k][0];
-                       if (parametersModel.distributionPrecipitation == 2)
+                       if (parametersModel.distributionPrecipitation > 1)
                        {
                            phatBeta[i][j] = occurrenceIndexSeasonal[i].parMultiexp[iSeason][k][1];
                        }
@@ -1306,7 +1324,12 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                    {
                        simulatedPrecipitationAmountsSeasonal[i][j] = weatherGenerator2D::inverseGammaFunction(uniformRandomVar,phatAlpha[i][j],phatBeta[i][j],0.0001) + parametersModel.precipitationThreshold;
                    }
-
+                   else if (parametersModel.distributionPrecipitation == 3)
+                   {
+                        simulatedPrecipitationAmountsSeasonal[i][j] = phatAlpha[i][j]*pow(-log(1-uniformRandomVar),phatBeta[i][j])+ parametersModel.precipitationThreshold;
+                        //simulatedPrecipitationAmountsSeasonal[i][j] = 0.84* phatAlpha[i][j]*pow(-log(1-uniformRandomVar),1.0)+ parametersModel.precipitationThreshold;
+                        //simulatedPrecipitationAmountsSeasonal[i][j] =-log(1-uniformRandomVar)*phatAlpha[i][j]+ parametersModel.precipitationThreshold;
+                   }
                }
            }
        }
