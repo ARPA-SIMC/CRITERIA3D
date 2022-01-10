@@ -9,7 +9,7 @@
     #define EPSTHRESHOLD 3.0e-7
     #define FPMINIMUM 1.0e-30
 
-
+// functions
     double factorial(int n);
     double standardGaussianInvCDF(double prob);
     float gammaCDF(float x, double beta, double gamma,  double pZero) ;
@@ -25,6 +25,12 @@
     double incompleteGamma(double alpha, double x); // only incomplete
     bool gammaFitting(std::vector<float> &series, int n, double* beta, double* gamma,  double* pZero);
 
+    double weibullCDF(double x, double lambda, double kappa);
+    double weibullPDF(double x, double lambda, double kappa);
+    double meanValueWeibull(double lambda, double kappa);
+    double varianceValueWeibull(double lambda, double kappa);
+    double functionValueVarianceWeibullDependingOnKappa(double mean, double variance, double kappa);
+    void parametersWeibullFromObservations(double mean, double variance, double* lambda, double* kappa, double leftBound, double rightBound);
 
 
 #endif // GAMMAFUNCTION

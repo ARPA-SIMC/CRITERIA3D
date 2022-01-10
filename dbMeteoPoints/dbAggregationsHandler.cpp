@@ -226,14 +226,17 @@ bool Crit3DAggregationsDbHandler::insertTmpAggr(QDate startDate, QDate endDate, 
         // LC NB le zone partono da 1
         for (int zone = 1; zone <= nZones; zone++)
         {
-            QString value = QString::number(aggregatedValues[day][zone-1], 'f', 1);
-            if (value != "nan")
+            if (aggregatedValues[day][zone-1] != NODATA)
             {
-                dateTimeList << (startDate.addDays(day)).toString("yyyy-MM-dd");
-                zoneList << zone;
-                idVariableList << idVariable;
-                valueList << value;
+                QString value = QString::number(aggregatedValues[day][zone-1], 'f', 1);
+                if (value != "nan")
+                {
+                    dateTimeList << (startDate.addDays(day)).toString("yyyy-MM-dd");
+                    zoneList << zone;
+                    idVariableList << idVariable;
+                    valueList << value;
 
+                }
             }
         }
     }
@@ -261,7 +264,7 @@ bool Crit3DAggregationsDbHandler::saveTmpAggrData(QString aggrType, QString peri
 
     for (int zone = 1; zone <= nZones; zone++)
     {
-        statement = QString("INSERT INTO `%1_%2_%3` ").arg(zone).arg(aggrType).arg(periodType);
+        statement = QString("REPLACE INTO `%1_%2_%3` ").arg(zone).arg(aggrType).arg(periodType);
         statement += QString("SELECT date, id_variable, value FROM TmpAggregationData ");
         statement += QString("WHERE zone = %1").arg(zone);
 

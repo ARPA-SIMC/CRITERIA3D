@@ -137,12 +137,7 @@ void weatherGenerator2D::prepareWeatherGeneratorOutput()
 
                 if (isPrecWG2D)
                 {
-
-                    if (parametersModel.distributionPrecipitation == 3)
-                    {
-                        outputWeatherData[iStation].precipitation[counter] = precGenerated[iStation][counter];
-                    }
-                    else {outputWeatherData[iStation].precipitation[counter] = amountsPrecGenerated[counter][iStation];}
+                    outputWeatherData[iStation].precipitation[counter] = amountsPrecGenerated[counter][iStation];
                 }
                 else
                 {

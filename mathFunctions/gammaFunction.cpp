@@ -503,3 +503,83 @@
 
         return float(logLogisticCDF);
     }
+
+    double weibullCDF(double x, double lambda, double kappa)
+    {
+        double value;
+        value = 1 - exp(-pow((x/lambda),kappa));
+        return value;
+    }
+
+    double weibullPDF(double x, double lambda, double kappa)
+    {
+        double value;
+        value = (kappa/pow(lambda,kappa))*pow(x,kappa-1)*exp(-pow((x/lambda),kappa));
+        return value;
+    }
+
+    double meanValueWeibull(double lambda, double kappa)
+    {
+        double value;
+        value = (lambda/kappa)*gammaFunction(1./kappa);
+        return value;
+    }
+
+    double varianceValueWeibull(double lambda, double kappa)
+    {
+        double value;
+        value = 2.*lambda*lambda/kappa*gammaFunction(2./kappa) - pow(meanValueWeibull(lambda,kappa),2);
+        return value;
+    }
+
+    double functionValueVarianceWeibullDependingOnKappa(double mean, double variance, double kappa)
+    {
+        double func;
+        func = 2*mean*mean*(kappa)/pow(gammaFunction(1./(kappa)),2)*gammaFunction(2./(kappa))- mean*mean - variance;
+        return func;
+    }
+
+    void parametersWeibullFromObservations(double mean, double variance, double* lambda, double* kappa, double leftBound, double rightBound)
+    {
+        double rightK = rightBound;
+        double leftK = leftBound;
+        double funcRight,funcLeft;
+        funcRight = functionValueVarianceWeibullDependingOnKappa(mean,variance,rightK);
+        funcLeft = functionValueVarianceWeibullDependingOnKappa(mean,variance,leftK);
+        int counter = 0;
+        while (funcRight*funcLeft > 0 && counter < 1000)
+        {
+            rightK += 0.01;
+            leftK -= 0.01;
+            if (leftK < 0.05) leftK = 0.05;
+            funcRight = functionValueVarianceWeibullDependingOnKappa(mean,variance,rightK);
+            funcLeft = functionValueVarianceWeibullDependingOnKappa(mean,variance,leftK);
+            counter++;
+        }
+        counter = 0;
+        double precision = 0.001;
+        double k=(rightK+leftK)*0.5;
+        double func;
+        double deltaFunc = fabs(funcLeft-funcRight);
+        double deltaK = rightK - leftK;
+        while (deltaK> 0.00001 && deltaFunc > precision && counter < 10000)
+        {
+            func = functionValueVarianceWeibullDependingOnKappa(mean,variance,k);
+            if (funcRight*func >0)
+            {
+                rightK = k;
+                funcRight = func;
+            }
+            else
+            {
+                leftK = k;
+                funcLeft = func;
+            }
+            deltaFunc = fabs(funcLeft-funcRight);
+            k = (rightK + leftK)*0.5;
+            deltaK = rightK - leftK;
+            counter++;
+        }
+        *kappa = k;
+        *lambda = mean*k/gammaFunction(1./k);
+    }
