@@ -617,6 +617,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
                    variance = PstdDev[i]*PstdDev[i];
                    parametersWeibullFromObservations(mean,variance, &lambdaWeibull,&kappaWeibull,leftBound,rightBound);
                    occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][0] = mean;
+                   //kappaWeibull = 1.333333333;
                    occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][1] = kappaWeibull;
                }
            }
