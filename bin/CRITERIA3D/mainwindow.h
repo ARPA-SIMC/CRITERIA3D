@@ -186,6 +186,10 @@
 
         void on_flagView_values_toggled(bool arg1);
 
+        void on_actionView_Snow_sensible_heat_triggered();
+
+        void on_actionView_Snow_latent_heat_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

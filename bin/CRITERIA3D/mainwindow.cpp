@@ -1269,10 +1269,6 @@ void MainWindow::showSnowVariable(meteoVariable var)
         setOutputVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
         break;
 
-    case snowFall:
-        setOutputVariable(snowFall, myProject.snowMaps.getSnowFallMap());
-        break;
-
     case snowSurfaceTemperature:
         setOutputVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
         break;
@@ -1293,8 +1289,20 @@ void MainWindow::showSnowVariable(meteoVariable var)
         setOutputVariable(snowAge, myProject.snowMaps.getAgeOfSnowMap());
         break;
 
+    case snowFall:
+        setOutputVariable(snowFall, myProject.snowMaps.getSnowFallMap());
+        break;
+
     case snowMelt:
         setOutputVariable(snowMelt, myProject.snowMaps.getSnowMeltMap());
+        break;
+
+    case sensibleHeat:
+        setOutputVariable(sensibleHeat, myProject.snowMaps.getSensibleHeatMap());
+        break;
+
+    case latentHeat:
+        setOutputVariable(latentHeat, myProject.snowMaps.getLatentHeatMap());
         break;
 
     default:
@@ -1305,11 +1313,6 @@ void MainWindow::showSnowVariable(meteoVariable var)
 void MainWindow::on_actionView_Snow_water_equivalent_triggered()
 {
     showSnowVariable(snowWaterEquivalent);
-}
-
-void MainWindow::on_actionView_Snow_fall_triggered()
-{
-    showSnowVariable(snowFall);
 }
 
 void MainWindow::on_actionView_Snow_surface_temperature_triggered()
@@ -1337,9 +1340,24 @@ void MainWindow::on_actionView_Snow_age_triggered()
     showSnowVariable(snowAge);
 }
 
+void MainWindow::on_actionView_Snow_fall_triggered()
+{
+    showSnowVariable(snowFall);
+}
+
 void MainWindow::on_actionView_Snowmelt_triggered()
 {
     showSnowVariable(snowMelt);
+}
+
+void MainWindow::on_actionView_Snow_sensible_heat_triggered()
+{
+    showSnowVariable(sensibleHeat);
+}
+
+void MainWindow::on_actionView_Snow_latent_heat_triggered()
+{
+    showSnowVariable(latentHeat);
 }
 
 // ------------- TILES -----------------------------
@@ -2652,4 +2670,7 @@ void MainWindow::on_flagView_values_toggled(bool isChecked)
         meteoPointList[i]->setShowValue(this->viewMeteoPointValues);
     }
 }
+
+
+
 

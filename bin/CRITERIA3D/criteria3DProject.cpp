@@ -934,6 +934,8 @@ bool Crit3DProject::writeOutputPointsTables()
                 if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceTemperature, errorString)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, snowSurfaceEnergy, errorString)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, snowInternalEnergy, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, sensibleHeat, errorString)) return false;
+                if (! outputPointsDbHandler->addColumn(tableName, latentHeat, errorString)) return false;
             }
         }
     }
@@ -993,6 +995,10 @@ bool Crit3DProject::writeOutputPointsData()
                 valuesList.push_back(snowMaps.getSurfaceEnergyMap()->getFastValueXY(x, y));
                 varList.push_back(snowInternalEnergy);
                 valuesList.push_back(snowMaps.getInternalEnergyMap()->getFastValueXY(x, y));
+                varList.push_back(sensibleHeat);
+                valuesList.push_back(snowMaps.getSensibleHeatMap()->getFastValueXY(x, y));
+                varList.push_back(latentHeat);
+                valuesList.push_back(snowMaps.getLatentHeatMap()->getFastValueXY(x, y));
             }
 
             if (! outputPointsDbHandler->saveHourlyData(tableName, getCurrentTime(), varList, valuesList, errorString))
