@@ -65,6 +65,8 @@
 
         double getSnowFall();
         double getSnowMelt();
+        double getSensibleHeat();
+        double getLatentHeat();
 
         double getSnowWaterEquivalent();
         double getIceContent();
@@ -84,34 +86,37 @@
 
     private:
 
-        /*! input */
+        // input
         double _clearSkyTransmissivity;      /*!<   [-] */
         double _transmissivity;              /*!<   [-] */
-        double _globalRadiation;             /*!<   [W/m2] */
-        double _beamRadiation;               /*!<   [W/m2] */
+        double _globalRadiation;             /*!<   [W m-2] */
+        double _beamRadiation;               /*!<   [W m-2] */
         double _prec;                        /*!<   [mm] */
         double _airT;                        /*!<   [°C] */
         double _airRH;                       /*!<   [%] */
         double _windInt;                     /*!<   [m/s] */
         double _surfaceWaterContent;         /*!<   [mm] */
 
-        /*! output */
+        // output
         double _evaporation;                /*!<   [mm] */
         double _precRain;                   /*!<   [mm] */
         double _precSnow;                   /*!<   [mm] */
         double _snowMelt;                   /*!<   [mm] */
+        double _sensibleHeat;               /*!<   [kJ m-2] */
+        double _latentHeat;                 /*!<   [kJ m-2] */
 
+        // state variables
         double _snowWaterEquivalent;        /*!<   [mm] */
         double _iceContent;                 /*!<   [mm] */
         double _liquidWaterContent;         /*!<   [mm] */
-        double _internalEnergy;
-        double _surfaceEnergy;
+        double _internalEnergy;             /*!<   [kJ m-2] */
+        double _surfaceEnergy;              /*!<   [kJ m-2] */
         double _snowSurfaceTemp;            /*!<   [°C] */
         double _ageOfSnow;                  /*!<   [days] */
     };
 
 
-    double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double myWindSpeed, double vegetativeHeight);
+    double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double windSpeed, double vegetativeHeight);
     double computeInternalEnergy(double initSoilPackTemp,int bulkDensity, double initSWE);
     double computeSurfaceEnergy(double initSnowSurfaceTemp,int bulkDensity, double initSWE, double snowSkinThickness);
 
