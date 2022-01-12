@@ -887,7 +887,7 @@ void weatherGenerator2D::computeTemperatureParameters()
         double ratioLag1 = 0;
         //double ratioLag0 = 0;
         double thresholdLag1 = 0.9;
-        thresholdLag1 = 0.999;
+        //thresholdLag1 = 0.999;
         if (matrixCovarianceLag1[1][1] > thresholdLag1)  // the numeric value is thought in order to avoid too extreme values
         {
             ratioLag1 = thresholdLag1/matrixCovarianceLag1[1][1];
@@ -900,7 +900,7 @@ void weatherGenerator2D::computeTemperatureParameters()
             }
         }
         double thresholdLag0 = 0.8;
-        thresholdLag0 = 0.999;
+        //thresholdLag0 = 0.999;
         if (matrixCovarianceLag0[0][1] > thresholdLag0) // the numeric value is thought in order to avoid too extreme values
         {
             matrixCovarianceLag0[0][1] = matrixCovarianceLag0[1][0] = thresholdLag0;
