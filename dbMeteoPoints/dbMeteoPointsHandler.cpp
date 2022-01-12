@@ -1193,7 +1193,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
     return true;
 }
 
-bool Crit3DMeteoPointsDbHandler::writeDailyData(QString pointCode, QDate date, meteoVariable var, float value, QString* log)
+bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QString> listEntries, QString* log)
 {
     if (!existIdPoint(pointCode))
     {
@@ -1208,9 +1208,11 @@ bool Crit3DMeteoPointsDbHandler::writeDailyData(QString pointCode, QDate date, m
         *log += "\nError in create table: " + tableName + _db.lastError().text();
         return false;
     }
-    QString id = QString::number(getIdfromMeteoVar(var));
+
     QString queryStr = QString(("INSERT OR REPLACE INTO `%1`"
-                                " VALUES ('%2','%3',%4)")).arg(tableName).arg(date.toString("yyyy-MM-dd")).arg(id).arg(value);
+                                " VALUES ")).arg(tableName);
+
+    queryStr = queryStr + listEntries.join(",");
 
     // exec query
     QSqlQuery qry(_db);

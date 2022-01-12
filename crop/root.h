@@ -48,6 +48,7 @@
         int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double rootDepthMin, double* minThickness, int* atoms);
         double getRootLengthDD(Crit3DRoot* myRoot, double currentDD, double emergenceDD);
         rootDistributionType getRootDistributionType(int rootShape);
+        int getRootDistributionNumber(rootDistributionType rootShape);
         rootDistributionType getRootDistributionTypeFromString(std::string rootShape);
         std::string getRootDistributionTypeString(rootDistributionType rootType);
 
