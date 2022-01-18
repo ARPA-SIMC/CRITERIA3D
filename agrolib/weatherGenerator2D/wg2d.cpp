@@ -492,7 +492,7 @@ void weatherGenerator2D::precipitationP00P10()
     //getchar();*/
 }
 
-int weatherGenerator2D::recursiveAccountDryDays(int idStation, int i, int iMonth,int step, int** consecutiveDays, int** occurrence, int nrFollowingSteps)
+int weatherGenerator2D::recursiveAccountDryDays(int idStation, int i, int iMonth,int step, std::vector<std::vector<int> > &consecutiveDays, std::vector<std::vector<int> > &occurrence, int nrFollowingSteps)
 {
     consecutiveDays[iMonth-1][step]++;
     if (obsDataD[idStation][i+step].prec < parametersModel.precipitationThreshold && step<nrFollowingSteps)
@@ -503,7 +503,7 @@ int weatherGenerator2D::recursiveAccountDryDays(int idStation, int i, int iMonth
     return 0;
 }
 
-int weatherGenerator2D::recursiveAccountWetDays(int idStation, int i, int iMonth,int step, int** consecutiveDays, int** occurrence, int nrFollowingSteps)
+int weatherGenerator2D::recursiveAccountWetDays(int idStation, int i, int iMonth,int step, std::vector<std::vector<int> > &consecutiveDays, std::vector<std::vector<int> > &occurrence, int nrFollowingSteps)
 {
     consecutiveDays[iMonth-1][step]++;
     if (obsDataD[idStation][i+step].prec >= parametersModel.precipitationThreshold && step<nrFollowingSteps)
@@ -516,26 +516,36 @@ int weatherGenerator2D::recursiveAccountWetDays(int idStation, int i, int iMonth
 
 void weatherGenerator2D::precipitationPDryUntilNSteps()
 {
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
     for (int idStation=0;idStation<nrStations;idStation++)
     {
-        int** occurrence0;
-        int** daysDry;
-        int** occurrence1;
-        int** daysWet;
+        //printf("site %d\n",idStation);
+        std::vector<std::vector<int> > occurrence0(12, std::vector<int>(60));
+        std::vector<std::vector<int> > daysDry(12, std::vector<int>(60));
+        std::vector<std::vector<int> > occurrence1(12, std::vector<int>(60));
+        std::vector<std::vector<int> > daysWet(12, std::vector<int>(60));
         int nrSteps = 60;
-        occurrence0 = (int **)calloc(12, sizeof(int*));
-        daysDry = (int **)calloc(12, sizeof(int*));
-        occurrence1 = (int **)calloc(12, sizeof(int*));
-        daysWet = (int **)calloc(12, sizeof(int*));
+        /*
+        int** occurrence0 = (int **)calloc(12, sizeof(int*));
+        int** daysDry = (int **)calloc(12, sizeof(int*));
+        int** occurrence1 = (int **)calloc(12, sizeof(int*));
+        int** daysWet = (int **)calloc(12, sizeof(int*));
+        */
         int daysWithoutRain[12]={0,0,0,0,0,0,0,0,0,0,0,0};
         int daysWithRain[12]={0,0,0,0,0,0,0,0,0,0,0,0};
         for(int i=0;i<12;i++)
         {
-
+            /*
             occurrence0[i] = (int *)calloc(nrSteps, sizeof(int));
             daysDry[i] = (int *)calloc(nrSteps, sizeof(int));
             occurrence1[i] = (int *)calloc(nrSteps, sizeof(int));
             daysWet[i] = (int *)calloc(nrSteps, sizeof(int));
+            */
             for(int j=0;j<nrSteps;j++)
             {
                 occurrence0[i][j]=0;
@@ -693,8 +703,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
                 //printf("%d %f %f\n",i,precOccurence[idStation][iMonth].pDry[i],precOccurence[idStation][iMonth].pWet[i]);
             }
         }
-        //getchar();
-
+        /*
         for (int i=0;i<12;i++)
         {
             free(occurrence0[i]);
@@ -702,12 +711,24 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
             free(occurrence1[i]);
             free(daysWet[i]);
         }
-        free(occurrence0);
-        free(daysDry);
-        free(occurrence1);
-        free(daysWet);
+        if (occurrence0 != NULL)
+            free(occurrence0);
+        if (daysDry != nullptr)
+            free(daysDry);
+        if (occurrence1 != nullptr)
+            free(occurrence1);
+        if (daysWet != nullptr)
+            free(daysWet);*/
+
+        occurrence0.clear();
+        daysDry.clear();
+        occurrence1.clear();
+        daysWet.clear();
+
     }
-    //getchar();
+    //time ( &rawtime );
+    //timeinfo = localtime ( &rawtime );
+    //printf ( "Current local time and date: %s", asctime (timeinfo) );
 }
 
 void weatherGenerator2D::precipitationCorrelationMatrices()

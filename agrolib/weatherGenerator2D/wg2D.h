@@ -287,8 +287,8 @@
         void precipitationAmountsOccurences(int idStation, double* precipitationAmountsD,bool* precipitationOccurencesD);
         void precipitationP00P10();
         void precipitationPDryUntilNSteps();
-        int recursiveAccountDryDays(int idStation, int i, int iMonth,int step, int** consecutiveDays, int** occurrence,int nrFollowingSteps);
-        int recursiveAccountWetDays(int idStation, int i, int iMonth,int step, int** consecutiveDays, int** occurrence, int nrFollowingSteps);
+        int recursiveAccountDryDays(int idStation, int i, int iMonth,int step, std::vector<std::vector<int> > &consecutiveDays, std::vector<std::vector<int> > &occurrence,int nrFollowingSteps);
+        int recursiveAccountWetDays(int idStation, int i, int iMonth,int step, std::vector<std::vector<int> > &consecutiveDays, std::vector<std::vector<int> > &occurrence, int nrFollowingSteps);
         void precipitationCorrelationMatrices();
         void precipitationMultisiteOccurrenceGeneration();
         void spatialIterationOccurrence(double ** M, double **K, double **occurrences, double** matrixOccurrence, double** normalizedMatrixRandom, double **transitionNormal, double ***transitionNormalAugmentedMemory, int lengthSeries);
