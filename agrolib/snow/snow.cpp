@@ -360,7 +360,7 @@ void Crit3DSnow::computeSnowBrooksModel()
 
     // calore latente pag. 51 (eq. 3.19)
     // FT: tolta WATER_DENSITY dall'eq. (non corrispondevano le unità di misura)
-    // FT calcolare solo se c'e' manto nevoso?
+    // FT serve formula diversa quando non c'è neve
     QVaporGradient = 3600. * (LATENT_HEAT_VAPORIZATION + LATENT_HEAT_FUSION)
             * (AirActualVapDensity - WaterActualVapDensity) / aerodynamicResistance;
 
@@ -451,8 +451,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     }
     else
     {
-        _surfaceEnergy = prevSurfaceEnergy + (QTotal + (freezeOrMelt / 1000.)
-                                * LATENT_HEAT_FUSION * WATER_DENSITY) * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
+        _surfaceEnergy = prevSurfaceEnergy + (QTotal + (freezeOrMelt / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY)
+                                * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
     }
 
     // TODO passare bulk density
