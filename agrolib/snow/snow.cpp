@@ -364,8 +364,6 @@ void Crit3DSnow::computeSnowBrooksModel()
             * (AirActualVapDensity - WaterActualVapDensity) / aerodynamicResistance;
 
     // FT serve formula diversa quando non c'è neve
-    if (previousSWE < EPSILON)
-        QVaporGradient *= 0.4;
 
     /*! \brief Energy Balance */
     QTotal = QSolar + QPrecip + QLongWave + QTempGradient + QVaporGradient + QWaterHeat + QWaterKinetic;
