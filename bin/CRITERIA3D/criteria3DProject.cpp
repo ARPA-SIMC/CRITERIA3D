@@ -715,7 +715,7 @@ bool Crit3DProject::saveModelState()
         return false;
     }
 
-    QString statePath = getProjectPath() + "/STATES";
+    QString statePath = getProjectPath() + PATH_STATES;
     if (!QDir(statePath).exists())
     {
         QDir().mkdir(statePath);
@@ -777,7 +777,7 @@ bool Crit3DProject::saveModelState()
 QList<QString> Crit3DProject::getAllSavedState()
 {
     QList<QString> states;
-    QString statePath = getProjectPath() + "/STATES";
+    QString statePath = getProjectPath() + PATH_STATES;
     QDir dir(statePath);
     if (!dir.exists())
     {
@@ -804,18 +804,17 @@ QList<QString> Crit3DProject::getAllSavedState()
 }
 
 
-bool Crit3DProject::loadModelState(QString stateStr)
+bool Crit3DProject::loadModelState(QString statePath)
 {
-    // state folder
-    QString statePath = getProjectPath() + "/STATES/" + stateStr;
     QDir stateDir(statePath);
     if (!stateDir.exists())
     {
-        errorString = "STATES directory is missing.";
+        errorString = "State directory is missing.";
         return false;
     }
 
     // set current date/hour
+    QString stateStr = getFileName(statePath);
     int year = stateStr.midRef(0,4).toInt();
     int month = stateStr.midRef(4,2).toInt();
     int day = stateStr.midRef(6,2).toInt();

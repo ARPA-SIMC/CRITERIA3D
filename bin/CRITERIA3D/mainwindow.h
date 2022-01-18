@@ -190,6 +190,8 @@
 
         void on_actionView_Snow_latent_heat_triggered();
 
+        void on_actionLoad_external_state_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

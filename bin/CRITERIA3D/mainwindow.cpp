@@ -2052,6 +2052,30 @@ void MainWindow::on_actionSave_state_triggered()
     return;
 }
 
+
+void MainWindow::on_actionLoad_external_state_triggered()
+{
+    if (! myProject.isProjectLoaded)
+    {
+        myProject.logError(ERROR_STR_MISSING_PROJECT);
+        return;
+    }
+
+    QString stateDirectory = QFileDialog::getExistingDirectory(this, tr("Open Directory"), "",
+                                                               QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+    if (myProject.loadModelState(stateDirectory))
+    {
+        updateDateTime();
+        myProject.loadMeteoPointsData(myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+        redrawMeteoPoints(currentPointsVisualization, true);
+    }
+    else
+    {
+        myProject.logError();
+    }
+}
+
+
 void MainWindow::on_actionLoad_state_triggered()
 {
     if (! myProject.isProjectLoaded)
@@ -2071,7 +2095,8 @@ void MainWindow::on_actionLoad_state_triggered()
     if (dialogLoadState.result() != QDialog::Accepted)
         return;
 
-    if (myProject.loadModelState(dialogLoadState.getSelectedState()))
+    QString statePath = myProject.getProjectPath() + PATH_STATES + dialogLoadState.getSelectedState();
+    if (myProject.loadModelState(statePath))
     {
         updateDateTime();
         myProject.loadMeteoPointsData(myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
@@ -2670,6 +2695,9 @@ void MainWindow::on_flagView_values_toggled(bool isChecked)
         meteoPointList[i]->setShowValue(this->viewMeteoPointValues);
     }
 }
+
+
+
 
 
 

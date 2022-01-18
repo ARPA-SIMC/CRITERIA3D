@@ -2936,7 +2936,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>25</height>
+     <height>29</height>
     </rect>
    </property>
    <property name="palette">
@@ -3147,6 +3147,7 @@
     <addaction name="actionSnow_settings"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_state"/>
+    <addaction name="actionLoad_external_state"/>
     <addaction name="actionSave_state"/>
     <addaction name="separator"/>
     <addaction name="actionSnow_initialize"/>
@@ -3815,6 +3816,11 @@
   <action name="actionView_Snow_latent_heat">
    <property name="text">
     <string>Latent heat</string>
+   </property>
+  </action>
+  <action name="actionLoad_external_state">
+   <property name="text">
+    <string>Load external state...</string>
    </property>
   </action>
  </widget>
