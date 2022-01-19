@@ -948,6 +948,7 @@ bool checkPrecipitationZero(std::vector <Crit3DInterpolationDataPoint> &myPoints
 }
 
 
+// predisposta per eventuale aggiunta wind al detrend
 bool isThermal(meteoVariable myVar)
 {
     if (myVar == airTemperature ||
@@ -974,8 +975,8 @@ bool getUseDetrendingVar(meteoVariable myVar)
             myVar == dailyAirTemperatureMin ||
             myVar == dailyAirDewTemperatureAvg ||
             myVar == dailyAirDewTemperatureMax ||
-            myVar == dailyAirDewTemperatureMin ||
-            myVar == windScalarIntensity)
+            myVar == dailyAirDewTemperatureMin)
+            // todo aggiungere windScalarIntensity?
 
         return true;
     else
@@ -1097,12 +1098,7 @@ bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                          Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                          Crit3DTime myTime, meteoVariable myVar, int orogProxyPos)
 {
-    if (! getUseDetrendingVar(myVar))
-    {
-            return false;
-    }
-
-    if (isThermal(myVar))
+    if (getUseDetrendingVar(myVar))
     {
         if (myCombination.getUseThermalInversion())
             return regressionOrographyT(myPoints, mySettings, myClimate, myTime, myVar, orogProxyPos, true);
