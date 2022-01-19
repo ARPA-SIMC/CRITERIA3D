@@ -2697,8 +2697,3 @@ void MainWindow::on_flagView_values_toggled(bool isChecked)
 }
 
 
-
-
-
-
-
