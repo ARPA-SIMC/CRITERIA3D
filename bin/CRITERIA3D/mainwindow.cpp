@@ -1489,9 +1489,7 @@ void MainWindow::openSoilWidget(QPoint mapPos)
 
 bool MainWindow::loadMeteoPointsDB_GUI(QString dbName)
 {
-    myProject.logInfoGUI("Load " + dbName);
     bool success = myProject.loadMeteoPointsDB(dbName);
-    myProject.closeLogInfo();
 
     if (success)
         drawMeteoPoints();
