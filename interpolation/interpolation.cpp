@@ -976,7 +976,6 @@ bool getUseDetrendingVar(meteoVariable myVar)
             myVar == dailyAirDewTemperatureAvg ||
             myVar == dailyAirDewTemperatureMax ||
             myVar == dailyAirDewTemperatureMin)
-            // todo aggiungere windScalarIntensity?
 
         return true;
     else
@@ -1094,23 +1093,31 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
     return retrendValue;
 }
 
+
 bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                          Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                          Crit3DTime myTime, meteoVariable myVar, int orogProxyPos)
 {
     if (getUseDetrendingVar(myVar))
     {
-        if (myCombination.getUseThermalInversion())
-            return regressionOrographyT(myPoints, mySettings, myClimate, myTime, myVar, orogProxyPos, true);
+        if (isThermal(myVar))
+        {
+            if (myCombination.getUseThermalInversion())
+                return regressionOrographyT(myPoints, mySettings, myClimate, myTime, myVar, orogProxyPos, true);
+            else
+                return regressionSimpleT(myPoints, mySettings, myClimate, myTime, myVar, orogProxyPos);
+        }
         else
-            return regressionSimpleT(myPoints, mySettings, myClimate, myTime, myVar, orogProxyPos);
+        {
+            return regressionGeneric(myPoints, mySettings, orogProxyPos, false);
+        }
     }
     else
     {
-        return regressionGeneric(myPoints, mySettings, orogProxyPos, false);
+        return false;
     }
-
 }
+
 
 void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                 Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,

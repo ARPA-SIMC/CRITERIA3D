@@ -776,7 +776,7 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesFromDb(QList<Crit3DMeteoPoint>& me
         {
             double xTemp, yTemp;
             gis::latLonToUtmForceZone(gisSettings.utmZone, meteoPoint.latitude, meteoPoint.longitude, &xTemp, &yTemp);
-            if (fabs(xTemp - meteoPoint.point.utm.x) < 30 && fabs(yTemp - meteoPoint.point.utm.y) < 30)
+            if (fabs(xTemp - meteoPoint.point.utm.x) < 100 && fabs(yTemp - meteoPoint.point.utm.y) < 100)
             {
                 isLocationOk = true;
             }

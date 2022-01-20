@@ -1045,6 +1045,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
 
     meteoPointsLoaded = true;
     logInfo("Meteo points DB = " + dbName);
+    closeLogInfo();
 
     return true;
 }
@@ -1832,6 +1833,9 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Cri
         }
     }
 }
+
+
+// FT TODO interpolationPoints(meteoVariable myVar, const Crit3DTime& myTime, elenco punti)
 
 
 bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
