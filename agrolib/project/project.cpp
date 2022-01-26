@@ -33,6 +33,7 @@ Project::Project()
     // They not change after loading default settings
     appPath = "";
     defaultPath = "";
+    computeOnlyPoints = false;
 
     initializeProject();
 
@@ -1835,7 +1836,48 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Cri
 }
 
 
-// FT TODO interpolationPoints(meteoVariable myVar, const Crit3DTime& myTime, elenco punti)
+bool Project::interpolationPoints(meteoVariable myVar, const Crit3DTime& myTime)
+{
+    std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+
+    // check quality and pass data to interpolation
+    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+                                         &qualityInterpolationSettings, &interpolationSettings,
+                                         meteoSettings, &climateParameters, interpolationPoints,
+                                         checkSpatialQuality))
+    {
+        logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
+        return false;
+    }
+
+    // detrending and checking precipitation
+    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
+                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+    if (! interpolationReady)
+    {
+        logError("Interpolation: error in function preInterpolation");
+        return false;
+    }
+
+    std::vector <float> proxyValues;
+    proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
+
+    for (unsigned int i = 0; i < outputPoints.size(); i++)
+    {
+        if (outputPoints[i].active)
+        {
+            double x = outputPoints[i].utm.x;
+            double y = outputPoints[i].utm.y;
+            double z = outputPoints[i].z;
+
+            if (getUseDetrendingVar(myVar)) getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+            outputPoints[i].currentValue = interpolate(interpolationPoints, &interpolationSettings,
+                                                       meteoSettings, myVar, x, y, z, proxyValues, true);
+        }
+    }
+
+    return true;
+}
 
 
 bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
@@ -1851,7 +1893,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    //detrending and checking precipitation
+    // detrending and checking precipitation
     bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
 
     if (! interpolationReady)
@@ -1860,7 +1902,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    // Interpolate
+    // interpolate
     if (! interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings, myRaster, DEM, myVar))
     {
         logError("Interpolation: error in function interpolationRaster");
@@ -3076,6 +3118,16 @@ bool Project::writeOutputPointList(QString fileName)
     }
 
     return true;
+}
+
+void Project::setComputeOnlyPoints(bool isOnlyPoints)
+{
+    computeOnlyPoints = isOnlyPoints;
+}
+
+bool Project::getComputeOnlyPoints()
+{
+    return computeOnlyPoints;
 }
 
 

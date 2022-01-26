@@ -142,9 +142,9 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
 
 
 bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings,
-                        gis::Crit3DRasterGrid* myGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar)
+                        gis::Crit3DRasterGrid* outputGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar)
 {
-    if (! myGrid->initializeGrid(raster))
+    if (! outputGrid->initializeGrid(raster))
     {
         return false;
     }
@@ -153,21 +153,21 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
     std::vector <float> proxyValues;
     proxyValues.resize(unsigned(mySettings->getProxyNr()));
 
-    for (long myRow = 0; myRow < myGrid->header->nrRows ; myRow++)
+    for (long myRow = 0; myRow < outputGrid->header->nrRows ; myRow++)
     {
-        for (long myCol = 0; myCol < myGrid->header->nrCols; myCol++)
+        for (long myCol = 0; myCol < outputGrid->header->nrCols; myCol++)
         {
-            gis::getUtmXYFromRowColSinglePrecision(*myGrid, myRow, myCol, &myX, &myY);
+            gis::getUtmXYFromRowColSinglePrecision(*outputGrid, myRow, myCol, &myX, &myY);
             float myZ = raster.value[myRow][myCol];
-            if (int(myZ) != int(myGrid->header->flag))
+            if (int(myZ) != int(outputGrid->header->flag))
             {
                 if (getUseDetrendingVar(myVar)) getProxyValuesXY(myX, myY, mySettings, proxyValues);
-                myGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
             }
         }
     }
 
-    if (! gis::updateMinMaxRasterGrid(myGrid))
+    if (! gis::updateMinMaxRasterGrid(outputGrid))
     {
         return false;
     }

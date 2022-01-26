@@ -41,7 +41,6 @@ Crit3DProject::Crit3DProject() : Project3D()
     _saveOutputRaster = false;
     _saveOutputPoints = false;
     _saveDailyState = false;
-    _computeOnlyPoints = false;
 
     isMeteo = false;
     isRadiation = false;
@@ -80,16 +79,6 @@ bool Crit3DProject::isSaveOutputRaster()
 void Crit3DProject::setSaveOutputPoints(bool isSave)
 {
     _saveOutputPoints = isSave;
-}
-
-void Crit3DProject::setComputeOnlyPoints(bool isUse)
-{
-    _computeOnlyPoints = isUse;
-}
-
-bool Crit3DProject::isComputeOnlyPoints()
-{
-    return _computeOnlyPoints;
 }
 
 // true if at least one point is active

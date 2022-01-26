@@ -916,12 +916,12 @@ bool Project3D::interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& 
 
 
 bool Project3D::interpolateAndSaveHourlyMeteo(meteoVariable myVar, const QDateTime& myTime,
-                                              const QString& outputPath, bool isSaveOutput)
+                                              const QString& outputPath, bool isSaveOutputRaster)
 {
     if (! interpolateHourlyMeteoVar(myVar, myTime))
         return false;
 
-    if (isSaveOutput)
+    if (isSaveOutputRaster)
         return saveHourlyMeteoOutput(myVar, outputPath, myTime, "");
     else
         return true;
