@@ -102,7 +102,7 @@ MainWindow::MainWindow(QWidget *parent) :
     myProject.setSaveOutputPoints(false);
     myProject.setComputeOnlyPoints(false);
     ui->flagOutputPoints_save_output->setChecked(myProject.isSaveOutputPoints());
-    ui->flagCompute_only_points->setChecked(myProject.isComputeOnlyPoints());
+    ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
 
     this->setMouseTracking(true);
 }
