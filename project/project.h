@@ -38,9 +38,6 @@
         #include "proxyWidget.h"
     #endif
 
-    #ifndef QSETTINGS_H
-        #include <QSettings>
-    #endif
     #ifndef _FSTREAM_
         #include <fstream>
     #endif
@@ -66,6 +63,7 @@
         QString appPath;
         QString defaultPath;
         QString projectPath;
+        bool computeOnlyPoints;
         FormInfo* formLog;
         ImportPropertiesCSV* importProperties;
 
@@ -237,6 +235,7 @@
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
         bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolationPoints(meteoVariable myVar, const Crit3DTime& myTime);
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         frequencyType getCurrentFrequency() const;
         void setCurrentFrequency(const frequencyType &value);
@@ -261,6 +260,9 @@
         bool deleteMeteoPointsData(const QList<QString>& pointList);
         bool loadOutputPointList(QString fileName);
         bool writeOutputPointList(QString fileName);
+
+        void setComputeOnlyPoints(bool isOnlyPoints);
+        bool getComputeOnlyPoints();
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
