@@ -2428,7 +2428,7 @@ bool Crit3DMeteoGridDbHandler::saveListDailyData(QString *myError, QString meteo
     int varCode = getDailyVarCode(meteoVar);
 
     QString statement = QString("CREATE TABLE IF NOT EXISTS `%1`"
-                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2,VariableCode,MemberNr))").arg(tableD).arg(_tableDaily.fieldTime);
+                                "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2,VariableCode))").arg(tableD).arg(_tableDaily.fieldTime);
 
     qry.exec(statement);
     statement = QString("DELETE FROM `%1` WHERE %2 = DATE('%3') AND VariableCode = '%4'")
