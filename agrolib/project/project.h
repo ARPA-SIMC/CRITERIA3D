@@ -233,10 +233,13 @@
         bool writeTopographicDistanceMap(std::string meteoPointId);
         bool loadTopographicDistanceMaps(bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
+
         bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
-        bool interpolationPoints(meteoVariable myVar, const Crit3DTime& myTime);
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
+                                       gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
+
         frequencyType getCurrentFrequency() const;
         void setCurrentFrequency(const frequencyType &value);
 

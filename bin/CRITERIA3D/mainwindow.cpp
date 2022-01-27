@@ -1668,7 +1668,7 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
         return;
 
     myProject.isMeteo = true;
-    myProject.isRadiation = true;
+    myProject.isRadiation = false;
     myProject.isSnow = false;
     myProject.isCrop = false;
     myProject.isWater = false;
@@ -1762,6 +1762,7 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 
     return runModels(firstTime, lastTime);
 }
+
 
 bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 {
