@@ -2441,10 +2441,9 @@ bool Crit3DMeteoGridDbHandler::saveListDailyData(QString *myError, QString meteo
     else
     {
         statement =  QString(("INSERT INTO `%1` (%2, VariableCode, Value) VALUES ")).arg(tableD).arg(_tableDaily.fieldTime);
-        // reverse order
-        for (int i = values.size()-1; i>=0; i--)
+        for (int i = 0; i<values.size(); i++)
         {
-            float value = values[i];
+            float value = values[values.size()-1-i];  // reverse order
             QString valueS = QString("'%1'").arg(value);
             QDate date = firstDate.addDays(i);
             if (isEqual(value, NODATA)) valueS = "NULL";
