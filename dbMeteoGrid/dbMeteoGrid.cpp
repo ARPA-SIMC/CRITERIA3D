@@ -2431,8 +2431,12 @@ bool Crit3DMeteoGridDbHandler::saveListDailyData(QString *myError, QString meteo
                                 "(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2,VariableCode))").arg(tableD).arg(_tableDaily.fieldTime);
 
     qry.exec(statement);
-    statement = QString("DELETE FROM `%1` WHERE %2 = DATE('%3') AND VariableCode = '%4'")
-                            .arg(tableD).arg(_tableDaily.fieldTime).arg(firstDate.toString("yyyy-MM-dd")).arg(varCode);
+    int nDays = values.size();
+
+    QDate lastDate = firstDate.addDays(nDays-1);
+    statement = QString("DELETE FROM `%1` WHERE %2 BETWEEN CAST('%3' AS DATE) AND CAST('%4' AS DATE) AND VariableCode = '%5'")
+                            .arg(tableD).arg(_tableDaily.fieldTime).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd")).arg(varCode);
+
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();
