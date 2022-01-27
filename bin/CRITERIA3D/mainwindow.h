@@ -192,6 +192,10 @@
 
         void on_actionLoad_external_state_triggered();
 
+        void on_actionTopographicDistanceMapWrite_triggered();
+
+        void on_actionTopographicDistanceMapLoad_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

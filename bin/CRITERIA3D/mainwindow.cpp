@@ -643,7 +643,13 @@ void MainWindow::on_actionLoad_DEM_triggered()
 
     if (fileName == "") return;
 
+    rasterDEM->setDrawing(false);
+    rasterOutput->setDrawing(false);
+
     if (! myProject.loadDEM(fileName)) return;
+
+    rasterDEM->setDrawing(true);
+    rasterOutput->setDrawing(true);
 
     this->renderDEM();
 }
@@ -2696,4 +2702,21 @@ void MainWindow::on_flagView_values_toggled(bool isChecked)
     }
 }
 
+
+void MainWindow::on_actionTopographicDistanceMapWrite_triggered()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Create topographic distance maps", "Only for stations with data?",
+            QMessageBox::Yes|QMessageBox::No);
+
+    bool onlyWithData = (reply == QMessageBox::Yes);
+
+    myProject.writeTopographicDistanceMaps(onlyWithData, true);
+}
+
+
+void MainWindow::on_actionTopographicDistanceMapLoad_triggered()
+{
+    myProject.loadTopographicDistanceMaps(true);
+}
 

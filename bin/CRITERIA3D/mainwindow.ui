@@ -3009,9 +3009,17 @@
     <property name="title">
      <string>Data spatialization</string>
     </property>
+    <widget class="QMenu" name="menuTopographic_Distance_map">
+     <property name="title">
+      <string>Topographic Distance map</string>
+     </property>
+     <addaction name="actionTopographicDistanceMapWrite"/>
+     <addaction name="actionTopographicDistanceMapLoad"/>
+    </widget>
     <addaction name="actionVariableQualitySpatial"/>
-    <addaction name="separator"/>
     <addaction name="actionInterpolationSettings"/>
+    <addaction name="separator"/>
+    <addaction name="menuTopographic_Distance_map"/>
     <addaction name="separator"/>
     <addaction name="actionCompute_hour_meteoVariables"/>
     <addaction name="actionComputePeriod_meteoVariables"/>
@@ -3821,6 +3829,16 @@
   <action name="actionLoad_external_state">
    <property name="text">
     <string>Load external state...</string>
+   </property>
+  </action>
+  <action name="actionTopographicDistanceMapWrite">
+   <property name="text">
+    <string>Write...</string>
+   </property>
+  </action>
+  <action name="actionTopographicDistanceMapLoad">
+   <property name="text">
+    <string>Load...</string>
    </property>
   </action>
  </widget>
