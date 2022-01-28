@@ -1916,6 +1916,8 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 
 bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
+    this->radiationMaps->initialize();
+
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
     radSettings.setGisSettings(&gisSettings);
@@ -1965,7 +1967,6 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     }
 
     // compute radiation
-    this->radiationMaps->initialize();
     if (getComputeOnlyPoints())
     {
         result = radiation::computeRadiationPointsPresentTime(&radSettings, this->DEM, this->radiationMaps, outputPoints, myTime);
