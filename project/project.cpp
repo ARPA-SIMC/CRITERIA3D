@@ -1935,11 +1935,13 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
         }
     }
 
-    if (! checkAndPassDataToInterpolation(quality, atmTransmissivity, meteoPoints, nrMeteoPoints,
+    bool result;
+    result = checkAndPassDataToInterpolation(quality, atmTransmissivity, meteoPoints, nrMeteoPoints,
                                           myTime, &qualityInterpolationSettings, &interpolationSettings,
-                                          meteoSettings, &climateParameters, interpolationPoints, checkSpatialQuality))
+                                          meteoSettings, &climateParameters, interpolationPoints, checkSpatialQuality);
+    if (! result)
     {
-        logError("Function interpolateRasterRadiation: not enough transmissivity data.");
+        logError("Function interpolateDemRadiation: not enough transmissivity data.");
         return false;
     }
 
@@ -1947,27 +1949,33 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
                      meteoPoints, nrMeteoPoints, atmTransmissivity, myTime);
 
     // interpolate transmissivity
-    bool result;
     if (getComputeOnlyPoints())
     {
-        result = interpolationOutputPoints(interpolationPoints, myRaster, atmTransmissivity);
+        result = interpolationOutputPoints(interpolationPoints, this->radiationMaps->transmissivityMap, atmTransmissivity);
     }
     else
     {
         result = interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings,
                                      this->radiationMaps->transmissivityMap, DEM, atmTransmissivity);
     }
-
-    if (!result)
+    if (! result)
     {
-        logError("interpolationRaster: error interpolating transmissivity.");
+        logError("Function interpolateDemRadiation: error interpolating transmissivity.");
         return false;
     }
 
     // compute radiation
-    if (! radiation::computeRadiationGridPresentTime(&radSettings, this->DEM, this->radiationMaps, myTime))
+    if (getComputeOnlyPoints())
     {
-        logError("Function interpolateRasterRadiation: error computing solar radiation");
+        result = radiation::computeRadiationPointsPresentTime(&radSettings, this->DEM, this->radiationMaps, outputPoints, myTime);
+    }
+    else
+    {
+        result = radiation::computeRadiationGridPresentTime(&radSettings, this->DEM, this->radiationMaps, myTime);
+    }
+    if (! result)
+    {
+        logError("Function interpolateDemRadiation: error computing solar radiation");
         return false;
     }
 
