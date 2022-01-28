@@ -1965,6 +1965,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     }
 
     // compute radiation
+    this->radiationMaps->initialize();
     if (getComputeOnlyPoints())
     {
         result = radiation::computeRadiationPointsPresentTime(&radSettings, this->DEM, this->radiationMaps, outputPoints, myTime);
