@@ -1000,6 +1000,32 @@ bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError)
        return true;
 }
 
+bool Crit3DMeteoGridDbHandler::newDatabase(QString *myError)
+{
+
+    if (_connection.provider.toUpper() == "MYSQL")
+    {
+        _db = QSqlDatabase::addDatabase("QMYSQL");
+    }
+
+    _db.setHostName(_connection.server);
+    _db.setUserName(_connection.user);
+    _db.setPassword(_connection.password);
+    _db.open();
+
+    QSqlQuery query(_db);
+
+    query.exec( "CREATE DATABASE IF NOT EXISTS "+_connection.name);
+
+    if (!query.exec())
+    {
+       *myError = "MySQL error:" + query.lastError().text();
+       return false;
+    }
+    _db.setDatabaseName(_connection.name);
+    return true;
+}
+
 bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError, QString connectionName)
 {
 

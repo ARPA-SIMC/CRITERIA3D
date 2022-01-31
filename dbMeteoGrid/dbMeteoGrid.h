@@ -57,6 +57,7 @@
 
         bool openDatabase(QString *myError);
         bool openDatabase(QString *myError, QString connectionName);
+        bool newDatabase(QString *myError);
         void closeDatabase();
         bool parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc, QString *error);
         bool checkXML(QString *myError);
