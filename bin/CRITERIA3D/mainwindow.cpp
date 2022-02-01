@@ -1674,7 +1674,7 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
         return;
 
     myProject.isMeteo = true;
-    myProject.isRadiation = false;
+    myProject.isRadiation = true;
     myProject.isSnow = false;
     myProject.isCrop = false;
     myProject.isWater = false;
