@@ -149,6 +149,16 @@ int Crit3DMeteoGridStructure::nrMembers() const
     return _nrMembers;
 }
 
+int Crit3DMeteoGridStructure::nrRow() const
+{
+    return _header.nrRows;
+}
+
+int Crit3DMeteoGridStructure::nrCol() const
+{
+    return _header.nrCols;
+}
+
 void Crit3DMeteoGridStructure::setNrMembers(int nrMembers)
 {
     _nrMembers = nrMembers;

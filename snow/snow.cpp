@@ -359,10 +359,11 @@ void Crit3DSnow::computeSnowBrooksModel()
     QTempGradient = (3600. * (HEAT_CAPACITY_AIR / 1000.) * (_airT - prevSurfacetemp)) / aerodynamicResistance;
 
     // calore latente pag. 51 (eq. 3.19)
-    // FT: tolta WATER_DENSITY dall'eq. (non corrispondevano le unità di misura)
-    // FT calcolare solo se c'e' manto nevoso?
+    // FT tolta WATER_DENSITY dall'eq. (non corrispondevano le unità di misura
     QVaporGradient = 3600. * (LATENT_HEAT_VAPORIZATION + LATENT_HEAT_FUSION)
             * (AirActualVapDensity - WaterActualVapDensity) / aerodynamicResistance;
+
+    // FT serve formula diversa quando non c'è neve
 
     /*! \brief Energy Balance */
     QTotal = QSolar + QPrecip + QLongWave + QTempGradient + QVaporGradient + QWaterHeat + QWaterKinetic;
@@ -451,8 +452,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     }
     else
     {
-        _surfaceEnergy = prevSurfaceEnergy + (QTotal + (freezeOrMelt / 1000.)
-                                * LATENT_HEAT_FUSION * WATER_DENSITY) * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
+        _surfaceEnergy = prevSurfaceEnergy + (QTotal + (freezeOrMelt / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY)
+                                * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
     }
 
     // TODO passare bulk density
@@ -570,6 +571,7 @@ double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double win
 
     /*! check on wind speed [m/s] */
     windSpeed = std::max(windSpeed, 0.1);
+    windSpeed = std::min(windSpeed, 10.);
 
     /*! check on vegetativeHeight  [m] */
     vegetativeHeight = std::max(vegetativeHeight, 0.01);

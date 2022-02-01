@@ -59,6 +59,7 @@
                     Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                     meteoVariable myVar, Crit3DTime myTime);
     bool getUseDetrendingVar(meteoVariable myVar);
+    bool isThermal(meteoVariable myVar);
     bool getUseTdVar(meteoVariable myVar);
     float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
     bool regressionGeneric(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
