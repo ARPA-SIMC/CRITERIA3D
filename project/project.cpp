@@ -1160,7 +1160,11 @@ bool Project::newMeteoGridDB(QString xmlName)
     if (! this->meteoGridDbHandler->newDatabase(&errorString)) return false;
 
     if (! this->meteoGridDbHandler->newCellProperties(&errorString)) return false;
-/*
+
+    Crit3DMeteoGridStructure structure = this->meteoGridDbHandler->meteoGrid()->gridStructure();
+
+    if (! this->meteoGridDbHandler->writeCellProperties(&errorString, structure.nrRow(), structure.nrCol())) return false;
+
     if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
 
     if (!meteoGridDbHandler->updateGridDate(&errorString))
@@ -1173,7 +1177,7 @@ bool Project::newMeteoGridDB(QString xmlName)
 
     meteoGridLoaded = true;
     logInfo("Meteo Grid = " + xmlName);
-    */
+
     return true;
 }
 
