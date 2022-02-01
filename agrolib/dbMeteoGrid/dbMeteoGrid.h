@@ -57,6 +57,7 @@
 
         bool openDatabase(QString *myError);
         bool openDatabase(QString *myError, QString connectionName);
+        bool newDatabase(QString *myError);
         void closeDatabase();
         bool parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc, QString *error);
         bool checkXML(QString *myError);
@@ -101,6 +102,8 @@
         std::string getMonthlyPragaName(meteoVariable meteoVar);
 
         bool loadCellProperties(QString *myError);
+        bool newCellProperties(QString *myError);
+        bool writeCellProperties(QString *myError, int nRow, int nCol);
         bool loadIdMeteoProperties(QString *myError, QString idMeteo);
         bool updateGridDate(QString *myError);
         bool loadGridDailyData(QString *myError, QString meteoPoint, QDate first, QDate last);

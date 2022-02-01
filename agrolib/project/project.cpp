@@ -1143,6 +1143,45 @@ bool Project::loadMeteoGridDB(QString xmlName)
     return true;
 }
 
+bool Project::newMeteoGridDB(QString xmlName)
+{
+    if (xmlName == "") return false;
+
+    closeMeteoGridDB();
+
+    dbGridXMLFileName = xmlName;
+    xmlName = getCompleteFileName(xmlName, PATH_METEOGRID);
+
+    meteoGridDbHandler = new Crit3DMeteoGridDbHandler();
+    meteoGridDbHandler->meteoGrid()->setGisSettings(this->gisSettings);
+
+    if (! meteoGridDbHandler->parseXMLGrid(xmlName, &errorString)) return false;
+
+    if (! this->meteoGridDbHandler->newDatabase(&errorString)) return false;
+
+    if (! this->meteoGridDbHandler->newCellProperties(&errorString)) return false;
+
+    Crit3DMeteoGridStructure structure = this->meteoGridDbHandler->meteoGrid()->gridStructure();
+
+    if (! this->meteoGridDbHandler->writeCellProperties(&errorString, structure.nrRow(), structure.nrCol())) return false;
+
+    if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
+
+    if (!meteoGridDbHandler->updateGridDate(&errorString))
+    {
+        logInfoGUI("updateGridDate: " + errorString);
+    }
+
+    if (loadGridDataAtStart || ! meteoPointsLoaded)
+        setCurrentDate(meteoGridDbHandler->lastDate());
+
+    meteoGridLoaded = true;
+    logInfo("Meteo Grid = " + xmlName);
+
+    return true;
+}
+
+
 bool Project::loadAggregationdDB(QString dbName)
 {
     if (dbName == "") return false;

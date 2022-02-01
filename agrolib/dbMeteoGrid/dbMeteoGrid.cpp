@@ -1000,6 +1000,38 @@ bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError)
        return true;
 }
 
+bool Crit3DMeteoGridDbHandler::newDatabase(QString *myError)
+{
+
+    if (_connection.provider.toUpper() == "MYSQL")
+    {
+        _db = QSqlDatabase::addDatabase("QMYSQL");
+    }
+
+    _db.setHostName(_connection.server);
+    _db.setUserName(_connection.user);
+    _db.setPassword(_connection.password);
+    _db.open();
+
+    QSqlQuery query(_db);
+
+    query.exec( "CREATE DATABASE IF NOT EXISTS "+_connection.name);
+
+    if (!query.exec())
+    {
+       *myError = "MySQL error:" + query.lastError().text();
+       return false;
+    }
+    _db.setDatabaseName(_connection.name);
+    if (!_db.open())
+    {
+       *myError = "Connection with database fail.\n" + _db.lastError().text();
+       return false;
+    }
+    else
+       return true;
+}
+
 bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError, QString connectionName)
 {
 
@@ -1116,6 +1148,48 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
                 return false;
             }
         }
+    }
+    return true;
+}
+
+bool Crit3DMeteoGridDbHandler::newCellProperties(QString *myError)
+{
+    QSqlQuery qry(_db);
+    QString table = "CellsProperties";
+    QString statement = QString("CREATE TABLE `%1`"
+                                "(`Code` varchar(6) NOT NULL PRIMARY KEY, `SecondaryCode` TEXT, `Name` TEXT, "
+                                "`Notes` TEXT, `Row` INT, `Col` INT, `X` DOUBLE(16,2) DEFAULT 0.00, `Y` DOUBLE(16,2) DEFAULT 0.00, `Height` DOUBLE(16,2) DEFAULT 0.00, `Active` INT)").arg(table);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    return true;
+}
+
+bool Crit3DMeteoGridDbHandler::writeCellProperties(QString *myError, int nRow, int nCol)
+{
+    QSqlQuery qry(_db);
+    QString table = "CellsProperties";
+    int id = 0;
+    QString statement = QString(("INSERT INTO `%1` (`Code`, `Name`, `Row`, `Col`, `Active`) VALUES ")).arg(table);
+    for (int i = 0; i<nRow; i++)
+    {
+        for (int j = 0; j<nCol; j++)
+        {
+            id = id + 1;
+            statement += QString(" ('%1','%2','%3','%4',1),").arg(id, 6, 10, QChar('0')).arg(id, 6, 10, QChar('0')).arg(i).arg(j);
+            _meteoGrid->fillMeteoPoint(i, j, QString("%1").arg(id, 6, 10, QChar('0')).toStdString(), QString("%1").arg(id, 6, 10, QChar('0')).toStdString(), 0, 1);
+        }
+    }
+
+    statement = statement.left(statement.length() - 1);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
     }
     return true;
 }
