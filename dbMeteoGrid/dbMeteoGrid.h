@@ -102,6 +102,7 @@
         std::string getMonthlyPragaName(meteoVariable meteoVar);
 
         bool loadCellProperties(QString *myError);
+        bool newCellProperties(QString *myError);
         bool loadIdMeteoProperties(QString *myError, QString idMeteo);
         bool updateGridDate(QString *myError);
         bool loadGridDailyData(QString *myError, QString meteoPoint, QDate first, QDate last);

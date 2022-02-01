@@ -1159,9 +1159,8 @@ bool Project::newMeteoGridDB(QString xmlName)
 
     if (! this->meteoGridDbHandler->newDatabase(&errorString)) return false;
 
-    /*
-    if (! this->meteoGridDbHandler->loadCellProperties(&errorString)) return false;
-
+    if (! this->meteoGridDbHandler->newCellProperties(&errorString)) return false;
+/*
     if (! this->meteoGridDbHandler->meteoGrid()->createRasterGrid()) return false;
 
     if (!meteoGridDbHandler->updateGridDate(&errorString))

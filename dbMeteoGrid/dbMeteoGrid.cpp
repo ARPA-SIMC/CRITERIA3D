@@ -1023,7 +1023,13 @@ bool Crit3DMeteoGridDbHandler::newDatabase(QString *myError)
        return false;
     }
     _db.setDatabaseName(_connection.name);
-    return true;
+    if (!_db.open())
+    {
+       *myError = "Connection with database fail.\n" + _db.lastError().text();
+       return false;
+    }
+    else
+       return true;
 }
 
 bool Crit3DMeteoGridDbHandler::openDatabase(QString *myError, QString connectionName)
@@ -1142,6 +1148,22 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
                 return false;
             }
         }
+    }
+    return true;
+}
+
+bool Crit3DMeteoGridDbHandler::newCellProperties(QString *myError)
+{
+    QSqlQuery qry(_db);
+    QString table = "CellsProperties";
+    QString statement = QString("CREATE TABLE `%1`"
+                                "(`Code` varchar(5) NOT NULL PRIMARY KEY, `SecondaryCode` TEXT, `Name` TEXT, "
+                                "`Notes` TEXT, `Row` INT, `Col` INT, `X` double, `Y` double, `Height` double, `Active` INT)").arg(table);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
     }
     return true;
 }
