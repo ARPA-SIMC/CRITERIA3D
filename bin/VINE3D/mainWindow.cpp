@@ -138,6 +138,7 @@ void MainWindow::updateMaps()
 void MainWindow::mouseReleaseEvent(QMouseEvent *event){
     updateMaps();
 
+    /*
     if (myRubberBand != nullptr && myRubberBand->isVisible())
     {
         QPoint lastCornerOffset = getMapPos(event->pos());
@@ -197,6 +198,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event){
 
         myRubberBand->hide();
     }
+    */
 }
 
 
@@ -560,7 +562,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 
 void MainWindow::addMeteoPoints()
 {
-    myProject.meteoPointsSelected.clear();
+    myProject.clearSelectedPoints();
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
         StationMarker* point = new StationMarker(5.0, true, QColor((Qt::white)), this->mapView);
