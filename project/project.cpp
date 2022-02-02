@@ -1829,7 +1829,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
                     {
                         return false;
                     }
-                    if (showInfo) logInfoGUI(QString::fromStdString(fileName) + " successfully created!");
+                    if (showInfo) logInfo(QString::fromStdString(fileName) + " successfully created!");
                 }
                 meteoPoints[i].topographicDistance = new gis::Crit3DRasterGrid();
                 if (! gis::readEsriGrid(fileName, meteoPoints[i].topographicDistance, &myError))
