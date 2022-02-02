@@ -1733,14 +1733,9 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 
             if (isSelected)
             {
-                if (gis::topographicDistanceMap(meteoPoints[i].point, DEM, &myMap))
+                if (!writeTopographicDistanceMap(i, DEM, mapsFolder))
                 {
-                    fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
-                    if (! gis::writeEsriGrid(fileName, &myMap, &myError))
-                    {
-                        logError(QString::fromStdString(myError));
-                        return false;
-                    }
+                    return false;
                 }
             }
         }
@@ -1751,7 +1746,7 @@ bool Project::writeTopographicDistanceMaps(bool onlyWithData, bool showInfo)
     return true;
 }
 
-bool Project::writeTopographicDistanceMap(std::string meteoPointId)
+bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRasterGrid& demMap, QString pathTd)
 {
     if (nrMeteoPoints == 0)
     {
@@ -1759,40 +1754,32 @@ bool Project::writeTopographicDistanceMap(std::string meteoPointId)
         return false;
     }
 
-    if (! DEM.isLoaded)
+    if (! demMap.isLoaded)
     {
         logError("Load a Digital Elevation Map before.");
         return false;
     }
 
-    QString mapsFolder = projectPath + PATH_TD;
-    if (! QDir(mapsFolder).exists())
-        QDir().mkdir(mapsFolder);
+    if (! QDir(pathTd).exists())
+        QDir().mkdir(pathTd);
 
     std::string myError;
     std::string fileName;
     gis::Crit3DRasterGrid myMap;
 
-    for (int i=0; i < nrMeteoPoints; i++)
+    if (gis::topographicDistanceMap(meteoPoints[pointIndex].point, demMap, &myMap))
     {
-        if (meteoPoints[i].id == meteoPointId && meteoPoints[i].active)
+        fileName = pathTd.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[pointIndex].id;
+        if (! gis::writeEsriGrid(fileName, &myMap, &myError))
         {
-            if (gis::topographicDistanceMap(meteoPoints[i].point, DEM, &myMap))
-            {
-                fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
-                if (! gis::writeEsriGrid(fileName, &myMap, &myError))
-                {
-                    logError(QString::fromStdString(myError));
-                    return false;
-                }
-            }
-            break;
+            logError(QString::fromStdString(myError));
+            return false;
         }
     }
     return true;
 }
 
-bool Project::loadTopographicDistanceMaps(bool showInfo)
+bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
 {
     if (nrMeteoPoints == 0)
     {
@@ -1815,7 +1802,7 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
 
     std::string myError;
     std::string fileName;
-
+    bool isSelected;
 
     for (int i=0; i < nrMeteoPoints; i++)
     {
@@ -1827,20 +1814,29 @@ bool Project::loadTopographicDistanceMaps(bool showInfo)
 
         if (meteoPoints[i].active)
         {
-            fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
-            if (!QFile::exists(QString::fromStdString(fileName + ".flt")))
+            if (! onlyWithData)
+                isSelected = true;
+            else {
+                isSelected = meteoPointsDbHandler->existData(&meteoPoints[i], daily) || meteoPointsDbHandler->existData(&meteoPoints[i], hourly);
+            }
+
+            if (isSelected)
             {
-                if (!writeTopographicDistanceMap(meteoPoints[i].id))
+                fileName = mapsFolder.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[i].id;
+                if (!QFile::exists(QString::fromStdString(fileName + ".flt")))
                 {
+                    if (!writeTopographicDistanceMap(i, DEM, mapsFolder))
+                    {
+                        return false;
+                    }
+                    if (showInfo) logInfoGUI(QString::fromStdString(fileName) + " successfully created!");
+                }
+                meteoPoints[i].topographicDistance = new gis::Crit3DRasterGrid();
+                if (! gis::readEsriGrid(fileName, meteoPoints[i].topographicDistance, &myError))
+                {
+                    logError(QString::fromStdString(myError));
                     return false;
                 }
-                logInfoGUI(QString::fromStdString(fileName) + " successfully created!");
-            }
-            meteoPoints[i].topographicDistance = new gis::Crit3DRasterGrid();
-            if (! gis::readEsriGrid(fileName, meteoPoints[i].topographicDistance, &myError))
-            {
-                logError(QString::fromStdString(myError));
-                return false;
             }
         }
     }
