@@ -1776,6 +1776,14 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
     myProject.hourlyMeteoMaps->initialize();
     myProject.radiationMaps->initialize();
 
+    // load td maps if needed
+    if (myProject.interpolationSettings.getUseTD())
+    {
+        myProject.logInfoGUI("Loading topographic distance maps...");
+        if (! myProject.loadTopographicDistanceMaps(true, false))
+            return false;
+    }
+
     QDate firstDate = firstTime.date();
     QDate lastDate = lastTime.date();
     int hour1 = firstTime.time().hour();
