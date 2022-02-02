@@ -2717,6 +2717,12 @@ void MainWindow::on_actionTopographicDistanceMapWrite_triggered()
 
 void MainWindow::on_actionTopographicDistanceMapLoad_triggered()
 {
-    myProject.loadTopographicDistanceMaps(true);
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Load topographic distance maps", "Only for stations with data?",
+            QMessageBox::Yes|QMessageBox::No);
+
+    bool onlyWithData = (reply == QMessageBox::Yes);
+
+    myProject.loadTopographicDistanceMaps(onlyWithData, true);
 }
 

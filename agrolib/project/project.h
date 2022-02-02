@@ -231,8 +231,8 @@
         bool updateProxy();
         void checkMeteoPointsDEM();
         bool writeTopographicDistanceMaps(bool onlyWithData, bool showInfo);
-        bool writeTopographicDistanceMap(std::string meteoPointId);
-        bool loadTopographicDistanceMaps(bool showInfo);
+        bool writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRasterGrid& demMap, QString pathTd);
+        bool loadTopographicDistanceMaps(bool onlyWithData, bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
 
         bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
