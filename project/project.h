@@ -106,7 +106,7 @@
         bool meteoPointsLoaded;
         int nrMeteoPoints;
         Crit3DMeteoPoint* meteoPoints;
-        std::vector<Crit3DOutputPoint> outputPoints;
+        std::vector<gis::Crit3DOutputPoint> outputPoints;
 
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
         Crit3DOutputPointsDbHandler* outputPointsDbHandler;
@@ -211,6 +211,7 @@
         bool loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, QString dataset, bool showInfo);
         bool loadMeteoPointsDB(QString dbName);
         bool loadMeteoGridDB(QString xmlName);
+        bool newMeteoGridDB(QString xmlName);
         bool loadAggregationdDB(QString dbName);
         bool loadOutputPointsDB(QString dbName);
         bool newOutputPointsDB(QString dbName);
@@ -230,13 +231,16 @@
         bool updateProxy();
         void checkMeteoPointsDEM();
         bool writeTopographicDistanceMaps(bool onlyWithData, bool showInfo);
-        bool writeTopographicDistanceMap(std::string meteoPointId);
-        bool loadTopographicDistanceMaps(bool showInfo);
+        bool writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRasterGrid& demMap, QString pathTd);
+        bool loadTopographicDistanceMaps(bool onlyWithData, bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
+
         bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
-        bool interpolationPoints(meteoVariable myVar, const Crit3DTime& myTime);
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
+                                       gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
+
         frequencyType getCurrentFrequency() const;
         void setCurrentFrequency(const frequencyType &value);
 

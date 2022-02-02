@@ -5,29 +5,9 @@
 #include <QTextStream>
 #include <QFileInfo>
 
-Crit3DOutputPoint::Crit3DOutputPoint()
-{
-    this->id = "";
-    this->latitude = NODATA;
-    this->longitude = NODATA;
-    this->active = false;
-    this->selected = false;
-    this->currentValue = NODATA;
-}
-
-void Crit3DOutputPoint::initialize(const std::string& _id, bool isActive, double _latitude, double _longitude,
-                              double _z, int zoneNumber)
-{
-    this->id = _id;
-    this->latitude = _latitude;
-    this->longitude = _longitude;
-    this->z = _z;
-    this->active = isActive;
-    gis::latLonToUtmForceZone(zoneNumber, latitude, longitude, &(utm.x), &(utm.y));
-}
 
 
-bool loadOutputPointListCsv(QString csvFileName, std::vector<Crit3DOutputPoint> &outputPointList,
+bool loadOutputPointListCsv(QString csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList,
                          int utmZone, QString &errorString)
 {
     QList<QList<QString>> data;
@@ -36,7 +16,7 @@ bool loadOutputPointListCsv(QString csvFileName, std::vector<Crit3DOutputPoint> 
 
     for (int i = 0; i < data.size(); i++)
     {
-        Crit3DOutputPoint p;
+        gis::Crit3DOutputPoint p;
         QString id = data.at(i)[0];
         QString lat = data.at(i)[1];
         QString lon = data.at(i)[2];
@@ -52,7 +32,7 @@ bool loadOutputPointListCsv(QString csvFileName, std::vector<Crit3DOutputPoint> 
 }
 
 
-bool writeOutputPointListCsv(QString csvFileName, std::vector<Crit3DOutputPoint> &outputPointList, QString &errorString)
+bool writeOutputPointListCsv(QString csvFileName, std::vector<gis::Crit3DOutputPoint> &outputPointList, QString &errorString)
 {
     errorString.clear();
     if (csvFileName == "")
