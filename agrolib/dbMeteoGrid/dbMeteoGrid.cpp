@@ -81,30 +81,55 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
                 myTag = child.toElement().tagName().toUpper();
                 if (myTag == "PROVIDER")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing provider";
+                        return false;
+                    }
                     _connection.provider = child.toElement().text();
                     // remove white spaces
                     _connection.provider = _connection.provider.simplified();
                 }
                 else if (myTag == "SERVER")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing server";
+                        return false;
+                    }
                     _connection.server = child.toElement().text();
                     // remove white spaces
                     _connection.server = _connection.server.simplified();
                 }
                 else if (myTag == "NAME")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing name";
+                        return false;
+                    }
                     _connection.name = child.toElement().text();
                     // remove white spaces
                     _connection.server = _connection.server.simplified();
                 }
                 else if (myTag == "USER")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing user";
+                        return false;
+                    }
                     _connection.user = child.toElement().text();
                     // remove white spaces
                     _connection.user = _connection.user.simplified();
                 }
                 else if (myTag == "PASSWORD")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing password";
+                        return false;
+                    }
                     _connection.password = child.toElement().text();
                     // remove white spaces
                     _connection.password = _connection.password.simplified();
@@ -206,28 +231,58 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
                 myTag = child.toElement().tagName().toUpper();
                 if (myTag == "XLL")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing XLL";
+                        return false;
+                    }
                     header.llCorner.longitude = child.toElement().text().toFloat();
                 }
                 if (myTag == "YLL")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing YLL";
+                        return false;
+                    }
                     header.llCorner.latitude = child.toElement().text().toFloat();
                 }
                 if (myTag == "NROWS")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing NROWS";
+                        return false;
+                    }
                     header.nrRows = child.toElement().text().toInt();
                     nRow = header.nrRows;
                 }
                 if (myTag == "NCOLS")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing NCOLS";
+                        return false;
+                    }
                     header.nrCols = child.toElement().text().toInt();
                     nCol = header.nrCols;
                 }
                 if (myTag == "XWIDTH")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing XWIDTH";
+                        return false;
+                    }
                     header.dx = child.toElement().text().toFloat();
                 }
                 if (myTag == "YWIDTH")
                 {
+                    if (child.toElement().text().isEmpty())
+                    {
+                        *myError = "Missing YWIDTH";
+                        return false;
+                    }
                     header.dy = child.toElement().text().toFloat();
                 }
                 child = child.nextSibling();
