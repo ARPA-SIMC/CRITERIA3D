@@ -530,7 +530,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
         //std::vector<std::vector<int> > occurrence0(12, std::vector<int>(60));
         std::vector<std::vector<int> > daysDry(12, std::vector<int>(60));
         //std::vector<std::vector<int> > occurrence1(12, std::vector<int>(60));
-        std::vector<std::vector<int> > daysWet(12, std::vector<int>(60));
+        //std::vector<std::vector<int> > daysWet(12, std::vector<int>(60));
         int nrSteps = 60;
         /*
         int** occurrence0 = (int **)calloc(12, sizeof(int*));
@@ -553,7 +553,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
                 //occurrence0[i][j]=0;
                 daysDry[i][j]=0;
                 //occurrence1[i][j]=0;
-                daysWet[i][j]=0;
+                //daysWet[i][j]=0;
             }
         }
 
@@ -584,8 +584,8 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
                         }
                         int step=0;
                         recursiveAccountDryDays(idStation,i,iMonth,step,daysDry,nrSteps-1);
-                        step = 0;
-                        recursiveAccountWetDays(idStation,i,iMonth,step,daysWet,nrSteps-1);
+                        //step = 0;
+                        //recursiveAccountWetDays(idStation,i,iMonth,step,daysWet,nrSteps-1);
                     }
                 }
             }
@@ -647,7 +647,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
         }
 
         //getchar();
-
+    /*
         for (int iMonth=0;iMonth<12;iMonth++)
         {
             int iMaxForInterpolation=0;
@@ -702,6 +702,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
                 //printf("%d %f %f\n",i,precOccurence[idStation][iMonth].pDry[i],precOccurence[idStation][iMonth].pWet[i]);
             }
         }
+        */
         /*
         for (int i=0;i<12;i++)
         {
@@ -722,7 +723,7 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
         //occurrence0.clear();
         daysDry.clear();
         //occurrence1.clear();
-        daysWet.clear();
+        //daysWet.clear();
 
     }
     //time ( &rawtime );
