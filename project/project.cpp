@@ -1469,10 +1469,15 @@ QDateTime Project::findDbPointLastTime()
     QDateTime lastTime;
     lastTime.setTimeSpec(Qt::UTC);
 
-    QDateTime lastDateD = meteoPointsDbHandler->getLastDate(daily);
+    QDateTime lastDateD;
+    lastDateD.setTimeSpec(Qt::UTC);
+    lastDateD = meteoPointsDbHandler->getLastDate(daily);
     if (! lastDateD.isNull()) lastTime = lastDateD;
 
-    QDateTime lastDateH = meteoPointsDbHandler->getLastDate(hourly);
+    QDateTime lastDateH;
+    lastDateH.setTimeSpec(Qt::UTC);
+    lastDateH = meteoPointsDbHandler->getLastDate(hourly);
+
     if (! lastDateH.isNull())
     {
         if (! lastTime.isNull())
@@ -1489,14 +1494,19 @@ QDateTime Project::findDbPointFirstTime()
     QDateTime firstTime;
     firstTime.setTimeSpec(Qt::UTC);
 
-    QDateTime firstDateD = meteoPointsDbHandler->getFirstDate(daily);
+    QDateTime firstDateD;
+    firstDateD.setTimeSpec(Qt::UTC);
+    firstDateD = meteoPointsDbHandler->getFirstDate(daily);
     if (! firstDateD.isNull()) firstTime = firstDateD;
 
-    QDateTime firstDateH = meteoPointsDbHandler->getFirstDate(hourly);
+    QDateTime firstDateH;
+    firstDateH.setTimeSpec(Qt::UTC);
+    firstDateH = meteoPointsDbHandler->getFirstDate(hourly);
+
     if (! firstDateH.isNull())
     {
         if (! firstTime.isNull())
-            firstTime = (firstDateD > firstDateH) ? firstDateD : firstDateH;
+            firstTime = (firstDateD < firstDateH) ? firstDateD : firstDateH;
         else
             firstTime = firstDateH;
     }
