@@ -938,6 +938,33 @@ bool Crit3DProject::writeOutputPointsData()
     std::vector<meteoVariable> varList;
     std::vector<float> valuesList;
 
+    if (isMeteo)
+    {
+        varList.push_back(airTemperature);
+        varList.push_back(precipitation);
+        varList.push_back(airRelHumidity);
+        varList.push_back(windScalarIntensity);
+    }
+    if (isRadiation)
+    {
+        varList.push_back(atmTransmissivity);
+        varList.push_back(globalIrradiance);
+        varList.push_back(directIrradiance);
+        varList.push_back(diffuseIrradiance);
+        varList.push_back(reflectedIrradiance);
+    }
+    if (isSnow)
+    {
+        varList.push_back(snowWaterEquivalent);
+        varList.push_back(snowFall);
+        varList.push_back(snowMelt);
+        varList.push_back(snowSurfaceTemperature);
+        varList.push_back(snowSurfaceEnergy);
+        varList.push_back(snowInternalEnergy);
+        varList.push_back(sensibleHeat);
+        varList.push_back(latentHeat);
+    }
+
     for (unsigned int i = 0; i < outputPoints.size(); i++)
     {
         if (outputPoints[i].active)
@@ -947,45 +974,28 @@ bool Crit3DProject::writeOutputPointsData()
             tableName = QString::fromStdString(outputPoints[i].id);
             if (isMeteo)
             {
-                varList.push_back(airTemperature);
                 valuesList.push_back(hourlyMeteoMaps->mapHourlyTair->getFastValueXY(x, y));
-                varList.push_back(precipitation);
                 valuesList.push_back(hourlyMeteoMaps->mapHourlyPrec->getFastValueXY(x, y));
-                varList.push_back(airRelHumidity);
                 valuesList.push_back(hourlyMeteoMaps->mapHourlyRelHum->getFastValueXY(x, y));
-                varList.push_back(windScalarIntensity);
                 valuesList.push_back(hourlyMeteoMaps->mapHourlyWindScalarInt->getFastValueXY(x, y));
             }
             if (isRadiation)
             {
-                varList.push_back(atmTransmissivity);
                 valuesList.push_back(radiationMaps->transmissivityMap->getFastValueXY(x, y));
-                varList.push_back(globalIrradiance);
                 valuesList.push_back(radiationMaps->globalRadiationMap->getFastValueXY(x, y));
-                varList.push_back(directIrradiance);
                 valuesList.push_back(radiationMaps->beamRadiationMap->getFastValueXY(x, y));
-                varList.push_back(diffuseIrradiance);
                 valuesList.push_back(radiationMaps->diffuseRadiationMap->getFastValueXY(x, y));
-                varList.push_back(reflectedIrradiance);
                 valuesList.push_back(radiationMaps->reflectedRadiationMap->getFastValueXY(x, y));
             }
             if (isSnow)
             {
-                varList.push_back(snowWaterEquivalent);
                 valuesList.push_back(snowMaps.getSnowWaterEquivalentMap()->getFastValueXY(x, y));
-                varList.push_back(snowFall);
                 valuesList.push_back(snowMaps.getSnowFallMap()->getFastValueXY(x, y));
-                varList.push_back(snowMelt);
                 valuesList.push_back(snowMaps.getSnowMeltMap()->getFastValueXY(x, y));
-                varList.push_back(snowSurfaceTemperature);
                 valuesList.push_back(snowMaps.getSnowSurfaceTempMap()->getFastValueXY(x, y));
-                varList.push_back(snowSurfaceEnergy);
                 valuesList.push_back(snowMaps.getSurfaceEnergyMap()->getFastValueXY(x, y));
-                varList.push_back(snowInternalEnergy);
                 valuesList.push_back(snowMaps.getInternalEnergyMap()->getFastValueXY(x, y));
-                varList.push_back(sensibleHeat);
                 valuesList.push_back(snowMaps.getSensibleHeatMap()->getFastValueXY(x, y));
-                varList.push_back(latentHeat);
                 valuesList.push_back(snowMaps.getLatentHeatMap()->getFastValueXY(x, y));
             }
 
@@ -993,8 +1003,10 @@ bool Crit3DProject::writeOutputPointsData()
             {
                 return false;
             }
+            valuesList.clear();
         }
     }
+    varList.clear();
 
     return true;
 }
