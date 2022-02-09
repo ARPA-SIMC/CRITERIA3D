@@ -208,35 +208,48 @@ void weatherGenerator2D::computeMonthlyTemperatures()
     countTmax = (int**)calloc(12,sizeof(int*));
     countPrec = (int**)calloc(12,sizeof(int*));
     //countTmean = (int**)calloc(12,sizeof(int*));
-    monthlyAverageOverYearsAverageTmax = (double*)calloc(12,sizeof(double));
-    monthlyAverageOverYearsAverageTmin = (double*)calloc(12,sizeof(double));
-    monthlyAverageOverYearsAverageTmean = (double*)calloc(12,sizeof(double));
-    monthlyAverageOverYearsAveragePrec = (double*)calloc(12,sizeof(double));
-    monthlyStdDevOverYearsAverageTmax = (double*)calloc(12,sizeof(double));
-    monthlyStdDevOverYearsAverageTmin = (double*)calloc(12,sizeof(double));
-    monthlyStdDevOverYearsAverageTmean = (double*)calloc(12,sizeof(double));
-    monthlyStdDevOverYearsAveragePrec = (double*)calloc(12,sizeof(double));
+
+
+    monthlyAverageOverYearsAverageTmax = (double**)calloc(12,sizeof(double*));
+    monthlyAverageOverYearsAverageTmin = (double**)calloc(12,sizeof(double*));
+    monthlyAverageOverYearsAverageTmean = (double**)calloc(12,sizeof(double*));
+    monthlyAverageOverYearsAveragePrec = (double**)calloc(12,sizeof(double*));
+    monthlyStdDevOverYearsAverageTmax = (double**)calloc(12,sizeof(double*));
+    monthlyStdDevOverYearsAverageTmin = (double**)calloc(12,sizeof(double*));
+    monthlyStdDevOverYearsAverageTmean = (double**)calloc(12,sizeof(double*));
+    monthlyStdDevOverYearsAveragePrec = (double**)calloc(12,sizeof(double*));
 
 
     for (int i=0;i<12;i++)
     {
-        monthlyAverageTmax[i]= (double*)calloc(obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year,sizeof(double));
-        monthlyAverageTmin[i]= (double*)calloc(obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year,sizeof(double));
-        monthlyAverageTmean[i]= (double*)calloc(obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year,sizeof(double));
-        monthlyAveragePrec[i]= (double*)calloc(obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year,sizeof(double));
-        countTmin[i]= (int*)calloc(obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1,sizeof(int));
-        countTmax[i]= (int*)calloc(obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1,sizeof(int));
-        countPrec[i]= (int*)calloc(obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1,sizeof(int));
-        monthlyAverageOverYearsAverageTmax[i] = 0;
-        monthlyAverageOverYearsAverageTmin[i] = 0;
-        monthlyAverageOverYearsAverageTmean[i] = 0;
-        monthlyAverageOverYearsAveragePrec[i] = 0;
-        monthlyStdDevOverYearsAverageTmax[i] = 0;
-        monthlyStdDevOverYearsAverageTmin[i] = 0;
-        monthlyStdDevOverYearsAverageTmean[i] = 0;
-        monthlyStdDevOverYearsAveragePrec[i] = 0;
-        for (int j=0;j<obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;j++)
+        monthlyAverageTmax[i]= (double*)calloc(nrStations,sizeof(double));
+        monthlyAverageTmin[i]= (double*)calloc(nrStations,sizeof(double));
+        monthlyAverageTmean[i]= (double*)calloc(nrStations,sizeof(double));
+        monthlyAveragePrec[i]= (double*)calloc(nrStations,sizeof(double));
+        monthlyAverageOverYearsAverageTmax[i] = (double*)calloc(nrStations,sizeof(double));
+        monthlyAverageOverYearsAverageTmin[i] = (double*)calloc(nrStations,sizeof(double));
+        monthlyAverageOverYearsAverageTmean[i] = (double*)calloc(nrStations,sizeof(double));
+        monthlyAverageOverYearsAveragePrec[i] = (double*)calloc(nrStations,sizeof(double));
+        monthlyStdDevOverYearsAverageTmax[i] = (double*)calloc(nrStations,sizeof(double));
+        monthlyStdDevOverYearsAverageTmin[i] = (double*)calloc(nrStations,sizeof(double));
+        monthlyStdDevOverYearsAverageTmean[i] = (double*)calloc(nrStations,sizeof(double));
+        monthlyStdDevOverYearsAveragePrec[i] = (double*)calloc(nrStations,sizeof(double));
+
+
+        countTmin[i]= (int*)calloc(nrStations,sizeof(int));
+        countTmax[i]= (int*)calloc(nrStations,sizeof(int));
+        countPrec[i]= (int*)calloc(nrStations,sizeof(int));
+        for (int j=0;j<nrStations;j++)
         {
+            monthlyAverageOverYearsAverageTmax[i][j] = 0;
+            monthlyAverageOverYearsAverageTmin[i][j] = 0;
+            monthlyAverageOverYearsAverageTmean[i][j] = 0;
+            monthlyAverageOverYearsAveragePrec[i][j] = 0;
+            monthlyStdDevOverYearsAverageTmax[i][j] = 0;
+            monthlyStdDevOverYearsAverageTmin[i][j] = 0;
+            monthlyStdDevOverYearsAverageTmean[i][j] = 0;
+            monthlyStdDevOverYearsAveragePrec[i][j] = 0;
+
             monthlyAverageTmax[i][j]=0;
             monthlyAverageTmin[i][j]=0;
             monthlyAverageTmean[i][j]=0;
@@ -253,42 +266,50 @@ void weatherGenerator2D::computeMonthlyTemperatures()
         {
             if(fabs(obsDataD[iStation][iDatum].tMax) > 60) obsDataD[iStation][iDatum].tMax = NODATA;
             if(fabs(obsDataD[iStation][iDatum].tMin) > 60) obsDataD[iStation][iDatum].tMin = NODATA;
-            int decadalLag;
+            //int decadalLag;
+            /*
             if (obsDataD[iStation][iDatum].date.day <10) decadalLag =0;
             else if (obsDataD[iStation][iDatum].date.day >=20) decadalLag =2;
             else decadalLag = 1;
+            */
             if (fabs(obsDataD[iStation][iDatum].tMin-NODATA) > EPSILON)
             {
-                monthlyAverageTmin[(obsDataD[iStation][iDatum].date.month-1)][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year]+= obsDataD[iStation][iDatum].tMin;
-                ++countTmin[(obsDataD[iStation][iDatum].date.month-1)][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year];
+                monthlyAverageTmin[(obsDataD[iStation][iDatum].date.month-1)][iStation]+= obsDataD[iStation][iDatum].tMin;
+                ++countTmin[(obsDataD[iStation][iDatum].date.month-1)][iStation];
             }
             if (fabs(obsDataD[iStation][iDatum].tMax-NODATA) > EPSILON)
             {
-                monthlyAverageTmax[(obsDataD[iStation][iDatum].date.month-1)][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year]+= obsDataD[iStation][iDatum].tMax;
-                ++countTmax[(obsDataD[iStation][iDatum].date.month-1)][obsDataD[iStation][iDatum].date.year-obsDataD[iStation][0].date.year];
+                monthlyAverageTmax[(obsDataD[iStation][iDatum].date.month-1)][iStation]+= obsDataD[iStation][iDatum].tMax;
+                ++countTmax[(obsDataD[iStation][iDatum].date.month-1)][iStation];
             }
-
+            if (fabs(obsDataD[iStation][iDatum].prec-NODATA) > EPSILON)
+            {
+                monthlyAverageTmax[(obsDataD[iStation][iDatum].date.month-1)][iStation]+= obsDataD[iStation][iDatum].tMax;
+                ++countTmax[(obsDataD[iStation][iDatum].date.month-1)][iStation];
+            }
         }
 
     }
 
     for (int i=0;i<12;i++)
     {
-        for (int j=0;j<obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;j++)
+        for (int j=0;j<nrStations;j++)
         {
             monthlyAverageTmax[i][j] /= countTmax[i][j];
             monthlyAverageTmin[i][j] /= countTmin[i][j];
             monthlyAverageTmean[i][j] = 0.5*(monthlyAverageTmax[i][j]+monthlyAverageTmin[i][j]);
-            monthlyAverageOverYearsAverageTmax[i] += monthlyAverageTmax[i][j];
-            monthlyAverageOverYearsAverageTmin[i] += monthlyAverageTmin[i][j];
-            monthlyAverageOverYearsAverageTmean[i] += monthlyAverageTmean[i][j];
+            monthlyAverageOverYearsAverageTmax[i][j] += monthlyAverageTmax[i][j];
+            monthlyAverageOverYearsAverageTmin[i][j] += monthlyAverageTmin[i][j];
+            monthlyAverageOverYearsAverageTmean[i][j] += monthlyAverageTmean[i][j];
+
+            monthlyAverageOverYearsAverageTmax[i][j] /= obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;
+            monthlyAverageOverYearsAverageTmin[i][j] /= obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;
+            monthlyAverageOverYearsAverageTmean[i][j] /= obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;
+            monthlyStdDevOverYearsAverageTmax[i][j] = sqrt(statistics::variance(monthlyAverageTmax[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
+            monthlyStdDevOverYearsAverageTmin[i][j] = sqrt(statistics::variance(monthlyAverageTmin[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
+            monthlyStdDevOverYearsAverageTmean[i][j] = sqrt(statistics::variance(monthlyAverageTmean[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
+
         }
-        monthlyAverageOverYearsAverageTmax[i] /= obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;
-        monthlyAverageOverYearsAverageTmin[i] /= obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;
-        monthlyAverageOverYearsAverageTmean[i] /= obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;
-        monthlyStdDevOverYearsAverageTmax[i] = sqrt(statistics::variance(monthlyAverageTmax[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
-        monthlyStdDevOverYearsAverageTmin[i] = sqrt(statistics::variance(monthlyAverageTmin[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
-        monthlyStdDevOverYearsAverageTmean[i] = sqrt(statistics::variance(monthlyAverageTmean[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
     }
     //srand (time(nullptr));
     //double temp = (double) rand() / (RAND_MAX);
