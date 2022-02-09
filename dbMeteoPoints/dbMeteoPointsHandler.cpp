@@ -1549,6 +1549,31 @@ QList<QString> Crit3DMeteoPointsDbHandler::getDatasetList()
     return datasetList;
 }
 
+QString Crit3DMeteoPointsDbHandler::getDatasetFromId(const QString& idPoint)
+{
+
+    QSqlQuery qry(_db);
+    QString dataset;
+    dataset.clear();
+
+    qry.prepare( "SELECT dataset from point_properties id_point = :id_point");
+    qry.bindValue(":id_point", idPoint);
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return dataset;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("dataset"), &dataset);
+        }
+    }
+    return dataset;
+}
+
 bool Crit3DMeteoPointsDbHandler::setActiveStateIfCondition(bool activeState, QString condition)
 {
     QSqlQuery qry(_db);

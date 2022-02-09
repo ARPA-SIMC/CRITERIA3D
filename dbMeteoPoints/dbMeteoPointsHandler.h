@@ -42,6 +42,7 @@
         QList<QString> getDatasetsList();
         QList<QString> getDatasetsActive();
         void setDatasetsActive(QString active);
+        QString getDatasetFromId(const QString& idPoint);
 
         QDateTime getFirstDate(frequencyType frequency);
         QDateTime getLastDate(frequencyType frequency);
