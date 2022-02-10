@@ -1556,7 +1556,7 @@ QString Crit3DMeteoPointsDbHandler::getDatasetFromId(const QString& idPoint)
     QString dataset;
     dataset.clear();
 
-    qry.prepare( "SELECT dataset from point_properties id_point = :id_point");
+    qry.prepare( "SELECT dataset from point_properties WHERE id_point = :id_point");
     qry.bindValue(":id_point", idPoint);
 
     if( !qry.exec() )
@@ -1572,6 +1572,30 @@ QString Crit3DMeteoPointsDbHandler::getDatasetFromId(const QString& idPoint)
         }
     }
     return dataset;
+}
+
+int Crit3DMeteoPointsDbHandler::getArkIdFromVar(const QString& variable)
+{
+
+    QSqlQuery qry(_db);
+    int arkId = NODATA;
+
+    qry.prepare( "SELECT id_arkimet from variable_properties WHERE variable = :variable");
+    qry.bindValue(":variable", variable);
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return arkId;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("id_arkimet"), &arkId);
+        }
+    }
+    return arkId;
 }
 
 bool Crit3DMeteoPointsDbHandler::setActiveStateIfCondition(bool activeState, QString condition)
