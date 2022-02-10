@@ -69,6 +69,7 @@
         bool loadVariableProperties();
         bool getNameColumn(QString tableName, QList<QString>* columnList);
         int getIdfromMeteoVar(meteoVariable meteoVar);
+        int getArkIdFromVar(const QString& variable);
         std::map<int, meteoVariable> getMapIdMeteoVar() const;
 
         bool existIdPoint(const QString& idPoint);
