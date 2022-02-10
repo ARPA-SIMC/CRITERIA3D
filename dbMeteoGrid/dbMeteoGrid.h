@@ -57,6 +57,7 @@
 
         bool openDatabase(QString *myError);
         bool openDatabase(QString *myError, QString connectionName);
+        bool newDatabase(QString *myError);
         void closeDatabase();
         bool parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc, QString *error);
         bool checkXML(QString *myError);
@@ -101,6 +102,8 @@
         std::string getMonthlyPragaName(meteoVariable meteoVar);
 
         bool loadCellProperties(QString *myError);
+        bool newCellProperties(QString *myError);
+        bool writeCellProperties(QString *myError, int nRow, int nCol);
         bool loadIdMeteoProperties(QString *myError, QString idMeteo);
         bool updateGridDate(QString *myError);
         bool loadGridDailyData(QString *myError, QString meteoPoint, QDate first, QDate last);
@@ -127,6 +130,7 @@
         bool saveCellGridMonthlyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
                                                              QList<meteoVariable> meteoVariableList);
         bool saveListDailyDataEnsemble(QString *myError, QString meteoPointID, QDate date, meteoVariable meteoVar, QList<float> values);
+        bool saveListDailyData(QString *myError, QString meteoPointID, QDate firstDate, meteoVariable meteoVar, QList<float> values);
         bool cleanDailyOldData(QString *myError, QDate date);
         bool saveListHourlyData(QString *myError, QString meteoPointID, QDateTime firstDateTime, meteoVariable meteoVar, QList<float> values);
         bool saveCellCurrentGridDaily(QString *myError, QString meteoPointID, QDate date, int varCode, float value);

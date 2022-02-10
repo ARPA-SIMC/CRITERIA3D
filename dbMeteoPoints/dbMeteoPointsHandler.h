@@ -26,6 +26,7 @@
     public:
         QString error;
 
+        explicit Crit3DMeteoPointsDbHandler();
         explicit Crit3DMeteoPointsDbHandler(QString dbname_);
         explicit Crit3DMeteoPointsDbHandler(QString provider_, QString host_, QString dbname_, int port_, QString user_, QString pass_);
 
@@ -36,10 +37,12 @@
 
         QSqlDatabase getDb() const;
         void setDb(const QSqlDatabase &db);
+        bool setAndOpenDb(QString dbname_);
 
         QList<QString> getDatasetsList();
         QList<QString> getDatasetsActive();
         void setDatasetsActive(QString active);
+        QString getDatasetFromId(const QString& idPoint);
 
         QDateTime getFirstDate(frequencyType frequency);
         QDateTime getLastDate(frequencyType frequency);
@@ -66,6 +69,7 @@
         bool loadVariableProperties();
         bool getNameColumn(QString tableName, QList<QString>* columnList);
         int getIdfromMeteoVar(meteoVariable meteoVar);
+        int getArkIdFromVar(const QString& variable);
         std::map<int, meteoVariable> getMapIdMeteoVar() const;
 
         bool existIdPoint(const QString& idPoint);

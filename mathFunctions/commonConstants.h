@@ -50,6 +50,7 @@
     #define PATH_SETTINGS "SETTINGS/"
     #define PATH_OUTPUT "OUTPUT/"
     #define PATH_TD "TD/"
+    #define PATH_STATES "STATES/"
 
     // --------------- soilFluxes3D ----------------
     #define NOLINK -1

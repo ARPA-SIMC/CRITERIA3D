@@ -55,6 +55,9 @@
             int nrMembers() const;
             void setNrMembers(int nrMembers);
 
+            int nrRow() const;
+            int nrCol() const;
+
     private:
             std::string _name;
             gis::Crit3DGridHeader _header;

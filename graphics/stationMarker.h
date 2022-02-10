@@ -22,7 +22,6 @@
             void setAltitude(double altitude);
             void setMunicipality(const std::string &municipality);
             void setQuality(const quality::qualityType &quality);
-            void setCurrentValue(float currentValue);
             bool active() const;
             void setActive(bool active);
 

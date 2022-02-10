@@ -474,7 +474,9 @@ void weatherGenerator2D::precipitationP00P10()
         for (int iMonth=0;iMonth<12;iMonth++)
         {
             //printf("before %d %f\n",iMonth+1,precOccurence[idStation][iMonth].p00);
+
             precOccurence[idStation][iMonth].p00 = (precOccurence[idStation][iMonth].p00)/(1-precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition]) - (precOccurence[idStation][iMonth].pDry[consecutiveDayTransition]) * (precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition])/(1-precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition]);
+
             //printf("after %d %f\n",iMonth+1,precOccurence[idStation][iMonth].p00);
             //printf("after %d %f %f %f\n",iMonth+1,precOccurence[idStation][iMonth].pDry[consecutiveDayTransition],precOccurence[idStation][iMonth].pDryWeight[consecutiveDayTransition],precOccurence[idStation][iMonth].p00);
             //getchar();
@@ -492,56 +494,66 @@ void weatherGenerator2D::precipitationP00P10()
     //getchar();*/
 }
 
-int weatherGenerator2D::recursiveAccountDryDays(int idStation, int i, int iMonth,int step, int** consecutiveDays, int** occurrence, int nrFollowingSteps)
+int weatherGenerator2D::recursiveAccountDryDays(int idStation, int i, int iMonth,int step, std::vector<std::vector<int> > &consecutiveDays, int nrFollowingSteps)
 {
     consecutiveDays[iMonth-1][step]++;
     if (obsDataD[idStation][i+step].prec < parametersModel.precipitationThreshold && step<nrFollowingSteps)
     {
-        occurrence[iMonth-1][step]++;
-        recursiveAccountDryDays(idStation, i, iMonth, step+1, consecutiveDays, occurrence, nrFollowingSteps);
+        //occurrence[iMonth-1][step]++;
+        recursiveAccountDryDays(idStation, i, iMonth, step+1, consecutiveDays, nrFollowingSteps);
     }
     return 0;
 }
 
-int weatherGenerator2D::recursiveAccountWetDays(int idStation, int i, int iMonth,int step, int** consecutiveDays, int** occurrence, int nrFollowingSteps)
+int weatherGenerator2D::recursiveAccountWetDays(int idStation, int i, int iMonth,int step, std::vector<std::vector<int> > &consecutiveDays, int nrFollowingSteps)
 {
     consecutiveDays[iMonth-1][step]++;
     if (obsDataD[idStation][i+step].prec >= parametersModel.precipitationThreshold && step<nrFollowingSteps)
     {
-        occurrence[iMonth-1][step]++;
-        recursiveAccountWetDays(idStation, i, iMonth, step+1, consecutiveDays, occurrence, nrFollowingSteps);
+        //occurrence[iMonth-1][step]++;
+        recursiveAccountWetDays(idStation, i, iMonth, step+1, consecutiveDays, nrFollowingSteps);
     }
     return 0;
 }
 
 void weatherGenerator2D::precipitationPDryUntilNSteps()
 {
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time ( &rawtime );
+    timeinfo = localtime ( &rawtime );
+    printf ( "Current local time and date: %s", asctime (timeinfo) );
     for (int idStation=0;idStation<nrStations;idStation++)
     {
-        int** occurrence0;
-        int** daysDry;
-        int** occurrence1;
-        int** daysWet;
+        printf("site %d\n",idStation);
+        //std::vector<std::vector<int> > occurrence0(12, std::vector<int>(60));
+        std::vector<std::vector<int> > daysDry(12, std::vector<int>(60));
+        //std::vector<std::vector<int> > occurrence1(12, std::vector<int>(60));
+        //std::vector<std::vector<int> > daysWet(12, std::vector<int>(60));
         int nrSteps = 60;
-        occurrence0 = (int **)calloc(12, sizeof(int*));
-        daysDry = (int **)calloc(12, sizeof(int*));
-        occurrence1 = (int **)calloc(12, sizeof(int*));
-        daysWet = (int **)calloc(12, sizeof(int*));
+        /*
+        int** occurrence0 = (int **)calloc(12, sizeof(int*));
+        int** daysDry = (int **)calloc(12, sizeof(int*));
+        int** occurrence1 = (int **)calloc(12, sizeof(int*));
+        int** daysWet = (int **)calloc(12, sizeof(int*));
+        */
         int daysWithoutRain[12]={0,0,0,0,0,0,0,0,0,0,0,0};
         int daysWithRain[12]={0,0,0,0,0,0,0,0,0,0,0,0};
         for(int i=0;i<12;i++)
         {
-
+            /*
             occurrence0[i] = (int *)calloc(nrSteps, sizeof(int));
             daysDry[i] = (int *)calloc(nrSteps, sizeof(int));
             occurrence1[i] = (int *)calloc(nrSteps, sizeof(int));
             daysWet[i] = (int *)calloc(nrSteps, sizeof(int));
+            */
             for(int j=0;j<nrSteps;j++)
             {
-                occurrence0[i][j]=0;
+                //occurrence0[i][j]=0;
                 daysDry[i][j]=0;
-                occurrence1[i][j]=0;
-                daysWet[i][j]=0;
+                //occurrence1[i][j]=0;
+                //daysWet[i][j]=0;
             }
         }
 
@@ -571,9 +583,9 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
                             daysWithRain[iMonth-1]++;
                         }
                         int step=0;
-                        recursiveAccountDryDays(idStation,i,iMonth,step,daysDry,occurrence0,nrSteps);
-                        step = 0;
-                        recursiveAccountWetDays(idStation,i,iMonth,step,daysWet,occurrence1,nrSteps);
+                        recursiveAccountDryDays(idStation,i,iMonth,step,daysDry,nrSteps-1);
+                        //step = 0;
+                        //recursiveAccountWetDays(idStation,i,iMonth,step,daysWet,nrSteps-1);
                     }
                 }
             }
@@ -584,21 +596,21 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
         {
             int iMaxForInterpolation=0;
             //printf("month %d\n",iMonth+1);
-            for (int i=0;i<nrSteps;i++)
+            for (int i=0;i<nrSteps-1;i++)
             {
                 int numberOfDryDays;
                 numberOfDryDays = daysDry[iMonth][i];
                 if (numberOfDryDays!= 0)
                 {
-                    precOccurence[idStation][iMonth].pDry[i] = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence0[iMonth][i])/numberOfDryDays));
-                    if (numberOfDryDays > 20 && occurrence0[iMonth][i]> EPSILON) iMaxForInterpolation = i;
+                    precOccurence[idStation][iMonth].pDry[i] = MINVALUE(ONELESSEPSILON,(double)((1.0*daysDry[iMonth][i+1])/numberOfDryDays));
+                    if (numberOfDryDays > 20 && daysDry[iMonth][i+1]> EPSILON) iMaxForInterpolation = i;
                 }
                 else
                 {
                     precOccurence[idStation][iMonth].pDry[i] = 0.0;
                 }
-                if (occurrence0[iMonth][0] != 0)
-                    precOccurence[idStation][iMonth].pDryWeight[i] = 1.0*occurrence0[iMonth][i]/occurrence0[iMonth][0];
+                if (daysDry[iMonth][1] != 0)
+                    precOccurence[idStation][iMonth].pDryWeight[i] = 1.0*daysDry[iMonth][i+1]/daysDry[iMonth][1];
                 else
                     precOccurence[idStation][iMonth].pDryWeight[i] = 0;
                 //printf("month %d, step %d, occurrence %d weight %f\n",iMonth,i,occurrence0[iMonth][i],precOccurence[idStation][iMonth].pDryWeight[i]);
@@ -617,20 +629,15 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
             }
             occurrenceFitting[0] = occurrenceFitting[1];
             statistics::rollingAverage(occurrenceFitting,iMaxForInterpolation,1,occurrenceFitted);
-/*
-            for (int i=0;i<iMaxForInterpolation;i++)
-            {
 
-                printf("%d) %.2f %.2f \n",i,occurrenceFitted[i],occurrenceFitting[i]);
-            }
-*/
+
 
             int i;
             for (i=0;i<iMaxForInterpolation;i++)
             {
                  precOccurence[idStation][iMonth].pDry[i] = MINVALUE(0.99,occurrenceFitted[i]);
             }
-            while (i<nrSteps)
+            while (i<nrSteps-1)
             {
                 precOccurence[idStation][iMonth].pDry[i] = precOccurence[idStation][iMonth].pDry[i-1]*0.999;
                 i++;
@@ -638,19 +645,21 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
             free(occurrenceFitting);
             free(occurrenceFitted);
         }
+
         //getchar();
+    /*
         for (int iMonth=0;iMonth<12;iMonth++)
         {
             int iMaxForInterpolation=0;
             //printf("month %d\n",iMonth+1);
-            for (int i=0;i<nrSteps;i++)
+            for (int i=0;i<nrSteps-1;i++)
             {
                 int numberOfWetDays;
                 numberOfWetDays = daysWet[iMonth][i];
                 if (numberOfWetDays!= 0)
                 {
-                    precOccurence[idStation][iMonth].pWet[i] = MINVALUE(ONELESSEPSILON,(double)((1.0*occurrence1[iMonth][i])/numberOfWetDays));
-                    if (numberOfWetDays > 20 && occurrence1[iMonth][i]> EPSILON) iMaxForInterpolation = i;
+                    precOccurence[idStation][iMonth].pWet[i] = MINVALUE(ONELESSEPSILON,(double)((1.0*daysWet[iMonth][i+1])/numberOfWetDays));
+                    if (numberOfWetDays > 20 && daysWet[iMonth][i+1]> EPSILON) iMaxForInterpolation = i;
                 }
                 else
                 {
@@ -693,8 +702,8 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
                 //printf("%d %f %f\n",i,precOccurence[idStation][iMonth].pDry[i],precOccurence[idStation][iMonth].pWet[i]);
             }
         }
-        //getchar();
-
+        */
+        /*
         for (int i=0;i<12;i++)
         {
             free(occurrence0[i]);
@@ -702,12 +711,24 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
             free(occurrence1[i]);
             free(daysWet[i]);
         }
-        free(occurrence0);
-        free(daysDry);
-        free(occurrence1);
-        free(daysWet);
+        if (occurrence0 != NULL)
+            free(occurrence0);
+        if (daysDry != nullptr)
+            free(daysDry);
+        if (occurrence1 != nullptr)
+            free(occurrence1);
+        if (daysWet != nullptr)
+            free(daysWet);*/
+
+        //occurrence0.clear();
+        daysDry.clear();
+        //occurrence1.clear();
+        //daysWet.clear();
+
     }
-    //getchar();
+    //time ( &rawtime );
+    //timeinfo = localtime ( &rawtime );
+    //printf ( "Current local time and date: %s", asctime (timeinfo) );
 }
 
 void weatherGenerator2D::precipitationCorrelationMatrices()
@@ -909,18 +930,16 @@ void weatherGenerator2D::precipitationMultisiteOccurrenceGeneration()
             {
                 normalizedTransitionProbabilityAugmentedMemory[i][0][k]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].pDry[k])));
                 normalizedTransitionProbabilityAugmentedMemory[i][1][k]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].pWet[k])));
+                //normalizedTransitionProbabilityAugmentedMemory[i][0][k]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].p00)));
+                //normalizedTransitionProbabilityAugmentedMemory[i][1][k]= - (SQRT_2*(statistics::inverseTabulatedERFC(2*precOccurence[i][iMonth].p10)));
                 //printf("%d,%f,%f\n",k,normalizedTransitionProbabilityAugmentedMemory[i][0][k],normalizedTransitionProbabilityAugmentedMemory[i][1][k]);
             }
             //getchar();
             for (int jCount=0;jCount<nrDaysIterativeProcessMonthly[iMonth];jCount++)
             {
                normalizedRandomMatrix[i][jCount]= myrandom::normalRandom(&gasDevIset,&gasDevGset);
-               //normalizedRandomMatrix[i][jCount]= myrandom::cauchyRandom(&gasDevIset,&gasDevGset,0.85);
-               //printf("%d  %f \n",i,normalizedRandomMatrix[i][jCount]);
-               //getchar();
             }
-            //printf("%d  %f  %f %f\n",i,normalizedTransitionProbability[i][0],normalizedTransitionProbability[i][1],normalizedRandomMatrix[i][0]);
-            //getchar();
+
         }
         //getchar();
         weatherGenerator2D::spatialIterationOccurrence(randomMatrix[iMonth].matrixM,randomMatrix[iMonth].matrixK,randomMatrix[iMonth].matrixOccurrences,matrixOccurrence,normalizedRandomMatrix,normalizedTransitionProbability,normalizedTransitionProbabilityAugmentedMemory,nrDaysIterativeProcessMonthly[iMonth]);
@@ -1163,7 +1182,7 @@ void weatherGenerator2D::spatialIterationOccurrence(double ** M, double** K,doub
                         nrConsecutiveDays++;
                         count--;
                     }
-                    if (nrConsecutiveDays<consecutiveDayTransition)
+                    if (nrConsecutiveDays<consecutiveDayTransition || nrConsecutiveDays>= 60)
                     {
                         if(normRandom[i][j]  > transitionNormal[i][0]) occurrences[i][j] = 1.;
                     }
