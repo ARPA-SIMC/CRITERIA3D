@@ -44,6 +44,7 @@
         quality::Range* qualityHourlyGIrr;
         quality::Range* qualityTransmissivity;
         quality::Range* qualityHourlyET0;
+        quality::Range* qualityHourlyleafWetness;
 
         quality::Range* qualityDailyT;
         quality::Range* qualityDailyP;
@@ -90,6 +91,12 @@
         quality::qualityType checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam, float myValue, int month, int height);
 
         bool wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters *climateParam, float myValue, int month, int height);
+
+        quality::qualityType checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height);
+
+        bool wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height);
+
+
     };
 
 
