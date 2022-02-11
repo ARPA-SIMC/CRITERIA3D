@@ -9,7 +9,7 @@ class DialogNewPoint : public QDialog
 {
      Q_OBJECT
 public:
-    DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DGisSettings& _gisSettings, gis::Crit3DRasterGrid *myDEM);
+    DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DGisSettings& _gisSettings, gis::Crit3DRasterGrid* _DEMptr);
     ~DialogNewPoint();
 
     void done(int res);

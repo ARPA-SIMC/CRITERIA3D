@@ -35,8 +35,8 @@
 #include "basicMath.h"
 
 
-// TODO ora le costanti in commonConstant sono in [J m-3 K-1]
-// controllare se tutte hanno divisione per 1000 per trasformare in kJ
+// Attenzione: ora le costanti in commonConstant sono in [J m-3 K-1]
+// controllare se tutte abbiano divisione per 1000 per trasformare in kJ
 
 Crit3DSnowParameters::Crit3DSnowParameters()
 {
@@ -47,7 +47,7 @@ Crit3DSnowParameters::Crit3DSnowParameters()
 void Crit3DSnowParameters::initialize()
 {
     // default values
-    snowSkinThickness = 0.02;            /*!<  [m] */ // LC: VARIE VERSIONI IN BROOKS: 3mm (nel testo), 2-3cm (nel codice)
+    snowSkinThickness = 0.02;            /*!<  [m] */ // LC: VERSIONI DIVERSE IN BROOKS: 3mm (nel testo), 2-3cm (nel codice)
     soilAlbedo = 0.2;                    /*!<  [-] bare soil - 20% */
     snowVegetationHeight = 1;
     snowWaterHoldingCapacity = 0.05;
@@ -82,6 +82,10 @@ void Crit3DSnow::initialize()
     _precSnow = NODATA;
     _precRain = NODATA;
     _snowMelt = NODATA;
+    _sensibleHeat = NODATA;
+    _latentHeat = NODATA;
+    _evaporation = NODATA;
+
     _snowWaterEquivalent = NODATA;
     _iceContent = NODATA;
     _liquidWaterContent = NODATA;
@@ -89,7 +93,6 @@ void Crit3DSnow::initialize()
     _surfaceEnergy = NODATA;
     _snowSurfaceTemp = NODATA;
     _ageOfSnow = NODATA;
-    _evaporation = NODATA;
 }
 
 
@@ -190,6 +193,13 @@ void Crit3DSnow::computeSnowBrooksModel()
         _surfaceEnergy = NODATA;
         _snowSurfaceTemp = NODATA;
         _ageOfSnow = NODATA;
+
+        _precSnow = NODATA;
+        _precRain = NODATA;
+        _snowMelt = NODATA;
+        _sensibleHeat = NODATA;
+        _latentHeat = NODATA;
+        _evaporation = NODATA;
         return;
     }
 
@@ -274,8 +284,7 @@ void Crit3DSnow::computeSnowBrooksModel()
                                 / ((ZEROCELSIUS + prevSurfacetemp) * THERMO_WATER_VAPOR) );
 
     // over ice
-    // LC: controllare
-    // non trovo riferimenti a questa formula
+    // LC: controllare - non trovo riferimenti a questa formula
     /*if (prevInternalEnergy <= 0)
     {
         WaterActualVapDensity *= exp(MH2O * LATENT_HEAT_FUSION * prevSurfacetemp * 1000
@@ -346,22 +355,20 @@ void Crit3DSnow::computeSnowBrooksModel()
               - myEmissivity * pow ((prevSurfacetemp + ZEROCELSIUS), 4.0)));
 
     // pag. 50 (3.17)
+    // calore sensibile
     QTempGradient = (3600. * (HEAT_CAPACITY_AIR / 1000.) * (_airT - prevSurfacetemp)) / aerodynamicResistance;
 
-    // FT calcolare solo se c'e' manto nevoso
-    if (previousSWE > SNOW_MINIMUM_HEIGHT)
-    {
-        // LC: pag. 51 (eq. 3.19)
-        // FT: tolta WATER_DENSITY dall'eq. (non corrispondevano le unità di misura)
-        QVaporGradient = 3600. * (LATENT_HEAT_VAPORIZATION + LATENT_HEAT_FUSION) * (AirActualVapDensity - WaterActualVapDensity) / aerodynamicResistance;
-    }
-    else
-    {
-        QVaporGradient = 0;
-    }
+    // calore latente pag. 51 (eq. 3.19)
+    // FT tolta WATER_DENSITY dall'eq. (non corrispondevano le unità di misura
+    QVaporGradient = 3600. * (LATENT_HEAT_VAPORIZATION + LATENT_HEAT_FUSION)
+            * (AirActualVapDensity - WaterActualVapDensity) / aerodynamicResistance;
+
+    // FT serve formula diversa quando non c'è neve
 
     /*! \brief Energy Balance */
     QTotal = QSolar + QPrecip + QLongWave + QTempGradient + QVaporGradient + QWaterHeat + QWaterKinetic;
+    _sensibleHeat = QTempGradient;
+    _latentHeat = QVaporGradient;
 
     /*! \brief Condensation/Evaporation */
     if (previousSWE > SNOW_MINIMUM_HEIGHT)
@@ -371,7 +378,7 @@ void Crit3DSnow::computeSnowBrooksModel()
         if (condOrEvap < 0)
         {
             //FT: controllo aggiunto: può evaporare al massimo la neve presente
-            condOrEvap = -std::min(condOrEvap, previousSWE + _precSnow);
+            condOrEvap = -std::min(fabs(condOrEvap), previousSWE + _precSnow);
         }
     }
     else
@@ -445,8 +452,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     }
     else
     {
-        _surfaceEnergy = prevSurfaceEnergy + (QTotal + (freezeOrMelt / 1000.)
-                                * LATENT_HEAT_FUSION * WATER_DENSITY) * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
+        _surfaceEnergy = prevSurfaceEnergy + (QTotal + (freezeOrMelt / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY)
+                                * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
     }
 
     // TODO passare bulk density
@@ -465,6 +472,17 @@ double Crit3DSnow::getSnowFall()
 double Crit3DSnow::getSnowMelt()
 {
     return MAXVALUE(_snowMelt, 0);
+}
+
+
+double Crit3DSnow::getSensibleHeat()
+{
+    return _sensibleHeat;
+}
+
+double Crit3DSnow::getLatentHeat()
+{
+    return _latentHeat;
 }
 
 double Crit3DSnow::getSnowWaterEquivalent()
@@ -539,47 +557,42 @@ void Crit3DSnow::setAgeOfSnow(float value)
 /*!
  * \brief Computes aerodynamic Resistance
  * \param isSnow
- * \param zRefWind [m] measurement height for wind
- * \param myWindSpeed [m * s-1] wind speed measured at reference height
- * \param vegetativeHeight [m] height of the vegetative
- * \return result
+ * \param zRefWind [m] heights of windspeed measurements
+ * \param windSpeed [m s-1] wind speed
+ * \param vegetativeHeight [m] height of the vegetation
+ * \return aerodynamic Resistance [s m-1]
  */
-double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double myWindSpeed, double vegetativeHeight)
+// resistance to heat transfer - Brooks pag 51, eq. 3.18
+double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double windSpeed, double vegetativeHeight)
 {
-
     double zeroPlane;            /*!  [m] zero-plane displacement (snow = 0m, vegetative cover d = 0.64 times the height of the vegetative) */
     double momentumRoughness;    /*!  [m] momentum roughness parameter (for snow = 0.001m, for vegetative cover zm = 0.13 times the height of the vegetation) */
-    double log2;                 // equivalente a vegetativeHeight = 1; log2 = (Zt - d + Zh)/Zh , Zt: measurement height for temperature  sempre pari a 2m (i sensori di temperatura sono piazzati a 2metri) */
-    double log1;
+    double zRefTemp = 2;         /*!  [m] heights of temperature measurements */
 
     /*! check on wind speed [m/s] */
-    myWindSpeed = std::max(myWindSpeed, 0.2);
+    windSpeed = std::max(windSpeed, 0.1);
+    windSpeed = std::min(windSpeed, 10.);
+
+    /*! check on vegetativeHeight  [m] */
+    vegetativeHeight = std::max(vegetativeHeight, 0.01);
 
     if (isSnow)
     {
         zeroPlane = 0;
         momentumRoughness = 0.001;
-        log2 = 9.2;                 // equivalent to vegetativeHeight = 1
     }
     else
     {
-        /*! check on vegetativeHeight  [m] */
-        vegetativeHeight = std::max(vegetativeHeight, 0.1);
-
-        //pag 51: the height of the zero-plane displacement
         zeroPlane = 0.64 * vegetativeHeight;
-
         momentumRoughness = 0.13 * vegetativeHeight;
-        log2 = 4;                   // equivalent to vegetativeHeight = 1
     }
 
-    if (zeroPlane > zRefWind)
-        zeroPlane = zRefWind;
+    double log1 = log((MAXVALUE(zRefWind - zeroPlane, 1.0) + momentumRoughness) / momentumRoughness);
 
-    // formula 3.18 pag 51
-    log1 = log((zRefWind - zeroPlane + momentumRoughness) / momentumRoughness);
+    double heatVaporRoughness = 0.2 * momentumRoughness;
+    double log2 = log((MAXVALUE(zRefTemp - zeroPlane, 1.0) + heatVaporRoughness) / heatVaporRoughness);
 
-    return log1 * log2 / (VON_KARMAN_CONST * VON_KARMAN_CONST * myWindSpeed);
+    return log1 * log2 / (VON_KARMAN_CONST * VON_KARMAN_CONST * windSpeed);
 }
 
 

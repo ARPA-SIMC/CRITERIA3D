@@ -26,15 +26,15 @@ FormTimePeriod::~FormTimePeriod()
 
 void FormTimePeriod::setMinimumDate(QDate myDate)
 {
-    ui->dateTimeEditFirst->setMinimumDate(myDate);
-    ui->dateTimeEditLast->setMinimumDate(myDate);
+    ui->dateTimeEditFirst->setMinimumDateTime(QDateTime(myDate, QTime(0,0,0), Qt::UTC));
+    ui->dateTimeEditLast->setMinimumDateTime(QDateTime(myDate, QTime(0,0,0), Qt::UTC));
 }
 
 
 void FormTimePeriod::setMaximumDate(QDate myDate)
 {
-    ui->dateTimeEditFirst->setMaximumDate(myDate);
-    ui->dateTimeEditLast->setMaximumDate(myDate);
+    ui->dateTimeEditFirst->setMaximumDateTime(QDateTime(myDate, QTime(23,0,0), Qt::UTC));
+    ui->dateTimeEditLast->setMaximumDateTime(QDateTime(myDate, QTime(23,0,0), Qt::UTC));
 }
 
 

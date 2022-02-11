@@ -46,7 +46,6 @@
 #include <QAction>
 #include <QMessageBox>
 #include <QFileInfo>
-#include <QDebug>
 
 
 Crit3DSoilWidget::Crit3DSoilWidget()
@@ -92,9 +91,9 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     infoGroup->setMaximumWidth(pic.width());
     infoGroup->hide();
 
-    QLabel *soilCodeLabel = new QLabel(tr("Soil code: "));
-    soilCodeValue = new QLineEdit();
-    soilCodeValue->setReadOnly(true);
+    QLabel *soilNameLabel = new QLabel(tr("Soil name: "));
+    soilNameValue = new QLineEdit();
+    soilNameValue->setReadOnly(true);
 
     QLabel *satLabel = new QLabel(tr("SAT [m3 m-3]"));
     satValue = new QLineEdit();
@@ -123,9 +122,9 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     QLabel *awLegendLabel = new QLabel(tr("AW = Available Water"));
     QLabel *potFCLegendLabel = new QLabel(tr("PotFC = Water Potential at Field Capacity"));
 
-    infoGroup->setTitle(soilName);
-    infoLayout->addWidget(soilCodeLabel, 0 , 0);
-    infoLayout->addWidget(soilCodeValue, 0 , 1);
+    infoGroup->setTitle("");
+    infoLayout->addWidget(soilNameLabel, 0 , 0);
+    infoLayout->addWidget(soilNameValue, 0 , 1);
     infoLayout->addWidget(satLabel, 1 , 0);
     infoLayout->addWidget(satValue, 1 , 1);
     infoLayout->addWidget(fcLabel, 2 , 0);
@@ -351,16 +350,18 @@ void Crit3DSoilWidget::on_actionOpenSoilDB()
 
 void Crit3DSoilWidget::cleanInfoGroup()
 {
-    soilName = QString::fromStdString(mySoil.name);
+    QString soilName = QString::fromStdString(mySoil.name);
+    QString soilCode = QString::fromStdString(mySoil.code);
+
+    infoGroup->setVisible(true);
+    infoGroup->setTitle(soilCode);
+
+    soilNameValue->setText(soilName);
     satValue->clear();
     fcValue->clear();
     wpValue->clear();
     awValue->clear();
     potFCValue->clear();
-
-    infoGroup->setVisible(true);
-    infoGroup->setTitle(soilName);
-    soilCodeValue->setText(QString::fromStdString(mySoil.code));
 }
 
 
@@ -424,7 +425,7 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
 
     if (! loadSoil(&dbSoil, soilCode, &mySoil, textureClassList, fittingOptions, &error))
     {
-        if (error.contains("Empty"))
+        if (error.contains("Empty", Qt::CaseInsensitive))
         {
             QMessageBox::information(nullptr, "Warning", error);
         }
@@ -496,7 +497,7 @@ void Crit3DSoilWidget::on_actionNewSoil()
         }
         else
         {
-            qDebug() << "Error: " << error;
+            QMessageBox::critical(nullptr, "Error", error);
         }
     }
 }

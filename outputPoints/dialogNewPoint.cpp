@@ -1,6 +1,6 @@
 #include "dialogNewPoint.h"
 
-DialogNewPoint::DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DGisSettings& _gisSettings, gis::Crit3DRasterGrid *_DEMptr)
+DialogNewPoint::DialogNewPoint(const QList<QString>& _idList, const gis::Crit3DGisSettings& _gisSettings, gis::Crit3DRasterGrid* _DEMptr)
 :idList(_idList), gisSettings(_gisSettings), DEMpointer(_DEMptr)
 {
 
