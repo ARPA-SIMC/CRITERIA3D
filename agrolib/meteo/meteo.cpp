@@ -231,6 +231,10 @@ float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, flo
         climateVar = tmin[indexMonth];
     else if (myVar == dailyAirTemperatureMax)
         climateVar = tmax[indexMonth];
+    if (myVar == dailyAirRelHumidityMin)
+        climateVar = tdmin[indexMonth];
+    else if (myVar == dailyAirRelHumidityMin)
+        climateVar = tdmax[indexMonth];
     else
         return NODATA;
 
