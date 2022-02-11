@@ -2014,11 +2014,11 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     // compute radiation
     if (getComputeOnlyPoints())
     {
-        result = radiation::computeRadiationPointsPresentTime(&radSettings, this->DEM, this->radiationMaps, outputPoints, myTime);
+        result = radiation::computeRadiationOutputPoints(&radSettings, this->DEM, this->radiationMaps, outputPoints, myTime);
     }
     else
     {
-        result = radiation::computeRadiationGridPresentTime(&radSettings, this->DEM, this->radiationMaps, myTime);
+        result = radiation::computeRadiationGrid(&radSettings, this->DEM, this->radiationMaps, myTime);
     }
     if (! result)
     {
