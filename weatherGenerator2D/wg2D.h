@@ -273,13 +273,16 @@
         double* normalRandomNumbers;
 
 
-        double* monthlyAverageOverYearsAverageTmax;
-        double* monthlyAverageOverYearsAverageTmin;
-        double* monthlyAverageOverYearsAverageTmean;
-        double* monthlyStdDevOverYearsAverageTmax;
-        double* monthlyStdDevOverYearsAverageTmin;
-        double* monthlyStdDevOverYearsAverageTmean;
-        float** monthlyRandomDeviationTmean;
+        double** monthlyAverageOverYearsAverageTmax;
+        double** monthlyAverageOverYearsAverageTmin;
+        double** monthlyAverageOverYearsAverageTmean;
+        double** monthlyAverageOverYearsAveragePrec;
+        double** monthlyStdDevOverYearsAverageTmax;
+        double** monthlyStdDevOverYearsAverageTmin;
+        double** monthlyStdDevOverYearsAverageTmean;
+        double** monthlyStdDevOverYearsAveragePrec;
+
+        //float** monthlyRandomDeviationTmean;
         //functions
         void commonModuleCompute();
         void precipitationCompute();

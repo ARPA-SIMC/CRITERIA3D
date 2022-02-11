@@ -7,6 +7,11 @@
 #include <QtSql>
 
 
+Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler()
+{
+
+}
+
 Crit3DMeteoPointsDbHandler::Crit3DMeteoPointsDbHandler(QString provider_, QString host_, QString dbname_, int port_,
                                                        QString user_, QString pass_)
 {
@@ -728,6 +733,30 @@ QSqlDatabase Crit3DMeteoPointsDbHandler::getDb() const
 void Crit3DMeteoPointsDbHandler::setDb(const QSqlDatabase &db)
 {
     _db = db;
+}
+
+
+bool Crit3DMeteoPointsDbHandler::setAndOpenDb(QString dbname_)
+{
+    error = "";
+    _mapIdMeteoVar.clear();
+
+    if(_db.isOpen())
+    {
+        qDebug() << _db.connectionName() << "is already open";
+        _db.close();
+        return false;
+    }
+
+    _db = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    _db.setDatabaseName(dbname_);
+
+    if (!_db.open())
+    {
+       error = _db.lastError().text();
+       return false;
+    }
+    return true;
 }
 
 std::map<int, meteoVariable> Crit3DMeteoPointsDbHandler::getMapIdMeteoVar() const
@@ -1518,6 +1547,55 @@ QList<QString> Crit3DMeteoPointsDbHandler::getDatasetList()
         }
     }
     return datasetList;
+}
+
+QString Crit3DMeteoPointsDbHandler::getDatasetFromId(const QString& idPoint)
+{
+
+    QSqlQuery qry(_db);
+    QString dataset;
+    dataset.clear();
+
+    qry.prepare( "SELECT dataset from point_properties WHERE id_point = :id_point");
+    qry.bindValue(":id_point", idPoint);
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return dataset;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("dataset"), &dataset);
+        }
+    }
+    return dataset;
+}
+
+int Crit3DMeteoPointsDbHandler::getArkIdFromVar(const QString& variable)
+{
+
+    QSqlQuery qry(_db);
+    int arkId = NODATA;
+
+    qry.prepare( "SELECT id_arkimet from variable_properties WHERE variable = :variable");
+    qry.bindValue(":variable", variable);
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return arkId;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("id_arkimet"), &arkId);
+        }
+    }
+    return arkId;
 }
 
 bool Crit3DMeteoPointsDbHandler::setActiveStateIfCondition(bool activeState, QString condition)
