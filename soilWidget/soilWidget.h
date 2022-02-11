@@ -48,8 +48,7 @@
             int dbSoilType;
 
             QGroupBox *infoGroup;
-            QString soilName;
-            QLineEdit* soilCodeValue;
+            QLineEdit* soilNameValue;
             QLineEdit* satValue;
             QLineEdit* fcValue;
             QLineEdit* wpValue;

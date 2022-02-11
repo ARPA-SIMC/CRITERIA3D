@@ -157,6 +157,7 @@ bool loadSoilInfo(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySo
         {
             getValue(qry.value("name"), &name);
             mySoil->name = name.toStdString();
+            mySoil->code = soilCode.toStdString();
             return true;
         }
         else
@@ -178,11 +179,19 @@ bool loadSoilData(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySo
 
     if (! query.isValid())
     {
-        *error = "dbSoil error: " + query.lastError().text();
+        if (query.lastError().type() != QSqlError::NoError)
+        {
+             *error = "dbSoil error: "+ query.lastError().text();
+        }
+        else
+        {
+            *error = "Soil is empty: " + soilCode;
+        }
         return false;
     }
 
-    int nrHorizons = query.at() + 1;     //SQLITE doesn't support SIZE
+    int nrHorizons = query.at() + 1;     // SQLITE doesn't support SIZE
+
     mySoil->initialize(soilCode.toStdString(), nrHorizons);
 
     unsigned int i = 0;
@@ -472,7 +481,7 @@ bool insertSoilData(QSqlDatabase* dbSoil, int soilID, QString soilCode, QString 
 
     if( !qry.exec() )
     {
-        *error = qry.lastError().text();
+        *error = "Insert new soil failed:\n" + qry.lastError().text();
         return false;
     }
 
