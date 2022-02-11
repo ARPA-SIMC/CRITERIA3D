@@ -106,6 +106,7 @@ Crit3DQuality::Crit3DQuality()
     qualityHourlyWDir = new quality::Range(0, 360);
     qualityHourlyGIrr = new quality::Range(-20, 1353);
     qualityHourlyET0 = new quality::Range(0, 5);
+    qualityHourlyleafWetness = new quality::Range(0, 1);
 
     qualityTransmissivity = new quality::Range(0, 1);
 
@@ -140,6 +141,8 @@ quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
         return qualityHourlyWDir;
     else if (myVar == airDewTemperature)
         return qualityHourlyTd;
+    else if (myVar == leafWetness)
+        return qualityHourlyleafWetness;
     else if (myVar == referenceEvapotranspiration);
 
     // daily
@@ -243,7 +246,6 @@ quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariabl
 
 bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
 {
-    Crit3DDate myDate(1,month,2020);
 
     float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
     float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
@@ -274,5 +276,88 @@ bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClima
     }
 
     return false;
+}
+
+quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+{
+
+    if (int(myValue) == int(NODATA))
+        return quality::missing_data;
+    else if (wrongValueHourly_SingleValue(myVar, climateParam, myValue, month, height))
+        return quality::wrong_spatial;
+    else
+        return quality::accepted;
+}
+
+bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+{
+    float tminClima;
+    float tmaxClima;
+    float tdminClima;
+    float tdmaxClima;
+
+    if (myVar == airTemperature)
+    {
+        tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
+        tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
+        if ( tminClima == NODATA || tmaxClima == NODATA)
+            return false;
+    }
+    if (myVar == airRelHumidity || myVar == airDewTemperature)
+    {
+        tdminClima = climateParam->getClimateVar(dailyAirRelHumidityMin, month, height, getReferenceHeight());
+        tdmaxClima = climateParam->getClimateVar(dailyAirRelHumidityMax, month, height, getReferenceHeight());
+        if ( tdminClima == NODATA || tdmaxClima == NODATA)
+            return false;
+    }
+
+    if (myVar == airTemperature)
+    {
+        if (myValue < tminClima + qualityHourlyT->getMin() ||
+            myValue > tmaxClima + qualityHourlyT->getMax()) return true;
+    }
+    else if (myVar == precipitation)
+    {
+        if (myValue < qualityHourlyP->getMin() ||
+            myValue > qualityHourlyP->getMax()) return true;
+    }
+    else if (myVar == airRelHumidity)
+    {
+        if (myValue < qualityHourlyRH->getMin() ||
+            myValue > qualityHourlyRH->getMax()) return true;
+    }
+    else if (myVar == airDewTemperature)
+    {
+        if ( (myValue != NODATA) && (myValue < tdminClima + qualityHourlyTd->getMin() ||
+            myValue > tdmaxClima + qualityHourlyTd->getMax()) ) return true;
+    }
+    else if (myVar == windVectorIntensity || myVar == windScalarIntensity || myVar == windVectorX || myVar == windVectorY)
+    {
+        if (myValue < qualityDailyWInt->getMin() ||
+            myValue > qualityDailyWInt->getMax()) return true;
+    }
+    else if (myVar == windVectorDirection)
+    {
+        if (myValue < qualityHourlyWDir->getMin() ||
+            myValue > qualityHourlyWDir->getMax()) return true;
+    }
+    else if (myVar == globalIrradiance)
+    {
+        if (myValue < qualityHourlyRH->getMin() ||
+            myValue > qualityHourlyRH->getMax()) return true;
+    }
+    else if (myVar == leafWetness)
+    {
+        if (myValue < qualityHourlyleafWetness->getMin() ||
+            myValue > qualityHourlyleafWetness->getMax()) return true;
+    }
+    else
+    {
+        if (myValue < getQualityRange(myVar)->getMin() || myValue > getQualityRange(myVar)->getMax())
+            return true;
+    }
+
+    return false;
 
 }
+
