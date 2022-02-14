@@ -4,6 +4,9 @@
     #ifndef SNOW_H
         #include "snow.h"
     #endif
+    #ifndef GIS_H
+        #include "gis.h"
+    #endif
 
     class Crit3DSnowMaps
     {
