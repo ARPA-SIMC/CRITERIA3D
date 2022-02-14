@@ -6,7 +6,6 @@
     #endif
 
     /*!
-     * \brief
      * Junsei Kondo, Hiromi Yamazawa, Measurement of snow surface emissivity
     */
     #define SNOW_EMISSIVITY 0.97                /*!<  [-] */
