@@ -273,14 +273,14 @@
         double* normalRandomNumbers;
 
 
-        double** monthlyAverageOverYearsAverageTmax;
-        double** monthlyAverageOverYearsAverageTmin;
-        double** monthlyAverageOverYearsAverageTmean;
-        double** monthlyAverageOverYearsAveragePrec;
-        double** monthlyStdDevOverYearsAverageTmax;
-        double** monthlyStdDevOverYearsAverageTmin;
-        double** monthlyStdDevOverYearsAverageTmean;
-        double** monthlyStdDevOverYearsAveragePrec;
+        double** monthlyAverageTmax;
+        double** monthlyAverageTmin;
+        double** monthlyAverageTmean;
+        double** monthlyAveragePrec;
+        double** monthlyStdDevTmax;
+        double** monthlyStdDevTmin;
+        double** monthlyStdDevTmean;
+        double** monthlyStdDevPrec;
 
         //float** monthlyRandomDeviationTmean;
         //functions
