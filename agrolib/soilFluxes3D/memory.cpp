@@ -20,11 +20,9 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     contacts:
-    fausto.tomei@gmail.com
-    ftomei@arpae.emr.it
-    gantolini@arpae.emr.it
+    ftomei@arpae.it
+    gantolini@arpae.it
 */
-
 
 #include <stdio.h>
 #include <stdlib.h>

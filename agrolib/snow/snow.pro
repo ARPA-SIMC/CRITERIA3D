@@ -27,7 +27,7 @@ win32:{
 
 TEMPLATE = lib
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../solarRadiation
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo
 
 SOURCES += \
     snow.cpp \

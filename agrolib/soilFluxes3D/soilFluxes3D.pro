@@ -29,7 +29,7 @@ win32:{
 }
 
 INCLUDEPATH += ../mathFunctions
-# do not include mathFunctions to compile as dll
+
 
 SOURCES +=  \
     boundary.cpp \

@@ -1,5 +1,5 @@
 /*!
-    \name extra.CPP
+    \name extra.cpp
     \copyright (C) 2011 Fausto Tomei, Gabriele Antolini, Antonio Volta,
                         Alberto Pistocchi, Marco Bittelli
 
@@ -20,9 +20,8 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     contacts:
-    fausto.tomei@gmail.com
-    ftomei@arpae.emr.it
-    gantolini@arpae.emr.it
+    ftomei@arpae.it
+    gantolini@arpae.it
 */
 
 
