@@ -4,7 +4,7 @@
 #   compute snow accumulation and melt
 #   with a mono-dimensional energy balance
 #
-#   This library is part of CRITERIA-3D distribution
+#   This project is part of CRITERIA-3D distribution
 #
 #-----------------------------------------------------
 

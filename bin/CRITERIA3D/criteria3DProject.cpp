@@ -19,13 +19,13 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     contacts:
-    fausto.tomei@gmail.com
     ftomei@arpae.it
     gantolini@arpae.it
 */
 
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "utilities.h"
 #include "criteria3DProject.h"
 #include "soilDbTools.h"
@@ -566,7 +566,29 @@ bool Crit3DProject::initializeSnowModel()
 }
 
 
-// assume that header of all meteo and snow maps = header of DEM
+void Crit3DProject::computeSnowPoint(int row, int col)
+{
+    snowMaps.setPoint(snowModel, row, col);
+
+    double airT = hourlyMeteoMaps->mapHourlyTair->value[row][col];
+    double prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+    double relHum = hourlyMeteoMaps->mapHourlyRelHum->value[row][col];
+    double windInt = hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col];
+    double globalRad = radiationMaps->globalRadiationMap->value[row][col];
+    double beamRad = radiationMaps->beamRadiationMap->value[row][col];
+    double transmissivity = radiationMaps->transmissivityMap->value[row][col];
+    double clearSkyTrans = radSettings.getClearSky();
+    double myWaterContent = 0;
+
+    snowModel.setInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, myWaterContent);
+
+    snowModel.computeSnowBrooksModel();
+
+    snowMaps.updateMap(snowModel, row, col);
+}
+
+
+// it assumes that header of meteo and snow maps = header of DEM
 bool Crit3DProject::computeSnowModel()
 {
     // check
@@ -584,40 +606,42 @@ bool Crit3DProject::computeSnowModel()
 
     if (! snowMaps.isInitialized)
     {
-        if (! initializeSnowModel())
+        if (! this->initializeSnowModel())
             return false;
     }
 
-    double airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, myWaterContent;
-
-    for (long row = 0; row < DEM.header->nrRows; row++)
+    if (getComputeOnlyPoints())
     {
-        for (long col = 0; col < DEM.header->nrCols; col++)
+        for (unsigned int i = 0; i < outputPoints.size(); i++)
         {
-            if (int(DEM.value[row][col]) != int(DEM.header->flag))
+            if (outputPoints[i].active)
             {
-                snowMaps.setPoint(snowModel, row, col);
+                double x = outputPoints[i].utm.x;
+                double y = outputPoints[i].utm.y;
 
-                airT = hourlyMeteoMaps->mapHourlyTair->value[row][col];
-                prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
-                relHum = hourlyMeteoMaps->mapHourlyRelHum->value[row][col];
-                windInt = hourlyMeteoMaps->mapHourlyWindScalarInt->value[row][col];
-                globalRad = radiationMaps->globalRadiationMap->value[row][col];
-                beamRad = radiationMaps->beamRadiationMap->value[row][col];
-                transmissivity = radiationMaps->transmissivityMap->value[row][col];
-                clearSkyTrans = radSettings.getClearSky();
-                myWaterContent = 0;
-
-                snowModel.setInputData(airT, prec, relHum, windInt, globalRad, beamRad, transmissivity, clearSkyTrans, myWaterContent);
-
-                snowModel.computeSnowBrooksModel();
-
-                snowMaps.updateMap(snowModel, row, col);
+                int row, col;
+                gis::getRowColFromXY(DEM, x, y, &row, &col);
+                if (! gis::isOutOfGridRowCol(row, col, DEM))
+                {
+                    this->computeSnowPoint(row, col);
+                }
             }
         }
     }
-
-    snowMaps.updateRangeMaps();
+    else
+    {
+        for (long row = 0; row < DEM.header->nrRows; row++)
+        {
+            for (long col = 0; col < DEM.header->nrCols; col++)
+            {
+                if (! isEqual(DEM.value[row][col], DEM.header->flag))
+                {
+                    this->computeSnowPoint(row, col);
+                }
+            }
+        }
+        snowMaps.updateRangeMaps();
+    }
 
     return true;
 }
@@ -661,6 +685,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
     {
         if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
             return false;
+
         if (isSaveOutputRaster())
         {
             saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myTime, "");

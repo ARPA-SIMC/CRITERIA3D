@@ -66,6 +66,7 @@
 
         bool initializeSnowModel();
         bool computeSnowModel();
+        void computeSnowPoint(int row, int col);
 
         bool modelHourlyCycle(QDateTime myTime, const QString& hourlyOutputPath);
 

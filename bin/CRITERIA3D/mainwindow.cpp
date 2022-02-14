@@ -1,3 +1,28 @@
+/*!
+    \copyright 2018 Fausto Tomei, Gabriele Antolini,
+    Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
+
+    This file is part of CRITERIA3D.
+    CRITERIA3D has been developed under contract issued by ARPAE Emilia-Romagna
+
+    CRITERIA3D is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CRITERIA3D is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
+
+    contacts:
+    ftomei@arpae.it
+    gantolini@arpae.it
+*/
+
 #include "ui_mainwindow.h"
 #include "mainwindow.h"
 
@@ -1773,15 +1798,22 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 {
     // initialize
-    myProject.hourlyMeteoMaps->initialize();
-    myProject.radiationMaps->initialize();
-
-    // load td maps if needed
-    if (myProject.interpolationSettings.getUseTD())
+    if (myProject.isMeteo)
     {
-        myProject.logInfoGUI("Loading topographic distance maps...");
-        if (! myProject.loadTopographicDistanceMaps(true, false))
-            return false;
+        myProject.hourlyMeteoMaps->initialize();
+
+        // load td maps if needed
+        if (myProject.interpolationSettings.getUseTD())
+        {
+            myProject.logInfoGUI("Loading topographic distance maps...");
+            if (! myProject.loadTopographicDistanceMaps(true, false))
+                return false;
+        }
+    }
+
+    if (myProject.isRadiation)
+    {
+        myProject.radiationMaps->initialize();
     }
 
     QDate firstDate = firstTime.date();
@@ -2231,6 +2263,7 @@ void MainWindow::on_actionPoints_activate_with_criteria_triggered()
     }
 }
 
+
 void MainWindow::on_actionPoints_deactivate_with_criteria_triggered()
 {
     if (myProject.setActiveStateWithCriteria(false))
@@ -2241,7 +2274,6 @@ void MainWindow::on_actionPoints_deactivate_with_criteria_triggered()
         this->loadMeteoPointsDB_GUI(dbName);
     }
 }
-
 
 
 void MainWindow::on_actionPoints_deactivate_with_no_data_triggered()
