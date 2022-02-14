@@ -1,7 +1,8 @@
 #ifndef TYPESEXTRA_H
 #define TYPESEXTRA_H
 
-    struct TboundaryHeat{
+    struct TboundaryHeat
+    {
         double temperature;                     /*!< [K] temperature of the boundary (ex. air temperature) */
         double relativeHumidity;                /*!< [%] relative humidity */
         double windSpeed;                       /*!< [m s-1] wind speed */
@@ -19,26 +20,30 @@
         double fixedTemperatureDepth;           /*!< [m] depth of fixed temperature layer */
     };
 
-    struct THeatFlux{
-        float waterFlux;                    // [m3 s-1]
-        float vaporFlux;                    // [kg s-1]
-        float* fluxes;                      // [W] for heat fluxes; [m3 s-1] for water fluxes
-        } ;
-
-    struct TCrit3DNodeHeat{
-        double T;					/*!< [K] node temperature */
-        double oldT;				/*!< [K] old node temperature */
-        double Qh;					/*!< [W] heat flow */
-        double sinkSource;          /*!< [W] heat sink/source */
+    struct THeatFlux
+    {
+        float waterFlux;                    /*!< [m3 s-1]   */
+        float vaporFlux;                    /*!< [kg s-1]   */
+        float* fluxes;                      /*!< [W] for heat fluxes; [m3 s-1] for water fluxes */
     };
 
-    struct TCrit3DLinkedNodeExtra{
+    struct TCrit3DNodeHeat
+    {
+        double T;                           /*!< [K] node temperature */
+        double oldT;                        /*!< [K] old node temperature */
+        double Qh;                          /*!< [W] heat flow */
+        double sinkSource;                  /*!< [W] heat sink/source */
+    };
+
+    struct TCrit3DLinkedNodeExtra
+    {
         THeatFlux* heatFlux;
     };
 
-    struct TCrit3DnodeExtra{
-        TCrit3DNodeHeat *Heat;      /*!< heat pointer */
-       } ;
+    struct TCrit3DnodeExtra
+    {
+        TCrit3DNodeHeat *Heat;              /*!< heat pointer */
+    };
 
     void initializeExtra(TCrit3DnodeExtra *myNodeExtra, bool computeHeat, bool computeSolutes);
     void initializeLinkExtra(TCrit3DLinkedNodeExtra* myLinkedNodeExtra, bool computeHeat, bool computeSolutes);
