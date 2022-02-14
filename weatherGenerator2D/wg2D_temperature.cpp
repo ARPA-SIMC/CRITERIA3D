@@ -207,7 +207,6 @@ void weatherGenerator2D::computeMonthlyTemperatures()
     countTmin = (int**)calloc(nrStations,sizeof(int*));
     countTmax = (int**)calloc(nrStations,sizeof(int*));
     countPrec = (int**)calloc(nrStations,sizeof(int*));
-    //countTmean = (int**)calloc(12,sizeof(int*));
 
 
     monthlyAverageTmax = (double**)calloc(nrStations,sizeof(double*));
@@ -266,12 +265,7 @@ void weatherGenerator2D::computeMonthlyTemperatures()
         {
             if(fabs(obsDataD[iStation][iDatum].tMax) > 60) obsDataD[iStation][iDatum].tMax = NODATA;
             if(fabs(obsDataD[iStation][iDatum].tMin) > 60) obsDataD[iStation][iDatum].tMin = NODATA;
-            //int decadalLag;
-            /*
-            if (obsDataD[iStation][iDatum].date.day <10) decadalLag =0;
-            else if (obsDataD[iStation][iDatum].date.day >=20) decadalLag =2;
-            else decadalLag = 1;
-            */
+
             if (fabs(obsDataD[iStation][iDatum].tMin-NODATA) > EPSILON)
             {
                 monthlyAverageTmin_local[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= obsDataD[iStation][iDatum].tMin;
@@ -282,7 +276,7 @@ void weatherGenerator2D::computeMonthlyTemperatures()
                 monthlyAverageTmax_local[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= obsDataD[iStation][iDatum].tMax;
                 ++countTmax[iStation][(obsDataD[iStation][iDatum].date.month-1)];
             }
-            if (fabs(obsDataD[iStation][iDatum].prec-NODATA) > EPSILON)
+            if (fabs(obsDataD[iStation][iDatum].prec-NODATA) > EPSILON && obsDataD[iStation][iDatum].prec> parametersModel.precipitationThreshold)
             {
                 monthlyAveragePrec_local[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= obsDataD[iStation][iDatum].prec;
                 ++countPrec[iStation][(obsDataD[iStation][iDatum].date.month-1)];
@@ -305,13 +299,6 @@ void weatherGenerator2D::computeMonthlyTemperatures()
             monthlyAverageTmean[i][j] = monthlyAverageTmean_local[i][j];
             monthlyAveragePrec[i][j] = monthlyAveragePrec_local[i][j];
 
-            //monthlyAverageOverYearsAverageTmax[i][j] /= obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;
-            //monthlyAverageOverYearsAverageTmin[i][j] /= obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;
-            //monthlyAverageOverYearsAverageTmean[i][j] /= obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1;
-            //monthlyStdDevOverYearsAverageTmax[i][j] = sqrt(statistics::variance(monthlyAverageTmax[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
-            //monthlyStdDevOverYearsAverageTmin[i][j] = sqrt(statistics::variance(monthlyAverageTmin[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
-            //monthlyStdDevOverYearsAverageTmean[i][j] = sqrt(statistics::variance(monthlyAverageTmean[i],obsDataD[0][nrData-1].date.year-obsDataD[0][0].date.year+1));
-
         }
     }
 
@@ -325,22 +312,15 @@ void weatherGenerator2D::computeMonthlyTemperatures()
             if (fabs(obsDataD[iStation][iDatum].tMin-NODATA) > EPSILON)
             {
                 monthlyStdDevTmin[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= pow(obsDataD[iStation][iDatum].tMin  - monthlyAverageTmin[iStation][(obsDataD[iStation][iDatum].date.month-1)],2);
-                //++countTmin[iStation][(obsDataD[iStation][iDatum].date.month-1)];
             }
             if (fabs(obsDataD[iStation][iDatum].tMax-NODATA) > EPSILON)
             {
                 monthlyStdDevTmax[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= pow(obsDataD[iStation][iDatum].tMax - monthlyAverageTmax[iStation][(obsDataD[iStation][iDatum].date.month-1)],2);
-                //++countTmax[iStation][(obsDataD[iStation][iDatum].date.month-1)];
             }
-            if (fabs(obsDataD[iStation][iDatum].prec-NODATA) > EPSILON)
+            if (fabs(obsDataD[iStation][iDatum].prec-NODATA) > EPSILON && obsDataD[iStation][iDatum].prec> parametersModel.precipitationThreshold)
             {
                 monthlyStdDevPrec[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= pow(obsDataD[iStation][iDatum].prec - monthlyAveragePrec[iStation][(obsDataD[iStation][iDatum].date.month-1)],2);
-                //++countPrec[iStation][(obsDataD[iStation][iDatum].date.month-1)];
             }
-            //monthlyStdDevOverYearsAverageTmax[i][j] += ;
-            //monthlyAverageOverYearsAverageTmin[i][j] += ;
-            //monthlyAverageOverYearsAverageTmean[i][j] += ;
-            //monthlyAverageOverYearsAverageTmean[i][j] += ;
         }
     }
 
@@ -351,7 +331,11 @@ void weatherGenerator2D::computeMonthlyTemperatures()
             monthlyStdDevTmin[i][j] = sqrt(monthlyStdDevTmin[i][j]/(countTmin[i][j]-1));
             monthlyStdDevTmax[i][j] = sqrt(monthlyStdDevTmax[i][j]/(countTmax[i][j]-1));
             monthlyStdDevPrec[i][j] = sqrt(monthlyStdDevPrec[i][j]/(countPrec[i][j]-1));
+            //printf("tmin month %d average %f stdDev %f\n", j+1,monthlyAverageTmin[i][j], monthlyStdDevTmin[i][j]);
+            //printf("tmax month %d average %f stdDev %f\n", j+1,monthlyAverageTmax[i][j], monthlyStdDevTmax[i][j]);
+            printf("prec month %d average %f stdDev %f\n", j+1,monthlyAveragePrec[i][j], monthlyStdDevPrec[i][j]);
         }
+        getchar();
     }
 
 

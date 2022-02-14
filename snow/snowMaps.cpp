@@ -1,12 +1,9 @@
 /*!
-    \copyright 2010-2016 Fausto Tomei, Gabriele Antolini,
+    \copyright Fausto Tomei, Gabriele Antolini,
     Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
 
-    You should have received a copy of the GNU General Public License
-    along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>.
-
     This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
+    CRITERIA3D has been developed under contract issued by ARPAE Emilia-Romagna
 
     CRITERIA3D is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -22,15 +19,12 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     contacts:
-    fausto.tomei@gmail.com
     ftomei@arpae.it
 */
 
-#include <math.h>
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "snowMaps.h"
-#include "snow.h"
 
 
 Crit3DSnowMaps::Crit3DSnowMaps()
@@ -111,7 +105,6 @@ void Crit3DSnowMaps::initialize(const gis::Crit3DRasterGrid& dtm, double snowSki
 }
 
 
-
 void Crit3DSnowMaps::updateMap(Crit3DSnow &snowPoint, int row, int col)
 {
     _snowWaterEquivalentMap->value[row][col] = float(snowPoint.getSnowWaterEquivalent());
@@ -163,7 +156,7 @@ void Crit3DSnowMaps::resetSnowModel(double snowSkinThickness)
     float initSWE;                  /*!<  [mm]     */
     int surfaceBulkDensity;         /*!<  [kg/m^3] */
 
-    // TODO pass real bulk density for each point if available
+    // TODO pass real bulk density
     surfaceBulkDensity = DEFAULT_BULK_DENSITY;
 
     for (long row = 0; row < _snowWaterEquivalentMap->header->nrRows; row++)
@@ -193,6 +186,8 @@ void Crit3DSnowMaps::resetSnowModel(double snowSkinThickness)
     }
 }
 
+
+// --------------------------- output ----------------------------
 
 gis::Crit3DRasterGrid* Crit3DSnowMaps::getSnowWaterEquivalentMap()
 {
@@ -230,7 +225,6 @@ gis::Crit3DRasterGrid* Crit3DSnowMaps::getAgeOfSnowMap()
 }
 
 
-// ----------------------- output ------------------------
 gis::Crit3DRasterGrid* Crit3DSnowMaps::getSnowFallMap()
 {
     return _snowFallMap;
@@ -250,6 +244,4 @@ gis::Crit3DRasterGrid* Crit3DSnowMaps::getLatentHeatMap()
 {
     return _latentHeatMap;
 }
-
-
 
