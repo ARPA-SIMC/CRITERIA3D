@@ -22,11 +22,9 @@
     ftomei@arpae.it
 */
 
-#include <math.h>
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "snowMaps.h"
-#include "snow.h"
 
 
 Crit3DSnowMaps::Crit3DSnowMaps()
@@ -107,7 +105,6 @@ void Crit3DSnowMaps::initialize(const gis::Crit3DRasterGrid& dtm, double snowSki
 }
 
 
-
 void Crit3DSnowMaps::updateMap(Crit3DSnow &snowPoint, int row, int col)
 {
     _snowWaterEquivalentMap->value[row][col] = float(snowPoint.getSnowWaterEquivalent());
@@ -159,7 +156,7 @@ void Crit3DSnowMaps::resetSnowModel(double snowSkinThickness)
     float initSWE;                  /*!<  [mm]     */
     int surfaceBulkDensity;         /*!<  [kg/m^3] */
 
-    // TODO pass real bulk density for each point if available
+    // TODO pass real bulk density
     surfaceBulkDensity = DEFAULT_BULK_DENSITY;
 
     for (long row = 0; row < _snowWaterEquivalentMap->header->nrRows; row++)
@@ -189,6 +186,8 @@ void Crit3DSnowMaps::resetSnowModel(double snowSkinThickness)
     }
 }
 
+
+// --------------------------- output ----------------------------
 
 gis::Crit3DRasterGrid* Crit3DSnowMaps::getSnowWaterEquivalentMap()
 {
@@ -226,7 +225,6 @@ gis::Crit3DRasterGrid* Crit3DSnowMaps::getAgeOfSnowMap()
 }
 
 
-// ----------------------- output ------------------------
 gis::Crit3DRasterGrid* Crit3DSnowMaps::getSnowFallMap()
 {
     return _snowFallMap;
@@ -246,6 +244,4 @@ gis::Crit3DRasterGrid* Crit3DSnowMaps::getLatentHeatMap()
 {
     return _latentHeatMap;
 }
-
-
 

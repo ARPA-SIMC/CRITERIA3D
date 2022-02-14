@@ -1,10 +1,6 @@
 #ifndef SNOW_H
 #define SNOW_H
 
-    #ifndef RADIATIONDEFINITIONS_H
-        #include "radiationDefinitions.h"
-    #endif
-
     /*!
      * Junsei Kondo, Hiromi Yamazawa, Measurement of snow surface emissivity
     */
@@ -84,7 +80,6 @@
         void setAgeOfSnow(float value);
 
     private:
-
         // input
         double _clearSkyTransmissivity;      /*!<   [-] */
         double _transmissivity;              /*!<   [-] */

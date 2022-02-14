@@ -26,9 +26,9 @@
 #include <math.h>
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "meteoPoint.h"
 #include "snow.h"
-#include "basicMath.h"
 
 
 // Warning: commonConstant unit is [J m-3 K-1]
