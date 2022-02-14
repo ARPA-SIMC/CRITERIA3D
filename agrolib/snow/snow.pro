@@ -2,7 +2,7 @@
 #
 #   snow library
 #   compute snow accumulation and melt
-#   mono-dimensional energy balance
+#   with a mono-dimensional energy balance
 #
 #   This library is part of CRITERIA-3D distribution
 #
