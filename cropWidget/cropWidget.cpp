@@ -454,8 +454,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     menuBar->addMenu(viewMenu);
     this->layout()->setMenuBar(menuBar);
 
-    QAction* openProject = new QAction(tr("&Open CRITERIA-1D Project"), this);
-    QAction* newProject = new QAction(tr("&New CRITERIA-1D Project"), this);
+    QAction* openProject = new QAction(tr("&Open Project"), this);
+    QAction* newProject = new QAction(tr("&New Project"), this);
     QAction* openCropDB = new QAction(tr("&Open dbCrop"), this);
     QAction* openMeteoDB = new QAction(tr("&Open dbMeteo"), this);
     QAction* openSoilDB = new QAction(tr("&Open dbSoil"), this);
