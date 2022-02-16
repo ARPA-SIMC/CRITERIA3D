@@ -910,9 +910,7 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
                            phatBeta[i][j] = occurrenceIndexSeasonal[i].parMultiexp[iSeason][k][1];
                        }
                    }
-
                }
-
           }
       }
 
