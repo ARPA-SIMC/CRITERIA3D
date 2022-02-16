@@ -857,19 +857,41 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         return true;
     }
 
-    bool computeRadiationRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
-                              Crit3DMeteoPoint* myPoint, TradPoint radPoint,
-                              int row, int col, const Crit3DTime& myTime)
+    bool computeRadiationPotentialRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
+                              Crit3DMeteoPoint* myMeteoPoint, TradPoint radPoint, const Crit3DTime& myTime)
     {
-        radPoint.lat = myPoint->latitude;
-        radPoint.lon = myPoint->longitude;
+        radPoint.lat = myMeteoPoint->latitude;
+        radPoint.lon = myMeteoPoint->longitude;
         radPoint.slope = readSlope(radSettings);
         radPoint.aspect = readAspect(radSettings);
 
-        float linke = readLinke(radSettings, row, col);
-        float albedo = readAlbedo(radSettings, row, col);
+        gis::Crit3DPoint myPoint = myMeteoPoint->point;
 
-        float transmissivity = myPoint->getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), atmTransmissivity);
+        float linke = readLinke(radSettings, myPoint);
+        float albedo = readAlbedo(radSettings, myPoint);
+
+        TsunPosition sunPosition;
+        if (!computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime,
+            linke, albedo, radSettings->getClearSky(), radSettings->getClearSky(), &sunPosition, &radPoint, dem))
+            return false;
+
+        return true;
+    }
+
+    bool computeRadiationRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
+                              Crit3DMeteoPoint* myMeteoPoint, TradPoint radPoint, const Crit3DTime& myTime)
+    {
+        radPoint.lat = myMeteoPoint->latitude;
+        radPoint.lon = myMeteoPoint->longitude;
+        radPoint.slope = readSlope(radSettings);
+        radPoint.aspect = readAspect(radSettings);
+
+        gis::Crit3DPoint myPoint = myMeteoPoint->point;
+
+        float linke = readLinke(radSettings, myPoint);
+        float albedo = readAlbedo(radSettings, myPoint);
+
+        float transmissivity = myMeteoPoint->getMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), atmTransmissivity);
 
         TsunPosition sunPosition;
         if (!computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime,

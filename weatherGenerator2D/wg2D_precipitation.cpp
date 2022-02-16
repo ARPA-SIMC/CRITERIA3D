@@ -608,6 +608,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
            {
                for (int i=0;i<nrBincenter;i++)
                {
+
                    double mean,variance;
                    double lambdaWeibull,kappaWeibull;
                    double rightBound,leftBound;
@@ -1468,7 +1469,7 @@ void weatherGenerator2D::createAmountOutputSerie()
 {
     //int dayOfYear;
     //int iSeason;
-    int day,month;
+    int day,monthInternal;
     double* january =(double*)calloc(31*parametersModel.yearOfSimulation, sizeof(double));
     double* february =(double*)calloc(28*parametersModel.yearOfSimulation, sizeof(double));
     double* march =(double*)calloc(31*parametersModel.yearOfSimulation, sizeof(double));
@@ -1545,66 +1546,66 @@ void weatherGenerator2D::createAmountOutputSerie()
 
             for(int i=0;i<parametersModel.yearOfSimulation*365;i++)
             {
-                dateFromDoy(i%365+1,1,&day,&month);
-                if ( month == 1)
+                dateFromDoy(i%365+1,1,&day,&monthInternal);
+                if ( monthInternal == 1)
                 {
-                    amountsPrecGenerated[i][j] = january[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = january[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 2)
+                if ( monthInternal == 2)
                 {
-                    amountsPrecGenerated[i][j] = february[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = february[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 3)
+                if ( monthInternal == 3)
                 {
-                    amountsPrecGenerated[i][j] = march[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = march[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 4)
+                if ( monthInternal == 4)
                 {
-                    amountsPrecGenerated[i][j] = april[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = april[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 5)
+                if ( monthInternal == 5)
                 {
-                    amountsPrecGenerated[i][j] = may[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = may[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 6)
+                if ( monthInternal == 6)
                 {
-                    amountsPrecGenerated[i][j] = june[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = june[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 7)
+                if ( monthInternal == 7)
                 {
-                    amountsPrecGenerated[i][j] = july[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = july[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 8)
+                if ( monthInternal == 8)
                 {
-                    amountsPrecGenerated[i][j] = august[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = august[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 9)
+                if ( monthInternal == 9)
                 {
-                    amountsPrecGenerated[i][j] = september[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = september[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 10)
+                if ( monthInternal == 10)
                 {
-                    amountsPrecGenerated[i][j] = october[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = october[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 11)
+                if ( monthInternal == 11)
                 {
-                    amountsPrecGenerated[i][j] = november[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = november[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 12)
+                if ( monthInternal == 12)
                 {
-                    amountsPrecGenerated[i][j] = december[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = december[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
             }
     }

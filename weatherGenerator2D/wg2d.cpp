@@ -275,6 +275,248 @@ void weatherGenerator2D::setObservedData(TObsDataD** observations)
             obsDataD[i][j].prec = observations[i][j].prec;
         }
     }
+
+    weatherGenerator2D::computeMonthlyVariables();
+}
+
+void weatherGenerator2D::computeMonthlyVariables()
+{
+    float** monthlyAverageTmax_local;
+    float** monthlyAverageTmin_local;
+    float** monthlyAverageTmean_local;
+    float** monthlyAveragePrec_local;
+    int** countTmin;
+    int** countTmax;
+    int** countPrec;
+
+    monthlyAverageTmax_local = (float**)calloc(nrStations,sizeof(float*));
+    monthlyAverageTmin_local = (float**)calloc(nrStations,sizeof(float*));
+    monthlyAverageTmean_local = (float**)calloc(nrStations,sizeof(float*));
+    monthlyAveragePrec_local = (float**)calloc(nrStations,sizeof(float*));
+    countTmin = (int**)calloc(nrStations,sizeof(int*));
+    countTmax = (int**)calloc(nrStations,sizeof(int*));
+    countPrec = (int**)calloc(nrStations,sizeof(int*));
+
+
+    monthlyAverageTmax = (float**)calloc(nrStations,sizeof(float*));
+    monthlyAverageTmin = (float**)calloc(nrStations,sizeof(float*));
+    monthlyAverageTmean = (float**)calloc(nrStations,sizeof(float*));
+    monthlyAveragePrec = (float**)calloc(nrStations,sizeof(float*));
+    monthlyStdDevTmax = (float**)calloc(nrStations,sizeof(float*));
+    monthlyStdDevTmin = (float**)calloc(nrStations,sizeof(float*));
+    monthlyStdDevTmean = (float**)calloc(nrStations,sizeof(float*));
+    monthlyStdDevPrec = (float**)calloc(nrStations,sizeof(float*));
+
+
+    for (int i=0;i<nrStations;i++)
+    {
+        monthlyAverageTmax_local[i]= (float*)calloc(12,sizeof(float));
+        monthlyAverageTmin_local[i]= (float*)calloc(12,sizeof(float));
+        monthlyAverageTmean_local[i]= (float*)calloc(12,sizeof(float));
+        monthlyAveragePrec_local[i]= (float*)calloc(12,sizeof(float));
+        monthlyAverageTmax[i] = (float*)calloc(12,sizeof(float));
+        monthlyAverageTmin[i] = (float*)calloc(12,sizeof(float));
+        monthlyAverageTmean[i] = (float*)calloc(12,sizeof(float));
+        monthlyAveragePrec[i] = (float*)calloc(12,sizeof(float));
+        monthlyStdDevTmax[i] = (float*)calloc(12,sizeof(float));
+        monthlyStdDevTmin[i] = (float*)calloc(12,sizeof(float));
+        monthlyStdDevTmean[i] = (float*)calloc(12,sizeof(float));
+        monthlyStdDevPrec[i] = (float*)calloc(12,sizeof(float));
+
+
+        countTmin[i]= (int*)calloc(12,sizeof(int));
+        countTmax[i]= (int*)calloc(12,sizeof(int));
+        countPrec[i]= (int*)calloc(12,sizeof(int));
+        for (int j=0;j<12;j++)
+        {
+            monthlyAverageTmax[i][j] = 0;
+            monthlyAverageTmin[i][j] = 0;
+            monthlyAverageTmean[i][j] = 0;
+            monthlyAveragePrec[i][j] = 0;
+            monthlyStdDevTmax[i][j] = 0;
+            monthlyStdDevTmin[i][j] = 0;
+            monthlyStdDevTmean[i][j] = 0;
+            monthlyStdDevPrec[i][j] = 0;
+
+            monthlyAverageTmax_local[i][j]=0;
+            monthlyAverageTmin_local[i][j]=0;
+            monthlyAverageTmean_local[i][j]=0;
+            monthlyAveragePrec_local[i][j]=0;
+            countTmin[i][j]=0;
+            countTmax[i][j]=0;
+            countPrec[i][j]=0;
+        }
+    }
+
+    for (int iStation=0; iStation<nrStations; iStation++)
+    {
+        for (int iDatum=0; iDatum<nrData; iDatum++)
+        {
+            if(fabs(obsDataD[iStation][iDatum].tMax) > 60) obsDataD[iStation][iDatum].tMax = NODATA;
+            if(fabs(obsDataD[iStation][iDatum].tMin) > 60) obsDataD[iStation][iDatum].tMin = NODATA;
+
+            if (fabs(obsDataD[iStation][iDatum].tMin-NODATA) > EPSILON)
+            {
+                monthlyAverageTmin_local[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= obsDataD[iStation][iDatum].tMin;
+                ++countTmin[iStation][(obsDataD[iStation][iDatum].date.month-1)];
+            }
+            if (fabs(obsDataD[iStation][iDatum].tMax-NODATA) > EPSILON)
+            {
+                monthlyAverageTmax_local[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= obsDataD[iStation][iDatum].tMax;
+                ++countTmax[iStation][(obsDataD[iStation][iDatum].date.month-1)];
+            }
+            if (fabs(obsDataD[iStation][iDatum].prec-NODATA) > EPSILON && obsDataD[iStation][iDatum].prec> parametersModel.precipitationThreshold)
+            {
+                monthlyAveragePrec_local[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= obsDataD[iStation][iDatum].prec;
+                ++countPrec[iStation][(obsDataD[iStation][iDatum].date.month-1)];
+            }
+        }
+
+    }
+
+    for (int i=0;i<nrStations;i++)
+    {
+        for (int j=0;j<12;j++)
+        {
+            monthlyAverageTmax_local[i][j] /= countTmax[i][j];
+            monthlyAverageTmin_local[i][j] /= countTmin[i][j];
+            monthlyAverageTmean_local[i][j] = 0.5*(monthlyAverageTmax_local[i][j]+monthlyAverageTmin_local[i][j]);
+            monthlyAveragePrec_local[i][j] /= countPrec[i][j];
+
+            monthlyAverageTmax[i][j] = monthlyAverageTmax_local[i][j]-parametersModel.precipitationThreshold;
+            monthlyAverageTmin[i][j] = monthlyAverageTmin_local[i][j]-parametersModel.precipitationThreshold;
+            monthlyAverageTmean[i][j] = monthlyAverageTmean_local[i][j]-parametersModel.precipitationThreshold;
+            monthlyAveragePrec[i][j] = monthlyAveragePrec_local[i][j]-parametersModel.precipitationThreshold;
+
+        }
+    }
+
+    for (int iStation=0;iStation<nrStations;iStation++)
+    {
+        for (int iDatum=0; iDatum<nrData; iDatum++)
+        {
+            if(fabs(obsDataD[iStation][iDatum].tMax) > 60) obsDataD[iStation][iDatum].tMax = NODATA;
+            if(fabs(obsDataD[iStation][iDatum].tMin) > 60) obsDataD[iStation][iDatum].tMin = NODATA;
+
+            if (fabs(obsDataD[iStation][iDatum].tMin-NODATA) > EPSILON)
+            {
+                monthlyStdDevTmin[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= pow(obsDataD[iStation][iDatum].tMin  - monthlyAverageTmin[iStation][(obsDataD[iStation][iDatum].date.month-1)],2);
+            }
+            if (fabs(obsDataD[iStation][iDatum].tMax-NODATA) > EPSILON)
+            {
+                monthlyStdDevTmax[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= pow(obsDataD[iStation][iDatum].tMax - monthlyAverageTmax[iStation][(obsDataD[iStation][iDatum].date.month-1)],2);
+            }
+            if (fabs(obsDataD[iStation][iDatum].prec-NODATA) > EPSILON && obsDataD[iStation][iDatum].prec> parametersModel.precipitationThreshold)
+            {
+                monthlyStdDevPrec[iStation][(obsDataD[iStation][iDatum].date.month-1)]+= pow(obsDataD[iStation][iDatum].prec - monthlyAveragePrec[iStation][(obsDataD[iStation][iDatum].date.month-1)],2);
+            }
+        }
+    }
+
+    for (int i=0;i<nrStations;i++)
+    {
+        for (int j=0;j<12;j++)
+        {
+            monthlyStdDevTmin[i][j] = sqrt(monthlyStdDevTmin[i][j]/(countTmin[i][j]-1));
+            monthlyStdDevTmax[i][j] = sqrt(monthlyStdDevTmax[i][j]/(countTmax[i][j]-1));
+            monthlyStdDevPrec[i][j] = sqrt(monthlyStdDevPrec[i][j]/(countPrec[i][j]-1));
+            //printf("tmin month %d average %f stdDev %f\n", j+1,monthlyAverageTmin[i][j], monthlyStdDevTmin[i][j]);
+            //printf("tmax month %d average %f stdDev %f\n", j+1,monthlyAverageTmax[i][j], monthlyStdDevTmax[i][j]);
+            //printf("prec month %d average %f stdDev %f\n", j+1,monthlyAveragePrec[i][j], monthlyStdDevPrec[i][j]);
+        }
+        //getchar();
+    }
+
+
+
+
+    for (int i=0;i<nrStations;i++)
+    {
+        free(countTmax[i]);
+        free(countTmin[i]);
+        free(countPrec[i]);
+        free(monthlyAverageTmax_local[i]);
+        free(monthlyAverageTmin_local[i]);
+        free(monthlyAverageTmean_local[i]);
+        free(monthlyAveragePrec_local[i]);
+
+
+    }
+    free(monthlyAverageTmax_local);
+    free(monthlyAverageTmin_local);
+    free(monthlyAverageTmean_local);
+    free(monthlyAveragePrec_local);
+    free(countTmax);
+    free(countTmin);
+    free(countPrec);
+
+    interpolatedDailyValuePrecAverage = (float**)calloc(nrStations,sizeof(float*));
+    interpolatedDailyValuePrecVariance = (float**)calloc(nrStations,sizeof(float*));
+    weibullDailyParameterKappa = (double**)calloc(nrStations,sizeof(double*));
+    weibullDailyParameterLambda = (double**)calloc(nrStations,sizeof(double*));
+    for (int i=0;i<nrStations;i++)
+    {
+        weibullDailyParameterKappa[i] = (double*)calloc(365,sizeof(double));
+        weibullDailyParameterLambda[i] = (double*)calloc(365,sizeof(double));
+        interpolatedDailyValuePrecAverage[i] = (float*)calloc(365,sizeof(float));
+        interpolatedDailyValuePrecVariance[i] = (float*)calloc(365,sizeof(float));
+        cubicSplineYearInterpolate(monthlyAveragePrec[i],interpolatedDailyValuePrecAverage[i]);
+        cubicSplineYearInterpolate(monthlyStdDevPrec[i],interpolatedDailyValuePrecVariance[i]);
+        for (int j=0;j<365;j++)
+        {
+            interpolatedDailyValuePrecVariance[i][j] *= interpolatedDailyValuePrecVariance[i][j];
+        }
+    }
+
+    for (int i=0;i<nrStations;i++)
+    {
+        for (int j=0;j<365;j++)
+        {
+            double mean,variance;
+            double lambdaWeibull,kappaWeibull;
+            double rightBound,leftBound;
+            rightBound = 10;
+            leftBound = 0.2;
+            mean = weibullDailyParameterLambda[i][j] = double(interpolatedDailyValuePrecAverage[i][j]);
+            variance = double(interpolatedDailyValuePrecVariance[i][j]);
+            parametersWeibullFromObservations(mean,variance, &lambdaWeibull,&kappaWeibull,leftBound,rightBound);
+            weibullDailyParameterKappa[i][j] = kappaWeibull;
+        }
+    }
+
+    for (int i=0;i<nrStations;i++)
+    {
+        for (int j=0;j<365;j++)
+        {
+            printf("site %d day %d lambda %f kappa %f\n",i,j,weibullDailyParameterLambda[i][j],weibullDailyParameterKappa[i][j]);
+        }
+        pressEnterToContinue();
+    }
+
+
+
+    for (int i=0;i<nrStations;i++)
+    {
+        free(monthlyAverageTmax[i]);
+        free(monthlyAverageTmin[i]);
+        free(monthlyAverageTmean[i]);
+        free(monthlyAveragePrec[i]);
+        free(monthlyStdDevTmax[i]);
+        free(monthlyStdDevTmin[i]);
+        free(monthlyStdDevTmean[i]);
+        free(monthlyStdDevPrec[i]);
+        free(interpolatedDailyValuePrecAverage[i]);
+        free(interpolatedDailyValuePrecVariance[i]);
+    }
+    free(monthlyAverageTmax);
+    free(monthlyAverageTmin);
+    free(monthlyAverageTmean);
+    free(monthlyAveragePrec);
+    free(monthlyStdDevTmax);
+    free(monthlyStdDevTmin);
+    free(monthlyStdDevTmean);
+    free(monthlyStdDevPrec);
+
 }
 
 
