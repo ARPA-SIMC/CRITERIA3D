@@ -11,13 +11,13 @@ Dependencies:
 - [Qt libraries](https://www.qt.io/download-qt-installer): Qt 5.x or following is needed (download also QtCharts).
 
 Build (with Qt Creator):
-- 1) Build the project *MapGraphics/MapGraphics.pro* 
-- 2) Build the project *bin/Makeall_CRITERIA3D/Makeall_CRITERIA3D.pro*
+1) Build the project  *MapGraphics/MapGraphics.pro* 
+2) Build the project  *bin/Makeall_CRITERIA3D/Makeall_CRITERIA3D.pro*
 
 Warning: deselect the flag 'Shadow build' in 'Build settings' of the Qt Creator, for both the projects *MapGraphics.pro* and *Makeall_CRITERIA3D.pro*
 
 ## How to compile VINE3D
-Follow the same step of CRITERIA-3D, with the project *bin/Makeall_CRITERIA3D/Makeall_VINE3D.pro*
+Follow the same steps of CRITERIA-3D, using the project  *bin/Makeall_CRITERIA3D/Makeall_VINE3D.pro*
 
 ## soilFluxes3D library 
 agrolib/soilFluxed3D is a numerical solution of flow equations of water and heat in the soil, in a three-dimensional domain.
