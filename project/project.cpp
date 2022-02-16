@@ -2177,16 +2177,15 @@ bool Project::loadProjectSettings(QString settingsFileName)
 
         projectName = projectSettings->value("name").toString();
         demFileName = projectSettings->value("dem").toString();
+
         dbPointsFileName = projectSettings->value("meteo_points").toString();
+
         outputPointsFileName = projectSettings->value("output_points").toString();
         dbAggregationFileName = projectSettings->value("aggregation_points").toString();
-        // for Criteria projects
-        if (dbPointsFileName == "")
-        {
-            dbPointsFileName = projectSettings->value("db_meteo").toString();
-        }
+
         dbGridXMLFileName = projectSettings->value("meteo_grid").toString();
         loadGridDataAtStart = projectSettings->value("load_grid_data_at_start").toBool();
+
     projectSettings->endGroup();
 
     projectSettings->beginGroup("settings");
