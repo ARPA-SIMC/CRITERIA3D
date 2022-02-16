@@ -858,12 +858,15 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
     }
 
     bool computeRadiationPotentialRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
-                              Crit3DMeteoPoint* myMeteoPoint, TradPoint radPoint, const Crit3DTime& myTime)
+                              Crit3DMeteoPoint* myMeteoPoint, float slope, float aspect, const Crit3DTime& myTime, TradPoint* radPoint)
     {
-        radPoint.lat = myMeteoPoint->latitude;
-        radPoint.lon = myMeteoPoint->longitude;
-        radPoint.slope = readSlope(radSettings);
-        radPoint.aspect = readAspect(radSettings);
+        radPoint->lat = myMeteoPoint->latitude;
+        radPoint->lon = myMeteoPoint->longitude;
+        radPoint->x = myMeteoPoint->point.utm.x;
+        radPoint->y = myMeteoPoint->point.utm.y;
+        radPoint->height = myMeteoPoint->point.z;
+        radPoint->slope = slope;
+        radPoint->aspect = aspect;
 
         gis::Crit3DPoint myPoint = myMeteoPoint->point;
 
@@ -872,7 +875,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
         TsunPosition sunPosition;
         if (!computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime,
-            linke, albedo, radSettings->getClearSky(), radSettings->getClearSky(), &sunPosition, &radPoint, dem))
+            linke, albedo, radSettings->getClearSky(), radSettings->getClearSky(), &sunPosition, radPoint, dem))
             return false;
 
         return true;
