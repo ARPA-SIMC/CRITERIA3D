@@ -720,7 +720,7 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
     const float tmin_max = 40;
 
     const float tmax_min = -40;
-    const float tmax_max = 50;
+    const float tmax_max = 60;
 
 
     do
