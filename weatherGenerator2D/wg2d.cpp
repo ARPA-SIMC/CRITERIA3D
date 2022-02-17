@@ -490,7 +490,7 @@ void weatherGenerator2D::computeMonthlyVariables()
         {
             printf("site %d day %d lambda %f kappa %f\n",i,j,weibullDailyParameterLambda[i][j],weibullDailyParameterKappa[i][j]);
         }
-        pressEnterToContinue();
+        //pressEnterToContinue();
     }
 
 

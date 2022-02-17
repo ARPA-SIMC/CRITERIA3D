@@ -912,8 +912,50 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
                    }
                }
           }
-      }
+     }
+     if (parametersModel.distributionPrecipitation == 3)
+     {
+         for (int i=0;i<nrStations;i++)
+         {
+            for (int j=0;j<lengthSeason[iSeason]*parametersModel.yearOfSimulation;j++)
+            {
+                 if (iSeason == 0)
+                 {
+                    int indexDay;
+                    indexDay = lengthSeason[iSeason]*parametersModel.yearOfSimulation;
+                    indexDay = (j%lengthSeason[iSeason])-31;
+                    if (indexDay < 0) indexDay += 365;
+                    phatAlpha[i][j] = 0.84*weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = 1.333333;weibullDailyParameterKappa[i][indexDay];
+                 }
+                 if (iSeason == 1)
+                 {
+                    int indexDay;
+                    indexDay = (j%lengthSeason[iSeason])+59;
 
+                    phatAlpha[i][j] = 0.84*weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = 1.333333;weibullDailyParameterKappa[i][indexDay];
+                 }
+                 if (iSeason == 2)
+                 {
+                    int indexDay;
+                    indexDay = (j%lengthSeason[iSeason])+151;
+
+                    phatAlpha[i][j] = 0.84*weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = 1.333333;//weibullDailyParameterKappa[i][indexDay];
+                 }
+                 if (iSeason == 3)
+                 {
+                    int indexDay;
+                    indexDay = (j%lengthSeason[iSeason])+243;
+
+                    phatAlpha[i][j] = 0.84*weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = 1.333333;weibullDailyParameterKappa[i][indexDay];
+                 }
+
+             }
+          }
+      }
       for (int j=0;j<lengthSeason[iSeason]*parametersModel.yearOfSimulation;j++)
       {
           for (int i=0;i<nrStations;i++)
