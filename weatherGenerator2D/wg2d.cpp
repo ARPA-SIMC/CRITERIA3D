@@ -383,9 +383,9 @@ void weatherGenerator2D::computeMonthlyVariables()
             monthlyAverageTmean_local[i][j] = 0.5*(monthlyAverageTmax_local[i][j]+monthlyAverageTmin_local[i][j]);
             monthlyAveragePrec_local[i][j] /= countPrec[i][j];
 
-            monthlyAverageTmax[i][j] = monthlyAverageTmax_local[i][j]-parametersModel.precipitationThreshold;
-            monthlyAverageTmin[i][j] = monthlyAverageTmin_local[i][j]-parametersModel.precipitationThreshold;
-            monthlyAverageTmean[i][j] = monthlyAverageTmean_local[i][j]-parametersModel.precipitationThreshold;
+            monthlyAverageTmax[i][j] = monthlyAverageTmax_local[i][j];
+            monthlyAverageTmin[i][j] = monthlyAverageTmin_local[i][j];
+            monthlyAverageTmean[i][j] = monthlyAverageTmean_local[i][j];
             monthlyAveragePrec[i][j] = monthlyAveragePrec_local[i][j]-parametersModel.precipitationThreshold;
 
         }

@@ -619,7 +619,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
                    parametersWeibullFromObservations(mean,variance, &lambdaWeibull,&kappaWeibull,leftBound,rightBound);
                    occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][0] = mean;
                    //kappaWeibull = 1.333333333;
-                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][1] = kappaWeibull;
+                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][1] = kappaWeibull+0.4;
                }
            }
 
@@ -913,6 +913,7 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
                }
           }
      }
+    /*
      if (parametersModel.distributionPrecipitation == 3)
      {
          for (int i=0;i<nrStations;i++)
@@ -925,37 +926,38 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
                     indexDay = lengthSeason[iSeason]*parametersModel.yearOfSimulation;
                     indexDay = (j%lengthSeason[iSeason])-31;
                     if (indexDay < 0) indexDay += 365;
-                    phatAlpha[i][j] = 0.84*weibullDailyParameterLambda[i][indexDay];
-                    phatBeta[i][j] = 1.333333;weibullDailyParameterKappa[i][indexDay];
+                    phatAlpha[i][j] = weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = weibullDailyParameterKappa[i][indexDay];
                  }
                  if (iSeason == 1)
                  {
                     int indexDay;
                     indexDay = (j%lengthSeason[iSeason])+59;
 
-                    phatAlpha[i][j] = 0.84*weibullDailyParameterLambda[i][indexDay];
-                    phatBeta[i][j] = 1.333333;weibullDailyParameterKappa[i][indexDay];
+                    phatAlpha[i][j] = weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = weibullDailyParameterKappa[i][indexDay];
                  }
                  if (iSeason == 2)
                  {
                     int indexDay;
                     indexDay = (j%lengthSeason[iSeason])+151;
 
-                    phatAlpha[i][j] = 0.84*weibullDailyParameterLambda[i][indexDay];
-                    phatBeta[i][j] = 1.333333;//weibullDailyParameterKappa[i][indexDay];
+                    phatAlpha[i][j] = weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = weibullDailyParameterKappa[i][indexDay];
                  }
                  if (iSeason == 3)
                  {
                     int indexDay;
                     indexDay = (j%lengthSeason[iSeason])+243;
 
-                    phatAlpha[i][j] = 0.84*weibullDailyParameterLambda[i][indexDay];
-                    phatBeta[i][j] = 1.333333;weibullDailyParameterKappa[i][indexDay];
+                    phatAlpha[i][j] = weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = weibullDailyParameterKappa[i][indexDay];
                  }
 
              }
           }
       }
+    */
       for (int j=0;j<lengthSeason[iSeason]*parametersModel.yearOfSimulation;j++)
       {
           for (int i=0;i<nrStations;i++)
@@ -1368,7 +1370,8 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                    }
                    else if (parametersModel.distributionPrecipitation == 3)
                    {
-                        simulatedPrecipitationAmountsSeasonal[i][j] = phatAlpha[i][j]*pow(-log(1-uniformRandomVar),phatBeta[i][j])+ parametersModel.precipitationThreshold;
+                        //simulatedPrecipitationAmountsSeasonal[i][j] = phatAlpha[i][j]*pow(-log(1-uniformRandomVar),1./phatBeta[i][j])+ parametersModel.precipitationThreshold;
+                        simulatedPrecipitationAmountsSeasonal[i][j] = phatAlpha[i][j]*pow(-log(1-uniformRandomVar),1./(phatBeta[i][j]))+ parametersModel.precipitationThreshold;
                         //simulatedPrecipitationAmountsSeasonal[i][j] = 0.84* phatAlpha[i][j]*pow(-log(1-uniformRandomVar),1.0)+ parametersModel.precipitationThreshold;
                         //simulatedPrecipitationAmountsSeasonal[i][j] =-log(1-uniformRandomVar)*phatAlpha[i][j]+ parametersModel.precipitationThreshold;
                    }
