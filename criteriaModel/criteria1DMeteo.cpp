@@ -720,7 +720,7 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
     const float tmin_max = 40;
 
     const float tmax_min = -40;
-    const float tmax_max = 50;
+    const float tmax_max = 60;
 
 
     do
@@ -836,9 +836,9 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
 
 /*!
  * \brief read daily meteo data from a table in the criteria-1D format
- * \brief (`date`,`tmin`,`tmax`,`tavg`,`prec`,`etp`,`watertable`)
+ * \brief (`date`,`tmin`,`tmax`,`tavg`,`prec`,`et0`,`watertable`)
  * \details mandatory: date, tmin, tmax, prec
- * \details not mandatory: tavg, etp, watertable
+ * \details not mandatory: tavg, et0, watertable
  * \details date format: "yyyy-mm-dd"
  * \return true if data are correctly loaded
  * \note meteoPoint have to be initialized BEFORE function
@@ -867,7 +867,7 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
     expectedDate = myDate;
     previousDate = myDate.addDays(-1);
 
-    bool existEtp = !(query->value("etp").isNull());
+    bool existEt0 = !(query->value("et0").isNull());
     bool existWatertable = !(query->value("watertable").isNull());
     bool existTavg = !(query->value("tavg").isNull());
 
@@ -926,8 +926,8 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
 
             // check
             if (prec < 0.f) prec = NODATA;
-            if (tmin < -50 || tmin > 40) tmin = NODATA;
-            if (tmax < -40 || tmax > 50) tmax = NODATA;
+            if (tmin < -60 || tmin > 50) tmin = NODATA;
+            if (tmax < -50 || tmax > 60) tmax = NODATA;
 
             if (int(tmin) == int(NODATA) || int(tmax) == int(NODATA) || int(prec) == int(NODATA))
             {
@@ -952,15 +952,15 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
             if (existTavg)
             {
                 getValue(query->value("tavg"), &tmed);
-                if (int(tmed) == int(NODATA) || tmed < -40.f || tmed > 40.f)
+                if (int(tmed) == int(NODATA) || tmed < -40.f || tmed > 50.f)
                      tmed = (tmin + tmax) * 0.5f;
             }
             else tmed = (tmin + tmax) * 0.5f;
 
             // ET0 [mm]
-            if (existEtp)
+            if (existEt0)
             {
-                getValue(query->value("etp"), &et0);
+                getValue(query->value("et0"), &et0);
                 if (et0 < 0.f || et0 > 10.f)
                     et0 = NODATA;
             }
