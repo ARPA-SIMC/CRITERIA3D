@@ -9,6 +9,7 @@
 #===========================================================
 
 QT       += widgets network sql
+greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
 TEMPLATE = lib
 CONFIG += staticlib
