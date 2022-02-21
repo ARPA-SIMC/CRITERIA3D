@@ -829,10 +829,10 @@ bool Crit3DProject::loadModelState(QString statePath)
 
     // set current date/hour
     QString stateStr = getFileName(statePath);
-    int year = stateStr.midRef(0,4).toInt();
-    int month = stateStr.midRef(4,2).toInt();
-    int day = stateStr.midRef(6,2).toInt();
-    int hour = stateStr.midRef(10,2).toInt();
+    int year = QStringView{stateStr}.mid(0,4).toInt();
+    int month = QStringView{stateStr}.mid(4,2).toInt();
+    int day = QStringView{stateStr}.mid(6,2).toInt();
+    int hour = QStringView{stateStr}.mid(10,2).toInt();
     setCurrentDate(QDate(year, month, day));
     setCurrentHour(hour);
 
