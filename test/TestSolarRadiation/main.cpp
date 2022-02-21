@@ -116,14 +116,14 @@ int main(int argc, char *argv[])
     std::cout << "\nComputing..." << std::endl;
 
     // COMPUTE POTENTIAL GLOBAL RADIATION MAPS
-    if (radiation::computeRadiationGridPresentTime(radSettings, *DEM, radMaps, *myTime))
+    if (radiation::computeRadiationGrid(radSettings, *DEM, radMaps, *myTime))
         std::cout << "\nGlobal solar irradiance (clear sky) computed." << std::endl;
     else
         std::cout << "Error in compute radiation." << std::endl << std::endl;
 
     //SAVE OUTPUT
     std::string otputFileName;
-    otputFileName = path.toStdString() + "globalRadiation";
+    otputFileName = path.toStdString() + PATH_OUTPUT + "globalRadiation";
     if (gis::writeEsriGrid(otputFileName, radMaps->globalRadiationMap, error))
         std::cout << "Map saved in: " << otputFileName << std::endl;
     else

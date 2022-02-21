@@ -26,17 +26,19 @@ win32:{
     TARGET = TestSolarRadiation
 }
 
-INCLUDEPATH += ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/gis ../../agrolib/solarRadiation
+INCLUDEPATH += ../../agrolib/crit3dDate ../../agrolib/mathFunctions ../../agrolib/meteo ../../agrolib/gis ../../agrolib/solarRadiation
 
 CONFIG += debug_and_release
 
 CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/solarRadiation/debug -lsolarRadiation
+    LIBS += -L../../agrolib/meteo/debug -lmeteo
     LIBS += -L../../agrolib/gis/debug -lgis
     LIBS += -L../../agrolib/mathFunctions/debug -lmathFunctions
     LIBS += -L../../agrolib/crit3dDate/debug -lcrit3dDate
 } else {
     LIBS += -L../../agrolib/solarRadiation/release -lsolarRadiation
+    LIBS += -L../../agrolib/meteo/release -lmeteo
     LIBS += -L../../agrolib/gis/release -lgis
     LIBS += -L../../agrolib/mathFunctions/release -lmathFunctions
     LIBS += -L../../agrolib/crit3dDate/release -lcrit3dDate
