@@ -313,6 +313,11 @@ void MapGraphicsView::zoomOut(ZoomMode zMode)
         this->setZoomLevel(this->zoomLevel()-1,zMode);
 }
 
+void MapGraphicsView::rotate(qreal rotation)
+{
+    _childView->rotate(rotation);
+}
+
 //protected slot
 void MapGraphicsView::handleChildMouseDoubleClick(QMouseEvent *event)
 {
@@ -356,6 +361,7 @@ void MapGraphicsView::handleChildViewScrollWheel(QWheelEvent *event)
         this->zoomOut(MouseZoom);
 }
 
+
 //private slot
 void MapGraphicsView::renderTiles()
 {
@@ -396,7 +402,7 @@ void MapGraphicsView::doTileLayout()
     //We'll mark tiles that aren't being displayed as free so we can use them
     QQueue<MapTileGraphicsObject *> freeTiles;
 
-    QSet<QPointF> placesWhereTilesAre;
+    QSet<QString> placesWhereTilesAre;
     foreach(MapTileGraphicsObject * tileObject, _tileObjects)
     {
         if (!tileObject->isVisible() || !exaggeratedBoundingRect.contains(tileObject->pos()))
@@ -405,7 +411,10 @@ void MapGraphicsView::doTileLayout()
             tileObject->setVisible(false);
         }
         else
-            placesWhereTilesAre.insert(tileObject->pos());
+        {
+            QString pointKey = QString::number(tileObject->pos().x()) % "," % QString::number(tileObject->pos().y());
+            placesWhereTilesAre.insert(pointKey);
+        }
     }
 
     const quint16 tileSize = _tileSource->tileSize();
@@ -432,7 +441,8 @@ void MapGraphicsView::doTileLayout()
 
 
             bool tileIsThere = false;
-            if (placesWhereTilesAre.contains(scenePos))
+            QString pointKey = QString::number(scenePos.x()) % "," % QString::number(scenePos.y());
+            if (placesWhereTilesAre.contains(pointKey))
                 tileIsThere = true;
 
             if (tileIsThere)

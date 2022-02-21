@@ -83,6 +83,8 @@ public:
     void zoomIn(ZoomMode zMode = CenterZoom);
     void zoomOut(ZoomMode zMode = CenterZoom);
 
+    void rotate(qreal rotation);
+
     friend qhash_result_t qHash(const QPointF &key, qhash_result_t seed) noexcept;
     
 signals:
@@ -119,12 +121,13 @@ private:
     DragMode _dragMode;
 };
 
-
+/*
 inline qhash_result_t qHash(const QPointF &key, qhash_result_t seed) noexcept
 {
     const QString temp = QString::number(key.x()) % "," % QString::number(key.y());
     return qHash(temp, seed);
 }
+*/
 
 
 #endif // MAPGRAPHICSVIEW_H

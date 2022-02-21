@@ -7,6 +7,10 @@
 #include <QtDebug>
 #include <QNetworkReply>
 
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    #include <QtCore5Compat/QRegExp>
+#endif
+
 
 const qreal PI = 3.14159265358979323846;
 const qreal deg2rad = PI / 180.0;
@@ -235,7 +239,6 @@ void WebTileSource::handleNetworkRequestFinished()
     //Figure out how long the tile should be cached
     QDateTime expireTime = QDateTime::currentDateTimeUtc().addSecs(86400*30);       // one month
 
-    #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     if (reply->hasRawHeader("Cache-Control"))
     {
         //We support the max-age directive only for now
@@ -250,7 +253,6 @@ void WebTileSource::handleNetworkRequestFinished()
                 expireTime = QDateTime::currentDateTimeUtc().addSecs(delta);
         }
     }
-    #endif
 
     //Notify client of tile retrieval
     this->prepareNewlyReceivedTile(x,y,z, image, expireTime);
