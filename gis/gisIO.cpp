@@ -289,8 +289,9 @@ namespace gis
         }
 
         // rowcol nr
-        latLonHeader->nrRows = utmHeader->nrRows * 1.1;
-        latLonHeader->nrCols = utmHeader->nrCols * 1.1;
+        // increase resolution
+        latLonHeader->nrRows = int(utmHeader->nrRows * 1.1);
+        latLonHeader->nrCols = int(utmHeader->nrCols * 1.1);
 
         // dx, dy
         latLonHeader->dx = (URcorner.longitude - LLcorner.longitude) / latLonHeader->nrCols;

@@ -265,6 +265,7 @@ namespace gis
     }
 
 
+    /*
     bool Crit3DRasterGrid::initializeGrid(const Crit3DGridHeader& latlonHeader)
     {
         this->clear();
@@ -274,7 +275,7 @@ namespace gis
         *(this->header) = initHeader;
 
         return this->initializeGrid(this->header->flag);
-    }
+    }*/
 
 
     bool Crit3DRasterGrid::initializeGrid(const Crit3DRasterGrid& initGrid)
