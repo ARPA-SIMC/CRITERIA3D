@@ -108,7 +108,6 @@
 
             Crit3DRasterHeader();
 
-            void convertFromLatLon(const Crit3DGridHeader& latLonHeader);
             bool isEqualTo(const Crit3DRasterHeader& myHeader);
 
             friend bool operator == (const Crit3DRasterHeader& myHeader1, const Crit3DRasterHeader& myHeader2);
@@ -149,7 +148,6 @@
             bool initializeGrid(float initValue);
             bool initializeGrid(const Crit3DRasterGrid& initGrid);
             bool initializeGrid(const Crit3DRasterHeader& initHeader);
-            //bool initializeGrid(const Crit3DGridHeader& latlonHeader);
             bool initializeGrid(const Crit3DRasterGrid& initGrid, float initValue);
 
             bool copyGrid(const Crit3DRasterGrid& initGrid);
@@ -231,8 +229,8 @@
         bool readEsriGrid(std::string myFileName, Crit3DRasterGrid* myGrid, std::string* myError);
         bool writeEsriGrid(std::string myFileName, Crit3DRasterGrid* myGrid, std::string* myError);
 
-        bool mapAlgebra(Crit3DRasterGrid* myMap1, Crit3DRasterGrid* myMap2, Crit3DRasterGrid *myMapOut, operationType myOperation);
-        bool mapAlgebra(Crit3DRasterGrid* myMap1, float myValue, Crit3DRasterGrid *myMapOut, operationType myOperation);
+        bool mapAlgebra(Crit3DRasterGrid* myMap1, Crit3DRasterGrid* myMap2, Crit3DRasterGrid *outputMap, operationType myOperation);
+        bool mapAlgebra(Crit3DRasterGrid* myMap1, float myValue, Crit3DRasterGrid *outputMap, operationType myOperation);
         bool prevailingMap(const Crit3DRasterGrid& inputMap,  Crit3DRasterGrid *outputMap);
         float prevailingValue(const std::vector<float> &valueList);
 
