@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <sstream>
 #include <fstream>
+#include <math.h>
 #include "commonConstants.h"
 #include "gis.h"
 
@@ -306,6 +307,39 @@ namespace gis
         return true;
     }
 
+    bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader)
+    {
+        Crit3DUtmPoint v[4];
+
+        // compute vertexes
+        gis::Crit3DGeoPoint geoPoint;
+
+        // LL
+        geoPoint.latitude = latLonHeader->llCorner.latitude;
+        geoPoint.longitude = latLonHeader->llCorner.longitude;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[0]);
+
+        // LR
+        geoPoint.longitude = latLonHeader->llCorner.longitude + latLonHeader->nrCols * latLonHeader->dx;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[1]);
+
+        // UR
+        geoPoint.latitude = latLonHeader->llCorner.latitude + latLonHeader->nrRows * latLonHeader->dy;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
+
+        // UL
+        geoPoint.longitude = latLonHeader->llCorner.longitude - latLonHeader->nrCols * latLonHeader->dx;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
+
+        utmHeader->cellSize = cellSize;
+        utmHeader->nrCols = int(floor((v[1].x - v[0].x)/utmHeader->cellSize));
+        utmHeader->nrRows = int(floor((v[2].y - v[1].y)/utmHeader->cellSize));
+        utmHeader->llCorner.x = v[0].x;
+        utmHeader->llCorner.y = v[0].y;
+
+        utmHeader->flag = latLonHeader->flag;
+        return true;
+    }
+
 
 }
-
