@@ -2413,6 +2413,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridHourlyVarFixedFields(QStrin
     return hourlyVarList;
 }
 
+
 bool Crit3DMeteoGridDbHandler::saveCellGridDailyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
                                                      QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings* meteoSettings)
 {
@@ -2434,13 +2435,12 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyData(QString *myError, QString m
         foreach (meteoVariable meteoVar, meteoVariableList)
             if (getVarFrequency(meteoVar) == daily)
             {
+                int varCode = getDailyVarCode(meteoVar);
                 for (QDate date = firstDate; date <= lastDate; date = date.addDays(1))
                 {
                     float value = meteoGrid()->meteoPoint(row, col).getMeteoPointValueD(getCrit3DDate(date), meteoVar, meteoSettings);
-                    QString valueS = QString("'%1'").arg(value);
+                    QString valueS = QString("'%1'").arg(double(value));
                     if (isEqual(value, NODATA)) valueS = "NULL";
-
-                    int varCode = getDailyVarCode(meteoVar);
 
                     statement += QString(" ('%1','%2',%3),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueS);
                 }
@@ -2457,6 +2457,57 @@ bool Crit3DMeteoGridDbHandler::saveCellGridDailyData(QString *myError, QString m
 
     return true;
 }
+
+
+// warning: delete all previous data
+bool Crit3DMeteoGridDbHandler::deleteAndWriteCellGridDailyData(QString& myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
+                                                     QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings* meteoSettings)
+{
+    QSqlQuery qry(_db);
+    QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
+
+    QString statement = QString("DROP TABLE `%1`").arg(tableD);
+    if( !qry.exec(statement) )
+    {
+        myError = qry.lastError().text();
+        return false;
+    }
+
+    statement = QString("CREATE TABLE `%1`(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2,VariableCode))").arg(tableD).arg(_tableDaily.fieldTime);
+    if( !qry.exec(statement) )
+    {
+        myError = qry.lastError().text();
+        return false;
+    }
+
+    statement =  QString(("INSERT INTO `%1` VALUES")).arg(tableD);
+
+    foreach (meteoVariable meteoVar, meteoVariableList)
+    {
+        if (getVarFrequency(meteoVar) == daily)
+        {
+            int varCode = getDailyVarCode(meteoVar);
+            for (QDate date = firstDate; date <= lastDate; date = date.addDays(1))
+            {
+                float value = meteoGrid()->meteoPoint(row, col).getMeteoPointValueD(getCrit3DDate(date), meteoVar, meteoSettings);
+                QString valueS = QString("'%1'").arg(double(value));
+                if (isEqual(value, NODATA)) valueS = "NULL";
+
+                statement += QString(" ('%1','%2',%3),").arg(date.toString("yyyy-MM-dd")).arg(varCode).arg(valueS);
+            }
+        }
+    }
+
+    statement = statement.left(statement.length() - 1);
+    if( !qry.exec(statement) )
+    {
+        myError = qry.lastError().text();
+        return false;
+    }
+
+    return true;
+}
+
 
 bool Crit3DMeteoGridDbHandler::saveCellGridDailyDataEnsemble(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
                                                      QList<meteoVariable> meteoVariableList, int memberNr, Crit3DMeteoSettings* meteoSettings)
