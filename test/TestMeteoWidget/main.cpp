@@ -70,13 +70,14 @@ int main(int argc, char *argv[])
 
     std::cout << "\n...Create window\n" << std::flush;
     bool isGrid = false;
-    Crit3DMeteoWidget w("Point", "/home/laura/PRAGA/DATA/PROJECT/test/");
+    Crit3DMeteoSettings meteoSettings;
+    Crit3DMeteoWidget w(isGrid, "", &meteoSettings);
 
     std::cout << "...Show window\n" << std::flush;
     w.show();
 
     std::cout << "...draw data p1\n" << std::flush;
-    w.draw(meteoPoint);
+    w.draw(meteoPoint, false);
 
     //std::cout << "...draw data p2\n" << std::flush;
     //w.draw(meteoPointSecond);

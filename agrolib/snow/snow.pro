@@ -2,9 +2,9 @@
 #
 #   snow library
 #   compute snow accumulation and melt
-#   mono-dimensional energy balance
+#   with a mono-dimensional energy balance
 #
-#   This library is part of CRITERIA-3D distribution
+#   This project is part of CRITERIA-3D distribution
 #
 #-----------------------------------------------------
 
@@ -27,7 +27,7 @@ win32:{
 
 TEMPLATE = lib
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../solarRadiation
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo
 
 SOURCES += \
     snow.cpp \

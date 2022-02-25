@@ -60,7 +60,7 @@ void DialogSelectVar::variableAllClicked(QListWidgetItem* item)
 
 void DialogSelectVar::variableSelClicked(QListWidgetItem* item)
 {
-    Q_UNUSED(item);
+    Q_UNUSED(item)
 
     addButton->setEnabled(false);
     deleteButton->setEnabled(true);

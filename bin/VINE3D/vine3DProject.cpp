@@ -180,7 +180,7 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     {
         logError();
         dbConnection.close();
-        return(false);
+        return false;
     }
 
     if (!loadFieldsProperties() || !loadFieldBook())

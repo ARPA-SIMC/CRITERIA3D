@@ -271,7 +271,7 @@ QValidator::State doubleValidator::validate ( QString& s, int& ) const
 
     QLocale locale;
 
-    QChar decimalPoint = locale.decimalPoint();
+    QString decimalPoint = locale.decimalPoint();
     int charsAfterPoint = s.length() - s.indexOf(decimalPoint) -1;
 
     if (charsAfterPoint > decimals() && s.indexOf(decimalPoint) != -1) {

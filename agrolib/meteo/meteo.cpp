@@ -290,13 +290,14 @@ double dailyExtrRadiation(double myLat, int myDoy)
     double Phi;                                  /*!< [rad] latitude in radiants */
     double delta;                                /*!< [rad] solar declination */
     double dr;                                   /*!< [-] inverse Earth-Sun relative distance */
+    double doy = double(myDoy);
 
-    Phi = PI / 180 * myLat;
-    delta = 0.4093 * sin((2 * PI / 365) * myDoy - 1.39);
-    dr = 1 + 0.033 * cos(2 * PI * myDoy / 365);
+    Phi = PI / 180. * myLat;
+    delta = 0.4093 * sin((2. * PI / 365.) * doy - 1.39);
+    dr = 1. + 0.033 * cos(2. * PI * doy / 365.);
     OmegaS = acos(-tan(Phi) * tan(delta));
 
-    return SOLAR_CONSTANT * DAY_SECONDS / 1000000 * dr / PI * (OmegaS * sin(Phi) * sin(delta) + cos(Phi) * cos(delta) * sin(OmegaS));
+    return SOLAR_CONSTANT * DAY_SECONDS / 1000000. * dr / PI * (OmegaS * sin(Phi) * sin(delta) + cos(Phi) * cos(delta) * sin(OmegaS));
 }
 
 

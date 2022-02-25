@@ -324,13 +324,13 @@ void MainWindow::on_actionOpen_project_triggered()
     QString myFileName = QFileDialog::getOpenFileName(this,tr("Open Project"), "", tr("Project files (*.ini)"));
     if (myFileName == "") return;
 
-    if (! myProject.loadVine3DProject(myFileName)) return;
+    if (myProject.loadVine3DProject(myFileName))
+       drawMeteoPoints();
 
     if (myProject.DEM.isLoaded)
         renderDEM();
-
-    drawMeteoPoints();
 }
+
 
 void MainWindow::on_actionRun_models_triggered()
 {

@@ -81,6 +81,11 @@
                                          int windowWidth, int timeStepSecond, const gis::Crit3DRasterGrid& myDEM);
 
         bool isGridPointComputable(Crit3DRadiationSettings* mySettings, int row, int col, const gis::Crit3DRasterGrid& myDEM, Crit3DRadiationMaps* radiationMaps);
+
+        bool computeRadiationRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
+                                                 Crit3DMeteoPoint* myMeteoPoint, TradPoint radPoint, const Crit3DTime& myTime);
+        bool computeRadiationPotentialRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
+                                  Crit3DMeteoPoint* myMeteoPoint, float slope, float aspect, const Crit3DTime& myTime, TradPoint *radPoint);
     }
 
 

@@ -7,6 +7,7 @@
 #-----------------------------------------------------
 
 QT       += core gui network widgets sql xml charts
+greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
 TEMPLATE = app
 TARGET = CRITERIA3D

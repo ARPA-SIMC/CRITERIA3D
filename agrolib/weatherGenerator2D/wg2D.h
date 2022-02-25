@@ -273,14 +273,18 @@
         double* normalRandomNumbers;
 
 
-        double** monthlyAverageOverYearsAverageTmax;
-        double** monthlyAverageOverYearsAverageTmin;
-        double** monthlyAverageOverYearsAverageTmean;
-        double** monthlyAverageOverYearsAveragePrec;
-        double** monthlyStdDevOverYearsAverageTmax;
-        double** monthlyStdDevOverYearsAverageTmin;
-        double** monthlyStdDevOverYearsAverageTmean;
-        double** monthlyStdDevOverYearsAveragePrec;
+        float** monthlyAverageTmax;
+        float** monthlyAverageTmin;
+        float** monthlyAverageTmean;
+        float** monthlyAveragePrec;
+        float** monthlyStdDevTmax;
+        float** monthlyStdDevTmin;
+        float** monthlyStdDevTmean;
+        float** monthlyStdDevPrec;
+        float** interpolatedDailyValuePrecAverage;
+        float** interpolatedDailyValuePrecVariance;
+        double** weibullDailyParameterLambda;
+        double** weibullDailyParameterKappa;
 
         //float** monthlyRandomDeviationTmean;
         //functions
@@ -306,7 +310,7 @@
 
 
         void temperatureCompute();
-        void computeMonthlyTemperatures();
+        void computeMonthlyVariables();
         void computeTemperatureParameters();
         void initializeTemperatureParameters();
         int  doyFromDate(int day,int month,int year);
