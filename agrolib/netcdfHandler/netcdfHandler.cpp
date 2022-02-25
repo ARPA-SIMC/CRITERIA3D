@@ -246,19 +246,19 @@ Crit3DTime NetCDFHandler::getTime(int timeIndex)
         return NO_DATETIME;
     }
 
-    int nrDays, residualTime;
+    long nrDays, residualTime;
 
     if (isStandardTime)
     {
         long nrSeconds = long(time[timeIndex]);
         nrDays = int(floor(nrSeconds / DAY_SECONDS));
-        residualTime = nrSeconds - (nrDays * DAY_SECONDS);
+        residualTime = nrSeconds - (nrDays * long(DAY_SECONDS));
     }
     else if (isHourly)
     {
         long nrHours = long(time[timeIndex]);
         nrDays = int(floor(nrHours / 24));
-        residualTime = (nrHours - nrDays*24) * HOUR_SECONDS;
+        residualTime = (nrHours - nrDays*24) * long(HOUR_SECONDS);
     }
     else if (isDaily)
     {
@@ -557,7 +557,14 @@ bool NetCDFHandler::readProperties(string fileName)
 
             latLonHeader.flag = NODATA;
 
-            dataGrid.header->convertFromLatLon(latLonHeader);
+            // raster header
+            dataGrid.header->nrRows = latLonHeader.nrRows;
+            dataGrid.header->nrCols = latLonHeader.nrCols;
+            dataGrid.header->flag = latLonHeader.flag;
+            dataGrid.header->llCorner.y = latLonHeader.llCorner.latitude;
+            dataGrid.header->llCorner.x = latLonHeader.llCorner.longitude;
+            // avg value (not used)
+            dataGrid.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
             dataGrid.initializeGrid(0);
         }
     }
@@ -925,7 +932,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
     {
 
         float timeValue[1];
-        timeValue[0] = (float)(nDays+1)/2.0;
+        timeValue[0] = float(nDays+1) / 2.f;
         status = nc_put_var_float(ncId, varTime, &timeValue[0]);
         if (status != NC_NOERR) return false;
         // time bounds
@@ -933,7 +940,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
         {
             float boundsValue[2];
             boundsValue[0] = 0.0;
-            boundsValue[1] = (float)nDays;
+            boundsValue[1] = float(nDays);
             status = nc_put_var_float(ncId, varTimeBounds, &boundsValue[0]);
             if (status != NC_NOERR) return false;
         }
