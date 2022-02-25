@@ -331,14 +331,14 @@ namespace gis
         geoPoint.longitude = latLonHeader->llCorner.longitude;
         gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[3]);
 
-        double xmin = min(v[0].x, v[3].x);
-        double xmax = max(v[1].x, v[2].x);
-        double ymin = min(v[0].y, v[1].y);
-        double ymax = max(v[2].y, v[3].y);
+        double xmin = floor(min(v[0].x, v[3].x));
+        double xmax = floor(max(v[1].x, v[2].x)) +1.;
+        double ymin = floor(min(v[0].y, v[1].y));
+        double ymax = floor(max(v[2].y, v[3].y)) +1.;
 
         utmHeader->cellSize = cellSize;
-        utmHeader->nrCols = int(floor((xmax-xmin)/utmHeader->cellSize));
-        utmHeader->nrRows = int(floor((ymax-ymin)/utmHeader->cellSize));
+        utmHeader->nrCols = int(floor((xmax-xmin)/utmHeader->cellSize) + 1);
+        utmHeader->nrRows = int(floor((ymax-ymin)/utmHeader->cellSize) + 1);
         utmHeader->llCorner.x = xmin;
         utmHeader->llCorner.y = ymin;
 
