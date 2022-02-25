@@ -233,7 +233,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
 
-        //std::cout << "URL: " << url.toString().toStdString(); //debug
+        //qDebug() << "URL: " << url.toString(); //debug
 
         // GET
         QNetworkReply* reply = manager->get(request);
