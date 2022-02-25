@@ -328,7 +328,7 @@ namespace gis
         gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
 
         // UL
-        geoPoint.longitude = latLonHeader->llCorner.longitude - latLonHeader->nrRows * latLonHeader->dy;
+        geoPoint.longitude = latLonHeader->llCorner.longitude - latLonHeader->nrCols * latLonHeader->dx;
         gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
 
         utmHeader->cellSize = cellSize;
