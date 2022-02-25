@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <sstream>
 #include <fstream>
+#include <math.h>
 #include "commonConstants.h"
 #include "gis.h"
 
@@ -331,8 +332,8 @@ namespace gis
         gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
 
         utmHeader->cellSize = cellSize;
-        utmHeader->nrCols = (v[1].x - v[0].x)/utmHeader->cellSize;
-        utmHeader->nrRows = (v[2].y - v[1].y)/utmHeader->cellSize;
+        utmHeader->nrCols = int(floor((v[1].x - v[0].x)/utmHeader->cellSize));
+        utmHeader->nrRows = int(floor((v[2].y - v[1].y)/utmHeader->cellSize));
         utmHeader->llCorner.x = v[0].x;
         utmHeader->llCorner.y = v[0].y;
 
