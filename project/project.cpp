@@ -3197,6 +3197,73 @@ bool Project::getComputeOnlyPoints()
     return computeOnlyPoints;
 }
 
+bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
+{
+    if (fileName != "")
+    {
+        gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
+
+        if (!meteoGridDbHandler->gridStructure().isUTM())
+        {
+            // lat lon grid
+            gis::Crit3DGridHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
+            gis::getGeoExtentsFromLatLonHeader(gisSettings, cellSize, myGrid->header, &latlonHeader);
+            if (!myGrid->initializeGrid(NODATA))
+            {
+                errorString = "initializeGrid failed";
+                delete myGrid;
+                return false;
+            }
+            double utmx;
+            double utmy;
+            double lat;
+            double lon;
+            int dataGridRow;
+            int dataGridCol;
+            float myValue;
+
+            for (int row = 0; row < myGrid->header->nrRows; row++)
+            {
+                for (int col = 0; col < myGrid->header->nrCols; col++)
+                {
+                    myGrid->getXY(row,col,&utmx,&utmy);
+                    gis::getLatLonFromUtm(gisSettings,utmx,utmy,&lat,&lon);
+                    gis::getMeteoGridRowColFromXY (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
+                    if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
+                    {
+                        myValue = NODATA;
+                    }
+                    else
+                    {
+                        myValue = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.value[latlonHeader.nrRows-1-dataGridRow][dataGridCol];
+                    }
+                    if (myValue != NO_ACTIVE && myValue != NODATA)
+                    {
+                        myGrid->value[row][col] = myValue;
+                    }
+                }
+            }
+        }
+        else
+        {
+            myGrid->copyGrid(meteoGridDbHandler->meteoGrid()->dataMeteoGrid);
+        }
+
+        std::string myError = errorString.toStdString();
+        QString fileWithoutExtension = QFileInfo(fileName).absolutePath() + QDir::separator() + QFileInfo(fileName).baseName();
+        if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), myGrid, &myError))
+        {
+            errorString = QString::fromStdString(myError);
+            delete myGrid;
+            return false;
+        }
+        delete myGrid;
+        return true;
+
+    }
+    return false;
+}
+
 
 /* ---------------------------------------------
  * LOG functions
