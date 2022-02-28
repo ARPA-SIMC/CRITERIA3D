@@ -2467,11 +2467,7 @@ bool Crit3DMeteoGridDbHandler::deleteAndWriteCellGridDailyData(QString& myError,
     QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
 
     QString statement = QString("DROP TABLE `%1`").arg(tableD);
-    if( !qry.exec(statement) )
-    {
-        myError = qry.lastError().text();
-        return false;
-    }
+    qry.exec(statement);
 
     statement = QString("CREATE TABLE `%1`(%2 date, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(%2,VariableCode))").arg(tableD).arg(_tableDaily.fieldTime);
     if( !qry.exec(statement) )
