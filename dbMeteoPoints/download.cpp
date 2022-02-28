@@ -173,6 +173,147 @@ void Download::downloadMetadata(QJsonObject obj)
     _dbMeteo->writePointProperties(pointProp);
 }
 
+bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
+{
+
+    bool result = true;
+    QEventLoop loop;
+
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+
+    QNetworkRequest request;
+    request.setUrl(QUrl("http://meteozen.metarpa/simcstations/api/v1/stations"));
+    request.setRawHeader("Authorization", _authorization);
+
+    // GET
+    QNetworkReply* reply = manager->get(request);
+
+    loop.exec();
+
+    if (reply->error() != QNetworkReply::NoError)
+    {
+            qDebug() << "Network Error: " << reply->error();
+            result = false;
+    }
+    else
+    {
+        QString data = (QString) reply->readAll();
+
+        QJsonParseError *error = new QJsonParseError();
+        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8(), error);
+
+        qDebug() << "err: " << error->errorString() << " -> " << error->offset;
+
+        // check validity of the document
+        if(!doc.isNull() && doc.isArray())
+        {
+            QJsonArray jsonArr = doc.array();
+
+            for(int index = 0; index < jsonArr.size(); ++index)
+            {
+                QJsonObject obj = jsonArr[index].toObject();
+
+                QJsonValue jsonDataset = obj.value("network");
+
+                if (jsonDataset.isUndefined())
+                    qDebug() << "jsonDataset: key id does not exist";
+                else if (!jsonDataset.isString())
+                    qDebug() << "jsonDataset: value is not string";
+                else
+                    foreach(QString item, id)
+                        if (jsonDataset == item)
+                        {
+                            QJsonValue jsonId = obj.value("id");
+
+                            if (jsonId.isNull())
+                            {
+                                  qDebug() << "Id is empty\n";
+                                  return false;
+                            }
+
+                            int idInt = jsonId.toInt();
+                            pointProp->id = std::to_string(idInt);
+
+                            QJsonValue jsonName = obj.value("name");
+                            if (jsonName.isNull())
+                                  qDebug() << "name is null\n";
+                            pointProp->name = jsonName.toString().toStdString();
+
+                            QJsonValue jsonNetwork = obj.value("network");
+                            pointProp->dataset = jsonNetwork.toString().toStdString();
+
+                            QJsonValue jsonGeometry = obj.value("geometry").toObject().value("coordinates");
+                            QJsonValue jsonLon = jsonGeometry.toArray()[0];
+                            if (jsonLon.isNull() || jsonLon.toInt() < -180 || jsonLon.toInt() > 180)
+                                qDebug() << "invalid Longitude\n";
+                            pointProp->longitude = jsonLon.toDouble();
+
+                            QJsonValue jsonLat = jsonGeometry.toArray()[1];
+                            if (jsonLat.isNull() || jsonLat.toInt() < -90 || jsonLat.toInt() > 90)
+                                qDebug() << "invalid Latitude\n";
+                            pointProp->latitude = jsonLat.toDouble();
+
+                            QJsonValue jsonLatInt = obj.value("lat");
+                            if (jsonLatInt.isNull())
+                                jsonLatInt = NODATA;
+                            pointProp->latInt = jsonLatInt.toInt();
+
+                            QJsonValue jsonLonInt = obj.value("lon");
+                            if (jsonLonInt.isNull())
+                                jsonLonInt = NODATA;
+                            pointProp->lonInt = jsonLonInt.toInt();
+
+                            QJsonValue jsonAltitude = obj.value("height");
+                            pointProp->point.z = jsonAltitude.toDouble();
+
+                            QJsonValue jsonState = obj.value("country").toObject().value("name");
+                            pointProp->state = jsonState.toString().toStdString();
+
+                            if (obj.value("region").isNull())
+                                pointProp->region = "";
+                            else
+                            {
+                                QJsonValue jsonRegion = obj.value("region").toObject().value("name");
+                                pointProp->region = jsonRegion.toString().toStdString();
+                            }
+
+                            if (obj.value("province").isNull())
+                                pointProp->province = "";
+                            else
+                            {
+                                QJsonValue jsonProvince = obj.value("province").toObject().value("name");
+                                pointProp->province = jsonProvince.toString().toStdString();
+                            }
+
+                            if (obj.value("municipality").isNull())
+                                pointProp->municipality = "";
+                            else
+                            {
+                                QJsonValue jsonMunicipality = obj.value("municipality").toObject().value("name");
+                                pointProp->municipality = jsonMunicipality.toString().toStdString();
+                            }
+
+                            double utmx, utmy;
+                            int utmZone = 32; // dove far inserire la utmZone? c'è funzione che data lat,lon restituisce utm zone?
+                            gis::latLonToUtmForceZone(utmZone, pointProp->latitude, pointProp->longitude, &utmx, &utmy);
+                            pointProp->point.utm.x = utmx;
+                            pointProp->point.utm.y = utmy;
+                        }
+            }
+        }
+         else
+        {
+            qDebug() << "Invalid JSON...\n";
+            result = false;
+        }
+    }
+
+    delete reply;
+    delete manager;
+    return result;
+}
+
 
 bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables, bool prec0024)
 {
