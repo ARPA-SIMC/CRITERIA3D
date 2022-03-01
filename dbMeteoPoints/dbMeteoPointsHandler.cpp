@@ -942,6 +942,33 @@ bool Crit3DMeteoPointsDbHandler::updatePointProperties(QList<QString> columnList
 
 }
 
+bool Crit3DMeteoPointsDbHandler::updatePointPropertiesGivenId(QString id, QList<QString> columnList, QList<QString> valueList)
+{
+
+    if (columnList.size() != valueList.size())
+    {
+        qDebug() << "invalid input";
+        return false;
+    }
+    QSqlQuery qry(_db);
+
+    QString queryStr = "UPDATE point_properties SET ";
+    for (int i = 0; i<columnList.size(); i++)
+    {
+        queryStr += columnList[i]+" = '" + valueList[i] + "',";
+    }
+    queryStr.chop(1); // remove last ,
+    queryStr += " WHERE id_point = " + id;
+
+    if( !qry.exec(queryStr) )
+    {
+        qDebug() << qry.lastError();
+        return false;
+    }
+    else
+        return true;
+
+}
 
 bool Crit3DMeteoPointsDbHandler::loadVariableProperties()
 {

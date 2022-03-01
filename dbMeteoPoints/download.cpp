@@ -214,26 +214,14 @@ bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
             {
                 QJsonObject obj = jsonArr[index].toObject();
 
-                QJsonValue jsonDataset = obj.value("network");
+                QString jsonIdValue = QString::number(obj.value("id").toInt());
 
-                if (jsonDataset.isUndefined())
-                    qDebug() << "jsonDataset: key id does not exist";
-                else if (!jsonDataset.isString())
-                    qDebug() << "jsonDataset: value is not string";
+                if (obj.value("id").isUndefined() || jsonIdValue.isEmpty())
+                    qDebug() << "jsonId: key id does not exist";
                 else
-                    foreach(QString item, id)
-                        if (jsonDataset == item)
+                        if (jsonIdValue == id)
                         {
-                            QJsonValue jsonId = obj.value("id");
-
-                            if (jsonId.isNull())
-                            {
-                                  qDebug() << "Id is empty\n";
-                                  return false;
-                            }
-
-                            int idInt = jsonId.toInt();
-                            pointProp->id = std::to_string(idInt);
+                            pointProp->id = id.toStdString();
 
                             QJsonValue jsonName = obj.value("name");
                             if (jsonName.isNull())
@@ -299,10 +287,14 @@ bool Download::getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp)
                             gis::latLonToUtmForceZone(utmZone, pointProp->latitude, pointProp->longitude, &utmx, &utmy);
                             pointProp->point.utm.x = utmx;
                             pointProp->point.utm.y = utmy;
+
+                            delete reply;
+                            delete manager;
+                            return result;
                         }
             }
         }
-         else
+        else
         {
             qDebug() << "Invalid JSON...\n";
             result = false;

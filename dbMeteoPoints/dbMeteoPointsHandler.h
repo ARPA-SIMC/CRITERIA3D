@@ -55,6 +55,7 @@
         bool deleteAllData(frequencyType myFreq);
         bool writePointProperties(Crit3DMeteoPoint* pointProp);
         bool updatePointProperties(QList<QString> columnList, QList<QString> valueList);
+        bool updatePointPropertiesGivenId(QString id, QList<QString> columnList, QList<QString> valueList);
         bool getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
                                  const gis::Crit3DGisSettings& gisSettings, QString& errorString);
         bool loadDailyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint);
