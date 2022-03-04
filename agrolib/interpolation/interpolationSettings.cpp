@@ -611,9 +611,9 @@ void Crit3DProxyCombination::setUseThermalInversion(bool value)
     useThermalInversion = value;
 }
 
-bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination* outCombination)
+bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination &outCombination)
 {
-    *outCombination = selectedCombination;
+    outCombination = selectedCombination;
     std::string binaryString = decimal_to_binary(combinationInteger, getProxyNr()+1);
 
     int indexHeight = getIndexHeight();
@@ -624,9 +624,9 @@ bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DP
             return false;
 
     for (unsigned int i=0; i < binaryString.length()-1; i++)
-        outCombination->setValue(i, binaryString[i] == '1' && selectedCombination.getValue(i));
+        outCombination.setValue(i, binaryString[i] == '1' && selectedCombination.getValue(i));
 
-    outCombination->setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());
+    outCombination.setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());
 
     return true;
 }

@@ -123,6 +123,11 @@ void Project::clearProject()
     outputPoints.clear();
     outputPointsFileName = "";
 
+    if (proxyWidget != nullptr)
+    {
+        delete proxyWidget;
+    }
+
     isProjectLoaded = false;
 }
 
