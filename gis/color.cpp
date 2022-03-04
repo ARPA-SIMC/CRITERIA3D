@@ -303,6 +303,20 @@ bool setGrayScale(Crit3DColorScale* myScale)
 }
 
 
+bool setBlackScale(Crit3DColorScale* myScale)
+{
+    myScale->nrKeyColors = 1;
+    myScale->nrColors = 256;
+    myScale->keyColor = new Crit3DColor[unsigned(myScale->nrKeyColors)];
+    myScale->color = new Crit3DColor[unsigned(myScale->nrColors)];
+    myScale->classification = classificationMethod::EqualInterval;
+
+    myScale->keyColor[0] = Crit3DColor(0, 0, 0);
+
+    return myScale->classify();
+}
+
+
 bool reverseColorScale(Crit3DColorScale* myScale)
 {
     // copy key colors
