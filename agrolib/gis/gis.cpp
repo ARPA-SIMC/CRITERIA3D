@@ -164,16 +164,6 @@ namespace gis
         flag = NODATA;
     }
 
-    void Crit3DRasterHeader::convertFromLatLon(const Crit3DGridHeader& latLonHeader)
-    {
-        nrRows = latLonHeader.nrRows;
-        nrCols = latLonHeader.nrCols;
-        flag = latLonHeader.flag;
-        llCorner.y = latLonHeader.llCorner.latitude;
-        llCorner.x = latLonHeader.llCorner.longitude;
-        cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
-    }
-
     Crit3DGridHeader::Crit3DGridHeader()
     {
         nrRows = 0;
@@ -183,24 +173,22 @@ namespace gis
         flag = NODATA;
     }
 
-    bool operator == (const Crit3DRasterHeader& myHeader1, const Crit3DRasterHeader& myHeader2)
+    bool operator == (const Crit3DRasterHeader& header1, const Crit3DRasterHeader& header2)
     {
-        return ((myHeader1.cellSize == myHeader2.cellSize) &&
-                (myHeader1.flag == myHeader2.flag) &&
-                (fabs(myHeader1.llCorner.x - myHeader2.llCorner.x) < 0.01) &&
-                (fabs(myHeader1.llCorner.y - myHeader2.llCorner.y) < 0.01) &&
-                (myHeader1.nrCols == myHeader2.nrCols) &&
-                (myHeader1.nrRows == myHeader2.nrRows));
+        return (isEqual(header1.cellSize, header2.cellSize) && isEqual(header1.flag, header2.flag)
+                && (fabs(header1.llCorner.x - header2.llCorner.x) < 0.01)
+                && (fabs(header1.llCorner.y - header2.llCorner.y) < 0.01)
+                && (header1.nrCols == header2.nrCols)
+                && (header1.nrRows == header2.nrRows));
     }
 
-    bool Crit3DRasterHeader::isEqualTo(const Crit3DRasterHeader& myHeader)
+    bool Crit3DRasterHeader::isEqualTo(const Crit3DRasterHeader& header)
     {
-        return ((cellSize == myHeader.cellSize) &&
-                (flag == myHeader.flag) &&
-                (fabs(llCorner.x - myHeader.llCorner.x) < 0.01) &&
-                (fabs(llCorner.y - myHeader.llCorner.y) < 0.01) &&
-                (nrCols == myHeader.nrCols) &&
-                (nrRows == myHeader.nrRows));
+        return (isEqual(cellSize, header.cellSize) && isEqual(flag, header.flag)
+                && (fabs(llCorner.x - header.llCorner.x) < 0.01)
+                && (fabs(llCorner.y - header.llCorner.y) < 0.01)
+                && (nrCols == header.nrCols)
+                && (nrRows == header.nrRows));
     }
 
     Crit3DRasterGrid::Crit3DRasterGrid()
@@ -265,18 +253,6 @@ namespace gis
     }
 
 
-    bool Crit3DRasterGrid::initializeGrid(const Crit3DGridHeader& latlonHeader)
-    {
-        this->clear();
-
-        Crit3DRasterHeader initHeader;
-        initHeader.convertFromLatLon(latlonHeader);
-        *(this->header) = initHeader;
-
-        return this->initializeGrid(this->header->flag);
-    }
-
-
     bool Crit3DRasterGrid::initializeGrid(const Crit3DRasterGrid& initGrid)
     {
         clear();
@@ -325,7 +301,7 @@ namespace gis
 
         for (int row = 0; row < this->header->nrRows; row++)
             for (int col = 0; col < this->header->nrCols; col++)
-                if (initGrid.value[row][col] != initGrid.header->flag)
+                if (! isEqual(initGrid.value[row][col], initGrid.header->flag))
                     this->value[row][col] = initValue;
 
         return gis::updateMinMaxRasterGrid(this);
@@ -1054,37 +1030,37 @@ namespace gis
     }
 
 
-    bool mapAlgebra(gis::Crit3DRasterGrid* myMap1, gis::Crit3DRasterGrid* myMap2,
-                    gis::Crit3DRasterGrid* myMapOut, operationType myOperation)
+    bool mapAlgebra(gis::Crit3DRasterGrid* map1, gis::Crit3DRasterGrid* map2,
+                    gis::Crit3DRasterGrid* outputMap, operationType myOperation)
     {
-        if (myMapOut == nullptr || myMap1 == nullptr || myMap2 == nullptr) return false;
-        if (! (*(myMap1->header) == *(myMap2->header))) return false;
-        if (! (*(myMapOut->header) == *(myMap1->header))) return false;
+        if (outputMap == nullptr || map1 == nullptr || map2 == nullptr) return false;
+        if (! (*(map1->header) == *(map2->header))) return false;
+        if (! (*(outputMap->header) == *(map1->header))) return false;
 
-        for (int myRow=0; myRow<myMapOut->header->nrRows; myRow++)
-            for (int myCol=0; myCol<myMapOut->header->nrCols; myCol++)
+        for (int myRow=0; myRow<outputMap->header->nrRows; myRow++)
+            for (int myCol=0; myCol<outputMap->header->nrCols; myCol++)
             {
-                if (!isEqual(myMap1->value[myRow][myCol], myMap1->header->flag)
-                    && !isEqual(myMap2->value[myRow][myCol], myMap2->header->flag))
+                if (!isEqual(map1->value[myRow][myCol], map1->header->flag)
+                    && !isEqual(map2->value[myRow][myCol], map2->header->flag))
                 {
                     if (myOperation == operationMin)
                     {
-                        myMapOut->value[myRow][myCol] = MINVALUE(myMap1->value[myRow][myCol], myMap2->value[myRow][myCol]);
+                        outputMap->value[myRow][myCol] = MINVALUE(map1->value[myRow][myCol], map2->value[myRow][myCol]);
                     }
                     else if (myOperation == operationMax)
                     {
-                        myMapOut->value[myRow][myCol] = MAXVALUE(myMap1->value[myRow][myCol], myMap2->value[myRow][myCol]);
+                        outputMap->value[myRow][myCol] = MAXVALUE(map1->value[myRow][myCol], map2->value[myRow][myCol]);
                     }
                     else if (myOperation == operationSum)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] + myMap2->value[myRow][myCol]);
+                        outputMap->value[myRow][myCol] = (map1->value[myRow][myCol] + map2->value[myRow][myCol]);
                     else if (myOperation == operationSubtract)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] - myMap2->value[myRow][myCol]);
+                        outputMap->value[myRow][myCol] = (map1->value[myRow][myCol] - map2->value[myRow][myCol]);
                     else if (myOperation == operationProduct)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] * myMap2->value[myRow][myCol]);
+                        outputMap->value[myRow][myCol] = (map1->value[myRow][myCol] * map2->value[myRow][myCol]);
                     else if (myOperation == operationDivide)
                     {
-                        if (myMap2->value[myRow][myCol] != 0.f)
-                            myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] / myMap2->value[myRow][myCol]);
+                        if (map2->value[myRow][myCol] != 0.f)
+                            outputMap->value[myRow][myCol] = (map1->value[myRow][myCol] / map2->value[myRow][myCol]);
                         else
                             return false;
                     }
@@ -1094,31 +1070,31 @@ namespace gis
         return true;
     }
 
-    bool mapAlgebra(gis::Crit3DRasterGrid* myMap1, float myValue,
-                    gis::Crit3DRasterGrid* myMapOut, operationType myOperation)
+    bool mapAlgebra(gis::Crit3DRasterGrid* map1, float myValue,
+                    gis::Crit3DRasterGrid* outputMap, operationType myOperation)
     {
-        if (myMapOut == nullptr || myMap1 == nullptr) return false;
-        if (! (*(myMap1->header) == *(myMapOut->header))) return false;
+        if (outputMap == nullptr || map1 == nullptr) return false;
+        if (! (*(map1->header) == *(outputMap->header))) return false;
 
-        for (int myRow=0; myRow<myMapOut->header->nrRows; myRow++)
-            for (int myCol=0; myCol<myMapOut->header->nrCols; myCol++)
+        for (int myRow=0; myRow<outputMap->header->nrRows; myRow++)
+            for (int myCol=0; myCol<outputMap->header->nrCols; myCol++)
             {
-                if (myMap1->value[myRow][myCol] != myMap1->header->flag)
+                if (! isEqual(map1->value[myRow][myCol], map1->header->flag))
                 {
                     if (myOperation == operationMin)
-                        myMapOut->value[myRow][myCol] = MINVALUE(myMap1->value[myRow][myCol], myValue);
+                        outputMap->value[myRow][myCol] = MINVALUE(map1->value[myRow][myCol], myValue);
                     else if (myOperation == operationMax)
-                        myMapOut->value[myRow][myCol] = MAXVALUE(myMap1->value[myRow][myCol], myValue);
+                        outputMap->value[myRow][myCol] = MAXVALUE(map1->value[myRow][myCol], myValue);
                     else if (myOperation == operationSum)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] + myValue);
+                        outputMap->value[myRow][myCol] = (map1->value[myRow][myCol] + myValue);
                     else if (myOperation == operationSubtract)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] - myValue);
+                        outputMap->value[myRow][myCol] = (map1->value[myRow][myCol] - myValue);
                     else if (myOperation == operationProduct)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] * myValue);
+                        outputMap->value[myRow][myCol] = (map1->value[myRow][myCol] * myValue);
                     else if (myOperation == operationDivide)
                     {
                         if (myValue != 0.f)
-                            myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] / myValue);
+                            outputMap->value[myRow][myCol] = (map1->value[myRow][myCol] / myValue);
                         else
                             return false;
                     }
@@ -1311,7 +1287,7 @@ namespace gis
                         {
                             gis::getRowColFromXY(inputMap, x+(i*step), y+(j*step), &inputRow, &inputCol);
                             value = inputMap.value[inputRow][inputCol];
-                            if (value != inputMap.header->flag)
+                            if (! isEqual(value, inputMap.header->flag))
                                 valuesList.push_back(value);
                         }
 
@@ -1358,8 +1334,8 @@ namespace gis
             Yf = Y1;
         }
 
-        Dx = (Xf - Xi) / nrStep;
-        Dy = (Yf - Yi) / nrStep;
+        Dx = (Xf - Xi) / float(nrStep);
+        Dy = (Yf - Yi) / float(nrStep);
 
         x = Xi;
         y = Yi;
@@ -1370,7 +1346,7 @@ namespace gis
             x = x + Dx;
             y = y + Dy;
             demValue = myDEM.getFastValueXY(x, y);
-            if (demValue != myDEM.header->flag)
+            if (! isEqual(demValue, myDEM.header->flag))
                 if (demValue > Zi)
                     maxDeltaZ = MAXVALUE(maxDeltaZ, demValue - Zi);
         }
@@ -1416,7 +1392,7 @@ namespace gis
         float demValue;
 
         demValue = gis::getValueFromXY(myDEM, myPoint.utm.x, myPoint.utm.y);
-        if (demValue != myDEM.header->flag)
+        if (! isEqual(demValue, myDEM.header->flag))
         {
             return 0;
         }
@@ -1431,7 +1407,7 @@ namespace gis
                 {
                     gis::getUtmXYFromRowCol(myDEM, row, col, &gridX, &gridY);
                     distance = computeDistance(float(gridX), float(gridY), float(myPoint.utm.x), float(myPoint.utm.y));
-                    if (closestDistanceFromGrid == NODATA || distance < closestDistanceFromGrid)
+                    if (isEqual(closestDistanceFromGrid, NODATA) || distance < closestDistanceFromGrid)
                     {
                         closestDistanceFromGrid = distance;
                     }
@@ -1500,14 +1476,17 @@ namespace gis
                         }
 
                     nrValues = int(values.size());
-                    if (nrValues / maxValues > nodataThreshold)
+                    if (maxValues > 0)
                     {
-                        if (elab == aggrAverage)
-                            value = statistics::mean(values, nrValues);
-                        else if (elab == aggrMedian)
-                            value = sorting::percentile(values, &nrValues, 50, true);
-                        else if (elab == aggrPrevailing)
-                            value = prevailingValue(values);
+                        if ((float(nrValues) / float(maxValues)) > nodataThreshold)
+                        {
+                            if (elab == aggrAverage)
+                                value = statistics::mean(values, nrValues);
+                            else if (elab == aggrMedian)
+                                value = sorting::percentile(values, &nrValues, 50, true);
+                            else if (elab == aggrPrevailing)
+                                value = prevailingValue(values);
+                        }
                     }
                 }
 
