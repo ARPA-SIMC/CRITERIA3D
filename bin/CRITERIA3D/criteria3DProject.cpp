@@ -501,7 +501,7 @@ bool Crit3DProject::initializeCriteria3DModel()
     }
 
     isCriteria3DInitialized = true;
-    logInfo("Criteria3D model initialized");
+    logInfoGUI("Criteria3D model initialized");
 
     return true;
 }
@@ -692,11 +692,9 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         }
         qApp->processEvents();
 
-        computeCrop(myTime);
+        // computeCrop(myTime);
 
         // TODO compute evap/transp
-
-        qApp->processEvents();
     }
 
     if (isSnow)

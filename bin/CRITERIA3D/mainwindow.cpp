@@ -1104,7 +1104,7 @@ void MainWindow::on_actionView_Boundary_triggered()
 {
     if (myProject.boundaryMap.isLoaded)
     {
-        setColorScale(noMeteoTerrain, myProject.boundaryMap.colorScale);
+        setBlackScale(myProject.boundaryMap.colorScale);
         setCurrentRasterOutput(&(myProject.boundaryMap));
         ui->labelOutputRaster->setText("Boundary map");
     }

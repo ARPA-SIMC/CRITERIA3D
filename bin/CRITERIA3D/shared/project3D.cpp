@@ -127,21 +127,34 @@ bool Project3D::initializeWaterBalance3D()
     logInfo("Memory initialized");
 
     // Set properties for all voxels
-    if (! setCrit3DSurfaces()) return false;
+    if (! setCrit3DSurfaces())
+    {
+        logError();
+        return false;
+    }
 
-    if (! setCrit3DSoils()) return false;
+    if (! setCrit3DSoils())
+    {
+        logError();
+        return false;
+    }
     logInfo("Soils initialized");
 
-    if (! setCrit3DTopography()) return false;
+    if (! setCrit3DTopography())
+    {
+        logError();
+        return false;
+    }
     logInfo("Topology initialized");
 
     if (! setCrit3DNodeSoil()) return false;
     logInfo("Soils initialized");
 
+    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, 10.0);
+
     soilFluxes3D::setNumericalParameters(6, 600, 200, 10, 12, 3);   // precision
     //soilFluxes3D::setNumericalParameters(30, 1800, 100, 10, 12, 2);  // speedy
     //soilFluxes3D::setNumericalParameters(300, 3600, 100, 10, 12, 1);   // very speedy (high error)
-    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, 10.0);
 
     logInfo("3D water balance initialized");
     return true;
@@ -298,13 +311,9 @@ bool Project3D::setLateralBoundary()
     {
         for (int col = 0; col < boundaryMap.header->nrCols; col++)
         {
-            if (gis::isBoundary(this->DEM, row, col))
+            if (gis::isBoundaryRunoff(this->DEM, row, col))
             {
-                // or: if(isMinimum)
-                if (! gis::isStrictMaximum(this->DEM, row, col))
-                {
-                    boundaryMap.value[row][col] = BOUNDARY_RUNOFF;
-                }
+                boundaryMap.value[row][col] = BOUNDARY_RUNOFF;
             }
         }
     }
@@ -864,8 +873,6 @@ void Project3D::computeWaterBalance3D(double timeStep)
 
 bool Project3D::computeCrop(QDateTime myTime)
 {
-    logInfo("Compute crop");
-
     for (long row = 0; row < DEM.header->nrRows ; row++)
     {
         for (long col = 0; col < DEM.header->nrCols; col++)

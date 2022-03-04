@@ -1105,17 +1105,14 @@ namespace gis
     }
 
     /*!
-     * \brief return true if value(row, col) > all values of neighbours
-     * \param myGrid Crit3DRasterGrid
-     * \param row
-     * \param col
-     * \return true/false
+     * \brief return true if value(row, col) > values of all neighbours
      */
     bool isStrictMaximum(const Crit3DRasterGrid& myGrid, int row, int col)
     {
-        float z, adjZ;
-        z = myGrid.getValueFromRowCol(row, col);
-        if (z == myGrid.header->flag) return false;
+        float adjZ;
+        float z = myGrid.getValueFromRowCol(row, col);
+        if (z == myGrid.header->flag)
+            return false;
 
         for (int r = -1; r <= 1; r++)
         {
@@ -1126,7 +1123,8 @@ namespace gis
                     adjZ = myGrid.getValueFromRowCol(row+r, col+c);
                     if (adjZ != myGrid.header->flag)
                     {
-                        if (z <= adjZ) return (false);
+                        if (z <= adjZ)
+                            return false;
                     }
                  }
              }
@@ -1138,10 +1136,6 @@ namespace gis
 
     /*!
      * \brief return true if value(row, col) <= all values of neighbours
-     * \param myGrid Crit3DRasterGrid
-     * \param row
-     * \param col
-     * \return true/false
      */
     bool isMinimum(const Crit3DRasterGrid& myGrid, int row, int col)
     {
@@ -1167,10 +1161,6 @@ namespace gis
 
     /*!
      * \brief return true if (row, col) is a minimum, or adjacent to a minimum
-     * \param myGrid Crit3DRasterGrid&
-     * \param row
-     * \param col
-     * \return true/false
      */
     bool isMinimumOrNearMinimum(const Crit3DRasterGrid& myGrid, int row, int col)
     {
@@ -1190,12 +1180,35 @@ namespace gis
     }
 
 
+    bool isBoundaryRunoff(const Crit3DRasterGrid& myGrid, int row, int col)
+    {
+        float z = myGrid.getValueFromRowCol(row, col);
+        if (z == myGrid.header->flag)
+            return false;
+
+        float z1, z2;
+        for (int r = -1; r <= 1; r++)
+        {
+            for (int c = -1; c <= 1; c++)
+            {
+                if ((r != 0 || c != 0))
+                {
+                    z1 = myGrid.getValueFromRowCol(row + r, col + c);
+                    if (z1 != myGrid.header->flag && z1 > z)
+                    {
+                        z2 = myGrid.getValueFromRowCol(row - r, col - c);
+                        if (z2 == myGrid.header->flag)
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
     /*!
      * \brief return true if one neighbour (at least) is nodata
-     * \param myGrid
-     * \param row
-     * \param col
-     * \return true/false
      */
     bool isBoundary(const Crit3DRasterGrid& myGrid, int row, int col)
     {
