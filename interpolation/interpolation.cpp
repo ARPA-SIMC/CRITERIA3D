@@ -86,45 +86,38 @@ float getZmax(std::vector <Crit3DInterpolationDataPoint> &myPoints)
     return myZmax;
 }
 
-float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, unsigned pos)
+float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, unsigned pos)
 {
     float maxValue = NODATA;
-    Crit3DProxy* myProxy = mySettings->getProxy(pos);
 
     for (unsigned i = 0; i < myPoints.size(); i++)
         if (myPoints[i].getProxyValue(pos) != NODATA)
             if (maxValue == NODATA || myPoints[i].getProxyValue(pos) > maxValue)
                 maxValue = myPoints[i].getProxyValue(pos);
+
     return maxValue;
 }
 
-float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, unsigned pos)
+float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, unsigned pos)
 {
     float minValue = NODATA;
-    Crit3DProxy* myProxy = mySettings->getProxy(pos);
 
     for (unsigned i = 0; i < myPoints.size(); i++)
         if (myPoints[i].getProxyValue(pos) != NODATA)
             if (minValue == NODATA || myPoints[i].getProxyValue(pos) < minValue)
                 minValue = myPoints[i].getProxyValue(pos);
+
     return minValue;
 }
 
-unsigned sortPointsByDistance(unsigned maxIndex, vector <Crit3DInterpolationDataPoint> &myPoints, vector <Crit3DInterpolationDataPoint> &myValidPoints)
+unsigned sortPointsByDistance(unsigned maxIndex, std::vector<Crit3DInterpolationDataPoint> &myPoints, std::vector<Crit3DInterpolationDataPoint> &myValidPoints)
 {   
-    unsigned i;
-    unsigned first, index;
-    float min_value = NODATA;
-    //unsigned* indici_ordinati;
-    //unsigned* indice_minimo;
-    std::vector <unsigned> indici_ordinati;
-    std::vector <unsigned> indice_minimo;
-    unsigned outIndex;
-
     if (myPoints.size() == 0) return 0;
 
-    //indici_ordinati = (unsigned *) calloc(maxIndex, sizeof(unsigned));
-    //  indice_minimo = (unsigned *) calloc(myPoints.size(), sizeof(unsigned));
+    unsigned i, first, index, outIndex;
+    float min_value = NODATA;
+    std::vector<unsigned> indici_ordinati;
+    std::vector<unsigned> indice_minimo;
 
     indici_ordinati.resize(maxIndex);
     indice_minimo.resize(myPoints.size());
@@ -142,7 +135,7 @@ unsigned sortPointsByDistance(unsigned maxIndex, vector <Crit3DInterpolationData
             while ((! myPoints[i].isActive || (isEqual(myPoints[i].distance, 0))) && (i < myPoints.size()-1))
                 i++;
 
-            if (i == myPoints.size()-1 && ! myPoints[i].isActive)
+            if (i == (myPoints.size()-1) && ! myPoints[i].isActive)
                 exit=true;
             else
             {
@@ -182,6 +175,8 @@ unsigned sortPointsByDistance(unsigned maxIndex, vector <Crit3DInterpolationData
         myValidPoints.push_back(myPoints[indici_ordinati[i]]);
     }
 
+    indici_ordinati.clear();
+    indice_minimo.clear();
     return outIndex;
 }
 
@@ -294,7 +289,6 @@ bool regressionSimple(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     for (i = 0; i < myPoints.size(); i++)
     {
         myPoint = myPoints[i];
-        myProxyValue = NODATA;
         if (myPoint.isActive)
         {
             if (proxyPosition != mySettings->getIndexHeight() || checkLapseRateCode(myPoint.lapseRateCode, mySettings->getUseLapseRateCode(), true))
@@ -1057,7 +1051,7 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
     Crit3DProxy* myProxy;
     Crit3DProxyCombination* myCombination = mySettings->getCurrentCombination();
 
-    for (int pos=0; pos < mySettings->getProxyNr(); pos++)
+    for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
         myProxy = mySettings->getProxy(pos);
 
@@ -1127,7 +1121,7 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
     Crit3DProxy* myProxy;
 
-    for (int pos=0; pos < mySettings->getProxyNr(); pos++)
+    for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
         if (myCombination.getValue(pos))
         {
@@ -1227,7 +1221,7 @@ void optimalDetrending(meteoVariable myVar,
 
     for (i=0; i < nrCombination; i++)
     {
-        if (mySettings->getCombination(i, &myCombination))
+        if (mySettings->getCombination(i, myCombination))
         {
             passDataToInterpolation(myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings);
             detrending(interpolationPoints, myCombination, mySettings, myClimate, myVar, myTime);
@@ -1249,7 +1243,7 @@ void optimalDetrending(meteoVariable myVar,
         }
     }
 
-    if (mySettings->getCombination(bestCombinationIndex, &bestCombination))
+    if (mySettings->getCombination(bestCombinationIndex, bestCombination))
     {
         passDataToInterpolation(myMeteoPoints, nrMeteoPoints, outInterpolationPoints, mySettings);
         detrending(outInterpolationPoints, bestCombination, mySettings, myClimate, myVar, myTime);

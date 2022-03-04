@@ -149,7 +149,7 @@
         size_t getProxyNr();
         void addProxy(Crit3DProxy myProxy, bool isActive_);
         float getProxyValue(unsigned pos, std::vector <float> proxyValues);
-        bool getCombination(int combinationInteger, Crit3DProxyCombination* outCombination);
+        bool getCombination(int combinationInteger, Crit3DProxyCombination &outCombination);
 
         void setInterpolationMethod(TInterpolationMethod myValue);
         TInterpolationMethod getInterpolationMethod();
@@ -195,7 +195,7 @@
         unsigned getIndexHeight() const;
         void setIndexHeight(unsigned value);
         Crit3DProxyCombination *getCurrentCombination() const;
-        void setCurrentCombination(Crit3DProxyCombination *value);
+        void setCurrentCombination(Crit3DProxyCombination* value);
         std::vector<Crit3DProxy> getCurrentProxy() const;
         void setCurrentProxy(const std::vector<Crit3DProxy> &value);
         float getRefHeightWind() const;
