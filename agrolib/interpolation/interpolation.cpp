@@ -118,9 +118,6 @@ unsigned sortPointsByDistance(unsigned maxIndex, vector <Crit3DInterpolationData
     //unsigned* indici_ordinati;
     //unsigned* indice_minimo;
     std::vector <unsigned> indici_ordinati;
-    std::vector <unsigned> indice_minimo;
-    unsigned outIndex;
-
     if (myPoints.size() == 0) return 0;
 
     //indici_ordinati = (unsigned *) calloc(maxIndex, sizeof(unsigned));
