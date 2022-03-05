@@ -669,7 +669,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             colorScale->minimum = 0;
             break;
         case dailyBIC:
-            setZeroCenteredScale(colorScale);
+            setCenteredScale(colorScale);
             break;
         case globalIrradiance: case directIrradiance: case diffuseIrradiance: case reflectedIrradiance:
         case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:

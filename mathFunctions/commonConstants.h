@@ -101,10 +101,6 @@
 
     #define RELAXATION 1
 
-    #define MAX_SOILS 256
-    #define MAX_SURFACES 256
-    #define MAX_HORIZONS 20
-
     // --------------- heat model -----------------
     #define SAVE_HEATFLUXES_NONE 0
     #define SAVE_HEATFLUXES_TOTAL 1
