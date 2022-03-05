@@ -673,7 +673,6 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         hourlyMeteoMaps->setComputed(true);
     }
 
-    // radiation model
     if (isRadiation)
     {
         if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, isSaveOutputRaster()))
@@ -704,12 +703,16 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         qApp->processEvents();
     }
 
+    // soil water balance
     if (isWater)
     {
-        // soil water balance
-        if (! computeWaterSinkSource()) return false;
-        qApp->processEvents();
+        if (! computeWaterSinkSource())
+        {
+            logError();
+            return false;
+        }
 
+        logInfo("\nWater balance: " + myTime.toString());
         computeWaterBalance3D(3600);
         qApp->processEvents();
 

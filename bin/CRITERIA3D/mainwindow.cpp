@@ -1760,7 +1760,10 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
         return false;
     }
 
-    // TODO: check on crop
+    if (myProject.isCrop)
+    {
+        // TODO: check on crop
+    }
 
     // Load meteo data
     myProject.logInfoGUI("Loading meteo data...");
@@ -1797,7 +1800,7 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 
 bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 {
-    // initialize
+    // initialize meteo
     if (myProject.isMeteo)
     {
         myProject.hourlyMeteoMaps->initialize();
@@ -1811,6 +1814,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
         }
     }
 
+    // initialize radiation
     if (myProject.isRadiation)
     {
         myProject.radiationMaps->initialize();
@@ -2052,6 +2056,27 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
     myProject.initializeCriteria3DModel();
 }
 
+
+void MainWindow::on_actionCriteria3D_compute_current_hour_triggered()
+{
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logError("Initialize 3D water fluxes before");
+        return;
+    }
+
+    QDateTime currentTime = myProject.getCurrentTime();
+
+    myProject.isMeteo = true;
+    myProject.isRadiation = true;
+    myProject.isSnow = false;
+    myProject.isCrop = true;
+    myProject.isWater = true;
+
+    startModels(currentTime, currentTime);
+}
+
+
 void MainWindow::on_actionCriteria3D_run_models_triggered()
 {
     if (! myProject.isCriteria3DInitialized)
@@ -2066,7 +2091,7 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 
     myProject.isMeteo = true;
     myProject.isRadiation = true;
-    myProject.isSnow = true;
+    myProject.isSnow = false;
     myProject.isCrop = true;
     myProject.isWater = true;
     startModels(firstTime, lastTime);
@@ -2765,4 +2790,5 @@ void MainWindow::on_actionTopographicDistanceMapLoad_triggered()
 
     myProject.loadTopographicDistanceMaps(onlyWithData, true);
 }
+
 

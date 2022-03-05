@@ -1764,7 +1764,7 @@ bool Vine3DProject::computeVine3DWaterSinkSource()
     for (unsigned long i = 0; i < nrNodes; i++)
     {
         myResult = soilFluxes3D::setWaterSinkSource(signed(i), waterSinkSource.at(i));
-        if (isCrit3dError(myResult, &myError))
+        if (isCrit3dError(myResult, myError))
         {
             logError("waterBalanceSinkSource:" + myError);
             return false;

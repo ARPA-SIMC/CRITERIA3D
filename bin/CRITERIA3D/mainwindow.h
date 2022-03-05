@@ -196,6 +196,8 @@
 
         void on_actionTopographicDistanceMapLoad_triggered();
 
+        void on_actionCriteria3D_compute_current_hour_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

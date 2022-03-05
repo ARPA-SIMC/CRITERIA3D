@@ -26,6 +26,7 @@
         bool setCrit3DSoils();
         bool setCrit3DTopography();
         bool setCrit3DNodeSoil();
+        bool initializeMatricPotential(float psi);
 
     public:
         bool isCriteria3DInitialized;
@@ -99,7 +100,7 @@
 
     };
 
-    bool isCrit3dError(int result, QString* error);
+    bool isCrit3dError(int result, QString &error);
     double getCriteria3DVar(criteria3DVariable myVar, long nodeIndex);
     bool setCriteria3DVar(criteria3DVariable myVar, long nodeIndex, double myValue);
 
