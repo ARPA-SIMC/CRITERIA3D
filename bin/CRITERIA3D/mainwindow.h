@@ -36,7 +36,7 @@
 
         void mouseMove(QPoint eventPos);
         void updateMaps();
-        void updateGUI();
+        void updateOutputMap();
 
         void on_actionOpenProject_triggered();
         void on_actionCloseProject_triggered();

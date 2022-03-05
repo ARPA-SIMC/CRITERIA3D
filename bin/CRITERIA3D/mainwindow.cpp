@@ -167,16 +167,16 @@ void MainWindow::updateMaps()
 {
     rasterDEM->updateCenter();
     rasterOutput->updateCenter();
+    inputRasterColorLegend->update();
     outputRasterColorLegend->update();
 
     *startCenter = rasterDEM->getCurrentCenter();
 }
 
 
-void MainWindow::updateGUI()
+void MainWindow::updateOutputMap()
 {
     updateDateTime();
-    emit rasterDEM->redrawRequested();
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
     qApp->processEvents();
@@ -1089,7 +1089,7 @@ void MainWindow::on_actionView_Aspect_triggered()
 {
     if (myProject.DEM.isLoaded)
     {
-        setColorScale(noMeteoTerrain, myProject.radiationMaps->aspectMap->colorScale);
+        setCircolarScale(myProject.radiationMaps->aspectMap->colorScale);
         setCurrentRasterOutput(myProject.radiationMaps->aspectMap);
         ui->labelOutputRaster->setText("Aspect °");
     }
@@ -1863,7 +1863,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
                 }
             }
 
-            this->updateGUI();
+            this->updateOutputMap();
 
             if (myProject.modelPause || myProject.modelStop)
             {

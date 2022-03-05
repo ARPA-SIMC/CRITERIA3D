@@ -44,7 +44,7 @@ void Project3D::initializeProject3D()
     soilMapFileName = "";
 
     // default
-    soilDepth = 1.0;            // [m]
+    soilDepth = 0.1;            // [m]
     minThickness = 0.02;        // [m]
     maxThickness = 0.1;         // [m]
     thickFactor = 1.5;
@@ -300,18 +300,18 @@ bool Project3D::setIndexMaps()
 
 bool Project3D::setLateralBoundary()
 {
-    if (! this->DEM.isLoaded)
+    if (! DEM.isLoaded)
     {
         logError("Missing Digital Elevation Model.");
         return false;
     }
 
-    boundaryMap.initializeGrid(this->DEM);
+    boundaryMap.initializeGrid(DEM);
     for (int row = 0; row < boundaryMap.header->nrRows; row++)
     {
         for (int col = 0; col < boundaryMap.header->nrCols; col++)
         {
-            if (gis::isBoundaryRunoff(this->DEM, row, col))
+            if (gis::isBoundaryRunoff(DEM, *(radiationMaps->aspectMap), row, col))
             {
                 boundaryMap.value[row][col] = BOUNDARY_RUNOFF;
             }
