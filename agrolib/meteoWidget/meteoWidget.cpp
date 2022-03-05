@@ -1563,52 +1563,42 @@ void Crit3DMeteoWidget::redraw()
 
 }
 
+
 void Crit3DMeteoWidget::shiftPrevious()
 {
-    int nDays = firstDate->date().daysTo(lastDate->date())+1;
-    if (firstDailyDate < firstDate->date().addDays(-nDays))
+    int nDays = firstDate->date().daysTo(lastDate->date());
+    if (firstDailyDate < firstDate->date().addDays(-nDays-1))
     {
-        firstDate->setDate(firstDate->date().addDays(-nDays));
+        firstDate->setDate(firstDate->date().addDays(-nDays-1));
     }
     else
     {
         firstDate->setDate(firstDailyDate);
     }
 
-    if (lastDate->date().addDays(-nDays) >= firstDate->date())
-    {
-        lastDate->setDate(lastDate->date().addDays(-nDays));
-    }
-    else
-    {
-        lastDate->setDate(firstDate->date());
-    }
-    redraw();
+    lastDate->setDate(firstDate->date().addDays(nDays));
 
+    redraw();
 }
+
 
 void Crit3DMeteoWidget::shiftFollowing()
 {
-    int nDays = firstDate->date().daysTo(lastDate->date())+1;
-    if (lastDate->date().addDays(nDays) < lastDailyDate)
+    int nDays = firstDate->date().daysTo(lastDate->date());
+    if (lastDate->date().addDays(nDays+1) < lastDailyDate)
     {
-        lastDate->setDate(lastDate->date().addDays(nDays));
+        lastDate->setDate(lastDate->date().addDays(nDays+1));
     }
     else
     {
         lastDate->setDate(lastDailyDate);
     }
 
-    if (firstDate->date().addDays(nDays) <= lastDate->date())
-    {
-        firstDate->setDate(firstDate->date().addDays(nDays));
-    }
-    else
-    {
-        firstDate->setDate(lastDate->date());
-    }
+    firstDate->setDate(lastDate->date().addDays(-nDays));
+
     redraw();
 }
+
 
 void Crit3DMeteoWidget::showTable()
 {
