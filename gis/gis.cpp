@@ -164,16 +164,6 @@ namespace gis
         flag = NODATA;
     }
 
-    void Crit3DRasterHeader::convertFromLatLon(const Crit3DGridHeader& latLonHeader)
-    {
-        nrRows = latLonHeader.nrRows;
-        nrCols = latLonHeader.nrCols;
-        flag = latLonHeader.flag;
-        llCorner.y = latLonHeader.llCorner.latitude;
-        llCorner.x = latLonHeader.llCorner.longitude;
-        cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
-    }
-
     Crit3DGridHeader::Crit3DGridHeader()
     {
         nrRows = 0;
@@ -183,24 +173,22 @@ namespace gis
         flag = NODATA;
     }
 
-    bool operator == (const Crit3DRasterHeader& myHeader1, const Crit3DRasterHeader& myHeader2)
+    bool operator == (const Crit3DRasterHeader& header1, const Crit3DRasterHeader& header2)
     {
-        return ((myHeader1.cellSize == myHeader2.cellSize) &&
-                (myHeader1.flag == myHeader2.flag) &&
-                (fabs(myHeader1.llCorner.x - myHeader2.llCorner.x) < 0.01) &&
-                (fabs(myHeader1.llCorner.y - myHeader2.llCorner.y) < 0.01) &&
-                (myHeader1.nrCols == myHeader2.nrCols) &&
-                (myHeader1.nrRows == myHeader2.nrRows));
+        return (isEqual(header1.cellSize, header2.cellSize) && isEqual(header1.flag, header2.flag)
+                && (fabs(header1.llCorner.x - header2.llCorner.x) < 0.01)
+                && (fabs(header1.llCorner.y - header2.llCorner.y) < 0.01)
+                && (header1.nrCols == header2.nrCols)
+                && (header1.nrRows == header2.nrRows));
     }
 
-    bool Crit3DRasterHeader::isEqualTo(const Crit3DRasterHeader& myHeader)
+    bool Crit3DRasterHeader::isEqualTo(const Crit3DRasterHeader& header)
     {
-        return ((cellSize == myHeader.cellSize) &&
-                (flag == myHeader.flag) &&
-                (fabs(llCorner.x - myHeader.llCorner.x) < 0.01) &&
-                (fabs(llCorner.y - myHeader.llCorner.y) < 0.01) &&
-                (nrCols == myHeader.nrCols) &&
-                (nrRows == myHeader.nrRows));
+        return (isEqual(cellSize, header.cellSize) && isEqual(flag, header.flag)
+                && (fabs(llCorner.x - header.llCorner.x) < 0.01)
+                && (fabs(llCorner.y - header.llCorner.y) < 0.01)
+                && (nrCols == header.nrCols)
+                && (nrRows == header.nrRows));
     }
 
     Crit3DRasterGrid::Crit3DRasterGrid()
@@ -265,18 +253,6 @@ namespace gis
     }
 
 
-    bool Crit3DRasterGrid::initializeGrid(const Crit3DGridHeader& latlonHeader)
-    {
-        this->clear();
-
-        Crit3DRasterHeader initHeader;
-        initHeader.convertFromLatLon(latlonHeader);
-        *(this->header) = initHeader;
-
-        return this->initializeGrid(this->header->flag);
-    }
-
-
     bool Crit3DRasterGrid::initializeGrid(const Crit3DRasterGrid& initGrid)
     {
         clear();
@@ -325,7 +301,7 @@ namespace gis
 
         for (int row = 0; row < this->header->nrRows; row++)
             for (int col = 0; col < this->header->nrCols; col++)
-                if (initGrid.value[row][col] != initGrid.header->flag)
+                if (! isEqual(initGrid.value[row][col], initGrid.header->flag))
                     this->value[row][col] = initValue;
 
         return gis::updateMinMaxRasterGrid(this);
@@ -334,13 +310,13 @@ namespace gis
 
     Crit3DPoint Crit3DRasterGrid::mapCenter()
     {
-        int myRow, myCol;
+        int row, col;
         Crit3DPoint myPoint;
 
         myPoint.utm.x = (header->llCorner.x + (header->nrCols * header->cellSize)/2.);
         myPoint.utm.y = (header->llCorner.y + (header->nrRows * header->cellSize)/2.);
-        getRowColFromXY(*this, myPoint.utm.x, myPoint.utm.y, &myRow, &myCol);
-        myPoint.z = double(this->value[myRow][myCol]);
+        getRowColFromXY(*this, myPoint.utm.x, myPoint.utm.y, &row, &col);
+        myPoint.z = double(this->value[row][col]);
 
         return myPoint;
     }
@@ -350,9 +326,9 @@ namespace gis
     {
         if (value != nullptr && header->nrRows > 0)
         {
-            for (int myRow = 0; myRow < header->nrRows; myRow++)
-                if (value[myRow] != nullptr)
-                    delete [] value[myRow];
+            for (int row = 0; row < header->nrRows; row++)
+                if (value[row] != nullptr)
+                    delete [] value[row];
 
             delete [] value;
             value = nullptr;
@@ -372,9 +348,9 @@ namespace gis
 
     void Crit3DRasterGrid::emptyGrid()
     {
-        for (int myRow = 0; myRow < header->nrRows; myRow++)
-            for (int myCol = 0; myCol < header->nrCols; myCol++)
-                value[myRow][myCol] = header->flag;
+        for (int row = 0; row < header->nrRows; row++)
+            for (int col = 0; col < header->nrCols; col++)
+                value[row][col] = header->flag;
     }
 
     Crit3DRasterGrid::~Crit3DRasterGrid()
@@ -385,8 +361,8 @@ namespace gis
 
     /*!
      * \brief return X,Y of cell center
-     * \param myRow
-     * \param myCol
+     * \param row
+     * \param col
      * \return Crit3DUtmPoint pointer
      */
     Crit3DTime Crit3DRasterGrid::getMapTime() const
@@ -399,23 +375,23 @@ namespace gis
         mapTime = value;
     }
 
-    Crit3DUtmPoint* Crit3DRasterGrid::utmPoint(int myRow, int myCol)
+    Crit3DUtmPoint* Crit3DRasterGrid::utmPoint(int row, int col)
     {
         double x, y;
         Crit3DUtmPoint *myPoint;
 
-        x = header->llCorner.x + header->cellSize * (double(myCol) + 0.5);
-        y = header->llCorner.y + header->cellSize * (double(header->nrRows - myRow) - 0.5);
+        x = header->llCorner.x + header->cellSize * (double(col) + 0.5);
+        y = header->llCorner.y + header->cellSize * (double(header->nrRows - row) - 0.5);
 
         myPoint = new Crit3DUtmPoint(x, y);
         return myPoint;
     }
 
 
-    void Crit3DRasterGrid::getXY(int myRow, int myCol, double* x, double* y)
+    void Crit3DRasterGrid::getXY(int row, int col, double* x, double* y)
     {
-        *x = header->llCorner.x + header->cellSize * (double(myCol) + 0.5);
-        *y = header->llCorner.y + header->cellSize * (double(header->nrRows - myRow) - 0.5);
+        *x = header->llCorner.x + header->cellSize * (double(col) + 0.5);
+        *y = header->llCorner.y + header->cellSize * (double(header->nrRows - row) - 0.5);
     }
 
 
@@ -446,10 +422,10 @@ namespace gis
         float minimum = NODATA;
         float maximum = NODATA;
 
-        for (int myRow = 0; myRow < myGrid->header->nrRows; myRow++)
-            for (int myCol = 0; myCol < myGrid->header->nrCols; myCol++)
+        for (int row = 0; row < myGrid->header->nrRows; row++)
+            for (int col = 0; col < myGrid->header->nrCols; col++)
             {
-                myValue = myGrid->value[myRow][myCol];
+                myValue = myGrid->value[row][col];
                 if (! isEqual(myValue, myGrid->header->flag)  && ! isEqual(myValue, NODATA))
                 {
                     if (isFirstValue)
@@ -498,10 +474,10 @@ namespace gis
         row1 = std::min(row1, myGrid->header->nrRows-1);
         col1 = std::min(col1, myGrid->header->nrCols-1);
 
-        for (int myRow = row0; myRow <= row1; myRow++)
-            for (int myCol = col0; myCol <= col1; myCol++)
+        for (int row = row0; row <= row1; row++)
+            for (int col = col0; col <= col1; col++)
             {
-                myValue = myGrid->value[myRow][myCol];
+                myValue = myGrid->value[row][col];
                 if (! isEqual(myValue, myGrid->header->flag) && ! isEqual(myValue, NODATA))
                 {
                     if (isFirstValue)
@@ -585,56 +561,56 @@ namespace gis
         *col = int(floor((myX - myHeader.llCorner.longitude) / myHeader.dx));
     }
 
-    void getRowColFromLatLon(const Crit3DGridHeader& latLonHeader, const Crit3DGeoPoint& p, int* myRow, int* myCol)
+    void getRowColFromLatLon(const Crit3DGridHeader& latLonHeader, const Crit3DGeoPoint& p, int* row, int* col)
     {
-        *myRow = (latLonHeader.nrRows - 1) - int(floor((p.latitude - latLonHeader.llCorner.latitude) / latLonHeader.dy));
-        *myCol = int(floor((p.longitude - latLonHeader.llCorner.longitude) / latLonHeader.dx));
+        *row = (latLonHeader.nrRows - 1) - int(floor((p.latitude - latLonHeader.llCorner.latitude) / latLonHeader.dy));
+        *col = int(floor((p.longitude - latLonHeader.llCorner.longitude) / latLonHeader.dx));
     }
 
-    bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DRasterGrid& myGrid)
+    bool isOutOfGridRowCol(int row, int col, const Crit3DRasterGrid& myGrid)
     {
-        if (  myRow < 0 || myRow >= myGrid.header->nrRows
-           || myCol < 0 || myCol >= myGrid.header->nrCols) return true;
+        if (  row < 0 || row >= myGrid.header->nrRows
+           || col < 0 || col >= myGrid.header->nrCols) return true;
         else return false;
     }
 
-    bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DGridHeader& header)
+    bool isOutOfGridRowCol(int row, int col, const Crit3DGridHeader& header)
     {
-        if (  myRow < 0 || myRow >= header.nrRows
-            || myCol < 0 || myCol >= header.nrCols) return true;
+        if (  row < 0 || row >= header.nrRows
+            || col < 0 || col >= header.nrCols) return true;
         else return false;
     }
 
     void getUtmXYFromRowColSinglePrecision(const Crit3DRasterGrid& myGrid,
-                                            int myRow, int myCol, float* myX, float* myY)
+                                            int row, int col, float* myX, float* myY)
     {
-        *myX = float(myGrid.header->llCorner.x + myGrid.header->cellSize * (myCol + 0.5));
-        *myY = float(myGrid.header->llCorner.y + myGrid.header->cellSize * (myGrid.header->nrRows - myRow) - 0.5);
+        *myX = float(myGrid.header->llCorner.x + myGrid.header->cellSize * (col + 0.5));
+        *myY = float(myGrid.header->llCorner.y + myGrid.header->cellSize * (myGrid.header->nrRows - row) - 0.5);
     }
 
     void getUtmXYFromRowColSinglePrecision(const Crit3DRasterHeader& myHeader,
-                                           int myRow, int myCol, float* myX, float* myY)
+                                           int row, int col, float* myX, float* myY)
     {
-        *myX = float(myHeader.llCorner.x + myHeader.cellSize * (myCol) + 0.5);
-        *myY = float(myHeader.llCorner.y + myHeader.cellSize * (myHeader.nrRows - myRow) - 0.5);
+        *myX = float(myHeader.llCorner.x + myHeader.cellSize * (col) + 0.5);
+        *myY = float(myHeader.llCorner.y + myHeader.cellSize * (myHeader.nrRows - row) - 0.5);
     }
 
-    void getUtmXYFromRowCol(const Crit3DRasterGrid& myGrid, int myRow, int myCol, double* myX, double* myY)
+    void getUtmXYFromRowCol(const Crit3DRasterGrid& myGrid, int row, int col, double* myX, double* myY)
     {
-            *myX = myGrid.header->llCorner.x + myGrid.header->cellSize * (myCol + 0.5);
-            *myY = myGrid.header->llCorner.y + myGrid.header->cellSize * (myGrid.header->nrRows - myRow - 0.5);
+            *myX = myGrid.header->llCorner.x + myGrid.header->cellSize * (col + 0.5);
+            *myY = myGrid.header->llCorner.y + myGrid.header->cellSize * (myGrid.header->nrRows - row - 0.5);
     }
 
-    void getUtmXYFromRowCol(const Crit3DRasterHeader& myHeader, int myRow, int myCol, double* myX, double* myY)
+    void getUtmXYFromRowCol(const Crit3DRasterHeader& myHeader, int row, int col, double* myX, double* myY)
     {
-            *myX = myHeader.llCorner.x + myHeader.cellSize * (myCol + 0.5);
-            *myY = myHeader.llCorner.y + myHeader.cellSize * (myHeader.nrRows - myRow - 0.5);
+            *myX = myHeader.llCorner.x + myHeader.cellSize * (col + 0.5);
+            *myY = myHeader.llCorner.y + myHeader.cellSize * (myHeader.nrRows - row - 0.5);
     }
 
-    void getLatLonFromRowCol(const Crit3DGridHeader& latLonHeader, int myRow, int myCol, double* lat, double* lon)
+    void getLatLonFromRowCol(const Crit3DGridHeader& latLonHeader, int row, int col, double* lat, double* lon)
     {
-            *lon = latLonHeader.llCorner.longitude + latLonHeader.dx * (myCol + 0.5);
-            *lat = latLonHeader.llCorner.latitude + latLonHeader.dy * (latLonHeader.nrRows - myRow - 0.5);
+            *lon = latLonHeader.llCorner.longitude + latLonHeader.dx * (col + 0.5);
+            *lat = latLonHeader.llCorner.latitude + latLonHeader.dy * (latLonHeader.nrRows - row - 0.5);
     }
 
     void getLatLonFromRowCol(const Crit3DGridHeader& latLonHeader, const Crit3DRasterCell& v, Crit3DGeoPoint* p)
@@ -650,36 +626,36 @@ namespace gis
 
     float getValueFromXY(const Crit3DRasterGrid& myGrid, double x, double y)
     {
-        int myRow, myCol;
+        int row, col;
 
         if (gis::isOutOfGridXY(x, y, myGrid.header)) return myGrid.header->flag ;
-        getRowColFromXY(myGrid, x, y, &myRow, &myCol);
-        return myGrid.value[myRow][myCol];
+        getRowColFromXY(myGrid, x, y, &row, &col);
+        return myGrid.value[row][col];
     }
 
-    bool Crit3DRasterGrid::isFlag(int myRow, int myCol)
+    bool Crit3DRasterGrid::isFlag(int row, int col)
     {
-        if (myRow < 0 || myRow > (header->nrRows - 1) || myCol < 0 || myCol > header->nrCols - 1)
+        if (row < 0 || row > (header->nrRows - 1) || col < 0 || col > header->nrCols - 1)
             return true;
         else
-            return (isEqual(value[myRow][myCol], header->flag));
+            return (isEqual(value[row][col], header->flag));
     }
 
     float Crit3DRasterGrid::getFastValueXY(float x, float y) const
     {
-        int myRow, myCol;
+        int row, col;
 
-        myRow = (header->nrRows-1) - int((double(y) - header->llCorner.y) / header->cellSize);
-        myCol = int((double(x) - header->llCorner.x) / header->cellSize);
-        return getValueFromRowCol(myRow, myCol);
+        row = (header->nrRows-1) - int((double(y) - header->llCorner.y) / header->cellSize);
+        col = int((double(x) - header->llCorner.x) / header->cellSize);
+        return getValueFromRowCol(row, col);
     }
 
-    float Crit3DRasterGrid::getValueFromRowCol(int myRow, int myCol) const
+    float Crit3DRasterGrid::getValueFromRowCol(int row, int col) const
     {
-        if (myRow < 0 || myRow > (header->nrRows - 1) || myCol < 0 || myCol > header->nrCols - 1)
+        if (row < 0 || row > (header->nrRows - 1) || col < 0 || col > header->nrCols - 1)
             return header->flag;
         else
-            return value[myRow][myCol];
+            return value[row][col];
     }
 
     bool isOutOfGridXY(double x, double y, Crit3DRasterHeader* header)
@@ -931,15 +907,15 @@ namespace gis
         latMap->initializeGrid(myGrid);
         lonMap->initializeGrid(myGrid);
 
-        for (int myRow = 0; myRow < myGrid.header->nrRows; myRow++)
-            for (int myCol = 0; myCol < myGrid.header->nrCols; myCol++)
-                if (! isEqual(myGrid.value[myRow][myCol], myGrid.header->flag))
+        for (int row = 0; row < myGrid.header->nrRows; row++)
+            for (int col = 0; col < myGrid.header->nrCols; col++)
+                if (! isEqual(myGrid.value[row][col], myGrid.header->flag))
                 {
-                    getUtmXYFromRowCol(myGrid, myRow, myCol, &utmX, &utmY);
+                    getUtmXYFromRowCol(myGrid, row, col, &utmX, &utmY);
                     getLatLonFromUtm(gisSettings, utmX, utmY, &latDegrees, &lonDegrees);
 
-                    latMap->value[myRow][myCol] = float(latDegrees);
-                    lonMap->value[myRow][myCol] = float(lonDegrees);
+                    latMap->value[row][col] = float(latDegrees);
+                    lonMap->value[row][col] = float(lonDegrees);
                 }
 
         gis::updateMinMaxRasterGrid(latMap);
@@ -952,10 +928,10 @@ namespace gis
     }
 
 
-    bool computeSlopeAspectMaps(const gis::Crit3DRasterGrid& myDEM,
+    bool computeSlopeAspectMaps(const gis::Crit3DRasterGrid& dem,
                                 gis::Crit3DRasterGrid* slopeMap, gis::Crit3DRasterGrid* aspectMap)
     {
-        if (! myDEM.isLoaded) return false;
+        if (! dem.isLoaded) return false;
 
         double dz_dx, dz_dy;
         double slope, aspect;
@@ -963,28 +939,28 @@ namespace gis
         double zNorth, zSouth, zEast, zWest;
         int i, nr;
 
-        slopeMap->initializeGrid(myDEM);
-        aspectMap->initializeGrid(myDEM);
+        slopeMap->initializeGrid(dem);
+        aspectMap->initializeGrid(dem);
 
-        for (int myRow = 0; myRow < myDEM.header->nrRows; myRow++)
-            for (int myCol = 0; myCol < myDEM.header->nrCols; myCol++)
+        for (int row = 0; row < dem.header->nrRows; row++)
+            for (int col = 0; col < dem.header->nrCols; col++)
             {
-                z = double(myDEM.value[myRow][myCol]);
-                if (! isEqual(z, double(myDEM.header->flag)))
+                z = double(dem.value[row][col]);
+                if (! isEqual(z, double(dem.header->flag)))
                 {
                     /*! compute dz/dy */
                     nr = 0;
                     dz = 0;
                     for (i=-1; i <=1; i++)
                     {
-                        zNorth = double(myDEM.getValueFromRowCol(myRow-1, myCol+i));
-                        zSouth = double(myDEM.getValueFromRowCol(myRow+1, myCol+i));
-                        if (! isEqual(zNorth, double(myDEM.header->flag)))
+                        zNorth = double(dem.getValueFromRowCol(row-1, col+i));
+                        zSouth = double(dem.getValueFromRowCol(row+1, col+i));
+                        if (! isEqual(zNorth, double(dem.header->flag)))
                         {
                             dz += zNorth - z;
                             nr++;
                         }
-                        if (! isEqual(zSouth, double(myDEM.header->flag)))
+                        if (! isEqual(zSouth, double(dem.header->flag)))
                         {
                             dz += z - zSouth;
                             nr++;
@@ -993,21 +969,21 @@ namespace gis
                     if (nr == 0)
                         dz_dy = EPSILON;
                     else
-                        dz_dy = dz / (nr * myDEM.header->cellSize);
+                        dz_dy = dz / (nr * dem.header->cellSize);
 
                     /*! compute dz/dx */
                     nr = 0;
                     dz = 0;
                     for (i=-1; i <=1; i++)
                     {
-                        zWest = double(myDEM.getValueFromRowCol(myRow+i, myCol-1));
-                        zEast = double(myDEM.getValueFromRowCol(myRow+i, myCol+1));
-                        if (! isEqual (zWest, double(myDEM.header->flag)))
+                        zWest = double(dem.getValueFromRowCol(row+i, col-1));
+                        zEast = double(dem.getValueFromRowCol(row+i, col+1));
+                        if (! isEqual (zWest, double(dem.header->flag)))
                         {
                             dz += zWest - z;
                             nr++;
                         }
-                        if (! isEqual(zEast, double(myDEM.header->flag)))
+                        if (! isEqual(zEast, double(dem.header->flag)))
                         {
                             dz += z - zEast;
                             nr++;
@@ -1016,11 +992,11 @@ namespace gis
                     if (nr == 0)
                         dz_dx = EPSILON;
                     else
-                        dz_dx = dz / (nr * myDEM.header->cellSize);
+                        dz_dx = dz / (nr * dem.header->cellSize);
 
                     /*! slope in degrees */
                     slope = atan(sqrt(dz_dx * dz_dx + dz_dy * dz_dy)) * RAD_TO_DEG;
-                    slopeMap->value[myRow][myCol] = float(slope);
+                    slopeMap->value[row][col] = float(slope);
 
                     /*! avoid arctan to infinite */
                     if (dz_dx == 0.) dz_dx = EPSILON;
@@ -1040,7 +1016,7 @@ namespace gis
                     aspect += (PI / 2.);
                     aspect *= RAD_TO_DEG;
 
-                    aspectMap->value[myRow][myCol] = float(aspect);
+                    aspectMap->value[row][col] = float(aspect);
                 }
             }
 
@@ -1054,37 +1030,37 @@ namespace gis
     }
 
 
-    bool mapAlgebra(gis::Crit3DRasterGrid* myMap1, gis::Crit3DRasterGrid* myMap2,
-                    gis::Crit3DRasterGrid* myMapOut, operationType myOperation)
+    bool mapAlgebra(gis::Crit3DRasterGrid* map1, gis::Crit3DRasterGrid* map2,
+                    gis::Crit3DRasterGrid* outputMap, operationType myOperation)
     {
-        if (myMapOut == nullptr || myMap1 == nullptr || myMap2 == nullptr) return false;
-        if (! (*(myMap1->header) == *(myMap2->header))) return false;
-        if (! (*(myMapOut->header) == *(myMap1->header))) return false;
+        if (outputMap == nullptr || map1 == nullptr || map2 == nullptr) return false;
+        if (! (*(map1->header) == *(map2->header))) return false;
+        if (! (*(outputMap->header) == *(map1->header))) return false;
 
-        for (int myRow=0; myRow<myMapOut->header->nrRows; myRow++)
-            for (int myCol=0; myCol<myMapOut->header->nrCols; myCol++)
+        for (int row=0; row<outputMap->header->nrRows; row++)
+            for (int col=0; col<outputMap->header->nrCols; col++)
             {
-                if (!isEqual(myMap1->value[myRow][myCol], myMap1->header->flag)
-                    && !isEqual(myMap2->value[myRow][myCol], myMap2->header->flag))
+                if (!isEqual(map1->value[row][col], map1->header->flag)
+                    && !isEqual(map2->value[row][col], map2->header->flag))
                 {
                     if (myOperation == operationMin)
                     {
-                        myMapOut->value[myRow][myCol] = MINVALUE(myMap1->value[myRow][myCol], myMap2->value[myRow][myCol]);
+                        outputMap->value[row][col] = MINVALUE(map1->value[row][col], map2->value[row][col]);
                     }
                     else if (myOperation == operationMax)
                     {
-                        myMapOut->value[myRow][myCol] = MAXVALUE(myMap1->value[myRow][myCol], myMap2->value[myRow][myCol]);
+                        outputMap->value[row][col] = MAXVALUE(map1->value[row][col], map2->value[row][col]);
                     }
                     else if (myOperation == operationSum)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] + myMap2->value[myRow][myCol]);
+                        outputMap->value[row][col] = (map1->value[row][col] + map2->value[row][col]);
                     else if (myOperation == operationSubtract)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] - myMap2->value[myRow][myCol]);
+                        outputMap->value[row][col] = (map1->value[row][col] - map2->value[row][col]);
                     else if (myOperation == operationProduct)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] * myMap2->value[myRow][myCol]);
+                        outputMap->value[row][col] = (map1->value[row][col] * map2->value[row][col]);
                     else if (myOperation == operationDivide)
                     {
-                        if (myMap2->value[myRow][myCol] != 0.f)
-                            myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] / myMap2->value[myRow][myCol]);
+                        if (map2->value[row][col] != 0.f)
+                            outputMap->value[row][col] = (map1->value[row][col] / map2->value[row][col]);
                         else
                             return false;
                     }
@@ -1094,31 +1070,31 @@ namespace gis
         return true;
     }
 
-    bool mapAlgebra(gis::Crit3DRasterGrid* myMap1, float myValue,
-                    gis::Crit3DRasterGrid* myMapOut, operationType myOperation)
+    bool mapAlgebra(gis::Crit3DRasterGrid* map1, float myValue,
+                    gis::Crit3DRasterGrid* outputMap, operationType myOperation)
     {
-        if (myMapOut == nullptr || myMap1 == nullptr) return false;
-        if (! (*(myMap1->header) == *(myMapOut->header))) return false;
+        if (outputMap == nullptr || map1 == nullptr) return false;
+        if (! (*(map1->header) == *(outputMap->header))) return false;
 
-        for (int myRow=0; myRow<myMapOut->header->nrRows; myRow++)
-            for (int myCol=0; myCol<myMapOut->header->nrCols; myCol++)
+        for (int row=0; row<outputMap->header->nrRows; row++)
+            for (int col=0; col<outputMap->header->nrCols; col++)
             {
-                if (myMap1->value[myRow][myCol] != myMap1->header->flag)
+                if (! isEqual(map1->value[row][col], map1->header->flag))
                 {
                     if (myOperation == operationMin)
-                        myMapOut->value[myRow][myCol] = MINVALUE(myMap1->value[myRow][myCol], myValue);
+                        outputMap->value[row][col] = MINVALUE(map1->value[row][col], myValue);
                     else if (myOperation == operationMax)
-                        myMapOut->value[myRow][myCol] = MAXVALUE(myMap1->value[myRow][myCol], myValue);
+                        outputMap->value[row][col] = MAXVALUE(map1->value[row][col], myValue);
                     else if (myOperation == operationSum)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] + myValue);
+                        outputMap->value[row][col] = (map1->value[row][col] + myValue);
                     else if (myOperation == operationSubtract)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] - myValue);
+                        outputMap->value[row][col] = (map1->value[row][col] - myValue);
                     else if (myOperation == operationProduct)
-                        myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] * myValue);
+                        outputMap->value[row][col] = (map1->value[row][col] * myValue);
                     else if (myOperation == operationDivide)
                     {
                         if (myValue != 0.f)
-                            myMapOut->value[myRow][myCol] = (myMap1->value[myRow][myCol] / myValue);
+                            outputMap->value[row][col] = (map1->value[row][col] / myValue);
                         else
                             return false;
                     }
@@ -1129,17 +1105,14 @@ namespace gis
     }
 
     /*!
-     * \brief return true if value(row, col) > all values of neighbours
-     * \param myGrid Crit3DRasterGrid
-     * \param row
-     * \param col
-     * \return true/false
+     * \brief return true if value(row, col) > values of all neighbours
      */
     bool isStrictMaximum(const Crit3DRasterGrid& myGrid, int row, int col)
     {
-        float z, adjZ;
-        z = myGrid.getValueFromRowCol(row, col);
-        if (z == myGrid.header->flag) return false;
+        float adjZ;
+        float z = myGrid.getValueFromRowCol(row, col);
+        if (z == myGrid.header->flag)
+            return false;
 
         for (int r = -1; r <= 1; r++)
         {
@@ -1150,7 +1123,8 @@ namespace gis
                     adjZ = myGrid.getValueFromRowCol(row+r, col+c);
                     if (adjZ != myGrid.header->flag)
                     {
-                        if (z <= adjZ) return (false);
+                        if (z <= adjZ)
+                            return false;
                     }
                  }
              }
@@ -1162,10 +1136,6 @@ namespace gis
 
     /*!
      * \brief return true if value(row, col) <= all values of neighbours
-     * \param myGrid Crit3DRasterGrid
-     * \param row
-     * \param col
-     * \return true/false
      */
     bool isMinimum(const Crit3DRasterGrid& myGrid, int row, int col)
     {
@@ -1191,10 +1161,6 @@ namespace gis
 
     /*!
      * \brief return true if (row, col) is a minimum, or adjacent to a minimum
-     * \param myGrid Crit3DRasterGrid&
-     * \param row
-     * \param col
-     * \return true/false
      */
     bool isMinimumOrNearMinimum(const Crit3DRasterGrid& myGrid, int row, int col)
     {
@@ -1214,31 +1180,45 @@ namespace gis
     }
 
 
+    bool isBoundaryRunoff(const Crit3DRasterGrid& dem, const Crit3DRasterGrid& aspectMap, int row, int col)
+    {
+        float z = dem.getValueFromRowCol(row,col);
+        float aspect = aspectMap.getValueFromRowCol(row,col);
+        if (z == dem.header->flag || aspect == aspectMap.header->flag)
+                return false;
+
+        int r = 0;
+        int c = 0;
+        if (aspect > 135 && aspect < 225)
+            r = 1;
+        else if (aspect < 45 || aspect > 315)
+            r = -1;
+
+        if (aspect > 45 && aspect < 135)
+            c = 1;
+        else if (aspect > 225 && aspect < 315)
+            c = -1;
+
+        float zBoundary = dem.getValueFromRowCol(row + r, col + c);
+        return (zBoundary == dem.header->flag);
+    }
+
+
     /*!
      * \brief return true if one neighbour (at least) is nodata
-     * \param myGrid
-     * \param row
-     * \param col
-     * \return true/false
      */
     bool isBoundary(const Crit3DRasterGrid& myGrid, int row, int col)
     {
         float z = myGrid.getValueFromRowCol(row, col);
+        if (z == myGrid.header->flag)
+            return false;
 
-        if (z != myGrid.header->flag)
-        {
-            for (int r = -1; r <= 1; r++)
-            {
-                for (int c = -1; c <= 1; c++)
-                {
-                    if ((r != 0 || c != 0))
-                    {
-                        if (myGrid.getValueFromRowCol(row + r, col + c) == myGrid.header->flag)
-                            return true;
-                    }
-                }
-            }
-        }
+        for (int r = -1; r <= 1; r++)
+            for (int c = -1; c <= 1; c++)
+                if ((r != 0 || c != 0))
+                    if (myGrid.getValueFromRowCol(row + r, col + c) == myGrid.header->flag)
+                        return true;
+
         return false;
     }
 
@@ -1311,7 +1291,7 @@ namespace gis
                         {
                             gis::getRowColFromXY(inputMap, x+(i*step), y+(j*step), &inputRow, &inputCol);
                             value = inputMap.value[inputRow][inputCol];
-                            if (value != inputMap.header->flag)
+                            if (! isEqual(value, inputMap.header->flag))
                                 valuesList.push_back(value);
                         }
 
@@ -1325,7 +1305,7 @@ namespace gis
     }
 
     float topographicDistance(float X1, float Y1, float Z1, float X2, float Y2, float Z2, float distance,
-                              const gis::Crit3DRasterGrid& myDEM)
+                              const gis::Crit3DRasterGrid& dem)
     {
         float x, y;
         float Xi, Yi, Zi, Xf, Yf;
@@ -1334,7 +1314,7 @@ namespace gis
         int i, nrStep;
         float maxDeltaZ;
 
-        float stepMeter = float(myDEM.header->cellSize);
+        float stepMeter = float(dem.header->cellSize);
 
         if (distance < stepMeter)
             return 0;
@@ -1358,8 +1338,8 @@ namespace gis
             Yf = Y1;
         }
 
-        Dx = (Xf - Xi) / nrStep;
-        Dy = (Yf - Yi) / nrStep;
+        Dx = (Xf - Xi) / float(nrStep);
+        Dy = (Yf - Yi) / float(nrStep);
 
         x = Xi;
         y = Yi;
@@ -1369,8 +1349,8 @@ namespace gis
         {
             x = x + Dx;
             y = y + Dy;
-            demValue = myDEM.getFastValueXY(x, y);
-            if (demValue != myDEM.header->flag)
+            demValue = dem.getFastValueXY(x, y);
+            if (! isEqual(demValue, dem.header->flag))
                 if (demValue > Zi)
                     maxDeltaZ = MAXVALUE(maxDeltaZ, demValue - Zi);
         }
@@ -1378,7 +1358,7 @@ namespace gis
         return maxDeltaZ;
     }
 
-    bool topographicDistanceMap(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& myDEM, Crit3DRasterGrid* myMap)
+    bool topographicDistanceMap(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap)
     {
 
         int row, col;
@@ -1386,18 +1366,18 @@ namespace gis
         double gridX, gridY;
         float demValue;
 
-        myMap->initializeGrid(myDEM);
+        myMap->initializeGrid(dem);
 
-        for (row = 0; row < myDEM.header->nrRows; row++)
-            for (col = 0; col < myDEM.header->nrCols; col++)
+        for (row = 0; row < dem.header->nrRows; row++)
+            for (col = 0; col < dem.header->nrCols; col++)
             {
-                demValue = myDEM.value[row][col];
-                if (! isEqual(demValue, myDEM.header->flag))
+                demValue = dem.value[row][col];
+                if (! isEqual(demValue, dem.header->flag))
                 {
-                    gis::getUtmXYFromRowCol(myDEM, row, col, &gridX, &gridY);
+                    gis::getUtmXYFromRowCol(dem, row, col, &gridX, &gridY);
                     distance = computeDistance(float(gridX), float(gridY), float(myPoint.utm.x), float(myPoint.utm.y));
                     myMap->value[row][col] = topographicDistance(float(gridX), float(gridY), demValue,
-                                            float(myPoint.utm.x), float(myPoint.utm.y), float(myPoint.z), distance, myDEM);
+                                            float(myPoint.utm.x), float(myPoint.utm.y), float(myPoint.z), distance, dem);
                 }
                 else
                     myMap->value[row][col] = myMap->header->flag;
@@ -1406,7 +1386,7 @@ namespace gis
         return true;
     }
 
-    float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& myDEM)
+    float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem)
     {
 
         int row, col;
@@ -1415,23 +1395,23 @@ namespace gis
         double gridX, gridY;
         float demValue;
 
-        demValue = gis::getValueFromXY(myDEM, myPoint.utm.x, myPoint.utm.y);
-        if (demValue != myDEM.header->flag)
+        demValue = gis::getValueFromXY(dem, myPoint.utm.x, myPoint.utm.y);
+        if (! isEqual(demValue, dem.header->flag))
         {
             return 0;
         }
 
         closestDistanceFromGrid = NODATA;
-        for (row = 0; row < myDEM.header->nrRows; row++)
+        for (row = 0; row < dem.header->nrRows; row++)
         {
-            for (col = 0; col < myDEM.header->nrCols; col++)
+            for (col = 0; col < dem.header->nrCols; col++)
             {
 
-                if (!isEqual(myDEM.getValueFromRowCol(row,col), myDEM.header->flag))
+                if (!isEqual(dem.getValueFromRowCol(row,col), dem.header->flag))
                 {
-                    gis::getUtmXYFromRowCol(myDEM, row, col, &gridX, &gridY);
+                    gis::getUtmXYFromRowCol(dem, row, col, &gridX, &gridY);
                     distance = computeDistance(float(gridX), float(gridY), float(myPoint.utm.x), float(myPoint.utm.y));
-                    if (closestDistanceFromGrid == NODATA || distance < closestDistanceFromGrid)
+                    if (isEqual(closestDistanceFromGrid, NODATA) || distance < closestDistanceFromGrid)
                     {
                         closestDistanceFromGrid = distance;
                     }
@@ -1500,14 +1480,17 @@ namespace gis
                         }
 
                     nrValues = int(values.size());
-                    if (nrValues / maxValues > nodataThreshold)
+                    if (maxValues > 0)
                     {
-                        if (elab == aggrAverage)
-                            value = statistics::mean(values, nrValues);
-                        else if (elab == aggrMedian)
-                            value = sorting::percentile(values, &nrValues, 50, true);
-                        else if (elab == aggrPrevailing)
-                            value = prevailingValue(values);
+                        if ((float(nrValues) / float(maxValues)) > nodataThreshold)
+                        {
+                            if (elab == aggrAverage)
+                                value = statistics::mean(values, nrValues);
+                            else if (elab == aggrMedian)
+                                value = sorting::percentile(values, &nrValues, 50, true);
+                            else if (elab == aggrPrevailing)
+                                value = prevailingValue(values);
+                        }
                     }
                 }
 
