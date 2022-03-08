@@ -3051,6 +3051,7 @@
     <addaction name="actionCriteria3D_settings"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Initialize"/>
+    <addaction name="actionCriteria3D_compute_current_hour"/>
     <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
    </widget>
@@ -3839,6 +3840,11 @@
   <action name="actionTopographicDistanceMapLoad">
    <property name="text">
     <string>Load...</string>
+   </property>
+  </action>
+  <action name="actionCriteria3D_compute_current_hour">
+   <property name="text">
+    <string>Compute current hour</string>
    </property>
   </action>
  </widget>

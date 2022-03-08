@@ -40,8 +40,8 @@
     float getMaxHeight(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
     float getZmin(std::vector <Crit3DInterpolationDataPoint> &myPoints);
     float getZmax(std::vector <Crit3DInterpolationDataPoint> &myPoints);
-    float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, unsigned pos);
-    float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, unsigned pos);
+    float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, unsigned pos);
+    float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, unsigned pos);
     bool preInterpolation(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters* myClimate,
                           Crit3DMeteoPoint *myMeteoPoints, int nrMeteoPoints, meteoVariable myVar, Crit3DTime myTime);
 

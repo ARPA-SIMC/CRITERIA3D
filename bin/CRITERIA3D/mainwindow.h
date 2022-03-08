@@ -36,7 +36,7 @@
 
         void mouseMove(QPoint eventPos);
         void updateMaps();
-        void updateGUI();
+        void updateOutputMap();
 
         void on_actionOpenProject_triggered();
         void on_actionCloseProject_triggered();
@@ -195,6 +195,8 @@
         void on_actionTopographicDistanceMapWrite_triggered();
 
         void on_actionTopographicDistanceMapLoad_triggered();
+
+        void on_actionCriteria3D_compute_current_hour_triggered();
 
     protected:
         /*!

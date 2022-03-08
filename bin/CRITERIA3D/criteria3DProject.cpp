@@ -501,7 +501,7 @@ bool Crit3DProject::initializeCriteria3DModel()
     }
 
     isCriteria3DInitialized = true;
-    logInfo("Criteria3D model initialized");
+    logInfoGUI("Criteria3D model initialized");
 
     return true;
 }
@@ -673,7 +673,6 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         hourlyMeteoMaps->setComputed(true);
     }
 
-    // radiation model
     if (isRadiation)
     {
         if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, isSaveOutputRaster()))
@@ -692,11 +691,9 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         }
         qApp->processEvents();
 
-        computeCrop(myTime);
+        // computeCrop(myTime);
 
         // TODO compute evap/transp
-
-        qApp->processEvents();
     }
 
     if (isSnow)
@@ -706,12 +703,16 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         qApp->processEvents();
     }
 
+    // soil water balance
     if (isWater)
     {
-        // soil water balance
-        if (! computeWaterSinkSource()) return false;
-        qApp->processEvents();
+        if (! computeWaterSinkSource())
+        {
+            logError();
+            return false;
+        }
 
+        logInfo("\nWater balance: " + myTime.toString());
         computeWaterBalance3D(3600);
         qApp->processEvents();
 
@@ -828,11 +829,11 @@ bool Crit3DProject::loadModelState(QString statePath)
     }
 
     // set current date/hour
-    QString stateStr = getFileName(statePath);
-    int year = QStringView{stateStr}.mid(0,4).toInt();
-    int month = QStringView{stateStr}.mid(4,2).toInt();
-    int day = QStringView{stateStr}.mid(6,2).toInt();
-    int hour = QStringView{stateStr}.mid(10,2).toInt();
+    QStringView stateStr = getFileName(statePath);
+    int year = stateStr.mid(0,4).toString().toInt();
+    int month = stateStr.mid(4,2).toString().toInt();
+    int day = stateStr.mid(6,2).toString().toInt();
+    int hour = stateStr.mid(10,2).toString().toInt();
     setCurrentDate(QDate(year, month, day));
     setCurrentHour(hour);
 

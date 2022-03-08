@@ -264,6 +264,7 @@
         bool deleteMeteoPointsData(const QList<QString>& pointList);
         bool loadOutputPointList(QString fileName);
         bool writeOutputPointList(QString fileName);
+        bool exportMeteoGridToESRI(QString fileName, double cellSize);
 
         void setComputeOnlyPoints(bool isOnlyPoints);
         bool getComputeOnlyPoints();

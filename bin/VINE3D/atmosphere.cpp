@@ -115,7 +115,7 @@ bool postInterpolation(meteoVariable myVar, gis::Crit3DRasterGrid* myGrid)
     else if (myVar == windScalarIntensity)
         setWindIntensityScale(myGrid->colorScale);
     else if (myVar == leafWetness)
-        setLeafWetnessScale(myGrid->colorScale);
+        setRelativeHumidityScale(myGrid->colorScale);
 
     return true;
 }
