@@ -1593,7 +1593,36 @@ QList<QString> Crit3DMeteoPointsDbHandler::getIdList()
     {
         while (qry.next())
         {
-            getValue(qry.value("dataset"), &id);
+            getValue(qry.value("id_point"), &id);
+            if (!idList.contains(id))
+            {
+                idList << id;
+            }
+        }
+    }
+    return idList;
+}
+
+QList<QString> Crit3DMeteoPointsDbHandler::getIdListGivenDataset(QList<QString> datasets)
+{
+    QList<QString> idList;
+    QSqlQuery qry(_db);
+    QString id;
+
+    QString datasetList = datasets.join(",");
+    qry.prepare( "SELECT id_point from point_properties WHERE dataset IN (:dataset)" );
+    qry.bindValue(":dataset", datasetList);
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return idList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("id_point"), &id);
             if (!idList.contains(id))
             {
                 idList << id;

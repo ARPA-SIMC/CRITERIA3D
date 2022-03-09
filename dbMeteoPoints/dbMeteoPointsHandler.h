@@ -89,6 +89,7 @@
         bool deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint>& pointList);
 
         QList<QString> getIdList();
+        QList<QString> getIdListGivenDataset(QList<QString> datasets);
         QList<QString> getMunicipalityList();
         QList<QString> getProvinceList();
         QList<QString> getRegionList();
