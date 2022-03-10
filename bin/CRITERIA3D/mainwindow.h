@@ -11,6 +11,7 @@
     #include "squareMarker.h"
     #include "colorLegend.h"
     #include "rubberBand.h"
+    #include "viewer3D.h"
 
     #include <QMainWindow>
 
@@ -198,6 +199,10 @@
 
         void on_actionCriteria3D_compute_current_hour_triggered();
 
+        void on_actionShow_3D_viewer_triggered();
+
+        void on_viewer3DClosed();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -217,6 +222,8 @@
 
     private:
         Ui::MainWindow* ui;
+
+        Viewer3D* viewer3D;
 
         Position* startCenter;
         MapGraphicsScene* mapScene;

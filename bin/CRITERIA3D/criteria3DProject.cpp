@@ -30,10 +30,12 @@
 #include "criteria3DProject.h"
 #include "soilDbTools.h"
 #include "gis.h"
+#include "color.h"
 #include "statistics.h"
 
 #include <QtSql>
 #include <QPaintEvent>
+#include <QVector3D>
 
 
 Crit3DProject::Crit3DProject() : Project3D()
@@ -1036,4 +1038,81 @@ bool Crit3DProject::writeOutputPointsData()
 
     return true;
 }
+
+
+bool Crit3DProject::initializeGeometry()
+{
+    if (! DEM.isLoaded)
+    {
+        errorString = ERROR_STR_MISSING_DEM;
+        return false;
+    }
+
+    // initialize
+    geometry.clear();
+    geometry.setShowHiddenFace(false);
+
+    // set center
+    double xCenter, yCenter;
+    gis::getUtmXYFromRowCol(DEM, DEM.header->nrRows * 0.5, DEM.header->nrCols * 0.5, &xCenter, &yCenter);
+    gis::updateMinMaxRasterGrid(&DEM);
+    float zCenter = (DEM.maximum + DEM.minimum) * 0.5;
+    geometry.setCenter (xCenter, yCenter, zCenter);
+
+    // set dimension
+    float dx = DEM.header->nrCols * DEM.header->cellSize;
+    float dy = DEM.header->nrRows * DEM.header->cellSize;
+    float dz = DEM.maximum + DEM.minimum;
+    geometry.setDimension(dx, dy);
+    float magnify = ((dx + dy) * 0.5f) / (dz * 5.f);
+    geometry.setMagnify(std::min(5.f, std::max(1.f, magnify)));
+
+    // set triangles
+    double x, y;
+    float z1, z2, z3;
+    QVector3D p1, p2, p3;
+    Crit3DColor *c1, *c2, *c3;
+    for (long row = 0; row < DEM.header->nrRows; row++)
+    {
+        for (long col = 0; col < DEM.header->nrCols; col++)
+        {
+            z1 = DEM.getValueFromRowCol(row, col);
+            if (z1 != DEM.header->flag)
+            {
+                gis::getUtmXYFromRowCol(DEM, row, col, &x, &y);
+                p1 = QVector3D(x, y, z1);
+                c1 = DEM.colorScale->getColor(z1);
+
+                z3 = DEM.getValueFromRowCol(row +1, col +1);
+                if (z3 != DEM.header->flag)
+                {
+                    gis::getUtmXYFromRowCol(DEM, row +1, col +1, &x, &y);
+                    p3 = QVector3D(x, y, z3);
+                    c3 = DEM.colorScale->getColor(z3);
+
+                    z2 = DEM.getValueFromRowCol(row +1, col);
+                    if (z2 != DEM.header->flag)
+                    {
+                        gis::getUtmXYFromRowCol(DEM, row +1, col, &x, &y);
+                        p2 = QVector3D(x, y, z2);
+                        c2 = DEM.colorScale->getColor(z2);
+                        geometry.addTriangle(p1, p2, p3, *c1, *c2, *c3);
+                    }
+
+                    z2 = DEM.getValueFromRowCol(row, col + 1);
+                    if (z2 != DEM.header->flag)
+                    {
+                        gis::getUtmXYFromRowCol(DEM, row, col +1, &x, &y);
+                        p2 = QVector3D(x, y, z2);
+                        c2 = DEM.colorScale->getColor(z2);
+                        geometry.addTriangle(p3, p2, p1, *c3, *c2, *c1);
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
 

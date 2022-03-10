@@ -13,6 +13,9 @@
     #ifndef PROJECT3D_H
         #include "project3D.h"
     #endif
+    #ifndef GEOMETRY_H
+        #include "geometry.h"
+    #endif
 
     #include <QString>
 
@@ -31,6 +34,8 @@
         gis::Crit3DRasterGrid soilUseMap;
         Crit3DSnowMaps snowMaps;
         Crit3DSnow snowModel;
+
+        Crit3DGeometry geometry;
 
         bool isMeteo, isRadiation, isCrop, isWater, isSnow;
         bool modelPause, modelStop;
@@ -79,6 +84,8 @@
 
         bool writeOutputPointsTables();
         bool writeOutputPointsData();
+
+        bool initializeGeometry();
 
     };
 

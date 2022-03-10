@@ -41,6 +41,8 @@
 #include "dialogLoadState.h"
 #include "dialogNewPoint.h"
 #include "utilities.h"
+#include "viewer3D.h"
+
 #include <QDebug>
 
 
@@ -56,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //this->viewer3D = nullptr;
+    this->viewer3D = nullptr;
 
     // Set the MapGraphics Scene and View
     this->mapScene = new MapGraphicsScene(this);
@@ -1000,47 +1002,7 @@ void MainWindow::on_actionProjectSettings_triggered()
 }
 
 
-// ---------  3D VIEW (TODO)
-/*
-void MainWindow::on_viewer3DClosed()
-{
-    this->viewer3D = nullptr;
-}
 
-bool MainWindow::initializeViewer3D()
-{
-    if (viewer3D == nullptr) return false;
-
-    if (! myProject.isCriteria3DInitialized)
-    {
-        myProject.logError("Initialize 3D model before");
-        return false;
-    }
-    else
-    {
-        viewer3D->initialize(&myProject);
-        return true;
-    }
-}
-
-void MainWindow::on_actionView_3D_triggered()
-{
-    if (! myProject.DEM.isLoaded)
-    {
-        myProject.logError(ERROR_STR_MISSING_DEM);
-        return;
-    }
-
-    if (viewer3D == nullptr || ! viewer3D->isVisible())
-    {
-        viewer3D = new Viewer3D(this);
-        if (! initializeViewer3D()) return;
-    }
-
-    viewer3D->show();
-    connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
-}
-*/
 
 // ---------------- SHOW METEOPOINTS --------------------------------
 
@@ -2791,4 +2753,31 @@ void MainWindow::on_actionTopographicDistanceMapLoad_triggered()
     myProject.loadTopographicDistanceMaps(onlyWithData, true);
 }
 
+
+// ---------  3D VIEW
+void MainWindow::on_viewer3DClosed()
+{
+    viewer3D = nullptr;
+}
+
+
+void MainWindow::on_actionShow_3D_viewer_triggered()
+{
+    if (viewer3D != nullptr)
+    {
+        if (! viewer3D->isVisible())
+            viewer3D->setVisible(true);
+        return;
+    }
+
+    if (! myProject.initializeGeometry())
+    {
+        myProject.logError();
+        return;
+    }
+
+    viewer3D = new Viewer3D(&(myProject.geometry));
+    viewer3D->show();
+    connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
+}
 
