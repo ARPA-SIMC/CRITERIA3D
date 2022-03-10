@@ -39,7 +39,7 @@
         void setDb(const QSqlDatabase &db);
         bool setAndOpenDb(QString dbname_);
 
-        QList<QString> getDatasetsList();
+        QList<QString> getAllDatasetsList();
         QList<QString> getDatasetsActive();
         void setDatasetsActive(QString active);
         QString getDatasetFromId(const QString& idPoint);

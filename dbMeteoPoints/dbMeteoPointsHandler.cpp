@@ -139,7 +139,7 @@ void Crit3DMeteoPointsDbHandler::setDatasetsActive(QString active)
 
 
 
-QList<QString> Crit3DMeteoPointsDbHandler::getDatasetsList()
+QList<QString> Crit3DMeteoPointsDbHandler::getAllDatasetsList()
 {
     QList<QString> datasetList;
     QSqlQuery qry(_db);
