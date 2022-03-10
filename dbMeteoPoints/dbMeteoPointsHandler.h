@@ -39,7 +39,7 @@
         void setDb(const QSqlDatabase &db);
         bool setAndOpenDb(QString dbname_);
 
-        QList<QString> getDatasetsList();
+        QList<QString> getAllDatasetsList();
         QList<QString> getDatasetsActive();
         void setDatasetsActive(QString active);
         QString getDatasetFromId(const QString& idPoint);
@@ -89,6 +89,7 @@
         bool deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint>& pointList);
 
         QList<QString> getIdList();
+        QList<QString> getIdListGivenDataset(QList<QString> datasets);
         QList<QString> getMunicipalityList();
         QList<QString> getProvinceList();
         QList<QString> getRegionList();

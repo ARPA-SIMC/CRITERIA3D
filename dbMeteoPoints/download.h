@@ -14,6 +14,7 @@
 
             bool getPointProperties(QList<QString> datasetList);
             bool getPointPropertiesFromId(QString id, Crit3DMeteoPoint* pointProp);
+            QMap<QString,QString> getArmiketIdList(QList<QString> datasetList);
             void downloadMetadata(QJsonObject obj);
             bool downloadDailyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables, bool prec0024);
             bool downloadHourlyData(QDate startDate, QDate endDate, QString dataset, QList<QString> stations, QList<int> variables);
