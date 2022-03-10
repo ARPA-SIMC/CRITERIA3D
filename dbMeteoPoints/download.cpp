@@ -89,10 +89,10 @@ bool Download::getPointProperties(QList<QString> datasetList)
     return result;
 }
 
-QList<QString> Download::getArmiketIdList(QList<QString> datasetList)
+QMap<QString, QString> Download::getArmiketIdList(QList<QString> datasetList)
 {
 
-    QList<QString> idList;
+    QMap<QString, QString> idList;
     QEventLoop loop;
 
     QNetworkAccessManager* manager = new QNetworkAccessManager(this);
@@ -142,13 +142,24 @@ QList<QString> Download::getArmiketIdList(QList<QString> datasetList)
                     foreach(QString item, _datasetsList)
                         if (jsonDataset == item)
                         {
+                            QString idValue;
+                            QString nameValue;
                             QJsonValue jsonId = obj.value("id");
                             if (!jsonId.isNull())
                             {
                                 int idInt = jsonId.toInt();
-                                QString idValue = QString::number(idInt);
-                                idList.append(idValue);
+                                idValue = QString::number(idInt);
                             }
+                            QJsonValue jsonName = obj.value("name");
+                            if (!jsonName.isNull())
+                            {
+                                nameValue = jsonName.toString();
+                            }
+                            else
+                            {
+                                nameValue = " ";
+                            }
+                            idList.insert(idValue, nameValue);
                         }
             }
         }
