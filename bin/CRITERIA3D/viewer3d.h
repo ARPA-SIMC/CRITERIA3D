@@ -2,10 +2,10 @@
 #define VIEWER3D_H
 
     #include <QWidget>
-    #include "geometry.h"
 
+    class Crit3DGeometry;
+    class Crit3DOpenGLWidget;
     class QSlider;
-    class GLWidget;
 
     class Viewer3D : public QWidget
     {
@@ -13,7 +13,6 @@
 
     public:
         Viewer3D(Crit3DGeometry *geometry);
-        ~Viewer3D();
 
     protected:
 
@@ -21,7 +20,7 @@
         QSlider *verticalSlider(int maximumAngle);
         QSlider *horizontalSlider(int maximumAngle);
 
-        GLWidget *glWidget;
+        Crit3DOpenGLWidget *glWidget;
         QSlider *xSlider;
         QSlider *ySlider;
         QSlider *zSlider;

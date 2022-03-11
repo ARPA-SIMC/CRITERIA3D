@@ -1,4 +1,3 @@
-
 #include "glWidget.h"
 #include "viewer3D.h"
 
@@ -12,7 +11,7 @@ Viewer3D::Viewer3D(Crit3DGeometry *geometry)
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle(tr("3D view"));
 
-    glWidget = new GLWidget(geometry);
+    glWidget = new Crit3DOpenGLWidget(geometry);
 
     xSlider = verticalSlider(360);
     zSlider = horizontalSlider(360);
@@ -27,19 +26,13 @@ Viewer3D::Viewer3D(Crit3DGeometry *geometry)
 
     setLayout(mainLayout);
 
-    connect(xSlider, &QSlider::valueChanged, glWidget, &GLWidget::setXRotation);
-    connect(glWidget, &GLWidget::xRotationChanged, xSlider, &QSlider::setValue);
-    connect(zSlider, &QSlider::valueChanged, glWidget, &GLWidget::setZRotation);
-    connect(glWidget, &GLWidget::zRotationChanged, zSlider, &QSlider::setValue);
+    connect(xSlider, &QSlider::valueChanged, glWidget, &Crit3DOpenGLWidget::setXRotation);
+    connect(glWidget, &Crit3DOpenGLWidget::xRotationChanged, xSlider, &QSlider::setValue);
+    connect(zSlider, &QSlider::valueChanged, glWidget, &Crit3DOpenGLWidget::setZRotation);
+    connect(glWidget, &Crit3DOpenGLWidget::zRotationChanged, zSlider, &QSlider::setValue);
 
     xSlider->setValue(30 * DEGREE_MULTIPLY);
     zSlider->setValue(0 * DEGREE_MULTIPLY);
-}
-
-
-Viewer3D::~Viewer3D()
-{
-    glWidget->clear();
 }
 
 

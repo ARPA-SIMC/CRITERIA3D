@@ -8,17 +8,19 @@
 #include <QMatrix4x4>
 #include "geometry.h"
 
+
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
-#define DEGREE_MULTIPLY 16.
+#define DEGREE_MULTIPLY 16
 
-class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
+
+class Crit3DOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
 
 public:
-    GLWidget(Crit3DGeometry *m_geometry, QWidget *parent = 0);
-    ~GLWidget();
+    Crit3DOpenGLWidget(Crit3DGeometry *m_geometry, QWidget *parent = nullptr);
+    ~Crit3DOpenGLWidget() override;
 
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;

@@ -92,8 +92,8 @@ SOURCES += \
     dialogSnowSettings.cpp \
     geometry.cpp \
     glWidget.cpp \
-    viewer3D.cpp \
-    main.cpp
+    main.cpp \
+    viewer3D.cpp
 
 
 HEADERS += \

@@ -49,55 +49,56 @@
 ****************************************************************************/
 
 #include "glWidget.h"
+#include "basicMath.h"
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 #include <math.h>
 
 
-GLWidget::GLWidget(Crit3DGeometry *geometry, QWidget *parent)
+Crit3DOpenGLWidget::Crit3DOpenGLWidget(Crit3DGeometry *geometry, QWidget *parent)
     : QOpenGLWidget(parent),
       m_xRotation(0),
       m_zRotation(0),
       m_xTraslation(0),
       m_yTraslation(0),
       m_zoom(1.f),
-      m_program(0),
+      m_program(nullptr),
       m_geometry (geometry)
 { }
 
-GLWidget::~GLWidget()
+Crit3DOpenGLWidget::~Crit3DOpenGLWidget()
 {
     clear();
 }
 
 
-void GLWidget::clear()
+void Crit3DOpenGLWidget::clear()
 {
     if (m_program == nullptr)
         return;
     makeCurrent();
     m_bufferObject.destroy();
     delete m_program;
-    m_program = 0;
+    m_program = nullptr;
     m_geometry->clear();
     doneCurrent();
 }
 
 
-QSize GLWidget::minimumSizeHint() const
+QSize Crit3DOpenGLWidget::minimumSizeHint() const
 {
     return QSize(100, 100);
 }
 
-QSize GLWidget::sizeHint() const
+QSize Crit3DOpenGLWidget::sizeHint() const
 {
     return QSize(1000, 600);
 }
 
-void GLWidget::setXRotation(int angle)
+void Crit3DOpenGLWidget::setXRotation(int angle)
 {
     angle = std::max(angle, 0);
-    angle = std::min(angle, 360 * int(DEGREE_MULTIPLY));
+    angle = std::min(angle, 360 * DEGREE_MULTIPLY);
     if (angle != m_xRotation)
     {
         m_xRotation = angle;
@@ -106,18 +107,18 @@ void GLWidget::setXRotation(int angle)
     }
 }
 
-void GLWidget::setXTraslation(float traslation)
+void Crit3DOpenGLWidget::setXTraslation(float traslation)
 {
-    if (traslation != m_xTraslation)
+    if (! isEqual(traslation, m_xTraslation))
     {
         m_xTraslation = traslation;
         update();
     }
 }
 
-void GLWidget::setYTraslation(float traslation)
+void Crit3DOpenGLWidget::setYTraslation(float traslation)
 {
-    if (traslation != m_yTraslation)
+    if (! isEqual(traslation, m_yTraslation))
     {
         m_yTraslation = traslation;
         update();
@@ -133,7 +134,7 @@ static void qNormalizeAngle(int &angle)
 }
 
 
-void GLWidget::setZRotation(int angle)
+void Crit3DOpenGLWidget::setZRotation(int angle)
 {
     qNormalizeAngle(angle);
     if (angle != m_zRotation)
@@ -145,10 +146,10 @@ void GLWidget::setZRotation(int angle)
 }
 
 
-void GLWidget::setZoom(float zoom)
+void Crit3DOpenGLWidget::setZoom(float zoom)
 {
     zoom = std::max(0.5f, zoom);
-    if (zoom != m_zoom)
+    if (! isEqual(zoom, m_zoom))
     {
         m_zoom = zoom;
         update();
@@ -186,7 +187,7 @@ static const char *fragmentShaderSource =
     "}\n";
 
 
-void GLWidget::initializeGL()
+void Crit3DOpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
     glClearColor(1, 1, 1, 0);
@@ -230,25 +231,25 @@ void GLWidget::initializeGL()
 }
 
 
-void GLWidget::setupVertexAttribs()
+void Crit3DOpenGLWidget::setupVertexAttribs()
 {
     m_bufferObject.bind();
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);
     f->glEnableVertexAttribArray(1);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), 0);
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), nullptr);
     f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
     m_bufferObject.release();
 }
 
-void GLWidget::paintGL()
+void Crit3DOpenGLWidget::paintGL()
 {
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_camera.setToIdentity();
     m_camera.translate(m_xTraslation, m_yTraslation, -m_zoom);
-    m_camera.rotate(- m_xRotation / DEGREE_MULTIPLY, 1, 0, 0);
-    m_camera.rotate(m_zRotation / DEGREE_MULTIPLY, 0, 0, 1);
+    m_camera.rotate(- float(m_xRotation / DEGREE_MULTIPLY), 1, 0, 0);
+    m_camera.rotate(float(m_zRotation / DEGREE_MULTIPLY), 0, 0, 1);
 
     m_program->bind();
     m_program->setUniformValue(m_projMatrixLoc, m_proj);
@@ -260,39 +261,39 @@ void GLWidget::paintGL()
     m_program->release();
 }
 
-void GLWidget::resizeGL(int w, int h)
+void Crit3DOpenGLWidget::resizeGL(int w, int h)
 {
     m_proj.setToIdentity();
-    m_proj.perspective(45.0f, GLfloat(w) / h, 0.1f, 1000000.0f);
+    m_proj.perspective(45.0f, GLfloat(w) / GLfloat(h), 0.1f, 1000000.0f);
 }
 
-void GLWidget::mousePressEvent(QMouseEvent *event)
+void Crit3DOpenGLWidget::mousePressEvent(QMouseEvent *event)
 {
     m_lastPos = event->pos();
 }
 
-void GLWidget::mouseMoveEvent(QMouseEvent *event)
+void Crit3DOpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
     int dx = event->pos().x() - m_lastPos.x();
     int dy = event->pos().y() - m_lastPos.y();
 
     if (event->buttons() & Qt::LeftButton)
     {
-        setXTraslation(m_xTraslation + m_zoom * dx * 0.002);
-        setYTraslation(m_yTraslation - m_zoom * dy * 0.002);
+        setXTraslation(m_xTraslation + m_zoom * float(dx) * 0.002f);
+        setYTraslation(m_yTraslation - m_zoom * float(dy) * 0.002f);
     }
     else if (event->buttons() & Qt::RightButton)
     {
-        setXRotation(m_xRotation - dy * DEGREE_MULTIPLY * 0.5);
-        setZRotation(m_zRotation + dx * DEGREE_MULTIPLY * 0.5);
+        setXRotation(m_xRotation - dy * DEGREE_MULTIPLY * 0.5f);
+        setZRotation(m_zRotation + dx * DEGREE_MULTIPLY * 0.5f);
     }
     m_lastPos = event->pos();
 }
 
 
-void GLWidget::wheelEvent(QWheelEvent *event)
+void Crit3DOpenGLWidget::wheelEvent(QWheelEvent *event)
 {
     int dy = event->angleDelta().y();
-    setZoom(m_zoom * (1 - dy * 0.001));
+    setZoom(m_zoom * (1 - float(dy) * 0.001f));
 }
 
