@@ -52,14 +52,8 @@
 
     public:
 
-        // database connection
-        QSqlDatabase dbConnection;
-        QString dbProvider;
-        QString dbHostname;
-        QString dbName;
-        int dbPort;
-        QString dbUsername;
-        QString dbPassword;
+        QString dbVine3DFileName;
+        QSqlDatabase dbVine3D;
 
         Crit3DTime currentTime;
 
@@ -102,12 +96,9 @@
         Vine3DProject();
 
         bool loadVine3DSettings();
-        void inizializeDBConnection();
-        bool openDBConnection();
         bool loadVine3DProjectSettings(QString projectFile);
         bool loadVine3DProjectParameters();
 
-        bool loadClimateParameters();
         bool loadAggregatedMeteoVarCodes();
         bool loadFieldsProperties();
         bool loadDBPoints();
@@ -120,6 +111,7 @@
         void initializeVine3DProject();
         void clearVine3DProject();
         bool loadVine3DProject(QString myFileName);
+        bool openVine3DDatabase(QString fileName);
 
         int queryFieldPoint(double x, double y);
         bool loadFieldShape();
