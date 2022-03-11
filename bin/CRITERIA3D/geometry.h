@@ -7,6 +7,9 @@
     #ifndef CRIT3DCOLOR_H
         #include "color.h"
     #endif
+    #ifndef GIS_H
+        #include "gis.h"
+    #endif
 
     class Crit3DGeometry
     {
@@ -26,14 +29,14 @@
         void setCenter(float x, float y, float z);
         void setDimension(float dx, float dy);
 
-        void addTriangle(const QVector3D &p1, const QVector3D &p2, const QVector3D &p3,
+        void addTriangle(const gis::Crit3DPoint &p1, const gis::Crit3DPoint &p2, const gis::Crit3DPoint &p3,
                          const Crit3DColor &c1, const Crit3DColor &c2, const Crit3DColor &c3);
 
         void setVertexColor(int i, const Crit3DColor &color);
 
     private:
 
-        void addVertex(const QVector3D &v);
+        void addVertex(const gis::Crit3DPoint &v);
         void addVertexColor(const Crit3DColor &color);
 
         QVector<GLfloat> m_data;

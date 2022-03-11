@@ -1090,7 +1090,7 @@ bool Crit3DProject::initializeGeometry()
     // set triangles
     double x, y;
     float z1, z2, z3;
-    QVector3D p1, p2, p3;
+    gis::Crit3DPoint p1, p2, p3;
     Crit3DColor *c1, *c2, *c3;
     Crit3DColor sc1, sc2, sc3;
     for (long row = 0; row < DEM.header->nrRows; row++)
@@ -1101,7 +1101,7 @@ bool Crit3DProject::initializeGeometry()
             if (! isEqual(z1, DEM.header->flag))
             {
                 gis::getUtmXYFromRowCol(DEM, row, col, &x, &y);
-                p1 = QVector3D(float(x), float(y), z1);
+                p1 = gis::Crit3DPoint(x, y, z1);
                 c1 = DEM.colorScale->getColor(z1);
                 shadowColor(*c1, sc1, row, col);
 
@@ -1109,7 +1109,7 @@ bool Crit3DProject::initializeGeometry()
                 if (! isEqual(z3, DEM.header->flag))
                 {
                     gis::getUtmXYFromRowCol(DEM, row+1, col+1, &x, &y);
-                    p3 = QVector3D(float(x), float(y), z3);
+                    p3 = gis::Crit3DPoint(x, y, z3);
                     c3 = DEM.colorScale->getColor(z3);
                     shadowColor(*c3, sc3, row+1, col+1);
 
@@ -1117,7 +1117,7 @@ bool Crit3DProject::initializeGeometry()
                     if (! isEqual(z2, DEM.header->flag))
                     {
                         gis::getUtmXYFromRowCol(DEM, row+1, col, &x, &y);
-                        p2 = QVector3D(float(x), float(y), z2);
+                        p2 = gis::Crit3DPoint(x, y, z2);
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row+1, col);
                         geometry.addTriangle(p1, p2, p3, sc1, sc2, sc3);
@@ -1127,7 +1127,7 @@ bool Crit3DProject::initializeGeometry()
                     if (! isEqual(z2, DEM.header->flag))
                     {
                         gis::getUtmXYFromRowCol(DEM, row, col+1, &x, &y);
-                        p2 = QVector3D(float(x), float(y), z2);
+                        p2 = gis::Crit3DPoint(x, y, z2);
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row, col+1);
                         geometry.addTriangle(p3, p2, p1, sc3, sc2, sc1);

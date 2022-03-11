@@ -35,7 +35,7 @@ void Crit3DGeometry::setDimension(float dx, float dy)
     m_dy = dy;
 }
 
-void Crit3DGeometry::addTriangle(const QVector3D &p1, const QVector3D &p2, const QVector3D &p3,
+void Crit3DGeometry::addTriangle(const gis::Crit3DPoint &p1, const gis::Crit3DPoint &p2, const gis::Crit3DPoint &p3,
                                  const Crit3DColor &c1, const Crit3DColor &c2, const Crit3DColor &c3)
 {
     addVertex(p1);
@@ -46,11 +46,11 @@ void Crit3DGeometry::addTriangle(const QVector3D &p1, const QVector3D &p2, const
     addVertexColor(c3);
 }
 
-void Crit3DGeometry::addVertex(const QVector3D &v)
+void Crit3DGeometry::addVertex(const gis::Crit3DPoint &v)
 {
-    m_data.append(v.x() - m_xCenter);
-    m_data.append(v.y() - m_yCenter);
-    m_data.append((v.z() - m_zCenter) * m_magnify);
+    m_data.append(v.utm.x - m_xCenter);
+    m_data.append(v.utm.y - m_yCenter);
+    m_data.append((v.z - m_zCenter) * m_magnify);
 
     m_dataCount += 3;
 }
