@@ -159,31 +159,19 @@ void Crit3DOpenGLWidget::setZoom(float zoom)
 
 static const char *vertexShaderSource =
     "attribute vec4 vertex;\n"
-    "attribute vec3 normal;\n"
-    "attribute vec4 colAttr;\n"
-    "varying vec3 vert;\n"
-    "varying vec3 vertNormal;\n"
-    "varying vec3 color;\n"
+    "attribute vec4 color;\n"
+    "varying vec4 myCol;\n"
     "uniform mat4 projMatrix;\n"
     "uniform mat4 mvMatrix;\n"
-    "uniform mat3 normalMatrix;\n"
     "void main() {\n"
-    "   vert = vertex.xyz;\n"
-    "   vertNormal = normalMatrix * normal;\n"
-    "   color = colAttr.xyz;\n"
+    "   myCol = color;\n"
     "   gl_Position = projMatrix * mvMatrix * vertex;\n"
     "}\n";
 
 static const char *fragmentShaderSource =
-    "varying vec3 vert;\n"
-    "varying vec3 vertNormal;\n"
-    "varying vec3 color;\n"
-    "uniform vec3 lightPos;\n"
+    "varying vec4 myCol;\n"
     "void main() {\n"
-    "   vec3 L = normalize(lightPos - vert);\n"
-    "   float NL = max(dot(normalize(vertNormal), L), 0.0);\n"
-    "   vec3 col = clamp(color * 0.5 + color * 0.5 * NL, 0.0, 1.0);\n"
-    "   gl_FragColor = vec4(col, 1.0);\n"
+    "   gl_FragColor = myCol;\n"
     "}\n";
 
 
@@ -196,15 +184,12 @@ void Crit3DOpenGLWidget::initializeGL()
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
     m_program->bindAttributeLocation("vertex", 0);
-    m_program->bindAttributeLocation("normal", 1);
-    m_program->bindAttributeLocation("colAttr", 2);
+    m_program->bindAttributeLocation("color", 1);
     m_program->link();
 
     m_program->bind();
     m_projMatrixLoc = m_program->uniformLocation("projMatrix");
     m_mvMatrixLoc = m_program->uniformLocation("mvMatrix");
-    m_normalMatrixLoc = m_program->uniformLocation("normalMatrix");
-    m_lightPosLoc = m_program->uniformLocation("lightPos");
 
     // Setup our vertex buffer object
     m_bufferObject.create();
@@ -215,19 +200,15 @@ void Crit3DOpenGLWidget::initializeGL()
     setupVertexAttribs();
 
     // set vertex colors
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), m_geometry->getColors());
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), m_geometry->getColors());
 
-    // Light position is fixed
-    m_program->setUniformValue(m_lightPosLoc, QVector3D(0, m_geometry->defaultDistance()*10, m_geometry->defaultDistance() * 100));
     m_program->release();
 
     // set default zoom
     setZoom(m_geometry->defaultDistance());
 
     glEnable(GL_DEPTH_TEST);
-    if (m_geometry->showHiddenFace())
-        glEnable(GL_CULL_FACE);
 }
 
 
@@ -236,9 +217,7 @@ void Crit3DOpenGLWidget::setupVertexAttribs()
     m_bufferObject.bind();
     QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
     f->glEnableVertexAttribArray(0);
-    f->glEnableVertexAttribArray(1);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), nullptr);
-    f->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<void *>(3 * sizeof(GLfloat)));
+    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
     m_bufferObject.release();
 }
 
@@ -254,7 +233,6 @@ void Crit3DOpenGLWidget::paintGL()
     m_program->bind();
     m_program->setUniformValue(m_projMatrixLoc, m_proj);
     m_program->setUniformValue(m_mvMatrixLoc, m_camera * m_world);
-    m_program->setUniformValue(m_normalMatrixLoc, m_camera.normalMatrix());
 
     glDrawArrays(GL_TRIANGLES, 0, m_geometry->vertexCount());
 

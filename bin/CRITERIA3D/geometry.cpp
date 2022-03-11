@@ -8,7 +8,6 @@ Crit3DGeometry::Crit3DGeometry()
 
 void Crit3DGeometry::clear()
 {
-    m_showHiddenFace = false,
     m_dataCount = 0;
     m_colorCount = 0;
     m_xCenter = 0;
@@ -39,36 +38,21 @@ void Crit3DGeometry::setDimension(float dx, float dy)
 void Crit3DGeometry::addTriangle(const QVector3D &p1, const QVector3D &p2, const QVector3D &p3,
                                  const Crit3DColor &c1, const Crit3DColor &c2, const Crit3DColor &c3)
 {
-    QVector3D n = QVector3D::normal(QVector3D(p2 - p1), QVector3D(p3 - p1));
-    addVertex(p1, n);
+    addVertex(p1);
     addVertexColor(c1);
-    addVertex(p2, n);
+    addVertex(p2);
     addVertexColor(c2);
-    addVertex(p3, n);
+    addVertex(p3);
     addVertexColor(c3);
-
-    if (m_showHiddenFace)
-    {
-        n = QVector3D::normal(QVector3D(p2 - p3), QVector3D(p1 - p3));
-        addVertex(p3, n);
-        addVertexColor(c3);
-        addVertex(p2, n);
-        addVertexColor(c2);
-        addVertex(p1, n);
-        addVertexColor(c1);
-    }
 }
 
-void Crit3DGeometry::addVertex(const QVector3D &v, const QVector3D &normal)
+void Crit3DGeometry::addVertex(const QVector3D &v)
 {
     m_data.append(v.x() - m_xCenter);
     m_data.append(v.y() - m_yCenter);
     m_data.append((v.z() - m_zCenter) * m_magnify);
-    m_data.append(normal.x());
-    m_data.append(normal.y());
-    m_data.append(normal.z());
 
-    m_dataCount += 6;
+    m_dataCount += 3;
 }
 
 void Crit3DGeometry::addVertexColor(const Crit3DColor &color)

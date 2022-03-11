@@ -86,6 +86,7 @@
         bool writeOutputPointsData();
 
         bool initializeGeometry();
+        void shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col);
 
     };
 

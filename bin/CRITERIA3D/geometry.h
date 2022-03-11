@@ -19,11 +19,9 @@
         const GLfloat *getColors() const { return m_colors.constData(); }
 
         int count() const { return m_dataCount; }
-        int vertexCount() const { return m_dataCount / 6; }
+        int vertexCount() const { return m_dataCount / 3; }
         float defaultDistance() const { return std::max(m_dx, m_dy); }
-        bool showHiddenFace() const { return m_showHiddenFace; }
 
-        void setShowHiddenFace(bool show) { m_showHiddenFace = show; }
         void setMagnify(float magnify) { m_magnify = magnify; }
         void setCenter(float x, float y, float z);
         void setDimension(float dx, float dy);
@@ -35,13 +33,12 @@
 
     private:
 
-        void addVertex(const QVector3D &v, const QVector3D &normal);
+        void addVertex(const QVector3D &v);
         void addVertexColor(const Crit3DColor &color);
 
         QVector<GLfloat> m_data;
         QVector<GLfloat> m_colors;
 
-        bool m_showHiddenFace;
         int m_dataCount;
         int m_colorCount;
 

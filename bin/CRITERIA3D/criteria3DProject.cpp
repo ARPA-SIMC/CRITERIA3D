@@ -997,8 +997,8 @@ bool Crit3DProject::writeOutputPointsData()
     {
         if (outputPoints[i].active)
         {
-            float x = outputPoints[i].utm.x;
-            float y = outputPoints[i].utm.y;
+            float x = float(outputPoints[i].utm.x);
+            float y = float(outputPoints[i].utm.y);
             tableName = QString::fromStdString(outputPoints[i].id);
             if (isMeteo)
             {
@@ -1040,6 +1040,28 @@ bool Crit3DProject::writeOutputPointsData()
 }
 
 
+void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col)
+{
+    colorOut.red = colorIn.red;
+    colorOut.green = colorIn.green;
+    colorOut.blue = colorIn.blue;
+
+    float aspect = radiationMaps->aspectMap->getValueFromRowCol(row, col);
+    if (! isEqual(aspect, radiationMaps->aspectMap->header->flag))
+    {
+        float slope = radiationMaps->slopeMap->getValueFromRowCol(row, col);
+        if (! isEqual(slope, radiationMaps->slopeMap->header->flag))
+        {
+            float slopeAmplification = 90.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
+            float shadow = cos(aspect * float(DEG_TO_RAD)) * std::max(3.f, slope * slopeAmplification);
+            colorOut.red += short(shadow);
+            colorOut.green += short(shadow);
+            colorOut.blue += short(shadow);
+        }
+    }
+}
+
+
 bool Crit3DProject::initializeGeometry()
 {
     if (! DEM.isLoaded)
@@ -1048,20 +1070,18 @@ bool Crit3DProject::initializeGeometry()
         return false;
     }
 
-    // initialize
     geometry.clear();
-    geometry.setShowHiddenFace(false);
 
     // set center
     double xCenter, yCenter;
-    gis::getUtmXYFromRowCol(DEM, DEM.header->nrRows * 0.5, DEM.header->nrCols * 0.5, &xCenter, &yCenter);
+    gis::getUtmXYFromRowCol(DEM, DEM.header->nrRows / 2, DEM.header->nrCols / 2, &xCenter, &yCenter);
     gis::updateMinMaxRasterGrid(&DEM);
-    float zCenter = (DEM.maximum + DEM.minimum) * 0.5;
-    geometry.setCenter (xCenter, yCenter, zCenter);
+    float zCenter = (DEM.maximum + DEM.minimum) * 0.5f;
+    geometry.setCenter (float(xCenter), float(yCenter), zCenter);
 
     // set dimension
-    float dx = DEM.header->nrCols * DEM.header->cellSize;
-    float dy = DEM.header->nrRows * DEM.header->cellSize;
+    float dx = float(DEM.header->nrCols * DEM.header->cellSize);
+    float dy = float(DEM.header->nrRows * DEM.header->cellSize);
     float dz = DEM.maximum + DEM.minimum;
     geometry.setDimension(dx, dy);
     float magnify = ((dx + dy) * 0.5f) / (dz * 5.f);
@@ -1072,40 +1092,45 @@ bool Crit3DProject::initializeGeometry()
     float z1, z2, z3;
     QVector3D p1, p2, p3;
     Crit3DColor *c1, *c2, *c3;
+    Crit3DColor sc1, sc2, sc3;
     for (long row = 0; row < DEM.header->nrRows; row++)
     {
         for (long col = 0; col < DEM.header->nrCols; col++)
         {
             z1 = DEM.getValueFromRowCol(row, col);
-            if (z1 != DEM.header->flag)
+            if (! isEqual(z1, DEM.header->flag))
             {
                 gis::getUtmXYFromRowCol(DEM, row, col, &x, &y);
-                p1 = QVector3D(x, y, z1);
+                p1 = QVector3D(float(x), float(y), z1);
                 c1 = DEM.colorScale->getColor(z1);
+                shadowColor(*c1, sc1, row, col);
 
-                z3 = DEM.getValueFromRowCol(row +1, col +1);
-                if (z3 != DEM.header->flag)
+                z3 = DEM.getValueFromRowCol(row+1, col+1);
+                if (! isEqual(z3, DEM.header->flag))
                 {
-                    gis::getUtmXYFromRowCol(DEM, row +1, col +1, &x, &y);
-                    p3 = QVector3D(x, y, z3);
+                    gis::getUtmXYFromRowCol(DEM, row+1, col+1, &x, &y);
+                    p3 = QVector3D(float(x), float(y), z3);
                     c3 = DEM.colorScale->getColor(z3);
+                    shadowColor(*c3, sc3, row+1, col+1);
 
-                    z2 = DEM.getValueFromRowCol(row +1, col);
-                    if (z2 != DEM.header->flag)
+                    z2 = DEM.getValueFromRowCol(row+1, col);
+                    if (! isEqual(z2, DEM.header->flag))
                     {
-                        gis::getUtmXYFromRowCol(DEM, row +1, col, &x, &y);
-                        p2 = QVector3D(x, y, z2);
+                        gis::getUtmXYFromRowCol(DEM, row+1, col, &x, &y);
+                        p2 = QVector3D(float(x), float(y), z2);
                         c2 = DEM.colorScale->getColor(z2);
-                        geometry.addTriangle(p1, p2, p3, *c1, *c2, *c3);
+                        shadowColor(*c2, sc2, row+1, col);
+                        geometry.addTriangle(p1, p2, p3, sc1, sc2, sc3);
                     }
 
-                    z2 = DEM.getValueFromRowCol(row, col + 1);
-                    if (z2 != DEM.header->flag)
+                    z2 = DEM.getValueFromRowCol(row, col+1);
+                    if (! isEqual(z2, DEM.header->flag))
                     {
-                        gis::getUtmXYFromRowCol(DEM, row, col +1, &x, &y);
-                        p2 = QVector3D(x, y, z2);
+                        gis::getUtmXYFromRowCol(DEM, row, col+1, &x, &y);
+                        p2 = QVector3D(float(x), float(y), z2);
                         c2 = DEM.colorScale->getColor(z2);
-                        geometry.addTriangle(p3, p2, p1, *c3, *c2, *c1);
+                        shadowColor(*c2, sc2, row, col+1);
+                        geometry.addTriangle(p3, p2, p1, sc3, sc2, sc1);
                     }
                 }
             }

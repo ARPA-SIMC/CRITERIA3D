@@ -62,7 +62,6 @@ private:
 
     int m_projMatrixLoc;
     int m_mvMatrixLoc;
-    int m_normalMatrixLoc;
     int m_lightPosLoc;
 
     QMatrix4x4 m_proj;
