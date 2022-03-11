@@ -7,7 +7,7 @@
 #-----------------------------------------------------
 
 QT       += core gui network widgets sql xml charts
-greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
+greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
 TEMPLATE = app
 TARGET = CRITERIA3D
@@ -84,19 +84,27 @@ CONFIG(debug, debug|release) {
 }
 
 
-SOURCES += mainwindow.cpp \
+SOURCES += \
+    shared/project3D.cpp \
+    mainwindow.cpp \
     criteria3DProject.cpp \
     dialogLoadState.cpp \
     dialogSnowSettings.cpp \
-    shared/project3D.cpp \
-    main.cpp
+    geometry.cpp \
+    glWidget.cpp \
+    main.cpp \
+    viewer3D.cpp
 
 
-HEADERS += mainwindow.h \
+HEADERS += \
+    shared/project3D.h \
+    mainwindow.h \
     criteria3DProject.h \
     dialogLoadState.h \
     dialogSnowSettings.h \
-    shared/project3D.h
+    geometry.h \
+    glWidget.h \
+    viewer3D.h
 
 
 FORMS += mainwindow.ui

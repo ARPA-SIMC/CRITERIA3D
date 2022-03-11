@@ -3136,6 +3136,8 @@
      <addaction name="separator"/>
      <addaction name="flagHide_outputPoints"/>
     </widget>
+    <addaction name="actionShow_3D_viewer"/>
+    <addaction name="separator"/>
     <addaction name="menuPoints"/>
     <addaction name="menuOutput_points_3"/>
     <addaction name="separator"/>
@@ -3343,7 +3345,7 @@
   </action>
   <action name="actionView_Boundary">
    <property name="text">
-    <string>3D Boundary</string>
+    <string>Runoff boundaries</string>
    </property>
   </action>
   <action name="actionInterpolationSettings">
@@ -3845,6 +3847,11 @@
   <action name="actionCriteria3D_compute_current_hour">
    <property name="text">
     <string>Compute current hour</string>
+   </property>
+  </action>
+  <action name="actionShow_3D_viewer">
+   <property name="text">
+    <string>3D viewer</string>
    </property>
   </action>
  </widget>

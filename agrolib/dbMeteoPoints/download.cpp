@@ -89,6 +89,91 @@ bool Download::getPointProperties(QList<QString> datasetList)
     return result;
 }
 
+QMap<QString, QString> Download::getArmiketIdList(QList<QString> datasetList)
+{
+
+    QMap<QString, QString> idList;
+    QEventLoop loop;
+
+    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+
+    _datasetsList = datasetList;
+
+    QNetworkRequest request;
+    request.setUrl(QUrl("http://meteozen.metarpa/simcstations/api/v1/stations"));
+    request.setRawHeader("Authorization", _authorization);
+
+    // GET
+    QNetworkReply* reply = manager->get(request);
+
+    loop.exec();
+
+    if (reply->error() != QNetworkReply::NoError)
+    {
+            qDebug() << "Network Error: " << reply->error();
+            return idList;
+    }
+    else
+    {
+        QString data = (QString) reply->readAll();
+
+        QJsonParseError *error = new QJsonParseError();
+        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8(), error);
+
+        qDebug() << "err: " << error->errorString() << " -> " << error->offset;
+
+        // check validity of the document
+        if(!doc.isNull() && doc.isArray())
+        {
+            QJsonArray jsonArr = doc.array();
+
+            for(int index = 0; index < jsonArr.size(); ++index)
+            {
+                QJsonObject obj = jsonArr[index].toObject();
+
+                QJsonValue jsonDataset = obj.value("network");
+
+                if (jsonDataset.isUndefined())
+                    qDebug() << "jsonDataset: key id does not exist";
+                else if (!jsonDataset.isString())
+                    qDebug() << "jsonDataset: value is not string";
+                else
+                    foreach(QString item, _datasetsList)
+                        if (jsonDataset == item)
+                        {
+                            QString idValue;
+                            QString nameValue;
+                            QJsonValue jsonId = obj.value("id");
+                            if (!jsonId.isNull())
+                            {
+                                int idInt = jsonId.toInt();
+                                idValue = QString::number(idInt);
+                            }
+                            QJsonValue jsonName = obj.value("name");
+                            if (!jsonName.isNull())
+                            {
+                                nameValue = jsonName.toString();
+                            }
+                            else
+                            {
+                                nameValue = " ";
+                            }
+                            idList.insert(idValue, nameValue);
+                        }
+            }
+        }
+         else
+        {
+            qDebug() << "Invalid JSON...\n";
+            return idList;
+        }
+    }
+
+    delete reply;
+    delete manager;
+    return idList;
+}
 
 void Download::downloadMetadata(QJsonObject obj)
 {
