@@ -486,6 +486,19 @@ bool Crit3DMeteoPointsDbHandler::deleteAllData(frequencyType myFreq)
     return true;
 }
 
+bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromDataset(QList<QString> datasets)
+{
+    QList<QString> idList = getIdListGivenDataset(datasets);
+    if (!idList.isEmpty())
+    {
+        return deleteAllPointsFromIdList(idList);
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool Crit3DMeteoPointsDbHandler::loadDailyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint)
 {
     QString dateStr;
@@ -1609,11 +1622,20 @@ QList<QString> Crit3DMeteoPointsDbHandler::getIdListGivenDataset(QList<QString> 
     QSqlQuery qry(_db);
     QString id;
 
-    QString datasetList = datasets.join(",");
-    qry.prepare( "SELECT id_point from point_properties WHERE dataset IN (:dataset)" );
-    qry.bindValue(":dataset", datasetList);
+    QString datasetList;
+    for (int i = 0; i < datasets.size(); i++)
+    {
+        QString dataset = datasets.at(i);
+        if (dataset != "")
+        {
+            if (datasetList != "")
+                datasetList += ",";
+            datasetList += "'" + dataset + "'";
+        }
+    }
+    QString statement = "SELECT id_point from point_properties WHERE dataset IN  (" + datasetList + ")";
 
-    if( !qry.exec() )
+    if( !qry.exec(statement) )
     {
         qDebug() << qry.lastError();
         return idList;
