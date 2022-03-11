@@ -34,12 +34,8 @@ Vine3DProject::Vine3DProject() : Project3D()
 void Vine3DProject::initializeVine3DProject()
 {
     idArea = "0000";
-    dbProvider = "QPSQL";
-    dbHostname = "127.0.0.1";
-    dbName = "";
-    dbPort = 5432;
-    dbUsername = "postgres";
-    dbPassword = "postgres";
+
+    dbVine3DFileName = "";
 
     isObsDataLoaded = false;
     setCurrentFrequency(hourly);
@@ -70,7 +66,9 @@ void Vine3DProject::clearVine3DProject()
     if (isProjectLoaded)
     {
         logInfo("Close Project");
-        dbConnection.close();
+        dbVine3D.close();
+
+        dbVine3DFileName = "";
 
         modelCaseIndexMap.clear();
 
@@ -79,38 +77,6 @@ void Vine3DProject::clearVine3DProject()
         delete vine3DMapsH;
         delete vine3DMapsD;
     }
-}
-
-
-void Vine3DProject::inizializeDBConnection()
-{
-    dbProvider = "QSQLITE";
-    dbHostname = "";
-    dbName = "";
-    dbPort = NODATA;
-    dbUsername = "";
-    dbPassword = "";
-}
-
-
-bool Vine3DProject::openDBConnection()
-{
-    dbConnection.close();
-
-    dbConnection = QSqlDatabase::addDatabase(dbProvider);
-    dbConnection.setHostName(dbHostname);
-    dbConnection.setDatabaseName(dbName);
-    dbConnection.setPort(dbPort);
-    dbConnection.setUserName(dbUsername);
-    dbConnection.setPassword(dbPassword);
-    if (! dbConnection.open())
-    {
-        logError("Open DB failed: " + dbHostname + "//" + dbName +"\n" + dbConnection.lastError().text());
-        dbConnection.close();
-        return(false);
-    }
-
-    return (true);
 }
 
 bool Vine3DProject::loadVine3DProjectSettings(QString projectFile)
@@ -122,21 +88,9 @@ bool Vine3DProject::loadVine3DProjectSettings(QString projectFile)
     }
 
     projectSettings->beginGroup("project");
-        QString myId = projectSettings->value("id").toString();
-        QString fieldName = projectSettings->value("modelCaseMap").toString();
-    projectSettings->endGroup();
-
-    idArea = myId;
-    fieldMapName = fieldName;
-
-    inizializeDBConnection();
-    projectSettings->beginGroup("database");
-        if (projectSettings->contains("driver") && !projectSettings->value("driver").toString().isEmpty()) dbProvider = projectSettings->value("driver").toString();
-        if (projectSettings->contains("host") && !projectSettings->value("host").toString().isEmpty()) dbHostname = projectSettings->value("host").toString();
-        if (projectSettings->contains("port") && !projectSettings->value("port").toString().isEmpty()) dbPort = projectSettings->value("port").toInt();
-        if (projectSettings->contains("dbname") && !projectSettings->value("dbname").toString().isEmpty()) dbName = projectSettings->value("dbname").toString();
-        if (projectSettings->contains("username") && !projectSettings->value("username").toString().isEmpty()) dbUsername = projectSettings->value("username").toString();
-        if (projectSettings->contains("password") && !projectSettings->value("password").toString().isEmpty()) dbPassword = projectSettings->value("password").toString();
+        idArea = projectSettings->value("id").toString();
+        fieldMapName = projectSettings->value("modelCaseMap").toString();
+        dbVine3DFileName = projectSettings->value("db_vine3d").toString();
     projectSettings->endGroup();
 
     projectSettings->beginGroup("settings");
@@ -146,6 +100,26 @@ bool Vine3DProject::loadVine3DProjectSettings(QString projectFile)
     return true;
 }
 
+bool Vine3DProject::openVine3DDatabase(QString fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing VINE3D DB filename");
+        return false;
+    }
+
+    dbVine3D = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    dbVine3D.setDatabaseName(fileName);
+
+    if (!dbVine3D.open())
+    {
+       errorString = "Connection with database fail";
+       return false;
+    }
+
+    logInfo("VINE3D database = " + fileName);
+    return true;
+}
 
 bool Vine3DProject::loadVine3DProject(QString myFileName)
 {
@@ -163,6 +137,8 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     if (! loadVine3DProjectSettings(myFileName))
         return false;
 
+    if (dbVine3DFileName != "") openVine3DDatabase(dbVine3DFileName);
+
     if (! loadProject())
         return false;
 
@@ -173,20 +149,18 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
 
     statePlantMaps = new Crit3DStatePlantMaps(DEM);
 
-    if (! openDBConnection()) return (false);
-
     if (!loadVine3DProjectParameters() || !loadSoils() || !loadTrainingSystems()
         || !loadAggregatedMeteoVarCodes() || !loadDBPoints())
     {
         logError();
-        dbConnection.close();
+        dbVine3D.close();
         return false;
     }
 
     if (!loadFieldsProperties() || !loadFieldBook())
     {
         logError();
-        dbConnection.close();
+        dbVine3D.close();
         return(false);
     }
 
@@ -236,7 +210,7 @@ bool Vine3DProject::loadGrapevineParameters()
             " FROM cultivar"
             " ORDER BY id_cultivar";
 
-    QSqlQuery myQuery = dbConnection.exec(myQueryString);
+    QSqlQuery myQuery = dbVine3D.exec(myQueryString);
     if (myQuery.size() == -1)
     {
         errorString = "wrong Grapevine parameters" + myQuery.lastError().text();
@@ -285,7 +259,7 @@ bool Vine3DProject::loadTrainingSystems()
             " FROM training_system"
             " ORDER BY id_training_system";
 
-    QSqlQuery myQuery = dbConnection.exec(myQueryString);
+    QSqlQuery myQuery = dbVine3D.exec(myQueryString);
 
     if (myQuery.size() < 1)
     {
@@ -325,7 +299,7 @@ bool Vine3DProject::loadFieldBook()
             " FROM field_book"
             " ORDER BY date_, id_field";
 
-    QSqlQuery myQuery = dbConnection.exec(myQueryString);
+    QSqlQuery myQuery = dbVine3D.exec(myQueryString);
 
     if (myQuery.size() == -1)
     {
@@ -437,7 +411,7 @@ int Vine3DProject::queryFieldPoint(double x, double y)
     myQueryString += "('POINT(" + UTMx + " " + UTMy + ")', 326" + UTMZone + ")) = true";
     QSqlQuery myQuery;
 
-    myQuery = this->dbConnection.exec(myQueryString);
+    myQuery = this->dbVine3D.exec(myQueryString);
 
     if (myQuery.size() == -1)
     {
@@ -668,7 +642,7 @@ bool Vine3DProject::loadFieldsProperties()
 
     // NR FIELDS
     myQueryString = "SELECT COUNT(*) FROM fields";
-    myQuery = dbConnection.exec(myQueryString);
+    myQuery = dbVine3D.exec(myQueryString);
     if (myQuery.size() == -1)
     {
         this->errorString = "Error reading fields table" + myQuery.lastError().text();
@@ -686,7 +660,7 @@ bool Vine3DProject::loadFieldsProperties()
 
     // CHECK DEFAULT
     myQueryString = "SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields WHERE id_field=0";
-    myQuery = dbConnection.exec(myQueryString);
+    myQuery = dbVine3D.exec(myQueryString);
     if (myQuery.size() == -1)
     {
         this->errorString = "Wrong structure in in fields table" + myQuery.lastError().text();
@@ -700,7 +674,7 @@ bool Vine3DProject::loadFieldsProperties()
 
     // READ PROPERTIES
     myQueryString = "SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields ORDER BY id_field";
-    myQuery = dbConnection.exec(myQueryString);
+    myQuery = dbVine3D.exec(myQueryString);
     fieldIndex = 0;
     while (myQuery.next())
     {
@@ -720,42 +694,8 @@ bool Vine3DProject::loadFieldsProperties()
 }
 
 
-bool Vine3DProject::loadClimateParameters()
-{
-    logInfo ("Read climate parameters...");
-    QString myQueryString = "SELECT month, tmin_lapse_rate, tmax_lapse_rate, tdmin_lapse_rate, tdmax_lapse_rate";
-    myQueryString += " FROM climate";
-    myQueryString += " ORDER BY month";
-
-    QSqlQuery myQuery = dbConnection.exec(myQueryString);
-    if (myQuery.size() == -1)
-    {
-        this->errorString = myQuery.lastError().text();
-        return(false);
-    }
-    else if (myQuery.size() != 12)
-    {
-        this->errorString = "wrong number of climate records (must be 12)";
-        return(false);
-    }
-
-    //read values
-    unsigned int i;
-    while (myQuery.next())
-    {
-        i = myQuery.value(0).toUInt();
-        climateParameters.tminLapseRate[i-1] = myQuery.value(1).toFloat();
-        climateParameters.tmaxLapseRate[i-1] = myQuery.value(2).toFloat();
-        climateParameters.tdMinLapseRate[i-1] = myQuery.value(3).toFloat();
-        climateParameters.tdMaxLapseRate[i-1] = myQuery.value(4).toFloat();
-    }
-
-    return(true);
-}
-
 bool Vine3DProject::loadVine3DProjectParameters()
 {
-    if (!loadClimateParameters()) return false;
     if (!loadGrapevineParameters()) return false;
 
     return true;
@@ -768,7 +708,7 @@ bool Vine3DProject::loadAggregatedMeteoVarCodes()
     myQueryString += " FROM variables";
     myQueryString += " ORDER BY id_variable";
 
-    QSqlQuery myQuery = dbConnection.exec(myQueryString);
+    QSqlQuery myQuery = dbVine3D.exec(myQueryString);
     if (myQuery.size() == -1)
     {
         this->errorString = myQuery.lastError().text();
@@ -797,7 +737,7 @@ bool Vine3DProject::loadSoils()
 {
     logInfo("Read soils...");
 
-    if (! loadAllSoils(&dbConnection, &soilList, texturalClassList, &fittingOptions, &errorString))
+    if (! loadAllSoils(&dbVine3D, &soilList, texturalClassList, &fittingOptions, &errorString))
     {
         logError();
         return false;
@@ -861,7 +801,7 @@ bool Vine3DProject::loadDBPoints()
     QString queryString = "SELECT id_point, name, utm_x, utm_y, altitude, is_utc, is_forecast FROM points_properties";
     queryString += " ORDER BY id_point";
 
-    QSqlQuery query = dbConnection.exec(queryString);
+    QSqlQuery query = dbVine3D.exec(queryString);
     if (query.size() == -1)
     {
         this->errorString = "Query failed in Table 'points_properties'\n" + query.lastError().text();
@@ -898,11 +838,11 @@ bool Vine3DProject::loadDBPoints()
 
     findVine3DLastMeteoDate();
 
-    if (dbConnection.isOpen())
+    if (dbVine3D.isOpen())
     {
         for (int i = 0; i < this->nrMeteoPoints; i++)
         {
-            if (! readPointProxyValues(&(this->meteoPoints[i]), &(this->dbConnection)))
+            if (! readPointProxyValues(&(this->meteoPoints[i]), &(this->dbVine3D)))
             {
                 logError("Error reading proxy values");
                 return false;
@@ -919,7 +859,7 @@ bool Vine3DProject::loadDBPoints()
 
 void Vine3DProject::findVine3DLastMeteoDate()
 {
-    QSqlQuery qry(dbConnection);
+    QSqlQuery qry(dbVine3D);
     QStringList tables;
     QDateTime lastDate(QDate(1800, 1, 1), QTime(0, 0, 0));
 
@@ -995,7 +935,7 @@ bool Vine3DProject::loadObsDataSubHourly(int indexPoint, meteoVariable myVar, QD
     queryString += " AND date_time <= '" + d2.toString("yyyy-MM-dd hh:mm:ss") + "'";
     queryString += " ORDER BY date_time";
 
-    QSqlQuery myQuery = dbConnection.exec(queryString);
+    QSqlQuery myQuery = dbVine3D.exec(queryString);
     if (myQuery.size() == -1)
     {
         logError("Query failed in Table 'obs_values': " + myQuery.lastError().text());
@@ -1050,7 +990,7 @@ bool Vine3DProject::loadObsDataHourly(int indexPoint, QDate d1, QDate d2, QStrin
     queryString += " AND date_ <= '" + d2.toString("yyyy-MM-dd") + "'";
     queryString += " ORDER BY date_, hour_";
 
-    QSqlQuery myQuery = dbConnection.exec(queryString);
+    QSqlQuery myQuery = dbVine3D.exec(queryString);
 
     if (myQuery.size() == -1)
     {
@@ -1142,7 +1082,7 @@ bool Vine3DProject::loadObsDataHourlyVar(int indexPoint, meteoVariable myVar, QD
     queryString += " AND date_ <= '" + d2.toString("yyyy-MM-dd") + "'";
     queryString += " ORDER BY date_, hour_";
 
-    QSqlQuery myQuery = dbConnection.exec(queryString);
+    QSqlQuery myQuery = dbVine3D.exec(queryString);
     if (myQuery.size() == -1)
     {
         logError("Query failed in table: "+ tableName + "\n" + myQuery.lastError().text());
