@@ -158,18 +158,18 @@ void Crit3DOpenGLWidget::setZoom(float zoom)
 
 
 static const char *vertexShaderSource =
-    "attribute vec4 vertex;\n"
-    "attribute vec4 color;\n"
-    "varying vec4 myCol;\n"
-    "uniform mat4 projMatrix;\n"
-    "uniform mat4 mvMatrix;\n"
+    "attribute lowp vec4 vertex;\n"
+    "attribute lowp vec4 color;\n"
+    "varying lowp vec4 myCol;\n"
+    "uniform lowp mat4 projMatrix;\n"
+    "uniform lowp mat4 mvMatrix;\n"
     "void main() {\n"
     "   myCol = color;\n"
     "   gl_Position = projMatrix * mvMatrix * vertex;\n"
     "}\n";
 
 static const char *fragmentShaderSource =
-    "varying vec4 myCol;\n"
+    "varying lowp vec4 myCol;\n"
     "void main() {\n"
     "   gl_FragColor = myCol;\n"
     "}\n";
