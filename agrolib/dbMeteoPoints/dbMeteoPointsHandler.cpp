@@ -968,6 +968,7 @@ bool Crit3DMeteoPointsDbHandler::updatePointPropertiesGivenId(QString id, QList<
     QString queryStr = "UPDATE point_properties SET ";
     for (int i = 0; i<columnList.size(); i++)
     {
+        valueList[i] = valueList[i].replace("'", "''");
         queryStr += columnList[i]+" = '" + valueList[i] + "',";
     }
     queryStr.chop(1); // remove last ,
