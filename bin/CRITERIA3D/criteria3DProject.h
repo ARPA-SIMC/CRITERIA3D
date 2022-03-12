@@ -35,7 +35,7 @@
         Crit3DSnowMaps snowMaps;
         Crit3DSnow snowModel;
 
-        Crit3DGeometry geometry;
+        Crit3DGeometry* geometry;
 
         bool isMeteo, isRadiation, isCrop, isWater, isSnow;
         bool modelPause, modelStop;
@@ -85,6 +85,7 @@
         bool writeOutputPointsTables();
         bool writeOutputPointsData();
 
+        void clearGeometry();
         bool initializeGeometry();
         void shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col);
 

@@ -52,7 +52,6 @@
 #include "basicMath.h"
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
-#include <math.h>
 
 
 Crit3DOpenGLWidget::Crit3DOpenGLWidget(Crit3DGeometry *geometry, QWidget *parent)
@@ -63,7 +62,7 @@ Crit3DOpenGLWidget::Crit3DOpenGLWidget(Crit3DGeometry *geometry, QWidget *parent
       m_yTraslation(0),
       m_zoom(1.f),
       m_program(nullptr),
-      m_geometry (geometry)
+      m_geometry(geometry)
 { }
 
 Crit3DOpenGLWidget::~Crit3DOpenGLWidget()
@@ -76,12 +75,14 @@ void Crit3DOpenGLWidget::clear()
 {
     if (m_program == nullptr)
         return;
+
     makeCurrent();
     m_bufferObject.destroy();
     delete m_program;
     m_program = nullptr;
-    m_geometry->clear();
     doneCurrent();
+
+    m_geometry->clear();
 }
 
 
@@ -190,20 +191,21 @@ void Crit3DOpenGLWidget::initializeGL()
     m_program->bind();
     m_projMatrixLoc = m_program->uniformLocation("projMatrix");
     m_mvMatrixLoc = m_program->uniformLocation("mvMatrix");
+    m_program->release();
 
-    // Setup our vertex buffer object
+    // setup vertex buffer object
     m_bufferObject.create();
     m_bufferObject.bind();
     m_bufferObject.allocate(m_geometry->getData(), m_geometry->count() * sizeof(GLfloat));
 
-    // Store the vertex attribute bindings for the program
-    setupVertexAttribs();
+    m_bufferObject.bind();
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
+    m_bufferObject.release();
 
     // set vertex colors
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), m_geometry->getColors());
-
-    m_program->release();
+    glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, 3 * sizeof(GLubyte), m_geometry->getColors());
 
     // set default zoom
     setZoom(m_geometry->defaultDistance());
@@ -211,15 +213,6 @@ void Crit3DOpenGLWidget::initializeGL()
     glEnable(GL_DEPTH_TEST);
 }
 
-
-void Crit3DOpenGLWidget::setupVertexAttribs()
-{
-    m_bufferObject.bind();
-    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
-    f->glEnableVertexAttribArray(0);
-    f->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
-    m_bufferObject.release();
-}
 
 void Crit3DOpenGLWidget::paintGL()
 {

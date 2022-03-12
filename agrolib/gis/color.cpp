@@ -154,9 +154,9 @@ bool setDefaultDEMScale(Crit3DColorScale* myScale)
     myScale->initialize(4, 256);
 
     myScale->keyColor[0] = Crit3DColor(32, 160, 32);        /*!<  green */
-    myScale->keyColor[1] = Crit3DColor(255, 255, 0);        /*!<  yellow */
+    myScale->keyColor[1] = Crit3DColor(224, 224, 0);        /*!<  yellow */
     myScale->keyColor[2] = Crit3DColor(160, 64, 0);         /*!<  red */
-    myScale->keyColor[3] = Crit3DColor(255, 255, 255);      /*!<  gray */
+    myScale->keyColor[3] = Crit3DColor(224, 224, 224);      /*!<  light gray */
 
     return(myScale->classify());
 }

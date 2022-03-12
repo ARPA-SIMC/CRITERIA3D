@@ -8,8 +8,6 @@ Crit3DGeometry::Crit3DGeometry()
 
 void Crit3DGeometry::clear()
 {
-    m_dataCount = 0;
-    m_colorCount = 0;
     m_xCenter = 0;
     m_yCenter = 0;
     m_zCenter = 0;
@@ -48,28 +46,25 @@ void Crit3DGeometry::addTriangle(const gis::Crit3DPoint &p1, const gis::Crit3DPo
 
 void Crit3DGeometry::addVertex(const gis::Crit3DPoint &v)
 {
-    m_data.append(v.utm.x - m_xCenter);
-    m_data.append(v.utm.y - m_yCenter);
-    m_data.append((v.z - m_zCenter) * m_magnify);
+    m_data.push_back(v.utm.x - m_xCenter);
+    m_data.push_back(v.utm.y - m_yCenter);
+    m_data.push_back((v.z - m_zCenter) * m_magnify);
 
-    m_dataCount += 3;
 }
 
 void Crit3DGeometry::addVertexColor(const Crit3DColor &color)
 {
-    m_colors.append(float(color.red) / 255.f);
-    m_colors.append(float(color.green) / 255.f);
-    m_colors.append(float(color.blue) / 255.f);
-
-    m_colorCount += 3;
+    m_colors.push_back(color.red);
+    m_colors.push_back(color.green);
+    m_colors.push_back(color.blue);
 }
 
 void Crit3DGeometry::setVertexColor(int i, const Crit3DColor &color)
 {
-    if (i > m_colorCount / 3) return;
+    if (i > vertexCount()) return;
 
-    m_colors[i*3] = float(color.red) / 255.f;
-    m_colors[i*3+1] = float(color.green) / 255.f;
-    m_colors[i*3+2] = float(color.blue) / 255.f;
+    m_colors[i*3] = color.red;
+    m_colors[i*3+1] = color.green;
+    m_colors[i*3+2] = color.blue;
 }
 

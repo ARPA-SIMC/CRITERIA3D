@@ -1054,10 +1054,21 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
         {
             float slopeAmplification = 90.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
             float shadow = cos(aspect * float(DEG_TO_RAD)) * std::max(3.f, slope * slopeAmplification);
-            colorOut.red += short(shadow);
-            colorOut.green += short(shadow);
-            colorOut.blue += short(shadow);
+            colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
+            colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
+            colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
         }
+    }
+}
+
+
+void Crit3DProject::clearGeometry()
+{
+    if (geometry != nullptr)
+    {
+        geometry->clear();
+        delete geometry;
+        geometry = nullptr;
     }
 }
 
@@ -1070,22 +1081,23 @@ bool Crit3DProject::initializeGeometry()
         return false;
     }
 
-    geometry.clear();
+    this->clearGeometry();
+    geometry = new Crit3DGeometry();
 
     // set center
     double xCenter, yCenter;
     gis::getUtmXYFromRowCol(DEM, DEM.header->nrRows / 2, DEM.header->nrCols / 2, &xCenter, &yCenter);
     gis::updateMinMaxRasterGrid(&DEM);
     float zCenter = (DEM.maximum + DEM.minimum) * 0.5f;
-    geometry.setCenter (float(xCenter), float(yCenter), zCenter);
+    geometry->setCenter(float(xCenter), float(yCenter), zCenter);
 
     // set dimension
     float dx = float(DEM.header->nrCols * DEM.header->cellSize);
     float dy = float(DEM.header->nrRows * DEM.header->cellSize);
     float dz = DEM.maximum + DEM.minimum;
-    geometry.setDimension(dx, dy);
+    geometry->setDimension(dx, dy);
     float magnify = ((dx + dy) * 0.5f) / (dz * 5.f);
-    geometry.setMagnify(std::min(5.f, std::max(1.f, magnify)));
+    geometry->setMagnify(std::min(5.f, std::max(1.f, magnify)));
 
     // set triangles
     double x, y;
@@ -1120,7 +1132,7 @@ bool Crit3DProject::initializeGeometry()
                         p2 = gis::Crit3DPoint(x, y, z2);
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row+1, col);
-                        geometry.addTriangle(p1, p2, p3, sc1, sc2, sc3);
+                        geometry->addTriangle(p1, p2, p3, sc1, sc2, sc3);
                     }
 
                     z2 = DEM.getValueFromRowCol(row, col+1);
@@ -1130,7 +1142,7 @@ bool Crit3DProject::initializeGeometry()
                         p2 = gis::Crit3DPoint(x, y, z2);
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row, col+1);
-                        geometry.addTriangle(p3, p2, p1, sc3, sc2, sc1);
+                        geometry->addTriangle(p3, p2, p1, sc3, sc2, sc1);
                     }
                 }
             }

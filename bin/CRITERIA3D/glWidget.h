@@ -46,8 +46,6 @@ protected:
     void wheelEvent(QWheelEvent *event) override;
 
 private:
-    void setupVertexAttribs();
-
     int m_xRotation;
     int m_zRotation;
     float m_xTraslation;
@@ -62,7 +60,6 @@ private:
 
     int m_projMatrixLoc;
     int m_mvMatrixLoc;
-    int m_lightPosLoc;
 
     QMatrix4x4 m_proj;
     QMatrix4x4 m_camera;

@@ -2754,9 +2754,10 @@ void MainWindow::on_actionTopographicDistanceMapLoad_triggered()
 }
 
 
-// ---------  3D VIEW
+// -----------------  3D VIEW ------------------
 void MainWindow::on_viewer3DClosed()
 {
+    myProject.clearGeometry();
     viewer3D = nullptr;
 }
 
@@ -2776,7 +2777,7 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
         return;
     }
 
-    viewer3D = new Viewer3D(&(myProject.geometry));
+    viewer3D = new Viewer3D(myProject.geometry);
     viewer3D->show();
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
 }

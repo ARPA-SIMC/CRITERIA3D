@@ -2,8 +2,7 @@
 #define GEOMETRY_H
 
     #include <qopengl.h>
-    #include <QVector>
-    #include <QVector3D>
+    #include <vector>
     #ifndef CRIT3DCOLOR_H
         #include "color.h"
     #endif
@@ -18,11 +17,11 @@
 
         void clear();
 
-        const GLfloat *getData() const { return m_data.constData(); }
-        const GLfloat *getColors() const { return m_colors.constData(); }
+        const GLfloat *getData() const { return m_data.data(); }
+        const GLubyte *getColors() const { return m_colors.data(); }
 
-        int count() const { return m_dataCount; }
-        int vertexCount() const { return m_dataCount / 3; }
+        int count() const { return m_data.size(); }
+        int vertexCount() const { return m_data.size() / 3; }
         float defaultDistance() const { return std::max(m_dx, m_dy); }
 
         void setMagnify(float magnify) { m_magnify = magnify; }
@@ -39,11 +38,8 @@
         void addVertex(const gis::Crit3DPoint &v);
         void addVertexColor(const Crit3DColor &color);
 
-        QVector<GLfloat> m_data;
-        QVector<GLfloat> m_colors;
-
-        int m_dataCount;
-        int m_colorCount;
+        std::vector<GLfloat> m_data;
+        std::vector<GLubyte> m_colors;
 
         float m_dx, m_dy;
         float m_xCenter, m_yCenter, m_zCenter;
