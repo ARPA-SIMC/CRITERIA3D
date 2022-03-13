@@ -1052,8 +1052,14 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
         float slope = radiationMaps->slopeMap->getValueFromRowCol(row, col);
         if (! isEqual(slope, radiationMaps->slopeMap->header->flag))
         {
+            if (slope > 45)
+            {
+                colorOut.red = (colorOut.red + 192) / 2;
+                colorOut.green = (colorOut.green + 192) / 2;
+                colorOut.blue = (colorOut.blue + 192) / 2;
+            }
             float slopeAmplification = 90.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
-            float shadow = cos(aspect * float(DEG_TO_RAD)) * std::max(3.f, slope * slopeAmplification);
+            float shadow = -cos(aspect * float(DEG_TO_RAD)) * std::max(3.f, slope * slopeAmplification);
             colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
             colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
             colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
@@ -1096,7 +1102,7 @@ bool Crit3DProject::initializeGeometry()
     float dy = float(DEM.header->nrRows * DEM.header->cellSize);
     float dz = DEM.maximum + DEM.minimum;
     geometry->setDimension(dx, dy);
-    float magnify = ((dx + dy) * 0.5f) / (dz * 5.f);
+    float magnify = ((dx + dy) * 0.5f) / (dz * 10.f);
     geometry->setMagnify(std::min(5.f, std::max(1.f, magnify)));
 
     // set triangles

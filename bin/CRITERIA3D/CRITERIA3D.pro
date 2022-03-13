@@ -6,7 +6,7 @@
 #
 #-----------------------------------------------------
 
-QT       += core gui network widgets sql xml charts
+QT  += core gui network widgets sql xml charts
 greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat openglwidgets
 
 TEMPLATE = app
@@ -28,6 +28,7 @@ INCLUDEPATH +=  ./shared  \
                 ../../agrolib/graphics  ../../agrolib/commonDialogs \
                 ../../mapGraphics ../../agrolib/meteoWidget
 
+LIBS += -lopengl32
 
 CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/graphics/debug -lgraphics

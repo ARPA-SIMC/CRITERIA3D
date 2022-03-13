@@ -49,9 +49,12 @@
 ****************************************************************************/
 
 #include "glWidget.h"
+#include "commonConstants.h"
 #include "basicMath.h"
+#include <math.h>
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
+#include <QOpenGLFunctions_4_0_Core>
 
 
 Crit3DOpenGLWidget::Crit3DOpenGLWidget(Crit3DGeometry *geometry, QWidget *parent)
@@ -80,6 +83,8 @@ void Crit3DOpenGLWidget::clear()
     m_bufferObject.destroy();
     delete m_program;
     m_program = nullptr;
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
     doneCurrent();
 
     m_geometry->clear();
@@ -158,7 +163,23 @@ void Crit3DOpenGLWidget::setZoom(float zoom)
 }
 
 
+void Crit3DOpenGLWidget::setMagnify(float magnify)
+{
+    if (! isEqual(magnify * 0.1f, m_geometry->magnify()))
+    {
+        m_geometry->setMagnify(magnify * 0.1f);
+
+        m_bufferObject.bind();
+        m_bufferObject.allocate(m_geometry->getVertices(), m_geometry->dataCount() * sizeof(GLfloat));
+        m_bufferObject.release();
+
+        update();
+    }
+}
+
+
 static const char *vertexShaderSource =
+    "#version 330 core\n"
     "attribute lowp vec4 vertex;\n"
     "attribute lowp vec4 color;\n"
     "varying lowp vec4 myCol;\n"
@@ -170,6 +191,7 @@ static const char *vertexShaderSource =
     "}\n";
 
 static const char *fragmentShaderSource =
+    "#version 330 core\n"
     "varying lowp vec4 myCol;\n"
     "void main() {\n"
     "   gl_FragColor = myCol;\n"
@@ -196,9 +218,7 @@ void Crit3DOpenGLWidget::initializeGL()
     // setup vertex buffer object
     m_bufferObject.create();
     m_bufferObject.bind();
-    m_bufferObject.allocate(m_geometry->getData(), m_geometry->count() * sizeof(GLfloat));
-
-    m_bufferObject.bind();
+    m_bufferObject.allocate(m_geometry->getVertices(), m_geometry->dataCount() * sizeof(GLfloat));
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
     m_bufferObject.release();
@@ -211,6 +231,10 @@ void Crit3DOpenGLWidget::initializeGL()
     setZoom(m_geometry->defaultDistance());
 
     glEnable(GL_DEPTH_TEST);
+    // hidden face
+    //glEnable(GL_CULL_FACE);
+    // wireframe
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 
@@ -219,18 +243,21 @@ void Crit3DOpenGLWidget::paintGL()
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_camera.setToIdentity();
-    m_camera.translate(m_xTraslation, m_yTraslation, -m_zoom);
-    m_camera.rotate(- float(m_xRotation / DEGREE_MULTIPLY), 1, 0, 0);
-    m_camera.rotate(float(m_zRotation / DEGREE_MULTIPLY), 0, 0, 1);
+    m_camera.translate(0, 0, -m_zoom);
+
+    m_world.setToIdentity();
+
+    m_world.rotate(float(-m_xRotation / DEGREE_MULTIPLY), 1, 0, 0);
+    m_world.rotate(float(m_zRotation / DEGREE_MULTIPLY), 0, 0, 1);
+    m_world.translate(m_xTraslation, m_yTraslation, 0);
 
     m_program->bind();
     m_program->setUniformValue(m_projMatrixLoc, m_proj);
     m_program->setUniformValue(m_mvMatrixLoc, m_camera * m_world);
-
     glDrawArrays(GL_TRIANGLES, 0, m_geometry->vertexCount());
-
     m_program->release();
 }
+
 
 void Crit3DOpenGLWidget::resizeGL(int w, int h)
 {
@@ -250,8 +277,10 @@ void Crit3DOpenGLWidget::mouseMoveEvent(QMouseEvent *event)
 
     if (event->buttons() & Qt::LeftButton)
     {
-        setXTraslation(m_xTraslation + m_zoom * float(dx) * 0.002f);
-        setYTraslation(m_yTraslation - m_zoom * float(dy) * 0.002f);
+        float cosAngle = cos(m_zRotation / DEGREE_MULTIPLY * DEG_TO_RAD);
+        float sinAngle = sin(m_zRotation / DEGREE_MULTIPLY * DEG_TO_RAD);
+        setXTraslation(m_xTraslation + m_zoom * (dx * cosAngle - dy * sinAngle) * 0.002f);
+        setYTraslation(m_yTraslation - m_zoom * (dy * cosAngle + dx * sinAngle) * 0.002f);
     }
     else if (event->buttons() & Qt::RightButton)
     {

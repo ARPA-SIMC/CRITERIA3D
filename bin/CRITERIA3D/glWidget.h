@@ -21,6 +21,7 @@ class Crit3DOpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 public:
     Crit3DOpenGLWidget(Crit3DGeometry *m_geometry, QWidget *parent = nullptr);
     ~Crit3DOpenGLWidget() override;
+    void clear();
 
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
@@ -31,7 +32,7 @@ public slots:
     void setXTraslation(float traslation);
     void setYTraslation(float traslation);
     void setZoom(float zoom);
-    void clear();
+    void setMagnify(float magnify);
 
 signals:
     void xRotationChanged(int angle);

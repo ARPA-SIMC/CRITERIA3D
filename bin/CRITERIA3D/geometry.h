@@ -17,14 +17,15 @@
 
         void clear();
 
-        const GLfloat *getData() const { return m_data.data(); }
+        const GLfloat *getVertices() const { return m_vertices.data(); }
         const GLubyte *getColors() const { return m_colors.data(); }
 
-        int count() const { return m_data.size(); }
-        int vertexCount() const { return m_data.size() / 3; }
+        int dataCount() const { return m_vertices.size(); }
+        int vertexCount() const { return m_vertices.size() / 3; }
         float defaultDistance() const { return std::max(m_dx, m_dy); }
+        float magnify() const { return m_magnify; }
 
-        void setMagnify(float magnify) { m_magnify = magnify; }
+        void setMagnify(float magnify);
         void setCenter(float x, float y, float z);
         void setDimension(float dx, float dy);
 
@@ -38,7 +39,7 @@
         void addVertex(const gis::Crit3DPoint &v);
         void addVertexColor(const Crit3DColor &color);
 
-        std::vector<GLfloat> m_data;
+        std::vector<GLfloat> m_vertices;
         std::vector<GLubyte> m_colors;
 
         float m_dx, m_dy;

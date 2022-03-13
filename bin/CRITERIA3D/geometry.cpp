@@ -15,7 +15,7 @@ void Crit3DGeometry::clear()
     m_dy = 0;
     m_magnify = 1;
 
-    m_data.clear();
+    m_vertices.clear();
     m_colors.clear();
 }
 
@@ -46,9 +46,9 @@ void Crit3DGeometry::addTriangle(const gis::Crit3DPoint &p1, const gis::Crit3DPo
 
 void Crit3DGeometry::addVertex(const gis::Crit3DPoint &v)
 {
-    m_data.push_back(v.utm.x - m_xCenter);
-    m_data.push_back(v.utm.y - m_yCenter);
-    m_data.push_back((v.z - m_zCenter) * m_magnify);
+    m_vertices.push_back(v.utm.x - m_xCenter);
+    m_vertices.push_back(v.utm.y - m_yCenter);
+    m_vertices.push_back((v.z - m_zCenter) * m_magnify);
 
 }
 
@@ -66,5 +66,18 @@ void Crit3DGeometry::setVertexColor(int i, const Crit3DColor &color)
     m_colors[i*3] = color.red;
     m_colors[i*3+1] = color.green;
     m_colors[i*3+2] = color.blue;
+}
+
+
+void Crit3DGeometry::setMagnify(float magnify)
+{
+    float ratio = magnify / m_magnify;
+
+    for (int i = 0; i < vertexCount(); i++)
+    {
+        m_vertices[i*3+2] *= ratio;
+    }
+
+    m_magnify = magnify;
 }
 

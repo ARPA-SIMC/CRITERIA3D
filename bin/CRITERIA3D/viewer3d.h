@@ -17,13 +17,13 @@
     protected:
 
     private:
-        QSlider *verticalSlider(int maximumAngle);
-        QSlider *horizontalSlider(int maximumAngle);
+        QSlider *verticalSlider(int minimum, int maximum, int step, int tick);
+        QSlider *horizontalSlider(int minimum, int maximum, int step, int tick);
 
         Crit3DOpenGLWidget *glWidget;
-        QSlider *xSlider;
-        QSlider *ySlider;
-        QSlider *zSlider;
+        QSlider *turnSlider;
+        QSlider *rotateSlider;
+        QSlider *magnifySlider;
     };
 
 #endif
