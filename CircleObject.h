@@ -24,6 +24,7 @@ public:
     void setFillColor(const QColor& color);
     void setCurrentValue(qreal currentValue);
     void setShowValue(bool isShowValue);
+    void setMarked(bool isMarked);
     
 signals:
     

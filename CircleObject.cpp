@@ -68,6 +68,17 @@ void CircleObject::setRadius(qreal radius)
     emit this->redrawRequested();
 }
 
+
+void CircleObject::setMarked(bool isMarked)
+{
+    if (_isMarked == isMarked)
+        return;
+
+    _isMarked = isMarked;
+    emit this->redrawRequested();
+}
+
+
 qreal CircleObject::currentValue() const
 {
     return _currentValue;
@@ -75,12 +86,18 @@ qreal CircleObject::currentValue() const
 
 void CircleObject::setCurrentValue(qreal currentValue)
 {
+    if (_currentValue == currentValue)
+        return;
+
     _currentValue = currentValue;
     emit this->redrawRequested();
 }
 
 void CircleObject::setShowValue(bool isShowValue)
 {
+    if (_isShowValue == isShowValue)
+        return;
+
     _isShowValue = isShowValue;
     emit this->redrawRequested();
 }
