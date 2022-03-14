@@ -1,6 +1,7 @@
 #include "CircleObject.h"
 
 #include <QtDebug>
+#include <QStaticText>
 #include <QKeyEvent>
 #define NODATA -9999
 
@@ -33,16 +34,19 @@ void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)
-    painter->setRenderHint(QPainter::Antialiasing,true);
+    painter->setRenderHint(QPainter::Antialiasing, true);
+
     if (_isShowValue)
     {
         QString valueStr = "";
         if (_currentValue != NODATA)
         {
-            valueStr = QString::number(_currentValue);
+            valueStr = QString::number(_currentValue, 'f', 1);
         }
         painter->scale(1,-1);
-        painter->drawText(-3 * int(_radius), int(_radius), valueStr);
+        QStaticText myText = QStaticText(valueStr);
+        myText.setTextWidth(_radius * 6);
+        painter->drawStaticText(-int(myText.textWidth() / 2), int(_radius), myText);
     }
     else
     {
