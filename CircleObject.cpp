@@ -46,7 +46,10 @@ void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
         painter->scale(1,-1);
         QStaticText myText = QStaticText(valueStr);
         myText.setTextWidth(_radius * 6);
-        painter->drawStaticText(-int(myText.textWidth() / 2), int(_radius), myText);
+        QPen myPen;
+        myPen.setColor(_fillColor);
+        painter->setPen(myPen);
+        painter->drawStaticText(-int(myText.textWidth() / 2), -int(_radius), myText);
     }
     else
     {
