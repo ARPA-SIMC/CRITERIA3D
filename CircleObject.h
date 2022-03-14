@@ -23,7 +23,8 @@ public:
     void setRadius(qreal radius);
     void setFillColor(const QColor& color);
     void setCurrentValue(qreal currentValue);
-    void setShowValue(bool isShowValue);
+    void setShowText(bool isShowText);
+    void setMultiColorText(bool isMultiColorText);
     void setMarked(bool isMarked);
     
 signals:
@@ -38,7 +39,8 @@ private:
     qreal _radius;
     qreal _currentValue;
     QColor _fillColor;
-    bool _isShowValue;
+    bool _isText;
+    bool _isMultiColorText;
     bool _isMarked;
     
 };

@@ -10,7 +10,8 @@ CircleObject::CircleObject(qreal radius, bool sizeIsZoomInvariant, QColor fillCo
 {
     _radius = qMax<qreal>(radius, 0.01);
     _currentValue = NODATA;
-    _isShowValue = false;
+    _isText = false;
+    _isMultiColorText = false;
     _isMarked = false;
 
     this->setFlag(MapGraphicsObject::ObjectIsSelectable);
@@ -36,20 +37,22 @@ void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     Q_UNUSED(widget)
     painter->setRenderHint(QPainter::Antialiasing, true);
 
-    if (_isShowValue)
+    if (_isText || _isMultiColorText)
     {
-        QString valueStr = "";
         if (_currentValue != NODATA)
         {
-            valueStr = QString::number(_currentValue, 'f', 1);
+            QString valueStr = QString::number(_currentValue, 'f', 1);
+            QStaticText myText = QStaticText(valueStr);
+            myText.setTextWidth(_radius * 6);
+            painter->scale(1,-1);
+            if (_isMultiColorText)
+            {
+                QPen myPen;
+                myPen.setColor(_fillColor);
+                painter->setPen(myPen);
+            }
+            painter->drawStaticText(-int(myText.textWidth() / 2), -int(_radius), myText);
         }
-        painter->scale(1,-1);
-        QStaticText myText = QStaticText(valueStr);
-        myText.setTextWidth(_radius * 6);
-        QPen myPen;
-        myPen.setColor(_fillColor);
-        painter->setPen(myPen);
-        painter->drawStaticText(-int(myText.textWidth() / 2), -int(_radius), myText);
     }
     else
     {
@@ -100,14 +103,25 @@ void CircleObject::setCurrentValue(qreal currentValue)
     emit this->redrawRequested();
 }
 
-void CircleObject::setShowValue(bool isShowValue)
+void CircleObject::setShowText(bool isShowText)
 {
-    if (_isShowValue == isShowValue)
+    if (_isText == isShowText)
         return;
 
-    _isShowValue = isShowValue;
+    _isText = isShowText;
     emit this->redrawRequested();
 }
+
+
+void CircleObject::setMultiColorText(bool isMultiColorText)
+{
+    if (_isMultiColorText == isMultiColorText)
+        return;
+
+    _isMultiColorText = isMultiColorText;
+    emit this->redrawRequested();
+}
+
 
 QColor CircleObject::color() const
 {
