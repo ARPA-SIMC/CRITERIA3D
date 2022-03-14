@@ -103,8 +103,9 @@
         bool loadDBPoints();
         bool loadGrapevineParameters();
         bool loadTrainingSystems();
-        bool loadSoils();
+
         bool loadFieldBook();
+        float findSoilMaxDepth();
         soil::Crit3DSoil *loadHorizons(int idSoil, QString soil_code);
 
         void initializeVine3DProject();

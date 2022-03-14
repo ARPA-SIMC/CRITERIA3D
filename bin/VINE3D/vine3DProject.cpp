@@ -91,6 +91,9 @@ bool Vine3DProject::loadVine3DProjectSettings(QString projectFile)
         idArea = projectSettings->value("id").toString();
         fieldMapName = projectSettings->value("modelCaseMap").toString();
         dbVine3DFileName = projectSettings->value("db_vine3d").toString();
+        soilDbFileName = projectSettings->value("soil_db").toString();
+        if (soilDbFileName == "")
+            soilDbFileName = projectSettings->value("db_soil").toString();
     projectSettings->endGroup();
 
     projectSettings->beginGroup("settings");
@@ -149,7 +152,11 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
 
     statePlantMaps = new Crit3DStatePlantMaps(DEM);
 
-    if (!loadVine3DProjectParameters() || !loadSoils() || !loadTrainingSystems()
+    // soil data
+    if (soilDbFileName != "") loadSoilDatabase(soilDbFileName);
+    soilDepth = findSoilMaxDepth();
+
+    if (!loadVine3DProjectParameters() || !loadTrainingSystems()
         || !loadAggregatedMeteoVarCodes() || !loadDBPoints())
     {
         logError();
@@ -734,26 +741,14 @@ bool Vine3DProject::loadAggregatedMeteoVarCodes()
 }
 
 
-bool Vine3DProject::loadSoils()
+float Vine3DProject::findSoilMaxDepth()
 {
-    logInfo("Read soils...");
-
-    if (! loadAllSoils(&dbVine3D, &soilList, texturalClassList, &fittingOptions, &errorString))
-    {
-        logError();
-        return false;
-    }
-    nrSoils = unsigned(soilList.size());
-
     double maxSoilDepth = 0;
     for (unsigned int i = 0; i < nrSoils; i++)
     {
         maxSoilDepth = MAXVALUE(maxSoilDepth, soilList[i].totalDepth);
     }
-    soilDepth = MINVALUE(soilDepth, maxSoilDepth);
-
-    logInfo("Soil depth = " + QString::number(this->soilDepth));
-    return true;
+    return MINVALUE(soilDepth, maxSoilDepth);
 }
 
 int Vine3DProject::getAggregatedVarCode(int rawVarCode)
