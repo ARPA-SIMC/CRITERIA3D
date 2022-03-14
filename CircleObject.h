@@ -38,6 +38,7 @@ private:
     qreal _currentValue;
     QColor _fillColor;
     bool _isShowValue;
+    bool _isMarked;
     
 };
 

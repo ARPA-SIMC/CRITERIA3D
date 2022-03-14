@@ -10,6 +10,7 @@ CircleObject::CircleObject(qreal radius, bool sizeIsZoomInvariant, QColor fillCo
     _radius = qMax<qreal>(radius, 0.01);
     _currentValue = NODATA;
     _isShowValue = false;
+    _isMarked = false;
 
     this->setFlag(MapGraphicsObject::ObjectIsSelectable);
     this->setFlag(MapGraphicsObject::ObjectIsMovable);
@@ -23,9 +24,9 @@ CircleObject::~CircleObject()
 QRectF CircleObject::boundingRect() const
 {
     return QRectF(-3*_radius,
-                  -1*_radius,
+                  -3*_radius,
                   6*_radius,
-                  2*_radius);
+                  6*_radius);
 }
 
 void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -41,12 +42,18 @@ void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
             valueStr = QString::number(_currentValue);
         }
         painter->scale(1,-1);
-        painter->drawText(-3*_radius, _radius, valueStr);
+        painter->drawText(-3 * int(_radius), int(_radius), valueStr);
     }
     else
     {
         painter->setBrush(_fillColor);
         painter->drawEllipse(QPointF(0,0), _radius, _radius);
+    }
+
+    if (_isMarked)
+    {
+        painter->setBrush(Qt::transparent);
+        painter->drawEllipse(QPointF(0,0), _radius*2, _radius*2);
     }
 }
 
