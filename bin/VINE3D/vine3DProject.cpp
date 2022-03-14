@@ -45,7 +45,7 @@ void Vine3DProject::initializeVine3DProject()
 
     lastDateTransmissivity.setDate(1900,1,1);
 
-    nrCultivar = 0;
+    cultivar.clear();
 
     nrModelCases = 0;
 
@@ -109,7 +109,7 @@ bool Vine3DProject::openVine3DDatabase(QString fileName)
     }
 
     dbVine3D = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
-    dbVine3D.setDatabaseName(fileName);
+    dbVine3D.setDatabaseName(getCompleteFileName(fileName, ""));
 
     if (!dbVine3D.open())
     {
@@ -197,7 +197,9 @@ bool Vine3DProject::loadGrapevineParameters()
 {
     logInfo ("Read grapevine parameters...");
 
-    QString myQueryString =
+    QSqlQuery myQuery(dbVine3D);
+
+    /*myQuery.prepare(
             " SELECT id_cultivar, name,"
             " phenovitis_force_physiological_maturity, miglietta_radiation_use_efficiency,"
             " miglietta_d, miglietta_f, miglietta_fruit_biomass_offset,"
@@ -208,42 +210,41 @@ bool Vine3DProject::loadGrapevineParameters()
             " phenovitis_force_flowering, phenovitis_force_veraison,"
             " phenovitis_force_fruitset, degree_days_veraison, hydrall_carbox_rate"
             " FROM cultivar"
-            " ORDER BY id_cultivar";
+            " ORDER BY id_cultivar");*/
 
-    QSqlQuery myQuery = dbVine3D.exec(myQueryString);
-    if (myQuery.size() == -1)
+    myQuery.prepare("SELECT * FROM cultivar");
+
+    if (! myQuery.exec())
     {
-        errorString = "wrong Grapevine parameters" + myQuery.lastError().text();
+        errorString = "Error reading grapevine parameters. " + myQuery.lastError().text();
         return false;
     }
-    //initialize vines
-    this->nrCultivar = myQuery.size();
-    this->cultivar = (TVineCultivar *) calloc(this->nrCultivar, sizeof(TVineCultivar));
 
     //read values
-    int i = 0;
+    TVineCultivar myCultivar;
+
     while (myQuery.next())
     {
-        this->cultivar[i].id = myQuery.value(0).toInt();
-        //strcpy(this->cultivar[i].name.cultivar, myQuery.value(1).toString().toStdString().c_str());
-        this->cultivar[i].parameterPhenoVitis.criticalForceStatePhysiologicalMaturity = myQuery.value(2).toDouble();
-        this->cultivar[i].parameterBindiMiglietta.radiationUseEfficiency = myQuery.value(3).toDouble();
-        this->cultivar[i].parameterBindiMiglietta.d = myQuery.value(4).toDouble();
-        this->cultivar[i].parameterBindiMiglietta.f = myQuery.value(5).toDouble();
-        this->cultivar[i].parameterBindiMiglietta.fruitBiomassOffset = myQuery.value(6).toDouble();
-        this->cultivar[i].parameterBindiMiglietta.fruitBiomassSlope = myQuery.value(7).toDouble();
-        this->cultivar[i].parameterWangLeuning.psiLeaf = myQuery.value(8).toDouble();
-        this->cultivar[i].parameterWangLeuning.waterStressThreshold = myQuery.value(9).toDouble();
-        this->cultivar[i].parameterWangLeuning.sensitivityToVapourPressureDeficit = myQuery.value(10).toDouble();
-        this->cultivar[i].parameterWangLeuning.alpha = myQuery.value(11).toDouble() * 1E5;
-        this->cultivar[i].parameterPhenoVitis.co1 = myQuery.value(12).toDouble();
-        this->cultivar[i].parameterPhenoVitis.criticalChilling = myQuery.value(13).toDouble();
-        this->cultivar[i].parameterPhenoVitis.criticalForceStateFlowering = myQuery.value(14).toDouble();
-        this->cultivar[i].parameterPhenoVitis.criticalForceStateVeraison = myQuery.value(15).toDouble();
-        this->cultivar[i].parameterPhenoVitis.criticalForceStateFruitSet = myQuery.value(16).toDouble();
-        this->cultivar[i].parameterPhenoVitis.degreeDaysAtVeraison = myQuery.value(17).toDouble();
-        this->cultivar[i].parameterWangLeuning.maxCarboxRate = myQuery.value(18).toDouble();
-        i++;
+        myCultivar.id = myQuery.value(0).toInt();
+        myCultivar.parameterPhenoVitis.criticalForceStatePhysiologicalMaturity = myQuery.value(2).toDouble();
+        myCultivar.parameterBindiMiglietta.radiationUseEfficiency = myQuery.value(3).toDouble();
+        myCultivar.parameterBindiMiglietta.d = myQuery.value(4).toDouble();
+        myCultivar.parameterBindiMiglietta.f = myQuery.value(5).toDouble();
+        myCultivar.parameterBindiMiglietta.fruitBiomassOffset = myQuery.value(6).toDouble();
+        myCultivar.parameterBindiMiglietta.fruitBiomassSlope = myQuery.value(7).toDouble();
+        myCultivar.parameterWangLeuning.psiLeaf = myQuery.value(8).toDouble();
+        myCultivar.parameterWangLeuning.waterStressThreshold = myQuery.value(9).toDouble();
+        myCultivar.parameterWangLeuning.sensitivityToVapourPressureDeficit = myQuery.value(10).toDouble();
+        myCultivar.parameterWangLeuning.alpha = myQuery.value(11).toDouble() * 1E5;
+        myCultivar.parameterPhenoVitis.co1 = myQuery.value(12).toDouble();
+        myCultivar.parameterPhenoVitis.criticalChilling = myQuery.value(13).toDouble();
+        myCultivar.parameterPhenoVitis.criticalForceStateFlowering = myQuery.value(14).toDouble();
+        myCultivar.parameterPhenoVitis.criticalForceStateVeraison = myQuery.value(15).toDouble();
+        myCultivar.parameterPhenoVitis.criticalForceStateFruitSet = myQuery.value(16).toDouble();
+        myCultivar.parameterPhenoVitis.degreeDaysAtVeraison = myQuery.value(17).toDouble();
+        myCultivar.parameterWangLeuning.maxCarboxRate = myQuery.value(18).toDouble();
+
+        cultivar.push_back(myCultivar);
     }
 
     return true;
@@ -590,8 +591,8 @@ bool Vine3DProject::readFieldQuery(QSqlQuery myQuery, int* idField, Crit3DLandus
     //CULTIVAR
     idCultivar = myQuery.value("id_cultivar").toInt();
     i=0;
-    while (i < this->nrCultivar && idCultivar != cultivar[i].id) i++;
-    if (i == this->nrCultivar)
+    while (i < cultivar.size() && idCultivar != cultivar[i].id) i++;
+    if (i == cultivar.size())
     {
         this->errorString = "cultivar " + QString::number(idCultivar) + " not found" + myQuery.lastError().text();
         return false;

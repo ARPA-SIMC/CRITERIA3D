@@ -64,8 +64,7 @@
         gis::Crit3DRasterGrid dataRaster;
         gis::Crit3DRasterGrid modelCaseIndexMap;
 
-        TVineCultivar* cultivar;
-        int nrCultivar;
+        std::vector <TVineCultivar> cultivar;
 
         Crit3DModelCase* modelCases;
         TtrainingSystem* trainingSystems;

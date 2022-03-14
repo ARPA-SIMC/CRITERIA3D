@@ -113,9 +113,14 @@ double getSoilVar(Vine3DProject* myProject, int soilIndex, int layerIndex, soil:
     }
     else if (myVar == soil::soilWaterContentWP)
     {
-        double signPsiLeaf = - myProject->cultivar->parameterWangLeuning.psiLeaf;         // [kPa]
-        // [m^3 m^-3]
-        return soil::thetaFromSignPsi(signPsiLeaf, &(myProject->soilList[soilIndex].horizon[horizonIndex]));
+        if (myProject->cultivar.size() > 0)
+        {
+            double signPsiLeaf = - myProject->cultivar[0].parameterWangLeuning.psiLeaf;         // [kPa]
+            // [m^3 m^-3]
+            return soil::thetaFromSignPsi(signPsiLeaf, &(myProject->soilList[soilIndex].horizon[horizonIndex]));
+        }
+        else
+            return NODATA;
     }
     else
     {
