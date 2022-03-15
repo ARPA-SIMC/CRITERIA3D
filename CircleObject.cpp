@@ -25,10 +25,10 @@ CircleObject::~CircleObject()
 
 QRectF CircleObject::boundingRect() const
 {
-    return QRectF(-3*_radius,
-                  -3*_radius,
-                  6*_radius,
-                  6*_radius);
+    return QRectF(-4*_radius,
+                  -2*_radius,
+                  8*_radius,
+                  4*_radius);
 }
 
 void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
@@ -43,7 +43,7 @@ void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
         {
             QString valueStr = QString::number(_currentValue, 'f', 1);
             QStaticText myText = QStaticText(valueStr);
-            myText.setTextWidth(_radius * 6);
+            myText.setTextWidth(_radius * 8);
             painter->scale(1,-1);
             if (_isMultiColorText)
             {
