@@ -450,6 +450,16 @@ bool Crit3DMeteoPoint::isDateLoadedH(const Crit3DDate& myDate)
         return true;
 }
 
+bool Crit3DMeteoPoint::isDateTimeLoadedH(const Crit3DTime& myDateTime)
+{
+    if (nrObsDataDaysH == 0)
+        return false;
+    else if (myDateTime < Crit3DTime(obsDataH[0].date,1) || myDateTime >= Crit3DTime(obsDataH[nrObsDataDaysH - 1].date,1))
+        return false;
+    else
+        return true;
+}
+
 bool Crit3DMeteoPoint::isDateIntervalLoadedH(const Crit3DDate& date1, const Crit3DDate& date2)
 {
     if (nrObsDataDaysH == 0)
