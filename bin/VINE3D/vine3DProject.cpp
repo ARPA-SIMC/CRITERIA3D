@@ -46,8 +46,9 @@ void Vine3DProject::initializeVine3DProject()
     lastDateTransmissivity.setDate(1900,1,1);
 
     cultivar.clear();
-
-    nrModelCases = 0;
+    trainingSystems.clear();
+    modelCases.clear();
+    fieldBook.clear();
 
     statePlant.stateGrowth.initialize();
     statePlant.statePheno.initialize();
@@ -156,19 +157,27 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     if (soilDbFileName != "") loadSoilDatabase(soilDbFileName);
     soilDepth = findSoilMaxDepth();
 
-    if (!loadVine3DProjectParameters() || !loadTrainingSystems()
-        || !loadAggregatedMeteoVarCodes() || !loadDBPoints())
+    // VINE3D parameters
+    if (!loadVine3DProjectParameters() || !loadTrainingSystems())
     {
         logError();
         dbVine3D.close();
         return false;
     }
 
+    // VINE3D fields
     if (!loadFieldsProperties() || !loadFieldBook())
     {
         logError();
         dbVine3D.close();
         return(false);
+    }
+
+    //meteo
+    if (!loadAggregatedMeteoVarCodes() || !loadDBPoints())
+    {
+        logError();
+        return false;
     }
 
     if (!loadFieldShape())
@@ -294,114 +303,92 @@ bool Vine3DProject::loadTrainingSystems()
 
 bool Vine3DProject::loadFieldBook()
 {
-    QDate myDate;
-    int i, nrOperations, idField;
-
     logInfo ("Read field book table...");
-    QString myQueryString =
+
+    QSqlQuery myQuery(dbVine3D);
+
+    myQuery.prepare(
             " SELECT date_, id_field, irrigated, grass, pinchout, leaf_removal,"
             " harvesting_performed, cluster_thinning, tartaric_acid, irrigation_hours, thinning_percentage"
             " FROM field_book"
-            " ORDER BY date_, id_field";
+            " ORDER BY date_, id_field");
 
-    QSqlQuery myQuery = dbVine3D.exec(myQueryString);
-
-    if (myQuery.size() == -1)
+    if (! myQuery.exec())
     {
-        this->errorString = "missing field_book\n" + myQuery.lastError().text();
+        errorString = "missing field_book\n" + myQuery.lastError().text();
         return false;
     }
 
-    //count number of operations
-    nrOperations = 0;
+    TVine3DOperation myOperation;
+
+    int idBook = 0;
     while (myQuery.next())
     {
-        for(i=2; i<=8; i++)
+        for (int i = 2; i <= 8; i++)
         {
-            if (myQuery.value(i).toFloat() > 0)
-                nrOperations++;
-        }
-    }
-    this->nrFieldOperations = nrOperations;
-    this->fieldBook = (TfieldBook *) calloc(this->nrFieldOperations, sizeof(TfieldBook));
-
-    // read values
-    myQuery.first();
-    int idBook = 0;
-    while (idBook < this->nrFieldOperations)
-    {
-        myDate = myQuery.value(0).toDate();
-        idField = myQuery.value(1).toInt();
-
-        nrOperations = 0;
-        for(i=2; i<=8; i++)
-        {
-            if (myQuery.value(i).toFloat() > 0)
-                nrOperations++;
-        }
-        i = 2;
-
-        while (nrOperations > 0)
-        {
-            this->fieldBook[idBook].idField = idField;
-            this->fieldBook[idBook].operationDate = myDate;
             if (myQuery.value(i).toFloat() > 0)
             {
+                myOperation.operationDate = myQuery.value(0).toDate();
+                myOperation.idField = myQuery.value(1).toInt();
+
                 //irrigation
                 if (i == 2)
                 {
-                    this->fieldBook[idBook].operation = irrigationOperation;
-                    this->fieldBook[idBook].quantity = myQuery.value(9).toFloat();
+                    myOperation.operation = irrigationOperation;
+                    myOperation.quantity = myQuery.value(9).toFloat();
+                    fieldBook.push_back(myOperation);
                 }
                 //grass sowing/removal
                 if (i == 3)
                 {
                     if (myQuery.value(3).toInt() == 1)
-                        this->fieldBook[idBook].operation = grassSowing;
-                    if (myQuery.value(3).toInt() > 1)
-                        this->fieldBook[idBook].operation = grassRemoving;
-                    this->fieldBook[idBook].quantity = 0.0;
+                        myOperation.operation = grassSowing;
+                    else if (myQuery.value(3).toInt() > 1)
+                        myOperation.operation = grassRemoving;
+
+                    myOperation.quantity = 0.0;
+                    fieldBook.push_back(myOperation);
                 }
                 //pinchout == trimming
                 if (i == 4)
                 {
                     this->fieldBook[idBook].operation = trimming;
                     this->fieldBook[idBook].quantity = 2.5;
+                    fieldBook.push_back(myOperation);
                 }
                 //leaf removal
                 if (i == 5)
                 {
                     this->fieldBook[idBook].operation = leafRemoval;
                     this->fieldBook[idBook].quantity = 3.0;
+                    fieldBook.push_back(myOperation);
                 }
                 //harvesting
                 if (i == 6)
                 {
                     this->fieldBook[idBook].operation = harvesting;
                     this->fieldBook[idBook].quantity = 0.0;
+                    fieldBook.push_back(myOperation);
                 }
                 //cluster thinning
                 if (i == 7)
                 {
                     this->fieldBook[idBook].operation = clusterThinning;
                     this->fieldBook[idBook].quantity = myQuery.value(10).toFloat();
+                    fieldBook.push_back(myOperation);
                 }
                 //tartaric acid analysis
                 if (i == 8)
                 {
                     this->fieldBook[idBook].operation = tartaricAnalysis;
                     this->fieldBook[idBook].quantity = myQuery.value(i).toFloat();
+                    fieldBook.push_back(myOperation);
                 }
-
-                nrOperations--;
-                idBook++;
             }
-            i++;
         }
-        myQuery.next();
     }
 
-    return(true);
+    return true;
 }
 
 
@@ -493,24 +480,24 @@ bool Vine3DProject::loadFieldShape()
     */
 }
 
-int getCaseIndexFromId(int caseId, Crit3DModelCase* modelCases, int nrModelCases)
+int getCaseIndexFromId(int caseId, std::vector <Crit3DModelCase> modelCases)
 {
-    if (nrModelCases == 0)
+    if (modelCases.size() == 0)
         return NODATA;
 
     int i;
-    for (i=0; i < nrModelCases; i++)
+    for (i=0; i < modelCases.size(); i++)
         if (caseId == modelCases[i].id)
             return i;
 
     //default value
-    if (i == nrModelCases - 1)
+    if (i == modelCases.size() - 1)
         return 0;
 
     return NODATA;
 }
 
-void modelCaseIndexMapIndexFromId(gis::Crit3DRasterGrid* myGrid, Crit3DModelCase* modelCases, int nrModelCases)
+void modelCaseIndexMapIndexFromId(gis::Crit3DRasterGrid* myGrid, std::vector <Crit3DModelCase> modelCases)
 {
     int fieldId, fieldIndex;
 
@@ -521,7 +508,7 @@ void modelCaseIndexMapIndexFromId(gis::Crit3DRasterGrid* myGrid, Crit3DModelCase
             fieldId = int(myGrid->value[myRow][myCol]);
             if (fieldId != int(myGrid->header->flag))
             {
-                fieldIndex = getCaseIndexFromId(fieldId, modelCases, nrModelCases);
+                fieldIndex = getCaseIndexFromId(fieldId, modelCases);
                 if (fieldIndex != NODATA)
                     myGrid->value[myRow][myCol] = fieldIndex;
             }
@@ -548,32 +535,12 @@ bool Vine3DProject::loadFieldMap(QString myFileName)
     gis::prevailingMap(myGrid, &(modelCaseIndexMap));
     gis::updateMinMaxRasterGrid(&(modelCaseIndexMap));
 
-    modelCaseIndexMapIndexFromId(&modelCaseIndexMap, this->modelCases, this->nrModelCases);
+    modelCaseIndexMapIndexFromId(&modelCaseIndexMap, modelCases);
 
     this->logInfo ("Field map = " + myFileName);
     return (true);
 }
 
-
-
-bool Vine3DProject::setField(int fieldIndex, int fieldId, Crit3DLanduse landuse, int soilIndex, int vineIndex, int trainingIndex,
-                             float maxLaiGrass, float maxIrrigationRate)
-{
-    modelCases[fieldIndex].id = fieldId;
-    modelCases[fieldIndex].landuse = landuse;
-    modelCases[fieldIndex].soilIndex = soilIndex;
-    modelCases[fieldIndex].cultivar = &(this->cultivar[vineIndex]);
-    modelCases[fieldIndex].maxLAIGrass = maxLaiGrass;
-    modelCases[fieldIndex].maxIrrigationRate = maxIrrigationRate;
-
-    float density = 1 / (trainingSystems[trainingIndex].rowDistance * trainingSystems[trainingIndex].plantDistance);
-
-    modelCases[fieldIndex].trainingSystem = trainingIndex;
-    modelCases[fieldIndex].plantDensity = density;
-    modelCases[fieldIndex].shootsPerPlant = this->trainingSystems[trainingIndex].shootsPerPlant;
-
-    return true;
-}
 
 bool Vine3DProject::readFieldQuery(QSqlQuery myQuery, int* idField, Crit3DLanduse* landuse, int* vineIndex, int* trainingIndex,
                                    int* soilIndex, float* maxLaiGrass, float* maxIrrigationRate)
@@ -586,7 +553,7 @@ bool Vine3DProject::readFieldQuery(QSqlQuery myQuery, int* idField, Crit3DLandus
     std::string landuse_name = myQuery.value("landuse").toString().toStdString();
     if (landuseNames.find(landuse_name) == landuseNames.end())
     {
-        this->errorString = "Unknown landuse for field " + QString::number(*idField);
+        errorString = "Unknown landuse for field " + QString::number(*idField);
         return false;
     }
     else
@@ -598,7 +565,7 @@ bool Vine3DProject::readFieldQuery(QSqlQuery myQuery, int* idField, Crit3DLandus
     while (i < cultivar.size() && idCultivar != cultivar[i].id) i++;
     if (i == cultivar.size())
     {
-        this->errorString = "cultivar " + QString::number(idCultivar) + " not found" + myQuery.lastError().text();
+        errorString = "cultivar " + QString::number(idCultivar) + " not found" + myQuery.lastError().text();
         return false;
     }
     *vineIndex = i;
@@ -609,7 +576,7 @@ bool Vine3DProject::readFieldQuery(QSqlQuery myQuery, int* idField, Crit3DLandus
     while (i < trainingSystems.size() && idTraining != this->trainingSystems[i].id) i++;
     if (i == trainingSystems.size())
     {
-        this->errorString = "training system nr." + QString::number(idTraining) + " not found" + myQuery.lastError().text();
+        errorString = "training system nr." + QString::number(idTraining) + " not found" + myQuery.lastError().text();
         return false;
     }
     *trainingIndex = i;
@@ -623,7 +590,7 @@ bool Vine3DProject::readFieldQuery(QSqlQuery myQuery, int* idField, Crit3DLandus
 
     if (index == this->nrSoils)
     {
-        this->errorString = "soil " + QString::number(idSoil) + " not found" + myQuery.lastError().text();
+        errorString = "soil " + QString::number(idSoil) + " not found" + myQuery.lastError().text();
         return false;
     }
     *soilIndex = signed(index);
@@ -639,54 +606,54 @@ bool Vine3DProject::loadFieldsProperties()
 {
     logInfo ("Read fields properties...");
 
-    QString myQueryString;
-    QSqlQuery myQuery;
     int fieldIndex, idField, vineIndex, trainingIndex, soilIndex;
     float maxLaiGrass, maxIrrigationRate;
     Crit3DLanduse landuse;
 
-    // NR FIELDS
-    myQueryString = "SELECT COUNT(*) FROM fields";
-    myQuery = dbVine3D.exec(myQueryString);
-    if (myQuery.size() == -1)
-    {
-        this->errorString = "Error reading fields table" + myQuery.lastError().text();
-        return(false);
-    }
-    if (myQuery.next())
-        nrModelCases = myQuery.value(0).toInt();
-
-    if (nrModelCases == 0)
-    {
-        this->errorString = "Empty fields table";
-        return false;
-    }
-    this->modelCases = (Crit3DModelCase *) calloc(this->nrModelCases, sizeof(Crit3DModelCase));
+    QSqlQuery myQuery(dbVine3D);
 
     // CHECK DEFAULT
-    myQueryString = "SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields WHERE id_field=0";
-    myQuery = dbVine3D.exec(myQueryString);
-    if (myQuery.size() == -1)
+    myQuery.prepare("SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields WHERE id_field=0");
+    if (! myQuery.exec())
     {
-        this->errorString = "Wrong structure in in fields table" + myQuery.lastError().text();
-        return(false);
+        errorString = "Error reading fields table" + myQuery.lastError().text();
+        return false;
     }
-    if (myQuery.size() == 0)
+    else if (!myQuery.next())
     {
         this->errorString = "Missing default field (index = 0) in fields table";
         return(false);
     }
 
     // READ PROPERTIES
-    myQueryString = "SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields ORDER BY id_field";
-    myQuery = dbVine3D.exec(myQueryString);
+    myQuery.prepare("SELECT id_field, landuse, id_cultivar, id_training_system, id_soil, max_lai_grass, irrigation_max_rate FROM fields ORDER BY id_field");
+    if (! myQuery.exec())
+    {
+        errorString = "Error reading fields table" + myQuery.lastError().text();
+        return false;
+    }
+
     fieldIndex = 0;
+    Crit3DModelCase myCase;
+
     while (myQuery.next())
     {
         if (readFieldQuery(myQuery, &idField, &landuse, &vineIndex, &trainingIndex, &soilIndex, &maxLaiGrass, &maxIrrigationRate))
         {
-            setField(fieldIndex, idField, landuse, soilIndex, vineIndex, trainingIndex, maxLaiGrass, maxIrrigationRate);
-            fieldIndex++;
+            myCase.id = idField;
+            myCase.landuse = landuse;
+            myCase.soilIndex = soilIndex;
+            myCase.cultivar = &(this->cultivar[vineIndex]);
+            myCase.maxLAIGrass = maxLaiGrass;
+            myCase.maxIrrigationRate = maxIrrigationRate;
+
+            float density = 1 / (trainingSystems[trainingIndex].rowDistance * trainingSystems[trainingIndex].plantDistance);
+
+            myCase.trainingSystem = trainingIndex;
+            myCase.plantDensity = density;
+            myCase.shootsPerPlant = this->trainingSystems[trainingIndex].shootsPerPlant;
+
+            modelCases.push_back(myCase);
         }
         else
         {
@@ -1592,13 +1559,13 @@ soil::Crit3DHorizon* Vine3DProject::getSoilHorizon(long row, long col, int layer
 bool Vine3DProject::getFieldBookIndex(int firstIndex, QDate myDate, int fieldIndex, int* outputIndex)
 {
     *outputIndex = NODATA;
-    for (int i = firstIndex; i < this->nrFieldOperations; i++)
+    for (int i = firstIndex; i < fieldBook.size(); i++)
     {
         // order by date
-        if (this->fieldBook[i].operationDate > myDate) return false;
-        if (myDate == this->fieldBook[i].operationDate)
+        if (fieldBook[i].operationDate > myDate) return false;
+        if (myDate == fieldBook[i].operationDate)
         {
-            if (fieldIndex == this->fieldBook[i].idField)
+            if (fieldIndex == fieldBook[i].idField)
             {
                 *outputIndex = i;
                 return true;

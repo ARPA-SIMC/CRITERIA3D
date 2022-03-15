@@ -29,7 +29,7 @@
         #include "project3D.h"
     #endif
 
-    struct TfieldBook {
+    struct TVine3DOperation {
         QDate operationDate;
         TfieldOperation operation;
         int idField;
@@ -65,14 +65,10 @@
         gis::Crit3DRasterGrid modelCaseIndexMap;
 
         std::vector <TVineCultivar> cultivar;
-
-        Crit3DModelCase* modelCases;
-
         std::vector <TtrainingSystem> trainingSystems;
-        TfieldBook* fieldBook;
 
-        int nrModelCases;
-        long nrFieldOperations;
+        std::vector <Crit3DModelCase> modelCases;
+        std::vector <TVine3DOperation> fieldBook;
 
         bool isObsDataLoaded;
         int* varCodes;

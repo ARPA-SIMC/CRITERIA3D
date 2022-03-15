@@ -27,7 +27,7 @@ bool initializeGrapevine(Vine3DProject* myProject)
     double depthModeRootDensity;     //[m] depth of mode of root density
     double depthMeanRootDensity;     //[m] depth of mean of root density
 
-    for (int i = 0 ; i < myProject->nrModelCases; i++)
+    for (int i = 0 ; i < myProject->modelCases.size(); i++)
     {
         soilIndex = myProject->modelCases[i].soilIndex;
         nrHorizons = myProject->soilList[soilIndex].nrHorizons;
