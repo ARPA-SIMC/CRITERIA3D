@@ -62,6 +62,18 @@ void Project3D::initializeProject3D()
     setCurrentFrequency(hourly);
 }
 
+bool Project3D::loadProject3DSettings()
+{
+    projectSettings->beginGroup("project");
+
+    soilDbFileName = projectSettings->value("soil_db").toString();
+    if (soilDbFileName == "")
+        soilDbFileName = projectSettings->value("db_soil").toString();
+
+    projectSettings->endGroup();
+
+    return true;
+}
 
 void Project3D::clearWaterBalance3D()
 {

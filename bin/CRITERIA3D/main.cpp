@@ -39,6 +39,9 @@ int main(int argc, char *argv[])
     if (! myProject.loadParameters("parameters.ini"))
         return -1;
 
+    if (! myProject.loadProject3DSettings())
+        return -1;
+
     if (! myProject.loadCriteria3DSettings())
         return -1;
 

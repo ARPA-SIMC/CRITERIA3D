@@ -113,6 +113,9 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
     if (! loadProjectSettings(myFileName))
         return false;
 
+    if (! loadProject3DSettings())
+        return false;
+
     if (! loadCriteria3DSettings())
         return false;
 
@@ -147,10 +150,6 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
 bool Crit3DProject::loadCriteria3DSettings()
 {
     projectSettings->beginGroup("project");
-
-    soilDbFileName = projectSettings->value("soil_db").toString();
-    if (soilDbFileName == "")
-        soilDbFileName = projectSettings->value("db_soil").toString();
 
     cropDbFileName = projectSettings->value("crop_db").toString();
     if (cropDbFileName == "")
