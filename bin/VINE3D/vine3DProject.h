@@ -67,9 +67,10 @@
         std::vector <TVineCultivar> cultivar;
 
         Crit3DModelCase* modelCases;
-        TtrainingSystem* trainingSystems;
+
+        std::vector <TtrainingSystem> trainingSystems;
         TfieldBook* fieldBook;
-        int nrTrainingSystems;
+
         int nrModelCases;
         long nrFieldOperations;
 

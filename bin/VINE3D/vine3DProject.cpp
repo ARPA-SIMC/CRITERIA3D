@@ -206,7 +206,7 @@ bool Vine3DProject::loadGrapevineParameters()
 
     QSqlQuery myQuery(dbVine3D);
 
-    /*myQuery.prepare(
+    myQuery.prepare(
             " SELECT id_cultivar, name,"
             " phenovitis_force_physiological_maturity, miglietta_radiation_use_efficiency,"
             " miglietta_d, miglietta_f, miglietta_fruit_biomass_offset,"
@@ -217,9 +217,7 @@ bool Vine3DProject::loadGrapevineParameters()
             " phenovitis_force_flowering, phenovitis_force_veraison,"
             " phenovitis_force_fruitset, degree_days_veraison, hydrall_carbox_rate"
             " FROM cultivar"
-            " ORDER BY id_cultivar");*/
-
-    myQuery.prepare("SELECT * FROM cultivar");
+            " ORDER BY id_cultivar");
 
     if (! myQuery.exec())
     {
@@ -261,34 +259,33 @@ bool Vine3DProject::loadGrapevineParameters()
 bool Vine3DProject::loadTrainingSystems()
 {
     logInfo ("Read training system...");
-    QString myQueryString =
+
+    QSqlQuery myQuery(dbVine3D);
+
+    myQuery.prepare(
             " SELECT id_training_system, nr_shoots_plant, row_width, row_height,"
             " row_distance, plant_distance"
             " FROM training_system"
-            " ORDER BY id_training_system";
+            " ORDER BY id_training_system");
 
-    QSqlQuery myQuery = dbVine3D.exec(myQueryString);
-
-    if (myQuery.size() < 1)
+    if (! myQuery.exec())
     {
-        this->errorString = "missing training system" + myQuery.lastError().text();
+        errorString = "Error reading training systems. " + myQuery.lastError().text();
         return false;
     }
-    //initialize training system
-    this->nrTrainingSystems = myQuery.size();
-    this->trainingSystems = (TtrainingSystem *) calloc(this->nrTrainingSystems, sizeof(TtrainingSystem));
 
-    //read values
-    int i = 0;
+    TtrainingSystem mySystem;
+
     while (myQuery.next())
     {
-        this->trainingSystems[i].id = myQuery.value(0).toInt();
-        this->trainingSystems[i].shootsPerPlant = myQuery.value(1).toFloat();
-        this->trainingSystems[i].rowWidth = myQuery.value(2).toFloat();
-        this->trainingSystems[i].rowHeight = myQuery.value(3).toFloat();
-        this->trainingSystems[i].rowDistance = myQuery.value(4).toFloat();
-        this->trainingSystems[i].plantDistance = myQuery.value(5).toFloat();
-        i++;
+        mySystem.id = myQuery.value(0).toInt();
+        mySystem.shootsPerPlant = myQuery.value(1).toFloat();
+        mySystem.rowWidth = myQuery.value(2).toFloat();
+        mySystem.rowHeight = myQuery.value(3).toFloat();
+        mySystem.rowDistance = myQuery.value(4).toFloat();
+        mySystem.plantDistance = myQuery.value(5).toFloat();
+
+        trainingSystems.push_back(mySystem);
     }
 
     return(true);
@@ -609,8 +606,8 @@ bool Vine3DProject::readFieldQuery(QSqlQuery myQuery, int* idField, Crit3DLandus
     //TRAINING SYSTEM
     idTraining = myQuery.value("id_training_system").toInt();
     i=0;
-    while (i < this->nrTrainingSystems && idTraining != this->trainingSystems[i].id) i++;
-    if (i == this->nrTrainingSystems)
+    while (i < trainingSystems.size() && idTraining != this->trainingSystems[i].id) i++;
+    if (i == trainingSystems.size())
     {
         this->errorString = "training system nr." + QString::number(idTraining) + " not found" + myQuery.lastError().text();
         return false;
@@ -712,6 +709,7 @@ bool Vine3DProject::loadVine3DProjectParameters()
 bool Vine3DProject::loadAggregatedMeteoVarCodes()
 {
     logInfo ("Reading aggregated variables codes...");
+
     QString myQueryString = "SELECT id_variable, aggregated_var_code";
     myQueryString += " FROM variables";
     myQueryString += " ORDER BY id_variable";
