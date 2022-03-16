@@ -45,7 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->showPoints = true;
 
-    this->myRubberBand = nullptr;
+    this->rubberBand = nullptr;
 
     // Set the MapGraphics Scene and View
     this->mapScene = new MapGraphicsScene(this);
@@ -227,10 +227,10 @@ void MainWindow::mouseMoveEvent(QMouseEvent * event)
     Position geoPoint = this->mapView->mapToScene(mapPos);
     this->ui->statusBar->showMessage(QString::number(geoPoint.latitude()) + " " + QString::number(geoPoint.longitude()));
 
-    if (myRubberBand != nullptr && myRubberBand->isActive)
+    if (rubberBand != nullptr && rubberBand->isActive)
     {
         QPoint widgetPos = mapPos + QPoint(MAPBORDER, MAPBORDER);
-        myRubberBand->setGeometry(QRect(myRubberBand->getOrigin(), widgetPos).normalized());
+        rubberBand->setGeometry(QRect(rubberBand->getOrigin(), widgetPos).normalized());
     }
 }
 
@@ -242,13 +242,13 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 
     if (event->button() == Qt::RightButton)
     {
-        if (myRubberBand != nullptr)
+        if (rubberBand != nullptr)
         {
             QPoint widgetPos = mapPos + QPoint(MAPBORDER, MAPBORDER);
-            myRubberBand->setOrigin(widgetPos);
-            myRubberBand->setGeometry(QRect(widgetPos, QSize()));
-            myRubberBand->isActive = true;
-            myRubberBand->show();
+            rubberBand->setOrigin(widgetPos);
+            rubberBand->setGeometry(QRect(widgetPos, QSize()));
+            rubberBand->isActive = true;
+            rubberBand->show();
         }
     }
 }
@@ -309,13 +309,24 @@ void MainWindow::renderDEM()
 
 void MainWindow::drawMeteoPoints()
 {
-    resetMeteoPoints();
+    resetMeteoPointMarkers();
+    if (! myProject.meteoPointsLoaded || myProject.nrMeteoPoints == 0)
+    {
+        ui->groupBoxMeteoPoints->setEnabled(false);
+        return;
+    }
+
     addMeteoPoints();
-    updateDateTime();
-    myProject.loadObsDataAllPoints(myProject.getCurrentDate(), myProject.getCurrentDate(), true);
+    ui->groupBoxMeteoPoints->setEnabled(true);
+
+    myProject.loadMeteoPointsData (myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+
+
     showPointsGroup->setEnabled(true);
     currentPointsVisualization = showLocation;
     redrawMeteoPoints(currentPointsVisualization, true);
+
+    updateDateTime();
 }
 
 
@@ -370,17 +381,16 @@ bool MainWindow::isInsideMap(const QPoint& pos)
     else return false;
 }
 
-
-void MainWindow::resetMeteoPoints()
+void MainWindow::resetMeteoPointMarkers()
 {
-    for (int i = 0; i < this->pointList.size(); i++)
-        this->mapView->scene()->removeObject(this->pointList[i]);
+    for (int i = 0; i < meteoPointList.size(); i++)
+    {
+        mapView->scene()->removeObject(meteoPointList[i]);
+        delete meteoPointList[i];
+    }
 
-    this->pointList.clear();
-
-    this->myRubberBand = nullptr;
+    meteoPointList.clear();
 }
-
 
 void MainWindow::on_actionVariableQualitySpatial_triggered()
 {
@@ -480,7 +490,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
 
     // hide all meteo points
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
-        pointList[i]->setVisible(false);
+        meteoPointList[i]->setVisible(false);
 
     meteoPointsLegend->setVisible(true);
 
@@ -498,10 +508,10 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             for (int i = 0; i < myProject.nrMeteoPoints; i++)
             {
                     myProject.meteoPoints[i].currentValue = NODATA;
-                    pointList[i]->setFillColor(QColor(Qt::white));
-                    pointList[i]->setRadius(5);
-                    pointList[i]->setToolTip();
-                    pointList[i]->setVisible(true);
+                    meteoPointList[i]->setFillColor(QColor(Qt::white));
+                    meteoPointList[i]->setRadius(5);
+                    meteoPointList[i]->setToolTip();
+                    meteoPointList[i]->setVisible(true);
             }
 
             myProject.meteoPointsColorScale->setRange(NODATA, NODATA);
@@ -536,21 +546,21 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 {
                     if (myProject.meteoPoints[i].quality == quality::accepted)
                     {
-                        pointList[i]->setRadius(5);
+                        meteoPointList[i]->setRadius(5);
                         myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
-                        pointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
-                        pointList[i]->setOpacity(1.0);
+                        meteoPointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
+                        meteoPointList[i]->setOpacity(1.0);
                     }
                     else
                     {
                         // Wrong data
-                        pointList[i]->setRadius(10);
-                        pointList[i]->setFillColor(QColor(Qt::black));
-                        pointList[i]->setOpacity(0.5);
+                        meteoPointList[i]->setRadius(10);
+                        meteoPointList[i]->setFillColor(QColor(Qt::black));
+                        meteoPointList[i]->setOpacity(0.5);
                     }
 
-                    pointList[i]->setToolTip();
-                    pointList[i]->setVisible(true);
+                    meteoPointList[i]->setToolTip();
+                    meteoPointList[i]->setVisible(true);
                 }
             }
 
@@ -578,8 +588,8 @@ void MainWindow::addMeteoPoints()
         point->setCurrentValue(myProject.meteoPoints[i].currentValue);
         point->setQuality(myProject.meteoPoints[i].quality);
 
-        this->pointList.append(point);
-        this->mapView->scene()->addObject(this->pointList[i]);
+        this->meteoPointList.append(point);
+        this->mapView->scene()->addObject(this->meteoPointList[i]);
 
         point->setToolTip();
         connect(point, SIGNAL(newStationClicked(std::string, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, bool)));

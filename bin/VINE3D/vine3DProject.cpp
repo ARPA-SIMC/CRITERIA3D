@@ -173,12 +173,12 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
         return(false);
     }
 
-    //meteo
+    /*//meteo
     if (!loadAggregatedMeteoVarCodes() || !loadDBPoints())
     {
         logError();
         return false;
-    }
+    }*/
 
     if (!loadFieldShape())
     {

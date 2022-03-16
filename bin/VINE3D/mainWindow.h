@@ -97,8 +97,8 @@
         RasterObject* rasterObj;
         ColorLegend *rasterLegend;
         ColorLegend *meteoPointsLegend;
-        QList<StationMarker*> pointList;
-        RubberBand *myRubberBand;
+        QList<StationMarker*> meteoPointList;
+        RubberBand *rubberBand;
 
         visualizationType currentPointsVisualization;
         QActionGroup *showPointsGroup;
@@ -112,7 +112,7 @@
 
         void updateVariable();
         void updateDateTime();
-        void resetMeteoPoints();
+        void resetMeteoPointMarkers();
         void addMeteoPoints();
 
         void redrawMeteoPoints(visualizationType myType, bool updateColorSCale);

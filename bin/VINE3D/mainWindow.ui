@@ -494,6 +494,9 @@
     <property name="font">
      <font>
       <family>Arial</family>
+      <pointsize>10</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
      </font>
     </property>
     <property name="mouseTracking">
@@ -953,6 +956,7 @@
     </property>
     <property name="font">
      <font>
+      <family>Arial</family>
       <pointsize>10</pointsize>
       <weight>50</weight>
       <bold>false</bold>
@@ -1018,7 +1022,10 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>8</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="toolTip">
@@ -1036,7 +1043,10 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="text">
@@ -1091,7 +1101,10 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="text">
@@ -1109,7 +1122,10 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="text">
@@ -1570,6 +1586,7 @@
     </property>
     <property name="font">
      <font>
+      <family>Arial</family>
       <pointsize>10</pointsize>
       <weight>50</weight>
       <bold>false</bold>
@@ -1632,7 +1649,10 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="text">
@@ -1714,7 +1734,10 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="dateTime">
@@ -1782,7 +1805,10 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="text">
@@ -1864,7 +1890,10 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>9</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="maximumDate">
@@ -1905,7 +1934,10 @@
      </property>
      <property name="font">
       <font>
+       <family>Arial</family>
        <pointsize>8</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
       </font>
      </property>
      <property name="toolTip">
@@ -1920,7 +1952,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="palette">
@@ -2372,9 +2404,8 @@
     <property name="title">
      <string>Fi&amp;le</string>
     </property>
-    <addaction name="actionOpen_project"/>
+    <addaction name="mnuFileOpenProject"/>
     <addaction name="separator"/>
-    <addaction name="actionOpen_crop_map"/>
    </widget>
    <widget class="QMenu" name="menuVariable">
     <property name="title">
@@ -2481,14 +2512,6 @@
     <string>Interpolation to DEM</string>
    </property>
   </action>
-  <action name="actionOpen_crop_map">
-   <property name="text">
-    <string>Open crop map...</string>
-   </property>
-   <property name="visible">
-    <bool>false</bool>
-   </property>
-  </action>
   <action name="actionCriteria3D_settings">
    <property name="text">
     <string>Settings...</string>
@@ -2525,7 +2548,7 @@
     <string>Parameters</string>
    </property>
   </action>
-  <action name="actionOpen_project">
+  <action name="mnuFileOpenProject">
    <property name="text">
     <string>Open project...</string>
    </property>
