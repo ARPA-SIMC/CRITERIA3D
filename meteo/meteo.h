@@ -82,6 +82,11 @@
     };
 
     enum lapseRateCodeType {primary, secondary, supplemental};
+    const std::map<lapseRateCodeType, std::string> MapLapseRateCodeToString = {
+      { primary , "primary" },
+      { secondary, "secondary"  },
+      { supplemental, "supplemental"}
+    };
 
     enum meteoVariable {airTemperature, dailyAirTemperatureMin, monthlyAirTemperatureMin, dailyAirTemperatureMax, monthlyAirTemperatureMax,
                     dailyAirTemperatureAvg, monthlyAirTemperatureAvg, dailyAirTemperatureRange,
@@ -327,6 +332,7 @@
     meteoVariable getMeteoVar(std::string varString);
     meteoVariable getHourlyMeteoVar(std::string varString);
     std::string getMeteoVarName(meteoVariable var);
+    std::string getLapseRateCodeName(lapseRateCodeType code);
 
     bool checkLapseRateCode(lapseRateCodeType myType, bool useLapseRateCode, bool useSupplemental);
     meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod myAggregation);
