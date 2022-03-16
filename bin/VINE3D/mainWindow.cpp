@@ -88,8 +88,6 @@ MainWindow::MainWindow(QWidget *parent) :
     this->updateVariable();
     this->updateDateTime();
 
-    connect(this->ui->dateEdit, SIGNAL(editingFinished()), this, SLOT(on_dateChanged()));
-
     this->setMouseTracking(true);
 }
 
@@ -321,7 +319,6 @@ void MainWindow::drawMeteoPoints()
 
     myProject.loadMeteoPointsData (myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
 
-
     showPointsGroup->setEnabled(true);
     currentPointsVisualization = showLocation;
     redrawMeteoPoints(currentPointsVisualization, true);
@@ -330,7 +327,7 @@ void MainWindow::drawMeteoPoints()
 }
 
 
-void MainWindow::on_actionOpen_project_triggered()
+void MainWindow::on_mnuFileOpenProject_triggered()
 {
     QString myFileName = QFileDialog::getOpenFileName(this,tr("Open Project"), "", tr("Project files (*.ini)"));
     if (myFileName == "") return;
@@ -445,27 +442,11 @@ void MainWindow::updateVariable()
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
-
 void MainWindow::updateDateTime()
 {
     int myHour = myProject.getCurrentHour();
     this->ui->dateEdit->setDate(myProject.getCurrentDate());
     this->ui->timeEdit->setTime(QTime(myHour,0,0));
-}
-
-
-void MainWindow::on_dateChanged()
-{
-
-    QDate date = this->ui->dateEdit->date();
-
-    if (date != myProject.getCurrentDate())
-    {
-        myProject.setCurrentDate(date);
-        myProject.loadObsDataAllPoints(date, date, true);
-    }
-
-    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 
@@ -658,8 +639,14 @@ void MainWindow::setCurrentRaster(gis::Crit3DRasterGrid *myRaster)
 
 void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 {
-    Q_UNUSED(date)
-    this->on_dateChanged();
+    if (date != myProject.getCurrentDate())
+    {
+        myProject.loadMeteoPointsData(date, date, true, true, true);
+        //myProject.loadMeteoGridData(date, date, true);
+        myProject.setCurrentDate(date);
+    }
+
+    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 void MainWindow::on_actionInterpolation_to_DEM_triggered()
@@ -754,3 +741,5 @@ void MainWindow::on_actionRadiation_settings_triggered()
     DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
     myDialogRadiation->close();
 }
+
+

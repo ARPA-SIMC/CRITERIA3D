@@ -36,7 +36,7 @@
 
     private slots:
 
-        void on_actionOpen_project_triggered();
+        void on_mnuFileOpenProject_triggered();
 
         void on_actionShowPointsHide_triggered();
         void on_actionShowPointsLocation_triggered();
@@ -51,7 +51,6 @@
         void on_actionMapESRISatellite_triggered();
         void on_actionMapTerrain_triggered();
 
-        void on_dateChanged();
         void on_variableButton_clicked();
 
         void on_rasterRestoreButton_clicked();
