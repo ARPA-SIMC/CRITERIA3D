@@ -1,6 +1,7 @@
 #include "CircleObject.h"
 
 #include <QtDebug>
+#include <QStaticText>
 #include <QKeyEvent>
 #define NODATA -9999
 
@@ -9,7 +10,9 @@ CircleObject::CircleObject(qreal radius, bool sizeIsZoomInvariant, QColor fillCo
 {
     _radius = qMax<qreal>(radius, 0.01);
     _currentValue = NODATA;
-    _isShowValue = false;
+    _isText = false;
+    _isMultiColorText = false;
+    _isMarked = false;
 
     this->setFlag(MapGraphicsObject::ObjectIsSelectable);
     this->setFlag(MapGraphicsObject::ObjectIsMovable);
@@ -22,31 +25,45 @@ CircleObject::~CircleObject()
 
 QRectF CircleObject::boundingRect() const
 {
-    return QRectF(-3*_radius,
-                  -1*_radius,
-                  6*_radius,
-                  2*_radius);
+    return QRectF(-4*_radius,
+                  -2*_radius,
+                  8*_radius,
+                  4*_radius);
 }
 
 void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     Q_UNUSED(option)
     Q_UNUSED(widget)
-    painter->setRenderHint(QPainter::Antialiasing,true);
-    if (_isShowValue)
+    painter->setRenderHint(QPainter::Antialiasing, true);
+
+    if (_isText || _isMultiColorText)
     {
-        QString valueStr = "";
         if (_currentValue != NODATA)
         {
-            valueStr = QString::number(_currentValue);
+            QString valueStr = QString::number(_currentValue, 'f', 1);
+            QStaticText myText = QStaticText(valueStr);
+            myText.setTextWidth(_radius * 8);
+            painter->scale(1,-1);
+            if (_isMultiColorText)
+            {
+                QPen myPen;
+                myPen.setColor(_fillColor);
+                painter->setPen(myPen);
+            }
+            painter->drawStaticText(-int(myText.textWidth() / 2), -int(_radius*2), myText);
         }
-        painter->scale(1,-1);
-        painter->drawText(-3*_radius, _radius, valueStr);
     }
     else
     {
         painter->setBrush(_fillColor);
         painter->drawEllipse(QPointF(0,0), _radius, _radius);
+    }
+
+    if (_isMarked)
+    {
+        painter->setBrush(Qt::transparent);
+        painter->drawEllipse(QPointF(0,0), _radius*2, _radius*2);
     }
 }
 
@@ -61,6 +78,17 @@ void CircleObject::setRadius(qreal radius)
     emit this->redrawRequested();
 }
 
+
+void CircleObject::setMarked(bool isMarked)
+{
+    if (_isMarked == isMarked)
+        return;
+
+    _isMarked = isMarked;
+    emit this->redrawRequested();
+}
+
+
 qreal CircleObject::currentValue() const
 {
     return _currentValue;
@@ -68,15 +96,32 @@ qreal CircleObject::currentValue() const
 
 void CircleObject::setCurrentValue(qreal currentValue)
 {
+    if (_currentValue == currentValue)
+        return;
+
     _currentValue = currentValue;
     emit this->redrawRequested();
 }
 
-void CircleObject::setShowValue(bool isShowValue)
+void CircleObject::setShowText(bool isShowText)
 {
-    _isShowValue = isShowValue;
+    if (_isText == isShowText)
+        return;
+
+    _isText = isShowText;
     emit this->redrawRequested();
 }
+
+
+void CircleObject::setMultiColorText(bool isMultiColorText)
+{
+    if (_isMultiColorText == isMultiColorText)
+        return;
+
+    _isMultiColorText = isMultiColorText;
+    emit this->redrawRequested();
+}
+
 
 QColor CircleObject::color() const
 {

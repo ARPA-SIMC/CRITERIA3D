@@ -14,6 +14,7 @@ StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillC
     _name = "";
     _dataset = "";
     _altitude = NODATA;
+    _lapseRateCode = primary;
     _municipality = "";
     _active = true;
 }
@@ -43,6 +44,11 @@ void StationMarker::setAltitude(double altitude)
     _altitude = altitude;
 }
 
+void StationMarker::setLapseRateCode(lapseRateCodeType code)
+{
+    _lapseRateCode = code;
+}
+
 void StationMarker::setMunicipality(const std::string &municipality)
 {
     _municipality = municipality;
@@ -70,9 +76,10 @@ void StationMarker::setToolTip()
     QString dataset = QString::fromStdString(_dataset);
     QString altitude = QString::number(_altitude);
     QString municipality = QString::fromStdString(_municipality);
+    QString lapseRateName = QString::fromStdString(getLapseRateCodeName(_lapseRateCode));
 
-    QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5")
-                            .arg(name, idpoint, dataset, altitude, municipality);
+    QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5 <br/> lapse rate code: %6")
+                            .arg(name, idpoint, dataset, altitude, municipality, lapseRateName);
 
     if (currentValue() != NODATA)
     {

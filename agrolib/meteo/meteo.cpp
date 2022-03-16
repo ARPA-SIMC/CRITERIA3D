@@ -908,6 +908,15 @@ std::string getMeteoVarName(meteoVariable var)
     return "";
 }
 
+std::string getLapseRateCodeName(lapseRateCodeType code)
+{
+    auto search = MapLapseRateCodeToString.find(code);
+    if (search != MapLapseRateCodeToString.end())
+        return search->second;
+
+    return "";
+}
+
 meteoVariable getHourlyMeteoVar(std::string varString)
 {
     auto search = MapHourlyMeteoVar.find(varString);
