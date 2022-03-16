@@ -86,8 +86,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->viewNotActiveOutputPoints = true;
     ui->flagView_not_active_outputPoints->setChecked(this->viewNotActiveOutputPoints);
     this->currentPointsVisualization = notShown;
-    this->viewMeteoPointValues = false;
-    ui->flagView_values->setChecked(this->viewMeteoPointValues);
+    ui->flagView_values->setChecked(false);
 
     // show menu
     showPointsGroup = new QActionGroup(this);
@@ -436,7 +435,6 @@ void MainWindow::addMeteoPoints()
         point->setMunicipality(myProject.meteoPoints[i].municipality);
         point->setCurrentValue(myProject.meteoPoints[i].currentValue);
         point->setQuality(myProject.meteoPoints[i].quality);
-        point->setShowValue(viewMeteoPointValues);
 
         this->meteoPointList.append(point);
         this->mapView->scene()->addObject(this->meteoPointList[i]);
@@ -2722,10 +2720,9 @@ void MainWindow::on_actionOutputPoints_add_triggered()
 
 void MainWindow::on_flagView_values_toggled(bool isChecked)
 {
-    viewMeteoPointValues = isChecked;
     for (int i = 0; i < meteoPointList.size(); i++)
     {
-        meteoPointList[i]->setShowValue(this->viewMeteoPointValues);
+        meteoPointList[i]->setShowText(isChecked);
     }
 }
 

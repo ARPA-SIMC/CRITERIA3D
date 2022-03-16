@@ -246,7 +246,6 @@
         bool viewNotActivePoints;
         bool viewOutputPoints;
         bool viewNotActiveOutputPoints;
-        bool viewMeteoPointValues;
 
         Crit3DSoilWidget *soilWidget;
 
