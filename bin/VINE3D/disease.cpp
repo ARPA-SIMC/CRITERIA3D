@@ -1,6 +1,7 @@
 #include "disease.h"
 #include "powderyMildew.h"
 #include "downyMildew.h"
+#include "project.h"
 #include "meteo.h"
 #include "atmosphere.h"
 #include "dataHandler.h"
@@ -118,7 +119,8 @@ bool computeDownyMildew(Vine3DProject* myProject, QDate firstDate, QDate lastDat
     lastTime.setDate(lastDate);
     lastTime.setTime(QTime(int(lastHour), 0, 0, 0));
 
-    if (!myProject->loadObsDataFilled(firstTime, lastTime))
+    //if (!myProject->loadObsDataFilled(firstTime, lastTime))
+    if (! myProject->loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
     {
         myProject->logError();
         return false;

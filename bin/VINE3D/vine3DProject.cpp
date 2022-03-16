@@ -1237,15 +1237,17 @@ bool Vine3DProject::loadObsDataFilled(QDateTime firstTime, QDateTime lastTime)
 }
 
 
-bool Vine3DProject::runModels(QDateTime dateTime1, QDateTime dateTime2, bool saveOutput, bool computeDiseases, const QString& myArea)
+bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput, bool computeDiseases, const QString& myArea)
 {
-    if (! this->isProjectLoaded)
+    if (! isProjectLoaded)
     {
-        this->logError("Load a project before.");
+        logError("Load a project before.");
         return false;
     }
 
-    if (!loadObsDataFilled(dateTime1, dateTime2))
+    //if (!loadObsDataFilled(dateTime1, dateTime2))
+    logInfoGUI("Loading meteo data...");
+    if (! loadMeteoPointsData(firstTime.date().addDays(-1), lastTime.date().addDays(+1), true, false, false))
     {
         this->logError();
         return false;
@@ -1254,10 +1256,10 @@ bool Vine3DProject::runModels(QDateTime dateTime1, QDateTime dateTime2, bool sav
     QDir myDir;
     QString myOutputPathDaily, myOutputPathHourly;
     bool isInitialState;
-    QDate firstDate = dateTime1.date();
-    QDate lastDate = dateTime2.date();
+    QDate firstDate = firstTime.date();
+    QDate lastDate = lastTime.date();
     QDate previousDate = firstDate.addDays(-1);
-    int hourTime2 = dateTime2.time().hour();
+    int hourTime2 = lastTime.time().hour();
     int finalHour;
 
     this->logInfo("Run models from: " + firstDate.toString() + " to: " + lastDate.toString());
