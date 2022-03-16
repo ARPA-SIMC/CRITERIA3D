@@ -131,6 +131,7 @@
             void cleanObsDataM();
 
             bool isDateLoadedH(const Crit3DDate& myDate);
+            bool isDateTimeLoadedH(const Crit3DTime& myDateTime);
             bool isDateIntervalLoadedH(const Crit3DDate& date1, const Crit3DDate& date2);
             bool isDateIntervalLoadedH(const Crit3DTime& time1, const Crit3DTime& time2);
             float obsDataConsistencyH(meteoVariable myVar, const Crit3DTime& time1, const Crit3DTime& time2);

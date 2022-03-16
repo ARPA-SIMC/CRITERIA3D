@@ -241,17 +241,32 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
     if (nrMeteoPoints == 0)
         return false;
 
-    // assign data
-    for (int i = 0; i < nrMeteoPoints; i++)
-        meteoPoints[i].currentValue = meteoPoints[i].getMeteoPointValue(myTime, myVar, meteoSettings);
-
-    // quality control - syntactic
-    myQuality->syntacticQualityControl(myVar, meteoPoints, nrMeteoPoints);
-
-    // quality control - spatial
-    if (checkSpatial && myVar != precipitation && myVar != dailyPrecipitation && myVar != windVectorDirection && myVar != dailyWindVectorDirectionPrevailing)
+    if (myVar == elaboration)
     {
-        spatialQualityControl(myVar, meteoPoints, nrMeteoPoints, spatialQualityInterpolationSettings, meteoSettings, myClimate, myTime);
+        // assign data
+        for (int i = 0; i < nrMeteoPoints; i++)
+            meteoPoints[i].currentValue = meteoPoints[i].elaboration;
+    }
+    else if (myVar == anomaly)
+    {
+        // assign data
+        for (int i = 0; i < nrMeteoPoints; i++)
+            meteoPoints[i].currentValue = meteoPoints[i].anomaly;
+    }
+    else
+    {
+        // assign data
+        for (int i = 0; i < nrMeteoPoints; i++)
+            meteoPoints[i].currentValue = meteoPoints[i].getMeteoPointValue(myTime, myVar, meteoSettings);
+
+        // quality control - syntactic
+        myQuality->syntacticQualityControl(myVar, meteoPoints, nrMeteoPoints);
+
+        // quality control - spatial
+        if (checkSpatial && myVar != precipitation && myVar != dailyPrecipitation && myVar != windVectorDirection && myVar != dailyWindVectorDirectionPrevailing)
+        {
+            spatialQualityControl(myVar, meteoPoints, nrMeteoPoints, spatialQualityInterpolationSettings, meteoSettings, myClimate, myTime);
+        }
     }
 
     return true;

@@ -82,6 +82,11 @@
     };
 
     enum lapseRateCodeType {primary, secondary, supplemental};
+    const std::map<lapseRateCodeType, std::string> MapLapseRateCodeToString = {
+      { primary , "primary" },
+      { secondary, "secondary"  },
+      { supplemental, "supplemental"}
+    };
 
     enum meteoVariable {airTemperature, dailyAirTemperatureMin, monthlyAirTemperatureMin, dailyAirTemperatureMax, monthlyAirTemperatureMax,
                     dailyAirTemperatureAvg, monthlyAirTemperatureAvg, dailyAirTemperatureRange,
@@ -99,7 +104,7 @@
                     snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceEnergy,
                     snowAge, snowLiquidWaterContent, snowMelt, sensibleHeat, latentHeat,
                     dailyWaterTableDepth,
-                    anomaly, noMeteoTerrain, noMeteoVar};
+                    anomaly, elaboration, noMeteoTerrain, noMeteoVar};
 
 
     const std::map<std::string, meteoVariable> MapDailyMeteoVar = {
@@ -134,7 +139,9 @@
       { "DAILY_BIC", dailyBIC },
       { "DAILY_DEGREEDAYS_HEATING", dailyHeatingDegreeDays },
       { "DAILY_DEGREEDAYS_COOLING", dailyCoolingDegreeDays },
-      { "DAILY_WATER_TABLE_DEPTH", dailyWaterTableDepth }
+      { "DAILY_WATER_TABLE_DEPTH", dailyWaterTableDepth },
+      { "ELABORATION", elaboration },
+      { "ANOMALY", anomaly }
     };
 
     const std::map<meteoVariable, std::string> MapDailyMeteoVarToString = {
@@ -169,7 +176,9 @@
       { dailyBIC, "DAILY_BIC" },
       { dailyHeatingDegreeDays, "DAILY_DEGREEDAYS_HEATING" },
       { dailyCoolingDegreeDays, "DAILY_DEGREEDAYS_COOLING" },
-      { dailyWaterTableDepth, "DAILY_WATER_TABLE_DEPTH" }
+      { dailyWaterTableDepth, "DAILY_WATER_TABLE_DEPTH" },
+      { elaboration, "ELABORATION" },
+      { anomaly, "ANOMALY" }
     };
 
     const std::map<std::string, meteoVariable> MapHourlyMeteoVar = {
@@ -327,6 +336,7 @@
     meteoVariable getMeteoVar(std::string varString);
     meteoVariable getHourlyMeteoVar(std::string varString);
     std::string getMeteoVarName(meteoVariable var);
+    std::string getLapseRateCodeName(lapseRateCodeType code);
 
     bool checkLapseRateCode(lapseRateCodeType myType, bool useLapseRateCode, bool useSupplemental);
     meteoVariable getDailyMeteoVarFromHourly(meteoVariable myVar, aggregationMethod myAggregation);
