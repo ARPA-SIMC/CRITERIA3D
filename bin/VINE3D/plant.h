@@ -97,11 +97,11 @@
     bool getOutputPlantToMap(long row, long col, Vine3DProject* myProject);
 
     bool savePlantState(Vine3DProject* myProject, plantVariable myVar,
-                        QDate myDate, QString myPath, QString myArea);
+                        QDate myDate, QString myPath);
     bool loadPlantState(Vine3DProject* myProject, plantVariable myVar,
-                        QDate myDate, QString myPath, QString myArea);
+                        QDate myDate, QString myPath);
     bool savePlantOutput(Vine3DProject* myProject, plantVariable myVar,
-                        QDate myDate, QString myPath, QString myArea, QString notes,
+                        QDate myDate, QString myPath, QString notes,
                          bool isStateMap, bool isMasked);
 
     bool updateThermalSum(Vine3DProject* myProject, QDate myDate);

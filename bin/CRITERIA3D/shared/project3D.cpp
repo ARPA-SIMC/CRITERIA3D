@@ -739,12 +739,12 @@ int Project3D::getSoilLayerIndex(double depth)
 }
 
 
-bool Project3D::saveHourlyMeteoOutput(meteoVariable myVar, const QString& myPath, QDateTime myTime, const QString& myArea)
+bool Project3D::saveHourlyMeteoOutput(meteoVariable myVar, const QString& myPath, QDateTime myTime)
 {
     gis::Crit3DRasterGrid* myRaster = getHourlyMeteoRaster(myVar);
     if (myRaster == nullptr) return false;
 
-    QString fileName = getOutputNameHourly(myVar, myTime, myArea);
+    QString fileName = getOutputNameHourly(myVar, myTime);
     QString outputFileName = myPath + fileName;
 
     std::string errStr;
@@ -759,7 +759,7 @@ bool Project3D::saveHourlyMeteoOutput(meteoVariable myVar, const QString& myPath
 
 
 bool Project3D::aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod myAggregation, const Crit3DDate& myDate,
-                              const QString& dailyPath, const QString& hourlyPath, const QString& myArea)
+                              const QString& dailyPath, const QString& hourlyPath)
 {
     std::string myError;
     int myTimeStep = int(3600. / meteoSettings->getHourlyIntervals());
@@ -776,7 +776,7 @@ bool Project3D::aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod 
 
     for (Crit3DTime myTime = myTimeIni; myTime<=myTimeFin; myTime=myTime.addSeconds(myTimeStep))
     {
-        QString hourlyFileName = getOutputNameHourly(myVar, getQDateTime(myTime), myArea);
+        QString hourlyFileName = getOutputNameHourly(myVar, getQDateTime(myTime));
         if (gis::readEsriGrid((hourlyPath + hourlyFileName).toStdString(), myMap, &myError))
         {
             if (myTime == myTimeIni)
@@ -816,7 +816,7 @@ bool Project3D::aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod 
     meteoVariable dailyVar = getDailyMeteoVarFromHourly(myVar, myAggregation);
     QString varName = QString::fromStdString(MapDailyMeteoVarToString.at(dailyVar));
 
-    QString filename = getOutputNameDaily(varName, myArea , "", getQDate(myDate));
+    QString filename = getOutputNameDaily(varName , "", getQDate(myDate));
 
     QString outputFileName = dailyPath + filename;
     bool isOk = gis::writeEsriGrid(outputFileName.toStdString(), myAggrMap, &myError);
@@ -980,7 +980,7 @@ bool Project3D::interpolateAndSaveHourlyMeteo(meteoVariable myVar, const QDateTi
         return false;
 
     if (isSaveOutputRaster)
-        return saveHourlyMeteoOutput(myVar, outputPath, myTime, "");
+        return saveHourlyMeteoOutput(myVar, outputPath, myTime);
     else
         return true;
 }
@@ -1189,11 +1189,10 @@ bool setCriteria3DVar(criteria3DVariable myVar, long nodeIndex, double myValue)
 }
 
 
-QString getOutputNameDaily(QString varName, QString strArea, QString notes, QDate myDate)
+QString getOutputNameDaily(QString varName, QString notes, QDate myDate)
 {
     QString myStr = varName;
-    if (strArea != "")
-        myStr += "_" + strArea;
+
     if (notes != "")
         myStr += "_" + notes;
 
@@ -1201,12 +1200,10 @@ QString getOutputNameDaily(QString varName, QString strArea, QString notes, QDat
 }
 
 
-QString getOutputNameHourly(meteoVariable hourlyVar, QDateTime myTime, QString myArea)
+QString getOutputNameHourly(meteoVariable hourlyVar, QDateTime myTime)
 {
     std::string varName = MapHourlyMeteoVarToString.at(hourlyVar);
     QString myStr = QString::fromStdString(varName);
-    if (myArea != "")
-        myStr += "_" + myArea;
 
     return myStr + myTime.toString("yyyyMMddThhmm");
 }
@@ -1214,7 +1211,7 @@ QString getOutputNameHourly(meteoVariable hourlyVar, QDateTime myTime, QString m
 
 bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, gis::Crit3DRasterGrid* myGrid)
 {
-    QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime, myArea);
+    QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);
     std::string error;
 
     if (gis::readEsriGrid(fileName.toStdString(), myGrid, &error))
@@ -1227,7 +1224,7 @@ bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QS
 float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, int row, int col)
 {
     gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
-    QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime, myArea);
+    QString fileName = hourlyPath + getOutputNameHourly(myVar, myTime);
     std::string error;
 
     if (gis::readEsriGrid(fileName.toStdString(), myGrid, &error))
@@ -1238,11 +1235,9 @@ float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, 
 }
 
 
-QString getDailyPrefixFromVar(QDate myDate, QString myArea, criteria3DVariable myVar)
+QString getDailyPrefixFromVar(QDate myDate, criteria3DVariable myVar)
 {
     QString fileName = myDate.toString("yyyyMMdd");
-    if (myArea != "")
-        fileName += "_" + myArea;
 
     if (myVar == waterContent)
         fileName += "_WaterContent_";

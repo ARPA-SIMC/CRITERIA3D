@@ -82,11 +82,11 @@ bool computePowderyMildew(Vine3DProject* myProject)
 }
 
 
-bool computeDownyMildew(Vine3DProject* myProject, QDate firstDate, QDate lastDate, unsigned lastHour, QString myArea)
+bool computeDownyMildew(Vine3DProject* myProject, QDate firstDate, QDate lastDate, unsigned lastHour)
 {
     using namespace std;
 
-    myProject->logInfo("\nCompute downy mildew...");
+    myProject->logInfoGUI("\nCompute downy mildew...");
 
     QDate firstJanuary;
     firstJanuary.setDate(lastDate.year(), 1, 1);
@@ -271,11 +271,11 @@ bool computeDownyMildew(Vine3DProject* myProject, QDate firstDate, QDate lastDat
             myDate = firstDate.addDays(n);
             dailyPath = myProject->getProjectPath() + myProject->dailyOutputPath + myDate.toString("yyyy/MM/dd/");
 
-            fileName = getOutputNameDaily("downyINFR", myArea, "", myDate);
+            fileName = getOutputNameDaily("downyINFR", "", myDate);
             outputFileName = dailyPath + fileName;
             gis::writeEsriGrid(outputFileName.toStdString(), infectionMap[n], &myErrorString);
 
-            fileName = getOutputNameDaily("downySymptoms", myArea, "", myDate);
+            fileName = getOutputNameDaily("downySymptoms", "", myDate);
             outputFileName = dailyPath + fileName;
             gis::writeEsriGrid(outputFileName.toStdString(), oilSpotMap[n], &myErrorString);
         }

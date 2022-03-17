@@ -400,9 +400,9 @@ bool getCriteria3DIntegrationMap(Vine3DProject* myProject, criteria3DVariable my
 
 
 bool saveWaterBalanceCumulatedOutput(Vine3DProject* myProject, QDate myDate, criteria3DVariable myVar,
-                            QString varName, QString notes, QString outputPath, QString myArea)
+                            QString varName, QString notes, QString outputPath)
 {
-    QString outputFilename = outputPath + getOutputNameDaily(varName, myArea, notes, myDate);
+    QString outputFilename = outputPath + getOutputNameDaily(varName, notes, myDate);
     std::string myErrorString;
     gis::Crit3DRasterGrid* myMap = myProject->outputWaterBalanceMaps->getMapFromVar(myVar);
     if (! gis::writeEsriGrid(outputFilename.toStdString(), myMap, &myErrorString))
@@ -416,7 +416,7 @@ bool saveWaterBalanceCumulatedOutput(Vine3DProject* myProject, QDate myDate, cri
 
 
 bool saveWaterBalanceOutput(Vine3DProject* myProject, QDate myDate, criteria3DVariable myVar,
-                            QString varName, QString notes, QString outputPath, QString myArea,
+                            QString varName, QString notes, QString outputPath,
                             double upperDepth, double lowerDepth)
 {
     gis::Crit3DRasterGrid* myMap = new gis::Crit3DRasterGrid();
@@ -438,7 +438,7 @@ bool saveWaterBalanceOutput(Vine3DProject* myProject, QDate myDate, criteria3DVa
             return false;
     }
 
-    QString outputFilename = outputPath + getOutputNameDaily(varName, myArea, notes, myDate);
+    QString outputFilename = outputPath + getOutputNameDaily(varName, notes, myDate);
     std::string myErrorString;
     if (! gis::writeEsriGrid(outputFilename.toStdString(), myMap, &myErrorString))
     {
@@ -453,14 +453,14 @@ bool saveWaterBalanceOutput(Vine3DProject* myProject, QDate myDate, criteria3DVa
 
 
 
-bool loadWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString myArea, QString statePath, criteria3DVariable myVar)
+bool loadWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString statePath, criteria3DVariable myVar)
 {
     std::string myErrorString;
     QString myMapName;
 
     gis::Crit3DRasterGrid myMap;
 
-    QString myPrefix = getDailyPrefixFromVar(myDate, myArea, myVar);
+    QString myPrefix = getDailyPrefixFromVar(myDate, myVar);
 
     for (int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
     {
@@ -479,14 +479,14 @@ bool loadWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString myAre
 }
 
 
-bool saveWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString myArea, QString statePath, criteria3DVariable myVar)
+bool saveWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString statePath, criteria3DVariable myVar)
 {
     std::string myErrorString;
     gis::Crit3DRasterGrid* myMap;
     myMap = new gis::Crit3DRasterGrid();
     myMap->initializeGrid(myProject->indexMap.at(0));
 
-    QString myPrefix = getDailyPrefixFromVar(myDate, myArea, myVar);
+    QString myPrefix = getDailyPrefixFromVar(myDate, myVar);
 
     for (int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
         if (getCriteria3DVarMap(myProject, myVar, layerIndex, myMap))

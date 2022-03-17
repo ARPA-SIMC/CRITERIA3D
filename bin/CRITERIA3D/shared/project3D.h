@@ -89,9 +89,9 @@
         bool interpolateAndSaveHourlyMeteo(meteoVariable myVar, const QDateTime& myTime,
                                            const QString& outputPath, bool isSaveOutputRaster);
 
-        bool saveHourlyMeteoOutput(meteoVariable myVar, const QString& myPath, QDateTime myTime, const QString& myArea);
+        bool saveHourlyMeteoOutput(meteoVariable myVar, const QString& myPath, QDateTime myTime);
         bool aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod myAggregation, const Crit3DDate& myDate,
-                                      const QString& dailyPath, const QString& hourlyPath, const QString& myArea);
+                                      const QString& dailyPath, const QString& hourlyPath);
 
         bool interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& myTime);
         double computeEvaporation(int row, int col, double lai);
@@ -105,9 +105,9 @@
     double getCriteria3DVar(criteria3DVariable myVar, long nodeIndex);
     bool setCriteria3DVar(criteria3DVariable myVar, long nodeIndex, double myValue);
 
-    QString getOutputNameDaily(QString varName, QString strArea, QString notes, QDate myDate);
-    QString getOutputNameHourly(meteoVariable myVar, QDateTime myTime, QString myArea);
-    QString getDailyPrefixFromVar(QDate myDate, QString myArea, criteria3DVariable myVar);
+    QString getOutputNameDaily(QString varName, QString notes, QDate myDate);
+    QString getOutputNameHourly(meteoVariable myVar, QDateTime myTime);
+    QString getDailyPrefixFromVar(QDate myDate, criteria3DVariable myVar);
 
     float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, int row, int col);
     bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, gis::Crit3DRasterGrid* myGrid);

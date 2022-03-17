@@ -123,7 +123,7 @@ bool cmdRunModels(Vine3DProject* myProject, QStringList argumentList)
     QDateTime firstDateTime = QDateTime(firstDay);
     firstDateTime.setTime(QTime(1,0,0,0));
 
-    if (! myProject->runModels(firstDateTime, lastDateTime, true, true, myProject->idArea))
+    if (! myProject->runModels(firstDateTime, lastDateTime, true, true))
         return false;
 
     return true;

@@ -291,11 +291,11 @@ bool interpolationProjectDemMain(Vine3DProject* myProject, meteoVariable myVar, 
 }
 
 
-bool loadDailyMeteoMap(Vine3DProject* myProject, meteoVariable myDailyVar, QDate myDate, const QString& myArea)
+bool loadDailyMeteoMap(Vine3DProject* myProject, meteoVariable myDailyVar, QDate myDate)
 {
     QString myPath = myProject->getProjectPath() + myProject->dailyOutputPath + myDate.toString("yyyy/MM/dd/");
     QString varName = QString::fromStdString(MapDailyMeteoVarToString.at(myDailyVar));
-    QString myFileName = myPath + getOutputNameDaily(varName, myArea, "", myDate);
+    QString myFileName = myPath + getOutputNameDaily(varName, "", myDate);
     std::string myError;
 
     QFile myFile;
@@ -314,7 +314,7 @@ bool loadDailyMeteoMap(Vine3DProject* myProject, meteoVariable myDailyVar, QDate
 
 bool interpolateAndSaveHourlyMeteo(Vine3DProject* myProject, meteoVariable myVar,
                         const Crit3DTime& myCrit3DTime, const QString& myOutputPath,
-                        bool isSave, const QString& myArea)
+                        bool isSave)
 {
     if (! interpolationProjectDemMain(myProject, myVar, myCrit3DTime, false))
     {
@@ -326,7 +326,7 @@ bool interpolateAndSaveHourlyMeteo(Vine3DProject* myProject, meteoVariable myVar
     }
 
     if (isSave)
-        return myProject->saveHourlyMeteoOutput(myVar, myOutputPath, getQDateTime(myCrit3DTime), myArea);
+        return myProject->saveHourlyMeteoOutput(myVar, myOutputPath, getQDateTime(myCrit3DTime));
     else
         return true;
 }

@@ -17,7 +17,7 @@
     bool assignIrrigation(Vine3DProject* myProject, Crit3DTime myTime);
 
     bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours, Vine3DProject* myProject,
-                         const QString& myOutputPath, bool isSave, const QString& myArea);
+                         const QString& myOutputPath, bool isSave);
 
     bool modelCycleOld(QDateTime dStart, QDateTime dStop,  int secondsPerStep, int indexPoint, TstatePlant* statePlant);
 

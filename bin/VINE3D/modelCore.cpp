@@ -95,7 +95,7 @@ QString grapevineError(Crit3DTime myTime, long row, long col, QString errorIni)
 
 bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
                      Vine3DProject* myProject, const QString& myOutputPath,
-                     bool saveOutput, const QString& myArea)
+                     bool saveOutput)
 {
 
     TfieldOperation operation;
@@ -116,24 +116,24 @@ bool modelDailyCycle(bool isInitialState, Crit3DDate myDate, int nrHours,
 
         // meteo interpolation
         myProject->logInfo("Interpolate meteo data");
-        interpolateAndSaveHourlyMeteo(myProject, airTemperature, myCurrentTime, myOutputPath, saveOutput, myArea);
-        interpolateAndSaveHourlyMeteo(myProject, precipitation, myCurrentTime, myOutputPath, saveOutput, myArea);
-        interpolateAndSaveHourlyMeteo(myProject, airRelHumidity, myCurrentTime, myOutputPath, saveOutput, myArea);
-        interpolateAndSaveHourlyMeteo(myProject, windScalarIntensity, myCurrentTime, myOutputPath, saveOutput, myArea);
-        interpolateAndSaveHourlyMeteo(myProject, globalIrradiance, myCurrentTime, myOutputPath, saveOutput, myArea);
+        interpolateAndSaveHourlyMeteo(myProject, airTemperature, myCurrentTime, myOutputPath, saveOutput);
+        interpolateAndSaveHourlyMeteo(myProject, precipitation, myCurrentTime, myOutputPath, saveOutput);
+        interpolateAndSaveHourlyMeteo(myProject, airRelHumidity, myCurrentTime, myOutputPath, saveOutput);
+        interpolateAndSaveHourlyMeteo(myProject, windScalarIntensity, myCurrentTime, myOutputPath, saveOutput);
+        interpolateAndSaveHourlyMeteo(myProject, globalIrradiance, myCurrentTime, myOutputPath, saveOutput);
 
         // ET0
         myProject->hourlyMeteoMaps->computeET0PMMap(myProject->DEM, myProject->radiationMaps);
         if (saveOutput)
         {
-            myProject->saveHourlyMeteoOutput(referenceEvapotranspiration, myOutputPath, getQDateTime(myCurrentTime), myArea);
+            myProject->saveHourlyMeteoOutput(referenceEvapotranspiration, myOutputPath, getQDateTime(myCurrentTime));
         }
 
         // Leaf Wetness
         myProject->hourlyMeteoMaps->computeLeafWetnessMap();
         if (saveOutput)
         {
-            myProject->saveHourlyMeteoOutput(leafWetness, myOutputPath, getQDateTime(myCurrentTime), myArea);
+            myProject->saveHourlyMeteoOutput(leafWetness, myOutputPath, getQDateTime(myCurrentTime));
         }
 
         if (isInitialState)

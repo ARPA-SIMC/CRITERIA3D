@@ -18,10 +18,9 @@
 
     bool interpolateAndSaveHourlyMeteo(Vine3DProject* myProject, meteoVariable myVar,
                             const Crit3DTime& myCrit3DTime, const QString& myOutputPath,
-                            bool isSave, const QString& myArea);
+                            bool isSave);
 
-    bool loadDailyMeteoMap(Vine3DProject* myProject, meteoVariable myDailyVar, QDate myDate,
-                           const QString& myArea);
+    bool loadDailyMeteoMap(Vine3DProject* myProject, meteoVariable myDailyVar, QDate myDate);
 
     void qualityControl(Vine3DProject* myProject, meteoVariable myVar, const Crit3DTime& myCrit3DTime);
 

@@ -336,10 +336,10 @@ bool getStatePlantToMap(long row,long col, Vine3DProject* myProject, TstatePlant
     return(true);
 }
 
-bool savePlantState(Vine3DProject* myProject, plantVariable myVar, QDate myDate, QString myPath, QString myArea)
+bool savePlantState(Vine3DProject* myProject, plantVariable myVar, QDate myDate, QString myPath)
 {
     QString varName = getVarNameFromPlantVariable(myVar);
-    QString fileName = myPath + myDate.toString("yyyyMMdd_") + myArea + "_" + varName;
+    QString fileName = myPath + myDate.toString("yyyyMMdd_") + "_" + varName;
     std::string myErrorString;
 
     gis::Crit3DRasterGrid* myMap;
@@ -356,10 +356,10 @@ bool savePlantState(Vine3DProject* myProject, plantVariable myVar, QDate myDate,
 
 
 bool savePlantOutput(Vine3DProject* myProject, plantVariable myVar,
-                   QDate myDate, QString myPath, QString myArea, QString notes, bool isStateMap, bool isMasked)
+                   QDate myDate, QString myPath, QString notes, bool isStateMap, bool isMasked)
 {
     QString varName = getVarNameFromPlantVariable(myVar);
-    QString fileName = getOutputNameDaily(varName, myArea, notes, myDate);
+    QString fileName = getOutputNameDaily(varName, notes, myDate);
     QString outputFileName = myPath + fileName;
 
     gis::Crit3DRasterGrid *myMap;
@@ -398,10 +398,10 @@ bool savePlantOutput(Vine3DProject* myProject, plantVariable myVar,
 }
 
 
-bool loadPlantState(Vine3DProject* myProject, plantVariable myVar, QDate myDate, QString myPath, QString myArea)
+bool loadPlantState(Vine3DProject* myProject, plantVariable myVar, QDate myDate, QString myPath)
 {
     QString varName = getVarNameFromPlantVariable(myVar);
-    QString fileName = myPath + myDate.toString("yyyyMMdd_") + myArea + "_" + varName;
+    QString fileName = myPath + myDate.toString("yyyyMMdd_") + "_" + varName;
 
     std::string errorString;
     gis::Crit3DRasterGrid* myMap = myProject->statePlantMaps->getMapFromVar(myVar);

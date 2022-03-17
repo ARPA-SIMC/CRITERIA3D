@@ -57,7 +57,6 @@
 
         Crit3DTime currentTime;
 
-        QString idArea;
         QString dailyOutputPath;
         QString fieldMapName;
 
@@ -133,8 +132,8 @@
         bool loadObsDataFilled(QDateTime firstTime, QDateTime lastTime);
         void findVine3DLastMeteoDate();
 
-        bool loadStates(QDate myDate, QString myArea);
-        bool saveStateAndOutput(QDate myDate, QString myArea, bool saveDiseases);
+        bool loadStates(QDate myDate);
+        bool saveStateAndOutput(QDate myDate, bool saveDiseases);
 
         int getIndexPointFromId(QString myId);
 
@@ -151,7 +150,7 @@
 
         soil::Crit3DHorizon* getSoilHorizon(long row, long col, int layer);
 
-        bool runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput, bool computeDiseases, const QString& myArea);
+        bool runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput, bool computeDiseases);
 
         bool executeVine3DCommand(QStringList argumentList, bool* isCommandFound);
     };
