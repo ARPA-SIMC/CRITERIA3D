@@ -10,6 +10,7 @@
 #include "utilities.h"
 #include "aggregation.h"
 #include "meteoWidget.h"
+#include "pointStatisticsWidget.h"
 #include "dialogSelectionMeteoPoint.h"
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
@@ -2776,6 +2777,16 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         }
         return;
     }
+}
+
+void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::string namePoint)
+{
+    // TO DO
+}
+
+void Project::showPointStatisticsWidgetGrid(std::string id)
+{
+    // TO DO
 }
 
 void Project::deleteMeteoWidgetPoint(int id)

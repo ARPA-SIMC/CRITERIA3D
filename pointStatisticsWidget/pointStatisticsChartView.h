@@ -1,0 +1,46 @@
+#ifndef PointStatisticsChartView_H
+#define PointStatisticsChartView_H
+
+#include <QtCharts/QChartView>
+#include <QtCharts/QScatterSeries>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QValueAxis>
+#include "pointStatisticsCallout.h"
+
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
+    QT_CHARTS_USE_NAMESPACE
+#endif
+
+class PointStatisticsChartView : public QChartView
+{
+    Q_OBJECT
+public:
+    explicit PointStatisticsChartView(QWidget *parent = 0);
+    /*
+    void cleanScatterSeries();
+    void drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3);
+    void cleanClimLapseRate();
+    void drawClimLapseRate(QPointF firstPoint, QPointF lastPoint);
+    void cleanModelLapseRate();
+    void drawModelLapseRate(QList<QPointF> pointList);
+    void tooltipScatterSeries(QPointF point, bool state);
+    void setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental);
+    */
+
+private:
+    /*
+    QScatterSeries *series1;
+    QScatterSeries *series2;
+    QScatterSeries *series3;
+    QLineSeries* climLapseRatelineSeries;
+    QLineSeries* modelLapseRatelineSeries;
+    QValueAxis* axisX;
+    QValueAxis* axisY;
+    PointStatisticsCallout *m_tooltip;
+    QMap< QString, QPointF > idPointMap;
+    QMap< QString, QPointF > idPointMap2;
+    QMap< QString, QPointF > idPointMap3;
+    */
+};
+
+#endif // PointStatisticsChartView_H

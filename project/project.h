@@ -254,6 +254,8 @@
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
+        void showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::string namePoint);
+        void showPointStatisticsWidgetGrid(std::string id);
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();
