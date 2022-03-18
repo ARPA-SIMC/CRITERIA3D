@@ -32,8 +32,8 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(QList<Crit3DMeteoPoint> meteoPoints)
-:meteoPoints(meteoPoints)
+Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints, frequencyType currentFrequency)
+:isGrid(isGrid), meteoPoints(meteoPoints), currentFrequency(currentFrequency)
 {
     this->setWindowTitle("Point statistics");
     this->resize(1240, 700);
@@ -42,48 +42,23 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(QList<Crit3DMeteoPoint>
     
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
+    QHBoxLayout *upperLayout = new QHBoxLayout();
+    QVBoxLayout *rightLayout = new QVBoxLayout();
+    QVBoxLayout *leftLayout = new QVBoxLayout();
+
     QGroupBox *horizontalGroupBox = new QGroupBox();
-    QHBoxLayout *selectionLayout = new QHBoxLayout;
-    QHBoxLayout *selectionChartLayout = new QHBoxLayout;
-    QVBoxLayout *selectionOptionLayout = new QVBoxLayout;
-    QHBoxLayout *selectionOptionBoxLayout = new QHBoxLayout;
-    QHBoxLayout *selectionOptionEditLayout = new QHBoxLayout;
+    QHBoxLayout *variableLayout = new QHBoxLayout;
+    QGroupBox *referencePeriodGroupBox = new QGroupBox();
+    QHBoxLayout *referencePeriodChartLayout = new QHBoxLayout;
+    QHBoxLayout *dateChartLayout = new QHBoxLayout;
+
+    QGroupBox *jointStationsGroupBox = new QGroupBox();
+    QHBoxLayout *jointStationsLayout = new QHBoxLayout;
+    QVBoxLayout *jointStationsSelectLayout = new QVBoxLayout;
+
     QVBoxLayout *plotLayout = new QVBoxLayout;
-/*
-    detrended.setText("Detrended data");
-    climatologicalLR.setText("Climatological lapse rate");
-    modelLR.setText("Model lapse rate");
-    
-    QLabel *r2Label = new QLabel(tr("R2"));
-    QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
-    
-    r2.setMaximumWidth(60);
-    r2.setMaximumHeight(30);
-    r2.setEnabled(false);
-    lapseRate.setMaximumWidth(60);
-    lapseRate.setMaximumHeight(30);
-    lapseRate.setEnabled(false);
-    
+
     QLabel *variableLabel = new QLabel(tr("Variable"));
-    QLabel *axisXLabel = new QLabel(tr("Axis X"));
-
-    std::vector<Crit3DProxy> proxy = interpolationSettings->getCurrentProxy();
-
-    for(int i=0; i<int(proxy.size()); i++)
-    {
-        axisX.addItem(QString::fromStdString(proxy[i].getName()));
-    }
-    proxyPos = 0;
-    axisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
-    if (axisX.currentText() != "elevation")
-    {
-        climatologicalLR.setVisible(false);
-    }
-    else
-    {
-        climatologicalLR.setVisible(true);
-    }
-
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
     {
@@ -103,57 +78,96 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(QList<Crit3DMeteoPoint>
     }
     variable.setMinimumWidth(130);
     variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    elaboration.setText("Elaboration");
     
-    selectionChartLayout->addWidget(variableLabel);
-    selectionChartLayout->addWidget(&variable);
-    selectionChartLayout->addWidget(axisXLabel);
-    selectionChartLayout->addWidget(&axisX);
-    
-    selectionOptionBoxLayout->addWidget(&detrended);
-    selectionOptionBoxLayout->addWidget(&modelLR);
-    selectionOptionBoxLayout->addWidget(&climatologicalLR);
+    variableLayout->addWidget(variableLabel);
+    variableLayout->addWidget(&variable);
+    variableLayout->addWidget(&elaboration);
+    referencePeriodGroupBox->setTitle("Reference period");
+    referencePeriodGroupBox->setLayout(variableLayout);
 
-    selectionOptionEditLayout->addWidget(r2Label);
-    selectionOptionEditLayout->addWidget(&r2);
-    selectionOptionEditLayout->addStretch(150);
-    selectionOptionEditLayout->addWidget(lapseRateLabel);
-    selectionOptionEditLayout->addWidget(&lapseRate);
-    selectionOptionEditLayout->addStretch(150);
-    selectionOptionEditLayout->addStretch(150);
+    QLabel *yearFromLabel = new QLabel(tr("From"));
+    referencePeriodChartLayout->addWidget(yearFromLabel);
+    referencePeriodChartLayout->addWidget(&yearFrom);
+    QLabel *yearToLabel = new QLabel(tr("To"));
+    referencePeriodChartLayout->addWidget(yearToLabel);
+    referencePeriodChartLayout->addWidget(&yearTo);
 
-    selectionOptionLayout->addLayout(selectionOptionBoxLayout);
-    selectionOptionLayout->addLayout(selectionOptionEditLayout);
+    QLabel *dayFromLabel = new QLabel(tr("Day from"));
+    dateChartLayout->addWidget(dayFromLabel);
+    dayFrom.setDisplayFormat("dd/MM");
+    dateChartLayout->addWidget(&dayFrom);
+    QLabel *dayToLabel = new QLabel(tr("Day to"));
+    dateChartLayout->addWidget(dayToLabel);
+    dayTo.setDisplayFormat("dd/MM");
+    dateChartLayout->addWidget(&dayTo);
+    QLabel *hourLabel = new QLabel(tr("Hour"));
+    hour.setRange(1,24);
+    hour.setSingleStep(1);
+    dateChartLayout->addWidget(hourLabel);
+    dateChartLayout->addWidget(&hour);
+    compute.setText("Compute");
 
-    selectionLayout->addLayout(selectionChartLayout);
-    selectionLayout->addStretch(30);
-    selectionLayout->addLayout(selectionOptionLayout);
-    
-    connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
-    connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
-    connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
-    connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
-    connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
+    jointStationsSelectLayout->addWidget(&jointStationsList);
+    QHBoxLayout *addDeleteStationLayout = new QHBoxLayout;
+    addDeleteStationLayout->addWidget(&addStation);
+    addStation.setText("Add");
+    deleteStation.setText("Delete");
+    saveToDb.setText("Save to DB");
+    addDeleteStationLayout->addWidget(&deleteStation);
+    jointStationsSelectLayout->addLayout(addDeleteStationLayout);
+    jointStationsSelectLayout->addWidget(&saveToDb);
+    jointStationsLayout->addLayout(jointStationsSelectLayout);
+    jointStationsSelected.setMaximumWidth(this->width()/4);
+    jointStationsLayout->addWidget(&jointStationsSelected);
+    jointStationsGroupBox->setTitle("Joint stations");
+    jointStationsGroupBox->setLayout(jointStationsLayout);
 
     chartView = new PointStatisticsChartView();
     plotLayout->addWidget(chartView);
 
     horizontalGroupBox->setMaximumSize(1240, 130);
-    horizontalGroupBox->setLayout(selectionLayout);
-    mainLayout->addWidget(horizontalGroupBox);
+    horizontalGroupBox->setLayout(variableLayout);
+    rightLayout->addWidget(horizontalGroupBox);
+    referencePeriodGroupBox->setLayout(referencePeriodChartLayout);
+    rightLayout->addWidget(referencePeriodGroupBox);
+    rightLayout->addLayout(dateChartLayout);
+    rightLayout->addWidget(&compute);
+
+    leftLayout->addWidget(jointStationsGroupBox);
+    QLabel *selectGraphLabel = new QLabel(tr("Select graph"));
+    leftLayout->addWidget(selectGraphLabel);
+    leftLayout->addWidget(&graph);
+    QLabel *availabilityLabel = new QLabel(tr("availability [%]"));
+    leftLayout->addWidget(availabilityLabel);
+    availability.setEnabled(false);
+    leftLayout->addWidget(&availability);
+
+
+    upperLayout->addLayout(rightLayout);
+    upperLayout->addLayout(leftLayout);
+    mainLayout->addLayout(upperLayout);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 
     if (currentFrequency != noFrequency)
     {
-        plot();
+        //plot();
     }
-*/
+
     show();
 }
 
 
 Crit3DPointStatisticsWidget::~Crit3DPointStatisticsWidget()
 {
+
+}
+
+void Crit3DPointStatisticsWidget::closeEvent(QCloseEvent *event)
+{
+    emit closePointStatistics();
+    event->accept();
 
 }
 
@@ -217,13 +231,6 @@ void Crit3DPointStatisticsWidget::updateFrequency(frequencyType newFrequency)
     variable.adjustSize();
 
     plot();
-}
-
-void Crit3DPointStatisticsWidget::closeEvent(QCloseEvent *event)
-{
-    emit closePointStatistics();
-    event->accept();
-
 }
 
 void Crit3DPointStatisticsWidget::plot()

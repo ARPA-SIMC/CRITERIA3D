@@ -2781,7 +2781,54 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
 
 void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::string namePoint)
 {
-    // TO DO
+    logInfoGUI("Loading data...");
+
+    // check dates
+    QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, idMeteoPoint).date();
+    QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, idMeteoPoint).date();
+    bool hasDailyData = !(firstDaily.isNull() || lastDaily.isNull());
+
+    QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, idMeteoPoint);
+    QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, idMeteoPoint);
+    bool hasHourlyData = !(firstHourly.isNull() || lastHourly.isNull());
+
+    if (!hasDailyData && !hasHourlyData)
+    {
+        logInfoGUI("No data.");
+        return;
+    }
+
+    // set minimum and maximum dates
+    QDate firstDate, lastDate;
+    if (hasDailyData)
+    {
+        firstDate = firstDaily;
+        lastDate = lastDaily;
+        if (hasHourlyData)
+        {
+            firstDate = std::min(firstDate, firstHourly.date());
+            lastDate = std::max(lastDaily, lastHourly.date());
+        }
+    }
+    else if (hasHourlyData)
+    {
+        firstDate = firstHourly.date();
+        lastDate = lastHourly.date();
+    }
+
+    Crit3DMeteoPoint mp;
+    mp.setId(idMeteoPoint);
+    mp.setName(namePoint);
+    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
+    meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
+    QList<Crit3DMeteoPoint> meteoPoints;
+    meteoPoints.append(mp);
+    // TO DO append le varie joint stations ancora non presenti
+    closeLogInfo();
+    bool isGrid = false;
+    Crit3DPointStatisticsWidget* pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPoints, currentFrequency);
+    QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
+    return;
 }
 
 void Project::showPointStatisticsWidgetGrid(std::string id)

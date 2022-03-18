@@ -13,7 +13,7 @@
         Q_OBJECT
 
         public:
-            Crit3DPointStatisticsWidget(QList<Crit3DMeteoPoint> meteoPoints);
+            Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints, frequencyType currentFrequency);
             ~Crit3DPointStatisticsWidget();
             void closeEvent(QCloseEvent *event);
             void updateDateTime(QDate newDate, int newHour);
@@ -25,20 +25,37 @@
             void modelLRClicked(int toggled);
 
     private:
+            bool isGrid;
             QList<Crit3DMeteoPoint> meteoPoints;
-            /*
             frequencyType currentFrequency;
+            QComboBox variable;
+            QComboBox yearFrom;
+            QComboBox yearTo;
+            meteoVariable myVar;
+            QPushButton elaboration;
+            QDateEdit dayFrom;
+            QDateEdit dayTo;
+            QSpinBox hour;
+            QPushButton compute;
+            PointStatisticsChartView *chartView;
+            QComboBox jointStationsList;
+            QPushButton addStation;
+            QPushButton deleteStation;
+            QPushButton saveToDb;
+            QListWidget jointStationsSelected;
+            QComboBox graph;
+            QTextEdit availability;
+                        /*
             QDate currentDate;
             int currentHour;
-            QComboBox variable;
             QComboBox axisX;
             QCheckBox detrended;
             QCheckBox climatologicalLR;
             QCheckBox modelLR;
             QTextEdit r2;
             QTextEdit lapseRate;
-            PointStatisticsChartView *chartView;
-            meteoVariable myVar;
+
+
             int proxyPos;
             */
 
