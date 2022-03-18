@@ -35,7 +35,7 @@
 Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints, frequencyType currentFrequency)
 :isGrid(isGrid), meteoPoints(meteoPoints), currentFrequency(currentFrequency)
 {
-    this->setWindowTitle("Point statistics");
+    this->setWindowTitle("Point statistics Id:"+QString::fromStdString(meteoPoints[0].id)+" "+QString::fromStdString(meteoPoints[0].name));
     this->resize(1240, 700);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
@@ -47,14 +47,18 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     QVBoxLayout *leftLayout = new QVBoxLayout();
 
     QGroupBox *horizontalGroupBox = new QGroupBox();
+    QVBoxLayout *elabLayout = new QVBoxLayout();
     QHBoxLayout *variableLayout = new QHBoxLayout;
     QGroupBox *referencePeriodGroupBox = new QGroupBox();
     QHBoxLayout *referencePeriodChartLayout = new QHBoxLayout;
     QHBoxLayout *dateChartLayout = new QHBoxLayout;
+    QGroupBox *gridLeftGroupBox = new QGroupBox();
+    QGridLayout *gridLeftLayout = new QGridLayout;
 
     QGroupBox *jointStationsGroupBox = new QGroupBox();
     QHBoxLayout *jointStationsLayout = new QHBoxLayout;
     QVBoxLayout *jointStationsSelectLayout = new QVBoxLayout;
+    QGridLayout *gridRightLayout = new QGridLayout;
 
     QVBoxLayout *plotLayout = new QVBoxLayout;
 
@@ -83,15 +87,15 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     variableLayout->addWidget(variableLabel);
     variableLayout->addWidget(&variable);
     variableLayout->addWidget(&elaboration);
-    referencePeriodGroupBox->setTitle("Reference period");
-    referencePeriodGroupBox->setLayout(variableLayout);
 
+    referencePeriodGroupBox->setTitle("Reference period");
     QLabel *yearFromLabel = new QLabel(tr("From"));
     referencePeriodChartLayout->addWidget(yearFromLabel);
     referencePeriodChartLayout->addWidget(&yearFrom);
     QLabel *yearToLabel = new QLabel(tr("To"));
     referencePeriodChartLayout->addWidget(yearToLabel);
     referencePeriodChartLayout->addWidget(&yearTo);
+    referencePeriodGroupBox->setLayout(referencePeriodChartLayout);
 
     QLabel *dayFromLabel = new QLabel(tr("Day from"));
     dateChartLayout->addWidget(dayFromLabel);
@@ -107,45 +111,121 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     dateChartLayout->addWidget(hourLabel);
     dateChartLayout->addWidget(&hour);
     compute.setText("Compute");
+    compute.setMaximumWidth(120);
 
+    QLabel *jointStationsLabel = new QLabel(tr("Stations:"));
+    jointStationsSelectLayout->addWidget(jointStationsLabel);
     jointStationsSelectLayout->addWidget(&jointStationsList);
+    jointStationsList.setMaximumWidth(this->width()/5);
     QHBoxLayout *addDeleteStationLayout = new QHBoxLayout;
     addDeleteStationLayout->addWidget(&addStation);
     addStation.setText("Add");
+    addStation.setMaximumWidth(120);
     deleteStation.setText("Delete");
+    deleteStation.setMaximumWidth(120);
     saveToDb.setText("Save to DB");
+    saveToDb.setMaximumWidth(120);
     addDeleteStationLayout->addWidget(&deleteStation);
     jointStationsSelectLayout->addLayout(addDeleteStationLayout);
     jointStationsSelectLayout->addWidget(&saveToDb);
     jointStationsLayout->addLayout(jointStationsSelectLayout);
     jointStationsSelected.setMaximumWidth(this->width()/4);
+    jointStationsSelected.setMaximumHeight(this->height()/4);
     jointStationsLayout->addWidget(&jointStationsSelected);
     jointStationsGroupBox->setTitle("Joint stations");
     jointStationsGroupBox->setLayout(jointStationsLayout);
 
     chartView = new PointStatisticsChartView();
+    chartView->setMinimumHeight(this->height()/2);
     plotLayout->addWidget(chartView);
 
-    horizontalGroupBox->setMaximumSize(1240, 130);
-    horizontalGroupBox->setLayout(variableLayout);
-    rightLayout->addWidget(horizontalGroupBox);
-    referencePeriodGroupBox->setLayout(referencePeriodChartLayout);
-    rightLayout->addWidget(referencePeriodGroupBox);
-    rightLayout->addLayout(dateChartLayout);
-    rightLayout->addWidget(&compute);
+    horizontalGroupBox->setLayout(elabLayout);
+    elabLayout->addLayout(variableLayout);
+    elabLayout->addWidget(referencePeriodGroupBox);
+    elabLayout->addLayout(dateChartLayout);
+    elabLayout->addWidget(&compute);
+    leftLayout->addWidget(horizontalGroupBox);
 
-    leftLayout->addWidget(jointStationsGroupBox);
-    QLabel *selectGraphLabel = new QLabel(tr("Select graph"));
-    leftLayout->addWidget(selectGraphLabel);
-    leftLayout->addWidget(&graph);
+    QLabel *classWidthLabel = new QLabel(tr("Class width"));
+    gridLeftLayout->addWidget(classWidthLabel,0,0,1,1);
+    QLabel *valMaxLabel = new QLabel(tr("Val max"));
+    gridLeftLayout->addWidget(valMaxLabel,0,1,1,1);
+    QLabel *smoothingLabel = new QLabel(tr("Smoothing"));
+    gridLeftLayout->addWidget(smoothingLabel,0,2,1,1);
+    classWidth.setEnabled(false);
+    classWidth.setMaximumWidth(60);
+    classWidth.setMaximumHeight(30);
+    gridLeftLayout->addWidget(&classWidth,3,0,1,1);
+    valMax.setEnabled(false);
+    valMax.setMaximumWidth(60);
+    valMax.setMaximumHeight(30);
+    gridLeftLayout->addWidget(&valMax,3,1,1,1);
+    smoothing.setEnabled(false);
+    smoothing.setMaximumWidth(60);
+    smoothing.setMaximumHeight(30);
+    gridLeftLayout->addWidget(&smoothing,3,2,1,1);
+    gridLeftGroupBox->setMaximumHeight(this->height()/6);
+    gridLeftGroupBox->setLayout(gridLeftLayout);
+    leftLayout->addWidget(gridLeftGroupBox);
+
+    rightLayout->addWidget(jointStationsGroupBox);
+    QLabel *selectGraphLabel = new QLabel(tr("Select graph:"));
+    rightLayout->addWidget(selectGraphLabel);
+    graph.setMaximumWidth(this->width()/5);
+    rightLayout->addWidget(&graph);
     QLabel *availabilityLabel = new QLabel(tr("availability [%]"));
-    leftLayout->addWidget(availabilityLabel);
+    gridRightLayout->addWidget(availabilityLabel,0,0,1,1);
     availability.setEnabled(false);
-    leftLayout->addWidget(&availability);
+    availability.setMaximumWidth(60);
+    availability.setMaximumHeight(30);
+    gridRightLayout->addWidget(&availability,1,0,1,1);
+    QLabel *rateLabel = new QLabel(tr("rate"));
+    gridRightLayout->addWidget(rateLabel,2,0,1,1);
+    QLabel *r2Label = new QLabel(tr("r2"));
+    gridRightLayout->addWidget(r2Label,2,1,1,1);
+    QLabel *significanceLabel = new QLabel(tr("significance [MK]"));
+    gridRightLayout->addWidget(significanceLabel,2,2,1,1);
+    rate.setEnabled(false);
+    rate.setMaximumWidth(60);
+    rate.setMaximumHeight(30);
+    gridRightLayout->addWidget(&rate,3,0,1,1);
+    r2.setEnabled(false);
+    r2.setMaximumWidth(60);
+    r2.setMaximumHeight(30);
+    gridRightLayout->addWidget(&r2,3,1,1,1);
+    significance.setEnabled(false);
+    significance.setMaximumWidth(60);
+    significance.setMaximumHeight(30);
+    gridRightLayout->addWidget(&significance,3,2,1,1);
+    QLabel *averageLabel = new QLabel(tr("average"));
+    gridRightLayout->addWidget(averageLabel,4,0,1,1);
+    QLabel *modeLabel = new QLabel(tr("mode"));
+    gridRightLayout->addWidget(modeLabel,4,1,1,1);
+    QLabel *medianLabel = new QLabel(tr("median"));
+    gridRightLayout->addWidget(medianLabel,4,2,1,1);
+    QLabel *sigmaLabel = new QLabel(tr("sigma"));
+    gridRightLayout->addWidget(sigmaLabel,4,3,1,1);
+    average.setEnabled(false);
+    average.setMaximumWidth(60);
+    average.setMaximumHeight(30);
+    gridRightLayout->addWidget(&average,5,0,1,1);
+    mode.setEnabled(false);
+    mode.setMaximumWidth(60);
+    mode.setMaximumHeight(30);
+    gridRightLayout->addWidget(&mode,5,1,1,1);
+    median.setEnabled(false);
+    median.setMaximumWidth(60);
+    median.setMaximumHeight(30);
+    gridRightLayout->addWidget(&median,5,2,1,1);
+    sigma.setEnabled(false);
+    sigma.setMaximumWidth(60);
+    sigma.setMaximumHeight(30);
+    gridRightLayout->addWidget(&sigma,5,3,1,1);
 
+    rightLayout->addLayout(gridRightLayout);
 
-    upperLayout->addLayout(rightLayout);
     upperLayout->addLayout(leftLayout);
+    upperLayout->addLayout(rightLayout);
     mainLayout->addLayout(upperLayout);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);

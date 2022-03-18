@@ -45,6 +45,16 @@
             QListWidget jointStationsSelected;
             QComboBox graph;
             QTextEdit availability;
+            QTextEdit rate;
+            QTextEdit r2;
+            QTextEdit significance;
+            QTextEdit average;
+            QTextEdit mode;
+            QTextEdit median;
+            QTextEdit sigma;
+            QTextEdit classWidth;
+            QTextEdit valMax;
+            QTextEdit smoothing;
                         /*
             QDate currentDate;
             int currentHour;
