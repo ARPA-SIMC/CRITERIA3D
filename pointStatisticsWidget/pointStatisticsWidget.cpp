@@ -136,7 +136,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     jointStationsGroupBox->setLayout(jointStationsLayout);
 
     chartView = new PointStatisticsChartView();
-    chartView->setMinimumHeight(this->height()/2);
+    chartView->setMinimumHeight(this->height()*2/3);
     plotLayout->addWidget(chartView);
 
     horizontalGroupBox->setLayout(elabLayout);
@@ -155,15 +155,15 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     classWidth.setEnabled(false);
     classWidth.setMaximumWidth(60);
     classWidth.setMaximumHeight(30);
-    gridLeftLayout->addWidget(&classWidth,3,0,1,1);
+    gridLeftLayout->addWidget(&classWidth,3,0,1,-1);
     valMax.setEnabled(false);
     valMax.setMaximumWidth(60);
     valMax.setMaximumHeight(30);
-    gridLeftLayout->addWidget(&valMax,3,1,1,1);
+    gridLeftLayout->addWidget(&valMax,3,1,1,-1);
     smoothing.setEnabled(false);
     smoothing.setMaximumWidth(60);
     smoothing.setMaximumHeight(30);
-    gridLeftLayout->addWidget(&smoothing,3,2,1,1);
+    gridLeftLayout->addWidget(&smoothing,3,2,1,-1);
     gridLeftGroupBox->setMaximumHeight(this->height()/6);
     gridLeftGroupBox->setLayout(gridLeftLayout);
     leftLayout->addWidget(gridLeftGroupBox);
