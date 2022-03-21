@@ -13,7 +13,7 @@
         Q_OBJECT
 
         public:
-            Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints, frequencyType currentFrequency);
+            Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints);
             ~Crit3DPointStatisticsWidget();
             void closeEvent(QCloseEvent *event);
             void updateDateTime(QDate newDate, int newHour);
@@ -55,19 +55,6 @@
             QTextEdit classWidth;
             QTextEdit valMax;
             QTextEdit smoothing;
-                        /*
-            QDate currentDate;
-            int currentHour;
-            QComboBox axisX;
-            QCheckBox detrended;
-            QCheckBox climatologicalLR;
-            QCheckBox modelLR;
-            QTextEdit r2;
-            QTextEdit lapseRate;
-
-
-            int proxyPos;
-            */
 
     signals:
         void closePointStatistics();

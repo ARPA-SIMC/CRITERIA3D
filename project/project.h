@@ -38,6 +38,10 @@
         #include "proxyWidget.h"
     #endif
 
+    #ifndef POINTSTATISTICSWIDGET_H
+        #include "pointStatisticsWidget.h"
+    #endif
+
     #ifndef _FSTREAM_
         #include <fstream>
     #endif

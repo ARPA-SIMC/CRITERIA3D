@@ -10,7 +10,6 @@
 #include "utilities.h"
 #include "aggregation.h"
 #include "meteoWidget.h"
-#include "pointStatisticsWidget.h"
 #include "dialogSelectionMeteoPoint.h"
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
@@ -2826,7 +2825,7 @@ void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::stri
     // TO DO append le varie joint stations ancora non presenti
     closeLogInfo();
     bool isGrid = false;
-    pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPoints, currentFrequency);
+    pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPoints);
     QObject::connect(proxyWidget, SIGNAL(pointStatisticsWidget()), this, SLOT(deletePointStatisticsWidget()));
     return;
 }
