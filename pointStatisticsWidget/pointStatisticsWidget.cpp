@@ -32,8 +32,8 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints)
-:isGrid(isGrid), meteoPoints(meteoPoints)
+Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly)
+:isGrid(isGrid), meteoPoints(meteoPoints), firstDaily(firstDaily), lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly)
 {
     this->setWindowTitle("Point statistics Id:"+QString::fromStdString(meteoPoints[0].id)+" "+QString::fromStdString(meteoPoints[0].name));
     this->resize(1240, 700);
@@ -68,9 +68,17 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     elaboration.setText("Elaboration");
     
     dailyButton.setText("Daily");
-    dailyButton.setChecked(true); //default
-    currentFrequency = daily; //default
     hourlyButton.setText("Hourly");
+    if (!firstDaily.isNull() || !lastDaily.isNull())
+    {
+        dailyButton.setChecked(true); //default
+        currentFrequency = daily; //default
+    }
+    else
+    {
+        hourlyButton.setChecked(true);
+        currentFrequency = hourly;
+    }
 
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
@@ -185,19 +193,25 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     rightLayout->addWidget(selectGraphLabel);
     if (currentFrequency == daily)
     {
-        graph.addItem("Distribution");
-        graph.addItem("Trend");
-        graph.addItem("Anomaly trend");
-        graph.addItem("Climate");
-        graph.addItem("Anomaly index");
-        graph.addItem("Weather generator");
-        graph.addItem("Scenario");
-        graph.addItem("Series generator");
+        if (!firstDaily.isNull() || !lastDaily.isNull())
+        {
+            graph.addItem("Distribution");
+            graph.addItem("Trend");
+            graph.addItem("Anomaly trend");
+            graph.addItem("Climate");
+            graph.addItem("Anomaly index");
+            graph.addItem("Weather generator");
+            graph.addItem("Scenario");
+            graph.addItem("Series generator");
+        }
     }
     else if (currentFrequency == hourly)
     {
-        graph.addItem("Distribution");
-        graph.addItem("Series generator");
+        if (!firstHourly.isNull() || !lastHourly.isNull())
+        {
+            graph.addItem("Distribution");
+            graph.addItem("Series generator");
+        }
     }
     graph.setMaximumWidth(this->width()/5);
     graph.setSizeAdjustPolicy(QComboBox::AdjustToContents);
@@ -296,14 +310,21 @@ void Crit3DPointStatisticsWidget::dailyVar()
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
 
     graph.clear();
-    graph.addItem("Distribution");
-    graph.addItem("Trend");
-    graph.addItem("Anomaly trend");
-    graph.addItem("Climate");
-    graph.addItem("Anomaly index");
-    graph.addItem("Weather generator");
-    graph.addItem("Scenario");
-    graph.addItem("Series generator");
+    if (!firstDaily.isNull() || !lastDaily.isNull())
+    {
+        graph.addItem("Distribution");
+        graph.addItem("Trend");
+        graph.addItem("Anomaly trend");
+        graph.addItem("Climate");
+        graph.addItem("Anomaly index");
+        graph.addItem("Weather generator");
+        graph.addItem("Scenario");
+        graph.addItem("Series generator");
+    }
+    else
+    {
+        QMessageBox::information(nullptr, "Warning", "No daily data");
+    }
 
 }
 
@@ -320,6 +341,14 @@ void Crit3DPointStatisticsWidget::hourlyVar()
     myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
 
     graph.clear();
-    graph.addItem("Distribution");
-    graph.addItem("Series generator");
+    if (!firstHourly.isNull() || !lastHourly.isNull())
+    {
+        graph.addItem("Distribution");
+        graph.addItem("Series generator");
+    }
+    else
+    {
+        QMessageBox::information(nullptr, "Warning", "No hourly data");
+    }
+
 }

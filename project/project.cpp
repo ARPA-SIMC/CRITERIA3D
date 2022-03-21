@@ -2797,24 +2797,6 @@ void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::stri
         return;
     }
 
-    // set minimum and maximum dates
-    QDate firstDate, lastDate;
-    if (hasDailyData)
-    {
-        firstDate = firstDaily;
-        lastDate = lastDaily;
-        if (hasHourlyData)
-        {
-            firstDate = std::min(firstDate, firstHourly.date());
-            lastDate = std::max(lastDaily, lastHourly.date());
-        }
-    }
-    else if (hasHourlyData)
-    {
-        firstDate = firstHourly.date();
-        lastDate = lastHourly.date();
-    }
-
     Crit3DMeteoPoint mp;
     mp.setId(idMeteoPoint);
     mp.setName(namePoint);
@@ -2825,7 +2807,7 @@ void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::stri
     // TO DO append le varie joint stations ancora non presenti
     closeLogInfo();
     bool isGrid = false;
-    pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPoints);
+    pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPoints, firstDaily, lastDaily, firstHourly, lastHourly);
     QObject::connect(proxyWidget, SIGNAL(pointStatisticsWidget()), this, SLOT(deletePointStatisticsWidget()));
     return;
 }

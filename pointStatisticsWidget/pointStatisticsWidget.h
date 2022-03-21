@@ -13,7 +13,7 @@
         Q_OBJECT
 
         public:
-            Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints);
+            Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly);
             ~Crit3DPointStatisticsWidget();
             void closeEvent(QCloseEvent *event);
             void dailyVar();
@@ -22,6 +22,10 @@
     private:
             bool isGrid;
             QList<Crit3DMeteoPoint> meteoPoints;
+            QDate firstDaily;
+            QDate lastDaily;
+            QDateTime firstHourly;
+            QDateTime lastHourly;
             frequencyType currentFrequency;
             QComboBox variable;
             QRadioButton dailyButton;
