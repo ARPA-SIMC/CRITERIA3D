@@ -49,6 +49,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     QGroupBox *horizontalGroupBox = new QGroupBox();
     QVBoxLayout *elabLayout = new QVBoxLayout();
     QHBoxLayout *variableLayout = new QHBoxLayout;
+    QGroupBox *variableGroupBox = new QGroupBox();
     QGroupBox *referencePeriodGroupBox = new QGroupBox();
     QHBoxLayout *referencePeriodChartLayout = new QHBoxLayout;
     QHBoxLayout *dateChartLayout = new QHBoxLayout;
@@ -62,7 +63,15 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
 
     QVBoxLayout *plotLayout = new QVBoxLayout;
 
-    QLabel *variableLabel = new QLabel(tr("Variable"));
+    QLabel *variableLabel = new QLabel(tr("Variable: "));
+
+    elaboration.setText("Elaboration");
+    
+    dailyButton.setText("Daily");
+    dailyButton.setChecked(true); //default
+    currentFrequency = daily; //default
+    hourlyButton.setText("Hourly");
+
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
     {
@@ -82,11 +91,13 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     }
     variable.setMinimumWidth(130);
     variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
-    elaboration.setText("Elaboration");
-    
+
+    variableLayout->addWidget(&dailyButton);
+    variableLayout->addWidget(&hourlyButton);
     variableLayout->addWidget(variableLabel);
     variableLayout->addWidget(&variable);
     variableLayout->addWidget(&elaboration);
+    variableGroupBox->setLayout(variableLayout);
 
     referencePeriodGroupBox->setTitle("Reference period");
     QLabel *yearFromLabel = new QLabel(tr("From"));
@@ -108,6 +119,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     QLabel *hourLabel = new QLabel(tr("Hour"));
     hour.setRange(1,24);
     hour.setSingleStep(1);
+    hour.setEnabled(false);
     dateChartLayout->addWidget(hourLabel);
     dateChartLayout->addWidget(&hour);
     compute.setText("Compute");
@@ -140,7 +152,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     plotLayout->addWidget(chartView);
 
     horizontalGroupBox->setLayout(elabLayout);
-    elabLayout->addLayout(variableLayout);
+    elabLayout->addWidget(variableGroupBox);
     elabLayout->addWidget(referencePeriodGroupBox);
     elabLayout->addLayout(dateChartLayout);
     elabLayout->addWidget(&compute);
@@ -171,7 +183,24 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     rightLayout->addWidget(jointStationsGroupBox);
     QLabel *selectGraphLabel = new QLabel(tr("Select graph:"));
     rightLayout->addWidget(selectGraphLabel);
+    if (currentFrequency == daily)
+    {
+        graph.addItem("Distribution");
+        graph.addItem("Trend");
+        graph.addItem("Anomaly trend");
+        graph.addItem("Climate");
+        graph.addItem("Anomaly index");
+        graph.addItem("Weather generator");
+        graph.addItem("Scenario");
+        graph.addItem("Series generator");
+    }
+    else if (currentFrequency == hourly)
+    {
+        graph.addItem("Distribution");
+        graph.addItem("Series generator");
+    }
     graph.setMaximumWidth(this->width()/5);
+    graph.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     rightLayout->addWidget(&graph);
     QLabel *availabilityLabel = new QLabel(tr("availability [%]"));
     gridRightLayout->addWidget(availabilityLabel,0,0,1,1);
@@ -230,6 +259,9 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 
+    connect(&dailyButton, &QRadioButton::clicked, [=](){ dailyVar(); });
+    connect(&hourlyButton, &QRadioButton::clicked, [=](){ hourlyVar(); });
+
 //    if (currentFrequency != noFrequency)
 //    {
         //plot();
@@ -249,4 +281,45 @@ void Crit3DPointStatisticsWidget::closeEvent(QCloseEvent *event)
     emit closePointStatistics();
     event->accept();
 
+}
+
+void Crit3DPointStatisticsWidget::dailyVar()
+{
+    currentFrequency = daily;
+    hour.setEnabled(false);
+    variable.clear();
+    std::map<meteoVariable, std::string>::const_iterator it;
+    for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
+    {
+        variable.addItem(QString::fromStdString(it->second));
+    }
+    myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+
+    graph.clear();
+    graph.addItem("Distribution");
+    graph.addItem("Trend");
+    graph.addItem("Anomaly trend");
+    graph.addItem("Climate");
+    graph.addItem("Anomaly index");
+    graph.addItem("Weather generator");
+    graph.addItem("Scenario");
+    graph.addItem("Series generator");
+
+}
+
+void Crit3DPointStatisticsWidget::hourlyVar()
+{
+    currentFrequency = hourly;
+    hour.setEnabled(true);
+    variable.clear();
+    std::map<meteoVariable, std::string>::const_iterator it;
+    for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
+    {
+        variable.addItem(QString::fromStdString(it->second));
+    }
+    myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
+
+    graph.clear();
+    graph.addItem("Distribution");
+    graph.addItem("Series generator");
 }

@@ -16,19 +16,16 @@
             Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints);
             ~Crit3DPointStatisticsWidget();
             void closeEvent(QCloseEvent *event);
-            void updateDateTime(QDate newDate, int newHour);
-            void updateFrequency(frequencyType newFrequency);
-            void changeProxyPos(const QString proxyName);
-            void changeVar(const QString varName);
-            void plot();
-            void climatologicalLRClicked(int toggled);
-            void modelLRClicked(int toggled);
+            void dailyVar();
+            void hourlyVar();
 
     private:
             bool isGrid;
             QList<Crit3DMeteoPoint> meteoPoints;
             frequencyType currentFrequency;
             QComboBox variable;
+            QRadioButton dailyButton;
+            QRadioButton hourlyButton;
             QComboBox yearFrom;
             QComboBox yearTo;
             meteoVariable myVar;
