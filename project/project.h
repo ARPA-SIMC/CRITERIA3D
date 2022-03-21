@@ -143,6 +143,7 @@
         QList<Crit3DMeteoWidget*> meteoWidgetGridList;
 
         Crit3DProxyWidget* proxyWidget;
+        Crit3DPointStatisticsWidget* pointStatisticsWidget;
 
         Project();
 
@@ -275,6 +276,7 @@
         void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid(int id);
         void deleteProxyWidget();
+        void deletePointStatisticsWidget();
 
     };
 

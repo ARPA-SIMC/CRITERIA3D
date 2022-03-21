@@ -2826,9 +2826,14 @@ void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::stri
     // TO DO append le varie joint stations ancora non presenti
     closeLogInfo();
     bool isGrid = false;
-    Crit3DPointStatisticsWidget* pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPoints, currentFrequency);
-    QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
+    pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPoints, currentFrequency);
+    QObject::connect(proxyWidget, SIGNAL(pointStatisticsWidget()), this, SLOT(deletePointStatisticsWidget()));
     return;
+}
+
+void Project::deletePointStatisticsWidget()
+{
+    pointStatisticsWidget = nullptr;
 }
 
 void Project::showPointStatisticsWidgetGrid(std::string id)
