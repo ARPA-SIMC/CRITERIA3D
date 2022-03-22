@@ -2798,8 +2798,7 @@ void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::stri
     }
 
     Crit3DMeteoPoint mp;
-    mp.setId(idMeteoPoint);
-    mp.setName(namePoint);
+    meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(idMeteoPoint), &mp, gisSettings, errorString);
     meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
     meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
     QList<Crit3DMeteoPoint> meteoPoints;
@@ -2807,7 +2806,7 @@ void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::stri
     // TO DO append le varie joint stations ancora non presenti
     closeLogInfo();
     bool isGrid = false;
-    pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPoints, firstDaily, lastDaily, firstHourly, lastHourly);
+    pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPointsDbHandler, nullptr, meteoPoints, firstDaily, lastDaily, firstHourly, lastHourly, meteoSettings);
     QObject::connect(proxyWidget, SIGNAL(pointStatisticsWidget()), this, SLOT(deletePointStatisticsWidget()));
     return;
 }

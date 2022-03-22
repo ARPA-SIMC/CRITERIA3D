@@ -6,7 +6,7 @@
 #
 #----------------------------------------------------
 
-QT  += widgets charts sql
+QT  += widgets charts sql xml
 
 TEMPLATE = lib
 CONFIG += staticlib
@@ -31,7 +31,7 @@ win32:{
     TARGET = pointStatisticsWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../commonDialogs ../interpolation
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../dbMeteoPoints ../dbMeteoGrid ../climate ../commonDialogs ../interpolation
 
 
 SOURCES += \

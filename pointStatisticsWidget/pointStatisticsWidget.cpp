@@ -32,8 +32,10 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly)
-:isGrid(isGrid), meteoPoints(meteoPoints), firstDaily(firstDaily), lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly)
+Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QList<Crit3DMeteoPoint> meteoPoints,
+                                                         QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings)
+:isGrid(isGrid), meteoPointsDbHandler(meteoPointsDbHandler), meteoGridDbHandler(meteoGridDbHandler), meteoPoints(meteoPoints), firstDaily(firstDaily),
+  lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly), meteoSettings(meteoSettings)
 {
     this->setWindowTitle("Point statistics Id:"+QString::fromStdString(meteoPoints[0].id)+" "+QString::fromStdString(meteoPoints[0].name));
     this->resize(1240, 700);
@@ -411,6 +413,26 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 QMessageBox::information(nullptr, "Warning", "Number of valid years < 3");
                 return;
+            }
+            if (myVar == dailyPrecipitation || myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM || myVar == dailyBIC)
+            {
+                clima.setElab1("sum");
+            }
+            else
+            {
+                clima.setElab1("average");
+            }
+            clima.setYearStart(yearFrom.currentText().toInt());
+            clima.setYearEnd(yearTo.currentText().toInt());
+            clima.setGenericPeriodDateStart(QDate(yearFrom.currentText().toInt(), dayFrom.date().month(), dayFrom.date().day()));
+            clima.setGenericPeriodDateEnd(QDate(yearTo.currentText().toInt(), dayTo.date().month(), dayTo.date().day()));
+            if (dayFrom.date()> dayTo.date())
+            {
+                clima.setNYears(1);
+            }
+            else
+            {
+                clima.setNYears(0);
             }
         }
     }

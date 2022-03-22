@@ -5,6 +5,9 @@
     #include <QtCharts>
     #include "pointStatisticsChartView.h"
     #include "meteoPoint.h"
+    #include "dbMeteoPointsHandler.h"
+    #include "dbMeteoGrid.h"
+    #include "crit3dClimate.h"
     #include "interpolationSettings.h"
     #include "interpolationPoint.h"
 
@@ -13,7 +16,7 @@
         Q_OBJECT
 
         public:
-            Crit3DPointStatisticsWidget(bool isGrid, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly);
+            Crit3DPointStatisticsWidget(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings);
             ~Crit3DPointStatisticsWidget();
             void closeEvent(QCloseEvent *event);
             void dailyVar();
@@ -24,6 +27,10 @@
 
     private:
             bool isGrid;
+            Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
+            Crit3DMeteoGridDbHandler* meteoGridDbHandler;
+            Crit3DMeteoSettings *meteoSettings;
+            Crit3DClimate clima;
             QList<Crit3DMeteoPoint> meteoPoints;
             QDate firstDaily;
             QDate lastDaily;

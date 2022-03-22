@@ -4486,4 +4486,93 @@ void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
     delete meteoPointTemp;
 }
 
+// return true if exists a valid period of data
+// (validYears: number of valid years)
+/*
+bool computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
+                                         Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, bool isAnomaly, Crit3DMeteoSettings* meteoSettings, int* validYears)
+{
+    *validYears = 0;
+    meteoComputation elabMeteoComp;
+    try
+    {
+        elabMeteoComp = MapMeteoComputation.at(clima->elab1().toStdString());
+    }
+    catch (const std::out_of_range& )
+    {
+        elabMeteoComp = noMeteoComp;
+    }
+    if (clima->param1IsClimate())
+    {
+        clima->param1();
+    }
+
+    QDate startDate(clima->yearStart(), clima->genericPeriodDateStart().month(), clima->genericPeriodDateStart().day());
+    QDate endDate(clima->yearEnd(), clima->genericPeriodDateEnd().month(), clima->genericPeriodDateEnd().day());
+    for (int myYear = clima->yearStart(); myYear <= clima->yearEnd(); myYear++)
+    {
+        startDate.setDate(myYear, startDate.month(), startDate.day());
+        endDate.setDate(myYear, endDate.month(), endDate.day());
+        if (clima->nYears() < 0)
+        {
+            startDate.setDate(myYear + clima->nYears(), startDate.month(), startDate.day());
+        }
+        else if (clima->nYears() > 0)
+        {
+            endDate.setDate(myYear + clima->nYears(), endDate.month(), endDate.day());
+        }
+        if (elaborationOnPoint())
+    }
+
+
+}
+
+
+Dim myYear As Integer
+Dim startDate As Date, finishDate As Date
+
+    computeAnnualSeriesOnPointFromDaily = False
+
+    myValidYears = 0
+
+    With myAnnualSeries
+
+        .firstYear = myYearIni
+        ReDim Preserve .Value(myYearFin - myYearIni + 1)
+
+        For myYear = myYearIni To myYearFin
+
+            startDate = DateSerial(myYear, month(myStartDate), day(myStartDate))
+            finishDate = DateSerial(myYear, month(myEndDate), day(myEndDate))
+            If myNPeriodYears < 0 Then
+                startDate = DateSerial(myYear + myNPeriodYears, month(myStartDate), day(myStartDate))
+            ElseIf myNPeriodYears > 0 Then
+                finishDate = DateSerial(myYear + myNPeriodYears, month(myEndDate), day(myEndDate))
+            End If
+
+            If Elaboration.ElaborationOnPoint(myPoint, FrmMeteo.getDataType, _
+                myVar, Definitions.GENERIC_PERIOD, myElab, myParam1, _
+                Definitions.NODATASTRING, Definitions.NO_DATA, _
+                startDate, finishDate, myNPeriodYears, _
+                myYear, myYear, False, Definitions.NODATE, Definitions.NODATE, Definitions.NO_DATA, _
+                False, LoadData) Then
+
+                .Value(myYear - myYearIni + 1) = myPoint.Elab
+
+                myValidYears = myValidYears + 1
+
+                computeAnnualSeriesOnPointFromDaily = True
+
+                .isLoaded = True
+
+            Else
+                .Value(myYear - myYearIni + 1) = Definitions.NO_DATA
+            End If
+
+        Next myYear
+
+    End With
+
+End Function
+*/
 
