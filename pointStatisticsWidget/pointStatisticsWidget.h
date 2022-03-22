@@ -18,6 +18,9 @@
             void closeEvent(QCloseEvent *event);
             void dailyVar();
             void hourlyVar();
+            void changeGraph(const QString graphName);
+            void changeVar(const QString varName);
+            void plot();
 
     private:
             bool isGrid;

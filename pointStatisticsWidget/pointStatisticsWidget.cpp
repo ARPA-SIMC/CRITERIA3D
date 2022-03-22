@@ -119,10 +119,12 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
     QLabel *dayFromLabel = new QLabel(tr("Day from"));
     dateChartLayout->addWidget(dayFromLabel);
     dayFrom.setDisplayFormat("dd/MM");
+    dayFrom.setDate(QDate(1800,1,1));
     dateChartLayout->addWidget(&dayFrom);
     QLabel *dayToLabel = new QLabel(tr("Day to"));
     dateChartLayout->addWidget(dayToLabel);
     dayTo.setDisplayFormat("dd/MM");
+    dayTo.setDate(QDate(1800,12,31));
     dateChartLayout->addWidget(&dayTo);
     QLabel *hourLabel = new QLabel(tr("Hour"));
     hour.setRange(1,24);
@@ -203,6 +205,13 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
             graph.addItem("Weather generator");
             graph.addItem("Scenario");
             graph.addItem("Series generator");
+
+            for(int i = 0; i <= lastDaily.year()-firstDaily.year(); i++)
+            {
+                yearFrom.addItem(QString::number(firstDaily.year()+i));
+                yearTo.addItem(QString::number(firstDaily.year()+i));
+            }
+            yearTo.setCurrentText(QString::number(lastDaily.year()));
         }
     }
     else if (currentFrequency == hourly)
@@ -211,6 +220,12 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
         {
             graph.addItem("Distribution");
             graph.addItem("Series generator");
+            for(int i = 0; i <= lastHourly.date().year() - firstHourly.date().year(); i++)
+            {
+                yearFrom.addItem(QString::number(firstHourly.date().year()+i));
+                yearTo.addItem(QString::number(firstHourly.date().year()+i));
+            }
+            yearTo.setCurrentText(QString::number(lastHourly.date().year()));
         }
     }
     graph.setMaximumWidth(this->width()/5);
@@ -275,12 +290,10 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, QList<Crit
 
     connect(&dailyButton, &QRadioButton::clicked, [=](){ dailyVar(); });
     connect(&hourlyButton, &QRadioButton::clicked, [=](){ hourlyVar(); });
+    connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
+    connect(&graph, &QComboBox::currentTextChanged, [=](const QString &newGraph){ this->changeGraph(newGraph); });
 
-//    if (currentFrequency != noFrequency)
-//    {
-        //plot();
-//    }
-
+    plot();
     show();
 }
 
@@ -302,6 +315,8 @@ void Crit3DPointStatisticsWidget::dailyVar()
     currentFrequency = daily;
     hour.setEnabled(false);
     variable.clear();
+    yearFrom.clear();
+    yearTo.clear();
     std::map<meteoVariable, std::string>::const_iterator it;
     for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
     {
@@ -320,6 +335,12 @@ void Crit3DPointStatisticsWidget::dailyVar()
         graph.addItem("Weather generator");
         graph.addItem("Scenario");
         graph.addItem("Series generator");
+        for(int i = 0; i <= lastDaily.year()-firstDaily.year(); i++)
+        {
+            yearFrom.addItem(QString::number(firstDaily.year()+i));
+            yearTo.addItem(QString::number(firstDaily.year()+i));
+        }
+        yearTo.setCurrentText(QString::number(lastDaily.year()));
     }
     else
     {
@@ -333,6 +354,8 @@ void Crit3DPointStatisticsWidget::hourlyVar()
     currentFrequency = hourly;
     hour.setEnabled(true);
     variable.clear();
+    yearFrom.clear();
+    yearTo.clear();
     std::map<meteoVariable, std::string>::const_iterator it;
     for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
     {
@@ -345,10 +368,54 @@ void Crit3DPointStatisticsWidget::hourlyVar()
     {
         graph.addItem("Distribution");
         graph.addItem("Series generator");
+        for(int i = 0; i <= lastHourly.date().year() - firstHourly.date().year(); i++)
+        {
+            yearFrom.addItem(QString::number(firstHourly.date().year()+i));
+            yearTo.addItem(QString::number(firstHourly.date().year()+i));
+        }
+        yearTo.setCurrentText(QString::number(lastHourly.date().year()));
     }
     else
     {
         QMessageBox::information(nullptr, "Warning", "No hourly data");
     }
 
+}
+
+void Crit3DPointStatisticsWidget::changeGraph(const QString graphName)
+{
+    plot();
+}
+
+void Crit3DPointStatisticsWidget::changeVar(const QString varName)
+{
+    if (currentFrequency == daily)
+    {
+        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
+    }
+    else if (currentFrequency == hourly)
+    {
+        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
+    }
+    plot();
+}
+
+void Crit3DPointStatisticsWidget::plot()
+{
+    if (currentFrequency == daily)
+    {
+        if (graph.currentText() == "Trend")
+        {
+            // check years
+            if (yearTo.currentText().toInt() - yearFrom.currentText().toInt() < 2)
+            {
+                QMessageBox::information(nullptr, "Warning", "Number of valid years < 3");
+                return;
+            }
+        }
+    }
+    else if (currentFrequency == hourly)
+    {
+
+    }
 }
