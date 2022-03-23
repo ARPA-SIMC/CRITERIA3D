@@ -4486,4 +4486,49 @@ void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
     delete meteoPointTemp;
 }
 
+int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
+                                         Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, bool isAnomaly, Crit3DMeteoSettings* meteoSettings, std::vector<float> &outputValues)
+{
+    int validYears = 0;
+    meteoComputation elabMeteoComp;
+    try
+    {
+        elabMeteoComp = MapMeteoComputation.at(clima->elab1().toStdString());
+    }
+    catch (const std::out_of_range& )
+    {
+        elabMeteoComp = noMeteoComp;
+    }
+    if (clima->param1IsClimate())
+    {
+        clima->param1();
+    }
+
+    QDate startDate(clima->yearStart(), clima->genericPeriodDateStart().month(), clima->genericPeriodDateStart().day());
+    QDate endDate(clima->yearEnd(), clima->genericPeriodDateEnd().month(), clima->genericPeriodDateEnd().day());
+    for (int myYear = clima->yearStart(); myYear <= clima->yearEnd(); myYear++)
+    {
+        startDate.setDate(myYear, startDate.month(), startDate.day());
+        endDate.setDate(myYear, endDate.month(), endDate.day());
+        if (clima->nYears() < 0)
+        {
+            startDate.setDate(myYear + clima->nYears(), startDate.month(), startDate.day());
+        }
+        else if (clima->nYears() > 0)
+        {
+            endDate.setDate(myYear + clima->nYears(), endDate.month(), endDate.day());
+        }
+        if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
+        {
+            validYears = validYears + 1;
+            outputValues.push_back(meteoPointTemp->elaboration);
+        }
+        else
+        {
+            outputValues.push_back(NODATA);
+        }
+    }
+    return validYears;
+}
+
 

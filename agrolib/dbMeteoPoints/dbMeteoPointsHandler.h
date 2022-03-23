@@ -58,6 +58,8 @@
         bool updatePointPropertiesGivenId(QString id, QList<QString> columnList, QList<QString> valueList);
         bool getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
                                  const gis::Crit3DGisSettings& gisSettings, QString& errorString);
+        bool getPropertiesGivenId(QString id, Crit3DMeteoPoint* meteoPoint,
+                                                const gis::Crit3DGisSettings& gisSettings, QString& errorString);
         bool loadDailyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint);
         std::vector<float> loadDailyVar(QString *myError, meteoVariable variable,
                                         Crit3DDate dateStart, Crit3DDate dateEnd,

@@ -106,6 +106,7 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QMenu menu;
         QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
         QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
+        QAction *openPointStatisticsWidget = menu.addAction("Open point statistics widget");
 
         QAction *selection =  menu.exec(QCursor::pos());
 
@@ -118,6 +119,10 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             else if (selection == appendMeteoWidget)
             {
                 emit appendStationClicked(_id, _name, isGrid);
+            }
+            else if (selection == openPointStatisticsWidget)
+            {
+                emit newPointStatisticsClicked(_id, _name, isGrid);
             }
         }
     }
