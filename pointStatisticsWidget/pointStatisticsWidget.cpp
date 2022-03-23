@@ -27,6 +27,7 @@
 #include "interpolation.h"
 #include "spatialControl.h"
 #include "commonConstants.h"
+#include "climate.h"
 #include "formInfo.h"
 
 #include <QLayout>
@@ -411,9 +412,10 @@ void Crit3DPointStatisticsWidget::plot()
             // check years
             if (yearTo.currentText().toInt() - yearFrom.currentText().toInt() < 2)
             {
-                QMessageBox::information(nullptr, "Warning", "Number of valid years < 3");
+                QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
                 return;
             }
+            clima.setVariable(myVar);
             if (myVar == dailyPrecipitation || myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM || myVar == dailyBIC)
             {
                 clima.setElab1("sum");
@@ -433,6 +435,29 @@ void Crit3DPointStatisticsWidget::plot()
             else
             {
                 clima.setNYears(0);
+            }
+            std::vector<float> outputValues;
+            QString myError;
+            bool isAnomaly = false;
+            // copy data to MPTemp
+            Crit3DMeteoPoint meteoPointTemp;
+            meteoPointTemp.id = meteoPoints[0].id;
+            meteoPointTemp.point.utm.x = meteoPoints[0].point.utm.x;  // LC to compute distance in passingClimateToAnomaly
+            meteoPointTemp.point.utm.y = meteoPoints[0].point.utm.y;  // LC to compute distance in passingClimateToAnomaly
+            meteoPointTemp.point.z = meteoPoints[0].point.z;
+            meteoPointTemp.latitude = meteoPoints[0].latitude;
+            meteoPointTemp.elaboration = meteoPoints[0].elaboration;
+
+            // meteoPointTemp should be init
+            meteoPointTemp.nrObsDataDaysH = 0;
+            meteoPointTemp.nrObsDataDaysD = 0;
+
+            int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
+                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
+            if (validYears < 3)
+            {
+                QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
+                return;
             }
         }
     }

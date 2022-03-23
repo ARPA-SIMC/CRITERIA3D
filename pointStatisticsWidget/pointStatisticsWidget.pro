@@ -31,7 +31,7 @@ win32:{
     TARGET = pointStatisticsWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../dbMeteoPoints ../dbMeteoGrid ../climate ../commonDialogs ../interpolation
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../dbMeteoPoints ../dbMeteoGrid ../phenology ../climate ../commonDialogs ../interpolation
 
 
 SOURCES += \
