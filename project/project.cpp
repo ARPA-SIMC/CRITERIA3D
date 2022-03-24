@@ -2807,7 +2807,7 @@ void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::stri
     closeLogInfo();
     bool isGrid = false;
     pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPointsDbHandler, nullptr, meteoPoints, firstDaily, lastDaily, firstHourly, lastHourly, meteoSettings);
-    QObject::connect(proxyWidget, SIGNAL(pointStatisticsWidget()), this, SLOT(deletePointStatisticsWidget()));
+    QObject::connect(pointStatisticsWidget, SIGNAL(pointStatisticsWidget()), this, SLOT(deletePointStatisticsWidget()));
     return;
 }
 

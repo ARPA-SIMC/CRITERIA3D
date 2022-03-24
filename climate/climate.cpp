@@ -4515,6 +4515,7 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
         endDate.setDate(myYear, endDate.month(), endDate.day());
         clima->setYearStart(myYear);
         clima->setYearEnd(myYear);
+        meteoPointTemp->nrObsDataDaysD = 0; // should be init
         if (clima->nYears() < 0)
         {
             startDate.setDate(myYear + clima->nYears(), startDate.month(), startDate.day());
