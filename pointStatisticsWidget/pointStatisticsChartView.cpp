@@ -1,4 +1,5 @@
 #include "pointStatisticsChartView.h"
+#include "commonConstants.h"
 #include <QtCharts/QLegendMarker>
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
@@ -7,53 +8,87 @@
 PointStatisticsChartView::PointStatisticsChartView(QWidget *parent) :
     QChartView(new QChart(), parent)
 {
-    /*
-    series1 = new QScatterSeries();
-    series1->setName("Primary");
-    series1->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    series1->setColor(Qt::red);
-    series1->setMarkerSize(10.0);
-
-    series2 = new QScatterSeries();
-    series2->setName("Secondary");
-    series2->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    series2->setColor(Qt::black);
-    series2->setMarkerSize(10.0);
-
-    series3 = new QScatterSeries();
-    series3->setName("Supplemental");
-    series3->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    QPen pen;
-    pen.setColor(Qt::black);
-    series3->setPen(pen);
-    series3->setColor(Qt::white);
-    series3->setMarkerSize(10.0);
-
-    climLapseRatelineSeries = new QLineSeries();
-    climLapseRatelineSeries->setName("Climatological Lapse Rate");
-    climLapseRatelineSeries->setColor(Qt::blue);
-
-    modelLapseRatelineSeries = new QLineSeries();
-    modelLapseRatelineSeries->setName("Model lapse rate");
-    modelLapseRatelineSeries->setColor(Qt::red);
-
+    trend = new QScatterSeries();
+    trend->setName("Trend");
+    trend->setColor(Qt::red);
+    trend->setMarkerSize(10.0);
     setRenderHint(QPainter::Antialiasing);
-    chart()->addSeries(series1);
-    chart()->addSeries(series2);
-    chart()->addSeries(series3);
 
-    axisX = new QValueAxis();
+    axisXvalue = new QValueAxis();
+    axisX = new QBarCategoryAxis();
     axisY = new QValueAxis();
 
     chart()->addAxis(axisX, Qt::AlignBottom);
+    chart()->addAxis(axisXvalue, Qt::AlignBottom);
+    axisX->setVisible(false);
     chart()->addAxis(axisY, Qt::AlignLeft);
     chart()->setDropShadowEnabled(false);
 
-
-    chart()->legend()->setMarkerShape(QLegend::MarkerShapeFromSeries);
+    chart()->legend()->setVisible(true);
+    chart()->legend()->setAlignment(Qt::AlignBottom);
     m_tooltip = new PointStatisticsCallout(chart());
     m_tooltip->hide();
-    */
+}
+
+void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<float> outputValues)
+{
+
+    trend->clear();
+    if (chart()->series().contains(trend))
+    {
+        chart()->removeSeries(trend);
+    }
+
+    float maxValue = NODATA;
+    float minValue = -NODATA;
+    for (unsigned int i = 0; i < years.size(); i++)
+    {
+        if (outputValues[i] != NODATA)
+        {
+            trend->append(years[i], outputValues[i]);
+            if (outputValues[i] > maxValue)
+            {
+                maxValue = outputValues[i];
+            }
+            if (outputValues[i] < minValue)
+            {
+                minValue = outputValues[i];
+            }
+        }
+    }
+    double yRange = maxValue - minValue;
+    double deltaY = yRange/100;
+    axisY->setMax(maxValue+3*deltaY);
+    axisY->setMin(minValue-3*deltaY);
+    axisXvalue->setRange(years[0], years[years.size()-1]);
+    axisXvalue->setTickCount(years.size());
+    axisXvalue->setLabelFormat("%d");
+    chart()->addSeries(trend);
+    trend->attachAxis(axisX);
+    trend->attachAxis(axisY);
+    connect(trend, &QScatterSeries::hovered, this, &PointStatisticsChartView::tooltipLineSeries);
+}
+
+void PointStatisticsChartView::tooltipLineSeries(QPointF point, bool state)
+{
+
+    auto serie = qobject_cast<QScatterSeries *>(sender());
+    if (state)
+    {
+        double xValue = point.x();
+        double yValue = point.y();
+
+        m_tooltip->setText(QString("%1: %2").arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setSeries(serie);
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
 }
 
 /*
@@ -181,62 +216,6 @@ void PointStatisticsChartView::setIdPointMap(const QMap<QString, QPointF> &value
     idPointMap3 = valueSupplemental;
 }
 
-void PointStatisticsChartView::tooltipScatterSeries(QPointF point, bool state)
-{
 
-    auto serie = qobject_cast<QScatterSeries *>(sender());
-    if (state)
-    {
-        double xValue = point.x();
-        double yValue = point.y();
-
-        QString key;
-
-        if (serie->name() == "Primary")
-        {
-            QMapIterator<QString, QPointF> i(idPointMap);
-            while (i.hasNext()) {
-                i.next();
-                if (i.value() == point)
-                {
-                    key = i.key();
-                }
-            }
-        }
-        else if (serie->name() == "Secondary")
-        {
-            QMapIterator<QString, QPointF> i(idPointMap2);
-            while (i.hasNext()) {
-                i.next();
-                if (i.value() == point)
-                {
-                    key = i.key();
-                }
-            }
-        }
-        else if (serie->name() == "Supplemental")
-        {
-            QMapIterator<QString, QPointF> i(idPointMap3);
-            while (i.hasNext()) {
-                i.next();
-                if (i.value() == point)
-                {
-                    key = i.key();
-                }
-            }
-        }
-
-        m_tooltip->setText(QString("%1\n%2 %3 ").arg(key).arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
-        m_tooltip->setSeries(serie);
-        m_tooltip->setAnchor(point);
-        m_tooltip->setZValue(11);
-        m_tooltip->updateGeometry();
-        m_tooltip->show();
-    }
-    else
-    {
-        m_tooltip->hide();
-    }
-}
 */
 

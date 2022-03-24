@@ -5,6 +5,7 @@
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
+#include <QtCharts/QBarCategoryAxis>
 #include "pointStatisticsCallout.h"
 
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
@@ -16,6 +17,8 @@ class PointStatisticsChartView : public QChartView
     Q_OBJECT
 public:
     explicit PointStatisticsChartView(QWidget *parent = 0);
+    void drawTrend(std::vector<int> years, std::vector<float> outputValues);
+    void tooltipLineSeries(QPointF point, bool state);
     /*
     void cleanScatterSeries();
     void drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3);
@@ -28,15 +31,17 @@ public:
     */
 
 private:
+    QScatterSeries* trend;
+    QBarCategoryAxis *axisX;
+    QValueAxis* axisXvalue;
+    QValueAxis* axisY;
+    PointStatisticsCallout *m_tooltip;
     /*
     QScatterSeries *series1;
     QScatterSeries *series2;
     QScatterSeries *series3;
     QLineSeries* climLapseRatelineSeries;
-    QLineSeries* modelLapseRatelineSeries;
-    QValueAxis* axisX;
-    QValueAxis* axisY;
-    PointStatisticsCallout *m_tooltip;
+    QLineSeries* modelLapseRatelineSeries; 
     QMap< QString, QPointF > idPointMap;
     QMap< QString, QPointF > idPointMap2;
     QMap< QString, QPointF > idPointMap3;

@@ -65,6 +65,7 @@
             QTextEdit sigma;
             QTextEdit classWidth;
             QTextEdit valMax;
+            QTextEdit valMin;
             QTextEdit smoothing;
 
     signals:
