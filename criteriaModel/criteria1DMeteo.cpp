@@ -277,7 +277,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
         // check valid prec
         if (prec < prec_min )
         {
-            invalidPrec = invalidPrec + previousDate.daysTo(date);
+            invalidPrec = invalidPrec + int(previousDate.daysTo(date));
             // 7 day missing, the next one invalid temp
             if ( invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC )
             {
@@ -347,9 +347,11 @@ bool checkYearMeteoGridFixedFields(QSqlDatabase dbMeteo, QString tableD, QString
     QString PREC_MIN = "0.0";
 
     // count valid temp and prec
-    QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE_FORMAT(`%1`,'%Y') = '%3' AND `%4` NOT LIKE '' AND `%5` NOT LIKE '' AND `%6` NOT LIKE ''").arg(fieldTime).arg(tableD).arg(year).arg(fieldTmin).arg(fieldTmax).arg(fieldPrec);
-    statement = statement + QString(" AND `%1` >= '%2' AND `%1` <= '%3'").arg(fieldTmin).arg(TMIN_MIN).arg(TMIN_MAX);
-    statement = statement + QString(" AND `%1` >= '%2' AND `%1` <= '%3' AND `%4` >= '%5'").arg(fieldTmax).arg(TMAX_MIN).arg(TMAX_MAX).arg(fieldPrec).arg(PREC_MIN);
+    QString statement = QString("SELECT COUNT(`%1`) FROM `%2` "
+                                "WHERE DATE_FORMAT(`%1`,'%Y') = '%3' AND `%4` NOT LIKE '' "
+                                "AND `%5` NOT LIKE '' AND `%6` NOT LIKE ''").arg(fieldTime, tableD, year, fieldTmin, fieldTmax, fieldPrec);
+    statement = statement + QString(" AND `%1` >= '%2' AND `%1` <= '%3'").arg(fieldTmin, TMIN_MIN, TMIN_MAX);
+    statement = statement + QString(" AND `%1` >= '%2' AND `%1` <= '%3' AND `%4` >= '%5'").arg(fieldTmax, TMAX_MIN, TMAX_MAX, fieldPrec, PREC_MIN);
 
     if( !qry.exec(statement) )
     {
@@ -376,7 +378,7 @@ bool checkYearMeteoGridFixedFields(QSqlDatabase dbMeteo, QString tableD, QString
     }
 
     // check consecutive missing days (1 missing day allowed for temperature)
-    statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3' ORDER BY `%2`").arg(tableD).arg(fieldTime).arg(year);
+    statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3' ORDER BY `%2`").arg(tableD, fieldTime, year);
     if( !qry.exec(statement) )
     {
         *error = qry.lastError().text();
@@ -442,7 +444,7 @@ bool checkYearMeteoGridFixedFields(QSqlDatabase dbMeteo, QString tableD, QString
         // check valid prec
         if (prec < prec_min )
         {
-            invalidPrec = invalidPrec + previousDate.daysTo(date);
+            invalidPrec = invalidPrec + int(previousDate.daysTo(date));
             // 7 day missing, the next one invalid temp
             if ( invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC )
             {
@@ -481,7 +483,7 @@ bool getLastDateGrid(QSqlDatabase dbMeteo, QString table, QString fieldTime, QSt
     *error = "";
     QSqlQuery qry(dbMeteo);
 
-    QString statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3' ORDER BY `%2` DESC").arg(table).arg(fieldTime).arg(year);
+    QString statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3' ORDER BY `%2` DESC").arg(table, fieldTime, year);
     if( !qry.exec(statement) )
     {
         *error = qry.lastError().text();
@@ -566,7 +568,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     float tmin = NODATA;
     float tmax = NODATA;
     float prec = NODATA;
-    float variableCode = NODATA;
+    int variableCode = NODATA;
     float tmin_min = TMIN_MIN.toFloat();
     float tmin_max = TMIN_MAX.toFloat();
 
@@ -651,7 +653,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
             // check valid prec
             if (prec < prec_min )
             {
-                invalidPrec = invalidPrec + previousDatePrec.daysTo(date);
+                invalidPrec = invalidPrec + int(previousDatePrec.daysTo(date));
                 // 7 day missing, the next one invalid temp
                 if ( invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC )
                 {
