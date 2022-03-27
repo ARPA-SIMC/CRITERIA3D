@@ -506,12 +506,12 @@ double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
  * \param soilLayers, lastRootLayer, irrigationMax
  * \return irrigation [mm]
  */
-double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, int lastRootLayer, double irrigationMax)
+double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, unsigned int lastRootLayer, double irrigationMax)
 {
     double residualIrrigation = irrigationMax;
-    int nrLayers = soilLayers.size();
+    unsigned int nrLayers = unsigned(soilLayers.size());
 
-    int i=0;
+    unsigned int i=0;
     while (i < nrLayers && i <= lastRootLayer && residualIrrigation > 0)
     {
         if (soilLayers[i].waterContent < soilLayers[i].FC)

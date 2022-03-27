@@ -107,7 +107,7 @@ void Crit1DCase::initializeWaterContent(Crit3DDate myDate)
     // water table
     if (unit.useWaterTableData)
     {
-        float waterTable = meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth);
+        double waterTable = double(meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
         computeCapillaryRise(soilLayers, waterTable);
     }
 }
@@ -221,7 +221,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
  */
 bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &error)
 {
-    unsigned int nrLayers = soilLayers.size();
+    unsigned int nrLayers = unsigned(soilLayers.size());
     unsigned int lastLayer = nrLayers - 1;
     error = "";
 
@@ -230,7 +230,7 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     {
         double totalPotential;                          // [m]
         double boundaryZ = 1.0;                         // [m]
-        if (output.dailyWaterTable != NODATA)
+        if (! isEqual(output.dailyWaterTable, NODATA))
         {
             totalPotential = output.dailyWaterTable;    // [m]
         }
@@ -469,7 +469,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
     // water table
     output.dailyWaterTable = double(meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
     // check
-    if (output.dailyWaterTable != NODATA)
+    if (! isEqual(output.dailyWaterTable, NODATA))
         output.dailyWaterTable = MAXVALUE(output.dailyWaterTable, 0.01);
 
     // prec forecast
@@ -504,7 +504,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
         if (! unit.isOptimalIrrigation)
             output.dailyIrrigation = irrigation;
         else
-            output.dailyIrrigation = assignOptimalIrrigation(soilLayers, crop.roots.lastRootLayer, irrigation);
+            output.dailyIrrigation = assignOptimalIrrigation(soilLayers, unsigned(crop.roots.lastRootLayer), irrigation);
 
         if (! computeWaterFluxes(myDate, error)) return false;
     }
