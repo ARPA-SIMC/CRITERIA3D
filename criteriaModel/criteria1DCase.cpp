@@ -545,9 +545,9 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
 
     // output variables
     output.dailySurfaceWaterContent = soilLayers[0].waterContent;
-    output.dailySoilWaterContent = getSoilWaterContent(soilLayers, 1.0);
-    output.dailyAvailableWater = getSoilAvailableWater(soilLayers, 1.0);
-    output.dailyFractionAW = getSoilFractionAW(soilLayers, 1.0);
+    output.dailySoilWaterContent = getSoilWaterContent(soilLayers, 100);
+    output.dailyAvailableWater = getAvailableWater(100);
+    output.dailyFractionAW = getFractionAW(100);
     output.dailyReadilyAW = getReadilyAvailableWater(crop, soilLayers);
 
     return true;
@@ -571,14 +571,15 @@ double Crit1DCase::getTotalWaterContent()
 
 
 /*!
- * \brief get volumetric water content at specific depth
- * \param depth = computation soil depth  [cm]
- * \return volumetric water content [-]
+ * \brief getWaterContent
+ * \param computationDepth = computation soil depth  [cm]
+ * \return volumetric water content at specific depth [-]
  */
-double Crit1DCase::getWaterContent(double depth)
+double Crit1DCase::getWaterContent(double computationDepth)
 {
-    depth /= 100;                                   // [cm] --> [m]
-    if (depth <= 0 || depth > mySoil.totalDepth)
+    computationDepth /= 100;        // [cm] --> [m]
+
+    if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
         return NODATA;
 
     double upperDepth, lowerDepth;
@@ -586,7 +587,7 @@ double Crit1DCase::getWaterContent(double depth)
     {
         upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
-        if (depth >= upperDepth && depth <= lowerDepth)
+        if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
         {
             return soilLayers[i].waterContent / (soilLayers[i].thickness * 1000);
         }
@@ -597,14 +598,15 @@ double Crit1DCase::getWaterContent(double depth)
 
 
 /*!
- * \brief get water potential at specific depth
- * \param depth = computation soil depth  [cm]
- * \return water potential [kPa]
+ * \brief getWaterPotential
+ * \param computationDepth = computation soil depth  [cm]
+ * \return water potential at specific depth [kPa]
  */
-double Crit1DCase::getWaterPotential(double depth)
+double Crit1DCase::getWaterPotential(double computationDepth)
 {
-    depth /= 100;                                   // [cm] --> [m]
-    if (depth <= 0 || depth > mySoil.totalDepth)
+    computationDepth /= 100;        // [cm] --> [m]
+
+    if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
         return NODATA;
 
     double upperDepth, lowerDepth;
@@ -612,7 +614,7 @@ double Crit1DCase::getWaterPotential(double depth)
     {
         upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
-        if (depth >= upperDepth && depth <= lowerDepth)
+        if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
         {
             return -soilLayers[i].getWaterPotential();
         }
@@ -623,13 +625,13 @@ double Crit1DCase::getWaterPotential(double depth)
 
 
 /*!
- * \brief getSoilWaterDeficit
- * \param depth = computation soil depth  [cm]
- * \return sum of water deficit from zero to depth (mm)
+ * \brief getWaterDeficit
+ * \param computationDepth = computation soil depth  [cm]
+ * \return sum of water deficit from zero to computationDepth (mm)
  */
-double Crit1DCase::getSoilWaterDeficit(double depth)
+double Crit1DCase::getWaterDeficit(double computationDepth)
 {
-    depth /= 100;                           // [cm] --> [m]
+    computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
     double waterDeficitSum = 0;             // [mm]
 
@@ -637,7 +639,7 @@ double Crit1DCase::getSoilWaterDeficit(double depth)
     {
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
 
-        if (lowerDepth < depth)
+        if (lowerDepth < computationDepth)
         {
             waterDeficitSum += soilLayers[i].FC - soilLayers[i].waterContent;
         }
@@ -646,7 +648,7 @@ double Crit1DCase::getSoilWaterDeficit(double depth)
             // fraction of last layer
             upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
             double layerDeficit = soilLayers[i].FC - soilLayers[i].waterContent;
-            double depthFraction = (depth - upperDepth) / soilLayers[i].thickness;
+            double depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
             return waterDeficitSum + layerDeficit * depthFraction;
         }
     }
@@ -656,13 +658,13 @@ double Crit1DCase::getSoilWaterDeficit(double depth)
 
 
 /*!
- * \brief getAvailableWaterCapacity
- * \param depth = computation soil depth  [cm]
- * \return sum of available water capacity (FC-WP) from zero to depth (mm)
+ * \brief getWaterCapacity
+ * \param computationDepth = computation soil depth  [cm]
+ * \return sum of available water capacity (FC-WP) from zero to computationDepth (mm)
  */
-double Crit1DCase::getAvailableWaterCapacity(double depth)
+double Crit1DCase::getWaterCapacity(double computationDepth)
 {
-    depth /= 100;                           // [cm] --> [m]
+    computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
     double awc = 0;                         // [mm]
 
@@ -670,7 +672,7 @@ double Crit1DCase::getAvailableWaterCapacity(double depth)
     {
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
 
-        if (lowerDepth < depth)
+        if (lowerDepth < computationDepth)
         {
             awc += soilLayers[i].FC - soilLayers[i].WP;
         }
@@ -679,12 +681,82 @@ double Crit1DCase::getAvailableWaterCapacity(double depth)
             // fraction of last layer
             upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
             double layerAWC = soilLayers[i].FC - soilLayers[i].WP;
-            double depthFraction = (depth - upperDepth) / soilLayers[i].thickness;
+            double depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
             return awc + layerAWC * depthFraction;
         }
     }
 
     return awc;
+}
+
+
+/*!
+ * \brief getAvailableWater
+ * \param computationDepth = computation soil depth  [cm]
+ * \return sum of available water from zero to computationDepth (mm)
+ */
+double Crit1DCase::getAvailableWater(double computationDepth)
+{
+    computationDepth /= 100;                // [cm] --> [m]
+    double lowerDepth, upperDepth;          // [m]
+    double availableWaterSum = 0;           // [mm]
+
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    {
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+
+        if (lowerDepth < computationDepth)
+        {
+            availableWaterSum += soilLayers[i].waterContent - soilLayers[i].WP;
+        }
+        else
+        {
+            // fraction of last layer
+            upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+            double layerAW = soilLayers[i].waterContent - soilLayers[i].WP;
+            double depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
+            return availableWaterSum + layerAW * depthFraction;
+        }
+    }
+
+    return availableWaterSum;
+}
+
+
+/*!
+ * \brief getFractionAW
+ * \param computationDepth = computation soil depth  [cm]
+ * \return fraction of available water from zero to computationDepth (mm)
+ */
+double Crit1DCase::getFractionAW(double computationDepth)
+{
+    computationDepth /= 100;            // [cm] --> [m]
+    double lowerDepth, upperDepth;      // [m]
+    double depthFraction;               // [-]
+    double availableWaterSum = 0;       // [mm]
+    double potentialAWSum = 0;          // [mm]
+
+    unsigned int i = 1;
+    bool isDepthLower = true;
+    while (i < soilLayers.size() && isDepthLower)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+
+        if (lowerDepth < computationDepth)
+            depthFraction = 1;
+        else
+        {
+            depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
+            isDepthLower = false;
+        }
+
+        availableWaterSum += (soilLayers[i].waterContent - soilLayers[i].WP) * depthFraction;
+        potentialAWSum += (soilLayers[i].FC - soilLayers[i].WP) * depthFraction;
+        i++;
+    }
+
+    return availableWaterSum / potentialAWSum;
 }
 
 
