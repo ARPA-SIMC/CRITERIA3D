@@ -123,6 +123,11 @@ void Project::clearProject()
     outputPoints.clear();
     outputPointsFileName = "";
 
+    if (proxyWidget != nullptr)
+    {
+        delete proxyWidget;
+    }
+
     isProjectLoaded = false;
 }
 
@@ -2773,6 +2778,49 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     }
 }
 
+void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::string namePoint)
+{
+    logInfoGUI("Loading data...");
+
+    // check dates
+    QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, idMeteoPoint).date();
+    QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, idMeteoPoint).date();
+    bool hasDailyData = !(firstDaily.isNull() || lastDaily.isNull());
+
+    QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, idMeteoPoint);
+    QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, idMeteoPoint);
+    bool hasHourlyData = !(firstHourly.isNull() || lastHourly.isNull());
+
+    if (!hasDailyData && !hasHourlyData)
+    {
+        logInfoGUI("No data.");
+        return;
+    }
+
+    Crit3DMeteoPoint mp;
+    meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(idMeteoPoint), &mp, gisSettings, errorString);
+    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
+    meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
+    QList<Crit3DMeteoPoint> meteoPoints;
+    meteoPoints.append(mp);
+    // TO DO append le varie joint stations ancora non presenti
+    closeLogInfo();
+    bool isGrid = false;
+    pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPointsDbHandler, nullptr, meteoPoints, firstDaily, lastDaily, firstHourly, lastHourly, meteoSettings);
+    QObject::connect(pointStatisticsWidget, SIGNAL(pointStatisticsWidget()), this, SLOT(deletePointStatisticsWidget()));
+    return;
+}
+
+void Project::deletePointStatisticsWidget()
+{
+    pointStatisticsWidget = nullptr;
+}
+
+void Project::showPointStatisticsWidgetGrid(std::string id)
+{
+    // TO DO
+}
+
 void Project::deleteMeteoWidgetPoint(int id)
 {
 
@@ -3195,6 +3243,73 @@ void Project::setComputeOnlyPoints(bool isOnlyPoints)
 bool Project::getComputeOnlyPoints()
 {
     return computeOnlyPoints;
+}
+
+bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
+{
+    if (fileName != "")
+    {
+        gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
+
+        if (!meteoGridDbHandler->gridStructure().isUTM())
+        {
+            // lat lon grid
+            gis::Crit3DGridHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
+            gis::getGeoExtentsFromLatLonHeader(gisSettings, cellSize, myGrid->header, &latlonHeader);
+            if (!myGrid->initializeGrid(NODATA))
+            {
+                errorString = "initializeGrid failed";
+                delete myGrid;
+                return false;
+            }
+            double utmx;
+            double utmy;
+            double lat;
+            double lon;
+            int dataGridRow;
+            int dataGridCol;
+            float myValue;
+
+            for (int row = 0; row < myGrid->header->nrRows; row++)
+            {
+                for (int col = 0; col < myGrid->header->nrCols; col++)
+                {
+                    myGrid->getXY(row,col,&utmx,&utmy);
+                    gis::getLatLonFromUtm(gisSettings,utmx,utmy,&lat,&lon);
+                    gis::getMeteoGridRowColFromXY (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
+                    if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
+                    {
+                        myValue = NODATA;
+                    }
+                    else
+                    {
+                        myValue = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.value[latlonHeader.nrRows-1-dataGridRow][dataGridCol];
+                    }
+                    if (myValue != NO_ACTIVE && myValue != NODATA)
+                    {
+                        myGrid->value[row][col] = myValue;
+                    }
+                }
+            }
+        }
+        else
+        {
+            myGrid->copyGrid(meteoGridDbHandler->meteoGrid()->dataMeteoGrid);
+        }
+
+        std::string myError = errorString.toStdString();
+        QString fileWithoutExtension = QFileInfo(fileName).absolutePath() + QDir::separator() + QFileInfo(fileName).baseName();
+        if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), myGrid, &myError))
+        {
+            errorString = QString::fromStdString(myError);
+            delete myGrid;
+            return false;
+        }
+        delete myGrid;
+        return true;
+
+    }
+    return false;
 }
 
 

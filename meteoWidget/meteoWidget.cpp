@@ -992,8 +992,10 @@ void Crit3DMeteoWidget::drawDailyVar()
                     }
                     else
                     {
-                        //lineSeries[mp][i]->append(day, value);
-                        lineSeries[mp][i]->setPointsVisible(true);
+                        if (meteoPoints[mp].isDateLoadedD(myDate))
+                        {
+                            lineSeries[mp][i]->append(day, value); // nodata days are not drawed if they are the first of the last day of the serie
+                        }
                     }
                 }
             }
@@ -1157,6 +1159,10 @@ void Crit3DMeteoWidget::drawDailyVar()
     axisX->setCategories(categories);
     axisXvirtual->setCategories(categoriesVirtual);
     axisXvirtual->setGridLineVisible(false);
+    if (axisY->max() == axisY->min())
+    {
+        axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
+    }
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
@@ -1251,8 +1257,10 @@ void Crit3DMeteoWidget::drawHourlyVar()
                         }
                         else
                         {
-                            //lineSeries[mp][i]->append(index, value);
-                            lineSeries[mp][i]->setPointsVisible(true);
+                            if (meteoPoints[mp].isDateTimeLoadedH(Crit3DTime(myCrit3DDate,h)))
+                            {
+                                lineSeries[mp][i]->append(index, value); // nodata hours are not drawed if they are the first of the last hour of the serie
+                            }
                         }
                     }
                 }
@@ -1356,6 +1364,11 @@ void Crit3DMeteoWidget::drawHourlyVar()
     axisX->setCategories(categories);
     axisXvirtual->setCategories(categoriesVirtual);
     axisX->setGridLineVisible(false);
+
+    if (axisY->max() == axisY->min())
+    {
+        axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
+    }
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
@@ -1563,52 +1576,42 @@ void Crit3DMeteoWidget::redraw()
 
 }
 
+
 void Crit3DMeteoWidget::shiftPrevious()
 {
-    int nDays = firstDate->date().daysTo(lastDate->date())+1;
-    if (firstDailyDate < firstDate->date().addDays(-nDays))
+    int nDays = firstDate->date().daysTo(lastDate->date());
+    if (firstDailyDate < firstDate->date().addDays(-nDays-1))
     {
-        firstDate->setDate(firstDate->date().addDays(-nDays));
+        firstDate->setDate(firstDate->date().addDays(-nDays-1));
     }
     else
     {
         firstDate->setDate(firstDailyDate);
     }
 
-    if (lastDate->date().addDays(-nDays) >= firstDate->date())
-    {
-        lastDate->setDate(lastDate->date().addDays(-nDays));
-    }
-    else
-    {
-        lastDate->setDate(firstDate->date());
-    }
-    redraw();
+    lastDate->setDate(firstDate->date().addDays(nDays));
 
+    redraw();
 }
+
 
 void Crit3DMeteoWidget::shiftFollowing()
 {
-    int nDays = firstDate->date().daysTo(lastDate->date())+1;
-    if (lastDate->date().addDays(nDays) < lastDailyDate)
+    int nDays = firstDate->date().daysTo(lastDate->date());
+    if (lastDate->date().addDays(nDays+1) < lastDailyDate)
     {
-        lastDate->setDate(lastDate->date().addDays(nDays));
+        lastDate->setDate(lastDate->date().addDays(nDays+1));
     }
     else
     {
         lastDate->setDate(lastDailyDate);
     }
 
-    if (firstDate->date().addDays(nDays) <= lastDate->date())
-    {
-        firstDate->setDate(firstDate->date().addDays(nDays));
-    }
-    else
-    {
-        firstDate->setDate(lastDate->date());
-    }
+    firstDate->setDate(lastDate->date().addDays(-nDays));
+
     redraw();
 }
+
 
 void Crit3DMeteoWidget::showTable()
 {

@@ -55,8 +55,8 @@ double *C = nullptr;
 double *X = nullptr;
 double *b = nullptr;
 
-static Tsoil Soil_List[MAX_SOILS][MAX_HORIZONS];
-static Tsoil Surface_List[MAX_SURFACES];
+std::vector< std::vector<Tsoil>> Soil_List;
+std::vector<Tsoil> Surface_List;
 
 
 namespace soilFluxes3D {
@@ -324,17 +324,20 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  }
 
 
-    /*!
-     * \brief Assign surface index to node
-     * \param nodeIndex
-     * \param surfaceIndex
-     * \return
-     */
+/*!
+ * \brief Assign surface index to node
+ * \param nodeIndex
+ * \param surfaceIndex
+ * \return OK/ERROR
+ */
  int DLL_EXPORT __STDCALL setNodeSurface(long nodeIndex, int surfaceIndex)
  {
-	if (myNode == nullptr) return(MEMORY_ERROR);
-    if ((nodeIndex < 0) || (! myNode[nodeIndex].isSurface)) return(INDEX_ERROR);
-    if ((surfaceIndex < 0) || (surfaceIndex >= MAX_SURFACES)) return(PARAMETER_ERROR);
+    if (myNode == nullptr)
+        return MEMORY_ERROR;
+    if (nodeIndex < 0 || (! myNode[nodeIndex].isSurface))
+        return INDEX_ERROR;
+    if (surfaceIndex < 0 || surfaceIndex >= int(Surface_List.size()))
+        return PARAMETER_ERROR;
 
     myNode[nodeIndex].Soil = &Surface_List[surfaceIndex];
 
@@ -342,55 +345,59 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  }
 
 
-    /*!
-     * \brief Assign soil to node
-     * \param nodeIndex
-     * \param soilIndex
-     * \param horizonIndex
-     * \return
-     */
+/*!
+ * \brief Assign soil to node
+ * \param nodeIndex
+ * \param soilIndex
+ * \param horizonIndex
+ * \return OK/ERROR
+ */
  int DLL_EXPORT __STDCALL setNodeSoil(long nodeIndex, int soilIndex, int horizonIndex)
  {
-	if (myNode == nullptr) return(MEMORY_ERROR);
-    if ((nodeIndex < 0) || (nodeIndex >= myStructure.nrNodes)) return(INDEX_ERROR);
-    if ((soilIndex < 0) || (soilIndex >= MAX_SOILS)) return(PARAMETER_ERROR);
-    if ((horizonIndex < 0) || (horizonIndex >= MAX_HORIZONS)) return(PARAMETER_ERROR);
+    if (myNode == nullptr)
+        return MEMORY_ERROR;
+    if (nodeIndex < 0 || nodeIndex >= myStructure.nrNodes)
+        return INDEX_ERROR;
+    if (soilIndex < 0 || soilIndex >= int(Soil_List.size()))
+        return PARAMETER_ERROR;
+    if (horizonIndex < 0 || horizonIndex >= int(Soil_List[soilIndex].size()))
+        return PARAMETER_ERROR;
 
     myNode[nodeIndex].Soil = &Soil_List[soilIndex][horizonIndex];
 
-    return(CRIT3D_OK);
+    return CRIT3D_OK;
  }
 
 
-    /*!
-     * \brief Set soil myParameters
-     * \param nSoil
-     * \param nHorizon
-     * \param VG_alpha [m^-1]      Van Genutchen alpha parameter - (warning! usually cm^-1 in literature)
-     * \param VG_n     [-]         n Van Genutchen  ]1, 10]
-     * \param VG_m
-     * \param VG_he
-     * \param ThetaR    [m^3/m^3]   residual water content
-     * \param ThetaS    [m^3/m^3]   saturated water content
-     * \param Ksat      [m/s]       saturated hydraulic conductivity
-     * \param L         [-]         tortuosity (Mualem formula)
-     * \return OK/ERROR
-     */
-    int DLL_EXPORT __STDCALL setSoilProperties(int nSoil, int nHorizon, double VG_alpha, double VG_n, double VG_m,
+/*!
+ * \brief Set soil properties
+ * \param nSoil
+ * \param nHorizon
+ * \param VG_alpha  [m-1]       Van Genutchen alpha parameter (warning: usually is kPa-1 in literature)
+ * \param VG_n      [-]         Van Genutchen n parameter ]1, 10]
+ * \param VG_m
+ * \param VG_he
+ * \param ThetaR    [m3 m-3]    residual water content
+ * \param ThetaS    [m3 m-3]    saturated water content
+ * \param Ksat      [m s-1]     saturated hydraulic conductivity
+ * \param L         [-]         tortuosity (Mualem equation)
+ * \return OK/ERROR
+ */
+ int DLL_EXPORT __STDCALL setSoilProperties(int nSoil, int nHorizon, double VG_alpha, double VG_n, double VG_m,
                         double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay)
  {
 
-	if ((nSoil < 0) || (nSoil >= MAX_SOILS)) return(INDEX_ERROR);
+    if (VG_alpha <= 0 || ThetaR < 0 || ThetaR >= 1 || ThetaS <= 0 || ThetaS > 1 || ThetaR > ThetaS)
+        return PARAMETER_ERROR;
 
-    if ((nHorizon < 0) || (nHorizon >= MAX_HORIZONS)) return(INDEX_ERROR);
+    if (nSoil >= int(Soil_List.size()))
+        Soil_List.resize(nSoil+1);
+    if (nHorizon >= int(Soil_List[nSoil].size()))
+        Soil_List[nSoil].resize(nHorizon+1);
 
-    if ((VG_alpha <= 0.) || (ThetaR < 0.) || (ThetaR >= 1.)
-    || (ThetaS <= 0.) || (ThetaS > 1.) || (ThetaR > ThetaS))
-        return(PARAMETER_ERROR);
-
-    Soil_List[nSoil][nHorizon].VG_alpha  = VG_alpha;
-    Soil_List[nSoil][nHorizon].VG_n  = VG_n;
-	Soil_List[nSoil][nHorizon].VG_m =  VG_m;
+    Soil_List[nSoil][nHorizon].VG_alpha = VG_alpha;
+    Soil_List[nSoil][nHorizon].VG_n = VG_n;
+    Soil_List[nSoil][nHorizon].VG_m = VG_m;
 
     Soil_List[nSoil][nHorizon].VG_he = VG_he;
     Soil_List[nSoil][nHorizon].VG_Sc = pow(1. + pow(VG_alpha * VG_he, VG_n), -VG_m);
@@ -403,16 +410,17 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     Soil_List[nSoil][nHorizon].organicMatter = organicMatter;
     Soil_List[nSoil][nHorizon].clay = clay;
 
-    return(CRIT3D_OK);
+    return CRIT3D_OK;
  }
 
 
  int DLL_EXPORT __STDCALL setSurfaceProperties(int surfaceIndex, double roughness, double surfacePond)
  {
-    if ((surfaceIndex < 0) || (surfaceIndex >= MAX_SURFACES))
-        return INDEX_ERROR;
-    if ((roughness < 0.) || (surfacePond < 0.))
+    if (roughness < 0 || surfacePond < 0)
         return PARAMETER_ERROR;
+
+    if (surfaceIndex > int(Surface_List.size()-1))
+        Surface_List.resize(surfaceIndex+1);
 
     Surface_List[surfaceIndex].Roughness = roughness;
     Surface_List[surfaceIndex].Pond = surfacePond;
@@ -421,13 +429,13 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  }
 
 
-    /*!
-     * \brief Set current matric potential
-     * \param nodeIndex
-     * \param potential [m]
-     * \return OK/ERROR
-     */
-	int DLL_EXPORT __STDCALL setMatricPotential(long nodeIndex, double potential)
+/*!
+ * \brief Set current matric potential
+ * \param nodeIndex
+ * \param potential [m]
+ * \return OK/ERROR
+ */
+ int DLL_EXPORT __STDCALL setMatricPotential(long nodeIndex, double potential)
  {
      if (myNode == nullptr)
          return MEMORY_ERROR;

@@ -20,6 +20,7 @@
             void setName(const std::string &name);
             void setDataset(const std::string &dataset);
             void setAltitude(double altitude);
+            void setLapseRateCode(lapseRateCodeType code);
             void setMunicipality(const std::string &municipality);
             void setQuality(const quality::qualityType &quality);
             bool active() const;
@@ -31,6 +32,7 @@
             std::string _name;
             std::string _dataset;
             double _altitude;
+            lapseRateCodeType _lapseRateCode;
             std::string _municipality;
             float _currentValue;
             quality::qualityType _quality;
@@ -42,6 +44,7 @@
         signals:
             void newStationClicked(std::string, std::string, bool);
             void appendStationClicked(std::string, std::string, bool);
+            void newPointStatisticsClicked(std::string, std::string, bool);
 
     };
 

@@ -4486,4 +4486,57 @@ void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDat
     delete meteoPointTemp;
 }
 
+int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
+                                         Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, bool isAnomaly, Crit3DMeteoSettings* meteoSettings, std::vector<float> &outputValues)
+{
+    int validYears = 0;
+    meteoComputation elabMeteoComp;
+    try
+    {
+        elabMeteoComp = MapMeteoComputation.at(clima->elab1().toStdString());
+    }
+    catch (const std::out_of_range& )
+    {
+        elabMeteoComp = noMeteoComp;
+    }
+    if (clima->param1IsClimate())
+    {
+        clima->param1();
+    }
+
+    QDate startDate(clima->yearStart(), clima->genericPeriodDateStart().month(), clima->genericPeriodDateStart().day());
+    QDate endDate(clima->yearEnd(), clima->genericPeriodDateEnd().month(), clima->genericPeriodDateEnd().day());
+    int yearStart = clima->yearStart();
+    int yearEnd = clima->yearEnd();
+
+    for (int myYear = yearStart; myYear <= yearEnd; myYear++)
+    {
+        startDate.setDate(myYear, startDate.month(), startDate.day());
+        endDate.setDate(myYear, endDate.month(), endDate.day());
+        clima->setYearStart(myYear);
+        clima->setYearEnd(myYear);
+        meteoPointTemp->nrObsDataDaysD = 0; // should be init
+        if (clima->nYears() < 0)
+        {
+            startDate.setDate(myYear + clima->nYears(), startDate.month(), startDate.day());
+            clima->setYearStart(myYear + clima->nYears());
+        }
+        else if (clima->nYears() > 0)
+        {
+            endDate.setDate(myYear + clima->nYears(), endDate.month(), endDate.day());
+            clima->setYearEnd(myYear + clima->nYears());
+        }
+        if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
+        {
+            validYears = validYears + 1;
+            outputValues.push_back(meteoPointTemp->elaboration);
+        }
+        else
+        {
+            outputValues.push_back(NODATA);
+        }
+    }
+    return validYears;
+}
+
 

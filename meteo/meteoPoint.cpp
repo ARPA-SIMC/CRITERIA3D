@@ -450,6 +450,16 @@ bool Crit3DMeteoPoint::isDateLoadedH(const Crit3DDate& myDate)
         return true;
 }
 
+bool Crit3DMeteoPoint::isDateTimeLoadedH(const Crit3DTime& myDateTime)
+{
+    if (nrObsDataDaysH == 0)
+        return false;
+    else if (myDateTime < Crit3DTime(obsDataH[0].date,1) || myDateTime >= Crit3DTime(obsDataH[nrObsDataDaysH - 1].date,1))
+        return false;
+    else
+        return true;
+}
+
 bool Crit3DMeteoPoint::isDateIntervalLoadedH(const Crit3DDate& date1, const Crit3DDate& date2)
 {
     if (nrObsDataDaysH == 0)
@@ -1110,7 +1120,7 @@ bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
     temperature = getMeteoPointValueH(myDate, myHour, 0, airTemperature);
     windSpeed = getMeteoPointValueH(myDate, myHour, 0, windScalarIntensity);
     netRadiation = getMeteoPointValueH(myDate, myHour, 0, netIrradiance);
-    height = this->point.z;
+    height = float(this->point.z);
     float et0;
 
     if (! isEqual(temperature, NODATA) && ! isEqual(relHumidity, NODATA) && ! isEqual(windSpeed, NODATA))
@@ -1147,24 +1157,24 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
         if (actualDate.day == nrDays || actualDate == lastDate)
         {
             indexMonth = indexMonth + 1;
-            if ((nrValid/nrDays*100) >= meteoSettings->getMinimumPercentage())
+            if ((float(nrValid)/float(nrDays)*100) >= meteoSettings->getMinimumPercentage())
             {
                 aggregateDailyInMonthly = true;
                 if (dailyMeteoVar == dailyAirTemperatureMin || dailyMeteoVar == dailyAirTemperatureMax || dailyMeteoVar == dailyAirTemperatureAvg)
                 {
                     if (nrValid != 0)
                     {
-                        setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),sum/nrValid);
+                        setMeteoPointValueM(actualDate, updateMeteoVariable(dailyMeteoVar, monthly), sum/float(nrValid));
                     }
                     else
                     {
-                        setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),NODATA);
+                        setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly), NODATA);
                     }
                 }
                 else if (dailyMeteoVar == dailyPrecipitation || dailyMeteoVar == dailyReferenceEvapotranspirationHS
                          || dailyMeteoVar == dailyReferenceEvapotranspirationPM || dailyMeteoVar == dailyGlobalRadiation)
                 {
-                    setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly),sum);
+                    setMeteoPointValueM(actualDate,updateMeteoVariable(dailyMeteoVar, monthly), sum);
                 }
             }
             else

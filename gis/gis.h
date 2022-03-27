@@ -148,6 +148,7 @@
             bool initializeGrid(float initValue);
             bool initializeGrid(const Crit3DRasterGrid& initGrid);
             bool initializeGrid(const Crit3DRasterHeader& initHeader);
+            bool initializeGrid(const Crit3DGridHeader& latLonHeader);
             bool initializeGrid(const Crit3DRasterGrid& initGrid, float initValue);
 
             bool copyGrid(const Crit3DRasterGrid& initGrid);
@@ -214,6 +215,7 @@
         bool isMinimum(const Crit3DRasterGrid& myGrid, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& myGrid, int row, int col);
         bool isBoundary(const Crit3DRasterGrid& myGrid, int row, int col);
+        bool isBoundaryRunoff(const Crit3DRasterGrid& dem, const Crit3DRasterGrid &aspectMap, int row, int col);
         bool isStrictMaximum(const Crit3DRasterGrid& myGrid, int row, int col);
 
         bool getNorthernEmisphere();
@@ -243,6 +245,7 @@
 
         bool getGeoExtentsFromUTMHeader(const Crit3DGisSettings& mySettings,
                                         Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
+        bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
 
         float topographicDistance(float X1, float Y1, float Z1, float X2, float Y2, float Z2, float distance,
                                   const gis::Crit3DRasterGrid& myDEM);

@@ -669,7 +669,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             colorScale->minimum = 0;
             break;
         case dailyBIC:
-            setZeroCenteredScale(colorScale);
+            setCenteredScale(colorScale);
             break;
         case globalIrradiance: case directIrradiance: case diffuseIrradiance: case reflectedIrradiance:
         case netIrradiance: case dailyGlobalRadiation: case atmTransmissivity:
@@ -904,6 +904,15 @@ std::string getMeteoVarName(meteoVariable var)
         search = MapHourlyMeteoVarToString.find(var);
         if (search != MapHourlyMeteoVarToString.end()) return search->second;
     }
+
+    return "";
+}
+
+std::string getLapseRateCodeName(lapseRateCodeType code)
+{
+    auto search = MapLapseRateCodeToString.find(code);
+    if (search != MapLapseRateCodeToString.end())
+        return search->second;
 
     return "";
 }
