@@ -408,6 +408,11 @@ void Crit3DPointStatisticsWidget::plot()
             valMax.setEnabled(false);
             valMin.setEnabled(false);
             smoothing.setEnabled(false);
+            availability.clear();
+            significance.clear();
+            average.clear();
+            r2.clear();
+            rate.clear();
             int firstYear = yearFrom.currentText().toInt();
             int lastYear = yearTo.currentText().toInt();
             // check years
@@ -461,10 +466,33 @@ void Crit3DPointStatisticsWidget::plot()
                 QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
                 return;
             }
+
+            float sum = 0;
             for (int i = firstYear; i<=lastYear; i++)
             {
                 years.push_back(i);
+                if (outputValues[i] != NODATA)
+                {
+                    sum = sum + outputValues[i];
+                }
             }
+            float availab = ((float)validYears/(float)years.size())*100.0;
+            availability.setText(QString::number(availab));
+            float mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
+            significance.setText(QString::number(mkendall));
+            float averageValue = sum/validYears;
+            average.setText(QString::number(averageValue, 'f', 1));
+
+            float myCoeff = NODATA;
+            float myIntercept = NODATA;
+            float myR2 = NODATA;
+            bool isZeroIntercept = false;
+            std::vector<float> yearsFloat(years.begin(), years.end());
+            statistics::linearRegression(yearsFloat, outputValues, outputValues.size(), isZeroIntercept,
+                                             &myIntercept, &myCoeff, &myR2);
+            r2.setText(QString::number(myR2, 'f', 3));
+            rate.setText(QString::number(myCoeff, 'f', 3));
+
             chartView->drawTrend(years, outputValues);
         }
     }
