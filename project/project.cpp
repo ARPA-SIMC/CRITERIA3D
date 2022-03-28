@@ -2778,49 +2778,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
     }
 }
 
-void Project::showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::string namePoint)
-{
-    logInfoGUI("Loading data...");
-
-    // check dates
-    QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, idMeteoPoint).date();
-    QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, idMeteoPoint).date();
-    bool hasDailyData = !(firstDaily.isNull() || lastDaily.isNull());
-
-    QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, idMeteoPoint);
-    QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, idMeteoPoint);
-    bool hasHourlyData = !(firstHourly.isNull() || lastHourly.isNull());
-
-    if (!hasDailyData && !hasHourlyData)
-    {
-        logInfoGUI("No data.");
-        return;
-    }
-
-    Crit3DMeteoPoint mp;
-    meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(idMeteoPoint), &mp, gisSettings, errorString);
-    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mp);
-    meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &mp);
-    QList<Crit3DMeteoPoint> meteoPoints;
-    meteoPoints.append(mp);
-    // TO DO append le varie joint stations ancora non presenti
-    closeLogInfo();
-    bool isGrid = false;
-    pointStatisticsWidget = new Crit3DPointStatisticsWidget(isGrid, meteoPointsDbHandler, nullptr, meteoPoints, firstDaily, lastDaily, firstHourly, lastHourly, meteoSettings);
-    QObject::connect(pointStatisticsWidget, SIGNAL(pointStatisticsWidget()), this, SLOT(deletePointStatisticsWidget()));
-    return;
-}
-
-void Project::deletePointStatisticsWidget()
-{
-    pointStatisticsWidget = nullptr;
-}
-
-void Project::showPointStatisticsWidgetGrid(std::string id)
-{
-    // TO DO
-}
-
 void Project::deleteMeteoWidgetPoint(int id)
 {
 

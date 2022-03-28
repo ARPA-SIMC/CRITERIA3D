@@ -29,15 +29,16 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "climate.h"
+#include "dialogElaboration.h"
 #include "formInfo.h"
 
 #include <QLayout>
 #include <QDate>
 
 Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QList<Crit3DMeteoPoint> meteoPoints,
-                                                         QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings)
+                                                         QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings, QSettings *settings)
 :isGrid(isGrid), meteoPointsDbHandler(meteoPointsDbHandler), meteoGridDbHandler(meteoGridDbHandler), meteoPoints(meteoPoints), firstDaily(firstDaily),
-  lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly), meteoSettings(meteoSettings)
+  lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly), meteoSettings(meteoSettings), settings(settings)
 {
     this->setWindowTitle("Point statistics Id:"+QString::fromStdString(meteoPoints[0].id)+" "+QString::fromStdString(meteoPoints[0].name));
     this->resize(1240, 700);
@@ -294,6 +295,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&graph, &QComboBox::currentTextChanged, [=](const QString &newGraph){ this->changeGraph(newGraph); });
     connect(&compute, &QPushButton::clicked, [=](){ plot(); });
+    connect(&elaboration, &QPushButton::clicked, [=](){ showElaboration(); });
 
     plot();
     show();
@@ -521,4 +523,25 @@ void Crit3DPointStatisticsWidget::plot()
     {
 
     }
+}
+
+void Crit3DPointStatisticsWidget::showElaboration()
+{
+    if (currentFrequency == daily)
+    {
+        DialogElaboration elabDialog(settings, &clima, firstDaily, lastDaily);
+        if (elabDialog.result() == QDialog::Accepted)
+        {
+            // TO DO
+        }
+    }
+    else
+    {
+        DialogElaboration elabDialog(settings, &clima, firstHourly.date(), lastHourly.date());
+        if (elabDialog.result() == QDialog::Accepted)
+        {
+            // TO DO
+        }
+    }
+    return;
 }

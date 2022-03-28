@@ -16,7 +16,8 @@
         Q_OBJECT
 
         public:
-            Crit3DPointStatisticsWidget(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings);
+            Crit3DPointStatisticsWidget(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily,
+                                        QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings, QSettings *settings);
             ~Crit3DPointStatisticsWidget();
             void closeEvent(QCloseEvent *event);
             void dailyVar();
@@ -24,12 +25,14 @@
             void changeGraph(const QString graphName);
             void changeVar(const QString varName);
             void plot();
+            void showElaboration();
 
     private:
             bool isGrid;
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
             Crit3DMeteoGridDbHandler* meteoGridDbHandler;
             Crit3DMeteoSettings *meteoSettings;
+            QSettings *settings;
             Crit3DClimate clima;
             QList<Crit3DMeteoPoint> meteoPoints;
             QDate firstDaily;
