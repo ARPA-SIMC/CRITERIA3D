@@ -470,5 +470,55 @@
             return NODATA;
         }
 
+        // warning: if isSortValues is true, list will be modified
+        float mode(std::vector<float> &list, int* nrList, bool isSortValues)
+        {
+
+            if (isSortValues)
+            {
+                // clean nodata
+                std::vector<float> cleanList;
+                for (unsigned int i = 0; i < unsigned(*nrList); i++)
+                {
+                    if (int(list[i]) != int(NODATA))
+                    {
+                        cleanList.push_back(list[i]);
+                    }
+                }
+
+                // sort
+                quicksortAscendingFloat(cleanList, 0, unsigned(cleanList.size() - 1));
+
+                // switch
+                *nrList = int(cleanList.size());
+                list.clear();
+                list = cleanList;
+            }
+
+            //finding max frequency
+            int max_count = 1, res = list[0], count = 1;
+            for (int i = 1; i < *nrList; i++)
+            {
+                if (list[i] == list[i - 1])
+                    count++;
+                else {
+                    if (count > max_count) {
+                        max_count = count;
+                        res = list[i - 1];
+                    }
+                    count = 1;
+                }
+            }
+
+            // when the last element is most frequent
+            if (count > max_count)
+            {
+                max_count = count;
+                res = list[*nrList - 1];
+            }
+
+            return res;
+        }
+
     }
 
