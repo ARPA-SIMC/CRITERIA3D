@@ -32,9 +32,10 @@ public:
 
 private:
     QScatterSeries* trend;
-    QBarCategoryAxis *axisX;
+    //QBarCategoryAxis *axisX;
     QValueAxis* axisXvalue;
     QValueAxis* axisY;
+    //QList<QString> categories;
     PointStatisticsCallout *m_tooltip;
     /*
     QScatterSeries *series1;

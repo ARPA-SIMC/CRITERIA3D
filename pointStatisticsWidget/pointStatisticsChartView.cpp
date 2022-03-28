@@ -15,12 +15,12 @@ PointStatisticsChartView::PointStatisticsChartView(QWidget *parent) :
     setRenderHint(QPainter::Antialiasing);
 
     axisXvalue = new QValueAxis();
-    axisX = new QBarCategoryAxis();
+    //axisX = new QBarCategoryAxis();
     axisY = new QValueAxis();
 
-    chart()->addAxis(axisX, Qt::AlignBottom);
+    //chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisXvalue, Qt::AlignBottom);
-    axisX->setVisible(false);
+    //axisX->setVisible(false);
     chart()->addAxis(axisY, Qt::AlignLeft);
     chart()->setDropShadowEnabled(false);
 
@@ -38,6 +38,13 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
     {
         chart()->removeSeries(trend);
     }
+    /*
+    categories.clear();
+    for (int year = years[0]; year < years.size(); year++)
+    {
+        categories.append(QString::number(year));
+    }
+    */
 
     float maxValue = NODATA;
     float minValue = -NODATA;
@@ -45,7 +52,7 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
     {
         if (outputValues[i] != NODATA)
         {
-            trend->append(years[i], outputValues[i]);
+            trend->append(QPointF(years[i], outputValues[i]));
             if (outputValues[i] > maxValue)
             {
                 maxValue = outputValues[i];
@@ -63,8 +70,9 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
     axisXvalue->setRange(years[0], years[years.size()-1]);
     axisXvalue->setTickCount(years.size());
     axisXvalue->setLabelFormat("%d");
+    //axisX->setCategories(categories);
     chart()->addSeries(trend);
-    trend->attachAxis(axisX);
+    trend->attachAxis(axisXvalue);
     trend->attachAxis(axisY);
     connect(trend, &QScatterSeries::hovered, this, &PointStatisticsChartView::tooltipLineSeries);
 }
@@ -78,7 +86,7 @@ void PointStatisticsChartView::tooltipLineSeries(QPointF point, bool state)
         double xValue = point.x();
         double yValue = point.y();
 
-        m_tooltip->setText(QString("%1: %2").arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setText(QString("%1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
