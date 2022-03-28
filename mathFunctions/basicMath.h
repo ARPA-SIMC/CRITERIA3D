@@ -38,6 +38,7 @@
         double percentile(double* list, int *nrList, double perc, bool isSortValues);
         float percentile(std::vector<float> &list, int* nrList, float perc, bool sortValues);
         float percentileRank(std::vector<float> &list, float value, bool sortValues);
+        float mode(std::vector<float> &list, int* nrList, bool isSortValues);
     }
 
 

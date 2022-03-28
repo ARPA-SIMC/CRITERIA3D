@@ -73,10 +73,12 @@
         void initializeWaterContent(Crit3DDate myDate);
         bool computeDailyModel(Crit3DDate &myDate, std::string &error);
 
-        double getWaterContent(double depth);
-        double getWaterPotential(double depth);
-        double getSoilWaterDeficit(double depth);
-        double getAvailableWaterCapacity(double depth);
+        double getWaterContent(double computationDepth);
+        double getWaterPotential(double computationDepth);
+        double getWaterDeficit(double computationDepth);
+        double getWaterCapacity(double computationDepth);
+        double getAvailableWater(double computationDepth);
+        double getFractionAW(double computationDepth);
 
     private:
         double minLayerThickness;       // [m]

@@ -1521,19 +1521,19 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
     }
     for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getSoilWaterDeficit(waterDeficitDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getWaterDeficit(waterDeficitDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < awcDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getAvailableWaterCapacity(awcDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getWaterCapacity(awcDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < availableWaterDepth.size(); i++)
     {
-        outputString += "," + QString::number(getSoilAvailableWater(myCase.soilLayers, availableWaterDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getAvailableWater(availableWaterDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
     {
-        outputString += "," + QString::number(getSoilFractionAW(myCase.soilLayers, fractionAvailableWaterDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 4);
     }
 
     outputString += ")";

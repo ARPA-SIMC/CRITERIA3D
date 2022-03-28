@@ -3313,6 +3313,8 @@ bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
 }
 
 
+
+
 /* ---------------------------------------------
  * LOG functions
  * --------------------------------------------*/
