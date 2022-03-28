@@ -454,7 +454,7 @@
 
             for (unsigned int i = 0; i < list.size(); i++)
             {
-                if (value == list[i])
+                if (isEqual(value, list[i]))
                 {
                     float rank = float(i + 1) / nrValuesF;
                     return rank * 100;
@@ -496,13 +496,17 @@
             }
 
             //finding max frequency
-            int max_count = 1, res = list[0], count = 1;
-            for (int i = 1; i < *nrList; i++)
+            int max_count = 1;
+            float res = list[0];
+            int count = 1;
+            for (unsigned int i = 1; i < unsigned(*nrList); i++)
             {
-                if (list[i] == list[i - 1])
+                if (isEqual(list[i], list[i - 1]))
                     count++;
-                else {
-                    if (count > max_count) {
+                else
+                {
+                    if (count > max_count)
+                    {
                         max_count = count;
                         res = list[i - 1];
                     }
@@ -514,7 +518,7 @@
             if (count > max_count)
             {
                 max_count = count;
-                res = list[*nrList - 1];
+                res = list[unsigned(*nrList) - 1];
             }
 
             return res;
