@@ -38,10 +38,6 @@
         #include "proxyWidget.h"
     #endif
 
-    #ifndef POINTSTATISTICSWIDGET_H
-        #include "pointStatisticsWidget.h"
-    #endif
-
     #ifndef _FSTREAM_
         #include <fstream>
     #endif
@@ -147,7 +143,6 @@
         QList<Crit3DMeteoWidget*> meteoWidgetGridList;
 
         Crit3DProxyWidget* proxyWidget;
-        Crit3DPointStatisticsWidget* pointStatisticsWidget;
 
         Project();
 
@@ -259,8 +254,6 @@
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
         void showProxyGraph();
-        void showPointStatisticsWidgetPoint(std::string idMeteoPoint, std::string namePoint);
-        void showPointStatisticsWidgetGrid(std::string id);
 
         void clearSelectedPoints();
         void clearSelectedOutputPoints();
@@ -280,7 +273,6 @@
         void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid(int id);
         void deleteProxyWidget();
-        void deletePointStatisticsWidget();
 
     };
 

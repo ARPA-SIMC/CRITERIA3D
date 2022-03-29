@@ -234,7 +234,7 @@ quality::qualityType Crit3DQuality::syntacticQualitySingleValue(meteoVariable my
     }
 }
 
-quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
 {
 
     if (int(myValue) == int(NODATA))
@@ -245,7 +245,7 @@ quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariabl
         return quality::accepted;
 }
 
-bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
 {
 
     float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
@@ -279,7 +279,7 @@ bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClima
     return false;
 }
 
-quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
 {
 
     if (int(myValue) == int(NODATA))
@@ -290,7 +290,7 @@ quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariab
         return quality::accepted;
 }
 
-bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
 {
     float tminClima = NODATA;
     float tmaxClima = NODATA;
