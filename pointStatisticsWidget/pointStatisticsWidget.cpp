@@ -71,6 +71,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     QLabel *variableLabel = new QLabel(tr("Variable: "));
 
     elaboration.setText("Elaboration");
+    elaboration.setEnabled(false);
     
     dailyButton.setText("Daily");
     hourlyButton.setText("Hourly");
@@ -385,6 +386,14 @@ void Crit3DPointStatisticsWidget::hourlyVar()
 
 void Crit3DPointStatisticsWidget::changeGraph(const QString graphName)
 {
+    if (graphName == "Trend" || graphName == "Anomaly trend")
+    {
+        elaboration.setEnabled(true);
+    }
+    else
+    {
+        elaboration.setEnabled(false);
+    }
     plot();
 }
 
@@ -527,21 +536,86 @@ void Crit3DPointStatisticsWidget::plot()
 
 void Crit3DPointStatisticsWidget::showElaboration()
 {
-    if (currentFrequency == daily)
+    DialogElaboration elabDialog(settings, &clima, firstDaily, lastDaily);
+    if (elabDialog.result() == QDialog::Accepted)
     {
-        DialogElaboration elabDialog(settings, &clima, firstDaily, lastDaily);
-        if (elabDialog.result() == QDialog::Accepted)
+        classWidth.setEnabled(false);
+        valMax.setEnabled(false);
+        valMin.setEnabled(false);
+        sigma.setEnabled(false);
+        mode.setEnabled(false);
+        median.setEnabled(false);
+
+        smoothing.setEnabled(false);
+        availability.clear();
+        significance.clear();
+        average.clear();
+        r2.clear();
+        rate.clear();
+
+        int firstYear = clima.yearStart();
+        int lastYear = clima.yearEnd();
+        // check years
+        if (lastYear - firstYear < 2)
         {
-            // TO DO
+            QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
+            return;
         }
-    }
-    else
-    {
-        DialogElaboration elabDialog(settings, &clima, firstHourly.date(), lastHourly.date());
-        if (elabDialog.result() == QDialog::Accepted)
+        std::vector<float> outputValues;
+        std::vector<int> years;
+        QString myError;
+        bool isAnomaly = false;
+        // copy data to MPTemp
+        Crit3DMeteoPoint meteoPointTemp;
+        meteoPointTemp.id = meteoPoints[0].id;
+        meteoPointTemp.point.utm.x = meteoPoints[0].point.utm.x;  // LC to compute distance in passingClimateToAnomaly
+        meteoPointTemp.point.utm.y = meteoPoints[0].point.utm.y;  // LC to compute distance in passingClimateToAnomaly
+        meteoPointTemp.point.z = meteoPoints[0].point.z;
+        meteoPointTemp.latitude = meteoPoints[0].latitude;
+        meteoPointTemp.elaboration = meteoPoints[0].elaboration;
+
+        // meteoPointTemp should be init
+        meteoPointTemp.nrObsDataDaysH = 0;
+        meteoPointTemp.nrObsDataDaysD = 0;
+
+        int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
+                                                 &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
+        if (validYears < 3)
         {
-            // TO DO
+            QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
+            return;
         }
+
+        float sum = 0;
+        int count = 0;
+        for (int i = firstYear; i<=lastYear; i++)
+        {
+            years.push_back(i);
+            if (outputValues[count] != NODATA)
+            {
+                sum = sum + outputValues[count];
+            }
+            count = count + 1;
+        }
+        // draw
+        chartView->drawTrend(years, outputValues);
+
+        float availab = ((float)validYears/(float)years.size())*100.0;
+        availability.setText(QString::number(availab));
+        float mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
+        significance.setText(QString::number(mkendall, 'f', 3));
+        float averageValue = sum/validYears;
+        average.setText(QString::number(averageValue, 'f', 1));
+
+        float myCoeff = NODATA;
+        float myIntercept = NODATA;
+        float myR2 = NODATA;
+        bool isZeroIntercept = false;
+        std::vector<float> yearsFloat(years.begin(), years.end());
+        statistics::linearRegression(yearsFloat, outputValues, outputValues.size(), isZeroIntercept,
+                                         &myIntercept, &myCoeff, &myR2);
+        r2.setText(QString::number(myR2, 'f', 3));
+        rate.setText(QString::number(myCoeff, 'f', 3));
     }
     return;
 }
