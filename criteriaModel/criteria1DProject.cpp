@@ -1496,7 +1496,7 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 3)
                     + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
                     + "," + QString::number(myCase.output.dailyReadilyAW, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 3)
                     + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 3)
                     + "," + QString::number(myCase.output.dailyDrainage, 'g', 3)
                     + "," + QString::number(myCase.output.dailyLateralDrainage, 'g', 3)
@@ -1533,7 +1533,7 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
     }
     for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 3);
     }
 
     outputString += ")";
