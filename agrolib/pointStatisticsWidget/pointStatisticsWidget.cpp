@@ -27,16 +27,18 @@
 #include "interpolation.h"
 #include "spatialControl.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "climate.h"
+#include "dialogElaboration.h"
 #include "formInfo.h"
 
 #include <QLayout>
 #include <QDate>
 
 Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QList<Crit3DMeteoPoint> meteoPoints,
-                                                         QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings)
+                                                         QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings, QSettings *settings)
 :isGrid(isGrid), meteoPointsDbHandler(meteoPointsDbHandler), meteoGridDbHandler(meteoGridDbHandler), meteoPoints(meteoPoints), firstDaily(firstDaily),
-  lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly), meteoSettings(meteoSettings)
+  lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly), meteoSettings(meteoSettings), settings(settings)
 {
     this->setWindowTitle("Point statistics Id:"+QString::fromStdString(meteoPoints[0].id)+" "+QString::fromStdString(meteoPoints[0].name));
     this->resize(1240, 700);
@@ -54,7 +56,9 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     QHBoxLayout *variableLayout = new QHBoxLayout;
     QGroupBox *variableGroupBox = new QGroupBox();
     QGroupBox *referencePeriodGroupBox = new QGroupBox();
+    analysisPeriodGroupBox = new QGroupBox();
     QHBoxLayout *referencePeriodChartLayout = new QHBoxLayout;
+    QHBoxLayout *analysisPeriodChartLayout = new QHBoxLayout;
     QHBoxLayout *dateChartLayout = new QHBoxLayout;
     QGroupBox *gridLeftGroupBox = new QGroupBox();
     QGridLayout *gridLeftLayout = new QGridLayout;
@@ -69,6 +73,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     QLabel *variableLabel = new QLabel(tr("Variable: "));
 
     elaboration.setText("Elaboration");
+    elaboration.setEnabled(false);
     
     dailyButton.setText("Daily");
     hourlyButton.setText("Hourly");
@@ -119,6 +124,16 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     referencePeriodChartLayout->addWidget(&yearTo);
     referencePeriodGroupBox->setLayout(referencePeriodChartLayout);
 
+    analysisPeriodGroupBox->setTitle("Analysis period");
+    QLabel *analysisYearFromLabel = new QLabel(tr("From"));
+    analysisPeriodChartLayout->addWidget(analysisYearFromLabel);
+    analysisPeriodChartLayout->addWidget(&analysisYearFrom);
+    QLabel *analysisYearToLabel = new QLabel(tr("To"));
+    analysisPeriodChartLayout->addWidget(analysisYearToLabel);
+    analysisPeriodChartLayout->addWidget(&analysisYearTo);
+    analysisPeriodGroupBox->setLayout(analysisPeriodChartLayout);
+    analysisPeriodGroupBox->setVisible(false);
+
     QLabel *dayFromLabel = new QLabel(tr("Day from"));
     dateChartLayout->addWidget(dayFromLabel);
     dayFrom.setDisplayFormat("dd/MM");
@@ -167,6 +182,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     horizontalGroupBox->setLayout(elabLayout);
     elabLayout->addWidget(variableGroupBox);
     elabLayout->addWidget(referencePeriodGroupBox);
+    elabLayout->addWidget(analysisPeriodGroupBox);
     elabLayout->addLayout(dateChartLayout);
     elabLayout->addWidget(&compute);
     leftLayout->addWidget(horizontalGroupBox);
@@ -175,20 +191,22 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     gridLeftLayout->addWidget(classWidthLabel,0,0,1,1);
     QLabel *valMaxLabel = new QLabel(tr("Val max"));
     gridLeftLayout->addWidget(valMaxLabel,0,1,1,1);
+    QLabel *valMinLabel = new QLabel(tr("Val min"));
+    gridLeftLayout->addWidget(valMinLabel,0,2,1,1);
     QLabel *smoothingLabel = new QLabel(tr("Smoothing"));
-    gridLeftLayout->addWidget(smoothingLabel,0,2,1,1);
-    classWidth.setEnabled(false);
+    gridLeftLayout->addWidget(smoothingLabel,0,3,1,1);
     classWidth.setMaximumWidth(60);
     classWidth.setMaximumHeight(30);
     gridLeftLayout->addWidget(&classWidth,3,0,1,-1);
-    valMax.setEnabled(false);
     valMax.setMaximumWidth(60);
     valMax.setMaximumHeight(30);
     gridLeftLayout->addWidget(&valMax,3,1,1,-1);
-    smoothing.setEnabled(false);
+    valMin.setMaximumWidth(60);
+    valMin.setMaximumHeight(30);
+    gridLeftLayout->addWidget(&valMin,3,2,1,-1);
     smoothing.setMaximumWidth(60);
     smoothing.setMaximumHeight(30);
-    gridLeftLayout->addWidget(&smoothing,3,2,1,-1);
+    gridLeftLayout->addWidget(&smoothing,3,3,1,-1);
     gridLeftGroupBox->setMaximumHeight(this->height()/6);
     gridLeftGroupBox->setLayout(gridLeftLayout);
     leftLayout->addWidget(gridLeftGroupBox);
@@ -201,13 +219,9 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
         if (!firstDaily.isNull() || !lastDaily.isNull())
         {
             graph.addItem("Distribution");
+            graph.addItem("Climate");
             graph.addItem("Trend");
             graph.addItem("Anomaly trend");
-            graph.addItem("Climate");
-            graph.addItem("Anomaly index");
-            graph.addItem("Weather generator");
-            graph.addItem("Scenario");
-            graph.addItem("Series generator");
 
             for(int i = 0; i <= lastDaily.year()-firstDaily.year(); i++)
             {
@@ -222,7 +236,6 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
         if (!firstHourly.isNull() || !lastHourly.isNull())
         {
             graph.addItem("Distribution");
-            graph.addItem("Series generator");
             for(int i = 0; i <= lastHourly.date().year() - firstHourly.date().year(); i++)
             {
                 yearFrom.addItem(QString::number(firstHourly.date().year()+i));
@@ -295,6 +308,8 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     connect(&hourlyButton, &QRadioButton::clicked, [=](){ hourlyVar(); });
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&graph, &QComboBox::currentTextChanged, [=](const QString &newGraph){ this->changeGraph(newGraph); });
+    connect(&compute, &QPushButton::clicked, [=](){ plot(); });
+    connect(&elaboration, &QPushButton::clicked, [=](){ showElaboration(); });
 
     plot();
     show();
@@ -331,13 +346,10 @@ void Crit3DPointStatisticsWidget::dailyVar()
     if (!firstDaily.isNull() || !lastDaily.isNull())
     {
         graph.addItem("Distribution");
+        graph.addItem("Climate");
         graph.addItem("Trend");
         graph.addItem("Anomaly trend");
-        graph.addItem("Climate");
-        graph.addItem("Anomaly index");
-        graph.addItem("Weather generator");
-        graph.addItem("Scenario");
-        graph.addItem("Series generator");
+
         for(int i = 0; i <= lastDaily.year()-firstDaily.year(); i++)
         {
             yearFrom.addItem(QString::number(firstDaily.year()+i));
@@ -370,7 +382,7 @@ void Crit3DPointStatisticsWidget::hourlyVar()
     if (!firstHourly.isNull() || !lastHourly.isNull())
     {
         graph.addItem("Distribution");
-        graph.addItem("Series generator");
+
         for(int i = 0; i <= lastHourly.date().year() - firstHourly.date().year(); i++)
         {
             yearFrom.addItem(QString::number(firstHourly.date().year()+i));
@@ -387,6 +399,21 @@ void Crit3DPointStatisticsWidget::hourlyVar()
 
 void Crit3DPointStatisticsWidget::changeGraph(const QString graphName)
 {
+    if (graphName == "Trend")
+    {
+        analysisPeriodGroupBox->setVisible(false);
+        elaboration.setEnabled(true);
+    }
+    else if (graphName == "Anomaly trend")
+    {
+        analysisPeriodGroupBox->setVisible(true);
+        elaboration.setEnabled(true);
+    }
+    else
+    {
+        analysisPeriodGroupBox->setVisible(false);
+        elaboration.setEnabled(false);
+    }
     plot();
 }
 
@@ -409,8 +436,24 @@ void Crit3DPointStatisticsWidget::plot()
     {
         if (graph.currentText() == "Trend")
         {
+            classWidth.setEnabled(false);
+            valMax.setEnabled(false);
+            valMin.setEnabled(false);
+            sigma.setEnabled(false);
+            mode.setEnabled(false);
+            median.setEnabled(false);
+
+            smoothing.setEnabled(false);
+            availability.clear();
+            significance.clear();
+            average.clear();
+            r2.clear();
+            rate.clear();
+
+            int firstYear = yearFrom.currentText().toInt();
+            int lastYear = yearTo.currentText().toInt();
             // check years
-            if (yearTo.currentText().toInt() - yearFrom.currentText().toInt() < 2)
+            if (lastYear - firstYear < 2)
             {
                 QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
                 return;
@@ -424,10 +467,10 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 clima.setElab1("average");
             }
-            clima.setYearStart(yearFrom.currentText().toInt());
-            clima.setYearEnd(yearTo.currentText().toInt());
-            clima.setGenericPeriodDateStart(QDate(yearFrom.currentText().toInt(), dayFrom.date().month(), dayFrom.date().day()));
-            clima.setGenericPeriodDateEnd(QDate(yearTo.currentText().toInt(), dayTo.date().month(), dayTo.date().day()));
+            clima.setYearStart(firstYear);
+            clima.setYearEnd(lastYear);
+            clima.setGenericPeriodDateStart(QDate(firstYear, dayFrom.date().month(), dayFrom.date().day()));
+            clima.setGenericPeriodDateEnd(QDate(lastYear, dayTo.date().month(), dayTo.date().day()));
             if (dayFrom.date()> dayTo.date())
             {
                 clima.setNYears(1);
@@ -437,6 +480,7 @@ void Crit3DPointStatisticsWidget::plot()
                 clima.setNYears(0);
             }
             std::vector<float> outputValues;
+            std::vector<int> years;
             QString myError;
             bool isAnomaly = false;
             // copy data to MPTemp
@@ -459,10 +503,139 @@ void Crit3DPointStatisticsWidget::plot()
                 QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
                 return;
             }
+
+            float sum = 0;
+            int count = 0;
+            for (int i = firstYear; i<=lastYear; i++)
+            {
+                years.push_back(i);
+                if (outputValues[count] != NODATA)
+                {
+                    sum = sum + outputValues[count];
+                }
+                count = count + 1;
+            }
+            // draw
+            chartView->drawTrend(years, outputValues);
+
+            float availab = ((float)validYears/(float)years.size())*100.0;
+            availability.setText(QString::number(availab));
+            float mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
+            significance.setText(QString::number(mkendall, 'f', 3));
+            float averageValue = sum/validYears;
+            average.setText(QString::number(averageValue, 'f', 1));
+
+            float myCoeff = NODATA;
+            float myIntercept = NODATA;
+            float myR2 = NODATA;
+            bool isZeroIntercept = false;
+            std::vector<float> yearsFloat(years.begin(), years.end());
+            statistics::linearRegression(yearsFloat, outputValues, outputValues.size(), isZeroIntercept,
+                                             &myIntercept, &myCoeff, &myR2);
+            r2.setText(QString::number(myR2, 'f', 3));
+            rate.setText(QString::number(myCoeff, 'f', 3));
+
+            /*
+            float stdDev = statistics::standardDeviation(outputValues, outputValues.size());
+            sigma.setText(QString::number(stdDev, 'f', 3));
+
+            int nrValues = int(outputValues.size());
+            float percentile = sorting::percentile(outputValues, &nrValues, 50.0, true);
+            median.setText(QString::number(percentile, 'f', 3));
+
+            float modeVal = sorting::mode(outputValues, &nrValues, true);
+            mode.setText(QString::number(modeVal, 'f', 3));
+            */
         }
     }
     else if (currentFrequency == hourly)
     {
 
     }
+}
+
+void Crit3DPointStatisticsWidget::showElaboration()
+{
+    DialogElaboration elabDialog(settings, &clima, firstDaily, lastDaily);
+    if (elabDialog.result() == QDialog::Accepted)
+    {
+        classWidth.setEnabled(false);
+        valMax.setEnabled(false);
+        valMin.setEnabled(false);
+        sigma.setEnabled(false);
+        mode.setEnabled(false);
+        median.setEnabled(false);
+
+        smoothing.setEnabled(false);
+        availability.clear();
+        significance.clear();
+        average.clear();
+        r2.clear();
+        rate.clear();
+
+        int firstYear = clima.yearStart();
+        int lastYear = clima.yearEnd();
+        // check years
+        if (lastYear - firstYear < 2)
+        {
+            QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
+            return;
+        }
+        std::vector<float> outputValues;
+        std::vector<int> years;
+        QString myError;
+        bool isAnomaly = false;
+        // copy data to MPTemp
+        Crit3DMeteoPoint meteoPointTemp;
+        meteoPointTemp.id = meteoPoints[0].id;
+        meteoPointTemp.point.utm.x = meteoPoints[0].point.utm.x;  // LC to compute distance in passingClimateToAnomaly
+        meteoPointTemp.point.utm.y = meteoPoints[0].point.utm.y;  // LC to compute distance in passingClimateToAnomaly
+        meteoPointTemp.point.z = meteoPoints[0].point.z;
+        meteoPointTemp.latitude = meteoPoints[0].latitude;
+        meteoPointTemp.elaboration = meteoPoints[0].elaboration;
+
+        // meteoPointTemp should be init
+        meteoPointTemp.nrObsDataDaysH = 0;
+        meteoPointTemp.nrObsDataDaysD = 0;
+
+        int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
+                                                 &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
+        if (validYears < 3)
+        {
+            QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
+            return;
+        }
+
+        float sum = 0;
+        int count = 0;
+        for (int i = firstYear; i<=lastYear; i++)
+        {
+            years.push_back(i);
+            if (outputValues[count] != NODATA)
+            {
+                sum = sum + outputValues[count];
+            }
+            count = count + 1;
+        }
+        // draw
+        chartView->drawTrend(years, outputValues);
+
+        float availab = ((float)validYears/(float)years.size())*100.0;
+        availability.setText(QString::number(availab));
+        float mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
+        significance.setText(QString::number(mkendall, 'f', 3));
+        float averageValue = sum/validYears;
+        average.setText(QString::number(averageValue, 'f', 1));
+
+        float myCoeff = NODATA;
+        float myIntercept = NODATA;
+        float myR2 = NODATA;
+        bool isZeroIntercept = false;
+        std::vector<float> yearsFloat(years.begin(), years.end());
+        statistics::linearRegression(yearsFloat, outputValues, outputValues.size(), isZeroIntercept,
+                                         &myIntercept, &myCoeff, &myR2);
+        r2.setText(QString::number(myR2, 'f', 3));
+        rate.setText(QString::number(myCoeff, 'f', 3));
+    }
+    return;
 }

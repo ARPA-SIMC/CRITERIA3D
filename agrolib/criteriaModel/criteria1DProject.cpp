@@ -61,9 +61,12 @@ void Crit1DProject::initialize()
     lastSimulationDate = QDate(1800,1,1);
 
     outputString = "";
+    // specific outputs
     waterDeficitDepth.clear();
     waterContentDepth.clear();
     waterPotentialDepth.clear();
+    availableWaterDepth.clear();
+    fractionAvailableWaterDepth.clear();
     awcDepth.clear();
 }
 
@@ -248,6 +251,22 @@ bool Crit1DProject::readSettings()
             projectError = "Wrong available water capacity depth in " + configFileName;
             return false;
         }
+        depthList = projectSettings->value("availableWater").toStringList();
+        if (depthList.size() == 0)
+            depthList = projectSettings->value("aw").toStringList();
+        if (! setVariableDepth(depthList, availableWaterDepth))
+        {
+            projectError = "Wrong available water depth in " + configFileName;
+            return false;
+        }
+        depthList = projectSettings->value("fractionAvailableWater").toStringList();
+        if (depthList.size() == 0)
+            depthList = projectSettings->value("faw").toStringList();
+        if (! setVariableDepth(depthList, fractionAvailableWaterDepth))
+        {
+            projectError = "Wrong fraction available water depth in " + configFileName;
+            return false;
+        }
     projectSettings->endGroup();
 
     return true;
@@ -368,7 +387,7 @@ bool Crit1DProject::setSoil(QString soilCode, QString &myError)
 }
 
 
-bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, int memberNr)
+bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr)
 {
     unsigned row;
     unsigned col;
@@ -448,7 +467,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, int mem
         }
         else
         {
-            if (!this->forecastMeteoGrid->loadGridDailyDataEnsemble(&projectError, idForecast, memberNr, lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
+            if (!this->forecastMeteoGrid->loadGridDailyDataEnsemble(&projectError, idForecast, int(memberNr), lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
             {
                 if (projectError == "Missing MeteoPoint id")
                 {
@@ -461,7 +480,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, int mem
                 return false;
             }
         }
-        nrDays += daysOfForecast;
+        nrDays += unsigned(daysOfForecast);
     }
 
     myCase.meteoPoint.latitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->latitude;
@@ -469,7 +488,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, int mem
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstSimulationDate));
 
     float tmin, tmax, tavg, prec;
-    long lastIndex = firstSimulationDate.daysTo(lastSimulationDate) + 1;
+    long lastIndex = long(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
     for (int i = 0; i < lastIndex; i++)
     {
         Crit3DDate myDate = getCrit3DDate(firstSimulationDate.addDays(i));
@@ -1310,12 +1329,12 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
                 myError = "WC not found";
                 return false;
             }
-            if (nrLayer<0 || (unsigned)nrLayer>=myCase.soilLayers.size())
+            if (nrLayer < 0 || unsigned(nrLayer) >= myCase.soilLayers.size())
             {
                 myError = "Invalid NR_LAYER";
                 return false;
             }
-            myCase.soilLayers[nrLayer].waterContent = wc;
+            myCase.soilLayers[unsigned(nrLayer)].waterContent = wc;
         }
         if (nrLayer == -1)
         {
@@ -1397,6 +1416,16 @@ bool Crit1DProject::createOutputTable(QString &myError)
         QString fieldName = "AWC_" + QString::number(awcDepth[i]);
         queryString += ", " + fieldName + " REAL";
     }
+    for (unsigned int i = 0; i < availableWaterDepth.size(); i++)
+    {
+        QString fieldName = "AW_" + QString::number(availableWaterDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
+    for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
+    {
+        QString fieldName = "FAW_" + QString::number(fractionAvailableWaterDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
 
     queryString += ")";
     myQuery = this->dbOutput.exec(queryString);
@@ -1442,6 +1471,16 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
             QString fieldName = "AWC_" + QString::number(awcDepth[i]);
             outputString += ", " + fieldName;
         }
+        for (unsigned int i = 0; i < availableWaterDepth.size(); i++)
+        {
+            QString fieldName = "AW_" + QString::number(availableWaterDepth[i]);
+            outputString += ", " + fieldName;
+        }
+        for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
+        {
+            QString fieldName = "FAW_" + QString::number(fractionAvailableWaterDepth[i]);
+            outputString += ", " + fieldName;
+        }
 
         outputString += ") VALUES ";
     }
@@ -1457,7 +1496,7 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 3)
                     + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
                     + "," + QString::number(myCase.output.dailyReadilyAW, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 3)
                     + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 3)
                     + "," + QString::number(myCase.output.dailyDrainage, 'g', 3)
                     + "," + QString::number(myCase.output.dailyLateralDrainage, 'g', 3)
@@ -1482,11 +1521,19 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
     }
     for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getSoilWaterDeficit(waterDeficitDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getWaterDeficit(waterDeficitDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < awcDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getAvailableWaterCapacity(awcDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getWaterCapacity(awcDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < availableWaterDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getAvailableWater(availableWaterDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 3);
     }
 
     outputString += ")";
@@ -1674,16 +1721,16 @@ QString getOutputStringNullZero(double value)
 }
 
 
-bool setVariableDepth(QStringList& depthList, std::vector<int>& variableDepth)
+bool setVariableDepth(QList<QString>& depthList, std::vector<int>& variableDepth)
 {
     int nrDepth = depthList.size();
     if (nrDepth > 0)
     {
         variableDepth.resize(unsigned(nrDepth));
-        for (unsigned int i = 0; i < unsigned(nrDepth); i++)
+        for (int i = 0; i < nrDepth; i++)
         {
-            variableDepth[i] = depthList[i].toInt();
-            if (variableDepth[i] <= 0)
+            variableDepth[unsigned(i)] = depthList[i].toInt();
+            if (variableDepth[unsigned(i)] <= 0)
                 return false;
         }
     }

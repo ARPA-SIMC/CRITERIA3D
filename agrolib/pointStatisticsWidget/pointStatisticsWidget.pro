@@ -35,12 +35,14 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../db
 
 
 SOURCES += \
+    dialogElaboration.cpp \
     pointStatisticsChartView.cpp \
     pointStatisticsCallout.cpp \
     pointStatisticsWidget.cpp
 
 
 HEADERS += \
+    dialogElaboration.h \
     pointStatisticsChartView.h \
     pointStatisticsCallout.h \
     pointStatisticsWidget.h 

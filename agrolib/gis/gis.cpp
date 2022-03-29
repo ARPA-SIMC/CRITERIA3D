@@ -234,22 +234,36 @@ namespace gis
 
     bool Crit3DRasterGrid::initializeGrid(float initValue)
     {
-        if (! this->initializeGrid()) return false;
+        if (! initializeGrid()) return false;
 
-        this->setConstantValue(initValue);
-
-        this->isLoaded = true;
+        setConstantValue(initValue);
+        isLoaded = true;
         return true;
     }
 
 
     bool Crit3DRasterGrid::initializeGrid(const Crit3DRasterHeader& initHeader)
     {
-        this->clear();
+        clear();
+        *(header) = initHeader;
+        return initializeGrid(header->flag);
+    }
 
-        *(this->header) = initHeader;
 
-        return this->initializeGrid(this->header->flag);
+    bool Crit3DRasterGrid::initializeGrid(const Crit3DGridHeader& latLonHeader)
+    {
+        clear();
+
+        header->nrRows = latLonHeader.nrRows;
+        header->nrCols = latLonHeader.nrCols;
+        header->flag = latLonHeader.flag;
+        header->llCorner.y = latLonHeader.llCorner.latitude;
+        header->llCorner.x = latLonHeader.llCorner.longitude;
+
+        // avg value (usually not used, this is a raster value container for a lat lon grid)
+        header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
+
+        return initializeGrid(header->flag);
     }
 
 
@@ -264,29 +278,27 @@ namespace gis
 
     bool Crit3DRasterGrid::initializeGrid(const Crit3DRasterGrid& initGrid, float initValue)
     {
-        this->clear();
-
-        *(this->header) = *(initGrid.header);
-
-        return this->initializeGrid(initValue);
+        clear();
+        *(header) = *(initGrid.header);
+        return initializeGrid(initValue);
     }
 
 
     bool Crit3DRasterGrid::copyGrid(const Crit3DRasterGrid& initGrid)
     {
-        this->clear();
+        clear();
 
-        *(this->header) = *(initGrid.header);
-        *(this->colorScale) = *(initGrid.colorScale);
+        *(header) = *(initGrid.header);
+        *(colorScale) = *(initGrid.colorScale);
 
-        this->initializeGrid();
+        initializeGrid();
 
-        for (int row = 0; row < this->header->nrRows; row++)
-            for (int col = 0; col < this->header->nrCols; col++)
-                    this->value[row][col] = initGrid.value[row][col];
+        for (int row = 0; row < header->nrRows; row++)
+            for (int col = 0; col < header->nrCols; col++)
+                    value[row][col] = initGrid.value[row][col];
 
         gis::updateMinMaxRasterGrid(this);
-        this->isLoaded = true;
+        isLoaded = true;
         return true;
     }
 
@@ -1111,7 +1123,7 @@ namespace gis
     {
         float adjZ;
         float z = myGrid.getValueFromRowCol(row, col);
-        if (z == myGrid.header->flag)
+        if (isEqual(z, myGrid.header->flag))
             return false;
 
         for (int r = -1; r <= 1; r++)
@@ -1121,7 +1133,7 @@ namespace gis
                 if (r != 0 || c != 0)
                 {
                     adjZ = myGrid.getValueFromRowCol(row+r, col+c);
-                    if (adjZ != myGrid.header->flag)
+                    if (! isEqual(adjZ, myGrid.header->flag))
                     {
                         if (z <= adjZ)
                             return false;
@@ -1141,7 +1153,8 @@ namespace gis
     {
         float z, adjZ;
         z = myGrid.getValueFromRowCol(row, col);
-        if (z == myGrid.header->flag) return false;
+        if (isEqual(z, myGrid.header->flag))
+            return false;
 
         for (int r=-1; r<=1; r++)
         {
@@ -1150,8 +1163,9 @@ namespace gis
                 if ((r != 0 || c != 0))
                 {
                     adjZ = myGrid.getValueFromRowCol(row+r, col+c);
-                    if (adjZ != myGrid.header->flag)
-                        if (z > adjZ) return (false);
+                    if (! isEqual(adjZ, myGrid.header->flag))
+                        if (z > adjZ)
+                            return false;
                 }
             }
         }
@@ -1165,13 +1179,14 @@ namespace gis
     bool isMinimumOrNearMinimum(const Crit3DRasterGrid& myGrid, int row, int col)
     {
         float z = myGrid.getValueFromRowCol(row, col);
-        if (z != myGrid.header->flag)
+        if (! isEqual(z, myGrid.header->flag))
         {
             for (int r=-1; r<=1; r++)
             {
                 for (int c=-1; c<=1; c++)
                 {
-                    if (isMinimum(myGrid, row + r, col + c)) return true;
+                    if (isMinimum(myGrid, row + r, col + c))
+                        return true;
                 }
             }
         }
@@ -1184,7 +1199,8 @@ namespace gis
     {
         float z = dem.getValueFromRowCol(row,col);
         float aspect = aspectMap.getValueFromRowCol(row,col);
-        if (z == dem.header->flag || aspect == aspectMap.header->flag)
+        if ( isEqual(z, dem.header->flag)
+            || isEqual(aspect, aspectMap.header->flag) )
                 return false;
 
         int r = 0;
@@ -1200,7 +1216,7 @@ namespace gis
             c = -1;
 
         float zBoundary = dem.getValueFromRowCol(row + r, col + c);
-        return (zBoundary == dem.header->flag);
+        return isEqual(zBoundary, dem.header->flag);
     }
 
 
@@ -1210,14 +1226,17 @@ namespace gis
     bool isBoundary(const Crit3DRasterGrid& myGrid, int row, int col)
     {
         float z = myGrid.getValueFromRowCol(row, col);
-        if (z == myGrid.header->flag)
+        if (isEqual(z, myGrid.header->flag))
             return false;
 
         for (int r = -1; r <= 1; r++)
             for (int c = -1; c <= 1; c++)
                 if ((r != 0 || c != 0))
-                    if (myGrid.getValueFromRowCol(row + r, col + c) == myGrid.header->flag)
+                {
+                    float zBoundary = myGrid.getValueFromRowCol(row + r, col + c);
+                    if (isEqual(zBoundary, myGrid.header->flag))
                         return true;
+                }
 
         return false;
     }
@@ -1263,7 +1282,7 @@ namespace gis
                 prevailing = values[i];
             }
 
-        return(prevailing);
+        return prevailing;
     }
 
 

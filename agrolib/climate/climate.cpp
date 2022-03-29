@@ -4506,17 +4506,25 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
 
     QDate startDate(clima->yearStart(), clima->genericPeriodDateStart().month(), clima->genericPeriodDateStart().day());
     QDate endDate(clima->yearEnd(), clima->genericPeriodDateEnd().month(), clima->genericPeriodDateEnd().day());
-    for (int myYear = clima->yearStart(); myYear <= clima->yearEnd(); myYear++)
+    int yearStart = clima->yearStart();
+    int yearEnd = clima->yearEnd();
+
+    for (int myYear = yearStart; myYear <= yearEnd; myYear++)
     {
         startDate.setDate(myYear, startDate.month(), startDate.day());
         endDate.setDate(myYear, endDate.month(), endDate.day());
+        clima->setYearStart(myYear);
+        clima->setYearEnd(myYear);
+        meteoPointTemp->nrObsDataDaysD = 0; // should be init
         if (clima->nYears() < 0)
         {
             startDate.setDate(myYear + clima->nYears(), startDate.month(), startDate.day());
+            clima->setYearStart(myYear + clima->nYears());
         }
         else if (clima->nYears() > 0)
         {
             endDate.setDate(myYear + clima->nYears(), endDate.month(), endDate.day());
+            clima->setYearEnd(myYear + clima->nYears());
         }
         if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
         {
