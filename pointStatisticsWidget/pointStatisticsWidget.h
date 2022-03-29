@@ -45,6 +45,9 @@
             QRadioButton hourlyButton;
             QComboBox yearFrom;
             QComboBox yearTo;
+            QGroupBox *analysisPeriodGroupBox;
+            QComboBox analysisYearFrom;
+            QComboBox analysisYearTo;
             meteoVariable myVar;
             QPushButton elaboration;
             QDateEdit dayFrom;

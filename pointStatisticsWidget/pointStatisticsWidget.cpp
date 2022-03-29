@@ -56,7 +56,9 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     QHBoxLayout *variableLayout = new QHBoxLayout;
     QGroupBox *variableGroupBox = new QGroupBox();
     QGroupBox *referencePeriodGroupBox = new QGroupBox();
+    analysisPeriodGroupBox = new QGroupBox();
     QHBoxLayout *referencePeriodChartLayout = new QHBoxLayout;
+    QHBoxLayout *analysisPeriodChartLayout = new QHBoxLayout;
     QHBoxLayout *dateChartLayout = new QHBoxLayout;
     QGroupBox *gridLeftGroupBox = new QGroupBox();
     QGridLayout *gridLeftLayout = new QGridLayout;
@@ -122,6 +124,16 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     referencePeriodChartLayout->addWidget(&yearTo);
     referencePeriodGroupBox->setLayout(referencePeriodChartLayout);
 
+    analysisPeriodGroupBox->setTitle("Analysis period");
+    QLabel *analysisYearFromLabel = new QLabel(tr("From"));
+    analysisPeriodChartLayout->addWidget(analysisYearFromLabel);
+    analysisPeriodChartLayout->addWidget(&analysisYearFrom);
+    QLabel *analysisYearToLabel = new QLabel(tr("To"));
+    analysisPeriodChartLayout->addWidget(analysisYearToLabel);
+    analysisPeriodChartLayout->addWidget(&analysisYearTo);
+    analysisPeriodGroupBox->setLayout(analysisPeriodChartLayout);
+    analysisPeriodGroupBox->setVisible(false);
+
     QLabel *dayFromLabel = new QLabel(tr("Day from"));
     dateChartLayout->addWidget(dayFromLabel);
     dayFrom.setDisplayFormat("dd/MM");
@@ -170,6 +182,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     horizontalGroupBox->setLayout(elabLayout);
     elabLayout->addWidget(variableGroupBox);
     elabLayout->addWidget(referencePeriodGroupBox);
+    elabLayout->addWidget(analysisPeriodGroupBox);
     elabLayout->addLayout(dateChartLayout);
     elabLayout->addWidget(&compute);
     leftLayout->addWidget(horizontalGroupBox);
@@ -386,12 +399,19 @@ void Crit3DPointStatisticsWidget::hourlyVar()
 
 void Crit3DPointStatisticsWidget::changeGraph(const QString graphName)
 {
-    if (graphName == "Trend" || graphName == "Anomaly trend")
+    if (graphName == "Trend")
     {
+        analysisPeriodGroupBox->setVisible(false);
+        elaboration.setEnabled(true);
+    }
+    else if (graphName == "Anomaly trend")
+    {
+        analysisPeriodGroupBox->setVisible(true);
         elaboration.setEnabled(true);
     }
     else
     {
+        analysisPeriodGroupBox->setVisible(false);
         elaboration.setEnabled(false);
     }
     plot();
