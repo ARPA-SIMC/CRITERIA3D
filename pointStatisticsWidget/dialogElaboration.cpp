@@ -150,6 +150,7 @@ DialogElaboration::DialogElaboration(QSettings *settings, Crit3DClimate *clima, 
     connect(&currentDay, &QDateEdit::dateChanged, [=](){ this->displayPeriod(periodTypeList.currentText()); });
     connect(&periodTypeList, &QComboBox::currentTextChanged, [=](const QString &newVar){ this->displayPeriod(newVar); });
     connect(&variableList, &QComboBox::currentTextChanged, [=](const QString &newVar){ this->listElaboration(newVar); });
+    connect(&elaborationList, &QComboBox::currentTextChanged, [=](const QString &newElab){ this->changeElab(newElab); });
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -435,3 +436,32 @@ bool DialogElaboration::checkValidData()
     }
     return true;
 }
+
+void DialogElaboration::changeElab(const QString value)
+{
+
+    if ( MapElabWithParam.find(value.toStdString()) == MapElabWithParam.end())
+    {
+        elab1Parameter.clear();
+        elab1Parameter.setReadOnly(true);
+        adjustSize();
+    }
+    else
+    {
+        elab1Parameter.setReadOnly(false);
+    }
+
+    if (elaborationList.currentText().toStdString() == "huglin" || elaborationList.currentText().toStdString() == "winkler" || elaborationList.currentText().toStdString() == "fregoni")
+    {
+        periodTypeList.setCurrentText("Generic");
+        periodTypeList.setEnabled(false);
+        displayPeriod(periodTypeList.currentText());
+    }
+    else
+    {
+        periodTypeList.setEnabled(true);
+        nrYear.setEnabled(true);
+    }
+
+}
+

@@ -17,6 +17,7 @@ public:
     void done(bool res);
     void displayPeriod(const QString value);
     void listElaboration(const QString value);
+    void changeElab(const QString value);
     bool checkValidData();
 private:
     QSettings *settings;
