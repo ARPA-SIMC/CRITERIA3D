@@ -4529,7 +4529,14 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
         if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
         {
             validYears = validYears + 1;
-            outputValues.push_back(meteoPointTemp->elaboration);
+            if(isAnomaly)
+            {
+                outputValues.push_back(meteoPointTemp->anomaly);
+            }
+            else
+            {
+                outputValues.push_back(meteoPointTemp->elaboration);
+            }
         }
         else
         {
