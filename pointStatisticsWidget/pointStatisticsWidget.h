@@ -17,7 +17,7 @@
 
         public:
             Crit3DPointStatisticsWidget(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily,
-                                        QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings, QSettings *settings);
+                                        QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality* quality);
             ~Crit3DPointStatisticsWidget();
             void closeEvent(QCloseEvent *event);
             void dailyVar();
@@ -32,6 +32,8 @@
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
             Crit3DMeteoGridDbHandler* meteoGridDbHandler;
             Crit3DMeteoSettings *meteoSettings;
+            Crit3DClimateParameters *climateParameters;
+            Crit3DQuality* quality;
             QSettings *settings;
             Crit3DClimate clima;
             QList<Crit3DMeteoPoint> meteoPoints;

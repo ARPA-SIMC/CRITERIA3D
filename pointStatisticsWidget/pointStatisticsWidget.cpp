@@ -36,9 +36,9 @@
 #include <QDate>
 
 Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QList<Crit3DMeteoPoint> meteoPoints,
-                                                         QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings, QSettings *settings)
+                                                         QDate firstDaily, QDate lastDaily, QDateTime firstHourly, QDateTime lastHourly, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality)
 :isGrid(isGrid), meteoPointsDbHandler(meteoPointsDbHandler), meteoGridDbHandler(meteoGridDbHandler), meteoPoints(meteoPoints), firstDaily(firstDaily),
-  lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly), meteoSettings(meteoSettings), settings(settings)
+  lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality)
 {
     this->setWindowTitle("Point statistics Id:"+QString::fromStdString(meteoPoints[0].id)+" "+QString::fromStdString(meteoPoints[0].name));
     this->resize(1240, 700);
@@ -670,6 +670,27 @@ void Crit3DPointStatisticsWidget::plot()
             float modeVal = sorting::mode(outputValues, &nrValues, true);
             mode.setText(QString::number(modeVal, 'f', 3));
             */
+        }
+        else if (graph.currentText() == "Climate")
+        {
+            classWidth.setEnabled(false);
+            valMax.setEnabled(false);
+            valMin.setEnabled(false);
+            sigma.setEnabled(false);
+            mode.setEnabled(false);
+            median.setEnabled(false);
+
+            smoothing.setEnabled(true);
+            availability.clear();
+            significance.clear();
+            average.clear();
+            r2.clear();
+            rate.clear();
+
+            int firstYear = yearFrom.currentText().toInt();
+            int lastYear = yearTo.currentText().toInt();
+            QDate startDate(firstYear, 1, 1);
+            QDate endDate(lastYear, 12, 31);
         }
     }
     else if (currentFrequency == hourly)
