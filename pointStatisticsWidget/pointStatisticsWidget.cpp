@@ -206,6 +206,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     gridLeftLayout->addWidget(&valMin,3,2,1,-1);
     smoothing.setMaximumWidth(60);
     smoothing.setMaximumHeight(30);
+    smoothing.setText("0");
     gridLeftLayout->addWidget(&smoothing,3,3,1,-1);
     gridLeftGroupBox->setMaximumHeight(this->height()/6);
     gridLeftGroupBox->setLayout(gridLeftLayout);
@@ -313,6 +314,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     connect(&graph, &QComboBox::currentTextChanged, [=](const QString &newGraph){ this->changeGraph(newGraph); });
     connect(&compute, &QPushButton::clicked, [=](){ plot(); });
     connect(&elaboration, &QPushButton::clicked, [=](){ showElaboration(); });
+    connect(&smoothing, &QTextEdit::textChanged, [=](){ changeSmooth(); });
 
     plot();
     show();
@@ -691,6 +693,13 @@ void Crit3DPointStatisticsWidget::plot()
             int lastYear = yearTo.currentText().toInt();
             QDate startDate(firstYear, 1, 1);
             QDate endDate(lastYear, 12, 31);
+            float dataPresence;
+            std::vector<float> dailyClima(366, 0);
+            std::vector<float> decadeClima(36, 0);
+            std::vector<float> monthlyClima(12, 0);
+            computeClimateOnDailyData(meteoPoints[0], myVar, startDate, endDate,
+                                          smoothing.toPlainText().toInt(), &dataPresence, quality, climateParameters, meteoSettings, dailyClima, decadeClima, monthlyClima);
+            availability.setText(QString::number(dataPresence));
         }
     }
     else if (currentFrequency == hourly)
@@ -783,4 +792,9 @@ void Crit3DPointStatisticsWidget::showElaboration()
         rate.setText(QString::number(myCoeff, 'f', 3));
     }
     return;
+}
+
+void Crit3DPointStatisticsWidget::changeSmooth()
+{
+    plot();
 }
