@@ -694,9 +694,21 @@ void Crit3DPointStatisticsWidget::plot()
             QDate startDate(firstYear, 1, 1);
             QDate endDate(lastYear, 12, 31);
             float dataPresence;
-            std::vector<float> dailyClima(366, 0);
-            std::vector<float> decadeClima(36, 0);
-            std::vector<float> monthlyClima(12, 0);
+            std::vector<float> dailyClima;
+            std::vector<float> decadeClima;
+            std::vector<float> monthlyClima;
+            for (int fill = 0; fill < 12; fill++)
+            {
+                monthlyClima.push_back(0);
+            }
+            for (int fill = 0; fill < 36; fill++)
+            {
+                decadeClima.push_back(0);
+            }
+            for (int fill = 0; fill < 366; fill++)
+            {
+                dailyClima.push_back(0);
+            }
             computeClimateOnDailyData(meteoPoints[0], myVar, startDate, endDate,
                                           smoothing.toPlainText().toInt(), &dataPresence, quality, climateParameters, meteoSettings, dailyClima, decadeClima, monthlyClima);
             availability.setText(QString::number(dataPresence));
@@ -796,5 +808,5 @@ void Crit3DPointStatisticsWidget::showElaboration()
 
 void Crit3DPointStatisticsWidget::changeSmooth()
 {
-    plot();
+    //plot();
 }

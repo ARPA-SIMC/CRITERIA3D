@@ -4557,15 +4557,34 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
     int month;
     int decade;
     int dayOfYear;
-    vector<float> monthly(12, 0);
-    vector<float> decadal(36, 0);
-    vector<float> daily(366, 0);
-    vector<float> numMonthlyData(12, 0);
-    vector<float> numDecadeData(36, 0);
-    vector<float> numDailyData(366, 0);
-    vector<float> maxMonthlyData(12, 0);
-    vector<float> maxDecadeData(36, 0);
-    vector<float> maxDailyData(366, 0);
+    vector<float> monthly;
+    vector<float> decadal;
+    vector<float> daily;
+    vector<float> numMonthlyData;
+    vector<float> numDecadeData;
+    vector<float> numDailyData;
+    vector<float> maxMonthlyData;
+    vector<float> maxDecadeData;
+    vector<float> maxDailyData;
+    for (int fill = 0; fill < 12; fill++)
+    {
+        monthly.push_back(0);
+        numMonthlyData.push_back(0);
+        maxMonthlyData.push_back(0);
+    }
+    for (int fill = 0; fill < 36; fill++)
+    {
+        decadal.push_back(0);
+        numDecadeData.push_back(0);
+        maxDecadeData.push_back(0);
+    }
+    for (int fill = 0; fill < 366; fill++)
+    {
+        daily.push_back(0);
+        numDailyData.push_back(0);
+        maxDailyData.push_back(0);
+    }
+
     quality::qualityType check;
     for (int day = 0; day < nrDays; day++)
     {
@@ -4740,6 +4759,5 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
             }
         }
     }
-    return;
 }
 
