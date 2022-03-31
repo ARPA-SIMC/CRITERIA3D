@@ -551,9 +551,6 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
     int idVar;
     float value;
 
-    QDate myDate;
-    QTime myTime;
-
     int numberOfDays = difference(dateStart, dateEnd)+1;
     int myHourlyFraction = 1;
     QString startDate = QString::fromStdString(dateStart.toStdString());
@@ -566,7 +563,7 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
     QString tableName = QString::fromStdString(meteoPoint->id) + "_H";
 
     QString statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATETIME('%2 01:00:00') AND date_time <= DATETIME('%3 00:00:00', '+1 day')")
-                                 .arg(tableName).arg(startDate).arg(endDate);
+                                 .arg(tableName, startDate, endDate);
     if( !qry.exec(statement) )
     {
         qDebug() << qry.lastError();
@@ -576,10 +573,11 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
     {
         while (qry.next())
         {
-            dateStr = qry.value(0).toString();
-            myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
-            myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-            QDateTime d(QDateTime(myDate, myTime, Qt::UTC));
+            QDateTime d = qry.value(0).toDateTime();
+            Crit3DDate myDate = Crit3DDate(d.date().day(), d.date().month(), d.date().year());
+            //myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
+            //myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
+            //QDateTime d(QDateTime(myDate, myTime, Qt::UTC));
 
             idVar = qry.value(1).toInt();
             try {
@@ -592,17 +590,16 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
             if (variable != noMeteoVar)
             {
                 value = qry.value(2).toFloat();
-                meteoPoint->setMeteoPointValueH(Crit3DDate(d.date().day(), d.date().month(), d.date().year()),
-                                                       d.time().hour(), d.time().minute(), variable, value);
+                meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), variable, value);
 
                 // copy scalar intensity to vector intensity (instantaneous values are equivalent, following WMO)
                 // should be removed when when we hourly averages are available
                 if (variable == windScalarIntensity)
-                    meteoPoint->setMeteoPointValueH(Crit3DDate(d.date().day(), d.date().month(), d.date().year()),
-                                                           d.time().hour(), d.time().minute(), windVectorIntensity, value);
+                    meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), windVectorIntensity, value);
             }
         }
     }
+
     return true;
 }
 

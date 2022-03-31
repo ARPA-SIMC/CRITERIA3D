@@ -483,7 +483,7 @@ void weatherGenerator2D::computeMonthlyVariables()
             weibullDailyParameterKappa[i][j] = kappaWeibull;
         }
     }
-
+    /*
     for (int i=0;i<nrStations;i++)
     {
         for (int j=0;j<365;j++)
@@ -492,7 +492,7 @@ void weatherGenerator2D::computeMonthlyVariables()
         }
         //pressEnterToContinue();
     }
-
+    */
 
 
     for (int i=0;i<nrStations;i++)
@@ -768,28 +768,17 @@ void weatherGenerator2D::precipitationPDryUntilNSteps()
     printf ( "Current local time and date: %s", asctime (timeinfo) );
     for (int idStation=0;idStation<nrStations;idStation++)
     {
-        printf("site %d\n",idStation);
+        //printf("site %d\n",idStation);
         //std::vector<std::vector<int> > occurrence0(12, std::vector<int>(60));
         std::vector<std::vector<int> > daysDry(12, std::vector<int>(60));
         //std::vector<std::vector<int> > occurrence1(12, std::vector<int>(60));
         //std::vector<std::vector<int> > daysWet(12, std::vector<int>(60));
         int nrSteps = 60;
-        /*
-        int** occurrence0 = (int **)calloc(12, sizeof(int*));
-        int** daysDry = (int **)calloc(12, sizeof(int*));
-        int** occurrence1 = (int **)calloc(12, sizeof(int*));
-        int** daysWet = (int **)calloc(12, sizeof(int*));
-        */
+
         int daysWithoutRain[12]={0,0,0,0,0,0,0,0,0,0,0,0};
         int daysWithRain[12]={0,0,0,0,0,0,0,0,0,0,0,0};
         for(int i=0;i<12;i++)
         {
-            /*
-            occurrence0[i] = (int *)calloc(nrSteps, sizeof(int));
-            daysDry[i] = (int *)calloc(nrSteps, sizeof(int));
-            occurrence1[i] = (int *)calloc(nrSteps, sizeof(int));
-            daysWet[i] = (int *)calloc(nrSteps, sizeof(int));
-            */
             for(int j=0;j<nrSteps;j++)
             {
                 //occurrence0[i][j]=0;
