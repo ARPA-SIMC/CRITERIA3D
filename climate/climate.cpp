@@ -4529,7 +4529,14 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
         if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
         {
             validYears = validYears + 1;
-            outputValues.push_back(meteoPointTemp->elaboration);
+            if(isAnomaly)
+            {
+                outputValues.push_back(meteoPointTemp->anomaly);
+            }
+            else
+            {
+                outputValues.push_back(meteoPointTemp->elaboration);
+            }
         }
         else
         {
@@ -4539,4 +4546,218 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
     return validYears;
 }
 
+void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, QDate firstDate, QDate lastDate,
+                              int smooth, float* dataPresence, Crit3DQuality* qualityCheck, Crit3DClimateParameters* climateParam,
+                               Crit3DMeteoSettings* meteoSettings, std::vector<float> &dailyClima, std::vector<float> &decadeClima, std::vector<float> &monthlyClima)
+{
+
+    int nrDays = int(firstDate.daysTo(lastDate) + 1);
+    Crit3DDate mpFirstDate = meteoPoint.obsDataD[0].date;
+    QDate myDate;
+    int month;
+    int decade;
+    int dayOfYear;
+    vector<float> monthly;
+    vector<float> decadal;
+    vector<float> daily;
+    vector<float> numMonthlyData;
+    vector<float> numDecadeData;
+    vector<float> numDailyData;
+    vector<float> maxMonthlyData;
+    vector<float> maxDecadeData;
+    vector<float> maxDailyData;
+    for (int fill = 0; fill < 12; fill++)
+    {
+        monthly.push_back(0);
+        numMonthlyData.push_back(0);
+        maxMonthlyData.push_back(0);
+    }
+    for (int fill = 0; fill < 36; fill++)
+    {
+        decadal.push_back(0);
+        numDecadeData.push_back(0);
+        maxDecadeData.push_back(0);
+    }
+    for (int fill = 0; fill < 366; fill++)
+    {
+        daily.push_back(0);
+        numDailyData.push_back(0);
+        maxDailyData.push_back(0);
+    }
+
+    quality::qualityType check;
+    for (int day = 0; day < nrDays; day++)
+    {
+        myDate = firstDate.addDays(day);
+
+        month = myDate.month();
+        decade = decadeFromDate(myDate);
+        dayOfYear = myDate.dayOfYear();
+
+        maxMonthlyData[month] = maxMonthlyData[month] + 1;
+        maxDecadeData[decade] = maxDecadeData[decade] + 1;
+        maxDailyData[dayOfYear] = maxDailyData[dayOfYear] + 1;
+
+        int i = getQDate(mpFirstDate).daysTo(myDate);
+        float myDailyValue = meteoPoint.getMeteoPointValueD(getCrit3DDate(myDate), var, meteoSettings);
+        if (i<0 || i>meteoPoint.nrObsDataDaysD)
+        {
+            check = quality::missing_data;
+        }
+        else
+        {
+            check = qualityCheck->checkFastValueDaily_SingleValue(var, climateParam, myDailyValue, month, meteoPoint.point.z);
+        }
+        if (check == quality::accepted)
+        {
+            if (numMonthlyData[month] == 0)
+            {
+                monthly[month] = myDailyValue;
+            }
+            else
+            {
+                monthly[month] = monthly[month] + myDailyValue;
+            }
+
+            if (numDecadeData[decade] == 0)
+            {
+                decadal[decade] = myDailyValue;
+            }
+            else
+            {
+                decadal[decade] = decadal[decade] + myDailyValue;
+            }
+
+            if (numDailyData[dayOfYear] == 0)
+            {
+                daily[dayOfYear] = myDailyValue;
+            }
+            else
+            {
+                daily[dayOfYear] = daily[dayOfYear] + myDailyValue;
+            }
+
+            numMonthlyData[month] = numMonthlyData[month] + 1;
+            numDecadeData[decade] = numDecadeData[decade] + 1;
+            numDailyData[dayOfYear] = numDailyData[dayOfYear] + 1;
+        }
+    }
+    // consistenza
+    float numDati = 0;
+    float numDatiMax = 0;
+    for (int myMonth = 1; myMonth <= 12; myMonth++)
+    {
+        numDati = numDati + numMonthlyData[myMonth];
+        numDatiMax = numDatiMax + maxMonthlyData[myMonth];
+    }
+    *dataPresence = numDati / numDatiMax * 100;
+    float minPerc = meteoSettings->getMinimumPercentage();
+    /*
+     * presenti in vb ma inutili
+    bool dailyClimaLoaded = true;
+    bool decadeClimaLoaded = true;
+    bool monthlyClimaLoaded = true;
+    */
+
+    for (int day = 1; day < 366; day++)
+    {
+        myDate = QDate(2000, 1, 1).addDays(day - 1);
+        // daily
+        if (maxDailyData[day] > 0)
+        {
+            if (numDailyData[day] / maxDailyData[day] >= (minPerc/100))
+            {
+                dailyClima[day] = daily[day] / numDailyData[day];
+            }
+            else
+            {
+                dailyClima[day] = NODATA;
+                //dailyClimaLoaded = false;
+            }
+        }
+        else
+        {
+            dailyClima[day] = NODATA;
+            //dailyClimaLoaded = false;
+        }
+
+        // decadal
+        decade = decadeFromDate(myDate);
+        if (maxDecadeData[decade] > 0)
+        {
+            if (numDecadeData[decade] / maxDecadeData[decade] >= (minPerc/100))
+            {
+                decadeClima[decade] = decadal[decade] / numDecadeData[decade];
+            }
+            else
+            {
+                decadeClima[decade] = NODATA;
+                //decadeClimaLoaded = false;
+            }
+        }
+        else
+        {
+            decadeClima[decade] = NODATA;
+            //decadeClimaLoaded = false;
+        }
+
+        // monthly
+        month = myDate.month();
+        if (maxMonthlyData[month] > 0)
+        {
+            if (numMonthlyData[month] / maxMonthlyData[month] >= (minPerc/100))
+            {
+                monthlyClima[month] = monthly[month] / numMonthlyData[month];
+            }
+            else
+            {
+                monthlyClima[month] = NODATA;
+                //monthlyClimaLoaded = false;
+            }
+        }
+        else
+        {
+            monthlyClima[month] = NODATA;
+            //monthlyClimaLoaded = false;
+        }
+    }
+    // smooth
+    if (smooth > 0)
+    {
+        std::vector<float> myClimaTmp = dailyClima;
+        int doy;
+        int nDays;
+        float dSum;
+        for (int day = 1; day < 366; day++)
+        {
+            dSum = 0;
+            nDays = 0;
+            for (int d = day-smooth; day <= day+smooth; day++)
+            {
+                doy = d;
+                if (doy < 1)
+                {
+                    doy = 366 + doy;
+                }
+                else if (doy > 366)
+                {
+                    doy = doy - 366;
+                }
+                if (myClimaTmp[doy] != NODATA)
+                {
+                    dSum = dSum + myClimaTmp[doy];
+                    nDays = nDays + 1;
+                }
+            }
+            if (nDays > 0)
+            {
+                dailyClima[day] = dSum / nDays;
+            }
+            else
+            {
+                dailyClima[day] = NODATA;
+            }
+        }
+    }
+}
 
