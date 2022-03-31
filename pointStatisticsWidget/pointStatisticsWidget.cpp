@@ -206,6 +206,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     gridLeftLayout->addWidget(&valMin,3,2,1,-1);
     smoothing.setMaximumWidth(60);
     smoothing.setMaximumHeight(30);
+    smoothing.setValidator(new QIntValidator(0, 366));
     smoothing.setText("0");
     gridLeftLayout->addWidget(&smoothing,3,3,1,-1);
     gridLeftGroupBox->setMaximumHeight(this->height()/6);
@@ -314,7 +315,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     connect(&graph, &QComboBox::currentTextChanged, [=](const QString &newGraph){ this->changeGraph(newGraph); });
     connect(&compute, &QPushButton::clicked, [=](){ plot(); });
     connect(&elaboration, &QPushButton::clicked, [=](){ showElaboration(); });
-    connect(&smoothing, &QTextEdit::textChanged, [=](){ changeSmooth(); });
+    connect(&smoothing, &QLineEdit::textChanged, [=](){ changeSmooth(); });
 
     plot();
     show();
@@ -689,29 +690,61 @@ void Crit3DPointStatisticsWidget::plot()
             r2.clear();
             rate.clear();
 
+            bool ok = true;
+            int smooth = smoothing.text().toInt(&ok);
+            if (!ok || smooth < 0)
+            {
+                QMessageBox::information(nullptr, "Error", "Wrong smoothing factor");
+                return;
+            }
+
             int firstYear = yearFrom.currentText().toInt();
             int lastYear = yearTo.currentText().toInt();
             QDate startDate(firstYear, 1, 1);
             QDate endDate(lastYear, 12, 31);
             float dataPresence;
             std::vector<float> dailyClima;
-            std::vector<float> decadeClima;
+            std::vector<float> decadalClima;
             std::vector<float> monthlyClima;
-            for (int fill = 0; fill < 12; fill++)
+            for (int fill = 0; fill <= 12; fill++)
             {
                 monthlyClima.push_back(0);
             }
-            for (int fill = 0; fill < 36; fill++)
+            for (int fill = 0; fill <= 36; fill++)
             {
-                decadeClima.push_back(0);
+                decadalClima.push_back(0);
             }
-            for (int fill = 0; fill < 366; fill++)
+            for (int fill = 0; fill <= 366; fill++)
             {
                 dailyClima.push_back(0);
             }
             computeClimateOnDailyData(meteoPoints[0], myVar, startDate, endDate,
-                                          smoothing.toPlainText().toInt(), &dataPresence, quality, climateParameters, meteoSettings, dailyClima, decadeClima, monthlyClima);
+                                          smooth, &dataPresence, quality, climateParameters, meteoSettings, dailyClima, decadalClima, monthlyClima);
             availability.setText(QString::number(dataPresence));
+            int decadeTmp = 0;
+            QList<QPointF> dailyPointList;
+            QList<QPointF> decadalPointList;
+            QList<QPointF> monthlyPointList;
+            for (int day = 1; day <= 366; day++)
+            {
+                QDate myDate = QDate(2000, 1, 1).addDays(day - 1);
+                dailyPointList.append(QPointF(day,dailyClima[day]));
+                int decade = decadeFromDate(myDate);
+                int dayStart;
+                int dayEnd;
+                int month;
+                intervalDecade(decade, myDate.year(), &dayStart, &dayEnd, &month);
+                if (myDate.day() == (dayStart+dayEnd)/2)
+                {
+                    decadalPointList.append(QPointF(day,decadalClima[day]));
+                }
+                if ( myDate.day() == round(getDaysInMonth(month, myDate.year())/2) )
+                {
+                    monthlyPointList.append(QPointF(day,monthlyClima[day]));
+                }
+            }
+            // draw
+            chartView->drawClima(dailyPointList, decadalPointList, monthlyPointList);
         }
     }
     else if (currentFrequency == hourly)
@@ -808,5 +841,5 @@ void Crit3DPointStatisticsWidget::showElaboration()
 
 void Crit3DPointStatisticsWidget::changeSmooth()
 {
-    //plot();
+    plot();
 }

@@ -150,7 +150,7 @@
                                              Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, bool isAnomaly, Crit3DMeteoSettings* meteoSettings, std::vector<float> &outputValues);
     void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, QDate firstDate, QDate lastDate,
                                   int smooth, float* dataPresence, Crit3DQuality* qualityCheck, Crit3DClimateParameters* climateParam,
-                                   Crit3DMeteoSettings* meteoSettings, std::vector<float> &dailyClima, std::vector<float> &decadeClima, std::vector<float> &monthlyClima);
+                                   Crit3DMeteoSettings* meteoSettings, std::vector<float> &dailyClima, std::vector<float> &decadalClima, std::vector<float> &monthlyClima);
     //int getClimateIndexFromDate(QDate myDate, period periodType);
 
 #endif // CLIMATE_H

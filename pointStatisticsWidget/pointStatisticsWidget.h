@@ -72,10 +72,10 @@
             QTextEdit mode;
             QTextEdit median;
             QTextEdit sigma;
-            QTextEdit classWidth;
-            QTextEdit valMax;
-            QTextEdit valMin;
-            QTextEdit smoothing;
+            QLineEdit classWidth;
+            QLineEdit valMax;
+            QLineEdit valMin;
+            QLineEdit smoothing;
 
     signals:
         void closePointStatistics();

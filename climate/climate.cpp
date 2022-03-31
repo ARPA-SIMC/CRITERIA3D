@@ -4548,7 +4548,7 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
 
 void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, QDate firstDate, QDate lastDate,
                               int smooth, float* dataPresence, Crit3DQuality* qualityCheck, Crit3DClimateParameters* climateParam,
-                               Crit3DMeteoSettings* meteoSettings, std::vector<float> &dailyClima, std::vector<float> &decadeClima, std::vector<float> &monthlyClima)
+                               Crit3DMeteoSettings* meteoSettings, std::vector<float> &dailyClima, std::vector<float> &decadalClima, std::vector<float> &monthlyClima)
 {
 
     int nrDays = int(firstDate.daysTo(lastDate) + 1);
@@ -4566,19 +4566,19 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
     vector<float> maxMonthlyData;
     vector<float> maxDecadeData;
     vector<float> maxDailyData;
-    for (int fill = 0; fill < 12; fill++)
+    for (int fill = 0; fill <= 12; fill++)
     {
         monthly.push_back(0);
         numMonthlyData.push_back(0);
         maxMonthlyData.push_back(0);
     }
-    for (int fill = 0; fill < 36; fill++)
+    for (int fill = 0; fill <= 36; fill++)
     {
         decadal.push_back(0);
         numDecadeData.push_back(0);
         maxDecadeData.push_back(0);
     }
-    for (int fill = 0; fill < 366; fill++)
+    for (int fill = 0; fill <= 366; fill++)
     {
         daily.push_back(0);
         numDailyData.push_back(0);
@@ -4687,17 +4687,17 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
         {
             if (numDecadeData[decade] / maxDecadeData[decade] >= (minPerc/100))
             {
-                decadeClima[decade] = decadal[decade] / numDecadeData[decade];
+                decadalClima[decade] = decadal[decade] / numDecadeData[decade];
             }
             else
             {
-                decadeClima[decade] = NODATA;
+                decadalClima[decade] = NODATA;
                 //decadeClimaLoaded = false;
             }
         }
         else
         {
-            decadeClima[decade] = NODATA;
+            decadalClima[decade] = NODATA;
             //decadeClimaLoaded = false;
         }
 

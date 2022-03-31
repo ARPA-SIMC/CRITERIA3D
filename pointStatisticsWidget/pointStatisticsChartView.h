@@ -18,35 +18,21 @@ class PointStatisticsChartView : public QChartView
 public:
     explicit PointStatisticsChartView(QWidget *parent = 0);
     void drawTrend(std::vector<int> years, std::vector<float> outputValues);
-    void tooltipLineSeries(QPointF point, bool state);
-    /*
-    void cleanScatterSeries();
-    void drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3);
-    void cleanClimLapseRate();
-    void drawClimLapseRate(QPointF firstPoint, QPointF lastPoint);
-    void cleanModelLapseRate();
-    void drawModelLapseRate(QList<QPointF> pointList);
-    void tooltipScatterSeries(QPointF point, bool state);
-    void setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental);
-    */
+    void drawClima(QList<QPointF> dailyPointList, QList<QPointF> decadalPointList, QList<QPointF> monthlyPointList);
+    void tooltipSeries(QPointF point, bool state);
+    void cleanTrendSeries();
+    void cleanClimaSeries();
 
 private:
     QScatterSeries* trend;
+    QLineSeries* climaDaily;
+    QLineSeries* climaDecadal;
+    QLineSeries* climaMonthly;
     //QBarCategoryAxis *axisX;
     QValueAxis* axisXvalue;
     QValueAxis* axisY;
     //QList<QString> categories;
     PointStatisticsCallout *m_tooltip;
-    /*
-    QScatterSeries *series1;
-    QScatterSeries *series2;
-    QScatterSeries *series3;
-    QLineSeries* climLapseRatelineSeries;
-    QLineSeries* modelLapseRatelineSeries; 
-    QMap< QString, QPointF > idPointMap;
-    QMap< QString, QPointF > idPointMap2;
-    QMap< QString, QPointF > idPointMap3;
-    */
 };
 
 #endif // PointStatisticsChartView_H
