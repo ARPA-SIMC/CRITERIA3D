@@ -201,7 +201,8 @@ static const char *fragmentShaderSource =
 void Crit3DOpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
-    glClearColor(1, 1, 1, 0);
+    // blue sky
+    glClearColor(0.52, 0.81, 0.92, 0);
 
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);

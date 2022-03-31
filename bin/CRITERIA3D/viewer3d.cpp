@@ -31,10 +31,17 @@ Viewer3D::Viewer3D(Crit3DGeometry *geometry)
     magnifySlider = horizontalSlider(1, 100, 1, 5);
     magnifyLayout->addWidget(magnifySlider);
 
+    QHBoxLayout *slopeLayout = new QHBoxLayout;
+    QLabel *slopeLabel = new QLabel("Artifact slope: ");
+    slopeLayout->addWidget(slopeLabel);
+    slopeSlider = horizontalSlider(1, 100, 1, 5);
+    slopeLayout->addWidget(slopeSlider);
+
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addLayout(glLayout);
     mainLayout->addLayout(rotateLayout);
     mainLayout->addLayout(magnifyLayout);
+    mainLayout->addLayout(slopeLayout);
     setLayout(mainLayout);
 
     QStatusBar *statusBar = new QStatusBar(this);
@@ -45,14 +52,16 @@ Viewer3D::Viewer3D(Crit3DGeometry *geometry)
     connect(rotateSlider, &QSlider::valueChanged, glWidget, &Crit3DOpenGLWidget::setZRotation);
     connect(glWidget, &Crit3DOpenGLWidget::zRotationChanged, rotateSlider, &QSlider::setValue);
     connect(magnifySlider, &QSlider::valueChanged, glWidget, &Crit3DOpenGLWidget::setMagnify);
+    connect(slopeSlider, &QSlider::valueChanged, this, &Viewer3D::on_slopeChanged);
 
     turnSlider->setValue(30 * DEGREE_MULTIPLY);
     rotateSlider->setValue(0 * DEGREE_MULTIPLY);
     magnifySlider->setValue(geometry->magnify() * 10);
+    slopeSlider->setValue(45);
 }
 
 
-QSlider *Viewer3D::verticalSlider(int minimum, int maximum, int step, int tick)
+QSlider* Viewer3D::verticalSlider(int minimum, int maximum, int step, int tick)
 {
     QSlider *slider = new QSlider(Qt::Vertical);
     slider->setRange(minimum, maximum);
@@ -64,7 +73,7 @@ QSlider *Viewer3D::verticalSlider(int minimum, int maximum, int step, int tick)
 }
 
 
-QSlider *Viewer3D::horizontalSlider(int minimum, int maximum, int step, int tick)
+QSlider* Viewer3D::horizontalSlider(int minimum, int maximum, int step, int tick)
 {
     QSlider *slider = new QSlider(Qt::Horizontal);
     slider->setRange(minimum, maximum);
@@ -73,5 +82,17 @@ QSlider *Viewer3D::horizontalSlider(int minimum, int maximum, int step, int tick
     slider->setTickInterval(tick);
     slider->setTickPosition(QSlider::TicksBelow);
     return slider;
+}
+
+
+float Viewer3D::getSlope()
+{
+    return slopeSlider->value();
+}
+
+
+void Viewer3D::on_slopeChanged()
+{
+    emit slopeChanged();
 }
 

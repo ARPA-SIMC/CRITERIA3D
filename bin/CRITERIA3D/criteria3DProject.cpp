@@ -1051,7 +1051,7 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
         float slope = radiationMaps->slopeMap->getValueFromRowCol(row, col);
         if (! isEqual(slope, radiationMaps->slopeMap->header->flag))
         {
-            if (slope > 45)
+            if (slope > artifactSlope)
             {
                 colorOut.red = (colorOut.red + 192) / 2;
                 colorOut.green = (colorOut.green + 192) / 2;
@@ -1157,4 +1157,57 @@ bool Crit3DProject::initializeGeometry()
     return true;
 }
 
+
+bool Crit3DProject::update3DColors()
+{
+    if (geometry == nullptr)
+    {
+        errorString = "Initialize 3D geometry before.";
+        return false;
+    }
+
+    float z1, z2, z3;
+    Crit3DColor *c1, *c2, *c3;
+    Crit3DColor sc1, sc2, sc3;
+    long i = 0;
+    for (long row = 0; row < DEM.header->nrRows; row++)
+    {
+        for (long col = 0; col < DEM.header->nrCols; col++)
+        {
+            z1 = DEM.getValueFromRowCol(row, col);
+            if (! isEqual(z1, DEM.header->flag))
+            {
+                c1 = DEM.colorScale->getColor(z1);
+                shadowColor(*c1, sc1, row, col);
+                z3 = DEM.getValueFromRowCol(row+1, col+1);
+                if (! isEqual(z3, DEM.header->flag))
+                {
+                    c3 = DEM.colorScale->getColor(z3);
+                    shadowColor(*c3, sc3, row+1, col+1);
+                    z2 = DEM.getValueFromRowCol(row+1, col);
+                    if (! isEqual(z2, DEM.header->flag))
+                    {
+                        c2 = DEM.colorScale->getColor(z2);
+                        shadowColor(*c2, sc2, row+1, col);
+                        geometry->setVertexColor(i++, sc1);
+                        geometry->setVertexColor(i++, sc2);
+                        geometry->setVertexColor(i++, sc3);
+                    }
+
+                    z2 = DEM.getValueFromRowCol(row, col+1);
+                    if (! isEqual(z2, DEM.header->flag))
+                    {
+                        c2 = DEM.colorScale->getColor(z2);
+                        shadowColor(*c2, sc2, row, col+1);
+                        geometry->setVertexColor(i++, sc3);
+                        geometry->setVertexColor(i++, sc2);
+                        geometry->setVertexColor(i++, sc1);
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
 

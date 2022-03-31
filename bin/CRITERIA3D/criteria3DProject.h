@@ -22,20 +22,24 @@
 
     class Crit3DProject : public Project3D
     {
+
     private:
-       bool _saveOutputRaster, _saveOutputPoints, _saveDailyState;
+        bool _saveOutputRaster, _saveOutputPoints, _saveDailyState;
 
         void clearCriteria3DProject();
         bool setSoilIndexMap();
 
+
     public:
+        Crit3DGeometry* geometry;
+
         // same header of DEM
         gis::Crit3DRasterGrid soilMap;
         gis::Crit3DRasterGrid soilUseMap;
         Crit3DSnowMaps snowMaps;
         Crit3DSnow snowModel;
 
-        Crit3DGeometry* geometry;
+        int artifactSlope = 45;
 
         bool isMeteo, isRadiation, isCrop, isWater, isSnow;
         bool modelPause, modelStop;
@@ -88,6 +92,7 @@
         void clearGeometry();
         bool initializeGeometry();
         void shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col);
+        bool update3DColors();
 
     };
 

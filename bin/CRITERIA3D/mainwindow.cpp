@@ -41,7 +41,7 @@
 #include "dialogLoadState.h"
 #include "dialogNewPoint.h"
 #include "utilities.h"
-#include "viewer3D.h"
+#include "glWidget.h"
 
 #include <QDebug>
 
@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    this->viewer3D = nullptr;
+    viewer3D = nullptr;
 
     // Set the MapGraphics Scene and View
     this->mapScene = new MapGraphicsScene(this);
@@ -2751,11 +2751,18 @@ void MainWindow::on_actionTopographicDistanceMapLoad_triggered()
 }
 
 
-// -----------------  3D VIEW ------------------
 void MainWindow::on_viewer3DClosed()
 {
     myProject.clearGeometry();
     viewer3D = nullptr;
+}
+
+
+void MainWindow::on_slopeChanged()
+{
+    myProject.artifactSlope = viewer3D->getSlope();
+    myProject.update3DColors();
+    viewer3D->glWidget->update();
 }
 
 
@@ -2776,6 +2783,8 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
 
     viewer3D = new Viewer3D(myProject.geometry);
     viewer3D->show();
+
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
+    connect (viewer3D, SIGNAL(slopeChanged()), this, SLOT(on_slopeChanged()));
 }
 
