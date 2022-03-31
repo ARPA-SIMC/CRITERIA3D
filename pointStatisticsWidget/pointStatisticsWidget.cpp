@@ -736,11 +736,11 @@ void Crit3DPointStatisticsWidget::plot()
                 intervalDecade(decade, myDate.year(), &dayStart, &dayEnd, &month);
                 if (myDate.day() == (dayStart+dayEnd)/2)
                 {
-                    decadalPointList.append(QPointF(day,decadalClima[day]));
+                    decadalPointList.append(QPointF(day,decadalClima[decade]));
                 }
                 if ( myDate.day() == round(getDaysInMonth(month, myDate.year())/2) )
                 {
-                    monthlyPointList.append(QPointF(day,monthlyClima[day]));
+                    monthlyPointList.append(QPointF(day,monthlyClima[month]));
                 }
             }
             // draw

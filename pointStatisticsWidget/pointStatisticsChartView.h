@@ -19,7 +19,8 @@ public:
     explicit PointStatisticsChartView(QWidget *parent = 0);
     void drawTrend(std::vector<int> years, std::vector<float> outputValues);
     void drawClima(QList<QPointF> dailyPointList, QList<QPointF> decadalPointList, QList<QPointF> monthlyPointList);
-    void tooltipSeries(QPointF point, bool state);
+    void tooltipTrendSeries(QPointF point, bool state);
+    void tooltipClimaSeries(QPointF point, bool state);
     void cleanTrendSeries();
     void cleanClimaSeries();
 
