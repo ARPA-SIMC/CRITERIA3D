@@ -197,6 +197,7 @@ void PointStatisticsChartView::drawClima(QList<QPointF> dailyPointList, QList<QP
     axisXvalue->setRange(1, 366);
     axisXvalue->setTickCount(366);
     axisXvalue->setLabelFormat("%d");
+    axisY->setLabelFormat("%.3f");
 
     chart()->addSeries(climaDaily);
     chart()->addSeries(climaDecadal);

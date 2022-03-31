@@ -4659,7 +4659,7 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
     bool monthlyClimaLoaded = true;
     */
 
-    for (int day = 1; day < 366; day++)
+    for (int day = 1; day <= 366; day++)
     {
         myDate = QDate(2000, 1, 1).addDays(day - 1);
         // daily
@@ -4728,7 +4728,7 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
         int doy;
         int nDays;
         float dSum;
-        for (int day = 1; day < 366; day++)
+        for (int day = 1; day <= 366; day++)
         {
             dSum = 0;
             nDays = 0;
