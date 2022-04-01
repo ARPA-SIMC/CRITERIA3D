@@ -73,10 +73,18 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
             }
         }
     }
-    double yRange = maxValue - minValue;
-    double deltaY = yRange/100;
-    axisY->setMax(maxValue+3*deltaY);
-    axisY->setMin(minValue-3*deltaY);
+    if (maxValue != minValue)
+    {
+        double yRange = maxValue - minValue;
+        double deltaY = yRange/100;
+        axisY->setMax(maxValue+3*deltaY);
+        axisY->setMin(minValue-3*deltaY);
+    }
+    else
+    {
+        axisY->setMax(maxValue+3);
+        axisY->setMin(minValue-3);
+    }
     axisXvalue->setRange(years[0], years[years.size()-1]);
     axisXvalue->setTickCount(years.size());
     axisXvalue->setLabelFormat("%d");

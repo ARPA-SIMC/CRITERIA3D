@@ -4519,12 +4519,10 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
         if (clima->nYears() < 0)
         {
             startDate.setDate(myYear + clima->nYears(), startDate.month(), startDate.day());
-            clima->setYearStart(myYear + clima->nYears());
         }
         else if (clima->nYears() > 0)
         {
             endDate.setDate(myYear + clima->nYears(), endDate.month(), endDate.day());
-            clima->setYearEnd(myYear + clima->nYears());
         }
         if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
         {
