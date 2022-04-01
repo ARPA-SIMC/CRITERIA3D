@@ -803,6 +803,9 @@ void Crit3DPointStatisticsWidget::showElaboration()
                                                  &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
         if (validYears < 3)
         {
+            //copy to clima original value for next elab
+            clima.setYearStart(firstYear);
+            clima.setYearEnd(lastYear);
             QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
             return;
         }
@@ -837,6 +840,10 @@ void Crit3DPointStatisticsWidget::showElaboration()
                                          &myIntercept, &myCoeff, &myR2);
         r2.setText(QString::number(myR2, 'f', 3));
         rate.setText(QString::number(myCoeff, 'f', 3));
+
+        //copy to clima original value for next elab
+        clima.setYearStart(firstYear);
+        clima.setYearEnd(lastYear);
     }
     return;
 }
