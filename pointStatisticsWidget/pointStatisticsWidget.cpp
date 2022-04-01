@@ -610,19 +610,20 @@ void Crit3DPointStatisticsWidget::plot()
 
             QDate startDate(clima.yearStart(), clima.genericPeriodDateStart().month(), clima.genericPeriodDateStart().day());
             QDate endDate(clima.yearEnd(), clima.genericPeriodDateEnd().month(), clima.genericPeriodDateEnd().day());
-            if ( elaborationOnPoint(&myError, meteoPointsDbHandler, nullptr, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings))
+            if (!elaborationOnPoint(&myError, meteoPointsDbHandler, nullptr, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings))
             {
                 QMessageBox::information(nullptr, "Error", "Data not available in the reference period");
                 return;
             }
 
-            isAnomaly = true;
             firstYear = analysisYearFrom.currentText().toInt();
             lastYear = analysisYearTo.currentText().toInt();
             clima.setYearStart(firstYear);
             clima.setYearEnd(lastYear);
             clima.setGenericPeriodDateStart(QDate(firstYear, dayFrom.date().month(), dayFrom.date().day()));
             clima.setGenericPeriodDateEnd(QDate(lastYear, dayTo.date().month(), dayTo.date().day()));
+            float elabResult = meteoPointTemp.elaboration;
+
             int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
                                                      &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
             if (validYears < 3)
@@ -638,6 +639,7 @@ void Crit3DPointStatisticsWidget::plot()
                 years.push_back(i);
                 if (outputValues[count] != NODATA)
                 {
+                    outputValues[count] = outputValues[count] - elabResult;
                     sum = sum + outputValues[count];
                 }
                 count = count + 1;
