@@ -798,7 +798,7 @@ void Crit3DPointStatisticsWidget::plot()
                         }
                         if (check == quality::accepted)
                         {
-                            if (myVar = dailyPrecipitation)
+                            if (myVar == dailyPrecipitation)
                             {
                                 if (myDailyValue < meteoSettings->getRainfallThreshold())
                                 {
