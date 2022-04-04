@@ -26,7 +26,7 @@
             void changeVar(const QString varName);
             void plot();
             void showElaboration();
-            void changeSmooth();
+            void updatePlot();
 
     private:
             bool isGrid;
