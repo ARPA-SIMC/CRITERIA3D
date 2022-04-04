@@ -27,6 +27,7 @@
             void plot();
             void showElaboration();
             void updatePlot();
+            void computePlot();
 
     private:
             bool isGrid;
