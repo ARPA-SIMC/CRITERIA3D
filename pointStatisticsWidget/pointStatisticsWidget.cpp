@@ -917,6 +917,8 @@ void Crit3DPointStatisticsWidget::plot()
             }
             median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 3));
 
+            valMax.blockSignals(true);
+            valMin.blockSignals(true);
             int valMaxValue = valMax.text().toInt(&ok);
             if (!ok || valMax.text().isEmpty() || valMaxValue == NODATA)
             {
@@ -929,6 +931,8 @@ void Crit3DPointStatisticsWidget::plot()
                 valMinValue = minValueInt;
                 valMin.setText(QString::number(valMinValue));
             }
+            valMax.blockSignals(false);
+            valMin.blockSignals(false);
 
 
         }
