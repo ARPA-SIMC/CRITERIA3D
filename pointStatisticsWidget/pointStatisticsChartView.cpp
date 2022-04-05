@@ -222,6 +222,8 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
     axisXvalue->setRange(minValue, maxValue);
     chart()->addSeries(distributionBar);
     chart()->addSeries(distributionLine);
+    connect(distributionLine, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipDistributionSeries);
+    connect(distributionBar, &QBarSeries::hovered, this, &PointStatisticsChartView::tooltipBar);
 
 }
 
@@ -281,5 +283,87 @@ void PointStatisticsChartView::tooltipClimaSeries(QPointF point, bool state)
     {
         m_tooltip->hide();
     }
+}
+
+void PointStatisticsChartView::tooltipDistributionSeries(QPointF point, bool state)
+{
+
+    auto serie = qobject_cast<QScatterSeries *>(sender());
+    if (state)
+    {
+        int xValue = point.x();
+        double yValue = point.y();
+
+        m_tooltip->setText(QString("%1,%2").arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setSeries(serie);
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+}
+
+void PointStatisticsChartView::tooltipBar(bool state, int index, QBarSet *barset)
+{
+/*
+    QBarSeries *series = qobject_cast<QBarSeries *>(sender());
+
+    if (state && barset!=nullptr && index < barset->count())
+    {
+
+        QPoint CursorPoint = QCursor::pos();
+        QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
+        QPointF pointF = chart->mapToValue(mapPoint,series);
+
+        // check if bar is hiding QlineSeries
+        if(isLine)
+        {
+            for (int mp=0; mp<meteoPoints.size();mp++)
+            {
+                for (int i = 0; i < nameLines.size(); i++)
+                {
+                    double lineSeriesY = lineSeries[mp][i]->at(pointF.toPoint().x()).y();
+                    if (  static_cast<int>( lineSeriesY) == pointF.toPoint().y())
+                    {
+                        if (computeTooltipLineSeries(lineSeries[mp][i], pointF, true))
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        QString valueStr;
+        if (currentFreq == daily)
+        {
+            QDate xDate = firstDate->date().addDays(index);
+            valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
+        }
+        if (currentFreq == hourly)
+        {
+
+            QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
+            xDate = xDate.addSecs(3600*index);
+            valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy hh:mm")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
+        }
+
+        m_tooltip->setSeries(series);
+        m_tooltip->setText(valueStr);
+        m_tooltip->setAnchor(pointF);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+*/
 }
 

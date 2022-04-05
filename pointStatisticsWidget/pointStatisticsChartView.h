@@ -24,6 +24,8 @@ public:
     void drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue);
     void tooltipTrendSeries(QPointF point, bool state);
     void tooltipClimaSeries(QPointF point, bool state);
+    void tooltipDistributionSeries(QPointF point, bool state);
+    void tooltipBar(bool state, int index, QBarSet *barset);
     void cleanTrendSeries();
     void cleanClimaSeries();
     void cleanDistribution();
