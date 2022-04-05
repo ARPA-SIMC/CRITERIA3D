@@ -31,6 +31,7 @@
 #include "climate.h"
 #include "dialogElaboration.h"
 #include "gammaFunction.h"
+#include "furtherMathFunctions.h"
 #include "formInfo.h"
 
 #include <QLayout>
@@ -948,7 +949,8 @@ void Crit3DPointStatisticsWidget::plot()
                             float gammaFun = gammaCDF(x, beta, gamma, pzero);
                             if (gammaFun != NODATA)
                             {
-                                // TO DO
+                                float probGamma = probabilityGamma(x, 1/beta, gamma, gammaFun);
+                                lineValues.append(QPointF(x,probGamma));
                             }
                             else
                             {
@@ -959,7 +961,8 @@ void Crit3DPointStatisticsWidget::plot()
                     }
                     else
                     {
-                        // TO DO
+                        float gauss = gaussianFunction(x, avg, dev_std);
+                        lineValues.append(QPointF(x,gauss));
                     }
                 }
             }
