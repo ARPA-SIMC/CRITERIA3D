@@ -859,6 +859,9 @@ void Crit3DPointStatisticsWidget::plot()
             float modeVal = NODATA;
             int nrValues = int(series.size());
             std::vector<float> sortedSeries = series;
+            double beta;
+            double gamma;
+            double pzero;
 
             if (myVar == dailyPrecipitation)
             {
@@ -870,10 +873,6 @@ void Crit3DPointStatisticsWidget::plot()
                         bucket[index] = bucket[index] + 1;
                     }
                 }
-
-                double beta;
-                double gamma;
-                double pzero;
                 if (!gammaFitting(series, nrValues, &beta, &gamma,  &pzero))
                 {
                     return;
@@ -934,6 +933,37 @@ void Crit3DPointStatisticsWidget::plot()
             valMax.blockSignals(false);
             valMin.blockSignals(false);
 
+            std::vector<float> barValues;
+            QList<QPointF> lineValues;
+            for (int i = 0; i<bucket.size(); i++)
+            {
+                float x = valMinValue + (i*classWidthValue) + (classWidthValue/2);
+                if (x < valMaxValue)
+                {
+                    barValues.push_back(bucket[i]);
+                    if (myVar == dailyPrecipitation)
+                    {
+                        if (x > 0)
+                        {
+                            float gammaFun = gammaCDF(x, beta, gamma, pzero);
+                            if (gammaFun != NODATA)
+                            {
+                                // TO DO
+                            }
+                            else
+                            {
+                                QMessageBox::information(nullptr, "Error", "Error in gamma distribution");
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // TO DO
+                    }
+                }
+            }
+            chartView->drawDistribution(barValues, lineValues, valMinValue, valMaxValue);
 
         }
     }
@@ -1038,6 +1068,11 @@ void Crit3DPointStatisticsWidget::showElaboration()
 
 void Crit3DPointStatisticsWidget::updatePlot()
 {
+    if (valMin.text().toInt() > valMax.text().toInt())
+    {
+        QMessageBox::information(nullptr, "Error", "Min value > Max vaue");
+        return;
+    }
     plot();
 }
 

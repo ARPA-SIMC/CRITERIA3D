@@ -6,6 +6,8 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
 #include "pointStatisticsCallout.h"
 
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
@@ -19,16 +21,20 @@ public:
     explicit PointStatisticsChartView(QWidget *parent = 0);
     void drawTrend(std::vector<int> years, std::vector<float> outputValues);
     void drawClima(QList<QPointF> dailyPointList, QList<QPointF> decadalPointList, QList<QPointF> monthlyPointList);
+    void drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue);
     void tooltipTrendSeries(QPointF point, bool state);
     void tooltipClimaSeries(QPointF point, bool state);
     void cleanTrendSeries();
     void cleanClimaSeries();
+    void cleanDistribution();
 
 private:
     QScatterSeries* trend;
     QLineSeries* climaDaily;
     QLineSeries* climaDecadal;
     QLineSeries* climaMonthly;
+    QBarSeries *distributionBar;
+    QLineSeries *distributionLine;
     //QBarCategoryAxis *axisX;
     QValueAxis* axisXvalue;
     QValueAxis* axisY;
