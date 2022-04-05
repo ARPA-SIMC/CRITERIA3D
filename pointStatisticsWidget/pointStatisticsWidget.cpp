@@ -317,10 +317,10 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     connect(&graph, &QComboBox::currentTextChanged, [=](const QString &newGraph){ this->changeGraph(newGraph); });
     connect(&compute, &QPushButton::clicked, [=](){ computePlot(); });
     connect(&elaboration, &QPushButton::clicked, [=](){ showElaboration(); });
-    connect(&smoothing, &QLineEdit::textChanged, [=](){ updatePlot(); });
-    connect(&valMax, &QLineEdit::textChanged, [=](){ updatePlot(); });
-    connect(&valMin, &QLineEdit::textChanged, [=](){ updatePlot(); });
-    connect(&classWidth, &QLineEdit::textChanged, [=](){ updatePlot(); });
+    connect(&smoothing, &QLineEdit::editingFinished, [=](){ updatePlot(); });
+    connect(&valMax, &QLineEdit::editingFinished, [=](){ updatePlot(); });
+    connect(&valMin, &QLineEdit::editingFinished, [=](){ updatePlot(); });
+    connect(&classWidth, &QLineEdit::editingFinished, [=](){ updatePlot(); });
 
     plot();
     show();

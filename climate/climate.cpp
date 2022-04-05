@@ -4730,7 +4730,7 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
         {
             dSum = 0;
             nDays = 0;
-            for (int d = day-smooth; day <= day+smooth; day++)
+            for (int d = day-smooth; d <= day+smooth; d++)
             {
                 doy = d;
                 if (doy < 1)
