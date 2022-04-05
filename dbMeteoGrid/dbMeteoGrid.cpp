@@ -1356,14 +1356,14 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
         return false;
     }
 
-    QDate maxDateD(QDate(1800, 1, 1));
-    QDate minDateD(QDate(7800, 12, 31));
+    QDate maxDateD((QDate(1800, 1, 1)));
+    QDate minDateD((QDate(7800, 12, 31)));
 
-    QDate maxDateH(QDate(1800, 1, 1));
-    QDate minDateH(QDate(7800, 12, 31));
+    QDate maxDateH((QDate(1800, 1, 1)));
+    QDate minDateH((QDate(7800, 12, 31)));
 
-    QDate maxDateM(QDate(1800, 1, 1));
-    QDate minDateM(QDate(7800, 12, 31));
+    QDate maxDateM((QDate(1800, 1, 1)));
+    QDate minDateM((QDate(7800, 12, 31)));
     QDate temp;
 
     QString tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
@@ -1416,7 +1416,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
             {
                 if (getValue(qry.value("minDate"), &temp))
                 {
-                    if (temp < minDateD)
+                    if (temp < minDateD )
                         minDateD = temp;
                 }
 
@@ -1463,11 +1463,12 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
                 statement = QString("SELECT MIN(%1) as minDate, MAX(%1) as maxDate FROM `%2`").arg(_tableHourly.fieldTime).arg(tableH);
                 qry.exec(statement);
             }
-            if ( qry.lastError().type() != QSqlError::NoError && qry.lastError().nativeErrorCode() != tableNotFoundError)
-            {
-                *myError = qry.lastError().text();
-                return false;
-            }
+        }
+
+        if ( qry.lastError().type() != QSqlError::NoError && qry.lastError().nativeErrorCode() != tableNotFoundError)
+        {
+            *myError = qry.lastError().text();
+            return false;
         }
         else
         {
@@ -1574,16 +1575,21 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
                 return false;
             }
         }
-        maxDateM.setDate(maxPragaYear, maxPragaMonth, 1);
-        minDateM.setDate(minPragaYear, minPragaMonth, 1);
+
+        if (minPragaYear != NODATA && maxPragaYear != NODATA &&
+                minPragaMonth != NODATA && maxPragaMonth != NODATA) {
+
+            maxDateM.setDate(maxPragaYear, maxPragaMonth, 1);
+            minDateM.setDate(minPragaYear, minPragaMonth, 1);
+        }
     }
 
     // the last hourly day is always incomplete, there is just 00.00 value
-    maxDateH = maxDateH.addDays(-1);
+    if (maxDateH != QDate(1800,1,1)) maxDateH = maxDateH.addDays(-1);
 
     if (minDateD < minDateH)
     {
-        if (_tableMonthly.exists && minDateM < minDateD)
+        if (_tableMonthly.exists && minDateM != QDate(7800, 12, 31) && minDateM < minDateD)
         {
             _firstDate = minDateM;
         }
@@ -1594,7 +1600,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
     }
     else
     {
-        if (_tableMonthly.exists && minDateM < minDateH)
+        if (_tableMonthly.exists && minDateM != QDate(7800, 12, 31) && minDateM < minDateH)
         {
             _firstDate = minDateM;
         }
@@ -1606,7 +1612,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
 
     if (maxDateD > maxDateH)
     {
-        if (_tableMonthly.exists && maxDateM > maxDateD)
+        if (_tableMonthly.exists && maxDateM != QDate(1800, 1, 1) && maxDateM > maxDateD)
         {
             _lastDate = maxDateM;
         }
@@ -1617,7 +1623,7 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
     }
     else
     {
-        if (_tableMonthly.exists && maxDateM > maxDateH)
+        if (_tableMonthly.exists && maxDateM != QDate(1800, 1, 1) && maxDateM > maxDateH)
         {
             _lastDate = maxDateM;
         }
