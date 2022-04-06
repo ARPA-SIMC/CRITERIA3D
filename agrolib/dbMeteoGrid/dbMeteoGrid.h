@@ -145,6 +145,13 @@
         bool saveCellCurrentGridHourly(QString *myError, QString meteoPointID, QDateTime dateTime, int varCode, float value);
         bool saveCellCurrentGridHourlyFF(QString *myError, QString meteoPointID, QDateTime dateTime, QString varPragaName, float value);
 
+        QDate getFirstDailyDate() const;
+        QDate getLastDailyDate() const;
+        QDate getFirstHourlyDate() const;
+        QDate getLastHourlyDate() const;
+        QDate getFirsMonthlytDate() const;
+        QDate getLastMonthlyDate() const;
+
     private:
 
         QString _fileName;
@@ -155,6 +162,13 @@
 
         QDate _firstDate;
         QDate _lastDate;
+
+        QDate _firstDailyDate;
+        QDate _lastDailyDate;
+        QDate _firstHourlyDate;
+        QDate _lastHourlyDate;
+        QDate _firsMonthlytDate;
+        QDate _lastMonthlyDate;
 
         TXMLTable _tableDaily;
         TXMLTable _tableHourly;

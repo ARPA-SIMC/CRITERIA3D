@@ -26,7 +26,8 @@
             void changeVar(const QString varName);
             void plot();
             void showElaboration();
-            void changeSmooth();
+            void updatePlot();
+            void computePlot();
 
     private:
             bool isGrid;
@@ -76,9 +77,6 @@
             QLineEdit valMax;
             QLineEdit valMin;
             QLineEdit smoothing;
-
-    signals:
-        void closePointStatistics();
     };
 
 

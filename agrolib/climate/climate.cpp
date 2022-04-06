@@ -4519,12 +4519,10 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
         if (clima->nYears() < 0)
         {
             startDate.setDate(myYear + clima->nYears(), startDate.month(), startDate.day());
-            clima->setYearStart(myYear + clima->nYears());
         }
         else if (clima->nYears() > 0)
         {
             endDate.setDate(myYear + clima->nYears(), endDate.month(), endDate.day());
-            clima->setYearEnd(myYear + clima->nYears());
         }
         if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
         {
@@ -4659,7 +4657,7 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
     bool monthlyClimaLoaded = true;
     */
 
-    for (int day = 1; day < 366; day++)
+    for (int day = 1; day <= 366; day++)
     {
         myDate = QDate(2000, 1, 1).addDays(day - 1);
         // daily
@@ -4728,11 +4726,11 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
         int doy;
         int nDays;
         float dSum;
-        for (int day = 1; day < 366; day++)
+        for (int day = 1; day <= 366; day++)
         {
             dSum = 0;
             nDays = 0;
-            for (int d = day-smooth; day <= day+smooth; day++)
+            for (int d = day-smooth; d <= day+smooth; d++)
             {
                 doy = d;
                 if (doy < 1)

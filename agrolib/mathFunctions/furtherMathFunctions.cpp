@@ -36,6 +36,14 @@ float gaussianFunction(TfunctionInput fInput)
     return y;
 }
 
+float gaussianFunction(float x, float mean, float devStd)
+{
+    devStd = std::max(devStd, (float)0.00001);
+    float ratio = (x - mean) / devStd;
+    float y = 1/(devStd*sqrt(2*PI))*exp(-0.5*(ratio*ratio));
+    return y;
+}
+
 float errorFunctionPrimitive(float x)
 {
     return expf(-x*x);
