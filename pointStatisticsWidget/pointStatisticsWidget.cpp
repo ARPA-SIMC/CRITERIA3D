@@ -200,12 +200,15 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     classWidth.setMaximumWidth(60);
     classWidth.setMaximumHeight(30);
     classWidth.setText("1");
+    classWidth.setValidator(new QDoubleValidator(1.0, 5.0, 1));
     gridLeftLayout->addWidget(&classWidth,3,0,1,-1);
     valMax.setMaximumWidth(60);
     valMax.setMaximumHeight(30);
+    valMax.setValidator(new QDoubleValidator(-999.0, 999.0, 1));
     gridLeftLayout->addWidget(&valMax,3,1,1,-1);
     valMin.setMaximumWidth(60);
     valMin.setMaximumHeight(30);
+    valMin.setValidator(new QDoubleValidator(-999.0, 999.0, 1));
     gridLeftLayout->addWidget(&valMin,3,2,1,-1);
     smoothing.setMaximumWidth(60);
     smoothing.setMaximumHeight(30);

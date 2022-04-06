@@ -4,6 +4,7 @@
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
 #include <QtCore/QtMath>
+#include <qdebug.h>
 
 PointStatisticsChartView::PointStatisticsChartView(QWidget *parent) :
     QChartView(new QChart(), parent)
@@ -209,17 +210,49 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
     distributionSet->setColor(Qt::red);
     distributionSet->setBorderColor(Qt::red);
 
+    float maxValueY = NODATA;
+    float minValueY = -NODATA;
+
     for (int i = 0; i<barValues.size(); i++)
     {
         *distributionSet << barValues[i];
+        if(barValues[i] != NODATA)
+        {
+            if (barValues[i] > maxValueY)
+            {
+                maxValueY = barValues[i];
+            }
+            if (barValues[i] < minValueY)
+            {
+                minValueY = barValues[i];
+            }
+        }
     }
 
     for (int i = 0; i<lineValues.size(); i++)
     {
         distributionLine->append(lineValues[i]);
+        if(lineValues[i].y() != NODATA)
+        {
+            if (lineValues[i].y() > maxValueY)
+            {
+                maxValueY = lineValues[i].y();
+            }
+            if (lineValues[i].y() < minValueY)
+            {
+                minValueY = lineValues[i].y();
+            }
+        }
     }
     distributionBar->append(distributionSet);
+    axisY->setMax(maxValueY);
+    axisY->setMin(minValueY);
     axisXvalue->setRange(minValue, maxValue);
+
+    distributionLine->attachAxis(axisXvalue);
+    distributionLine->attachAxis(axisY);
+    distributionBar->attachAxis(axisXvalue);
+    distributionBar->attachAxis(axisY);
     chart()->addSeries(distributionBar);
     chart()->addSeries(distributionLine);
     connect(distributionLine, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipDistributionSeries);
@@ -266,7 +299,7 @@ void PointStatisticsChartView::tooltipTrendSeries(QPointF point, bool state)
 void PointStatisticsChartView::tooltipClimaSeries(QPointF point, bool state)
 {
 
-    auto serie = qobject_cast<QScatterSeries *>(sender());
+    auto serie = qobject_cast<QLineSeries *>(sender());
     if (state)
     {
         int xValue = point.x();
@@ -288,7 +321,7 @@ void PointStatisticsChartView::tooltipClimaSeries(QPointF point, bool state)
 void PointStatisticsChartView::tooltipDistributionSeries(QPointF point, bool state)
 {
 
-    auto serie = qobject_cast<QScatterSeries *>(sender());
+    auto serie = qobject_cast<QLineSeries *>(sender());
     if (state)
     {
         int xValue = point.x();
@@ -309,49 +342,23 @@ void PointStatisticsChartView::tooltipDistributionSeries(QPointF point, bool sta
 
 void PointStatisticsChartView::tooltipBar(bool state, int index, QBarSet *barset)
 {
-/*
+
     QBarSeries *series = qobject_cast<QBarSeries *>(sender());
 
     if (state && barset!=nullptr && index < barset->count())
     {
 
         QPoint CursorPoint = QCursor::pos();
-        QPoint mapPoint = chartView->mapFromGlobal(CursorPoint);
-        QPointF pointF = chart->mapToValue(mapPoint,series);
+        QPoint mapPoint = mapFromGlobal(CursorPoint);
+        QPointF pointF = this->chart()->mapToValue(mapPoint,series);
 
         // check if bar is hiding QlineSeries
-        if(isLine)
+        if (  static_cast<int>( distributionLine->at(pointF.toPoint().x()).y() ) == pointF.toPoint().y())
         {
-            for (int mp=0; mp<meteoPoints.size();mp++)
-            {
-                for (int i = 0; i < nameLines.size(); i++)
-                {
-                    double lineSeriesY = lineSeries[mp][i]->at(pointF.toPoint().x()).y();
-                    if (  static_cast<int>( lineSeriesY) == pointF.toPoint().y())
-                    {
-                        if (computeTooltipLineSeries(lineSeries[mp][i], pointF, true))
-                        {
-                            return;
-                        }
-                    }
-                }
-            }
+            tooltipDistributionSeries(pointF, true);
         }
 
-        QString valueStr;
-        if (currentFreq == daily)
-        {
-            QDate xDate = firstDate->date().addDays(index);
-            valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
-        }
-        if (currentFreq == hourly)
-        {
-
-            QDateTime xDate(firstDate->date(), QTime(0,0,0), Qt::UTC);
-            xDate = xDate.addSecs(3600*index);
-            valueStr = QString("%1 \n%2 %3 ").arg(xDate.toString("MMM dd yyyy hh:mm")).arg(barset->label()).arg(barset->at(index), 0, 'f', 1);
-        }
-
+        QString valueStr = QString("%1").arg(barset->at(index), 0, 'f', 1);
         m_tooltip->setSeries(series);
         m_tooltip->setText(valueStr);
         m_tooltip->setAnchor(pointF);
@@ -364,6 +371,5 @@ void PointStatisticsChartView::tooltipBar(bool state, int index, QBarSet *barset
     {
         m_tooltip->hide();
     }
-*/
 }
 
