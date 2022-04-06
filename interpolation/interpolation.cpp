@@ -873,14 +873,14 @@ float inverseDistanceWeighted(vector <Crit3DInterpolationDataPoint> &myPointList
 
     sum = 0 ;
     sumWeights = 0 ;
-    for (int i = 0 ; i < (int)(myPointList.size()); i++)
+    for (unsigned int i = 0 ; i < myPointList.size(); i++)
     {
-        if (myPointList[i].distance > 0.)
+        if (myPointList[i].distance > 0.f)
         {
-            weight = myPointList[i].distance / 10000. ;
+            weight = double(myPointList[i].distance) / 10000.;
             weight = fabs(1 / (weight * weight * weight));
             sumWeights += weight;
-            sum += myPointList[i].value * weight;
+            sum += double(myPointList[i].value) * weight;
         }
     }
 
@@ -889,6 +889,7 @@ float inverseDistanceWeighted(vector <Crit3DInterpolationDataPoint> &myPointList
     else
         return NODATA;
 }
+
 
 float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 {
@@ -1222,6 +1223,7 @@ void optimalDetrending(meteoVariable myVar,
     nrCombination = short(pow(2, (proxyNr + 1)));
 
     minError = NODATA;
+    bestCombinationIndex = 0;
 
     for (i=0; i < nrCombination; i++)
     {
@@ -1256,6 +1258,7 @@ void optimalDetrending(meteoVariable myVar,
 
     return;
 }
+
 
 bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings,
                       Crit3DClimateParameters* myClimate, Crit3DMeteoPoint* myMeteoPoints, int nrMeteoPoints,
