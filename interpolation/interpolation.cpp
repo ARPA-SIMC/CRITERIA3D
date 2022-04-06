@@ -1167,7 +1167,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
     float kh = 0;
     float bestKh = kh;
     float bestError = NODATA;
-    while (kh <= 1024)
+    while (kh <= 128)
     {
         mySettings->setTopoDist_Kh(kh);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
@@ -1200,7 +1200,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
         }
         kz *= 2;
     }
-    mySettings->setTopoDist_Kz(bestKz); */
+    mySettings->setTopoDist_Kz(bestKz);*/
 
 }
 
