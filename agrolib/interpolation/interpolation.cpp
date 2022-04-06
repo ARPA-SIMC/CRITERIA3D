@@ -1148,6 +1148,7 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 }
 
+
 void topographicDistanceOptimize(meteoVariable myVar,
                                  Crit3DMeteoPoint* &myMeteoPoints,
                                  int nrMeteoPoints,
@@ -1158,47 +1159,48 @@ void topographicDistanceOptimize(meteoVariable myVar,
 {
     float avgError;
 
-    float kz = 0;
-    float bestKz = kz;
-    float bestError = NODATA;
-    while (kz <= 256)
-    {
-        mySettings->setTopoDist_Kz(kz);
-        if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
-        {
-            avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
-            if (bestError == NODATA || avgError < bestError)
-            {
-                bestError = avgError;
-                bestKz = kz;
-            }
-        }
-        kz = (kz == 0 ? 1 : kz*2);
-    }
-
-    mySettings->setTopoDist_Kz(bestKz);
-
     float kh = 0;
     float bestKh = kh;
-    bestError = NODATA;
+    float bestError = NODATA;
     while (kh <= 1000000)
     {
         mySettings->setTopoDist_Kh(kh);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
         {
             avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
-            if (bestError == NODATA || avgError < bestError)
+            if (isEqual(bestError, NODATA) || avgError < bestError)
             {
                 bestError = avgError;
                 bestKh = kh;
             }
         }
-        kh = (kh == 0 ? 1 : kh*2);
+        kh = (isEqual(kh, 0) ? 1 : kh*2);
     }
 
     mySettings->setTopoDist_Kh(bestKh);
 
+    float kz = 0;
+    float bestKz = kz;
+    bestError = NODATA;
+    while (kz <= 64)
+    {
+        mySettings->setTopoDist_Kz(kz);
+        if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
+        {
+            avgError = computeErrorCrossValidation(myVar, myMeteoPoints, nrMeteoPoints, myTime, meteoSettings);
+            if (isEqual(bestError, NODATA) || avgError < bestError)
+            {
+                bestError = avgError;
+                bestKz = kz;
+            }
+        }
+        kz = (isEqual(kz, 0) ? 1 : kz*2);
+    }
+
+    mySettings->setTopoDist_Kz(bestKz);
+
 }
+
 
 void optimalDetrending(meteoVariable myVar,
                     Crit3DMeteoPoint* &myMeteoPoints,
