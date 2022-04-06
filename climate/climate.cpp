@@ -4524,21 +4524,43 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
         {
             endDate.setDate(myYear + clima->nYears(), endDate.month(), endDate.day());
         }
-        if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
+        if (isMeteoGrid)
         {
-            validYears = validYears + 1;
-            if(isAnomaly)
+            if ( elaborationOnPoint(myError, nullptr, meteoGridDbHandler, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
             {
-                outputValues.push_back(meteoPointTemp->anomaly);
+                validYears = validYears + 1;
+                if(isAnomaly)
+                {
+                    outputValues.push_back(meteoPointTemp->anomaly);
+                }
+                else
+                {
+                    outputValues.push_back(meteoPointTemp->elaboration);
+                }
             }
             else
             {
-                outputValues.push_back(meteoPointTemp->elaboration);
+                outputValues.push_back(NODATA);
             }
         }
         else
         {
-            outputValues.push_back(NODATA);
+            if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
+            {
+                validYears = validYears + 1;
+                if(isAnomaly)
+                {
+                    outputValues.push_back(meteoPointTemp->anomaly);
+                }
+                else
+                {
+                    outputValues.push_back(meteoPointTemp->elaboration);
+                }
+            }
+            else
+            {
+                outputValues.push_back(NODATA);
+            }
         }
     }
     return validYears;

@@ -523,9 +523,11 @@ void Crit3DPointStatisticsWidget::plot()
             // meteoPointTemp should be init
             meteoPointTemp.nrObsDataDaysH = 0;
             meteoPointTemp.nrObsDataDaysD = 0;
-
+            FormInfo formInfo;
+            formInfo.showInfo("compute annual series...");
             int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
                                                      &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
+            formInfo.close();
             if (validYears < 3)
             {
                 QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
@@ -624,10 +626,22 @@ void Crit3DPointStatisticsWidget::plot()
 
             QDate startDate(clima.yearStart(), clima.genericPeriodDateStart().month(), clima.genericPeriodDateStart().day());
             QDate endDate(clima.yearEnd(), clima.genericPeriodDateEnd().month(), clima.genericPeriodDateEnd().day());
-            if (!elaborationOnPoint(&myError, meteoPointsDbHandler, nullptr, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings))
+
+            if (isGrid)
             {
-                QMessageBox::information(nullptr, "Error", "Data not available in the reference period");
-                return;
+                if (!elaborationOnPoint(&myError, nullptr, meteoGridDbHandler, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings))
+                {
+                    QMessageBox::information(nullptr, "Error", "Data not available in the reference period");
+                    return;
+                }
+            }
+            else
+            {
+                if (!elaborationOnPoint(&myError, meteoPointsDbHandler, nullptr, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings))
+                {
+                    QMessageBox::information(nullptr, "Error", "Data not available in the reference period");
+                    return;
+                }
             }
 
             firstYear = analysisYearFrom.currentText().toInt();
@@ -638,8 +652,12 @@ void Crit3DPointStatisticsWidget::plot()
             clima.setGenericPeriodDateEnd(QDate(lastYear, dayTo.date().month(), dayTo.date().day()));
             float elabResult = meteoPointTemp.elaboration;
 
+            FormInfo formInfo;
+            formInfo.showInfo("compute annual series...");
+
             int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
                                                      &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
+            formInfo.close();
             if (validYears < 3)
             {
                 QMessageBox::information(nullptr, "Error", "Number of valid years < 3");
