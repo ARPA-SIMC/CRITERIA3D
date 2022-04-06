@@ -899,11 +899,8 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 for (int i = 0; i < nrValues; i++)
                 {
-                    if (series[i] > 0)
-                    {
-                        int index = (series[i] - minValueInt)/classWidthValue;
-                        bucket[index] = bucket[index] + 1;
-                    }
+                    int index = (series[i] - minValueInt)/classWidthValue;
+                    bucket[index] = bucket[index] + 1;
                 }
                 avg = statistics::mean(series, nrValues);
                 dev_std = statistics::standardDeviation(series, nrValues);
