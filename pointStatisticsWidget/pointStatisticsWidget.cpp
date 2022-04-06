@@ -338,9 +338,7 @@ Crit3DPointStatisticsWidget::~Crit3DPointStatisticsWidget()
 
 void Crit3DPointStatisticsWidget::closeEvent(QCloseEvent *event)
 {
-    emit closePointStatistics();
     event->accept();
-
 }
 
 void Crit3DPointStatisticsWidget::dailyVar()

@@ -1356,14 +1356,14 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
         return false;
     }
 
-    QDate maxDateD((QDate(1800, 1, 1)));
-    QDate minDateD((QDate(7800, 12, 31)));
+    _lastDailyDate.setDate(1800, 1, 1);
+    _firstDailyDate.setDate(7800, 12, 31);
 
-    QDate maxDateH((QDate(1800, 1, 1)));
-    QDate minDateH((QDate(7800, 12, 31)));
+    _lastHourlyDate.setDate(1800, 1, 1);
+    _firstHourlyDate.setDate(7800, 12, 31);
 
-    QDate maxDateM((QDate(1800, 1, 1)));
-    QDate minDateM((QDate(7800, 12, 31)));
+    _lastMonthlyDate.setDate(1800, 1, 1);
+    _firsMonthlytDate.setDate(7800, 12, 31);
     QDate temp;
 
     QString tableD = _tableDaily.prefix + QString::fromStdString(id) + _tableDaily.postFix;
@@ -1416,14 +1416,14 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
             {
                 if (getValue(qry.value("minDate"), &temp))
                 {
-                    if (temp < minDateD )
-                        minDateD = temp;
+                    if (temp < _firstDailyDate )
+                        _firstDailyDate = temp;
                 }
 
                 if (getValue(qry.value("maxDate"), &temp))
                 {
-                    if (temp > maxDateD)
-                        maxDateD = temp;
+                    if (temp > _lastDailyDate)
+                        _lastDailyDate = temp;
                 }
             }
             else
@@ -1476,14 +1476,14 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
             {
                 if (getValue(qry.value("minDate"), &temp))
                 {
-                    if (temp < minDateH)
-                        minDateH = temp;
+                    if (temp < _firstHourlyDate)
+                        _firstHourlyDate = temp;
                 }
 
                 if (getValue(qry.value("maxDate"), &temp))
                 {
-                    if (temp > maxDateH)
-                        maxDateH = temp;
+                    if (temp > _lastHourlyDate)
+                        _lastHourlyDate = temp;
                 }
             }
             else
@@ -1579,57 +1579,57 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
         if (minPragaYear != NODATA && maxPragaYear != NODATA &&
                 minPragaMonth != NODATA && maxPragaMonth != NODATA) {
 
-            maxDateM.setDate(maxPragaYear, maxPragaMonth, 1);
-            minDateM.setDate(minPragaYear, minPragaMonth, 1);
+            _lastMonthlyDate.setDate(maxPragaYear, maxPragaMonth, 1);
+            _firsMonthlytDate.setDate(minPragaYear, minPragaMonth, 1);
         }
     }
 
     // the last hourly day is always incomplete, there is just 00.00 value
-    if (maxDateH != QDate(1800,1,1)) maxDateH = maxDateH.addDays(-1);
+    if (_lastHourlyDate != QDate(1800,1,1)) _lastHourlyDate = _lastHourlyDate.addDays(-1);
 
-    if (minDateD < minDateH)
+    if (_firstDailyDate < _firstHourlyDate)
     {
-        if (_tableMonthly.exists && minDateM != QDate(7800, 12, 31) && minDateM < minDateD)
+        if (_tableMonthly.exists && _firsMonthlytDate != QDate(7800, 12, 31) && _firsMonthlytDate < _firstDailyDate)
         {
-            _firstDate = minDateM;
+            _firstDate = _firsMonthlytDate;
         }
         else
         {
-            _firstDate = minDateD;
+            _firstDate = _firstDailyDate;
         }
     }
     else
     {
-        if (_tableMonthly.exists && minDateM != QDate(7800, 12, 31) && minDateM < minDateH)
+        if (_tableMonthly.exists && _firsMonthlytDate != QDate(7800, 12, 31) && _firsMonthlytDate < _firstHourlyDate)
         {
-            _firstDate = minDateM;
+            _firstDate = _firsMonthlytDate;
         }
         else
         {
-            _firstDate = minDateH;
+            _firstDate = _firstHourlyDate;
         }
     }
 
-    if (maxDateD > maxDateH)
+    if (_lastDailyDate > _lastHourlyDate)
     {
-        if (_tableMonthly.exists && maxDateM != QDate(1800, 1, 1) && maxDateM > maxDateD)
+        if (_tableMonthly.exists && _lastMonthlyDate != QDate(1800, 1, 1) && _lastMonthlyDate > _lastDailyDate)
         {
-            _lastDate = maxDateM;
+            _lastDate = _lastMonthlyDate;
         }
         else
         {
-            _lastDate = maxDateD;
+            _lastDate = _lastDailyDate;
         }
     }
     else
     {
-        if (_tableMonthly.exists && maxDateM != QDate(1800, 1, 1) && maxDateM > maxDateH)
+        if (_tableMonthly.exists && _lastMonthlyDate != QDate(1800, 1, 1) && _lastMonthlyDate > _lastHourlyDate)
         {
-            _lastDate = maxDateM;
+            _lastDate = _lastMonthlyDate;
         }
         else
         {
-            _lastDate = maxDateH;
+            _lastDate = _lastHourlyDate;
         }
     }
 
@@ -3239,6 +3239,60 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridHourlyFF(QString *myError, QSt
     }
 
     return true;
+}
+
+QDate Crit3DMeteoGridDbHandler::getFirstDailyDate() const
+{
+    if (_firstDailyDate.year() == 7800)
+    {
+        return QDate(); // return null date
+    }
+    return _firstDailyDate;
+}
+
+QDate Crit3DMeteoGridDbHandler::getLastDailyDate() const
+{
+    if (_lastDailyDate.year() == 1800)
+    {
+        return QDate(); // return null date
+    }
+    return _lastDailyDate;
+}
+
+QDate Crit3DMeteoGridDbHandler::getFirstHourlyDate() const
+{
+    if (_firstHourlyDate.year() == 7800)
+    {
+        return QDate(); // return null date
+    }
+    return _firstHourlyDate;
+}
+
+QDate Crit3DMeteoGridDbHandler::getLastHourlyDate() const
+{
+    if (_lastHourlyDate.year() == 1800)
+    {
+        return QDate(); // return null date
+    }
+    return _lastHourlyDate;
+}
+
+QDate Crit3DMeteoGridDbHandler::getFirsMonthlytDate() const
+{
+    if (_firsMonthlytDate.year() == 7800)
+    {
+        return QDate(); // return null date
+    }
+    return _firsMonthlytDate;
+}
+
+QDate Crit3DMeteoGridDbHandler::getLastMonthlyDate() const
+{
+    if (_lastHourlyDate.year() == 1800)
+    {
+        return QDate(); // return null date
+    }
+    return _lastMonthlyDate;
 }
 
 bool Crit3DMeteoGridDbHandler::idDailyList(QString *myError, QList<QString>* idMeteoList)

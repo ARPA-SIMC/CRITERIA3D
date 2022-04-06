@@ -77,9 +77,6 @@
             QLineEdit valMax;
             QLineEdit valMin;
             QLineEdit smoothing;
-
-    signals:
-        void closePointStatistics();
     };
 
 
