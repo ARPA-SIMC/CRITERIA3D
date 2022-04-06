@@ -50,9 +50,12 @@ PointStatisticsChartView::PointStatisticsChartView(QWidget *parent) :
 void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<float> outputValues)
 {
 
-    cleanTrendSeries();
-    cleanClimaSeries();
-    cleanDistribution();
+    if (chart()->series().size() > 0)
+    {
+        cleanClimaSeries();
+        cleanDistribution();
+        cleanTrendSeries();
+    }
     chart()->legend()->setVisible(true);
 
     float maxValue = NODATA;
@@ -123,9 +126,12 @@ void PointStatisticsChartView::cleanTrendSeries()
 
 void PointStatisticsChartView::drawClima(QList<QPointF> dailyPointList, QList<QPointF> decadalPointList, QList<QPointF> monthlyPointList)
 {
-    cleanClimaSeries();
-    cleanTrendSeries();
-    cleanDistribution();
+    if (chart()->series().size() > 0)
+    {
+        cleanClimaSeries();
+        cleanDistribution();
+        cleanTrendSeries();
+    }
     chart()->legend()->setVisible(true);
 
     float maxValue = NODATA;
@@ -201,9 +207,12 @@ void PointStatisticsChartView::drawClima(QList<QPointF> dailyPointList, QList<QP
 
 void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue)
 {
-    cleanClimaSeries();
-    cleanTrendSeries();
-    cleanDistribution();
+    if (chart()->series().size() > 0)
+    {
+        cleanClimaSeries();
+        cleanDistribution();
+        cleanTrendSeries();
+    }
     chart()->legend()->setVisible(false);
 
     QBarSet *distributionSet = new QBarSet("Distribution");
@@ -249,12 +258,14 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
     axisY->setMin(minValueY);
     axisXvalue->setRange(minValue, maxValue);
 
+    chart()->addSeries(distributionBar);
+    chart()->addSeries(distributionLine);
+
     distributionLine->attachAxis(axisXvalue);
     distributionLine->attachAxis(axisY);
     distributionBar->attachAxis(axisXvalue);
     distributionBar->attachAxis(axisY);
-    chart()->addSeries(distributionBar);
-    chart()->addSeries(distributionLine);
+
     connect(distributionLine, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipDistributionSeries);
     connect(distributionBar, &QBarSeries::hovered, this, &PointStatisticsChartView::tooltipBar);
 
