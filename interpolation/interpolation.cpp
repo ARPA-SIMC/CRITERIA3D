@@ -199,7 +199,7 @@ void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint>
             {
                 float topoDistance = 0.;
                 float kh = mySettings->getTopoDist_Kh();
-                if (kh != 0)
+                if (! isEqual(kh, 0))
                 {
                     topoDistance = NODATA;
                     if (myPoints[i].topographicDistance != nullptr)
@@ -211,10 +211,10 @@ void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint>
                         }
                     }
 
-                    if (topoDistance == NODATA)
-                        topoDistance = topographicDistance(x, y, z, (float)myPoints[i].point->utm.x,
-                                                           (float)myPoints[i].point->utm.y,
-                                                           (float)myPoints[i].point->z, myPoints[i].distance,
+                    if (isEqual(topoDistance, NODATA))
+                        topoDistance = topographicDistance(x, y, z, float(myPoints[i].point->utm.x),
+                                                           float(myPoints[i].point->utm.y),
+                                                           float(myPoints[i].point->z), myPoints[i].distance,
                                                            *(mySettings->getCurrentDEM()));
                 }
 
@@ -1158,6 +1158,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
                                  const Crit3DTime &myTime)
 {
     float avgError;
+
     float bestKz = 0;
     mySettings->setTopoDist_Kz(bestKz);
 
@@ -1165,7 +1166,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
     float kh = 0;
     float bestKh = kh;
     float bestError = NODATA;
-    while (kh <= 1000000)
+    while (kh <= 1024)
     {
         mySettings->setTopoDist_Kh(kh);
         if (computeResiduals(myVar, myMeteoPoints, nrMeteoPoints, interpolationPoints, mySettings, meteoSettings, true, true))
@@ -1183,7 +1184,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
     mySettings->setTopoDist_Kh(bestKh);
 
     // optimize kz
-    float kz = 1;
+    /*float kz = 1;
     while (kz <= 64)
     {
         mySettings->setTopoDist_Kz(kz);
@@ -1198,8 +1199,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
         }
         kz *= 2;
     }
-
-    mySettings->setTopoDist_Kz(bestKz);
+    mySettings->setTopoDist_Kz(bestKz); */
 
 }
 
