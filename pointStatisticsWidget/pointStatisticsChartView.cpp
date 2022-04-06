@@ -324,7 +324,7 @@ void PointStatisticsChartView::tooltipDistributionSeries(QPointF point, bool sta
     auto serie = qobject_cast<QLineSeries *>(sender());
     if (state)
     {
-        int xValue = point.x();
+        double xValue = point.x();
         double yValue = point.y();
 
         m_tooltip->setText(QString("%1,%2").arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
