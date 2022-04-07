@@ -90,6 +90,7 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
     axisXvalue->setRange(years[0], years[years.size()-1]);
     axisXvalue->setTickCount(years.size());
     axisXvalue->setLabelFormat("%d");
+    axisY->setLabelFormat("%.1f");
     chart()->addSeries(trend);
     trend->attachAxis(axisXvalue);
     trend->attachAxis(axisY);
@@ -189,7 +190,7 @@ void PointStatisticsChartView::drawClima(QList<QPointF> dailyPointList, QList<QP
     axisXvalue->setRange(1, 366);
     axisXvalue->setTickCount(20);
     axisXvalue->setLabelFormat("%d");
-    axisY->setLabelFormat("%.3f");
+    axisY->setLabelFormat("%.1f");
 
     chart()->addSeries(climaDaily);
     chart()->addSeries(climaDecadal);

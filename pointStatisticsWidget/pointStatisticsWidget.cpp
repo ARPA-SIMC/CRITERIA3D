@@ -79,15 +79,33 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     
     dailyButton.setText("Daily");
     hourlyButton.setText("Hourly");
-    if (!firstDaily.isNull() || !lastDaily.isNull())
+    if (firstDaily.isNull() || lastDaily.isNull())
     {
-        dailyButton.setChecked(true); //default
-        currentFrequency = daily; //default
+        dailyButton.setEnabled(false);
     }
     else
     {
-        hourlyButton.setChecked(true);
-        currentFrequency = hourly;
+        dailyButton.setEnabled(true);
+        dailyButton.setChecked(true); //default
+        currentFrequency = daily; //default
+    }
+
+    if (firstHourly.isNull() || lastHourly.isNull())
+    {
+        hourlyButton.setEnabled(false);
+    }
+    else
+    {
+        hourlyButton.setEnabled(true);
+        if (dailyButton.isEnabled())
+        {
+            hourlyButton.setChecked(false);
+        }
+        else
+        {
+            hourlyButton.setChecked(true);
+            currentFrequency = hourly;
+        }
     }
 
     std::map<meteoVariable, std::string>::const_iterator it;
