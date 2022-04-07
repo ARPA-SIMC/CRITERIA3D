@@ -590,6 +590,12 @@ bool Project::loadParameters(QString parametersFileName)
                 qualityInterpolationSettings.setMinRegressionR2(parameters->value("minRegressionR2").toFloat());
             }
 
+            if (parameters->contains("topographicDistanceMaxMultiplier"))
+            {
+                interpolationSettings.setTopoDist_maxKh(parameters->value("topographicDistanceMaxMultiplier").toInt());
+                qualityInterpolationSettings.setTopoDist_maxKh(parameters->value("topographicDistanceMaxMultiplier").toInt());
+            }
+
             if (parameters->contains("useDewPoint"))
                 interpolationSettings.setUseDewPoint(parameters->value("useDewPoint").toBool());
 
@@ -2304,11 +2310,12 @@ void Project::saveInterpolationParameters()
         parameters->setValue("lapseRateCode", interpolationSettings.getUseLapseRateCode());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parameters->setValue("topographicDistance", interpolationSettings.getUseTD());
+        parameters->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
         parameters->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
         parameters->setValue("useDewPoint", interpolationSettings.getUseDewPoint());
         parameters->setValue("useInterpolationTemperatureForRH", interpolationSettings.getUseInterpolatedTForRH());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
-        parameters->setValue("minRegressionR2", QString::number(interpolationSettings.getMinRegressionR2()));
+        parameters->setValue("minRegressionR2", QString::number(double(interpolationSettings.getMinRegressionR2())));
     parameters->endGroup();
 
     saveProxies();

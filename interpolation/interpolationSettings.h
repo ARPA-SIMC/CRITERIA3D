@@ -113,6 +113,7 @@
         float minRegressionR2;
         bool useThermalInversion;
         bool useTD;
+        int maxTdMultiplier;
         bool useLapseRateCode;
         bool useBestDetrending;
         bool useDewPoint;
@@ -127,7 +128,7 @@
         float maxHeightInversion;
         float shepardInitialRadius;
         int indexPointCV;
-        float topoDist_Kh, topoDist_Kz;
+        int topoDist_maxKh, topoDist_Kh, topoDist_Kz;
 
         bool proxyLoaded;
         std::vector <Crit3DProxy> currentProxy;
@@ -181,10 +182,12 @@
         void setIndexPointCV(int value);
         gis::Crit3DRasterGrid *getCurrentDEM() const;
         void setCurrentDEM(gis::Crit3DRasterGrid *value);
-        float getTopoDist_Kh() const;
-        void setTopoDist_Kh(float value);
-        float getTopoDist_Kz() const;
-        void setTopoDist_Kz(float value);
+        int getTopoDist_maxKh() const;
+        void setTopoDist_maxKh(int value);
+        int getTopoDist_Kh() const;
+        void setTopoDist_Kh(int value);
+        int getTopoDist_Kz() const;
+        void setTopoDist_Kz(int value);
         Crit3DProxyCombination getOptimalCombination() const;
         Crit3DProxyCombination* getOptimalCombinationRef();
         void setOptimalCombination(const Crit3DProxyCombination &value);
