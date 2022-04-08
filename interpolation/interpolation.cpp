@@ -41,6 +41,8 @@
 using namespace std;
 
 
+
+
 float getMinHeight(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode)
 {
     float myZmin = NODATA;
@@ -1388,4 +1390,5 @@ float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &my
     }
     return getFirstIntervalHeightValue;
 }
+
 

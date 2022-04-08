@@ -36,6 +36,7 @@
         #include "interpolationPoint.h"
     #endif
 
+
     float getMinHeight(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
     float getMaxHeight(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
     float getZmin(std::vector <Crit3DInterpolationDataPoint> &myPoints);

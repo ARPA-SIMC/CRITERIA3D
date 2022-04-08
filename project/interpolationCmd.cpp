@@ -6,6 +6,56 @@
 #include "interpolation.h"
 #include "interpolationCmd.h"
 
+float crossValidationStatistics::getMeanAbsoluteError() const
+{
+    return meanAbsoluteError;
+}
+
+void crossValidationStatistics::setMeanAbsoluteError(float newMeanAbsoluteError)
+{
+    meanAbsoluteError = newMeanAbsoluteError;
+}
+
+float crossValidationStatistics::getRootMeanSquareError() const
+{
+    return rootMeanSquareError;
+}
+
+void crossValidationStatistics::setRootMeanSquareError(float newRootMeanSquareError)
+{
+    rootMeanSquareError = newRootMeanSquareError;
+}
+
+float crossValidationStatistics::getCompoundRelativeError() const
+{
+    return compoundRelativeError;
+}
+
+void crossValidationStatistics::setCompoundRelativeError(float newCompoundRelativeError)
+{
+    compoundRelativeError = newCompoundRelativeError;
+}
+
+float crossValidationStatistics::getMeanBiasError() const
+{
+    return meanBiasError;
+}
+
+void crossValidationStatistics::setMeanBiasError(float newMeanBiasError)
+{
+    meanBiasError = newMeanBiasError;
+}
+
+const Crit3DProxyCombination &crossValidationStatistics::getProxyCombination() const
+{
+    return proxyCombination;
+}
+
+void crossValidationStatistics::setProxyCombination(const Crit3DProxyCombination &newProxyCombination)
+{
+    proxyCombination = newProxyCombination;
+}
+
 void Crit3DProxyGridSeries::initialize()
 {
     gridName.clear();
