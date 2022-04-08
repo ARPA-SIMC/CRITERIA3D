@@ -938,7 +938,10 @@ void Crit3DPointStatisticsWidget::plot()
                     if (series[i] > 0)
                     {
                         int index = (series[i] - valMinValue)/classWidthValue;
-                        bucket[index] = bucket[index] + 1;
+                        if( index >= 0)
+                        {
+                            bucket[index] = bucket[index] + 1;
+                        }
                     }
                 }
                 if (!gammaFitting(series, nrValues, &beta, &gamma,  &pzero))
@@ -951,13 +954,17 @@ void Crit3DPointStatisticsWidget::plot()
                 for (int i = 0; i < nrValues; i++)
                 {
                     int index = (series[i] - valMinValue)/classWidthValue;
-                    bucket[index] = bucket[index] + 1;
+                    if( index >= 0)
+                    {
+                        bucket[index] = bucket[index] + 1;
+                    }
                 }
                 avg = statistics::mean(series, nrValues);
                 dev_std = statistics::standardDeviation(series, nrValues);
                 millile3dev = sorting::percentile(sortedSeries, &nrValues, 99.73, true);
                 millile_3Dev = sorting::percentile(sortedSeries, &nrValues, 0.27, false);
             }
+
             availability.setText(QString::number(nrValues/totDays * 100, 'f', 3));
             average.setText(QString::number(avg, 'f', 3));
 
@@ -1013,6 +1020,7 @@ void Crit3DPointStatisticsWidget::plot()
                 }
             }
             chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue);
+
 
         }
     }
@@ -1171,7 +1179,10 @@ void Crit3DPointStatisticsWidget::plot()
                 if (series[i] > 0)
                 {
                     int index = (series[i] - valMinValue)/classWidthValue;
-                    bucket[index] = bucket[index] + 1;
+                    if( index >= 0)
+                    {
+                        bucket[index] = bucket[index] + 1;
+                    }
                 }
             }
             if (!gammaFitting(series, nrValues, &beta, &gamma,  &pzero))
@@ -1186,7 +1197,10 @@ void Crit3DPointStatisticsWidget::plot()
                 if (series[i] > 0)
                 {
                     int index = (series[i] - valMinValue)/classWidthValue;
-                    bucket[index] = bucket[index] + 1;
+                    if( index >= 0)
+                    {
+                        bucket[index] = bucket[index] + 1;
+                    }
                 }
             }
             avg = statistics::mean(series, nrValues);
