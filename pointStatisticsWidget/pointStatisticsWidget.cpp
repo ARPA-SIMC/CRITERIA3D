@@ -956,7 +956,8 @@ void Crit3DPointStatisticsWidget::plot()
 
             if (modeVal != NODATA)
             {
-                mode.setText(QString::number(minValueInt + (modeVal*classWidthValue) + (classWidthValue/2), 'f', 3));
+                float myMode = minValueInt + (modeVal*classWidthValue) + (classWidthValue/2.0);
+                mode.setText(QString::number(myMode, 'f', 3));
             }
             if (dev_std != NODATA)
             {
