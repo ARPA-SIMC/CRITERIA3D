@@ -896,9 +896,26 @@ void Crit3DPointStatisticsWidget::plot()
             int minValueInt = myMinValue;
             int maxValueInt = myMaxValue + 1;
 
+            valMax.blockSignals(true);
+            valMin.blockSignals(true);
+            int valMaxValue = valMax.text().toInt(&ok);
+            if (!ok || valMax.text().isEmpty() || valMaxValue == NODATA)
+            {
+                valMaxValue = maxValueInt;
+                valMax.setText(QString::number(valMaxValue));
+            }
+            int valMinValue = valMin.text().toInt(&ok);
+            if (!ok || valMin.text().isEmpty() || valMinValue == NODATA)
+            {
+                valMinValue = minValueInt;
+                valMin.setText(QString::number(valMinValue));
+            }
+            valMax.blockSignals(false);
+            valMin.blockSignals(false);
+
             // init
             std::vector<float> bucket;
-            for (int i = 0; i<= (maxValueInt - minValueInt)/classWidthValue; i++)
+            for (int i = 0; i<= (valMaxValue - valMinValue)/classWidthValue; i++)
             {
                 bucket.push_back(0);
             }
@@ -920,8 +937,11 @@ void Crit3DPointStatisticsWidget::plot()
                 {
                     if (series[i] > 0)
                     {
-                        int index = (series[i] - minValueInt)/classWidthValue;
-                        bucket[index] = bucket[index] + 1;
+                        int index = (series[i] - valMinValue)/classWidthValue;
+                        if( index >= 0)
+                        {
+                            bucket[index] = bucket[index] + 1;
+                        }
                     }
                 }
                 if (!gammaFitting(series, nrValues, &beta, &gamma,  &pzero))
@@ -933,14 +953,18 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 for (int i = 0; i < nrValues; i++)
                 {
-                    int index = (series[i] - minValueInt)/classWidthValue;
-                    bucket[index] = bucket[index] + 1;
+                    int index = (series[i] - valMinValue)/classWidthValue;
+                    if( index >= 0)
+                    {
+                        bucket[index] = bucket[index] + 1;
+                    }
                 }
                 avg = statistics::mean(series, nrValues);
                 dev_std = statistics::standardDeviation(series, nrValues);
                 millile3dev = sorting::percentile(sortedSeries, &nrValues, 99.73, true);
                 millile_3Dev = sorting::percentile(sortedSeries, &nrValues, 0.27, false);
             }
+
             availability.setText(QString::number(nrValues/totDays * 100, 'f', 3));
             average.setText(QString::number(avg, 'f', 3));
 
@@ -956,7 +980,7 @@ void Crit3DPointStatisticsWidget::plot()
 
             if (modeVal != NODATA)
             {
-                float myMode = minValueInt + (modeVal*classWidthValue) + (classWidthValue/2.0);
+                float myMode = minValueInt + (modeVal*classWidthValue) + (classWidthValue/2.0); // use minValueInt not the displayed minValue
                 mode.setText(QString::number(myMode, 'f', 3));
             }
             if (dev_std != NODATA)
@@ -965,31 +989,12 @@ void Crit3DPointStatisticsWidget::plot()
             }
             median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 3));
 
-            valMax.blockSignals(true);
-            valMin.blockSignals(true);
-            int valMaxValue = valMax.text().toInt(&ok);
-            if (!ok || valMax.text().isEmpty() || valMaxValue == NODATA)
-            {
-                valMaxValue = maxValueInt;
-                valMax.setText(QString::number(valMaxValue));
-            }
-            int valMinValue = valMin.text().toInt(&ok);
-            if (!ok || valMin.text().isEmpty() || valMinValue == NODATA)
-            {
-                valMinValue = minValueInt;
-                valMin.setText(QString::number(valMinValue));
-            }
-            valMax.blockSignals(false);
-            valMin.blockSignals(false);
-
-            std::vector<float> barValues;
             QList<QPointF> lineValues;
             for (int i = 0; i<bucket.size(); i++)
             {
-                float x = valMinValue + (i*classWidthValue) + (classWidthValue/2);
+                float x = valMinValue + (i*classWidthValue) + (classWidthValue/2.0);
                 if (x < valMaxValue)
                 {
-                    barValues.push_back(bucket[i]);
                     if (myVar == dailyPrecipitation)
                     {
                         if (x > 0)
@@ -1014,7 +1019,8 @@ void Crit3DPointStatisticsWidget::plot()
                     }
                 }
             }
-            chartView->drawDistribution(barValues, lineValues, valMinValue, valMaxValue);
+            chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue);
+
 
         }
     }
@@ -1131,9 +1137,26 @@ void Crit3DPointStatisticsWidget::plot()
         int minValueInt = myMinValue;
         int maxValueInt = myMaxValue + 1;
 
+        valMax.blockSignals(true);
+        valMin.blockSignals(true);
+        int valMaxValue = valMax.text().toInt(&ok);
+        if (!ok || valMax.text().isEmpty() || valMaxValue == NODATA)
+        {
+            valMaxValue = maxValueInt;
+            valMax.setText(QString::number(valMaxValue));
+        }
+        int valMinValue = valMin.text().toInt(&ok);
+        if (!ok || valMin.text().isEmpty() || valMinValue == NODATA)
+        {
+            valMinValue = minValueInt;
+            valMin.setText(QString::number(valMinValue));
+        }
+        valMax.blockSignals(false);
+        valMin.blockSignals(false);
+
         // init
         std::vector<float> bucket;
-        for (int i = 0; i<= (maxValueInt - minValueInt)/classWidthValue; i++)
+        for (int i = 0; i<= (valMaxValue - valMinValue)/classWidthValue; i++)
         {
             bucket.push_back(0);
         }
@@ -1155,8 +1178,11 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 if (series[i] > 0)
                 {
-                    int index = (series[i] - minValueInt)/classWidthValue;
-                    bucket[index] = bucket[index] + 1;
+                    int index = (series[i] - valMinValue)/classWidthValue;
+                    if( index >= 0)
+                    {
+                        bucket[index] = bucket[index] + 1;
+                    }
                 }
             }
             if (!gammaFitting(series, nrValues, &beta, &gamma,  &pzero))
@@ -1170,8 +1196,11 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 if (series[i] > 0)
                 {
-                    int index = (series[i] - minValueInt)/classWidthValue;
-                    bucket[index] = bucket[index] + 1;
+                    int index = (series[i] - valMinValue)/classWidthValue;
+                    if( index >= 0)
+                    {
+                        bucket[index] = bucket[index] + 1;
+                    }
                 }
             }
             avg = statistics::mean(series, nrValues);
@@ -1194,7 +1223,8 @@ void Crit3DPointStatisticsWidget::plot()
 
         if (modeVal != NODATA)
         {
-            mode.setText(QString::number(minValueInt + (modeVal*classWidthValue) + (classWidthValue/2), 'f', 3));
+            float myMode = minValueInt + (modeVal*classWidthValue) + (classWidthValue/2.0); // use minValueInt not the displayed minValue
+            mode.setText(QString::number(myMode, 'f', 3));
         }
         if (dev_std != NODATA)
         {
@@ -1202,31 +1232,12 @@ void Crit3DPointStatisticsWidget::plot()
         }
         median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 3));
 
-        valMax.blockSignals(true);
-        valMin.blockSignals(true);
-        int valMaxValue = valMax.text().toInt(&ok);
-        if (!ok || valMax.text().isEmpty() || valMaxValue == NODATA)
-        {
-            valMaxValue = maxValueInt;
-            valMax.setText(QString::number(valMaxValue));
-        }
-        int valMinValue = valMin.text().toInt(&ok);
-        if (!ok || valMin.text().isEmpty() || valMinValue == NODATA)
-        {
-            valMinValue = minValueInt;
-            valMin.setText(QString::number(valMinValue));
-        }
-        valMax.blockSignals(false);
-        valMin.blockSignals(false);
-
-        std::vector<float> barValues;
         QList<QPointF> lineValues;
         for (int i = 0; i<bucket.size(); i++)
         {
-            float x = valMinValue + (i*classWidthValue) + (classWidthValue/2);
+            float x = valMinValue + (i*classWidthValue) + (classWidthValue/2.0);
             if (x < valMaxValue)
             {
-                barValues.push_back(bucket[i]);
                 if (myVar == precipitation)
                 {
                     if (x > 0)
@@ -1251,7 +1262,7 @@ void Crit3DPointStatisticsWidget::plot()
                 }
             }
         }
-        chartView->drawDistribution(barValues, lineValues, valMinValue, valMaxValue);
+        chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue);
     }
 }
 

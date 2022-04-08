@@ -37,10 +37,10 @@ private:
     QLineSeries* climaMonthly;
     QBarSeries *distributionBar;
     QLineSeries *distributionLine;
-    //QBarCategoryAxis *axisX;
+    QBarCategoryAxis *axisX;
     QValueAxis* axisXvalue;
     QValueAxis* axisY;
-    //QList<QString> categories;
+    QList<QString> categories;
     PointStatisticsCallout *m_tooltip;
 };
 

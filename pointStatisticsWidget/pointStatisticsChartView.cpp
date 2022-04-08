@@ -32,12 +32,12 @@ PointStatisticsChartView::PointStatisticsChartView(QWidget *parent) :
     climaMonthly->setColor(Qt::green);
 
     axisXvalue = new QValueAxis();
-    //axisX = new QBarCategoryAxis();
+    axisX = new QBarCategoryAxis();
+    axisX->hide();
     axisY = new QValueAxis();
 
-    //chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisXvalue, Qt::AlignBottom);
-    //axisX->setVisible(false);
+    chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisY, Qt::AlignLeft);
     chart()->setDropShadowEnabled(false);
 
@@ -215,6 +215,7 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
         cleanTrendSeries();
     }
     chart()->legend()->setVisible(false);
+    categories.clear();
 
     QBarSet *distributionSet = new QBarSet("Distribution");
     distributionSet->setColor(Qt::red);
@@ -225,6 +226,7 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
 
     for (int i = 0; i<barValues.size(); i++)
     {
+        categories.append(QString::number(i));
         *distributionSet << barValues[i];
         if(barValues[i] != NODATA)
         {
@@ -254,22 +256,23 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
             }
         }
     }
+
     distributionBar->append(distributionSet);
     axisY->setMax(maxValueY);
     axisY->setMin(minValueY);
     axisXvalue->setRange(minValue, maxValue);
+    axisX->setCategories(categories);
 
     chart()->addSeries(distributionBar);
     chart()->addSeries(distributionLine);
 
     distributionLine->attachAxis(axisXvalue);
-    distributionLine->attachAxis(axisY);
-    distributionBar->attachAxis(axisXvalue);
+
+    distributionBar->attachAxis(axisX);
     distributionBar->attachAxis(axisY);
 
     connect(distributionLine, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipDistributionSeries);
     connect(distributionBar, &QBarSeries::hovered, this, &PointStatisticsChartView::tooltipBar);
-
 }
 
 void PointStatisticsChartView::cleanDistribution()
