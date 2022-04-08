@@ -157,6 +157,9 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
     {
         for (long myCol = 0; myCol < outputGrid->header->nrCols; myCol++)
         {
+            if (myRow == 97 && myCol == 49)
+                int a = 0;
+
             gis::getUtmXYFromRowColSinglePrecision(*outputGrid, myRow, myCol, &myX, &myY);
             float myZ = raster.value[myRow][myCol];
             if (int(myZ) != int(outputGrid->header->flag))
