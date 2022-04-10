@@ -373,7 +373,7 @@ void PointStatisticsChartView::tooltipBar(bool state, int index, QBarSet *barset
             tooltipDistributionSeries(pointF, true);
         }
 
-        QString valueStr = QString("%1").arg(barset->at(index), 0, 'f', 1);
+        QString valueStr = QString("%1").arg(barset->at(index), 0, 'f', 3);
         m_tooltip->setSeries(series);
         m_tooltip->setText(valueStr);
         m_tooltip->setAnchor(pointF);

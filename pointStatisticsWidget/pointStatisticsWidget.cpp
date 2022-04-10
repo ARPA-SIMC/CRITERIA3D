@@ -325,8 +325,22 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     sigma.setMaximumHeight(30);
     gridRightLayout->addWidget(&sigma,5,3,1,1);
 
-    rightLayout->addLayout(gridRightLayout);
+    // menu
+    QMenuBar* menuBar = new QMenuBar();
+    QMenu *editMenu = new QMenu("Edit");
 
+    menuBar->addMenu(editMenu);
+    mainLayout->setMenuBar(menuBar);
+
+    QAction* changeLeftAxis = new QAction(tr("&Change axis left"), this);
+    QAction* exportGraph = new QAction(tr("&Export graph"), this);
+    QAction* exportData = new QAction(tr("&Export data"), this);
+
+    editMenu->addAction(changeLeftAxis);
+    editMenu->addAction(exportGraph);
+    editMenu->addAction(exportData);
+
+    rightLayout->addLayout(gridRightLayout);
     upperLayout->addLayout(leftLayout);
     upperLayout->addLayout(rightLayout);
     mainLayout->addLayout(upperLayout);
@@ -931,6 +945,8 @@ void Crit3DPointStatisticsWidget::plot()
             double gamma;
             double pzero;
 
+            int visualizedNrValues = 0;
+
             if (myVar == dailyPrecipitation)
             {
                 for (int i = 0; i < nrValues; i++)
@@ -941,6 +957,7 @@ void Crit3DPointStatisticsWidget::plot()
                         if( index >= 0)
                         {
                             bucket[index] = bucket[index] + 1;
+                            visualizedNrValues = visualizedNrValues + 1;
                         }
                     }
                 }
@@ -957,6 +974,7 @@ void Crit3DPointStatisticsWidget::plot()
                     if( index >= 0)
                     {
                         bucket[index] = bucket[index] + 1;
+                        visualizedNrValues = visualizedNrValues + 1;
                     }
                 }
                 avg = statistics::mean(series, nrValues);
@@ -1018,6 +1036,10 @@ void Crit3DPointStatisticsWidget::plot()
                         lineValues.append(QPointF(x,gauss));
                     }
                 }
+            }
+            for (int i = 0; i<bucket.size(); i++)
+            {
+                bucket[i] = bucket[i]/visualizedNrValues;
             }
             chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue);
 
@@ -1172,6 +1194,7 @@ void Crit3DPointStatisticsWidget::plot()
         double gamma;
         double pzero;
 
+        int visualizedNrValues = 0;
         if (myVar == precipitation)
         {
             for (int i = 0; i < nrValues; i++)
@@ -1182,6 +1205,7 @@ void Crit3DPointStatisticsWidget::plot()
                     if( index >= 0)
                     {
                         bucket[index] = bucket[index] + 1;
+                        visualizedNrValues = visualizedNrValues + 1;
                     }
                 }
             }
@@ -1200,6 +1224,7 @@ void Crit3DPointStatisticsWidget::plot()
                     if( index >= 0)
                     {
                         bucket[index] = bucket[index] + 1;
+                        visualizedNrValues = visualizedNrValues + 1;
                     }
                 }
             }
@@ -1261,6 +1286,10 @@ void Crit3DPointStatisticsWidget::plot()
                     lineValues.append(QPointF(x,gauss));
                 }
             }
+        }
+        for (int i = 0; i<bucket.size(); i++)
+        {
+            bucket[i] = bucket[i]/visualizedNrValues;
         }
         chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue);
     }
