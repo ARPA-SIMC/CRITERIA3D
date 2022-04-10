@@ -2048,8 +2048,11 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
 
     if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, &interpolationSettings, meteoSettings, true, true))
         return false;
-    else
-        return true;
+
+    if (! computeStatisticsCrossValidation(myVar, myStats))
+        return false;
+
+    return true;
 }
 
 bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
