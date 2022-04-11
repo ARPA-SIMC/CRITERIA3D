@@ -31,20 +31,18 @@ win32:{
     TARGET = pointStatisticsWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../dbMeteoPoints ../dbMeteoGrid ../phenology ../climate ../commonDialogs ../interpolation
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../dbMeteoPoints ../dbMeteoGrid ../phenology ../climate ../commonDialogs ../commonChartElements ../interpolation
 
 
 SOURCES += \
     dialogElaboration.cpp \
     pointStatisticsChartView.cpp \
-    pointStatisticsCallout.cpp \
     pointStatisticsWidget.cpp
 
 
 HEADERS += \
     dialogElaboration.h \
     pointStatisticsChartView.h \
-    pointStatisticsCallout.h \
     pointStatisticsWidget.h 
 
 

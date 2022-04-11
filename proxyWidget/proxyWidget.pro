@@ -31,18 +31,16 @@ win32:{
     TARGET = proxyWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../commonDialogs ../interpolation
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../commonDialogs ../commonChartElements ../interpolation
 
 
 SOURCES += \
     chartView.cpp \
-    proxyCallout.cpp \
     proxyWidget.cpp
 
 
 HEADERS += \
     chartView.h \
-    proxyCallout.h \
     proxyWidget.h 
 
 

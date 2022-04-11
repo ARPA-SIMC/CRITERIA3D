@@ -28,6 +28,9 @@
             void showElaboration();
             void updatePlot();
             void computePlot();
+            void on_actionChangeLeftAxis();
+            void on_actionExportGraph();
+            void on_actionExportData();
 
     private:
             bool isGrid;

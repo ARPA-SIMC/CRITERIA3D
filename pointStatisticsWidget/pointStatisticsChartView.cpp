@@ -43,7 +43,7 @@ PointStatisticsChartView::PointStatisticsChartView(QWidget *parent) :
 
     chart()->legend()->setVisible(true);
     chart()->legend()->setAlignment(Qt::AlignBottom);
-    m_tooltip = new PointStatisticsCallout(chart());
+    m_tooltip = new Callout(chart());
     m_tooltip->hide();
 }
 

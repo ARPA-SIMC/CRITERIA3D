@@ -30,6 +30,7 @@
 #include "basicMath.h"
 #include "climate.h"
 #include "dialogElaboration.h"
+#include "dialogChangeAxis.h"
 #include "gammaFunction.h"
 #include "furtherMathFunctions.h"
 #include "formInfo.h"
@@ -357,6 +358,9 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     connect(&valMax, &QLineEdit::editingFinished, [=](){ updatePlot(); });
     connect(&valMin, &QLineEdit::editingFinished, [=](){ updatePlot(); });
     connect(&classWidth, &QLineEdit::editingFinished, [=](){ updatePlot(); });
+    connect(changeLeftAxis, &QAction::triggered, this, &Crit3DPointStatisticsWidget::on_actionChangeLeftAxis);
+    connect(exportGraph, &QAction::triggered, this, &Crit3DPointStatisticsWidget::on_actionExportGraph);
+    connect(exportData, &QAction::triggered, this, &Crit3DPointStatisticsWidget::on_actionExportData);
 
     plot();
     show();
@@ -1404,3 +1408,44 @@ void Crit3DPointStatisticsWidget::computePlot()
     valMin.clear();
     plot();
 }
+
+void Crit3DPointStatisticsWidget::on_actionChangeLeftAxis()
+{
+    DialogChangeAxis changeAxisDialog(true);
+    if (changeAxisDialog.result() == QDialog::Accepted)
+    {
+        //chartView->axisY->setMax(changeAxisDialog.getMaxVal());
+        //chartView->axisY->setMin(changeAxisDialog.getMinVal());
+    }
+}
+
+
+void Crit3DPointStatisticsWidget::on_actionExportGraph()
+{
+
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save current graph"), "", tr("png files (*.png)"));
+
+    if (fileName != "")
+    {
+        const auto dpr = chartView->devicePixelRatioF();
+        QPixmap buffer(chartView->width() * dpr, chartView->height() * dpr);
+        buffer.setDevicePixelRatio(dpr);
+        buffer.fill(Qt::transparent);
+
+        QPainter *paint = new QPainter(&buffer);
+        paint->setPen(*(new QColor(255,34,255,255)));
+        chartView->render(paint);
+
+        QFile file(fileName);
+        file.open(QIODevice::WriteOnly);
+        buffer.save(&file, "PNG");
+    }
+}
+
+void Crit3DPointStatisticsWidget::on_actionExportData()
+{
+     // TO DO
+}
+
+
+

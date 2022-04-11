@@ -8,7 +8,7 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QBarSeries>
 #include <QtCharts/QBarSet>
-#include "pointStatisticsCallout.h"
+#include "callout.h"
 
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     QT_CHARTS_USE_NAMESPACE
@@ -41,7 +41,7 @@ private:
     QValueAxis* axisXvalue;
     QValueAxis* axisY;
     QList<QString> categories;
-    PointStatisticsCallout *m_tooltip;
+    Callout *m_tooltip;
 };
 
 #endif // PointStatisticsChartView_H
