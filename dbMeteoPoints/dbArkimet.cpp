@@ -72,12 +72,11 @@ QList<int> DbArkimet::getId(QString VarName)
     QList<int> idList;
     QSqlQuery qry(_db);
 
-    qry.prepare( "SELECT id_arkimet FROM variable_properties WHERE variable = :VarName" );
-    qry.bindValue(":VarName", VarName);
+    QString myQuery = QString("SELECT `id_arkimet` FROM `variable_properties` WHERE `variable`='%1'").arg(VarName);
 
-    if( !qry.exec() )
+    if( !qry.exec(myQuery))
     {
-        qDebug() << qry.lastError();
+        error = "Error in execute query:\n" + myQuery + "\n" + qry.lastError().text();
     }
     else
     {

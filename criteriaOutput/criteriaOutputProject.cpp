@@ -914,8 +914,15 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
     gis::Crit3DGridHeader latLonHeader;
     gis::getGeoExtentsFromUTMHeader(gisSettings, myRaster.header, &latLonHeader);
 
-    gis::Crit3DRasterGrid latLonRaster;
-    latLonRaster.initializeGrid(latLonHeader);
+    // initialize data raster (only for values)
+    gis::Crit3DRasterGrid dataRaster;
+    dataRaster.header->nrRows = latLonHeader.nrRows;
+    dataRaster.header->nrCols = latLonHeader.nrCols;
+    dataRaster.header->flag = latLonHeader.flag;
+    dataRaster.header->llCorner.y = latLonHeader.llCorner.latitude;
+    dataRaster.header->llCorner.x = latLonHeader.llCorner.longitude;
+    dataRaster.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
+    dataRaster.initializeGrid();
 
     // assign lat lon values
     double lat, lon, x, y;
@@ -932,7 +939,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
                 float value = myRaster.getValueFromRowCol(utmRow, utmCol);
                 if (int(value) != int(myRaster.header->flag))
                 {
-                    latLonRaster.value[row][col] = value;
+                    dataRaster.value[row][col] = value;
                 }
             }
         }
@@ -952,7 +959,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
         return false;
     }
 
-    if (! myNetCDF.writeData_NoTime(latLonRaster))
+    if (! myNetCDF.writeData_NoTime(dataRaster))
     {
         projectError = "Error in write data to netcdf.";
         myNetCDF.close();

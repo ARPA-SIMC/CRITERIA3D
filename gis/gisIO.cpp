@@ -1,9 +1,9 @@
 /*!
-    \copyright 2010-2016 Fausto Tomei, Gabriele Antolini,
+    \copyright 2016 Fausto Tomei, Gabriele Antolini,
     Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
 
     This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
+    CRITERIA3D has been developed under contract issued by ARPAE Emilia-Romagna
 
     CRITERIA3D is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -19,14 +19,15 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     contacts:
-    fausto.tomei@gmail.com
     ftomei@arpae.it
+    gantolini@arpae.it
 */
 
 
 #include <algorithm>
 #include <sstream>
 #include <fstream>
+#include <math.h>
 #include "commonConstants.h"
 #include "gis.h"
 
@@ -289,8 +290,9 @@ namespace gis
         }
 
         // rowcol nr
-        latLonHeader->nrRows = utmHeader->nrRows;
-        latLonHeader->nrCols = utmHeader->nrCols;
+        // increase resolution
+        latLonHeader->nrRows = int(utmHeader->nrRows * 1.0);
+        latLonHeader->nrCols = int(utmHeader->nrCols * 1.0);
 
         // dx, dy
         latLonHeader->dx = (URcorner.longitude - LLcorner.longitude) / latLonHeader->nrCols;
@@ -305,6 +307,44 @@ namespace gis
         return true;
     }
 
+    bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader)
+    {
+        Crit3DUtmPoint v[4];
+
+        // compute vertexes
+        gis::Crit3DGeoPoint geoPoint;
+
+        // LL
+        geoPoint.latitude = latLonHeader->llCorner.latitude;
+        geoPoint.longitude = latLonHeader->llCorner.longitude;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[0]);
+
+        // LR
+        geoPoint.longitude = latLonHeader->llCorner.longitude + latLonHeader->nrCols * latLonHeader->dx;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[1]);
+
+        // UR
+        geoPoint.latitude = latLonHeader->llCorner.latitude + latLonHeader->nrRows * latLonHeader->dy;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
+
+        // UL
+        geoPoint.longitude = latLonHeader->llCorner.longitude;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[3]);
+
+        double xmin = floor(min(v[0].x, v[3].x));
+        double xmax = floor(max(v[1].x, v[2].x)) +1.;
+        double ymin = floor(min(v[0].y, v[1].y));
+        double ymax = floor(max(v[2].y, v[3].y)) +1.;
+
+        utmHeader->cellSize = cellSize;
+        utmHeader->nrCols = int(floor((xmax-xmin)/utmHeader->cellSize) + 1);
+        utmHeader->nrRows = int(floor((ymax-ymin)/utmHeader->cellSize) + 1);
+        utmHeader->llCorner.x = xmin;
+        utmHeader->llCorner.y = ymin;
+
+        utmHeader->flag = latLonHeader->flag;
+        return true;
+    }
+
 
 }
-

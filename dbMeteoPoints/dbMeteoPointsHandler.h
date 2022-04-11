@@ -39,7 +39,7 @@
         void setDb(const QSqlDatabase &db);
         bool setAndOpenDb(QString dbname_);
 
-        QList<QString> getDatasetsList();
+        QList<QString> getAllDatasetsList();
         QList<QString> getDatasetsActive();
         void setDatasetsActive(QString active);
         QString getDatasetFromId(const QString& idPoint);
@@ -55,8 +55,11 @@
         bool deleteAllData(frequencyType myFreq);
         bool writePointProperties(Crit3DMeteoPoint* pointProp);
         bool updatePointProperties(QList<QString> columnList, QList<QString> valueList);
+        bool updatePointPropertiesGivenId(QString id, QList<QString> columnList, QList<QString> valueList);
         bool getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
                                  const gis::Crit3DGisSettings& gisSettings, QString& errorString);
+        bool getPropertiesGivenId(QString id, Crit3DMeteoPoint* meteoPoint,
+                                                const gis::Crit3DGisSettings& gisSettings, QString& errorString);
         bool loadDailyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint);
         std::vector<float> loadDailyVar(QString *myError, meteoVariable variable,
                                         Crit3DDate dateStart, Crit3DDate dateEnd,
@@ -86,7 +89,10 @@
 
         bool deleteAllPointsFromIdList(const QList<QString> &pointList);
         bool deleteAllPointsFromGeoPointList(const QList<gis::Crit3DGeoPoint>& pointList);
+        bool deleteAllPointsFromDataset(QList<QString> datasets);
 
+        QList<QString> getIdList();
+        QList<QString> getIdListGivenDataset(QList<QString> datasets);
         QList<QString> getMunicipalityList();
         QList<QString> getProvinceList();
         QList<QString> getRegionList();

@@ -25,6 +25,7 @@
 
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "quality.h"
 #include "meteoPoint.h"
 
@@ -233,7 +234,7 @@ quality::qualityType Crit3DQuality::syntacticQualitySingleValue(meteoVariable my
     }
 }
 
-quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
 {
 
     if (int(myValue) == int(NODATA))
@@ -244,14 +245,14 @@ quality::qualityType Crit3DQuality::checkFastValueDaily_SingleValue(meteoVariabl
         return quality::accepted;
 }
 
-bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
 {
 
     float tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
     float tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
 
     if (myVar == dailyAirTemperatureMin || myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureAvg)
-        if ( tminClima == NODATA || tmaxClima == NODATA)
+        if (isEqual(tminClima, NODATA) || isEqual(tmaxClima, NODATA))
             return false;
 
     if (myVar == dailyAirTemperatureMin)
@@ -278,7 +279,7 @@ bool Crit3DQuality::wrongValueDaily_SingleValue(meteoVariable myVar, Crit3DClima
     return false;
 }
 
-quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
 {
 
     if (int(myValue) == int(NODATA))
@@ -289,25 +290,25 @@ quality::qualityType Crit3DQuality::checkFastValueHourly_SingleValue(meteoVariab
         return quality::accepted;
 }
 
-bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, int height)
+bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height)
 {
-    float tminClima;
-    float tmaxClima;
-    float tdminClima;
-    float tdmaxClima;
+    float tminClima = NODATA;
+    float tmaxClima = NODATA;
+    float tdminClima = NODATA;
+    float tdmaxClima = NODATA;
 
     if (myVar == airTemperature)
     {
         tminClima = climateParam->getClimateVar(dailyAirTemperatureMin, month, height, getReferenceHeight());
         tmaxClima = climateParam->getClimateVar(dailyAirTemperatureMax, month, height, getReferenceHeight());
-        if ( tminClima == NODATA || tmaxClima == NODATA)
+        if (isEqual(tminClima, NODATA) || isEqual(tmaxClima, NODATA))
             return false;
     }
     if (myVar == airRelHumidity || myVar == airDewTemperature)
     {
         tdminClima = climateParam->getClimateVar(dailyAirRelHumidityMin, month, height, getReferenceHeight());
         tdmaxClima = climateParam->getClimateVar(dailyAirRelHumidityMax, month, height, getReferenceHeight());
-        if ( tdminClima == NODATA || tdmaxClima == NODATA)
+        if ( isEqual(tdminClima, NODATA) || isEqual(tdmaxClima, NODATA))
             return false;
     }
 
@@ -328,8 +329,9 @@ bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClim
     }
     else if (myVar == airDewTemperature)
     {
-        if ( (myValue != NODATA) && (myValue < tdminClima + qualityHourlyTd->getMin() ||
-            myValue > tdmaxClima + qualityHourlyTd->getMax()) ) return true;
+        if ( (! isEqual(myValue, NODATA)) &&
+            (myValue < (tdminClima + qualityHourlyTd->getMin()) || myValue > (tdmaxClima + qualityHourlyTd->getMax())) )
+            return true;
     }
     else if (myVar == windVectorIntensity || myVar == windScalarIntensity || myVar == windVectorX || myVar == windVectorY)
     {

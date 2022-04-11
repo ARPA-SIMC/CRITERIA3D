@@ -1,12 +1,9 @@
 /*!
-    \copyright 2010-2016 Fausto Tomei, Gabriele Antolini,
+    \copyright Fausto Tomei, Gabriele Antolini,
     Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
 
-    You should have received a copy of the GNU General Public License
-    along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>.
-
     This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
+    CRITERIA3D has been developed under contract issued by ARPAE Emilia-Romagna
 
     CRITERIA3D is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -22,7 +19,6 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     contacts:
-    fausto.tomei@gmail.com
     ftomei@arpae.it
 */
 
@@ -30,13 +26,13 @@
 #include <math.h>
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "meteoPoint.h"
 #include "snow.h"
-#include "basicMath.h"
 
 
-// Attenzione: ora le costanti in commonConstant sono in [J m-3 K-1]
-// controllare se tutte abbiano divisione per 1000 per trasformare in kJ
+// Warning: commonConstant unit is [J m-3 K-1]
+// check division by 1000 to transform in [kJ]
 
 Crit3DSnowParameters::Crit3DSnowParameters()
 {
@@ -179,7 +175,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     double myEmissivity;
     double const ONE_HOUR = 1./24.;
 
-    // gestione specchi d'acqua
+    // free water
     bool isWater = false;
     if ((_surfaceWaterContent / 1000) > snowParameters.snowMaxWaterContent )     /*!<  [m]  */
             isWater = true;
@@ -213,7 +209,7 @@ void Crit3DSnow::computeSnowBrooksModel()
         cloudCover = 0.1;
 
     // ombreggiamento per vegetazione (4m sopra manto nevoso: ombreggiamento completo)
-    // TODO migliorare - aggiungere LAI se disponibile
+    // TODO improve - use LAI when available
     double maxSnowDensity = 10;          // 1 mm snow = 1 cm water
     double maxVegetationHeight = 4;      // [m]
     double vegetationShadowing;          // [-]
@@ -228,8 +224,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     double prevSurfaceEnergy = _surfaceEnergy;
 
     /*--------------------------------------------------------------------
-    // COERENZA
-    // controlli di coerenza per eventuali modifiche manuale su mappa SWE
+    // controlli di coerenza per eventuali modifiche manuali su mappa SWE
     // -------------------------------------------------------------------*/
     if (previousSWE > 0)
     {
@@ -244,7 +239,7 @@ void Crit3DSnow::computeSnowBrooksModel()
             // Pag. 53 formula 3.23
             prevInternalEnergy = -(previousSWE / 1000) * LATENT_HEAT_FUSION * WATER_DENSITY;
 
-            // stato: neve recente prossima alla fusione, con una settimana di età
+            // stato fittizio:: neve recente prossima alla fusione, con una settimana di età
             _ageOfSnow = 7;
             prevSurfacetemp = std::min(prevSurfacetemp, -0.1);
             prevSurfaceEnergy = std::min(prevSurfaceEnergy, -0.1);
@@ -273,7 +268,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     else
         aerodynamicResistance = aerodynamicResistanceCampbell77(false, 10, _windInt, snowParameters.snowVegetationHeight);
 
-    // ok pag.52 (3.20)
+    // pag. 52 (3.20)
     // source: Jensen et al. (1990) and Tetens (1930)
     // saturated vapor density
     AirActualVapDensity = double(exp((16.78 * dewPoint - 116.9) / (dewPoint + 237.3))
@@ -284,7 +279,7 @@ void Crit3DSnow::computeSnowBrooksModel()
                                 / ((ZEROCELSIUS + prevSurfacetemp) * THERMO_WATER_VAPOR) );
 
     // over ice
-    // LC: controllare - non trovo riferimenti a questa formula
+    // LC: non trovo riferimenti a questa formula
     /*if (prevInternalEnergy <= 0)
     {
         WaterActualVapDensity *= exp(MH2O * LATENT_HEAT_FUSION * prevSurfacetemp * 1000
@@ -321,7 +316,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     // energia acqua libera
     QWaterKinetic = 0;
 
-    // TO DO free water flux
+    // TODO free water flux
     /*
     double freeWaterFlux = 0;
     nodeIndex = GIS.GetValueFromXY(criteria3DModule.Crit3DIndexMap(0), x, y)
@@ -355,15 +350,15 @@ void Crit3DSnow::computeSnowBrooksModel()
               - myEmissivity * pow ((prevSurfacetemp + ZEROCELSIUS), 4.0)));
 
     // pag. 50 (3.17)
-    // calore sensibile
+    // sensible heat
     QTempGradient = (3600. * (HEAT_CAPACITY_AIR / 1000.) * (_airT - prevSurfacetemp)) / aerodynamicResistance;
 
-    // calore latente pag. 51 (eq. 3.19)
-    // FT tolta WATER_DENSITY dall'eq. (non corrispondevano le unità di misura
+    // latent heat pag. 51 (3.19)
+    // FT tolta WATER_DENSITY dall'eq. (non corrispondevano le unità di misura)
     QVaporGradient = 3600. * (LATENT_HEAT_VAPORIZATION + LATENT_HEAT_FUSION)
             * (AirActualVapDensity - WaterActualVapDensity) / aerodynamicResistance;
 
-    // FT serve formula diversa quando non c'è neve
+    // TODO serve formula diversa quando non c'è neve
 
     /*! \brief Energy Balance */
     QTotal = QSolar + QPrecip + QLongWave + QTempGradient + QVaporGradient + QWaterHeat + QWaterKinetic;
@@ -373,11 +368,11 @@ void Crit3DSnow::computeSnowBrooksModel()
     /*! \brief Condensation/Evaporation */
     if (previousSWE > SNOW_MINIMUM_HEIGHT)
     {
-        // pag 51 (3.21)
+        // pag. 51 (3.21)
         condOrEvap = QVaporGradient / ((LATENT_HEAT_FUSION + LATENT_HEAT_VAPORIZATION) * WATER_DENSITY) * 1000.;
         if (condOrEvap < 0)
         {
-            //FT: controllo aggiunto: può evaporare al massimo la neve presente
+            // controllo aggiunto: può evaporare al massimo la neve presente
             condOrEvap = -std::min(fabs(condOrEvap), previousSWE + _precSnow);
         }
     }
@@ -393,7 +388,7 @@ void Crit3DSnow::computeSnowBrooksModel()
         _evaporation = 0;
 
     /*! refreeze */
-    // pag. 53 (3.25) (3.26) (3.24)
+    // pag.53 (3.25) (3.26) (3.24)
     double wFreeze = std::min((_precRain + prevLWaterContent), std::max(0., -1000. / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal)));
     double wThaw =  std::min((_precSnow + prevIceContent + condOrEvap), std::max(0., 1000. / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal)));
     freezeOrMelt = wFreeze - wThaw;
@@ -456,7 +451,7 @@ void Crit3DSnow::computeSnowBrooksModel()
                                 * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
     }
 
-    // TODO passare bulk density
+    // TODO pass bulk density
     bulk_density = DEFAULT_BULK_DENSITY;
     _snowSurfaceTemp = _surfaceEnergy / ((HEAT_CAPACITY_SNOW / 1000.) * std::min(_snowWaterEquivalent / 1000., snowParameters.snowSkinThickness)
                    + SOIL_SPECIFIC_HEAT * std::max(0., snowParameters.snowSkinThickness - _snowWaterEquivalent / 1000.) * bulk_density);
@@ -555,14 +550,13 @@ void Crit3DSnow::setAgeOfSnow(float value)
 
 
 /*!
- * \brief Computes aerodynamic Resistance
- * \param isSnow
+ * \brief Computes aerodynamic Resistance (resistance to heat transfer)
+ * Brooks pag.51 (3.18)
  * \param zRefWind [m] heights of windspeed measurements
  * \param windSpeed [m s-1] wind speed
  * \param vegetativeHeight [m] height of the vegetation
  * \return aerodynamic Resistance [s m-1]
  */
-// resistance to heat transfer - Brooks pag 51, eq. 3.18
 double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double windSpeed, double vegetativeHeight)
 {
     double zeroPlane;            /*!  [m] zero-plane displacement (snow = 0m, vegetative cover d = 0.64 times the height of the vegetative) */
@@ -596,14 +590,14 @@ double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double win
 }
 
 
-// LC: InternalEnergyMap pag. 54 formula 3.29  initSoilPackTemp sarebbe da chiamare initSnowPackTemp ????
+// pag. 54 (3.29)
 double computeInternalEnergy(double initSoilPackTemp,int bulkDensity, double initSWE)
 {
     return initSoilPackTemp * (HEAT_CAPACITY_SNOW / 1000. * initSWE + bulkDensity * SNOW_DAMPING_DEPTH * SOIL_SPECIFIC_HEAT);
 }
 
 
-// LC: è la formula 3.27 a pag. 54 in cui ha diviso la surface come la somma dei contributi della parte "water" e di quella "soil"
+// pag. 54 (3.27) surface come somma dei contributi della parte "water" e di quella "soil"
 double computeSurfaceEnergy(double initSnowSurfaceTemp,int bulkDensity, double initSWE, double snowSkinThickness)
 {
     return initSnowSurfaceTemp * (HEAT_CAPACITY_SNOW / 1000. * std::min(initSWE, snowSkinThickness)

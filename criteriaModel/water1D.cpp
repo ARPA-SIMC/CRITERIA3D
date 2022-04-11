@@ -506,12 +506,12 @@ double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
  * \param soilLayers, lastRootLayer, irrigationMax
  * \return irrigation [mm]
  */
-double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, int lastRootLayer, double irrigationMax)
+double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, unsigned int lastRootLayer, double irrigationMax)
 {
     double residualIrrigation = irrigationMax;
-    int nrLayers = soilLayers.size();
+    unsigned int nrLayers = unsigned(soilLayers.size());
 
-    int i=0;
+    unsigned int i=0;
     while (i < nrLayers && i <= lastRootLayer && residualIrrigation > 0)
     {
         if (soilLayers[i].waterContent < soilLayers[i].FC)
@@ -532,11 +532,12 @@ double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, int l
 /*!
  * \brief getSoilWaterContent
  * \param soilLayers
- * \param computationSoilDepth = computation depth  [m]
- * \return sum of water content from zero to computationSoilDepth (mm)
+ * \param computationDepth = computation soil depth [cm]
+ * \return sum of water content from zero to computationSoilDepth [mm]
  */
-double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
+double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, double computationDepth)
 {
+    computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
     double waterContentSum = 0;             // [mm]
 
@@ -544,90 +545,19 @@ double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, dou
     {
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
 
-        if (lowerDepth < computationSoilDepth)
+        if (lowerDepth < computationDepth)
         {
             waterContentSum += soilLayers[i].waterContent;
         }
         else
         {
             upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
-            double depthFraction = (computationSoilDepth - upperDepth) / soilLayers[i].thickness;
+            double depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
             return waterContentSum + soilLayers[i].waterContent * depthFraction;
         }
     }
 
     return waterContentSum;
-}
-
-
-
-/*!
- * \brief getSoilAvailableWater
- * \param soilLayers
- * \param computationSoilDepth = computation depth  [m]
- * \return sum of available water from zero to computationSoilDepth (mm)
- */
-double getSoilAvailableWater(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
-{
-    double lowerDepth, upperDepth;      // [m]
-    double availableWaterSum = 0;       // [mm]
-
-    for (unsigned int i = 1; i < soilLayers.size(); i++)
-    {
-        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
-
-        if (lowerDepth < computationSoilDepth)
-        {
-            availableWaterSum += soilLayers[i].waterContent - soilLayers[i].WP;
-        }
-        else
-        {
-            // fraction of last layer
-            upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
-            double layerAW = soilLayers[i].waterContent - soilLayers[i].WP;
-            double depthFraction = (computationSoilDepth - upperDepth) / soilLayers[i].thickness;
-            return availableWaterSum + layerAW * depthFraction;
-        }
-    }
-
-    return availableWaterSum;
-}
-
-
-/*!
- * \brief getSoilFractionAW
- * \param soilLayers
- * \param computationSoilDepth = computation depth  [m]
- * \return fraction of available water from zero to computationSoilDepth (mm)
- */
-double getSoilFractionAW(const std::vector<soil::Crit3DLayer> &soilLayers, double computationSoilDepth)
-{
-    double lowerDepth, upperDepth;      // [m]
-    double depthFraction;               // [-]
-    double availableWaterSum = 0;       // [mm]
-    double potentialAWSum = 0;          // [mm]
-
-    unsigned int i = 1;
-    bool isDepthLower = true;
-    while (i < soilLayers.size() && isDepthLower)
-    {
-        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
-        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
-
-        if (lowerDepth < computationSoilDepth)
-            depthFraction = 1;
-        else
-        {
-            depthFraction = (computationSoilDepth - upperDepth) / soilLayers[i].thickness;
-            isDepthLower = false;
-        }
-
-        availableWaterSum += (soilLayers[i].waterContent - soilLayers[i].WP) * depthFraction;
-        potentialAWSum += (soilLayers[i].FC - soilLayers[i].WP) * depthFraction;
-        i++;
-    }
-
-    return availableWaterSum / potentialAWSum;
 }
 
 

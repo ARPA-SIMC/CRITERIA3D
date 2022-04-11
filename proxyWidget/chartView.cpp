@@ -50,7 +50,7 @@ ChartView::ChartView(QWidget *parent) :
 
 
     chart()->legend()->setMarkerShape(QLegend::MarkerShapeFromSeries);
-    m_tooltip = new ProxyCallout(chart());
+    m_tooltip = new Callout(chart());
     m_tooltip->hide();
 }
 

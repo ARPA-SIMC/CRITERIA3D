@@ -345,7 +345,7 @@ void TabWaterRetentionData::widgetClicked(int index)
 
     if (mySoil->horizon[index].dbData.waterRetention.size() != 0)
     {
-        row = row + mySoil->horizon[index].dbData.waterRetention.size();
+        row = row + int(mySoil->horizon[index].dbData.waterRetention.size());
     }
     tableWaterRetention->setRowCount(row);
     tableWaterRetention->setSortingEnabled(false);

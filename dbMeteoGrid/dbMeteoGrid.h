@@ -123,6 +123,8 @@
         bool saveGridData(QString *myError, QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
         bool saveGridHourlyData(QString *myError, QDateTime firstDate, QDateTime lastDate, QList<meteoVariable> meteoVariableList);
         bool saveGridDailyData(QString *myError, QDateTime firstDate, QDateTime lastDate, QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
+        bool deleteAndWriteCellGridDailyData(QString& myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
+                                             QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings* meteoSettings);
         bool saveCellGridDailyData(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate, QList<meteoVariable> meteoVariableList, Crit3DMeteoSettings *meteoSettings);
         bool saveCellGridDailyDataFF(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate, Crit3DMeteoSettings *meteoSettings);
         bool saveCellGridDailyDataEnsemble(QString *myError, QString meteoPointID, int row, int col, QDate firstDate, QDate lastDate,
@@ -143,6 +145,13 @@
         bool saveCellCurrentGridHourly(QString *myError, QString meteoPointID, QDateTime dateTime, int varCode, float value);
         bool saveCellCurrentGridHourlyFF(QString *myError, QString meteoPointID, QDateTime dateTime, QString varPragaName, float value);
 
+        QDate getFirstDailyDate() const;
+        QDate getLastDailyDate() const;
+        QDate getFirstHourlyDate() const;
+        QDate getLastHourlyDate() const;
+        QDate getFirsMonthlytDate() const;
+        QDate getLastMonthlyDate() const;
+
     private:
 
         QString _fileName;
@@ -153,6 +162,13 @@
 
         QDate _firstDate;
         QDate _lastDate;
+
+        QDate _firstDailyDate;
+        QDate _lastDailyDate;
+        QDate _firstHourlyDate;
+        QDate _lastHourlyDate;
+        QDate _firsMonthlytDate;
+        QDate _lastMonthlyDate;
 
         TXMLTable _tableDaily;
         TXMLTable _tableHourly;

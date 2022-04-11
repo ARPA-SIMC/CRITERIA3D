@@ -1,12 +1,12 @@
 #-----------------------------------------------------
 #
-#   soilFluxes3D
+#   soilFluxes3D library
 #
 #   Numerical solution for flow equations
 #   of water and heat in the soil
 #   in a three-dimensional domain
 #
-#   This library is part of CRITERIA3D distribution
+#   This project is part of CRITERIA3D distribution
 #
 #-----------------------------------------------------
 
@@ -29,7 +29,7 @@ win32:{
 }
 
 INCLUDEPATH += ../mathFunctions
-# do not include mathFunctions to compile as dll
+
 
 SOURCES +=  \
     boundary.cpp \

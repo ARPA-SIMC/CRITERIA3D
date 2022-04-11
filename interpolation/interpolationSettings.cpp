@@ -113,22 +113,32 @@ void Crit3DInterpolationSettings::setCurrentDEM(gis::Crit3DRasterGrid *value)
     currentDEM = value;
 }
 
-float Crit3DInterpolationSettings::getTopoDist_Kh() const
+int Crit3DInterpolationSettings::getTopoDist_maxKh() const
+{
+    return topoDist_maxKh;
+}
+
+void Crit3DInterpolationSettings::setTopoDist_maxKh(int value)
+{
+    topoDist_maxKh = value;
+}
+
+int Crit3DInterpolationSettings::getTopoDist_Kh() const
 {
     return topoDist_Kh;
 }
 
-void Crit3DInterpolationSettings::setTopoDist_Kh(float value)
+void Crit3DInterpolationSettings::setTopoDist_Kh(int value)
 {
     topoDist_Kh = value;
 }
 
-float Crit3DInterpolationSettings::getTopoDist_Kz() const
+int Crit3DInterpolationSettings::getTopoDist_Kz() const
 {
     return topoDist_Kz;
 }
 
-void Crit3DInterpolationSettings::setTopoDist_Kz(float value)
+void Crit3DInterpolationSettings::setTopoDist_Kz(int value)
 {
     topoDist_Kz = value;
 }
@@ -251,7 +261,7 @@ void Crit3DInterpolationSettings::initializeProxy()
     selectedCombination.clear();
     optimalCombination.clear();
 
-    indexHeight = NODATA;
+    indexHeight = unsigned(NODATA);
 }
 
 void Crit3DInterpolationSettings::initialize()
@@ -260,13 +270,14 @@ void Crit3DInterpolationSettings::initialize()
     interpolationMethod = idw;
     useThermalInversion = true;
     useTD = false;
+    topoDist_maxKh = 128;
     useDewPoint = true;
     useInterpolatedTForRH = true;
     useBestDetrending = false;
     useLapseRateCode = false;
     minRegressionR2 = float(PEARSONSTANDARDTHRESHOLD);
     meteoGridAggrMethod = aggrAverage;
-    indexHeight = NODATA;
+    indexHeight = unsigned(NODATA);
 
     isKrigingReady = false;
     precipitationAllZero = false;
@@ -611,9 +622,9 @@ void Crit3DProxyCombination::setUseThermalInversion(bool value)
     useThermalInversion = value;
 }
 
-bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination* outCombination)
+bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination &outCombination)
 {
-    *outCombination = selectedCombination;
+    outCombination = selectedCombination;
     std::string binaryString = decimal_to_binary(combinationInteger, getProxyNr()+1);
 
     int indexHeight = getIndexHeight();
@@ -624,9 +635,9 @@ bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DP
             return false;
 
     for (unsigned int i=0; i < binaryString.length()-1; i++)
-        outCombination->setValue(i, binaryString[i] == '1' && selectedCombination.getValue(i));
+        outCombination.setValue(i, binaryString[i] == '1' && selectedCombination.getValue(i));
 
-    outCombination->setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());
+    outCombination.setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());
 
     return true;
 }
