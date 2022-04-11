@@ -31,6 +31,11 @@ public:
     void cleanDistribution();
     void setYmax(float value);
     void setYmin(float value);
+    QList<QPointF> exportTrend();
+    QList<QPointF> exportClimaDaily();
+    QList<QPointF> exportClimaDecadal();
+    QList<QPointF> exportClimaMonthly();
+    QList<float> exportDistribution();
 
 private:
     QScatterSeries* trend;

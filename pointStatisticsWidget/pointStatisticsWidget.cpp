@@ -1444,7 +1444,73 @@ void Crit3DPointStatisticsWidget::on_actionExportGraph()
 
 void Crit3DPointStatisticsWidget::on_actionExportData()
 {
-     // TO DO
+    QString csvFileName = QFileDialog::getSaveFileName(this, tr("Save current data"), "", tr("csv files (*.csv)"));
+
+    if (csvFileName != "")
+    {
+        QFile myFile(csvFileName);
+        if (!myFile.open(QIODevice::WriteOnly | QFile::Truncate))
+        {
+            QMessageBox::information(nullptr, "Error", "Open CSV failed: " + csvFileName + "\n ");
+            return;
+        }
+
+        QTextStream myStream (&myFile);
+        myStream.setRealNumberPrecision(3);
+        if (graph.currentText() == "Trend" || graph.currentText() == "Anomaly trend")
+        {
+            QString header = "x,y";
+            myStream << header << "\n";
+            QList<QPointF> dataPoins = chartView->exportTrend();
+            for (int i = 0; i < dataPoins.size(); i++)
+            {
+                myStream << dataPoins[i].x() << "," << dataPoins[i].y() << "\n";
+            }
+        }
+        else if (graph.currentText() == "Climate")
+        {
+            myStream << "Daily" << "\n";
+            QString header = "x,y";
+            myStream << header << "\n";
+            QList<QPointF> dataPoins = chartView->exportClimaDaily();
+            for (int i = 0; i < dataPoins.size(); i++)
+            {
+                myStream << dataPoins[i].x() << "," << dataPoins[i].y() << "\n";
+            }
+            dataPoins.clear();
+            myStream << "Decadal" << "\n";
+            header = "x,y";
+            myStream << header << "\n";
+            dataPoins = chartView->exportClimaDecadal();
+            for (int i = 0; i < dataPoins.size(); i++)
+            {
+                myStream << dataPoins[i].x() << "," << dataPoins[i].y() << "\n";
+            }
+            dataPoins.clear();
+            myStream << "Monthly" << "\n";
+            header = "x,y";
+            myStream << header << "\n";
+            dataPoins = chartView->exportClimaMonthly();
+            for (int i = 0; i < dataPoins.size(); i++)
+            {
+                myStream << dataPoins[i].x() << "," << dataPoins[i].y() << "\n";
+            }
+        }
+        else if (graph.currentText() == "Distribution")
+        {
+            QString header = "x";
+            myStream << header << "\n";
+            QList<float> bar = chartView->exportDistribution();
+            for (int i = 0; i < bar.size(); i++)
+            {
+                myStream << bar[i] << "\n";
+            }
+        }
+
+        myFile.close();
+
+        return;
+    }
 }
 
 

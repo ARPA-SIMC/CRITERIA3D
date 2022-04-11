@@ -398,3 +398,38 @@ void PointStatisticsChartView::setYmin(float value)
     axisY->setMin(value);
 }
 
+QList<QPointF> PointStatisticsChartView::exportTrend()
+{
+    return trend->points();
+}
+
+QList<QPointF> PointStatisticsChartView::exportClimaDaily()
+{
+    return climaDaily->points();
+}
+
+QList<QPointF> PointStatisticsChartView::exportClimaDecadal()
+{
+    return climaDecadal->points();
+}
+
+QList<QPointF> PointStatisticsChartView::exportClimaMonthly()
+{
+    return climaMonthly->points();
+}
+
+QList<float> PointStatisticsChartView::exportDistribution()
+{
+    QList<float> barValues;
+    QList<QBarSet *> barSet = distributionBar->barSets();
+
+    if (barSet.size() != 0)
+    {
+        for (int i = 0; i<barSet[0]->count(); i++)
+        {
+            barValues.append(barSet[0]->at(i));
+        }
+    }
+    return barValues;
+}
+
