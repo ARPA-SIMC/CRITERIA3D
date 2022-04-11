@@ -55,7 +55,7 @@ TabRootDensity::TabRootDensity()
     chart->legend()->setVisible(false);
     nrLayers = 0;
 
-    m_tooltip = new CropCallout(chart);
+    m_tooltip = new Callout(chart);
     m_tooltip->hide();
 
     connect(currentDate, &QDateEdit::dateChanged, this, &TabRootDensity::updateRootDensity);

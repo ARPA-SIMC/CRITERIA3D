@@ -5,7 +5,7 @@
 #include <QtWidgets>
 #include <QtCharts>
 
-#include "cropCallout.h"
+#include "callout.h"
 
 #ifndef METEOPOINT_H
     #include "meteoPoint.h"
@@ -43,7 +43,7 @@ private:
     QValueAxis *axisX;
     QBarCategoryAxis *axisY;
     QStringList categories;
-    CropCallout *m_tooltip;
+    Callout *m_tooltip;
 
 };
 

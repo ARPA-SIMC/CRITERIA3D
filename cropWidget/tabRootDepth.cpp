@@ -51,7 +51,7 @@ TabRootDepth::TabRootDepth()
     chart->legend()->setFont(legendFont);
 
     chart->setAcceptHoverEvents(true);
-    m_tooltip = new CropCallout(chart);
+    m_tooltip = new Callout(chart);
     m_tooltip->hide();
 
     connect(seriesRootDepthMin, &QLineSeries::hovered, this, &TabRootDepth::tooltipRDM);
