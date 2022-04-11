@@ -1414,8 +1414,8 @@ void Crit3DPointStatisticsWidget::on_actionChangeLeftAxis()
     DialogChangeAxis changeAxisDialog(true);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
-        //chartView->axisY->setMax(changeAxisDialog.getMaxVal());
-        //chartView->axisY->setMin(changeAxisDialog.getMinVal());
+        chartView->setYmax(changeAxisDialog.getMaxVal());
+        chartView->setYmin(changeAxisDialog.getMinVal());
     }
 }
 

@@ -388,3 +388,13 @@ void PointStatisticsChartView::tooltipBar(bool state, int index, QBarSet *barset
     }
 }
 
+void PointStatisticsChartView::setYmax(float value)
+{
+    axisY->setMax(value);
+}
+
+void PointStatisticsChartView::setYmin(float value)
+{
+    axisY->setMin(value);
+}
+

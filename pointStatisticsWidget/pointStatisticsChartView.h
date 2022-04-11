@@ -29,6 +29,8 @@ public:
     void cleanTrendSeries();
     void cleanClimaSeries();
     void cleanDistribution();
+    void setYmax(float value);
+    void setYmin(float value);
 
 private:
     QScatterSeries* trend;
