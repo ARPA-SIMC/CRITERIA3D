@@ -1456,6 +1456,7 @@ void Crit3DPointStatisticsWidget::on_actionExportData()
         }
 
         QTextStream myStream (&myFile);
+        myStream.setRealNumberNotation(QTextStream::FixedNotation);
         myStream.setRealNumberPrecision(3);
         if (graph.currentText() == "Trend" || graph.currentText() == "Anomaly trend")
         {
