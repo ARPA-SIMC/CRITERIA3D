@@ -27,6 +27,7 @@
             void plot();
             void showElaboration();
             void updatePlot();
+            void updatePlotByVal();
             void computePlot();
             void on_actionChangeLeftAxis();
             void on_actionExportGraph();
@@ -80,6 +81,8 @@
             QLineEdit valMax;
             QLineEdit valMin;
             QLineEdit smoothing;
+            int valMaxValue;
+            int valMinValue;
     };
 
 
