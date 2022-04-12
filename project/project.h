@@ -241,8 +241,8 @@
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
                                        gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
-        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics myStats);
-        bool computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics myStats);
+        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics* myStats);
+        bool computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics *myStats);
 
         frequencyType getCurrentFrequency() const;
         void setCurrentFrequency(const frequencyType &value);

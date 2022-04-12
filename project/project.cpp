@@ -1923,14 +1923,9 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
     return true;
 }
 
-bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics myStats)
+bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics* myStats)
 {
-
-    myStats.setMeanAbsoluteError(NODATA);
-    myStats.setMeanBiasError(NODATA);
-    myStats.setRootMeanSquareError(NODATA);
-    myStats.setCompoundRelativeError(NODATA);
-    myStats.setR2(NODATA);
+    myStats->initialize();
 
     std::vector <float> obs;
     std::vector <float> pre;
@@ -1953,20 +1948,20 @@ bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable 
 
     if (obs.size() > 0)
     {
-        myStats.setMeanAbsoluteError(statistics::meanAbsoluteError(obs, pre));
-        myStats.setMeanBiasError(statistics::meanError(obs, pre));
-        myStats.setRootMeanSquareError(statistics::rootMeanSquareError(obs, pre));
-        myStats.setCompoundRelativeError(statistics::compoundRelativeError(obs, pre));
+        myStats->setMeanAbsoluteError(statistics::meanAbsoluteError(obs, pre));
+        myStats->setMeanBiasError(statistics::meanError(obs, pre));
+        myStats->setRootMeanSquareError(statistics::rootMeanSquareError(obs, pre));
+        myStats->setCompoundRelativeError(statistics::compoundRelativeError(obs, pre));
 
         float intercept, slope, r2;
         statistics::linearRegression(obs, pre, int(obs.size()), false, &intercept, &slope, &r2);
-        myStats.setR2(r2);
+        myStats->setR2(r2);
     }
 
     return true;
 }
 
-bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics myStats)
+bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics *myStats)
 {
     if (! checkInterpolationMain(myVar)) return false;
 
