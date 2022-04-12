@@ -177,6 +177,56 @@ namespace statistics
         return float(sum / nrValidValues);
     }
 
+    double rootMeanSquareError(std::vector <float> measured, std::vector <float> simulated)
+    {
+        double sigma=0.;
+        double diff;
+        long nrValidValues = 0;
+
+        if (measured.size() != simulated.size()) return NODATA;
+
+        for (int i=0; i < measured.size(); i++)
+        {
+            if ((measured[i] != NODATA) && (simulated[i] != NODATA))
+            {
+                diff = measured[i]-simulated[i];
+                sigma += (diff * diff);
+                nrValidValues++;
+            }
+        }
+
+        if (nrValidValues == 0) return NODATA;
+
+        sigma /= nrValidValues;
+        sigma = sqrt(sigma);
+        return sigma;
+    }
+
+    double compoundRelativeError(std::vector <float> measured, std::vector <float> simulated)
+    {
+        if (measured.size() != simulated.size()) return NODATA;
+
+        float obsAvg = mean(measured, int(measured.size()));
+
+        if (isEqual(obsAvg, NODATA)) return NODATA;
+
+        float sumDev = 0;
+        int i;
+
+        for (i=0; i < measured.size(); i++)
+            if (!isEqual(measured[i], NODATA))
+                sumDev += (measured[i] - obsAvg) * (measured[i] - obsAvg);
+
+        if (sumDev == 0) return NODATA;
+
+        float sumError = 0;
+        for (i = 0; i < measured.size(); i++)
+            if (!isEqual(measured[i], NODATA) && !isEqual(simulated[i], NODATA))
+                sumError += (simulated[i] - measured[i]) * (simulated[i] - measured[i]);
+
+        return sumError / sumDev;
+    }
+
     float coefficientOfVariation(float *measured , float *simulated , int nrData)
     {
         double sigma=0;

@@ -66,17 +66,28 @@ void crossValidationStatistics::setProxyCombination(const Crit3DProxyCombination
     proxyCombination = newProxyCombination;
 }
 
+float crossValidationStatistics::getR2() const
+{
+    return R2;
+}
+
+void crossValidationStatistics::setR2(float newR2)
+{
+    R2 = newR2;
+}
+
 crossValidationStatistics::crossValidationStatistics()
+{
+    initialize();
+}
+
+void crossValidationStatistics::initialize()
 {
     meanAbsoluteError = NODATA;
     rootMeanSquareError = NODATA;
     compoundRelativeError = NODATA;
     meanBiasError = NODATA;
-}
-
-void crossValidationStatistics::initialize()
-{
-
+    R2 = NODATA;
 }
 
 void Crit3DProxyGridSeries::initialize()
