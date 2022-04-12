@@ -66,6 +66,14 @@ void crossValidationStatistics::setProxyCombination(const Crit3DProxyCombination
     proxyCombination = newProxyCombination;
 }
 
+crossValidationStatistics::crossValidationStatistics()
+{
+    meanAbsoluteError = NODATA;
+    rootMeanSquareError = NODATA;
+    compoundRelativeError = NODATA;
+    meanBiasError = NODATA;
+}
+
 void crossValidationStatistics::initialize()
 {
 
