@@ -48,6 +48,7 @@
     bool searchDocPath(QString* docPath);
     bool searchDataPath(QString* dataPath);
     void clearDir( const QString path );
+    QList<QString> removeList(QList<QString> list, QList<QString> toDelete);
 
 
 #endif // UTILITIES_H
