@@ -1926,6 +1926,7 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
 bool Project::computeStatisticsCrossValidation(meteoVariable myVar, crossValidationStatistics myStats)
 {
 
+
 /*
 Dim i As Long
 Dim myObs() As Single, myPre() As Single
