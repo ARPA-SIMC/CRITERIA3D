@@ -235,7 +235,7 @@
         bool loadTopographicDistanceMaps(bool onlyWithData, bool showInfo);
         void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
 
-        bool checkInterpolationMain(meteoVariable myVar, bool checkDem);
+        bool checkInterpolationMain(meteoVariable myVar);
         bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);

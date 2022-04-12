@@ -1968,7 +1968,7 @@ bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable 
 
 bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics myStats)
 {
-    if (! checkInterpolationMain(myVar, false)) return false;
+    if (! checkInterpolationMain(myVar)) return false;
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
@@ -2120,9 +2120,9 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     return true;
 }
 
-bool Project::checkInterpolationMain(meteoVariable myVar, bool checkDem)
+bool Project::checkInterpolationMain(meteoVariable myVar)
 {
-    if (checkDem && ! DEM.isLoaded)
+    if (! DEM.isLoaded)
     {
         logError("Digital Elevation Model not loaded");
         return false;
@@ -2146,7 +2146,7 @@ bool Project::checkInterpolationMain(meteoVariable myVar, bool checkDem)
 
 bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
-    if (! checkInterpolationMain(myVar, true)) return false;
+    if (! checkInterpolationMain(myVar)) return false;
 
     if (myVar == globalIrradiance)
     {
