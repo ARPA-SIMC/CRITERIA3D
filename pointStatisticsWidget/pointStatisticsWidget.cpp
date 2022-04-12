@@ -719,7 +719,7 @@ void Crit3DPointStatisticsWidget::plot()
             // draw
             chartView->drawTrend(years, outputValues);
 
-            ffloat availab = ((float)validData/(float)count)*100.0;
+            float availab = ((float)validData/(float)count)*100.0;
             availability.setText(QString::number(availab, 'f', 3));
             float mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
             significance.setText(QString::number(mkendall, 'f', 3));
