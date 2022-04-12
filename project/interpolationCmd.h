@@ -27,6 +27,7 @@
         float rootMeanSquareError;
         float compoundRelativeError;
         float meanBiasError;
+        float R2;
 
     public:
         crossValidationStatistics();
@@ -44,6 +45,8 @@
         void setMeanBiasError(float newMeanBiasError);
         const Crit3DTime &getRefTime() const;
         void setRefTime(const Crit3DTime &newRefTime);
+        float getR2() const;
+        void setR2(float newR2);
     };
 
     class Crit3DProxyGridSeries
