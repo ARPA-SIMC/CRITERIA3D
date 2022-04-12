@@ -572,19 +572,21 @@ void Crit3DPointStatisticsWidget::plot()
 
             float sum = 0;
             int count = 0;
+            int validData = 0;
             for (int i = firstYear; i<=lastYear; i++)
             {
                 years.push_back(i);
                 if (outputValues[count] != NODATA)
                 {
                     sum = sum + outputValues[count];
+                    validData = validData + 1;
                 }
                 count = count + 1;
             }
             // draw
             chartView->drawTrend(years, outputValues);
 
-            float availab = ((float)validYears/(float)years.size())*100.0;
+            float availab = ((float)validData/(float)count)*100.0;
             availability.setText(QString::number(availab, 'f', 3));
             float mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
             significance.setText(QString::number(mkendall, 'f', 3));
