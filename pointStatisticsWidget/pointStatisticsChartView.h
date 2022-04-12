@@ -21,7 +21,7 @@ public:
     explicit PointStatisticsChartView(QWidget *parent = 0);
     void drawTrend(std::vector<int> years, std::vector<float> outputValues);
     void drawClima(QList<QPointF> dailyPointList, QList<QPointF> decadalPointList, QList<QPointF> monthlyPointList);
-    void drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue);
+    void drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue, int classWidthValue);
     void tooltipTrendSeries(QPointF point, bool state);
     void tooltipClimaSeries(QPointF point, bool state);
     void tooltipDistributionSeries(QPointF point, bool state);
@@ -44,6 +44,7 @@ private:
     QLineSeries* climaMonthly;
     QBarSeries *distributionBar;
     QLineSeries *distributionLine;
+    int widthValue;
     QBarCategoryAxis *axisX;
     QValueAxis* axisXvalue;
     QValueAxis* axisY;

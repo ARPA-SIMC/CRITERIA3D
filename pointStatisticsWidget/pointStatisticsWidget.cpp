@@ -210,10 +210,10 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
 
     QLabel *classWidthLabel = new QLabel(tr("Class width"));
     gridLeftLayout->addWidget(classWidthLabel,0,0,1,1);
-    QLabel *valMaxLabel = new QLabel(tr("Val max"));
-    gridLeftLayout->addWidget(valMaxLabel,0,1,1,1);
     QLabel *valMinLabel = new QLabel(tr("Val min"));
-    gridLeftLayout->addWidget(valMinLabel,0,2,1,1);
+    gridLeftLayout->addWidget(valMinLabel,0,1,1,1);
+    QLabel *valMaxLabel = new QLabel(tr("Val max"));
+    gridLeftLayout->addWidget(valMaxLabel,0,2,1,1);
     QLabel *smoothingLabel = new QLabel(tr("Smoothing"));
     gridLeftLayout->addWidget(smoothingLabel,0,3,1,1);
     classWidth.setMaximumWidth(60);
@@ -988,7 +988,7 @@ void Crit3DPointStatisticsWidget::plot()
             }
 
             availability.setText(QString::number(nrValues/totDays * 100, 'f', 3));
-            average.setText(QString::number(avg, 'f', 3));
+            average.setText(QString::number(avg, 'f', 1));
 
             int numModeData = 0;
             for (int i = 0; i<bucket.size(); i++)
@@ -1003,13 +1003,13 @@ void Crit3DPointStatisticsWidget::plot()
             if (modeVal != NODATA)
             {
                 float myMode = minValueInt + (modeVal*classWidthValue) + (classWidthValue/2.0); // use minValueInt not the displayed minValue
-                mode.setText(QString::number(myMode, 'f', 3));
+                mode.setText(QString::number(myMode, 'f', 1));
             }
             if (dev_std != NODATA)
             {
-                sigma.setText(QString::number(dev_std, 'f', 3));
+                sigma.setText(QString::number(dev_std, 'f', 1));
             }
-            median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 3));
+            median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 1));
 
             QList<QPointF> lineValues;
             for (int i = 0; i<bucket.size(); i++)
@@ -1045,7 +1045,7 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 bucket[i] = bucket[i]/visualizedNrValues;
             }
-            chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue);
+            chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue, classWidthValue);
 
 
         }
@@ -1238,7 +1238,7 @@ void Crit3DPointStatisticsWidget::plot()
             millile_3Dev = sorting::percentile(sortedSeries, &nrValues, 0.27, false);
         }
         availability.setText(QString::number(nrValues/totDays * 100, 'f', 3));
-        average.setText(QString::number(avg, 'f', 3));
+        average.setText(QString::number(avg, 'f', 1));
 
         int numModeData = 0;
         for (int i = 0; i<bucket.size(); i++)
@@ -1253,13 +1253,13 @@ void Crit3DPointStatisticsWidget::plot()
         if (modeVal != NODATA)
         {
             float myMode = minValueInt + (modeVal*classWidthValue) + (classWidthValue/2.0); // use minValueInt not the displayed minValue
-            mode.setText(QString::number(myMode, 'f', 3));
+            mode.setText(QString::number(myMode, 'f', 1));
         }
         if (dev_std != NODATA)
         {
-            sigma.setText(QString::number(dev_std, 'f', 3));
+            sigma.setText(QString::number(dev_std, 'f', 1));
         }
-        median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 3));
+        median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 1));
 
         QList<QPointF> lineValues;
         for (int i = 0; i<bucket.size(); i++)
@@ -1295,7 +1295,7 @@ void Crit3DPointStatisticsWidget::plot()
         {
             bucket[i] = bucket[i]/visualizedNrValues;
         }
-        chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue);
+        chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue, classWidthValue);
     }
 }
 

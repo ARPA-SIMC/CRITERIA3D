@@ -206,7 +206,7 @@ void PointStatisticsChartView::drawClima(QList<QPointF> dailyPointList, QList<QP
     connect(climaMonthly, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipClimaSeries);
 }
 
-void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue)
+void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue, int classWidthValue)
 {
     if (chart()->series().size() > 0)
     {
@@ -216,6 +216,7 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
     }
     chart()->legend()->setVisible(false);
     categories.clear();
+    widthValue = classWidthValue;
 
     QBarSet *distributionSet = new QBarSet("Distribution");
     distributionSet->setColor(Qt::red);
@@ -260,6 +261,7 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
     distributionBar->append(distributionSet);
     axisY->setMax(maxValueY);
     axisY->setMin(minValueY);
+    axisY->setLabelFormat("%.3f");
     axisXvalue->setRange(minValue, maxValue);
     axisX->setCategories(categories);
 
@@ -366,6 +368,9 @@ void PointStatisticsChartView::tooltipBar(bool state, int index, QBarSet *barset
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = mapFromGlobal(CursorPoint);
         QPointF pointF = this->chart()->mapToValue(mapPoint,series);
+        float xStart = axisXvalue->min() + (index*widthValue);
+        float xEnd = axisXvalue->min() + ((index+1)*widthValue);
+
 
         // check if bar is hiding QlineSeries
         if (  static_cast<int>( distributionLine->at(pointF.toPoint().x()).y() ) == pointF.toPoint().y())
@@ -373,7 +378,7 @@ void PointStatisticsChartView::tooltipBar(bool state, int index, QBarSet *barset
             tooltipDistributionSeries(pointF, true);
         }
 
-        QString valueStr = QString("%1").arg(barset->at(index), 0, 'f', 3);
+        QString valueStr = QString("[%1:%2] frequency %3").arg(xStart, 0, 'f', 1).arg(xEnd, 0, 'f', 1).arg(barset->at(index), 0, 'f', 3);
         m_tooltip->setSeries(series);
         m_tooltip->setText(valueStr);
         m_tooltip->setAnchor(pointF);
