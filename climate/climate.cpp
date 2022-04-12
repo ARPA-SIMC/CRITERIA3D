@@ -4672,12 +4672,6 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
     }
     *dataPresence = numDati / numDatiMax * 100;
     float minPerc = meteoSettings->getMinimumPercentage();
-    /*
-     * presenti in vb ma inutili
-    bool dailyClimaLoaded = true;
-    bool decadeClimaLoaded = true;
-    bool monthlyClimaLoaded = true;
-    */
 
     for (int day = 1; day <= 366; day++)
     {
@@ -4692,13 +4686,11 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
             else
             {
                 dailyClima[day] = NODATA;
-                //dailyClimaLoaded = false;
             }
         }
         else
         {
             dailyClima[day] = NODATA;
-            //dailyClimaLoaded = false;
         }
 
         // decadal
@@ -4712,13 +4704,11 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
             else
             {
                 decadalClima[decade] = NODATA;
-                //decadeClimaLoaded = false;
             }
         }
         else
         {
             decadalClima[decade] = NODATA;
-            //decadeClimaLoaded = false;
         }
 
         // monthly
@@ -4732,13 +4722,11 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
             else
             {
                 monthlyClima[month] = NODATA;
-                //monthlyClimaLoaded = false;
             }
         }
         else
         {
             monthlyClima[month] = NODATA;
-            //monthlyClimaLoaded = false;
         }
     }
     // smooth
