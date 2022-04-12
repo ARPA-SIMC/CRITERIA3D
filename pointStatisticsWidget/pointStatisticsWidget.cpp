@@ -987,7 +987,7 @@ void Crit3DPointStatisticsWidget::plot()
                 millile_3Dev = sorting::percentile(sortedSeries, &nrValues, 0.27, false);
             }
 
-            availability.setText(QString::number(nrValues/totDays * 100, 'f', 3));
+            availability.setText(QString::number((float)nrValues/(float)totDays * 100, 'f', 3));
             average.setText(QString::number(avg, 'f', 1));
 
             int numModeData = 0;
@@ -1237,7 +1237,7 @@ void Crit3DPointStatisticsWidget::plot()
             millile3dev = sorting::percentile(sortedSeries, &nrValues, 99.73, true);
             millile_3Dev = sorting::percentile(sortedSeries, &nrValues, 0.27, false);
         }
-        availability.setText(QString::number(nrValues/totDays * 100, 'f', 3));
+        availability.setText(QString::number((float)nrValues/(float)totDays * 100, 'f', 3));
         average.setText(QString::number(avg, 'f', 1));
 
         int numModeData = 0;
