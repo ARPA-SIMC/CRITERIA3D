@@ -1965,6 +1965,20 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
 {
     if (! checkInterpolationMain(myVar)) return false;
 
+    if ((interpolationSettings.getUseDewPoint() && (myVar == dailyAirRelHumidityAvg ||
+            myVar == dailyAirRelHumidityMin || myVar == dailyAirRelHumidityMax || myVar == airRelHumidity)) ||
+            myVar == dailyGlobalRadiation ||
+            myVar == dailyLeafWetness ||
+            myVar == dailyWindVectorDirectionPrevailing ||
+            myVar == dailyWindVectorIntensityAvg ||
+            myVar == dailyWindVectorIntensityMax ||
+            myVar == globalIrradiance)
+    {
+        logError("Not available for " + QString::fromStdString(getVariableString(myVar)));
+        return false;
+    }
+
+
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
     // check quality and pass data to interpolation
@@ -1976,10 +1990,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
         return false;
     }
 
-    // detrending and checking precipitation
-    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
-
-    if (! interpolationReady)
+    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
     {
         logError("Interpolation: error in function preInterpolation");
         return false;

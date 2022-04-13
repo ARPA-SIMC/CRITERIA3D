@@ -128,7 +128,9 @@
         float maxHeightInversion;
         float shepardInitialRadius;
         int indexPointCV;
-        int topoDist_maxKh, topoDist_Kh, topoDist_Kz;
+        int topoDist_maxKh, topoDist_Kh;
+        std::vector <float> Kh_series;
+        std::vector <float> Kh_error_series;
 
         bool proxyLoaded;
         std::vector <Crit3DProxy> currentProxy;
@@ -186,8 +188,6 @@
         void setTopoDist_maxKh(int value);
         int getTopoDist_Kh() const;
         void setTopoDist_Kh(int value);
-        int getTopoDist_Kz() const;
-        void setTopoDist_Kz(int value);
         Crit3DProxyCombination getOptimalCombination() const;
         Crit3DProxyCombination* getOptimalCombinationRef();
         void setOptimalCombination(const Crit3DProxyCombination &value);
@@ -209,6 +209,11 @@
         void setUseInterpolatedTForRH(bool value);
         bool getProxyLoaded() const;
         void setProxyLoaded(bool value);
+        const std::vector<float> &getKh_series() const;
+        void setKh_series(const std::vector<float> &newKh_series);
+        const std::vector<float> &getKh_error_series() const;
+        void setKh_error_series(const std::vector<float> &newKh_error_series);
+        void addToKhSeries(float kh, float error);
     };
 
 #endif // INTERPOLATIONSETTINGS_H
