@@ -963,7 +963,7 @@ void Crit3DPointStatisticsWidget::plot()
                     if (series[i] > 0)
                     {
                         int index = (series[i] - valMinValue)/classWidthValue;
-                        if( index >= 0)
+                        if( index >= 0 && index<bucket.size())
                         {
                             bucket[index] = bucket[index] + 1;
                             visualizedNrValues = visualizedNrValues + 1;
@@ -980,7 +980,7 @@ void Crit3DPointStatisticsWidget::plot()
                 for (int i = 0; i < nrValues; i++)
                 {
                     int index = (series[i] - valMinValue)/classWidthValue;
-                    if( index >= 0)
+                    if( index >= 0 && index<bucket.size())
                     {
                         bucket[index] = bucket[index] + 1;
                         visualizedNrValues = visualizedNrValues + 1;
@@ -1051,8 +1051,6 @@ void Crit3DPointStatisticsWidget::plot()
                 bucket[i] = bucket[i]/visualizedNrValues;
             }
             chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue, classWidthValue);
-
-
         }
     }
     else if (currentFrequency == hourly)
@@ -1212,7 +1210,7 @@ void Crit3DPointStatisticsWidget::plot()
                 if (series[i] > 0)
                 {
                     int index = (series[i] - valMinValue)/classWidthValue;
-                    if( index >= 0)
+                    if( index >= 0 && index<bucket.size())
                     {
                         bucket[index] = bucket[index] + 1;
                         visualizedNrValues = visualizedNrValues + 1;
@@ -1231,7 +1229,7 @@ void Crit3DPointStatisticsWidget::plot()
                 if (series[i] > 0)
                 {
                     int index = (series[i] - valMinValue)/classWidthValue;
-                    if( index >= 0)
+                    if( index >= 0 && index<bucket.size())
                     {
                         bucket[index] = bucket[index] + 1;
                         visualizedNrValues = visualizedNrValues + 1;
@@ -1407,9 +1405,15 @@ void Crit3DPointStatisticsWidget::updatePlotByVal()
     }
     if (valMin.text().toInt() >= valMax.text().toInt())
     {
-        QMessageBox::information(nullptr, "Error", "Min value >= Max vaue");
+        valMax.blockSignals(true);
+        valMin.blockSignals(true);
+
         valMin.setText(QString::number(valMinValue));
         valMax.setText(QString::number(valMaxValue));
+
+        valMax.blockSignals(false);
+        valMin.blockSignals(false);
+        QMessageBox::information(nullptr, "Error", "Min value >= Max vaue");
         return;
     }
     plot();
