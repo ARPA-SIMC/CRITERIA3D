@@ -9,7 +9,7 @@ SUBDIRS =       ../../agrolib/soilFluxes3D  \
                 ../../agrolib/dbMeteoGrid  ../../agrolib/importDataXML \
                 ../../agrolib/proxyWidget ../../agrolib/project  \
                 ../../agrolib/meteoWidget ../../agrolib/soilWidget \
-                ../../agrolib/commonDialogs ../../agrolib/graphics \
+                ../../agrolib/commonDialogs ../../agrolib/commonChartElements ../../agrolib/graphics \
                 ../CRITERIA3D
 
 CONFIG += ordered
