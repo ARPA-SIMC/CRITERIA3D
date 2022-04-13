@@ -221,14 +221,15 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     classWidth.setText("1");
     classWidth.setValidator(new QDoubleValidator(1.0, 5.0, 1));
     gridLeftLayout->addWidget(&classWidth,3,0,1,-1);
-    valMax.setMaximumWidth(60);
-    valMax.setMaximumHeight(30);
-    valMax.setValidator(new QDoubleValidator(-999.0, 999.0, 1));
-    gridLeftLayout->addWidget(&valMax,3,1,1,-1);
+
     valMin.setMaximumWidth(60);
     valMin.setMaximumHeight(30);
     valMin.setValidator(new QDoubleValidator(-999.0, 999.0, 1));
-    gridLeftLayout->addWidget(&valMin,3,2,1,-1);
+    gridLeftLayout->addWidget(&valMin,3,1,1,-1);
+    valMax.setMaximumWidth(60);
+    valMax.setMaximumHeight(30);
+    valMax.setValidator(new QDoubleValidator(-999.0, 999.0, 1));
+    gridLeftLayout->addWidget(&valMax,3,2,1,-1);
     smoothing.setMaximumWidth(60);
     smoothing.setMaximumHeight(30);
     smoothing.setValidator(new QIntValidator(0, 366));
@@ -355,8 +356,8 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     connect(&compute, &QPushButton::clicked, [=](){ computePlot(); });
     connect(&elaboration, &QPushButton::clicked, [=](){ showElaboration(); });
     connect(&smoothing, &QLineEdit::editingFinished, [=](){ updatePlot(); });
-    connect(&valMax, &QLineEdit::editingFinished, [=](){ updatePlot(); });
-    connect(&valMin, &QLineEdit::editingFinished, [=](){ updatePlot(); });
+    connect(&valMax, &QLineEdit::editingFinished, [=](){ updatePlotByVal(); });
+    connect(&valMin, &QLineEdit::editingFinished, [=](){ updatePlotByVal(); });
     connect(&classWidth, &QLineEdit::editingFinished, [=](){ updatePlot(); });
     connect(changeLeftAxis, &QAction::triggered, this, &Crit3DPointStatisticsWidget::on_actionChangeLeftAxis);
     connect(exportGraph, &QAction::triggered, this, &Crit3DPointStatisticsWidget::on_actionExportGraph);
@@ -807,6 +808,8 @@ void Crit3DPointStatisticsWidget::plot()
         }
         else if (graph.currentText() == "Distribution")
         {
+            valMax.blockSignals(true);
+            valMin.blockSignals(true);
 
             classWidth.setEnabled(true);
             valMax.setEnabled(true);
@@ -918,15 +921,13 @@ void Crit3DPointStatisticsWidget::plot()
             int minValueInt = myMinValue;
             int maxValueInt = myMaxValue + 1;
 
-            valMax.blockSignals(true);
-            valMin.blockSignals(true);
-            int valMaxValue = valMax.text().toInt(&ok);
+            valMaxValue = valMax.text().toInt(&ok);
             if (!ok || valMax.text().isEmpty() || valMaxValue == NODATA)
             {
                 valMaxValue = maxValueInt;
                 valMax.setText(QString::number(valMaxValue));
             }
-            int valMinValue = valMin.text().toInt(&ok);
+            valMinValue = valMin.text().toInt(&ok);
             if (!ok || valMin.text().isEmpty() || valMinValue == NODATA)
             {
                 valMinValue = minValueInt;
@@ -962,7 +963,7 @@ void Crit3DPointStatisticsWidget::plot()
                     if (series[i] > 0)
                     {
                         int index = (series[i] - valMinValue)/classWidthValue;
-                        if( index >= 0)
+                        if( index >= 0 && index<bucket.size())
                         {
                             bucket[index] = bucket[index] + 1;
                             visualizedNrValues = visualizedNrValues + 1;
@@ -979,7 +980,7 @@ void Crit3DPointStatisticsWidget::plot()
                 for (int i = 0; i < nrValues; i++)
                 {
                     int index = (series[i] - valMinValue)/classWidthValue;
-                    if( index >= 0)
+                    if( index >= 0 && index<bucket.size())
                     {
                         bucket[index] = bucket[index] + 1;
                         visualizedNrValues = visualizedNrValues + 1;
@@ -1050,12 +1051,13 @@ void Crit3DPointStatisticsWidget::plot()
                 bucket[i] = bucket[i]/visualizedNrValues;
             }
             chartView->drawDistribution(bucket, lineValues, valMinValue, valMaxValue, classWidthValue);
-
-
         }
     }
     else if (currentFrequency == hourly)
     {
+        valMax.blockSignals(true);
+        valMin.blockSignals(true);
+
         classWidth.setEnabled(true);
         valMax.setEnabled(true);
         valMin.setEnabled(true);
@@ -1167,15 +1169,13 @@ void Crit3DPointStatisticsWidget::plot()
         int minValueInt = myMinValue;
         int maxValueInt = myMaxValue + 1;
 
-        valMax.blockSignals(true);
-        valMin.blockSignals(true);
-        int valMaxValue = valMax.text().toInt(&ok);
+        valMaxValue = valMax.text().toInt(&ok);
         if (!ok || valMax.text().isEmpty() || valMaxValue == NODATA)
         {
             valMaxValue = maxValueInt;
             valMax.setText(QString::number(valMaxValue));
         }
-        int valMinValue = valMin.text().toInt(&ok);
+        valMinValue = valMin.text().toInt(&ok);
         if (!ok || valMin.text().isEmpty() || valMinValue == NODATA)
         {
             valMinValue = minValueInt;
@@ -1210,7 +1210,7 @@ void Crit3DPointStatisticsWidget::plot()
                 if (series[i] > 0)
                 {
                     int index = (series[i] - valMinValue)/classWidthValue;
-                    if( index >= 0)
+                    if( index >= 0 && index<bucket.size())
                     {
                         bucket[index] = bucket[index] + 1;
                         visualizedNrValues = visualizedNrValues + 1;
@@ -1229,7 +1229,7 @@ void Crit3DPointStatisticsWidget::plot()
                 if (series[i] > 0)
                 {
                     int index = (series[i] - valMinValue)/classWidthValue;
-                    if( index >= 0)
+                    if( index >= 0 && index<bucket.size())
                     {
                         bucket[index] = bucket[index] + 1;
                         visualizedNrValues = visualizedNrValues + 1;
@@ -1396,18 +1396,38 @@ void Crit3DPointStatisticsWidget::showElaboration()
     return;
 }
 
-void Crit3DPointStatisticsWidget::updatePlot()
+void Crit3DPointStatisticsWidget::updatePlotByVal()
 {
-    if (valMin.text().toInt() > valMax.text().toInt())
+    // check valMax and valMin
+    if (valMin.text().toInt() == valMinValue && valMax.text().toInt() == valMaxValue)
     {
-        QMessageBox::information(nullptr, "Error", "Min value > Max vaue");
+        return; //nothing changed
+    }
+    if (valMin.text().toInt() >= valMax.text().toInt())
+    {
+        valMax.blockSignals(true);
+        valMin.blockSignals(true);
+
+        valMin.setText(QString::number(valMinValue));
+        valMax.setText(QString::number(valMaxValue));
+
+        valMax.blockSignals(false);
+        valMin.blockSignals(false);
+        QMessageBox::information(nullptr, "Error", "Min value >= Max vaue");
         return;
     }
     plot();
 }
 
+void Crit3DPointStatisticsWidget::updatePlot()
+{
+    // does not compute valMax and valMin
+    plot();
+}
+
 void Crit3DPointStatisticsWidget::computePlot()
 {
+    // compute valMax and valMin
     valMax.clear();
     valMin.clear();
     plot();

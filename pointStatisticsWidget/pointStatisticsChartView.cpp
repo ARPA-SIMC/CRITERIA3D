@@ -208,6 +208,7 @@ void PointStatisticsChartView::drawClima(QList<QPointF> dailyPointList, QList<QP
 
 void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue, int classWidthValue)
 {
+
     if (chart()->series().size() > 0)
     {
         cleanClimaSeries();
@@ -217,6 +218,7 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
     chart()->legend()->setVisible(false);
     categories.clear();
     widthValue = classWidthValue;
+
 
     QBarSet *distributionSet = new QBarSet("Distribution");
     distributionSet->setColor(Qt::red);
@@ -275,6 +277,7 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
 
     connect(distributionLine, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipDistributionSeries);
     connect(distributionBar, &QBarSeries::hovered, this, &PointStatisticsChartView::tooltipBar);
+
 }
 
 void PointStatisticsChartView::cleanDistribution()
