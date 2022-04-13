@@ -173,13 +173,24 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
 
 void Crit3DProxyWidget::changeVar(const QString varName)
 {
-    if (currentFrequency == daily)
+    if (varName == "ELABORATION")
     {
-        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
+        myVar = elaboration;
     }
-    else if (currentFrequency == hourly)
+    else if (varName == "ANOMALY")
     {
-        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
+        myVar = anomaly;
+    }
+    else
+    {
+        if (currentFrequency == daily)
+        {
+            myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
+        }
+        else if (currentFrequency == hourly)
+        {
+            myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
+        }
     }
     plot();
 }

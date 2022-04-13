@@ -1,4 +1,5 @@
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "stationMarker.h"
 
 #include <QMenu>
@@ -81,9 +82,10 @@ void StationMarker::setToolTip()
     QString toolTipText = QString("Point: <b> %1 </b> <br/> ID: %2 <br/> dataset: %3 <br/> altitude: %4 m <br/> municipality: %5 <br/> lapse rate code: %6")
                             .arg(name, idpoint, dataset, altitude, municipality, lapseRateName);
 
-    if (currentValue() != NODATA)
+    double value = currentValue();
+    if (! isEqual(value, NODATA))
     {
-        QString value = QString::number(currentValue());
+        QString valueStr = QString::number(value, 'f', 1);
 
         QString myQuality = "";
         if (_quality == quality::wrong_syntactic)
@@ -91,7 +93,7 @@ void StationMarker::setToolTip()
         if (_quality == quality::wrong_spatial)
             myQuality = "WRONG DATA (spatial control)";
 
-        toolTipText = QString("value: <b> %1 <br/> %2 <br/> </b>").arg(value, myQuality) + toolTipText;
+        toolTipText = QString("value: <b> %1 <br/> %2 <br/> </b>").arg(valueStr, myQuality) + toolTipText;
     }
 
     CircleObject::setToolTip(toolTipText);

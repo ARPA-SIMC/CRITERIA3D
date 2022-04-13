@@ -5,7 +5,7 @@
     #include <QtCharts>
     #include "soil.h"
     #include "barHorizon.h"
-    #include "soilCallout.h"
+    #include "callout.h"
 
     class TabHydraulicConductivityCurve: public QWidget
     {
@@ -27,7 +27,7 @@
         QList<QLineSeries*> curveList;
         QLogValueAxis *axisX;
         QLogValueAxis *axisY;
-        SoilCallout *m_tooltip;
+        Callout *m_tooltip;
         bool fillElement;
         int indexSelected;
 

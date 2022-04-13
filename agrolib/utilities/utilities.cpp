@@ -508,3 +508,12 @@ QList<QString> readListSingleColumn(QString fileName, QString& error)
     return myList;
 }
 
+QList<QString> removeList(QList<QString> list, QList<QString> toDelete)
+{
+  QList<QString>::iterator i;
+  for (i = toDelete.begin(); i != toDelete.end(); ++i)
+  {
+    list.removeAll(*i);
+  }
+  return list;
+}

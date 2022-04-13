@@ -247,7 +247,7 @@
                                         Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
         bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
 
-        float topographicDistance(float X1, float Y1, float Z1, float X2, float Y2, float Z2, float distance,
+        float topographicDistance(float x1, float y1, float z1, float x2, float y2, float z2, float distance,
                                   const gis::Crit3DRasterGrid& myDEM);
         bool topographicDistanceMap(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& myDEM, Crit3DRasterGrid* myMap);
         float closestDistanceFromGrid(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& myDEM);
