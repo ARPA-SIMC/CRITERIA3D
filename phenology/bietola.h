@@ -23,7 +23,7 @@
         double m_TEo;		// temperatura ottimale per l'effetto radiativo
         double m_alfa;		// coefficiente dell'esponente
 
-        vector<double> m_faseFenologica;
+        std::vector<double> m_faseFenologica;
 
     public:
         Bietola()
@@ -39,7 +39,7 @@
             m_TEx(0.),
             m_TEo(0.),
             m_alfa(0.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         Bietola(const char* coltura, double limiteGradiGiorno)
@@ -55,7 +55,7 @@
             m_TEx(36.),
             m_TEo(27.3),
             m_alfa(2.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         ~Bietola()
