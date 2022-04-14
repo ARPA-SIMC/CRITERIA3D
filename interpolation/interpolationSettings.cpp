@@ -259,6 +259,12 @@ void Crit3DInterpolationSettings::addToKhSeries(float kh, float error)
     Kh_error_series.push_back(error);
 }
 
+void Crit3DInterpolationSettings::initializeKhSeries()
+{
+    Kh_series.clear();
+    Kh_error_series.clear();
+}
+
 void Crit3DInterpolationSettings::setKh_error_series(const std::vector<float> &newKh_error_series)
 {
     Kh_error_series = newKh_error_series;

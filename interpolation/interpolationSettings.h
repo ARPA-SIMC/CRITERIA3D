@@ -214,6 +214,7 @@
         const std::vector<float> &getKh_error_series() const;
         void setKh_error_series(const std::vector<float> &newKh_error_series);
         void addToKhSeries(float kh, float error);
+        void initializeKhSeries();
     };
 
 #endif // INTERPOLATIONSETTINGS_H
