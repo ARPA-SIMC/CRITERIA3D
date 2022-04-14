@@ -219,7 +219,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     classWidth.setMaximumWidth(60);
     classWidth.setMaximumHeight(30);
     classWidth.setText("1");
-    classWidth.setValidator(new QDoubleValidator(1.0, 5.0, 1));
+    classWidth.setValidator(new QIntValidator(1.0, 5.0));
     gridLeftLayout->addWidget(&classWidth,3,0,1,-1);
 
     valMin.setMaximumWidth(60);
@@ -1489,7 +1489,7 @@ void Crit3DPointStatisticsWidget::on_actionExportData()
             QList<QPointF> dataPoins = chartView->exportTrend();
             for (int i = 0; i < dataPoins.size(); i++)
             {
-                myStream << dataPoins[i].x() << "," << dataPoins[i].y() << "\n";
+                myStream << dataPoins[i].toPoint().x() << "," << dataPoins[i].y() << "\n";
             }
         }
         else if (graph.currentText() == "Climate")
@@ -1523,12 +1523,14 @@ void Crit3DPointStatisticsWidget::on_actionExportData()
         }
         else if (graph.currentText() == "Distribution")
         {
-            QString header = "x";
+            QString header = "x1,x2,frequency";
             myStream << header << "\n";
-            QList<float> bar = chartView->exportDistribution();
+            QList< QList<float> > bar = chartView->exportDistribution();
             for (int i = 0; i < bar.size(); i++)
             {
-                myStream << bar[i] << "\n";
+                int x1 = bar[i].at(0);
+                int x2 = bar[i].at(1);
+                myStream << x1 << "," << x2 << "," << bar[i].at(2) << "\n";
             }
         }
 

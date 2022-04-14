@@ -39,6 +39,7 @@
         QList<QString> getAggregations();
         bool writeRasterName(QString rasterName);
         bool getRasterName(QString* rasterName);
+        bool renameColumn(QString oldColumn, QString newColumn);
 
     private:
         QSqlDatabase _db;

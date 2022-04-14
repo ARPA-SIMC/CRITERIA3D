@@ -35,7 +35,7 @@ public:
     QList<QPointF> exportClimaDaily();
     QList<QPointF> exportClimaDecadal();
     QList<QPointF> exportClimaMonthly();
-    QList<float> exportDistribution();
+    QList<QList<float> > exportDistribution();
 
 private:
     QScatterSeries* trend;
