@@ -445,13 +445,18 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
             lx = x1 - x0;
             ly = y1 - y0;
 
-            if (this->isLatLon)
+            if (isLatLon)
                 value = myRaster->value[row][col];
             else
             {
                 value = myRaster->header->flag;
-                if (this->matrix[row][col].row != NODATA)
-                    value = myRaster->value[matrix[row][col].row][matrix[row][col].col];
+                int r = matrix[row][col].row;
+                if (r != int(NODATA))
+                {
+                    int c = matrix[row][col].col;
+                    if (! gis::isOutOfGridRowCol(r, c, *(myRaster)))
+                        value = myRaster->value[r][c];
+                }
             }
 
             if (this->isGrid && isDrawBorder && ! isEqual(value, NO_ACTIVE))
