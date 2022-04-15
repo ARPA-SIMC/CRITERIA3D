@@ -88,7 +88,14 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
         axisY->setMin(minValue-3);
     }
     axisXvalue->setRange(years[0], years[years.size()-1]);
-    axisXvalue->setTickCount(years.size());
+    if (years.size() <= 30)
+    {
+        axisXvalue->setTickCount(years.size());
+    }
+    else
+    {
+        axisXvalue->setTickCount(30);
+    }
     axisXvalue->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
     chart()->addSeries(trend);
