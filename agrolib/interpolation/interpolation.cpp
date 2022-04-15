@@ -1161,7 +1161,8 @@ void topographicDistanceOptimize(meteoVariable myVar,
 {
     float avgError;
 
-    // optimize kh
+    mySettings->initializeKhSeries();
+
     int kh = 0;
     int bestKh = kh;
     float bestError = NODATA;

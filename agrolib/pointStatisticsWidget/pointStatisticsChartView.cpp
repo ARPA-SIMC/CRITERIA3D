@@ -88,7 +88,14 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
         axisY->setMin(minValue-3);
     }
     axisXvalue->setRange(years[0], years[years.size()-1]);
-    axisXvalue->setTickCount(years.size());
+    if (years.size() <= 30)
+    {
+        axisXvalue->setTickCount(years.size());
+    }
+    else
+    {
+        axisXvalue->setTickCount(30);
+    }
     axisXvalue->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
     chart()->addSeries(trend);
@@ -426,16 +433,25 @@ QList<QPointF> PointStatisticsChartView::exportClimaMonthly()
     return climaMonthly->points();
 }
 
-QList<float> PointStatisticsChartView::exportDistribution()
+QList< QList<float> > PointStatisticsChartView::exportDistribution()
 {
-    QList<float> barValues;
+    QList< QList<float> > barValues;
     QList<QBarSet *> barSet = distributionBar->barSets();
+    QList<float> tuple;
+    float xStart;
+    float xEnd;
 
     if (barSet.size() != 0)
     {
         for (int i = 0; i<barSet[0]->count(); i++)
         {
-            barValues.append(barSet[0]->at(i));
+            tuple.clear();
+            xStart = axisXvalue->min() + (i*widthValue);
+            xEnd = axisXvalue->min() + ((i+1)*widthValue);
+            tuple.append(xStart);
+            tuple.append(xEnd);
+            tuple.append(barSet[0]->at(i));
+            barValues.append(tuple);
         }
     }
     return barValues;

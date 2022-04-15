@@ -26,6 +26,7 @@
         bool writeAggregationZonesTable(QString name, QString filename, QString field);
         bool getAggregationZonesReference(QString name, QString* filename, QString* field);
         void initAggregatedTables(int numZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable);
+        void writePointProperties(int numZones, QString aggrType, std::vector <double> lonVector, std::vector <double> latVector);
         bool saveAggrData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable, std::vector< std::vector<float> > aggregatedValues, std::vector<double> lonVector, std::vector<double> latVector);
         void createTmpAggrTable();
         void deleteTmpAggrTable();
@@ -38,6 +39,7 @@
         QList<QString> getAggregations();
         bool writeRasterName(QString rasterName);
         bool getRasterName(QString* rasterName);
+        bool renameColumn(QString oldColumn, QString newColumn);
 
     private:
         QSqlDatabase _db;

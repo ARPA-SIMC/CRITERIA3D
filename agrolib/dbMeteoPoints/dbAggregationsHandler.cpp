@@ -54,6 +54,7 @@ bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QSt
                                                std::vector< std::vector<float> > aggregatedValues, std::vector <double> lonVector, std::vector <double> latVector)
 {
     initAggregatedTables(nZones, aggrType, periodType, startDate, endDate, variable);
+    writePointProperties(nZones, aggrType, lonVector, latVector);
     createTmpAggrTable();
     insertTmpAggr(startDate, endDate, variable, aggregatedValues, nZones);
     if (!saveTmpAggrData(aggrType, periodType, nZones))
@@ -177,6 +178,32 @@ void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString agg
                         .arg(i).arg(aggrType).arg(periodType).arg(startDate.toString("yyyy-MM-dd")).arg(endDate.toString("yyyy-MM-dd")).arg(idVariable);
 
         qry = QSqlQuery(statement, _db);
+        if( !qry.exec() )
+        {
+            _error = qry.lastError().text();
+        }
+    }
+
+}
+
+void Crit3DAggregationsDbHandler::writePointProperties(int numZones, QString aggrType, std::vector <double> lonVector, std::vector <double> latVector)
+{
+
+    QSqlQuery qry(_db);
+    for (int i = 1; i <= numZones; i++)
+    {
+        QString id = QString::number(i)+"_"+aggrType;
+        QString name = id;
+        qry.prepare( "INSERT INTO point_properties (id_point, name, latitude, longitude, altitude, is_active)"
+                                          " VALUES (:id_point, :name, :latitude, :longitude, :altitude, :is_active)" );
+
+        qry.bindValue(":id_point", id);
+        qry.bindValue(":name", name);
+        qry.bindValue(":latitude", latVector[i-1]);
+        qry.bindValue(":longitude", lonVector[i-1]);
+        qry.bindValue(":altitude", 0);
+        qry.bindValue(":is_active", 1);
+
         if( !qry.exec() )
         {
             _error = qry.lastError().text();
@@ -404,3 +431,41 @@ QList<QString> Crit3DAggregationsDbHandler::getAggregations()
     return aggregationList;
 }
 
+bool Crit3DAggregationsDbHandler::renameColumn(QString oldColumn, QString newColumn)
+{
+    QSqlQuery qry(_db);
+
+    qry.prepare( "SELECT name FROM sqlite_master WHERE type='table'  AND name like '%_D' OR name like '%_H';");
+    QString table;
+    QList<QString> tablesList;
+
+    if( !qry.exec() )
+    {
+        _error = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value(0), &table);
+            tablesList.append(table);
+        }
+    }
+    if (tablesList.isEmpty())
+    {
+        _error = "name not found";
+        return false;
+    }
+    foreach (QString table, tablesList)
+    {
+        QString statement = QString( "ALTER TABLE `%1` RENAME COLUMN %2 TO %3").arg(table).arg(oldColumn).arg(newColumn);
+        if(!qry.exec(statement) )
+        {
+            _error = qry.lastError().text();
+            return false;
+        }
+    }
+    return true;
+
+}
