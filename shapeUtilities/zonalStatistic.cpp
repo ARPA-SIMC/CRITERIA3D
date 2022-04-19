@@ -63,7 +63,7 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
     int fieldIndex = shapeVal.getDBFFieldIndex(valField.c_str());
     if (fieldIndex == -1)
     {
-        error = shapeVal.getFilepath() + "has not field called " + valField.c_str();
+        error = shapeVal.getFilepath() + " has not field called " + valField.c_str();
         return false;
     }
 
