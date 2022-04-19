@@ -981,7 +981,9 @@ bool getUseDetrendingVar(meteoVariable myVar)
 bool getUseTdVar(meteoVariable myVar)
 {
     //exclude large scale variables
-    if (myVar == globalIrradiance ||
+    if (myVar == precipitation ||
+            myVar == dailyPrecipitation ||
+            myVar == globalIrradiance ||
             myVar == atmTransmissivity ||
             myVar == dailyGlobalRadiation ||
             myVar == atmPressure ||
