@@ -1,5 +1,6 @@
 #include "dbAggregationsHandler.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "utilities.h"
 
 #include <QtSql>
@@ -50,20 +51,30 @@ std::map<int, meteoVariable> Crit3DAggregationsDbHandler::mapIdMeteoVar() const
 return _mapIdMeteoVar;
 }
 
+
 bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable,
                                                std::vector< std::vector<float> > aggregatedValues, std::vector <double> lonVector, std::vector <double> latVector)
 {
     initAggregatedTables(nZones, aggrType, periodType, startDate, endDate, variable);
     writePointProperties(nZones, aggrType, lonVector, latVector);
+
     createTmpAggrTable();
-    insertTmpAggr(startDate, endDate, variable, aggregatedValues, nZones);
+
+    if (!insertTmpAggr(startDate, endDate, variable, aggregatedValues, nZones))
+    {
+        return false;
+    }
+
     if (!saveTmpAggrData(aggrType, periodType, nZones))
     {
         return false;
     }
+
     deleteTmpAggrTable();
+
     return true;
 }
+
 
 bool Crit3DAggregationsDbHandler::writeAggregationZonesTable(QString name, QString filename, QString field)
 {
@@ -186,30 +197,54 @@ void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString agg
 
 }
 
-void Crit3DAggregationsDbHandler::writePointProperties(int numZones, QString aggrType, std::vector <double> lonVector, std::vector <double> latVector)
+
+bool Crit3DAggregationsDbHandler::existIdPoint(const QString& idPoint)
 {
+    QSqlQuery qry(_db);
+    QString queryStr = "SELECT EXISTS(SELECT 1 FROM point_properties WHERE id_point='" + idPoint + "')";
+    qry.prepare(queryStr);
+
+    if (! qry.exec()) return false;
+    qry.last();
+    return (qry.value(0).toInt() > 0);
+}
+
+
+bool Crit3DAggregationsDbHandler::writePointProperties(int numZones, QString aggrType, std::vector <double> lonVector, std::vector <double> latVector)
+{
+    if ( !_db.tables().contains(QLatin1String("point_properties")) )
+    {
+        return false;
+    }
 
     QSqlQuery qry(_db);
     for (int i = 1; i <= numZones; i++)
+
     {
-        QString id = QString::number(i)+"_"+aggrType;
+        QString id = QString::number(i) + "_" + aggrType;
         QString name = id;
-        qry.prepare( "INSERT INTO point_properties (id_point, name, latitude, longitude, altitude, is_active)"
-                                          " VALUES (:id_point, :name, :latitude, :longitude, :altitude, :is_active)" );
 
-        qry.bindValue(":id_point", id);
-        qry.bindValue(":name", name);
-        qry.bindValue(":latitude", latVector[i-1]);
-        qry.bindValue(":longitude", lonVector[i-1]);
-        qry.bindValue(":altitude", 0);
-        qry.bindValue(":is_active", 1);
-
-        if( !qry.exec() )
+        if (! existIdPoint(id))
         {
-            _error = qry.lastError().text();
+            qry.prepare( "INSERT INTO point_properties (id_point, name, latitude, longitude, altitude, is_active)"
+                                              " VALUES (:id_point, :name, :latitude, :longitude, :altitude, :is_active)" );
+
+            qry.bindValue(":id_point", id);
+            qry.bindValue(":name", name);
+            qry.bindValue(":latitude", latVector[i-1]);
+            qry.bindValue(":longitude", lonVector[i-1]);
+            qry.bindValue(":altitude", 0);
+            qry.bindValue(":is_active", 1);
+
+            if( !qry.exec() )
+            {
+                _error = qry.lastError().text();
+                return false;
+            }
         }
     }
 
+    return true;
 }
 
 void Crit3DAggregationsDbHandler::createTmpAggrTable()
@@ -224,6 +259,7 @@ void Crit3DAggregationsDbHandler::createTmpAggrTable()
     }
 }
 
+
 void Crit3DAggregationsDbHandler::deleteTmpAggrTable()
 {
     QSqlQuery qry(_db);
@@ -237,51 +273,40 @@ void Crit3DAggregationsDbHandler::deleteTmpAggrTable()
 bool Crit3DAggregationsDbHandler::insertTmpAggr(QDate startDate, QDate endDate, meteoVariable variable, std::vector< std::vector<float> > aggregatedValues, int nZones)
 {
     int idVariable = getIdfromMeteoVar(variable);
-    int nrDays = int(startDate.daysTo(endDate) + 1);
-    QSqlQuery qry(_db);
-    qry.prepare( "INSERT INTO `TmpAggregationData` (date_time, zone, id_variable, value)"
-                                          " VALUES (?, ?, ?, ?)" );
-    //QString dateTime;
-    QVariantList dateTimeList;
-    QVariantList zoneList;
-    QVariantList idVariableList;
-    QVariantList valueList;
+    long nrDays = long(startDate.daysTo(endDate)) + 1;
+    bool isFirst = true;
+    QString queryStr = "INSERT INTO 'TmpAggregationData' (date_time, zone, id_variable, value) VALUES ";
 
-
-    for (int day = 0; day < nrDays; day++)
+    for (unsigned int day = 0; day < unsigned(nrDays); day++)
     {
-
         // LC NB le zone partono da 1
-        for (int zone = 1; zone <= nZones; zone++)
+        for (unsigned int zone = 1; zone <= unsigned(nZones); zone++)
         {
-            if (aggregatedValues[day][zone-1] != NODATA)
+            if (! isEqual(aggregatedValues[day][zone-1], NODATA))
             {
-                QString value = QString::number(aggregatedValues[day][zone-1], 'f', 1);
-                if (value != "nan")
+                QString valueStr = QString::number(double(aggregatedValues[day][zone-1]), 'f', 1);
+                if (valueStr != "nan")
                 {
-                    dateTimeList << (startDate.addDays(day)).toString("yyyy-MM-dd");
-                    zoneList << zone;
-                    idVariableList << idVariable;
-                    valueList << value;
-
+                    QString dateStr = startDate.addDays(day).toString("yyyy-MM-dd");
+                    QString zoneStr = QString::number(zone);
+                    QString varStr = QString::number(idVariable);
+                    if (!isFirst)
+                        queryStr += ",";
+                    queryStr += "('" + dateStr + "'," + zoneStr + "," + varStr + "," + valueStr + ")";
+                    isFirst = false;
                 }
             }
         }
     }
 
-    qry.addBindValue(dateTimeList);
-    qry.addBindValue(zoneList);
-    qry.addBindValue(idVariableList);
-    qry.addBindValue(valueList);
-
-    if( !qry.execBatch() )
+    QSqlQuery qry(_db);
+    if( !qry.exec(queryStr))
     {
         _error = qry.lastError().text();
         return false;
     }
-    else
-        return true;
 
+    return true;
 }
 
 
