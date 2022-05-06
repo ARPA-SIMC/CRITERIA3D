@@ -352,7 +352,7 @@ void MainWindow::on_actionRun_models_triggered()
     int myReturn = formTimePeriod.exec();
     if (myReturn == QDialog::Rejected) return;
 
-    myProject.runModels(timeIni, timeFin, true, true);
+    myProject.runModels(timeIni, timeFin, true);
 }
 
 

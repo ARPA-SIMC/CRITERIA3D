@@ -60,6 +60,8 @@
         QString dailyOutputPath;
         QString fieldMapName;
 
+        bool computeDiseases;
+
         gis::Crit3DRasterGrid dataRaster;
         gis::Crit3DRasterGrid modelCaseIndexMap;
 
@@ -133,7 +135,7 @@
         void findVine3DLastMeteoDate();
 
         bool loadStates(QDate myDate);
-        bool saveStateAndOutput(QDate myDate, bool saveDiseases);
+        bool saveStateAndOutput(QDate myDate);
 
         int getIndexPointFromId(QString myId);
 
@@ -150,7 +152,7 @@
 
         soil::Crit3DHorizon* getSoilHorizon(long row, long col, int layer);
 
-        bool runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput, bool computeDiseases);
+        bool runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput);
 
         bool executeVine3DCommand(QStringList argumentList, bool* isCommandFound);
     };

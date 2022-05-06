@@ -38,6 +38,8 @@ void Vine3DProject::initializeVine3DProject()
     isObsDataLoaded = false;
     setCurrentFrequency(hourly);
 
+    computeDiseases = false;
+
     dailyOutputPath = "daily_output/";
     fieldMapName = "";
 
@@ -95,7 +97,8 @@ bool Vine3DProject::loadVine3DProjectSettings(QString projectFile)
     projectSettings->endGroup();
 
     projectSettings->beginGroup("settings");
-    soilDepth = projectSettings->value("soil_depth").toDouble();
+        soilDepth = projectSettings->value("soil_depth").toDouble();
+        computeDiseases = projectSettings->value("compute_diseases").toBool();
     projectSettings->endGroup();
 
     return true;
@@ -1234,7 +1237,7 @@ bool Vine3DProject::loadObsDataFilled(QDateTime firstTime, QDateTime lastTime)
 }
 
 
-bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput, bool computeDiseases)
+bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput)
 {
     if (! isProjectLoaded)
     {
@@ -1337,7 +1340,7 @@ bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool save
             if (computeDiseases) computePowderyMildew(this);
 
             //state and output
-            if (! saveStateAndOutput(myDate, computeDiseases)) return false;
+            if (! saveStateAndOutput(myDate)) return false;
         }
     }
 
@@ -1393,7 +1396,7 @@ bool Vine3DProject::loadStates(QDate myDate)
 }
 
 
-bool Vine3DProject::saveStateAndOutput(QDate myDate, bool saveDiseases)
+bool Vine3DProject::saveStateAndOutput(QDate myDate)
 {
     QDir myDir;
     QString statePath = getProjectPath() + "states/" + myDate.toString("yyyy/MM/dd/");
@@ -1425,7 +1428,7 @@ bool Vine3DProject::saveStateAndOutput(QDate myDate, bool saveDiseases)
     if (!savePlantState(this, fruitBiomassVar, myDate, statePath)) return(false);
     if (!savePlantState(this, fruitBiomassIndexVar,myDate,statePath)) return(false);
 
-    if (saveDiseases)
+    if (computeDiseases)
     {
         if (!savePlantState(this, powderyAICVar, myDate, statePath)) return(false);
         if (!savePlantState(this, powderyCurrentColoniesVar, myDate, statePath)) return(false);
@@ -1450,7 +1453,7 @@ bool Vine3DProject::saveStateAndOutput(QDate myDate, bool saveDiseases)
     if (!savePlantOutput(this, transpirationGrassVar, myDate, outputPath, notes, false, false)) return(false);
     if (!savePlantOutput(this, wineYieldVar, myDate, outputPath, notes, false, true)) return(false);
 
-    if (saveDiseases)
+    if (computeDiseases)
     {
         if (!savePlantOutput(this, powderyAICVar, myDate, outputPath, notes, true, true)) return(false);
         if (!savePlantOutput(this, powderySporulatingColoniesVar, myDate, outputPath, notes, true, true)) return(false);
