@@ -454,10 +454,8 @@ double Crit3DCrop::getSurfaceCoverFraction()
 
 double Crit3DCrop::getMaxEvaporation(double ET0)
 {
-    const double maxEvapRatio = 0.66;
-
     double SCF = this->getSurfaceCoverFraction();
-    return ET0 * maxEvapRatio * (1 - SCF);
+    return ET0 * (1 - SCF);
 }
 
 

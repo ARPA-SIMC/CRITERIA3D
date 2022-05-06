@@ -19,6 +19,36 @@
 
     class QDate;
 
+    class crossValidationStatistics {
+    private:
+        Crit3DTime refTime;
+        Crit3DProxyCombination proxyCombination;
+        float meanAbsoluteError;
+        float rootMeanSquareError;
+        float compoundRelativeError;
+        float meanBiasError;
+        float R2;
+
+    public:
+        crossValidationStatistics();
+        void initialize();
+
+        const Crit3DProxyCombination &getProxyCombination() const;
+        void setProxyCombination(const Crit3DProxyCombination &newProxyCombination);
+        float getMeanAbsoluteError() const;
+        void setMeanAbsoluteError(float newMeanAbsoluteError);
+        float getRootMeanSquareError() const;
+        void setRootMeanSquareError(float newRootMeanSquareError);
+        float getCompoundRelativeError() const;
+        void setCompoundRelativeError(float newCompoundRelativeError);
+        float getMeanBiasError() const;
+        void setMeanBiasError(float newMeanBiasError);
+        const Crit3DTime &getRefTime() const;
+        void setRefTime(const Crit3DTime &newRefTime);
+        float getR2() const;
+        void setR2(float newR2);
+    };
+
     class Crit3DProxyGridSeries
     {
     private:

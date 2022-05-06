@@ -5,7 +5,7 @@
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
-#include "proxyCallout.h"
+#include "callout.h"
 
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     QT_CHARTS_USE_NAMESPACE
@@ -33,7 +33,7 @@ private:
     QLineSeries* modelLapseRatelineSeries;
     QValueAxis* axisX;
     QValueAxis* axisY;
-    ProxyCallout *m_tooltip;
+    Callout *m_tooltip;
     QMap< QString, QPointF > idPointMap;
     QMap< QString, QPointF > idPointMap2;
     QMap< QString, QPointF > idPointMap3;

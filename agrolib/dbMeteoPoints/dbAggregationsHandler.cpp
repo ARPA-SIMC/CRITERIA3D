@@ -1,5 +1,6 @@
 #include "dbAggregationsHandler.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "utilities.h"
 
 #include <QtSql>
@@ -50,18 +51,30 @@ std::map<int, meteoVariable> Crit3DAggregationsDbHandler::mapIdMeteoVar() const
 return _mapIdMeteoVar;
 }
 
-bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable, std::vector< std::vector<float> > aggregatedValues)
+
+bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QString periodType, QDate startDate, QDate endDate, meteoVariable variable,
+                                               std::vector< std::vector<float> > aggregatedValues, std::vector <double> lonVector, std::vector <double> latVector)
 {
     initAggregatedTables(nZones, aggrType, periodType, startDate, endDate, variable);
+    writePointProperties(nZones, aggrType, lonVector, latVector);
+
     createTmpAggrTable();
-    insertTmpAggr(startDate, endDate, variable, aggregatedValues, nZones);
+
+    if (!insertTmpAggr(startDate, endDate, variable, aggregatedValues, nZones))
+    {
+        return false;
+    }
+
     if (!saveTmpAggrData(aggrType, periodType, nZones))
     {
         return false;
     }
+
     deleteTmpAggrTable();
+
     return true;
 }
+
 
 bool Crit3DAggregationsDbHandler::writeAggregationZonesTable(QString name, QString filename, QString field)
 {
@@ -165,14 +178,14 @@ void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString agg
     for (int i = 1; i <= numZones; i++)
     {
         QString statement = QString("CREATE TABLE IF NOT EXISTS `%1_%2_%3` "
-                                    "(date TEXT, id_variable INTEGER, value REAL, PRIMARY KEY(date,id_variable))").arg(i).arg(aggrType).arg(periodType);
+                                    "(date_time TEXT, id_variable INTEGER, value REAL, PRIMARY KEY(date_time,id_variable))").arg(i).arg(aggrType).arg(periodType);
 
         QSqlQuery qry(statement, _db);
         if( !qry.exec() )
         {
             _error = qry.lastError().text();
         }
-        statement = QString("DELETE FROM `%1_%2_%3` WHERE date >= DATE('%4') AND date < DATE('%5', '+1 day') AND id_variable = %6")
+        statement = QString("DELETE FROM `%1_%2_%3` WHERE date_time >= DATE('%4') AND date_time < DATE('%5', '+1 day') AND id_variable = %6")
                         .arg(i).arg(aggrType).arg(periodType).arg(startDate.toString("yyyy-MM-dd")).arg(endDate.toString("yyyy-MM-dd")).arg(idVariable);
 
         qry = QSqlQuery(statement, _db);
@@ -184,17 +197,68 @@ void Crit3DAggregationsDbHandler::initAggregatedTables(int numZones, QString agg
 
 }
 
+
+bool Crit3DAggregationsDbHandler::existIdPoint(const QString& idPoint)
+{
+    QSqlQuery qry(_db);
+    QString queryStr = "SELECT EXISTS(SELECT 1 FROM point_properties WHERE id_point='" + idPoint + "')";
+    qry.prepare(queryStr);
+
+    if (! qry.exec()) return false;
+    qry.last();
+    return (qry.value(0).toInt() > 0);
+}
+
+
+bool Crit3DAggregationsDbHandler::writePointProperties(int numZones, QString aggrType, std::vector <double> lonVector, std::vector <double> latVector)
+{
+    if ( !_db.tables().contains(QLatin1String("point_properties")) )
+    {
+        return false;
+    }
+
+    QSqlQuery qry(_db);
+    for (int i = 1; i <= numZones; i++)
+
+    {
+        QString id = QString::number(i) + "_" + aggrType;
+        QString name = id;
+
+        if (! existIdPoint(id))
+        {
+            qry.prepare( "INSERT INTO point_properties (id_point, name, latitude, longitude, altitude, is_active)"
+                                              " VALUES (:id_point, :name, :latitude, :longitude, :altitude, :is_active)" );
+
+            qry.bindValue(":id_point", id);
+            qry.bindValue(":name", name);
+            qry.bindValue(":latitude", latVector[i-1]);
+            qry.bindValue(":longitude", lonVector[i-1]);
+            qry.bindValue(":altitude", 0);
+            qry.bindValue(":is_active", 1);
+
+            if( !qry.exec() )
+            {
+                _error = qry.lastError().text();
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 void Crit3DAggregationsDbHandler::createTmpAggrTable()
 {
     this->deleteTmpAggrTable();
 
     QSqlQuery qry(_db);
-    qry.prepare("CREATE TABLE TmpAggregationData (date TEXT, zone TEXT, id_variable INTEGER, value REAL)");
+    qry.prepare("CREATE TABLE TmpAggregationData (date_time TEXT, zone TEXT, id_variable INTEGER, value REAL)");
     if( !qry.exec() )
     {
         _error = qry.lastError().text();
     }
 }
+
 
 void Crit3DAggregationsDbHandler::deleteTmpAggrTable()
 {
@@ -209,51 +273,40 @@ void Crit3DAggregationsDbHandler::deleteTmpAggrTable()
 bool Crit3DAggregationsDbHandler::insertTmpAggr(QDate startDate, QDate endDate, meteoVariable variable, std::vector< std::vector<float> > aggregatedValues, int nZones)
 {
     int idVariable = getIdfromMeteoVar(variable);
-    int nrDays = int(startDate.daysTo(endDate) + 1);
-    QSqlQuery qry(_db);
-    qry.prepare( "INSERT INTO `TmpAggregationData` (date, zone, id_variable, value)"
-                                          " VALUES (?, ?, ?, ?)" );
-    //QString dateTime;
-    QVariantList dateTimeList;
-    QVariantList zoneList;
-    QVariantList idVariableList;
-    QVariantList valueList;
+    long nrDays = long(startDate.daysTo(endDate)) + 1;
+    bool isFirst = true;
+    QString queryStr = "INSERT INTO 'TmpAggregationData' (date_time, zone, id_variable, value) VALUES ";
 
-
-    for (int day = 0; day < nrDays; day++)
+    for (unsigned int day = 0; day < unsigned(nrDays); day++)
     {
-
         // LC NB le zone partono da 1
-        for (int zone = 1; zone <= nZones; zone++)
+        for (unsigned int zone = 1; zone <= unsigned(nZones); zone++)
         {
-            if (aggregatedValues[day][zone-1] != NODATA)
+            if (! isEqual(aggregatedValues[day][zone-1], NODATA))
             {
-                QString value = QString::number(aggregatedValues[day][zone-1], 'f', 1);
-                if (value != "nan")
+                QString valueStr = QString::number(double(aggregatedValues[day][zone-1]), 'f', 1);
+                if (valueStr != "nan")
                 {
-                    dateTimeList << (startDate.addDays(day)).toString("yyyy-MM-dd");
-                    zoneList << zone;
-                    idVariableList << idVariable;
-                    valueList << value;
-
+                    QString dateStr = startDate.addDays(day).toString("yyyy-MM-dd");
+                    QString zoneStr = QString::number(zone);
+                    QString varStr = QString::number(idVariable);
+                    if (!isFirst)
+                        queryStr += ",";
+                    queryStr += "('" + dateStr + "'," + zoneStr + "," + varStr + "," + valueStr + ")";
+                    isFirst = false;
                 }
             }
         }
     }
 
-    qry.addBindValue(dateTimeList);
-    qry.addBindValue(zoneList);
-    qry.addBindValue(idVariableList);
-    qry.addBindValue(valueList);
-
-    if( !qry.execBatch() )
+    QSqlQuery qry(_db);
+    if( !qry.exec(queryStr))
     {
         _error = qry.lastError().text();
         return false;
     }
-    else
-        return true;
 
+    return true;
 }
 
 
@@ -265,7 +318,7 @@ bool Crit3DAggregationsDbHandler::saveTmpAggrData(QString aggrType, QString peri
     for (int zone = 1; zone <= nZones; zone++)
     {
         statement = QString("REPLACE INTO `%1_%2_%3` ").arg(zone).arg(aggrType).arg(periodType);
-        statement += QString("SELECT date, id_variable, value FROM TmpAggregationData ");
+        statement += QString("SELECT date_time, id_variable, value FROM TmpAggregationData ");
         statement += QString("WHERE zone = %1").arg(zone);
 
         _db.exec(statement);
@@ -288,7 +341,7 @@ std::vector<float> Crit3DAggregationsDbHandler::getAggrData(QString aggrType, QS
     QDate date;
     float value;
 
-    QString statement = QString( "SELECT * FROM `%1_%2_%3` WHERE date >= DATE('%4') AND date < DATE('%5', '+1 day') AND id_variable = '%6'")
+    QString statement = QString( "SELECT * FROM `%1_%2_%3` WHERE date_time >= DATE('%4') AND date_time < DATE('%5', '+1 day') AND id_variable = '%6'")
                                 .arg(zone).arg(aggrType).arg(periodType).arg(startDate.toString("yyyy-MM-dd")).arg(endDate.toString("yyyy-MM-dd")).arg(idVariable);
     QSqlQuery qry(statement, _db);
 
@@ -301,7 +354,7 @@ std::vector<float> Crit3DAggregationsDbHandler::getAggrData(QString aggrType, QS
     {
         while (qry.next())
         {
-            getValue(qry.value("date"), &date);
+            getValue(qry.value("date_time"), &date);
             getValue(qry.value("value"), &value);
             values[startDate.daysTo(date)] = value;
         }
@@ -403,3 +456,41 @@ QList<QString> Crit3DAggregationsDbHandler::getAggregations()
     return aggregationList;
 }
 
+bool Crit3DAggregationsDbHandler::renameColumn(QString oldColumn, QString newColumn)
+{
+    QSqlQuery qry(_db);
+
+    qry.prepare( "SELECT name FROM sqlite_master WHERE type='table'  AND name like '%_D' OR name like '%_H';");
+    QString table;
+    QList<QString> tablesList;
+
+    if( !qry.exec() )
+    {
+        _error = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value(0), &table);
+            tablesList.append(table);
+        }
+    }
+    if (tablesList.isEmpty())
+    {
+        _error = "name not found";
+        return false;
+    }
+    foreach (QString table, tablesList)
+    {
+        QString statement = QString( "ALTER TABLE `%1` RENAME COLUMN %2 TO %3").arg(table).arg(oldColumn).arg(newColumn);
+        if(!qry.exec(statement) )
+        {
+            _error = qry.lastError().text();
+            return false;
+        }
+    }
+    return true;
+
+}

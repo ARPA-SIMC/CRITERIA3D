@@ -1323,12 +1323,13 @@ namespace gis
         return true;
     }
 
-    float topographicDistance(float X1, float Y1, float Z1, float X2, float Y2, float Z2, float distance,
+
+    float topographicDistance(float x1, float y1, float z1, float x2, float y2, float z2, float distance,
                               const gis::Crit3DRasterGrid& dem)
     {
         float x, y;
         float Xi, Yi, Zi, Xf, Yf;
-        float Dx, Dy;
+        float dx, dy;
         float demValue;
         int i, nrStep;
         float maxDeltaZ;
@@ -1340,25 +1341,25 @@ namespace gis
 
         nrStep = int(distance / stepMeter);
 
-        if (Z1 < Z2)
+        if (z1 < z2)
         {
-            Xi = X1;
-            Yi = Y1;
-            Zi = Z1;
-            Xf = X2;
-            Yf = Y2;
+            Xi = x1;
+            Yi = y1;
+            Zi = z1;
+            Xf = x2;
+            Yf = y2;
         }
         else
         {
-            Xi = X2;
-            Yi = Y2;
-            Zi = Z2;
-            Xf = X1;
-            Yf = Y1;
+            Xi = x2;
+            Yi = y2;
+            Zi = z2;
+            Xf = x1;
+            Yf = y1;
         }
 
-        Dx = (Xf - Xi) / float(nrStep);
-        Dy = (Yf - Yi) / float(nrStep);
+        dx = (Xf - Xi) / float(nrStep);
+        dy = (Yf - Yi) / float(nrStep);
 
         x = Xi;
         y = Yi;
@@ -1366,8 +1367,8 @@ namespace gis
 
         for (i=1; i<=nrStep; i++)
         {
-            x = x + Dx;
-            y = y + Dy;
+            x = x + dx;
+            y = y + dy;
             demValue = dem.getFastValueXY(x, y);
             if (! isEqual(demValue, dem.header->flag))
                 if (demValue > Zi)
@@ -1376,6 +1377,7 @@ namespace gis
 
         return maxDeltaZ;
     }
+
 
     bool topographicDistanceMap(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap)
     {

@@ -202,6 +202,7 @@
         void on_actionShow_3D_viewer_triggered();
 
         void on_viewer3DClosed();
+        void on_slopeChanged();
 
     protected:
         /*!

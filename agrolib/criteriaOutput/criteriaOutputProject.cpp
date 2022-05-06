@@ -629,7 +629,7 @@ int CriteriaOutputProject::createMaps()
     {
         int nRasterError = inputField.size() - rasterOK;
         projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
-        return false;
+        return ERROR_MAPS;
     }
 }
 #endif
@@ -722,28 +722,33 @@ int CriteriaOutputProject::createAggregationFile()
     if ( shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
     {
         projectError = "shape type error: not 2D Polygon type" ;
-        return false;
+        return ERROR_SHAPEFILE;
     }
 
     // check proj
-    if (shapeRef.getIsWGS84() == false || shapeVal.getIsWGS84() == false)
+    if (shapeRef.getIsWGS84() == false)
     {
-        projectError = "projection error: not WGS84" ;
-        return false;
+        projectError = QString::fromStdString(shapeRef.getFilepath()) +  " projection error: not WGS84" ;
+        return ERROR_SHAPEFILE;
+    }
+    if (shapeVal.getIsWGS84() == false)
+    {
+        projectError = QString::fromStdString(shapeVal.getFilepath()) + " projection error: not WGS84" ;
+        return ERROR_SHAPEFILE;
     }
 
     // check utm zone
     if (shapeRef.getUtmZone() != shapeVal.getUtmZone())
     {
         projectError = "utm zone: different utm zones" ;
-        return false;
+        return ERROR_SHAPEFILE;
     }
 
     // parser aggregation list
     if (!aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
     {
         projectError = "Open failure: " + aggregationListFileName + "\n" + projectError;
-        return false;
+        return ERROR_ZONAL_STATISTICS_SHAPE;
     }
 
     logger.writeInfo("output shapefile: " + outputAggrShapeFileName);
@@ -780,7 +785,11 @@ int CriteriaOutputProject::createAggregationFile()
                                         threshold, error);
         }
 
-        if (!isOk) break;
+        if (!isOk)
+        {
+            projectError = QString::fromStdString(error);
+            break;
+        }
     }
 
     rasterRef.clear();

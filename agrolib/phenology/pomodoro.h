@@ -18,7 +18,7 @@
         double m_maxPHD;
         double m_accumuloPrec;
 
-        vector<double> m_faseFenologica;
+        std::vector<double> m_faseFenologica;
 
     public:
 
@@ -33,7 +33,7 @@
             m_minPHD(0.),
             m_maxPHD(0.),
             m_accumuloPrec(0.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         Pomodoro(const char* coltura, double minPHD, double maxPHD)
@@ -47,7 +47,7 @@
             m_minPHD(minPHD),
             m_maxPHD(maxPHD),
             m_accumuloPrec(0.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         ~Pomodoro()
@@ -88,7 +88,7 @@
         double m_maxPHD;
         double m_accumuloPrec;
 
-        vector<double> m_faseFenologica;
+        std::vector<double> m_faseFenologica;
 
     public:
 
@@ -102,7 +102,7 @@
             m_minPHD(0.),
             m_maxPHD(0.),
             m_accumuloPrec(0.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         PomodoroTrapianto(const char* coltura, double minPHD, double maxPHD)
@@ -115,7 +115,7 @@
             m_minPHD(minPHD),
             m_maxPHD(maxPHD),
             m_accumuloPrec(0.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         ~PomodoroTrapianto()

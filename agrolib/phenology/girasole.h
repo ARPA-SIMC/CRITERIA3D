@@ -20,7 +20,7 @@
         double C3[2][4];
         double C4[2][4];
 
-        vector<double> m_faseFenologica;
+        std::vector<double> m_faseFenologica;
 
     public:
 
@@ -33,7 +33,7 @@
             m_maturazione(Crit3DDate()),
             m_raccolta(Crit3DDate()),
             m_limiteGradiGiorno(0.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {
             C1[0][0] = 0.;	C1[0][1] = 0.;	C1[0][2] = 0.;	C1[0][3] = 0.;
             C2[0][0] = 0.;	C2[0][1] = 0.;	C2[0][2] = 0.;	C2[0][3] = 0.;
@@ -54,7 +54,7 @@
             m_maturazione(Crit3DDate()),
             m_raccolta(Crit3DDate()),
             m_limiteGradiGiorno(limiteGradiGiorno),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {
             C1[0][0] = 0.00371;	C1[0][1] = 0.00331;	C1[0][2] = 0.00315;	C1[0][3] = 0.00287;
             C2[0][0] = 0.000092;C2[0][1] = 0.000071;C2[0][2] = 0.000067;C2[0][3] = 0.000058;

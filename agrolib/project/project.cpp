@@ -590,6 +590,12 @@ bool Project::loadParameters(QString parametersFileName)
                 qualityInterpolationSettings.setMinRegressionR2(parameters->value("minRegressionR2").toFloat());
             }
 
+            if (parameters->contains("topographicDistanceMaxMultiplier"))
+            {
+                interpolationSettings.setTopoDist_maxKh(parameters->value("topographicDistanceMaxMultiplier").toInt());
+                qualityInterpolationSettings.setTopoDist_maxKh(parameters->value("topographicDistanceMaxMultiplier").toInt());
+            }
+
             if (parameters->contains("useDewPoint"))
                 interpolationSettings.setUseDewPoint(parameters->value("useDewPoint").toBool());
 
@@ -1917,6 +1923,87 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
     return true;
 }
 
+bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics* myStats)
+{
+    myStats->initialize();
+
+    std::vector <float> obs;
+    std::vector <float> pre;
+
+    float value;
+
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].active)
+        {
+            value = meteoPoints[i].getMeteoPointValue(myTime, myVar, meteoSettings);
+
+            if (! isEqual(value, NODATA) && ! isEqual(meteoPoints[i].residual, NODATA))
+            {
+                obs.push_back(value);
+                pre.push_back(value + meteoPoints[i].residual);
+            }
+        }
+    }
+
+    if (obs.size() > 0)
+    {
+        myStats->setMeanAbsoluteError(statistics::meanAbsoluteError(obs, pre));
+        myStats->setMeanBiasError(statistics::meanError(obs, pre));
+        myStats->setRootMeanSquareError(statistics::rootMeanSquareError(obs, pre));
+        myStats->setCompoundRelativeError(statistics::compoundRelativeError(obs, pre));
+
+        float intercept, slope, r2;
+        statistics::linearRegression(obs, pre, int(obs.size()), false, &intercept, &slope, &r2);
+        myStats->setR2(r2);
+    }
+
+    return true;
+}
+
+bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics *myStats)
+{
+    if (! checkInterpolationMain(myVar)) return false;
+
+    if ((interpolationSettings.getUseDewPoint() && (myVar == dailyAirRelHumidityAvg ||
+            myVar == dailyAirRelHumidityMin || myVar == dailyAirRelHumidityMax || myVar == airRelHumidity)) ||
+            myVar == dailyGlobalRadiation ||
+            myVar == dailyLeafWetness ||
+            myVar == dailyWindVectorDirectionPrevailing ||
+            myVar == dailyWindVectorIntensityAvg ||
+            myVar == dailyWindVectorIntensityMax ||
+            myVar == globalIrradiance)
+    {
+        logError("Not available for " + QString::fromStdString(getVariableString(myVar)));
+        return false;
+    }
+
+
+    std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+
+    // check quality and pass data to interpolation
+    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+                                         &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
+                                         checkSpatialQuality))
+    {
+        logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
+        return false;
+    }
+
+    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+    {
+        logError("Interpolation: error in function preInterpolation");
+        return false;
+    }
+
+    if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, interpolationPoints, &interpolationSettings, meteoSettings, true, true))
+        return false;
+
+    if (! computeStatisticsCrossValidation(myTime, myVar, myStats))
+        return false;
+
+    return true;
+}
 
 bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
@@ -2039,8 +2126,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     return true;
 }
 
-
-bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
+bool Project::checkInterpolationMain(meteoVariable myVar)
 {
     if (! DEM.isLoaded)
     {
@@ -2059,6 +2145,14 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
         logError("Select a variable before.");
         return false;
     }
+
+    return true;
+
+}
+
+bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
+{
+    if (! checkInterpolationMain(myVar)) return false;
 
     if (myVar == globalIrradiance)
     {
@@ -2304,11 +2398,12 @@ void Project::saveInterpolationParameters()
         parameters->setValue("lapseRateCode", interpolationSettings.getUseLapseRateCode());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parameters->setValue("topographicDistance", interpolationSettings.getUseTD());
+        parameters->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
         parameters->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
         parameters->setValue("useDewPoint", interpolationSettings.getUseDewPoint());
         parameters->setValue("useInterpolationTemperatureForRH", interpolationSettings.getUseInterpolatedTForRH());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
-        parameters->setValue("minRegressionR2", QString::number(interpolationSettings.getMinRegressionR2()));
+        parameters->setValue("minRegressionR2", QString::number(double(interpolationSettings.getMinRegressionR2())));
     parameters->endGroup();
 
     saveProxies();

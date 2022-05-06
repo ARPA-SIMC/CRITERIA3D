@@ -14,7 +14,7 @@
 
         public:
             Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMeteoSettings* meteoSettings_);
-            ~Crit3DMeteoWidget();
+            ~Crit3DMeteoWidget() override;
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
             void setDateInterval(QDate date0, QDate date1);
@@ -38,7 +38,7 @@
             bool computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state);
             void tooltipBar(bool state, int index, QBarSet *barset);
             void handleMarkerClicked();
-            void closeEvent(QCloseEvent *event);
+            void closeEvent(QCloseEvent *event) override;
             void setIsEnsemble(bool value);
             bool getIsEnsemble();
             void setNrMembers(int value);

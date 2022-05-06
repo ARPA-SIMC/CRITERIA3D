@@ -19,6 +19,7 @@ DialogElaboration::DialogElaboration(QSettings *settings, Crit3DClimate *clima, 
     QHBoxLayout elaborationLayout;
     meteoVariable var;
 
+    std::string lastVariableUsed = "";
     Q_FOREACH (QString group, settings->childGroups())
     {
         if (!group.endsWith("_VarToElab1"))
@@ -28,11 +29,19 @@ DialogElaboration::DialogElaboration(QSettings *settings, Crit3DClimate *clima, 
         try {
           var = MapDailyMeteoVar.at(variable);
           item = MapDailyMeteoVarToString.at(var);
+          if (clima->variable() == var)
+          {
+            lastVariableUsed = item;
+          }
         }
         catch (const std::out_of_range& ) {
            continue;
         }
         variableList.addItem(QString::fromStdString(item));
+    }
+    if (lastVariableUsed != "")
+    {
+        variableList.setCurrentText(QString::fromStdString(lastVariableUsed));
     }
 
     QLabel variableLabel("Variable: ");
@@ -47,13 +56,28 @@ DialogElaboration::DialogElaboration(QSettings *settings, Crit3DClimate *clima, 
     currentDay.setVisible(true);
 
     QLabel firstDateLabel("Start Year:");
-    firstYearEdit.setText(QString::number(firstDate.year()));
+    if (clima->yearStart() != NODATA)
+    {
+        firstYearEdit.setText(QString::number(clima->yearStart()));
+    }
+    else
+    {
+        firstYearEdit.setText(QString::number(firstDate.year()));
+    }
+
     firstYearEdit.setFixedWidth(110);
     firstYearEdit.setValidator(new QIntValidator(1800, 3000));
     firstDateLabel.setBuddy(&firstYearEdit);
 
     QLabel lastDateLabel("End Year:");
-    lastYearEdit.setText(QString::number(lastDate.year()));
+    if (clima->yearEnd() != NODATA)
+    {
+        lastYearEdit.setText(QString::number(clima->yearEnd()));
+    }
+    else
+    {
+        lastYearEdit.setText(QString::number(lastDate.year()));
+    }
     lastYearEdit.setFixedWidth(110);
     lastYearEdit.setValidator(new QIntValidator(1800, 3000));
     lastDateLabel.setBuddy(&lastYearEdit);
@@ -95,12 +119,34 @@ DialogElaboration::DialogElaboration(QSettings *settings, Crit3DClimate *clima, 
     nrYear.setText("0");
     nrYearLabel.setBuddy(&nrYear);
 
-    genericStartLabel.setVisible(false);
-    genericEndLabel.setVisible(false);
-    genericPeriodStart.setVisible(false);
-    genericPeriodEnd.setVisible(false);
-    nrYearLabel.setVisible(false);
-    nrYear.setVisible(false);
+    if (!clima->periodStr().isEmpty())
+    {
+        periodTypeList.setCurrentText(clima->periodStr());
+        if (clima->periodStr() == "Generic")
+        {
+            genericPeriodStart.setDate(clima->genericPeriodDateStart());
+            genericPeriodEnd.setDate(clima->genericPeriodDateEnd());
+            nrYear.setText(QString::number(clima->nYears()));
+            periodDisplay.setVisible(false);
+            currentDayLabel.setVisible(false);
+            currentDay.setVisible(false);
+            genericStartLabel.setVisible(true);
+            genericEndLabel.setVisible(true);
+            genericPeriodStart.setVisible(true);
+            genericPeriodEnd.setVisible(true);
+            nrYearLabel.setVisible(true);
+            nrYear.setVisible(true);
+        }
+        else
+        {
+            genericStartLabel.setVisible(false);
+            genericEndLabel.setVisible(false);
+            genericPeriodStart.setVisible(false);
+            genericPeriodEnd.setVisible(false);
+            nrYearLabel.setVisible(false);
+            nrYear.setVisible(false);
+        }
+    }
 
     genericPeriodLayout.addWidget(&genericStartLabel);
     genericPeriodLayout.addWidget(&genericPeriodStart);
@@ -120,6 +166,10 @@ DialogElaboration::DialogElaboration(QSettings *settings, Crit3DClimate *clima, 
         settings->setArrayIndex(i);
         QString elab = settings->value("elab").toString();
         elaborationList.addItem( elab );
+    }
+    if (!clima->elab1().isEmpty())
+    {
+        elaborationList.setCurrentText(clima->elab1());
     }
     settings->endArray();
     settings->endGroup();
@@ -143,6 +193,10 @@ DialogElaboration::DialogElaboration(QSettings *settings, Crit3DClimate *clima, 
     else
     {
         elab1Parameter.setReadOnly(false);
+        if (clima->param1() != NODATA)
+        {
+            elab1Parameter.setText(QString::number(clima->param1()));
+        }
     }
 
     elaborationLayout.addWidget(&elab1Parameter);

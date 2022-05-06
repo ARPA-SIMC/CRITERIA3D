@@ -26,7 +26,7 @@
         double m_limiteGradiGiorno;
         double m_sogliaGradiGiorno;
 
-        vector<double> m_faseFenologica;
+        std::vector<double> m_faseFenologica;
 
     public:
         // ctors
@@ -45,7 +45,7 @@
             m_numeroFoglieEmerse(0.),
             m_limiteGradiGiorno(0.),
             m_sogliaGradiGiorno(0.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         Cereali(const char* coltura, const double& beta, const double& sigma, const double& limiteGradiGiorno)
@@ -63,7 +63,7 @@
             m_numeroFoglieEmerse(0.),
             m_limiteGradiGiorno(limiteGradiGiorno),
             m_sogliaGradiGiorno(9.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         ~Cereali()

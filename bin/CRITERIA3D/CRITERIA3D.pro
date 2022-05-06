@@ -25,7 +25,7 @@ INCLUDEPATH +=  ./shared  \
                 ../../agrolib/outputPoints ../../agrolib/soilWidget ../../agrolib/utilities  \
                 ../../agrolib/dbMeteoPoints ../../agrolib/outputPoints ../../agrolib/dbMeteoGrid \
                 ../../agrolib/importDataXML ../../agrolib/proxyWidget ../../agrolib/project \
-                ../../agrolib/graphics  ../../agrolib/commonDialogs \
+                ../../agrolib/graphics  ../../agrolib/commonChartElements ../../agrolib/commonDialogs \
                 ../../mapGraphics ../../agrolib/meteoWidget
 
 LIBS += -lopengl32
@@ -47,6 +47,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/dbMeteoPoints/debug -ldbMeteoPoints
     LIBS += -L../../agrolib/outputPoints/debug -loutputPoints
     LIBS += -L../../agrolib/soilWidget/debug -lsoilWidget
+    LIBS += -L../../agrolib/commonChartElements/debug -lcommonChartElements
     LIBS += -L../../agrolib/crop/debug -lcrop
     LIBS += -L../../agrolib/soil/debug -lsoil
     LIBS += -L../../agrolib/utilities/debug -lutilities
@@ -71,6 +72,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/dbMeteoPoints/release -ldbMeteoPoints
     LIBS += -L../../agrolib/outputPoints/release -loutputPoints
     LIBS += -L../../agrolib/soilWidget/release -lsoilWidget
+    LIBS += -L../../agrolib/commonChartElements/release -lcommonChartElements
     LIBS += -L../../agrolib/crop/release -lcrop
     LIBS += -L../../agrolib/soil/release -lsoil
     LIBS += -L../../agrolib/utilities/release -lutilities

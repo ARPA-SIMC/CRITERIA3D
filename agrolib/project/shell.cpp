@@ -11,7 +11,6 @@
     #pragma comment(lib, "User32.lib")
 #endif
 
-using namespace std;
 
 
 bool attachOutputToConsole()
@@ -138,10 +137,10 @@ QString getTimeStamp(QList<QString> argumentList)
 
 QList<QString> getArgumentList(QString commandLine)
 {
-    string str;
+    std::string str;
     QList<QString> argumentList;
 
-    istringstream stream(commandLine.toStdString());
+    std::istringstream stream(commandLine.toStdString());
     while (stream >> str)
     {
         argumentList.append(QString::fromStdString(str));
@@ -153,10 +152,10 @@ QList<QString> getArgumentList(QString commandLine)
 
 QString getCommandLine(QString programName)
 {
-    string commandLine;
+    std::string commandLine;
 
-    cout << programName.toStdString() << ">";
-    getline (cin, commandLine);
+    std::cout << programName.toStdString() << ">";
+    getline (std::cin, commandLine);
 
     return QString::fromStdString(commandLine);
 }

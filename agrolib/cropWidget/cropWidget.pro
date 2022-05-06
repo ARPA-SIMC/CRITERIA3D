@@ -31,11 +31,11 @@ win32:{
 }
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../dbMeteoGrid  \
-            ../soil ../crop ../qcustomplot ../criteriaModel ../commonDialogs ../meteoWidget ../soilWidget
+            ../soil ../crop ../qcustomplot ../criteriaModel ../commonDialogs \
+            ../commonChartElements ../meteoWidget ../soilWidget
 
 
 SOURCES += \
-    cropCallout.cpp \
     cropWidget.cpp \
     dialogNewCrop.cpp \
     dialogNewProject.cpp \
@@ -46,7 +46,6 @@ SOURCES += \
     tabWaterContent.cpp
 
 HEADERS += \
-    cropCallout.h \
     cropWidget.h \
     dialogNewCrop.h \
     dialogNewProject.h \

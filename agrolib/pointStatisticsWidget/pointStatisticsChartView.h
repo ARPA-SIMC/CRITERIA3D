@@ -6,7 +6,9 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include <QtCharts/QBarCategoryAxis>
-#include "pointStatisticsCallout.h"
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include "callout.h"
 
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     QT_CHARTS_USE_NAMESPACE
@@ -18,35 +20,36 @@ class PointStatisticsChartView : public QChartView
 public:
     explicit PointStatisticsChartView(QWidget *parent = 0);
     void drawTrend(std::vector<int> years, std::vector<float> outputValues);
-    void tooltipLineSeries(QPointF point, bool state);
-    /*
-    void cleanScatterSeries();
-    void drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3);
-    void cleanClimLapseRate();
-    void drawClimLapseRate(QPointF firstPoint, QPointF lastPoint);
-    void cleanModelLapseRate();
-    void drawModelLapseRate(QList<QPointF> pointList);
-    void tooltipScatterSeries(QPointF point, bool state);
-    void setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental);
-    */
+    void drawClima(QList<QPointF> dailyPointList, QList<QPointF> decadalPointList, QList<QPointF> monthlyPointList);
+    void drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue, int classWidthValue);
+    void tooltipTrendSeries(QPointF point, bool state);
+    void tooltipClimaSeries(QPointF point, bool state);
+    void tooltipDistributionSeries(QPointF point, bool state);
+    void tooltipBar(bool state, int index, QBarSet *barset);
+    void cleanTrendSeries();
+    void cleanClimaSeries();
+    void cleanDistribution();
+    void setYmax(float value);
+    void setYmin(float value);
+    QList<QPointF> exportTrend();
+    QList<QPointF> exportClimaDaily();
+    QList<QPointF> exportClimaDecadal();
+    QList<QPointF> exportClimaMonthly();
+    QList<QList<float> > exportDistribution();
 
 private:
     QScatterSeries* trend;
-    //QBarCategoryAxis *axisX;
+    QLineSeries* climaDaily;
+    QLineSeries* climaDecadal;
+    QLineSeries* climaMonthly;
+    QBarSeries *distributionBar;
+    QLineSeries *distributionLine;
+    int widthValue;
+    QBarCategoryAxis *axisX;
     QValueAxis* axisXvalue;
     QValueAxis* axisY;
-    //QList<QString> categories;
-    PointStatisticsCallout *m_tooltip;
-    /*
-    QScatterSeries *series1;
-    QScatterSeries *series2;
-    QScatterSeries *series3;
-    QLineSeries* climLapseRatelineSeries;
-    QLineSeries* modelLapseRatelineSeries; 
-    QMap< QString, QPointF > idPointMap;
-    QMap< QString, QPointF > idPointMap2;
-    QMap< QString, QPointF > idPointMap3;
-    */
+    QList<QString> categories;
+    Callout *m_tooltip;
 };
 
 #endif // PointStatisticsChartView_H

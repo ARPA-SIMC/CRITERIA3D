@@ -80,7 +80,7 @@ TabLAI::TabLAI()
     chart->legend()->setAlignment(Qt::AlignBottom);
     chart->setAcceptHoverEvents(true);
 
-    m_tooltip = new CropCallout(chart);
+    m_tooltip = new Callout(chart);
     m_tooltip->hide();
 
     connect(seriesLAI, &QLineSeries::hovered, this, &TabLAI::tooltipLAI);

@@ -4,6 +4,7 @@
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
 #include <QtCore/QtMath>
+#include <qdebug.h>
 
 PointStatisticsChartView::PointStatisticsChartView(QWidget *parent) :
     QChartView(new QChart(), parent)
@@ -14,37 +15,48 @@ PointStatisticsChartView::PointStatisticsChartView(QWidget *parent) :
     trend->setMarkerSize(10.0);
     setRenderHint(QPainter::Antialiasing);
 
+    climaDaily = new QLineSeries();
+    climaDaily->setName("Daily");
+    climaDaily->setColor(Qt::black);
+
+    climaDecadal = new QLineSeries();
+    climaDecadal->setName("Decadal");
+    climaDecadal->setColor(Qt::red);
+
+    climaMonthly = new QLineSeries();
+    climaMonthly->setName("Monthly");
+    climaMonthly->setColor(Qt::green);
+
+    distributionBar = new QBarSeries();
+    distributionLine = new QLineSeries();
+    climaMonthly->setColor(Qt::green);
+
     axisXvalue = new QValueAxis();
-    //axisX = new QBarCategoryAxis();
+    axisX = new QBarCategoryAxis();
+    axisX->hide();
     axisY = new QValueAxis();
 
-    //chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisXvalue, Qt::AlignBottom);
-    //axisX->setVisible(false);
+    chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisY, Qt::AlignLeft);
     chart()->setDropShadowEnabled(false);
 
     chart()->legend()->setVisible(true);
     chart()->legend()->setAlignment(Qt::AlignBottom);
-    m_tooltip = new PointStatisticsCallout(chart());
+    m_tooltip = new Callout(chart());
     m_tooltip->hide();
 }
 
 void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<float> outputValues)
 {
 
-    trend->clear();
-    if (chart()->series().contains(trend))
+    if (chart()->series().size() > 0)
     {
-        chart()->removeSeries(trend);
+        cleanClimaSeries();
+        cleanDistribution();
+        cleanTrendSeries();
     }
-    /*
-    categories.clear();
-    for (int year = years[0]; year < years.size(); year++)
-    {
-        categories.append(QString::number(year));
-    }
-    */
+    chart()->legend()->setVisible(true);
 
     float maxValue = NODATA;
     float minValue = -NODATA;
@@ -63,21 +75,233 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
             }
         }
     }
-    double yRange = maxValue - minValue;
-    double deltaY = yRange/100;
-    axisY->setMax(maxValue+3*deltaY);
-    axisY->setMin(minValue-3*deltaY);
+    if (maxValue != minValue)
+    {
+        double yRange = maxValue - minValue;
+        double deltaY = yRange/100;
+        axisY->setMax(maxValue+3*deltaY);
+        axisY->setMin(minValue-3*deltaY);
+    }
+    else
+    {
+        axisY->setMax(maxValue+3);
+        axisY->setMin(minValue-3);
+    }
     axisXvalue->setRange(years[0], years[years.size()-1]);
-    axisXvalue->setTickCount(years.size());
+    if (years.size() <= 30)
+    {
+        axisXvalue->setTickCount(years.size());
+    }
+    else
+    {
+        axisXvalue->setTickCount(30);
+    }
     axisXvalue->setLabelFormat("%d");
-    //axisX->setCategories(categories);
+    axisY->setLabelFormat("%.1f");
     chart()->addSeries(trend);
     trend->attachAxis(axisXvalue);
     trend->attachAxis(axisY);
-    connect(trend, &QScatterSeries::hovered, this, &PointStatisticsChartView::tooltipLineSeries);
+    connect(trend, &QScatterSeries::hovered, this, &PointStatisticsChartView::tooltipTrendSeries);
 }
 
-void PointStatisticsChartView::tooltipLineSeries(QPointF point, bool state)
+void PointStatisticsChartView::cleanClimaSeries()
+{
+    if (chart()->series().contains(climaDaily))
+    {
+        chart()->removeSeries(climaDaily);
+        climaDaily->clear();
+    }
+    if (chart()->series().contains(climaDecadal))
+    {
+        chart()->removeSeries(climaDecadal);
+        climaDecadal->clear();
+    }
+    if (chart()->series().contains(climaMonthly))
+    {
+        chart()->removeSeries(climaMonthly);
+        climaMonthly->clear();
+    }
+}
+
+void PointStatisticsChartView::cleanTrendSeries()
+{
+    if (chart()->series().contains(trend))
+    {
+        chart()->removeSeries(trend);
+        trend->clear();
+    }
+}
+
+void PointStatisticsChartView::drawClima(QList<QPointF> dailyPointList, QList<QPointF> decadalPointList, QList<QPointF> monthlyPointList)
+{
+    if (chart()->series().size() > 0)
+    {
+        cleanClimaSeries();
+        cleanDistribution();
+        cleanTrendSeries();
+    }
+    chart()->legend()->setVisible(true);
+
+    float maxValue = NODATA;
+    float minValue = -NODATA;
+
+    for (int i = 0; i < dailyPointList.size(); i++)
+    {
+        climaDaily->append(dailyPointList[i]);
+        if(dailyPointList[i].y() != NODATA)
+        {
+            if (dailyPointList[i].y() > maxValue)
+            {
+                maxValue = dailyPointList[i].y();
+            }
+            if (dailyPointList[i].y() < minValue)
+            {
+                minValue = dailyPointList[i].y();
+            }
+        }
+    }
+
+    for (int i = 0; i < decadalPointList.size(); i++)
+    {
+        climaDecadal->append(decadalPointList[i]);
+        if(decadalPointList[i].y() != NODATA)
+        {
+            if (decadalPointList[i].y() > maxValue)
+            {
+                maxValue = decadalPointList[i].y();
+            }
+            if (decadalPointList[i].y() < minValue)
+            {
+                minValue = decadalPointList[i].y();
+            }
+        }
+    }
+
+    for (int i = 0; i < monthlyPointList.size(); i++)
+    {
+        climaMonthly->append(monthlyPointList[i]);
+        if(monthlyPointList[i].y() != NODATA)
+        {
+            if (monthlyPointList[i].y() > maxValue)
+            {
+                maxValue = monthlyPointList[i].y();
+            }
+            if (monthlyPointList[i].y() < minValue)
+            {
+                minValue = monthlyPointList[i].y();
+            }
+        }
+    }
+    axisY->setMax(maxValue);
+    axisY->setMin(minValue);
+    axisXvalue->setRange(1, 366);
+    axisXvalue->setTickCount(20);
+    axisXvalue->setLabelFormat("%d");
+    axisY->setLabelFormat("%.1f");
+
+    chart()->addSeries(climaDaily);
+    chart()->addSeries(climaDecadal);
+    chart()->addSeries(climaMonthly);
+    climaDaily->attachAxis(axisXvalue);
+    climaDaily->attachAxis(axisY);
+    climaDecadal->attachAxis(axisXvalue);
+    climaDecadal->attachAxis(axisY);
+    climaMonthly->attachAxis(axisXvalue);
+    climaMonthly->attachAxis(axisY);
+    connect(climaDaily, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipClimaSeries);
+    connect(climaDecadal, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipClimaSeries);
+    connect(climaMonthly, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipClimaSeries);
+}
+
+void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue, int classWidthValue)
+{
+
+    if (chart()->series().size() > 0)
+    {
+        cleanClimaSeries();
+        cleanDistribution();
+        cleanTrendSeries();
+    }
+    chart()->legend()->setVisible(false);
+    categories.clear();
+    widthValue = classWidthValue;
+
+
+    QBarSet *distributionSet = new QBarSet("Distribution");
+    distributionSet->setColor(Qt::red);
+    distributionSet->setBorderColor(Qt::red);
+
+    float maxValueY = NODATA;
+    float minValueY = -NODATA;
+
+    for (int i = 0; i<barValues.size(); i++)
+    {
+        categories.append(QString::number(i));
+        *distributionSet << barValues[i];
+        if(barValues[i] != NODATA)
+        {
+            if (barValues[i] > maxValueY)
+            {
+                maxValueY = barValues[i];
+            }
+            if (barValues[i] < minValueY)
+            {
+                minValueY = barValues[i];
+            }
+        }
+    }
+
+    for (int i = 0; i<lineValues.size(); i++)
+    {
+        distributionLine->append(lineValues[i]);
+        if(lineValues[i].y() != NODATA)
+        {
+            if (lineValues[i].y() > maxValueY)
+            {
+                maxValueY = lineValues[i].y();
+            }
+            if (lineValues[i].y() < minValueY)
+            {
+                minValueY = lineValues[i].y();
+            }
+        }
+    }
+
+    distributionBar->append(distributionSet);
+    axisY->setMax(maxValueY);
+    axisY->setMin(minValueY);
+    axisY->setLabelFormat("%.3f");
+    axisXvalue->setRange(minValue, maxValue);
+    axisX->setCategories(categories);
+
+    chart()->addSeries(distributionBar);
+    chart()->addSeries(distributionLine);
+
+    distributionLine->attachAxis(axisXvalue);
+
+    distributionBar->attachAxis(axisX);
+    distributionBar->attachAxis(axisY);
+
+    connect(distributionLine, &QLineSeries::hovered, this, &PointStatisticsChartView::tooltipDistributionSeries);
+    connect(distributionBar, &QBarSeries::hovered, this, &PointStatisticsChartView::tooltipBar);
+
+}
+
+void PointStatisticsChartView::cleanDistribution()
+{
+    if (chart()->series().contains(distributionLine))
+    {
+        chart()->removeSeries(distributionLine);
+        distributionLine->clear();
+    }
+    if (chart()->series().contains(distributionBar))
+    {
+        chart()->removeSeries(distributionBar);
+        distributionBar->clear();
+    }
+}
+
+void PointStatisticsChartView::tooltipTrendSeries(QPointF point, bool state)
 {
 
     auto serie = qobject_cast<QScatterSeries *>(sender());
@@ -86,7 +310,7 @@ void PointStatisticsChartView::tooltipLineSeries(QPointF point, bool state)
         double xValue = point.x();
         double yValue = point.y();
 
-        m_tooltip->setText(QString("%1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
+        m_tooltip->setText(QString("year %1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
@@ -99,131 +323,137 @@ void PointStatisticsChartView::tooltipLineSeries(QPointF point, bool state)
     }
 }
 
-/*
-void PointStatisticsChartView::cleanScatterSeries()
+void PointStatisticsChartView::tooltipClimaSeries(QPointF point, bool state)
 {
-    if (chart()->series().contains(series1))
+
+    auto serie = qobject_cast<QLineSeries *>(sender());
+    if (state)
     {
-        chart()->removeSeries(series1);
-        series1->clear();
+        int xValue = point.x();
+        double yValue = point.y();
+
+        m_tooltip->setText(QString("dOY %1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
+        m_tooltip->setSeries(serie);
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
     }
-    if (chart()->series().contains(series2))
+    else
     {
-        chart()->removeSeries(series2);
-        series2->clear();
-    }
-    if (chart()->series().contains(series3))
-    {
-        chart()->removeSeries(series3);
-        series3->clear();
+        m_tooltip->hide();
     }
 }
 
-void PointStatisticsChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3)
+void PointStatisticsChartView::tooltipDistributionSeries(QPointF point, bool state)
 {
-    for (int i = 0; i < pointListSeries1.size(); i++)
+
+    auto serie = qobject_cast<QLineSeries *>(sender());
+    if (state)
     {
-        series1->append(pointListSeries1[i]);
-    }
+        double xValue = point.x();
+        double yValue = point.y();
 
-    for (int i = 0; i < pointListSeries2.size(); i++)
+        m_tooltip->setText(QString("%1,%2").arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setSeries(serie);
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
     {
-        series2->append(pointListSeries2[i]);
-    }
-
-    for (int i = 0; i < pointListSeries3.size(); i++)
-    {
-        series3->append(pointListSeries3[i]);
-    }
-
-    pointListSeries1.append(pointListSeries2);
-    pointListSeries1.append(pointListSeries3);
-    double xMin = std::numeric_limits<int>::max();
-    double xMax = std::numeric_limits<int>::min();
-    double yMin = std::numeric_limits<int>::max();
-    double yMax = std::numeric_limits<int>::min();
-    foreach (QPointF p, pointListSeries1) {
-        xMin = qMin(xMin, p.x());
-        xMax = qMax(xMax, p.x());
-        yMin = qMin(yMin, p.y());
-        yMax = qMax(yMax, p.y());
-    }
-
-    double xRange = xMax - xMin;
-    double yRange = yMax - yMin;
-    double deltaX = xRange/100;
-    double deltaY = yRange/100;
-    axisX->setMax(xMax+3*deltaX);
-    axisX->setMin(xMin-3*deltaX);
-    axisY->setMax(yMax+3*deltaY);
-    axisY->setMin(yMin-3*deltaY);
-
-    chart()->addSeries(series1);
-    chart()->addSeries(series2);
-    chart()->addSeries(series3);
-
-    series1->attachAxis(axisX);
-    series1->attachAxis(axisY);
-
-    series2->attachAxis(axisX);
-    series2->attachAxis(axisY);
-
-    series3->attachAxis(axisX);
-    series3->attachAxis(axisY);
-
-    connect(series1, &QScatterSeries::hovered, this, &PointStatisticsChartView::tooltipScatterSeries);
-    connect(series2, &QScatterSeries::hovered, this, &PointStatisticsChartView::tooltipScatterSeries);
-    connect(series3, &QScatterSeries::hovered, this, &PointStatisticsChartView::tooltipScatterSeries);
-}
-
-void PointStatisticsChartView::cleanClimLapseRate()
-{
-    if (chart()->series().contains(climLapseRatelineSeries))
-    {
-        chart()->removeSeries(climLapseRatelineSeries);
-        climLapseRatelineSeries->clear();
+        m_tooltip->hide();
     }
 }
 
-void PointStatisticsChartView::drawClimLapseRate(QPointF firstPoint, QPointF lastPoint)
+void PointStatisticsChartView::tooltipBar(bool state, int index, QBarSet *barset)
 {
-    climLapseRatelineSeries->append(firstPoint);
-    climLapseRatelineSeries->append(lastPoint);
-    chart()->addSeries(climLapseRatelineSeries);
-    climLapseRatelineSeries->attachAxis(axisX);
-    climLapseRatelineSeries->attachAxis(axisY);
-}
 
-void PointStatisticsChartView::cleanModelLapseRate()
-{
-    if (chart()->series().contains(modelLapseRatelineSeries))
+    QBarSeries *series = qobject_cast<QBarSeries *>(sender());
+
+    if (state && barset!=nullptr && index < barset->count())
     {
-        chart()->removeSeries(modelLapseRatelineSeries);
-        modelLapseRatelineSeries->clear();
+
+        QPoint CursorPoint = QCursor::pos();
+        QPoint mapPoint = mapFromGlobal(CursorPoint);
+        QPointF pointF = this->chart()->mapToValue(mapPoint,series);
+        float xStart = axisXvalue->min() + (index*widthValue);
+        float xEnd = axisXvalue->min() + ((index+1)*widthValue);
+
+
+        // check if bar is hiding QlineSeries
+        if (  static_cast<int>( distributionLine->at(pointF.toPoint().x()).y() ) == pointF.toPoint().y())
+        {
+            tooltipDistributionSeries(pointF, true);
+        }
+
+        QString valueStr = QString("[%1:%2] frequency %3").arg(xStart, 0, 'f', 1).arg(xEnd, 0, 'f', 1).arg(barset->at(index), 0, 'f', 3);
+        m_tooltip->setSeries(series);
+        m_tooltip->setText(valueStr);
+        m_tooltip->setAnchor(pointF);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+
+    }
+    else
+    {
+        m_tooltip->hide();
     }
 }
 
-void PointStatisticsChartView::drawModelLapseRate(QList<QPointF> pointList)
+void PointStatisticsChartView::setYmax(float value)
 {
-    for (int i = 0; i < pointList.size(); i++)
+    axisY->setMax(value);
+}
+
+void PointStatisticsChartView::setYmin(float value)
+{
+    axisY->setMin(value);
+}
+
+QList<QPointF> PointStatisticsChartView::exportTrend()
+{
+    return trend->points();
+}
+
+QList<QPointF> PointStatisticsChartView::exportClimaDaily()
+{
+    return climaDaily->points();
+}
+
+QList<QPointF> PointStatisticsChartView::exportClimaDecadal()
+{
+    return climaDecadal->points();
+}
+
+QList<QPointF> PointStatisticsChartView::exportClimaMonthly()
+{
+    return climaMonthly->points();
+}
+
+QList< QList<float> > PointStatisticsChartView::exportDistribution()
+{
+    QList< QList<float> > barValues;
+    QList<QBarSet *> barSet = distributionBar->barSets();
+    QList<float> tuple;
+    float xStart;
+    float xEnd;
+
+    if (barSet.size() != 0)
     {
-        modelLapseRatelineSeries->append(pointList[i]);
+        for (int i = 0; i<barSet[0]->count(); i++)
+        {
+            tuple.clear();
+            xStart = axisXvalue->min() + (i*widthValue);
+            xEnd = axisXvalue->min() + ((i+1)*widthValue);
+            tuple.append(xStart);
+            tuple.append(xEnd);
+            tuple.append(barSet[0]->at(i));
+            barValues.append(tuple);
+        }
     }
-    chart()->addSeries(modelLapseRatelineSeries);
-    modelLapseRatelineSeries->attachAxis(axisX);
-    modelLapseRatelineSeries->attachAxis(axisY);
+    return barValues;
 }
-
-void PointStatisticsChartView::setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental)
-{
-    idPointMap.clear();
-    idPointMap2.clear();
-    idPointMap3.clear();
-    idPointMap = valuePrimary;
-    idPointMap2 = valueSecondary;
-    idPointMap3 = valueSupplemental;
-}
-
-
-*/
 
