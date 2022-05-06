@@ -23,7 +23,7 @@ INCLUDEPATH +=  ../../mapGraphics \
                 ../../agrolib/utilities ../../agrolib/dbMeteoPoints ../../agrolib/dbMeteoGrid \
                 ../../agrolib/importDataXML ../../agrolib/proxyWidget \
                 ../../agrolib/commonDialogs ../../agrolib/project \
-                ../../agrolib/graphics ../../agrolib/meteoWidget ../../mapGraphics  \
+                ../../agrolib/graphics ../../agrolib/commonChartElements ../../agrolib/meteoWidget ../../mapGraphics  \
                 ../CRITERIA3D/shared
 
 CONFIG += debug_and_release
@@ -36,6 +36,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/proxyWidget/debug -lproxyWidget
     LIBS += -L../../agrolib/importDataXML/debug -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/debug -lmeteoWidget
+    LIBS += -L../../agrolib/commonChartElements/debug -lcommonChartElements
     LIBS += -L../../agrolib/commonDialogs/debug -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/debug -ldbMeteoGrid
     LIBS += -L../../agrolib/dbMeteoPoints/debug -ldbMeteoPoints
@@ -58,6 +59,7 @@ CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/proxyWidget/release -lproxyWidget
     LIBS += -L../../agrolib/importDataXML/release -limportDataXML
     LIBS += -L../../agrolib/meteoWidget/release -lmeteoWidget
+    LIBS += -L../../agrolib/commonChartElements/release -lcommonChartElements
     LIBS += -L../../agrolib/commonDialogs/release -lcommonDialogs
     LIBS += -L../../agrolib/dbMeteoGrid/release -ldbMeteoGrid
     LIBS += -L../../agrolib/dbMeteoPoints/release -ldbMeteoPoints
