@@ -41,6 +41,7 @@ bool initializeRasterFromShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid 
     header.llCorner.y = ymin;
     header.nrRows = int(floor((ymax - ymin) / cellSize))+1;
     header.nrCols = int(floor((xmax - xmin) / cellSize))+1;
+    header.flag = NODATA;
 
     return raster.initializeGrid(header);
 }

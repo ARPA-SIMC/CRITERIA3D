@@ -931,7 +931,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
     dataRaster.header->llCorner.y = latLonHeader.llCorner.latitude;
     dataRaster.header->llCorner.x = latLonHeader.llCorner.longitude;
     dataRaster.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
-    dataRaster.initializeGrid();
+    dataRaster.initializeGrid(latLonHeader.flag);
 
     // assign lat lon values
     double lat, lon, x, y;
