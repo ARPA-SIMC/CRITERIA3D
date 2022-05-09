@@ -20,8 +20,8 @@
         const GLfloat *getVertices() const { return m_vertices.data(); }
         const GLubyte *getColors() const { return m_colors.data(); }
 
-        int dataCount() const { return m_vertices.size(); }
-        int vertexCount() const { return m_vertices.size() / 3; }
+        long dataCount() const { return long(m_vertices.size()); }
+        long vertexCount() const { return long(m_vertices.size()) / 3; }
         float defaultDistance() const { return std::max(m_dx, m_dy); }
         float magnify() const { return m_magnify; }
 
