@@ -1,8 +1,8 @@
 #include "dialogChangeAxis.h"
 
-DialogChangeAxis::DialogChangeAxis(bool isLeftAxis)
+DialogChangeAxis::DialogChangeAxis(bool isLeftAxis_)
 {
-    isLeftAxis = isLeftAxis;
+    isLeftAxis = isLeftAxis_;
     QString title;
     if (isLeftAxis)
     {
