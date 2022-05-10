@@ -1,5 +1,5 @@
 #include "glWidget.h"
-#include "viewer3D.h"
+#include "viewer3d.h"
 
 #include <QSlider>
 #include <QLabel>
@@ -57,7 +57,7 @@ Viewer3D::Viewer3D(Crit3DGeometry *geometry)
     turnSlider->setValue(30 * DEGREE_MULTIPLY);
     rotateSlider->setValue(0 * DEGREE_MULTIPLY);
     magnifySlider->setValue(geometry->magnify() * 10);
-    slopeSlider->setValue(45);
+    slopeSlider->setValue(geometry->artifactSlope());
 }
 
 

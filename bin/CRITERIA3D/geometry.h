@@ -24,8 +24,10 @@
         long vertexCount() const { return long(m_vertices.size()) / 3; }
         float defaultDistance() const { return std::max(m_dx, m_dy); }
         float magnify() const { return m_magnify; }
+        int artifactSlope() const { return m_artifactSlope; }
 
         void setMagnify(float magnify);
+        void setArtifactSlope(int artifactSlope){ m_artifactSlope = artifactSlope; }
         void setCenter(float x, float y, float z);
         void setDimension(float dx, float dy);
 
@@ -45,6 +47,7 @@
         float m_dx, m_dy;
         float m_xCenter, m_yCenter, m_zCenter;
         float m_magnify;
+        int m_artifactSlope = 60;
     };
 
 

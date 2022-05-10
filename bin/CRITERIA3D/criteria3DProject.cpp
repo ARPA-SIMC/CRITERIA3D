@@ -1051,17 +1051,17 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
         float slope = radiationMaps->slopeMap->getValueFromRowCol(row, col);
         if (! isEqual(slope, radiationMaps->slopeMap->header->flag))
         {
-            if (slope > artifactSlope)
-            {
-                colorOut.red = (colorOut.red + 192) / 2;
-                colorOut.green = (colorOut.green + 192) / 2;
-                colorOut.blue = (colorOut.blue + 192) / 2;
-            }
-            float slopeAmplification = 90.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
-            float shadow = -cos(aspect * float(DEG_TO_RAD)) * std::max(3.f, slope * slopeAmplification);
+            float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
+            float shadow = -cos(aspect * float(DEG_TO_RAD)) * std::max(5.f, slope * slopeAmplification);
             colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
             colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
             colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
+            if (slope > geometry->artifactSlope())
+            {
+                colorOut.red = std::min(255, std::max(0, int((colorOut.red + 256) / 2)));
+                colorOut.green = std::min(255, std::max(0, int((colorOut.green + 256) / 2)));
+                colorOut.blue = std::min(255, std::max(0, int((colorOut.blue + 256) / 2)));
+            }
         }
     }
 }
