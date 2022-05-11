@@ -306,9 +306,6 @@
         void initializePrecipitationOutputs(int lengthSeason[]);
         void initializePrecipitationInternalArrays();
         void spatialIterationAmounts(double** correlationMatrixSimulatedData,double ** amountsCorrelationMatrix , double** randomMatrix, int length, double** occurrences, double** phatAlpha, double** phatBeta,double** simulatedPrecipitationAmounts);
-        double inverseGammaFunction(double valueProbability, double alpha, double beta, double accuracy);
-
-
         void temperatureCompute();
         void computeMonthlyVariables();
         void computeTemperatureParameters();

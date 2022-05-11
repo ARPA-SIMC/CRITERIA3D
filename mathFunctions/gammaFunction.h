@@ -24,6 +24,7 @@
     void gammaIncompleteComplementaryFunction(double *gammaComplementaryFunction, double alpha, double x, double *gammaLn);
     double incompleteGamma(double alpha, double x, double *lnGammaValue); // incomplete + complete
     double incompleteGamma(double alpha, double x); // only incomplete
+    double inverseGammaCumulativeDistributionFunction(double valueProbability, double alpha, double beta, double accuracy);
     bool gammaFitting(std::vector<float> &series, int n, double* beta, double* gamma,  double* pZero);
 
     double weibullCDF(double x, double lambda, double kappa);

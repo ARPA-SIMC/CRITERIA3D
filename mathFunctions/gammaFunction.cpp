@@ -406,6 +406,44 @@
                x (value)
     Output:    GammaCDF (probability  a<=x)
     */
+
+    double inverseGammaCumulativeDistributionFunction(double valueProbability, double alpha, double beta, double accuracy)
+    {
+       double x;
+       double y;
+       double rightBound = 25.0;
+       double leftBound = 0.0;
+       int counter = 0;
+       do {
+           y = incompleteGamma(alpha,rightBound/beta);
+           if (valueProbability>y)
+           {
+               rightBound *= 2;
+               counter++;
+               if (counter == 7) return rightBound;
+           }
+       } while ((valueProbability>y));
+
+       x = (rightBound + leftBound)*0.5;
+       y = incompleteGamma(alpha,x/beta);
+       while ((fabs(valueProbability - y) > accuracy) && (counter < 200))
+       {
+           if (y > valueProbability)
+           {
+               rightBound = x;
+           }
+           else
+           {
+               leftBound = x;
+           }
+           x = (rightBound + leftBound)*0.5;
+           y = incompleteGamma(alpha,x/beta);
+           ++counter;
+       }
+       x = (rightBound + leftBound)*0.5;
+       return x;
+    }
+
     float gammaCDF(float x, double beta, double gamma,  double pZero)
     {
 
@@ -519,6 +557,7 @@
     double inverseWeibullCDF(double x, double lambda, double kappa)
     {
         double value;
+        if (x >= 1  || x < 0 || kappa <= 0 || lambda <= 0) return PARAMETER_ERROR;
         value = lambda*pow(-log(1-x),1./kappa);
         return value;
     }
