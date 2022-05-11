@@ -27,6 +27,7 @@
     bool gammaFitting(std::vector<float> &series, int n, double* beta, double* gamma,  double* pZero);
 
     double weibullCDF(double x, double lambda, double kappa);
+    double inverseWeibullCDF(double x, double lambda, double kappa);
     double weibullPDF(double x, double lambda, double kappa);
     double meanValueWeibull(double lambda, double kappa);
     double varianceValueWeibull(double lambda, double kappa);

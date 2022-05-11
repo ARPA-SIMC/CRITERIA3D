@@ -516,6 +516,13 @@
         return value;
     }
 
+    double inverseWeibullCDF(double x, double lambda, double kappa)
+    {
+        double value;
+        value = lambda*pow(-log(1-x),1./kappa);
+        return value;
+    }
+
     double weibullPDF(double x, double lambda, double kappa)
     {
         double value;
