@@ -444,10 +444,10 @@
        return x;
     }
 
-    double generalizedGammaCDF(float x, double beta, double gamma,  double pZero)
+    float generalizedGammaCDF(float x, double beta, double gamma,  double pZero)
     {
 
-        double gammaCDF = NODATA;
+        float gammaCDF = NODATA;
 
         if (fabs(x - NODATA) < EPSILON || fabs(beta - NODATA)< EPSILON || fabs(gamma - NODATA) < EPSILON || fabs(pZero - NODATA) < EPSILON || beta == 0)
         {
