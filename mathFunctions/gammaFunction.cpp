@@ -404,7 +404,7 @@
     Input:     beta, gamma (gamma parameters)
                pzero (probability of zero)
                x (value)
-    Output:    GammaCDF (probability  a<=x)
+    Output:    generalizedGammaCDF (probability  a<=x)
     */
 
     double inverseGammaCumulativeDistributionFunction(double valueProbability, double alpha, double beta, double accuracy)
