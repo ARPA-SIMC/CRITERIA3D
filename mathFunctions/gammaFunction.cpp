@@ -444,12 +444,12 @@
        return x;
     }
 
-    float gammaCDF(float x, double beta, double gamma,  double pZero)
+    double generalizedGammaCDF(float x, double beta, double gamma,  double pZero)
     {
 
-        float gammaCDF = NODATA;
+        double gammaCDF = NODATA;
 
-        if (x == NODATA || beta == NODATA || gamma == NODATA || pZero == NODATA || beta == 0)
+        if (fabs(x - NODATA) < EPSILON || fabs(beta - NODATA)< EPSILON || fabs(gamma - NODATA) < EPSILON || fabs(pZero - NODATA) < EPSILON || beta == 0)
         {
             return gammaCDF;
         }
@@ -460,7 +460,7 @@
         }
         else
         {
-            gammaCDF = pZero + (1 - pZero) * incompleteGamma(gamma, x / beta);
+            gammaCDF = pZero + (1 - pZero) * incompleteGamma(gamma, double(x) / beta);
         }
         return gammaCDF;
 

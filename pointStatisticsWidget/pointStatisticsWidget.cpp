@@ -1030,8 +1030,8 @@ void Crit3DPointStatisticsWidget::plot()
                     {
                         if (x > 0)
                         {
-                            float gammaFun = gammaCDF(x, beta, gamma, pzero);
-                            if (gammaFun != NODATA)
+                            float gammaFun = generalizedGammaCDF(x, beta, gamma, pzero);
+                            if (fabs(gammaFun - NODATA) > EPSILON)
                             {
                                 float probGamma = probabilityGamma(x, 1/beta, gamma, gammaFun);
                                 lineValues.append(QPointF(x,probGamma));
@@ -1279,8 +1279,8 @@ void Crit3DPointStatisticsWidget::plot()
                 {
                     if (x > 0)
                     {
-                        float gammaFun = gammaCDF(x, beta, gamma, pzero);
-                        if (gammaFun != NODATA)
+                        float gammaFun = generalizedGammaCDF(x, beta, gamma, pzero);
+                        if (fabs(gammaFun - NODATA) > EPSILON)
                         {
                             float probGamma = probabilityGamma(x, 1/beta, gamma, gammaFun);
                             lineValues.append(QPointF(x,probGamma));

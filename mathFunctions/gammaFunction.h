@@ -12,7 +12,7 @@
 // functions
     double factorial(int n);
     double standardGaussianInvCDF(double prob);
-    float gammaCDF(float x, double beta, double gamma,  double pZero) ;
+    float generalizedGammaCDF(float x, double beta, double gamma,  double pZero) ;
     float probabilityGamma(float x, double alfa, double gamma, float gammaFunc);
     void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta);
     void logLogisticFitting(std::vector<float> probWeightedMoments, double *alpha, double *beta, double *gamma);
