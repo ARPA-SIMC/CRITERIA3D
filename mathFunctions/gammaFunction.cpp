@@ -444,6 +444,45 @@
        return x;
     }
 
+    float inverseGeneralizedGammaCDF(double valueProbability, double alpha, double beta, double accuracy,double pZero)
+    {
+       float x;
+       float y;
+       float rightBound = 25.0;
+       float leftBound = 0.0;
+       int counter = 0;
+       do {
+           //y = incompleteGamma(alpha,rightBound/beta);
+           y = generalizedGammaCDF(rightBound,beta,alpha,pZero);
+           if (valueProbability>y)
+           {
+               rightBound *= 2;
+               counter++;
+               if (counter == 7) return rightBound;
+           }
+       } while ((valueProbability>y));
+
+       x = (rightBound + leftBound)*0.5;
+       y = generalizedGammaCDF(x,beta,alpha,pZero);
+       while ((fabs(valueProbability - y) > accuracy) && (counter < 200))
+       {
+           if (y > valueProbability)
+           {
+               rightBound = x;
+           }
+           else
+           {
+               leftBound = x;
+           }
+           x = (rightBound + leftBound)*0.5;
+           y = generalizedGammaCDF(x,beta,alpha,pZero);
+           ++counter;
+       }
+       x = (rightBound + leftBound)*0.5;
+       return x;
+    }
+
+
     float generalizedGammaCDF(float x, double beta, double gamma,  double pZero)
     {
 
