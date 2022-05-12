@@ -177,7 +177,7 @@ float Drought::computeDroughtIndex()
         {
             if (index == INDEX_SPI)
             {
-                float gammaCDFRes = gammaCDF(mySum[j], currentGamma[myMonthIndex-1].beta, currentGamma[myMonthIndex-1].gamma, currentGamma[myMonthIndex-1].pzero);
+                float gammaCDFRes = generalizedGammaCDF(mySum[j], currentGamma[myMonthIndex-1].beta, currentGamma[myMonthIndex-1].gamma, currentGamma[myMonthIndex-1].pzero);
                 if (gammaCDFRes > 0 && gammaCDFRes < 1)
                 {
                     droughtResults[j] = standardGaussianInvCDF(gammaCDFRes);
