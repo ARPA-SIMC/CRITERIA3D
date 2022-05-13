@@ -19,6 +19,7 @@
     void logLogisticFitting(std::vector<float> probWeightedMoments, double *alpha, double *beta, double *gamma);
     float logLogisticCDF(float myValue, double alpha, double beta, double gamma);
 
+    bool getGammaParameters(double mean, double variance, double* alpha, double* beta);
     double gammaFunction(double value);
     double gammaNaturalLogarithm(double value);
     void gammaIncompleteP(double *gammaDevelopmentSeries, double alpha, double x, double *gammaLn);

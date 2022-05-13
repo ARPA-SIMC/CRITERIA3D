@@ -328,6 +328,19 @@
         return gammaIncomplete;
     }
 
+    bool getGammaParameters(double mean, double variance, double* alpha, double* beta)
+    {
+        // beta is intended as rate parameter
+        if (variance == 0 || mean == 0)
+        {
+            return false;
+        }
+
+        *alpha = variance/mean;
+        *beta = mean*mean/variance;
+        return true;
+    }
+
     bool gammaFitting(std::vector<float> &series, int n, double *beta, double *gamma,  double *pZero)
     {
         if (n<=0)
