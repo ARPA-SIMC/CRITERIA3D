@@ -1030,17 +1030,21 @@ void Crit3DPointStatisticsWidget::plot()
                     {
                         if (x > 0)
                         {
+                            /*
                             float gammaFun = generalizedGammaCDF(x, beta, gamma, pzero);
                             if (fabs(gammaFun - NODATA) > EPSILON)
                             {
                                 float probGamma = probabilityGamma(x, 1/beta, gamma, gammaFun);
                                 lineValues.append(QPointF(x,probGamma));
                             }
+
                             else
                             {
                                 QMessageBox::information(nullptr, "Error", "Error in gamma distribution");
                                 return;
-                            }
+                            }*/
+                            float probGamma = generalizedGammaCDF(x, beta, gamma, pzero);
+                            lineValues.append(QPointF(x,probGamma));
                         }
                     }
                     else if (myVar != dailyAirRelHumidityMin && myVar != dailyAirRelHumidityMax && myVar != dailyAirRelHumidityAvg)
