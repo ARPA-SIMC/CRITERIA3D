@@ -548,7 +548,7 @@
         }
         else
         {
-            gammaCDF = pZero + (1 - pZero) * incompleteGamma(gamma, double(x) / beta);
+            gammaCDF = pZero + (1 - pZero) * incompleteGamma(gamma, x / beta);
         }
         return gammaCDF;
 
