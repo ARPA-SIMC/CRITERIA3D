@@ -559,6 +559,11 @@
         return ( exp(-alfa * x) *( pow(x,(gamma - 1)) * pow(alfa,gamma) / gammaFunc) );
     }
 
+    float probabilityGamma(float x, double alpha, double beta)
+    {
+        return ( exp(-beta * x) *( pow(x,(alpha - 1)) * pow(beta,alpha) / gammaFunction(alpha)) );
+    }
+
     void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta)
     {
 
