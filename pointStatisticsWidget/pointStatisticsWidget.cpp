@@ -955,7 +955,7 @@ void Crit3DPointStatisticsWidget::plot()
             int nrValues = int(series.size());
             std::vector<float> sortedSeries = series;
             double beta;
-            double gamma;
+            double alpha;
             double pzero;
 
             int visualizedNrValues = 0;
@@ -974,7 +974,7 @@ void Crit3DPointStatisticsWidget::plot()
                         }
                     }
                 }
-                if (!gammaFitting(series, nrValues, &beta, &gamma,  &pzero))
+                if (!gammaFitting(series, nrValues, &beta, &alpha,  &pzero))
                 {
                     return;
                 }
@@ -1030,10 +1030,10 @@ void Crit3DPointStatisticsWidget::plot()
                     {
                         if (x > 0)
                         {
-                            float gammaFun = generalizedGammaCDF(x, beta, gamma, pzero);
+                            float gammaFun = generalizedGammaCDF(x, beta, alpha, pzero);
                             if (! isEqual(gammaFun, NODATA))
                             {
-                                float probGamma = probabilityGamma(x, 1/beta, gamma, gammaFun);
+                                float probGamma = probabilityGamma(x, 1/beta, alpha, gammaFun);
                                 lineValues.append(QPointF(x, probGamma));
                             }
 
@@ -1204,7 +1204,7 @@ void Crit3DPointStatisticsWidget::plot()
         int nrValues = int(series.size());
         std::vector<float> sortedSeries = series;
         double beta;
-        double gamma;
+        double alpha;
         double pzero;
 
         int visualizedNrValues = 0;
@@ -1222,7 +1222,7 @@ void Crit3DPointStatisticsWidget::plot()
                     }
                 }
             }
-            if (!gammaFitting(series, nrValues, &beta, &gamma,  &pzero))
+            if (!gammaFitting(series, nrValues, &beta, &alpha,  &pzero))
             {
                 return;
             }
@@ -1280,10 +1280,10 @@ void Crit3DPointStatisticsWidget::plot()
                 {
                     if (x > 0)
                     {
-                        float gammaFun = generalizedGammaCDF(x, beta, gamma, pzero);
+                        float gammaFun = generalizedGammaCDF(x, beta, alpha, pzero);
                         if (fabs(gammaFun - NODATA) > EPSILON)
                         {
-                            float probGamma = probabilityGamma(x, 1/beta, gamma, gammaFun);
+                            float probGamma = probabilityGamma(x, 1/beta, alpha, gammaFun);
                             lineValues.append(QPointF(x,probGamma));
                         }
                         else
