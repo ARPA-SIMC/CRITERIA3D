@@ -400,6 +400,10 @@
             *alpha = (1 + sqrt(1 + 4 * delta / 3)) / (4 * delta);
             *beta = average / (*alpha);
         }
+        if (*alpha <= 0 || *beta <= 0)
+        {
+            return false;
+        }
 
         return true;
     }
