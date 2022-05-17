@@ -1024,18 +1024,19 @@ void Crit3DPointStatisticsWidget::plot()
             for (int i = 0; i<bucket.size(); i++)
             {
                 float x = valMinValue + (i*classWidthValue) + (classWidthValue/2.0);
-                if (x < valMaxValue)
+                if (x < float(valMaxValue))
                 {
                     if (myVar == dailyPrecipitation)
                     {
                         if (x > 0)
                         {
                             float gammaFun = generalizedGammaCDF(x, beta, gamma, pzero);
-                            if (fabs(gammaFun - NODATA) > EPSILON)
+                            if (! isEqual(gammaFun, NODATA))
                             {
                                 float probGamma = probabilityGamma(x, 1/beta, gamma, gammaFun);
-                                lineValues.append(QPointF(x,probGamma));
+                                lineValues.append(QPointF(x, probGamma));
                             }
+
                             else
                             {
                                 QMessageBox::information(nullptr, "Error", "Error in gamma distribution");
