@@ -1371,7 +1371,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                    }
                    else if (parametersModel.distributionPrecipitation == 2)
                    {
-                       simulatedPrecipitationAmountsSeasonal[i][j] = weatherGenerator2D::inverseGammaFunction(uniformRandomVar,phatAlpha[i][j],phatBeta[i][j],0.0001) + parametersModel.precipitationThreshold;
+                       simulatedPrecipitationAmountsSeasonal[i][j] = inverseGammaCumulativeDistributionFunction(uniformRandomVar,phatAlpha[i][j],phatBeta[i][j],0.0001) + parametersModel.precipitationThreshold;
                    }
                    else if (parametersModel.distributionPrecipitation == 3)
                    {
@@ -1467,7 +1467,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
 
 }
 
-
+/*
 double weatherGenerator2D::inverseGammaFunction(double valueProbability, double alpha, double beta, double accuracy)
 {
    double x;
@@ -1504,7 +1504,7 @@ double weatherGenerator2D::inverseGammaFunction(double valueProbability, double 
    x = (rightBound + leftBound)*0.5;
    return x;
 }
-
+*/
 
 void weatherGenerator2D::pressEnterToContinue()
 {

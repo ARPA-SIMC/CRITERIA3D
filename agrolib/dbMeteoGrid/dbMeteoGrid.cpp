@@ -2635,7 +2635,7 @@ bool Crit3DMeteoGridDbHandler::saveListHourlyData(QString *myError, QString mete
     return true;
 }
 
-bool Crit3DMeteoGridDbHandler::saveListDailyData(QString *myError, QString meteoPointID, QDate firstDate, meteoVariable meteoVar, QList<float> values)
+bool Crit3DMeteoGridDbHandler::saveListDailyData(QString *myError, QString meteoPointID, QDate firstDate, meteoVariable meteoVar, QList<float> values, bool reverseOrder)
 {
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPointID + _tableDaily.postFix;
@@ -2661,7 +2661,15 @@ bool Crit3DMeteoGridDbHandler::saveListDailyData(QString *myError, QString meteo
         statement =  QString(("INSERT INTO `%1` (%2, VariableCode, Value) VALUES ")).arg(tableD).arg(_tableDaily.fieldTime);
         for (int i = 0; i<values.size(); i++)
         {
-            float value = values[values.size()-1-i];  // reverse order
+            float value;
+            if (reverseOrder)
+            {
+                value = values[values.size()-1-i];  // reverse order
+            }
+            else
+            {
+                value = values[i];
+            }
             QString valueS = QString("'%1'").arg(value);
             QDate date = firstDate.addDays(i);
             if (isEqual(value, NODATA)) valueS = "NULL";
