@@ -29,6 +29,8 @@
     double incompleteGamma(double alpha, double x, double *lnGammaValue); // incomplete + complete
     double incompleteGamma(double alpha, double x); // only incomplete
     double inverseGammaCumulativeDistributionFunction(double valueProbability, double alpha, double beta, double accuracy);
+    double inverseGeneralizedGammaCDFDoublePrecision(double valueProbability, double alpha, double beta, double accuracy,double pZero,double outlierStep);
+    float inverseGeneralizedGammaCDF(float valueProbability, double alpha, double beta, double accuracy,double pZero,double outlierStep);
     bool gammaFitting(std::vector<float> &series, int n, double* beta, double* gamma,  double* pZero);
 
     double weibullCDF(double x, double lambda, double kappa);
