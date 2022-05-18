@@ -974,7 +974,7 @@ void Crit3DPointStatisticsWidget::plot()
                         }
                     }
                 }
-                if (!gammaFitting(series, nrValues, &beta, &alpha,  &pzero))
+                if (!generalizedGammaFitting(series, nrValues, &beta, &alpha,  &pzero))
                 {
                     return;
                 }
@@ -1220,7 +1220,7 @@ void Crit3DPointStatisticsWidget::plot()
                     }
                 }
             }
-            if (!gammaFitting(series, nrValues, &beta, &alpha,  &pzero))
+            if (!generalizedGammaFitting(series, nrValues, &beta, &alpha,  &pzero))
             {
                 return;
             }

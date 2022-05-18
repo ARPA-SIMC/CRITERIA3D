@@ -273,7 +273,7 @@ bool Drought::computeSpiParameters()
 
         if (n / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
         {
-            gammaFitting(monthSeries, n, &(currentGamma[myMonth-1].beta), &(currentGamma[myMonth-1].gamma),  &(currentGamma[myMonth-1].pzero));
+            generalizedGammaFitting(monthSeries, n, &(currentGamma[myMonth-1].beta), &(currentGamma[myMonth-1].gamma),  &(currentGamma[myMonth-1].pzero));
         }
     }
     return true;
