@@ -52,13 +52,13 @@
 Crit3DCropWidget::Crit3DCropWidget()
 {
     setWindowTitle(QStringLiteral("CRITERIA 1D_PRO"));
-    resize(1400, 700);
+    resize(1300, 700);
 
     isRedraw = true;
 
     // font
     QFont myFont = this->font();
-    myFont.setPointSize(9);
+    myFont.setPointSize(8);
     setFont(myFont);
 
     // layout
