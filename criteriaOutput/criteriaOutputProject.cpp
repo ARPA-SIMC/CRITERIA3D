@@ -1025,6 +1025,7 @@ bool CriteriaOutputProject::getAllDbVariable()
         projectError = "missing file: " + dbDataName;
         return false;
     }
+
     // open DB
     dbData = QSqlDatabase::addDatabase("QSQLITE", "data");
     dbData.setDatabaseName(dbDataName);
@@ -1034,29 +1035,27 @@ bool CriteriaOutputProject::getAllDbVariable()
         return false;
     }
 
+    // read tables
+    QList<QString> tablesList = dbData.tables();
+    if (tablesList.isEmpty())
+    {
+        projectError = "Db is empty";
+        return false;
+    }
+
+    // read table_info
+    QString tableName = tablesList[0];
+    QString statement = QString("PRAGMA table_info(`%1`)").arg(tableName);
     QSqlQuery qry(dbData);
-    QString statement = QString("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%' ESCAPE '^'");
-    QString tableName;
+    if( !qry.exec(statement) )
+    {
+        projectError = qry.lastError().text();
+        return false;
+    }
+
+    // read fields
+    QString fieldName;
     QList<QString> varList;
-    if( !qry.exec(statement) )
-    {
-        projectError = qry.lastError().text();
-        return false;
-    }
-    qry.first();
-    if (!qry.isValid())
-    {
-        projectError = qry.lastError().text();
-        return false ;
-    }
-    getValue(qry.value("name"), &tableName);
-    statement = QString("PRAGMA table_info(`%1`)").arg(tableName);
-    QString name;
-    if( !qry.exec(statement) )
-    {
-        projectError = qry.lastError().text();
-        return false;
-    }
     qry.first();
     if (!qry.isValid())
     {
@@ -1065,10 +1064,10 @@ bool CriteriaOutputProject::getAllDbVariable()
     }
     do
     {
-        getValue(qry.value("name"), &name);
-        if (name != "DATE")
+        getValue(qry.value("name"), &fieldName);
+        if (fieldName != "DATE")
         {
-            varList<<name;
+            varList<<fieldName;
         }
     }
     while(qry.next());
@@ -1093,41 +1092,36 @@ bool CriteriaOutputProject::getDbDataDates(QDate &firstDate, QDate &lastDate)
         return false;
     }
 
-    QSqlQuery qry(dbData);
-    QString idCase;
-    QString statement;
     QDate firstTmp;
     QDate lastTmp;
 
     firstDate = QDate::currentDate();
     lastDate = QDate(1800,1,1);
 
-    for (int i = 0; i < tablesList.size(); i++)
+    QString idCase = tablesList[0];
+    QString statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
+    QSqlQuery qry(dbData);
+    if( !qry.exec(statement) )
     {
-        idCase = tablesList[i];
-        statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
-        if( !qry.exec(statement) )
-        {
-            projectError = qry.lastError().text();
-            return false;
-        }
-        qry.first();
-        if (!qry.isValid())
-        {
-            projectError = qry.lastError().text();
-            return false ;
-        }
-        getValue(qry.value("MIN(DATE)"), &firstTmp);
-        getValue(qry.value("MAX(DATE)"), &lastTmp);
+        projectError = qry.lastError().text();
+        return false;
+    }
+    qry.first();
+    if (!qry.isValid())
+    {
+        projectError = qry.lastError().text();
+        return false ;
+    }
+    getValue(qry.value("MIN(DATE)"), &firstTmp);
+    getValue(qry.value("MAX(DATE)"), &lastTmp);
 
-        if (firstTmp < firstDate)
-        {
-            firstDate = firstTmp;
-        }
-        if (lastTmp > lastDate)
-        {
-            lastDate = lastTmp;
-        }
+    if (firstTmp < firstDate)
+    {
+        firstDate = firstTmp;
+    }
+    if (lastTmp > lastDate)
+    {
+        lastDate = lastTmp;
     }
 
     if (!firstDate.isValid() || !lastDate.isValid())
