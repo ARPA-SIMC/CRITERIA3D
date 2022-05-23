@@ -15,7 +15,7 @@
                           int cropId, QString *myError);
 
     float getIrriRatioFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField,
-                                QString idCrop, QString *myError);
+                                QString idCropClass, QString *myError);
 
     float getIrriRatioFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString cropIdField,
                          int cropId, QString *myError);

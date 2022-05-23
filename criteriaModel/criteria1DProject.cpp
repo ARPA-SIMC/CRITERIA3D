@@ -766,7 +766,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
     // check meteo data
     if (myCase.meteoPoint.nrObsDataDaysD == 0)
     {
-        projectError = "Missing meteo data.";
+        projectError = "Missing meteo data: " + QString::fromStdString(myCase.meteoPoint.name);
         return false;
     }
 
@@ -774,6 +774,16 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
     {
         if (! createOutputTable(projectError))
             return false;
+    }
+    if (isSeasonalForecast)
+    {
+        float irriRatio = getIrriRatioFromClass(&dbCrop, "crop_class", "id_class",
+                                                myCase.unit.idCropClass, &projectError);
+        if (irriRatio < 0.001f)
+        {
+            // No irrigation: nothing to do
+            return true;
+        }
     }
 
     // set computation period (all meteo data)
@@ -1122,15 +1132,6 @@ bool Crit1DProject::computeMonthlyForecast(unsigned int unitIndex, float irriRat
 
 bool Crit1DProject::computeSeasonalForecast(unsigned int index, float irriRatio)
 {
-    if (irriRatio < 0.001f)
-    {
-        // No irrigation: nothing to do
-        outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
-        outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
-        outputCsvFile << ",0,0,0,0,0\n";
-        return true;
-    }
-
     if (! computeUnit(index, 0))
     {
         logger.writeError(projectError);
@@ -1139,19 +1140,28 @@ bool Crit1DProject::computeSeasonalForecast(unsigned int index, float irriRatio)
 
     outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
     outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
-    // percentiles
-    float percentile = sorting::percentile(forecastIrr, &(nrForecasts), 5, true);
-    outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 25, false);
-    outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 50, false);
-    outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 75, false);
-    outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 95, false);
-    outputCsvFile << "," << percentile * irriRatio << "\n";
-    outputCsvFile.flush();
 
+    if (irriRatio < 0.001f)
+    {
+        // No irrigation
+        outputCsvFile << ",0,0,0,0,0\n";
+    }
+    else
+    {
+        // irrigation percentiles
+        float percentile = sorting::percentile(forecastIrr, &(nrForecasts), 5, true);
+        outputCsvFile << "," << percentile * irriRatio;
+        percentile = sorting::percentile(forecastIrr, &(nrForecasts), 25, false);
+        outputCsvFile << "," << percentile * irriRatio;
+        percentile = sorting::percentile(forecastIrr, &(nrForecasts), 50, false);
+        outputCsvFile << "," << percentile * irriRatio;
+        percentile = sorting::percentile(forecastIrr, &(nrForecasts), 75, false);
+        outputCsvFile << "," << percentile * irriRatio;
+        percentile = sorting::percentile(forecastIrr, &(nrForecasts), 95, false);
+        outputCsvFile << "," << percentile * irriRatio << "\n";
+    }
+
+    outputCsvFile.flush();
     return true;
 }
 
