@@ -128,7 +128,17 @@ bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shap
             fieldValue = shapeHandler.readDoubleAttribute(shapeIndex, fieldIndex);
         }
 
-        if (int(fieldValue) != int(NODATA))
+        // check nodata
+        if (fieldValue == 0)
+        {
+            std::string strValue = shapeHandler.readStringAttribute(shapeIndex, fieldIndex);
+            if (strValue == "" || strValue == "******")
+            {
+                fieldValue = NODATA;
+            }
+        }
+
+        if (fieldValue != NODATA)
         {
             // get bounds
             bounds = object.getBounds();
