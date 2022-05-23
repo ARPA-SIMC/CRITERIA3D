@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <math.h>
 
+#include "basicMath.h"
 #include "commonConstants.h"
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
@@ -99,7 +100,17 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
                     value = shapeVal.readDoubleAttribute(signed(col), fieldIndex);
                 }
 
-                if (int(value) == NODATA)
+                // check nodata
+                if (isEqual(value, 0))
+                {
+                    std::string strValue = shapeVal.readStringAttribute(signed(col), fieldIndex);
+                    if (strValue == "" || strValue == "******")
+                    {
+                        value = NODATA;
+                    }
+                }
+
+                if (isEqual(value, NODATA))
                 {
                     vectorNull[row] += nrPoints;
                 }
@@ -220,6 +231,17 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                 if (fieldType == FTInteger)
                 {
                     int value = shapeVal.readIntAttribute(int(col), fieldIndex);
+
+                    // check nodata
+                    if (value == 0)
+                    {
+                        std::string strValue = shapeVal.readStringAttribute(signed(col), fieldIndex);
+                        if (strValue == "" || strValue == "******")
+                        {
+                            value = NODATA;
+                        }
+                    }
+
                     if (value == NODATA)
                     {
                         vectorNull[row] += nrPoints;
@@ -245,7 +267,18 @@ bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandl
                 else if (fieldType == FTDouble)
                 {
                     double value = shapeVal.readDoubleAttribute(signed(col), fieldIndex);
-                    if (int(value) == int(NODATA))
+
+                    // check nodata
+                    if (isEqual(value, 0))
+                    {
+                        std::string strValue = shapeVal.readStringAttribute(signed(col), fieldIndex);
+                        if (strValue == "" || strValue == "******")
+                        {
+                            value = NODATA;
+                        }
+                    }
+
+                    if (isEqual(value, NODATA))
                     {
                         vectorNull[row] += nrPoints;
                     }
