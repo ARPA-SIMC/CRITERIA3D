@@ -256,9 +256,6 @@ void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
     {
         values[i] = float(shapePointer->getNumericValue(signed(i), fieldName));
 
-        // zero equal to null value
-        if (isEqual(values[i], -9999)) values[i] = NODATA;
-
         if (isEqual(firstValue, NODATA) && (! isEqual(values[i], NODATA)))
             firstValue = values[i];
     }
