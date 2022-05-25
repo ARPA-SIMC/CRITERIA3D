@@ -26,8 +26,9 @@ ChartView::ChartView(QWidget *parent) :
     series3 = new QScatterSeries();
     series3->setName("Supplemental");
     series3->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    series3->setPen(pen);
     series3->setColor(Qt::gray);
-    series3->setMarkerSize(10.0);
+    series3->setMarkerSize(8.0);
 
     climLapseRatelineSeries = new QLineSeries();
     climLapseRatelineSeries->setName("Climatological Lapse Rate");
