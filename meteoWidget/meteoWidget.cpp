@@ -1943,80 +1943,43 @@ void Crit3DMeteoWidget::handleMarkerClicked()
 {
 
     QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
-    if (marker->type() == QLegendMarker::LegendMarkerTypeXY)
+
+    // Toggle visibility of series
+    bool isVisible = marker->series()->isVisible();
+    marker->series()->setVisible(!isVisible);
+
+    // Turn legend marker back to visible, since otherwise hiding series also hides the marker
+    marker->setVisible(true);
+
+    // change marker alpha, if series is not visible
+    qreal alpha;
+    if (isVisible)
     {
-        // Toggle visibility of series
-        marker->series()->setVisible(!marker->series()->isVisible());
-
-        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
-        marker->setVisible(true);
-
-        // change marker alpha, if series is not visible
-        qreal alpha = 1.0;
-
-        if (!marker->series()->isVisible()) {
-            alpha = 0.5;
-        }
-
-        QColor color;
-        QBrush brush = marker->labelBrush();
-        color = brush.color();
-        color.setAlphaF(alpha);
-        brush.setColor(color);
-        marker->setLabelBrush(brush);
-
-        brush = marker->brush();
-        color = brush.color();
-        color.setAlphaF(alpha);
-        brush.setColor(color);
-        marker->setBrush(brush);
-
-        QPen pen = marker->pen();
-        color = pen.color();
-        color.setAlphaF(alpha);
-        pen.setColor(color);
-        marker->setPen(pen);
+        alpha = 0.5;
     }
-    else if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
+    else
     {
-        // Toggle visibility of series
-        marker->series()->setVisible(!marker->series()->isVisible());
-
-        // change marker alpha, if series is not visible
-        qreal alpha = 1.0;
-
-        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
-        foreach(QLegendMarker* marker, chart->legend()->markers())
-        {
-            if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
-            {
-                marker->setVisible(true);
-            }
-            if (!marker->series()->isVisible()) {
-                alpha = 0.5;
-            }
-
-            QColor color;
-            QBrush brush = marker->labelBrush();
-            color = brush.color();
-            color.setAlphaF(alpha);
-            brush.setColor(color);
-            marker->setLabelBrush(brush);
-
-            brush = marker->brush();
-            color = brush.color();
-            color.setAlphaF(alpha);
-            brush.setColor(color);
-            marker->setBrush(brush);
-
-            QPen pen = marker->pen();
-            color = pen.color();
-            color.setAlphaF(alpha);
-            pen.setColor(color);
-            marker->setPen(pen);
-        }
-
+        alpha = 1.0;
     }
+
+    QColor color;
+    QBrush brush = marker->labelBrush();
+    color = brush.color();
+    color.setAlphaF(alpha);
+    brush.setColor(color);
+    marker->setLabelBrush(brush);
+
+    brush = marker->brush();
+    color = brush.color();
+    color.setAlphaF(alpha);
+    brush.setColor(color);
+    marker->setBrush(brush);
+
+    QPen pen = marker->pen();
+    color = pen.color();
+    color.setAlphaF(alpha);
+    pen.setColor(color);
+    marker->setPen(pen);
 
 }
 
