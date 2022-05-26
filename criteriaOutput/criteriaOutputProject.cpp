@@ -33,7 +33,7 @@ void CriteriaOutputProject::initialize()
     path = "";
     projectName = "";
     operation = "";
-    dbUnitsName = "";
+    dbComputationUnitsName = "";
     dbDataName = "";
     dbDataHistoricalName = "";
     dbCropName = "";
@@ -57,7 +57,7 @@ void CriteriaOutputProject::initialize()
     outputShapeFilePath = "";
     outputAggrCsvFileName = "";
 
-    dbUnitsName = "";
+    dbComputationUnitsName = "";
     dbDataName = "";
     dbCropName = "";
     dbDataHistoricalName = "";
@@ -78,7 +78,7 @@ void CriteriaOutputProject::closeProject()
 
         initialize();
 
-        unitList.clear();
+        compUnitList.clear();
         outputFile.close();
         logFile.close();
         dbData.close();
@@ -230,15 +230,21 @@ bool CriteriaOutputProject::readSettings()
 
     projectName = projectSettings->value("name","").toString();
 
-    dbUnitsName = projectSettings->value("db_units","").toString();
-    if (dbUnitsName.left(1) == ".")
+    // computationa units
+    dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
+    if (dbComputationUnitsName == "")
     {
-        dbUnitsName = path + QDir::cleanPath(dbUnitsName);
+        // check old name
+        dbComputationUnitsName = projectSettings->value("db_units","").toString();
     }
-    if (dbUnitsName == "")
+    if (dbComputationUnitsName == "")
     {
-        projectError = "Missing information on units";
+        projectError = "Missing information on computational units";
         return false;
+    }
+    if (dbComputationUnitsName.left(1) == ".")
+    {
+        dbComputationUnitsName = path + QDir::cleanPath(dbComputationUnitsName);
     }
 
     dbDataName = projectSettings->value("db_data","").toString();
@@ -387,19 +393,19 @@ int CriteriaOutputProject::precomputeDtx()
     }
 
     // read unit list
-    logger.writeInfo("DB computation units: " + dbUnitsName);
-    if (! readUnitList(dbUnitsName, unitList, projectError))
+    logger.writeInfo("DB computational units: " + dbComputationUnitsName);
+    if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
-    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+    logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
     logger.writeInfo("Compute dtx...");
 
     QString idCase;
-    for (unsigned int i=0; i < unitList.size(); i++)
+    for (unsigned int i=0; i < compUnitList.size(); i++)
     {
-        idCase = unitList[i].idCase;
+        idCase = compUnitList[i].idCase;
         logger.writeInfo(QString::number(i) + " ID CASE: " + idCase);
 
         int myResult = computeAllDtxUnit(dbDataHistorical, idCase, projectError);
@@ -425,12 +431,12 @@ int CriteriaOutputProject::createCsvFile()
     }
 
     // read unit list
-    logger.writeInfo("DB computation units: " + dbUnitsName);
-    if (! readUnitList(dbUnitsName, unitList, projectError))
+    logger.writeInfo("DB computational units: " + dbComputationUnitsName);
+    if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
-    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+    logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
     if (!initializeCsvOutputFile())
     {
@@ -442,10 +448,10 @@ int CriteriaOutputProject::createCsvFile()
     // write output
     QString idCase;
     QString idCropClass;
-    for (unsigned int i=0; i < unitList.size(); i++)
+    for (unsigned int i=0; i < compUnitList.size(); i++)
     {
-        idCase = unitList[i].idCase;
-        idCropClass = unitList[i].idCropClass;
+        idCase = compUnitList[i].idCase;
+        idCropClass = compUnitList[i].idCropClass;
 
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, outputCsvFileName, projectError);
         if (myResult != CRIT1D_OK)
@@ -1158,7 +1164,7 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     outputFile.close();
 
     // read unit list
-    if (! readUnitList(dbUnitsName, unitList, projectError))
+    if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
@@ -1166,10 +1172,10 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     // write output
     QString idCase;
     QString idCropClass;
-    for (unsigned int i=0; i < unitList.size(); i++)
+    for (unsigned int i=0; i < compUnitList.size(); i++)
     {
-        idCase = unitList[i].idCase;
-        idCropClass = unitList[i].idCropClass;
+        idCase = compUnitList[i].idCase;
+        idCropClass = compUnitList[i].idCropClass;
 
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, projectError);
         if (myResult != CRIT1D_OK)

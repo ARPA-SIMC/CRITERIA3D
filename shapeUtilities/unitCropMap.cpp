@@ -216,10 +216,10 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
         }
     }
 
-    ComputationUnitsDB unitsDb(dbName, error);
+    ComputationUnitsDB compUnitsDb(dbName, error);
     if (error != "")
         return false;
 
-    return unitsDb.writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, error);
+    return compUnitsDb.writeListToCompUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, error);
 
 }
