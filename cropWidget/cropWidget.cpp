@@ -688,7 +688,7 @@ void Crit3DCropWidget::on_actionNewProject()
                 db_crop = "crop.db";
                 if (!QFile::copy(dataPath+PATH_TEMPLATE+"crop_default.db", completePath+"/data/"+"crop.db"))
                 {
-                    QMessageBox::critical(nullptr, "Error in copy crop_default.db", "Copy failed");
+                    QMessageBox::critical(nullptr, "Error", "Copy failed: crop_default.db");
                     return;
                 }
             }
@@ -719,6 +719,8 @@ void Crit3DCropWidget::on_actionNewProject()
             projectSetting->sync();
 
         }
+
+        QMessageBox::information(nullptr, "Success", "project created:" + dataPath+PATH_PROJECT+projectName);
     }
 }
 
