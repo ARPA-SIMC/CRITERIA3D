@@ -99,6 +99,7 @@
         QList<QString> getStateList();
         QList<QString> getDatasetList();
         bool setActiveStateIfCondition(bool activeState, QString condition);
+        bool setOrogCode(QString id, int orogCode);
 
 
     protected:

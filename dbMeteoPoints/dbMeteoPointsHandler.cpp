@@ -1814,3 +1814,23 @@ bool Crit3DMeteoPointsDbHandler::setActiveStateIfCondition(bool activeState, QSt
 
 }
 
+bool Crit3DMeteoPointsDbHandler::setOrogCode(QString id, int orogCode)
+{
+    QSqlQuery qry(_db);
+
+    qry.prepare( "UPDATE point_properties SET orog_code = :orogCode WHERE id_point = :id" );
+    qry.bindValue(":orogCode", orogCode);
+    qry.bindValue(":id", id);
+
+    if( !qry.exec() )
+    {
+        error += id + " " + qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+
+}
+
