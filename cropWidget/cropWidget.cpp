@@ -529,9 +529,15 @@ Crit3DCropWidget::Crit3DCropWidget()
 void Crit3DCropWidget::on_actionOpenProject()
 {
     isRedraw = false;
+    QString dataPath, projectPath;
+
+    if (searchDataPath(&dataPath))
+        projectPath = dataPath + PATH_PROJECT;
+    else
+        projectPath = "";
 
     checkCropUpdate();
-    QString projFileName = QFileDialog::getOpenFileName(this, tr("Open Criteria-1D project"), "", tr("Settings files (*.ini)"));
+    QString projFileName = QFileDialog::getOpenFileName(this, tr("Open Criteria-1D project"), projectPath, tr("Settings files (*.ini)"));
 
     if (projFileName == "") return;
 
