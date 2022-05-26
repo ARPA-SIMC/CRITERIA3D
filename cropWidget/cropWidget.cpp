@@ -629,9 +629,9 @@ void Crit3DCropWidget::on_actionNewProject()
             if (dialog.getSoilDbOption() == NEW_DB)
             {
                 db_soil = "soil.db";
-                if (!QFile::copy(dataPath+PATH_TEMPLATE+"template_soil.db", completePath+"/data/"+db_soil))
+                if (!QFile::copy(dataPath + PATH_TEMPLATE + "template_soil.db", completePath + "/data/" + db_soil))
                 {
-                    QMessageBox::critical(nullptr, "Error in copy template_soil.db", "Copy failed");
+                    QMessageBox::critical(nullptr, "Error", "Copy failed: template_soil.db");
                     return;
                 }
             }
@@ -1554,13 +1554,13 @@ void Crit3DCropWidget::on_actionDeleteCrop()
     QString msg;
     if (cropListComboBox.currentText().isEmpty())
     {
-        msg = "Select the soil to be deleted";
+        msg = "Select the crop to be deleted.";
         QMessageBox::information(nullptr, "Warning", msg);
     }
     else
     {
         QMessageBox::StandardButton confirm;
-        msg = "Are you sure you want to delete "+cropListComboBox.currentText()+" ?";
+        msg = "Are you sure you want to delete " + cropListComboBox.currentText() + " ?";
         confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
         QString error;
 
