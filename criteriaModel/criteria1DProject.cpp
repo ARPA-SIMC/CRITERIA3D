@@ -37,11 +37,11 @@ void Crit1DProject::initialize()
     dbMeteoName = "";
     dbForecastName = "";
     dbOutputName = "";
-    dbUnitsName = "";
+    dbComputationUnitsName = "";
 
     projectError = "";
 
-    unitList.clear();
+    compUnitList.clear();
 
     isXmlMeteoGrid = false;
     isSaveState = false;
@@ -113,17 +113,22 @@ bool Crit1DProject::readSettings()
     if (dbForecastName.left(1) == ".")
         dbForecastName = path + dbForecastName;
 
-    // unitList list
-    dbUnitsName = projectSettings->value("db_units","").toString();
-    if (dbUnitsName.left(1) == ".")
-        dbUnitsName = path + dbUnitsName;
-
-    if (dbUnitsName == "")
+    // computational units db
+    dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
+    if (dbComputationUnitsName == "")
+    {
+        // check old name
+        dbComputationUnitsName = projectSettings->value("db_units","").toString();
+    }
+    if (dbComputationUnitsName == "")
     {
         projectError = "Missing information on computational units";
         return false;
     }
+    if (dbComputationUnitsName.left(1) == ".")
+        dbComputationUnitsName = path + dbComputationUnitsName;
 
+   // output db
     dbOutputName = projectSettings->value("db_output","").toString();
     if (dbOutputName.left(1) == ".")
         dbOutputName = path + dbOutputName;
@@ -314,13 +319,13 @@ int Crit1DProject::initializeProject(QString settingsFileName)
     if (! loadDriessenParameters(&dbSoil, soilTexture, &projectError))
         return ERROR_SOIL_PARAMETERS;
 
-    // Computation unit list
-    if (! readUnitList(dbUnitsName, unitList, projectError))
+    // Computational unit list
+    if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))
     {
         logger.writeError(projectError);
         return ERROR_READ_UNITS;
     }
-    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+    logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
     isProjectLoaded = true;
 
@@ -727,7 +732,7 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
 }
 
 
-bool Crit1DProject::computeUnit(const Crit1DUnit& myUnit)
+bool Crit1DProject::computeUnit(const Crit1DCompUnit& myUnit)
 {
     myCase.unit = myUnit;
     return computeCase(0);
@@ -736,7 +741,7 @@ bool Crit1DProject::computeUnit(const Crit1DUnit& myUnit)
 
 bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int memberNr)
 {
-    myCase.unit = unitList[unitIndex];
+    myCase.unit = compUnitList[unitIndex];
     return computeCase(memberNr);
 }
 
@@ -898,36 +903,36 @@ int Crit1DProject::computeAllUnits()
 
     try
     {
-        for (unsigned int i = 0; i < unitList.size(); i++)
+        for (unsigned int i = 0; i < compUnitList.size(); i++)
         {
             // is numerical
-            //QString isNumerical = unitList[i].isNumericalInfiltration? "true" : "false";
+            //QString isNumerical = compUnitList[i].isNumericalInfiltration? "true" : "false";
             //logger.writeInfo("is numerical: " + isNumerical);
 
             // CROP
-            unitList[i].idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class",
-                                                         unitList[i].idCropClass, &projectError).toUpper();
-            if (unitList[i].idCrop == "")
+            compUnitList[i].idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class",
+                                                         compUnitList[i].idCropClass, &projectError).toUpper();
+            if (compUnitList[i].idCrop == "")
             {
-                logger.writeInfo("Unit " + unitList[i].idCase + " " + unitList[i].idCropClass + " ***** missing CROP *****");
+                logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing CROP *****");
                 isErrorCrop = true;
                 continue;
             }
 
             // IRRI_RATIO
             float irriRatio = getIrriRatioFromClass(&dbCrop, "crop_class", "id_class",
-                                                            unitList[i].idCropClass, &projectError);
+                                                            compUnitList[i].idCropClass, &projectError);
             if ((isSeasonalForecast || isMonthlyForecast || isShortTermForecast) && (int(irriRatio) == int(NODATA)))
             {
-                logger.writeInfo("Unit " + unitList[i].idCase + " " + unitList[i].idCropClass + " ***** missing IRRIGATION RATIO *****");
+                logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing IRRIGATION RATIO *****");
                 continue;
             }
 
             // SOIL
-            unitList[i].idSoil = getIdSoilString(&dbSoil, unitList[i].idSoilNumber, &projectError);
-            if (unitList[i].idSoil == "")
+            compUnitList[i].idSoil = getIdSoilString(&dbSoil, compUnitList[i].idSoilNumber, &projectError);
+            if (compUnitList[i].idSoil == "")
             {
-                logger.writeInfo("Unit " + unitList[i].idCase + " Soil nr." + QString::number(unitList[i].idSoilNumber) + " ***** missing SOIL *****");
+                logger.writeInfo("Unit " + compUnitList[i].idCase + " Soil nr." + QString::number(compUnitList[i].idSoilNumber) + " ***** missing SOIL *****");
                 isErrorSoil = true;
                 continue;
             }
@@ -956,7 +961,7 @@ int Crit1DProject::computeAllUnits()
                     }
                     else
                     {
-                        projectError = "Computational Unit: " + unitList[i].idCase + "\n" + projectError;
+                        projectError = "Computational Unit: " + compUnitList[i].idCase + "\n" + projectError;
                         logger.writeError(projectError);
                         isErrorModel = true;
                     }
@@ -991,7 +996,7 @@ int Crit1DProject::computeAllUnits()
         else
             return ERROR_UNKNOWN;
     }
-    else if (nrUnitsComputed < unitList.size())
+    else if (nrUnitsComputed < compUnitList.size())
     {
         if (isErrorModel)
             return WARNING_METEO_OR_MODEL;
@@ -1068,7 +1073,7 @@ void Crit1DProject::updateSeasonalForecastOutput(Crit3DDate myDate, int &indexFo
 
 bool Crit1DProject::computeMonthlyForecast(unsigned int unitIndex, float irriRatio)
 {
-    logger.writeInfo(unitList[unitIndex].idCase);
+    logger.writeInfo(compUnitList[unitIndex].idCase);
 
     if (!forecastMeteoGrid->gridStructure().isEnsemble())
     {
@@ -1097,8 +1102,8 @@ bool Crit1DProject::computeMonthlyForecast(unsigned int unitIndex, float irriRat
     }
 
     // write output
-    outputCsvFile << unitList[unitIndex].idCase.toStdString();
-    outputCsvFile << "," << unitList[unitIndex].idCropClass.toStdString();
+    outputCsvFile << compUnitList[unitIndex].idCase.toStdString();
+    outputCsvFile << "," << compUnitList[unitIndex].idCropClass.toStdString();
 
     // percentiles irrigation
     float percentile = sorting::percentile(forecastIrr, &(nrForecasts), 5, true);
@@ -1138,8 +1143,8 @@ bool Crit1DProject::computeSeasonalForecast(unsigned int index, float irriRatio)
         return false;
     }
 
-    outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
-    outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
+    outputCsvFile << compUnitList[index].idCase.toStdString() << "," << compUnitList[index].idCrop.toStdString() << ",";
+    outputCsvFile << compUnitList[index].idSoil.toStdString() << "," << compUnitList[index].idMeteo.toStdString();
 
     if (irriRatio < 0.001f)
     {
@@ -1714,8 +1719,7 @@ int Crit1DProject::openAllDatabase()
         }
     }
 
-    // db units
-    logger.writeInfo ("Computational units DB: " + dbUnitsName);
+    logger.writeInfo ("Computational units DB: " + dbComputationUnitsName);
 
     return CRIT1D_OK;
 }

@@ -51,7 +51,7 @@
     class Crit1DCase
     {
     public:
-        Crit1DUnit unit;
+        Crit1DCompUnit unit;
 
         // SOIL
         soil::Crit3DSoil mySoil;

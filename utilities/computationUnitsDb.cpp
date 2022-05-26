@@ -5,7 +5,7 @@
 #include <QtSql>
 
 
-Crit1DUnit::Crit1DUnit()
+Crit1DCompUnit::Crit1DCompUnit()
 {
     idCase = "";
     idCropClass = "";
@@ -54,11 +54,12 @@ ComputationUnitsDB::~ComputationUnitsDB()
 }
 
 
-bool ComputationUnitsDB::writeListToUnitsTable(QList<QString> idCase, QList<QString> idCrop, QList<QString> idMeteo,
-                                  QList<QString> idSoil, QList<double> hectares, QString &error)
+bool ComputationUnitsDB::writeListToCompUnitsTable(QList<QString> idCase, QList<QString> idCrop,
+                                                   QList<QString> idMeteo, QList<QString> idSoil,
+                                                   QList<double> hectares, QString &error)
 {
     QSqlQuery qry(db);
-    qry.prepare("CREATE TABLE units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, hectares NUMERIC, PRIMARY KEY(ID_CASE))");
+    qry.prepare("CREATE TABLE computational_units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, hectares NUMERIC, PRIMARY KEY(ID_CASE))");
     if( !qry.exec() )
     {
         error = qry.lastError().text();
@@ -66,7 +67,7 @@ bool ComputationUnitsDB::writeListToUnitsTable(QList<QString> idCase, QList<QStr
     }
     qry.clear();
 
-    QString myQuery = "INSERT INTO units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, hectares) VALUES ";
+    QString myQuery = "INSERT INTO computational_units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, hectares) VALUES ";
 
     for (int i = 0; i < idCase.size(); i++)
     {
@@ -91,10 +92,10 @@ bool ComputationUnitsDB::writeListToUnitsTable(QList<QString> idCase, QList<QStr
 
 
 // load computation units list
-bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString &error)
+bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &compUnitList, QString &error)
 {
-    QString unitsTable = "units";
-    QList<QString> fieldList = getFields(&db, unitsTable);
+    QString compUnitsTable = "computational_units";
+    QList<QString> fieldList = getFields(&db, compUnitsTable);
     bool existNumericalInfiltration = fieldList.contains("numerical_solution");
     bool existWaterRetentionData = fieldList.contains("water_retention_fitting");
     bool existWaterTable = fieldList.contains("use_water_table");
@@ -102,7 +103,7 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
     bool existSlope = fieldList.contains("slope");
     // TODO others
 
-    QString queryString = "SELECT * FROM " + unitsTable;
+    QString queryString = "SELECT * FROM " + compUnitsTable;
     queryString += " ORDER BY ID_CROP, ID_SOIL, ID_METEO";
 
     QSqlQuery query = db.exec(queryString);
@@ -111,40 +112,40 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
     {
         if (query.lastError().nativeErrorCode() != "")
         {
-            error = "dbUnits error: " + query.lastError().nativeErrorCode() + " - " + query.lastError().text();
+            error = "Error in reading computational units.\n" + query.lastError().text();
         }
-        else error = "Missing units data";
+        else error = "Missing computational units data";
 
         return false;
     }
 
     unsigned int nrUnits = unsigned(query.at() + 1);     // SQLITE doesn't support SIZE
-    unitList.clear();
-    unitList.resize(nrUnits);
+    compUnitList.clear();
+    compUnitList.resize(nrUnits);
 
     unsigned int i = 0;
     query.first();
     do
     {
-        unitList[i].idCase = query.value("ID_CASE").toString();
-        unitList[i].idCropClass = query.value("ID_CROP").toString();
-        unitList[i].idMeteo = query.value("ID_METEO").toString();
-        unitList[i].idForecast = query.value("ID_METEO").toString();
-        unitList[i].idSoilNumber = query.value("ID_SOIL").toInt();
+        compUnitList[i].idCase = query.value("ID_CASE").toString();
+        compUnitList[i].idCropClass = query.value("ID_CROP").toString();
+        compUnitList[i].idMeteo = query.value("ID_METEO").toString();
+        compUnitList[i].idForecast = query.value("ID_METEO").toString();
+        compUnitList[i].idSoilNumber = query.value("ID_SOIL").toInt();
 
         if (existNumericalInfiltration)
-            unitList[i].isNumericalInfiltration = query.value("numerical_solution").toBool();
+            compUnitList[i].isNumericalInfiltration = query.value("numerical_solution").toBool();
         if (existWaterTable)
-            unitList[i].useWaterTableData = query.value("use_water_table").toBool();
+            compUnitList[i].useWaterTableData = query.value("use_water_table").toBool();
         if (existOptimalIrrigation)
-            unitList[i].isOptimalIrrigation = query.value("optimal_irrigation").toBool();
+            compUnitList[i].isOptimalIrrigation = query.value("optimal_irrigation").toBool();
         if (existWaterRetentionData)
-            unitList[i].useWaterRetentionData = query.value("water_retention_fitting").toBool();
+            compUnitList[i].useWaterRetentionData = query.value("water_retention_fitting").toBool();
         if (existSlope)
         {
             double slope;
             if (getValue(query.value("slope"), &slope))
-                unitList[i].slope = slope;
+                compUnitList[i].slope = slope;
         }
 
         i++;
@@ -155,14 +156,14 @@ bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString
 }
 
 
-bool readUnitList(QString dbUnitsName, std::vector<Crit1DUnit> &unitList, QString &error)
+bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &compUnitList, QString &error)
 {
-    ComputationUnitsDB dbUnits(dbUnitsName, error);
+    ComputationUnitsDB dbCompUnits(dbComputationUnitsName, error);
     if (error != "")
     {
         return false;
     }
-    if (! dbUnits.readUnitList(unitList, error))
+    if (! dbCompUnits.readComputationUnitList(compUnitList, error))
     {
         return false;
     }
