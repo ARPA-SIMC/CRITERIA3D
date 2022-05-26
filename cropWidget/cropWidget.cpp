@@ -600,7 +600,7 @@ void Crit3DCropWidget::on_actionNewProject()
             if(!QDir().mkdir(completePath))
             {
                 QMessageBox::StandardButton confirm;
-                QString msg = "Project dir "+ completePath + " already exists, do you want to overwrite it?";
+                QString msg = "Project " + completePath + " already exists, do you want to overwrite it?";
                 confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
 
                 if (confirm == QMessageBox::Yes)
@@ -721,7 +721,7 @@ void Crit3DCropWidget::on_actionNewProject()
 
         }
 
-        QMessageBox::information(nullptr, "Success", "project created:" + dataPath+PATH_PROJECT+projectName);
+        QMessageBox::information(nullptr, "Success", "project created: " + dataPath+PATH_PROJECT+projectName);
     }
 }
 
