@@ -617,10 +617,10 @@ void Crit3DCropWidget::on_actionNewProject()
             {
                 QDir().mkdir(completePath+"/data");
             }
-            // copy template units
-            if (!QFile::copy(dataPath+PATH_TEMPLATE+"template_units.db", completePath+"/data/"+"units.db"))
+            // copy template computational units
+            if (!QFile::copy(dataPath+PATH_TEMPLATE+"template_comp_units.db", completePath+"/data/"+"comp_units.db"))
             {
-                QMessageBox::critical(nullptr, "Error in copy template_units.db", "Copy failed");
+                QMessageBox::critical(nullptr, "Error in copy", "Copy failed: template_comp_units.db");
                 return;
             }
             QString db_soil, db_meteo, db_crop;
@@ -713,7 +713,7 @@ void Crit3DCropWidget::on_actionNewProject()
                     projectSetting->setValue("db_soil", "./data/"+db_soil);
                     projectSetting->setValue("db_meteo", "./data/"+db_meteo);
                     projectSetting->setValue("db_crop", "./data/"+db_crop);
-                    projectSetting->setValue("db_units", "./data/units.db");
+                    projectSetting->setValue("db_comp_units", "./data/comp_units.db");
                     projectSetting->setValue("db_output", "./output/"+projectName+".db");
             projectSetting->endGroup();
             projectSetting->sync();
