@@ -58,7 +58,7 @@ bool ComputationUnitsDB::writeListToUnitsTable(QList<QString> idCase, QList<QStr
                                   QList<QString> idSoil, QList<double> hectares, QString &error)
 {
     QSqlQuery qry(db);
-    qry.prepare("CREATE TABLE units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, hectares NUMERIC, PRIMARY KEY(ID_CASE))");
+    qry.prepare("CREATE TABLE computational_units (ID_CASE TEXT, ID_CROP TEXT, ID_METEO TEXT, ID_SOIL TEXT, hectares NUMERIC, PRIMARY KEY(ID_CASE))");
     if( !qry.exec() )
     {
         error = qry.lastError().text();
@@ -66,7 +66,7 @@ bool ComputationUnitsDB::writeListToUnitsTable(QList<QString> idCase, QList<QStr
     }
     qry.clear();
 
-    QString myQuery = "INSERT INTO units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, hectares) VALUES ";
+    QString myQuery = "INSERT INTO computational_units (ID_CASE, ID_CROP, ID_METEO, ID_SOIL, hectares) VALUES ";
 
     for (int i = 0; i < idCase.size(); i++)
     {
@@ -90,8 +90,8 @@ bool ComputationUnitsDB::writeListToUnitsTable(QList<QString> idCase, QList<QStr
 }
 
 
-// load computation units list
-bool ComputationUnitsDB::readUnitList(std::vector<Crit1DUnit> &unitList, QString &error)
+// load computational units list
+bool ComputationUnitsDB::readCompUnitList(std::vector<Crit1DUnit> &unitList, QString &error)
 {
     QString unitsTable = "units";
     QList<QString> fieldList = getFields(&db, unitsTable);
