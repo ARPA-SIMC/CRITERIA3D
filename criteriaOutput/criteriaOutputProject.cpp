@@ -230,7 +230,7 @@ bool CriteriaOutputProject::readSettings()
 
     projectName = projectSettings->value("name","").toString();
 
-    // computationa units
+    // computational units
     dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
     if (dbComputationUnitsName == "")
     {
