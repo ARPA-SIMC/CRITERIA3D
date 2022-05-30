@@ -85,6 +85,7 @@
         int nDecimalsField(int fieldIndex);
 
         double getNumericValue(int shapeNumber, std::string fieldName);
+        double getNumericValue(int shapeNumber, int fieldPos);
         std::string getStringValue(int shapeNumber, std::string fieldName);
 
         std::vector<unsigned int> getHoles(int shapeNumber, int partNumber);

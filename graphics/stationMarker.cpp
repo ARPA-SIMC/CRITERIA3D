@@ -1,6 +1,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "stationMarker.h"
+#include "qdebug.h"
 
 #include <QMenu>
 
@@ -109,6 +110,11 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
         QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
         QAction *openPointStatisticsWidget = menu.addAction("Open point statistics widget");
+        QMenu *orogCodeSubMenu;
+        orogCodeSubMenu = menu.addMenu("Orog code");
+        QAction *actionOrogCode_primary = orogCodeSubMenu->addAction( "Set as primary station" );
+        QAction *actionOrogCode_secondary = orogCodeSubMenu->addAction( "Set as secondary station" );
+        QAction *actionOrogCode_supplemental = orogCodeSubMenu->addAction( "Set as supplemental station" );
 
         QAction *selection =  menu.exec(QCursor::pos());
 
@@ -125,6 +131,18 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             else if (selection == openPointStatisticsWidget)
             {
                 emit newPointStatisticsClicked(_id, _name, isGrid);
+            }
+            else if (selection == actionOrogCode_primary)
+            {
+                emit changeOrogCodeClicked(_id, 0);
+            }
+            else if (selection == actionOrogCode_secondary)
+            {
+                emit changeOrogCodeClicked(_id, 1);
+            }
+            else if (selection == actionOrogCode_supplemental)
+            {
+                emit changeOrogCodeClicked(_id, 2);
             }
         }
     }
