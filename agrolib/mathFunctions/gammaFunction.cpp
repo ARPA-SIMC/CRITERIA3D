@@ -341,7 +341,7 @@
         return true;
     }
 
-    bool gammaFitting(std::vector<float> &series, int n, double *beta, double *alpha,  double *pZero)
+    bool generalizedGammaFitting(std::vector<float> &series, int n, double *beta, double *alpha,  double *pZero)
     {
         if (n<=0)
         {
@@ -464,6 +464,8 @@
     float inverseGeneralizedGammaCDF(float valueProbability, double alpha, double beta, double accuracy,double pZero,double outlierStep)
     {
 
+       if (valueProbability < 0 || valueProbability >= 1)
+            return PARAMETER_ERROR;
        if (valueProbability < 0.995)
        {
            float x;
@@ -515,6 +517,8 @@
     double inverseGeneralizedGammaCDFDoublePrecision(double valueProbability, double alpha, double beta, double accuracy,double pZero,double outlierStep)
     {
 
+       if (valueProbability < 0 || valueProbability >= 1)
+           return PARAMETER_ERROR;
        if (valueProbability < 0.995)
        {
            double x;

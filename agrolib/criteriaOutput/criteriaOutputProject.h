@@ -75,7 +75,7 @@ public:
 
     QDate dateComputation;
 
-    QString dbUnitsName;
+    QString dbComputationUnitsName;
     QString dbDataName;
     QString dbCropName;
     QString dbDataHistoricalName;
@@ -85,7 +85,7 @@ public:
     QSqlDatabase dbDataHistorical;
 
     int nrUnits;
-    std::vector<Crit1DUnit> unitList;
+    std::vector<Crit1DCompUnit> compUnitList;
     CriteriaOutputVariable outputVariable;
     CriteriaAggregationVariable aggregationVariable;
 

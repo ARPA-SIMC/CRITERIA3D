@@ -142,7 +142,7 @@
 
             void clearCrop();
             void checkCropUpdate();
-            void openUnitsDB(QString dbUnitsName);
+            void openComputationUnitsDB(QString dbComputationUnitsName);
             void openCropDB(QString dbCropName);
             void openMeteoDB(QString dbMeteoName);
             void openSoilDB(QString dbSoilName);

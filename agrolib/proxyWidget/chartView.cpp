@@ -10,23 +10,25 @@ ChartView::ChartView(QWidget *parent) :
     series1 = new QScatterSeries();
     series1->setName("Primary");
     series1->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    series1->setColor(Qt::red);
+    QPen pen;
+    pen.setColor(Qt::black);
+    series1->setPen(pen);
+    series1->setColor(Qt::white);
     series1->setMarkerSize(10.0);
 
     series2 = new QScatterSeries();
     series2->setName("Secondary");
     series2->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    series2->setPen(pen);
     series2->setColor(Qt::black);
     series2->setMarkerSize(10.0);
 
     series3 = new QScatterSeries();
     series3->setName("Supplemental");
     series3->setMarkerShape(QScatterSeries::MarkerShapeCircle);
-    QPen pen;
-    pen.setColor(Qt::black);
     series3->setPen(pen);
-    series3->setColor(Qt::white);
-    series3->setMarkerSize(10.0);
+    series3->setColor(Qt::gray);
+    series3->setMarkerSize(8.0);
 
     climLapseRatelineSeries = new QLineSeries();
     climLapseRatelineSeries->setName("Climatological Lapse Rate");
