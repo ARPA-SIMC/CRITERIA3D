@@ -96,7 +96,6 @@
         bool loadVine3DProjectSettings(QString projectFile);
         bool loadVine3DProjectParameters();
 
-        bool loadAggregatedMeteoVarCodes();
         bool loadFieldsProperties();
         bool loadDBPoints();
         bool loadGrapevineParameters();

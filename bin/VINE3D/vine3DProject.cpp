@@ -158,27 +158,12 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     soilDepth = findSoilMaxDepth();
 
     // VINE3D parameters
-    if (!loadVine3DProjectParameters() || !loadTrainingSystems())
-    {
-        logError();
-        dbVine3D.close();
-        return false;
-    }
-
-    // VINE3D fields
-    if (!loadFieldsProperties() || !loadFieldBook())
+    if (!loadVine3DProjectParameters() || !loadTrainingSystems() || !loadFieldsProperties() || !loadFieldBook())
     {
         logError();
         dbVine3D.close();
         return(false);
     }
-
-    /*//meteo
-    if (!loadAggregatedMeteoVarCodes() || !loadDBPoints())
-    {
-        logError();
-        return false;
-    }*/
 
     if (!loadFieldShape())
     {
@@ -671,38 +656,6 @@ bool Vine3DProject::loadVine3DProjectParameters()
     if (!loadGrapevineParameters()) return false;
 
     return true;
-}
-
-bool Vine3DProject::loadAggregatedMeteoVarCodes()
-{
-    logInfo ("Reading aggregated variables codes...");
-
-    QString myQueryString = "SELECT id_variable, aggregated_var_code";
-    myQueryString += " FROM variables";
-    myQueryString += " ORDER BY id_variable";
-
-    QSqlQuery myQuery = dbVine3D.exec(myQueryString);
-    if (myQuery.size() == -1)
-    {
-        this->errorString = myQuery.lastError().text();
-        return(false);
-    }
-
-    this->nrAggrVar = myQuery.size();
-    this->varCodes = (int *) calloc(this->nrAggrVar, sizeof(int));
-    this->aggrVarCodes = (int *) calloc(this->nrAggrVar, sizeof(int));
-
-    int i=0;
-    while (myQuery.next())
-    {
-        this->varCodes[i] = myQuery.value(0).toInt();
-        this->aggrVarCodes[i] = NODATA;
-        if (!myQuery.value(1).isNull())
-            this->aggrVarCodes[i] = myQuery.value(1).toInt();
-        i++;
-    }
-
-    return(true);
 }
 
 
