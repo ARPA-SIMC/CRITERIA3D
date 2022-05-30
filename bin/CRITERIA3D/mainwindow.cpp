@@ -2760,7 +2760,7 @@ void MainWindow::on_viewer3DClosed()
 
 void MainWindow::on_slopeChanged()
 {
-    myProject.artifactSlope = viewer3D->getSlope();
+    myProject.geometry->setArtifactSlope(viewer3D->getSlope());
     myProject.update3DColors();
     viewer3D->glWidget->update();
 }

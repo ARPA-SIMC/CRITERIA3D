@@ -170,7 +170,7 @@ void Crit3DOpenGLWidget::setMagnify(float magnify)
         m_geometry->setMagnify(magnify * 0.1f);
 
         m_bufferObject.bind();
-        m_bufferObject.allocate(m_geometry->getVertices(), m_geometry->dataCount() * sizeof(GLfloat));
+        m_bufferObject.allocate(m_geometry->getVertices(), m_geometry->dataCount() * long(sizeof(GLfloat)));
         m_bufferObject.release();
 
         update();
@@ -202,7 +202,7 @@ void Crit3DOpenGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
     // blue sky
-    glClearColor(0.52, 0.81, 0.92, 0);
+    glClearColor(0.52f, 0.81f, 0.92f, 0.f);
 
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
@@ -219,7 +219,7 @@ void Crit3DOpenGLWidget::initializeGL()
     // setup vertex buffer object
     m_bufferObject.create();
     m_bufferObject.bind();
-    m_bufferObject.allocate(m_geometry->getVertices(), m_geometry->dataCount() * sizeof(GLfloat));
+    m_bufferObject.allocate(m_geometry->getVertices(), m_geometry->dataCount() * long(sizeof(GLfloat)));
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), nullptr);
     m_bufferObject.release();

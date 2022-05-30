@@ -39,8 +39,6 @@
         Crit3DSnowMaps snowMaps;
         Crit3DSnow snowModel;
 
-        int artifactSlope = 45;
-
         bool isMeteo, isRadiation, isCrop, isWater, isSnow;
         bool modelPause, modelStop;
         QDateTime modelFirstTime, modelLastTime;

@@ -80,4 +80,3 @@ void Crit3DGeometry::setMagnify(float magnify)
 
     m_magnify = magnify;
 }
-
