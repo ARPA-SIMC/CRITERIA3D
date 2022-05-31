@@ -446,16 +446,15 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
         url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
-        url.addQueryItem("style", "postprocess");
-        url.addQueryItem("query", QString("%2%3%4").arg(refTime).arg(area).arg(product));
-
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
 
-        //qDebug() << "URL: " << url.toString(); //debug
+        QUrlQuery postData;
+        postData.addQueryItem("style", "postprocess");
+        postData.addQueryItem("query", QString("%2%3%4").arg(refTime, area, product));
 
-        // GET
-        QNetworkReply* reply = manager->post(request);
+        QNetworkReply* reply = manager->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
         downloadOk = true;
         loop.exec();
 
@@ -589,15 +588,15 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
         url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
-        url.addQueryItem("style", "postprocess");
-        url.addQueryItem("query", QString("%2%3%4").arg(refTime).arg(area).arg(product));
-
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
 
-        //qDebug() << url.toString();
+        QUrlQuery postData;
+        postData.addQueryItem("style", "postprocess");
+        postData.addQueryItem("query", QString("%2%3%4").arg(refTime, area, product));
 
-        QNetworkReply* reply = manager->post(request);
+        QNetworkReply* reply = manager->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
         loop.exec();
 
         if (reply->error() != QNetworkReply::NoError)
