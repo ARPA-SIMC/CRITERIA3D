@@ -1382,6 +1382,41 @@ bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QSt
     }
 }
 
+bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(QString pointCode, QList<QString> listEntries, QString* log)
+{
+    if (!existIdPoint(pointCode))
+    {
+        *log += "\nID " + pointCode + " is not present in the point properties table.";
+        return false;
+    }
+    // create table
+    bool deletePreviousData = false;
+    QString tableName = pointCode + "_H";
+    if (! createTable(tableName, deletePreviousData))
+    {
+        *log += "\nError in create table: " + tableName + _db.lastError().text();
+        return false;
+    }
+
+    QString queryStr = QString(("INSERT OR REPLACE INTO `%1`"
+                                " VALUES ")).arg(tableName);
+
+    queryStr = queryStr + listEntries.join(",");
+
+    // exec query
+    QSqlQuery qry(_db);
+    qry.prepare(queryStr);
+    if (! qry.exec())
+    {
+        *log += "\nError in execute query: " + qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 bool Crit3DMeteoPointsDbHandler::setAllPointsActive()
 {
     QSqlQuery qry(_db);
