@@ -445,8 +445,9 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
-        url = QUrl(QString("%1/query?query=%2%3%4&style=postprocess")
-                   .arg(_dbMeteo->getDatasetURL(dataset)).arg(refTime).arg(area).arg(product));
+        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
+        url.addQueryItem("style", "postprocess");
+        url.addQueryItem("query", QString("%2%3%4").arg(refTime).arg(area).arg(product));
 
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
@@ -454,7 +455,7 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         //qDebug() << "URL: " << url.toString(); //debug
 
         // GET
-        QNetworkReply* reply = manager->get(request);
+        QNetworkReply* reply = manager->post(request);
         downloadOk = true;
         loop.exec();
 
@@ -587,13 +588,16 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
-        url = QUrl(QString("%1/query?query=%2%3%4&style=postprocess").arg(_dbMeteo->getDatasetURL(dataset)).arg(refTime).arg(area).arg(product));
+        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
+        url.addQueryItem("style", "postprocess");
+        url.addQueryItem("query", QString("%2%3%4").arg(refTime).arg(area).arg(product));
+
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
 
         //qDebug() << url.toString();
 
-        QNetworkReply* reply = manager->get(request);  // GET
+        QNetworkReply* reply = manager->post(request);
         loop.exec();
 
         if (reply->error() != QNetworkReply::NoError)
