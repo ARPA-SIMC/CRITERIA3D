@@ -743,10 +743,6 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                         }
                     }
                   }
-                  else
-                  {
-                    // TO DO fixed case anche in vb
-                  }
               }
               else if (time.getType().toUpper() == "HOURLY")
               {
@@ -811,10 +807,6 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                             }
                         }
                     }
-                  }
-                  else
-                  {
-                    // TO DO fixed case anche in vb
                   }
               }
               else
