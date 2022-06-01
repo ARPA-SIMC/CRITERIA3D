@@ -3148,6 +3148,35 @@ bool Project::setActiveStateWithCriteria(bool isActive)
 }
 
 
+bool Project::setMarkedFromPointList(QString fileName)
+{
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        meteoPoints[i].marked = false;
+    }
+
+    QList<QString> pointList = readListSingleColumn(fileName, errorString);
+    if (pointList.size() == 0)
+    {
+        logError();
+        return false;
+    }
+
+    for (int j = 0; j < pointList.size(); j++)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].id == pointList[j].toStdString())
+            {
+                meteoPoints[i].marked = true;
+            }
+        }
+    }
+
+    return true;
+}
+
+
 bool Project::deleteMeteoPoints(const QList<QString>& pointList)
 {
     logInfoGUI("Deleting points...");
