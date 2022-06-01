@@ -1,6 +1,6 @@
 #include "dialogSelectVar.h"
 
-DialogSelectVar::DialogSelectVar(QStringList allVar, QStringList selectedVar)
+DialogSelectVar::DialogSelectVar(QList<QString> allVar, QList<QString> selectedVar)
 : allVar(allVar), selectedVar(selectedVar)
 {
     setWindowTitle("Add or remove variables");
@@ -10,9 +10,6 @@ DialogSelectVar::DialogSelectVar(QStringList allVar, QStringList selectedVar)
     QVBoxLayout *arrowLayout = new QVBoxLayout();
     QHBoxLayout *layoutOk = new QHBoxLayout;
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(true); });
-    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(false); });
 
     layoutOk->addWidget(&buttonBox);
     listAllVar = new QListWidget;
@@ -47,7 +44,6 @@ DialogSelectVar::DialogSelectVar(QStringList allVar, QStringList selectedVar)
     connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(true); });
     connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(false); });
 
-
     show();
     exec();
 
@@ -64,7 +60,7 @@ void DialogSelectVar::variableAllClicked(QListWidgetItem* item)
 
 void DialogSelectVar::variableSelClicked(QListWidgetItem* item)
 {
-    Q_UNUSED(item);
+    Q_UNUSED(item)
 
     addButton->setEnabled(false);
     deleteButton->setEnabled(true);
@@ -87,9 +83,9 @@ void DialogSelectVar::deleteVar()
     listAllVar->addItem(item);
 }
 
-QStringList DialogSelectVar::getSelectedVariables()
+QList<QString> DialogSelectVar::getSelectedVariables()
 {
-    QStringList variableSelected;
+    QList<QString> variableSelected;
     for(int i = 0; i < listSelectedVar->count(); ++i)
     {
         QString var = listSelectedVar->item(i)->text();

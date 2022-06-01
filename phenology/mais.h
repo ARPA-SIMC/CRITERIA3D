@@ -18,8 +18,8 @@
         double m_numeroFoglieEmerse;
         double m_numeroFoglieTotali;
 
-        vector<double> m_limiteGradiGiorno;
-        vector<double> m_faseFenologica;
+        std::vector<double> m_limiteGradiGiorno;
+        std::vector<double> m_faseFenologica;
 
     public:
 
@@ -34,8 +34,8 @@
             m_classeFAO(100),
             m_numeroFoglieEmerse(0),
             m_numeroFoglieTotali(0),
-            m_limiteGradiGiorno(vector<double>()),
-            m_faseFenologica(vector<double>())
+            m_limiteGradiGiorno(std::vector<double>()),
+            m_faseFenologica(std::vector<double>())
         {}
 
         Mais(const char* coltura, const long& varieta)
@@ -48,8 +48,8 @@
             m_classeFAO(200 + varieta * 100),
             m_numeroFoglieEmerse(1.),
             m_numeroFoglieTotali(0),
-            m_limiteGradiGiorno(vector<double>()),
-            m_faseFenologica(vector<double>())
+            m_limiteGradiGiorno(std::vector<double>()),
+            m_faseFenologica(std::vector<double>())
         {
             m_limiteGradiGiorno.push_back(568.);
             m_limiteGradiGiorno.push_back(671.);

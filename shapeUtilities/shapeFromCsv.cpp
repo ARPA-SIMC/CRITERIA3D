@@ -28,6 +28,49 @@ long getFileLenght(QString fileName)
 }
 
 
+bool getFieldList(QString fieldListFileName, QMap<QString, QList<QString>>& fieldList, QString &error)
+{
+    int requiredItems = 5;
+
+    // check fieldList
+    if (fieldListFileName.isEmpty())
+    {
+        error = "Missing field list.";
+        return false;
+    }
+
+    QFile fileRef(fieldListFileName);
+    if ( !fileRef.open(QFile::ReadOnly | QFile::Text) ) {
+        error = "Field list not exists: " + fieldListFileName;
+        return false;
+    }
+
+    QTextStream in(&fileRef);
+    // skip header
+    QString line = in.readLine();
+    while (!in.atEnd())
+    {
+        QString line = in.readLine();
+        QList<QString> items = line.split(",");
+        if (items.size() < requiredItems)
+        {
+            error = "invalid field list: missing parameters";
+            return false;
+        }
+        QString key = items[1];
+        items.removeAt(1);
+        if (key.isEmpty() || items[0].isEmpty())
+        {
+            error = "invalid field list: missing field name";
+            return false;
+        }
+        fieldList.insert(key,items);
+    }
+
+    return true;
+}
+
+
 /*! shapeFromCsv
  * \brief import data on a shapeFile from a csv
  *
@@ -48,7 +91,6 @@ long getFileLenght(QString fileName)
 bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                   QString fieldListFileName, QString outputFileName, QString &error)
 {
-    int csvRefRequiredInfo = 5;
     int defaultStringLenght = 20;
     int defaultDoubleLenght = 10;
     int defaultDoubleDecimals = 2;
@@ -61,44 +103,8 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         return false;
     }
 
-    // fill mapCsvShapeFields
-    QMap<QString, QStringList> mapCsvShapeFields;
-    if (!fieldListFileName.isEmpty())
-    {
-        // read fieldList and
-        QFile fileRef(fieldListFileName);
-        if ( !fileRef.open(QFile::ReadOnly | QFile::Text) ) {
-            error = "Field list not exists: " + fieldListFileName;
-            return false;
-        }
-        else
-        {
-            QTextStream in(&fileRef);
-            // skip header
-            QString line = in.readLine();
-            while (!in.atEnd())
-            {
-                QString line = in.readLine();
-                QStringList items = line.split(",");
-                if (items.size() < csvRefRequiredInfo)
-                {
-                    error = "invalid field list: missing parameters";
-                    return false;
-                }
-                QString key = items[1];
-                items.removeAt(1);
-                if (key.isEmpty() || items[0].isEmpty())
-                {
-                    error = "invalid field list: missing field name";
-                    return false;
-                }
-                mapCsvShapeFields.insert(key,items);
-            }
-        }
-    }
-
-    QFile file(csvFileName);
-    if ( !file.open(QFile::ReadOnly | QFile::Text) )
+    QFile csvFile(csvFileName);
+    if ( !csvFile.open(QFile::ReadOnly | QFile::Text) )
     {
         error = "CSV data file not exists: " + csvFileName;
         return false;
@@ -115,18 +121,23 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     }
 
     // Create a thread to retrieve data from a file
-    QTextStream inputStream(&file);
+    QTextStream inputStream(&csvFile);
+
     // read first row (header)
     QString firstRow = inputStream.readLine();
-    QStringList newFields = firstRow.split(",");
+    QList<QString> newFields = firstRow.split(",");
 
+    // read field list
+    QMap<QString, QList<QString>> fieldList;
     if (fieldListFileName.isEmpty())
     {
-        // fill mapCsvShapeFields with default values
+        // fill fieldList with default values (call from GEO)
         QString key = newFields.last();
-        QStringList items;
+        QList<QString> items;
         items << "outputVar" << "FLOAT" << "8";
-        if (key == "FRACTION_AW")
+
+        // fraction of available water [0-1] requires 3 decimal digits
+        if (key == "FRACTION_AW" || key.left(3) == "FAW")
         {
             items << "3";
         }
@@ -134,7 +145,12 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         {
             items << "1";
         }
-        mapCsvShapeFields.insert(key,items);
+        fieldList.insert(key, items);
+    }
+    else
+    {
+        if (! getFieldList(fieldListFileName, fieldList, error))
+            return false;
     }
 
     int type;
@@ -152,9 +168,9 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         {
             idCaseIndexCsv = i;
         }
-        if (mapCsvShapeFields.contains(newFields[i]))
+        if (fieldList.contains(newFields[i]))
         {
-            QStringList valuesList = mapCsvShapeFields.value(newFields[i]);
+            QList<QString> valuesList = fieldList.value(newFields[i]);
             QString field = valuesList[0];
             if (valuesList[1] == "STRING")
             {
@@ -171,24 +187,41 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
             }
             else
             {
-                type = FTDouble;
-                if (valuesList[2].isEmpty())
+                if (valuesList[1] == "INTEGER")
                 {
-                    nWidth = defaultDoubleLenght;
+                    type = FTInteger;
+                    if (valuesList[2].isEmpty())
+                    {
+                        nWidth = defaultDoubleLenght;
+                    }
+                    else
+                    {
+                        nWidth = valuesList[2].toInt();
+                    }
+                    nDecimals = 0;
                 }
                 else
                 {
-                    nWidth = valuesList[2].toInt();
-                }
-                if (valuesList[3].isEmpty())
-                {
-                    nDecimals = defaultDoubleDecimals;
-                }
-                else
-                {
-                    nDecimals = valuesList[3].toInt();
+                    type = FTDouble;
+                    if (valuesList[2].isEmpty())
+                    {
+                        nWidth = defaultDoubleLenght;
+                    }
+                    else
+                    {
+                        nWidth = valuesList[2].toInt();
+                    }
+                    if (valuesList[3].isEmpty())
+                    {
+                        nDecimals = defaultDoubleDecimals;
+                    }
+                    else
+                    {
+                        nDecimals = valuesList[3].toInt();
+                    }
                 }
             }
+
             outputShapeFile.addField(field.toStdString().c_str(), type, nWidth, nDecimals);
             myPosMap.insert(i,outputShapeFile.getFieldPos(field.toStdString()));
         }
@@ -238,7 +271,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                     {
                         error = "Error in write this cases: " + idCase;
                         outputShapeFile.close();
-                        file.close();
+                        csvFile.close();
                         return false;
                     }
                 }
@@ -247,7 +280,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     }
 
     outputShapeFile.close();
-    file.close();
+    csvFile.close();
     return true;
 }
 

@@ -20,9 +20,8 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     contacts:
-    fausto.tomei@gmail.com
-    ftomei@arpae.emr.it
-    gantolini@arpae.emr.it
+    ftomei@arpae.it
+    gantolini@arpae.it
 */
 
 #include <stdio.h>
@@ -44,12 +43,13 @@ double distance(unsigned long i, unsigned long j)
 
 double distance2D(unsigned long i, unsigned long j)
 {
-    return sqrt(square(fabs(double(myNode[i].x - myNode[j].x))) + square(fabs(double(myNode[i].y - myNode[j].y))));
+    return sqrt(square(fabs(double(myNode[i].x - myNode[j].x)))
+                + square(fabs(double(myNode[i].y - myNode[j].y))));
 }
 
 double arithmeticMean(double v1, double v2)
 {
-    return (v1 + v2) /2;
+    return (v1 + v2) * 0.5;
 }
 
 double logarithmicMean(double v1, double v2)
@@ -66,27 +66,29 @@ double logarithmicMean(double v1, double v2)
 
 double geometricMean(double v1, double v2)
 {
-    double sign = v1/fabs(v1);
+    double sign = v1 / fabs(v1);
     return sign * sqrt(v1 * v2);
 }
 
 double computeMean(double v1, double v2)
 {
     if (myParameters.meanType == MEAN_LOGARITHMIC)
-        return(logarithmicMean(v1, v2));
+        return logarithmicMean(v1, v2);
     else if (myParameters.meanType == MEAN_GEOMETRIC)
-        return(geometricMean(v1, v2));
+        return geometricMean(v1, v2);
     else
-        //default: logarithmic
-        return(logarithmicMean(v1, v2));
+        // default: logarithmic
+        return logarithmicMean(v1, v2);
 }
 
 
 TlinkedNode* getLink(long i, long j)
 {
-    if (myNode[i].up.index == j) return &(myNode[i].up);
+    if (myNode[i].up.index == j)
+        return &(myNode[i].up);
 
-    if (myNode[i].down.index == j) return &(myNode[i].down);
+    if (myNode[i].down.index == j)
+        return &(myNode[i].down);
 
     for (short l = 0; l < myStructure.nrLateralLinks; l++)
     {
@@ -121,7 +123,8 @@ double GaussSeidelIterationWater(short direction)
         lastIndex = -1;
     }
 
-    double currentNorm, infinityNorm = 0;
+    double currentNorm = 0.;
+    double infinityNorm = 0.;
     long i = firstIndex;
 
     while (i != lastIndex)
@@ -183,7 +186,7 @@ double GaussSeidelIterationHeat()
             }
         }
 
-    return(norma_inf);
+    return norma_inf;
  }
 
 
@@ -214,7 +217,7 @@ bool GaussSeidelRelaxation (int approximation, double residualTolerance, int pro
 
             if (currentNorm > (bestNorm * 10.0))
             {
-                return(false);                    //not converging
+                return false;                    // not converging
             }
             else if (currentNorm < bestNorm)
             {
@@ -225,5 +228,5 @@ bool GaussSeidelRelaxation (int approximation, double residualTolerance, int pro
         iteration++;
 	}
 
-	return(true);
+    return true;
 }

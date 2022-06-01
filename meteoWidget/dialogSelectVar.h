@@ -8,20 +8,20 @@ class DialogSelectVar : public QDialog
     Q_OBJECT
 
 private:
-    QStringList allVar;
-    QStringList selectedVar;
+    QList<QString> allVar;
+    QList<QString> selectedVar;
     QListWidget* listAllVar;
     QListWidget* listSelectedVar;
     QPushButton *addButton;
     QPushButton *deleteButton;
 
 public:
-    DialogSelectVar(QStringList allVar, QStringList selectedVar);
+    DialogSelectVar(QList<QString> allVar, QList<QString> selectedVar);
     void variableAllClicked(QListWidgetItem* item);
     void variableSelClicked(QListWidgetItem* item);
     void addVar();
     void deleteVar();
-    QStringList getSelectedVariables();
+    QList<QString> getSelectedVariables();
 };
 
 #endif // DIALOGSELECTVAR_H

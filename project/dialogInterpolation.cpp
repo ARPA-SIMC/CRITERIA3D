@@ -1,5 +1,5 @@
 #include <QtWidgets>
-#include <QStringList>
+#include <QList>
 
 #include "project.h"
 #include "utilities.h"
@@ -40,6 +40,14 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     topographicDistanceEdit->setChecked(_interpolationSettings->getUseTD());
     layoutMain->addWidget(topographicDistanceEdit);
 
+    QLabel *labelMaxTd = new QLabel(tr("maximum Td multiplier"));
+    QIntValidator *intValTd = new QIntValidator(1, 1000000, this);
+    maxTdMultiplierEdit.setFixedWidth(60);
+    maxTdMultiplierEdit.setValidator(intValTd);
+    maxTdMultiplierEdit.setText(QString::number(_interpolationSettings->getTopoDist_maxKh()));
+    layoutMain->addWidget(labelMaxTd);
+    layoutMain->addWidget(&maxTdMultiplierEdit);
+
     // dew point
     useDewPointEdit = new QCheckBox(tr("interpolate relative humidity using dew point"));
     useDewPointEdit->setChecked(_interpolationSettings->getUseDewPoint());
@@ -57,7 +65,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     doubleValR2->setNotation(QDoubleValidator::StandardNotation);
     minRegressionR2Edit.setFixedWidth(30);
     minRegressionR2Edit.setValidator(doubleValR2);
-    minRegressionR2Edit.setText(QString::number(_interpolationSettings->getMinRegressionR2()));
+    minRegressionR2Edit.setText(QString::number(double(_interpolationSettings->getMinRegressionR2())));
     layoutDetrending->addWidget(labelMinR2);
     layoutDetrending->addWidget(&minRegressionR2Edit);
 
@@ -161,6 +169,12 @@ void DialogInterpolation::accept()
         return;
     }
 
+    if (maxTdMultiplierEdit.text().isEmpty())
+    {
+        QMessageBox::information(nullptr, "Missing Td multiplier", "insert maximum Td multiplier");
+        return;
+    }
+
     if (algorithmEdit.currentIndex() == -1)
     {
         QMessageBox::information(nullptr, "No algorithm selected", "Choose algorithm");
@@ -183,8 +197,10 @@ void DialogInterpolation::accept()
     _interpolationSettings->setUseDewPoint(useDewPointEdit->isChecked());
     _interpolationSettings->setUseInterpolatedTForRH((useInterpolTForRH->isChecked()));
     _interpolationSettings->setMinRegressionR2(minRegressionR2Edit.text().toFloat());
+    _interpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());
 
     _qualityInterpolationSettings->setMinRegressionR2(minRegressionR2Edit.text().toFloat());
+    _qualityInterpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());
     _qualityInterpolationSettings->setUseLapseRateCode(lapseRateCodeEdit->isChecked());
     _qualityInterpolationSettings->setUseThermalInversion(thermalInversionEdit->isChecked());
 
@@ -337,7 +353,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
 
     QLabel *labelTableList = new QLabel(tr("table for point values"));
     layoutPointValues->addWidget(labelTableList);
-    QStringList tables_ = _project->meteoPointsDbHandler->getDb().tables();
+    QList<QString> tables_ = _project->meteoPointsDbHandler->getDb().tables();
     for (int i=0; i < tables_.size(); i++)
         _table.addItem(tables_[i]);
 
@@ -387,7 +403,7 @@ ProxyDialog::ProxyDialog(Project *myProject)
 
 bool ProxyDialog::checkProxies(QString *error)
 {
-    QStringList fields;
+    QList<QString> fields;
     std::string table_;
 
     for (unsigned i=0; i < _proxy.size(); i++)

@@ -1,6 +1,9 @@
 
 #include "mais.h"
 
+#include "math.h"
+#include <algorithm>
+
 extern long doy(const Crit3DDate& data);
 
 // funzione semplificata per il calcolo della temperatura del suolo
@@ -85,7 +88,7 @@ void Mais::Emergenza(const Stazione& stazione, const Parametri& parametri)
 {
 	long i = m_faseFenologica.size() - 1;
 	double Tsm = ( TemperaturaSuoloMinima(i, stazione, parametri) + TemperaturaSuoloMassima(i, stazione, parametri) ) / 2.;
-	m_faseFenologica[i] += __max( static_cast<double>(0.), 0.0144 * Tsm - 0.09193 );
+    m_faseFenologica[i] += std::max( static_cast<double>(0.), 0.0144 * Tsm - 0.09193 );
 }
 
 // routine di calcolo della data di viraggio apicale
@@ -114,7 +117,7 @@ void Mais::Fioritura(const Stazione& stazione, const Parametri& parametri)
 void Mais::Maturazione(const Stazione& stazione) 
 {
 	long i = m_faseFenologica.size() - 1;
-	m_faseFenologica[i] += CornHeatUnits(__max(10., stazione.Tx(i)), __max(4.4, stazione.Tn(i))) / m_limiteGradiGiorno[m_classeFAO/100 - 2];
+    m_faseFenologica[i] += CornHeatUnits(std::max(10., (double)stazione.Tx(i)), std::max(4.4, (double)stazione.Tn(i))) / m_limiteGradiGiorno[m_classeFAO/100 - 2];
 }
 
 // simulazione dello sviluppo delle fasi fenologiche del mais

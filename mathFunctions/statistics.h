@@ -16,7 +16,7 @@
                             winkler, huglin, fregoni,
                             correctedDegreeDaysSum, erosivityFactorElab, rainIntensityElab, noMeteoComp};
 
-    enum aggregationMethod {noAggrMethod, aggrAverage, aggrMedian, aggrStdDeviation, aggrMin, aggrMax, aggrSum, aggrPrevailing, aggrIntegral, aggrCenter};
+    enum aggregationMethod {noAggrMethod, aggrAverage, aggrMedian, aggrStdDeviation, aggrMin, aggrMax, aggrSum, aggrPrevailing, aggrIntegral, aggrCenter, aggr95Perc};
 
     float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float rainfallThreshold);
 
@@ -24,8 +24,10 @@
     {
         double rootMeanSquareError(double *measured , double *simulated , int nrData);
         float rootMeanSquareError(float *measured , float *simulated , int nrData);
+        double rootMeanSquareError(std::vector <float> measured, std::vector <float> simulated);
         float meanError(std::vector<float> measured , std::vector<float> simulated );
         float meanAbsoluteError(std::vector <float> measured, std::vector <float> simulated);
+        double compoundRelativeError(std::vector <float> measured, std::vector <float> simulated);
         float coefficientOfVariation(float *measured , float *simulated , int nrData);
         float weighedMean(float *data , float *weights, int nrData);
         float linearInterpolation(float x1, float y1, float x2, float y2, float xx);

@@ -20,7 +20,7 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
         QTextStream in(&fileCsv);
         //skip header
         QString line = in.readLine();
-        QStringList header = line.split(",");
+        QList<QString> header = line.split(",");
         // whitespace removed from the start and the end.
         QMutableListIterator<QString> it(header);
         while (it.hasNext()) {
@@ -31,14 +31,14 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
         while (!in.atEnd())
         {
             line = in.readLine();
-            QStringList items = line.split(",");
+            QList<QString> items = line.split(",");
             if (items.size() < REQUIREDAGGREGATIONINFO)
             {
                 error = "invalid output format CSV, missing reference data";
                 return false;
             }
 
-            int pos = header.indexOf("output variable (csv)");
+            int pos = int(header.indexOf("output variable (csv)"));
             if (pos == -1)
             {
                 error = "missing output variable";
@@ -52,7 +52,7 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
                 return false;
             }
 
-            pos = header.indexOf("input field (shape)");
+            pos = int(header.indexOf("input field (shape)"));
             if (pos == -1)
             {
                 error = "missing input field (shape)";
@@ -66,7 +66,7 @@ bool CriteriaAggregationVariable::parserAggregationVariable(QString fileName, QS
                 return false;
             }
 
-            pos = header.indexOf("computation");
+            pos = int(header.indexOf("computation"));
             if (pos == -1)
             {
                 error = "missing computation";

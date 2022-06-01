@@ -1,5 +1,6 @@
 #include "commonConstants.h"
 #include "criteriaOutputVariable.h"
+
 #include <QFile>
 #include <QTextStream>
 
@@ -20,7 +21,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
         QTextStream in(&fileCsv);
         //skip header
         QString line = in.readLine();
-        QStringList header = line.split(",");
+        QList<QString> header = line.split(",");
         // whitespace removed from the start and the end.
         QMutableListIterator<QString> it(header);
         while (it.hasNext()) {
@@ -31,14 +32,14 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
         while (!in.atEnd())
         {
             line = in.readLine();
-            QStringList items = line.split(",");
+            QList<QString> items = line.split(",");
             if (items.size() < CSVREQUIREDINFO)
             {
                 error = "invalid output format CSV, missing reference data";
                 return false;
             }
 
-            int pos = header.indexOf("output var name");
+            int pos = int(header.indexOf("output var name"));
             if (pos == -1)
             {
                 error = "missing output var name";
@@ -46,7 +47,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
             }
             outputVarName.push_back(items[pos]);
 
-            pos = header.indexOf("var name");
+            pos = int(header.indexOf("var name"));
             if (pos == -1)
             {
                 error = "missing var name";
@@ -54,7 +55,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
             }
             varName.push_back(items[pos].toUpper());
 
-            pos = header.indexOf("reference day");
+            pos = int(header.indexOf("reference day"));
             if (pos == -1)
             {
                 error = "missing reference day";
@@ -67,7 +68,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
                 return false;
             }
 
-            pos = header.indexOf("computation");
+            pos = int(header.indexOf("computation"));
             if (pos == -1)
             {
                 error = "missing computation";
@@ -75,7 +76,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
             }
             computation.push_back(items[pos]);
 
-            pos = header.indexOf("nr days");
+            pos = int(header.indexOf("nr days"));
             if (pos == -1)
             {
                 error = "missing nr days";
@@ -83,7 +84,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
             }
             nrDays.push_back(items[pos]);
 
-            pos = header.indexOf("climate computation");
+            pos = int(header.indexOf("climate computation"));
             if (pos == -1)
             {
                 error = "missing climate computation";
@@ -91,7 +92,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
             }
             climateComputation.push_back(items[pos]);
 
-            pos = header.indexOf("parameter 1");
+            pos = int(header.indexOf("parameter 1"));
             if (pos == -1)
             {
                 error = "missing parameter 1";
@@ -110,7 +111,7 @@ bool CriteriaOutputVariable::parserOutputVariable(QString fileName, QString &err
                 }
             }
 
-            pos = header.indexOf("parameter 2");
+            pos = int(header.indexOf("parameter 2"));
             if (pos == -1)
             {
                 error = "missing parameter 2";

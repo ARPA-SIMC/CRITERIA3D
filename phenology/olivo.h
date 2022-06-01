@@ -3,7 +3,6 @@
 
     #include "coltura.h"
 
-
     class Olivo : public Coltura
     {
         const char* m_coltura;
@@ -14,7 +13,7 @@
         Crit3DDate m_maturazione;
         double m_limiteGradiGiorno[2];
 
-        vector<double> m_faseFenologica;
+        std::vector<double> m_faseFenologica;
 
     public:
 
@@ -24,7 +23,7 @@
             m_induzioneFiorale(Crit3DDate()),
             m_fioritura(Crit3DDate()),
             m_maturazione(Crit3DDate()),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {
             m_limiteGradiGiorno[0] = 0.;
             m_limiteGradiGiorno[1] = 0.;
@@ -37,7 +36,7 @@
             m_induzioneFiorale(Crit3DDate()),
             m_fioritura(Crit3DDate()),
             m_maturazione(Crit3DDate()),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {
             m_limiteGradiGiorno[0] = limiteGradiGiorno0;
             m_limiteGradiGiorno[1] = limiteGradiGiorno1;

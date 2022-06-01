@@ -5,11 +5,13 @@
 #include <QDate>
 #include <fstream>
 #include <QSqlDatabase>
+
 #include "logger.h"
 #include "criteriaOutputVariable.h"
 #include "criteriaAggregationVariable.h"
 #include "computationUnitsDb.h"
 #include "shapeHandler.h"
+#include "crit3dDate.h"
 
 #define REQUIREDMAPLISTCSVINFO 2
 
@@ -35,7 +37,9 @@
 #define ERROR_OUTPUT_VARIABLES -60
 #define ERROR_CSVFILE -65
 #define ERROR_SHAPEFILE -70
+#define ERROR_NETCDF -75
 #define ERROR_ZONAL_STATISTICS_SHAPE -80
+#define ERROR_MAPS -85
 #define ERROR_MISSING_GDAL -100
 
 
@@ -46,6 +50,7 @@ public:
 
     QString path;
     QString projectName;
+    QString operation;
     QString configFileName;
     QString projectError;
     QString ucmFileName;
@@ -55,11 +60,13 @@ public:
     QString shapeFieldName;
     QString aggregationListFileName;
     QString aggregationCellSize;
+    QString aggregationThreshold;
 
     QString mapListFileName;
     QString mapCellSize;
     QString mapFormat;
     QString mapProjection;
+    QString mapAreaName;
 
     QString outputCsvFileName;
     QString outputShapeFileName;
@@ -68,7 +75,7 @@ public:
 
     QDate dateComputation;
 
-    QString dbUnitsName;
+    QString dbComputationUnitsName;
     QString dbDataName;
     QString dbCropName;
     QString dbDataHistoricalName;
@@ -78,7 +85,7 @@ public:
     QSqlDatabase dbDataHistorical;
 
     int nrUnits;
-    std::vector<Crit1DUnit> unitList;
+    std::vector<Crit1DCompUnit> compUnitList;
     CriteriaOutputVariable outputVariable;
     CriteriaAggregationVariable aggregationVariable;
 
@@ -92,7 +99,8 @@ public:
 
     void initialize();
     void closeProject();
-    int initializeProject(QString settingsFileName, QDate dateComputation, bool isLog);
+
+    int initializeProject(QString settingsFileName, QString operation, QDate dateComputation, bool isLog);
     int initializeProjectDtx();
     int initializeProjectCsv();
 
@@ -102,13 +110,17 @@ public:
     int createCsvFile();
     int createShapeFile();
     int createAggregationFile();
+    int createNetcdf();
     int createMaps();
 
     bool initializeCsvOutputFile();
-    bool getAllDbVariable(QString &projectError);   
-    bool getDbDataDates(QDate* firstDate, QDate* lastDate, QString &projectError);
+    bool getAllDbVariable();
+    bool getDbDataDates(QDate &firstDate, QDate &lastDate);
     int createCsvFileFromGUI(QDate dateComputation, QString csvFileName);
     int createShapeFileFromGUI();
+    bool convertShapeToNetcdf(Crit3DShapeHandler &shape, std::string outputFileName,
+                              std::string field, std::string variableName, std::string variableUnit, double cellSize,
+                              Crit3DDate computationDate, int nrDays);
 
 };
 

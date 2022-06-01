@@ -8,7 +8,8 @@
         #include "extra.h"
     #endif
 
-    struct Tboundary{
+    struct Tboundary
+    {
         short type;
         float slope;                        /*!< [m m-1]    */
         float boundaryArea;                 /*!< [m2] (only for surface runoff [m]) */
@@ -17,9 +18,10 @@
         double prescribedTotalPotential;	/*!< [m] imposed total soil-water potential (H) */
 
         TboundaryHeat *Heat;                /*!< extra variables for heat flux */
-		} ;
+    };
 
-    struct TCrit3DStructure{
+    struct TCrit3DStructure
+    {
         long nrLayers;
         long nrNodes;
         int nrLateralLinks;
@@ -34,31 +36,33 @@
         int saveHeatFluxesType;
 
         void initialize()
-            {
-                nrLayers = 0;
-                nrNodes = 0;
-                nrLateralLinks = 0;
-                maxNrColumns = 0;
-                computeWater = true;
-                computeHeat = false;
-                computeHeatAdvection = false;
-                computeHeatVapor = false;
-                computeSolutes = false;
-                saveHeatFluxesType = SAVE_HEATFLUXES_NONE;
-            }
-        } ;
+        {
+            nrLayers = 0;
+            nrNodes = 0;
+            nrLateralLinks = 0;
+            maxNrColumns = 0;
+            computeWater = true;
+            computeHeat = false;
+            computeHeatAdvection = false;
+            computeHeatVapor = false;
+            computeSolutes = false;
+            saveHeatFluxesType = SAVE_HEATFLUXES_NONE;
+        }
+    };
 
 
-    struct TlinkedNode{
+    struct TlinkedNode
+    {
         long index;                 /*!< index of linked elements */
         float area;                 /*!< interface area [m^2] */
         float sumFlow;              /*!< [m^3] sum of flow(i,j) */
 
         TCrit3DLinkedNodeExtra* linkedExtra;    /*!< extra variables for heat flux */
-        } ;
+    };
 
 
-    struct Tsoil{
+    struct Tsoil
+    {
         double VG_alpha;            /*!< [m^-1] Van Genutchen alpha parameter */
         double VG_n;                /*!< [-] Van Genutchen n parameter */
         double VG_m;                /*!< [-] Van Genutchen m parameter  ]0. , 1.[ */
@@ -75,11 +79,11 @@
         //for heat
         double organicMatter;       /*!< [-] fraction of organic matter */
         double clay;                /*!< [-] fraction of clay */
-        } ;
+    };
 
 
-     struct TCrit3Dnode{
-
+    struct TCrit3Dnode
+    {
         double Se;					/*!< [-] degree of saturation */
         double k;                   /*!< [m s^-1] soil water conductivity */
         double H;                   /*!< [m] pressure head */
@@ -102,16 +106,18 @@
         TCrit3DnodeExtra* extra;    /*!< extra variables for heat and solutes */
 
         bool isSurface;
-        } ;
+    };
 
 
-     struct TmatrixElement {
+    struct TmatrixElement
+    {
         long index;
         double val;
-        } ;
+    };
 
 
-     struct Tbalance {
+    struct Tbalance
+    {
         double storageWater;
         double sinkSourceWater;
         double waterMBE, waterMBR;
@@ -120,25 +126,26 @@
         double sinkSourceHeat;
         double heatMBE = 0.0;
         double heatMBR = 1.0;
-        } ;
+    };
 
-	struct Tculvert {
+    struct Tculvert
+    {
 		long index = NOLINK;
 		double width;				/*!< [m] */
 		double height;				/*!< [m] */
 		double roughness;			/*!< [s m-1/3] */
 		double slope;				/*!< [-] */
-		} ;
+    };
 
-     extern TCrit3DStructure myStructure;
-     extern TParameters myParameters;
-     extern TCrit3Dnode *myNode;
-     extern TmatrixElement **A;
-	 extern Tculvert myCulvert;
-     extern double *b, *C, *X;
-     extern double *invariantFlux;         //array accessorio per flussi avvettivi e latenti
-	 extern double Courant;
+    extern TCrit3DStructure myStructure;
+    extern TParameters myParameters;
+    extern TCrit3Dnode *myNode;
+    extern TmatrixElement **A;
+    extern Tculvert myCulvert;
+    extern double *b, *C, *X;
+    extern double *invariantFlux;         // array accessorio per flussi avvettivi e latenti
+    extern double Courant;
 
-     extern Tbalance balanceCurrentTimeStep, balancePreviousTimeStep, balanceCurrentPeriod, balanceWholePeriod;
+    extern Tbalance balanceCurrentTimeStep, balancePreviousTimeStep, balanceCurrentPeriod, balanceWholePeriod;
 
 #endif // SOILFLUXES3DTYPES

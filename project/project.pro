@@ -29,16 +29,19 @@ win32:{
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo   \
             ../solarRadiation ../interpolation ../utilities     \
-            ../netcdfHandler ../dbMeteoPoints ../dbMeteoGrid    \
-            ../meteoWidget ../commonDialogs
+            ../netcdfHandler ../dbMeteoPoints ../outputPoints ../dbMeteoGrid    \
+            ../meteoWidget ../commonDialogs ../commonChartElements ../climate ../proxyWidget ../importDataXML
 
 
 SOURCES += \
     aggregation.cpp \
     dialogInterpolation.cpp \
+    dialogPointDeleteData.cpp \
+    dialogPointProperties.cpp \
     dialogProject.cpp \
     dialogRadiation.cpp \
     dialogSelection.cpp \
+    dialogSelectionMeteoPoint.cpp \
     dialogSettings.cpp \
     interpolationCmd.cpp \
     meteoMaps.cpp \
@@ -49,9 +52,12 @@ SOURCES += \
 HEADERS += \
     aggregation.h \
     dialogInterpolation.h \
+    dialogPointDeleteData.h \
+    dialogPointProperties.h \
     dialogProject.h \
     dialogRadiation.h \
     dialogSelection.h \
+    dialogSelectionMeteoPoint.h \
     dialogSettings.h \
     interpolationCmd.h \
     meteoMaps.h \

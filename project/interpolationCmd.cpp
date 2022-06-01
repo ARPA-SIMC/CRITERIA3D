@@ -6,6 +6,90 @@
 #include "interpolation.h"
 #include "interpolationCmd.h"
 
+float crossValidationStatistics::getMeanAbsoluteError() const
+{
+    return meanAbsoluteError;
+}
+
+void crossValidationStatistics::setMeanAbsoluteError(float newMeanAbsoluteError)
+{
+    meanAbsoluteError = newMeanAbsoluteError;
+}
+
+float crossValidationStatistics::getRootMeanSquareError() const
+{
+    return rootMeanSquareError;
+}
+
+void crossValidationStatistics::setRootMeanSquareError(float newRootMeanSquareError)
+{
+    rootMeanSquareError = newRootMeanSquareError;
+}
+
+float crossValidationStatistics::getCompoundRelativeError() const
+{
+    return compoundRelativeError;
+}
+
+void crossValidationStatistics::setCompoundRelativeError(float newCompoundRelativeError)
+{
+    compoundRelativeError = newCompoundRelativeError;
+}
+
+float crossValidationStatistics::getMeanBiasError() const
+{
+    return meanBiasError;
+}
+
+void crossValidationStatistics::setMeanBiasError(float newMeanBiasError)
+{
+    meanBiasError = newMeanBiasError;
+}
+
+const Crit3DTime &crossValidationStatistics::getRefTime() const
+{
+    return refTime;
+}
+
+void crossValidationStatistics::setRefTime(const Crit3DTime &newRefTime)
+{
+    refTime = newRefTime;
+}
+
+const Crit3DProxyCombination &crossValidationStatistics::getProxyCombination() const
+{
+    return proxyCombination;
+}
+
+void crossValidationStatistics::setProxyCombination(const Crit3DProxyCombination &newProxyCombination)
+{
+    proxyCombination = newProxyCombination;
+}
+
+float crossValidationStatistics::getR2() const
+{
+    return R2;
+}
+
+void crossValidationStatistics::setR2(float newR2)
+{
+    R2 = newR2;
+}
+
+crossValidationStatistics::crossValidationStatistics()
+{
+    initialize();
+}
+
+void crossValidationStatistics::initialize()
+{
+    meanAbsoluteError = NODATA;
+    rootMeanSquareError = NODATA;
+    compoundRelativeError = NODATA;
+    meanBiasError = NODATA;
+    R2 = NODATA;
+}
+
 void Crit3DProxyGridSeries::initialize()
 {
     gridName.clear();
@@ -142,9 +226,9 @@ bool checkProxyGridSeries(Crit3DInterpolationSettings* mySettings, const gis::Cr
 
 
 bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings,
-                        gis::Crit3DRasterGrid* myGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar)
+                        gis::Crit3DRasterGrid* outputGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar)
 {
-    if (! myGrid->initializeGrid(raster))
+    if (! outputGrid->initializeGrid(raster))
     {
         return false;
     }
@@ -153,21 +237,21 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
     std::vector <float> proxyValues;
     proxyValues.resize(unsigned(mySettings->getProxyNr()));
 
-    for (long myRow = 0; myRow < myGrid->header->nrRows ; myRow++)
+    for (long myRow = 0; myRow < outputGrid->header->nrRows ; myRow++)
     {
-        for (long myCol = 0; myCol < myGrid->header->nrCols; myCol++)
+        for (long myCol = 0; myCol < outputGrid->header->nrCols; myCol++)
         {
-            gis::getUtmXYFromRowColSinglePrecision(*myGrid, myRow, myCol, &myX, &myY);
+            gis::getUtmXYFromRowColSinglePrecision(*outputGrid, myRow, myCol, &myX, &myY);
             float myZ = raster.value[myRow][myCol];
-            if (int(myZ) != int(myGrid->header->flag))
+            if (int(myZ) != int(outputGrid->header->flag))
             {
                 if (getUseDetrendingVar(myVar)) getProxyValuesXY(myX, myY, mySettings, proxyValues);
-                myGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
             }
         }
     }
 
-    if (! gis::updateMinMaxRasterGrid(myGrid))
+    if (! gis::updateMinMaxRasterGrid(outputGrid))
     {
         return false;
     }

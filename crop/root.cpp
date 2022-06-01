@@ -76,7 +76,22 @@ namespace root
             case (5):
                 return GAMMA_DISTRIBUTION;
             default:
-                return GAMMA_DISTRIBUTION;
+                return CARDIOID_DISTRIBUTION;
+         }
+    }
+
+    int getRootDistributionNumber(rootDistributionType rootShape)
+    {
+        switch (rootShape)
+        {
+            case (CYLINDRICAL_DISTRIBUTION):
+                return 1;
+            case (CARDIOID_DISTRIBUTION):
+                return 4;
+            case (GAMMA_DISTRIBUTION):
+                return 5;
+            default:
+                return 4;
          }
     }
 
@@ -485,24 +500,31 @@ namespace root
         }
         else if (myCrop->roots.rootShape == GAMMA_DISTRIBUTION)
         {
-            double normalizationFactor ;
             double kappa, theta,a,b;
             double mean, mode;
             mean = myCrop->roots.rootLength * 0.5;
-            mode = myCrop->roots.rootLength * 0.2;
-            theta = mean - mode;
-            kappa = mean / theta;
-            // complete gamma function
-            normalizationFactor = Gamma_Function(kappa);
+            int iterations=0;
+            double integralComplementary;
+            do{
+                mode = 0.6*mean;
+                theta = mean - mode;
+                kappa = mean / theta;
+                iterations++;
+                integralComplementary=incompleteGamma(kappa,3*myCrop->roots.rootLength/theta) - incompleteGamma(kappa,myCrop->roots.rootLength/theta);
+                mean *= 0.99;
+            } while(integralComplementary>0.01 && iterations<1000);
 
             for (i=1 ; i < nrLayers; i++)
             {
                 b = MAXVALUE(soilLayers[i].depth + soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // right extreme
-                if (b>0)
+                if (b>0 && b< myCrop->roots.rootLength)
                 {
                     a = MAXVALUE(soilLayers[i].depth - soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // left extreme
-                    myCrop->roots.rootDensity[i] = Incomplete_Gamma_Function(b/theta,kappa) - Incomplete_Gamma_Function(a/theta,kappa);
-                    myCrop->roots.rootDensity[i] /= normalizationFactor;
+                    myCrop->roots.rootDensity[i] = incompleteGamma(kappa,b/theta) - incompleteGamma(kappa,a/theta); // incompleteGamma is already normalized by gamma(kappa)
+                }
+                else
+                {
+                    myCrop->roots.rootDensity[i] = 0;
                 }
             }
         }

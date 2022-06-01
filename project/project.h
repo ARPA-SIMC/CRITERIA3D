@@ -7,6 +7,12 @@
     #ifndef GIS_H
         #include "gis.h"
     #endif
+    #ifndef OUTPUTPOINTS_H
+        #include "outputPoints.h"
+    #endif
+    #ifndef DBOUTPUTPOINTSHANDLER_H
+        #include "dbOutputPointsHandler.h"
+    #endif
     #ifndef DBMETEOPOINTS_H
         #include "dbMeteoPointsHandler.h"
     #endif
@@ -25,10 +31,13 @@
     #ifndef METEOMAPS_H
         #include "meteoMaps.h"
     #endif
-
-    #ifndef QSETTINGS_H
-        #include <QSettings>
+    #ifndef IMPORTPROPERTIESCSV_H
+        #include "importPropertiesCSV.h"
     #endif
+    #ifndef PROXYWIDGET_H
+        #include "proxyWidget.h"
+    #endif
+
     #ifndef _FSTREAM_
         #include <fstream>
     #endif
@@ -38,6 +47,11 @@
     #define ERROR_DEM 2
     #define ERROR_DBPOINT 3
     #define ERROR_DBGRID 4
+    #define ERROR_OUTPUTPOINTLIST 5
+
+    #define ERROR_STR_MISSING_DB "Load a meteo points DB before."
+    #define ERROR_STR_MISSING_DEM "Load a Digital Elevation Model (DEM) before."
+    #define ERROR_STR_MISSING_PROJECT "Open a project before."
 
     class Crit3DMeteoWidget;
     class FormInfo;
@@ -49,7 +63,9 @@
         QString appPath;
         QString defaultPath;
         QString projectPath;
+        bool computeOnlyPoints;
         FormInfo* formLog;
+        ImportPropertiesCSV* importProperties;
 
         void clearMeteoPoints();
         bool createDefaultProject(QString fileName);
@@ -74,9 +90,15 @@
         QString logFileName;
         QString demFileName;
         QString dbPointsFileName;
+        QString dbAggregationFileName;
+        QString aggregationPath;
         QString dbGridXMLFileName;
         QString parametersFileName;
         std::ofstream logFile;
+
+        // output points
+        QString outputPointsFileName;
+        QString currentDbOutputFileName;
 
         QSettings* parameters;
         QSettings* projectSettings;
@@ -84,9 +106,13 @@
         bool meteoPointsLoaded;
         int nrMeteoPoints;
         Crit3DMeteoPoint* meteoPoints;
+        std::vector<gis::Crit3DOutputPoint> outputPoints;
+
         Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
+        Crit3DOutputPointsDbHandler* outputPointsDbHandler;
         Crit3DAggregationsDbHandler* aggregationDbHandler;
-        QList<gis::Crit3DGeoPoint> meteoPointsSelected;
+        QDateTime meteoPointsDbFirstTime, meteoPointsDbLastTime;
+
         Crit3DColorScale* meteoPointsColorScale;
 
         bool meteoGridLoaded;
@@ -115,6 +141,8 @@
 
         QList<Crit3DMeteoWidget*> meteoWidgetPointList;
         QList<Crit3DMeteoWidget*> meteoWidgetGridList;
+
+        Crit3DProxyWidget* proxyWidget;
 
         Project();
 
@@ -175,22 +203,26 @@
         void closeMeteoGridDB();
         void cleanMeteoPointsData();
 
+        void closeOutputPointsDB();
+
         bool loadDEM(QString myFileName);
         void closeDEM();
         bool loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo);
         bool loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, QString dataset, bool showInfo);
         bool loadMeteoPointsDB(QString dbName);
         bool loadMeteoGridDB(QString xmlName);
+        bool newMeteoGridDB(QString xmlName);
         bool loadAggregationdDB(QString dbName);
+        bool loadOutputPointsDB(QString dbName);
+        bool newOutputPointsDB(QString dbName);
         bool loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showInfo);
         bool loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, bool showInfo);
+        bool loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool showInfo);
         void loadMeteoGridData(QDate firstDate, QDate lastDate, bool showInfo);
         QDateTime findDbPointLastTime();
         QDateTime findDbPointFirstTime();
 
-        void getMeteoPointsRange(float *minimum, float *maximum);
-        bool getMeteoPointSelected(int i);
-
+        void getMeteoPointsRange(float& minimum, float& maximum, bool useNotActivePoints);
         float meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeIni, const Crit3DTime& timeFin);
 
         bool loadProxyGrids();
@@ -199,25 +231,51 @@
         bool updateProxy();
         void checkMeteoPointsDEM();
         bool writeTopographicDistanceMaps(bool onlyWithData, bool showInfo);
-        bool writeTopographicDistanceMap(std::string meteoPointId);
-        bool loadTopographicDistanceMaps(bool showInfo);
-        void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime);
+        bool writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRasterGrid& demMap, QString pathTd);
+        bool loadTopographicDistanceMaps(bool onlyWithData, bool showInfo);
+        void passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Crit3DMeteoSettings *meteoSettings);
+
+        bool checkInterpolationMain(meteoVariable myVar);
         bool interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
         bool interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster);
+        bool interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoint> &interpolationPoints,
+                                       gis::Crit3DRasterGrid *outputGrid, meteoVariable myVar);
+        bool interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics* myStats);
+        bool computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics *myStats);
+
         frequencyType getCurrentFrequency() const;
         void setCurrentFrequency(const frequencyType &value);
 
         bool checkMeteoGridForExport();
         void importHourlyMeteoData(const QString& fileName, bool importAllFiles, bool deletePreviousData);
 
+        bool parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString> *csvFields);
+        bool writeMeteoPointsProperties(QList<QString> joinedList);
+
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
+        void showProxyGraph();
+
+        void clearSelectedPoints();
+        void clearSelectedOutputPoints();
+        bool setActiveStateSelectedPoints(bool isActive);
+        bool setActiveStatePointList(QString fileName, bool isActive);
+        bool setActiveStateWithCriteria(bool isActive);
+        bool deleteMeteoPoints(const QList<QString>& pointList);
+        bool deleteMeteoPointsData(const QList<QString>& pointList);
+        bool loadOutputPointList(QString fileName);
+        bool writeOutputPointList(QString fileName);
+        bool exportMeteoGridToESRI(QString fileName, double cellSize);
+
+        void setComputeOnlyPoints(bool isOnlyPoints);
+        bool getComputeOnlyPoints();
 
     private slots:
         void deleteMeteoWidgetPoint(int id);
         void deleteMeteoWidgetGrid(int id);
+        void deleteProxyWidget();
 
     };
 

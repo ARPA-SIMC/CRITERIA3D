@@ -91,7 +91,7 @@ TabIrrigation::TabIrrigation()
     chartView->setRenderHint(QPainter::Antialiasing);
     axisX->hide();
 
-    m_tooltip = new CropCallout(chart);
+    m_tooltip = new Callout(chart);
     m_tooltip->hide();
 
     connect(seriesLAI, &QLineSeries::hovered, this, &TabIrrigation::tooltipLAI);

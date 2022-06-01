@@ -32,73 +32,73 @@ void BarHorizon::setClass(int classUSDA)
     // sand
     case 1:
     {
-        linePalette.setColor(QPalette::Background, QColor(255,206,156));
+        linePalette.setColor(QPalette::Window, QColor(255,206,156));
         break;
     }
     // loamy sand
     case 2:
     {
-        linePalette.setColor(QPalette::Background, QColor(255,206,206));
+        linePalette.setColor(QPalette::Window, QColor(240,190,190));
         break;
     }
     // sandy loam
     case 3:
     {
-        linePalette.setColor(QPalette::Background, QColor(255,206,255));
+        linePalette.setColor(QPalette::Window, QColor(240,190,240));
         break;
     }
     // silt loam
     case 4:
     {
-        linePalette.setColor(QPalette::Background, QColor(156,206,000));
+        linePalette.setColor(QPalette::Window, QColor(156,206,000));
         break;
     }
     // loam
     case 5:
     {
-        linePalette.setColor(QPalette::Background, QColor(206,156,000));
+        linePalette.setColor(QPalette::Window, QColor(206,156,000));
         break;
     }
     // silt
     case 6:
     {
-        linePalette.setColor(QPalette::Background, QColor(000,255,49));
+        linePalette.setColor(QPalette::Window, QColor(000,255,49));
         break;
     }
     // sandy clayloam
     case 7:
     {
-        linePalette.setColor(QPalette::Background, QColor(255,156,156));
+        linePalette.setColor(QPalette::Window, QColor(255,156,156));
         break;
     }
     // silty clayloam
     case 8:
     {
-        linePalette.setColor(QPalette::Background, QColor(99,206,156));
+        linePalette.setColor(QPalette::Window, QColor(99,206,156));
         break;
     }
     // clayloam
     case 9:
     {
-        linePalette.setColor(QPalette::Background, QColor(206,255,99));
+        linePalette.setColor(QPalette::Window, QColor(206,255,99));
         break;
     }
     // sandy clay
     case 10:
     {
-        linePalette.setColor(QPalette::Background, QColor(255,000,000));
+        linePalette.setColor(QPalette::Window, QColor(255,000,000));
         break;
     }
     // silty clay
     case 11:
     {
-        linePalette.setColor(QPalette::Background, QColor(156,255,206));
+        linePalette.setColor(QPalette::Window, QColor(128,255,206));
         break;
     }
     // clay
     case 12:
     {
-        linePalette.setColor(QPalette::Background, QColor(255,255,156));
+        linePalette.setColor(QPalette::Window, QColor(220,220,128));
         break;
     }
 
@@ -310,7 +310,7 @@ QColor BarHorizonList::getColor(int index)
 {
     if (index < barList.size())
     {
-        return barList[index]->palette().color(QPalette::Background);
+        return barList[index]->palette().color(QPalette::Window);
     }
     else return QColor(0, 0, 0);
 }

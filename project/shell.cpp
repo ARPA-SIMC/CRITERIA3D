@@ -1,16 +1,16 @@
 #include "shell.h"
 #include "project.h"
+#include "commonConstants.h"
 #include <iostream>
 #include <sstream>
 #include <QString>
-#include <QStringList>
+#include <QList>
 
 #ifdef _WIN32
     #include "Windows.h"
     #pragma comment(lib, "User32.lib")
 #endif
 
-using namespace std;
 
 
 bool attachOutputToConsole()
@@ -117,10 +117,13 @@ void openNewConsole()
 }
 
 
-QString getTimeStamp(QStringList argumentList)
+QString getTimeStamp(QList<QString> argumentList)
 {
     QString myString = ">> ";
-    myString += QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+
+    QDate myDate = QDateTime::currentDateTime().date();
+    QTime myTime = QDateTime::currentDateTime().time();
+    myString += QDateTime(myDate, myTime, Qt::UTC).toString("yyyy-MM-dd hh:mm:ss");
     myString += " >>";
 
     for (int i = 0; i < argumentList.size(); i++)
@@ -132,12 +135,12 @@ QString getTimeStamp(QStringList argumentList)
 }
 
 
-QStringList getArgumentList(QString commandLine)
+QList<QString> getArgumentList(QString commandLine)
 {
-    string str;
-    QStringList argumentList;
+    std::string str;
+    QList<QString> argumentList;
 
-    istringstream stream(commandLine.toStdString());
+    std::istringstream stream(commandLine.toStdString());
     while (stream >> str)
     {
         argumentList.append(QString::fromStdString(str));
@@ -149,18 +152,18 @@ QStringList getArgumentList(QString commandLine)
 
 QString getCommandLine(QString programName)
 {
-    string commandLine;
+    std::string commandLine;
 
-    cout << programName.toStdString() << ">";
-    getline (cin, commandLine);
+    std::cout << programName.toStdString() << ">";
+    getline (std::cin, commandLine);
 
     return QString::fromStdString(commandLine);
 }
 
 
-QStringList getSharedCommandList()
+QList<QString> getSharedCommandList()
 {
-    QStringList cmdList;
+    QList<QString> cmdList;
 
     cmdList.append("Log     | SetLogFile");
     cmdList.append("DEM     | LoadDEM");
@@ -171,73 +174,87 @@ QStringList getSharedCommandList()
 }
 
 
-bool cmdExit(Project* myProject)
+int cmdExit(Project* myProject)
 {
     myProject->requestedExit = true;
 
     // TODO: close project
 
-    return true;
+    return PRAGA_OK;
 }
 
 
-bool cmdLoadDEM(Project* myProject, QStringList argumentList)
+int cmdLoadDEM(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
         myProject->logError("Missing DEM file name.");
         // TODO: USAGE
-        return false;
+        return PRAGA_MISSING_FILE;
     }
     else
     {
-        return myProject->loadDEM(argumentList[1]);
+        if (myProject->loadDEM(argumentList[1]))
+        {
+            return PRAGA_OK;
+        }
+        else
+        {
+            return PRAGA_ERROR;
+        }
     }
 }
 
 
-bool cmdLoadMeteoGrid(Project* myProject, QStringList argumentList)
+int cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
         myProject->logError("Missing Grid file name.");
         // TODO: USAGE
-        return false;
+        return PRAGA_MISSING_FILE;
     }
     else
     {
         if (!myProject->loadMeteoGridDB(argumentList[1]))
         {
-            return false;
+            return PRAGA_ERROR;
         }
         else
         {
             myProject->meteoGridDbHandler->meteoGrid()->createRasterGrid();
-            return true;
+            return PRAGA_OK;
         }
     }
 }
 
 
-bool cmdSetLogFile(Project* myProject, QStringList argumentList)
+int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 {
     if (argumentList.size() < 2)
     {
         myProject->logError("Missing Log file name.");
         // TODO: USAGE
-        return false;
+        return PRAGA_INVALID_COMMAND;
     }
     else
     {
-        return myProject->setLogFile(argumentList[1]);
+        if (myProject->setLogFile(argumentList[1]))
+        {
+            return PRAGA_OK;
+        }
+        else
+        {
+            return PRAGA_ERROR;
+        }
     }
 }
 
 
-bool executeSharedCommand(Project* myProject, QStringList argumentList, bool* isCommandFound)
+int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* isCommandFound)
 {
     *isCommandFound = false;
-    if (argumentList.size() == 0) return false;
+    if (argumentList.size() == 0) return PRAGA_INVALID_COMMAND;
 
     QString command = argumentList[0].toUpper();
 
@@ -267,6 +284,6 @@ bool executeSharedCommand(Project* myProject, QStringList argumentList, bool* is
         // other shared commands
     }
 
-    return false;
+    return PRAGA_INVALID_COMMAND;
 }
 

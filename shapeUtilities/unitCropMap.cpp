@@ -9,7 +9,7 @@
 
 
 bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Crit3DShapeHandler &soil, Crit3DShapeHandler &meteo,
-                 std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize,
+                 std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize, double threshold,
                  QString ucmFileName, std::string &error, bool showInfo)
 {
 
@@ -44,7 +44,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     std::vector <std::vector<int> > matrix = computeMatrixAnalysis(ucm, meteo, rasterRef, rasterVal, vectorNull);
 
     if (showInfo) formInfo.setText("[4/8] Zonal statistic crop/meteo...");
-    bool isOk = zonalStatisticsShapeMajority(ucm, meteo, matrix, vectorNull, idMeteo, "ID_METEO", error);
+    bool isOk = zonalStatisticsShapeMajority(ucm, meteo, matrix, vectorNull, idMeteo, "ID_METEO", threshold, error);
 
     // zonal statistic on soil map
     if (isOk)
@@ -56,7 +56,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
         matrix = computeMatrixAnalysis(ucm, soil, rasterRef, rasterVal, vectorNull);
 
         if (showInfo) formInfo.setText("[7/8] Zonal statistic crop/soil...");
-        isOk = zonalStatisticsShapeMajority(ucm, soil, matrix, vectorNull, idSoil, "ID_SOIL", error);
+        isOk = zonalStatisticsShapeMajority(ucm, soil, matrix, vectorNull, idSoil, "ID_SOIL", threshold, error);
     }
 
     if (! isOk)
@@ -187,7 +187,7 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
         return false;
     }
 
-    QStringList idCase, idCrop, idMeteo, idSoil;
+    QList<QString> idCase, idCrop, idMeteo, idSoil;
     QList<double> ha;
 
     for (int i = 0; i < nrShape; i++)
@@ -195,24 +195,31 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
         QString key = QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CASE"));
         if (key.isEmpty()) continue;
 
+        double hectares = shapeHandler.getNumericValue(signed(i), "hectares");
+
         if ( !idCase.contains(key) )
         {
             idCase << key;
             idCrop << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CROP"));
             idMeteo << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_METEO"));
             idSoil << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_SOIL"));
-            ha << shapeHandler.getNumericValue(signed(i), "hectares");
+            ha << hectares;
         }
         else
         {
-            // TODO search id_case and sum hectares
+            // sum hectares
+            if (hectares > 0)
+            {
+                int index = idCase.indexOf(key);
+                ha[index] += hectares;
+            }
         }
     }
 
-    ComputationUnitsDB unitsDb(dbName, error);
+    ComputationUnitsDB compUnitsDb(dbName, error);
     if (error != "")
         return false;
 
-    return unitsDb.writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, error);
+    return compUnitsDb.writeListToCompUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, error);
 
 }

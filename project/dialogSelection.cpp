@@ -128,9 +128,11 @@ frequencyType chooseFrequency(Project* project_)
 
     QRadioButton Daily("Daily");
     QRadioButton Hourly("Hourly");
+    QRadioButton Monthly("Monthly");
 
     layoutFrequency.addWidget(&Daily);
     layoutFrequency.addWidget(&Hourly);
+    layoutFrequency.addWidget(&Monthly);
 
     frequencyType myFreq = project_->getCurrentFrequency();
 
@@ -138,6 +140,8 @@ frequencyType chooseFrequency(Project* project_)
         Daily.setChecked(true);
     else if (myFreq == hourly)
         Hourly.setChecked(true);
+    else if (myFreq == monthly)
+        Monthly.setChecked(true);
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
@@ -158,6 +162,8 @@ frequencyType chooseFrequency(Project* project_)
        return daily;
    else if (Hourly.isChecked())
        return hourly;
+   else if (Monthly.isChecked())
+       return monthly;
    else
        return noFrequency;
 
@@ -213,6 +219,14 @@ meteoVariable chooseMeteoVariable(Project* myProject)
     QRadioButton WX("Wind vector component X");
     QRadioButton WY("Wind vector component Y");
     QRadioButton LW("Leaf wetness");
+
+    QRadioButton MTavg("Average air temperature");
+    QRadioButton MTmin("Minimum air temperature");
+    QRadioButton MTmax("Maximum air temperature");
+    QRadioButton MP("Precipitation");
+    QRadioButton MET0HS("Reference evapotranspiration (H-S)");
+    QRadioButton MRad("Solar radiation");
+    QRadioButton MBIC("Hydroclimatic balance");
 
     if (myProject->getCurrentFrequency() == daily)
     {
@@ -312,6 +326,31 @@ meteoVariable chooseMeteoVariable(Project* myProject)
         else if (myCurrentVar == leafWetness)
             LW.setChecked(true);
     }
+    else if (myProject->getCurrentFrequency() == monthly)
+    {
+        layoutVariable.addWidget(&MTavg);
+        layoutVariable.addWidget(&MTmin);
+        layoutVariable.addWidget(&MTmax);
+        layoutVariable.addWidget(&MP);
+        layoutVariable.addWidget(&MET0HS);
+        layoutVariable.addWidget(&MRad);
+        layoutVariable.addWidget(&MBIC);
+
+        if (myCurrentVar == monthlyAirTemperatureMin)
+            MTmin.setChecked(true);
+        else if (myCurrentVar == monthlyAirTemperatureMax)
+            MTmax.setChecked(true);
+        else if (myCurrentVar == monthlyAirTemperatureAvg)
+            MTavg.setChecked(true);
+        else if (myCurrentVar == monthlyPrecipitation)
+            MP.setChecked(true);
+        else if (myCurrentVar == monthlyReferenceEvapotranspirationHS)
+            MET0HS.setChecked(true);
+        else if (myCurrentVar == monthlyGlobalRadiation)
+            MRad.setChecked(true);
+        else if (myCurrentVar == monthlyPrecipitation)
+            MBIC.setChecked(true);
+    }
     else return noMeteoVar;
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -397,6 +436,24 @@ meteoVariable chooseMeteoVariable(Project* myProject)
            return (leafWetness);
        else if (ET0PMh.isChecked())
            return (referenceEvapotranspiration);
+   }
+
+   if (myProject->getCurrentFrequency() == monthly)
+   {
+       if (MTmin.isChecked())
+           return (monthlyAirTemperatureMin);
+       else if (MTmax.isChecked())
+           return (monthlyAirTemperatureMax);
+       else if (MTavg.isChecked())
+           return (monthlyAirTemperatureAvg);
+       else if (MP.isChecked())
+           return (monthlyPrecipitation);
+       else if (MRad.isChecked())
+           return (monthlyGlobalRadiation);
+       else if (MET0HS.isChecked())
+           return (monthlyReferenceEvapotranspirationHS);
+       else if (MBIC.isChecked())
+           return (monthlyBIC);
    }
 
    return noMeteoVar;

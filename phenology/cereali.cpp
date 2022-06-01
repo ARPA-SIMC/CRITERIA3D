@@ -1,5 +1,6 @@
 #include "cereali.h"
-
+#include "float.h"
+#include "math.h"
 
 // calcolo delle date di semina ed emergenza fittizie
 bool Cereali::CalcoloDateFittizie(const Stazione& stazione, const Parametri& parametri, Console& console)
@@ -55,7 +56,7 @@ bool Cereali::CalcoloDateFittizie(const Stazione& stazione, const Parametri& par
 	{
 		double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
 
-		sommaTermica += __max( static_cast<double>(0.), TassoSviluppoEmergenza(Tm) );
+        sommaTermica += std::max( static_cast<double>(0.), TassoSviluppoEmergenza(Tm) );
 			
 		if( sommaTermica >= 1. )
 		{
@@ -108,7 +109,7 @@ bool Cereali::CalcoloNumeroFoglie(Stazione& stazione, const Parametri& parametri
 
 		double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
 
-		P += __max(0., -0.038 + m_beta * Tm); 
+        P += std::max(0., -0.038 + m_beta * Tm);
 	}
 
 	m_numeroFoglieTotali = 6.5 + m_sigma * exp( - stazione.Fotoperiodo(indexEmergenza) / 4. ) + 0.65 * NumeroFoglieEmerse(P);
@@ -133,7 +134,7 @@ void Cereali::Emergenza(const Stazione& stazione)
 {
 	long i = m_faseFenologica.size() - 1;
 	double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
-	m_faseFenologica[i] += __max( static_cast<double>(0.), TassoSviluppoEmergenza(Tm) );
+    m_faseFenologica[i] += std::max( static_cast<double>(0.), TassoSviluppoEmergenza(Tm) );
 }
 
 // calcolo del numero di bozze fogliari e del periodo di viraggio apicale
@@ -142,7 +143,7 @@ void Cereali::Viraggio(const Stazione& stazione)
 	long i = m_faseFenologica.size() - 1;
 	double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
 
-	double Pr = __max(0., -0.038 + m_beta * Tm);
+    double Pr = std::max(0., -0.038 + m_beta * Tm);
 
 	m_numeroPrimordi += Pr;
 	m_faseFenologica[i] += Pr / ( static_cast<double>(m_numeroFoglieTotali) - 4. );
@@ -157,7 +158,7 @@ void Cereali::Spigatura(const Stazione& stazione)
 	long i = m_faseFenologica.size() - 1;
 	double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
 
-	double Pr = __max(0., -0.038 + m_beta * Tm);
+    double Pr = std::max(0., -0.038 + m_beta * Tm);
 
 	m_numeroPrimordi += Pr;
 	m_faseFenologica[i] += Pr * ( 1. - 0.03 * NumeroFoglieEmerse(m_numeroPrimordi) ) / ( m_numeroFoglieTotali - NumeroFoglieEmerse(m_numeroPrimordi) );
@@ -170,7 +171,7 @@ void Cereali::Maturazione(const Stazione& stazione)
 {
 	long i = m_faseFenologica.size() - 1;
 	double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
-	m_faseFenologica[i] += __max( static_cast<double>(0.), ( Tm - m_sogliaGradiGiorno ) / m_limiteGradiGiorno );
+    m_faseFenologica[i] += std::max( static_cast<double>(0.), ( Tm - m_sogliaGradiGiorno ) / m_limiteGradiGiorno );
 }
 
 

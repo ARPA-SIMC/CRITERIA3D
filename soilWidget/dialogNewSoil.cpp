@@ -8,7 +8,7 @@ DialogNewSoil::DialogNewSoil()
     QGridLayout *layoutSoil = new QGridLayout();
     QHBoxLayout *layoutOk = new QHBoxLayout();
 
-    QLabel *idSoilLabel = new QLabel(tr("Enter soil ID (for the soil map): "));
+    QLabel *idSoilLabel = new QLabel(tr("Enter soil ID (only numerical): "));
     idSoilValue = new QLineEdit();
 
     QIntValidator* validatorID = new QIntValidator();
@@ -90,7 +90,7 @@ void DialogNewSoil::done(bool res)
         }
         else
         {
-            // remove whiteSpaces
+            // remove white spaces
             QString code = codeSoilValue->text();
             code = code.simplified();
             code.replace(" ","");
@@ -99,7 +99,7 @@ void DialogNewSoil::done(bool res)
             return;
         }
     }
-    else    // cancel, close or exc was pressed
+    else    // cancel or close was pressed
     {
         QDialog::done(QDialog::Rejected);
         return;

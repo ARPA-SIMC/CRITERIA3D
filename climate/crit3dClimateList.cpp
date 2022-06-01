@@ -15,12 +15,12 @@ Crit3DClimateList::~Crit3DClimateList()
 {
 }
 
-QStringList Crit3DClimateList::listClimateElab() const
+QList<QString> Crit3DClimateList::listClimateElab() const
 {
     return _listClimateElab;
 }
 
-void Crit3DClimateList::setListClimateElab(const QStringList &listClimateElab)
+void Crit3DClimateList::setListClimateElab(const QList<QString> &listClimateElab)
 {
     _listClimateElab = listClimateElab;
 }
@@ -192,7 +192,7 @@ void Crit3DClimateList::parserElaboration()
 
         QString climateElab = _listClimateElab[i];
 
-        QStringList words = climateElab.split('_');
+        QList<QString> words = climateElab.split('_');
 
         if (words.isEmpty())
         {
@@ -200,7 +200,7 @@ void Crit3DClimateList::parserElaboration()
         }
 
         QString periodElabList = words.at(pos);
-        QStringList myYearWords = periodElabList.split('-'); // ÷
+        QList<QString> myYearWords = periodElabList.split('-'); // ÷
 
         if (myYearWords[0].toInt() == false || myYearWords[1].toInt() == false)
         {
@@ -417,13 +417,13 @@ bool Crit3DClimateList::parserGenericPeriodString(int index)
 {
     int pos = 0;
     QString climateElab = clima->climateElab();
-    QStringList words = climateElab.split('_');
+    QList<QString> words = climateElab.split('_');
     if (words.isEmpty())
     {
         return false;
     }
     QString periodElabList = words.at(pos);
-    QStringList myYearWords = periodElabList.split('-'); // ÷
+    QList<QString> myYearWords = periodElabList.split('-'); // ÷
     if (myYearWords[0].toInt() == false || myYearWords[1].toInt() == false)
     {
         return false;

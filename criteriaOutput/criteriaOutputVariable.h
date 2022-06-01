@@ -2,19 +2,19 @@
 #define CRITERIAOUTPUTVARIABLE_H
 
     #include <QString>
-    #include <QStringList>
+    #include <QList>
 
     #define CSVREQUIREDINFO 8
 
     class CriteriaOutputVariable
     {
     public:
-        QStringList outputVarName;
-        QStringList varName;
+        QList<QString> outputVarName;
+        QList<QString> varName;
         QList<int> referenceDay;
-        QStringList computation;
-        QStringList nrDays;
-        QStringList climateComputation;
+        QList<QString> computation;
+        QList<QString> nrDays;
+        QList<QString> climateComputation;
         QList<int> param1;
         QList<int> param2;
 

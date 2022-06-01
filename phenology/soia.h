@@ -23,7 +23,7 @@
         double b1[4][3];
         double b2[4][3];
 
-        vector<double> m_faseFenologica;
+        std::vector<double> m_faseFenologica;
 
     public:
 
@@ -35,7 +35,7 @@
             m_ingrossamentoBaccello(Crit3DDate()),
             m_maturazione(Crit3DDate()),
             m_raccolta(Crit3DDate()),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {
             a0[0][0] = 0.;	  a1[0][0] = 0.;		a2[0][0] = 0.;		  a3[0][0] = 1.;
             a0[1][0] = 8.02;  a1[1][0] = 2.37E-2;	a2[1][0] = -2.309E-3; a3[1][0] = 0.;
@@ -76,7 +76,7 @@
             m_ingrossamentoBaccello(Crit3DDate()),
             m_maturazione(Crit3DDate()),
             m_raccolta(Crit3DDate()),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {
             a0[0][0] = 0.;	  a1[0][0] = 0.;		a2[0][0] = 0.;		  a3[0][0] = 1.;
             a0[1][0] = 8.02;  a1[1][0] = 2.37E-2;	a2[1][0] = -2.309E-3; a3[1][0] = 0.;

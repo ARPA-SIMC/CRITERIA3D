@@ -14,12 +14,6 @@
                        FUNCTION_CODE_FOURIER_GENERAL_HARMONICS,
                        FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN, FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN_RESTRICTED};
 
-    double twoParametersAndExponentialPolynomialFunctions(double x, double* par);
-    double twoHarmonicsFourier(double x, double* par);
-    double harmonicsFourierGeneral(double x, double* par,int nrPar);
-    float errorFunctionPrimitive(float x);
-    double errorFunctionPrimitive(double x);
-
 
     struct TfunctionInput{
         float x ;
@@ -41,6 +35,18 @@
         int nrPar ;
         float *par ;
     };
+
+    double twoParametersAndExponentialPolynomialFunctions(double x, double* par);
+    double twoHarmonicsFourier(double x, double* par);
+    double harmonicsFourierGeneral(double x, double* par,int nrPar);
+    float errorFunctionPrimitive(float x);
+    double errorFunctionPrimitive(double x);
+    double parabolicFunction(double x, double* par);
+    float gaussianFunction(TfunctionInput fInput);
+    float gaussianFunction(float x, float mean, float devStd);
+
+
+
 
     namespace integration
     {

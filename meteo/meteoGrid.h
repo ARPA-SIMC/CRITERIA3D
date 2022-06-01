@@ -55,6 +55,9 @@
             int nrMembers() const;
             void setNrMembers(int nrMembers);
 
+            int nrRow() const;
+            int nrCol() const;
+
     private:
             std::string _name;
             gis::Crit3DGridHeader _header;
@@ -118,10 +121,12 @@
             void initMeteoPoints(int nRow, int nCol);
 
             void fillMeteoPoint(unsigned int row, unsigned int col, const std::string &code, const std::string &name, int height, bool active);
-            void fillCurrentDailyValue(Crit3DDate date, meteoVariable variable);
+            void fillCurrentDailyValue(Crit3DDate date, meteoVariable variable, Crit3DMeteoSettings *meteoSettings);
             void fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable);
+            void fillCurrentMonthlyValue(Crit3DDate date, meteoVariable variable);
 
             bool findMeteoPointFromId(unsigned *row, unsigned *col, const std::string &code);
+            bool existsMeteoPointFromId(const std::string& id);
             bool getMeteoPointActiveId(int row, int col, std::string *id);
             bool getLatFromId(std::string id, double* lat);
             bool getLatLonFromId(std::string id, double* lat, double* lon);

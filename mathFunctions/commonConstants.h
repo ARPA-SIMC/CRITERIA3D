@@ -22,11 +22,11 @@
     #endif
 
     #ifndef HOUR_SECONDS
-        #define HOUR_SECONDS 3600
+        #define HOUR_SECONDS 3600.
     #endif
 
     #ifndef DAY_SECONDS
-        #define DAY_SECONDS 86400
+        #define DAY_SECONDS 86400.
     #endif
 
     // --------------- modalities ------------------
@@ -48,7 +48,9 @@
     #define PATH_PROJECT "PROJECT/"
     #define PATH_TEMPLATE "TEMPLATE/"
     #define PATH_SETTINGS "SETTINGS/"
+    #define PATH_OUTPUT "OUTPUT/"
     #define PATH_TD "TD/"
+    #define PATH_STATES "STATES/"
 
     // --------------- soilFluxes3D ----------------
     #define NOLINK -1
@@ -71,6 +73,14 @@
     #define CRIT1D_OK 0
     #define CRIT3D_OK 1
 
+    // --------------- PRAGA constants  ----------------
+    #define PRAGA_OK 0
+    #define PRAGA_ERROR 100
+    #define PRAGA_INVALID_COMMAND 101
+    #define PRAGA_MISSING_FILE 102
+    #define PRAGA_ENV_ERROR 103
+    #define NO_ACTIVE -8888
+
     #define VANGENUCHTEN 0
     #define MODIFIEDVANGENUCHTEN 1
     #define CAMPBELL 2
@@ -90,10 +100,6 @@
     #define BOUNDARY_NONE 99
 
     #define RELAXATION 1
-
-    #define MAX_SOILS 256
-    #define MAX_SURFACES 256
-    #define MAX_HORIZONS 20
 
     // --------------- heat model -----------------
     #define SAVE_HEATFLUXES_NONE 0
@@ -118,11 +124,11 @@
 
     // -------------------ASTRONOMY--------------------
     // [J s-1 m-2] solar constant
-    #define SOLAR_CONSTANT  1367
+    #define SOLAR_CONSTANT  1367.
     // [m s-2] GRAVITY acceleration
     #define	GRAVITY	9.80665
     // [m s-1]
-    #define LIGHT_SPEED 299792458
+    #define LIGHT_SPEED 299792458.
 
     // -------------------CHEMISTRY--------------------
     // [mol-1] Avogadro number
@@ -131,7 +137,7 @@
     #define PLANCK 6.626E-34
 
     // [kg m-3]
-    #define WATER_DENSITY 1000
+    #define WATER_DENSITY 1000.
 
     // [kg m-3] air density, temperature 0 °C
     #define  AIR_DENSITY 1.29
@@ -155,7 +161,7 @@
     // [K m-1] constant lapse rate of moist air
     #define LAPSE_RATE_MOIST_AIR 0.0065
     // [Pa] standard atmospheric pressure at sea level
-    #define P0 101300
+    #define P0 101300.
     // [K] temperature at reference pressure level (P0)
     #define TP0 293.16
     // [g s-2] surface tension at 25 degC
@@ -171,19 +177,19 @@
     // [] Von Kármán constant
     #define VON_KARMAN_CONST 0.41
     // [J kg-1 K-1] specific heat at constant pressure
-    #define CP 1013
+    #define CP 1013.
 
     // [g cm3-1]
     #define QUARTZ_DENSITY 2.648
 
     // [J m-3 K-1] volumetric specific heat
-    #define HEAT_CAPACITY_WATER 4182000
-    #define HEAT_CAPACITY_AIR  1290
-    #define HEAT_CAPACITY_SNOW 2100000
-    #define HEAT_CAPACITY_MINERAL 2310000
+    #define HEAT_CAPACITY_WATER 4182000.
+    #define HEAT_CAPACITY_AIR  1290.
+    #define HEAT_CAPACITY_SNOW 2100000.
+    #define HEAT_CAPACITY_MINERAL 231000
 
     // [J kg-1 K-1] specific heat
-    #define HEAT_CAPACITY_WATER_VAPOR 1996
+    #define HEAT_CAPACITY_WATER_VAPOR 1996.
 
     // [J mol-1 K-1] molar specific heat of air at constant pressure
     #define HEAT_CAPACITY_AIR_MOLAR 29.31
@@ -192,7 +198,7 @@
     #define	 VAPOR_DIFFUSIVITY0 0.0000212
 
     // [Pa] default atmospheric pressure at sea level
-    #define SEA_LEVEL_PRESSURE 101325
+    #define SEA_LEVEL_PRESSURE 101325.
 
     #define ALBEDO_WATER 0.05
     #define ALBEDO_SOIL 0.15

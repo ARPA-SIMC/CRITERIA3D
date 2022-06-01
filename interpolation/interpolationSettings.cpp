@@ -113,24 +113,24 @@ void Crit3DInterpolationSettings::setCurrentDEM(gis::Crit3DRasterGrid *value)
     currentDEM = value;
 }
 
-float Crit3DInterpolationSettings::getTopoDist_Kh() const
+int Crit3DInterpolationSettings::getTopoDist_maxKh() const
+{
+    return topoDist_maxKh;
+}
+
+void Crit3DInterpolationSettings::setTopoDist_maxKh(int value)
+{
+    topoDist_maxKh = value;
+}
+
+int Crit3DInterpolationSettings::getTopoDist_Kh() const
 {
     return topoDist_Kh;
 }
 
-void Crit3DInterpolationSettings::setTopoDist_Kh(float value)
+void Crit3DInterpolationSettings::setTopoDist_Kh(int value)
 {
     topoDist_Kh = value;
-}
-
-float Crit3DInterpolationSettings::getTopoDist_Kz() const
-{
-    return topoDist_Kz;
-}
-
-void Crit3DInterpolationSettings::setTopoDist_Kz(float value)
-{
-    topoDist_Kz = value;
 }
 
 Crit3DProxyCombination Crit3DInterpolationSettings::getOptimalCombination() const
@@ -238,6 +238,38 @@ void Crit3DInterpolationSettings::setProxyLoaded(bool value)
     proxyLoaded = value;
 }
 
+const std::vector<float> &Crit3DInterpolationSettings::getKh_series() const
+{
+    return Kh_series;
+}
+
+void Crit3DInterpolationSettings::setKh_series(const std::vector<float> &newKh_series)
+{
+    Kh_series = newKh_series;
+}
+
+const std::vector<float> &Crit3DInterpolationSettings::getKh_error_series() const
+{
+    return Kh_error_series;
+}
+
+void Crit3DInterpolationSettings::addToKhSeries(float kh, float error)
+{
+    Kh_series.push_back(kh);
+    Kh_error_series.push_back(error);
+}
+
+void Crit3DInterpolationSettings::initializeKhSeries()
+{
+    Kh_series.clear();
+    Kh_error_series.clear();
+}
+
+void Crit3DInterpolationSettings::setKh_error_series(const std::vector<float> &newKh_error_series)
+{
+    Kh_error_series = newKh_error_series;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -251,7 +283,7 @@ void Crit3DInterpolationSettings::initializeProxy()
     selectedCombination.clear();
     optimalCombination.clear();
 
-    indexHeight = NODATA;
+    indexHeight = unsigned(NODATA);
 }
 
 void Crit3DInterpolationSettings::initialize()
@@ -260,13 +292,14 @@ void Crit3DInterpolationSettings::initialize()
     interpolationMethod = idw;
     useThermalInversion = true;
     useTD = false;
+    topoDist_maxKh = 128;
     useDewPoint = true;
     useInterpolatedTForRH = true;
     useBestDetrending = false;
     useLapseRateCode = false;
     minRegressionR2 = float(PEARSONSTANDARDTHRESHOLD);
     meteoGridAggrMethod = aggrAverage;
-    indexHeight = NODATA;
+    indexHeight = unsigned(NODATA);
 
     isKrigingReady = false;
     precipitationAllZero = false;
@@ -279,6 +312,9 @@ void Crit3DInterpolationSettings::initialize()
 
     if (currentCombination == nullptr)
         currentCombination = new Crit3DProxyCombination();
+
+    Kh_series.clear();
+    Kh_error_series.clear();
 
     initializeProxy();
 }
@@ -413,6 +449,36 @@ void Crit3DProxy::setProxyField(const std::string &value)
     proxyField = value;
 }
 
+float Crit3DProxy::getLapseRateT0() const
+{
+    return lapseRateT0;
+}
+
+void Crit3DProxy::setLapseRateT0(float newLapseRateT0)
+{
+    lapseRateT0 = newLapseRateT0;
+}
+
+float Crit3DProxy::getLapseRateT1() const
+{
+    return lapseRateT1;
+}
+
+void Crit3DProxy::setLapseRateT1(float newLapseRateT1)
+{
+    lapseRateT1 = newLapseRateT1;
+}
+
+float Crit3DProxy::getRegressionIntercept() const
+{
+    return regressionIntercept;
+}
+
+void Crit3DProxy::setRegressionIntercept(float newRegressionIntercept)
+{
+    regressionIntercept = newRegressionIntercept;
+}
+
 Crit3DProxy::Crit3DProxy()
 {
     name = "";
@@ -425,6 +491,8 @@ Crit3DProxy::Crit3DProxy()
     regressionSlope = NODATA;
     lapseRateH0 = NODATA;
     lapseRateH1 = NODATA;
+    lapseRateT0 = NODATA;
+    lapseRateT1 = NODATA;
     inversionLapseRate = NODATA;
     inversionIsSignificative = false;
 
@@ -496,8 +564,11 @@ void Crit3DProxy::initializeOrography()
 {
     setLapseRateH0(0.);
     setLapseRateH1(NODATA);
+    setLapseRateT0(NODATA);
+    setLapseRateT1(NODATA);
     setInversionLapseRate(NODATA);
     setRegressionSlope(NODATA);
+    setRegressionIntercept(NODATA);
     setRegressionR2(NODATA);
     setInversionIsSignificative(false);
 
@@ -576,9 +647,9 @@ void Crit3DProxyCombination::setUseThermalInversion(bool value)
     useThermalInversion = value;
 }
 
-bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination* outCombination)
+bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination &outCombination)
 {
-    *outCombination = selectedCombination;
+    outCombination = selectedCombination;
     std::string binaryString = decimal_to_binary(combinationInteger, getProxyNr()+1);
 
     int indexHeight = getIndexHeight();
@@ -589,9 +660,9 @@ bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DP
             return false;
 
     for (unsigned int i=0; i < binaryString.length()-1; i++)
-        outCombination->setValue(i, binaryString[i] == '1' && selectedCombination.getValue(i));
+        outCombination.setValue(i, binaryString[i] == '1' && selectedCombination.getValue(i));
 
-    outCombination->setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());
+    outCombination.setUseThermalInversion(binaryString[binaryString.length()-1] == '1' && selectedCombination.getUseThermalInversion());
 
     return true;
 }

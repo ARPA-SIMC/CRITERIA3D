@@ -14,6 +14,8 @@
 #include "qdebug.h"
 #include "iostream"
 
+using namespace std;
+
 bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
     Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, QDate startDate, QDate endDate, bool isAnomaly, Crit3DMeteoSettings* meteoSettings)
 {
@@ -65,7 +67,7 @@ bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPoint
         }
     }
 
-    bool dataLoaded = preElaboration(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPointTemp, isMeteoGrid, clima->variable(), elab1MeteoComp, startDate, endDate, outputValues, &percValue, meteoSettings, clima->getElabSettings());
+    bool dataLoaded = preElaboration(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPointTemp, isMeteoGrid, clima->variable(), elab1MeteoComp, startDate, endDate, outputValues, &percValue, meteoSettings);
 
     if (dataLoaded)
     {
@@ -315,7 +317,7 @@ bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
         meteoPointTemp->nrObsDataDaysD = 0;
         meteoPointTemp->nrObsDataDaysH = 0;
 
-        dataLoaded = preElaboration(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPointTemp, isMeteoGrid, clima->variable(), elab1MeteoComp, startDate, endDate, outputValues, &percValue, meteoSettings, clima->getElabSettings());
+        dataLoaded = preElaboration(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPointTemp, isMeteoGrid, clima->variable(), elab1MeteoComp, startDate, endDate, outputValues, &percValue, meteoSettings);
     }
 
     if (dataLoaded)
@@ -1072,7 +1074,7 @@ float dailyAverageT(float Tmin, float Tmax)
 
 }
 
-float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude)
+float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings* meteoSettings)
 {
 
     Crit3DQuality qualityCheck;
@@ -1082,7 +1084,7 @@ float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitud
     quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
     int dayOfYear = getDoyFromDate(date);
     if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-        return ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, latitude, dayOfYear, Tmax, Tmin);
+        return ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin);
     else
         return NODATA;
 
@@ -1408,7 +1410,7 @@ bool elaborateDailyAggregatedVar(meteoVariable myVar, Crit3DMeteoPoint meteoPoin
     }
     else if (aggregationFrequency == daily)
     {
-            return elaborateDailyAggregatedVarFromDaily(myVar, meteoPoint, outputValues, percValue);
+            return elaborateDailyAggregatedVarFromDaily(myVar, meteoPoint, meteoSettings, outputValues, percValue);
     }
     else
         return false;
@@ -1434,7 +1436,8 @@ frequencyType getAggregationFrequency(meteoVariable myVar)
 
 }
 
-bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, std::vector<float> &outputValues, float* percValue)
+bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, Crit3DMeteoSettings* meteoSettings,
+                                          std::vector<float> &outputValues, float* percValue)
 {
 
     float res;
@@ -1481,9 +1484,71 @@ bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint 
             }
             else
             {
-                res = dailyEtpHargreaves(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax, date, meteoPoint.latitude);
+                res = dailyEtpHargreaves(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax, date, meteoPoint.latitude, meteoSettings);
                 meteoPoint.obsDataD[index].et0_hs = res;
             }
+            break;
+        }
+        case dailyHeatingDegreeDays:
+        {
+            quality::qualityType qualityTavg = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureAvg, meteoPoint.obsDataD[index].tAvg);
+            if (qualityTavg == quality::accepted)
+            {
+                res = 0;
+                if ( meteoPoint.obsDataD[index].tAvg < DDHEATING_THRESHOLD)
+                {
+                    res = DDHEATING_THRESHOLD - meteoPoint.obsDataD[index].tAvg;
+                }
+            }
+            else
+            {
+                meteoPoint.obsDataD[index].tAvg = dailyAverageT(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax);
+                qualityTavg = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureAvg, meteoPoint.obsDataD[index].tAvg);
+                if (qualityTavg == quality::accepted)
+                {
+                    res = 0;
+                    if ( meteoPoint.obsDataD[index].tAvg < DDHEATING_THRESHOLD)
+                    {
+                        res = DDHEATING_THRESHOLD - meteoPoint.obsDataD[index].tAvg;
+                    }
+                }
+                else
+                {
+                    res = NODATA;
+                }
+            }
+            meteoPoint.obsDataD[index].dd_heating = res;
+            break;
+        }
+        case dailyCoolingDegreeDays:
+        {
+            quality::qualityType qualityTavg = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureAvg, meteoPoint.obsDataD[index].tAvg);
+            if (qualityTavg == quality::accepted)
+            {
+                res = 0;
+                if ( meteoPoint.obsDataD[index].tAvg > DDCOOLING_THRESHOLD)
+                {
+                    res = meteoPoint.obsDataD[index].tAvg - DDCOOLING_SUBTRACTION;
+                }
+            }
+            else
+            {
+                meteoPoint.obsDataD[index].tAvg = dailyAverageT(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax);
+                qualityTavg = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureAvg, meteoPoint.obsDataD[index].tAvg);
+                if (qualityTavg == quality::accepted)
+                {
+                    res = 0;
+                    if ( meteoPoint.obsDataD[index].tAvg > DDCOOLING_THRESHOLD)
+                    {
+                        res = meteoPoint.obsDataD[index].tAvg - DDCOOLING_SUBTRACTION;
+                    }
+                }
+                else
+                {
+                    res = NODATA;
+                }
+            }
+            meteoPoint.obsDataD[index].dd_heating = res;
             break;
         }
         case dailyAirDewTemperatureAvg:
@@ -1676,19 +1741,19 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
 }
 
 bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid, meteoVariable variable, meteoComputation elab1,
-    QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings, Crit3DElaborationSettings* elabSettings)
+    QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings)
 {
 
     bool preElaboration = false;
-    bool automaticETP = elabSettings->getAutomaticETP();
-    bool automaticTmed = elabSettings->getAutomaticTmed();
+    bool automaticETP = meteoSettings->getAutomaticET0HS();
+    bool automaticTmed = meteoSettings->getAutomaticTavg();
 
     switch(variable)
     {
 
         case dailyLeafWetness:
         {
-            if ( loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, leafWetness, QDateTime(startDate,QTime(1,0,0)), QDateTime(endDate.addDays(1),QTime(0,0,0))) > 0)
+            if ( loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, leafWetness, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
             {
                 preElaboration = elaborateDailyAggregatedVar(dailyLeafWetness, *meteoPoint, outputValues, percValue, meteoSettings);
             }
@@ -1721,9 +1786,9 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
         case dailyThomAvg: case dailyThomMax: case dailyThomHoursAbove:
         {
 
-            if (loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airTemperature, QDateTime(startDate,QTime(1,0,0)), QDateTime(endDate.addDays(1),QTime(0,0,0))) > 0)
+            if (loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airTemperature, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
             {
-                if (loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airRelHumidity, QDateTime(startDate,QTime(1,0,0)), QDateTime(endDate.addDays(1),QTime(0,0,0)))  > 0)
+                if (loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airRelHumidity, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC))  > 0)
                 {
                     preElaboration = elaborateDailyAggregatedVar(variable, *meteoPoint, outputValues, percValue, meteoSettings);
                 }
@@ -1743,6 +1808,10 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
                     if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureMax, startDate, endDate) > 0)
                     {
                         preElaboration = elaborateDailyAggregatedVar(dailyReferenceEvapotranspirationHS, *meteoPoint, outputValues, percValue, meteoSettings);
+                        for (int outputIndex = 0; outputIndex<outputValues.size(); outputIndex++)
+                        {
+                            meteoPoint->obsDataD[outputIndex].et0_hs = outputValues[outputIndex];
+                        }
                     }
                 }
             }
@@ -1825,6 +1894,56 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
                     if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureMax, startDate, endDate) > 0)
                     {
                         preElaboration = elaborateDailyAggregatedVar(dailyReferenceEvapotranspirationHS, *meteoPoint, outputValues, percValue, meteoSettings);
+                    }
+                }
+            }
+            break;
+        }
+        case dailyHeatingDegreeDays:
+        {
+            if (loadDailyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyHeatingDegreeDays, startDate, endDate, outputValues) > 0)
+            {
+                preElaboration = true;
+            }
+            else
+            {
+                if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureAvg, startDate, endDate) > 0)
+                {
+                    preElaboration = elaborateDailyAggregatedVar(dailyHeatingDegreeDays, *meteoPoint, outputValues, percValue, meteoSettings);
+                }
+                else
+                {
+                    if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureMin, startDate, endDate) > 0)
+                    {
+                        if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureMax, startDate, endDate) > 0)
+                        {
+                            preElaboration = elaborateDailyAggregatedVar(dailyHeatingDegreeDays, *meteoPoint, outputValues, percValue, meteoSettings);
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        case dailyCoolingDegreeDays:
+        {
+            if (loadDailyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyCoolingDegreeDays, startDate, endDate, outputValues) > 0)
+            {
+                preElaboration = true;
+            }
+            else
+            {
+                if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureAvg, startDate, endDate) > 0)
+                {
+                    preElaboration = elaborateDailyAggregatedVar(dailyCoolingDegreeDays, *meteoPoint, outputValues, percValue, meteoSettings);
+                }
+                else
+                {
+                    if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureMin, startDate, endDate) > 0)
+                    {
+                        if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureMax, startDate, endDate) > 0)
+                        {
+                            preElaboration = elaborateDailyAggregatedVar(dailyCoolingDegreeDays, *meteoPoint, outputValues, percValue, meteoSettings);
+                        }
                     }
                 }
             }
@@ -2192,7 +2311,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
 
 QString getTable(QString elab)
 {
-    QStringList words = elab.split('_');
+    QList<QString> words = elab.split('_');
     QString periodTypeStr = words[2];
     QString tableName = "climate_"+periodTypeStr.toLower();
 
@@ -2202,7 +2321,7 @@ QString getTable(QString elab)
 int getClimateIndexFromElab(QDate myDate, QString elab)
 {
 
-    QStringList words = elab.split('_');
+    QList<QString> words = elab.split('_');
     QString periodTypeStr = words[2];
 
     period periodType = getPeriodTypeFromString(periodTypeStr);
@@ -2227,7 +2346,7 @@ int getClimateIndexFromElab(QDate myDate, QString elab)
 int getNumberClimateIndexFromElab(QString elab)
 {
 
-    QStringList words = elab.split('_');
+    QList<QString> words = elab.split('_');
     QString periodTypeStr = words[2];
 
     period periodType = getPeriodTypeFromString(periodTypeStr);
@@ -2315,7 +2434,7 @@ int nParameters(meteoComputation elab)
 
 }
 
-bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QString *myError)
+bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, Crit3DDroughtList *listXMLDrought, Crit3DPhenologyList *listXMLPhenology, QString xmlFileName, QString *myError)
 {
 
     QDomDocument xmlDoc;
@@ -2357,6 +2476,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
 
     QDomNode ancestor = xmlDoc.documentElement().firstChild();
     QString myTag;
+    QString mySecondTag;
 
     QString firstYear;
     QString lastYear;
@@ -2375,11 +2495,16 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     bool param1IsClimate = false;
     bool anomalyIsClimate;
     QString elabParam2;
+    QString filename;
 
     int nElab = 0;
     int nAnomaly = 0;
+    int nDrought = 0;
+    int nPhenology = 0;
     bool errorElab = false;
     bool errorAnomaly = false;
+    bool errorDrought = false;
+    bool errorPhenology = false;
 
     while(!ancestor.isNull())
     {
@@ -2544,6 +2669,27 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                     }
                     listXMLElab->insertElab2(elab.toLower());
                 }
+                if (myTag == "EXPORT")
+                {
+                    secondChild = child.firstChild();
+                    while( !secondChild.isNull())
+                    {
+                        mySecondTag = secondChild.toElement().tagName().toUpper();
+                        if (mySecondTag == "FILENAME")
+                        {
+                            filename = secondChild.toElement().text();
+                            if (filename.isEmpty())
+                            {
+                                listXMLElab->insertFileName("");
+                            }
+                            else
+                            {
+                                listXMLElab->insertFileName(filename);
+                            }
+                        }
+                        secondChild = secondChild.nextSibling();
+                    }
+                }
                 if (errorElab)
                 {
                     errorElab = false;
@@ -2555,7 +2701,6 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 {
                     child = child.nextSibling();
                 }
-
             }
             nElab = nElab + 1;
             qDebug() << "nElab " << nElab;
@@ -2897,6 +3042,27 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                         listXMLAnomaly->insertRefElab2(refElab2.toLower());
                     }
                 }
+                if (myTag == "EXPORT")
+                {
+                    secondChild = child.firstChild();
+                    while( !secondChild.isNull())
+                    {
+                        mySecondTag = secondChild.toElement().tagName().toUpper();
+                        if (mySecondTag == "FILENAME")
+                        {
+                            filename = secondChild.toElement().text();
+                            if (filename.isEmpty())
+                            {
+                                listXMLAnomaly->insertFileName("");
+                            }
+                            else
+                            {
+                                listXMLAnomaly->insertFileName(filename);
+                            }
+                        }
+                        secondChild = secondChild.nextSibling();
+                    }
+                }
                 if (errorAnomaly)
                 {
                     errorAnomaly = false;
@@ -2916,25 +3082,291 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
         else if (ancestor.toElement().tagName().toUpper() == "PHENOLOGY")
         {
             qDebug() << "PHENOLOGY ";
-              // TO DO
-//            child = ancestor.firstChild();
-//            while( !child.isNull())
-//            {
+            QString dataTypeAttribute = ancestor.toElement().attribute("Datatype").toUpper();
+            if ( dataTypeAttribute == "GRID")
+            {
+                listXMLPhenology->setIsMeteoGrid(true);
+            }
+            else if (dataTypeAttribute == "POINT")
+            {
+                listXMLPhenology->setIsMeteoGrid(false);
+            }
+            else if (dataTypeAttribute.isEmpty() || (dataTypeAttribute != "GRID" && dataTypeAttribute != "POINT"))
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            QString computationType = ancestor.toElement().attribute("computationType").toUpper();
+            if ( computationType == "CURRENTSTAGE" || computationType == "CURRENT")
+            {
+                listXMLPhenology->insertComputation(currentStage);
+            }
+            else if (computationType == "ANOMALYDAYS")
+            {
+                listXMLPhenology->insertComputation(anomalyDays);
+            }
+            else if (computationType == "DIFFERENCESTAGES")
+            {
+                listXMLPhenology->insertComputation(differenceStages);
+            }
+            else
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            QString cropStr = ancestor.toElement().attribute("crop").toUpper();
+            phenoCrop crop = getKeyMapPhenoCrop(MapPhenoCropToString, cropStr.toStdString());
+            if (crop == invalidCrop)
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            else
+            {
+                listXMLPhenology->insertCrop(crop);
+            }
+            QString variety = ancestor.toElement().attribute("variety").toUpper();
+            // LC Classe 500 a cosa corrisponde?
+            if ( variety == "PRECOCISSIMA" || variety == "CLASSE 500")
+            {
+                listXMLPhenology->insertVariety(precocissima);
+            }
+            else if (variety == "PRECOCE")
+            {
+                listXMLPhenology->insertVariety(precoce);
+            }
+            else if (variety == "MEDIA")
+            {
+                listXMLPhenology->insertVariety(media);
+            }
+            else if (variety == "TARDIVE")
+            {
+                listXMLPhenology->insertVariety(tardive);
+            }
+            else
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            bool ok;
+            int vernalization = ancestor.toElement().attribute("vernalization").toUpper().toInt(&ok);
+            if (ok)
+            {
+                listXMLPhenology->insertVernalization(vernalization);
+            }
+            else
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            QString scale = ancestor.toElement().attribute("scale").toUpper();
+            if (scale == "BBCH")
+            {
+                listXMLPhenology->insertScale(BBCH);
+            }
+            else if (scale == "ARPA")
+            {
+                listXMLPhenology->insertScale(ARPA);
+            }
+            else
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "PERIOD")
+                {
+                    QDate startDate = QDate::fromString(child.toElement().attribute("ini"), "dd/MM/yyyy");
+                    QDate endDate = QDate::fromString(child.toElement().attribute("fin"), "dd/MM/yyyy");
+                    if (!endDate.isValid() || !startDate.isValid() || endDate<startDate)
+                    {
+                        listXMLPhenology->eraseElement(nPhenology);
+                        qDebug() << "Invalid date";
+                        errorPhenology = true;
+                    }
+                    else
+                    {
+                        listXMLPhenology->insertDateStart(startDate);
+                        listXMLPhenology->insertDateEnd(endDate);
+                    }
+                }
+                if (myTag == "EXPORT")
+                {
+                    secondChild = child.firstChild();
+                    while( !secondChild.isNull())
+                    {
+                        mySecondTag = secondChild.toElement().tagName().toUpper();
+                        if (mySecondTag == "FILENAME")
+                        {
+                            filename = secondChild.toElement().text();
+                            if (filename.isEmpty())
+                            {
+                                listXMLPhenology->insertFileName("");
+                            }
+                            else
+                            {
+                                listXMLPhenology->insertFileName(filename);
+                            }
+                        }
+                        secondChild = secondChild.nextSibling();
+                    }
+                }
+                if (errorPhenology)
+                {
+                    errorPhenology = false;
+                    child = child.lastChild();
+                    child = child.nextSibling();
+                    nPhenology = nPhenology - 1;
+                }
+                else
+                {
+                    child = child.nextSibling();
+                }
+            }
+            nPhenology = nPhenology + 1;
+            qDebug() << "nPhenology " << nPhenology;
 
-//            }
-//            child = child.nextSibling();
         }
 
         else if (ancestor.toElement().tagName().toUpper() == "DROUGHT")
         {
             qDebug() << "DROUGHT ";
-              // TO DO
-//            child = ancestor.firstChild();
-//            while( !child.isNull())
-//            {
+            QString dataTypeAttribute = ancestor.toElement().attribute("Datatype").toUpper();
+            if ( dataTypeAttribute == "GRID")
+            {
+                listXMLDrought->setIsMeteoGrid(true);
+            }
+            else if (dataTypeAttribute == "POINT")
+            {
+                listXMLDrought->setIsMeteoGrid(false);
+            }
+            else if (dataTypeAttribute.isEmpty() || (dataTypeAttribute != "GRID" && dataTypeAttribute != "POINT"))
+            {
+                ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                continue;
+            }
+            child = ancestor.firstChild();
+            while( !child.isNull())
+            {
+                myTag = child.toElement().tagName().toUpper();
+                if (myTag == "INDEX")
+                {
+                    QString index = child.toElement().text().toUpper();
+                    if (index == "SPI")
+                    {
+                        listXMLDrought->insertIndex(INDEX_SPI);
+                        listXMLDrought->insertVariable(noMeteoVar); // SPI has not variable
+                    }
+                    else if (index == "SPEI")
+                    {
+                        listXMLDrought->insertIndex(INDEX_SPEI);
+                        listXMLDrought->insertVariable(noMeteoVar); // SPEI has not variable
+                    }
+                    else if (index == "DECILES")
+                    {
+                        listXMLDrought->insertIndex(INDEX_DECILES);
+                        listXMLDrought->insertTimescale(0);  // Deciles has not timescale
+                        listXMLDrought->insertVariable(noMeteoVar);
+                    }
+                    else
+                    {
+                        listXMLDrought->eraseElement(nDrought);
+                        qDebug() << "noIndex ";
+                        errorDrought = true;
+                    }
 
-//            }
-//            child = child.nextSibling();
+                }
+                if (myTag == "REFINTERVAL")
+                {
+                    firstYear = child.toElement().attribute("yearini");
+                    lastYear = child.toElement().attribute("yearfin");
+                    listXMLDrought->insertYearStart(firstYear.toInt());
+                    listXMLDrought->insertYearEnd(lastYear.toInt());
+                    if (checkYears(firstYear, lastYear) == false)
+                    {
+                        listXMLDrought->eraseElement(nDrought);
+                        qDebug() << "checkYears ";
+                        errorDrought = true;
+                    }
+                }
+                if (myTag == "DATE")
+                {
+                    QString dateStr = child.toElement().text();
+                    QDate date = QDate::fromString(dateStr,"dd/MM/yyyy");
+                    if (date.isValid())
+                    {
+                        listXMLDrought->insertDate(date);
+                    }
+                    else
+                    {
+                        listXMLDrought->eraseElement(nDrought);
+                        qDebug() << "invalid date ";
+                        errorDrought = true;
+                    }
+                }
+                if (myTag == "TIMESCALE")
+                {
+                    bool ok;
+                    QString timescaleStr = child.toElement().text();
+                    int timeScale = timescaleStr.toInt(&ok);
+                    if (ok)
+                    {
+                        listXMLDrought->insertTimescale(timeScale);
+                    }
+                    else
+                    {
+                        listXMLDrought->eraseElement(nDrought);
+                        qDebug() << "invalid timescale ";
+                        errorDrought = true;
+                    }
+                }
+                if (myTag == "VARIABLE")
+                {
+                    QString variable = child.toElement().text();
+                    meteoVariable var = getKeyMeteoVarMeteoMap(MapMonthlyMeteoVarToString, variable.toStdString());
+                    if (var != noMeteoVar)
+                    {
+                        listXMLDrought->updateVariable(var, listXMLDrought->listVariable().size() - 1);   //change var
+                    }
+                }
+                if (myTag == "EXPORT")
+                {
+                    secondChild = child.firstChild();
+                    while( !secondChild.isNull())
+                    {
+                        mySecondTag = secondChild.toElement().tagName().toUpper();
+                        if (mySecondTag == "FILENAME")
+                        {
+                            filename = secondChild.toElement().text();
+                            if (filename.isEmpty())
+                            {
+                                listXMLDrought->insertFileName("");
+                            }
+                            else
+                            {
+                                listXMLDrought->insertFileName(filename);
+                            }
+                        }
+                        secondChild = secondChild.nextSibling();
+                    }
+                }
+                if (errorDrought)
+                {
+                    errorDrought = false;
+                    child = child.lastChild();
+                    child = child.nextSibling();
+                    nDrought = nDrought - 1;
+                }
+                else
+                {
+                    child = child.nextSibling();
+                }
+            }
+            nDrought = nDrought + 1;
+            qDebug() << "nDrought " << nDrought;
         }
 
         ancestor = ancestor.nextSibling();
@@ -2943,17 +3375,34 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
 
     for (int i = 0; i < nElab; i++)
     {
-        listXMLElab->addElab(i);
-        qDebug() << "elab: " << listXMLElab->listAll()[i];
+        if (listXMLElab->addElab(i))
+        {
+            qDebug() << "elab: " << listXMLElab->listAll().back();
+        }
     }
     for (int i = 0; i < nAnomaly; i++)
     {
-        listXMLAnomaly->addAnomaly(i);
-        qDebug() << "anomaly: " << listXMLAnomaly->listAll()[i];
+        if (listXMLAnomaly->addAnomaly(i))
+        {
+            qDebug() << "anomaly: " << listXMLAnomaly->listAll().back();
+        }
+    }
+    for (int i = 0; i < nDrought; i++)
+    {
+        if (listXMLDrought->addDrought(i))
+        {
+            qDebug() << "drought: " << listXMLDrought->listAll().back();
+        }
+    }
+    for (int i = 0; i < nPhenology; i++)
+    {
+        if (listXMLPhenology->addPhenology(i))
+        {
+            qDebug() << "phenology: " << listXMLPhenology->listAll().back();
+        }
     }
     return true;
 }
-
 
 bool parseXMLPeriodType(QDomNode ancestor, QString attributePeriod, Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXMLAnomaly, bool isAnomaly, bool isRefPeriod,
                         QString* period, QString *myError)
@@ -3986,5 +4435,339 @@ bool appendXMLAnomaly(Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QS
 
 }
 
+void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDate firstDate, QDate lastDate,
+                              std::vector<meteoVariable> dailyMeteoVar,
+                              Crit3DMeteoSettings* meteoSettings, Crit3DQuality* qualityCheck, Crit3DClimateParameters* climateParam)
+{
+    int nrMonths = (lastDate.year()-firstDate.year())*12+lastDate.month()-(firstDate.month()-1);
+    QString myError;
+    bool isMeteoGrid = true;
+    Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
+    float percValue;
+    std::vector<float> outputValues;
+    QList<meteoVariable> meteoVariableList;
 
+    for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
+    {
+        for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
+        {
+            meteoVariableList.clear();
+            if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->active)
+            {
+                meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->initializeObsDataM(nrMonths, firstDate.month(), firstDate.year());
+                meteoPointTemp->initializeObsDataM(nrMonths, firstDate.month(), firstDate.year());
+                // copy id to MPTemp
+                meteoPointTemp->id = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id;
+                // meteoPointTemp should be init
+                meteoPointTemp->nrObsDataDaysH = 0;
+                meteoPointTemp->nrObsDataDaysD = 0;
+
+                for(int i = 0; i < dailyMeteoVar.size(); i++)
+                {
+                    if (preElaboration(&myError, nullptr, meteoGridDbHandler, meteoPointTemp, isMeteoGrid, dailyMeteoVar[i], noMeteoComp, firstDate, lastDate, outputValues, &percValue, meteoSettings))
+                    {
+                        if (meteoPointTemp->computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[i], meteoSettings, qualityCheck, climateParam))
+                        {
+                            meteoVariable monthlyVar = updateMeteoVariable(dailyMeteoVar[i], monthly);
+                            if (monthlyVar != noMeteoVar)
+                            {
+                                meteoVariableList.append(monthlyVar);
+                            }
+                        }
+                    }
+                }
+                // copy meteoPoint Temp valus
+                meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->obsDataM = meteoPointTemp->obsDataM ;
+                if (!meteoVariableList.isEmpty())
+                {
+                    meteoGridDbHandler->saveCellGridMonthlyData(&myError, QString::fromStdString(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id), row, col, firstDate, lastDate, meteoVariableList);
+                }
+            }
+        }
+    }
+    delete meteoPointTemp;
+}
+
+int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
+                                         Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, bool isAnomaly, Crit3DMeteoSettings* meteoSettings, std::vector<float> &outputValues)
+{
+    int validYears = 0;
+    meteoComputation elabMeteoComp;
+    try
+    {
+        elabMeteoComp = MapMeteoComputation.at(clima->elab1().toStdString());
+    }
+    catch (const std::out_of_range& )
+    {
+        elabMeteoComp = noMeteoComp;
+    }
+    if (clima->param1IsClimate())
+    {
+        clima->param1();
+    }
+
+    QDate startDate(clima->yearStart(), clima->genericPeriodDateStart().month(), clima->genericPeriodDateStart().day());
+    QDate endDate(clima->yearEnd(), clima->genericPeriodDateEnd().month(), clima->genericPeriodDateEnd().day());
+    int yearStart = clima->yearStart();
+    int yearEnd = clima->yearEnd();
+
+    for (int myYear = yearStart; myYear <= yearEnd; myYear++)
+    {
+        startDate.setDate(myYear, startDate.month(), startDate.day());
+        endDate.setDate(myYear, endDate.month(), endDate.day());
+        clima->setYearStart(myYear);
+        clima->setYearEnd(myYear);
+        meteoPointTemp->nrObsDataDaysD = 0; // should be init
+        if (clima->nYears() < 0)
+        {
+            startDate.setDate(myYear + clima->nYears(), startDate.month(), startDate.day());
+        }
+        else if (clima->nYears() > 0)
+        {
+            endDate.setDate(myYear + clima->nYears(), endDate.month(), endDate.day());
+        }
+        if (isMeteoGrid)
+        {
+            if ( elaborationOnPoint(myError, nullptr, meteoGridDbHandler, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
+            {
+                validYears = validYears + 1;
+                if(isAnomaly)
+                {
+                    outputValues.push_back(meteoPointTemp->anomaly);
+                }
+                else
+                {
+                    outputValues.push_back(meteoPointTemp->elaboration);
+                }
+            }
+            else
+            {
+                outputValues.push_back(NODATA);
+            }
+        }
+        else
+        {
+            if ( elaborationOnPoint(myError, meteoPointsDbHandler, nullptr, meteoPointTemp, clima, isMeteoGrid, startDate, endDate, isAnomaly, meteoSettings))
+            {
+                validYears = validYears + 1;
+                if(isAnomaly)
+                {
+                    outputValues.push_back(meteoPointTemp->anomaly);
+                }
+                else
+                {
+                    outputValues.push_back(meteoPointTemp->elaboration);
+                }
+            }
+            else
+            {
+                outputValues.push_back(NODATA);
+            }
+        }
+    }
+    return validYears;
+}
+
+void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, QDate firstDate, QDate lastDate,
+                              int smooth, float* dataPresence, Crit3DQuality* qualityCheck, Crit3DClimateParameters* climateParam,
+                               Crit3DMeteoSettings* meteoSettings, std::vector<float> &dailyClima, std::vector<float> &decadalClima, std::vector<float> &monthlyClima)
+{
+
+    int nrDays = int(firstDate.daysTo(lastDate) + 1);
+    Crit3DDate mpFirstDate = meteoPoint.obsDataD[0].date;
+    QDate myDate;
+    int month;
+    int decade;
+    int dayOfYear;
+    vector<float> monthly;
+    vector<float> decadal;
+    vector<float> daily;
+    vector<float> numMonthlyData;
+    vector<float> numDecadeData;
+    vector<float> numDailyData;
+    vector<float> maxMonthlyData;
+    vector<float> maxDecadeData;
+    vector<float> maxDailyData;
+    for (int fill = 0; fill <= 12; fill++)
+    {
+        monthly.push_back(0);
+        numMonthlyData.push_back(0);
+        maxMonthlyData.push_back(0);
+    }
+    for (int fill = 0; fill <= 36; fill++)
+    {
+        decadal.push_back(0);
+        numDecadeData.push_back(0);
+        maxDecadeData.push_back(0);
+    }
+    for (int fill = 0; fill <= 366; fill++)
+    {
+        daily.push_back(0);
+        numDailyData.push_back(0);
+        maxDailyData.push_back(0);
+    }
+
+    quality::qualityType check;
+    for (int day = 0; day < nrDays; day++)
+    {
+        myDate = firstDate.addDays(day);
+
+        month = myDate.month();
+        decade = decadeFromDate(myDate);
+        dayOfYear = myDate.dayOfYear();
+
+        maxMonthlyData[month] = maxMonthlyData[month] + 1;
+        maxDecadeData[decade] = maxDecadeData[decade] + 1;
+        maxDailyData[dayOfYear] = maxDailyData[dayOfYear] + 1;
+
+        int i = getQDate(mpFirstDate).daysTo(myDate);
+        float myDailyValue = meteoPoint.getMeteoPointValueD(getCrit3DDate(myDate), var, meteoSettings);
+        if (i<0 || i>meteoPoint.nrObsDataDaysD)
+        {
+            check = quality::missing_data;
+        }
+        else
+        {
+            check = qualityCheck->checkFastValueDaily_SingleValue(var, climateParam, myDailyValue, month, meteoPoint.point.z);
+        }
+        if (check == quality::accepted)
+        {
+            if (numMonthlyData[month] == 0)
+            {
+                monthly[month] = myDailyValue;
+            }
+            else
+            {
+                monthly[month] = monthly[month] + myDailyValue;
+            }
+
+            if (numDecadeData[decade] == 0)
+            {
+                decadal[decade] = myDailyValue;
+            }
+            else
+            {
+                decadal[decade] = decadal[decade] + myDailyValue;
+            }
+
+            if (numDailyData[dayOfYear] == 0)
+            {
+                daily[dayOfYear] = myDailyValue;
+            }
+            else
+            {
+                daily[dayOfYear] = daily[dayOfYear] + myDailyValue;
+            }
+
+            numMonthlyData[month] = numMonthlyData[month] + 1;
+            numDecadeData[decade] = numDecadeData[decade] + 1;
+            numDailyData[dayOfYear] = numDailyData[dayOfYear] + 1;
+        }
+    }
+    // consistenza
+    float numDati = 0;
+    float numDatiMax = 0;
+    for (int myMonth = 1; myMonth <= 12; myMonth++)
+    {
+        numDati = numDati + numMonthlyData[myMonth];
+        numDatiMax = numDatiMax + maxMonthlyData[myMonth];
+    }
+    *dataPresence = numDati / numDatiMax * 100;
+    float minPerc = meteoSettings->getMinimumPercentage();
+
+    for (int day = 1; day <= 366; day++)
+    {
+        myDate = QDate(2000, 1, 1).addDays(day - 1);
+        // daily
+        if (maxDailyData[day] > 0)
+        {
+            if (numDailyData[day] / maxDailyData[day] >= (minPerc/100))
+            {
+                dailyClima[day] = daily[day] / numDailyData[day];
+            }
+            else
+            {
+                dailyClima[day] = NODATA;
+            }
+        }
+        else
+        {
+            dailyClima[day] = NODATA;
+        }
+
+        // decadal
+        decade = decadeFromDate(myDate);
+        if (maxDecadeData[decade] > 0)
+        {
+            if (numDecadeData[decade] / maxDecadeData[decade] >= (minPerc/100))
+            {
+                decadalClima[decade] = decadal[decade] / numDecadeData[decade];
+            }
+            else
+            {
+                decadalClima[decade] = NODATA;
+            }
+        }
+        else
+        {
+            decadalClima[decade] = NODATA;
+        }
+
+        // monthly
+        month = myDate.month();
+        if (maxMonthlyData[month] > 0)
+        {
+            if (numMonthlyData[month] / maxMonthlyData[month] >= (minPerc/100))
+            {
+                monthlyClima[month] = monthly[month] / numMonthlyData[month];
+            }
+            else
+            {
+                monthlyClima[month] = NODATA;
+            }
+        }
+        else
+        {
+            monthlyClima[month] = NODATA;
+        }
+    }
+    // smooth
+    if (smooth > 0)
+    {
+        std::vector<float> myClimaTmp = dailyClima;
+        int doy;
+        int nDays;
+        float dSum;
+        for (int day = 1; day <= 366; day++)
+        {
+            dSum = 0;
+            nDays = 0;
+            for (int d = day-smooth; d <= day+smooth; d++)
+            {
+                doy = d;
+                if (doy < 1)
+                {
+                    doy = 366 + doy;
+                }
+                else if (doy > 366)
+                {
+                    doy = doy - 366;
+                }
+                if (myClimaTmp[doy] != NODATA)
+                {
+                    dSum = dSum + myClimaTmp[doy];
+                    nDays = nDays + 1;
+                }
+            }
+            if (nDays > 0)
+            {
+                dailyClima[day] = dSum / nDays;
+            }
+            else
+            {
+                dailyClima[day] = NODATA;
+            }
+        }
+    }
+}
 

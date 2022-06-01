@@ -114,6 +114,7 @@ void NetCDFHandler::clear()
     idLat = NODATA;
     idLon = NODATA;
     idTime = NODATA;
+    idTimeBnds = NODATA;
 
     isUTM = false;
     isLatLon = false;
@@ -245,19 +246,19 @@ Crit3DTime NetCDFHandler::getTime(int timeIndex)
         return NO_DATETIME;
     }
 
-    int nrDays, residualTime;
+    long nrDays, residualTime;
 
     if (isStandardTime)
     {
         long nrSeconds = long(time[timeIndex]);
         nrDays = int(floor(nrSeconds / DAY_SECONDS));
-        residualTime = nrSeconds - (nrDays * DAY_SECONDS);
+        residualTime = nrSeconds - (nrDays * long(DAY_SECONDS));
     }
     else if (isHourly)
     {
         long nrHours = long(time[timeIndex]);
         nrDays = int(floor(nrHours / 24));
-        residualTime = (nrHours - nrDays*24) * HOUR_SECONDS;
+        residualTime = (nrHours - nrDays*24) * long(HOUR_SECONDS);
     }
     else if (isDaily)
     {
@@ -556,7 +557,14 @@ bool NetCDFHandler::readProperties(string fileName)
 
             latLonHeader.flag = NODATA;
 
-            dataGrid.header->convertFromLatLon(latLonHeader);
+            // raster header
+            dataGrid.header->nrRows = latLonHeader.nrRows;
+            dataGrid.header->nrCols = latLonHeader.nrCols;
+            dataGrid.header->flag = latLonHeader.flag;
+            dataGrid.header->llCorner.y = latLonHeader.llCorner.latitude;
+            dataGrid.header->llCorner.x = latLonHeader.llCorner.longitude;
+            // avg value (not used)
+            dataGrid.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
             dataGrid.initializeGrid(0);
         }
     }
@@ -754,66 +762,193 @@ bool NetCDFHandler::createNewFile(std::string fileName)
 {
     clear();
 
-    int status = nc_create(fileName.data(), NC_CLOBBER, &ncId);
+    int status = nc_create(fileName.data(), NC_CLOBBER|NC_NETCDF4, &ncId);
     return (status == NC_NOERR);
 }
 
 
-bool NetCDFHandler::writeGeoDimensions(const gis::Crit3DGridHeader& latLonHeader)
+bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, const string& title,
+                                  const string& variableName, const string& variableUnit,
+                                  const Crit3DDate& myDate, int nDays, int refYearStart, int refYearEnd)
 {
     if (ncId == NODATA) return false;
 
+    bool timeDimensionExists = (myDate != NO_DATE);
+    bool boundsExist = false;
+    bool referenceIntervalExists = false;
+    if (nDays != 0 && nDays != NODATA)
+    {
+        boundsExist = true;
+    }
+    if (refYearStart != 0 && refYearStart != NODATA
+        && refYearEnd != 0 && refYearEnd != NODATA)
+    {
+        referenceIntervalExists = true;
+    }
     nrLat = latLonHeader.nrRows;
     nrLon = latLonHeader.nrCols;
-    int varLat, varLon;
+    int varLat, varLon, status;
+    int varTime = 0;
+    int varTimeBounds = 0;
 
-    // def dimensions (lat/lon)
-    int status = nc_def_dim(ncId, "latitude", unsigned(nrLat), &idLat);
+    // global attributes
+    status = nc_put_att_text(ncId, NC_GLOBAL, "title", title.length(), title.c_str());
+    if (status != NC_NOERR) return false;
+    status = nc_put_att_text(ncId, NC_GLOBAL, "history", 11, "Version 1.0");
+    if (status != NC_NOERR) return false;
+    status = nc_put_att_text(ncId, NC_GLOBAL, "Conventions", 6, "CF-1.7");
     if (status != NC_NOERR) return false;
 
-    status = nc_def_dim(ncId, "longitude", unsigned(nrLon), &idLon);
+    // time
+    if (timeDimensionExists)
+    {
+        status = nc_def_dim(ncId, "time", unsigned(1), &idTime);
+        if (status != NC_NOERR) return false;
+
+        status = nc_def_var (ncId, "time", NC_FLOAT, 1, &idTime, &varTime);
+        if (status != NC_NOERR) return false;
+
+        status = nc_put_att_text(ncId, varTime, "standard_name", 4, "time");
+        if (status != NC_NOERR) return false;
+
+        std::string timeUnits = "days since " + myDate.toStdString();
+        status = nc_put_att_text(ncId, varTime, "units", timeUnits.length(), timeUnits.c_str());
+        if (status != NC_NOERR) return false;
+
+        std::string timeCalendarAtt = "gregorian" ;
+        status = nc_put_att_text(ncId, varTime, "calendar", timeCalendarAtt.length(), timeCalendarAtt.c_str());
+        if (status != NC_NOERR) return false;
+
+        if (boundsExist)
+        {
+            status = nc_def_dim(ncId, "bnds", unsigned(2), &idTimeBnds);
+            if (status != NC_NOERR) return false;
+
+            int time_bnds_dims[2];
+            time_bnds_dims[0] = idTime;
+            time_bnds_dims[1] = idTimeBnds;
+            status = nc_def_var (ncId, "time_bnds", NC_FLOAT, 2, time_bnds_dims, &varTimeBounds);
+            if (status != NC_NOERR) return false;
+
+            status = nc_put_att_text(ncId, varTime, "bounds", 9, "time_bnds");
+            if (status != NC_NOERR) return false;
+        }
+    }
+
+    // lat
+    status = nc_def_dim(ncId, "lat", unsigned(nrLat), &idLat);
     if (status != NC_NOERR) return false;
 
-    // def geo variables (lat/lon)
-    status = nc_def_var (ncId, "latitude", NC_FLOAT, 1, &idLat, &varLat);
+    status = nc_def_var (ncId, "lat", NC_FLOAT, 1, &idLat, &varLat);
     if (status != NC_NOERR) return false;
 
-    status = nc_def_var (ncId, "longitude", NC_FLOAT, 1, &idLon, &varLon);
+    status = nc_put_att_text(ncId, varLat, "standard_name", 8, "latitude");
     if (status != NC_NOERR) return false;
-
-    // def generic variable
-    variables.resize(1);
-    int varDimId[2];
-    varDimId[0] = idLat;
-    varDimId[1] = idLon;
-    status = nc_def_var (ncId, "var", NC_FLOAT, 2, varDimId, &(variables[0].id));
-    if (status != NC_NOERR) return false;
-
-    // attributes
     status = nc_put_att_text(ncId, varLat, "units", 13, "degrees_north");
     if (status != NC_NOERR) return false;
 
+    // lon
+    status = nc_def_dim(ncId, "lon", unsigned(nrLon), &idLon);
+    if (status != NC_NOERR) return false;
+
+    status = nc_def_var (ncId, "lon", NC_FLOAT, 1, &idLon, &varLon);
+    if (status != NC_NOERR) return false;
+
+    status = nc_put_att_text(ncId, varLon, "standard_name", 9, "longitude");
+    if (status != NC_NOERR) return false;
     status = nc_put_att_text(ncId, varLon, "units", 12, "degrees_east");
     if (status != NC_NOERR) return false;
 
-    // valid range
-//    float range[] = {-1000.0, 1000.0};
-//    status = nc_put_att_float(ncId, variables[0].id, "valid_range", NC_FLOAT, 2, range);
-//    if (status != NC_NOERR) return false;
+    // generic variable
+    variables.resize(1);
+    if (timeDimensionExists)
+    {
+        int nrDims = 3;
+        int varDimId[3];
+        varDimId[0] = idTime;
+        varDimId[1] = idLat;
+        varDimId[2] = idLon;
+
+        status = nc_def_var (ncId, variableName.c_str(), NC_FLOAT, nrDims, varDimId, &(variables[0].id));
+        if (status != NC_NOERR) return false;
+    }
+    else
+    {
+        int nrDims = 2;
+        int varDimId[2];
+        varDimId[0] = idLat;
+        varDimId[1] = idLon;
+
+        status = nc_def_var (ncId, variableName.c_str(), NC_FLOAT, nrDims, varDimId, &(variables[0].id));
+        if (status != NC_NOERR) return false;
+    }
+
+    if (referenceIntervalExists)
+    {
+        std::string referenceYearStart = std::to_string(refYearStart);
+        status = nc_put_att_text(ncId, variables[0].id, "reference_start_year", referenceYearStart.length(), referenceYearStart.c_str());
+        if (status != NC_NOERR) return false;
+        std::string referenceYearEnd = std::to_string(refYearEnd);
+        status = nc_put_att_text(ncId, variables[0].id, "reference_end_year", referenceYearEnd.length(), referenceYearEnd.c_str());
+        if (status != NC_NOERR) return false;
+    }
+
+    // atributes
+    status = nc_put_att_text(ncId, variables[0].id, "long_name", variableName.length(), variableName.c_str());
+    if (status != NC_NOERR) return false;
+
+    // Units are not required for dimensionless quantities
+    if (variableUnit != "")
+    {
+        status = nc_put_att_text(ncId, variables[0].id, "units", variableUnit.length(), variableUnit.c_str());
+        if (status != NC_NOERR) return false;
+    }
 
     // no data
-    float missing[] = {float(NODATA)};
+    float missing[] = {NODATA};
     status = nc_put_att_float(ncId, variables[0].id, "missing_value", NC_FLOAT, 1, missing);
     if (status != NC_NOERR) return false;
+
+    // compression
+    int shuffle = NC_SHUFFLE;
+    int deflate = 1;
+    int deflate_level = 1;
+    status = nc_def_var_deflate(ncId, variables[0].id, shuffle, deflate, deflate_level);
+    if (status != NC_NOERR) return false;
+
+    // valid range
+    /*
+    float range[] = {-1000.0, 1000.0};
+    status = nc_put_att_float(ncId, variables[0].id, "valid_range", NC_FLOAT, 2, range);
+    if (status != NC_NOERR) return false;
+    */
 
     // end of metadata
     status = nc_enddef(ncId);
     if (status != NC_NOERR) return false;
 
+    // write time
+    if (timeDimensionExists)
+    {
+
+        float timeValue[1];
+        timeValue[0] = float(nDays+1) / 2.f;
+        status = nc_put_var_float(ncId, varTime, &timeValue[0]);
+        if (status != NC_NOERR) return false;
+        // time bounds
+        if (boundsExist)
+        {
+            float boundsValue[2];
+            boundsValue[0] = 0.0;
+            boundsValue[1] = float(nDays);
+            status = nc_put_var_float(ncId, varTimeBounds, &boundsValue[0]);
+            if (status != NC_NOERR) return false;
+        }
+    }
+
     // set lat/lon arrays
     lat = new float[unsigned(nrLat)];
     lon = new float[unsigned(nrLon)];
-
     for (int row = 0; row < nrLat; row++)
     {
         lat[row] = float(latLonHeader.llCorner.latitude + latLonHeader.dy * (latLonHeader.nrRows - row - 0.5));
@@ -836,7 +971,6 @@ bool NetCDFHandler::writeGeoDimensions(const gis::Crit3DGridHeader& latLonHeader
 
 bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
 {
-
     if (ncId == NODATA) return false;
 
     float* var = new float[unsigned(nrLat*nrLon)];
@@ -845,7 +979,12 @@ bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
     {
         for (int col = 0; col < nrLon; col++)
         {
-            var[row*nrLon + col] = myDataGrid.value[row][col];
+            float value = myDataGrid.value[row][col];
+            // check on not active cells (for meteo grid)
+            if (isEqual(value, myDataGrid.header->flag) || isEqual(value, NO_ACTIVE))
+                value = NODATA;
+
+            var[row*nrLon + col] = value;
         }
     }
 

@@ -1,13 +1,15 @@
 
 #include "girasole.h"
 
+#include "math.h"
+#include <algorithm>
 
 void Girasole::Emergenza(const Stazione& stazione) 
 {
 	long i = m_faseFenologica.size() - 1;
 	double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
 	double Ts = 7.9;
-    m_faseFenologica[i] += __max( static_cast<double>(0.), Tm - Ts ) / 67.;
+    m_faseFenologica[i] += std::max( static_cast<double>(0.), Tm - Ts ) / 67.;
 }
 
 void Girasole::GemmaFiorale(const Stazione& stazione, const Parametri& parametri) 
@@ -15,7 +17,7 @@ void Girasole::GemmaFiorale(const Stazione& stazione, const Parametri& parametri
 	long i = m_faseFenologica.size() - 1;
 	double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
 	double Ts = 6.6;
-	double dT = __max( static_cast<double>(0.), Tm - Ts );
+    double dT = std::max( static_cast<double>(0.), Tm - Ts );
 
     m_faseFenologica[i] += ( C1[0][parametri.varieta] * dT - C2[0][parametri.varieta] * dT * dT )
 		                 * ( C3[0][parametri.varieta] + C4[0][parametri.varieta] * Tm );
@@ -26,7 +28,7 @@ void Girasole::Fioritura(const Stazione& stazione, const Parametri& parametri)
 	long i = m_faseFenologica.size() - 1;
 	double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
 	double Ts = 3.9;
-	double dT = __max( static_cast<double>(0.), Tm - Ts );
+    double dT = std::max( static_cast<double>(0.), Tm - Ts );
 
     m_faseFenologica[i] += ( C1[1][parametri.varieta] * dT - C2[1][parametri.varieta] * dT * dT )
 		                 * ( C3[1][parametri.varieta] + C4[1][parametri.varieta] * Tm );

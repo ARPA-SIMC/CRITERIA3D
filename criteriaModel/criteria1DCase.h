@@ -51,7 +51,7 @@
     class Crit1DCase
     {
     public:
-        Crit1DUnit unit;
+        Crit1DCompUnit unit;
 
         // SOIL
         soil::Crit3DSoil mySoil;
@@ -73,9 +73,12 @@
         void initializeWaterContent(Crit3DDate myDate);
         bool computeDailyModel(Crit3DDate &myDate, std::string &error);
 
-        double getWaterContent(double depth);
-        double getWaterPotential(double depth);
-        double getSoilWaterDeficit(double depth);
+        double getWaterContent(double computationDepth);
+        double getWaterPotential(double computationDepth);
+        double getWaterDeficit(double computationDepth);
+        double getWaterCapacity(double computationDepth);
+        double getAvailableWater(double computationDepth);
+        double getFractionAW(double computationDepth);
 
     private:
         double minLayerThickness;       // [m]

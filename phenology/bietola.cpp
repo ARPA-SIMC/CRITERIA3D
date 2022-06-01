@@ -1,11 +1,12 @@
-
+#include <algorithm>
 #include "bietola.h"
+#include "math.h"
 
 
 double Bietola::R(double T) 
 {
-  T = __min(T, m_TEx);
-  T = __max(T, m_TEn);
+  T = std::min(T, m_TEx);
+  T = std::max(T, m_TEn);
   return m_Rmax * pow((T - m_TEn) / (m_TEo - m_TEn), m_alfa) 
 	            * pow((m_TEx - T) / (m_TEx - m_TEo), m_alfa * ( m_TEx / m_TEo - 1.));
 }
@@ -26,8 +27,8 @@ void Bietola::DodiciFoglie(const Stazione& stazione)
 {
 	long i = m_faseFenologica.size() - 1;
 	double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
-	m_gradiGiornoDodiciFoglie += __max(0., Tm);
-    m_faseFenologica[i] += __max(0., Tm) / ( 924. - m_gradiGiornoEmergenza );
+    m_gradiGiornoDodiciFoglie += std::max(0., Tm);
+    m_faseFenologica[i] += std::max(0., Tm) / ( 924. - m_gradiGiornoEmergenza );
 }
 
 // Raccolta
@@ -35,7 +36,7 @@ void Bietola::Raccolta(const Stazione& stazione)
 {
 	long i = m_faseFenologica.size() - 1;
 	double Tm = ( stazione.Tn(i) + stazione.Tx(i) ) / 2.;
-    m_faseFenologica[i] += __max(0., Tm) / ( m_limiteGradiGiorno - 924. );
+    m_faseFenologica[i] += std::max(0., Tm) / ( m_limiteGradiGiorno - 924. );
 }
 
 

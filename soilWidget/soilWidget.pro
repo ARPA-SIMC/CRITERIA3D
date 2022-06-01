@@ -31,11 +31,10 @@ win32:{
     TARGET = soilWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../soil ../utilities
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../soil ../utilities ../commonChartElements
 
 SOURCES += \
     barHorizon.cpp \
-    soilCallout.cpp \
     soilTable.cpp \
     soilWidget.cpp \
     tabHorizons.cpp \
@@ -49,7 +48,6 @@ SOURCES += \
 
 HEADERS += \
     barHorizon.h \
-    soilCallout.h \
     soilTable.h \
     soilWidget.h \
     tabHorizons.h \

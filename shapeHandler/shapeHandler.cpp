@@ -24,6 +24,7 @@
     Fausto Tomei ftomei@arpae.it
 */
 
+#include "basicMath.h"
 #include "shapeHandler.h"
 #include "commonConstants.h"
 #include <fstream>
@@ -246,6 +247,8 @@ bool Crit3DShapeHandler::setUTMzone(std::string prjFileName)
                 std::size_t foundEnd = line.find(separator);
                 std::string utm = line.substr(start, foundEnd-1-start);
                 m_utmZone = std::stoi(utm);
+                std::string emisphere = utm.substr(utm.length()-1, utm.length()-1);
+                m_isNorth = (emisphere == "N");
                 prjFile.close();
                 return true;
             }
@@ -346,17 +349,35 @@ double Crit3DShapeHandler::getNumericValue(int shapeNumber, std::string fieldNam
 
     if (fieldPos == -1) return NODATA;
 
+    return getNumericValue(shapeNumber, fieldPos);
+}
+
+
+double Crit3DShapeHandler::getNumericValue(int shapeNumber, int fieldPos)
+{
     DBFFieldType fieldType = getFieldType(fieldPos);
 
+    double value = NODATA;
     if (fieldType == FTInteger)
     {
-        return readIntAttribute(shapeNumber, fieldPos);
+        value = readIntAttribute(shapeNumber, fieldPos);
     }
     else if (fieldType == FTDouble)
     {
-        return readDoubleAttribute(shapeNumber, fieldPos);
+        value = readDoubleAttribute(shapeNumber, fieldPos);
     }
-    else return NODATA;
+
+    // check zero as nodata
+    if (isEqual(value, 0))
+    {
+        std::string strValue = readStringAttribute(shapeNumber, fieldPos);
+        if (strValue == "" || strValue == "******")
+        {
+            value = NODATA;
+        }
+    }
+
+    return value;
 }
 
 
@@ -382,6 +403,11 @@ DBFFieldType Crit3DShapeHandler::getFieldType(int fieldPos)
 bool Crit3DShapeHandler::getIsWGS84() const
 {
     return m_isWGS84;
+}
+
+bool Crit3DShapeHandler::getIsNorth() const
+{
+    return m_isNorth;
 }
 
 int Crit3DShapeHandler::getUtmZone() const

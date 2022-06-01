@@ -2,6 +2,8 @@
 #define CEREALI_H
 
     #include "coltura.h"
+    #include "math.h"
+    #include <algorithm>
 
     // Classe per gli oggetti Cereali, Grano duro e Orzo
     class Cereali : public Coltura
@@ -24,7 +26,7 @@
         double m_limiteGradiGiorno;
         double m_sogliaGradiGiorno;
 
-        vector<double> m_faseFenologica;
+        std::vector<double> m_faseFenologica;
 
     public:
         // ctors
@@ -43,7 +45,7 @@
             m_numeroFoglieEmerse(0.),
             m_limiteGradiGiorno(0.),
             m_sogliaGradiGiorno(0.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         Cereali(const char* coltura, const double& beta, const double& sigma, const double& limiteGradiGiorno)
@@ -61,7 +63,7 @@
             m_numeroFoglieEmerse(0.),
             m_limiteGradiGiorno(limiteGradiGiorno),
             m_sogliaGradiGiorno(9.),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {}
 
         ~Cereali()
@@ -69,7 +71,7 @@
             m_faseFenologica.clear();
         }
 
-        double TassoSviluppoEmergenza(const double& T) { return __max( 0., -0.006 + 0.0065*T); }
+        double TassoSviluppoEmergenza(const double& T) { return std::max( 0., -0.006 + 0.0065*T); }
         double NumeroFoglieEmerse(const double& P) { return ( 1. - exp( -0.03 * ( P - 4. ) ) ) / 0.03; }
 
         // calcolo delle date di semina ed emergenza fittizie

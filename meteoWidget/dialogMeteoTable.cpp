@@ -2,19 +2,20 @@
 #include "utilities.h"
 #include "commonConstants.h"
 
-DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QStringList currentVariables)
+DialogMeteoTable::DialogMeteoTable(Crit3DMeteoSettings *meteoSettings_, QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QList<QString> currentVariables)
     :meteoPoints(meteoPoints), firstDate(firstDate), lastDate(lastDate), currentFreq(currentFreq), currentVariables(currentVariables)
 {
+    meteoSettings = meteoSettings_;
 
     QString title = "Table meteo values ID: ";
-    QStringList idList;
-    QStringList nameList;
+    QList<QString> idList;
+    QList<QString> nameList;
     for (int i=0; i<meteoPoints.size(); i++)
     {
         idList << QString::fromStdString(meteoPoints[i].id);
 
         QString pointName = QString::fromStdString(meteoPoints[i].name);
-        QStringList elementsName = pointName.split(' ');
+        QList<QString> elementsName = pointName.split(' ');
         if (elementsName.size() == 1)
         {
             pointName = elementsName[0].left(8);
@@ -69,7 +70,7 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
     }
 
     QDate myDate;
-    QDateTime firstDateTime(firstDate, QTime(0,0,0));
+    QDateTime firstDateTime(firstDate, QTime(0,0,0), Qt::UTC);
     QDateTime myDateTime;
 
     for (int row=0; row < rowNumber; row++)
@@ -104,7 +105,7 @@ DialogMeteoTable::DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate 
                 if (currentFreq == daily)
                 {
                     meteoVariable meteoVar = MapDailyMeteoVar.at(currentVariables[varPos].toStdString());
-                    double value = meteoPoints[mpPos].getMeteoPointValueD(getCrit3DDate(myDate), meteoVar);
+                    double value = meteoPoints[mpPos].getMeteoPointValueD(getCrit3DDate(myDate), meteoVar, meteoSettings);
                     if (value != NODATA)
                     {
                         meteoTable->setItem(row, col, new QTableWidgetItem( QString::number(value)));

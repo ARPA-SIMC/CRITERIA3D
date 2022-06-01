@@ -24,6 +24,7 @@
 
 #include "cropWidget.h"
 #include "dialogNewCrop.h"
+#include "dialogNewProject.h"
 #include "cropDbTools.h"
 #include "cropDbQuery.h"
 #include "criteria1DMeteo.h"
@@ -33,6 +34,8 @@
 #include "soilWidget.h"
 #include "meteoWidget.h"
 #include "criteria1DMeteo.h"
+#include "utilities.h"
+#include "basicMath.h"
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -48,14 +51,14 @@
 
 Crit3DCropWidget::Crit3DCropWidget()
 {
-    setWindowTitle(QStringLiteral("CRITERIA 1D - Crop Editor"));
-    resize(1400, 700);
+    setWindowTitle(QStringLiteral("CRITERIA 1D_PRO"));
+    resize(1300, 700);
 
     isRedraw = true;
 
     // font
     QFont myFont = this->font();
-    myFont.setPointSize(9);
+    myFont.setPointSize(8);
     setFont(myFont);
 
     // layout
@@ -303,7 +306,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     rootShapeComboBox = new QComboBox();
     rootShapeComboBox->setMaximumWidth(rootParametersGroup->width()/3);
 
-    for (int i=0; i<numRootDistributionType; i++)
+    for (int i=0; i < numRootDistributionType; i++)
     {
         rootDistributionType type = rootDistributionType(i);
         rootShapeComboBox->addItem(QString::fromStdString(root::getRootDistributionTypeString(type)));
@@ -451,25 +454,30 @@ Crit3DCropWidget::Crit3DCropWidget()
     menuBar->addMenu(viewMenu);
     this->layout()->setMenuBar(menuBar);
 
-    QAction* openProject = new QAction(tr("&Open CRITERIA-1D Project"), this);
+    QAction* openProject = new QAction(tr("&Open Project"), this);
+    QAction* newProject = new QAction(tr("&New Project"), this);
     QAction* openCropDB = new QAction(tr("&Open dbCrop"), this);
     QAction* openMeteoDB = new QAction(tr("&Open dbMeteo"), this);
     QAction* openSoilDB = new QAction(tr("&Open dbSoil"), this);
-    saveChanges = new QAction(tr("&Save Changes"), this);
 
+    saveChanges = new QAction(tr("&Save Changes"), this);
     saveChanges->setEnabled(false);
+    QAction* executeCase = new QAction(tr("&Execute case"), this);
 
     QAction* newCrop = new QAction(tr("&New Crop"), this);
     QAction* deleteCrop = new QAction(tr("&Delete Crop"), this);
     restoreData = new QAction(tr("&Restore Data"), this);
 
     fileMenu->addAction(openProject);
+    fileMenu->addAction(newProject);
     fileMenu->addSeparator();
     fileMenu->addAction(openCropDB);
     fileMenu->addAction(openMeteoDB);
     fileMenu->addAction(openSoilDB);
     fileMenu->addSeparator();
     fileMenu->addAction(saveChanges);
+    fileMenu->addSeparator();
+    fileMenu->addAction(executeCase);
 
     editMenu->addAction(newCrop);
     editMenu->addAction(deleteCrop);
@@ -483,6 +491,7 @@ Crit3DCropWidget::Crit3DCropWidget()
     cropChanged = false;
 
     connect(openProject, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenProject);
+    connect(newProject, &QAction::triggered, this, &Crit3DCropWidget::on_actionNewProject);
     connect(&caseListComboBox, &QComboBox::currentTextChanged, this, &Crit3DCropWidget::on_actionChooseCase);
 
     connect(openCropDB, &QAction::triggered, this, &Crit3DCropWidget::on_actionOpenCropDB);
@@ -510,6 +519,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     connect(saveButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionSave);
     connect(updateButton, &QPushButton::clicked, this, &Crit3DCropWidget::on_actionUpdate);
 
+    connect(executeCase, &QAction::triggered, this, &Crit3DCropWidget::on_actionExecuteCase);
+
     //set current tab
     tabChanged(0);
 }
@@ -518,45 +529,31 @@ Crit3DCropWidget::Crit3DCropWidget()
 void Crit3DCropWidget::on_actionOpenProject()
 {
     isRedraw = false;
+    QString dataPath, projectPath;
+
+    if (searchDataPath(&dataPath))
+        projectPath = dataPath + PATH_PROJECT;
+    else
+        projectPath = "";
 
     checkCropUpdate();
-    QString projFileName = QFileDialog::getOpenFileName(this, tr("Open Criteria-1D project"), "", tr("Settings files (*.ini)"));
+    QString projFileName = QFileDialog::getOpenFileName(this, tr("Open Criteria-1D project"), projectPath, tr("Settings files (*.ini)"));
 
     if (projFileName == "") return;
 
-    QString path = QFileInfo(projFileName).absolutePath()+"/";
-
-    QSettings* projectSettings;
-    projectSettings = new QSettings(projFileName, QSettings::IniFormat);
-    projectSettings->beginGroup("project");
-
-    path += projectSettings->value("path","").toString();
-
-    QString newDbCropName = projectSettings->value("db_crop","").toString();
-    if (newDbCropName.left(1) == ".")
-        newDbCropName = QDir::cleanPath(path + newDbCropName);
-
-    QString dbMeteoName = projectSettings->value("db_meteo","").toString();
-    if (dbMeteoName.left(1) == ".")
-        dbMeteoName = QDir::cleanPath(path + dbMeteoName);
-    if (dbMeteoName.right(3) == "xml")
-        isXmlMeteoGrid = true;
-    else
-        isXmlMeteoGrid = false;
-
-    QString dbSoilName = projectSettings->value("db_soil","").toString();
-    if (dbSoilName.left(1) == ".")
-        dbSoilName = QDir::cleanPath(path + dbSoilName);
-
-    QString dbUnitsName = projectSettings->value("db_units","").toString();
-    if (dbUnitsName.left(1) == ".")
-        dbUnitsName = QDir::cleanPath(path + dbUnitsName);
+    myProject.initialize();
+    int myResult = myProject.initializeProject(projFileName);
+    if (myResult != CRIT1D_OK)
+    {
+        QMessageBox::critical(nullptr, "Error", myProject.projectError);
+        return;
+    }
 
     this->cropListComboBox.blockSignals(true);
     this->soilListComboBox.blockSignals(true);
 
-    openCropDB(newDbCropName);
-    openSoilDB(dbSoilName);
+    openCropDB(myProject.dbCropName);
+    openSoilDB(myProject.dbSoilName);
 
     this->cropListComboBox.blockSignals(false);
     this->soilListComboBox.blockSignals(false);
@@ -564,12 +561,12 @@ void Crit3DCropWidget::on_actionOpenProject()
     this->firstYearListComboBox.blockSignals(true);
     this->lastYearListComboBox.blockSignals(true);
 
-    openMeteoDB(dbMeteoName);
+    openMeteoDB(myProject.dbMeteoName);
 
     this->firstYearListComboBox.blockSignals(false);
     this->lastYearListComboBox.blockSignals(false);
 
-    openUnitsDB(dbUnitsName);
+    openComputationUnitsDB(myProject.dbComputationUnitsName);
     viewMenu->setEnabled(true);
     if (soilListComboBox.count() == 0)
     {
@@ -589,6 +586,149 @@ void Crit3DCropWidget::on_actionOpenProject()
     }
 
     isRedraw = true;
+}
+
+void Crit3DCropWidget::on_actionNewProject()
+{
+    DialogNewProject dialog;
+    if (dialog.result() != QDialog::Accepted)
+    {
+        return;
+    }
+    else
+    {
+        QString dataPath;
+        QString projectName = dialog.getProjectName();
+        projectName = projectName.simplified().remove(' ');
+        if (searchDataPath(&dataPath))
+        {
+            QString completePath = dataPath+PATH_PROJECT+projectName;
+            if(!QDir().mkdir(completePath))
+            {
+                QMessageBox::StandardButton confirm;
+                QString msg = "Project " + completePath + " already exists, do you want to overwrite it?";
+                confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::Yes);
+
+                if (confirm == QMessageBox::Yes)
+                {
+                    clearDir(completePath);
+                    QDir().mkdir(completePath+"/data");
+                }
+                else
+                {
+                    return;
+                }
+            }
+            else
+            {
+                QDir().mkdir(completePath+"/data");
+            }
+            // copy template computational units
+            if (!QFile::copy(dataPath + PATH_TEMPLATE + "template_comp_units.db",
+                             completePath + "/data/" + "comp_units.db"))
+            {
+                QMessageBox::critical(nullptr, "Error", "Copy failed: template_comp_units.db");
+                return;
+            }
+            QString db_soil, db_meteo, db_crop;
+            // db soil
+            if (dialog.getSoilDbOption() == NEW_DB)
+            {
+                db_soil = "soil.db";
+                if (!QFile::copy(dataPath + PATH_TEMPLATE + "template_soil.db", completePath + "/data/" + db_soil))
+                {
+                    QMessageBox::critical(nullptr, "Error", "Copy failed: template_soil.db");
+                    return;
+                }
+            }
+            else if (dialog.getSoilDbOption() == DEFAULT_DB)
+            {
+                db_soil = "soil_ER_2002.db";
+                if (!QFile::copy(dataPath+"SOIL/soil_ER_2002.db", completePath+"/data/"+db_soil))
+                {
+                    QMessageBox::critical(nullptr, "Error in copy soil_ER_2002.db", "Copy failed");
+                    return;
+                }
+            }
+            else if (dialog.getSoilDbOption() == CHOOSE_DB)
+            {
+                QString soilPath = dialog.getDbSoilCompletePath();
+                db_soil = QFileInfo(soilPath).baseName()+".db";
+                if (!QFile::copy(soilPath, completePath+"/data/"+db_soil))
+                {
+                    QMessageBox::critical(nullptr, "Error in copy "+soilPath, "Copy failed");
+                    return;
+                }
+            }
+            // db meteo
+            if (dialog.getMeteoDbOption() == NEW_DB)
+            {
+                db_meteo = "meteo.db";
+                if (!QFile::copy(dataPath+PATH_TEMPLATE+"template_meteo.db", completePath+"/data/"+db_meteo))
+                {
+                    QMessageBox::critical(nullptr, "Error in copy template_meteo.db", "Copy failed");
+                    return;
+                }
+            }
+            else if (dialog.getMeteoDbOption() == DEFAULT_DB)
+            {
+                db_meteo = "meteo.db";
+                if (!QFile::copy(dataPath+PATH_PROJECT+"test/data/meteo.db", completePath+"/data/"+db_meteo))
+                {
+                    QMessageBox::critical(nullptr, "Error in copy meteo.db", "Copy failed");
+                    return;
+                }
+            }
+            else if (dialog.getMeteoDbOption() == CHOOSE_DB)
+            {
+                QString meteoPath = dialog.getDbMeteoCompletePath();
+                db_meteo = QFileInfo(meteoPath).baseName()+".db";
+                if (!QFile::copy(meteoPath, completePath+"/data/"+db_meteo))
+                {
+                    QMessageBox::critical(nullptr, "Error in copy "+meteoPath, "Copy failed");
+                    return;
+                }
+            }
+            // db crop
+            if (dialog.getCropDbOption() == DEFAULT_DB)
+            {
+                db_crop = "crop.db";
+                if (!QFile::copy(dataPath+PATH_TEMPLATE+"crop_default.db", completePath+"/data/"+"crop.db"))
+                {
+                    QMessageBox::critical(nullptr, "Error", "Copy failed: crop_default.db");
+                    return;
+                }
+            }
+            else if (dialog.getCropDbOption() == CHOOSE_DB)
+            {
+                QString cropPath = dialog.getDbCropCompletePath();
+                db_crop = QFileInfo(cropPath).baseName()+".db";
+                if (!QFile::copy(cropPath, completePath+"/data/"+db_crop))
+                {
+                    QMessageBox::critical(nullptr, "Error in copy "+cropPath, "Copy failed");
+                    return;
+                }
+            }
+            // write .ini
+            QSettings* projectSetting = new QSettings(dataPath+PATH_PROJECT+projectName+"/"+projectName+".ini", QSettings::IniFormat);
+            projectSetting->beginGroup("software");
+                    projectSetting->setValue("software", "CRITERIA1D");
+            projectSetting->endGroup();
+            projectSetting->beginGroup("project");
+                    projectSetting->setValue("path", "./");
+                    projectSetting->setValue("name", projectName);
+                    projectSetting->setValue("db_soil", "./data/"+db_soil);
+                    projectSetting->setValue("db_meteo", "./data/"+db_meteo);
+                    projectSetting->setValue("db_crop", "./data/"+db_crop);
+                    projectSetting->setValue("db_comp_units", "./data/comp_units.db");
+                    projectSetting->setValue("db_output", "./output/"+projectName+".db");
+            projectSetting->endGroup();
+            projectSetting->sync();
+
+        }
+
+        QMessageBox::information(nullptr, "Success", "project created: " + dataPath+PATH_PROJECT+projectName);
+    }
 }
 
 
@@ -632,10 +772,10 @@ void Crit3DCropWidget::checkCropUpdate()
 }
 
 
-void Crit3DCropWidget::openUnitsDB(QString dbUnitsName)
+void Crit3DCropWidget::openComputationUnitsDB(QString dbComputationUnitsName)
 {  
     QString error;
-    if (! readUnitList(dbUnitsName, unitList, error))
+    if (! readComputationUnitList(dbComputationUnitsName, myProject.compUnitList, error))
     {
         QMessageBox::critical(nullptr, "Error in DB Units:", error);
         return;
@@ -646,9 +786,9 @@ void Crit3DCropWidget::openUnitsDB(QString dbUnitsName)
     this->caseListComboBox.clear();
     this->caseListComboBox.blockSignals(false);
 
-    for (unsigned int i = 0; i < unitList.size(); i++)
+    for (unsigned int i = 0; i < myProject.compUnitList.size(); i++)
     {
-        this->caseListComboBox.addItem(unitList[i].idCase);
+        this->caseListComboBox.addItem(myProject.compUnitList[i].idCase);
     }
 }
 
@@ -665,15 +805,15 @@ void Crit3DCropWidget::openCropDB(QString newDbCropName)
     clearCrop();
 
     QString error;
-    if (! openDbCrop(&dbCrop, newDbCropName, &error))
+    if (! openDbCrop(&(myProject.dbCrop), newDbCropName, &error))
     {
         QMessageBox::critical(nullptr, "Error DB crop", error);
         return;
     }
 
     // read crop list
-    QStringList cropStringList;
-    if (! getCropIdList(&dbCrop, &cropStringList, &error))
+    QList<QString> cropStringList;
+    if (! getCropIdList(&(myProject.dbCrop), &cropStringList, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
         return;
@@ -701,9 +841,9 @@ void Crit3DCropWidget::on_actionOpenMeteoDB()
     else
     {
         if (dbMeteoName.right(3) == "xml")
-            isXmlMeteoGrid = true;
+            myProject.isXmlMeteoGrid = true;
         else
-            isXmlMeteoGrid = false;
+            myProject.isXmlMeteoGrid = false;
         openMeteoDB(dbMeteoName);
     }
 }
@@ -714,7 +854,7 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
 
     QString error;
     QStringList idMeteoList;
-    if (isXmlMeteoGrid)
+    if (myProject.isXmlMeteoGrid)
     {
         if (! xmlMeteoGrid.parseXMLGrid(dbMeteoName, &error))
         {
@@ -726,7 +866,7 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
             QMessageBox::critical(nullptr, "Error DB Grid", error);
             return;
         }
-        dbMeteo = xmlMeteoGrid.db();
+        myProject.dbMeteo = xmlMeteoGrid.db();
 
         if (!xmlMeteoGrid.idDailyList(&error, &idMeteoList))
         {
@@ -736,14 +876,14 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
     }
     else
     {
-        if (! openDbMeteo(dbMeteoName, &dbMeteo, &error))
+        if (! openDbMeteo(dbMeteoName, &(myProject.dbMeteo), &error))
         {
             QMessageBox::critical(nullptr, "Error DB meteo", error);
             return;
         }
 
         // read id_meteo list
-        if (! getMeteoPointList(&dbMeteo, &idMeteoList, &error))
+        if (! getMeteoPointList(&(myProject.dbMeteo), &idMeteoList, &error))
         {
             QMessageBox::critical(nullptr, "Error!", error);
             return;
@@ -794,21 +934,21 @@ void Crit3DCropWidget::on_actionOpenSoilDB()
 void Crit3DCropWidget::openSoilDB(QString dbSoilName)
 {
     QString error;
-    if (! openDbSoil(dbSoilName, &dbSoil, &error))
+    if (! openDbSoil(dbSoilName, &(myProject.dbSoil), &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
         return;
     }
 
     // load default VG parameters
-    if (! loadVanGenuchtenParameters(&dbSoil, textureClassList, &error))
+    if (! loadVanGenuchtenParameters(&(myProject.dbSoil), myProject.soilTexture, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
         return;
     }
 
     // load default Driessen parameters
-    if (! loadDriessenParameters(&dbSoil, textureClassList, &error))
+    if (! loadDriessenParameters(&(myProject.dbSoil), myProject.soilTexture, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
         return;
@@ -816,7 +956,7 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
 
     // read soil list
     QStringList soilStringList;
-    if (! getSoilList(&dbSoil, &soilStringList, &error))
+    if (! getSoilList(&(myProject.dbSoil), &soilStringList, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
         return;
@@ -848,6 +988,25 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
 }
 
 
+void Crit3DCropWidget::on_actionExecuteCase()
+{
+    if (! myProject.isProjectLoaded)
+    {
+        QMessageBox::warning(nullptr, "Warning", "Open a project before.");
+        return;
+    }
+
+    if (!myProject.computeUnit(myCase.unit))
+    {
+        QMessageBox::critical(nullptr, "Error!", myProject.projectError);
+    }
+    else
+    {
+        QMessageBox::warning(nullptr, "Case executed: "+ myCase.unit.idCase, "Output:\n" + QDir().cleanPath(myProject.dbOutputName));
+    }
+}
+
+
 void Crit3DCropWidget::on_actionChooseCase()
 {
     isRedraw = false;
@@ -857,14 +1016,14 @@ void Crit3DCropWidget::on_actionChooseCase()
     int index = caseListComboBox.currentIndex();
     QString errorStr;
 
-    myCase.unit = unitList[index];
+    myCase.unit = myProject.compUnitList[unsigned(index)];
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
 
     // METEO
     meteoListComboBox.setCurrentText(myCase.unit.idMeteo);
 
     // CROP
-    myCase.unit.idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class", myCase.unit.idCropClass, &errorStr);
+    myCase.unit.idCrop = getCropFromClass(&(myProject.dbCrop), "crop_class", "id_class", myCase.unit.idCropClass, &errorStr);
     if (myCase.unit.idCrop != "")
     {
         cropListComboBox.setCurrentText(myCase.unit.idCrop);
@@ -877,7 +1036,7 @@ void Crit3DCropWidget::on_actionChooseCase()
     }
 
     // SOIL
-    myCase.unit.idSoil = getIdSoilString(&dbSoil, myCase.unit.idSoilNumber, &errorStr);
+    myCase.unit.idSoil = getIdSoilString(&(myProject.dbSoil), myCase.unit.idSoilNumber, &errorStr);
     if (myCase.unit.idSoil != "")
     {
         soilListComboBox.setCurrentText(myCase.unit.idSoil);
@@ -934,7 +1093,7 @@ void Crit3DCropWidget::on_actionChooseCrop(QString idCrop)
 void Crit3DCropWidget::updateCropParam(QString idCrop)
 {
     QString error;
-    if (!loadCropParameters(&dbCrop, idCrop, &(myCase.crop), &error))
+    if (!loadCropParameters(&(myProject.dbCrop), idCrop, &(myCase.crop), &error))
     {
         if (error.contains("Empty"))
         {
@@ -1053,7 +1212,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
     myCase.meteoPoint.setId(idMeteo.toStdString());
     QString error;
 
-    if (isXmlMeteoGrid)
+    if (myProject.isXmlMeteoGrid)
     {
         if (! xmlMeteoGrid.loadIdMeteoProperties(&error, idMeteo))
         {
@@ -1067,7 +1226,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
             return;
         }
         myCase.meteoPoint.latitude = lat;
-        tableMeteo = xmlMeteoGrid.tableDaily().prefix + idMeteo + xmlMeteoGrid.tableDaily().postFix;
+        meteoTableName = xmlMeteoGrid.tableDaily().prefix + idMeteo + xmlMeteoGrid.tableDaily().postFix;
         if (!xmlMeteoGrid.getYearList(&error, idMeteo, &yearList))
         {
             QMessageBox::critical(nullptr, "Error!", error);
@@ -1084,7 +1243,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
             for (int i = 0; i<yearList.size()-1; i++)
             {
 
-                    if ( !checkYearMeteoGridFixedFields(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
+                    if ( !checkYearMeteoGridFixedFields(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
                     {
                         yearList.removeAt(pos);
                         i = i - 1;
@@ -1095,7 +1254,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
                     }
             }
             // store last Date
-            getLastDateGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &lastDBMeteoDate, &error);
+            getLastDateGrid(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &(myProject.lastSimulationDate), &error);
         }
         else
         {
@@ -1113,7 +1272,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
             for (int i = 0; i<yearList.size()-1; i++)
             {
 
-                    if ( !checkYearMeteoGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, varCodeTmin, varCodeTmax, varCodePrec, yearList[i], &error))
+                    if ( !checkYearMeteoGrid(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, varCodeTmin, varCodeTmax, varCodePrec, yearList[i], &error))
                     {
                         yearList.removeAt(pos);
                         i = i - 1;
@@ -1124,20 +1283,20 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
                     }
              }
             // store last Date
-            getLastDateGrid(dbMeteo, tableMeteo, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &lastDBMeteoDate, &error);
+            getLastDateGrid(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &myProject.lastSimulationDate, &error);
         }
     }
     else
     {
         QString lat,lon;
-        if (getLatLonFromIdMeteo(&dbMeteo, idMeteo, &lat, &lon, &error))
+        if (getLatLonFromIdMeteo(&(myProject.dbMeteo), idMeteo, &lat, &lon, &error))
         {
             myCase.meteoPoint.latitude = lat.toDouble();
         }
 
-        tableMeteo = getTableNameFromIdMeteo(&dbMeteo, idMeteo, &error);
+        meteoTableName = getTableNameFromIdMeteo(&(myProject.dbMeteo), idMeteo, &error);
 
-        if (!getYearList(&dbMeteo, tableMeteo, &yearList, &error))
+        if (!getYearList(&(myProject.dbMeteo), meteoTableName, &yearList, &error))
         {
             QMessageBox::critical(nullptr, "Error!", error);
             return;
@@ -1148,7 +1307,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
         // last year can be incomplete
         for (int i = 0; i<yearList.size()-1; i++)
         {
-            if ( !checkYear(&dbMeteo, tableMeteo, yearList[i], &error))
+            if ( !checkYear(&(myProject.dbMeteo), meteoTableName, yearList[i], &error))
             {
                 yearList.removeAt(pos);
                 i = i - 1;
@@ -1159,7 +1318,7 @@ void Crit3DCropWidget::on_actionChooseMeteo(QString idMeteo)
             }
         }
         // store last Date
-        getLastDate(&dbMeteo, tableMeteo, yearList[yearList.size()-1], &lastDBMeteoDate, &error);
+        getLastDate(&(myProject.dbMeteo), meteoTableName, yearList[yearList.size()-1], &myProject.lastSimulationDate, &error);
     }
     if (yearList.size() == 1)
     {
@@ -1242,7 +1401,7 @@ void Crit3DCropWidget::updateMeteoPointValues()
     }
     myCase.meteoPoint.initializeObsDataD(numberDays, getCrit3DDate(firstDate));
 
-    if (isXmlMeteoGrid)
+    if (myProject.isXmlMeteoGrid)
     {
         unsigned row;
         unsigned col;
@@ -1272,7 +1431,7 @@ void Crit3DCropWidget::updateMeteoPointValues()
             }
         }
         float tmin, tmax, tavg, prec, waterDepth;
-        for (int i = 0; i < firstDate.daysTo(QDate(lastDate.year(),12,31))+1; i++)
+        for (int i = 0; i < (firstDate.daysTo(QDate(lastDate.year(), 12, 31)) + 1); i++)
         {
             Crit3DDate myDate = getCrit3DDate(firstDate.addDays(i));
             tmin = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
@@ -1282,9 +1441,9 @@ void Crit3DCropWidget::updateMeteoPointValues()
             myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMax, tmax);
 
             tavg = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
-            if (tavg == NODATA)
+            if (isEqual(tavg, NODATA))
             {
-                tavg = (tmax + tmin)/2;
+                tavg = (tmax + tmin) / 2;
             }
             myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureAvg, tavg);
 
@@ -1315,7 +1474,7 @@ void Crit3DCropWidget::updateMeteoPointValues()
     {
         if (onlyOneYear)
         {
-            if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(lastYear), &error))
+            if (!fillDailyTempPrecCriteria1D(&(myProject.dbMeteo), meteoTableName, &(myCase.meteoPoint), QString::number(lastYear), &error))
             {
                 QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
                 return;
@@ -1339,7 +1498,8 @@ void Crit3DCropWidget::updateMeteoPointValues()
             // fill meteoPoint
             for (int year = firstYear; year <= lastYear; year++)
             {
-                if (!fillDailyTempPrecCriteria1D(&dbMeteo, tableMeteo, &(myCase.meteoPoint), QString::number(year), &error))
+                if (!fillDailyTempPrecCriteria1D(&(myProject.dbMeteo), meteoTableName,
+                                                 &(myCase.meteoPoint), QString::number(year), &error))
                 {
                     QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
                     return;
@@ -1365,7 +1525,8 @@ void Crit3DCropWidget::on_actionChooseSoil(QString soilCode)
     QString error;
     myCase.mySoil.cleanSoil();
 
-    if (! loadSoil(&dbSoil, soilCode, &(myCase.mySoil), textureClassList, &(myCase.fittingOptions), &error))
+    if (! loadSoil(&(myProject.dbSoil), soilCode, &(myCase.mySoil),
+                  myProject.soilTexture, &(myCase.fittingOptions), &error))
     {
         if (error.contains("Empty"))
         {
@@ -1399,19 +1560,19 @@ void Crit3DCropWidget::on_actionDeleteCrop()
     QString msg;
     if (cropListComboBox.currentText().isEmpty())
     {
-        msg = "Select the soil to be deleted";
+        msg = "Select the crop to be deleted.";
         QMessageBox::information(nullptr, "Warning", msg);
     }
     else
     {
         QMessageBox::StandardButton confirm;
-        msg = "Are you sure you want to delete "+cropListComboBox.currentText()+" ?";
+        msg = "Are you sure you want to delete " + cropListComboBox.currentText() + " ?";
         confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
         QString error;
 
         if (confirm == QMessageBox::Yes)
         {
-            if (deleteCropData(&dbCrop, cropListComboBox.currentText(), &error))
+            if (deleteCropData(&(myProject.dbCrop), cropListComboBox.currentText(), &error))
             {
                 cropListComboBox.removeItem(cropListComboBox.currentIndex());
             }
@@ -1461,9 +1622,9 @@ void Crit3DCropWidget::on_actionSave()
 bool Crit3DCropWidget::saveCrop()
 {
     QString error;
-    if ( !updateCropLAIparam(&dbCrop, &(myCase.crop), &error)
-            || !updateCropRootparam(&dbCrop, &(myCase.crop), &error)
-            || !updateCropIrrigationparam(&dbCrop, &(myCase.crop), &error) )
+    if ( !updateCropLAIparam(&(myProject.dbCrop), &(myCase.crop), &error)
+            || !updateCropRootparam(&(myProject.dbCrop), &(myCase.crop), &error)
+            || !updateCropIrrigationparam(&(myProject.dbCrop), &(myCase.crop), &error) )
     {
         QMessageBox::critical(nullptr, "Update param failed!", error);
         return false;
@@ -1488,7 +1649,7 @@ void Crit3DCropWidget::on_actionUpdate()
         }
         else
         {
-            if (! myCase.mySoil.code.empty())
+            if ((! myCase.mySoil.code.empty()) && isRedraw)
             {
                 if (tabWidget->currentIndex() == 1)
                 {
@@ -1610,7 +1771,7 @@ bool Crit3DCropWidget::updateCrop()
 
 void Crit3DCropWidget::on_actionNewCrop()
 {
-    if (!dbCrop.isOpen())
+    if (!myProject.dbCrop.isOpen())
     {
         QString msg = "Open a Db Crop";
         QMessageBox::information(nullptr, "Warning", msg);
@@ -1636,7 +1797,10 @@ void Crit3DCropWidget::updateTabLAI()
 {
     if (!myCase.crop.idCrop.empty() && !myCase.meteoPoint.id.empty())
     {
-        tabLAI->computeLAI(&(myCase.crop), &(myCase.meteoPoint), firstYearListComboBox.currentText().toInt(), lastYearListComboBox.currentText().toInt(), lastDBMeteoDate, myCase.soilLayers);
+        tabLAI->computeLAI(&(myCase.crop), &(myCase.meteoPoint),
+                           firstYearListComboBox.currentText().toInt(),
+                           lastYearListComboBox.currentText().toInt(),
+                           myProject.lastSimulationDate, myCase.soilLayers);
     }
 }
 
@@ -1644,7 +1808,10 @@ void Crit3DCropWidget::updateTabRootDepth()
 {
     if (!myCase.crop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
     {
-        tabRootDepth->computeRootDepth(&(myCase.crop), &(myCase.meteoPoint), firstYearListComboBox.currentText().toInt(), lastYearListComboBox.currentText().toInt(), lastDBMeteoDate, myCase.soilLayers);
+        tabRootDepth->computeRootDepth(&(myCase.crop), &(myCase.meteoPoint),
+                                       firstYearListComboBox.currentText().toInt(),
+                                       lastYearListComboBox.currentText().toInt(),
+                                       myProject.lastSimulationDate, myCase.soilLayers);
     }
 }
 
@@ -1652,7 +1819,10 @@ void Crit3DCropWidget::updateTabRootDensity()
 {
     if (!myCase.crop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
     {
-        tabRootDensity->computeRootDensity(&(myCase.crop), &(myCase.meteoPoint), firstYearListComboBox.currentText().toInt(), lastYearListComboBox.currentText().toInt(), lastDBMeteoDate, myCase.soilLayers);
+        tabRootDensity->computeRootDensity(&(myCase.crop), &(myCase.meteoPoint),
+                                           firstYearListComboBox.currentText().toInt(),
+                                           lastYearListComboBox.currentText().toInt(),
+                                           myProject.lastSimulationDate, myCase.soilLayers);
     }
 }
 
@@ -1660,7 +1830,9 @@ void Crit3DCropWidget::updateTabIrrigation()
 {
     if (!myCase.crop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
     {
-        tabIrrigation->computeIrrigation(myCase, firstYearListComboBox.currentText().toInt(), lastYearListComboBox.currentText().toInt(), lastDBMeteoDate);
+        tabIrrigation->computeIrrigation(myCase, firstYearListComboBox.currentText().toInt(),
+                                         lastYearListComboBox.currentText().toInt(),
+                                         myProject.lastSimulationDate);
     }
 }
 
@@ -1668,7 +1840,9 @@ void Crit3DCropWidget::updateTabWaterContent()
 {
     if (!myCase.crop.idCrop.empty() && !myCase.meteoPoint.id.empty() && !myCase.mySoil.code.empty())
     {
-        tabWaterContent->computeWaterContent(myCase, firstYearListComboBox.currentText().toInt(), lastYearListComboBox.currentText().toInt(), lastDBMeteoDate, volWaterContent->isChecked());
+        tabWaterContent->computeWaterContent(myCase, firstYearListComboBox.currentText().toInt(),
+                                             lastYearListComboBox.currentText().toInt(),
+                                             myProject.lastSimulationDate, volWaterContent->isChecked());
     }
 }
 
@@ -1808,14 +1982,26 @@ bool Crit3DCropWidget::checkIfCropIsChanged()
     // water needs
     if( cropFromDB.kcMax != maxKcValue->text().toDouble()
        || cropFromDB.psiLeaf != psiLeafValue->text().toDouble()
-       || cropFromDB.fRAW != rawFractionValue->value()
-       || cropFromDB.stressTolerance != stressToleranceValue->value() )
+       || ! isEqual(cropFromDB.fRAW, rawFractionValue->value())
+       || ! isEqual(cropFromDB.stressTolerance, stressToleranceValue->value()) )
     {
         cropChanged = true;
         return cropChanged;
     }
 
-    // TODO check irrigation parameters
+    // irrigation parameters
+    // TODO gestire caso irrigazioni azzerate
+    if(irrigationShiftValue->isVisible())
+    {
+        if( cropFromDB.irrigationVolume != irrigationVolumeValue->text().toDouble()
+           || cropFromDB.irrigationShift != irrigationShiftValue->value()
+           || cropFromDB.degreeDaysStartIrrigation != degreeDaysStartValue->text().toInt()
+           || cropFromDB.degreeDaysEndIrrigation != degreeDaysEndValue->text().toInt() )
+        {
+            cropChanged = true;
+            return cropChanged;
+        }
+    }
 
     cropChanged = false;
     return cropChanged;
@@ -1835,11 +2021,11 @@ void Crit3DCropWidget::irrigationVolumeChanged()
     else if (irrigationVolumeValue->text().toDouble() > 0)
     {
         irrigationShiftValue->setEnabled(true);
-        irrigationShiftValue->setValue(myCase.crop.irrigationShift);
+        irrigationShiftValue->setValue(cropFromDB.irrigationShift);
         degreeDaysStartValue->setEnabled(true);
-        degreeDaysStartValue->setText(QString::number(myCase.crop.degreeDaysStartIrrigation));
+        degreeDaysStartValue->setText(QString::number(cropFromDB.degreeDaysStartIrrigation));
         degreeDaysEndValue->setEnabled(true);
-        degreeDaysEndValue->setText(QString::number(myCase.crop.degreeDaysEndIrrigation));
+        degreeDaysEndValue->setText(QString::number(cropFromDB.degreeDaysEndIrrigation));
     }
 }
 
@@ -1854,8 +2040,8 @@ bool Crit3DCropWidget::setMeteoSqlite(QString* error)
     if (myCase.meteoPoint.id.empty())
         return false;
 
-    QString queryString = "SELECT * FROM '" + tableMeteo + "' ORDER BY [date]";
-    QSqlQuery query = this->dbMeteo.exec(queryString);
+    QString queryString = "SELECT * FROM '" + meteoTableName + "' ORDER BY [date]";
+    QSqlQuery query = myProject.dbMeteo.exec(queryString);
     query.last();
 
     if (! query.isValid())
@@ -1863,7 +2049,7 @@ bool Crit3DCropWidget::setMeteoSqlite(QString* error)
         if (query.lastError().text() != "")
             *error = "dbMeteo error: " + query.lastError().text();
         else
-            *error = "Missing meteo table:" + tableMeteo;
+            *error = "Missing meteo table:" + meteoTableName;
         return false;
     }
 
@@ -1878,9 +2064,9 @@ bool Crit3DCropWidget::setMeteoSqlite(QString* error)
     if (subQuery)
     {
         query.clear();
-        queryString = "SELECT * FROM '" + tableMeteo + "' WHERE date BETWEEN '"
+        queryString = "SELECT * FROM '" + meteoTableName + "' WHERE date BETWEEN '"
                     + firstDate.toString("yyyy-MM-dd") + "' AND '" + lastDate.toString("yyyy-MM-dd") + "'";
-        query = this->dbMeteo.exec(queryString);
+        query = myProject.dbMeteo.exec(queryString);
     }
 
     // Initialize data
@@ -1896,30 +2082,21 @@ bool Crit3DCropWidget::setMeteoSqlite(QString* error)
 
 void Crit3DCropWidget::on_actionViewWeather()
 {
-    QString dataPath, settingsPath;
     QString error;
-    if (searchDataPath(&dataPath))
-    {
-        settingsPath = dataPath + "SETTINGS";
-    }
-    else
-    {
-        QMessageBox::critical(nullptr, "error", "missing SETTINGS folder");
-        return;
-    }
     if (!setMeteoSqlite(&error))
     {
         QMessageBox::critical(nullptr, "error", error);
         return;
     }
-    Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(isXmlMeteoGrid, settingsPath);
-    meteoWidgetPoint->draw(myCase.meteoPoint);
+
+    Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(myProject.isXmlMeteoGrid, myProject.path, &meteoSettings);
+    meteoWidgetPoint->draw(myCase.meteoPoint, false);
 }
 
 
 void Crit3DCropWidget::on_actionViewSoil()
 {
     Crit3DSoilWidget* soilWidget = new Crit3DSoilWidget();
-    soilWidget->setDbSoil(dbSoil, soilListComboBox.currentText());
+    soilWidget->setDbSoil(myProject.dbSoil, soilListComboBox.currentText());
 }
 

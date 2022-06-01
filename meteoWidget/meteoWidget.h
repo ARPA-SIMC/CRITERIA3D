@@ -13,12 +13,12 @@
         Q_OBJECT
 
         public:
-            Crit3DMeteoWidget(bool isGrid, QString projectPath);
-            ~Crit3DMeteoWidget();
+            Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMeteoSettings* meteoSettings_);
+            ~Crit3DMeteoWidget() override;
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
             void setDateInterval(QDate date0, QDate date1);
-            void draw(Crit3DMeteoPoint mp);
+            void draw(Crit3DMeteoPoint mp, bool isAppend);
             void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
             void drawEnsemble();
             void resetValues();
@@ -38,7 +38,7 @@
             bool computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state);
             void tooltipBar(bool state, int index, QBarSet *barset);
             void handleMarkerClicked();
-            void closeEvent(QCloseEvent *event);
+            void closeEvent(QCloseEvent *event) override;
             void setIsEnsemble(bool value);
             bool getIsEnsemble();
             void setNrMembers(int value);
@@ -51,6 +51,7 @@
             bool isGrid;
             bool isEnsemble;
             int nrMembers;
+            Crit3DMeteoSettings* meteoSettings;
             QPushButton *addVarButton;
             QPushButton *dailyButton;
             QPushButton *hourlyButton;
@@ -66,11 +67,11 @@
             QBarCategoryAxis *axisXvirtual;
             QValueAxis *axisY;
             QValueAxis *axisYdx;
-            QMap<QString, QStringList> MapCSVDefault;
-            QMap<QString, QStringList> MapCSVStyles;
-            QStringList currentVariables;
-            QStringList nameLines;
-            QStringList nameBar;
+            QMap<QString, QList<QString>> MapCSVDefault;
+            QMap<QString, QList<QString>> MapCSVStyles;
+            QList<QString> currentVariables;
+            QList<QString> nameLines;
+            QList<QString> nameBar;
             double maxEnsembleBar;
             double maxEnsembleLine;
             double minEnsembleLine;
@@ -81,8 +82,8 @@
             QVector<QBoxPlotSeries*> ensembleSeries;
             QVector<QList<QBoxSet*>> ensembleSet;
             QVector<QVector<QBarSet*>> setVector;
-            QStringList categories;
-            QStringList categoriesVirtual;
+            QList<QString> categories;
+            QList<QString> categoriesVirtual;
             QVector<Crit3DMeteoPoint> meteoPoints;
             QVector<Crit3DMeteoPoint> meteoPointsEnsemble;
             frequencyType currentFreq;

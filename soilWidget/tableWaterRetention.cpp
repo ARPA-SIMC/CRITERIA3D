@@ -32,7 +32,7 @@ void TableWaterRetention::keyPressEvent(QKeyEvent *event){
                 QItemSelectionRange range = selectionModel()->selection().first();
                 for (auto i = range.top(); i <= range.bottom(); ++i)
                 {
-                    QStringList rowContents;
+                    QList<QString> rowContents;
                     for (auto j = range.left(); j <= range.right(); ++j)
                         rowContents << model()->index(i,j).data().toString();
                     text += rowContents.join("\t");
@@ -44,7 +44,11 @@ void TableWaterRetention::keyPressEvent(QKeyEvent *event){
         {
 
             QString text = QApplication::clipboard()->text();
-            QStringList rowContents = text.split("\n", QString::SkipEmptyParts);
+            #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+                QList<QString> rowContents = text.split("\n", Qt::SkipEmptyParts);
+            #else
+                QList<QString> rowContents = text.split("\n", QString::SkipEmptyParts);
+            #endif
 
             QModelIndex initIndex = selectedIndexes().at(0);
             auto initRow = initIndex.row();
@@ -52,7 +56,7 @@ void TableWaterRetention::keyPressEvent(QKeyEvent *event){
 
             for (auto i = 0; i < rowContents.size(); ++i)
             {
-                QStringList columnContents = rowContents.at(i).split("\t");
+                QList<QString> columnContents = rowContents.at(i).split("\t");
                 if (columnContents.size() == 1)
                 {
                     model()->setData(model()->index(initRow + i, initCol), columnContents[0]);

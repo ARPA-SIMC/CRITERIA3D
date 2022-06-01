@@ -1,6 +1,8 @@
 
 #include "vite.h"
 
+#include "math.h"
+#include <algorithm>
 
 double Vite::GradiGiorno(const long& i, const Stazione& stazione)
 {
@@ -9,11 +11,11 @@ double Vite::GradiGiorno(const long& i, const Stazione& stazione)
 	double gradiGiorno = 0.;
 
     if( stazione.Tn(i) < Ts && stazione.Tx(i) > Ts )
-		gradiGiorno += __max( static_cast<double>(0.),
+        gradiGiorno += std::max( static_cast<double>(0.),
 							 .5 * ( stazione.Tx(i) - Ts ) * ( stazione.Tx(i) - Ts ) /
 							 ( stazione.Tx(i) - stazione.Tn(i) ) );
     else
-		gradiGiorno += __max( static_cast<double>(0.),
+        gradiGiorno += std::max( static_cast<double>(0.),
 							  .5 * ( stazione.Tx(i) + stazione.Tn(i) ) - Ts );
 
 	return gradiGiorno;

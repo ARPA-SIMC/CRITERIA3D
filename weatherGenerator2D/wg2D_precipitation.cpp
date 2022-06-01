@@ -364,7 +364,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
            {
                bins[i]=bins2[i];
                nrBins[i-1] = 0;
-               if (bins2[i] != NODATA)
+               if (fabs(bins2[i] - NODATA) > EPSILON)
                {
                    bincenter[i-1]= (bins2[i-1] + bins[i])*0.5; //?????
                    newCounter++;
@@ -385,7 +385,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
                    }
                }
                Pmean[i] /= nrBins[i];  // mean for each bin
-               if (parametersModel.distributionPrecipitation == 2)
+               if (parametersModel.distributionPrecipitation > 1)
                {
                    for (int j=0;j<numberObservedMax;j++)
                    {
@@ -432,7 +432,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
            int nrBincenter=0;
            for (int i=0;i<(lengthBins-1);i++)
            {
-               if(bincenter[i] != NODATA)
+               if(fabs(bincenter[i] - NODATA) > EPSILON)
                    nrBincenter++;
            }
            double* meanPFit = (double *) calloc(nrBincenter, sizeof(double));
@@ -447,15 +447,16 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
 
            interpolation::fittingMarquardt(parMin,parMax,par,nrPar,parDelta,maxIterations,epsilon,functionCode,binCenter,meanPFit,nrBincenter);
 
-           // con marquardt stimo già tutti i parametri compreso l'esponente quindi il ciclo
-           // for da 2 a 20 (presente nel codice originale) risulta inutile nel codice tradotto
+           // Unless the original Mulgets, in this version we make use of Marquardt algorithm for best fitting
+           // of all parameters. For this reason the "for" cycle from
+           // from 2 to 20 to get the best exponent has not been translated
            for (int i=0;i<nrBincenter;i++)
            {
                meanPFit[i] = par[0]+par[1]* pow(binCenter[i],par[2]);
            }
 
 
-           if (parametersModel.distributionPrecipitation == 2)
+           if (parametersModel.distributionPrecipitation >1 )
            {
                interpolation::fittingMarquardt(parMin,parMax,par,nrPar,parDelta,maxIterations,epsilon,functionCode,binCenter,stdDevFit,nrBincenter);
 
@@ -511,7 +512,7 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
 
                    moranArray[i] += occurrenceMatrixSeason[j][i]* wSeason[ijk][j];
                }
-               if (weightSum == 0) moranArray[i] = 0;
+               if (fabs(weightSum) < EPSILON) moranArray[i] = 0;
                else moranArray[i] /= weightSum;
                if (occurrenceMatrixSeason[ijk][i] > (ONELESSEPSILON)) counterMoranPrec++ ;
 
@@ -599,17 +600,42 @@ void weatherGenerator2D::precipitationMultiDistributionParameterization()
            {
                for (int i=0;i<nrBincenter;i++)
                {
-                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][0]=meanPFit[i]*meanPFit[i]/(PstdDev[i]*PstdDev[i]);
+                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][0]= meanPFit[i]*meanPFit[i]/(PstdDev[i]*PstdDev[i]);
                    occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][1]=(PstdDev[i]*PstdDev[i])/meanPFit[i];
                }
            }
+           else if (parametersModel.distributionPrecipitation == 3)
+           {
+               for (int i=0;i<nrBincenter;i++)
+               {
+
+                   double mean,variance;
+                   double lambdaWeibull,kappaWeibull;
+                   double rightBound,leftBound;
+                   rightBound = 10;
+                   leftBound = 0.2;
+                   mean = meanPFit[i];
+                   variance = PstdDev[i]*PstdDev[i];
+                   parametersWeibullFromObservations(mean,variance, &lambdaWeibull,&kappaWeibull,leftBound,rightBound);
+                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][0] = mean;
+                   //kappaWeibull = 1.333333333;
+                   double testVarianceWeibull,testVarianceWeibull2;
+                   testVarianceWeibull = varianceValueWeibull(mean,kappaWeibull);
+                   occurrenceIndexSeasonal[ijk].parMultiexp[qq][i][1] = kappaWeibull+0.4;
+                   testVarianceWeibull2 = varianceValueWeibull(mean,kappaWeibull+0.4);
+                   //printf("%f  %f\n",testVarianceWeibull,testVarianceWeibull2);
+                   //pressEnterToContinue();
+               }
+           }
+
+
 
            for (int i=0;i<nrBincenter;i++)
            {
                occurrenceIndexSeasonal[ijk].meanP[qq][i] = Pmean[i];
                occurrenceIndexSeasonal[ijk].meanFit[qq][i] = meanFit[i];
                occurrenceIndexSeasonal[ijk].binCenter[qq][i] = binCenter[i];
-               if (parametersModel.distributionPrecipitation == 2)
+               if (parametersModel.distributionPrecipitation > 1)
                {
                    occurrenceIndexSeasonal[ijk].stdDevP[qq][i] = PstdDev[i];
                    occurrenceIndexSeasonal[ijk].stdDevFit[qq][i] = stdDevFit[i];
@@ -884,17 +910,59 @@ void weatherGenerator2D::precipitationMultisiteAmountsGeneration()
                    if ((moranRandom[i][j] > occurrenceIndexSeasonal[i].bin[iSeason][k]) && (moranRandom[i][j] <= occurrenceIndexSeasonal[i].bin[iSeason][k+1]))
                    {
                        phatAlpha[i][j] = occurrenceIndexSeasonal[i].parMultiexp[iSeason][k][0];
-                       if (parametersModel.distributionPrecipitation == 2)
+                       if (parametersModel.distributionPrecipitation > 1)
                        {
                            phatBeta[i][j] = occurrenceIndexSeasonal[i].parMultiexp[iSeason][k][1];
                        }
                    }
-
                }
+          }
+     }
+    /*
+     if (parametersModel.distributionPrecipitation == 3)
+     {
+         for (int i=0;i<nrStations;i++)
+         {
+            for (int j=0;j<lengthSeason[iSeason]*parametersModel.yearOfSimulation;j++)
+            {
+                 if (iSeason == 0)
+                 {
+                    int indexDay;
+                    indexDay = lengthSeason[iSeason]*parametersModel.yearOfSimulation;
+                    indexDay = (j%lengthSeason[iSeason])-31;
+                    if (indexDay < 0) indexDay += 365;
+                    phatAlpha[i][j] = weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = weibullDailyParameterKappa[i][indexDay];
+                 }
+                 if (iSeason == 1)
+                 {
+                    int indexDay;
+                    indexDay = (j%lengthSeason[iSeason])+59;
 
+                    phatAlpha[i][j] = weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = weibullDailyParameterKappa[i][indexDay];
+                 }
+                 if (iSeason == 2)
+                 {
+                    int indexDay;
+                    indexDay = (j%lengthSeason[iSeason])+151;
+
+                    phatAlpha[i][j] = weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = weibullDailyParameterKappa[i][indexDay];
+                 }
+                 if (iSeason == 3)
+                 {
+                    int indexDay;
+                    indexDay = (j%lengthSeason[iSeason])+243;
+
+                    phatAlpha[i][j] = weibullDailyParameterLambda[i][indexDay];
+                    phatBeta[i][j] = weibullDailyParameterKappa[i][indexDay];
+                 }
+
+             }
           }
       }
-
+    */
       for (int j=0;j<lengthSeason[iSeason]*parametersModel.yearOfSimulation;j++)
       {
           for (int i=0;i<nrStations;i++)
@@ -1303,9 +1371,15 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
                    }
                    else if (parametersModel.distributionPrecipitation == 2)
                    {
-                       simulatedPrecipitationAmountsSeasonal[i][j] = weatherGenerator2D::inverseGammaFunction(uniformRandomVar,phatAlpha[i][j],phatBeta[i][j],0.0001) + parametersModel.precipitationThreshold;
+                       simulatedPrecipitationAmountsSeasonal[i][j] = inverseGammaCumulativeDistributionFunction(uniformRandomVar,phatAlpha[i][j],phatBeta[i][j],0.0001) + parametersModel.precipitationThreshold;
                    }
-
+                   else if (parametersModel.distributionPrecipitation == 3)
+                   {
+                        //simulatedPrecipitationAmountsSeasonal[i][j] = phatAlpha[i][j]*pow(-log(1-uniformRandomVar),1./phatBeta[i][j])+ parametersModel.precipitationThreshold;
+                        simulatedPrecipitationAmountsSeasonal[i][j] = phatAlpha[i][j]*pow(-log(1-uniformRandomVar),1./(phatBeta[i][j]))+ parametersModel.precipitationThreshold;
+                        //simulatedPrecipitationAmountsSeasonal[i][j] = 0.84* phatAlpha[i][j]*pow(-log(1-uniformRandomVar),1.0)+ parametersModel.precipitationThreshold;
+                        //simulatedPrecipitationAmountsSeasonal[i][j] =-log(1-uniformRandomVar)*phatAlpha[i][j]+ parametersModel.precipitationThreshold;
+                   }
                }
            }
        }
@@ -1393,7 +1467,7 @@ void weatherGenerator2D::spatialIterationAmounts(double** correlationMatrixSimul
 
 }
 
-
+/*
 double weatherGenerator2D::inverseGammaFunction(double valueProbability, double alpha, double beta, double accuracy)
 {
    double x;
@@ -1402,7 +1476,7 @@ double weatherGenerator2D::inverseGammaFunction(double valueProbability, double 
    double leftBound = 0.0;
    int counter = 0;
    do {
-       y = gammaDistributions::incompleteGamma(alpha,rightBound/beta);
+       y = incompleteGamma(alpha,rightBound/beta);
        if (valueProbability>y)
        {
            rightBound *= 2;
@@ -1412,7 +1486,7 @@ double weatherGenerator2D::inverseGammaFunction(double valueProbability, double 
    } while ((valueProbability>y));
 
    x = (rightBound + leftBound)*0.5;
-   y = gammaDistributions::incompleteGamma(alpha,x/beta);
+   y = incompleteGamma(alpha,x/beta);
    while ((fabs(valueProbability - y) > accuracy) && (counter < 200))
    {
        if (y > valueProbability)
@@ -1424,13 +1498,13 @@ double weatherGenerator2D::inverseGammaFunction(double valueProbability, double 
            leftBound = x;
        }
        x = (rightBound + leftBound)*0.5;
-       y = gammaDistributions::incompleteGamma(alpha,x/beta);
+       y = incompleteGamma(alpha,x/beta);
        ++counter;
    }
    x = (rightBound + leftBound)*0.5;
    return x;
 }
-
+*/
 
 void weatherGenerator2D::pressEnterToContinue()
 {
@@ -1443,7 +1517,7 @@ void weatherGenerator2D::createAmountOutputSerie()
 {
     //int dayOfYear;
     //int iSeason;
-    int day,month;
+    int day,monthInternal;
     double* january =(double*)calloc(31*parametersModel.yearOfSimulation, sizeof(double));
     double* february =(double*)calloc(28*parametersModel.yearOfSimulation, sizeof(double));
     double* march =(double*)calloc(31*parametersModel.yearOfSimulation, sizeof(double));
@@ -1520,66 +1594,66 @@ void weatherGenerator2D::createAmountOutputSerie()
 
             for(int i=0;i<parametersModel.yearOfSimulation*365;i++)
             {
-                dateFromDoy(i%365+1,1,&day,&month);
-                if ( month == 1)
+                dateFromDoy(i%365+1,1,&day,&monthInternal);
+                if ( monthInternal == 1)
                 {
-                    amountsPrecGenerated[i][j] = january[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = january[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 2)
+                if ( monthInternal == 2)
                 {
-                    amountsPrecGenerated[i][j] = february[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = february[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 3)
+                if ( monthInternal == 3)
                 {
-                    amountsPrecGenerated[i][j] = march[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = march[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 4)
+                if ( monthInternal == 4)
                 {
-                    amountsPrecGenerated[i][j] = april[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = april[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 5)
+                if ( monthInternal == 5)
                 {
-                    amountsPrecGenerated[i][j] = may[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = may[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 6)
+                if ( monthInternal == 6)
                 {
-                    amountsPrecGenerated[i][j] = june[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = june[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 7)
+                if ( monthInternal == 7)
                 {
-                    amountsPrecGenerated[i][j] = july[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = july[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 8)
+                if ( monthInternal == 8)
                 {
-                    amountsPrecGenerated[i][j] = august[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = august[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 9)
+                if ( monthInternal == 9)
                 {
-                    amountsPrecGenerated[i][j] = september[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = september[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 10)
+                if ( monthInternal == 10)
                 {
-                    amountsPrecGenerated[i][j] = october[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = october[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 11)
+                if ( monthInternal == 11)
                 {
-                    amountsPrecGenerated[i][j] = november[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = november[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
-                if ( month == 12)
+                if ( monthInternal == 12)
                 {
-                    amountsPrecGenerated[i][j] = december[count[month-1]];
-                    ++count[month-1];
+                    amountsPrecGenerated[i][j] = december[count[monthInternal-1]];
+                    ++count[monthInternal-1];
                 }
             }
     }

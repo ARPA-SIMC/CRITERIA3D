@@ -1,14 +1,10 @@
 /*!
-    CRITERIA3D
-
-    \copyright 2016 Fausto Tomei, Gabriele Antolini,
-    Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
-
-    You should have received a copy of the GNU General Public License
-    along with Nome-Programma.  If not, see <http://www.gnu.org/licenses/>.
+    \name crit3dTime.cpp
+    \copyright (C) 2016 Fausto Tomei, Gabriele Antolini, Antonio Volta,
+                        Alberto Pistocchi, Marco Bittelli, Laura Costantini
 
     This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
+    CRITERIA3D has been developed under contract issued by ARPAE Emilia-Romagna
 
     CRITERIA3D is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
@@ -24,8 +20,8 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     contacts:
-    fausto.tomei@gmail.com
     ftomei@arpae.it
+    gantolini@arpae.it
 */
 
 #include <math.h>

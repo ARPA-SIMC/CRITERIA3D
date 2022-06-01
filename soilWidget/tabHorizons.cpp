@@ -555,7 +555,7 @@ void TabHorizons::cellChanged(int row, int column)
     switch (column) {
         case 0:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.upperDepth = NODATA;
                 tableDb->item(row, column)->setText("");
@@ -569,7 +569,7 @@ void TabHorizons::cellChanged(int row, int column)
         }
         case 1:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.lowerDepth = NODATA;
                 tableDb->item(row, column)->setText("");
@@ -583,7 +583,7 @@ void TabHorizons::cellChanged(int row, int column)
         }
         case 2:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.sand = NODATA;
                 tableDb->item(row, column)->setText("");
@@ -597,7 +597,7 @@ void TabHorizons::cellChanged(int row, int column)
         }
         case 3:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.silt = NODATA;
                 tableDb->item(row, column)->setText("");
@@ -611,7 +611,7 @@ void TabHorizons::cellChanged(int row, int column)
         }
         case 4:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.clay = NODATA;
                 tableDb->item(row, column)->setText("");
@@ -625,7 +625,7 @@ void TabHorizons::cellChanged(int row, int column)
         }
         case 5:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.coarseFragments = NODATA;
                 tableDb->item(row, column)->setText("");
@@ -639,7 +639,7 @@ void TabHorizons::cellChanged(int row, int column)
         }
         case 6:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.organicMatter = NODATA;
                 tableDb->item(row, column)->setText("");
@@ -653,7 +653,7 @@ void TabHorizons::cellChanged(int row, int column)
         }
         case 7:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.bulkDensity = NODATA;
                 tableDb->item(row, column)->setText("");
@@ -667,7 +667,7 @@ void TabHorizons::cellChanged(int row, int column)
         }
         case 8:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.kSat = NODATA;
                 tableDb->item(row, column)->setText("");
@@ -681,7 +681,7 @@ void TabHorizons::cellChanged(int row, int column)
         }
         case 9:
         {
-            if (data == NODATA || data.isEmpty())
+            if (data == QString::number(NODATA) || data.isEmpty())
             {
                 mySoil->horizon[unsigned(row)].dbData.thetaSat = NODATA;
                 tableDb->item(row, column)->setText("");

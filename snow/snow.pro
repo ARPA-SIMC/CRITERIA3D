@@ -1,28 +1,39 @@
 #-----------------------------------------------------
 #
 #   snow library
-#   Compute snow accumulation and melt
-#   mono-dimensional energy balance
+#   compute snow accumulation and melt
+#   with a mono-dimensional energy balance
 #
-#   This library is part of CRITERIA-3D distribution
+#   This project is part of CRITERIA-3D distribution
 #
 #-----------------------------------------------------
 
 QT += core
 QT -= gui
 
-
-TARGET = snow
 CONFIG += staticlib
+CONFIG += debug_and_release
+
+unix:{
+    CONFIG(debug, debug|release) {
+        TARGET = debug/snow
+    } else {
+        TARGET = release/snow
+    }
+}
+win32:{
+    TARGET = snow
+}
 
 TEMPLATE = lib
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../solarRadiation
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo
 
 SOURCES += \
-    snowMaps.cpp \
-    snowPoint.cpp
+    snow.cpp \
+    snowMaps.cpp
 
 HEADERS += \
-    snowMaps.h \
-    snowPoint.h
+    snow.h \
+    snowMaps.h
+

@@ -55,7 +55,7 @@ TabRootDensity::TabRootDensity()
     chart->legend()->setVisible(false);
     nrLayers = 0;
 
-    m_tooltip = new CropCallout(chart);
+    m_tooltip = new Callout(chart);
     m_tooltip->hide();
 
     connect(currentDate, &QDateEdit::dateChanged, this, &TabRootDensity::updateRootDensity);
@@ -131,9 +131,9 @@ void TabRootDensity::computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *me
     updateRootDensity();
 }
 
-void TabRootDensity::on_actionChooseYear(QString year)
+void TabRootDensity::on_actionChooseYear(QString myYear)
 {
-    this->year = year.toInt();
+    this->year = myYear.toInt();
     if (year == lastMeteoDate.year())
     {
         slider->setMaximum(lastMeteoDate.dayOfYear());

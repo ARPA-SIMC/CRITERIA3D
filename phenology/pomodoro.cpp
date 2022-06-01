@@ -1,26 +1,28 @@
 
 #include "pomodoro.h"
 
+#include "math.h"
+#include <algorithm>
 
 double Pomodoro::Dday(Stazione& stazione, const long& i)
 {
 	double L = stazione.Fotoperiodo(i);
 	double Td = Tday(stazione.Tn(i), stazione.Tx(i));
-	return __max( static_cast<double>(0.),
+    return std::max( static_cast<double>(0.),
 				  ( -6.0304 + 0.5408 * Td - 0.0104 * Td * Td ) * L / 24. );
 }
 
 double Pomodoro::Dday(Stazione& stazione, const long& i, const double& Ts) 
 {
 	double L = stazione.Fotoperiodo(i);
-	return __max( static_cast<double>(0.), 
+    return std::max( static_cast<double>(0.),
 		          ( Tday(stazione.Tn(i), stazione.Tx(i)) - Ts ) / ( 26. - Ts) * L / 24. );
 }
 
 double Pomodoro::Dnyt(Stazione& stazione, const long& i, const double& Ts)
 {
 	double L = stazione.Fotoperiodo(i);
-	return __max( static_cast<double>(0.), 
+    return std::max( static_cast<double>(0.),
 		          ( Tnyt(stazione.Tn(i), stazione.Tx(i)) - Ts ) / ( 26. - Ts) * ( 24. - L ) / 24. );
 }
 

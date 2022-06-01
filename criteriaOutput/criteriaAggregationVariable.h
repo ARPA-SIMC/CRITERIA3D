@@ -2,16 +2,16 @@
 #define CRITERIAAGGREGATIONVARIABLE_H
 
     #include <QString>
-    #include <QStringList>
+    #include <QList>
 
     #define REQUIREDAGGREGATIONINFO 3
 
     class CriteriaAggregationVariable
     {
     public:
-        QStringList outputVarName;
-        QStringList inputField;
-        QStringList aggregationType;
+        QList<QString> outputVarName;
+        QList<QString> inputField;
+        QList<QString> aggregationType;
 
         CriteriaAggregationVariable();
         bool parserAggregationVariable(QString fileName, QString &error);

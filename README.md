@@ -34,7 +34,7 @@ agrolib is released under the GNU LGPL license.
 ## Authors
 - Fausto Tomei <ftomei@arpae.it>
 - Gabriele Antolini	 <gantolini@arpae.it>
-- Antonio Volta		<antonio.volta@arpae.it>
+- Antonio Volta		<avolta@arpae.it>
 - Laura Costantini  <laura.costantini0@gmail.com>
 
 ### Contributions

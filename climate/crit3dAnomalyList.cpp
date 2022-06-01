@@ -24,12 +24,12 @@ void Crit3DAnomalyList::setIsMeteoGrid(bool isMeteoGrid)
     _isMeteoGrid = isMeteoGrid;
 }
 
-QStringList Crit3DAnomalyList::listAnomaly() const
+QList<QString> Crit3DAnomalyList::listAnomaly() const
 {
     return _listAll;
 }
 
-void Crit3DAnomalyList::setListAnomaly(const QStringList &listAnomaly)
+void Crit3DAnomalyList::setListAnomaly(const QList<QString> &listAnomaly)
 {
     _listAll = listAnomaly;
 }
@@ -649,7 +649,7 @@ void Crit3DAnomalyList::insertRefParam2(float refParam2)
     _listRefParam2.push_back(refParam2);
 }
 
-void Crit3DAnomalyList::addAnomaly(unsigned int index)
+bool Crit3DAnomalyList::addAnomaly(unsigned int index)
 {
 
     bool isPercentage = _listisPercentage[index];
@@ -749,18 +749,34 @@ void Crit3DAnomalyList::addAnomaly(unsigned int index)
 
     if (_listAll.contains(anomalyAdded)!= 0)
     {
-        return;
+        return false;
     }
 
     _listAll.append(anomalyAdded);
+    return true;
 }
 
-QStringList Crit3DAnomalyList::listAll() const
+QList<QString> Crit3DAnomalyList::listAll() const
 {
     return _listAll;
 }
 
-void Crit3DAnomalyList::setListAll(const QStringList &listAll)
+void Crit3DAnomalyList::setListAll(const QList<QString> &listAll)
 {
     _listAll = listAll;
+}
+
+std::vector<QString> Crit3DAnomalyList::listFileName() const
+{
+    return _listFileName;
+}
+
+void Crit3DAnomalyList::setListFileName(const std::vector<QString> &listFileName)
+{
+    _listFileName = listFileName;
+}
+
+void Crit3DAnomalyList::insertFileName(QString filename)
+{
+    _listFileName.push_back(filename);
 }

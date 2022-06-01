@@ -15,7 +15,7 @@
         Crit3DDate m_maturazione;
         double m_limiteGradiGiorno[4];
 
-        vector<double> m_faseFenologica;
+        std::vector<double> m_faseFenologica;
 
     public:
 
@@ -26,7 +26,7 @@
             m_fioritura(Crit3DDate()),
             m_invaiatura(Crit3DDate()),
             m_maturazione(Crit3DDate()),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {
             m_limiteGradiGiorno[0] = 0.;
             m_limiteGradiGiorno[1] = 0.;
@@ -42,7 +42,7 @@
             m_fioritura(Crit3DDate()),
             m_invaiatura(Crit3DDate()),
             m_maturazione(Crit3DDate()),
-            m_faseFenologica(vector<double>())
+            m_faseFenologica(std::vector<double>())
         {
             m_limiteGradiGiorno[0] = limiteGradiGiorno0;
             m_limiteGradiGiorno[1] = limiteGradiGiorno1;

@@ -13,7 +13,7 @@ DialogNewCrop::DialogNewCrop(Crit3DCrop *newCrop)
     idCropValue = new QLineEdit();
 
     QLabel *idCropName = new QLabel(tr("Enter crop name: "));
-    nameCropValue = new QLineEdit();  
+    nameCropValue = new QLineEdit();
 
     QLabel *typeCropLabel = new QLabel(tr("Select crop type: "));
     QComboBox* typeCropComboBox = new QComboBox();

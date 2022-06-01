@@ -19,6 +19,7 @@
         std::vector<DBFFieldType> m_fieldsTypeList;
         std::vector< std::vector<std::vector<unsigned int>>> holes;
         bool        m_isWGS84;
+        bool        m_isNorth;
         int         m_utmZone;
         int         m_parts;
         int         m_holes;
@@ -73,6 +74,7 @@
         std::string getFilepath() const;
 
         bool getIsWGS84() const;
+        bool getIsNorth() const;
         int getUtmZone() const;
 
         void packDBF(std::string newFile);
@@ -83,6 +85,7 @@
         int nDecimalsField(int fieldIndex);
 
         double getNumericValue(int shapeNumber, std::string fieldName);
+        double getNumericValue(int shapeNumber, int fieldPos);
         std::string getStringValue(int shapeNumber, std::string fieldName);
 
         std::vector<unsigned int> getHoles(int shapeNumber, int partNumber);

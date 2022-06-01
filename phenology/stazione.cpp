@@ -1,6 +1,8 @@
 #include "stazione.h"
 #include "commonConstants.h"
 
+#include "math.h"
+
 
 // calcolo del fotoperiodo alla data corrente
 double Stazione::Fotoperiodo(const long& i) 
@@ -51,7 +53,7 @@ bool Stazione::InterpolaDati(const Parametri& parametri, Console& console)
 	{
 		sprintf(message, "\n\n Stazione di %s", m_nome);
 		console.Show(message);
-		sprintf(message, "\n Dati finali di temperatura massima mancanti - non è possibile interpolare i dati.");
+		sprintf(message, "\n Dati finali di temperatura massima mancanti - non e' possibile interpolare i dati.");
 		console.Show(message);
 		return false;
 	
@@ -62,7 +64,7 @@ bool Stazione::InterpolaDati(const Parametri& parametri, Console& console)
 	{
 		sprintf(message, "\n\n Stazione di %s", m_nome);
 		console.Show(message);
-		sprintf(message, "\n Dati finali di temperatura massima mancanti - non è possibile interpolare i dati.");
+		sprintf(message, "\n Dati finali di temperatura massima mancanti - non e' possibile interpolare i dati.");
 		console.Show(message);
 		return false;
 	
@@ -75,7 +77,7 @@ bool Stazione::InterpolaDati(const Parametri& parametri, Console& console)
 }
 
 
-bool interpolaDatiTemperatura(char* nome, std::vector<float> &dati, const Parametri& parametri, Console& console)
+bool Stazione::interpolaDatiTemperatura(char* nome, std::vector<float> &dati, const Parametri& parametri, Console& console)
 {
     char message[256];
 
@@ -128,7 +130,7 @@ bool interpolaDatiTemperatura(char* nome, std::vector<float> &dati, const Parame
         {
             sprintf(message, "\n\n Stazione di %s", nome);
             console.Show(message);
-            sprintf(message, "\n Troppi dati mancanti - non è possibile interpolare i dati.");
+            sprintf(message, "\n Troppi dati mancanti - non e' possibile interpolare i dati.");
             console.Show(message);
             return false;
         }

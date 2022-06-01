@@ -28,7 +28,7 @@
     private:
         int utmZone;
         long nrX, nrY, nrLat, nrLon, nrTime;
-        int idTime, idX, idY, idLat, idLon;
+        int idTime, idTimeBnds, idX, idY, idLat, idLon;
 
         float *x, *y;
         float *lat, *lon;
@@ -38,6 +38,7 @@
         bool isStandardTime;
         bool isHourly;
         bool isDaily;
+
         Crit3DDate firstDate;
 
         std::stringstream metadata;
@@ -82,7 +83,9 @@
         bool extractVariableMap(int idVar, Crit3DTime myTime, gis::Crit3DRasterGrid* myDataGrid, std::string *error);
 
         bool createNewFile(std::string fileName);
-        bool writeGeoDimensions(const gis::Crit3DGridHeader& latLonHeader);
+        bool writeMetadata(const gis::Crit3DGridHeader& latLonHeader, const std::string &title,
+                           const std::string &variableName, const std::string &variableUnit,
+                           const Crit3DDate &myDate, int nDays, int refYearStart, int refYearEnd);
         bool writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid);
     };
 

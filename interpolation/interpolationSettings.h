@@ -31,10 +31,13 @@
 
         float regressionR2;
         float regressionSlope;
+        float regressionIntercept;
 
         //orography
         float lapseRateH1;
         float lapseRateH0;
+        float lapseRateT0;
+        float lapseRateT1;
         float inversionLapseRate;
         bool inversionIsSignificative;
 
@@ -72,6 +75,12 @@
         void setProxyField(const std::string &value);
         std::vector<gis::Crit3DRasterGrid *> getGridSeries() const;
         void setGridSeries(const std::vector<gis::Crit3DRasterGrid *> &value);
+        float getLapseRateT0() const;
+        void setLapseRateT0(float newLapseRateT0);
+        float getLapseRateT1() const;
+        void setLapseRateT1(float newLapseRateT1);
+        float getRegressionIntercept() const;
+        void setRegressionIntercept(float newRegressionIntercept);
     };
 
     class Crit3DProxyCombination
@@ -104,6 +113,7 @@
         float minRegressionR2;
         bool useThermalInversion;
         bool useTD;
+        int maxTdMultiplier;
         bool useLapseRateCode;
         bool useBestDetrending;
         bool useDewPoint;
@@ -118,7 +128,9 @@
         float maxHeightInversion;
         float shepardInitialRadius;
         int indexPointCV;
-        float topoDist_Kh, topoDist_Kz;
+        int topoDist_maxKh, topoDist_Kh;
+        std::vector <float> Kh_series;
+        std::vector <float> Kh_error_series;
 
         bool proxyLoaded;
         std::vector <Crit3DProxy> currentProxy;
@@ -140,7 +152,7 @@
         size_t getProxyNr();
         void addProxy(Crit3DProxy myProxy, bool isActive_);
         float getProxyValue(unsigned pos, std::vector <float> proxyValues);
-        bool getCombination(int combinationInteger, Crit3DProxyCombination* outCombination);
+        bool getCombination(int combinationInteger, Crit3DProxyCombination &outCombination);
 
         void setInterpolationMethod(TInterpolationMethod myValue);
         TInterpolationMethod getInterpolationMethod();
@@ -172,10 +184,10 @@
         void setIndexPointCV(int value);
         gis::Crit3DRasterGrid *getCurrentDEM() const;
         void setCurrentDEM(gis::Crit3DRasterGrid *value);
-        float getTopoDist_Kh() const;
-        void setTopoDist_Kh(float value);
-        float getTopoDist_Kz() const;
-        void setTopoDist_Kz(float value);
+        int getTopoDist_maxKh() const;
+        void setTopoDist_maxKh(int value);
+        int getTopoDist_Kh() const;
+        void setTopoDist_Kh(int value);
         Crit3DProxyCombination getOptimalCombination() const;
         Crit3DProxyCombination* getOptimalCombinationRef();
         void setOptimalCombination(const Crit3DProxyCombination &value);
@@ -186,7 +198,7 @@
         unsigned getIndexHeight() const;
         void setIndexHeight(unsigned value);
         Crit3DProxyCombination *getCurrentCombination() const;
-        void setCurrentCombination(Crit3DProxyCombination *value);
+        void setCurrentCombination(Crit3DProxyCombination* value);
         std::vector<Crit3DProxy> getCurrentProxy() const;
         void setCurrentProxy(const std::vector<Crit3DProxy> &value);
         float getRefHeightWind() const;
@@ -197,6 +209,12 @@
         void setUseInterpolatedTForRH(bool value);
         bool getProxyLoaded() const;
         void setProxyLoaded(bool value);
+        const std::vector<float> &getKh_series() const;
+        void setKh_series(const std::vector<float> &newKh_series);
+        const std::vector<float> &getKh_error_series() const;
+        void setKh_error_series(const std::vector<float> &newKh_error_series);
+        void addToKhSeries(float kh, float error);
+        void initializeKhSeries();
     };
 
 #endif // INTERPOLATIONSETTINGS_H

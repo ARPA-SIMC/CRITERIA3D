@@ -5,7 +5,7 @@
 #include <QtWidgets>
 #include <QtCharts>
 
-#include "cropCallout.h"
+#include "callout.h"
 
 #ifndef METEOPOINT_H
     #include "meteoPoint.h"
@@ -20,7 +20,7 @@ class TabRootDensity : public QWidget
 public:
     TabRootDensity();
     void computeRootDensity(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers);
-    void on_actionChooseYear(QString year);
+    void on_actionChooseYear(QString myYear);
     void updateDate();
     void updateRootDensity();
     void tooltip(bool state, int index, QBarSet *barset);
@@ -43,7 +43,7 @@ private:
     QValueAxis *axisX;
     QBarCategoryAxis *axisY;
     QStringList categories;
-    CropCallout *m_tooltip;
+    Callout *m_tooltip;
 
 };
 

@@ -18,22 +18,43 @@
     {
 
     public:
+        bool isProjectLoaded;
         QString projectError;
         Logger logger;
+
+        QString path;
+
+        // database
+        QString dbCropName;
+        QString dbSoilName;
+        QString dbOutputName;
+        QString dbMeteoName;
+        QString dbForecastName;
+        QString dbComputationUnitsName;
+
+        QSqlDatabase dbCrop;
+        QSqlDatabase dbSoil;
+        QSqlDatabase dbMeteo;
 
         // dates
         QDate firstSimulationDate;
         QDate lastSimulationDate;
 
+        bool isXmlMeteoGrid;
+
+        // soil
+        soil::Crit3DTextureClass soilTexture[13];
+
+        std::vector<Crit1DCompUnit> compUnitList;
+
         Crit1DProject();
 
+        void initialize();
         int initializeProject(QString settingsFileName);
         int computeAllUnits();
+        bool computeUnit(const Crit1DCompUnit& myUnit);
 
     private:
-        bool isProjectLoaded;
-
-        QString path;
         QString projectName;
         QString configFileName;
 
@@ -43,44 +64,34 @@
 
         // seasonal forecast
         bool isSeasonalForecast;
-        int firstSeasonMonth;
-        std::vector<float> seasonalForecasts;
-        int nrSeasonalForecasts;
-
-        // short term forecast
-        bool isShortTermForecast;
-        unsigned int daysOfForecast;
-
-        // monthly forecast
         bool isMonthlyForecast;
+        bool isShortTermForecast;
 
-        QString dbCropName;
-        QString dbSoilName;
-        QString dbOutputName;
-        QString dbMeteoName;
-        QString dbForecastName;
-        QString dbUnitsName;
+        int firstSeasonMonth;
+        int daysOfForecast;
+        int nrForecasts;
+        std::vector<float> forecastIrr;
+        std::vector<float> forecastPrec;
 
         QString outputString;
 
         QString logFileName;
         std::ofstream logFile;
 
-        bool isXmlGrid;
         bool addDateTimeLogFile;
 
         QString outputCsvFileName;
         std::ofstream outputCsvFile;
 
         // specific output
-        std::vector<int> waterDeficitDepth;
         std::vector<int> waterContentDepth;
         std::vector<int> waterPotentialDepth;
+        std::vector<int> waterDeficitDepth;
+        std::vector<int> awcDepth;
+        std::vector<int> availableWaterDepth;
+        std::vector<int> fractionAvailableWaterDepth;
 
         // DATABASE
-        QSqlDatabase dbCrop;
-        QSqlDatabase dbSoil;
-        QSqlDatabase dbMeteo;
         QSqlDatabase dbForecast;
         QSqlDatabase dbOutput;
         QSqlDatabase dbState;
@@ -88,14 +99,8 @@
         Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
 
-        std::vector<Crit1DUnit> unitList;
-
-        // soil
-        soil::Crit3DTextureClass soilTexture[13];
-
         Crit1DCase myCase;
 
-        void initialize();
         void closeProject();
         bool readSettings();
         void closeAllDatabase();
@@ -105,15 +110,17 @@
         bool setSoil(QString soilCode, QString &myError);
 
         bool setMeteoSqlite(QString idMeteo, QString idForecast);
-        bool setMeteoXmlGrid(QString idMeteo, QString idForecast);
+        bool setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr);
 
         bool setPercentileOutputCsv();
         void updateSeasonalForecastOutput(Crit3DDate myDate, int &index);
+        void updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int memberNr);
         void initializeSeasonalForecast(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
-        bool computeSeasonalForecast(unsigned int index, double irriRatio);
-        bool computeMonthlyForecast(unsigned int index, double irriRatio);
+        bool computeSeasonalForecast(unsigned int index, float irriRatio);
+        bool computeMonthlyForecast(unsigned int unitIndex, float irriRatio);
 
-        bool computeUnit(unsigned int unitIndex);
+        bool computeCase(unsigned int memberNr);
+        bool computeUnit(unsigned int unitIndex, unsigned int memberNr);
 
         bool createOutputTable(QString &myError);
         bool createState(QString &myError);
@@ -126,7 +133,7 @@
 
 
     QString getOutputStringNullZero(double value);
-    bool setVariableDepth(QStringList &depthList, std::vector<int> &variableDepth);
+    bool setVariableDepth(QList<QString> &depthList, std::vector<int> &variableDepth);
 
 
 #endif // CRITERIA1DPROJECT_H

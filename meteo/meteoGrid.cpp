@@ -149,6 +149,16 @@ int Crit3DMeteoGridStructure::nrMembers() const
     return _nrMembers;
 }
 
+int Crit3DMeteoGridStructure::nrRow() const
+{
+    return _header.nrRows;
+}
+
+int Crit3DMeteoGridStructure::nrCol() const
+{
+    return _header.nrCols;
+}
+
 void Crit3DMeteoGridStructure::setNrMembers(int nrMembers)
 {
     _nrMembers = nrMembers;
@@ -203,13 +213,15 @@ bool Crit3DMeteoGrid::createRasterGrid()
 
     dataMeteoGrid.header->nrCols = _gridStructure.header().nrCols;
     dataMeteoGrid.header->nrRows = _gridStructure.header().nrRows;
-    dataMeteoGrid.header->flag = INDEX_ERROR;
+    dataMeteoGrid.header->flag = NO_ACTIVE;
 
     dataMeteoGrid.initializeGrid(NODATA);
 
+    // not active cells
     for (size_t i=0; i < size_t(_gridStructure.header().nrRows); i++)
         for (size_t j=0; j < size_t(_gridStructure.header().nrCols); j++)
-             if (! _meteoPoints[i][j]->active) dataMeteoGrid.value[size_t(_gridStructure.header().nrRows)-1-i][j] = dataMeteoGrid.header->flag;
+             if (! _meteoPoints[i][j]->active)
+                 dataMeteoGrid.value[size_t(_gridStructure.header().nrRows)-1-i][j] = NO_ACTIVE;
 
     dataMeteoGrid.isLoaded = true;
     return true;
@@ -295,11 +307,11 @@ void Crit3DMeteoGrid::fillMeteoPoint(unsigned int row, unsigned int col, const s
     }
 }
 
-void Crit3DMeteoGrid::fillCurrentDailyValue(Crit3DDate date, meteoVariable variable)
+void Crit3DMeteoGrid::fillCurrentDailyValue(Crit3DDate date, meteoVariable variable, Crit3DMeteoSettings* meteoSettings)
 {
     for (unsigned row = 0; row < unsigned(_gridStructure.header().nrRows); row++)
         for (unsigned col = 0; col < unsigned(_gridStructure.header().nrCols); col++)
-            _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueD(date, variable);
+            _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueD(date, variable, meteoSettings);
 }
 
 void Crit3DMeteoGrid::fillCurrentHourlyValue(Crit3DDate date, int hour, int minute, meteoVariable variable)
@@ -307,6 +319,13 @@ void Crit3DMeteoGrid::fillCurrentHourlyValue(Crit3DDate date, int hour, int minu
     for (int row = 0; row < _gridStructure.header().nrRows; row++)
         for(int col = 0; col < _gridStructure.header().nrCols; col++)
             _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueH(date, hour, minute, variable);
+}
+
+void Crit3DMeteoGrid::fillCurrentMonthlyValue(Crit3DDate date, meteoVariable variable)
+{
+    for (int row = 0; row < _gridStructure.header().nrRows; row++)
+        for(int col = 0; col < _gridStructure.header().nrCols; col++)
+            _meteoPoints[row][col]->currentValue = _meteoPoints[row][col]->getMeteoPointValueM(date, variable);
 }
 
 void Crit3DMeteoGrid::fillMeteoRaster()
@@ -427,6 +446,23 @@ bool Crit3DMeteoGrid::findMeteoPointFromId(unsigned* row, unsigned* col, const s
             {
                 *row = i;
                 *col = j;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Crit3DMeteoGrid::existsMeteoPointFromId(const std::string& id)
+{
+    unsigned i,j;
+
+    for (i = 0; i < unsigned(_gridStructure.header().nrRows); i++)
+    {
+        for (j = 0; j < unsigned(_gridStructure.header().nrCols); j++)
+        {
+            if (_meteoPoints[i][j]->id == id)
+            {
                 return true;
             }
         }
@@ -735,6 +771,7 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
 void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
 {
     int nrDays = dateIni.daysTo(dateFin) + 1;
+    int nrMonths = (dateFin.year-dateIni.year)*12+dateFin.month-(dateIni.month-1);
 
     for (unsigned row = 0; row < unsigned(gridStructure().header().nrRows); row++)
         for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
@@ -742,6 +779,7 @@ void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
             {
                 _meteoPoints[row][col]->initializeObsDataH(1, nrDays, dateIni);
                 _meteoPoints[row][col]->initializeObsDataD(nrDays, dateIni);
+                _meteoPoints[row][col]->initializeObsDataM(nrMonths, dateIni.month, dateIni.year);
             }
 }
 
@@ -752,6 +790,7 @@ void Crit3DMeteoGrid::emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin)
         {
             _meteoPoints[row][col]->emptyObsDataH(dateIni, dateFin);
             _meteoPoints[row][col]->emptyObsDataD(dateIni, dateFin);
+            _meteoPoints[row][col]->emptyObsDataM(dateIni, dateFin);
         }
 }
 
@@ -986,9 +1025,3 @@ void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
         }
     }
 }
-
-
-
-
-
-

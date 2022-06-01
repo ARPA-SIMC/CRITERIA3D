@@ -1,41 +1,45 @@
 #ifndef GAMMAFUNCTION
 #define GAMMAFUNCTION
 
-    /*!
-     * code from http://www.mymathlib.com/
-     * Copyright © 2004 RLH. All rights reserved.
-     */
+#ifndef _VECTOR_
+    #include <vector>
+#endif
 
     #define ITERATIONSMAX 100
     #define EPSTHRESHOLD 3.0e-7
     #define FPMINIMUM 1.0e-30
 
-    double Entire_Incomplete_Gamma_Function(double x, double nu);
-    long double xEntire_Incomplete_Gamma_Function(long double x, long double nu);
+// functions
+    double factorial(int n);
+    double standardGaussianInvCDF(double prob);
+    float generalizedGammaCDF(float x, double beta, double gamma,  double pZero) ;
+    double generalizedGammaCDF(double x, double beta, double gamma,  double pZero);
+    float inverseGeneralizedGammaCDF(double valueProbability, double alpha, double beta, double accuracy,double pZero,double outlierStep);
+    float probabilityGamma(float x, double alfa, double gamma, float gammaFunc);
+    float probabilityGamma(float x, double alpha, double beta);
+    void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta);
+    void logLogisticFitting(std::vector<float> probWeightedMoments, double *alpha, double *beta, double *gamma);
+    float logLogisticCDF(float myValue, double alpha, double beta, double gamma);
 
-    double Factorial(int n);
-    long double xFactorial(int n);
-    int Factorial_Max_Arg( void );
+    bool getGammaParameters(double mean, double variance, double* alpha, double* beta);
+    double gammaFunction(double value);
+    double gammaNaturalLogarithm(double value);
+    void gammaIncompleteP(double *gammaDevelopmentSeries, double alpha, double x, double *gammaLn);
+    void gammaIncompleteComplementaryFunction(double *gammaComplementaryFunction, double alpha, double x, double *gammaLn);
+    double incompleteGamma(double alpha, double x, double *lnGammaValue); // incomplete + complete
+    double incompleteGamma(double alpha, double x); // only incomplete
+    double inverseGammaCumulativeDistributionFunction(double valueProbability, double alpha, double beta, double accuracy);
+    double inverseGeneralizedGammaCDFDoublePrecision(double valueProbability, double alpha, double beta, double accuracy,double pZero,double outlierStep);
+    float inverseGeneralizedGammaCDF(float valueProbability, double alpha, double beta, double accuracy,double pZero,double outlierStep);
+    bool generalizedGammaFitting(std::vector<float> &series, int n, double* beta, double* alpha,  double* pZero);
 
-    double Gamma_Function(double x);
-    long double xGamma_Function(long double x);
-    double Gamma_Function_Max_Arg( void );
-    long double xGamma_Function_Max_Arg( void );
-
-    double Incomplete_Gamma_Function(double x, double nu);
-    long double xIncomplete_Gamma_Function(long double x, long double nu);
-
-    double Ln_Gamma_Function(double x);
-    long double xLn_Gamma_Function(long double x);
-
-    namespace gammaDistributions
-    {
-        double gammaNaturalLogarithm(double value);
-        void gammaIncompleteP(double *gammaDevelopmentSeries, double alpha, double x, double *gammaLn);
-        void gammaIncompleteComplementaryFunction(double *gammaComplementaryFunction, double alpha, double x, double *gammaLn);
-        double incompleteGamma(double alpha, double x, double *lnGammaValue); // incomplete + complete
-        double incompleteGamma(double alpha, double x); // only incomplete
-    }
+    double weibullCDF(double x, double lambda, double kappa);
+    double inverseWeibullCDF(double x, double lambda, double kappa);
+    double weibullPDF(double x, double lambda, double kappa);
+    double meanValueWeibull(double lambda, double kappa);
+    double varianceValueWeibull(double lambda, double kappa);
+    double functionValueVarianceWeibullDependingOnKappa(double mean, double variance, double kappa);
+    void parametersWeibullFromObservations(double mean, double variance, double* lambda, double* kappa, double leftBound, double rightBound);
 
 
 #endif // GAMMAFUNCTION

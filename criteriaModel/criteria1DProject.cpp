@@ -37,31 +37,37 @@ void Crit1DProject::initialize()
     dbMeteoName = "";
     dbForecastName = "";
     dbOutputName = "";
-    dbUnitsName = "";
+    dbComputationUnitsName = "";
 
     projectError = "";
 
-    unitList.clear();
+    compUnitList.clear();
 
-    isXmlGrid = false;
+    isXmlMeteoGrid = false;
     isSaveState = false;
     isRestart = false;
 
     isSeasonalForecast = false;
-    firstSeasonMonth = NODATA;
-    nrSeasonalForecasts = 0;
-
-    isShortTermForecast = false;
-    daysOfForecast = NODATA;
     isMonthlyForecast = false;
+    isShortTermForecast = false;
+
+    firstSeasonMonth = NODATA;
+    daysOfForecast = NODATA;
+    nrForecasts = NODATA;
+    forecastIrr.clear();
+    forecastPrec.clear();
 
     firstSimulationDate = QDate(1800,1,1);
     lastSimulationDate = QDate(1800,1,1);
 
     outputString = "";
+    // specific outputs
     waterDeficitDepth.clear();
     waterContentDepth.clear();
     waterPotentialDepth.clear();
+    availableWaterDepth.clear();
+    fractionAvailableWaterDepth.clear();
+    awcDepth.clear();
 }
 
 
@@ -87,7 +93,7 @@ bool Crit1DProject::readSettings()
     projectSettings->beginGroup("project");
 
     path += projectSettings->value("path","").toString();
-    projectName += projectSettings->value("name","").toString();
+    projectName = projectSettings->value("name", "CRITERIA1D").toString();
 
     dbCropName = projectSettings->value("db_crop","").toString();
     if (dbCropName.left(1) == ".")
@@ -101,23 +107,28 @@ bool Crit1DProject::readSettings()
     if (dbMeteoName.left(1) == ".")
         dbMeteoName = path + dbMeteoName;
     if (dbMeteoName.right(3) == "xml")
-        isXmlGrid = true;
+        isXmlMeteoGrid = true;
 
     dbForecastName = projectSettings->value("db_forecast","").toString();
     if (dbForecastName.left(1) == ".")
         dbForecastName = path + dbForecastName;
 
-    // unitList list
-    dbUnitsName = projectSettings->value("db_units","").toString();
-    if (dbUnitsName.left(1) == ".")
-        dbUnitsName = path + dbUnitsName;
-
-    if (dbUnitsName == "")
+    // computational units db
+    dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
+    if (dbComputationUnitsName == "")
+    {
+        // check old name
+        dbComputationUnitsName = projectSettings->value("db_units","").toString();
+    }
+    if (dbComputationUnitsName == "")
     {
         projectError = "Missing information on computational units";
         return false;
     }
+    if (dbComputationUnitsName.left(1) == ".")
+        dbComputationUnitsName = path + dbComputationUnitsName;
 
+   // output db
     dbOutputName = projectSettings->value("db_output","").toString();
     if (dbOutputName.left(1) == ".")
         dbOutputName = path + dbOutputName;
@@ -154,38 +165,66 @@ bool Crit1DProject::readSettings()
     // FORECAST
     projectSettings->beginGroup("forecast");
 
-        isSeasonalForecast = projectSettings->value("isSeasonalForecast",0).toBool();
-        isShortTermForecast = projectSettings->value("isShortTermForecast",0).toBool();
-        isMonthlyForecast = projectSettings->value("isMonthlyForecast",0).toBool();
-        if (isShortTermForecast)
+        isSeasonalForecast = projectSettings->value("isSeasonalForecast", 0).toBool();
+        isShortTermForecast = projectSettings->value("isShortTermForecast", 0).toBool();
+        isMonthlyForecast = projectSettings->value("isMonthlyForecast", 0).toBool();
+        if (isShortTermForecast || isMonthlyForecast)
         {
-            daysOfForecast = projectSettings->value("daysOfForecast",0).toInt();
+            daysOfForecast = projectSettings->value("daysOfForecast", 0).toInt();
+            if (daysOfForecast == 0)
+            {
+                projectError = "Missing daysOfForecast.";
+                return false;
+            }
         }
         if (isSeasonalForecast)
         {
-            firstSeasonMonth = projectSettings->value("firstMonth",0).toInt();
+            firstSeasonMonth = projectSettings->value("firstMonth", 0).toInt();
+            if (firstSeasonMonth == 0)
+            {
+                projectError = "Missing firstSeasonMonth.";
+                return false;
+            }
+        }
+        if ((isShortTermForecast && isMonthlyForecast)
+            || (isShortTermForecast && isSeasonalForecast)
+            || (isMonthlyForecast && isSeasonalForecast))
+        {
+            projectError = "Too many forecast types.";
+            return false;
         }
 
     projectSettings->endGroup();
 
     projectSettings->beginGroup("csv");
         outputCsvFileName = projectSettings->value("csv_output","").toString();
-        if (outputCsvFileName.right(4) == ".csv")
+        if (outputCsvFileName != "")
         {
-            outputCsvFileName = outputCsvFileName.left(outputCsvFileName.length()-4);
-        }
+            if (outputCsvFileName.right(4) == ".csv")
+            {
+                outputCsvFileName = outputCsvFileName.left(outputCsvFileName.length()-4);
+            }
 
-        bool addDate = projectSettings->value("add_date_to_filename","").toBool();
-        if (addDate)
-        {
-            QString dateStr = QDate::currentDate().toString("yyyy-MM-dd");
-            outputCsvFileName += "_" + dateStr;
-        }
-        outputCsvFileName += ".csv";
+            bool addDate = projectSettings->value("add_date_to_filename","").toBool();
+            if (addDate)
+            {
+                QString dateStr;
+                if (lastSimulationDate == QDate(1800,1,1))
+                {
+                    dateStr = QDate::currentDate().toString("yyyy-MM-dd");
+                }
+                else
+                {
+                    dateStr = lastSimulationDate.addDays(1).toString("yyyy-MM-dd");
+                }
+                outputCsvFileName += "_" + dateStr;
+            }
+            outputCsvFileName += ".csv";
 
-        if (outputCsvFileName.left(1) == ".")
-        {
-            outputCsvFileName = path + QDir::cleanPath(outputCsvFileName);
+            if (outputCsvFileName.at(0) == '.')
+            {
+                outputCsvFileName = path + QDir::cleanPath(outputCsvFileName);
+            }
         }
 
     projectSettings->endGroup();
@@ -193,12 +232,6 @@ bool Crit1DProject::readSettings()
     // OUTPUT variables (optional)
     QStringList depthList;
     projectSettings->beginGroup("output");
-        depthList = projectSettings->value("waterDeficit").toStringList();
-        if (! setVariableDepth(depthList, waterDeficitDepth))
-        {
-            projectError = "Wrong water deficit depth in " + configFileName;
-            return false;
-        }
         depthList = projectSettings->value("waterContent").toStringList();
         if (! setVariableDepth(depthList, waterContentDepth))
         {
@@ -209,6 +242,34 @@ bool Crit1DProject::readSettings()
         if (! setVariableDepth(depthList, waterPotentialDepth))
         {
             projectError = "Wrong water potential depth in " + configFileName;
+            return false;
+        }
+        depthList = projectSettings->value("waterDeficit").toStringList();
+        if (! setVariableDepth(depthList, waterDeficitDepth))
+        {
+            projectError = "Wrong water deficit depth in " + configFileName;
+            return false;
+        }
+        depthList = projectSettings->value("awc").toStringList();
+        if (! setVariableDepth(depthList, awcDepth))
+        {
+            projectError = "Wrong available water capacity depth in " + configFileName;
+            return false;
+        }
+        depthList = projectSettings->value("availableWater").toStringList();
+        if (depthList.size() == 0)
+            depthList = projectSettings->value("aw").toStringList();
+        if (! setVariableDepth(depthList, availableWaterDepth))
+        {
+            projectError = "Wrong available water depth in " + configFileName;
+            return false;
+        }
+        depthList = projectSettings->value("fractionAvailableWater").toStringList();
+        if (depthList.size() == 0)
+            depthList = projectSettings->value("faw").toStringList();
+        if (! setVariableDepth(depthList, fractionAvailableWaterDepth))
+        {
+            projectError = "Wrong fraction available water depth in " + configFileName;
             return false;
         }
     projectSettings->endGroup();
@@ -258,13 +319,13 @@ int Crit1DProject::initializeProject(QString settingsFileName)
     if (! loadDriessenParameters(&dbSoil, soilTexture, &projectError))
         return ERROR_SOIL_PARAMETERS;
 
-    // Computation unit list
-    if (! readUnitList(dbUnitsName, unitList, projectError))
+    // Computational unit list
+    if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))
     {
         logger.writeError(projectError);
         return ERROR_READ_UNITS;
     }
-    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+    logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
     isProjectLoaded = true;
 
@@ -289,7 +350,7 @@ void Crit1DProject::checkSimulationDates()
     dateStr = lastSimulationDate.toString("yyyy-MM-dd");
     if (dateStr == "1800-01-01")
     {
-        if (isXmlGrid)
+        if (isXmlMeteoGrid)
         {
 
             lastSimulationDate = QDate::currentDate().addDays(-1);
@@ -303,6 +364,14 @@ void Crit1DProject::checkSimulationDates()
     }
 
     logger.writeInfo("Last simulation date: " + dateStr);
+    if (isSeasonalForecast)
+    {
+        logger.writeInfo("first forecast month: " + QString::number(firstSeasonMonth));
+    }
+    else
+    {
+        logger.writeInfo("Nr of forecast days: " + QString::number(daysOfForecast));
+    }
 }
 
 
@@ -323,9 +392,8 @@ bool Crit1DProject::setSoil(QString soilCode, QString &myError)
 }
 
 
-bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
+bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr)
 {
-
     unsigned row;
     unsigned col;
     unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
@@ -392,7 +460,32 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
                 return false;
             }
         }
-        nrDays += this->daysOfForecast;
+        nrDays += unsigned(daysOfForecast);
+    }
+
+    if (this->isMonthlyForecast)
+    {
+        if (this->forecastMeteoGrid->gridStructure().isFixedFields())
+        {
+            projectError = "DB grid fixed fields: not available";
+            return false;
+        }
+        else
+        {
+            if (!this->forecastMeteoGrid->loadGridDailyDataEnsemble(&projectError, idForecast, int(memberNr), lastSimulationDate.addDays(1), lastSimulationDate.addDays(daysOfForecast)))
+            {
+                if (projectError == "Missing MeteoPoint id")
+                {
+                    projectError = "Missing forecast meteo cell";
+                }
+                else
+                {
+                    projectError = "Missing forecast data";
+                }
+                return false;
+            }
+        }
+        nrDays += unsigned(daysOfForecast);
     }
 
     myCase.meteoPoint.latitude = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->latitude;
@@ -400,7 +493,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstSimulationDate));
 
     float tmin, tmax, tavg, prec;
-    long lastIndex = firstSimulationDate.daysTo(lastSimulationDate) + 1;
+    long lastIndex = long(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
     for (int i = 0; i < lastIndex; i++)
     {
         Crit3DDate myDate = getCrit3DDate(firstSimulationDate.addDays(i));
@@ -420,7 +513,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast)
         prec = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
         myCase.meteoPoint.setMeteoPointValueD(myDate, dailyPrecipitation, prec);
     }
-    if (isShortTermForecast)
+    if (isShortTermForecast || isMonthlyForecast)
     {
         QDate start = lastSimulationDate.addDays(1);
         QDate end = lastSimulationDate.addDays(daysOfForecast);
@@ -639,9 +732,23 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
 }
 
 
-bool Crit1DProject::computeUnit(unsigned int unitIndex)
+bool Crit1DProject::computeUnit(const Crit1DCompUnit& myUnit)
 {
-    myCase.unit = unitList[unitIndex];
+    myCase.unit = myUnit;
+    return computeCase(0);
+}
+
+
+bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int memberNr)
+{
+    myCase.unit = compUnitList[unitIndex];
+    return computeCase(memberNr);
+}
+
+
+// use memberNr = 0 for deterministic run
+bool Crit1DProject::computeCase(unsigned int memberNr)
+{
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
 
     if (! loadCropParameters(&dbCrop, myCase.unit.idCrop, &(myCase.crop), &projectError))
@@ -650,9 +757,9 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
     if (! setSoil(myCase.unit.idSoil, projectError))
         return false;
 
-    if (isXmlGrid)
+    if (isXmlMeteoGrid)
     {
-        if (! setMeteoXmlGrid(myCase.unit.idMeteo, myCase.unit.idForecast))
+        if (! setMeteoXmlGrid(myCase.unit.idMeteo, myCase.unit.idForecast, memberNr))
             return false;
     }
     else
@@ -664,14 +771,24 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
     // check meteo data
     if (myCase.meteoPoint.nrObsDataDaysD == 0)
     {
-        projectError = "Missing meteo data.";
+        projectError = "Missing meteo data: " + QString::fromStdString(myCase.meteoPoint.name);
         return false;
     }
 
-    if (! isSeasonalForecast)
+    if ((! isSeasonalForecast) && (! isMonthlyForecast))
     {
         if (! createOutputTable(projectError))
             return false;
+    }
+    if (isSeasonalForecast)
+    {
+        float irriRatio = getIrriRatioFromClass(&dbCrop, "crop_class", "id_class",
+                                                myCase.unit.idCropClass, &projectError);
+        if (irriRatio < 0.001f)
+        {
+            // No irrigation: nothing to do
+            return true;
+        }
     }
 
     // set computation period (all meteo data)
@@ -680,7 +797,10 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
     firstDate = myCase.meteoPoint.obsDataD[0].date;
     lastDate = myCase.meteoPoint.obsDataD[lastIndex].date;
 
-    if (isSeasonalForecast) initializeSeasonalForecast(firstDate, lastDate);
+    if (isSeasonalForecast)
+    {
+        initializeSeasonalForecast(firstDate, lastDate);
+    }
     int indexSeasonalForecast = NODATA;
 
     // initialize crop
@@ -704,7 +824,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
         }
 
         float waterTable = myCase.meteoPoint.getMeteoPointValueD(firstDate, dailyWaterTableDepth);
-        if (! myCase.crop.restore(myDate, myCase.meteoPoint.latitude, myCase.soilLayers, waterTable, errorString))
+        if (! myCase.crop.restore(myDate, myCase.meteoPoint.latitude, myCase.soilLayers, double(waterTable), errorString))
         {
             projectError = QString::fromStdString(errorString);
             return false;
@@ -725,6 +845,10 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
         {
             updateSeasonalForecastOutput(myDate, indexSeasonalForecast);
         }
+        else if (isMonthlyForecast)
+        {
+            updateMonthlyForecastOutput(myDate, memberNr);
+        }
         else
         {
             prepareOutput(myDate, isFirstDay);
@@ -738,7 +862,7 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex)
             return false;
     }
 
-    if (isSeasonalForecast)
+    if (isSeasonalForecast || isMonthlyForecast)
         return true;
     else
         return saveOutput(projectError);
@@ -757,6 +881,15 @@ int Crit1DProject::computeAllUnits()
         if (!setPercentileOutputCsv())
             return ERROR_DBOUTPUT;
     }
+    else
+    {
+        if (dbOutputName == "")
+        {
+            logger.writeError("Missing output db");
+            return ERROR_DBOUTPUT;
+        }
+
+    }
 
     // create db state
     if (isSaveState)
@@ -770,36 +903,36 @@ int Crit1DProject::computeAllUnits()
 
     try
     {
-        for (unsigned int i = 0; i < unitList.size(); i++)
+        for (unsigned int i = 0; i < compUnitList.size(); i++)
         {
             // is numerical
-            //QString isNumerical = unitList[i].isNumericalInfiltration? "true" : "false";
+            //QString isNumerical = compUnitList[i].isNumericalInfiltration? "true" : "false";
             //logger.writeInfo("is numerical: " + isNumerical);
 
             // CROP
-            unitList[i].idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class",
-                                                         unitList[i].idCropClass, &projectError).toUpper();
-            if (unitList[i].idCrop == "")
+            compUnitList[i].idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class",
+                                                         compUnitList[i].idCropClass, &projectError).toUpper();
+            if (compUnitList[i].idCrop == "")
             {
-                logger.writeInfo("Unit " + unitList[i].idCase + " " + unitList[i].idCropClass + " ***** missing CROP *****");
+                logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing CROP *****");
                 isErrorCrop = true;
                 continue;
             }
 
             // IRRI_RATIO
-            double irriRatio = double(getIrriRatioFromClass(&dbCrop, "crop_class", "id_class",
-                                                            unitList[i].idCropClass, &projectError));
+            float irriRatio = getIrriRatioFromClass(&dbCrop, "crop_class", "id_class",
+                                                            compUnitList[i].idCropClass, &projectError);
             if ((isSeasonalForecast || isMonthlyForecast || isShortTermForecast) && (int(irriRatio) == int(NODATA)))
             {
-                logger.writeInfo("Unit " + unitList[i].idCase + " " + unitList[i].idCropClass + " ***** missing IRRIGATION RATIO *****");
+                logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing IRRIGATION RATIO *****");
                 continue;
             }
 
             // SOIL
-            unitList[i].idSoil = getIdSoilString(&dbSoil, unitList[i].idSoilNumber, &projectError);
-            if (unitList[i].idSoil == "")
+            compUnitList[i].idSoil = getIdSoilString(&dbSoil, compUnitList[i].idSoilNumber, &projectError);
+            if (compUnitList[i].idSoil == "")
             {
-                logger.writeInfo("Unit " + unitList[i].idCase + " Soil nr." + QString::number(unitList[i].idSoilNumber) + " ***** missing SOIL *****");
+                logger.writeInfo("Unit " + compUnitList[i].idCase + " Soil nr." + QString::number(compUnitList[i].idSoilNumber) + " ***** missing SOIL *****");
                 isErrorSoil = true;
                 continue;
             }
@@ -822,13 +955,13 @@ int Crit1DProject::computeAllUnits()
                 }
                 else
                 {
-                    if (computeUnit(i))
+                    if (computeUnit(i, 0))
                     {
                         nrUnitsComputed++;
                     }
                     else
                     {
-                        projectError = "Computational Unit: " + unitList[i].idCase + "\n" + projectError;
+                        projectError = "Computational Unit: " + compUnitList[i].idCase + "\n" + projectError;
                         logger.writeError(projectError);
                         isErrorModel = true;
                     }
@@ -863,7 +996,7 @@ int Crit1DProject::computeAllUnits()
         else
             return ERROR_UNKNOWN;
     }
-    else if (nrUnitsComputed < unitList.size())
+    else if (nrUnitsComputed < compUnitList.size())
     {
         if (isErrorModel)
             return WARNING_METEO_OR_MODEL;
@@ -877,8 +1010,26 @@ int Crit1DProject::computeAllUnits()
 }
 
 
+// update values of monthly forecast
+void Crit1DProject::updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int memberNr)
+{
+    QDate myQdate = getQDate(myDate);
+
+    if (myQdate == lastSimulationDate)
+    {
+        forecastIrr[memberNr] = 0;
+        forecastPrec[memberNr] = 0;
+    }
+    else if (myQdate > lastSimulationDate)
+    {
+        forecastIrr[memberNr] += float(myCase.output.dailyIrrigation);
+        forecastPrec[memberNr] += float(myCase.output.dailyPrec);
+    }
+}
+
+
 // update values of annual irrigation
-void Crit1DProject::updateSeasonalForecastOutput(Crit3DDate myDate, int &index)
+void Crit1DProject::updateSeasonalForecastOutput(Crit3DDate myDate, int &indexForecast)
 {
     bool isInsideSeason = false;
 
@@ -901,72 +1052,121 @@ void Crit1DProject::updateSeasonalForecastOutput(Crit3DDate myDate, int &index)
         // first date of season
         if (myDate.day == 1 && myDate.month == firstSeasonMonth)
         {
-            if (index == NODATA)
-                index = 0;
+            if (indexForecast == NODATA)
+                indexForecast = 0;
             else
-                index++;
+                indexForecast++;
         }
 
         // sum of irrigations
-        if (index != NODATA)
+        if (indexForecast != NODATA)
         {
-            unsigned int i = unsigned(index);
-            if (int(seasonalForecasts[i]) == int(NODATA))
-                seasonalForecasts[i] = float(myCase.output.dailyIrrigation);
+            unsigned int i = unsigned(indexForecast);
+            if (int(forecastIrr[i]) == int(NODATA))
+                forecastIrr[i] = float(myCase.output.dailyIrrigation);
             else
-                seasonalForecasts[i] += float(myCase.output.dailyIrrigation);
+                forecastIrr[i] += float(myCase.output.dailyIrrigation);
         }
     }
 }
 
-bool Crit1DProject::computeMonthlyForecast(unsigned int index, double irriRatio)
+
+bool Crit1DProject::computeMonthlyForecast(unsigned int unitIndex, float irriRatio)
 {
-    if (irriRatio < EPSILON)
+    logger.writeInfo(compUnitList[unitIndex].idCase);
+
+    if (!forecastMeteoGrid->gridStructure().isEnsemble())
     {
-        // No irrigation: nothing to do
-        outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
-        outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
-        outputCsvFile << ",0,0,0,0,0\n";
-        return true;
+        projectError = "Forecast grid is not Ensemble.";
+        logger.writeError(projectError);
+        return false;
     }
 
-    // TODO
+    nrForecasts = forecastMeteoGrid->gridStructure().nrMembers();
+    if (nrForecasts < 1)
+    {
+        projectError = "Missing ensemble members.";
+        logger.writeError(projectError);
+        return false;
+    }
+
+    forecastIrr.resize(unsigned(nrForecasts));
+    forecastPrec.resize(unsigned(nrForecasts));
+    for (unsigned int memberNr = 1; memberNr < unsigned(nrForecasts); memberNr++)
+    {
+        if (! computeUnit(unitIndex, memberNr))
+        {
+            logger.writeError(projectError);
+            return false;
+        }
+    }
+
+    // write output
+    outputCsvFile << compUnitList[unitIndex].idCase.toStdString();
+    outputCsvFile << "," << compUnitList[unitIndex].idCropClass.toStdString();
+
+    // percentiles irrigation
+    float percentile = sorting::percentile(forecastIrr, &(nrForecasts), 5, true);
+    outputCsvFile << "," << QString::number(double(percentile * irriRatio), 'f', 1).toStdString();
+    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 25, false);
+    outputCsvFile << "," << QString::number(double(percentile * irriRatio), 'f', 1).toStdString();
+    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 50, false);
+    outputCsvFile << "," << QString::number(double(percentile * irriRatio), 'f', 1).toStdString();
+    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 75, false);
+    outputCsvFile << "," << QString::number(double(percentile * irriRatio), 'f', 1).toStdString();
+    percentile = sorting::percentile(forecastIrr, &(nrForecasts), 95, false);
+    outputCsvFile << "," << QString::number(double(percentile * irriRatio), 'f', 1).toStdString();
+
+    // percentiles prec
+    percentile = sorting::percentile(forecastPrec, &(nrForecasts), 5, true);
+    outputCsvFile << "," << QString::number(double(percentile), 'f', 1).toStdString();
+    percentile = sorting::percentile(forecastPrec, &(nrForecasts), 25, false);
+    outputCsvFile << "," << QString::number(double(percentile), 'f', 1).toStdString();
+    percentile = sorting::percentile(forecastPrec, &(nrForecasts), 50, false);
+    outputCsvFile << "," << QString::number(double(percentile), 'f', 1).toStdString();
+    percentile = sorting::percentile(forecastPrec, &(nrForecasts), 75, false);
+    outputCsvFile << "," << QString::number(double(percentile), 'f', 1).toStdString();
+    percentile = sorting::percentile(forecastPrec, &(nrForecasts), 95, false);
+    outputCsvFile << "," << QString::number(double(percentile), 'f', 1).toStdString() << "\n";
+
+    outputCsvFile.flush();
+
     return true;
 }
 
 
-bool Crit1DProject::computeSeasonalForecast(unsigned int index, double irriRatio)
+bool Crit1DProject::computeSeasonalForecast(unsigned int index, float irriRatio)
 {
-    if (irriRatio < EPSILON)
-    {
-        // No irrigation: nothing to do
-        outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
-        outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
-        outputCsvFile << ",0,0,0,0,0\n";
-        return true;
-    }
-
-    if (! computeUnit(index))
+    if (! computeUnit(index, 0))
     {
         logger.writeError(projectError);
         return false;
     }
 
-    outputCsvFile << unitList[index].idCase.toStdString() << "," << unitList[index].idCrop.toStdString() << ",";
-    outputCsvFile << unitList[index].idSoil.toStdString() << "," << unitList[index].idMeteo.toStdString();
-    // percentiles
-    double percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 5, true);
-    outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 25, false);
-    outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 50, false);
-    outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 75, false);
-    outputCsvFile << "," << percentile * irriRatio;
-    percentile = sorting::percentile(seasonalForecasts, &(nrSeasonalForecasts), 95, false);
-    outputCsvFile << "," << percentile * irriRatio << "\n";
-    outputCsvFile.flush();
+    outputCsvFile << compUnitList[index].idCase.toStdString() << "," << compUnitList[index].idCrop.toStdString() << ",";
+    outputCsvFile << compUnitList[index].idSoil.toStdString() << "," << compUnitList[index].idMeteo.toStdString();
 
+    if (irriRatio < 0.001f)
+    {
+        // No irrigation
+        outputCsvFile << ",0,0,0,0,0\n";
+    }
+    else
+    {
+        // irrigation percentiles
+        float percentile = sorting::percentile(forecastIrr, &(nrForecasts), 5, true);
+        outputCsvFile << "," << percentile * irriRatio;
+        percentile = sorting::percentile(forecastIrr, &(nrForecasts), 25, false);
+        outputCsvFile << "," << percentile * irriRatio;
+        percentile = sorting::percentile(forecastIrr, &(nrForecasts), 50, false);
+        outputCsvFile << "," << percentile * irriRatio;
+        percentile = sorting::percentile(forecastIrr, &(nrForecasts), 75, false);
+        outputCsvFile << "," << percentile * irriRatio;
+        percentile = sorting::percentile(forecastIrr, &(nrForecasts), 95, false);
+        outputCsvFile << "," << percentile * irriRatio << "\n";
+    }
+
+    outputCsvFile.flush();
     return true;
 }
 
@@ -992,7 +1192,14 @@ bool Crit1DProject::setPercentileOutputCsv()
             logger.writeInfo("Output file: " + outputCsvFileName + "\n");
         }
 
-        outputCsvFile << "ID_CASE,CROP,SOIL,METEO,p5,p25,p50,p75,p95\n";
+        if (isSeasonalForecast)
+        {
+            outputCsvFile << "ID_CASE,CROP,SOIL,METEO,p5,p25,p50,p75,p95\n";
+        }
+        if (isMonthlyForecast)
+        {
+            outputCsvFile << "ID_CASE,CROP,irr5,irr25,irr50,irr75,irr95,prec5,prec25,prec50,prec75,prec95\n";
+        }
     }
 
     return true;
@@ -1004,14 +1211,14 @@ void Crit1DProject::initializeSeasonalForecast(const Crit3DDate& firstDate, cons
 {
     if (isSeasonalForecast)
     {
-        seasonalForecasts.clear();
+        forecastIrr.clear();
 
-        nrSeasonalForecasts = lastDate.year - firstDate.year +1;
-        seasonalForecasts.resize(unsigned(nrSeasonalForecasts));
+        nrForecasts = lastDate.year - firstDate.year +1;
+        forecastIrr.resize(unsigned(nrForecasts));
 
-        for (unsigned int i = 0; i < unsigned(nrSeasonalForecasts); i++)
+        for (unsigned int i = 0; i < unsigned(nrForecasts); i++)
         {
-            seasonalForecasts[i] = NODATA;
+            forecastIrr[i] = NODATA;
         }
     }
 }
@@ -1137,12 +1344,12 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
                 myError = "WC not found";
                 return false;
             }
-            if (nrLayer<0 || (unsigned)nrLayer>=myCase.soilLayers.size())
+            if (nrLayer < 0 || unsigned(nrLayer) >= myCase.soilLayers.size())
             {
                 myError = "Invalid NR_LAYER";
                 return false;
             }
-            myCase.soilLayers[nrLayer].waterContent = wc;
+            myCase.soilLayers[unsigned(nrLayer)].waterContent = wc;
         }
         if (nrLayer == -1)
         {
@@ -1204,11 +1411,6 @@ bool Crit1DProject::createOutputTable(QString &myError)
                   + " LAI REAL, ROOT_DEPTH REAL, BALANCE REAL";
 
     // specific depth variables
-    for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
-    {
-        QString fieldName = "DEFICIT_" + QString::number(waterDeficitDepth[i]);
-        queryString += ", " + fieldName + " REAL";
-    }
     for (unsigned int i = 0; i < waterContentDepth.size(); i++)
     {
         QString fieldName = "SWC_" + QString::number(waterContentDepth[i]);
@@ -1217,6 +1419,26 @@ bool Crit1DProject::createOutputTable(QString &myError)
     for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
     {
         QString fieldName = "WP_" + QString::number(waterPotentialDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
+    for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
+    {
+        QString fieldName = "DEFICIT_" + QString::number(waterDeficitDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
+    for (unsigned int i = 0; i < awcDepth.size(); i++)
+    {
+        QString fieldName = "AWC_" + QString::number(awcDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
+    for (unsigned int i = 0; i < availableWaterDepth.size(); i++)
+    {
+        QString fieldName = "AW_" + QString::number(availableWaterDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
+    for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
+    {
+        QString fieldName = "FAW_" + QString::number(fractionAvailableWaterDepth[i]);
         queryString += ", " + fieldName + " REAL";
     }
 
@@ -1244,11 +1466,6 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
                        + " TRANSP_MAX, TRANSP, EVAP_MAX, EVAP, LAI, ROOT_DEPTH, BALANCE";
 
         // specific depth variables
-        for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
-        {
-            QString fieldName = "DEFICIT_" + QString::number(waterDeficitDepth[i]);
-            outputString += ", " + fieldName;
-        }
         for (unsigned int i = 0; i < waterContentDepth.size(); i++)
         {
             QString fieldName = "SWC_" + QString::number(waterContentDepth[i]);
@@ -1257,6 +1474,26 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
         for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
         {
             QString fieldName = "WP_" + QString::number(waterPotentialDepth[i]);
+            outputString += ", " + fieldName;
+        }
+        for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
+        {
+            QString fieldName = "DEFICIT_" + QString::number(waterDeficitDepth[i]);
+            outputString += ", " + fieldName;
+        }
+        for (unsigned int i = 0; i < awcDepth.size(); i++)
+        {
+            QString fieldName = "AWC_" + QString::number(awcDepth[i]);
+            outputString += ", " + fieldName;
+        }
+        for (unsigned int i = 0; i < availableWaterDepth.size(); i++)
+        {
+            QString fieldName = "AW_" + QString::number(availableWaterDepth[i]);
+            outputString += ", " + fieldName;
+        }
+        for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
+        {
+            QString fieldName = "FAW_" + QString::number(fractionAvailableWaterDepth[i]);
             outputString += ", " + fieldName;
         }
 
@@ -1274,7 +1511,7 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailySurfaceWaterContent, 'g', 3)
                     + "," + QString::number(myCase.output.dailyAvailableWater, 'g', 4)
                     + "," + QString::number(myCase.output.dailyReadilyAW, 'g', 4)
-                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 4)
+                    + "," + QString::number(myCase.output.dailyFractionAW, 'g', 3)
                     + "," + QString::number(myCase.output.dailySurfaceRunoff, 'g', 3)
                     + "," + QString::number(myCase.output.dailyDrainage, 'g', 3)
                     + "," + QString::number(myCase.output.dailyLateralDrainage, 'g', 3)
@@ -1289,10 +1526,6 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
                     + "," + QString::number(myCase.output.dailyBalance, 'g', 3);
 
     // specific depth variables
-    for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
-    {
-        outputString += "," + QString::number(myCase.getSoilWaterDeficit(waterDeficitDepth[i]), 'g', 4);
-    }
     for (unsigned int i = 0; i < waterContentDepth.size(); i++)
     {
         outputString += "," + QString::number(myCase.getWaterContent(waterContentDepth[i]), 'g', 4);
@@ -1300,6 +1533,22 @@ void Crit1DProject::prepareOutput(Crit3DDate myDate, bool isFirst)
     for (unsigned int i = 0; i < waterPotentialDepth.size(); i++)
     {
         outputString += "," + QString::number(myCase.getWaterPotential(waterPotentialDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getWaterDeficit(waterDeficitDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < awcDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getWaterCapacity(awcDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < availableWaterDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getAvailableWater(availableWaterDepth[i]), 'g', 4);
+    }
+    for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 3);
     }
 
     outputString += ")";
@@ -1377,7 +1626,7 @@ int Crit1DProject::openAllDatabase()
         return ERROR_DBMETEO_OBSERVED;
     }
 
-    if (isXmlGrid)
+    if (isXmlMeteoGrid)
     {
         observedMeteoGrid = new Crit3DMeteoGridDbHandler();
         if (! observedMeteoGrid->parseXMLGrid(dbMeteoName, &projectError))
@@ -1406,7 +1655,7 @@ int Crit1DProject::openAllDatabase()
     }
 
     // meteo forecast
-    if (isShortTermForecast)
+    if (isShortTermForecast || isMonthlyForecast)
     {
         logger.writeInfo ("Forecast DB: " + dbForecastName);
         if (! QFile(dbForecastName).exists())
@@ -1416,7 +1665,7 @@ int Crit1DProject::openAllDatabase()
             return ERROR_DBMETEO_FORECAST;
         }
 
-        if (isXmlGrid)
+        if (isXmlMeteoGrid)
         {
             forecastMeteoGrid = new Crit3DMeteoGridDbHandler();
             if (! forecastMeteoGrid->parseXMLGrid(dbForecastName, &projectError))
@@ -1448,6 +1697,11 @@ int Crit1DProject::openAllDatabase()
     // output DB (not used in seasonal/monthly forecast)
     if ((! isSeasonalForecast) && (! isMonthlyForecast))
     {
+        if (dbOutputName == "")
+        {
+            logger.writeError("Missing output DB");
+                return ERROR_DBOUTPUT;
+        }
         QFile::remove(dbOutputName);
         logger.writeInfo ("Output DB: " + dbOutputName);
         dbOutput = QSqlDatabase::addDatabase("QSQLITE", "output");
@@ -1457,7 +1711,6 @@ int Crit1DProject::openAllDatabase()
         if (!QDir(outputDbPath).exists())
              QDir().mkdir(outputDbPath);
 
-
         if (! dbOutput.open())
         {
             projectError = "Open output DB failed: " + dbOutput.lastError().text();
@@ -1466,8 +1719,7 @@ int Crit1DProject::openAllDatabase()
         }
     }
 
-    // db units
-    logger.writeInfo ("Computational units DB: " + dbUnitsName);
+    logger.writeInfo ("Computational units DB: " + dbComputationUnitsName);
 
     return CRIT1D_OK;
 }
@@ -1483,16 +1735,16 @@ QString getOutputStringNullZero(double value)
 }
 
 
-bool setVariableDepth(QStringList& depthList, std::vector<int>& variableDepth)
+bool setVariableDepth(QList<QString>& depthList, std::vector<int>& variableDepth)
 {
     int nrDepth = depthList.size();
     if (nrDepth > 0)
     {
-        variableDepth.resize(nrDepth);
+        variableDepth.resize(unsigned(nrDepth));
         for (int i = 0; i < nrDepth; i++)
         {
-            variableDepth[i] = depthList[i].toInt();
-            if (variableDepth[i] <= 0)
+            variableDepth[unsigned(i)] = depthList[i].toInt();
+            if (variableDepth[unsigned(i)] <= 0)
                 return false;
         }
     }

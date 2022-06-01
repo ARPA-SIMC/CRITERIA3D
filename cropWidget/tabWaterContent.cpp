@@ -18,8 +18,8 @@ TabWaterContent::TabWaterContent()
     graphic->xAxis->setTicker(dateTicker);
     QDateTime first(QDate(QDate::currentDate().year(), 1, 1), QTime(0, 0, 0));
     QDateTime last(QDate(QDate::currentDate().year(), 12, 31), QTime(23, 0, 0));
-    double firstDouble = first.toTime_t();
-    double lastDouble = last.toTime_t();
+    double firstDouble = first.toSecsSinceEpoch();
+    double lastDouble = last.toSecsSinceEpoch();
     graphic->xAxis->setRange(firstDouble, lastDouble);
     graphic->xAxis->setVisible(true);
     graphic->yAxis->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
@@ -105,8 +105,8 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
     // update axes and colorMap size
     QDateTime first(QDate(firstYear, 1, 1), QTime(0, 0, 0));
     QDateTime last(QDate(lastDate.year, lastDate.month, lastDate.day), QTime(23, 0, 0));
-    double firstDouble = first.toTime_t();
-    double lastDouble = last.toTime_t();
+    double firstDouble = first.toSecsSinceEpoch();
+    double lastDouble = last.toSecsSinceEpoch();
     graphic->xAxis->setRange(firstDouble, lastDouble);
 
     nx = first.date().daysTo(last.date())+1;
@@ -141,7 +141,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase myCase, int firstYear, int 
             {
                 if (isVolumetricWaterContent)
                 {
-                    waterContent = myCase.soilLayers[i].getVolumetricWaterContent() / myCase.soilLayers[i].soilFraction;
+                    waterContent = myCase.soilLayers[i].getVolumetricWaterContent() * myCase.soilLayers[i].soilFraction;
                     maxWaterContent = MAXVALUE(waterContent, maxWaterContent);
                 }
                 else

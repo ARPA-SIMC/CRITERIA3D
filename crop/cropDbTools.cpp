@@ -181,10 +181,14 @@ bool updateCropRootparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *erro
 {
     QSqlQuery qry(*dbCrop);
 
-    qry.prepare( "UPDATE crop SET root_depth_zero = :root_depth_zero, "
-                 "root_depth_max = :root_depth_max, root_shape_deformation = :root_shape_deformation, degree_days_root_increase = :degree_days_root_increase"
+    qry.prepare( "UPDATE crop SET root_shape = :root_shape,"
+                 " root_depth_zero = :root_depth_zero,"
+                 " root_depth_max = :root_depth_max,"
+                 " root_shape_deformation = :root_shape_deformation,"
+                 " degree_days_root_increase = :degree_days_root_increase"
                  " WHERE id_crop = :id_crop");
 
+    qry.bindValue(":root_shape", root::getRootDistributionNumber(myCrop->roots.rootShape));
     qry.bindValue(":root_depth_zero", myCrop->roots.rootDepthMin);
     qry.bindValue(":root_depth_max", myCrop->roots.rootDepthMax);
     qry.bindValue(":root_shape_deformation", myCrop->roots.shapeDeformation);

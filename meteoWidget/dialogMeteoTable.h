@@ -11,17 +11,18 @@ class DialogMeteoTable : public QDialog
 
     private:
 
+    Crit3DMeteoSettings* meteoSettings;
     QVector<Crit3DMeteoPoint> meteoPoints;
     QDate firstDate;
     QDate lastDate;
     frequencyType currentFreq;
-    QStringList currentVariables;
+    QList<QString> currentVariables;
     MeteoTable* meteoTable;
-    QStringList labels;
-    QStringList meteoTableHeader;
+    QList<QString> labels;
+    QList<QString> meteoTableHeader;
 
     public:
-        DialogMeteoTable(QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QStringList currentVariables);
+        DialogMeteoTable(Crit3DMeteoSettings* meteoSettings_, QVector<Crit3DMeteoPoint> meteoPoints, QDate firstDate, QDate lastDate, frequencyType currentFreq, QList<QString> currentVariables);
         ~DialogMeteoTable();
 };
 

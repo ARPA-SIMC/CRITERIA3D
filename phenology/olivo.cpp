@@ -1,6 +1,10 @@
 
 #include "olivo.h"
 
+#include "math.h"
+#include <algorithm>
+
+
 void Olivo::InduzioneFiorale(const Stazione& stazione) 
 {
 	long i = m_faseFenologica.size() - 1;
@@ -27,9 +31,9 @@ void Olivo::Fioritura(const Stazione& stazione)
 	double gradiGiorno = 0.;
 
 	if( Tm > 12.5 )
-		gradiGiorno += __max( static_cast<double>(0.), Tm - Ts );
+        gradiGiorno += std::max( static_cast<double>(0.), Tm - Ts );
     else if( stazione.Tx(i) > 12.5 )
-		gradiGiorno += __max( static_cast<double>(0.), 
+        gradiGiorno += std::max( static_cast<double>(0.),
 		                      ( stazione.Tx(i) - 12.5 ) *( stazione.Tx(i) - 12.5 ) / 2. /
 							  ( stazione.Tx(i) - stazione.Tn(i) ) );
   
@@ -45,9 +49,9 @@ void Olivo::Maturazione(const Stazione& stazione)
 	double gradiGiorno = 0.;
 
 	if( Tm > 12.5 )
-		gradiGiorno += __max( static_cast<double>(0.), Tm - Ts );
+        gradiGiorno += std::max( static_cast<double>(0.), Tm - Ts );
     else if( stazione.Tx(i) > 12.5 )
-		gradiGiorno += __max( static_cast<double>(0.), 
+        gradiGiorno += std::max( static_cast<double>(0.),
 		                      ( stazione.Tx(i) - 12.5 ) *( stazione.Tx(i) - 12.5 ) / 2. /
 							  ( stazione.Tx(i) - stazione.Tn(i) ) );
   

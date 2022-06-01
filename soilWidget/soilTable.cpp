@@ -4,6 +4,7 @@
 #include <qevent.h>
 #include <qtooltip.h>
 #include <qdebug.h>
+#include <QFile>
 
 #include "soilTable.h"
 #include "tableDelegate.h"

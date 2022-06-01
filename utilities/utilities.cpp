@@ -2,18 +2,18 @@
 #include "commonConstants.h"
 #include "crit3dDate.h"
 
-
 #include <QVariant>
 #include <QSqlDriver>
 #include <QSqlRecord>
 #include <QDir>
+#include <QTextStream>
 
 
-QStringList getFields(QSqlDatabase* db_, QString tableName)
+QList<QString> getFields(QSqlDatabase* db_, QString tableName)
 {
     QSqlDriver* driver_ = db_->driver();
     QSqlRecord record_ = driver_->record(tableName);
-    QStringList fieldList;
+    QList<QString> fieldList;
     for (int i=0; i < record_.count(); i++)
         fieldList.append(record_.fieldName(i));
 
@@ -171,6 +171,7 @@ QDateTime getQDateTime(const Crit3DTime& t)
 {
     QDate myDate = QDate(t.date.year, t.date.month, t.date.day);
     QDateTime myDateTime;
+    myDateTime.setTimeSpec(Qt::UTC);
     myDateTime.setDate(myDate);
     return myDateTime.addSecs(t.time);
 }
@@ -391,11 +392,10 @@ QStringList FloatVectorToStringList(std::vector <float> myVector)
     return myList;
 }
 
-
 bool removeDirectory(QString myPath)
 {
     QDir myDir(myPath);
-    myDir.setNameFilters(QStringList() << "*.*");
+    myDir.setNameFilters(QList<QString>() << "*.*");
     myDir.setFilter(QDir::Files);
 
     // remove all files
@@ -465,4 +465,55 @@ bool searchDataPath(QString* dataPath)
 
     *dataPath = QDir::cleanPath(myPath) + "/DATA/";
     return true;
+}
+
+void clearDir( const QString path )
+{
+    QDir dir( path );
+
+    dir.setFilter( QDir::NoDotAndDotDot | QDir::Files );
+    foreach( QString dirItem, dir.entryList() )
+        dir.remove( dirItem );
+
+    dir.setFilter( QDir::NoDotAndDotDot | QDir::Dirs );
+    foreach( QString dirItem, dir.entryList() )
+    {
+        QDir subDir( dir.absoluteFilePath( dirItem ) );
+        subDir.removeRecursively();
+    }
+}
+
+
+QList<QString> readListSingleColumn(QString fileName, QString& error)
+{
+    QFile listFile(fileName);
+    QList<QString> myList;
+    if (listFile.open(QFile::ReadOnly | QFile::Text))
+    {
+        QTextStream sIn(&listFile);
+        while (!sIn.atEnd())
+        {
+            QString newValue = sIn.readLine();
+            if (newValue != "" && myList.contains(newValue) == 0)
+            {
+                myList << newValue;
+            }
+        }
+    }
+    else
+    {
+        error = "Error opening list file: " + fileName;
+    }
+
+    return myList;
+}
+
+QList<QString> removeList(QList<QString> list, QList<QString> toDelete)
+{
+  QList<QString>::iterator i;
+  for (i = toDelete.begin(); i != toDelete.end(); ++i)
+  {
+    list.removeAll(*i);
+  }
+  return list;
 }

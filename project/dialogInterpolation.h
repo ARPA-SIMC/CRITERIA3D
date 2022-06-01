@@ -20,6 +20,7 @@
 
             QComboBox algorithmEdit;
             QLineEdit minRegressionR2Edit;
+            QLineEdit maxTdMultiplierEdit;
             QCheckBox* lapseRateCodeEdit;
             QCheckBox* thermalInversionEdit;
             QCheckBox* optimalDetrendingEdit;
