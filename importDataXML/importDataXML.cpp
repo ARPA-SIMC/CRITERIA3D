@@ -941,11 +941,44 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
 
     while (!in.atEnd())
     {
-      QString line = in.readLine();
-      if (nRow >= format_headerRow && !line.isEmpty())
-      {
-          if (format_isSinglePoint)
-          {
+        QString line = in.readLine();
+        if (nRow >= format_headerRow && !line.isEmpty())
+        {
+            if (!format_isSinglePoint)
+            {
+              QList<QString> myFields = line.split(format_delimiter);
+              QString previousPointCode = "";
+              if (pointCode.getPosition()-1 < myFields.size())
+              {
+                  myPointCode = parseXMLPointCode(line);
+              }
+              if (myPointCode.isEmpty())
+              {
+                *error = "Point code not found for file: " + dataFileName;
+                return false;
+              }
+              if (myPointCode != previousPointCode)
+              {
+                // check if myPointCode exists
+                if (isGrid)
+                {
+                    if(!meteoGridDbHandler->meteoGrid()->existsMeteoPointFromId(myPointCode.toStdString()))
+                    {
+                      *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
+                      return false;
+                    }
+                 }
+                 else
+                 {
+                    if (!meteoPointsDbHandler->existIdPoint(myPointCode))
+                    {
+                       *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
+                       return false;
+                    }
+                 }
+                 previousPointCode = myPointCode;
+              }
+            } // end multiPoint case
             if (time.getType().toUpper() == "DAILY")
             {
                 QList<QString> myFields = line.split(format_delimiter);
@@ -1138,12 +1171,6 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                 *error = "Unknown time type" + time.getType().toUpper() + "for file: " + dataFileName;
                 return false;
             }
-          }
-          else
-          {
-              //multipoint
-              // LC tutto commentato in vb
-          }
       }
       nRow = nRow + 1;
     }
@@ -1222,7 +1249,14 @@ QString ImportDataXML::parseXMLPointCode(QString text)
         else if (format_type == XMLFORMATDELIMITED)
         {
             QList<QString> list = text.split(format_delimiter);
-            myPointCode = list[pointCode.getPosition()];
+            if (format_isSinglePoint)
+            {
+                myPointCode = list[pointCode.getPosition()];
+            }
+            else
+            {
+                myPointCode = list[pointCode.getPosition()-1];
+            }
         }
     }
 
