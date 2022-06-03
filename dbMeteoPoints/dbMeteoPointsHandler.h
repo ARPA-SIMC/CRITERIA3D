@@ -82,6 +82,7 @@
                             int* nrMissingData, int* nrWrongData, Crit3DQuality* dataQuality);
         bool importHourlyMeteoData(QString fileNameComplete, bool deletePreviousData, QString *log);
         bool writeDailyDataList(QString pointCode, QList<QString> listEntries, QString* log);
+        bool writeHourlyDataList(QString pointCode, QList<QString> listEntries, QString* log);
 
         bool setAllPointsActive();
         bool setAllPointsNotActive();
@@ -99,6 +100,7 @@
         QList<QString> getStateList();
         QList<QString> getDatasetList();
         bool setActiveStateIfCondition(bool activeState, QString condition);
+        bool setOrogCode(QString id, int orogCode);
 
 
     protected:

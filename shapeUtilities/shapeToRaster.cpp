@@ -1,9 +1,10 @@
+#include <float.h>
+#include <math.h>
+
 #include "shapeToRaster.h"
 #include "commonConstants.h"
 #include "gis.h"
-
-#include <float.h>
-#include <math.h>
+#include "basicMath.h"
 
 
 bool initializeRasterFromShape(Crit3DShapeHandler &shape, gis::Crit3DRasterGrid &raster, double cellSize)
@@ -98,7 +99,7 @@ bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler
 }
 
 
-bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shapeHandler, std::string valField)
+bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shapeHandler, std::string fieldName)
 {
     int nrShape = shapeHandler.getShapeCount();
     if (nrShape <= 0)
@@ -109,26 +110,18 @@ bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shap
 
     ShapeObject object;
     double x, y, fieldValue;
-    int fieldIndex = shapeHandler.getDBFFieldIndex(valField.c_str());
-    DBFFieldType fieldType = shapeHandler.getFieldType(fieldIndex);
     Box<double> bounds;
     int r0, r1, c0, c1;
+
+    int fieldIndex = shapeHandler.getDBFFieldIndex(fieldName.c_str());
 
     for (int shapeIndex = 0; shapeIndex < nrShape; shapeIndex++)
     {
         shapeHandler.getShape(shapeIndex, object);
 
-        fieldValue = NODATA;
-        if (fieldType == FTInteger)
-        {
-            fieldValue = shapeHandler.readIntAttribute(shapeIndex, fieldIndex);
-        }
-        else if (fieldType == FTDouble)
-        {
-            fieldValue = shapeHandler.readDoubleAttribute(shapeIndex, fieldIndex);
-        }
+        fieldValue = shapeHandler.getNumericValue(shapeIndex, fieldIndex);
 
-        if (int(fieldValue) != int(NODATA))
+        if (! isEqual(fieldValue, NODATA))
         {
             // get bounds
             bounds = object.getBounds();

@@ -53,7 +53,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     this->isGrid = isGrid;
     this->isEnsemble = false;
     this->nrMembers = NODATA;
-    maxEnsembleBar = 0;
+    maxEnsembleBar = -1;
     maxEnsembleLine = NODATA;
     minEnsembleLine = -NODATA;
 
@@ -716,7 +716,7 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
 
     Crit3DDate myDate;
     int nDays = 0;
-    maxEnsembleBar = 0;
+    maxEnsembleBar = -1;
     maxEnsembleLine = NODATA;
     minEnsembleLine = -NODATA;
 
@@ -886,9 +886,20 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
 
     if(isLine)
     {
-        axisY->setVisible(true);
-        axisY->setMax(maxEnsembleLine);
-        axisY->setMin(minEnsembleLine);
+        if (maxEnsembleLine == NODATA && minEnsembleLine == -NODATA)
+        {
+            axisY->setVisible(false);
+        }
+        else
+        {
+            axisY->setVisible(true);
+            axisY->setMax(maxEnsembleLine);
+            axisY->setMin(minEnsembleLine);
+            if (axisY->max() == axisY->min())
+            {
+                axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
+            }
+        }
     }
     else
     {
@@ -897,8 +908,22 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
 
     if (isBar)
     {
-        axisYdx->setVisible(true);
-        axisYdx->setRange(0,maxEnsembleBar);
+        if (maxEnsembleBar == -1)
+        {
+            axisYdx->setVisible(false);
+        }
+        else
+        {
+            axisYdx->setVisible(true);
+            if (maxEnsembleBar != 0)
+            {
+                axisYdx->setRange(0,maxEnsembleBar);
+            }
+            else
+            {
+                axisYdx->setRange(0,1);
+            }
+        }
     }
     else
     {
@@ -925,7 +950,7 @@ void Crit3DMeteoWidget::drawDailyVar()
 
     Crit3DDate myDate;
     int nDays = 0;
-    double maxBar = 0;
+    double maxBar = -1;
     double maxLine = NODATA;
     double minLine = -NODATA;
 
@@ -1044,14 +1069,25 @@ void Crit3DMeteoWidget::drawDailyVar()
                 barSeries[mp]->attachAxis(axisYdx);
             }
         }
-        axisYdx->setVisible(true);
-        if (maxEnsembleBar > maxBar)
+        if (maxEnsembleBar == -1 && maxBar == -1)
         {
-            axisYdx->setRange(0,maxEnsembleBar);
+            axisYdx->setVisible(false);
         }
         else
         {
-            axisYdx->setRange(0,maxBar);
+            axisYdx->setVisible(true);
+            if (maxEnsembleBar > maxBar)
+            {
+                axisYdx->setRange(0,maxEnsembleBar);
+            }
+            else
+            {
+                axisYdx->setRange(0,maxBar);
+            }
+            if (axisYdx->max() == axisYdx->min())
+            {
+                axisYdx->setRange(0,1);
+            }
         }
     }
     else
@@ -1074,23 +1110,34 @@ void Crit3DMeteoWidget::drawDailyVar()
                 }
             }
         }
-        axisY->setVisible(true);
-        if (maxEnsembleLine > maxLine)
+        if (maxLine == NODATA && minLine == -NODATA && maxEnsembleLine == NODATA && minEnsembleLine == -NODATA)
         {
-            axisY->setMax(maxEnsembleLine);
+            axisY->setVisible(false);
         }
         else
         {
-            axisY->setMax(maxLine);
-        }
+            axisY->setVisible(true);
+            if (maxEnsembleLine > maxLine)
+            {
+                axisY->setMax(maxEnsembleLine);
+            }
+            else
+            {
+                axisY->setMax(maxLine);
+            }
 
-        if (minEnsembleLine < minLine)
-        {
-            axisY->setMin(minEnsembleLine);
-        }
-        else
-        {
-            axisY->setMin(minLine);
+            if (minEnsembleLine < minLine)
+            {
+                axisY->setMin(minEnsembleLine);
+            }
+            else
+            {
+                axisY->setMin(minLine);
+            }
+            if (axisY->max() == axisY->min())
+            {
+                axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
+            }
         }
     }
     else
@@ -1159,10 +1206,6 @@ void Crit3DMeteoWidget::drawDailyVar()
     axisX->setCategories(categories);
     axisXvirtual->setCategories(categoriesVirtual);
     axisXvirtual->setGridLineVisible(false);
-    if (axisY->max() == axisY->min())
-    {
-        axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
-    }
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
@@ -1186,7 +1229,7 @@ void Crit3DMeteoWidget::drawHourlyVar()
     firstDate->blockSignals(true);
     lastDate->blockSignals(true);
 
-    double maxBar = 0;
+    double maxBar = -1;
     double maxLine = NODATA;
     double minLine = -NODATA;
 
@@ -1331,8 +1374,22 @@ void Crit3DMeteoWidget::drawHourlyVar()
                 barSeries[mp]->attachAxis(axisYdx);
             }
         }
-        axisYdx->setVisible(true);
-        axisYdx->setRange(0,maxBar);
+        if (maxBar == -1)
+        {
+            axisYdx->setVisible(false);
+        }
+        else
+        {
+            axisYdx->setVisible(true);
+            if (maxBar != 0)
+            {
+                axisYdx->setRange(0,maxBar);
+            }
+            else
+            {
+                axisYdx->setRange(0,1);
+            }
+        }
     }
     else
     {
@@ -1351,10 +1408,21 @@ void Crit3DMeteoWidget::drawHourlyVar()
                 connect(lineSeries[mp][i], &QLineSeries::hovered, this, &Crit3DMeteoWidget::tooltipLineSeries);
             }
         }
+        if (maxLine == NODATA && minLine == -NODATA)
+        {
+            axisY->setVisible(false);
+        }
+        else
+        {
+            axisY->setVisible(true);
+            axisY->setMax(maxLine);
+            axisY->setMin(minLine);
 
-        axisY->setVisible(true);
-        axisY->setMax(maxLine);
-        axisY->setMin(minLine);
+            if (axisY->max() == axisY->min())
+            {
+                axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
+            }
+        }
     }
     else
     {
@@ -1364,11 +1432,6 @@ void Crit3DMeteoWidget::drawHourlyVar()
     axisX->setCategories(categories);
     axisXvirtual->setCategories(categoriesVirtual);
     axisX->setGridLineVisible(false);
-
-    if (axisY->max() == axisY->min())
-    {
-        axisY->setRange(axisY->min()-axisY->min()/100, axisY->max()+axisY->max()/100);
-    }
 
     firstDate->blockSignals(false);
     lastDate->blockSignals(false);
@@ -1880,80 +1943,43 @@ void Crit3DMeteoWidget::handleMarkerClicked()
 {
 
     QLegendMarker* marker = qobject_cast<QLegendMarker*> (sender());
-    if (marker->type() == QLegendMarker::LegendMarkerTypeXY)
+
+    // Toggle visibility of series
+    bool isVisible = marker->series()->isVisible();
+    marker->series()->setVisible(!isVisible);
+
+    // Turn legend marker back to visible, since otherwise hiding series also hides the marker
+    marker->setVisible(true);
+
+    // change marker alpha, if series is not visible
+    qreal alpha;
+    if (isVisible)
     {
-        // Toggle visibility of series
-        marker->series()->setVisible(!marker->series()->isVisible());
-
-        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
-        marker->setVisible(true);
-
-        // change marker alpha, if series is not visible
-        qreal alpha = 1.0;
-
-        if (!marker->series()->isVisible()) {
-            alpha = 0.5;
-        }
-
-        QColor color;
-        QBrush brush = marker->labelBrush();
-        color = brush.color();
-        color.setAlphaF(alpha);
-        brush.setColor(color);
-        marker->setLabelBrush(brush);
-
-        brush = marker->brush();
-        color = brush.color();
-        color.setAlphaF(alpha);
-        brush.setColor(color);
-        marker->setBrush(brush);
-
-        QPen pen = marker->pen();
-        color = pen.color();
-        color.setAlphaF(alpha);
-        pen.setColor(color);
-        marker->setPen(pen);
+        alpha = 0.5;
     }
-    else if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
+    else
     {
-        // Toggle visibility of series
-        marker->series()->setVisible(!marker->series()->isVisible());
-
-        // change marker alpha, if series is not visible
-        qreal alpha = 1.0;
-
-        // Turn legend marker back to visible, since otherwise hiding series also hides the marker
-        foreach(QLegendMarker* marker, chart->legend()->markers())
-        {
-            if (marker->type() == QLegendMarker::LegendMarkerTypeBar)
-            {
-                marker->setVisible(true);
-            }
-            if (!marker->series()->isVisible()) {
-                alpha = 0.5;
-            }
-
-            QColor color;
-            QBrush brush = marker->labelBrush();
-            color = brush.color();
-            color.setAlphaF(alpha);
-            brush.setColor(color);
-            marker->setLabelBrush(brush);
-
-            brush = marker->brush();
-            color = brush.color();
-            color.setAlphaF(alpha);
-            brush.setColor(color);
-            marker->setBrush(brush);
-
-            QPen pen = marker->pen();
-            color = pen.color();
-            color.setAlphaF(alpha);
-            pen.setColor(color);
-            marker->setPen(pen);
-        }
-
+        alpha = 1.0;
     }
+
+    QColor color;
+    QBrush brush = marker->labelBrush();
+    color = brush.color();
+    color.setAlphaF(alpha);
+    brush.setColor(color);
+    marker->setLabelBrush(brush);
+
+    brush = marker->brush();
+    color = brush.color();
+    color.setAlphaF(alpha);
+    brush.setColor(color);
+    marker->setBrush(brush);
+
+    QPen pen = marker->pen();
+    color = pen.color();
+    color.setAlphaF(alpha);
+    pen.setColor(color);
+    marker->setPen(pen);
 
 }
 

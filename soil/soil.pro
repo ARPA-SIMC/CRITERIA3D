@@ -31,5 +31,7 @@ SOURCES += soil.cpp \
     soilDbTools.cpp
 
 HEADERS += soil.h \
+    carbon.h \
+    nitrogen.h \
     soilDbTools.h
 

@@ -23,6 +23,7 @@ public:
     bool parseXMLFile(QDomDocument* xmlDoc, QString *error);
     bool parserXML(QString *error);
     bool importData(QString fileName, QString *error);
+    QDateTime parseXMLDateTime(QString text);
     bool importXMLDataFixed(QString *error);
     bool importXMLDataDelimited(QString *error);
     QString parseXMLPointCode(QString text);
