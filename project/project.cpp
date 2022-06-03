@@ -2570,6 +2570,7 @@ bool Project::loadProject()
     if (! loadParameters(parametersFileName))
     {
         errorType = ERROR_SETTINGS;
+        errorString = "load parameters failed";
         logError();
         return false;
     }
@@ -2578,12 +2579,14 @@ bool Project::loadProject()
         if (! loadDEM(demFileName))
         {
             errorType = ERROR_DEM;
+            errorString = "load DEM failed";
             return false;
         }
 
     if (dbPointsFileName != "")
         if (! loadMeteoPointsDB(dbPointsFileName))
         {
+            errorString = "load Meteo Points DB failed";
             errorType = ERROR_DBPOINT;
             return false;
         }
@@ -2591,6 +2594,7 @@ bool Project::loadProject()
     if (dbAggregationFileName != "")
         if (! loadAggregationdDB(projectPath+"/"+dbAggregationFileName))
         {
+            errorString = "load Aggregation DB failed";
             errorType = ERROR_DBPOINT;
             return false;
         }
@@ -2598,6 +2602,7 @@ bool Project::loadProject()
     if (dbGridXMLFileName != "")
         if (! loadMeteoGridDB(dbGridXMLFileName))
         {
+            errorString = "load Meteo Grid DB failed";
             errorType = ERROR_DBGRID;
             return false;
         }
@@ -2605,6 +2610,7 @@ bool Project::loadProject()
     if (outputPointsFileName != "")
         if (! loadOutputPointList(outputPointsFileName))
         {
+            errorString = "load Output Point List failed";
             errorType = ERROR_OUTPUTPOINTLIST;
             return false;
         }
@@ -3135,6 +3141,35 @@ bool Project::setActiveStateWithCriteria(bool isActive)
         {
             logError("Failed to activate/deactivate points selected:\n" + meteoPointsDbHandler->error);
             return false;
+        }
+    }
+
+    return true;
+}
+
+
+bool Project::setMarkedFromPointList(QString fileName)
+{
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        meteoPoints[i].marked = false;
+    }
+
+    QList<QString> pointList = readListSingleColumn(fileName, errorString);
+    if (pointList.size() == 0)
+    {
+        logError();
+        return false;
+    }
+
+    for (int j = 0; j < pointList.size(); j++)
+    {
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].id == pointList[j].toStdString())
+            {
+                meteoPoints[i].marked = true;
+            }
         }
     }
 
