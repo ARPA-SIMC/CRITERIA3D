@@ -77,16 +77,16 @@
         float prec;
     };
 
-    void initializeDailyDataBasic(ToutputDailyMeteo* mydailyData, Crit3DDate myDate);
+    void initializeDailyDataBasic(ToutputDailyMeteo* dailyData, Crit3DDate myDate);
 
-    float getTMax(int dayOfYear, float precThreshold, TweatherGenClimate* wGen);
-    float getTMin(int dayOfYear, float precThreshold, TweatherGenClimate* wGen);
-    float getTAverage(int dayOfYear, float precThreshold, TweatherGenClimate* wGen);
-    float getPrecip(int dayOfYear, float precThreshold, TweatherGenClimate* wGen);
+    float getTMax(int dayOfYear, float precThreshold, TweatherGenClimate& wGen);
+    float getTMin(int dayOfYear, float precThreshold, TweatherGenClimate& wGen);
+    float getTAverage(int dayOfYear, float precThreshold, TweatherGenClimate& wGen);
+    float getPrecip(int dayOfYear, float precThreshold, TweatherGenClimate &wGen);
 
-    void newDay(int dayOfYear, float precThreshold, TweatherGenClimate* wGen);
+    void newDay(int dayOfYear, float precThreshold, TweatherGenClimate &wGen);
 
-    void initializeWeather(TweatherGenClimate* wGen);
+    void initializeWeather(TweatherGenClimate &wGen);
 
     void normalRandom(float *rnd_1, float *rnd_2);
 
@@ -101,7 +101,7 @@
     bool isWGDate(Crit3DDate myDate, int wgDoy1, int wgDoy2);
 
     bool assignXMLAnomaly(TXMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anomalyMonth1,
-                          int anomalyMonth2, TweatherGenClimate* wGenNoAnomaly, TweatherGenClimate* wGen);
+                          int anomalyMonth2, TweatherGenClimate &wGenNoAnomaly, TweatherGenClimate& wGen);
 
     bool assignAnomalyNoPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
                              float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar );
@@ -110,13 +110,16 @@
                            float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar);
 
     bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAnomaly* XMLAnomaly,
-                            TweatherGenClimate wGenClimate, TinputObsData* lastYearDailyObsData,
-                            int numRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2, float minPrec);
+                            TweatherGenClimate& wGenClimate, TinputObsData* lastYearDailyObsData,
+                            int numRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2, float rainfallThreshold);
 
-    bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGenClimate* wgClimate,
+    bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGenClimate& wgClimate,
                                     int predictionYear, int firstYear, int nrRepetitions,
                                     int wgDoy1, int wgDoy2, float minPrec, bool isLastMember,
                                     ToutputDailyMeteo* outputDailyData, int *outputDataLenght);
+
+    bool computeClimate(TweatherGenClimate &wgClimate, int firstYear, int nrRepetitions,
+                        float rainfallThreshold, std::vector<ToutputDailyMeteo> &outputDailyData);
 
     void clearInputData(TinputObsData* myData);
 
