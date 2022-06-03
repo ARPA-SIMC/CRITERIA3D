@@ -12,6 +12,7 @@ ImportDataXML::ImportDataXML(bool isGrid, Crit3DMeteoPointsDbHandler *meteoPoint
     this->xmlFileName = xmlFileName;
     this->meteoPointsDbHandler = meteoPointsDbHandler;
     this->meteoGridDbHandler = meteoGridDbHandler;
+    this->format_headerRow = 0;
 }
 
 bool ImportDataXML::parseXMLFile(QDomDocument* xmlDoc, QString *error)
@@ -869,7 +870,8 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                             }
                             else
                             {
-                                *error = "Var Field position error for file:\n" + dataFileName;
+                                nErrors = nErrors + 1;
+                                myValue = format_missingValue;
                                 return false;
                             }
                             // check FLAG
@@ -891,7 +893,8 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                             }
                             else
                             {
-                                *error = "Var Field position error for file:\n" + dataFileName;
+                                nErrors = nErrors + 1;
+                                myValue = format_missingValue;
                                 return false;
                             }
                         }
@@ -963,7 +966,8 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                             }
                             else
                             {
-                                *error = "Var Field position error for file:\n" + dataFileName;
+                                nErrors = nErrors + 1;
+                                myValue = format_missingValue;
                                 return false;
                             }
                             // check FLAG
@@ -985,7 +989,8 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                             }
                             else
                             {
-                                *error = "Var Field position error for file:\n" + dataFileName;
+                                nErrors = nErrors + 1;
+                                myValue = format_missingValue;
                                 return false;
                             }
                         }
