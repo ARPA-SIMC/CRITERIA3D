@@ -603,10 +603,10 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
         } // end daily
         else if (time.getType().toUpper() == "HOURLY")
         {
-            QDateTime myDate = parseXMLDateTime(line);
-            if (!myDate.isValid() || myDate.date().year() == 1800)
+            QDateTime myDateTime = parseXMLDateTime(line);
+            if (!myDateTime.isValid() || myDateTime.date().year() == 1800)
             {
-                *error = "Date not found or not valid for file: " + dataFileName;
+                *error = "Date not found or not valid for file: " + dataFileName + "\n" + line;
                 return false;
             }
             for (int i = 0; i<variable.size(); i++)
@@ -655,17 +655,17 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                     }
                     if (isGrid)
                     {
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd hh:mm")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
+                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
                     }
                     else
                     {
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd hh:mm")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
                     }
                     mapIdValues.insert(myPointCode, listEntries);
                     // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
                     if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
                     {
-                        if (!meteoGridDbHandler->saveCellCurrentGridHourlyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getHourlyPragaName(var)), myValue.toFloat()))
+                        if (!meteoGridDbHandler->saveCellCurrentGridHourlyFF(error, myPointCode, myDateTime, QString::fromStdString(meteoGridDbHandler->getHourlyPragaName(var)), myValue.toFloat()))
                         {
                             return false;
                         }
@@ -933,16 +933,16 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
             else if (time.getType().toUpper() == "HOURLY")
             {
                 QList<QString> myFields = line.split(format_delimiter);
-                QDateTime myDate(QDate(1800,1,1), QTime(0,0,0));
+                QDateTime myDateTime(QDate(1800,1,1), QTime(0,0,0), Qt::UTC);
 
                 if (time.getPosition()-1 < myFields.size())
                 {
-                     myDate = parseXMLDateTime(myFields[time.getPosition()-1]);
+                     myDateTime = parseXMLDateTime(myFields[time.getPosition()-1]);
                 }
 
-                if (!myDate.isValid() || myDate.date().year() == 1800)
+                if (!myDateTime.isValid() || myDateTime.date().year() == 1800)
                 {
-                    *error = "Date not found or not valid for file: " + dataFileName;
+                    *error = "Date not found or not valid for file: " + dataFileName + "\n" + line;
                     return false;
                 }
                 for (int i = 0; i<variable.size(); i++)
@@ -1005,17 +1005,17 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                             }
                             if (isGrid)
                             {
-                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd hh:mm")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
+                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
                             }
                             else
                             {
-                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd hh:mm")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
                             }
                             mapIdValues.insert(myPointCode, listEntries);
                             // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
                             if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
                             {
-                                if (!meteoGridDbHandler->saveCellCurrentGridHourlyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
+                                if (!meteoGridDbHandler->saveCellCurrentGridHourlyFF(error, myPointCode, myDateTime, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
                                 {
                                     return false;
                                 }
@@ -1083,9 +1083,10 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
             }
         }
     }
+
     if (nErrors != 0)
     {
-        *error = QString::number(nErrors);
+        *error = "Not valid or missing data: " + QString::number(nErrors);
     }
     return true;
 }
@@ -1138,16 +1139,18 @@ QDate ImportDataXML::parseXMLDate(QString text)
     return myDate;
 }
 
+
 QDateTime ImportDataXML::parseXMLDateTime(QString text)
 {
-    QDateTime myDateTime(QDate(1800,1,1), QTime(0,0,0));
-
     QString myDateStr = text.mid(time.getFirstChar()-1,time.getNrChar());
     QString format = time.getFormat();
-    myDateTime = QDateTime::fromString(myDateStr,format);
+
+    QDateTime myDateTime = QDateTime::fromString(myDateStr,format);
+    myDateTime.setTimeSpec(Qt::UTC);
 
     return myDateTime;
 }
+
 
 QVariant ImportDataXML::parseXMLFixedValue(QString text, int nReplication, FieldXML myField)
 {
