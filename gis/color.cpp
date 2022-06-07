@@ -47,50 +47,52 @@ Crit3DColor::Crit3DColor(short myRed, short myGreen, short myBlue)
 
 Crit3DColorScale::Crit3DColorScale()
 {
-    nrKeyColors = 1;
-    nrColors = 1;
-    keyColor.resize(nrKeyColors);
-    color.resize(nrColors);
-    minimum = NODATA;
-    maximum = NODATA;
+    _nrKeyColors = 1;
+    _nrColors = 1;
+    keyColor.resize(_nrKeyColors);
+    color.resize(_nrColors);
+
+    _minimum = NODATA;
+    _maximum = NODATA;
+    _isRangeBlocked = false;
+
+    _classification = classificationMethod::EqualInterval;
 }
 
 
-void Crit3DColorScale::initialize(int nrKeyColors_, int nrColors_)
+void Crit3DColorScale::initialize(unsigned int nrKeyColors, unsigned int nrColors)
 {
-    nrKeyColors = nrKeyColors_;
-    nrColors = nrColors_;
+    _nrKeyColors = nrKeyColors;
+    _nrColors = nrColors;
 
     keyColor.clear();
-    keyColor.resize(nrKeyColors);
+    keyColor.resize(_nrKeyColors);
 
     color.clear();
-    color.resize(nrColors);
-
-    classification = classificationMethod::EqualInterval;
+    color.resize(_nrColors);
 }
 
 
-bool Crit3DColorScale::setRange(float minimum_, float maximum_)
+bool Crit3DColorScale::setRange(float minimum, float maximum)
 {
-    if (maximum_ < minimum_)
+    if (maximum < minimum)
         return false;
 
-    minimum = minimum_;
-    maximum = maximum_;
+    _minimum = minimum;
+    _maximum = maximum;
     return true;
 }
 
 
 bool Crit3DColorScale::classify()
 {
-    int i, j, n, nrIntervals, nrStep;
+    unsigned int i, j, n, nrIntervals, nrStep;
     float dRed, dGreen, dBlue;
 
-    if (classification == classificationMethod::EqualInterval)
+    if (_classification == classificationMethod::EqualInterval)
     {
-        nrIntervals = std::max(nrKeyColors - 1, 1);
-        nrStep = nrColors / nrIntervals;
+        nrIntervals = MAXVALUE(_nrKeyColors -1, 1);
+        nrStep = _nrColors / nrIntervals;
 
         for (i = 0; i < nrIntervals; i++)
         {
@@ -106,30 +108,30 @@ bool Crit3DColorScale::classify()
                 color[n].blue = keyColor[i].blue + short(dBlue * float(j));
             }
         }
-        color[nrColors-1] = keyColor[nrKeyColors -1];
+        color[_nrColors-1] = keyColor[_nrKeyColors -1];
     }
 
-    return (true);
+    return true;
 }
 
 
 Crit3DColor* Crit3DColorScale::getColor(float value)
 {
-    int index = 0;
+    unsigned int index = 0;
 
-    if (value <= minimum)
+    if (value <= _minimum)
     {
         index = 0;
     }
-    else if (value >= maximum)
+    else if (value >= _maximum)
     {
-        index = nrColors-1;
+        index = _nrColors-1;
     }
     else
     {
-        if (classification == classificationMethod::EqualInterval)
+        if (_classification == classificationMethod::EqualInterval)
         {
-            index = int(float(nrColors-1) * ((value - minimum) / (maximum - minimum)));
+            index = unsigned(float(_nrColors-1) * ((value - _minimum) / (_maximum - _minimum)));
         }
     }
 
@@ -137,14 +139,14 @@ Crit3DColor* Crit3DColorScale::getColor(float value)
 }
 
 
-int Crit3DColorScale::getColorIndex(float value)
+unsigned int Crit3DColorScale::getColorIndex(float value)
 {
-    if (value <= minimum)
+    if (value <= _minimum)
         return 0;
-    else if (value >= maximum)
-        return nrColors-1;
-    else if (classification == classificationMethod::EqualInterval)
-        return int(float(nrColors-1) * ((value - minimum) / (maximum - minimum)));
+    else if (value >= _maximum)
+        return _nrColors-1;
+    else if (_classification == classificationMethod::EqualInterval)
+        return unsigned(float(_nrColors-1) * ((value - _minimum) / (_maximum - _minimum)));
     else return 0;
 }
 
@@ -298,8 +300,8 @@ bool reverseColorScale(Crit3DColorScale* myScale)
     std::vector<Crit3DColor> oldKeyColor = myScale->keyColor;
 
     // reverse key colors
-    int lastIndex = myScale->nrKeyColors - 1;
-    for (int i = 0; i < myScale->nrKeyColors; i++)
+    unsigned int lastIndex = myScale->nrKeyColors() - 1;
+    for (unsigned int i = 0; i < myScale->nrKeyColors(); i++)
     {
         myScale->keyColor[i] = oldKeyColor[lastIndex - i];
     }
@@ -313,7 +315,7 @@ bool reverseColorScale(Crit3DColorScale* myScale)
 /*!
  * \brief roundColorScale round colorScale values on the second (or third) digit of each range.
  * It requires that nrColors is a multiply of nrIntervals for a correct visualization in the colors legend.
- * It is projected for a legend of nrIntervals+1 levels (i.e= 4 intervals, 5 levels)
+ * It is projected for a legend of nrIntervals+1 levels (i.e 4 intervals = 5 levels)
  * \param myScale
  * \param nrIntervals
  * \param lessRounded if true the round is on third digit
@@ -323,66 +325,63 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
 {
     if (myScale == nullptr) return false;
 
-    if (isEqual(myScale->minimum, NODATA)
-        || isEqual(myScale->maximum, NODATA)) return false;
+    if (isEqual(myScale->minimum(), NODATA)
+        || isEqual(myScale->maximum(), NODATA)) return false;
 
     if (nrIntervals < 1) return false;
 
-    if (isEqual(myScale->minimum, myScale->maximum))
+    if (isEqual(myScale->minimum(), myScale->maximum()))
     {
-        if (isEqual(myScale->minimum, 0))
+        myScale->setMaximum(myScale->maximum() + 1);
+
+        if (! isEqual(myScale->minimum(), 0))
         {
-            myScale->maximum += 1;
-        }
-        else
-        {
-            myScale->minimum -= 1;
-            myScale->maximum += 1;
+            myScale->setMinimum(myScale->minimum() - 1);
         }
         return true;
     }
 
-    double avg = double(myScale->minimum) + double(myScale->maximum - myScale->minimum) / 2;
-    double level = double(myScale->maximum - myScale->minimum) / double(nrIntervals);
-    double logLevel = log10(level);
+    double avg = double(myScale->minimum()) + double(myScale->maximum() - myScale->minimum()) / 2;
+    double step = double(myScale->maximum() - myScale->minimum()) / double(nrIntervals);
+    double logStep = log10(step);
 
     double myExp;
     double roundAvg = avg;
 
     if (isEqual(avg, 0))
     {
-        myExp = floor(logLevel)-1;
+        myExp = floor(logStep)-1;
     }
     else
     {
         double logAvg = log10(avg);
         if (lessRounded)
         {
-            myExp = std::min(floor(logLevel)-1, floor(logAvg)-1);
+            myExp = std::min(floor(logStep)-1, floor(logAvg)-1);
         }
         else
         {
-            myExp = std::max(floor(logLevel)-1, floor(logAvg)-1);
+            myExp = std::max(floor(logStep)-1, floor(logAvg)-1);
         }
     }
 
     double pow10 = pow(10, myExp);
-    double roundLevel = ceil(level / pow10) * pow10;
+    double roundStep = ceil(step / pow10) * pow10;
 
     if (! isEqual(avg, 0))
     {
         roundAvg = round(avg / pow10) * pow10;
     }
 
-    if (myScale->minimum == 0.f)
+    if (myScale->minimum() == 0.f)
     {
         //precipitation
-        myScale->maximum = float(roundLevel * nrIntervals);
+        myScale->setMaximum(float(roundStep * nrIntervals));
     }
     else
     {
-        myScale->minimum = float(roundAvg - roundLevel*(nrIntervals/2));
-        myScale->maximum = float(roundAvg + roundLevel*(nrIntervals/2));
+        myScale->setMinimum(float(roundAvg - roundStep*(nrIntervals/2)));
+        myScale->setMaximum(float(roundAvg + roundStep*(nrIntervals/2)));
     }
 
     return true;
