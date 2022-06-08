@@ -318,7 +318,7 @@ bool reverseColorScale(Crit3DColorScale* myScale)
  * It is projected for a legend of nrIntervals+1 levels (i.e 4 intervals = 5 levels)
  * \param myScale
  * \param nrIntervals
- * \param lessRounded if true the round is on third digit
+ * \param lessRounded if true the round is on more digit
  * \return
  */
 bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounded)
@@ -357,7 +357,7 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
         double logAvg = log10(avg);
         if (lessRounded)
         {
-            myExp = std::min(floor(logStep)-1, floor(logAvg)-1);
+            myExp = int((floor(logStep) + floor(logAvg))/2 - 1);
         }
         else
         {
