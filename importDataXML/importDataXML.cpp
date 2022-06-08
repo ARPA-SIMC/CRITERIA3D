@@ -105,7 +105,7 @@ bool ImportDataXML::parserXML(QString *myError)
                 myTag = child.toElement().tagName().toUpper();
                 if (myTag == "TYPE")
                 {
-                    if (child.toElement().text().toUpper().simplified() == "FIXED")
+                    if (child.toElement().text().toUpper().simplified() == "FIXED" || child.toElement().text().toUpper().simplified() == "XMLFORMATFIXED")
                     {
                         format_type = XMLFORMATFIXED;
                     }
