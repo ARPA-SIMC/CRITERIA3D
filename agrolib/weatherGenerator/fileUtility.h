@@ -4,10 +4,16 @@
     class QString;
     struct ToutputDailyMeteo;
     struct TinputObsData;
+    #include <vector>
 
-    bool readMeteoDataCsv (QString namefile, char separator, double noData,  TinputObsData* inputData);
+    bool readMeteoDataCsv (QString namefile, char valuesSeparator,
+                          double noData,  TinputObsData* inputData);
 
-    bool writeMeteoDataCsv (QString namefile, char separator, ToutputDailyMeteo* mydailyData, long dataLenght);
+    bool writeMeteoDataCsv (QString namefile, char valueSeparator,
+                           ToutputDailyMeteo* mydailyData, long dataLenght);
+
+    bool writeMeteoDataCsv(QString namefile, char valueSeparator,
+                           std::vector<ToutputDailyMeteo>& dailyData);
 
 #endif // FILEUTILITY_H
 

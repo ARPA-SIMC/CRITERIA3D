@@ -445,16 +445,16 @@ bool Download::downloadDailyData(QDate startDate, QDate endDate, QString dataset
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
-        url = QUrl(QString("%1/query?query=%2%3%4&style=postprocess")
-                   .arg(_dbMeteo->getDatasetURL(dataset)).arg(refTime).arg(area).arg(product));
-
+        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
 
-        //qDebug() << "URL: " << url.toString(); //debug
+        QUrlQuery postData;
+        postData.addQueryItem("style", "postprocess");
+        postData.addQueryItem("query", QString("%2%3%4").arg(refTime, area, product));
 
-        // GET
-        QNetworkReply* reply = manager->get(request);
+        QNetworkReply* reply = manager->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
         downloadOk = true;
         loop.exec();
 
@@ -587,13 +587,16 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
         QNetworkAccessManager* manager = new QNetworkAccessManager(this);
         connect(manager, SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
 
-        url = QUrl(QString("%1/query?query=%2%3%4&style=postprocess").arg(_dbMeteo->getDatasetURL(dataset)).arg(refTime).arg(area).arg(product));
+        url = QUrl(QString("%1/query").arg(_dbMeteo->getDatasetURL(dataset)));
         request.setUrl(url);
         request.setRawHeader("Authorization", _authorization);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/x-www-form-urlencoded"));
 
-        //qDebug() << url.toString();
+        QUrlQuery postData;
+        postData.addQueryItem("style", "postprocess");
+        postData.addQueryItem("query", QString("%2%3%4").arg(refTime, area, product));
 
-        QNetworkReply* reply = manager->get(request);  // GET
+        QNetworkReply* reply = manager->post(request, postData.toString(QUrl::FullyEncoded).toUtf8());
         loop.exec();
 
         if (reply->error() != QNetworkReply::NoError)

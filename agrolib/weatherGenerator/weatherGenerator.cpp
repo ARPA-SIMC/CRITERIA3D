@@ -80,48 +80,48 @@
 #include "furtherMathFunctions.h"
 
 
-float getTMax(int dayOfYear, float precThreshold, TweatherGenClimate* wGen)
+float getTMax(int dayOfYear, float precThreshold, TweatherGenClimate& wGen)
 {
     dayOfYear = dayOfYear % 365;
-    if (dayOfYear != wGen->state.currentDay)
+    if (dayOfYear != wGen.state.currentDay)
         newDay(dayOfYear, precThreshold, wGen);
 
-    return wGen->state.currentTmax;
+    return wGen.state.currentTmax;
 }
 
 
-float getTMin(int dayOfYear, float precThreshold, TweatherGenClimate* wGen)
+float getTMin(int dayOfYear, float precThreshold, TweatherGenClimate& wGen)
 {
     dayOfYear = dayOfYear % 365;
-    if (dayOfYear != wGen->state.currentDay)
+    if (dayOfYear != wGen.state.currentDay)
         newDay(dayOfYear, precThreshold,  wGen);
 
-    return wGen->state.currentTmin;
+    return wGen.state.currentTmin;
 }
 
 
-float getTAverage(int dayOfYear, float precThreshold, TweatherGenClimate* wGen)
+float getTAverage(int dayOfYear, float precThreshold, TweatherGenClimate &wGen)
 {
     dayOfYear = dayOfYear % 365;
-    if (dayOfYear != wGen->state.currentDay)
+    if (dayOfYear != wGen.state.currentDay)
         newDay(dayOfYear, precThreshold, wGen);
 
-    return 0.5f * (wGen->state.currentTmax + wGen->state.currentTmin);
+    return 0.5f * (wGen.state.currentTmax + wGen.state.currentTmin);
 }
 
 
-float getPrecip(int dayOfYear, float precThreshold, TweatherGenClimate* wGen)
+float getPrecip(int dayOfYear, float precThreshold, TweatherGenClimate& wGen)
 {
     dayOfYear = dayOfYear % 365;
-    if (dayOfYear != wGen->state.currentDay)
+    if (dayOfYear != wGen.state.currentDay)
         newDay(dayOfYear, precThreshold, wGen);
 
-    return wGen->state.currentPrec;
+    return wGen.state.currentPrec;
 }
 
 
 // main function
-void newDay(int dayOfYear, float precThreshold, TweatherGenClimate* wGen)
+void newDay(int dayOfYear, float precThreshold, TweatherGenClimate& wGen)
 {
     float meanTMax, meanTMin, stdTMax, stdTMin;
 
@@ -129,34 +129,44 @@ void newDay(int dayOfYear, float precThreshold, TweatherGenClimate* wGen)
     dayOfYear = dayOfYear - 1;
 
     //Precipitation
-    bool isWetDay = markov(wGen->daily.pwd[dayOfYear], wGen->daily.pww[dayOfYear], wGen->state.wetPreviousDay);
+    bool isWetDay = markov(wGen.daily.pwd[dayOfYear], wGen.daily.pww[dayOfYear], wGen.state.wetPreviousDay);
 
     if (isWetDay)
     {
-        meanTMax = wGen->daily.meanWetTMax[dayOfYear];
-        wGen->state.currentPrec = weibull(wGen->daily.meanPrecip[dayOfYear], precThreshold);
+        meanTMax = wGen.daily.meanWetTMax[dayOfYear];
+        wGen.state.currentPrec = weibull(wGen.daily.meanPrecip[dayOfYear], precThreshold);
     }
     else
     {
-        meanTMax = wGen->daily.meanDryTMax[dayOfYear];
-        wGen->state.currentPrec = 0;
+        meanTMax = wGen.daily.meanDryTMax[dayOfYear];
+        wGen.state.currentPrec = 0;
     }
 
     //store information
-    wGen->state.wetPreviousDay = isWetDay;
+    wGen.state.wetPreviousDay = isWetDay;
 
     //temperature
-    meanTMin = wGen->daily.meanTMin[dayOfYear];
-    stdTMax = wGen->daily.maxTempStd[dayOfYear];
-    stdTMin = wGen->daily.minTempStd[dayOfYear];
+    meanTMin = wGen.daily.meanTMin[dayOfYear];
+    stdTMax = wGen.daily.maxTempStd[dayOfYear];
+    stdTMin = wGen.daily.minTempStd[dayOfYear];
 
-    genTemps(&wGen->state.currentTmax, &wGen->state.currentTmin, meanTMax, meanTMin, stdTMax, stdTMin, &(wGen->state.resTMaxPrev), &(wGen->state.resTMinPrev));
+    genTemps(&wGen.state.currentTmax, &wGen.state.currentTmin, meanTMax, meanTMin, stdTMax, stdTMin, &(wGen.state.resTMaxPrev), &(wGen.state.resTMinPrev));
 
-    wGen->state.currentDay = dayOfYear;
+    wGen.state.currentDay = dayOfYear;
 }
 
 
-void initializeWeather(TweatherGenClimate* wGen)
+void initializeDailyDataBasic(ToutputDailyMeteo* dailyData, Crit3DDate myDate)
+{
+    dailyData->date = myDate;
+    dailyData->maxTemp = NODATA;
+    dailyData->minTemp = NODATA;
+    dailyData->prec = NODATA;
+
+}
+
+
+void initializeWeather(TweatherGenClimate &wGen)
 {
     float mpww[12];
     float mpwd[12];
@@ -169,50 +179,44 @@ void initializeWeather(TweatherGenClimate* wGen)
     float mMeanDiff[12];
     float mMaxTempStd[12];
     float mMinTempStd[12];
-    float aveTMax = 0;
-    float aveTMin = 0;
     float sumPrecip = 0;
     int daysInMonth;
     int m;
 
-    wGen->state.currentDay = NODATA;
-    wGen->state.currentTmax = NODATA;
-    wGen->state.currentTmin = NODATA;
-    wGen->state.currentPrec = NODATA;
+    wGen.state.currentDay = NODATA;
+    wGen.state.currentTmax = NODATA;
+    wGen.state.currentTmin = NODATA;
+    wGen.state.currentPrec = NODATA;
+
     // TODO: pass residual data of last observed day
-    wGen->state.resTMaxPrev = 0;
-    wGen->state.resTMinPrev = 0;
-    wGen->state.wetPreviousDay = false;
+    wGen.state.resTMaxPrev = 0;
+    wGen.state.resTMinPrev = 0;
+    wGen.state.wetPreviousDay = false;
 
     for (int i = 0; i < 366; i++)
     {
-        wGen->daily.maxTempStd[i] = 0;
-        wGen->daily.meanDryTMax[i] = 0;
-        wGen->daily.meanTMin[i] = 0;
-        wGen->daily.meanPrecip[i] = 0;
-        wGen->daily.meanWetTMax[i] = 0;
-        wGen->daily.minTempStd[i] = 0;
-        wGen->daily.pwd[i] = 0;
-        wGen->daily.pww[i] = 0;
+        wGen.daily.maxTempStd[i] = 0;
+        wGen.daily.meanDryTMax[i] = 0;
+        wGen.daily.meanTMin[i] = 0;
+        wGen.daily.meanPrecip[i] = 0;
+        wGen.daily.meanWetTMax[i] = 0;
+        wGen.daily.minTempStd[i] = 0;
+        wGen.daily.pwd[i] = 0;
+        wGen.daily.pww[i] = 0;
     }
 
     for (m = 0; m < 12; m++)
     {
-        mMeanTMax[m] = wGen->monthly.monthlyTmax[m];
-        mMeanTMin[m] = wGen->monthly.monthlyTmin[m];
-        mMeanPrecip[m] = wGen->monthly.sumPrec[m];
-        fWetDays[m] = wGen->monthly.fractionWetDays[m];
-        mpww[m] = wGen->monthly.probabilityWetWet[m];
-        mMeanDiff[m] = wGen->monthly.dw_Tmax[m];
-        mMaxTempStd[m] = wGen->monthly.stDevTmax[m];
-        mMinTempStd[m] = wGen->monthly.stDevTmin[m];
-        aveTMax = aveTMax + mMeanTMax[m];
-        aveTMin = aveTMin + mMeanTMin[m];
+        mMeanTMax[m] = wGen.monthly.monthlyTmax[m];
+        mMeanTMin[m] = wGen.monthly.monthlyTmin[m];
+        mMeanPrecip[m] = wGen.monthly.sumPrec[m];
+        fWetDays[m] = wGen.monthly.fractionWetDays[m];
+        mpww[m] = wGen.monthly.probabilityWetWet[m];
+        mMeanDiff[m] = wGen.monthly.dw_Tmax[m];
+        mMaxTempStd[m] = wGen.monthly.stDevTmax[m];
+        mMinTempStd[m] = wGen.monthly.stDevTmin[m];
         sumPrecip = sumPrecip + mMeanPrecip[m];
     }
-
-    aveTMax = aveTMax / 12;
-    aveTMin = aveTMin / 12;
 
     for (m = 0; m < 12; m++)
     {
@@ -221,21 +225,20 @@ void initializeWeather(TweatherGenClimate* wGen)
 
         mpwd[m] = (1.f - mpww[m]) * (fWetDays[m] / (1.f - fWetDays[m]));
 
-        daysInMonth = getDaysInMonth(m+1,2001); // year = 2001 is to avoid leap year
+        daysInMonth = getDaysInMonth(m+1, 2001); // year = 2001 is to avoid leap year
 
         // convert from total mm/month to average mm/wet day
-        mMeanPrecip[m] = mMeanPrecip[m] / (fWetDays[m] * daysInMonth);
+        mMeanPrecip[m] = mMeanPrecip[m] / (fWetDays[m] * float(daysInMonth));
     }
 
-    cubicSplineYearInterpolate(mpww, wGen->daily.pww);
-    cubicSplineYearInterpolate(mpwd, wGen->daily.pwd);
-    cubicSplineYearInterpolate(mMeanDryTMax, wGen->daily.meanDryTMax);
-    cubicSplineYearInterpolate(mMeanPrecip, wGen->daily.meanPrecip);
-    cubicSplineYearInterpolate(mMeanWetTMax, wGen->daily.meanWetTMax);
-    cubicSplineYearInterpolate(mMeanTMin, wGen->daily.meanTMin);
-    cubicSplineYearInterpolate(mMinTempStd, wGen->daily.minTempStd);
-    cubicSplineYearInterpolate(mMaxTempStd, wGen->daily.maxTempStd);
-
+    cubicSplineYearInterpolate(mpww, wGen.daily.pww);
+    cubicSplineYearInterpolate(mpwd, wGen.daily.pwd);
+    cubicSplineYearInterpolate(mMeanDryTMax, wGen.daily.meanDryTMax);
+    cubicSplineYearInterpolate(mMeanPrecip, wGen.daily.meanPrecip);
+    cubicSplineYearInterpolate(mMeanWetTMax, wGen.daily.meanWetTMax);
+    cubicSplineYearInterpolate(mMeanTMin, wGen.daily.meanTMin);
+    cubicSplineYearInterpolate(mMinTempStd, wGen.daily.minTempStd);
+    cubicSplineYearInterpolate(mMaxTempStd, wGen.daily.maxTempStd);
 }
 
 
@@ -356,7 +359,7 @@ void quadrSplineYearInterpolate(float *meanY, float *dayVal)
 {
     float a[13] = {0};
     float b[14] = {0};
-    float c[13] = {0};;
+    float c[13] = {0};
     float aa[13] = {0};
     float bb[13] = {0};
     float cc[13] = {0};
@@ -465,7 +468,36 @@ void genTemps(float *tMax, float *tMin, float meanTMax, float meanTMin, float st
 }
 
 
-bool assignXMLAnomaly(TXMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anomalyMonth1, int anomalyMonth2, TweatherGenClimate* wGenNoAnomaly, TweatherGenClimate* wGen)
+bool isWGDate(Crit3DDate myDate, int wgDoy1, int wgDoy2)
+{
+    bool isWGDate = false;
+    int myDoy = getDoyFromDate(myDate);
+
+    if (wgDoy2 >= wgDoy1)
+    {
+        if ( (myDoy >= wgDoy1) && (myDoy <= wgDoy2) )
+            isWGDate = true;
+    }
+    else
+    {
+        if ( (myDoy >= wgDoy1) || (myDoy <= wgDoy2) )
+            isWGDate = true;
+    }
+
+    return isWGDate;
+}
+
+
+void clearInputData(TinputObsData* myData)
+{
+    myData->inputTMin.clear();
+    myData->inputTMax.clear();
+    myData->inputPrecip.clear();
+}
+
+
+
+bool assignXMLAnomaly(TXMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anomalyMonth1, int anomalyMonth2, TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen)
 {
     unsigned int i = 0;
     QString myVar;
@@ -489,17 +521,17 @@ bool assignXMLAnomaly(TXMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anoma
             if (int(myValue) != int(NODATA))
             {
                 if ( (myVar == "TMIN") || (myVar == "AVGTMIN") )
-                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly->monthly.monthlyTmin, wGen->monthly.monthlyTmin);
+                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.monthlyTmin, wGen.monthly.monthlyTmin);
                 else if ( (myVar == "TMAX") || (myVar == "AVGTMAX") )
-                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly->monthly.monthlyTmax, wGen->monthly.monthlyTmax);
+                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.monthlyTmax, wGen.monthly.monthlyTmax);
                 else if ( (myVar == "PREC3M") || (myVar == "PREC") )
-                    result = assignAnomalyPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly->monthly.sumPrec, wGen->monthly.sumPrec);
+                    result = assignAnomalyPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.sumPrec, wGen.monthly.sumPrec);
                 else if ( (myVar == "WETDAYSFREQUENCY") )
-                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly->monthly.fractionWetDays, wGen->monthly.fractionWetDays);
+                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.fractionWetDays, wGen.monthly.fractionWetDays);
                 else if ( (myVar == "WETWETDAYSFREQUENCY") )
-                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly->monthly.probabilityWetWet, wGen->monthly.probabilityWetWet);
+                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.probabilityWetWet, wGen.monthly.probabilityWetWet);
                 else if ( (myVar == "DELTATMAXDRYWET") )
-                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly->monthly.dw_Tmax, wGen->monthly.dw_Tmax);
+                    result = assignAnomalyNoPrec(myValue, anomalyMonth1, anomalyMonth2, wGenNoAnomaly.monthly.dw_Tmax, wGen.monthly.dw_Tmax);
             }
             else
             {
@@ -524,14 +556,14 @@ bool assignXMLAnomaly(TXMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anoma
     for (int m = 0; m < 12; m++)
     {
         stream << "month = " << m +1 << endl;
-        stream << "wGen->monthly.monthlyTmin = " << wGen->monthly.monthlyTmin[m] << endl;
-        stream << "wGen->monthly.monthlyTmax = " << wGen->monthly.monthlyTmax[m] << endl;
-        stream << "wGen->monthly.sumPrec = " << wGen->monthly.sumPrec[m] << endl;
-        stream << "wGen->monthly.stDevTmin[m] = " << wGen->monthly.stDevTmin[m] << endl;
-        stream << "wGen->monthly.stDevTmax = " << wGen->monthly.stDevTmax[m] << endl;
-        stream << "wGen->monthly.fractionWetDays[m] = " << wGen->monthly.fractionWetDays[m] << endl;
-        stream << "wGen->monthly.probabilityWetWet[m] = " << wGen->monthly.probabilityWetWet[m] << endl;
-        stream << "wGen->monthly.dw_Tmax[m] = " << wGen->monthly.dw_Tmax[m] << endl;
+        stream << "wGen.monthly.monthlyTmin = " << wGen.monthly.monthlyTmin[m] << endl;
+        stream << "wGen.monthly.monthlyTmax = " << wGen.monthly.monthlyTmax[m] << endl;
+        stream << "wGen.monthly.sumPrec = " << wGen.monthly.sumPrec[m] << endl;
+        stream << "wGen.monthly.stDevTmin[m] = " << wGen.monthly.stDevTmin[m] << endl;
+        stream << "wGen.monthly.stDevTmax = " << wGen.monthly.stDevTmax[m] << endl;
+        stream << "wGen.monthly.fractionWetDays[m] = " << wGen.monthly.fractionWetDays[m] << endl;
+        stream << "wGen.monthly.probabilityWetWet[m] = " << wGen.monthly.probabilityWetWet[m] << endl;
+        stream << "wGen.monthly.dw_Tmax[m] = " << wGen.monthly.dw_Tmax[m] << endl;
         stream << "-------------------------------------------" << endl;
     }
     */
@@ -540,58 +572,60 @@ bool assignXMLAnomaly(TXMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anoma
 }
 
 
-bool assignAnomalyNoPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2, float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar )
+bool assignAnomalyNoPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
+                         float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar)
 {
-    int myMonth = 0;
+    int month = 0;
 
     if (anomalyMonth2 >= anomalyMonth1)
     {
         // regular period
-        for (myMonth = anomalyMonth1; myMonth <= anomalyMonth2; myMonth++)
-            myWGMonthlyVar[myMonth-1] = myWGMonthlyVarNoAnomaly[myMonth-1] + myAnomaly;
+        for (month = anomalyMonth1; month <= anomalyMonth2; month++)
+            myWGMonthlyVar[month-1] = myWGMonthlyVarNoAnomaly[month-1] + myAnomaly;
 
     }
     else
     {
         // irregular period (between years)
-        for (myMonth = anomalyMonth1; myMonth <= 12; myMonth++)
-            myWGMonthlyVar[myMonth-1] = myWGMonthlyVarNoAnomaly[myMonth-1] + myAnomaly;
+        for (month = anomalyMonth1; month <= 12; month++)
+            myWGMonthlyVar[month-1] = myWGMonthlyVarNoAnomaly[month-1] + myAnomaly;
 
-        for (myMonth = 1; myMonth <=anomalyMonth2; myMonth++)
-            myWGMonthlyVar[myMonth-1] = myWGMonthlyVarNoAnomaly[myMonth-1] + myAnomaly;
+        for (month = 1; month <=anomalyMonth2; month++)
+            myWGMonthlyVar[month-1] = myWGMonthlyVarNoAnomaly[month-1] + myAnomaly;
     }
 
     return true;
 }
 
 
-bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2, float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar)
+bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
+                       float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar)
 {
 
-    int myMonth = 0;
+    int month;
     float mySumClimatePrec;
     float myNewSumPrec = 0;
     float myFraction = 0;
 
-    int myNumMonths = numMonthsInPeriod(anomalyMonth1, anomalyMonth2);
+    int nrMonths = numMonthsInPeriod(anomalyMonth1, anomalyMonth2);
 
     // compute sum of precipitation
     mySumClimatePrec = 0;
     if (anomalyMonth2 >= anomalyMonth1)
     {
         // regular period
-        for (myMonth = anomalyMonth1; myMonth <= anomalyMonth2; myMonth++)
-            mySumClimatePrec = mySumClimatePrec + myWGMonthlyVarNoAnomaly[myMonth-1];
+        for (month = anomalyMonth1; month <= anomalyMonth2; month++)
+            mySumClimatePrec = mySumClimatePrec + myWGMonthlyVarNoAnomaly[month-1];
 
     }
     else
     {
         // irregular period (between years)
-        for (myMonth = anomalyMonth1; myMonth <= 12; myMonth++)
-            mySumClimatePrec = mySumClimatePrec + myWGMonthlyVarNoAnomaly[myMonth-1];
+        for (month = anomalyMonth1; month <= 12; month++)
+            mySumClimatePrec = mySumClimatePrec + myWGMonthlyVarNoAnomaly[month-1];
 
-        for (myMonth = 1; myMonth <= anomalyMonth2; myMonth++)
-            mySumClimatePrec = mySumClimatePrec + myWGMonthlyVarNoAnomaly[myMonth-1];
+        for (month = 1; month <= anomalyMonth2; month++)
+            mySumClimatePrec = mySumClimatePrec + myWGMonthlyVarNoAnomaly[month-1];
     }
 
     myNewSumPrec = std::max(mySumClimatePrec + myAnomaly, 0.f);
@@ -601,24 +635,24 @@ bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2, fl
 
     if (anomalyMonth2 >= anomalyMonth1)
     {
-        for (myMonth = anomalyMonth1; myMonth <= anomalyMonth2; myMonth++)
+        for (month = anomalyMonth1; month <= anomalyMonth2; month++)
         {
             if (mySumClimatePrec > 0)
-                myWGMonthlyVar[myMonth-1] = myWGMonthlyVarNoAnomaly[myMonth-1] * myFraction;
+                myWGMonthlyVar[month-1] = myWGMonthlyVarNoAnomaly[month-1] * myFraction;
             else
-                myWGMonthlyVar[myMonth-1] = myNewSumPrec / myNumMonths;
+                myWGMonthlyVar[month-1] = myNewSumPrec / float(nrMonths);
         }
     }
     else
     {
-        for (myMonth = 1; myMonth<= 12; myMonth++)
+        for (month = 1; month<= 12; month++)
         {
-            if (myMonth <= anomalyMonth2 || myMonth >= anomalyMonth1)
+            if (month <= anomalyMonth2 || month >= anomalyMonth1)
             {
                 if (mySumClimatePrec > 0)
-                    myWGMonthlyVar[myMonth-1] = myWGMonthlyVarNoAnomaly[myMonth-1] * myFraction;
+                    myWGMonthlyVar[month-1] = myWGMonthlyVarNoAnomaly[month-1] * myFraction;
                 else
-                    myWGMonthlyVar[myMonth-1] = myNewSumPrec / myNumMonths;
+                    myWGMonthlyVar[month-1] = myNewSumPrec / float(nrMonths);
             }
         }
     }
@@ -635,8 +669,9 @@ bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2, fl
   * Output is written on outputFileName (csv)
 */
 bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAnomaly* XMLAnomaly,
-                          TweatherGenClimate wGenClimate, TinputObsData* lastYearDailyObsData,
-                          int nrRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2, float rainfallThreshold)
+                          TweatherGenClimate& wGenClimate, TinputObsData* lastYearDailyObsData,
+                          int nrRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2,
+                          float rainfallThreshold)
 {
     TweatherGenClimate wGen;
     ToutputDailyMeteo* myDailyPredictions;
@@ -758,7 +793,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAn
     for (unsigned int modelIndex = 0; modelIndex < nrMembers; modelIndex++)
     {
         // assign anomaly
-        if ( !assignXMLAnomaly(XMLAnomaly, modelIndex, anomalyMonth1, anomalyMonth2, &wGenClimate, &wGen))
+        if ( !assignXMLAnomaly(XMLAnomaly, modelIndex, anomalyMonth1, anomalyMonth2, wGenClimate, wGen))
         {
                     qDebug() << "Error in Scenario: assignXMLAnomaly returns false";
                     return false;
@@ -769,7 +804,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAn
             isLastMember = true;
         }
         // compute seasonal prediction
-        if (!computeSeasonalPredictions(lastYearDailyObsData, &wGen,
+        if (!computeSeasonalPredictions(lastYearDailyObsData, wGen,
                                         myPredictionYear, myYear, nrRepetitions,
                                         wgDoy1, wgDoy2, rainfallThreshold, isLastMember,
                                         myDailyPredictions, &outputDataLenght ))
@@ -786,7 +821,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAn
 
     writeMeteoDataCsv (outputFileName, separator, myDailyPredictions, outputDataLenght);
 
-    free(myDailyPredictions);
+    delete[] myDailyPredictions;
 
     return true;
 }
@@ -802,7 +837,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAn
     Observed data (Tmin, Tmax, Prec) are in lastYearDailyObsData
   \return outputDailyData
 */
-bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGenClimate* wgClimate,
+bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGenClimate &wgClimate,
                                 int predictionYear, int firstYear, int nrRepetitions,
                                 int wgDoy1, int wgDoy2, float rainfallThreshold, bool isLastMember,
                                 ToutputDailyMeteo* outputDailyData, int *outputDataLenght)
@@ -919,39 +954,40 @@ bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGen
 }
 
 
-void initializeDailyDataBasic(ToutputDailyMeteo* mydailyData, Crit3DDate myDate)
+/*!
+  \name computeClimate
+  \brief Generates a time series of daily data (Tmin, Tmax, Prec)
+    The lenght is equals to nrRepetitions years, starting from firstYear
+    climate indexes are stored in wgClimate
+  \return outputDailyData
+*/
+bool computeClimate(TweatherGenClimate &wgClimate, int firstYear, int nrRepetitions,
+                    float rainfallThreshold, std::vector<ToutputDailyMeteo> &outputDailyData)
 {
-    mydailyData->date = myDate;
-    mydailyData->maxTemp = NODATA;
-    mydailyData->minTemp = NODATA;
-    mydailyData->prec = NODATA;
+    Crit3DDate firstDate = Crit3DDate(1, 1, firstYear);
+    int lastYear = firstYear + nrRepetitions - 1;
+    Crit3DDate lastDate = Crit3DDate(31, 12, lastYear);
 
-}
+    // initialize output array
+    int nrDays = firstDate.daysTo(lastDate) + 1;
+    outputDailyData.resize(unsigned(nrDays));
 
+    // initialize WG
+    initializeWeather(wgClimate);
 
-bool isWGDate(Crit3DDate myDate, int wgDoy1, int wgDoy2)
-{
-    bool isWGDate = false;
-    int myDoy = getDoyFromDate(myDate);
-
-    if (wgDoy2 >= wgDoy1)
+    unsigned int index = 0;
+    for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
-        if ( (myDoy >= wgDoy1) && (myDoy <= wgDoy2) )
-                isWGDate = true;
+        initializeDailyDataBasic (&outputDailyData[index], myDate);
+
+        int myDoy = getDoyFromDate(myDate);
+
+        outputDailyData[index].maxTemp = getTMax(myDoy, rainfallThreshold, wgClimate);
+        outputDailyData[index].minTemp = wgClimate.state.currentTmin;
+        outputDailyData[index].prec = wgClimate.state.currentPrec;
+
+        index++;
     }
-    else
-    {
-        if ( (myDoy >= wgDoy1) || (myDoy <= wgDoy2) )
-                isWGDate = true;
-    }
 
-    return isWGDate;
-}
-
-
-void clearInputData(TinputObsData* myData)
-{
-    myData->inputTMin.clear();
-    myData->inputTMax.clear();
-    myData->inputPrecip.clear();
+    return true;
 }

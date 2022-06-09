@@ -661,12 +661,10 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case snowFall: case snowWaterEquivalent: case snowLiquidWaterContent: case snowMelt:
         case dailyWaterTableDepth:
             setPrecipitationScale(colorScale);
-            colorScale->minimum = 0;
             break;  
         case snowAge:
             setGrayScale(colorScale);
             reverseColorScale(colorScale);
-            colorScale->minimum = 0;
             break;
         case dailyBIC:
             setCenteredScale(colorScale);

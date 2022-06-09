@@ -111,6 +111,7 @@
             float climate;
             bool active;
             bool selected;
+            bool marked;
 
             std::vector <float> proxyValues;
             lapseRateCodeType lapseRateCode;

@@ -77,6 +77,7 @@ void Crit3DMeteoPoint::clear()
 
     this->active = false;
     this->selected = false;
+    this->marked = false;
 
     this->quality = quality::missing_data;
 

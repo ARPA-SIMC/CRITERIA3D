@@ -392,19 +392,22 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
     }
 
     // dynamic color scale
-    if (this->isLatLon)
+    if (! myRaster->colorScale->isRangeBlocked())
     {
-        // lat lon raster
-        gis::updateColorScale(myRaster, window);
+        if (this->isLatLon)
+        {
+            // lat lon raster
+            gis::updateColorScale(myRaster, window);
+        }
+        else
+        {
+            // UTM raster
+            gis::Crit3DRasterWindow* utmWindow = new gis::Crit3DRasterWindow();
+            gis::getUtmWindow(this->latLonHeader, *(myRaster->header), window, utmWindow, this->utmZone);
+            gis::updateColorScale(myRaster, *utmWindow);
+        }
+        roundColorScale(myRaster->colorScale, 4, true);
     }
-    else
-    {
-        // UTM raster
-        gis::Crit3DRasterWindow* utmWindow = new gis::Crit3DRasterWindow();
-        gis::getUtmWindow(this->latLonHeader, *(myRaster->header), window, utmWindow, this->utmZone);
-        gis::updateColorScale(myRaster, *utmWindow);
-    }
-    roundColorScale(myRaster->colorScale, 4, true);
 
     int step = getCurrentStep(window);
 

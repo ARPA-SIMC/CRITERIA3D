@@ -1,7 +1,7 @@
 # agrolib
 Libraries for agrometeorological modelling and climate analysis. 
 They include a numerical solution for three-dimensional water and heat flow in the soil, 
-water balance 1D, meteorological data interpolation, daily weather generator (1D and 2D), radiation budget, 
+water balance 1D, meteorological data interpolation, daily data weather generator (1D and 2D), radiation budget, 
 snow accumulation and melt, phenology, plant development, root development, rainfall interception and plant water uptake.
 
 ## soilFluxes3D library
