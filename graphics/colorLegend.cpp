@@ -23,8 +23,8 @@ void ColorLegend::paintEvent(QPaintEvent *event)
     Q_UNUSED(event)
 
     if (this->colorScale == nullptr) return;
-    if (isEqual(this->colorScale->minimum, NODATA)
-        || isEqual(this->colorScale->maximum, NODATA)) return;
+    if (isEqual(this->colorScale->minimum(), NODATA)
+        || isEqual(this->colorScale->maximum(), NODATA)) return;
 
     QPainter painter(this);
     Crit3DColor* myColor;
@@ -35,16 +35,16 @@ void ColorLegend::paintEvent(QPaintEvent *event)
 
     const int DELTA = 18;
     int legendWidth = painter.window().width() - DELTA*2;
-    int nrStep = this->colorScale->nrColors;
-    float step = (colorScale->maximum - colorScale->minimum) / float(nrStep);
+    unsigned int nrStep = this->colorScale->nrColors();
+    float step = (colorScale->maximum() - colorScale->minimum()) / float(nrStep);
     double dx = double(legendWidth) / double(nrStep+1);
-    int stepText = MAXVALUE(nrStep / 4, 1);
+    unsigned int stepText = MAXVALUE(nrStep / 4, 1);
     QString valueStr;
     int nrDigits;
     double dblValue, shiftFatctor;
 
-    float value = this->colorScale->minimum;
-    for (int i = 0; i <= nrStep; i++)
+    float value = this->colorScale->minimum();
+    for (unsigned int i = 0; i <= nrStep; i++)
     {
         dblValue = double(value);
         myColor = this->colorScale->getColor(value);
@@ -56,11 +56,11 @@ void ColorLegend::paintEvent(QPaintEvent *event)
             nrDigits = int(ceil(log10(abs(dblValue))));
             if (dblValue < 0) nrDigits++;
 
-            if (isEqual(int(dblValue), dblValue))
+            if (isEqual(round(dblValue), dblValue))
             {
-                valueStr = QString::number(int(dblValue));
+                valueStr = QString::number(round(dblValue));
             }
-            else if (fabs(int(dblValue*10) - (dblValue*10)) < 0.1)
+            else if (fabs(round(dblValue*10) - (dblValue*10)) < 0.1)
             {
                 valueStr = QString::number(dblValue, 'f', 1);
                 nrDigits += 1;

@@ -2840,6 +2840,36 @@ bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDailyList(QString meteoPointID
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::saveCellCurrentGridHourlyList(QString meteoPointID, QList<QString> listEntries, QString *myError)
+{
+    QSqlQuery qry(_db);
+    QString tableH = _tableHourly.prefix + meteoPointID + _tableHourly.postFix;
+
+
+    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1` "
+                                "(`%2` datetime, VariableCode tinyint(3) UNSIGNED, Value float(6,1), PRIMARY KEY(`%2`,VariableCode))").arg(tableH).arg(_tableHourly.fieldTime);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+
+        statement = QString("REPLACE INTO `%1` VALUES ").arg(tableH);
+        statement = statement + listEntries.join(",");
+
+        if( !qry.exec(statement) )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool Crit3DMeteoGridDbHandler::saveCellCurrentGridDaily(QString *myError, QString meteoPointID, QDate date, int varCode, float value)
 {
     QSqlQuery qry(_db);

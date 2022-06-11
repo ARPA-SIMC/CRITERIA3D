@@ -407,7 +407,7 @@ namespace gis
     }
 
 
-    void checkMinimumRange(float& minimum, float& maximum)
+    void checkRange(float& minimum, float& maximum)
     {
         if (isEqual(maximum, 0) && isEqual(maximum, 0))
         {
@@ -460,9 +460,8 @@ namespace gis
         myGrid->maximum = maximum;
         myGrid->minimum = minimum;
 
-        checkMinimumRange(minimum, maximum);
-        myGrid->colorScale->maximum = maximum;
-        myGrid->colorScale->minimum = minimum;
+        checkRange(minimum, maximum);
+        myGrid->colorScale->setRange(minimum, maximum);
 
         return true;
     }
@@ -509,14 +508,12 @@ namespace gis
         //  no values
         if (isFirstValue)
         {
-            myGrid->colorScale->maximum = NODATA;
-            myGrid->colorScale->minimum = NODATA;
+            myGrid->colorScale->setRange(NODATA, NODATA);
             return false;
         }
 
-        checkMinimumRange(minimum, maximum);
-        myGrid->colorScale->maximum = maximum;
-        myGrid->colorScale->minimum = minimum;
+        checkRange(minimum, maximum);
+        myGrid->colorScale->setRange(minimum, maximum);
 
         return true;
     }

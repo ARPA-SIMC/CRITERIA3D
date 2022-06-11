@@ -13,7 +13,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
                  QString ucmFileName, std::string &error, bool showInfo)
 {
 
-    // make a copy of shapefile and return cloned shapefile complete path
+    // make a copy of crop shapefile (reference) and return cloned shapefile complete path
     QString refFileName = QString::fromStdString(crop.getFilepath());
     QString ucmShapeFileName = cloneShapeFile(refFileName, ucmFileName);
 

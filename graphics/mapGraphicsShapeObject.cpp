@@ -261,15 +261,14 @@ void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
     }
 
     // set min/max
-    colorScale->minimum = firstValue;
-    colorScale->maximum = firstValue;
+    colorScale->setRange(firstValue, firstValue);
     if (! isEqual(firstValue, NODATA))
     {
         for (unsigned int i = 0; i < nrShapes; i++)
             if (! isEqual(values[i], NODATA))
             {
-                colorScale->minimum = MINVALUE(colorScale->minimum, values[i]);
-                colorScale->maximum = MAXVALUE(colorScale->maximum, values[i]);
+                colorScale->setMinimum(MINVALUE(colorScale->minimum(), values[i]));
+                colorScale->setMaximum(MAXVALUE(colorScale->maximum(), values[i]));
             }
     }
 }
@@ -313,13 +312,11 @@ void MapGraphicsShapeObject::setCategories(std::string fieldName)
     // define min/max
     if (! categories.empty())
     {
-        colorScale->minimum = 1;
-        colorScale->maximum = categories.size();
+        colorScale->setRange(1, float(categories.size()));
     }
     else
     {
-        colorScale->minimum = NODATA;
-        colorScale->maximum = NODATA;
+        colorScale->setRange(NODATA, NODATA);
     }
 }
 
