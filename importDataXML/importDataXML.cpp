@@ -549,7 +549,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                     if (!variable[i].flagAccepted.isEmpty())
                     {
                         QString format = variable[i].flagField.getFormat();
-                        if (format.isEmpty() || format == "%s")
+                        if (format.isEmpty() || format == "%s" || format == "%d")
                         {
                             myFlagAccepted = variable[i].flagAccepted;
                             myFlag = parseXMLFixedValue(line, nReplication, variable[i].flagField);
@@ -621,7 +621,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                     if (!variable[i].flagAccepted.isEmpty())
                     {
                         QString format = variable[i].flagField.getFormat();
-                        if (format.isEmpty() || format == "%s")
+                        if (format.isEmpty() || format == "%s" || format == "%d")
                         {
                             myFlagAccepted = variable[i].flagAccepted;
                             myFlag = parseXMLFixedValue(line, nReplication, variable[i].flagField);
@@ -655,11 +655,11 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                     }
                     if (isGrid)
                     {
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
+                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm:ss")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
                     }
                     else
                     {
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm:ss")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
                     }
                     mapIdValues.insert(myPointCode, listEntries);
                     // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
@@ -1005,11 +1005,11 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                             }
                             if (isGrid)
                             {
-                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
+                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm:ss")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
                             }
                             else
                             {
-                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                                listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm:ss")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
                             }
                             mapIdValues.insert(myPointCode, listEntries);
                             // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
