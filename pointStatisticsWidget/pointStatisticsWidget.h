@@ -32,6 +32,9 @@
             void on_actionChangeLeftAxis();
             void on_actionExportGraph();
             void on_actionExportData();
+            void addStationClicked();
+            void deleteStationClicked();
+            void saveToDbClicked();
 
     private:
             bool isGrid;

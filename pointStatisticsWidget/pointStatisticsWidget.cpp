@@ -178,6 +178,14 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     jointStationsSelectLayout->addWidget(jointStationsLabel);
     jointStationsSelectLayout->addWidget(&jointStationsList);
     jointStationsList.setMaximumWidth(this->width()/5);
+    for (int i = 1; i<meteoPoints.size(); i++)
+    {
+        jointStationsList.addItem(QString::fromStdString(meteoPoints[i].id)+" "+QString::fromStdString(meteoPoints[i].name));
+    }
+    if (jointStationsList.count() != 0)
+    {
+        addStation.setEnabled(true);
+    }
     QHBoxLayout *addDeleteStationLayout = new QHBoxLayout;
     addDeleteStationLayout->addWidget(&addStation);
     addStation.setText("Add");
@@ -186,6 +194,8 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     deleteStation.setMaximumWidth(120);
     saveToDb.setText("Save to DB");
     saveToDb.setMaximumWidth(120);
+    deleteStation.setEnabled(false);
+    saveToDb.setEnabled(false);
     addDeleteStationLayout->addWidget(&deleteStation);
     jointStationsSelectLayout->addLayout(addDeleteStationLayout);
     jointStationsSelectLayout->addWidget(&saveToDb);
@@ -363,6 +373,9 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     connect(&valMax, &QLineEdit::editingFinished, [=](){ updatePlotByVal(); });
     connect(&valMin, &QLineEdit::editingFinished, [=](){ updatePlotByVal(); });
     connect(&classWidth, &QLineEdit::editingFinished, [=](){ updatePlot(); });
+    connect(&addStation, &QPushButton::clicked, [=](){ addStationClicked(); });
+    connect(&deleteStation, &QPushButton::clicked, [=](){ deleteStationClicked(); });
+    connect(&saveToDb, &QPushButton::clicked, [=](){ saveToDbClicked(); });
     connect(changeLeftAxis, &QAction::triggered, this, &Crit3DPointStatisticsWidget::on_actionChangeLeftAxis);
     connect(exportGraph, &QAction::triggered, this, &Crit3DPointStatisticsWidget::on_actionExportGraph);
     connect(exportData, &QAction::triggered, this, &Crit3DPointStatisticsWidget::on_actionExportData);
@@ -1539,6 +1552,42 @@ void Crit3DPointStatisticsWidget::on_actionExportData()
         myFile.close();
 
         return;
+    }
+}
+
+void Crit3DPointStatisticsWidget::addStationClicked()
+{
+    if (!jointStationsList.currentText().isEmpty())
+    {
+        if (jointStationsSelected.findItems(jointStationsList.currentText(), Qt::MatchExactly).isEmpty())
+        {
+            jointStationsSelected.addItem(jointStationsList.currentText());
+            deleteStation.setEnabled(true);
+            saveToDb.setEnabled(true);
+        }
+    }
+}
+
+void Crit3DPointStatisticsWidget::deleteStationClicked()
+{
+    QList<QListWidgetItem*> items = jointStationsSelected.selectedItems();
+    foreach(QListWidgetItem * item, items)
+    {
+        delete jointStationsSelected.takeItem(jointStationsSelected.row(item));
+    }
+}
+
+void Crit3DPointStatisticsWidget::saveToDbClicked()
+{
+    QList<QString> stationsList;
+    for (int row = 0; row < jointStationsSelected.count(); row++)
+    {
+        QString textSelected = jointStationsSelected.item(row)->text();
+        stationsList.append(textSelected.section(" ",0,0));
+    }
+    if (!meteoPointsDbHandler->setJointStations(QString::fromStdString(meteoPoints[0].id), stationsList))
+    {
+        QMessageBox::critical(nullptr, "Error", meteoPointsDbHandler->error);
     }
 }
 

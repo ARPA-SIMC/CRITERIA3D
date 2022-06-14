@@ -44,7 +44,7 @@
         signals:
             void newStationClicked(std::string, std::string, bool);
             void appendStationClicked(std::string, std::string, bool);
-            void newPointStatisticsClicked(std::string, std::string, bool);
+            void newPointStatisticsClicked(std::string, bool);
             void changeOrogCodeClicked(std::string, int);
 
     };

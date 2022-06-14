@@ -130,7 +130,7 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             }
             else if (selection == openPointStatisticsWidget)
             {
-                emit newPointStatisticsClicked(_id, _name, isGrid);
+                emit newPointStatisticsClicked(_id, isGrid);
             }
             else if (selection == actionOrogCode_primary)
             {
