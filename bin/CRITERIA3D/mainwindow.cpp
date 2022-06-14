@@ -1658,11 +1658,11 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
     if (! selectDates (firstTime, lastTime))
         return;
 
-    myProject.isMeteo = true;
-    myProject.isRadiation = true;
-    myProject.isSnow = false;
-    myProject.isCrop = false;
-    myProject.isWater = false;
+    myProject.computeMeteo = true;
+    myProject.computeRadiation = true;
+    myProject.computeSnow = false;
+    myProject.computeCrop = false;
+    myProject.computeWater = false;
 
     startModels(firstTime, lastTime);
 }
@@ -1708,19 +1708,19 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
         return false;
     }
 
-    if (myProject.isSnow && (! myProject.snowMaps.isInitialized))
+    if (myProject.computeSnow && (! myProject.snowMaps.isInitialized))
     {
         myProject.logError("Initialize Snow model or load a state before.");
         return false;
     }
 
-    if (myProject.isWater && (! myProject.isCriteria3DInitialized))
+    if (myProject.computeWater && (! myProject.isCriteria3DInitialized))
     {
         myProject.logError("Initialize 3D water fluxes or load a state before.");
         return false;
     }
 
-    if (myProject.isCrop)
+    if (myProject.computeCrop)
     {
         // TODO: check on crop
     }
@@ -1761,7 +1761,7 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
 {
     // initialize meteo
-    if (myProject.isMeteo)
+    if (myProject.computeMeteo)
     {
         myProject.hourlyMeteoMaps->initialize();
 
@@ -1775,7 +1775,7 @@ bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
     }
 
     // initialize radiation
-    if (myProject.isRadiation)
+    if (myProject.computeRadiation)
     {
         myProject.radiationMaps->initialize();
     }
@@ -1911,11 +1911,12 @@ void MainWindow::on_actionRadiation_run_model_triggered()
     if (! selectDates (firstTime, lastTime))
         return;
 
-    myProject.isMeteo = false;
-    myProject.isRadiation = true;
-    myProject.isSnow = false;
-    myProject.isCrop = false;
-    myProject.isWater = false;
+    myProject.computeMeteo = false;
+    myProject.computeRadiation = true;
+    myProject.computeSnow = false;
+    myProject.computeCrop = false;
+    myProject.computeWater = false;
+
     startModels(firstTime, lastTime);
 }
 
@@ -1941,11 +1942,12 @@ void MainWindow::on_actionSnow_run_model_triggered()
     if (! selectDates (firstTime, lastTime))
         return;
 
-    myProject.isMeteo = true;
-    myProject.isRadiation = true;
-    myProject.isSnow = true;
-    myProject.isCrop = false;
-    myProject.isWater = false;
+    myProject.computeMeteo = true;
+    myProject.computeRadiation = true;
+    myProject.computeSnow = true;
+    myProject.computeCrop = false;
+    myProject.computeWater = false;
+
     startModels(firstTime, lastTime);
 }
 
@@ -1959,11 +1961,12 @@ void MainWindow::on_actionSnow_compute_current_hour_triggered()
 
     QDateTime currentTime = myProject.getCurrentTime();
 
-    myProject.isMeteo = true;
-    myProject.isRadiation = true;
-    myProject.isSnow = true;
-    myProject.isCrop = false;
-    myProject.isWater = false;
+    myProject.computeMeteo = true;
+    myProject.computeRadiation = true;
+    myProject.computeSnow = true;
+    myProject.computeCrop = false;
+    myProject.computeWater = false;
+
     startModels(currentTime, currentTime);
 }
 
@@ -2027,11 +2030,11 @@ void MainWindow::on_actionCriteria3D_compute_current_hour_triggered()
 
     QDateTime currentTime = myProject.getCurrentTime();
 
-    myProject.isMeteo = true;
-    myProject.isRadiation = true;
-    myProject.isSnow = false;
-    myProject.isCrop = true;
-    myProject.isWater = true;
+    myProject.computeMeteo = true;
+    myProject.computeRadiation = true;
+    myProject.computeSnow = false;
+    myProject.computeCrop = true;
+    myProject.computeWater = true;
 
     startModels(currentTime, currentTime);
 }
@@ -2049,11 +2052,12 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     if (! selectDates(firstTime, lastTime))
         return;
 
-    myProject.isMeteo = true;
-    myProject.isRadiation = true;
-    myProject.isSnow = false;
-    myProject.isCrop = true;
-    myProject.isWater = true;
+    myProject.computeMeteo = true;
+    myProject.computeRadiation = true;
+    myProject.computeSnow = false;
+    myProject.computeCrop = true;
+    myProject.computeWater = true;
+
     startModels(firstTime, lastTime);
 }
 

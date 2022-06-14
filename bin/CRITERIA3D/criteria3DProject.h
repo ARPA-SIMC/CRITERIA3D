@@ -39,7 +39,9 @@
         Crit3DSnowMaps snowMaps;
         Crit3DSnow snowModel;
 
-        bool isMeteo, isRadiation, isCrop, isWater, isSnow;
+        bool computeMeteo, computeRadiation, computeCrop, computeWater, computeSnow, computeHeat, computeSolutes;
+        bool computeAdvectiveHeat, computeLatentHeat;
+
         bool modelPause, modelStop;
         QDateTime modelFirstTime, modelLastTime;
 

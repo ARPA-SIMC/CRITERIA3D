@@ -44,11 +44,15 @@ Crit3DProject::Crit3DProject() : Project3D()
     _saveOutputPoints = false;
     _saveDailyState = false;
 
-    isMeteo = false;
-    isRadiation = false;
-    isCrop = false;
-    isWater = false;
-    isSnow = false;
+    computeMeteo = false;
+    computeRadiation = false;
+    computeCrop = false;
+    computeWater = false;
+    computeSnow = false;
+    computeHeat = false;
+    computeSolutes = false;
+    computeAdvectiveHeat = false;
+    computeLatentHeat = false;
 
     modelPause = false;
     modelStop = false;
@@ -150,13 +154,16 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
 bool Crit3DProject::loadCriteria3DSettings()
 {
     projectSettings->beginGroup("project");
+        cropDbFileName = projectSettings->value("crop_db").toString();
+        if (cropDbFileName == "")
+            cropDbFileName = projectSettings->value("db_crop").toString();
+        soilMapFileName = projectSettings->value("soil_map").toString();
+    projectSettings->endGroup();
 
-    cropDbFileName = projectSettings->value("crop_db").toString();
-    if (cropDbFileName == "")
-        cropDbFileName = projectSettings->value("db_crop").toString();
-
-    soilMapFileName = projectSettings->value("soil_map").toString();
-
+    projectSettings->beginGroup("simulation");
+        computeHeat = projectSettings->value("compute_heat").toBool();
+        computeLatentHeat = projectSettings->value("compute_latent_heat").toBool();
+        computeAdvectiveHeat = projectSettings->value("compute_advective_heat").toBool();
     projectSettings->endGroup();
 
     return true;
@@ -653,7 +660,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
     hourlyMeteoMaps->setComputed(false);
     radiationMaps->setComputed(false);
 
-    if (isMeteo)
+    if (computeMeteo)
     {
         if (! interpolateAndSaveHourlyMeteo(airTemperature, myTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
@@ -674,14 +681,14 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         hourlyMeteoMaps->setComputed(true);
     }
 
-    if (isRadiation)
+    if (computeRadiation)
     {
         if (! interpolateAndSaveHourlyMeteo(globalIrradiance, myTime, hourlyOutputPath, isSaveOutputRaster()))
             return false;
         qApp->processEvents();
     }
 
-    if (isCrop)
+    if (computeCrop)
     {
         if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
             return false;
@@ -697,7 +704,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         // TODO compute evap/transp
     }
 
-    if (isSnow)
+    if (computeSnow)
     {
         if (! computeSnowModel())
             return false;
@@ -705,7 +712,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
     }
 
     // soil water balance
-    if (isWater)
+    if (computeWater)
     {
         if (! computeWaterSinkSource())
         {
@@ -718,6 +725,12 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         qApp->processEvents();
 
         //updateWaterBalanceMaps();
+    }
+
+    // soil heat
+    if (computeHeat)
+    {
+        //to do;
     }
 
     return true;
@@ -926,14 +939,14 @@ bool Crit3DProject::writeOutputPointsTables()
             if (! outputPointsDbHandler->createTable(tableName, errorString))
                 return false;
 
-            if (isMeteo)
+            if (computeMeteo)
             {
                 if (! outputPointsDbHandler->addColumn(tableName, airTemperature, errorString)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, precipitation, errorString)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, airRelHumidity, errorString)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, windScalarIntensity, errorString)) return false;
             }
-            if (isRadiation)
+            if (computeRadiation)
             {
                 if (! outputPointsDbHandler->addColumn(tableName, atmTransmissivity, errorString)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, globalIrradiance, errorString)) return false;
@@ -941,7 +954,7 @@ bool Crit3DProject::writeOutputPointsTables()
                 if (! outputPointsDbHandler->addColumn(tableName, diffuseIrradiance, errorString)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, reflectedIrradiance, errorString)) return false;
             }
-            if (isSnow)
+            if (computeSnow)
             {
                 if (! outputPointsDbHandler->addColumn(tableName, snowWaterEquivalent, errorString)) return false;
                 if (! outputPointsDbHandler->addColumn(tableName, snowFall, errorString)) return false;
@@ -965,14 +978,14 @@ bool Crit3DProject::writeOutputPointsData()
     std::vector<meteoVariable> varList;
     std::vector<float> valuesList;
 
-    if (isMeteo)
+    if (computeMeteo)
     {
         varList.push_back(airTemperature);
         varList.push_back(precipitation);
         varList.push_back(airRelHumidity);
         varList.push_back(windScalarIntensity);
     }
-    if (isRadiation)
+    if (computeRadiation)
     {
         varList.push_back(atmTransmissivity);
         varList.push_back(globalIrradiance);
@@ -980,7 +993,7 @@ bool Crit3DProject::writeOutputPointsData()
         varList.push_back(diffuseIrradiance);
         varList.push_back(reflectedIrradiance);
     }
-    if (isSnow)
+    if (computeSnow)
     {
         varList.push_back(snowWaterEquivalent);
         varList.push_back(snowFall);
@@ -999,14 +1012,14 @@ bool Crit3DProject::writeOutputPointsData()
             float x = float(outputPoints[i].utm.x);
             float y = float(outputPoints[i].utm.y);
             tableName = QString::fromStdString(outputPoints[i].id);
-            if (isMeteo)
+            if (computeMeteo)
             {
                 valuesList.push_back(hourlyMeteoMaps->mapHourlyTair->getFastValueXY(x, y));
                 valuesList.push_back(hourlyMeteoMaps->mapHourlyPrec->getFastValueXY(x, y));
                 valuesList.push_back(hourlyMeteoMaps->mapHourlyRelHum->getFastValueXY(x, y));
                 valuesList.push_back(hourlyMeteoMaps->mapHourlyWindScalarInt->getFastValueXY(x, y));
             }
-            if (isRadiation)
+            if (computeRadiation)
             {
                 valuesList.push_back(radiationMaps->transmissivityMap->getFastValueXY(x, y));
                 valuesList.push_back(radiationMaps->globalRadiationMap->getFastValueXY(x, y));
@@ -1014,7 +1027,7 @@ bool Crit3DProject::writeOutputPointsData()
                 valuesList.push_back(radiationMaps->diffuseRadiationMap->getFastValueXY(x, y));
                 valuesList.push_back(radiationMaps->reflectedRadiationMap->getFastValueXY(x, y));
             }
-            if (isSnow)
+            if (computeSnow)
             {
                 valuesList.push_back(snowMaps.getSnowWaterEquivalentMap()->getFastValueXY(x, y));
                 valuesList.push_back(snowMaps.getSnowFallMap()->getFastValueXY(x, y));
