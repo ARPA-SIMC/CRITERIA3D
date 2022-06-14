@@ -2169,23 +2169,22 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     // resize vector
     int nrValues = int(firstDateDB->daysTo(lastDateDB)) + 1;
     dailyVarList.resize(unsigned(nrValues));
+    for (unsigned int i = 0; i < dailyVarList.size(); i++)
+    {
+        dailyVarList[i] = NODATA;
+    }
 
     // assign values
-    previousIndex = 0;
+    float value;
     qry.first();
     do
     {
         currentDate = qry.value(_tableDaily.fieldTime).toDate();
         currentIndex = unsigned(firstDateDB->daysTo(currentDate));
-
-        for (unsigned int i = previousIndex+1; i < currentIndex; i++)
+        if (getValue(qry.value("Value"), &value))
         {
-            dailyVarList[i] = NODATA;
+            dailyVarList[currentIndex] = value;
         }
-
-        dailyVarList[currentIndex] = qry.value("Value").toFloat();
-        previousIndex = currentIndex;
-
     } while (qry.next());
 
     return dailyVarList;

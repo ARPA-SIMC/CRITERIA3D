@@ -1869,3 +1869,67 @@ bool Crit3DMeteoPointsDbHandler::setOrogCode(QString id, int orogCode)
 
 }
 
+QList<QString> Crit3DMeteoPointsDbHandler::getJointStations(const QString& idPoint)
+{
+
+    QSqlQuery qry(_db);
+    QList<QString> stationsList;
+    QString station;
+
+    qry.prepare( "SELECT joint_station from joint_stations WHERE id_point = :id_point");
+    qry.bindValue(":id_point", idPoint);
+
+    if( !qry.exec() )
+    {
+        qDebug() << qry.lastError();
+        return stationsList;
+    }
+    else
+    {
+        while (qry.next())
+        {
+            getValue(qry.value("joint_station"), &station);
+            if (!stationsList.contains(station))
+            {
+                stationsList << station;
+            }
+        }
+    }
+    return stationsList;
+}
+
+bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<QString> stationsList)
+{
+
+    QSqlQuery qry(_db);
+
+    qry.prepare( "DELETE FROM joint_station WHERE id_point = :id_point" );
+    qry.bindValue(":id_point", idPoint);
+    if( !qry.exec() )
+    {
+        error += idPoint + " " + qry.lastError().text();
+        return false;
+    }
+
+    error.clear();
+    for (int i = 0; i < stationsList.size(); i++)
+    {
+        qry.prepare( "INSERT INTO joint_station (id_point, joint_station) VALUES (:id_point, :joint_station)" );
+
+        qry.bindValue(":id_point", idPoint);
+        qry.bindValue(":name", stationsList[i]);
+        if( !qry.exec() )
+        {
+            error += idPoint + "," + stationsList[i] + " " + qry.lastError().text();
+        }
+    }
+    if (error.isEmpty())
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+

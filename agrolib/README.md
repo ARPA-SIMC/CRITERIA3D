@@ -1,6 +1,6 @@
 # agrolib
-Libraries for agrometeorological modelling and climate analysis. 
-They include a numerical solution for three-dimensional water and heat flow in the soil, 
+Agrolib are a set of libraries for agrometeorological modeling and climate analysis. 
+They include a numerical solution for three-dimensional water and heat flow in soil, 
 water balance 1D, meteorological data interpolation, daily data weather generator (1D and 2D), radiation budget, 
 snow accumulation and melt, phenology, plant development, root development, rainfall interception and plant water uptake.
 
@@ -11,7 +11,7 @@ Surface water flow is described by the two-dimensional parabolic approximation o
 Water fluxes equations may be coupled with the heat flux equations, which include diffusive, latent and advective terms. Atmospheric data (net irradiance, air temperature and relative humidity, wind speed) could be used as top boundary conditions. See [CRITERIA3D](http://www.sciencedirect.com/science/article/pii/S0309170809001754) for more information.
 
 ## criteriaModel library
-Algorithms for 1D water balance: soil water infiltration, drainage and capillary rise, crop water demand, evaporation and crop transpiration. 
+Algorithms for 1D water balance ([CRITERIA1D](https://github.com/ARPA-SIMC/CRITERIA1D)): soil water infiltration, drainage and capillary rise, crop water demand, evaporation and crop transpiration. 
 
 ## crop library
 Algorithms for crop development, leaf area index, root growth and distribution, based on daily temperature.
@@ -23,7 +23,7 @@ Modified Van Genuchten-Mualem model for soil water retention curve and water con
 Algorithms for potential/actual solar radiation computation.
 
 ## interpolation library
-Algorithms for the spatialization of meteorological data.
+Algorithms for the spatialization of meteorological data ([PRAGA](https://github.com/ARPA-SIMC/PRAGA)).
 
 ## License
 agrolib has been developed under contract issued by 
