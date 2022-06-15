@@ -573,9 +573,6 @@ void Crit3DPointStatisticsWidget::plot()
             // copy data to MPTemp
             Crit3DMeteoPoint meteoPointTemp;
             meteoPointTemp.id = meteoPoints[0].id;
-            meteoPointTemp.point.utm.x = meteoPoints[0].point.utm.x;  // LC to compute distance in passingClimateToAnomaly
-            meteoPointTemp.point.utm.y = meteoPoints[0].point.utm.y;  // LC to compute distance in passingClimateToAnomaly
-            meteoPointTemp.point.z = meteoPoints[0].point.z;
             meteoPointTemp.latitude = meteoPoints[0].latitude;
             meteoPointTemp.elaboration = meteoPoints[0].elaboration;
 
@@ -584,8 +581,9 @@ void Crit3DPointStatisticsWidget::plot()
             meteoPointTemp.nrObsDataDaysD = 0;
             FormInfo formInfo;
             formInfo.showInfo("compute annual series...");
+            bool dataAlreadyLoaded = false;
             int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
-                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
+                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, dataAlreadyLoaded);
             formInfo.close();
             if (validYears < 3)
             {
@@ -675,9 +673,6 @@ void Crit3DPointStatisticsWidget::plot()
             // copy data to MPTemp
             Crit3DMeteoPoint meteoPointTemp;
             meteoPointTemp.id = meteoPoints[0].id;
-            meteoPointTemp.point.utm.x = meteoPoints[0].point.utm.x;  // LC to compute distance in passingClimateToAnomaly
-            meteoPointTemp.point.utm.y = meteoPoints[0].point.utm.y;  // LC to compute distance in passingClimateToAnomaly
-            meteoPointTemp.point.z = meteoPoints[0].point.z;
             meteoPointTemp.latitude = meteoPoints[0].latitude;
             meteoPointTemp.elaboration = meteoPoints[0].elaboration;
 
@@ -687,10 +682,11 @@ void Crit3DPointStatisticsWidget::plot()
 
             QDate startDate(clima.yearStart(), clima.genericPeriodDateStart().month(), clima.genericPeriodDateStart().day());
             QDate endDate(clima.yearEnd(), clima.genericPeriodDateEnd().month(), clima.genericPeriodDateEnd().day());
+            bool dataAlreadyLoaded = false;
 
             if (isGrid)
             {
-                if (!elaborationOnPoint(&myError, nullptr, meteoGridDbHandler, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings))
+                if (!elaborationOnPoint(&myError, nullptr, meteoGridDbHandler, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
                 {
                     QMessageBox::information(nullptr, "Error", "Data not available in the reference period");
                     return;
@@ -698,7 +694,7 @@ void Crit3DPointStatisticsWidget::plot()
             }
             else
             {
-                if (!elaborationOnPoint(&myError, meteoPointsDbHandler, nullptr, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings))
+                if (!elaborationOnPoint(&myError, meteoPointsDbHandler, nullptr, &meteoPointTemp, &clima, isGrid, startDate, endDate, isAnomaly, meteoSettings, dataAlreadyLoaded))
                 {
                     QMessageBox::information(nullptr, "Error", "Data not available in the reference period");
                     return;
@@ -715,9 +711,10 @@ void Crit3DPointStatisticsWidget::plot()
 
             FormInfo formInfo;
             formInfo.showInfo("compute annual series...");
+            bool dataAlreadyLoaded = false;
 
             int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
-                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
+                                                     &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, dataAlreadyLoaded);
             formInfo.close();
             if (validYears < 3)
             {
@@ -1357,18 +1354,16 @@ void Crit3DPointStatisticsWidget::showElaboration()
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
         meteoPointTemp.id = meteoPoints[0].id;
-        meteoPointTemp.point.utm.x = meteoPoints[0].point.utm.x;  // LC to compute distance in passingClimateToAnomaly
-        meteoPointTemp.point.utm.y = meteoPoints[0].point.utm.y;  // LC to compute distance in passingClimateToAnomaly
-        meteoPointTemp.point.z = meteoPoints[0].point.z;
         meteoPointTemp.latitude = meteoPoints[0].latitude;
         meteoPointTemp.elaboration = meteoPoints[0].elaboration;
 
         // meteoPointTemp should be init
         meteoPointTemp.nrObsDataDaysH = 0;
         meteoPointTemp.nrObsDataDaysD = 0;
+        bool dataAlreadyLoaded = false;
 
         int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
-                                                 &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues);
+                                                 &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, dataAlreadyLoaded);
         if (validYears < 3)
         {
             //copy to clima original value for next elab
