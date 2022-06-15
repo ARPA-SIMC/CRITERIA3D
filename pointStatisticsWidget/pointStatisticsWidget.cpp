@@ -187,6 +187,10 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     {
         addStation.setEnabled(true);
     }
+    else
+    {
+        addStation.setEnabled(false);
+    }
     QHBoxLayout *addDeleteStationLayout = new QHBoxLayout;
     addDeleteStationLayout->addWidget(&addStation);
     addStation.setText("Add");
@@ -1568,6 +1572,7 @@ void Crit3DPointStatisticsWidget::addStationClicked()
             idPoints << jointStationsList.currentText().section(" ",0,0).toStdString();
         }
     }
+    updateYears();
 
 }
 
@@ -1579,6 +1584,7 @@ void Crit3DPointStatisticsWidget::deleteStationClicked()
         idPoints.removeOne(item->text().section(" ",0,0).toStdString());
         delete jointStationsSelected.takeItem(jointStationsSelected.row(item));
     }
+    updateYears();
 }
 
 void Crit3DPointStatisticsWidget::saveToDbClicked()
@@ -1597,15 +1603,21 @@ void Crit3DPointStatisticsWidget::saveToDbClicked()
 
 void Crit3DPointStatisticsWidget::updateYears()
 {
-    for (int i = 0; i<idPoints.size(); i++)
+    firstDaily = meteoPointsDbHandler->getFirstDate(daily, meteoPoints[0].id).date();
+    lastDaily = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
+
+    firstHourly = meteoPointsDbHandler->getFirstDate(hourly, meteoPoints[0].id);
+    lastHourly = meteoPointsDbHandler->getLastDate(hourly, meteoPoints[0].id);
+
+    for (int i = 1; i<idPoints.size(); i++)
     {
         QDate firstDailyJointStation = meteoPointsDbHandler->getFirstDate(daily, idPoints[i]).date();
         QDate lastDailyJointStation = meteoPointsDbHandler->getLastDate(daily, idPoints[i]).date();
-        if (firstDailyJointStation < firstDaily )
+        if (firstDailyJointStation.isValid() && firstDailyJointStation < firstDaily )
         {
             firstDaily = firstDailyJointStation;
         }
-        if (lastDailyJointStation > lastDaily )
+        if (lastDailyJointStation.isValid() && lastDailyJointStation > lastDaily )
         {
             lastDaily = lastDailyJointStation;
         }
@@ -1613,25 +1625,31 @@ void Crit3DPointStatisticsWidget::updateYears()
         QDateTime firstHourlyJointStation = meteoPointsDbHandler->getFirstDate(hourly, idPoints[i]);
         QDateTime lastHourlyJointStation = meteoPointsDbHandler->getLastDate(hourly, idPoints[i]);
 
-        if (firstHourlyJointStation < firstHourly )
+        if (firstHourlyJointStation.isValid() && firstHourlyJointStation < firstHourly )
         {
             firstHourly = firstHourlyJointStation;
         }
-        if (lastHourlyJointStation > lastHourly )
+        if (lastHourlyJointStation.isValid() && lastHourlyJointStation > lastHourly )
         {
             lastHourly = lastHourlyJointStation;
         }
     }
+
     yearFrom.clear();
     yearTo.clear();
     if (currentFrequency == daily)
     {
+        analysisYearFrom.clear();
+        analysisYearTo.clear();
         for(int i = 0; i <= lastDaily.year()-firstDaily.year(); i++)
         {
             yearFrom.addItem(QString::number(firstDaily.year()+i));
             yearTo.addItem(QString::number(firstDaily.year()+i));
+            analysisYearFrom.addItem(QString::number(firstDaily.year()+i));
+            analysisYearTo.addItem(QString::number(firstDaily.year()+i));
         }
         yearTo.setCurrentText(QString::number(lastDaily.year()));
+        analysisYearTo.setCurrentText(QString::number(lastDaily.year()));
     }
     else if (currentFrequency == hourly)
     {
@@ -1642,15 +1660,6 @@ void Crit3DPointStatisticsWidget::updateYears()
         }
         yearTo.setCurrentText(QString::number(lastHourly.date().year()));
     }
-    analysisYearFrom.clear();
-    analysisYearTo.clear();
-    for(int i = 0; i <= lastDaily.year()-firstDaily.year(); i++)
-    {
-        analysisYearFrom.addItem(QString::number(firstDaily.year()+i));
-        analysisYearTo.addItem(QString::number(firstDaily.year()+i));
-    }
-    analysisYearTo.setCurrentText(QString::number(lastDaily.year()));
-
 }
 
 
