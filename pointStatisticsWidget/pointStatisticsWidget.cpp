@@ -1603,32 +1603,20 @@ void Crit3DPointStatisticsWidget::saveToDbClicked()
 
 void Crit3DPointStatisticsWidget::updateYears()
 {
-    firstDaily = meteoPointsDbHandler->getFirstDate(daily, meteoPoints[0].id).date();
-    lastDaily = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
 
-    firstHourly = meteoPointsDbHandler->getFirstDate(hourly, meteoPoints[0].id);
+    lastDaily = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
     lastHourly = meteoPointsDbHandler->getLastDate(hourly, meteoPoints[0].id);
 
     for (int i = 1; i<idPoints.size(); i++)
     {
-        QDate firstDailyJointStation = meteoPointsDbHandler->getFirstDate(daily, idPoints[i]).date();
+
         QDate lastDailyJointStation = meteoPointsDbHandler->getLastDate(daily, idPoints[i]).date();
-        if (firstDailyJointStation.isValid() && firstDailyJointStation < firstDaily )
-        {
-            firstDaily = firstDailyJointStation;
-        }
         if (lastDailyJointStation.isValid() && lastDailyJointStation > lastDaily )
         {
             lastDaily = lastDailyJointStation;
         }
 
-        QDateTime firstHourlyJointStation = meteoPointsDbHandler->getFirstDate(hourly, idPoints[i]);
         QDateTime lastHourlyJointStation = meteoPointsDbHandler->getLastDate(hourly, idPoints[i]);
-
-        if (firstHourlyJointStation.isValid() && firstHourlyJointStation < firstHourly )
-        {
-            firstHourly = firstHourlyJointStation;
-        }
         if (lastHourlyJointStation.isValid() && lastHourlyJointStation > lastHourly )
         {
             lastHourly = lastHourlyJointStation;
