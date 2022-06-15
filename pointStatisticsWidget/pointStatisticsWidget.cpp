@@ -711,8 +711,6 @@ void Crit3DPointStatisticsWidget::plot()
 
             FormInfo formInfo;
             formInfo.showInfo("compute annual series...");
-            bool dataAlreadyLoaded = false;
-
             int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, meteoGridDbHandler,
                                                      &meteoPointTemp, &clima, isGrid, isAnomaly, meteoSettings, outputValues, dataAlreadyLoaded);
             formInfo.close();
