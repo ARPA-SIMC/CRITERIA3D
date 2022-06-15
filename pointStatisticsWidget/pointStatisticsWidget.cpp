@@ -955,7 +955,7 @@ void Crit3DPointStatisticsWidget::plot()
                         int nPoint;
                         for (nPoint = 0; nPoint<idPoints.size(); nPoint++)
                         {
-                            if (myDate < meteoPointsDbHandler->getLastDate(daily, meteoPoints[nPoint].id).date())
+                            if (myDate <= meteoPointsDbHandler->getLastDate(daily, meteoPoints[nPoint].id).date())
                             {
                                 break;
                             }
@@ -1211,7 +1211,7 @@ void Crit3DPointStatisticsWidget::plot()
                     int nPoint;
                     for (nPoint = 0; nPoint<idPoints.size(); nPoint++)
                     {
-                        if (myDate < meteoPointsDbHandler->getLastDate(hourly, meteoPoints[nPoint].id).date())
+                        if (myDate <= meteoPointsDbHandler->getLastDate(hourly, meteoPoints[nPoint].id).date())
                         {
                             break;
                         }
