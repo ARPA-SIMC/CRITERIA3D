@@ -605,12 +605,9 @@ void Crit3DPointStatisticsWidget::plot()
                                 break;
                             }
                         }
-                        Crit3DMeteoPoint meteoPointGet = meteoPoints[indexMp];
-                        meteoPointsDbHandler->loadDailyData(getCrit3DDate(lastDateCopyed), getCrit3DDate(lastDateNew), &meteoPointGet);
-                        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(lastDateCopyed), getCrit3DDate(lastDateNew.addDays(1)), &meteoPointGet);
                         for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
                         {
-                            setMpValues(meteoPointGet, &meteoPointTemp, myDate);
+                            setMpValues(meteoPoints[indexMp], &meteoPointTemp, myDate);
                         }
                     }
                     lastDateCopyed = lastDateNew;
@@ -742,12 +739,9 @@ void Crit3DPointStatisticsWidget::plot()
                                 break;
                             }
                         }
-                        Crit3DMeteoPoint meteoPointGet = meteoPoints[indexMp];
-                        meteoPointsDbHandler->loadDailyData(getCrit3DDate(lastDateCopyed), getCrit3DDate(lastDateNew), &meteoPointGet);
-                        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(lastDateCopyed), getCrit3DDate(lastDateNew.addDays(1)), &meteoPointGet);
                         for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
                         {
-                            setMpValues(meteoPointGet, &meteoPointTemp, myDate);
+                            setMpValues(meteoPoints[indexMp], &meteoPointTemp, myDate);
                         }
                     }
                     lastDateCopyed = lastDateNew;
@@ -890,12 +884,9 @@ void Crit3DPointStatisticsWidget::plot()
                                 break;
                             }
                         }
-                        Crit3DMeteoPoint meteoPointGet = meteoPoints[indexMp];
-                        meteoPointsDbHandler->loadDailyData(getCrit3DDate(lastDateCopyed), getCrit3DDate(lastDateNew), &meteoPointGet);
-                        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(lastDateCopyed), getCrit3DDate(lastDateNew.addDays(1)), &meteoPointGet);
                         for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
                         {
-                            setMpValues(meteoPointGet, &meteoPointTemp, myDate);
+                            setMpValues(meteoPoints[indexMp], &meteoPointTemp, myDate);
                         }
                     }
                     lastDateCopyed = lastDateNew;
@@ -1523,12 +1514,9 @@ void Crit3DPointStatisticsWidget::showElaboration()
                             break;
                         }
                     }
-                    Crit3DMeteoPoint meteoPointGet = meteoPoints[indexMp];
-                    meteoPointsDbHandler->loadDailyData(getCrit3DDate(lastDateCopyed), getCrit3DDate(lastDateNew), &meteoPointGet);
-                    meteoPointsDbHandler->loadHourlyData(getCrit3DDate(lastDateCopyed), getCrit3DDate(lastDateNew.addDays(1)), &meteoPointGet);
                     for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
                     {
-                        setMpValues(meteoPointGet, &meteoPointTemp, myDate);
+                        setMpValues(meteoPoints[indexMp], &meteoPointTemp, myDate);
                     }
                 }
                 lastDateCopyed = lastDateNew;
@@ -1731,17 +1719,38 @@ void Crit3DPointStatisticsWidget::on_actionExportData()
 
 void Crit3DPointStatisticsWidget::addStationClicked()
 {
-    if (!jointStationsList.currentText().isEmpty())
+    if (jointStationsList.currentText().isEmpty())
     {
-        if (jointStationsSelected.findItems(jointStationsList.currentText(), Qt::MatchExactly).isEmpty())
-        {
-            jointStationsSelected.addItem(jointStationsList.currentText());
-            deleteStation.setEnabled(true);
-            saveToDb.setEnabled(true);
-            idPoints << jointStationsList.currentText().section(" ",0,0).toStdString();
-        }
+        return;
     }
-    updateYears();
+    std::string newId;
+    if (jointStationsSelected.findItems(jointStationsList.currentText(), Qt::MatchExactly).isEmpty())
+    {
+        jointStationsSelected.addItem(jointStationsList.currentText());
+        deleteStation.setEnabled(true);
+        saveToDb.setEnabled(true);
+        newId = jointStationsList.currentText().section(" ",0,0).toStdString();
+        idPoints << newId;
+
+        updateYears();
+        int indexMp;
+        for (int j = 0; j<meteoPoints.size(); j++)
+        {
+            if (meteoPoints[j].id == newId)
+            {
+                indexMp = j;
+                break;
+            }
+        }
+        // load all Data
+        QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, newId).date();
+        QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, newId).date();
+
+        QDateTime firstHourly = meteoPointsDbHandler->getFirstDate(hourly, newId);
+        QDateTime lastHourly = meteoPointsDbHandler->getLastDate(hourly, newId);
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPoints[indexMp]);
+        meteoPointsDbHandler->loadHourlyData(getCrit3DDate(firstHourly.date()), getCrit3DDate(lastHourly.date()), &meteoPoints[indexMp]);
+    }
 
 }
 
