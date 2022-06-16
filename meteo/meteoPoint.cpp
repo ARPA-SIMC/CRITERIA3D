@@ -148,6 +148,40 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
     }
 }
 
+void Crit3DMeteoPoint::initializeObsDataHFromMp(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp)
+{
+
+    hourlyFraction = myHourlyFraction;
+    unsigned int nrDailyValues = unsigned(hourlyFraction * 24);
+    Crit3DDate myDate = firstDate;
+    TObsDataH *data = mp.getObsDataH();
+    for (unsigned int i = 0; i < unsigned(numberOfDays); i++)
+    {
+        if (i<nrObsDataDaysH)
+        {
+            obsDataH[i].date = myDate;
+            for (unsigned int j = 0; j < nrDailyValues; j++)
+            {
+                obsDataH[i].tAir[j] = data[i].tAir[j];
+                obsDataH[i].prec[j] = data[i].prec[j];
+                obsDataH[i].rhAir[j] = data[i].rhAir[j];
+                obsDataH[i].tDew[j] = data[i].tDew[j];
+                obsDataH[i].irradiance[j] = data[i].irradiance[j];
+                obsDataH[i].netIrradiance[j] =data[i].netIrradiance[j];
+                obsDataH[i].et0[j] = data[i].et0[j];
+                obsDataH[i].windVecX[j] = data[i].windVecX[j];
+                obsDataH[i].windVecY[j] = data[i].windVecY[j];
+                obsDataH[i].windVecInt[j] = data[i].windVecInt[j];
+                obsDataH[i].windVecDir[j] = data[i].windVecDir[j];
+                obsDataH[i].windScalInt[j] = data[i].windScalInt[j];
+                obsDataH[i].leafW[j] = data[i].leafW[j];
+                obsDataH[i].transmissivity[j] = data[i].transmissivity[j];
+            }
+            ++myDate;
+        }
+    }
+}
+
 
 void Crit3DMeteoPoint::initializeObsDataD(unsigned int numberOfDays, const Crit3DDate& firstDate)
 {
@@ -184,6 +218,36 @@ void Crit3DMeteoPoint::initializeObsDataD(unsigned int numberOfDays, const Crit3
         ++myDate;
     }
 }
+
+void Crit3DMeteoPoint::initializeObsDataDFromMp(unsigned int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp)
+{
+    Crit3DDate myDate = firstDate;
+    for (unsigned int i = 0; i < numberOfDays; i++)
+    {
+        obsDataD[i].date = myDate;
+        obsDataD[i].tMax = mp.obsDataD[i].tMax;
+        obsDataD[i].tMin = mp.obsDataD[i].tMin;
+        obsDataD[i].tAvg = mp.obsDataD[i].tAvg;
+        obsDataD[i].prec = mp.obsDataD[i].prec;
+        obsDataD[i].rhMax = mp.obsDataD[i].rhMax;
+        obsDataD[i].rhMin = mp.obsDataD[i].rhMin;
+        obsDataD[i].rhAvg = mp.obsDataD[i].rhAvg;
+        obsDataD[i].globRad = mp.obsDataD[i].globRad;
+        obsDataD[i].et0_hs = mp.obsDataD[i].et0_hs;
+        obsDataD[i].et0_pm = mp.obsDataD[i].et0_pm;
+        obsDataD[i].dd_heating = mp.obsDataD[i].dd_heating;
+        obsDataD[i].dd_cooling = mp.obsDataD[i].dd_cooling;
+        obsDataD[i].windVecIntAvg = mp.obsDataD[i].windVecIntAvg;
+        obsDataD[i].windVecIntMax = mp.obsDataD[i].windVecIntMax;
+        obsDataD[i].windVecDirPrev = mp.obsDataD[i].windVecDirPrev;
+        obsDataD[i].windScalIntAvg = mp.obsDataD[i].windScalIntAvg;
+        obsDataD[i].windScalIntMax = mp.obsDataD[i].windScalIntMax;
+        obsDataD[i].leafW = mp.obsDataD[i].leafW;
+        obsDataD[i].waterTable = mp.obsDataD[i].waterTable;
+        ++myDate;
+    }
+}
+
 
 void Crit3DMeteoPoint::initializeObsDataM(unsigned int numberOfMonths, unsigned int month, int year)
 {
@@ -1196,12 +1260,6 @@ TObsDataH *Crit3DMeteoPoint::getObsDataH() const
 {
     return obsDataH;
 }
-
-void Crit3DMeteoPoint::setObsDataH(TObsDataH *value)
-{
-    obsDataH = value;
-}
-
 
 // ---- end class
 
