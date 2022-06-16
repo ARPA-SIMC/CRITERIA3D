@@ -70,7 +70,7 @@ bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPoint
     bool dataLoaded;
     if (dataAlreadyLoaded)
     {
-        dataLoaded = true;
+        dataLoaded = preElaborationWithoutLoad(meteoPointTemp, clima->variable(), startDate, endDate, outputValues, &percValue, meteoSettings);
     }
     else
     {
@@ -819,6 +819,29 @@ float loadDailyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandler
         float percValue = float(nrValidValues) / float(nrRequestedValues);
         return percValue;
     }
+}
+
+float loadFromMp_SaveOutput(Crit3DMeteoPoint* meteoPoint,
+        meteoVariable variable, QDate first, QDate last, std::vector<float> &outputValues)
+{
+    Crit3DQuality qualityCheck;
+    int nrValidValues = 0;
+    int nrRequestedValues = first.daysTo(last) +1;
+
+
+    for (QDate myDate = first; myDate<=last; myDate=myDate.addDays(1))
+    {
+        float value = meteoPoint->getMeteoPointValueD(getCrit3DDate(myDate), variable);
+        quality::qualityType qualityT = qualityCheck.syntacticQualitySingleValue(variable, value);
+        if (qualityT == quality::accepted)
+        {
+            nrValidValues = nrValidValues + 1;
+        }
+        outputValues.push_back(value);
+    }
+
+    float percValue = float(nrValidValues) / float(nrRequestedValues);
+    return percValue;
 }
 
 
@@ -2024,6 +2047,134 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
     return preElaboration;
 }
 
+bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable variable, QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings)
+{
+
+    bool preElaboration = false;
+    bool automaticETP = meteoSettings->getAutomaticET0HS();
+    bool automaticTmed = meteoSettings->getAutomaticTavg();
+
+    switch(variable)
+    {
+
+        case dailyLeafWetness:
+        {
+            preElaboration = elaborateDailyAggregatedVar(dailyLeafWetness, *meteoPoint, outputValues, percValue, meteoSettings);
+            break;
+        }
+
+        case dailyThomDaytime:
+        {
+            preElaboration = elaborateDailyAggregatedVar(dailyThomDaytime, *meteoPoint, outputValues, percValue, meteoSettings);
+            break;
+        }
+
+        case dailyThomNighttime:
+        {
+            preElaboration = elaborateDailyAggregatedVar(dailyThomNighttime, *meteoPoint, outputValues, percValue, meteoSettings);
+            break;
+        }
+        case dailyThomAvg: case dailyThomMax: case dailyThomHoursAbove:
+        {
+            preElaboration = elaborateDailyAggregatedVar(variable, *meteoPoint, outputValues, percValue, meteoSettings);
+            break;
+        }
+        case dailyBIC:
+        {
+            if (automaticETP)
+            {
+                preElaboration = elaborateDailyAggregatedVar(dailyReferenceEvapotranspirationHS, *meteoPoint, outputValues, percValue, meteoSettings);
+                for (int outputIndex = 0; outputIndex<outputValues.size(); outputIndex++)
+                {
+                    meteoPoint->obsDataD[outputIndex].et0_hs = outputValues[outputIndex];
+                }
+            }
+
+            if (preElaboration)
+            {
+                preElaboration = elaborateDailyAggregatedVar(dailyBIC, *meteoPoint, outputValues, percValue, meteoSettings);
+            }
+            break;
+        }
+
+        case dailyAirTemperatureRange:
+        {
+            preElaboration = elaborateDailyAggregatedVar(dailyAirTemperatureRange, *meteoPoint, outputValues, percValue, meteoSettings);
+            break;
+        }
+        case dailyAirDewTemperatureMax:
+        {
+            preElaboration = elaborateDailyAggregatedVar(dailyAirDewTemperatureMax, *meteoPoint, outputValues, percValue, meteoSettings);
+            break;
+        }
+
+        case dailyAirDewTemperatureMin:
+        {
+            preElaboration = elaborateDailyAggregatedVar(dailyAirDewTemperatureMin, *meteoPoint, outputValues, percValue, meteoSettings);
+            break;
+        }
+
+        case dailyAirTemperatureAvg:
+        {
+            if (loadFromMp_SaveOutput(meteoPoint, dailyAirTemperatureAvg, startDate, endDate, outputValues) > 0)
+            {
+                preElaboration = true;
+            }
+            else if (automaticTmed)
+            {
+                preElaboration = elaborateDailyAggregatedVar(dailyAirTemperatureAvg, *meteoPoint, outputValues, percValue, meteoSettings);
+            }
+            break;
+        }
+
+        case dailyReferenceEvapotranspirationHS:
+        {
+            if (loadFromMp_SaveOutput(meteoPoint, dailyReferenceEvapotranspirationHS, startDate, endDate, outputValues) > 0)
+            {
+                preElaboration = true;
+            }
+            else if (automaticETP)
+            {
+                preElaboration = elaborateDailyAggregatedVar(dailyReferenceEvapotranspirationHS, *meteoPoint, outputValues, percValue, meteoSettings);
+            }
+            break;
+        }
+        case dailyHeatingDegreeDays:
+        {
+            if (loadFromMp_SaveOutput(meteoPoint, dailyHeatingDegreeDays, startDate, endDate, outputValues) > 0)
+            {
+                preElaboration = true;
+            }
+            else
+            {
+                preElaboration = elaborateDailyAggregatedVar(dailyHeatingDegreeDays, *meteoPoint, outputValues, percValue, meteoSettings);
+            }
+            break;
+        }
+        case dailyCoolingDegreeDays:
+        {
+            if (loadFromMp_SaveOutput(meteoPoint, dailyCoolingDegreeDays, startDate, endDate, outputValues) > 0)
+            {
+                preElaboration = true;
+            }
+            else
+            {
+                preElaboration = elaborateDailyAggregatedVar(dailyCoolingDegreeDays, *meteoPoint, outputValues, percValue, meteoSettings);
+            }
+            break;
+        }
+
+        default:
+        {
+            *percValue = loadFromMp_SaveOutput(meteoPoint, variable, startDate, endDate, outputValues);
+
+            preElaboration = ((*percValue) > 0);
+            break;
+        }
+    }
+
+    return preElaboration;
+}
 
 void extractValidValuesCC(std::vector<float> &outputValues)
 {
@@ -2037,7 +2188,6 @@ void extractValidValuesCC(std::vector<float> &outputValues)
     }
 
 }
-
 
 void extractValidValuesWithThreshold(std::vector<float> &outputValues, float myThreshold)
 {
@@ -4526,7 +4676,10 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
         endDate.setDate(myYear, endDate.month(), endDate.day());
         clima->setYearStart(myYear);
         clima->setYearEnd(myYear);
-        meteoPointTemp->nrObsDataDaysD = 0; // should be init
+        if (!dataAlreadyLoaded)
+        {
+            meteoPointTemp->nrObsDataDaysD = 0; // should be init
+        }
         if (clima->nYears() < 0)
         {
             startDate.setDate(myYear + clima->nYears(), startDate.month(), startDate.day());

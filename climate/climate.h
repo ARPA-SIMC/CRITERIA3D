@@ -151,6 +151,9 @@
     void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, QDate firstDate, QDate lastDate,
                                   int smooth, float* dataPresence, Crit3DQuality* qualityCheck, Crit3DClimateParameters* climateParam,
                                    Crit3DMeteoSettings* meteoSettings, std::vector<float> &dailyClima, std::vector<float> &decadalClima, std::vector<float> &monthlyClima);
+    bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable variable, QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings);
+    float loadFromMp_SaveOutput(Crit3DMeteoPoint* meteoPoint,
+            meteoVariable variable, QDate first, QDate last, std::vector<float> &outputValues);
     //int getClimateIndexFromDate(QDate myDate, period periodType);
 
 #endif // CLIMATE_H
