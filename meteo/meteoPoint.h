@@ -167,6 +167,8 @@
 
             bool computeDerivedVariables(Crit3DTime dateTime);
             bool computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar, Crit3DMeteoSettings *meteoSettings, Crit3DQuality *qualityCheck, Crit3DClimateParameters *climateParam);
+            TObsDataH *getObsDataH() const;
+            void setObsDataH(TObsDataH *value);
 
     private:
             TObsDataH *obsDataH;

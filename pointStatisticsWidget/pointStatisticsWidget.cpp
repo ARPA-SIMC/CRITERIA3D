@@ -570,18 +570,17 @@ void Crit3DPointStatisticsWidget::plot()
             std::vector<int> years;
             QString myError;
             bool isAnomaly = false;
-            // copy data to MPTemp
-            Crit3DMeteoPoint meteoPointTemp;
+
             FormInfo formInfo;
             formInfo.showInfo("compute annual series...");
-
+            // copy data to MPTemp
+            Crit3DMeteoPoint meteoPointTemp;
+            meteoPointTemp.id = meteoPoints[0].id;
+            meteoPointTemp.latitude = meteoPoints[0].latitude;
+            meteoPointTemp.elaboration = meteoPoints[0].elaboration;
             bool dataAlreadyLoaded;
             if (idPoints.size() == 1)
             {
-                meteoPointTemp.id = meteoPoints[0].id;
-                meteoPointTemp.latitude = meteoPoints[0].latitude;
-                meteoPointTemp.elaboration = meteoPoints[0].elaboration;
-
                 // meteoPointTemp should be init
                 meteoPointTemp.nrObsDataDaysH = 0;
                 meteoPointTemp.nrObsDataDaysD = 0;
@@ -589,7 +588,12 @@ void Crit3DPointStatisticsWidget::plot()
             }
             else
             {
-                meteoPointTemp = meteoPoints[0];
+                QDate endDate(QDate(lastYear, dayTo.date().month(), dayTo.date().day()));
+                int numberOfDays = meteoPoints[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
+                meteoPointTemp.initializeObsDataD(numberOfDays, meteoPoints[0].obsDataD[0].date);
+                meteoPointTemp.initializeObsDataH(1, numberOfDays, meteoPoints[0].getMeteoPointHourlyValuesDate(0));
+                meteoPointTemp.obsDataD = meteoPoints[0].obsDataD;
+                meteoPointTemp.setObsDataH(meteoPoints[0].getObsDataH());
                 QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
                 for (int i = 1; i<idPoints.size(); i++)
                 {
@@ -703,19 +707,18 @@ void Crit3DPointStatisticsWidget::plot()
             std::vector<int> years;
             QString myError;
             bool isAnomaly = false;
-            // copy data to MPTemp
-            Crit3DMeteoPoint meteoPointTemp;
 
             QDate startDate(clima.yearStart(), clima.genericPeriodDateStart().month(), clima.genericPeriodDateStart().day());
             QDate endDate(clima.yearEnd(), clima.genericPeriodDateEnd().month(), clima.genericPeriodDateEnd().day()); 
             bool dataAlreadyLoaded;
 
+            // copy data to MPTemp
+            Crit3DMeteoPoint meteoPointTemp;
+            meteoPointTemp.id = meteoPoints[0].id;
+            meteoPointTemp.latitude = meteoPoints[0].latitude;
+            meteoPointTemp.elaboration = meteoPoints[0].elaboration;
             if (idPoints.size() == 1)
             {
-                meteoPointTemp.id = meteoPoints[0].id;
-                meteoPointTemp.latitude = meteoPoints[0].latitude;
-                meteoPointTemp.elaboration = meteoPoints[0].elaboration;
-
                 // meteoPointTemp should be init
                 meteoPointTemp.nrObsDataDaysH = 0;
                 meteoPointTemp.nrObsDataDaysD = 0;
@@ -723,7 +726,11 @@ void Crit3DPointStatisticsWidget::plot()
             }
             else
             {
-                meteoPointTemp = meteoPoints[0];
+                int numberOfDays = meteoPoints[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
+                meteoPointTemp.initializeObsDataD(numberOfDays, meteoPoints[0].obsDataD[0].date);
+                meteoPointTemp.initializeObsDataH(1, numberOfDays, meteoPoints[0].getMeteoPointHourlyValuesDate(0));
+                meteoPointTemp.obsDataD = meteoPoints[0].obsDataD;
+                meteoPointTemp.setObsDataH(meteoPoints[0].getObsDataH());
                 QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
                 for (int i = 1; i<idPoints.size(); i++)
                 {
@@ -868,7 +875,15 @@ void Crit3DPointStatisticsWidget::plot()
             }
             else
             {
-                Crit3DMeteoPoint meteoPointTemp = meteoPoints[0];
+                Crit3DMeteoPoint meteoPointTemp;
+                meteoPointTemp.id = meteoPoints[0].id;
+                meteoPointTemp.latitude = meteoPoints[0].latitude;
+                meteoPointTemp.elaboration = meteoPoints[0].elaboration;
+                int numberOfDays = meteoPoints[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
+                meteoPointTemp.initializeObsDataD(numberOfDays, meteoPoints[0].obsDataD[0].date);
+                meteoPointTemp.initializeObsDataH(1, numberOfDays, meteoPoints[0].getMeteoPointHourlyValuesDate(0));
+                meteoPointTemp.obsDataD = meteoPoints[0].obsDataD;
+                meteoPointTemp.setObsDataH(meteoPoints[0].getObsDataH());
                 QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
                 for (int i = 1; i<idPoints.size(); i++)
                 {
@@ -1484,13 +1499,12 @@ void Crit3DPointStatisticsWidget::showElaboration()
         bool isAnomaly = false;
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
+        meteoPointTemp.id = meteoPoints[0].id;
+        meteoPointTemp.latitude = meteoPoints[0].latitude;
+        meteoPointTemp.elaboration = meteoPoints[0].elaboration;
         bool dataAlreadyLoaded;
         if (idPoints.size() == 1)
         {
-            meteoPointTemp.id = meteoPoints[0].id;
-            meteoPointTemp.latitude = meteoPoints[0].latitude;
-            meteoPointTemp.elaboration = meteoPoints[0].elaboration;
-
             // meteoPointTemp should be init
             meteoPointTemp.nrObsDataDaysH = 0;
             meteoPointTemp.nrObsDataDaysD = 0;
@@ -1498,7 +1512,12 @@ void Crit3DPointStatisticsWidget::showElaboration()
         }
         else
         {
-            meteoPointTemp = meteoPoints[0];
+            QDate endDate(clima.yearEnd(), clima.genericPeriodDateEnd().month(), clima.genericPeriodDateEnd().day());
+            int numberOfDays = meteoPoints[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
+            meteoPointTemp.initializeObsDataD(numberOfDays, meteoPoints[0].obsDataD[0].date);
+            meteoPointTemp.initializeObsDataH(1, numberOfDays, meteoPoints[0].getMeteoPointHourlyValuesDate(0));
+            meteoPointTemp.obsDataD = meteoPoints[0].obsDataD;
+            meteoPointTemp.setObsDataH(meteoPoints[0].getObsDataH());
             QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
             for (int i = 1; i<idPoints.size(); i++)
             {

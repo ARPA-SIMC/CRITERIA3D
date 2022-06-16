@@ -1192,6 +1192,16 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
     return aggregateDailyInMonthly;
 }
 
+TObsDataH *Crit3DMeteoPoint::getObsDataH() const
+{
+    return obsDataH;
+}
+
+void Crit3DMeteoPoint::setObsDataH(TObsDataH *value)
+{
+    obsDataH = value;
+}
+
 
 // ---- end class
 
