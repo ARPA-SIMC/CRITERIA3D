@@ -46,6 +46,7 @@
             void appendStationClicked(std::string, std::string, bool);
             void newPointStatisticsClicked(std::string, bool);
             void changeOrogCodeClicked(std::string, int);
+            void newHomogeneityTestClicked(std::string);
 
     };
 

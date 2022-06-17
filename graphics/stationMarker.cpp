@@ -110,6 +110,7 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
         QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
         QAction *openPointStatisticsWidget = menu.addAction("Open point statistics widget");
+        QAction *openHomogeneityWidget = menu.addAction("Open homogeneity test widget");
         QMenu *orogCodeSubMenu;
         orogCodeSubMenu = menu.addMenu("Orog code");
         QAction *actionOrogCode_primary = orogCodeSubMenu->addAction( "Set as primary station" );
@@ -131,6 +132,10 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             else if (selection == openPointStatisticsWidget)
             {
                 emit newPointStatisticsClicked(_id, isGrid);
+            }
+            else if (selection == openHomogeneityWidget)
+            {
+                emit newHomogeneityTestClicked(_id);
             }
             else if (selection == actionOrogCode_primary)
             {
