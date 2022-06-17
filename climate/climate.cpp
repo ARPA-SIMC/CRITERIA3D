@@ -103,7 +103,7 @@ bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPoint
             return false;
         }
 
-        result = computeStatistic(outputValues, meteoPointTemp, clima, startD, endD, clima->nYears(), elab1MeteoComp, elab2MeteoComp, meteoSettings);
+        result = computeStatistic(outputValues, meteoPointTemp, clima, startD, endD, clima->nYears(), elab1MeteoComp, elab2MeteoComp, meteoSettings, dataAlreadyLoaded);
 
         if (isAnomaly)
         {
@@ -343,6 +343,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
 {
 
     QSqlDatabase db = clima->db();
+    bool dataAlreadyLoaded = false;
 
     float result;
 
@@ -418,7 +419,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
                 }
             }
 
-            result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings);
+            result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings, dataAlreadyLoaded);
 
             if (result != NODATA)
             {
@@ -484,7 +485,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
                 }
             }
 
-            result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings);
+            result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings, dataAlreadyLoaded);
 
             if (result != NODATA)
             {
@@ -536,7 +537,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
                 }
             }
 
-            result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings);
+            result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings, dataAlreadyLoaded);
 
             if (result != NODATA)
             {
@@ -604,7 +605,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
                 }
             }
 
-            result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, seasonalNPeriodYears, elab1, elab2, meteoSettings);
+            result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, seasonalNPeriodYears, elab1, elab2, meteoSettings, dataAlreadyLoaded);
 
             if (result != NODATA)
             {
@@ -646,7 +647,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
             }
         }
 
-        result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings);
+        result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings, dataAlreadyLoaded);
 
         if (result != NODATA)
         {
@@ -681,7 +682,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
             }
         }
 
-        result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings);
+        result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings, dataAlreadyLoaded);
 
         if (result != NODATA)
         {
@@ -2205,7 +2206,7 @@ void extractValidValuesWithThreshold(std::vector<float> &outputValues, float myT
 
 //nYears   = 0         same year
 //nYears   = 1,2,3...   betweend years 1,2,3...
-float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoPoint, Crit3DClimate *clima, Crit3DDate firstDate, Crit3DDate lastDate, int nYears, meteoComputation elab1, meteoComputation elab2, Crit3DMeteoSettings* meteoSettings)
+float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoPoint, Crit3DClimate *clima, Crit3DDate firstDate, Crit3DDate lastDate, int nYears, meteoComputation elab1, meteoComputation elab2, Crit3DMeteoSettings* meteoSettings, bool dataAlreadyLoaded)
 {
 
     std::vector<float> values;
@@ -2294,7 +2295,14 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
                         }
                         else
                         {
-                            index = difference(meteoPoint->obsDataD[0].date, presentDate);
+                            if (dataAlreadyLoaded)
+                            {
+                                index = difference(firstDate, presentDate);
+                            }
+                            else
+                            {
+                                index = difference(meteoPoint->obsDataD[0].date, presentDate);
+                            }
                             if (index < inputValues.size())
                             {
                                 value = inputValues.at(index);

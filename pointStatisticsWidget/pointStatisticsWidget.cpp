@@ -1819,7 +1819,9 @@ void Crit3DPointStatisticsWidget::updateYears()
             lastHourly = lastHourlyJointStation;
         }
     }
-
+    // save current yearFrom
+    QString currentYearFrom = yearFrom.currentText();
+    QString currentAnalysisYearFrom = analysisYearFrom.currentText();
     yearFrom.clear();
     yearTo.clear();
     if (currentFrequency == daily)
@@ -1835,6 +1837,8 @@ void Crit3DPointStatisticsWidget::updateYears()
         }
         yearTo.setCurrentText(QString::number(lastDaily.year()));
         analysisYearTo.setCurrentText(QString::number(lastDaily.year()));
+        yearFrom.setCurrentText(currentYearFrom);
+        analysisYearTo.setCurrentText(currentAnalysisYearFrom);
     }
     else if (currentFrequency == hourly)
     {
@@ -1843,6 +1847,7 @@ void Crit3DPointStatisticsWidget::updateYears()
             yearFrom.addItem(QString::number(firstHourly.date().year()+i));
             yearTo.addItem(QString::number(firstHourly.date().year()+i));
         }
+        yearFrom.setCurrentText(currentYearFrom);
         yearTo.setCurrentText(QString::number(lastHourly.date().year()));
     }
 }
