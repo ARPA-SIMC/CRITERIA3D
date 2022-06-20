@@ -16,18 +16,13 @@
         Q_OBJECT
 
         public:
-            Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint mp, QDate firstDaily,
+            Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily,
                                         QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality* quality);
             ~Crit3DHomogeneityWidget();
             void closeEvent(QCloseEvent *event);
-            void dailyVar();
-            void hourlyVar();
-            void changeGraph(const QString graphName);
+            void changeMethod(const QString methodName);
             void changeVar(const QString varName);
-            void plot();
-            void updatePlot();
-            void updatePlotByVal();
-            void computePlot();
+            //void plot();
             void on_actionChangeLeftAxis();
             void on_actionExportGraph();
             void on_actionExportData();
@@ -39,9 +34,8 @@
 
     private:
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
-            Crit3DMeteoPoint mp;
-            Crit3DClimate clima;
             QList<Crit3DMeteoPoint> meteoPoints;
+            Crit3DClimate clima;
             QList<std::string> idPoints;
             QDate firstDaily;
             QDate lastDaily;
@@ -51,42 +45,26 @@
             Crit3DClimateParameters *climateParameters;
             Crit3DQuality* quality;
 
-            frequencyType currentFrequency;
             QComboBox variable;
             QComboBox method;
-            QRadioButton dailyButton;
-            QRadioButton hourlyButton;
             QComboBox yearFrom;
             QComboBox yearTo;
-            QGroupBox *analysisPeriodGroupBox;
-            QComboBox analysisYearFrom;
-            QComboBox analysisYearTo;
             meteoVariable myVar;
-            QPushButton elaboration;
-            QDateEdit dayFrom;
-            QDateEdit dayTo;
-            QSpinBox hour;
             QPushButton find;
             HomogeneityChartView *chartView;
-            QComboBox stationsList;
-            QPushButton addStation;
-            QPushButton deleteStation;
-            QListWidget stationsSelected;
-            QComboBox graphType;
-            QTextEdit availability;
-            QTextEdit rate;
-            QTextEdit r2;
-            QTextEdit significance;
-            QTextEdit average;
-            QTextEdit mode;
-            QTextEdit median;
-            QTextEdit sigma;
-            QLineEdit classWidth;
-            QLineEdit valMax;
-            QLineEdit valMin;
-            QLineEdit smoothing;
-            int valMaxValue;
-            int valMinValue;
+            QComboBox jointStationsList;
+            QPushButton addJointStation;
+            QPushButton deleteJointStation;
+            QPushButton saveToDb;
+            QListWidget jointStationsSelected;
+            QLineEdit minNumStations;
+            QListWidget listFoundStations;
+            QListWidget listSelectedStations;
+            QPushButton addButton;
+            QPushButton deleteButton;
+            QTableWidget stationsTable;
+            QLabel resultLabel;
+            QPushButton execute;
     };
 
 

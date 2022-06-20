@@ -46,6 +46,16 @@ HomogeneityChartView::HomogeneityChartView(QWidget *parent) :
     m_tooltip = new Callout(chart());
     m_tooltip->hide();
 }
+
+void HomogeneityChartView::setYmax(float value)
+{
+    axisY->setMax(value);
+}
+
+void HomogeneityChartView::setYmin(float value)
+{
+    axisY->setMin(value);
+}
 /*
 void HomogeneityChartView::drawTrend(std::vector<int> years, std::vector<float> outputValues)
 {
@@ -401,16 +411,6 @@ void HomogeneityChartView::tooltipBar(bool state, int index, QBarSet *barset)
     {
         m_tooltip->hide();
     }
-}
-
-void HomogeneityChartView::setYmax(float value)
-{
-    axisY->setMax(value);
-}
-
-void HomogeneityChartView::setYmin(float value)
-{
-    axisY->setMin(value);
 }
 
 QList<QPointF> HomogeneityChartView::exportTrend()
