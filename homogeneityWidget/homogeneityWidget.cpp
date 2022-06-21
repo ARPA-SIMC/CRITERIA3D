@@ -204,9 +204,14 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     resultLayout->addWidget(&resultLabel);
     resultGroupBox->setLayout(resultLayout);
 
-    chartView = new HomogeneityChartView();
-    chartView->setMinimumWidth(this->width()*2/3);
-    plotLayout->addWidget(chartView);
+    annualSeriesChartView = new AnnualSeriesChartView();
+    annualSeriesChartView->setMinimumWidth(this->width()*2/3);
+    annualSeriesChartView->setYTitle(QString::fromStdString(getUnitFromVariable(myVar)));
+    plotLayout->addWidget(annualSeriesChartView);
+
+    homogeneityChartView = new HomogeneityChartView();
+    homogeneityChartView->setMinimumWidth(this->width()*2/3);
+    plotLayout->addWidget(homogeneityChartView);
 
     firstLayout->addWidget(methodGroupBox);
     firstLayout->addWidget(variableGroupBox);
@@ -227,28 +232,30 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     menuBar->addMenu(editMenu);
     mainLayout->setMenuBar(menuBar);
 
-    QAction* changeLeftAxis = new QAction(tr("&Change axis left"), this);
-    QAction* exportGraph = new QAction(tr("&Export graph"), this);
-    QAction* exportData = new QAction(tr("&Export data"), this);
+    QAction* changeHomogeneityLeftAxis = new QAction(tr("&Change homogenity chart axis left"), this);
+    QAction* exportHomogeneityGraph = new QAction(tr("&Export homogenity graph"), this);
+    QAction* exportHomogeneityData = new QAction(tr("&Export homogenity data"), this);
 
-    editMenu->addAction(changeLeftAxis);
-    editMenu->addAction(exportGraph);
-    editMenu->addAction(exportData);
+    editMenu->addAction(changeHomogeneityLeftAxis);
+    editMenu->addAction(exportHomogeneityGraph);
+    editMenu->addAction(exportHomogeneityData);
 
     mainLayout->addLayout(leftLayout);
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
+    connect(&yearFrom, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
+    connect(&yearTo, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&method, &QComboBox::currentTextChanged, [=](const QString &newMethod){ this->changeMethod(newMethod); });
     connect(&addJointStation, &QPushButton::clicked, [=](){ addStationClicked(); });
     connect(&deleteJointStation, &QPushButton::clicked, [=](){ deleteStationClicked(); });
     connect(&saveToDb, &QPushButton::clicked, [=](){ saveToDbClicked(); });
-    connect(changeLeftAxis, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionChangeLeftAxis);
-    connect(exportGraph, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportGraph);
-    connect(exportData, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportData);
+    connect(changeHomogeneityLeftAxis, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionChangeLeftAxis);
+    connect(exportHomogeneityGraph, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportGraph);
+    connect(exportHomogeneityData, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportData);
 
-//    plot();
+    plotAnnualSeries();
 
     show();
 }
@@ -262,6 +269,105 @@ Crit3DHomogeneityWidget::~Crit3DHomogeneityWidget()
 void Crit3DHomogeneityWidget::closeEvent(QCloseEvent *event)
 {
     event->accept();
+}
+
+void Crit3DHomogeneityWidget::plotAnnualSeries()
+{
+    int firstYear = yearFrom.currentText().toInt();
+    int lastYear = yearTo.currentText().toInt();
+
+    clima.setVariable(myVar);
+    if (myVar == dailyPrecipitation || myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM || myVar == dailyBIC)
+    {
+        clima.setElab1("sum");
+    }
+    else
+    {
+        clima.setElab1("average");
+    }
+    clima.setYearStart(firstYear);
+    clima.setYearEnd(lastYear);
+    clima.setGenericPeriodDateStart(QDate(firstYear, 1, 1));
+    clima.setGenericPeriodDateEnd(QDate(lastYear, 12, 31));
+    clima.setNYears(0);
+
+    std::vector<float> outputValues;
+    std::vector<int> years;
+    QString myError;
+    bool isAnomaly = false;
+
+    FormInfo formInfo;
+    formInfo.showInfo("compute annual series...");
+    // copy data to MPTemp
+    Crit3DMeteoPoint meteoPointTemp;
+    meteoPointTemp.id = meteoPoints[0].id;
+    meteoPointTemp.latitude = meteoPoints[0].latitude;
+    meteoPointTemp.elaboration = meteoPoints[0].elaboration;
+    bool dataAlreadyLoaded;
+    if (idPoints.size() == 1)
+    {
+        // meteoPointTemp should be init
+        meteoPointTemp.nrObsDataDaysH = 0;
+        meteoPointTemp.nrObsDataDaysD = 0;
+        dataAlreadyLoaded = false;
+    }
+    else
+    {
+        QDate endDate(QDate(lastYear, 12, 31));
+        int numberOfDays = meteoPoints[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
+        meteoPointTemp.initializeObsDataD(numberOfDays, meteoPoints[0].obsDataD[0].date);
+        meteoPointTemp.initializeObsDataH(1, numberOfDays, meteoPoints[0].getMeteoPointHourlyValuesDate(0));
+        meteoPointTemp.initializeObsDataDFromMp(meteoPoints[0].nrObsDataDaysD, meteoPoints[0].obsDataD[0].date, meteoPoints[0]);
+        meteoPointTemp.initializeObsDataHFromMp(1,meteoPoints[0].nrObsDataDaysH, meteoPoints[0].getMeteoPointHourlyValuesDate(0), meteoPoints[0]);
+        QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
+        for (int i = 1; i<idPoints.size(); i++)
+        {
+            QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, idPoints[i]).date();
+            if (lastDateNew > lastDateCopyed)
+            {
+                int indexMp;
+                for (int j = 0; j<meteoPoints.size(); j++)
+                {
+                    if (meteoPoints[j].id == idPoints[i])
+                    {
+                        indexMp = j;
+                        break;
+                    }
+                }
+                for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
+                {
+                    setMpValues(meteoPoints[indexMp], &meteoPointTemp, myDate);
+                }
+            }
+            lastDateCopyed = lastDateNew;
+        }
+        dataAlreadyLoaded = true;
+    }
+
+    annualSeriesChartView->clearSeries();
+    int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
+                                             &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, outputValues, dataAlreadyLoaded);
+    formInfo.close();
+
+    if (validYears > 0)
+    {
+        double sum = 0;
+        int count = 0;
+        int validData = 0;
+        for (int i = firstYear; i<=lastYear; i++)
+        {
+            years.push_back(i);
+            if (outputValues[count] != NODATA)
+            {
+                sum += double(outputValues[unsigned(count)]);
+                validData = validData + 1;
+            }
+            count = count + 1;
+        }
+        averageValue = sum / validYears;
+        // draw
+        annualSeriesChartView->draw(years, outputValues);
+    }
 }
 
 void Crit3DHomogeneityWidget::setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet, QDate myDate)
@@ -406,7 +512,21 @@ void Crit3DHomogeneityWidget::setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3D
 void Crit3DHomogeneityWidget::changeVar(const QString varName)
 {
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
-    //plot();
+    listFoundStations.clear();
+    listSelectedStations.clear();
+    stationsTable.clear();
+    resultLabel.clear();
+    annualSeriesChartView->setYTitle(QString::fromStdString(getUnitFromVariable(myVar)));
+    plotAnnualSeries();
+}
+
+void Crit3DHomogeneityWidget::changeYears()
+{
+    listFoundStations.clear();
+    listSelectedStations.clear();
+    stationsTable.clear();
+    resultLabel.clear();
+    plotAnnualSeries();
 }
 
 void Crit3DHomogeneityWidget::changeMethod(const QString methodName)
@@ -484,6 +604,9 @@ void Crit3DHomogeneityWidget::saveToDbClicked()
 void Crit3DHomogeneityWidget::updateYears()
 {
 
+    yearFrom.blockSignals(true);
+    yearTo.blockSignals(true);
+
     lastDaily = meteoPointsDbHandler->getLastDate(daily, meteoPoints[0].id).date();
     for (int i = 1; i<idPoints.size(); i++)
     {
@@ -506,6 +629,10 @@ void Crit3DHomogeneityWidget::updateYears()
     }
     yearTo.setCurrentText(QString::number(lastDaily.year()));
     yearFrom.setCurrentText(currentYearFrom);
+
+    yearFrom.blockSignals(true);
+    yearTo.blockSignals(true);
+    plotAnnualSeries();
 }
 
 void Crit3DHomogeneityWidget::on_actionChangeLeftAxis()
@@ -513,8 +640,8 @@ void Crit3DHomogeneityWidget::on_actionChangeLeftAxis()
     DialogChangeAxis changeAxisDialog(true);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
-        chartView->setYmax(changeAxisDialog.getMaxVal());
-        chartView->setYmin(changeAxisDialog.getMinVal());
+        homogeneityChartView->setYmax(changeAxisDialog.getMaxVal());
+        homogeneityChartView->setYmin(changeAxisDialog.getMinVal());
     }
 }
 
@@ -526,14 +653,14 @@ void Crit3DHomogeneityWidget::on_actionExportGraph()
 
     if (fileName != "")
     {
-        const auto dpr = chartView->devicePixelRatioF();
-        QPixmap buffer(chartView->width() * dpr, chartView->height() * dpr);
+        const auto dpr = homogeneityChartView->devicePixelRatioF();
+        QPixmap buffer(homogeneityChartView->width() * dpr, homogeneityChartView->height() * dpr);
         buffer.setDevicePixelRatio(dpr);
         buffer.fill(Qt::transparent);
 
         QPainter *paint = new QPainter(&buffer);
         paint->setPen(*(new QColor(255,34,255,255)));
-        chartView->render(paint);
+        homogeneityChartView->render(paint);
 
         QFile file(fileName);
         file.open(QIODevice::WriteOnly);

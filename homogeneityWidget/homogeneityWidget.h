@@ -4,6 +4,7 @@
     #include <QtWidgets>
     #include <QtCharts>
     #include "homogeneityChartView.h"
+    #include "annualSeriesChartView.h"
     #include "meteoPoint.h"
     #include "dbMeteoPointsHandler.h"
     #include "dbMeteoGrid.h"
@@ -22,7 +23,8 @@
             void closeEvent(QCloseEvent *event);
             void changeMethod(const QString methodName);
             void changeVar(const QString varName);
-            //void plot();
+            void changeYears();
+            void plotAnnualSeries();
             void on_actionChangeLeftAxis();
             void on_actionExportGraph();
             void on_actionExportData();
@@ -51,7 +53,8 @@
             QComboBox yearTo;
             meteoVariable myVar;
             QPushButton find;
-            HomogeneityChartView *chartView;
+            HomogeneityChartView *homogeneityChartView;
+            AnnualSeriesChartView *annualSeriesChartView;
             QComboBox jointStationsList;
             QPushButton addJointStation;
             QPushButton deleteJointStation;
@@ -65,6 +68,8 @@
             QTableWidget stationsTable;
             QLabel resultLabel;
             QPushButton execute;
+
+            double averageValue;
     };
 
 

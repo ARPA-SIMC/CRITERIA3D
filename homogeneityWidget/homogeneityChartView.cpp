@@ -27,17 +27,13 @@ HomogeneityChartView::HomogeneityChartView(QWidget *parent) :
     climaMonthly->setName("Monthly");
     climaMonthly->setColor(Qt::green);
 
-    distributionBar = new QBarSeries();
     distributionLine = new QLineSeries();
     climaMonthly->setColor(Qt::green);
 
     axisXvalue = new QValueAxis();
-    axisX = new QBarCategoryAxis();
-    axisX->hide();
     axisY = new QValueAxis();
 
     chart()->addAxis(axisXvalue, Qt::AlignBottom);
-    chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisY, Qt::AlignLeft);
     chart()->setDropShadowEnabled(false);
 

@@ -5,9 +5,6 @@
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
-#include <QtCharts/QBarCategoryAxis>
-#include <QtCharts/QBarSeries>
-#include <QtCharts/QBarSet>
 #include "callout.h"
 
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
@@ -25,7 +22,6 @@ public:
     void tooltipTrendSeries(QPointF point, bool state);
     void tooltipClimaSeries(QPointF point, bool state);
     void tooltipDistributionSeries(QPointF point, bool state);
-    void tooltipBar(bool state, int index, QBarSet *barset);
     void cleanTrendSeries();
     void cleanClimaSeries();
     void cleanDistribution();
@@ -42,10 +38,8 @@ private:
     QLineSeries* climaDaily;
     QLineSeries* climaDecadal;
     QLineSeries* climaMonthly;
-    QBarSeries *distributionBar;
     QLineSeries *distributionLine;
     int widthValue;
-    QBarCategoryAxis *axisX;
     QValueAxis* axisXvalue;
     QValueAxis* axisY;
     QList<QString> categories;

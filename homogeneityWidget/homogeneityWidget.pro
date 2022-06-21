@@ -35,11 +35,13 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../db
 
 
 SOURCES += \
+    annualSeriesChartView.cpp \
     homogeneityChartView.cpp \
     homogeneityWidget.cpp
 
 
 HEADERS += \
+    annualSeriesChartView.h \
     homogeneityChartView.h \
     homogeneityWidget.h 
 
