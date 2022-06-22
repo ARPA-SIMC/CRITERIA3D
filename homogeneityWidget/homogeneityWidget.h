@@ -17,8 +17,9 @@
         Q_OBJECT
 
         public:
-            Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPoints, QDate firstDaily,
-                                        QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality* quality);
+            Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPoints, QList<std::string> sortedId,
+            std::vector<float> distanceId, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings,
+                                    Crit3DClimateParameters *climateParameters, Crit3DQuality* quality);
             ~Crit3DHomogeneityWidget();
             void closeEvent(QCloseEvent *event);
             void changeMethod(const QString methodName);
@@ -41,6 +42,8 @@
             QList<std::string> idPoints;
             QDate firstDaily;
             QDate lastDaily;
+            QList<std::string> sortedId;
+            std::vector<float> distanceId;
 
             Crit3DMeteoSettings *meteoSettings;
             QSettings *settings;

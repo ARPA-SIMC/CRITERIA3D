@@ -252,6 +252,68 @@
             }
         }
 
+        void quicksortAscendingIntegerWithParameters(std::vector<int> &x, std::vector<float> &values, int first,int last)
+        {
+           int pivot,temp,l,r;
+
+           if(first<last)
+           {
+               // only 2 elements
+               if (last-first == 1)
+               {
+                   if (values[first] > values[last])
+                   {
+                       //swap
+                       temp = x[first];
+                       x[first]= x[last];
+                       x[last] = temp;
+                   }
+               }
+               int posPivot = (last - first) / 2 + first;
+               pivot = values[posPivot];
+               if (values[last] < pivot)
+               {
+                   //swap
+                   temp = x[posPivot];
+                   x[posPivot]= x[last];
+                   x[last] = temp;
+               }
+               l=first;
+               r=last;
+
+               while(l<r)
+               {
+                   if (values[l] < pivot)
+                   {
+                         l = l + 1;
+                   }
+                   else if (values[r] >= pivot)
+                   {
+                       r = r -1;
+                   }
+                   else
+                   {
+                       //swap
+                       temp = x[l];
+                       x[l]= x[r];
+                       x[r] = temp;
+                   }
+               }
+               if (l > first)
+               {
+                   l = l - 1;
+               }
+               else
+               {
+                   temp = x[first];
+                   x[first]= x[posPivot];
+                   x[posPivot] = temp;
+               }
+
+               quicksortAscendingIntegerWithParameters(x,values,first,l);
+               quicksortAscendingIntegerWithParameters(x,values,r,last);
+            }
+        }
 
         void quicksortAscendingDouble(double *x, int first,int last)
         {

@@ -1932,4 +1932,3 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
         return false;
     }
 }
-

@@ -104,7 +104,6 @@
         QList<QString> getJointStations(const QString& idPoint);
         bool setJointStations(const QString& idPoint, QList<QString> stationsList);
 
-
     protected:
 
         QSqlDatabase _db;

@@ -154,6 +154,8 @@
     bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable variable, QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings);
     float loadFromMp_SaveOutput(Crit3DMeteoPoint* meteoPoint,
             meteoVariable variable, QDate first, QDate last, std::vector<float> &outputValues);
+    bool findReferenceStations(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
+                               Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, Crit3DMeteoSettings* meteoSettings, bool dataAlreadyLoaded);
     //int getClimateIndexFromDate(QDate myDate, period periodType);
 
 #endif // CLIMATE_H

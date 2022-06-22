@@ -39,9 +39,9 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPoints,
+Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPoints, QList<std::string> sortedId, std::vector<float> distanceId,
                                                          QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality)
-:meteoPointsDbHandler(meteoPointsDbHandler), meteoPoints(meteoPoints), firstDaily(firstDaily),
+:meteoPointsDbHandler(meteoPointsDbHandler), meteoPoints(meteoPoints), sortedId(sortedId), distanceId(distanceId), firstDaily(firstDaily),
   lastDaily(lastDaily), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality)
 {
     this->setWindowTitle("Homogeneity Test Id:"+QString::fromStdString(meteoPoints[0].id)+" "+QString::fromStdString(meteoPoints[0].name));
@@ -517,6 +517,7 @@ void Crit3DHomogeneityWidget::changeVar(const QString varName)
     stationsTable.clear();
     resultLabel.clear();
     annualSeriesChartView->setYTitle(QString::fromStdString(getUnitFromVariable(myVar)));
+    execute.setEnabled(false);
     plotAnnualSeries();
 }
 
@@ -526,6 +527,7 @@ void Crit3DHomogeneityWidget::changeYears()
     listSelectedStations.clear();
     stationsTable.clear();
     resultLabel.clear();
+    execute.setEnabled(false);
     plotAnnualSeries();
 }
 
