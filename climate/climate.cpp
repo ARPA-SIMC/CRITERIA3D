@@ -4941,17 +4941,3 @@ void computeClimateOnDailyData(Crit3DMeteoPoint meteoPoint, meteoVariable var, Q
     }
 }
 
-bool findReferenceStations(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler,
-                           Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, Crit3DMeteoSettings* meteoSettings, bool dataAlreadyLoaded)
-{
-    std::vector<float> outputValues;
-    int validYears = computeAnnualSeriesOnPointFromDaily(myError, meteoPointsDbHandler, nullptr,
-                                             meteoPointTemp, clima, false, false, meteoSettings, outputValues, dataAlreadyLoaded);
-    if (validYears = 0)
-    {
-        return false;
-    }
-    // TO DO
-    return true;
-}
-

@@ -103,6 +103,8 @@
         bool setOrogCode(QString id, int orogCode);
         QList<QString> getJointStations(const QString& idPoint);
         bool setJointStations(const QString& idPoint, QList<QString> stationsList);
+        QString getNameGivenId(QString id);
+        double getAltitudeGivenId(QString id);
 
     protected:
 

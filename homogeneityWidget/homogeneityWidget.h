@@ -17,7 +17,7 @@
         Q_OBJECT
 
         public:
-            Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPoints, QList<std::string> sortedId,
+            Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPointsNearDistanceList, QList<std::string> sortedId,
             std::vector<float> distanceId, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings,
                                     Crit3DClimateParameters *climateParameters, Crit3DQuality* quality);
             ~Crit3DHomogeneityWidget();
@@ -34,16 +34,21 @@
             void saveToDbClicked();
             void updateYears();
             void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint *meteoPointSet, QDate myDate);
+            void findReferenceStations();
 
     private:
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
-            QList<Crit3DMeteoPoint> meteoPoints;
+            QList<Crit3DMeteoPoint> meteoPointsNearDistanceList;
             Crit3DClimate clima;
-            QList<std::string> idPoints;
+            QList<std::string> idPointsJointed;
             QDate firstDaily;
             QDate lastDaily;
+            std::vector<float> myAnnualSeries;
             QList<std::string> sortedId;
             std::vector<float> distanceId;
+            QList<std::string> sortedIdFound;
+            QList<float> distanceIdFound;
+            QList<std::vector<float>> myAnnualSeriesFound;
 
             Crit3DMeteoSettings *meteoSettings;
             QSettings *settings;
@@ -72,6 +77,7 @@
             QLabel resultLabel;
             QPushButton execute;
 
+            QString myError;
             double averageValue;
     };
 

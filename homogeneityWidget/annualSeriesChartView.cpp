@@ -62,13 +62,13 @@ void AnnualSeriesChartView::draw(std::vector<int> years, std::vector<float> outp
         axisY->setMin(minValue-3);
     }
     axisX->setRange(years[0], years[years.size()-1]);
-    if (years.size() <= 30)
+    if (years.size() <= 15)
     {
         axisX->setTickCount(years.size());
     }
     else
     {
-        axisX->setTickCount(30);
+        axisX->setTickCount(15);
     }
     axisX->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");

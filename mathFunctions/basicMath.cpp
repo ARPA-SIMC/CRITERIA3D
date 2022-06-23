@@ -254,7 +254,7 @@
 
         void quicksortAscendingIntegerWithParameters(std::vector<int> &x, std::vector<float> &values, int first,int last)
         {
-           int pivot,temp,l,r;
+           int pivot,tmpVal,tmpIndex,l,r;
 
            if(first<last)
            {
@@ -264,9 +264,13 @@
                    if (values[first] > values[last])
                    {
                        //swap
-                       temp = x[first];
-                       x[first]= x[last];
-                       x[last] = temp;
+                       tmpIndex = x[last];
+                       tmpVal = values[last];
+                       values[last] = values[first];
+                       values[first] = tmpVal;
+                       x[last]= x[first];
+                       x[first] = tmpIndex;
+                       return;
                    }
                }
                int posPivot = (last - first) / 2 + first;
@@ -274,9 +278,12 @@
                if (values[last] < pivot)
                {
                    //swap
-                   temp = x[posPivot];
-                   x[posPivot]= x[last];
-                   x[last] = temp;
+                   tmpIndex = x[last];
+                   tmpVal = values[last];
+                   values[last] = values[posPivot];
+                   values[posPivot] = tmpVal;
+                   x[last]= x[posPivot];
+                   x[posPivot] = tmpIndex;
                }
                l=first;
                r=last;
@@ -294,9 +301,12 @@
                    else
                    {
                        //swap
-                       temp = x[l];
-                       x[l]= x[r];
-                       x[r] = temp;
+                       tmpIndex = x[r];
+                       tmpVal = values[r];
+                       values[r] = values[l];
+                       values[l] = tmpVal;
+                       x[r]= x[l];
+                       x[l] = tmpIndex;
                    }
                }
                if (l > first)
@@ -305,9 +315,15 @@
                }
                else
                {
-                   temp = x[first];
-                   x[first]= x[posPivot];
-                   x[posPivot] = temp;
+                   //swap
+                   tmpIndex = x[posPivot];
+                   tmpVal = values[posPivot];
+                   values[posPivot] = values[first];
+                   values[first] = tmpVal;
+                   x[posPivot]= x[first];
+                   x[first] = tmpIndex;
+
+                   r = r + 1;
                }
 
                quicksortAscendingIntegerWithParameters(x,values,first,l);

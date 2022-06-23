@@ -953,6 +953,52 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesGivenId(QString id, Crit3DMeteoPoi
     return true;
 }
 
+QString Crit3DMeteoPointsDbHandler::getNameGivenId(QString id)
+{
+
+    QSqlQuery qry(_db);
+    QString name = "";
+
+    qry.prepare( "SELECT name from point_properties WHERE id_point = :id_point" );
+    qry.bindValue(":id_point", id);
+
+    if( !qry.exec() )
+    {
+        error = qry.lastError().text();
+        return name;
+    }
+
+    if(qry.next())
+    {
+        getValue(qry.value("name"), &name);
+    }
+
+    return name;
+}
+
+double Crit3DMeteoPointsDbHandler::getAltitudeGivenId(QString id)
+{
+
+    QSqlQuery qry(_db);
+    double altitude = NODATA;
+
+    qry.prepare( "SELECT altitude from point_properties WHERE id_point = :id_point" );
+    qry.bindValue(":id_point", id);
+
+    if( !qry.exec() )
+    {
+        error = qry.lastError().text();
+        return altitude;
+    }
+
+    if(qry.next())
+    {
+        getValue(qry.value("altitude"), &altitude);
+    }
+
+    return altitude;
+}
+
 bool Crit3DMeteoPointsDbHandler::writePointProperties(Crit3DMeteoPoint *myPoint)
 {
 
