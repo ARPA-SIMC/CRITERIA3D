@@ -65,11 +65,7 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     QGroupBox *jointStationsGroupBox = new QGroupBox();
     QHBoxLayout *jointStationsLayout = new QHBoxLayout;
     QVBoxLayout *jointStationsSelectLayout = new QVBoxLayout;
-
-    QHBoxLayout *secondLayout = new QHBoxLayout();
-    QGroupBox *parametersGroupBox = new QGroupBox();
-    parametersGroupBox->setTitle("Parameter");
-    QGridLayout *gridParamtersLayout = new QGridLayout;
+    QHBoxLayout *paramtersLayout = new QHBoxLayout;
 
     QHBoxLayout *findStationsLayout = new QHBoxLayout();
     QVBoxLayout *selectStationsLayout = new QVBoxLayout();
@@ -105,15 +101,12 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     variableGroupBox->setLayout(variableLayout);
 
     QLabel *minNumStationsLabel = new QLabel(tr("Minimum number of stations: "));
-    gridParamtersLayout->addWidget(minNumStationsLabel,0,0,1,1);
+    paramtersLayout->addWidget(minNumStationsLabel);
     minNumStations.setMaximumWidth(50);
     minNumStations.setMaximumHeight(24);
     minNumStations.setText("1");
     minNumStations.setValidator(new QIntValidator(1.0, 20.0));
-    gridParamtersLayout->addWidget(&minNumStations,3,0,1,-1);
-
-    parametersGroupBox->setMaximumHeight(this->height()/8);
-    parametersGroupBox->setLayout(gridParamtersLayout);
+    paramtersLayout->addWidget(&minNumStations);
 
     QLabel *jointStationsLabel = new QLabel(tr("Stations:"));
     jointStationsSelectLayout->addWidget(jointStationsLabel);
@@ -190,6 +183,8 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     tableHeader <<"Name"<<"R^2"<<"getDistance [km]"<<"Delta Z [m]";
     stationsTable.setHorizontalHeaderLabels(tableHeader);
     stationsTable.adjustSize();
+    stationsTable.horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    stationsTable.resizeColumnsToContents();
     selectStationsLayout->addWidget(&stationsTable);
 
     execute.setText("Execute");
@@ -215,11 +210,9 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     firstLayout->addWidget(methodGroupBox);
     firstLayout->addWidget(variableGroupBox);
 
-    secondLayout->addWidget(parametersGroupBox);
-
     leftLayout->addLayout(firstLayout);
     leftLayout->addWidget(jointStationsGroupBox);
-    leftLayout->addLayout(secondLayout);
+    leftLayout->addLayout(paramtersLayout);
     leftLayout->addLayout(findStationsLayout);
     leftLayout->addLayout(selectStationsLayout);
     leftLayout->addWidget(resultGroupBox);
@@ -514,7 +507,7 @@ void Crit3DHomogeneityWidget::changeVar(const QString varName)
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
     listFoundStations.clear();
     listSelectedStations.clear();
-    stationsTable.clear();
+    stationsTable.clearContents();
     resultLabel.clear();
     annualSeriesChartView->setYTitle(QString::fromStdString(getUnitFromVariable(myVar)));
     execute.setEnabled(false);
@@ -525,7 +518,7 @@ void Crit3DHomogeneityWidget::changeYears()
 {
     listFoundStations.clear();
     listSelectedStations.clear();
-    stationsTable.clear();
+    stationsTable.clearContents();
     resultLabel.clear();
     execute.setEnabled(false);
     plotAnnualSeries();
@@ -750,7 +743,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
     sortedIdFound.clear();
     distanceIdFound.clear();
     myAnnualSeriesFound.clear();
-    stationsTable.clear();
+    stationsTable.clearContents();
     if (myAnnualSeries.size() == 0)
     {
         QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
@@ -838,7 +831,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         double delta =  meteoPointsNearDistanceList[0].point.z - altitude;
         stationsTable.setItem(i,0,new QTableWidgetItem(name));
         stationsTable.setItem(i,1,new QTableWidgetItem(QString::number(r2)));
-        stationsTable.setItem(i,2,new QTableWidgetItem(QString::number(distanceIdFound[i])));
+        stationsTable.setItem(i,2,new QTableWidgetItem(QString::number(distanceIdFound[i]/1000)));
         stationsTable.setItem(i,3,new QTableWidgetItem(QString::number(delta)));
     }
 }
