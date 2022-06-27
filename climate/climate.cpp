@@ -1156,7 +1156,7 @@ float computeWinkler(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Crit3DD
     {
         index = difference(meteoPoint->obsDataD[0].date, presentDate);
         checkData = false;
-        if (index < meteoPoint->nrObsDataDaysD)
+        if (index > 0 && index < meteoPoint->nrObsDataDaysD)
         {
 
             // TO DO nella versione vb il check prevede anche l'immissione del parametro height
@@ -1216,7 +1216,7 @@ float computeLastDayBelowThreshold(std::vector<float> &inputValues, Crit3DDate f
     for (int i = 0; i < numberOfDays; i++)
     {
         index = difference(firstDateDailyVar, presentDate);
-        if ( index < inputValues.size())
+        if (index > 0 && index < inputValues.size())
         {
             if (inputValues.at(index) != NODATA && inputValues.at(index) < param1)
             {
@@ -1252,7 +1252,7 @@ float computeHuglin(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Crit3DDa
     {
         index = difference(meteoPoint->obsDataD[0].date, presentDate);
         checkData = false;
-        if ( index < meteoPoint->nrObsDataDaysD)
+        if (index > 0 && index < meteoPoint->nrObsDataDaysD)
         {
 
             // TO DO nella versione vb il check prevede anche l'immissione del parametro height
@@ -1318,7 +1318,7 @@ float computeFregoni(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Crit3DD
     {
         index = difference(meteoPoint->obsDataD[0].date, presentDate);
         checkData = false;
-        if ( index < meteoPoint->nrObsDataDaysD)
+        if (index > 0 && index < meteoPoint->nrObsDataDaysD)
         {
 
             // TO DO nella versione vb il check prevede anche l'immissione del parametro height
@@ -1379,7 +1379,7 @@ float computeCorrectedSum(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Cr
     for (int i = 0; i < numberOfDays; i++)
     {
         checkData = false;
-        if (index < meteoPoint->nrObsDataDaysD)
+        if (index > 0 && index < meteoPoint->nrObsDataDaysD)
         {
             // TO DO nella versione vb il check prevede anche l'immissione del parametro height
             quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, meteoPoint->obsDataD[index].tMin);
@@ -2303,7 +2303,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
                             {
                                 index = difference(meteoPoint->obsDataD[0].date, presentDate);
                             }
-                            if (index < inputValues.size())
+                            if (index > 0 && index < inputValues.size())
                             {
                                 value = inputValues.at(index);
                             }
@@ -2413,7 +2413,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
                         else
                         {
                             index = difference(meteoPoint->obsDataD[0].date, presentDate);
-                            if (index < inputValues.size())
+                            if (index > 0 && index < inputValues.size())
                             {
                                 value = inputValues.at(index);
                             }
