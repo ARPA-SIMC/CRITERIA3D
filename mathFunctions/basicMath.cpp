@@ -252,9 +252,11 @@
             }
         }
 
-        void quicksortAscendingIntegerWithParameters(std::vector<int> &x, std::vector<float> &values, int first,int last)
+        void quicksortAscendingIntegerWithParameters(std::vector<int> &x, std::vector<float> &values, unsigned first, unsigned last)
         {
-           int pivot,tmpVal,tmpIndex,l,r;
+           int tmpIndex;
+           unsigned l, r;
+           float tmpVal, pivot;
 
            if(first<last)
            {
@@ -273,7 +275,7 @@
                        return;
                    }
                }
-               int posPivot = (last - first) / 2 + first;
+               unsigned posPivot = (last - first) / 2 + first;
                pivot = values[posPivot];
                if (values[last] < pivot)
                {
