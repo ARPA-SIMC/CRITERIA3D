@@ -1163,7 +1163,7 @@ bool Crit1DProject::computeIrrigationStatistics(unsigned int index, float irriRa
 {
     if (! computeUnit(index, 0))
     {
-        projectError = "Computational Unit: " + compUnitList[index].idCase + "\n" + projectError;
+        projectError = "Computational Unit: " + compUnitList[index].idCase + " - " + projectError;
         logger.writeError(projectError);
         return false;
     }
