@@ -1214,7 +1214,7 @@ bool Crit1DProject::setPercentileOutputCsv()
         }
         else
         {
-            logger.writeInfo("Output file: " + outputCsvFileName + "\n");
+            logger.writeInfo("Statistics output file (csv): " + outputCsvFileName + "\n");
         }
 
         if (isYearlyStatistics || isSeasonalForecast)
