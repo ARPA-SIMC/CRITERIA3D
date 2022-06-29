@@ -991,23 +991,27 @@ void Crit3DPointStatisticsWidget::plot()
                     totDays = totDays + 1;
                     if (myDate >= firstDaily && myDate <= lastDaily)
                     {
-                        int nPoint;
-                        for (nPoint = 0; nPoint<idPoints.size(); nPoint++)
+                        int indexMp = 0;
+                        int i = firstDaily.daysTo(myDate);
+                        if (!isGrid)
                         {
-                            if (myDate <= meteoPointsDbHandler->getLastDate(daily, idPoints[nPoint]).date())
+                            int nPoint;
+                            for (nPoint = 0; nPoint<idPoints.size(); nPoint++)
                             {
-                                break;
+                                if (myDate <= meteoPointsDbHandler->getLastDate(daily, idPoints[nPoint]).date())
+                                {
+                                    break;
+                                }
                             }
-                        }
-                        QDate myFirstDaily = meteoPointsDbHandler->getFirstDate(daily, idPoints[nPoint]).date();
-                        int i = myFirstDaily.daysTo(myDate);
-                        int indexMp;
-                        for (int i = 0; i<meteoPoints.size(); i++)
-                        {
-                            if (meteoPoints[i].id == idPoints[nPoint])
+                            QDate myFirstDaily = meteoPointsDbHandler->getFirstDate(daily, idPoints[nPoint]).date();
+                            i = myFirstDaily.daysTo(myDate);
+                            for (int j = 0; j<meteoPoints.size(); j++)
                             {
-                                indexMp = i;
-                                break;
+                                if (meteoPoints[j].id == idPoints[nPoint])
+                                {
+                                    indexMp = j;
+                                    break;
+                                }
                             }
                         }
                         float myDailyValue = meteoPoints[indexMp].getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
@@ -1256,23 +1260,27 @@ void Crit3DPointStatisticsWidget::plot()
                 totDays = totDays + 1;
                 if (myDate >= firstHourly.date() && myDate <= lastHourly.date())
                 {
-                    int nPoint;
-                    for (nPoint = 0; nPoint<idPoints.size(); nPoint++)
+                    int indexMp = 0;
+                    int i = firstHourly.daysTo(myDate);
+                    if (!isGrid)
                     {
-                        if (myDate <= meteoPointsDbHandler->getLastDate(hourly, idPoints[nPoint]).date())
+                        int nPoint;
+                        for (nPoint = 0; nPoint<idPoints.size(); nPoint++)
                         {
-                            break;
+                            if (myDate <= meteoPointsDbHandler->getLastDate(hourly, idPoints[nPoint]).date())
+                            {
+                                break;
+                            }
                         }
-                    }
-                    QDate myFirstHourly = meteoPointsDbHandler->getFirstDate(hourly, idPoints[nPoint]).date();
-                    int i = myFirstHourly.daysTo(myDate);
-                    int indexMp;
-                    for (int i = 0; i<meteoPoints.size(); i++)
-                    {
-                        if (meteoPoints[i].id == idPoints[nPoint])
+                        QDate myFirstHourly = meteoPointsDbHandler->getFirstDate(hourly, idPoints[nPoint]).date();
+                        i = myFirstHourly.daysTo(myDate);
+                        for (int j = 0; j<meteoPoints.size(); j++)
                         {
-                            indexMp = i;
-                            break;
+                            if (meteoPoints[j].id == idPoints[nPoint])
+                            {
+                                indexMp = j;
+                                break;
+                            }
                         }
                     }
                     float myHourlyValue = meteoPoints[indexMp].getMeteoPointValueH(getCrit3DDate(myDate), myHour, 0, myVar);
