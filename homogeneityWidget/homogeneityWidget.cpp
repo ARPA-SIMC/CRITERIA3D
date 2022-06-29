@@ -744,6 +744,10 @@ void Crit3DHomogeneityWidget::findReferenceStations()
     distanceIdFound.clear();
     myAnnualSeriesFound.clear();
     stationsTable.clearContents();
+
+    int firstYear = yearFrom.currentText().toInt();
+    int lastYear = yearTo.currentText().toInt();
+
     if (myAnnualSeries.size() == 0)
     {
         QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
@@ -756,6 +760,12 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         {
             continue;
         }
+        clima.setYearStart(firstYear);
+        clima.setYearEnd(lastYear);
+        clima.setGenericPeriodDateStart(QDate(firstYear, 1, 1));
+        clima.setGenericPeriodDateEnd(QDate(lastYear, 12, 31));
+        clima.setNYears(0);
+
         Crit3DMeteoPoint mpToBeComputed;
         mpToBeComputed.id = sortedId[i];
         QList<QString> jointStationsListMpToBeComputed = meteoPointsDbHandler->getJointStations(QString::fromStdString(mpToBeComputed.id));
@@ -764,6 +774,8 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
         meteoPointTemp.id = mpToBeComputed.id;
+        meteoPointTemp.latitude = mpToBeComputed.latitude;
+        meteoPointTemp.elaboration = mpToBeComputed.elaboration;
         bool dataAlreadyLoaded;
         if (jointStationsListMpToBeComputed.size() == 0)
         {
