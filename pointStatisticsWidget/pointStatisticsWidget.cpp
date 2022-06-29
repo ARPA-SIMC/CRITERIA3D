@@ -1261,7 +1261,7 @@ void Crit3DPointStatisticsWidget::plot()
                 if (myDate >= firstHourly.date() && myDate <= lastHourly.date())
                 {
                     int indexMp = 0;
-                    int i = firstHourly.daysTo(myDate);
+                    int i = firstHourly.date().daysTo(myDate);
                     if (!isGrid)
                     {
                         int nPoint;
