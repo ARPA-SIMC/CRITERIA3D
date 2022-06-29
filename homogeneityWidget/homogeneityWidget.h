@@ -27,8 +27,10 @@
             void changeYears();
             void plotAnnualSeries();
             void on_actionChangeLeftAxis();
-            void on_actionExportGraph();
-            void on_actionExportData();
+            void on_actionExportHomogeneityGraph();
+            void on_actionExportAnnualGraph();
+            void on_actionExportAnnualData();
+            void on_actionExportHomogeneityData();
             void addJointStationClicked();
             void deleteJointStationClicked();
             void saveToDbClicked();
@@ -37,6 +39,7 @@
             void findReferenceStations();
             void addFoundStationClicked();
             void deleteFoundStationClicked();
+            void executeClicked();
 
     private:
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
@@ -51,6 +54,7 @@
             QList<std::string> sortedIdFound;
             QList<float> distanceIdFound;
             QList<std::vector<float>> myAnnualSeriesFound;
+            QMap<QString, std::string> mapNameId;
 
             Crit3DMeteoSettings *meteoSettings;
             QSettings *settings;

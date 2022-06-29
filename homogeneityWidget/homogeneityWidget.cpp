@@ -174,6 +174,7 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     stationsLayout->addWidget(&listSelectedStations);
 
     headerLayout->addWidget(allHeader);
+    headerLayout->addStretch(listFoundStations.width());
     headerLayout->addWidget(selectedHeader);
     selectStationsLayout->addLayout(headerLayout);
     selectStationsLayout->addLayout(stationsLayout);
@@ -225,11 +226,15 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     mainLayout->setMenuBar(menuBar);
 
     QAction* changeHomogeneityLeftAxis = new QAction(tr("&Change homogenity chart axis left"), this);
+    QAction* exportAnnualGraph = new QAction(tr("&Export annual series graph"), this);
     QAction* exportHomogeneityGraph = new QAction(tr("&Export homogenity graph"), this);
+    QAction* exportAnnualData = new QAction(tr("&Export annual series data"), this);
     QAction* exportHomogeneityData = new QAction(tr("&Export homogenity data"), this);
 
     editMenu->addAction(changeHomogeneityLeftAxis);
+    editMenu->addAction(exportAnnualGraph);
     editMenu->addAction(exportHomogeneityGraph);
+    editMenu->addAction(exportAnnualData);
     editMenu->addAction(exportHomogeneityData);
 
     mainLayout->addLayout(leftLayout);
@@ -246,9 +251,12 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     connect(&find, &QPushButton::clicked, [=](){ findReferenceStations(); });
     connect(&addStationFoundButton, &QPushButton::clicked, [=](){ addFoundStationClicked(); });
     connect(&deleteStationFoundButton, &QPushButton::clicked, [=](){ deleteFoundStationClicked(); });
+    connect(&execute, &QPushButton::clicked, [=](){ executeClicked(); });
     connect(changeHomogeneityLeftAxis, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionChangeLeftAxis);
-    connect(exportHomogeneityGraph, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportGraph);
-    connect(exportHomogeneityData, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportData);
+    connect(exportAnnualGraph, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportAnnualGraph);
+    connect(exportHomogeneityGraph, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportHomogeneityGraph);
+    connect(exportAnnualData, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportAnnualData);
+    connect(exportHomogeneityData, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportHomogeneityData);
 
     plotAnnualSeries();
 
@@ -643,7 +651,7 @@ void Crit3DHomogeneityWidget::on_actionChangeLeftAxis()
 }
 
 
-void Crit3DHomogeneityWidget::on_actionExportGraph()
+void Crit3DHomogeneityWidget::on_actionExportHomogeneityGraph()
 {
 
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save current graph"), "", tr("png files (*.png)"));
@@ -665,7 +673,29 @@ void Crit3DHomogeneityWidget::on_actionExportGraph()
     }
 }
 
-void Crit3DHomogeneityWidget::on_actionExportData()
+void Crit3DHomogeneityWidget::on_actionExportAnnualGraph()
+{
+
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save current graph"), "", tr("png files (*.png)"));
+
+    if (fileName != "")
+    {
+        const auto dpr = annualSeriesChartView->devicePixelRatioF();
+        QPixmap buffer(annualSeriesChartView->width() * dpr, annualSeriesChartView->height() * dpr);
+        buffer.setDevicePixelRatio(dpr);
+        buffer.fill(Qt::transparent);
+
+        QPainter *paint = new QPainter(&buffer);
+        paint->setPen(*(new QColor(255,34,255,255)));
+        annualSeriesChartView->render(paint);
+
+        QFile file(fileName);
+        file.open(QIODevice::WriteOnly);
+        buffer.save(&file, "PNG");
+    }
+}
+
+void Crit3DHomogeneityWidget::on_actionExportHomogeneityData()
 {
     /*
     QString csvFileName = QFileDialog::getSaveFileName(this, tr("Save current data"), "", tr("csv files (*.csv)"));
@@ -740,12 +770,19 @@ void Crit3DHomogeneityWidget::on_actionExportData()
     */
 }
 
+void Crit3DHomogeneityWidget::on_actionExportAnnualData()
+{
+    // TO DO
+}
+
 void Crit3DHomogeneityWidget::findReferenceStations()
 {
     sortedIdFound.clear();
     distanceIdFound.clear();
     myAnnualSeriesFound.clear();
     stationsTable.clearContents();
+    listFoundStations.clear();
+    listSelectedStations.clear();
 
     int firstYear = yearFrom.currentText().toInt();
     int lastYear = yearTo.currentText().toInt();
@@ -821,6 +858,8 @@ void Crit3DHomogeneityWidget::findReferenceStations()
             {
                 myNrStations = myNrStations + 1;
                 sortedIdFound.append(sortedId[i]);
+                QString name = meteoPointsDbHandler->getNameGivenId(QString::fromStdString(sortedId[i]));
+                mapNameId.insert(name, sortedId[i]);
                 distanceIdFound.append(distanceId[i]);
                 myAnnualSeriesFound.append(mpToBeComputedAnnualSeries);
             }
@@ -839,13 +878,22 @@ void Crit3DHomogeneityWidget::findReferenceStations()
     for (int i = 0; i<myNrStations; i++)
     {
         float r2, y_intercept, trend;
-        QString name = meteoPointsDbHandler->getNameGivenId(QString::fromStdString(sortedIdFound[i]));
+        QString name;
+        QMapIterator<QString,std::string> iterator(mapNameId);
+        while (iterator.hasNext()) {
+            iterator.next();
+            if (iterator.value() == sortedIdFound[i])
+            {
+                name = iterator.key();
+                break;
+            }
+        }
         statistics::linearRegression(myAnnualSeries, myAnnualSeriesFound[i], myAnnualSeries.size(), false, &y_intercept, &trend, &r2);
         double altitude = meteoPointsDbHandler->getAltitudeGivenId(QString::fromStdString(sortedIdFound[i]));
         double delta =  meteoPointsNearDistanceList[0].point.z - altitude;
         stationsTable.setItem(i,0,new QTableWidgetItem(name));
-        stationsTable.setItem(i,1,new QTableWidgetItem(QString::number(r2)));
-        stationsTable.setItem(i,2,new QTableWidgetItem(QString::number(distanceIdFound[i]/1000)));
+        stationsTable.setItem(i,1,new QTableWidgetItem(QString::number(r2, 'f', 3)));
+        stationsTable.setItem(i,2,new QTableWidgetItem(QString::number(distanceIdFound[i]/1000, 'f', 1)));
         stationsTable.setItem(i,3,new QTableWidgetItem(QString::number(delta)));
         if (listFoundStations.findItems(name, Qt::MatchExactly).isEmpty())
         {
@@ -875,10 +923,12 @@ void Crit3DHomogeneityWidget::addFoundStationClicked()
     if(listSelectedStations.count() == 0)
     {
         deleteStationFoundButton.setEnabled(false);
+        execute.setEnabled(false);
     }
     else
     {
         deleteStationFoundButton.setEnabled(true);
+        execute.setEnabled(true);
     }
 }
 
@@ -901,11 +951,26 @@ void Crit3DHomogeneityWidget::deleteFoundStationClicked()
     if(listSelectedStations.count() == 0)
     {
         deleteStationFoundButton.setEnabled(false);
+        execute.setEnabled(false);
     }
     else
     {
         deleteStationFoundButton.setEnabled(true);
+        execute.setEnabled(true);
     }
 }
 
+void Crit3DHomogeneityWidget::executeClicked()
+{
+    // TO DO
+    // test
+    for (int row = 0; row < listSelectedStations.count(); row++)
+    {
+        QString name = listSelectedStations.item(row)->text();
+        std::string id = mapNameId.value(name);
+        qDebug() << "name: " << name;
+        qDebug() << "id: " << QString::fromStdString(id);
+    }
+
+}
 
