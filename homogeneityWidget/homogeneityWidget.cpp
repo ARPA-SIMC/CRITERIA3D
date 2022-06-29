@@ -163,12 +163,12 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
 
     QLabel *allHeader = new QLabel("Stations found");
     QLabel *selectedHeader = new QLabel("Stations selected");
-    addButton.setText("➡");
-    deleteButton.setText("⬅");
-    addButton.setEnabled(false);
-    deleteButton.setEnabled(false);
-    arrowLayout->addWidget(&addButton);
-    arrowLayout->addWidget(&deleteButton);
+    addStationFoundButton.setText("➡");
+    deleteStationFoundButton.setText("⬅");
+    addStationFoundButton.setEnabled(false);
+    deleteStationFoundButton.setEnabled(false);
+    arrowLayout->addWidget(&addStationFoundButton);
+    arrowLayout->addWidget(&deleteStationFoundButton);
     stationsLayout->addWidget(&listFoundStations);
     stationsLayout->addLayout(arrowLayout);
     stationsLayout->addWidget(&listSelectedStations);
@@ -240,10 +240,12 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     connect(&yearFrom, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&yearTo, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&method, &QComboBox::currentTextChanged, [=](const QString &newMethod){ this->changeMethod(newMethod); });
-    connect(&addJointStation, &QPushButton::clicked, [=](){ addStationClicked(); });
-    connect(&deleteJointStation, &QPushButton::clicked, [=](){ deleteStationClicked(); });
+    connect(&addJointStation, &QPushButton::clicked, [=](){ addJointStationClicked(); });
+    connect(&deleteJointStation, &QPushButton::clicked, [=](){ deleteJointStationClicked(); });
     connect(&saveToDb, &QPushButton::clicked, [=](){ saveToDbClicked(); });
     connect(&find, &QPushButton::clicked, [=](){ findReferenceStations(); });
+    connect(&addStationFoundButton, &QPushButton::clicked, [=](){ addFoundStationClicked(); });
+    connect(&deleteStationFoundButton, &QPushButton::clicked, [=](){ deleteFoundStationClicked(); });
     connect(changeHomogeneityLeftAxis, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionChangeLeftAxis);
     connect(exportHomogeneityGraph, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportGraph);
     connect(exportHomogeneityData, &QAction::triggered, this, &Crit3DHomogeneityWidget::on_actionExportData);
@@ -537,7 +539,7 @@ void Crit3DHomogeneityWidget::changeMethod(const QString methodName)
     //plot();
 }
 
-void Crit3DHomogeneityWidget::addStationClicked()
+void Crit3DHomogeneityWidget::addJointStationClicked()
 {
     if (jointStationsList.currentText().isEmpty())
     {
@@ -571,7 +573,7 @@ void Crit3DHomogeneityWidget::addStationClicked()
 
 }
 
-void Crit3DHomogeneityWidget::deleteStationClicked()
+void Crit3DHomogeneityWidget::deleteJointStationClicked()
 {
     QList<QListWidgetItem*> items = jointStationsSelected.selectedItems();
     foreach(QListWidgetItem * item, items)
@@ -845,6 +847,64 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         stationsTable.setItem(i,1,new QTableWidgetItem(QString::number(r2)));
         stationsTable.setItem(i,2,new QTableWidgetItem(QString::number(distanceIdFound[i]/1000)));
         stationsTable.setItem(i,3,new QTableWidgetItem(QString::number(delta)));
+        if (listFoundStations.findItems(name, Qt::MatchExactly).isEmpty())
+        {
+            listFoundStations.addItem(name);
+            addStationFoundButton.setEnabled(true);
+        }
+    }
+}
+
+void Crit3DHomogeneityWidget::addFoundStationClicked()
+{
+
+    QListWidgetItem *item = listFoundStations.currentItem();
+    int row = listFoundStations.currentRow();
+    listFoundStations.takeItem(row);
+    listSelectedStations.addItem(item);
+
+    if(listFoundStations.count() == 0)
+    {
+        addStationFoundButton.setEnabled(false);
+    }
+    else
+    {
+        addStationFoundButton.setEnabled(true);
+    }
+
+    if(listSelectedStations.count() == 0)
+    {
+        deleteStationFoundButton.setEnabled(false);
+    }
+    else
+    {
+        deleteStationFoundButton.setEnabled(true);
+    }
+}
+
+void Crit3DHomogeneityWidget::deleteFoundStationClicked()
+{
+    QListWidgetItem *item = listSelectedStations.currentItem();
+    int row = listSelectedStations.currentRow();
+    listSelectedStations.takeItem(row);
+    listFoundStations.addItem(item);
+
+    if(listFoundStations.count() == 0)
+    {
+        addStationFoundButton.setEnabled(false);
+    }
+    else
+    {
+        addStationFoundButton.setEnabled(true);
+    }
+
+    if(listSelectedStations.count() == 0)
+    {
+        deleteStationFoundButton.setEnabled(false);
+    }
+    else
+    {
+        deleteStationFoundButton.setEnabled(true);
     }
 }
 

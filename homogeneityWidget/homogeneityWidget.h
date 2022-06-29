@@ -29,12 +29,14 @@
             void on_actionChangeLeftAxis();
             void on_actionExportGraph();
             void on_actionExportData();
-            void addStationClicked();
-            void deleteStationClicked();
+            void addJointStationClicked();
+            void deleteJointStationClicked();
             void saveToDbClicked();
             void updateYears();
             void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint *meteoPointSet, QDate myDate);
             void findReferenceStations();
+            void addFoundStationClicked();
+            void deleteFoundStationClicked();
 
     private:
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
@@ -71,8 +73,8 @@
             QLineEdit minNumStations;
             QListWidget listFoundStations;
             QListWidget listSelectedStations;
-            QPushButton addButton;
-            QPushButton deleteButton;
+            QPushButton addStationFoundButton;
+            QPushButton deleteStationFoundButton;
             QTableWidget stationsTable;
             QLabel resultLabel;
             QPushButton execute;
