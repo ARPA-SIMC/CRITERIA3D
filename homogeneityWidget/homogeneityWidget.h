@@ -12,6 +12,8 @@
     #include "interpolationSettings.h"
     #include "interpolationPoint.h"
 
+    #define TOLERANCE 0.00000001
+
     class Crit3DHomogeneityWidget : public QWidget
     {
         Q_OBJECT
@@ -51,10 +53,8 @@
             std::vector<float> myAnnualSeries;
             QList<std::string> sortedId;
             std::vector<float> distanceId;
-            QList<std::string> sortedIdFound;
-            QList<float> distanceIdFound;
-            QList<std::vector<float>> myAnnualSeriesFound;
             QMap<QString, std::string> mapNameId;
+            QMap<QString, std::vector<float>> mapNameAnnualSeries;
 
             Crit3DMeteoSettings *meteoSettings;
             QSettings *settings;
@@ -85,6 +85,10 @@
 
             QString myError;
             double averageValue;
+            bool isHomogeneous;
+            std::vector<float> myTValues;
+            float myYearTmax;
+            float myTmax;
     };
 
 

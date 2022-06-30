@@ -371,6 +371,12 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
         // draw
         annualSeriesChartView->draw(years, myAnnualSeries);
     }
+    else
+    {
+        myAnnualSeries.clear();
+        QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
+        return;
+    }
 }
 
 void Crit3DHomogeneityWidget::setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet, QDate myDate)
@@ -777,13 +783,13 @@ void Crit3DHomogeneityWidget::on_actionExportAnnualData()
 
 void Crit3DHomogeneityWidget::findReferenceStations()
 {
-    sortedIdFound.clear();
-    distanceIdFound.clear();
-    myAnnualSeriesFound.clear();
     stationsTable.clearContents();
     listFoundStations.clear();
     listSelectedStations.clear();
 
+    QList<std::vector<float>> myAnnualSeriesFound;
+    QList<std::string> sortedIdFound;
+    QList<float> distanceIdFound;
     int firstYear = yearFrom.currentText().toInt();
     int lastYear = yearTo.currentText().toInt();
 
@@ -860,6 +866,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
                 sortedIdFound.append(sortedId[i]);
                 QString name = meteoPointsDbHandler->getNameGivenId(QString::fromStdString(sortedId[i]));
                 mapNameId.insert(name, sortedId[i]);
+                mapNameAnnualSeries.insert(name,mpToBeComputedAnnualSeries);
                 distanceIdFound.append(distanceId[i]);
                 myAnnualSeriesFound.append(mpToBeComputedAnnualSeries);
             }
@@ -962,14 +969,204 @@ void Crit3DHomogeneityWidget::deleteFoundStationClicked()
 
 void Crit3DHomogeneityWidget::executeClicked()
 {
-    // TO DO
-    // test
-    for (int row = 0; row < listSelectedStations.count(); row++)
+    isHomogeneous = false;
+    myTValues.clear();
+    myYearTmax = NODATA;
+    myTmax = NODATA;
+
+    if (method.currentText() == "SNHT")
     {
-        QString name = listSelectedStations.item(row)->text();
-        std::string id = mapNameId.value(name);
-        qDebug() << "name: " << name;
-        qDebug() << "id: " << QString::fromStdString(id);
+        if (myAnnualSeries.empty())
+        {
+            QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
+            return;
+        }
+        if (mapNameAnnualSeries.isEmpty())
+        {
+            QMessageBox::critical(nullptr, "Error", "No reference stations found");
+            return;
+        }
+        std::vector<float> myValidValues;
+        for (int i = 0; i<myAnnualSeries.size(); i++)
+        {
+            if (myAnnualSeries[i] != NODATA)
+            {
+                myValidValues.push_back(myAnnualSeries[i]);
+            }
+        }
+        float myAverage = statistics::mean(myValidValues, myValidValues.size());
+        std::vector<float> myRefAverage;
+        std::vector<float> r2;
+        std::vector<std::vector<float>> refSeriesVector;
+        float r2Value, y_intercept, trend;
+        int nrReference = listSelectedStations.count();
+        for (int row = 0; row < nrReference; row++)
+        {
+            std::vector<float> myRefValidValues;
+            QString name = listSelectedStations.item(row)->text();
+            std::vector<float> refSeries = mapNameAnnualSeries.value(name);
+            refSeriesVector.push_back(refSeries);
+            for (int i = 0; i<refSeries.size(); i++)
+            {
+                if (refSeries[i] != NODATA)
+                {
+                    myRefValidValues.push_back(refSeries[i]);
+                }
+            }
+            myRefAverage.push_back(statistics::mean(myRefValidValues, myRefValidValues.size()));
+            statistics::linearRegression(myAnnualSeries, refSeries, myAnnualSeries.size(), false, &y_intercept, &trend, &r2Value);
+            r2.push_back(r2Value);
+        }
+        float tmp, sumV;
+        std::vector<float> myQ;
+        if (myVar == dailyPrecipitation)
+        {
+            for (int i = 0; i<myAnnualSeries.size(); i++)
+            {
+                tmp = 0;
+                sumV = 0;
+                for (int j = 0; j<nrReference; j++)
+                {
+                    if (refSeriesVector[j][i] != NODATA)
+                    {
+                        tmp = tmp + (r2[j] * refSeriesVector[j][i] * myAverage / myRefAverage[j]);
+                        sumV = r2[j] + sumV;
+                    }
+                }
+                if (myAnnualSeries[i] != NODATA && tmp!= 0 && sumV!= 0)
+                {
+                    myQ.push_back(myAnnualSeries[i]/(tmp/sumV));
+                }
+                else
+                {
+                    myQ.push_back(NODATA);
+                }
+            }
+        }
+        else if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureRange || myVar == dailyGlobalRadiation)
+        {
+            for (int i = 0; i<myAnnualSeries.size(); i++)
+            {
+                tmp = 0;
+                sumV = 0;
+                for (int j = 0; j<nrReference; j++)
+                {
+                    if (refSeriesVector[j][i] != NODATA)
+                    {
+                        tmp = tmp + (r2[j] * (refSeriesVector[j][i] - myRefAverage[j] + myAverage));
+                        sumV = r2[j] + sumV;
+                    }
+                }
+                if (myAnnualSeries[i] != NODATA)
+                {
+                    if (sumV > 0)
+                    {
+                         myQ.push_back(myAnnualSeries[i]-(tmp/sumV));
+                    }
+                    else
+                    {
+                        myQ.push_back(NODATA);
+                    }
+                }
+                else
+                {
+                    myQ.push_back(NODATA);
+                }
+            }
+        }
+        myValidValues.clear();
+        for (int i = 0; i<myQ.size(); i++)
+        {
+            if (myQ[i] != NODATA)
+            {
+                myValidValues.push_back(myQ[i]);
+            }
+        }
+        float myQAverage = statistics::mean(myValidValues, myValidValues.size());
+        float myQDevStd = statistics::standardDeviation(myValidValues, myValidValues.size());
+        std::vector<float> myZ;
+        for (int i = 0; i<myQ.size(); i++)
+        {
+            if (myQ[i] != NODATA)
+            {
+                myZ[i] = (myQ[i] - myQAverage) / myQDevStd;
+            }
+            else
+            {
+                myZ[i] = NODATA;
+            }
+        }
+        myValidValues.clear();
+        for (int i = 0; i<myZ.size(); i++)
+        {
+            if (myZ[i] != NODATA)
+            {
+                myValidValues.push_back(myZ[i]);
+            }
+        }
+        float myZAverage = statistics::mean(myValidValues, myValidValues.size());
+
+        isHomogeneous = (qAbs(myZAverage) <= TOLERANCE);
+        std::vector<float> z1;
+        std::vector<float> z2;
+
+        for (int i = 0; i< myZ.size(); i++)
+        {
+            z1.push_back(NODATA);
+            z2.push_back(NODATA);
+            if (i<myZ.size()-1)
+            {
+                myTValues.push_back(NODATA);
+            }
+        }
+
+        for (int a = 0; a< myZ.size()-1; a++)
+        {
+            for (int i = 0; i< myZ.size(); i++)
+            {
+                if (i<=a)
+                {
+                    z1[i] = myZ[i];
+                }
+                else
+                {
+                    z2[i-a] = myZ[i];
+                }
+            }
+            myValidValues.clear();
+            for (int i = 0; i<z1.size(); i++)
+            {
+                if (z1[i] != NODATA)
+                {
+                    myValidValues.push_back(z1[i]);
+                }
+            }
+            float myZ1Average = statistics::mean(myValidValues, myValidValues.size());
+            myValidValues.clear();
+            for (int i = 0; i<z2.size(); i++)
+            {
+                if (z2[i] != NODATA)
+                {
+                    myValidValues.push_back(z2[i]);
+                }
+            }
+            float myZ2Average = statistics::mean(myValidValues, myValidValues.size());
+            if (myZ1Average != NODATA && myZ2Average != NODATA)
+            {
+                myTValues[a] = (a * pow(myZ1Average,2)) + ((myZ.size() - a) * pow(myZ2Average,2));
+                if (myTmax == NODATA)
+                {
+                    myTmax = myTValues[a];
+                    myYearTmax = yearFrom.currentText().toInt() + a - 1;
+                }
+                else if (myTValues[a] > myTmax)
+                {
+                    myTmax = myTValues[a];
+                    myYearTmax = yearFrom.currentText().toInt() + a - 1;
+                }
+            }
+        }
+
     }
 
 }
