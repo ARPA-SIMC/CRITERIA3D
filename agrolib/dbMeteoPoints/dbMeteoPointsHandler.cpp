@@ -953,6 +953,52 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesGivenId(QString id, Crit3DMeteoPoi
     return true;
 }
 
+QString Crit3DMeteoPointsDbHandler::getNameGivenId(QString id)
+{
+
+    QSqlQuery qry(_db);
+    QString name = "";
+
+    qry.prepare( "SELECT name from point_properties WHERE id_point = :id_point" );
+    qry.bindValue(":id_point", id);
+
+    if( !qry.exec() )
+    {
+        error = qry.lastError().text();
+        return name;
+    }
+
+    if(qry.next())
+    {
+        getValue(qry.value("name"), &name);
+    }
+
+    return name;
+}
+
+double Crit3DMeteoPointsDbHandler::getAltitudeGivenId(QString id)
+{
+
+    QSqlQuery qry(_db);
+    double altitude = NODATA;
+
+    qry.prepare( "SELECT altitude from point_properties WHERE id_point = :id_point" );
+    qry.bindValue(":id_point", id);
+
+    if( !qry.exec() )
+    {
+        error = qry.lastError().text();
+        return altitude;
+    }
+
+    if(qry.next())
+    {
+        getValue(qry.value("altitude"), &altitude);
+    }
+
+    return altitude;
+}
+
 bool Crit3DMeteoPointsDbHandler::writePointProperties(Crit3DMeteoPoint *myPoint)
 {
 
@@ -1903,7 +1949,7 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
 
     QSqlQuery qry(_db);
 
-    qry.prepare( "DELETE FROM joint_station WHERE id_point = :id_point" );
+    qry.prepare( "DELETE FROM joint_stations WHERE id_point = :id_point" );
     qry.bindValue(":id_point", idPoint);
     if( !qry.exec() )
     {
@@ -1914,10 +1960,10 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
     error.clear();
     for (int i = 0; i < stationsList.size(); i++)
     {
-        qry.prepare( "INSERT INTO joint_station (id_point, joint_station) VALUES (:id_point, :joint_station)" );
+        qry.prepare( "INSERT INTO joint_stations (id_point, joint_station) VALUES (:id_point, :joint_station)" );
 
         qry.bindValue(":id_point", idPoint);
-        qry.bindValue(":name", stationsList[i]);
+        qry.bindValue(":joint_station", stationsList[i]);
         if( !qry.exec() )
         {
             error += idPoint + "," + stationsList[i] + " " + qry.lastError().text();
@@ -1932,4 +1978,3 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
         return false;
     }
 }
-

@@ -1192,6 +1192,16 @@ bool Project::newMeteoGridDB(QString xmlName)
     return true;
 }
 
+bool Project::deleteMeteoGridDB()
+{
+    if (!meteoGridDbHandler->deleteDatabase(&errorString))
+    {
+        logInfoGUI("delete meteo grid error: " + errorString);
+        return false;
+    }
+    return true;
+}
+
 
 bool Project::loadAggregationdDB(QString dbName)
 {

@@ -62,16 +62,17 @@
         bool isSaveState;
         bool isRestart;
 
-        // seasonal forecast
+        // forecast period
+        bool isYearlyStatistics;
         bool isSeasonalForecast;
         bool isMonthlyForecast;
         bool isShortTermForecast;
 
         int firstSeasonMonth;
         int daysOfForecast;
-        int nrForecasts;
-        std::vector<float> forecastIrr;
-        std::vector<float> forecastPrec;
+        int nrYears;
+        std::vector<float> irriSeries;
+        std::vector<float> precSeries;
 
         QString outputString;
 
@@ -113,10 +114,10 @@
         bool setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr);
 
         bool setPercentileOutputCsv();
-        void updateSeasonalForecastOutput(Crit3DDate myDate, int &index);
         void updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int memberNr);
-        void initializeSeasonalForecast(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
-        bool computeSeasonalForecast(unsigned int index, float irriRatio);
+        void initializeIrrigationStatistics(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
+        void updateIrrigationStatistics(Crit3DDate myDate, int &index);
+        bool computeIrrigationStatistics(unsigned int index, float irriRatio);
         bool computeMonthlyForecast(unsigned int unitIndex, float irriRatio);
 
         bool computeCase(unsigned int memberNr);
@@ -126,7 +127,7 @@
         bool createState(QString &myError);
         bool saveState(QString &myError);
         bool restoreState(QString dbStateToRestoreName, QString &myError);
-        void prepareOutput(Crit3DDate myDate, bool isFirst);
+        void updateOutput(Crit3DDate myDate, bool isFirst);
         bool saveOutput(QString &myError);
 
     };

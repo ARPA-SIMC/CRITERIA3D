@@ -1087,6 +1087,20 @@ bool Crit3DMeteoGridDbHandler::newDatabase(QString *myError)
        return true;
 }
 
+bool Crit3DMeteoGridDbHandler::deleteDatabase(QString *myError)
+{
+    QSqlQuery query(_db);
+
+    query.exec( "DROP DATABASE IF EXISTS "+_connection.name);
+
+    if (!query.exec())
+    {
+       *myError = "MySQL error:" + query.lastError().text();
+       return false;
+    }
+    return true;
+}
+
 bool Crit3DMeteoGridDbHandler::newDatabase(QString *myError, QString connectionName)
 {
 

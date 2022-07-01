@@ -212,6 +212,7 @@
         bool loadMeteoPointsDB(QString dbName);
         bool loadMeteoGridDB(QString xmlName);
         bool newMeteoGridDB(QString xmlName);
+        bool deleteMeteoGridDB();
         bool loadAggregationdDB(QString dbName);
         bool loadOutputPointsDB(QString dbName);
         bool newOutputPointsDB(QString dbName);
