@@ -284,10 +284,6 @@ bool NetCDFHandler::readProperties(string fileName)
     char attrName[NC_MAX_NAME+1];
     char varName[NC_MAX_NAME+1];
     char typeName[NC_MAX_NAME+1];
-    /*char* name = new char[NC_MAX_NAME+1];
-    char* attrName = new char[NC_MAX_NAME+1];
-    char* varName = new char[NC_MAX_NAME+1];
-    char* typeName = new char[NC_MAX_NAME+1];*/
 
     char* valueStr;
     int valueInt;
@@ -296,7 +292,7 @@ bool NetCDFHandler::readProperties(string fileName)
     nc_type ncTypeId;
     int timeType = NC_DOUBLE;
 
-    //NC_NOWRITE tells netCDF we want read-only access
+    // NC_NOWRITE tells netCDF we want read-only access
     if ((retval = nc_open(fileName.data(), NC_NOWRITE, &ncId)))
     {
         metadata << nc_strerror(retval) << endl;
@@ -623,7 +619,7 @@ bool NetCDFHandler::readProperties(string fileName)
             }
             delete [] floatTime;
         }
-        else if (timeType == NC_INT)
+        else if (timeType == NC_INT || timeType == NC_INT64)
         {
             int* intTime = new int[unsigned(nrTime)];
             retval = nc_get_var_int(ncId, idTime, intTime);
@@ -632,6 +628,11 @@ bool NetCDFHandler::readProperties(string fileName)
                 time[i] = double(intTime[i]);
             }
             delete [] intTime;
+        }
+        else
+        {
+            metadata << "Error! Not valid time data type: " << timeType << endl;
+            return false;
         }
     }
 
