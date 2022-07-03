@@ -13,8 +13,6 @@
     #include "interpolationPoint.h"
 
     #define TOLERANCE 0.00000001
-    #define SNHT_T95_VALUES[10] {5.7,6.95,7.65,8.1,8.45,8.65,8.8,8.95,9.05,9.15}
-
 
     class Crit3DHomogeneityWidget : public QWidget
     {
@@ -91,6 +89,7 @@
             std::vector<float> myTValues;
             float myYearTmax;
             float myTmax;
+            float SNHT_T95_VALUES [10] {5.7,6.95,7.65,8.1,8.45,8.65,8.8,8.95,9.05,9.15};
     };
 
 

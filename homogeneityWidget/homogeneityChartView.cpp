@@ -10,18 +10,19 @@ HomogeneityChartView::HomogeneityChartView(QWidget *parent) :
     QChartView(new QChart(), parent)
 {
 
-    tValues = new QLineSeries();
+    tValues = new QScatterSeries();
     tValues->setName("TValues");
     tValues->setColor(Qt::red);
+    tValues->setMarkerSize(10.0);
 
     SNHT_T95Values = new QLineSeries();
     SNHT_T95Values->setName("SNHT_T95");
     SNHT_T95Values->setColor(Qt::black);
 
-    axisXvalue = new QValueAxis();
+    axisX = new QValueAxis();
     axisY = new QValueAxis();
 
-    chart()->addAxis(axisXvalue, Qt::AlignBottom);
+    chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisY, Qt::AlignLeft);
     chart()->setDropShadowEnabled(false);
 
@@ -41,29 +42,20 @@ void HomogeneityChartView::setYmin(float value)
     axisY->setMin(value);
 }
 
-void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> tvalues)
+void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> outputValues, QList<QPointF> t95Points)
 {
-
-}
-/*
-void HomogeneityChartView::drawTrend(std::vector<int> years, std::vector<float> outputValues)
-{
-
     if (chart()->series().size() > 0)
     {
-        cleanClimaSeries();
-        cleanDistribution();
-        cleanTrendSeries();
+        // clean TO DO
     }
     chart()->legend()->setVisible(true);
-
     float maxValue = NODATA;
     float minValue = -NODATA;
     for (unsigned int i = 0; i < years.size(); i++)
     {
         if (outputValues[i] != NODATA)
         {
-            trend->append(QPointF(years[i], outputValues[i]));
+            tValues->append(QPointF(years[i], outputValues[i]));
             if (outputValues[i] > maxValue)
             {
                 maxValue = outputValues[i];
@@ -71,6 +63,21 @@ void HomogeneityChartView::drawTrend(std::vector<int> years, std::vector<float> 
             if (outputValues[i] < minValue)
             {
                 minValue = outputValues[i];
+            }
+        }
+    }
+    for (int i = 0; i < t95Points.size(); i++)
+    {
+        SNHT_T95Values->append(t95Points[i]);
+        if(t95Points[i].y() != NODATA)
+        {
+            if (t95Points[i].y() > maxValue)
+            {
+                maxValue = t95Points[i].y();
+            }
+            if (t95Points[i].y() < minValue)
+            {
+                minValue = t95Points[i].y();
             }
         }
     }
@@ -86,23 +93,28 @@ void HomogeneityChartView::drawTrend(std::vector<int> years, std::vector<float> 
         axisY->setMax(maxValue+3);
         axisY->setMin(minValue-3);
     }
-    axisXvalue->setRange(years[0], years[years.size()-1]);
+    axisX->setRange(years[0], years[years.size()-1]);
     if (years.size() <= 30)
     {
-        axisXvalue->setTickCount(years.size());
+        axisX->setTickCount(years.size());
     }
     else
     {
-        axisXvalue->setTickCount(30);
+        axisX->setTickCount(30);
     }
-    axisXvalue->setLabelFormat("%d");
+    axisX->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
-    chart()->addSeries(trend);
-    trend->attachAxis(axisXvalue);
-    trend->attachAxis(axisY);
-    connect(trend, &QScatterSeries::hovered, this, &HomogeneityChartView::tooltipTrendSeries);
+    axisX->setTitleText("years");
+    axisY->setTitleText("T-value");
+    chart()->addSeries(tValues);
+    chart()->addSeries(SNHT_T95Values);
+    SNHT_T95Values->attachAxis(axisX);
+    SNHT_T95Values->attachAxis(axisY);
+    tValues->attachAxis(axisX);
+    tValues->attachAxis(axisY);
+    //connect(tValues, &QScatterSeries::hovered, this, &HomogeneityChartView::tooltipTValuesSeries);
 }
-
+/*
 void HomogeneityChartView::cleanClimaSeries()
 {
     if (chart()->series().contains(climaDaily))
@@ -193,19 +205,19 @@ void HomogeneityChartView::drawClima(QList<QPointF> dailyPointList, QList<QPoint
     }
     axisY->setMax(maxValue);
     axisY->setMin(minValue);
-    axisXvalue->setRange(1, 366);
-    axisXvalue->setTickCount(20);
-    axisXvalue->setLabelFormat("%d");
+    axisX->setRange(1, 366);
+    axisX->setTickCount(20);
+    axisX->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
 
     chart()->addSeries(climaDaily);
     chart()->addSeries(climaDecadal);
     chart()->addSeries(climaMonthly);
-    climaDaily->attachAxis(axisXvalue);
+    climaDaily->attachAxis(axisX);
     climaDaily->attachAxis(axisY);
-    climaDecadal->attachAxis(axisXvalue);
+    climaDecadal->attachAxis(axisX);
     climaDecadal->attachAxis(axisY);
-    climaMonthly->attachAxis(axisXvalue);
+    climaMonthly->attachAxis(axisX);
     climaMonthly->attachAxis(axisY);
     connect(climaDaily, &QLineSeries::hovered, this, &HomogeneityChartView::tooltipClimaSeries);
     connect(climaDecadal, &QLineSeries::hovered, this, &HomogeneityChartView::tooltipClimaSeries);
@@ -270,13 +282,13 @@ void HomogeneityChartView::drawDistribution(std::vector<float> barValues, QList<
     axisY->setMax(maxValueY);
     axisY->setMin(minValueY);
     axisY->setLabelFormat("%.3f");
-    axisXvalue->setRange(minValue, maxValue);
+    axisX->setRange(minValue, maxValue);
     axisX->setCategories(categories);
 
     chart()->addSeries(distributionBar);
     chart()->addSeries(distributionLine);
 
-    distributionLine->attachAxis(axisXvalue);
+    distributionLine->attachAxis(axisX);
 
     distributionBar->attachAxis(axisX);
     distributionBar->attachAxis(axisY);
@@ -377,8 +389,8 @@ void HomogeneityChartView::tooltipBar(bool state, int index, QBarSet *barset)
         QPoint CursorPoint = QCursor::pos();
         QPoint mapPoint = mapFromGlobal(CursorPoint);
         QPointF pointF = this->chart()->mapToValue(mapPoint,series);
-        float xStart = axisXvalue->min() + (index*widthValue);
-        float xEnd = axisXvalue->min() + ((index+1)*widthValue);
+        float xStart = axisX->min() + (index*widthValue);
+        float xEnd = axisX->min() + ((index+1)*widthValue);
 
 
         // check if bar is hiding QlineSeries
@@ -435,8 +447,8 @@ QList< QList<float> > HomogeneityChartView::exportDistribution()
         for (int i = 0; i<barSet[0]->count(); i++)
         {
             tuple.clear();
-            xStart = axisXvalue->min() + (i*widthValue);
-            xEnd = axisXvalue->min() + ((i+1)*widthValue);
+            xStart = axisX->min() + (i*widthValue);
+            xEnd = axisX->min() + ((i+1)*widthValue);
             tuple.append(xStart);
             tuple.append(xEnd);
             tuple.append(barSet[0]->at(i));

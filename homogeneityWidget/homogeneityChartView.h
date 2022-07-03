@@ -18,14 +18,13 @@ public:
     explicit HomogeneityChartView(QWidget *parent = 0);
     void setYmax(float value);
     void setYmin(float value);
-    void drawSNHT(std::vector<int> years, std::vector<float> tvalues);
+    void drawSNHT(std::vector<int> years, std::vector<float> tvalues, QList<QPointF> t95Points);
 
 
 private:
-    QScatterSeries* trend;
-    QLineSeries* tValues;
+    QScatterSeries* tValues;
     QLineSeries* SNHT_T95Values;
-    QValueAxis* axisXvalue;
+    QValueAxis* axisX;
     QValueAxis* axisY;
     Callout *m_tooltip;
 };

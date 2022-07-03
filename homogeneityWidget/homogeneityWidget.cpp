@@ -976,6 +976,7 @@ void Crit3DHomogeneityWidget::executeClicked()
 
     if (method.currentText() == "SNHT")
     {
+        int myFirstYear = yearFrom.currentText().toInt();
         if (myAnnualSeries.empty())
         {
             QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
@@ -1074,6 +1075,11 @@ void Crit3DHomogeneityWidget::executeClicked()
                 }
             }
         }
+        else
+        {
+            return;
+            // LC cosa deve fare per le altre var?
+        }
         myValidValues.clear();
         for (int i = 0; i<myQ.size(); i++)
         {
@@ -1089,11 +1095,11 @@ void Crit3DHomogeneityWidget::executeClicked()
         {
             if (myQ[i] != NODATA)
             {
-                myZ[i] = (myQ[i] - myQAverage) / myQDevStd;
+                myZ.push_back((myQ[i] - myQAverage) / myQDevStd);
             }
             else
             {
-                myZ[i] = NODATA;
+                myZ.push_back(NODATA);
             }
         }
         myValidValues.clear();
@@ -1157,14 +1163,62 @@ void Crit3DHomogeneityWidget::executeClicked()
                 if (myTmax == NODATA)
                 {
                     myTmax = myTValues[a];
-                    myYearTmax = yearFrom.currentText().toInt() + a - 1;
+                    myYearTmax = myFirstYear + a - 1;
                 }
                 else if (myTValues[a] > myTmax)
                 {
                     myTmax = myTValues[a];
-                    myYearTmax = yearFrom.currentText().toInt() + a - 1;
+                    myYearTmax = myFirstYear + a - 1;
                 }
             }
+        }
+        std::vector<int> years;
+        std::vector<float> outputValues;
+        QList<QPointF> t95Points;
+        float myValue;
+        float myMaxValue = NODATA;
+        float myT95;
+
+        int myNrYears = yearTo.currentText().toInt() - myFirstYear + 1;
+        for (int i = 0; i < myTValues.size(); i++)
+        {
+            years.push_back(myFirstYear+i);
+            myValue = myTValues[i];
+            if (myValue != NODATA)
+            {
+                if ((myMaxValue == NODATA) || (myValue > myMaxValue))
+                {
+                    myMaxValue = myValue;
+                }
+            }
+            outputValues.push_back(myValue);
+        }
+        int myT95Index = round(myNrYears / 10);
+        if (myT95Index > 0 && myT95Index <= 10)
+        {
+            int index = round(myNrYears / 10);
+            myT95 = SNHT_T95_VALUES[index];
+            if (myT95 != NODATA)
+            {
+                t95Points.append(QPointF(myFirstYear,myT95));
+                t95Points.append(QPointF(myFirstYear+myTValues.size()-1,myT95));
+            }
+        }
+        else
+        {
+            QMessageBox::critical(nullptr, "Info", "T95 value available only for number of years < 100");
+        }
+        homogeneityChartView->drawSNHT(years,outputValues,t95Points);
+        if (myTmax >= myT95 && myYearTmax != NODATA)
+        {
+            QString text = "Series is not homogeneous";
+            text = text + "Year of discontinuity: " + QString::number(myYearTmax);
+            resultLabel.setText(text);
+            resultLabel.setWordWrap(true);
+        }
+        else
+        {
+            resultLabel.setText("Series is homogeneous");
         }
 
     }
