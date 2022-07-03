@@ -9,26 +9,14 @@
 HomogeneityChartView::HomogeneityChartView(QWidget *parent) :
     QChartView(new QChart(), parent)
 {
-    trend = new QScatterSeries();
-    trend->setName("Trend");
-    trend->setColor(Qt::red);
-    trend->setMarkerSize(10.0);
-    setRenderHint(QPainter::Antialiasing);
 
-    climaDaily = new QLineSeries();
-    climaDaily->setName("Daily");
-    climaDaily->setColor(Qt::black);
+    tValues = new QLineSeries();
+    tValues->setName("TValues");
+    tValues->setColor(Qt::red);
 
-    climaDecadal = new QLineSeries();
-    climaDecadal->setName("Decadal");
-    climaDecadal->setColor(Qt::red);
-
-    climaMonthly = new QLineSeries();
-    climaMonthly->setName("Monthly");
-    climaMonthly->setColor(Qt::green);
-
-    distributionLine = new QLineSeries();
-    climaMonthly->setColor(Qt::green);
+    SNHT_T95Values = new QLineSeries();
+    SNHT_T95Values->setName("SNHT_T95");
+    SNHT_T95Values->setColor(Qt::black);
 
     axisXvalue = new QValueAxis();
     axisY = new QValueAxis();
@@ -51,6 +39,11 @@ void HomogeneityChartView::setYmax(float value)
 void HomogeneityChartView::setYmin(float value)
 {
     axisY->setMin(value);
+}
+
+void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> tvalues)
+{
+
 }
 /*
 void HomogeneityChartView::drawTrend(std::vector<int> years, std::vector<float> outputValues)
