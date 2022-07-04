@@ -527,6 +527,7 @@ void Crit3DHomogeneityWidget::changeVar(const QString varName)
     resultLabel.clear();
     annualSeriesChartView->setYTitle(QString::fromStdString(getUnitFromVariable(myVar)));
     execute.setEnabled(false);
+    homogeneityChartView->cleanSNHTSeries();
     plotAnnualSeries();
 }
 
@@ -537,6 +538,7 @@ void Crit3DHomogeneityWidget::changeYears()
     stationsTable.clearContents();
     resultLabel.clear();
     execute.setEnabled(false);
+    homogeneityChartView->cleanSNHTSeries();
     plotAnnualSeries();
 }
 
@@ -703,7 +705,7 @@ void Crit3DHomogeneityWidget::on_actionExportAnnualGraph()
 
 void Crit3DHomogeneityWidget::on_actionExportHomogeneityData()
 {
-    /*
+
     QString csvFileName = QFileDialog::getSaveFileName(this, tr("Save current data"), "", tr("csv files (*.csv)"));
     if (csvFileName != "")
     {
@@ -717,68 +719,52 @@ void Crit3DHomogeneityWidget::on_actionExportHomogeneityData()
         QTextStream myStream (&myFile);
         myStream.setRealNumberNotation(QTextStream::FixedNotation);
         myStream.setRealNumberPrecision(3);
-        if (graphType.currentText() == "Trend" || graphType.currentText() == "Anomaly trend")
+        if (method.currentText() == "SNHT")
         {
             QString header = "x,y";
             myStream << header << "\n";
-            QList<QPointF> dataPoins = chartView->exportTrend();
+            QList<QPointF> dataPoins = homogeneityChartView->exportSNHTValues();
             for (int i = 0; i < dataPoins.size(); i++)
             {
                 myStream << dataPoins[i].toPoint().x() << "," << dataPoins[i].y() << "\n";
             }
         }
-        else if (graphType.currentText() == "Climate")
+        else if (method.currentText() == "CRADDOCK")
         {
-            myStream << "Daily" << "\n";
-            QString header = "x,y";
-            myStream << header << "\n";
-            QList<QPointF> dataPoins = chartView->exportClimaDaily();
-            for (int i = 0; i < dataPoins.size(); i++)
-            {
-                myStream << dataPoins[i].x() << "," << dataPoins[i].y() << "\n";
-            }
-            dataPoins.clear();
-            myStream << "Decadal" << "\n";
-            header = "x,y";
-            myStream << header << "\n";
-            dataPoins = chartView->exportClimaDecadal();
-            for (int i = 0; i < dataPoins.size(); i++)
-            {
-                myStream << dataPoins[i].x() << "," << dataPoins[i].y() << "\n";
-            }
-            dataPoins.clear();
-            myStream << "Monthly" << "\n";
-            header = "x,y";
-            myStream << header << "\n";
-            dataPoins = chartView->exportClimaMonthly();
-            for (int i = 0; i < dataPoins.size(); i++)
-            {
-                myStream << dataPoins[i].x() << "," << dataPoins[i].y() << "\n";
-            }
+            // TO DO
         }
-        else if (graphType.currentText() == "Distribution")
-        {
-            QString header = "x1,x2,frequency";
-            myStream << header << "\n";
-            QList< QList<float> > bar = chartView->exportDistribution();
-            for (int i = 0; i < bar.size(); i++)
-            {
-                int x1 = bar[i].at(0);
-                int x2 = bar[i].at(1);
-                myStream << x1 << "," << x2 << "," << bar[i].at(2) << "\n";
-            }
-        }
-
         myFile.close();
 
         return;
     }
-    */
 }
 
 void Crit3DHomogeneityWidget::on_actionExportAnnualData()
 {
-    // TO DO
+    QString csvFileName = QFileDialog::getSaveFileName(this, tr("Save current data"), "", tr("csv files (*.csv)"));
+    if (csvFileName != "")
+    {
+        QFile myFile(csvFileName);
+        if (!myFile.open(QIODevice::WriteOnly | QFile::Truncate))
+        {
+            QMessageBox::information(nullptr, "Error", "Open CSV failed: " + csvFileName + "\n ");
+            return;
+        }
+
+        QTextStream myStream (&myFile);
+        myStream.setRealNumberNotation(QTextStream::FixedNotation);
+        myStream.setRealNumberPrecision(3);
+        QString header = "x,y";
+        myStream << header << "\n";
+        QList<QPointF> dataPoins = annualSeriesChartView->exportAnnualValues();
+        for (int i = 0; i < dataPoins.size(); i++)
+        {
+            myStream << dataPoins[i].toPoint().x() << "," << dataPoins[i].y() << "\n";
+        }
+        myFile.close();
+
+        return;
+    }
 }
 
 void Crit3DHomogeneityWidget::findReferenceStations()
@@ -1126,7 +1112,7 @@ void Crit3DHomogeneityWidget::executeClicked()
             }
         }
 
-        for (int a = 0; a< myZ.size()-1; a++)
+        for (int a = 0; a < myZ.size()-1; a++)
         {
             for (int i = 0; i< myZ.size(); i++)
             {
@@ -1159,16 +1145,16 @@ void Crit3DHomogeneityWidget::executeClicked()
             float myZ2Average = statistics::mean(myValidValues, myValidValues.size());
             if (myZ1Average != NODATA && myZ2Average != NODATA)
             {
-                myTValues[a] = (a * pow(myZ1Average,2)) + ((myZ.size() - a) * pow(myZ2Average,2));
+                myTValues[a] = ( (a+1) * pow(myZ1Average,2)) + ((myZ.size() - (a+1)) * pow(myZ2Average,2));
                 if (myTmax == NODATA)
                 {
                     myTmax = myTValues[a];
-                    myYearTmax = myFirstYear + a - 1;
+                    myYearTmax = myFirstYear + a;
                 }
                 else if (myTValues[a] > myTmax)
                 {
                     myTmax = myTValues[a];
-                    myYearTmax = myFirstYear + a - 1;
+                    myYearTmax = myFirstYear + a;
                 }
             }
         }
@@ -1197,7 +1183,7 @@ void Crit3DHomogeneityWidget::executeClicked()
         if (myT95Index > 0 && myT95Index <= 10)
         {
             int index = round(myNrYears / 10);
-            myT95 = SNHT_T95_VALUES[index];
+            myT95 = SNHT_T95_VALUES[index-1];
             if (myT95 != NODATA)
             {
                 t95Points.append(QPointF(myFirstYear,myT95));

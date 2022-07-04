@@ -122,3 +122,8 @@ void AnnualSeriesChartView::tooltipAnnualSeries(QPointF point, bool state)
         m_tooltip->hide();
     }
 }
+
+QList<QPointF> AnnualSeriesChartView::exportAnnualValues()
+{
+    return annualSeries->points();
+}

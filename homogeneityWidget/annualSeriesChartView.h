@@ -22,6 +22,7 @@ public:
     void setYmin(float value);
     void setYTitle(QString title);
     void clearSeries();
+    QList<QPointF> exportAnnualValues();
 
 private:
     QScatterSeries* annualSeries;
