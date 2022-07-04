@@ -956,22 +956,24 @@ void Crit3DHomogeneityWidget::executeClicked()
     myTValues.clear();
     myYearTmax = NODATA;
     myTmax = NODATA;
+
+    int myFirstYear = yearFrom.currentText().toInt();
+    if (myAnnualSeries.empty())
+    {
+        QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
+        return;
+    }
+    if (mapNameAnnualSeries.isEmpty())
+    {
+        QMessageBox::critical(nullptr, "Error", "No reference stations found");
+        return;
+    }
+
     FormInfo formInfo;
     formInfo.showInfo("compute homogeneity test...");
 
     if (method.currentText() == "SNHT")
     {
-        int myFirstYear = yearFrom.currentText().toInt();
-        if (myAnnualSeries.empty())
-        {
-            QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
-            return;
-        }
-        if (mapNameAnnualSeries.isEmpty())
-        {
-            QMessageBox::critical(nullptr, "Error", "No reference stations found");
-            return;
-        }
         std::vector<float> myValidValues;
         for (int i = 0; i<myAnnualSeries.size(); i++)
         {
@@ -1206,6 +1208,10 @@ void Crit3DHomogeneityWidget::executeClicked()
             resultLabel.setText("Series is homogeneous");
         }
 
+    }
+    else if (method.currentText() == "CRADDOCK")
+    {
+        // TO DO
     }
     formInfo.close();
 
