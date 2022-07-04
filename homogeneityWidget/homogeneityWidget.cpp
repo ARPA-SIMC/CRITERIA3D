@@ -276,6 +276,7 @@ void Crit3DHomogeneityWidget::closeEvent(QCloseEvent *event)
 
 void Crit3DHomogeneityWidget::plotAnnualSeries()
 {
+    annualSeriesChartView->clearSeries();
     myAnnualSeries.clear();
     int firstYear = yearFrom.currentText().toInt();
     int lastYear = yearTo.currentText().toInt();
@@ -347,7 +348,6 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
         dataAlreadyLoaded = true;
     }
 
-    annualSeriesChartView->clearSeries();
     int validYears = computeAnnualSeriesOnPointFromDaily(&myError, meteoPointsDbHandler, nullptr,
                                              &meteoPointTemp, &clima, false, isAnomaly, meteoSettings, myAnnualSeries, dataAlreadyLoaded);
     formInfo.close();
@@ -527,7 +527,7 @@ void Crit3DHomogeneityWidget::changeVar(const QString varName)
     resultLabel.clear();
     annualSeriesChartView->setYTitle(QString::fromStdString(getUnitFromVariable(myVar)));
     execute.setEnabled(false);
-    homogeneityChartView->cleanSNHTSeries();
+    homogeneityChartView->clearSNHTSeries();
     plotAnnualSeries();
 }
 
@@ -538,21 +538,18 @@ void Crit3DHomogeneityWidget::changeYears()
     stationsTable.clearContents();
     resultLabel.clear();
     execute.setEnabled(false);
-    homogeneityChartView->cleanSNHTSeries();
+    homogeneityChartView->clearSNHTSeries();
     plotAnnualSeries();
 }
 
 void Crit3DHomogeneityWidget::changeMethod(const QString methodName)
 {
-    if (methodName == "SNHT")
+    homogeneityChartView->clearSNHTSeries();
+    resultLabel.clear();
+    if (execute.isEnabled())
     {
-
+        executeClicked();
     }
-    else if (methodName == "CRADDOCK")
-    {
-
-    }
-    //plot();
 }
 
 void Crit3DHomogeneityWidget::addJointStationClicked()
@@ -570,7 +567,6 @@ void Crit3DHomogeneityWidget::addJointStationClicked()
         newId = jointStationsList.currentText().section(" ",0,0).toStdString();
         idPointsJointed << newId;
 
-        updateYears();
         int indexMp;
         for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
         {
@@ -585,6 +581,7 @@ void Crit3DHomogeneityWidget::addJointStationClicked()
         QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, newId).date();
 
         meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPointsNearDistanceList[indexMp]);
+        updateYears();
     }
 
 }
@@ -959,6 +956,8 @@ void Crit3DHomogeneityWidget::executeClicked()
     myTValues.clear();
     myYearTmax = NODATA;
     myTmax = NODATA;
+    FormInfo formInfo;
+    formInfo.showInfo("compute homogeneity test...");
 
     if (method.currentText() == "SNHT")
     {
@@ -1197,7 +1196,7 @@ void Crit3DHomogeneityWidget::executeClicked()
         homogeneityChartView->drawSNHT(years,outputValues,t95Points);
         if (myTmax >= myT95 && myYearTmax != NODATA)
         {
-            QString text = "Series is not homogeneous";
+            QString text = "Series is not homogeneous\n";
             text = text + "Year of discontinuity: " + QString::number(myYearTmax);
             resultLabel.setText(text);
             resultLabel.setWordWrap(true);
@@ -1208,6 +1207,7 @@ void Crit3DHomogeneityWidget::executeClicked()
         }
 
     }
+    formInfo.close();
 
 }
 

@@ -83,6 +83,7 @@ void AnnualSeriesChartView::clearSeries()
     if (chart()->series().size() > 0)
     {
         chart()->removeSeries(annualSeries);
+        annualSeries->clear();
     }
 }
 

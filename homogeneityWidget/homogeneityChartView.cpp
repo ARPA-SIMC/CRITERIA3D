@@ -46,7 +46,7 @@ void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> o
 {
     if (chart()->series().size() > 0)
     {
-        cleanSNHTSeries();
+        clearSNHTSeries();
     }
     chart()->legend()->setVisible(true);
     float maxValue = NODATA;
@@ -117,7 +117,7 @@ void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> o
 
 }
 
-void HomogeneityChartView::cleanSNHTSeries()
+void HomogeneityChartView::clearSNHTSeries()
 {
     if (chart()->series().contains(tValues))
     {

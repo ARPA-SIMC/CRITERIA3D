@@ -19,7 +19,7 @@ public:
     void setYmax(float value);
     void setYmin(float value);
     void drawSNHT(std::vector<int> years, std::vector<float> tvalues, QList<QPointF> t95Points);
-    void cleanSNHTSeries();
+    void clearSNHTSeries();
     void tooltipSNHTSeries(QPointF point, bool state);
     QList<QPointF> exportSNHTValues();
 
