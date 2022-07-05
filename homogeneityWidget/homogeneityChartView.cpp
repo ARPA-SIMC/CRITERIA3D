@@ -117,6 +117,86 @@ void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> o
 
 }
 
+void HomogeneityChartView::drawCraddock(int myFirstYear, int myLastYear, std::vector<std::vector<float>> outputValues, std::vector<QString> refNames, meteoVariable myVar, double averageValue)
+{
+    if (chart()->series().size() > 0)
+    {
+        for(int i = 0; i<craddockSeries.size(); i++)
+        {
+            if (chart()->series().contains(craddockSeries[i]))
+            {
+                chart()->removeSeries(craddockSeries[i]);
+                craddockSeries[i]->clear();
+            }
+        }
+    }
+    craddockSeries.clear();
+    float myMinValue = NODATA;
+    float myMaxValue = NODATA;
+    for (int refIndex = 0; refIndex<refNames.size(); refIndex++)
+    {
+        QLineSeries* refSeries = new QLineSeries();
+        refSeries->setName(refNames[refIndex]);
+        refSeries->append(myFirstYear - 1,0);
+        for (int myYear = 0; myYear < outputValues[refIndex].size(); myYear++)
+        {
+            float myValue = outputValues[refIndex][myYear];
+            int year = myFirstYear + myYear;
+            if (myValue != NODATA)
+            {
+                if ((myMinValue == NODATA) || (myValue < myMinValue))
+                {
+                    myMinValue = myValue;
+                }
+                if ((myMaxValue == NODATA) || (myValue > myMaxValue))
+                {
+                    myMaxValue = myValue;
+                }
+                refSeries->append(year,myValue);
+            }
+            else
+            {
+                refSeries->append(year,NODATA);
+            }
+        }
+        craddockSeries.push_back(refSeries);
+    }
+    float myThreshold;
+    if (myVar == dailyPrecipitation)
+    {
+        myThreshold = averageValue * (myLastYear - myFirstYear) / 25;
+        axisY->setTitleText("[mm]");
+
+    }
+    else if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureRange)
+    {
+        myThreshold = averageValue * (myLastYear - myFirstYear) / 50;
+        axisY->setTitleText("[°C]");
+    }
+    axisY->setMax(std::max(myThreshold, myMaxValue));
+    axisY->setMin(std::min(-myThreshold, myMinValue));
+    axisX->setLabelFormat("%d");
+    axisY->setLabelFormat("%.1f");
+    axisX->setTitleText("years");
+    axisX->setRange(myFirstYear-1, myLastYear);
+    if (myLastYear-myFirstYear+2 <= 30)
+    {
+        axisX->setTickCount(myLastYear-myFirstYear+2);
+    }
+    else
+    {
+        axisX->setTickCount(30);
+    }
+    for (int i = 0; i<craddockSeries.size(); i++)
+    {
+        chart()->addSeries(craddockSeries[i]);
+        craddockSeries[i]->attachAxis(axisX);
+        craddockSeries[i]->attachAxis(axisY);
+        connect(craddockSeries[i], &QScatterSeries::hovered, this, &HomogeneityChartView::tooltipCraddockSeries);
+    }
+
+}
+
 void HomogeneityChartView::clearSNHTSeries()
 {
     if (chart()->series().contains(tValues))
@@ -138,6 +218,28 @@ void HomogeneityChartView::tooltipSNHTSeries(QPointF point, bool state)
     if (state)
     {
         double xValue = point.x();
+        double yValue = point.y();
+
+        m_tooltip->setText(QString("year %1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
+        m_tooltip->setSeries(serie);
+        m_tooltip->setAnchor(point);
+        m_tooltip->setZValue(11);
+        m_tooltip->updateGeometry();
+        m_tooltip->show();
+    }
+    else
+    {
+        m_tooltip->hide();
+    }
+}
+
+void HomogeneityChartView::tooltipCraddockSeries(QPointF point, bool state)
+{
+
+    auto serie = qobject_cast<QLineSeries *>(sender());
+    if (state)
+    {
+        int xValue = point.x();
         double yValue = point.y();
 
         m_tooltip->setText(QString("year %1: %2").arg(xValue).arg(yValue, 0, 'f', 3));

@@ -952,12 +952,14 @@ void Crit3DHomogeneityWidget::deleteFoundStationClicked()
 
 void Crit3DHomogeneityWidget::executeClicked()
 {
-    isHomogeneous = false;
-    myTValues.clear();
-    myYearTmax = NODATA;
-    myTmax = NODATA;
+    bool isHomogeneous = false;
+    std::vector<float> myTValues;
+    float myYearTmax = NODATA;
+    float myTmax = NODATA;
+    resultLabel.clear();
 
     int myFirstYear = yearFrom.currentText().toInt();
+    int myLastYear = yearTo.currentText().toInt();
     if (myAnnualSeries.empty())
     {
         QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
@@ -971,6 +973,7 @@ void Crit3DHomogeneityWidget::executeClicked()
 
     FormInfo formInfo;
     formInfo.showInfo("compute homogeneity test...");
+    int nrReference = listSelectedStations.count();
 
     if (method.currentText() == "SNHT")
     {
@@ -987,7 +990,7 @@ void Crit3DHomogeneityWidget::executeClicked()
         std::vector<float> r2;
         std::vector<std::vector<float>> refSeriesVector;
         float r2Value, y_intercept, trend;
-        int nrReference = listSelectedStations.count();
+
         for (int row = 0; row < nrReference; row++)
         {
             std::vector<float> myRefValidValues;
@@ -1211,7 +1214,100 @@ void Crit3DHomogeneityWidget::executeClicked()
     }
     else if (method.currentText() == "CRADDOCK")
     {
-        // TO DO
+        float myLastSum;
+        float myReferenceSum;
+        float myAverage;
+        int myValidYears;
+        std::vector<float> myRefAverage;
+        std::vector<float> myC;
+        std::vector<std::vector<float>> mySValues;
+        std::vector<std::vector<float>> myD;
+        // init myD
+        for (int row = 0; row < nrReference; row++)
+        {
+            std::vector<float> vectD;
+            for (int myYear = 0; myYear<myAnnualSeries.size(); myYear++)
+            {
+                vectD.push_back(NODATA);
+            }
+            myD.push_back(vectD);
+            mySValues.push_back(vectD);
+        }
+        std::vector<QString> refNames;
+        for (int row = 0; row < nrReference; row++)
+        {
+            // compute mean only for common years
+            myLastSum = 0;
+            myReferenceSum = 0;
+            myValidYears = 0;
+            QString name = listSelectedStations.item(row)->text();
+            refNames.push_back(name);
+            std::vector<float> refSeries = mapNameAnnualSeries.value(name);
+            for (int myYear = 0; myYear<myAnnualSeries.size(); myYear++)
+            {
+                if (myAnnualSeries[myYear] != NODATA && refSeries[myYear] != NODATA)
+                {
+                    myLastSum = myLastSum + myAnnualSeries[myYear];
+                    myReferenceSum = myReferenceSum + refSeries[myYear];
+                    myValidYears = myValidYears + 1;
+                }
+            }
+            myAverage = myLastSum / myValidYears;
+            myRefAverage.push_back(myReferenceSum / myValidYears);
+            if (myVar == dailyPrecipitation)
+            {
+                if (myRefAverage[row] == 0)
+                {
+                    QMessageBox::critical(nullptr, "Error", "Can not divide by zero");
+                    return;
+                }
+                myC.push_back(myRefAverage[row] / myAverage);
+            }
+            else if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureRange)
+            {
+                 myC.push_back(myRefAverage[row] - myAverage);
+            }
+            else
+            {
+                // LC cosa fare se è un altra var?
+                return;
+            }
+            for (int myYear = 0; myYear<myAnnualSeries.size(); myYear++)
+            {
+                if (myAnnualSeries[myYear] != NODATA && refSeries[myYear] != NODATA)
+                {
+                    if (myVar == dailyPrecipitation)
+                    {
+                         myD[row][myYear] = myC[row]*myAnnualSeries[myYear] - refSeries[myYear];
+                    }
+                    else if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureRange)
+                    {
+                        myD[row][myYear] = myC[row]+myAnnualSeries[myYear] - refSeries[myYear];
+                    }
+                    else
+                    {
+                        // LC cosa fare se è un altra var?
+                        return;
+                    }
+                }
+            }
+        }
+        // sum
+        for (int row = 0; row < nrReference; row++)
+        {
+            myLastSum = 0;
+            for (int myYear = 0; myYear<myAnnualSeries.size(); myYear++)
+            {
+                if (myD[row][myYear] != NODATA)
+                {
+                    mySValues[row][myYear] = myLastSum + myD[row][myYear];
+                    myLastSum = mySValues[row][myYear];
+                }
+            }
+        }
+        // draw
+        homogeneityChartView->drawCraddock(myFirstYear, myLastYear, mySValues, refNames, myVar, averageValue);
+
     }
     formInfo.close();
 
