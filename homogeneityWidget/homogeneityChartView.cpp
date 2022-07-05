@@ -94,13 +94,13 @@ void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> o
         axisY->setMin(minValue-3);
     }
     axisX->setRange(years[0], years[years.size()-1]);
-    if (years.size() <= 30)
+    if (years.size() <= 15)
     {
         axisX->setTickCount(years.size());
     }
     else
     {
-        axisX->setTickCount(30);
+        axisX->setTickCount(15);
     }
     axisX->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
@@ -179,13 +179,13 @@ void HomogeneityChartView::drawCraddock(int myFirstYear, int myLastYear, std::ve
     axisY->setLabelFormat("%.1f");
     axisX->setTitleText("years");
     axisX->setRange(myFirstYear-1, myLastYear);
-    if (myLastYear-myFirstYear+2 <= 30)
+    if (myLastYear-myFirstYear+2 <= 15)
     {
         axisX->setTickCount(myLastYear-myFirstYear+2);
     }
     else
     {
-        axisX->setTickCount(30);
+        axisX->setTickCount(15);
     }
     for (int i = 0; i<craddockSeries.size(); i++)
     {
@@ -258,4 +258,16 @@ void HomogeneityChartView::tooltipCraddockSeries(QPointF point, bool state)
 QList<QPointF> HomogeneityChartView::exportSNHTValues()
 {
     return tValues->points();
+}
+
+QList<QList<QPointF>> HomogeneityChartView::exportCraddockValues(QList<QString> &refNames)
+{
+    QList<QList<QPointF>> pointsAllSeries;
+    for (int i = 0; i<craddockSeries.size(); i++)
+    {
+        QList<QPointF> pointsSerie = craddockSeries[i]->points();
+        refNames.push_back(craddockSeries[i]->name());
+        pointsAllSeries.push_back(pointsSerie);
+    }
+    return pointsAllSeries;
 }

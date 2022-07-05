@@ -25,6 +25,7 @@ public:
     void tooltipSNHTSeries(QPointF point, bool state);
     void tooltipCraddockSeries(QPointF point, bool state);
     QList<QPointF> exportSNHTValues();
+    QList<QList<QPointF>> exportCraddockValues(QList<QString> &refNames);
 
 private:
     QScatterSeries* tValues;

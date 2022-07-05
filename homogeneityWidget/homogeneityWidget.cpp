@@ -718,17 +718,30 @@ void Crit3DHomogeneityWidget::on_actionExportHomogeneityData()
         myStream.setRealNumberPrecision(3);
         if (method.currentText() == "SNHT")
         {
-            QString header = "x,y";
+            QString header = "year,value";
             myStream << header << "\n";
-            QList<QPointF> dataPoins = homogeneityChartView->exportSNHTValues();
-            for (int i = 0; i < dataPoins.size(); i++)
+            QList<QPointF> dataPoints = homogeneityChartView->exportSNHTValues();
+            for (int i = 0; i < dataPoints.size(); i++)
             {
-                myStream << dataPoins[i].toPoint().x() << "," << dataPoins[i].y() << "\n";
+                myStream << dataPoints[i].toPoint().x() << "," << dataPoints[i].y() << "\n";
             }
         }
         else if (method.currentText() == "CRADDOCK")
         {
-            // TO DO
+            QList<QString> refNames;
+            QList<QList<QPointF>> pointsAllSeries = homogeneityChartView->exportCraddockValues(refNames);
+            for (int point = 0; point<refNames.size(); point++)
+            {
+                QString name = refNames[point];
+                myStream << name << "\n";
+                QString header = "year,value";
+                myStream << header << "\n";
+                QList<QPointF> dataPoints = pointsAllSeries[point];
+                for (int i = 0; i < dataPoints.size(); i++)
+                {
+                    myStream << dataPoints[i].toPoint().x() << "," << dataPoints[i].y() << "\n";
+                }
+            }
         }
         myFile.close();
 
@@ -751,7 +764,7 @@ void Crit3DHomogeneityWidget::on_actionExportAnnualData()
         QTextStream myStream (&myFile);
         myStream.setRealNumberNotation(QTextStream::FixedNotation);
         myStream.setRealNumberPrecision(3);
-        QString header = "x,y";
+        QString header = "year,value";
         myStream << header << "\n";
         QList<QPointF> dataPoins = annualSeriesChartView->exportAnnualValues();
         for (int i = 0; i < dataPoins.size(); i++)
