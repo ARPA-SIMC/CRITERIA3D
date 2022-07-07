@@ -124,7 +124,7 @@
         bool computeUnit(unsigned int unitIndex, unsigned int memberNr);
 
         bool createOutputTable(QString &myError);
-        bool createState(QString &myError);
+        bool createDbState(QString &myError);
         bool saveState(QString &myError);
         bool restoreState(QString dbStateToRestoreName, QString &myError);
         void updateOutput(Crit3DDate myDate, bool isFirst);
