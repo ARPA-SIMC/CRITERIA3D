@@ -88,11 +88,23 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     methodGroupBox->setLayout(methodLayout);
 
     QLabel *variableLabel = new QLabel(tr("Variable: "));
+    variable.addItem("DAILY_TAVG");
+    variable.addItem("DAILY_TEMPRANGE");
+    variable.addItem("DAILY_PREC");
+    variable.addItem("DAILY_RHAVG");
+    variable.addItem("DAILY_RAD");
+    variable.addItem("DAILY_DIRECT_RAD");
+    variable.addItem("DAILY_DIFFUSE_RAD");
+    variable.addItem("DAILY_REFLEC_RAD");
+    variable.addItem("DAILY_W_VEC_INT_AVG");
+    variable.addItem("DAILY_W_SCAL_INT_AVG");
+    /*
     std::map<meteoVariable, std::string>::const_iterator it;
     for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
     {
         variable.addItem(QString::fromStdString(it->second));
     }
+    */
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
     variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     variable.setMaximumWidth(150);
@@ -1047,7 +1059,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                 }
             }
         }
-        else if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureRange || myVar == dailyGlobalRadiation)
+        else
         {
             for (int i = 0; i<myAnnualSeries.size(); i++)
             {
@@ -1077,11 +1089,6 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myQ.push_back(NODATA);
                 }
             }
-        }
-        else
-        {
-            return;
-            // LC cosa deve fare per le altre var?
         }
         myValidValues.clear();
         for (int i = 0; i<myQ.size(); i++)
@@ -1276,14 +1283,9 @@ void Crit3DHomogeneityWidget::executeClicked()
                 }
                 myC.push_back(myRefAverage[row] / myAverage);
             }
-            else if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureRange)
-            {
-                 myC.push_back(myRefAverage[row] - myAverage);
-            }
             else
             {
-                // LC cosa fare se è un altra var?
-                return;
+                 myC.push_back(myRefAverage[row] - myAverage);
             }
             for (int myYear = 0; myYear<myAnnualSeries.size(); myYear++)
             {
@@ -1293,14 +1295,9 @@ void Crit3DHomogeneityWidget::executeClicked()
                     {
                          myD[row][myYear] = myC[row]*myAnnualSeries[myYear] - refSeries[myYear];
                     }
-                    else if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureRange)
-                    {
-                        myD[row][myYear] = myC[row]+myAnnualSeries[myYear] - refSeries[myYear];
-                    }
                     else
                     {
-                        // LC cosa fare se è un altra var?
-                        return;
+                        myD[row][myYear] = myC[row]+myAnnualSeries[myYear] - refSeries[myYear];
                     }
                 }
             }
