@@ -1252,9 +1252,9 @@ void Crit1DProject::initializeIrrigationStatistics(const Crit3DDate& firstDate, 
 bool Crit1DProject::createDbState(QString &myError)
 {
     // create db state
-    QString date = lastSimulationDate.addDays(1).toString("yyyy_MM_dd");
+    QString dateStr = lastSimulationDate.addDays(1).toString("yyyy_MM_dd");
     QString outputDbPath = getFilePath(dbOutput.databaseName());
-    QString dbStateName = outputDbPath + "state_" + date + ".db";
+    QString dbStateName = outputDbPath + "state_" + dateStr + ".db";
     if (QFile::exists(dbStateName))
     {
         QFile::remove(dbStateName);
