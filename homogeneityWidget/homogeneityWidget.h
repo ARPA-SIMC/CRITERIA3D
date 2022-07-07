@@ -12,6 +12,8 @@
     #include "interpolationSettings.h"
     #include "interpolationPoint.h"
 
+    #define TOLERANCE 0.00000001
+
     class Crit3DHomogeneityWidget : public QWidget
     {
         Q_OBJECT
@@ -27,14 +29,19 @@
             void changeYears();
             void plotAnnualSeries();
             void on_actionChangeLeftAxis();
-            void on_actionExportGraph();
-            void on_actionExportData();
-            void addStationClicked();
-            void deleteStationClicked();
+            void on_actionExportHomogeneityGraph();
+            void on_actionExportAnnualGraph();
+            void on_actionExportAnnualData();
+            void on_actionExportHomogeneityData();
+            void addJointStationClicked();
+            void deleteJointStationClicked();
             void saveToDbClicked();
             void updateYears();
             void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint *meteoPointSet, QDate myDate);
             void findReferenceStations();
+            void addFoundStationClicked();
+            void deleteFoundStationClicked();
+            void executeClicked();
 
     private:
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
@@ -46,9 +53,8 @@
             std::vector<float> myAnnualSeries;
             QList<std::string> sortedId;
             std::vector<float> distanceId;
-            QList<std::string> sortedIdFound;
-            QList<float> distanceIdFound;
-            QList<std::vector<float>> myAnnualSeriesFound;
+            QMap<QString, std::string> mapNameId;
+            QMap<QString, std::vector<float>> mapNameAnnualSeries;
 
             Crit3DMeteoSettings *meteoSettings;
             QSettings *settings;
@@ -71,14 +77,15 @@
             QLineEdit minNumStations;
             QListWidget listFoundStations;
             QListWidget listSelectedStations;
-            QPushButton addButton;
-            QPushButton deleteButton;
+            QPushButton addStationFoundButton;
+            QPushButton deleteStationFoundButton;
             QTableWidget stationsTable;
             QLabel resultLabel;
             QPushButton execute;
 
             QString myError;
             double averageValue;
+            float SNHT_T95_VALUES [10] {5.7,6.95,7.65,8.1,8.45,8.65,8.8,8.95,9.05,9.15};
     };
 
 

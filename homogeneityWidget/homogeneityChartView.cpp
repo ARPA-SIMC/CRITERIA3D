@@ -9,31 +9,20 @@
 HomogeneityChartView::HomogeneityChartView(QWidget *parent) :
     QChartView(new QChart(), parent)
 {
-    trend = new QScatterSeries();
-    trend->setName("Trend");
-    trend->setColor(Qt::red);
-    trend->setMarkerSize(10.0);
-    setRenderHint(QPainter::Antialiasing);
 
-    climaDaily = new QLineSeries();
-    climaDaily->setName("Daily");
-    climaDaily->setColor(Qt::black);
+    tValues = new QScatterSeries();
+    tValues->setName("TValues");
+    tValues->setColor(Qt::red);
+    tValues->setMarkerSize(10.0);
 
-    climaDecadal = new QLineSeries();
-    climaDecadal->setName("Decadal");
-    climaDecadal->setColor(Qt::red);
+    SNHT_T95Values = new QLineSeries();
+    SNHT_T95Values->setName("SNHT_T95");
+    SNHT_T95Values->setColor(Qt::black);
 
-    climaMonthly = new QLineSeries();
-    climaMonthly->setName("Monthly");
-    climaMonthly->setColor(Qt::green);
-
-    distributionLine = new QLineSeries();
-    climaMonthly->setColor(Qt::green);
-
-    axisXvalue = new QValueAxis();
+    axisX = new QValueAxis();
     axisY = new QValueAxis();
 
-    chart()->addAxis(axisXvalue, Qt::AlignBottom);
+    chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisY, Qt::AlignLeft);
     chart()->setDropShadowEnabled(false);
 
@@ -52,25 +41,21 @@ void HomogeneityChartView::setYmin(float value)
 {
     axisY->setMin(value);
 }
-/*
-void HomogeneityChartView::drawTrend(std::vector<int> years, std::vector<float> outputValues)
-{
 
+void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> outputValues, QList<QPointF> t95Points)
+{
     if (chart()->series().size() > 0)
     {
-        cleanClimaSeries();
-        cleanDistribution();
-        cleanTrendSeries();
+        clearSNHTSeries();
     }
     chart()->legend()->setVisible(true);
-
     float maxValue = NODATA;
     float minValue = -NODATA;
     for (unsigned int i = 0; i < years.size(); i++)
     {
         if (outputValues[i] != NODATA)
         {
-            trend->append(QPointF(years[i], outputValues[i]));
+            tValues->append(QPointF(years[i], outputValues[i]));
             if (outputValues[i] > maxValue)
             {
                 maxValue = outputValues[i];
@@ -78,6 +63,21 @@ void HomogeneityChartView::drawTrend(std::vector<int> years, std::vector<float> 
             if (outputValues[i] < minValue)
             {
                 minValue = outputValues[i];
+            }
+        }
+    }
+    for (int i = 0; i < t95Points.size(); i++)
+    {
+        SNHT_T95Values->append(t95Points[i]);
+        if(t95Points[i].y() != NODATA)
+        {
+            if (t95Points[i].y() > maxValue)
+            {
+                maxValue = t95Points[i].y();
+            }
+            if (t95Points[i].y() < minValue)
+            {
+                minValue = t95Points[i].y();
             }
         }
     }
@@ -93,221 +93,125 @@ void HomogeneityChartView::drawTrend(std::vector<int> years, std::vector<float> 
         axisY->setMax(maxValue+3);
         axisY->setMin(minValue-3);
     }
-    axisXvalue->setRange(years[0], years[years.size()-1]);
-    if (years.size() <= 30)
+    axisX->setRange(years[0], years[years.size()-1]);
+    if (years.size() <= 15)
     {
-        axisXvalue->setTickCount(years.size());
+        axisX->setTickCount(years.size());
     }
     else
     {
-        axisXvalue->setTickCount(30);
+        axisX->setTickCount(15);
     }
-    axisXvalue->setLabelFormat("%d");
+    axisX->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
-    chart()->addSeries(trend);
-    trend->attachAxis(axisXvalue);
-    trend->attachAxis(axisY);
-    connect(trend, &QScatterSeries::hovered, this, &HomogeneityChartView::tooltipTrendSeries);
+    axisX->setTitleText("years");
+    axisY->setTitleText("T-value");
+    chart()->addSeries(tValues);
+    chart()->addSeries(SNHT_T95Values);
+    SNHT_T95Values->attachAxis(axisX);
+    SNHT_T95Values->attachAxis(axisY);
+    tValues->attachAxis(axisX);
+    tValues->attachAxis(axisY);
+    connect(tValues, &QScatterSeries::hovered, this, &HomogeneityChartView::tooltipSNHTSeries);
+    connect(SNHT_T95Values, &QScatterSeries::hovered, this, &HomogeneityChartView::tooltipSNHTSeries);
+
 }
 
-void HomogeneityChartView::cleanClimaSeries()
-{
-    if (chart()->series().contains(climaDaily))
-    {
-        chart()->removeSeries(climaDaily);
-        climaDaily->clear();
-    }
-    if (chart()->series().contains(climaDecadal))
-    {
-        chart()->removeSeries(climaDecadal);
-        climaDecadal->clear();
-    }
-    if (chart()->series().contains(climaMonthly))
-    {
-        chart()->removeSeries(climaMonthly);
-        climaMonthly->clear();
-    }
-}
-
-void HomogeneityChartView::cleanTrendSeries()
-{
-    if (chart()->series().contains(trend))
-    {
-        chart()->removeSeries(trend);
-        trend->clear();
-    }
-}
-
-void HomogeneityChartView::drawClima(QList<QPointF> dailyPointList, QList<QPointF> decadalPointList, QList<QPointF> monthlyPointList)
+void HomogeneityChartView::drawCraddock(int myFirstYear, int myLastYear, std::vector<std::vector<float>> outputValues, std::vector<QString> refNames, meteoVariable myVar, double averageValue)
 {
     if (chart()->series().size() > 0)
     {
-        cleanClimaSeries();
-        cleanDistribution();
-        cleanTrendSeries();
-    }
-    chart()->legend()->setVisible(true);
-
-    float maxValue = NODATA;
-    float minValue = -NODATA;
-
-    for (int i = 0; i < dailyPointList.size(); i++)
-    {
-        climaDaily->append(dailyPointList[i]);
-        if(dailyPointList[i].y() != NODATA)
+        for(int i = 0; i<craddockSeries.size(); i++)
         {
-            if (dailyPointList[i].y() > maxValue)
+            if (chart()->series().contains(craddockSeries[i]))
             {
-                maxValue = dailyPointList[i].y();
-            }
-            if (dailyPointList[i].y() < minValue)
-            {
-                minValue = dailyPointList[i].y();
+                chart()->removeSeries(craddockSeries[i]);
+                craddockSeries[i]->clear();
             }
         }
     }
-
-    for (int i = 0; i < decadalPointList.size(); i++)
+    craddockSeries.clear();
+    float myMinValue = NODATA;
+    float myMaxValue = NODATA;
+    for (int refIndex = 0; refIndex<refNames.size(); refIndex++)
     {
-        climaDecadal->append(decadalPointList[i]);
-        if(decadalPointList[i].y() != NODATA)
+        QLineSeries* refSeries = new QLineSeries();
+        refSeries->setName(refNames[refIndex]);
+        refSeries->append(myFirstYear - 1,0);
+        for (int myYear = 0; myYear < outputValues[refIndex].size(); myYear++)
         {
-            if (decadalPointList[i].y() > maxValue)
+            float myValue = outputValues[refIndex][myYear];
+            int year = myFirstYear + myYear;
+            if (myValue != NODATA)
             {
-                maxValue = decadalPointList[i].y();
+                if ((myMinValue == NODATA) || (myValue < myMinValue))
+                {
+                    myMinValue = myValue;
+                }
+                if ((myMaxValue == NODATA) || (myValue > myMaxValue))
+                {
+                    myMaxValue = myValue;
+                }
+                refSeries->append(year,myValue);
             }
-            if (decadalPointList[i].y() < minValue)
+            else
             {
-                minValue = decadalPointList[i].y();
+                refSeries->append(year,NODATA);
             }
         }
+        craddockSeries.push_back(refSeries);
     }
-
-    for (int i = 0; i < monthlyPointList.size(); i++)
+    float myThreshold;
+    if (myVar == dailyPrecipitation)
     {
-        climaMonthly->append(monthlyPointList[i]);
-        if(monthlyPointList[i].y() != NODATA)
-        {
-            if (monthlyPointList[i].y() > maxValue)
-            {
-                maxValue = monthlyPointList[i].y();
-            }
-            if (monthlyPointList[i].y() < minValue)
-            {
-                minValue = monthlyPointList[i].y();
-            }
-        }
+        myThreshold = averageValue * (myLastYear - myFirstYear) / 25;
+        axisY->setTitleText("[mm]");
+
     }
-    axisY->setMax(maxValue);
-    axisY->setMin(minValue);
-    axisXvalue->setRange(1, 366);
-    axisXvalue->setTickCount(20);
-    axisXvalue->setLabelFormat("%d");
+    else if (myVar == dailyAirTemperatureAvg || myVar == dailyAirTemperatureRange)
+    {
+        myThreshold = averageValue * (myLastYear - myFirstYear) / 50;
+        axisY->setTitleText("[°C]");
+    }
+    axisY->setMax(std::max(myThreshold, myMaxValue));
+    axisY->setMin(std::min(-myThreshold, myMinValue));
+    axisX->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
+    axisX->setTitleText("years");
+    axisX->setRange(myFirstYear-1, myLastYear);
+    if (myLastYear-myFirstYear+2 <= 15)
+    {
+        axisX->setTickCount(myLastYear-myFirstYear+2);
+    }
+    else
+    {
+        axisX->setTickCount(15);
+    }
+    for (int i = 0; i<craddockSeries.size(); i++)
+    {
+        chart()->addSeries(craddockSeries[i]);
+        craddockSeries[i]->attachAxis(axisX);
+        craddockSeries[i]->attachAxis(axisY);
+        connect(craddockSeries[i], &QScatterSeries::hovered, this, &HomogeneityChartView::tooltipCraddockSeries);
+    }
 
-    chart()->addSeries(climaDaily);
-    chart()->addSeries(climaDecadal);
-    chart()->addSeries(climaMonthly);
-    climaDaily->attachAxis(axisXvalue);
-    climaDaily->attachAxis(axisY);
-    climaDecadal->attachAxis(axisXvalue);
-    climaDecadal->attachAxis(axisY);
-    climaMonthly->attachAxis(axisXvalue);
-    climaMonthly->attachAxis(axisY);
-    connect(climaDaily, &QLineSeries::hovered, this, &HomogeneityChartView::tooltipClimaSeries);
-    connect(climaDecadal, &QLineSeries::hovered, this, &HomogeneityChartView::tooltipClimaSeries);
-    connect(climaMonthly, &QLineSeries::hovered, this, &HomogeneityChartView::tooltipClimaSeries);
 }
 
-void HomogeneityChartView::drawDistribution(std::vector<float> barValues, QList<QPointF> lineValues, int minValue, int maxValue, int classWidthValue)
+void HomogeneityChartView::clearSNHTSeries()
 {
-
-    if (chart()->series().size() > 0)
+    if (chart()->series().contains(tValues))
     {
-        cleanClimaSeries();
-        cleanDistribution();
-        cleanTrendSeries();
+        chart()->removeSeries(tValues);
+        tValues->clear();
     }
-    chart()->legend()->setVisible(false);
-    categories.clear();
-    widthValue = classWidthValue;
-
-
-    QBarSet *distributionSet = new QBarSet("Distribution");
-    distributionSet->setColor(Qt::red);
-    distributionSet->setBorderColor(Qt::red);
-
-    float maxValueY = NODATA;
-    float minValueY = -NODATA;
-
-    for (int i = 0; i<barValues.size(); i++)
+    if (chart()->series().contains(SNHT_T95Values))
     {
-        categories.append(QString::number(i));
-        *distributionSet << barValues[i];
-        if(barValues[i] != NODATA)
-        {
-            if (barValues[i] > maxValueY)
-            {
-                maxValueY = barValues[i];
-            }
-            if (barValues[i] < minValueY)
-            {
-                minValueY = barValues[i];
-            }
-        }
-    }
-
-    for (int i = 0; i<lineValues.size(); i++)
-    {
-        distributionLine->append(lineValues[i]);
-        if(lineValues[i].y() != NODATA)
-        {
-            if (lineValues[i].y() > maxValueY)
-            {
-                maxValueY = lineValues[i].y();
-            }
-            if (lineValues[i].y() < minValueY)
-            {
-                minValueY = lineValues[i].y();
-            }
-        }
-    }
-
-    distributionBar->append(distributionSet);
-    axisY->setMax(maxValueY);
-    axisY->setMin(minValueY);
-    axisY->setLabelFormat("%.3f");
-    axisXvalue->setRange(minValue, maxValue);
-    axisX->setCategories(categories);
-
-    chart()->addSeries(distributionBar);
-    chart()->addSeries(distributionLine);
-
-    distributionLine->attachAxis(axisXvalue);
-
-    distributionBar->attachAxis(axisX);
-    distributionBar->attachAxis(axisY);
-
-    connect(distributionLine, &QLineSeries::hovered, this, &HomogeneityChartView::tooltipDistributionSeries);
-    connect(distributionBar, &QBarSeries::hovered, this, &HomogeneityChartView::tooltipBar);
-
-}
-
-void HomogeneityChartView::cleanDistribution()
-{
-    if (chart()->series().contains(distributionLine))
-    {
-        chart()->removeSeries(distributionLine);
-        distributionLine->clear();
-    }
-    if (chart()->series().contains(distributionBar))
-    {
-        chart()->removeSeries(distributionBar);
-        distributionBar->clear();
+        chart()->removeSeries(SNHT_T95Values);
+        SNHT_T95Values->clear();
     }
 }
 
-void HomogeneityChartView::tooltipTrendSeries(QPointF point, bool state)
+void HomogeneityChartView::tooltipSNHTSeries(QPointF point, bool state)
 {
 
     auto serie = qobject_cast<QScatterSeries *>(sender());
@@ -329,7 +233,7 @@ void HomogeneityChartView::tooltipTrendSeries(QPointF point, bool state)
     }
 }
 
-void HomogeneityChartView::tooltipClimaSeries(QPointF point, bool state)
+void HomogeneityChartView::tooltipCraddockSeries(QPointF point, bool state)
 {
 
     auto serie = qobject_cast<QLineSeries *>(sender());
@@ -338,7 +242,7 @@ void HomogeneityChartView::tooltipClimaSeries(QPointF point, bool state)
         int xValue = point.x();
         double yValue = point.y();
 
-        m_tooltip->setText(QString("dOY %1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
+        m_tooltip->setText(QString("year %1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
@@ -351,105 +255,19 @@ void HomogeneityChartView::tooltipClimaSeries(QPointF point, bool state)
     }
 }
 
-void HomogeneityChartView::tooltipDistributionSeries(QPointF point, bool state)
+QList<QPointF> HomogeneityChartView::exportSNHTValues()
 {
+    return tValues->points();
+}
 
-    auto serie = qobject_cast<QLineSeries *>(sender());
-    if (state)
+QList<QList<QPointF>> HomogeneityChartView::exportCraddockValues(QList<QString> &refNames)
+{
+    QList<QList<QPointF>> pointsAllSeries;
+    for (int i = 0; i<craddockSeries.size(); i++)
     {
-        double xValue = point.x();
-        double yValue = point.y();
-
-        m_tooltip->setText(QString("%1,%2").arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
-        m_tooltip->setSeries(serie);
-        m_tooltip->setAnchor(point);
-        m_tooltip->setZValue(11);
-        m_tooltip->updateGeometry();
-        m_tooltip->show();
+        QList<QPointF> pointsSerie = craddockSeries[i]->points();
+        refNames.push_back(craddockSeries[i]->name());
+        pointsAllSeries.push_back(pointsSerie);
     }
-    else
-    {
-        m_tooltip->hide();
-    }
+    return pointsAllSeries;
 }
-
-void HomogeneityChartView::tooltipBar(bool state, int index, QBarSet *barset)
-{
-
-    QBarSeries *series = qobject_cast<QBarSeries *>(sender());
-
-    if (state && barset!=nullptr && index < barset->count())
-    {
-
-        QPoint CursorPoint = QCursor::pos();
-        QPoint mapPoint = mapFromGlobal(CursorPoint);
-        QPointF pointF = this->chart()->mapToValue(mapPoint,series);
-        float xStart = axisXvalue->min() + (index*widthValue);
-        float xEnd = axisXvalue->min() + ((index+1)*widthValue);
-
-
-        // check if bar is hiding QlineSeries
-        if (  static_cast<int>( distributionLine->at(pointF.toPoint().x()).y() ) == pointF.toPoint().y())
-        {
-            tooltipDistributionSeries(pointF, true);
-        }
-
-        QString valueStr = QString("[%1:%2] frequency %3").arg(xStart, 0, 'f', 1).arg(xEnd, 0, 'f', 1).arg(barset->at(index), 0, 'f', 3);
-        m_tooltip->setSeries(series);
-        m_tooltip->setText(valueStr);
-        m_tooltip->setAnchor(pointF);
-        m_tooltip->setZValue(11);
-        m_tooltip->updateGeometry();
-        m_tooltip->show();
-
-    }
-    else
-    {
-        m_tooltip->hide();
-    }
-}
-
-QList<QPointF> HomogeneityChartView::exportTrend()
-{
-    return trend->points();
-}
-
-QList<QPointF> HomogeneityChartView::exportClimaDaily()
-{
-    return climaDaily->points();
-}
-
-QList<QPointF> HomogeneityChartView::exportClimaDecadal()
-{
-    return climaDecadal->points();
-}
-
-QList<QPointF> HomogeneityChartView::exportClimaMonthly()
-{
-    return climaMonthly->points();
-}
-
-QList< QList<float> > HomogeneityChartView::exportDistribution()
-{
-    QList< QList<float> > barValues;
-    QList<QBarSet *> barSet = distributionBar->barSets();
-    QList<float> tuple;
-    float xStart;
-    float xEnd;
-
-    if (barSet.size() != 0)
-    {
-        for (int i = 0; i<barSet[0]->count(); i++)
-        {
-            tuple.clear();
-            xStart = axisXvalue->min() + (i*widthValue);
-            xEnd = axisXvalue->min() + ((i+1)*widthValue);
-            tuple.append(xStart);
-            tuple.append(xEnd);
-            tuple.append(barSet[0]->at(i));
-            barValues.append(tuple);
-        }
-    }
-    return barValues;
-}
-*/
