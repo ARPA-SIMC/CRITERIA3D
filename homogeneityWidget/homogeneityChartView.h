@@ -22,6 +22,7 @@ public:
     void drawSNHT(std::vector<int> years, std::vector<float> tvalues, QList<QPointF> t95Points);
     void drawCraddock(int myFirstYear, int myLastYear, std::vector<std::vector<float>> outputValues, std::vector<QString> refNames, meteoVariable myVar, double averageValue);
     void clearSNHTSeries();
+    void clearCraddockSeries();
     void tooltipSNHTSeries(QPointF point, bool state);
     void tooltipCraddockSeries(QPointF point, bool state);
     QList<QPointF> exportSNHTValues();

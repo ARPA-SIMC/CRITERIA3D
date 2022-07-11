@@ -540,6 +540,7 @@ void Crit3DHomogeneityWidget::changeVar(const QString varName)
     annualSeriesChartView->setYTitle(QString::fromStdString(getUnitFromVariable(myVar)));
     execute.setEnabled(false);
     homogeneityChartView->clearSNHTSeries();
+    homogeneityChartView->clearCraddockSeries();
     plotAnnualSeries();
 }
 
@@ -551,12 +552,14 @@ void Crit3DHomogeneityWidget::changeYears()
     resultLabel.clear();
     execute.setEnabled(false);
     homogeneityChartView->clearSNHTSeries();
+    homogeneityChartView->clearCraddockSeries();
     plotAnnualSeries();
 }
 
 void Crit3DHomogeneityWidget::changeMethod(const QString methodName)
 {
     homogeneityChartView->clearSNHTSeries();
+    homogeneityChartView->clearCraddockSeries();
     resultLabel.clear();
     if (execute.isEnabled())
     {
