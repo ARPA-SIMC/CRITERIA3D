@@ -1260,6 +1260,12 @@ QString Crit3DMeteoPointsDbHandler::getNewDataEntry(int pos, const QList<QString
 }
 
 
+/*!
+    \name importHourlyMeteoData
+    \brief import hourly meteo data from .csv files
+    \details fixed format:
+    DATE(yyyy-mm-dd), HOUR, TAVG, PREC, RHAVG, RAD, W_SCAL_INT
+*/
 bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool deletePreviousData, QString* log)
 {
     QString fileName = getFileName(csvFileName);
@@ -1291,7 +1297,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
     else
     {
         // skip first row (header)
-        QList<QString> header = myStream.readLine().split(',');
+        QString header = myStream.readLine();
     }
 
     // create table
