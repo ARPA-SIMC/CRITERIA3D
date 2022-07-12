@@ -83,6 +83,7 @@ void AnnualSeriesChartView::clearSeries()
     if (chart()->series().size() > 0)
     {
         chart()->removeSeries(annualSeries);
+        annualSeries->clear();
     }
 }
 
@@ -121,4 +122,9 @@ void AnnualSeriesChartView::tooltipAnnualSeries(QPointF point, bool state)
     {
         m_tooltip->hide();
     }
+}
+
+QList<QPointF> AnnualSeriesChartView::exportAnnualValues()
+{
+    return annualSeries->points();
 }
