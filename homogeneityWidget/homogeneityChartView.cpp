@@ -119,18 +119,8 @@ void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> o
 
 void HomogeneityChartView::drawCraddock(int myFirstYear, int myLastYear, std::vector<std::vector<float>> outputValues, std::vector<QString> refNames, meteoVariable myVar, double averageValue)
 {
-    if (chart()->series().size() > 0)
-    {
-        for(int i = 0; i<craddockSeries.size(); i++)
-        {
-            if (chart()->series().contains(craddockSeries[i]))
-            {
-                chart()->removeSeries(craddockSeries[i]);
-                craddockSeries[i]->clear();
-            }
-        }
-    }
-    craddockSeries.clear();
+
+    clearCraddockSeries();
     float myMinValue = NODATA;
     float myMaxValue = NODATA;
     for (int refIndex = 0; refIndex<refNames.size(); refIndex++)
@@ -209,6 +199,22 @@ void HomogeneityChartView::clearSNHTSeries()
         chart()->removeSeries(SNHT_T95Values);
         SNHT_T95Values->clear();
     }
+}
+
+void HomogeneityChartView::clearCraddockSeries()
+{
+    if (chart()->series().size() > 0)
+    {
+        for(int i = 0; i<craddockSeries.size(); i++)
+        {
+            if (chart()->series().contains(craddockSeries[i]))
+            {
+                chart()->removeSeries(craddockSeries[i]);
+                craddockSeries[i]->clear();
+            }
+        }
+    }
+    craddockSeries.clear();
 }
 
 void HomogeneityChartView::tooltipSNHTSeries(QPointF point, bool state)

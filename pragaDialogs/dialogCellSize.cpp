@@ -1,6 +1,6 @@
 #include "dialogCellSize.h"
 
-DialogCellSize::DialogCellSize()
+DialogCellSize::DialogCellSize(int defaultCellSize)
 {
 
     this->setWindowTitle("Insert Cell size");
@@ -13,6 +13,7 @@ DialogCellSize::DialogCellSize()
     QLabel cellSizeLabel("Cell size:");
     cellSizeLabel.setBuddy(&cellSizeEdit);
     cellSizeEdit.setValidator(new QDoubleValidator(0.0, 9999.0,1));
+    cellSizeEdit.setText(QString::number(defaultCellSize));
 
     cellSizeLayout->addWidget(&cellSizeLabel);
     cellSizeLayout->addWidget(&cellSizeEdit);

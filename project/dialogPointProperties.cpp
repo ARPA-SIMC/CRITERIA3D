@@ -17,8 +17,8 @@ DialogPointProperties::DialogPointProperties(QList<QString> pragaProperties, QLi
     csvList = new QListWidget;
     joinedList = new QListWidget;
 
-    QLabel *Praga = new QLabel("PRAGA");
-    QLabel *csv = new QLabel("Settings file");
+    QLabel *internal = new QLabel("Internal properties");
+    QLabel *csv = new QLabel("csv properties");
 
     joinButton = new QPushButton(tr("Join"));
     deleteButton = new QPushButton(tr("Delete"));
@@ -34,7 +34,7 @@ DialogPointProperties::DialogPointProperties(QList<QString> pragaProperties, QLi
     displayLayout->addWidget(joinedList);
     displayLayout->addWidget(deleteButton);
 
-    headerLayout->addWidget(Praga, Qt::AlignCenter);
+    headerLayout->addWidget(internal, Qt::AlignCenter);
     headerLayout->addSpacing(propertiesList->width());
     headerLayout->addWidget(csv, Qt::AlignCenter);
 
@@ -78,6 +78,7 @@ void DialogPointProperties::csvClicked(QListWidgetItem* item)
 
 void DialogPointProperties::joinedClicked(QListWidgetItem* item)
 {
+    Q_UNUSED(item)
     deleteButton->setEnabled(true);
 }
 
@@ -153,24 +154,24 @@ void DialogPointProperties::done(bool res)
         }
         if (unusedProperties.contains("id_point"))
         {
-            QMessageBox::information(nullptr, "Missing id_point", "Join id_point");
+            QMessageBox::information(nullptr, "Missing id_point", "Join id_point fields");
             return;
         }
         if (unusedProperties.contains("name"))
         {
-            QMessageBox::information(nullptr, "Missing name", "Join name");
+            QMessageBox::information(nullptr, "Missing name", "Join name fields");
             return;
         }
         if (unusedProperties.contains("altitude"))
         {
-            QMessageBox::information(nullptr, "Missing altitude", "Join altitude");
+            QMessageBox::information(nullptr, "Missing altitude", "Join altitude fields");
             return;
         }
         if (unusedProperties.contains("latitude") || unusedProperties.contains("longitude"))
         {
             if (unusedProperties.contains("utm_x") || unusedProperties.contains("utm_y"))
             {
-                QMessageBox::information(nullptr, "Missing geographical coordinate", "Join coordinate");
+                QMessageBox::information(nullptr, "", "Missing geographical coordinates");
                 return;
             }
         }
