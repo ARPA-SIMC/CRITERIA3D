@@ -11,7 +11,7 @@ private:
     QLineEdit cellSizeEdit;
 
 public:
-    DialogCellSize();
+    DialogCellSize(int defaultCellSize);
     ~DialogCellSize();
     void done(bool res);
     double getCellSize() const;
