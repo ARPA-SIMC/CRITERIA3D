@@ -157,7 +157,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
                             horizon.organicMatter, horizon.texture.clay * 0.01);
         if (result != CRIT3D_OK)
         {
-            error = "Error in setSoilProperties, horizon nr: " + std::to_string(horizonIndex);
+            error = "Error in setSoilProperties, horizon nr: " + std::to_string(horizonIndex + 1);
             return false;
         }
     }
