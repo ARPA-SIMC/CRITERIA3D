@@ -3423,7 +3423,7 @@ int Project::computeCellSizeFromMeteoGrid()
 
     cellSize /= 10;
     // round cellSize
-    int nTimes = int(ceil(log10(cellSize)));
+    int nTimes = int(floor(log10(cellSize)));
     int roundValue = int(round(cellSize / pow(10, nTimes)));
     cellSize = roundValue * int(pow(10, nTimes));
 
