@@ -56,7 +56,7 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
         cleanDistribution();
         cleanTrendSeries();
     }
-    chart()->legend()->setVisible(true);
+    chart()->legend()->setVisible(false);
 
     float maxValue = NODATA;
     float minValue = -NODATA;
@@ -88,13 +88,13 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
         axisY->setMin(minValue-3);
     }
     axisXvalue->setRange(years[0], years[years.size()-1]);
-    if (years.size() <= 30)
+    if (years.size() <= 20)
     {
         axisXvalue->setTickCount(years.size());
     }
     else
     {
-        axisXvalue->setTickCount(30);
+        axisXvalue->setTickCount(20);
     }
     axisXvalue->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
@@ -195,7 +195,7 @@ void PointStatisticsChartView::drawClima(QList<QPointF> dailyPointList, QList<QP
     axisY->setMax(maxValue);
     axisY->setMin(minValue);
     axisXvalue->setRange(1, 366);
-    axisXvalue->setTickCount(20);
+    axisXvalue->setTickCount(28);
     axisXvalue->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
 

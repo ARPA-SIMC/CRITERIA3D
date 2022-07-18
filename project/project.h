@@ -270,7 +270,7 @@
         bool loadOutputPointList(QString fileName);
         bool writeOutputPointList(QString fileName);
         bool exportMeteoGridToESRI(QString fileName, double cellSize);
-        int computeCellSize();
+        int computeCellSizeFromMeteoGrid();
 
         void setComputeOnlyPoints(bool isOnlyPoints);
         bool getComputeOnlyPoints();

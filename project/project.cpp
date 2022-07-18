@@ -3409,28 +3409,26 @@ bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
     return false;
 }
 
-int Project::computeCellSize()
+
+int Project::computeCellSizeFromMeteoGrid()
 {
-    int cellSize;
-    if (!meteoGridDbHandler->gridStructure().isUTM())
+    if (meteoGridDbHandler->gridStructure().isUTM())
     {
-        // lat lon grid
-        gis::Crit3DGridHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
-        cellSize = gis::getGeoCellSizeFromLatLonHeader(gisSettings, &latlonHeader);
+        return meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header->cellSize;
     }
-    else
-    {
-        cellSize = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header->cellSize;
-    }
-    cellSize = cellSize / 10;
+
+    // lat lon grid
+    gis::Crit3DGridHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
+    int cellSize = gis::getGeoCellSizeFromLatLonHeader(gisSettings, &latlonHeader);
+
+    cellSize /= 10;
     // round cellSize
-    int nTimes = log10(cellSize);
-    int roundValue = round(cellSize / pow(10,nTimes));
-    cellSize = roundValue * pow(10,nTimes);
+    int nTimes = int(floor(log10(cellSize)));
+    int roundValue = int(round(cellSize / pow(10, nTimes)));
+    cellSize = roundValue * int(pow(10, nTimes));
+
     return cellSize;
 }
-
-
 
 
 /* ---------------------------------------------
