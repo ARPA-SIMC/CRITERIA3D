@@ -3410,6 +3410,25 @@ bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
 }
 
 
+int Project::computeCellSizeFromMeteoGrid()
+{
+    if (meteoGridDbHandler->gridStructure().isUTM())
+    {
+        return meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header->cellSize;
+    }
+
+    // lat lon grid
+    gis::Crit3DGridHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
+    int cellSize = gis::getGeoCellSizeFromLatLonHeader(gisSettings, &latlonHeader);
+
+    cellSize /= 10;
+    // round cellSize
+    int nTimes = int(floor(log10(cellSize)));
+    int roundValue = int(round(cellSize / pow(10, nTimes)));
+    cellSize = roundValue * int(pow(10, nTimes));
+
+    return cellSize;
+}
 
 
 /* ---------------------------------------------

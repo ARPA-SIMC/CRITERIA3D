@@ -346,5 +346,34 @@ namespace gis
         return true;
     }
 
+    double getGeoCellSizeFromLatLonHeader(const Crit3DGisSettings& mySettings, Crit3DGridHeader *latLonHeader)
+    {
+        Crit3DUtmPoint v[4];
+
+        // compute vertexes
+        gis::Crit3DGeoPoint geoPoint;
+
+        // LL
+        geoPoint.latitude = latLonHeader->llCorner.latitude;
+        geoPoint.longitude = latLonHeader->llCorner.longitude;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[0]);
+
+        // LR
+        geoPoint.longitude = latLonHeader->llCorner.longitude + latLonHeader->nrCols * latLonHeader->dx;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[1]);
+
+        // UR
+        geoPoint.latitude = latLonHeader->llCorner.latitude + latLonHeader->nrRows * latLonHeader->dy;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
+
+        // UL
+        geoPoint.longitude = latLonHeader->llCorner.longitude;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[3]);
+
+        double xCellSize = (v[1].x-v[0].x)/latLonHeader->nrCols;
+        double yCellSize = (v[3].y-v[0].y)/latLonHeader->nrRows;
+
+        return min(xCellSize,yCellSize);
+    }
 
 }

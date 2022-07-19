@@ -210,6 +210,54 @@ class Crit3DCarbonNitrogen
 #endif // CARBON_H
 /*
  *
+void N_initializeCrop(bool noReset)
+{
+    N_cropToHarvest = 0;
+    N_cropToResidues = 0;
+
+    if (!noReset)
+        N_roots = 0;
+    // da leggere da database
+    N_uptakable = tbColture("Nasportabile") / 10;   //      da [kg ha-1] a [g m-2]
+    N_uptakeDeficit = 0;
+    N_uptakeMax = 0;
+    N_potentialDemandCumulated = 0;
+    ReDim N_deficit_daily(Nitrogen.N_deficit_max_days)
+
+    Select Case TipoColtura
+        Case "arborea", "arborea_inerbita", "fruit_tree", "fruit_tree_with_grass"
+        {
+            // 2001 Rufat Dejong Fig. 4 e Tagliavini
+            N_ratioHarvested = 0.4;      // fruits, pruning wood
+            N_ratioResidues = 0.5;       // leaves
+            N_ratioRoots = 0.1;           // roots, trunk, branches
+
+
+        }
+        else if  Case "erbacea_poliennale", "herbaceous_perennial", "prativa", "grass", "incolto", "fallow", "prativa_primoanno", "grass_firstyear"
+        {
+            N_ratioHarvested = 0.9;
+            N_ratioResidues = 0;
+            N_ratioRoots = 0.1;
+        }
+        else
+        {
+            // colture annuali
+            N_ratioHarvested = 0.9;
+            N_ratioResidues = 0;
+            N_ratioRoots = 0.1;
+        }
+
+    //in prima approssimazione calcolato da N massimo asportabile per ciclo
+    //(parte asportabile e non asportabile) e LAIMAX
+    //2013.10 GA
+    //scambio mail con Ass.Agr.:
+    //
+    MaxRate_LAI_Ndemand = (N_uptakable - N_roots) / LAIMAX ;
+
+}
+
+
 void N_harvest() // public function
 {
         // 2013.06 GA translated in C++ by AV 2022.06
