@@ -86,7 +86,11 @@ void StationMarker::setToolTip()
     double value = currentValue();
     if (! isEqual(value, NODATA))
     {
-        QString valueStr = QString::number(value, 'f', 1);
+        QString valueStr;
+        if (fabs(value) <= 1)
+            valueStr = QString::number(value, 'f', 2);
+        else
+            valueStr = QString::number(value, 'f', 1);
 
         QString myQuality = "";
         if (_quality == quality::wrong_syntactic)
