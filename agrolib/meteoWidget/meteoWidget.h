@@ -17,6 +17,7 @@
             ~Crit3DMeteoWidget() override;
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
+            void setCurrentDate(QDate myDate);
             void setDateInterval(QDate date0, QDate date1);
             void draw(Crit3DMeteoPoint mp, bool isAppend);
             void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
@@ -91,6 +92,7 @@
             QDate lastDailyDate;
             QDate firstHourlyDate;
             QDate lastHourlyDate;
+            QDate currentDate;
             bool isLine;
             bool isBar;
             Callout *m_tooltip;

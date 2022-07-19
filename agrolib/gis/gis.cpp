@@ -407,26 +407,6 @@ namespace gis
     }
 
 
-    void checkRange(float& minimum, float& maximum)
-    {
-        if (isEqual(maximum, 0) && isEqual(maximum, 0))
-        {
-            maximum = 0.01f;
-            return;
-        }
-
-        float avg = (maximum + minimum) * 0.5f;
-        float minRange = std::max(0.01f, float(fabs(avg)) * 0.01f);
-
-        if ((maximum - minimum) < minRange)
-        {
-            minimum = avg - minRange * 0.5f;
-            maximum = avg + minRange * 0.5f;
-            return;
-        }
-    }
-
-
     bool updateMinMaxRasterGrid(Crit3DRasterGrid* myGrid)
     {
         float myValue;
@@ -460,7 +440,6 @@ namespace gis
         myGrid->maximum = maximum;
         myGrid->minimum = minimum;
 
-        checkRange(minimum, maximum);
         myGrid->colorScale->setRange(minimum, maximum);
 
         return true;
@@ -512,7 +491,6 @@ namespace gis
             return false;
         }
 
-        checkRange(minimum, maximum);
         myGrid->colorScale->setRange(minimum, maximum);
 
         return true;

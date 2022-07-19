@@ -188,7 +188,6 @@
         double computeDistancePoint(Crit3DUtmPoint* p0, Crit3DUtmPoint *p1);
         bool updateMinMaxRasterGrid(Crit3DRasterGrid* myGrid);
         bool updateColorScale(Crit3DRasterGrid* myGrid, int row0, int col0, int row1, int col1);
-        void checkRange(float& minimum, float& maximum);
 
         void getRowColFromXY(const Crit3DRasterGrid &myGrid, double myX, double myY, int* row, int* col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, double myX, double myY, int *row, int *col);
