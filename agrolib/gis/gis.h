@@ -246,6 +246,7 @@
         bool getGeoExtentsFromUTMHeader(const Crit3DGisSettings& mySettings,
                                         Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
         bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
+        double getGeoCellSizeFromLatLonHeader(const Crit3DGisSettings& mySettings, Crit3DGridHeader *latLonHeader);
 
         float topographicDistance(float x1, float y1, float z1, float x2, float y2, float z2, float distance,
                                   const gis::Crit3DRasterGrid& myDEM);
