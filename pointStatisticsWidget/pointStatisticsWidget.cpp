@@ -631,6 +631,35 @@ void Crit3DPointStatisticsWidget::plot()
             double sum = 0;
             int count = 0;
             int validData = 0;
+            int yearsLength = lastYear - firstYear;
+            int nYearsToAdd;
+            if (yearsLength > 20)
+            {
+                for (int inc = 0; inc<=3; inc++)
+                {
+                    if ( (yearsLength+inc) % 2 == 0 &&  (yearsLength+inc)/2 <= 20)
+                    {
+                        nYearsToAdd = inc;
+                        break;
+                    }
+                    if ( (yearsLength+inc) % 3 == 0 &&  (yearsLength+inc)/3 <= 20)
+                    {
+                        nYearsToAdd = inc;
+                        break;
+                    }
+                    if ( (yearsLength+inc) % 4 == 0 &&  (yearsLength+inc)/4 <= 20)
+                    {
+                        nYearsToAdd = inc;
+                        break;
+                    }
+                }
+                for (int i = nYearsToAdd; i> 0; i--)
+                {
+                    years.push_back(firstYear-i);
+                    outputValues.insert(outputValues.begin(),NODATA);
+                }
+
+            }
             for (int i = firstYear; i<=lastYear; i++)
             {
                 years.push_back(i);
@@ -796,6 +825,36 @@ void Crit3DPointStatisticsWidget::plot()
             float sum = 0;
             int count = 0;
             int validData = 0;
+
+            int yearsLength = lastYear - firstYear;
+            int nYearsToAdd;
+            if (yearsLength > 20)
+            {
+                for (int inc = 0; inc<=3; inc++)
+                {
+                    if ( (yearsLength+inc) % 2 == 0 &&  (yearsLength+inc)/2 <= 20)
+                    {
+                        nYearsToAdd = inc;
+                        break;
+                    }
+                    if ( (yearsLength+inc) % 3 == 0 &&  (yearsLength+inc)/3 <= 20)
+                    {
+                        nYearsToAdd = inc;
+                        break;
+                    }
+                    if ( (yearsLength+inc) % 4 == 0 &&  (yearsLength+inc)/4 <= 20)
+                    {
+                        nYearsToAdd = inc;
+                        break;
+                    }
+                }
+                for (int i = nYearsToAdd; i> 0; i--)
+                {
+                    years.push_back(firstYear-i);
+                    outputValues.insert(outputValues.begin(),NODATA);
+                }
+
+            }
             for (int i = firstYear; i<=lastYear; i++)
             {
                 years.push_back(i);
@@ -1564,6 +1623,35 @@ void Crit3DPointStatisticsWidget::showElaboration()
 
         float sum = 0;
         int count = 0;
+        int yearsLength = lastYear - firstYear;
+        int nYearsToAdd;
+        if (yearsLength > 20)
+        {
+            for (int inc = 0; inc<=3; inc++)
+            {
+                if ( (yearsLength+inc) % 2 == 0 &&  (yearsLength+inc)/2 <= 20)
+                {
+                    nYearsToAdd = inc;
+                    break;
+                }
+                if ( (yearsLength+inc) % 3 == 0 &&  (yearsLength+inc)/3 <= 20)
+                {
+                    nYearsToAdd = inc;
+                    break;
+                }
+                if ( (yearsLength+inc) % 4 == 0 &&  (yearsLength+inc)/4 <= 20)
+                {
+                    nYearsToAdd = inc;
+                    break;
+                }
+            }
+            for (int i = nYearsToAdd; i> 0; i--)
+            {
+                years.push_back(firstYear-i);
+                outputValues.insert(outputValues.begin(),NODATA);
+            }
+
+        }
         for (int i = firstYear; i<=lastYear; i++)
         {
             years.push_back(i);
