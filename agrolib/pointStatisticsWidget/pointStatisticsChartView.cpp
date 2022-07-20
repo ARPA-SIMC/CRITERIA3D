@@ -96,11 +96,12 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
     else
     {
         int div = 0;
-        for (int i = 2; i<nYears; i++)
+        for (int i = 2; i<=4; i++)
         {
-            if (nYears % i == 0 && nYears/i <= 20)
+            if ( (nYears-1) % i == 0 && (nYears-1)/i <= 20)
             {
                 div = i;
+                break;
             }
         }
         if (div == 0)
@@ -109,7 +110,7 @@ void PointStatisticsChartView::drawTrend(std::vector<int> years, std::vector<flo
         }
         else
         {
-            axisXvalue->setTickCount(nYears/div);
+            axisXvalue->setTickCount( (nYears-1)/div + 1);
         }
     }
     axisXvalue->setLabelFormat("%d");
