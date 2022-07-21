@@ -2838,7 +2838,9 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             meteoWidgetId = 0;
         }
         meteoWidgetGrid->setMeteoWidgetID(meteoWidgetId);
+        meteoWidgetGrid->setCurrentDate(this->currentDate);
         meteoWidgetGridList.append(meteoWidgetGrid);
+
         QObject::connect(meteoWidgetGrid, SIGNAL(closeWidgetGrid(int)), this, SLOT(deleteMeteoWidgetGrid(int)));
         logInfoGUI("Loading data...");
         if (meteoGridDbHandler->gridStructure().isEnsemble())
@@ -2883,7 +2885,6 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             if (meteoGridDbHandler->meteoGrid()->findMeteoPointFromId(&row,&col,idCell))
             {
                 meteoWidgetGrid->setDateInterval(firstDate, lastDate);
-                meteoWidgetGrid->setCurrentDate(this->currentDate);
                 meteoWidgetGrid->draw(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col), isAppend);
             }
         }
