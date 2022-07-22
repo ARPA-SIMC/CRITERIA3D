@@ -3,6 +3,7 @@
 #include "stationMarker.h"
 #include "qdebug.h"
 
+#include <math.h>
 #include <QMenu>
 
 StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent) :
