@@ -434,9 +434,9 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp, bool isAppend)
 
         lastDate->setDate(currentDate);
 
-        // draw period (60 days for daily, 3 days for hourly)
+        // draw period (31 days for daily, 3 days for hourly)
         if (currentFreq == daily)
-            firstDate->setDate(currentDate.addDays(-60));
+            firstDate->setDate(currentDate.addDays(-30));
         else if (currentFreq == hourly)
             firstDate->setDate(currentDate.addDays(-2));
 
@@ -491,9 +491,9 @@ void Crit3DMeteoWidget::drawEnsemble()
 
     lastDate->setDate(currentDate);
 
-    // draw period (60 days for daily, 3 days for hourly)
+    // draw period (31 days for daily, 3 days for hourly)
     if (currentFreq == daily)
-        firstDate->setDate(currentDate.addDays(-60));
+        firstDate->setDate(currentDate.addDays(-30));
     else if (currentFreq == hourly)
         firstDate->setDate(currentDate.addDays(-2));
 
