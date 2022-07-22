@@ -245,13 +245,25 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
     {
         // assign data
         for (int i = 0; i < nrMeteoPoints; i++)
+        {
             meteoPoints[i].currentValue = meteoPoints[i].elaboration;
+            if (int(meteoPoints[i].currentValue) != int(NODATA))
+                meteoPoints[i].quality = quality::accepted;
+            else
+                meteoPoints[i].quality = quality::missing_data;
+        }
     }
     else if (myVar == anomaly)
     {
         // assign data
         for (int i = 0; i < nrMeteoPoints; i++)
+        {
             meteoPoints[i].currentValue = meteoPoints[i].anomaly;
+            if (int(meteoPoints[i].currentValue) != int(NODATA))
+                meteoPoints[i].quality = quality::accepted;
+            else
+                meteoPoints[i].quality = quality::missing_data;
+        }
     }
     else
     {

@@ -19,7 +19,6 @@ using namespace std;
 bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
     Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, QDate startDate, QDate endDate, bool isAnomaly, Crit3DMeteoSettings* meteoSettings, bool dataAlreadyLoaded)
 {
-
     float percValue;
     float result;
 
@@ -1156,7 +1155,7 @@ float computeWinkler(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Crit3DD
     {
         index = difference(meteoPoint->obsDataD[0].date, presentDate);
         checkData = false;
-        if (index > 0 && index < meteoPoint->nrObsDataDaysD)
+        if (index >= 0 && index < meteoPoint->nrObsDataDaysD)
         {
 
             // TO DO nella versione vb il check prevede anche l'immissione del parametro height
@@ -1216,7 +1215,7 @@ float computeLastDayBelowThreshold(std::vector<float> &inputValues, Crit3DDate f
     for (int i = 0; i < numberOfDays; i++)
     {
         index = difference(firstDateDailyVar, presentDate);
-        if (index > 0 && index < inputValues.size())
+        if (index >= 0 && index < inputValues.size())
         {
             if (inputValues.at(index) != NODATA && inputValues.at(index) < param1)
             {
@@ -1252,7 +1251,7 @@ float computeHuglin(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Crit3DDa
     {
         index = difference(meteoPoint->obsDataD[0].date, presentDate);
         checkData = false;
-        if (index > 0 && index < meteoPoint->nrObsDataDaysD)
+        if (index >= 0 && index < meteoPoint->nrObsDataDaysD)
         {
 
             // TO DO nella versione vb il check prevede anche l'immissione del parametro height
@@ -1318,7 +1317,7 @@ float computeFregoni(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Crit3DD
     {
         index = difference(meteoPoint->obsDataD[0].date, presentDate);
         checkData = false;
-        if (index > 0 && index < meteoPoint->nrObsDataDaysD)
+        if (index >= 0 && index < meteoPoint->nrObsDataDaysD)
         {
 
             // TO DO nella versione vb il check prevede anche l'immissione del parametro height
@@ -1379,7 +1378,7 @@ float computeCorrectedSum(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Cr
     for (int i = 0; i < numberOfDays; i++)
     {
         checkData = false;
-        if (index > 0 && index < meteoPoint->nrObsDataDaysD)
+        if (index >= 0 && index < meteoPoint->nrObsDataDaysD)
         {
             // TO DO nella versione vb il check prevede anche l'immissione del parametro height
             quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, meteoPoint->obsDataD[index].tMin);
@@ -2303,7 +2302,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
                             {
                                 index = difference(meteoPoint->obsDataD[0].date, presentDate);
                             }
-                            if (index > 0 && index < inputValues.size())
+                            if (index >= 0 && index < inputValues.size())
                             {
                                 value = inputValues.at(index);
                             }
@@ -2322,8 +2321,12 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
                     }
                 }
 
-                if (nValidValues == 0)return NODATA;
-                if (float(nValidValues) / float(nValues) * 100.f < meteoSettings->getMinimumPercentage()) return NODATA;
+                if (nValidValues == 0)
+                    return NODATA;
+
+                float validPercentage = (float(nValidValues) / float(nValues)) * 100;
+                if (validPercentage < meteoSettings->getMinimumPercentage())
+                    return NODATA;
 
                 return statisticalElab(elab1, param1, values, nValidValues, meteoSettings->getRainfallThreshold());
             }
@@ -2413,7 +2416,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
                         else
                         {
                             index = difference(meteoPoint->obsDataD[0].date, presentDate);
-                            if (index > 0 && index < inputValues.size())
+                            if (index >= 0 && index < inputValues.size())
                             {
                                 value = inputValues.at(index);
                             }

@@ -254,7 +254,8 @@ bool Project::loadParameters(QString parametersFileName)
 
     if (! QFile(parametersFileName).exists() || ! QFileInfo(parametersFileName).isFile())
     {
-        logError("Missing parameters file: " + parametersFileName);
+        errorString = "Missing parameters file: " + parametersFileName;
+        errorString += "\nCheck project.path in " + projectSettings->fileName();
         return false;
     }
 
@@ -2352,15 +2353,24 @@ void Project::setCurrentFrequency(const frequencyType &value)
     }
 }
 
-void Project::saveProjectSettings()
+
+void Project::saveProjectLocation()
 {
     projectSettings->beginGroup("location");
     projectSettings->setValue("lat", gisSettings.startLocation.latitude);
     projectSettings->setValue("lon", gisSettings.startLocation.longitude);
-        projectSettings->setValue("utm_zone", gisSettings.utmZone);
-        projectSettings->setValue("time_zone", gisSettings.timeZone);
-        projectSettings->setValue("is_utc", gisSettings.isUTC);
+    projectSettings->setValue("utm_zone", gisSettings.utmZone);
+    projectSettings->setValue("time_zone", gisSettings.timeZone);
+    projectSettings->setValue("is_utc", gisSettings.isUTC);
     projectSettings->endGroup();
+
+    projectSettings->sync();
+}
+
+
+void Project::saveProjectSettings()
+{
+    saveProjectLocation();
 
     projectSettings->beginGroup("project");
         projectSettings->setValue("name", projectName);
@@ -2580,7 +2590,7 @@ bool Project::loadProject()
     if (! loadParameters(parametersFileName))
     {
         errorType = ERROR_SETTINGS;
-        errorString = "load parameters failed";
+        errorString = "load parameters failed:\n" + errorString;
         logError();
         return false;
     }
