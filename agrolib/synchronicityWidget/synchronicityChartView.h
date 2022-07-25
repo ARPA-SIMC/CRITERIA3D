@@ -1,5 +1,5 @@
-#ifndef HOMOGENEITYCHARTVIEW_H
-#define HOMOGENEITYCHARTVIEW_H
+#ifndef SYNCHRONICITYCHARTVIEW_H
+#define SYNCHRONICITYCHARTVIEW_H
 
 #include <QtCharts/QChartView>
 #include <QtCharts/QScatterSeries>
@@ -12,11 +12,11 @@
     QT_CHARTS_USE_NAMESPACE
 #endif
 
-class HomogeneityChartView : public QChartView
+class SynchronicityChartView : public QChartView
 {
     Q_OBJECT
 public:
-    explicit HomogeneityChartView(QWidget *parent = 0);
+    explicit SynchronicityChartView(QWidget *parent = 0);
     void setYmax(float value);
     void setYmin(float value);
     void drawSNHT(std::vector<int> years, std::vector<float> tvalues, QList<QPointF> t95Points);
@@ -29,7 +29,6 @@ public:
     QList<QList<QPointF>> exportCraddockValues(QList<QString> &refNames);
 
 private:
-    QScatterSeries* tValues;
     QLineSeries* SNHT_T95Values;
     QValueAxis* axisX;
     QValueAxis* axisY;
@@ -37,4 +36,4 @@ private:
     QList<QLineSeries*> craddockSeries;
 };
 
-#endif // HOMOGENEITYCHARTVIEW_H
+#endif // SYNCHRONICITYCHARTVIEW_H

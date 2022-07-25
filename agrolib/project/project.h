@@ -151,6 +151,7 @@
 
         void createProject(QString path_, QString name_, QString description);
         void saveProject();
+        void saveProjectLocation();
         void saveProjectSettings();
         void saveAllParameters();
         void saveGenericParameters();

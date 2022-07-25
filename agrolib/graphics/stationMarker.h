@@ -47,6 +47,8 @@
             void newPointStatisticsClicked(std::string, bool);
             void changeOrogCodeClicked(std::string, int);
             void newHomogeneityTestClicked(std::string);
+            void newSynchronicityTestClicked(std::string);
+            void setSynchronicityReferenceClicked(std::string);
 
     };
 

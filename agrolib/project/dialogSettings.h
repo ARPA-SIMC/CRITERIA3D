@@ -28,7 +28,6 @@
         QLineEdit timeZoneEdit;
         QCheckBox utc;
         QCheckBox localTime ;
-        QCheckBox loadGridData;
 
     private:
 
