@@ -69,10 +69,11 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     this->resize(1240, 700);
     this->setAttribute(Qt::WA_DeleteOnClose);
     currentFreq = noFrequency;
-    firstDailyDate = QDate::currentDate();
-    firstHourlyDate = QDate::currentDate();
-    lastDailyDate = QDate(1800,1,1);
-    lastHourlyDate = QDate(1800,1,1);
+    currentDate = QDate(1800,1,1);
+    firstDailyDate = currentDate;
+    firstHourlyDate = currentDate;
+    lastDailyDate = currentDate;
+    lastHourlyDate = currentDate;
 
     isLine = false;
     isBar = false;
@@ -266,8 +267,8 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     shiftFollowingButton = new QPushButton(tr(">"));
     QLabel *labelFirstDate = new QLabel(tr("Start Date: "));
     QLabel *labelEndDate = new QLabel(tr("End Date: "));
-    firstDate = new QDateTimeEdit(QDate::currentDate());
-    lastDate = new QDateTimeEdit(QDate::currentDate());
+    firstDate = new QDateTimeEdit(currentDate);
+    lastDate = new QDateTimeEdit(currentDate);
     dailyButton->setMaximumWidth(100);
     hourlyButton->setMaximumWidth(100);
     addVarButton->setMaximumWidth(100);
@@ -431,39 +432,13 @@ void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp, bool isAppend)
             }
         }
 
-        if (currentFreq == daily)
-        {
-            if (firstDailyDate == QDate::currentDate() && lastDailyDate == QDate(1800,1,1))
-            {
-                firstDate->setDate(QDate::currentDate());
-                lastDate->setDate(QDate::currentDate());
-            }
-            else
-            {
-                firstDate->setDate(firstDailyDate);
-                lastDate->setDate(lastDailyDate);
-            }
-        }
-        else if (currentFreq == hourly)
-        {
-            if (firstHourlyDate == QDate::currentDate() && lastHourlyDate == QDate(1800,1,1))
-            {
-                firstDate->setDate(QDate::currentDate());
-                lastDate->setDate(QDate::currentDate());
-            }
-            else
-            {
-                firstDate->setDate(firstHourlyDate);
-                lastDate->setDate(lastHourlyDate);
-            }
-        }
+        lastDate->setDate(currentDate);
 
-        // check draw period (max 30 days)
-        QDate minDate = lastDate->date().addDays(-30);
-        if (firstDate->date() < minDate)
-        {
-            firstDate->setDate(minDate);
-        }
+        // draw period (60 days for daily, 3 days for hourly)
+        if (currentFreq == daily)
+            firstDate->setDate(currentDate.addDays(-60));
+        else if (currentFreq == hourly)
+            firstDate->setDate(currentDate.addDays(-2));
 
         firstDate->blockSignals(false);
         lastDate->blockSignals(false);
@@ -514,39 +489,13 @@ void Crit3DMeteoWidget::drawEnsemble()
         lastHourlyDate = myHourlyDateLast;
     }
 
-    if (currentFreq == daily)
-    {
-        if (firstDailyDate == QDate::currentDate() && lastDailyDate == QDate(1800,1,1))
-        {
-            firstDate->setDate(QDate::currentDate());
-            lastDate->setDate(QDate::currentDate());
-        }
-        else
-        {
-            firstDate->setDate(firstDailyDate);
-            lastDate->setDate(lastDailyDate);
-        }
-    }
-    else if (currentFreq == hourly)
-    {
-        if (firstHourlyDate == QDate::currentDate() && lastHourlyDate == QDate(1800,1,1))
-        {
-            firstDate->setDate(QDate::currentDate());
-            lastDate->setDate(QDate::currentDate());
-        }
-        else
-        {
-            firstDate->setDate(firstHourlyDate);
-            lastDate->setDate(lastHourlyDate);
-        }
-    }
+    lastDate->setDate(currentDate);
 
-    // check draw period (max 30 days)
-    QDate minDate = lastDate->date().addDays(-30);
-    if (firstDate->date() < minDate)
-    {
-        firstDate->setDate(minDate);
-    }
+    // draw period (60 days for daily, 3 days for hourly)
+    if (currentFreq == daily)
+        firstDate->setDate(currentDate.addDays(-60));
+    else if (currentFreq == hourly)
+        firstDate->setDate(currentDate.addDays(-2));
 
     redraw();
 
@@ -2022,6 +1971,11 @@ int Crit3DMeteoWidget::getMeteoWidgetID() const
 void Crit3DMeteoWidget::setMeteoWidgetID(int value)
 {
     meteoWidgetID = value;
+}
+
+void Crit3DMeteoWidget::setCurrentDate(QDate myDate)
+{
+    currentDate = myDate;
 }
 
 void Crit3DMeteoWidget::on_actionChangeLeftAxis()
