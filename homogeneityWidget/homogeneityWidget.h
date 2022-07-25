@@ -7,7 +7,6 @@
     #include "annualSeriesChartView.h"
     #include "meteoPoint.h"
     #include "dbMeteoPointsHandler.h"
-    #include "dbMeteoGrid.h"
     #include "crit3dClimate.h"
     #include "interpolationSettings.h"
     #include "interpolationPoint.h"
