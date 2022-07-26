@@ -35,6 +35,8 @@
             std::string referencePointId;
             QDate firstDaily;
             QDate lastDaily;
+            QDate firstRefDaily;
+            QDate lastRefDaily;
             Crit3DMeteoSettings *meteoSettings;
             QSettings *settings;
             Crit3DClimateParameters *climateParameters;
