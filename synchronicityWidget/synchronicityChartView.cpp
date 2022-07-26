@@ -38,12 +38,8 @@ void SynchronicityChartView::setYmin(float value)
 }
 
 /*
-void SynchronicityChartView::drawSNHT(std::vector<int> years, std::vector<float> outputValues, QList<QPointF> t95Points)
+void SynchronicityChartView::drawGraphStation(std::vector<int> years, std::vector<float> outputValues)
 {
-    if (chart()->series().size() > 0)
-    {
-        clearSNHTSeries();
-    }
     chart()->legend()->setVisible(true);
     float maxValue = NODATA;
     float minValue = -NODATA;
@@ -51,7 +47,6 @@ void SynchronicityChartView::drawSNHT(std::vector<int> years, std::vector<float>
     {
         if (outputValues[i] != NODATA)
         {
-            tValues->append(QPointF(years[i], outputValues[i]));
             if (outputValues[i] > maxValue)
             {
                 maxValue = outputValues[i];
@@ -62,27 +57,10 @@ void SynchronicityChartView::drawSNHT(std::vector<int> years, std::vector<float>
             }
         }
     }
-    for (int i = 0; i < t95Points.size(); i++)
-    {
-        SNHT_T95Values->append(t95Points[i]);
-        if(t95Points[i].y() != NODATA)
-        {
-            if (t95Points[i].y() > maxValue)
-            {
-                maxValue = t95Points[i].y();
-            }
-            if (t95Points[i].y() < minValue)
-            {
-                minValue = t95Points[i].y();
-            }
-        }
-    }
     if (maxValue != minValue)
     {
-        double yRange = maxValue - minValue;
-        double deltaY = yRange/100;
-        axisY->setMax(maxValue+3*deltaY);
-        axisY->setMin(minValue-3*deltaY);
+        axisY->setMax(maxValue);
+        axisY->setMin(minValue);
     }
     else
     {
@@ -118,11 +96,8 @@ void SynchronicityChartView::drawSNHT(std::vector<int> years, std::vector<float>
     axisX->setLabelFormat("%d");
     axisY->setLabelFormat("%.1f");
     axisX->setTitleText("years");
-    axisY->setTitleText("T-value");
+    axisY->setTitleText("");
     chart()->addSeries(tValues);
-    chart()->addSeries(SNHT_T95Values);
-    SNHT_T95Values->attachAxis(axisX);
-    SNHT_T95Values->attachAxis(axisY);
     tValues->attachAxis(axisX);
     tValues->attachAxis(axisY);
     connect(tValues, &QScatterSeries::hovered, this, &SynchronicityChartView::tooltipSNHTSeries);
