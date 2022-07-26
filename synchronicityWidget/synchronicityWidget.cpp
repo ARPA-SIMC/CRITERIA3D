@@ -175,6 +175,7 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     connect(&stationYearFrom, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&stationYearTo, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&stationAddGraph, &QPushButton::clicked, [=](){ addGraph(); });
+    connect(&stationClearGraph, &QPushButton::clicked, [=](){ clearGraph(); });
     connect(changeSynchronicityLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftAxis);
 
     show();
@@ -341,7 +342,13 @@ void Crit3DSynchronicityWidget::addGraph()
         currentDate = currentDate.addDays(1);
     }
     // draw
+    synchronicityChartView->drawGraphStation(myStartDate.year(), myYearlySeries);
 
+}
+
+void Crit3DSynchronicityWidget::clearGraph()
+{
+    synchronicityChartView->clearStationGraphSeries();
 }
 
 void Crit3DSynchronicityWidget::on_actionChangeLeftAxis()

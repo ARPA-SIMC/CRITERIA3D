@@ -24,6 +24,7 @@
             void changeVar(const QString varName);
             void changeYears();      
             void addGraph();
+            void clearGraph();
             void setReferencePointId(const std::string &value);
             void on_actionChangeLeftAxis();
 
