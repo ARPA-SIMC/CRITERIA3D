@@ -40,12 +40,12 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint* mp,
+Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint mp, gis::Crit3DGisSettings gisSettings,
                                                          QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality)
-:meteoPointsDbHandler(meteoPointsDbHandler), mp(mp),firstDaily(firstDaily),
+:meteoPointsDbHandler(meteoPointsDbHandler), mp(mp),firstDaily(firstDaily), gisSettings(gisSettings),
   lastDaily(lastDaily), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality)
 {
-    this->setWindowTitle("Synchronicity analysis Id:"+QString::fromStdString(mp->id));
+    this->setWindowTitle("Synchronicity analysis Id:"+QString::fromStdString(mp.id));
     this->resize(1240, 700);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
@@ -68,7 +68,7 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     QHBoxLayout *interpolationButtonLayout = new QHBoxLayout;
     referencePointId = "";
 
-    QLabel *nameLabel = new QLabel(QString::fromStdString(mp->name));
+    QLabel *nameLabel = new QLabel(QString::fromStdString(mp.name));
     QLabel *variableLabel = new QLabel(tr("Variable: "));
     variable.addItem("DAILY_TMIN");
     variable.addItem("DAILY_TMAX");
@@ -210,6 +210,8 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
             stationAddGraph.setEnabled(false);
             return;
         }
+        QString errorString;
+        meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(value), &mpRef, gisSettings, errorString);
         //meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstRefDaily), getCrit3DDate(lastRefDaily), &mpRef);
         stationAddGraph.setEnabled(true);
     }
@@ -229,6 +231,7 @@ void Crit3DSynchronicityWidget::changeYears()
 
 void Crit3DSynchronicityWidget::addGraph()
 {
+
     if (referencePointId == "")
     {
         QMessageBox::information(nullptr, "Error", "Select a reference point on the map");
@@ -240,7 +243,7 @@ void Crit3DSynchronicityWidget::addGraph()
 
     std::vector<float> dailyValues;
     QString myError;
-    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, mp);
+    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, &mp);
     if (dailyValues.empty())
     {
         QMessageBox::information(nullptr, "Error", "No data for active station");
