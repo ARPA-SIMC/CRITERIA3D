@@ -31,6 +31,7 @@
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
             Crit3DClimate clima;
             Crit3DMeteoPoint* mp;
+            Crit3DMeteoPoint mpRef;
             std::string referencePointId;
             QDate firstDaily;
             QDate lastDaily;

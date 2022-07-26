@@ -193,8 +193,42 @@ void Crit3DSynchronicityWidget::closeEvent(QCloseEvent *event)
 
 void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
 {
-    referencePointId = value;
-    nameRefLabel.setText(QString::fromStdString(referencePointId));
+    if (referencePointId != value)
+    {
+        mpRef.cleanObsDataD();
+        mpRef.clear();
+        referencePointId = value;
+        nameRefLabel.setText(QString::fromStdString(referencePointId));
+        QDate firstRefDaily = meteoPointsDbHandler->getFirstDate(daily, value).date();
+        QDate lastRefDaily = meteoPointsDbHandler->getLastDate(daily, value).date();
+        bool hasDailyData = !(firstRefDaily.isNull() || lastRefDaily.isNull());
+
+        if (!hasDailyData)
+        {
+            QMessageBox::information(nullptr, "Error", "Reference point has not daiy data");
+            return;
+        }
+        QDate myFirst;
+        QDate myLast;
+        if (firstDaily < firstRefDaily)
+        {
+            myFirst = firstRefDaily;
+        }
+        else
+        {
+            myFirst = firstDaily;
+        }
+
+        if (lastDaily > lastRefDaily)
+        {
+            myLast = lastRefDaily;
+        }
+        else
+        {
+            myLast = lastDaily;
+        }
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(myFirst), getCrit3DDate(myLast), &mpRef);
+    }
 }
 
 
