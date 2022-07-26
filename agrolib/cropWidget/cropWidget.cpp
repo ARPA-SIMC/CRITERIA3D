@@ -2090,6 +2090,10 @@ void Crit3DCropWidget::on_actionViewWeather()
     }
 
     Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(myProject.isXmlMeteoGrid, myProject.path, &meteoSettings);
+
+    QDate lastDate = getQDate(myCase.meteoPoint.getLastDailyData());
+    meteoWidgetPoint->setCurrentDate(lastDate);
+
     meteoWidgetPoint->draw(myCase.meteoPoint, false);
 }
 
