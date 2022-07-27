@@ -19,7 +19,7 @@ public:
     explicit SynchronicityChartView(QWidget *parent = 0);
     void setYmax(float value);
     void setYmin(float value);
-    void drawGraphStation(int firstYear, std::vector<float> outputValues);
+    void drawGraphStation(QList<QPointF> pointList);
     void clearStationGraphSeries();
     void tooltipGraphStationSeries(QPointF point, bool state);
 

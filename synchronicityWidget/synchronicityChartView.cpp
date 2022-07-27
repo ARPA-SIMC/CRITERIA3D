@@ -33,27 +33,26 @@ void SynchronicityChartView::setYmin(float value)
 }
 
 
-void SynchronicityChartView::drawGraphStation(int firstYear, std::vector<float> outputValues)
+void SynchronicityChartView::drawGraphStation(QList<QPointF> pointList)
 {
-    chart()->legend()->setVisible(true);
+    chart()->legend()->setVisible(false);
 
     float maxValue = NODATA;
     float minValue = -NODATA;
     QLineSeries* graphSeries = new QLineSeries();
-    unsigned int nYears;
-    for (nYears = 0; nYears < outputValues.size(); nYears++)
+    for (unsigned int nYears = 0; nYears < pointList.size(); nYears++)
     {
-        if (outputValues[nYears] != NODATA)
+        if (pointList[nYears].y() != NODATA)
         {
-            if (outputValues[nYears] > maxValue)
+            if (pointList[nYears].y() > maxValue)
             {
-                maxValue = outputValues[nYears];
+                maxValue = pointList[nYears].y();
             }
-            if (outputValues[nYears] < minValue)
+            if (pointList[nYears].y() < minValue)
             {
-                minValue = outputValues[nYears];
+                minValue = pointList[nYears].y();
             }
-            graphSeries->append(firstYear+nYears,outputValues[nYears]);
+            graphSeries->append(pointList[nYears]);
         }
     }
     if (maxValue != minValue)
@@ -66,17 +65,17 @@ void SynchronicityChartView::drawGraphStation(int firstYear, std::vector<float> 
         axisY->setMax(maxValue+3);
         axisY->setMin(minValue-3);
     }
-    axisX->setRange(firstYear, firstYear+nYears);
-    if ( nYears+1 <= 15)
+    axisX->setRange(pointList[0].x(), pointList[pointList.size()-1].x());
+    if ( pointList[pointList.size()-1].x()-pointList[0].x()+1 <= 15)
     {
-        axisX->setTickCount(nYears+1);
+        axisX->setTickCount(pointList[pointList.size()-1].x()-pointList[0].x()+1);
     }
     else
     {
         axisX->setTickCount(15);
     }
     axisX->setLabelFormat("%d");
-    axisY->setLabelFormat("%.1f");
+    axisY->setLabelFormat("%.3f");
     axisX->setTitleText("years");
     axisY->setTitleText("r2");
     chart()->addSeries(graphSeries);

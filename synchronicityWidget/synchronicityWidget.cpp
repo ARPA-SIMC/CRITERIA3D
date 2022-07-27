@@ -199,7 +199,6 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
         mpRef.cleanObsDataD();
         mpRef.clear();
         referencePointId = value;
-        nameRefLabel.setText(QString::fromStdString(referencePointId));
         firstRefDaily = meteoPointsDbHandler->getFirstDate(daily, value).date();
         lastRefDaily = meteoPointsDbHandler->getLastDate(daily, value).date();
         bool hasDailyData = !(firstRefDaily.isNull() || lastRefDaily.isNull());
@@ -212,6 +211,7 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
         }
         QString errorString;
         meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(value), &mpRef, gisSettings, errorString);
+        nameRefLabel.setText("Id "+ QString::fromStdString(referencePointId)+" - "+QString::fromStdString(mpRef.name));
         //meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstRefDaily), getCrit3DDate(lastRefDaily), &mpRef);
         stationAddGraph.setEnabled(true);
     }
@@ -308,7 +308,8 @@ void Crit3DSynchronicityWidget::addGraph()
     int currentYear = currentDate.year();
     std::vector<float> myX;
     std::vector<float> myY;
-    std::vector<float> myYearlySeries;
+    QList<QPointF> pointList;
+    float minPerc = meteoSettings->getMinimumPercentage();
     while (currentDate <= myEndDate)
     {
         float myValue1 = dailyValues[firstDaily.daysTo(currentDate)+1+myLag];
@@ -320,13 +321,14 @@ void Crit3DSynchronicityWidget::addGraph()
         }
         if ( currentDate == QDate(currentYear, 12, 31)  || currentDate == myEndDate)
         {
-            int days = 365;
+            float days = 365;
             if (isLeapYear(currentYear))
             {
                 days = 366;
             }
             float r2, y_intercept, trend;
-            if (myX.size() / days * 100 > meteoSettings->getMinimumPercentage())
+
+            if ((float)myX.size() / days * 100.0 > minPerc)
             {
                 statistics::linearRegression(myX, myY, myX.size(), false, &y_intercept, &trend, &r2);
             }
@@ -336,7 +338,7 @@ void Crit3DSynchronicityWidget::addGraph()
             }
             if (r2 != NODATA)
             {
-                myYearlySeries.push_back(r2);
+                pointList.append(QPointF(currentYear,r2));
             }
             myX.clear();
             myY.clear();
@@ -345,7 +347,7 @@ void Crit3DSynchronicityWidget::addGraph()
         currentDate = currentDate.addDays(1);
     }
     // draw
-    synchronicityChartView->drawGraphStation(myStartDate.year(), myYearlySeries);
+    synchronicityChartView->drawGraphStation(pointList);
 
 }
 
