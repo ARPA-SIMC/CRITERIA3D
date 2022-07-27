@@ -323,7 +323,6 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     if (idPointsJointed.size() == 1)
     {
         // meteoPointTemp should be init
-        meteoPointTemp.nrObsDataDaysH = 0;
         meteoPointTemp.nrObsDataDaysD = 0;
         dataAlreadyLoaded = false;
     }
@@ -332,9 +331,7 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
         QDate endDate(QDate(lastYear, 12, 31));
         int numberOfDays = meteoPointsNearDistanceList[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
         meteoPointTemp.initializeObsDataD(numberOfDays, meteoPointsNearDistanceList[0].obsDataD[0].date);
-        meteoPointTemp.initializeObsDataH(1, numberOfDays, meteoPointsNearDistanceList[0].getMeteoPointHourlyValuesDate(0));
         meteoPointTemp.initializeObsDataDFromMp(meteoPointsNearDistanceList[0].nrObsDataDaysD, meteoPointsNearDistanceList[0].obsDataD[0].date, meteoPointsNearDistanceList[0]);
-        meteoPointTemp.initializeObsDataHFromMp(1,meteoPointsNearDistanceList[0].nrObsDataDaysH, meteoPointsNearDistanceList[0].getMeteoPointHourlyValuesDate(0), meteoPointsNearDistanceList[0]);
         QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPointsNearDistanceList[0].id).date();
         for (int i = 1; i<idPointsJointed.size(); i++)
         {
@@ -428,7 +425,8 @@ void Crit3DHomogeneityWidget::setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3D
 
     switch(myVar)
     {
-
+        /*
+         * // LC queste var non possono esserci
         case dailyLeafWetness:
         {
             QDateTime myDateTime(myDate,QTime(1,0,0));
@@ -488,6 +486,7 @@ void Crit3DHomogeneityWidget::setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3D
             meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyPrecipitation, value);
             break;
         }
+        */
 
     case dailyAirTemperatureRange:
         {

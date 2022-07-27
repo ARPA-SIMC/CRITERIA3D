@@ -17,23 +17,28 @@
         Q_OBJECT
 
         public:
-            Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint* mp, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings,
+            Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint mp, gis::Crit3DGisSettings gisSettings, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings,
                                     Crit3DClimateParameters *climateParameters, Crit3DQuality* quality);
             ~Crit3DSynchronicityWidget();
             void closeEvent(QCloseEvent *event);
             void changeVar(const QString varName);
             void changeYears();      
             void addGraph();
+            void clearGraph();
             void setReferencePointId(const std::string &value);
             void on_actionChangeLeftAxis();
 
     private:
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
             Crit3DClimate clima;
-            Crit3DMeteoPoint* mp;
+            Crit3DMeteoPoint mp;
+            Crit3DMeteoPoint mpRef;
             std::string referencePointId;
             QDate firstDaily;
             QDate lastDaily;
+            QDate firstRefDaily;
+            QDate lastRefDaily;
+            gis::Crit3DGisSettings gisSettings;
             Crit3DMeteoSettings *meteoSettings;
             QSettings *settings;
             Crit3DClimateParameters *climateParameters;

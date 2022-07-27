@@ -40,12 +40,12 @@
 #include <QLayout>
 #include <QDate>
 
-Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint* mp,
+Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint mp, gis::Crit3DGisSettings gisSettings,
                                                          QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality)
-:meteoPointsDbHandler(meteoPointsDbHandler), mp(mp),firstDaily(firstDaily),
+:meteoPointsDbHandler(meteoPointsDbHandler), mp(mp),firstDaily(firstDaily), gisSettings(gisSettings),
   lastDaily(lastDaily), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality)
 {
-    this->setWindowTitle("Synchronicity analysis Id:"+QString::fromStdString(mp->id));
+    this->setWindowTitle("Synchronicity analysis Id:"+QString::fromStdString(mp.id));
     this->resize(1240, 700);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
@@ -68,7 +68,7 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     QHBoxLayout *interpolationButtonLayout = new QHBoxLayout;
     referencePointId = "";
 
-    QLabel *nameLabel = new QLabel(QString::fromStdString(mp->name));
+    QLabel *nameLabel = new QLabel(QString::fromStdString(mp.name));
     QLabel *variableLabel = new QLabel(tr("Variable: "));
     variable.addItem("DAILY_TMIN");
     variable.addItem("DAILY_TMAX");
@@ -175,6 +175,7 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     connect(&stationYearFrom, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&stationYearTo, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&stationAddGraph, &QPushButton::clicked, [=](){ addGraph(); });
+    connect(&stationClearGraph, &QPushButton::clicked, [=](){ clearGraph(); });
     connect(changeSynchronicityLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftAxis);
 
     show();
@@ -193,8 +194,27 @@ void Crit3DSynchronicityWidget::closeEvent(QCloseEvent *event)
 
 void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
 {
-    referencePointId = value;
-    nameRefLabel.setText(QString::fromStdString(referencePointId));
+    if (referencePointId != value)
+    {
+        mpRef.cleanObsDataD();
+        mpRef.clear();
+        referencePointId = value;
+        firstRefDaily = meteoPointsDbHandler->getFirstDate(daily, value).date();
+        lastRefDaily = meteoPointsDbHandler->getLastDate(daily, value).date();
+        bool hasDailyData = !(firstRefDaily.isNull() || lastRefDaily.isNull());
+
+        if (!hasDailyData)
+        {
+            QMessageBox::information(nullptr, "Error", "Reference point has not daiy data");
+            stationAddGraph.setEnabled(false);
+            return;
+        }
+        QString errorString;
+        meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(value), &mpRef, gisSettings, errorString);
+        nameRefLabel.setText("Id "+ QString::fromStdString(referencePointId)+" - "+QString::fromStdString(mpRef.name));
+        //meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstRefDaily), getCrit3DDate(lastRefDaily), &mpRef);
+        stationAddGraph.setEnabled(true);
+    }
 }
 
 
@@ -211,12 +231,129 @@ void Crit3DSynchronicityWidget::changeYears()
 
 void Crit3DSynchronicityWidget::addGraph()
 {
+
     if (referencePointId == "")
     {
         QMessageBox::information(nullptr, "Error", "Select a reference point on the map");
         return;
     }
-    // TO DO
+    QDate myStartDate(stationYearFrom.currentText().toInt(), 1, 1);
+    QDate myEndDate(stationYearTo.currentText().toInt(), 12, 31);
+    int myLag = stationLag.text().toInt();
+
+    std::vector<float> dailyValues;
+    QString myError;
+    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, &mp);
+    if (dailyValues.empty())
+    {
+        QMessageBox::information(nullptr, "Error", "No data for active station");
+        return;
+    }
+    std::vector<float> dailyRefValues;
+    dailyRefValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate), getCrit3DDate(myEndDate), &firstRefDaily, &mpRef);
+    if (dailyRefValues.empty())
+    {
+        QMessageBox::information(nullptr, "Error", "No data for reference station");
+        return;
+    }
+
+    if (firstDaily.addDays(std::min(0,myLag)) > firstRefDaily)
+    {
+        if (firstDaily.addDays(std::min(0,myLag)) > QDate(stationYearFrom.currentText().toInt(), 1, 1))
+        {
+            myStartDate = firstDaily.addDays(std::min(0,myLag));
+        }
+        else
+        {
+            myStartDate = QDate(stationYearFrom.currentText().toInt(), 1, 1);
+        }
+    }
+    else
+    {
+        if (firstRefDaily > QDate(stationYearFrom.currentText().toInt(), 1, 1))
+        {
+            myStartDate = firstRefDaily;
+        }
+        else
+        {
+            myStartDate = QDate(stationYearFrom.currentText().toInt(), 1, 1);
+        }
+
+    }
+
+    if (firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)) < firstRefDaily.addDays(dailyRefValues.size()-1))
+    {
+        if (firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)) < QDate(stationYearTo.currentText().toInt(), 12, 31))
+        {
+            myEndDate = firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag));
+        }
+        else
+        {
+            myEndDate = QDate(stationYearTo.currentText().toInt(), 12, 31);
+        }
+
+    }
+    else
+    {
+        if (firstRefDaily.addDays(dailyRefValues.size()-1) < QDate(stationYearTo.currentText().toInt(), 12, 31))
+        {
+            myEndDate = firstRefDaily.addDays(dailyRefValues.size()-1);
+        }
+        else
+        {
+            myEndDate =  QDate(stationYearTo.currentText().toInt(), 12, 31);
+        }
+    }
+    QDate currentDate = myStartDate;
+    int currentYear = currentDate.year();
+    std::vector<float> myX;
+    std::vector<float> myY;
+    QList<QPointF> pointList;
+    float minPerc = meteoSettings->getMinimumPercentage();
+    while (currentDate <= myEndDate)
+    {
+        float myValue1 = dailyValues[firstDaily.daysTo(currentDate)+myLag];
+        float myValue2 = dailyRefValues[firstRefDaily.daysTo(currentDate)];
+        if (myValue1 != NODATA && myValue2 != NODATA)
+        {
+            myX.push_back(myValue1);
+            myY.push_back(myValue2);
+        }
+        if ( currentDate == QDate(currentYear, 12, 31)  || currentDate == myEndDate)
+        {
+            float days = 365;
+            if (isLeapYear(currentYear))
+            {
+                days = 366;
+            }
+            float r2, y_intercept, trend;
+
+            if ((float)myX.size() / days * 100.0 > minPerc)
+            {
+                statistics::linearRegression(myX, myY, myX.size(), false, &y_intercept, &trend, &r2);
+            }
+            else
+            {
+                r2 = NODATA;
+            }
+            if (r2 != NODATA)
+            {
+                pointList.append(QPointF(currentYear,r2));
+            }
+            myX.clear();
+            myY.clear();
+            currentYear = currentYear + 1;
+        }
+        currentDate = currentDate.addDays(1);
+    }
+    // draw
+    synchronicityChartView->drawGraphStation(pointList);
+
+}
+
+void Crit3DSynchronicityWidget::clearGraph()
+{
+    synchronicityChartView->clearStationGraphSeries();
 }
 
 void Crit3DSynchronicityWidget::on_actionChangeLeftAxis()
