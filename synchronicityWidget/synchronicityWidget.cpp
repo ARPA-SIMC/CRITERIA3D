@@ -312,8 +312,8 @@ void Crit3DSynchronicityWidget::addGraph()
     float minPerc = meteoSettings->getMinimumPercentage();
     while (currentDate <= myEndDate)
     {
-        float myValue1 = dailyValues[firstDaily.daysTo(currentDate)+1+myLag];
-        float myValue2 = dailyRefValues[firstRefDaily.daysTo(currentDate)+1];
+        float myValue1 = dailyValues[firstDaily.daysTo(currentDate)+myLag];
+        float myValue2 = dailyRefValues[firstRefDaily.daysTo(currentDate)];
         if (myValue1 != NODATA && myValue2 != NODATA)
         {
             myX.push_back(myValue1);
