@@ -18,6 +18,8 @@ SynchronicityChartView::SynchronicityChartView(QWidget *parent) :
 
     chart()->legend()->setVisible(true);
     chart()->legend()->setAlignment(Qt::AlignBottom);
+    maxValue = NODATA;
+    minValue = -NODATA;
     m_tooltip = new Callout(chart());
     m_tooltip->hide();
 }
@@ -33,13 +35,19 @@ void SynchronicityChartView::setYmin(float value)
 }
 
 
-void SynchronicityChartView::drawGraphStation(QList<QPointF> pointList)
+void SynchronicityChartView::drawGraphStation(QList<QPointF> pointList, QString var, int lag)
 {
-    chart()->legend()->setVisible(false);
-
-    float maxValue = NODATA;
-    float minValue = -NODATA;
+    chart()->legend()->setVisible(true);
+    QString name = var+" lag="+QString::number(lag);
+    for(int i = 0; i<stationGraphSeries.size(); i++)
+    {
+        if (stationGraphSeries[i]->name() == name)
+        {
+            return;
+        }
+    }
     QLineSeries* graphSeries = new QLineSeries();
+    graphSeries->setName(name);
     for (unsigned int nYears = 0; nYears < pointList.size(); nYears++)
     {
         if (pointList[nYears].y() != NODATA)
@@ -99,6 +107,8 @@ void SynchronicityChartView::clearStationGraphSeries()
         }
     }
     stationGraphSeries.clear();
+    maxValue = NODATA;
+    minValue = -NODATA;
 }
 
 void SynchronicityChartView::tooltipGraphStationSeries(QPointF point, bool state)

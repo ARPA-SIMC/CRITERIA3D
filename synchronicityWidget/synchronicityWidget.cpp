@@ -212,7 +212,6 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
         QString errorString;
         meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(value), &mpRef, gisSettings, errorString);
         nameRefLabel.setText("Id "+ QString::fromStdString(referencePointId)+" - "+QString::fromStdString(mpRef.name));
-        //meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstRefDaily), getCrit3DDate(lastRefDaily), &mpRef);
         stationAddGraph.setEnabled(true);
     }
 }
@@ -221,12 +220,13 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
 void Crit3DSynchronicityWidget::changeVar(const QString varName)
 {
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
-    // TO DO
+    addGraph();
 }
 
 void Crit3DSynchronicityWidget::changeYears()
 {
-    // TO DO
+    clearGraph();
+    addGraph();
 }
 
 void Crit3DSynchronicityWidget::addGraph()
@@ -347,7 +347,7 @@ void Crit3DSynchronicityWidget::addGraph()
         currentDate = currentDate.addDays(1);
     }
     // draw
-    synchronicityChartView->drawGraphStation(pointList);
+    synchronicityChartView->drawGraphStation(pointList, variable.currentText(), myLag);
 
 }
 
