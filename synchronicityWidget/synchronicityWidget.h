@@ -58,6 +58,9 @@
             QPushButton interpolationClearGraph;
             QSpinBox interpolationLag;
             SynchronicityChartView *synchronicityChartView;
+
+    signals:
+            void closeSynchWidget();
     };
 
 

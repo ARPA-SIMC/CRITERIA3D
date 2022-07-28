@@ -189,6 +189,7 @@ Crit3DSynchronicityWidget::~Crit3DSynchronicityWidget()
 
 void Crit3DSynchronicityWidget::closeEvent(QCloseEvent *event)
 {
+    emit closeSynchWidget();
     event->accept();
 }
 
