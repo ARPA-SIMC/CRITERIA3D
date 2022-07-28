@@ -1,4 +1,4 @@
-#include "synchronicityChartView.h"
+#include "interpolationChartView.h"
 #include "commonConstants.h"
 #include <QtCharts/QLegendMarker>
 #include <QtGui/QImage>
@@ -6,10 +6,10 @@
 #include <QtCore/QtMath>
 #include <qdebug.h>
 
-SynchronicityChartView::SynchronicityChartView(QWidget *parent) :
-    QChartView(new QChart(), parent)
+InterpolationChartView::InterpolationChartView(QWidget *parent) :
+        QChartView(new QChart(), parent)
 {
-    axisX = new QValueAxis();
+    axisX = new QDateTimeAxis();
     axisY = new QValueAxis();
 
     chart()->addAxis(axisX, Qt::AlignBottom);
@@ -24,18 +24,18 @@ SynchronicityChartView::SynchronicityChartView(QWidget *parent) :
     m_tooltip->hide();
 }
 
-void SynchronicityChartView::setYmax(float value)
+void InterpolationChartView::setYmax(float value)
 {
     axisY->setMax(value);
 }
 
-void SynchronicityChartView::setYmin(float value)
+void InterpolationChartView::setYmin(float value)
 {
     axisY->setMin(value);
 }
 
-
-void SynchronicityChartView::drawGraphStation(QList<QPointF> pointList, QString var, int lag)
+/*
+void InterpolationChartView::drawGraphStation(QList<QPointF> pointList, QString var, int lag)
 {
     chart()->legend()->setVisible(true);
     QString name = var+" lag="+QString::number(lag);
@@ -82,18 +82,18 @@ void SynchronicityChartView::drawGraphStation(QList<QPointF> pointList, QString 
     {
         axisX->setTickCount(15);
     }
-    axisX->setLabelFormat("%d");
-    axisY->setLabelFormat("%.3f");
-    axisX->setTitleText("years");
+    axisX->setFormat("dd.MM.yyyy");
+    axisY->setLabelFormat("%.1f");
+    axisX->setTitleText("date");
     axisY->setTitleText("r2");
     chart()->addSeries(graphSeries);
     graphSeries->attachAxis(axisX);
     graphSeries->attachAxis(axisY);
     stationGraphSeries.push_back(graphSeries);
-    connect(graphSeries, &QLineSeries::hovered, this, &SynchronicityChartView::tooltipGraphStationSeries);
+    connect(graphSeries, &QLineSeries::hovered, this, &InterpolationChartView::tooltipGraphStationSeries);
 }
 
-void SynchronicityChartView::clearStationGraphSeries()
+void InterpolationChartView::clearStationGraphSeries()
 {
     if (chart()->series().size() > 0)
     {
@@ -111,7 +111,7 @@ void SynchronicityChartView::clearStationGraphSeries()
     minValue = -NODATA;
 }
 
-void SynchronicityChartView::tooltipGraphStationSeries(QPointF point, bool state)
+void InterpolationChartView::tooltipGraphStationSeries(QPointF point, bool state)
 {
 
     auto serie = qobject_cast<QLineSeries *>(sender());
@@ -132,4 +132,6 @@ void SynchronicityChartView::tooltipGraphStationSeries(QPointF point, bool state
         m_tooltip->hide();
     }
 }
+*/
+
 

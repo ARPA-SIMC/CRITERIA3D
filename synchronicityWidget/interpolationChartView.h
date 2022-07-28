@@ -1,10 +1,11 @@
-#ifndef SYNCHRONICITYCHARTVIEW_H
-#define SYNCHRONICITYCHARTVIEW_H
+#ifndef INTERPOLATIONCHARTVIEW_H
+#define INTERPOLATIONCHARTVIEW_H
 
 #include <QtCharts/QChartView>
 #include <QtCharts/QScatterSeries>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
+#include <QtCharts/QDateTimeAxis>
 #include "meteo.h"
 #include "callout.h"
 
@@ -12,20 +13,20 @@
     QT_CHARTS_USE_NAMESPACE
 #endif
 
-class SynchronicityChartView : public QChartView
+class InterpolationChartView : public QChartView
 {
     Q_OBJECT
 public:
-    explicit SynchronicityChartView(QWidget *parent = 0);
+    explicit InterpolationChartView(QWidget *parent = 0);
     void setYmax(float value);
     void setYmin(float value);
-    void drawGraphStation(QList<QPointF> pointList, QString var, int lag);
-    void clearStationGraphSeries();
-    void tooltipGraphStationSeries(QPointF point, bool state);
+    //void drawGraphStation(QList<QPointF> pointList, QString var, int lag);
+    //void clearStationGraphSeries();
+    //void tooltipGraphStationSeries(QPointF point, bool state);
 
 
 private:
-    QValueAxis* axisX;
+    QDateTimeAxis* axisX;
     QValueAxis* axisY;
     Callout *m_tooltip;
     QList<QLineSeries*> stationGraphSeries;
@@ -33,4 +34,4 @@ private:
     float minValue;
 };
 
-#endif // SYNCHRONICITYCHARTVIEW_H
+#endif // INTERPOLATIONCHARTVIEW_H
