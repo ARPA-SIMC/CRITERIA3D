@@ -4,6 +4,7 @@
     #include <QtWidgets>
     #include <QtCharts>
     #include "synchronicityChartView.h"
+    #include "interpolationChartView.h"
     #include "meteoPoint.h"
     #include "dbMeteoPointsHandler.h"
     #include "crit3dClimate.h"
@@ -26,7 +27,8 @@
             void addGraph();
             void clearGraph();
             void setReferencePointId(const std::string &value);
-            void on_actionChangeLeftAxis();
+            void on_actionChangeLeftSynchAxis();
+            void on_actionChangeLeftInterpolationAxis();
 
     private:
             Crit3DMeteoPointsDbHandler* meteoPointsDbHandler;
@@ -58,6 +60,7 @@
             QPushButton interpolationClearGraph;
             QSpinBox interpolationLag;
             SynchronicityChartView *synchronicityChartView;
+            InterpolationChartView *interpolationChartView;
 
     signals:
             void closeSynchWidget();

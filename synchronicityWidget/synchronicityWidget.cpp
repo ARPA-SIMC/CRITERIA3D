@@ -53,7 +53,7 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QHBoxLayout *upperLayout = new QHBoxLayout();
-    QVBoxLayout *plotLayout = new QVBoxLayout();
+    QHBoxLayout *plotLayout = new QHBoxLayout();
 
     QGroupBox *firstGroupBox = new QGroupBox();
     QVBoxLayout *firstLayout = new QVBoxLayout();
@@ -152,6 +152,11 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     synchronicityChartView->setMinimumWidth(this->width()*2/3);
     plotLayout->addWidget(synchronicityChartView);
 
+    interpolationChartView = new InterpolationChartView();
+    interpolationChartView->setMinimumWidth(this->width()*2/3);
+    interpolationChartView->setVisible(false);
+    plotLayout->addWidget(interpolationChartView);
+
     upperLayout->addWidget(firstGroupBox);
     upperLayout->addWidget(stationGroupBox);
     upperLayout->addWidget(interpolationGroupBox);
@@ -164,8 +169,10 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     mainLayout->setMenuBar(menuBar);
 
     QAction* changeSynchronicityLeftAxis = new QAction(tr("&Change synchronicity chart axis left"), this);
+    QAction* changeInterpolationLeftAxis = new QAction(tr("&Change interpolation chart axis left"), this);
 
     editMenu->addAction(changeSynchronicityLeftAxis);
+    editMenu->addAction(changeInterpolationLeftAxis);
 
     mainLayout->addLayout(upperLayout);
     mainLayout->addLayout(plotLayout);
@@ -176,7 +183,8 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     connect(&stationYearTo, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&stationAddGraph, &QPushButton::clicked, [=](){ addGraph(); });
     connect(&stationClearGraph, &QPushButton::clicked, [=](){ clearGraph(); });
-    connect(changeSynchronicityLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftAxis);
+    connect(changeSynchronicityLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis);
+    connect(changeInterpolationLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftInterpolationAxis);
 
     show();
 }
@@ -357,13 +365,23 @@ void Crit3DSynchronicityWidget::clearGraph()
     synchronicityChartView->clearStationGraphSeries();
 }
 
-void Crit3DSynchronicityWidget::on_actionChangeLeftAxis()
+void Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis()
 {
     DialogChangeAxis changeAxisDialog(true);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         synchronicityChartView->setYmax(changeAxisDialog.getMaxVal());
         synchronicityChartView->setYmin(changeAxisDialog.getMinVal());
+    }
+}
+
+void Crit3DSynchronicityWidget::on_actionChangeLeftInterpolationAxis()
+{
+    DialogChangeAxis changeAxisDialog(true);
+    if (changeAxisDialog.result() == QDialog::Accepted)
+    {
+        interpolationChartView->setYmax(changeAxisDialog.getMaxVal());
+        interpolationChartView->setYmin(changeAxisDialog.getMinVal());
     }
 }
 

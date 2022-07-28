@@ -35,11 +35,13 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../db
 
 
 SOURCES += \
+    interpolationChartView.cpp \
     synchronicityChartView.cpp \
     synchronicityWidget.cpp
 
 
 HEADERS += \
+    interpolationChartView.h \
     synchronicityChartView.h \
     synchronicityWidget.h 
 
