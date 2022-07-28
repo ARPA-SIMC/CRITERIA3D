@@ -483,8 +483,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     editMenu->addAction(deleteCrop);
     editMenu->addAction(restoreData);
 
-    viewWeather = new QAction(tr("&Weather data"), this);
-    viewSoil = new QAction(tr("&Soil data"), this);
+    viewWeather = new QAction(tr("&Weather"), this);
+    viewSoil = new QAction(tr("&Soil"), this);
     viewMenu->addAction(viewWeather);
     viewMenu->addAction(viewSoil);
 
