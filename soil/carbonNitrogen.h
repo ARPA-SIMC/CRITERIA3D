@@ -214,15 +214,20 @@ class Crit3DCarbonNitrogenWholeProfile
  *
 void NO3_Balance()
 {
-    // 02.11.26.MVS
+    // 02.11.26.MVS translated by Antonio Volta 2022.07.29
 
     float profileNO3PreviousDay;
 
     profileNO3PreviousDay = profileNO3;
-    profileNO3 = ProfileSum(N_NO3());
-    BilFinaleNO3 = profileNO3 - ProfiloNO3Ieri - N_NO3_fertGG + N_imm_l_NO3GG;
-    BilFinaleNO3 = BilFinaleNO3 + N_denitrGG - N_nitrifGG + N_NO3_uptakeGG;
-    BilFinaleNO3 = BilFinaleNO3 + N_NO3_runoff0GG + N_NO3_runoffGG - PrecN_NO3GG + Flux_NO3GG;
+    //profileNO3 = ProfileSum(N_NO3());
+    profileNO3 = 0;
+    for (int i=0;i<nrLayers;i++)
+    {
+        profileNO3 += N_NO3[i];
+    }
+    balanceFinalNO3 = profileNO3 - profileNO3PreviousDay - N_NO3_fertGG + N_imm_l_NO3GG;
+    balanceFinalNO3 += N_denitrGG - N_nitrifGG + N_NO3_uptakeGG;
+    balanceFinalNO3 += N_NO3_runoff0GG + N_NO3_runoffGG - PrecN_NO3GG + Flux_NO3GG;
     return;
 }
 
@@ -238,10 +243,10 @@ void N_initializeCrop(bool noReset)
     N_uptakeDeficit = 0;
     N_uptakeMax = 0;
     N_potentialDemandCumulated = 0;
-    ReDim N_deficit_daily(Nitrogen.N_deficit_max_days)
+    ReDim N_deficit_daily(Nitrogen.N_deficit_max_days) // operazione da capire come gestire
 
-    Select Case TipoColtura
-        Case "arborea", "arborea_inerbita", "fruit_tree", "fruit_tree_with_grass"
+    //Select Case TipoColtura
+        if (TipoColtura == "arborea" || TipoColtura == "arborea_inerbita" || TipoColtura == "fruit_tree" || TipoColtura == "fruit_tree_with_grass")
         {
             // 2001 Rufat Dejong Fig. 4 e Tagliavini
             N_ratioHarvested = 0.4;      // fruits, pruning wood
@@ -250,7 +255,7 @@ void N_initializeCrop(bool noReset)
 
 
         }
-        else if  Case "erbacea_poliennale", "herbaceous_perennial", "prativa", "grass", "incolto", "fallow", "prativa_primoanno", "grass_firstyear"
+        else if (TipoColtura == "erbacea_poliennale" || TipoColtura == "herbaceous_perennial" || TipoColtura == "prativa" || TipoColtura == "grass" || TipoColtura == "incolto" || TipoColtura ==  "fallow" || TipoColtura == "prativa_primoanno" || TipoColtura == "grass_firstyear")
         {
             N_ratioHarvested = 0.9;
             N_ratioResidues = 0;
@@ -269,7 +274,7 @@ void N_initializeCrop(bool noReset)
     //2013.10 GA
     //scambio mail con Ass.Agr.:
     //
-    MaxRate_LAI_Ndemand = (N_uptakable - N_roots) / LAIMAX ;
+    maxRate_LAI_Ndemand = (N_uptakable - N_roots) / LAIMAX ;
 
 }
 
@@ -284,7 +289,7 @@ void N_harvest() // public function
 
     int L;
     float N_toLitter;
-
+    // !!! verificare USR PSR
     if (PSR == 0 && USR == 0)
         return;
 
@@ -293,7 +298,7 @@ void N_harvest() // public function
         //Select Case TipoColtura
             // annual crop
             if (TipoColtura == "erbacea" || TipoColtura == "herbaceous" || TipoColtura == "orticola", TipoColtura == "horticultural")
-                N_toLitter = Radici.DensStrato(L) * N_roots;
+                N_toLitter = Radici.DensStrato(L) * N_roots; // !! prendere il dato da dove?
 
             // multiannual crop
             else if (TipoColtura == "erbacea_poliennale"|| TipoColtura == "herbaceous_perennial"|| TipoColtura ==  "prativa"|| TipoColtura ==  "grass"|| TipoColtura ==  "incolto"|| TipoColtura ==  "fallow"|| TipoColtura ==  "prativa_primoanno"|| TipoColtura ==  "grass_firstyear")
