@@ -37,7 +37,7 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
              || myVar == dailyAirRelHumidityMin
              || myVar == dailyAirRelHumidityAvg )
     {
-        threshold = 8.f;
+        threshold = 12.f;
         zWeight = stdDevZ / 100.f;
         distWeight = minDistance / 1000.f;
         threshold += zWeight + distWeight + stdDev * nrStdDev;

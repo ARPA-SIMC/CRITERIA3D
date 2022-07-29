@@ -41,9 +41,9 @@
 #include <QDate>
 
 Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint mp, gis::Crit3DGisSettings gisSettings,
-                                                         QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality)
+                                                         QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality, Crit3DInterpolationSettings interpolationSettings)
 :meteoPointsDbHandler(meteoPointsDbHandler), mp(mp),firstDaily(firstDaily), gisSettings(gisSettings),
-  lastDaily(lastDaily), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality)
+  lastDaily(lastDaily), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality), interpolationSettings(interpolationSettings)
 {
     this->setWindowTitle("Synchronicity analysis Id:"+QString::fromStdString(mp.id));
     this->resize(1240, 700);
@@ -131,18 +131,27 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
         interpolationYearTo.addItem(QString::number(firstDaily.year()+i));
     }
     interpolationYearTo.setCurrentText(QString::number(lastDaily.year()));
-    QLabel *interpolationLagLabel = new QLabel(tr("lag"));
     interpolationDateLayout->addStretch(20);
+    QLabel *interpolationLagLabel = new QLabel(tr("lag"));
     interpolationDateLayout->addWidget(interpolationLagLabel);
     interpolationLag.setRange(-10, 10);
     interpolationLag.setSingleStep(1);
     interpolationDateLayout->addWidget(&interpolationLag);
+    QLabel *smoothLabel = new QLabel(tr("smooth"));
+    interpolationDateLayout->addWidget(smoothLabel);
+    smooth.setRange(0, 10);
+    smooth.setSingleStep(1);
+    interpolationDateLayout->addWidget(&smooth);
     interpolationLayout->addLayout(interpolationDateLayout);
 
+    QLabel *interpolationElabLabel = new QLabel(tr("Elaboration: "));
+    interpolationElab.addItem("Difference");
+    interpolationElab.addItem("Absolute difference");
+    interpolationElab.addItem("Square difference");
+    interpolationButtonLayout->addWidget(interpolationElabLabel);
+    interpolationButtonLayout->addWidget(&interpolationElab);
     interpolationButtonLayout->addWidget(&interpolationAddGraph);
     interpolationAddGraph.setText("Add graph");
-    interpolationButtonLayout->addWidget(&interpolationReloadGraph);
-    interpolationReloadGraph.setText("Reload");
     interpolationButtonLayout->addWidget(&interpolationClearGraph);
     interpolationClearGraph.setText("Clear");
     interpolationLayout->addLayout(interpolationButtonLayout);

@@ -19,7 +19,7 @@
 
         public:
             Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint mp, gis::Crit3DGisSettings gisSettings, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings,
-                                    Crit3DClimateParameters *climateParameters, Crit3DQuality* quality);
+                                    Crit3DClimateParameters *climateParameters, Crit3DQuality* quality, Crit3DInterpolationSettings interpolationSettings);
             ~Crit3DSynchronicityWidget();
             void closeEvent(QCloseEvent *event);
             void changeVar(const QString varName);
@@ -44,6 +44,7 @@
             Crit3DMeteoSettings *meteoSettings;
             QSettings *settings;
             Crit3DClimateParameters *climateParameters;
+            Crit3DInterpolationSettings interpolationSettings;
             Crit3DQuality* quality;
             QLabel nameRefLabel;
             QComboBox variable;
@@ -56,9 +57,10 @@
             QPushButton stationAddGraph;
             QPushButton stationClearGraph;
             QPushButton interpolationAddGraph;
-            QPushButton interpolationReloadGraph;
+            QComboBox interpolationElab;
             QPushButton interpolationClearGraph;
             QSpinBox interpolationLag;
+            QSpinBox smooth;
             SynchronicityChartView *synchronicityChartView;
             InterpolationChartView *interpolationChartView;
 
