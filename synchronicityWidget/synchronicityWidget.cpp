@@ -35,8 +35,8 @@
 #include "dialogChangeAxis.h"
 #include "gammaFunction.h"
 #include "furtherMathFunctions.h"
-#include "formInfo.h"
 
+#include <QProgressDialog>
 #include <QLayout>
 #include <QDate>
 
@@ -195,6 +195,7 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     connect(&stationAddGraph, &QPushButton::clicked, [=](){ addStationGraph(); });
     connect(&stationClearGraph, &QPushButton::clicked, [=](){ clearStationGraph(); });
     connect(&interpolationAddGraph, &QPushButton::clicked, [=](){ addInterpolationGraph(); });
+    connect(&interpolationClearGraph, &QPushButton::clicked, [=](){ clearInterpolationGraph(); });
     connect(changeSynchronicityLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis);
     connect(changeInterpolationLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftInterpolationAxis);
 
@@ -377,6 +378,12 @@ void Crit3DSynchronicityWidget::clearStationGraph()
     synchronicityChartView->clearStationGraphSeries();
 }
 
+void Crit3DSynchronicityWidget::clearInterpolationGraph()
+{
+    interpolationChartView->clearInterpolationGraphSeries();
+    interpolationChartView->setVisible(false);
+}
+
 void Crit3DSynchronicityWidget::addInterpolationGraph()
 {
     QDate myStartDate = interpolationDateFrom.date();
@@ -385,6 +392,7 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     int mySmooth = smooth.text().toInt();
     QString elabType = interpolationElab.currentText();
     interpolationDailySeries.clear();
+    interpolationChartView->setVisible(true);
 
     std::vector<float> dailyValues;
     QString myError;
@@ -395,20 +403,33 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
         return;
     }
 
-    int daysToStart = 0;
-    int daysToEnd = 0;
     if (firstDaily.addDays(std::min(0,myLag)) > myStartDate)
     {
-        daysToStart = myStartDate.daysTo(firstDaily.addDays(std::min(0,myLag)));
         myStartDate = firstDaily.addDays(std::min(0,myLag));
     }
     if (firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)) < myEndDate)
     {
-        daysToEnd = firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)).daysTo(myEndDate);
         myEndDate = firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag));
     }
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+
+    // load data
+    QProgressDialog progress("Loading daily data...", "Abort", 0, nrMeteoPoints, this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.show();
+    int i = 0;
+    for (i; i<nrMeteoPoints; i++)
+    {
+        progress.setValue(i+1);
+        if (progress.wasCanceled())
+        {
+            break;
+        }
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(myStartDate), getCrit3DDate(myEndDate), &meteoPoints[i]);
+    }
+    progress.setValue(i+1);
+    progress.close();
 
     for (QDate currentDate = myStartDate; currentDate <= myEndDate; currentDate = currentDate.addDays(1))
     {
@@ -450,11 +471,18 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
         }
 
     }
-
-    // smooth
-    smoothSerie();
-    // draw
-    interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, myStartDate, variable.currentText(), myLag, mySmooth);
+    if (interpolationDailySeries.empty())
+    {
+        QMessageBox::information(nullptr, "Error", "No data available");
+        return;
+    }
+    else
+    {
+        // smooth
+        smoothSerie();
+        // draw
+        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, myStartDate, variable.currentText(), myLag, mySmooth);
+    }
 
 }
 
