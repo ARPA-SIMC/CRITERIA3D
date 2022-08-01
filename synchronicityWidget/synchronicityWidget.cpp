@@ -392,7 +392,6 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     int mySmooth = smooth.text().toInt();
     QString elabType = interpolationElab.currentText();
     interpolationDailySeries.clear();
-    interpolationChartView->setVisible(true);
 
     std::vector<float> dailyValues;
     QString myError;
@@ -478,6 +477,7 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     }
     else
     {
+        interpolationChartView->setVisible(true);
         // smooth
         smoothSerie();
         // draw
@@ -528,6 +528,11 @@ void Crit3DSynchronicityWidget::smoothSerie()
             }
         }
     }
+    else
+    {
+        smoothInterpDailySeries = interpolationDailySeries;
+    }
+
 }
 
 void Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis()
