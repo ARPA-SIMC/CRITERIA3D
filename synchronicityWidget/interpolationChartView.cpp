@@ -1,5 +1,6 @@
 #include "interpolationChartView.h"
 #include "commonConstants.h"
+#include "QDate"
 #include <QtCharts/QLegendMarker>
 #include <QtGui/QImage>
 #include <QtGui/QPainter>
@@ -34,33 +35,34 @@ void InterpolationChartView::setYmin(float value)
     axisY->setMin(value);
 }
 
-/*
-void InterpolationChartView::drawGraphStation(QList<QPointF> pointList, QString var, int lag)
+
+void InterpolationChartView::drawGraphInterpolation(std::vector<float> values, QDate myStartDate, QString var, int lag, int smooth)
 {
     chart()->legend()->setVisible(true);
-    QString name = var+" lag="+QString::number(lag);
-    for(int i = 0; i<stationGraphSeries.size(); i++)
+    QString name = var+" lag="+QString::number(lag)+" smooth="+QString::number(smooth);
+    for(int i = 0; i<interpolationGraphSeries.size(); i++)
     {
-        if (stationGraphSeries[i]->name() == name)
+        if (interpolationGraphSeries[i]->name() == name)
         {
             return;
         }
     }
     QLineSeries* graphSeries = new QLineSeries();
     graphSeries->setName(name);
-    for (unsigned int nYears = 0; nYears < pointList.size(); nYears++)
+    for (unsigned int nValues = 0; nValues < values.size(); nValues++)
     {
-        if (pointList[nYears].y() != NODATA)
+        QDateTime myDate(myStartDate.addDays(nValues), QTime(1,0,0),Qt::UTC);
+        if (values[nValues] != NODATA)
         {
-            if (pointList[nYears].y() > maxValue)
+            if (values[nValues] > maxValue)
             {
-                maxValue = pointList[nYears].y();
+                maxValue = values[nValues];
             }
-            if (pointList[nYears].y() < minValue)
+            if (values[nValues] < minValue)
             {
-                minValue = pointList[nYears].y();
+                minValue = values[nValues];
             }
-            graphSeries->append(pointList[nYears]);
+            graphSeries->append(myDate.toMSecsSinceEpoch(), values[nValues]);
         }
     }
     if (maxValue != minValue)
@@ -73,10 +75,10 @@ void InterpolationChartView::drawGraphStation(QList<QPointF> pointList, QString 
         axisY->setMax(maxValue+3);
         axisY->setMin(minValue-3);
     }
-    axisX->setRange(pointList[0].x(), pointList[pointList.size()-1].x());
-    if ( pointList[pointList.size()-1].x()-pointList[0].x()+1 <= 15)
+    axisX->setRange(QDateTime(myStartDate, QTime(1,0,0),Qt::UTC), QDateTime(myStartDate.addDays(values.size()-1), QTime(1,0,0),Qt::UTC));
+    if ( values.size() <= 15)
     {
-        axisX->setTickCount(pointList[pointList.size()-1].x()-pointList[0].x()+1);
+        axisX->setTickCount(values.size());
     }
     else
     {
@@ -89,29 +91,29 @@ void InterpolationChartView::drawGraphStation(QList<QPointF> pointList, QString 
     chart()->addSeries(graphSeries);
     graphSeries->attachAxis(axisX);
     graphSeries->attachAxis(axisY);
-    stationGraphSeries.push_back(graphSeries);
-    connect(graphSeries, &QLineSeries::hovered, this, &InterpolationChartView::tooltipGraphStationSeries);
+    interpolationGraphSeries.push_back(graphSeries);
+    connect(graphSeries, &QLineSeries::hovered, this, &InterpolationChartView::tooltipGraphInterpolationSeries);
 }
 
-void InterpolationChartView::clearStationGraphSeries()
+void InterpolationChartView::clearInterpolationGraphSeries()
 {
     if (chart()->series().size() > 0)
     {
-        for(int i = 0; i<stationGraphSeries.size(); i++)
+        for(int i = 0; i<interpolationGraphSeries.size(); i++)
         {
-            if (chart()->series().contains(stationGraphSeries[i]))
+            if (chart()->series().contains(interpolationGraphSeries[i]))
             {
-                chart()->removeSeries(stationGraphSeries[i]);
-                stationGraphSeries[i]->clear();
+                chart()->removeSeries(interpolationGraphSeries[i]);
+                interpolationGraphSeries[i]->clear();
             }
         }
     }
-    stationGraphSeries.clear();
+    interpolationGraphSeries.clear();
     maxValue = NODATA;
     minValue = -NODATA;
 }
 
-void InterpolationChartView::tooltipGraphStationSeries(QPointF point, bool state)
+void InterpolationChartView::tooltipGraphInterpolationSeries(QPointF point, bool state)
 {
 
     auto serie = qobject_cast<QLineSeries *>(sender());
@@ -120,7 +122,7 @@ void InterpolationChartView::tooltipGraphStationSeries(QPointF point, bool state
         int xValue = point.x();
         double yValue = point.y();
 
-        m_tooltip->setText(QString("year %1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
+        m_tooltip->setText(QString("%1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
@@ -132,6 +134,3 @@ void InterpolationChartView::tooltipGraphStationSeries(QPointF point, bool state
         m_tooltip->hide();
     }
 }
-*/
-
-

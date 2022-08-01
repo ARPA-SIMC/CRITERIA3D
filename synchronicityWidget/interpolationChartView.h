@@ -20,16 +20,16 @@ public:
     explicit InterpolationChartView(QWidget *parent = 0);
     void setYmax(float value);
     void setYmin(float value);
-    //void drawGraphStation(QList<QPointF> pointList, QString var, int lag);
-    //void clearStationGraphSeries();
-    //void tooltipGraphStationSeries(QPointF point, bool state);
+    void drawGraphInterpolation(std::vector<float> values, QDate myStartDate, QString var, int lag, int smooth);
+    void clearInterpolationGraphSeries();
+    void tooltipGraphInterpolationSeries(QPointF point, bool state);
 
 
 private:
     QDateTimeAxis* axisX;
     QValueAxis* axisY;
     Callout *m_tooltip;
-    QList<QLineSeries*> stationGraphSeries;
+    QList<QLineSeries*> interpolationGraphSeries;
     float maxValue;
     float minValue;
 };

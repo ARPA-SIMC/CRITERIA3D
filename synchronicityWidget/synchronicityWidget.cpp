@@ -41,9 +41,11 @@
 #include <QDate>
 
 Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint mp, gis::Crit3DGisSettings gisSettings,
-                                                         QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality, Crit3DInterpolationSettings interpolationSettings)
+                                                         QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality, Crit3DInterpolationSettings interpolationSettings,
+                                                     Crit3DInterpolationSettings qualityInterpolationSettings, bool checkSpatialQuality, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints)
 :meteoPointsDbHandler(meteoPointsDbHandler), mp(mp),firstDaily(firstDaily), gisSettings(gisSettings),
-  lastDaily(lastDaily), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality), interpolationSettings(interpolationSettings)
+  lastDaily(lastDaily), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters),
+  quality(quality), interpolationSettings(interpolationSettings), qualityInterpolationSettings(qualityInterpolationSettings), checkSpatialQuality(checkSpatialQuality), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints)
 {
     this->setWindowTitle("Synchronicity analysis Id:"+QString::fromStdString(mp.id));
     this->resize(1240, 700);
@@ -119,18 +121,18 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     interpolationGroupBox->setTitle("Interpolation");
     QLabel *interpolationYearFromLabel = new QLabel(tr("From"));
     interpolationDateLayout->addWidget(interpolationYearFromLabel);
-    interpolationYearFrom.setMaximumWidth(100);
-    interpolationDateLayout->addWidget(&interpolationYearFrom);
+    interpolationDateFrom.setMaximumWidth(100);
+    interpolationDateLayout->addWidget(&interpolationDateFrom);
     QLabel *interpolationYearToLabel = new QLabel(tr("From"));
     interpolationDateLayout->addWidget(interpolationYearToLabel);
-    interpolationYearTo.setMaximumWidth(100);
-    interpolationDateLayout->addWidget(&interpolationYearTo);
-    for(int i = 0; i <= lastDaily.year()-firstDaily.year(); i++)
-    {
-        interpolationYearFrom.addItem(QString::number(firstDaily.year()+i));
-        interpolationYearTo.addItem(QString::number(firstDaily.year()+i));
-    }
-    interpolationYearTo.setCurrentText(QString::number(lastDaily.year()));
+    interpolationDateTo.setMaximumWidth(100);
+    interpolationDateLayout->addWidget(&interpolationDateTo);
+    interpolationDateFrom.setMinimumDate(firstDaily);
+    interpolationDateTo.setMinimumDate(firstDaily);
+    interpolationDateFrom.setMaximumDate(lastDaily);
+    interpolationDateTo.setMaximumDate(lastDaily);
+    interpolationDateFrom.setDate(firstDaily);
+    interpolationDateTo.setDate(lastDaily);
     interpolationDateLayout->addStretch(20);
     QLabel *interpolationLagLabel = new QLabel(tr("lag"));
     interpolationDateLayout->addWidget(interpolationLagLabel);
@@ -192,6 +194,7 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     connect(&stationYearTo, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&stationAddGraph, &QPushButton::clicked, [=](){ addGraph(); });
     connect(&stationClearGraph, &QPushButton::clicked, [=](){ clearGraph(); });
+    connect(&interpolationAddGraph, &QPushButton::clicked, [=](){ addInterpolationGraph(); });
     connect(changeSynchronicityLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis);
     connect(changeInterpolationLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftInterpolationAxis);
 
@@ -372,6 +375,131 @@ void Crit3DSynchronicityWidget::addGraph()
 void Crit3DSynchronicityWidget::clearGraph()
 {
     synchronicityChartView->clearStationGraphSeries();
+}
+
+void Crit3DSynchronicityWidget::addInterpolationGraph()
+{
+    QDate myStartDate = interpolationDateFrom.date();
+    QDate myEndDate = interpolationDateTo.date();
+    int myLag = interpolationLag.text().toInt();
+    int mySmooth = smooth.text().toInt();
+    QString elabType = interpolationElab.currentText();
+    interpolationDailySeries.clear();
+
+    std::vector<float> dailyValues;
+    QString myError;
+    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, &mp);
+    if (dailyValues.empty())
+    {
+        QMessageBox::information(nullptr, "Error", "No data for active station");
+        return;
+    }
+
+    int daysToStart = 0;
+    int daysToEnd = 0;
+    if (firstDaily.addDays(std::min(0,myLag)) > myStartDate)
+    {
+        daysToStart = myStartDate.daysTo(firstDaily.addDays(std::min(0,myLag)));
+        myStartDate = firstDaily.addDays(std::min(0,myLag));
+    }
+    if (firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)) < myEndDate)
+    {
+        daysToEnd = firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)).daysTo(myEndDate);
+        myEndDate = firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag));
+    }
+
+    std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+
+    for (QDate currentDate = myStartDate; currentDate <= myEndDate; currentDate = currentDate.addDays(1))
+    {
+        float myValue1 = dailyValues[firstDaily.daysTo(currentDate)+myLag];
+        // check quality and pass data to interpolation
+        if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, 1),
+                                             &qualityInterpolationSettings, &interpolationSettings, meteoSettings, climateParameters, interpolationPoints,
+                                             checkSpatialQuality))
+        {
+            QMessageBox::critical(nullptr, "Error", "No data available");
+            return;
+        }
+
+        if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, climateParameters, meteoPoints, nrMeteoPoints, myVar, getCrit3DTime(currentDate, 1)))
+        {
+            QMessageBox::critical(nullptr, "Error", "Interpolation: error in function preInterpolation");
+            return;
+        }
+        float interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar,
+                                              float(mp.point.utm.x),
+                                              float(mp.point.utm.y),
+                                              float(mp.point.z),
+                                              mp.getProxyValues(), false);
+
+        if (myValue1 != NODATA && interpolatedValue != NODATA)
+        {
+            if (elabType == "Difference" || elabType == "Square difference")
+            {
+                interpolationDailySeries.push_back(myValue1 - interpolatedValue);
+            }
+            else if (elabType == "Absolute difference")
+            {
+                interpolationDailySeries.push_back(abs(myValue1 - interpolatedValue));
+            }
+        }
+        else
+        {
+            interpolationDailySeries.push_back(NODATA);
+        }
+
+    }
+
+    // smooth
+    smoothSerie();
+    // draw
+    interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, myStartDate, variable.currentText(), myLag, mySmooth);
+
+}
+
+void Crit3DSynchronicityWidget::smoothSerie()
+{
+    int mySmooth = smooth.text().toInt();
+    QString elabType = interpolationElab.currentText();
+    smoothInterpDailySeries.clear();
+
+    if (mySmooth > 0)
+    {
+        for (int i = 0; i<interpolationDailySeries.size(); i++)
+        {
+            float dSum = 0;
+            float dSum2 = 0;
+            int nDays = 0;
+            for (int j = i-mySmooth; j<=i+mySmooth; j++)
+            {
+                if (j >= 0 && j < interpolationDailySeries.size())
+                {
+                    if (interpolationDailySeries[j] != NODATA)
+                    {
+                        dSum = dSum + interpolationDailySeries[j];
+                        dSum2 = dSum2 + interpolationDailySeries[j] * interpolationDailySeries[j];
+                        nDays = nDays + 1;
+                    }
+                }
+            }
+            if (nDays / (mySmooth * 2 + 1) > meteoSettings->getMinimumPercentage() / 100)
+            {
+                if (elabType == "Square difference")
+                {
+                    smoothInterpDailySeries.push_back(dSum2/nDays);
+                }
+                else
+                {
+                    smoothInterpDailySeries.push_back(dSum/nDays);
+                }
+            }
+            else
+            {
+                smoothInterpDailySeries.push_back(NODATA);
+            }
+        }
+    }
 }
 
 void Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis()
