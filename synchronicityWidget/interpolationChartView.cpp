@@ -76,15 +76,15 @@ void InterpolationChartView::drawGraphInterpolation(std::vector<float> values, Q
         axisY->setMin(minValue-3);
     }
     axisX->setRange(QDateTime(myStartDate, QTime(1,0,0),Qt::UTC), QDateTime(myStartDate.addDays(values.size()-1), QTime(1,0,0),Qt::UTC));
-    if ( values.size() <= 15)
+    if ( values.size() <= 10)
     {
         axisX->setTickCount(values.size());
     }
     else
     {
-        axisX->setTickCount(15);
+        axisX->setTickCount(10);
     }
-    axisX->setFormat("dd.MM.yyyy");
+    axisX->setFormat("yyyy.MM.dd");
     axisY->setLabelFormat("%.1f");
     axisX->setTitleText("date");
     axisY->setTitleText("r2");
@@ -121,8 +121,9 @@ void InterpolationChartView::tooltipGraphInterpolationSeries(QPointF point, bool
     {
         int xValue = point.x();
         double yValue = point.y();
+        QDate myDate = QDateTime::fromMSecsSinceEpoch(xValue).date();
 
-        m_tooltip->setText(QString("%1: %2").arg(xValue).arg(yValue, 0, 'f', 3));
+        m_tooltip->setText(QString("%1: %2").arg(myDate.toString("yyyy/MM/dd")).arg(yValue, 0, 'f', 3));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);

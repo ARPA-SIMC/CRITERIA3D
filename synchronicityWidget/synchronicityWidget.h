@@ -27,6 +27,7 @@
             void addStationGraph();
             void clearStationGraph();
             void addInterpolationGraph();
+            void clearInterpolationGraph();
             void smoothSerie();
             void setReferencePointId(const std::string &value);
             void on_actionChangeLeftSynchAxis();
