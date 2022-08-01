@@ -192,8 +192,8 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&stationYearFrom, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
     connect(&stationYearTo, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
-    connect(&stationAddGraph, &QPushButton::clicked, [=](){ addGraph(); });
-    connect(&stationClearGraph, &QPushButton::clicked, [=](){ clearGraph(); });
+    connect(&stationAddGraph, &QPushButton::clicked, [=](){ addStationGraph(); });
+    connect(&stationClearGraph, &QPushButton::clicked, [=](){ clearStationGraph(); });
     connect(&interpolationAddGraph, &QPushButton::clicked, [=](){ addInterpolationGraph(); });
     connect(changeSynchronicityLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis);
     connect(changeInterpolationLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftInterpolationAxis);
@@ -241,16 +241,16 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
 void Crit3DSynchronicityWidget::changeVar(const QString varName)
 {
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
-    addGraph();
+    addStationGraph();
 }
 
 void Crit3DSynchronicityWidget::changeYears()
 {
-    clearGraph();
-    addGraph();
+    clearStationGraph();
+    addStationGraph();
 }
 
-void Crit3DSynchronicityWidget::addGraph()
+void Crit3DSynchronicityWidget::addStationGraph()
 {
 
     if (referencePointId == "")
@@ -372,7 +372,7 @@ void Crit3DSynchronicityWidget::addGraph()
 
 }
 
-void Crit3DSynchronicityWidget::clearGraph()
+void Crit3DSynchronicityWidget::clearStationGraph()
 {
     synchronicityChartView->clearStationGraphSeries();
 }

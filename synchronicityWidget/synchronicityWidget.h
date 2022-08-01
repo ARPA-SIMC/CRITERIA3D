@@ -24,8 +24,8 @@
             void closeEvent(QCloseEvent *event);
             void changeVar(const QString varName);
             void changeYears();      
-            void addGraph();
-            void clearGraph();
+            void addStationGraph();
+            void clearStationGraph();
             void addInterpolationGraph();
             void smoothSerie();
             void setReferencePointId(const std::string &value);
