@@ -212,6 +212,461 @@ class Crit3DCarbonNitrogenWholeProfile
 #endif // CARBON_H
 /*
  *
+
+void computeWaterCorrectionFactor(int L)
+{
+    // LEACHM
+
+    static double AOPT = 0.08;           // High end of optimum water content range, air-filled porosity
+    static double SCORR = 0.6;           // Relative transformation rate at saturation (except denitrification)
+    static int RM = 1;
+    float wHigh;
+    float wMin;
+    float wLow;
+    float myTheta, myThetaPA, myThetaCC, myThetaSAT;
+
+    myTheta = WaterBalance.ConvertWCToVolumetric(suolo[L], U[L]);
+    myThetaPA = WaterBalance.ConvertWCToVolumetric(suolo[L], suolo[L].PA);
+    myThetaCC = WaterBalance.ConvertWCToVolumetric(suolo[L], suolo[L].CC);
+    myThetaSAT = WaterBalance.ConvertWCToVolumetric(suolo[L], suolo[L].SAT);
+
+    wMin = myThetaPA;
+    wLow = myThetaCC;
+    wHigh = myThetaSAT - AOPT;
+
+    if (myTheta > wHigh Then)
+        waterCorrectionFactor[L] = pow(SCORR + (1 - SCORR) * ((myThetaSAT - myTheta) / (myThetaSAT - wHigh)),RM);
+    else if (myTheta <= wHigh && myTheta >= wLow)
+        waterCorrectionFactor[L] = 1;
+    else if (myTheta < wLow)
+        waterCorrectionFactor[L] = pow(((maxValue(myTheta, wMin) - wMin) / (wLow - wMin)),RM);
+
+}
+
+
+void computeTemperatureCorrectionFactor(int L)
+{
+    //2008.10 GA
+    //2004.02.20.VM
+    //computes the temperature correction factor
+    //----- Inputs --------------------
+    //T [°C] temperature
+    //Q10 [-] rate increase every 10 °C
+    //Tbase [°C] base temperature
+
+    if (flagHeat)
+        temperatureCorrectionFactor[L] = pow(Q10, ((soilTemperature[L] - Tbase) / 10));
+    else
+        temperatureCorrectionFactor[L] = 1;
+}
+
+void computeLayerRates(int L)
+{
+    float totalCorrectionFactor;
+    float wCorr_Denitrification;
+    float theta;
+    float thetaSAT;
+    float conc_N_NO3;
+
+    // update C/N ratio (fixed for humus and biomass)
+    CNratio_litter[L] = CNRatio(C_litter[L], N_litter[L]);
+
+    totalCorrectionFactor = temperatureCorrectionFactor[L] * waterCorrectionFactor[L];
+
+    // carbon
+
+    // humus mineralization
+    actualRate_C_HumusMin = rate_C_HumusMin * totalCorrectionFactor;
+
+    // litter to humus
+    actualRate_C_LitterToHumus = rate_C_LitterMin * totalCorrectionFactor * (FE * FH);
+
+    // litter to CO2
+    actualRate_C_LitterToCO2 = rate_C_LitterMin * totalCorrectionFactor * (1 - FE);
+
+    // litter to biomass
+    actualRate_C_LitterToBiomass = rate_C_LitterMin * TotalCorrectionFactor * FE * (1 - FH);
+
+    //nitrogen
+
+    // litter mineralization/immobilization
+    actualRate_N_LitterMin = maxValue(0, 1 / CNratio_litter[L] - FE / CNratio_biomass);
+    if (N_litter[L] > 0)
+        actualRate_N_LitterImm = -minValue(0, 1 / CNratio_litter[L] - FE / CNratio_biomass);
+    else
+        actualRate_N_LitterImm = 0;
+
+    //nitrification
+    actualRate_N_Nitrification = Rate_N_Nitrification * totalCorrectionFactor;
+
+    // denitrification
+    thetaSAT = orizzonti(suolo[L].Orizzonte).thetaS;
+    theta = WaterBalance.ConvertWCToVolumetric(suolo[L], U[L]);
+    wCorr_Denitrification = pow(maxValue(0, (theta - (1 - Max_afp_denitr) * thetaSAT)) / (thetaSAT - (1 - Max_afp_denitr) * ThetaSAT)), 2);
+    conc_N_NO3 = convertToGramsPerLiter(L, N_NO3[L]) * 1000 'mg l-1;
+    actualRate_N_Denitrification = Rate_N_Denitrification * temperatureCorrectionFactor[L] * wCorr_Denitrification
+        * conc_N_NO3 / (conc_N_NO3 + Csat_denitr);
+
+    // urea hydrolysis
+    actualRate_Urea_Hydr = rate_Urea_Hydr * totalCorrectionFactor;
+
+}
+
+void N_Uptake()
+{
+    // 2008.09 GA ristrutturazione in base a LEACHM
+    //           + nuovo calcolo potenziale uptake giornaliero (eliminato FGS)
+    // 04.03.02.FZ modifica percentuali in NradiciCum
+    // 02.11.26.MVS
+    // 01.01.10.GD
+
+    float N_max_transp;          // potential N uptake in transpiration stream
+    float* N_NO3_up_max = (float *) calloc(nrLayers, sizeof(float));
+    float* N_NH4_up_max = (float *) calloc(nrLayers, sizeof(float));
+    int L;
+
+    if (LAI == 0)
+    {
+        return;
+    }
+
+    // uptake da germinazione a raccolta
+    if (GGAttuale <= GGGermination)
+    {
+        return;
+    }
+
+    // controlla se ho esaurito il totale assimilabile
+    if (N_PotentialDemandCumulated >= N_Uptakable)
+    {
+        return;
+    }
+
+    // uptake potenziale (dipendente da LAI)
+    N_Uptake_Potential();
+
+    if (N_DailyDemand == 0)
+    {
+        return
+    }
+
+    for(L=0;l>nrLayers;L++)
+    {
+        N_NO3_up_max[L] = 0;
+        N_NH4_up_max[L] = 0;
+    }
+
+    //2008.09 GA niente residuo
+    //aggiungo eventuale residuo
+    //N_Uptake_Max
+
+    N_UptakeMax = N_DailyDemand;
+
+    if ((TR == 0) || (TM == 0))
+    {
+        return;
+    }
+
+    // calcolo massimi uptake per specie
+    N_max_transp = 0;
+    for (L = PSR; L< USR; L++)
+    {
+        if (TReale[L] > 0)
+        {
+            N_NO3_up_max[L] = N_NO3[L] / umid[L].BeforeTranspiration * TReale[L];
+            N_NH4_up_max[L] = N_NH4_Sol[L] / umid[L].BeforeTranspiration * TReale[L];
+        }
+        else
+        {
+            N_NO3_up_max[L] = 0;
+            N_NH4_up_max[L] = 0;
+        }
+
+        N_max_transp += N_NO3_up_max[L] + N_NH4_up_max[L];
+    }
+
+    if (N_max_transp > 0)
+    {
+        for (L = PSR;L<USR;L++)
+        {
+            N_NO3_uptake[L] = minValue(N_NO3[L], (N_NO3_up_max[L] / N_max_transp) * N_UptakeMax);
+            //GA2017 dialogo con Ceotto (mais San Prospero)
+            N_NH4_uptake[L] = 0 'min(N_NH4_Sol[L], (N_NH4_up_max[L] / N_max_transp) * N_UptakeMax)
+        }
+    }
+
+}
+
+void N_SurfaceRunoff()
+{
+    //-----------------------------------------
+    //02.11.19.MVS Surface separato da Subsurface
+    //-------------- NOTE -----------------------------------------------------
+    //sub la stima del N asportato tramite l'acqua di ruscellamento superficiale
+
+    if (supRunoffGG > 0)
+    {
+        // calcolo dell'azoto perso nel ruscellamento superficiale
+        // seguendo i calcoli tratti da EPIC per il fosforo
+        N_NO3_runoff0GG = minValue(N_NO3[0], N_NO3[0] / umid[0].BeforeRunoff * supRunoffGG);
+        N_NH4_runoff0GG = minValue(N_NH4_Sol[0], N_NH4_Sol[0] / umid[0].BeforeRunoff * supRunoffGG);
+
+        N_NO3[1] -= N_NO3_runoff0GG;
+        N_NH4[1] -= N_NH4_runoff0GG;
+
+    }
+
+}
+
+
+void N_SubSurfaceRunoff()
+{
+    //02.11.19.MVS Surface separato da Subsurface
+    //02.03.14.GD
+    //02.03.05.GD.MVS ruscellamento superficiale
+    //02.03.04.GD
+    //-------------- NOTE -----------------------------------------------------
+    //sub la stima del N asportato tramite l'acqua di ruscellamento ipodermico
+
+    int L;
+
+    if (hypRunoffGG > 0)
+    {
+        // ReDim N_NH4_conc(nrLayers) // capire cosa sono questi 2
+        // ReDim N_NO3_conc(nrLayers) // capire cosa sono questi 2
+
+        for (L = 0; L<nrLayers;L++)
+        {
+            if (suolo[L].prof + suolo[L].spess) > PScol)
+            {
+                break;
+            }
+
+            if (umid[L].BeforeSubrunoff > 0)
+            {
+                // calcolo dell'azoto perso nel ruscellamento ipodermico
+                N_NO3_runoff[L] = minValue(N_NO3[L], N_NO3[L] / umid[L].BeforeSubrunoff * runOff[L]);
+                N_NH4_runoff[L] = minValue(N_NH4_Sol[L], N_NH4_Sol(L) / umid[L].BeforeSubrunoff * runOff[L]);
+
+                N_NO3_runoffGG += N_NO3_runoff[L];
+                N_NH4_runoffGG += N_NH4_runoff[L];
+
+                N_NO3[L] -= N_NO3_runoff[L];
+                N_NH4[L] -= N_NH4_runoff[L];
+            }
+        }
+
+    }
+
+}
+
+
+void N_Uptake_Potential()
+{
+    //2008.09 GA nuova routine per calcolo di domanda di azoto
+    //2008.04 GA
+    //2002.11.26.MVS nuova routine a partire dal calcolo del lai
+
+    N_DailyDemand = 0;
+
+    //per evitare salti bruschi appena il LAI parte
+    if (LAI_previous == 0)
+    {
+        return;
+    }
+
+    //solo in fase di crescita
+    if (GGAttuale > (GGCrescita + GGEmergence))
+    {
+        return;
+    }
+    N_DailyDemand = minValue(maxValue(0, LAI - LAI_previous) * MaxRate_LAI_Ndemand, MaxRate_LAI_Ndemand);
+    N_PotentialDemandCumulated += N_DailyDemand;
+
+}
+
+void N_Uptake_Max()
+{
+    //'2008.02 GA revisione (da manuale LEACHM)
+    //'2002.11.19.MVS
+
+    int L; //contatore
+    //-------------------------------------------------------------------------
+    int myDays;
+    int i;
+    float previousDeficit;
+
+    // per medica non c'è deficit
+    if ((coltura == Crops.CROP_ALFALFA) || (coltura == Crops.CROP_ALFALFA_FIRSTYEAR) || (coltura == Crops.CROP_SOYBEAN))
+    {
+        N_UptakeDeficit = 0;
+        return;
+    }
+
+    // aggiorno deficit degli ultimi giorni
+    previousDeficit = 0;
+    myDays = UBound(Nitrogen.N_deficit_daily); //!! da modificare tutta la struttura in C usando array dinamici oppure inserendo qualche metodo alternativo di conteggio dei giorni
+    if (myDays < nitrogen.N_deficit_max_days)
+    {
+        ReDim Preserve nitrogen.N_deficit_daily(myDays + 1);
+    }
+    for (i = 0;i<UBound(nitrogen.N_deficit_daily) - 1;i++)
+    {
+        nitrogen.N_deficit_daily(i) = nitrogen.N_deficit_daily(i + 1);
+        previousDeficit += nitrogen.N_deficit_daily(i);
+    }
+    nitrogen.N_deficit_daily[UBound(nitrogen.N_deficit_daily)] = N_UptakeDeficit;
+    N_UptakeDeficit = N_UptakeDeficit + previousDeficit;
+
+    //'2008.02 GA verso la fine del ciclo la pianta il deficit non può essere totalmente compensato
+    //'(LeachM)
+    if (GGAttuale > (GGCrescita + GGEmergence))
+    {
+        N_UptakeDeficit = 0;
+    }
+    N_UptakeMax = N_DailyDemand + N_UptakeDeficit;
+    N_UptakeDeficit = 0;
+}
+
+
+void N_Reset()
+{
+    //'02.11.26.MVS
+    //'02.10.22.GD
+
+    //'azzeramento giornaliero
+    // credo che venga fatto così semplicemente per riazzerare piuttosto che cambiare dimensione
+    ReDim N_imm_l_NH4(nrLayers)
+    ReDim N_imm_l_NO3(nrLayers)
+
+    ReDim C_litter_humus(nrLayers)
+    ReDim C_litter_litter(nrLayers)
+    ReDim C_min_humus(nrLayers)
+    ReDim C_min_litter(nrLayers)
+    ReDim C_denitr_litter(nrLayers)
+    ReDim C_denitr_humus(nrLayers)
+
+    ReDim N_NO3_uptake(nrLayers)
+    ReDim N_NH4_uptake(nrLayers)
+
+    ReDim N_min_humus(nrLayers)
+    ReDim N_min_litter(nrLayers)
+    ReDim N_litter_humus(nrLayers)
+    ReDim N_nitrif(nrLayers)
+    ReDim N_Urea_Hydr(nrLayers)
+    ReDim N_vol(nrLayers)
+
+    ReDim CNratio_litter(nrLayers)
+
+    ReDim N_NO3_runoff(nrLayers)
+    ReDim N_NH4_runoff(nrLayers)
+
+    ReDim N_denitr(nrLayers)
+
+    //'azzero tutte le variabili giornaliere
+    //'bil NO3
+    N_NO3_fertGG = 0;
+    N_imm_l_NO3GG = 0;
+    N_denitrGG = 0;//   'Denitrification non viene piu' chiamata
+    N_NO3_uptakeGG = 0;
+    N_NO3_runoff0GG = 0;
+    N_NO3_runoffGG = 0;
+    flux_NO3GG = 0;
+    precN_NO3GG = 0;
+    precN_NH4GG = 0;
+    N_nitrifGG = 0;
+    N_NH4_fertGG = 0;
+    N_NH4_AdsorbedGG = 0;
+    N_NH4_AdsorbedBeforeGG = 0;
+    N_imm_l_NH4GG = 0;
+    N_min_humusGG = 0;
+    N_min_litterGG = 0;
+    N_NH4_volGG = 0;
+    N_Urea_HydrGG = 0;
+    N_NH4_uptakeGG = 0;
+    flux_NH4GG = 0;
+    N_NH4_runoff0GG = 0;
+    N_NH4_runoffGG = 0;
+    N_humusGG = 0;
+    N_litterGG = 0;
+    C_humusGG = 0;
+    C_litterGG = 0;
+    C_min_humusGG = 0;
+    C_min_litterGG = 0;
+    C_litter_humusGG = 0;
+    C_litter_litterGG = 0;
+}
+
+
+float findPistonDepth()
+{
+    int L;
+    for (L = 0;L<nrLayers;L++)
+    {
+        if (umid[L].BeforeInfiltration > suolo[L].CC)
+        {
+            if (Flux[L] < (umid[L].BeforeInfiltration - suolo[L].CC))
+            {
+                break;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    if (L > nrLayers)
+    {
+        return MaxSoilDepth;
+    }
+    else
+    {
+        return suolo[L].prof;
+    }
+}
+
+
+
+//calcolo dei flussi di soluti gravitazionali (a 'pistone')
+void soluteFluxesPiston(float* mySolute, float PistonDepth,
+    float* leached)
+{
+    int L;
+    float myFreeSolute;
+    double* f_Solute;
+    f_Solute = (double *) calloc(nrLayers, sizeof(double));
+    f_Solute[0] = 0;
+
+    for (L = 0; L < nrLayers; L++)
+    {
+        f_Solute(L) = 0;
+
+        // azoto in entrata da nodo L-1
+        mySolute[L] += f_Solute[L - 1];
+
+        if (suolo[L].prof >= PistonDepth)
+        {
+            break;
+        }
+
+//'        If umid(L).BeforeInfiltration > suolo(L).CC Then
+//'            myFreeSolute = mySolute(L) * (umid(L).BeforeInfiltration - suolo(L).CC) / umid(L).BeforeInfiltration
+//'        Else
+//'            myFreeSolute = 0
+//'        End If
+
+        f_Solute[L] = minValue(mySolute[L], myFreeSolute / (umid[L].BeforeInfiltration) * Flux[L]);
+
+        // azoto in uscita da nodo L
+        mySolute[L] -= f_Solute[L];
+    }
+
+    //leaching
+    *leached += f_Solute[nrLayers];
+    free (f_Solute);
+}
+
+
 void soluteFluxesPiston_old(float* mySolute, float* leached, float* CoeffPiston)
 // 2008.10 FT GA
 // calcolo dei flussi di nitrati gravitazionali (a 'pistone')
@@ -307,7 +762,7 @@ void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* 
         }
         flux_solute = (float *) calloc(nrLayers, sizeof(float));
         double *u_temp = (double *) calloc(nrLayers, sizeof(double));
-        double *f_solute = (double *) calloc(nrLayers, sizeof(double));
+        f_solute = (double *) calloc(nrLayers, sizeof(double));
 
         for (L = 0; L<nrLayers; L++)
         {
@@ -362,7 +817,10 @@ void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* 
 
         // leaching
         // FT GA 2007.12
-        *leached += Flux_Solute[nrLayers-1];
+        *leached += flux_Solute[nrLayers-1];
+        free (flux_Solute);
+        free (u_temp);
+        free (f_solute);
 
 }
 
