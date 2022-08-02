@@ -119,11 +119,11 @@ void InterpolationChartView::tooltipGraphInterpolationSeries(QPointF point, bool
     auto serie = qobject_cast<QLineSeries *>(sender());
     if (state)
     {
-        int xValue = point.x();
         double yValue = point.y();
-        QDate myDate = QDateTime::fromMSecsSinceEpoch(xValue).date();
+        QDateTime dt;
+        dt.setMSecsSinceEpoch(point.x());
 
-        m_tooltip->setText(QString("%1: %2").arg(myDate.toString("yyyy/MM/dd")).arg(yValue, 0, 'f', 3));
+        m_tooltip->setText(QString("%1: %2").arg(dt.toString("yyyy/MM/dd")).arg(yValue, 0, 'f', 3));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
