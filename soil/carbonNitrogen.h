@@ -212,6 +212,963 @@ class Crit3DCarbonNitrogenWholeProfile
 #endif // CARBON_H
 /*
  *
+Private Sub ChemicalTransformations()
+' 2013.06 GA
+' revision from LEACHM
+' concentrations in g m-3 (= mg dm-3)
+
+Dim myN_NO3 As Single                   '[g m-3] nitric nitrogen concentration
+Dim myN_NH4 As Single                   '[g m-3] ammonium concentration
+Dim myN_NH4_sol As Single               '[g m-3] ammonium concentration in solution
+Dim NH4_ratio As Single                 '[] ratio of NH4 on total N
+Dim NO3_ratio As Single                 '[] ratio of NO3 on total N
+Dim myTotalC As Single                  '[g m-3] total carbon
+Dim myLitterC As Single                 '[g m-3] carbon concentration in litter
+Dim myHumusC As Single                  '[g m-3] carbon concentration in humus
+Dim myLitterN As Single                 '[g m-3] nitrogen concentration in litter
+Dim myHumusN As Single                  '[g m-3] nitrogen concentration in humus
+
+Dim CCDEN As Single                     '[g m-3] Amount of carbon equivalent to N removed (as CO2) from denitrification
+Dim CLIMM As Single                     '[g m-3] maximum N immobilization
+Dim CLIMX As Single                     '[g m-3] ratio of the maximum to the desired rate. Adjusted by 0.08 to extend immobilization and slow the rate
+Dim CCLH As Single                      '[g m-3] carbon from litter to humus
+Dim CLH As Single                       '[g m-3] nitrogen from litter to humus
+Dim CLI As Single                       '[g m-3] nitrogen internally recycled in litter
+Dim CCLI As Single                      '[g m-3] carbon internally recycled in litter
+Dim CCLCO2 As Single                    '[g m-3] carbon from litter to CO2
+Dim CCHCO2 As Single                    '[g m-3] carbon from humus to CO2
+Dim CCLDN As Single                     '[g m-3] carbonio rimosso dal litter per denitrificazione
+Dim CCHDN As Single                     '[g m-3] carbonio rimosso dall'humus per denitrificazione
+Dim CNHNO As Single                     '[g m-3] source di nitrato (da nitrificazione)
+Dim CNON As Single                      '[g m-3] sink di nitrato (da denitrificazione)
+Dim CURNH As Single                     '[g m-3] urea hydrolysis
+Dim CHNH As Single                      '[g m-3] N humus mineralization
+Dim CLNH As Single                      '[g m-3] N litter mineralization
+Dim CNHGAS As Single                    '[g m-3] NH4 volatilization
+Dim CNHL As Single                      '[g m-3] N NH4 litter immobilization
+Dim CNOL As Single                      '[g m-3] N NO3 litter immobilization
+Dim USENH4 As Single                    '[g m-3] N NH4 uptake
+Dim USENO3 As Single                    '[g m-3] N NO3 uptake
+
+Dim litterCSink As Single               '[g m-3] C litter sink
+Dim litterCSource As Single             '[g m-3] C litter source
+Dim litterCRecycle As Single            '[g m-3] C litter recycle
+Dim litterCNetSink As Single            '[g m-3] C litter net sink/source
+Dim humusCSink As Single                '[g m-3] C humus sink
+Dim humusCSource As Single              '[g m-3] C humus source
+Dim humusCNetSink As Single             '[g m-3] C net sink/source
+Dim litterNSink As Single               '[g m-3] N litter sink
+Dim litterNSource As Single             '[g m-3] N litter source
+Dim litterNRecycle As Single            '[g m-3] N litter recycle
+Dim litterNNetSink As Single            '[g m-3] N litter net sink/source
+Dim humusNSink As Single                '[g m-3] N humus sink
+Dim humusNSource As Single              '[g m-3] N humus source
+Dim humusNNetSink As Single             '[g m-3] N net sink/source
+Dim N_NH4_sink As Single
+Dim N_NH4_source As Single
+Dim N_NH4_netSink As Single
+Dim N_NO3_sink As Single
+Dim N_NO3_source As Single
+Dim N_NO3_netSink As Single
+
+Dim totalCO2 As Single                  '[g m-3] source of CO2
+Dim Def As Single
+Dim Total As Single
+Dim Factor As Single
+
+Const AdjustFactor = 0.08               ' factor to extend immobilization and slow the rate
+
+Dim L As Integer
+
+    For L = 1 To nrLayers
+
+        ' correction functions for soil temperature and humidity
+        'inserire parametri in Options.mdb
+        ComputeTemperatureCorrectionFactor L
+        ComputeWaterCorrectionFactor L
+
+        ' compute layer transformation rates
+        ComputeLayerRates L
+
+        ' convert to concentration
+        myLitterC = convertToGramsPerM3(L, C_litter(L))
+        myHumusC = convertToGramsPerM3(L, C_humus(L))
+        myLitterN = convertToGramsPerM3(L, N_litter(L))
+        myHumusN = convertToGramsPerM3(L, N_humus(L))
+
+        myTotalC = (myLitterC + myHumusC)
+        myN_NO3 = convertToGramsPerM3(L, N_NO3(L))
+        myN_NH4 = convertToGramsPerM3(L, N_NH4(L))
+        If (myN_NH4 + myN_NO3 > 0) Then
+            NH4_ratio = myN_NH4 / (myN_NH4 + myN_NO3)
+            NO3_ratio = 1 - NH4_ratio
+        Else
+            NH4_ratio = 0
+            NO3_ratio = 0
+        End If
+
+    ' CARBON TRANSFORMATIONS
+
+        ' i) Associated with denitrification.  Amount of carbon
+        '    equivalent to N removed.  (No more than a tenth of C present
+        '    C  can be removed). Not in Johnsson's paper.
+        '    si assume che tutto il nitrato sia in soluzione (mg l-1)
+        '    CO2 prodotta associata a denitrificazione
+        '    cinetica primo ordine della decomposizione della s.o. (rateo proporzionale alla concentrazione)
+        CCDEN = max(0, myN_NO3 * (1 - Exp(-ActualRate_N_Denitrification))) * 72 / 56
+        ' No more than a tenth of C present C  can be removed
+        If CCDEN > 0.1 * myTotalC Then CCDEN = 0.1 * myTotalC
+
+
+        ' ii) litter transformation
+        ' litter C to humus C
+        CCLH = max(0, myLitterC * (1 - Exp(-ActualRate_C_LitterToHumus)))
+        ' litter C internal recycle
+        CCLI = max(0, myLitterC * (1 - Exp(-ActualRate_C_LitterToBiomass)))
+        ' litter C to CO2
+        CCLCO2 = max(0, myLitterC * (1 - Exp(-ActualRate_C_LitterToCO2)))
+        ' nitrogen immobilization
+        CLIMX = 1
+        If ActualRate_N_LitterImm > 0 Then
+            CLIMM = ActualRate_N_LitterImm * (CCLI + CCLH + CCLCO2)
+            If CLIMM > 0 Then CLIMX = min(1, (AdjustFactor * (myN_NO3 + myN_NH4)) / CLIMM)
+            ' if immobilization limits mineralization then the effective rate of immobilization is reduced
+            If CLIMX < 1 Then
+                CCLH = CCLH * CLIMX
+                CCLI = CCLI * CLIMX
+                CCLCO2 = CCLCO2 * CLIMX
+            End If
+            CNHL = CLIMM * CLIMX * NH4_ratio
+        End If
+
+        ' Energy source for denitrification
+        If myTotalC > 0 Then
+            CCLDN = CCDEN * myLitterC / myTotalC
+        Else
+            CCLDN = 0
+        End If
+
+        litterCSink = CCLH + CCLCO2 + CCLDN
+        litterCSource = 0
+        litterCRecycle = CCLI
+        litterCNetSink = -litterCSink + litterCSource
+
+        ' iii) humus transformations
+        'humus to CO2
+        CCHCO2 = max(0, myHumusC * (1 - Exp(-ActualRate_C_HumusMin)))
+        'energy source for denitrification
+        If myTotalC > 0 Then
+            CCHDN = CCDEN * myHumusC / myTotalC
+        Else
+            CCHDN = 0
+        End If
+        humusCSink = CCHDN + CCHCO2
+        humusCSource = CCLH
+        humusCNetSink = humusCSource - humusCSink
+
+        ' iv) CO2
+        totalCO2 = CCLCO2 + CCHCO2 + CCLDN + CCHDN
+
+
+    ' NITROGEN TRANSFORMATIONS
+        ' i) urea hydrolysis
+        CURNH = convertToGramsPerM3(L, N_urea(L)) * (1 - Exp(-ActualRate_Urea_Hydr))
+
+        ' ii) ammonium volatilization (only top 5 cm of soil) (in LEACHM 10 cm but layer thickness is 10 cm)
+        If suolo(L).prof + suolo(L).spess < 5 Then
+            myN_NH4_sol = convertToGramsPerM3(L, N_NH4_Sol(L))
+            CNHGAS = min(0.5 * myN_NH4_sol, myN_NH4_sol * (1 - Exp(-Rate_N_NH4_Volatilization)))
+        Else
+            CNHGAS = 0
+        End If
+
+        ' iii) nitrification
+        CNHNO = (max(0, myN_NH4 - myN_NO3 / limRatio_nitr)) * (1 - Exp(-ActualRate_N_Nitrification))
+
+        ' iv) mineralization
+        CHNH = max(myHumusN, 0) * ActualRate_C_HumusMin
+        CLNH = ActualRate_N_LitterMin * (CCLH + CCLCO2 + CCLI)
+        If ActualRate_N_LitterImm > 0 Then
+            CNHL = CLIMM * CLIMX * NH4_ratio
+        End If
+
+        ' NH4 sink/source
+        USENH4 = convertToGramsPerM3(L, N_NH4_uptake(L))
+        N_NH4_sink = CNHNO + CNHL
+        N_NH4_source = CHNH + CLNH + CURNH
+        N_NH4_netSink = -N_NH4_sink + N_NH4_source - CNHGAS - USENH4
+        ' adjustment
+        Def = myN_NH4 + N_NH4_netSink
+        Total = CNHNO + CNHGAS + USENH4
+        If Def < 0 And Total > 0 Then
+            Factor = max(0, 1 + Def / Total)
+            CNHNO = Factor * CNHNO
+            CNHGAS = Factor * CNHGAS
+            USENH4 = Factor * USENH4
+            N_NH4_sink = CNHNO + CNHL
+            N_NH4_netSink = -N_NH4_sink + N_NH4_source - CNHGAS - USENH4
+        End If
+
+        ' NO3 sink/source
+        USENO3 = convertToGramsPerM3(L, N_NO3_uptake(L))
+        If ActualRate_N_LitterImm > 0 Then
+            CNOL = CLIMM * CLIMX * NO3_ratio
+        End If
+        CNON = CCDEN * 56 / 72
+        N_NO3_source = CNHNO
+        N_NO3_sink = CNOL
+        N_NO3_netSink = -N_NO3_sink + N_NO3_source - USENO3 - CNON
+        ' adjustment
+        Def = myN_NO3 + N_NO3_netSink
+        Total = USENO3 + CNON
+        If Def < 0 And Total > 0 Then
+            Factor = max(0, 1 + Def / Total)
+            CNON = Factor * CNON
+            USENO3 = Factor * USENO3
+            N_NO3_sink = CNON + CNOL
+            N_NO3_netSink = -N_NO3_sink + N_NO3_source - USENO3
+        End If
+
+        ' litter N sink/source
+        CLH = CCLH / CNratio_humus
+        CLI = CCLI / CNratio_humus
+        litterNSink = CLH + CLNH
+        litterNSource = CNHL + CNOL
+        litterNRecycle = CLI
+        litterNNetSink = -litterNSink + litterNSource
+
+        ' humus sink/source
+        humusNSink = CHNH
+        humusNSource = CLH
+        humusNNetSink = -humusNSink + humusNSource
+
+    ' ---------------------------------------------------------------------------------
+
+        ' convert back to g m-2
+        N_NO3_uptake(L) = USENO3 * (suolo(L).spess / 100)
+        N_NH4_uptake(L) = USENH4 * (suolo(L).spess / 100)
+        N_min_litter(L) = CLNH * (suolo(L).spess / 100)
+        N_imm_l_NH4(L) = CNHL * (suolo(L).spess / 100)
+        N_imm_l_NO3(L) = CNOL * (suolo(L).spess / 100)
+        N_min_humus(L) = CHNH * (suolo(L).spess / 100)
+        N_litter_humus(L) = CLH * (suolo(L).spess / 100)
+        N_vol(L) = CNHGAS * (suolo(L).spess / 100)
+        N_denitr(L) = CNON * (suolo(L).spess / 100)
+        N_nitrif(L) = CNHNO * (suolo(L).spess / 100)
+        N_Urea_Hydr(L) = CURNH * (suolo(L).spess / 100)
+
+        C_litter_humus(L) = CCLH * (suolo(L).spess / 100)
+        C_litter_litter(L) = CCLI * (suolo(L).spess / 100)
+        C_min_litter(L) = CCLCO2 * (suolo(L).spess / 100)
+        C_min_humus(L) = CCHCO2 * (suolo(L).spess / 100)
+        C_denitr_humus(L) = CCHDN * (suolo(L).spess / 100)
+        C_denitr_litter(L) = CCLDN * (suolo(L).spess / 100)
+
+    ' -----------------------------------------------------------------------------------
+    ' mass balancing
+
+        N_NH4(L) = N_NH4(L) + N_NH4_netSink * (suolo(L).spess / 100)
+        N_NO3(L) = N_NO3(L) + N_NO3_netSink * (suolo(L).spess / 100)
+        C_litter(L) = C_litter(L) + litterCNetSink * (suolo(L).spess / 100)
+        C_humus(L) = C_humus(L) + humusCNetSink * (suolo(L).spess / 100)
+        N_litter(L) = N_litter(L) + litterNNetSink * (suolo(L).spess / 100)
+        N_humus(L) = N_humus(L) + humusNNetSink * (suolo(L).spess / 100)
+        N_urea(L) = N_urea(L) - N_Urea_Hydr(L)
+
+        'If N_NH4(L) < 0 Then Stop
+        'If N_NO3(L) < 0 Then Stop
+        'If C_litter(L) < 0 Then Stop
+        'If C_humus(L) < 0 Then Stop
+        'If N_litter(L) < 0 Then Stop
+        'If N_humus(L) < 0 Then Stop
+
+        N_NH4(L) = max(0, N_NH4(L))
+        N_NO3(L) = max(0, N_NO3(L))
+        C_litter(L) = max(0, C_litter(L))
+        C_humus(L) = max(0, C_humus(L))
+        N_litter(L) = max(0, N_litter(L))
+        N_humus(L) = max(0, N_humus(L))
+        N_urea(L) = max(0, N_urea(L))
+
+        ' profile totals
+        N_humusGG = N_humusGG + N_humus(L)
+        N_litterGG = N_litterGG + N_litter(L)
+        N_litter_humusGG = N_litter_humusGG + N_litter_humus(L)
+        N_min_humusGG = N_min_humusGG + N_min_humus(L)
+        N_min_litterGG = N_min_litterGG + N_min_litter(L)
+        N_imm_l_NH4GG = N_imm_l_NH4GG + N_imm_l_NH4(L)
+        N_imm_l_NO3GG = N_imm_l_NO3GG + N_imm_l_NO3(L)
+        C_humusGG = C_humusGG + C_humus(L)
+        C_min_humusGG = C_min_humusGG + C_min_humus(L)
+        C_litter_humusGG = C_litter_humusGG + C_litter_humus(L)
+        C_litter_litterGG = C_litter_litterGG + C_litter_litter(L)
+        C_min_litterGG = C_min_litterGG + C_min_litter(L)
+        C_litterGG = C_litterGG + C_litter(L)
+        N_NO3_uptakeGG = N_NO3_uptakeGG + N_NO3_uptake(L)
+        N_NH4_uptakeGG = N_NH4_uptakeGG + N_NH4_uptake(L)
+        N_NH4_volGG = N_NH4_volGG + N_vol(L)
+        N_nitrifGG = N_nitrifGG + N_nitrif(L)
+        N_Urea_HydrGG = N_Urea_HydrGG + N_Urea_Hydr(L)
+        N_denitrGG = N_denitrGG + N_denitr(L)
+
+    Next L
+
+    updateNCrop
+
+End Sub
+
+
+// da valutare
+Public Sub N_Initialize()
+'****************************************************************
+'Scopo: lettura da tbAzoto di coefficienti relativi al ciclo di N
+'****************************************************************
+'04.08.04.VM eliminazione dei vettori di costanti
+'00.07.19.VM.MVS nuova sub chiamata da SUB_INI_Profilo per le variabili dell'azoto
+'****************************************************************
+
+    tbAzoto.MoveFirst
+
+    Rate_C_HumusMin = tbAzoto("miner_rate_humus")
+    Rate_C_LitterMin = tbAzoto("miner_rate_litter")
+    Rate_N_NH4_Volatilization = tbAzoto("volatNH4_rate")
+    Rate_N_Denitrification = tbAzoto("denitr_rate")
+    Max_afp_denitr = tbAzoto("denitr_max_AFPF")
+    Csat_denitr = tbAzoto("denitr_Csat")
+    Rate_Urea_Hydr = tbAzoto("hydr_urea")
+    Rate_N_Nitrification = tbAzoto("nitr_rate")
+    limRatio_nitr = tbAzoto("nitr_limRatio")
+    FE = tbAzoto("Fe")
+    FH = tbAzoto("Fh")
+    CNratio_humus = tbAzoto("CNh")
+    Kd_NH4 = tbAzoto("Kd_NH4")
+    Q10 = tbAzoto("Q10")
+    Tbase = tbAzoto("TBase")
+
+    CNratio_biomass = CNratio_humus
+    FlagSO = 1
+
+    '2008.02 GA da inserire in database
+    Nitrogen.N_deficit_max_days = 3
+    ReDim Nitrogen.N_deficit_daily(0)
+    N_CropToHarvest = 0
+    N_CropToResidues = 0
+    N_Roots = 0
+
+End Sub
+
+
+void N_Fertilization()
+{
+    //07.12.17 GA cambiata dichiarazione da Integer a Single per concentrazioni (per valori frazionari)
+    //02.11.27.MVS aggiunta concime organico
+    //02.11.26.MVS aggiunta N_NO3_fertGG e N_NH4_fertGG per il bilancio
+    //02.03.10.GD
+    //01.01.10.GD
+    //00.06.16.GD.MVS Questa sub è attivata nel momento della concimazione.
+    //-------------- NOTE -----------------------------------------------------
+    //Legge i dati dalla story e alimenta il suolo con le forme azotate appropiate.
+    //-------------- Input Variables ------------------------------------------
+    //N_NH4()                    [g m-2] azoto sotto forma ammoniacale
+    //N_NO3()                    [g m-2] azoto sotto forma nitrica
+    //nrLayers                    [-] numero di strati del profilo simulato
+    //ProfConcimeN               [cm] profondità della concimazione azotata
+    //QuantitàConcimeTot               [kg ha -1] quantità totale di concime di azoto
+    //Suolo().Spess              [cm] spessore dello strato
+    //-------------- Output Variables -----------------------------------------
+    //N_NH4()                    [g m-2] azoto sotto forma ammoniacale
+    //N_NO3()                    [g m-2] azoto sotto forma nitrica
+    //-------------- Internal Variables ---------------------------------------
+    //
+    //-------------- Input Parameters -----------------------------------------
+    //
+    //-------------- Internal Parameters --------------------------------------
+    float* quantityN = (float *) calloc(nrLayers, sizeof(float));
+    int L;//            'contatore
+    int LL;//        'contatore
+    float quantityNcm; // As Single   'quantità per cm
+    float percNO3; // As Single       'percentuale di nitrato nel concime
+    float percNH4; // As Single      'percentuale di ione ammonio nel concime
+    float percNorg; // As Single       'percentuale di sostanza organica nel concime
+
+    int ID_Fertilizer;
+    string ID_TipoConcime // As String (valutare come trattarlo)
+    float QuantityNtot;
+    float titoloN;
+    float C_N_organic;
+    string str; // valutare As String
+    float* N_Norg_fert = (float *) calloc(nrLayers, sizeof(float)); // As Single
+    float* N_NO3_fert = (float *) calloc(nrLayers, sizeof(float)); // As Single
+    float* N_NH4_fert = (float *) calloc(nrLayers, sizeof(float)); // As Single
+
+    // ReDim N_Norg_fert(nrLayers)
+    // ReDim N_NO3_fert(nrLayers)
+    // ReDim N_NH4_fert(nrLayers)
+    // ReDim QuantitàN(nrLayers)
+
+    str = "ID_FERTILIZER = " & TipoConcime & ""
+
+    // 'calcolo quantità N nella concimazione N/P/K
+    tbConcimi.FindFirst str
+    If Not tbConcimi.NoMatch Then
+        ID_Fertilizer = tbConcimi("ID_FERTILIZER")
+        ID_TipoConcime = tbConcimi("ID_tipo")
+        TitoloN = tbConcimi("TitoloN")
+        PercNO3 = tbConcimi("N-NO3")
+        PercNH4 = tbConcimi("N-NH4")
+        PercNorg = tbConcimi("N-Norg")
+        C_N_organico = tbConcimi("C_N_organico")
+    Else
+        StampaErrore ("type of fertilizer missing")
+    End If
+
+
+    if (ID_TipoConcime == "organico")
+    {
+        //letame e liquame è espresso in tonnellate
+        QuantitàConcimeTot = QuantitàConcimeTot *= 1000;  //da tonnellate a kg
+    }
+
+    QuantitàNtot = QuantitàConcimeTot / 100 * TitoloN;
+
+    //perdita immediata per volatilizzazione dell'urea
+    if (ID_Fertilizer == FERTILIZER_UREA)
+        QuantityNtot *= 0.8;
+
+    //2007.04 GA se profondità = 0 (tutto nei primi 10 cm)
+    if (ProfConcime == 0)
+        ProfConcime = 10;
+
+    // divido la quantità per cm
+    quantityNcm = QuantityNtot / ProfConcime;
+    for (L = 0; L < nrLayers; L++)
+    {
+        if (quantityNtot == 0)
+        {
+            LL = L - 1;
+            break;
+        }
+        quantityN[L] = quantityNcm * suolo[L].spess;
+        if (quantityN[L] > quantityNtot)
+            QuantityN[L] = QuantityNtot; //controllo per non superare la quantità di concime nell'ultimo strato concimato
+        quantityNtot -= quantityN[L];
+        quantityN[L] /= 10 // da kg ha-1 a g m-2
+    }
+
+    for (L=0; L<LL; L++)
+    {
+        //'2007.12 GA inserita concimazione ureica (prima N_urea era sempre 0!)
+        //'perdita del 30% per volatilizzazione immediata
+        if ID_Fertilizer = FERTILIZER_UREA
+            N_urea[L] = quantityN[L];
+
+        N_NO3_fert[L] = PercNO3 * QuantitàN[L] / 100;
+        N_NH4_fert[L] = PercNH4 * QuantitàN[L] / 100;
+        N_Norg_fert[L] = PercNorg * QuantitàN[L] / 100;
+
+        //per il bilancio...
+        N_NO3_fertGG += N_NO3_fert[L];
+        N_NH4_fertGG += N_NH4_fert[L];
+
+        N_NO3[L] += N_NO3_fert[L]; //aggiornamento N_NO3
+        N_NH4[L] += N_NH4_fert[L]; //aggiornamento N_NH4
+        N_litter[L] += N_Norg_fert[L]; //aggiornamento N_litter
+        C_litter[L] += N_Norg_fert[L] * C_N_organic; //aggiornamento C_litter
+    }
+
+}
+
+// da valutare
+Public Sub N_InitializeVariables()
+'2004.08.16.VM introduzione di FUN_CNhumus_INI e LitterIni
+'2004.08.05.VM eliminato da tbLog la costante CNratio_humus
+'2004.06.25.VM forzato la sostanza organica del suolo
+'2002.03.15.GD correzione calcolo N_humus
+'2000.11.20.MVS nuovo codice sulla lettura di tbIniProfilo e tblog
+'1999.12.02.MVS cambiamento tbUscite in tbUscite_azoto...
+'1999.05.20.GD
+'1999.03.15.GD
+'-------------- NOTE -----------------------------------------------------
+'Questa routine carica i valori iniziali nelle variabili
+'utilizzando due metodi alternativi:
+'1) nel caso la simulazione sia stata interrotta legge
+'   lo stato delle variabili dal database delle uscite
+'2) nel caso la simulazione sia nuova pone a zero oppure a valori
+'   iniziali le stesse variabili
+'-------------- Input Variables ------------------------------------------
+'nrLayers           [-] numero di strati
+'DataIniziale      [-] data di inizio della simulazione
+'-------------- Output Variables -----------------------------------------
+
+'-------------- Internal Variables ---------------------------------------
+Dim L As Integer   '[-] numero dello strato
+Dim Nome$          '[-] nome del campo umidità
+'-------------- Input Parameters -----------------------------------------
+'
+'-------------- Internal Parameters --------------------------------------
+'
+'-------------------------------------------------------------------------
+    Dim dataformattata As String
+    Dim i As Integer
+    Dim variable As String
+    Dim fldname As String
+
+    dataformattata = "Data=#" & format(Month(Attuale), "00") & "/" & format(Day(Attuale), "00") & "/" & format(Year(Attuale), "0000") & "#"    ' - 1900, "00") & "#" '****cambio formato
+
+    tbUscite_Azoto.FindFirst dataformattata
+
+    If Envi = "GEO" Then
+        If Not tbLog.EOF Then
+
+            While Not tbLog.EOF
+
+                    variable = tbLog("Varname")
+
+                    If variable = "C_humus" Or _
+                       variable = "C_litter" Or _
+                       variable = "N_Humus" Or _
+                       variable = "N_litter" Or _
+                       variable = "N_NH4" Or _
+                       variable = "N_NH4_Adsorbed" Or _
+                       variable = "N_NO3" Or _
+                       variable = "N_urea" Or _
+                       variable = "CNratio_litter" Then
+
+                        For L = 1 To nrLayers
+                            fldname = "Str" & CStr(L)
+                            If variable = "C_humus" Then C_humus(L) = CSng(tbLog(fldname))
+                            If variable = "C_litter" Then C_litter(L) = CSng(tbLog(fldname))
+                            If variable = "N_Humus" Then N_humus(L) = CSng(tbLog(fldname))
+                            If variable = "N_litter" Then N_litter(L) = CSng(tbLog(fldname))
+                            If variable = "N_NH4" Then N_NH4(L) = CSng(tbLog(fldname))
+                            If variable = "N_NH4_Adsorbed" Then N_NH4_Adsorbed(L) = CSng(tbLog(fldname))
+                            If variable = "N_NO3" Then N_NO3(L) = CSng(tbLog(fldname))
+                            If variable = "N_urea" Then N_urea(L) = CSng(tbLog(fldname))
+                            If variable = "CNratio_litter" Then CNratio_litter(L) = CSng(tbLog(fldname))
+                        Next L
+                    End If
+                tbLog.MoveNext
+            Wend
+            tbLog.MoveFirst
+
+        Else
+            HumusIni
+            LitterIni
+            Partitioning
+        End If
+
+    Else
+        HumusIni
+        LitterIni
+        Partitioning
+    End If
+
+    'azzeramento delle variabili non rilette
+
+    ProfiloNO3 = ProfileSum(N_NO3())
+    ProfiloNH4 = ProfileSum(N_NH4())
+
+End Sub
+
+// da valutare come replicare se fare riferimento ad un database
+Public Sub ApriTabellaUsciteAzoto(tbname_azoto As String)
+
+
+Dim L As Integer
+
+    If Not TableExists(dbNitrogen, tbname_azoto) Then
+
+        Dim td As TableDef
+
+        Set td = dbWater.CreateTableDef(tbname_azoto)
+
+        Dim data As field
+        Set data = td.CreateField("DATA", dbDate)
+        td.fields.Append data
+
+        Dim ind As Index
+        Set ind = td.CreateIndex("Primario")
+        Set data = ind.CreateField("Data")
+        ind.Primary = True
+        ind.Required = True
+        ind.IgnoreNulls = False
+        ind.Unique = True
+
+        ind.fields.Append data
+        td.Indexes.Append ind
+
+        If FlVarOutN_NO3strato = True Then
+
+            Dim fldN_NO3() As field
+            ReDim fldN_NO3(NOutputLayer)
+            For L = 1 To NOutputLayer
+                Set fldN_NO3(L) = td.CreateField("N_NO3" + CStr(L), dbSingle)
+                td.fields.Append fldN_NO3(L)
+            Next L
+
+        End If
+
+        If FlVarOutN_NH4strato = True Then
+            Dim fldN_NH4() As field
+            ReDim fldN_NH4(NOutputLayer)
+            For L = 1 To NOutputLayer
+                Set fldN_NH4(L) = td.CreateField("N_NH4" + CStr(L), dbSingle)
+                td.fields.Append fldN_NH4(L)
+            Next L
+        End If
+
+        If FlVarOutProfiloNH4 = True Then
+            Dim fldProfiloNH4 As field 'GG
+            Set fldProfiloNH4 = td.CreateField("ProfiloNH4", dbSingle)
+            td.fields.Append fldProfiloNH4
+        End If
+
+        If FlVarOutN_NH4_fertGG = True Then
+            Dim fldN_NH4_fertGG As field 'GG
+            Set fldN_NH4_fertGG = td.CreateField("N_NH4_fertGG", dbSingle)
+            td.fields.Append fldN_NH4_fertGG
+        End If
+
+        If FlVarOutN_min_humusGG = True Then
+            Dim fldN_min_humusGG As field
+            Set fldN_min_humusGG = td.CreateField("N_min_humusGG", dbSingle)
+            td.fields.Append fldN_min_humusGG
+        End If
+
+        If FlVarOutN_min_litterGG = True Then
+            Dim fldN_min_litterGG As field 'NEW!
+            Set fldN_min_litterGG = td.CreateField("N_min_litterGG", dbSingle)
+            td.fields.Append fldN_min_litterGG
+        End If
+
+        If FlVarOutN_idr_ureaGG = True Then
+            Dim fldN_idr_ureaGG As field 'GG
+            Set fldN_idr_ureaGG = td.CreateField("N_idr_ureaGG", dbSingle)
+            td.fields.Append fldN_idr_ureaGG
+        End If
+
+        If FlVarOutN_NH4adsorbGG = True Then
+            Dim fldN_NH4adsorbGG As field 'NEW!
+            Set fldN_NH4adsorbGG = td.CreateField("N_NH4adsorbGG", dbSingle)
+            td.fields.Append fldN_NH4adsorbGG
+        End If
+
+        If FlVarOutN_imm_l_NH4GG = True Then
+            Dim fldN_imm_l_NH4GG As field 'NEW!
+            Set fldN_imm_l_NH4GG = td.CreateField("N_imm_l_NH4GG", dbSingle)
+            td.fields.Append fldN_imm_l_NH4GG
+        End If
+
+        If FlVarOutN_volGG = True Then
+            Dim fldN_volGG  As field 'GG
+            Set fldN_volGG = td.CreateField("N_volGG", dbSingle)
+            td.fields.Append fldN_volGG
+        End If
+
+        If FlVarOutN_nitrifGGNH4 = True Then
+            Dim fldN_nitrifGGnh4 As field 'GG
+            Set fldN_nitrifGGnh4 = td.CreateField("N_nitrifGGnh4", dbSingle)
+            td.fields.Append fldN_nitrifGGnh4
+        End If
+
+        If FlVarOutN_NH4_uptakeGG = True Then
+            Dim fldN_NH4_uptakeGG As field 'GG
+            Set fldN_NH4_uptakeGG = td.CreateField("NH4_uptakeGG", dbSingle)
+            td.fields.Append fldN_NH4_uptakeGG
+        End If
+
+        If FlVarOutN_NH4_runoff0GG = True Then
+            Dim fldN_NH4_runoff0GG As field
+            Set fldN_NH4_runoff0GG = td.CreateField("N_NH4_runoff0GG", dbSingle)
+            td.fields.Append fldN_NH4_runoff0GG
+        End If
+
+        If FlVarOutN_NH4_runoffGG = True Then
+            Dim fldN_NH4_runoffGG As field
+            Set fldN_NH4_runoffGG = td.CreateField("N_NH4_runoffGG", dbSingle)
+            td.fields.Append fldN_NH4_runoffGG
+        End If
+
+        If FlVarOutFlux_NH4GG = True Then
+            Dim fldFlux_NH4GG As field
+            Set fldFlux_NH4GG = td.CreateField("Flux_NH4GG", dbSingle)
+            td.fields.Append fldFlux_NH4GG
+        End If
+
+        If FlVarOutBilFinaleNH4 = True Then
+            Dim fldBilFinaleNH4 As field
+            Set fldBilFinaleNH4 = td.CreateField("BilFinaleNH4", dbSingle)
+            td.fields.Append fldBilFinaleNH4
+        End If
+
+        'BILANCIO NO3
+        If FlVarOutProfiloNO3 = True Then
+            Dim fldProfiloNO3 As field 'GG
+            Set fldProfiloNO3 = td.CreateField("ProfiloNO3", dbSingle)
+            td.fields.Append fldProfiloNO3
+        End If
+
+        If FlVarOutN_NO3_fertGG = True Then
+            Dim fldN_NO3_fertGG As field 'GG
+            Set fldN_NO3_fertGG = td.CreateField("N_NO3_fertGG", dbSingle)
+            td.fields.Append fldN_NO3_fertGG
+        End If
+
+        If FlVarOutPrecN_NO3GG = True Then
+            Dim fldPrecN_NO3GG As field 'GG
+            Set fldPrecN_NO3GG = td.CreateField("PrecN_NO3GG", dbSingle)
+            td.fields.Append fldPrecN_NO3GG
+        End If
+
+        If FlVarOutN_nitrifGGNO3 = True Then
+            Dim fldN_nitrifGGno3 As field 'sommato a NO3 e sottratto a NH4!
+            Set fldN_nitrifGGno3 = td.CreateField("N_nitrifGGno3", dbSingle)
+            td.fields.Append fldN_nitrifGGno3
+        End If
+
+        If FlVarOutN_imm_l_NO3GG = True Then
+            Dim fldN_imm_l_NO3GG As field 'NEW!
+            Set fldN_imm_l_NO3GG = td.CreateField("N_imm_l_NO3GG", dbSingle)
+            td.fields.Append fldN_imm_l_NO3GG
+        End If
+
+        If FlVarOutN_denitrGG = True Then
+            Dim fldN_denitrGG As field 'GG
+            Set fldN_denitrGG = td.CreateField("N_denitrGG", dbSingle)
+            td.fields.Append fldN_denitrGG
+        End If
+
+        If FlVarOutN_NO3_uptakeGG = True Then
+            Dim fldN_NO3_uptakeGG As field 'GG
+            Set fldN_NO3_uptakeGG = td.CreateField("NO3_uptakeGG", dbSingle)
+            td.fields.Append fldN_NO3_uptakeGG
+        End If
+
+        If FlVarOutN_NO3_runoff0GG = True Then
+            Dim fldN_NO3_runoff0GG As field
+            Set fldN_NO3_runoff0GG = td.CreateField("N_NO3_runoff0GG", dbSingle)
+            td.fields.Append fldN_NO3_runoff0GG
+        End If
+
+        If FlVarOutN_NO3_runoffGG = True Then
+            Dim fldN_NO3_runoffGG As field
+            Set fldN_NO3_runoffGG = td.CreateField("N_NO3_runoffGG", dbSingle)
+            td.fields.Append fldN_NO3_runoffGG
+        End If
+
+        If FlVarOutFlux_NO3GG = True Then
+            Dim fldFlux_NO3GG As field
+            Set fldFlux_NO3GG = td.CreateField("Flux_NO3GG", dbSingle)
+            td.fields.Append fldFlux_NO3GG
+        End If
+
+        If FlVarOutBilFinaleNO3 = True Then
+            Dim fldBilFinaleNO3 As field
+            Set fldBilFinaleNO3 = td.CreateField("BilFinaleNO3", dbSingle)
+            td.fields.Append fldBilFinaleNO3
+        End If
+
+        'GENERALE
+        If FlVarOutC_litter_humusGG = True Then
+            Dim fldC_litter_humusGG As field 'GG
+            Set fldC_litter_humusGG = td.CreateField("C_litter_humusGG", dbSingle)
+            td.fields.Append fldC_litter_humusGG
+        End If
+
+        If FlVarOutC_litter_litterGG = True Then
+            Dim fldC_litter_litterGG As field 'GG
+            Set fldC_litter_litterGG = td.CreateField("C_litter_litterGG", dbSingle)
+            td.fields.Append fldC_litter_litterGG
+        End If
+
+        If FlVarOutC_min_litterGG = True Then
+            Dim fldC_min_litterGG As field 'GG
+            Set fldC_min_litterGG = td.CreateField("C_min_litterGG", dbSingle)
+            td.fields.Append fldC_min_litterGG
+        End If
+
+        If FlVarOutC_min_humusGG = True Then
+            Dim fldC_min_humusGG As field 'GG
+            Set fldC_min_humusGG = td.CreateField("C_min_humusGG", dbSingle)
+            td.fields.Append fldC_min_humusGG
+        End If
+
+        If FlVarOutC_humusGG = True Then
+            Dim fldC_humusGG As field 'GG
+            Set fldC_humusGG = td.CreateField("C_humusGG", dbSingle)
+            td.fields.Append fldC_humusGG
+        End If
+
+        If FlVarOutC_litterGG = True Then
+            Dim fldC_litterGG As field 'GG
+            Set fldC_litterGG = td.CreateField("C_litterGG", dbSingle)
+            td.fields.Append fldC_litterGG
+        End If
+
+        If FlVarOutN_humusGG = True Then
+            Dim fldN_humus_totGG As field
+            Set fldN_humus_totGG = td.CreateField("N_humusGG", dbSingle)
+            td.fields.Append fldN_humus_totGG
+        End If
+
+        If FlVarOutN_litterGG = True Then
+            Dim fldN_litter_totGG As field
+            Set fldN_litter_totGG = td.CreateField("N_litterGG", dbSingle)
+            td.fields.Append fldN_litter_totGG
+        End If
+
+        If FlVarOutN_uptakePOTGG = True Then
+            Dim fldN_uptakePOTGG As field 'GG
+            Set fldN_uptakePOTGG = td.CreateField("N_uptakePOTGG", dbSingle)
+            td.fields.Append fldN_uptakePOTGG
+        End If
+
+        dbNitrogen.TableDefs.Append td
+
+    End If
+
+    Set tbUscite_Azoto = dbNitrogen.OpenRecordset(tbname_azoto, dbOpenDynaset)
+
+End Sub
+
+// da valutare come riscrivere gli output
+Public Sub N_Output()
+
+Dim L As Integer
+
+    If FlVarOutN_NO3strato Then SUB_UTIL_AggregaOutput N_NO3(), tbUscite_Azoto, "N_NO3", 10  'da [g m-2] a [kg ha-1]
+
+    '2007.12 GA
+    If FlVarOutN_NH4strato Then SUB_UTIL_AggregaOutput N_NH4(), tbUscite_Azoto, "N_NH4", 10
+    If FlVarOutProfiloNH4 Then tbUscite_Azoto("ProfiloNH4") = max(tbUscite_Azoto("ProfiloNH4"), ProfiloNH4 * 10)  'da g m-2 a kg ha-1
+    If FlVarOutN_NH4_fertGG Then tbUscite_Azoto("N_NH4_fertGG") = tbUscite_Azoto("N_NH4_fertGG") + N_NH4_fertGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_min_humusGG Then tbUscite_Azoto("N_min_humusGG") = tbUscite_Azoto("N_min_humusGG") + N_min_humusGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_min_litterGG Then tbUscite_Azoto("N_min_litterGG") = tbUscite_Azoto("N_min_litterGG") + N_min_litterGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_idr_ureaGG Then tbUscite_Azoto("N_idr_ureaGG") = tbUscite_Azoto("N_idr_ureaGG") + N_Urea_HydrGG * 10
+    If FlVarOutN_NH4adsorbGG Then tbUscite_Azoto("N_NH4adsorbGG") = tbUscite_Azoto("N_NH4adsorbGG") + N_NH4_AdsorbedGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_imm_l_NH4GG Then tbUscite_Azoto("N_imm_l_NH4GG") = tbUscite_Azoto("N_imm_l_NH4GG") + N_imm_l_NH4GG * 10
+    If FlVarOutN_volGG Then tbUscite_Azoto("N_volGG") = tbUscite_Azoto("N_volGG") + N_NH4_volGG * 10
+    If FlVarOutN_nitrifGGNH4 Then tbUscite_Azoto("N_nitrifGGnh4") = tbUscite_Azoto("N_nitrifGGnh4") + N_nitrifGG * 10
+    If FlVarOutN_NH4_uptakeGG Then tbUscite_Azoto("NH4_uptakeGG") = tbUscite_Azoto("NH4_uptakeGG") + N_NH4_uptakeGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_NH4_runoff0GG Then tbUscite_Azoto("N_NH4_runoff0GG") = tbUscite_Azoto("N_NH4_runoff0GG") + N_NH4_runoff0GG * 10
+    If FlVarOutN_NH4_runoffGG Then tbUscite_Azoto("N_NH4_runoffGG") = tbUscite_Azoto("N_NH4_runoffGG") + N_NH4_runoffGG * 10
+    If FlVarOutFlux_NH4GG Then tbUscite_Azoto("Flux_NH4GG") = tbUscite_Azoto("Flux_NH4GG") + Flux_NH4GG * 10
+    If FlVarOutBilFinaleNH4 Then tbUscite_Azoto("BilFinaleNH4") = tbUscite_Azoto("BilFinaleNH4") + BilFinaleNH4 * 10
+
+    If FlVarOutProfiloNO3 Then tbUscite_Azoto("ProfiloNO3") = max(tbUscite_Azoto("ProfiloNO3"), ProfiloNO3 * 10)  'da g m-2 a kg ha-1
+    If FlVarOutN_NO3_fertGG Then tbUscite_Azoto("N_NO3_fertGG") = tbUscite_Azoto("N_NO3_fertGG") + N_NO3_fertGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutPrecN_NO3GG Then tbUscite_Azoto("PrecN_NO3GG") = tbUscite_Azoto("PrecN_NO3GG") + PrecN_NO3GG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_nitrifGGNO3 Then tbUscite_Azoto("N_nitrifGGno3") = tbUscite_Azoto("N_nitrifGGno3") + N_nitrifGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_imm_l_NO3GG Then tbUscite_Azoto("N_imm_l_NO3GG") = tbUscite_Azoto("N_imm_l_NO3GG") + N_imm_l_NO3GG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_denitrGG Then tbUscite_Azoto("N_denitrGG") = tbUscite_Azoto("N_denitrGG") + N_denitrGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_NO3_uptakeGG Then tbUscite_Azoto("NO3_uptakeGG") = tbUscite_Azoto("NO3_uptakeGG") + N_NO3_uptakeGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_NO3_runoff0GG Then tbUscite_Azoto("N_NO3_runoff0GG") = tbUscite_Azoto("N_NO3_runoff0GG") + N_NO3_runoff0GG * 10
+    If FlVarOutN_NO3_runoffGG Then tbUscite_Azoto("N_NO3_runoffGG") = tbUscite_Azoto("N_NO3_runoffGG") + N_NO3_runoffGG * 10
+    If FlVarOutFlux_NO3GG Then tbUscite_Azoto("Flux_NO3GG") = tbUscite_Azoto("Flux_NO3GG") + Flux_NO3GG * 10
+    If FlVarOutBilFinaleNO3 Then tbUscite_Azoto("BilFinaleNO3") = tbUscite_Azoto("BilFinaleNO3") + BilFinaleNO3 * 10
+
+'GENERALE
+    If FlVarOutC_litter_humusGG Then tbUscite_Azoto("C_litter_humusGG") = tbUscite_Azoto("C_litter_humusGG") + C_litter_humusGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutC_litter_litterGG Then tbUscite_Azoto("C_litter_litterGG") = tbUscite_Azoto("C_litter_litterGG") + C_litter_litterGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutC_min_litterGG Then tbUscite_Azoto("C_min_litterGG") = tbUscite_Azoto("C_min_litterGG") + C_min_litterGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutC_min_humusGG Then tbUscite_Azoto("C_min_humusGG") = tbUscite_Azoto("C_min_humusGG") + C_min_humusGG * 10 'da g m-2 a kg ha-1
+
+    If FlVarOutC_humusGG Then tbUscite_Azoto("C_humusGG") = tbUscite_Azoto("C_humusGG") + C_humusGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutC_litterGG Then tbUscite_Azoto("C_litterGG") = tbUscite_Azoto("C_litterGG") + C_litterGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_humusGG Then tbUscite_Azoto("N_humusGG") = tbUscite_Azoto("N_humusGG") + N_humusGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_litterGG Then tbUscite_Azoto("N_litterGG") = tbUscite_Azoto("N_litterGG") + N_litterGG * 10 'da g m-2 a kg ha-1
+    If FlVarOutN_uptakePOTGG Then tbUscite_Azoto("N_uptakePOTGG") = tbUscite_Azoto("N_uptakePOTGG") + N_DailyDemand * 10
+
+End Sub
+
+void N_Main()
+{
+    //******** MAIN NITROGEN ROUTINE******************************
+    //2008.09 GA
+    //04.08.05.VM Version 2004.4
+    //04.02.20.VM VERSION 2004.3
+    //04.01.28.FZ REVISIONE 2004.2
+    //04.01.09.FZ REVISIONE 2004.1
+    //02.11.26.MVS riscritto il vecchio SUB_SOIL_N
+
+    //inputs from precipitation
+        //da dati deposizioni umide ARPA
+        //pianura ravennate-bolognese media areale di 400 eqN ha-1 y-1 (1 eqN = 14 g)
+        //6 kg ha-1 y-1
+        //considerando una precipitazione annua di 400 mm
+        //0.015 kg ha-1 N mm-1
+        //0.0015 g m-2 N mm-1
+        //suddividendo equamente tra NO3 e NH4
+        //0.00075 g m-2 N nitrico e ammoniacale mm-1
+        //controllare dati di concentrazione ARPA piogge
+
+    if (precGG > 0)
+    {
+        precN_NO3GG = 0.00075 * precGG;
+        precN_NH4GG = 0.00075 * precGG;
+        N_NO3[0] += PrecN_NO3GG;
+        N_NH4[0] += PrecN_NH4GG;
+        partitioning();
+    }
+
+    N_Uptake();
+    // definire attuale
+    if (Attuale == Date_N_EndCrop)
+        N_Harvest();
+
+    if (Attuale == Date_N_Plough)
+        N_Plough();
+
+    //ciclo della sostanza organica e le trasformazioni dell'azoto
+    chemicalTransformations();
+    partitioning();
+
+    //flussi di azoto nel suolo
+    float myPistonDepth;
+        //myPistonDepth = FindPistonDepth
+        //SoluteFluxesPiston N_NO3, myPistonDepth, Flux_NO3GG
+        //SoluteFluxesPiston N_NH4, myPistonDepth, Flux_NH4GG
+
+    soluteFluxes(N_NO3, FlagWaterTableUpward, myPistonDepth, flux_NO3GG);
+
+    soluteFluxes (N_NH4_Sol, FlagWaterTableUpward, myPistonDepth, Flux_NH4GG);
+    updateTotalOfPartitioned N_NH4, N_NH4_Adsorbed, N_NH4_Sol);
+    partitioning();
+
+    if (FlagWaterTableWashing)
+        leachingWaterTable(N_NO3, flux_NO3GG);
+
+    if (FlagWaterTableWashing)
+        leachingWaterTable(N_NH4_Sol, Flux_NH4GG);
+    updateTotalOfPartitioned(N_NH4, N_NH4_Adsorbed, N_NH4_Sol);
+    partitioning;
+
+    // perdita superficiale
+    if (FlagRunoff == 1)
+        N_SurfaceRunoff();
+    partitioning();
+
+    // perdita per ruscellamento ipodermico
+    If (FlagSSRunoff == 1 && FlagInfiltration != infiltration_1d)
+        N_SubSurfaceRunoff();
+    Partitioning
+
+    //bilanci
+    NH4_Balance();
+    NO3_Balance();
+}
+
+float CNRatio(float c,float n)
+{
+    // 2004.02.20.VM
+    // computes the C/N ratio
+    if (FlagSO != 1)
+        return 20.;
+    if (n > 0.000001)
+        return maxValue(0.001, c/n);
+    else
+        return 100.;
+}
 
 void computeWaterCorrectionFactor(int L)
 {
@@ -240,9 +1197,7 @@ void computeWaterCorrectionFactor(int L)
         waterCorrectionFactor[L] = 1;
     else if (myTheta < wLow)
         waterCorrectionFactor[L] = pow(((maxValue(myTheta, wMin) - wMin) / (wLow - wMin)),RM);
-
 }
-
 
 void computeTemperatureCorrectionFactor(int L)
 {
