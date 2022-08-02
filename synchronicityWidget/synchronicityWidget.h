@@ -28,6 +28,8 @@
             void clearStationGraph();
             void addInterpolationGraph();
             void clearInterpolationGraph();
+            void changeSmooth();
+            void changeInterpolationDate();
             void smoothSerie();
             void setReferencePointId(const std::string &value);
             void on_actionChangeLeftSynchAxis();
@@ -72,6 +74,7 @@
             InterpolationChartView *interpolationChartView;
             std::vector<float> interpolationDailySeries;
             std::vector<float> smoothInterpDailySeries;
+            QDate interpolationStartDate;
 
     signals:
             void closeSynchWidget();

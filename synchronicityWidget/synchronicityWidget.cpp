@@ -196,6 +196,9 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     connect(&stationClearGraph, &QPushButton::clicked, [=](){ clearStationGraph(); });
     connect(&interpolationAddGraph, &QPushButton::clicked, [=](){ addInterpolationGraph(); });
     connect(&interpolationClearGraph, &QPushButton::clicked, [=](){ clearInterpolationGraph(); });
+    connect(&smooth, QOverload<int>::of(&QSpinBox::valueChanged), [=](){ changeSmooth(); });
+    connect(&interpolationDateFrom, &QDateEdit::dateChanged, [=](){ this->changeInterpolationDate(); });
+    connect(&interpolationDateTo, &QDateEdit::dateChanged, [=](){ this->changeInterpolationDate(); });
     connect(changeSynchronicityLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis);
     connect(changeInterpolationLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftInterpolationAxis);
 
@@ -386,7 +389,7 @@ void Crit3DSynchronicityWidget::clearInterpolationGraph()
 
 void Crit3DSynchronicityWidget::addInterpolationGraph()
 {
-    QDate myStartDate = interpolationDateFrom.date();
+    interpolationStartDate = interpolationDateFrom.date();
     QDate myEndDate = interpolationDateTo.date();
     int myLag = interpolationLag.text().toInt();
     int mySmooth = smooth.text().toInt();
@@ -395,16 +398,16 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
 
     std::vector<float> dailyValues;
     QString myError;
-    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, &mp);
+    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(interpolationStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, &mp);
     if (dailyValues.empty())
     {
         QMessageBox::information(nullptr, "Error", "No data for active station");
         return;
     }
 
-    if (firstDaily.addDays(std::min(0,myLag)) > myStartDate)
+    if (firstDaily.addDays(std::min(0,myLag)) > interpolationStartDate)
     {
-        myStartDate = firstDaily.addDays(std::min(0,myLag));
+        interpolationStartDate = firstDaily.addDays(std::min(0,myLag));
     }
     if (firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)) < myEndDate)
     {
@@ -425,12 +428,12 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
         {
             break;
         }
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(myStartDate), getCrit3DDate(myEndDate), &meteoPoints[i]);
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(interpolationStartDate), getCrit3DDate(myEndDate), &meteoPoints[i]);
     }
     progress.setValue(i+1);
     progress.close();
 
-    for (QDate currentDate = myStartDate; currentDate <= myEndDate; currentDate = currentDate.addDays(1))
+    for (QDate currentDate = interpolationStartDate; currentDate <= myEndDate; currentDate = currentDate.addDays(1))
     {
         float myValue1 = dailyValues[firstDaily.daysTo(currentDate)+myLag];
         // check quality and pass data to interpolation
@@ -481,7 +484,7 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
         // smooth
         smoothSerie();
         // draw
-        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, myStartDate, variable.currentText(), myLag, mySmooth);
+        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth);
     }
 
 }
@@ -533,6 +536,21 @@ void Crit3DSynchronicityWidget::smoothSerie()
         smoothInterpDailySeries = interpolationDailySeries;
     }
 
+}
+
+void Crit3DSynchronicityWidget::changeSmooth()
+{
+    int myLag = interpolationLag.text().toInt();
+    int mySmooth = smooth.text().toInt();
+    smoothSerie();
+    // draw
+    interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth);
+}
+
+void Crit3DSynchronicityWidget::changeInterpolationDate()
+{
+    clearInterpolationGraph();
+    addInterpolationGraph();
 }
 
 void Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis()
