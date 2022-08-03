@@ -52,6 +52,10 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
 
+    stationClearAndReload = false;
+    interpolationClearAndReload = false;
+    interpolationChangeSmooth = false;
+
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QHBoxLayout *upperLayout = new QHBoxLayout();
@@ -245,13 +249,11 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
 void Crit3DSynchronicityWidget::changeVar(const QString varName)
 {
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
-    addStationGraph();
 }
 
 void Crit3DSynchronicityWidget::changeYears()
 {
-    clearStationGraph();
-    addStationGraph();
+    stationClearAndReload = true;
 }
 
 void Crit3DSynchronicityWidget::addStationGraph()
@@ -261,6 +263,11 @@ void Crit3DSynchronicityWidget::addStationGraph()
     {
         QMessageBox::information(nullptr, "Error", "Select a reference point on the map");
         return;
+    }
+    if (stationClearAndReload)
+    {
+        clearStationGraph();
+        stationClearAndReload = false;
     }
     QDate myStartDate(stationYearFrom.currentText().toInt(), 1, 1);
     QDate myEndDate(stationYearTo.currentText().toInt(), 12, 31);
@@ -389,11 +396,27 @@ void Crit3DSynchronicityWidget::clearInterpolationGraph()
 
 void Crit3DSynchronicityWidget::addInterpolationGraph()
 {
+    if (interpolationClearAndReload)
+    {
+        clearInterpolationGraph();
+        interpolationClearAndReload = false;
+    }
     interpolationStartDate = interpolationDateFrom.date();
     QDate myEndDate = interpolationDateTo.date();
     int myLag = interpolationLag.text().toInt();
     int mySmooth = smooth.text().toInt();
     QString elabType = interpolationElab.currentText();
+
+    if (interpolationChangeSmooth)
+    {
+        // draw without compute all series
+        interpolationChartView->setVisible(true);
+        smoothSerie();
+        // draw
+        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
+        interpolationChangeSmooth = false;
+        return;
+    }
     interpolationDailySeries.clear();
 
     std::vector<float> dailyValues;
@@ -540,18 +563,12 @@ void Crit3DSynchronicityWidget::smoothSerie()
 
 void Crit3DSynchronicityWidget::changeSmooth()
 {
-    int myLag = interpolationLag.text().toInt();
-    int mySmooth = smooth.text().toInt();
-    QString elabType = interpolationElab.currentText();
-    smoothSerie();
-    // draw
-    interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
+    interpolationChangeSmooth = true;
 }
 
 void Crit3DSynchronicityWidget::changeInterpolationDate()
 {
-    clearInterpolationGraph();
-    addInterpolationGraph();
+    interpolationClearAndReload = true;
 }
 
 void Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis()
