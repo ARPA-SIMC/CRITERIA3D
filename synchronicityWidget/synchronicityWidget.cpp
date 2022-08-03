@@ -127,7 +127,7 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     interpolationDateLayout->addWidget(interpolationYearFromLabel);
     interpolationDateFrom.setMaximumWidth(100);
     interpolationDateLayout->addWidget(&interpolationDateFrom);
-    QLabel *interpolationYearToLabel = new QLabel(tr("From"));
+    QLabel *interpolationYearToLabel = new QLabel(tr("To"));
     interpolationDateLayout->addWidget(interpolationYearToLabel);
     interpolationDateTo.setMaximumWidth(100);
     interpolationDateLayout->addWidget(&interpolationDateTo);
