@@ -214,35 +214,33 @@ class Crit3DCarbonNitrogenWholeProfile
  *
 
 
-Private Function convertToGramsPerM3(ByVal layerIndex As Integer, ByVal myQuantity As Single) As Single
-' convert from g m-2 to g m-3 (= mg dm-3)
-    convertToGramsPerM3 = myQuantity / (suolo(layerIndex).spess / 100)
-End Function
+float convertToGramsPerM3(int layerIndex,float myQuantity)
+{
+    // convert from g m-2 to g m-3 (= mg dm-3)
+    return myQuantity / (suolo[layerIndex].spess / 100);
+}
 
 
-Private Function convertToGramsPerLiter(ByVal layerIndex As Integer, ByVal myQuantity As Single) As Single
-' convert from g m-2 to g l-1
+float convertToGramsPerLiter(int layerIndex,float myQuantity)
+{
+    //' convert from g m-2 to g l-1
 
-    ' to g dm-3
-    convertToGramsPerLiter = convertToGramsPerM3(layerIndex, myQuantity) / 1000
-    ' to g l-1
-    convertToGramsPerLiter = convertToGramsPerLiter / WaterBalance.ConvertWCToVolumetric(suolo(layerIndex), U(layerIndex))  'to g l-1
-End Function
-
-
-Private Function convertToGramsPerKg(ByVal layerIndex As Integer, ByVal myQuantity As Single) As Single
-' convert from g m-2 to g kg-1
-
-    ' to g dm-3
-    convertToGramsPerKg = convertToGramsPerM3(layerIndex, myQuantity) / 1000
-
-    ' to g kg-1
-    convertToGramsPerKg = convertToGramsPerKg / suolo(layerIndex).MVA
-End Function
+    //' to g dm-3 and to g l-1
+    return (convertToGramsPerM3(layerIndex, myQuantity) / 1000)/WaterBalance.ConvertWCToVolumetric(suolo[layerIndex], U[layerIndex]);
+}
 
 
-Public Sub N_InitializeLayers()
+float convertToGramsPerKg(int layerIndex,float myQuantity)
+{
+    //' convert from g m-2 to g kg-1
 
+    //' to g dm-3 and then to g kg-1
+    return (convertToGramsPerM3(layerIndex, myQuantity) / 1000) / suolo(layerIndex).MVA;
+}
+
+// da valutare
+void N_InitializeLayers()
+{
     Erase C_humus
     Erase C_litter
     Erase C_litter_humus
@@ -303,24 +301,25 @@ Public Sub N_InitializeLayers()
     ReDim TCorr(nrLayers)
     ReDim WCorr(nrLayers)
 
-End Sub
+}
 
 
 Private Sub HumusIni()
-'2008.09 GA
-'GA 2007.12 perché C calcolato da (CN/CN+1) e non moltiplicando per 0.58 come solito?
-'computes initial humus carbon and nitrogen for a layer L
-'version 1.0, 2004.08.09.VM
+{
+    //'2008.09 GA
+    //'GA 2007.12 perché C calcolato da (CN/CN+1) e non moltiplicando per 0.58 come solito?
+    //'computes initial humus carbon and nitrogen for a layer L
+    //'version 1.0, 2004.08.09.VM
 
-    Dim L As Integer
-    'MVA                '[kg dm-3 = 10^6 g m-3]
+    int L;
+    // MVA                '[kg dm-3 = 10^6 g m-3]
 
-    For L = 1 To nrLayers
-        C_humus(L) = suolo(L).MVA * 1000000 * (suolo(L).SostanzaO / 100) * 0.58 * suolo(L).spess / 100
-        N_humus(L) = C_humus(L) / CNratio_humus
-    Next L
-
-End Sub
+    for (L = 1; L<nrLayers;L++)
+    {
+        C_humus[L] = suolo[L].MVA * 1000000 * (suolo[L].SostanzaO / 100) * 0.58 * suolo[L].spess / 100;
+        N_humus[L] = C_humus[L] / CNratio_humus;
+    }
+}
 
 
 void updateTotalOfPartitioned(float* mySoluteSum, float* mySoluteAds,float* mySoluteSol)
