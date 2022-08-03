@@ -213,38 +213,158 @@ class Crit3DCarbonNitrogenWholeProfile
 /*
  *
 
-Private Sub Partitioning()
-'2013.06
-' partitioning of N (only NH4) between adsorbed and in solution
 
-' SE(M,I)=DSE(M,I)/(DLZ*(KD(M,I)*RHO(I)+W(I)))
-' ASE(M,I)=KD(M,I)*SE(M,I)
-' DSE / DLZ (mg dm-3)
+Private Function convertToGramsPerM3(ByVal layerIndex As Integer, ByVal myQuantity As Single) As Single
+' convert from g m-2 to g m-3 (= mg dm-3)
+    convertToGramsPerM3 = myQuantity / (suolo(layerIndex).spess / 100)
+End Function
 
-Dim N_NH4_g_dm3 As Single               '[g dm-3] total ammonium
-Dim N_NH4_sol_g_l As Single             '[g l-1] ammonium in solution
-Dim N_NH4_ads_g_kg As Single            '[g kg-1] adsorbed ammonium
-Dim N_NH4_ads_g_m3 As Single            '[g m-3] adsorbed ammonium
-Dim myTheta As Single
-Dim L As Integer
 
-    N_NH4_AdsorbedGG = 0
+Private Function convertToGramsPerLiter(ByVal layerIndex As Integer, ByVal myQuantity As Single) As Single
+' convert from g m-2 to g l-1
+
+    ' to g dm-3
+    convertToGramsPerLiter = convertToGramsPerM3(layerIndex, myQuantity) / 1000
+    ' to g l-1
+    convertToGramsPerLiter = convertToGramsPerLiter / WaterBalance.ConvertWCToVolumetric(suolo(layerIndex), U(layerIndex))  'to g l-1
+End Function
+
+
+Private Function convertToGramsPerKg(ByVal layerIndex As Integer, ByVal myQuantity As Single) As Single
+' convert from g m-2 to g kg-1
+
+    ' to g dm-3
+    convertToGramsPerKg = convertToGramsPerM3(layerIndex, myQuantity) / 1000
+
+    ' to g kg-1
+    convertToGramsPerKg = convertToGramsPerKg / suolo(layerIndex).MVA
+End Function
+
+
+Public Sub N_InitializeLayers()
+
+    Erase C_humus
+    Erase C_litter
+    Erase C_litter_humus
+    Erase C_litter_litter
+    Erase C_min_humus
+    Erase C_min_litter
+    Erase C_denitr_litter
+    Erase C_denitr_humus
+    Erase Wcorr_denitr
+    Erase N_humus
+    Erase N_denitr
+    Erase N_litter
+    Erase N_litter_humus
+    Erase N_min_humus
+    Erase N_min_litter
+    Erase N_NH4
+    Erase N_NH4_Adsorbed
+    Erase N_NH4_Sol
+    Erase N_nitrif
+    Erase N_NO3
+    Erase N_urea
+    Erase N_Urea_Hydr
+    Erase N_vol
+    Erase N_NH4_uptake
+    Erase N_NO3_uptake
+    Erase CNratio_litter
+    Erase SO
+    Erase TCorr
+    Erase WCorr
+
+    ReDim C_humus(nrLayers)
+    ReDim C_litter(nrLayers)
+    ReDim C_litter_humus(nrLayers)
+    ReDim C_litter_litter(nrLayers)
+    ReDim C_min_humus(nrLayers)
+    ReDim C_min_litter(nrLayers)
+    ReDim C_denitr_litter(nrLayers)
+    ReDim C_denitr_humus(nrLayers)
+    ReDim Wcorr_denitr(nrLayers)
+    ReDim N_humus(nrLayers)
+    ReDim N_denitr(nrLayers)
+    ReDim N_litter(nrLayers)
+    ReDim N_litter_humus(nrLayers)
+    ReDim N_min_humus(nrLayers)
+    ReDim N_min_litter(nrLayers)
+    ReDim N_NH4(nrLayers)
+    ReDim N_NH4_Sol(nrLayers)
+    ReDim N_NH4_Adsorbed(nrLayers)
+    ReDim N_nitrif(nrLayers)
+    ReDim N_NO3(nrLayers)
+    ReDim N_urea(nrLayers)
+    ReDim N_Urea_Hydr(nrLayers)
+    ReDim N_vol(nrLayers)
+    ReDim N_NH4_uptake(nrLayers)
+    ReDim N_NO3_uptake(nrLayers)
+    ReDim CNratio_litter(nrLayers)
+    ReDim SO(nrLayers)
+    ReDim TCorr(nrLayers)
+    ReDim WCorr(nrLayers)
+
+End Sub
+
+
+Private Sub HumusIni()
+'2008.09 GA
+'GA 2007.12 perché C calcolato da (CN/CN+1) e non moltiplicando per 0.58 come solito?
+'computes initial humus carbon and nitrogen for a layer L
+'version 1.0, 2004.08.09.VM
+
+    Dim L As Integer
+    'MVA                '[kg dm-3 = 10^6 g m-3]
 
     For L = 1 To nrLayers
-        myTheta = WaterBalance.ConvertWCToVolumetric(suolo(L), U(L))
-        N_NH4_g_dm3 = convertToGramsPerM3(L, N_NH4(L)) / 1000
-        N_NH4_sol_g_l = N_NH4_g_dm3 / (Kd_NH4 * suolo(L).MVA + myTheta)
-
-        N_NH4_Sol(L) = N_NH4_sol_g_l * (suolo(L).spess / 100) * myTheta * 1000
-
-        N_NH4_ads_g_kg = Kd_NH4 * N_NH4_sol_g_l
-        N_NH4_ads_g_m3 = N_NH4_ads_g_kg * suolo(L).MVA * 1000
-        N_NH4_Adsorbed(L) = N_NH4_ads_g_m3 * suolo(L).spess / 100
-
-        N_NH4_AdsorbedGG = N_NH4_AdsorbedGG + N_NH4_Adsorbed(L)
+        C_humus(L) = suolo(L).MVA * 1000000 * (suolo(L).SostanzaO / 100) * 0.58 * suolo(L).spess / 100
+        N_humus(L) = C_humus(L) / CNratio_humus
     Next L
 
 End Sub
+
+
+void updateTotalOfPartitioned(float* mySoluteSum, float* mySoluteAds,float* mySoluteSol)
+{
+    int L;
+    for (L = 0; L<nrLayers; L++)
+    {
+        mySoluteSum[L] = mySoluteAds[L] + mySoluteSol[L];
+    }
+}
+
+void partitioning()
+{
+    //2013.06
+    // partitioning of N (only NH4) between adsorbed and in solution
+
+    // SE(M,I)=DSE(M,I)/(DLZ*(KD(M,I)*RHO(I)+W(I)))
+    // ASE(M,I)=KD(M,I)*SE(M,I)
+    // DSE / DLZ (mg dm-3)
+
+    float N_NH4_g_dm3;               //[g dm-3] total ammonium
+    float N_NH4_sol_g_l;             //[g l-1] ammonium in solution
+    float N_NH4_ads_g_kg;            //[g kg-1] adsorbed ammonium
+    float N_NH4_ads_g_m3;            //[g m-3] adsorbed ammonium
+    float myTheta;
+    int L;
+
+    N_NH4_AdsorbedGG = 0;
+
+    for (L = 0; L<nrLayers; L++)
+    {
+        myTheta = WaterBalance.ConvertWCToVolumetric(suolo[L], U[L]);
+        N_NH4_g_dm3 = convertToGramsPerM3(L, N_NH4[L]) / 1000;
+        N_NH4_sol_g_l = N_NH4_g_dm3 / (Kd_NH4 * suolo[L].MVA + myTheta)
+
+        N_NH4_Sol[L] = N_NH4_sol_g_l * (suolo[L].spess / 100) * myTheta * 1000;
+
+        N_NH4_ads_g_kg = Kd_NH4 * N_NH4_sol_g_l;
+        N_NH4_ads_g_m3 = N_NH4_ads_g_kg * suolo[L].MVA * 1000;
+        N_NH4_Adsorbed[L] = N_NH4_ads_g_m3 * suolo[L].spess / 100;
+
+        N_NH4_AdsorbedGG += N_NH4_Adsorbed(L);
+    }
+}
 
 
 void litterIni()
