@@ -75,6 +75,9 @@
             std::vector<float> interpolationDailySeries;
             std::vector<float> smoothInterpDailySeries;
             QDate interpolationStartDate;
+            bool stationClearAndReload;
+            bool interpolationClearAndReload;
+            bool interpolationChangeSmooth;
 
     signals:
             void closeSynchWidget();
