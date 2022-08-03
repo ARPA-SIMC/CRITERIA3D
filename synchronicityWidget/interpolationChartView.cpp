@@ -36,10 +36,10 @@ void InterpolationChartView::setYmin(float value)
 }
 
 
-void InterpolationChartView::drawGraphInterpolation(std::vector<float> values, QDate myStartDate, QString var, int lag, int smooth)
+void InterpolationChartView::drawGraphInterpolation(std::vector<float> values, QDate myStartDate, QString var, int lag, int smooth, QString elabType)
 {
     chart()->legend()->setVisible(true);
-    QString name = var+" lag="+QString::number(lag)+" smooth="+QString::number(smooth);
+    QString name = var+" lag="+QString::number(lag)+" smooth="+QString::number(smooth)+elabType;
     for(int i = 0; i<interpolationGraphSeries.size(); i++)
     {
         if (interpolationGraphSeries[i]->name() == name)

@@ -484,7 +484,7 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
         // smooth
         smoothSerie();
         // draw
-        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth);
+        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
     }
 
 }
@@ -542,9 +542,10 @@ void Crit3DSynchronicityWidget::changeSmooth()
 {
     int myLag = interpolationLag.text().toInt();
     int mySmooth = smooth.text().toInt();
+    QString elabType = interpolationElab.currentText();
     smoothSerie();
     // draw
-    interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth);
+    interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
 }
 
 void Crit3DSynchronicityWidget::changeInterpolationDate()
