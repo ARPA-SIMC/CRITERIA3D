@@ -212,310 +212,377 @@ class Crit3DCarbonNitrogenWholeProfile
 #endif // CARBON_H
 /*
  *
-Private Sub ChemicalTransformations()
-' 2013.06 GA
-' revision from LEACHM
-' concentrations in g m-3 (= mg dm-3)
 
-Dim myN_NO3 As Single                   '[g m-3] nitric nitrogen concentration
-Dim myN_NH4 As Single                   '[g m-3] ammonium concentration
-Dim myN_NH4_sol As Single               '[g m-3] ammonium concentration in solution
-Dim NH4_ratio As Single                 '[] ratio of NH4 on total N
-Dim NO3_ratio As Single                 '[] ratio of NO3 on total N
-Dim myTotalC As Single                  '[g m-3] total carbon
-Dim myLitterC As Single                 '[g m-3] carbon concentration in litter
-Dim myHumusC As Single                  '[g m-3] carbon concentration in humus
-Dim myLitterN As Single                 '[g m-3] nitrogen concentration in litter
-Dim myHumusN As Single                  '[g m-3] nitrogen concentration in humus
+Private Sub Partitioning()
+'2013.06
+' partitioning of N (only NH4) between adsorbed and in solution
 
-Dim CCDEN As Single                     '[g m-3] Amount of carbon equivalent to N removed (as CO2) from denitrification
-Dim CLIMM As Single                     '[g m-3] maximum N immobilization
-Dim CLIMX As Single                     '[g m-3] ratio of the maximum to the desired rate. Adjusted by 0.08 to extend immobilization and slow the rate
-Dim CCLH As Single                      '[g m-3] carbon from litter to humus
-Dim CLH As Single                       '[g m-3] nitrogen from litter to humus
-Dim CLI As Single                       '[g m-3] nitrogen internally recycled in litter
-Dim CCLI As Single                      '[g m-3] carbon internally recycled in litter
-Dim CCLCO2 As Single                    '[g m-3] carbon from litter to CO2
-Dim CCHCO2 As Single                    '[g m-3] carbon from humus to CO2
-Dim CCLDN As Single                     '[g m-3] carbonio rimosso dal litter per denitrificazione
-Dim CCHDN As Single                     '[g m-3] carbonio rimosso dall'humus per denitrificazione
-Dim CNHNO As Single                     '[g m-3] source di nitrato (da nitrificazione)
-Dim CNON As Single                      '[g m-3] sink di nitrato (da denitrificazione)
-Dim CURNH As Single                     '[g m-3] urea hydrolysis
-Dim CHNH As Single                      '[g m-3] N humus mineralization
-Dim CLNH As Single                      '[g m-3] N litter mineralization
-Dim CNHGAS As Single                    '[g m-3] NH4 volatilization
-Dim CNHL As Single                      '[g m-3] N NH4 litter immobilization
-Dim CNOL As Single                      '[g m-3] N NO3 litter immobilization
-Dim USENH4 As Single                    '[g m-3] N NH4 uptake
-Dim USENO3 As Single                    '[g m-3] N NO3 uptake
+' SE(M,I)=DSE(M,I)/(DLZ*(KD(M,I)*RHO(I)+W(I)))
+' ASE(M,I)=KD(M,I)*SE(M,I)
+' DSE / DLZ (mg dm-3)
 
-Dim litterCSink As Single               '[g m-3] C litter sink
-Dim litterCSource As Single             '[g m-3] C litter source
-Dim litterCRecycle As Single            '[g m-3] C litter recycle
-Dim litterCNetSink As Single            '[g m-3] C litter net sink/source
-Dim humusCSink As Single                '[g m-3] C humus sink
-Dim humusCSource As Single              '[g m-3] C humus source
-Dim humusCNetSink As Single             '[g m-3] C net sink/source
-Dim litterNSink As Single               '[g m-3] N litter sink
-Dim litterNSource As Single             '[g m-3] N litter source
-Dim litterNRecycle As Single            '[g m-3] N litter recycle
-Dim litterNNetSink As Single            '[g m-3] N litter net sink/source
-Dim humusNSink As Single                '[g m-3] N humus sink
-Dim humusNSource As Single              '[g m-3] N humus source
-Dim humusNNetSink As Single             '[g m-3] N net sink/source
-Dim N_NH4_sink As Single
-Dim N_NH4_source As Single
-Dim N_NH4_netSink As Single
-Dim N_NO3_sink As Single
-Dim N_NO3_source As Single
-Dim N_NO3_netSink As Single
-
-Dim totalCO2 As Single                  '[g m-3] source of CO2
-Dim Def As Single
-Dim Total As Single
-Dim Factor As Single
-
-Const AdjustFactor = 0.08               ' factor to extend immobilization and slow the rate
-
+Dim N_NH4_g_dm3 As Single               '[g dm-3] total ammonium
+Dim N_NH4_sol_g_l As Single             '[g l-1] ammonium in solution
+Dim N_NH4_ads_g_kg As Single            '[g kg-1] adsorbed ammonium
+Dim N_NH4_ads_g_m3 As Single            '[g m-3] adsorbed ammonium
+Dim myTheta As Single
 Dim L As Integer
 
+    N_NH4_AdsorbedGG = 0
+
     For L = 1 To nrLayers
+        myTheta = WaterBalance.ConvertWCToVolumetric(suolo(L), U(L))
+        N_NH4_g_dm3 = convertToGramsPerM3(L, N_NH4(L)) / 1000
+        N_NH4_sol_g_l = N_NH4_g_dm3 / (Kd_NH4 * suolo(L).MVA + myTheta)
 
-        ' correction functions for soil temperature and humidity
-        'inserire parametri in Options.mdb
-        ComputeTemperatureCorrectionFactor L
-        ComputeWaterCorrectionFactor L
+        N_NH4_Sol(L) = N_NH4_sol_g_l * (suolo(L).spess / 100) * myTheta * 1000
 
-        ' compute layer transformation rates
-        ComputeLayerRates L
+        N_NH4_ads_g_kg = Kd_NH4 * N_NH4_sol_g_l
+        N_NH4_ads_g_m3 = N_NH4_ads_g_kg * suolo(L).MVA * 1000
+        N_NH4_Adsorbed(L) = N_NH4_ads_g_m3 * suolo(L).spess / 100
 
-        ' convert to concentration
-        myLitterC = convertToGramsPerM3(L, C_litter(L))
-        myHumusC = convertToGramsPerM3(L, C_humus(L))
-        myLitterN = convertToGramsPerM3(L, N_litter(L))
-        myHumusN = convertToGramsPerM3(L, N_humus(L))
-
-        myTotalC = (myLitterC + myHumusC)
-        myN_NO3 = convertToGramsPerM3(L, N_NO3(L))
-        myN_NH4 = convertToGramsPerM3(L, N_NH4(L))
-        If (myN_NH4 + myN_NO3 > 0) Then
-            NH4_ratio = myN_NH4 / (myN_NH4 + myN_NO3)
-            NO3_ratio = 1 - NH4_ratio
-        Else
-            NH4_ratio = 0
-            NO3_ratio = 0
-        End If
-
-    ' CARBON TRANSFORMATIONS
-
-        ' i) Associated with denitrification.  Amount of carbon
-        '    equivalent to N removed.  (No more than a tenth of C present
-        '    C  can be removed). Not in Johnsson's paper.
-        '    si assume che tutto il nitrato sia in soluzione (mg l-1)
-        '    CO2 prodotta associata a denitrificazione
-        '    cinetica primo ordine della decomposizione della s.o. (rateo proporzionale alla concentrazione)
-        CCDEN = max(0, myN_NO3 * (1 - Exp(-ActualRate_N_Denitrification))) * 72 / 56
-        ' No more than a tenth of C present C  can be removed
-        If CCDEN > 0.1 * myTotalC Then CCDEN = 0.1 * myTotalC
-
-
-        ' ii) litter transformation
-        ' litter C to humus C
-        CCLH = max(0, myLitterC * (1 - Exp(-ActualRate_C_LitterToHumus)))
-        ' litter C internal recycle
-        CCLI = max(0, myLitterC * (1 - Exp(-ActualRate_C_LitterToBiomass)))
-        ' litter C to CO2
-        CCLCO2 = max(0, myLitterC * (1 - Exp(-ActualRate_C_LitterToCO2)))
-        ' nitrogen immobilization
-        CLIMX = 1
-        If ActualRate_N_LitterImm > 0 Then
-            CLIMM = ActualRate_N_LitterImm * (CCLI + CCLH + CCLCO2)
-            If CLIMM > 0 Then CLIMX = min(1, (AdjustFactor * (myN_NO3 + myN_NH4)) / CLIMM)
-            ' if immobilization limits mineralization then the effective rate of immobilization is reduced
-            If CLIMX < 1 Then
-                CCLH = CCLH * CLIMX
-                CCLI = CCLI * CLIMX
-                CCLCO2 = CCLCO2 * CLIMX
-            End If
-            CNHL = CLIMM * CLIMX * NH4_ratio
-        End If
-
-        ' Energy source for denitrification
-        If myTotalC > 0 Then
-            CCLDN = CCDEN * myLitterC / myTotalC
-        Else
-            CCLDN = 0
-        End If
-
-        litterCSink = CCLH + CCLCO2 + CCLDN
-        litterCSource = 0
-        litterCRecycle = CCLI
-        litterCNetSink = -litterCSink + litterCSource
-
-        ' iii) humus transformations
-        'humus to CO2
-        CCHCO2 = max(0, myHumusC * (1 - Exp(-ActualRate_C_HumusMin)))
-        'energy source for denitrification
-        If myTotalC > 0 Then
-            CCHDN = CCDEN * myHumusC / myTotalC
-        Else
-            CCHDN = 0
-        End If
-        humusCSink = CCHDN + CCHCO2
-        humusCSource = CCLH
-        humusCNetSink = humusCSource - humusCSink
-
-        ' iv) CO2
-        totalCO2 = CCLCO2 + CCHCO2 + CCLDN + CCHDN
-
-
-    ' NITROGEN TRANSFORMATIONS
-        ' i) urea hydrolysis
-        CURNH = convertToGramsPerM3(L, N_urea(L)) * (1 - Exp(-ActualRate_Urea_Hydr))
-
-        ' ii) ammonium volatilization (only top 5 cm of soil) (in LEACHM 10 cm but layer thickness is 10 cm)
-        If suolo(L).prof + suolo(L).spess < 5 Then
-            myN_NH4_sol = convertToGramsPerM3(L, N_NH4_Sol(L))
-            CNHGAS = min(0.5 * myN_NH4_sol, myN_NH4_sol * (1 - Exp(-Rate_N_NH4_Volatilization)))
-        Else
-            CNHGAS = 0
-        End If
-
-        ' iii) nitrification
-        CNHNO = (max(0, myN_NH4 - myN_NO3 / limRatio_nitr)) * (1 - Exp(-ActualRate_N_Nitrification))
-
-        ' iv) mineralization
-        CHNH = max(myHumusN, 0) * ActualRate_C_HumusMin
-        CLNH = ActualRate_N_LitterMin * (CCLH + CCLCO2 + CCLI)
-        If ActualRate_N_LitterImm > 0 Then
-            CNHL = CLIMM * CLIMX * NH4_ratio
-        End If
-
-        ' NH4 sink/source
-        USENH4 = convertToGramsPerM3(L, N_NH4_uptake(L))
-        N_NH4_sink = CNHNO + CNHL
-        N_NH4_source = CHNH + CLNH + CURNH
-        N_NH4_netSink = -N_NH4_sink + N_NH4_source - CNHGAS - USENH4
-        ' adjustment
-        Def = myN_NH4 + N_NH4_netSink
-        Total = CNHNO + CNHGAS + USENH4
-        If Def < 0 And Total > 0 Then
-            Factor = max(0, 1 + Def / Total)
-            CNHNO = Factor * CNHNO
-            CNHGAS = Factor * CNHGAS
-            USENH4 = Factor * USENH4
-            N_NH4_sink = CNHNO + CNHL
-            N_NH4_netSink = -N_NH4_sink + N_NH4_source - CNHGAS - USENH4
-        End If
-
-        ' NO3 sink/source
-        USENO3 = convertToGramsPerM3(L, N_NO3_uptake(L))
-        If ActualRate_N_LitterImm > 0 Then
-            CNOL = CLIMM * CLIMX * NO3_ratio
-        End If
-        CNON = CCDEN * 56 / 72
-        N_NO3_source = CNHNO
-        N_NO3_sink = CNOL
-        N_NO3_netSink = -N_NO3_sink + N_NO3_source - USENO3 - CNON
-        ' adjustment
-        Def = myN_NO3 + N_NO3_netSink
-        Total = USENO3 + CNON
-        If Def < 0 And Total > 0 Then
-            Factor = max(0, 1 + Def / Total)
-            CNON = Factor * CNON
-            USENO3 = Factor * USENO3
-            N_NO3_sink = CNON + CNOL
-            N_NO3_netSink = -N_NO3_sink + N_NO3_source - USENO3
-        End If
-
-        ' litter N sink/source
-        CLH = CCLH / CNratio_humus
-        CLI = CCLI / CNratio_humus
-        litterNSink = CLH + CLNH
-        litterNSource = CNHL + CNOL
-        litterNRecycle = CLI
-        litterNNetSink = -litterNSink + litterNSource
-
-        ' humus sink/source
-        humusNSink = CHNH
-        humusNSource = CLH
-        humusNNetSink = -humusNSink + humusNSource
-
-    ' ---------------------------------------------------------------------------------
-
-        ' convert back to g m-2
-        N_NO3_uptake(L) = USENO3 * (suolo(L).spess / 100)
-        N_NH4_uptake(L) = USENH4 * (suolo(L).spess / 100)
-        N_min_litter(L) = CLNH * (suolo(L).spess / 100)
-        N_imm_l_NH4(L) = CNHL * (suolo(L).spess / 100)
-        N_imm_l_NO3(L) = CNOL * (suolo(L).spess / 100)
-        N_min_humus(L) = CHNH * (suolo(L).spess / 100)
-        N_litter_humus(L) = CLH * (suolo(L).spess / 100)
-        N_vol(L) = CNHGAS * (suolo(L).spess / 100)
-        N_denitr(L) = CNON * (suolo(L).spess / 100)
-        N_nitrif(L) = CNHNO * (suolo(L).spess / 100)
-        N_Urea_Hydr(L) = CURNH * (suolo(L).spess / 100)
-
-        C_litter_humus(L) = CCLH * (suolo(L).spess / 100)
-        C_litter_litter(L) = CCLI * (suolo(L).spess / 100)
-        C_min_litter(L) = CCLCO2 * (suolo(L).spess / 100)
-        C_min_humus(L) = CCHCO2 * (suolo(L).spess / 100)
-        C_denitr_humus(L) = CCHDN * (suolo(L).spess / 100)
-        C_denitr_litter(L) = CCLDN * (suolo(L).spess / 100)
-
-    ' -----------------------------------------------------------------------------------
-    ' mass balancing
-
-        N_NH4(L) = N_NH4(L) + N_NH4_netSink * (suolo(L).spess / 100)
-        N_NO3(L) = N_NO3(L) + N_NO3_netSink * (suolo(L).spess / 100)
-        C_litter(L) = C_litter(L) + litterCNetSink * (suolo(L).spess / 100)
-        C_humus(L) = C_humus(L) + humusCNetSink * (suolo(L).spess / 100)
-        N_litter(L) = N_litter(L) + litterNNetSink * (suolo(L).spess / 100)
-        N_humus(L) = N_humus(L) + humusNNetSink * (suolo(L).spess / 100)
-        N_urea(L) = N_urea(L) - N_Urea_Hydr(L)
-
-        'If N_NH4(L) < 0 Then Stop
-        'If N_NO3(L) < 0 Then Stop
-        'If C_litter(L) < 0 Then Stop
-        'If C_humus(L) < 0 Then Stop
-        'If N_litter(L) < 0 Then Stop
-        'If N_humus(L) < 0 Then Stop
-
-        N_NH4(L) = max(0, N_NH4(L))
-        N_NO3(L) = max(0, N_NO3(L))
-        C_litter(L) = max(0, C_litter(L))
-        C_humus(L) = max(0, C_humus(L))
-        N_litter(L) = max(0, N_litter(L))
-        N_humus(L) = max(0, N_humus(L))
-        N_urea(L) = max(0, N_urea(L))
-
-        ' profile totals
-        N_humusGG = N_humusGG + N_humus(L)
-        N_litterGG = N_litterGG + N_litter(L)
-        N_litter_humusGG = N_litter_humusGG + N_litter_humus(L)
-        N_min_humusGG = N_min_humusGG + N_min_humus(L)
-        N_min_litterGG = N_min_litterGG + N_min_litter(L)
-        N_imm_l_NH4GG = N_imm_l_NH4GG + N_imm_l_NH4(L)
-        N_imm_l_NO3GG = N_imm_l_NO3GG + N_imm_l_NO3(L)
-        C_humusGG = C_humusGG + C_humus(L)
-        C_min_humusGG = C_min_humusGG + C_min_humus(L)
-        C_litter_humusGG = C_litter_humusGG + C_litter_humus(L)
-        C_litter_litterGG = C_litter_litterGG + C_litter_litter(L)
-        C_min_litterGG = C_min_litterGG + C_min_litter(L)
-        C_litterGG = C_litterGG + C_litter(L)
-        N_NO3_uptakeGG = N_NO3_uptakeGG + N_NO3_uptake(L)
-        N_NH4_uptakeGG = N_NH4_uptakeGG + N_NH4_uptake(L)
-        N_NH4_volGG = N_NH4_volGG + N_vol(L)
-        N_nitrifGG = N_nitrifGG + N_nitrif(L)
-        N_Urea_HydrGG = N_Urea_HydrGG + N_Urea_Hydr(L)
-        N_denitrGG = N_denitrGG + N_denitr(L)
-
+        N_NH4_AdsorbedGG = N_NH4_AdsorbedGG + N_NH4_Adsorbed(L)
     Next L
 
-    updateNCrop
-
 End Sub
+
+
+void litterIni()
+{
+    //2008.10 GA inizializzazione indipendente da humus ma da input utente
+    //computes initial litter carbon and nitrogen for a layer L
+    //version 1.0, 2004.08.16.VM
+
+    int L;
+    float LayerRatio;
+    float myDepth;
+
+    myDepth = maxValue(litterIniProf, 6);
+
+    for (L=0; L<nrLayers ;L++)
+    {
+        if (suolo[L].prof <= myDepth)
+        {
+            LayerRatio = (suolo[L].spess / myDepth);
+            C_litter[L] = LitterIniC * LayerRatio / 10;          //from kg ha-1 to g m-2
+            N_litter[L] = LitterIniN * LayerRatio / 10;          //from kg ha-1 to g m-2
+        }
+    }
+}
+
+void chemicalTransformations()
+{
+    // 2013.06 GA
+    // revision from LEACHM
+    // concentrations in g m-3 (= mg dm-3)
+
+    float myN_NO3;                   //[g m-3] nitric nitrogen concentration
+    float myN_NH4;                   //[g m-3] ammonium concentration
+    float myN_NH4_sol;               //[g m-3] ammonium concentration in solution
+    float NH4_ratio;                 //[] ratio of NH4 on total N
+    float NO3_ratio;                 //[] ratio of NO3 on total N
+    float myTotalC;                  //[g m-3] total carbon
+    float myLitterC;                 //[g m-3] carbon concentration in litter
+    float myHumusC;                  //[g m-3] carbon concentration in humus
+    float myLitterN;                 //[g m-3] nitrogen concentration in litter
+    float myHumusN;                  //[g m-3] nitrogen concentration in humus
+
+    float CCDEN;                     //[g m-3] Amount of carbon equivalent to N removed (as CO2) from denitrification
+    float CLIMM;                     //[g m-3] maximum N immobilization
+    float CLIMX;                     //[g m-3] ratio of the maximum to the desired rate. Adjusted by 0.08 to extend immobilization and slow the rate
+    float CCLH;                      //[g m-3] carbon from litter to humus
+    float CLH;                       //[g m-3] nitrogen from litter to humus
+    float CLI;                       //[g m-3] nitrogen internally recycled in litter
+    float CCLI;                      //[g m-3] carbon internally recycled in litter
+    float CCLCO2;                    //[g m-3] carbon from litter to CO2
+    float CCHCO2;                    //[g m-3] carbon from humus to CO2
+    float CCLDN;                     //[g m-3] carbonio rimosso dal litter per denitrificazione
+    float CCHDN;                     //[g m-3] carbonio rimosso dall'humus per denitrificazione
+    float CNHNO;                     //[g m-3] source di nitrato (da nitrificazione)
+    float CNON;                      //[g m-3] sink di nitrato (da denitrificazione)
+    float CURNH;                     //[g m-3] urea hydrolysis
+    float CHNH;                      //[g m-3] N humus mineralization
+    float CLNH;                      //[g m-3] N litter mineralization
+    float CNHGAS;                    //[g m-3] NH4 volatilization
+    float CNHL;                      //[g m-3] N NH4 litter immobilization
+    float CNOL;                      //[g m-3] N NO3 litter immobilization
+    float USENH4;                    //[g m-3] N NH4 uptake
+    float USENO3;                    //[g m-3] N NO3 uptake
+
+    float litterCSink;               //[g m-3] C litter sink
+    float litterCSource;             //[g m-3] C litter source
+    float litterCRecycle;            //[g m-3] C litter recycle
+    float litterCNetSink;            //[g m-3] C litter net sink/source
+    float humusCSink;                //[g m-3] C humus sink
+    float humusCSource;              //[g m-3] C humus source
+    float humusCNetSink;             //[g m-3] C net sink/source
+    float litterNSink;               //[g m-3] N litter sink
+    float litterNSource;             //[g m-3] N litter source
+    float litterNRecycle;            //[g m-3] N litter recycle
+    float litterNNetSink;            //[g m-3] N litter net sink/source
+    float humusNSink;                //[g m-3] N humus sink
+    float humusNSource;              //[g m-3] N humus source
+    float humusNNetSink;             //[g m-3] N net sink/source
+    float N_NH4_sink;
+    float N_NH4_source;
+    float N_NH4_netSink;
+    float N_NO3_sink;
+    float N_NO3_source;
+    float N_NO3_netSink;
+
+    float totalCO2;                   //[g m-3] source of CO2
+    float def;
+    float total;
+    float factor;
+
+    static float adjustFactor = 0.08; // factor to extend immobilization and slow the rate
+
+    int L;
+
+    for (L=0; L<nrLayers; L++)
+    {
+        // correction functions for soil temperature and humidity
+        // inserire parametri in Options.mdb
+        computeTemperatureCorrectionFactor(L);
+        computeWaterCorrectionFactor(L);
+
+        // compute layer transformation rates
+        computeLayerRates(L);
+
+        // convert to concentration
+        myLitterC = convertToGramsPerM3(L, C_litter[L]);
+        myHumusC = convertToGramsPerM3(L, C_humus[L]);
+        myLitterN = convertToGramsPerM3(L, N_litter[L]);
+        myHumusN = convertToGramsPerM3(L, N_humus[L]);
+
+        myTotalC = (myLitterC + myHumusC);
+        myN_NO3 = convertToGramsPerM3(L, N_NO3[L]);
+        myN_NH4 = convertToGramsPerM3(L, N_NH4[L]);
+        if ((myN_NH4 + myN_NO3) > 0)
+        {
+            NH4_ratio = myN_NH4 / (myN_NH4 + myN_NO3);
+            NO3_ratio = 1 - NH4_ratio;
+        }
+        else
+        {
+            NH4_ratio = 0;
+            NO3_ratio = 0;
+        }
+
+    // CARBON TRANSFORMATIONS
+
+        // i) Associated with denitrification.  Amount of carbon
+        //    equivalent to N removed.  (No more than a tenth of C present
+        //    C  can be removed). Not in Johnsson's paper.
+        //    si assume che tutto il nitrato sia in soluzione (mg l-1)
+        //    CO2 prodotta associata a denitrificazione
+        //    cinetica primo ordine della decomposizione della s.o. (rateo proporzionale alla concentrazione)
+        CCDEN = maxValue(0, myN_NO3 * (1 - exp(-actualRate_N_Denitrification))) * 72. / 56.;
+        // No more than a tenth of C present C  can be removed
+            CCDEN = minValue(CCDEN,0.1 * myTotalC);
+
+
+        // ii) litter transformation
+        // litter C to humus C
+        CCLH = maxValue(0, myLitterC * (1 - exp(-actualRate_C_LitterToHumus)));
+        // litter C internal recycle
+        CCLI = maxValue(0, myLitterC * (1 - exp(-actualRate_C_LitterToBiomass)));
+        // litter C to CO2
+        CCLCO2 = maxValue(0, myLitterC * (1 - exp(-actualRate_C_LitterToCO2)));
+        // nitrogen immobilization
+        CLIMX = 1;
+        if (actualRate_N_LitterImm > 0)
+        {
+            CLIMM = actualRate_N_LitterImm * (CCLI + CCLH + CCLCO2);
+            if (CLIMM > 0)
+                CLIMX = minValue(1, (adjustFactor * (myN_NO3 + myN_NH4)) / CLIMM);
+            // if immobilization limits mineralization then the effective rate of immobilization is reduced
+            if (CLIMX < 1)
+            {
+                CCLH *= CLIMX;
+                CCLI *= CLIMX;
+                CCLCO2 *= CLIMX;
+            }
+            CNHL = CLIMM * CLIMX * NH4_ratio;
+        }
+
+        // Energy source for denitrification
+        if (myTotalC > 0)
+        {
+            CCLDN = CCDEN * myLitterC / myTotalC;
+        }
+        else
+        {
+            CCLDN = 0;
+        }
+        litterCSink = CCLH + CCLCO2 + CCLDN;
+        litterCSource = 0;
+        litterCRecycle = CCLI;
+        litterCNetSink = -litterCSink + litterCSource;
+
+        // iii) humus transformations
+        // humus to CO2
+        CCHCO2 = maxValue(0, myHumusC * (1 - exp(-actualRate_C_HumusMin)));
+        // energy source for denitrification
+        if (myTotalC > 0)
+            CCHDN = CCDEN * myHumusC / myTotalC;
+        else
+            CCHDN = 0;
+
+        humusCSink = CCHDN + CCHCO2;
+        humusCSource = CCLH;
+        humusCNetSink = humusCSource - humusCSink;
+
+        // iv) CO2
+        totalCO2 = CCLCO2 + CCHCO2 + CCLDN + CCHDN;
+
+
+    // NITROGEN TRANSFORMATIONS
+        // i) urea hydrolysis
+        CURNH = convertToGramsPerM3(L, N_urea[L]) * (1 - exp(-actualRate_Urea_Hydr));
+
+        // ii) ammonium volatilization (only top 5 cm of soil) (in LEACHM 10 cm but layer thickness is 10 cm)
+        if (suolo[L].prof + suolo[L].spess) < 5
+        {
+            myN_NH4_sol = convertToGramsPerM3(L, N_NH4_Sol[L]);
+            CNHGAS = minValue(0.5 * myN_NH4_sol, myN_NH4_sol * (1 - exp(-rate_N_NH4_Volatilization)));
+        }
+        else
+            CNHGAS = 0;
+
+        // iii) nitrification
+        CNHNO = (maxValue(0, myN_NH4 - myN_NO3 / limRatio_nitr)) * (1 - exp(-actualRate_N_Nitrification));
+
+        // iv) mineralization
+        CHNH = maxVale(myHumusN, 0) * actualRate_C_HumusMin;
+        CLNH = actualRate_N_LitterMin * (CCLH + CCLCO2 + CCLI);
+        if (actualRate_N_LitterImm > 0)
+            CNHL = CLIMM * CLIMX * NH4_ratio;
+
+        // NH4 sink/source
+        USENH4 = convertToGramsPerM3(L, N_NH4_uptake[L]);
+        N_NH4_sink = CNHNO + CNHL;
+        N_NH4_source = CHNH + CLNH + CURNH;
+        N_NH4_netSink = -N_NH4_sink + N_NH4_source - CNHGAS - USENH4;
+        // adjustment
+        def = myN_NH4 + N_NH4_netSink;
+        total = CNHNO + CNHGAS + USENH4;
+        if (def < 0 && total > 0)
+        {
+            factor = maxValue(0, 1. + def / total);
+            CNHNO *= factor;
+            CNHGAS *= factor;
+            USENH4 *= factor;
+            N_NH4_sink = CNHNO + CNHL;
+            N_NH4_netSink = -N_NH4_sink + N_NH4_source - CNHGAS - USENH4;
+        }
+
+        // NO3 sink/source
+        USENO3 = convertToGramsPerM3(L, N_NO3_uptake[L]);
+        if (actualRate_N_LitterImm > 0)
+            CNOL = CLIMM * CLIMX * NO3_ratio;
+        CNON = CCDEN * 56. / 72.;
+        N_NO3_source = CNHNO;
+        N_NO3_sink = CNOL;
+        N_NO3_netSink = -N_NO3_sink + N_NO3_source - USENO3 - CNON;
+        // adjustment
+        def = myN_NO3 + N_NO3_netSink;
+        total = USENO3 + CNON;
+        if (def < 0 && Total > 0)
+        {
+            factor = maxValue(0., 1. + def / total);
+            CNON *= factor;
+            USENO3 *= factor;
+            N_NO3_sink = CNON + CNOL;
+            N_NO3_netSink = -N_NO3_sink + N_NO3_source - USENO3;
+        }
+
+        // litter N sink/source
+        CLH = CCLH / CNratio_humus;
+        CLI = CCLI / CNratio_humus;
+        litterNSink = CLH + CLNH;
+        litterNSource = CNHL + CNOL;
+        litterNRecycle = CLI;
+        litterNNetSink = -litterNSink + litterNSource;
+
+        // humus sink/source
+        humusNSink = CHNH;
+        humusNSource = CLH;
+        humusNNetSink = -humusNSink + humusNSource;
+
+    // ---------------------------------------------------------------------------------
+
+        // convert back to g m-2
+        N_NO3_uptake[L] = USENO3 * (suolo[L].spess / 100.);
+        N_NH4_uptake[L] = USENH4 * (suolo[L].spess / 100.);
+        N_min_litter[L] = CLNH * (suolo[L].spess / 100.);
+        N_imm_l_NH4[L] = CNHL * (suolo[L].spess / 100.);
+        N_imm_l_NO3[L] = CNOL * (suolo[L].spess / 100.);
+        N_min_humus[L] = CHNH * (suolo[L].spess / 100.);
+        N_litter_humus[L] = CLH * (suolo[L].spess / 100.);
+        N_vol[L] = CNHGAS * (suolo[L].spess / 100.);
+        N_denitr[L] = CNON * (suolo[L].spess / 100.);
+        N_nitrif[L] = CNHNO * (suolo[L].spess / 100.);
+        N_Urea_Hydr[L] = CURNH * (suolo[L].spess / 100.);
+
+        C_litter_humus[L] = CCLH * (suolo[L].spess / 100.);
+        C_litter_litter[L] = CCLI * (suolo[L].spess / 100.);
+        C_min_litter[L] = CCLCO2 * (suolo[L].spess / 100.);
+        C_min_humus[L] = CCHCO2 * (suolo[L].spess / 100.);
+        C_denitr_humus[L] = CCHDN * (suolo[L].spess / 100.);
+        C_denitr_litter[L] = CCLDN * (suolo[L].spess / 100.);
+
+    // -----------------------------------------------------------------------------------
+    // mass balancing
+
+        N_NH4[L] += N_NH4_netSink * (suolo[L].spess / 100.);
+        N_NO3[L] += N_NO3_netSink * (suolo[L].spess / 100.);
+        C_litter[L] += litterCNetSink * (suolo[L].spess / 100.);
+        C_humus[L] += humusCNetSink * (suolo[L].spess / 100.);
+        N_litter[L] += litterNNetSink * (suolo[L].spess / 100.);
+        N_humus[L] += humusNNetSink * (suolo[L].spess / 100.);
+        N_urea[L] -= N_Urea_Hydr[L];
+
+        //If N_NH4(L) < 0 Then Stop
+        //If N_NO3(L) < 0 Then Stop
+        //If C_litter(L) < 0 Then Stop
+        //If C_humus(L) < 0 Then Stop
+        //If N_litter(L) < 0 Then Stop
+        //If N_humus(L) < 0 Then Stop
+
+        N_NH4[L] = maxValue(0, N_NH4[L]);
+        N_NO3[L] = maxValue(0, N_NO3[L]);
+        C_litter[L] = maxValue(0, C_litter[L]);
+        C_humus[L] = maxValue(0, C_humus[L]);
+        N_litter[L] = maxValue(0, N_litter[L]);
+        N_humus[L] = maxValue(0, N_humus[L]);
+        N_urea[L] = maxValue(0, N_urea[L]);
+
+        // profile totals
+        N_humusGG += N_humus[L];
+        N_litterGG += N_litter[L];
+        N_litter_humusGG += N_litter_humus[L];
+        N_min_humusGG += N_min_humus[L];
+        N_min_litterGG += N_min_litter[L];
+        N_imm_l_NH4GG += N_imm_l_NH4[L];
+        N_imm_l_NO3GG += N_imm_l_NO3[L];
+        C_humusGG += C_humus[L];
+        C_min_humusGG += C_min_humus[L];
+        C_litter_humusGG += C_litter_humus[L];
+        C_litter_litterGG += C_litter_litter[L];
+        C_min_litterGG += C_min_litter[L];
+        C_litterGG += C_litter[L];
+        N_NO3_uptakeGG += N_NO3_uptake[L];
+        N_NH4_uptakeGG += N_NH4_uptake[L];
+        N_NH4_volGG += N_vol[L];
+        N_nitrifGG += N_nitrif[L];
+        N_Urea_HydrGG += N_Urea_Hydr[L];
+        N_denitrGG += N_denitr[L];
+    }
+
+    updateNCrop();
+
+}
 
 
 // da valutare
