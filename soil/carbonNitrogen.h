@@ -204,6 +204,52 @@ class Crit3DCarbonNitrogenWholeProfile
 
     void N_main();
 
+    private:
+
+    float convertToGramsPerM3(int layerIndex,float myQuantity);
+    float convertToGramsPerLiter(int layerIndex,float myQuantity);
+    float convertToGramsPerKg(int layerIndex,float myQuantity);
+    void N_InitializeLayers();
+    void humusIni();
+    void updateTotalOfPartitioned(float* mySoluteSum, float* mySoluteAds,float* mySoluteSol);
+    void partitioning();
+    void litterIni();
+    void chemicalTransformations();
+    void N_Initialize();
+    void N_Fertilization();
+    void N_InitializeVariables();
+    //void ApriTabellaUsciteAzoto(tbname_azoto As String);
+    void N_Output();
+    float CNRatio(float c,float n);
+    void computeWaterCorrectionFactor(int L);
+    void computeTemperatureCorrectionFactor(int L);
+    void computeLayerRates(int L);
+    void N_Uptake();
+    void N_SurfaceRunoff();
+    void N_SubSurfaceRunoff();
+    void N_Uptake_Potential();
+    void N_Uptake_Max();
+    void N_Reset();
+    float findPistonDepth();
+    void soluteFluxesPiston(float* mySolute, float PistonDepth,float* leached);
+    void soluteFluxesPiston_old(float* mySolute, float* leached, float* CoeffPiston);
+    // sbagliata verificare void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* );
+    void leachingWaterTable(float* mySolute, float* leached);
+    void NH4_Balance();
+    void NO3_Balance();
+    void N_initializeCrop(bool noReset);
+    void N_harvest();
+    void updateNCrop();
+    void N_plough();
+    void NFromCropSenescence(float myDays,float coeffB);
+
+
+
+
+
+
+
+
 
 
     Crit3DCarbonNitrogenWholeProfile();

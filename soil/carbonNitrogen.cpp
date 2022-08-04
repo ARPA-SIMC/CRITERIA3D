@@ -500,7 +500,7 @@ void chemicalTransformations()
 
 
 // da valutare
-Public Sub N_Initialize()
+void N_Initialize()
 '****************************************************************
 'Scopo: lettura da tbAzoto di coefficienti relativi al ciclo di N
 '****************************************************************
@@ -660,7 +660,7 @@ void N_Fertilization()
 }
 
 // da valutare
-Public Sub N_InitializeVariables()
+void N_InitializeVariables()
 '2004.08.16.VM introduzione di FUN_CNhumus_INI e LitterIni
 '2004.08.05.VM eliminato da tbLog la costante CNratio_humus
 '2004.06.25.VM forzato la sostanza organica del suolo
@@ -752,7 +752,7 @@ Dim Nome$          '[-] nome del campo umidità
 End Sub
 
 // da valutare come replicare se fare riferimento ad un database
-Public Sub ApriTabellaUsciteAzoto(tbname_azoto As String)
+void ApriTabellaUsciteAzoto(tbname_azoto As String)
 
 
 Dim L As Integer
@@ -1013,7 +1013,7 @@ Dim L As Integer
 End Sub
 
 // da valutare come riscrivere gli output
-Public Sub N_Output()
+void N_Output()
 
 Dim L As Integer
 
@@ -2021,7 +2021,7 @@ void N_plough() // this function must be public
         N_roots = 0;
 }
 
-void NFromCropSenescence(ByVal myDays As Single, ByVal coeffB As Single) // this function must be public
+void NFromCropSenescence(float myDays,float coeffB) // this function must be public
 {
     //created in 2013.06 by GA, translated by AV 2022.06
     //new function for describing the release of Nitrogen from pluriannual crop residues
