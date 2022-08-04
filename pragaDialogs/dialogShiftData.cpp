@@ -1,7 +1,6 @@
 #include "dialogShiftData.h"
-#include "meteo.h"
 
-DialogShiftData::DialogShiftData(QDate myDate)
+DialogShiftData::DialogShiftData(QDate myDate, bool allPoints)
 {
 
     this->setWindowTitle("Shift Data");
@@ -13,7 +12,16 @@ DialogShiftData::DialogShiftData(QDate myDate)
     QVBoxLayout *variableLayout = new QVBoxLayout;
     QHBoxLayout *shiftLayout = new QHBoxLayout;
 
-    QLabel *subTitleLabel = new QLabel(tr("Selected points"));
+    QLabel *subTitleLabel = new QLabel();
+    if (allPoints)
+    {
+        subTitleLabel->setText("All points");
+    }
+    else
+    {
+        subTitleLabel->setText("Selected points");
+    }
+
     mainLayout->addWidget(subTitleLabel);
     QLabel *dateFromLabel = new QLabel(tr("From"));
     dateLayout->addWidget(dateFromLabel);
@@ -31,7 +39,7 @@ DialogShiftData::DialogShiftData(QDate myDate)
     {
         variable.addItem(QString::fromStdString(it->second));
     }
-    //myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+
     variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     variable.setMaximumWidth(150);
     variableLayout->addWidget(variableLabel);
@@ -39,8 +47,9 @@ DialogShiftData::DialogShiftData(QDate myDate)
 
     QLabel shiftLabel("Shift:");
     shiftLabel.setBuddy(&shiftEdit);
-    shiftEdit.setValidator(new QIntValidator(1.0, 100.0));
+    shiftEdit.setValidator(new QIntValidator(-100.0, 100.0));
     shiftEdit.setText(QString::number(0));
+    shiftEdit.setMaximumWidth(50);
 
     shiftLayout->addWidget(&shiftLabel);
     shiftLayout->addWidget(&shiftEdit);
@@ -88,5 +97,20 @@ void DialogShiftData::done(bool res)
 int DialogShiftData::getShift() const
 {
     return shiftEdit.text().toInt();
+}
+
+meteoVariable DialogShiftData::getVariable() const
+{
+    return getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+}
+
+QDate DialogShiftData::getDateFrom() const
+{
+    return dateFrom.date();
+}
+
+QDate DialogShiftData::getDateTo() const
+{
+    return dateTo.date();
 }
 
