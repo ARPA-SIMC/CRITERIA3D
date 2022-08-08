@@ -970,6 +970,15 @@ bool Crit3DMeteoPoint::existDailyData(const Crit3DDate& myDate)
 }
 
 
+Crit3DDate Crit3DMeteoPoint::getLastDailyData()
+{
+    if (obsDataD.size() == 0)
+        return NO_DATE;
+
+    return obsDataD[nrObsDataDaysD-1].date;
+}
+
+
 float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings)
 {
     //check

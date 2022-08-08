@@ -37,7 +37,7 @@ float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
              || myVar == dailyAirRelHumidityMin
              || myVar == dailyAirRelHumidityAvg )
     {
-        threshold = 8.f;
+        threshold = 12.f;
         zWeight = stdDevZ / 100.f;
         distWeight = minDistance / 1000.f;
         threshold += zWeight + distWeight + stdDev * nrStdDev;
@@ -245,13 +245,25 @@ bool checkData(Crit3DQuality* myQuality, meteoVariable myVar, Crit3DMeteoPoint* 
     {
         // assign data
         for (int i = 0; i < nrMeteoPoints; i++)
+        {
             meteoPoints[i].currentValue = meteoPoints[i].elaboration;
+            if (int(meteoPoints[i].currentValue) != int(NODATA))
+                meteoPoints[i].quality = quality::accepted;
+            else
+                meteoPoints[i].quality = quality::missing_data;
+        }
     }
     else if (myVar == anomaly)
     {
         // assign data
         for (int i = 0; i < nrMeteoPoints; i++)
+        {
             meteoPoints[i].currentValue = meteoPoints[i].anomaly;
+            if (int(meteoPoints[i].currentValue) != int(NODATA))
+                meteoPoints[i].quality = quality::accepted;
+            else
+                meteoPoints[i].quality = quality::missing_data;
+        }
     }
     else
     {

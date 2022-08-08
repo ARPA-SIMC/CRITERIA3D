@@ -366,7 +366,12 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
     }
 
     double pow10 = pow(10, myExp);
-    double roundStep = ceil(step / pow10) * pow10;
+    double newStep = step / pow10;
+    double roundStep;
+    if (isEqual(newStep, floor(newStep)))
+        roundStep = newStep * pow10;
+    else
+        roundStep = ceil(newStep) * pow10;
 
     if (! isEqual(avg, 0))
     {

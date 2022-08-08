@@ -1,5 +1,5 @@
-#ifndef HomogeneityChartView_H
-#define HomogeneityChartView_H
+#ifndef HOMOGENEITYCHARTVIEW_H
+#define HOMOGENEITYCHARTVIEW_H
 
 #include <QtCharts/QChartView>
 #include <QtCharts/QScatterSeries>
@@ -37,4 +37,4 @@ private:
     QList<QLineSeries*> craddockSeries;
 };
 
-#endif // HomogeneityChartView_H
+#endif // HOMOGENEITYCHARTVIEW_H

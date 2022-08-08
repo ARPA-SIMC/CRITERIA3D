@@ -773,7 +773,7 @@ float computeShepard(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInte
     unsigned int nrValid = 0;
 
     // define a first neighborhood inside initial radius
-    for (i=1; i < myPoints.size(); i++)
+    for (i=0; i < myPoints.size(); i++)
         if (myPoints[i].distance <= settings->getShepardInitialRadius() && myPoints[i].distance > 0 && myPoints[i].index != settings->getIndexPointCV())
         {
             shepardNeighbourPoints.push_back(myPoints[i]);
@@ -865,6 +865,14 @@ float computeShepard(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInte
         result += weight[i] * shepardValidPoints[i].value;
 
     return result;
+}
+
+float computeModifiedShepard(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* settings, float X, float Y)
+{
+    return NODATA;
+
+    // to do: simplify and avoid sorting
+
 }
 
 

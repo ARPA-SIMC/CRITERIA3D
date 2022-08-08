@@ -483,8 +483,8 @@ Crit3DCropWidget::Crit3DCropWidget()
     editMenu->addAction(deleteCrop);
     editMenu->addAction(restoreData);
 
-    viewWeather = new QAction(tr("&Weather data"), this);
-    viewSoil = new QAction(tr("&Soil data"), this);
+    viewWeather = new QAction(tr("&Weather"), this);
+    viewSoil = new QAction(tr("&Soil"), this);
     viewMenu->addAction(viewWeather);
     viewMenu->addAction(viewSoil);
 
@@ -2090,6 +2090,10 @@ void Crit3DCropWidget::on_actionViewWeather()
     }
 
     Crit3DMeteoWidget* meteoWidgetPoint = new Crit3DMeteoWidget(myProject.isXmlMeteoGrid, myProject.path, &meteoSettings);
+
+    QDate lastDate = getQDate(myCase.meteoPoint.getLastDailyData());
+    meteoWidgetPoint->setCurrentDate(lastDate);
+
     meteoWidgetPoint->draw(myCase.meteoPoint, false);
 }
 

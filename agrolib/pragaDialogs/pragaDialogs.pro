@@ -37,6 +37,7 @@ SOURCES += \
     dialogDownloadMeteoData.cpp \
     dialogSelectDataset.cpp \
     dialogSeriesOnZones.cpp \
+    dialogShiftData.cpp \
     dialogXMLComputation.cpp
 
 HEADERS += \
@@ -47,5 +48,6 @@ HEADERS += \
     dialogDownloadMeteoData.h \
     dialogSelectDataset.h \
     dialogSeriesOnZones.h \
+    dialogShiftData.h \
     dialogXMLComputation.h
 

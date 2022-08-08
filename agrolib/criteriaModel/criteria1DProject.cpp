@@ -925,7 +925,7 @@ int Crit1DProject::computeAllUnits()
 
             // CROP
             compUnitList[i].idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class",
-                                                         compUnitList[i].idCropClass, &projectError).toUpper();
+                                                         compUnitList[i].idCropClass, &projectError);
             if (compUnitList[i].idCrop == "")
             {
                 logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing CROP *****");

@@ -3,6 +3,7 @@
 #include "stationMarker.h"
 #include "qdebug.h"
 
+#include <math.h>
 #include <QMenu>
 
 StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent) :
@@ -115,6 +116,8 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
         QAction *openPointStatisticsWidget = menu.addAction("Open point statistics widget");
         QAction *openHomogeneityWidget = menu.addAction("Open homogeneity test widget");
+        QAction *openSynchronicityWidget = menu.addAction("Open synchronicity test widget");
+        QAction *setSynchronicityReferencePoint = menu.addAction("Set as synchronicity reference point");
         QMenu *orogCodeSubMenu;
         orogCodeSubMenu = menu.addMenu("Orog code");
         QAction *actionOrogCode_primary = orogCodeSubMenu->addAction( "Set as primary station" );
@@ -140,6 +143,14 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             else if (selection == openHomogeneityWidget)
             {
                 emit newHomogeneityTestClicked(_id);
+            }
+            else if (selection == openSynchronicityWidget)
+            {
+                emit newSynchronicityTestClicked(_id);
+            }
+            else if (selection == setSynchronicityReferencePoint)
+            {
+                emit setSynchronicityReferenceClicked(_id);
             }
             else if (selection == actionOrogCode_primary)
             {

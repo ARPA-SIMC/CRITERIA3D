@@ -14,6 +14,63 @@
 
 #include "crit3dDate.h"
 
+class Crit3DCarbonNitrogen
+{
+    private:
+    // correction factors
+    float temperatureCorrectionFactor;   // [] correction factor for soil temperature
+    float waterCorrecctionFactor;        //[] correction factor for soil water content
+    float waterCorrecctionFactorDenitrification;     //[] correction factor for soil water content (denitrification)
+
+    // nitrogen
+        // contents
+    public:
+    float N_NO3;            //[g m-2] Nitrogen in form of Nitrates
+    float N_NH4;            //[g m-2] Nitrogen in form of Ammonium
+    float N_NH4_Adsorbed;   //[g m-2] Nitrogen in form of adsorbed Ammonium
+    float N_NH4_Sol;        //[g m-2] Nitrogen in form of dissolved Ammonium
+    float N_urea;           //[g m-2] Nitrogen in form of Urea
+    float N_humus;//[g m-2] Nitrogen in humus
+    float N_litter;//[g m-2] Nitrogen litter
+        // fluxes
+    private:
+
+    float N_NO3_uptake;//[g m-2] NO3 crop uptake
+    float N_NH4_uptake;//[g m-2] NH4 crop uptake
+    float N_min_litter;//[g m-2] mineralized Nitrogen in litter
+    float N_imm_l_NH4;//[g m-2] NH4 immobilized in litter
+    float N_imm_l_NO3;//[g m-2] NO3 immobilized in litter
+    float N_min_humus;//[g m-2] mineralized Nitrogen in humus
+    float N_litter_humus;//[g m-2] N from litter to humus
+    float N_vol;//[g m-2] volatilized NH4
+    float N_denitr;//[g m-2] denitrified N
+    float N_nitrif;//[g m-2] N from NH4 to NO3
+    float N_Urea_Hydr;//[g m-2] hydrolyzed urea to NH4
+    float N_NO3_runoff;//[g m-2] NO3 lost through surface & subsurface run off
+    float N_NH4_runoff;//[g m-2] NH4 lost through surface & subsurface run off
+            //ratios
+    public:
+    float ratio_CN_litter; //[-] ratio C/N in litter
+
+    // carbon
+        //contents
+    public:
+    float C_humus; //[g m-2] C in humus
+    float C_litter; //[g m-2] C in litter
+            // fluxes
+    private:
+    float C_litter_humus; //[g m-2] C for litter to humus
+    float C_litter_litter; //[g m-2] recycled Nitrogen within litter
+    float C_min_humus; //[g m-2] C lost as CO2 by humus mineralization
+    float C_min_litter; //[g m-2] C lost as CO2 by litter mineralization
+    float C_denitr_humus; //[g m-2] C in humus lost as CO2 by means of denitrification
+    float C_denitr_litter; //[g m-2] C in litter lost as CO2 by means of denitrification
+
+
+
+    Crit3DCarbonNitrogen();
+};
+
 class Crit3DCarbonNitrogenWholeProfile
 {
 
@@ -141,6 +198,55 @@ class Crit3DCarbonNitrogenWholeProfile
     float C_min_litterGG;           //[g m-2] C lost as CO2 by litter mineralization
 
 
+    Crit3DCarbonNitrogen *arrayCarbonNitrogen;
+
+    public:
+
+    void N_main();
+
+    private:
+
+    float convertToGramsPerM3(int layerIndex,float myQuantity);
+    float convertToGramsPerLiter(int layerIndex,float myQuantity);
+    float convertToGramsPerKg(int layerIndex,float myQuantity);
+    void N_InitializeLayers();
+    void humusIni();
+    void updateTotalOfPartitioned(float* mySoluteSum, float* mySoluteAds,float* mySoluteSol);
+    void partitioning();
+    void litterIni();
+    void chemicalTransformations();
+    void N_Initialize();
+    void N_Fertilization();
+    void N_InitializeVariables();
+    //void ApriTabellaUsciteAzoto(tbname_azoto As String);
+    void N_Output();
+    float CNRatio(float c,float n);
+    void computeWaterCorrectionFactor(int L);
+    void computeTemperatureCorrectionFactor(int L);
+    void computeLayerRates(int L);
+    void N_Uptake();
+    void N_SurfaceRunoff();
+    void N_SubSurfaceRunoff();
+    void N_Uptake_Potential();
+    void N_Uptake_Max();
+    void N_Reset();
+    float findPistonDepth();
+    void soluteFluxesPiston(float* mySolute, float PistonDepth,float* leached);
+    void soluteFluxesPiston_old(float* mySolute, float* leached, float* CoeffPiston);
+    // sbagliata verificare void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* );
+    void leachingWaterTable(float* mySolute, float* leached);
+    void NH4_Balance();
+    void NO3_Balance();
+    void N_initializeCrop(bool noReset);
+    void N_harvest();
+    void updateNCrop();
+    void N_plough();
+    void NFromCropSenescence(float myDays,float coeffB);
+
+
+
+
+
 
 
 
@@ -149,273 +255,11 @@ class Crit3DCarbonNitrogenWholeProfile
     Crit3DCarbonNitrogenWholeProfile();
 };
 
-class Crit3DCarbonNitrogen
-{
-    private:
-    // correction factors
-    float temperatureCorrectionFactor;   // [] correction factor for soil temperature
-    float waterCorrecctionFactor;        //[] correction factor for soil water content
-    float waterCorrecctionFactorDenitrification;     //[] correction factor for soil water content (denitrification)
 
-    // nitrogen
-        // contents
-    public:
-    float N_NO3;            //[g m-2] Nitrogen in form of Nitrates
-    float N_NH4;            //[g m-2] Nitrogen in form of Ammonium
-    float N_NH4_Adsorbed;   //[g m-2] Nitrogen in form of adsorbed Ammonium
-    float N_NH4_Sol;        //[g m-2] Nitrogen in form of dissolved Ammonium
-    float N_urea;           //[g m-2] Nitrogen in form of Urea
-    float N_humus;//[g m-2] Nitrogen in humus
-    float N_litter;//[g m-2] Nitrogen litter
-        // fluxes
-    private:
-
-    float N_NO3_uptake;//[g m-2] NO3 crop uptake
-    float N_NH4_uptake;//[g m-2] NH4 crop uptake
-    float N_min_litter;//[g m-2] mineralized Nitrogen in litter
-    float N_imm_l_NH4;//[g m-2] NH4 immobilized in litter
-    float N_imm_l_NO3;//[g m-2] NO3 immobilized in litter
-    float N_min_humus;//[g m-2] mineralized Nitrogen in humus
-    float N_litter_humus;//[g m-2] N from litter to humus
-    float N_vol;//[g m-2] volatilized NH4
-    float N_denitr;//[g m-2] denitrified N
-    float N_nitrif;//[g m-2] N from NH4 to NO3
-    float N_Urea_Hydr;//[g m-2] hydrolyzed urea to NH4
-    float N_NO3_runoff;//[g m-2] NO3 lost through surface & subsurface run off
-    float N_NH4_runoff;//[g m-2] NH4 lost through surface & subsurface run off
-            //ratios
-    public:
-    float ratio_CN_litter; //[-] ratio C/N in litter
-
-    // carbon
-        //contents
-    public:
-    float C_humus; //[g m-2] C in humus
-    float C_litter; //[g m-2] C in litter
-            // fluxes
-    private:
-    float C_litter_humus; //[g m-2] C for litter to humus
-    float C_litter_litter; //[g m-2] recycled Nitrogen within litter
-    float C_min_humus; //[g m-2] C lost as CO2 by humus mineralization
-    float C_min_litter; //[g m-2] C lost as CO2 by litter mineralization
-    float C_denitr_humus; //[g m-2] C in humus lost as CO2 by means of denitrification
-    float C_denitr_litter; //[g m-2] C in litter lost as CO2 by means of denitrification
-
-
-
-    Crit3DCarbonNitrogen();
-};
 
 
 #endif // CARBON_H
-/*
- *
-void N_initializeCrop(bool noReset)
-{
-    N_cropToHarvest = 0;
-    N_cropToResidues = 0;
 
-    if (!noReset)
-        N_roots = 0;
-    // da leggere da database
-    N_uptakable = tbColture("Nasportabile") / 10;   //      da [kg ha-1] a [g m-2]
-    N_uptakeDeficit = 0;
-    N_uptakeMax = 0;
-    N_potentialDemandCumulated = 0;
-    ReDim N_deficit_daily(Nitrogen.N_deficit_max_days)
-
-    Select Case TipoColtura
-        Case "arborea", "arborea_inerbita", "fruit_tree", "fruit_tree_with_grass"
-        {
-            // 2001 Rufat Dejong Fig. 4 e Tagliavini
-            N_ratioHarvested = 0.4;      // fruits, pruning wood
-            N_ratioResidues = 0.5;       // leaves
-            N_ratioRoots = 0.1;           // roots, trunk, branches
-
-
-        }
-        else if  Case "erbacea_poliennale", "herbaceous_perennial", "prativa", "grass", "incolto", "fallow", "prativa_primoanno", "grass_firstyear"
-        {
-            N_ratioHarvested = 0.9;
-            N_ratioResidues = 0;
-            N_ratioRoots = 0.1;
-        }
-        else
-        {
-            // colture annuali
-            N_ratioHarvested = 0.9;
-            N_ratioResidues = 0;
-            N_ratioRoots = 0.1;
-        }
-
-    //in prima approssimazione calcolato da N massimo asportabile per ciclo
-    //(parte asportabile e non asportabile) e LAIMAX
-    //2013.10 GA
-    //scambio mail con Ass.Agr.:
-    //
-    MaxRate_LAI_Ndemand = (N_uptakable - N_roots) / LAIMAX ;
-
-}
-
-
-void N_harvest() // public function
-{
-        // 2013.06 GA translated in C++ by AV 2022.06
-        // annual crops:roots are incorporated in litter at harvest
-        // meadow and perennial herbaceous crops: half of N from roots is incorporated in litter
-        // tree crops: half of N from roots is incorporated in litter
-        // N of leaves is incorporated in litter through the upeer layer with a smoothly rate during the leaf fall
-
-    int L;
-    float N_toLitter;
-
-    if (PSR == 0 && USR == 0)
-        return;
-
-    for (L = PSR; L <= USR; L++) // verificare i cicli for per cambio indici
-    {
-        //Select Case TipoColtura
-            // annual crop
-            if (TipoColtura == "erbacea" || TipoColtura == "herbaceous" || TipoColtura == "orticola", TipoColtura == "horticultural")
-                N_toLitter = Radici.DensStrato(L) * N_roots;
-
-            // multiannual crop
-            else if (TipoColtura == "erbacea_poliennale"|| TipoColtura == "herbaceous_perennial"|| TipoColtura ==  "prativa"|| TipoColtura ==  "grass"|| TipoColtura ==  "incolto"|| TipoColtura ==  "fallow"|| TipoColtura ==  "prativa_primoanno"|| TipoColtura ==  "grass_firstyear")
-                N_toLitter = Radici.DensStrato(L) * N_roots / 2;
-
-            // tree crops
-            else if (TipoColtura ==  "arborea"|| TipoColtura == "fruit_tree"|| TipoColtura == "arborea_inerbita"|| TipoColtura == "fruit_tree_with_grass")
-                N_toLitter = Radici.DensStrato(L) * N_roots / 2;
-
-
-
-        N_litter(L) += N_toLitter
-        C_litter(L) += CN_RATIO_NOTHARVESTED * N_toLitter
-    }
-
-    if (TipoColtura == "erbacea" || TipoColtura == "herbaceous" || TipoColtura == "orticola", TipoColtura == "horticultural")
-    {
-        // annual crops
-        N_cropToHarvest = 0;
-        N_cropToResidues = 0;
-        N_roots = 0;
-    }
-    else if (TipoColtura == "erbacea_poliennale"|| TipoColtura == "herbaceous_perennial"|| TipoColtura ==  "prativa"|| TipoColtura ==  "grass"|| TipoColtura ==  "incolto"|| TipoColtura ==  "fallow"|| TipoColtura ==  "prativa_primoanno"|| TipoColtura ==  "grass_firstyear")
-    {
-        //pluriennali
-        N_cropToHarvest = 0;
-        N_cropToResidues = 0;
-        N_roots *= 0.5;
-    }
-    else if (TipoColtura ==  "arborea"|| TipoColtura == "fruit_tree"|| TipoColtura == "arborea_inerbita"|| TipoColtura == "fruit_tree_with_grass")
-    {
-        //tree crops
-
-            N_cropToHarvest = 0;
-            N_Roots *= 0.5;
-    }
-
-    N_potentialDemandCumulated = 0;
-
-}
-
-
-
-void updateNCrop() // this function must be private
-{
-    if (coltura == Crops.CROP_ALFALFA || coltura == Crops.CROP_ALFALFA_FIRSTYEAR || coltura == Crops.CROP_SOYBEAN)
-    {
-            // the demand is satisfied by Nitrogen fixation
-            // it prevails soil mineral uptake, if available
-            N_cropToHarvest += N_dailyDemand * N_ratioHarvested;
-            N_cropToResidues += N_dailyDemand * N_ratioResidues;
-            N_Roots += N_dailyDemand * N_ratioRoots;
-    }
-    else
-    {
-            N_cropToHarvest += (N_NH4_uptakeGG + N_NO3_uptakeGG) * N_ratioHarvested;
-            N_cropToResidues += (N_NH4_uptakeGG + N_NO3_uptakeGG) * N_ratioResidues;
-            N_roots += (N_NH4_uptakeGG + N_NO3_uptakeGG) * N_ratioRoots;
-    }
-    // pare che sia commentato chiedere a Gabri
-    'N_UptakeDeficit = max(N_PotentialDemandCumulated - N_Crop, 0)
-}
-
-void N_plough() // this function must be public
-{
-    int L;
-    float depthRatio;
-    float N_toLitter; // sembra da togliere chiedere a Gabri
-    float N_totLitter;
-    float N_totHumus;
-    float C_totLitter;
-    float C_totHumus;
-    float N_totNO3;
-    float N_totNH4;
-    int myLastLayer;
-    float tmp;
-
-        N_totLitter = N_cropToHarvest + N_cropToResidues + N_roots;
-        C_totLitter = N_totLitter * CN_RATIO_NOTHARVESTED;
-        N_totHumus = 0;
-        C_totLitter = 0;
-        C_totHumus = 0;
-        N_totNO3 = 0;
-        N_totNH4 = 0;
-
-        L = 0;
-        do{
-
-            N_totLitter += N_litter[L];
-            C_totLitter += C_litter[L];
-            N_totHumus += N_humus[L];
-            C_totHumus += C_humus[L];
-            N_totNO3 += N_NO3[L];
-            N_totNH4 += N_NH4[L];
-            L++;
-        } while (suolo(L).spess + suolo(L).prof <= N_Plough_Depth)
-
-        if (L == 0)
-            return;
-        else
-            myLastLayer = L - 1;
-
-        tmp = 0;
-        for (L=0;L<myLastLayer;L++) // verificare i cicli for per cambio indici
-        {
-            depthRatio = suolo(L).spess / (suolo(myLastLayer).spess + suolo(myLastLayer).prof)
-            tmp += depthRatio;
-
-            N_litter(L) = N_totLitter * depthRatio;
-            C_litter(L) = C_totLitter * depthRatio;
-            N_humus(L) = N_totHumus * depthRatio;
-            C_humus(L) = C_totHumus * depthRatio;
-            N_NO3(L) = N_totNO3 * depthRatio;
-            N_NH4(L) = N_totNH4 * depthRatio;
-        }
-        Partitioning
-
-        N_cropToHarvest = 0;
-        N_cropToResidues = 0;
-        N_roots = 0;
-}
-
-void NFromCropSenescence(ByVal myDays As Single, ByVal coeffB As Single) // this function must be public
-{
-    //created in 2013.06 by GA, translated by AV 2022.06
-    //new function for describing the release of Nitrogen from pluriannual crop residues
-    // e.g. leaf fall
-    //myDays  days past since beginning of senescence
-    //coeffB  b coefficient in exponential senescence LAI curve
-
-
-    float ratioSenescence;      //ratio of drop leaves
-
-    ratioSenescence = exp(coeffB * myDays) * (1 - exp(-coeffB)) / (exp(coeffB * LENGTH_SENESCENCE) - 1);
-    N_litter[0] = N_litter[0] + N_CropToResidues * ratioSenescence;
-
-}
-*/
 
 
 
