@@ -1295,6 +1295,22 @@ bool Crit3DMeteoGridDbHandler::writeCellProperties(QString *myError, int nRow, i
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::activeAllCells(QString *myError)
+{
+    QSqlQuery qry(_db);
+
+    qry.prepare( "UPDATE CellsProperties SET Active = 1" );
+    if( !qry.exec() )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *myError, QString idMeteo)
 {
     QSqlQuery qry(_db);
