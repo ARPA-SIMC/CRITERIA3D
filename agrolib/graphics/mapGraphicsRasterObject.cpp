@@ -151,7 +151,7 @@ QPointF RasterObject::getLatLon(const QPointF &pos)
      Q_UNUSED(widget)
 
     if (isDrawing)
-    {
+    { 
         setMapExtents();
 
         if (rasterPointer != nullptr)
