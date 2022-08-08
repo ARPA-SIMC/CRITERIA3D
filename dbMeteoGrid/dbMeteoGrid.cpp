@@ -1311,6 +1311,22 @@ bool Crit3DMeteoGridDbHandler::activeAllCells(QString *myError)
     }
 }
 
+bool Crit3DMeteoGridDbHandler::activeCellsInList(QString *myError, QList<QString> idList)
+{
+    QSqlQuery qry(_db);
+    QString statement = QString("UPDATE CellsProperties SET Active = 1 WHERE `Code` IN ('%1')").arg(idList.join("','"));
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
 bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *myError, QString idMeteo)
 {
     QSqlQuery qry(_db);
