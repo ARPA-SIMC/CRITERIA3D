@@ -76,6 +76,7 @@
             QLineEdit minNumStations;
             QListWidget listFoundStations;
             QListWidget listSelectedStations;
+            QList<QString> listAllFound;
             QPushButton addStationFoundButton;
             QPushButton deleteStationFoundButton;
             QTableWidget stationsTable;

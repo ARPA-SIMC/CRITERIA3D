@@ -181,6 +181,8 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     deleteStationFoundButton.setEnabled(false);
     arrowLayout->addWidget(&addStationFoundButton);
     arrowLayout->addWidget(&deleteStationFoundButton);
+    listFoundStations.setSelectionMode(QAbstractItemView::ExtendedSelection);
+    listSelectedStations.setSelectionMode(QAbstractItemView::ExtendedSelection);
     stationsLayout->addWidget(&listFoundStations);
     stationsLayout->addLayout(arrowLayout);
     stationsLayout->addWidget(&listSelectedStations);
@@ -561,6 +563,7 @@ void Crit3DHomogeneityWidget::changeVar(const QString varName)
 {
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
     listFoundStations.clear();
+    listAllFound.clear();
     listSelectedStations.clear();
     stationsTable.clearContents();
     resultLabel.clear();
@@ -574,6 +577,7 @@ void Crit3DHomogeneityWidget::changeVar(const QString varName)
 void Crit3DHomogeneityWidget::changeYears()
 {
     listFoundStations.clear();
+    listAllFound.clear();
     listSelectedStations.clear();
     stationsTable.clearContents();
     resultLabel.clear();
@@ -823,6 +827,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
 {
     stationsTable.clearContents();
     listFoundStations.clear();
+    listAllFound.clear();
     listSelectedStations.clear();
 
     QList<std::vector<float>> myAnnualSeriesFound;
@@ -942,6 +947,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         stationsTable.setItem(i,3,new QTableWidgetItem(QString::number(delta)));
         if (listFoundStations.findItems(name, Qt::MatchExactly).isEmpty())
         {
+            listAllFound.append(name);
             listFoundStations.addItem(name);
             addStationFoundButton.setEnabled(true);
         }
@@ -950,11 +956,12 @@ void Crit3DHomogeneityWidget::findReferenceStations()
 
 void Crit3DHomogeneityWidget::addFoundStationClicked()
 {
-
-    QListWidgetItem *item = listFoundStations.currentItem();
-    int row = listFoundStations.currentRow();
-    listFoundStations.takeItem(row);
-    listSelectedStations.addItem(item);
+    QList<QListWidgetItem *> items = listFoundStations.selectedItems();
+    for (int i = 0; i<items.size(); i++)
+    {
+        listFoundStations.takeItem(listFoundStations.row(items[i]));
+        listSelectedStations.addItem(items[i]);
+    }
 
     if(listFoundStations.count() == 0)
     {
@@ -979,10 +986,20 @@ void Crit3DHomogeneityWidget::addFoundStationClicked()
 
 void Crit3DHomogeneityWidget::deleteFoundStationClicked()
 {
-    QListWidgetItem *item = listSelectedStations.currentItem();
-    int row = listSelectedStations.currentRow();
-    listSelectedStations.takeItem(row);
-    listFoundStations.addItem(item);
+    QList<QListWidgetItem *> items = listSelectedStations.selectedItems();
+    for (int i = 0; i<items.size(); i++)
+    {
+        listSelectedStations.takeItem(listSelectedStations.row(items[i]));
+    }
+    // add station, keep order
+    listFoundStations.clear();
+    for (int i = 0; i<listAllFound.size(); i++)
+    {
+        if (listSelectedStations.findItems(listAllFound[i], Qt::MatchExactly).isEmpty())
+        {
+            listFoundStations.addItem(listAllFound[i]);
+        }
+    }
 
     if(listFoundStations.count() == 0)
     {
