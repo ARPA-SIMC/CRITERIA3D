@@ -412,7 +412,6 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     else
     {
         myAnnualSeries.clear();
-        QMessageBox::critical(nullptr, "Error", "Data unavailable for candidate station");
         return;
     }
 }
