@@ -36,7 +36,6 @@
             void deleteJointStationClicked();
             void saveToDbClicked();
             void updateYears();
-            void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint *meteoPointSet, QDate myDate);
             void findReferenceStations();
             void addFoundStationClicked();
             void deleteFoundStationClicked();

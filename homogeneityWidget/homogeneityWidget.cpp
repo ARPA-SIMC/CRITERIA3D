@@ -89,22 +89,12 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
 
     QLabel *variableLabel = new QLabel(tr("Variable: "));
     variable.addItem("DAILY_TAVG");
-    variable.addItem("DAILY_TEMPRANGE");
     variable.addItem("DAILY_PREC");
     variable.addItem("DAILY_RHAVG");
     variable.addItem("DAILY_RAD");
-    variable.addItem("DAILY_DIRECT_RAD");
-    variable.addItem("DAILY_DIFFUSE_RAD");
-    variable.addItem("DAILY_REFLEC_RAD");
     variable.addItem("DAILY_W_VEC_INT_AVG");
     variable.addItem("DAILY_W_SCAL_INT_AVG");
-    /*
-    std::map<meteoVariable, std::string>::const_iterator it;
-    for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
-    {
-        variable.addItem(QString::fromStdString(it->second));
-    }
-    */
+
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
     variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     variable.setMaximumWidth(150);
@@ -351,7 +341,7 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
                 }
                 for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
                 {
-                    setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate);
+                    setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate, myVar, meteoSettings);
                 }
             }
             lastDateCopyed = lastDateNew;
@@ -418,146 +408,7 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     }
 }
 
-void Crit3DHomogeneityWidget::setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet, QDate myDate)
-{
 
-    bool automaticETP = meteoSettings->getAutomaticET0HS();
-    bool automaticTmed = meteoSettings->getAutomaticTavg();
-
-    switch(myVar)
-    {
-        /*
-         * // LC queste var non possono esserci
-        case dailyLeafWetness:
-        {
-            QDateTime myDateTime(myDate,QTime(1,0,0));
-            QDateTime endDateTime(myDate.addDays(1),QTime(0,0,0));
-            while(myDateTime<=endDateTime)
-            {
-                float value = meteoPointGet.getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, leafWetness);
-                meteoPointSet->setMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, leafWetness, value);
-                myDateTime = myDateTime.addSecs(3600);
-            }
-            break;
-        }
-
-        case dailyThomDaytime:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, value);
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
-            break;
-        }
-
-        case dailyThomNighttime:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, value);
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
-            break;
-        }
-        case dailyThomAvg: case dailyThomMax: case dailyThomHoursAbove:
-        {
-            QDateTime myDateTime(myDate,QTime(1,0,0));
-            QDateTime endDateTime(myDate.addDays(1),QTime(0,0,0));
-            while(myDateTime<=endDateTime)
-            {
-                float value = meteoPointGet.getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, airTemperature);
-                meteoPointSet->setMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, airTemperature, value);
-                value = meteoPointGet.getMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, airRelHumidity);
-                meteoPointSet->setMeteoPointValueH(getCrit3DDate(myDateTime.date()), myDateTime.time().hour(), 0, airRelHumidity, value);
-                myDateTime = myDateTime.addSecs(3600);
-            }
-            break;
-        }
-        case dailyBIC:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyReferenceEvapotranspirationHS, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyReferenceEvapotranspirationHS, value);
-            if (automaticETP)
-            {
-                float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
-                value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
-            }
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyPrecipitation, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyPrecipitation, value);
-            break;
-        }
-        */
-
-    case dailyAirTemperatureRange:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
-            break;
-        }
-        case dailyAirDewTemperatureMax:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, value);
-            break;
-        }
-
-        case dailyAirDewTemperatureMin:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, value);
-            break;
-        }
-
-        case dailyAirTemperatureAvg:
-        {
-            if (automaticTmed)
-            {
-                float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
-                value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
-            }
-            break;
-        }
-
-        case dailyReferenceEvapotranspirationHS:
-        {
-            if (automaticETP)
-            {
-                float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
-                value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-                meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
-            }
-            break;
-        }
-        case dailyHeatingDegreeDays: case dailyCoolingDegreeDays:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, value);
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
-            break;
-        }
-
-        default:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), myVar, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), myVar, value);
-            break;
-        }
-    }
-
-}
 
 void Crit3DHomogeneityWidget::changeVar(const QString varName)
 {
@@ -700,7 +551,6 @@ void Crit3DHomogeneityWidget::on_actionChangeLeftAxis()
         homogeneityChartView->setYmin(changeAxisDialog.getMinVal());
     }
 }
-
 
 void Crit3DHomogeneityWidget::on_actionExportHomogeneityGraph()
 {
@@ -891,7 +741,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
 
                     for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
                     {
-                        setMpValues(mpGet, &meteoPointTemp, myDate);
+                        setMpValues(mpGet, &meteoPointTemp, myDate, myVar, meteoSettings);
                     }
                 }
                 lastDateCopyed = lastDateNew;
