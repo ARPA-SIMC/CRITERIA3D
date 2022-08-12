@@ -749,7 +749,8 @@ void Crit3DHomogeneityWidget::findReferenceStations()
                     {
                         setMpValues(mpGet, &meteoPointTemp, myDate, myVar, meteoSettings);
                     }
-                    name = name+"_"+jointStationsListMpToBeComputed[j];
+                    QString nameJoint = meteoPointsDbHandler->getNameGivenId(jointStationsListMpToBeComputed[j]);
+                    name = name+"_J_"+nameJoint;
                 }
                 lastDateCopyed = lastDateNew;
             }
