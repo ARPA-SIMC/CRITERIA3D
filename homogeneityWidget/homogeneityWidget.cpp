@@ -706,6 +706,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
 
         Crit3DMeteoPoint mpToBeComputed;
         mpToBeComputed.id = sortedId[i];
+        QString name = meteoPointsDbHandler->getNameGivenId(QString::fromStdString(sortedId[i]));
         QList<QString> jointStationsListMpToBeComputed = meteoPointsDbHandler->getJointStations(QString::fromStdString(mpToBeComputed.id));
         meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mpToBeComputed);
 
@@ -743,6 +744,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
                     {
                         setMpValues(mpGet, &meteoPointTemp, myDate, myVar, meteoSettings);
                     }
+                    name = name+"_"+jointStationsListMpToBeComputed[j];
                 }
                 lastDateCopyed = lastDateNew;
             }
@@ -753,11 +755,10 @@ void Crit3DHomogeneityWidget::findReferenceStations()
                                                  &meteoPointTemp, &clima, false, false, meteoSettings, mpToBeComputedAnnualSeries, dataAlreadyLoaded);
         if (validYears != 0)
         {
-            if (validYears / (clima.yearEnd() - clima.yearStart() + 1) > meteoSettings->getMinimumPercentage() / 100.f)
+            if (validYears / (lastYear - firstYear + 1) > meteoSettings->getMinimumPercentage() / 100.f)
             {
                 myNrStations = myNrStations + 1;
-                sortedIdFound.append(sortedId[i]);
-                QString name = meteoPointsDbHandler->getNameGivenId(QString::fromStdString(sortedId[i]));
+                sortedIdFound.append(sortedId[i]);   
                 mapNameId.insert(name, sortedId[i]);
                 mapNameAnnualSeries.insert(name,mpToBeComputedAnnualSeries);
                 distanceIdFound.append(distanceId[i]);
