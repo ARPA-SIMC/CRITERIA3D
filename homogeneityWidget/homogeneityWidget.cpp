@@ -692,8 +692,13 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         return;
     }
     int myNrStations = 0;
-    for (int i = 0; i<sortedId.size(); i++)
+    QProgressDialog progress("Finding stations...", "Abort", 0, sortedId.size(), this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.show();
+    int i = 0;
+    for (i = 0; i<sortedId.size(); i++)
     {
+        progress.setValue(i+1);
         if (idPointsJointed.contains(sortedId[i]))
         {
             continue;
@@ -755,7 +760,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
                                                  &meteoPointTemp, &clima, false, false, meteoSettings, mpToBeComputedAnnualSeries, dataAlreadyLoaded);
         if (validYears != 0)
         {
-            if (validYears / (lastYear - firstYear + 1) > meteoSettings->getMinimumPercentage() / 100.f)
+            if ( (float)validYears / (float)(lastYear - firstYear + 1) > meteoSettings->getMinimumPercentage() / 100.f)
             {
                 myNrStations = myNrStations + 1;
                 sortedIdFound.append(sortedId[i]);   
@@ -770,32 +775,35 @@ void Crit3DHomogeneityWidget::findReferenceStations()
             break;
         }
     }
+    progress.setValue(i+1);
+    progress.close();
+
     if (myNrStations == 0)
     {
         QMessageBox::critical(nullptr, "Error", "No reference stations found");
         return;
     }
     stationsTable.setRowCount(myNrStations);
-    for (int i = 0; i<myNrStations; i++)
+    for (int z = 0; z<myNrStations; z++)
     {
         float r2, y_intercept, trend;
         QString name;
         QMapIterator<QString,std::string> iterator(mapNameId);
         while (iterator.hasNext()) {
             iterator.next();
-            if (iterator.value() == sortedIdFound[i])
+            if (iterator.value() == sortedIdFound[z])
             {
                 name = iterator.key();
                 break;
             }
         }
-        statistics::linearRegression(myAnnualSeries, myAnnualSeriesFound[i], myAnnualSeries.size(), false, &y_intercept, &trend, &r2);
-        double altitude = meteoPointsDbHandler->getAltitudeGivenId(QString::fromStdString(sortedIdFound[i]));
+        statistics::linearRegression(myAnnualSeries, myAnnualSeriesFound[z], myAnnualSeries.size(), false, &y_intercept, &trend, &r2);
+        double altitude = meteoPointsDbHandler->getAltitudeGivenId(QString::fromStdString(sortedIdFound[z]));
         double delta =  meteoPointsNearDistanceList[0].point.z - altitude;
-        stationsTable.setItem(i,0,new QTableWidgetItem(name));
-        stationsTable.setItem(i,1,new QTableWidgetItem(QString::number(r2, 'f', 3)));
-        stationsTable.setItem(i,2,new QTableWidgetItem(QString::number(distanceIdFound[i]/1000, 'f', 1)));
-        stationsTable.setItem(i,3,new QTableWidgetItem(QString::number(delta)));
+        stationsTable.setItem(z,0,new QTableWidgetItem(name));
+        stationsTable.setItem(z,1,new QTableWidgetItem(QString::number(r2, 'f', 3)));
+        stationsTable.setItem(z,2,new QTableWidgetItem(QString::number(distanceIdFound[z]/1000, 'f', 1)));
+        stationsTable.setItem(z,3,new QTableWidgetItem(QString::number(delta)));
         if (listFoundStations.findItems(name, Qt::MatchExactly).isEmpty())
         {
             listAllFound.append(name);
