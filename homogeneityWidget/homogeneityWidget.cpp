@@ -885,9 +885,9 @@ void Crit3DHomogeneityWidget::deleteFoundStationClicked()
 void Crit3DHomogeneityWidget::executeClicked()
 {
     bool isHomogeneous = false;
-    std::vector<float> myTValues;
-    float myYearTmax = NODATA;
-    float myTmax = NODATA;
+    std::vector<double> myTValues;
+    double myYearTmax = NODATA;
+    double myTmax = NODATA;
     resultLabel.clear();
 
     int myFirstYear = yearFrom.currentText().toInt();
@@ -909,23 +909,23 @@ void Crit3DHomogeneityWidget::executeClicked()
 
     if (method.currentText() == "SNHT")
     {
-        std::vector<float> myValidValues;
+        std::vector<double> myValidValues;
         for (int i = 0; i<myAnnualSeries.size(); i++)
         {
             if (myAnnualSeries[i] != NODATA)
             {
-                myValidValues.push_back(myAnnualSeries[i]);
+                myValidValues.push_back((double)myAnnualSeries[i]);
             }
         }
-        float myAverage = statistics::mean(myValidValues, myValidValues.size());
-        std::vector<float> myRefAverage;
+        double myAverage = statistics::mean(myValidValues, myValidValues.size());
+        std::vector<double> myRefAverage;
         std::vector<float> r2;
         std::vector<std::vector<float>> refSeriesVector;
         float r2Value, y_intercept, trend;
 
         for (int row = 0; row < nrReference; row++)
         {
-            std::vector<float> myRefValidValues;
+            std::vector<double> myRefValidValues;
             QString name = listSelectedStations.item(row)->text();
             std::vector<float> refSeries = mapNameAnnualSeries.value(name);
             refSeriesVector.push_back(refSeries);
@@ -933,15 +933,15 @@ void Crit3DHomogeneityWidget::executeClicked()
             {
                 if (refSeries[i] != NODATA)
                 {
-                    myRefValidValues.push_back(refSeries[i]);
+                    myRefValidValues.push_back((double)refSeries[i]);
                 }
             }
             myRefAverage.push_back(statistics::mean(myRefValidValues, myRefValidValues.size()));
             statistics::linearRegression(myAnnualSeries, refSeries, myAnnualSeries.size(), false, &y_intercept, &trend, &r2Value);
             r2.push_back(r2Value);
         }
-        float tmp, sumV;
-        std::vector<float> myQ;
+        double tmp, sumV;
+        std::vector<double> myQ;
         if (myVar == dailyPrecipitation)
         {
             for (int i = 0; i<myAnnualSeries.size(); i++)
@@ -958,7 +958,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                 }
                 if (myAnnualSeries[i] != NODATA && tmp!= 0 && sumV!= 0)
                 {
-                    myQ.push_back(myAnnualSeries[i]/(tmp/sumV));
+                    myQ.push_back((double)myAnnualSeries[i]/(tmp/sumV));
                 }
                 else
                 {
@@ -984,7 +984,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                 {
                     if (sumV > 0)
                     {
-                         myQ.push_back(myAnnualSeries[i]-(tmp/sumV));
+                         myQ.push_back((double)myAnnualSeries[i]-(tmp/sumV));
                     }
                     else
                     {
@@ -1005,9 +1005,9 @@ void Crit3DHomogeneityWidget::executeClicked()
                 myValidValues.push_back(myQ[i]);
             }
         }
-        float myQAverage = statistics::mean(myValidValues, myValidValues.size());
-        float myQDevStd = statistics::standardDeviation(myValidValues, myValidValues.size());
-        std::vector<float> myZ;
+        double myQAverage = statistics::mean(myValidValues, myValidValues.size());
+        double myQDevStd = statistics::standardDeviation(myValidValues, myValidValues.size());
+        std::vector<double> myZ;
         for (int i = 0; i<myQ.size(); i++)
         {
             if (myQ[i] != NODATA)
@@ -1028,11 +1028,11 @@ void Crit3DHomogeneityWidget::executeClicked()
             }
         }
 
-        float myZAverage = statistics::mean(myValidValues, myValidValues.size());
+        double myZAverage = statistics::mean(myValidValues, myValidValues.size());
 
         isHomogeneous = (qAbs(myZAverage) <= TOLERANCE);
-        std::vector<float> z1;
-        std::vector<float> z2;
+        std::vector<double> z1;
+        std::vector<double> z2;
 
         for (int i = 0; i< myZ.size()-1; i++)
         {
@@ -1062,7 +1062,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myValidValues.push_back(z1[i]);
                 }
             }
-            float myZ1Average = statistics::mean(myValidValues, myValidValues.size());
+            double myZ1Average = statistics::mean(myValidValues, myValidValues.size());
             myValidValues.clear();
             for (int i = 0; i<z2.size(); i++)
             {
@@ -1071,7 +1071,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myValidValues.push_back(z2[i]);
                 }
             }
-            float myZ2Average = statistics::mean(myValidValues, myValidValues.size());
+            double myZ2Average = statistics::mean(myValidValues, myValidValues.size());
             if (myZ1Average != NODATA && myZ2Average != NODATA)
             {
                 myTValues[a] = ( (a+1) * pow(myZ1Average,2)) + ((myZ.size() - (a+1)) * pow(myZ2Average,2));
@@ -1088,11 +1088,11 @@ void Crit3DHomogeneityWidget::executeClicked()
             }
         }
         std::vector<int> years;
-        std::vector<float> outputValues;
+        std::vector<double> outputValues;
         QList<QPointF> t95Points;
-        float myValue;
-        float myMaxValue = NODATA;
-        float myT95;
+        double myValue;
+        double myMaxValue = NODATA;
+        double myT95;
 
         int myNrYears = yearTo.currentText().toInt() - myFirstYear + 1;
         for (int i = 0; i < myTValues.size(); i++)
