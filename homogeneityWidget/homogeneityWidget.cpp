@@ -1027,34 +1027,22 @@ void Crit3DHomogeneityWidget::executeClicked()
                 myValidValues.push_back(myZ[i]);
             }
         }
-        /*
-         * // TEST
-        double mySum = 0;
-        for (int i = 0; i<myValidValues.size(); i++)
-        {
-            mySum = mySum + (double)myValidValues[i];
-            qDebug() << " " << (double)myValidValues[i];
-        }
-        double myZDouble = mySum/myValidValues.size();
-        */
+
         float myZAverage = statistics::mean(myValidValues, myValidValues.size());
 
         isHomogeneous = (qAbs(myZAverage) <= TOLERANCE);
         std::vector<float> z1;
         std::vector<float> z2;
 
-        for (int i = 0; i< myZ.size(); i++)
+        for (int i = 0; i< myZ.size()-1; i++)
         {
-            z1.push_back(NODATA);
-            z2.push_back(NODATA);
-            if (i<myZ.size()-1)
-            {
-                myTValues.push_back(NODATA);
-            }
+            myTValues.push_back(NODATA);
         }
 
         for (int a = 0; a < myZ.size()-1; a++)
         {
+            z1.resize(a+1);
+            z2.resize(myZ.size()-a-1);
             for (int i = 0; i< myZ.size(); i++)
             {
                 if (i<=a)
@@ -1063,7 +1051,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                 }
                 else
                 {
-                    z2[i-a] = myZ[i];
+                    z2[i-a-1] = myZ[i];
                 }
             }
             myValidValues.clear();
