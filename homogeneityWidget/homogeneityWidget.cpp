@@ -1027,6 +1027,16 @@ void Crit3DHomogeneityWidget::executeClicked()
                 myValidValues.push_back(myZ[i]);
             }
         }
+        /*
+         * // TEST
+        double mySum = 0;
+        for (int i = 0; i<myValidValues.size(); i++)
+        {
+            mySum = mySum + (double)myValidValues[i];
+            qDebug() << " " << (double)myValidValues[i];
+        }
+        double myZDouble = mySum/myValidValues.size();
+        */
         float myZAverage = statistics::mean(myValidValues, myValidValues.size());
 
         isHomogeneous = (qAbs(myZAverage) <= TOLERANCE);
