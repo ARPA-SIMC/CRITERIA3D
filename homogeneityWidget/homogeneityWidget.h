@@ -19,7 +19,7 @@
 
         public:
             Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPointsNearDistanceList, QList<std::string> sortedId,
-            std::vector<float> distanceId, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings,
+            std::vector<float> distanceId, QList<QString> jointStationsMyMp, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings,
                                     Crit3DClimateParameters *climateParameters, Crit3DQuality* quality);
             ~Crit3DHomogeneityWidget();
             void closeEvent(QCloseEvent *event);

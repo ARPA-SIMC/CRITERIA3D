@@ -40,16 +40,20 @@
 #include <QDate>
 
 Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPointsNearDistanceList, QList<std::string> sortedId, std::vector<float> distanceId,
-                                                         QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality)
+                                                         QList<QString> jointStationsMyMp, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality)
 :meteoPointsDbHandler(meteoPointsDbHandler), meteoPointsNearDistanceList(meteoPointsNearDistanceList), sortedId(sortedId), distanceId(distanceId), firstDaily(firstDaily),
   lastDaily(lastDaily), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality)
 {
-    this->setWindowTitle("Homogeneity Test Id:"+QString::fromStdString(meteoPointsNearDistanceList[0].id)+" "+QString::fromStdString(meteoPointsNearDistanceList[0].name));
+    this->setWindowTitle("Homogeneity Test Id:"+QString::fromStdString(this->meteoPointsNearDistanceList[0].id)+" "+QString::fromStdString(this->meteoPointsNearDistanceList[0].name));
     this->resize(1240, 700);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
 
-    idPointsJointed << meteoPointsNearDistanceList[0].id;
+    idPointsJointed << this->meteoPointsNearDistanceList[0].id;
+    for (int i = 0; i<jointStationsMyMp.size(); i++)
+    {
+        idPointsJointed << jointStationsMyMp[i].toStdString();
+    }
 
     // layout
     QHBoxLayout *mainLayout = new QHBoxLayout();
@@ -113,9 +117,28 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     QLabel *jointStationsLabel = new QLabel(tr("Stations:"));
     jointStationsSelectLayout->addWidget(jointStationsLabel);
     jointStationsSelectLayout->addWidget(&jointStationsList);
-    for (int i = 1; i<meteoPointsNearDistanceList.size(); i++)
+
+    for (int i = 0; i<jointStationsMyMp.size(); i++)
     {
-        jointStationsList.addItem(QString::fromStdString(meteoPointsNearDistanceList[i].id)+" "+QString::fromStdString(meteoPointsNearDistanceList[i].name));
+        int indexMp;
+        for (int j = 0; j<this->meteoPointsNearDistanceList.size(); j++)
+        {
+            if (this->meteoPointsNearDistanceList[j].id == jointStationsMyMp[i].toStdString())
+            {
+                indexMp = j;
+                break;
+            }
+        }
+        jointStationsSelected.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].id)+" "+QString::fromStdString(this->meteoPointsNearDistanceList[indexMp].name));
+        // load all Data
+        QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, jointStationsMyMp[i].toStdString()).date();
+        QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, jointStationsMyMp[i].toStdString()).date();
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &this->meteoPointsNearDistanceList[indexMp]);
+    }
+
+    for (int i = 1; i<this->meteoPointsNearDistanceList.size(); i++)
+    {
+        jointStationsList.addItem(QString::fromStdString(this->meteoPointsNearDistanceList[i].id)+" "+QString::fromStdString(this->meteoPointsNearDistanceList[i].name));
     }
     if (jointStationsList.count() != 0)
     {
@@ -133,8 +156,16 @@ Crit3DHomogeneityWidget::Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* met
     deleteJointStation.setMaximumWidth(120);
     saveToDb.setText("Save to DB");
     saveToDb.setMaximumWidth(120);
-    deleteJointStation.setEnabled(false);
     saveToDb.setEnabled(false);
+
+    if (jointStationsSelected.count() == 0)
+    {
+        deleteJointStation.setEnabled(false);
+    }
+    else
+    {
+        deleteJointStation.setEnabled(true);
+    }
     addDeleteStationLayout->addWidget(&deleteJointStation);
     jointStationsSelectLayout->addLayout(addDeleteStationLayout);
     jointStationsSelectLayout->addWidget(&saveToDb);
@@ -486,11 +517,16 @@ void Crit3DHomogeneityWidget::addJointStationClicked()
 void Crit3DHomogeneityWidget::deleteJointStationClicked()
 {
     QList<QListWidgetItem*> items = jointStationsSelected.selectedItems();
+    if (items.isEmpty())
+    {
+        return;
+    }
     foreach(QListWidgetItem * item, items)
     {
         idPointsJointed.removeOne(item->text().section(" ",0,0).toStdString());
         delete jointStationsSelected.takeItem(jointStationsSelected.row(item));
     }
+    saveToDb.setEnabled(true);
     updateYears();
 }
 
@@ -506,6 +542,7 @@ void Crit3DHomogeneityWidget::saveToDbClicked()
     {
         QMessageBox::critical(nullptr, "Error", meteoPointsDbHandler->error);
     }
+    saveToDb.setEnabled(false);
 }
 
 void Crit3DHomogeneityWidget::updateYears()
