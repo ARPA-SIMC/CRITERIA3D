@@ -72,6 +72,8 @@
 
     int thomDailyNHoursAbove(TObsDataH *hourlyValues, float thomthreshold, float minimumPercentage);
 
+    int temperatureDailyNHoursAbove(TObsDataH *hourlyValues, float temperaturethreshold, float minimumPercentage);
+
     float thomDailyMax(TObsDataH *hourlyValues, float minimumPercentage);
 
     float thomDailyMean(TObsDataH *hourlyValues, float minimumPercentage);
