@@ -972,9 +972,9 @@ int thomDailyNHoursAbove(TObsDataH* hourlyValues, float thomthreshold, float min
     for (int hour = 0; hour < 24; hour++)
     {
         float thom = thomH(hourlyValues->tAir[hour], hourlyValues->rhAir[hour]);
-        if (thom != NODATA)
+        if (fabs(thom - NODATA) > EPSILON)
         {
-            nData = nData + 1;
+            nData++;// = nData + 1;
             if (nrHours == NODATA)
                 nrHours = 0;
             if (thom > thomthreshold)
@@ -997,9 +997,9 @@ float thomDailyMax(TObsDataH* hourlyValues, float minimumPercentage)
     for (int hour = 0; hour < 24; hour++)
     {
         float thom = thomH(hourlyValues->tAir[hour], hourlyValues->rhAir[hour]);
-        if (thom != NODATA)
+        if (fabs(thom - NODATA) > EPSILON)
         {
-            nData = nData + 1;
+            nData++;// = nData + 1;
             if (thom > thomMax)
                 thomMax = thom;
         }
@@ -1021,10 +1021,10 @@ float thomDailyMean(TObsDataH* hourlyValues, float minimumPercentage)
     for (int hour = 0; hour < 24; hour++)
     {
         float thom = thomH(hourlyValues->tAir[hour], hourlyValues->rhAir[hour]);
-        if (thom != NODATA)
+        if (fabs(thom - NODATA) > EPSILON)
         {
             thomValues.push_back(thom);
-            nData = nData + 1;
+            nData++; //nData = nData + 1;
         }
     }
     if ( (float(nData) / 24 * 100) < minimumPercentage)
@@ -1035,6 +1035,28 @@ float thomDailyMean(TObsDataH* hourlyValues, float minimumPercentage)
 
     return thomDailyMean;
 
+}
+
+// compute # hours temperature >  threshold per day
+int temperatureDailyNHoursAbove(TObsDataH* hourlyValues, float temperaturethreshold, float minimumPercentage)
+{
+
+    int nData = 0;
+    int nrHours = NODATA;
+    for (int hour = 0; hour < 24; hour++)
+    {
+        if (fabs(hourlyValues->tAir[hour] - NODATA) > EPSILON)
+        {
+            nData++;
+            if (nrHours == NODATA)
+                nrHours = 0;
+            if (hourlyValues->tAir[hour] > temperaturethreshold)
+                nrHours++;
+        }
+    }
+    if ( (float(nData) / 24 * 100) < minimumPercentage)
+        nrHours = NODATA;
+    return nrHours;
 }
 
 float dailyLeafWetnessComputation(TObsDataH* hourlyValues, float minimumPercentage)
@@ -1048,7 +1070,7 @@ float dailyLeafWetnessComputation(TObsDataH* hourlyValues, float minimumPercenta
         if (hourlyValues->leafW[hour] == 0 || hourlyValues->leafW[hour] == 1)
         {
                 dailyLeafWetnessRes = dailyLeafWetnessRes + hourlyValues->leafW[hour];
-                nData = nData + 1;
+                nData++; //nData = nData + 1;
         }
     }
     if ( (float(nData) / 24 * 100) < minimumPercentage)
