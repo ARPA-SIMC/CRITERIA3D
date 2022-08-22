@@ -1814,7 +1814,14 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
             }
             break;
         }
-
+        case dailyTemperatureHoursAbove:
+        {
+            if ( loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airTemperature, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
+            {
+                preElaboration = elaborateDailyAggregatedVar(dailyTemperatureHoursAbove, *meteoPoint, outputValues, percValue, meteoSettings);
+            }
+            break;
+        }
         case dailyThomDaytime:
         {
             if ( loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirRelHumidityMin, startDate, endDate) > 0)
