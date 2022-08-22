@@ -175,6 +175,7 @@
       { dailyThomHoursAbove, "DAILY_THOM_HABOVE" },
       { dailyThomDaytime, "DAILY_THOM_DAYTIME" },
       { dailyThomNighttime, "DAILY_THOM_NIGHTTIME" },
+      { dailyTemperatureHoursAbove, "DAILY_TEMPERATURE_HABOVE" },
       { dailyDirectRadiation, "DAILY_DIRECT_RAD" },
       { dailyDiffuseRadiation, "DAILY_DIFFUSE_RAD" },
       { dailyReflectedRadiation, "DAILY_REFLEC_RAD" },
