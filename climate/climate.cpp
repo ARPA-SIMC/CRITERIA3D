@@ -1037,7 +1037,7 @@ float thomDailyMean(TObsDataH* hourlyValues, float minimumPercentage)
 
 }
 
-// compute # hours temperature >  threshold per day
+// compute # hours per day where temperature >  threshold
 int temperatureDailyNHoursAbove(TObsDataH* hourlyValues, float temperaturethreshold, float minimumPercentage)
 {
 
@@ -1665,6 +1665,8 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
                 case dailyLeafWetness:
                     res = dailyLeafWetnessComputation(hourlyValues, meteoSettings->getMinimumPercentage());
                     break;
+                case dailyTemperatureHoursAbove:
+                    res = temperatureDailyNHoursAbove(hourlyValues, meteoSettings->getTemperatureThreshold(), meteoSettings->getMinimumPercentage());
                 default:
                     res = NODATA;
                     break;
