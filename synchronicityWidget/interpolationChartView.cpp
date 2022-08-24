@@ -87,7 +87,15 @@ void InterpolationChartView::drawGraphInterpolation(std::vector<float> values, Q
     axisX->setFormat("yyyy.MM.dd");
     axisY->setLabelFormat("%.1f");
     axisX->setTitleText("date");
-    axisY->setTitleText("r2");
+    if (var == "DAILY_TMIN" || var == "DAILY_TMAX")
+    {
+        axisY->setTitleText("°C");
+    }
+    else if (var == "DAILY_PREC")
+    {
+        axisY->setTitleText("mm");
+    }
+
     chart()->addSeries(graphSeries);
     graphSeries->attachAxis(axisX);
     graphSeries->attachAxis(axisY);
