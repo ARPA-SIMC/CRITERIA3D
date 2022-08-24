@@ -771,7 +771,6 @@ void Crit3DHomogeneityWidget::findReferenceStations()
             int numberOfDays = mpToBeComputed.obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
             meteoPointTemp.initializeObsDataD(numberOfDays, mpToBeComputed.obsDataD[0].date);
             meteoPointTemp.initializeObsDataDFromMp(mpToBeComputed.nrObsDataDaysD, mpToBeComputed.obsDataD[0].date, mpToBeComputed);
-            meteoPointTemp.initializeObsDataHFromMp(1,mpToBeComputed.nrObsDataDaysH, mpToBeComputed.getMeteoPointHourlyValuesDate(0), mpToBeComputed);
             QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, mpToBeComputed.id).date();
             for (int j = 0; j<jointStationsListMpToBeComputed.size(); j++)
             {
