@@ -505,10 +505,10 @@ void Crit3DHomogeneityWidget::addJointStationClicked()
             }
         }
         // load all Data
-        QDate firstDaily = meteoPointsDbHandler->getFirstDate(daily, newId).date();
-        QDate lastDaily = meteoPointsDbHandler->getLastDate(daily, newId).date();
+        QDate firstDailyNewId = meteoPointsDbHandler->getFirstDate(daily, newId).date();
+        QDate lastDailyNewId = meteoPointsDbHandler->getLastDate(daily, newId).date();
 
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &meteoPointsNearDistanceList[indexMp]);
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDailyNewId), getCrit3DDate(lastDailyNewId), &meteoPointsNearDistanceList[indexMp]);
         updateYears();
     }
 
