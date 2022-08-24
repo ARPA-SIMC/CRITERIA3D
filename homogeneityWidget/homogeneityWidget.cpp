@@ -315,6 +315,8 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     myAnnualSeries.clear();
     int firstYear = yearFrom.currentText().toInt();
     int lastYear = yearTo.currentText().toInt();
+    QDate firstDate(firstYear, 1, 1);
+    QDate lastDate(lastYear, 12, 31);
 
     clima.setVariable(myVar);
     if (myVar == dailyPrecipitation || myVar == dailyReferenceEvapotranspirationHS || myVar == dailyReferenceEvapotranspirationPM || myVar == dailyBIC)
@@ -327,8 +329,8 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     }
     clima.setYearStart(firstYear);
     clima.setYearEnd(lastYear);
-    clima.setGenericPeriodDateStart(QDate(firstYear, 1, 1));
-    clima.setGenericPeriodDateEnd(QDate(lastYear, 12, 31));
+    clima.setGenericPeriodDateStart(firstDate);
+    clima.setGenericPeriodDateEnd(lastDate);
     clima.setNYears(0);
 
     std::vector<int> years;
@@ -342,9 +344,11 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
     meteoPointTemp.id = meteoPointsNearDistanceList[0].id;
     meteoPointTemp.latitude = meteoPointsNearDistanceList[0].latitude;
     meteoPointTemp.elaboration = meteoPointsNearDistanceList[0].elaboration;
+    QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPointsNearDistanceList[0].id).date();
     bool dataAlreadyLoaded;
-    if (idPointsJointed.size() == 1)
+    if (idPointsJointed.size() == 1 || lastDateCopyed >= lastDate)
     {
+        // no joint station inside date interval
         // meteoPointTemp should be init
         meteoPointTemp.nrObsDataDaysD = 0;
         dataAlreadyLoaded = false;
@@ -355,27 +359,29 @@ void Crit3DHomogeneityWidget::plotAnnualSeries()
         int numberOfDays = meteoPointsNearDistanceList[0].obsDataD[0].date.daysTo(getCrit3DDate(endDate))+1;
         meteoPointTemp.initializeObsDataD(numberOfDays, meteoPointsNearDistanceList[0].obsDataD[0].date);
         meteoPointTemp.initializeObsDataDFromMp(meteoPointsNearDistanceList[0].nrObsDataDaysD, meteoPointsNearDistanceList[0].obsDataD[0].date, meteoPointsNearDistanceList[0]);
-        QDate lastDateCopyed = meteoPointsDbHandler->getLastDate(daily, meteoPointsNearDistanceList[0].id).date();
-        for (int i = 1; i<idPointsJointed.size(); i++)
+        if (lastDateCopyed < lastDate)
         {
-            QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, idPointsJointed[i]).date();
-            if (lastDateNew > lastDateCopyed)
+            for (int i = 1; i<idPointsJointed.size(); i++)
             {
-                int indexMp;
-                for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
+                QDate lastDateNew = meteoPointsDbHandler->getLastDate(daily, idPointsJointed[i]).date();
+                if (lastDateNew > lastDateCopyed)
                 {
-                    if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
+                    int indexMp;
+                    for (int j = 0; j<meteoPointsNearDistanceList.size(); j++)
                     {
-                        indexMp = j;
-                        break;
+                        if (meteoPointsNearDistanceList[j].id == idPointsJointed[i])
+                        {
+                            indexMp = j;
+                            break;
+                        }
+                    }
+                    for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
+                    {
+                        setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate, myVar, meteoSettings);
                     }
                 }
-                for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
-                {
-                    setMpValues(meteoPointsNearDistanceList[indexMp], &meteoPointTemp, myDate, myVar, meteoSettings);
-                }
+                lastDateCopyed = lastDateNew;
             }
-            lastDateCopyed = lastDateNew;
         }
         dataAlreadyLoaded = true;
     }
@@ -551,7 +557,6 @@ void Crit3DHomogeneityWidget::updateYears()
     yearFrom.blockSignals(true);
     yearTo.blockSignals(true);
 
-    lastDaily = meteoPointsDbHandler->getLastDate(daily, meteoPointsNearDistanceList[0].id).date();
     for (int i = 1; i<idPointsJointed.size(); i++)
     {
 
@@ -574,8 +579,8 @@ void Crit3DHomogeneityWidget::updateYears()
     yearTo.setCurrentText(QString::number(lastDaily.year()));
     yearFrom.setCurrentText(currentYearFrom);
 
-    yearFrom.blockSignals(true);
-    yearTo.blockSignals(true);
+    yearFrom.blockSignals(false);
+    yearTo.blockSignals(false);
     plotAnnualSeries();
 }
 
@@ -722,6 +727,8 @@ void Crit3DHomogeneityWidget::findReferenceStations()
     QList<float> distanceIdFound;
     int firstYear = yearFrom.currentText().toInt();
     int lastYear = yearTo.currentText().toInt();
+    QDate firstDate(firstYear, 1, 1);
+    QDate lastDate(lastYear, 12, 31);
 
     if (myAnnualSeries.size() == 0)
     {
@@ -750,7 +757,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         mpToBeComputed.id = sortedId[i];
         QString name = meteoPointsDbHandler->getNameGivenId(QString::fromStdString(sortedId[i]));
         QList<QString> jointStationsListMpToBeComputed = meteoPointsDbHandler->getJointStations(QString::fromStdString(mpToBeComputed.id));
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mpToBeComputed);
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &mpToBeComputed);
 
         // copy data to MPTemp
         Crit3DMeteoPoint meteoPointTemp;
@@ -779,7 +786,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
                 {
                     Crit3DMeteoPoint mpGet;
                     mpGet.id = jointStationsListMpToBeComputed[j].toStdString();
-                    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDaily), getCrit3DDate(lastDaily), &mpGet);
+                    meteoPointsDbHandler->loadDailyData(getCrit3DDate(firstDate), getCrit3DDate(lastDate), &mpGet);
 
                     for (QDate myDate=lastDateCopyed.addDays(1); myDate<=lastDateNew; myDate=myDate.addDays(1))
                     {
