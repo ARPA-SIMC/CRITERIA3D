@@ -729,13 +729,13 @@ void Crit3DHomogeneityWidget::findReferenceStations()
         return;
     }
     int myNrStations = 0;
-    QProgressDialog progress("Finding stations...", "Abort", 0, sortedId.size(), this);
+    QProgressDialog progress("Finding stations...", "Abort", 0, minNumStations.text().toInt(), this);
     progress.setWindowModality(Qt::WindowModal);
     progress.show();
     int i = 0;
     for (i = 0; i<sortedId.size(); i++)
     {
-        progress.setValue(i+1);
+        progress.setValue(myNrStations);
         if (idPointsJointed.contains(sortedId[i]))
         {
             continue;
@@ -813,7 +813,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
             break;
         }
     }
-    progress.setValue(i+1);
+    progress.setValue(myNrStations);
     progress.close();
 
     if (myNrStations == 0)
