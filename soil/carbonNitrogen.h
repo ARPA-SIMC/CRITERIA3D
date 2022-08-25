@@ -13,6 +13,7 @@
 #define FERTILIZER_UREA  9
 
 #include "crit3dDate.h"
+#include "soil.h"
 
 class Crit3DCarbonNitrogen
 {
@@ -202,17 +203,17 @@ class Crit3DCarbonNitrogenWholeProfile
 
     public:
 
-    void N_main(float precGG,int nrLayers);
+    void N_main(float precGG, int nrLayers, float* theta, std::vector<soil::Crit3DLayer> &soilLayers, soil::Crit3DSoil *soil);
 
     private:
     int numberOfLayers;
-    float convertToGramsPerM3(int layerIndex,float myQuantity);
-    float convertToGramsPerLiter(int layerIndex,float myQuantity);
-    float convertToGramsPerKg(int layerIndex,float myQuantity);
+    float convertToGramsPerM3(int layerIndex, float myQuantity, std::vector<soil::Crit3DLayer> &soilLayers);
+    float convertToGramsPerLiter(int layerIndex,float myQuantity, std::vector<soil::Crit3DLayer> &soilLayers);
+    float convertToGramsPerKg(int layerIndex,float myQuantity, std::vector<soil::Crit3DLayer> &soilLayers,soil::Crit3DSoil* soil);
     void N_InitializeLayers();
     void humusIni();
     void updateTotalOfPartitioned(float* mySoluteSum, float* mySoluteAds,float* mySoluteSol);
-    void partitioning();
+    void partitioning(float* theta,std::vector<soil::Crit3DLayer> &soilLayers,soil::Crit3DSoil* soil);
     void litterIni();
     void chemicalTransformations();
     void N_Initialize();
