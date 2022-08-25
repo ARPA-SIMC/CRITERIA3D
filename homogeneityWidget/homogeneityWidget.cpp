@@ -468,6 +468,7 @@ void Crit3DHomogeneityWidget::changeYears()
     listAllFound.clear();
     listSelectedStations.clear();
     stationsTable.clearContents();
+    stationsTable.setRowCount(0);
     resultLabel.clear();
     execute.setEnabled(false);
     homogeneityChartView->clearSNHTSeries();
