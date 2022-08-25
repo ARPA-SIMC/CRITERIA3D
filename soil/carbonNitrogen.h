@@ -202,10 +202,10 @@ class Crit3DCarbonNitrogenWholeProfile
 
     public:
 
-    void N_main();
+    void N_main(float precGG,int nrLayers);
 
     private:
-
+    int numberOfLayers;
     float convertToGramsPerM3(int layerIndex,float myQuantity);
     float convertToGramsPerLiter(int layerIndex,float myQuantity);
     float convertToGramsPerKg(int layerIndex,float myQuantity);

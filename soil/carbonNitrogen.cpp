@@ -1,5 +1,7 @@
+#include <stdio.h>
+#include <math.h>
 
-
+#include "carbonNitrogen.h"
 
 
 
@@ -125,8 +127,8 @@ void updateTotalOfPartitioned(float* mySoluteSum, float* mySoluteAds,float* mySo
         mySoluteSum[L] = mySoluteAds[L] + mySoluteSol[L];
     }
 }
-
-void partitioning()
+*/
+void Crit3DCarbonNitrogenWholeProfile::partitioning()
 {
     //2013.06
     // partitioning of N (only NH4) between adsorbed and in solution
@@ -142,25 +144,25 @@ void partitioning()
     float myTheta;
     int L;
 
-    N_NH4_AdsorbedGG = 0;
+    N_NH4_adsorbedGG = 0;
 
-    for (L = 0; L<nrLayers; L++)
+    for (L = 0; L<numberOfLayers; L++)
     {
         myTheta = WaterBalance.ConvertWCToVolumetric(suolo[L], U[L]);
-        N_NH4_g_dm3 = convertToGramsPerM3(L, N_NH4[L]) / 1000;
+        N_NH4_g_dm3 = convertToGramsPerM3(L,arrayCarbonNitrogen[L].N_NH4) / 1000;
         N_NH4_sol_g_l = N_NH4_g_dm3 / (Kd_NH4 * suolo[L].MVA + myTheta)
 
         N_NH4_Sol[L] = N_NH4_sol_g_l * (suolo[L].spess / 100) * myTheta * 1000;
 
         N_NH4_ads_g_kg = Kd_NH4 * N_NH4_sol_g_l;
         N_NH4_ads_g_m3 = N_NH4_ads_g_kg * suolo[L].MVA * 1000;
-        N_NH4_Adsorbed[L] = N_NH4_ads_g_m3 * suolo[L].spess / 100;
+        N_NH4_adsorbed[L] = N_NH4_ads_g_m3 * suolo[L].spess / 100;
 
-        N_NH4_AdsorbedGG += N_NH4_Adsorbed(L);
+        N_NH4_adsorbedGG += N_NH4_adsorbed[L];
     }
 }
 
-
+/*
 void litterIni()
 {
     //2008.10 GA inizializzazione indipendente da humus ma da input utente
@@ -1061,8 +1063,8 @@ Dim L As Integer
     If FlVarOutN_uptakePOTGG Then tbUscite_Azoto("N_uptakePOTGG") = tbUscite_Azoto("N_uptakePOTGG") + N_DailyDemand * 10
 
 End Sub
-
-void N_main()
+*/
+void Crit3DCarbonNitrogenWholeProfile::N_main(float precGG,int nrLayers)
 {
     //++++++++++ MAIN NITROGEN ROUTINE +++++++++++++++++++++++++++++++++++
     //2008.09 GA
@@ -1082,16 +1084,18 @@ void N_main()
         //suddividendo equamente tra NO3 e NH4
         //0.00075 g m-2 N nitrico e ammoniacale mm-1
         //controllare dati di concentrazione ARPA piogge
-
+    numberOfLayers = nrLayers;
+    arrayCarbonNitrogen = (Crit3DCarbonNitrogen*) calloc(numberOfLayers,sizeof(Crit3DCarbonNitrogen));
+    // (float *) calloc(nrLayers, sizeof(float));
     if (precGG > 0)
     {
         precN_NO3GG = 0.00075 * precGG;
         precN_NH4GG = 0.00075 * precGG;
-        N_NO3[0] += PrecN_NO3GG;
-        N_NH4[0] += PrecN_NH4GG;
+        arrayCarbonNitrogen[0].N_NO3 += precN_NO3GG;
+        arrayCarbonNitrogen[0].N_NH4 += precN_NH4GG;
         partitioning();
     }
-
+    /*
     N_Uptake();
     // definire attuale
     if (Attuale == Date_N_EndCrop)
@@ -1122,7 +1126,7 @@ void N_main()
     if (FlagWaterTableWashing)
         leachingWaterTable(N_NH4_Sol, Flux_NH4GG);
     updateTotalOfPartitioned(N_NH4, N_NH4_Adsorbed, N_NH4_Sol);
-    partitioning;
+    partitioning();
 
     // perdita superficiale
     if (FlagRunoff == 1)
@@ -1137,8 +1141,9 @@ void N_main()
     //bilanci
     NH4_Balance();
     NO3_Balance();
+    */
 }
-
+/*
 float CNRatio(float c,float n)
 {
     // 2004.02.20.VM
