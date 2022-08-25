@@ -39,7 +39,7 @@ void InterpolationChartView::setYmin(float value)
 void InterpolationChartView::drawGraphInterpolation(std::vector<float> values, QDate myStartDate, QString var, int lag, int smooth, QString elabType)
 {
     chart()->legend()->setVisible(true);
-    QString name = var+" lag="+QString::number(lag)+" smooth="+QString::number(smooth)+elabType;
+    QString name = var+" lag="+QString::number(lag)+" smooth="+QString::number(smooth) + " " + elabType;
     for(int i = 0; i<interpolationGraphSeries.size(); i++)
     {
         if (interpolationGraphSeries[i]->name() == name)
@@ -87,7 +87,15 @@ void InterpolationChartView::drawGraphInterpolation(std::vector<float> values, Q
     axisX->setFormat("yyyy.MM.dd");
     axisY->setLabelFormat("%.1f");
     axisX->setTitleText("date");
-    axisY->setTitleText("r2");
+    if (var == "DAILY_TMIN" || var == "DAILY_TMAX")
+    {
+        axisY->setTitleText("°C");
+    }
+    else if (var == "DAILY_PREC")
+    {
+        axisY->setTitleText("mm");
+    }
+
     chart()->addSeries(graphSeries);
     graphSeries->attachAxis(axisX);
     graphSeries->attachAxis(axisY);
