@@ -22,7 +22,7 @@ class Crit3DCarbonNitrogen
     float temperatureCorrectionFactor;   // [] correction factor for soil temperature
     float waterCorrecctionFactor;        //[] correction factor for soil water content
     float waterCorrecctionFactorDenitrification;     //[] correction factor for soil water content (denitrification)
-
+    //
     // nitrogen
         // contents
     public:
