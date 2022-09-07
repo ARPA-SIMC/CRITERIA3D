@@ -173,6 +173,7 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
             return;
 
         for (i = 0; i < nrMeteoPoints; i++)
+        {
             if (meteoPoints[i].quality == quality::accepted)
             {
                 if (neighbourhoodVariability(myVar, myInterpolationPoints, settings, float(meteoPoints[i].point.utm.x),
@@ -189,6 +190,7 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
                     }
                 }
             }
+        }
 
         if (listIndex.size() > 0)
         {

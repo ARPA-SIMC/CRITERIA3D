@@ -28,6 +28,7 @@ win32:{
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities
 
 SOURCES += soil.cpp \
+    carbonNitrogen.cpp \
     soilDbTools.cpp
 
 HEADERS += soil.h \

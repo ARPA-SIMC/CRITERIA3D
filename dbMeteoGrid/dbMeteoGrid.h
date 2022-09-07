@@ -147,6 +147,8 @@
                                                               QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList, int memberNr);
         bool saveCellCurrentGridHourly(QString *myError, QString meteoPointID, QDateTime dateTime, int varCode, float value);
         bool saveCellCurrentGridHourlyFF(QString *myError, QString meteoPointID, QDateTime dateTime, QString varPragaName, float value);
+        bool activeAllCells(QString *myError);
+        bool setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState);
 
         QDate getFirstDailyDate() const;
         QDate getLastDailyDate() const;

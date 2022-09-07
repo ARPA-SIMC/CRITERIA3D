@@ -30,7 +30,7 @@
             void clearInterpolationGraph();
             void changeSmooth();
             void changeInterpolationDate();
-            void smoothSerie();
+            void smoothSeries();
             void setReferencePointId(const std::string &value);
             void on_actionChangeLeftSynchAxis();
             void on_actionChangeLeftInterpolationAxis();
@@ -75,6 +75,9 @@
             std::vector<float> interpolationDailySeries;
             std::vector<float> smoothInterpDailySeries;
             QDate interpolationStartDate;
+            bool stationClearAndReload;
+            bool interpolationClearAndReload;
+            bool interpolationChangeSmooth;
 
     signals:
             void closeSynchWidget();

@@ -104,6 +104,11 @@ float Crit3DMeteoSettings::getThomThreshold() const
     return thomThreshold;
 }
 
+float Crit3DMeteoSettings::getTemperatureThreshold() const
+{
+    return temperatureThreshold;
+}
+
 void Crit3DMeteoSettings::setThomThreshold(float value)
 {
     thomThreshold = value;

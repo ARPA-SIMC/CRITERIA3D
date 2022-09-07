@@ -20,7 +20,7 @@ public:
     explicit InterpolationChartView(QWidget *parent = 0);
     void setYmax(float value);
     void setYmin(float value);
-    void drawGraphInterpolation(std::vector<float> values, QDate myStartDate, QString var, int lag, int smooth);
+    void drawGraphInterpolation(std::vector<float> values, QDate myStartDate, QString var, int lag, int smooth, QString elabType);
     void clearInterpolationGraphSeries();
     void tooltipGraphInterpolationSeries(QPointF point, bool state);
 

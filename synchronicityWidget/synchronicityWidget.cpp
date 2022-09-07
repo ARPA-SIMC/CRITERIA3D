@@ -52,6 +52,10 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
 
+    stationClearAndReload = false;
+    interpolationClearAndReload = false;
+    interpolationChangeSmooth = false;
+
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QHBoxLayout *upperLayout = new QHBoxLayout();
@@ -123,7 +127,7 @@ Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler*
     interpolationDateLayout->addWidget(interpolationYearFromLabel);
     interpolationDateFrom.setMaximumWidth(100);
     interpolationDateLayout->addWidget(&interpolationDateFrom);
-    QLabel *interpolationYearToLabel = new QLabel(tr("From"));
+    QLabel *interpolationYearToLabel = new QLabel(tr("To"));
     interpolationDateLayout->addWidget(interpolationYearToLabel);
     interpolationDateTo.setMaximumWidth(100);
     interpolationDateLayout->addWidget(&interpolationDateTo);
@@ -245,13 +249,11 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
 void Crit3DSynchronicityWidget::changeVar(const QString varName)
 {
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
-    addStationGraph();
 }
 
 void Crit3DSynchronicityWidget::changeYears()
 {
-    clearStationGraph();
-    addStationGraph();
+    stationClearAndReload = true;
 }
 
 void Crit3DSynchronicityWidget::addStationGraph()
@@ -261,6 +263,11 @@ void Crit3DSynchronicityWidget::addStationGraph()
     {
         QMessageBox::information(nullptr, "Error", "Select a reference point on the map");
         return;
+    }
+    if (stationClearAndReload)
+    {
+        clearStationGraph();
+        stationClearAndReload = false;
     }
     QDate myStartDate(stationYearFrom.currentText().toInt(), 1, 1);
     QDate myEndDate(stationYearTo.currentText().toInt(), 12, 31);
@@ -389,11 +396,27 @@ void Crit3DSynchronicityWidget::clearInterpolationGraph()
 
 void Crit3DSynchronicityWidget::addInterpolationGraph()
 {
+    if (interpolationClearAndReload)
+    {
+        clearInterpolationGraph();
+        interpolationClearAndReload = false;
+    }
     interpolationStartDate = interpolationDateFrom.date();
     QDate myEndDate = interpolationDateTo.date();
     int myLag = interpolationLag.text().toInt();
     int mySmooth = smooth.text().toInt();
     QString elabType = interpolationElab.currentText();
+
+    if (interpolationChangeSmooth)
+    {
+        // draw without compute all series
+        interpolationChartView->setVisible(true);
+        smoothSeries();
+        // draw
+        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
+        interpolationChangeSmooth = false;
+        return;
+    }
     interpolationDailySeries.clear();
 
     std::vector<float> dailyValues;
@@ -421,7 +444,7 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     progress.setWindowModality(Qt::WindowModal);
     progress.show();
     int i = 0;
-    for (i; i<nrMeteoPoints; i++)
+    for (; i<nrMeteoPoints; i++)
     {
         progress.setValue(i+1);
         if (progress.wasCanceled())
@@ -458,13 +481,17 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
 
         if (myValue1 != NODATA && interpolatedValue != NODATA)
         {
-            if (elabType == "Difference" || elabType == "Square difference")
+            if (elabType == "Difference")
             {
-                interpolationDailySeries.push_back(myValue1 - interpolatedValue);
+                interpolationDailySeries.push_back(interpolatedValue - myValue1);
+            }
+            else if (elabType == "Square difference")
+            {
+                interpolationDailySeries.push_back((interpolatedValue - myValue1) * (interpolatedValue - myValue1));
             }
             else if (elabType == "Absolute difference")
             {
-                interpolationDailySeries.push_back(abs(myValue1 - interpolatedValue));
+                interpolationDailySeries.push_back(abs(interpolatedValue - myValue1));
             }
         }
         else
@@ -482,14 +509,14 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     {
         interpolationChartView->setVisible(true);
         // smooth
-        smoothSerie();
+        smoothSeries();
         // draw
-        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth);
+        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
     }
 
 }
 
-void Crit3DSynchronicityWidget::smoothSerie()
+void Crit3DSynchronicityWidget::smoothSeries()
 {
     int mySmooth = smooth.text().toInt();
     QString elabType = interpolationElab.currentText();
@@ -500,7 +527,6 @@ void Crit3DSynchronicityWidget::smoothSerie()
         for (int i = 0; i<interpolationDailySeries.size(); i++)
         {
             float dSum = 0;
-            float dSum2 = 0;
             int nDays = 0;
             for (int j = i-mySmooth; j<=i+mySmooth; j++)
             {
@@ -509,21 +535,13 @@ void Crit3DSynchronicityWidget::smoothSerie()
                     if (interpolationDailySeries[j] != NODATA)
                     {
                         dSum = dSum + interpolationDailySeries[j];
-                        dSum2 = dSum2 + interpolationDailySeries[j] * interpolationDailySeries[j];
                         nDays = nDays + 1;
                     }
                 }
             }
             if (nDays / (mySmooth * 2 + 1) > meteoSettings->getMinimumPercentage() / 100)
             {
-                if (elabType == "Square difference")
-                {
-                    smoothInterpDailySeries.push_back(dSum2/nDays);
-                }
-                else
-                {
-                    smoothInterpDailySeries.push_back(dSum/nDays);
-                }
+                smoothInterpDailySeries.push_back(dSum/nDays);
             }
             else
             {
@@ -540,17 +558,12 @@ void Crit3DSynchronicityWidget::smoothSerie()
 
 void Crit3DSynchronicityWidget::changeSmooth()
 {
-    int myLag = interpolationLag.text().toInt();
-    int mySmooth = smooth.text().toInt();
-    smoothSerie();
-    // draw
-    interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth);
+    interpolationChangeSmooth = true;
 }
 
 void Crit3DSynchronicityWidget::changeInterpolationDate()
 {
-    clearInterpolationGraph();
-    addInterpolationGraph();
+    interpolationClearAndReload = true;
 }
 
 void Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis()

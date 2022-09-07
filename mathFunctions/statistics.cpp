@@ -459,6 +459,33 @@ namespace statistics
             return NODATA;
     }
 
+    double variance(std::vector<double> myList, int nrList)
+    {
+        double myMean, myDiff, squareDiff;
+        int i, nrValidValues;
+
+        if (nrList <= 1) return NODATA;
+
+        myMean = mean(myList,nrList);
+
+        squareDiff = 0;
+        nrValidValues = 0;
+        for (i = 0; i<nrList; i++)
+        {
+            if (myList[i]!= NODATA)
+            {
+                myDiff = (myList[i] - myMean);
+                squareDiff += (myDiff * myDiff);
+                nrValidValues++;
+            }
+        }
+
+        if (nrValidValues > 1)
+            return (squareDiff / (nrValidValues - 1));
+        else
+            return NODATA;
+    }
+
     double variance(double *myList, int nrList)
     {
         double myMean, myDiff, squareDiff;
@@ -532,6 +559,29 @@ namespace statistics
             return NODATA;
     }
 
+    double mean(std::vector<double> myList, int nrList)
+    {
+        double sum=0.;
+        int i, nrValidValues;
+
+        if (nrList < 1) return NODATA;
+        nrValidValues = 0;
+
+        for (i = 0; i < nrList; i++)
+        {
+            if (myList[i]!= NODATA)
+            {
+                sum += myList[i];
+                nrValidValues++;
+            }
+        }
+
+        if (nrValidValues > 0)
+            return (sum/(double)(nrValidValues));
+        else
+            return NODATA;
+    }
+
     double mean(double *myList, int nrList)
     {
         double sum=0.;
@@ -561,6 +611,11 @@ namespace statistics
     }
 
     float standardDeviation(std::vector<float> myList, int nrList)
+    {
+        return sqrtf(variance(myList,nrList));
+    }
+
+    double standardDeviation(std::vector<double> myList, int nrList)
     {
         return sqrtf(variance(myList,nrList));
     }
