@@ -1,0 +1,56 @@
+#include "formText.h"
+
+FormText::FormText(QString title)
+{
+
+    this->setWindowTitle(title);
+    QVBoxLayout* mainLayout = new QVBoxLayout;
+    this->resize(250, 100);
+
+    QHBoxLayout *layoutOk = new QHBoxLayout;
+    QHBoxLayout *textLayout = new QHBoxLayout;
+
+    textLayout->addWidget(&textEdit);
+
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(QDialog::Accepted); });
+    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(QDialog::Rejected); });
+
+    layoutOk->addWidget(&buttonBox);
+
+    mainLayout->addLayout(textLayout);
+    mainLayout->addLayout(layoutOk);
+
+    setLayout(mainLayout);
+    exec();
+}
+
+FormText::~FormText()
+{
+    close();
+}
+
+void FormText::done(int res)
+{
+    if (res == QDialog::Accepted) // ok
+    {
+        if (textEdit.text().isEmpty())
+        {
+            QMessageBox::information(nullptr, "Missing cell size value", "Insert cell size");
+            return;
+        }
+        QDialog::done(QDialog::Accepted);
+        return;
+    }
+    else    // cancel, close or exc was pressed
+    {
+        QDialog::done(QDialog::Rejected);
+        return;
+    }
+}
+
+QString FormText::getText() const
+{
+    return textEdit.text();
+}
