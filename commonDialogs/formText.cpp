@@ -35,11 +35,6 @@ void FormText::done(int res)
 {
     if (res == QDialog::Accepted) // ok
     {
-        if (textEdit.text().isEmpty())
-        {
-            QMessageBox::information(nullptr, "Missing cell size value", "Insert cell size");
-            return;
-        }
         QDialog::done(QDialog::Accepted);
         return;
     }
