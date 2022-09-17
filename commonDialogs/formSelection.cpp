@@ -59,6 +59,9 @@ QString FormSelection::getSelection()
     return cmbStringList->currentText();
 }
 
-
+int FormSelection::getSelectionId()
+{
+    return cmbStringList->currentIndex();
+}
 
 

@@ -16,6 +16,7 @@ public:
     ~FormSelection();
     void done(int res);
     QString getSelection();
+    int getSelectionId();
 };
 
 #endif // FORMSELECTION_H
