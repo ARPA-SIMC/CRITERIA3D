@@ -1,98 +1,28 @@
-
-#include "carbonNitrogenModel.h"
-#include "carbonNitrogen.h"
 #include "commonConstants.h"
+#include "carbonNitrogenModel.h"
 
-float Crit3DCarbonNitrogenProfile::convertToGramsPerM3(float myQuantity, soil::Crit3DLayer &soilLayer)
+
+double Crit3DCarbonNitrogenProfile::convertToGramsPerM3(double myQuantity, soil::Crit3DLayer &soilLayer)
 {
-    // convert from g m-2 to g m-3 (= mg dm-3)
-    return myQuantity / (float(soilLayer.thickness) / 100.f);
+    // convert [g m-2] -> [g m-3] = [mg dm-3]
+    return myQuantity / soilLayer.thickness;
 }
 
 
-float Crit3DCarbonNitrogenProfile::convertToGramsPerLiter(float myQuantity, soil::Crit3DLayer &soilLayer)
+double Crit3DCarbonNitrogenProfile::convertToGramsPerLiter(double myQuantity, soil::Crit3DLayer &soilLayer)
 {
-    //' convert from g m-2 to g l-1
-
-    //' to g dm-3 and to g l-1
-    return (convertToGramsPerM3(myQuantity, soilLayer) / 1000);// /WaterBalance.ConvertWCToVolumetric(suolo[layerIndex], U[layerIndex]);
+    // convert [g m-2] -> [g m-3] -> [g l-1]
+    return (convertToGramsPerM3(myQuantity, soilLayer) / 1000);
 }
 
 
-float Crit3DCarbonNitrogenProfile::convertToGramsPerKg(float myQuantity, soil::Crit3DLayer &soilLayer)
+double Crit3DCarbonNitrogenProfile::convertToGramsPerKg(double myQuantity, soil::Crit3DLayer &soilLayer)
 {
-    //' convert from g m-2 to g kg-1
-
-    //' to g dm-3 and then to g kg-1
+    // convert [g m-2] -> [g m-3] -> [g kg-1]
     return (convertToGramsPerM3(myQuantity, soilLayer) / 1000) / soilLayer.horizon->bulkDensity;
 }
+
 /*
- *
-// da valutare
-void N_InitializeLayers()
-{
-    Erase C_humus
-    Erase C_litter
-    Erase C_litter_humus
-    Erase C_litter_litter
-    Erase C_min_humus
-    Erase C_min_litter
-    Erase C_denitr_litter
-    Erase C_denitr_humus
-    Erase Wcorr_denitr
-    Erase N_humus
-    Erase N_denitr
-    Erase N_litter
-    Erase N_litter_humus
-    Erase N_min_humus
-    Erase N_min_litter
-    Erase N_NH4
-    Erase N_NH4_Adsorbed
-    Erase N_NH4_Sol
-    Erase N_nitrif
-    Erase N_NO3
-    Erase N_urea
-    Erase N_Urea_Hydr
-    Erase N_vol
-    Erase N_NH4_uptake
-    Erase N_NO3_uptake
-    Erase CNratio_litter
-    Erase SO
-    Erase TCorr
-    Erase WCorr
-
-    ReDim C_humus(nrLayers)
-    ReDim C_litter(nrLayers)
-    ReDim C_litter_humus(nrLayers)
-    ReDim C_litter_litter(nrLayers)
-    ReDim C_min_humus(nrLayers)
-    ReDim C_min_litter(nrLayers)
-    ReDim C_denitr_litter(nrLayers)
-    ReDim C_denitr_humus(nrLayers)
-    ReDim Wcorr_denitr(nrLayers)
-    ReDim N_humus(nrLayers)
-    ReDim N_denitr(nrLayers)
-    ReDim N_litter(nrLayers)
-    ReDim N_litter_humus(nrLayers)
-    ReDim N_min_humus(nrLayers)
-    ReDim N_min_litter(nrLayers)
-    ReDim N_NH4(nrLayers)
-    ReDim N_NH4_Sol(nrLayers)
-    ReDim N_NH4_Adsorbed(nrLayers)
-    ReDim N_nitrif(nrLayers)
-    ReDim N_NO3(nrLayers)
-    ReDim N_urea(nrLayers)
-    ReDim N_Urea_Hydr(nrLayers)
-    ReDim N_vol(nrLayers)
-    ReDim N_NH4_uptake(nrLayers)
-    ReDim N_NO3_uptake(nrLayers)
-    ReDim CNratio_litter(nrLayers)
-    ReDim SO(nrLayers)
-    ReDim TCorr(nrLayers)
-    ReDim WCorr(nrLayers)
-
-}
-
 
 void humusIni()
 {
@@ -112,7 +42,7 @@ void humusIni()
 }
 
 
-void updateTotalOfPartitioned(float* mySoluteSum, float* mySoluteAds,float* mySoluteSol)
+void updateTotalOfPartitioned(double* mySoluteSum, double* mySoluteAds,double* mySoluteSol)
 {
     int L;
     for (L = 0; L<nrLayers; L++)
@@ -121,34 +51,34 @@ void updateTotalOfPartitioned(float* mySoluteSum, float* mySoluteAds,float* mySo
     }
 }
 */
-void Crit3DCarbonNitrogenProfile::partitioning(float* theta, Crit1DCase &myCase)
+
+void Crit3DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
 {
-    // 2013.06
     // partitioning of N (only NH4) between adsorbed and in solution
 
     // SE(M,I)=DSE(M,I)/(DLZ*(KD(M,I)*RHO(I)+W(I)))
     // ASE(M,I)=KD(M,I)*SE(M,I)
     // DSE / DLZ (mg dm-3)
 
-    float N_NH4_g_dm3;               //[g dm-3] total ammonium
-    float N_NH4_sol_g_l;             //[g l-1] ammonium in solution
-    float N_NH4_ads_g_kg;            //[g kg-1] adsorbed ammonium
-    float N_NH4_ads_g_m3;            //[g m-3] adsorbed ammonium
-    float myTheta;
+    double N_NH4_g_dm3;               // [g dm-3] total ammonium
+    double N_NH4_sol_g_l;             // [g l-1] ammonium in solution
+    double N_NH4_ads_g_kg;            // [g kg-1] adsorbed ammonium
+    double N_NH4_ads_g_m3;            // [g m-3] adsorbed ammonium
+    double myTheta;
 
     N_NH4_adsorbedGG = 0;
 
-    for (int l = 0; l < myCase.soilLayers.size(); l++)
+    for (unsigned int l = 0; l < myCase.soilLayers.size(); l++)
     {
-        myTheta = theta[l];
+        myTheta = myCase.getWaterContent(l);
         N_NH4_g_dm3 = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_NH4, myCase.soilLayers[l]) / 1000;
         N_NH4_sol_g_l = N_NH4_g_dm3 / (Kd_NH4 * myCase.soilLayers[l].horizon->bulkDensity + myTheta);
 
-        myCase.carbonNitrogenLayers[l].N_NH4_Sol = N_NH4_sol_g_l * (myCase.soilLayers[l].thickness / 100) * myTheta * 1000;
+        myCase.carbonNitrogenLayers[l].N_NH4_Sol = N_NH4_sol_g_l * myCase.soilLayers[l].thickness * myTheta * 1000;
 
         N_NH4_ads_g_kg = Kd_NH4 * N_NH4_sol_g_l;
         N_NH4_ads_g_m3 = N_NH4_ads_g_kg * myCase.soilLayers[l].horizon->bulkDensity * 1000;
-        myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed = N_NH4_ads_g_m3 * myCase.soilLayers[l].thickness / 100;
+        myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed = N_NH4_ads_g_m3 * myCase.soilLayers[l].thickness;
         N_NH4_adsorbedGG += myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed;
     }
 }
@@ -161,8 +91,8 @@ void litterIni()
     //version 1.0, 2004.08.16.VM
 
     int L;
-    float LayerRatio;
-    float myDepth;
+    double LayerRatio;
+    double myDepth;
 
     myDepth = maxValue(litterIniProf, 6);
 
@@ -183,66 +113,66 @@ void chemicalTransformations()
     // revision from LEACHM
     // concentrations in g m-3 (= mg dm-3)
 
-    float myN_NO3;                   //[g m-3] nitric nitrogen concentration
-    float myN_NH4;                   //[g m-3] ammonium concentration
-    float myN_NH4_sol;               //[g m-3] ammonium concentration in solution
-    float NH4_ratio;                 //[] ratio of NH4 on total N
-    float NO3_ratio;                 //[] ratio of NO3 on total N
-    float myTotalC;                  //[g m-3] total carbon
-    float myLitterC;                 //[g m-3] carbon concentration in litter
-    float myHumusC;                  //[g m-3] carbon concentration in humus
-    float myLitterN;                 //[g m-3] nitrogen concentration in litter
-    float myHumusN;                  //[g m-3] nitrogen concentration in humus
+    double myN_NO3;                   //[g m-3] nitric nitrogen concentration
+    double myN_NH4;                   //[g m-3] ammonium concentration
+    double myN_NH4_sol;               //[g m-3] ammonium concentration in solution
+    double NH4_ratio;                 //[] ratio of NH4 on total N
+    double NO3_ratio;                 //[] ratio of NO3 on total N
+    double myTotalC;                  //[g m-3] total carbon
+    double myLitterC;                 //[g m-3] carbon concentration in litter
+    double myHumusC;                  //[g m-3] carbon concentration in humus
+    double myLitterN;                 //[g m-3] nitrogen concentration in litter
+    double myHumusN;                  //[g m-3] nitrogen concentration in humus
 
-    float CCDEN;                     //[g m-3] Amount of carbon equivalent to N removed (as CO2) from denitrification
-    float CLIMM;                     //[g m-3] maximum N immobilization
-    float CLIMX;                     //[g m-3] ratio of the maximum to the desired rate. Adjusted by 0.08 to extend immobilization and slow the rate
-    float CCLH;                      //[g m-3] carbon from litter to humus
-    float CLH;                       //[g m-3] nitrogen from litter to humus
-    float CLI;                       //[g m-3] nitrogen internally recycled in litter
-    float CCLI;                      //[g m-3] carbon internally recycled in litter
-    float CCLCO2;                    //[g m-3] carbon from litter to CO2
-    float CCHCO2;                    //[g m-3] carbon from humus to CO2
-    float CCLDN;                     //[g m-3] carbonio rimosso dal litter per denitrificazione
-    float CCHDN;                     //[g m-3] carbonio rimosso dall'humus per denitrificazione
-    float CNHNO;                     //[g m-3] source di nitrato (da nitrificazione)
-    float CNON;                      //[g m-3] sink di nitrato (da denitrificazione)
-    float CURNH;                     //[g m-3] urea hydrolysis
-    float CHNH;                      //[g m-3] N humus mineralization
-    float CLNH;                      //[g m-3] N litter mineralization
-    float CNHGAS;                    //[g m-3] NH4 volatilization
-    float CNHL;                      //[g m-3] N NH4 litter immobilization
-    float CNOL;                      //[g m-3] N NO3 litter immobilization
-    float USENH4;                    //[g m-3] N NH4 uptake
-    float USENO3;                    //[g m-3] N NO3 uptake
+    double CCDEN;                     //[g m-3] Amount of carbon equivalent to N removed (as CO2) from denitrification
+    double CLIMM;                     //[g m-3] maximum N immobilization
+    double CLIMX;                     //[g m-3] ratio of the maximum to the desired rate. Adjusted by 0.08 to extend immobilization and slow the rate
+    double CCLH;                      //[g m-3] carbon from litter to humus
+    double CLH;                       //[g m-3] nitrogen from litter to humus
+    double CLI;                       //[g m-3] nitrogen internally recycled in litter
+    double CCLI;                      //[g m-3] carbon internally recycled in litter
+    double CCLCO2;                    //[g m-3] carbon from litter to CO2
+    double CCHCO2;                    //[g m-3] carbon from humus to CO2
+    double CCLDN;                     //[g m-3] carbonio rimosso dal litter per denitrificazione
+    double CCHDN;                     //[g m-3] carbonio rimosso dall'humus per denitrificazione
+    double CNHNO;                     //[g m-3] source di nitrato (da nitrificazione)
+    double CNON;                      //[g m-3] sink di nitrato (da denitrificazione)
+    double CURNH;                     //[g m-3] urea hydrolysis
+    double CHNH;                      //[g m-3] N humus mineralization
+    double CLNH;                      //[g m-3] N litter mineralization
+    double CNHGAS;                    //[g m-3] NH4 volatilization
+    double CNHL;                      //[g m-3] N NH4 litter immobilization
+    double CNOL;                      //[g m-3] N NO3 litter immobilization
+    double USENH4;                    //[g m-3] N NH4 uptake
+    double USENO3;                    //[g m-3] N NO3 uptake
 
-    float litterCSink;               //[g m-3] C litter sink
-    float litterCSource;             //[g m-3] C litter source
-    float litterCRecycle;            //[g m-3] C litter recycle
-    float litterCNetSink;            //[g m-3] C litter net sink/source
-    float humusCSink;                //[g m-3] C humus sink
-    float humusCSource;              //[g m-3] C humus source
-    float humusCNetSink;             //[g m-3] C net sink/source
-    float litterNSink;               //[g m-3] N litter sink
-    float litterNSource;             //[g m-3] N litter source
-    float litterNRecycle;            //[g m-3] N litter recycle
-    float litterNNetSink;            //[g m-3] N litter net sink/source
-    float humusNSink;                //[g m-3] N humus sink
-    float humusNSource;              //[g m-3] N humus source
-    float humusNNetSink;             //[g m-3] N net sink/source
-    float N_NH4_sink;
-    float N_NH4_source;
-    float N_NH4_netSink;
-    float N_NO3_sink;
-    float N_NO3_source;
-    float N_NO3_netSink;
+    double litterCSink;               //[g m-3] C litter sink
+    double litterCSource;             //[g m-3] C litter source
+    double litterCRecycle;            //[g m-3] C litter recycle
+    double litterCNetSink;            //[g m-3] C litter net sink/source
+    double humusCSink;                //[g m-3] C humus sink
+    double humusCSource;              //[g m-3] C humus source
+    double humusCNetSink;             //[g m-3] C net sink/source
+    double litterNSink;               //[g m-3] N litter sink
+    double litterNSource;             //[g m-3] N litter source
+    double litterNRecycle;            //[g m-3] N litter recycle
+    double litterNNetSink;            //[g m-3] N litter net sink/source
+    double humusNSink;                //[g m-3] N humus sink
+    double humusNSource;              //[g m-3] N humus source
+    double humusNNetSink;             //[g m-3] N net sink/source
+    double N_NH4_sink;
+    double N_NH4_source;
+    double N_NH4_netSink;
+    double N_NO3_sink;
+    double N_NO3_source;
+    double N_NO3_netSink;
 
-    float totalCO2;                   //[g m-3] source of CO2
-    float def;
-    float total;
-    float factor;
+    double totalCO2;                   //[g m-3] source of CO2
+    double def;
+    double total;
+    double factor;
 
-    static float adjustFactor = 0.08; // factor to extend immobilization and slow the rate
+    static double adjustFactor = 0.08; // factor to extend immobilization and slow the rate
 
     int L;
 
@@ -557,23 +487,23 @@ void N_Fertilization()
     //-------------- Input Parameters -----------------------------------------
     //
     //-------------- Internal Parameters --------------------------------------
-    float* quantityN = (float *) calloc(nrLayers, sizeof(float));
+    double* quantityN = (double *) calloc(nrLayers, sizeof(double));
     int L;//            'contatore
     int LL;//        'contatore
-    float quantityNcm; // As Single   'quantità per cm
-    float percNO3; // As Single       'percentuale di nitrato nel concime
-    float percNH4; // As Single      'percentuale di ione ammonio nel concime
-    float percNorg; // As Single       'percentuale di sostanza organica nel concime
+    double quantityNcm; // As Single   'quantità per cm
+    double percNO3; // As Single       'percentuale di nitrato nel concime
+    double percNH4; // As Single      'percentuale di ione ammonio nel concime
+    double percNorg; // As Single       'percentuale di sostanza organica nel concime
 
     int ID_Fertilizer;
     string ID_TipoConcime // As String (valutare come trattarlo)
-    float QuantityNtot;
-    float titoloN;
-    float C_N_organic;
+    double QuantityNtot;
+    double titoloN;
+    double C_N_organic;
     string str; // valutare As String
-    float* N_Norg_fert = (float *) calloc(nrLayers, sizeof(float)); // As Single
-    float* N_NO3_fert = (float *) calloc(nrLayers, sizeof(float)); // As Single
-    float* N_NH4_fert = (float *) calloc(nrLayers, sizeof(float)); // As Single
+    double* N_Norg_fert = (double *) calloc(nrLayers, sizeof(double)); // As Single
+    double* N_NO3_fert = (double *) calloc(nrLayers, sizeof(double)); // As Single
+    double* N_NH4_fert = (double *) calloc(nrLayers, sizeof(double)); // As Single
 
     // ReDim N_Norg_fert(nrLayers)
     // ReDim N_NO3_fert(nrLayers)
@@ -1055,7 +985,7 @@ Dim L As Integer
 
 End Sub
 
-void Crit3DCarbonNitrogenProfile::N_main(float precGG,int nrLayers,float* theta,std::vector<soil::Crit3DLayer> &soilLayers,soil::Crit3DSoil* soil)
+void Crit3DCarbonNitrogenProfile::N_main(double precGG,int nrLayers,double* theta,std::vector<soil::Crit3DLayer> &soilLayers,soil::Crit3DSoil* soil)
 {
     //++++++++++ MAIN NITROGEN ROUTINE +++++++++++++++++++++++++++++++++++
     //2008.09 GA
@@ -1077,7 +1007,7 @@ void Crit3DCarbonNitrogenProfile::N_main(float precGG,int nrLayers,float* theta,
         //controllare dati di concentrazione ARPA piogge
     numberOfLayers = nrLayers;
     arrayCarbonNitrogen = (Crit3DCarbonNitrogenLayer*) calloc(numberOfLayers,sizeof(Crit3DCarbonNitrogenLayer));
-    // (float *) calloc(nrLayers, sizeof(float));
+    // (double *) calloc(nrLayers, sizeof(double));
     if (precGG > 0)
     {
         precN_NO3GG = 0.00075 * precGG;
@@ -1086,7 +1016,7 @@ void Crit3DCarbonNitrogenProfile::N_main(float precGG,int nrLayers,float* theta,
         arrayCarbonNitrogen[0].N_NH4 += precN_NH4GG;
         partitioning(theta,soilLayers,soil);
     }
-    /*
+
     N_Uptake();
     // definire attuale
     if (Attuale == Date_N_EndCrop)
@@ -1100,7 +1030,7 @@ void Crit3DCarbonNitrogenProfile::N_main(float precGG,int nrLayers,float* theta,
     partitioning();
 
     //flussi di azoto nel suolo
-    float myPistonDepth;
+    double myPistonDepth;
         //myPistonDepth = FindPistonDepth
         //SoluteFluxesPiston N_NO3, myPistonDepth, Flux_NO3GG
         //SoluteFluxesPiston N_NH4, myPistonDepth, Flux_NH4GG
@@ -1135,7 +1065,7 @@ void Crit3DCarbonNitrogenProfile::N_main(float precGG,int nrLayers,float* theta,
 }
 
 
-float CNRatio(float c,float n)
+double CNRatio(double c,double n)
 {
     // 2004.02.20.VM
     // computes the C/N ratio
@@ -1154,10 +1084,10 @@ void computeWaterCorrectionFactor(int L)
     static double AOPT = 0.08;           // High end of optimum water content range, air-filled porosity
     static double SCORR = 0.6;           // Relative transformation rate at saturation (except denitrification)
     static int RM = 1;
-    float wHigh;
-    float wMin;
-    float wLow;
-    float myTheta, myThetaPA, myThetaCC, myThetaSAT;
+    double wHigh;
+    double wMin;
+    double wLow;
+    double myTheta, myThetaPA, myThetaCC, myThetaSAT;
 
     myTheta = WaterBalance.ConvertWCToVolumetric(suolo[L], U[L]);
     myThetaPA = WaterBalance.ConvertWCToVolumetric(suolo[L], suolo[L].PA);
@@ -1194,11 +1124,11 @@ void computeTemperatureCorrectionFactor(int L)
 
 void computeLayerRates(int L)
 {
-    float totalCorrectionFactor;
-    float wCorr_Denitrification;
-    float theta;
-    float thetaSAT;
-    float conc_N_NO3;
+    double totalCorrectionFactor;
+    double wCorr_Denitrification;
+    double theta;
+    double thetaSAT;
+    double conc_N_NO3;
 
     // update C/N ratio (fixed for humus and biomass)
     CNratio_litter[L] = CNRatio(C_litter[L], N_litter[L]);
@@ -1252,9 +1182,9 @@ void Crit3DCarbonNitrogenProfile::N_Uptake()
     // 02.11.26.MVS
     // 01.01.10.GD
 
-    /*float N_max_transp;          // potential N uptake in transpiration stream
-    float* N_NO3_up_max = (float *) calloc(numberOfLayers, sizeof(float));
-    float* N_NH4_up_max = (float *) calloc(numberOfLayers, sizeof(float));
+    /*double N_max_transp;          // potential N uptake in transpiration stream
+    double* N_NO3_up_max = (double *) calloc(numberOfLayers, sizeof(double));
+    double* N_NH4_up_max = (double *) calloc(numberOfLayers, sizeof(double));
     int L;
 
     if (LAI <= 0)
@@ -1426,7 +1356,7 @@ void N_Uptake_Max()
     //-------------------------------------------------------------------------
     int myDays;
     int i;
-    float previousDeficit;
+    double previousDeficit;
 
     // per medica non c'è deficit
     if ((coltura == Crops.CROP_ALFALFA) || (coltura == Crops.CROP_ALFALFA_FIRSTYEAR) || (coltura == Crops.CROP_SOYBEAN))
@@ -1530,7 +1460,7 @@ void N_Reset()
 }
 
 
-float findPistonDepth()
+double findPistonDepth()
 {
     int L;
     for (L = 0;L<nrLayers;L++)
@@ -1560,11 +1490,11 @@ float findPistonDepth()
 
 
 //calcolo dei flussi di soluti gravitazionali (a 'pistone')
-void soluteFluxesPiston(float* mySolute, float PistonDepth,
-    float* leached)
+void soluteFluxesPiston(double* mySolute, double PistonDepth,
+    double* leached)
 {
     int L;
-    float myFreeSolute;
+    double myFreeSolute;
     double* f_Solute;
     f_Solute = (double *) calloc(nrLayers, sizeof(double));
     f_Solute[0] = 0;
@@ -1599,7 +1529,7 @@ void soluteFluxesPiston(float* mySolute, float PistonDepth,
 }
 
 
-void soluteFluxesPiston_old(float* mySolute, float* leached, float* CoeffPiston)
+void soluteFluxesPiston_old(double* mySolute, double* leached, double* CoeffPiston)
 // 2008.10 FT GA
 // calcolo dei flussi di nitrati gravitazionali (a 'pistone')
 
@@ -1653,7 +1583,7 @@ void soluteFluxesPiston_old(float* mySolute, float* leached, float* CoeffPiston)
 }
 
 
-void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* )
+void soluteFluxes(double* mySolute(),bool flagRisalita, double pistonDepth,double* )
 
     //2008.10 GA eliminata parte dispersiva perché il meccanismo pseudo-numerico è già dispersivo di suo
     //2008.09 GA inserita componente dispersiva
@@ -1664,7 +1594,7 @@ void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* 
     //calcolo dei flussi di soluti con diluizione iterativa
 
     int L;                          //[-] contatore
-    float* flux_Solute();           //[g m-2] flussi soluto
+    double* flux_Solute();           //[g m-2] flussi soluto
     int i;                          //[-] contatore
     int iterations;       //[-] numero di iterazioni per la diluizione
     double* f_Solute;
@@ -1672,8 +1602,8 @@ void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* 
     double H2O_step_flux_L_1;
     double U_vol;
     int firstLayer;
-    float myFreeSolute;
-    float coeffMobile;
+    double myFreeSolute;
+    double coeffMobile;
 
         if (pistonDepth >= suolo[nrLayers].prof)
             return;
@@ -1692,7 +1622,7 @@ void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* 
             firstLayer = L;
             L=0;
         }
-        flux_solute = (float *) calloc(nrLayers, sizeof(float));
+        flux_solute = (double *) calloc(nrLayers, sizeof(double));
         double *u_temp = (double *) calloc(nrLayers, sizeof(double));
         f_solute = (double *) calloc(nrLayers, sizeof(double));
 
@@ -1760,7 +1690,7 @@ void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* 
 
 
 // function develpoed by V. Marletto for watertable
-void leachingWaterTable(float* mySolute, float* leached)
+void leachingWaterTable(double* mySolute, double* leached)
 {
     int L;
     double mySolute_leach_edge;
@@ -1788,7 +1718,7 @@ void leachingWaterTable(float* mySolute, float* leached)
 
 void NH4_Balance()
 {
-    float profileNH4PreviousDay;
+    double profileNH4PreviousDay;
 
     profileNH4PreviousDay = profileNH4;
     // ProfiloNH4 = ProfileSum(N_NH4())
@@ -1812,7 +1742,7 @@ void NO3_Balance()
 {
     // 02.11.26.MVS translated by Antonio Volta 2022.07.29
 
-    float profileNO3PreviousDay;
+    double profileNO3PreviousDay;
 
     profileNO3PreviousDay = profileNO3;
     //profileNO3 = ProfileSum(N_NO3());
@@ -1884,7 +1814,7 @@ void N_harvest() // public function
         // N of leaves is incorporated in litter through the upeer layer with a smoothly rate during the leaf fall
 
     int L;
-    float N_toLitter;
+    double N_toLitter;
     // !!! verificare USR PSR
     if (PSR == 0 && USR == 0)
         return;
@@ -1961,16 +1891,16 @@ void updateNCrop() // this function must be private
 void N_plough() // this function must be public
 {
     int L;
-    float depthRatio;
-    float N_toLitter; // sembra da togliere chiedere a Gabri
-    float N_totLitter;
-    float N_totHumus;
-    float C_totLitter;
-    float C_totHumus;
-    float N_totNO3;
-    float N_totNH4;
+    double depthRatio;
+    double N_toLitter; // sembra da togliere chiedere a Gabri
+    double N_totLitter;
+    double N_totHumus;
+    double C_totLitter;
+    double C_totHumus;
+    double N_totNO3;
+    double N_totNH4;
     int myLastLayer;
-    float tmp;
+    double tmp;
 
         N_totLitter = N_cropToHarvest + N_cropToResidues + N_roots;
         C_totLitter = N_totLitter * CN_RATIO_NOTHARVESTED;
@@ -2017,7 +1947,7 @@ void N_plough() // this function must be public
         N_roots = 0;
 }
 
-void NFromCropSenescence(float myDays,float coeffB) // this function must be public
+void NFromCropSenescence(double myDays,double coeffB) // this function must be public
 {
     //created in 2013.06 by GA, translated by AV 2022.06
     //new function for describing the release of Nitrogen from pluriannual crop residues
@@ -2026,7 +1956,7 @@ void NFromCropSenescence(float myDays,float coeffB) // this function must be pub
     //coeffB  b coefficient in exponential senescence LAI curve
 
 
-    float ratioSenescence;      //ratio of drop leaves
+    double ratioSenescence;      //ratio of drop leaves
 
     ratioSenescence = exp(coeffB * myDays) * (1 - exp(-coeffB)) / (exp(coeffB * LENGTH_SENESCENCE) - 1);
     N_litter[0] = N_litter[0] + N_CropToResidues * ratioSenescence;

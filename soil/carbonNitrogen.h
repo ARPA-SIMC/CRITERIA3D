@@ -18,55 +18,55 @@
 
 class Crit3DCarbonNitrogenLayer
 {
-
 public:
 
     Crit3DCarbonNitrogenLayer();
 
     // NITROGEN
-    float N_NO3;            //[g m-2] Nitrogen in form of Nitrates
-    float N_NH4;            //[g m-2] Nitrogen in form of Ammonium
-    float N_NH4_Adsorbed;   //[g m-2] Nitrogen in form of adsorbed Ammonium
-    float N_NH4_Sol;        //[g m-2] Nitrogen in form of dissolved Ammonium
-    float N_urea;           //[g m-2] Nitrogen in form of Urea
-    float N_humus;          //[g m-2] Nitrogen in humus
-    float N_litter;         //[g m-2] Nitrogen litter
-
-    // ratios
-    float ratio_CN_litter; //[-] ratio C/N in litter
+    double N_NO3;            //[g m-2] Nitrogen in form of Nitrates
+    double N_NH4;            //[g m-2] Nitrogen in form of Ammonium
+    double N_NH4_Adsorbed;   //[g m-2] Nitrogen in form of adsorbed Ammonium
+    double N_NH4_Sol;        //[g m-2] Nitrogen in form of dissolved Ammonium
+    double N_urea;           //[g m-2] Nitrogen in form of Urea
+    double N_humus;          //[g m-2] Nitrogen in humus
+    double N_litter;         //[g m-2] Nitrogen litter
 
     // CARBON
-    float C_humus;          //[g m-2] C in humus
-    float C_litter;         //[g m-2] C in litter
+    double C_humus;          //[g m-2] C in humus
+    double C_litter;         //[g m-2] C in litter
+
+    // ratios
+    double ratio_CN_litter; //[-] ratio C/N in litter
 
 private:
     // NITROGEN
-    float N_NO3_uptake;     //[g m-2] NO3 crop uptake
-    float N_NH4_uptake;     //[g m-2] NH4 crop uptake
-    float N_min_litter;     //[g m-2] mineralized Nitrogen in litter
-    float N_imm_l_NH4;      //[g m-2] NH4 immobilized in litter
-    float N_imm_l_NO3;      //[g m-2] NO3 immobilized in litter
-    float N_min_humus;      //[g m-2] mineralized Nitrogen in humus
-    float N_litter_humus;   //[g m-2] N from litter to humus
-    float N_vol;            //[g m-2] volatilized NH4
-    float N_denitr;         //[g m-2] denitrified N
+    double N_NO3_uptake;     //[g m-2] NO3 crop uptake
+    double N_NH4_uptake;     //[g m-2] NH4 crop uptake
+    double N_min_litter;     //[g m-2] mineralized Nitrogen in litter
+    double N_imm_l_NH4;      //[g m-2] NH4 immobilized in litter
+    double N_imm_l_NO3;      //[g m-2] NO3 immobilized in litter
+    double N_min_humus;      //[g m-2] mineralized Nitrogen in humus
+    double N_litter_humus;   //[g m-2] N from litter to humus
+    double N_vol;            //[g m-2] volatilized NH4
+    double N_denitr;         //[g m-2] denitrified N
     float N_nitrif;         //[g m-2] N from NH4 to NO3
-    float N_Urea_Hydr;      //[g m-2] hydrolyzed urea to NH4
-    float N_NO3_runoff;     //[g m-2] NO3 lost through surface & subsurface run off
-    float N_NH4_runoff;     //[g m-2] NH4 lost through surface & subsurface run off
-
-    // correction factors
-    float temperatureCorrectionFactor;   // [] correction factor for soil temperature
-    float waterCorrecctionFactor;        // [] correction factor for soil water content
-    float waterCorrecctionFactorDenitrification;     // [] correction factor for soil water content (denitrification)
+    double N_Urea_Hydr;      //[g m-2] hydrolyzed urea to NH4
+    double N_NO3_runoff;     //[g m-2] NO3 lost through surface & subsurface run off
+    double N_NH4_runoff;     //[g m-2] NH4 lost through surface & subsurface run off
 
     // CARBON
-    float C_litter_humus;   //[g m-2] C for litter to humus
-    float C_litter_litter;  //[g m-2] recycled Nitrogen within litter
-    float C_min_humus;      //[g m-2] C lost as CO2 by humus mineralization
-    float C_min_litter;     //[g m-2] C lost as CO2 by litter mineralization
-    float C_denitr_humus;   //[g m-2] C in humus lost as CO2 by means of denitrification
-    float C_denitr_litter;  //[g m-2] C in litter lost as CO2 by means of denitrification
+    double C_litter_humus;   //[g m-2] C for litter to humus
+    double C_litter_litter;  //[g m-2] recycled Nitrogen within litter
+    double C_min_humus;      //[g m-2] C lost as CO2 by humus mineralization
+    double C_min_litter;     //[g m-2] C lost as CO2 by litter mineralization
+    double C_denitr_humus;   //[g m-2] C in humus lost as CO2 by means of denitrification
+    double C_denitr_litter;  //[g m-2] C in litter lost as CO2 by means of denitrification
+
+    // correction factors
+    double temperatureCorrectionFactor;   // [] correction factor for soil temperature
+    double waterCorrecctionFactor;        // [] correction factor for soil water content
+    double waterCorrecctionFactorDenitrification;     // [] correction factor for soil water content (denitrification)
+
 };
 
 

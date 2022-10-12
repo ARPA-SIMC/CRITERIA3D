@@ -17,45 +17,45 @@ private:
 
     //rates ------------------------------------------------------------------------------------------------
     // tabulated values
-    float rate_C_litterMin;             //[d-1] litter mineralization rate
-    float rate_C_humusMin;              //[d-1] humus mineralization rate
-    float rate_N_NH4_volatilization;    //[d-1] ammonium volatilization rate
-    float rate_urea_hydr;               //[d-1] urea hydrolisis rate
-    float rate_N_nitrification;         //[d-1] nitrification rate
-    float limRatio_nitr;                // [] limiting NO3/NH4 ratio in solution for nitrification
-    float rate_N_denitrification;       // [d-1] denitrifition rate
-    float max_afp_denitr;               // [] maximum air filled porosity fraction for denitrification onset
-    float constant_sat_denitr;                  // [mg l-1] semisaturation constant for denitrification
-    float Kd_NH4;                       // [l kg-1] partition coefficient for ammonium
-    float FE;                           // [] synthesis efficiency factor
-    float FH;                           // [] humification factor
-    float Q10;                          //[] temperature rate correction: increase factor every 10 °C
-    float baseTemperature;              // [°C] temperature rate correction: base temperature
+    double rate_C_litterMin;             //[d-1] litter mineralization rate
+    double rate_C_humusMin;              //[d-1] humus mineralization rate
+    double rate_N_NH4_volatilization;    //[d-1] ammonium volatilization rate
+    double rate_urea_hydr;               //[d-1] urea hydrolisis rate
+    double rate_N_nitrification;         //[d-1] nitrification rate
+    double limRatio_nitr;                // [] limiting NO3/NH4 ratio in solution for nitrification
+    double rate_N_denitrification;       // [d-1] denitrifition rate
+    double max_afp_denitr;               // [] maximum air filled porosity fraction for denitrification onset
+    double constant_sat_denitr;                  // [mg l-1] semisaturation constant for denitrification
+    double Kd_NH4;                       // [l kg-1] partition coefficient for ammonium
+    double FE;                           // [] synthesis efficiency factor
+    double FH;                           // [] humification factor
+    double Q10;                          //[] temperature rate correction: increase factor every 10 °C
+    double baseTemperature;              // [°C] temperature rate correction: base temperature
 
     // values corrected for Temperature and RH
 
-    float actualRate_C_humusMin;        //
-    float actualRate_C_litterToHumus;   //
-    float actualRate_C_litterToCO2;     //
-    float actualRate_C_litterToBiomass; //
-    float actualRate_N_litterMin;       // [] rate of N mineralization in litter
-    float actualRate_N_litterImm;       // [] rate of N immobilization in litter
-    float actualRate_N_nitrification;   //
-    float actualRate_N_denitrification; //
-    float actualRateUreaHydr;         //
+    double actualRate_C_humusMin;        //
+    double actualRate_C_litterToHumus;   //
+    double actualRate_C_litterToCO2;     //
+    double actualRate_C_litterToBiomass; //
+    double actualRate_N_litterMin;       // [] rate of N mineralization in litter
+    double actualRate_N_litterImm;       // [] rate of N immobilization in litter
+    double actualRate_N_nitrification;   //
+    double actualRate_N_denitrification; //
+    double actualRateUreaHydr;         //
 
     // fix variables --------------------------------------------------------------------------------------------
-    float ratio_CN_humus;               //[] rapporto C/N pool humus
-    float ratio_CN_biomass;             //[] rapporto C/N pool biomass
+    double ratio_CN_humus;               //[] rapporto C/N pool humus
+    double ratio_CN_biomass;             //[] rapporto C/N pool biomass
 
 
 public:
-    float litterIniC;                   //[kg ha-1] initial litter carbon
-    float LITTERINI_C_DEFAULT = 1200;   //[kg ha-1] initial litter carbon (default)
-    float litterIniN;                   //[kg ha-1] initial litter nitrogen
-    float LITTERINI_N_DEFAULT = 40;     //[kg ha-1] initial litter nitrogen (default)
-    float litterIniProf ;               //[cm] initial litter depth
-    float LITTERINI_PROF_DEFAULT = 30;  //[cm] initial litter depth (default)
+    double litterIniC;                   //[kg ha-1] initial litter carbon
+    double LITTERINI_C_DEFAULT = 1200;   //[kg ha-1] initial litter carbon (default)
+    double litterIniN;                   //[kg ha-1] initial litter nitrogen
+    double LITTERINI_N_DEFAULT = 40;     //[kg ha-1] initial litter nitrogen (default)
+    double litterIniProf ;               //[cm] initial litter depth
+    double LITTERINI_PROF_DEFAULT = 30;  //[cm] initial litter depth (default)
 
     // flags -------------------------------------------------------------------------------------------------
     int flagSO;                         // 1: computes SO; 0: SO set at the default value
@@ -67,87 +67,87 @@ public:
     // Nitrogen in soil
     // contents
 public:
-    float N_humusGG;                //[g m-2] Nitrogen within humus
-    float N_litterGG;               //[g m-2] Nitrogen within litter
-    float N_NH4_adsorbedGG;         //[g m-2] adsorbed Ammonium in the current day
-    float N_NH4_adsorbedBeforeGG;   //[g m-2] adsorbed Ammonium in the previous day
+    double N_humusGG;                //[g m-2] Nitrogen within humus
+    double N_litterGG;               //[g m-2] Nitrogen within litter
+    double N_NH4_adsorbedGG;         //[g m-2] adsorbed Ammonium in the current day
+    double N_NH4_adsorbedBeforeGG;   //[g m-2] adsorbed Ammonium in the previous day
     double profileNO3;              //[g m-2] N-NO3 in the whole profile
     double profileNH4;              //[g m-2] N-NH4 in the whole profile
     double balanceFinalNO3;            //[g m-2] N-NO3: budget error
     double balanceFinalNH4;            //[g m-2] N-NH4: budget error
         //fluxes
-    float precN_NO3GG;              //[g m-2] NO3 from rainfall
-    float precN_NH4GG;              //[g m-2] NH4 from rainfall
-    float N_NO3_fertGG;             //[g m-2] NO3 from fertilization
-    float N_NH4_fertGG;             //[g m-2] NH4 from fertilization
-    float N_min_litterGG;           //[g m-2] mineralized Nitrogen from litter
+    double precN_NO3GG;              //[g m-2] NO3 from rainfall
+    double precN_NH4GG;              //[g m-2] NH4 from rainfall
+    double N_NO3_fertGG;             //[g m-2] NO3 from fertilization
+    double N_NH4_fertGG;             //[g m-2] NH4 from fertilization
+    double N_min_litterGG;           //[g m-2] mineralized Nitrogen from litter
 private:
-    float N_imm_l_NH4GG;            //[g m-2] NH4 immobilized in litter
-    float N_imm_l_NO3GG;            //[g m-2] NO3 immobilized in litter
+    double N_imm_l_NH4GG;            //[g m-2] NH4 immobilized in litter
+    double N_imm_l_NO3GG;            //[g m-2] NO3 immobilized in litter
 public:
-    float N_min_humusGG;            //[g m-2] mineralized Nitrogen from humus
-    float N_litter_humusGG;         //[g m-2] Nitrogen from litter to humus
-    float N_NH4_volGG;              //[g m-2] Volatilized NH4 in the whole profile
-    float N_nitrifGG;               //[g m-2] Nitrogen from NH4 to NO3
-    float N_urea_hydrGG;            //[g m-2] Hydrolyzed urea urea to NH4
-    float Flux_NO3GG;               //[g m-2] NO3 leaching flux
-    float Flux_NH4GG;               //[g m-2] NH4 leaching flux
-    float N_NO3_runoff0GG;          //[g m-2] NO3 lost through surface run off
-    float N_NH4_runoff0GG;          //[g m-2] NH4 lost through surface run off
-    float N_NO3_runoffGG;           //[g m-2] NO3 lost through subsurface run off
-    float N_NH4_runoffGG;           //[g m-2] NH4 lost through subsurface run off
+    double N_min_humusGG;            //[g m-2] mineralized Nitrogen from humus
+    double N_litter_humusGG;         //[g m-2] Nitrogen from litter to humus
+    double N_NH4_volGG;              //[g m-2] Volatilized NH4 in the whole profile
+    double N_nitrifGG;               //[g m-2] Nitrogen from NH4 to NO3
+    double N_urea_hydrGG;            //[g m-2] Hydrolyzed urea urea to NH4
+    double Flux_NO3GG;               //[g m-2] NO3 leaching flux
+    double Flux_NH4GG;               //[g m-2] NH4 leaching flux
+    double N_NO3_runoff0GG;          //[g m-2] NO3 lost through surface run off
+    double N_NH4_runoff0GG;          //[g m-2] NH4 lost through surface run off
+    double N_NO3_runoffGG;           //[g m-2] NO3 lost through subsurface run off
+    double N_NH4_runoffGG;           //[g m-2] NH4 lost through subsurface run off
     // uptake
     Crit3DDate date_N_endCrop;
     Crit3DDate date_N_plough;
-    //float Date_N_EndCrop As Date    //[date] data di fine coltura per N (raccolta o rottura prato)
-    //float Date_N_Plough As Date     //[date] data di lavorazione per interramento residui N
-    float N_uptakable;              //[g m-2] assorbimento massimo della coltura per ciclo colturale
+    //double Date_N_EndCrop As Date    //[date] data di fine coltura per N (raccolta o rottura prato)
+    //double Date_N_Plough As Date     //[date] data di lavorazione per interramento residui N
+    double N_uptakable;              //[g m-2] assorbimento massimo della coltura per ciclo colturale
 private:
-    float maxRate_LAI_Ndemand;      //[g m-2 d-1 LAI-1] maximum demand for unit LAI increment
-    float CN_RATIO_NOTHARVESTED=30; //[] C/N ratio in not harvested crop
+    double maxRate_LAI_Ndemand;      //[g m-2 d-1 LAI-1] maximum demand for unit LAI increment
+    double CN_RATIO_NOTHARVESTED=30; //[] C/N ratio in not harvested crop
 public:
-    float N_cropToHarvest;          //[g m-2] Nitrogen absorbed in harvest
-    float N_cropToResidues;         //[g m-2] Nitrogen absorbed in crop residues
-    float N_roots;                  //[g m-2] Nitrogen absorbed in roots
+    double N_cropToHarvest;          //[g m-2] Nitrogen absorbed in harvest
+    double N_cropToResidues;         //[g m-2] Nitrogen absorbed in crop residues
+    double N_roots;                  //[g m-2] Nitrogen absorbed in roots
 private:
-    float N_ratioHarvested;         //[] ratio of harvested crop
-    float N_ratioResidues;          //[] ratio of residues not harvested left above the soil
-    float N_ratioRoots;             //[] ratio of living roots left at harvest
+    double N_ratioHarvested;         //[] ratio of harvested crop
+    double N_ratioResidues;          //[] ratio of residues not harvested left above the soil
+    double N_ratioRoots;             //[] ratio of living roots left at harvest
 public:
-    float N_potentialDemandCum;     //[g m-2] cumulated potential Nitrogen at current date
-    float N_dailyDemand;            //[g m-2] potential Nitrogen at current date
-    float N_dailyDemandMaxCover;    //[g m-2] potential Nitrogen at max cover day (LAI_MAX)
-    float N_uptakeMax;              //[g m-2] Max Nitrogen uptake
-    float N_uptakeDeficit;          //[g m-2] Nitrogen deficit: not absorbed Nitrogen with respect to Nitrogen demand
-    float* N_deficit_daily;         //[g m-2] array of deficit in the last days (defined by N_deficit_max_days)
+    double N_potentialDemandCum;     //[g m-2] cumulated potential Nitrogen at current date
+    double N_dailyDemand;            //[g m-2] potential Nitrogen at current date
+    double N_dailyDemandMaxCover;    //[g m-2] potential Nitrogen at max cover day (LAI_MAX)
+    double N_uptakeMax;              //[g m-2] Max Nitrogen uptake
+    double N_uptakeDeficit;          //[g m-2] Nitrogen deficit: not absorbed Nitrogen with respect to Nitrogen demand
+    double* N_deficit_daily;         //[g m-2] array of deficit in the last days (defined by N_deficit_max_days)
     int N_deficit_max_days;         //[d] nr days with available deficit
-    float N_NH4_uptakeGG;           //[g m-2] NH4 absorbed by the crop
-    float N_NO3_uptakeGG;           //[g m-2] NO3 absorbed by the crop
-    float N_denitrGG;               //[g m-2] Lost Nitrogen by denitrification
+    double N_NH4_uptakeGG;           //[g m-2] NH4 absorbed by the crop
+    double N_NO3_uptakeGG;           //[g m-2] NO3 absorbed by the crop
+    double N_denitrGG;               //[g m-2] Lost Nitrogen by denitrification
         //carbon
         //contents
-    float C_humusGG;                //[g m-2] C in humus
-    float C_litterGG;               //[g m-2] C in litter
+    double C_humusGG;                //[g m-2] C in humus
+    double C_litterGG;               //[g m-2] C in litter
         //flussi
-    float C_litter_humusGG;         //[g m-2] C from litter to humus
-    float C_litter_litterGG;        //[g m-2] C recycled within litter
-    float C_min_humusGG;            //[g m-2] C lost as CO2 by humus mineralization
-    float C_min_litterGG;           //[g m-2] C lost as CO2 by litter mineralization
+    double C_litter_humusGG;         //[g m-2] C from litter to humus
+    double C_litter_litterGG;        //[g m-2] C recycled within litter
+    double C_min_humusGG;            //[g m-2] C lost as CO2 by humus mineralization
+    double C_min_litterGG;           //[g m-2] C lost as CO2 by litter mineralization
 
 
 public:
 
-    void N_main(float precGG, int nrLayers, float* theta, std::vector<soil::Crit3DLayer> &soilLayers, soil::Crit3DSoil *soil);
+    void N_main(double precGG, int nrLayers, double* theta, std::vector<soil::Crit3DLayer> &soilLayers, soil::Crit3DSoil *soil);
 
 private:
 
-    float convertToGramsPerM3(float myQuantity, soil::Crit3DLayer &soilLayer);
-    float convertToGramsPerLiter(float myQuantity, soil::Crit3DLayer &soilLayer);
-    float convertToGramsPerKg(float myQuantity, soil::Crit3DLayer &soilLayer);
+    double convertToGramsPerM3(double myQuantity, soil::Crit3DLayer &soilLayer);
+    double convertToGramsPerLiter(double myQuantity, soil::Crit3DLayer &soilLayer);
+    double convertToGramsPerKg(double myQuantity, soil::Crit3DLayer &soilLayer);
     void N_InitializeLayers();
     void humusIni();
-    void updateTotalOfPartitioned(float* mySoluteSum, float* mySoluteAds,float* mySoluteSol);
-    void partitioning(float* theta, Crit1DCase &myCase);
+    void updateTotalOfPartitioned(double* mySoluteSum, double* mySoluteAds,double* mySoluteSol);
+    void partitioning(Crit1DCase &myCase);
     void litterIni();
     void chemicalTransformations();
     void N_Initialize();
@@ -155,7 +155,7 @@ private:
     void N_InitializeVariables();
     //void ApriTabellaUsciteAzoto(tbname_azoto As String);
     void N_Output();
-    float CNRatio(float c,float n);
+    double CNRatio(double c,double n);
     void computeWaterCorrectionFactor(int L);
     void computeTemperatureCorrectionFactor(int L);
     void computeLayerRates(int L);
@@ -165,18 +165,18 @@ private:
     void N_Uptake_Potential();
     void N_Uptake_Max();
     void N_Reset();
-    float findPistonDepth();
-    void soluteFluxesPiston(float* mySolute, float PistonDepth,float* leached);
-    void soluteFluxesPiston_old(float* mySolute, float* leached, float* CoeffPiston);
-    // sbagliata verificare void soluteFluxes(float* mySolute(),bool flagRisalita, float pistonDepth,float* );
-    void leachingWaterTable(float* mySolute, float* leached);
+    double findPistonDepth();
+    void soluteFluxesPiston(double* mySolute, double PistonDepth,double* leached);
+    void soluteFluxesPiston_old(double* mySolute, double* leached, double* CoeffPiston);
+    // sbagliata verificare void soluteFluxes(double* mySolute(),bool flagRisalita, double pistonDepth,double* );
+    void leachingWaterTable(double* mySolute, double* leached);
     void NH4_Balance();
     void NO3_Balance();
     void N_initializeCrop(bool noReset);
     void N_harvest();
     void updateNCrop();
     void N_plough();
-    void NFromCropSenescence(float myDays,float coeffB);
+    void NFromCropSenescence(double myDays,double coeffB);
 
 };
 
