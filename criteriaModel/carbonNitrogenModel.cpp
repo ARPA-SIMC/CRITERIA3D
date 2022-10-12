@@ -70,7 +70,7 @@ void Crit3DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
 
     for (unsigned int l = 0; l < myCase.soilLayers.size(); l++)
     {
-        myTheta = myCase.getWaterContent(l);
+        myTheta = myCase.soilLayers[l].waterContent / (myCase.soilLayers[l].thickness * 1000);
         N_NH4_g_dm3 = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_NH4, myCase.soilLayers[l]) / 1000;
         N_NH4_sol_g_l = N_NH4_g_dm3 / (Kd_NH4 * myCase.soilLayers[l].horizon->bulkDensity + myTheta);
 
