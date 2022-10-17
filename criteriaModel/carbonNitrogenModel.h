@@ -137,7 +137,7 @@ public:
 
 public:
 
-    void N_main(double precGG, int nrLayers, double* theta, std::vector<soil::Crit3DLayer> &soilLayers, soil::Crit3DSoil *soil);
+    void N_main(double precGG, Crit1DCase &myCase);
 
 private:
 
@@ -159,10 +159,10 @@ private:
     void computeWaterCorrectionFactor(int L);
     void computeTemperatureCorrectionFactor(int L);
     void computeLayerRates(int L);
-    void N_Uptake();
+    void N_Uptake(Crit1DCase &myCase);
     void N_SurfaceRunoff();
     void N_SubSurfaceRunoff();
-    void N_Uptake_Potential();
+    void N_Uptake_Potential(Crit1DCase &myCase);
     void N_Uptake_Max();
     void N_Reset();
     double findPistonDepth();

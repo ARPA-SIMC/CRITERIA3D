@@ -984,8 +984,8 @@ Dim L As Integer
     If FlVarOutN_uptakePOTGG Then tbUscite_Azoto("N_uptakePOTGG") = tbUscite_Azoto("N_uptakePOTGG") + N_DailyDemand * 10
 
 End Sub
-
-void Crit3DCarbonNitrogenProfile::N_main(double precGG,int nrLayers,double* theta,std::vector<soil::Crit3DLayer> &soilLayers,soil::Crit3DSoil* soil)
+*/
+void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase)
 {
     //++++++++++ MAIN NITROGEN ROUTINE +++++++++++++++++++++++++++++++++++
     //2008.09 GA
@@ -1005,19 +1005,20 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG,int nrLayers,double* thet
         //suddividendo equamente tra NO3 e NH4
         //0.00075 g m-2 N nitrico e ammoniacale mm-1
         //controllare dati di concentrazione ARPA piogge
-    numberOfLayers = nrLayers;
-    arrayCarbonNitrogen = (Crit3DCarbonNitrogenLayer*) calloc(numberOfLayers,sizeof(Crit3DCarbonNitrogenLayer));
+    //numberOfLayers = nrLayers;
+    //arrayCarbonNitrogen = (Crit3DCarbonNitrogenLayer*) calloc(numberOfLayers,sizeof(Crit3DCarbonNitrogenLayer));
     // (double *) calloc(nrLayers, sizeof(double));
     if (precGG > 0)
     {
         precN_NO3GG = 0.00075 * precGG;
         precN_NH4GG = 0.00075 * precGG;
-        arrayCarbonNitrogen[0].N_NO3 += precN_NO3GG;
-        arrayCarbonNitrogen[0].N_NH4 += precN_NH4GG;
-        partitioning(theta,soilLayers,soil);
+        myCase.carbonNitrogenLayers[0].N_NO3 += precN_NO3GG;
+        myCase.carbonNitrogenLayers[0].N_NH4 += precN_NH4GG;
+        partitioning(myCase);
     }
 
-    N_Uptake();
+    N_Uptake(myCase);
+    /*
     // definire attuale
     if (Attuale == Date_N_EndCrop)
         N_Harvest();
@@ -1057,14 +1058,15 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG,int nrLayers,double* thet
     // perdita per ruscellamento ipodermico
     If (FlagSSRunoff == 1 && FlagInfiltration != infiltration_1d)
         N_SubSurfaceRunoff();
-    Partitioning
+    partitioning();
 
     //bilanci
     NH4_Balance();
     NO3_Balance();
+    */
 }
 
-
+/*
 double CNRatio(double c,double n)
 {
     // 2004.02.20.VM
@@ -1174,39 +1176,44 @@ void computeLayerRates(int L)
 
 }
 */
-void Crit3DCarbonNitrogenProfile::N_Uptake()
+void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
 {
     // 2008.09 GA ristrutturazione in base a LEACHM
     //           + nuovo calcolo potenziale uptake giornaliero (eliminato FGS)
     // 04.03.02.FZ modifica percentuali in NradiciCum
     // 02.11.26.MVS
     // 01.01.10.GD
+    double N_max_transp;          // potential N uptake in transpiration stream
+    double* N_NO3_up_max = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
+    double* N_NH4_up_max = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
+    int l;
 
-    /*double N_max_transp;          // potential N uptake in transpiration stream
-    double* N_NO3_up_max = (double *) calloc(numberOfLayers, sizeof(double));
-    double* N_NH4_up_max = (double *) calloc(numberOfLayers, sizeof(double));
-    int L;
-
-    if (LAI <= 0)
+    if (myCase.crop.LAI <= 0)
     {
         return;
     }
+    if(myCase.crop.degreeDays <= myCase.crop.degreeDaysEmergence)
+        return;
 
     // uptake da germinazione a raccolta
+    /*
     if (GGAttuale <= GGGermination)
     {
         return;
     }
+    */
 
     // controlla se ho esaurito il totale assimilabile
-    if (N_PotentialDemandCumulated >= N_Uptakable)
+    //myCase.carbonNitrogenLayers[0].
+
+    if (N_potentialDemandCum >= N_uptakable)
     {
         return;
     }
 
     // uptake potenziale (dipendente da LAI)
-    N_Uptake_Potential();
-
+    N_Uptake_Potential(myCase);
+    /*
     if (N_DailyDemand == 0)
     {
         return
@@ -1257,6 +1264,8 @@ void Crit3DCarbonNitrogenProfile::N_Uptake()
         }
     }
 */
+    free(N_NO3_up_max);
+    free(N_NH4_up_max);
 }
 /*
 void N_SurfaceRunoff()
@@ -1321,32 +1330,33 @@ void N_SubSurfaceRunoff()
     }
 
 }
+*/
 
-
-void N_Uptake_Potential()
+void Crit3DCarbonNitrogenProfile::N_Uptake_Potential(Crit1DCase &myCase)
 {
     //2008.09 GA nuova routine per calcolo di domanda di azoto
     //2008.04 GA
     //2002.11.26.MVS nuova routine a partire dal calcolo del lai
 
-    N_DailyDemand = 0;
+    N_dailyDemand = 0;
 
     //per evitare salti bruschi appena il LAI parte
+    /*
     if (LAI_previous == 0)
     {
         return;
     }
-
+    */
     //solo in fase di crescita
-    if (GGAttuale > (GGCrescita + GGEmergence))
+    if (myCase.crop.degreeDays > (myCase.crop.degreeDaysIncrease + myCase.crop.degreeDaysEmergence))
     {
         return;
     }
-    N_DailyDemand = minValue(maxValue(0, LAI - LAI_previous) * MaxRate_LAI_Ndemand, MaxRate_LAI_Ndemand);
-    N_PotentialDemandCumulated += N_DailyDemand;
+    //N_dailyDemand = minValue(maxValue(0, myCase.crop.LAI - LAI_previous) * maxRate_LAI_Ndemand, maxRate_LAI_Ndemand);
+    N_potentialDemandCum += N_dailyDemand;
 
 }
-
+/*
 void N_Uptake_Max()
 {
     //'2008.02 GA revisione (da manuale LEACHM)
