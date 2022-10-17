@@ -19,7 +19,7 @@ public:
     explicit HomogeneityChartView(QWidget *parent = 0);
     void setYmax(float value);
     void setYmin(float value);
-    void drawSNHT(std::vector<int> years, std::vector<float> tvalues, QList<QPointF> t95Points);
+    void drawSNHT(std::vector<int> years, std::vector<double> tvalues, QList<QPointF> t95Points);
     void drawCraddock(int myFirstYear, int myLastYear, std::vector<std::vector<float>> outputValues, std::vector<QString> refNames, meteoVariable myVar, double averageValue);
     void clearSNHTSeries();
     void clearCraddockSeries();

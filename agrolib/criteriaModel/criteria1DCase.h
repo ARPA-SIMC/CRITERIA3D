@@ -4,6 +4,9 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
+    #ifndef CARBON_H
+        #include "carbonNitrogen.h"
+    #endif
     #ifndef CROP_H
         #include "crop.h"
     #endif
@@ -56,6 +59,7 @@
         // SOIL
         soil::Crit3DSoil mySoil;
         std::vector<soil::Crit3DLayer> soilLayers;
+        std::vector<Crit3DCarbonNitrogenLayer> carbonNitrogenLayers;
         soil::Crit3DFittingOptions fittingOptions;
 
         // CROP

@@ -42,7 +42,7 @@ void HomogeneityChartView::setYmin(float value)
     axisY->setMin(value);
 }
 
-void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<float> outputValues, QList<QPointF> t95Points)
+void HomogeneityChartView::drawSNHT(std::vector<int> years, std::vector<double> outputValues, QList<QPointF> t95Points)
 {
     if (chart()->series().size() > 0)
     {

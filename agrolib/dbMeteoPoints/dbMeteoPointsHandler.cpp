@@ -1955,6 +1955,16 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
 
     QSqlQuery qry(_db);
 
+    QString queryStr;
+    queryStr = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                                "(id_point TEXT, joint_station TEXT, PRIMARY KEY(id_point, joint_station))").arg("joint_stations");
+    qry.prepare(queryStr);
+    if( !qry.exec() )
+    {
+        error += idPoint + " " + qry.lastError().text();
+        return false;
+    }
+
     qry.prepare( "DELETE FROM joint_stations WHERE id_point = :id_point" );
     qry.bindValue(":id_point", idPoint);
     if( !qry.exec() )

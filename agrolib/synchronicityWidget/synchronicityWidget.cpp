@@ -411,7 +411,7 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     {
         // draw without compute all series
         interpolationChartView->setVisible(true);
-        smoothSerie();
+        smoothSeries();
         // draw
         interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
         interpolationChangeSmooth = false;
@@ -444,7 +444,7 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     progress.setWindowModality(Qt::WindowModal);
     progress.show();
     int i = 0;
-    for (i; i<nrMeteoPoints; i++)
+    for (; i<nrMeteoPoints; i++)
     {
         progress.setValue(i+1);
         if (progress.wasCanceled())
@@ -481,13 +481,17 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
 
         if (myValue1 != NODATA && interpolatedValue != NODATA)
         {
-            if (elabType == "Difference" || elabType == "Square difference")
+            if (elabType == "Difference")
             {
-                interpolationDailySeries.push_back(myValue1 - interpolatedValue);
+                interpolationDailySeries.push_back(interpolatedValue - myValue1);
+            }
+            else if (elabType == "Square difference")
+            {
+                interpolationDailySeries.push_back((interpolatedValue - myValue1) * (interpolatedValue - myValue1));
             }
             else if (elabType == "Absolute difference")
             {
-                interpolationDailySeries.push_back(abs(myValue1 - interpolatedValue));
+                interpolationDailySeries.push_back(abs(interpolatedValue - myValue1));
             }
         }
         else
@@ -505,14 +509,14 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
     {
         interpolationChartView->setVisible(true);
         // smooth
-        smoothSerie();
+        smoothSeries();
         // draw
         interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
     }
 
 }
 
-void Crit3DSynchronicityWidget::smoothSerie()
+void Crit3DSynchronicityWidget::smoothSeries()
 {
     int mySmooth = smooth.text().toInt();
     QString elabType = interpolationElab.currentText();
@@ -523,7 +527,6 @@ void Crit3DSynchronicityWidget::smoothSerie()
         for (int i = 0; i<interpolationDailySeries.size(); i++)
         {
             float dSum = 0;
-            float dSum2 = 0;
             int nDays = 0;
             for (int j = i-mySmooth; j<=i+mySmooth; j++)
             {
@@ -532,21 +535,13 @@ void Crit3DSynchronicityWidget::smoothSerie()
                     if (interpolationDailySeries[j] != NODATA)
                     {
                         dSum = dSum + interpolationDailySeries[j];
-                        dSum2 = dSum2 + interpolationDailySeries[j] * interpolationDailySeries[j];
                         nDays = nDays + 1;
                     }
                 }
             }
             if (nDays / (mySmooth * 2 + 1) > meteoSettings->getMinimumPercentage() / 100)
             {
-                if (elabType == "Square difference")
-                {
-                    smoothInterpDailySeries.push_back(dSum2/nDays);
-                }
-                else
-                {
-                    smoothInterpDailySeries.push_back(dSum/nDays);
-                }
+                smoothInterpDailySeries.push_back(dSum/nDays);
             }
             else
             {

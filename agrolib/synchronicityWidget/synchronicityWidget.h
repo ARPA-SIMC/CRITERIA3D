@@ -30,7 +30,7 @@
             void clearInterpolationGraph();
             void changeSmooth();
             void changeInterpolationDate();
-            void smoothSerie();
+            void smoothSeries();
             void setReferencePointId(const std::string &value);
             void on_actionChangeLeftSynchAxis();
             void on_actionChangeLeftInterpolationAxis();

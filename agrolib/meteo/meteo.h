@@ -55,6 +55,9 @@
         float getThomThreshold() const;
         void setThomThreshold(float value);
 
+        float getTemperatureThreshold() const;
+        void setTemperatureThreshold(float value);
+
         float getTransSamaniCoefficient() const;
         void setTransSamaniCoefficient(float value);
 
@@ -74,6 +77,7 @@
         float minimumPercentage;
         float rainfallThreshold;
         float thomThreshold;
+        float temperatureThreshold;
         float transSamaniCoefficient;
         int hourlyIntervals;
         float windIntensityDefault;
@@ -93,7 +97,7 @@
                     precipitation, dailyPrecipitation, monthlyPrecipitation,
                     airRelHumidity, dailyAirRelHumidityMin, dailyAirRelHumidityMax, dailyAirRelHumidityAvg,
                     airDewTemperature, dailyAirDewTemperatureMin, dailyAirDewTemperatureMax, dailyAirDewTemperatureAvg,
-                    thom, dailyThomMax, dailyThomAvg, dailyThomHoursAbove, dailyThomDaytime, dailyThomNighttime,
+                    thom, dailyThomMax, dailyThomAvg, dailyThomHoursAbove, dailyThomDaytime, dailyThomNighttime,dailyTemperatureHoursAbove,
                     globalIrradiance, netIrradiance, directIrradiance, diffuseIrradiance, reflectedIrradiance, atmTransmissivity,
                     dailyGlobalRadiation, monthlyGlobalRadiation, dailyDirectRadiation, dailyDiffuseRadiation, dailyReflectedRadiation,
                     windScalarIntensity, windVectorIntensity, windVectorDirection, windVectorX, windVectorY,
@@ -133,6 +137,7 @@
       { "DAILY_THOM_HABOVE", dailyThomHoursAbove },
       { "DAILY_THOM_DAYTIME", dailyThomDaytime },
       { "DAILY_THOM_NIGHTTIME", dailyThomNighttime },
+      { "DAILY_TEMPERATURE_HABOVE", dailyTemperatureHoursAbove},
       { "DAILY_DIRECT_RAD", dailyDirectRadiation },
       { "DAILY_DIFFUSE_RAD", dailyDiffuseRadiation },
       { "DAILY_REFLEC_RAD", dailyReflectedRadiation },
@@ -170,6 +175,7 @@
       { dailyThomHoursAbove, "DAILY_THOM_HABOVE" },
       { dailyThomDaytime, "DAILY_THOM_DAYTIME" },
       { dailyThomNighttime, "DAILY_THOM_NIGHTTIME" },
+      { dailyTemperatureHoursAbove, "DAILY_TEMPERATURE_HABOVE" },
       { dailyDirectRadiation, "DAILY_DIRECT_RAD" },
       { dailyDiffuseRadiation, "DAILY_DIFFUSE_RAD" },
       { dailyReflectedRadiation, "DAILY_REFLEC_RAD" },
