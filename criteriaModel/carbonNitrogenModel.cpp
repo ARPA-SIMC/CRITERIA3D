@@ -1213,24 +1213,24 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
 
     // uptake potenziale (dipendente da LAI)
     N_Uptake_Potential(myCase);
-    /*
-    if (N_DailyDemand == 0)
+
+    if (N_dailyDemand == 0)
     {
-        return
+        return;
     }
 
-    for(L=0;l>nrLayers;L++)
+    for(l=0;l<myCase.soilLayers.size();l++)
     {
-        N_NO3_up_max[L] = 0;
-        N_NH4_up_max[L] = 0;
+        N_NO3_up_max[l] = 0;
+        N_NH4_up_max[l] = 0;
     }
 
     //2008.09 GA niente residuo
     //aggiungo eventuale residuo
     //N_Uptake_Max
 
-    N_UptakeMax = N_DailyDemand;
-
+    N_uptakeMax = N_dailyDemand;
+    /*
     if ((TR == 0) || (TM == 0))
     {
         return;
@@ -1238,20 +1238,20 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
 
     // calcolo massimi uptake per specie
     N_max_transp = 0;
-    for (L = PSR; L< USR; L++)
+    for (l = PSR; l< USR; l++)
     {
         if (TReale[L] > 0)
         {
-            N_NO3_up_max[L] = N_NO3[L] / umid[L].BeforeTranspiration * TReale[L];
-            N_NH4_up_max[L] = N_NH4_Sol[L] / umid[L].BeforeTranspiration * TReale[L];
+            N_NO3_up_max[l] = myCase.carbonNitrogenLayers[l].N_NO3 / umid[l].BeforeTranspiration * TReale[l];
+            N_NH4_up_max[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol / umid[l].BeforeTranspiration * TReale[l];
         }
         else
         {
-            N_NO3_up_max[L] = 0;
-            N_NH4_up_max[L] = 0;
+            N_NO3_up_max[l] = 0;
+            N_NH4_up_max[l] = 0;
         }
 
-        N_max_transp += N_NO3_up_max[L] + N_NH4_up_max[L];
+        N_max_transp += N_NO3_up_max[l] + N_NH4_up_max[l];
     }
 
     if (N_max_transp > 0)
