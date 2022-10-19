@@ -137,7 +137,7 @@ public:
 
 public:
 
-    void N_main(double precGG, Crit1DCase &myCase);
+    void N_main(double precGG, Crit1DCase &myCase, Crit3DDate &myDate);
 
 private:
 
@@ -173,7 +173,7 @@ private:
     void NH4_Balance();
     void NO3_Balance();
     void N_initializeCrop(bool noReset);
-    void N_harvest();
+    void N_harvest(Crit1DCase &myCase);
     void updateNCrop();
     void N_plough();
     void NFromCropSenescence(double myDays,double coeffB);

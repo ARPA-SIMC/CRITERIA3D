@@ -30,6 +30,8 @@ public:
     double N_urea;           //[g m-2] Nitrogen in form of Urea
     double N_humus;          //[g m-2] Nitrogen in humus
     double N_litter;         //[g m-2] Nitrogen litter
+    double N_NO3_uptake;     //[g m-2] NO3 crop uptake
+    double N_NH4_uptake;     //[g m-2] NH4 crop uptake
 
     // CARBON
     double C_humus;          //[g m-2] C in humus
@@ -40,8 +42,7 @@ public:
 
 private:
     // NITROGEN
-    double N_NO3_uptake;     //[g m-2] NO3 crop uptake
-    double N_NH4_uptake;     //[g m-2] NH4 crop uptake
+
     double N_min_litter;     //[g m-2] mineralized Nitrogen in litter
     double N_imm_l_NH4;      //[g m-2] NH4 immobilized in litter
     double N_imm_l_NO3;      //[g m-2] NO3 immobilized in litter

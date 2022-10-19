@@ -985,7 +985,7 @@ Dim L As Integer
 
 End Sub
 */
-void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase)
+void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3DDate &myDate)
 {
     //++++++++++ MAIN NITROGEN ROUTINE +++++++++++++++++++++++++++++++++++
     //2008.09 GA
@@ -1018,14 +1018,14 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase)
     }
 
     N_Uptake(myCase);
-    /*
+    int currentDOY = getDoyFromDate(myDate);
+    //myCase.crop.
     // definire attuale
-    if (Attuale == Date_N_EndCrop)
-        N_Harvest();
-
-    if (Attuale == Date_N_Plough)
+    if (currentDOY == getDoyFromDate(date_N_endCrop))
+        N_harvest(myCase);
+    /*
+    if (currentDOY == getDoyFromDate(date_N_plough))
         N_Plough();
-
     //ciclo della sostanza organica e le trasformazioni dell'azoto
     chemicalTransformations();
     partitioning();
@@ -1230,20 +1230,24 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
     //N_Uptake_Max
 
     N_uptakeMax = N_dailyDemand;
-    /*
-    if ((TR == 0) || (TM == 0))
+
+    //myCase.crop.
+
+    if ((myCase.output.dailyTranspiration == 0) || (myCase.crop.getMaxTranspiration(myCase.output.dailyEt0) == 0))
     {
         return;
     }
 
     // calcolo massimi uptake per specie
     N_max_transp = 0;
-    for (l = PSR; l< USR; l++)
+
+    for (l = myCase.crop.roots.firstRootLayer; l< myCase.crop.roots.lastRootLayer; l++)
     {
-        if (TReale[L] > 0)
+
+        if (myCase.crop.layerTranspiration[l] > 0)
         {
-            N_NO3_up_max[l] = myCase.carbonNitrogenLayers[l].N_NO3 / umid[l].BeforeTranspiration * TReale[l];
-            N_NH4_up_max[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol / umid[l].BeforeTranspiration * TReale[l];
+            //N_NO3_up_max[l] = myCase.carbonNitrogenLayers[l].N_NO3 / umid[l].BeforeTranspiration * myCase.crop.layerTranspiration[l];
+            //N_NH4_up_max[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol / umid[l].BeforeTranspiration * myCase.crop.layerTranspiration[l];
         }
         else
         {
@@ -1256,14 +1260,13 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
 
     if (N_max_transp > 0)
     {
-        for (L = PSR;L<USR;L++)
+        for (l = myCase.crop.roots.firstRootLayer;l<myCase.crop.roots.lastRootLayer;l++)
         {
-            N_NO3_uptake[L] = minValue(N_NO3[L], (N_NO3_up_max[L] / N_max_transp) * N_UptakeMax);
+            myCase.carbonNitrogenLayers[l].N_NO3_uptake = MINVALUE(myCase.carbonNitrogenLayers[l].N_NO3, (N_NO3_up_max[l] / N_max_transp) * N_uptakeMax);
             //GA2017 dialogo con Ceotto (mais San Prospero)
-            N_NH4_uptake[L] = 0 'min(N_NH4_Sol[L], (N_NH4_up_max[L] / N_max_transp) * N_UptakeMax)
+            myCase.carbonNitrogenLayers[l].N_NH4_uptake = 0; //'min(N_NH4_Sol[L], (N_NH4_up_max[L] / N_max_transp) * N_UptakeMax)
         }
     }
-*/
     free(N_NO3_up_max);
     free(N_NH4_up_max);
 }
@@ -1814,8 +1817,8 @@ void N_initializeCrop(bool noReset)
 
 }
 
-
-void N_harvest() // public function
+*/
+void Crit3DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public function
 {
         // 2013.06 GA translated in C++ by AV 2022.06
         // annual crops:roots are incorporated in litter at harvest
@@ -1823,60 +1826,52 @@ void N_harvest() // public function
         // tree crops: half of N from roots is incorporated in litter
         // N of leaves is incorporated in litter through the upeer layer with a smoothly rate during the leaf fall
 
-    int L;
     double N_toLitter;
     // !!! verificare USR PSR
-    if (PSR == 0 && USR == 0)
+    if (myCase.crop.roots.firstRootLayer == 0 && myCase.crop.roots.lastRootLayer == 0)
         return;
 
-    for (L = PSR; L <= USR; L++) // verificare i cicli for per cambio indici
+    for (int l = myCase.crop.roots.firstRootLayer; l <= myCase.crop.roots.lastRootLayer; l++) // verificare i cicli for per cambio indici
     {
         //Select Case TipoColtura
-            // annual crop
-            if (TipoColtura == "erbacea" || TipoColtura == "herbaceous" || TipoColtura == "orticola", TipoColtura == "horticultural")
-                N_toLitter = Radici.DensStrato(L) * N_roots; // !! prendere il dato da dove?
+        // annual crop
+        if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL)
+            N_toLitter = myCase.crop.roots.rootDensity[l] * N_roots; // !! prendere il dato da dove?
+        // multiannual crop
+        else if (myCase.crop.type == HERBACEOUS_PERENNIAL|| myCase.crop.type == GRASS|| myCase.crop.type ==  FALLOW)
+            N_toLitter = myCase.crop.roots.rootDensity[l] * N_roots / 2;
+        // tree crops
+        else if (myCase.crop.type == FRUIT_TREE)
+            N_toLitter = myCase.crop.roots.rootDensity[l] * N_roots / 2;
 
-            // multiannual crop
-            else if (TipoColtura == "erbacea_poliennale"|| TipoColtura == "herbaceous_perennial"|| TipoColtura ==  "prativa"|| TipoColtura ==  "grass"|| TipoColtura ==  "incolto"|| TipoColtura ==  "fallow"|| TipoColtura ==  "prativa_primoanno"|| TipoColtura ==  "grass_firstyear")
-                N_toLitter = Radici.DensStrato(L) * N_roots / 2;
-
-            // tree crops
-            else if (TipoColtura ==  "arborea"|| TipoColtura == "fruit_tree"|| TipoColtura == "arborea_inerbita"|| TipoColtura == "fruit_tree_with_grass")
-                N_toLitter = Radici.DensStrato(L) * N_roots / 2;
-
-
-
-        N_litter(L) += N_toLitter
-        C_litter(L) += CN_RATIO_NOTHARVESTED * N_toLitter
+        myCase.carbonNitrogenLayers[l].N_litter += N_toLitter;
+        myCase.carbonNitrogenLayers[l].C_litter += CN_RATIO_NOTHARVESTED * N_toLitter;
     }
 
-    if (TipoColtura == "erbacea" || TipoColtura == "herbaceous" || TipoColtura == "orticola", TipoColtura == "horticultural")
+    if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL)
     {
         // annual crops
         N_cropToHarvest = 0;
         N_cropToResidues = 0;
         N_roots = 0;
     }
-    else if (TipoColtura == "erbacea_poliennale"|| TipoColtura == "herbaceous_perennial"|| TipoColtura ==  "prativa"|| TipoColtura ==  "grass"|| TipoColtura ==  "incolto"|| TipoColtura ==  "fallow"|| TipoColtura ==  "prativa_primoanno"|| TipoColtura ==  "grass_firstyear")
+    else if (myCase.crop.type == HERBACEOUS_PERENNIAL|| myCase.crop.type == GRASS|| myCase.crop.type ==  FALLOW)
     {
         //pluriennali
         N_cropToHarvest = 0;
         N_cropToResidues = 0;
         N_roots *= 0.5;
     }
-    else if (TipoColtura ==  "arborea"|| TipoColtura == "fruit_tree"|| TipoColtura == "arborea_inerbita"|| TipoColtura == "fruit_tree_with_grass")
+    else if (myCase.crop.type == FRUIT_TREE)
     {
         //tree crops
-
             N_cropToHarvest = 0;
-            N_Roots *= 0.5;
+            N_roots *= 0.5;
     }
-
-    N_potentialDemandCumulated = 0;
-
+    N_potentialDemandCum = 0;
 }
 
-
+/*
 
 void updateNCrop() // this function must be private
 {
