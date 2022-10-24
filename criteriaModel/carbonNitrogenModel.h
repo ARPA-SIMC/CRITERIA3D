@@ -149,15 +149,15 @@ private:
     void updateTotalOfPartitioned(double* mySoluteSum, double* mySoluteAds,double* mySoluteSol);
     void partitioning(Crit1DCase &myCase);
     void litterIni();
-    void chemicalTransformations();
+    void chemicalTransformations(Crit1DCase &myCase);
     void N_Initialize();
     void N_Fertilization();
     void N_InitializeVariables();
     //void ApriTabellaUsciteAzoto(tbname_azoto As String);
     void N_Output();
     double CNRatio(double c,double n);
-    void computeWaterCorrectionFactor(int L);
-    void computeTemperatureCorrectionFactor(int L);
+    double computeWaterCorrectionFactor(int L);
+    double computeTemperatureCorrectionFactor(int L);
     void computeLayerRates(int L);
     void N_Uptake(Crit1DCase &myCase);
     void N_SurfaceRunoff();
@@ -175,7 +175,7 @@ private:
     void N_initializeCrop(bool noReset);
     void N_harvest(Crit1DCase &myCase);
     void updateNCrop();
-    void N_plough();
+    void N_plough(Crit1DCase &myCase);
     void NFromCropSenescence(double myDays,double coeffB);
 
 };

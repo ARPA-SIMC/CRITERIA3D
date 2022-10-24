@@ -40,6 +40,11 @@ public:
     // ratios
     double ratio_CN_litter; //[-] ratio C/N in litter
 
+    // correction factors
+    double temperatureCorrectionFactor;   // [] correction factor for soil temperature
+    double waterCorrecctionFactor;        // [] correction factor for soil water content
+    double waterCorrecctionFactorDenitrification;     // [] correction factor for soil water content (denitrification)
+
 private:
     // NITROGEN
 
@@ -63,10 +68,7 @@ private:
     double C_denitr_humus;   //[g m-2] C in humus lost as CO2 by means of denitrification
     double C_denitr_litter;  //[g m-2] C in litter lost as CO2 by means of denitrification
 
-    // correction factors
-    double temperatureCorrectionFactor;   // [] correction factor for soil temperature
-    double waterCorrecctionFactor;        // [] correction factor for soil water content
-    double waterCorrecctionFactorDenitrification;     // [] correction factor for soil water content (denitrification)
+
 
 };
 
