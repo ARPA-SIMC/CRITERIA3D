@@ -157,7 +157,7 @@ private:
     void N_Output();
     double CNRatio(double c,double n);
     double computeWaterCorrectionFactor(int L);
-    double computeTemperatureCorrectionFactor(int L);
+    double computeTemperatureCorrectionFactor(bool flag, int l, double layerSoilTemperature, double baseTemperature);
     void computeLayerRates(int L);
     void N_Uptake(Crit1DCase &myCase);
     void N_SurfaceRunoff();

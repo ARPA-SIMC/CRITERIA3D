@@ -175,14 +175,16 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
     static double adjustFactor = 0.08; // factor to extend immobilization and slow the rate
 
     int l;
-    /*
+
     for (l=0; l<fabs(myCase.soilLayers.size()); l++)
     {
         // correction functions for soil temperature and humidity
         // inserire parametri in Options.mdb
-
-        myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor = computeTemperatureCorrectionFactor(l,myCase);
-        myCase.carbonNitrogenLayers[l].waterCorrecctionFactor = computeWaterCorrectionFactor(l);
+        bool flagHeat = false;
+        double soilTemperature=25;
+        double baseTemperature = 10;
+        myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor = computeTemperatureCorrectionFactor(flagHeat,l,soilTemperature,baseTemperature);
+        /*myCase.carbonNitrogenLayers[l].waterCorrecctionFactor = computeWaterCorrectionFactor(l);
 
         // compute layer transformation rates
         computeLayerRates(l);
@@ -416,10 +418,11 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         N_nitrifGG += N_nitrif[L];
         N_Urea_HydrGG += N_Urea_Hydr[L];
         N_denitrGG += N_denitr[L];
+        */
     }
-
+    /*
     updateNCrop();
-*/
+    */
 }
 
 /*
@@ -1081,7 +1084,7 @@ double CNRatio(double c,double n)
         return 100.;
 }
 
-void computeWaterCorrectionFactor(int L)
+void computeWaterCorrectionFactor(int l)
 {
     // LEACHM
 
@@ -1110,7 +1113,7 @@ void computeWaterCorrectionFactor(int L)
         waterCorrectionFactor[L] = pow(((maxValue(myTheta, wMin) - wMin) / (wLow - wMin)),RM);
 }
 */
-double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(int l)
+double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(bool flag, int l, double layerSoilTemperature, double baseTemperature)
 {
     //2008.10 GA
     //2004.02.20.VM
