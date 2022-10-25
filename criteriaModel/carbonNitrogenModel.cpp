@@ -184,8 +184,8 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         double soilTemperature=25;
         double baseTemperature = 10;
         myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor = computeTemperatureCorrectionFactor(flagHeat,l,soilTemperature,baseTemperature);
-        /*myCase.carbonNitrogenLayers[l].waterCorrecctionFactor = computeWaterCorrectionFactor(l);
-
+        myCase.carbonNitrogenLayers[l].waterCorrecctionFactor = computeWaterCorrectionFactor(l,myCase);
+        /*
         // compute layer transformation rates
         computeLayerRates(l);
 
@@ -1083,8 +1083,8 @@ double CNRatio(double c,double n)
     else
         return 100.;
 }
-
-void computeWaterCorrectionFactor(int l)
+*/
+double Crit3DCarbonNitrogenProfile::computeWaterCorrectionFactor(int l,Crit1DCase &myCase)
 {
     // LEACHM
 
@@ -1094,26 +1094,26 @@ void computeWaterCorrectionFactor(int l)
     double wHigh;
     double wMin;
     double wLow;
-    double myTheta, myThetaPA, myThetaCC, myThetaSAT;
+    double myTheta, myThetaWP, myThetaFC, myThetaSAT;
 
-    myTheta = WaterBalance.ConvertWCToVolumetric(suolo[L], U[L]);
-    myThetaPA = WaterBalance.ConvertWCToVolumetric(suolo[L], suolo[L].PA);
-    myThetaCC = WaterBalance.ConvertWCToVolumetric(suolo[L], suolo[L].CC);
-    myThetaSAT = WaterBalance.ConvertWCToVolumetric(suolo[L], suolo[L].SAT);
+    myTheta = myCase.soilLayers[l].waterContent / (myCase.soilLayers[l].thickness * 1000);
+    myThetaWP = myCase.soilLayers[l].WP / (myCase.soilLayers[l].thickness * 1000);
+    myThetaFC = myCase.soilLayers[l].FC / (myCase.soilLayers[l].thickness * 1000);
+    myThetaSAT = myCase.soilLayers[l].SAT / (myCase.soilLayers[l].thickness * 1000);
 
-    wMin = myThetaPA;
-    wLow = myThetaCC;
+    wMin = myThetaWP;
+    wLow = myThetaFC;
     wHigh = myThetaSAT - AOPT;
 
-    if (myTheta > wHigh Then)
-        waterCorrectionFactor[L] = pow(SCORR + (1 - SCORR) * ((myThetaSAT - myTheta) / (myThetaSAT - wHigh)),RM);
+    if (myTheta > wHigh)
+        return pow(SCORR + (1 - SCORR) * ((myThetaSAT - myTheta) / (myThetaSAT - wHigh)),RM);
     else if (myTheta <= wHigh && myTheta >= wLow)
-        waterCorrectionFactor[L] = 1;
+        return 1;
     else if (myTheta < wLow)
-        waterCorrectionFactor[L] = pow(((maxValue(myTheta, wMin) - wMin) / (wLow - wMin)),RM);
+        return pow(((MAXVALUE(myTheta, wMin) - wMin) / (wLow - wMin)),RM);
 }
-*/
-double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(bool flag, int l, double layerSoilTemperature, double baseTemperature)
+
+double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(bool flagHeat, int l, double layerSoilTemperature, double baseTemperature)
 {
     //2008.10 GA
     //2004.02.20.VM
@@ -1122,10 +1122,10 @@ double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(bool flag
     //T [°C] temperature
     //Q10 [-] rate increase every 10 °C
     //Tbase [°C] base temperature
-/*
+
     if (flagHeat)
-        return pow(Q10, ((soilTemperature[L] - baseTemperature) / 10.));
-    else*/
+        return pow(Q10, ((layerSoilTemperature - baseTemperature) / 10.));
+    else
         return 1;
 }
 /*

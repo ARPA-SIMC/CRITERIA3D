@@ -156,7 +156,7 @@ private:
     //void ApriTabellaUsciteAzoto(tbname_azoto As String);
     void N_Output();
     double CNRatio(double c,double n);
-    double computeWaterCorrectionFactor(int L);
+    double computeWaterCorrectionFactor(int l,Crit1DCase &myCase);
     double computeTemperatureCorrectionFactor(bool flag, int l, double layerSoilTemperature, double baseTemperature);
     void computeLayerRates(int L);
     void N_Uptake(Crit1DCase &myCase);
