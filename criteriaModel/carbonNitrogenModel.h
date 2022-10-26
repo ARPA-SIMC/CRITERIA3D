@@ -13,7 +13,7 @@ class Crit3DCarbonNitrogenProfile
 public:
     Crit3DCarbonNitrogenProfile();
 
-private:
+
 
     //rates ------------------------------------------------------------------------------------------------
     // tabulated values
@@ -58,7 +58,7 @@ public:
     double LITTERINI_PROF_DEFAULT = 30;  //[cm] initial litter depth (default)
 
     // flags -------------------------------------------------------------------------------------------------
-    int flagSO;                         // 1: computes SO; 0: SO set at the default value
+    int flagSOM;                         // 1: computes SO; 0: SO set at the default value
     int flagLocalOS;                    //1: Initializes the profile of SO without keeping that of soil
     bool flagWaterTableWashing;         // if true: the solute is completely leached in groundwater
     bool flagWaterTableUpward;          // if true: capillary rise is allowed
@@ -155,10 +155,10 @@ private:
     void N_InitializeVariables();
     //void ApriTabellaUsciteAzoto(tbname_azoto As String);
     void N_Output();
-    double CNRatio(double c,double n);
+    double CNRatio(double c,double n,int flagOrganicMatter);
     double computeWaterCorrectionFactor(int l,Crit1DCase &myCase);
     double computeTemperatureCorrectionFactor(bool flag, int l, double layerSoilTemperature, double baseTemperature);
-    void computeLayerRates(int L);
+    void computeLayerRates(int l,Crit1DCase &myCase);
     void N_Uptake(Crit1DCase &myCase);
     void N_SurfaceRunoff();
     void N_SubSurfaceRunoff();

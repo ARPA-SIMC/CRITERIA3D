@@ -2,6 +2,11 @@
 #include "carbonNitrogenModel.h"
 
 
+Crit3DCarbonNitrogenProfile::Crit3DCarbonNitrogenProfile()
+{
+    flagSOM = 1 ;
+}
+
 double Crit3DCarbonNitrogenProfile::convertToGramsPerM3(double myQuantity, soil::Crit3DLayer &soilLayer)
 {
     // convert [g m-2] -> [g m-3] = [mg dm-3]
@@ -185,10 +190,10 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         double baseTemperature = 10;
         myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor = computeTemperatureCorrectionFactor(flagHeat,l,soilTemperature,baseTemperature);
         myCase.carbonNitrogenLayers[l].waterCorrecctionFactor = computeWaterCorrectionFactor(l,myCase);
-        /*
-        // compute layer transformation rates
-        computeLayerRates(l);
 
+        // compute layer transformation rates
+        computeLayerRates(l,myCase);
+        /*
         // convert to concentration
         myLitterC = convertToGramsPerM3(L, C_litter[L]);
         myHumusC = convertToGramsPerM3(L, C_humus[L]);
@@ -1071,19 +1076,19 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     */
 }
 
-/*
-double CNRatio(double c,double n)
+
+double Crit3DCarbonNitrogenProfile::CNRatio(double c,double n,int flagOrganicMatter)
 {
     // 2004.02.20.VM
     // computes the C/N ratio
-    if (FlagSO != 1)
+    if (flagOrganicMatter != 1)
         return 20.;
     if (n > 0.000001)
-        return maxValue(0.001, c/n);
+        return MAXVALUE(0.001, c/n);
     else
         return 100.;
 }
-*/
+
 double Crit3DCarbonNitrogenProfile::computeWaterCorrectionFactor(int l,Crit1DCase &myCase)
 {
     // LEACHM
@@ -1128,8 +1133,8 @@ double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(bool flag
     else
         return 1;
 }
-/*
-void computeLayerRates(int L)
+
+void Crit3DCarbonNitrogenProfile::computeLayerRates(int l,Crit1DCase &myCase)
 {
     double totalCorrectionFactor;
     double wCorr_Denitrification;
@@ -1138,49 +1143,51 @@ void computeLayerRates(int L)
     double conc_N_NO3;
 
     // update C/N ratio (fixed for humus and biomass)
-    CNratio_litter[L] = CNRatio(C_litter[L], N_litter[L]);
+    myCase.carbonNitrogenLayers[l].ratio_CN_litter = CNRatio(myCase.carbonNitrogenLayers[l].C_litter, myCase.carbonNitrogenLayers[l].N_litter,flagSOM);
+    totalCorrectionFactor = myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor * myCase.carbonNitrogenLayers[l].waterCorrecctionFactor;
 
-    totalCorrectionFactor = temperatureCorrectionFactor[L] * waterCorrectionFactor[L];
+
 
     // carbon
 
     // humus mineralization
-    actualRate_C_HumusMin = rate_C_HumusMin * totalCorrectionFactor;
+    actualRate_C_humusMin = rate_C_humusMin * totalCorrectionFactor;
 
     // litter to humus
-    actualRate_C_LitterToHumus = rate_C_LitterMin * totalCorrectionFactor * (FE * FH);
+    actualRate_C_litterToHumus = rate_C_litterMin * totalCorrectionFactor * (FE * FH);
 
     // litter to CO2
-    actualRate_C_LitterToCO2 = rate_C_LitterMin * totalCorrectionFactor * (1 - FE);
+    actualRate_C_litterToCO2 = rate_C_litterMin * totalCorrectionFactor * (1 - FE);
 
     // litter to biomass
-    actualRate_C_LitterToBiomass = rate_C_LitterMin * TotalCorrectionFactor * FE * (1 - FH);
+    actualRate_C_litterToBiomass = rate_C_litterMin * totalCorrectionFactor * FE * (1 - FH);
 
     //nitrogen
 
     // litter mineralization/immobilization
-    actualRate_N_LitterMin = maxValue(0, 1 / CNratio_litter[L] - FE / CNratio_biomass);
-    if (N_litter[L] > 0)
-        actualRate_N_LitterImm = -minValue(0, 1 / CNratio_litter[L] - FE / CNratio_biomass);
+    actualRate_N_litterMin = MAXVALUE(0, 1 / myCase.carbonNitrogenLayers[l].ratio_CN_litter - FE / ratio_CN_biomass);
+    if (myCase.carbonNitrogenLayers[l].N_litter > 0)
+        actualRate_N_litterImm = -MINVALUE(0, 1 / myCase.carbonNitrogenLayers[l].ratio_CN_litter - FE / ratio_CN_biomass);
     else
-        actualRate_N_LitterImm = 0;
+        actualRate_N_litterImm = 0;
 
     //nitrification
-    actualRate_N_Nitrification = Rate_N_Nitrification * totalCorrectionFactor;
+    actualRate_N_nitrification = rate_N_nitrification * totalCorrectionFactor;
 
     // denitrification
-    thetaSAT = orizzonti(suolo[L].Orizzonte).thetaS;
-    theta = WaterBalance.ConvertWCToVolumetric(suolo[L], U[L]);
-    wCorr_Denitrification = pow(maxValue(0, (theta - (1 - Max_afp_denitr) * thetaSAT)) / (thetaSAT - (1 - Max_afp_denitr) * ThetaSAT)), 2);
-    conc_N_NO3 = convertToGramsPerLiter(L, N_NO3[L]) * 1000 'mg l-1;
-    actualRate_N_Denitrification = Rate_N_Denitrification * temperatureCorrectionFactor[L] * wCorr_Denitrification
+    thetaSAT = myCase.soilLayers[l].SAT  / (myCase.soilLayers[l].thickness * 1000);
+    theta = myCase.soilLayers[l].waterContent / (myCase.soilLayers[l].thickness * 1000);
+    wCorr_Denitrification = pow(MAXVALUE(0, (theta - (1 - max_afp_denitr) * thetaSAT)) / (thetaSAT - (1 - max_afp_denitr) * thetaSAT), 2);
+    conc_N_NO3 =convertToGramsPerLiter(myCase.carbonNitrogenLayers[l].N_NO3,myCase.soilLayers[l]) * 1000;
+    /*
+    actualRate_N_denitrification = rate_N_denitrification * myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor * wCorr_Denitrification
         * conc_N_NO3 / (conc_N_NO3 + Csat_denitr);
 
     // urea hydrolysis
     actualRate_Urea_Hydr = rate_Urea_Hydr * totalCorrectionFactor;
-
+    */
 }
-*/
+
 void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
 {
     // 2008.09 GA ristrutturazione in base a LEACHM
