@@ -84,14 +84,15 @@
         double getAvailableWater(double computationDepth);
         double getFractionAW(double computationDepth);
 
+
     private:
         double minLayerThickness;       // [m]
         double geometricFactor;         // [-]
-        double ploughedSoilDepth;       // [m]
+
         double lx, ly;                  // [m]
         double area;                    // [m2]
 
-        std::vector<double> prevWaterContent;
+
 
         bool initializeNumericalFluxes(std::string &error);
         bool computeNumericalFluxes(const Crit3DDate &myDate, std::string &error);
@@ -100,6 +101,10 @@
         void saveWaterContent();
         void restoreWaterContent();
         double getTotalWaterContent();
+
+     public:
+        std::vector<double> prevWaterContent;
+        double ploughedSoilDepth;       // [m]
 
     };
 

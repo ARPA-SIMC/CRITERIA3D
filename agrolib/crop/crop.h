@@ -64,6 +64,7 @@
         bool isLiving;
         bool isEmerged;
         double LAI;
+        double LAIpreviousDay;
         double LAIstartSenescence;
         int daysSinceIrrigation;
         std::vector<double> layerTranspiration;

@@ -13,7 +13,7 @@ class Crit3DCarbonNitrogenProfile
 public:
     Crit3DCarbonNitrogenProfile();
 
-private:
+
 
     //rates ------------------------------------------------------------------------------------------------
     // tabulated values
@@ -25,7 +25,7 @@ private:
     double limRatio_nitr;                // [] limiting NO3/NH4 ratio in solution for nitrification
     double rate_N_denitrification;       // [d-1] denitrifition rate
     double max_afp_denitr;               // [] maximum air filled porosity fraction for denitrification onset
-    double constant_sat_denitr;                  // [mg l-1] semisaturation constant for denitrification
+    double constant_sat_denitr;          // [mg l-1] semisaturation constant for denitrification
     double Kd_NH4;                       // [l kg-1] partition coefficient for ammonium
     double FE;                           // [] synthesis efficiency factor
     double FH;                           // [] humification factor
@@ -58,7 +58,7 @@ public:
     double LITTERINI_PROF_DEFAULT = 30;  //[cm] initial litter depth (default)
 
     // flags -------------------------------------------------------------------------------------------------
-    int flagSO;                         // 1: computes SO; 0: SO set at the default value
+    int flagSOM;                         // 1: computes SO; 0: SO set at the default value
     int flagLocalOS;                    //1: Initializes the profile of SO without keeping that of soil
     bool flagWaterTableWashing;         // if true: the solute is completely leached in groundwater
     bool flagWaterTableUpward;          // if true: capillary rise is allowed
@@ -137,7 +137,7 @@ public:
 
 public:
 
-    void N_main(double precGG, Crit1DCase &myCase);
+    void N_main(double precGG, Crit1DCase &myCase, Crit3DDate &myDate);
 
 private:
 
@@ -146,19 +146,19 @@ private:
     double convertToGramsPerKg(double myQuantity, soil::Crit3DLayer &soilLayer);
     void N_InitializeLayers();
     void humusIni();
-    void updateTotalOfPartitioned(double* mySoluteSum, double* mySoluteAds,double* mySoluteSol);
+    double updateTotalOfPartitioned(double mySoluteAds,double mySoluteSol);
     void partitioning(Crit1DCase &myCase);
     void litterIni();
-    void chemicalTransformations();
+    void chemicalTransformations(Crit1DCase &myCase);
     void N_Initialize();
     void N_Fertilization();
     void N_InitializeVariables();
     //void ApriTabellaUsciteAzoto(tbname_azoto As String);
     void N_Output();
-    double CNRatio(double c,double n);
-    void computeWaterCorrectionFactor(int L);
-    void computeTemperatureCorrectionFactor(int L);
-    void computeLayerRates(int L);
+    double CNRatio(double c,double n,int flagOrganicMatter);
+    double computeWaterCorrectionFactor(int l,Crit1DCase &myCase);
+    double computeTemperatureCorrectionFactor(bool flag, int l, double layerSoilTemperature, double baseTemperature);
+    void computeLayerRates(int l,Crit1DCase &myCase);
     void N_Uptake(Crit1DCase &myCase);
     void N_SurfaceRunoff();
     void N_SubSurfaceRunoff();
@@ -168,14 +168,14 @@ private:
     double findPistonDepth();
     void soluteFluxesPiston(double* mySolute, double PistonDepth,double* leached);
     void soluteFluxesPiston_old(double* mySolute, double* leached, double* CoeffPiston);
-    // sbagliata verificare void soluteFluxes(double* mySolute(),bool flagRisalita, double pistonDepth,double* );
+    void soluteFluxes(double* mySolute(),bool flagRisalita, double pistonDepth,double* );
     void leachingWaterTable(double* mySolute, double* leached);
     void NH4_Balance();
     void NO3_Balance();
     void N_initializeCrop(bool noReset);
-    void N_harvest();
-    void updateNCrop();
-    void N_plough();
+    void N_harvest(Crit1DCase &myCase);
+    void updateNCrop(Crit3DCrop crop);
+    void N_plough(Crit1DCase &myCase);
     void NFromCropSenescence(double myDays,double coeffB);
 
 };

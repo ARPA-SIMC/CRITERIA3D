@@ -30,6 +30,8 @@ public:
     double N_urea;           //[g m-2] Nitrogen in form of Urea
     double N_humus;          //[g m-2] Nitrogen in humus
     double N_litter;         //[g m-2] Nitrogen litter
+    double N_NO3_uptake;     //[g m-2] NO3 crop uptake
+    double N_NH4_uptake;     //[g m-2] NH4 crop uptake
 
     // CARBON
     double C_humus;          //[g m-2] C in humus
@@ -38,10 +40,14 @@ public:
     // ratios
     double ratio_CN_litter; //[-] ratio C/N in litter
 
-private:
+    // correction factors
+    double temperatureCorrectionFactor;   // [] correction factor for soil temperature
+    double waterCorrecctionFactor;        // [] correction factor for soil water content
+    double waterCorrecctionFactorDenitrification;     // [] correction factor for soil water content (denitrification)
+
+public:
     // NITROGEN
-    double N_NO3_uptake;     //[g m-2] NO3 crop uptake
-    double N_NH4_uptake;     //[g m-2] NH4 crop uptake
+
     double N_min_litter;     //[g m-2] mineralized Nitrogen in litter
     double N_imm_l_NH4;      //[g m-2] NH4 immobilized in litter
     double N_imm_l_NO3;      //[g m-2] NO3 immobilized in litter
@@ -62,10 +68,7 @@ private:
     double C_denitr_humus;   //[g m-2] C in humus lost as CO2 by means of denitrification
     double C_denitr_litter;  //[g m-2] C in litter lost as CO2 by means of denitrification
 
-    // correction factors
-    double temperatureCorrectionFactor;   // [] correction factor for soil temperature
-    double waterCorrecctionFactor;        // [] correction factor for soil water content
-    double waterCorrecctionFactorDenitrification;     // [] correction factor for soil water content (denitrification)
+
 
 };
 
