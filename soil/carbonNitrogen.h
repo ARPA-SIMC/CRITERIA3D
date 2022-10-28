@@ -45,7 +45,7 @@ public:
     double waterCorrecctionFactor;        // [] correction factor for soil water content
     double waterCorrecctionFactorDenitrification;     // [] correction factor for soil water content (denitrification)
 
-private:
+public:
     // NITROGEN
 
     double N_min_litter;     //[g m-2] mineralized Nitrogen in litter
