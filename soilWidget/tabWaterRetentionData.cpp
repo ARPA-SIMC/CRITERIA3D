@@ -144,7 +144,7 @@ void TabWaterRetentionData::addRowClicked()
     mySoil->horizon[currentHorizon].dbData.waterRetention.insert(itPos, newRow);
 
     std::string errorString;
-    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, &errorString);
+    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, errorString);
 
     deleteRow->setEnabled(true);
 
@@ -185,7 +185,7 @@ void TabWaterRetentionData::removeRowClicked()
     tableWaterRetention->removeRow(row);
     mySoil->horizon[currentHorizon].dbData.waterRetention.erase(mySoil->horizon[currentHorizon].dbData.waterRetention.begin() + row);
     std::string errorString;
-    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, &errorString);
+    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, errorString);
 
     emit updateSignal();
 }
@@ -286,7 +286,7 @@ void TabWaterRetentionData::cellChanged(int row, int column)
     sort(mySoil->horizon[currentHorizon].dbData.waterRetention.begin(), mySoil->horizon[currentHorizon].dbData.waterRetention.end(), soil::sortWaterPotential);
 
     std::string errorString;
-    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, &errorString);
+    soil::setHorizon(&(mySoil->horizon[currentHorizon]), myTextureClassList, myFittingOptions, errorString);
 
     tableWaterRetention->update();
     tableWaterRetention->blockSignals(false);
