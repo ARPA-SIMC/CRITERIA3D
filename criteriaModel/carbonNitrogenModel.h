@@ -90,8 +90,8 @@ public:
     double N_NH4_volGG;              //[g m-2] Volatilized NH4 in the whole profile
     double N_nitrifGG;               //[g m-2] Nitrogen from NH4 to NO3
     double N_urea_hydrGG;            //[g m-2] Hydrolyzed urea urea to NH4
-    double Flux_NO3GG;               //[g m-2] NO3 leaching flux
-    double Flux_NH4GG;               //[g m-2] NH4 leaching flux
+    double flux_NO3GG;               //[g m-2] NO3 leaching flux
+    double flux_NH4GG;               //[g m-2] NH4 leaching flux
     double N_NO3_runoff0GG;          //[g m-2] NO3 lost through surface run off
     double N_NH4_runoff0GG;          //[g m-2] NH4 lost through surface run off
     double N_NO3_runoffGG;           //[g m-2] NO3 lost through subsurface run off
@@ -169,7 +169,7 @@ private:
     void soluteFluxesPiston(double* mySolute, double PistonDepth,double* leached);
     void soluteFluxesPiston_old(double* mySolute, double* leached, double* CoeffPiston);
     void soluteFluxes(double* mySolute(),bool flagRisalita, double pistonDepth,double* );
-    void leachingWaterTable(double* mySolute, double* leached);
+    void leachingWaterTable(double* mySolute, double* leached, Crit1DCase &myCase);
     void NH4_Balance();
     void NO3_Balance();
     void N_initializeCrop(bool noReset);

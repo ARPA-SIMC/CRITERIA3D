@@ -1054,7 +1054,7 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
         //myPistonDepth = FindPistonDepth
         //SoluteFluxesPiston N_NO3, myPistonDepth, Flux_NO3GG
         //SoluteFluxesPiston N_NH4, myPistonDepth, Flux_NH4GG
-
+    double *mySolute = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
     //soluteFluxes(N_NO3, FlagWaterTableUpward, myPistonDepth, flux_NO3GG);
 
     //soluteFluxes (N_NH4_Sol, FlagWaterTableUpward, myPistonDepth, Flux_NH4GG);
@@ -1063,15 +1063,27 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
         myCase.carbonNitrogenLayers[l].N_NH4  = updateTotalOfPartitioned(myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed, myCase.carbonNitrogenLayers[l].N_NH4_Sol);
     }
     partitioning(myCase);
+
+    if (flagWaterTableWashing)
+    {
+        for(int l=0;l<fabs(myCase.soilLayers.size());l++)
+        {
+            mySolute[l] = myCase.carbonNitrogenLayers[l].N_NO3;
+        }
+        leachingWaterTable(mySolute, &flux_NO3GG,myCase);
+        for(int l=0;l<fabs(myCase.soilLayers.size());l++)
+        {
+            mySolute[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol;
+        }
+        leachingWaterTable(mySolute, &flux_NH4GG,myCase);
+    }
+    free(mySolute);
+    for(int l=0;l<fabs(myCase.soilLayers.size());l++)
+    {
+        myCase.carbonNitrogenLayers[l].N_NH4  = updateTotalOfPartitioned(myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed, myCase.carbonNitrogenLayers[l].N_NH4_Sol);
+    }
+    partitioning(myCase);
     /*
-    if (FlagWaterTableWashing)
-        leachingWaterTable(N_NO3, flux_NO3GG);
-
-    if (FlagWaterTableWashing)
-        leachingWaterTable(N_NH4_Sol, Flux_NH4GG);
-    updateTotalOfPartitioned(N_NH4, N_NH4_Adsorbed, N_NH4_Sol);
-    partitioning();
-
     // loss due to surface runoff
     if (FlagRunoff == 1)
         N_SurfaceRunoff();
@@ -1736,33 +1748,35 @@ void Crit3DCarbonNitrogenProfile::soluteFluxes(Crit1DCase &myCase,bool flagRisal
 
 
 
-// function develpoed by V. Marletto for watertable
-void leachingWaterTable(double* mySolute, double* leached)
+// function developed by V. Marletto for watertable
+*/
+void Crit3DCarbonNitrogenProfile::leachingWaterTable(double* mySolute, double* leached,Crit1DCase &myCase)
 {
-    int L;
-    double mySolute_leach_edge;
+    double mySoluteLeachEdge;
 
     // dilavamento
-    if ((waterTable != NODATA) && (waterTable > 0) && (flagWaterTable == 1) && (flagWaterTableCase == 1))
+
+    if ((myCase.output.dailyWaterTable != NODATA) && (myCase.output.dailyWaterTable > 0) && (myCase.unit.useWaterTableData == 1));// da chiarire && (flagWaterTableCase == 1))
     {
-        for (L = 0; L< Layers; L++)
+        for (int l = 0; l< fabs(myCase.soilLayers.size()); l++)
         {
-            if (suolo[L].prof > waterTable)
+            double maxCapillaryRise = myCase.soilLayers[l].critical - myCase.soilLayers[l].waterContent;
+            if (myCase.soilLayers[l].depth > myCase.output.dailyWaterTable)
             {
-                leached += mySolute[L]
-                mySolute[L] = 0;
-            }
-            else if (suolo[L].prof >= waterTable - MAX_FRANGIA_CAPILLARE)
+                *leached += mySolute[l];
+                mySolute[l] = 0;
+            }            
+            else if (myCase.soilLayers[l].depth >= myCase.output.dailyWaterTable - maxCapillaryRise)
             {
-                mySolute_leach_edge = (mySolute[L] / MAX_FRANGIA_CAPILLARE) * (MAX_FRANGIA_CAPILLARE - (waterTable - suolo[L].prof))
-                mySolute[L] += - mySolute_leach_edge;
-                leached += mySolute_leach_edge;
+                mySoluteLeachEdge = (mySolute[l] / maxCapillaryRise) * (maxCapillaryRise - (myCase.output.dailyWaterTable - myCase.soilLayers[l].depth));
+                mySolute[l] += - mySoluteLeachEdge;
+                *leached += mySoluteLeachEdge;
             }
         }
     }
 
 }
-
+/*
 void NH4_Balance()
 {
     double profileNH4PreviousDay;
