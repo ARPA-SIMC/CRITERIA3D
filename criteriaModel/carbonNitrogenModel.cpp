@@ -1083,12 +1083,13 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
         myCase.carbonNitrogenLayers[l].N_NH4  = updateTotalOfPartitioned(myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed, myCase.carbonNitrogenLayers[l].N_NH4_Sol);
     }
     partitioning(myCase);
-    /*
-    // loss due to surface runoff
-    if (FlagRunoff == 1)
-        N_SurfaceRunoff();
-    partitioning(myCase);
 
+    // loss due to surface runoff
+    bool flagRunoff = true;
+    if (flagRunoff == true)
+        N_SurfaceRunoff(); // da modificare la funzione
+    partitioning(myCase);
+    /*
     // loss due to subsurface runoff
     If (FlagSSRunoff == 1 && FlagInfiltration != infiltration_1d)
         N_SubSurfaceRunoff();
@@ -1315,14 +1316,14 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
     free(N_NO3_up_max);
     free(N_NH4_up_max);
 }
-/*
-void N_SurfaceRunoff()
+
+void Crit3DCarbonNitrogenProfile::N_SurfaceRunoff()
 {
     //-----------------------------------------
     //02.11.19.MVS Surface separato da Subsurface
     //-------------- NOTE -----------------------------------------------------
     //sub la stima del N asportato tramite l'acqua di ruscellamento superficiale
-
+    /*
     if (supRunoffGG > 0)
     {
         // calcolo dell'azoto perso nel ruscellamento superficiale
@@ -1334,10 +1335,10 @@ void N_SurfaceRunoff()
         N_NH4[1] -= N_NH4_runoff0GG;
 
     }
-
+    */
 }
 
-
+/*
 void N_SubSurfaceRunoff()
 {
     //02.11.19.MVS Surface separato da Subsurface
