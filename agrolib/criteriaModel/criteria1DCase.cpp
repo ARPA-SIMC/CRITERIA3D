@@ -80,12 +80,15 @@ Crit1DCase::Crit1DCase()
 bool Crit1DCase::initializeSoil(std::string &error)
 {
     soilLayers.clear();
+    carbonNitrogenLayers.clear();
 
     double factor = 1.0;
     if (unit.isGeometricLayers) factor = geometricFactor;
 
     if (! mySoil.setSoilLayers(minLayerThickness, factor, soilLayers, error))
         return false;
+
+    carbonNitrogenLayers.resize(soilLayers.size());
 
     if (unit.isNumericalInfiltration)
     {

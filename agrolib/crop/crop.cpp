@@ -99,6 +99,7 @@ void Crit3DCrop::clear()
     daysSinceIrrigation = NODATA;
     degreeDays = NODATA;
     LAI = NODATA;
+    LAIpreviousDay = NODATA;
     layerTranspiration.clear();
 }
 
@@ -208,7 +209,7 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
             myLai += LAIgrass;
         }
     }
-
+    LAIpreviousDay = LAI;
     LAI = myLai;
     return true;
 }
@@ -345,12 +346,14 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
 
         // LAI
         LAI = LAImin;
+        LAIpreviousDay = LAImin;
         if (type == FRUIT_TREE) LAI += LAIgrass;
     }
     else
     {
         degreeDays = NODATA;
         LAI = NODATA;
+        LAIpreviousDay = NODATA;
         currentSowingDoy = NODATA;
 
         // roots

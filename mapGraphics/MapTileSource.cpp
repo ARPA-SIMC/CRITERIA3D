@@ -293,7 +293,7 @@ QDateTime MapTileSource::getTileExpirationTime(const QString &cacheID)
         expireTime = _cacheExpirations.value(cacheID);
     else
     {
-        qWarning() << "Tile" << cacheID << "has unknown expire time. Resetting to default of" << DEFAULT_CACHE_DAYS << "days.";
+        //qWarning() << "Tile" << cacheID << "has unknown expire time. Resetting to default of" << DEFAULT_CACHE_DAYS << "days.";
         expireTime = QDateTime::currentDateTimeUtc().addDays(DEFAULT_CACHE_DAYS);
         _cacheExpirations.insert(cacheID,expireTime);
     }

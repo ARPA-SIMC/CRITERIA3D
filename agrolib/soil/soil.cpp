@@ -680,9 +680,9 @@ namespace soil
      * \return true if soil properties are correct, false otherwise
      */
     bool setHorizon(Crit3DHorizon* horizon, Crit3DTextureClass* textureClassList,
-                    Crit3DFittingOptions* fittingOptions, std::string* error)
+                    Crit3DFittingOptions* fittingOptions, std::string &error)
     {
-        *error = "";
+        error = "";
 
         // depth [cm]->[m]
         if (horizon->dbData.upperDepth != NODATA && horizon->dbData.lowerDepth != NODATA)
@@ -692,7 +692,7 @@ namespace soil
         }
         else
         {
-            *error += "wrong depth";
+            error += "wrong depth";
             return false;
         }
 
@@ -736,7 +736,7 @@ namespace soil
         horizon->texture.classUSDA = soil::getUSDATextureClass(horizon->texture);
         if (horizon->texture.classUSDA == NODATA)
         {
-            *error = "sand+silt+clay <> 100";
+            error = "sand+silt+clay <> 100";
             return false;
         }
 
@@ -790,12 +790,12 @@ namespace soil
             if (horizon->dbData.kSat < (horizon->waterConductivity.kSat / 100))
             {
                 horizon->waterConductivity.kSat /= 100;
-                *error = "Ksat is out of class limits.";
+                error = "Ksat is out of class limits.";
             }
             else if (horizon->dbData.kSat > (horizon->waterConductivity.kSat * 100))
             {
                 horizon->waterConductivity.kSat *= 100;
-                *error = "Ksat is out of class limits.";
+                error = "Ksat is out of class limits.";
             }
             else
             {

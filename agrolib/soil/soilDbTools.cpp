@@ -290,7 +290,7 @@ bool loadSoil(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySoil,
     *error = "";
     for (unsigned int i = 0; i < mySoil->nrHorizons; i++)
     {
-        if (! soil::setHorizon(&(mySoil->horizon[i]), textureClassList, fittingOptions, &errorString))
+        if (! soil::setHorizon(&(mySoil->horizon[i]), textureClassList, fittingOptions, errorString))
         {
             *error += "horizon nr." + QString::number(mySoil->horizon[i].dbData.horizonNr) + ": "
                     + QString::fromStdString(errorString) + "\n";

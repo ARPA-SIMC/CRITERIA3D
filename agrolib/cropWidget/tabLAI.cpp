@@ -98,6 +98,7 @@ TabLAI::TabLAI()
     setLayout(mainLayout);
 }
 
+
 void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
     unsigned int nrLayers = unsigned(soilLayers.size());
@@ -154,6 +155,7 @@ void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int fi
         {         
             x.setDate(QDate(myDate.year, myDate.month, myDate.day));
             doy = getDoyFromDate(myDate);
+
             // ET0
             dailyEt0 = ET0_Hargreaves(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT, meteoPoint->latitude, doy, tmax, tmin);
             seriesPotentialEvap->append(x.toMSecsSinceEpoch(), dailyEt0);

@@ -41,6 +41,7 @@ void Vine3DProject::initializeVine3DProject()
     computeDiseases = false;
 
     dailyOutputPath = "daily_output/";
+    hourlyOutputPath = "hourly_ouptut/";
     fieldMapName = "";
 
     lastDateTransmissivity.setDate(1900,1,1);
@@ -1159,7 +1160,6 @@ bool Vine3DProject::loadObsDataFilled(QDateTime firstTime, QDateTime lastTime)
 {
     QDate d1 = firstTime.date().addDays(-30);
     QDate d2 = lastTime.date().addDays(30);
-    //if (d2 > today) d2 = today;
 
     if (! this->loadObsDataAllPoints(d1, d2, false)) return(false);
 
@@ -1243,7 +1243,7 @@ bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool save
             {
                 //create output directories
                 myOutputPathDaily = getProjectPath() + dailyOutputPath + myDate.toString("yyyy/MM/dd/");
-                myOutputPathHourly = getProjectPath() + "hourly_output/" + myDate.toString("yyyy/MM/dd/");
+                myOutputPathHourly = getProjectPath() + hourlyOutputPath + myDate.toString("yyyy/MM/dd/");
 
                 if ((! myDir.mkpath(myOutputPathDaily)) || (! myDir.mkpath(myOutputPathHourly)))
                 {

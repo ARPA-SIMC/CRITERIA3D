@@ -972,9 +972,9 @@ int thomDailyNHoursAbove(TObsDataH* hourlyValues, float thomthreshold, float min
     for (int hour = 0; hour < 24; hour++)
     {
         float thom = thomH(hourlyValues->tAir[hour], hourlyValues->rhAir[hour]);
-        if (thom != NODATA)
+        if (fabs(thom - NODATA) > EPSILON)
         {
-            nData = nData + 1;
+            nData++;// = nData + 1;
             if (nrHours == NODATA)
                 nrHours = 0;
             if (thom > thomthreshold)
@@ -997,9 +997,9 @@ float thomDailyMax(TObsDataH* hourlyValues, float minimumPercentage)
     for (int hour = 0; hour < 24; hour++)
     {
         float thom = thomH(hourlyValues->tAir[hour], hourlyValues->rhAir[hour]);
-        if (thom != NODATA)
+        if (fabs(thom - NODATA) > EPSILON)
         {
-            nData = nData + 1;
+            nData++;// = nData + 1;
             if (thom > thomMax)
                 thomMax = thom;
         }
@@ -1021,10 +1021,10 @@ float thomDailyMean(TObsDataH* hourlyValues, float minimumPercentage)
     for (int hour = 0; hour < 24; hour++)
     {
         float thom = thomH(hourlyValues->tAir[hour], hourlyValues->rhAir[hour]);
-        if (thom != NODATA)
+        if (fabs(thom - NODATA) > EPSILON)
         {
             thomValues.push_back(thom);
-            nData = nData + 1;
+            nData++; //nData = nData + 1;
         }
     }
     if ( (float(nData) / 24 * 100) < minimumPercentage)
@@ -1035,6 +1035,28 @@ float thomDailyMean(TObsDataH* hourlyValues, float minimumPercentage)
 
     return thomDailyMean;
 
+}
+
+// compute # hours per day where temperature >  threshold
+int temperatureDailyNHoursAbove(TObsDataH* hourlyValues, float temperaturethreshold, float minimumPercentage)
+{
+
+    int nData = 0;
+    int nrHours = NODATA;
+    for (int hour = 0; hour < 24; hour++)
+    {
+        if (fabs(hourlyValues->tAir[hour] - NODATA) > EPSILON)
+        {
+            nData++;
+            if (nrHours == NODATA)
+                nrHours = 0;
+            if (hourlyValues->tAir[hour] > temperaturethreshold)
+                nrHours++;
+        }
+    }
+    if ( (float(nData) / 24 * 100) < minimumPercentage)
+        nrHours = NODATA;
+    return nrHours;
 }
 
 float dailyLeafWetnessComputation(TObsDataH* hourlyValues, float minimumPercentage)
@@ -1048,7 +1070,7 @@ float dailyLeafWetnessComputation(TObsDataH* hourlyValues, float minimumPercenta
         if (hourlyValues->leafW[hour] == 0 || hourlyValues->leafW[hour] == 1)
         {
                 dailyLeafWetnessRes = dailyLeafWetnessRes + hourlyValues->leafW[hour];
-                nData = nData + 1;
+                nData++; //nData = nData + 1;
         }
     }
     if ( (float(nData) / 24 * 100) < minimumPercentage)
@@ -1448,6 +1470,13 @@ bool elaborateDailyAggregatedVar(meteoVariable myVar, Crit3DMeteoPoint meteoPoin
 
 }
 
+bool elaborateDailyAggrVarFromStartDate(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, QDate first, QDate last, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings)
+{
+    outputValues.clear();
+    return elaborateDailyAggrVarFromDailyFromStartDate(myVar, meteoPoint, meteoSettings, first, last, outputValues, percValue);
+
+}
+
 
 frequencyType getAggregationFrequency(meteoVariable myVar)
 {
@@ -1643,6 +1672,8 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
                 case dailyLeafWetness:
                     res = dailyLeafWetnessComputation(hourlyValues, meteoSettings->getMinimumPercentage());
                     break;
+                case dailyTemperatureHoursAbove:
+                    res = temperatureDailyNHoursAbove(hourlyValues, meteoSettings->getTemperatureThreshold(), meteoSettings->getMinimumPercentage());
                 default:
                     res = NODATA;
                     break;
@@ -1654,6 +1685,152 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
         outputValues.push_back(res);
     }
 
+    if (nrValidValues > 0)
+        return true;
+    else
+        return false;
+
+}
+
+bool elaborateDailyAggrVarFromDailyFromStartDate(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, Crit3DMeteoSettings* meteoSettings, QDate first, QDate last,
+                                          std::vector<float> &outputValues, float* percValue)
+{
+
+    float res;
+    int nrValidValues = 0;
+    QDate firstDate = getQDate(meteoPoint.obsDataD[0].date);
+    Crit3DQuality qualityCheck;
+
+    for (QDate myDate = first; myDate<=last; myDate=myDate.addDays(1))
+    {
+        int index = firstDate.daysTo(myDate);
+        switch(myVar)
+        {
+        case dailyThomDaytime:
+                res = thomDayTime(meteoPoint.obsDataD[index].tMax, meteoPoint.obsDataD[index].rhMin);
+            break;
+        case dailyThomNighttime:
+                res = thomNightTime(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].rhMax);
+                break;
+        case dailyBIC:
+                res = computeDailyBIC(meteoPoint.obsDataD[index].prec, meteoPoint.obsDataD[index].et0_hs);
+                break;
+        case dailyAirTemperatureRange:
+                res = dailyThermalRange(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax);
+                break;
+        case dailyAirTemperatureAvg:
+                {
+                    quality::qualityType qualityTavg = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureAvg, meteoPoint.obsDataD[index].tAvg);
+                    if (qualityTavg == quality::accepted)
+                    {
+                        res = meteoPoint.obsDataD[index].tAvg;
+                    }
+                    else
+                    {
+                        res = dailyAverageT(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax);
+                        meteoPoint.obsDataD[index].tAvg = res;
+                    }
+                    break;
+                }
+        case dailyReferenceEvapotranspirationHS:
+        {
+            quality::qualityType qualityEtp = qualityCheck.syntacticQualitySingleValue(dailyReferenceEvapotranspirationHS, meteoPoint.obsDataD[index].et0_hs);
+            if (qualityEtp == quality::accepted)
+            {
+                res = meteoPoint.obsDataD[index].et0_hs;
+            }
+            else
+            {
+                res = dailyEtpHargreaves(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax, getCrit3DDate(myDate), meteoPoint.latitude, meteoSettings);
+                meteoPoint.obsDataD[index].et0_hs = res;
+            }
+            break;
+        }
+        case dailyHeatingDegreeDays:
+        {
+            quality::qualityType qualityTavg = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureAvg, meteoPoint.obsDataD[index].tAvg);
+            if (qualityTavg == quality::accepted)
+            {
+                res = 0;
+                if ( meteoPoint.obsDataD[index].tAvg < DDHEATING_THRESHOLD)
+                {
+                    res = DDHEATING_THRESHOLD - meteoPoint.obsDataD[index].tAvg;
+                }
+            }
+            else
+            {
+                meteoPoint.obsDataD[index].tAvg = dailyAverageT(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax);
+                qualityTavg = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureAvg, meteoPoint.obsDataD[index].tAvg);
+                if (qualityTavg == quality::accepted)
+                {
+                    res = 0;
+                    if ( meteoPoint.obsDataD[index].tAvg < DDHEATING_THRESHOLD)
+                    {
+                        res = DDHEATING_THRESHOLD - meteoPoint.obsDataD[index].tAvg;
+                    }
+                }
+                else
+                {
+                    res = NODATA;
+                }
+            }
+            meteoPoint.obsDataD[index].dd_heating = res;
+            break;
+        }
+        case dailyCoolingDegreeDays:
+        {
+            quality::qualityType qualityTavg = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureAvg, meteoPoint.obsDataD[index].tAvg);
+            if (qualityTavg == quality::accepted)
+            {
+                res = 0;
+                if ( meteoPoint.obsDataD[index].tAvg > DDCOOLING_THRESHOLD)
+                {
+                    res = meteoPoint.obsDataD[index].tAvg - DDCOOLING_SUBTRACTION;
+                }
+            }
+            else
+            {
+                meteoPoint.obsDataD[index].tAvg = dailyAverageT(meteoPoint.obsDataD[index].tMin, meteoPoint.obsDataD[index].tMax);
+                qualityTavg = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureAvg, meteoPoint.obsDataD[index].tAvg);
+                if (qualityTavg == quality::accepted)
+                {
+                    res = 0;
+                    if ( meteoPoint.obsDataD[index].tAvg > DDCOOLING_THRESHOLD)
+                    {
+                        res = meteoPoint.obsDataD[index].tAvg - DDCOOLING_SUBTRACTION;
+                    }
+                }
+                else
+                {
+                    res = NODATA;
+                }
+            }
+            meteoPoint.obsDataD[index].dd_heating = res;
+            break;
+        }
+        case dailyAirDewTemperatureAvg:
+                res = dewPoint(meteoPoint.obsDataD[index].rhAvg, meteoPoint.obsDataD[index].tAvg); // RHavg, Tavg
+                break;
+        case dailyAirDewTemperatureMin:
+                res = dewPoint(meteoPoint.obsDataD[index].rhMax, meteoPoint.obsDataD[index].tMin); // RHmax, Tmin
+                break;
+        case dailyAirDewTemperatureMax:
+                res = dewPoint(meteoPoint.obsDataD[index].rhMin, meteoPoint.obsDataD[index].tMax); // RHmin, Tmax
+                break;
+        default:
+                res = NODATA;
+                break;
+        }
+
+        if (res != NODATA)
+        {
+            nrValidValues += 1;
+        }
+
+        outputValues.push_back(res);
+    }
+
+    *percValue = nrValidValues / meteoPoint.nrObsDataDaysD;
     if (nrValidValues > 0)
         return true;
     else
@@ -1790,7 +1967,14 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
             }
             break;
         }
-
+        case dailyTemperatureHoursAbove:
+        {
+            if ( loadHourlyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, airTemperature, QDateTime(startDate,QTime(1,0,0),Qt::UTC), QDateTime(endDate.addDays(1),QTime(0,0,0),Qt::UTC)) > 0)
+            {
+                preElaboration = elaborateDailyAggregatedVar(dailyTemperatureHoursAbove, *meteoPoint, outputValues, percValue, meteoSettings);
+            }
+            break;
+        }
         case dailyThomDaytime:
         {
             if ( loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirRelHumidityMin, startDate, endDate) > 0)
@@ -2059,31 +2243,31 @@ bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable varia
 
         case dailyLeafWetness:
         {
-            preElaboration = elaborateDailyAggregatedVar(dailyLeafWetness, *meteoPoint, outputValues, percValue, meteoSettings);
+            preElaboration = elaborateDailyAggrVarFromStartDate(dailyLeafWetness, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             break;
         }
 
         case dailyThomDaytime:
         {
-            preElaboration = elaborateDailyAggregatedVar(dailyThomDaytime, *meteoPoint, outputValues, percValue, meteoSettings);
+            preElaboration = elaborateDailyAggrVarFromStartDate(dailyThomDaytime, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             break;
         }
 
         case dailyThomNighttime:
         {
-            preElaboration = elaborateDailyAggregatedVar(dailyThomNighttime, *meteoPoint, outputValues, percValue, meteoSettings);
+            preElaboration = elaborateDailyAggrVarFromStartDate(dailyThomNighttime, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             break;
         }
         case dailyThomAvg: case dailyThomMax: case dailyThomHoursAbove:
         {
-            preElaboration = elaborateDailyAggregatedVar(variable, *meteoPoint, outputValues, percValue, meteoSettings);
+            preElaboration = elaborateDailyAggrVarFromStartDate(variable, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             break;
         }
         case dailyBIC:
         {
             if (automaticETP)
             {
-                preElaboration = elaborateDailyAggregatedVar(dailyReferenceEvapotranspirationHS, *meteoPoint, outputValues, percValue, meteoSettings);
+                preElaboration = elaborateDailyAggrVarFromStartDate(dailyReferenceEvapotranspirationHS, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
                 for (int outputIndex = 0; outputIndex<outputValues.size(); outputIndex++)
                 {
                     meteoPoint->obsDataD[outputIndex].et0_hs = outputValues[outputIndex];
@@ -2092,25 +2276,25 @@ bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable varia
 
             if (preElaboration)
             {
-                preElaboration = elaborateDailyAggregatedVar(dailyBIC, *meteoPoint, outputValues, percValue, meteoSettings);
+                preElaboration = elaborateDailyAggrVarFromStartDate(dailyBIC, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             }
             break;
         }
 
         case dailyAirTemperatureRange:
         {
-            preElaboration = elaborateDailyAggregatedVar(dailyAirTemperatureRange, *meteoPoint, outputValues, percValue, meteoSettings);
+            preElaboration = elaborateDailyAggrVarFromStartDate(dailyAirTemperatureRange, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             break;
         }
         case dailyAirDewTemperatureMax:
         {
-            preElaboration = elaborateDailyAggregatedVar(dailyAirDewTemperatureMax, *meteoPoint, outputValues, percValue, meteoSettings);
+            preElaboration = elaborateDailyAggrVarFromStartDate(dailyAirDewTemperatureMax, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             break;
         }
 
         case dailyAirDewTemperatureMin:
         {
-            preElaboration = elaborateDailyAggregatedVar(dailyAirDewTemperatureMin, *meteoPoint, outputValues, percValue, meteoSettings);
+            preElaboration = elaborateDailyAggrVarFromStartDate(dailyAirDewTemperatureMin, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             break;
         }
 
@@ -2122,7 +2306,8 @@ bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable varia
             }
             else if (automaticTmed)
             {
-                preElaboration = elaborateDailyAggregatedVar(dailyAirTemperatureAvg, *meteoPoint, outputValues, percValue, meteoSettings);
+                outputValues.clear();
+                preElaboration = elaborateDailyAggrVarFromStartDate(dailyAirTemperatureAvg, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             }
             break;
         }
@@ -2135,7 +2320,8 @@ bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable varia
             }
             else if (automaticETP)
             {
-                preElaboration = elaborateDailyAggregatedVar(dailyReferenceEvapotranspirationHS, *meteoPoint, outputValues, percValue, meteoSettings);
+                outputValues.clear();
+                preElaboration = elaborateDailyAggrVarFromStartDate(dailyReferenceEvapotranspirationHS, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             }
             break;
         }
@@ -2147,7 +2333,8 @@ bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable varia
             }
             else
             {
-                preElaboration = elaborateDailyAggregatedVar(dailyHeatingDegreeDays, *meteoPoint, outputValues, percValue, meteoSettings);
+                outputValues.clear();
+                preElaboration = elaborateDailyAggrVarFromStartDate(dailyHeatingDegreeDays, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             }
             break;
         }
@@ -2159,7 +2346,8 @@ bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable varia
             }
             else
             {
-                preElaboration = elaborateDailyAggregatedVar(dailyCoolingDegreeDays, *meteoPoint, outputValues, percValue, meteoSettings);
+                outputValues.clear();
+                preElaboration = elaborateDailyAggrVarFromStartDate(dailyCoolingDegreeDays, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             }
             break;
         }
@@ -5046,18 +5234,6 @@ void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet
             if (qualityTavg == quality::accepted)
             {
                 meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, valueTavg);
-            }
-            else
-            {
-                if (automaticTmed)
-                {
-                    float valueMin = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, valueMin);
-                    float valueMax = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, valueMax);
-                    float Tavg = dailyAverageT(valueMin, valueMax);
-                    meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureAvg, Tavg);
-                }
             }
             break;
         }

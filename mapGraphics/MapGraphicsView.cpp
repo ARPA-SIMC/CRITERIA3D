@@ -283,8 +283,8 @@ void MapGraphicsView::setZoomLevel(quint8 nZoom, ZoomMode zMode)
 
     //Re-center the view where we want it
     sceneRect = _childScene->sceneRect();
-    mousePoint = QPointF(sceneRect.width()*xRatio,
-                         sceneRect.height()*yRatio) - offset;
+    mousePoint = QPointF(sceneRect.width() * qreal(xRatio),
+                         sceneRect.height() * qreal(yRatio)) - offset;
 
     if (zMode == MouseZoom)
         _childView->centerOn(mousePoint);
@@ -292,7 +292,7 @@ void MapGraphicsView::setZoomLevel(quint8 nZoom, ZoomMode zMode)
         this->centerOn(centerGeoPos);
 
     //Make MapGraphicsObjects update
-    this->zoomLevelChanged(nZoom);
+    emit this->zoomLevelChanged(nZoom);
 }
 
 void MapGraphicsView::zoomIn(ZoomMode zMode)
@@ -301,7 +301,16 @@ void MapGraphicsView::zoomIn(ZoomMode zMode)
         return;
 
     if (this->zoomLevel() < _tileSource->maxZoomLevel())
-        this->setZoomLevel(this->zoomLevel()+1,zMode);
+    {
+        try
+        {
+            this->setZoomLevel(this->zoomLevel()+1,zMode);
+        }
+        catch (std::invalid_argument& e)
+        {
+            qWarning() << QString::fromStdString(e.what());
+        }
+    }
 }
 
 void MapGraphicsView::zoomOut(ZoomMode zMode)
@@ -310,7 +319,16 @@ void MapGraphicsView::zoomOut(ZoomMode zMode)
         return;
 
     if (this->zoomLevel() > _tileSource->minZoomLevel())
-        this->setZoomLevel(this->zoomLevel()-1,zMode);
+    {
+        try
+        {
+            this->setZoomLevel(this->zoomLevel()-1,zMode);
+        }
+        catch (std::invalid_argument& e)
+        {
+            qWarning() << QString::fromStdString(e.what());
+        }
+    }
 }
 
 void MapGraphicsView::rotate(qreal rotation)

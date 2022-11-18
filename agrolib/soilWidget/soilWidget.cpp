@@ -557,7 +557,7 @@ void Crit3DSoilWidget::on_actionUseWaterRetentionData()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, &errorString);
+        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, errorString);
     }
 
     updateAll();
@@ -577,7 +577,7 @@ void Crit3DSoilWidget::on_actionAirEntry()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, &errorString);
+        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, errorString);
     }
     updateAll();
 }
@@ -595,7 +595,7 @@ void Crit3DSoilWidget::on_actionParameterRestriction()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, &errorString);
+        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, errorString);
     }
     updateAll();
 }
