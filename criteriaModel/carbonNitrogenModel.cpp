@@ -1817,7 +1817,6 @@ void NO3_Balance()
     balanceFinalNO3 = profileNO3 - profileNO3PreviousDay - N_NO3_fertGG + N_imm_l_NO3GG;
     balanceFinalNO3 += N_denitrGG - N_nitrifGG + N_NO3_uptakeGG;
     balanceFinalNO3 += N_NO3_runoff0GG + N_NO3_runoffGG - PrecN_NO3GG + Flux_NO3GG;
-    return;
 }
 
 void N_initializeCrop(bool noReset)
