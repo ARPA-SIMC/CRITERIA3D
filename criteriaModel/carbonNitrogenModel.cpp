@@ -286,6 +286,7 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         humusCNetSink = humusCSource - humusCSink;
 
         // iv) CO2
+        // TODO controllare i casi come questo (is never read)
         totalCO2 = CCLCO2 + CCHCO2 + CCLDN + CCHDN;
 
 
@@ -1054,6 +1055,8 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
         //myPistonDepth = FindPistonDepth
         //SoluteFluxesPiston N_NO3, myPistonDepth, Flux_NO3GG
         //SoluteFluxesPiston N_NH4, myPistonDepth, Flux_NH4GG
+
+    // TODO usare std vector
     double *mySolute = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
     for(int l=0;l<fabs(myCase.soilLayers.size());l++)
     {
@@ -1063,6 +1066,8 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     //soluteFluxes(N_NO3, FlagWaterTableUpward, myPistonDepth, flux_NO3GG);
 
     //soluteFluxes (N_NH4_Sol, FlagWaterTableUpward, myPistonDepth, Flux_NH4GG);
+
+    // TODO cambiare in unsigned
     for(int l=0;l<fabs(myCase.soilLayers.size());l++)
     {
         myCase.carbonNitrogenLayers[l].N_NH4  = updateTotalOfPartitioned(myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed, myCase.carbonNitrogenLayers[l].N_NH4_Sol);
@@ -1119,6 +1124,7 @@ double Crit3DCarbonNitrogenProfile::CNRatio(double c,double n,int flagOrganicMat
         return 100.;
 }
 
+// TODO unsigned
 double Crit3DCarbonNitrogenProfile::computeWaterCorrectionFactor(int l,Crit1DCase &myCase)
 {
     // LEACHM
@@ -1146,7 +1152,10 @@ double Crit3DCarbonNitrogenProfile::computeWaterCorrectionFactor(int l,Crit1DCas
         return 1;
     else if (myTheta < wLow)
         return pow(((MAXVALUE(myTheta, wMin) - wMin) / (wLow - wMin)),RM);
+
+    // TODO manca valore di ritorno di default
 }
+
 
 double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(bool flagHeat, int l, double layerSoilTemperature, double baseTemperature)
 {
