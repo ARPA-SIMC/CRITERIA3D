@@ -160,7 +160,7 @@ private:
     double computeTemperatureCorrectionFactor(bool flag, int l, double layerSoilTemperature, double baseTemperature);
     void computeLayerRates(int l,Crit1DCase &myCase);
     void N_Uptake(Crit1DCase &myCase);
-    void N_SurfaceRunoff();
+    void N_SurfaceRunoff(Crit1DCase &myCase);
     void N_SubSurfaceRunoff();
     void N_Uptake_Potential(Crit1DCase &myCase);
     void N_Uptake_Max();
@@ -170,8 +170,8 @@ private:
     void soluteFluxesPiston_old(double* mySolute, double* leached, double* CoeffPiston);
     void soluteFluxes(double* mySolute(),bool flagRisalita, double pistonDepth,double* );
     void leachingWaterTable(double* mySolute, double* leached, Crit1DCase &myCase);
-    void NH4_Balance();
-    void NO3_Balance();
+    void NH4_Balance(Crit1DCase &myCase);
+    void NO3_Balance(Crit1DCase &myCase);
     void N_initializeCrop(bool noReset);
     void N_harvest(Crit1DCase &myCase);
     void updateNCrop(Crit3DCrop crop);

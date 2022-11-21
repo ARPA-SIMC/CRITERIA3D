@@ -1087,16 +1087,18 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     // loss due to surface runoff
     bool flagRunoff = true;
     if (flagRunoff == true)
-        N_SurfaceRunoff(); // da modificare la funzione
+        N_SurfaceRunoff(myCase); // da modificare la funzione
     partitioning(myCase);
-    /*
+    /* the next if cycle should not be presente in Criteria1D because there is no lateral movement
     // loss due to subsurface runoff
     If (FlagSSRunoff == 1 && FlagInfiltration != infiltration_1d)
         N_SubSurfaceRunoff();
     partitioning(myCase);
+    */
 
     //bilanci
-    NH4_Balance();
+    NH4_Balance(myCase);
+    /*
     NO3_Balance();
     */
 }
@@ -1317,25 +1319,25 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
     free(N_NH4_up_max);
 }
 
-void Crit3DCarbonNitrogenProfile::N_SurfaceRunoff()
+void Crit3DCarbonNitrogenProfile::N_SurfaceRunoff(Crit1DCase &myCase)
 {
     //-----------------------------------------
     //02.11.19.MVS Surface separato da Subsurface
     //-------------- NOTE -----------------------------------------------------
     //sub la stima del N asportato tramite l'acqua di ruscellamento superficiale
-    /*
-    if (supRunoffGG > 0)
+
+    if (myCase.output.dailySurfaceRunoff > 0)
     {
         // calcolo dell'azoto perso nel ruscellamento superficiale
         // seguendo i calcoli tratti da EPIC per il fosforo
-        N_NO3_runoff0GG = minValue(N_NO3[0], N_NO3[0] / umid[0].BeforeRunoff * supRunoffGG);
-        N_NH4_runoff0GG = minValue(N_NH4_Sol[0], N_NH4_Sol[0] / umid[0].BeforeRunoff * supRunoffGG);
+        N_NO3_runoff0GG = MINVALUE(myCase.carbonNitrogenLayers[0].N_NO3, myCase.carbonNitrogenLayers[0].N_NO3 / myCase.prevWaterContent[0] * myCase.output.dailySurfaceRunoff);
+        N_NH4_runoff0GG = MINVALUE(myCase.carbonNitrogenLayers[0].N_NH4_Sol, myCase.carbonNitrogenLayers[0].N_NH4_Sol / myCase.prevWaterContent[0] * myCase.output.dailySurfaceRunoff);
 
-        N_NO3[1] -= N_NO3_runoff0GG;
-        N_NH4[1] -= N_NH4_runoff0GG;
+        myCase.carbonNitrogenLayers[1].N_NO3 -= N_NO3_runoff0GG;
+        myCase.carbonNitrogenLayers[1].N_NH4_Sol -= N_NH4_runoff0GG;
 
     }
-    */
+
 }
 
 /*
@@ -1777,29 +1779,28 @@ void Crit3DCarbonNitrogenProfile::leachingWaterTable(double* mySolute, double* l
     }
 
 }
-/*
-void NH4_Balance()
+
+void Crit3DCarbonNitrogenProfile::NH4_Balance(Crit1DCase &myCase)
 {
     double profileNH4PreviousDay;
 
     profileNH4PreviousDay = profileNH4;
     // ProfiloNH4 = ProfileSum(N_NH4())
     profileNH4 = 0;
-    for (int i=0;i<nrLayers;i++)
+    for (int i=0;i<fabs(myCase.soilLayers.size());i++)
     {
-        profileNH4 += N_NH4[i];
+        profileNH4 += myCase.carbonNitrogenLayers[0].N_NH4;
     }
 
     balanceFinalNH4 = profileNH4 - profileNH4PreviousDay - N_NH4_fertGG + N_imm_l_NH4GG;
     balanceFinalNH4 += - N_min_humusGG - N_min_litterGG;
-    balanceFinalNH4 += N_NH4_volGG - N_Urea_HydrGG + N_nitrifGG;
+    balanceFinalNH4 += N_NH4_volGG - N_urea_hydrGG + N_nitrifGG;
     balanceFinalNH4 += N_NH4_uptakeGG;
-    balanceFinalNH4 += N_NH4_runoff0GG + N_NH4_runoffGG + Flux_NH4GG - PrecN_NH4GG;
+    balanceFinalNH4 += N_NH4_runoff0GG + N_NH4_runoffGG + flux_NH4GG - precN_NH4GG;
 
     //If BilFinaleNH4 > 0.01 Then Stop
-    return;
 }
-
+/*
 void NO3_Balance()
 {
     // 02.11.26.MVS translated by Antonio Volta 2022.07.29
