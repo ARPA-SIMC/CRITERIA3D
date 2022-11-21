@@ -168,7 +168,7 @@ private:
     double findPistonDepth();
     void soluteFluxesPiston(double* mySolute, double PistonDepth,double* leached);
     void soluteFluxesPiston_old(double* mySolute, double* leached, double* CoeffPiston);
-    void soluteFluxes(double* mySolute(),bool flagRisalita, double pistonDepth,double* );
+    void soluteFluxes(double* mySolute,bool flagRisalita, double pistonDepth,double* leached,Crit1DCase &myCase);
     void leachingWaterTable(double* mySolute, double* leached, Crit1DCase &myCase);
     void NH4_Balance(Crit1DCase &myCase);
     void NO3_Balance(Crit1DCase &myCase);
