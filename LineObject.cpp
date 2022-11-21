@@ -6,11 +6,13 @@
 LineObject::LineObject(const Position &endA,
                        const Position &endB,
                        qreal thickness,
+                       QColor color,
                        MapGraphicsObject *parent) :
     MapGraphicsObject(false, parent),
     _a(endA), _b(endB)
 {
     _thickness = qBound<qreal>(0.0, thickness, 5.0);
+    _color = color;
     this->updatePositionFromEndPoints();
 }
 
@@ -44,12 +46,13 @@ void LineObject::paint(QPainter *painter,
                        const QStyleOptionGraphicsItem *option,
                        QWidget *widget)
 {
-    Q_UNUSED(option);
-    Q_UNUSED(widget);
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
 
     painter->setRenderHint(QPainter::Antialiasing, true);
     QPen pen = painter->pen();
     pen.setWidthF(_thickness);
+    pen.setColor(_color);
     painter->setPen(pen);
 
     const qreal avgLat = (_a.latitude() + _b.latitude()) / 2.0;
@@ -76,7 +79,7 @@ qreal LineObject::thickness() const
 void LineObject::setThickness(qreal nThick)
 {
     _thickness = qBound<qreal>(0.0, nThick, 5.0);
-    this->redrawRequested();
+    emit this->redrawRequested();
 }
 
 //public slot
@@ -84,7 +87,7 @@ void LineObject::setEndPointA(const Position &pos)
 {
     _a = pos;
     this->updatePositionFromEndPoints();
-    this->redrawRequested();
+    emit this->redrawRequested();
 }
 
 //public slot
@@ -92,7 +95,7 @@ void LineObject::setEndPointB(const Position &pos)
 {
     _b = pos;
     this->updatePositionFromEndPoints();
-    this->redrawRequested();
+    emit this->redrawRequested();
 }
 
 //public slot
@@ -102,7 +105,7 @@ void LineObject::setEndPoints(const Position &a,
     _a = a;
     _b = b;
     this->updatePositionFromEndPoints();
-    this->redrawRequested();
+    emit this->redrawRequested();
 }
 
 //private slot
@@ -111,4 +114,13 @@ void LineObject::updatePositionFromEndPoints()
     const qreal avgLon = (_a.longitude() + _b.longitude()) / 2.0;
     const qreal avgLat = (_a.latitude() + _b.latitude()) / 2.0;
     this->setPos(QPointF(avgLon, avgLat));
+}
+
+void LineObject::setColor(const QColor &color)
+{
+    if (_color == color)
+        return;
+
+    _color = color;
+    emit this->redrawRequested();
 }
