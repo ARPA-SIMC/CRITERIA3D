@@ -6,13 +6,12 @@
 #include <math.h>
 #include <QMenu>
 
-StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent) :
+StationMarker::StationMarker(qreal radius,bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent) :
     CircleObject(radius, sizeIsZoomInvariant, fillColor, parent)
 {
     this->setFlag(MapGraphicsObject::ObjectIsSelectable, false);
     this->setFlag(MapGraphicsObject::ObjectIsMovable, false);
     this->setFlag(MapGraphicsObject::ObjectIsFocusable, false);
-    _view = view;
     _id = "";
     _name = "";
     _dataset = "";
