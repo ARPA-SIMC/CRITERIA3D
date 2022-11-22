@@ -278,6 +278,7 @@
         void setOutputRasterVisible(bool value);
 
         void addMeteoPoints();
+        void testWindObject();
         void drawProject();
         void renderDEM();
         void drawMeteoPoints();

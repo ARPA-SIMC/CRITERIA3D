@@ -42,6 +42,7 @@
 #include "dialogNewPoint.h"
 #include "utilities.h"
 #include "glWidget.h"
+#include "ArrowObject.h"
 
 #include <QDebug>
 
@@ -138,7 +139,7 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 {
     Q_UNUSED(event)
 
-    const int INFOHEIGHT = 40;
+    const int INFOHEIGHT = 42;
     int x1 = this->width() - TOOLSWIDTH - MAPBORDER;
     int dy = ui->groupBoxModel->height() + ui->groupBoxMeteoPoints->height() + ui->groupBoxDEM->height() + ui->groupBoxVariableMap->height() + MAPBORDER*4;
     int y1 = (this->height() - INFOHEIGHT - dy) / 2;
@@ -417,13 +418,24 @@ void MainWindow::addOutputPointsGUI()
 }
 
 
+void MainWindow::testWindObject()
+{
+    int i = 0;
+    ArrowObject* arrow = new ArrowObject(-100, -200, QColor(Qt::red));
+    arrow->setLatitude(myProject.meteoPoints[i].latitude);
+    arrow->setLongitude(myProject.meteoPoints[i].longitude);
+
+    this->mapView->scene()->addObject(arrow);
+}
+
+
 void MainWindow::addMeteoPoints()
 {
     myProject.clearSelectedPoints();
 
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
-        StationMarker* point = new StationMarker(5.0, true, QColor((Qt::white)), this->mapView);
+        StationMarker* point = new StationMarker(5.0, true, QColor((Qt::white)));
 
         point->setFlag(MapGraphicsObject::ObjectIsMovable, false);
         point->setLatitude(myProject.meteoPoints[i].latitude);
@@ -433,7 +445,7 @@ void MainWindow::addMeteoPoints()
         point->setDataset(myProject.meteoPoints[i].dataset);
         point->setAltitude(myProject.meteoPoints[i].point.z);
         point->setMunicipality(myProject.meteoPoints[i].municipality);
-        point->setCurrentValue(myProject.meteoPoints[i].currentValue);
+        point->setCurrentValue(qreal(myProject.meteoPoints[i].currentValue));
         point->setQuality(myProject.meteoPoints[i].quality);
 
         this->meteoPointList.append(point);
