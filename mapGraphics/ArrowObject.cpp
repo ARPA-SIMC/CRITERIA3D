@@ -15,7 +15,7 @@ ArrowObject::~ArrowObject()
 // pure-virtual from MapGraphicsObject
 QRectF ArrowObject::boundingRect() const
 {
-    return QRectF(0, 0, _dx, _dy);
+    return QRectF(0, 0, _dx, -_dy);
 }
 
 // pure-virtual from MapGraphicsObject

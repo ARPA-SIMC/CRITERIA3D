@@ -421,7 +421,7 @@ void MainWindow::addOutputPointsGUI()
 void MainWindow::testWindObject()
 {
     int i = 0;
-    ArrowObject* arrow = new ArrowObject(-100, -200, QColor(Qt::red));
+    ArrowObject* arrow = new ArrowObject(-100, 100, QColor(Qt::red));
     arrow->setLatitude(myProject.meteoPoints[i].latitude);
     arrow->setLongitude(myProject.meteoPoints[i].longitude);
 
@@ -455,6 +455,7 @@ void MainWindow::addMeteoPoints()
         connect(point, SIGNAL(newStationClicked(std::string, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, bool)));
         connect(point, SIGNAL(appendStationClicked(std::string, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, bool)));
     }
+
 }
 
 
