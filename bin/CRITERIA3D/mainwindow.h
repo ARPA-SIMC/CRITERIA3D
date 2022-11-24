@@ -12,6 +12,7 @@
     #include "colorLegend.h"
     #include "rubberBand.h"
     #include "viewer3D.h"
+    #include "ArrowObject.h"
 
     #include <QMainWindow>
 
@@ -234,6 +235,7 @@
         RasterObject* rasterOutput;
         QList<StationMarker*> meteoPointList;
         QList<SquareMarker*> outputPointList;
+        QList<ArrowObject*> windVectorList;
 
         ColorLegend *inputRasterColorLegend;
         ColorLegend *outputRasterColorLegend;
@@ -278,7 +280,7 @@
         void setOutputRasterVisible(bool value);
 
         void addMeteoPoints();
-        void testWindObject();
+        void drawWindVector(int i);
         void drawProject();
         void renderDEM();
         void drawMeteoPoints();
@@ -299,6 +301,7 @@
         void addOutputPointsGUI();
         void redrawOutputPoints();
         void resetOutputPointMarkers();
+        void clearWindVectorObjects();
     };
 
     bool selectDates(QDateTime &firstTime, QDateTime &lastTime);

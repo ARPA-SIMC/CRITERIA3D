@@ -42,7 +42,6 @@
 #include "dialogNewPoint.h"
 #include "utilities.h"
 #include "glWidget.h"
-#include "ArrowObject.h"
 
 #include <QDebug>
 
@@ -418,14 +417,21 @@ void MainWindow::addOutputPointsGUI()
 }
 
 
-void MainWindow::testWindObject()
+void MainWindow::drawWindVector(int i)
 {
-    int i = 0;
-    ArrowObject* arrow = new ArrowObject(-100, 100, QColor(Qt::red));
+    float dx = myProject.meteoPoints[i].getMeteoPointValue(myProject.getCrit3DCurrentTime(),
+                                                           windVectorX,  myProject.meteoSettings);
+    float dy = myProject.meteoPoints[i].getMeteoPointValue(myProject.getCrit3DCurrentTime(),
+                                                           windVectorY,  myProject.meteoSettings);
+    if (isEqual(dx, NODATA) || isEqual(dy, NODATA))
+        return;
+
+    ArrowObject* arrow = new ArrowObject(qreal(dx * 10), qreal(dy * 10), QColor(Qt::black));
     arrow->setLatitude(myProject.meteoPoints[i].latitude);
     arrow->setLongitude(myProject.meteoPoints[i].longitude);
+    windVectorList.append(arrow);
 
-    this->mapView->scene()->addObject(arrow);
+    mapView->scene()->addObject(windVectorList.last());
 }
 
 
@@ -492,6 +498,7 @@ void MainWindow::callAppendMeteoWidget(std::string id, std::string name, bool is
 void MainWindow::drawMeteoPoints()
 {
     resetMeteoPointMarkers();
+    clearWindVectorObjects();
 
     if (! myProject.meteoPointsLoaded || myProject.nrMeteoPoints == 0)
     {
@@ -590,6 +597,7 @@ void MainWindow::clearMeteoPoints_GUI()
 {
     resetMeteoPointMarkers();
     resetOutputPointMarkers();
+    clearWindVectorObjects();
     meteoPointsLegend->setVisible(false);
     showPointsGroup->setEnabled(false);
 }
@@ -742,6 +750,7 @@ bool MainWindow::isInsideMap(const QPoint& pos)
     else return false;
 }
 
+
 void MainWindow::resetMeteoPointMarkers()
 {
     for (int i = 0; i < meteoPointList.size(); i++)
@@ -763,6 +772,18 @@ void MainWindow::resetOutputPointMarkers()
     }
 
     outputPointList.clear();
+}
+
+
+void MainWindow::clearWindVectorObjects()
+{
+    for (int i = 0; i < windVectorList.size(); i++)
+    {
+        mapView->scene()->removeObject(windVectorList[i]);
+        delete windVectorList[i];
+    }
+
+    windVectorList.clear();
 }
 
 
@@ -831,6 +852,8 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
         meteoPointList[i]->setVisible(false);
 
+    clearWindVectorObjects();
+
     meteoPointsLegend->setVisible(true);
 
     switch(currentPointsVisualization)
@@ -880,9 +903,11 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         }
         case showCurrentVariable:
         {
+            meteoVariable currentVar = myProject.getCurrentVariable();
+
             this->ui->actionView_PointsCurrentVariable->setChecked(true);
             // quality control
-            checkData(myProject.quality, myProject.getCurrentVariable(),
+            checkData(myProject.quality, currentVar,
                       myProject.meteoPoints, myProject.nrMeteoPoints, myProject.getCrit3DCurrentTime(),
                       &(myProject.qualityInterpolationSettings), myProject.meteoSettings,
                       &(myProject.climateParameters), myProject.checkSpatialQuality);
@@ -896,9 +921,9 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             }
 
             roundColorScale(myProject.meteoPointsColorScale, 4, true);
-            setColorScale(myProject.getCurrentVariable(), myProject.meteoPointsColorScale);
+            setColorScale(currentVar, myProject.meteoPointsColorScale);
+            bool isWindVector = (currentVar == windVectorIntensity || currentVar == windVectorDirection);
 
-            Crit3DColor *myColor;
             for (int i = 0; i < myProject.nrMeteoPoints; i++)
             {
                 if (int(myProject.meteoPoints[i].currentValue) != NODATA)
@@ -906,9 +931,11 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     if (myProject.meteoPoints[i].quality == quality::accepted)
                     {
                         meteoPointList[i]->setRadius(5);
-                        myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
+                        Crit3DColor *myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
                         meteoPointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
                         meteoPointList[i]->setOpacity(1.0);
+                        if (isWindVector)
+                            drawWindVector(i);
                     }
                     else
                     {
