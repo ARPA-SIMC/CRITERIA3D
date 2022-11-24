@@ -1,4 +1,5 @@
 #include "ArrowObject.h"
+#include <algorithm>
 
 
 ArrowObject::ArrowObject(qreal dx, qreal dy,
@@ -15,7 +16,13 @@ ArrowObject::~ArrowObject()
 // pure-virtual from MapGraphicsObject
 QRectF ArrowObject::boundingRect() const
 {
-    return QRectF(0, 0, _dx, -_dy);
+    qreal step = 5;
+    qreal left = std::min(0., _dx) -step;
+    qreal width = abs(_dx) + step*2;
+    qreal top = std::max(0., _dy) +step;
+    qreal height = abs(_dy) + step*2;
+
+    return QRectF(left, -top, width, height);
 }
 
 // pure-virtual from MapGraphicsObject
@@ -29,7 +36,6 @@ void ArrowObject::paint(QPainter *painter,
     painter->setRenderHint(QPainter::Antialiasing, true);
     QPen pen = painter->pen();
     pen.setColor(_color);
-    pen.setWidthF(2);
     painter->setPen(pen);
 
     painter->drawLine(0, 0, int(_dx), int(_dy));
