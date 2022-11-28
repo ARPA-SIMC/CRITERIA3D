@@ -9,16 +9,7 @@
         #include "statistics.h"
     #endif
 
-    #ifndef VECTOR_H
-        #include <vector>
-    #endif
-
-    #ifndef _MAP_
-        #include <map>
-    #endif
-
-
-    class Crit3DColorScale;
+    #include <map>
 
     #define DEFAULT_MIN_PERCENTAGE 80
     #define DEFAULT_RAINFALL_THRESHOLD 0.2f
@@ -38,6 +29,8 @@
     #define FIELD_METEO_DATETIME "date"
     #define FIELD_METEO_VARIABLE "id_variable"
     #define FIELD_METEO_VARIABLE_NAME "variable"
+
+    class Crit3DColorScale;
 
     class Crit3DMeteoSettings
     {
