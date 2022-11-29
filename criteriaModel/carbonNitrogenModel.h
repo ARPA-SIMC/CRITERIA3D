@@ -182,5 +182,22 @@ private:
 
 };
 
+/* parametri da leggere da database da inserire in una classe settings
+ * miner_h 0.000005
+ * miner_l 0.01
+ * Vol_NH4 0.4
+ * denitrif 0.001
+ * max_AFP_denitrif 0.1
+ * Csat_denitr 10
+ * urea_hydr 0.43
+ * nitrif 0.0018
+ * limRatio_nit 8
+ * Fe 0.5
+ * Fh 0.2
+ * Q10 2.3
+ * Tbase 20
+ * Cn_h 7
+ * Kd_NH4 4
+ * */
 
 #endif // CARBONNITROGENMODEL_H
