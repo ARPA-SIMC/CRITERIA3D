@@ -635,7 +635,8 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
     {
         query.clear();
         queryString = "SELECT * FROM '" + tableName + "' WHERE date BETWEEN '"
-                    + firstDate.toString("yyyy-MM-dd") + "' AND '" + lastDate.toString("yyyy-MM-dd") + "'";
+                    + firstDate.toString("yyyy-MM-dd") + "' AND '" + lastDate.toString("yyyy-MM-dd") + "'"
+                    + " ORDER BY date";
         query = this->dbMeteo.exec(queryString);
     }
 
