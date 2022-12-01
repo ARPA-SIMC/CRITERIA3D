@@ -156,10 +156,6 @@ bool Crit1DProject::readSettings()
     addDateTimeLogFile = projectSettings->value("add_date_to_log","").toBool();
     isSaveState = projectSettings->value("save_state","").toBool();
     isRestart = projectSettings->value("restart","").toBool();
-    if (isRestart && ! isSaveState)
-    {
-        logger.writeInfo("WARNING: it is not possible to restart without save state (check file ini).");
-    }
 
     projectSettings->endGroup();
 
@@ -372,6 +368,8 @@ void Crit1DProject::checkSimulationDates()
     }
 
     logger.writeInfo("Last simulation date: " + dateStr);
+    boolStr = isSaveState? "TRUE" : "FALSE";
+    logger.writeInfo("Save state: " + boolStr);
 
     if (isSeasonalForecast)
     {
@@ -1298,11 +1296,18 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
 {
     if (!QFile::exists(dbStateToRestoreName))
     {
-        myError = "DB state: " +dbStateToRestoreName+" does not exist";
+        myError = "DB state: " + dbStateToRestoreName + " does not exist";
         return false;
     }
-    QSqlDatabase dbStateToRestore = QSqlDatabase::addDatabase("QSQLITE", "stateToRestore");
-    dbStateToRestore.setDatabaseName(dbStateToRestoreName);
+
+    QSqlDatabase dbStateToRestore;
+    if (QSqlDatabase::contains("stateToRestore"))
+        dbStateToRestore = QSqlDatabase::database("stateToRestore");
+    else
+    {
+        dbStateToRestore = QSqlDatabase::addDatabase("QSQLITE", "stateToRestore");
+        dbStateToRestore.setDatabaseName(dbStateToRestoreName);
+    }
 
     if (! dbStateToRestore.open())
     {
@@ -1375,6 +1380,12 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
                 myError = "Invalid NR_LAYER";
                 return false;
             }
+            // check values
+            if (nrLayer > 0)
+            {
+                wc = std::min(wc, myCase.soilLayers[unsigned(nrLayer)].SAT);
+                wc = std::max(wc, myCase.soilLayers[unsigned(nrLayer)].HH);
+            }
             myCase.soilLayers[unsigned(nrLayer)].waterContent = wc;
         }
         if (nrLayer == -1)
@@ -1384,6 +1395,7 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
         }
     }
 
+    dbStateToRestore.close();
     return true;
 }
 
