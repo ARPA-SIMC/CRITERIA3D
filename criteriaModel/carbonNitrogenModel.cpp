@@ -1,5 +1,6 @@
 #include "commonConstants.h"
 #include "carbonNitrogenModel.h"
+#include <math.h>
 
 
 Crit3DCarbonNitrogenProfile::Crit3DCarbonNitrogenProfile()
