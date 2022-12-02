@@ -389,8 +389,8 @@ void Crit3DSnow::computeSnowBrooksModel()
 
     /*! refreeze */
     // pag.53 (3.25) (3.26) (3.24)
-    double wFreeze = std::min((_precRain + prevLWaterContent), std::max(0., -1000. / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal)));
-    double wThaw =  std::min((_precSnow + prevIceContent + condOrEvap), std::max(0., 1000. / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal)));
+    double wFreeze = std::min((_precRain + prevLWaterContent), std::max(0., -1000. / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal * 0.5)));
+    double wThaw =  std::min((_precSnow + prevIceContent + condOrEvap), std::max(0., 1000. / (LATENT_HEAT_FUSION * WATER_DENSITY) * (prevInternalEnergy + QTotal * 0.5)));
     freezeOrMelt = wFreeze - wThaw;
 
     /*! Internal energy */
