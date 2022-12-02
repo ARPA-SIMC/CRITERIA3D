@@ -1673,7 +1673,7 @@ void MainWindow::on_actionProxy_analysis_triggered()
     return myProject.showProxyGraph();
 }
 
-void MainWindow::on_actionCompute_hour_meteoVariables_triggered()
+void MainWindow::on_actionComputeHour_meteoVariables_triggered()
 {
     if (myProject.nrMeteoPoints == 0)
     {
