@@ -10,16 +10,17 @@
     /*!
      * specific gas constant of water vapor
     */
-    #define THERMO_WATER_VAPOR 0.4615           /*!<  [kJ/(kg °K)] */
+    #define THERMO_WATER_VAPOR 0.4615           /*!<  [kJ kg-1 °K-1] */
 
     /*!
      * heat of fusion for ice at 0 °C
     */
-    #define LATENT_HEAT_FUSION  335.             /*!<  [kJ/kg] */
-    #define LATENT_HEAT_VAPORIZATION 2500.       /*!<  [kJ/kg] */
+    #define LATENT_HEAT_FUSION  335.             /*!<  [kJ kg-1] */
+    #define LATENT_HEAT_VAPORIZATION 2500.       /*!<  [kJ kg-1] */
 
-    #define SOIL_SPECIFIC_HEAT 2.1              /*!<  [KJ/kg/°C] */
-    #define DEFAULT_BULK_DENSITY 1350.          /*!<  [kg/m^3] */
+    #define SNOW_SPECIFIC_HEAT 2.1              /*!<  [KJ kg-1 °C-1] */
+    #define SOIL_SPECIFIC_HEAT 1.4              /*!<  [KJ kg-1 °C-1] wet soil */
+    #define DEFAULT_BULK_DENSITY 1350.          /*!<  [kg m-3] */
     #define SOIL_DAMPING_DEPTH 0.3              /*!<  [m] */
     #define SNOW_DAMPING_DEPTH 0.05             /*!<  [m] */
     #define SNOW_MINIMUM_HEIGHT 2.              /*!<  [mm] */
@@ -112,7 +113,7 @@
 
     double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double windSpeed, double vegetativeHeight);
     double computeInternalEnergy(double initSoilPackTemp,int bulkDensity, double initSWE);
-    double computeSurfaceEnergy(double initSnowSurfaceTemp,int bulkDensity, double initSWE, double snowSkinThickness);
+    double computeSurfaceEnergy(double initSnowSurfaceTemp, double snowSkinThickness);
 
 
 #endif // SNOW_H
