@@ -1,10 +1,13 @@
 #include "commonConstants.h"
 #include "carbonNitrogenModel.h"
+#include <math.h>
 
 
 Crit3DCarbonNitrogenProfile::Crit3DCarbonNitrogenProfile()
 {
     flagSOM = 1 ;
+    // TODO initialize
+
 }
 
 double Crit3DCarbonNitrogenProfile::convertToGramsPerM3(double myQuantity, soil::Crit3DLayer &soilLayer)
@@ -184,9 +187,7 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 
     static double adjustFactor = 0.08; // factor to extend immobilization and slow the rate
 
-    int l;
-
-    for (l=0; l<fabs(myCase.soilLayers.size()); l++)
+    for (unsigned l=0; l<myCase.soilLayers.size(); l++)
     {
         // correction functions for soil temperature and humidity
         // inserire parametri in Options.mdb
@@ -194,10 +195,10 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         double soilTemperature=25;
         double baseTemperature = 10;
         myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor = computeTemperatureCorrectionFactor(flagHeat,l,soilTemperature,baseTemperature);
-        myCase.carbonNitrogenLayers[l].waterCorrecctionFactor = computeWaterCorrectionFactor(l,myCase);
+        myCase.carbonNitrogenLayers[l].waterCorrecctionFactor = computeWaterCorrectionFactor(l, myCase);
 
         // compute layer transformation rates
-        computeLayerRates(l,myCase);
+        computeLayerRates(l, myCase);
 
         // convert to concentration
         myLitterC = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].C_litter,myCase.soilLayers[l]);
@@ -286,6 +287,7 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         humusCNetSink = humusCSource - humusCSink;
 
         // iv) CO2
+        // TODO controllare i casi come questo (is never read)
         totalCO2 = CCLCO2 + CCHCO2 + CCLDN + CCHDN;
 
 
@@ -1054,6 +1056,8 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
         //myPistonDepth = FindPistonDepth
         //SoluteFluxesPiston N_NO3, myPistonDepth, Flux_NO3GG
         //SoluteFluxesPiston N_NH4, myPistonDepth, Flux_NH4GG
+
+    // TODO usare std vector
     double *mySolute = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
     for(int l=0;l<fabs(myCase.soilLayers.size());l++)
     {
@@ -1063,6 +1067,8 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     //soluteFluxes(N_NO3, FlagWaterTableUpward, myPistonDepth, flux_NO3GG);
 
     //soluteFluxes (N_NH4_Sol, FlagWaterTableUpward, myPistonDepth, Flux_NH4GG);
+
+    // TODO cambiare in unsigned
     for(int l=0;l<fabs(myCase.soilLayers.size());l++)
     {
         myCase.carbonNitrogenLayers[l].N_NH4  = updateTotalOfPartitioned(myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed, myCase.carbonNitrogenLayers[l].N_NH4_Sol);
@@ -1119,6 +1125,7 @@ double Crit3DCarbonNitrogenProfile::CNRatio(double c,double n,int flagOrganicMat
         return 100.;
 }
 
+// TODO unsigned
 double Crit3DCarbonNitrogenProfile::computeWaterCorrectionFactor(int l,Crit1DCase &myCase)
 {
     // LEACHM
@@ -1146,7 +1153,10 @@ double Crit3DCarbonNitrogenProfile::computeWaterCorrectionFactor(int l,Crit1DCas
         return 1;
     else if (myTheta < wLow)
         return pow(((MAXVALUE(myTheta, wMin) - wMin) / (wLow - wMin)),RM);
+
+    // TODO manca valore di ritorno di default
 }
+
 
 double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(bool flagHeat, int l, double layerSoilTemperature, double baseTemperature)
 {
@@ -1164,7 +1174,7 @@ double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(bool flag
         return 1;
 }
 
-void Crit3DCarbonNitrogenProfile::computeLayerRates(int l,Crit1DCase &myCase)
+void Crit3DCarbonNitrogenProfile::computeLayerRates(unsigned l, Crit1DCase &myCase)
 {
     double totalCorrectionFactor;
     double wCorr_Denitrification;
@@ -1175,8 +1185,6 @@ void Crit3DCarbonNitrogenProfile::computeLayerRates(int l,Crit1DCase &myCase)
     // update C/N ratio (fixed for humus and biomass)
     myCase.carbonNitrogenLayers[l].ratio_CN_litter = CNRatio(myCase.carbonNitrogenLayers[l].C_litter, myCase.carbonNitrogenLayers[l].N_litter,flagSOM);
     totalCorrectionFactor = myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor * myCase.carbonNitrogenLayers[l].waterCorrecctionFactor;
-
-
 
     // carbon
 
@@ -1875,7 +1883,7 @@ void Crit3DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
         // tree crops: half of N from roots is incorporated in litter
         // N of leaves is incorporated in litter through the upeer layer with a smoothly rate during the leaf fall
 
-    double N_toLitter;
+    double N_toLitter = 0;
     // !!! verificare USR PSR
     if (myCase.crop.roots.firstRootLayer == 0 && myCase.crop.roots.lastRootLayer == 0)
         return;
@@ -1960,7 +1968,6 @@ void Crit3DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
     N_totLitter = N_cropToHarvest + N_cropToResidues + N_roots;
     C_totLitter = N_totLitter * CN_RATIO_NOTHARVESTED;
     N_totHumus = 0;
-    C_totLitter = 0;
     C_totHumus = 0;
     N_totNO3 = 0;
     N_totNH4 = 0;

@@ -6,14 +6,18 @@
 #include "soil.h"
 #include "criteria1DCase.h"
 
+class Crit3DCarbonNitrogenSettings
+{
+    // TODO inserire i valori iniziali
+    // spostare i tassi default
+};
+
 
 class Crit3DCarbonNitrogenProfile
 {
 
 public:
     Crit3DCarbonNitrogenProfile();
-
-
 
     //rates ------------------------------------------------------------------------------------------------
     // tabulated values
@@ -42,14 +46,12 @@ public:
     double actualRate_N_litterImm;       // [] rate of N immobilization in litter
     double actualRate_N_nitrification;   //
     double actualRate_N_denitrification; //
-    double actualRateUreaHydr;         //
+    double actualRateUreaHydr;           //
 
     // fix variables --------------------------------------------------------------------------------------------
     double ratio_CN_humus;               //[] rapporto C/N pool humus
     double ratio_CN_biomass;             //[] rapporto C/N pool biomass
 
-
-public:
     double litterIniC;                   //[kg ha-1] initial litter carbon
     double LITTERINI_C_DEFAULT = 1200;   //[kg ha-1] initial litter carbon (default)
     double litterIniN;                   //[kg ha-1] initial litter nitrogen
@@ -66,7 +68,6 @@ public:
     // daily values---------------------------------------------------------------------------------
     // Nitrogen in soil
     // contents
-public:
     double N_humusGG;                //[g m-2] Nitrogen within humus
     double N_litterGG;               //[g m-2] Nitrogen within litter
     double N_NH4_adsorbedGG;         //[g m-2] adsorbed Ammonium in the current day
@@ -81,6 +82,7 @@ public:
     double N_NO3_fertGG;             //[g m-2] NO3 from fertilization
     double N_NH4_fertGG;             //[g m-2] NH4 from fertilization
     double N_min_litterGG;           //[g m-2] mineralized Nitrogen from litter
+
 private:
     double N_imm_l_NH4GG;            //[g m-2] NH4 immobilized in litter
     double N_imm_l_NO3GG;            //[g m-2] NO3 immobilized in litter
@@ -158,7 +160,7 @@ private:
     double CNRatio(double c,double n,int flagOrganicMatter);
     double computeWaterCorrectionFactor(int l,Crit1DCase &myCase);
     double computeTemperatureCorrectionFactor(bool flag, int l, double layerSoilTemperature, double baseTemperature);
-    void computeLayerRates(int l,Crit1DCase &myCase);
+    void computeLayerRates(unsigned l,Crit1DCase &myCase);
     void N_Uptake(Crit1DCase &myCase);
     void N_SurfaceRunoff(Crit1DCase &myCase);
     void N_SubSurfaceRunoff();
@@ -180,5 +182,22 @@ private:
 
 };
 
+/* parametri da leggere da database da inserire in una classe settings
+ * miner_h 0.000005
+ * miner_l 0.01
+ * Vol_NH4 0.4
+ * denitrif 0.001
+ * max_AFP_denitrif 0.1
+ * Csat_denitr 10
+ * urea_hydr 0.43
+ * nitrif 0.0018
+ * limRatio_nit 8
+ * Fe 0.5
+ * Fh 0.2
+ * Q10 2.3
+ * Tbase 20
+ * Cn_h 7
+ * Kd_NH4 4
+ * */
 
 #endif // CARBONNITROGENMODEL_H
