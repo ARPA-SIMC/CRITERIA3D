@@ -172,7 +172,7 @@ void Crit3DSnowMaps::resetSnowModel(double snowSkinThickness)
 
                 _snowSurfaceTempMap->value[row][col] = float(_initSnowSurfaceTemp);
 
-                _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergy(_initSnowSurfaceTemp, surfaceBulkDensity, initSWE/1000., snowSkinThickness));
+                _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergy(_initSnowSurfaceTemp, snowSkinThickness));
 
                 _internalEnergyMap->value[row][col] = float(computeInternalEnergy(_initSoilPackTemp, surfaceBulkDensity, initSWE/1000.));
 
