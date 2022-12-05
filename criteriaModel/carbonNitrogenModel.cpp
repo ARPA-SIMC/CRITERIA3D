@@ -2,6 +2,46 @@
 #include "carbonNitrogenModel.h"
 #include <math.h>
 
+Crit3DCarbonNitrogenSettings::Crit3DCarbonNitrogenSettings()
+{
+    rate_C_humusMin = 0.000005;
+    rate_C_litterMin = 0.01;
+    rate_N_NH4_volatilization = 0.4;
+    rate_N_denitrification = 0.001;
+    max_afp_denitr = 0.1;
+    constant_sat_denitr = 10;
+    rate_urea_hydr = 0.43;
+    rate_N_nitrification = 0.0018;
+    limRatio_nitr = 8;
+    FE = 0.5;
+    FH = 0.2;
+    Q10 = 2.3;
+    baseTemperature = 20;
+
+    Kd_NH4 = 4;
+
+
+
+
+            /* parametri da leggere da database da inserire in una classe settings
+             * miner_h 0.000005
+             * miner_l 0.01
+             * Vol_NH4 0.4
+             * denitrif 0.001
+             * max_AFP_denitrif 0.1
+             * Csat_denitr 10
+             * urea_hydr 0.43
+             * nitrif 0.0018
+             * limRatio_nit 8
+             * Fe 0.5
+             * Fh 0.2
+             * Q10 2.3
+             * Tbase 20
+             * Cn_h 7
+             * Kd_NH4 4
+             * */
+}
+
 
 Crit3DCarbonNitrogenProfile::Crit3DCarbonNitrogenProfile()
 {
@@ -85,11 +125,11 @@ void Crit3DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
     {
         myTheta = myCase.soilLayers[l].waterContent / (myCase.soilLayers[l].thickness * 1000);
         N_NH4_g_dm3 = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_NH4, myCase.soilLayers[l]) / 1000;
-        N_NH4_sol_g_l = N_NH4_g_dm3 / (Kd_NH4 * myCase.soilLayers[l].horizon->bulkDensity + myTheta);
+        N_NH4_sol_g_l = N_NH4_g_dm3 / (carbonNitrogenParameter.Kd_NH4 * myCase.soilLayers[l].horizon->bulkDensity + myTheta);
 
         myCase.carbonNitrogenLayers[l].N_NH4_Sol = N_NH4_sol_g_l * myCase.soilLayers[l].thickness * myTheta * 1000;
 
-        N_NH4_ads_g_kg = Kd_NH4 * N_NH4_sol_g_l;
+        N_NH4_ads_g_kg = carbonNitrogenParameter.Kd_NH4 * N_NH4_sol_g_l;
         N_NH4_ads_g_m3 = N_NH4_ads_g_kg * myCase.soilLayers[l].horizon->bulkDensity * 1000;
         myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed = N_NH4_ads_g_m3 * myCase.soilLayers[l].thickness;
         N_NH4_adsorbedGG += myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed;
@@ -299,13 +339,13 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         if ((myCase.soilLayers[l].depth + myCase.soilLayers[l].thickness) < 0.05)
         {
             myN_NH4_sol = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_NH4_Sol,myCase.soilLayers[l]);
-            CNHGAS =myN_NH4_sol * (MINVALUE(0.5,  (1 - exp(-rate_N_NH4_volatilization))));
+            CNHGAS =myN_NH4_sol * (MINVALUE(0.5,  (1 - exp(-carbonNitrogenParameter.rate_N_NH4_volatilization))));
         }
         else
             CNHGAS = 0;
 
         // iii) nitrification
-        CNHNO = (MAXVALUE(0, myN_NH4 - myN_NO3 / limRatio_nitr)) * (1 - exp(-actualRate_N_nitrification));
+        CNHNO = (MAXVALUE(0, myN_NH4 - myN_NO3 / carbonNitrogenParameter.limRatio_nitr)) * (1 - exp(-actualRate_N_nitrification));
 
         // iv) mineralization
         CHNH = MAXVALUE(myHumusN, 0) * actualRate_C_humusMin;
@@ -1169,7 +1209,7 @@ double Crit3DCarbonNitrogenProfile::computeTemperatureCorrectionFactor(bool flag
     //Tbase [°C] base temperature
 
     if (flagHeat)
-        return pow(Q10, ((layerSoilTemperature - baseTemperature) / 10.));
+        return pow(carbonNitrogenParameter.Q10, ((layerSoilTemperature - baseTemperature) / 10.));
     else
         return 1;
 }
@@ -1189,41 +1229,41 @@ void Crit3DCarbonNitrogenProfile::computeLayerRates(unsigned l, Crit1DCase &myCa
     // carbon
 
     // humus mineralization
-    actualRate_C_humusMin = rate_C_humusMin * totalCorrectionFactor;
+    actualRate_C_humusMin = carbonNitrogenParameter.rate_C_humusMin * totalCorrectionFactor;
 
     // litter to humus
-    actualRate_C_litterToHumus = rate_C_litterMin * totalCorrectionFactor * (FE * FH);
+    actualRate_C_litterToHumus = carbonNitrogenParameter.rate_C_litterMin * totalCorrectionFactor * (carbonNitrogenParameter.FE * carbonNitrogenParameter.FH);
 
     // litter to CO2
-    actualRate_C_litterToCO2 = rate_C_litterMin * totalCorrectionFactor * (1 - FE);
+    actualRate_C_litterToCO2 = carbonNitrogenParameter.rate_C_litterMin * totalCorrectionFactor * (1 - carbonNitrogenParameter.FE);
 
     // litter to biomass
-    actualRate_C_litterToBiomass = rate_C_litterMin * totalCorrectionFactor * FE * (1 - FH);
+    actualRate_C_litterToBiomass = carbonNitrogenParameter.rate_C_litterMin * totalCorrectionFactor * carbonNitrogenParameter.FE * (1 - carbonNitrogenParameter.FH);
 
     //nitrogen
 
     // litter mineralization/immobilization
-    actualRate_N_litterMin = MAXVALUE(0, 1 / myCase.carbonNitrogenLayers[l].ratio_CN_litter - FE / ratio_CN_biomass);
+    actualRate_N_litterMin = MAXVALUE(0, 1 / myCase.carbonNitrogenLayers[l].ratio_CN_litter - carbonNitrogenParameter.FE / ratio_CN_biomass);
     if (myCase.carbonNitrogenLayers[l].N_litter > 0)
-        actualRate_N_litterImm = -MINVALUE(0, 1 / myCase.carbonNitrogenLayers[l].ratio_CN_litter - FE / ratio_CN_biomass);
+        actualRate_N_litterImm = -MINVALUE(0, 1 / myCase.carbonNitrogenLayers[l].ratio_CN_litter - carbonNitrogenParameter.FE / ratio_CN_biomass);
     else
         actualRate_N_litterImm = 0;
 
     //nitrification
-    actualRate_N_nitrification = rate_N_nitrification * totalCorrectionFactor;
+    actualRate_N_nitrification = carbonNitrogenParameter.rate_N_nitrification * totalCorrectionFactor;
 
     // denitrification
     thetaSAT = myCase.soilLayers[l].SAT  / (myCase.soilLayers[l].thickness * 1000);
     theta = myCase.soilLayers[l].waterContent / (myCase.soilLayers[l].thickness * 1000);
-    wCorr_Denitrification = pow(MAXVALUE(0, (theta - (1 - max_afp_denitr) * thetaSAT)) / (thetaSAT - (1 - max_afp_denitr) * thetaSAT), 2);
+    wCorr_Denitrification = pow(MAXVALUE(0, (theta - (1 - carbonNitrogenParameter.max_afp_denitr) * thetaSAT)) / (thetaSAT - (1 - carbonNitrogenParameter.max_afp_denitr) * thetaSAT), 2);
     conc_N_NO3 =convertToGramsPerLiter(myCase.carbonNitrogenLayers[l].N_NO3,myCase.soilLayers[l]) * 1000;
 
-    actualRate_N_denitrification = rate_N_denitrification * myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor * wCorr_Denitrification
-        * conc_N_NO3 / (conc_N_NO3 + constant_sat_denitr);
+    actualRate_N_denitrification = carbonNitrogenParameter.rate_N_denitrification * myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor * wCorr_Denitrification
+        * conc_N_NO3 / (conc_N_NO3 + carbonNitrogenParameter.constant_sat_denitr);
 
     // urea hydrolysis
 
-    actualRateUreaHydr = rate_urea_hydr * totalCorrectionFactor;
+    actualRateUreaHydr = carbonNitrogenParameter.rate_urea_hydr * totalCorrectionFactor;
 
 }
 

@@ -10,17 +10,13 @@ class Crit3DCarbonNitrogenSettings
 {
     // TODO inserire i valori iniziali
     // spostare i tassi default
-};
-
-
-class Crit3DCarbonNitrogenProfile
-{
-
-public:
-    Crit3DCarbonNitrogenProfile();
 
     //rates ------------------------------------------------------------------------------------------------
     // tabulated values
+              // [°C] temperature rate correction: base temperature
+public:
+    Crit3DCarbonNitrogenSettings();
+
     double rate_C_litterMin;             //[d-1] litter mineralization rate
     double rate_C_humusMin;              //[d-1] humus mineralization rate
     double rate_N_NH4_volatilization;    //[d-1] ammonium volatilization rate
@@ -34,8 +30,37 @@ public:
     double FE;                           // [] synthesis efficiency factor
     double FH;                           // [] humification factor
     double Q10;                          //[] temperature rate correction: increase factor every 10 °C
-    double baseTemperature;              // [°C] temperature rate correction: base temperature
+    double baseTemperature;
 
+    /* parametri da leggere da database da inserire in una classe settings
+     * miner_h 0.000005
+     * miner_l 0.01
+     * Vol_NH4 0.4
+     * denitrif 0.001
+     * max_AFP_denitrif 0.1
+     * Csat_denitr 10
+     * urea_hydr 0.43
+     * nitrif 0.0018
+     * limRatio_nit 8
+     * Fe 0.5
+     * Fh 0.2
+     * Q10 2.3
+     * Tbase 20
+     * Cn_h 7
+     * Kd_NH4 4
+     * */
+};
+
+
+class Crit3DCarbonNitrogenProfile
+{
+
+public:
+    Crit3DCarbonNitrogenProfile();
+
+    // rates
+
+    Crit3DCarbonNitrogenSettings carbonNitrogenParameter;
     // values corrected for Temperature and RH
 
     double actualRate_C_humusMin;        //
@@ -107,6 +132,8 @@ public:
 private:
     double maxRate_LAI_Ndemand;      //[g m-2 d-1 LAI-1] maximum demand for unit LAI increment
     double CN_RATIO_NOTHARVESTED=30; //[] C/N ratio in not harvested crop
+
+
 public:
     double N_cropToHarvest;          //[g m-2] Nitrogen absorbed in harvest
     double N_cropToResidues;         //[g m-2] Nitrogen absorbed in crop residues
@@ -115,6 +142,7 @@ private:
     double N_ratioHarvested;         //[] ratio of harvested crop
     double N_ratioResidues;          //[] ratio of residues not harvested left above the soil
     double N_ratioRoots;             //[] ratio of living roots left at harvest
+
 public:
     double N_potentialDemandCum;     //[g m-2] cumulated potential Nitrogen at current date
     double N_dailyDemand;            //[g m-2] potential Nitrogen at current date
@@ -182,22 +210,6 @@ private:
 
 };
 
-/* parametri da leggere da database da inserire in una classe settings
- * miner_h 0.000005
- * miner_l 0.01
- * Vol_NH4 0.4
- * denitrif 0.001
- * max_AFP_denitrif 0.1
- * Csat_denitr 10
- * urea_hydr 0.43
- * nitrif 0.0018
- * limRatio_nit 8
- * Fe 0.5
- * Fh 0.2
- * Q10 2.3
- * Tbase 20
- * Cn_h 7
- * Kd_NH4 4
- * */
+
 
 #endif // CARBONNITROGENMODEL_H
