@@ -28,6 +28,7 @@
 #include "transmissivity.h"
 #include "radiationSettings.h"
 #include "solarRadiation.h"
+#include "basicMath.h"
 #include <math.h>
 
 
@@ -67,7 +68,7 @@ bool computeTransmissivity(Crit3DRadiationSettings* mySettings, Crit3DMeteoPoint
         float myRad = meteoPoints[i].getMeteoPointValueH(myTime.date, myTime.getHour(),
                                                          myTime.getMinutes(), globalIrradiance);
 
-        if (myRad != NODATA)
+        if (!isEqual(myRad, NODATA))
         {
             myIndex = 0;
             float* obsRadVector = new float[unsigned(intervalWidth)];
@@ -90,7 +91,7 @@ bool computeTransmissivity(Crit3DRadiationSettings* mySettings, Crit3DMeteoPoint
             meteoPoints[i].setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(),
                                                atmTransmissivity, transmissivity);
 
-            if (transmissivity != NODATA) myCounter++;
+            if (!isEqual(transmissivity, NODATA)) myCounter++;
             delete [] obsRadVector;
         }
     }
@@ -106,52 +107,73 @@ bool computeTransmissivityFromTRange(Crit3DMeteoPoint* meteoPoints, int nrMeteoP
     int hourlyFraction = meteoPoints[0].hourlyFraction;
     int deltaSeconds = 3600 / hourlyFraction;
 
-    int counter = 0;
-    Crit3DTime timeTmp;
-    float temp, tmin, tmax;
-    float transmissivity;
-    int i;
+    Crit3DDate currentDate = currentTime.date;
+    Crit3DTime tmpTime;
+    tmpTime.date = currentDate;
 
-    for (i = 0; i < nrMeteoPoints; i++)
+    int counterValidPoints = 0;
+
+    for (int i = 0; i < nrMeteoPoints; i++)
     {
-        tmin = NODATA;
-        tmax = NODATA;
-        int mySeconds = deltaSeconds;
+        bool isValidTRange = false;
 
-        timeTmp.date = currentTime.date;
-        timeTmp.time = 0;
+        // check daily temperatures
+        float tmin = meteoPoints[i].getMeteoPointValueD(currentDate, dailyAirTemperatureMin);
+        float tmax = meteoPoints[i].getMeteoPointValueD(currentDate, dailyAirTemperatureMax);
 
-        while (mySeconds < DAY_SECONDS)
+        if ((!isEqual(tmin, NODATA)) && (!isEqual(tmax, NODATA)))
         {
-            timeTmp = timeTmp.addSeconds(deltaSeconds);
-            temp = meteoPoints[i].getMeteoPointValueH(timeTmp.date, timeTmp.getHour(), timeTmp.getMinutes(), airTemperature);
-            if (temp != NODATA)
+            isValidTRange = true;
+        }
+        else
+        {
+            // check if hourly temperatures exist
+            float hourlyTemp = meteoPoints[i].getMeteoPointValueH(currentDate, currentTime.getHour(), currentTime.getMinutes(), airTemperature);
+            if (! isEqual(hourlyTemp, NODATA))
             {
-                if (tmin == NODATA || temp < tmin)
-                    tmin = temp;
-                if (tmax == NODATA || temp > tmax)
-                    tmax = temp;
+                int nrValidHourlyData = 0;
+                int mySeconds = deltaSeconds;
+                tmpTime.time = 0;
+
+                while (mySeconds < DAY_SECONDS)
+                {
+                    tmpTime = tmpTime.addSeconds(deltaSeconds);
+                    hourlyTemp = meteoPoints[i].getMeteoPointValueH(currentDate, tmpTime.getHour(), tmpTime.getMinutes(), airTemperature);
+                    if (! isEqual(hourlyTemp, NODATA))
+                    {
+                        if (isEqual(tmin, NODATA) || hourlyTemp < tmin)
+                            tmin = hourlyTemp;
+                        if (isEqual(tmax, NODATA) || hourlyTemp > tmax)
+                            tmax = hourlyTemp;
+                        nrValidHourlyData++;
+                    }
+                    mySeconds += deltaSeconds;
+                }
+                // check if the number of data is enough
+                if (nrValidHourlyData > (20 * hourlyFraction))
+                {
+                    isValidTRange = true;
+                }
             }
-            mySeconds += deltaSeconds;
         }
 
-        if (tmin != NODATA && tmax != NODATA)
+        if (isValidTRange)
         {
-            transmissivity = computePointTransmissivitySamani(tmin, tmax, float(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT));
-            if (transmissivity != NODATA)
+            float transmissivity = computePointTransmissivitySamani(tmin, tmax, float(TRANSMISSIVITY_SAMANI_COEFF_DEFAULT));
+            if (!isEqual(transmissivity, NODATA))
             {
-                // save transmissivity data in memory (all daily values)
+                // save transmissivity data (the same for all hourly values)
                 int nrDailyValues = hourlyFraction * 24;
                 for (int h = 1; h <= nrDailyValues; h++)
-                    meteoPoints[i].setMeteoPointValueH(currentTime.date, h, 0, atmTransmissivity, transmissivity);
+                    meteoPoints[i].setMeteoPointValueH(currentDate, h, 0, atmTransmissivity, transmissivity);
 
-                //midnight
-                meteoPoints[i].setMeteoPointValueH(currentTime.date.addDays(1),
+                // midnight
+                meteoPoints[i].setMeteoPointValueH(currentDate.addDays(1),
                                        0, 0, atmTransmissivity, transmissivity);
-                counter++;
+                counterValidPoints++;
             }
         }
     }
 
-    return (counter > 0);
+    return (counterValidPoints > 0);
 }
