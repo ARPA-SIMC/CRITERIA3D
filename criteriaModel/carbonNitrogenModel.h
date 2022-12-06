@@ -195,11 +195,11 @@ private:
     void N_Uptake_Potential(Crit1DCase &myCase);
     void N_Uptake_Max();
     void N_Reset();
-    double findPistonDepth();
+    double findPistonDepth(Crit1DCase &myCase);
     void soluteFluxesPiston(double* mySolute, double PistonDepth,double* leached);
     void soluteFluxesPiston_old(double* mySolute, double* leached, double* CoeffPiston);
-    void soluteFluxes(double* mySolute,bool flagRisalita, double pistonDepth,double* leached,Crit1DCase &myCase);
-    void leachingWaterTable(double* mySolute, double* leached, Crit1DCase &myCase);
+    void soluteFluxes(std::vector<double> &mySolute, bool flagRisalita, double pistonDepth, double* leached, Crit1DCase &myCase);
+    void leachingWaterTable(std::vector<double> &mySolute, double* leached, Crit1DCase &myCase);
     void NH4_Balance(Crit1DCase &myCase);
     void NO3_Balance(Crit1DCase &myCase);
     void N_initializeCrop(bool noReset);
