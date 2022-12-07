@@ -17,35 +17,18 @@ Crit3DCarbonNitrogenSettings::Crit3DCarbonNitrogenSettings()
     FH = 0.2;
     Q10 = 2.3;
     baseTemperature = 20;
-
     Kd_NH4 = 4;
-
-
-
-
-            /* parametri da leggere da database da inserire in una classe settings
-             * miner_h 0.000005
-             * miner_l 0.01
-             * Vol_NH4 0.4
-             * denitrif 0.001
-             * max_AFP_denitrif 0.1
-             * Csat_denitr 10
-             * urea_hydr 0.43
-             * nitrif 0.0018
-             * limRatio_nit 8
-             * Fe 0.5
-             * Fh 0.2
-             * Q10 2.3
-             * Tbase 20
-             * Cn_h 7
-             * Kd_NH4 4
-             * */
+    CN_RATIO_NOTHARVESTED = 30;
+    LITTERINI_C_DEFAULT = 1200;   //[kg ha-1] initial litter carbon (default)
+    LITTERINI_N_DEFAULT = 40;     //[kg ha-1] initial litter nitrogen (default)
+    LITTERINI_PROF_DEFAULT = 30;  //[cm] initial litter depth (default)
 }
 
 
 Crit3DCarbonNitrogenProfile::Crit3DCarbonNitrogenProfile()
 {
-    flagSOM = 1 ;
+    flagSOM = 1;
+
     // TODO initialize
 
 }
@@ -310,7 +293,7 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         }
         litterCSink = CCLH + CCLCO2 + CCLDN;
         litterCSource = 0;
-        litterCRecycle = CCLI;
+        litterCRecycle = CCLI; // verificato che anche nell'originale la variabile non è usata
         litterCNetSink = -litterCSink + litterCSource;
 
         // iii) humus transformations
@@ -328,7 +311,7 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 
         // iv) CO2
         // TODO controllare i casi come questo (is never read)
-        totalCO2 = CCLCO2 + CCHCO2 + CCLDN + CCHDN;
+        totalCO2 = CCLCO2 + CCHCO2 + CCLDN + CCHDN; // verificato che anche nell'originale la variabile non è usata
 
 
     // NITROGEN TRANSFORMATIONS
@@ -1097,7 +1080,6 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
         //SoluteFluxesPiston N_NO3, myPistonDepth, Flux_NO3GG
         //SoluteFluxesPiston N_NH4, myPistonDepth, Flux_NH4GG
 
-    // TODO usare std vector
 
     std::vector<double> mySolute;
     mySolute.resize(myCase.soilLayers.size());
@@ -1113,7 +1095,6 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     }
     soluteFluxes(mySolute, flagWaterTableUpward, myPistonDepth, &flux_NH4GG, myCase);
 
-    // TODO cambiare in unsigned
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
     {
         myCase.carbonNitrogenLayers[l].N_NH4  = updateTotalOfPartitioned(myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed, myCase.carbonNitrogenLayers[l].N_NH4_Sol);
@@ -1170,7 +1151,7 @@ double Crit3DCarbonNitrogenProfile::CNRatio(double c,double n,int flagOrganicMat
         return 100.;
 }
 
-// TODO unsigned
+
 double Crit3DCarbonNitrogenProfile::computeWaterCorrectionFactor(int l,Crit1DCase &myCase)
 {
     // LEACHM
@@ -1194,12 +1175,10 @@ double Crit3DCarbonNitrogenProfile::computeWaterCorrectionFactor(int l,Crit1DCas
 
     if (myTheta > wHigh)
         return pow(SCORR + (1 - SCORR) * ((myThetaSAT - myTheta) / (myThetaSAT - wHigh)),RM);
-    else if (myTheta <= wHigh && myTheta >= wLow)
-        return 1;
     else if (myTheta < wLow)
         return pow(((MAXVALUE(myTheta, wMin) - wMin) / (wLow - wMin)),RM);
-
-    // TODO manca valore di ritorno di default
+    else
+        return 1;
 }
 
 
@@ -1280,37 +1259,30 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
     // 02.11.26.MVS
     // 01.01.10.GD
     double N_max_transp;          // potential N uptake in transpiration stream
-    double* N_NO3_up_max = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
-    double* N_NH4_up_max = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
-    //int l;
 
+    //int l;
     if (myCase.crop.LAI <= 0)
     {
-        free(N_NO3_up_max);
-        free(N_NH4_up_max);
         return;
     }
     if(myCase.crop.degreeDays <= myCase.crop.degreeDaysEmergence)
     {
-        free(N_NO3_up_max);
-        free(N_NH4_up_max);
         return;
     }
+
+
     // uptake da germinazione a raccolta
-    /*
-    if (GGAttuale <= GGGermination)
+
+    if (myCase.crop.degreeDays <= myCase.crop.degreeDaysEmergence)
     {
         return;
     }
-    */
 
     // controlla se ho esaurito il totale assimilabile
     //myCase.carbonNitrogenLayers[0].
 
     if (N_potentialDemandCum >= N_uptakable)
     {
-        free(N_NO3_up_max);
-        free(N_NH4_up_max);
         return;
     }
 
@@ -1319,11 +1291,12 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
 
     if (N_dailyDemand == 0)
     {
-        free(N_NO3_up_max);
-        free(N_NH4_up_max);
         return;
     }
-
+    std::vector<double> N_NO3_up_max;
+    std::vector<double> N_NH4_up_max;
+    N_NO3_up_max.resize(myCase.soilLayers.size());
+    N_NH4_up_max.resize(myCase.soilLayers.size());
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
     {
         N_NO3_up_max[l] = 0;
@@ -1337,8 +1310,8 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
 
     if ((myCase.output.dailyTranspiration == 0) || (myCase.crop.getMaxTranspiration(myCase.output.dailyEt0) == 0))
     {
-        free(N_NO3_up_max);
-        free(N_NH4_up_max);
+        N_NO3_up_max.clear();
+        N_NH4_up_max.clear();
         return;
     }
 
@@ -1371,8 +1344,8 @@ void Crit3DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
             myCase.carbonNitrogenLayers[l].N_NH4_uptake = 0; //'min(N_NH4_Sol[L], (N_NH4_up_max[L] / N_max_transp) * N_UptakeMax)
         }
     }
-    free(N_NO3_up_max);
-    free(N_NH4_up_max);
+    N_NO3_up_max.clear();
+    N_NH4_up_max.clear();
 }
 
 void Crit3DCarbonNitrogenProfile::N_SurfaceRunoff(Crit1DCase &myCase)
@@ -1780,7 +1753,7 @@ void Crit3DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
                     myFreeSolute = mySolute[l] * coeffMobile;
                     fSolute[l] = MINVALUE(mySolute[l], myFreeSolute / myCase.prevWaterContent[l] * H2O_step_flux);
                 }
-                else if (flagRisalita && (myCase.soilLayers[l].flux < 0) && (l < fabs(myCase.soilLayers.size())))
+                else if (flagRisalita && (myCase.soilLayers[l].flux < 0) && (l < myCase.soilLayers.size()))
                 {
                     //myFreeSolute = mySolute[L + 1] * CoeffMobile;
                     myFreeSolute = mySolute[l+1];
@@ -1820,7 +1793,7 @@ void Crit3DCarbonNitrogenProfile::leachingWaterTable(std::vector<double> &mySolu
 
     if ((myCase.output.dailyWaterTable != NODATA) && (myCase.output.dailyWaterTable > 0) && (myCase.unit.useWaterTableData == 1));// da chiarire && (flagWaterTableCase == 1))
     {
-        for (int l = 0; l< fabs(myCase.soilLayers.size()); l++)
+        for (unsigned int l = 0; l< myCase.soilLayers.size(); l++)
         {
             double maxCapillaryRise = myCase.soilLayers[l].critical - myCase.soilLayers[l].waterContent;
             if (myCase.soilLayers[l].depth > myCase.output.dailyWaterTable)
@@ -1846,7 +1819,7 @@ void Crit3DCarbonNitrogenProfile::NH4_Balance(Crit1DCase &myCase)
     profileNH4PreviousDay = profileNH4;
     // ProfiloNH4 = ProfileSum(N_NH4())
     profileNH4 = 0;
-    for (int i=0;i<fabs(myCase.soilLayers.size());i++)
+    for (unsigned int i=0;i<myCase.soilLayers.size();i++)
     {
         profileNH4 += myCase.carbonNitrogenLayers[0].N_NH4;
     }
@@ -1869,7 +1842,7 @@ void Crit3DCarbonNitrogenProfile::NO3_Balance(Crit1DCase &myCase)
     profileNO3PreviousDay = profileNO3;
     //profileNO3 = ProfileSum(N_NO3());
     profileNO3 = 0;
-    for (int i=0;i<fabs(myCase.soilLayers.size());i++)
+    for (unsigned int i=0;i<myCase.soilLayers.size();i++)
     {
         profileNO3 += myCase.carbonNitrogenLayers[i].N_NO3;
     }
@@ -1953,7 +1926,7 @@ void Crit3DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
             N_toLitter = myCase.crop.roots.rootDensity[l] * N_roots / 2;
 
         myCase.carbonNitrogenLayers[l].N_litter += N_toLitter;
-        myCase.carbonNitrogenLayers[l].C_litter += CN_RATIO_NOTHARVESTED * N_toLitter;
+        myCase.carbonNitrogenLayers[l].C_litter += carbonNitrogenParameter.CN_RATIO_NOTHARVESTED * N_toLitter;
     }
 
     if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL)
@@ -2004,7 +1977,7 @@ void Crit3DCarbonNitrogenProfile::updateNCrop(Crit3DCrop crop) // this function 
 
 void Crit3DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function must be public
 {
-    int l;
+    unsigned int l=0;
     double depthRatio;
     // double N_toLitter; // sembra da togliere chiedere a Gabri
     double N_totLitter;
@@ -2017,13 +1990,11 @@ void Crit3DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
     double tmp;
 
     N_totLitter = N_cropToHarvest + N_cropToResidues + N_roots;
-    C_totLitter = N_totLitter * CN_RATIO_NOTHARVESTED;
+    C_totLitter = N_totLitter * carbonNitrogenParameter.CN_RATIO_NOTHARVESTED;
     N_totHumus = 0;
     C_totHumus = 0;
     N_totNO3 = 0;
     N_totNH4 = 0;
-
-    l = 0;
 
     do{
 
