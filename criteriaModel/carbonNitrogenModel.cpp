@@ -22,6 +22,9 @@ Crit3DCarbonNitrogenSettings::Crit3DCarbonNitrogenSettings()
     LITTERINI_C_DEFAULT = 1200;   //[kg ha-1] initial litter carbon (default)
     LITTERINI_N_DEFAULT = 40;     //[kg ha-1] initial litter nitrogen (default)
     LITTERINI_PROF_DEFAULT = 30;  //[cm] initial litter depth (default)
+    ratioBiomassCN = 7;
+    ratioHumusCN = 7;
+    ratioLitterCN = 7;
 }
 
 
@@ -53,26 +56,26 @@ double Crit3DCarbonNitrogenProfile::convertToGramsPerKg(double myQuantity, soil:
     return (convertToGramsPerM3(myQuantity, soilLayer) / 1000) / soilLayer.horizon->bulkDensity;
 }
 
-/*
 
-void humusIni()
+
+void Crit3DCarbonNitrogenProfile::humusIni(Crit1DCase &myCase)
 {
     //'2008.09 GA
     //'GA 2007.12 perché C calcolato da (CN/CN+1) e non moltiplicando per 0.58 come solito?
     //'computes initial humus carbon and nitrogen for a layer L
     //'version 1.0, 2004.08.09.VM
 
-    int L;
+
     // MVA                '[kg dm-3 = 10^6 g m-3]
 
-    for (L = 1; L<nrLayers;L++)
+    for (unsigned int l = 0; l<myCase.soilLayers.size();l++)
     {
-        C_humus[L] = suolo[L].MVA * 1000000 * (suolo[L].SostanzaO / 100) * 0.58 * suolo[L].spess / 100;
-        N_humus[L] = C_humus[L] / CNratio_humus;
+        myCase.carbonNitrogenLayers[l].C_humus = myCase.soilLayers[l].horizon->bulkDensity * 1000000 * (myCase.soilLayers[l].horizon->organicMatter / 100) * 0.58 * myCase.soilLayers[l].thickness; // tolto il 100 perche gia in metri
+        myCase.carbonNitrogenLayers[l].N_humus = myCase.carbonNitrogenLayers[l].C_humus / carbonNitrogenParameter.ratioHumusCN;
     }
 }
 
-
+/*
 void updateTotalOfPartitioned(double* mySoluteSum, double* mySoluteAds,double* mySoluteSol)
 {
     int L;
@@ -119,30 +122,29 @@ void Crit3DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
     }
 }
 
-/*
-void litterIni()
+
+void Crit3DCarbonNitrogenProfile::litterIni(Crit1DCase &myCase)
 {
     //2008.10 GA inizializzazione indipendente da humus ma da input utente
     //computes initial litter carbon and nitrogen for a layer L
     //version 1.0, 2004.08.16.VM
 
-    int L;
-    double LayerRatio;
+    double layerRatio;
     double myDepth;
 
-    myDepth = maxValue(litterIniProf, 6);
+    myDepth = MAXVALUE(carbonNitrogenParameter.LITTERINI_PROF_DEFAULT, 6);
 
-    for (L=0; L<nrLayers ;L++)
+    for (unsigned int l=0; l<myCase.soilLayers.size() ;l++)
     {
-        if (suolo[L].prof <= myDepth)
+        if (myCase.soilLayers[l].depth <= myDepth)
         {
-            LayerRatio = (suolo[L].spess / myDepth);
-            C_litter[L] = LitterIniC * LayerRatio / 10;          //from kg ha-1 to g m-2
-            N_litter[L] = LitterIniN * LayerRatio / 10;          //from kg ha-1 to g m-2
+            layerRatio = (myCase.soilLayers[l].thickness / myDepth);
+            myCase.carbonNitrogenLayers[l].C_litter = carbonNitrogenParameter.LITTERINI_C_DEFAULT * layerRatio / 10;          //from kg ha-1 to g m-2
+            myCase.carbonNitrogenLayers[l].N_litter = carbonNitrogenParameter.LITTERINI_N_DEFAULT * layerRatio / 10;          //from kg ha-1 to g m-2
         }
     }
 }
-*/
+
 void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 {
     // 2013.06 GA
@@ -464,47 +466,28 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 
 }
 
-/*
+
 // da valutare
-void N_Initialize()
-'****************************************************************
-'Scopo: lettura da tbAzoto di coefficienti relativi al ciclo di N
-'****************************************************************
-'04.08.04.VM eliminazione dei vettori di costanti
-'00.07.19.VM.MVS nuova sub chiamata da SUB_INI_Profilo per le variabili dell'azoto
-'****************************************************************
+void Crit3DCarbonNitrogenProfile::N_Initialize()
+{
+    //****************************************************************
+    //Scopo: lettura da tbAzoto di coefficienti relativi al ciclo di N
+    //****************************************************************
+    //04.08.04.VM eliminazione dei vettori di costanti
+    //00.07.19.VM.MVS nuova sub chiamata da SUB_INI_Profilo per le variabili dell'azoto
+    //****************************************************************
 
-    tbAzoto.MoveFirst
-
-    Rate_C_HumusMin = tbAzoto("miner_rate_humus")
-    Rate_C_LitterMin = tbAzoto("miner_rate_litter")
-    Rate_N_NH4_Volatilization = tbAzoto("volatNH4_rate")
-    Rate_N_Denitrification = tbAzoto("denitr_rate")
-    Max_afp_denitr = tbAzoto("denitr_max_AFPF")
-    Csat_denitr = tbAzoto("denitr_Csat")
-    Rate_Urea_Hydr = tbAzoto("hydr_urea")
-    Rate_N_Nitrification = tbAzoto("nitr_rate")
-    limRatio_nitr = tbAzoto("nitr_limRatio")
-    FE = tbAzoto("Fe")
-    FH = tbAzoto("Fh")
-    CNratio_humus = tbAzoto("CNh")
-    Kd_NH4 = tbAzoto("Kd_NH4")
-    Q10 = tbAzoto("Q10")
-    Tbase = tbAzoto("TBase")
-
-    CNratio_biomass = CNratio_humus
-    FlagSO = 1
-
-    '2008.02 GA da inserire in database
-    Nitrogen.N_deficit_max_days = 3
-    ReDim Nitrogen.N_deficit_daily(0)
-    N_CropToHarvest = 0
-    N_CropToResidues = 0
-    N_Roots = 0
-
-End Sub
-
-
+        // 2008.02 GA da inserire in database
+        /*Nitrogen.N_deficit_max_days = 3
+        ReDim Nitrogen.N_deficit_daily(0)
+        N_CropToHarvest = 0
+        N_CropToResidues = 0
+        N_Roots = 0*/
+        N_cropToHarvest = 0;
+        N_cropToResidues = 0;
+        N_roots = 0;
+}
+/*
 void N_Fertilization()
 {
     //07.12.17 GA cambiata dichiarazione da Integer a Single per concentrazioni (per valori frazionari)
@@ -1850,8 +1833,8 @@ void Crit3DCarbonNitrogenProfile::NO3_Balance(Crit1DCase &myCase)
     balanceFinalNO3 += N_denitrGG - N_nitrifGG + N_NO3_uptakeGG;
     balanceFinalNO3 += N_NO3_runoff0GG + N_NO3_runoffGG - precN_NO3GG + flux_NO3GG;
 }
-/*
-void N_initializeCrop(bool noReset)
+
+void Crit3DCarbonNitrogenProfile::N_initializeCrop(bool noReset,Crit1DCase &myCase)
 {
     N_cropToHarvest = 0;
     N_cropToResidues = 0;
@@ -1859,14 +1842,17 @@ void N_initializeCrop(bool noReset)
     if (!noReset)
         N_roots = 0;
     // da leggere da database
-    N_uptakable = tbColture("Nasportabile") / 10;   //      da [kg ha-1] a [g m-2]
+    //N_uptakable = tbColture("Nasportabile") / 10;   //      da [kg ha-1] a [g m-2]
+    N_uptakable = 20; // TODO da fare lettura chiedere a Fausto
+
     N_uptakeDeficit = 0;
     N_uptakeMax = 0;
-    N_potentialDemandCumulated = 0;
-    ReDim N_deficit_daily(Nitrogen.N_deficit_max_days) // operazione da capire come gestire
+    N_potentialDemandCum = 0;
+    // ReDim N_deficit_daily(Nitrogen.N_deficit_max_days) // TODO operazione da capire come gestire
 
     //Select Case TipoColtura
-        if (TipoColtura == "arborea" || TipoColtura == "arborea_inerbita" || TipoColtura == "fruit_tree" || TipoColtura == "fruit_tree_with_grass")
+
+        if (myCase.crop.type == FRUIT_TREE)
         {
             // 2001 Rufat Dejong Fig. 4 e Tagliavini
             N_ratioHarvested = 0.4;      // fruits, pruning wood
@@ -1875,7 +1861,7 @@ void N_initializeCrop(bool noReset)
 
 
         }
-        else if (TipoColtura == "erbacea_poliennale" || TipoColtura == "herbaceous_perennial" || TipoColtura == "prativa" || TipoColtura == "grass" || TipoColtura == "incolto" || TipoColtura ==  "fallow" || TipoColtura == "prativa_primoanno" || TipoColtura == "grass_firstyear")
+        else if (myCase.crop.type == HERBACEOUS_PERENNIAL || myCase.crop.type ==  GRASS || myCase.crop.type ==  FALLOW)
         {
             N_ratioHarvested = 0.9;
             N_ratioResidues = 0;
@@ -1883,7 +1869,7 @@ void N_initializeCrop(bool noReset)
         }
         else
         {
-            // colture annuali
+            // annual crops
             N_ratioHarvested = 0.9;
             N_ratioResidues = 0;
             N_ratioRoots = 0.1;
@@ -1894,11 +1880,11 @@ void N_initializeCrop(bool noReset)
     //2013.10 GA
     //scambio mail con Ass.Agr.:
     //
-    maxRate_LAI_Ndemand = (N_uptakable - N_roots) / LAIMAX ;
+    maxRate_LAI_Ndemand = (N_uptakable - N_roots) / myCase.crop.LAImax ;
 
 }
 
-*/
+
 void Crit3DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public function
 {
         // 2013.06 GA translated in C++ by AV 2022.06
@@ -1986,7 +1972,7 @@ void Crit3DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
     double C_totHumus;
     double N_totNO3;
     double N_totNH4;
-    int myLastLayer;
+    unsigned int myLastLayer;
     double tmp;
 
     N_totLitter = N_cropToHarvest + N_cropToResidues + N_roots;
@@ -2032,8 +2018,8 @@ void Crit3DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
     N_cropToResidues = 0;
     N_roots = 0;
 }
-/*
-void NFromCropSenescence(double myDays,double coeffB) // this function must be public
+
+void Crit3DCarbonNitrogenProfile::NFromCropSenescence(double myDays,double coeffB,Crit1DCase &myCase) // this function must be public
 {
     //created in 2013.06 by GA, translated by AV 2022.06
     //new function for describing the release of Nitrogen from pluriannual crop residues
@@ -2041,11 +2027,10 @@ void NFromCropSenescence(double myDays,double coeffB) // this function must be p
     //myDays  days past since beginning of senescence
     //coeffB  b coefficient in exponential senescence LAI curve
 
-
+    double LENGTH_SENESCENCE = 20;
     double ratioSenescence;      //ratio of drop leaves
-
-    ratioSenescence = exp(coeffB * myDays) * (1 - exp(-coeffB)) / (exp(coeffB * LENGTH_SENESCENCE) - 1);
-    N_litter[0] = N_litter[0] + N_CropToResidues * ratioSenescence;
+    ratioSenescence = exp(coeffB * myDays) * (1 - exp(-coeffB)) / (exp(coeffB * LENGTH_SENESCENCE) - 1);    
+    myCase.carbonNitrogenLayers[0].N_litter += N_cropToResidues * ratioSenescence;
 
 }
-*/
+

@@ -39,6 +39,7 @@ public:
 
     // ratios
     double ratio_CN_litter; //[-] ratio C/N in litter
+    double ratio_CN_humus;
 
     // correction factors
     double temperatureCorrectionFactor;   // [] correction factor for soil temperature

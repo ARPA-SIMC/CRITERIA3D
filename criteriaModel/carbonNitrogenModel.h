@@ -35,6 +35,9 @@ public:
     double LITTERINI_C_DEFAULT;
     double LITTERINI_N_DEFAULT;
     double LITTERINI_PROF_DEFAULT;
+    double ratioHumusCN;
+    double ratioLitterCN;
+    double ratioBiomassCN;
 
     /* parametri da leggere da database da inserire in una classe settings
      * miner_h 0.000005
@@ -81,9 +84,9 @@ public:
     double ratio_CN_humus;               //[] rapporto C/N pool humus
     double ratio_CN_biomass;             //[] rapporto C/N pool biomass
 
-    double litterIniC;                   //[kg ha-1] initial litter carbon
-    double litterIniN;                   //[kg ha-1] initial litter nitrogen
-    double litterIniProf ;               //[cm] initial litter depth
+    //double litterIniC;                   //[kg ha-1] initial litter carbon
+    //double litterIniN;                   //[kg ha-1] initial litter nitrogen
+    //double litterIniProf ;               //[cm] initial litter depth
 
     // flags -------------------------------------------------------------------------------------------------
     int flagSOM;                         // 1: computes SO; 0: SO set at the default value
@@ -156,10 +159,10 @@ public:
     double N_NO3_uptakeGG;           //[g m-2] NO3 absorbed by the crop
     double N_denitrGG;               //[g m-2] Lost Nitrogen by denitrification
         //carbon
-
+    // content
     double C_humusGG;                //[g m-2] C in humus
     double C_litterGG;               //[g m-2] C in litter
-
+    // flux
     double C_litter_humusGG;         //[g m-2] C from litter to humus
     double C_litter_litterGG;        //[g m-2] C recycled within litter
     double C_min_humusGG;            //[g m-2] C lost as CO2 by humus mineralization
@@ -176,10 +179,10 @@ private:
     double convertToGramsPerLiter(double myQuantity, soil::Crit3DLayer &soilLayer);
     double convertToGramsPerKg(double myQuantity, soil::Crit3DLayer &soilLayer);
     void N_InitializeLayers();
-    void humusIni();
+    void humusIni(Crit1DCase &myCase);
     double updateTotalOfPartitioned(double mySoluteAds,double mySoluteSol);
     void partitioning(Crit1DCase &myCase);
-    void litterIni();
+    void litterIni(Crit1DCase &myCase);
     void chemicalTransformations(Crit1DCase &myCase);
     void N_Initialize();
     void N_Fertilization();
@@ -203,11 +206,11 @@ private:
     void leachingWaterTable(std::vector<double> &mySolute, double* leached, Crit1DCase &myCase);
     void NH4_Balance(Crit1DCase &myCase);
     void NO3_Balance(Crit1DCase &myCase);
-    void N_initializeCrop(bool noReset);
+    void N_initializeCrop(bool noReset,Crit1DCase &myCase);
     void N_harvest(Crit1DCase &myCase);
     void updateNCrop(Crit3DCrop crop);
     void N_plough(Crit1DCase &myCase);
-    void NFromCropSenescence(double myDays,double coeffB);
+    void NFromCropSenescence(double myDays,double coeffB,Crit1DCase &myCase);
 
 };
 
