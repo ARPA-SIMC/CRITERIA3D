@@ -666,7 +666,7 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
         QString tableNameForecast = query.value("table_name").toString();
 
         query.clear();
-        queryString = "SELECT * FROM " + tableNameForecast + " ORDER BY [date]";
+        queryString = "SELECT * FROM '" + tableNameForecast + "' ORDER BY [date]";
         query = this->dbForecast.exec(queryString);
         query.last();
 
