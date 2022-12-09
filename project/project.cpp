@@ -3112,7 +3112,7 @@ bool Project::setActiveStateWithCriteria(bool isActive)
     {
         if (!DEM.isLoaded)
         {
-            QMessageBox::critical(nullptr, "DEM distance", "No DEM open");
+            logError("No DEM open");
             return false;
         }
         QList<QString> points;
@@ -3230,12 +3230,12 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
     if (pointList.isEmpty())
     {
         logError("No data to delete.");
-        return false;
+        return true;
     }
 
-    DialogPointDeleteData dialogPointDelete;
+    DialogPointDeleteData dialogPointDelete(currentDate);
     if (dialogPointDelete.result() != QDialog::Accepted)
-        return false;
+        return true;
 
     QList<meteoVariable> dailyVarList = dialogPointDelete.getVarD();
     QList<meteoVariable> hourlyVarList = dialogPointDelete.getVarH();
@@ -3243,6 +3243,14 @@ bool Project::deleteMeteoPointsData(const QList<QString>& pointList)
     QDate endDate = dialogPointDelete.getLastDate();
     bool allDaily = dialogPointDelete.getAllDailyVar();
     bool allHourly = dialogPointDelete.getAllHourlyVar();
+
+    QString question = "Data of " + QString::number(pointList.size()) + " points\n";
+    question += QString::number(dailyVarList.size()) + " daily vars\n";
+    question += QString::number(hourlyVarList.size()) + " hourly vars\n";
+    question += "from " + startDate.toString() + " to " + endDate.toString() + "\n";
+    question += "will be deleted. Are you sure?";
+    if (QMessageBox::question(nullptr, "Question", question) != QMessageBox::Yes)
+        return true;
 
     setProgressBar("Deleting data...", pointList.size());
     for (int i = 0; i < pointList.size(); i++)

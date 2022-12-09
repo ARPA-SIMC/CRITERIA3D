@@ -1,6 +1,6 @@
 #include "dialogPointDeleteData.h"
 
-DialogPointDeleteData::DialogPointDeleteData()
+DialogPointDeleteData::DialogPointDeleteData(QDate currentdate)
 {
     setWindowTitle("Delete Data");
     QVBoxLayout mainLayout;
@@ -47,12 +47,12 @@ DialogPointDeleteData::DialogPointDeleteData()
     connect(&dailyVar, &QListWidget::itemClicked, [=](QListWidgetItem * item){ this->dailyItemClicked(item); });
     connect(&hourlyVar, &QListWidget::itemClicked, [=](QListWidgetItem * item){ this->hourlyItemClicked(item); });
 
-    firstDateEdit.setDate(QDate::currentDate());
+    firstDateEdit.setDate(currentdate);
     firstDateEdit.setDisplayFormat("yyyy-MM-dd");
     QLabel *FirstDateLabel = new QLabel("   Start Date:");
     FirstDateLabel->setBuddy(&firstDateEdit);
 
-    lastDateEdit.setDate(QDate::currentDate());
+    lastDateEdit.setDate(currentdate);
     lastDateEdit.setDisplayFormat("yyyy-MM-dd");
     QLabel *LastDateLabel = new QLabel("    End Date:");
     LastDateLabel->setBuddy(&lastDateEdit);
