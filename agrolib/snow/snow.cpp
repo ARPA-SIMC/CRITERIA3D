@@ -348,8 +348,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     QLongWave = double(STEFAN_BOLTZMANN * 3.6 * (longWaveAtmEmissivity * pow(_airT + ZEROCELSIUS, 4.0)
               - surfaceEmissivity * pow (prevSurfacetemp + ZEROCELSIUS, 4.0)));
 
-    // pag. 50 (3.17)
-    // sensible heat
+    // sensible heat pag. 50 (3.17)
     QTempGradient = 3600. * (HEAT_CAPACITY_AIR / 1000.) * (_airT - prevSurfacetemp) / aerodynamicResistance;
 
     // latent heat pag. 51 (3.19)
@@ -393,17 +392,21 @@ void Crit3DSnow::computeSnowBrooksModel()
     double freeze_melt = 0;      // [mm] freeze (positive) or melt (negative)
 
     // pag.53 (3.25)
-    // net amount of liquid water that freezes (heat added to the snow pack) and ice that melts (heat removed from the snow pack)
+    /*! net amount of liquid water that freezes (heat added to the snow pack) and ice that melts (heat removed from the snow pack) */
     double w = (prevInternalEnergy + QTotal) / (LATENT_HEAT_FUSION * WATER_DENSITY);  // [m]
     if (w < 0)
     {
-        // refreeze
-        freeze_melt = std::min(prevLWaterContent + _precRain, -w * 1000.);                // [mm]
+        // controllo aggiunto
+        if (prevSurfacetemp <= 0)
+        {
+            /*! refreeze */
+            freeze_melt = std::min(prevLWaterContent + _precRain, -w * 1000.);          // [mm]
+        }
     }
     else
     {
-        // melt
-        freeze_melt = -std::min(prevIceContent + _precSnow + sublimation, w * 1000.);      // [mm]
+        /*! melt */
+        freeze_melt = -std::min(prevIceContent + _precSnow + sublimation, w * 1000.);   // [mm]
     }
     // pag.53 (3.23) modificata (errore nel denominatore)
     double Qr = (freeze_melt / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY;
@@ -412,9 +415,6 @@ void Crit3DSnow::computeSnowBrooksModel()
     _internalEnergy = prevInternalEnergy + QTotal + Qr;
 
     /*! Snow Pack Mass */
-
-    double waterHoldingCapacity = snowParameters.snowWaterHoldingCapacity
-                                  / (1 - snowParameters.snowWaterHoldingCapacity); // [%]
 
     /*! Ice content */
     if (_internalEnergy > EPSILON)
@@ -426,6 +426,9 @@ void Crit3DSnow::computeSnowBrooksModel()
         _iceContent = prevIceContent + _precSnow + sublimation + freeze_melt;
         _iceContent = std::max(_iceContent, 0.);
     }
+
+    double waterHoldingCapacity = snowParameters.snowWaterHoldingCapacity
+                                  / (1 - snowParameters.snowWaterHoldingCapacity); // [%]
 
     /*! Liquid water content */
     if (_internalEnergy > EPSILON)
