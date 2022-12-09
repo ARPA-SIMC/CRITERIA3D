@@ -2458,6 +2458,7 @@ void MainWindow::on_actionPoints_delete_data_selected_triggered()
 
     QDate currentDate = myProject.getCurrentDate();
     myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
+    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 
@@ -2491,6 +2492,7 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
 
     QDate currentDate = myProject.getCurrentDate();
     myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
+    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 void MainWindow::on_flagHide_outputPoints_toggled(bool isChecked)
