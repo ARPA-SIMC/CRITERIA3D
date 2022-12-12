@@ -56,10 +56,12 @@ public:
     double N_litter_humus;   //[g m-2] N from litter to humus
     double N_vol;            //[g m-2] volatilized NH4
     double N_denitr;         //[g m-2] denitrified N
-    float N_nitrif;         //[g m-2] N from NH4 to NO3
+    float N_nitrif;          //[g m-2] N from NH4 to NO3
     double N_Urea_Hydr;      //[g m-2] hydrolyzed urea to NH4
     double N_NO3_runoff;     //[g m-2] NO3 lost through surface & subsurface run off
     double N_NH4_runoff;     //[g m-2] NH4 lost through surface & subsurface run off
+
+
 
     // CARBON
     double C_litter_humus;   //[g m-2] C for litter to humus
