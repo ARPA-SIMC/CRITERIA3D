@@ -197,7 +197,7 @@ private:
     void chemicalTransformations(Crit1DCase &myCase);
     void N_Initialize();
     void N_Fertilization(Crit1DCase &myCase,TfertilizerProperties fertilizerProperties);
-    void N_InitializeVariables();
+    void N_InitializeVariables(Crit1DCase &myCase);
     //void ApriTabellaUsciteAzoto(tbname_azoto As String);
     void N_Output();
     double CNRatio(double c,double n,int flagOrganicMatter);

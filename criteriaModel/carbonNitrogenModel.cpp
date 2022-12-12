@@ -485,35 +485,9 @@ void Crit3DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Tfertilizer
     //02.03.10.GD
     //01.01.10.GD
     //00.06.16.GD.MVS Questa sub è attivata nel momento della concimazione.
-    //-------------- NOTE -----------------------------------------------------
-    //Legge i dati dalla story e alimenta il suolo con le forme azotate appropiate.
-    //-------------- Input Variables ------------------------------------------
 
-    //ProfConcimeN               [cm] profondità della concimazione azotata
-    //QuantitàConcimeTot               [kg ha -1] quantità totale di concime di azoto
-    //Suolo().Spess              [cm] spessore dello strato
-    //-------------- Output Variables -----------------------------------------
-    //N_NH4()                    [g m-2] azoto sotto forma ammoniacale
-    //N_NO3()                    [g m-2] azoto sotto forma nitrica
-    //-------------- Internal Variables ---------------------------------------
-    //
-    //-------------- Input Parameters -----------------------------------------
-    //
-    //-------------- Internal Parameters --------------------------------------
-
-    //int L;//            'contatore
-    //int LL;//        'contatore
     double quantityNcm;     // quantity per cm
-    //double percNO3;         // nitrate quantity
-    //double percNH4;         // ammonium quantity
-    //double percNorg;        // organic N quantity
-
-    //int ID_Fertilizer;
-    //string ID_TipoConcime // As String (valutare come trattarlo)
     double N_totalQuantity;
-    //double titoloN;
-    //double C_N_organic;
-    //string str; // valutare As String
     std::vector<double> quantityN;
     quantityN.resize(myCase.soilLayers.size());
     std::vector<double> N_Norg_fert;
@@ -522,22 +496,6 @@ void Crit3DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Tfertilizer
     N_NO3_fert.resize(myCase.soilLayers.size());
     std::vector<double> N_NH4_fert;
     N_NH4_fert.resize(myCase.soilLayers.size());
-
-    //str = "ID_FERTILIZER = " & TipoConcime & ""
-
-    // 'calcolo quantità N nella concimazione N/P/K
-    //tbConcimi.FindFirst str
-    //If Not tbConcimi.NoMatch Then
-        //ID_Fertilizer = fertilizerProperties.ID_FERTILIZER;
-        //ID_TipoConcime = fertilizerProperties.ID_TYPE;
-        //titoloN = fertilizerProperties.N_content;
-        //PercNO3 = tbConcimi("N-NO3")
-        //PercNH4 = tbConcimi("N-NH4")
-        //PercNorg = tbConcimi("N-Norg")
-        //C_N_organico = tbConcimi("C_N_organico")
-    //Else
-        //StampaErrore ("type of fertilizer missing")
-    //End If
 
     /* farei questa trasformazione fuori non dentro la funzione
     if (ID_TipoConcime == "organico")
@@ -558,7 +516,7 @@ void Crit3DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Tfertilizer
 
     // divido la quantità per cm
     quantityNcm = N_totalQuantity / fertilizerProperties.fertilizerDepth;
-    unsigned int ll;
+    unsigned int ll=1;
     for (unsigned int l=0; l<myCase.soilLayers.size(); l++)
     {
         if (N_totalQuantity <= 0)
@@ -595,37 +553,35 @@ void Crit3DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Tfertilizer
     }
 
 }
-/*
-// da valutare
-void N_InitializeVariables()
-'2004.08.16.VM introduzione di FUN_CNhumus_INI e LitterIni
-'2004.08.05.VM eliminato da tbLog la costante CNratio_humus
-'2004.06.25.VM forzato la sostanza organica del suolo
-'2002.03.15.GD correzione calcolo N_humus
-'2000.11.20.MVS nuovo codice sulla lettura di tbIniProfilo e tblog
-'1999.12.02.MVS cambiamento tbUscite in tbUscite_azoto...
-'1999.05.20.GD
-'1999.03.15.GD
-'-------------- NOTE -----------------------------------------------------
-'Questa routine carica i valori iniziali nelle variabili
-'utilizzando due metodi alternativi:
-'1) nel caso la simulazione sia stata interrotta legge
-'   lo stato delle variabili dal database delle uscite
-'2) nel caso la simulazione sia nuova pone a zero oppure a valori
-'   iniziali le stesse variabili
-'-------------- Input Variables ------------------------------------------
-'nrLayers           [-] numero di strati
-'DataIniziale      [-] data di inizio della simulazione
-'-------------- Output Variables -----------------------------------------
 
-'-------------- Internal Variables ---------------------------------------
-Dim L As Integer   '[-] numero dello strato
-Dim Nome$          '[-] nome del campo umidità
-'-------------- Input Parameters -----------------------------------------
-'
-'-------------- Internal Parameters --------------------------------------
-'
-'-------------------------------------------------------------------------
+// da valutare
+void Crit3DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
+{
+    //2004.08.16.VM introduzione di FUN_CNhumus_INI e LitterIni
+    //2004.08.05.VM eliminato da tbLog la costante CNratio_humus
+    //2004.06.25.VM forzato la sostanza organica del suolo
+    //2002.03.15.GD correzione calcolo N_humus
+    //2000.11.20.MVS nuovo codice sulla lettura di tbIniProfilo e tblog
+    //1999.12.02.MVS cambiamento tbUscite in tbUscite_azoto...
+    //1999.05.20.GD
+    //1999.03.15.GD
+    //-------------- NOTE -----------------------------------------------------
+    //Questa routine carica i valori iniziali nelle variabili
+    //utilizzando due metodi alternativi:
+    //1) nel caso la simulazione sia stata interrotta legge
+    //   lo stato delle variabili dal database delle uscite
+    //2) nel caso la simulazione sia nuova pone a zero oppure a valori
+    //   iniziali le stesse variabili
+    //-------------- Input Variables ------------------------------------------
+    //nrLayers           [-] numero di strati
+    //DataIniziale      [-] data di inizio della simulazione
+    //-------------- Output Variables -----------------------------------------
+
+    //-------------- Internal Variables ---------------------------------------
+
+    /*Dim Nome$          '[-] nome del campo umidità
+
+
     Dim dataformattata As String
     Dim i As Integer
     Dim variable As String
@@ -681,13 +637,27 @@ Dim Nome$          '[-] nome del campo umidità
         Partitioning
     End If
 
-    'azzeramento delle variabili non rilette
+    */
+    double nitrogenPerCm = 0.05; // [g m-2] valore da rivedere
+    // azzeramento delle variabili non rilette
+    for(unsigned int l=0; l<myCase.soilLayers.size();l++)
+    {
+        myCase.carbonNitrogenLayers[l].N_NO3 = 100*myCase.soilLayers[l].thickness*nitrogenPerCm;
+        myCase.carbonNitrogenLayers[l].N_NH4 = 100*myCase.soilLayers[l].thickness*nitrogenPerCm;
+        myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed = 0.1*(myCase.carbonNitrogenLayers[l].N_NH4);
+        myCase.carbonNitrogenLayers[l].N_urea = 0;
 
-    ProfiloNO3 = ProfileSum(N_NO3())
-    ProfiloNH4 = ProfileSum(N_NH4())
+    }
+    profileNH4 = profileNO3 = 0;
+    for(unsigned int l=0; l<myCase.soilLayers.size();l++)
+    {
+        profileNO3 += myCase.carbonNitrogenLayers[l].N_NO3;
+        profileNH4 += myCase.carbonNitrogenLayers[l].N_NH4;
+    }
 
-End Sub
-
+    // End Sub
+}
+/*
 // da valutare come replicare se fare riferimento ad un database
 void ApriTabellaUsciteAzoto(tbname_azoto As String)
 
