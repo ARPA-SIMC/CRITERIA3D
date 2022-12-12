@@ -75,17 +75,6 @@ void Crit3DCarbonNitrogenProfile::humusIni(Crit1DCase &myCase)
     }
 }
 
-/*
-void updateTotalOfPartitioned(double* mySoluteSum, double* mySoluteAds,double* mySoluteSol)
-{
-    int L;
-    for (L = 0; L<nrLayers; L++)
-    {
-        mySoluteSum[L] = mySoluteAds[L] + mySoluteSol[L];
-    }
-}
-*/
-
 double Crit3DCarbonNitrogenProfile::updateTotalOfPartitioned(double mySoluteAds,double mySoluteSol)
 {
     return (mySoluteAds + mySoluteSol);
@@ -93,7 +82,7 @@ double Crit3DCarbonNitrogenProfile::updateTotalOfPartitioned(double mySoluteAds,
 
 void Crit3DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
 {
-    // partitioning of N (only NH4) between adsorbed and in solution
+    // partitioning of N (only NH4) between adsorbed and solute
 
     // SE(M,I)=DSE(M,I)/(DLZ*(KD(M,I)*RHO(I)+W(I)))
     // ASE(M,I)=KD(M,I)*SE(M,I)
@@ -487,8 +476,8 @@ void Crit3DCarbonNitrogenProfile::N_Initialize()
         N_cropToResidues = 0;
         N_roots = 0;
 }
-/*
-void N_Fertilization()
+
+void Crit3DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,TfertilizerProperties fertilizerProperties)
 {
     //07.12.17 GA cambiata dichiarazione da Integer a Single per concentrazioni (per valori frazionari)
     //02.11.27.MVS aggiunta concime organico
@@ -496,148 +485,103 @@ void N_Fertilization()
     //02.03.10.GD
     //01.01.10.GD
     //00.06.16.GD.MVS Questa sub è attivata nel momento della concimazione.
-    //-------------- NOTE -----------------------------------------------------
-    //Legge i dati dalla story e alimenta il suolo con le forme azotate appropiate.
-    //-------------- Input Variables ------------------------------------------
-    //N_NH4()                    [g m-2] azoto sotto forma ammoniacale
-    //N_NO3()                    [g m-2] azoto sotto forma nitrica
-    //nrLayers                    [-] numero di strati del profilo simulato
-    //ProfConcimeN               [cm] profondità della concimazione azotata
-    //QuantitàConcimeTot               [kg ha -1] quantità totale di concime di azoto
-    //Suolo().Spess              [cm] spessore dello strato
-    //-------------- Output Variables -----------------------------------------
-    //N_NH4()                    [g m-2] azoto sotto forma ammoniacale
-    //N_NO3()                    [g m-2] azoto sotto forma nitrica
-    //-------------- Internal Variables ---------------------------------------
-    //
-    //-------------- Input Parameters -----------------------------------------
-    //
-    //-------------- Internal Parameters --------------------------------------
-    double* quantityN = (double *) calloc(nrLayers, sizeof(double));
-    int L;//            'contatore
-    int LL;//        'contatore
-    double quantityNcm; // As Single   'quantità per cm
-    double percNO3; // As Single       'percentuale di nitrato nel concime
-    double percNH4; // As Single      'percentuale di ione ammonio nel concime
-    double percNorg; // As Single       'percentuale di sostanza organica nel concime
 
-    int ID_Fertilizer;
-    string ID_TipoConcime // As String (valutare come trattarlo)
-    double QuantityNtot;
-    double titoloN;
-    double C_N_organic;
-    string str; // valutare As String
-    double* N_Norg_fert = (double *) calloc(nrLayers, sizeof(double)); // As Single
-    double* N_NO3_fert = (double *) calloc(nrLayers, sizeof(double)); // As Single
-    double* N_NH4_fert = (double *) calloc(nrLayers, sizeof(double)); // As Single
+    double quantityNcm;     // quantity per cm
+    double N_totalQuantity;
+    std::vector<double> quantityN;
+    quantityN.resize(myCase.soilLayers.size());
+    std::vector<double> N_Norg_fert;
+    N_Norg_fert.resize(myCase.soilLayers.size());
+    std::vector<double> N_NO3_fert;
+    N_NO3_fert.resize(myCase.soilLayers.size());
+    std::vector<double> N_NH4_fert;
+    N_NH4_fert.resize(myCase.soilLayers.size());
 
-    // ReDim N_Norg_fert(nrLayers)
-    // ReDim N_NO3_fert(nrLayers)
-    // ReDim N_NH4_fert(nrLayers)
-    // ReDim QuantitàN(nrLayers)
-
-    str = "ID_FERTILIZER = " & TipoConcime & ""
-
-    // 'calcolo quantità N nella concimazione N/P/K
-    tbConcimi.FindFirst str
-    If Not tbConcimi.NoMatch Then
-        ID_Fertilizer = tbConcimi("ID_FERTILIZER")
-        ID_TipoConcime = tbConcimi("ID_tipo")
-        TitoloN = tbConcimi("TitoloN")
-        PercNO3 = tbConcimi("N-NO3")
-        PercNH4 = tbConcimi("N-NH4")
-        PercNorg = tbConcimi("N-Norg")
-        C_N_organico = tbConcimi("C_N_organico")
-    Else
-        StampaErrore ("type of fertilizer missing")
-    End If
-
-
+    /* farei questa trasformazione fuori non dentro la funzione
     if (ID_TipoConcime == "organico")
     {
         //letame e liquame è espresso in tonnellate
         QuantitàConcimeTot = QuantitàConcimeTot *= 1000;  //da tonnellate a kg
-    }
+    }*/
 
-    QuantitàNtot = QuantitàConcimeTot / 100 * TitoloN;
+    N_totalQuantity = fertilizerProperties.quantity / 100 * fertilizerProperties.N_content;
 
     //perdita immediata per volatilizzazione dell'urea
-    if (ID_Fertilizer == FERTILIZER_UREA)
-        QuantityNtot *= 0.8;
+    if (fertilizerProperties.ID_FERTILIZER == FERTILIZER_UREA)
+        N_totalQuantity *= 0.8; // assuming 20% becomes NH3 by volatilization
 
     //2007.04 GA se profondità = 0 (tutto nei primi 10 cm)
-    if (ProfConcime == 0)
-        ProfConcime = 10;
+    if (fertilizerProperties.fertilizerDepth < 10)
+        fertilizerProperties.fertilizerDepth = 10;
 
     // divido la quantità per cm
-    quantityNcm = QuantityNtot / ProfConcime;
-    for (L = 0; L < nrLayers; L++)
+    quantityNcm = N_totalQuantity / fertilizerProperties.fertilizerDepth;
+    unsigned int ll=1;
+    for (unsigned int l=0; l<myCase.soilLayers.size(); l++)
     {
-        if (quantityNtot == 0)
+        if (N_totalQuantity <= 0)
         {
-            LL = L - 1;
+            ll = l - 1;
             break;
         }
-        quantityN[L] = quantityNcm * suolo[L].spess;
-        if (quantityN[L] > quantityNtot)
-            QuantityN[L] = QuantityNtot; //controllo per non superare la quantità di concime nell'ultimo strato concimato
-        quantityNtot -= quantityN[L];
-        quantityN[L] /= 10 // da kg ha-1 a g m-2
+        quantityN[l] = quantityNcm * myCase.soilLayers[l].thickness*100;
+        if (quantityN[l] > N_totalQuantity)
+            quantityN[l] = N_totalQuantity; //check to not overpass the fertilizer quantity in the last layer
+        N_totalQuantity -= quantityN[l];
+        quantityN[l] /= 10; // from kg ha-1 to g m-2
     }
 
-    for (L=0; L<LL; L++)
+    for (unsigned int l=0; l<ll; l++)
     {
         //'2007.12 GA inserita concimazione ureica (prima N_urea era sempre 0!)
         //'perdita del 30% per volatilizzazione immediata
-        if (ID_Fertilizer == FERTILIZER_UREA)
-            N_urea[L] = quantityN[L];
+        if (fertilizerProperties.ID_FERTILIZER == FERTILIZER_UREA)
+            myCase.carbonNitrogenLayers[l].N_urea = quantityN[l];
 
-        N_NO3_fert[L] = PercNO3 * QuantitàN[L] / 100;
-        N_NH4_fert[L] = PercNH4 * QuantitàN[L] / 100;
-        N_Norg_fert[L] = PercNorg * QuantitàN[L] / 100;
+        N_NO3_fert[l] = quantityN[l]*fertilizerProperties.N_NO3_percentage / 100;
+        N_NH4_fert[l] = quantityN[l]*fertilizerProperties.N_NH4_percentage/ 100;
+        N_Norg_fert[l] = quantityN[l]*fertilizerProperties.N_org_percentage/ 100;
 
         //per il bilancio...
-        N_NO3_fertGG += N_NO3_fert[L];
-        N_NH4_fertGG += N_NH4_fert[L];
+        N_NO3_fertGG += N_NO3_fert[l];
+        N_NH4_fertGG += N_NH4_fert[l];
 
-        N_NO3[L] += N_NO3_fert[L]; //aggiornamento N_NO3
-        N_NH4[L] += N_NH4_fert[L]; //aggiornamento N_NH4
-        N_litter[L] += N_Norg_fert[L]; //aggiornamento N_litter
-        C_litter[L] += N_Norg_fert[L] * C_N_organic; //aggiornamento C_litter
+        myCase.carbonNitrogenLayers[l].N_NO3 += N_NO3_fert[l];                                      // updating N_NO3
+        myCase.carbonNitrogenLayers[l].N_NH4 += N_NH4_fert[l];                                      // updating N_NH4
+        myCase.carbonNitrogenLayers[l].N_litter += N_Norg_fert[l];                                  // updating N_litter
+        myCase.carbonNitrogenLayers[l].C_litter += N_Norg_fert[l] * fertilizerProperties.C_N_ratio; // updating C_litter
     }
 
 }
 
 // da valutare
-void N_InitializeVariables()
-'2004.08.16.VM introduzione di FUN_CNhumus_INI e LitterIni
-'2004.08.05.VM eliminato da tbLog la costante CNratio_humus
-'2004.06.25.VM forzato la sostanza organica del suolo
-'2002.03.15.GD correzione calcolo N_humus
-'2000.11.20.MVS nuovo codice sulla lettura di tbIniProfilo e tblog
-'1999.12.02.MVS cambiamento tbUscite in tbUscite_azoto...
-'1999.05.20.GD
-'1999.03.15.GD
-'-------------- NOTE -----------------------------------------------------
-'Questa routine carica i valori iniziali nelle variabili
-'utilizzando due metodi alternativi:
-'1) nel caso la simulazione sia stata interrotta legge
-'   lo stato delle variabili dal database delle uscite
-'2) nel caso la simulazione sia nuova pone a zero oppure a valori
-'   iniziali le stesse variabili
-'-------------- Input Variables ------------------------------------------
-'nrLayers           [-] numero di strati
-'DataIniziale      [-] data di inizio della simulazione
-'-------------- Output Variables -----------------------------------------
+void Crit3DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
+{
+    //2004.08.16.VM introduzione di FUN_CNhumus_INI e LitterIni
+    //2004.08.05.VM eliminato da tbLog la costante CNratio_humus
+    //2004.06.25.VM forzato la sostanza organica del suolo
+    //2002.03.15.GD correzione calcolo N_humus
+    //2000.11.20.MVS nuovo codice sulla lettura di tbIniProfilo e tblog
+    //1999.12.02.MVS cambiamento tbUscite in tbUscite_azoto...
+    //1999.05.20.GD
+    //1999.03.15.GD
+    //-------------- NOTE -----------------------------------------------------
+    //Questa routine carica i valori iniziali nelle variabili
+    //utilizzando due metodi alternativi:
+    //1) nel caso la simulazione sia stata interrotta legge
+    //   lo stato delle variabili dal database delle uscite
+    //2) nel caso la simulazione sia nuova pone a zero oppure a valori
+    //   iniziali le stesse variabili
+    //-------------- Input Variables ------------------------------------------
+    //nrLayers           [-] numero di strati
+    //DataIniziale      [-] data di inizio della simulazione
+    //-------------- Output Variables -----------------------------------------
 
-'-------------- Internal Variables ---------------------------------------
-Dim L As Integer   '[-] numero dello strato
-Dim Nome$          '[-] nome del campo umidità
-'-------------- Input Parameters -----------------------------------------
-'
-'-------------- Internal Parameters --------------------------------------
-'
-'-------------------------------------------------------------------------
+    //-------------- Internal Variables ---------------------------------------
+
+    /*Dim Nome$          '[-] nome del campo umidità
+
+
     Dim dataformattata As String
     Dim i As Integer
     Dim variable As String
@@ -693,13 +637,27 @@ Dim Nome$          '[-] nome del campo umidità
         Partitioning
     End If
 
-    'azzeramento delle variabili non rilette
+    */
+    double nitrogenPerCm = 0.05; // [g m-2] valore da rivedere
+    // azzeramento delle variabili non rilette
+    for(unsigned int l=0; l<myCase.soilLayers.size();l++)
+    {
+        myCase.carbonNitrogenLayers[l].N_NO3 = 100*myCase.soilLayers[l].thickness*nitrogenPerCm;
+        myCase.carbonNitrogenLayers[l].N_NH4 = 100*myCase.soilLayers[l].thickness*nitrogenPerCm;
+        myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed = 0.1*(myCase.carbonNitrogenLayers[l].N_NH4);
+        myCase.carbonNitrogenLayers[l].N_urea = 0;
 
-    ProfiloNO3 = ProfileSum(N_NO3())
-    ProfiloNH4 = ProfileSum(N_NH4())
+    }
+    profileNH4 = profileNO3 = 0;
+    for(unsigned int l=0; l<myCase.soilLayers.size();l++)
+    {
+        profileNO3 += myCase.carbonNitrogenLayers[l].N_NO3;
+        profileNH4 += myCase.carbonNitrogenLayers[l].N_NH4;
+    }
 
-End Sub
-
+    // End Sub
+}
+/*
 // da valutare come replicare se fare riferimento ad un database
 void ApriTabellaUsciteAzoto(tbname_azoto As String)
 
@@ -1031,9 +989,7 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
         //suddividendo equamente tra NO3 e NH4
         //0.00075 g m-2 N nitrico e ammoniacale mm-1
         //controllare dati di concentrazione ARPA piogge
-    //numberOfLayers = nrLayers;
-    //arrayCarbonNitrogen = (Crit3DCarbonNitrogenLayer*) calloc(numberOfLayers,sizeof(Crit3DCarbonNitrogenLayer));
-    // (double *) calloc(nrLayers, sizeof(double));
+
     if (precGG > 0)
     {
         precN_NO3GG = 0.00075 * precGG;
@@ -1109,7 +1065,7 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     if (flagRunoff == true)
         N_SurfaceRunoff(myCase); // da modificare la funzione
     partitioning(myCase);
-    /* the next if cycle should not be presente in Criteria1D because there is no lateral movement
+    /* the next if cycle should not be present in Criteria1D because there is no lateral movement
     // loss due to subsurface runoff
     If (FlagSSRunoff == 1 && FlagInfiltration != infiltration_1d)
         N_SubSurfaceRunoff();
@@ -1463,15 +1419,16 @@ void N_Uptake_Max()
     N_UptakeMax = N_DailyDemand + N_UptakeDeficit;
     N_UptakeDeficit = 0;
 }
+*/
 
-
-void N_Reset()
+void Crit3DCarbonNitrogenProfile::N_Reset()
 {
     //'02.11.26.MVS
     //'02.10.22.GD
 
     //'azzeramento giornaliero
     // credo che venga fatto così semplicemente per riazzerare piuttosto che cambiare dimensione
+    /*
     ReDim N_imm_l_NH4(nrLayers)
     ReDim N_imm_l_NO3(nrLayers)
 
@@ -1498,7 +1455,7 @@ void N_Reset()
     ReDim N_NH4_runoff(nrLayers)
 
     ReDim N_denitr(nrLayers)
-
+    */
     //'azzero tutte le variabili giornaliere
     //'bil NO3
     N_NO3_fertGG = 0;
@@ -1512,13 +1469,13 @@ void N_Reset()
     precN_NH4GG = 0;
     N_nitrifGG = 0;
     N_NH4_fertGG = 0;
-    N_NH4_AdsorbedGG = 0;
-    N_NH4_AdsorbedBeforeGG = 0;
+    N_NH4_adsorbedGG = 0;
+    N_NH4_adsorbedBeforeGG = 0;
     N_imm_l_NH4GG = 0;
     N_min_humusGG = 0;
     N_min_litterGG = 0;
     N_NH4_volGG = 0;
-    N_Urea_HydrGG = 0;
+    N_urea_hydrGG = 0;
     N_NH4_uptakeGG = 0;
     flux_NH4GG = 0;
     N_NH4_runoff0GG = 0;
@@ -1533,7 +1490,7 @@ void N_Reset()
     C_litter_litterGG = 0;
 }
 
-*/
+
 double Crit3DCarbonNitrogenProfile::findPistonDepth(Crit1DCase &myCase)
 {
     unsigned int l;
@@ -1675,7 +1632,7 @@ void Crit3DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
     std::vector<double> u_temp;
     double H2O_step_flux;
     double H2O_step_flux_L_1;
-    double U_vol;
+    //double U_vol;
     int firstLayer;
     double myFreeSolute;
     double coeffMobile;
@@ -1684,20 +1641,14 @@ void Crit3DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
             return;
         else
         {
-            //for (l=0; l< myCase.soilLayers.size();l++)
-            //{
             unsigned int l=0;
             while(myCase.soilLayers[l].depth >= pistonDepth)
             {
                 l++;
                 firstLayer = l;
             }
-        //}
-            //l=0;
         }
-        //fluxSolute = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
-         // = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
-        //fSolute = (double *) calloc(myCase.soilLayers.size(), sizeof(double));
+
         fluxSolute.resize(myCase.soilLayers.size());
         fSolute.resize(myCase.soilLayers.size());
         u_temp.resize(myCase.soilLayers.size());
@@ -1755,19 +1706,13 @@ void Crit3DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
         // leaching
         // FT GA 2007.12
         *leached += fluxSolute[myCase.soilLayers.size()-1];
-        //free (fluxSolute);
-        //free (u_temp);
-        //free (fSolute);
         fluxSolute.clear();
         u_temp.clear();
         fSolute.clear();
 }
-/*
-
-
 
 // function developed by V. Marletto for watertable
-*/
+
 void Crit3DCarbonNitrogenProfile::leachingWaterTable(std::vector<double> &mySolute, double* leached,Crit1DCase &myCase)
 {
     double mySoluteLeachEdge;

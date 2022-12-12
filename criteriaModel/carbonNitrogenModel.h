@@ -5,6 +5,17 @@
 #include "crit3dDate.h"
 #include "soil.h"
 #include "criteria1DCase.h"
+struct TfertilizerProperties{
+    int ID_FERTILIZER;
+    int ID_TYPE;
+    double N_content;
+    double N_NO3_percentage;
+    double N_NH4_percentage;
+    double N_org_percentage;
+    double C_N_ratio;
+    double fertilizerDepth;
+    double quantity;
+};
 
 class Crit3DCarbonNitrogenSettings
 {
@@ -16,7 +27,7 @@ class Crit3DCarbonNitrogenSettings
               // [°C] temperature rate correction: base temperature
 public:
     Crit3DCarbonNitrogenSettings();
-
+    TfertilizerProperties fertilizerProperties;
     double rate_C_litterMin;             //[d-1] litter mineralization rate
     double rate_C_humusMin;              //[d-1] humus mineralization rate
     double rate_N_NH4_volatilization;    //[d-1] ammonium volatilization rate
@@ -185,8 +196,8 @@ private:
     void litterIni(Crit1DCase &myCase);
     void chemicalTransformations(Crit1DCase &myCase);
     void N_Initialize();
-    void N_Fertilization();
-    void N_InitializeVariables();
+    void N_Fertilization(Crit1DCase &myCase,TfertilizerProperties fertilizerProperties);
+    void N_InitializeVariables(Crit1DCase &myCase);
     //void ApriTabellaUsciteAzoto(tbname_azoto As String);
     void N_Output();
     double CNRatio(double c,double n,int flagOrganicMatter);
