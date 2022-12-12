@@ -458,18 +458,24 @@ void Crit3DSnow::computeSnowBrooksModel()
     /*! Snow surface energy */
     if (_snowWaterEquivalent > EPSILON)
     {
-        _surfaceEnergy = prevSurfaceEnergy + (QTotal + Qr)
-                         * (std::min(_snowWaterEquivalent / 1000., snowParameters.snowSkinThickness) / SNOW_DAMPING_DEPTH
-                         + std::max(snowParameters.snowSkinThickness - (_snowWaterEquivalent / 1000.), 0.) / SOIL_DAMPING_DEPTH);
-        _surfaceEnergy = std::min(0., _surfaceEnergy);
-        _snowSurfaceTemp = _surfaceEnergy / (WATER_DENSITY * SNOW_SPECIFIC_HEAT * snowParameters.snowSkinThickness);
+        if (fabs(_internalEnergy) < EPSILON)
+             _surfaceEnergy = 0.;
+        else
+        {
+            _surfaceEnergy = std::min(0., prevSurfaceEnergy + (QTotal + Qr)
+                             * (std::min(_snowWaterEquivalent / 1000., snowParameters.snowSkinThickness) / SNOW_DAMPING_DEPTH
+                             + std::max(snowParameters.snowSkinThickness - (_snowWaterEquivalent / 1000.), 0.) / SOIL_DAMPING_DEPTH));
+        }
     }
     else
     {
         // soil
         _surfaceEnergy = prevSurfaceEnergy + (QTotal + Qr) * (snowParameters.snowSkinThickness / SOIL_DAMPING_DEPTH);
-        _snowSurfaceTemp = _surfaceEnergy / (DEFAULT_BULK_DENSITY * SOIL_SPECIFIC_HEAT * snowParameters.snowSkinThickness);
     }
+
+    _snowSurfaceTemp = _surfaceEnergy / ((WATER_DENSITY * SNOW_SPECIFIC_HEAT * std::min(snowParameters.snowSkinThickness, _snowWaterEquivalent / 1000.))
+                                      + (DEFAULT_BULK_DENSITY * SOIL_SPECIFIC_HEAT * std::max(0., snowParameters.snowSkinThickness - _snowWaterEquivalent / 1000.)));
+
     // controllo aggiunto per problemi numerici
     _snowSurfaceTemp = std::min(_snowSurfaceTemp, prevSurfacetemp + 10);
     _snowSurfaceTemp = std::max(_snowSurfaceTemp, prevSurfacetemp - 10);
