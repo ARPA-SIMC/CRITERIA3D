@@ -3037,7 +3037,7 @@
     <addaction name="separator"/>
     <addaction name="menuTopographic_Distance_map"/>
     <addaction name="separator"/>
-    <addaction name="actionCompute_hour_meteoVariables"/>
+    <addaction name="actionComputeHour_meteoVariables"/>
     <addaction name="actionComputePeriod_meteoVariables"/>
     <addaction name="separator"/>
     <addaction name="actionProxy_analysis"/>
@@ -3429,7 +3429,7 @@
     <string>Compute current hour</string>
    </property>
   </action>
-  <action name="actionCompute_hour_meteoVariables">
+  <action name="actionComputeHour_meteoVariables">
    <property name="text">
     <string>Compute current hour (all meteo variables)</string>
    </property>

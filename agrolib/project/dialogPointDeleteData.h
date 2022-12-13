@@ -22,7 +22,7 @@ private:
     QCheckBox allHourly;
 
 public:
-    DialogPointDeleteData();
+    DialogPointDeleteData(QDate currentdate);
     void allDailyVarClicked(int toggled);
     void allHourlyVarClicked(int toggled);
     void dailyItemClicked(QListWidgetItem * item);

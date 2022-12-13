@@ -14,8 +14,8 @@ FormText::FormText(QString title)
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
-    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(QDialog::Accepted); });
-    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(QDialog::Rejected); });
+    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ done(QDialog::Accepted); });
+    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ done(QDialog::Rejected); });
 
     layoutOk->addWidget(&buttonBox);
 
@@ -24,11 +24,6 @@ FormText::FormText(QString title)
 
     setLayout(mainLayout);
     exec();
-}
-
-FormText::~FormText()
-{
-    close();
 }
 
 void FormText::done(int res)

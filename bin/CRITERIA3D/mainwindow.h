@@ -12,6 +12,7 @@
     #include "colorLegend.h"
     #include "rubberBand.h"
     #include "viewer3D.h"
+    #include "ArrowObject.h"
 
     #include <QMainWindow>
 
@@ -93,7 +94,7 @@
         void on_actionInterpolationSettings_triggered();
         void on_actionProxy_analysis_triggered();
         void on_actionComputePeriod_meteoVariables_triggered();
-        void on_actionCompute_hour_meteoVariables_triggered();
+        void on_actionComputeHour_meteoVariables_triggered();
 
         void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
         void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
@@ -234,6 +235,7 @@
         RasterObject* rasterOutput;
         QList<StationMarker*> meteoPointList;
         QList<SquareMarker*> outputPointList;
+        QList<ArrowObject*> windVectorList;
 
         ColorLegend *inputRasterColorLegend;
         ColorLegend *outputRasterColorLegend;
@@ -278,6 +280,7 @@
         void setOutputRasterVisible(bool value);
 
         void addMeteoPoints();
+        void drawWindVector(int i);
         void drawProject();
         void renderDEM();
         void drawMeteoPoints();
@@ -298,6 +301,7 @@
         void addOutputPointsGUI();
         void redrawOutputPoints();
         void resetOutputPointMarkers();
+        void clearWindVectorObjects();
     };
 
     bool selectDates(QDateTime &firstTime, QDateTime &lastTime);

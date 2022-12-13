@@ -758,8 +758,11 @@ bool Crit3DProject::saveModelState()
         QDir().mkdir(statePath + "/" + dateFolder);
     }
 
+    // create snow path
     QString snowPath = statePath + "/" + dateFolder + "/snow";
     QDir().mkdir(snowPath);
+    QString imgPath = snowPath + "/img";
+    QDir().mkdir(imgPath);
 
     logInfo("Saving snow state: " + dateFolder);
     std::string error;
@@ -768,6 +771,13 @@ bool Crit3DProject::saveModelState()
         logError("Error saving water equivalent map: " + QString::fromStdString(error));
         return false;
     }
+    // ENVI file
+    if (!gis::writeENVIGrid((imgPath+"/SWE").toStdString(), gisSettings.utmZone, snowMaps.getSnowWaterEquivalentMap(), error))
+    {
+        logError("Error saving water equivalent map (ENVI file): " + QString::fromStdString(error));
+        return false;
+    }
+
     if (!gis::writeEsriGrid((snowPath+"/AgeOfSnow").toStdString(), snowMaps.getAgeOfSnowMap(), &error))
     {
         logError("Error saving age of snow map: " + QString::fromStdString(error));
