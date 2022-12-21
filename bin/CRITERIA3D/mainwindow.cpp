@@ -509,7 +509,7 @@ void MainWindow::drawMeteoPoints()
     addMeteoPoints();
     ui->groupBoxMeteoPoints->setEnabled(true);
 
-    myProject.loadMeteoPointsData (myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
 
     showPointsGroup->setEnabled(true);
 
@@ -627,15 +627,6 @@ void MainWindow::renderDEM()
     mapView->centerOn(qreal(center->longitude), qreal(center->latitude));
 
     this->updateMaps();
-
-    /*
-    if (viewer3D != nullptr)
-    {
-        initializeViewer3D();
-        //this->viewer3D->close();
-        //this->viewer3D = nullptr;
-    }
-    */
 }
 
 
@@ -647,11 +638,18 @@ void MainWindow::updateDateTime()
     this->ui->timeEdit->setValue(myProject.getCurrentHour());
 }
 
+
+void MainWindow::loadMeteoPointsDataSingleDay(const QDate &date, bool showInfo)
+{
+    myProject.loadMeteoPointsData(date.addDays(-1), date, true, true, showInfo);
+}
+
+
 void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 {
     if (date != myProject.getCurrentDate())
     {
-        myProject.loadMeteoPointsData(date, date, true, true, true);
+        loadMeteoPointsDataSingleDay(date, true);
         //myProject.loadMeteoGridData(date, date, true);
         myProject.setAllHourlyMeteoMapsComputed(false);
         myProject.setCurrentDate(date);
@@ -945,7 +943,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                         meteoPointList[i]->setOpacity(0.5);
                     }
 
-                    meteoPointList[i]->setCurrentValue(myProject.meteoPoints[i].currentValue);
+                    meteoPointList[i]->setCurrentValue(qreal(myProject.meteoPoints[i].currentValue));
                     meteoPointList[i]->setQuality(myProject.meteoPoints[i].quality);
                     meteoPointList[i]->setToolTip();
 
@@ -2140,7 +2138,7 @@ void MainWindow::on_actionLoad_external_state_triggered()
     if (myProject.loadModelState(stateDirectory))
     {
         updateDateTime();
-        myProject.loadMeteoPointsData(myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+        loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
         redrawMeteoPoints(currentPointsVisualization, true);
     }
     else
@@ -2173,7 +2171,7 @@ void MainWindow::on_actionLoad_state_triggered()
     if (myProject.loadModelState(statePath))
     {
         updateDateTime();
-        myProject.loadMeteoPointsData(myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+        loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
         redrawMeteoPoints(currentPointsVisualization, true);
 
         //myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString()
@@ -2456,8 +2454,7 @@ void MainWindow::on_actionPoints_delete_data_selected_triggered()
         myProject.logError("Failed to delete data.");
     }
 
-    QDate currentDate = myProject.getCurrentDate();
-    myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
@@ -2490,8 +2487,7 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
         myProject.logError("Failed to delete data.");
     }
 
-    QDate currentDate = myProject.getCurrentDate();
-    myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
     redrawMeteoPoints(currentPointsVisualization, true);
 }
 
@@ -2607,9 +2603,9 @@ void MainWindow::on_actionOutputPoints_delete_selected_triggered()
 
     if (reply == QMessageBox::Yes)
     {
-        for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+        for (int i = 0; i < int(myProject.outputPoints.size()); i++)
         {
-            if (myProject.outputPoints[i].selected)
+            if (myProject.outputPoints[unsigned(i)].selected)
             {
                 myProject.outputPoints.erase(myProject.outputPoints.begin()+i);
                 mapView->scene()->removeObject(outputPointList[i]);
@@ -2806,7 +2802,7 @@ void MainWindow::on_viewer3DClosed()
 
 void MainWindow::on_slopeChanged()
 {
-    myProject.geometry->setArtifactSlope(viewer3D->getSlope());
+    myProject.geometry->setArtifactSlope(int(viewer3D->getSlope()));
     myProject.update3DColors();
     viewer3D->glWidget->update();
 }
