@@ -807,13 +807,16 @@ float loadDailyVarSeries_SaveOutput(QString *myError, Crit3DMeteoPointsDbHandler
             if (qualityT == quality::accepted)
             {
                 nrValidValues = nrValidValues + 1;
+                meteoPoint->setMeteoPointValueD(currentDate, variable, dailyValues[i]);
+                outputValues.push_back(dailyValues[i]);
             }
-            meteoPoint->setMeteoPointValueD(currentDate, variable, dailyValues[i]);
-
-            outputValues.push_back(dailyValues[i]);
+            else
+            {
+                meteoPoint->setMeteoPointValueD(currentDate, variable, NODATA);
+                outputValues.push_back(NODATA);
+            }
 
             currentDate = currentDate.addDays(1);
-
         }
 
         float percValue = float(nrValidValues) / float(nrRequestedValues);
@@ -1505,7 +1508,7 @@ bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint 
     Crit3DDate date = meteoPoint.obsDataD[0].date;
     Crit3DQuality qualityCheck;
 
-    for (int index = 0; index < meteoPoint.nrObsDataDaysD; index++)
+    for (unsigned int index = 0; index < unsigned(meteoPoint.nrObsDataDaysD); index++)
     {
         switch(myVar)
         {
@@ -1703,7 +1706,7 @@ bool elaborateDailyAggrVarFromDailyFromStartDate(meteoVariable myVar, Crit3DMete
 
     for (QDate myDate = first; myDate<=last; myDate=myDate.addDays(1))
     {
-        int index = firstDate.daysTo(myDate);
+        unsigned int index = firstDate.daysTo(myDate);
         switch(myVar)
         {
         case dailyThomDaytime:
