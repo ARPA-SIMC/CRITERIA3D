@@ -441,7 +441,7 @@ void MainWindow::addMeteoPoints()
 
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
-        StationMarker* point = new StationMarker(5.0, true, QColor((Qt::white)));
+        StationMarker* point = new StationMarker(5.0, true, QColor(Qt::white));
 
         point->setFlag(MapGraphicsObject::ObjectIsMovable, false);
         point->setLatitude(myProject.meteoPoints[i].latitude);
