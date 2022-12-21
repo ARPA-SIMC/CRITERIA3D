@@ -520,6 +520,7 @@ void Crit3DPointStatisticsWidget::changeVar(const QString varName)
     computePlot();
 }
 
+
 void Crit3DPointStatisticsWidget::plot()
 {
     if (currentFrequency == daily)
@@ -534,6 +535,9 @@ void Crit3DPointStatisticsWidget::plot()
             availability.clear();
             significance.clear();
             average.clear();
+            median.clear();
+            mode.clear();
+            sigma.clear();
             r2.clear();
             rate.clear();
 
@@ -666,7 +670,7 @@ void Crit3DPointStatisticsWidget::plot()
                 if (outputValues[count] != NODATA)
                 {
                     sum += double(outputValues[unsigned(count)]);
-                    validData = validData + 1;
+                    validData++;
                 }
                 count = count + 1;
             }
@@ -677,7 +681,7 @@ void Crit3DPointStatisticsWidget::plot()
             availability.setText(QString::number(availab, 'f', 3));
             double mkendall = statisticalElab(mannKendall, NODATA, outputValues, outputValues.size(), meteoSettings->getRainfallThreshold());
             significance.setText(QString::number(mkendall, 'f', 3));
-            double averageValue = sum / validYears;
+            double averageValue = sum / double(validData);
             average.setText(QString::number(averageValue, 'f', 1));
 
             float myCoeff = NODATA;
@@ -700,6 +704,9 @@ void Crit3DPointStatisticsWidget::plot()
             availability.clear();
             significance.clear();
             average.clear();
+            median.clear();
+            mode.clear();
+            sigma.clear();
             r2.clear();
             rate.clear();
 
@@ -896,6 +903,9 @@ void Crit3DPointStatisticsWidget::plot()
             availability.clear();
             significance.clear();
             average.clear();
+            median.clear();
+            mode.clear();
+            sigma.clear();
             r2.clear();
             rate.clear();
 
@@ -1008,6 +1018,9 @@ void Crit3DPointStatisticsWidget::plot()
             significance.clear();
             average.clear();
             r2.clear();
+            median.clear();
+            mode.clear();
+            sigma.clear();
             rate.clear();
             std::vector<float> series;
 
