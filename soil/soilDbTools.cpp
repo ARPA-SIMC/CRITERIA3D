@@ -545,7 +545,7 @@ QString getIdSoilString(QSqlDatabase* dbSoil, int idSoilNumber, QString *myError
 bool getSoilList(QSqlDatabase* dbSoil, QStringList* soilList, QString* error)
 {
     // query soil list
-    QString queryString = "SELECT soil_code FROM soils";
+    QString queryString = "SELECT DISTINCT soil_code FROM soils ORDER BY soil_code";
     QSqlQuery query = dbSoil->exec(queryString);
 
     query.first();
