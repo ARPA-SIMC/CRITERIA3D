@@ -88,7 +88,7 @@ void NetCDFHandler::close()
         ncId = NODATA;
     }
 
-    clear();
+    this->clear();
 }
 
 
@@ -135,7 +135,7 @@ void NetCDFHandler::clear()
     dataGrid.clear();
     dimensions.clear();
     variables.clear();
-    metadata.clear();
+    metadata.str("");
 }
 
 
@@ -292,6 +292,8 @@ bool NetCDFHandler::readProperties(string fileName)
     nc_type ncTypeId;
     int timeType = NC_DOUBLE;
 
+    metadata.str("");
+
     // NC_NOWRITE tells netCDF we want read-only access
     if ((retval = nc_open(fileName.data(), NC_NOWRITE, &ncId)))
     {
@@ -309,7 +311,7 @@ bool NetCDFHandler::readProperties(string fileName)
     }
 
     // GLOBAL ATTRIBUTES
-    metadata << fileName << endl << endl;
+    metadata << "FILE:" << endl << fileName << endl << endl;
     metadata << "Global attributes:" << endl;
 
     for (int a = 0; a < nrGlobalAttributes; a++)
