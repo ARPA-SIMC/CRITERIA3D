@@ -122,7 +122,7 @@ void Crit3DCarbonNitrogenProfile::litterIni(Crit1DCase &myCase)
     double myDepth;
 
     myDepth = MAXVALUE(carbonNitrogenParameter.LITTERINI_PROF_DEFAULT, 6);
-
+    myDepth /= 100; // transform depth from cm to m
     for (unsigned int l=0; l<myCase.soilLayers.size() ;l++)
     {
         if (myCase.soilLayers[l].depth <= myDepth)
@@ -638,6 +638,10 @@ void Crit3DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
     End If
 
     */
+    humusIni(myCase);
+    litterIni(myCase);
+    partitioning(myCase);
+
     double nitrogenPerCm = 0.05; // [g m-2] valore da rivedere
     // azzeramento delle variabili non rilette
     for(unsigned int l=0; l<myCase.soilLayers.size();l++)
