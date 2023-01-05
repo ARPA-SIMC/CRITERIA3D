@@ -542,7 +542,7 @@ QString getIdSoilString(QSqlDatabase* dbSoil, int idSoilNumber, QString *myError
 }
 
 
-bool getSoilList(QSqlDatabase* dbSoil, QStringList* soilList, QString* error)
+bool getSoilList(QSqlDatabase* dbSoil, QList<QString>* soilList, QString* error)
 {
     // query soil list
     QString queryString = "SELECT DISTINCT soil_code FROM soils ORDER BY soil_code";

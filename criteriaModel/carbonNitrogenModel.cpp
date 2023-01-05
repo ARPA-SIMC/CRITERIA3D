@@ -1712,7 +1712,7 @@ void Crit3DCarbonNitrogenProfile::leachingWaterTable(std::vector<double> &mySolu
 
     // dilavamento
 
-    if ((myCase.output.dailyWaterTable != NODATA) && (myCase.output.dailyWaterTable > 0) && (myCase.unit.useWaterTableData == 1));// da chiarire && (flagWaterTableCase == 1))
+    if ((myCase.output.dailyWaterTable != NODATA) && (myCase.output.dailyWaterTable > 0) && (myCase.unit.useWaterTableData == 1))// da chiarire && (flagWaterTableCase == 1))
     {
         for (unsigned int l = 0; l< myCase.soilLayers.size(); l++)
         {
@@ -1910,7 +1910,6 @@ void Crit3DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
     double N_totNO3 = 0;
     double N_totNH4 = 0;
     unsigned int myLastLayer;
-    double tmp;
 
     N_totLitter = N_cropToHarvest + N_cropToResidues + N_roots;
     C_totLitter = N_totLitter * carbonNitrogenParameter.CN_RATIO_NOTHARVESTED;

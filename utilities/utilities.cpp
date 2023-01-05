@@ -372,7 +372,7 @@ bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* start
 }
 
 
-std::vector <float> StringListToFloat(QStringList myList)
+std::vector <float> StringListToFloat(QList<QString> myList)
 {
     std::vector <float> myVector;
     myVector.resize(unsigned(myList.size()));
@@ -383,9 +383,9 @@ std::vector <float> StringListToFloat(QStringList myList)
 }
 
 
-QStringList FloatVectorToStringList(std::vector <float> myVector)
+QList<QString> FloatVectorToStringList(std::vector <float> myVector)
 {
-    QStringList myList;
+    QList<QString> myList;
     for (unsigned i=0; i < unsigned(myVector.size()); i++)
         myList.push_back(QString::number(double(myVector[i])));
 
