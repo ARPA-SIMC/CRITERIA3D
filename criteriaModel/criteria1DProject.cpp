@@ -872,6 +872,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
     {
         if (! saveState(projectError))
             return false;
+        logger.writeInfo("Save state:" + dbState.databaseName());
     }
 
     if (isSeasonalForecast || isMonthlyForecast)
@@ -1330,7 +1331,7 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
     {
         double degreeDays;
         int daySinceIrr;
-        if (qry.next())
+        if (qry.first())
         {
             if (!getValue(qry.value("DEGREE_DAYS"), &degreeDays))
             {
