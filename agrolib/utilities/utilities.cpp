@@ -20,70 +20,54 @@ QList<QString> getFields(QSqlDatabase* db_, QString tableName)
     return fieldList;
 }
 
+
 // return boolean (false if recordset is not valid)
 bool getValue(QVariant myRs)
 {
-    if (! myRs.isValid() || myRs.isNull())
-    {
-        return false;
-    }
-    else
-    {
-        if (myRs == "" || myRs == "NULL")
-            return false;
-        else
-            return myRs.toBool();
-    }
+    if (! myRs.isValid() || myRs.isNull()) return false;
+
+    if (myRs == "" || myRs == "NULL") return false;
+
+    return myRs.toBool();
 }
+
 
 bool getValue(QVariant myRs, int* myValue)
 {
-    if (! myRs.isValid() || myRs.isNull())
-    {
-        *myValue = NODATA;
-    }
-    else
-    {
-        if (myRs == "" || myRs == "NULL")
-            *myValue = NODATA;
-        else
-            *myValue = myRs.toInt();
-    }
+    *myValue = NODATA;
 
-    return (*myValue != NODATA);
+    if (! myRs.isValid() || myRs.isNull()) return false;
+
+    if (myRs == "" || myRs == "NULL") return false;
+
+    *myValue = myRs.toInt();
+    return true;
 }
 
 
 bool getValue(QVariant myRs, float* myValue)
 {
-    if (myRs.isNull())
-        *myValue = NODATA;
-    else
-    {
-        if (myRs == "")
-             *myValue = NODATA;
-        else
-            *myValue = myRs.toFloat();
-    }
+    *myValue = NODATA;
 
-    return (int(*myValue) != int(NODATA));
+    if (! myRs.isValid() || myRs.isNull()) return false;
+    if (myRs == "" || myRs == "NULL") return false;
+
+    *myValue = myRs.toFloat();
+    return true;
 }
 
 
 bool getValue(QVariant myRs, double* myValue)
 {
-    if (myRs.isNull())
-        *myValue = NODATA;
-    else
-    {
-        if (myRs == "")
-             *myValue = NODATA;
-        else
-            *myValue = myRs.toDouble();
-    }
+    *myValue = NODATA;
 
-    return (int(*myValue) != int(NODATA));
+    if (! myRs.isValid() || myRs.isNull()) return false;
+    if (myRs == "" || myRs == "NULL") return false;
+
+    *myValue = myRs.toDouble();
+    return true;
 }
+
 
 bool getValue(QVariant myRs, QDate* myValue)
 {
@@ -118,12 +102,12 @@ bool getValue(QVariant myRs, QDateTime* myValue)
 
 bool getValue(QVariant myRs, QString* myValue)
 {
-    if (myRs.isNull())
-        *myValue = "";
-    else
-        *myValue = myRs.toString();
+    *myValue = "";
+    if (! myRs.isValid() || myRs.isNull()) return false;
+    if (myRs == "NULL") return false;
 
-    return (*myValue != "");
+    *myValue = myRs.toString();
+    return true;
 }
 
 
@@ -372,7 +356,7 @@ bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* start
 }
 
 
-std::vector <float> StringListToFloat(QStringList myList)
+std::vector <float> StringListToFloat(QList<QString> myList)
 {
     std::vector <float> myVector;
     myVector.resize(unsigned(myList.size()));
@@ -383,9 +367,9 @@ std::vector <float> StringListToFloat(QStringList myList)
 }
 
 
-QStringList FloatVectorToStringList(std::vector <float> myVector)
+QList<QString> FloatVectorToStringList(std::vector <float> myVector)
 {
-    QStringList myList;
+    QList<QString> myList;
     for (unsigned i=0; i < unsigned(myVector.size()); i++)
         myList.push_back(QString::number(double(myVector[i])));
 

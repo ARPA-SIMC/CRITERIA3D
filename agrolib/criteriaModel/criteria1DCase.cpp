@@ -122,14 +122,14 @@ void Crit1DCase::initializeWaterContent(Crit3DDate myDate)
  */
 bool Crit1DCase::initializeNumericalFluxes(std::string &error)
 {
-    unsigned nrLayers = unsigned(soilLayers.size());
+    int nrLayers = int(soilLayers.size());
     if (nrLayers < 1)
     {
         error = "Missing soil layers";
         return false;
     }
 
-    unsigned lastLayer = nrLayers-1;
+    int lastLayer = nrLayers-1;
     int nrlateralLinks = 0;
 
     int result = soilFluxes3D::initialize(nrLayers, nrLayers, nrlateralLinks, true, false, false);
@@ -149,7 +149,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     {
         soil::Crit3DHorizon horizon = mySoil.horizon[horizonIndex];
         double soilFraction = (1.0 - horizon.coarseFragments);
-        result = soilFluxes3D::setSoilProperties(soilIndex, horizonIndex,
+        result = soilFluxes3D::setSoilProperties(soilIndex, int(horizonIndex),
                             horizon.vanGenuchten.alpha * GRAVITY,
                             horizon.vanGenuchten.n, horizon.vanGenuchten.m,
                             horizon.vanGenuchten.he / GRAVITY,
@@ -179,38 +179,41 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     // set surface (node 0)
     bool isSurface = true;
     int nodeIndex = 0;
-    soilFluxes3D::setNode(nodeIndex, x0, y0, z0, area, isSurface, true, BOUNDARY_RUNOFF, unit.slope, ly);
+    soilFluxes3D::setNode(nodeIndex, x0, y0, z0, area, isSurface, true, BOUNDARY_RUNOFF, float(unit.slope), float(ly));
     soilFluxes3D::setNodeSurface(nodeIndex, surfaceIndex);
-    soilFluxes3D::setNodeLink(nodeIndex, nodeIndex + 1, DOWN, area);
+    soilFluxes3D::setNodeLink(nodeIndex, nodeIndex + 1, DOWN, float(area));
 
-    // set nodes
+    // set soil nodes
     isSurface = false;
-    for (unsigned int i = 1; i < nrLayers; i++)
+    for (int i = 1; i < nrLayers; i++)
     {
-        double volume = area * soilLayers[i].thickness;             // [m^3]
-        double z = z0 - soilLayers[i].depth;                        // [m]
+        double volume = area * soilLayers[unsigned(i)].thickness;             // [m^3]
+        double z = z0 - soilLayers[unsigned(i)].depth;                        // [m]
         if (i == lastLayer)
         {
             if (unit.useWaterTableData)
-                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, unit.slope, area);
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true,
+                                      BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, float(unit.slope), float(area));
             else
-                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREEDRAINAGE, unit.slope, area);
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true,
+                                      BOUNDARY_FREEDRAINAGE, float(unit.slope), float(area));
         }
         else
         {
-            double boundaryArea = ly * soilLayers[i].thickness;
-            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREELATERALDRAINAGE, unit.slope, boundaryArea);
+            double boundaryArea = ly * soilLayers[unsigned(i)].thickness;
+            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true,
+                                  BOUNDARY_FREELATERALDRAINAGE, float(unit.slope), float(boundaryArea));
         }
 
         // set soil
-        int horizonIndex = mySoil.getHorizonIndex(soilLayers[i].depth);
+        int horizonIndex = mySoil.getHorizonIndex(soilLayers[unsigned(i)].depth);
         soilFluxes3D::setNodeSoil(i, soilIndex, horizonIndex);
 
         // set links
-        soilFluxes3D::setNodeLink(i, i-1, UP, area);
+        soilFluxes3D::setNodeLink(i, i-1, UP, float(area));
         if (i != lastLayer)
         {
-            soilFluxes3D::setNodeLink(i, i+1, DOWN, area);
+            soilFluxes3D::setNodeLink(i, i+1, DOWN, float(area));
         }
     }
 
@@ -262,7 +265,7 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     soilFluxes3D::initializeBalance();
 
     // precipitation
-    // TODO improve lat < 0
+    // TODO improve for lat < 0
     int duration = 24;                              // [hours] winter
     if (myDate.month >= 5 && myDate.month <= 9)
     {
@@ -761,5 +764,3 @@ double Crit1DCase::getFractionAW(double computationDepth)
 
     return availableWaterSum / potentialAWSum;
 }
-
-

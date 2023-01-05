@@ -200,9 +200,9 @@ private:
     void N_InitializeVariables(Crit1DCase &myCase);
     //void ApriTabellaUsciteAzoto(tbname_azoto As String);
     void N_Output();
-    double CNRatio(double c,double n,int flagOrganicMatter);
+    double CNRatio(double C, double N, int flagOrganicMatter);
     double computeWaterCorrectionFactor(int l,Crit1DCase &myCase);
-    double computeTemperatureCorrectionFactor(bool flag, int l, double layerSoilTemperature, double baseTemperature);
+    double computeTemperatureCorrectionFactor(bool flag, double layerSoilTemperature, double baseTemperature);
     void computeLayerRates(unsigned l,Crit1DCase &myCase);
     void N_Uptake(Crit1DCase &myCase);
     void N_SurfaceRunoff(Crit1DCase &myCase);

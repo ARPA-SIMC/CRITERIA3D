@@ -31,17 +31,16 @@
 
 float gaussianFunction(TfunctionInput fInput)
 {
-    float y;
-    y = 1/(fInput.par[1]*sqrt(2*PI))*exp(-0.5*(fInput.x-fInput.par[0])*(fInput.x-fInput.par[0])/(fInput.par[1]*fInput.par[1]));
+    float y = 1/(fInput.par[1]*sqrt(2*PI))*exp(-0.5*(fInput.x-fInput.par[0])*(fInput.x-fInput.par[0])/(fInput.par[1]*fInput.par[1]));
     return y;
 }
 
 float gaussianFunction(float x, float mean, float devStd)
 {
-    devStd = MAXVALUE(devStd, 0.00001f);
-    float ratio = (x - mean) / devStd;
-    float y = 1 / (devStd*sqrt(2*PI)) * exp(-0.5*(ratio*ratio));
-    return y;
+    double devStd_d = MAXVALUE(double(devStd), 0.00001);
+    double ratio = double(x - mean) / devStd_d;
+    double y = 1 / (devStd_d * sqrt(2*PI)) * exp(-0.5*(ratio * ratio));
+    return float(y);
 }
 
 float errorFunctionPrimitive(float x)

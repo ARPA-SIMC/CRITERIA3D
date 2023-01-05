@@ -617,7 +617,7 @@ namespace statistics
 
     double standardDeviation(std::vector<double> myList, int nrList)
     {
-        return sqrtf(variance(myList,nrList));
+        return sqrt(variance(myList,nrList));
     }
 
     double standardDeviation(double *myList, int nrList)
