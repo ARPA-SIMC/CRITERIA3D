@@ -289,7 +289,7 @@ void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
     }
 
     // read soil list
-    QStringList soilStringList;
+    QList<QString> soilStringList;
     if (! getSoilList(&dbSoil, &soilStringList, &error))
     {
         QMessageBox::critical(nullptr, "Error", "getSoilList: " + error);
@@ -329,7 +329,7 @@ void Crit3DSoilWidget::on_actionOpenSoilDB()
     }
 
     // read soil list
-    QStringList soilStringList;
+    QList<QString> soilStringList;
     if (! getSoilList(&dbSoil, &soilStringList, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);

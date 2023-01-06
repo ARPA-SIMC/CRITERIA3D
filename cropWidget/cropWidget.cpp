@@ -853,7 +853,7 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
 {
 
     QString error;
-    QStringList idMeteoList;
+    QList<QString> idMeteoList;
     if (myProject.isXmlMeteoGrid)
     {
         if (! xmlMeteoGrid.parseXMLGrid(dbMeteoName, &error))
@@ -955,7 +955,7 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
     }
 
     // read soil list
-    QStringList soilStringList;
+    QList<QString> soilStringList;
     if (! getSoilList(&(myProject.dbSoil), &soilStringList, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);

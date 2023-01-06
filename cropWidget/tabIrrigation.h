@@ -26,7 +26,7 @@ private:
     QDateTimeAxis *axisXvirtual;
     QValueAxis *axisY;
     QValueAxis *axisYdx;
-    QStringList categories;
+    QList<QString> categories;
     QLineSeries* seriesLAI;
     QLineSeries* seriesMaxTransp;
     QLineSeries* seriesRealTransp;

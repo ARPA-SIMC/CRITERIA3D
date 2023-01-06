@@ -69,7 +69,7 @@
 
             QString meteoTableName;
             bool cropChanged;
-            QStringList yearList;
+            QList<QString> yearList;
             bool onlyOneYear;
 
             Crit3DMeteoGridDbHandler xmlMeteoGrid;
