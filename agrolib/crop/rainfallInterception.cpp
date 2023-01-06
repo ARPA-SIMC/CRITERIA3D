@@ -70,7 +70,10 @@ namespace canopy {
         return maxStemFlowRate;
     }
 
-    bool waterManagementCanopy(double* storedWater, double rainfall, double waterFreeEvaporation, double lai, double laiMin, double extinctionCoefficient, double leafStorage, double stemStorage,double maxStemFlowRate, double* freeRainfall, double *drainage, double* stemFlow, double* throughfallWater, double* soilWater)
+    bool waterManagementCanopy(double* storedWater, double rainfall, double waterFreeEvaporation, double lai,
+                               double laiMin, double extinctionCoefficient, double leafStorage, double stemStorage,
+                               double maxStemFlowRate, double* freeRainfall, double *drainage, double* stemFlow,
+                               double* throughfallWater, double* soilWater)
     {
         // state variable (input and output):
         // double* storedWater: state variable: water stored within the canopy (mm)
@@ -108,7 +111,9 @@ namespace canopy {
         return true;
     }
 
-    bool waterManagementCanopy(double* storedWater, double rainfall, double waterFreeEvaporation, double lai, double laiMin, double extinctionCoefficient, double leafStorage, double stemStorage,double maxStemFlowRate, double* soilWater)
+    bool waterManagementCanopy(double* storedWater, double rainfall, double waterFreeEvaporation, double lai, double laiMin,
+                               double extinctionCoefficient, double leafStorage, double stemStorage,
+                               double maxStemFlowRate, double* soilWater)
     {
         // state variable (input and output):
         // double* storedWater: state variable: water stored within the canopy (mm)

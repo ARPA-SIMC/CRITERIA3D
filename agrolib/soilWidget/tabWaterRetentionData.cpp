@@ -12,7 +12,7 @@ TabWaterRetentionData::TabWaterRetentionData()
     QVBoxLayout* tableLayout = new QVBoxLayout;
     tableWaterRetention = new TableWaterRetention();
     tableWaterRetention->setColumnCount(2);
-    QStringList tableHeader;
+    QList<QString> tableHeader;
     tableHeader << "Water potential [kPa]" << "Water content [m3 m-3]";
     tableWaterRetention->setHorizontalHeaderLabels(tableHeader);
     tableWaterRetention->setSelectionBehavior(QAbstractItemView::SelectRows);

@@ -1,7 +1,7 @@
 #include "formSelection.h"
 
 
-FormSelection::FormSelection(QStringList stringList_)
+FormSelection::FormSelection(QList<QString> stringList_)
 : stringList(stringList_)
 {
 

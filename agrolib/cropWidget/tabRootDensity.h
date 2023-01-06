@@ -42,7 +42,7 @@ private:
     QBarSet *set;
     QValueAxis *axisX;
     QBarCategoryAxis *axisY;
-    QStringList categories;
+    QList<QString> categories;
     Callout *m_tooltip;
 
 };
