@@ -3,7 +3,6 @@
 #   Synchronicity Widget library
 #   This project is part of PRAGA distribution
 #
-#
 #----------------------------------------------------
 
 QT  += widgets charts sql xml
@@ -31,7 +30,8 @@ win32:{
     TARGET = synchronicityWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../dbMeteoPoints ../dbMeteoGrid ../phenology ../climate ../commonDialogs ../commonChartElements ../interpolation
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../dbMeteoPoints \
+                ../dbMeteoGrid ../climate ../phenology ../commonDialogs ../commonChartElements ../interpolation
 
 
 SOURCES += \
@@ -44,5 +44,4 @@ HEADERS += \
     interpolationChartView.h \
     synchronicityChartView.h \
     synchronicityWidget.h 
-
 

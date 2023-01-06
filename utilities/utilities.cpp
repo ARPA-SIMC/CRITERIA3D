@@ -367,7 +367,7 @@ std::vector <float> StringListToFloat(QList<QString> myList)
 }
 
 
-QList<QString> FloatVectorToStringList(std::vector <float> myVector)
+QStringList FloatVectorToStringList(std::vector <float> myVector)
 {
     QList<QString> myList;
     for (unsigned i=0; i < unsigned(myVector.size()); i++)

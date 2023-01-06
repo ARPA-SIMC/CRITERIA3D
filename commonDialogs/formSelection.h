@@ -12,7 +12,7 @@ private:
     QComboBox* cmbStringList;
 
 public:
-    FormSelection(QStringList stringList_);
+    FormSelection(QList<QString> stringList_);
     ~FormSelection();
     void done(int res);
     QString getSelection();
