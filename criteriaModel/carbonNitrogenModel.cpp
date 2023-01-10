@@ -1316,8 +1316,8 @@ void Crit3DCarbonNitrogenProfile::N_SurfaceRunoff(Crit1DCase &myCase)
         N_NO3_runoff0GG = MINVALUE(myCase.carbonNitrogenLayers[0].N_NO3, myCase.carbonNitrogenLayers[0].N_NO3 / myCase.prevWaterContent[0] * myCase.output.dailySurfaceRunoff);
         N_NH4_runoff0GG = MINVALUE(myCase.carbonNitrogenLayers[0].N_NH4_Sol, myCase.carbonNitrogenLayers[0].N_NH4_Sol / myCase.prevWaterContent[0] * myCase.output.dailySurfaceRunoff);
 
-        myCase.carbonNitrogenLayers[1].N_NO3 -= N_NO3_runoff0GG;
-        myCase.carbonNitrogenLayers[1].N_NH4_Sol -= N_NH4_runoff0GG;
+        myCase.carbonNitrogenLayers[0].N_NO3 -= N_NO3_runoff0GG;
+        myCase.carbonNitrogenLayers[0].N_NH4_Sol -= N_NH4_runoff0GG;
 
     }
 
@@ -1729,7 +1729,7 @@ void Crit3DCarbonNitrogenProfile::leachingWaterTable(std::vector<double> &mySolu
 {
     double mySoluteLeachEdge;
 
-    // dilavamento
+    // leaching
 
     if ((myCase.output.dailyWaterTable != NODATA) && (myCase.output.dailyWaterTable > 0) && (myCase.unit.useWaterTableData == 1))// da chiarire && (flagWaterTableCase == 1))
     {
