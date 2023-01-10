@@ -1629,24 +1629,23 @@ void soluteFluxesPiston_old(double* mySolute, double* leached, double* CoeffPist
 */
 void Crit3DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,bool upwardFlag, double pistonDepth,double* leached,Crit1DCase &myCase)
 {
-    //2008.10 GA eliminata parte dispersiva perché il meccanismo pseudo-numerico è già dispersivo di suo
-    //2008.09 GA inserita componente dispersiva
-    //2008.03 GA FT inserita componente diffusiva
-    //2007.04 FT GA sistemato algoritmo pseudo-numerico a iterazione
-    //04.03.02.FZ
-    //-------------- NOTE -----------------------------------------------------
-    //calcolo dei flussi di soluti con diluizione iterativa
+    //2022.12 AV code translation from VB to C/C++
+    //2008.10 GA quit the dispersive algorithm because the pseudonumerical procedure is already self dispersive
+    //2008.09 GA added dispersive component
+    //2008.03 GA FT added diffusive component
+    //2007.04 FT GA debugged the iteration pseudo-numerical algorithm
+    //04.03.02.FZ first implementation
+    //-------------- NOTES -----------------------------------------------------
+    //computation of solute fluxes through iterative dilution
 
-    //unsigned int l;                          //[-] contatore
-    //unsigned int i;                          //[-] contatore
-    unsigned int iterations;       //[-] numero di iterazioni per la diluizione
-    std::vector<double> fluxSolute;           //[g m-2] flussi soluto
+    unsigned int iterations;                   //[-] needed iterations for dilution
+    std::vector<double> fluxSolute;           //[g m-2] vector used to compute the fluxes computation
     std::vector<double> fSolute;
     std::vector<double> u_temp;
     double H2O_step_flux;
     double H2O_step_flux_L_1;
     //double U_vol;
-    int firstLayer;
+    int firstLayer=0;
     double myFreeSolute;
     double coeffMobile;
 
@@ -1668,7 +1667,7 @@ void Crit3DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
         for (unsigned int l = 0; l<myCase.soilLayers.size(); l++)
         {
             fluxSolute[l] = 0;
-            u_temp[l] = myCase.prevWaterContent[l]; // umid[l].BeforeInfiltration;
+            u_temp[l] = myCase.prevWaterContent[l];
         }
         // ???????????????????
         //For L = nrLayers To 1 Step -1
@@ -1690,10 +1689,10 @@ void Crit3DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
                 H2O_step_flux = (myCase.soilLayers[l].flux / iterations);
                 H2O_step_flux_L_1 = (myCase.soilLayers[l-1].flux / iterations);
 
-                // acqua in entrata/uscita da nodo L
+                // water balance from node l
                 u_temp[l] += H2O_step_flux_L_1 - H2O_step_flux;
 
-                // calcolo flussi soluto
+                // computation of solute fluxes
                 if (myCase.soilLayers[l].flux > 0)
                 {
                     coeffMobile = 1;
