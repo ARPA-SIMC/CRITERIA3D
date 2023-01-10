@@ -51,6 +51,7 @@
             int meteoWidgetID;
             bool isGrid;
             bool isEnsemble;
+            bool isInitialized;
             int nrMembers;
             Crit3DMeteoSettings* meteoSettings;
             QPushButton *addVarButton;
