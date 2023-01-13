@@ -928,6 +928,7 @@ bool Project::loadDEM(QString myFileName)
     if (! gis::readEsriGrid(fileName, &DEM, &error))
     {
         this->logError("Wrong Digital Elevation Model file.\n" + QString::fromStdString(error));
+        errorType = ERROR_DEM;
         return false;
     }
 
@@ -2596,12 +2597,7 @@ bool Project::loadProject()
     }
 
     if (demFileName != "")
-        if (! loadDEM(demFileName))
-        {
-            errorType = ERROR_DEM;
-            errorString = "load DEM failed";
-            return false;
-        }
+        if (! loadDEM(demFileName)) return false;
 
     if (dbPointsFileName != "")
         if (! loadMeteoPointsDB(dbPointsFileName))
