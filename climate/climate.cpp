@@ -1614,15 +1614,6 @@ bool elaborateDailyAggregatedVarFromDaily(meteoVariable myVar, Crit3DMeteoPoint 
             meteoPoint.obsDataD[index].dd_heating = res;
             break;
         }
-        case dailyAirDewTemperatureAvg:
-                res = dewPoint(meteoPoint.obsDataD[index].rhAvg, meteoPoint.obsDataD[index].tAvg); // RHavg, Tavg
-                break;
-        case dailyAirDewTemperatureMin:
-                res = dewPoint(meteoPoint.obsDataD[index].rhMax, meteoPoint.obsDataD[index].tMin); // RHmax, Tmin
-                break;
-        case dailyAirDewTemperatureMax:
-                res = dewPoint(meteoPoint.obsDataD[index].rhMin, meteoPoint.obsDataD[index].tMax); // RHmin, Tmax
-                break;
         default:
                 res = NODATA;
                 break;
@@ -1811,15 +1802,6 @@ bool elaborateDailyAggrVarFromDailyFromStartDate(meteoVariable myVar, Crit3DMete
             meteoPoint.obsDataD[index].dd_heating = res;
             break;
         }
-        case dailyAirDewTemperatureAvg:
-                res = dewPoint(meteoPoint.obsDataD[index].rhAvg, meteoPoint.obsDataD[index].tAvg); // RHavg, Tavg
-                break;
-        case dailyAirDewTemperatureMin:
-                res = dewPoint(meteoPoint.obsDataD[index].rhMax, meteoPoint.obsDataD[index].tMin); // RHmax, Tmin
-                break;
-        case dailyAirDewTemperatureMax:
-                res = dewPoint(meteoPoint.obsDataD[index].rhMin, meteoPoint.obsDataD[index].tMax); // RHmin, Tmax
-                break;
         default:
                 res = NODATA;
                 break;
@@ -2056,29 +2038,6 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
             }
             break;
         }
-        case dailyAirDewTemperatureMax:
-        {
-            if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureMax, startDate, endDate) > 0)
-            {
-                if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirRelHumidityMin, startDate, endDate) > 0)
-                {
-                    preElaboration = elaborateDailyAggregatedVar(dailyAirDewTemperatureMax, *meteoPoint, outputValues, percValue, meteoSettings);
-                }
-            }
-            break;
-        }
-
-        case dailyAirDewTemperatureMin:
-        {
-            if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirTemperatureMin, startDate, endDate) > 0)
-            {
-                if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyAirRelHumidityMax, startDate, endDate) > 0)
-                {
-                    preElaboration = elaborateDailyAggregatedVar(dailyAirDewTemperatureMin, *meteoPoint, outputValues, percValue, meteoSettings);
-                }
-            }
-            break;
-        }
 
         case dailyAirTemperatureAvg:
         {
@@ -2287,17 +2246,6 @@ bool preElaborationWithoutLoad(Crit3DMeteoPoint* meteoPoint, meteoVariable varia
         case dailyAirTemperatureRange:
         {
             preElaboration = elaborateDailyAggrVarFromStartDate(dailyAirTemperatureRange, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
-            break;
-        }
-        case dailyAirDewTemperatureMax:
-        {
-            preElaboration = elaborateDailyAggrVarFromStartDate(dailyAirDewTemperatureMax, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
-            break;
-        }
-
-        case dailyAirDewTemperatureMin:
-        {
-            preElaboration = elaborateDailyAggrVarFromStartDate(dailyAirDewTemperatureMin, *meteoPoint, startDate, endDate, outputValues, percValue, meteoSettings);
             break;
         }
 
@@ -5204,29 +5152,12 @@ void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet
             break;
         }
 
-    case dailyAirTemperatureRange:
+        case dailyAirTemperatureRange:
         {
             float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
             meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
             value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
             meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
-            break;
-        }
-        case dailyAirDewTemperatureMax:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMax, value);
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMin, value);
-            break;
-        }
-
-        case dailyAirDewTemperatureMin:
-        {
-            float value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirTemperatureMin, value);
-            value = meteoPointGet.getMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, meteoSettings);
-            meteoPointSet->setMeteoPointValueD(getCrit3DDate(myDate), dailyAirRelHumidityMax, value);
             break;
         }
 
