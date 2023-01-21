@@ -959,10 +959,7 @@ bool isThermal(meteoVariable myVar)
             myVar == airDewTemperature ||
             myVar == dailyAirTemperatureAvg ||
             myVar == dailyAirTemperatureMax ||
-            myVar == dailyAirTemperatureMin ||
-            myVar == dailyAirDewTemperatureAvg ||
-            myVar == dailyAirDewTemperatureMax ||
-            myVar == dailyAirDewTemperatureMin)
+            myVar == dailyAirTemperatureMin)
 
         return true;
     else
@@ -976,10 +973,7 @@ bool getUseDetrendingVar(meteoVariable myVar)
             myVar == airDewTemperature ||
             myVar == dailyAirTemperatureAvg ||
             myVar == dailyAirTemperatureMax ||
-            myVar == dailyAirTemperatureMin ||
-            myVar == dailyAirDewTemperatureAvg ||
-            myVar == dailyAirDewTemperatureMax ||
-            myVar == dailyAirDewTemperatureMin)
+            myVar == dailyAirTemperatureMin)
 
         return true;
     else

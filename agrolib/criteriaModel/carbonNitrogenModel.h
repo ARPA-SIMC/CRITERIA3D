@@ -45,7 +45,7 @@ public:
     double CN_RATIO_NOTHARVESTED;
     double LITTERINI_C_DEFAULT;
     double LITTERINI_N_DEFAULT;
-    double LITTERINI_PROF_DEFAULT;
+    double LITTERINI_DEPTH_DEFAULT;
     double ratioHumusCN;
     double ratioLitterCN;
     double ratioBiomassCN;
@@ -95,9 +95,9 @@ public:
     double ratio_CN_humus;               //[] rapporto C/N pool humus
     double ratio_CN_biomass;             //[] rapporto C/N pool biomass
 
-    //double litterIniC;                   //[kg ha-1] initial litter carbon
-    //double litterIniN;                   //[kg ha-1] initial litter nitrogen
-    //double litterIniProf ;               //[cm] initial litter depth
+    double litterIniC;                   //[kg ha-1] initial litter carbon
+    double litterIniN;                   //[kg ha-1] initial litter nitrogen
+    double litterIniDepth ;               //[cm] initial litter depth
 
     // flags -------------------------------------------------------------------------------------------------
     int flagSOM;                         // 1: computes SO; 0: SO set at the default value
