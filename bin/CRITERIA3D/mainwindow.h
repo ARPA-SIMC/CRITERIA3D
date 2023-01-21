@@ -302,6 +302,7 @@
         void redrawOutputPoints();
         void resetOutputPointMarkers();
         void clearWindVectorObjects();
+        void loadMeteoPointsDataSingleDay(const QDate &date, bool showInfo);
     };
 
     bool selectDates(QDateTime &firstTime, QDateTime &lastTime);

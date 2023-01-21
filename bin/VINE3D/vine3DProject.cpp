@@ -163,7 +163,7 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     {
         logError();
         dbVine3D.close();
-        return(false);
+        return false;
     }
 
     if (!loadFieldShape())
@@ -178,7 +178,7 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     if (! initializeWaterBalance3D())
     {
         logError();
-        return(false);
+        return false;
     }
     outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(DEM);
 
@@ -216,7 +216,7 @@ bool Vine3DProject::loadGrapevineParameters()
 
     if (! myQuery.exec())
     {
-        errorString = "Error reading grapevine parameters. " + myQuery.lastError().text();
+        errorString = "Error reading grapevine parameters:\n" + myQuery.lastError().text();
         return false;
     }
 

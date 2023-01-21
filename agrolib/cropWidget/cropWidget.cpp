@@ -853,7 +853,7 @@ void Crit3DCropWidget::openMeteoDB(QString dbMeteoName)
 {
 
     QString error;
-    QStringList idMeteoList;
+    QList<QString> idMeteoList;
     if (myProject.isXmlMeteoGrid)
     {
         if (! xmlMeteoGrid.parseXMLGrid(dbMeteoName, &error))
@@ -955,7 +955,7 @@ void Crit3DCropWidget::openSoilDB(QString dbSoilName)
     }
 
     // read soil list
-    QStringList soilStringList;
+    QList<QString> soilStringList;
     if (! getSoilList(&(myProject.dbSoil), &soilStringList, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
@@ -2029,12 +2029,14 @@ void Crit3DCropWidget::irrigationVolumeChanged()
     }
 }
 
+
 void Crit3DCropWidget::variableWaterContentChanged()
 {
     updateTabWaterContent();
 }
 
-bool Crit3DCropWidget::setMeteoSqlite(QString* error)
+
+bool Crit3DCropWidget::setMeteoSqlite(QString& error)
 {
 
     if (myCase.meteoPoint.id.empty())
@@ -2047,9 +2049,9 @@ bool Crit3DCropWidget::setMeteoSqlite(QString* error)
     if (! query.isValid())
     {
         if (query.lastError().text() != "")
-            *error = "dbMeteo error: " + query.lastError().text();
+            error = "dbMeteo error: " + query.lastError().text();
         else
-            *error = "Missing meteo table:" + meteoTableName;
+            error = "Missing meteo table:" + meteoTableName;
         return false;
     }
 
@@ -2073,7 +2075,9 @@ bool Crit3DCropWidget::setMeteoSqlite(QString* error)
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstDate));
 
     // Read observed data
-    if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), error)) return false;
+    int maxNrDays = NODATA; // all data
+    if (! readDailyDataCriteria1D(query, myCase.meteoPoint, maxNrDays, error))
+        return false;
 
     return true;
 
@@ -2083,9 +2087,9 @@ bool Crit3DCropWidget::setMeteoSqlite(QString* error)
 void Crit3DCropWidget::on_actionViewWeather()
 {
     QString error;
-    if (!setMeteoSqlite(&error))
+    if (!setMeteoSqlite(error))
     {
-        QMessageBox::critical(nullptr, "error", error);
+        QMessageBox::critical(nullptr, "ERROR!", error);
         return;
     }
 

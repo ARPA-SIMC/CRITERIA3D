@@ -2172,7 +2172,6 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
     QDate currentDate, lastDateDB;
-    unsigned int previousIndex, currentIndex;
     std::vector<float> dailyVarList;
 
     int varCode = getDailyVarCode(variable);
@@ -2226,10 +2225,10 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     do
     {
         currentDate = qry.value(_tableDaily.fieldTime).toDate();
-        currentIndex = unsigned(firstDateDB->daysTo(currentDate));
+        int currentIndex = int(firstDateDB->daysTo(currentDate));
         if (getValue(qry.value("Value"), &value))
         {
-            dailyVarList[currentIndex] = value;
+            dailyVarList[unsigned(currentIndex)] = value;
         }
     } while (qry.next());
 

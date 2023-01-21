@@ -11,7 +11,6 @@
         #include "criteria1DCase.h"
     #endif
 
-    #include <QDate>
     #include <fstream>
 
     class Crit1DProject
@@ -75,14 +74,11 @@
         std::vector<float> precSeries;
 
         QString outputString;
-
         QString logFileName;
-        std::ofstream logFile;
-
-        bool addDateTimeLogFile;
-
         QString outputCsvFileName;
         std::ofstream outputCsvFile;
+
+        bool addDateTimeLogFile;
 
         // specific output
         std::vector<int> waterContentDepth;

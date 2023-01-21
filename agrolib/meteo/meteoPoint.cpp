@@ -157,7 +157,7 @@ void Crit3DMeteoPoint::initializeObsDataHFromMp(int myHourlyFraction, int number
     TObsDataH *data = mp.getObsDataH();
     for (unsigned int i = 0; i < unsigned(numberOfDays); i++)
     {
-        if (i<nrObsDataDaysH)
+        if (i < unsigned(nrObsDataDaysH))
         {
             obsDataH[i].date = myDate;
             for (unsigned int j = 0; j < nrDailyValues; j++)
@@ -187,7 +187,7 @@ void Crit3DMeteoPoint::initializeObsDataD(unsigned int numberOfDays, const Crit3
 {
     obsDataD.clear();
     obsDataD.resize(numberOfDays);
-    nrObsDataDaysD = numberOfDays;
+    nrObsDataDaysD = int(numberOfDays);
 
     quality = quality::missing_data;
     residual = NODATA;
@@ -1018,7 +1018,8 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
         if (! isEqual(obsDataD[i].et0_hs, NODATA))
             return obsDataD[i].et0_hs;
         else if (meteoSettings->getAutomaticET0HS() && !isEqual(obsDataD[i].tMin, NODATA) && !isEqual(obsDataD[i].tMax, NODATA))
-            return ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, getDoyFromDate(myDate), obsDataD[i].tMax, obsDataD[i].tMin);
+            return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude,
+                                        getDoyFromDate(myDate), obsDataD[i].tMax, obsDataD[i].tMin));
         else
             return NODATA;
     }
@@ -1175,7 +1176,6 @@ std::vector <float> Crit3DMeteoPoint::getProxyValues()
 
 bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
 {
-    float relHumidity, prec;
     short leafW;
     float temperature, windSpeed, height, netRadiation;
 
@@ -1185,8 +1185,8 @@ bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
     bool leafWres = false;
     bool et0res = false;
 
-    relHumidity = getMeteoPointValueH(myDate, myHour, 0, airRelHumidity);
-    prec = getMeteoPointValueH(myDate, myHour, 0, precipitation);
+    double relHumidity = double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity));
+    double prec = double(getMeteoPointValueH(myDate, myHour, 0, precipitation));
 
     if (computeLeafWetness(prec, relHumidity, &leafW))
         leafWres = setMeteoPointValueH(myDate, myHour, 0, leafWetness, leafW);
@@ -1222,7 +1222,8 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
     for (Crit3DDate actualDate = firstDate; actualDate<=lastDate; actualDate=actualDate.addDays(1))
     {
         float myDailyValue = getMeteoPointValueD(actualDate, dailyMeteoVar, meteoSettings);
-        quality::qualityType qualityT = qualityCheck->checkFastValueDaily_SingleValue(dailyMeteoVar, climateParam, myDailyValue, currentMonth, this->point.z);
+        quality::qualityType qualityT = qualityCheck->checkFastValueDaily_SingleValue(dailyMeteoVar, climateParam,
+                                                                                      myDailyValue, currentMonth, float(point.z));
         if (qualityT == quality::accepted)
         {
             sum = sum + myDailyValue;

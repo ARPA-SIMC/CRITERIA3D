@@ -317,7 +317,7 @@ void MainWindow::drawMeteoPoints()
     addMeteoPoints();
     ui->groupBoxMeteoPoints->setEnabled(true);
 
-    myProject.loadMeteoPointsData (myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+    myProject.loadMeteoPointsData (myProject.getCurrentDate().addDays(-1), myProject.getCurrentDate(), true, true, true);
 
     showPointsGroup->setEnabled(true);
     currentPointsVisualization = showLocation;
@@ -332,15 +332,17 @@ void MainWindow::on_mnuFileOpenProject_triggered()
     QString myFileName = QFileDialog::getOpenFileName(this,tr("Open Project"), "", tr("Project files (*.ini)"));
     if (myFileName == "") return;
 
-    if (myProject.loadVine3DProject(myFileName))
+    myProject.loadVine3DProject(myFileName);
+
+    if (myProject.DEM.isLoaded)
+        renderDEM();
+
+    if (myProject.meteoPointsLoaded)
     {
         if (myProject.getCurrentHour() == 24)
             myProject.setCurrentHour(23);
         drawMeteoPoints();
     }
-
-    if (myProject.DEM.isLoaded)
-        renderDEM();
 }
 
 
@@ -572,7 +574,7 @@ void MainWindow::addMeteoPoints()
     myProject.clearSelectedPoints();
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
-        StationMarker* point = new StationMarker(5.0, true, QColor((Qt::white)), this->mapView);
+        StationMarker* point = new StationMarker(5.0, true, QColor(Qt::white));
 
         point->setFlag(MapGraphicsObject::ObjectIsMovable, false);
         point->setLatitude(myProject.meteoPoints[i].latitude);
@@ -657,7 +659,7 @@ void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 {
     if (date != myProject.getCurrentDate())
     {
-        myProject.loadMeteoPointsData(date, date, true, true, true);
+        myProject.loadMeteoPointsData(date.addDays(-1), date, true, true, true);
         //myProject.loadMeteoGridData(date, date, true);
         myProject.setCurrentDate(date);
     }

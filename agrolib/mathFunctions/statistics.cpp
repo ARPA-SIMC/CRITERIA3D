@@ -185,7 +185,7 @@ namespace statistics
 
         if (measured.size() != simulated.size()) return NODATA;
 
-        for (int i=0; i < measured.size(); i++)
+        for (unsigned int i=0; i < measured.size(); i++)
         {
             if ((measured[i] != NODATA) && (simulated[i] != NODATA))
             {
@@ -211,16 +211,16 @@ namespace statistics
         if (isEqual(obsAvg, NODATA)) return NODATA;
 
         float sumDev = 0;
-        int i;
 
-        for (i=0; i < measured.size(); i++)
+        for (unsigned int i=0; i < measured.size(); i++)
             if (!isEqual(measured[i], NODATA))
                 sumDev += (measured[i] - obsAvg) * (measured[i] - obsAvg);
 
         if (sumDev == 0) return NODATA;
 
         float sumError = 0;
-        for (i = 0; i < measured.size(); i++)
+
+        for (unsigned int i = 0; i < measured.size(); i++)
             if (!isEqual(measured[i], NODATA) && !isEqual(simulated[i], NODATA))
                 sumError += (simulated[i] - measured[i]) * (simulated[i] - measured[i]);
 
@@ -617,7 +617,7 @@ namespace statistics
 
     double standardDeviation(std::vector<double> myList, int nrList)
     {
-        return sqrtf(variance(myList,nrList));
+        return sqrt(variance(myList,nrList));
     }
 
     double standardDeviation(double *myList, int nrList)

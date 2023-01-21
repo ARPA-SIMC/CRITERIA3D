@@ -9,6 +9,7 @@ See [CRITERIA3D paper](https://github.com/ARPA-SIMC/CRITERIA3D/blob/master/DOC/C
 ## How to compile CRITERIA-3D
 Dependencies:
 - [Qt libraries](https://www.qt.io/download-qt-installer): Qt 5.x or following is needed (download also QtCharts).
+- Only for Qt 6.x : download also *Qt5 Compatibility Module*
 
 Build (with Qt Creator):
 1) Build the project  *MapGraphics/MapGraphics.pro* 

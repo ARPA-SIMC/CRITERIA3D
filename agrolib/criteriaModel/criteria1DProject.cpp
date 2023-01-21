@@ -78,7 +78,6 @@ void Crit1DProject::closeProject()
     {
         logger.writeInfo("Close Project...");
         closeAllDatabase();
-        logFile.close();
 
         isProjectLoaded = false;
     }
@@ -235,7 +234,7 @@ bool Crit1DProject::readSettings()
     projectSettings->endGroup();
 
     // OUTPUT variables (optional)
-    QStringList depthList;
+    QList<QString> depthList;
     projectSettings->beginGroup("output");
         depthList = projectSettings->value("waterContent").toStringList();
         if (! setVariableDepth(depthList, waterContentDepth))
@@ -639,14 +638,16 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
     }
 
     // Forecast: increase nr of days
-    if (this->isShortTermForecast)
-        nrDays += unsigned(this->daysOfForecast);
+    if (isShortTermForecast)
+        nrDays += unsigned(daysOfForecast);
 
     // Initialize data
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstDate));
 
     // Read observed data
-    if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), &projectError)) return false;
+    int maxNrDays = NODATA; // all data
+    if (! readDailyDataCriteria1D(query, myCase.meteoPoint, maxNrDays, projectError))
+        return false;
 
     // Add Short-Term forecast
     if (this->isShortTermForecast)
@@ -698,7 +699,9 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
         }
 
         // Read forecast data
-        if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), &projectError)) return false;
+        maxNrDays = daysOfForecast;
+        if (! readDailyDataCriteria1D(query, myCase.meteoPoint, maxNrDays, projectError))
+                return false;
 
         // fill temperature (only forecast)
         // estende il dato precedente se mancante
@@ -869,6 +872,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
     {
         if (! saveState(projectError))
             return false;
+        logger.writeInfo("Save state:" + dbState.databaseName());
     }
 
     if (isSeasonalForecast || isMonthlyForecast)
@@ -1327,7 +1331,7 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
     {
         double degreeDays;
         int daySinceIrr;
-        if (qry.next())
+        if (qry.first())
         {
             if (!getValue(qry.value("DEGREE_DAYS"), &degreeDays))
             {
@@ -1789,4 +1793,3 @@ bool setVariableDepth(QList<QString>& depthList, std::vector<int>& variableDepth
 
     return true;
 }
-

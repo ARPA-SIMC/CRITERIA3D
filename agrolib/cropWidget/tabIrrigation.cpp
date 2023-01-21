@@ -122,7 +122,6 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
 
     this->firstYear = firstYear;
     int prevYear = firstYear - 1;
-    std::string error;
 
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
     Crit3DDate lastDate;
@@ -170,7 +169,7 @@ void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int last
 
         if (! myCase.computeDailyModel(myDate, errorString))
         {
-            QMessageBox::critical(nullptr, "Error!", QString::fromStdString(error));
+            QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorString));
             return;
         }
         // display only interval firstYear lastYear
