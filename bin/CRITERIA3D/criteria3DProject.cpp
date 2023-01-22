@@ -93,7 +93,7 @@ bool Crit3DProject::initializeCriteria3DModel()
     int soilLayerWithRoot = this->nrSoilLayers - nrSoilLayersWithoutRoots;
     double depthModeRootDensity = 0.35*this->soilDepth;     //[m] depth of mode of root density
     double depthMeanRootDensity = 0.5*this->soilDepth;      //[m] depth of mean of root density
-    initializeRootProperties(&(this->soilList[0]), this->nrSoilLayers, this->soilDepth,
+    initializeRootProperties(&(this->soilList[0]), this->nrSoilLayers, this->computationSoilDepth,
                          this->layerDepth.data(), this->layerThickness.data(),
                          nrSoilLayersWithoutRoots, soilLayerWithRoot,
                          GAMMA_DISTRIBUTION, depthModeRootDensity, depthMeanRootDensity);

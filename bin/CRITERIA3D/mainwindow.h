@@ -13,6 +13,7 @@
     #include "rubberBand.h"
     #include "viewer3D.h"
     #include "ArrowObject.h"
+    #include "project3D.h"
 
     #include <QMainWindow>
 
@@ -205,6 +206,8 @@
         void on_viewer3DClosed();
         void on_slopeChanged();
 
+        void on_actionView_SurfaceWaterContent_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -289,9 +292,11 @@
 
         void setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
         void setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
+        void setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myGrid);
 
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);
+        void showCriteria3DVariable(criteria3DVariable var, int layerIndex);
 
         bool setRadiationAsCurrentVariable();
         bool startModels(QDateTime firstTime, QDateTime lastTime);

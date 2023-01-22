@@ -45,7 +45,7 @@ void Project3D::initializeProject3D()
     soilMapFileName = "";
 
     // default
-    soilDepth = 1.0;            // [m]
+    computationSoilDepth = 0.0;            // [m]
     minThickness = 0.02;        // [m]
     maxThickness = 0.1;         // [m]
     thickFactor = 1.5;
@@ -234,7 +234,7 @@ void Project3D::computeNrLayers()
     double depth = minThickness * 0.5;
 
     nrLayers = 1;
-    while (depth < soilDepth)
+    while (depth < computationSoilDepth)
     {
         nextThickness = MINVALUE(maxThickness, prevThickness * thickFactor);
         depth = depth + (prevThickness + nextThickness) * 0.5;
@@ -253,6 +253,9 @@ void Project3D::setLayersDepth()
 
     layerDepth[0] = 0.0;
     layerThickness[0] = 0.0;
+
+    if (nrLayers <= 1) return;
+
     layerThickness[1] = minThickness;
     layerDepth[1] = minThickness * 0.5;
 
@@ -260,7 +263,7 @@ void Project3D::setLayersDepth()
     {
         if (i == lastLayer)
         {
-            layerThickness[i] = soilDepth - (layerDepth[i-1] + layerThickness[i-1] / 2.0);
+            layerThickness[i] = computationSoilDepth - (layerDepth[i-1] + layerThickness[i-1] / 2.0);
         }
         else
         {
@@ -721,7 +724,7 @@ double Project3D::getSoilLayerBottom(unsigned int i)
     return layerDepth[i] + layerThickness[i] / 2.0;
 }
 
-// index of soil layer for the current depth
+// soil layer index from soil depth
 int Project3D::getSoilLayerIndex(double depth)
 {
     unsigned int i= 0;
@@ -838,16 +841,24 @@ bool Project3D::aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod 
 double Project3D::computeEvaporation(int row, int col, double lai)
 {
     double depthCoeff, thickCoeff, layerCoeff;
-    double residualEvap, layerEvap, availableWater, flow;
+    double availableWater;                              // [mm]
 
-    double const MAX_PROF_EVAPORATION = 0.2;           //[m]
-    int lastEvapLayer = getSoilLayerIndex(MAX_PROF_EVAPORATION);
-    double area = DEM.header->cellSize * DEM.header->cellSize;
+    double const MAX_EVAPORATION_DEPTH = 0.2;           // [m]
+    int lastEvapLayer;                                  // [-] index
+    if (computationSoilDepth >= MAX_EVAPORATION_DEPTH)
+    {
+        lastEvapLayer = getSoilLayerIndex(MAX_EVAPORATION_DEPTH);
+    }
+    else
+    {
+       lastEvapLayer = getSoilLayerIndex(computationSoilDepth);
+    }
 
-    //E0 [mm]
-    double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);
-    double potentialEvaporation = getMaxEvaporation(et0, lai);
-    double realEvap = 0;
+    double area = DEM.header->cellSize * DEM.header->cellSize;              // [m2]
+
+    double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);    // [mm]
+    double potentialEvaporation = getMaxEvaporation(et0, lai);              // [mm]
+    double realEvaporation = 0;                                             // [mm]
 
     for (unsigned int layer=0; layer <= unsigned(lastEvapLayer); layer++)
     {
@@ -856,37 +867,35 @@ double Project3D::computeEvaporation(int row, int col, double lai)
         // layer coefficient
         if (layer == 0)
         {
-            // surface: [m] water level
-            availableWater = getCriteria3DVar(availableWaterContent, nodeIndex);
+            // surface: water level [m] -> [mm]
+            availableWater = getCriteria3DVar(availableWaterContent, nodeIndex) * 1000;
             layerCoeff = 1;
         }
         else
         {
-            // sub-surface: [m^3 m^-3]
+            // sub-surface: volumetric awc [m^3 m^-3]
             availableWater = getCriteria3DVar(availableWaterContent, nodeIndex);
-            availableWater *= layerThickness[layer];                // [m]
+            // [m] -> [mm]
+            availableWater *= layerThickness[layer] * 1000;
 
-            depthCoeff = layerDepth[layer] / MAX_PROF_EVAPORATION;
+            depthCoeff = layerDepth[layer] / MAX_EVAPORATION_DEPTH;
             thickCoeff = layerThickness[layer] / 0.04;
             layerCoeff = exp(-EULER * depthCoeff) * thickCoeff;
         }
 
-        // [m]->[mm]
-        availableWater *= 1000;
-
-        residualEvap = potentialEvaporation - realEvap;
-        layerEvap = MINVALUE(potentialEvaporation * layerCoeff, residualEvap);
+        double residualEvap = potentialEvaporation - realEvaporation;       // [mm]
+        double layerEvap = MINVALUE(potentialEvaporation * layerCoeff, residualEvap);  // [mm]
         layerEvap = MINVALUE(layerEvap, availableWater);
 
         if (layerEvap > 0)
         {
-            realEvap += layerEvap;
-            flow = area * (layerEvap / 1000);                               // [m3/h]
-            waterSinkSource.at(unsigned(nodeIndex)) -= (flow / 3600);       // [m3/s]
+            realEvaporation += layerEvap;
+            double flow = area * (layerEvap / 1000);                        // [m3 h-1]
+            waterSinkSource.at(unsigned(nodeIndex)) -= (flow / 3600);       // [m3 s-1]
         }
     }
 
-    return realEvap;
+    return realEvaporation;
 }
 
 
@@ -1067,10 +1076,9 @@ bool Project3D::computeWaterSinkSource()
     */
 
     // assign sink/source
-    int myResult;
     for (unsigned long i = 0; i < nrNodes; i++)
     {
-        myResult = soilFluxes3D::setWaterSinkSource(signed(i), waterSinkSource.at(i));
+        int myResult = soilFluxes3D::setWaterSinkSource(signed(i), waterSinkSource.at(i));
         if (isCrit3dError(myResult, errorString))
         {
             errorString = "waterBalanceSinkSource:" + errorString;
@@ -1082,11 +1090,42 @@ bool Project3D::computeWaterSinkSource()
 }
 
 
+bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
+{
+    long nodeIndex;
 
+    criteria3DMap.initializeGrid(indexMap.at(layerIndex));
+
+    for (int row = 0; row < indexMap.at(layerIndex).header->nrRows; row++)
+        for (int col = 0; col < indexMap.at(layerIndex).header->nrCols; col++)
+        {
+            nodeIndex = indexMap.at(layerIndex).value[row][col];
+            if (nodeIndex != indexMap.at(layerIndex).header->flag)
+            {
+                double value = getCriteria3DVar(var, nodeIndex);
+
+                if (value == NODATA)
+                    criteria3DMap.value[row][col] = criteria3DMap.header->flag;
+                else
+                {
+                    if (var == waterContent && layerIndex == 0)
+                    {
+                        value *= 1000;          // [m] -> [mm]
+                    }
+                    criteria3DMap.value[row][col] = value;
+                }
+            }
+            else
+                criteria3DMap.value[row][col] = criteria3DMap.header->flag;
+        }
+
+    gis::updateMinMaxRasterGrid(&criteria3DMap);
+
+    return true;
+}
 
 
 // ------------------------- other functions -------------------------
-
 
 bool isCrit3dError(int result, QString& error)
 {

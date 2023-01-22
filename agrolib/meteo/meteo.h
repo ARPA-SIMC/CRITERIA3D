@@ -100,7 +100,8 @@
                     snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceEnergy,
                     snowAge, snowLiquidWaterContent, snowMelt, sensibleHeat, latentHeat,
                     dailyWaterTableDepth,
-                    anomaly, elaboration, noMeteoTerrain, noMeteoVar};
+                    anomaly, elaboration, noMeteoTerrain,
+                    noMeteoVar};
 
 
     const std::map<std::string, meteoVariable> MapDailyMeteoVar = {

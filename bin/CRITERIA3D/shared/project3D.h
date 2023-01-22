@@ -17,6 +17,11 @@
 
     class Project3D : public Project
     {
+        Q_OBJECT
+
+    signals:
+        void updateOutputSignal();
+
     private:
         void computeNrLayers();
         void setLayersDepth();
@@ -42,11 +47,12 @@
         // 3D soil fluxes maps
         gis::Crit3DRasterGrid soilIndexMap;
         gis::Crit3DRasterGrid boundaryMap;
+        gis::Crit3DRasterGrid criteria3DMap;
         std::vector <gis::Crit3DRasterGrid> indexMap;
 
         // soil properties
         unsigned int nrSoils;
-        double soilDepth;                       // [m]
+        double computationSoilDepth;            // [m]
 
         std::vector <soil::Crit3DSoil> soilList;
         soil::Crit3DTextureClass texturalClassList[13];
@@ -98,6 +104,8 @@
         bool computeWaterSinkSource();
         void computeWaterBalance3D(double timeStep);
         bool computeCrop(QDateTime myTime);
+
+        bool setCriteria3DMap(criteria3DVariable var, int layerIndex);
 
     };
 

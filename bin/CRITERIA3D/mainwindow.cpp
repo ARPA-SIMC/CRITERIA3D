@@ -182,6 +182,10 @@ void MainWindow::updateMaps()
 void MainWindow::updateOutputMap()
 {
     updateDateTime();
+    if (myProject.isCriteria3DInitialized)
+    {
+        myProject.setCriteria3DMap(waterContent, 0);
+    }
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
 }
@@ -1016,9 +1020,11 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
 
     rasterOutput->initializeUTM(myRaster, myProject.gisSettings, false);
     outputRasterColorLegend->colorScale = myRaster->colorScale;
-    outputRasterColorLegend->repaint();
+
     emit rasterOutput->redrawRequested();
-    updateMaps();
+    outputRasterColorLegend->update();
+
+    rasterOutput->updateCenter();
 }
 
 void MainWindow::on_actionProjectSettings_triggered()
@@ -1159,6 +1165,16 @@ void MainWindow::setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *m
     setColorScale(myVar, myGrid->colorScale);
     setCurrentRasterOutput(myGrid);
     ui->labelOutputRaster->setText(QString::fromStdString(getVariableString(myVar)));
+}
+
+void MainWindow::setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myGrid)
+{
+    if (myVar == waterContent && layerIndex == 0)
+    {
+        setSurfaceWaterScale(myGrid->colorScale);
+        ui->labelOutputRaster->setText("Surface water content [mm]");
+    }
+    setCurrentRasterOutput(myGrid);
 }
 
 void MainWindow::showMeteoVariable(meteoVariable var)
@@ -1968,7 +1984,8 @@ void MainWindow::on_actionSnow_settings_triggered()
 }
 
 
-//----------------- MENU WATER FLUXES  -----------------
+//--------------------- MENU WATER FLUXES  -----------------------
+
 void MainWindow::on_actionCriteria3D_settings_triggered()
 {
     // TODO
@@ -2019,6 +2036,32 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     myProject.computeWater = true;
 
     startModels(firstTime, lastTime);
+}
+
+
+void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex)
+{
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logError("Initialize water fluxes before.");
+        return;
+    }
+
+    switch(var)
+    {
+    case waterContent:
+        myProject.setCriteria3DMap(waterContent, layerIndex);
+        setCriteria3DVariable(waterContent, layerIndex, &(myProject.criteria3DMap));
+        break;
+
+    default: {}
+    }
+}
+
+
+void MainWindow::on_actionView_SurfaceWaterContent_triggered()
+{
+    showCriteria3DVariable(waterContent, 0);
 }
 
 
@@ -2750,3 +2793,4 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
     connect (viewer3D, SIGNAL(slopeChanged()), this, SLOT(on_slopeChanged()));
 }
+
