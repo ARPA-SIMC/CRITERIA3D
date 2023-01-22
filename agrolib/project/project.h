@@ -75,7 +75,7 @@
     protected:
         frequencyType currentFrequency;
         meteoVariable currentVariable;
-        QDate previousDate, currentDate;
+        QDate currentDate;
         int currentHour;
 
     public:

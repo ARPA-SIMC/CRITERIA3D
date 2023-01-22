@@ -295,7 +295,6 @@
 
         bool setRadiationAsCurrentVariable();
         bool startModels(QDateTime firstTime, QDateTime lastTime);
-        bool runModels(QDateTime firstTime, QDateTime lastTime);
 
         void testOutputPoints();
         void addOutputPointsGUI();

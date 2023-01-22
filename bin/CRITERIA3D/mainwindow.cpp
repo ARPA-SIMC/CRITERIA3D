@@ -131,6 +131,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
 
     this->setMouseTracking(true);
+
+    connect(&myProject, &Crit3DProject::updateOutputSignal, this, &MainWindow::updateOutputMap);
 }
 
 
@@ -164,6 +166,8 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 }
 
 
+// ------------------- SLOT -----------------------
+
 void MainWindow::updateMaps()
 {
     rasterDEM->updateCenter();
@@ -180,11 +184,9 @@ void MainWindow::updateOutputMap()
     updateDateTime();
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
-    qApp->processEvents();
 }
 
 
-// ------------------- SLOT -----------------------
 void MainWindow::mouseMove(QPoint eventPos)
 {
     if (! isInsideMap(eventPos)) return;
@@ -340,7 +342,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton)
     {
-        if (contextMenuRequested(event->pos(), event->globalPos()))
+        if (contextMenuRequested(event->pos(), event->globalPosition().toPoint()))
             return;
 
         if (rubberBand != nullptr)
@@ -1038,8 +1040,6 @@ void MainWindow::on_actionProjectSettings_triggered()
 }
 
 
-
-
 // ---------------- SHOW METEOPOINTS --------------------------------
 
 void MainWindow::on_flagView_not_active_points_toggled(bool isChecked)
@@ -1690,6 +1690,7 @@ void MainWindow::on_actionComputeHour_meteoVariables_triggered()
     showMeteoVariable(myProject.getCurrentVariable());
 }
 
+
 void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
 {
     QDateTime firstTime, lastTime;
@@ -1706,7 +1707,8 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
 }
 
 
-// ------------------------ MODEL CYCLE ----------------------------
+// ------------------------ MODEL CYCLE ---------------------------
+
 bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 {
     if (! myProject.meteoPointsLoaded)
@@ -1715,8 +1717,11 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
         return false;
     }
 
-    firstTime = myProject.getCurrentTime();
-    firstTime = firstTime.addSecs(3600);
+    firstTime.setTimeSpec(Qt::UTC);
+    firstTime.setDate(myProject.getCurrentDate());
+    firstTime = firstTime.addSecs((myProject.getCurrentHour() +1) * HOUR_SECONDS);
+
+    lastTime.setTimeSpec(Qt::UTC);
     lastTime = firstTime;
     lastTime.setTime(QTime(23,0,0));
 
@@ -1736,6 +1741,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 
     return true;
 }
+
 
 bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 {
@@ -1792,96 +1798,9 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
 
-    return runModels(firstTime, lastTime);
+    return myProject.runModels(firstTime, lastTime);
 }
 
-
-bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
-{
-    // initialize meteo
-    if (myProject.computeMeteo)
-    {
-        myProject.hourlyMeteoMaps->initialize();
-
-        // load td maps if needed
-        if (myProject.interpolationSettings.getUseTD())
-        {
-            myProject.logInfoGUI("Loading topographic distance maps...");
-            if (! myProject.loadTopographicDistanceMaps(true, false))
-                return false;
-        }
-    }
-
-    // initialize radiation
-    if (myProject.computeRadiation)
-    {
-        myProject.radiationMaps->initialize();
-    }
-
-    QDate firstDate = firstTime.date();
-    QDate lastDate = lastTime.date();
-    int hour1 = firstTime.time().hour();
-    int hour2 = lastTime.time().hour();
-
-    // cycle on days
-    QString currentOutputPath;
-    for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1))
-    {
-        myProject.setCurrentDate(myDate);
-
-        if (myProject.isSaveOutputRaster())
-        {
-            // create directory for hourly raster output
-            currentOutputPath = myProject.getProjectPath() + PATH_OUTPUT + myDate.toString("yyyy/MM/dd/");
-            if (! QDir().mkpath(currentOutputPath))
-            {
-                myProject.logError("Creation of directory for hourly raster output failed:" + currentOutputPath);
-                myProject.setSaveOutputRaster(false);
-            }
-        }
-
-        // cycle on hours
-        int firstHour = (myDate == firstDate) ? hour1 : 0;
-        int lastHour = (myDate == lastDate) ? hour2 : 23;
-
-        for (int hour = firstHour; hour <= lastHour; hour++)
-        {
-            myProject.setCurrentHour(hour);
-            QDateTime myTime = QDateTime(myDate, QTime(hour, 0, 0), Qt::UTC);
-
-            if (! myProject.modelHourlyCycle(myTime, currentOutputPath))
-            {
-                myProject.logError();
-                return false;
-            }
-
-            // output points
-            if (myProject.isSaveOutputPoints())
-            {
-                if (! myProject.writeOutputPointsData())
-                {
-                    myProject.logError();
-                    return false;
-                }
-            }
-
-            this->updateOutputMap();
-
-            if (myProject.modelPause || myProject.modelStop)
-            {
-                return true;
-            }
-        }
-
-        if (myProject.isSaveDailyState())
-        {
-            myProject.saveModelState();
-        }
-    }
-
-    myProject.closeLogInfo();
-    return true;
-}
 
 void MainWindow::on_buttonModelPause_clicked()
 {
@@ -1890,11 +1809,13 @@ void MainWindow::on_buttonModelPause_clicked()
     ui->buttonModelStart->setEnabled(true);
 }
 
+
 void MainWindow::on_buttonModelStop_clicked()
 {
     myProject.modelStop = true;
     ui->groupBoxModel->setDisabled(true);
 }
+
 
 void MainWindow::on_buttonModelStart_clicked()
 {
@@ -1905,12 +1826,13 @@ void MainWindow::on_buttonModelStart_clicked()
         ui->buttonModelStart->setDisabled(true);
         QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
         newFirstTime = newFirstTime.addSecs(3600);
-        runModels(newFirstTime, myProject.modelLastTime);
+        myProject.runModels(newFirstTime, myProject.modelLastTime);
     }
 }
 
 
-//------------------- MENU SOLAR RADIATION MODEL -----------------
+//------------------- MENU SOLAR RADIATION MODEL ----------------
+
 void MainWindow::on_actionRadiation_settings_triggered()
 {
     DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
@@ -2729,7 +2651,6 @@ void MainWindow::on_actionLoad_OutputPoints_triggered()
 }
 
 
-
 void MainWindow::on_actionOutputPoints_add_triggered()
 {
     if (myProject.outputPointsFileName.isEmpty())
@@ -2829,4 +2750,3 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
     connect (viewer3D, SIGNAL(slopeChanged()), this, SLOT(on_slopeChanged()));
 }
-

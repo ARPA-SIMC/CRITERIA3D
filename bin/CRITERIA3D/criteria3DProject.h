@@ -22,6 +22,10 @@
 
     class Crit3DProject : public Project3D
     {
+    Q_OBJECT
+
+    signals:
+        void updateOutputSignal();
 
     private:
         bool _saveOutputRaster, _saveOutputPoints, _saveDailyState;
@@ -48,6 +52,7 @@
         Crit3DProject();
 
         bool initializeCriteria3DModel();
+        bool runModels(QDateTime firstTime, QDateTime lastTime);
 
         void setSaveDailyState(bool isSave);
         bool isSaveDailyState();
