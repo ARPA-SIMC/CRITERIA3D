@@ -66,7 +66,6 @@ void Project::initializeProject()
     currentVariable = noMeteoVar;
     currentFrequency = noFrequency;
     currentDate.setDate(1800,1,1);
-    previousDate = currentDate;
     currentHour = 12;
 
     parameters = nullptr;
@@ -755,12 +754,11 @@ void Project::setCurrentDate(QDate myDate)
 {
     if (myDate != this->currentDate)
     {
-        this->previousDate = this->currentDate;
         this->currentDate = myDate;
-    }
-    if (proxyWidget != nullptr)
-    {
-        proxyWidget->updateDateTime(currentDate, currentHour);
+        if (proxyWidget != nullptr)
+        {
+            proxyWidget->updateDateTime(currentDate, currentHour);
+        }
     }
 }
 
