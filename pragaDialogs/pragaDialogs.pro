@@ -35,6 +35,7 @@ SOURCES += \
     dialogAddRemoveDataset.cpp \
     dialogCellSize.cpp \
     dialogClimateFields.cpp \
+    dialogComputeData.cpp \
     dialogDownloadMeteoData.cpp \
     dialogSelectDataset.cpp \
     dialogSeriesOnZones.cpp \
@@ -46,6 +47,7 @@ HEADERS += \
     dialogAddRemoveDataset.h \
     dialogCellSize.h \
     dialogClimateFields.h \
+    dialogComputeData.h \
     dialogDownloadMeteoData.h \
     dialogSelectDataset.h \
     dialogSeriesOnZones.h \
