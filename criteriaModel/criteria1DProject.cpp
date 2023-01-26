@@ -649,6 +649,13 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
     if (! readDailyDataCriteria1D(query, myCase.meteoPoint, maxNrDays, projectError))
         return false;
 
+    // write missing data on log
+    if (projectError != "")
+    {
+        this->logger.writeInfo(projectError);
+        projectError = "";
+    }
+
     // Add Short-Term forecast
     if (this->isShortTermForecast)
     {
@@ -702,6 +709,11 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
         maxNrDays = daysOfForecast;
         if (! readDailyDataCriteria1D(query, myCase.meteoPoint, maxNrDays, projectError))
                 return false;
+
+        if (projectError != "")
+        {
+            this->logger.writeInfo(projectError);
+        }
 
         // fill temperature (only forecast)
         // estende il dato precedente se mancante
