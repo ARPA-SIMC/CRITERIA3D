@@ -66,7 +66,6 @@ void Project::initializeProject()
     currentVariable = noMeteoVar;
     currentFrequency = noFrequency;
     currentDate.setDate(1800,1,1);
-    previousDate = currentDate;
     currentHour = 12;
 
     parameters = nullptr;
@@ -755,12 +754,11 @@ void Project::setCurrentDate(QDate myDate)
 {
     if (myDate != this->currentDate)
     {
-        this->previousDate = this->currentDate;
         this->currentDate = myDate;
-    }
-    if (proxyWidget != nullptr)
-    {
-        proxyWidget->updateDateTime(currentDate, currentHour);
+        if (proxyWidget != nullptr)
+        {
+            proxyWidget->updateDateTime(currentDate, currentHour);
+        }
     }
 }
 
@@ -928,6 +926,7 @@ bool Project::loadDEM(QString myFileName)
     if (! gis::readEsriGrid(fileName, &DEM, &error))
     {
         this->logError("Wrong Digital Elevation Model file.\n" + QString::fromStdString(error));
+        errorType = ERROR_DEM;
         return false;
     }
 
@@ -976,21 +975,21 @@ bool Project::loadMeteoPointsDB(QString fileName)
     QString dbName = getCompleteFileName(fileName, PATH_METEOPOINT);
     if (! QFile(dbName).exists())
     {
-        logError("Meteo points DB does not exists:\n" + dbName);
+        errorString = "Meteo points DB does not exists:\n" + dbName;
         return false;
     }
 
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
     if (meteoPointsDbHandler->error != "")
     {
-        logError("Function loadMeteoPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->error);
+        errorString = "Function loadMeteoPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->error;
         closeMeteoPointsDB();
         return false;
     }
 
     if (! meteoPointsDbHandler->loadVariableProperties())
     {
-        logError(meteoPointsDbHandler->error);
+        errorString = meteoPointsDbHandler->error;
         closeMeteoPointsDB();
         return false;
     }
@@ -1000,7 +999,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
     if (! meteoPointsDbHandler->getPropertiesFromDb(listMeteoPoints, gisSettings, errorString))
     {
         errorString = "Error in reading table 'point_properties'\n" + errorString;
-        logError();
         closeMeteoPointsDB();
         return false;
     }
@@ -1009,7 +1007,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
     if (nrMeteoPoints == 0)
     {
         errorString = "Missing data in the table 'point_properties'\n" + errorString;
-        logError();
         closeMeteoPointsDB();
         return false;
     }
@@ -1569,38 +1566,36 @@ bool Project::readPointProxyValues(Crit3DMeteoPoint* myPoint, QSqlDatabase* myDb
     {
         myPoint->proxyValues[i] = NODATA;
 
-        // read only for active proxies
-        if (interpolationSettings.getSelectedCombination().getValue(i))
-        {
-            myProxy = interpolationSettings.getProxy(i);
-            proxyField = QString::fromStdString(myProxy->getProxyField());
-            proxyTable = QString::fromStdString(myProxy->getProxyTable());
+        // read for all proxies (also not active) for proxy graphs
 
-            if (proxyField != "" && proxyTable != "")
+        myProxy = interpolationSettings.getProxy(i);
+        proxyField = QString::fromStdString(myProxy->getProxyField());
+        proxyTable = QString::fromStdString(myProxy->getProxyTable());
+
+        if (proxyField != "" && proxyTable != "")
+        {
+            statement = QString("SELECT %1 FROM %2 WHERE id_point = '%3'").arg(proxyField).arg(proxyTable).arg(QString::fromStdString((*myPoint).id));
+            if(qry.exec(statement))
             {
-                statement = QString("SELECT %1 FROM %2 WHERE id_point = '%3'").arg(proxyField).arg(proxyTable).arg(QString::fromStdString((*myPoint).id));
-                if(qry.exec(statement))
+                qry.last();
+                if (qry.value(proxyField) != "")
                 {
-                    qry.last();
-                    if (qry.value(proxyField) != "")
-                    {
-                        if (! qry.value(proxyField).isNull())
-                            myPoint->proxyValues[i] = qry.value(proxyField).toFloat();
-                    }
+                    if (! qry.value(proxyField).isNull())
+                        myPoint->proxyValues[i] = qry.value(proxyField).toFloat();
                 }
             }
+        }
 
-            if (int(myPoint->proxyValues[i]) == int(NODATA))
+        if (int(myPoint->proxyValues[i]) == int(NODATA))
+        {
+            gis::Crit3DRasterGrid* proxyGrid = myProxy->getGrid();
+            if (proxyGrid == nullptr || ! proxyGrid->isLoaded)
+                return false;
+            else
             {
-                gis::Crit3DRasterGrid* proxyGrid = myProxy->getGrid();
-                if (proxyGrid == nullptr || ! proxyGrid->isLoaded)
-                    return false;
-                else
-                {
-                    myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
-                    if (! isEqual(myValue, proxyGrid->header->flag))
-                        myPoint->proxyValues[i] = myValue;
-                }
+                myValue = gis::getValueFromXY(*proxyGrid, myPoint->point.utm.x, myPoint->point.utm.y);
+                if (! isEqual(myValue, proxyGrid->header->flag))
+                    myPoint->proxyValues[i] = myValue;
             }
         }
     }
@@ -1617,31 +1612,28 @@ bool Project::loadProxyGrids()
 
         logInfoGUI("Loading grid for proxy: " + QString::fromStdString(myProxy->getName()));
 
-        if (interpolationSettings.getSelectedCombination().getValue(i) || myProxy->getForQualityControl())
+        gis::Crit3DRasterGrid* myGrid = myProxy->getGrid();
+
+        QString fileName = QString::fromStdString(myProxy->getGridName());
+        fileName = getCompleteFileName(fileName, PATH_GEO);
+
+        if (! myGrid->isLoaded && fileName != "")
         {
-            gis::Crit3DRasterGrid* myGrid = myProxy->getGrid();
-
-            QString fileName = QString::fromStdString(myProxy->getGridName());
-            fileName = getCompleteFileName(fileName, PATH_GEO);
-
-            if (! myGrid->isLoaded && fileName != "")
+            gis::Crit3DRasterGrid proxyGrid;
+            std::string myError;
+            if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, & myError))
             {
-                gis::Crit3DRasterGrid proxyGrid;
-                std::string myError;
-                if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, & myError))
-                {
-                    gis::Crit3DRasterGrid* resGrid = new gis::Crit3DRasterGrid();
-                    gis::resampleGrid(proxyGrid, resGrid, *(DEM.header), aggrAverage, 0);
-                    myProxy->setGrid(resGrid);
-                }
-                else
-                {
-                    errorString = "Error loading proxy grid " + fileName;
-                    return false;
-                }
-
-                proxyGrid.clear();
+                gis::Crit3DRasterGrid* resGrid = new gis::Crit3DRasterGrid();
+                gis::resampleGrid(proxyGrid, resGrid, *(DEM.header), aggrAverage, 0);
+                myProxy->setGrid(resGrid);
             }
+            else
+            {
+                errorString = "Error loading proxy grid " + fileName;
+                return false;
+            }
+
+            proxyGrid.clear();
         }
 
         closeLogInfo();
@@ -2596,12 +2588,7 @@ bool Project::loadProject()
     }
 
     if (demFileName != "")
-        if (! loadDEM(demFileName))
-        {
-            errorType = ERROR_DEM;
-            errorString = "load DEM failed";
-            return false;
-        }
+        if (! loadDEM(demFileName)) return false;
 
     if (dbPointsFileName != "")
         if (! loadMeteoPointsDB(dbPointsFileName))

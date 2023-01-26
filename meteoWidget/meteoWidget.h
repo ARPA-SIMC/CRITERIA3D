@@ -46,11 +46,13 @@
             void on_actionChangeLeftAxis();
             void on_actionChangeRightAxis();
             void on_actionExportGraph();
+            void on_actionRemoveStation();
 
     private:
             int meteoWidgetID;
             bool isGrid;
             bool isEnsemble;
+            bool isInitialized;
             int nrMembers;
             Crit3DMeteoSettings* meteoSettings;
             QPushButton *addVarButton;

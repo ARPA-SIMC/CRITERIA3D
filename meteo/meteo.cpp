@@ -652,7 +652,7 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
     {
         case airTemperature: case dailyAirTemperatureAvg: case dailyAirTemperatureMax:
         case dailyAirTemperatureMin: case dailyAirTemperatureRange:
-        case airDewTemperature: case dailyAirDewTemperatureAvg: case dailyAirDewTemperatureMin: case dailyAirDewTemperatureMax:
+        case airDewTemperature:
         case snowSurfaceTemperature:
         case elaboration:
             setTemperatureScale(colorScale);
@@ -716,12 +716,8 @@ std::string getVariableString(meteoVariable myVar)
         return "Maximum relative humidity (%)";
     else if (myVar == dailyAirRelHumidityMin)
         return "Minimum relative humidity (%)";
-    else if (myVar == airDewTemperature || myVar == dailyAirDewTemperatureAvg)
+    else if (myVar == airDewTemperature)
         return "Air dew temperature (°C)";
-    else if (myVar == dailyAirDewTemperatureMax)
-        return "Maximum air dew temperature (°C)";
-    else if (myVar == dailyAirDewTemperatureMin)
-        return "Minimum air dew temperature (°C)";
     else if (myVar == thom || myVar == dailyThomAvg)
         return "Thom index ()";
     else if (myVar == dailyThomDaytime)
@@ -1042,9 +1038,6 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
         else if (myVar == airRelHumidity)
             return dailyAirRelHumidityAvg;
 
-        else if (myVar == airDewTemperature)
-            return dailyAirDewTemperatureAvg;
-
         else if (myVar == thom)
             return dailyThomAvg;
 
@@ -1079,9 +1072,6 @@ meteoVariable updateMeteoVariable(meteoVariable myVar, frequencyType myFreq)
 
         else if (myVar == dailyAirRelHumidityAvg || myVar == dailyAirRelHumidityMax || myVar == dailyAirRelHumidityMin)
             return airRelHumidity;
-
-        else if (myVar == dailyAirDewTemperatureAvg || myVar == dailyAirDewTemperatureMax || myVar == dailyAirDewTemperatureMin)
-            return airDewTemperature;
 
         else if (myVar == dailyPrecipitation || myVar == monthlyPrecipitation)
             return precipitation;

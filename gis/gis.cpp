@@ -515,7 +515,7 @@ namespace gis
             dx = x2 - x1;
             dy = y2 - y1;
 
-            return sqrt((dx * dx)+(dy * dy));
+            return sqrtf((dx * dx)+(dy * dy));
     }
 
     void getRowColFromXY(const Crit3DRasterGrid& myGrid, double myX, double myY, int *row, int *col)

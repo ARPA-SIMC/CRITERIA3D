@@ -24,6 +24,7 @@
 
 #include "meteoWidget.h"
 #include "dialogSelectVar.h"
+#include "dialogRemoveStation.h"
 #include "dialogMeteoTable.h"
 #include "dialogChangeAxis.h"
 #include "utilities.h"
@@ -49,6 +50,7 @@ qreal findMedian(QList<double> sortedList, int begin, int end)
 
 Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMeteoSettings* meteoSettings_)
 {
+    isInitialized = false;
     meteoSettings = meteoSettings_;
     this->isGrid = isGrid;
     this->isEnsemble = false;
@@ -112,81 +114,80 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     // read Crit3DPlotDefault and fill MapCSVDefault
     int CSVRequiredInfo = 3;
     QFile fileDefaultGraph(defaultPath);
-    if ( !fileDefaultGraph.open(QFile::ReadOnly | QFile::Text) ) {
+    if ( !fileDefaultGraph.open(QFile::ReadOnly | QFile::Text) )
+    {
         qDebug() << "File not exists";
         QMessageBox::information(nullptr, "Warning", "Missing Crit3DPlotDefault.csv");
+        return;
     }
-    else
+
+    currentVariables.clear();
+    QTextStream in(&fileDefaultGraph);
+    in.readLine(); //skip first line
+    while (!in.atEnd())
     {
-        QTextStream in(&fileDefaultGraph);
-        in.readLine(); //skip first line
-        while (!in.atEnd())
+        QString line = in.readLine();
+        QList<QString> items = line.split(",");
+        if (items.size() < CSVRequiredInfo)
         {
-            QString line = in.readLine();
-            QList<QString> items = line.split(",");
-            if (items.size() < CSVRequiredInfo)
+            qDebug() << "invalid format CSV, missing data";
+            break;
+        }
+        QString key = items[0];
+        items.removeFirst();
+        if (key.isEmpty() || items[0].isEmpty())
+        {
+            qDebug() << "invalid format CSV, missing data";
+            break;
+        }
+        if (key.contains("DAILY"))
+        {
+            currentFreq = daily;
+        }
+        else
+        {
+            currentFreq = hourly;
+        }
+        MapCSVDefault.insert(key,items);
+        if (items[0] == "line")
+        {
+            auto search = MapDailyMeteoVar.find(key.toStdString());
+            auto searchHourly = MapHourlyMeteoVar.find(key.toStdString());
+            if (search != MapDailyMeteoVar.end() || searchHourly != MapHourlyMeteoVar.end())
             {
-                qDebug() << "invalid format CSV, missing data";
-                currentVariables.clear();
-                break;
-            }
-            QString key = items[0];
-            items.removeFirst();
-            if (key.isEmpty() || items[0].isEmpty())
-            {
-                qDebug() << "invalid format CSV, missing data";
-                currentVariables.clear();
-                break;
-            }
-            if (key.contains("DAILY"))
-            {
-                currentFreq = daily;
-            }
-            else
-            {
-                currentFreq = hourly;
-            }
-            MapCSVDefault.insert(key,items);
-            if (items[0] == "line")
-            {
-                auto search = MapDailyMeteoVar.find(key.toStdString());
-                auto searchHourly = MapHourlyMeteoVar.find(key.toStdString());
-                if (search != MapDailyMeteoVar.end() || searchHourly != MapHourlyMeteoVar.end())
-                {
-                    isLine = true;
-                    QLineSeries* line = new QLineSeries();
-                    line->setName(key);
-                    line->setColor(QColor(items[1]));
-                    vectorLine.append(line);
-                    currentVariables.append(key);
-                    nameLines.append(key);
-                    colorLines.append(QColor(items[1]));
-                }
-            }
-            else if (items[0] == "bar")
-            {
-                auto search = MapDailyMeteoVar.find(key.toStdString());
-                auto searchHourly = MapHourlyMeteoVar.find(key.toStdString());
-                if (search != MapDailyMeteoVar.end() || searchHourly != MapHourlyMeteoVar.end())
-                {
-                    isBar = true;
-                    QBarSet* set = new QBarSet(key);
-                    set->setColor(QColor(items[1]));
-                    set->setBorderColor(QColor(items[1]));
-                    vectorBarSet.append(set);
-                    currentVariables.append(key);
-                    nameBar.append(key);
-                    colorBar.append(QColor(items[1]));
-                }
-            }
-            else
-            {
-                qDebug() << "invalid format CSV, missing line or bar";
-                currentVariables.clear();
-                break;
+                isLine = true;
+                QLineSeries* line = new QLineSeries();
+                line->setName(key);
+                line->setColor(QColor(items[1]));
+                vectorLine.append(line);
+                currentVariables.append(key);
+                nameLines.append(key);
+                colorLines.append(QColor(items[1]));
             }
         }
+        else if (items[0] == "bar")
+        {
+            auto search = MapDailyMeteoVar.find(key.toStdString());
+            auto searchHourly = MapHourlyMeteoVar.find(key.toStdString());
+            if (search != MapDailyMeteoVar.end() || searchHourly != MapHourlyMeteoVar.end())
+            {
+                isBar = true;
+                QBarSet* set = new QBarSet(key);
+                set->setColor(QColor(items[1]));
+                set->setBorderColor(QColor(items[1]));
+                vectorBarSet.append(set);
+                currentVariables.append(key);
+                nameBar.append(key);
+                colorBar.append(QColor(items[1]));
+            }
+        }
+        else
+        {
+            qDebug() << "invalid format CSV, missing line or bar";
+            break;
+        }
     }
+
     // check valid data
     int dailyVar = 0;
     int hourlyVar = 0;
@@ -203,7 +204,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     }
     if (currentVariables.isEmpty() || (dailyVar != 0 && hourlyVar != 0))
     {
-        qDebug() << "invalid format CSV";
+        QMessageBox::information(nullptr, "Warning", "Wrong variables in Crit3DPlotDefault.csv");
         currentFreq = noFrequency;
         currentVariables.clear();
         nameLines.clear();
@@ -211,6 +212,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
         MapCSVDefault.clear();
         isLine = false;
         isBar = false;
+        return;
     }
 
     if (isLine)
@@ -227,6 +229,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     if ( !fileStylesGraph.open(QFile::ReadOnly | QFile::Text) ) {
         QMessageBox::information(nullptr, "Error", "Missing Crit3DPlotStyles.csv");
         qDebug() << "File not exists";
+        return;
     }
     else
     {
@@ -354,10 +357,12 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     QAction* changeLeftAxis = new QAction(tr("&Change axis left"), this);
     QAction* changeRightAxis = new QAction(tr("&Change axis right"), this);
     QAction* exportGraph = new QAction(tr("&Export graph"), this);
+    QAction* removeStation = new QAction(tr("&Remove stations"), this);
 
     editMenu->addAction(changeLeftAxis);
     editMenu->addAction(changeRightAxis);
     editMenu->addAction(exportGraph);
+    editMenu->addAction(removeStation);
 
     connect(addVarButton, &QPushButton::clicked, [=](){ showVar(); });
     connect(dailyButton, &QPushButton::clicked, [=](){ showDailyGraph(); });
@@ -369,6 +374,7 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     connect(changeLeftAxis, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionChangeLeftAxis);
     connect(changeRightAxis, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionChangeRightAxis);
     connect(exportGraph, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionExportGraph);
+    connect(removeStation, &QAction::triggered, this, &Crit3DMeteoWidget::on_actionRemoveStation);
 
     plotLayout->addWidget(chartView);
     horizontalGroupBox->setLayout(buttonLayout);
@@ -376,7 +382,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     mainLayout->addLayout(plotLayout);
     setLayout(mainLayout);
 
+    isInitialized = true;
 }
+
 
 Crit3DMeteoWidget::~Crit3DMeteoWidget()
 {
@@ -394,6 +402,8 @@ void Crit3DMeteoWidget::setDateInterval(QDate first, QDate last)
 
 void Crit3DMeteoWidget::draw(Crit3DMeteoPoint mp, bool isAppend)
 {
+    if (! isInitialized) return;
+
     meteoPoints.append(mp);
 
     if (! isAppend)
@@ -456,7 +466,7 @@ void Crit3DMeteoWidget::addMeteoPointsEnsemble(Crit3DMeteoPoint mp)
 
 void Crit3DMeteoWidget::drawEnsemble()
 {
-    if (meteoPointsEnsemble.isEmpty() || meteoPointsEnsemble.size() != nrMembers)
+    if (! isInitialized || meteoPointsEnsemble.isEmpty() || meteoPointsEnsemble.size() != nrMembers)
         return;
 
     firstDate->blockSignals(true);
@@ -635,7 +645,6 @@ void Crit3DMeteoWidget::resetValues()
 
 void Crit3DMeteoWidget::resetEnsembleValues()
 {
-
     // clear prev series values
     ensembleSet.clear();
     for (int i = 0; i < ensembleSeries.size(); i++)
@@ -651,12 +660,13 @@ void Crit3DMeteoWidget::resetEnsembleValues()
     maxEnsembleBar = 0;
     maxEnsembleLine = NODATA;
     minEnsembleLine = -NODATA;
-
 }
 
 
 void Crit3DMeteoWidget::drawEnsembleDailyVar()
 {
+    if (! isInitialized) return;
+
     FormInfo formInfo;
     formInfo.showInfo("Draw daily data...");
 
@@ -891,6 +901,8 @@ void Crit3DMeteoWidget::drawEnsembleDailyVar()
 
 void Crit3DMeteoWidget::drawDailyVar()
 {
+    if (! isInitialized) return;
+
     FormInfo formInfo;
     formInfo.showInfo("Draw daily data...");
 
@@ -1147,7 +1159,6 @@ void Crit3DMeteoWidget::drawDailyVar()
                     setVector[mp][j]->setColor(Qt::transparent);
                 }
                 setVector[mp][j]->setBorderColor(barColor);
-
             }
         }
     }
@@ -1172,6 +1183,8 @@ void Crit3DMeteoWidget::drawDailyVar()
 
 void Crit3DMeteoWidget::drawHourlyVar()
 {
+    if (! isInitialized) return;
+
     FormInfo formInfo;
     formInfo.showInfo("Draw hourly data...");
 
@@ -1399,6 +1412,8 @@ void Crit3DMeteoWidget::drawHourlyVar()
 
 void Crit3DMeteoWidget::showVar()
 {
+    if (! isInitialized) return;
+
     if (currentFreq == noFrequency)
     {
         if (!dailyButton->isEnabled()) // dailyButton is pressed
@@ -1444,6 +1459,8 @@ void Crit3DMeteoWidget::showVar()
 
 void Crit3DMeteoWidget::showDailyGraph()
 {
+    if (! isInitialized) return;
+
     currentFreq = daily;
 
     dailyButton->setEnabled(false);
@@ -1478,6 +1495,8 @@ void Crit3DMeteoWidget::showDailyGraph()
 
 void Crit3DMeteoWidget::showHourlyGraph()
 {
+    if (! isInitialized) return;
+
     currentFreq = hourly;
 
     hourlyButton->setEnabled(false);
@@ -1512,6 +1531,8 @@ void Crit3DMeteoWidget::showHourlyGraph()
 
 void Crit3DMeteoWidget::updateSeries()
 {
+    if (! isInitialized) return;
+
     nameLines.clear();
     colorLines.clear();
     nameBar.clear();
@@ -1548,6 +1569,8 @@ void Crit3DMeteoWidget::updateSeries()
 
 void Crit3DMeteoWidget::redraw()
 {
+    if (! isInitialized) return;
+
     if (lastDate->dateTime() < firstDate->dateTime())
     {
         QMessageBox::information(nullptr, "Error", "Invalid data range");
@@ -1988,6 +2011,7 @@ void Crit3DMeteoWidget::on_actionChangeLeftAxis()
     }
 }
 
+
 void Crit3DMeteoWidget::on_actionChangeRightAxis()
 {
     DialogChangeAxis changeAxisDialog(false);
@@ -1998,9 +2022,9 @@ void Crit3DMeteoWidget::on_actionChangeRightAxis()
     }
 }
 
+
 void Crit3DMeteoWidget::on_actionExportGraph()
 {
-
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save current graph"), "", tr("png files (*.png)"));
 
     if (fileName != "")
@@ -2017,6 +2041,37 @@ void Crit3DMeteoWidget::on_actionExportGraph()
         QFile file(fileName);
         file.open(QIODevice::WriteOnly);
         buffer.save(&file, "PNG");
+    }
+}
+
+void Crit3DMeteoWidget::on_actionRemoveStation()
+{
+    QList<QString> allStations;
+    for (int mp=0; mp<meteoPoints.size();mp++)
+    {
+        QString stationId = QString::fromStdString(meteoPoints[mp].id);
+        QString stationsName = QString::fromStdString(meteoPoints[mp].name);
+        QString station = stationId+"_"+stationsName;
+        allStations << station;
+    }
+    DialogRemoveStation selectStation(allStations);
+    if (selectStation.result() == QDialog::Accepted)
+    {
+        QList<QString> stationsToRemoveList = selectStation.getSelectedStations();
+        for (int n=0; n<stationsToRemoveList.size();n++)
+        {
+            QString id = stationsToRemoveList[n].split("_")[0];
+            for (int indexMp=0; indexMp<meteoPoints.size();indexMp++)
+            {
+                if (meteoPoints[indexMp].id == id.toStdString())
+                {
+                    meteoPoints.removeAt(indexMp);
+                    indexMp = indexMp - 1;
+                }
+            }
+        }
+        updateSeries();
+        redraw();
     }
 }
 
