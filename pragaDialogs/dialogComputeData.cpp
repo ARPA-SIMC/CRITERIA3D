@@ -40,6 +40,8 @@ DialogComputeData::DialogComputeData(QDate myDateFrom, QDate myDateTo, bool isGr
 
     dateFrom.setDate(myDateFrom);
     dateTo.setDate(myDateTo);
+    dateFrom.setDisplayFormat("dd.MM.yyyy");
+    dateTo.setDisplayFormat("dd.MM.yyyy");
 
     QLabel *variableLabel = new QLabel(tr("Variable: "));
     std::map<meteoVariable, std::string>::const_iterator it;
