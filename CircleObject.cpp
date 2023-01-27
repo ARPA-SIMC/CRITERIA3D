@@ -62,6 +62,7 @@ void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 
     if (_isMarked)
     {
+        painter->setPen(QPen(QColor(Qt::white)));
         painter->setBrush(Qt::transparent);
         painter->drawEllipse(QPointF(0,0), _radius*2, _radius*2);
     }
