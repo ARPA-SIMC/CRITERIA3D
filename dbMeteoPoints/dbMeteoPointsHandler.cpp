@@ -1386,7 +1386,8 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
         qry.prepare(queryStr);
         if (! qry.exec())
         {
-            *log += "\nError in execute query: " + qry.lastError().text();
+            *log += "\nError in execute query: " + qry.lastError().text() +"\n";
+            *log += "Maybe there are missing or wrong data values.";
             return false;
         }
     }
