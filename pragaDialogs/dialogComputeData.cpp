@@ -131,7 +131,7 @@ void DialogComputeData::done(bool res)
             QMessageBox::information(nullptr, "Missing variable", "Select a variable");
             return;
         }
-        if (dateFrom.date() >= dateTo.date())
+        if (dateFrom.date() > dateTo.date())
         {
             QMessageBox::information(nullptr, "Invalid interval", "First date should be <= last date ");
             return;
