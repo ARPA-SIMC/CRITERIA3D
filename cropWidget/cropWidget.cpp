@@ -2079,6 +2079,9 @@ bool Crit3DCropWidget::setMeteoSqlite(QString& error)
     if (! readDailyDataCriteria1D(query, myCase.meteoPoint, maxNrDays, error))
         return false;
 
+    if (error != "")
+        QMessageBox::warning(nullptr, "WARNING!", error);
+
     return true;
 
 }

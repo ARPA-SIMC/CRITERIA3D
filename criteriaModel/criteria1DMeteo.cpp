@@ -279,7 +279,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
         if (prec < prec_min )
         {
             invalidPrec = invalidPrec + int(previousDate.daysTo(date));
-            // 7 day missing, the next one invalid temp
+            // 7 day missing, the next one invalid
             if ( invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC )
             {
                  *error = "incomplete year, missing valid data (prec) more than 7 consecutive days";
@@ -849,7 +849,7 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
  * \return true if data are correctly loaded
  * \note meteoPoint have to be initialized BEFORE function
  */
-bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int maxNrDays, QString &myError)
+bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int maxNrDays, QString &error)
 {
     const int MAX_MISSING_DAYS = 3;
     QDate myDate, expectedDate, previousDate;
@@ -866,6 +866,7 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
     float previousTmax = NODATA;
     float previousWaterTable = NODATA;
     int nrMissingData = 0;
+    std::vector<QString> wrongDate;
 
     // first date
     query.first();
@@ -884,7 +885,7 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
 
         if (! myDate.isValid())
         {
-            myError = meteoID + " wrong date format: " + query.value("date").toString();
+            error = meteoID + " wrong date format: " + query.value("date").toString();
             return false;
         }
 
@@ -894,7 +895,7 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
             {
                 if (expectedDate.daysTo(myDate) > MAX_MISSING_DAYS)
                 {
-                    myError = meteoID + " wrong METEO: too many missing data." + expectedDate.toString();
+                    error = meteoID + " wrong METEO: too many missing data." + expectedDate.toString();
                     return false;
                 }
                 else
@@ -938,6 +939,7 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
 
             if (int(tmin) == int(NODATA) || int(tmax) == int(NODATA) || int(prec) == int(NODATA))
             {
+                wrongDate.push_back(myDate.toString("yyyy-MM-dd"));
                 if (nrMissingData < MAX_MISSING_DAYS)
                 {
                     if (int(tmin) == int(NODATA)) tmin = previousTmin;
@@ -947,7 +949,7 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
                 }
                 else
                 {
-                    myError = meteoID + " wrong METEO: too many missing data " + myDate.toString();
+                    error = meteoID + " wrong METEO: too many missing data " + myDate.toString();
                     return false;
                 }
             }
@@ -994,7 +996,7 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
             }
             else
             {
-                myError = meteoID + " wrong METEO: index out of range.";
+                error = meteoID + " wrong METEO: index out of range.";
                 return false;
             }
 
@@ -1004,6 +1006,18 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
         }
 
     } while(query.next() && (currentIndex < maxNrDays || maxNrDays == NODATA));
+
+    if (wrongDate.size() > 0)
+    {
+        error = "WARNING on meteo table: " + meteoID + "\n";
+        error += "Wrong or missing data: ";
+        for (unsigned int i = 0; i < wrongDate.size(); i++)
+        {
+            error += wrongDate[i];
+            if (i < (wrongDate.size() - 1))
+                error += ", ";
+        }
+    }
 
     return true;
 }
