@@ -29,6 +29,8 @@ public:
     void setShowText(bool isShowText);
     void setMultiColorText(bool isMultiColorText);
     void setMarked(bool isMarked);
+
+    bool isMarked(){ return _isMarked; }
     
 signals:
     
