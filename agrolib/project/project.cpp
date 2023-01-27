@@ -975,21 +975,21 @@ bool Project::loadMeteoPointsDB(QString fileName)
     QString dbName = getCompleteFileName(fileName, PATH_METEOPOINT);
     if (! QFile(dbName).exists())
     {
-        logError("Meteo points DB does not exists:\n" + dbName);
+        errorString = "Meteo points DB does not exists:\n" + dbName;
         return false;
     }
 
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
     if (meteoPointsDbHandler->error != "")
     {
-        logError("Function loadMeteoPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->error);
+        errorString = "Function loadMeteoPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->error;
         closeMeteoPointsDB();
         return false;
     }
 
     if (! meteoPointsDbHandler->loadVariableProperties())
     {
-        logError(meteoPointsDbHandler->error);
+        errorString = meteoPointsDbHandler->error;
         closeMeteoPointsDB();
         return false;
     }
@@ -999,7 +999,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
     if (! meteoPointsDbHandler->getPropertiesFromDb(listMeteoPoints, gisSettings, errorString))
     {
         errorString = "Error in reading table 'point_properties'\n" + errorString;
-        logError();
         closeMeteoPointsDB();
         return false;
     }
@@ -1008,7 +1007,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
     if (nrMeteoPoints == 0)
     {
         errorString = "Missing data in the table 'point_properties'\n" + errorString;
-        logError();
         closeMeteoPointsDB();
         return false;
     }

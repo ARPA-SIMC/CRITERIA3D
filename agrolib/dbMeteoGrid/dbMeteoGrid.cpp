@@ -3402,7 +3402,7 @@ QDate Crit3DMeteoGridDbHandler::getFirsMonthlytDate() const
 
 QDate Crit3DMeteoGridDbHandler::getLastMonthlyDate() const
 {
-    if (_lastHourlyDate.year() == 1800)
+    if (_lastMonthlyDate.year() == 1800)
     {
         return QDate(); // return null date
     }

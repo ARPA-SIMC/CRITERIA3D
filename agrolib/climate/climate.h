@@ -56,6 +56,7 @@
                                               std::vector<float> &outputValues, float* percValue);
     bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint meteoPoint, std::vector<float> &outputValues, Crit3DMeteoSettings *meteoSettings);
     bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint *meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin, Crit3DMeteoSettings *meteoSettings);
+    std::vector<float> aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin);
 
     bool anomalyOnPoint(Crit3DMeteoPoint* meteoPoint, float refValue);
 
@@ -149,7 +150,7 @@
 
     bool appendXMLAnomaly(Crit3DAnomalyList *listXMLAnomaly, QString xmlFileName, QString *myError);
 
-    void monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDate firstDate, QDate lastDate, std::vector<meteoVariable> dailyMeteoVar, Crit3DMeteoSettings* meteoSettings, Crit3DQuality *qualityCheck, Crit3DClimateParameters *climateParam);
+    bool monthlyAggregateDataGrid(Crit3DMeteoGridDbHandler* meteoGridDbHandler, QDate firstDate, QDate lastDate, std::vector<meteoVariable> dailyMeteoVar, Crit3DMeteoSettings* meteoSettings, Crit3DQuality *qualityCheck, Crit3DClimateParameters *climateParam);
 
     int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
                                              Crit3DMeteoPoint* meteoPointTemp, Crit3DClimate* clima, bool isMeteoGrid, bool isAnomaly, Crit3DMeteoSettings* meteoSettings, std::vector<float> &outputValues, bool dataAlreadyLoaded);
