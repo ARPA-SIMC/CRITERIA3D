@@ -346,7 +346,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton)
     {
-        if (contextMenuRequested(event->pos(), event->globalPosition().toPoint()))
+        if (contextMenuRequested(event->pos(), event->globalPos()))
             return;
 
         if (rubberBand != nullptr)
