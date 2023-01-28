@@ -1833,6 +1833,7 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
     meteoVariable hourlyVar = noMeteoVar;
     meteoComputation elab = noMeteoComp;
     float param = NODATA;
+    int nValidValues;
 
     if (meteoPoint->nrObsDataDaysD == 0)
         meteoPoint->initializeObsDataD(dateIni.daysTo(dateFin)+1, dateIni);
@@ -1912,14 +1913,27 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
         dailyValue = NODATA;
         value = NODATA;
         values.clear();
+        nValidValues = 0;
 
         for (hour = 1; hour <= 24; hour++)
         {
             value = meteoPoint->getMeteoPointValueH(date, hour, 0, hourlyVar);
-            values.push_back(value);
+            if (int(value) != NODATA)
+            {
+                values.push_back(value);
+                nValidValues = nValidValues + 1;
+            }
         }
 
-        dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
+        float validPercentage = (float(nValidValues) / float(24)) * 100;
+        if (validPercentage < meteoSettings->getMinimumPercentage())
+        {
+            dailyValue = NODATA;
+        }
+        else
+        {
+            dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
+        }
         meteoPoint->setMeteoPointValueD(date, myVar, dailyValue);
 
         if (myVar == dailyLeafWetness && dailyValue > 24)
@@ -1933,7 +1947,7 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
 
 }
 
-std::vector<float> aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin)
+std::vector<float> aggregatedHourlyToDailyList(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin, Crit3DMeteoSettings *meteoSettings)
 {
 
     Crit3DDate date;
@@ -1944,6 +1958,7 @@ std::vector<float> aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint
     meteoVariable hourlyVar = noMeteoVar;
     meteoComputation elab = noMeteoComp;
     float param = NODATA;
+    int nValidValues;
 
     if (meteoPoint->nrObsDataDaysD == 0)
         meteoPoint->initializeObsDataD(dateIni.daysTo(dateFin)+1, dateIni);
@@ -2023,15 +2038,28 @@ std::vector<float> aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint
         dailyValue = NODATA;
         value = NODATA;
         values.clear();
+        nValidValues = 0;
 
         for (hour = 1; hour <= 24; hour++)
         {
             value = meteoPoint->getMeteoPointValueH(date, hour, 0, hourlyVar);
-            values.push_back(value);
+            if (int(value) != NODATA)
+            {
+                values.push_back(value);
+                nValidValues = nValidValues + 1;
+            }
         }
 
-        dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
-        dailyData.push_back(dailyValue);
+        float validPercentage = (float(nValidValues) / float(24)) * 100;
+        if (validPercentage < meteoSettings->getMinimumPercentage())
+        {
+            dailyData.push_back(NODATA);
+        }
+        else
+        {
+            dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
+            dailyData.push_back(dailyValue);
+        }
 
         if (myVar == dailyLeafWetness && dailyValue > 24)
         {

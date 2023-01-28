@@ -155,11 +155,19 @@ QList <meteoVariable> DialogComputeData::getVariables() const
         QString var = selVar[i]->text();
         if (isGrid)
         {
-            selMeteoVar.append(getKeyMeteoVarMeteoMap(MapMonthlyMeteoVarToString, var.toStdString()));
+            meteoVariable meteoVarSelected = getKeyMeteoVarMeteoMap(MapMonthlyMeteoVarToString, var.toStdString());
+            if (meteoVarSelected != noMeteoVar)
+            {
+                selMeteoVar.append(meteoVarSelected);
+            }
         }
         else
         {
-            selMeteoVar.append(getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, var.toStdString()));
+            meteoVariable meteoVarSelected = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, var.toStdString());
+            if (meteoVarSelected != noMeteoVar)
+            {
+                selMeteoVar.append(meteoVarSelected);
+            }
         }
 
     }
