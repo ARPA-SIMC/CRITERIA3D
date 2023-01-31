@@ -768,7 +768,7 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
     }
 }
 
-void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
+void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin, bool isHourly, bool isDaily, bool isMonthly)
 {
     int nrDays = dateIni.daysTo(dateFin) + 1;
     int nrMonths = (dateFin.year-dateIni.year)*12+dateFin.month-(dateIni.month-1);
@@ -777,9 +777,9 @@ void Crit3DMeteoGrid::initializeData(Crit3DDate dateIni, Crit3DDate dateFin)
         for (unsigned col = 0; col < unsigned(gridStructure().header().nrCols); col++)
             if (_meteoPoints[row][col]->active)
             {
-                _meteoPoints[row][col]->initializeObsDataH(1, nrDays, dateIni);
-                _meteoPoints[row][col]->initializeObsDataD(nrDays, dateIni);
-                _meteoPoints[row][col]->initializeObsDataM(nrMonths, dateIni.month, dateIni.year);
+                if (isHourly) _meteoPoints[row][col]->initializeObsDataH(1, nrDays, dateIni);
+                if (isDaily) _meteoPoints[row][col]->initializeObsDataD(nrDays, dateIni);
+                if (isMonthly) _meteoPoints[row][col]->initializeObsDataM(nrMonths, dateIni.month, dateIni.year);
             }
 }
 
