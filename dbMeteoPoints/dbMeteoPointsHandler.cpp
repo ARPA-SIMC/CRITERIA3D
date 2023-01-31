@@ -546,7 +546,6 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(Crit3DDate dateStart, Crit3DDate 
 
 bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint)
 {
-    QString dateStr;
     meteoVariable variable;
     int idVar;
     float value;

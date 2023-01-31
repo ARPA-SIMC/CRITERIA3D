@@ -35,10 +35,6 @@
         double *time;
         bool isLatDecreasing;
 
-        bool isStandardTime;
-        bool isHourly;
-        bool isDaily;
-
         Crit3DDate firstDate;
 
         std::stringstream metadata;
@@ -49,6 +45,10 @@
         bool isUTM;
         bool isLatLon;
         bool isRotatedLatLon;
+
+        bool isStandardTime;
+        bool isHourly;
+        bool isDaily;
 
         std::vector<NetCDFVariable> variables;
         gis::Crit3DRasterGrid dataGrid;
