@@ -49,21 +49,32 @@ string lowerCase(string myStr)
 
 
 NetCDFVariable::NetCDFVariable()
-    : name{""}, longName{""}, id{NODATA}, type{NODATA}
+    : name{""}, longName{""}, unit{""}, id{NODATA}, type{NODATA}
 { }
 
 
-NetCDFVariable::NetCDFVariable(char* myName, int myId, int myType)
-    : name{myName}, longName{myName}, id{myId}, type{myType}
+NetCDFVariable::NetCDFVariable(char*_name, int _id, int _type)
+    : name{_name}, longName{_name}, unit(""), id{_id}, type{_type}
 { }
 
 
 std::string NetCDFVariable::getVarName()
 {
-    if (longName.size() <= 32)
-        return longName;
+    std::string unitStr = "";
+
+    if (unit != "")
+    {
+        unitStr = " - " + unit;
+    }
+
+    if (longName.size() <= 32 && longName != "")
+    {
+        return longName + unitStr;
+    }
     else
-        return name;
+    {
+        return name + unitStr;
+    }
 }
 
 
@@ -124,6 +135,7 @@ void NetCDFHandler::clear()
     isStandardTime = false;
     isHourly = false;
     isDaily = false;
+
     firstDate = NO_DATE;
 
     x = nullptr;
@@ -136,13 +148,7 @@ void NetCDFHandler::clear()
     dimensions.clear();
     variables.clear();
     metadata.str("");
-}
-
-
-void NetCDFHandler::initialize(int _utmZone)
-{
-    this->close();
-    utmZone = _utmZone;
+    timeUnit = "";
 }
 
 
@@ -158,7 +164,7 @@ int NetCDFHandler::getDimensionIndex(char* dimName)
 }
 
 
-NetCDFVariable NetCDFHandler::getVariable(int idVar)
+NetCDFVariable NetCDFHandler::getVariableFromId(int idVar)
 {
     for (unsigned int i = 0; i < variables.size(); i++)
         if (variables[i].id == idVar)
@@ -168,16 +174,16 @@ NetCDFVariable NetCDFHandler::getVariable(int idVar)
 }
 
 
-std::string NetCDFHandler::getVarName(int idVar)
+NetCDFVariable NetCDFHandler::getVariableFromIndex(int index)
 {
-    NetCDFVariable var = getVariable(idVar);
-    return var.getVarName();
-}
-
-
-bool NetCDFHandler::isLoaded()
-{
-    return (variables.size() > 0);
+    if (unsigned(index) < variables.size())
+    {
+        return variables[index];
+    }
+    else
+    {
+        return NetCDFVariable();
+    }
 }
 
 
@@ -196,9 +202,18 @@ bool NetCDFHandler::setVarLongName(const std::string& varName, const string &var
 }
 
 
-std::string NetCDFHandler::getMetadata()
+bool NetCDFHandler::setVarUnit(const std::string& varName, const std::string &varUnit)
 {
-    return metadata.str();
+    for (unsigned int i = 0; i < variables.size(); i++)
+    {
+        if (variables[i].name == varName)
+        {
+            variables[i].unit = varUnit;
+            return true;
+        }
+    }
+
+    return false;
 }
 
 
@@ -285,7 +300,6 @@ bool NetCDFHandler::readProperties(string fileName)
     char varName[NC_MAX_NAME+1];
     char typeName[NC_MAX_NAME+1];
 
-    char* valueStr;
     int valueInt;
     double value;
     size_t length;
@@ -319,13 +333,13 @@ bool NetCDFHandler::readProperties(string fileName)
         nc_inq_attname(ncId, NC_GLOBAL, a, attrName);
         nc_inq_attlen(ncId, NC_GLOBAL, attrName, &length);
 
-        valueStr = new char[length+1];
-        nc_get_att_text(ncId, NC_GLOBAL, attrName, valueStr);
+        char* valueChar = new char[length+1];
+        nc_get_att_text(ncId, NC_GLOBAL, attrName, valueChar);
 
-        string myString = string(valueStr).substr(0, length);
-        metadata << attrName << " = " << myString << endl;
+        string valueString = string(valueChar).substr(0, length);
+        metadata << attrName << " = " << valueString << endl;
 
-        delete [] valueStr;
+        delete [] valueChar;
    }
 
    // DIMENSIONS
@@ -404,7 +418,7 @@ bool NetCDFHandler::readProperties(string fileName)
        nc_inq_var(ncId, v, varName, &ncTypeId, &nrVarDimensions, varDimIds, &nrVarAttributes);
        nc_inq_type(ncId, ncTypeId, typeName, &length);
 
-       // is Variable?
+       // is it a variable?
        if (nrVarDimensions > 1)
        {
             variables.push_back(NetCDFVariable(varName, v, ncTypeId));
@@ -462,40 +476,51 @@ bool NetCDFHandler::readProperties(string fileName)
             if (ncTypeId == NC_CHAR)
             {
                 nc_inq_attlen(ncId, v, attrName, &length);
-                valueStr = new char[length+1];
-                nc_get_att_text(ncId, v, attrName, valueStr);
 
-                string myString = string(valueStr).substr(0, length);
-                metadata << attrName << " = " << myString << endl;
+                char* valueChar = new char[length+1];
+                nc_get_att_text(ncId, v, attrName, valueChar);
 
-                if (v == idTime)
+                string valueStr = string(valueChar).substr(0, length);
+                metadata << attrName << " = " << valueStr << endl;
+
+                if (lowerCase(string(attrName)) == "units" || lowerCase(string(attrName)) == "unit")
                 {
-                    if (lowerCase(string(attrName)) == "units")
+                    if (v == idTime)
                     {
-                        if (lowerCase(myString).substr(0, 13) == "seconds since")
+                        timeUnit = valueStr;
+
+                        if (lowerCase(valueStr).substr(0, 13) == "seconds since")
                         {
                             isStandardTime = true;
-                            std::string dateStr = lowerCase(myString).substr(14, 23);
+                            std::string dateStr = lowerCase(valueStr).substr(14, 23);
                             firstDate = Crit3DDate(dateStr);
                         }
-                        else if (lowerCase(myString).substr(0, 11) == "hours since")
+                        else if (lowerCase(valueStr).substr(0, 11) == "hours since")
                         {
                             isHourly = true;
-                            std::string dateStr = lowerCase(myString).substr(12, 21);
+                            std::string dateStr = lowerCase(valueStr).substr(12, 21);
                             firstDate = Crit3DDate(dateStr);
                         }
-                        else if (lowerCase(myString).substr(0, 10) == "days since")
+                        else if (lowerCase(valueStr).substr(0, 10) == "days since")
                         {
                             isDaily = true;
-                            std::string dateStr = lowerCase(myString).substr(11, 20);
+                            std::string dateStr = lowerCase(valueStr).substr(11, 20);
                             firstDate = Crit3DDate(dateStr);
-                        }
+                        } 
+                    }
+                    else
+                    {
+                        // set variable unit
+                        setVarUnit(string(varName), valueStr);
                     }
                 }
-                if (lowerCase(string(attrName)) == "long_name")
-                    setVarLongName(string(varName), myString);
 
-                delete [] valueStr;
+                if (lowerCase(string(attrName)) == "long_name")
+                {
+                    setVarLongName(string(varName), valueStr);
+                }
+
+                delete [] valueChar;
             }
             else if (ncTypeId == NC_INT)
             {
@@ -656,7 +681,7 @@ bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Cr
     // check
     if (! isTimeReadable())
     {
-        *buffer << "Wrong time dimension! Use standard POSIX (seconds since 1970-01-01)." << endl;
+        *buffer << "Wrong or missing time dimension!" << endl;
         return false;
     }
     if (! isPointInside(geoPoint))
@@ -708,7 +733,7 @@ bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Cr
     }
 
     // check variable
-    NetCDFVariable var = getVariable(idVar);
+    NetCDFVariable var = getVariableFromId(idVar);
     if (var.getVarName() == "")
     {
         *buffer << "Wrong variable!" << endl;
@@ -1001,7 +1026,7 @@ bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
 bool NetCDFHandler::extractVariableMap(int idVar, Crit3DTime myTime, gis::Crit3DRasterGrid* myDataGrid, string *error)
 {
     // check variable
-    NetCDFVariable var = getVariable(idVar);
+    NetCDFVariable var = getVariableFromId(idVar);
     if (var.getVarName() == "")
     {
         *error = "Wrong variable!";
