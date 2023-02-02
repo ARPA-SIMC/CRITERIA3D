@@ -129,6 +129,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     horizontalGroupBox->setLayout(selectionLayout);
 
     chartView = new ChartView();
+    chartView->setMinimumHeight(200);
     QStatusBar* statusBar = new QStatusBar();
 
     mainLayout->addWidget(horizontalGroupBox);
