@@ -3,6 +3,7 @@
 #include <QtDebug>
 #include <QStaticText>
 #include <QKeyEvent>
+#include <QBrush>
 #define NODATA -9999
 
 CircleObject::CircleObject(qreal radius, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent) :
@@ -62,7 +63,7 @@ void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
 
     if (_isMarked)
     {
-        painter->setPen(QPen(QColor(Qt::white)));
+        painter->setPen(QPen(QBrush(QColor(Qt::black)),2));
         painter->setBrush(Qt::transparent);
         painter->drawEllipse(QPointF(0,0), _radius*2, _radius*2);
     }

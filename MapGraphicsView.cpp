@@ -256,44 +256,48 @@ void MapGraphicsView::setZoomLevel(quint8 nZoom, ZoomMode zMode)
     if (_tileSource.isNull())
         return;
 
-    //This stuff is for handling the re-centering upong zoom in/out
-    const QPointF  centerGeoPos = this->mapToScene(QPoint(this->width()/2,this->height()/2));
-    QPointF mousePoint = _childView->mapToScene(_childView->mapFromGlobal(QCursor::pos()));
-    QRectF sceneRect = _childScene->sceneRect();
-    const float xRatio = float(mousePoint.x() / sceneRect.width());
-    const float yRatio = float(mousePoint.y() / sceneRect.height());
-    const QPointF centerPos = _childView->mapToScene(QPoint(_childView->width()/2,_childView->height()/2));
-    const QPointF offset = mousePoint - centerPos;
+    try
+    {
+        //This stuff is for handling the re-centering upong zoom in/out
+        const QPointF  centerGeoPos = this->mapToScene(QPoint(this->width()/2,this->height()/2));
+        QPointF mousePoint = _childView->mapToScene(_childView->mapFromGlobal(QCursor::pos()));
+        QRectF sceneRect = _childScene->sceneRect();
+        const float xRatio = float(mousePoint.x() / sceneRect.width());
+        const float yRatio = float(mousePoint.y() / sceneRect.height());
+        const QPointF centerPos = _childView->mapToScene(QPoint(_childView->width()/2,_childView->height()/2));
+        const QPointF offset = mousePoint - centerPos;
 
-    //Change the zoom level
-    nZoom = qMin(_tileSource->maxZoomLevel(),qMax(_tileSource->minZoomLevel(),nZoom));
+        //Change the zoom level
+        nZoom = qMin(_tileSource->maxZoomLevel(),qMax(_tileSource->minZoomLevel(),nZoom));
 
-    if (nZoom == _zoomLevel)
-        return;
+        if (nZoom == _zoomLevel)
+            return;
 
-    _zoomLevel = nZoom;
+        _zoomLevel = nZoom;
 
-    //Disable all tile display temporarily. They'll redisplay properly when the timer ticks
-    foreach(MapTileGraphicsObject * tileObject, _tileObjects)
-        tileObject->setVisible(false);
+        //Disable all tile display temporarily. They'll redisplay properly when the timer ticks
+        foreach(MapTileGraphicsObject * tileObject, _tileObjects)
+            tileObject->setVisible(false);
 
-    //Make sure the QGraphicsScene is the right size
-    this->resetQGSSceneSize();
+        //Make sure the QGraphicsScene is the right size
+        this->resetQGSSceneSize();
 
+        //Re-center the view where we want it
+        sceneRect = _childScene->sceneRect();
+        mousePoint = QPointF(sceneRect.width() * qreal(xRatio),
+                             sceneRect.height() * qreal(yRatio)) - offset;
 
-    //Re-center the view where we want it
-    sceneRect = _childScene->sceneRect();
-    mousePoint = QPointF(sceneRect.width() * qreal(xRatio),
-                         sceneRect.height() * qreal(yRatio)) - offset;
+        if (zMode == MouseZoom)
+            _childView->centerOn(mousePoint);
+        else
+            this->centerOn(centerGeoPos);
 
-    if (zMode == MouseZoom)
-        _childView->centerOn(mousePoint);
-    else
-        this->centerOn(centerGeoPos);
-
-    //Make MapGraphicsObjects update
-    emit this->zoomLevelChanged(nZoom);
+        //Make MapGraphicsObjects update
+        emit this->zoomLevelChanged(nZoom);
+    }
+    catch (...) { }
 }
+
 
 void MapGraphicsView::zoomIn(ZoomMode zMode)
 {
@@ -304,12 +308,10 @@ void MapGraphicsView::zoomIn(ZoomMode zMode)
     {
         try
         {
-            this->setZoomLevel(this->zoomLevel()+1,zMode);
+            this->setZoomLevel(this->zoomLevel()+1, zMode);
         }
-        catch (std::invalid_argument& e)
-        {
-            qWarning() << QString::fromStdString(e.what());
-        }
+        catch (...)
+        { }
     }
 }
 
@@ -322,7 +324,7 @@ void MapGraphicsView::zoomOut(ZoomMode zMode)
     {
         try
         {
-            this->setZoomLevel(this->zoomLevel()-1,zMode);
+            this->setZoomLevel(this->zoomLevel()-1, zMode);
         }
         catch (std::invalid_argument& e)
         {
@@ -372,11 +374,16 @@ void MapGraphicsView::handleChildViewScrollWheel(QWheelEvent *event)
 {
     event->setAccepted(true);
 
-    this->setDragMode(MapGraphicsView::ScrollHandDrag);
-    if (event->angleDelta().y() > 0)
-        this->zoomIn(MouseZoom);
-    else
-        this->zoomOut(MouseZoom);
+    try
+    {
+        this->setDragMode(MapGraphicsView::ScrollHandDrag);
+        if (event->angleDelta().y() > 0)
+            this->zoomIn(MouseZoom);
+        else
+            this->zoomOut(MouseZoom);
+    } catch (...)
+    {
+    }
 }
 
 
