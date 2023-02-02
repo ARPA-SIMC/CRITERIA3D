@@ -842,7 +842,7 @@ void Crit3DHomogeneityWidget::findReferenceStations()
                 break;
             }
         }
-        statistics::linearRegression(myAnnualSeries, myAnnualSeriesFound[z], myAnnualSeries.size(), false, &y_intercept, &trend, &r2);
+        statistics::linearRegression(myAnnualSeries, myAnnualSeriesFound[z], int(myAnnualSeries.size()), false, &y_intercept, &trend, &r2);
         double altitude = meteoPointsDbHandler->getAltitudeGivenId(QString::fromStdString(sortedIdFound[z]));
         double delta =  meteoPointsNearDistanceList[0].point.z - altitude;
         stationsTable.setItem(z,0,new QTableWidgetItem(name));
@@ -961,7 +961,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                 myValidValues.push_back((double)myAnnualSeries[i]);
             }
         }
-        double myAverage = statistics::mean(myValidValues, myValidValues.size());
+        double myAverage = statistics::mean(myValidValues, int(myValidValues.size()));
         std::vector<double> myRefAverage;
         std::vector<float> r2;
         std::vector<std::vector<float>> refSeriesVector;
@@ -980,8 +980,8 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myRefValidValues.push_back((double)refSeries[i]);
                 }
             }
-            myRefAverage.push_back(statistics::mean(myRefValidValues, myRefValidValues.size()));
-            statistics::linearRegression(myAnnualSeries, refSeries, myAnnualSeries.size(), false, &y_intercept, &trend, &r2Value);
+            myRefAverage.push_back(statistics::mean(myRefValidValues, int(myRefValidValues.size())));
+            statistics::linearRegression(myAnnualSeries, refSeries, long(myAnnualSeries.size()), false, &y_intercept, &trend, &r2Value);
             r2.push_back(r2Value);
         }
         double tmp, sumV;
@@ -1049,8 +1049,8 @@ void Crit3DHomogeneityWidget::executeClicked()
                 myValidValues.push_back(myQ[i]);
             }
         }
-        double myQAverage = statistics::mean(myValidValues, myValidValues.size());
-        double myQDevStd = statistics::standardDeviation(myValidValues, myValidValues.size());
+        double myQAverage = statistics::mean(myValidValues, int(myValidValues.size()));
+        double myQDevStd = statistics::standardDeviation(myValidValues, int(myValidValues.size()));
         std::vector<double> myZ;
         for (int i = 0; i<myQ.size(); i++)
         {
@@ -1072,7 +1072,7 @@ void Crit3DHomogeneityWidget::executeClicked()
             }
         }
 
-        double myZAverage = statistics::mean(myValidValues, myValidValues.size());
+        double myZAverage = statistics::mean(myValidValues, int(myValidValues.size()));
 
         isHomogeneous = (qAbs(myZAverage) <= TOLERANCE);
         std::vector<double> z1;
@@ -1106,7 +1106,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myValidValues.push_back(z1[i]);
                 }
             }
-            double myZ1Average = statistics::mean(myValidValues, myValidValues.size());
+            double myZ1Average = statistics::mean(myValidValues, int(myValidValues.size()));
             myValidValues.clear();
             for (int i = 0; i<z2.size(); i++)
             {
@@ -1115,7 +1115,7 @@ void Crit3DHomogeneityWidget::executeClicked()
                     myValidValues.push_back(z2[i]);
                 }
             }
-            double myZ2Average = statistics::mean(myValidValues, myValidValues.size());
+            double myZ2Average = statistics::mean(myValidValues, int(myValidValues.size()));
             if (myZ1Average != NODATA && myZ2Average != NODATA)
             {
                 myTValues[a] = ( (a+1) * pow(myZ1Average,2)) + ((myZ.size() - (a+1)) * pow(myZ2Average,2));
