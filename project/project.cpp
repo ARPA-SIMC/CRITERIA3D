@@ -2978,7 +2978,33 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 
 void Project::showProxyGraph()
 {
-    proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    Crit3DMeteoPoint* meteoPointsSelected;
+    int nSelected = 0;
+    for (int i = 0; i < nrMeteoPoints; i++)
+    {
+        if (meteoPoints[i].selected)
+        {
+            nSelected = nSelected + 1;
+        }
+    }
+    if (nSelected == 0)
+    {
+        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPoints, nrMeteoPoints, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    }
+    else
+    {
+        meteoPointsSelected = new Crit3DMeteoPoint[unsigned(nSelected)];
+        int posMpSelected = 0;
+        for (int i = 0; i < nrMeteoPoints; i++)
+        {
+            if (meteoPoints[i].selected)
+            {
+                meteoPointsSelected[posMpSelected] = meteoPoints[i];
+                posMpSelected = posMpSelected + 1;
+            }
+        }
+        proxyWidget = new Crit3DProxyWidget(&interpolationSettings, meteoPointsSelected, nSelected, currentFrequency, currentDate, currentHour, quality, &qualityInterpolationSettings, meteoSettings, &climateParameters, checkSpatialQuality);
+    }
     QObject::connect(proxyWidget, SIGNAL(closeProxyWidget()), this, SLOT(deleteProxyWidget()));
     return;
 }
