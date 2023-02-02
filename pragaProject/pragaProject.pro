@@ -18,6 +18,17 @@ CONFIG += c++11 c++14 c++17
 DEFINES += _CRT_SECURE_NO_WARNINGS
 DEFINES += NETCDF
 
+unix:{
+    CONFIG(debug, debug|release) {
+        TARGET = debug/pragaProject
+    } else {
+        TARGET = release/pragaProject
+    }
+}
+win32:{
+    TARGET = pragaProject
+}
+
 INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../phenology ../meteo ../gis  \
                 ../drought ../interpolation ../solarRadiation ../utilities  \
                 ../outputPoints ../dbMeteoPoints ../dbMeteoGrid ../meteoWidget  \
