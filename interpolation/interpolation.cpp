@@ -973,7 +973,8 @@ bool getUseDetrendingVar(meteoVariable myVar)
             myVar == airDewTemperature ||
             myVar == dailyAirTemperatureAvg ||
             myVar == dailyAirTemperatureMax ||
-            myVar == dailyAirTemperatureMin)
+            myVar == dailyAirTemperatureMin ||
+            myVar == elaboration)
 
         return true;
     else
