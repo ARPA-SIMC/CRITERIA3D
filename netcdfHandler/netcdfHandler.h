@@ -93,7 +93,7 @@
 
         bool readProperties(std::string fileName);
         bool exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Crit3DTime firstTime, Crit3DTime lastTime, std::stringstream *buffer);
-        bool extractVariableMap(int idVar, Crit3DTime myTime, gis::Crit3DRasterGrid* myDataGrid, std::string *error);
+        bool extractVariableMap(int idVar, const Crit3DTime &myTime, std::string &error);
 
         bool createNewFile(std::string fileName);
 

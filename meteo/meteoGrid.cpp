@@ -340,7 +340,6 @@ void Crit3DMeteoGrid::fillMeteoRaster()
              }
         }
     }
-
 }
 
 void Crit3DMeteoGrid::fillMeteoRasterNoData()

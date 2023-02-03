@@ -1023,47 +1023,48 @@ bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
 }
 
 
-bool NetCDFHandler::extractVariableMap(int idVar, Crit3DTime myTime, gis::Crit3DRasterGrid* myDataGrid, string *error)
+bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std::string& error)
 {
     // check variable
     NetCDFVariable var = getVariableFromId(idVar);
     if (var.getVarName() == "")
     {
-        *error = "Wrong variable!";
+        error = "Wrong variable!";
         return false;
     }
 
     // check time
-    int timeIndex = NODATA;
     if (isTimeReadable())
     {
         if (myTime < getFirstTime() || myTime > getLastTime())
         {
-            *error = "Time is out of range.";
+            error = "Time is out of range.";
             return false;
         }
 
         // search time index
-        int i = 0;
-        while (i < nrTime && timeIndex == NODATA)
+        int timeIndex = NODATA;
+        for (int i = 0; i < nrTime; i++)
         {
             if (getTime(i) == myTime)
+            {
                 timeIndex = i;
-            i++;
+                break;
+            }
         }
         if  (timeIndex == NODATA)
         {
-            *error = "Data not found for this time.";
+            error = "No available time.";
             return false;
         }
     }
 
     // read data
     // todo:  nc_get_vara_float
-    int retval = nc_get_var_float(ncId, idVar, &myDataGrid->value[0][0]);
+    int retval = nc_get_var_float(ncId, idVar, &dataGrid.value[0][0]);
     if (retval != NC_NOERR)
     {
-        error->append(nc_strerror(retval));
+        error.append(nc_strerror(retval));
         return false;
     }
 

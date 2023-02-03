@@ -347,7 +347,7 @@ int RasterObject::getCurrentStep(const gis::Crit3DRasterWindow& window)
     double dx = (pixelRT.x() - pixelLL.x() + 1) / double(window.nrCols());
     double dy = (pixelRT.y() - pixelLL.y() + 1) / double(window.nrRows());
 
-    int step = int(round(1.0 / std::min(dx, dy)));
+    int step = int(round(2.0 / std::min(dx, dy)));
     return std::max(1, step);
 }
 
