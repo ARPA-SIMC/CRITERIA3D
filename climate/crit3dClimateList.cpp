@@ -219,7 +219,7 @@ void Crit3DClimateList::parserElaboration()
 
         meteoVariable var = noMeteoVar;
         if (words[pos] != "")
-            var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, words[pos].toStdString());
+            var = getKeyMeteoVarMeteoMapWithoutUnderscore(MapDailyMeteoVarToString, words[pos].toStdString());
 
         _listVariable.push_back(var);
 

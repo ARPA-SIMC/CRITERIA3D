@@ -854,6 +854,24 @@ meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, co
     return key;
 }
 
+meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std::string> map, const std::string& value)
+{
+    std::map<meteoVariable, std::string>::const_iterator it;
+    meteoVariable key = noMeteoVar;
+
+    for (it = map.begin(); it != map.end(); ++it)
+    {
+        std::string str = it->second;
+        str.erase(std::remove(str.begin(), str.end(), '_'), str.end());
+        if (str == value)
+        {
+            key = it->first;
+            break;
+        }
+    }
+    return key;
+}
+
 frequencyType getVarFrequency(meteoVariable myVar)
 {
     if (MapDailyMeteoVarToString.find(myVar) != MapDailyMeteoVarToString.end())

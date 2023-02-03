@@ -35,7 +35,7 @@ void SaveClimaLayout::addElab()
 {
 
 
-    QString elabAdded = firstYear + "-" + lastYear + "_" + variable + "_" + period;
+    QString elabAdded = firstYear + "-" + lastYear + "_" + variable.remove("_") + "_" + period;
     if (period == "Generic")
     {
         elabAdded = elabAdded + "_" + genericPeriodStartDay + ":" + genericPeriodStartMonth + "-" + genericPeriodEndDay + ":" + genericPeriodEndMonth;
@@ -78,6 +78,10 @@ void SaveClimaLayout::addElab()
 
 void SaveClimaLayout::deleteRaw()
 {
+    if (listView.selectedItems().size()==0)
+    {
+        return;
+    }
     list.removeAt(listView.currentIndex().row());
     listView.takeItem(listView.currentIndex().row());
 }
