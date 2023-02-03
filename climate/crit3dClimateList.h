@@ -103,6 +103,8 @@
         void parserElaboration();
         bool parserGenericPeriodString(int index);
 
+        meteoComputation getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value);
+
 
     private:
 

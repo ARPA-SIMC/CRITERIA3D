@@ -1183,7 +1183,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
                 bestKh = kh;
             }
 
-            mySettings->addToKhSeries(kh, avgError);
+            mySettings->addToKhSeries(float(kh), avgError);
         }
         kh = ((kh == 0) ? 1 : kh*2);
     }
