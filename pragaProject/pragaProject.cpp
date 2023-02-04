@@ -3183,3 +3183,214 @@ bool PragaProject::removeGriddingTask(QDateTime dateCreation, QString user, QDat
 
     return true;
 }
+
+bool PragaProject::computeClimaFromXMLSaveOnDB(QString xmlName)
+{
+    /*
+    if (meteoGridDbHandler == nullptr)
+    {
+        return false;
+    }
+    Crit3DElabList *listXMLElab = new Crit3DElabList();
+    Crit3DAnomalyList *listXMLAnomaly = new Crit3DAnomalyList();
+    Crit3DDroughtList *listXMLDrought = new Crit3DDroughtList();
+    Crit3DPhenologyList *listXMLPhenology = new Crit3DPhenologyList();
+
+    if (xmlName == "")
+    {
+        errorString = "Empty XML name";
+        delete listXMLElab;
+        delete listXMLAnomaly;
+        delete listXMLDrought;
+        delete listXMLPhenology;
+        return false;
+    }
+    if (!parseXMLElaboration(listXMLElab, listXMLAnomaly, listXMLDrought, listXMLPhenology, xmlName, &errorString))
+    {
+        delete listXMLElab;
+        delete listXMLAnomaly;
+        delete listXMLDrought;
+        delete listXMLPhenology;
+        return false;
+    }
+    if (!listXMLElab->listAll().isEmpty() && listXMLElab->isMeteoGrid() == false)
+    {
+        errorString = "Datatype is not Grid";
+        delete listXMLElab;
+        delete listXMLAnomaly;
+        delete listXMLDrought;
+        delete listXMLPhenology;
+        return false;
+    }
+    if (!listXMLAnomaly->listAll().isEmpty() && listXMLAnomaly->isMeteoGrid() == false)
+    {
+        errorString = "Datatype is not Grid";
+        delete listXMLElab;
+        delete listXMLAnomaly;
+        delete listXMLDrought;
+        delete listXMLPhenology;
+        return false;
+    }
+    if (listXMLDrought->listAll().size() != 0 && listXMLDrought->isMeteoGrid() == false)
+    {
+        errorString = "Datatype is not Grid";
+        delete listXMLElab;
+        delete listXMLAnomaly;
+        delete listXMLDrought;
+        delete listXMLPhenology;
+        return false;
+    }
+    if (listXMLPhenology->listAll().size() != 0 && listXMLPhenology->isMeteoGrid() == false)
+    {
+        errorString = "Datatype is not Grid";
+        delete listXMLElab;
+        delete listXMLAnomaly;
+        delete listXMLDrought;
+        delete listXMLPhenology;
+        return false;
+    }
+    if (listXMLElab->listAll().isEmpty() && listXMLAnomaly->listAll().isEmpty() && listXMLDrought->listAll().size() == 0 && listXMLPhenology->listAll().size() == 0)
+    {
+        errorString = "There are not valid Elaborations or Anomalies or Drought";
+        delete listXMLElab;
+        delete listXMLAnomaly;
+        delete listXMLDrought;
+        delete listXMLPhenology;
+        return false;
+    }
+    if (clima == nullptr)
+    {
+        clima = new Crit3DClimate();
+    }
+    if (referenceClima == nullptr && !listXMLAnomaly->listAll().isEmpty())
+    {
+        referenceClima = new Crit3DClimate();
+    }
+
+    for (int i = 0; i<listXMLElab->listAll().size(); i++)
+    {
+        clima->setVariable(listXMLElab->listVariable()[i]);
+        clima->setYearStart(listXMLElab->listYearStart()[i]);
+        clima->setYearEnd(listXMLElab->listYearEnd()[i]);
+        clima->setPeriodStr(listXMLElab->listPeriodStr()[i]);
+        clima->setPeriodType(listXMLElab->listPeriodType()[i]);
+
+        clima->setGenericPeriodDateStart(listXMLElab->listDateStart()[i]);
+        clima->setGenericPeriodDateEnd(listXMLElab->listDateEnd()[i]);
+        clima->setNYears(listXMLElab->listNYears()[i]);
+        clima->setElab1(listXMLElab->listElab1()[i]);
+
+        if (!listXMLElab->listParam1IsClimate()[i])
+        {
+            clima->setParam1IsClimate(false);
+            clima->setParam1(listXMLElab->listParam1()[i]);
+        }
+        else
+        {
+            clima->setParam1IsClimate(true);
+            clima->setParam1ClimateField(listXMLElab->listParam1ClimateField()[i]);
+            int climateIndex = getClimateIndexFromElab(listXMLElab->listDateStart()[i], listXMLElab->listParam1ClimateField()[i]);
+            clima->setParam1ClimateIndex(climateIndex);
+
+        }
+        clima->setElab2(listXMLElab->listElab2()[i]);
+        clima->setParam2(listXMLElab->listParam2()[i]);
+
+        elaborationPointsCycleGrid(false, false);
+
+        // reset param
+        clima->resetParam();
+        // reset current values
+        clima->resetCurrentValues();
+    }
+
+    for (int i = 0; i<listXMLAnomaly->listAll().size(); i++)
+    {
+        clima->setVariable(listXMLAnomaly->listVariable()[i]);
+        clima->setYearStart(listXMLAnomaly->listYearStart()[i]);
+        clima->setYearEnd(listXMLAnomaly->listYearEnd()[i]);
+        clima->setPeriodStr(listXMLAnomaly->listPeriodStr()[i]);
+        clima->setPeriodType(listXMLAnomaly->listPeriodType()[i]);
+
+        clima->setGenericPeriodDateStart(listXMLAnomaly->listDateStart()[i]);
+        clima->setGenericPeriodDateEnd(listXMLAnomaly->listDateEnd()[i]);
+        clima->setNYears(listXMLAnomaly->listNYears()[i]);
+        clima->setElab1(listXMLAnomaly->listElab1()[i]);
+
+        if (!listXMLAnomaly->listParam1IsClimate()[i])
+        {
+            clima->setParam1IsClimate(false);
+            clima->setParam1(listXMLAnomaly->listParam1()[i]);
+        }
+        else
+        {
+            clima->setParam1IsClimate(true);
+            clima->setParam1ClimateField(listXMLAnomaly->listParam1ClimateField()[i]);
+            int climateIndex = getClimateIndexFromElab(listXMLAnomaly->listDateStart()[i], listXMLElab->listParam1ClimateField()[i]);
+            clima->setParam1ClimateIndex(climateIndex);
+
+        }
+        clima->setElab2(listXMLAnomaly->listElab2()[i]);
+        clima->setParam2(listXMLAnomaly->listParam2()[i]);
+
+        referenceClima->setVariable(listXMLAnomaly->listVariable()[i]);
+        referenceClima->setYearStart(listXMLAnomaly->listRefYearStart()[i]);
+        referenceClima->setYearEnd(listXMLAnomaly->listRefYearEnd()[i]);
+        referenceClima->setPeriodStr(listXMLAnomaly->listRefPeriodStr()[i]);
+        referenceClima->setPeriodType(listXMLAnomaly->listRefPeriodType()[i]);
+
+        referenceClima->setGenericPeriodDateStart(listXMLAnomaly->listRefDateStart()[i]);
+        referenceClima->setGenericPeriodDateEnd(listXMLAnomaly->listRefDateEnd()[i]);
+        referenceClima->setNYears(listXMLAnomaly->listRefNYears()[i]);
+        referenceClima->setElab1(listXMLAnomaly->listRefElab1()[i]);
+
+        if (!listXMLAnomaly->listRefParam1IsClimate()[i])
+        {
+            referenceClima->setParam1IsClimate(false);
+            referenceClima->setParam1(listXMLAnomaly->listRefParam1()[i]);
+        }
+        else
+        {
+            referenceClima->setParam1IsClimate(true);
+            referenceClima->setParam1ClimateField(listXMLAnomaly->listRefParam1ClimateField()[i]);
+            int climateIndex = getClimateIndexFromElab(listXMLAnomaly->listRefDateStart()[i], listXMLAnomaly->listRefParam1ClimateField()[i]);
+            referenceClima->setParam1ClimateIndex(climateIndex);
+        }
+        referenceClima->setElab2(listXMLAnomaly->listRefElab2()[i]);
+        referenceClima->setParam2(listXMLAnomaly->listRefParam2()[i]);
+
+        elaborationPointsCycleGrid(false, false);
+        elaborationPointsCycleGrid(true, false);
+        if (!listXMLAnomaly->isPercentage()[i])
+        {
+            meteoGridDbHandler->meteoGrid()->fillMeteoRasterAnomalyValue();
+        }
+        else
+        {
+            meteoGridDbHandler->meteoGrid()->fillMeteoRasterAnomalyPercValue();
+        }
+
+
+        QDate dateEnd = listXMLAnomaly->listDateEnd()[i].addYears(listXMLAnomaly->listNYears()[i]);
+        QDate dateStart = listXMLAnomaly->listDateStart()[i];
+        int nDays = dateStart.daysTo(dateEnd);
+        // reset param
+        clima->resetParam();
+        referenceClima->resetParam();
+        // reset current values
+        clima->resetCurrentValues();
+        referenceClima->resetCurrentValues();
+    }
+
+    for (unsigned int i = 0; i<listXMLDrought->listAll().size(); i++)
+    {
+        computeDroughtIndexAll(listXMLDrought->listIndex()[i], listXMLDrought->listYearStart()[i], listXMLDrought->listYearEnd()[i], listXMLDrought->listDate()[i], listXMLDrought->listTimescale()[i], listXMLDrought->listVariable()[i]);
+    }
+
+    delete listXMLElab;
+    delete listXMLAnomaly;
+    delete listXMLDrought;
+    delete listXMLPhenology;
+    */
+    return true;
+}

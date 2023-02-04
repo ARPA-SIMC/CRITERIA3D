@@ -22,6 +22,7 @@ QList<QString> getPragaCommandList()
     cmdList.append("GridDerVar      | GridDerivedVariables");
     cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
     cmdList.append("AggrOnZones     | GridAggregationOnZones");
+    cmdList.append("ComputeClimate     | ComputeClimaFromXMLSaveOnDB");
 
     return cmdList;
 }
@@ -111,6 +112,11 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
 //        *isCommandFound = true;
 //        return cmdLoadForecast(this, argumentList);
 //    }
+    else if (command == "CLIMATE" || command == "COMPUTECLIMATE")
+    {
+        *isCommandFound = true;
+        return cmdComputeClimaFromXMLSaveOnDB(this, argumentList);
+    }
     else
     {
         // other specific Praga commands
@@ -828,3 +834,19 @@ int pragaShell(PragaProject* myProject)
         return true;
     }
     */
+    int cmdComputeClimaFromXMLSaveOnDB(PragaProject* myProject, QList<QString> argumentList)
+    {
+        if (argumentList.size() < 2)
+        {
+            myProject->logError("Missing xml name");
+            return PRAGA_INVALID_COMMAND;
+        }
+
+        QString xmlName = myProject->getCompleteFileName(argumentList.at(1), PATH_PROJECT);
+        if (!myProject->computeClimaFromXMLSaveOnDB(xmlName))
+        {
+            return PRAGA_ERROR;
+        }
+
+        return PRAGA_OK;
+    }
