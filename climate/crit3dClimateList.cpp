@@ -400,17 +400,13 @@ bool Crit3DClimateList::parserGenericPeriodString(int index)
     int year = 2000;
     _listGenericPeriodDateStart.push_back( QDate(year,  month.toInt(),  day.toInt()) );
 
-    //climaElabList->setGenericPeriodDateStart( QDate(year,  month.toInt(),  day.toInt()) );
-
     day = periodString.mid(6,2);
     month = periodString.mid(9,2);
 
-    //climaElabList->setGenericPeriodDateEnd( QDate(year,  month.toInt(),  day.toInt()) );
     _listGenericPeriodDateEnd.push_back( QDate(year,  month.toInt(),  day.toInt()) );
 
     if ( periodString.size() > 11 )
     {
-        //climaElabList->setNYears( (periodString.mid(13,2)).toInt() );
         _listNYears.push_back((periodString.mid(13,2)).toInt());
     }
     return true;
