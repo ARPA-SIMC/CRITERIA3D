@@ -254,7 +254,6 @@ bool passingClimateToAnomalyGrid(QString *myError, Crit3DMeteoPoint* meteoPointT
 bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
                     Crit3DClimate* clima, Crit3DMeteoPoint* meteoPointTemp, std::vector<float> &outputValues, bool isMeteoGrid, QDate startDate, QDate endDate, bool changeDataSet, Crit3DMeteoSettings* meteoSettings)
 {
-
     float percValue;
     bool dataLoaded = true;
 
@@ -312,7 +311,8 @@ bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
         }
     }
 
-
+    std::string varStr = getKeyStringMeteoMap(MapDailyMeteoVar, clima->variable());
+    std::cout << "ClimateOnPoint variable  " <<  varStr << std::endl;
     if (changeDataSet)
     {
         clima->setCurrentVar(clima->variable());
@@ -329,6 +329,7 @@ bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
 
     if (dataLoaded)
     {
+        std::cout << "dataLoaded " << std::endl;
         if (climateTemporalCycle(myError, clima, outputValues, meteoPointTemp, elab1MeteoComp, elab2MeteoComp, meteoSettings))
         {
             return true;
@@ -340,7 +341,7 @@ bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
 
 bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<float> &outputValues, Crit3DMeteoPoint* meteoPoint, meteoComputation elab1, meteoComputation elab2, Crit3DMeteoSettings* meteoSettings)
 {
-
+    std::cout << "climateTemporalCycle" << std::endl;
     QSqlDatabase db = clima->db();
     bool dataAlreadyLoaded = false;
 
@@ -680,11 +681,12 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
                 clima->setParam1(NODATA);
             }
         }
-
+        std::cout << "genericPeriod compuote Statistics" << std::endl;
         result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings, dataAlreadyLoaded);
 
         if (result != NODATA)
         {
+            std::cout << "saveGenericElab" << std::endl;
             return saveGenericElab(db, myError, QString::fromStdString(meteoPoint->id), result, clima->climateElab());
         }
         else
@@ -2075,7 +2077,7 @@ std::vector<float> aggregatedHourlyToDailyList(meteoVariable myVar, Crit3DMeteoP
 bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid, meteoVariable variable, meteoComputation elab1,
     QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings)
 {
-
+   std::cout << "preElaboration" << std::endl;
     bool preElaboration = false;
     bool automaticETP = meteoSettings->getAutomaticET0HS();
     bool automaticTmed = meteoSettings->getAutomaticTavg();
@@ -2318,6 +2320,12 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
 
             default:
             {
+                QString startDateStr = startDate.toString();
+                QString endDateStr = endDate.toString();
+                std::string varStr = getKeyStringMeteoMap(MapDailyMeteoVar, variable);
+                std::cout << "startDate  " <<  startDateStr.toStdString() << std::endl;
+                std::cout << "endDate  " << endDateStr.toStdString() << std::endl;
+                std::cout << "variable  " <<  varStr << std::endl;
                 *percValue = loadDailyVarSeries_SaveOutput(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, variable, startDate, endDate, outputValues);
 
                 preElaboration = ((*percValue) > 0);
