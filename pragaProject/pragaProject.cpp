@@ -1055,9 +1055,6 @@ bool PragaProject::climatePointsCycle(bool showInfo)
             {
                 clima->resetParam();
                 clima->setClimateElab(climateList->listClimateElab().at(j));
-                std::string varStr = getKeyStringMeteoMap(MapDailyMeteoVar, climateList->listVariable().at(0));
-                std::cout << "climatePointsCycle variable  " <<  varStr << std::endl;
-
 
                 if (climateList->listClimateElab().at(j)!= nullptr)
                 {
@@ -3227,8 +3224,6 @@ bool PragaProject::computeClimaFromXMLSaveOnDB(QString xmlName)
     }
 
     clima->getListElab()->setListClimateElab(listXMLElab->listAll());
-    std::string varStr = getKeyStringMeteoMap(MapDailyMeteoVar, listXMLElab->listVariable()[0]);
-    std::cout << "computeClimaFromXMLSaveOnDB variable  " <<  varStr << std::endl;
     int validCell = 0;
     bool changeDataSet = true;
     QDate startDate;
@@ -3247,6 +3242,7 @@ bool PragaProject::computeClimaFromXMLSaveOnDB(QString xmlName)
             std::vector<float> outputValues;
             for (int i = 0; i<listXMLElab->listAll().size(); i++)
             {
+                clima->setClimateElab(listXMLElab->listAll()[i]);
                 clima->setVariable(listXMLElab->listVariable()[i]);
                 clima->setYearStart(listXMLElab->listYearStart()[i]);
                 clima->setYearEnd(listXMLElab->listYearEnd()[i]);
@@ -3303,51 +3299,7 @@ bool PragaProject::computeClimaFromXMLSaveOnDB(QString xmlName)
             }
         }
     }
-    /*
-    for (int i = 0; i<listXMLElab->listAll().size(); i++)
-    {
-        clima->setVariable(listXMLElab->listVariable()[i]);
-        clima->setYearStart(listXMLElab->listYearStart()[i]);
-        clima->setYearEnd(listXMLElab->listYearEnd()[i]);
-        clima->setPeriodStr(listXMLElab->listPeriodStr()[i]);
-        clima->setPeriodType(listXMLElab->listPeriodType()[i]);
 
-        clima->setGenericPeriodDateStart(listXMLElab->listDateStart()[i]);
-        clima->setGenericPeriodDateEnd(listXMLElab->listDateEnd()[i]);
-        clima->setNYears(listXMLElab->listNYears()[i]);
-        clima->setElab1(listXMLElab->listElab1()[i]);
-
-        if (!listXMLElab->listParam1IsClimate()[i])
-        {
-            clima->setParam1IsClimate(false);
-            clima->setParam1(listXMLElab->listParam1()[i]);
-        }
-        else
-        {
-            clima->setParam1IsClimate(true);
-            clima->setParam1ClimateField(listXMLElab->listParam1ClimateField()[i]);
-            int climateIndex = getClimateIndexFromElab(listXMLElab->listDateStart()[i], listXMLElab->listParam1ClimateField()[i]);
-            clima->setParam1ClimateIndex(climateIndex);
-
-        }
-        clima->setElab2(listXMLElab->listElab2()[i]);
-        clima->setParam2(listXMLElab->listParam2()[i]);
-
-        if (listXMLElab->isMeteoGrid())
-        {
-            climatePointsCycleGrid(true);
-        }
-        else
-        {
-            climatePointsCycle(true);
-        }
-
-        // reset param
-        clima->resetParam();
-        // reset current values
-        clima->resetCurrentValues();
-    }
-    */
     delete listXMLElab;
     delete listXMLAnomaly;
     delete listXMLDrought;
