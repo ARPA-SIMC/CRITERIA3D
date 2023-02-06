@@ -32,7 +32,7 @@
         float *x, *y;
         float *lat, *lon;
         double *time;
-        bool isLatDecreasing;
+        bool isYincreasing;
 
         Crit3DDate firstDate;
         Crit3DDate lastDate;
@@ -92,7 +92,7 @@
         NetCDFVariable getVariableFromIndex(int index);
 
         bool readProperties(std::string fileName);
-        bool exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Crit3DTime firstTime, Crit3DTime lastTime, std::stringstream *buffer);
+        bool exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Crit3DTime seriesFirstTime, Crit3DTime seriesLastTime, std::stringstream *buffer);
         bool extractVariableMap(int idVar, const Crit3DTime &myTime, std::string &error);
 
         bool createNewFile(std::string fileName);

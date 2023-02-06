@@ -440,7 +440,10 @@ namespace gis
         myGrid->maximum = maximum;
         myGrid->minimum = minimum;
 
-        myGrid->colorScale->setRange(minimum, maximum);
+        if (! myGrid->colorScale->isRangeBlocked())
+        {
+            myGrid->colorScale->setRange(minimum, maximum);
+        }
 
         return true;
     }

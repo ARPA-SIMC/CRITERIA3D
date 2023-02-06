@@ -130,8 +130,8 @@ void NetCDFHandler::clear()
     isUTM = false;
     isLatLon = false;
     isRotatedLatLon = false;
+    isYincreasing = false;
 
-    isLatDecreasing = false;
     isStandardTime = false;
     isHourly = false;
     isDaily = false;
@@ -561,18 +561,16 @@ bool NetCDFHandler::readProperties(string fileName)
 
             latLonHeader.llCorner.longitude = double(lon[0]);
             latLonHeader.dx = double(lon[nrLon-1] - lon[0]) / double(nrLon-1);
+            latLonHeader.dy = fabs(lat[nrLat-1] - lat[0]) / double(nrLat-1);
 
-            if (lat[1] > lat[0])
+            isYincreasing = (lat[1] > lat[0]);
+            if (isYincreasing)
             {
                 latLonHeader.llCorner.latitude = double(lat[0]);
-                latLonHeader.dy = double(lat[nrLat-1]-lat[0]) / double(nrLat-1);
-                isLatDecreasing = false;
             }
             else
             {
                 latLonHeader.llCorner.latitude = double(lat[nrLat-1]);
-                latLonHeader.dy = double(lat[0]-lat[nrLat-1]) / double(nrLat-1);
-                isLatDecreasing = true;
             }
 
             latLonHeader.llCorner.longitude -= (latLonHeader.dx * 0.5);
@@ -615,8 +613,20 @@ bool NetCDFHandler::readProperties(string fileName)
                 metadata << "\nWarning! dx != dy" << endl;
 
             dataGrid.header->cellSize = double(x[1]-x[0]);
-            dataGrid.header->llCorner.x = double(x[0]) - dataGrid.header->cellSize*0.5;
-            dataGrid.header->llCorner.y = double(y[0]) - dataGrid.header->cellSize*0.5;
+            dataGrid.header->llCorner.x = double(x[0]);
+
+            isYincreasing = (y[1] > y[0]);
+            if (isYincreasing)
+            {
+                dataGrid.header->llCorner.y = double(y[0]);
+            }
+            else
+            {
+                dataGrid.header->llCorner.y = double(y[nrY-1]);
+            }
+
+            dataGrid.header->llCorner.x -= dataGrid.header->cellSize * 0.5;
+            dataGrid.header->llCorner.y -= dataGrid.header->cellSize * 0.5;
 
             dataGrid.header->nrCols = nrX;
             dataGrid.header->nrRows = nrY;
@@ -676,7 +686,7 @@ bool NetCDFHandler::readProperties(string fileName)
 }
 
 
-bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Crit3DTime firstTime, Crit3DTime lastTime, stringstream *buffer)
+bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Crit3DTime seriesFirstTime, Crit3DTime seriesLastTime, stringstream *buffer)
 {
     // check
     if (! isTimeReadable())
@@ -690,7 +700,7 @@ bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Cr
         return false;
     }
 
-    if (firstTime < getFirstTime() || lastTime > getLastTime())
+    if (seriesFirstTime < getFirstTime() || seriesLastTime > getLastTime())
     {
         *buffer << "Wrong time index!" << endl;
         return false;
@@ -701,7 +711,7 @@ bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Cr
     if (isLatLon)
     {
         gis::getRowColFromLatLon(latLonHeader, geoPoint, &row, &col);
-        if (!isLatDecreasing)
+        if (isYincreasing)
             row = (nrLat-1) - row;
     }
     else
@@ -718,9 +728,9 @@ bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Cr
     int i = 0;
     while ((i < nrTime) && (t1 == NODATA || t2 == NODATA))
     {
-        if (getTime(i) == firstTime)
+        if (getTime(i) == seriesFirstTime)
             t1 = i;
-        if (getTime(i) == lastTime)
+        if (getTime(i) == seriesLastTime)
             t2 = i;
         i++;
     }
@@ -921,7 +931,7 @@ bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, con
         if (status != NC_NOERR) return false;
     }
 
-    // atributes
+    // attributes
     status = nc_put_att_text(ncId, variables[0].id, "long_name", variableName.length(), variableName.c_str());
     if (status != NC_NOERR) return false;
 
@@ -1023,50 +1033,132 @@ bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
 }
 
 
-bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std::string& error)
+bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std::string& errorStr)
 {
-    // check variable
-    NetCDFVariable var = getVariableFromId(idVar);
-    if (var.getVarName() == "")
+    // initialize
+    for (int row = 0; row < dataGrid.header->nrRows; row++)
     {
-        error = "Wrong variable!";
+        for (int col = 0; col < dataGrid.header->nrCols; col++)
+        {
+            dataGrid.value[row][col] = NODATA;
+        }
+    }
+
+    // check variable
+    NetCDFVariable currentVar = getVariableFromId(idVar);
+    if (currentVar.getVarName() == "")
+    {
+        errorStr = "Wrong variable.";
         return false;
     }
 
     // check time
-    if (isTimeReadable())
+    if (! isTimeReadable())
     {
-        if (myTime < getFirstTime() || myTime > getLastTime())
-        {
-            error = "Time is out of range.";
-            return false;
-        }
-
-        // search time index
-        int timeIndex = NODATA;
-        for (int i = 0; i < nrTime; i++)
-        {
-            if (getTime(i) == myTime)
-            {
-                timeIndex = i;
-                break;
-            }
-        }
-        if  (timeIndex == NODATA)
-        {
-            error = "No available time.";
-            return false;
-        }
-    }
-
-    // read data
-    // todo:  nc_get_vara_float
-    int retval = nc_get_var_float(ncId, idVar, &dataGrid.value[0][0]);
-    if (retval != NC_NOERR)
-    {
-        error.append(nc_strerror(retval));
+        errorStr = "Missing Time dimension.";
         return false;
     }
 
-    return true;
+    if (myTime < getFirstTime() || myTime > getLastTime())
+    {
+        errorStr = "Time is out of range.";
+        return false;
+    }
+
+    // search time index
+    int timeIndex = NODATA;
+    for (int i = 0; i < nrTime; i++)
+    {
+        if (getTime(i) == myTime)
+        {
+            timeIndex = i;
+            break;
+        }
+    }
+    if  (timeIndex == NODATA)
+    {
+        errorStr = "No available time index.";
+        return false;
+    }
+
+    // read data
+    int retVal;
+    long nrValues;
+    size_t start[] = {timeIndex, 0, 0};
+    size_t count[] = {1, 1, 1};
+    if (isLatLon)
+    {
+        count[1] = nrLat;
+        count[2] = nrLon;
+        nrValues = nrLat * nrLon;
+    }
+    else
+    {
+        count[1] = nrX;
+        count[2] = nrY;
+        nrValues = nrX * nrY;
+    }
+    float* values = new float[nrValues];
+
+    switch(currentVar.type)
+    {
+        case NC_DOUBLE:
+        {
+            double* valuesDouble = new double[nrValues];
+            retVal = nc_get_vara_double(ncId, idVar, start, count, valuesDouble);
+            for (int i=0; i < nrValues; i++)
+            {
+                values[i] = float(valuesDouble[i]);
+            }
+            delete valuesDouble;
+            break;
+        }
+        case NC_FLOAT:
+        {
+            retVal = nc_get_vara_float(ncId, idVar, start, count, values);
+            break;
+        }
+        case NC_INT:
+        {
+            int* valuesInt = new int[nrValues];
+            retVal = nc_get_vara_int(ncId, idVar, start, count, valuesInt);
+            for (int i=0; i < nrValues; i++)
+            {
+                values[i] = float(valuesInt[i]);
+            }
+            delete valuesInt;
+            break;
+        }
+            default:
+        {
+            errorStr = "Wrong variable type.";
+            return false;
+        }
+    }
+
+    if (retVal != NC_NOERR)
+    {
+        errorStr.append(nc_strerror(retVal));
+        delete values;
+        return false;
+    }
+    else
+    {
+        for (int row = 0; row < dataGrid.header->nrRows; row++)
+        {
+            for (int col = 0; col < dataGrid.header->nrCols; col++)
+            {
+                if (isYincreasing)
+                {
+                    dataGrid.value[row][col] = values[(dataGrid.header->nrRows-row-1) * nrLon + col];
+                }
+                else
+                {
+                    dataGrid.value[row][col] = values[row * nrLon + col];
+                }
+            }
+        }
+        delete values;
+        return true;
+    }
 }
