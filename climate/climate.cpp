@@ -2666,6 +2666,18 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
                     primary = computeCorrectedSum(meteoPoint, firstDate, lastDate, param1, meteoSettings->getMinimumPercentage());
                     break;
                 }
+                case noMeteoComp:
+                {
+                    if ( (clima->getCurrentPeriodType() != dailyPeriod) )
+                    {
+                        return NODATA;
+                    }
+                    if ( (clima->dailyCumulated() == false) )
+                    {
+                        return NODATA;
+                    }
+                    // TO DO cumulata
+                }
                 default:
                 {
 
