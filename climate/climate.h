@@ -68,6 +68,8 @@
 
     bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<float> &outputValues, Crit3DMeteoPoint* meteoPoint, meteoComputation elab1, meteoComputation elab2, Crit3DMeteoSettings *meteoSettings);
 
+    bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Crit3DClimate* clima, Crit3DMeteoPoint* meteoPoint, meteoComputation elab2, Crit3DMeteoSettings* meteoSettings);
+
     float thomDayTime(float tempMax, float relHumMinAir);
 
     float thomNightTime(float tempMin, float relHumMaxAir);
