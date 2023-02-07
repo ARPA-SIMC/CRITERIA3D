@@ -3407,7 +3407,7 @@ bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
                 {
                     myGrid->getXY(row,col,&utmx,&utmy);
                     gis::getLatLonFromUtm(gisSettings,utmx,utmy,&lat,&lon);
-                    gis::getMeteoGridRowColFromXY (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
+                    gis::getGridRowColFromXY (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
                     if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
                     {
                         myValue = NODATA;
