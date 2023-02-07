@@ -545,7 +545,7 @@ namespace gis
         v->col = int(floor((p.x - myHeader.llCorner.x) / myHeader.cellSize));
     }
 
-    void getMeteoGridRowColFromXY (const Crit3DGridHeader& myHeader, double myX, double myY, int *row, int *col)
+    void getGridRowColFromXY (const Crit3DGridHeader& myHeader, double myX, double myY, int *row, int *col)
     {
         *row = int(floor((myY - myHeader.llCorner.latitude) / myHeader.dy));
         *col = int(floor((myX - myHeader.llCorner.longitude) / myHeader.dx));
