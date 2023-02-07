@@ -357,6 +357,10 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
     {
 
         clima->setCurrentPeriodType(clima->periodType());
+        if ( clima->dailyCumulated() == true)
+        {
+            return dailyCumulatedClimate(myError, outputValues, clima, meteoPoint, elab2, meteoSettings);
+        }
 
         bool okAtLeastOne = false;
         int nLeapYears = 0;
@@ -692,6 +696,123 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
     default:
         return false;
 
+    }
+}
+
+bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Crit3DClimate* clima, Crit3DMeteoPoint* meteoPoint, meteoComputation elab2, Crit3DMeteoSettings* meteoSettings)
+{
+
+    bool okAtLeastOne = false;
+    int nLeapYears = 0;
+    int totYears = 0;
+    int nDays;
+    float result;
+    unsigned int index;
+    std::vector<float> allResults;
+    int cumulatedValue = 0;
+    std::vector<float> cumulatedValues;
+    std::vector< std::vector<float> > cumulatedAllDaysAllYears;
+
+    Crit3DDate presentDate;
+
+    QSqlDatabase db = clima->db();
+    float minPerc = meteoSettings->getMinimumPercentage();
+    float param2 = clima->param2();
+
+    for (int i = clima->yearStart(); i<=clima->yearEnd(); i++)
+    {
+        if (isLeapYear(i))
+        {
+            nLeapYears = nLeapYears + 1;
+            nDays = 366;
+        }
+        else
+        {
+            nDays = 365;
+        }
+
+        for (int n = 1; n<=nDays; n++)
+        {
+            presentDate = getDateFromDoy(i, n);
+            float value = NODATA;
+
+            if (meteoPoint->obsDataD[0].date > presentDate)
+            {
+                value = NODATA;
+            }
+            else
+            {
+                index = difference(meteoPoint->obsDataD[0].date, presentDate);
+                value = inputValues.at(index);
+                cumulatedValue = cumulatedValue + value;
+            }
+            cumulatedValues.push_back(value);
+        }
+        cumulatedAllDaysAllYears.push_back(cumulatedValues);
+        cumulatedValues.clear();
+        cumulatedValue = 0;
+        totYears = totYears + 1;
+    }
+
+    if (nLeapYears == 0)
+    {
+        nDays = 365;
+    }
+    else
+    {
+        nDays = 366;
+    }
+
+    std::vector<float> cumulatedValuesPerDay;
+    for (int i = 1; i<=nDays; i++)
+    {
+        if (i == 366)
+        {
+            meteoSettings->setMinimumPercentage(minPerc * nLeapYears/totYears);
+        }
+        else
+        {
+            meteoSettings->setMinimumPercentage(minPerc);
+        }
+        for (int j=0; j<cumulatedAllDaysAllYears.size(); j++)
+        {
+            if (i < cumulatedAllDaysAllYears[j].size())
+            {
+                cumulatedValuesPerDay.push_back(cumulatedAllDaysAllYears[j][i]);
+            }
+        }
+        switch(elab2)
+        {
+            case trend:
+                result = statisticalElab(elab2, clima->yearStart(), cumulatedValuesPerDay, cumulatedValuesPerDay.size(), meteoSettings->getRainfallThreshold());
+            default:
+                result = statisticalElab(elab2, param2, cumulatedValuesPerDay, cumulatedValuesPerDay.size(), meteoSettings->getRainfallThreshold());
+        }
+        cumulatedValuesPerDay.clear();
+
+        if (result != NODATA)
+        {
+            okAtLeastOne = true;
+        }
+        allResults.push_back(result);
+    }
+
+    // if there are no leap years, save NODATA into 366row
+    if (nLeapYears == 0)
+    {
+        allResults.push_back(NODATA);
+    }
+
+    // reset currentPeriod
+    clima->setCurrentPeriodType(noPeriodType);
+
+    if (okAtLeastOne)
+    {
+        return saveDailyElab(db, myError, QString::fromStdString(meteoPoint->id), allResults, clima->climateElab());
+    }
+    else
+    {
+        return false;
     }
 }
 
@@ -2665,18 +2786,6 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
                 {
                     primary = computeCorrectedSum(meteoPoint, firstDate, lastDate, param1, meteoSettings->getMinimumPercentage());
                     break;
-                }
-                case noMeteoComp:
-                {
-                    if ( (clima->getCurrentPeriodType() != dailyPeriod) )
-                    {
-                        return NODATA;
-                    }
-                    if ( (clima->dailyCumulated() == false) )
-                    {
-                        return NODATA;
-                    }
-                    // TO DO cumulata
                 }
                 default:
                 {
