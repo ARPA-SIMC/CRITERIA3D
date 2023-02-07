@@ -105,6 +105,9 @@
 
         meteoComputation getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value);
 
+        void insertDailyCumulated(bool dailyCumulated);
+        std::vector<bool> listDailyCumulated() const;
+
 
     private:
 
@@ -123,6 +126,7 @@
         std::vector<QString> _listParam1ClimateField;
         std::vector<QString> _listElab2;
         std::vector<float> _listParam2;
+        std::vector<bool> _listDailyCumulated;
 
     };
 

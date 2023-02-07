@@ -328,6 +328,17 @@ void Crit3DElabList::insertParam2(float param2)
     _listParam2.push_back(param2);
 }
 
+void Crit3DElabList::insertDailyCumulated(bool dailyCumulated)
+{
+    _listDailyCumulated.push_back(dailyCumulated);
+}
+
+std::vector<bool> Crit3DElabList::listDailyCumulated() const
+{
+    return _listDailyCumulated;
+}
+
+
 bool Crit3DElabList::addElab(unsigned int index)
 {
 

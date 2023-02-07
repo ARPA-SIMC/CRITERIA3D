@@ -183,6 +183,16 @@ void Crit3DClimateList::setListParam2(const std::vector<float> &listParam2)
     _listParam2 = listParam2;
 }
 
+void Crit3DClimateList::insertDailyCumulated(bool dailyCumulated)
+{
+   _listDailyCumulated.push_back(dailyCumulated);
+}
+
+std::vector<bool> Crit3DClimateList::listDailyCumulated() const
+{
+   return _listDailyCumulated;
+}
+
 void Crit3DClimateList::parserElaboration()
 {
 
