@@ -743,8 +743,15 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
             else
             {
                 index = difference(meteoPoint->obsDataD[0].date, presentDate);
-                value = inputValues.at(index);
-                cumulatedValue = cumulatedValue + value;
+                if (index < inputValues.size())
+                {
+                    value = inputValues.at(index);
+                    cumulatedValue = cumulatedValue + value;
+                }
+                else
+                {
+                    value = NODATA;
+                }
             }
             cumulatedValues.push_back(value);
         }
