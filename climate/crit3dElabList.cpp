@@ -1,5 +1,6 @@
 #include <QString>
 #include <QDate>
+#include <QDebug>
 #include "crit3dElabList.h"
 #include "commonConstants.h"
 #include "climate.h"
