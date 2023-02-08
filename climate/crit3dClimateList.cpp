@@ -230,6 +230,15 @@ void Crit3DClimateList::parserElaboration()
         meteoVariable var = noMeteoVar;
         if (words[pos] != "")
         {
+            if (words[pos].contains("CUMULATED"))
+            {
+                _listDailyCumulated.push_back(true);
+                words[pos].remove("CUMULATED");
+            }
+            else
+            {
+                _listDailyCumulated.push_back(false);
+            }
             var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, words[pos].toStdString());
             if (var == noMeteoVar)
             {
