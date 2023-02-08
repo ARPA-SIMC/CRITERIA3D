@@ -3033,6 +3033,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     QDomNode child;
     QDomNode secondChild;
     QDomNodeList secElab;
+    QDomNodeList primaryElab;
     QDomNodeList anomalySecElab;
     QDomNodeList anomalyRefSecElab;
     TXMLvar varTable;
@@ -3089,6 +3090,16 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 continue;
             }
 
+            QString cumulated = ancestor.toElement().attribute("dailyCumulated").toUpper();
+            if ( cumulated == "TRUE")
+            {
+                listXMLElab->insertDailyCumulated(true);
+            }
+            else
+            {
+                listXMLElab->insertDailyCumulated(false);
+            }
+
             if (parseXMLPeriodType(ancestor, "PeriodType", listXMLElab, listXMLAnomaly, false, false, &period, myError) == false)
             {
                 listXMLElab->eraseElement(nElab);
@@ -3102,6 +3113,24 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
             {
                 listXMLElab->insertElab2("");       // there is not secondary elab
                 listXMLElab->insertParam2(NODATA);
+            }
+
+            primaryElab = ancestor.toElement().elementsByTagName("PrimaryElaboration");
+            if (primaryElab.size() == 0)
+            {
+                qDebug() << "NO PRIMARY ELAB ";
+                if (listXMLElab->listPeriodType().back() != dailyPeriod)
+                {
+                    listXMLElab->eraseElement(nElab);
+                    ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                    qDebug() << "no primary elab, period type != dailyPeriod ";
+                    continue;
+                }
+                listXMLElab->insertElab1("");       // there is not primary elab
+                listXMLElab->insertParam1(NODATA);
+                param1IsClimate = false;
+                listXMLElab->insertParam1IsClimate(false);
+                listXMLElab->insertParam1ClimateField("");
             }
 
             child = ancestor.firstChild();
