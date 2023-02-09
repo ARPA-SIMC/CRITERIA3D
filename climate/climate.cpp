@@ -780,6 +780,7 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
         {
             case trend:
                 result = statisticalElab(elab2, clima->yearStart(), cumulatedValuesPerDay, cumulatedValuesPerDay.size(), meteoSettings->getRainfallThreshold());
+                break;
             default:
                 result = statisticalElab(elab2, param2, cumulatedValuesPerDay, cumulatedValuesPerDay.size(), meteoSettings->getRainfallThreshold());
         }
