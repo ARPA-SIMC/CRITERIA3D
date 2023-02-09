@@ -716,7 +716,6 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
     QSqlDatabase db = clima->db();
     float minPerc = meteoSettings->getMinimumPercentage();
     float param2 = clima->param2();
-
     for (int i = clima->yearStart(); i<=clima->yearEnd(); i++)
     {
         if (isLeapYear(i))
@@ -745,13 +744,13 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
                 {
                     value = inputValues.at(index);
                     cumulatedValue = cumulatedValue + value;
+                    cumulatedValues.push_back(cumulatedValue);
                 }
                 else
                 {
                     value = NODATA;
                 }
             }
-            cumulatedValues.push_back(value);
         }
         cumulatedAllDaysAllYears.push_back(cumulatedValues);
         cumulatedValues.clear();
@@ -781,7 +780,7 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
         }
         for (int j=0; j<cumulatedAllDaysAllYears.size(); j++)
         {
-            if (i < cumulatedAllDaysAllYears[j].size())
+            if (i <= cumulatedAllDaysAllYears[j].size())
             {
                 cumulatedValuesPerDay.push_back(cumulatedAllDaysAllYears[j][i-1]);
             }
