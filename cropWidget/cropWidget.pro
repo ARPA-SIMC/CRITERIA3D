@@ -31,7 +31,7 @@ win32:{
 }
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../dbMeteoGrid  \
-            ../soil ../crop ../qcustomplot ../criteriaModel ../commonDialogs \
+            ../soil ../carbonNitrogen ../crop ../qcustomplot ../criteriaModel ../commonDialogs \
             ../commonChartElements ../meteoWidget ../soilWidget
 
 
@@ -39,6 +39,7 @@ SOURCES += \
     cropWidget.cpp \
     dialogNewCrop.cpp \
     dialogNewProject.cpp \
+    tabCarbonNitrogen.cpp \
     tabIrrigation.cpp \
     tabLAI.cpp \
     tabRootDensity.cpp \
@@ -49,6 +50,7 @@ HEADERS += \
     cropWidget.h \
     dialogNewCrop.h \
     dialogNewProject.h \
+    tabCarbonNitrogen.h \
     tabIrrigation.h \
     tabLAI.h \
     tabRootDensity.h \
