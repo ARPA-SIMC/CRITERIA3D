@@ -371,6 +371,17 @@ size_t Crit3DInterpolationSettings::getProxyNr()
 Crit3DProxy* Crit3DInterpolationSettings::getProxy(unsigned pos)
 { return &(currentProxy[pos]);}
 
+int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
+{
+    for (int i = 0; i < getProxyNr(); i++)
+    {
+        if (getProxyPragaName(getProxyName(i)) == name)
+            return i;
+    }
+
+    return NODATA;
+}
+
 std::string Crit3DProxy::getName() const
 {
     return name;
