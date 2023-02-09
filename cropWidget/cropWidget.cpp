@@ -433,11 +433,14 @@ Crit3DCropWidget::Crit3DCropWidget()
     tabRootDensity = new TabRootDensity();
     tabIrrigation = new TabIrrigation();
     tabWaterContent = new TabWaterContent();
+    tabCarbonNitrogen = new TabCarbonNitrogen();
+
     tabWidget->addTab(tabLAI, tr("LAI development"));
     tabWidget->addTab(tabRootDepth, tr("Root depth"));
     tabWidget->addTab(tabRootDensity, tr("Root density"));
     tabWidget->addTab(tabIrrigation, tr("Irrigation"));
     tabWidget->addTab(tabWaterContent, tr("Water Content"));
+    tabWidget->addTab(tabCarbonNitrogen, tr("Carbon Nitrogen"));
     WidgetLayout->addWidget(tabWidget);
 
     this->setLayout(mainLayout);
@@ -1667,6 +1670,10 @@ void Crit3DCropWidget::on_actionUpdate()
                 {
                     updateTabWaterContent();
                 }
+                if (tabWidget->currentIndex() == 5)
+                {
+                    updateTabCarbonNitrogen();
+                }
             }
         }
     }
@@ -1843,6 +1850,16 @@ void Crit3DCropWidget::updateTabWaterContent()
         tabWaterContent->computeWaterContent(myProject.myCase, firstYearListComboBox.currentText().toInt(),
                                              lastYearListComboBox.currentText().toInt(),
                                              myProject.lastSimulationDate, volWaterContent->isChecked());
+    }
+}
+
+void Crit3DCropWidget::updateTabCarbonNitrogen()
+{
+    if (!myProject.myCase.crop.idCrop.empty() && !myProject.myCase.meteoPoint.id.empty() && !myProject.myCase.mySoil.code.empty())
+    {
+        /*tabWaterContent->computeWaterContent(myProject.myCase, firstYearListComboBox.currentText().toInt(),
+                                             lastYearListComboBox.currentText().toInt(),
+                                             myProject.lastSimulationDate, volWaterContent->isChecked());*/
     }
 }
 

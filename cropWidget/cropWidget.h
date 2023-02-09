@@ -21,6 +21,7 @@
     #include "tabRootDensity.h"
     #include "tabIrrigation.h"
     #include "tabWaterContent.h"
+    #include "tabCarbonNitrogen.h"
 
 
     class Crit3DCropWidget : public QWidget
@@ -57,6 +58,8 @@
             void updateTabRootDensity();
             void updateTabIrrigation();
             void updateTabWaterContent();
+            void updateTabCarbonNitrogen();
+
             void tabChanged(int index);
             bool checkIfCropIsChanged();
             void irrigationVolumeChanged();
@@ -137,6 +140,7 @@
             TabRootDensity* tabRootDensity;
             TabIrrigation* tabIrrigation;
             TabWaterContent* tabWaterContent;
+            TabCarbonNitrogen* tabCarbonNitrogen;
 
             bool isRedraw;
 

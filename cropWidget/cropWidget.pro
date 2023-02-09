@@ -39,6 +39,7 @@ SOURCES += \
     cropWidget.cpp \
     dialogNewCrop.cpp \
     dialogNewProject.cpp \
+    tabCarbonNitrogen.cpp \
     tabIrrigation.cpp \
     tabLAI.cpp \
     tabRootDensity.cpp \
@@ -49,6 +50,7 @@ HEADERS += \
     cropWidget.h \
     dialogNewCrop.h \
     dialogNewProject.h \
+    tabCarbonNitrogen.h \
     tabIrrigation.h \
     tabLAI.h \
     tabRootDensity.h \

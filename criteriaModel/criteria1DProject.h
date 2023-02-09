@@ -45,7 +45,7 @@
         bool isXmlMeteoGrid;
 
         Crit1DCase myCase;
-        Crit3DCarbonNitrogenProfile myCarbonNitrogenProfile;
+        Crit1DCarbonNitrogenProfile myCarbonNitrogenProfile;
 
         // soil
         soil::Crit3DTextureClass soilTexture[13];

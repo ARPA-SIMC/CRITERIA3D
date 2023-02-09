@@ -5,11 +5,11 @@
     #include "carbonNitrogen.h"
     #include "criteria1DCase.h"
 
-    class Crit3DCarbonNitrogenProfile
+    class Crit1DCarbonNitrogenProfile
     {
 
     public:
-        Crit3DCarbonNitrogenProfile();
+        Crit1DCarbonNitrogenProfile();
 
         // rates
 
