@@ -230,7 +230,7 @@ void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint>
 bool neighbourhoodVariability(meteoVariable myVar, std::vector <Crit3DInterpolationDataPoint> &myInterpolationPoints,
                               Crit3DInterpolationSettings* mySettings,
                               float x, float y, float z, int nMax,
-                              float* devSt, float* devStDeltaZ, float* minDistance)
+                              float* devSt, float* avgDeltaZ, float* minDistance)
 {
     int i, max_points;
     float* dataNeighborhood;
@@ -263,7 +263,7 @@ bool neighbourhoodVariability(meteoVariable myVar, std::vector <Crit3DInterpolat
             if ((validPoints[i]).point->z != NODATA)
                 deltaZ.push_back(fabs(((float)(validPoints[i]).point->z) - z));
 
-        *devStDeltaZ = statistics::mean(deltaZ.data(), int(deltaZ.size()));
+        *avgDeltaZ = statistics::mean(deltaZ.data(), int(deltaZ.size()));
 
         return true;
     }
