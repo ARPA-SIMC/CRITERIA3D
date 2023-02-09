@@ -355,7 +355,6 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
 
     case dailyPeriod:
     {
-
         clima->setCurrentPeriodType(clima->periodType());
         if ( clima->dailyCumulated() == true)
         {
@@ -701,7 +700,6 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
 
 bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Crit3DClimate* clima, Crit3DMeteoPoint* meteoPoint, meteoComputation elab2, Crit3DMeteoSettings* meteoSettings)
 {
-
     bool okAtLeastOne = false;
     int nLeapYears = 0;
     int totYears = 0;
@@ -785,7 +783,7 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
         {
             if (i < cumulatedAllDaysAllYears[j].size())
             {
-                cumulatedValuesPerDay.push_back(cumulatedAllDaysAllYears[j][i]);
+                cumulatedValuesPerDay.push_back(cumulatedAllDaysAllYears[j][i-1]);
             }
         }
         switch(elab2)

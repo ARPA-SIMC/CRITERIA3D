@@ -1059,6 +1059,7 @@ bool PragaProject::climatePointsCycle(bool showInfo)
                 if (climateList->listClimateElab().at(j)!= nullptr)
                 {
                     // copy current elaboration to clima
+                    clima->setDailyCumulated(climateList->listDailyCumulated()[j]);
                     clima->setYearStart(climateList->listYearStart().at(j));
                     clima->setYearEnd(climateList->listYearEnd().at(j));
                     clima->setPeriodType(climateList->listPeriodType().at(j));
@@ -1184,6 +1185,7 @@ bool PragaProject::climatePointsCycleGrid(bool showInfo)
                    {
 
                        // copy current elaboration to clima
+                       clima->setDailyCumulated(climateList->listDailyCumulated()[j]);
                        clima->setYearStart(climateList->listYearStart().at(j));
                        clima->setYearEnd(climateList->listYearEnd().at(j));
                        clima->setPeriodType(climateList->listPeriodType().at(j));
@@ -3242,6 +3244,7 @@ bool PragaProject::computeClimaFromXMLSaveOnDB(QString xmlName)
             std::vector<float> outputValues;
             for (int i = 0; i<listXMLElab->listAll().size(); i++)
             {
+                clima->setDailyCumulated(listXMLElab->listDailyCumulated()[i]);
                 clima->setClimateElab(listXMLElab->listAll()[i]);
                 clima->setVariable(listXMLElab->listVariable()[i]);
                 clima->setYearStart(listXMLElab->listYearStart()[i]);
