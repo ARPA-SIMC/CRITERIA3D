@@ -962,8 +962,8 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     partitioning(myCase);
 
     //flussi di azoto nel suolo
-    double myPistonDepth;
-    myPistonDepth = findPistonDepth(myCase);
+    double pistonDepth;
+    pistonDepth = findPistonDepth(myCase);
         //SoluteFluxesPiston N_NO3, myPistonDepth, Flux_NO3GG
         //SoluteFluxesPiston N_NH4, myPistonDepth, Flux_NH4GG
 
@@ -974,12 +974,12 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NO3;
     }
-    soluteFluxes(mySolute, flagWaterTableUpward , myPistonDepth, &flux_NO3GG, myCase);
+    soluteFluxes(mySolute, flagWaterTableUpward , pistonDepth, &flux_NO3GG, myCase);
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol;
     }
-    soluteFluxes(mySolute, flagWaterTableUpward, myPistonDepth, &flux_NH4GG, myCase);
+    soluteFluxes(mySolute, flagWaterTableUpward, pistonDepth, &flux_NH4GG, myCase);
 
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
     {
