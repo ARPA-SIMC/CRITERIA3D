@@ -722,10 +722,12 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
         {
             nLeapYears = nLeapYears + 1;
             nDays = 366;
+            meteoSettings->setMinimumPercentage(minPerc * nLeapYears/totYears);
         }
         else
         {
             nDays = 365;
+            meteoSettings->setMinimumPercentage(minPerc);
         }
 
         for (int n = 1; n<=nDays; n++)
@@ -733,26 +735,25 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
             presentDate = getDateFromDoy(i, n);
             float value = NODATA;
 
-            if (meteoPoint->obsDataD[0].date > presentDate)
-            {
-                value = NODATA;
-            }
-            else
+            if (meteoPoint->obsDataD[0].date < presentDate)
             {
                 index = difference(meteoPoint->obsDataD[0].date, presentDate);
                 if (index < inputValues.size())
                 {
                     value = inputValues.at(index);
-                    cumulatedValue = cumulatedValue + value;
-                    cumulatedValues.push_back(cumulatedValue);
-                }
-                else
-                {
-                    value = NODATA;
+                    if (value != NODATA)
+                    {
+                        cumulatedValue = cumulatedValue + value;
+                        cumulatedValues.push_back(cumulatedValue);
+                    }
                 }
             }
         }
-        cumulatedAllDaysAllYears.push_back(cumulatedValues);
+        float validPercentage = (float(cumulatedValues.size()) / float(nDays)) * 100;
+        if (validPercentage > meteoSettings->getMinimumPercentage())
+        {
+            cumulatedAllDaysAllYears.push_back(cumulatedValues);
+        }
         cumulatedValues.clear();
         cumulatedValue = 0;
         totYears = totYears + 1;
@@ -770,14 +771,6 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
     std::vector<float> cumulatedValuesPerDay;
     for (int i = 1; i<=nDays; i++)
     {
-        if (i == 366)
-        {
-            meteoSettings->setMinimumPercentage(minPerc * nLeapYears/totYears);
-        }
-        else
-        {
-            meteoSettings->setMinimumPercentage(minPerc);
-        }
         for (int j=0; j<cumulatedAllDaysAllYears.size(); j++)
         {
             if (i <= cumulatedAllDaysAllYears[j].size())
