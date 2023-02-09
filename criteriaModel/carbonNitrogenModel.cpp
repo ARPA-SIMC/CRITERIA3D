@@ -2,39 +2,42 @@
 #include "carbonNitrogenModel.h"
 #include <math.h>
 
-Crit3DCarbonNitrogenSettings::Crit3DCarbonNitrogenSettings()
-{
-    rate_C_humusMin = 0.000005;
-    rate_C_litterMin = 0.01;
-    rate_N_NH4_volatilization = 0.4;
-    rate_N_denitrification = 0.001;
-    max_afp_denitr = 0.1;
-    constant_sat_denitr = 10;
-    rate_urea_hydr = 0.43;
-    rate_N_nitrification = 0.0018;
-    limRatio_nitr = 8;
-    FE = 0.5;
-    FH = 0.2;
-    Q10 = 2.3;
-    baseTemperature = 20;
-    Kd_NH4 = 4;
-    CN_RATIO_NOTHARVESTED = 30;
-    LITTERINI_C_DEFAULT = 1200;   //[kg ha-1] initial litter carbon (default)
-    LITTERINI_N_DEFAULT = 40;     //[kg ha-1] initial litter nitrogen (default)
-    LITTERINI_DEPTH_DEFAULT = 30;  //[cm] initial litter depth (default)
-    ratioBiomassCN = 7;
-    ratioHumusCN = 7;
-    ratioLitterCN = 7;
-}
-
 
 Crit3DCarbonNitrogenProfile::Crit3DCarbonNitrogenProfile()
 {
     flagSOM = 1;
 
-    // TODO initialize
-
+    N_Initialize();
 }
+
+
+void Crit3DCarbonNitrogenProfile::N_Initialize()
+{
+    //****************************************************************
+    //Scopo: lettura da tbAzoto di coefficienti relativi al ciclo di N
+    //****************************************************************
+    //04.08.04.VM eliminazione dei vettori di costanti
+    //00.07.19.VM.MVS nuova sub chiamata da SUB_INI_Profilo per le variabili dell'azoto
+    //****************************************************************
+
+    // 2008.02 GA da inserire in database
+    /*Nitrogen.N_deficit_max_days = 3
+        ReDim Nitrogen.N_deficit_daily(0)
+        */
+
+    ratio_CN_humus = ratio_CN_biomass = 12; // !! to be read somewhere
+    flagSOM = 1; // !! to be read somewhere
+    flagWaterTableUpward = true;  // !! to be read somewhere
+    flagWaterTableWashing = true;  // !! to be read somewhere
+    litterIniC = NODATA; // !! to be read somewhere
+    litterIniN = NODATA; // !! to be read somewhere
+    litterIniDepth = NODATA; // !! to be read somewhere
+
+    N_cropToHarvest = 0;
+    N_cropToResidues = 0;
+    N_roots = 0;
+}
+
 
 double Crit3DCarbonNitrogenProfile::convertToGramsPerM3(double myQuantity, soil::Crit3DLayer &soilLayer)
 {
@@ -57,34 +60,25 @@ double Crit3DCarbonNitrogenProfile::convertToGramsPerKg(double myQuantity, soil:
 }
 
 
-
-void Crit3DCarbonNitrogenProfile::humusIni(Crit1DCase &myCase)
+void Crit3DCarbonNitrogenProfile::humus_Initialize(Crit1DCase &myCase)
 {
-    //'2008.09 GA
-    //'GA 2007.12 perché C calcolato da (CN/CN+1) e non moltiplicando per 0.58 come solito?
-    //'computes initial humus carbon and nitrogen for a layer L
-    //'version 1.0, 2004.08.09.VM
-
-
-    // MVA                '[kg dm-3 = 10^6 g m-3]
-
-    for (unsigned int l = 0; l<myCase.soilLayers.size();l++)
+    for (unsigned int l = 0; l < myCase.soilLayers.size(); l++)
     {
         myCase.carbonNitrogenLayers[l].C_humus = myCase.soilLayers[l].horizon->bulkDensity * 1000000 * (myCase.soilLayers[l].horizon->organicMatter / 100) * 0.58 * myCase.soilLayers[l].thickness; // tolto il 100 perche gia in metri
         myCase.carbonNitrogenLayers[l].N_humus = myCase.carbonNitrogenLayers[l].C_humus / carbonNitrogenParameter.ratioHumusCN;
     }
 }
 
+
 double Crit3DCarbonNitrogenProfile::updateTotalOfPartitioned(double mySoluteAds,double mySoluteSol)
 {
     return (mySoluteAds + mySoluteSol);
 }
 
+
+// partitioning of N (only NH4) between adsorbed and solute
 void Crit3DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
 {
-    // partitioning of N (only NH4) between adsorbed and solute
-
-
     double N_NH4_g_dm3;               // [g dm-3] total ammonium
     double N_NH4_sol_g_l;             // [g l-1] ammonium in solution
     double N_NH4_ads_g_kg;            // [g kg-1] adsorbed ammonium
@@ -109,24 +103,23 @@ void Crit3DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
 }
 
 
-void Crit3DCarbonNitrogenProfile::litterIni(Crit1DCase &myCase)
+// computes initial litter carbon and nitrogen for a layer
+void Crit3DCarbonNitrogenProfile::litter_Initialize(Crit1DCase &myCase)
 {
-    //2008.10 GA inizializzazione indipendente da humus ma da input utente
-    //computes initial litter carbon and nitrogen for a layer L
-    //version 1.0, 2004.08.16.VM
-
     double layerRatio;
     double myDepth;
     if (fabs(litterIniC-NODATA) < EPSILON)
+    {
         litterIniC = carbonNitrogenParameter.LITTERINI_C_DEFAULT;
+    }
     if (fabs(litterIniN-NODATA) < EPSILON)
         litterIniN = carbonNitrogenParameter.LITTERINI_N_DEFAULT;
     if (fabs(litterIniDepth-NODATA) < EPSILON)
         litterIniDepth = carbonNitrogenParameter.LITTERINI_DEPTH_DEFAULT;
 
     myDepth = MAXVALUE(litterIniDepth, 6);
-    myDepth /= 100; // transform depth from cm to m
-    for (unsigned int l=0; l<myCase.soilLayers.size() ;l++)
+    myDepth /= 100; // from [cm] to [m]
+    for (unsigned int l=0; l < myCase.soilLayers.size(); l++)
     {
         if (myCase.soilLayers[l].depth <= myDepth)
         {
@@ -136,6 +129,7 @@ void Crit3DCarbonNitrogenProfile::litterIni(Crit1DCase &myCase)
         }
     }
 }
+
 
 void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 {
@@ -466,34 +460,6 @@ void Crit3DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 }
 
 
-// da valutare
-void Crit3DCarbonNitrogenProfile::N_Initialize()
-{
-    //****************************************************************
-    //Scopo: lettura da tbAzoto di coefficienti relativi al ciclo di N
-    //****************************************************************
-    //04.08.04.VM eliminazione dei vettori di costanti
-    //00.07.19.VM.MVS nuova sub chiamata da SUB_INI_Profilo per le variabili dell'azoto
-    //****************************************************************
-
-        // 2008.02 GA da inserire in database
-        /*Nitrogen.N_deficit_max_days = 3
-        ReDim Nitrogen.N_deficit_daily(0)
-        */
-
-        ratio_CN_humus = ratio_CN_biomass = 12; // !! to be read somewhere
-        flagSOM = 1; // !! to be read somewhere
-        flagWaterTableUpward = true;  // !! to be read somewhere
-        flagWaterTableWashing = true;  // !! to be read somewhere
-        litterIniC = NODATA; // !! to be read somewhere
-        litterIniN = NODATA; // !! to be read somewhere
-        litterIniDepth = NODATA; // !! to be read somewhere
-
-        N_cropToHarvest = 0;
-        N_cropToResidues = 0;
-        N_roots = 0;
-}
-
 void Crit3DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,TfertilizerProperties fertilizerProperties)
 {
     //07.12.17 GA cambiata dichiarazione da Integer a Single per concentrazioni (per valori frazionari)
@@ -574,14 +540,6 @@ void Crit3DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Tfertilizer
 // da valutare
 void Crit3DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
 {
-    //2004.08.16.VM introduzione di FUN_CNhumus_INI e LitterIni
-    //2004.08.05.VM eliminato da tbLog la costante CNratio_humus
-    //2004.06.25.VM forzato la sostanza organica del suolo
-    //2002.03.15.GD correzione calcolo N_humus
-    //2000.11.20.MVS nuovo codice sulla lettura di tbIniProfilo e tblog
-    //1999.12.02.MVS cambiamento tbUscite in tbUscite_azoto...
-    //1999.05.20.GD
-    //1999.03.15.GD
     //-------------- NOTE -----------------------------------------------------
     //Questa routine carica i valori iniziali nelle variabili
     //utilizzando due metodi alternativi:
@@ -593,12 +551,7 @@ void Crit3DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
     //nrLayers           [-] numero di strati
     //DataIniziale      [-] data di inizio della simulazione
     //-------------- Output Variables -----------------------------------------
-
-    //-------------- Internal Variables ---------------------------------------
-
-    /*Dim Nome$          '[-] nome del campo umidità
-
-
+    /*
     Dim dataformattata As String
     Dim i As Integer
     Dim variable As String
@@ -643,41 +596,43 @@ void Crit3DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
             tbLog.MoveFirst
 
         Else
-            HumusIni
+            humus_Initialize
             LitterIni
             Partitioning
         End If
 
     Else
-        HumusIni
+        humus_Initialize
         LitterIni
         Partitioning
     End If
 
     */
-    humusIni(myCase);
-    litterIni(myCase);
+    humus_Initialize(myCase);
+    litter_Initialize(myCase);
     partitioning(myCase);
 
-    double nitrogenPerCm = 0.05; // [g m-2] valore da rivedere
-    // azzeramento delle variabili non rilette
-    for(unsigned int l=0; l<myCase.soilLayers.size();l++)
+    double nitrogenPerCm = 0.05;            // [g m-2] valore da rivedere
+
+    // initialize state variables
+    // TODO add these varibles to state/restart
+    for(unsigned int l=0; l < myCase.soilLayers.size(); l++)
     {
         myCase.carbonNitrogenLayers[l].N_NO3 = 100*myCase.soilLayers[l].thickness*nitrogenPerCm;
         myCase.carbonNitrogenLayers[l].N_NH4 = 100*myCase.soilLayers[l].thickness*nitrogenPerCm;
         myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed = 0.1*(myCase.carbonNitrogenLayers[l].N_NH4);
         myCase.carbonNitrogenLayers[l].N_urea = 0;
-
     }
+
     profileNH4 = profileNO3 = 0;
-    for(unsigned int l=0; l<myCase.soilLayers.size();l++)
+    for(unsigned int l=0; l < myCase.soilLayers.size(); l++)
     {
         profileNO3 += myCase.carbonNitrogenLayers[l].N_NO3;
         profileNH4 += myCase.carbonNitrogenLayers[l].N_NH4;
     }
-
-    // End Sub
 }
+
+
 /*
 // da valutare come replicare se fare riferimento ad un database
 void ApriTabellaUsciteAzoto(tbname_azoto As String)
@@ -990,25 +945,19 @@ Dim L As Integer
 
 End Sub
 */
+
+// --------------------------- MAIN NITROGEN FUNCTION ----------------------------------------
 void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3DDate &myDate)
 {
-    //++++++++++ MAIN NITROGEN ROUTINE +++++++++++++++++++++++++++++++++++
-    //2008.09 GA
-    //04.08.05.VM Version 2004.4
-    //04.02.20.VM VERSION 2004.3
-    //04.01.28.FZ REVISIONE 2004.2
-    //04.01.09.FZ REVISIONE 2004.1
-    //02.11.26.MVS riscritto il vecchio SUB_SOIL_N
-
     //inputs from precipitation
-        //wet deposition data (ARPAE)
-        //values for the Bologna-Ravenna plain area about 400 eqN ha-1 y-1 (1 eqN = 14 g)
-        //6 kg ha-1 y-1
-        //considering average annual rainfall of 400 mm
-        //0.015 kg ha-1 N mm-1
-        //0.0015 g m-2 N mm-1
-        //dividing equally between N-NO3 and N-NH4
-        //0.00075 g m-2 N-NO3 and N-NH4 mm-1
+    //wet deposition data (ARPAE)
+    //values for the Bologna-Ravenna plain area about 400 eqN ha-1 y-1 (1 eqN = 14 g)
+    //6 kg ha-1 y-1
+    //considering average annual rainfall of 400 mm
+    //0.015 kg ha-1 N mm-1
+    //0.0015 g m-2 N mm-1
+    //dividing equally between N-NO3 and N-NH4
+    //0.00075 g m-2 N-NO3 and N-NH4 mm-1
 
     if (precGG > 0)
     {
@@ -1038,7 +987,6 @@ void Crit3DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     myPistonDepth = findPistonDepth(myCase);
         //SoluteFluxesPiston N_NO3, myPistonDepth, Flux_NO3GG
         //SoluteFluxesPiston N_NH4, myPistonDepth, Flux_NH4GG
-
 
     std::vector<double> mySolute;
     mySolute.resize(myCase.soilLayers.size());

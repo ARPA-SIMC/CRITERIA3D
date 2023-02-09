@@ -31,22 +31,23 @@ win32:{
 }
 
 INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../gis ../meteo \
-                ../dbMeteoGrid ../soil ../crop ../utilities ../soilFluxes3D/header
-
-SOURCES += \
-    carbonNitrogenModel.cpp \
-    criteria1DCase.cpp \
-    criteria1DMeteo.cpp \
-    criteria1DProject.cpp \
-    water1D.cpp
+                ../dbMeteoGrid ../soil ../crop ../utilities \
+                ../soilFluxes3D/header ../carbonNitrogen
 
 HEADERS += \
-    carbonNitrogenModel.h \
     criteria1DCase.h \
     criteria1DError.h \
     criteria1DMeteo.h \
     criteria1DProject.h \
+    carbonNitrogenModel.h \
     water1D.h
+
+SOURCES += \
+    criteria1DCase.cpp \
+    criteria1DMeteo.cpp \
+    criteria1DProject.cpp \
+    carbonNitrogenModel.cpp \
+    water1D.cpp
 
 unix {
     target.path = /usr/lib

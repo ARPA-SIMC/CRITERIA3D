@@ -64,7 +64,7 @@
 
         private:
             Crit1DProject myProject;
-            Crit1DCase myCase;
+
             Crit3DCrop cropFromDB;
 
             QString meteoTableName;
