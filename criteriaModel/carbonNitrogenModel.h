@@ -7,11 +7,8 @@
 
     class Crit1DCarbonNitrogenProfile
     {
-
     public:
         Crit1DCarbonNitrogenProfile();
-
-        // rates
 
         Crit3DCarbonNitrogenSettings carbonNitrogenParameter;
         // values corrected for Temperature and RH
@@ -27,16 +24,16 @@
         double actualRateUreaHydr;           //
 
         // fix variables --------------------------------------------------------------------------------------------
-        double ratio_CN_humus;               //[] rapporto C/N pool humus
-        double ratio_CN_biomass;             //[] rapporto C/N pool biomass
+        double ratio_CN_humus;               // [] rapporto C/N pool humus
+        double ratio_CN_biomass;             // [] rapporto C/N pool biomass
 
         double litterIniC;                   //[kg ha-1] initial litter carbon
         double litterIniN;                   //[kg ha-1] initial litter nitrogen
         double litterIniDepth ;               //[cm] initial litter depth
 
         // flags -------------------------------------------------------------------------------------------------
-        int flagSOM;                         // 1: computes SO; 0: SO set at the default value
-        int flagLocalOS;                    //1: Initializes the profile of SO without keeping that of soil
+        int flagSOM;                        // 1: computes SO; 0: SO set at the default value
+        int flagLocalOS;                    // 1: Initializes the profile of SO without keeping that of soil
         bool flagWaterTableWashing;         // if true: the solute is completely leached in groundwater
         bool flagWaterTableUpward;          // if true: capillary rise is allowed
 
@@ -125,18 +122,13 @@
         void litter_Initialize(Crit1DCase &myCase);
         void N_initializeCrop(bool noReset,Crit1DCase &myCase);
 
-        double convertToGramsPerM3(double myQuantity, soil::Crit3DLayer &soilLayer);
-        double convertToGramsPerLiter(double myQuantity, soil::Crit3DLayer &soilLayer);
-        double convertToGramsPerKg(double myQuantity, soil::Crit3DLayer &soilLayer);
-
         double updateTotalOfPartitioned(double mySoluteAds,double mySoluteSol);
         void partitioning(Crit1DCase &myCase);
         void chemicalTransformations(Crit1DCase &myCase);
-        void N_Fertilization(Crit1DCase &myCase,TfertilizerProperties fertilizerProperties);
+        void N_Fertilization(Crit1DCase &myCase, Crit3DFertilizerProperties fertilizerProperties);
 
         //void ApriTabellaUsciteAzoto(tbname_azoto As String);
         void N_Output();
-        double CNRatio(double C, double N, int flagOrganicMatter);
         double computeWaterCorrectionFactor(int l,Crit1DCase &myCase);
         double computeTemperatureCorrectionFactor(bool flag, double layerSoilTemperature, double baseTemperature);
         void computeLayerRates(unsigned l,Crit1DCase &myCase);
@@ -157,7 +149,7 @@
         void N_harvest(Crit1DCase &myCase);
         void updateNCrop(Crit3DCrop crop);
         void N_plough(Crit1DCase &myCase);
-        void NFromCropSenescence(double myDays,double coeffB,Crit1DCase &myCase);
+        void NFromCropSenescence(double myDays, double coeffB, Crit1DCase &myCase);
 
     };
 

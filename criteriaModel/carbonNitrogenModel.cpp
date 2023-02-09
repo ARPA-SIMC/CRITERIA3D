@@ -39,27 +39,6 @@ void Crit1DCarbonNitrogenProfile::N_Initialize()
 }
 
 
-double Crit1DCarbonNitrogenProfile::convertToGramsPerM3(double myQuantity, soil::Crit3DLayer &soilLayer)
-{
-    // convert [g m-2] -> [g m-3] = [mg dm-3]
-    return myQuantity / soilLayer.thickness;
-}
-
-
-double Crit1DCarbonNitrogenProfile::convertToGramsPerLiter(double myQuantity, soil::Crit3DLayer &soilLayer)
-{
-    // convert [g m-2] -> [g m-3] -> [g l-1]
-    return (convertToGramsPerM3(myQuantity, soilLayer) / 1000);
-}
-
-
-double Crit1DCarbonNitrogenProfile::convertToGramsPerKg(double myQuantity, soil::Crit3DLayer &soilLayer)
-{
-    // convert [g m-2] -> [g m-3] -> [g kg-1]
-    return (convertToGramsPerM3(myQuantity, soilLayer) / 1000) / soilLayer.horizon->bulkDensity;
-}
-
-
 void Crit1DCarbonNitrogenProfile::humus_Initialize(Crit1DCase &myCase)
 {
     for (unsigned int l = 0; l < myCase.soilLayers.size(); l++)
@@ -460,7 +439,7 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 }
 
 
-void Crit1DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,TfertilizerProperties fertilizerProperties)
+void Crit1DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Crit3DFertilizerProperties fertilizerProperties)
 {
     //07.12.17 GA cambiata dichiarazione da Integer a Single per concentrazioni (per valori frazionari)
     //02.11.27.MVS aggiunta concime organico
@@ -1043,19 +1022,6 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     //nitrogen budgets
     NH4_Balance(myCase);
     NO3_Balance(myCase);
-}
-
-
-double Crit1DCarbonNitrogenProfile::CNRatio(double C,double N,int flagOrganicMatter)
-{
-    // 2004.02.20.VM
-    // computes the C/N ratio
-    if (flagOrganicMatter != 1)
-        return 20.;
-    if (N > 0.000001)
-        return MAXVALUE(0.001, C/N);
-    else
-        return 100.;
 }
 
 
