@@ -1122,6 +1122,7 @@ bool PragaProject::climatePointsCycle(bool showInfo)
     }
     else
     {
+        logInfo("climate saved");
         delete meteoPointTemp;
         return true;
     }
@@ -1252,6 +1253,7 @@ bool PragaProject::climatePointsCycleGrid(bool showInfo)
     }
     else
     {
+       logInfo("climate saved");
         delete meteoPointTemp;
         return true;
     }
@@ -3322,6 +3324,7 @@ bool PragaProject::computeClimaFromXMLSaveOnDB(QString xmlName)
      }
      else
      {
+        logInfo("climate saved");
          delete meteoPointTemp;
          return true;
      }

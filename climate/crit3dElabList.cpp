@@ -367,7 +367,10 @@ bool Crit3DElabList::addElab(unsigned int index)
     QString elab1ParamFromdB = _listParam1ClimateField[index];
 
     QString elabAdded = yearStart + "-" + yearEnd + "_" + variable + "_" + period;
-    elabAdded = elabAdded + "_" + periodStartDay + ":" + periodStartMonth + "-" + periodEndDay + ":" + periodEndMonth;
+    if (periodStartDay != "0" && periodStartMonth != "0" && periodEndDay != "0" && periodEndMonth != "0")
+    {
+        elabAdded = elabAdded + "_" + periodStartDay + ":" + periodStartMonth + "-" + periodEndDay + ":" + periodEndMonth;
+    }
     if (nYear != "0")
     {
         elabAdded = elabAdded + "-+" + nYear + "y";

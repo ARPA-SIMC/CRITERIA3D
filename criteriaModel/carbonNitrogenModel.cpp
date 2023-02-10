@@ -964,8 +964,6 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     //flussi di azoto nel suolo
     double pistonDepth;
     pistonDepth = findPistonDepth(myCase);
-        //SoluteFluxesPiston N_NO3, myPistonDepth, Flux_NO3GG
-        //SoluteFluxesPiston N_NH4, myPistonDepth, Flux_NH4GG
 
     std::vector<double> mySolute;
     mySolute.resize(myCase.soilLayers.size());
