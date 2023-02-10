@@ -3320,8 +3320,8 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
             }
             if (periodPresent == false)
             {
-                listXMLElab->insertDateStart(QDate(firstYear.toInt(), 1, 1));
-                listXMLElab->insertDateEnd(QDate(lastYear.toInt(), 12, 31));
+                listXMLElab->insertDateStart(QDate(firstYear.toInt(), 0, 0));
+                listXMLElab->insertDateEnd(QDate(lastYear.toInt(), 0, 0));
                 listXMLElab->insertNYears(0);
             }
             nElab = nElab + 1;
