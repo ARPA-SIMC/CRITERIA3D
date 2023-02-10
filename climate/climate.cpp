@@ -2610,6 +2610,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
 
     std::vector<float> values;
     std::vector<float> valuesSecondElab;
+    std::vector<int> valuesYearsPrimaryElab;
     Crit3DDate presentDate;
     int numberOfDays;
     int nValidValues = 0;
@@ -2850,6 +2851,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
             if (primary != NODATA)
             {
                 valuesSecondElab.push_back(primary);
+                valuesYearsPrimaryElab.push_back(presentYear);
                 nValidYears = nValidYears + 1;
             }
 
