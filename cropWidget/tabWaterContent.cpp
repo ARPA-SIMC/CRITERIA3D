@@ -1,6 +1,8 @@
 #include "tabWaterContent.h"
 #include "commonConstants.h"
 #include "formInfo.h"
+#include "criteria1DCase.h"
+
 
 TabWaterContent::TabWaterContent()
 {

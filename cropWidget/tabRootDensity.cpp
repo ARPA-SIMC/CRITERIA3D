@@ -1,5 +1,7 @@
 #include "tabRootDensity.h"
 #include "commonConstants.h"
+#include "crop.h"
+#include "meteoPoint.h"
 
 TabRootDensity::TabRootDensity()
 {

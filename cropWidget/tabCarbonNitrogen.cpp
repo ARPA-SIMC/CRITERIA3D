@@ -1,7 +1,7 @@
-
 #include "tabCarbonNitrogen.h"
 #include "commonConstants.h"
 #include "formInfo.h"
+#include "criteria1DCase.h"
 
 
 TabCarbonNitrogen::TabCarbonNitrogen()

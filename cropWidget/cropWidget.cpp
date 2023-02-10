@@ -52,7 +52,7 @@
 Crit3DCropWidget::Crit3DCropWidget()
 {
     setWindowTitle(QStringLiteral("CRITERIA 1D_PRO"));
-    resize(1300, 700);
+    resize(1200, 600);
 
     isRedraw = true;
 
