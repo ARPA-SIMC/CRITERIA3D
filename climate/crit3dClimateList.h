@@ -42,7 +42,9 @@
       { "fregoni", fregoni },
       { "correctedDegreeDaysSum", correctedDegreeDaysSum },
       { "erosivityFactorElab", erosivityFactorElab },
-      { "rainIntensityElab", rainIntensityElab }
+      { "rainIntensityElab", rainIntensityElab },
+      { "yearMax", yearMax },
+      { "yearMin", yearMin }
     };
 
     class Crit3DClimateList

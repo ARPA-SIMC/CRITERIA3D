@@ -2999,6 +2999,10 @@ int nParameters(meteoComputation elab)
         return 1;
     case lastDayBelowThreshold:
         return 1;
+    case yearMax:
+        return 0;
+    case yearMin:
+        return 0;
     default:
         return 0;
     }
