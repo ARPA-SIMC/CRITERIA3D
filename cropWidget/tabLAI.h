@@ -2,14 +2,12 @@
 #define TABLAI_H
 
     #include <QtWidgets>
-#ifndef METEOPOINT_H
-    #include "meteoPoint.h"
-#endif
-#ifndef CROP_H
-    #include "crop.h"
-#endif
-#include <QtCharts>
-#include "callout.h"
+    #include <QtCharts>
+    #include "callout.h"
+    #include "soil.h"
+
+    class Crit3DCrop;
+    class Crit3DMeteoPoint;
 
     class TabLAI : public QWidget
     {

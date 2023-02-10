@@ -1,19 +1,18 @@
 #ifndef CROPWIDGET_H
 #define CROPWIDGET_H
 
-#ifndef MAX_YEARS
-    #define MAX_YEARS 10
-#endif
-#ifndef DBMETEOGRID_H
-    #include "dbMeteoGrid.h"
-#endif
+    #ifndef MAX_YEARS
+        #define MAX_YEARS 10
+    #endif
+    #ifndef DBMETEOGRID_H
+        #include "dbMeteoGrid.h"
+    #endif
 
     #include <QWidget>
     #include <QComboBox>
     #include <QGroupBox>
     #include <QLineEdit>
     #include <QLabel>
-    #include <QSqlDatabase>
 
     #include "criteria1DProject.h"
     #include "tabLAI.h"

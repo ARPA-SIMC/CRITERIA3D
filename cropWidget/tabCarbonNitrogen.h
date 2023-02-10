@@ -1,11 +1,11 @@
-
 #ifndef TABCARBONNITROGEN_H
 #define TABCARBONNITROGEN_H
 
     #include <QtWidgets>
-    #include "criteria1DCase.h"
-    #include "carbonNitrogenModel.h"
     #include "qcustomplot.h"
+
+    class Crit1DCase;
+    class Crit1DCarbonNitrogenProfile;
 
     class TabCarbonNitrogen : public QWidget
     {

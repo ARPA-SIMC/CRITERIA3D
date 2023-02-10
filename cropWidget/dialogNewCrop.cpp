@@ -1,4 +1,5 @@
 #include "dialogNewCrop.h"
+#include "crop.h"
 #include "commonConstants.h"
 
 DialogNewCrop::DialogNewCrop(Crit3DCrop *newCrop)
@@ -105,7 +106,8 @@ void DialogNewCrop::on_actionChooseType(QString type)
     }
 }
 
-void DialogNewCrop::done(bool res)
+
+void DialogNewCrop::done(int res)
 {
     if(res)  // ok was pressed
     {
@@ -134,6 +136,7 @@ void DialogNewCrop::done(bool res)
         return;
     }
 }
+
 
 bool DialogNewCrop::checkData()
 {

@@ -1,8 +1,8 @@
 #ifndef DIALOGNEWCROP_H
 #define DIALOGNEWCROP_H
 
-#include "crop.h"
-#include <QtWidgets>
+    #include <QtWidgets>
+    class Crit3DCrop;
 
     class DialogNewCrop : public QDialog
     {
@@ -10,7 +10,7 @@
     public:
         DialogNewCrop(Crit3DCrop* newCrop);
         void on_actionChooseType(QString type);
-        void done(bool res);
+        void done(int res);
         bool checkData();
         QString getNameCrop();
 
