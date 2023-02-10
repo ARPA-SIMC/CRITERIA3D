@@ -1116,6 +1116,7 @@ bool PragaProject::climatePointsCycle(bool showInfo)
         {
             errorString = "no valid cells available";
         }
+        logError(errorString);
         delete meteoPointTemp;
         return false;
     }
@@ -1245,6 +1246,7 @@ bool PragaProject::climatePointsCycleGrid(bool showInfo)
        {
            errorString = "no valid cells available";
        }
+       logError(errorString);
        delete meteoPointTemp;
        return false;
     }
@@ -3307,5 +3309,20 @@ bool PragaProject::computeClimaFromXMLSaveOnDB(QString xmlName)
     delete listXMLAnomaly;
     delete listXMLDrought;
     delete listXMLPhenology;
-    return true;
+
+    if (validCell == 0)
+    {
+        if (errorString.isEmpty())
+        {
+            errorString = "no valid cells available";
+        }
+        logError(errorString);
+        delete meteoPointTemp;
+        return false;
+     }
+     else
+     {
+         delete meteoPointTemp;
+         return true;
+     }
 }

@@ -444,6 +444,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
 
@@ -498,6 +499,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
     }
@@ -550,6 +552,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
     }
@@ -618,6 +621,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
 
@@ -654,6 +658,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
     }
@@ -688,12 +693,16 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
     }
 
     default:
+    {
+        *myError = "period not valid";
         return false;
+    }
 
     }
 }
@@ -808,6 +817,7 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
     }
     else
     {
+        *myError = "no results to save";
         return false;
     }
 }
