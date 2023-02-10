@@ -2871,6 +2871,16 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
         {
             switch(elab2)
             {
+                case yearMax: case yearMin:
+                {
+                    int index = statisticalElab(elab2, firstYear, valuesSecondElab, nValidYears, meteoSettings->getRainfallThreshold());
+                    if (index != NODATA && index < valuesYearsPrimaryElab.size())
+                    {
+                        return valuesYearsPrimaryElab[index];
+                    }
+                    else
+                        return NODATA;
+                }
                 case trend:
                     return statisticalElab(elab2, firstYear, valuesSecondElab, nValidYears, meteoSettings->getRainfallThreshold());
                 default:
