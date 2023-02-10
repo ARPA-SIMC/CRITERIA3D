@@ -1,9 +1,12 @@
-#include "tabLAI.h"
-#include "commonConstants.h"
 #include <QMessageBox>
 #include <QLegendMarker>
+
+#include "tabLAI.h"
+#include "commonConstants.h"
 #include "formInfo.h"
-#include "qdebug.h"
+#include "meteoPoint.h"
+//#include "qdebug.h"
+#include "crop.h"
 
 
 TabLAI::TabLAI()
