@@ -4,8 +4,9 @@
     #include <QtWidgets>
     #include "qcustomplot.h"
 
-    class Crit1DCase;
-    class Crit1DCarbonNitrogenProfile;
+    class Crit1DProject;
+
+    enum carbonNitrogenVariable {NH3, NH4, N_HUMUS, N_LITTER, C_HUMUS, C_LITTER};
 
     class TabCarbonNitrogen : public QWidget
     {
@@ -13,7 +14,8 @@
     public:
         TabCarbonNitrogen();
 
-        void computeCarbonNitrogen(Crit1DCase myCase, Crit1DCarbonNitrogenProfile myCarbonNitrogen, int firstYear, int lastYear, QDate lastDBMeteoDate);
+        void computeCarbonNitrogen(Crit1DProject &myProject, carbonNitrogenVariable currentVariable,
+                                   int firstYear, int lastYear);
 
     private:
         QString title;

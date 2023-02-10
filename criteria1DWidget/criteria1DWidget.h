@@ -1,5 +1,5 @@
-#ifndef CROPWIDGET_H
-#define CROPWIDGET_H
+#ifndef CRITERIA1DWIDGET_H
+#define CRITERIA1DWIDGET_H
 
     #ifndef MAX_YEARS
         #define MAX_YEARS 10
@@ -23,12 +23,12 @@
     #include "tabCarbonNitrogen.h"
 
 
-    class Crit3DCropWidget : public QWidget
+    class Criteria1DWidget : public QWidget
     {
         Q_OBJECT
 
         public:
-            Crit3DCropWidget();
+            Criteria1DWidget();
             void on_actionOpenProject();
             void on_actionNewProject();
             void on_actionOpenCropDB();
@@ -62,7 +62,6 @@
             void tabChanged(int index);
             bool checkIfCropIsChanged();
             void irrigationVolumeChanged();
-            void variableWaterContentChanged();
 
         private:
             Crit1DProject myProject;
@@ -86,6 +85,8 @@
             QGroupBox *irrigationParametersGroup;
             QGroupBox *waterStressParametersGroup;
             QGroupBox *waterContentGroup;
+            QGroupBox *carbonNitrogenGroup;
+
             QComboBox caseListComboBox;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
@@ -123,8 +124,14 @@
             QLineEdit* psiLeafValue;
             QDoubleSpinBox* rawFractionValue;
             QDoubleSpinBox* stressToleranceValue;
+
             QRadioButton *volWaterContent;
             QRadioButton *degreeSat;
+            QRadioButton *nitrogen_NH3;
+            QRadioButton *nitrogen_NH4;
+            QRadioButton *carbon_C_humus;
+            QRadioButton *carbon_C_litter;
+
             QTabWidget* tabWidget;
             QAction* saveChanges;
             QAction* restoreData;
@@ -153,4 +160,4 @@
     };
 
 
-#endif // CROPWIDGET_H
+#endif // CRITERIA1DWIDGET_H

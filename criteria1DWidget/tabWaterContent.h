@@ -12,10 +12,11 @@
 
     public:
         TabWaterContent();
-        void computeWaterContent(Crit1DCase myCase, int firstYear, int lastYear, QDate lastDBMeteoDate, bool isVolumetricWaterContent);
+        void computeWaterContent(Crit1DCase &myCase, int firstYear, int lastYear,
+                                 const QDate &lastDBMeteoDate, bool isVolumetricWaterContent);
 
     private:
-        bool isVolumetricWaterContent;
+        //bool isVolumetricWaterContent;
         QString title;
         QCustomPlot *graphic;
         QCPColorMap *colorMap;

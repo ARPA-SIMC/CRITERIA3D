@@ -17,7 +17,9 @@
         Q_OBJECT
     public:
         TabRootDepth();
-        void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers);
+        void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear,
+                              QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers);
+
         void tooltipRDM(QPointF point, bool state);
         void tooltipRD(QPointF point, bool state);
         Callout *m_tooltip;
