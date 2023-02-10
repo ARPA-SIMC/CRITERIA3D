@@ -129,8 +129,10 @@
             QRadioButton *degreeSat;
             QRadioButton *nitrogen_NH3;
             QRadioButton *nitrogen_NH4;
-            QRadioButton *carbon_C_humus;
-            QRadioButton *carbon_C_litter;
+            QRadioButton *nitrogen_humus;
+            QRadioButton *nitrogen_litter;
+            QRadioButton *carbon_humus;
+            QRadioButton *carbon_litter;
 
             QTabWidget* tabWidget;
             QAction* saveChanges;

@@ -403,16 +403,19 @@ Criteria1DWidget::Criteria1DWidget()
     waterContentLayout->addWidget(volWaterContent);
     waterContentLayout->addWidget(degreeSat);
 
-    // TODO add other variables
     nitrogen_NH3 = new QRadioButton(tr("&NH3 - Nitrogen in form of nitrates [g m-2]"));
     nitrogen_NH4 = new QRadioButton(tr("&NH4 - Nitrogen in form of ammonium [g m-2]"));
-    carbon_C_humus = new QRadioButton(tr("&Carbon in humus [g m-2]"));
-    carbon_C_litter = new QRadioButton(tr("Carbon in litter [g m-2]"));
+    nitrogen_humus = new QRadioButton(tr("&Nitrogen in humus [g m-2]"));
+    nitrogen_litter = new QRadioButton(tr("Nitrogen in litter [g m-2]"));
+    carbon_humus = new QRadioButton(tr("&Carbon in humus [g m-2]"));
+    carbon_litter = new QRadioButton(tr("Carbon in litter [g m-2]"));
     nitrogen_NH3->setChecked(true);
     carbonNitrogenLayout->addWidget(nitrogen_NH3);
     carbonNitrogenLayout->addWidget(nitrogen_NH4);
-    carbonNitrogenLayout->addWidget(carbon_C_humus);
-    carbonNitrogenLayout->addWidget(carbon_C_litter);
+    carbonNitrogenLayout->addWidget(nitrogen_humus);
+    carbonNitrogenLayout->addWidget(nitrogen_litter);
+    carbonNitrogenLayout->addWidget(carbon_humus);
+    carbonNitrogenLayout->addWidget(carbon_litter);
 
     infoCaseGroup->setLayout(caseInfoLayout);
     infoCropGroup->setLayout(cropInfoLayout);
@@ -1809,7 +1812,7 @@ void Criteria1DWidget::on_actionNewCrop()
     }
     else
     {
-        // TO DO
+        // TODO
         // write newCrop on Db
         delete newCrop;
     }
@@ -1874,8 +1877,10 @@ void Criteria1DWidget::updateTabCarbonNitrogen()
 {
     if (myProject.isProjectLoaded)
     {
-        carbonNitrogenVariable currentVar;
-        // TODO set current var
+        carbonNitrogenVariable currentVar = NH3;
+        if (this->nitrogen_NH4->isChecked())
+            currentVar = NH4;
+        // TODO
         tabCarbonNitrogen->computeCarbonNitrogen(myProject, currentVar,
                                              firstYearListComboBox.currentText().toInt(),
                                              lastYearListComboBox.currentText().toInt());

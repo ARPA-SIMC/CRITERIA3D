@@ -119,6 +119,7 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
 
     myProject.myCase.crop.initialize(myProject.myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
     myProject.myCase.initializeWaterContent(firstDate);
+    // TODO initialize CN
     //myProject.myCarbonNitrogenProfile.N_InitializeVariables(myProject.myCase);
 
     // update axes and colorMap size
@@ -147,6 +148,7 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
     {
         if (! myProject.myCase.computeDailyModel(myDate, errorString))
         {
+            // TODO compute CN
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorString));
             return;
         }
@@ -159,6 +161,7 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
             doy++; // if display 1 year this is the day Of year, otherwise count all days in that period
             for (unsigned int l = 1; l < nrLayers; l++)
             {
+                // TODO read variable
                 value = myProject.myCase.soilLayers[l].getDegreeOfSaturation();
                 maxValue = std::max(value, maxValue);
                 colorMap->data()->setCell(doy-1, l-1, value);
