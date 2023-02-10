@@ -3075,6 +3075,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     bool errorAnomaly = false;
     bool errorDrought = false;
     bool errorPhenology = false;
+    bool periodPresent = false;
 
     while(!ancestor.isNull())
     {
@@ -3174,6 +3175,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 }
                 if (myTag == "PERIOD")
                 {
+                    periodPresent = true;
                     if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, false, false, period, firstYear, myError) == false)
                     {
                         listXMLElab->eraseElement(nElab);
@@ -3299,6 +3301,12 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 {
                     child = child.nextSibling();
                 }
+            }
+            if (periodPresent == false)
+            {
+                listXMLElab->insertDateStart(QDate(firstYear.toInt(), 1, 1));
+                listXMLElab->insertDateEnd(QDate(lastYear.toInt(), 12, 31));
+                listXMLElab->insertNYears(0);
             }
             nElab = nElab + 1;
             qDebug() << "nElab " << nElab;
