@@ -43,8 +43,8 @@
       { "correctedDegreeDaysSum", correctedDegreeDaysSum },
       { "erosivityFactorElab", erosivityFactorElab },
       { "rainIntensityElab", rainIntensityElab },
-      { "yearMax", yearMax },
-      { "yearMin", yearMin }
+      { "yearmax", yearMax },
+      { "yearmin", yearMin }
     };
 
     class Crit3DClimateList
