@@ -183,6 +183,16 @@ void Crit3DClimateList::setListParam2(const std::vector<float> &listParam2)
     _listParam2 = listParam2;
 }
 
+void Crit3DClimateList::insertDailyCumulated(bool dailyCumulated)
+{
+   _listDailyCumulated.push_back(dailyCumulated);
+}
+
+std::vector<bool> Crit3DClimateList::listDailyCumulated() const
+{
+   return _listDailyCumulated;
+}
+
 void Crit3DClimateList::parserElaboration()
 {
 
@@ -219,7 +229,22 @@ void Crit3DClimateList::parserElaboration()
 
         meteoVariable var = noMeteoVar;
         if (words[pos] != "")
+        {
+            if (words[pos].contains("CUMULATED"))
+            {
+                _listDailyCumulated.push_back(true);
+                words[pos].remove("CUMULATED");
+            }
+            else
+            {
+                _listDailyCumulated.push_back(false);
+            }
             var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, words[pos].toStdString());
+            if (var == noMeteoVar)
+            {
+                var = getKeyMeteoVarMeteoMapWithoutUnderscore(MapDailyMeteoVarToString, words[pos].toStdString());
+            }
+        }
 
         _listVariable.push_back(var);
 
@@ -264,7 +289,7 @@ void Crit3DClimateList::parserElaboration()
         bool param1IsClimate;
         QString param1ClimateField;
 
-        meteoComputation elabMeteoComputation = MapMeteoComputation.at(elab.toStdString());
+        meteoComputation elabMeteoComputation = getMeteoCompFromString(MapMeteoComputation, elab.toStdString());
 
         float param = NODATA;
         int nrParam = nParameters(elabMeteoComputation);
@@ -318,7 +343,7 @@ void Crit3DClimateList::parserElaboration()
 
             elab1 = words[pos];
             _listElab1.push_back(elab1);
-            elabMeteoComputation = MapMeteoComputation.at(elab1.toStdString());
+            elabMeteoComputation = getMeteoCompFromString(MapMeteoComputation, elab1.toStdString());
             nrParam = nParameters(elabMeteoComputation);
 
             if (nrParam > 0)
@@ -394,159 +419,32 @@ bool Crit3DClimateList::parserGenericPeriodString(int index)
     int year = 2000;
     _listGenericPeriodDateStart.push_back( QDate(year,  month.toInt(),  day.toInt()) );
 
-    //climaElabList->setGenericPeriodDateStart( QDate(year,  month.toInt(),  day.toInt()) );
-
     day = periodString.mid(6,2);
     month = periodString.mid(9,2);
 
-    //climaElabList->setGenericPeriodDateEnd( QDate(year,  month.toInt(),  day.toInt()) );
     _listGenericPeriodDateEnd.push_back( QDate(year,  month.toInt(),  day.toInt()) );
 
     if ( periodString.size() > 11 )
     {
-        //climaElabList->setNYears( (periodString.mid(13,2)).toInt() );
         _listNYears.push_back((periodString.mid(13,2)).toInt());
     }
     return true;
 
 }
 
-
-/* old
- * bool parserElaboration(Crit3DClimate* clima)
+meteoComputation Crit3DClimateList::getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value)
 {
-    int pos = 0;
-    QString climateElab = clima->climateElab();
-    QList<QString> words = climateElab.split('_');
-    if (words.isEmpty())
+
+    std::map<std::string, meteoComputation>::const_iterator it;
+    meteoComputation meteoValue = noMeteoComp;
+
+    for (it = map.begin(); it != map.end(); ++it)
     {
-        return false;
-    }
-    QString periodElabList = words.at(pos);
-    QList<QString> myYearWords = periodElabList.split('-'); // ÷
-    if (myYearWords[0].toInt() == false || myYearWords[1].toInt() == false)
-    {
-        return false;
-    }
-    clima->setYearStart(myYearWords[0].toInt());
-    clima->setYearEnd(myYearWords[1].toInt());
-    pos = pos + 1;
-    if (words.size() == pos)
-    {
-        return false;
-    }
-    meteoVariable var;
-    if (words[pos] == "")
-    {
-        var = noMeteoVar;
-    }
-    else
-    {
-        try
+        if (it->first == value)
         {
-            var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, words[pos].toStdString());
-          //var = MapDailyMeteoVar.at(words[pos].toStdString());
-        }
-        catch (const std::out_of_range& )
-        {
-          var = noMeteoVar;
+            meteoValue = it->second;
+            break;
         }
     }
-    clima->setVariable(var);
-    pos = pos + 1;
-    if (words.size() == pos)
-    {
-        return false;
-    }
-    QString periodTypeStr = words[pos];
-    clima->setPeriodStr(periodTypeStr);
-    clima->setPeriodType(getPeriodTypeFromString(periodTypeStr));
-    pos = pos + 1; // pos = 3
-    if (words.size() == pos)
-    {
-        return false;
-    }
-    if ( (clima->periodType() == genericPeriod) && ( (words[pos].at(0)).isDigit() ) )
-    {
-        clima->setPeriodStr(words[pos]);
-        parserGenericPeriodString(clima);
-        pos = pos + 1; // pos = 4
-    }
-    if (words.size() == pos)
-    {
-        return false;
-    }
-    QString elab = words[pos];
-    meteoComputation elabMeteoComputation = MapMeteoComputation.at(elab.toStdString());
-    float param = NODATA;
-    int nrParam = nParameters(elabMeteoComputation);
-    if (nrParam > 0)
-    {
-        pos = pos + 1;
-        if ( words[pos].at(0) == '|' )
-        {
-            clima->setParam1IsClimate(true);
-            QString param1ClimateField = words[pos];
-            param1ClimateField.remove(0,1);
-            pos = pos + 1;
-            if ( words[pos].right(2) == "||" ) return false;
-            while ( words[pos].right(2) != "||" )
-            {
-                param1ClimateField = param1ClimateField + "_" + words[pos];
-                pos = pos + 1;
-            }
-            param1ClimateField = param1ClimateField + "_" + words[pos].left(words[pos].size() - 2);
-            clima->setParam1ClimateField(param1ClimateField);
-            param =  NODATA;
-        }
-        else
-        {
-            clima->setParam1IsClimate(false);
-            clima->setParam1ClimateField("");
-            param = words[pos].toFloat();
-        }
-    }
-    pos = pos + 1;
-    if (words.size() > pos)
-    {
-        clima->setElab2(elab);
-        clima->setParam2(param);
-        QString elab1 = words[pos];
-        clima->setElab1(elab1);
-        elabMeteoComputation = MapMeteoComputation.at(elab1.toStdString());
-        nrParam = nParameters(elabMeteoComputation);
-        if (nrParam > 0)
-        {
-            pos = pos + 1;
-            if ( words[pos].at(0) == '|' )
-            {
-                clima->setParam1IsClimate(true);
-                QString param1ClimateField = words[pos];
-                param1ClimateField.remove(0,1);
-                pos = pos + 1;
-                if ( words[pos].right(2) == "||" ) return false;
-                while ( words[pos].right(2) != "||" )
-                {
-                    pos = pos + 1;
-                    param1ClimateField = param1ClimateField + "_" + words[pos];
-                }
-                pos = pos + 1;
-                param1ClimateField = param1ClimateField + "_" + words[pos].left(words[pos].size() - 2);
-                clima->setParam1(NODATA);
-            }
-            else
-            {
-                clima->setParam1IsClimate(false);
-                clima->setParam1ClimateField("");
-                clima->setParam1( words[pos].toFloat() );
-            }
-        }
-    }
-    else
-    {
-        clima->setElab1(elab);
-        clima->setParam1(param);
-    }
-    return true;
+    return meteoValue;
 }
-*/

@@ -131,7 +131,7 @@ void DialogComputeData::done(bool res)
             QMessageBox::information(nullptr, "Missing variable", "Select a variable");
             return;
         }
-        if (dateFrom.date() >= dateTo.date())
+        if (dateFrom.date() > dateTo.date())
         {
             QMessageBox::information(nullptr, "Invalid interval", "First date should be <= last date ");
             return;
@@ -155,11 +155,19 @@ QList <meteoVariable> DialogComputeData::getVariables() const
         QString var = selVar[i]->text();
         if (isGrid)
         {
-            selMeteoVar.append(getKeyMeteoVarMeteoMap(MapMonthlyMeteoVarToString, var.toStdString()));
+            meteoVariable meteoVarSelected = getKeyMeteoVarMeteoMap(MapMonthlyMeteoVarToString, var.toStdString());
+            if (meteoVarSelected != noMeteoVar)
+            {
+                selMeteoVar.append(meteoVarSelected);
+            }
         }
         else
         {
-            selMeteoVar.append(getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, var.toStdString()));
+            meteoVariable meteoVarSelected = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, var.toStdString());
+            if (meteoVarSelected != noMeteoVar)
+            {
+                selMeteoVar.append(meteoVarSelected);
+            }
         }
 
     }

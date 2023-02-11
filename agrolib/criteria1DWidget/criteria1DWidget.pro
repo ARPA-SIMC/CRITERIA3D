@@ -1,6 +1,6 @@
 #----------------------------------------------------
 #
-#   Crop Widget library
+#   criteria1DWidget library
 #   This project is part of CRITERIA-3D distribution
 #
 #----------------------------------------------------
@@ -14,31 +14,32 @@ CONFIG += debug_and_release
 
 unix:{
     CONFIG(debug, debug|release) {
-        TARGET = debug/cropWidget
+        TARGET = debug/criteria1DWidget
     } else {
-        TARGET = release/cropWidget
+        TARGET = release/criteria1DWidget
     }
 }
 macx:{
     CONFIG(debug, debug|release) {
-        TARGET = debug/cropWidget
+        TARGET = debug/criteria1DWidget
     } else {
-        TARGET = release/cropWidget
+        TARGET = release/criteria1DWidget
     }
 }
 win32:{
-    TARGET = cropWidget
+    TARGET = criteria1DWidget
 }
 
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../utilities ../gis ../meteo ../dbMeteoGrid  \
-            ../soil ../crop ../qcustomplot ../criteriaModel ../commonDialogs \
+            ../soil ../carbonNitrogen ../crop ../qcustomplot ../criteriaModel ../commonDialogs \
             ../commonChartElements ../meteoWidget ../soilWidget
 
 
 SOURCES += \
-    cropWidget.cpp \
+    criteria1DWidget.cpp \
     dialogNewCrop.cpp \
     dialogNewProject.cpp \
+    tabCarbonNitrogen.cpp \
     tabIrrigation.cpp \
     tabLAI.cpp \
     tabRootDensity.cpp \
@@ -46,9 +47,10 @@ SOURCES += \
     tabWaterContent.cpp
 
 HEADERS += \
-    cropWidget.h \
+    criteria1DWidget.h \
     dialogNewCrop.h \
     dialogNewProject.h \
+    tabCarbonNitrogen.h \
     tabIrrigation.h \
     tabLAI.h \
     tabRootDensity.h \

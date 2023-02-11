@@ -2,6 +2,7 @@
 #include "commonConstants.h"
 #include "formInfo.h"
 #include "math.h"
+#include "criteria1DCase.h"
 
 
 TabIrrigation::TabIrrigation()
@@ -112,7 +113,7 @@ TabIrrigation::TabIrrigation()
 }
 
 
-void TabIrrigation::computeIrrigation(Crit1DCase myCase, int firstYear, int lastYear, QDate lastDBMeteoDate)
+void TabIrrigation::computeIrrigation(Crit1DCase &myCase, int firstYear, int lastYear, const QDate &lastDBMeteoDate)
 {
     FormInfo formInfo;
 

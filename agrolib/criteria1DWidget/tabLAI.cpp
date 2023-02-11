@@ -1,9 +1,12 @@
-#include "tabLAI.h"
-#include "commonConstants.h"
 #include <QMessageBox>
 #include <QLegendMarker>
+
+#include "tabLAI.h"
+#include "commonConstants.h"
 #include "formInfo.h"
-#include "qdebug.h"
+#include "meteoPoint.h"
+//#include "qdebug.h"
+#include "crop.h"
 
 
 TabLAI::TabLAI()
@@ -99,7 +102,8 @@ TabLAI::TabLAI()
 }
 
 
-void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers)
+void TabLAI::computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear,
+                        const QDate &lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers)
 {
     unsigned int nrLayers = unsigned(soilLayers.size());
     double totalSoilDepth = 0;

@@ -2,21 +2,21 @@
 #define TABLAI_H
 
     #include <QtWidgets>
-#ifndef METEOPOINT_H
-    #include "meteoPoint.h"
-#endif
-#ifndef CROP_H
-    #include "crop.h"
-#endif
-#include <QtCharts>
-#include "callout.h"
+    #include <QtCharts>
+    #include "callout.h"
+    #include "soil.h"
+
+    class Crit3DCrop;
+    class Crit3DMeteoPoint;
 
     class TabLAI : public QWidget
     {
         Q_OBJECT
     public:
         TabLAI();
-        void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer>& soilLayers);
+        void computeLAI(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear,
+                        const QDate &lastDBMeteoDate, const std::vector<soil::Crit3DLayer>& soilLayers);
+
         void tooltipLAI(QPointF point, bool state);
         void tooltipPE(QPointF point, bool state);
         void tooltipME(QPointF point, bool state);

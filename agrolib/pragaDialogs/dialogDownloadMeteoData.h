@@ -3,8 +3,6 @@
 
 #include <QtWidgets>
 
-    class PragaProject;
-
     class DialogDownloadMeteoData : public QDialog
     {
 

@@ -35,9 +35,9 @@
 Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
 :interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
 {
-    this->setWindowTitle("Proxy analysis");
-    this->resize(1240, 700);
-    this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    this->setWindowTitle("Proxy analysis over " + QString::number(nrMeteoPoints) +  " points");
+    this->resize(1024, 700);
+    this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     this->setAttribute(Qt::WA_DeleteOnClose);
     
     // layout
@@ -48,7 +48,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QVBoxLayout *selectionOptionLayout = new QVBoxLayout;
     QHBoxLayout *selectionOptionBoxLayout = new QHBoxLayout;
     QHBoxLayout *selectionOptionEditLayout = new QHBoxLayout;
-    QVBoxLayout *plotLayout = new QVBoxLayout;
 
     detrended.setText("Detrended data");
     climatologicalLR.setText("Climatological lapse rate");
@@ -101,7 +100,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
         }
         myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
     }
-    variable.setMinimumWidth(130);
     variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     
     selectionChartLayout->addWidget(variableLabel);
@@ -127,21 +125,24 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     selectionLayout->addLayout(selectionChartLayout);
     selectionLayout->addStretch(30);
     selectionLayout->addLayout(selectionOptionLayout);
+    horizontalGroupBox->setMaximumSize(1240, 130);
+    horizontalGroupBox->setLayout(selectionLayout);
+
+    chartView = new ChartView();
+    chartView->setMinimumHeight(200);
+    QStatusBar* statusBar = new QStatusBar();
+
+    mainLayout->addWidget(horizontalGroupBox);
+    mainLayout->addWidget(chartView);
+    mainLayout->addWidget(statusBar);
+
+    setLayout(mainLayout);
     
     connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
-
-    chartView = new ChartView();
-    plotLayout->addWidget(chartView);
-
-    horizontalGroupBox->setMaximumSize(1240, 130);
-    horizontalGroupBox->setLayout(selectionLayout);
-    mainLayout->addWidget(horizontalGroupBox);
-    mainLayout->addLayout(plotLayout);
-    setLayout(mainLayout);
 
     if (currentFrequency != noFrequency)
     {
