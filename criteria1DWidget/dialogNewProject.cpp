@@ -121,7 +121,7 @@ QGroupBox *DialogNewProject::createCropGroup()
     return groupBox;
 }
 
-void DialogNewProject::done(bool res)
+void DialogNewProject::done(int res)
 {
     if(res)  // ok was pressed
     {

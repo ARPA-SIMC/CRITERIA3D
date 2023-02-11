@@ -84,7 +84,7 @@
 
             QString myError;
             double averageValue;
-            float SNHT_T95_VALUES [10] {5.7,6.95,7.65,8.1,8.45,8.65,8.8,8.95,9.05,9.15};
+            float SNHT_T95_VALUES [10] {5.7f,6.95f,7.65f,8.1f,8.45f,8.65f,8.8f,8.95f,9.05f,9.15f};
     };
 
 

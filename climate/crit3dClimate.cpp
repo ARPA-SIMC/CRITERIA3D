@@ -23,6 +23,7 @@ Crit3DClimate::Crit3DClimate()
     _isClimateAnomalyFromDb = false;
     _elab2 = "";
     _param2 = NODATA;
+    _dailyCumulated = false;
 
     _currentVar = noMeteoVar;
     _currentElab1 = "";
@@ -53,6 +54,7 @@ void Crit3DClimate::resetParam()
     _isClimateAnomalyFromDb = false;
     _elab2 = "";
     _param2 = NODATA;
+    _dailyCumulated = false;
 
 }
 
@@ -85,6 +87,7 @@ void Crit3DClimate::copyParam(Crit3DClimate* clima)
     _isClimateAnomalyFromDb = clima->getIsClimateAnomalyFromDb();
     _elab2 = clima->elab2();
     _param2 = clima->param2();
+    _dailyCumulated = clima->dailyCumulated();
 
 }
 
@@ -335,6 +338,16 @@ bool Crit3DClimate::getIsClimateAnomalyFromDb() const
 void Crit3DClimate::setIsClimateAnomalyFromDb(bool isClimateAnomalyFromDb)
 {
     _isClimateAnomalyFromDb = isClimateAnomalyFromDb;
+}
+
+bool Crit3DClimate::dailyCumulated() const
+{
+    return _dailyCumulated;
+}
+
+void Crit3DClimate::setDailyCumulated(bool newDailyCumulated)
+{
+    _dailyCumulated = newDailyCumulated;
 }
 
 QSqlDatabase Crit3DClimate::db() const

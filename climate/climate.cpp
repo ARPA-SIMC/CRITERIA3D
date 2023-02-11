@@ -254,7 +254,6 @@ bool passingClimateToAnomalyGrid(QString *myError, Crit3DMeteoPoint* meteoPointT
 bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler,
                     Crit3DClimate* clima, Crit3DMeteoPoint* meteoPointTemp, std::vector<float> &outputValues, bool isMeteoGrid, QDate startDate, QDate endDate, bool changeDataSet, Crit3DMeteoSettings* meteoSettings)
 {
-
     float percValue;
     bool dataLoaded = true;
 
@@ -312,7 +311,6 @@ bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
         }
     }
 
-
     if (changeDataSet)
     {
         clima->setCurrentVar(clima->variable());
@@ -340,7 +338,6 @@ bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
 
 bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<float> &outputValues, Crit3DMeteoPoint* meteoPoint, meteoComputation elab1, meteoComputation elab2, Crit3DMeteoSettings* meteoSettings)
 {
-
     QSqlDatabase db = clima->db();
     bool dataAlreadyLoaded = false;
 
@@ -358,8 +355,11 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
 
     case dailyPeriod:
     {
-
         clima->setCurrentPeriodType(clima->periodType());
+        if ( clima->dailyCumulated() == true)
+        {
+            return dailyCumulatedClimate(myError, outputValues, clima, meteoPoint, elab2, meteoSettings);
+        }
 
         bool okAtLeastOne = false;
         int nLeapYears = 0;
@@ -444,6 +444,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
 
@@ -498,6 +499,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
     }
@@ -550,6 +552,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
     }
@@ -618,6 +621,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
 
@@ -654,6 +658,7 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
     }
@@ -680,7 +685,6 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
                 clima->setParam1(NODATA);
             }
         }
-
         result = computeStatistic(outputValues, meteoPoint, clima, startD, endD, clima->nYears(), elab1, elab2, meteoSettings, dataAlreadyLoaded);
 
         if (result != NODATA)
@@ -689,13 +693,132 @@ bool climateTemporalCycle(QString *myError, Crit3DClimate* clima, std::vector<fl
         }
         else
         {
+            *myError = "no results to save";
             return false;
         }
     }
 
     default:
+    {
+        *myError = "period not valid";
         return false;
+    }
 
+    }
+}
+
+bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Crit3DClimate* clima, Crit3DMeteoPoint* meteoPoint, meteoComputation elab2, Crit3DMeteoSettings* meteoSettings)
+{
+    bool okAtLeastOne = false;
+    int nLeapYears = 0;
+    int totYears = 0;
+    int nDays;
+    float result;
+    unsigned int index;
+    std::vector<float> allResults;
+    float cumulatedValue = 0;
+    std::vector<float> cumulatedValues;
+    std::vector< std::vector<float> > cumulatedAllDaysAllYears;
+
+    Crit3DDate presentDate;
+
+    QSqlDatabase db = clima->db();
+    float minPerc = meteoSettings->getMinimumPercentage();
+    float param2 = clima->param2();
+    for (int year = clima->yearStart(); year <= clima->yearEnd(); year++)
+    {
+        if (isLeapYear(year))
+        {
+            nLeapYears = nLeapYears + 1;
+            nDays = 366;
+            meteoSettings->setMinimumPercentage(minPerc * nLeapYears/totYears);
+        }
+        else
+        {
+            nDays = 365;
+            meteoSettings->setMinimumPercentage(minPerc);
+        }
+
+        for (int n = 1; n<=nDays; n++)
+        {
+            presentDate = getDateFromDoy(year, n);
+            float value = NODATA;
+
+            if (presentDate >= meteoPoint->obsDataD[0].date)
+            {
+                index = difference(meteoPoint->obsDataD[0].date, presentDate);
+                if (index < inputValues.size())
+                {
+                    value = inputValues.at(index);
+                    if (value != NODATA) cumulatedValue = cumulatedValue + value;
+
+                    cumulatedValues.push_back(cumulatedValue);
+                }
+            }
+        }
+        float validPercentage = (float(cumulatedValues.size()) / float(nDays)) * 100;
+        if (validPercentage > meteoSettings->getMinimumPercentage())
+        {
+            cumulatedAllDaysAllYears.push_back(cumulatedValues);
+        }
+        cumulatedValues.clear();
+        cumulatedValue = 0;
+        totYears = totYears + 1;
+    }
+
+    if (nLeapYears == 0)
+    {
+        nDays = 365;
+    }
+    else
+    {
+        nDays = 366;
+    }
+
+    std::vector<float> cumulatedValuesPerDay;
+    for (int i = 1; i<=nDays; i++)
+    {
+        for (int j=0; j<cumulatedAllDaysAllYears.size(); j++)
+        {
+            if (i <= cumulatedAllDaysAllYears[j].size())
+            {
+                cumulatedValuesPerDay.push_back(cumulatedAllDaysAllYears[j][i-1]);
+            }
+        }
+        switch(elab2)
+        {
+            case trend:
+                result = statisticalElab(elab2, clima->yearStart(), cumulatedValuesPerDay, cumulatedValuesPerDay.size(), meteoSettings->getRainfallThreshold());
+                break;
+            default:
+                result = statisticalElab(elab2, param2, cumulatedValuesPerDay, cumulatedValuesPerDay.size(), meteoSettings->getRainfallThreshold());
+        }
+        cumulatedValuesPerDay.clear();
+
+        if (result != NODATA)
+        {
+            okAtLeastOne = true;
+        }
+        allResults.push_back(result);
+    }
+
+    // if there are no leap years, save NODATA into 366row
+    if (nLeapYears == 0)
+    {
+        allResults.push_back(NODATA);
+    }
+
+    // reset currentPeriod
+    clima->setCurrentPeriodType(noPeriodType);
+
+    if (okAtLeastOne)
+    {
+        return saveDailyElab(db, myError, QString::fromStdString(meteoPoint->id), allResults, clima->climateElab());
+    }
+    else
+    {
+        *myError = "no results to save";
+        return false;
     }
 }
 
@@ -1833,6 +1956,7 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
     meteoVariable hourlyVar = noMeteoVar;
     meteoComputation elab = noMeteoComp;
     float param = NODATA;
+    int nValidValues;
 
     if (meteoPoint->nrObsDataDaysD == 0)
         meteoPoint->initializeObsDataD(dateIni.daysTo(dateFin)+1, dateIni);
@@ -1912,14 +2036,27 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
         dailyValue = NODATA;
         value = NODATA;
         values.clear();
+        nValidValues = 0;
 
         for (hour = 1; hour <= 24; hour++)
         {
             value = meteoPoint->getMeteoPointValueH(date, hour, 0, hourlyVar);
-            values.push_back(value);
+            if (int(value) != NODATA)
+            {
+                values.push_back(value);
+                nValidValues = nValidValues + 1;
+            }
         }
 
-        dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
+        float validPercentage = (float(nValidValues) / float(24)) * 100;
+        if (validPercentage < meteoSettings->getMinimumPercentage())
+        {
+            dailyValue = NODATA;
+        }
+        else
+        {
+            dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
+        }
         meteoPoint->setMeteoPointValueD(date, myVar, dailyValue);
 
         if (myVar == dailyLeafWetness && dailyValue > 24)
@@ -1933,7 +2070,7 @@ bool aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, 
 
 }
 
-std::vector<float> aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin)
+std::vector<float> aggregatedHourlyToDailyList(meteoVariable myVar, Crit3DMeteoPoint* meteoPoint, Crit3DDate dateIni, Crit3DDate dateFin, Crit3DMeteoSettings *meteoSettings)
 {
 
     Crit3DDate date;
@@ -1944,6 +2081,7 @@ std::vector<float> aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint
     meteoVariable hourlyVar = noMeteoVar;
     meteoComputation elab = noMeteoComp;
     float param = NODATA;
+    int nValidValues;
 
     if (meteoPoint->nrObsDataDaysD == 0)
         meteoPoint->initializeObsDataD(dateIni.daysTo(dateFin)+1, dateIni);
@@ -2023,15 +2161,28 @@ std::vector<float> aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint
         dailyValue = NODATA;
         value = NODATA;
         values.clear();
+        nValidValues = 0;
 
         for (hour = 1; hour <= 24; hour++)
         {
             value = meteoPoint->getMeteoPointValueH(date, hour, 0, hourlyVar);
-            values.push_back(value);
+            if (int(value) != NODATA)
+            {
+                values.push_back(value);
+                nValidValues = nValidValues + 1;
+            }
         }
 
-        dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
-        dailyData.push_back(dailyValue);
+        float validPercentage = (float(nValidValues) / float(24)) * 100;
+        if (validPercentage < meteoSettings->getMinimumPercentage())
+        {
+            dailyData.push_back(NODATA);
+        }
+        else
+        {
+            dailyValue = statisticalElab(elab, param, values, values.size(), NODATA);
+            dailyData.push_back(dailyValue);
+        }
 
         if (myVar == dailyLeafWetness && dailyValue > 24)
         {
@@ -2047,7 +2198,6 @@ std::vector<float> aggregatedHourlyToDaily(meteoVariable myVar, Crit3DMeteoPoint
 bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, Crit3DMeteoPoint* meteoPoint, bool isMeteoGrid, meteoVariable variable, meteoComputation elab1,
     QDate startDate, QDate endDate, std::vector<float> &outputValues, float* percValue, Crit3DMeteoSettings* meteoSettings)
 {
-
     bool preElaboration = false;
     bool automaticETP = meteoSettings->getAutomaticET0HS();
     bool automaticTmed = meteoSettings->getAutomaticTavg();
@@ -2460,6 +2610,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
 
     std::vector<float> values;
     std::vector<float> valuesSecondElab;
+    std::vector<int> valuesYearsPrimaryElab;
     Crit3DDate presentDate;
     int numberOfDays;
     int nValidValues = 0;
@@ -2700,6 +2851,7 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
             if (primary != NODATA)
             {
                 valuesSecondElab.push_back(primary);
+                valuesYearsPrimaryElab.push_back(presentYear);
                 nValidYears = nValidYears + 1;
             }
 
@@ -2719,6 +2871,16 @@ float computeStatistic(std::vector<float> &inputValues, Crit3DMeteoPoint* meteoP
         {
             switch(elab2)
             {
+                case yearMax: case yearMin:
+                {
+                    int index = statisticalElab(elab2, firstYear, valuesSecondElab, nValidYears, meteoSettings->getRainfallThreshold());
+                    if (index != NODATA && index < valuesYearsPrimaryElab.size())
+                    {
+                        return valuesYearsPrimaryElab[index];
+                    }
+                    else
+                        return NODATA;
+                }
                 case trend:
                     return statisticalElab(elab2, firstYear, valuesSecondElab, nValidYears, meteoSettings->getRainfallThreshold());
                 default:
@@ -2847,6 +3009,10 @@ int nParameters(meteoComputation elab)
         return 1;
     case lastDayBelowThreshold:
         return 1;
+    case yearMax:
+        return 0;
+    case yearMin:
+        return 0;
     default:
         return 0;
     }
@@ -2889,6 +3055,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     QDomNode child;
     QDomNode secondChild;
     QDomNodeList secElab;
+    QDomNodeList primaryElab;
     QDomNodeList anomalySecElab;
     QDomNodeList anomalyRefSecElab;
     TXMLvar varTable;
@@ -2924,6 +3091,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
     bool errorAnomaly = false;
     bool errorDrought = false;
     bool errorPhenology = false;
+    bool periodPresent = false;
 
     while(!ancestor.isNull())
     {
@@ -2945,6 +3113,16 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 continue;
             }
 
+            QString cumulated = ancestor.toElement().attribute("dailyCumulated").toUpper();
+            if ( cumulated == "TRUE")
+            {
+                listXMLElab->insertDailyCumulated(true);
+            }
+            else
+            {
+                listXMLElab->insertDailyCumulated(false);
+            }
+
             if (parseXMLPeriodType(ancestor, "PeriodType", listXMLElab, listXMLAnomaly, false, false, &period, myError) == false)
             {
                 listXMLElab->eraseElement(nElab);
@@ -2958,6 +3136,24 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
             {
                 listXMLElab->insertElab2("");       // there is not secondary elab
                 listXMLElab->insertParam2(NODATA);
+            }
+
+            primaryElab = ancestor.toElement().elementsByTagName("PrimaryElaboration");
+            if (primaryElab.size() == 0)
+            {
+                qDebug() << "NO PRIMARY ELAB ";
+                if (listXMLElab->listPeriodType().back() != dailyPeriod)
+                {
+                    listXMLElab->eraseElement(nElab);
+                    ancestor = ancestor.nextSibling(); // something is wrong, go to next elab
+                    qDebug() << "no primary elab, period type != dailyPeriod ";
+                    continue;
+                }
+                listXMLElab->insertElab1("");       // there is not primary elab
+                listXMLElab->insertParam1(NODATA);
+                param1IsClimate = false;
+                listXMLElab->insertParam1IsClimate(false);
+                listXMLElab->insertParam1ClimateField("");
             }
 
             child = ancestor.firstChild();
@@ -2995,6 +3191,7 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 }
                 if (myTag == "PERIOD")
                 {
+                    periodPresent = true;
                     if (parseXMLPeriodTag(child, listXMLElab, listXMLAnomaly, false, false, period, firstYear, myError) == false)
                     {
                         listXMLElab->eraseElement(nElab);
@@ -3120,6 +3317,12 @@ bool parseXMLElaboration(Crit3DElabList *listXMLElab, Crit3DAnomalyList *listXML
                 {
                     child = child.nextSibling();
                 }
+            }
+            if (periodPresent == false)
+            {
+                listXMLElab->insertDateStart(QDate(firstYear.toInt(), 0, 0));
+                listXMLElab->insertDateEnd(QDate(lastYear.toInt(), 0, 0));
+                listXMLElab->insertNYears(0);
             }
             nElab = nElab + 1;
             qDebug() << "nElab " << nElab;

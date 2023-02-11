@@ -135,7 +135,7 @@
             bool findFirstActiveMeteoPoint(std::string* id, int* row, int* col);
             bool isActiveMeteoPointFromId(const std::string &id);
 
-            void initializeData(Crit3DDate dateIni, Crit3DDate dateFin);
+            void initializeData(Crit3DDate dateIni, Crit3DDate dateFin, bool isHourly, bool isDaily, bool isMonthly);
             void emptyGridData(Crit3DDate dateIni, Crit3DDate dateFin);
             void findGridAggregationPoints(gis::Crit3DRasterGrid* myDEM);
             void assignCellAggregationPoints(unsigned row, unsigned col, gis::Crit3DRasterGrid* myDEM, bool excludeNoData);

@@ -1,12 +1,12 @@
 #ifndef DIALOGNEWPROJECT_H
 #define DIALOGNEWPROJECT_H
 
-#include <QObject>
-#include <QtWidgets>
+    #include <QObject>
+    #include <QtWidgets>
 
-#define NEW_DB 0
-#define DEFAULT_DB 1
-#define CHOOSE_DB 2
+    #define NEW_DB 0
+    #define DEFAULT_DB 1
+    #define CHOOSE_DB 2
 
     class DialogNewProject : public QDialog
     {
@@ -31,7 +31,7 @@
         int getMeteoDbOption();
         int getCropDbOption();
 
-        void done(bool res);
+        void done(int res);
 
         QString getProjectName() const;
 

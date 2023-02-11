@@ -26,6 +26,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <float.h>
+#include <algorithm>    // std::find
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -79,6 +80,34 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
             return statistics::standardDeviation(values, nValues);
         case timeIntegration:
             return TimeIntegration(values, param);
+        case yearMax:
+        {
+            float maxValue = statistics::maxList(values, nValues);
+            std::vector<float>::iterator it = std::find(values.begin(), values.end(), maxValue);
+            if (it != values.end())
+            {
+                int index = std::distance(values.begin(), it);
+                return float(index);
+            }
+            else
+            {
+                return NODATA;
+            }
+        }
+        case yearMin:
+        {
+            float minValue = statistics::minList(values, nValues);
+            std::vector<float>::iterator it = std::find(values.begin(), values.end(), minValue);
+            if (it != values.end())
+            {
+                int index = std::distance(values.begin(), it);
+                return float(index);
+            }
+            else
+            {
+                return NODATA;
+            }
+        }
 
         default:
             return NODATA;

@@ -10,6 +10,9 @@
     #ifndef CRITERIA1DCASE_H
         #include "criteria1DCase.h"
     #endif
+    #ifndef CARBON_NITROGEN_MODEL_H
+        #include "carbonNitrogenModel.h"
+    #endif
 
     #include <fstream>
 
@@ -40,6 +43,9 @@
         QDate lastSimulationDate;
 
         bool isXmlMeteoGrid;
+
+        Crit1DCase myCase;
+        Crit1DCarbonNitrogenProfile myCarbonNitrogenProfile;
 
         // soil
         soil::Crit3DTextureClass soilTexture[13];
@@ -95,8 +101,6 @@
 
         Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
-
-        Crit1DCase myCase;
 
         void closeProject();
         bool readSettings();

@@ -177,9 +177,11 @@ QDate getQDate(const Crit3DDate& d)
 QDateTime getQDateTime(const Crit3DTime& t)
 {
     QDate myDate = QDate(t.date.year, t.date.month, t.date.day);
+
     QDateTime myDateTime;
     myDateTime.setTimeSpec(Qt::UTC);
     myDateTime.setDate(myDate);
+    myDateTime.setTime(QTime(0,0,0,0));
     return myDateTime.addSecs(t.time);
 }
 

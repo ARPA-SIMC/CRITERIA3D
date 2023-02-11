@@ -14,7 +14,7 @@
                             trend, mannKendall,
                             phenology,
                             winkler, huglin, fregoni,
-                            correctedDegreeDaysSum, erosivityFactorElab, rainIntensityElab, noMeteoComp};
+                            correctedDegreeDaysSum, erosivityFactorElab, rainIntensityElab, yearMax, yearMin, noMeteoComp};
 
     enum aggregationMethod {noAggrMethod, aggrAverage, aggrMedian, aggrStdDeviation, aggrMin, aggrMax, aggrSum, aggrPrevailing, aggrIntegral, aggrCenter, aggr95Perc};
 

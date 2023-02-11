@@ -1,5 +1,6 @@
 #include <QString>
 #include <QDate>
+#include <QDebug>
 #include "crit3dElabList.h"
 #include "commonConstants.h"
 #include "climate.h"
@@ -51,6 +52,7 @@ void Crit3DElabList::reset()
     _listVariable.clear();
     _listYearEnd.clear();
     _listYearStart.clear();
+    _listDailyCumulated.clear();
 }
 
 void Crit3DElabList::eraseElement(unsigned int index)
@@ -115,7 +117,10 @@ void Crit3DElabList::eraseElement(unsigned int index)
     {
         _listYearStart.erase(_listYearStart.begin() + index);
     }
-
+    if (_listDailyCumulated.size() > index)
+    {
+        _listDailyCumulated.erase(_listDailyCumulated.begin() + index);
+    }
 }
 
 std::vector<int> Crit3DElabList::listYearStart() const
@@ -328,12 +333,27 @@ void Crit3DElabList::insertParam2(float param2)
     _listParam2.push_back(param2);
 }
 
+void Crit3DElabList::insertDailyCumulated(bool dailyCumulated)
+{
+    _listDailyCumulated.push_back(dailyCumulated);
+}
+
+std::vector<bool> Crit3DElabList::listDailyCumulated() const
+{
+    return _listDailyCumulated;
+}
+
+
 bool Crit3DElabList::addElab(unsigned int index)
 {
 
     QString yearStart = QString::number(_listYearStart[index]);
     QString yearEnd = QString::number(_listYearEnd[index]);
-    QString variable = QString::fromStdString(MapDailyMeteoVarToString.at(_listVariable[index]));
+    QString variable = QString::fromStdString(MapDailyMeteoVarToString.at(_listVariable[index])).remove("_");
+    if (_listDailyCumulated[index] == true)
+    {
+        variable = variable+"CUMULATED";
+    }
     QString period = _listPeriodStr[index];
     QString periodStartDay = QString::number(_listDateStart[index].day());
     QString periodStartMonth = QString::number(_listDateStart[index].month());
@@ -346,9 +366,11 @@ bool Crit3DElabList::addElab(unsigned int index)
     float elab2Param = _listParam2[index];
     QString elab1ParamFromdB = _listParam1ClimateField[index];
 
-
     QString elabAdded = yearStart + "-" + yearEnd + "_" + variable + "_" + period;
-    elabAdded = elabAdded + "_" + periodStartDay + ":" + periodStartMonth + "-" + periodEndDay + ":" + periodEndMonth;
+    if (periodStartDay != "0" && periodStartMonth != "0" && periodEndDay != "0" && periodEndMonth != "0")
+    {
+        elabAdded = elabAdded + "_" + periodStartDay + ":" + periodStartMonth + "-" + periodEndDay + ":" + periodEndMonth;
+    }
     if (nYear != "0")
     {
         elabAdded = elabAdded + "-+" + nYear + "y";
@@ -363,18 +385,27 @@ bool Crit3DElabList::addElab(unsigned int index)
             elabAdded = elabAdded + "_" + QString::number(elab2Param);
         }
     }
-    elabAdded = elabAdded + "_" + elab1;
-    if (elab1Param != NODATA)
+    if (elab1 != "")
     {
-        elabAdded = elabAdded + "_" + QString::number(elab1Param);
+        elabAdded = elabAdded + "_" + elab1;
+        if (elab1Param != NODATA)
+        {
+            elabAdded = elabAdded + "_" + QString::number(elab1Param);
+        }
+        else if(_listParam1IsClimate[index] == true && !elab1ParamFromdB.isEmpty())
+        {
+            elabAdded = elabAdded + "_|" + elab1ParamFromdB + "||";
+        }
     }
-    else if(_listParam1IsClimate[index] == true && !elab1ParamFromdB.isEmpty())
+    else
     {
-        elabAdded = elabAdded + "_|" + elab1ParamFromdB + "||";
+        qDebug() << "elab1 is empty " ;
+        elabAdded = elabAdded + "_" + "noMeteoComp";
     }
 
     if (_listAll.contains(elabAdded)!= 0)
     {
+        qDebug() << "return false elabAdded: " << elabAdded;
         return false;
     }
 

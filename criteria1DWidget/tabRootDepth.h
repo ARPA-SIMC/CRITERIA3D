@@ -5,20 +5,21 @@
     #include <QtCharts>
 
     #include "callout.h"
+    #ifndef SOIL_H
+        #include "soil.h"
+    #endif
 
-    #ifndef METEOPOINT_H
-        #include "meteoPoint.h"
-    #endif
-    #ifndef CROP_H
-        #include "crop.h"
-    #endif
+    class Crit3DCrop;
+    class Crit3DMeteoPoint;
 
     class TabRootDepth : public QWidget
     {
         Q_OBJECT
     public:
         TabRootDepth();
-        void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear, QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers);
+        void computeRootDepth(Crit3DCrop* myCrop, Crit3DMeteoPoint *meteoPoint, int firstYear, int lastYear,
+                              QDate lastDBMeteoDate, const std::vector<soil::Crit3DLayer> &soilLayers);
+
         void tooltipRDM(QPointF point, bool state);
         void tooltipRD(QPointF point, bool state);
         Callout *m_tooltip;

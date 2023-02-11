@@ -34,19 +34,6 @@
 #include <QLayout>
 #include <QDate>
 
-qreal findMedian(QList<double> sortedList, int begin, int end)
-{
-    int count = end - begin;
-    if (count % 2) {
-        return sortedList.at(count / 2 + begin);
-    } else {
-        qreal right = sortedList.at(count / 2 + begin);
-        qreal left = sortedList.at(count / 2 - 1 + begin);
-        return (right + left) / 2.0;
-    }
-}
-
-
 
 Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMeteoSettings* meteoSettings_)
 {
@@ -380,6 +367,9 @@ Crit3DMeteoWidget::Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMet
     horizontalGroupBox->setLayout(buttonLayout);
     mainLayout->addWidget(horizontalGroupBox);
     mainLayout->addLayout(plotLayout);
+
+    QStatusBar* statusBar = new QStatusBar();
+    mainLayout->addWidget(statusBar);
     setLayout(mainLayout);
 
     isInitialized = true;
@@ -2074,5 +2064,19 @@ void Crit3DMeteoWidget::on_actionRemoveStation()
         redraw();
     }
 }
+
+
+qreal findMedian(QList<double> sortedList, int begin, int end)
+{
+    int count = end - begin;
+    if (count % 2) {
+        return sortedList.at(count / 2 + begin);
+    } else {
+        qreal right = sortedList.at(count / 2 + begin);
+        qreal left = sortedList.at(count / 2 - 1 + begin);
+        return (right + left) / 2.0;
+    }
+}
+
 
 

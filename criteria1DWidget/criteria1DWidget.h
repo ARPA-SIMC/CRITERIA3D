@@ -1,19 +1,18 @@
-#ifndef CROPWIDGET_H
-#define CROPWIDGET_H
+#ifndef CRITERIA1DWIDGET_H
+#define CRITERIA1DWIDGET_H
 
-#ifndef MAX_YEARS
-    #define MAX_YEARS 10
-#endif
-#ifndef DBMETEOGRID_H
-    #include "dbMeteoGrid.h"
-#endif
+    #ifndef MAX_YEARS
+        #define MAX_YEARS 10
+    #endif
+    #ifndef DBMETEOGRID_H
+        #include "dbMeteoGrid.h"
+    #endif
 
     #include <QWidget>
     #include <QComboBox>
     #include <QGroupBox>
     #include <QLineEdit>
     #include <QLabel>
-    #include <QSqlDatabase>
 
     #include "criteria1DProject.h"
     #include "tabLAI.h"
@@ -21,14 +20,15 @@
     #include "tabRootDensity.h"
     #include "tabIrrigation.h"
     #include "tabWaterContent.h"
+    #include "tabCarbonNitrogen.h"
 
 
-    class Crit3DCropWidget : public QWidget
+    class Criteria1DWidget : public QWidget
     {
         Q_OBJECT
 
         public:
-            Crit3DCropWidget();
+            Criteria1DWidget();
             void on_actionOpenProject();
             void on_actionNewProject();
             void on_actionOpenCropDB();
@@ -57,14 +57,15 @@
             void updateTabRootDensity();
             void updateTabIrrigation();
             void updateTabWaterContent();
+            void updateTabCarbonNitrogen();
+
             void tabChanged(int index);
             bool checkIfCropIsChanged();
             void irrigationVolumeChanged();
-            void variableWaterContentChanged();
 
         private:
             Crit1DProject myProject;
-            Crit1DCase myCase;
+
             Crit3DCrop cropFromDB;
 
             QString meteoTableName;
@@ -84,6 +85,8 @@
             QGroupBox *irrigationParametersGroup;
             QGroupBox *waterStressParametersGroup;
             QGroupBox *waterContentGroup;
+            QGroupBox *carbonNitrogenGroup;
+
             QComboBox caseListComboBox;
             QComboBox cropListComboBox;
             QComboBox meteoListComboBox;
@@ -121,8 +124,16 @@
             QLineEdit* psiLeafValue;
             QDoubleSpinBox* rawFractionValue;
             QDoubleSpinBox* stressToleranceValue;
+
             QRadioButton *volWaterContent;
             QRadioButton *degreeSat;
+            QRadioButton *nitrogen_NH3;
+            QRadioButton *nitrogen_NH4;
+            QRadioButton *nitrogen_humus;
+            QRadioButton *nitrogen_litter;
+            QRadioButton *carbon_humus;
+            QRadioButton *carbon_litter;
+
             QTabWidget* tabWidget;
             QAction* saveChanges;
             QAction* restoreData;
@@ -137,6 +148,7 @@
             TabRootDensity* tabRootDensity;
             TabIrrigation* tabIrrigation;
             TabWaterContent* tabWaterContent;
+            TabCarbonNitrogen* tabCarbonNitrogen;
 
             bool isRedraw;
 
@@ -150,4 +162,4 @@
     };
 
 
-#endif // CROPWIDGET_H
+#endif // CRITERIA1DWIDGET_H

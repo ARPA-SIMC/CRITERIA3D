@@ -326,6 +326,7 @@
     std::string getUnitFromVariable(meteoVariable var);
     std::string getKeyStringMeteoMap(std::map<std::string, meteoVariable> map, meteoVariable value);
     meteoVariable getKeyMeteoVarMeteoMap(std::map<meteoVariable,std::string> map, const std::string &value);
+    meteoVariable getKeyMeteoVarMeteoMapWithoutUnderscore(std::map<meteoVariable,std::string> map, const std::string& value);
     meteoVariable getMeteoVar(std::string varString);
     meteoVariable getHourlyMeteoVar(std::string varString);
     std::string getMeteoVarName(meteoVariable var);
