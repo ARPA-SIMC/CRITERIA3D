@@ -360,6 +360,5 @@ bool Crit3DQuality::wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClim
     }
 
     return false;
-
 }
 

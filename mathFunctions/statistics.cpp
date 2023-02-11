@@ -34,7 +34,6 @@
 #include "physics.h"
 
 
-
 float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float rainfallThreshold)
 {
     switch(elab)
@@ -86,7 +85,7 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
             std::vector<float>::iterator it = std::find(values.begin(), values.end(), maxValue);
             if (it != values.end())
             {
-                int index = std::distance(values.begin(), it);
+                int index = int(std::distance(values.begin(), it));
                 return float(index);
             }
             else
@@ -100,7 +99,7 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
             std::vector<float>::iterator it = std::find(values.begin(), values.end(), minValue);
             if (it != values.end())
             {
-                int index = std::distance(values.begin(), it);
+                int index = int(std::distance(values.begin(), it));
                 return float(index);
             }
             else

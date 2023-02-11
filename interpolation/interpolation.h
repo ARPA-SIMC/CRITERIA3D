@@ -43,6 +43,7 @@
     float getZmax(std::vector <Crit3DInterpolationDataPoint> &myPoints);
     float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, unsigned pos);
     float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, unsigned pos);
+
     bool preInterpolation(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters* myClimate,
                           Crit3DMeteoPoint *myMeteoPoints, int nrMeteoPoints, meteoVariable myVar, Crit3DTime myTime);
 
@@ -56,15 +57,20 @@
 
     float interpolate(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, meteoVariable myVar, float myX, float myY, float myZ, std::vector<float> myProxyValues, bool excludeSupplemental);
     void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<float> &myValues);
+
     void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                     Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                     meteoVariable myVar, Crit3DTime myTime);
+
     bool getUseDetrendingVar(meteoVariable myVar);
     bool isThermal(meteoVariable myVar);
     bool getUseTdVar(meteoVariable myVar);
+
     float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
+
     bool regressionGeneric(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings,
                            int proxyPos, bool isZeroIntercept);
+
     bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                              Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                              Crit3DTime myTime, meteoVariable myVar, int orogProxyPos);

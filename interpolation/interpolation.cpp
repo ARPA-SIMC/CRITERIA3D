@@ -199,8 +199,8 @@ void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint>
             if (mySettings->getUseTD() && getUseTdVar(myVar))
             {
                 float topoDistance = 0.;
-                float kh = mySettings->getTopoDist_Kh();
-                if (! isEqual(kh, 0))
+                int kh = mySettings->getTopoDist_Kh();
+                if (kh != 0)
                 {
                     topoDistance = NODATA;
                     if (myPoints[i].topographicDistance != nullptr)
@@ -260,8 +260,12 @@ bool neighbourhoodVariability(meteoVariable myVar, std::vector <Crit3DInterpolat
             deltaZ.push_back(1);
 
         for (i=0; i<max_points;i++)
+        {
             if ((validPoints[i]).point->z != NODATA)
-                deltaZ.push_back(fabs(((float)(validPoints[i]).point->z) - z));
+            {
+                deltaZ.push_back(float(fabs(validPoints[i].point->z - z)));
+            }
+        }
 
         *avgDeltaZ = statistics::mean(deltaZ.data(), int(deltaZ.size()));
 
@@ -453,7 +457,7 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
         myIntervalsHeight.push_back((heightSup + heightInf) / float(2.));
         myIntervalsValues.push_back(myAvg);
 
-        deltaZ = DELTAZ_INI * exp(heightInf / maxHeightInv);
+        deltaZ = DELTAZ_INI * expf(heightInf / maxHeightInv);
         heightInf = heightSup;
     }
 
@@ -867,14 +871,6 @@ float computeShepard(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInte
     return result;
 }
 
-float computeModifiedShepard(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* settings, float X, float Y)
-{
-    return NODATA;
-
-    // to do: simplify and avoid sorting
-
-}
-
 
 float inverseDistanceWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 {
@@ -1201,13 +1197,13 @@ void optimalDetrending(meteoVariable myVar,
 {
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
-    short i, nrCombination, bestCombinationIndex;
+    int i, nrCombination, bestCombinationIndex;
     float avgError, minError;
     size_t proxyNr = mySettings->getProxyNr();
     Crit3DProxyCombination myCombination, bestCombination;
     myCombination = mySettings->getSelectedCombination();
 
-    nrCombination = short(pow(2, (proxyNr + 1)));
+    nrCombination = int(pow(2, double(proxyNr) + 1));
 
     minError = NODATA;
     bestCombinationIndex = 0;

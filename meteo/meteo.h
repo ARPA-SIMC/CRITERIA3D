@@ -303,6 +303,9 @@
     float relHumFromTdew(float Td, float T);
     float tDewFromRelHum(float RH, float T);
 
+    double tDewFromRelHum(double RH, double T);
+    double tDewFromRelHum(double RH, double T);
+
     bool computeLeafWetness(double prec, double relHumidity, short* leafW);
 
     double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalIrradiance,

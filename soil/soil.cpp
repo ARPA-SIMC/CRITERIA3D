@@ -1008,11 +1008,8 @@ namespace soil
             currentThikness *= geometricFactor;
             i++;
         }
-
         return true;
     }
 
 }
-
-
 
