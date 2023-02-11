@@ -20,7 +20,7 @@
 
     #define SNOW_SPECIFIC_HEAT 2.1              /*!<  [KJ kg-1 °C-1] */
     #define SOIL_SPECIFIC_HEAT 1.4              /*!<  [KJ kg-1 °C-1] wet soil */
-    #define DEFAULT_BULK_DENSITY 1350.          /*!<  [kg m-3] */
+    #define DEFAULT_BULK_DENSITY 1350           /*!<  [kg m-3] */
     #define SOIL_DAMPING_DEPTH 0.3              /*!<  [m] */
     #define SNOW_DAMPING_DEPTH 0.05             /*!<  [m] */
     #define SNOW_MINIMUM_HEIGHT 2.              /*!<  [mm] */

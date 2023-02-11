@@ -11,9 +11,7 @@
         #include "meteoGrid.h"
     #endif
 
-    #ifndef _DEQUE_
-        #include <deque>
-    #endif
+    #include <deque>
 
     std::string getKeyStringInterpolationMethod(TInterpolationMethod value);
     TProxyVar getProxyPragaName(std::string name_);

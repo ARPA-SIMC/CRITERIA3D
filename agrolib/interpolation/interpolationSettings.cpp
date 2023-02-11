@@ -661,7 +661,7 @@ void Crit3DProxyCombination::setUseThermalInversion(bool value)
 bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination &outCombination)
 {
     outCombination = selectedCombination;
-    std::string binaryString = decimal_to_binary(combinationInteger, getProxyNr()+1);
+    std::string binaryString = decimal_to_binary(unsigned(combinationInteger), int(getProxyNr()+1));
 
     int indexHeight = getIndexHeight();
 

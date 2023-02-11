@@ -31,8 +31,9 @@
 
 float gaussianFunction(TfunctionInput fInput)
 {
-    float y = 1/(fInput.par[1]*sqrt(2*PI))*exp(-0.5*(fInput.x-fInput.par[0])*(fInput.x-fInput.par[0])/(fInput.par[1]*fInput.par[1]));
-    return y;
+    double y = (1 / (fInput.par[1] * sqrt(2*PI))
+            * exp(-0.5*(fInput.x-fInput.par[0])*(fInput.x-fInput.par[0])/(fInput.par[1]*fInput.par[1])));
+    return float(y);
 }
 
 float gaussianFunction(float x, float mean, float devStd)
@@ -52,7 +53,6 @@ double errorFunctionPrimitive(double x)
 {
     return exp(-x*x);
 }
-
 
 float blackBodyShape(TfunctionInput fInput)
 {
@@ -95,8 +95,8 @@ double harmonicsFourierGeneral(double x, double* par,int nrPar)
         }
         return y;
     }
-
 }
+
 /*float straightLine(TfunctionInput fInput)
 {
     float m,q,y;
@@ -157,9 +157,10 @@ namespace integration
 
     float trapzdParametric(float (*func)(TfunctionInput) , int nrPar, float *par , float a , float b , int n)
     {
-        float x , tnm , sum , del ;
-        static float s ;
-        TfunctionInput functionInput ;
+        float x, tnm, sum, del;
+        static float s;
+        TfunctionInput functionInput;
+
         if (nrPar > 0)
         {
             functionInput.par = (float *) calloc(nrPar, sizeof(float));
@@ -169,7 +170,6 @@ namespace integration
                 functionInput.par[i]=par[i];
             }
         }
-
         else
         {
             functionInput.par = (float *) calloc(1, sizeof(float));
@@ -230,18 +230,20 @@ namespace integration
     }
 
 
-    float simpsonRule(float (*func)(float),float a , float b , float EPS)
+    float simpsonRule(float (*func)(float), float a, float b, float EPS)
     {
         /*! this function calculates definte integrals using the Simpson rule */
         if (a > b)
         {
             return (-simpsonRule(func,b, a , EPS)); //recursive formula
         }
+
         float old_s [10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
         //float trapezoidalRule(float (*func)(float) , float a , float b , int n) ;
         int j;
         float sumInfenitesimal , sumTrapezoidal , old_sumTrapezoidal=0.0 , old_sumInfinitesimal = 0.0 ;
         float s1 = 0.;
+
         for ( j=1 ; j <= 20 ; j++)
         {
             sumTrapezoidal = trapezoidalRule(func,a,b,j) ;
@@ -260,8 +262,10 @@ namespace integration
             old_sumInfinitesimal = sumInfenitesimal ;
            old_sumTrapezoidal = sumTrapezoidal ;
         }
-        float average_s=0.0 , average_s2 = 0.0 , variance ;
-        for ( short k=0 ; k < 10 ; k++)
+
+        float average_s=0.0, average_s2 = 0.0, variance;
+
+        for (short k=0; k < 10; k++)
         {
             average_s  += old_s[k];
             average_s2 += old_s[k]*old_s[k] ;

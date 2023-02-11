@@ -36,7 +36,7 @@ float computePointTransmissivitySamani(float tmin, float tmax, float samaniCoeff
 {
     if (samaniCoeff != NODATA && tmin != NODATA && tmax != NODATA)
         if (tmin <= tmax)
-            return samaniCoeff * sqrt(tmax - tmin);
+            return samaniCoeff * sqrtf(tmax - tmin);
         else
             return false;
     else

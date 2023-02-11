@@ -226,25 +226,34 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, int mont
         return NODATA;
 }
 
+
 float Crit3DClimateParameters::getClimateVar(meteoVariable myVar, int month, float height, float refHeight)
 {
     unsigned int indexMonth = unsigned(month - 1);
-
     float climateVar = NODATA;
 
-    if (myVar == dailyAirTemperatureMin)
+    switch(myVar)
+    {
+    case dailyAirTemperatureMin:
         climateVar = tmin[indexMonth];
-    else if (myVar == dailyAirTemperatureMax)
+        break;
+    case dailyAirTemperatureMax:
         climateVar = tmax[indexMonth];
-    if (myVar == dailyAirRelHumidityMin)
+        break;
+    case dailyAirRelHumidityMin:
         climateVar = tdmin[indexMonth];
-    else if (myVar == dailyAirRelHumidityMin)
+        break;
+    case dailyAirRelHumidityMax:
         climateVar = tdmax[indexMonth];
-    else
+        break;
+    default:
         return NODATA;
+    }
 
     if (climateVar != NODATA && height != NODATA)
+    {
         climateVar += getClimateLapseRate(myVar, month) * (height - refHeight);
+    }
 
     return climateVar;
 }
@@ -263,23 +272,50 @@ float tDewFromRelHum(float RH, float T)
 }
 
 
+double tDewFromRelHum(double RH, double T)
+{
+    if (isEqual(RH, NODATA) || isEqual(T, NODATA) || RH == 0)
+        return NODATA;
+
+    RH = MINVALUE(100, RH);
+
+    double mySaturatedVaporPres = exp((16.78 * T - 116.9) / (T + 237.3));
+    double actualVaporPres = RH / 100. * mySaturatedVaporPres;
+    return (log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres));
+}
+
+
 float relHumFromTdew(float Td, float T)
 {
-    if (int(Td) == int(NODATA) || int(T) == int(NODATA))
+    if (isEqual(Td, NODATA) || isEqual(T, NODATA))
         return NODATA;
 
     double d = 237.3;
     double c = 17.2693882;
     double esp = 1 / (double(T) + d);
-    double myValue = pow((exp((c * double(Td)) - ((c * double(T) / (double(T) + d))) * (double(Td) + d))), esp);
-    myValue *= 100.;
+    double rh = pow(exp((c * double(Td)) - ((c * double(T) / (double(T) + d))) * (double(Td) + d)), esp);
+    rh *= 100;
 
-    if (myValue > 100.)
-        return 100;
-    else if (myValue <= 0.)
-        return 1.;
-    else
-        return float(myValue);
+    if (rh > 100) return 100;
+
+    return std::max(1.f, float(rh));
+}
+
+
+double relHumFromTdew(double Td, double T)
+{
+    if (isEqual(Td, NODATA) || isEqual(T, NODATA))
+        return NODATA;
+
+    double d = 237.3;
+    double c = 17.2693882;
+    double esp = 1 / (double(T) + d);
+    double rh = pow(exp((c * Td) - (c * T / (T + d)) * (Td + d)), esp);
+    rh *= 100;
+
+    if (rh > 100) return 100;
+
+    return std::max(1., rh);
 }
 
 
@@ -582,7 +618,7 @@ float computeThomIndex(float temp, float relHum)
     {
         float zT = temp;
         float zUR = relHum;
-        float es = 0.611f * exp(17.27f * zT / (zT + float(ZEROCELSIUS) - 36.f));
+        float es = float(0.611 * exp(17.27 * zT / (zT + ZEROCELSIUS - 36)));
         float zTwb = zT;
         float zTwbPrec = -999.f;
 
@@ -590,8 +626,8 @@ float computeThomIndex(float temp, float relHum)
         {
             zTwbPrec = zTwb;
             float zT1 = (zT + zTwb) / 2;
-            float es1 = 0.611f * exp(17.27f * zT1 / (zT1 + float(ZEROCELSIUS) - 36.f));
-            float delta = es1 / (zT1 + float(ZEROCELSIUS)) * log(207700000 / es1);
+            float es1 = float(0.611 * exp(17.27 * zT1 / (zT1 + ZEROCELSIUS - 36)));
+            float delta = float(es1 / (zT1 + ZEROCELSIUS) * log(207700000 / es1));
             zTwb = zT - es * (1.f - zUR / 100.f) / (delta + 0.06667f);
         }
 
@@ -623,7 +659,7 @@ bool computeWindPolar(float u, float v, float* intensity, float* direction)
 
     if (isEqual(u, NODATA) || isEqual(v, NODATA)) return false;
 
-    *intensity = sqrt(u * u + v * v);
+    *intensity = sqrtf(u * u + v * v);
 
     if (isEqual(u, 0))
     {
