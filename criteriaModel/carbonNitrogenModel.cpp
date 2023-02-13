@@ -219,24 +219,24 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         //    si assume che tutto il nitrato sia in soluzione (mg l-1)
         //    CO2 prodotta associata a denitrificazione
         //    cinetica primo ordine della decomposizione della s.o. (rateo proporzionale alla concentrazione)
-        CCDEN = MAXVALUE(0, myN_NO3 * (1 - exp(-actualRate_N_denitrification))) * 72. / 56.;
+        CCDEN = MAXVALUE(0, myN_NO3 * (1 - exp(-actualRate.N_denitrification))) * 72. / 56.;
         // No more than a tenth of C present C  can be removed
             CCDEN = MINVALUE(CCDEN,0.1 * myTotalC);
 
 
         // ii) litter transformation
         // litter C to humus C    
-        CCLH = MAXVALUE(0, myLitterC * (1 - exp(-actualRate_C_litterToHumus)));
+        CCLH = MAXVALUE(0, myLitterC * (1 - exp(-actualRate.C_litterToHumus)));
         // litter C internal recycle
-        CCLI = MAXVALUE(0, myLitterC * (1 - exp(-actualRate_C_litterToHumus)));
+        CCLI = MAXVALUE(0, myLitterC * (1 - exp(-actualRate.C_litterToHumus)));
         // litter C to CO2
-        CCLCO2 = MAXVALUE(0, myLitterC * (1 - exp(-actualRate_C_litterToHumus)));
+        CCLCO2 = MAXVALUE(0, myLitterC * (1 - exp(-actualRate.C_litterToHumus)));
         // nitrogen immobilization
         CLIMX = 1;
 
-        if (actualRate_N_litterImm > 0)
+        if (actualRate.N_litterImm > 0)
         {
-            CLIMM = actualRate_N_litterImm * (CCLI + CCLH + CCLCO2);
+            CLIMM = actualRate.N_litterImm * (CCLI + CCLH + CCLCO2);
             if (CLIMM > 0)
                 CLIMX = MINVALUE(1, (adjustFactor * (myN_NO3 + myN_NH4)) / CLIMM);
             // if immobilization limits mineralization then the effective rate of immobilization is reduced
@@ -270,7 +270,7 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 
         // iii) humus transformations
         // humus to CO2
-        CCHCO2 = MAXVALUE(0, myHumusC * (1 - exp(-actualRate_C_humusMin)));
+        CCHCO2 = MAXVALUE(0, myHumusC * (1 - exp(-actualRate.C_humusMin)));
         // energy source for denitrification
         if (myTotalC > 0)
             CCHDN = CCDEN * myHumusC / myTotalC;
@@ -288,7 +288,7 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 
     // NITROGEN TRANSFORMATIONS
         // i) urea hydrolysis
-        CURNH = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_urea, myCase.soilLayers[l]) * (1 - exp(-actualRateUreaHydr));
+        CURNH = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_urea, myCase.soilLayers[l]) * (1 - exp(-actualRate.ureaHydr));
 
         // ii) ammonium volatilization (only top 5 cm of soil) (in LEACHM 10 cm but layer thickness is 10 cm)
         if ((myCase.soilLayers[l].depth + myCase.soilLayers[l].thickness) < 0.05)
@@ -300,11 +300,11 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
             CNHGAS = 0;
 
         // iii) nitrification
-        CNHNO = (MAXVALUE(0, myN_NH4 - myN_NO3 / carbonNitrogenParameter.limRatio_nitr)) * (1 - exp(-actualRate_N_nitrification));
+        CNHNO = (MAXVALUE(0, myN_NH4 - myN_NO3 / carbonNitrogenParameter.limRatio_nitr)) * (1 - exp(-actualRate.N_nitrification));
 
         // iv) mineralization
-        CHNH = MAXVALUE(myHumusN, 0) * actualRate_C_humusMin;
-        CLNH = actualRate_N_litterMin * (CCLH + CCLCO2 + CCLI);
+        CHNH = MAXVALUE(myHumusN, 0) * actualRate.C_humusMin;
+        CLNH = actualRate.N_litterMin * (CCLH + CCLCO2 + CCLI);
         //if (actualRate_N_litterImm > 0)
             //CNHL = CLIMM * CLIMX * NH4_ratio; // already computed above
 
@@ -328,7 +328,7 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 
         // NO3 sink/source
         USENO3 = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_NO3_uptake,myCase.soilLayers[l]);
-        if (actualRate_N_litterImm > 0)
+        if (actualRate.N_litterImm > 0)
             CNOL = CLIMM * CLIMX * NO3_ratio;
         else
             CNOL = 0;
@@ -1084,28 +1084,28 @@ void Crit1DCarbonNitrogenProfile::computeLayerRates(unsigned l, Crit1DCase &myCa
     // carbon
 
     // humus mineralization
-    actualRate_C_humusMin = carbonNitrogenParameter.rate_C_humusMin * totalCorrectionFactor;
+    actualRate.C_humusMin = carbonNitrogenParameter.rate_C_humusMin * totalCorrectionFactor;
 
     // litter to humus
-    actualRate_C_litterToHumus = carbonNitrogenParameter.rate_C_litterMin * totalCorrectionFactor * (carbonNitrogenParameter.FE * carbonNitrogenParameter.FH);
+    actualRate.C_litterToHumus = carbonNitrogenParameter.rate_C_litterMin * totalCorrectionFactor * (carbonNitrogenParameter.FE * carbonNitrogenParameter.FH);
 
     // litter to CO2
-    actualRate_C_litterToCO2 = carbonNitrogenParameter.rate_C_litterMin * totalCorrectionFactor * (1 - carbonNitrogenParameter.FE);
+    actualRate.C_litterToCO2 = carbonNitrogenParameter.rate_C_litterMin * totalCorrectionFactor * (1 - carbonNitrogenParameter.FE);
 
     // litter to biomass
-    actualRate_C_litterToBiomass = carbonNitrogenParameter.rate_C_litterMin * totalCorrectionFactor * carbonNitrogenParameter.FE * (1 - carbonNitrogenParameter.FH);
+    actualRate.C_litterToBiomass = carbonNitrogenParameter.rate_C_litterMin * totalCorrectionFactor * carbonNitrogenParameter.FE * (1 - carbonNitrogenParameter.FH);
 
     //nitrogen
 
     // litter mineralization/immobilization
-    actualRate_N_litterMin = MAXVALUE(0, 1. / myCase.carbonNitrogenLayers[l].ratio_CN_litter - carbonNitrogenParameter.FE / ratio_CN_biomass);
+    actualRate.N_litterMin = MAXVALUE(0, 1. / myCase.carbonNitrogenLayers[l].ratio_CN_litter - carbonNitrogenParameter.FE / ratio_CN_biomass);
     if (myCase.carbonNitrogenLayers[l].N_litter > 0)
-        actualRate_N_litterImm = -MINVALUE(0, 1. / myCase.carbonNitrogenLayers[l].ratio_CN_litter - carbonNitrogenParameter.FE / ratio_CN_biomass);
+        actualRate.N_litterImm = -MINVALUE(0, 1. / myCase.carbonNitrogenLayers[l].ratio_CN_litter - carbonNitrogenParameter.FE / ratio_CN_biomass);
     else
-        actualRate_N_litterImm = 0;
+        actualRate.N_litterImm = 0;
 
     //nitrification
-    actualRate_N_nitrification = carbonNitrogenParameter.rate_N_nitrification * totalCorrectionFactor;
+    actualRate.N_nitrification = carbonNitrogenParameter.rate_N_nitrification * totalCorrectionFactor;
 
     // denitrification
     thetaSAT = myCase.soilLayers[l].SAT  / (myCase.soilLayers[l].thickness * 1000);
@@ -1113,12 +1113,12 @@ void Crit1DCarbonNitrogenProfile::computeLayerRates(unsigned l, Crit1DCase &myCa
     wCorr_Denitrification = pow(MAXVALUE(0, (theta - (1 - carbonNitrogenParameter.max_afp_denitr) * thetaSAT)) / (thetaSAT - (1 - carbonNitrogenParameter.max_afp_denitr) * thetaSAT), 2);
     conc_N_NO3 =convertToGramsPerLiter(myCase.carbonNitrogenLayers[l].N_NO3,myCase.soilLayers[l]) * 1000;
 
-    actualRate_N_denitrification = carbonNitrogenParameter.rate_N_denitrification * myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor * wCorr_Denitrification
+    actualRate.N_denitrification = carbonNitrogenParameter.rate_N_denitrification * myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor * wCorr_Denitrification
         * conc_N_NO3 / (conc_N_NO3 + carbonNitrogenParameter.constant_sat_denitr);
 
     // urea hydrolysis
 
-    actualRateUreaHydr = carbonNitrogenParameter.rate_urea_hydr * totalCorrectionFactor;
+    actualRate.ureaHydr = carbonNitrogenParameter.rate_urea_hydr * totalCorrectionFactor;
 
 }
 
