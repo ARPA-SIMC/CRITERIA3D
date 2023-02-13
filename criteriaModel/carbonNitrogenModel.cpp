@@ -41,7 +41,7 @@ void Crit1DCarbonNitrogenProfile::N_Initialize()
 
 void Crit1DCarbonNitrogenProfile::humus_Initialize(Crit1DCase &myCase)
 {
-    for (unsigned int l = 0; l < myCase.soilLayers.size(); l++)
+    for (unsigned int l = 1; l < myCase.soilLayers.size(); l++)
     {
         myCase.carbonNitrogenLayers[l].C_humus = myCase.soilLayers[l].horizon->bulkDensity * 1000000 * (myCase.soilLayers[l].horizon->organicMatter / 100) * 0.58 * myCase.soilLayers[l].thickness; // tolto il 100 perche gia in metri
         myCase.carbonNitrogenLayers[l].N_humus = myCase.carbonNitrogenLayers[l].C_humus / carbonNitrogenParameter.ratioHumusCN;
@@ -66,7 +66,7 @@ void Crit1DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
 
     N_NH4_adsorbedGG = 0;
 
-    for (unsigned int l = 0; l < myCase.soilLayers.size(); l++)
+    for (unsigned int l = 1; l < myCase.soilLayers.size(); l++)
     {
         myTheta = myCase.soilLayers[l].waterContent / (myCase.soilLayers[l].thickness * 1000);
         N_NH4_g_dm3 = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_NH4, myCase.soilLayers[l]) / 1000;
@@ -98,7 +98,7 @@ void Crit1DCarbonNitrogenProfile::litter_Initialize(Crit1DCase &myCase)
 
     myDepth = MAXVALUE(litterIniDepth, 6);
     myDepth /= 100; // from [cm] to [m]
-    for (unsigned int l=0; l < myCase.soilLayers.size(); l++)
+    for (unsigned int l=1; l < myCase.soilLayers.size(); l++)
     {
         if (myCase.soilLayers[l].depth <= myDepth)
         {
@@ -177,7 +177,7 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
 
     static double adjustFactor = 0.08; // factor to extend immobilization and slow the rate
 
-    for (unsigned l=0; l<myCase.soilLayers.size(); l++)
+    for (unsigned l=1; l<myCase.soilLayers.size(); l++)
     {
         // correction functions for soil temperature and humidity
         // inserire parametri in Options.mdb
@@ -316,7 +316,7 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         // adjustment
         def = myN_NH4 + N_NH4_netSink;
         total = CNHNO + CNHGAS + USENH4;
-        if (def < 0 && total > 0)
+        if ((def < 0) && total > 0)
         {
             factor = MAXVALUE(0, 1. + def / total);
             CNHNO *= factor;
@@ -340,7 +340,7 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         def = myN_NO3 + N_NO3_netSink;
         total = USENO3 + CNON;
 
-        if (def < 0 && total > 0)
+        if ((def < 0) && (total > 0))
         {
             factor = MAXVALUE(0., 1. + def / total);
             CNON *= factor;
@@ -462,7 +462,7 @@ void Crit1DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Crit3DFerti
 
     //perdita immediata per volatilizzazione dell'urea
     if (fertilizerProperties.ID_FERTILIZER == FERTILIZER_UREA)
-        N_totalQuantity *= 0.8; // assuming 20% becomes NH3 by volatilization
+        N_totalQuantity *= 0.8; // assuming 20% becomes NO3 by volatilization
 
     //2007.04 GA se profondità = 0 (tutto nei primi 10 cm)
     if (fertilizerProperties.fertilizerDepth < 10)
@@ -471,7 +471,7 @@ void Crit1DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Crit3DFerti
     // divido la quantità per cm
     quantityNcm = N_totalQuantity / fertilizerProperties.fertilizerDepth;
     unsigned int ll=1;
-    for (unsigned int l=0; l<myCase.soilLayers.size(); l++)
+    for (unsigned int l=1; l<myCase.soilLayers.size(); l++)
     {
         if (N_totalQuantity <= 0)
         {
@@ -485,7 +485,7 @@ void Crit1DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Crit3DFerti
         quantityN[l] /= 10; // from kg ha-1 to g m-2
     }
 
-    for (unsigned int l=0; l<ll; l++)
+    for (unsigned int l=1; l<ll; l++)
     {
         //'2007.12 GA inserita concimazione ureica (prima N_urea era sempre 0!)
         //'perdita del 30% per volatilizzazione immediata
@@ -587,7 +587,7 @@ void Crit1DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
 
     // initialize state variables
     // TODO add these varibles to state/restart
-    for(unsigned int l=0; l < myCase.soilLayers.size(); l++)
+    for(unsigned int l=1; l < myCase.soilLayers.size(); l++)
     {
         myCase.carbonNitrogenLayers[l].N_NO3 = 100*myCase.soilLayers[l].thickness*nitrogenPerCm;
         myCase.carbonNitrogenLayers[l].N_NH4 = 100*myCase.soilLayers[l].thickness*nitrogenPerCm;
@@ -596,7 +596,7 @@ void Crit1DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
     }
 
     profileNH4 = profileNO3 = 0;
-    for(unsigned int l=0; l < myCase.soilLayers.size(); l++)
+    for(unsigned int l=1; l < myCase.soilLayers.size(); l++)
     {
         profileNO3 += myCase.carbonNitrogenLayers[l].N_NO3;
         profileNH4 += myCase.carbonNitrogenLayers[l].N_NH4;
@@ -960,18 +960,20 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     std::vector<double> mySolute;
     mySolute.resize(myCase.soilLayers.size());
 
-    for(unsigned int l=0;l<myCase.soilLayers.size();l++)
+    for(unsigned int l=1; l < myCase.soilLayers.size(); l++)
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NO3;
     }
+
     soluteFluxes(mySolute, flag.waterTableUpward , pistonDepth, &flux_NO3GG, myCase);
-    for(unsigned int l=0;l<myCase.soilLayers.size();l++)
+
+    for(unsigned int l=1;l<myCase.soilLayers.size();l++)
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol;
     }
     soluteFluxes(mySolute, flag.waterTableUpward, pistonDepth, &flux_NH4GG, myCase);
 
-    for(unsigned int l=0;l<myCase.soilLayers.size();l++)
+    for(unsigned int l=1;l<myCase.soilLayers.size();l++)
     {
         myCase.carbonNitrogenLayers[l].N_NH4  = updateTotalOfPartitioned(myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed, myCase.carbonNitrogenLayers[l].N_NH4_Sol);
     }
@@ -979,19 +981,21 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
 
     if (flag.waterTableWashing)
     {
-        for(unsigned int l=0;l<myCase.soilLayers.size();l++)
+        for(unsigned int l=1;l<myCase.soilLayers.size();l++)
         {
             mySolute[l] = myCase.carbonNitrogenLayers[l].N_NO3;
         }
         leachingWaterTable(mySolute, &flux_NO3GG,myCase);
-        for(unsigned int l=0;l<myCase.soilLayers.size();l++)
+
+        for(unsigned int l=1;l<myCase.soilLayers.size();l++)
         {
             mySolute[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol;
         }
         leachingWaterTable(mySolute, &flux_NH4GG,myCase);
     }
+
     mySolute.clear();
-    for(unsigned int l=0;l<myCase.soilLayers.size();l++)
+    for(unsigned int l=1;l<myCase.soilLayers.size();l++)
     {
         myCase.carbonNitrogenLayers[l].N_NH4  = updateTotalOfPartitioned(myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed, myCase.carbonNitrogenLayers[l].N_NH4_Sol);
     }
@@ -1170,7 +1174,7 @@ void Crit1DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
     std::vector<double> N_NH4_up_max;
     N_NO3_up_max.resize(myCase.soilLayers.size());
     N_NH4_up_max.resize(myCase.soilLayers.size());
-    for(unsigned int l=0;l<myCase.soilLayers.size();l++)
+    for(unsigned int l=1;l<myCase.soilLayers.size();l++)
     {
         N_NO3_up_max[l] = 0;
         N_NH4_up_max[l] = 0;
@@ -1411,7 +1415,7 @@ void Crit1DCarbonNitrogenProfile::N_Reset()
 double Crit1DCarbonNitrogenProfile::findPistonDepth(Crit1DCase &myCase)
 {
     unsigned int l;
-    for (l = 0;l<myCase.soilLayers.size();l++)
+    for (l = 1; l < myCase.soilLayers.size(); l++)
     {
         if (myCase.prevWaterContent[l] > myCase.soilLayers[l].FC)
         {
@@ -1553,26 +1557,29 @@ void Crit1DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
     double myFreeSolute;
     double coeffMobile;
 
-        if (pistonDepth >= myCase.soilLayers[myCase.soilLayers.size()-1].depth)
-            return;
-        else
-        {
-            unsigned int l=0;
-            while(myCase.soilLayers[l].depth >= pistonDepth)
-            {
-                l++;
-                firstLayer = l;
-            }
-        }
+    unsigned int lastLayer = myCase.soilLayers.size() - 1;
 
-        fluxSolute.resize(myCase.soilLayers.size());
-        fSolute.resize(myCase.soilLayers.size());
-        u_temp.resize(myCase.soilLayers.size());
-        for (unsigned int l = 0; l<myCase.soilLayers.size(); l++)
+    if (pistonDepth >= myCase.soilLayers[lastLayer].depth)
+        return;
+    else
+    {
+        unsigned int l=1;
+        while(myCase.soilLayers[l].depth < pistonDepth)
         {
-            fluxSolute[l] = 0;
-            u_temp[l] = myCase.prevWaterContent[l];
+            l++;
         }
+        firstLayer = l;
+    }
+
+    fluxSolute.resize(myCase.soilLayers.size());
+    fSolute.resize(myCase.soilLayers.size());
+    u_temp.resize(myCase.soilLayers.size());
+
+    for (unsigned int l = 1; l <= lastLayer; l++)
+    {
+        fluxSolute[l] = 0;
+        u_temp[l] = myCase.prevWaterContent[l];
+    }
         // ???????????????????
         //For L = nrLayers To 1 Step -1
 
@@ -1583,48 +1590,48 @@ void Crit1DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
 
         //iterazioni = min(max(24, 0.1 * max(Flux(0), Abs(Flux(nrLayers))) * max(Flux(0), Abs(Flux(nrLayers)))), 1000)
 
-        iterations = 1;
-        for (unsigned int i = 0; i<iterations; i++)
+    iterations = 1;
+    for (unsigned int i = 0; i < iterations; i++)
+    {
+        for (unsigned int l = firstLayer; l <= lastLayer; l++)
         {
-            for (unsigned int l = firstLayer; l<myCase.soilLayers.size(); l++)
+            fSolute[l] = 0;
+
+            H2O_step_flux = (myCase.soilLayers[l].flux / iterations);
+            H2O_step_flux_L_1 = (myCase.soilLayers[l-1].flux / iterations);
+
+            // water balance from node l
+            u_temp[l] += H2O_step_flux_L_1 - H2O_step_flux;
+
+            // computation of solute fluxes
+            if (myCase.soilLayers[l].flux > 0)
             {
-                fSolute[l] = 0;
-
-                H2O_step_flux = (myCase.soilLayers[l].flux / iterations);
-                H2O_step_flux_L_1 = (myCase.soilLayers[l-1].flux / iterations);
-
-                // water balance from node l
-                u_temp[l] += H2O_step_flux_L_1 - H2O_step_flux;
-
-                // computation of solute fluxes
-                if (myCase.soilLayers[l].flux > 0)
-                {
-                    coeffMobile = 1;
-                    myFreeSolute = mySolute[l] * coeffMobile;
-                    fSolute[l] = MINVALUE(mySolute[l], myFreeSolute / myCase.prevWaterContent[l] * H2O_step_flux);
-                }
-                else if (upwardFlag && (myCase.soilLayers[l].flux < 0) && (l < myCase.soilLayers.size()))
-                {
-                    //myFreeSolute = mySolute[L + 1] * CoeffMobile;
-                    myFreeSolute = mySolute[l+1];
-                    fSolute[l] = MINVALUE(mySolute[l+1], myFreeSolute / myCase.prevWaterContent[l+1] * H2O_step_flux);
-                }
-
-                //azoto in entrata/uscita da nodo L-1
-                mySolute[l] += fSolute[l-1] - fSolute[l];
-
-                //flussi convettivi totali
-                fluxSolute[l] += fSolute[l];
-
+                coeffMobile = 1;
+                myFreeSolute = mySolute[l] * coeffMobile;
+                fSolute[l] = MINVALUE(mySolute[l], myFreeSolute / myCase.prevWaterContent[l] * H2O_step_flux);
             }
-        }
+            else if (upwardFlag && (myCase.soilLayers[l].flux < 0) && (l <= lastLayer))
+            {
+                //myFreeSolute = mySolute[L + 1] * CoeffMobile;
+                myFreeSolute = mySolute[l+1];
+                fSolute[l] = MINVALUE(mySolute[l+1], myFreeSolute / myCase.prevWaterContent[l+1] * H2O_step_flux);
+            }
 
-        // leaching
-        // FT GA 2007.12
-        *leached += fluxSolute[myCase.soilLayers.size()-1];
-        fluxSolute.clear();
-        u_temp.clear();
-        fSolute.clear();
+            //azoto in entrata/uscita da nodo L-1
+            mySolute[l] += fSolute[l-1] - fSolute[l];
+
+            //flussi convettivi totali
+            fluxSolute[l] += fSolute[l];
+
+        }
+    }
+
+    // leaching
+    // FT GA 2007.12
+    *leached += fluxSolute[myCase.soilLayers.size()-1];
+    fluxSolute.clear();
+    u_temp.clear();
+    fSolute.clear();
 }
 
 // function developed by V. Marletto for watertable
@@ -1637,14 +1644,14 @@ void Crit1DCarbonNitrogenProfile::leachingWaterTable(std::vector<double> &mySolu
 
     if ((myCase.output.dailyWaterTable != NODATA) && (myCase.output.dailyWaterTable > 0) && (myCase.unit.useWaterTableData == 1))// da chiarire && (flagWaterTableCase == 1))
     {
-        for (unsigned int l = 0; l< myCase.soilLayers.size(); l++)
+        for (unsigned int l = 1; l< myCase.soilLayers.size(); l++)
         {
             double maxCapillaryRise = myCase.soilLayers[l].critical - myCase.soilLayers[l].waterContent;
             if (myCase.soilLayers[l].depth > myCase.output.dailyWaterTable)
             {
                 *leached += mySolute[l];
                 mySolute[l] = 0;
-            }            
+            }
             else if (myCase.soilLayers[l].depth >= myCase.output.dailyWaterTable - maxCapillaryRise)
             {
                 mySoluteLeachEdge = (mySolute[l] / maxCapillaryRise) * (maxCapillaryRise - (myCase.output.dailyWaterTable - myCase.soilLayers[l].depth));
@@ -1824,7 +1831,6 @@ void Crit1DCarbonNitrogenProfile::updateNCrop(Crit3DCrop crop) // this function 
 
 void Crit1DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function must be public
 {
-    unsigned int l=0;
     double depthRatio;
     double N_totLitter;
     double N_totHumus = 0;
@@ -1837,8 +1843,8 @@ void Crit1DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
     N_totLitter = N_cropToHarvest + N_cropToResidues + N_roots;
     C_totLitter = N_totLitter * carbonNitrogenParameter.CN_RATIO_NOTHARVESTED;
 
+    unsigned int l=1;
     do{
-
         N_totLitter += myCase.carbonNitrogenLayers[l].N_litter;
         C_totLitter += myCase.carbonNitrogenLayers[l].C_litter;
         N_totHumus += myCase.carbonNitrogenLayers[l].N_humus;
@@ -1848,13 +1854,13 @@ void Crit1DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
         l++;
     } while (myCase.soilLayers[l].thickness + myCase.soilLayers[l].depth <= myCase.ploughedSoilDepth);
 
-    if (l == 0)
+    if (l == 1)
         return;
     else
         myLastLayer = l - 1;
 
     // tmp = 0;
-    for (l=0;l<myLastLayer;l++) // verificare i cicli for per cambio indici
+    for (l=1; l<myLastLayer; l++) // verificare i cicli for per cambio indici
     {
         depthRatio = myCase.soilLayers[l].thickness / (myCase.soilLayers[l].thickness + myCase.soilLayers[l].depth);
         //tmp += depthRatio;

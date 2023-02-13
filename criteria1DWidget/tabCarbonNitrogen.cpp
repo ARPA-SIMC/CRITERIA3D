@@ -10,10 +10,10 @@ TabCarbonNitrogen::TabCarbonNitrogen()
     QVBoxLayout *plotLayout = new QVBoxLayout;
     graphic = new QCustomPlot();
 
-    // configure axis rect:
+    // configure axis rect
     graphic->axisRect()->setupFullAxesBox(true);
-    graphic->xAxis->setLabel("Date");
 
+    // x axis (date):
     QSharedPointer<QCPAxisTickerDateTime> dateTicker(new QCPAxisTickerDateTime);
     dateTicker->setDateTimeFormat("MMM d \n yyyy");
     dateTicker->setTickCount(13);
@@ -24,7 +24,9 @@ TabCarbonNitrogen::TabCarbonNitrogen()
     double lastDouble = last.toSecsSinceEpoch();
     graphic->xAxis->setRange(firstDouble, lastDouble);
     graphic->xAxis->setVisible(true);
-    graphic->yAxis->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
+
+    // y axis (depth)
+    //graphic->yAxis->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
     graphic->yAxis->setLabel("Depth [m]");
     graphic->yAxis->setRangeReversed(true);
 
@@ -75,7 +77,7 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
 {
     switch(currentVariable)
     {
-    case NH3:
+    case NO3:
         title = "Nitrogen in form of Nitrates [g m-2]";
         break;
     case NH4:
@@ -119,8 +121,8 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
 
     myProject.myCase.crop.initialize(myProject.myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
     myProject.myCase.initializeWaterContent(firstDate);
-    // TODO initialize CN
-    //myProject.myCarbonNitrogenProfile.N_InitializeVariables(myProject.myCase);
+
+    myProject.myCarbonNitrogenProfile.N_InitializeVariables(myProject.myCase);
 
     // update axes and colorMap size
     QDateTime first(QDate(firstYear, 1, 1), QTime(0, 0, 0));
@@ -152,7 +154,7 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
             return;
         }
 
-        // TODO compute N_main
+        myProject.myCarbonNitrogenProfile.N_main(myProject.myCase.output.dailyPrec, myProject.myCase, myDate);
 
         if ((cont % step) == 0) formInfo.setValue(cont);
 
@@ -162,8 +164,17 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
             doy++; // if display 1 year this is the day Of year, otherwise count all days in that period
             for (unsigned int l = 1; l < nrLayers; l++)
             {
-                // TODO read current CN variable
-                value = myProject.myCase.soilLayers[l].getDegreeOfSaturation();
+                switch(currentVariable)
+                {
+                case NO3:
+                    value = myProject.myCase.carbonNitrogenLayers[l].N_NO3;
+                    break;
+                case NH4:
+                    value = myProject.myCase.carbonNitrogenLayers[l].N_NH4;
+                    break;
+                default:
+                    value = NODATA;
+                }
 
                 maxValue = std::max(value, maxValue);
                 colorMap->data()->setCell(doy-1, l-1, value);
@@ -187,6 +198,6 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
     graphic->rescaleAxes();
 
     colorScale->axis()->setLabel(title);
-    colorScale->axis()->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
+    //colorScale->axis()->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
     graphic->replot();
 }

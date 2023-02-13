@@ -10,10 +10,10 @@ TabWaterContent::TabWaterContent()
     QVBoxLayout *plotLayout = new QVBoxLayout;
     graphic = new QCustomPlot();
 
-    // configure axis rect:
+    // configure axis rect
     graphic->axisRect()->setupFullAxesBox(true);
-    graphic->xAxis->setLabel("Date");
 
+    // x axis (dates)
     QSharedPointer<QCPAxisTickerDateTime> dateTicker(new QCPAxisTickerDateTime);
     dateTicker->setDateTimeFormat("MMM d \n yyyy");
     dateTicker->setTickCount(13);
@@ -24,7 +24,9 @@ TabWaterContent::TabWaterContent()
     double lastDouble = last.toSecsSinceEpoch();
     graphic->xAxis->setRange(firstDouble, lastDouble);
     graphic->xAxis->setVisible(true);
-    graphic->yAxis->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
+
+    // y axis (depth)
+    //graphic->yAxis->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
     graphic->yAxis->setLabel("Depth [m]");
     graphic->yAxis->setRangeReversed(true);
 
@@ -76,11 +78,11 @@ void TabWaterContent::computeWaterContent(Crit1DCase &myCase, int firstYear, int
     FormInfo formInfo;
     if (isVolumetricWaterContent)
     {
-        title = "volumetric water content [m3 m-3]";
+        title = "Volumetric water content [m3 m-3]";
     }
     else
     {
-        title = "degree of saturation [-]";
+        title = "Degree of saturation [-]";
     }
 
     unsigned int nrLayers = unsigned(myCase.soilLayers.size());
@@ -178,7 +180,7 @@ void TabWaterContent::computeWaterContent(Crit1DCase &myCase, int firstYear, int
     graphic->rescaleAxes();
 
     colorScale->axis()->setLabel(title);
-    colorScale->axis()->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
+    //colorScale->axis()->setLabelFont(QFont("Noto Sans", 8, QFont::Bold));
     graphic->replot();
 }
 

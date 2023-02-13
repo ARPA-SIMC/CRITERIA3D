@@ -127,7 +127,7 @@
 
             QRadioButton *volWaterContent;
             QRadioButton *degreeSat;
-            QRadioButton *nitrogen_NH3;
+            QRadioButton *nitrogen_NO3;
             QRadioButton *nitrogen_NH4;
             QRadioButton *nitrogen_humus;
             QRadioButton *nitrogen_litter;
