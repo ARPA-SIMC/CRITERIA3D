@@ -25,6 +25,65 @@
         double ureaHydr;          //
     };
 
+    struct TFlag
+    {
+        int SOM;                        // 1: computes SO; 0: SO set at the default value
+        int localOS;                    // 1: Initializes the profile of SO without keeping that of soil
+        bool waterTableWashing;         // if true: the solute is completely leached in groundwater
+        bool waterTableUpward;          // if true: capillary rise is allowed
+    };
+
+    struct TNitrogenTotalProfile
+    {
+
+        double N_humusGG;                //[g m-2] Nitrogen within humus
+        double N_litterGG;               //[g m-2] Nitrogen within litter
+        double N_NH4_adsorbedGG;         //[g m-2] adsorbed Ammonium in the current day
+        double N_NH4_adsorbedBeforeGG;   //[g m-2] adsorbed Ammonium in the previous day
+        double profileNO3;              //[g m-2] N-NO3 in the whole profile
+        double profileNH4;              //[g m-2] N-NH4 in the whole profile
+        double balanceFinalNO3;            //[g m-2] N-NO3: budget error
+        double balanceFinalNH4;            //[g m-2] N-NH4: budget error
+        //fluxes
+        double precN_NO3GG;              //[g m-2] NO3 from rainfall
+        double precN_NH4GG;              //[g m-2] NH4 from rainfall
+        double N_NO3_fertGG;             //[g m-2] NO3 from fertilization
+        double N_NH4_fertGG;             //[g m-2] NH4 from fertilization
+        double N_min_litterGG;           //[g m-2] mineralized Nitrogen from litter
+
+
+        double N_imm_l_NH4GG;            //[g m-2] NH4 immobilized in litter
+        double N_imm_l_NO3GG;            //[g m-2] NO3 immobilized in litter
+
+        double N_min_humusGG;            //[g m-2] mineralized Nitrogen from humus
+        double N_litter_humusGG;         //[g m-2] Nitrogen from litter to humus
+        double N_NH4_volGG;              //[g m-2] Volatilized NH4 in the whole profile
+        double N_nitrifGG;               //[g m-2] Nitrogen from NH4 to NO3
+        double N_urea_hydrGG;            //[g m-2] Hydrolyzed urea urea to NH4
+        double flux_NO3GG;               //[g m-2] NO3 leaching flux
+        double flux_NH4GG;               //[g m-2] NH4 leaching flux
+        double N_NO3_runoff0GG;          //[g m-2] NO3 lost through surface run off
+        double N_NH4_runoff0GG;          //[g m-2] NH4 lost through surface run off
+        double N_NO3_runoffGG;           //[g m-2] NO3 lost through subsurface run off
+        double N_NH4_runoffGG;           //[g m-2] NH4 lost through subsurface run off
+
+
+
+
+
+    };
+
+    struct TCarbonTotalProfile
+    {
+        double humusGG;                //[g m-2] C in humus
+        double litterGG;               //[g m-2] C in litter
+        // flux
+        double litter_humusGG;         //[g m-2] C from litter to humus
+        double litter_litterGG;        //[g m-2] C recycled within litter
+        double min_humusGG;            //[g m-2] C lost as CO2 by humus mineralization
+        double min_litterGG;           //[g m-2] C lost as CO2 by litter mineralization
+    };
+
     class Crit3DCarbonNitrogenLayer
     {
     public:

@@ -23,11 +23,7 @@
         double litterIniDepth ;               //[cm] initial litter depth
 
         // flags -------------------------------------------------------------------------------------------------
-        int flagSOM;                        // 1: computes SO; 0: SO set at the default value
-        int flagLocalOS;                    // 1: Initializes the profile of SO without keeping that of soil
-        bool flagWaterTableWashing;         // if true: the solute is completely leached in groundwater
-        bool flagWaterTableUpward;          // if true: capillary rise is allowed
-
+        TFlag flag;
         // daily values---------------------------------------------------------------------------------
         // Nitrogen in soil
         // contents
@@ -46,7 +42,7 @@
         double N_NH4_fertGG;             //[g m-2] NH4 from fertilization
         double N_min_litterGG;           //[g m-2] mineralized Nitrogen from litter
 
-    private:
+
         double N_imm_l_NH4GG;            //[g m-2] NH4 immobilized in litter
         double N_imm_l_NO3GG;            //[g m-2] NO3 immobilized in litter
     public:
@@ -91,13 +87,7 @@
         double N_denitrGG;               //[g m-2] Lost Nitrogen by denitrification
             //carbon
         // content
-        double C_humusGG;                //[g m-2] C in humus
-        double C_litterGG;               //[g m-2] C in litter
-        // flux
-        double C_litter_humusGG;         //[g m-2] C from litter to humus
-        double C_litter_litterGG;        //[g m-2] C recycled within litter
-        double C_min_humusGG;            //[g m-2] C lost as CO2 by humus mineralization
-        double C_min_litterGG;           //[g m-2] C lost as CO2 by litter mineralization
+        TCarbonTotalProfile carbonTotalProfile;
 
     public:
 

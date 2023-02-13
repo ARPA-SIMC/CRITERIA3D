@@ -5,7 +5,7 @@
 
 Crit1DCarbonNitrogenProfile::Crit1DCarbonNitrogenProfile()
 {
-    flagSOM = 1;
+    flag.SOM = 1;
 
     N_Initialize();
 }
@@ -26,9 +26,9 @@ void Crit1DCarbonNitrogenProfile::N_Initialize()
         */
 
     ratio_CN_humus = ratio_CN_biomass = 12; // !! to be read somewhere
-    flagSOM = 1; // !! to be read somewhere
-    flagWaterTableUpward = true;  // !! to be read somewhere
-    flagWaterTableWashing = true;  // !! to be read somewhere
+    flag.SOM = 1; // !! to be read somewhere
+    flag.waterTableUpward = true;  // !! to be read somewhere
+    flag.waterTableWashing = true;  // !! to be read somewhere
     litterIniC = NODATA; // !! to be read somewhere
     litterIniN = NODATA; // !! to be read somewhere
     litterIniDepth = NODATA; // !! to be read somewhere
@@ -395,14 +395,6 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         myCase.carbonNitrogenLayers[l].N_humus += humusNNetSink * myCase.soilLayers[l].thickness;
         myCase.carbonNitrogenLayers[l].N_urea -= myCase.carbonNitrogenLayers[l].N_Urea_Hydr;
 
-
-        //If N_NH4(L) < 0 Then Stop
-        //If N_NO3(L) < 0 Then Stop
-        //If C_litter(L) < 0 Then Stop
-        //If C_humus(L) < 0 Then Stop
-        //If N_litter(L) < 0 Then Stop
-        //If N_humus(L) < 0 Then Stop
-
         myCase.carbonNitrogenLayers[l].N_NH4 = MAXVALUE(0, myCase.carbonNitrogenLayers[l].N_NH4);
         myCase.carbonNitrogenLayers[l].N_NO3 = MAXVALUE(0, myCase.carbonNitrogenLayers[l].N_NO3);
         myCase.carbonNitrogenLayers[l].C_litter = MAXVALUE(0, myCase.carbonNitrogenLayers[l].C_litter);
@@ -419,12 +411,12 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         N_min_litterGG += myCase.carbonNitrogenLayers[l].N_min_litter;
         N_imm_l_NH4GG += myCase.carbonNitrogenLayers[l].N_imm_l_NH4;
         N_imm_l_NO3GG += myCase.carbonNitrogenLayers[l].N_imm_l_NO3;
-        C_humusGG += myCase.carbonNitrogenLayers[l].C_humus;
-        C_min_humusGG += myCase.carbonNitrogenLayers[l].C_min_humus;
-        C_litter_humusGG += myCase.carbonNitrogenLayers[l].C_litter_humus;
-        C_litter_litterGG += myCase.carbonNitrogenLayers[l].C_litter_litter;
-        C_min_litterGG += myCase.carbonNitrogenLayers[l].C_min_litter;
-        C_litterGG += myCase.carbonNitrogenLayers[l].C_litter;
+        carbonTotalProfile.humusGG += myCase.carbonNitrogenLayers[l].C_humus;
+        carbonTotalProfile.min_humusGG += myCase.carbonNitrogenLayers[l].C_min_humus;
+        carbonTotalProfile.litter_humusGG += myCase.carbonNitrogenLayers[l].C_litter_humus;
+        carbonTotalProfile.litter_litterGG += myCase.carbonNitrogenLayers[l].C_litter_litter;
+        carbonTotalProfile.min_litterGG += myCase.carbonNitrogenLayers[l].C_min_litter;
+        carbonTotalProfile.litterGG += myCase.carbonNitrogenLayers[l].C_litter;
         N_NO3_uptakeGG += myCase.carbonNitrogenLayers[l].N_NO3_uptake;
         N_NH4_uptakeGG += myCase.carbonNitrogenLayers[l].N_NH4_uptake;
         N_NH4_volGG += myCase.carbonNitrogenLayers[l].N_vol;
@@ -972,12 +964,12 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NO3;
     }
-    soluteFluxes(mySolute, flagWaterTableUpward , pistonDepth, &flux_NO3GG, myCase);
+    soluteFluxes(mySolute, flag.waterTableUpward , pistonDepth, &flux_NO3GG, myCase);
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol;
     }
-    soluteFluxes(mySolute, flagWaterTableUpward, pistonDepth, &flux_NH4GG, myCase);
+    soluteFluxes(mySolute, flag.waterTableUpward, pistonDepth, &flux_NH4GG, myCase);
 
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
     {
@@ -985,7 +977,7 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     }
     partitioning(myCase);
 
-    if (flagWaterTableWashing)
+    if (flag.waterTableWashing)
     {
         for(unsigned int l=0;l<myCase.soilLayers.size();l++)
         {
@@ -1078,7 +1070,7 @@ void Crit1DCarbonNitrogenProfile::computeLayerRates(unsigned l, Crit1DCase &myCa
     double conc_N_NO3;
 
     // update C/N ratio (fixed for humus and biomass)
-    myCase.carbonNitrogenLayers[l].ratio_CN_litter = CNRatio(myCase.carbonNitrogenLayers[l].C_litter, myCase.carbonNitrogenLayers[l].N_litter,flagSOM);
+    myCase.carbonNitrogenLayers[l].ratio_CN_litter = CNRatio(myCase.carbonNitrogenLayers[l].C_litter, myCase.carbonNitrogenLayers[l].N_litter,flag.SOM);
     totalCorrectionFactor = myCase.carbonNitrogenLayers[l].temperatureCorrectionFactor * myCase.carbonNitrogenLayers[l].waterCorrecctionFactor;
 
     // carbon
@@ -1407,12 +1399,12 @@ void Crit1DCarbonNitrogenProfile::N_Reset()
     N_NH4_runoffGG = 0;
     N_humusGG = 0;
     N_litterGG = 0;
-    C_humusGG = 0;
-    C_litterGG = 0;
-    C_min_humusGG = 0;
-    C_min_litterGG = 0;
-    C_litter_humusGG = 0;
-    C_litter_litterGG = 0;
+    carbonTotalProfile.humusGG = 0;
+    carbonTotalProfile.litterGG = 0;
+    carbonTotalProfile.min_humusGG = 0;
+    carbonTotalProfile.min_litterGG = 0;
+    carbonTotalProfile.litter_humusGG = 0;
+    carbonTotalProfile.litter_litterGG = 0;
 }
 
 
