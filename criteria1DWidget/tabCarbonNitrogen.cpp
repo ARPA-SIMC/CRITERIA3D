@@ -172,6 +172,18 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
                 case NH4:
                     value = myProject.myCase.carbonNitrogenLayers[l].N_NH4;
                     break;
+                case N_HUMUS:
+                    value = myProject.myCase.carbonNitrogenLayers[l].N_humus;
+                    break;
+                case N_LITTER:
+                    value = myProject.myCase.carbonNitrogenLayers[l].N_litter;
+                    break;
+                case C_HUMUS:
+                    value = myProject.myCase.carbonNitrogenLayers[l].C_humus;
+                    break;
+                case C_LITTER:
+                    value = myProject.myCase.carbonNitrogenLayers[l].C_litter;
+                    break;
                 default:
                     value = NODATA;
                 }
