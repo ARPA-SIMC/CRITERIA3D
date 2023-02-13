@@ -34,6 +34,7 @@ class DialogMeteoComputation : public QDialog
         QDateEdit genericPeriodEnd;
         QLineEdit nrYear;
         QCheckBox readParam;
+        QCheckBox dailyCumulated;
 
         QComboBox periodTypeList;
         QComboBox elaborationList;
