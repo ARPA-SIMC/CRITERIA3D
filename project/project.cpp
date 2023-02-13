@@ -2285,6 +2285,14 @@ bool Project::loadProjectSettings(QString settingsFileName)
         outputPointsFileName = projectSettings->value("output_points").toString();
         dbAggregationFileName = projectSettings->value("aggregation_points").toString();
 
+        // LC nel caso ci sia solo il dbAggregation ma si vogliano utilizzare le funzioni "nate" per i db point (es. calcolo clima)
+        // copio il dbAggregation in dbPointsFileName così può essere trattato allo stesso modo.
+        // Utile soprattutto nel caso di chiamate da shell in quanto da GUI è possibile direttamente aprire un db aggregation come db points.
+        if (dbPointsFileName.isEmpty() && !dbAggregationFileName.isEmpty())
+        {
+            dbPointsFileName = dbAggregationFileName;
+        }
+
         dbGridXMLFileName = projectSettings->value("meteo_grid").toString();
         loadGridDataAtStart = projectSettings->value("load_grid_data_at_start").toBool();
 
