@@ -33,9 +33,9 @@ void Crit1DCarbonNitrogenProfile::N_Initialize()
     litterIniN = NODATA; // !! to be read somewhere
     litterIniDepth = NODATA; // !! to be read somewhere
 
-    N_cropToHarvest = 0;
-    N_cropToResidues = 0;
-    N_roots = 0;
+    nitrogenTotalProfile.cropToHarvest = 0;
+    nitrogenTotalProfile.cropToResidues = 0;
+    nitrogenTotalProfile.roots = 0;
 }
 
 
@@ -64,7 +64,7 @@ void Crit1DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
     double N_NH4_ads_g_m3;            // [g m-3] adsorbed ammonium
     double myTheta;
 
-    N_NH4_adsorbedGG = 0;
+    nitrogenTotalProfile.NH4_adsorbedGG = 0;
 
     for (unsigned int l = 0; l < myCase.soilLayers.size(); l++)
     {
@@ -77,7 +77,7 @@ void Crit1DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
         N_NH4_ads_g_kg = carbonNitrogenParameter.Kd_NH4 * N_NH4_sol_g_l;
         N_NH4_ads_g_m3 = N_NH4_ads_g_kg * myCase.soilLayers[l].horizon->bulkDensity * 1000;
         myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed = N_NH4_ads_g_m3 * myCase.soilLayers[l].thickness;
-        N_NH4_adsorbedGG += myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed;
+        nitrogenTotalProfile.NH4_adsorbedGG += myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed;
     }
 }
 
@@ -404,25 +404,25 @@ void Crit1DCarbonNitrogenProfile::chemicalTransformations(Crit1DCase &myCase)
         myCase.carbonNitrogenLayers[l].N_urea = MAXVALUE(0, myCase.carbonNitrogenLayers[l].N_urea);
 
         // profile totals
-        N_humusGG += myCase.carbonNitrogenLayers[l].N_humus;
-        N_litterGG += myCase.carbonNitrogenLayers[l].N_litter;
-        N_litter_humusGG += myCase.carbonNitrogenLayers[l].N_litter_humus;
-        N_min_humusGG += myCase.carbonNitrogenLayers[l].N_min_humus;
-        N_min_litterGG += myCase.carbonNitrogenLayers[l].N_min_litter;
-        N_imm_l_NH4GG += myCase.carbonNitrogenLayers[l].N_imm_l_NH4;
-        N_imm_l_NO3GG += myCase.carbonNitrogenLayers[l].N_imm_l_NO3;
+        nitrogenTotalProfile.humusGG += myCase.carbonNitrogenLayers[l].N_humus;
+        nitrogenTotalProfile.litterGG += myCase.carbonNitrogenLayers[l].N_litter;
+        nitrogenTotalProfile.litter_humusGG += myCase.carbonNitrogenLayers[l].N_litter_humus;
+        nitrogenTotalProfile.min_humusGG += myCase.carbonNitrogenLayers[l].N_min_humus;
+        nitrogenTotalProfile.min_litterGG += myCase.carbonNitrogenLayers[l].N_min_litter;
+        nitrogenTotalProfile.imm_l_NH4GG += myCase.carbonNitrogenLayers[l].N_imm_l_NH4;
+        nitrogenTotalProfile.imm_l_NO3GG += myCase.carbonNitrogenLayers[l].N_imm_l_NO3;
         carbonTotalProfile.humusGG += myCase.carbonNitrogenLayers[l].C_humus;
         carbonTotalProfile.min_humusGG += myCase.carbonNitrogenLayers[l].C_min_humus;
         carbonTotalProfile.litter_humusGG += myCase.carbonNitrogenLayers[l].C_litter_humus;
         carbonTotalProfile.litter_litterGG += myCase.carbonNitrogenLayers[l].C_litter_litter;
         carbonTotalProfile.min_litterGG += myCase.carbonNitrogenLayers[l].C_min_litter;
         carbonTotalProfile.litterGG += myCase.carbonNitrogenLayers[l].C_litter;
-        N_NO3_uptakeGG += myCase.carbonNitrogenLayers[l].N_NO3_uptake;
-        N_NH4_uptakeGG += myCase.carbonNitrogenLayers[l].N_NH4_uptake;
-        N_NH4_volGG += myCase.carbonNitrogenLayers[l].N_vol;
-        N_nitrifGG += myCase.carbonNitrogenLayers[l].N_nitrif;
-        N_urea_hydrGG += myCase.carbonNitrogenLayers[l].N_Urea_Hydr;
-        N_denitrGG += myCase.carbonNitrogenLayers[l].N_denitr;
+        nitrogenTotalProfile.NO3_uptakeGG += myCase.carbonNitrogenLayers[l].N_NO3_uptake;
+        nitrogenTotalProfile.NH4_uptakeGG += myCase.carbonNitrogenLayers[l].N_NH4_uptake;
+        nitrogenTotalProfile.NH4_volGG += myCase.carbonNitrogenLayers[l].N_vol;
+        nitrogenTotalProfile.nitrifGG += myCase.carbonNitrogenLayers[l].N_nitrif;
+        nitrogenTotalProfile.urea_hydrGG += myCase.carbonNitrogenLayers[l].N_Urea_Hydr;
+        nitrogenTotalProfile.denitrGG += myCase.carbonNitrogenLayers[l].N_denitr;
 
     }
 
@@ -497,8 +497,8 @@ void Crit1DCarbonNitrogenProfile::N_Fertilization(Crit1DCase &myCase,Crit3DFerti
         N_Norg_fert[l] = quantityN[l]*fertilizerProperties.N_org_percentage/ 100;
 
         //per il bilancio...
-        N_NO3_fertGG += N_NO3_fert[l];
-        N_NH4_fertGG += N_NH4_fert[l];
+        nitrogenTotalProfile.NO3_fertGG += N_NO3_fert[l];
+        nitrogenTotalProfile.NH4_fertGG += N_NH4_fert[l];
 
         myCase.carbonNitrogenLayers[l].N_NO3 += N_NO3_fert[l];                                      // updating N_NO3
         myCase.carbonNitrogenLayers[l].N_NH4 += N_NH4_fert[l];                                      // updating N_NH4
@@ -595,11 +595,11 @@ void Crit1DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
         myCase.carbonNitrogenLayers[l].N_urea = 0;
     }
 
-    profileNH4 = profileNO3 = 0;
+    nitrogenTotalProfile.profileNH4 = nitrogenTotalProfile.profileNO3 = 0;
     for(unsigned int l=0; l < myCase.soilLayers.size(); l++)
     {
-        profileNO3 += myCase.carbonNitrogenLayers[l].N_NO3;
-        profileNH4 += myCase.carbonNitrogenLayers[l].N_NH4;
+        nitrogenTotalProfile.profileNO3 += myCase.carbonNitrogenLayers[l].N_NO3;
+        nitrogenTotalProfile.profileNH4 += myCase.carbonNitrogenLayers[l].N_NH4;
     }
 }
 
@@ -932,10 +932,10 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
 
     if (precGG > 0)
     {
-        precN_NO3GG = 0.00075 * precGG;
-        precN_NH4GG = 0.00075 * precGG;
-        myCase.carbonNitrogenLayers[0].N_NO3 += precN_NO3GG;
-        myCase.carbonNitrogenLayers[0].N_NH4 += precN_NH4GG;
+        nitrogenTotalProfile.prec_NO3GG = 0.00075 * precGG;
+        nitrogenTotalProfile.prec_NH4GG = 0.00075 * precGG;
+        myCase.carbonNitrogenLayers[0].N_NO3 += nitrogenTotalProfile.prec_NO3GG;
+        myCase.carbonNitrogenLayers[0].N_NH4 += nitrogenTotalProfile.prec_NH4GG;
         partitioning(myCase);
     }
 
@@ -964,12 +964,12 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NO3;
     }
-    soluteFluxes(mySolute, flag.waterTableUpward , pistonDepth, &flux_NO3GG, myCase);
+    soluteFluxes(mySolute, flag.waterTableUpward , pistonDepth, &nitrogenTotalProfile.flux_NO3GG, myCase);
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol;
     }
-    soluteFluxes(mySolute, flag.waterTableUpward, pistonDepth, &flux_NH4GG, myCase);
+    soluteFluxes(mySolute, flag.waterTableUpward, pistonDepth, &nitrogenTotalProfile.flux_NH4GG, myCase);
 
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
     {
@@ -983,12 +983,12 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
         {
             mySolute[l] = myCase.carbonNitrogenLayers[l].N_NO3;
         }
-        leachingWaterTable(mySolute, &flux_NO3GG,myCase);
+        leachingWaterTable(mySolute, &nitrogenTotalProfile.flux_NO3GG,myCase);
         for(unsigned int l=0;l<myCase.soilLayers.size();l++)
         {
             mySolute[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol;
         }
-        leachingWaterTable(mySolute, &flux_NH4GG,myCase);
+        leachingWaterTable(mySolute, &nitrogenTotalProfile.flux_NH4GG,myCase);
     }
     mySolute.clear();
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
@@ -1141,7 +1141,7 @@ void Crit1DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
 
     // check if total assimilable Nitrogen has already been taken up
 
-    if (N_potentialDemandCum >= N_uptakable)
+    if (nitrogenTotalProfile.potentialDemandCum >= nitrogenTotalProfile.uptakable)
     {
         return;
     }
@@ -1149,7 +1149,7 @@ void Crit1DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
     // potential N uptake (dependent on LAI)
     N_Uptake_Potential(myCase);
 
-    if (N_dailyDemand == 0)
+    if (nitrogenTotalProfile.dailyDemand == 0)
     {
         return;
     }
@@ -1158,7 +1158,7 @@ void Crit1DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
     //2008.09 GA no residues
     //Add residues
 
-    N_uptakeMax = N_dailyDemand;
+    nitrogenTotalProfile.uptakeMax = nitrogenTotalProfile.dailyDemand;
 
     if ((myCase.output.dailyTranspiration == 0) || (myCase.crop.getMaxTranspiration(myCase.output.dailyEt0) == 0))
     {
@@ -1197,7 +1197,7 @@ void Crit1DCarbonNitrogenProfile::N_Uptake(Crit1DCase &myCase)
     {
         for (int l = myCase.crop.roots.firstRootLayer;l<myCase.crop.roots.lastRootLayer;l++)
         {
-            myCase.carbonNitrogenLayers[l].N_NO3_uptake = MINVALUE(myCase.carbonNitrogenLayers[l].N_NO3, (N_NO3_up_max[l] / N_max_transp) * N_uptakeMax);
+            myCase.carbonNitrogenLayers[l].N_NO3_uptake = MINVALUE(myCase.carbonNitrogenLayers[l].N_NO3, (N_NO3_up_max[l] / N_max_transp) * nitrogenTotalProfile.uptakeMax);
             //GA2017 dialogo con Ceotto (mais San Prospero)
             myCase.carbonNitrogenLayers[l].N_NH4_uptake = 0; //'min(N_NH4_Sol[L], (N_NH4_up_max[L] / N_max_transp) * N_UptakeMax)
         }
@@ -1217,11 +1217,11 @@ void Crit1DCarbonNitrogenProfile::N_SurfaceRunoff(Crit1DCase &myCase)
     {
         // calcolo dell'azoto perso nel ruscellamento superficiale
         // seguendo i calcoli tratti da EPIC per il fosforo
-        N_NO3_runoff0GG = MINVALUE(myCase.carbonNitrogenLayers[0].N_NO3, myCase.carbonNitrogenLayers[0].N_NO3 / myCase.prevWaterContent[0] * myCase.output.dailySurfaceRunoff);
-        N_NH4_runoff0GG = MINVALUE(myCase.carbonNitrogenLayers[0].N_NH4_Sol, myCase.carbonNitrogenLayers[0].N_NH4_Sol / myCase.prevWaterContent[0] * myCase.output.dailySurfaceRunoff);
+        nitrogenTotalProfile.NO3_runoff0GG = MINVALUE(myCase.carbonNitrogenLayers[0].N_NO3, myCase.carbonNitrogenLayers[0].N_NO3 / myCase.prevWaterContent[0] * myCase.output.dailySurfaceRunoff);
+        nitrogenTotalProfile.NH4_runoff0GG = MINVALUE(myCase.carbonNitrogenLayers[0].N_NH4_Sol, myCase.carbonNitrogenLayers[0].N_NH4_Sol / myCase.prevWaterContent[0] * myCase.output.dailySurfaceRunoff);
 
-        myCase.carbonNitrogenLayers[0].N_NO3 -= N_NO3_runoff0GG;
-        myCase.carbonNitrogenLayers[0].N_NH4_Sol -= N_NH4_runoff0GG;
+        myCase.carbonNitrogenLayers[0].N_NO3 -= nitrogenTotalProfile.NO3_runoff0GG;
+        myCase.carbonNitrogenLayers[0].N_NH4_Sol -= nitrogenTotalProfile.NH4_runoff0GG;
 
     }
 
@@ -1276,7 +1276,7 @@ void Crit1DCarbonNitrogenProfile::N_Uptake_Potential(Crit1DCase &myCase)
     //2008.04 GA
     //2002.11.26.MVS this computation depends on LAI
 
-    N_dailyDemand = 0;
+    nitrogenTotalProfile.dailyDemand = 0;
 
     // to avoid strong changes as far as LAI>0
     if (myCase.crop.LAIpreviousDay == 0)
@@ -1290,8 +1290,8 @@ void Crit1DCarbonNitrogenProfile::N_Uptake_Potential(Crit1DCase &myCase)
         return;
     }
 
-    N_dailyDemand = MINVALUE(MAXVALUE(0, myCase.crop.LAI - myCase.crop.LAIpreviousDay) * maxRate_LAI_Ndemand, maxRate_LAI_Ndemand);
-    N_potentialDemandCum += N_dailyDemand;
+    nitrogenTotalProfile.dailyDemand = MINVALUE(MAXVALUE(0, myCase.crop.LAI - myCase.crop.LAIpreviousDay) * maxRate_LAI_Ndemand, maxRate_LAI_Ndemand);
+    nitrogenTotalProfile.potentialDemandCum += nitrogenTotalProfile.dailyDemand;
 }
 /*
 void N_Uptake_Max()
@@ -1375,30 +1375,30 @@ void Crit1DCarbonNitrogenProfile::N_Reset()
     */
     //'azzero tutte le variabili giornaliere
     //'bil NO3
-    N_NO3_fertGG = 0;
-    N_imm_l_NO3GG = 0;
-    N_denitrGG = 0;//   'Denitrification non viene piu' chiamata
-    N_NO3_uptakeGG = 0;
-    N_NO3_runoff0GG = 0;
-    N_NO3_runoffGG = 0;
-    flux_NO3GG = 0;
-    precN_NO3GG = 0;
-    precN_NH4GG = 0;
-    N_nitrifGG = 0;
-    N_NH4_fertGG = 0;
-    N_NH4_adsorbedGG = 0;
-    N_NH4_adsorbedBeforeGG = 0;
-    N_imm_l_NH4GG = 0;
-    N_min_humusGG = 0;
-    N_min_litterGG = 0;
-    N_NH4_volGG = 0;
-    N_urea_hydrGG = 0;
-    N_NH4_uptakeGG = 0;
-    flux_NH4GG = 0;
-    N_NH4_runoff0GG = 0;
-    N_NH4_runoffGG = 0;
-    N_humusGG = 0;
-    N_litterGG = 0;
+    nitrogenTotalProfile.NO3_fertGG = 0;
+    nitrogenTotalProfile.imm_l_NO3GG = 0;
+    nitrogenTotalProfile.denitrGG = 0;//   'Denitrification non viene piu' chiamata
+    nitrogenTotalProfile.NO3_uptakeGG = 0;
+    nitrogenTotalProfile.NO3_runoff0GG = 0;
+    nitrogenTotalProfile.NO3_runoffGG = 0;
+    nitrogenTotalProfile.flux_NO3GG = 0;
+    nitrogenTotalProfile.prec_NO3GG = 0;
+    nitrogenTotalProfile.prec_NH4GG = 0;
+    nitrogenTotalProfile.nitrifGG = 0;
+    nitrogenTotalProfile.NH4_fertGG = 0;
+    nitrogenTotalProfile.NH4_adsorbedGG = 0;
+    nitrogenTotalProfile.NH4_adsorbedBeforeGG = 0;
+    nitrogenTotalProfile.imm_l_NH4GG = 0;
+    nitrogenTotalProfile.min_humusGG = 0;
+    nitrogenTotalProfile.min_litterGG = 0;
+    nitrogenTotalProfile.NH4_volGG = 0;
+    nitrogenTotalProfile.urea_hydrGG = 0;
+    nitrogenTotalProfile.NH4_uptakeGG = 0;
+    nitrogenTotalProfile.flux_NH4GG = 0;
+    nitrogenTotalProfile.NH4_runoff0GG = 0;
+    nitrogenTotalProfile.NH4_runoffGG = 0;
+    nitrogenTotalProfile.humusGG = 0;
+    nitrogenTotalProfile.litterGG = 0;
     carbonTotalProfile.humusGG = 0;
     carbonTotalProfile.litterGG = 0;
     carbonTotalProfile.min_humusGG = 0;
@@ -1660,19 +1660,19 @@ void Crit1DCarbonNitrogenProfile::NH4_Balance(Crit1DCase &myCase)
 {
     double profileNH4PreviousDay;
 
-    profileNH4PreviousDay = profileNH4;
+    profileNH4PreviousDay = nitrogenTotalProfile.profileNH4;
     // ProfiloNH4 = ProfileSum(N_NH4())
-    profileNH4 = 0;
+    nitrogenTotalProfile.profileNH4 = 0;
     for (unsigned int i=0;i<myCase.soilLayers.size();i++)
     {
-        profileNH4 += myCase.carbonNitrogenLayers[0].N_NH4;
+        nitrogenTotalProfile.profileNH4 += myCase.carbonNitrogenLayers[0].N_NH4;
     }
 
-    balanceFinalNH4 = profileNH4 - profileNH4PreviousDay - N_NH4_fertGG + N_imm_l_NH4GG;
-    balanceFinalNH4 += - N_min_humusGG - N_min_litterGG;
-    balanceFinalNH4 += N_NH4_volGG - N_urea_hydrGG + N_nitrifGG;
-    balanceFinalNH4 += N_NH4_uptakeGG;
-    balanceFinalNH4 += N_NH4_runoff0GG + N_NH4_runoffGG + flux_NH4GG - precN_NH4GG;
+    nitrogenTotalProfile.balanceFinalNH4 = nitrogenTotalProfile.profileNH4 - profileNH4PreviousDay - nitrogenTotalProfile.NH4_fertGG + nitrogenTotalProfile.imm_l_NH4GG;
+    nitrogenTotalProfile.balanceFinalNH4 += - nitrogenTotalProfile.min_humusGG - nitrogenTotalProfile.min_litterGG;
+    nitrogenTotalProfile.balanceFinalNH4 += nitrogenTotalProfile.NH4_volGG - nitrogenTotalProfile.urea_hydrGG + nitrogenTotalProfile.nitrifGG;
+    nitrogenTotalProfile.balanceFinalNH4 += nitrogenTotalProfile.NH4_uptakeGG;
+    nitrogenTotalProfile.balanceFinalNH4 += nitrogenTotalProfile.NH4_runoff0GG + nitrogenTotalProfile.NH4_runoffGG + nitrogenTotalProfile.flux_NH4GG - nitrogenTotalProfile.prec_NH4GG;
 
     //If BilFinaleNH4 > 0.01 Then Stop
 }
@@ -1683,32 +1683,32 @@ void Crit1DCarbonNitrogenProfile::NO3_Balance(Crit1DCase &myCase)
 
     double profileNO3PreviousDay;
 
-    profileNO3PreviousDay = profileNO3;
+    profileNO3PreviousDay = nitrogenTotalProfile.profileNO3;
     //profileNO3 = ProfileSum(N_NO3());
-    profileNO3 = 0;
+    nitrogenTotalProfile.profileNO3 = 0;
     for (unsigned int i=0;i<myCase.soilLayers.size();i++)
     {
-        profileNO3 += myCase.carbonNitrogenLayers[i].N_NO3;
+        nitrogenTotalProfile.profileNO3 += myCase.carbonNitrogenLayers[i].N_NO3;
     }
-    balanceFinalNO3 = profileNO3 - profileNO3PreviousDay - N_NO3_fertGG + N_imm_l_NO3GG;
-    balanceFinalNO3 += N_denitrGG - N_nitrifGG + N_NO3_uptakeGG;
-    balanceFinalNO3 += N_NO3_runoff0GG + N_NO3_runoffGG - precN_NO3GG + flux_NO3GG;
+    nitrogenTotalProfile.balanceFinalNO3 = nitrogenTotalProfile.profileNO3 - profileNO3PreviousDay - nitrogenTotalProfile.NO3_fertGG + nitrogenTotalProfile.imm_l_NO3GG;
+    nitrogenTotalProfile.balanceFinalNO3 += nitrogenTotalProfile.denitrGG - nitrogenTotalProfile.nitrifGG + nitrogenTotalProfile.NO3_uptakeGG;
+    nitrogenTotalProfile.balanceFinalNO3 += nitrogenTotalProfile.NO3_runoff0GG + nitrogenTotalProfile.NO3_runoffGG - nitrogenTotalProfile.prec_NO3GG + nitrogenTotalProfile.flux_NO3GG;
 }
 
 void Crit1DCarbonNitrogenProfile::N_initializeCrop(bool noReset,Crit1DCase &myCase)
 {
-    N_cropToHarvest = 0;
-    N_cropToResidues = 0;
+    nitrogenTotalProfile.cropToHarvest = 0;
+    nitrogenTotalProfile.cropToResidues = 0;
 
     if (!noReset)
-        N_roots = 0;
+        nitrogenTotalProfile.roots = 0;
     // da leggere da database
     //N_uptakable = tbColture("Nasportabile") / 10;   //      da [kg ha-1] a [g m-2]
-    N_uptakable = 20; // TODO da fare lettura chiedere a Fausto
+    nitrogenTotalProfile.uptakable = 20; // TODO da fare lettura chiedere a Fausto
 
-    N_uptakeDeficit = 0;
-    N_uptakeMax = 0;
-    N_potentialDemandCum = 0;
+    nitrogenTotalProfile.uptakeDeficit = 0;
+    nitrogenTotalProfile.uptakeMax = 0;
+    nitrogenTotalProfile.potentialDemandCum = 0;
     // ReDim N_deficit_daily(Nitrogen.N_deficit_max_days) // TODO operazione da capire come gestire
 
     //Select Case TipoColtura
@@ -1716,24 +1716,24 @@ void Crit1DCarbonNitrogenProfile::N_initializeCrop(bool noReset,Crit1DCase &myCa
         if (myCase.crop.type == FRUIT_TREE)
         {
             // 2001 Rufat Dejong Fig. 4 e Tagliavini
-            N_ratioHarvested = 0.4;      // fruits, pruning wood
-            N_ratioResidues = 0.5;       // leaves
-            N_ratioRoots = 0.1;           // roots, trunk, branches
+            nitrogenTotalProfile.ratioHarvested = 0.4;      // fruits, pruning wood
+            nitrogenTotalProfile.ratioResidues = 0.5;       // leaves
+            nitrogenTotalProfile.ratioRoots = 0.1;           // roots, trunk, branches
 
 
         }
         else if (myCase.crop.type == HERBACEOUS_PERENNIAL || myCase.crop.type ==  GRASS || myCase.crop.type ==  FALLOW)
         {
-            N_ratioHarvested = 0.9;
-            N_ratioResidues = 0;
-            N_ratioRoots = 0.1;
+            nitrogenTotalProfile.ratioHarvested = 0.9;
+            nitrogenTotalProfile.ratioResidues = 0;
+            nitrogenTotalProfile.ratioRoots = 0.1;
         }
         else
         {
             // annual crops
-            N_ratioHarvested = 0.9;
-            N_ratioResidues = 0;
-            N_ratioRoots = 0.1;
+            nitrogenTotalProfile.ratioHarvested = 0.9;
+            nitrogenTotalProfile.ratioResidues = 0;
+            nitrogenTotalProfile.ratioRoots = 0.1;
         }
 
     //in prima approssimazione calcolato da N massimo asportabile per ciclo
@@ -1741,7 +1741,7 @@ void Crit1DCarbonNitrogenProfile::N_initializeCrop(bool noReset,Crit1DCase &myCa
     //2013.10 GA
     //scambio mail con Ass.Agr.:
     //
-    maxRate_LAI_Ndemand = (N_uptakable - N_roots) / myCase.crop.LAImax ;
+    maxRate_LAI_Ndemand = (nitrogenTotalProfile.uptakable - nitrogenTotalProfile.roots) / myCase.crop.LAImax ;
 
 }
 
@@ -1764,13 +1764,13 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
         //Select Case TipoColtura
         // annual crop
         if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL)
-            N_toLitter = myCase.crop.roots.rootDensity[l] * N_roots; // !! prendere il dato da dove?
+            N_toLitter = myCase.crop.roots.rootDensity[l] * nitrogenTotalProfile.roots; // !! prendere il dato da dove?
         // multiannual crop
         else if (myCase.crop.type == HERBACEOUS_PERENNIAL|| myCase.crop.type == GRASS|| myCase.crop.type ==  FALLOW)
-            N_toLitter = myCase.crop.roots.rootDensity[l] * N_roots / 2;
+            N_toLitter = myCase.crop.roots.rootDensity[l] * nitrogenTotalProfile.roots / 2;
         // tree crops
         else if (myCase.crop.type == FRUIT_TREE)
-            N_toLitter = myCase.crop.roots.rootDensity[l] * N_roots / 2;
+            N_toLitter = myCase.crop.roots.rootDensity[l] * nitrogenTotalProfile.roots / 2;
 
         myCase.carbonNitrogenLayers[l].N_litter += N_toLitter;
         myCase.carbonNitrogenLayers[l].C_litter += carbonNitrogenParameter.CN_RATIO_NOTHARVESTED * N_toLitter;
@@ -1779,24 +1779,24 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
     if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL)
     {
         // annual crops
-        N_cropToHarvest = 0;
-        N_cropToResidues = 0;
-        N_roots = 0;
+        nitrogenTotalProfile.cropToHarvest = 0;
+        nitrogenTotalProfile.cropToResidues = 0;
+        nitrogenTotalProfile.roots = 0;
     }
     else if (myCase.crop.type == HERBACEOUS_PERENNIAL|| myCase.crop.type == GRASS|| myCase.crop.type ==  FALLOW)
     {
         //pluriennali
-        N_cropToHarvest = 0;
-        N_cropToResidues = 0;
-        N_roots *= 0.5;
+        nitrogenTotalProfile.cropToHarvest = 0;
+        nitrogenTotalProfile.cropToResidues = 0;
+        nitrogenTotalProfile.roots *= 0.5;
     }
     else if (myCase.crop.type == FRUIT_TREE)
     {
         //tree crops
-            N_cropToHarvest = 0;
-            N_roots *= 0.5;
+            nitrogenTotalProfile.cropToHarvest = 0;
+            nitrogenTotalProfile.roots *= 0.5;
     }
-    N_potentialDemandCum = 0;
+    nitrogenTotalProfile.potentialDemandCum = 0;
 }
 
 
@@ -1808,15 +1808,15 @@ void Crit1DCarbonNitrogenProfile::updateNCrop(Crit3DCrop crop) // this function 
     {
             // the demand is satisfied by Nitrogen fixation
             // it prevails soil mineral uptake, if available
-            N_cropToHarvest += N_dailyDemand * N_ratioHarvested;
-            N_cropToResidues += N_dailyDemand * N_ratioResidues;
-            N_roots += N_dailyDemand * N_ratioRoots;
+            nitrogenTotalProfile.cropToHarvest += nitrogenTotalProfile.dailyDemand * nitrogenTotalProfile.ratioHarvested;
+            nitrogenTotalProfile.cropToResidues += nitrogenTotalProfile.dailyDemand * nitrogenTotalProfile.ratioResidues;
+            nitrogenTotalProfile.roots += nitrogenTotalProfile.dailyDemand * nitrogenTotalProfile.ratioRoots;
     }
     else
     {
-            N_cropToHarvest += (N_NH4_uptakeGG + N_NO3_uptakeGG) * N_ratioHarvested;
-            N_cropToResidues += (N_NH4_uptakeGG + N_NO3_uptakeGG) * N_ratioResidues;
-            N_roots += (N_NH4_uptakeGG + N_NO3_uptakeGG) * N_ratioRoots;
+            nitrogenTotalProfile.cropToHarvest += (nitrogenTotalProfile.NH4_uptakeGG + nitrogenTotalProfile.NO3_uptakeGG) * nitrogenTotalProfile.ratioHarvested;
+            nitrogenTotalProfile.cropToResidues += (nitrogenTotalProfile.NH4_uptakeGG + nitrogenTotalProfile.NO3_uptakeGG) * nitrogenTotalProfile.ratioResidues;
+            nitrogenTotalProfile.roots += (nitrogenTotalProfile.NH4_uptakeGG + nitrogenTotalProfile.NO3_uptakeGG) * nitrogenTotalProfile.ratioRoots;
     }
     // pare che sia commentato chiedere a Gabri
     //'N_UptakeDeficit = max(N_PotentialDemandCumulated - N_Crop, 0)
@@ -1834,7 +1834,7 @@ void Crit1DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
     double N_totNH4 = 0;
     unsigned int myLastLayer;
 
-    N_totLitter = N_cropToHarvest + N_cropToResidues + N_roots;
+    N_totLitter = nitrogenTotalProfile.cropToHarvest + nitrogenTotalProfile.cropToResidues + nitrogenTotalProfile.roots;
     C_totLitter = N_totLitter * carbonNitrogenParameter.CN_RATIO_NOTHARVESTED;
 
     do{
@@ -1866,9 +1866,9 @@ void Crit1DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
         myCase.carbonNitrogenLayers[l].N_NH4 = N_totNH4 * depthRatio;
     }
     partitioning(myCase);
-    N_cropToHarvest = 0;
-    N_cropToResidues = 0;
-    N_roots = 0;
+    nitrogenTotalProfile.cropToHarvest = 0;
+    nitrogenTotalProfile.cropToResidues = 0;
+    nitrogenTotalProfile.roots = 0;
 }
 
 void Crit1DCarbonNitrogenProfile::NFromCropSenescence(double myDays,double coeffB,Crit1DCase &myCase) // this function must be public
@@ -1882,7 +1882,7 @@ void Crit1DCarbonNitrogenProfile::NFromCropSenescence(double myDays,double coeff
     double LENGTH_SENESCENCE = 20;
     double ratioSenescence;      //ratio of drop leaves
     ratioSenescence = exp(coeffB * myDays) * (1 - exp(-coeffB)) / (exp(coeffB * LENGTH_SENESCENCE) - 1);    
-    myCase.carbonNitrogenLayers[0].N_litter += N_cropToResidues * ratioSenescence;
+    myCase.carbonNitrogenLayers[0].N_litter += nitrogenTotalProfile.cropToResidues * ratioSenescence;
 
 }
 
