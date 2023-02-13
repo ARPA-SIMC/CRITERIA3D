@@ -148,12 +148,11 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
     {
         if (! myProject.myCase.computeDailyModel(myDate, errorString))
         {
-            // TODO compute CN
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorString));
             return;
         }
 
-        // TODO N_main
+        // TODO compute N_main
 
         if ((cont % step) == 0) formInfo.setValue(cont);
 
@@ -163,7 +162,7 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
             doy++; // if display 1 year this is the day Of year, otherwise count all days in that period
             for (unsigned int l = 1; l < nrLayers; l++)
             {
-                // TODO read NC variable
+                // TODO read current CN variable
                 value = myProject.myCase.soilLayers[l].getDegreeOfSaturation();
 
                 maxValue = std::max(value, maxValue);
