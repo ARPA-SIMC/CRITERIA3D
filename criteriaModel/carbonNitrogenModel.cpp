@@ -595,13 +595,9 @@ void Crit1DCarbonNitrogenProfile::N_InitializeVariables(Crit1DCase &myCase)
         myCase.carbonNitrogenLayers[l].N_urea = 0;
     }
 
-<<<<<<< HEAD
-    profileNH4 = profileNO3 = 0;
+    nitrogenTotalProfile.profileNH4 = 0;
+    nitrogenTotalProfile.profileNO3 = 0;
     for(unsigned int l=1; l < myCase.soilLayers.size(); l++)
-=======
-    nitrogenTotalProfile.profileNH4 = nitrogenTotalProfile.profileNO3 = 0;
-    for(unsigned int l=0; l < myCase.soilLayers.size(); l++)
->>>>>>> 920af6e04598c838d900373ade83e526a0d66d0e
     {
         nitrogenTotalProfile.profileNO3 += myCase.carbonNitrogenLayers[l].N_NO3;
         nitrogenTotalProfile.profileNH4 += myCase.carbonNitrogenLayers[l].N_NH4;
@@ -968,16 +964,10 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     for(unsigned int l=1; l < myCase.soilLayers.size(); l++)
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NO3;
-    }
-<<<<<<< HEAD
-
-    soluteFluxes(mySolute, flag.waterTableUpward , pistonDepth, &flux_NO3GG, myCase);
-
-    for(unsigned int l=1;l<myCase.soilLayers.size();l++)
-=======
+    } 
     soluteFluxes(mySolute, flag.waterTableUpward , pistonDepth, &nitrogenTotalProfile.flux_NO3GG, myCase);
+
     for(unsigned int l=0;l<myCase.soilLayers.size();l++)
->>>>>>> 920af6e04598c838d900373ade83e526a0d66d0e
     {
         mySolute[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol;
     }
@@ -991,18 +981,13 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
 
     if (flag.waterTableWashing)
     {
-        for(unsigned int l=1;l<myCase.soilLayers.size();l++)
+        for(unsigned int l=1; l<myCase.soilLayers.size(); l++)
         {
             mySolute[l] = myCase.carbonNitrogenLayers[l].N_NO3;
         }
-<<<<<<< HEAD
-        leachingWaterTable(mySolute, &flux_NO3GG,myCase);
-
-        for(unsigned int l=1;l<myCase.soilLayers.size();l++)
-=======
         leachingWaterTable(mySolute, &nitrogenTotalProfile.flux_NO3GG,myCase);
-        for(unsigned int l=0;l<myCase.soilLayers.size();l++)
->>>>>>> 920af6e04598c838d900373ade83e526a0d66d0e
+
+        for(unsigned int l=1; l<myCase.soilLayers.size(); l++)
         {
             mySolute[l] = myCase.carbonNitrogenLayers[l].N_NH4_Sol;
         }
