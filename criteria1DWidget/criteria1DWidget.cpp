@@ -1878,14 +1878,18 @@ void Criteria1DWidget::updateTabCarbonNitrogen()
     if (myProject.isProjectLoaded)
     {
         carbonNitrogenVariable currentVar = NH3;
-        if (this->nitrogen_NH4->isChecked())
-            currentVar = NH4;
-        // TODO
+        if (this->nitrogen_NH4->isChecked()) currentVar = NH4;
+        if (this->nitrogen_humus->isChecked()) currentVar = N_HUMUS;
+        if (this->nitrogen_litter->isChecked()) currentVar = N_LITTER;
+        if (this->carbon_humus->isChecked()) currentVar = C_HUMUS;
+        if (this->carbon_litter->isChecked()) currentVar = C_LITTER;
+
         tabCarbonNitrogen->computeCarbonNitrogen(myProject, currentVar,
                                              firstYearListComboBox.currentText().toInt(),
                                              lastYearListComboBox.currentText().toInt());
     }
 }
+
 
 void Criteria1DWidget::tabChanged(int index)
 {
