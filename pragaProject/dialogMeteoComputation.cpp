@@ -195,6 +195,16 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
         QString elab = settings->value("elab").toString();
         elaborationList.addItem( elab );
     }
+    elaborationList.addItem("No elaboration available");
+    if (periodTypeList.currentText() == "Daily")
+    {
+        elaborationList.setCurrentText("No elaboration available");
+        elaborationList.setEnabled(false);
+    }
+    else
+    {
+        elaborationList.setEnabled(true);
+    }
     settings->endArray();
     settings->endGroup();
     elaborationLayout.addWidget(&elaborationList);
@@ -644,6 +654,8 @@ void DialogMeteoComputation::displayPeriod(const QString value)
 
     if (value == "Daily")
     {
+        elaborationList.setCurrentText("No elaboration available");
+        elaborationList.setEnabled(false);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -671,6 +683,7 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Decadal")
     {
+        elaborationList.setEnabled(true);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -698,6 +711,7 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Monthly")
     {
+        elaborationList.setEnabled(true);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -724,6 +738,7 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Seasonal")
     {
+        elaborationList.setEnabled(true);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -751,6 +766,7 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Annual")
     {
+        elaborationList.setEnabled(true);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -776,6 +792,7 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Generic")
     {
+        elaborationList.setEnabled(true);
         periodDisplay.setVisible(false);
         currentDayLabel.setVisible(false);
         currentDay.setVisible(false);
@@ -853,6 +870,17 @@ void DialogMeteoComputation::listElaboration(const QString value)
         elaborationList.addItem( elab );
 
     }
+    elaborationList.addItem("No elaboration available");
+    if (periodTypeList.currentText() == "Daily")
+    {
+        elaborationList.setCurrentText("No elaboration available");
+        elaborationList.setEnabled(false);
+    }
+    else
+    {
+        elaborationList.setEnabled(true);
+    }
+
     settings->endArray();
     settings->endGroup();
 
