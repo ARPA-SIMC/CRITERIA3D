@@ -12,6 +12,19 @@
 
     #define FERTILIZER_UREA  9
 
+    struct TactualRate
+    {
+        double C_humusMin;        //
+        double C_litterToHumus;   //
+        double C_litterToCO2;     //
+        double C_litterToBiomass; //
+        double N_litterMin;       // [] rate of N mineralization in litter
+        double N_litterImm;       // [] rate of N immobilization in litter
+        double N_nitrification;   //
+        double N_denitrification; //
+        double ureaHydr;          //
+    };
+
     class Crit3DCarbonNitrogenLayer
     {
     public:

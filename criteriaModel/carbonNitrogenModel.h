@@ -13,19 +13,10 @@
         Crit3DCarbonNitrogenSettings carbonNitrogenParameter;
         // values corrected for Temperature and RH
 
-        double actualRate_C_humusMin;        //
-        double actualRate_C_litterToHumus;   //
-        double actualRate_C_litterToCO2;     //
-        double actualRate_C_litterToBiomass; //
-        double actualRate_N_litterMin;       // [] rate of N mineralization in litter
-        double actualRate_N_litterImm;       // [] rate of N immobilization in litter
-        double actualRate_N_nitrification;   //
-        double actualRate_N_denitrification; //
-        double actualRateUreaHydr;           //
-
+        TactualRate actualRate;
         // fix variables --------------------------------------------------------------------------------------------
-        double ratio_CN_humus;               // [] rapporto C/N pool humus
-        double ratio_CN_biomass;             // [] rapporto C/N pool biomass
+        double ratio_CN_humus;               // [] ratio C/N pool humus
+        double ratio_CN_biomass;             // [] ratio C/N pool biomass
 
         double litterIniC;                   //[kg ha-1] initial litter carbon
         double litterIniN;                   //[kg ha-1] initial litter nitrogen
@@ -48,7 +39,7 @@
         double profileNH4;              //[g m-2] N-NH4 in the whole profile
         double balanceFinalNO3;            //[g m-2] N-NO3: budget error
         double balanceFinalNH4;            //[g m-2] N-NH4: budget error
-            //fluxes
+        //fluxes
         double precN_NO3GG;              //[g m-2] NO3 from rainfall
         double precN_NH4GG;              //[g m-2] NH4 from rainfall
         double N_NO3_fertGG;             //[g m-2] NO3 from fertilization
@@ -73,13 +64,10 @@
         // uptake
         Crit3DDate date_N_endCrop;
         Crit3DDate date_N_plough;
-        //double Date_N_EndCrop As Date    //[date] data di fine coltura per N (raccolta o rottura prato)
-        //double Date_N_Plough As Date     //[date] data di lavorazione per interramento residui N
+
         double N_uptakable;              //[g m-2] assorbimento massimo della coltura per ciclo colturale
     private:
         double maxRate_LAI_Ndemand;      //[g m-2 d-1 LAI-1] maximum demand for unit LAI increment
-        //double CN_RATIO_NOTHARVESTED=30; //[] C/N ratio in not harvested crop
-
 
     public:
         double N_cropToHarvest;          //[g m-2] Nitrogen absorbed in harvest
@@ -96,8 +84,8 @@
         double N_dailyDemandMaxCover;    //[g m-2] potential Nitrogen at max cover day (LAI_MAX)
         double N_uptakeMax;              //[g m-2] Max Nitrogen uptake
         double N_uptakeDeficit;          //[g m-2] Nitrogen deficit: not absorbed Nitrogen with respect to Nitrogen demand
-        //double* N_deficit_daily;         //[g m-2] array of deficit in the last days (defined by N_deficit_max_days)
-        int N_deficit_max_days;         //[d] nr days with available deficit
+
+        int N_deficit_max_days;          //[d] nr days with available deficit
         double N_NH4_uptakeGG;           //[g m-2] NH4 absorbed by the crop
         double N_NO3_uptakeGG;           //[g m-2] NO3 absorbed by the crop
         double N_denitrGG;               //[g m-2] Lost Nitrogen by denitrification
