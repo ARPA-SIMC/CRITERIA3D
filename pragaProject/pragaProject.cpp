@@ -777,7 +777,10 @@ bool PragaProject::elaborationPointsCycle(bool isAnomaly, bool showInfo)
     // initialize
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        meteoPoints[i].elaboration = NODATA;
+        if (! isAnomaly)
+        {
+            meteoPoints[i].elaboration = NODATA;
+        }
         meteoPoints[i].anomaly = NODATA;
         meteoPoints[i].anomalyPercentage = NODATA;
     }
