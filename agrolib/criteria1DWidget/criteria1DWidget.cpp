@@ -403,14 +403,14 @@ Criteria1DWidget::Criteria1DWidget()
     waterContentLayout->addWidget(volWaterContent);
     waterContentLayout->addWidget(degreeSat);
 
-    nitrogen_NH3 = new QRadioButton(tr("&NH3 - Nitrogen in form of nitrates [g m-2]"));
+    nitrogen_NO3 = new QRadioButton(tr("&NO3 - Nitrogen in form of nitrates [g m-2]"));
     nitrogen_NH4 = new QRadioButton(tr("&NH4 - Nitrogen in form of ammonium [g m-2]"));
     nitrogen_humus = new QRadioButton(tr("&Nitrogen in humus [g m-2]"));
     nitrogen_litter = new QRadioButton(tr("Nitrogen in litter [g m-2]"));
     carbon_humus = new QRadioButton(tr("&Carbon in humus [g m-2]"));
     carbon_litter = new QRadioButton(tr("Carbon in litter [g m-2]"));
-    nitrogen_NH3->setChecked(true);
-    carbonNitrogenLayout->addWidget(nitrogen_NH3);
+    nitrogen_NO3->setChecked(true);
+    carbonNitrogenLayout->addWidget(nitrogen_NO3);
     carbonNitrogenLayout->addWidget(nitrogen_NH4);
     carbonNitrogenLayout->addWidget(nitrogen_humus);
     carbonNitrogenLayout->addWidget(nitrogen_litter);
@@ -1877,15 +1877,19 @@ void Criteria1DWidget::updateTabCarbonNitrogen()
 {
     if (myProject.isProjectLoaded)
     {
-        carbonNitrogenVariable currentVar = NH3;
-        if (this->nitrogen_NH4->isChecked())
-            currentVar = NH4;
-        // TODO
+        carbonNitrogenVariable currentVar = NO3;
+        if (this->nitrogen_NH4->isChecked()) currentVar = NH4;
+        if (this->nitrogen_humus->isChecked()) currentVar = N_HUMUS;
+        if (this->nitrogen_litter->isChecked()) currentVar = N_LITTER;
+        if (this->carbon_humus->isChecked()) currentVar = C_HUMUS;
+        if (this->carbon_litter->isChecked()) currentVar = C_LITTER;
+
         tabCarbonNitrogen->computeCarbonNitrogen(myProject, currentVar,
                                              firstYearListComboBox.currentText().toInt(),
                                              lastYearListComboBox.currentText().toInt());
     }
 }
+
 
 void Criteria1DWidget::tabChanged(int index)
 {

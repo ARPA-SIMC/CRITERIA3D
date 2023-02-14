@@ -146,7 +146,11 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     periodLayout.addWidget(&periodTypeLabel);
     periodLayout.addWidget(&periodTypeList);
 
+    dailyCumulated.setText("Daily cumulated");
+    dailyCumulated.setChecked(false);
     QString periodSelected = periodTypeList.currentText();
+    periodLayout.addWidget(&dailyCumulated);
+
     int dayOfYear = currentDay.date().dayOfYear();
     periodDisplay.setText("Day Of Year: " + QString::number(dayOfYear));
     periodDisplay.setReadOnly(true);
@@ -194,6 +198,18 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
         settings->setArrayIndex(i);
         QString elab = settings->value("elab").toString();
         elaborationList.addItem( elab );
+    }
+    elaborationList.addItem("No elaboration available");
+    if (periodSelected == "Daily")
+    {
+        elaborationList.setCurrentText("No elaboration available");
+        elaborationList.setEnabled(false);
+        dailyCumulated.setVisible(true);
+    }
+    else
+    {
+        elaborationList.setEnabled(true);
+        dailyCumulated.setVisible(false);
     }
     settings->endArray();
     settings->endGroup();
@@ -438,6 +454,7 @@ void DialogMeteoComputation::done(bool res)
                     return;
                 }
             }
+            myProject.clima->setDailyCumulated(dailyCumulated.isChecked());
 
             QString periodSelected = periodTypeList.currentText();
             QString value = variableList.currentText();
@@ -465,7 +482,15 @@ void DialogMeteoComputation::done(bool res)
                 myProject.clima->setGenericPeriodDateEnd(end);
             }
 
-            myProject.clima->setElab1(elaborationList.currentText());
+            if (elaborationList.currentText() == "No elaboration available")
+            {
+                myProject.clima->setElab1("noMeteoComp");
+            }
+            else
+            {
+                myProject.clima->setElab1(elaborationList.currentText());
+            }
+
 
             if (!readParam.isChecked())
             {
@@ -644,6 +669,9 @@ void DialogMeteoComputation::displayPeriod(const QString value)
 
     if (value == "Daily")
     {
+        elaborationList.setCurrentText("No elaboration available");
+        elaborationList.setEnabled(false);
+        dailyCumulated.setVisible(true);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -671,6 +699,8 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Decadal")
     {
+        elaborationList.setEnabled(true);
+        dailyCumulated.setVisible(false);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -698,6 +728,8 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Monthly")
     {
+        elaborationList.setEnabled(true);
+        dailyCumulated.setVisible(false);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -724,6 +756,8 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Seasonal")
     {
+        elaborationList.setEnabled(true);
+        dailyCumulated.setVisible(false);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -751,6 +785,8 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Annual")
     {
+        elaborationList.setEnabled(true);
+        dailyCumulated.setVisible(false);
         if (saveClima)
         {
             periodDisplay.setVisible(false);
@@ -776,6 +812,8 @@ void DialogMeteoComputation::displayPeriod(const QString value)
     }
     else if (value == "Generic")
     {
+        elaborationList.setEnabled(true);
+        dailyCumulated.setVisible(false);
         periodDisplay.setVisible(false);
         currentDayLabel.setVisible(false);
         currentDay.setVisible(false);
@@ -853,6 +891,17 @@ void DialogMeteoComputation::listElaboration(const QString value)
         elaborationList.addItem( elab );
 
     }
+    elaborationList.addItem("No elaboration available");
+    if (periodTypeList.currentText() == "Daily")
+    {
+        elaborationList.setCurrentText("No elaboration available");
+        elaborationList.setEnabled(false);
+    }
+    else
+    {
+        elaborationList.setEnabled(true);
+    }
+
     settings->endArray();
     settings->endGroup();
 
@@ -876,10 +925,19 @@ void DialogMeteoComputation::listElaboration(const QString value)
 void DialogMeteoComputation::listSecondElab(const QString value)
 {
 
+    QString elabValue;
+    if (value == "No elaboration available")
+    {
+        elabValue = "noMeteoComp";
+    }
+    else
+    {
+        elabValue = value;
+    }
     QString prevSecondElab = secondElabList.currentText();
     bool existsPrevSecondElab = false;
 
-    if ( MapElabWithParam.find(value.toStdString()) == MapElabWithParam.end())
+    if ( MapElabWithParam.find(elabValue.toStdString()) == MapElabWithParam.end())
     {
         elab1Parameter.clear();
         elab1Parameter.setReadOnly(true);
@@ -906,9 +964,9 @@ void DialogMeteoComputation::listSecondElab(const QString value)
         nrYear.setEnabled(true);
     }
 
-    QString group = value + "_Elab1Elab2";
+    QString group = elabValue + "_Elab1Elab2";
     settings->beginGroup(group);
-    int size = settings->beginReadArray(value);
+    int size = settings->beginReadArray(elabValue);
 
     if (size == 0 || firstYearEdit.text().toInt() == lastYearEdit.text().toInt())
     {
@@ -1056,7 +1114,12 @@ void DialogMeteoComputation::copyDataToSaveLayout()
     }
     saveClimaLayout.setFirstYear(firstYearEdit.text());
     saveClimaLayout.setLastYear(lastYearEdit.text());
-    saveClimaLayout.setVariable(variableList.currentText());
+    QString variable = variableList.currentText();
+    if (periodTypeList.currentText() == "Daily" && dailyCumulated.isChecked())
+    {
+        variable = variable+"CUMULATED";
+    }
+    saveClimaLayout.setVariable(variable);
     saveClimaLayout.setPeriod(periodTypeList.currentText());
     if (periodTypeList.currentText() == "Generic")
     {
@@ -1106,7 +1169,14 @@ void DialogMeteoComputation::copyDataToSaveLayout()
     }
     saveClimaLayout.setSecondElab(secondElabList.currentText());
     saveClimaLayout.setElab2Param(elab2Parameter.text());
-    saveClimaLayout.setElab(elaborationList.currentText());
+    if (elaborationList.currentText() == "No elaboration available")
+    {
+        saveClimaLayout.setElab("noMeteoComp");
+    }
+    else
+    {
+        saveClimaLayout.setElab(elaborationList.currentText());
+    }
     saveClimaLayout.setElab1Param(elab1Parameter.text());
 
     if (readParam.isChecked())

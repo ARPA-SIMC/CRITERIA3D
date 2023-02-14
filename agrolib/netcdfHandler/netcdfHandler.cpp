@@ -1066,8 +1066,8 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
     }
 
     // search time index
-    int timeIndex = NODATA;
-    for (int i = 0; i < nrTime; i++)
+    long timeIndex = NODATA;
+    for (long i = 0; i < nrTime; i++)
     {
         if (getTime(i) == myTime)
         {
@@ -1084,7 +1084,7 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
     // read data
     int retVal;
     long nrValues;
-    size_t start[] = {timeIndex, 0, 0};
+    size_t start[] = {unsigned(timeIndex), 0, 0};
     size_t count[] = {1, 1, 1};
     if (isLatLon)
     {
