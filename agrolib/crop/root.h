@@ -28,7 +28,7 @@
         double shapeDeformation;            /*!< [-]   */
 
         /*! variables */
-        double actualRootDepthMax;          /*!< [m]  it takes into account soilDepth */
+        double actualRootDepthMax;          /*!< [m]  it takes into account computationSoilDepth */
         double rootLength;                  /*!< [m]  */
         int firstRootLayer;                 /*!< [-]  */
         int lastRootLayer;                  /*!< [-]  */

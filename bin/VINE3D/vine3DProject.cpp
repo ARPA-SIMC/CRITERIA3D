@@ -98,7 +98,7 @@ bool Vine3DProject::loadVine3DProjectSettings(QString projectFile)
     projectSettings->endGroup();
 
     projectSettings->beginGroup("settings");
-        soilDepth = projectSettings->value("soil_depth").toDouble();
+        computationSoilDepth = projectSettings->value("soil_depth").toDouble();
         computeDiseases = projectSettings->value("compute_diseases").toBool();
     projectSettings->endGroup();
 
@@ -156,7 +156,7 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
 
     // soil data
     if (soilDbFileName != "") loadSoilDatabase(soilDbFileName);
-    soilDepth = findSoilMaxDepth();
+    computationSoilDepth = findSoilMaxDepth();
 
     // VINE3D parameters
     if (!loadVine3DProjectParameters() || !loadTrainingSystems() || !loadFieldsProperties() || !loadFieldBook())
@@ -667,7 +667,7 @@ float Vine3DProject::findSoilMaxDepth()
     {
         maxSoilDepth = MAXVALUE(maxSoilDepth, soilList[i].totalDepth);
     }
-    return MINVALUE(soilDepth, maxSoilDepth);
+    return MINVALUE(computationSoilDepth, maxSoilDepth);
 }
 
 int Vine3DProject::getAggregatedVarCode(int rawVarCode)
@@ -1420,8 +1420,8 @@ bool Vine3DProject::saveStateAndOutput(QDate myDate)
     saveWaterBalanceOutput(this, myDate, waterMatricPotential, "matricPotential_m", "70cm", outputPath, 0.7, 0.7);
     saveWaterBalanceOutput(this, myDate, waterMatricPotential, "matricPotential_m", "130cm", outputPath, 1.3, 1.3);
 
-    if (!saveWaterBalanceOutput(this, myDate, degreeOfSaturation, "degreeOfSaturation", "soilDepth", outputPath, 0.0, double(soilDepth) - 0.01)) return false;
-    if (!saveWaterBalanceOutput(this, myDate, availableWaterContent, "waterContent_mm", "rootZone", outputPath, 0.0, double(soilDepth))) return false;
+    if (!saveWaterBalanceOutput(this, myDate, degreeOfSaturation, "degreeOfSaturation", "soilDepth", outputPath, 0.0, double(computationSoilDepth) - 0.01)) return false;
+    if (!saveWaterBalanceOutput(this, myDate, availableWaterContent, "waterContent_mm", "rootZone", outputPath, 0.0, double(computationSoilDepth))) return false;
     if (!saveWaterBalanceCumulatedOutput(this, myDate, waterInflow, "waterInflow_l", "", outputPath)) return false;
     if (!saveWaterBalanceCumulatedOutput(this, myDate, bottomDrainage, "bottomDrainage_mm", "", outputPath)) return false;
 
