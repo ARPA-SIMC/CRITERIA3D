@@ -5,7 +5,69 @@
 
 Crit1DCarbonNitrogenProfile::Crit1DCarbonNitrogenProfile()
 {
+
+    actualRate.C_humusMin = 0;
+    actualRate.C_litterToHumus = 0;
+    actualRate.C_litterToCO2 = 0;
+    actualRate.C_litterToBiomass = 0;
+    actualRate.N_litterMin = 0;
+    actualRate.N_litterImm = 0;
+    actualRate.N_nitrification = 0;
+    actualRate.N_denitrification = 0;
+    actualRate.ureaHydr = 0;
+
     flag.SOM = 1;
+    flag.localOS = 0;
+    flag.waterTableUpward = false;
+    flag.waterTableWashing = false;
+
+    nitrogenTotalProfile.humusGG = 0;
+    nitrogenTotalProfile.litterGG = 0;
+    nitrogenTotalProfile.NH4_adsorbedBeforeGG = 0;
+    nitrogenTotalProfile.NH4_adsorbedBeforeGG = 0;
+    nitrogenTotalProfile.profileNO3 = 0;
+    nitrogenTotalProfile.profileNH4 = 0;
+    nitrogenTotalProfile.NH4_adsorbedBeforeGG = 0;
+    nitrogenTotalProfile.balanceFinalNH4 = 0;
+    nitrogenTotalProfile.balanceFinalNO3 = 0;
+    nitrogenTotalProfile.prec_NO3GG = 0;
+    nitrogenTotalProfile.prec_NH4GG = 0;
+    nitrogenTotalProfile.NO3_fertGG = 0;
+    nitrogenTotalProfile.NH4_fertGG = 0;
+    nitrogenTotalProfile.min_litterGG = 0;
+    nitrogenTotalProfile.imm_l_NH4GG = 0;
+    nitrogenTotalProfile.imm_l_NO3GG = 0;
+    nitrogenTotalProfile.min_humusGG = 0;
+    nitrogenTotalProfile.litter_humusGG = 0;
+    nitrogenTotalProfile.NH4_volGG = 0;
+    nitrogenTotalProfile.nitrifGG = 0;
+    nitrogenTotalProfile.urea_hydrGG = 0;
+    nitrogenTotalProfile.flux_NH4GG = 0;
+    nitrogenTotalProfile.flux_NO3GG = 0;
+    nitrogenTotalProfile.NO3_runoff0GG = 0;
+    nitrogenTotalProfile.NH4_runoff0GG = 0;
+    nitrogenTotalProfile.uptakable = 0;
+    nitrogenTotalProfile.cropToHarvest = 0;
+    nitrogenTotalProfile.cropToResidues = 0;
+    nitrogenTotalProfile.roots = 0;
+    nitrogenTotalProfile.ratioHarvested = 0;
+    nitrogenTotalProfile.ratioResidues = 0;
+    nitrogenTotalProfile.ratioRoots = 0;
+    nitrogenTotalProfile.potentialDemandCum = 0;
+    nitrogenTotalProfile.dailyDemand = 0;
+    nitrogenTotalProfile.dailyDemandMaxCover = 0;
+    nitrogenTotalProfile.uptakeMax = 0;
+    nitrogenTotalProfile.uptakeDeficit = 0;
+    nitrogenTotalProfile.NH4_uptakeGG = 0;
+    nitrogenTotalProfile.NO3_uptakeGG = 0;
+    nitrogenTotalProfile.denitrGG = 0;
+
+    carbonTotalProfile.humusGG = 0;
+    carbonTotalProfile.litterGG = 0;
+    carbonTotalProfile.litter_humusGG = 0;
+    carbonTotalProfile.litter_litterGG = 0;
+    carbonTotalProfile.min_humusGG = 0;
+    carbonTotalProfile.min_litterGG = 0;
 
     N_Initialize();
 }

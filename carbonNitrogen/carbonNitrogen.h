@@ -87,9 +87,6 @@
         double NH4_uptakeGG;           //[g m-2] NH4 absorbed by the crop
         double NO3_uptakeGG;           //[g m-2] NO3 absorbed by the crop
         double denitrGG;               //[g m-2] Lost Nitrogen by denitrification
-
-
-
     };
 
     struct TCarbonTotalProfile
