@@ -1114,7 +1114,12 @@ void DialogMeteoComputation::copyDataToSaveLayout()
     }
     saveClimaLayout.setFirstYear(firstYearEdit.text());
     saveClimaLayout.setLastYear(lastYearEdit.text());
-    saveClimaLayout.setVariable(variableList.currentText());
+    QString variable = variableList.currentText();
+    if (periodTypeList.currentText() == "Daily" && dailyCumulated.isChecked())
+    {
+        variable = variable+"CUMULATED";
+    }
+    saveClimaLayout.setVariable(variable);
     saveClimaLayout.setPeriod(periodTypeList.currentText());
     if (periodTypeList.currentText() == "Generic")
     {
