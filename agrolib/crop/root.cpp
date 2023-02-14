@@ -447,7 +447,7 @@ namespace root
             return false;
         }
 
-        double computationSoilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
+        double soilDepth = soilLayers[nrLayers-1].depth + soilLayers[nrLayers-1].thickness / 2;
 
         // Initialize
         unsigned int i, layer;
@@ -467,7 +467,7 @@ namespace root
             unsigned int nrAtoms;
             nrAtoms = root::getNrAtoms(soilLayers, myCrop->roots.rootDepthMin, &minimumThickness, atoms);
             numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
-            numberOfRootedLayers = int(ceil(MINVALUE(myCrop->roots.rootLength, computationSoilDepth) / minimumThickness));
+            numberOfRootedLayers = int(ceil(MINVALUE(myCrop->roots.rootLength, soilDepth) / minimumThickness));
             double* densityThinLayers =  new double[nrAtoms];
 
             for (i=0; i < nrAtoms; i++)
