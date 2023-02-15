@@ -42,6 +42,8 @@
         std::vector<NetCDFVariable> dimensions;
         std::vector<NetCDFVariable> variables;
 
+        gis::Crit3DRasterGrid dataGrid;
+
     public:
         int ncId;
         bool isUTM;
@@ -52,7 +54,6 @@
         bool isHourly;
         bool isDaily;
 
-        gis::Crit3DRasterGrid dataGrid;
         gis::Crit3DGridHeader latLonHeader;
 
         NetCDFHandler();
@@ -90,6 +91,8 @@
 
         NetCDFVariable getVariableFromId(int idVar);
         NetCDFVariable getVariableFromIndex(int index);
+
+        gis::Crit3DRasterGrid* getRaster();
 
         bool readProperties(std::string fileName);
         bool exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Crit3DTime seriesFirstTime, Crit3DTime seriesLastTime, std::stringstream *buffer);
