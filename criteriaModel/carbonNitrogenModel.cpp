@@ -1547,7 +1547,7 @@ double Crit1DCarbonNitrogenProfile::findPistonDepth(Crit1DCase &myCase)
             break;
         }
     }
-    if (l > myCase.soilLayers.size())
+    if (l >= myCase.soilLayers.size())
     {
         return myCase.mySoil.totalDepth;
     }
@@ -1716,7 +1716,7 @@ void Crit1DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
                 myFreeSolute = mySolute[l];
                 fSolute[l] = MINVALUE(mySolute[l], myFreeSolute / myCase.prevWaterContent[l] * H2O_step_flux);
             }
-            else if (upwardFlag && (myCase.soilLayers[l].flux < 0) && (l <= lastLayer))
+            else if (upwardFlag && (myCase.soilLayers[l].flux < 0) && (l < lastLayer))
             {
                 myFreeSolute = mySolute[l+1];
                 fSolute[l] = MINVALUE(mySolute[l+1], myFreeSolute / myCase.prevWaterContent[l+1] * H2O_step_flux);
