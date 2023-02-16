@@ -1491,8 +1491,9 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
 
             if (! isEqual(zoneValue, zoneGrid->header->flag))
             {
-                zoneIndex = unsigned(zoneValue);
-                if (zoneIndex > 0)
+                zoneIndex = (unsigned int)(zoneValue);
+
+                if (zoneIndex > 0 && zoneIndex <= zoneGrid->maximum)
                 {
                     utmXvector[zoneIndex-1] = utmXvector[zoneIndex-1] + utmx;
                     utmYvector[zoneIndex-1] = utmYvector[zoneIndex-1] + utmy;
@@ -1501,12 +1502,13 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
             }
         }
     }
+
     for (unsigned int zonePos = 0; zonePos < zoneVector.size(); zonePos++)
     {
         double lat;
         double lon;
-       utmXvector[zonePos] = utmXvector[zonePos]/count[zonePos];
-       utmYvector[zonePos] = utmYvector[zonePos]/count[zonePos];
+       utmXvector[zonePos] = utmXvector[zonePos] / count[zonePos];
+       utmYvector[zonePos] = utmYvector[zonePos] / count[zonePos];
        gis::getLatLonFromUtm(gisSettings, utmXvector[zonePos], utmYvector[zonePos], &lat, &lon);
        latVector.push_back(lat);
        lonVector.push_back(lon);
@@ -1561,17 +1563,16 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
 
      for (int day = 0; day < nrDays; day++)
      {
-
          for (int zoneRow = 0; zoneRow < zoneGrid->header->nrRows; zoneRow++)
          {
              for (int zoneCol = 0; zoneCol < zoneGrid->header->nrCols; zoneCol++)
              {
 
                 float zoneValue = zoneGrid->value[zoneRow][zoneCol];
-                if ( zoneValue != zoneGrid->header->flag)
+                if (! isEqual(zoneValue, zoneGrid->header->flag))
                 {
                     zoneIndex = (unsigned int)(zoneValue);
-                    if (zoneIndex < 1)
+                    if (zoneIndex < 1 || zoneIndex > zoneGrid->maximum)
                     {
                         errorString = "invalid zone index: " + QString::number(zoneIndex);
                         return false;
