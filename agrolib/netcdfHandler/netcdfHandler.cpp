@@ -1110,7 +1110,7 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
             {
                 values[i] = float(valuesDouble[i]);
             }
-            delete valuesDouble;
+            delete[] valuesDouble;
             break;
         }
         case NC_FLOAT:
@@ -1126,7 +1126,7 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
             {
                 values[i] = float(valuesInt[i]);
             }
-            delete valuesInt;
+            delete[] valuesInt;
             break;
         }
             default:
@@ -1139,7 +1139,7 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
     if (retVal != NC_NOERR)
     {
         errorStr.append(nc_strerror(retVal));
-        delete values;
+        delete[] values;
         return false;
     }
     else
@@ -1158,7 +1158,13 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
                 }
             }
         }
-        delete values;
+        delete[] values;
         return true;
     }
+}
+
+
+gis::Crit3DRasterGrid* NetCDFHandler::getRaster()
+{
+    return &dataGrid;
 }
