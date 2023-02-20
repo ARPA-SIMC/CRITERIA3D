@@ -882,17 +882,17 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 // color
                 if (myProject.meteoPoints[i].selected)
                 {
-                    meteoPointList[i]->setFillColor(QColor(Qt::yellow));
+                    meteoPointList[i]->setFillColor(Qt::yellow);
                 }
                 else
                 {
                     if (myProject.meteoPoints[i].active)
                     {
-                        meteoPointList[i]->setFillColor(QColor(Qt::white));
+                        meteoPointList[i]->setFillColor(Qt::white);
                     }
                     else if (! myProject.meteoPoints[i].active)
                     {
-                        meteoPointList[i]->setFillColor(QColor(Qt::red));
+                        meteoPointList[i]->setFillColor(Qt::red);
                     }
                 }
 
@@ -945,7 +945,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     {
                         // Wrong data
                         meteoPointList[i]->setRadius(10);
-                        meteoPointList[i]->setFillColor(QColor(Qt::black));
+                        meteoPointList[i]->setFillColor(Qt::black);
                         meteoPointList[i]->setOpacity(0.5);
                     }
 

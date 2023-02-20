@@ -20,9 +20,10 @@ public:
     //pure-virtual from MapGraphicsObject
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-    qreal radius() const;
-    qreal currentValue() const;
-    QColor color() const;
+    inline qreal radius() const { return _radius; }
+    inline qreal currentValue() const { return _currentValue; }
+    inline QColor color() const { return _fillColor; }
+
     void setRadius(qreal radius);
     void setFillColor(const QColor& color);
     void setCurrentValue(qreal currentValue);
