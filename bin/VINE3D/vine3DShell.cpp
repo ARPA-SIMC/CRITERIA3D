@@ -94,7 +94,6 @@ bool cmdRunModels(Vine3DProject* myProject, QStringList argumentList)
         }
     }
 
-    QDate today, firstDay;
     int nrDays, nrDaysForecast;
 
     if (argumentList.size() >= 3)
@@ -114,14 +113,17 @@ bool cmdRunModels(Vine3DProject* myProject, QStringList argumentList)
         nrDaysForecast = 0;
     }
 
-    today = QDate::currentDate();
-    QDateTime lastDateTime = QDateTime(today);
-    lastDateTime = lastDateTime.addDays(nrDaysForecast);
-    lastDateTime.setTime(QTime(23,0,0,0));
+    QDate today = QDate::currentDate();
+    QDate firstDay = today.addDays(-nrDays);
+    QDate lastDay = today.addDays(nrDaysForecast);
 
-    firstDay = today.addDays(-nrDays);
-    QDateTime firstDateTime = QDateTime(firstDay);
+    QDateTime firstDateTime;
+    firstDateTime.setDate(firstDay);
     firstDateTime.setTime(QTime(1,0,0,0));
+
+    QDateTime lastDateTime;
+    lastDateTime.setDate(lastDay);
+    lastDateTime.setTime(QTime(23,0,0,0));
 
     if (! myProject->runModels(firstDateTime, lastDateTime, true))
         return false;
