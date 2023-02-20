@@ -1900,13 +1900,6 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         return false;
     }
 
-    if (interpolationSettings.getUseTD())
-    {
-        logInfoGUI("Loading topographic distance maps...");
-        if (! loadTopographicDistanceMaps(true, false))
-            return false;
-    }
-
     //order variables for derived computation
 
     std::string id;
@@ -1960,6 +1953,24 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         }
     }
 
+    // find out if topographic distance is needed
+    bool useTd = false;
+    foreach (myVar, variables)
+    {
+        if (getUseTdVar(myVar))
+        {
+            useTd = true;
+            break;
+        }
+    }
+
+    if (useTd)
+    {
+        logInfoGUI("Loading topographic distance maps...");
+        if (! loadTopographicDistanceMaps(true, false))
+            return false;
+    }
+
     // save also time aggregated variables
     foreach (myVar, aggrVariables)
         varToSave.push_back(myVar);
@@ -1983,7 +1994,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
             loadDateFin = myDate.addDays(nrDaysLoading-1);
             if (loadDateFin > dateFin) loadDateFin = dateFin;
 
-            logInfoGUI("Loading meteo points data from " + dateIni.addDays(-1).toString("dd/MM/yyyy") + " to " + loadDateFin.toString("dd/MM/yyyy"));
+            logInfoGUI("Loading meteo points data from " + myDate.addDays(-1).toString("dd/MM/yyyy") + " to " + loadDateFin.toString("dd/MM/yyyy"));
 
             //load also one day in advance (for transmissivity)
             if (! loadMeteoPointsData(myDate.addDays(-1), loadDateFin, isHourly, isDaily, false))

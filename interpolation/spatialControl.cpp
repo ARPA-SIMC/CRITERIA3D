@@ -161,7 +161,6 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
     std::vector <int> listIndex;
     std::vector <float> listResiduals;
     std::vector <Crit3DInterpolationDataPoint> myInterpolationPoints;
-    int seaDistPos = NODATA;
 
     if (passDataToInterpolation(meteoPoints, nrMeteoPoints, myInterpolationPoints, settings))
     {
@@ -172,8 +171,6 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
         // compute residuals
         if (! computeResiduals(myVar, meteoPoints, nrMeteoPoints, myInterpolationPoints, settings, meteoSettings, false, false))
             return;
-
-        seaDistPos = settings->getProxyPosFromName(seaDistance);
 
         for (i = 0; i < nrMeteoPoints; i++)
         {
