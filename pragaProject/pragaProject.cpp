@@ -1900,13 +1900,6 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         return false;
     }
 
-    if (interpolationSettings.getUseTD())
-    {
-        logInfoGUI("Loading topographic distance maps...");
-        if (! loadTopographicDistanceMaps(true, false))
-            return false;
-    }
-
     //order variables for derived computation
 
     std::string id;
@@ -1958,6 +1951,24 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
             useProxies = true;
             break;
         }
+    }
+
+    // find out if topographic distance is needed
+    bool useTd = false;
+    foreach (myVar, variables)
+    {
+        if (getUseTdVar(myVar))
+        {
+            useTd = true;
+            break;
+        }
+    }
+
+    if (useTd)
+    {
+        logInfoGUI("Loading topographic distance maps...");
+        if (! loadTopographicDistanceMaps(true, false))
+            return false;
     }
 
     // save also time aggregated variables
