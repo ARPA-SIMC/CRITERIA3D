@@ -44,6 +44,7 @@
 
         bool modelPause, modelStop;
         QDateTime modelFirstTime, modelLastTime;
+        QDateTime meteoPointsDbFirstTime;
 
         Crit3DProject();
 
