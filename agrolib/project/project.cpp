@@ -1026,7 +1026,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
     listMeteoPoints.clear();
 
     // find dates
-    meteoPointsDbFirstTime = findDbPointFirstTime();
     meteoPointsDbLastTime = findDbPointLastTime();
 
     if (! meteoPointsDbLastTime.isNull())
@@ -1044,6 +1043,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     }
 
     // load proxy values for detrending
+    logInfoGUI("Read proxy values: " + fileName);
     if (! readProxyValues())
     {
         logError("Error reading proxy values");
@@ -1223,7 +1223,7 @@ bool Project::loadAggregationdDB(QString dbName)
 }
 
 
-bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo)
+bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate, bool loadHourly, bool loadDaily, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
@@ -1231,7 +1231,7 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
     bool isData = false;
     int step = 0;
 
-    QString infoStr = "Load data: " + firstDate.toString();
+    QString infoStr = "Load meteo points data: " + firstDate.toString();
 
     if (firstDate != lastDate)
     {
@@ -1263,7 +1263,7 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
 }
 
 
-bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, QString dataset, bool showInfo)
+bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate, bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
@@ -1271,7 +1271,7 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
     bool isData = false;
     int step = 0;
 
-    QString infoStr = "Load data: " + firstDate.toString();
+    QString infoStr = "Load meteo points data: " + firstDate.toString();
 
     if (firstDate != lastDate)
         infoStr += " - " + lastDate.toString();
