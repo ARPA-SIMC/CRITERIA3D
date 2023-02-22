@@ -2690,6 +2690,7 @@ bool Project::loadProject()
         {
             errorString = "load Meteo Points DB failed";
             errorType = ERROR_DBPOINT;
+            logError();
             return false;
         }
 
@@ -2699,6 +2700,7 @@ bool Project::loadProject()
         {
             errorString = "load Aggregation DB failed";
             errorType = ERROR_DBPOINT;
+            logError();
             return false;
         }
         // LC nel caso ci sia solo il dbAggregation ma si vogliano utilizzare le funzioni "nate" per i db point (es. calcolo clima)
@@ -2708,8 +2710,7 @@ bool Project::loadProject()
         {
             if (! loadAggregationDBAsMeteoPoints(dbAggregationFileName))
             {
-                errorType = ERROR_DBPOINT;
-                return false;
+                logInfo(errorString);
             }
         }
     }
@@ -2719,6 +2720,7 @@ bool Project::loadProject()
         {
             errorString = "load Meteo Grid DB failed";
             errorType = ERROR_DBGRID;
+            logError();
             return false;
         }
 
@@ -2727,6 +2729,7 @@ bool Project::loadProject()
         {
             errorString = "load Output Point List failed";
             errorType = ERROR_OUTPUTPOINTLIST;
+            logError();
             return false;
         }
 
