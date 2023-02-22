@@ -216,6 +216,7 @@
         bool newMeteoGridDB(QString xmlName);
         bool deleteMeteoGridDB();
         bool loadAggregationdDB(QString dbName);
+        bool loadAggregationDBAsMeteoPoints(QString fileName);
         bool loadOutputPointsDB(QString dbName);
         bool newOutputPointsDB(QString dbName);
         bool loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showInfo);
