@@ -35,18 +35,159 @@
 #include "dialogChangeAxis.h"
 #include "gammaFunction.h"
 #include "furtherMathFunctions.h"
+#include "formInfo.h"
 
-#include <QProgressDialog>
 #include <QLayout>
 #include <QDate>
 
+Crit3DSynchronicityWidget::Crit3DSynchronicityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoPoint* mp,
+                                                         QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings, Crit3DClimateParameters *climateParameters, Crit3DQuality *quality)
+:meteoPointsDbHandler(meteoPointsDbHandler), mp(mp),firstDaily(firstDaily),
+  lastDaily(lastDaily), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality)
+{
+    this->setWindowTitle("Synchronicity analysis Id:"+QString::fromStdString(mp->id));
+    this->resize(1240, 700);
+    this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    this->setAttribute(Qt::WA_DeleteOnClose);
+
+    // layout
+    QVBoxLayout *mainLayout = new QVBoxLayout();
+    QHBoxLayout *upperLayout = new QHBoxLayout();
+    QVBoxLayout *plotLayout = new QVBoxLayout();
+
+    QGroupBox *firstGroupBox = new QGroupBox();
+    QVBoxLayout *firstLayout = new QVBoxLayout();
+    QGroupBox *stationGroupBox = new QGroupBox();
+    QVBoxLayout *stationLayout = new QVBoxLayout;
+    QHBoxLayout *stationRefPointLayout = new QHBoxLayout;
+    QHBoxLayout *stationDateLayout = new QHBoxLayout;
+    QHBoxLayout *stationButtonLayout = new QHBoxLayout;
+    QGroupBox *interpolationGroupBox = new QGroupBox();
+    QVBoxLayout *interpolationLayout = new QVBoxLayout;
+    QHBoxLayout *interpolationDateLayout = new QHBoxLayout;
+    QHBoxLayout *interpolationButtonLayout = new QHBoxLayout;
+    referencePointId = "";
+
+    QLabel *nameLabel = new QLabel(QString::fromStdString(mp->name));
+    QLabel *variableLabel = new QLabel(tr("Variable: "));
+    variable.addItem("DAILY_TMIN");
+    variable.addItem("DAILY_TMAX");
+    variable.addItem("DAILY_PREC");
+
+    myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+    variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    variable.setMaximumWidth(150);
+    firstLayout->addWidget(nameLabel);
+    firstLayout->addWidget(variableLabel);
+    firstLayout->addWidget(&variable);
+    firstGroupBox->setLayout(firstLayout);
+
+    stationGroupBox->setTitle("Station");
+    QLabel *referenceLabel = new QLabel(tr("Reference point: "));
+    stationRefPointLayout->addWidget(referenceLabel);
+    stationRefPointLayout->addWidget(&nameRefLabel);
+    QLabel *yearFromLabel = new QLabel(tr("From"));
+    stationDateLayout->addWidget(yearFromLabel);
+    stationYearFrom.setMaximumWidth(100);
+    stationDateLayout->addWidget(&stationYearFrom);
+    QLabel *yearToLabel = new QLabel(tr("To"));
+    stationDateLayout->addWidget(yearToLabel);
+    stationYearTo.setMaximumWidth(100);
+    stationDateLayout->addWidget(&stationYearTo);
+    for(int i = 0; i <= lastDaily.year()-firstDaily.year(); i++)
+    {
+        stationYearFrom.addItem(QString::number(firstDaily.year()+i));
+        stationYearTo.addItem(QString::number(firstDaily.year()+i));
+    }
+    stationYearTo.setCurrentText(QString::number(lastDaily.year()));
+    QLabel *lagLabel = new QLabel(tr("lag"));
+    stationDateLayout->addStretch(20);
+    stationDateLayout->addWidget(lagLabel);
+    stationLag.setRange(-10, 10);
+    stationLag.setSingleStep(1);
+    stationDateLayout->addWidget(&stationLag);
+    stationLayout->addLayout(stationRefPointLayout);
+    stationLayout->addLayout(stationDateLayout);
+
+    stationButtonLayout->addWidget(&stationAddGraph);
+    stationAddGraph.setText("Add graph");
+    stationButtonLayout->addWidget(&stationClearGraph);
+    stationClearGraph.setText("Clear");
+    stationLayout->addLayout(stationButtonLayout);
+    stationGroupBox->setLayout(stationLayout);
+
+    interpolationGroupBox->setTitle("Interpolation");
+    QLabel *interpolationYearFromLabel = new QLabel(tr("From"));
+    interpolationDateLayout->addWidget(interpolationYearFromLabel);
+    interpolationYearFrom.setMaximumWidth(100);
+    interpolationDateLayout->addWidget(&interpolationYearFrom);
+    QLabel *interpolationYearToLabel = new QLabel(tr("From"));
+    interpolationDateLayout->addWidget(interpolationYearToLabel);
+    interpolationYearTo.setMaximumWidth(100);
+    interpolationDateLayout->addWidget(&interpolationYearTo);
+    for(int i = 0; i <= lastDaily.year()-firstDaily.year(); i++)
+    {
+        interpolationYearFrom.addItem(QString::number(firstDaily.year()+i));
+        interpolationYearTo.addItem(QString::number(firstDaily.year()+i));
+    }
+    interpolationYearTo.setCurrentText(QString::number(lastDaily.year()));
+    QLabel *interpolationLagLabel = new QLabel(tr("lag"));
+    interpolationDateLayout->addStretch(20);
+    interpolationDateLayout->addWidget(interpolationLagLabel);
+    interpolationLag.setRange(-10, 10);
+    interpolationLag.setSingleStep(1);
+    interpolationDateLayout->addWidget(&interpolationLag);
+    interpolationLayout->addLayout(interpolationDateLayout);
+
+    interpolationButtonLayout->addWidget(&interpolationAddGraph);
+    interpolationAddGraph.setText("Add graph");
+    interpolationButtonLayout->addWidget(&interpolationReloadGraph);
+    interpolationReloadGraph.setText("Reload");
+    interpolationButtonLayout->addWidget(&interpolationClearGraph);
+    interpolationClearGraph.setText("Clear");
+    interpolationLayout->addLayout(interpolationButtonLayout);
+    interpolationGroupBox->setLayout(interpolationLayout);
+
+    synchronicityChartView = new SynchronicityChartView();
+    synchronicityChartView->setMinimumWidth(this->width()*2/3);
+    plotLayout->addWidget(synchronicityChartView);
+
+    upperLayout->addWidget(firstGroupBox);
+    upperLayout->addWidget(stationGroupBox);
+    upperLayout->addWidget(interpolationGroupBox);
+
+    // menu
+    QMenuBar* menuBar = new QMenuBar();
+    QMenu *editMenu = new QMenu("Edit");
+
+    menuBar->addMenu(editMenu);
+    mainLayout->setMenuBar(menuBar);
+
+    QAction* changeSynchronicityLeftAxis = new QAction(tr("&Change synchronicity chart axis left"), this);
+
+    editMenu->addAction(changeSynchronicityLeftAxis);
+
+    mainLayout->addLayout(upperLayout);
+    mainLayout->addLayout(plotLayout);
+    setLayout(mainLayout);
+
+    connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
+    connect(&stationYearFrom, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
+    connect(&stationYearTo, &QComboBox::currentTextChanged, [=](){ this->changeYears(); });
+    connect(&stationAddGraph, &QPushButton::clicked, [=](){ addGraph(); });
+    connect(changeSynchronicityLeftAxis, &QAction::triggered, this, &Crit3DSynchronicityWidget::on_actionChangeLeftAxis);
+
+    show();
+}
+
 
 Crit3DSynchronicityWidget::~Crit3DSynchronicityWidget()
-{}
+{
+
+}
 
 void Crit3DSynchronicityWidget::closeEvent(QCloseEvent *event)
 {
-    emit closeSynchWidget();
     event->accept();
 }
 
@@ -57,20 +198,36 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
         mpRef.cleanObsDataD();
         mpRef.clear();
         referencePointId = value;
-        firstRefDaily = meteoPointsDbHandler->getFirstDate(daily, value).date();
-        lastRefDaily = meteoPointsDbHandler->getLastDate(daily, value).date();
+        nameRefLabel.setText(QString::fromStdString(referencePointId));
+        QDate firstRefDaily = meteoPointsDbHandler->getFirstDate(daily, value).date();
+        QDate lastRefDaily = meteoPointsDbHandler->getLastDate(daily, value).date();
         bool hasDailyData = !(firstRefDaily.isNull() || lastRefDaily.isNull());
 
         if (!hasDailyData)
         {
             QMessageBox::information(nullptr, "Error", "Reference point has not daiy data");
-            stationAddGraph.setEnabled(false);
             return;
         }
-        QString errorString;
-        meteoPointsDbHandler->getPropertiesGivenId(QString::fromStdString(value), &mpRef, gisSettings, errorString);
-        nameRefLabel.setText("Id "+ QString::fromStdString(referencePointId)+" - "+QString::fromStdString(mpRef.name));
-        stationAddGraph.setEnabled(true);
+        QDate myFirst;
+        QDate myLast;
+        if (firstDaily < firstRefDaily)
+        {
+            myFirst = firstRefDaily;
+        }
+        else
+        {
+            myFirst = firstDaily;
+        }
+
+        if (lastDaily > lastRefDaily)
+        {
+            myLast = lastRefDaily;
+        }
+        else
+        {
+            myLast = lastDaily;
+        }
+        meteoPointsDbHandler->loadDailyData(getCrit3DDate(myFirst), getCrit3DDate(myLast), &mpRef);
     }
 }
 
@@ -78,340 +235,31 @@ void Crit3DSynchronicityWidget::setReferencePointId(const std::string &value)
 void Crit3DSynchronicityWidget::changeVar(const QString varName)
 {
     myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
+    // TO DO
 }
 
 void Crit3DSynchronicityWidget::changeYears()
 {
-    stationClearAndReload = true;
+    // TO DO
 }
 
-void Crit3DSynchronicityWidget::addStationGraph()
+void Crit3DSynchronicityWidget::addGraph()
 {
-
     if (referencePointId == "")
     {
         QMessageBox::information(nullptr, "Error", "Select a reference point on the map");
         return;
     }
-    if (stationClearAndReload)
-    {
-        clearStationGraph();
-        stationClearAndReload = false;
-    }
-    QDate myStartDate(stationYearFrom.currentText().toInt(), 1, 1);
-    QDate myEndDate(stationYearTo.currentText().toInt(), 12, 31);
-    int myLag = stationLag.text().toInt();
-
-    std::vector<float> dailyValues;
-    QString myError;
-    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, &mp);
-    if (dailyValues.empty())
-    {
-        QMessageBox::information(nullptr, "Error", "No data for active station");
-        return;
-    }
-    std::vector<float> dailyRefValues;
-    dailyRefValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(myStartDate), getCrit3DDate(myEndDate), &firstRefDaily, &mpRef);
-    if (dailyRefValues.empty())
-    {
-        QMessageBox::information(nullptr, "Error", "No data for reference station");
-        return;
-    }
-
-    if (firstDaily.addDays(std::min(0,myLag)) > firstRefDaily)
-    {
-        if (firstDaily.addDays(std::min(0,myLag)) > QDate(stationYearFrom.currentText().toInt(), 1, 1))
-        {
-            myStartDate = firstDaily.addDays(std::min(0,myLag));
-        }
-        else
-        {
-            myStartDate = QDate(stationYearFrom.currentText().toInt(), 1, 1);
-        }
-    }
-    else
-    {
-        if (firstRefDaily > QDate(stationYearFrom.currentText().toInt(), 1, 1))
-        {
-            myStartDate = firstRefDaily;
-        }
-        else
-        {
-            myStartDate = QDate(stationYearFrom.currentText().toInt(), 1, 1);
-        }
-
-    }
-
-    if (firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)) < firstRefDaily.addDays(dailyRefValues.size()-1))
-    {
-        if (firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)) < QDate(stationYearTo.currentText().toInt(), 12, 31))
-        {
-            myEndDate = firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag));
-        }
-        else
-        {
-            myEndDate = QDate(stationYearTo.currentText().toInt(), 12, 31);
-        }
-
-    }
-    else
-    {
-        if (firstRefDaily.addDays(dailyRefValues.size()-1) < QDate(stationYearTo.currentText().toInt(), 12, 31))
-        {
-            myEndDate = firstRefDaily.addDays(dailyRefValues.size()-1);
-        }
-        else
-        {
-            myEndDate =  QDate(stationYearTo.currentText().toInt(), 12, 31);
-        }
-    }
-    QDate currentDate = myStartDate;
-    int currentYear = currentDate.year();
-    std::vector<float> myX;
-    std::vector<float> myY;
-    QList<QPointF> pointList;
-    float minPerc = meteoSettings->getMinimumPercentage();
-    while (currentDate <= myEndDate)
-    {
-        float myValue1 = dailyValues[firstDaily.daysTo(currentDate)+myLag];
-        float myValue2 = dailyRefValues[firstRefDaily.daysTo(currentDate)];
-        if (myValue1 != NODATA && myValue2 != NODATA)
-        {
-            myX.push_back(myValue1);
-            myY.push_back(myValue2);
-        }
-        if ( currentDate == QDate(currentYear, 12, 31)  || currentDate == myEndDate)
-        {
-            float days = 365;
-            if (isLeapYear(currentYear))
-            {
-                days = 366;
-            }
-            float r2, y_intercept, trend;
-
-            if ((float)myX.size() / days * 100.0 > minPerc)
-            {
-                statistics::linearRegression(myX, myY, myX.size(), false, &y_intercept, &trend, &r2);
-            }
-            else
-            {
-                r2 = NODATA;
-            }
-            if (r2 != NODATA)
-            {
-                pointList.append(QPointF(currentYear,r2));
-            }
-            myX.clear();
-            myY.clear();
-            currentYear = currentYear + 1;
-        }
-        currentDate = currentDate.addDays(1);
-    }
-    // draw
-    synchronicityChartView->drawGraphStation(pointList, variable.currentText(), myLag);
-
+    // TO DO
 }
 
-void Crit3DSynchronicityWidget::clearStationGraph()
-{
-    synchronicityChartView->clearStationGraphSeries();
-}
-
-void Crit3DSynchronicityWidget::clearInterpolationGraph()
-{
-    interpolationChartView->clearInterpolationGraphSeries();
-    interpolationChartView->setVisible(false);
-}
-
-void Crit3DSynchronicityWidget::addInterpolationGraph()
-{
-    if (interpolationClearAndReload)
-    {
-        clearInterpolationGraph();
-        interpolationClearAndReload = false;
-    }
-    interpolationStartDate = interpolationDateFrom.date();
-    QDate myEndDate = interpolationDateTo.date();
-    int myLag = interpolationLag.text().toInt();
-    int mySmooth = smooth.text().toInt();
-    QString elabType = interpolationElab.currentText();
-
-    if (interpolationChangeSmooth)
-    {
-        // draw without compute all series
-        interpolationChartView->setVisible(true);
-        smoothSeries();
-        // draw
-        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
-        interpolationChangeSmooth = false;
-        return;
-    }
-    interpolationDailySeries.clear();
-
-    std::vector<float> dailyValues;
-    QString myError;
-    dailyValues = meteoPointsDbHandler->loadDailyVar(&myError, myVar, getCrit3DDate(interpolationStartDate.addDays(myLag)), getCrit3DDate(myEndDate.addDays(myLag)), &firstDaily, &mp);
-    if (dailyValues.empty())
-    {
-        QMessageBox::information(nullptr, "Error", "No data for active station");
-        return;
-    }
-
-    if (firstDaily.addDays(std::min(0,myLag)) > interpolationStartDate)
-    {
-        interpolationStartDate = firstDaily.addDays(std::min(0,myLag));
-    }
-    if (firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag)) < myEndDate)
-    {
-        myEndDate = firstDaily.addDays(dailyValues.size()-1-std::max(0,myLag));
-    }
-
-    std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
-
-    // load data
-    QProgressDialog progress("Loading daily data...", "Abort", 0, nrMeteoPoints, this);
-    progress.setWindowModality(Qt::WindowModal);
-    progress.show();
-    int i = 0;
-    for (; i<nrMeteoPoints; i++)
-    {
-        progress.setValue(i+1);
-        if (progress.wasCanceled())
-        {
-            break;
-        }
-        meteoPointsDbHandler->loadDailyData(getCrit3DDate(interpolationStartDate), getCrit3DDate(myEndDate), &meteoPoints[i]);
-    }
-    progress.setValue(i+1);
-    progress.close();
-
-    for (QDate currentDate = interpolationStartDate; currentDate <= myEndDate; currentDate = currentDate.addDays(1))
-    {
-        float myValue1 = dailyValues[firstDaily.daysTo(currentDate)+myLag];
-        // check quality and pass data to interpolation
-        if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, 1),
-                                             &qualityInterpolationSettings, &interpolationSettings, meteoSettings, climateParameters, interpolationPoints,
-                                             checkSpatialQuality))
-        {
-            QMessageBox::critical(nullptr, "Error", "No data available");
-            return;
-        }
-
-        if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, climateParameters, meteoPoints, nrMeteoPoints, myVar, getCrit3DTime(currentDate, 1)))
-        {
-            QMessageBox::critical(nullptr, "Error", "Interpolation: error in function preInterpolation");
-            return;
-        }
-        float interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar,
-                                              float(mp.point.utm.x),
-                                              float(mp.point.utm.y),
-                                              float(mp.point.z),
-                                              mp.getProxyValues(), false);
-
-        if (myValue1 != NODATA && interpolatedValue != NODATA)
-        {
-            if (elabType == "Difference")
-            {
-                interpolationDailySeries.push_back(interpolatedValue - myValue1);
-            }
-            else if (elabType == "Square difference")
-            {
-                interpolationDailySeries.push_back((interpolatedValue - myValue1) * (interpolatedValue - myValue1));
-            }
-            else if (elabType == "Absolute difference")
-            {
-                interpolationDailySeries.push_back(abs(interpolatedValue - myValue1));
-            }
-        }
-        else
-        {
-            interpolationDailySeries.push_back(NODATA);
-        }
-
-    }
-    if (interpolationDailySeries.empty())
-    {
-        QMessageBox::information(nullptr, "Error", "No data available");
-        return;
-    }
-    else
-    {
-        interpolationChartView->setVisible(true);
-        // smooth
-        smoothSeries();
-        // draw
-        interpolationChartView->drawGraphInterpolation(smoothInterpDailySeries, interpolationStartDate, variable.currentText(), myLag, mySmooth, elabType);
-    }
-
-}
-
-void Crit3DSynchronicityWidget::smoothSeries()
-{
-    int mySmooth = smooth.text().toInt();
-    QString elabType = interpolationElab.currentText();
-    smoothInterpDailySeries.clear();
-
-    if (mySmooth > 0)
-    {
-        for (int i = 0; i < interpolationDailySeries.size(); i++)
-        {
-            float dSum = 0;
-            int nDays = 0;
-            for (int j = i-mySmooth; j<=i+mySmooth; j++)
-            {
-                if (j >= 0 && j < interpolationDailySeries.size())
-                {
-                    if (interpolationDailySeries[j] != NODATA)
-                    {
-                        dSum = dSum + interpolationDailySeries[j];
-                        nDays = nDays + 1;
-                    }
-                }
-            }
-            if (nDays / (mySmooth * 2 + 1) > meteoSettings->getMinimumPercentage() / 100)
-            {
-                smoothInterpDailySeries.push_back(dSum/nDays);
-            }
-            else
-            {
-                smoothInterpDailySeries.push_back(NODATA);
-            }
-        }
-    }
-    else
-    {
-        smoothInterpDailySeries = interpolationDailySeries;
-    }
-
-}
-
-void Crit3DSynchronicityWidget::changeSmooth()
-{
-    interpolationChangeSmooth = true;
-}
-
-void Crit3DSynchronicityWidget::changeInterpolationDate()
-{
-    interpolationClearAndReload = true;
-}
-
-void Crit3DSynchronicityWidget::on_actionChangeLeftSynchAxis()
+void Crit3DSynchronicityWidget::on_actionChangeLeftAxis()
 {
     DialogChangeAxis changeAxisDialog(true);
     if (changeAxisDialog.result() == QDialog::Accepted)
     {
         synchronicityChartView->setYmax(changeAxisDialog.getMaxVal());
         synchronicityChartView->setYmin(changeAxisDialog.getMinVal());
-    }
-}
-
-void Crit3DSynchronicityWidget::on_actionChangeLeftInterpolationAxis()
-{
-    DialogChangeAxis changeAxisDialog(true);
-    if (changeAxisDialog.result() == QDialog::Accepted)
-    {
-        interpolationChartView->setYmax(changeAxisDialog.getMaxVal());
-        interpolationChartView->setYmin(changeAxisDialog.getMinVal());
     }
 }
 

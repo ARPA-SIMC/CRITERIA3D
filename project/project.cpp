@@ -3583,7 +3583,7 @@ int Project::computeCellSizeFromMeteoGrid()
 bool Project::setLogFile(QString myFileName)
 {
     this->logFileName = myFileName;
-    myFileName = getCompleteFileName(myFileName, "LOG/");
+    myFileName = getCompleteFileName(myFileName, PATH_LOG);
 
     QString filePath = getFilePath(myFileName);
     QString fileName = getFileName(myFileName);
@@ -3605,6 +3605,7 @@ bool Project::setLogFile(QString myFileName)
     if (logFile.is_open())
     {
         logInfo("LogFile = " + currentFileName);
+        this->logFileName = currentFileName;
         return true;
     }
     else
