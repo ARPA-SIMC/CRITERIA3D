@@ -1026,7 +1026,6 @@ bool Project::loadMeteoPointsDB(QString fileName)
     listMeteoPoints.clear();
 
     // find dates
-    meteoPointsDbFirstTime = findDbPointFirstTime();
     meteoPointsDbLastTime = findDbPointLastTime();
 
     if (! meteoPointsDbLastTime.isNull())
@@ -1044,6 +1043,102 @@ bool Project::loadMeteoPointsDB(QString fileName)
     }
 
     // load proxy values for detrending
+    logInfoGUI("Read proxy values: " + fileName);
+    if (! readProxyValues())
+    {
+        logError("Error reading proxy values");
+    }
+
+    //position with respect to DEM
+    if (DEM.isLoaded)
+        checkMeteoPointsDEM();
+
+    meteoPointsLoaded = true;
+    logInfo("Meteo points DB = " + dbName);
+    closeLogInfo();
+
+    return true;
+}
+
+bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
+{
+    if (fileName == "") return false;
+
+    logInfoGUI("Load meteo points DB = " + fileName);
+
+    dbPointsFileName = fileName;
+    QString dbName = getCompleteFileName(fileName, PATH_PROJECT);
+    if (! QFile(dbName).exists())
+    {
+        errorString = "Aggregation points DB does not exists:\n" + dbName;
+        return false;
+    }
+
+    meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
+    if (meteoPointsDbHandler->error != "")
+    {
+        errorString = "Function loadAggregationPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->error;
+        closeMeteoPointsDB();
+        return false;
+    }
+
+    if (! meteoPointsDbHandler->loadVariableProperties())
+    {
+        errorString = meteoPointsDbHandler->error;
+        closeMeteoPointsDB();
+        return false;
+    }
+
+    QList<Crit3DMeteoPoint> listMeteoPoints;
+    errorString = "";
+    if (! meteoPointsDbHandler->getPropertiesFromDb(listMeteoPoints, gisSettings, errorString))
+    {
+        errorString = "Error in reading table 'point_properties'\n" + errorString;
+        closeMeteoPointsDB();
+        return false;
+    }
+
+    nrMeteoPoints = listMeteoPoints.size();
+    if (nrMeteoPoints == 0)
+    {
+        errorString = "Missing data in the table 'point_properties'\n" + errorString;
+        closeMeteoPointsDB();
+        return false;
+    }
+
+    // warning
+    if (errorString != "")
+    {
+        logError();
+        errorString = "";
+    }
+
+    meteoPoints = new Crit3DMeteoPoint[unsigned(nrMeteoPoints)];
+
+    for (int i=0; i < nrMeteoPoints; i++)
+        meteoPoints[i] = listMeteoPoints[i];
+
+    listMeteoPoints.clear();
+
+    // find dates
+    meteoPointsDbLastTime = findDbPointLastTime();
+
+    if (! meteoPointsDbLastTime.isNull())
+    {
+        if (meteoPointsDbLastTime.time().hour() == 00)
+        {
+            setCurrentDate(meteoPointsDbLastTime.date().addDays(-1));
+            setCurrentHour(24);
+        }
+        else
+        {
+            setCurrentDate(meteoPointsDbLastTime.date());
+            setCurrentHour(meteoPointsDbLastTime.time().hour());
+        }
+    }
+
+    // load proxy values for detrending
+    logInfoGUI("Read proxy values: " + fileName);
     if (! readProxyValues())
     {
         logError("Error reading proxy values");
@@ -1223,7 +1318,7 @@ bool Project::loadAggregationdDB(QString dbName)
 }
 
 
-bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, bool showInfo)
+bool Project::loadMeteoPointsData(const QDate& firstDate, const QDate& lastDate, bool loadHourly, bool loadDaily, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
@@ -1231,7 +1326,7 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
     bool isData = false;
     int step = 0;
 
-    QString infoStr = "Load data: " + firstDate.toString();
+    QString infoStr = "Load meteo points data: " + firstDate.toString();
 
     if (firstDate != lastDate)
     {
@@ -1263,7 +1358,7 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
 }
 
 
-bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHourly, bool loadDaily, QString dataset, bool showInfo)
+bool Project::loadMeteoPointsData(const QDate &firstDate, const QDate &lastDate, bool loadHourly, bool loadDaily, const QString &dataset, bool showInfo)
 {
     //check
     if (firstDate == QDate(1800,1,1) || lastDate == QDate(1800,1,1)) return false;
@@ -1271,7 +1366,7 @@ bool Project::loadMeteoPointsData(QDate firstDate, QDate lastDate, bool loadHour
     bool isData = false;
     int step = 0;
 
-    QString infoStr = "Load data: " + firstDate.toString();
+    QString infoStr = "Load meteo points data: " + firstDate.toString();
 
     if (firstDate != lastDate)
         infoStr += " - " + lastDate.toString();
@@ -2285,14 +2380,6 @@ bool Project::loadProjectSettings(QString settingsFileName)
         outputPointsFileName = projectSettings->value("output_points").toString();
         dbAggregationFileName = projectSettings->value("aggregation_points").toString();
 
-        // LC nel caso ci sia solo il dbAggregation ma si vogliano utilizzare le funzioni "nate" per i db point (es. calcolo clima)
-        // copio il dbAggregation in dbPointsFileName così può essere trattato allo stesso modo.
-        // Utile soprattutto nel caso di chiamate da shell in quanto da GUI è possibile direttamente aprire un db aggregation come db points.
-        if (dbPointsFileName.isEmpty() && !dbAggregationFileName.isEmpty())
-        {
-            dbPointsFileName = dbAggregationFileName;
-        }
-
         dbGridXMLFileName = projectSettings->value("meteo_grid").toString();
         loadGridDataAtStart = projectSettings->value("load_grid_data_at_start").toBool();
 
@@ -2603,22 +2690,37 @@ bool Project::loadProject()
         {
             errorString = "load Meteo Points DB failed";
             errorType = ERROR_DBPOINT;
+            logError();
             return false;
         }
 
     if (dbAggregationFileName != "")
+    {
         if (! loadAggregationdDB(projectPath+"/"+dbAggregationFileName))
         {
             errorString = "load Aggregation DB failed";
             errorType = ERROR_DBPOINT;
+            logError();
             return false;
         }
+        // LC nel caso ci sia solo il dbAggregation ma si vogliano utilizzare le funzioni "nate" per i db point (es. calcolo clima)
+        // copio il dbAggregation in dbPointsFileName così può essere trattato allo stesso modo.
+        // Utile soprattutto nel caso di chiamate da shell in quanto da GUI è possibile direttamente aprire un db aggregation come db points.
+        if (dbPointsFileName.isEmpty())
+        {
+            if (! loadAggregationDBAsMeteoPoints(dbAggregationFileName))
+            {
+                logInfo(errorString);
+            }
+        }
+    }
 
     if (dbGridXMLFileName != "")
         if (! loadMeteoGridDB(dbGridXMLFileName))
         {
             errorString = "load Meteo Grid DB failed";
             errorType = ERROR_DBGRID;
+            logError();
             return false;
         }
 
@@ -2627,6 +2729,7 @@ bool Project::loadProject()
         {
             errorString = "load Output Point List failed";
             errorType = ERROR_OUTPUTPOINTLIST;
+            logError();
             return false;
         }
 
