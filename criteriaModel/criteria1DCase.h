@@ -4,6 +4,9 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
+    #ifndef CARBON_H
+        #include "carbonNitrogen.h"
+    #endif
     #ifndef CROP_H
         #include "crop.h"
     #endif
@@ -56,6 +59,7 @@
         // SOIL
         soil::Crit3DSoil mySoil;
         std::vector<soil::Crit3DLayer> soilLayers;
+        std::vector<Crit3DCarbonNitrogenLayer> carbonNitrogenLayers;
         soil::Crit3DFittingOptions fittingOptions;
 
         // CROP
@@ -80,14 +84,15 @@
         double getAvailableWater(double computationDepth);
         double getFractionAW(double computationDepth);
 
+
     private:
         double minLayerThickness;       // [m]
         double geometricFactor;         // [-]
-        double ploughedSoilDepth;       // [m]
+
         double lx, ly;                  // [m]
         double area;                    // [m2]
 
-        std::vector<double> prevWaterContent;
+
 
         bool initializeNumericalFluxes(std::string &error);
         bool computeNumericalFluxes(const Crit3DDate &myDate, std::string &error);
@@ -96,6 +101,10 @@
         void saveWaterContent();
         void restoreWaterContent();
         double getTotalWaterContent();
+
+     public:
+        std::vector<double> prevWaterContent;
+        double ploughedSoilDepth;       // [m]
 
     };
 

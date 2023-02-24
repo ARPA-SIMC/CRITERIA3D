@@ -251,7 +251,7 @@ bool setWindIntensityScale(Crit3DColorScale* myScale)
 {
     myScale->initialize(3, 256);
 
-    myScale->keyColor[0] = Crit3DColor(32, 128, 32);        /*!<  dark green */
+    myScale->keyColor[0] = Crit3DColor(32, 128, 32);        /*!< dark green */
     myScale->keyColor[1] = Crit3DColor(255, 255, 0);        /*!< yellow */
     myScale->keyColor[2] = Crit3DColor(255, 0, 0);          /*!< red */
 
@@ -269,6 +269,18 @@ bool setRadiationScale(Crit3DColorScale* myScale)
     myScale->keyColor[3] = Crit3DColor(128, 0, 128);        /*!< violet */
 
     return myScale->classify();
+}
+
+
+bool setSurfaceWaterScale(Crit3DColorScale* myScale)
+{
+    myScale->initialize(3, 256);
+
+    myScale->keyColor[0] = Crit3DColor(255, 255, 255);      /*!< white */
+    myScale->keyColor[1] = Crit3DColor(0, 255, 255);        /*!< cyan */
+    myScale->keyColor[2] = Crit3DColor(0, 0, 255);          /*!< blue */
+
+    return(myScale->classify());
 }
 
 

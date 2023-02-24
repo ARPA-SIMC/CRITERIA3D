@@ -371,6 +371,17 @@ size_t Crit3DInterpolationSettings::getProxyNr()
 Crit3DProxy* Crit3DInterpolationSettings::getProxy(unsigned pos)
 { return &(currentProxy[pos]);}
 
+int Crit3DInterpolationSettings::getProxyPosFromName(TProxyVar name)
+{
+    for (int i = 0; i < getProxyNr(); i++)
+    {
+        if (getProxyPragaName(getProxyName(i)) == name)
+            return i;
+    }
+
+    return NODATA;
+}
+
 std::string Crit3DProxy::getName() const
 {
     return name;
@@ -650,7 +661,7 @@ void Crit3DProxyCombination::setUseThermalInversion(bool value)
 bool Crit3DInterpolationSettings::getCombination(int combinationInteger, Crit3DProxyCombination &outCombination)
 {
     outCombination = selectedCombination;
-    std::string binaryString = decimal_to_binary(combinationInteger, getProxyNr()+1);
+    std::string binaryString = decimal_to_binary(unsigned(combinationInteger), int(getProxyNr()+1));
 
     int indexHeight = getIndexHeight();
 

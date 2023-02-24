@@ -440,7 +440,10 @@ namespace gis
         myGrid->maximum = maximum;
         myGrid->minimum = minimum;
 
-        myGrid->colorScale->setRange(minimum, maximum);
+        if (! myGrid->colorScale->isRangeBlocked())
+        {
+            myGrid->colorScale->setRange(minimum, maximum);
+        }
 
         return true;
     }
@@ -515,7 +518,7 @@ namespace gis
             dx = x2 - x1;
             dy = y2 - y1;
 
-            return sqrt((dx * dx)+(dy * dy));
+            return sqrtf((dx * dx)+(dy * dy));
     }
 
     void getRowColFromXY(const Crit3DRasterGrid& myGrid, double myX, double myY, int *row, int *col)
@@ -542,7 +545,7 @@ namespace gis
         v->col = int(floor((p.x - myHeader.llCorner.x) / myHeader.cellSize));
     }
 
-    void getMeteoGridRowColFromXY (const Crit3DGridHeader& myHeader, double myX, double myY, int *row, int *col)
+    void getGridRowColFromXY (const Crit3DGridHeader& myHeader, double myX, double myY, int *row, int *col)
     {
         *row = int(floor((myY - myHeader.llCorner.latitude) / myHeader.dy));
         *col = int(floor((myX - myHeader.llCorner.longitude) / myHeader.dx));

@@ -10,8 +10,10 @@
     #ifndef CRITERIA1DCASE_H
         #include "criteria1DCase.h"
     #endif
+    #ifndef CARBON_NITROGEN_MODEL_H
+        #include "carbonNitrogenModel.h"
+    #endif
 
-    #include <QDate>
     #include <fstream>
 
     class Crit1DProject
@@ -41,6 +43,9 @@
         QDate lastSimulationDate;
 
         bool isXmlMeteoGrid;
+
+        Crit1DCase myCase;
+        Crit1DCarbonNitrogenProfile myCarbonNitrogenProfile;
 
         // soil
         soil::Crit3DTextureClass soilTexture[13];
@@ -75,14 +80,11 @@
         std::vector<float> precSeries;
 
         QString outputString;
-
         QString logFileName;
-        std::ofstream logFile;
-
-        bool addDateTimeLogFile;
-
         QString outputCsvFileName;
         std::ofstream outputCsvFile;
+
+        bool addDateTimeLogFile;
 
         // specific output
         std::vector<int> waterContentDepth;
@@ -99,8 +101,6 @@
 
         Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
-
-        Crit1DCase myCase;
 
         void closeProject();
         bool readSettings();

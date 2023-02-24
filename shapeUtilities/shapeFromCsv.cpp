@@ -235,7 +235,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
 
     // Reads the data and write to output shapefile
     QString line;
-    QStringList items;
+    QList<QString> items;
     QString idCase;
     std::string idCaseStr;
     int nrShapes = outputShapeFile.getShapeCount();

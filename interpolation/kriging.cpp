@@ -31,7 +31,7 @@
 
         inverseA = (double *) malloc(sizeof(double) * dim *dim);
 
-        /*! inizializza = matrice Identità */
+        /*! inizializza = matrice Identita' */
         for (i = 0; i < dim; i++)
             for(j = 0; j < dim; j++)
                 inverseA[i*dim+j] = (i == j) ? 1. : 0. ;

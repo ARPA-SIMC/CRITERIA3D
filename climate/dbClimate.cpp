@@ -366,6 +366,7 @@ bool selectVarElab(QSqlDatabase db, QString *myError, QString table, QString var
     QString elab;
 
     bool found = false;
+    variable = variable.remove("_"); // db save variable without "_"
 
     QString statement = QString("SELECT DISTINCT elab from `%1` WHERE `elab` LIKE '%%2%%'").arg(table).arg(variable);
 
