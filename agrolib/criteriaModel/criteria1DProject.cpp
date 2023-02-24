@@ -78,7 +78,6 @@ void Crit1DProject::closeProject()
     {
         logger.writeInfo("Close Project...");
         closeAllDatabase();
-        logFile.close();
 
         isProjectLoaded = false;
     }
@@ -156,10 +155,6 @@ bool Crit1DProject::readSettings()
     addDateTimeLogFile = projectSettings->value("add_date_to_log","").toBool();
     isSaveState = projectSettings->value("save_state","").toBool();
     isRestart = projectSettings->value("restart","").toBool();
-    if (isRestart && ! isSaveState)
-    {
-        logger.writeInfo("WARNING: it is not possible to restart without save state (check file ini).");
-    }
 
     projectSettings->endGroup();
 
@@ -239,7 +234,7 @@ bool Crit1DProject::readSettings()
     projectSettings->endGroup();
 
     // OUTPUT variables (optional)
-    QStringList depthList;
+    QList<QString> depthList;
     projectSettings->beginGroup("output");
         depthList = projectSettings->value("waterContent").toStringList();
         if (! setVariableDepth(depthList, waterContentDepth))
@@ -372,6 +367,8 @@ void Crit1DProject::checkSimulationDates()
     }
 
     logger.writeInfo("Last simulation date: " + dateStr);
+    boolStr = isSaveState? "TRUE" : "FALSE";
+    logger.writeInfo("Save state: " + boolStr);
 
     if (isSeasonalForecast)
     {
@@ -635,19 +632,29 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
     {
         query.clear();
         queryString = "SELECT * FROM '" + tableName + "' WHERE date BETWEEN '"
-                    + firstDate.toString("yyyy-MM-dd") + "' AND '" + lastDate.toString("yyyy-MM-dd") + "'";
+                    + firstDate.toString("yyyy-MM-dd") + "' AND '" + lastDate.toString("yyyy-MM-dd") + "'"
+                    + " ORDER BY date";
         query = this->dbMeteo.exec(queryString);
     }
 
     // Forecast: increase nr of days
-    if (this->isShortTermForecast)
-        nrDays += unsigned(this->daysOfForecast);
+    if (isShortTermForecast)
+        nrDays += unsigned(daysOfForecast);
 
     // Initialize data
     myCase.meteoPoint.initializeObsDataD(nrDays, getCrit3DDate(firstDate));
 
     // Read observed data
-    if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), &projectError)) return false;
+    int maxNrDays = NODATA; // all data
+    if (! readDailyDataCriteria1D(query, myCase.meteoPoint, maxNrDays, projectError))
+        return false;
+
+    // write missing data on log
+    if (projectError != "")
+    {
+        this->logger.writeInfo(projectError);
+        projectError = "";
+    }
 
     // Add Short-Term forecast
     if (this->isShortTermForecast)
@@ -667,7 +674,7 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
         QString tableNameForecast = query.value("table_name").toString();
 
         query.clear();
-        queryString = "SELECT * FROM " + tableNameForecast + " ORDER BY [date]";
+        queryString = "SELECT * FROM '" + tableNameForecast + "' ORDER BY [date]";
         query = this->dbForecast.exec(queryString);
         query.last();
 
@@ -699,7 +706,14 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
         }
 
         // Read forecast data
-        if (! readDailyDataCriteria1D(&query, &(myCase.meteoPoint), &projectError)) return false;
+        maxNrDays = daysOfForecast;
+        if (! readDailyDataCriteria1D(query, myCase.meteoPoint, maxNrDays, projectError))
+                return false;
+
+        if (projectError != "")
+        {
+            this->logger.writeInfo(projectError);
+        }
 
         // fill temperature (only forecast)
         // estende il dato precedente se mancante
@@ -870,6 +884,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
     {
         if (! saveState(projectError))
             return false;
+        logger.writeInfo("Save state:" + dbState.databaseName());
     }
 
     if (isSeasonalForecast || isMonthlyForecast)
@@ -925,7 +940,7 @@ int Crit1DProject::computeAllUnits()
 
             // CROP
             compUnitList[i].idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class",
-                                                         compUnitList[i].idCropClass, &projectError).toUpper();
+                                                         compUnitList[i].idCropClass, &projectError);
             if (compUnitList[i].idCrop == "")
             {
                 logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing CROP *****");
@@ -1297,11 +1312,18 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
 {
     if (!QFile::exists(dbStateToRestoreName))
     {
-        myError = "DB state: " +dbStateToRestoreName+" does not exist";
+        myError = "DB state: " + dbStateToRestoreName + " does not exist";
         return false;
     }
-    QSqlDatabase dbStateToRestore = QSqlDatabase::addDatabase("QSQLITE", "stateToRestore");
-    dbStateToRestore.setDatabaseName(dbStateToRestoreName);
+
+    QSqlDatabase dbStateToRestore;
+    if (QSqlDatabase::contains("stateToRestore"))
+        dbStateToRestore = QSqlDatabase::database("stateToRestore");
+    else
+    {
+        dbStateToRestore = QSqlDatabase::addDatabase("QSQLITE", "stateToRestore");
+        dbStateToRestore.setDatabaseName(dbStateToRestoreName);
+    }
 
     if (! dbStateToRestore.open())
     {
@@ -1321,7 +1343,7 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
     {
         double degreeDays;
         int daySinceIrr;
-        if (qry.next())
+        if (qry.first())
         {
             if (!getValue(qry.value("DEGREE_DAYS"), &degreeDays))
             {
@@ -1374,6 +1396,12 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
                 myError = "Invalid NR_LAYER";
                 return false;
             }
+            // check values
+            if (nrLayer > 0)
+            {
+                wc = std::min(wc, myCase.soilLayers[unsigned(nrLayer)].SAT);
+                wc = std::max(wc, myCase.soilLayers[unsigned(nrLayer)].HH);
+            }
             myCase.soilLayers[unsigned(nrLayer)].waterContent = wc;
         }
         if (nrLayer == -1)
@@ -1383,6 +1411,7 @@ bool Crit1DProject::restoreState(QString dbStateToRestoreName, QString &myError)
         }
     }
 
+    dbStateToRestore.close();
     return true;
 }
 
@@ -1776,4 +1805,3 @@ bool setVariableDepth(QList<QString>& depthList, std::vector<int>& variableDepth
 
     return true;
 }
-

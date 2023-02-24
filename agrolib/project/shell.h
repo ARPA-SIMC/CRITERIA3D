@@ -19,6 +19,7 @@
     int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool *isCommandFound);
 
     int cmdLoadDEM(Project* myProject, QList<QString> argumentList);
+    int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList);
     int cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList);
     int cmdSetLogFile(Project* myProject, QList<QString> argumentList);
     int cmdExit(Project* myProject);

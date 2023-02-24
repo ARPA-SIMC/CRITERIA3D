@@ -44,10 +44,12 @@
 
         bool modelPause, modelStop;
         QDateTime modelFirstTime, modelLastTime;
+        QDateTime meteoPointsDbFirstTime;
 
         Crit3DProject();
 
         bool initializeCriteria3DModel();
+        bool runModels(QDateTime firstTime, QDateTime lastTime);
 
         void setSaveDailyState(bool isSave);
         bool isSaveDailyState();

@@ -12,17 +12,19 @@ public:
     explicit LineObject(const Position& endA,
                         const Position& endB,
                         qreal thickness = 0.0,
+                        QColor color = QColor(0,0,0,0),
                         MapGraphicsObject *parent = nullptr);
-    virtual ~LineObject();
+    virtual ~LineObject() override;
 
     //pure-virtual from MapGraphicsObject
-    QRectF boundingRect() const;
+    QRectF boundingRect() const override;
 
     //pure-virtual from MapGraphicsObject
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
     qreal thickness() const;
     void setThickness(qreal nThick);
+    void setColor(const QColor& color);
     
 signals:
     
@@ -39,6 +41,7 @@ private:
     Position _a;
     Position _b;
     qreal _thickness;
+    QColor _color;
     
 };
 

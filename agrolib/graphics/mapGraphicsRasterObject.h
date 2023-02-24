@@ -32,13 +32,16 @@
     #include "MapGraphics_global.h"
     #include "MapGraphicsObject.h"
     #include "MapGraphicsView.h"
-    #include "Position.h"
+
+    #ifndef POSITION_H
+        #include "Position.h"
+    #endif
 
     #ifndef COLORLEGEND_H
         #include "colorLegend.h"
     #endif
 
-    #ifndef MAP_H
+    #ifndef GEOMAP_H
         #include "geoMap.h"
     #endif
 

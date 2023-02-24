@@ -10,6 +10,8 @@
     #include <QSqlDatabase>
     #include <vector>
 
+class QSqlDatabase;
+
     class Crit1DCompUnit
     {
     public:

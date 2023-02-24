@@ -199,8 +199,8 @@ void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint>
             if (mySettings->getUseTD() && getUseTdVar(myVar))
             {
                 float topoDistance = 0.;
-                float kh = mySettings->getTopoDist_Kh();
-                if (! isEqual(kh, 0))
+                int kh = mySettings->getTopoDist_Kh();
+                if (kh != 0)
                 {
                     topoDistance = NODATA;
                     if (myPoints[i].topographicDistance != nullptr)
@@ -230,7 +230,7 @@ void computeDistances(meteoVariable myVar, vector <Crit3DInterpolationDataPoint>
 bool neighbourhoodVariability(meteoVariable myVar, std::vector <Crit3DInterpolationDataPoint> &myInterpolationPoints,
                               Crit3DInterpolationSettings* mySettings,
                               float x, float y, float z, int nMax,
-                              float* devSt, float* devStDeltaZ, float* minDistance)
+                              float* devSt, float* avgDeltaZ, float* minDistance)
 {
     int i, max_points;
     float* dataNeighborhood;
@@ -260,10 +260,14 @@ bool neighbourhoodVariability(meteoVariable myVar, std::vector <Crit3DInterpolat
             deltaZ.push_back(1);
 
         for (i=0; i<max_points;i++)
+        {
             if ((validPoints[i]).point->z != NODATA)
-                deltaZ.push_back(fabs(((float)(validPoints[i]).point->z) - z));
+            {
+                deltaZ.push_back(float(fabs(validPoints[i].point->z - z)));
+            }
+        }
 
-        *devStDeltaZ = statistics::mean(deltaZ.data(), int(deltaZ.size()));
+        *avgDeltaZ = statistics::mean(deltaZ.data(), int(deltaZ.size()));
 
         return true;
     }
@@ -453,7 +457,7 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
         myIntervalsHeight.push_back((heightSup + heightInf) / float(2.));
         myIntervalsValues.push_back(myAvg);
 
-        deltaZ = DELTAZ_INI * exp(heightInf / maxHeightInv);
+        deltaZ = DELTAZ_INI * expf(heightInf / maxHeightInv);
         heightInf = heightSup;
     }
 
@@ -773,7 +777,7 @@ float computeShepard(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInte
     unsigned int nrValid = 0;
 
     // define a first neighborhood inside initial radius
-    for (i=1; i < myPoints.size(); i++)
+    for (i=0; i < myPoints.size(); i++)
         if (myPoints[i].distance <= settings->getShepardInitialRadius() && myPoints[i].distance > 0 && myPoints[i].index != settings->getIndexPointCV())
         {
             shepardNeighbourPoints.push_back(myPoints[i]);
@@ -951,10 +955,7 @@ bool isThermal(meteoVariable myVar)
             myVar == airDewTemperature ||
             myVar == dailyAirTemperatureAvg ||
             myVar == dailyAirTemperatureMax ||
-            myVar == dailyAirTemperatureMin ||
-            myVar == dailyAirDewTemperatureAvg ||
-            myVar == dailyAirDewTemperatureMax ||
-            myVar == dailyAirDewTemperatureMin)
+            myVar == dailyAirTemperatureMin)
 
         return true;
     else
@@ -969,9 +970,7 @@ bool getUseDetrendingVar(meteoVariable myVar)
             myVar == dailyAirTemperatureAvg ||
             myVar == dailyAirTemperatureMax ||
             myVar == dailyAirTemperatureMin ||
-            myVar == dailyAirDewTemperatureAvg ||
-            myVar == dailyAirDewTemperatureMax ||
-            myVar == dailyAirDewTemperatureMin)
+            myVar == elaboration)
 
         return true;
     else
@@ -1180,7 +1179,7 @@ void topographicDistanceOptimize(meteoVariable myVar,
                 bestKh = kh;
             }
 
-            mySettings->addToKhSeries(kh, avgError);
+            mySettings->addToKhSeries(float(kh), avgError);
         }
         kh = ((kh == 0) ? 1 : kh*2);
     }
@@ -1198,13 +1197,13 @@ void optimalDetrending(meteoVariable myVar,
 {
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
-    short i, nrCombination, bestCombinationIndex;
+    int i, nrCombination, bestCombinationIndex;
     float avgError, minError;
     size_t proxyNr = mySettings->getProxyNr();
     Crit3DProxyCombination myCombination, bestCombination;
     myCombination = mySettings->getSelectedCombination();
 
-    nrCombination = short(pow(2, (proxyNr + 1)));
+    nrCombination = int(pow(2, double(proxyNr) + 1));
 
     minError = NODATA;
     bestCombinationIndex = 0;

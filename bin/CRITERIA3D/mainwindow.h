@@ -12,6 +12,8 @@
     #include "colorLegend.h"
     #include "rubberBand.h"
     #include "viewer3D.h"
+    #include "ArrowObject.h"
+    #include "project3D.h"
 
     #include <QMainWindow>
 
@@ -93,7 +95,7 @@
         void on_actionInterpolationSettings_triggered();
         void on_actionProxy_analysis_triggered();
         void on_actionComputePeriod_meteoVariables_triggered();
-        void on_actionCompute_hour_meteoVariables_triggered();
+        void on_actionComputeHour_meteoVariables_triggered();
 
         void callNewMeteoWidget(std::string id, std::string name, bool isGrid);
         void callAppendMeteoWidget(std::string id, std::string name, bool isGrid);
@@ -204,6 +206,8 @@
         void on_viewer3DClosed();
         void on_slopeChanged();
 
+        void on_actionView_SurfaceWaterContent_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -234,6 +238,7 @@
         RasterObject* rasterOutput;
         QList<StationMarker*> meteoPointList;
         QList<SquareMarker*> outputPointList;
+        QList<ArrowObject*> windVectorList;
 
         ColorLegend *inputRasterColorLegend;
         ColorLegend *outputRasterColorLegend;
@@ -278,6 +283,7 @@
         void setOutputRasterVisible(bool value);
 
         void addMeteoPoints();
+        void drawWindVector(int i);
         void drawProject();
         void renderDEM();
         void drawMeteoPoints();
@@ -286,18 +292,21 @@
 
         void setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
         void setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
+        void setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myGrid);
 
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);
+        void showCriteria3DVariable(criteria3DVariable var, int layerIndex);
 
         bool setRadiationAsCurrentVariable();
         bool startModels(QDateTime firstTime, QDateTime lastTime);
-        bool runModels(QDateTime firstTime, QDateTime lastTime);
 
         void testOutputPoints();
         void addOutputPointsGUI();
         void redrawOutputPoints();
         void resetOutputPointMarkers();
+        void clearWindVectorObjects();
+        void loadMeteoPointsDataSingleDay(const QDate &date, bool showInfo);
     };
 
     bool selectDates(QDateTime &firstTime, QDateTime &lastTime);

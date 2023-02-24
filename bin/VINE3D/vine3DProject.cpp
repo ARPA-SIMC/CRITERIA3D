@@ -41,6 +41,7 @@ void Vine3DProject::initializeVine3DProject()
     computeDiseases = false;
 
     dailyOutputPath = "daily_output/";
+    hourlyOutputPath = "hourly_ouptut/";
     fieldMapName = "";
 
     lastDateTransmissivity.setDate(1900,1,1);
@@ -97,7 +98,7 @@ bool Vine3DProject::loadVine3DProjectSettings(QString projectFile)
     projectSettings->endGroup();
 
     projectSettings->beginGroup("settings");
-        soilDepth = projectSettings->value("soil_depth").toDouble();
+        computationSoilDepth = projectSettings->value("soil_depth").toDouble();
         computeDiseases = projectSettings->value("compute_diseases").toBool();
     projectSettings->endGroup();
 
@@ -155,14 +156,14 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
 
     // soil data
     if (soilDbFileName != "") loadSoilDatabase(soilDbFileName);
-    soilDepth = findSoilMaxDepth();
+    computationSoilDepth = findSoilMaxDepth();
 
     // VINE3D parameters
     if (!loadVine3DProjectParameters() || !loadTrainingSystems() || !loadFieldsProperties() || !loadFieldBook())
     {
         logError();
         dbVine3D.close();
-        return(false);
+        return false;
     }
 
     if (!loadFieldShape())
@@ -177,7 +178,7 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     if (! initializeWaterBalance3D())
     {
         logError();
-        return(false);
+        return false;
     }
     outputWaterBalanceMaps = new Crit3DWaterBalanceMaps(DEM);
 
@@ -215,7 +216,7 @@ bool Vine3DProject::loadGrapevineParameters()
 
     if (! myQuery.exec())
     {
-        errorString = "Error reading grapevine parameters. " + myQuery.lastError().text();
+        errorString = "Error reading grapevine parameters:\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -666,7 +667,7 @@ float Vine3DProject::findSoilMaxDepth()
     {
         maxSoilDepth = MAXVALUE(maxSoilDepth, soilList[i].totalDepth);
     }
-    return MINVALUE(soilDepth, maxSoilDepth);
+    return MINVALUE(computationSoilDepth, maxSoilDepth);
 }
 
 int Vine3DProject::getAggregatedVarCode(int rawVarCode)
@@ -1159,7 +1160,6 @@ bool Vine3DProject::loadObsDataFilled(QDateTime firstTime, QDateTime lastTime)
 {
     QDate d1 = firstTime.date().addDays(-30);
     QDate d2 = lastTime.date().addDays(30);
-    //if (d2 > today) d2 = today;
 
     if (! this->loadObsDataAllPoints(d1, d2, false)) return(false);
 
@@ -1243,7 +1243,7 @@ bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool save
             {
                 //create output directories
                 myOutputPathDaily = getProjectPath() + dailyOutputPath + myDate.toString("yyyy/MM/dd/");
-                myOutputPathHourly = getProjectPath() + "hourly_output/" + myDate.toString("yyyy/MM/dd/");
+                myOutputPathHourly = getProjectPath() + hourlyOutputPath + myDate.toString("yyyy/MM/dd/");
 
                 if ((! myDir.mkpath(myOutputPathDaily)) || (! myDir.mkpath(myOutputPathHourly)))
                 {
@@ -1420,8 +1420,8 @@ bool Vine3DProject::saveStateAndOutput(QDate myDate)
     saveWaterBalanceOutput(this, myDate, waterMatricPotential, "matricPotential_m", "70cm", outputPath, 0.7, 0.7);
     saveWaterBalanceOutput(this, myDate, waterMatricPotential, "matricPotential_m", "130cm", outputPath, 1.3, 1.3);
 
-    if (!saveWaterBalanceOutput(this, myDate, degreeOfSaturation, "degreeOfSaturation", "soilDepth", outputPath, 0.0, double(soilDepth) - 0.01)) return false;
-    if (!saveWaterBalanceOutput(this, myDate, availableWaterContent, "waterContent_mm", "rootZone", outputPath, 0.0, double(soilDepth))) return false;
+    if (!saveWaterBalanceOutput(this, myDate, degreeOfSaturation, "degreeOfSaturation", "soilDepth", outputPath, 0.0, double(computationSoilDepth) - 0.01)) return false;
+    if (!saveWaterBalanceOutput(this, myDate, availableWaterContent, "waterContent_mm", "rootZone", outputPath, 0.0, double(computationSoilDepth))) return false;
     if (!saveWaterBalanceCumulatedOutput(this, myDate, waterInflow, "waterInflow_l", "", outputPath)) return false;
     if (!saveWaterBalanceCumulatedOutput(this, myDate, bottomDrainage, "bottomDrainage_mm", "", outputPath)) return false;
 

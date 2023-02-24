@@ -317,7 +317,7 @@ void MainWindow::drawMeteoPoints()
     addMeteoPoints();
     ui->groupBoxMeteoPoints->setEnabled(true);
 
-    myProject.loadMeteoPointsData (myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+    myProject.loadMeteoPointsData (myProject.getCurrentDate().addDays(-1), myProject.getCurrentDate(), true, true, true);
 
     showPointsGroup->setEnabled(true);
     currentPointsVisualization = showLocation;
@@ -332,20 +332,30 @@ void MainWindow::on_mnuFileOpenProject_triggered()
     QString myFileName = QFileDialog::getOpenFileName(this,tr("Open Project"), "", tr("Project files (*.ini)"));
     if (myFileName == "") return;
 
-    if (myProject.loadVine3DProject(myFileName))
-       drawMeteoPoints();
+    myProject.loadVine3DProject(myFileName);
 
     if (myProject.DEM.isLoaded)
         renderDEM();
+
+    if (myProject.meteoPointsLoaded)
+    {
+        if (myProject.getCurrentHour() == 24)
+            myProject.setCurrentHour(23);
+        drawMeteoPoints();
+    }
 }
 
 
 void MainWindow::on_actionRun_models_triggered()
 {
-    if (! myProject.isProjectLoaded) return;
+    if (! myProject.isProjectLoaded)
+    {
+        myProject.logError("Load a project before.");
+        return;
+    }
 
-    QDateTime timeIni(QDateTime::currentDateTime());
-    QDateTime timeFin(QDateTime::currentDateTime());
+    QDateTime timeIni = myProject.getCurrentTime();
+    QDateTime timeFin = timeIni.addSecs(3600);
 
     FormTimePeriod formTimePeriod(&timeIni, &timeFin);
     formTimePeriod.show();
@@ -399,6 +409,11 @@ void MainWindow::on_actionVariableQualitySpatial_triggered()
 void MainWindow::interpolateDemGUI()
 {
     meteoVariable myVar = myProject.getCurrentVariable();
+    if (myVar == noMeteoVar)
+    {
+        myProject.logError("Select a variable before.");
+        return;
+    }
 
     if (myProject.interpolationDemMain(myVar, myProject.getCrit3DCurrentTime(), &(myProject.dataRaster)))
     {
@@ -491,6 +506,7 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     myProject.meteoPoints[i].currentValue = NODATA;
                     meteoPointList[i]->setFillColor(QColor(Qt::white));
                     meteoPointList[i]->setRadius(5);
+                    meteoPointList[i]->setCurrentValue(NODATA);
                     meteoPointList[i]->setToolTip();
                     meteoPointList[i]->setVisible(true);
             }
@@ -540,6 +556,8 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                         meteoPointList[i]->setOpacity(0.5);
                     }
 
+                    meteoPointList[i]->setCurrentValue(myProject.meteoPoints[i].currentValue);
+                    meteoPointList[i]->setQuality(myProject.meteoPoints[i].quality);
                     meteoPointList[i]->setToolTip();
                     meteoPointList[i]->setVisible(true);
                 }
@@ -556,7 +574,7 @@ void MainWindow::addMeteoPoints()
     myProject.clearSelectedPoints();
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
-        StationMarker* point = new StationMarker(5.0, true, QColor((Qt::white)), this->mapView);
+        StationMarker* point = new StationMarker(5.0, true, QColor(Qt::white));
 
         point->setFlag(MapGraphicsObject::ObjectIsMovable, false);
         point->setLatitude(myProject.meteoPoints[i].latitude);
@@ -641,7 +659,7 @@ void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 {
     if (date != myProject.getCurrentDate())
     {
-        myProject.loadMeteoPointsData(date, date, true, true, true);
+        myProject.loadMeteoPointsData(date.addDays(-1), date, true, true, true);
         //myProject.loadMeteoGridData(date, date, true);
         myProject.setCurrentDate(date);
     }
@@ -651,11 +669,13 @@ void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 
 void MainWindow::on_actionInterpolation_to_DEM_triggered()
 {
-    myProject.logInfoGUI("Interpolation...");
+    if (! myProject.DEM.isLoaded)
+    {
+        myProject.logError("Load a project before.");
+        return;
+    }
 
     interpolateDemGUI();
-
-    myProject.closeLogInfo();
 }
 
 void MainWindow::on_actionInterpolationSettings_triggered()
@@ -688,7 +708,7 @@ void MainWindow::on_actionShow_DEM_triggered()
     }
     else
     {
-        myProject.logInfoGUI("Load a Digital Elevation Model.");
+        myProject.logError("Load a Digital Elevation Model before.");
         return;
     }
 }
@@ -703,7 +723,7 @@ void MainWindow::on_actionShow_boundary_triggered()
         }
         else
         {
-            myProject.logError("Initialize model");
+            myProject.logError("Initialize model before.");
             return;
         }
 }

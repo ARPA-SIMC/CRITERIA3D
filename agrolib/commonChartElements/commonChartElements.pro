@@ -11,6 +11,7 @@ QT  += gui widgets charts
 TEMPLATE = lib
 CONFIG += staticlib
 CONFIG += debug_and_release
+CONFIG += c++14 c++17
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 

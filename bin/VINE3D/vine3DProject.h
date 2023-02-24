@@ -58,6 +58,7 @@
         Crit3DTime currentTime;
 
         QString dailyOutputPath;
+        QString hourlyOutputPath;
         QString fieldMapName;
 
         bool computeDiseases;

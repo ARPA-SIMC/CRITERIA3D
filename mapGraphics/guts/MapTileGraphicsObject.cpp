@@ -40,6 +40,9 @@ void MapTileGraphicsObject::paint(QPainter *painter, const QStyleOptionGraphicsI
     Q_UNUSED(option)
     Q_UNUSED(widget)
 
+    // added for QT6
+    painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
+
     //If we've got a tile, draw it. Otherwise, show a loading or "No tile source" message
     if (_tile != nullptr)
         painter->drawPixmap(this->boundingRect().toRect(),

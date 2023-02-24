@@ -53,10 +53,16 @@ bool loadVanGenuchtenParameters(QSqlDatabase* dbSoil, soil::Crit3DTextureClass* 
     query.first();
     do
     {
-        id = query.value(0).toInt();
+        bool isOk;
+        id = query.value(0).toInt(&isOk);
+        if (! isOk)
+        {
+            *error = "Table van_genuchten: \nWrong ID: " + query.value(0).toString();
+            return false;
+        }
 
         //check data
-        for (j = 0; j <= 8; j++)
+        for (j = 2; j <= 8; j++)
             if (! getValue(query.value(j), &myValue))
             {
                 *error = "Table van_genuchten: missing data in soil texture:" + QString::number(id);
@@ -290,7 +296,7 @@ bool loadSoil(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySoil,
     *error = "";
     for (unsigned int i = 0; i < mySoil->nrHorizons; i++)
     {
-        if (! soil::setHorizon(&(mySoil->horizon[i]), textureClassList, fittingOptions, &errorString))
+        if (! soil::setHorizon(&(mySoil->horizon[i]), textureClassList, fittingOptions, errorString))
         {
             *error += "horizon nr." + QString::number(mySoil->horizon[i].dbData.horizonNr) + ": "
                     + QString::fromStdString(errorString) + "\n";
@@ -542,10 +548,10 @@ QString getIdSoilString(QSqlDatabase* dbSoil, int idSoilNumber, QString *myError
 }
 
 
-bool getSoilList(QSqlDatabase* dbSoil, QStringList* soilList, QString* error)
+bool getSoilList(QSqlDatabase* dbSoil, QList<QString>* soilList, QString* error)
 {
     // query soil list
-    QString queryString = "SELECT soil_code FROM soils";
+    QString queryString = "SELECT DISTINCT soil_code FROM soils ORDER BY soil_code";
     QSqlQuery query = dbSoil->exec(queryString);
 
     query.first();

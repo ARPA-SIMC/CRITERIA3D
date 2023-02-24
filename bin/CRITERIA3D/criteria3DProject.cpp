@@ -62,6 +62,144 @@ Crit3DProject::Crit3DProject() : Project3D()
 }
 
 
+bool Crit3DProject::initializeCriteria3DModel()
+{
+    // check data
+    if (! this->DEM.isLoaded)
+    {
+        logError("Missing Digital Elevation Model.");
+        return false;
+    }
+    else if (! this->soilMap.isLoaded)
+    {
+        logError("Missing soil map.");
+        return false;
+    }
+    else if (this->soilList.size() == 0)
+    {
+        logError("Missing soil properties.");
+        return false;
+    }
+
+    clearWaterBalance3D();
+
+    if (!setSoilIndexMap()) return false;
+
+    // TODO set soilUseMap()
+
+    /* TODO initialize root density
+    // andrebbe rifatto per ogni tipo di suolo (ora considera solo suolo 0)
+    int nrSoilLayersWithoutRoots = 2;
+    int soilLayerWithRoot = this->nrSoilLayers - nrSoilLayersWithoutRoots;
+    double depthModeRootDensity = 0.35*this->soilDepth;     //[m] depth of mode of root density
+    double depthMeanRootDensity = 0.5*this->soilDepth;      //[m] depth of mean of root density
+    initializeRootProperties(&(this->soilList[0]), this->nrSoilLayers, this->computationSoilDepth,
+                         this->layerDepth.data(), this->layerThickness.data(),
+                         nrSoilLayersWithoutRoots, soilLayerWithRoot,
+                         GAMMA_DISTRIBUTION, depthModeRootDensity, depthMeanRootDensity);
+    */
+
+    if (! initializeWaterBalance3D())
+    {
+        clearWaterBalance3D();
+        logError("Criteria3D model not initialized.");
+        return false;
+    }
+
+    isCriteria3DInitialized = true;
+    logInfoGUI("Criteria3D model initialized");
+
+    return true;
+}
+
+
+bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
+{
+    // initialize meteo
+    if (computeMeteo)
+    {
+        hourlyMeteoMaps->initialize();
+
+        // load td maps if needed
+        if (interpolationSettings.getUseTD())
+        {
+            logInfoGUI("Loading topographic distance maps...");
+            if (! loadTopographicDistanceMaps(true, false))
+                return false;
+        }
+    }
+
+    // initialize radiation
+    if (computeRadiation)
+    {
+        radiationMaps->initialize();
+    }
+
+    QDate firstDate = firstTime.date();
+    QDate lastDate = lastTime.date();
+    int hour1 = firstTime.time().hour();
+    int hour2 = lastTime.time().hour();
+
+    // cycle on days
+    QString currentOutputPath;
+    for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1))
+    {
+        setCurrentDate(myDate);
+
+        if (isSaveOutputRaster())
+        {
+            // create directory for hourly raster output
+            currentOutputPath = getProjectPath() + PATH_OUTPUT + myDate.toString("yyyy/MM/dd/");
+            if (! QDir().mkpath(currentOutputPath))
+            {
+                logError("Creation of directory for hourly raster output failed:" + currentOutputPath);
+                setSaveOutputRaster(false);
+            }
+        }
+
+        // cycle on hours
+        int firstHour = (myDate == firstDate) ? hour1 : 0;
+        int lastHour = (myDate == lastDate) ? hour2 : 23;
+
+        for (currentHour = firstHour; currentHour <= lastHour; currentHour++)
+        {
+            QDateTime myTime = QDateTime(myDate, QTime(currentHour, 0, 0), Qt::UTC);
+
+            if (! modelHourlyCycle(myTime, currentOutputPath))
+            {
+                logError();
+                return false;
+            }
+
+             emit updateOutputSignal();
+
+            // output points
+            if (isSaveOutputPoints())
+            {
+                if (! writeOutputPointsData())
+                {
+                    logError();
+                    return false;
+                }
+            }
+
+            if (modelPause || modelStop)
+            {
+                return true;
+            }
+        }
+
+        if (isSaveDailyState())
+        {
+            saveModelState();
+        }
+    }
+
+    closeLogInfo();
+    return true;
+}
+
+
 void Crit3DProject::setSaveDailyState(bool isSave)
 {
     _saveDailyState = isSave;
@@ -127,6 +265,12 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
     {
         if (errorType != ERROR_DBGRID)
             return false;
+    }
+
+    // only for 3d model
+    if (meteoPointsLoaded)
+    {
+        meteoPointsDbFirstTime = findDbPointFirstTime();
     }
 
     if (! loadCriteria3DParameters())
@@ -464,57 +608,6 @@ bool Crit3DProject::computeAllMeteoMaps(const QDateTime& myTime, bool showInfo)
 }
 
 
-bool Crit3DProject::initializeCriteria3DModel()
-{
-    // check data
-    if (! this->DEM.isLoaded)
-    {
-        logError("Missing Digital Elevation Model.");
-        return false;
-    }
-    else if (! this->soilMap.isLoaded)
-    {
-        logError("Missing soil map.");
-        return false;
-    }
-    else if (this->soilList.size() == 0)
-    {
-        logError("Missing soil properties.");
-        return false;
-    }
-
-    clearWaterBalance3D();
-
-    if (!setSoilIndexMap()) return false;
-
-    // TODO set soilUseMap()
-
-    /* TODO initialize root density
-    // andrebbe rifatto per ogni tipo di suolo (ora considera solo suolo 0)
-    int nrSoilLayersWithoutRoots = 2;
-    int soilLayerWithRoot = this->nrSoilLayers - nrSoilLayersWithoutRoots;
-    double depthModeRootDensity = 0.35*this->soilDepth;     //[m] depth of mode of root density
-    double depthMeanRootDensity = 0.5*this->soilDepth;      //[m] depth of mean of root density
-    initializeRootProperties(&(this->soilList[0]), this->nrSoilLayers, this->soilDepth,
-                         this->layerDepth.data(), this->layerThickness.data(),
-                         nrSoilLayersWithoutRoots, soilLayerWithRoot,
-                         GAMMA_DISTRIBUTION, depthModeRootDensity, depthMeanRootDensity);
-    */
-
-    if (! initializeWaterBalance3D())
-    {
-        clearWaterBalance3D();
-        logError("Criteria3D model not initialized.");
-        return false;
-    }
-
-    isCriteria3DInitialized = true;
-    logInfoGUI("Criteria3D model initialized");
-
-    return true;
-}
-
-
 void Crit3DProject::setAllHourlyMeteoMapsComputed(bool value)
 {
     if (radiationMaps != nullptr)
@@ -758,8 +851,11 @@ bool Crit3DProject::saveModelState()
         QDir().mkdir(statePath + "/" + dateFolder);
     }
 
+    // create snow path
     QString snowPath = statePath + "/" + dateFolder + "/snow";
     QDir().mkdir(snowPath);
+    QString imgPath = snowPath + "/img";
+    QDir().mkdir(imgPath);
 
     logInfo("Saving snow state: " + dateFolder);
     std::string error;
@@ -768,6 +864,13 @@ bool Crit3DProject::saveModelState()
         logError("Error saving water equivalent map: " + QString::fromStdString(error));
         return false;
     }
+    // ENVI file
+    if (!gis::writeENVIGrid((imgPath+"/SWE").toStdString(), gisSettings.utmZone, snowMaps.getSnowWaterEquivalentMap(), error))
+    {
+        logError("Error saving water equivalent map (ENVI file): " + QString::fromStdString(error));
+        return false;
+    }
+
     if (!gis::writeEsriGrid((snowPath+"/AgeOfSnow").toStdString(), snowMaps.getAgeOfSnowMap(), &error))
     {
         logError("Error saving age of snow map: " + QString::fromStdString(error));

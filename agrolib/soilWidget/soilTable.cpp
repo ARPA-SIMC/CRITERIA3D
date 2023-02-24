@@ -15,7 +15,7 @@ Crit3DSoilTable::Crit3DSoilTable(tableType type) : type(type)
     this->setMouseTracking(true);
     this->viewport()->setMouseTracking(true);
 
-    QStringList tableHeader;
+    QList<QString> tableHeader;
     if (type == dbTable)
     {
         this->setColumnCount(10);
@@ -91,7 +91,7 @@ void Crit3DSoilTable::copyAll()
     int nRow = this->rowCount();
     int nCol = this->columnCount();
     QString text;
-    QStringList headerContents;
+    QList<QString> headerContents;
     // copy header
     for(int j=0; j<nCol; j++)
     {
@@ -103,7 +103,7 @@ void Crit3DSoilTable::copyAll()
     // copy row
     for(int i=0; i<nRow; i++)
     {
-        QStringList rowContents;
+        QList<QString> rowContents;
         for(int j=0; j<nCol; j++)
         {
             rowContents << model()->index(i,j).data().toString();
@@ -121,7 +121,7 @@ void Crit3DSoilTable::exportToCsv(QString csvFile)
     int nRow = this->rowCount();
     int nCol = this->columnCount();
     QString conTents;
-    QStringList strList;
+    QList<QString> strList;
     // copy header
     QHeaderView * header = this->horizontalHeader() ;
     if (header)

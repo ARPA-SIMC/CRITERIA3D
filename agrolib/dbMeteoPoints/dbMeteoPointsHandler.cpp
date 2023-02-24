@@ -546,7 +546,6 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(Crit3DDate dateStart, Crit3DDate 
 
 bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint)
 {
-    QString dateStr;
     meteoVariable variable;
     int idVar;
     float value;
@@ -593,7 +592,7 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
                 meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), variable, value);
 
                 // copy scalar intensity to vector intensity (instantaneous values are equivalent, following WMO)
-                // should be removed when when we hourly averages are available
+                // should be removed when hourly averages are available
                 if (variable == windScalarIntensity)
                     meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), windVectorIntensity, value);
             }
@@ -1386,7 +1385,8 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
         qry.prepare(queryStr);
         if (! qry.exec())
         {
-            *log += "\nError in execute query: " + qry.lastError().text();
+            *log += "\nError in execute query: " + qry.lastError().text() +"\n";
+            *log += "Maybe there are missing or wrong data values.";
             return false;
         }
     }
@@ -1954,6 +1954,16 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
 {
 
     QSqlQuery qry(_db);
+
+    QString queryStr;
+    queryStr = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                                "(id_point TEXT, joint_station TEXT, PRIMARY KEY(id_point, joint_station))").arg("joint_stations");
+    qry.prepare(queryStr);
+    if( !qry.exec() )
+    {
+        error += idPoint + " " + qry.lastError().text();
+        return false;
+    }
 
     qry.prepare( "DELETE FROM joint_stations WHERE id_point = :id_point" );
     qry.bindValue(":id_point", idPoint);

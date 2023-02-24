@@ -512,7 +512,7 @@ double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, unsig
     unsigned int nrLayers = unsigned(soilLayers.size());
 
     unsigned int i=0;
-    while (i < nrLayers && i <= lastRootLayer && residualIrrigation > 0)
+    while ((i < nrLayers) && (i <= lastRootLayer) && (residualIrrigation > 0))
     {
         if (soilLayers[i].waterContent < soilLayers[i].FC)
         {

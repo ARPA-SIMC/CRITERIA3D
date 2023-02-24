@@ -19,7 +19,7 @@
 
         public:
             Crit3DHomogeneityWidget(Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, QList<Crit3DMeteoPoint> meteoPointsNearDistanceList, QList<std::string> sortedId,
-            std::vector<float> distanceId, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings,
+            std::vector<float> distanceId, QList<QString> jointStationsMyMp, QDate firstDaily, QDate lastDaily, Crit3DMeteoSettings *meteoSettings, QSettings *settings,
                                     Crit3DClimateParameters *climateParameters, Crit3DQuality* quality);
             ~Crit3DHomogeneityWidget();
             void closeEvent(QCloseEvent *event);
@@ -36,7 +36,6 @@
             void deleteJointStationClicked();
             void saveToDbClicked();
             void updateYears();
-            void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint *meteoPointSet, QDate myDate);
             void findReferenceStations();
             void addFoundStationClicked();
             void deleteFoundStationClicked();
@@ -76,6 +75,7 @@
             QLineEdit minNumStations;
             QListWidget listFoundStations;
             QListWidget listSelectedStations;
+            QList<QString> listAllFound;
             QPushButton addStationFoundButton;
             QPushButton deleteStationFoundButton;
             QTableWidget stationsTable;
@@ -84,7 +84,7 @@
 
             QString myError;
             double averageValue;
-            float SNHT_T95_VALUES [10] {5.7,6.95,7.65,8.1,8.45,8.65,8.8,8.95,9.05,9.15};
+            float SNHT_T95_VALUES [10] {5.7f,6.95f,7.65f,8.1f,8.45f,8.65f,8.8f,8.95f,9.05f,9.15f};
     };
 
 

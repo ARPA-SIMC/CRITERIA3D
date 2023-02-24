@@ -331,8 +331,8 @@ bool getRootZoneAWCmap(Vine3DProject* myProject, gis::Crit3DRasterGrid* outputMa
 bool getCriteria3DIntegrationMap(Vine3DProject* myProject, criteria3DVariable myVar,
                        double upperDepth, double lowerDepth, gis::Crit3DRasterGrid* criteria3DMap)
 {
-    if (upperDepth > myProject->soilDepth) return false;
-    lowerDepth = MINVALUE(lowerDepth, myProject->soilDepth);
+    if (upperDepth > myProject->computationSoilDepth) return false;
+    lowerDepth = MINVALUE(lowerDepth, myProject->computationSoilDepth);
 
     if (upperDepth == lowerDepth)
     {

@@ -60,17 +60,40 @@ bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QSt
 
     createTmpAggrTable();
 
-    if (!insertTmpAggr(startDate, endDate, variable, aggregatedValues, nZones))
-    {
-        return false;
-    }
+    // test
+    int idVariable = getIdfromMeteoVar(variable);
+    long nrDays = long(startDate.daysTo(endDate)) + 1;
+    QString valueString, dateString, varString;
+    QString queryString;
+    QSqlQuery qry(_db);
 
-    if (!saveTmpAggrData(aggrType, periodType, nZones))
+    // LC NB le zone partono da 1
+    for (unsigned int zone = 1; zone <= unsigned(nZones); zone++)
     {
-        return false;
-    }
+        queryString = QString("REPLACE INTO `%1_%2_%3` VALUES").arg(QString::number(zone), aggrType, periodType);
 
-    deleteTmpAggrTable();
+        for (unsigned int day = 0; day < unsigned(nrDays); day++)
+        {
+
+            if (! isEqual(aggregatedValues[day][zone-1], NODATA))
+                valueString = QString::number(double(aggregatedValues[day][zone-1]), 'f', 1);
+            else
+                valueString = "NULL";
+
+            dateString = startDate.addDays(day).toString("yyyy-MM-dd");
+            varString = QString::number(idVariable);
+
+            queryString += "('" + dateString + "'," + varString + "," + valueString + "),";
+        }
+        queryString = queryString.left(queryString.length() - 1);
+
+        if (! qry.exec(queryString))
+        {
+            _error = qry.lastError().text();
+            return false;
+        }
+
+    }
 
     return true;
 }
@@ -269,68 +292,6 @@ void Crit3DAggregationsDbHandler::deleteTmpAggrTable()
     qry.exec();
 }
 
-
-bool Crit3DAggregationsDbHandler::insertTmpAggr(QDate startDate, QDate endDate, meteoVariable variable, std::vector< std::vector<float> > aggregatedValues, int nZones)
-{
-    int idVariable = getIdfromMeteoVar(variable);
-    long nrDays = long(startDate.daysTo(endDate)) + 1;
-    bool isFirst = true;
-    QString queryStr = "INSERT INTO 'TmpAggregationData' (date_time, zone, id_variable, value) VALUES ";
-
-    for (unsigned int day = 0; day < unsigned(nrDays); day++)
-    {
-        // LC NB le zone partono da 1
-        for (unsigned int zone = 1; zone <= unsigned(nZones); zone++)
-        {
-            if (! isEqual(aggregatedValues[day][zone-1], NODATA))
-            {
-                QString valueStr = QString::number(double(aggregatedValues[day][zone-1]), 'f', 1);
-                if (valueStr != "nan")
-                {
-                    QString dateStr = startDate.addDays(day).toString("yyyy-MM-dd");
-                    QString zoneStr = QString::number(zone);
-                    QString varStr = QString::number(idVariable);
-                    if (!isFirst)
-                        queryStr += ",";
-                    queryStr += "('" + dateStr + "'," + zoneStr + "," + varStr + "," + valueStr + ")";
-                    isFirst = false;
-                }
-            }
-        }
-    }
-
-    QSqlQuery qry(_db);
-    if( !qry.exec(queryStr))
-    {
-        _error = qry.lastError().text();
-        return false;
-    }
-
-    return true;
-}
-
-
-bool Crit3DAggregationsDbHandler::saveTmpAggrData(QString aggrType, QString periodType, int nZones)
-{
-
-    QString statement;
-
-    for (int zone = 1; zone <= nZones; zone++)
-    {
-        statement = QString("REPLACE INTO `%1_%2_%3` ").arg(zone).arg(aggrType).arg(periodType);
-        statement += QString("SELECT date_time, id_variable, value FROM TmpAggregationData ");
-        statement += QString("WHERE zone = %1").arg(zone);
-
-        _db.exec(statement);
-        if (_db.lastError().type() != QSqlError::NoError)
-        {
-            _error = _db.lastError().text();
-            return false;
-        }
-
-    }
-    return true;
-}
 
 std::vector<float> Crit3DAggregationsDbHandler::getAggrData(QString aggrType, QString periodType, int zone, QDate startDate, QDate endDate, meteoVariable variable)
 {

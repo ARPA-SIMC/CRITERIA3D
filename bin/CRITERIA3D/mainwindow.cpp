@@ -131,6 +131,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->flagCompute_only_points->setChecked(myProject.getComputeOnlyPoints());
 
     this->setMouseTracking(true);
+
+    connect(&myProject, &Crit3DProject::updateOutputSignal, this, &MainWindow::updateOutputMap);
 }
 
 
@@ -138,7 +140,7 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 {
     Q_UNUSED(event)
 
-    const int INFOHEIGHT = 40;
+    const int INFOHEIGHT = 42;
     int x1 = this->width() - TOOLSWIDTH - MAPBORDER;
     int dy = ui->groupBoxModel->height() + ui->groupBoxMeteoPoints->height() + ui->groupBoxDEM->height() + ui->groupBoxVariableMap->height() + MAPBORDER*4;
     int y1 = (this->height() - INFOHEIGHT - dy) / 2;
@@ -164,6 +166,8 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 }
 
 
+// ------------------- SLOT -----------------------
+
 void MainWindow::updateMaps()
 {
     rasterDEM->updateCenter();
@@ -178,13 +182,15 @@ void MainWindow::updateMaps()
 void MainWindow::updateOutputMap()
 {
     updateDateTime();
+    if (myProject.isCriteria3DInitialized)
+    {
+        myProject.setCriteria3DMap(waterContent, 0);
+    }
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
-    qApp->processEvents();
 }
 
 
-// ------------------- SLOT -----------------------
 void MainWindow::mouseMove(QPoint eventPos)
 {
     if (! isInsideMap(eventPos)) return;
@@ -417,13 +423,31 @@ void MainWindow::addOutputPointsGUI()
 }
 
 
+void MainWindow::drawWindVector(int i)
+{
+    float dx = myProject.meteoPoints[i].getMeteoPointValue(myProject.getCrit3DCurrentTime(),
+                                                           windVectorX,  myProject.meteoSettings);
+    float dy = myProject.meteoPoints[i].getMeteoPointValue(myProject.getCrit3DCurrentTime(),
+                                                           windVectorY,  myProject.meteoSettings);
+    if (isEqual(dx, NODATA) || isEqual(dy, NODATA))
+        return;
+
+    ArrowObject* arrow = new ArrowObject(qreal(dx * 10), qreal(dy * 10), QColor(Qt::black));
+    arrow->setLatitude(myProject.meteoPoints[i].latitude);
+    arrow->setLongitude(myProject.meteoPoints[i].longitude);
+    windVectorList.append(arrow);
+
+    mapView->scene()->addObject(windVectorList.last());
+}
+
+
 void MainWindow::addMeteoPoints()
 {
     myProject.clearSelectedPoints();
 
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
     {
-        StationMarker* point = new StationMarker(5.0, true, QColor((Qt::white)), this->mapView);
+        StationMarker* point = new StationMarker(5.0, true, QColor(Qt::white));
 
         point->setFlag(MapGraphicsObject::ObjectIsMovable, false);
         point->setLatitude(myProject.meteoPoints[i].latitude);
@@ -433,7 +457,7 @@ void MainWindow::addMeteoPoints()
         point->setDataset(myProject.meteoPoints[i].dataset);
         point->setAltitude(myProject.meteoPoints[i].point.z);
         point->setMunicipality(myProject.meteoPoints[i].municipality);
-        point->setCurrentValue(myProject.meteoPoints[i].currentValue);
+        point->setCurrentValue(qreal(myProject.meteoPoints[i].currentValue));
         point->setQuality(myProject.meteoPoints[i].quality);
 
         this->meteoPointList.append(point);
@@ -443,6 +467,7 @@ void MainWindow::addMeteoPoints()
         connect(point, SIGNAL(newStationClicked(std::string, std::string, bool)), this, SLOT(callNewMeteoWidget(std::string, std::string, bool)));
         connect(point, SIGNAL(appendStationClicked(std::string, std::string, bool)), this, SLOT(callAppendMeteoWidget(std::string, std::string, bool)));
     }
+
 }
 
 
@@ -479,6 +504,7 @@ void MainWindow::callAppendMeteoWidget(std::string id, std::string name, bool is
 void MainWindow::drawMeteoPoints()
 {
     resetMeteoPointMarkers();
+    clearWindVectorObjects();
 
     if (! myProject.meteoPointsLoaded || myProject.nrMeteoPoints == 0)
     {
@@ -489,7 +515,7 @@ void MainWindow::drawMeteoPoints()
     addMeteoPoints();
     ui->groupBoxMeteoPoints->setEnabled(true);
 
-    myProject.loadMeteoPointsData (myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
 
     showPointsGroup->setEnabled(true);
 
@@ -577,6 +603,7 @@ void MainWindow::clearMeteoPoints_GUI()
 {
     resetMeteoPointMarkers();
     resetOutputPointMarkers();
+    clearWindVectorObjects();
     meteoPointsLegend->setVisible(false);
     showPointsGroup->setEnabled(false);
 }
@@ -606,15 +633,6 @@ void MainWindow::renderDEM()
     mapView->centerOn(qreal(center->longitude), qreal(center->latitude));
 
     this->updateMaps();
-
-    /*
-    if (viewer3D != nullptr)
-    {
-        initializeViewer3D();
-        //this->viewer3D->close();
-        //this->viewer3D = nullptr;
-    }
-    */
 }
 
 
@@ -626,11 +644,18 @@ void MainWindow::updateDateTime()
     this->ui->timeEdit->setValue(myProject.getCurrentHour());
 }
 
+
+void MainWindow::loadMeteoPointsDataSingleDay(const QDate &date, bool showInfo)
+{
+    myProject.loadMeteoPointsData(date.addDays(-1), date, true, true, showInfo);
+}
+
+
 void MainWindow::on_dateEdit_dateChanged(const QDate &date)
 {
     if (date != myProject.getCurrentDate())
     {
-        myProject.loadMeteoPointsData(date, date, true, true, true);
+        loadMeteoPointsDataSingleDay(date, true);
         //myProject.loadMeteoGridData(date, date, true);
         myProject.setAllHourlyMeteoMapsComputed(false);
         myProject.setCurrentDate(date);
@@ -729,6 +754,7 @@ bool MainWindow::isInsideMap(const QPoint& pos)
     else return false;
 }
 
+
 void MainWindow::resetMeteoPointMarkers()
 {
     for (int i = 0; i < meteoPointList.size(); i++)
@@ -750,6 +776,18 @@ void MainWindow::resetOutputPointMarkers()
     }
 
     outputPointList.clear();
+}
+
+
+void MainWindow::clearWindVectorObjects()
+{
+    for (int i = 0; i < windVectorList.size(); i++)
+    {
+        mapView->scene()->removeObject(windVectorList[i]);
+        delete windVectorList[i];
+    }
+
+    windVectorList.clear();
 }
 
 
@@ -818,6 +856,8 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
     for (int i = 0; i < myProject.nrMeteoPoints; i++)
         meteoPointList[i]->setVisible(false);
 
+    clearWindVectorObjects();
+
     meteoPointsLegend->setVisible(true);
 
     switch(currentPointsVisualization)
@@ -842,17 +882,17 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                 // color
                 if (myProject.meteoPoints[i].selected)
                 {
-                    meteoPointList[i]->setFillColor(QColor(Qt::yellow));
+                    meteoPointList[i]->setFillColor(Qt::yellow);
                 }
                 else
                 {
                     if (myProject.meteoPoints[i].active)
                     {
-                        meteoPointList[i]->setFillColor(QColor(Qt::white));
+                        meteoPointList[i]->setFillColor(Qt::white);
                     }
                     else if (! myProject.meteoPoints[i].active)
                     {
-                        meteoPointList[i]->setFillColor(QColor(Qt::red));
+                        meteoPointList[i]->setFillColor(Qt::red);
                     }
                 }
 
@@ -867,9 +907,11 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
         }
         case showCurrentVariable:
         {
+            meteoVariable currentVar = myProject.getCurrentVariable();
+
             this->ui->actionView_PointsCurrentVariable->setChecked(true);
             // quality control
-            checkData(myProject.quality, myProject.getCurrentVariable(),
+            checkData(myProject.quality, currentVar,
                       myProject.meteoPoints, myProject.nrMeteoPoints, myProject.getCrit3DCurrentTime(),
                       &(myProject.qualityInterpolationSettings), myProject.meteoSettings,
                       &(myProject.climateParameters), myProject.checkSpatialQuality);
@@ -883,9 +925,9 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
             }
 
             roundColorScale(myProject.meteoPointsColorScale, 4, true);
-            setColorScale(myProject.getCurrentVariable(), myProject.meteoPointsColorScale);
+            setColorScale(currentVar, myProject.meteoPointsColorScale);
+            bool isWindVector = (currentVar == windVectorIntensity || currentVar == windVectorDirection);
 
-            Crit3DColor *myColor;
             for (int i = 0; i < myProject.nrMeteoPoints; i++)
             {
                 if (int(myProject.meteoPoints[i].currentValue) != NODATA)
@@ -893,19 +935,21 @@ void MainWindow::redrawMeteoPoints(visualizationType myType, bool updateColorSCa
                     if (myProject.meteoPoints[i].quality == quality::accepted)
                     {
                         meteoPointList[i]->setRadius(5);
-                        myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
+                        Crit3DColor *myColor = myProject.meteoPointsColorScale->getColor(myProject.meteoPoints[i].currentValue);
                         meteoPointList[i]->setFillColor(QColor(myColor->red, myColor->green, myColor->blue));
                         meteoPointList[i]->setOpacity(1.0);
+                        if (isWindVector)
+                            drawWindVector(i);
                     }
                     else
                     {
                         // Wrong data
                         meteoPointList[i]->setRadius(10);
-                        meteoPointList[i]->setFillColor(QColor(Qt::black));
+                        meteoPointList[i]->setFillColor(Qt::black);
                         meteoPointList[i]->setOpacity(0.5);
                     }
 
-                    meteoPointList[i]->setCurrentValue(myProject.meteoPoints[i].currentValue);
+                    meteoPointList[i]->setCurrentValue(qreal(myProject.meteoPoints[i].currentValue));
                     meteoPointList[i]->setQuality(myProject.meteoPoints[i].quality);
                     meteoPointList[i]->setToolTip();
 
@@ -976,9 +1020,11 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
 
     rasterOutput->initializeUTM(myRaster, myProject.gisSettings, false);
     outputRasterColorLegend->colorScale = myRaster->colorScale;
-    outputRasterColorLegend->repaint();
+
     emit rasterOutput->redrawRequested();
-    updateMaps();
+    outputRasterColorLegend->update();
+
+    rasterOutput->updateCenter();
 }
 
 void MainWindow::on_actionProjectSettings_triggered()
@@ -998,8 +1044,6 @@ void MainWindow::on_actionProjectSettings_triggered()
         }
     }
 }
-
-
 
 
 // ---------------- SHOW METEOPOINTS --------------------------------
@@ -1121,6 +1165,16 @@ void MainWindow::setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *m
     setColorScale(myVar, myGrid->colorScale);
     setCurrentRasterOutput(myGrid);
     ui->labelOutputRaster->setText(QString::fromStdString(getVariableString(myVar)));
+}
+
+void MainWindow::setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myGrid)
+{
+    if (myVar == waterContent && layerIndex == 0)
+    {
+        setSurfaceWaterScale(myGrid->colorScale);
+        ui->labelOutputRaster->setText("Surface water content [mm]");
+    }
+    setCurrentRasterOutput(myGrid);
 }
 
 void MainWindow::showMeteoVariable(meteoVariable var)
@@ -1633,7 +1687,7 @@ void MainWindow::on_actionProxy_analysis_triggered()
     return myProject.showProxyGraph();
 }
 
-void MainWindow::on_actionCompute_hour_meteoVariables_triggered()
+void MainWindow::on_actionComputeHour_meteoVariables_triggered()
 {
     if (myProject.nrMeteoPoints == 0)
     {
@@ -1652,6 +1706,7 @@ void MainWindow::on_actionCompute_hour_meteoVariables_triggered()
     showMeteoVariable(myProject.getCurrentVariable());
 }
 
+
 void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
 {
     QDateTime firstTime, lastTime;
@@ -1668,7 +1723,8 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
 }
 
 
-// ------------------------ MODEL CYCLE ----------------------------
+// ------------------------ MODEL CYCLE ---------------------------
+
 bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 {
     if (! myProject.meteoPointsLoaded)
@@ -1677,8 +1733,11 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
         return false;
     }
 
-    firstTime = myProject.getCurrentTime();
-    firstTime = firstTime.addSecs(3600);
+    firstTime.setTimeSpec(Qt::UTC);
+    firstTime.setDate(myProject.getCurrentDate());
+    firstTime = firstTime.addSecs((myProject.getCurrentHour() +1) * HOUR_SECONDS);
+
+    lastTime.setTimeSpec(Qt::UTC);
     lastTime = firstTime;
     lastTime.setTime(QTime(23,0,0));
 
@@ -1698,6 +1757,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 
     return true;
 }
+
 
 bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 {
@@ -1754,96 +1814,9 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
 
-    return runModels(firstTime, lastTime);
+    return myProject.runModels(firstTime, lastTime);
 }
 
-
-bool MainWindow::runModels(QDateTime firstTime, QDateTime lastTime)
-{
-    // initialize meteo
-    if (myProject.computeMeteo)
-    {
-        myProject.hourlyMeteoMaps->initialize();
-
-        // load td maps if needed
-        if (myProject.interpolationSettings.getUseTD())
-        {
-            myProject.logInfoGUI("Loading topographic distance maps...");
-            if (! myProject.loadTopographicDistanceMaps(true, false))
-                return false;
-        }
-    }
-
-    // initialize radiation
-    if (myProject.computeRadiation)
-    {
-        myProject.radiationMaps->initialize();
-    }
-
-    QDate firstDate = firstTime.date();
-    QDate lastDate = lastTime.date();
-    int hour1 = firstTime.time().hour();
-    int hour2 = lastTime.time().hour();
-
-    // cycle on days
-    QString currentOutputPath;
-    for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1))
-    {
-        myProject.setCurrentDate(myDate);
-
-        if (myProject.isSaveOutputRaster())
-        {
-            // create directory for hourly raster output
-            currentOutputPath = myProject.getProjectPath() + PATH_OUTPUT + myDate.toString("yyyy/MM/dd/");
-            if (! QDir().mkpath(currentOutputPath))
-            {
-                myProject.logError("Creation of directory for hourly raster output failed:" + currentOutputPath);
-                myProject.setSaveOutputRaster(false);
-            }
-        }
-
-        // cycle on hours
-        int firstHour = (myDate == firstDate) ? hour1 : 0;
-        int lastHour = (myDate == lastDate) ? hour2 : 23;
-
-        for (int hour = firstHour; hour <= lastHour; hour++)
-        {
-            myProject.setCurrentHour(hour);
-            QDateTime myTime = QDateTime(myDate, QTime(hour, 0, 0), Qt::UTC);
-
-            if (! myProject.modelHourlyCycle(myTime, currentOutputPath))
-            {
-                myProject.logError();
-                return false;
-            }
-
-            // output points
-            if (myProject.isSaveOutputPoints())
-            {
-                if (! myProject.writeOutputPointsData())
-                {
-                    myProject.logError();
-                    return false;
-                }
-            }
-
-            this->updateOutputMap();
-
-            if (myProject.modelPause || myProject.modelStop)
-            {
-                return true;
-            }
-        }
-
-        if (myProject.isSaveDailyState())
-        {
-            myProject.saveModelState();
-        }
-    }
-
-    myProject.closeLogInfo();
-    return true;
-}
 
 void MainWindow::on_buttonModelPause_clicked()
 {
@@ -1852,11 +1825,13 @@ void MainWindow::on_buttonModelPause_clicked()
     ui->buttonModelStart->setEnabled(true);
 }
 
+
 void MainWindow::on_buttonModelStop_clicked()
 {
     myProject.modelStop = true;
     ui->groupBoxModel->setDisabled(true);
 }
+
 
 void MainWindow::on_buttonModelStart_clicked()
 {
@@ -1867,12 +1842,13 @@ void MainWindow::on_buttonModelStart_clicked()
         ui->buttonModelStart->setDisabled(true);
         QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
         newFirstTime = newFirstTime.addSecs(3600);
-        runModels(newFirstTime, myProject.modelLastTime);
+        myProject.runModels(newFirstTime, myProject.modelLastTime);
     }
 }
 
 
-//------------------- MENU SOLAR RADIATION MODEL -----------------
+//------------------- MENU SOLAR RADIATION MODEL ----------------
+
 void MainWindow::on_actionRadiation_settings_triggered()
 {
     DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
@@ -2008,7 +1984,8 @@ void MainWindow::on_actionSnow_settings_triggered()
 }
 
 
-//----------------- MENU WATER FLUXES  -----------------
+//--------------------- MENU WATER FLUXES  -----------------------
+
 void MainWindow::on_actionCriteria3D_settings_triggered()
 {
     // TODO
@@ -2062,6 +2039,32 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 }
 
 
+void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex)
+{
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logError("Initialize water fluxes before.");
+        return;
+    }
+
+    switch(var)
+    {
+    case waterContent:
+        myProject.setCriteria3DMap(waterContent, layerIndex);
+        setCriteria3DVariable(waterContent, layerIndex, &(myProject.criteria3DMap));
+        break;
+
+    default: {}
+    }
+}
+
+
+void MainWindow::on_actionView_SurfaceWaterContent_triggered()
+{
+    showCriteria3DVariable(waterContent, 0);
+}
+
+
 //------------------- STATES ----------------------
 
 void MainWindow::on_flagSave_state_daily_step_toggled(bool isChecked)
@@ -2100,7 +2103,7 @@ void MainWindow::on_actionLoad_external_state_triggered()
     if (myProject.loadModelState(stateDirectory))
     {
         updateDateTime();
-        myProject.loadMeteoPointsData(myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+        loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
         redrawMeteoPoints(currentPointsVisualization, true);
     }
     else
@@ -2133,7 +2136,7 @@ void MainWindow::on_actionLoad_state_triggered()
     if (myProject.loadModelState(statePath))
     {
         updateDateTime();
-        myProject.loadMeteoPointsData(myProject.getCurrentDate(), myProject.getCurrentDate(), true, true, true);
+        loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
         redrawMeteoPoints(currentPointsVisualization, true);
 
         //myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString()
@@ -2416,8 +2419,8 @@ void MainWindow::on_actionPoints_delete_data_selected_triggered()
         myProject.logError("Failed to delete data.");
     }
 
-    QDate currentDate = myProject.getCurrentDate();
-    myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
+    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 
@@ -2449,8 +2452,8 @@ void MainWindow::on_actionPoints_delete_data_not_active_triggered()
         myProject.logError("Failed to delete data.");
     }
 
-    QDate currentDate = myProject.getCurrentDate();
-    myProject.loadMeteoPointsData(currentDate, currentDate, true, true, true);
+    loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
+    redrawMeteoPoints(currentPointsVisualization, true);
 }
 
 void MainWindow::on_flagHide_outputPoints_toggled(bool isChecked)
@@ -2565,9 +2568,9 @@ void MainWindow::on_actionOutputPoints_delete_selected_triggered()
 
     if (reply == QMessageBox::Yes)
     {
-        for (unsigned int i = 0; i < myProject.outputPoints.size(); i++)
+        for (int i = 0; i < int(myProject.outputPoints.size()); i++)
         {
-            if (myProject.outputPoints[i].selected)
+            if (myProject.outputPoints[unsigned(i)].selected)
             {
                 myProject.outputPoints.erase(myProject.outputPoints.begin()+i);
                 mapView->scene()->removeObject(outputPointList[i]);
@@ -2691,7 +2694,6 @@ void MainWindow::on_actionLoad_OutputPoints_triggered()
 }
 
 
-
 void MainWindow::on_actionOutputPoints_add_triggered()
 {
     if (myProject.outputPointsFileName.isEmpty())
@@ -2764,7 +2766,7 @@ void MainWindow::on_viewer3DClosed()
 
 void MainWindow::on_slopeChanged()
 {
-    myProject.geometry->setArtifactSlope(viewer3D->getSlope());
+    myProject.geometry->setArtifactSlope(int(viewer3D->getSlope()));
     myProject.update3DColors();
     viewer3D->glWidget->update();
 }
