@@ -191,7 +191,7 @@ bool loadSoilData(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySo
         }
         else
         {
-            *error = "Soil is empty: " + soilCode;
+            *error = "Soil " + soilCode + " is missing, check soil_code in dbSoil.";
         }
         return false;
     }
@@ -545,6 +545,27 @@ QString getIdSoilString(QSqlDatabase* dbSoil, int idSoilNumber, QString *myError
     getValue(query.value("soil_code"), &idSoilStr);
 
     return idSoilStr;
+}
+
+
+int getIdSoilNumeric(QSqlDatabase *dbSoil, QString soilCode, QString *myError)
+{
+    *myError = "";
+    QString queryString = "SELECT * FROM soils WHERE soil_code=" + soilCode;
+
+    QSqlQuery query = dbSoil->exec(queryString);
+    query.last();
+
+    if (! query.isValid())
+    {
+        *myError = query.lastError().text();
+        return NODATA;
+    }
+
+    int idSoilNumeric;
+    getValue(query.value("id_soil"), &idSoilNumeric);
+
+    return idSoilNumeric;
 }
 
 

@@ -27,6 +27,7 @@
     bool loadDriessenParameters(QSqlDatabase* dbSoil, soil::Crit3DTextureClass* textureClassList, QString *error);
 
     QString getIdSoilString(QSqlDatabase* dbSoil, int idSoilNumber, QString *myError);
+    int getIdSoilNumeric(QSqlDatabase *dbSoil, QString soilCode, QString *myError);
 
     bool openDbSoil(QString dbName, QSqlDatabase* dbSoil, QString* error);
 

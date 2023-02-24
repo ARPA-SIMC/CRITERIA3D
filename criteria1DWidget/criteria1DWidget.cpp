@@ -1059,7 +1059,10 @@ void Criteria1DWidget::on_actionChooseCase()
     }
 
     // SOIL
-    myProject.myCase.unit.idSoil = getIdSoilString(&(myProject.dbSoil), myProject.myCase.unit.idSoilNumber, &errorStr);
+    if (myProject.myCase.unit.idSoilNumber != NODATA)
+    {
+        myProject.myCase.unit.idSoil = getIdSoilString(&(myProject.dbSoil), myProject.myCase.unit.idSoilNumber, &errorStr);
+    }
     if (myProject.myCase.unit.idSoil != "")
     {
         soilListComboBox.setCurrentText(myProject.myCase.unit.idSoil);
