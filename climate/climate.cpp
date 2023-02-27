@@ -719,6 +719,7 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
     float cumulatedValue = 0;
     std::vector<float> cumulatedValues;
     std::vector< std::vector<float> > cumulatedAllDaysAllYears;
+    std::vector<int> valuesYears;
 
     Crit3DDate presentDate;
 
@@ -727,6 +728,7 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
     float param2 = clima->param2();
     for (int year = clima->yearStart(); year <= clima->yearEnd(); year++)
     {
+        valuesYears.push_back(year);
         if (isLeapYear(year))
         {
             nLeapYears = nLeapYears + 1;
@@ -787,6 +789,19 @@ bool dailyCumulatedClimate(QString *myError, std::vector<float> &inputValues, Cr
         }
         switch(elab2)
         {
+            case yearMax: case yearMin:
+            {
+                int index = statisticalElab(elab2, clima->yearStart(), cumulatedValuesPerDay, cumulatedValuesPerDay.size(), meteoSettings->getRainfallThreshold());
+                if (index != NODATA && index < valuesYears.size())
+                {
+                    result = valuesYears[index];
+                }
+                else
+                {
+                    result = NODATA;
+                }
+                break;
+            }
             case trend:
                 result = statisticalElab(elab2, clima->yearStart(), cumulatedValuesPerDay, cumulatedValuesPerDay.size(), meteoSettings->getRainfallThreshold());
                 break;
