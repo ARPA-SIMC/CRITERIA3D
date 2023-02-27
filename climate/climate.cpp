@@ -24,32 +24,8 @@ bool elaborationOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPoint
 
     std::vector<float> outputValues;
 
-    meteoComputation elab1MeteoComp;
-    meteoComputation elab2MeteoComp;
-    try
-    {
-        elab1MeteoComp = MapMeteoComputation.at(clima->elab1().toStdString());
-    }
-    catch (const std::out_of_range& )
-    {
-        elab1MeteoComp = noMeteoComp;
-    }
-
-    if (clima->elab2() == "")
-    {
-        elab2MeteoComp = noMeteoComp;
-    }
-    else
-    {
-        try
-        {
-            elab2MeteoComp = MapMeteoComputation.at(clima->elab2().toStdString());
-        }
-        catch (const std::out_of_range& )
-        {
-            elab2MeteoComp = noMeteoComp;
-        }
-    }
+    meteoComputation elab1MeteoComp = getMeteoCompFromString(MapMeteoComputation, clima->elab1().toStdString());
+    meteoComputation elab2MeteoComp = getMeteoCompFromString(MapMeteoComputation, clima->elab2().toStdString());
 
     if (clima->param1IsClimate())
     {
@@ -266,32 +242,8 @@ bool climateOnPoint(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
         clima->setDb(meteoPointsDbHandler->getDb());
     }
 
-
-    meteoComputation elab1MeteoComp;
-    meteoComputation elab2MeteoComp;
-    try
-    {
-        elab1MeteoComp = MapMeteoComputation.at(clima->elab1().toStdString());
-    }
-    catch (const std::out_of_range& )
-    {
-        elab1MeteoComp = noMeteoComp;
-    }
-    if (clima->elab2() == "")
-    {
-        elab2MeteoComp = noMeteoComp;
-    }
-    else
-    {
-        try
-        {
-            elab2MeteoComp = MapMeteoComputation.at(clima->elab2().toStdString());
-        }
-        catch (const std::out_of_range& )
-        {
-            elab2MeteoComp = noMeteoComp;
-        }
-    }
+    meteoComputation elab1MeteoComp = getMeteoCompFromString(MapMeteoComputation, clima->elab1().toStdString());
+    meteoComputation elab2MeteoComp = getMeteoCompFromString(MapMeteoComputation, clima->elab2().toStdString());
 
     // check id points
     if (changeDataSet == false)
@@ -5135,15 +5087,8 @@ int computeAnnualSeriesOnPointFromDaily(QString *myError, Crit3DMeteoPointsDbHan
                                         std::vector<float> &outputValues, bool dataAlreadyLoaded)
 {
     int validYears = 0;
-    meteoComputation elabMeteoComp;
-    try
-    {
-        elabMeteoComp = MapMeteoComputation.at(clima->elab1().toStdString());
-    }
-    catch (const std::out_of_range& )
-    {
-        elabMeteoComp = noMeteoComp;
-    }
+    meteoComputation elabMeteoComp = getMeteoCompFromString(MapMeteoComputation, clima->elab1().toStdString());
+
     if (clima->param1IsClimate())
     {
         clima->param1();
@@ -5538,3 +5483,22 @@ void setMpValues(Crit3DMeteoPoint meteoPointGet, Crit3DMeteoPoint* meteoPointSet
 
 }
 
+meteoComputation getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value)
+{
+
+    std::map<std::string, meteoComputation>::const_iterator it;
+    meteoComputation meteoValue = noMeteoComp;
+    QString valueLower = QString::fromStdString(value).toLower();
+    QString mapStringToLower;
+
+    for (it = map.begin(); it != map.end(); ++it)
+    {
+        mapStringToLower = QString::fromStdString(it->first).toLower();
+        if (mapStringToLower == valueLower)
+        {
+            meteoValue = it->second;
+            break;
+        }
+    }
+    return meteoValue;
+}
