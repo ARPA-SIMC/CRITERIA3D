@@ -109,7 +109,16 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
         }
 
         default:
-            return NODATA;
+        {
+            if (elab == noMeteoComp && nValues == 1)
+            {
+                return values[0];
+            }
+            else
+            {
+                return NODATA;
+            }
+        }
     }
 }
 
