@@ -861,7 +861,7 @@ int pragaShell(PragaProject* myProject)
     int cmdDroughtIndexPoint(PragaProject* myProject, QList<QString> argumentList)
     {
 
-        if (argumentList.size() < 7)
+        if (argumentList.size() < 5)
         {
             myProject->logError("Missing parameters for computing drought index point");
             return PRAGA_INVALID_COMMAND;
@@ -869,24 +869,26 @@ int pragaShell(PragaProject* myProject)
 
         bool ok = false;
         int timescale;
-        int ry1, ry2, y1, y2;
+        int ry1, ry2;
+        droughtIndex index;
 
         for (int i = 1; i < argumentList.size(); i++)
         {
             if (argumentList.at(i).left(3) == "-i:")
             {
-                QString index = argumentList[i].right(argumentList[i].length()-3).toUpper();
-                if (index == "SPI" || index == "INDEX_SPI")
+                QString indexStr = argumentList[i].right(argumentList[i].length()-3).toUpper();
+
+                if (indexStr == "SPI" || indexStr == "INDEX_SPI")
                 {
-                    index = "INDEX_SPI";
+                    index = INDEX_SPI;
                 }
-                else if (index == "SPEI" || index == "INDEX_SPEI")
+                else if (indexStr == "SPEI" || indexStr == "INDEX_SPEI")
                 {
-                    index = "INDEX_SPEI";
+                    index = INDEX_SPEI;
                 }
-                else if (index == "DECILES" || index == "INDEX_DECILES")
+                else if (indexStr == "DECILES" || indexStr == "INDEX_DECILES")
                 {
-                    index = "INDEX_DECILES";
+                    index = INDEX_DECILES;
                 }
                 else
                 {
@@ -921,29 +923,11 @@ int pragaShell(PragaProject* myProject)
                     return PRAGA_INVALID_COMMAND;
                 }
             }
-            if (argumentList.at(i).left(4) == "-y1:")
-            {
-                y1 = argumentList[i].right(argumentList[i].length()-4).toInt(&ok);
-                if (!ok)
-                {
-                    myProject->logError("Wrong start year: -y1:<integer number>");
-                    return PRAGA_INVALID_COMMAND;
-                }
-            }
-            else if (argumentList.at(i).left(4) == "-y2:")
-            {
-                y2 = argumentList[i].right(argumentList[i].length()-4).toInt(&ok);
-                if (!ok)
-                {
-                    myProject->logError("Wrong end year: -y2:<integer number>");
-                    return PRAGA_INVALID_COMMAND;
-                }
-            }
-
         }
-        // TO DO
-        //if (! myProject->())
-            //return PRAGA_ERROR;
+        if (! myProject->computeDroughtIndexPoint(index, timescale, ry1, ry2))
+        {
+            return PRAGA_ERROR;
+        }
 
         return PRAGA_OK;
     }

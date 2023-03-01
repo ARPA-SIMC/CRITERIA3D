@@ -3032,6 +3032,76 @@ bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int
     return res;
 }
 
+bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, int refYearStart, int refYearEnd)
+{
+
+    // check meteo point
+    if (! meteoPointsLoaded)
+    {
+        logError("No meteo point");
+        return false;
+    }
+
+    // check ref years
+    if (refYearStart > refYearEnd)
+    {
+        logError("Wrong reference years");
+        return false;
+    }
+
+    bool res = false;
+/*
+    QDate firstDate(firstYear,1,1);
+    QDate lastDate;
+    int maxYear = std::max(lastYear,date.year());
+    if (maxYear == QDate::currentDate().year())
+    {
+        lastDate.setDate(maxYear, QDate::currentDate().month(),1);
+    }
+    else
+    {
+        lastDate.setDate(maxYear,12,1);
+    }
+
+    for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
+    {
+        for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
+        {
+            if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->active)
+            {
+                meteoGridDbHandler->loadGridMonthlyData(&errorString, QString::fromStdString(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id), firstDate, lastDate);
+                Drought mydrought(index, firstYear, lastYear, getCrit3DDate(date), meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col), meteoSettings);
+                if (timescale > 0)
+                {
+                    mydrought.setTimeScale(timescale);
+                }
+                meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration = NODATA;
+                if (index == INDEX_DECILES)
+                {
+                    if (myVar != noMeteoVar)
+                    {
+                        mydrought.setMyVar(myVar);
+                    }
+                    if (mydrought.computePercentileValuesCurrentDay())
+                    {
+                        meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration = mydrought.getCurrentPercentileValue();
+                    }
+                }
+                else if (index == INDEX_SPI || index == INDEX_SPEI)
+                {
+                    meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration = mydrought.computeDroughtIndex();
+                }
+                if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration != NODATA)
+                {
+                    res = true;
+                }
+            }
+        }
+    }
+    */
+    return res;
+}
+
 bool PragaProject::activeMeteoGridCellsWithDEM()
 {
 
