@@ -3049,57 +3049,85 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
         return false;
     }
 
-    bool res = false;
-/*
-    QDate firstDate(firstYear,1,1);
-    QDate lastDate;
-    int maxYear = std::max(lastYear,date.year());
-    if (maxYear == QDate::currentDate().year())
+    QDate firstDate = meteoPointsDbHandler->getFirstDate(daily).date();
+    QDate lastDate = meteoPointsDbHandler->getLastDate(daily).date();
+    QDate myDate = firstDate;
+    bool loadHourly = false;
+    bool loadDaily = true;
+    bool showInfo = true;
+    float value = NODATA;
+    QString indexStr;
+    QList<QString> listEntries;
+
+    if (index == INDEX_SPI)
     {
-        lastDate.setDate(maxYear, QDate::currentDate().month(),1);
+        indexStr = "SPI";
+    }
+    else if (index == INDEX_SPEI)
+    {
+        indexStr = "SPEI";
+    }
+    else if (index == INDEX_DECILES)
+    {
+        indexStr = "DECILES";
     }
     else
     {
-        lastDate.setDate(maxYear,12,1);
+        logError("Unknown index");
+        return false;
     }
 
-    for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
+    if (!loadMeteoPointsData(firstDate, lastDate, loadHourly, loadDaily, showInfo))
     {
-        for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
+        logError("There are no data");
+        return false;
+    }
+
+    int step = 0;
+    for (int i=0; i < nrMeteoPoints; i++)
+    {
+        if (showInfo)
         {
-            if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->active)
+            if ((i % step) == 0) updateProgressBar(i);
+        }
+
+        Drought mydrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
+        if (timescale > 0)
+        {
+            mydrought.setTimeScale(timescale);
+        }
+        while(myDate <= lastDate)
+        {
+            if (index == INDEX_DECILES)
             {
-                meteoGridDbHandler->loadGridMonthlyData(&errorString, QString::fromStdString(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id), firstDate, lastDate);
-                Drought mydrought(index, firstYear, lastYear, getCrit3DDate(date), meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col), meteoSettings);
-                if (timescale > 0)
+                if (mydrought.computePercentileValuesCurrentDay())
                 {
-                    mydrought.setTimeScale(timescale);
-                }
-                meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration = NODATA;
-                if (index == INDEX_DECILES)
-                {
-                    if (myVar != noMeteoVar)
-                    {
-                        mydrought.setMyVar(myVar);
-                    }
-                    if (mydrought.computePercentileValuesCurrentDay())
-                    {
-                        meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration = mydrought.getCurrentPercentileValue();
-                    }
-                }
-                else if (index == INDEX_SPI || index == INDEX_SPEI)
-                {
-                    meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration = mydrought.computeDroughtIndex();
-                }
-                if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->elaboration != NODATA)
-                {
-                    res = true;
+                    value = mydrought.getCurrentPercentileValue();
                 }
             }
+            else if (index == INDEX_SPI || index == INDEX_SPEI)
+            {
+                value = mydrought.computeDroughtIndex();
+            }
+            listEntries.push_back(QString("(%1,%2,%3,%4,%5,%6,%7,%8)").arg(QString::number(myDate.year())).arg(QString::number(myDate.month()))
+                                  .arg(QString::fromStdString(meteoPoints[i].id)).arg(QString::number(refYearStart)).arg(QString::number(refYearEnd)).arg(indexStr)
+                                  .arg(QString::number(timescale)).arg(QString::number(value)));
+            myDate = myDate.addMonths(1);
+            mydrought.setDate(getCrit3DDate(myDate));
         }
+
     }
-    */
-    return res;
+    if (listEntries.empty())
+    {
+        logError("Failed to compute droughtIndex ");
+        return false;
+    }
+    if (!meteoPointsDbHandler->writeDroughtDataList(listEntries, &errorString))
+    {
+        logError("Failed to write droughtIndex "+errorString);
+        return false;
+    }
+    return true;
 }
 
 bool PragaProject::activeMeteoGridCellsWithDEM()
