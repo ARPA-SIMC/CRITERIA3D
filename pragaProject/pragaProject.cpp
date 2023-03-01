@@ -3084,11 +3084,16 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
     }
 
     int step = 0;
+    if (showInfo)
+    {
+        QString infoStr = "Compute drought - Meteo Points";
+        step = setProgressBar(infoStr, nrMeteoPoints);
+    }
     for (int i=0; i < nrMeteoPoints; i++)
     {
-        if (showInfo)
+        if (showInfo && (i % step) == 0)
         {
-            if ((i % step) == 0) updateProgressBar(i);
+            updateProgressBar(i);
         }
 
         Drought mydrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
@@ -3109,7 +3114,7 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
             {
                 value = mydrought.computeDroughtIndex();
             }
-            listEntries.push_back(QString("(%1,%2,%3,%4,%5,%6,%7,%8)").arg(QString::number(myDate.year())).arg(QString::number(myDate.month()))
+            listEntries.push_back(QString("(%1,%2,'%3',%4,%5,'%6',%7,%8)").arg(QString::number(myDate.year())).arg(QString::number(myDate.month()))
                                   .arg(QString::fromStdString(meteoPoints[i].id)).arg(QString::number(refYearStart)).arg(QString::number(refYearEnd)).arg(indexStr)
                                   .arg(QString::number(timescale)).arg(QString::number(value)));
             myDate = myDate.addMonths(1);
@@ -3126,6 +3131,10 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
     {
         logError("Failed to write droughtIndex "+errorString);
         return false;
+    }
+    if (showInfo)
+    {
+        logInfo("droughtIndex saved");
     }
     return true;
 }

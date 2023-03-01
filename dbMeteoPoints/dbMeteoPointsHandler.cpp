@@ -1484,8 +1484,6 @@ bool Crit3DMeteoPointsDbHandler::writeDroughtDataList(QList<QString> listEntries
     }
 
     QString queryStr = QString(("INSERT OR REPLACE INTO `drought` (year, month, id_point, yearRefStart, yearRefEnd, drought_index, timescale, value) VALUES "));
-
-
     queryStr = queryStr + listEntries.join(",");
 
     // exec query
