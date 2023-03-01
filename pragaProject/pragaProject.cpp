@@ -3089,6 +3089,12 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
         QString infoStr = "Compute drought - Meteo Points";
         step = setProgressBar(infoStr, nrMeteoPoints);
     }
+
+    std::vector<meteoVariable> dailyMeteoVar;
+    dailyMeteoVar.push_back(dailyPrecipitation);
+    dailyMeteoVar.push_back(dailyReferenceEvapotranspirationHS);
+    int nrMonths = (lastDate.year()-firstDate.year())*12+lastDate.month()-(firstDate.month()-1);
+
     for (int i=0; i < nrMeteoPoints; i++)
     {
         if (showInfo && (i % step) == 0)
@@ -3096,6 +3102,12 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
             updateProgressBar(i);
         }
 
+        // compute monthly data
+        meteoPoints[i].initializeObsDataM(nrMonths, firstDate.month(), firstDate.year());
+        for(int i = 0; i < dailyMeteoVar.size(); i++)
+        {
+            meteoPoints[i].computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[i], meteoSettings, quality, &climateParameters);
+        }
         Drought mydrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
         if (timescale > 0)
         {
