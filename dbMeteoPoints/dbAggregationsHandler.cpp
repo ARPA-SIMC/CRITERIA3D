@@ -95,6 +95,7 @@ bool Crit3DAggregationsDbHandler::saveAggrData(int nZones, QString aggrType, QSt
 
     }
 
+    deleteTmpAggrTable();
     return true;
 }
 
