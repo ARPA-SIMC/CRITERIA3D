@@ -3108,13 +3108,13 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
         {
             meteoPoints[i].computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[i], meteoSettings, quality, &climateParameters);
         }
-        Drought mydrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
-        if (timescale > 0)
-        {
-            mydrought.setTimeScale(timescale);
-        }
         while(myDate <= lastDate)
         {
+            Drought mydrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
+            if (timescale > 0)
+            {
+                mydrought.setTimeScale(timescale);
+            }
             if (index == INDEX_DECILES)
             {
                 if (mydrought.computePercentileValuesCurrentDay())
@@ -3130,9 +3130,7 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
                                   .arg(QString::fromStdString(meteoPoints[i].id)).arg(QString::number(refYearStart)).arg(QString::number(refYearEnd)).arg(indexStr)
                                   .arg(QString::number(timescale)).arg(QString::number(value)));
             myDate = myDate.addMonths(1);
-            mydrought.setDate(getCrit3DDate(myDate));
         }
-
     }
     if (listEntries.empty())
     {
