@@ -3110,9 +3110,9 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
 
         // compute monthly data
         meteoPoints[i].initializeObsDataM(nrMonths, firstDate.month(), firstDate.year());
-        for(int i = 0; i < dailyMeteoVar.size(); i++)
+        for(int j = 0; j < dailyMeteoVar.size(); j++)
         {
-            meteoPoints[i].computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[i], meteoSettings, quality, &climateParameters);
+            meteoPoints[i].computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[j], meteoSettings, quality, &climateParameters);
         }
         while(myDate <= lastDate)
         {
