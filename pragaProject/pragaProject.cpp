@@ -3032,6 +3032,129 @@ bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int
     return res;
 }
 
+bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, int refYearStart, int refYearEnd)
+{
+
+    if (!aggregationDbHandler)
+    {
+        logError("No db aggregation");
+        return false;
+    }
+
+    // check meteo point
+    if (! meteoPointsLoaded)
+    {
+        logError("No meteo point");
+        return false;
+    }
+
+    // check ref years
+    if (refYearStart > refYearEnd)
+    {
+        logError("Wrong reference years");
+        return false;
+    }
+
+    QDate firstDate = meteoPointsDbHandler->getFirstDate(daily).date();
+    QDate lastDate = meteoPointsDbHandler->getLastDate(daily).date();
+    QDate myDate = firstDate;
+    bool loadHourly = false;
+    bool loadDaily = true;
+    bool showInfo = true;
+    float value = NODATA;
+    QString indexStr;
+    QList<QString> listEntries;
+
+    if (index == INDEX_SPI)
+    {
+        indexStr = "SPI";
+    }
+    else if (index == INDEX_SPEI)
+    {
+        indexStr = "SPEI";
+    }
+    else if (index == INDEX_DECILES)
+    {
+        indexStr = "DECILES";
+    }
+    else
+    {
+        logError("Unknown index");
+        return false;
+    }
+
+    if (!loadMeteoPointsData(firstDate, lastDate, loadHourly, loadDaily, showInfo))
+    {
+        logError("There are no data");
+        return false;
+    }
+
+    int step = 0;
+    if (showInfo)
+    {
+        QString infoStr = "Compute drought - Meteo Points";
+        step = setProgressBar(infoStr, nrMeteoPoints);
+    }
+
+    std::vector<meteoVariable> dailyMeteoVar;
+    dailyMeteoVar.push_back(dailyPrecipitation);
+    dailyMeteoVar.push_back(dailyReferenceEvapotranspirationHS);
+    int nrMonths = (lastDate.year()-firstDate.year())*12+lastDate.month()-(firstDate.month()-1);
+
+    for (int i=0; i < nrMeteoPoints; i++)
+    {
+        if (showInfo && (i % step) == 0)
+        {
+            updateProgressBar(i);
+        }
+
+        // compute monthly data
+        meteoPoints[i].initializeObsDataM(nrMonths, firstDate.month(), firstDate.year());
+        for(int j = 0; j < dailyMeteoVar.size(); j++)
+        {
+            meteoPoints[i].computeMonthlyAggregate(getCrit3DDate(firstDate), getCrit3DDate(lastDate), dailyMeteoVar[j], meteoSettings, quality, &climateParameters);
+        }
+        while(myDate <= lastDate)
+        {
+            Drought mydrought(index, refYearStart, refYearEnd, getCrit3DDate(myDate), &(meteoPoints[i]), meteoSettings);
+            if (timescale > 0)
+            {
+                mydrought.setTimeScale(timescale);
+            }
+            if (index == INDEX_DECILES)
+            {
+                if (mydrought.computePercentileValuesCurrentDay())
+                {
+                    value = mydrought.getCurrentPercentileValue();
+                }
+            }
+            else if (index == INDEX_SPI || index == INDEX_SPEI)
+            {
+                value = mydrought.computeDroughtIndex();
+            }
+            listEntries.push_back(QString("(%1,%2,'%3',%4,%5,'%6',%7,%8)").arg(QString::number(myDate.year())).arg(QString::number(myDate.month()))
+                                  .arg(QString::fromStdString(meteoPoints[i].id)).arg(QString::number(refYearStart)).arg(QString::number(refYearEnd)).arg(indexStr)
+                                  .arg(QString::number(timescale)).arg(QString::number(value)));
+            myDate = myDate.addMonths(1);
+        }
+    }
+    if (listEntries.empty())
+    {
+        logError("Failed to compute droughtIndex ");
+        return false;
+    }
+    if (!aggregationDbHandler->writeDroughtDataList(listEntries, &errorString))
+    {
+        logError("Failed to write droughtIndex "+errorString);
+        return false;
+    }
+    if (showInfo)
+    {
+        logInfo("droughtIndex saved");
+    }
+    return true;
+}
+
 bool PragaProject::activeMeteoGridCellsWithDEM()
 {
 

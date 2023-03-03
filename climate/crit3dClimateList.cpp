@@ -431,20 +431,3 @@ bool Crit3DClimateList::parserGenericPeriodString(int index)
     return true;
 
 }
-
-meteoComputation Crit3DClimateList::getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value)
-{
-
-    std::map<std::string, meteoComputation>::const_iterator it;
-    meteoComputation meteoValue = noMeteoComp;
-
-    for (it = map.begin(); it != map.end(); ++it)
-    {
-        if (it->first == value)
-        {
-            meteoValue = it->second;
-            break;
-        }
-    }
-    return meteoValue;
-}

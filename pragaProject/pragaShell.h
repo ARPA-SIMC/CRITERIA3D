@@ -20,6 +20,7 @@
     int cmdGridAggregationOnZones(PragaProject* myProject, QList<QString> argumentList);
     int cmdMonthlyIntegrationVariablesGrid(PragaProject* myProject, QList<QString> argumentList);
     int cmdComputeClimaFromXMLSaveOnDB(PragaProject* myProject, QList<QString> argumentList);
+    int cmdDroughtIndexPoint(PragaProject* myProject, QList<QString> argumentList);
     //bool cmdLoadForecast(PragaProject* myProject, QList<QString> argumentList);
 
     #ifdef NETCDF

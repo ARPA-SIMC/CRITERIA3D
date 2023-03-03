@@ -105,8 +105,6 @@
         void parserElaboration();
         bool parserGenericPeriodString(int index);
 
-        meteoComputation getMeteoCompFromString(std::map<std::string, meteoComputation> map, std::string value);
-
         void insertDailyCumulated(bool dailyCumulated);
         std::vector<bool> listDailyCumulated() const;
 

@@ -17,12 +17,14 @@ QList<QString> getPragaCommandList()
     cmdList.append("Download        | Download");
     cmdList.append("Netcdf          | ExportNetcdf");
     cmdList.append("XMLToNetcdf     | ExportXMLElaborationsToNetcdf");
-    //cmdList.append("LoadForecast | LoadForecastData");
+    //cmdList.append("LoadForecast  | LoadForecastData");
     cmdList.append("GridAggr        | GridAggregation");
     cmdList.append("GridDerVar      | GridDerivedVariables");
     cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
     cmdList.append("AggrOnZones     | GridAggregationOnZones");
-    cmdList.append("ComputeClimate     | ComputeClimaFromXMLSaveOnDB");
+    cmdList.append("ComputeClimate  | ComputeClimaFromXMLSaveOnDB");
+    cmdList.append("Drought         | ComputeDroughtIndexGrid");
+    cmdList.append("DroughtPoint    | ComputeDroughtIndexPoint");
 
     return cmdList;
 }
@@ -116,6 +118,11 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
     {
         *isCommandFound = true;
         return cmdComputeClimaFromXMLSaveOnDB(this, argumentList);
+    }
+    else if (command == "DROUGHTINDEXPOINT" || command == "DROUGHTPOINT")
+    {
+        *isCommandFound = true;
+        return cmdDroughtIndexPoint(this, argumentList);
     }
     else
     {
@@ -844,6 +851,80 @@ int pragaShell(PragaProject* myProject)
 
         QString xmlName = myProject->getCompleteFileName(argumentList.at(1), PATH_PROJECT);
         if (!myProject->computeClimaFromXMLSaveOnDB(xmlName))
+        {
+            return PRAGA_ERROR;
+        }
+
+        return PRAGA_OK;
+    }
+
+    int cmdDroughtIndexPoint(PragaProject* myProject, QList<QString> argumentList)
+    {
+
+        if (argumentList.size() < 5)
+        {
+            myProject->logError("Missing parameters for computing drought index point");
+            return PRAGA_INVALID_COMMAND;
+        }
+
+        bool ok = false;
+        int timescale;
+        int ry1, ry2;
+        droughtIndex index;
+
+        for (int i = 1; i < argumentList.size(); i++)
+        {
+            if (argumentList.at(i).left(3) == "-i:")
+            {
+                QString indexStr = argumentList[i].right(argumentList[i].length()-3).toUpper();
+
+                if (indexStr == "SPI" || indexStr == "INDEX_SPI")
+                {
+                    index = INDEX_SPI;
+                }
+                else if (indexStr == "SPEI" || indexStr == "INDEX_SPEI")
+                {
+                    index = INDEX_SPEI;
+                }
+                else if (indexStr == "DECILES" || indexStr == "INDEX_DECILES")
+                {
+                    index = INDEX_DECILES;
+                }
+                else
+                {
+                    myProject->logError("Wrong index: -i:<SPI/SPEI/DECILES>");
+                    return PRAGA_INVALID_COMMAND;
+                }
+            }
+            if (argumentList.at(i).left(3) == "-t:")
+            {
+                timescale = argumentList[i].right(argumentList[i].length()-3).toInt(&ok);
+                if (!ok)
+                {
+                    myProject->logError("Wrong timescale: -t:<integer number>");
+                    return PRAGA_INVALID_COMMAND;
+                }
+            }
+            if (argumentList.at(i).left(5) == "-ry1:")
+            {
+                ry1 = argumentList[i].right(argumentList[i].length()-5).toInt(&ok);
+                if (!ok)
+                {
+                    myProject->logError("Wrong reference start year: -ry1:<integer number>");
+                    return PRAGA_INVALID_COMMAND;
+                }
+            }
+            else if (argumentList.at(i).left(5) == "-ry2:")
+            {
+                ry2 = argumentList[i].right(argumentList[i].length()-5).toInt(&ok);
+                if (!ok)
+                {
+                    myProject->logError("Wrong reference end year: -ry2:<integer number>");
+                    return PRAGA_INVALID_COMMAND;
+                }
+            }
+        }
+        if (! myProject->computeDroughtIndexPoint(index, timescale, ry1, ry2))
         {
             return PRAGA_ERROR;
         }
