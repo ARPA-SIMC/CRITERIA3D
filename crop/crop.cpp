@@ -545,7 +545,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
         // [mm]
         waterScarcityThreshold = soilLayers[i].FC - fRAW * (soilLayers[i].FC - cropWP);
 
-        if (soilLayers[i].waterContent > waterSurplusThreshold)
+        if ((soilLayers[i].waterContent - waterSurplusThreshold) > EPSILON)
         {
             // WATER SURPLUS
             layerTranspiration[i] = maxTranspiration * roots.rootDensity[i] *
