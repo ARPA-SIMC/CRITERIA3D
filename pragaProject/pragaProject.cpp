@@ -3035,6 +3035,12 @@ bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int
 bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, int refYearStart, int refYearEnd)
 {
 
+    if (!aggregationDbHandler)
+    {
+        logError("No db aggregation");
+        return false;
+    }
+
     // check meteo point
     if (! meteoPointsLoaded)
     {
@@ -3137,7 +3143,7 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
         logError("Failed to compute droughtIndex ");
         return false;
     }
-    if (!meteoPointsDbHandler->writeDroughtDataList(listEntries, &errorString))
+    if (!aggregationDbHandler->writeDroughtDataList(listEntries, &errorString))
     {
         logError("Failed to write droughtIndex "+errorString);
         return false;

@@ -83,7 +83,6 @@
         bool importHourlyMeteoData(QString fileNameComplete, bool deletePreviousData, QString *log);
         bool writeDailyDataList(QString pointCode, QList<QString> listEntries, QString* log);
         bool writeHourlyDataList(QString pointCode, QList<QString> listEntries, QString* log);
-        bool writeDroughtDataList(QList<QString> listEntries, QString* log);
 
         bool setAllPointsActive();
         bool setAllPointsNotActive();

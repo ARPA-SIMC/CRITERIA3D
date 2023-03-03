@@ -456,3 +456,33 @@ bool Crit3DAggregationsDbHandler::renameColumn(QString oldColumn, QString newCol
     return true;
 
 }
+
+bool Crit3DAggregationsDbHandler::writeDroughtDataList(QList<QString> listEntries, QString* log)
+{
+    // create table
+    QSqlQuery qry(_db);
+    qry.prepare("CREATE TABLE IF NOT EXISTS `drought` "
+                "(year INTEGER, month INTEGER, id_point TEXT, yearRefStart INTEGER, yearRefEnd INTEGER, drought_index TEXT, timescale INTEGER, value REAL, "
+                "PRIMARY KEY(year, month, id_point, yearRefStart, yearRefEnd, drought_index, timescale));");
+
+    if( !qry.exec() )
+    {
+        *log += "\nError in execute query: " + qry.lastError().text();
+        return false;
+    }
+
+    QString queryStr = QString(("INSERT OR REPLACE INTO `drought` (year, month, id_point, yearRefStart, yearRefEnd, drought_index, timescale, value) VALUES "));
+    queryStr = queryStr + listEntries.join(",");
+
+    // exec query
+    qry.prepare(queryStr);
+    if (! qry.exec())
+    {
+        *log += "\nError in execute query: " + qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
