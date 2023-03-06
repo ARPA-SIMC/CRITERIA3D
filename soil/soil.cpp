@@ -54,6 +54,7 @@ namespace soil
 
     Crit3DFittingOptions::Crit3DFittingOptions()
     {
+        // default
         this->waterRetentionCurve = MODIFIEDVANGENUCHTEN;
         this->useWaterRetentionData = true;
         this->airEntryFixed = true;
