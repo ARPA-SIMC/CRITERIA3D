@@ -51,6 +51,9 @@ void Crit3DCrop::clear()
     idCrop = "";
     type = HERBACEOUS_ANNUAL;
 
+    /*!
+     * \brief roots
+     */
     roots.clear();
 
     /*!
@@ -251,6 +254,14 @@ bool Crit3DCrop::isPluriannual() const
 }
 
 
+bool Crit3DCrop::isRootStatic() const
+{
+    return (type == HERBACEOUS_PERENNIAL ||
+            type == GRASS ||
+            type == FRUIT_TREE);
+}
+
+
 /*!
  * \brief getSurfaceWaterPonding
  * \return maximum height of water ponding [mm]
@@ -332,7 +343,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
 void Crit3DCrop::resetCrop(unsigned int nrLayers)
 {
     // roots
-    if (! isPluriannual())
+    if (! isRootStatic())
     {
         for (unsigned int i = 0; i < nrLayers; i++)
             roots.rootDensity[i] = 0;

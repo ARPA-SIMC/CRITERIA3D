@@ -76,7 +76,6 @@ void TabHydraulicConductivityCurve::setFillElement(bool value)
 
 void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
 {
-
     if (soil == nullptr) return;
 
     resetAll();

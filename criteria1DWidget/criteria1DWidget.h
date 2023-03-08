@@ -115,8 +115,8 @@
             QLineEdit* rootDepthMaxValue;
             QComboBox* rootShapeComboBox;
             QDoubleSpinBox* shapeDeformationValue;
-            QLabel *degreeDaysInc;
-            QLineEdit* degreeDaysIncValue;
+            QLabel *rootDegreeDaysInc;
+            QLineEdit* rootDegreeDaysIncValue;
             QLineEdit* irrigationVolumeValue;
             QSpinBox* irrigationShiftValue;
             QLineEdit* degreeDaysStartValue;

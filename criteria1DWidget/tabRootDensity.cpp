@@ -78,7 +78,7 @@ TabRootDensity::TabRootDensity()
 void TabRootDensity::computeRootDensity(const Crit1DProject &myProject, int firstYear, int lastYear)
 {
     mp =  myProject.myCase.meteoPoint;
-    crop = myProject.myCase.crop;
+    myCrop = myProject.myCase.crop;
     layers = myProject.myCase.soilLayers;
     nrLayers = unsigned(layers.size());
     lastMeteoDate = myProject.lastSimulationDate;
@@ -130,7 +130,7 @@ void TabRootDensity::computeRootDensity(const Crit1DProject &myProject, int firs
     axisY->append(categories);
 
     int currentDoy = 1;
-    crop.initialize(myProject.myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
+    myCrop.initialize(myProject.myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
 
     updateRootDensity();
 }
@@ -201,7 +201,7 @@ void TabRootDensity::updateRootDensity()
         tmin = mp.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         tmax = mp.getMeteoPointValueD(myDate, dailyAirTemperatureMax);
 
-        if (!crop.dailyUpdate(myDate, mp.latitude, layers, tmin, tmax, waterTableDepth, error))
+        if (!myCrop.dailyUpdate(myDate, mp.latitude, layers, tmin, tmax, waterTableDepth, error))
         {
             QMessageBox::critical(nullptr, "Error!", QString::fromStdString(error));
             return;
@@ -220,7 +220,7 @@ void TabRootDensity::updateRootDensity()
                     layerIndex = getSoilLayerIndex(layers, depthLayers[i]);
                     if (layerIndex != NODATA)
                     {
-                        rootDensity = crop.roots.rootDensity[layerIndex]*100;
+                        rootDensity = myCrop.roots.rootDensity[layerIndex]*100;
                         rootDensityAdj = rootDensity/layers[layerIndex].thickness*0.02;
                         *set << rootDensityAdj;
 

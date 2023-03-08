@@ -8,8 +8,10 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
+    #ifndef CROP_H
+        #include "crop.h"
+    #endif
 
-    class Crit3DCrop;
     class Crit3DMeteoPoint;
 
     class TabRootDepth : public QWidget
