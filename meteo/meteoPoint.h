@@ -109,6 +109,7 @@
             float anomaly;
             float anomalyPercentage;
             float climate;
+
             bool active;
             bool selected;
             bool marked;
