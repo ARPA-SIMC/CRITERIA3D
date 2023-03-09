@@ -11,7 +11,7 @@
         #include "root.h"
     #endif
 
-    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FALLOW, FRUIT_TREE};
+    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FRUIT_TREE, FALLOW, FALLOW_ANNUAL};
     #define NR_CROP_SPECIES 6
 
     /*!
@@ -73,11 +73,12 @@
 
         void clear();
 
-        bool isWaterSurplusResistant() const;
         int getDaysFromTypicalSowing(int myDoy) const;
         int getDaysFromCurrentSowing(int myDoy) const;
         bool isInsideTypicalCycle(int myDoy) const;
-        bool isPluriannual() const;
+
+        bool isWaterSurplusResistant() const;
+        bool isSowingCrop() const;
         bool isRootStatic() const;
 
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
