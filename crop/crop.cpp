@@ -136,14 +136,16 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
     daysSinceIrrigation = NODATA;
 
     // check if the crop is living
-    if (isPluriannual())
-        isLiving = true;
-    else
+    if (isSowingCrop())
     {
         isLiving = isInsideTypicalCycle(currentDoy);
 
         if (isLiving == true)
             currentSowingDoy = sowingDoy;
+    }
+    else
+    {
+        isLiving = true;
     }
 
     resetCrop(nrLayers);
@@ -155,7 +157,7 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
     double degreeDaysLai = 0;
     double myLai = 0;
 
-    if (! isPluriannual())
+    if (isSowingCrop())
     {
         if (! isEmerged)
         {
@@ -220,7 +222,7 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
 
 bool Crit3DCrop::isWaterSurplusResistant() const
 {
-    return (idCrop == "RICE" || type == GRASS || type == FALLOW);
+    return (idCrop == "RICE");
 }
 
 
@@ -245,12 +247,9 @@ bool Crit3DCrop::isInsideTypicalCycle(int myDoy) const
 }
 
 
-bool Crit3DCrop::isPluriannual() const
+bool Crit3DCrop::isSowingCrop() const
 {
-    return (type == HERBACEOUS_PERENNIAL ||
-            type == GRASS ||
-            type == FALLOW ||
-            type == FRUIT_TREE);
+    return (type == HERBACEOUS_ANNUAL || type == HORTICULTURAL);
 }
 
 
@@ -258,6 +257,7 @@ bool Crit3DCrop::isRootStatic() const
 {
     return (type == HERBACEOUS_PERENNIAL ||
             type == GRASS ||
+            type == FALLOW ||
             type == FRUIT_TREE);
 }
 
@@ -270,10 +270,11 @@ double Crit3DCrop::getSurfaceWaterPonding()
 {
     // TODO taking into account tillage and crop development
     double clodHeight;          // [mm] height of clod
-    if (isPluriannual())
-        clodHeight = 0.0;
-    else
+
+    if (isSowingCrop())
         clodHeight = 5.0;
+    else
+        clodHeight = 0.0;
 
     if (maxSurfacePuddle == NODATA)
         return clodHeight;
@@ -286,19 +287,8 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
 {
     int currentDoy = getDoyFromDate(myDate);
 
-    if (isPluriannual())
+    if (isSowingCrop())
     {
-        // pluriannual crop: reset at the end of year (january at north / july at south)
-        if ((latitude >= 0 && myDate.month == 1 && myDate.day == 1)
-            || (latitude < 0 && myDate.month == 7 && myDate.day == 1))
-        {
-            isLiving = true;
-            return true;
-        }
-    }
-    else
-    {
-        // annual crop
         if (isLiving)
         {
             // living crop: check end of crop cycle
@@ -312,7 +302,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
         }
         else
         {
-            // naked soil: check sowing
+            // bare soil: check sowing
             int sowingDoyPeriod = 30;
             int daysFromSowing = getDaysFromTypicalSowing(currentDoy);
 
@@ -333,13 +323,24 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
             }
         }
     }
+    else
+    {
+        // pluriannual crop: reset at the end of year
+        // January at north hemisphere, July at south
+        if ((latitude >= 0 && myDate.month == 1 && myDate.day == 1)
+            || (latitude < 0 && myDate.month == 7 && myDate.day == 1))
+        {
+            isLiving = true;
+            return true;
+        }
+    }
 
     return false;
 }
 
 
 // reset of (already initialized) crop
-// TODO: partenza intelligente (usando sowing doy e ciclo)
+// TODO: smart start (using sowing doy and cycle)
 void Crit3DCrop::resetCrop(unsigned int nrLayers)
 {
     // roots
@@ -468,8 +469,9 @@ double Crit3DCrop::getSurfaceCoverFraction()
 
 double Crit3DCrop::getMaxEvaporation(double ET0)
 {
-    double SCF = this->getSurfaceCoverFraction();
-    return ET0 * (1 - SCF);
+    double evapMax = ET0 * (1.0 - getSurfaceCoverFraction());
+    // TODO check
+    return evapMax * 0.66;
 }
 
 
@@ -656,6 +658,8 @@ speciesType getCropType(std::string cropType)
         return GRASS;
     else if (cropType == "fallow")
         return FALLOW;
+    else if (cropType == "annual_fallow" || cropType == "fallow_annual")
+        return FALLOW_ANNUAL;
     else if (cropType == "tree" || cropType == "fruit_tree")
         return FRUIT_TREE;
     else
@@ -676,6 +680,8 @@ std::string getCropTypeString(speciesType cropType)
         return "grass";
     case FALLOW:
         return "fallow";
+    case FALLOW_ANNUAL:
+        return "fallow_annual";
     case FRUIT_TREE:
         return "fruit_tree";
     }

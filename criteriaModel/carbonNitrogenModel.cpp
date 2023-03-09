@@ -1645,7 +1645,10 @@ void Crit1DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
     int firstLayer=0;
     double myFreeSolute;
 
-    unsigned int lastLayer = myCase.soilLayers.size() - 1;
+    if (myCase.soilLayers.size() <= 0)
+        return;
+
+    unsigned int lastLayer = unsigned(myCase.soilLayers.size()) - 1;
 
     if (pistonDepth >= myCase.soilLayers[lastLayer].depth)
         return;
@@ -1801,10 +1804,9 @@ void Crit1DCarbonNitrogenProfile::N_initializeCrop(bool noReset,Crit1DCase &myCa
             nitrogenTotalProfile.ratioHarvested = 0.4;      // fruits, pruning wood
             nitrogenTotalProfile.ratioResidues = 0.5;       // leaves
             nitrogenTotalProfile.ratioRoots = 0.1;           // roots, trunk, branches
-
-
         }
-        else if (myCase.crop.type == HERBACEOUS_PERENNIAL || myCase.crop.type ==  GRASS || myCase.crop.type ==  FALLOW)
+        else if (myCase.crop.type == HERBACEOUS_PERENNIAL || myCase.crop.type ==  GRASS
+                 || myCase.crop.type ==  FALLOW)
         {
             nitrogenTotalProfile.ratioHarvested = 0.9;
             nitrogenTotalProfile.ratioResidues = 0;
@@ -1845,7 +1847,7 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
     {
         //Select Case TipoColtura
         // annual crop
-        if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL)
+        if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL || myCase.crop.type ==  FALLOW_ANNUAL)
             N_toLitter = myCase.crop.roots.rootDensity[l] * nitrogenTotalProfile.roots; // !! prendere il dato da dove?
         // multiannual crop
         else if (myCase.crop.type == HERBACEOUS_PERENNIAL|| myCase.crop.type == GRASS|| myCase.crop.type ==  FALLOW)
@@ -1858,23 +1860,23 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
         myCase.carbonNitrogenLayers[l].C_litter += carbonNitrogenParameter.CN_RATIO_NOTHARVESTED * N_toLitter;
     }
 
-    if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL)
+    if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL || myCase.crop.type == FALLOW_ANNUAL)
     {
         // annual crops
         nitrogenTotalProfile.cropToHarvest = 0;
         nitrogenTotalProfile.cropToResidues = 0;
         nitrogenTotalProfile.roots = 0;
     }
-    else if (myCase.crop.type == HERBACEOUS_PERENNIAL|| myCase.crop.type == GRASS|| myCase.crop.type ==  FALLOW)
+    else if (myCase.crop.type == HERBACEOUS_PERENNIAL || myCase.crop.type == GRASS || myCase.crop.type == FALLOW)
     {
-        //pluriennali
+        // pluriennal
         nitrogenTotalProfile.cropToHarvest = 0;
         nitrogenTotalProfile.cropToResidues = 0;
         nitrogenTotalProfile.roots *= 0.5;
     }
     else if (myCase.crop.type == FRUIT_TREE)
     {
-        //tree crops
+        // tree crops
             nitrogenTotalProfile.cropToHarvest = 0;
             nitrogenTotalProfile.roots *= 0.5;
     }

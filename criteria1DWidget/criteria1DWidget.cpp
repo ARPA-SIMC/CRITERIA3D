@@ -1133,7 +1133,7 @@ void Criteria1DWidget::updateCropParam(QString idCrop)
     cropNameValue->setText(QString::fromStdString(myProject.myCase.crop.name));
     cropTypeValue->setText(QString::fromStdString(getCropTypeString(myProject.myCase.crop.type)));
 
-    if (! myProject.myCase.crop.isPluriannual())
+    if (myProject.myCase.crop.isSowingCrop())
     {
         cropSowing.setVisible(true);
         cropCycleMax.setVisible(true);
