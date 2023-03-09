@@ -3465,6 +3465,33 @@ bool Crit3DMeteoGridDbHandler::getYearList(QString *myError, QString meteoPoint,
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameProc, QDate date)
+{
+    QSqlQuery qry(_db);
+    QString table = "log_procedures";
+
+    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1` "
+                                "(`nameProc` varchar(64) NOT NULL PRIMARY KEY, `lastDate` date)").arg(table);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        statement = QString("REPLACE INTO `%1` VALUES ('%2','%3')").arg(table).arg(nameProc).arg(date.toString("yyyy-MM-dd"));
+
+        if( !qry.exec(statement) )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+    }
+
+    return true;
+}
+
 QDate Crit3DMeteoGridDbHandler::firstDate() const
 {
     return _firstDate;
