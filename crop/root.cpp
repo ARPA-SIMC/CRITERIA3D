@@ -151,21 +151,26 @@ namespace root
     {
         double myRootLength = NODATA;
 
-        if (myCrop->isPluriannual())
+        if (myCrop->isRootStatic())
         {
             myRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
         }
         else
         {
             if (currentDD <= 0)
+            {
                 myRootLength = 0.0;
-            else if (currentDD > myCrop->roots.degreeDaysRootGrowth)
-                myRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
+            }
             else
             {
-                // in order to avoid numerical divergences when calculating density through cardioid and gamma function
-                currentDD = MAXVALUE(currentDD, 1.0);
-                myRootLength = getRootLengthDD(&(myCrop->roots), currentDD, myCrop->degreeDaysEmergence);
+                if (currentDD > myCrop->roots.degreeDaysRootGrowth)
+                    myRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
+                else
+                {
+                    // in order to avoid numerical divergences when calculating density through cardioid and gamma function
+                    currentDD = MAXVALUE(currentDD, 1.0);
+                    myRootLength = getRootLengthDD(&(myCrop->roots), currentDD, myCrop->degreeDaysEmergence);
+                }
             }
         }
 

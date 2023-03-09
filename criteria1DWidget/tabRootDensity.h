@@ -7,6 +7,8 @@
     #include "callout.h"
     #include "criteria1DProject.h"
 
+    class Crit3DMeteoPoint;
+
     class TabRootDensity : public QWidget
     {
         Q_OBJECT
@@ -21,7 +23,7 @@
         void tooltip(bool state, int index, QBarSet *barset);
 
     private:
-        Crit3DCrop crop;
+        Crit3DCrop myCrop;
         Crit3DMeteoPoint mp;
         std::vector<soil::Crit3DLayer> layers;
 

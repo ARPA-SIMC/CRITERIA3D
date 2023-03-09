@@ -878,7 +878,6 @@ namespace soil
             y[i + firstIndex] = horizon->dbData.waterRetention[i].water_content;
         }
 
-
         int functionCode;
         unsigned int nrParameters;
         int nrIterations = 200;

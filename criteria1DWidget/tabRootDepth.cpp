@@ -3,7 +3,6 @@
 #include "tabRootDepth.h"
 #include "commonConstants.h"
 #include "utilities.h"
-#include "crop.h"
 #include "meteoPoint.h"
 #include "formInfo.h"
 
