@@ -25,6 +25,7 @@ QList<QString> getPragaCommandList()
     cmdList.append("ComputeClimate  | ComputeClimaFromXMLSaveOnDB");
     cmdList.append("Drought         | ComputeDroughtIndexGrid");
     cmdList.append("DroughtPoint    | ComputeDroughtIndexPoint");
+    cmdList.append("SaveLogProc     | SaveLogProceduresGrid");
 
     return cmdList;
 }
@@ -123,6 +124,11 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
     {
         *isCommandFound = true;
         return cmdDroughtIndexPoint(this, argumentList);
+    }
+    else if (command == "SAVELOGPROC" || command == "SAVELOGPROCEDURESGRID")
+    {
+        *isCommandFound = true;
+        return cmdSaveLogDataProceduresGrid(this, argumentList);
     }
     else
     {
@@ -925,6 +931,26 @@ int pragaShell(PragaProject* myProject)
             }
         }
         if (! myProject->computeDroughtIndexPoint(index, timescale, ry1, ry2))
+        {
+            return PRAGA_ERROR;
+        }
+
+        return PRAGA_OK;
+    }
+
+    int cmdSaveLogDataProceduresGrid(PragaProject* myProject, QList<QString> argumentList)
+    {
+        if (argumentList.size() < 3)
+        {
+            myProject->logError("Missing procedure name or date to save");
+            return PRAGA_INVALID_COMMAND;
+        }
+
+        QString nameProc = argumentList.at(1);
+        QString dateStr = argumentList.at(2);
+        QDate date = QDate::fromString(dateStr, "dd/MM/yyyy");
+
+        if (!myProject->saveLogProceduresGrid(nameProc, date))
         {
             return PRAGA_ERROR;
         }
