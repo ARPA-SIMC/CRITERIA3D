@@ -227,7 +227,7 @@ void updateBoundary()
 }
 
 
-void updateBoundaryWater(double deltaT)
+void updateBoundaryWater (double deltaT)
 {
     double Hs, avgH, maxFlow, flow;
     double const EPSILON_METER = 0.0001;          // [m] 0.1 mm
