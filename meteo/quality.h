@@ -5,7 +5,7 @@
         #include "meteo.h"
     #endif
 
-    // TODO: move in options/quality db
+    // default
     #define DEF_VALUE_REF_HEIGHT 300
     #define DEF_VALUE_DELTA_T_SUSP 13
     #define DEF_VALUE_DELTA_T_WRONG 26
@@ -95,7 +95,6 @@
         quality::qualityType checkFastValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height);
 
         bool wrongValueHourly_SingleValue(meteoVariable myVar, Crit3DClimateParameters* climateParam, float myValue, int month, float height);
-
 
     };
 

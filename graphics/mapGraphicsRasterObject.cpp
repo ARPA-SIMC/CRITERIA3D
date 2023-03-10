@@ -347,7 +347,7 @@ int RasterObject::getCurrentStep(const gis::Crit3DRasterWindow& window)
     double dx = (pixelRT.x() - pixelLL.x() + 1) / double(window.nrCols());
     double dy = (pixelRT.y() - pixelLL.y() + 1) / double(window.nrRows());
 
-    int step = int(round(1.0 / std::min(dx, dy)));
+    int step = int(round(2.0 / std::min(dx, dy)));
     return std::max(1, step);
 }
 
@@ -366,10 +366,21 @@ float RasterObject::getValue(gis::Crit3DGeoPoint& geoPoint)
     if (rasterPointer == nullptr) return NODATA;
     if (! rasterPointer->isLoaded) return NODATA;
 
-    gis::Crit3DUtmPoint utmPoint;
-    gis::getUtmFromLatLon(utmZone, geoPoint, &utmPoint);
+    float value = NODATA;
+    if (isLatLon)
+    {
+        int row, col;
+        gis::getRowColFromLatLon(latLonHeader, geoPoint, &row, &col);
+        value = rasterPointer->getValueFromRowCol(row, col);
 
-    float value = gis::getValueFromUTMPoint(*rasterPointer, utmPoint);
+    }
+    else
+    {
+        gis::Crit3DUtmPoint utmPoint;
+        gis::getUtmFromLatLon(utmZone, geoPoint, &utmPoint);
+
+        value = gis::getValueFromUTMPoint(*rasterPointer, utmPoint);
+    }
 
     if (isEqual(value, rasterPointer->header->flag))
         return NODATA;
@@ -531,10 +542,10 @@ void RasterObject::setMapExtents()
 bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
 {
     // only for grid
-    if (! this->isGrid)
+    if (! (this->isGrid || this->isNetcdf))
         return false;
 
-    gis::getMeteoGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
+    gis::getGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
 
     // check out of grid
     if (gis::isOutOfGridRowCol(*row, *col, this->latLonHeader))

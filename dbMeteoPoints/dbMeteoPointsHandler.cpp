@@ -546,7 +546,6 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(Crit3DDate dateStart, Crit3DDate 
 
 bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint)
 {
-    QString dateStr;
     meteoVariable variable;
     int idVar;
     float value;
@@ -593,7 +592,7 @@ bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate
                 meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), variable, value);
 
                 // copy scalar intensity to vector intensity (instantaneous values are equivalent, following WMO)
-                // should be removed when when we hourly averages are available
+                // should be removed when hourly averages are available
                 if (variable == windScalarIntensity)
                     meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), windVectorIntensity, value);
             }
@@ -953,6 +952,52 @@ bool Crit3DMeteoPointsDbHandler::getPropertiesGivenId(QString id, Crit3DMeteoPoi
     return true;
 }
 
+QString Crit3DMeteoPointsDbHandler::getNameGivenId(QString id)
+{
+
+    QSqlQuery qry(_db);
+    QString name = "";
+
+    qry.prepare( "SELECT name from point_properties WHERE id_point = :id_point" );
+    qry.bindValue(":id_point", id);
+
+    if( !qry.exec() )
+    {
+        error = qry.lastError().text();
+        return name;
+    }
+
+    if(qry.next())
+    {
+        getValue(qry.value("name"), &name);
+    }
+
+    return name;
+}
+
+double Crit3DMeteoPointsDbHandler::getAltitudeGivenId(QString id)
+{
+
+    QSqlQuery qry(_db);
+    double altitude = NODATA;
+
+    qry.prepare( "SELECT altitude from point_properties WHERE id_point = :id_point" );
+    qry.bindValue(":id_point", id);
+
+    if( !qry.exec() )
+    {
+        error = qry.lastError().text();
+        return altitude;
+    }
+
+    if(qry.next())
+    {
+        getValue(qry.value("altitude"), &altitude);
+    }
+
+    return altitude;
+}
+
 bool Crit3DMeteoPointsDbHandler::writePointProperties(Crit3DMeteoPoint *myPoint)
 {
 
@@ -1214,6 +1259,12 @@ QString Crit3DMeteoPointsDbHandler::getNewDataEntry(int pos, const QList<QString
 }
 
 
+/*!
+    \name importHourlyMeteoData
+    \brief import hourly meteo data from .csv files
+    \details fixed format:
+    DATE(yyyy-mm-dd), HOUR, TAVG, PREC, RHAVG, RAD, W_SCAL_INT
+*/
 bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool deletePreviousData, QString* log)
 {
     QString fileName = getFileName(csvFileName);
@@ -1245,7 +1296,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
     else
     {
         // skip first row (header)
-        QList<QString> header = myStream.readLine().split(',');
+        QString header = myStream.readLine();
     }
 
     // create table
@@ -1334,7 +1385,8 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
         qry.prepare(queryStr);
         if (! qry.exec())
         {
-            *log += "\nError in execute query: " + qry.lastError().text();
+            *log += "\nError in execute query: " + qry.lastError().text() +"\n";
+            *log += "Maybe there are missing or wrong data values.";
             return false;
         }
     }
@@ -1903,7 +1955,17 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
 
     QSqlQuery qry(_db);
 
-    qry.prepare( "DELETE FROM joint_station WHERE id_point = :id_point" );
+    QString queryStr;
+    queryStr = QString("CREATE TABLE IF NOT EXISTS `%1`"
+                                "(id_point TEXT, joint_station TEXT, PRIMARY KEY(id_point, joint_station))").arg("joint_stations");
+    qry.prepare(queryStr);
+    if( !qry.exec() )
+    {
+        error += idPoint + " " + qry.lastError().text();
+        return false;
+    }
+
+    qry.prepare( "DELETE FROM joint_stations WHERE id_point = :id_point" );
     qry.bindValue(":id_point", idPoint);
     if( !qry.exec() )
     {
@@ -1914,10 +1976,10 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
     error.clear();
     for (int i = 0; i < stationsList.size(); i++)
     {
-        qry.prepare( "INSERT INTO joint_station (id_point, joint_station) VALUES (:id_point, :joint_station)" );
+        qry.prepare( "INSERT INTO joint_stations (id_point, joint_station) VALUES (:id_point, :joint_station)" );
 
         qry.bindValue(":id_point", idPoint);
-        qry.bindValue(":name", stationsList[i]);
+        qry.bindValue(":joint_station", stationsList[i]);
         if( !qry.exec() )
         {
             error += idPoint + "," + stationsList[i] + " " + qry.lastError().text();
@@ -1932,4 +1994,3 @@ bool Crit3DMeteoPointsDbHandler::setJointStations(const QString& idPoint, QList<
         return false;
     }
 }
-

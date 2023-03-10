@@ -188,13 +188,12 @@
         double computeDistancePoint(Crit3DUtmPoint* p0, Crit3DUtmPoint *p1);
         bool updateMinMaxRasterGrid(Crit3DRasterGrid* myGrid);
         bool updateColorScale(Crit3DRasterGrid* myGrid, int row0, int col0, int row1, int col1);
-        void checkRange(float& minimum, float& maximum);
 
         void getRowColFromXY(const Crit3DRasterGrid &myGrid, double myX, double myY, int* row, int* col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, double myX, double myY, int *row, int *col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, int *row, int *col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, Crit3DRasterCell* v);
-        void getMeteoGridRowColFromXY(const Crit3DGridHeader& myHeader, double myX, double myY, int *row, int *col);
+        void getGridRowColFromXY(const Crit3DGridHeader& myHeader, double myX, double myY, int *row, int *col);
 
         void getRowColFromLatLon(const Crit3DGridHeader &latLonHeader, const Crit3DGeoPoint& p, int *myRow, int *myCol);
         bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DRasterGrid &myGrid);
@@ -228,8 +227,12 @@
         void utmToLatLon(int zoneNumber, double referenceLat, double utmEasting, double utmNorthing, double *lat, double *lon);
         bool isValidUtmTimeZone(int utmZone, int timeZone);
 
-        bool readEsriGrid(std::string myFileName, Crit3DRasterGrid* myGrid, std::string* myError);
-        bool writeEsriGrid(std::string myFileName, Crit3DRasterGrid* myGrid, std::string* myError);
+        bool readEsriGrid(std::string fileName, Crit3DRasterGrid* rasterGrid, std::string* error);
+        bool readEsriGridHeader(std::string fileName, gis::Crit3DRasterHeader *header, std::string* error);
+        bool readEsriGridFlt(std::string fileName, gis::Crit3DRasterGrid *rasterGrid, std::string *error);
+        bool writeEsriGrid(std::string fileName, Crit3DRasterGrid* rasterGrid, std::string* error);
+
+        bool writeENVIGrid(std::string fileName, int utmZone, Crit3DRasterGrid *rasterGrid, std::string &error);
 
         bool mapAlgebra(Crit3DRasterGrid* myMap1, Crit3DRasterGrid* myMap2, Crit3DRasterGrid *outputMap, operationType myOperation);
         bool mapAlgebra(Crit3DRasterGrid* myMap1, float myValue, Crit3DRasterGrid *outputMap, operationType myOperation);
@@ -246,6 +249,7 @@
         bool getGeoExtentsFromUTMHeader(const Crit3DGisSettings& mySettings,
                                         Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
         bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
+        double getGeoCellSizeFromLatLonHeader(const Crit3DGisSettings& mySettings, Crit3DGridHeader *latLonHeader);
 
         float topographicDistance(float x1, float y1, float z1, float x2, float y2, float z2, float distance,
                                   const gis::Crit3DRasterGrid& myDEM);

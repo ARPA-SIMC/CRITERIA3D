@@ -4,7 +4,7 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
-    #include <QStringList>
+    #include <QString>
 
     class QSqlDatabase;
 
@@ -27,6 +27,7 @@
     bool loadDriessenParameters(QSqlDatabase* dbSoil, soil::Crit3DTextureClass* textureClassList, QString *error);
 
     QString getIdSoilString(QSqlDatabase* dbSoil, int idSoilNumber, QString *myError);
+    int getIdSoilNumeric(QSqlDatabase *dbSoil, QString soilCode, QString *myError);
 
     bool openDbSoil(QString dbName, QSqlDatabase* dbSoil, QString* error);
 
@@ -39,7 +40,7 @@
                       soil::Crit3DFittingOptions *fittingOptions, QString* error);
 
     bool loadSoilInfo(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySoil, QString *error);
-    bool getSoilList(QSqlDatabase* dbSoil, QStringList* soilList, QString* error);
+    bool getSoilList(QSqlDatabase* dbSoil, QList<QString>* soilList, QString* error);
 
 
 #endif // SOILDBTOOLS_H

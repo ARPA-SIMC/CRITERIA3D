@@ -94,7 +94,7 @@ double computeSoilSurfaceResistanceCG(double theta, double thetaSat)
 /*!
  * \brief atmospheric sensible heat flux
  * \param i
- * \return latent heat (W m-2)
+ * \return sensible heat (W m-2)
  */
 double computeAtmosphericSensibleFlux(long i)
 {

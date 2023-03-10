@@ -30,7 +30,7 @@
     #define CLEAR_SKY_TRANSMISSIVITY_DEFAULT     0.75f
     #define SHADOW_FACTOR 1
 
-    enum TradiationAlgorithm{RADIATION_ALGORITHM_RSUN = 0}; // RADIATION_ALGORITHM_BROOKS = 1};
+    enum TradiationAlgorithm{RADIATION_ALGORITHM_RSUN = 0};
     enum TradiationRealSkyAlgorithm{RADIATION_REALSKY_TOTALTRANSMISSIVITY, RADIATION_REALSKY_LINKE};
     enum TparameterMode {PARAM_MODE_FIXED = 0, PARAM_MODE_MAP = 1, PARAM_MODE_MONTHLY = 2} ;
     enum TtiltMode{TILT_TYPE_FIXED=1, TILT_TYPE_DEM=2};
@@ -39,7 +39,6 @@
 
     const std::map<std::string, TradiationAlgorithm> radAlgorithmToString = {
       { "r.sun", RADIATION_ALGORITHM_RSUN }
-//      { "brooks", RADIATION_ALGORITHM_BROOKS }
     };
 
     const std::map<std::string, TradiationRealSkyAlgorithm> realSkyAlgorithmToString = {

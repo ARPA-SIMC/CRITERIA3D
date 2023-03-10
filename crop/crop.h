@@ -11,7 +11,7 @@
         #include "root.h"
     #endif
 
-    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FALLOW, FRUIT_TREE};
+    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FRUIT_TREE, FALLOW, FALLOW_ANNUAL};
     #define NR_CROP_SPECIES 6
 
     /*!
@@ -64,6 +64,7 @@
         bool isLiving;
         bool isEmerged;
         double LAI;
+        double LAIpreviousDay;
         double LAIstartSenescence;
         int daysSinceIrrigation;
         std::vector<double> layerTranspiration;
@@ -72,11 +73,13 @@
 
         void clear();
 
-        bool isWaterSurplusResistant() const;
         int getDaysFromTypicalSowing(int myDoy) const;
         int getDaysFromCurrentSowing(int myDoy) const;
         bool isInsideTypicalCycle(int myDoy) const;
-        bool isPluriannual() const;
+
+        bool isWaterSurplusResistant() const;
+        bool isSowingCrop() const;
+        bool isRootStatic() const;
 
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
@@ -92,7 +95,7 @@
         double getMaxTranspiration(double ET0);
         double getSurfaceWaterPonding();
 
-        double getCropWaterDeficit(const std::vector<soil::Crit3DLayer>& soilLayers);
+        double getCropWaterDeficit(const std::vector<soil::Crit3DLayer> & soilLayers);
 
         double computeTranspiration(double maxTranspiration, const std::vector<soil::Crit3DLayer>& soilLayers, double& waterStress);
     };

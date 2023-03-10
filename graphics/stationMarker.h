@@ -13,7 +13,7 @@
         Q_OBJECT
 
         public:
-            explicit StationMarker(qreal radius, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
+            explicit StationMarker(qreal radius, bool sizeIsZoomInvariant, QColor fillColor, MapGraphicsObject *parent = nullptr);
             void setId(std::string id);
             void setToolTip();
             std::string id() const;
@@ -27,7 +27,6 @@
             void setActive(bool active);
 
     private:
-            MapGraphicsView* _view;
             std::string _id;
             std::string _name;
             std::string _dataset;
@@ -44,8 +43,11 @@
         signals:
             void newStationClicked(std::string, std::string, bool);
             void appendStationClicked(std::string, std::string, bool);
-            void newPointStatisticsClicked(std::string, std::string, bool);
+            void newPointStatisticsClicked(std::string, bool);
             void changeOrogCodeClicked(std::string, int);
+            void newHomogeneityTestClicked(std::string);
+            void newSynchronicityTestClicked(std::string);
+            void setSynchronicityReferenceClicked(std::string);
 
     };
 

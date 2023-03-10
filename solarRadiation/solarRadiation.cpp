@@ -583,7 +583,7 @@ namespace radiation
         //in attesa di studi mirati (Bristow and Campbell, 1985)
         maximumDiffuseTransmissivity = 0.6f / (clearSkyTransmissivity - 0.4f);
         *Tt = MAXVALUE(MINVALUE(transmissivity, clearSkyTransmissivity), 0.00001f);
-        *td = (*Tt) * (1.f - exp(maximumDiffuseTransmissivity - (maximumDiffuseTransmissivity * clearSkyTransmissivity) / (*Tt)));
+        *td = (*Tt) * (1 - expf(maximumDiffuseTransmissivity - (maximumDiffuseTransmissivity * clearSkyTransmissivity) / (*Tt)));
 
         /*! FT 0.12 stimato da Settefonti agosto 2007 */
         if ((*Tt) > 0.6f) *td = MAXVALUE(*td, 0.1f);
@@ -1100,7 +1100,6 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
             return computeRadiationGridRsun(radSettings, dem, radiationMaps, myTime);
         }
         else
-            // todo Brooks
             return false;
     }
 
@@ -1113,7 +1112,6 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
             return false;
 
         if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
-            // todo Brooks
             return false;
 
         TradPoint radPoint;

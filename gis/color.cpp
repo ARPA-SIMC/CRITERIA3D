@@ -251,7 +251,7 @@ bool setWindIntensityScale(Crit3DColorScale* myScale)
 {
     myScale->initialize(3, 256);
 
-    myScale->keyColor[0] = Crit3DColor(32, 128, 32);        /*!<  dark green */
+    myScale->keyColor[0] = Crit3DColor(32, 128, 32);        /*!< dark green */
     myScale->keyColor[1] = Crit3DColor(255, 255, 0);        /*!< yellow */
     myScale->keyColor[2] = Crit3DColor(255, 0, 0);          /*!< red */
 
@@ -269,6 +269,18 @@ bool setRadiationScale(Crit3DColorScale* myScale)
     myScale->keyColor[3] = Crit3DColor(128, 0, 128);        /*!< violet */
 
     return myScale->classify();
+}
+
+
+bool setSurfaceWaterScale(Crit3DColorScale* myScale)
+{
+    myScale->initialize(3, 256);
+
+    myScale->keyColor[0] = Crit3DColor(255, 255, 255);      /*!< white */
+    myScale->keyColor[1] = Crit3DColor(0, 255, 255);        /*!< cyan */
+    myScale->keyColor[2] = Crit3DColor(0, 0, 255);          /*!< blue */
+
+    return(myScale->classify());
 }
 
 
@@ -354,7 +366,7 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
     }
     else
     {
-        double logAvg = log10(avg);
+        double logAvg = log10(abs(avg));
         if (lessRounded)
         {
             myExp = int((floor(logStep) + floor(logAvg))/2 - 1);
@@ -366,7 +378,12 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
     }
 
     double pow10 = pow(10, myExp);
-    double roundStep = ceil(step / pow10) * pow10;
+    double newStep = step / pow10;
+    double roundStep;
+    if (isEqual(newStep, floor(newStep)))
+        roundStep = newStep * pow10;
+    else
+        roundStep = ceil(newStep) * pow10;
 
     if (! isEqual(avg, 0))
     {

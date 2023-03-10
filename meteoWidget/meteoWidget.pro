@@ -12,6 +12,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
+CONFIG += c++14 c++17
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -36,6 +37,7 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../co
 
 SOURCES += \
     dialogMeteoTable.cpp \
+    dialogRemoveStation.cpp \
     dialogSelectVar.cpp \
     meteoTable.cpp \
     meteoWidget.cpp
@@ -43,6 +45,7 @@ SOURCES += \
 
 HEADERS += \
     dialogMeteoTable.h \
+    dialogRemoveStation.h \
     dialogSelectVar.h \
     meteoTable.h \
     meteoWidget.h

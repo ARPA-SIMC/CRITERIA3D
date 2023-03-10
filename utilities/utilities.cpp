@@ -5,6 +5,7 @@
 #include <QVariant>
 #include <QSqlDriver>
 #include <QSqlRecord>
+#include <QSqlQuery>
 #include <QDir>
 #include <QTextStream>
 
@@ -20,70 +21,88 @@ QList<QString> getFields(QSqlDatabase* db_, QString tableName)
     return fieldList;
 }
 
+
+QList<QString> getFieldsUpperCase(QSqlQuery& query)
+{
+    QSqlRecord record = query.record();
+    QList<QString> fieldList;
+    for (int i=0; i < record.count(); i++)
+        fieldList.append(record.fieldName(i).toUpper());
+
+    return fieldList;
+}
+
+
 // return boolean (false if recordset is not valid)
 bool getValue(QVariant myRs)
 {
-    if (! myRs.isValid() || myRs.isNull())
-    {
-        return false;
-    }
-    else
-    {
-        if (myRs == "" || myRs == "NULL")
-            return false;
-        else
-            return myRs.toBool();
-    }
+    if (! myRs.isValid() || myRs.isNull()) return false;
+
+    if (myRs == "" || myRs == "NULL") return false;
+
+    return myRs.toBool();
 }
+
 
 bool getValue(QVariant myRs, int* myValue)
 {
-    if (! myRs.isValid() || myRs.isNull())
+    *myValue = NODATA;
+
+    if (! myRs.isValid() || myRs.isNull()) return false;
+    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+
+    bool isOk;
+    *myValue = myRs.toInt(&isOk);
+
+    if (! isOk)
     {
         *myValue = NODATA;
-    }
-    else
-    {
-        if (myRs == "" || myRs == "NULL")
-            *myValue = NODATA;
-        else
-            *myValue = myRs.toInt();
+        return false;
     }
 
-    return (*myValue != NODATA);
+    return true;
 }
 
 
 bool getValue(QVariant myRs, float* myValue)
 {
-    if (myRs.isNull())
-        *myValue = NODATA;
-    else
+    *myValue = NODATA;
+
+    if (! myRs.isValid() || myRs.isNull()) return false;
+    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+
+    bool isOk;
+    *myValue = myRs.toFloat(&isOk);
+
+    if (! isOk)
     {
-        if (myRs == "")
-             *myValue = NODATA;
-        else
-            *myValue = myRs.toFloat();
+        *myValue = NODATA;
+        return false;
     }
 
-    return (int(*myValue) != int(NODATA));
+    return true;
 }
 
 
 bool getValue(QVariant myRs, double* myValue)
 {
-    if (myRs.isNull())
-        *myValue = NODATA;
-    else
+    *myValue = NODATA;
+
+    if (! myRs.isValid() || myRs.isNull()) return false;
+    if (myRs == "" || myRs == "NULL" || myRs == "nan") return false;
+
+    bool isOk;
+    *myValue = myRs.toDouble(&isOk);
+
+    if (! isOk)
     {
-        if (myRs == "")
-             *myValue = NODATA;
-        else
-            *myValue = myRs.toDouble();
+        *myValue = NODATA;
+        return false;
     }
 
-    return (int(*myValue) != int(NODATA));
+    return true;
 }
+
 
 bool getValue(QVariant myRs, QDate* myValue)
 {
@@ -118,12 +137,12 @@ bool getValue(QVariant myRs, QDateTime* myValue)
 
 bool getValue(QVariant myRs, QString* myValue)
 {
-    if (myRs.isNull())
-        *myValue = "";
-    else
-        *myValue = myRs.toString();
+    *myValue = "";
+    if (! myRs.isValid() || myRs.isNull()) return false;
+    if (myRs == "NULL") return false;
 
-    return (*myValue != "");
+    *myValue = myRs.toString();
+    return true;
 }
 
 
@@ -170,9 +189,11 @@ QDate getQDate(const Crit3DDate& d)
 QDateTime getQDateTime(const Crit3DTime& t)
 {
     QDate myDate = QDate(t.date.year, t.date.month, t.date.day);
+
     QDateTime myDateTime;
     myDateTime.setTimeSpec(Qt::UTC);
     myDateTime.setDate(myDate);
+    myDateTime.setTime(QTime(0,0,0,0));
     return myDateTime.addSecs(t.time);
 }
 
@@ -372,7 +393,7 @@ bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* start
 }
 
 
-std::vector <float> StringListToFloat(QStringList myList)
+std::vector <float> StringListToFloat(QList<QString> myList)
 {
     std::vector <float> myVector;
     myVector.resize(unsigned(myList.size()));
@@ -385,7 +406,7 @@ std::vector <float> StringListToFloat(QStringList myList)
 
 QStringList FloatVectorToStringList(std::vector <float> myVector)
 {
-    QStringList myList;
+    QList<QString> myList;
     for (unsigned i=0; i < unsigned(myVector.size()); i++)
         myList.push_back(QString::number(double(myVector[i])));
 

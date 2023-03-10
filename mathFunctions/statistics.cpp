@@ -26,12 +26,12 @@
 #include <math.h>
 #include <stdlib.h>
 #include <float.h>
+#include <algorithm>    // std::find
 
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "statistics.h"
 #include "physics.h"
-
 
 
 float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float rainfallThreshold)
@@ -79,9 +79,46 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
             return statistics::standardDeviation(values, nValues);
         case timeIntegration:
             return TimeIntegration(values, param);
+        case yearMax:
+        {
+            float maxValue = statistics::maxList(values, nValues);
+            std::vector<float>::iterator it = std::find(values.begin(), values.end(), maxValue);
+            if (it != values.end())
+            {
+                int index = int(std::distance(values.begin(), it));
+                return float(index);
+            }
+            else
+            {
+                return NODATA;
+            }
+        }
+        case yearMin:
+        {
+            float minValue = statistics::minList(values, nValues);
+            std::vector<float>::iterator it = std::find(values.begin(), values.end(), minValue);
+            if (it != values.end())
+            {
+                int index = int(std::distance(values.begin(), it));
+                return float(index);
+            }
+            else
+            {
+                return NODATA;
+            }
+        }
 
         default:
-            return NODATA;
+        {
+            if (elab == noMeteoComp && nValues == 1)
+            {
+                return values[0];
+            }
+            else
+            {
+                return NODATA;
+            }
+        }
     }
 }
 
@@ -185,7 +222,7 @@ namespace statistics
 
         if (measured.size() != simulated.size()) return NODATA;
 
-        for (int i=0; i < measured.size(); i++)
+        for (unsigned int i=0; i < measured.size(); i++)
         {
             if ((measured[i] != NODATA) && (simulated[i] != NODATA))
             {
@@ -211,16 +248,16 @@ namespace statistics
         if (isEqual(obsAvg, NODATA)) return NODATA;
 
         float sumDev = 0;
-        int i;
 
-        for (i=0; i < measured.size(); i++)
+        for (unsigned int i=0; i < measured.size(); i++)
             if (!isEqual(measured[i], NODATA))
                 sumDev += (measured[i] - obsAvg) * (measured[i] - obsAvg);
 
         if (sumDev == 0) return NODATA;
 
         float sumError = 0;
-        for (i = 0; i < measured.size(); i++)
+
+        for (unsigned int i = 0; i < measured.size(); i++)
             if (!isEqual(measured[i], NODATA) && !isEqual(simulated[i], NODATA))
                 sumError += (simulated[i] - measured[i]) * (simulated[i] - measured[i]);
 
@@ -459,6 +496,33 @@ namespace statistics
             return NODATA;
     }
 
+    double variance(std::vector<double> myList, int nrList)
+    {
+        double myMean, myDiff, squareDiff;
+        int i, nrValidValues;
+
+        if (nrList <= 1) return NODATA;
+
+        myMean = mean(myList,nrList);
+
+        squareDiff = 0;
+        nrValidValues = 0;
+        for (i = 0; i<nrList; i++)
+        {
+            if (myList[i]!= NODATA)
+            {
+                myDiff = (myList[i] - myMean);
+                squareDiff += (myDiff * myDiff);
+                nrValidValues++;
+            }
+        }
+
+        if (nrValidValues > 1)
+            return (squareDiff / (nrValidValues - 1));
+        else
+            return NODATA;
+    }
+
     double variance(double *myList, int nrList)
     {
         double myMean, myDiff, squareDiff;
@@ -532,6 +596,29 @@ namespace statistics
             return NODATA;
     }
 
+    double mean(std::vector<double> myList, int nrList)
+    {
+        double sum=0.;
+        int i, nrValidValues;
+
+        if (nrList < 1) return NODATA;
+        nrValidValues = 0;
+
+        for (i = 0; i < nrList; i++)
+        {
+            if (myList[i]!= NODATA)
+            {
+                sum += myList[i];
+                nrValidValues++;
+            }
+        }
+
+        if (nrValidValues > 0)
+            return (sum/(double)(nrValidValues));
+        else
+            return NODATA;
+    }
+
     double mean(double *myList, int nrList)
     {
         double sum=0.;
@@ -563,6 +650,11 @@ namespace statistics
     float standardDeviation(std::vector<float> myList, int nrList)
     {
         return sqrtf(variance(myList,nrList));
+    }
+
+    double standardDeviation(std::vector<double> myList, int nrList)
+    {
+        return sqrt(variance(myList,nrList));
     }
 
     double standardDeviation(double *myList, int nrList)

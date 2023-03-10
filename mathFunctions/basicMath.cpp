@@ -252,6 +252,86 @@
             }
         }
 
+        void quicksortAscendingIntegerWithParameters(std::vector<int> &x, std::vector<float> &values, unsigned first, unsigned last)
+        {
+           int tmpIndex;
+           unsigned l, r;
+           float tmpVal, pivot;
+
+           if(first<last)
+           {
+               // only 2 elements
+               if (last-first == 1)
+               {
+                   if (values[first] > values[last])
+                   {
+                       //swap
+                       tmpIndex = x[last];
+                       tmpVal = values[last];
+                       values[last] = values[first];
+                       values[first] = tmpVal;
+                       x[last]= x[first];
+                       x[first] = tmpIndex;
+                       return;
+                   }
+               }
+               unsigned posPivot = (last - first) / 2 + first;
+               pivot = values[posPivot];
+               if (values[last] < pivot)
+               {
+                   //swap
+                   tmpIndex = x[last];
+                   tmpVal = values[last];
+                   values[last] = values[posPivot];
+                   values[posPivot] = tmpVal;
+                   x[last]= x[posPivot];
+                   x[posPivot] = tmpIndex;
+               }
+               l=first;
+               r=last;
+
+               while(l<r)
+               {
+                   if (values[l] < pivot)
+                   {
+                         l = l + 1;
+                   }
+                   else if (values[r] >= pivot)
+                   {
+                       r = r -1;
+                   }
+                   else
+                   {
+                       //swap
+                       tmpIndex = x[r];
+                       tmpVal = values[r];
+                       values[r] = values[l];
+                       values[l] = tmpVal;
+                       x[r]= x[l];
+                       x[l] = tmpIndex;
+                   }
+               }
+               if (l > first)
+               {
+                   l = l - 1;
+               }
+               else
+               {
+                   //swap
+                   tmpIndex = x[posPivot];
+                   tmpVal = values[posPivot];
+                   values[posPivot] = values[first];
+                   values[first] = tmpVal;
+                   x[posPivot]= x[first];
+                   x[first] = tmpIndex;
+
+                   r = r + 1;
+               }
+
+               quicksortAscendingIntegerWithParameters(x,values,first,l);
+               quicksortAscendingIntegerWithParameters(x,values,r,last);
+            }
+        }
 
         void quicksortAscendingDouble(double *x, int first,int last)
         {

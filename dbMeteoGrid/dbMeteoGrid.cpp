@@ -1087,6 +1087,20 @@ bool Crit3DMeteoGridDbHandler::newDatabase(QString *myError)
        return true;
 }
 
+bool Crit3DMeteoGridDbHandler::deleteDatabase(QString *myError)
+{
+    QSqlQuery query(_db);
+
+    query.exec( "DROP DATABASE IF EXISTS "+_connection.name);
+
+    if (!query.exec())
+    {
+       *myError = "MySQL error:" + query.lastError().text();
+       return false;
+    }
+    return true;
+}
+
 bool Crit3DMeteoGridDbHandler::newDatabase(QString *myError, QString connectionName)
 {
 
@@ -1279,6 +1293,38 @@ bool Crit3DMeteoGridDbHandler::writeCellProperties(QString *myError, int nRow, i
         return false;
     }
     return true;
+}
+
+bool Crit3DMeteoGridDbHandler::activeAllCells(QString *myError)
+{
+    QSqlQuery qry(_db);
+
+    qry.prepare( "UPDATE CellsProperties SET Active = 1" );
+    if( !qry.exec() )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+bool Crit3DMeteoGridDbHandler::setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState)
+{
+    QSqlQuery qry(_db);
+    QString statement = QString("UPDATE CellsProperties SET Active = %1 WHERE `Code` IN ('%2')").arg(activeState).arg(idList.join("','"));
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 bool Crit3DMeteoGridDbHandler::loadIdMeteoProperties(QString *myError, QString idMeteo)
@@ -2126,7 +2172,6 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
     QDate currentDate, lastDateDB;
-    unsigned int previousIndex, currentIndex;
     std::vector<float> dailyVarList;
 
     int varCode = getDailyVarCode(variable);
@@ -2180,10 +2225,10 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     do
     {
         currentDate = qry.value(_tableDaily.fieldTime).toDate();
-        currentIndex = unsigned(firstDateDB->daysTo(currentDate));
+        int currentIndex = int(firstDateDB->daysTo(currentDate));
         if (getValue(qry.value("Value"), &value))
         {
-            dailyVarList[currentIndex] = value;
+            dailyVarList[unsigned(currentIndex)] = value;
         }
     } while (qry.next());
 
@@ -3357,7 +3402,7 @@ QDate Crit3DMeteoGridDbHandler::getFirsMonthlytDate() const
 
 QDate Crit3DMeteoGridDbHandler::getLastMonthlyDate() const
 {
-    if (_lastHourlyDate.year() == 1800)
+    if (_lastMonthlyDate.year() == 1800)
     {
         return QDate(); // return null date
     }
@@ -3417,6 +3462,33 @@ bool Crit3DMeteoGridDbHandler::getYearList(QString *myError, QString meteoPoint,
         }
 
     }
+    return true;
+}
+
+bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameProc, QDate date)
+{
+    QSqlQuery qry(_db);
+    QString table = "log_procedures";
+
+    QString statement = QString("CREATE TABLE IF NOT EXISTS `%1` "
+                                "(`nameProc` varchar(64) NOT NULL PRIMARY KEY, `lastDate` date)").arg(table);
+
+    if( !qry.exec(statement) )
+    {
+        *myError = qry.lastError().text();
+        return false;
+    }
+    else
+    {
+        statement = QString("REPLACE INTO `%1` VALUES ('%2','%3')").arg(table).arg(nameProc).arg(date.toString("yyyy-MM-dd"));
+
+        if( !qry.exec(statement) )
+        {
+            *myError = qry.lastError().text();
+            return false;
+        }
+    }
+
     return true;
 }
 

@@ -148,12 +148,46 @@ void Crit3DMeteoPoint::initializeObsDataH(int myHourlyFraction, int numberOfDays
     }
 }
 
+void Crit3DMeteoPoint::initializeObsDataHFromMp(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp)
+{
+
+    hourlyFraction = myHourlyFraction;
+    unsigned int nrDailyValues = unsigned(hourlyFraction * 24);
+    Crit3DDate myDate = firstDate;
+    TObsDataH *data = mp.getObsDataH();
+    for (unsigned int i = 0; i < unsigned(numberOfDays); i++)
+    {
+        if (i < unsigned(nrObsDataDaysH))
+        {
+            obsDataH[i].date = myDate;
+            for (unsigned int j = 0; j < nrDailyValues; j++)
+            {
+                obsDataH[i].tAir[j] = data[i].tAir[j];
+                obsDataH[i].prec[j] = data[i].prec[j];
+                obsDataH[i].rhAir[j] = data[i].rhAir[j];
+                obsDataH[i].tDew[j] = data[i].tDew[j];
+                obsDataH[i].irradiance[j] = data[i].irradiance[j];
+                obsDataH[i].netIrradiance[j] =data[i].netIrradiance[j];
+                obsDataH[i].et0[j] = data[i].et0[j];
+                obsDataH[i].windVecX[j] = data[i].windVecX[j];
+                obsDataH[i].windVecY[j] = data[i].windVecY[j];
+                obsDataH[i].windVecInt[j] = data[i].windVecInt[j];
+                obsDataH[i].windVecDir[j] = data[i].windVecDir[j];
+                obsDataH[i].windScalInt[j] = data[i].windScalInt[j];
+                obsDataH[i].leafW[j] = data[i].leafW[j];
+                obsDataH[i].transmissivity[j] = data[i].transmissivity[j];
+            }
+            ++myDate;
+        }
+    }
+}
+
 
 void Crit3DMeteoPoint::initializeObsDataD(unsigned int numberOfDays, const Crit3DDate& firstDate)
 {
     obsDataD.clear();
     obsDataD.resize(numberOfDays);
-    nrObsDataDaysD = numberOfDays;
+    nrObsDataDaysD = int(numberOfDays);
 
     quality = quality::missing_data;
     residual = NODATA;
@@ -184,6 +218,36 @@ void Crit3DMeteoPoint::initializeObsDataD(unsigned int numberOfDays, const Crit3
         ++myDate;
     }
 }
+
+void Crit3DMeteoPoint::initializeObsDataDFromMp(unsigned int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp)
+{
+    Crit3DDate myDate = firstDate;
+    for (unsigned int i = 0; i < numberOfDays; i++)
+    {
+        obsDataD[i].date = myDate;
+        obsDataD[i].tMax = mp.obsDataD[i].tMax;
+        obsDataD[i].tMin = mp.obsDataD[i].tMin;
+        obsDataD[i].tAvg = mp.obsDataD[i].tAvg;
+        obsDataD[i].prec = mp.obsDataD[i].prec;
+        obsDataD[i].rhMax = mp.obsDataD[i].rhMax;
+        obsDataD[i].rhMin = mp.obsDataD[i].rhMin;
+        obsDataD[i].rhAvg = mp.obsDataD[i].rhAvg;
+        obsDataD[i].globRad = mp.obsDataD[i].globRad;
+        obsDataD[i].et0_hs = mp.obsDataD[i].et0_hs;
+        obsDataD[i].et0_pm = mp.obsDataD[i].et0_pm;
+        obsDataD[i].dd_heating = mp.obsDataD[i].dd_heating;
+        obsDataD[i].dd_cooling = mp.obsDataD[i].dd_cooling;
+        obsDataD[i].windVecIntAvg = mp.obsDataD[i].windVecIntAvg;
+        obsDataD[i].windVecIntMax = mp.obsDataD[i].windVecIntMax;
+        obsDataD[i].windVecDirPrev = mp.obsDataD[i].windVecDirPrev;
+        obsDataD[i].windScalIntAvg = mp.obsDataD[i].windScalIntAvg;
+        obsDataD[i].windScalIntMax = mp.obsDataD[i].windScalIntMax;
+        obsDataD[i].leafW = mp.obsDataD[i].leafW;
+        obsDataD[i].waterTable = mp.obsDataD[i].waterTable;
+        ++myDate;
+    }
+}
+
 
 void Crit3DMeteoPoint::initializeObsDataM(unsigned int numberOfMonths, unsigned int month, int year)
 {
@@ -906,6 +970,15 @@ bool Crit3DMeteoPoint::existDailyData(const Crit3DDate& myDate)
 }
 
 
+Crit3DDate Crit3DMeteoPoint::getLastDailyData()
+{
+    if (obsDataD.size() == 0)
+        return NO_DATE;
+
+    return obsDataD[nrObsDataDaysD-1].date;
+}
+
+
 float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVariable myVar, Crit3DMeteoSettings* meteoSettings)
 {
     //check
@@ -945,7 +1018,8 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
         if (! isEqual(obsDataD[i].et0_hs, NODATA))
             return obsDataD[i].et0_hs;
         else if (meteoSettings->getAutomaticET0HS() && !isEqual(obsDataD[i].tMin, NODATA) && !isEqual(obsDataD[i].tMax, NODATA))
-            return ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, getDoyFromDate(myDate), obsDataD[i].tMax, obsDataD[i].tMin);
+            return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude,
+                                        getDoyFromDate(myDate), obsDataD[i].tMax, obsDataD[i].tMin));
         else
             return NODATA;
     }
@@ -1102,7 +1176,6 @@ std::vector <float> Crit3DMeteoPoint::getProxyValues()
 
 bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
 {
-    float relHumidity, prec;
     short leafW;
     float temperature, windSpeed, height, netRadiation;
 
@@ -1112,8 +1185,8 @@ bool Crit3DMeteoPoint::computeDerivedVariables(Crit3DTime dateTime)
     bool leafWres = false;
     bool et0res = false;
 
-    relHumidity = getMeteoPointValueH(myDate, myHour, 0, airRelHumidity);
-    prec = getMeteoPointValueH(myDate, myHour, 0, precipitation);
+    double relHumidity = double(getMeteoPointValueH(myDate, myHour, 0, airRelHumidity));
+    double prec = double(getMeteoPointValueH(myDate, myHour, 0, precipitation));
 
     if (computeLeafWetness(prec, relHumidity, &leafW))
         leafWres = setMeteoPointValueH(myDate, myHour, 0, leafWetness, leafW);
@@ -1149,7 +1222,8 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
     for (Crit3DDate actualDate = firstDate; actualDate<=lastDate; actualDate=actualDate.addDays(1))
     {
         float myDailyValue = getMeteoPointValueD(actualDate, dailyMeteoVar, meteoSettings);
-        quality::qualityType qualityT = qualityCheck->checkFastValueDaily_SingleValue(dailyMeteoVar, climateParam, myDailyValue, currentMonth, this->point.z);
+        quality::qualityType qualityT = qualityCheck->checkFastValueDaily_SingleValue(dailyMeteoVar, climateParam,
+                                                                                      myDailyValue, currentMonth, float(point.z));
         if (qualityT == quality::accepted)
         {
             sum = sum + myDailyValue;
@@ -1192,6 +1266,10 @@ bool Crit3DMeteoPoint::computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate 
     return aggregateDailyInMonthly;
 }
 
+TObsDataH *Crit3DMeteoPoint::getObsDataH() const
+{
+    return obsDataH;
+}
 
 // ---- end class
 

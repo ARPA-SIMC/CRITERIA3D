@@ -655,7 +655,7 @@ bool Crit3DAnomalyList::addAnomaly(unsigned int index)
     bool isPercentage = _listisPercentage[index];
     QString yearStart = QString::number(_listYearStart[index]);
     QString yearEnd = QString::number(_listYearEnd[index]);
-    QString variable = QString::fromStdString(MapDailyMeteoVarToString.at(_listVariable[index]));
+    QString variable = QString::fromStdString(MapDailyMeteoVarToString.at(_listVariable[index])).remove("_");
     QString period = _listPeriodStr[index];
     QString periodStartDay = QString::number(_listDateStart[index].day());
     QString periodStartMonth = QString::number(_listDateStart[index].month());

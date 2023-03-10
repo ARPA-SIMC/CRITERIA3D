@@ -9,6 +9,7 @@
 #include "criteria1DMeteo.h"
 #include "utilities.h"
 #include "meteoPoint.h"
+#include "basicMath.h"
 
 
 bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
@@ -27,7 +28,7 @@ bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
 }
 
 
-bool getMeteoPointList(QSqlDatabase* dbMeteo, QStringList* idMeteoList, QString* error)
+bool getMeteoPointList(QSqlDatabase* dbMeteo, QList<QString>* idMeteoList, QString* error)
 {
     // query id_meteo list
     QString queryString = "SELECT id_meteo FROM meteo_locations";
@@ -146,7 +147,7 @@ QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString 
 }
 
 
-bool getYearList(QSqlDatabase* dbMeteo, QString table, QStringList* yearList, QString *error)
+bool getYearList(QSqlDatabase* dbMeteo, QString table, QList<QString>* yearList, QString *error)
 {
     *error = "";
     QString queryString = "SELECT date, strftime('%Y',date) as Year FROM '" + table +"'";
@@ -278,7 +279,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
         if (prec < prec_min )
         {
             invalidPrec = invalidPrec + int(previousDate.daysTo(date));
-            // 7 day missing, the next one invalid temp
+            // 7 day missing, the next one invalid
             if ( invalidPrec > MAX_MISSING_CONSECUTIVE_DAYS_PREC )
             {
                  *error = "incomplete year, missing valid data (prec) more than 7 consecutive days";
@@ -311,6 +312,7 @@ bool checkYear(QSqlDatabase* dbMeteo, QString table, QString year, QString *erro
     return true;
 }
 
+
 bool getLastDate(QSqlDatabase* dbMeteo, QString table, QString year, QDate* date, QString *error)
 {
     *error = "";
@@ -330,6 +332,7 @@ bool getLastDate(QSqlDatabase* dbMeteo, QString table, QString year, QDate* date
         return true;
     }
 }
+
 
 bool checkYearMeteoGridFixedFields(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, QString fieldTmin, QString fieldTmax, QString fieldPrec, QString year, QString *error)
 {
@@ -497,6 +500,7 @@ bool getLastDateGrid(QSqlDatabase dbMeteo, QString table, QString fieldTime, QSt
     }
 }
 
+
 bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, int varCodeTmin, int varCodeTmax, int varCodePrec, QString year, QString *error)
 {
 
@@ -513,11 +517,11 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     QString PREC_MIN = "0.0";
 
     // count valid temp and prec
-    QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE_FORMAT(`%1`,'%Y') = '%3'").arg(fieldTime).arg(tableD).arg(year);
-    statement = statement + QString(" AND ( (VariableCode = '%1' AND Value >= '%2' AND Value <= '%3')").arg(varCodeTmin).arg(TMIN_MIN).arg(TMIN_MAX);
-    statement = statement + QString(" OR ( VariableCode = '%1' AND Value >= '%2' AND Value <= '%3') ").arg(varCodeTmax).arg(TMAX_MIN).arg(TMAX_MAX);
+    QString statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE_FORMAT(`%1`,'%Y') = '%3'").arg(fieldTime, tableD, year);
+    statement = statement + QString(" AND ( (VariableCode = '%1' AND Value >= '%2' AND Value <= '%3')").arg(varCodeTmin).arg(TMIN_MIN, TMIN_MAX);
+    statement = statement + QString(" OR ( VariableCode = '%1' AND Value >= '%2' AND Value <= '%3') ").arg(varCodeTmax).arg(TMAX_MIN, TMAX_MAX);
     statement = statement + QString(" OR ( VariableCode = '%1' AND Value >= '%2') )").arg(varCodePrec).arg(PREC_MIN);
-//qDebug() << "statement " << statement;
+
     if( !qry.exec(statement) )
     {
         *error = qry.lastError().text();
@@ -530,7 +534,6 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
         return false;
     }
     int count;
-
 
     getValue(qry.value(0), &count);
     QDate temp(year.toInt(), 1, 1);
@@ -546,7 +549,7 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
     // check consecutive missing days (1 missing day allowed for temperature)
     statement = QString("SELECT * FROM `%1` WHERE DATE_FORMAT(`%2`,'%Y') = '%3' AND "
                         "( VariableCode = '%4' OR VariableCode = '%5' OR VariableCode = '%6') "
-                        "ORDER BY `%2`").arg(tableD).arg(fieldTime).arg(year).arg(varCodeTmin).arg(varCodeTmax).arg(varCodePrec);
+                        "ORDER BY `%2`").arg(tableD, fieldTime, year).arg(varCodeTmin, varCodeTmax, varCodePrec);
     if( !qry.exec(statement) )
     {
         *error = qry.lastError().text();
@@ -744,7 +747,7 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
         {
             tmax = NODATA;
         }
-        if (tmin == NODATA || tmax == NODATA)
+        if (isEqual(tmin, NODATA) || isEqual(tmax, NODATA))
         {
             tavg = NODATA;
         }
@@ -780,7 +783,7 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
         tmin = meteoPoint->getMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMin);
         tmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMax);
         tavg = meteoPoint->getMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureAvg);
-        if (tmin == NODATA)
+        if (isEqual(tmin, NODATA))
         {
             if (i!=0 && i!=(daysInYear-1))
             {
@@ -802,13 +805,13 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
             meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMin, tmin);
 
         }
-        if (tmax == NODATA)
+        if (isEqual(tmax, NODATA))
         {
             if (i!=0 && i!=(daysInYear-1))
             {
                 prevTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(-1)), dailyAirTemperatureMax);
                 nextTmax = meteoPoint->getMeteoPointValueD(getCrit3DDate(date.addDays(1)), dailyAirTemperatureMax);
-                tmax = (prevTmin + nextTmin) * 0.5f;
+                tmax = (prevTmax + nextTmax) * 0.5f;
             }
             else if (i==0)
             {
@@ -823,18 +826,19 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
 
             meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureMax, tmax);
         }
-        if (tavg == NODATA)
+        if (isEqual(tavg, NODATA))
         {
             tavg = (tmin + tmax) * 0.5f;
             meteoPoint->setMeteoPointValueD(getCrit3DDate(date), dailyAirTemperatureAvg, tavg);
         }
-        if (prec == NODATA)
+        if (isEqual(prec, NODATA))
         {
             prec = 0;
         }
     }
     return true;
 }
+
 
 /*!
  * \brief read daily meteo data from a table in the criteria-1D format
@@ -845,12 +849,12 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
  * \return true if data are correctly loaded
  * \note meteoPoint have to be initialized BEFORE function
  */
-bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QString *myError)
+bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int maxNrDays, QString &error)
 {
     const int MAX_MISSING_DAYS = 3;
     QDate myDate, expectedDate, previousDate;
     Crit3DDate date;
-    QString meteoID = QString::fromStdString(meteoPoint->id);
+    QString meteoID = QString::fromStdString(meteoPoint.id);
 
     float tmin = NODATA;
     float tmax = NODATA;
@@ -862,24 +866,27 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
     float previousTmax = NODATA;
     float previousWaterTable = NODATA;
     int nrMissingData = 0;
+    std::vector<QString> wrongDate;
 
     // first date
-    query->first();
-    myDate = query->value("date").toDate();
+    query.first();
+    myDate = query.value("date").toDate();
     expectedDate = myDate;
     previousDate = myDate.addDays(-1);
 
-    bool existEt0 = !(query->value("et0").isNull());
-    bool existWatertable = !(query->value("watertable").isNull());
-    bool existTavg = !(query->value("tavg").isNull());
+    QList<QString> fieldList = getFieldsUpperCase(query);
+    bool existEt0 = fieldList.contains("ET0");
+    bool existWatertable = fieldList.contains("WATERTABLE");
+    bool existTavg = fieldList.contains("TAVG");
 
+    int currentIndex = 0;
     do
     {
-        myDate = query->value("date").toDate();
+        myDate = query.value("date").toDate();
 
         if (! myDate.isValid())
         {
-            *myError = meteoID + " wrong date format: " + query->value("date").toString();
+            error = meteoID + " wrong date format: " + query.value("date").toString();
             return false;
         }
 
@@ -889,7 +896,7 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
             {
                 if (expectedDate.daysTo(myDate) > MAX_MISSING_DAYS)
                 {
-                    *myError = meteoID + " wrong METEO: too many missing data." + expectedDate.toString();
+                    error = meteoID + " wrong METEO: too many missing data." + expectedDate.toString();
                     return false;
                 }
                 else
@@ -905,12 +912,12 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
                         waterTable = previousWaterTable;
 
                         date = getCrit3DDate(expectedDate);
-                        meteoPoint->setMeteoPointValueD(date, dailyAirTemperatureMin, tmin);
-                        meteoPoint->setMeteoPointValueD(date, dailyAirTemperatureMax, tmax);
-                        meteoPoint->setMeteoPointValueD(date, dailyAirTemperatureAvg, tmed);
-                        meteoPoint->setMeteoPointValueD(date, dailyPrecipitation, prec);
-                        meteoPoint->setMeteoPointValueD(date, dailyReferenceEvapotranspirationHS, et0);
-                        meteoPoint->setMeteoPointValueD(date, dailyWaterTableDepth, waterTable);
+                        meteoPoint.setMeteoPointValueD(date, dailyAirTemperatureMin, tmin);
+                        meteoPoint.setMeteoPointValueD(date, dailyAirTemperatureMax, tmax);
+                        meteoPoint.setMeteoPointValueD(date, dailyAirTemperatureAvg, tmed);
+                        meteoPoint.setMeteoPointValueD(date, dailyPrecipitation, prec);
+                        meteoPoint.setMeteoPointValueD(date, dailyReferenceEvapotranspirationHS, et0);
+                        meteoPoint.setMeteoPointValueD(date, dailyWaterTableDepth, waterTable);
 
                         expectedDate = expectedDate.addDays(1);
                     }
@@ -922,27 +929,28 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
             previousWaterTable = waterTable;
 
             // mandatory variables
-            getValue(query->value("tmin"), &tmin);
-            getValue(query->value("tmax"), &tmax);
-            getValue(query->value("prec"), &prec);
+            getValue(query.value("tmin"), &tmin);
+            getValue(query.value("tmax"), &tmax);
+            getValue(query.value("prec"), &prec);
 
             // check
             if (prec < 0.f) prec = NODATA;
-            if (tmin < -60 || tmin > 50) tmin = NODATA;
-            if (tmax < -50 || tmax > 60) tmax = NODATA;
+            if ((tmin < -60.f) || (tmin > 50.f)) tmin = NODATA;
+            if ((tmax < -50.f) || (tmax > 60.f)) tmax = NODATA;
 
-            if (int(tmin) == int(NODATA) || int(tmax) == int(NODATA) || int(prec) == int(NODATA))
+            if (isEqual(tmin, NODATA) || isEqual(tmax, NODATA) || isEqual(prec, NODATA))
             {
+                wrongDate.push_back(myDate.toString("yyyy-MM-dd"));
                 if (nrMissingData < MAX_MISSING_DAYS)
                 {
-                    if (int(tmin) == int(NODATA)) tmin = previousTmin;
-                    if (int(tmax) == int(NODATA)) tmax = previousTmax;
-                    if (int(prec) == int(NODATA)) prec = 0;
+                    if (isEqual(tmin, NODATA)) tmin = previousTmin;
+                    if (isEqual(tmax, NODATA)) tmax = previousTmax;
+                    if (isEqual(prec, NODATA)) prec = 0;
                     nrMissingData++;
                 }
                 else
                 {
-                    *myError = meteoID + " wrong METEO: too many missing data " + myDate.toString();
+                    error = meteoID + " wrong METEO: too many missing data " + myDate.toString();
                     return false;
                 }
             }
@@ -953,8 +961,8 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
             // TAVG [°C]
             if (existTavg)
             {
-                getValue(query->value("tavg"), &tmed);
-                if (int(tmed) == int(NODATA) || tmed < -40.f || tmed > 50.f)
+                getValue(query.value("tavg"), &tmed);
+                if (isEqual(tmed, NODATA) || (tmed < -40.f) || (tmed > 50.f))
                      tmed = (tmin + tmax) * 0.5f;
             }
             else tmed = (tmin + tmax) * 0.5f;
@@ -962,8 +970,8 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
             // ET0 [mm]
             if (existEt0)
             {
-                getValue(query->value("et0"), &et0);
-                if (et0 < 0.f || et0 > 10.f)
+                getValue(query.value("et0"), &et0);
+                if ((et0 < 0.f) || (et0 > 10.f))
                     et0 = NODATA;
             }
             else et0 = NODATA;
@@ -971,33 +979,46 @@ bool readDailyDataCriteria1D(QSqlQuery *query, Crit3DMeteoPoint *meteoPoint, QSt
             // Watertable depth [m]
             if (existWatertable)
             {
-                getValue(query->value("watertable"), &waterTable);
+                getValue(query.value("watertable"), &waterTable);
                 if (waterTable < 0.f)
                     waterTable = NODATA;
             }
             else waterTable = NODATA;
 
             date = getCrit3DDate(myDate);
-            if (meteoPoint->obsDataD[0].date.daysTo(date) < meteoPoint->nrObsDataDaysD)
+            if (meteoPoint.obsDataD[0].date.daysTo(date) < meteoPoint.nrObsDataDaysD)
             {
-                meteoPoint->setMeteoPointValueD(date, dailyAirTemperatureMin, float(tmin));
-                meteoPoint->setMeteoPointValueD(date, dailyAirTemperatureMax, float(tmax));
-                meteoPoint->setMeteoPointValueD(date, dailyAirTemperatureAvg, float(tmed));
-                meteoPoint->setMeteoPointValueD(date, dailyPrecipitation, float(prec));
-                meteoPoint->setMeteoPointValueD(date, dailyReferenceEvapotranspirationHS, float(et0));
-                meteoPoint->setMeteoPointValueD(date, dailyWaterTableDepth, waterTable);
+                meteoPoint.setMeteoPointValueD(date, dailyAirTemperatureMin, float(tmin));
+                meteoPoint.setMeteoPointValueD(date, dailyAirTemperatureMax, float(tmax));
+                meteoPoint.setMeteoPointValueD(date, dailyAirTemperatureAvg, float(tmed));
+                meteoPoint.setMeteoPointValueD(date, dailyPrecipitation, float(prec));
+                meteoPoint.setMeteoPointValueD(date, dailyReferenceEvapotranspirationHS, float(et0));
+                meteoPoint.setMeteoPointValueD(date, dailyWaterTableDepth, waterTable);
             }
             else
             {
-                *myError = meteoID + " wrong METEO: index out of range.";
+                error = meteoID + " wrong METEO: index out of range.";
                 return false;
             }
 
             previousDate = myDate;
             expectedDate = myDate.addDays(1);
+            currentIndex++;
         }
 
-    } while(query->next());
+    } while(query.next() && (currentIndex < maxNrDays || maxNrDays == NODATA));
+
+    if (wrongDate.size() > 0)
+    {
+        error = "WARNING on meteo table: " + meteoID + "\n";
+        error += "Wrong or missing data: ";
+        for (unsigned int i = 0; i < wrongDate.size(); i++)
+        {
+            error += wrongDate[i];
+            if (i < (wrongDate.size() - 1))
+                error += ", ";
+        }
+    }
 
     return true;
 }

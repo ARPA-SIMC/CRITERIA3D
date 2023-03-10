@@ -77,19 +77,18 @@ double VolumetricLatentHeatVaporization(double myPressure, double myT)
 
 
 /*!
- * \brief vapourPressureDeficit
+ * \brief Vapour Pressure Deficit (VPD)
  * \param air temperature (C)
- * \param realtive humidity (%)
+ * \param relative humidity (%)
  * \return Vapour pressure deficit [hPa]
  */
-double vapourPressureDeficit(double tAir, double relativeHumidity)
+double VapourPressureDeficit(double tAir, double relativeHumidity)
 {
     // check relative humidity
     if (relativeHumidity < 1) relativeHumidity = 1.0;
     if (relativeHumidity > 100) relativeHumidity = 100.0;
-    relativeHumidity /= 100.0;
 
-    return (1.0 - relativeHumidity) * 6.1375 * exp((17.502 * tAir) / (240.97 + tAir));
+    return (1.0 - relativeHumidity / 100.0) * SaturationVaporPressure(tAir) / 100.0;
 }
 
 

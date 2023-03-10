@@ -59,6 +59,7 @@
         bool openDatabase(QString *myError, QString connectionName);
         bool newDatabase(QString *myError);
         bool newDatabase(QString *myError, QString connectionName);
+        bool deleteDatabase(QString *myError);
         void closeDatabase();
         bool parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc, QString *error);
         bool checkXML(QString *myError);
@@ -146,6 +147,8 @@
                                                               QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList, int memberNr);
         bool saveCellCurrentGridHourly(QString *myError, QString meteoPointID, QDateTime dateTime, int varCode, float value);
         bool saveCellCurrentGridHourlyFF(QString *myError, QString meteoPointID, QDateTime dateTime, QString varPragaName, float value);
+        bool activeAllCells(QString *myError);
+        bool setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState);
 
         QDate getFirstDailyDate() const;
         QDate getLastDailyDate() const;
@@ -153,6 +156,8 @@
         QDate getLastHourlyDate() const;
         QDate getFirsMonthlytDate() const;
         QDate getLastMonthlyDate() const;
+
+        bool saveLogProcedures(QString *myError, QString nameProc, QDate date);
 
     private:
 

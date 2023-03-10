@@ -167,6 +167,7 @@ QList<QString> getSharedCommandList()
 
     cmdList.append("Log     | SetLogFile");
     cmdList.append("DEM     | LoadDEM");
+    cmdList.append("POINT   | LoadPoints");
     cmdList.append("GRID    | LoadGrid");
     cmdList.append("Quit    | Exit");
 
@@ -205,6 +206,24 @@ int cmdLoadDEM(Project* myProject, QList<QString> argumentList)
     }
 }
 
+int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList)
+{
+    if (argumentList.size() < 2)
+    {
+        myProject->logError("Missing db point name");
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    QString filename = argumentList.at(1);
+
+    if (! myProject->loadMeteoPointsDB(filename))
+    {
+        myProject->logError();
+        return ERROR_DBPOINT;
+    }
+
+    return PRAGA_OK;
+}
 
 int cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList)
 {
@@ -267,6 +286,11 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
     {
         *isCommandFound = true;
         return cmdLoadDEM(myProject, argumentList);
+    }
+    else if (command == "POINT" || command == "LOADPOINTS")
+    {
+        *isCommandFound = true;
+        return cmdOpenDbPoint(myProject, argumentList);
     }
     else if (command == "GRID" || command == "LOADGRID")
     {

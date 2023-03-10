@@ -10,8 +10,10 @@
     #ifndef CRITERIA1DCASE_H
         #include "criteria1DCase.h"
     #endif
+    #ifndef CARBON_NITROGEN_MODEL_H
+        #include "carbonNitrogenModel.h"
+    #endif
 
-    #include <QDate>
     #include <fstream>
 
     class Crit1DProject
@@ -42,6 +44,9 @@
 
         bool isXmlMeteoGrid;
 
+        Crit1DCase myCase;
+        Crit1DCarbonNitrogenProfile myCarbonNitrogenProfile;
+
         // soil
         soil::Crit3DTextureClass soilTexture[13];
 
@@ -62,26 +67,24 @@
         bool isSaveState;
         bool isRestart;
 
-        // seasonal forecast
+        // forecast period
+        bool isYearlyStatistics;
         bool isSeasonalForecast;
         bool isMonthlyForecast;
         bool isShortTermForecast;
 
         int firstSeasonMonth;
         int daysOfForecast;
-        int nrForecasts;
-        std::vector<float> forecastIrr;
-        std::vector<float> forecastPrec;
+        int nrYears;
+        std::vector<float> irriSeries;
+        std::vector<float> precSeries;
 
         QString outputString;
-
         QString logFileName;
-        std::ofstream logFile;
-
-        bool addDateTimeLogFile;
-
         QString outputCsvFileName;
         std::ofstream outputCsvFile;
+
+        bool addDateTimeLogFile;
 
         // specific output
         std::vector<int> waterContentDepth;
@@ -99,8 +102,6 @@
         Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
 
-        Crit1DCase myCase;
-
         void closeProject();
         bool readSettings();
         void closeAllDatabase();
@@ -113,20 +114,20 @@
         bool setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr);
 
         bool setPercentileOutputCsv();
-        void updateSeasonalForecastOutput(Crit3DDate myDate, int &index);
         void updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int memberNr);
-        void initializeSeasonalForecast(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
-        bool computeSeasonalForecast(unsigned int index, float irriRatio);
+        void initializeIrrigationStatistics(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
+        void updateIrrigationStatistics(Crit3DDate myDate, int &index);
+        bool computeIrrigationStatistics(unsigned int index, float irriRatio);
         bool computeMonthlyForecast(unsigned int unitIndex, float irriRatio);
 
         bool computeCase(unsigned int memberNr);
         bool computeUnit(unsigned int unitIndex, unsigned int memberNr);
 
         bool createOutputTable(QString &myError);
-        bool createState(QString &myError);
+        bool createDbState(QString &myError);
         bool saveState(QString &myError);
         bool restoreState(QString dbStateToRestoreName, QString &myError);
-        void prepareOutput(Crit3DDate myDate, bool isFirst);
+        void updateOutput(Crit3DDate myDate, bool isFirst);
         bool saveOutput(QString &myError);
 
     };

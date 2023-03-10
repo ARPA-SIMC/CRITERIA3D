@@ -11,9 +11,7 @@
         #include "meteoGrid.h"
     #endif
 
-    #ifndef _DEQUE_
-        #include <deque>
-    #endif
+    #include <deque>
 
     std::string getKeyStringInterpolationMethod(TInterpolationMethod value);
     TProxyVar getProxyPragaName(std::string name_);
@@ -153,6 +151,7 @@
         void addProxy(Crit3DProxy myProxy, bool isActive_);
         float getProxyValue(unsigned pos, std::vector <float> proxyValues);
         bool getCombination(int combinationInteger, Crit3DProxyCombination &outCombination);
+        int getProxyPosFromName(TProxyVar name);
 
         void setInterpolationMethod(TInterpolationMethod myValue);
         TInterpolationMethod getInterpolationMethod();

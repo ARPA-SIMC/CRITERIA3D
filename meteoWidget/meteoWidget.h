@@ -6,8 +6,8 @@
     #include "meteoPoint.h"
     #include "callout.h"
 
-
     qreal findMedian(QList<double> sortedList, int begin, int end);
+
     class Crit3DMeteoWidget : public QWidget
     {
         Q_OBJECT
@@ -17,6 +17,7 @@
             ~Crit3DMeteoWidget() override;
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
+            void setCurrentDate(QDate myDate);
             void setDateInterval(QDate date0, QDate date1);
             void draw(Crit3DMeteoPoint mp, bool isAppend);
             void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
@@ -45,11 +46,13 @@
             void on_actionChangeLeftAxis();
             void on_actionChangeRightAxis();
             void on_actionExportGraph();
+            void on_actionRemoveStation();
 
     private:
             int meteoWidgetID;
             bool isGrid;
             bool isEnsemble;
+            bool isInitialized;
             int nrMembers;
             Crit3DMeteoSettings* meteoSettings;
             QPushButton *addVarButton;
@@ -91,6 +94,7 @@
             QDate lastDailyDate;
             QDate firstHourlyDate;
             QDate lastHourlyDate;
+            QDate currentDate;
             bool isLine;
             bool isBar;
             Callout *m_tooltip;

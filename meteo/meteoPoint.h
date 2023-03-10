@@ -109,6 +109,7 @@
             float anomaly;
             float anomalyPercentage;
             float climate;
+
             bool active;
             bool selected;
             bool marked;
@@ -147,6 +148,7 @@
             void initializeObsDataM(unsigned int numberOfMonths, unsigned int month, int year);
 
             bool existDailyData(const Crit3DDate& myDate);
+            Crit3DDate getLastDailyData();
 
             float getMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar);
             bool setMeteoPointValueH(const Crit3DDate& myDate, int myHour, int myMinutes, meteoVariable myVar, float myValue);
@@ -167,6 +169,9 @@
 
             bool computeDerivedVariables(Crit3DTime dateTime);
             bool computeMonthlyAggregate(Crit3DDate firstDate, Crit3DDate lastDate, meteoVariable dailyMeteoVar, Crit3DMeteoSettings *meteoSettings, Crit3DQuality *qualityCheck, Crit3DClimateParameters *climateParam);
+            TObsDataH *getObsDataH() const;
+            void initializeObsDataDFromMp(unsigned int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp);
+            void initializeObsDataHFromMp(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp);
 
     private:
             TObsDataH *obsDataH;
