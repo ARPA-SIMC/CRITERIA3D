@@ -57,7 +57,10 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     if (isMeteoPointLoaded)
     {
         pointsButton.setEnabled(true);
-        pointsButton.setChecked(true); //default
+        if (!isMeteoGridLoaded)
+        {
+            pointsButton.setChecked(true);
+        }
     }
     else
     {
@@ -66,7 +69,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     if (isMeteoGridLoaded)
     {
         gridButton.setEnabled(true);
-        if (!pointsButton.isChecked())
+        if (!isMeteoPointLoaded)
         {
             gridButton.setChecked(true);
         }
@@ -74,6 +77,20 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     else
     {
         gridButton.setEnabled(false);
+    }
+
+    if (isMeteoPointLoaded && isMeteoGridLoaded)
+    {
+        if (myProject.lastElabTargetisGrid)
+        {
+            gridButton.setChecked(true);
+            pointsButton.setChecked(false);
+        }
+        else
+        {
+            pointsButton.setChecked(true);
+            gridButton.setChecked(false);
+        }
     }
 
     if (pointsButton.isChecked())

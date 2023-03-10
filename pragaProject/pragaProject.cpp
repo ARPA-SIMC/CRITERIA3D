@@ -41,6 +41,7 @@ void PragaProject::initializePragaProject()
     pragaDefaultSettings = nullptr;
     pragaDailyMaps = nullptr;
     users.clear();
+    lastElabTargetisGrid = false;
 }
 
 void PragaProject::clearPragaProject()

@@ -59,6 +59,7 @@
         Crit3DClimate* clima;
         Crit3DClimate* climaFromDb;
         Crit3DClimate* referenceClima;
+        bool lastElabTargetisGrid;
 
         bool isElabMeteoPointsValue;
         QString climateIndex;
