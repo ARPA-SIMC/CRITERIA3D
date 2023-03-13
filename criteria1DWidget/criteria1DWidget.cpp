@@ -51,7 +51,7 @@
 
 Criteria1DWidget::Criteria1DWidget()
 {
-    resize(1300, 700);
+    resize(1200, 600);
 
     // font
     QFont currentFont = this->font();
@@ -2037,9 +2037,9 @@ bool Criteria1DWidget::checkIfCropIsChanged()
         return cropChanged;
     }
     // roots
-    if(cropFromDB.roots.rootDepthMin != rootDepthZeroValue->text().toDouble()
-            || cropFromDB.roots.rootDepthMax != rootDepthMaxValue->text().toDouble()
-            || cropFromDB.roots.shapeDeformation != shapeDeformationValue->value()
+    if(! isEqual(cropFromDB.roots.rootDepthMin, rootDepthZeroValue->text().toDouble())
+            || ! isEqual(cropFromDB.roots.rootDepthMax, rootDepthMaxValue->text().toDouble())
+            || ! isEqual(cropFromDB.roots.shapeDeformation, shapeDeformationValue->value())
             || cropFromDB.roots.rootShape != root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString()))
     {
         cropChanged = true;
