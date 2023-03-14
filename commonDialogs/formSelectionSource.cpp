@@ -1,14 +1,12 @@
 #include "formSelectionSource.h"
-//#include "pragaProject.h"
 
 #include <QRadioButton>
 #include <QMessageBox>
 #include <QBoxLayout>
 
-/*
-pragaProject myProject;
 FormSelectionSource::FormSelectionSource()
 {
+    /*
     this->setWindowTitle("Please select a source");
     QHBoxLayout* mainLayout = new QHBoxLayout;
     this->resize(200, 300);
@@ -18,7 +16,13 @@ FormSelectionSource::FormSelectionSource()
     QRadioButton *gridButton = new QRadioButton(tr("Grid"));
     QRadioButton *pointButton =new QRadioButton(tr("Meteo Points"));
 
-    // Questo sarebbe carino ma devi passargli le informazioni e non saprei da dove:
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(QDialog::Accepted); });
+    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(QDialog::Rejected); });
+
+
+    /* Questo sarebbe carino ma devi passargli le informazioni e non saprei da dove (da fare forse nella main):
     if (isMeteoPointLoaded)
     {
         pointsButton.setEnabled(true);
@@ -51,16 +55,19 @@ FormSelectionSource::FormSelectionSource()
     SelectionLayout->addWidget(gridSelection, 0, 0);
     SelectionLayout->addWidget(pointSelection,0, 1);
     */
-/*
+    /*
     horizLayout->addWidget(gridButton);
     horizLayout->addWidget(pointButton);
+    horizLayout->addWidget(&buttonBox);
 
-    this->setLayout(horizLayout);
+    this->setLayout(horizLayout);   // Forse non serve il this.
+    exec();
 
-    connect(gridButton, &QRadioButton::clicked, this, [=](){ sourceChange(); });
-    connect(gridButton, &QRadioButton::clicked, this, [=](){ sourceChange(); });
+    //connect(gridButton, &QRadioButton::clicked, this, [=](){ sourceChange(); });
+    //connect(gridButton, &QRadioButton::clicked, this, [=](){ sourceChange(); });
+    */
 }
-*/
+
 
 /*
 void formSelectionSource::sourceChange()
@@ -77,25 +84,7 @@ void formSelectionSource::sourceChange()
     }
 }
 
-*/
-    /*
-            cmbStringList = new QComboBox;
-    cmbStringList->addItems(stringList);
 
-    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-    connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(QDialog::Accepted); });
-    connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(QDialog::Rejected); });
-
-    datasetLayout->addWidget(cmbStringList);
-    layoutOk->addWidget(&buttonBox);
-
-    mainLayout->addLayout(datasetLayout);
-    mainLayout->addLayout(layoutOk);
-
-    setLayout(mainLayout);
-    exec();
-}
 
 FormSelection::~FormSelection()
 {

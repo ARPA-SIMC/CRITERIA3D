@@ -1,21 +1,21 @@
 #ifndef FORMSELECTIONSOURCE_H
 #define FORMSELECTIONSOURCE_H
-/*
+
 #include <QtWidgets>
-*/
+
 #include <QWidget>
 
 
-class FormSelectionSource : public QWidget
+class FormSelectionSource : public QDialog
 {
     Q_OBJECT
 
 public:
     FormSelectionSource();
-    void sourceDone(int res);
-    QString getSourceSelection();
+    void done(int res);
+    //QString getSourceSelection();
     int getSourceSelectionId();
-    void sourceChange();
+    //void sourceChange();
 
 private:
     /*
