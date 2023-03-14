@@ -220,12 +220,6 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
 }
 
 
-bool Crit3DCrop::isWaterSurplusResistant() const
-{
-    return (idCrop == "RICE");
-}
-
-
 int Crit3DCrop::getDaysFromTypicalSowing(int myDoy) const
 {
     return (myDoy - sowingDoy) % 365;
@@ -250,6 +244,12 @@ bool Crit3DCrop::isInsideTypicalCycle(int myDoy) const
 bool Crit3DCrop::isSowingCrop() const
 {
     return (type == HERBACEOUS_ANNUAL || type == HORTICULTURAL);
+}
+
+
+bool Crit3DCrop::isWaterSurplusResistant() const
+{
+    return (idCrop == "RICE");
 }
 
 
