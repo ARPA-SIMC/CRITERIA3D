@@ -32,18 +32,16 @@ INCLUDEPATH += ../mathFunctions
 SOURCES += \
     formInfo.cpp \
     formSelection.cpp \
-    formSelectionSource.cpp \
     formText.cpp \
     formTimePeriod.cpp \
-    formSelectionSource.cpp \
+    formSelectionSource.cpp
 
 HEADERS += \
     formInfo.h \
     formSelection.h \
-    formSelectionSource.h \
     formText.h \
     formTimePeriod.h \
-    formSelectionSource.h \
+    formSelectionSource.h
 
 FORMS += \
     formTimePeriod.ui
