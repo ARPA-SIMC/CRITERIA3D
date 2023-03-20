@@ -173,6 +173,14 @@ Crit3DTime getCrit3DTime(const QDate& t, int hour)
     myTime.date.day = t.day();
     myTime.date.month = t.month();
     myTime.date.year = t.year();
+
+    if (hour >= 24)
+    {
+        int nrDays = int(floor(hour / 24));
+        for (int i = 1; i <= nrDays; i++)
+            ++myTime.date;
+        hour -= (nrDays * 24);
+    }
     myTime.time = hour * 3600;
 
     return myTime;
