@@ -1938,7 +1938,7 @@ void Crit1DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
 
     for (l=1; l<myLastLayer; l++) // verificare i cicli for per cambio indici
     {
-        depthRatio = myCase.soilLayers[l].thickness / (myCase.soilLayers[l].thickness + myCase.soilLayers[l].depth);        
+        depthRatio = myCase.soilLayers[l].thickness / (myCase.soilLayers[myLastLayer].thickness + myCase.soilLayers[myLastLayer].depth);
         myCase.carbonNitrogenLayers[l].N_litter = N_totLitter * depthRatio;
         myCase.carbonNitrogenLayers[l].C_litter = C_totLitter * depthRatio;
         myCase.carbonNitrogenLayers[l].N_humus = N_totHumus * depthRatio;
