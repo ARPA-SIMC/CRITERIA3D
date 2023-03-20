@@ -1,4 +1,5 @@
 #include "formSelectionSource.h"
+#include "commonConstants.h"
 
 #include <QRadioButton>
 #include <QMessageBox>
@@ -7,66 +8,30 @@
 FormSelectionSource::FormSelectionSource()
 {
 
-    this->setWindowTitle("Please select a source");
-    QHBoxLayout* mainLayout = new QHBoxLayout;
-    this->resize(200, 300);
+    this->setWindowTitle("Select data source");
+    this->resize(300, 150);
 
-    QHBoxLayout *horizLayout = new QHBoxLayout;
-
-    gridButton = new QRadioButton(tr("Grid"));
+    gridButton = new QRadioButton(tr("Meteo Grid"));
     pointButton =new QRadioButton(tr("Meteo Points"));
+
+    QHBoxLayout *sourceLayout = new QHBoxLayout;
+    sourceLayout->addWidget(gridButton);
+    sourceLayout->addWidget(pointButton);
+
+    QGroupBox *sourceGroupBox = new QGroupBox("Source");
+    sourceGroupBox->setLayout(sourceLayout);
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
     connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(QDialog::Accepted); });
     connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(QDialog::Rejected); });
 
-    connect(pointButton, &QRadioButton::clicked, [=](){ this->getSourceSelectionId(); });
-    connect(gridButton, &QRadioButton::clicked, [=](){ this->getSourceSelectionId(); });
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+    mainLayout->addWidget(sourceGroupBox);
+    mainLayout->addWidget(&buttonBox);
 
-
-    /* Questo sarebbe carino ma devi passargli le informazioni e non saprei da dove (da fare forse nella main):
-    if (isMeteoPointLoaded)
-    {
-        pointsButton.setEnabled(true);
-        if (!isMeteoGridLoaded)
-        {
-            pointsButton.setChecked(true);
-        }
-    }
-    else
-    {
-        pointsButton.setEnabled(false);
-    }
-    if (isMeteoGridLoaded)
-    {
-        gridButton.setEnabled(true);
-        if (!isMeteoPointLoaded)
-        {
-            gridButton.setChecked(true);
-        }
-    }
-    else
-    {
-        gridButton.setEnabled(false);
-    }
-    */
-
-    /*
-    QGridLayout *SelectionLayout = new QGridLayout;
-
-    SelectionLayout->addWidget(gridSelection, 0, 0);
-    SelectionLayout->addWidget(pointSelection,0, 1);
-    */
-
-    horizLayout->addWidget(gridButton);
-    horizLayout->addWidget(pointButton);
-    horizLayout->addWidget(&buttonBox);
-
-    setLayout(horizLayout);   // Forse non serve il this.
-    show();
+    setLayout(mainLayout);
     exec();
-
 }
 
 
@@ -74,7 +39,7 @@ void FormSelectionSource::done(int res)
 {
     if (res == QDialog::Accepted) // ok
     {
-        if (!pointButton->isChecked() && !gridButton->isChecked())     //(cmbStringList->currentText() == "")
+        if (!pointButton->isChecked() && !gridButton->isChecked())
         {
             QMessageBox::information(nullptr, "Missing source selection.", "Please choose a data source.");
             return;
@@ -99,6 +64,10 @@ int FormSelectionSource::getSourceSelectionId()
     else if (gridButton->isChecked())
     {
         return 2;
+    }
+    else
+    {
+        return NODATA;
     }
 }
 
