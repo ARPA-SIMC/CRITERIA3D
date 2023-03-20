@@ -6,20 +6,23 @@
 
 FormSelectionSource::FormSelectionSource()
 {
-    /*
+
     this->setWindowTitle("Please select a source");
     QHBoxLayout* mainLayout = new QHBoxLayout;
     this->resize(200, 300);
 
     QHBoxLayout *horizLayout = new QHBoxLayout;
 
-    QRadioButton *gridButton = new QRadioButton(tr("Grid"));
-    QRadioButton *pointButton =new QRadioButton(tr("Meteo Points"));
+    gridButton = new QRadioButton(tr("Grid"));
+    pointButton =new QRadioButton(tr("Meteo Points"));
 
     QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
 
     connect(&buttonBox, &QDialogButtonBox::accepted, [=](){ this->done(QDialog::Accepted); });
     connect(&buttonBox, &QDialogButtonBox::rejected, [=](){ this->done(QDialog::Rejected); });
+
+    connect(pointButton, &QRadioButton::clicked, [=](){ this->getSourceSelectionId(); });
+    connect(gridButton, &QRadioButton::clicked, [=](){ this->getSourceSelectionId(); });
 
 
     /* Questo sarebbe carino ma devi passargli le informazioni e non saprei da dove (da fare forse nella main):
@@ -55,69 +58,47 @@ FormSelectionSource::FormSelectionSource()
     SelectionLayout->addWidget(gridSelection, 0, 0);
     SelectionLayout->addWidget(pointSelection,0, 1);
     */
-    /*
+
     horizLayout->addWidget(gridButton);
     horizLayout->addWidget(pointButton);
     horizLayout->addWidget(&buttonBox);
 
-    this->setLayout(horizLayout);   // Forse non serve il this.
+    setLayout(horizLayout);   // Forse non serve il this.
+    show();
     exec();
 
-    //connect(gridButton, &QRadioButton::clicked, this, [=](){ sourceChange(); });
-    //connect(gridButton, &QRadioButton::clicked, this, [=](){ sourceChange(); });
-    */
 }
 
 
-/*
-void formSelectionSource::sourceChange()
-{
-    if (pointsButton.isChecked())
-    {
-        isMeteoGrid = false;
-        myProject.clima->setDb(myProject.meteoPointsDbHandler->getDb());    // Al posto di clima cosa devo mettere?
-    }
-    else if (gridButton.isChecked())
-    {
-        isMeteoGrid = true;
-        myProject.clima->setDb(myProject.meteoGridDbHandler->db());
-    }
-}
-
-
-
-FormSelection::~FormSelection()
-{
-    close();
-}
-
-void FormSelection::done(int res)
+void FormSelectionSource::done(int res)
 {
     if (res == QDialog::Accepted) // ok
     {
-        if (cmbStringList->currentText() == "")
+        if (!pointButton->isChecked() && !gridButton->isChecked())     //(cmbStringList->currentText() == "")
         {
-            QMessageBox::information(nullptr, "Missing selection", "Select");
+            QMessageBox::information(nullptr, "Missing source selection.", "Please choose a data source.");
             return;
         }
         QDialog::done(QDialog::Accepted);
         return;
     }
-    else    // cancel, close or exc was pressed
+    else    // cancel, close or esc was pressed
     {
         QDialog::done(QDialog::Rejected);
         return;
     }
 }
 
-QString FormSelection::getSelection()
+
+int FormSelectionSource::getSourceSelectionId()
 {
-    return cmbStringList->currentText();
+    if (pointButton->isChecked())
+    {
+       return 1;
+    }
+    else if (gridButton->isChecked())
+    {
+        return 2;
+    }
 }
 
-int FormSelection::getSelectionId()
-{
-    return cmbStringList->currentIndex();
-}
-
-*/

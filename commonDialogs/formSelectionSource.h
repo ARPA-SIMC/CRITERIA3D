@@ -3,7 +3,7 @@
 
 #include <QtWidgets>
 
-#include <QWidget>
+//#include <QWidget>
 
 
 class FormSelectionSource : public QDialog
@@ -18,6 +18,8 @@ public:
     //void sourceChange();
 
 private:
+    QRadioButton* pointButton;
+    QRadioButton* gridButton;
     /*
     QGroupBox *SourceSelection();
 */
