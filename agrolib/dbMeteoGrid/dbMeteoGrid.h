@@ -157,6 +157,8 @@
         QDate getFirsMonthlytDate() const;
         QDate getLastMonthlyDate() const;
 
+        bool saveLogProcedures(QString *myError, QString nameProc, QDate date);
+
     private:
 
         QString _fileName;

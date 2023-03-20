@@ -18,12 +18,16 @@ class DialogMeteoComputation : public QDialog
 
     private:
         QSettings* settings;
+        bool isMeteoPointLoaded;
+        bool isMeteoGridLoaded;
         bool isMeteoGrid;
         bool isAnomaly;
         bool saveClima;
         QString title;
         QDateEdit currentDay;
         QLabel currentDayLabel;
+        QRadioButton pointsButton;
+        QRadioButton gridButton;
         QComboBox variableList;
         QLineEdit firstYearEdit;
         QLineEdit lastYearEdit;
@@ -60,7 +64,7 @@ class DialogMeteoComputation : public QDialog
 
 
     public:
-        DialogMeteoComputation(QSettings *settings, bool isMeteoGrid, bool isAnomaly, bool saveClima);
+        DialogMeteoComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded, bool isAnomaly, bool saveClima);
         void done(bool res);
         void displayPeriod(const QString value);
         void checkYears();
@@ -74,6 +78,8 @@ class DialogMeteoComputation : public QDialog
         QList<QString> getElabSaveList();
         void copyDataFromXML();
         void saveDataToXML();
+        void targetChange();
+        bool getIsMeteoGrid() const;
 };
 
 

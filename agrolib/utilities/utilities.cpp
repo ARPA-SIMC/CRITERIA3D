@@ -5,6 +5,7 @@
 #include <QVariant>
 #include <QSqlDriver>
 #include <QSqlRecord>
+#include <QSqlQuery>
 #include <QDir>
 #include <QTextStream>
 
@@ -16,6 +17,17 @@ QList<QString> getFields(QSqlDatabase* db_, QString tableName)
     QList<QString> fieldList;
     for (int i=0; i < record_.count(); i++)
         fieldList.append(record_.fieldName(i));
+
+    return fieldList;
+}
+
+
+QList<QString> getFieldsUpperCase(QSqlQuery& query)
+{
+    QSqlRecord record = query.record();
+    QList<QString> fieldList;
+    for (int i=0; i < record.count(); i++)
+        fieldList.append(record.fieldName(i).toUpper());
 
     return fieldList;
 }

@@ -874,9 +874,10 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
     expectedDate = myDate;
     previousDate = myDate.addDays(-1);
 
-    bool existEt0 = !(query.value("et0").isNull());
-    bool existWatertable = !(query.value("watertable").isNull());
-    bool existTavg = !(query.value("tavg").isNull());
+    QList<QString> fieldList = getFieldsUpperCase(query);
+    bool existEt0 = fieldList.contains("ET0");
+    bool existWatertable = fieldList.contains("WATERTABLE");
+    bool existTavg = fieldList.contains("TAVG");
 
     int currentIndex = 0;
     do
@@ -934,17 +935,17 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
 
             // check
             if (prec < 0.f) prec = NODATA;
-            if (tmin < -60 || tmin > 50) tmin = NODATA;
-            if (tmax < -50 || tmax > 60) tmax = NODATA;
+            if ((tmin < -60.f) || (tmin > 50.f)) tmin = NODATA;
+            if ((tmax < -50.f) || (tmax > 60.f)) tmax = NODATA;
 
-            if (int(tmin) == int(NODATA) || int(tmax) == int(NODATA) || int(prec) == int(NODATA))
+            if (isEqual(tmin, NODATA) || isEqual(tmax, NODATA) || isEqual(prec, NODATA))
             {
                 wrongDate.push_back(myDate.toString("yyyy-MM-dd"));
                 if (nrMissingData < MAX_MISSING_DAYS)
                 {
-                    if (int(tmin) == int(NODATA)) tmin = previousTmin;
-                    if (int(tmax) == int(NODATA)) tmax = previousTmax;
-                    if (int(prec) == int(NODATA)) prec = 0;
+                    if (isEqual(tmin, NODATA)) tmin = previousTmin;
+                    if (isEqual(tmax, NODATA)) tmax = previousTmax;
+                    if (isEqual(prec, NODATA)) prec = 0;
                     nrMissingData++;
                 }
                 else
@@ -961,7 +962,7 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
             if (existTavg)
             {
                 getValue(query.value("tavg"), &tmed);
-                if (int(tmed) == int(NODATA) || tmed < -40.f || tmed > 50.f)
+                if (isEqual(tmed, NODATA) || (tmed < -40.f) || (tmed > 50.f))
                      tmed = (tmin + tmax) * 0.5f;
             }
             else tmed = (tmin + tmax) * 0.5f;
@@ -970,7 +971,7 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
             if (existEt0)
             {
                 getValue(query.value("et0"), &et0);
-                if (et0 < 0.f || et0 > 10.f)
+                if ((et0 < 0.f) || (et0 > 10.f))
                     et0 = NODATA;
             }
             else et0 = NODATA;

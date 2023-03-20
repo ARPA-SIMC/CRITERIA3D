@@ -1036,6 +1036,7 @@ void Crit1DCarbonNitrogenProfile::N_main(double precGG, Crit1DCase &myCase,Crit3
     //dividing equally between N-NO3 and N-NH4
     //0.00075 g m-2 N-NO3 and N-NH4 mm-1
 
+    N_Reset();
     if (precGG > 0)
     {
         nitrogenTotalProfile.prec_NO3GG = 0.00075 * precGG;
@@ -1465,36 +1466,7 @@ void Crit1DCarbonNitrogenProfile::N_Reset()
     //'02.11.26.MVS
     //'02.10.22.GD
 
-    //'azzeramento giornaliero
-    // credo che venga fatto così semplicemente per riazzerare piuttosto che cambiare dimensione
-    /*
-    ReDim N_imm_l_NH4(nrLayers)
-    ReDim N_imm_l_NO3(nrLayers)
-
-    ReDim C_litter_humus(nrLayers)
-    ReDim C_litter_litter(nrLayers)
-    ReDim C_min_humus(nrLayers)
-    ReDim C_min_litter(nrLayers)
-    ReDim C_denitr_litter(nrLayers)
-    ReDim C_denitr_humus(nrLayers)
-
-    ReDim N_NO3_uptake(nrLayers)
-    ReDim N_NH4_uptake(nrLayers)
-
-    ReDim N_min_humus(nrLayers)
-    ReDim N_min_litter(nrLayers)
-    ReDim N_litter_humus(nrLayers)
-    ReDim N_nitrif(nrLayers)
-    ReDim N_Urea_Hydr(nrLayers)
-    ReDim N_vol(nrLayers)
-
-    ReDim CNratio_litter(nrLayers)
-
-    ReDim N_NO3_runoff(nrLayers)
-    ReDim N_NH4_runoff(nrLayers)
-
-    ReDim N_denitr(nrLayers)
-    */
+    // reset the daily variables of the entire profile to 0
     //'azzero tutte le variabili giornaliere
     //'bil NO3
     nitrogenTotalProfile.NO3_fertGG = 0;
@@ -1673,7 +1645,10 @@ void Crit1DCarbonNitrogenProfile::soluteFluxes(std::vector<double> &mySolute,boo
     int firstLayer=0;
     double myFreeSolute;
 
-    unsigned int lastLayer = myCase.soilLayers.size() - 1;
+    if (myCase.soilLayers.size() <= 0)
+        return;
+
+    unsigned int lastLayer = unsigned(myCase.soilLayers.size()) - 1;
 
     if (pistonDepth >= myCase.soilLayers[lastLayer].depth)
         return;
@@ -1829,10 +1804,9 @@ void Crit1DCarbonNitrogenProfile::N_initializeCrop(bool noReset,Crit1DCase &myCa
             nitrogenTotalProfile.ratioHarvested = 0.4;      // fruits, pruning wood
             nitrogenTotalProfile.ratioResidues = 0.5;       // leaves
             nitrogenTotalProfile.ratioRoots = 0.1;           // roots, trunk, branches
-
-
         }
-        else if (myCase.crop.type == HERBACEOUS_PERENNIAL || myCase.crop.type ==  GRASS || myCase.crop.type ==  FALLOW)
+        else if (myCase.crop.type == HERBACEOUS_PERENNIAL || myCase.crop.type ==  GRASS
+                 || myCase.crop.type ==  FALLOW)
         {
             nitrogenTotalProfile.ratioHarvested = 0.9;
             nitrogenTotalProfile.ratioResidues = 0;
@@ -1873,7 +1847,7 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
     {
         //Select Case TipoColtura
         // annual crop
-        if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL)
+        if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL || myCase.crop.type ==  FALLOW_ANNUAL)
             N_toLitter = myCase.crop.roots.rootDensity[l] * nitrogenTotalProfile.roots; // !! prendere il dato da dove?
         // multiannual crop
         else if (myCase.crop.type == HERBACEOUS_PERENNIAL|| myCase.crop.type == GRASS|| myCase.crop.type ==  FALLOW)
@@ -1886,23 +1860,23 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
         myCase.carbonNitrogenLayers[l].C_litter += carbonNitrogenParameter.CN_RATIO_NOTHARVESTED * N_toLitter;
     }
 
-    if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL)
+    if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL || myCase.crop.type == FALLOW_ANNUAL)
     {
         // annual crops
         nitrogenTotalProfile.cropToHarvest = 0;
         nitrogenTotalProfile.cropToResidues = 0;
         nitrogenTotalProfile.roots = 0;
     }
-    else if (myCase.crop.type == HERBACEOUS_PERENNIAL|| myCase.crop.type == GRASS|| myCase.crop.type ==  FALLOW)
+    else if (myCase.crop.type == HERBACEOUS_PERENNIAL || myCase.crop.type == GRASS || myCase.crop.type == FALLOW)
     {
-        //pluriennali
+        // pluriennal
         nitrogenTotalProfile.cropToHarvest = 0;
         nitrogenTotalProfile.cropToResidues = 0;
         nitrogenTotalProfile.roots *= 0.5;
     }
     else if (myCase.crop.type == FRUIT_TREE)
     {
-        //tree crops
+        // tree crops
             nitrogenTotalProfile.cropToHarvest = 0;
             nitrogenTotalProfile.roots *= 0.5;
     }
@@ -1962,11 +1936,9 @@ void Crit1DCarbonNitrogenProfile::N_plough(Crit1DCase &myCase) // this function 
     else
         myLastLayer = l - 1;
 
-    // tmp = 0;
     for (l=1; l<myLastLayer; l++) // verificare i cicli for per cambio indici
     {
-        depthRatio = myCase.soilLayers[l].thickness / (myCase.soilLayers[l].thickness + myCase.soilLayers[l].depth);
-        //tmp += depthRatio;
+        depthRatio = myCase.soilLayers[l].thickness / (myCase.soilLayers[l].thickness + myCase.soilLayers[l].depth);        
         myCase.carbonNitrogenLayers[l].N_litter = N_totLitter * depthRatio;
         myCase.carbonNitrogenLayers[l].C_litter = C_totLitter * depthRatio;
         myCase.carbonNitrogenLayers[l].N_humus = N_totHumus * depthRatio;

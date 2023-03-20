@@ -131,7 +131,15 @@ bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &co
         compUnitList[i].idCropClass = query.value("ID_CROP").toString();
         compUnitList[i].idMeteo = query.value("ID_METEO").toString();
         compUnitList[i].idForecast = query.value("ID_METEO").toString();
-        compUnitList[i].idSoilNumber = query.value("ID_SOIL").toInt();
+
+        bool isNumber = false;
+        compUnitList[i].idSoilNumber = query.value("ID_SOIL").toInt(&isNumber);
+        if (! isNumber)
+        {
+            // read soilCode
+            compUnitList[i].idSoil = query.value("ID_SOIL").toString();
+            compUnitList[i].idSoilNumber = NODATA;
+        }
 
         if (existNumericalInfiltration)
             compUnitList[i].isNumericalInfiltration = query.value("numerical_solution").toBool();

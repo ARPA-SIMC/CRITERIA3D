@@ -47,7 +47,7 @@ DialogNewCrop::DialogNewCrop(Crit3DCrop *newCrop)
     layoutCrop->addWidget(cycleMaxDurationValue, 4 , 1);
 
     newCrop->type = getCropType(typeCropComboBox->currentText().toStdString());
-    if (!newCrop->isPluriannual())
+    if (newCrop->isSowingCrop())
     {
         sowingDoY->setVisible(true);
         sowingDoYValue->setVisible(true);
@@ -85,10 +85,8 @@ DialogNewCrop::DialogNewCrop(Crit3DCrop *newCrop)
 
 void DialogNewCrop::on_actionChooseType(QString type)
 {
-
-    // isPluriannal: NO sowingDoy and cycleMaxduration, YES default values NULL e 365
     newCrop->type = getCropType(type.toStdString());
-    if (!newCrop->isPluriannual())
+    if (newCrop->isSowingCrop())
     {
         sowingDoY->setVisible(true);
         sowingDoYValue->setVisible(true);

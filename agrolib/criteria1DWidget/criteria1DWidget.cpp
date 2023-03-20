@@ -51,7 +51,7 @@
 
 Criteria1DWidget::Criteria1DWidget()
 {
-    resize(1300, 700);
+    resize(1200, 600);
 
     // font
     QFont currentFont = this->font();
@@ -321,10 +321,10 @@ Criteria1DWidget::Criteria1DWidget()
     shapeDeformationValue->setDecimals(1);
     shapeDeformationValue->setSingleStep(0.1);
 
-    degreeDaysInc = new QLabel(tr("degree days root inc [°C]: "));
-    degreeDaysIncValue = new QLineEdit();
-    degreeDaysIncValue->setMaximumWidth(rootParametersGroup->width()/5);
-    degreeDaysIncValue->setValidator(positiveValidator);
+    rootDegreeDaysInc = new QLabel(tr("degree days root inc [°C]: "));
+    rootDegreeDaysIncValue = new QLineEdit();
+    rootDegreeDaysIncValue->setMaximumWidth(rootParametersGroup->width()/5);
+    rootDegreeDaysIncValue->setValidator(positiveValidator);
 
     parametersRootDepthLayout->addWidget(rootDepthZero, 0, 0);
     parametersRootDepthLayout->addWidget(rootDepthZeroValue, 0, 1);
@@ -334,8 +334,8 @@ Criteria1DWidget::Criteria1DWidget()
     parametersRootDepthLayout->addWidget(rootShapeComboBox, 2, 1);
     parametersRootDepthLayout->addWidget(shapeDeformation, 3, 0);
     parametersRootDepthLayout->addWidget(shapeDeformationValue, 3, 1);
-    parametersRootDepthLayout->addWidget(degreeDaysInc, 4, 0);
-    parametersRootDepthLayout->addWidget(degreeDaysIncValue, 4, 1);
+    parametersRootDepthLayout->addWidget(rootDegreeDaysInc, 4, 0);
+    parametersRootDepthLayout->addWidget(rootDegreeDaysIncValue, 4, 1);
 
     QLabel *irrigationVolume = new QLabel(tr("irrigation quantity [mm]: "));
     irrigationVolumeValue = new QLineEdit();
@@ -1050,8 +1050,6 @@ void Criteria1DWidget::on_actionChooseCase()
     if (myProject.myCase.unit.idCrop != "")
     {
         cropListComboBox.setCurrentText(myProject.myCase.unit.idCrop);
-        clearCrop();
-        updateCropParam(myProject.myCase.unit.idCrop);
     }
     else
     {
@@ -1059,7 +1057,10 @@ void Criteria1DWidget::on_actionChooseCase()
     }
 
     // SOIL
-    myProject.myCase.unit.idSoil = getIdSoilString(&(myProject.dbSoil), myProject.myCase.unit.idSoilNumber, &errorStr);
+    if (myProject.myCase.unit.idSoilNumber != NODATA)
+    {
+        myProject.myCase.unit.idSoil = getIdSoilString(&(myProject.dbSoil), myProject.myCase.unit.idSoilNumber, &errorStr);
+    }
     if (myProject.myCase.unit.idSoil != "")
     {
         soilListComboBox.setCurrentText(myProject.myCase.unit.idSoil);
@@ -1132,7 +1133,7 @@ void Criteria1DWidget::updateCropParam(QString idCrop)
     cropNameValue->setText(QString::fromStdString(myProject.myCase.crop.name));
     cropTypeValue->setText(QString::fromStdString(getCropTypeString(myProject.myCase.crop.type)));
 
-    if (! myProject.myCase.crop.isPluriannual())
+    if (myProject.myCase.crop.isSowingCrop())
     {
         cropSowing.setVisible(true);
         cropCycleMax.setVisible(true);
@@ -1177,16 +1178,16 @@ void Criteria1DWidget::updateCropParam(QString idCrop)
     rootDepthMaxValue->setText(QString::number(myProject.myCase.crop.roots.rootDepthMax));
     shapeDeformationValue->setValue(myProject.myCase.crop.roots.shapeDeformation);
     rootShapeComboBox->setCurrentText(QString::fromStdString(root::getRootDistributionTypeString(myProject.myCase.crop.roots.rootShape)));
-    if (myProject.myCase.crop.isPluriannual())
+    if (myProject.myCase.crop.isRootStatic())
     {
-        degreeDaysInc->setVisible(false);
-        degreeDaysIncValue->setVisible(false);
+        rootDegreeDaysInc->setVisible(false);
+        rootDegreeDaysIncValue->setVisible(false);
     }
     else
     {
-        degreeDaysInc->setVisible(true);
-        degreeDaysIncValue->setVisible(true);
-        degreeDaysIncValue->setText(QString::number(myProject.myCase.crop.roots.degreeDaysRootGrowth));
+        rootDegreeDaysInc->setVisible(true);
+        rootDegreeDaysIncValue->setVisible(true);
+        rootDegreeDaysIncValue->setText(QString::number(myProject.myCase.crop.roots.degreeDaysRootGrowth));
     }
     // irrigation parameters
     irrigationVolumeValue->setText(QString::number(myProject.myCase.crop.irrigationVolume));
@@ -1740,13 +1741,13 @@ bool Criteria1DWidget::updateCrop()
     myProject.myCase.crop.roots.rootDepthMax = rootDepthMaxValue->text().toDouble();
     myProject.myCase.crop.roots.shapeDeformation = shapeDeformationValue->value();
     myProject.myCase.crop.roots.rootShape = root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString());
-    if (myProject.myCase.crop.isPluriannual())
+    if (myProject.myCase.crop.isRootStatic())
     {
         myProject.myCase.crop.roots.degreeDaysRootGrowth = NODATA;
     }
     else
     {
-        myProject.myCase.crop.roots.degreeDaysRootGrowth = degreeDaysIncValue->text().toDouble();
+        myProject.myCase.crop.roots.degreeDaysRootGrowth = rootDegreeDaysIncValue->text().toDouble();
     }
     // irrigation
     QString error;
@@ -2036,15 +2037,15 @@ bool Criteria1DWidget::checkIfCropIsChanged()
         return cropChanged;
     }
     // roots
-    if(cropFromDB.roots.rootDepthMin != rootDepthZeroValue->text().toDouble()
-            || cropFromDB.roots.rootDepthMax != rootDepthMaxValue->text().toDouble()
-            || cropFromDB.roots.shapeDeformation != shapeDeformationValue->value()
+    if(! isEqual(cropFromDB.roots.rootDepthMin, rootDepthZeroValue->text().toDouble())
+            || ! isEqual(cropFromDB.roots.rootDepthMax, rootDepthMaxValue->text().toDouble())
+            || ! isEqual(cropFromDB.roots.shapeDeformation, shapeDeformationValue->value())
             || cropFromDB.roots.rootShape != root::getRootDistributionTypeFromString(rootShapeComboBox->currentText().toStdString()))
     {
         cropChanged = true;
         return cropChanged;
     }
-    if (!cropFromDB.isPluriannual() && cropFromDB.roots.degreeDaysRootGrowth != degreeDaysIncValue->text().toDouble())
+    if (!cropFromDB.isRootStatic() && cropFromDB.roots.degreeDaysRootGrowth != rootDegreeDaysIncValue->text().toDouble())
     {
         cropChanged = true;
         return cropChanged;

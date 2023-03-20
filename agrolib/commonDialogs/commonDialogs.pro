@@ -33,13 +33,15 @@ SOURCES += \
     formInfo.cpp \
     formSelection.cpp \
     formText.cpp \
-    formTimePeriod.cpp
+    formTimePeriod.cpp \
+    formSelectionSource.cpp
 
 HEADERS += \
     formInfo.h \
     formSelection.h \
     formText.h \
-    formTimePeriod.h
+    formTimePeriod.h \
+    formSelectionSource.h
 
 FORMS += \
     formTimePeriod.ui

@@ -41,6 +41,7 @@
         bool writeRasterName(QString rasterName);
         bool getRasterName(QString* rasterName);
         bool renameColumn(QString oldColumn, QString newColumn);
+        bool writeDroughtDataList(QList<QString> listEntries, QString* log);
 
     private:
         QSqlDatabase _db;

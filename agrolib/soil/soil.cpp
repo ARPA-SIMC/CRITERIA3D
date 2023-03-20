@@ -29,6 +29,7 @@
 */
 
 #include <math.h>
+#include <algorithm>
 
 #include "soil.h"
 #include "commonConstants.h"
@@ -54,6 +55,7 @@ namespace soil
 
     Crit3DFittingOptions::Crit3DFittingOptions()
     {
+        // default
         this->waterRetentionCurve = MODIFIEDVANGENUCHTEN;
         this->useWaterRetentionData = true;
         this->airEntryFixed = true;
@@ -842,14 +844,38 @@ namespace soil
             return false;
         }
 
-        // values
-        unsigned int nrValues = unsigned(horizon->dbData.waterRetention.size());
+        unsigned int nrObsValues = unsigned(horizon->dbData.waterRetention.size());
+
+        // search theta max
+        double psiMin = 10000;      // [kpa]
+        double thetaMax = 0;        // [m3 m-3]
+        for (unsigned int i = 0; i < nrObsValues; i++)
+        {
+            psiMin = std::min(psiMin, horizon->dbData.waterRetention[i].water_potential);
+            thetaMax = std::max(thetaMax, horizon->dbData.waterRetention[i].water_content);
+        }
+        bool addThetaSat = ((thetaMax < horizon->vanGenuchten.thetaS) && (psiMin > 3));
+
+        // set values
+        unsigned int nrValues = nrObsValues;
+        unsigned int firstIndex = 0;
+        if (addThetaSat)
+        {
+            nrValues++;
+            firstIndex = 1;
+        }
         double* x = new double[nrValues];
         double* y = new double[nrValues];
-        for (unsigned int i = 0; i < nrValues; i++)
+
+        if (addThetaSat)
         {
-            x[i] = horizon->dbData.waterRetention[i].water_potential;
-            y[i] = horizon->dbData.waterRetention[i].water_content;
+            x[0] = 0.0;
+            y[0] = horizon->vanGenuchten.thetaS;
+        }
+        for (unsigned int i = 0; i < nrObsValues; i++)
+        {
+            x[i + firstIndex] = horizon->dbData.waterRetention[i].water_potential;
+            y[i + firstIndex] = horizon->dbData.waterRetention[i].water_content;
         }
 
         int functionCode;

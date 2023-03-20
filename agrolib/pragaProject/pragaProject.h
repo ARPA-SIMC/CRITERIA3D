@@ -59,6 +59,7 @@
         Crit3DClimate* clima;
         Crit3DClimate* climaFromDb;
         Crit3DClimate* referenceClima;
+        bool lastElabTargetisGrid;
 
         bool isElabMeteoPointsValue;
         QString climateIndex;
@@ -126,6 +127,7 @@
         bool loadXMLImportData(QString fileName);
         bool monthlyVariablesGrid(QDate first, QDate last, QList <meteoVariable> variables);
         bool computeDroughtIndexAll(droughtIndex index, int firstYear, int lastYear, QDate date, int timescale, meteoVariable myVar);
+        bool computeDroughtIndexPoint(droughtIndex index, int timescale, int refYearStart, int refYearEnd);
         void showPointStatisticsWidgetPoint(std::string idMeteoPoint);
         void showHomogeneityTestWidgetPoint(std::string idMeteoPoint);
         void showSynchronicityTestWidgetPoint(std::string idMeteoPoint);
@@ -137,6 +139,7 @@
                                                         std::vector<QString> &users, std::vector<QString> &notes);
         bool removeGriddingTask(QDateTime dateCreation, QString user, QDate dateStart, QDate dateEnd);
         bool computeClimaFromXMLSaveOnDB(QString xmlName);
+        bool saveLogProceduresGrid(QString nameProc, QDate date);
 
         #ifdef NETCDF
                 bool exportMeteoGridToNetCDF(QString fileName, QString title, QString variableName, std::string variableUnit, Crit3DDate myDate, int nDays, int refYearStart, int refYearEnd);

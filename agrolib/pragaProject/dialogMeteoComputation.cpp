@@ -7,8 +7,8 @@
 
 extern PragaProject myProject;
 
-DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteoGrid, bool isAnomaly, bool saveClima)
-    : settings(settings), isMeteoGrid(isMeteoGrid), isAnomaly(isAnomaly), saveClima(saveClima)
+DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteoGridLoaded, bool isMeteoPointLoaded, bool isAnomaly, bool saveClima)
+    : settings(settings), isMeteoGridLoaded(isMeteoGridLoaded), isMeteoPointLoaded(isMeteoPointLoaded), isAnomaly(isAnomaly), saveClima(saveClima)
 {
 
     if (saveClima)
@@ -26,6 +26,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
 
     QVBoxLayout mainLayout;
     QHBoxLayout varLayout;
+    QHBoxLayout targetLayout;
     QHBoxLayout dateLayout;
     QHBoxLayout periodLayout;
     QHBoxLayout displayLayout;
@@ -47,6 +48,65 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
     QLabel anomalyLabel("<font color='red'>Reference Data:</font>");
     copyData.setText("Copy data above");
     copyData.setMaximumWidth(this->width()/3);
+
+
+    QGroupBox *targetGroupBox = new QGroupBox("Target");
+    pointsButton.setText("meteo points");
+    gridButton.setText("meteo grid");
+
+    if (isMeteoPointLoaded)
+    {
+        pointsButton.setEnabled(true);
+        if (!isMeteoGridLoaded)
+        {
+            pointsButton.setChecked(true);
+        }
+    }
+    else
+    {
+        pointsButton.setEnabled(false);
+    }
+    if (isMeteoGridLoaded)
+    {
+        gridButton.setEnabled(true);
+        if (!isMeteoPointLoaded)
+        {
+            gridButton.setChecked(true);
+        }
+    }
+    else
+    {
+        gridButton.setEnabled(false);
+    }
+
+    if (isMeteoPointLoaded && isMeteoGridLoaded)
+    {
+        if (myProject.lastElabTargetisGrid)
+        {
+            gridButton.setChecked(true);
+            pointsButton.setChecked(false);
+        }
+        else
+        {
+            pointsButton.setChecked(true);
+            gridButton.setChecked(false);
+        }
+    }
+
+    if (pointsButton.isChecked())
+    {
+        isMeteoGrid = false;
+        myProject.clima->setDb(myProject.meteoPointsDbHandler->getDb());
+    }
+    else if (gridButton.isChecked())
+    {
+        isMeteoGrid = true;
+        myProject.clima->setDb(myProject.meteoGridDbHandler->db());
+    }
+
+    targetLayout.addWidget(&pointsButton);
+    targetLayout.addWidget(&gridButton);
+    targetGroupBox->setLayout(&targetLayout);
 
     meteoVariable var;
 
@@ -289,6 +349,17 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
 
     if (isAnomaly)
     {
+        if (pointsButton.isChecked())
+        {
+            isMeteoGrid = false;
+            myProject.referenceClima->setDb(myProject.meteoPointsDbHandler->getDb());
+        }
+        else if (gridButton.isChecked())
+        {
+            isMeteoGrid = true;
+            myProject.referenceClima->setDb(myProject.meteoGridDbHandler->db());
+        }
+
         anomaly.AnomalySetVariableElab(variableList.currentText());
         anomaly.build(settings);
 
@@ -306,6 +377,9 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
         saveClimaMainLayout.addWidget(&saveClimaLayout);
     }
 
+
+    connect(&pointsButton, &QRadioButton::clicked, [=](){ targetChange(); });
+    connect(&gridButton, &QRadioButton::clicked, [=](){ targetChange(); });
 
     connect(&firstYearEdit, &QLineEdit::editingFinished, [=](){ this->checkYears(); });
     connect(&lastYearEdit, &QLineEdit::editingFinished, [=](){ this->checkYears(); });
@@ -334,6 +408,7 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
 
     layoutOk.addWidget(&buttonBox);
 
+    mainLayout.addWidget(targetGroupBox);
     mainLayout.addLayout(&varLayout);
     mainLayout.addLayout(&dateLayout);
     mainLayout.addLayout(&periodLayout);
@@ -1737,5 +1812,32 @@ void DialogMeteoComputation::saveDataToXML()
 
 
 
+}
+
+void DialogMeteoComputation::targetChange()
+{
+    if (pointsButton.isChecked())
+    {
+        isMeteoGrid = false;
+        myProject.clima->setDb(myProject.meteoPointsDbHandler->getDb());
+        if (isAnomaly)
+        {
+            myProject.referenceClima->setDb(myProject.meteoPointsDbHandler->getDb());
+        }
+    }
+    else if (gridButton.isChecked())
+    {
+        isMeteoGrid = true;
+        myProject.clima->setDb(myProject.meteoGridDbHandler->db());
+        if (isAnomaly)
+        {
+            myProject.referenceClima->setDb(myProject.meteoGridDbHandler->db());
+        }
+    }
+}
+
+bool DialogMeteoComputation::getIsMeteoGrid() const
+{
+    return isMeteoGrid;
 }
 

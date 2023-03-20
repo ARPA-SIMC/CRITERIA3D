@@ -28,6 +28,7 @@
     bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* startDate, QDate* endDate);
 
     QList<QString> getFields(QSqlDatabase* db_, QString tableName);
+    QList<QString> getFieldsUpperCase(QSqlQuery& query);
 
     bool getValue(QVariant myRs);
     bool getValue(QVariant myRs, int* myValue);
