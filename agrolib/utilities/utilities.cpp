@@ -1,6 +1,7 @@
 #include "utilities.h"
 #include "commonConstants.h"
 #include "crit3dDate.h"
+#include "math.h"
 
 #include <QVariant>
 #include <QSqlDriver>
