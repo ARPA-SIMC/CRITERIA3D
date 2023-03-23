@@ -916,14 +916,8 @@ bool Project::loadDEM(QString myFileName)
     this->demFileName = myFileName;
     myFileName = getCompleteFileName(myFileName, PATH_DEM);
 
-    std::string error, fileName;
-    if (myFileName.right(4).left(1) == ".")
-    {
-        myFileName = myFileName.left(myFileName.length()-4);
-    }
-    fileName = myFileName.toStdString();
-
-    if (! gis::readEsriGrid(fileName, &DEM, &error))
+    std::string error;
+    if (! gis::openRaster(myFileName.toStdString(), &DEM, error))
     {
         this->logError("Wrong Digital Elevation Model file.\n" + QString::fromStdString(error));
         errorType = ERROR_DEM;
@@ -1716,7 +1710,7 @@ bool Project::loadProxyGrids()
         {
             gis::Crit3DRasterGrid proxyGrid;
             std::string myError;
-            if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, & myError))
+            if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, myError))
             {
                 gis::Crit3DRasterGrid* resGrid = new gis::Crit3DRasterGrid();
                 gis::resampleGrid(proxyGrid, resGrid, *(DEM.header), aggrAverage, 0);
@@ -1740,7 +1734,7 @@ bool Project::loadProxyGrids()
 
 bool Project::loadRadiationGrids()
 {
-    std::string* myError = new std::string();
+    std::string myError = "";
     gis::Crit3DRasterGrid *grdLinke, *grdAlbedo;
     std::string gridName;
 
@@ -1889,7 +1883,7 @@ bool Project::writeTopographicDistanceMap(int pointIndex, const gis::Crit3DRaste
     if (gis::topographicDistanceMap(meteoPoints[pointIndex].point, demMap, &myMap))
     {
         fileName = pathTd.toStdString() + "TD_" + QFileInfo(demFileName).baseName().toStdString() + "_" + meteoPoints[pointIndex].id;
-        if (! gis::writeEsriGrid(fileName, &myMap, &myError))
+        if (! gis::writeEsriGrid(fileName, &myMap, myError))
         {
             logError(QString::fromStdString(myError));
             return false;
@@ -1951,7 +1945,7 @@ bool Project::loadTopographicDistanceMaps(bool onlyWithData, bool showInfo)
                     if (showInfo) logInfo(QString::fromStdString(fileName) + " successfully created!");
                 }
                 meteoPoints[i].topographicDistance = new gis::Crit3DRasterGrid();
-                if (! gis::readEsriGrid(fileName, meteoPoints[i].topographicDistance, &myError))
+                if (! gis::readEsriGrid(fileName, meteoPoints[i].topographicDistance, myError))
                 {
                     logError(QString::fromStdString(myError));
                     return false;
@@ -3541,7 +3535,7 @@ bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
 
         std::string myError = errorString.toStdString();
         QString fileWithoutExtension = QFileInfo(fileName).absolutePath() + QDir::separator() + QFileInfo(fileName).baseName();
-        if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), myGrid, &myError))
+        if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), myGrid, myError))
         {
             errorString = QString::fromStdString(myError);
             delete myGrid;

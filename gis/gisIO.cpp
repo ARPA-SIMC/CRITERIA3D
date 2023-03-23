@@ -33,35 +33,60 @@
 
 using namespace std;
 
-bool splitKeyValue(std::string myLine, std::string *myKey, std::string *myValue)
+
+bool splitKeyValue(const string &myLine, string &key, string &value)
 {
-    *myKey = ""; *myValue = "";
+    key = "";
+    value = "";
+
     istringstream myStream(myLine);
+    myStream >> key;
+    myStream >> value;
 
-    myStream >> *myKey;
-    myStream >> *myValue;
-    if ((*myKey == "") || (*myValue == "")) return (false);
-    else return(true);
+    if (key == "" || value == "")
+        return false;
+
+    return true;
 }
 
-std::string upperCase(std::string myStr)
+
+bool splitKeyValueByDelimiter(const string &myLine, const string &delimiter, string &key, string &value)
 {
-    std::string upperCaseStr = myStr;
-    transform(myStr.begin(), myStr.end(), upperCaseStr.begin(), ::toupper);
-    return(upperCaseStr);
+    key = "";
+    value = "";
+
+    key = myLine.substr(0, myLine.find(delimiter));
+    // clean blanks
+    key.erase(remove_if(key.begin(), key.end(), isspace), key.end());
+
+    value = myLine.substr(myLine.find(delimiter)+1);
+
+    if (key == "" || value == "")
+        return false;
+
+    return true;
 }
+
+
+string upperCase(const string &myStr)
+{
+    string upperCaseStr = myStr;
+    transform(myStr.begin(), myStr.end(), upperCaseStr.begin(), ::toupper);
+    return upperCaseStr;
+}
+
 
 namespace gis
     {
 
     /*!
-     * \brief Read a ESRI grid header file (.hdr)
+     * \brief Read a ESRI float header file (.hdr)
      * \param fileName    string
      * \param header      Crit3DRasterHeader pointer
      * \param error       string pointer
      * \return true on success, false otherwise
      */
-    bool readEsriGridHeader(string fileName, gis::Crit3DRasterHeader *header, string* error)
+bool readEsriGridHeader(string fileName, gis::Crit3DRasterHeader *header, string &error)
     {
         string myLine, myKey, upKey, myValue;
         int nrKeys = 0;
@@ -71,14 +96,14 @@ namespace gis
 
         if (!myFile.is_open())
         {
-            *error = "Missing file: " + fileName;
+            error = "Missing file: " + fileName;
             return false;
         }
 
         while (myFile.good())
         {
             getline (myFile, myLine);
-            if (splitKeyValue(myLine, &myKey, &myValue))
+            if (splitKeyValue(myLine, myKey, myValue))
             {
                 upKey = upperCase(myKey);
 
@@ -111,10 +136,84 @@ namespace gis
 
         if (nrKeys < 6)
         {
-            *error = "Missing keys in .hdr file.";
-            return(false);
+            error = "Missing keys in hdr file.";
+            return false;
         }
-        return(true);
+        return true;
+    }
+
+
+    /*!
+     * \brief Read a ENVI header file (.hdr)
+     * \param fileName    string
+     * \param header      Crit3DRasterHeader pointer
+     * \param error       string pointer
+     * \return true on success, false otherwise
+     */
+    bool readEnviHeader(string fileName, gis::Crit3DRasterHeader *header, string &error)
+    {
+        string myLine, key, upKey, valueStr;
+        int nrKeys = 0;
+
+        fileName += ".hdr";
+        ifstream  myFile (fileName.c_str());
+
+        if (!myFile.is_open())
+        {
+            error = "Missing file: " + fileName;
+            return false;
+        }
+
+        while (myFile.good())
+        {
+            getline (myFile, myLine);
+            if (splitKeyValueByDelimiter(myLine, "=", key, valueStr))
+            {
+                upKey = upperCase(key);
+
+                if ((upKey == "SAMPLES") || (upKey == "LINES")
+                    || (upKey == "DATATYPE") || (upKey == "MAPINFO")
+                    || (upKey == "DATAIGNOREVALUE") || (upKey == "NODATA"))
+                    nrKeys++;
+
+                if (upKey == "SAMPLES")
+                    header->nrCols = ::atoi(valueStr.c_str());
+
+                else if (upKey == "LINES")
+                    header->nrRows = ::atoi(valueStr.c_str());
+
+                else if (upKey == "DATATYPE")
+                {
+                    int type = ::atoi(valueStr.c_str());
+                    if (type != 4)
+                    {
+                        error = "Wrong data type: only value 4 is allowed.";
+                        return false;
+                    }
+                }
+
+                else if (upKey == "MAPINFO")
+                {
+                    header->llCorner.x = ::atof(valueStr.c_str());
+
+                    header->llCorner.y = ::atof(valueStr.c_str());
+
+                    header->cellSize = ::atof(valueStr.c_str());
+                }
+
+                else if ((upKey == "DATAIGNOREVALUE") || (upKey == "NODATA"))
+                    header->flag = float(::atof(valueStr.c_str()));
+            }
+        }
+        myFile.close();
+
+        if (nrKeys < 5)
+        {
+            error = "Missing keys in hdr file.";
+            return false;
+        }
+
+        return true;
     }
 
 
@@ -125,7 +224,7 @@ namespace gis
      * \param error         string pointer
      * \return true on success, false otherwise
      */
-    bool readEsriGridFlt(string fileName, gis::Crit3DRasterGrid *rasterGrid, string *error)
+    bool readEsriGridFlt(string fileName, gis::Crit3DRasterGrid *rasterGrid, string &error)
     {
         fileName += ".flt";
 
@@ -133,15 +232,15 @@ namespace gis
 
         if (! rasterGrid->initializeGrid())
         {
-            *error = "Memory error: file too big.";
-            return(false);
+            error = "Memory error: file too big.";
+            return false;
         }
 
         filePointer = fopen (fileName.c_str(), "rb" );
         if (filePointer == nullptr)
         {
-            *error = "File .flt error.";
-            return(false);
+            error = "Error in .flt file.";
+            return false;
         }
 
         for (int row = 0; row < rasterGrid->header->nrRows; row++)
@@ -159,18 +258,18 @@ namespace gis
      * \brief Write a ESRI grid header file (.hdr)
      * \param myFileName    string name file
      * \param myHeader      Crit3DRasterHeader pointer
-     * \param myError       string pointer
+     * \param error       string pointer
      * \return true on success, false otherwise
      */
-    bool writeEsriGridHeader(string myFileName, gis::Crit3DRasterHeader *myHeader, string* myError)
+    bool writeEsriGridHeader(string myFileName, gis::Crit3DRasterHeader *myHeader, string &error)
     {
         myFileName += ".hdr";
         ofstream myFile (myFileName.c_str());
 
         if (!myFile.is_open())
         {
-            *myError = "File .hdr error.";
-            return(false);
+            error = "File .hdr error.";
+            return false;
         }
 
         myFile << "ncols         " << myHeader->nrCols << "\n";
@@ -206,10 +305,10 @@ namespace gis
      * \brief Write a ESRI grid data file (.flt)
      * \param myFileName    string name file
      * \param myHeader      Crit3DRasterHeader pointer
-     * \param myError       string pointer
+     * \param error       string pointer
      * \return true on success, false otherwise
      */
-    bool writeEsriGridFlt(string myFileName, gis::Crit3DRasterGrid *myGrid, string *myError)
+    bool writeEsriGridFlt(string myFileName, gis::Crit3DRasterGrid *myGrid, string &error)
     {
         myFileName += ".flt";
 
@@ -218,8 +317,8 @@ namespace gis
         filePointer = fopen(myFileName.c_str(), "wb" );
         if (filePointer == nullptr)
         {
-            *myError = "File .flt error.";
-            return(false);
+            error = "Error in writing flt file.";
+            return false;
         }
 
         for (int myRow = 0; myRow < myGrid->header->nrRows; myRow++)
@@ -229,31 +328,50 @@ namespace gis
         return true;
     }
 
-    bool readEsriGrid(string fileName, Crit3DRasterGrid* rasterGrid, string* error)
+
+    bool openRaster(string fileName, Crit3DRasterGrid *rasterGrid, string &error)
+    {
+        if (fileName.size() <= 4)
+        {
+            error = "Wrong filename.";
+            return false;
+        }
+
+        std::string fileNameWithoutExt = fileName.substr(0, fileName.size() - 4);
+        std::string fileExtension = fileName.substr(fileName.size() - 4);
+
+        if (fileExtension == ".flt")
+        {
+            return gis::readEsriGrid(fileNameWithoutExt, rasterGrid, error);
+        }
+        else if (fileExtension == ".img")
+        {
+            return gis::readEnviGrid(fileNameWithoutExt, rasterGrid, error);
+        }
+
+        return false;
+    }
+
+
+    bool readEsriGrid(string fileName, Crit3DRasterGrid* rasterGrid, string &error)
     {
         if (rasterGrid == nullptr) return false;
-        rasterGrid->isLoaded = false;
+        rasterGrid->clear();
 
-        Crit3DRasterHeader *tmpHeader = new Crit3DRasterHeader;
-
-        if(gis::readEsriGridHeader(fileName, tmpHeader, error))
+        if(gis::readEsriGridHeader(fileName, rasterGrid->header, error))
         {
-            rasterGrid->clear();
-            *(rasterGrid->header) = *tmpHeader;
-
             if (gis::readEsriGridFlt(fileName, rasterGrid, error))
             {
+                gis::updateMinMaxRasterGrid(rasterGrid);
                 rasterGrid->isLoaded = true;
-                updateMinMaxRasterGrid(rasterGrid);
             }
         }
 
-        delete tmpHeader;
         return rasterGrid->isLoaded;
     }
 
 
-    bool writeEsriGrid(string fileName, Crit3DRasterGrid *rasterGrid, string *error)
+    bool writeEsriGrid(string fileName, Crit3DRasterGrid *rasterGrid, string &error)
     {
         if (gis::writeEsriGridHeader(fileName, rasterGrid->header, error))
             if (gis::writeEsriGridFlt(fileName, rasterGrid, error))
@@ -264,10 +382,30 @@ namespace gis
 
 
     /*!
+     * \brief Read a ENVI grid data file (.img and .hdr)
+     * \return true on success, false otherwise
+     */
+    bool readEnviGrid(string fileName, Crit3DRasterGrid* rasterGrid, string &error)
+    {
+        rasterGrid->clear();
+
+        if(gis::readEnviHeader(fileName, rasterGrid->header, error))
+        {
+            if (gis::readEsriGridFlt(fileName, rasterGrid, error))
+            {
+                gis::updateMinMaxRasterGrid(rasterGrid);
+                rasterGrid->isLoaded = true;
+            }
+        }
+
+        return rasterGrid->isLoaded;
+    }
+
+    /*!
      * \brief Write a ENVI grid data file (.img and .hdr)
      * \return true on success, false otherwise
      */
-    bool writeENVIGrid(string fileName, int utmZone, Crit3DRasterGrid *rasterGrid, string &error)
+    bool writeEnviGrid(string fileName, int utmZone, Crit3DRasterGrid *rasterGrid, string &error)
     {
         FILE* filePointer;
         string imgFileName = fileName + ".img";

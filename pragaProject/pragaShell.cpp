@@ -637,20 +637,20 @@ int cmdGridAggregationOnZones(PragaProject* myProject, QList<QString> argumentLi
     meteoComputation elab1MeteoComp = noMeteoComp;
     QString periodType = "D";
 
-    gis::Crit3DRasterGrid* myRaster = new gis::Crit3DRasterGrid();
     QString rasterName;
     if (!myProject->aggregationDbHandler->getRasterName(&rasterName))
     {
-        myProject->errorString = "Missing Raster Name inside aggregation db";
-        myProject->logError();
+        myProject->logError("Missing Raster Name inside aggregation db.");
         return PRAGA_ERROR;
     }
+
     // open raster
+    gis::Crit3DRasterGrid* myRaster = new gis::Crit3DRasterGrid();
     QString fnWithoutExt = myProject->projectPragaFolder+"/"+rasterName;
-    std::string* myError = new std::string();
+    std::string myError = "";
     if (! gis::readEsriGrid(fnWithoutExt.toStdString(), myRaster, myError))
     {
-        myProject->logError("Load raster failed!");
+        myProject->logError("Load raster failed: " + QString::fromStdString(myError));
         delete myRaster;
         return PRAGA_ERROR;
     }
