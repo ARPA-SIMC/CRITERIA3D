@@ -28,6 +28,8 @@
 #include <sstream>
 #include <fstream>
 #include <math.h>
+#include <algorithm>
+
 #include "commonConstants.h"
 #include "gis.h"
 
