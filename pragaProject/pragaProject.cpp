@@ -2037,7 +2037,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
                             {
                                 myGrid = getPragaMapFromVar(airDewTemperature);
                                 rasterName = getMapFileOutName(airDewTemperature, myDate, myHour);
-                                if (rasterName != "") gis::writeEsriGrid(getProjectPath().toStdString() + rasterName.toStdString(), myGrid, &errString);
+                                if (rasterName != "") gis::writeEsriGrid(getProjectPath().toStdString() + rasterName.toStdString(), myGrid, errString);
                             }
                         }
                         else if (myVar == windVectorDirection || myVar == windVectorIntensity) {
@@ -2062,7 +2062,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
                         if (saveRasters)
                         {
                             rasterName = getMapFileOutName(myVar, myDate, myHour);
-                            if (rasterName != "") gis::writeEsriGrid(getProjectPath().toStdString() + rasterName.toStdString(), myGrid, &errString);
+                            if (rasterName != "") gis::writeEsriGrid(getProjectPath().toStdString() + rasterName.toStdString(), myGrid, errString);
                         }
 
                         if (myVar == windVectorDirection || myVar == windVectorIntensity)
@@ -2108,7 +2108,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
                     if (saveRasters)
                     {
                         rasterName = getMapFileOutName(myVar, myDate, 0);
-                        gis::writeEsriGrid(getProjectPath().toStdString() + rasterName.toStdString(), myGrid, &errString);
+                        gis::writeEsriGrid(getProjectPath().toStdString() + rasterName.toStdString(), myGrid, errString);
                     }
 
                     meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, daily, getCrit3DDate(myDate), 0, 0, &DEM, myGrid, interpolationSettings.getMeteoGridAggrMethod());

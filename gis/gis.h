@@ -227,12 +227,13 @@
         void utmToLatLon(int zoneNumber, double referenceLat, double utmEasting, double utmNorthing, double *lat, double *lon);
         bool isValidUtmTimeZone(int utmZone, int timeZone);
 
-        bool readEsriGrid(std::string fileName, Crit3DRasterGrid* rasterGrid, std::string* error);
-        bool readEsriGridHeader(std::string fileName, gis::Crit3DRasterHeader *header, std::string* error);
-        bool readEsriGridFlt(std::string fileName, gis::Crit3DRasterGrid *rasterGrid, std::string *error);
-        bool writeEsriGrid(std::string fileName, Crit3DRasterGrid* rasterGrid, std::string* error);
+        bool openRaster(std::string fileName, Crit3DRasterGrid *rasterGrid, std::string &error);
 
-        bool writeENVIGrid(std::string fileName, int utmZone, Crit3DRasterGrid *rasterGrid, std::string &error);
+        bool readEsriGrid(std::string fileName, Crit3DRasterGrid* rasterGrid, std::string &error);
+        bool writeEsriGrid(std::string fileName, Crit3DRasterGrid *rasterGrid, std::string &error);
+
+        bool readEnviGrid(std::string fileName, Crit3DRasterGrid* rasterGrid, std::string &error);
+        bool writeEnviGrid(std::string fileName, int utmZone, Crit3DRasterGrid *rasterGrid, std::string &error);
 
         bool mapAlgebra(Crit3DRasterGrid* myMap1, Crit3DRasterGrid* myMap2, Crit3DRasterGrid *outputMap, operationType myOperation);
         bool mapAlgebra(Crit3DRasterGrid* myMap1, float myValue, Crit3DRasterGrid *outputMap, operationType myOperation);

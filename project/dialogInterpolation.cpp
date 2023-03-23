@@ -248,7 +248,7 @@ void ProxyDialog::selectGridFile()
     std::string fileName = qFileName.toStdString();
     std::string error_;
     gis::Crit3DRasterGrid* grid_ = new gis::Crit3DRasterGrid();
-    if (gis::readEsriGrid(fileName, grid_, &error_))
+    if (gis::readEsriGrid(fileName, grid_, error_))
         _proxyGridName.setText(qFileName);
     else
         QMessageBox::information(nullptr, "Error", "Error opening " + qFileName);
