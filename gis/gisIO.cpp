@@ -52,14 +52,19 @@ bool splitKeyValue(const string &myLine, string &key, string &value)
 }
 
 
+void cleanSpaces(std::string &str)
+{
+    str.erase(remove_if(str.begin(), str.end(), [](unsigned char c){ return isspace(c); }), str.end());
+}
+
+
 bool splitKeyValueByDelimiter(const string &myLine, const string &delimiter, string &key, string &value)
 {
     key = "";
     value = "";
 
     key = myLine.substr(0, myLine.find(delimiter));
-    // clean blanks
-    key.erase(remove_if(key.begin(), key.end(), isspace), key.end());
+    cleanSpaces(key);
 
     value = myLine.substr(myLine.find(delimiter)+1);
 
