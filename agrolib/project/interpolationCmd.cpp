@@ -142,7 +142,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     if (nrGrids == 1)
     {
-        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, &myError)) return false;
+        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError)) return false;
         gis::resampleGrid(tmpGrid, gridOut, *gridBase.header, aggrAverage, 0);
         return true;
     }
@@ -167,8 +167,8 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     // load grids
     gis::Crit3DRasterGrid firstGrid, secondGrid;
-    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, &myError)) return false;
-    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, &myError)) return false;
+    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, myError)) return false;
+    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError)) return false;
 
     firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
     secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));
