@@ -207,7 +207,7 @@ QDateTime getQDateTime(const Crit3DTime& t)
 }
 
 
-QString getFileName(QString fileNameComplete)
+QString getFileName(const QString &fileNameComplete)
 {
     QString c;
     QString fileName = "";
@@ -215,15 +215,20 @@ QString getFileName(QString fileNameComplete)
     {
         c = fileNameComplete.mid(i,1);
         if ((c != "\\") && (c != "/"))
+        {
             fileName = c + fileName;
+        }
         else
+        {
             return fileName;
+        }
     }
+
     return fileName;
 }
 
 
-QString getFilePath(QString fileNameComplete)
+QString getFilePath(const QString &fileNameComplete)
 {
     QString fileName = getFileName(fileNameComplete);
     QString filePath = fileNameComplete.left(fileNameComplete.length() - fileName.length());
