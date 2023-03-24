@@ -110,8 +110,9 @@
 
             bool isEqualTo(const Crit3DRasterHeader& myHeader);
 
-            friend bool operator == (const Crit3DRasterHeader& myHeader1, const Crit3DRasterHeader& myHeader2);
         };
+
+        bool operator == (const Crit3DRasterHeader& myHeader1, const Crit3DRasterHeader& myHeader2);
 
 
         class  Crit3DRasterCell {
