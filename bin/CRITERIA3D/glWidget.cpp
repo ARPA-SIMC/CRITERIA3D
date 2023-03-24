@@ -86,8 +86,6 @@ void Crit3DOpenGLWidget::clear()
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
     doneCurrent();
-
-    m_geometry->clear();
 }
 
 
