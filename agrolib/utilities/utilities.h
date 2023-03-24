@@ -38,8 +38,8 @@
     bool getValue(QVariant myRs, QDateTime* myValue);
     bool getValue(QVariant myRs, QString* myValue);
 
-    QString getFilePath(QString fileNameComplete);
-    QString getFileName(QString fileNameComplete);
+    QString getFilePath(const QString &fileNameComplete);
+    QString getFileName(const QString &fileNameComplete);
 
     std::vector <float> StringListToFloat(QList<QString> myList);
     QStringList FloatVectorToStringList(std::vector <float> myVector);

@@ -401,7 +401,7 @@ bool Crit3DProject::loadSoilMap(QString fileName)
     std::string myError;
     std::string myFileName = fileName.left(fileName.length()-4).toStdString();
 
-    if (! gis::readEsriGrid(myFileName, &soilMap, &myError))
+    if (! gis::readEsriGrid(myFileName, &soilMap, myError))
     {
         logError("Load soil map failed: " + fileName);
         return false;
@@ -859,44 +859,44 @@ bool Crit3DProject::saveModelState()
 
     logInfo("Saving snow state: " + dateFolder);
     std::string error;
-    if (!gis::writeEsriGrid((snowPath+"/SWE").toStdString(), snowMaps.getSnowWaterEquivalentMap(), &error))
+    if (!gis::writeEsriGrid((snowPath+"/SWE").toStdString(), snowMaps.getSnowWaterEquivalentMap(), error))
     {
         logError("Error saving water equivalent map: " + QString::fromStdString(error));
         return false;
     }
     // ENVI file
-    if (!gis::writeENVIGrid((imgPath+"/SWE").toStdString(), gisSettings.utmZone, snowMaps.getSnowWaterEquivalentMap(), error))
+    if (!gis::writeEnviGrid((imgPath+"/SWE").toStdString(), gisSettings.utmZone, snowMaps.getSnowWaterEquivalentMap(), error))
     {
         logError("Error saving water equivalent map (ENVI file): " + QString::fromStdString(error));
         return false;
     }
 
-    if (!gis::writeEsriGrid((snowPath+"/AgeOfSnow").toStdString(), snowMaps.getAgeOfSnowMap(), &error))
+    if (!gis::writeEsriGrid((snowPath+"/AgeOfSnow").toStdString(), snowMaps.getAgeOfSnowMap(), error))
     {
         logError("Error saving age of snow map: " + QString::fromStdString(error));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/SnowSurfaceTemp").toStdString(), snowMaps.getSnowSurfaceTempMap(), &error))
+    if (!gis::writeEsriGrid((snowPath+"/SnowSurfaceTemp").toStdString(), snowMaps.getSnowSurfaceTempMap(), error))
     {
         logError("Error saving snow surface temp map: " + QString::fromStdString(error));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/IceContent").toStdString(), snowMaps.getIceContentMap(), &error))
+    if (!gis::writeEsriGrid((snowPath+"/IceContent").toStdString(), snowMaps.getIceContentMap(), error))
     {
         logError("Error saving ice content map: " + QString::fromStdString(error));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/LWContent").toStdString(), snowMaps.getLWContentMap(), &error))
+    if (!gis::writeEsriGrid((snowPath+"/LWContent").toStdString(), snowMaps.getLWContentMap(), error))
     {
         logError("Error saving LW content map: " + QString::fromStdString(error));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/InternalEnergy").toStdString(), snowMaps.getInternalEnergyMap(), &error))
+    if (!gis::writeEsriGrid((snowPath+"/InternalEnergy").toStdString(), snowMaps.getInternalEnergyMap(), error))
     {
         logError("Error saving internal energy map: " + QString::fromStdString(error));
         return false;
     }
-    if (!gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceEnergyMap(), &error))
+    if (!gis::writeEsriGrid((snowPath+"/SurfaceInternalEnergy").toStdString(), snowMaps.getSurfaceEnergyMap(), error))
     {
         logError("Error saving surface energy map: " + QString::fromStdString(error));
         return false;
@@ -946,11 +946,11 @@ bool Crit3DProject::loadModelState(QString statePath)
     }
 
     // set current date/hour
-    QStringView stateStr = getFileName(statePath);
-    int year = stateStr.mid(0,4).toString().toInt();
-    int month = stateStr.mid(4,2).toString().toInt();
-    int day = stateStr.mid(6,2).toString().toInt();
-    int hour = stateStr.mid(10,2).toString().toInt();
+    QString stateStr = getFileName(statePath);
+    int year = stateStr.mid(0,4).toInt();
+    int month = stateStr.mid(4,2).toInt();
+    int day = stateStr.mid(6,2).toInt();
+    int hour = stateStr.mid(10,2).toInt();
     setCurrentDate(QDate(year, month, day));
     setCurrentHour(hour);
 
@@ -966,7 +966,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         std::string fileName;
 
         fileName = snowPath.toStdString() + "/SWE";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSnowWaterEquivalentMap(), &error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getSnowWaterEquivalentMap(), error))
         {
             errorString = "Wrong Snow SWE map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
@@ -974,7 +974,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
 
         fileName = snowPath.toStdString() + "/AgeOfSnow";
-        if (! gis::readEsriGrid(fileName, snowMaps.getAgeOfSnowMap(), &error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getAgeOfSnowMap(), error))
         {
             errorString = "Wrong Snow AgeOfSnow map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
@@ -982,7 +982,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
 
         fileName = snowPath.toStdString() + "/IceContent";
-        if (! gis::readEsriGrid(fileName, snowMaps.getIceContentMap(), &error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getIceContentMap(), error))
         {
             errorString = "Wrong Snow IceContent map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
@@ -990,7 +990,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
 
         fileName = snowPath.toStdString() + "/InternalEnergy";
-        if (! gis::readEsriGrid(fileName, snowMaps.getInternalEnergyMap(), &error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getInternalEnergyMap(), error))
         {
             errorString = "Wrong Snow InternalEnergy map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
@@ -998,7 +998,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
 
         fileName = snowPath.toStdString() + "/LWContent";
-        if (! gis::readEsriGrid(fileName, snowMaps.getLWContentMap(), &error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getLWContentMap(), error))
         {
             errorString = "Wrong Snow LWContent map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
@@ -1006,7 +1006,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
 
         fileName = snowPath.toStdString() + "/SnowSurfaceTemp";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSnowSurfaceTempMap(), &error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getSnowSurfaceTempMap(), error))
         {
             errorString = "Wrong Snow SurfaceTemp map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
@@ -1014,7 +1014,7 @@ bool Crit3DProject::loadModelState(QString statePath)
         }
 
         fileName = snowPath.toStdString() + "/SurfaceInternalEnergy";
-        if (! gis::readEsriGrid(fileName, snowMaps.getSurfaceEnergyMap(), &error))
+        if (! gis::readEsriGrid(fileName, snowMaps.getSurfaceEnergyMap(), error))
         {
             errorString = "Wrong Snow SurfaceInternalEnergy map:\n" + QString::fromStdString(error);
             snowMaps.isInitialized = false;
