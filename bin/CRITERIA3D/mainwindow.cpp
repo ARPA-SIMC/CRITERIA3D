@@ -690,7 +690,7 @@ void MainWindow::on_timeEdit_valueChanged(int myHour)
 void MainWindow::on_actionLoad_DEM_triggered()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Digital Elevation Model"), "",
-                                    tr("ESRI float (*.flt);; ENVI image (.img)"));
+                                    tr("ESRI float (*.flt);; ENVI image (*.img)"));
 
     if (fileName == "") return;
 
