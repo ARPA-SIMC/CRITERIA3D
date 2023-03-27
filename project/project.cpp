@@ -921,13 +921,14 @@ bool Project::loadDEM(QString myFileName)
 
     logInfoGUI("Load DEM = " + myFileName);
 
-    this->demFileName = myFileName;
+    demFileName = myFileName;
     myFileName = getCompleteFileName(myFileName, PATH_DEM);
 
     std::string error;
-    if (! gis::openRaster(myFileName.toStdString(), &DEM, error))
+    if (! gis::openRaster(myFileName.toStdString(), &DEM, gisSettings.utmZone, error))
     {
-        this->logError("Wrong Digital Elevation Model file.\n" + QString::fromStdString(error));
+        closeLogInfo();
+        logError("Wrong Digital Elevation Model:\n" + QString::fromStdString(error));
         errorType = ERROR_DEM;
         return false;
     }
