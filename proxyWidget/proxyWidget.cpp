@@ -237,20 +237,39 @@ void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
 
 }
 
+
+Crit3DTime Crit3DProxyWidget::getCurrentTime()
+{
+    Crit3DTime myTime;
+    if (currentFrequency == hourly)
+    {
+        myTime = getCrit3DTime(currentDate, currentHour);
+    }
+    else
+    {
+        myTime = getCrit3DTime(currentDate, 0);
+    }
+
+    return myTime;
+}
+
+
 void Crit3DProxyWidget::plot()
 {
     chartView->cleanScatterSeries();
     outInterpolationPoints.clear();
+
     if (detrended.isChecked())
     {
         outInterpolationPoints.clear();
-        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
-        detrending(outInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar,
-                   getCrit3DTime(currentDate, currentHour));
+        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
+                                        interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
+        detrending(outInterpolationPoints, interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam, myVar, getCurrentTime());
     }
     else
     {
-        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCrit3DTime(currentDate, currentHour), SQinterpolationSettings, interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
+        checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
+                                        interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
     }
     QList<QPointF> point_vector;
     QList<QPointF> point_vector2;
@@ -329,7 +348,7 @@ void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
         float zMax = getZmax(outInterpolationPoints);
         float zMin = getZmin(outInterpolationPoints);
         float firstIntervalHeightValue = getFirstIntervalHeightValue(outInterpolationPoints, interpolationSettings->getUseLapseRateCode());
-        float lapseRate = climateParam->getClimateLapseRate(myVar, getCrit3DTime(currentDate, currentHour));
+        float lapseRate = climateParam->getClimateLapseRate(myVar, getCurrentTime());
         if (lapseRate == NODATA)
         {
             return;
@@ -357,7 +376,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             xMax = getZmax(outInterpolationPoints);
 
             if (!regressionOrography(outInterpolationPoints,interpolationSettings->getSelectedCombination(), interpolationSettings, climateParam,
-                                                               getCrit3DTime(currentDate, currentHour), myVar, proxyPos))
+                                                               getCurrentTime(), myVar, proxyPos))
             {
                 return;
             }

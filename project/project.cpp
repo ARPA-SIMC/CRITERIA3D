@@ -783,8 +783,16 @@ int Project::getCurrentHour()
 
 Crit3DTime Project::getCrit3DCurrentTime()
 {
-     return getCrit3DTime(this->currentDate, this->currentHour);
+    if (currentFrequency == hourly)
+    {
+        return getCrit3DTime(this->currentDate, this->currentHour);
+    }
+    else
+    {
+        return getCrit3DTime(this->currentDate, 0);
+    }
 }
+
 
 QDateTime Project::getCurrentTime()
 {
