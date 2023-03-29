@@ -507,7 +507,7 @@ namespace gis
             dx = p1->x - p0->x;
             dy = p1->y - p0->y;
 
-            return sqrt((dx * dx)+(dy * dy));
+            return sqrt((dx * dx) + (dy * dy));
     }
 
 
@@ -518,8 +518,9 @@ namespace gis
             dx = x2 - x1;
             dy = y2 - y1;
 
-            return sqrtf((dx * dx)+(dy * dy));
+            return sqrtf((dx * dx) + (dy * dy));
     }
+
 
     void getRowColFromXY(const Crit3DRasterGrid& myGrid, double myX, double myY, int *row, int *col)
     {
@@ -1359,7 +1360,6 @@ namespace gis
 
     bool topographicDistanceMap(Crit3DPoint myPoint, const gis::Crit3DRasterGrid& dem, Crit3DRasterGrid* myMap)
     {
-
         int row, col;
         float distance;
         double gridX, gridY;

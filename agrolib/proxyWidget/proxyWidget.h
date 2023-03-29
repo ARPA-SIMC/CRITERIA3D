@@ -48,6 +48,8 @@
             meteoVariable myVar;
             int proxyPos;
 
+            Crit3DTime getCurrentTime();
+
     signals:
         void closeProxyWidget();
     };
