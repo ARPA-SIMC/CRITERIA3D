@@ -9,11 +9,10 @@
 
     private:
         QLineEdit textEdit;
+        void done(int res);
 
     public:
         FormText(QString title);
-
-        void done(int res) override;
 
         QString getText() const;
     };

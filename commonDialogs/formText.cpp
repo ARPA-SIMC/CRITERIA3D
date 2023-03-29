@@ -2,7 +2,6 @@
 
 FormText::FormText(QString title)
 {
-
     this->setWindowTitle(title);
     QVBoxLayout* mainLayout = new QVBoxLayout;
     this->resize(250, 100);
@@ -26,6 +25,7 @@ FormText::FormText(QString title)
     exec();
 }
 
+
 void FormText::done(int res)
 {
     if (res == QDialog::Accepted) // ok
@@ -39,6 +39,7 @@ void FormText::done(int res)
         return;
     }
 }
+
 
 QString FormText::getText() const
 {
