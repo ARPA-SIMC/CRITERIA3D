@@ -107,6 +107,9 @@
         bool getIsClimateAnomalyFromDb() const;
         void setIsClimateAnomalyFromDb(bool isClimateFromDb);
 
+        bool dailyCumulated() const;
+        void setDailyCumulated(bool newDailyCumulated);
+
     private:
         QSqlDatabase _db;
         QString _climateElab;
@@ -126,6 +129,7 @@
         bool _isClimateAnomalyFromDb;
         QString _elab2;
         float _param2;
+        bool _dailyCumulated;
         Crit3DElaborationSettings *elabSettings;
 
         meteoVariable _currentVar;

@@ -135,7 +135,7 @@ namespace leafDevelopment
         if (myCrop->type == FRUIT_TREE)
             c4 = 15.0;
         else
-            c4 = 10.0;
+            c4 = 9.0;
 
         if (myDegreeDays <= myCrop->degreeDaysIncrease)
         {

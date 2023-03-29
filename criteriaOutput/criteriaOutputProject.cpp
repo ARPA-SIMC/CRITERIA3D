@@ -33,7 +33,7 @@ void CriteriaOutputProject::initialize()
     path = "";
     projectName = "";
     operation = "";
-    dbUnitsName = "";
+    dbComputationUnitsName = "";
     dbDataName = "";
     dbDataHistoricalName = "";
     dbCropName = "";
@@ -57,7 +57,7 @@ void CriteriaOutputProject::initialize()
     outputShapeFilePath = "";
     outputAggrCsvFileName = "";
 
-    dbUnitsName = "";
+    dbComputationUnitsName = "";
     dbDataName = "";
     dbCropName = "";
     dbDataHistoricalName = "";
@@ -78,7 +78,7 @@ void CriteriaOutputProject::closeProject()
 
         initialize();
 
-        unitList.clear();
+        compUnitList.clear();
         outputFile.close();
         logFile.close();
         dbData.close();
@@ -230,15 +230,21 @@ bool CriteriaOutputProject::readSettings()
 
     projectName = projectSettings->value("name","").toString();
 
-    dbUnitsName = projectSettings->value("db_units","").toString();
-    if (dbUnitsName.left(1) == ".")
+    // computational units
+    dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
+    if (dbComputationUnitsName == "")
     {
-        dbUnitsName = path + QDir::cleanPath(dbUnitsName);
+        // check old name
+        dbComputationUnitsName = projectSettings->value("db_units","").toString();
     }
-    if (dbUnitsName == "")
+    if (dbComputationUnitsName == "")
     {
-        projectError = "Missing information on units";
+        projectError = "Missing information on computational units";
         return false;
+    }
+    if (dbComputationUnitsName.left(1) == ".")
+    {
+        dbComputationUnitsName = path + QDir::cleanPath(dbComputationUnitsName);
     }
 
     dbDataName = projectSettings->value("db_data","").toString();
@@ -387,19 +393,19 @@ int CriteriaOutputProject::precomputeDtx()
     }
 
     // read unit list
-    logger.writeInfo("DB computation units: " + dbUnitsName);
-    if (! readUnitList(dbUnitsName, unitList, projectError))
+    logger.writeInfo("DB computational units: " + dbComputationUnitsName);
+    if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
-    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+    logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
     logger.writeInfo("Compute dtx...");
 
     QString idCase;
-    for (unsigned int i=0; i < unitList.size(); i++)
+    for (unsigned int i=0; i < compUnitList.size(); i++)
     {
-        idCase = unitList[i].idCase;
+        idCase = compUnitList[i].idCase;
         logger.writeInfo(QString::number(i) + " ID CASE: " + idCase);
 
         int myResult = computeAllDtxUnit(dbDataHistorical, idCase, projectError);
@@ -425,12 +431,12 @@ int CriteriaOutputProject::createCsvFile()
     }
 
     // read unit list
-    logger.writeInfo("DB computation units: " + dbUnitsName);
-    if (! readUnitList(dbUnitsName, unitList, projectError))
+    logger.writeInfo("DB computational units: " + dbComputationUnitsName);
+    if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
-    logger.writeInfo("Query result: " + QString::number(unitList.size()) + " distinct computation units.");
+    logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
     if (!initializeCsvOutputFile())
     {
@@ -442,10 +448,10 @@ int CriteriaOutputProject::createCsvFile()
     // write output
     QString idCase;
     QString idCropClass;
-    for (unsigned int i=0; i < unitList.size(); i++)
+    for (unsigned int i=0; i < compUnitList.size(); i++)
     {
-        idCase = unitList[i].idCase;
-        idCropClass = unitList[i].idCropClass;
+        idCase = compUnitList[i].idCase;
+        idCropClass = compUnitList[i].idCropClass;
 
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, outputCsvFileName, projectError);
         if (myResult != CRIT1D_OK)
@@ -629,7 +635,7 @@ int CriteriaOutputProject::createMaps()
     {
         int nRasterError = inputField.size() - rasterOK;
         projectError = QString::number(nRasterError) + " invalid raster - " + projectError;
-        return false;
+        return ERROR_MAPS;
     }
 }
 #endif
@@ -722,28 +728,33 @@ int CriteriaOutputProject::createAggregationFile()
     if ( shapeRef.getTypeString() != shapeVal.getTypeString() || shapeRef.getTypeString() != "2D Polygon" )
     {
         projectError = "shape type error: not 2D Polygon type" ;
-        return false;
+        return ERROR_SHAPEFILE;
     }
 
     // check proj
-    if (shapeRef.getIsWGS84() == false || shapeVal.getIsWGS84() == false)
+    if (shapeRef.getIsWGS84() == false)
     {
-        projectError = "projection error: not WGS84" ;
-        return false;
+        projectError = QString::fromStdString(shapeRef.getFilepath()) +  " projection error: not WGS84" ;
+        return ERROR_SHAPEFILE;
+    }
+    if (shapeVal.getIsWGS84() == false)
+    {
+        projectError = QString::fromStdString(shapeVal.getFilepath()) + " projection error: not WGS84" ;
+        return ERROR_SHAPEFILE;
     }
 
     // check utm zone
     if (shapeRef.getUtmZone() != shapeVal.getUtmZone())
     {
         projectError = "utm zone: different utm zones" ;
-        return false;
+        return ERROR_SHAPEFILE;
     }
 
     // parser aggregation list
     if (!aggregationVariable.parserAggregationVariable(aggregationListFileName, projectError))
     {
         projectError = "Open failure: " + aggregationListFileName + "\n" + projectError;
-        return false;
+        return ERROR_ZONAL_STATISTICS_SHAPE;
     }
 
     logger.writeInfo("output shapefile: " + outputAggrShapeFileName);
@@ -780,7 +791,11 @@ int CriteriaOutputProject::createAggregationFile()
                                         threshold, error);
         }
 
-        if (!isOk) break;
+        if (!isOk)
+        {
+            projectError = QString::fromStdString(error);
+            break;
+        }
     }
 
     rasterRef.clear();
@@ -922,7 +937,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
     dataRaster.header->llCorner.y = latLonHeader.llCorner.latitude;
     dataRaster.header->llCorner.x = latLonHeader.llCorner.longitude;
     dataRaster.header->cellSize = (latLonHeader.dx + latLonHeader.dy) * 0.5;
-    dataRaster.initializeGrid();
+    dataRaster.initializeGrid(latLonHeader.flag);
 
     // assign lat lon values
     double lat, lon, x, y;
@@ -1016,6 +1031,7 @@ bool CriteriaOutputProject::getAllDbVariable()
         projectError = "missing file: " + dbDataName;
         return false;
     }
+
     // open DB
     dbData = QSqlDatabase::addDatabase("QSQLITE", "data");
     dbData.setDatabaseName(dbDataName);
@@ -1025,29 +1041,27 @@ bool CriteriaOutputProject::getAllDbVariable()
         return false;
     }
 
+    // read tables
+    QList<QString> tablesList = dbData.tables();
+    if (tablesList.isEmpty())
+    {
+        projectError = "Db is empty";
+        return false;
+    }
+
+    // read table_info
+    QString tableName = tablesList[0];
+    QString statement = QString("PRAGMA table_info(`%1`)").arg(tableName);
     QSqlQuery qry(dbData);
-    QString statement = QString("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%' ESCAPE '^'");
-    QString tableName;
+    if( !qry.exec(statement) )
+    {
+        projectError = qry.lastError().text();
+        return false;
+    }
+
+    // read fields
+    QString fieldName;
     QList<QString> varList;
-    if( !qry.exec(statement) )
-    {
-        projectError = qry.lastError().text();
-        return false;
-    }
-    qry.first();
-    if (!qry.isValid())
-    {
-        projectError = qry.lastError().text();
-        return false ;
-    }
-    getValue(qry.value("name"), &tableName);
-    statement = QString("PRAGMA table_info(`%1`)").arg(tableName);
-    QString name;
-    if( !qry.exec(statement) )
-    {
-        projectError = qry.lastError().text();
-        return false;
-    }
     qry.first();
     if (!qry.isValid())
     {
@@ -1056,10 +1070,10 @@ bool CriteriaOutputProject::getAllDbVariable()
     }
     do
     {
-        getValue(qry.value("name"), &name);
-        if (name != "DATE")
+        getValue(qry.value("name"), &fieldName);
+        if (fieldName != "DATE")
         {
-            varList<<name;
+            varList<<fieldName;
         }
     }
     while(qry.next());
@@ -1084,41 +1098,36 @@ bool CriteriaOutputProject::getDbDataDates(QDate &firstDate, QDate &lastDate)
         return false;
     }
 
-    QSqlQuery qry(dbData);
-    QString idCase;
-    QString statement;
     QDate firstTmp;
     QDate lastTmp;
 
     firstDate = QDate::currentDate();
     lastDate = QDate(1800,1,1);
 
-    for (int i = 0; i < tablesList.size(); i++)
+    QString idCase = tablesList[0];
+    QString statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
+    QSqlQuery qry(dbData);
+    if( !qry.exec(statement) )
     {
-        idCase = tablesList[i];
-        statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
-        if( !qry.exec(statement) )
-        {
-            projectError = qry.lastError().text();
-            return false;
-        }
-        qry.first();
-        if (!qry.isValid())
-        {
-            projectError = qry.lastError().text();
-            return false ;
-        }
-        getValue(qry.value("MIN(DATE)"), &firstTmp);
-        getValue(qry.value("MAX(DATE)"), &lastTmp);
+        projectError = qry.lastError().text();
+        return false;
+    }
+    qry.first();
+    if (!qry.isValid())
+    {
+        projectError = qry.lastError().text();
+        return false ;
+    }
+    getValue(qry.value("MIN(DATE)"), &firstTmp);
+    getValue(qry.value("MAX(DATE)"), &lastTmp);
 
-        if (firstTmp < firstDate)
-        {
-            firstDate = firstTmp;
-        }
-        if (lastTmp > lastDate)
-        {
-            lastDate = lastTmp;
-        }
+    if (firstTmp < firstDate)
+    {
+        firstDate = firstTmp;
+    }
+    if (lastTmp > lastDate)
+    {
+        lastDate = lastTmp;
     }
 
     if (!firstDate.isValid() || !lastDate.isValid())
@@ -1155,7 +1164,7 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     outputFile.close();
 
     // read unit list
-    if (! readUnitList(dbUnitsName, unitList, projectError))
+    if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))
     {
         return ERROR_READ_UNITS;
     }
@@ -1163,10 +1172,10 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
     // write output
     QString idCase;
     QString idCropClass;
-    for (unsigned int i=0; i < unitList.size(); i++)
+    for (unsigned int i=0; i < compUnitList.size(); i++)
     {
-        idCase = unitList[i].idCase;
-        idCropClass = unitList[i].idCropClass;
+        idCase = compUnitList[i].idCase;
+        idCropClass = compUnitList[i].idCropClass;
 
         myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, projectError);
         if (myResult != CRIT1D_OK)

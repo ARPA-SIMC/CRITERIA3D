@@ -289,7 +289,7 @@ void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
     }
 
     // read soil list
-    QStringList soilStringList;
+    QList<QString> soilStringList;
     if (! getSoilList(&dbSoil, &soilStringList, &error))
     {
         QMessageBox::critical(nullptr, "Error", "getSoilList: " + error);
@@ -329,7 +329,7 @@ void Crit3DSoilWidget::on_actionOpenSoilDB()
     }
 
     // read soil list
-    QStringList soilStringList;
+    QList<QString> soilStringList;
     if (! getSoilList(&dbSoil, &soilStringList, &error))
     {
         QMessageBox::critical(nullptr, "Error!", error);
@@ -557,7 +557,7 @@ void Crit3DSoilWidget::on_actionUseWaterRetentionData()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, &errorString);
+        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, errorString);
     }
 
     updateAll();
@@ -577,7 +577,7 @@ void Crit3DSoilWidget::on_actionAirEntry()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, &errorString);
+        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, errorString);
     }
     updateAll();
 }
@@ -595,7 +595,7 @@ void Crit3DSoilWidget::on_actionParameterRestriction()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, &errorString);
+        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, errorString);
     }
     updateAll();
 }

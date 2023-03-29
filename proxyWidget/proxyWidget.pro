@@ -12,6 +12,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
+CONFIG += c++11 c++14 c++17
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -31,18 +32,16 @@ win32:{
     TARGET = proxyWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../commonDialogs ../interpolation
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../commonDialogs ../commonChartElements ../interpolation
 
 
 SOURCES += \
     chartView.cpp \
-    proxyCallout.cpp \
     proxyWidget.cpp
 
 
 HEADERS += \
     chartView.h \
-    proxyCallout.h \
     proxyWidget.h 
 
 

@@ -11,7 +11,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
-QMAKE_CXXFLAGS += -std=c++11
+CONFIG += c++11 c++14 c++17
 
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
@@ -30,7 +30,7 @@ win32:{
 INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo   \
             ../solarRadiation ../interpolation ../utilities     \
             ../netcdfHandler ../dbMeteoPoints ../outputPoints ../dbMeteoGrid    \
-            ../meteoWidget ../commonDialogs ../proxyWidget ../importDataXML
+            ../meteoWidget ../commonDialogs ../commonChartElements ../climate ../proxyWidget ../importDataXML
 
 
 SOURCES += \

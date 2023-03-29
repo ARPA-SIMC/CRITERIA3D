@@ -43,6 +43,7 @@
     double errorFunctionPrimitive(double x);
     double parabolicFunction(double x, double* par);
     float gaussianFunction(TfunctionInput fInput);
+    float gaussianFunction(float x, float mean, float devStd);
 
 
 

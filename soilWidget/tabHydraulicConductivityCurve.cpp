@@ -33,7 +33,7 @@ TabHydraulicConductivityCurve::TabHydraulicConductivityCurve()
     chart->legend()->setAlignment(Qt::AlignBottom);
     chart->setAcceptHoverEvents(true);
 
-    m_tooltip = new SoilCallout(chart);
+    m_tooltip = new Callout(chart);
     m_tooltip->hide();
 
     mainLayout->addWidget(barHorizons.groupBox);
@@ -58,7 +58,7 @@ void TabHydraulicConductivityCurve::resetAll()
 
     chart->removeAllSeries();
     delete m_tooltip;
-    m_tooltip = new SoilCallout(chart);
+    m_tooltip = new Callout(chart);
     m_tooltip->hide();
     fillElement = false;
 
@@ -76,7 +76,6 @@ void TabHydraulicConductivityCurve::setFillElement(bool value)
 
 void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
 {
-
     if (soil == nullptr) return;
 
     resetAll();

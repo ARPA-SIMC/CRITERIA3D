@@ -347,7 +347,7 @@ int RasterObject::getCurrentStep(const gis::Crit3DRasterWindow& window)
     double dx = (pixelRT.x() - pixelLL.x() + 1) / double(window.nrCols());
     double dy = (pixelRT.y() - pixelLL.y() + 1) / double(window.nrRows());
 
-    int step = int(round(1.0 / std::min(dx, dy)));
+    int step = int(round(2.0 / std::min(dx, dy)));
     return std::max(1, step);
 }
 
@@ -366,10 +366,21 @@ float RasterObject::getValue(gis::Crit3DGeoPoint& geoPoint)
     if (rasterPointer == nullptr) return NODATA;
     if (! rasterPointer->isLoaded) return NODATA;
 
-    gis::Crit3DUtmPoint utmPoint;
-    gis::getUtmFromLatLon(utmZone, geoPoint, &utmPoint);
+    float value = NODATA;
+    if (isLatLon)
+    {
+        int row, col;
+        gis::getRowColFromLatLon(latLonHeader, geoPoint, &row, &col);
+        value = rasterPointer->getValueFromRowCol(row, col);
 
-    float value = gis::getValueFromUTMPoint(*rasterPointer, utmPoint);
+    }
+    else
+    {
+        gis::Crit3DUtmPoint utmPoint;
+        gis::getUtmFromLatLon(utmZone, geoPoint, &utmPoint);
+
+        value = gis::getValueFromUTMPoint(*rasterPointer, utmPoint);
+    }
 
     if (isEqual(value, rasterPointer->header->flag))
         return NODATA;
@@ -392,19 +403,22 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
     }
 
     // dynamic color scale
-    if (this->isLatLon)
+    if (! myRaster->colorScale->isRangeBlocked())
     {
-        // lat lon raster
-        gis::updateColorScale(myRaster, window);
+        if (this->isLatLon)
+        {
+            // lat lon raster
+            gis::updateColorScale(myRaster, window);
+        }
+        else
+        {
+            // UTM raster
+            gis::Crit3DRasterWindow* utmWindow = new gis::Crit3DRasterWindow();
+            gis::getUtmWindow(this->latLonHeader, *(myRaster->header), window, utmWindow, this->utmZone);
+            gis::updateColorScale(myRaster, *utmWindow);
+        }
+        roundColorScale(myRaster->colorScale, 4, true);
     }
-    else
-    {
-        // UTM raster
-        gis::Crit3DRasterWindow* utmWindow = new gis::Crit3DRasterWindow();
-        gis::getUtmWindow(this->latLonHeader, *(myRaster->header), window, utmWindow, this->utmZone);
-        gis::updateColorScale(myRaster, *utmWindow);
-    }
-    roundColorScale(myRaster->colorScale, 4, true);
 
     int step = getCurrentStep(window);
 
@@ -445,13 +459,18 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
             lx = x1 - x0;
             ly = y1 - y0;
 
-            if (this->isLatLon)
+            if (isLatLon)
                 value = myRaster->value[row][col];
             else
             {
                 value = myRaster->header->flag;
-                if (this->matrix[row][col].row != NODATA)
-                    value = myRaster->value[matrix[row][col].row][matrix[row][col].col];
+                int r = matrix[row][col].row;
+                if (r != int(NODATA))
+                {
+                    int c = matrix[row][col].col;
+                    if (! gis::isOutOfGridRowCol(r, c, *(myRaster)))
+                        value = myRaster->value[r][c];
+                }
             }
 
             if (this->isGrid && isDrawBorder && ! isEqual(value, NO_ACTIVE))
@@ -523,10 +542,10 @@ void RasterObject::setMapExtents()
 bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
 {
     // only for grid
-    if (! this->isGrid)
+    if (! (this->isGrid || this->isNetcdf))
         return false;
 
-    gis::getMeteoGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
+    gis::getGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
 
     // check out of grid
     if (gis::isOutOfGridRowCol(*row, *col, this->latLonHeader))

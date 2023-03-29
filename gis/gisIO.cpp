@@ -28,57 +28,84 @@
 #include <sstream>
 #include <fstream>
 #include <math.h>
+#include <algorithm>
+
 #include "commonConstants.h"
 #include "gis.h"
 
 using namespace std;
 
-bool splitKeyValue(std::string myLine, std::string *myKey, std::string *myValue)
+
+bool splitKeyValue(const string &myLine, string &key, string &value)
 {
-    *myKey = ""; *myValue = "";
+    key = "";
+    value = "";
+
     istringstream myStream(myLine);
+    myStream >> key;
+    myStream >> value;
 
-    myStream >> *myKey;
-    myStream >> *myValue;
-    if ((*myKey == "") || (*myValue == "")) return (false);
-    else return(true);
+    if (key == "" || value == "")
+        return false;
+
+    return true;
 }
 
-std::string upperCase(std::string myStr)
+
+bool splitKeyValueByDelimiter(const string &myLine, const string &delimiter, string &key, string &value)
 {
-    std::string upperCaseStr = myStr;
-    transform(myStr.begin(), myStr.end(), upperCaseStr.begin(), ::toupper);
-    return(upperCaseStr);
+    key = "";
+    value = "";
+
+    key = myLine.substr(0, myLine.find(delimiter));
+    // clean blanks
+    key.erase(remove_if(key.begin(), key.end(), isspace), key.end());
+
+    value = myLine.substr(myLine.find(delimiter)+1);
+
+    if (key == "" || value == "")
+        return false;
+
+    return true;
 }
+
+
+string upperCase(const string &myStr)
+{
+    string upperCaseStr = myStr;
+    transform(myStr.begin(), myStr.end(), upperCaseStr.begin(), ::toupper);
+    return upperCaseStr;
+}
+
 
 namespace gis
     {
 
     /*!
-     * \brief Read a ESRI grid header file (.hdr)
-     * \param myFileName    string
-     * \param myHeader      Crit3DRasterHeader pointer
-     * \param myError       string pointer
+     * \brief Read a ESRI float header file (.hdr)
+     * \param fileName    string
+     * \param header      Crit3DRasterHeader pointer
+     * \param error       string pointer
      * \return true on success, false otherwise
      */
-    bool readEsriGridHeader(string myFileName, gis::Crit3DRasterHeader *myHeader, string* myError)
+bool readEsriGridHeader(string fileName, gis::Crit3DRasterHeader *header, string &error)
     {
         string myLine, myKey, upKey, myValue;
         int nrKeys = 0;
 
-        myFileName += ".hdr";
-        ifstream  myFile (myFileName.c_str());
+        fileName += ".hdr";
+        ifstream  myFile (fileName.c_str());
 
         if (!myFile.is_open())
         {
-            *myError = "Missing file: " + myFileName;
+            error = "Missing file: " + fileName;
             return false;
         }
 
         while (myFile.good())
         {
             getline (myFile, myLine);
-            if (splitKeyValue(myLine, &myKey, &myValue))
+            if (splitKeyValue(myLine, myKey, myValue))
             {
                 upKey = upperCase(myKey);
 
@@ -88,87 +115,163 @@ namespace gis
                     nrKeys++;
 
                 if (upKey == "NCOLS")
-                    myHeader->nrCols = ::atoi(myValue.c_str());
+                    header->nrCols = ::atoi(myValue.c_str());
 
                 else if (upKey == "NROWS")
-                    myHeader->nrRows = ::atoi(myValue.c_str());
+                    header->nrRows = ::atoi(myValue.c_str());
 
                 // LLCORNER is the lower-left corner
                 else if (upKey == "XLLCORNER")
-                    myHeader->llCorner.x = ::atof(myValue.c_str());
+                    header->llCorner.x = ::atof(myValue.c_str());
 
                 else if (upKey == "YLLCORNER")
-                    myHeader->llCorner.y = ::atof(myValue.c_str());
+                    header->llCorner.y = ::atof(myValue.c_str());
 
                 else if (upKey == "CELLSIZE")
-                    myHeader->cellSize = ::atof(myValue.c_str());
+                    header->cellSize = ::atof(myValue.c_str());
 
                 else if ((upKey == "NODATA_VALUE") || (upKey == "NODATA"))
-                    myHeader->flag = float(::atof(myValue.c_str()));
+                    header->flag = float(::atof(myValue.c_str()));
             }
         }
         myFile.close();
 
         if (nrKeys < 6)
         {
-            *myError = "Missing keys in .hdr file.";
-            return(false);
+            error = "Missing keys in hdr file.";
+            return false;
         }
-        return(true);
+        return true;
+    }
+
+
+    /*!
+     * \brief Read a ENVI header file (.hdr)
+     * \param fileName    string
+     * \param header      Crit3DRasterHeader pointer
+     * \param error       string pointer
+     * \return true on success, false otherwise
+     */
+    bool readEnviHeader(string fileName, gis::Crit3DRasterHeader *header, string &error)
+    {
+        string myLine, key, upKey, valueStr;
+        int nrKeys = 0;
+
+        fileName += ".hdr";
+        ifstream  myFile (fileName.c_str());
+
+        if (!myFile.is_open())
+        {
+            error = "Missing file: " + fileName;
+            return false;
+        }
+
+        while (myFile.good())
+        {
+            getline (myFile, myLine);
+            if (splitKeyValueByDelimiter(myLine, "=", key, valueStr))
+            {
+                upKey = upperCase(key);
+
+                if ((upKey == "SAMPLES") || (upKey == "LINES")
+                    || (upKey == "DATATYPE") || (upKey == "MAPINFO")
+                    || (upKey == "DATAIGNOREVALUE") || (upKey == "NODATA"))
+                    nrKeys++;
+
+                if (upKey == "SAMPLES")
+                    header->nrCols = ::atoi(valueStr.c_str());
+
+                else if (upKey == "LINES")
+                    header->nrRows = ::atoi(valueStr.c_str());
+
+                else if (upKey == "DATATYPE")
+                {
+                    int type = ::atoi(valueStr.c_str());
+                    if (type != 4)
+                    {
+                        error = "Wrong data type: only value 4 is allowed.";
+                        return false;
+                    }
+                }
+
+                else if (upKey == "MAPINFO")
+                {
+                    header->llCorner.x = ::atof(valueStr.c_str());
+
+                    header->llCorner.y = ::atof(valueStr.c_str());
+
+                    header->cellSize = ::atof(valueStr.c_str());
+                }
+
+                else if ((upKey == "DATAIGNOREVALUE") || (upKey == "NODATA"))
+                    header->flag = float(::atof(valueStr.c_str()));
+            }
+        }
+        myFile.close();
+
+        if (nrKeys < 5)
+        {
+            error = "Missing keys in hdr file.";
+            return false;
+        }
+
+        return true;
     }
 
 
     /*!
      * \brief Read a ESRI grid data file (.flt)
-     * \param fileName string name file
-     * \param myGrid Crit3DRasterGrid pointer
-     * \param myError string pointer
+     * \param fileName      string name file
+     * \param rasterGrid    Crit3DRasterGrid pointer
+     * \param error         string pointer
      * \return true on success, false otherwise
      */
-    bool readEsriGridFlt(string fileName, gis::Crit3DRasterGrid *myGrid, string *myError)
+    bool readEsriGridFlt(string fileName, gis::Crit3DRasterGrid *rasterGrid, string &error)
     {
         fileName += ".flt";
 
         FILE* filePointer;
 
-        if (! myGrid->initializeGrid())
+        if (! rasterGrid->initializeGrid())
         {
-            *myError = "Memory error: file too big.";
-            return(false);
+            error = "Memory error: file too big.";
+            return false;
         }
 
         filePointer = fopen (fileName.c_str(), "rb" );
         if (filePointer == nullptr)
         {
-            *myError = "File .flt error.";
-            return(false);
+            error = "Error in .flt file.";
+            return false;
         }
 
-        for (int row = 0; row < myGrid->header->nrRows; row++)
-            fread (myGrid->value[row], sizeof(float), unsigned(myGrid->header->nrCols), filePointer);
+        for (int row = 0; row < rasterGrid->header->nrRows; row++)
+        {
+            fread (rasterGrid->value[row], sizeof(float), unsigned(rasterGrid->header->nrCols), filePointer);
+        }
 
         fclose (filePointer);
 
-        return (true);
+        return true;
     }
 
 
     /*!
      * \brief Write a ESRI grid header file (.hdr)
-     * \param myFileName string name file
-     * \param myHeader Crit3DRasterHeader pointer
-     * \param myError string pointer
+     * \param myFileName    string name file
+     * \param myHeader      Crit3DRasterHeader pointer
+     * \param error       string pointer
      * \return true on success, false otherwise
      */
-    bool writeEsriGridHeader(string myFileName, gis::Crit3DRasterHeader *myHeader, string* myError)
+    bool writeEsriGridHeader(string myFileName, gis::Crit3DRasterHeader *myHeader, string &error)
     {
         myFileName += ".hdr";
         ofstream myFile (myFileName.c_str());
 
         if (!myFile.is_open())
         {
-            *myError = "File .hdr error.";
-            return(false);
+            error = "File .hdr error.";
+            return false;
         }
 
         myFile << "ncols         " << myHeader->nrCols << "\n";
@@ -202,12 +305,12 @@ namespace gis
 
     /*!
      * \brief Write a ESRI grid data file (.flt)
-     * \param myFileName string name file
-     * \param myHeader Crit3DRasterHeader pointer
-     * \param myError string pointer
+     * \param myFileName    string name file
+     * \param myHeader      Crit3DRasterHeader pointer
+     * \param error       string pointer
      * \return true on success, false otherwise
      */
-    bool writeEsriGridFlt(string myFileName, gis::Crit3DRasterGrid *myGrid, string *myError)
+    bool writeEsriGridFlt(string myFileName, gis::Crit3DRasterGrid *myGrid, string &error)
     {
         myFileName += ".flt";
 
@@ -216,47 +319,148 @@ namespace gis
         filePointer = fopen(myFileName.c_str(), "wb" );
         if (filePointer == nullptr)
         {
-            *myError = "File .flt error.";
-            return(false);
+            error = "Error in writing flt file.";
+            return false;
         }
 
         for (int myRow = 0; myRow < myGrid->header->nrRows; myRow++)
             fwrite(myGrid->value[myRow], sizeof(float), unsigned(myGrid->header->nrCols), filePointer);
 
         fclose (filePointer);
-        return (true);
+        return true;
     }
 
-    bool readEsriGrid(string myFileName, Crit3DRasterGrid* myGrid, string* myError)
+
+    bool openRaster(string fileName, Crit3DRasterGrid *rasterGrid, string &error)
     {
-        if (myGrid == nullptr) return false;
-        myGrid->isLoaded = false;
-
-        Crit3DRasterHeader *myHeader;
-        myHeader = new Crit3DRasterHeader;
-
-        if(gis::readEsriGridHeader(myFileName, myHeader, myError))
+        if (fileName.size() <= 4)
         {
-            myGrid->clear();
-            *(myGrid->header) = *myHeader;
+            error = "Wrong filename.";
+            return false;
+        }
 
-            if (gis::readEsriGridFlt(myFileName, myGrid, myError))
+        std::string fileNameWithoutExt = fileName.substr(0, fileName.size() - 4);
+        std::string fileExtension = fileName.substr(fileName.size() - 4);
+
+        if (fileExtension == ".flt")
+        {
+            return gis::readEsriGrid(fileNameWithoutExt, rasterGrid, error);
+        }
+        else if (fileExtension == ".img")
+        {
+            return gis::readEnviGrid(fileNameWithoutExt, rasterGrid, error);
+        }
+
+        return false;
+    }
+
+
+    bool readEsriGrid(string fileName, Crit3DRasterGrid* rasterGrid, string &error)
+    {
+        if (rasterGrid == nullptr) return false;
+        rasterGrid->clear();
+
+        if(gis::readEsriGridHeader(fileName, rasterGrid->header, error))
+        {
+            if (gis::readEsriGridFlt(fileName, rasterGrid, error))
             {
-                myGrid->isLoaded = true;
-                updateMinMaxRasterGrid(myGrid);
+                gis::updateMinMaxRasterGrid(rasterGrid);
+                rasterGrid->isLoaded = true;
             }
         }
 
-        return(myGrid->isLoaded);
+        return rasterGrid->isLoaded;
     }
 
-    bool writeEsriGrid(string myFileName, Crit3DRasterGrid *myGrid, string *myError)
-    {
-        if (gis::writeEsriGridHeader(myFileName, myGrid->header, myError))
-            if (gis::writeEsriGridFlt(myFileName, myGrid, myError))
-                return(true);
 
-        return(false);
+    bool writeEsriGrid(string fileName, Crit3DRasterGrid *rasterGrid, string &error)
+    {
+        if (gis::writeEsriGridHeader(fileName, rasterGrid->header, error))
+            if (gis::writeEsriGridFlt(fileName, rasterGrid, error))
+                return true;
+
+        return false;
+    }
+
+
+    /*!
+     * \brief Read a ENVI grid data file (.img and .hdr)
+     * \return true on success, false otherwise
+     */
+    bool readEnviGrid(string fileName, Crit3DRasterGrid* rasterGrid, string &error)
+    {
+        rasterGrid->clear();
+
+        if(gis::readEnviHeader(fileName, rasterGrid->header, error))
+        {
+            if (gis::readEsriGridFlt(fileName, rasterGrid, error))
+            {
+                gis::updateMinMaxRasterGrid(rasterGrid);
+                rasterGrid->isLoaded = true;
+            }
+        }
+
+        return rasterGrid->isLoaded;
+    }
+
+    /*!
+     * \brief Write a ENVI grid data file (.img and .hdr)
+     * \return true on success, false otherwise
+     */
+    bool writeEnviGrid(string fileName, int utmZone, Crit3DRasterGrid *rasterGrid, string &error)
+    {
+        FILE* filePointer;
+        string imgFileName = fileName + ".img";
+
+        filePointer = fopen(imgFileName.c_str(), "wb" );
+        if (filePointer == nullptr)
+        {
+            error = "error in writing file: " + imgFileName;
+            return false;
+        }
+
+        // write grid
+        for (int row = 0; row < rasterGrid->header->nrRows; row++)
+            fwrite(rasterGrid->value[row], sizeof(float), unsigned(rasterGrid->header->nrCols), filePointer);
+
+        fclose (filePointer);
+
+        // write header file
+        string headerFileName = fileName + ".hdr";
+        ofstream myFile (headerFileName.c_str());
+
+        if (!myFile.is_open())
+        {
+            error = "error in writing file: " + headerFileName;
+            return false;
+        }
+
+        // top-left corner
+        char* xTopLeftcorner = new char[20];
+        char* yTopLeftcorner = new char[20];
+        sprintf(xTopLeftcorner, "%.03f", rasterGrid->header->llCorner.x);
+        sprintf(yTopLeftcorner, "%.03f", rasterGrid->header->llCorner.y + rasterGrid->header->nrRows * rasterGrid->header->cellSize);
+
+        myFile << "ENVI\n";
+        myFile << "description = {CRITERIA3D raster grid}\n";
+        myFile << "samples = " << rasterGrid->header->nrCols << "\n";
+        myFile << "lines = " << rasterGrid->header->nrRows << "\n";
+        myFile << "bands = 1\n";
+        myFile << "header offset = 0\n";
+        myFile << "file type = ENVI Standard\n";
+        myFile << "data type = 4\n";
+        myFile << "interleave = bsq\n";
+        myFile << "byte order = 0\n";
+        myFile << "data ignore value = " << rasterGrid->header->flag << "\n";
+        myFile << "map info = {UTM, 1, 1, " << xTopLeftcorner << ", " << yTopLeftcorner  << ", ";
+        myFile << rasterGrid->header->cellSize << ", " << rasterGrid->header->cellSize << ", ";
+        myFile << utmZone << ", North, WGS-84, units=Meters}";
+
+        delete[] xTopLeftcorner;
+        delete[] yTopLeftcorner;
+        myFile.close();
+
+        return true;
     }
 
 
@@ -291,8 +495,8 @@ namespace gis
 
         // rowcol nr
         // increase resolution
-        latLonHeader->nrRows = int(utmHeader->nrRows * 1.1);
-        latLonHeader->nrCols = int(utmHeader->nrCols * 1.1);
+        latLonHeader->nrRows = int(utmHeader->nrRows * 1.0);
+        latLonHeader->nrCols = int(utmHeader->nrCols * 1.0);
 
         // dx, dy
         latLonHeader->dx = (URcorner.longitude - LLcorner.longitude) / latLonHeader->nrCols;
@@ -328,18 +532,52 @@ namespace gis
         gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
 
         // UL
-        geoPoint.longitude = latLonHeader->llCorner.longitude - latLonHeader->nrRows * latLonHeader->dy;
-        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
+        geoPoint.longitude = latLonHeader->llCorner.longitude;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[3]);
+
+        double xmin = floor(min(v[0].x, v[3].x));
+        double xmax = floor(max(v[1].x, v[2].x)) +1.;
+        double ymin = floor(min(v[0].y, v[1].y));
+        double ymax = floor(max(v[2].y, v[3].y)) +1.;
 
         utmHeader->cellSize = cellSize;
-        utmHeader->nrCols = int(floor((v[1].x - v[0].x)/utmHeader->cellSize));
-        utmHeader->nrRows = int(floor((v[2].y - v[1].y)/utmHeader->cellSize));
-        utmHeader->llCorner.x = v[0].x;
-        utmHeader->llCorner.y = v[0].y;
+        utmHeader->nrCols = int(floor((xmax-xmin)/utmHeader->cellSize) + 1);
+        utmHeader->nrRows = int(floor((ymax-ymin)/utmHeader->cellSize) + 1);
+        utmHeader->llCorner.x = xmin;
+        utmHeader->llCorner.y = ymin;
 
         utmHeader->flag = latLonHeader->flag;
         return true;
     }
 
+    double getGeoCellSizeFromLatLonHeader(const Crit3DGisSettings& mySettings, Crit3DGridHeader *latLonHeader)
+    {
+        Crit3DUtmPoint v[4];
+
+        // compute vertexes
+        gis::Crit3DGeoPoint geoPoint;
+
+        // LL
+        geoPoint.latitude = latLonHeader->llCorner.latitude;
+        geoPoint.longitude = latLonHeader->llCorner.longitude;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[0]);
+
+        // LR
+        geoPoint.longitude = latLonHeader->llCorner.longitude + latLonHeader->nrCols * latLonHeader->dx;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[1]);
+
+        // UR
+        geoPoint.latitude = latLonHeader->llCorner.latitude + latLonHeader->nrRows * latLonHeader->dy;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[2]);
+
+        // UL
+        geoPoint.longitude = latLonHeader->llCorner.longitude;
+        gis::getUtmFromLatLon(mySettings.utmZone, geoPoint, &v[3]);
+
+        double xCellSize = (v[1].x-v[0].x)/latLonHeader->nrCols;
+        double yCellSize = (v[3].y-v[0].y)/latLonHeader->nrRows;
+
+        return min(xCellSize,yCellSize);
+    }
 
 }

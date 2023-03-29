@@ -80,12 +80,15 @@ Crit1DCase::Crit1DCase()
 bool Crit1DCase::initializeSoil(std::string &error)
 {
     soilLayers.clear();
+    carbonNitrogenLayers.clear();
 
     double factor = 1.0;
     if (unit.isGeometricLayers) factor = geometricFactor;
 
     if (! mySoil.setSoilLayers(minLayerThickness, factor, soilLayers, error))
         return false;
+
+    carbonNitrogenLayers.resize(soilLayers.size());
 
     if (unit.isNumericalInfiltration)
     {
@@ -107,7 +110,7 @@ void Crit1DCase::initializeWaterContent(Crit3DDate myDate)
     // water table
     if (unit.useWaterTableData)
     {
-        float waterTable = meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth);
+        double waterTable = double(meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
         computeCapillaryRise(soilLayers, waterTable);
     }
 }
@@ -119,14 +122,14 @@ void Crit1DCase::initializeWaterContent(Crit3DDate myDate)
  */
 bool Crit1DCase::initializeNumericalFluxes(std::string &error)
 {
-    unsigned nrLayers = unsigned(soilLayers.size());
+    int nrLayers = int(soilLayers.size());
     if (nrLayers < 1)
     {
         error = "Missing soil layers";
         return false;
     }
 
-    unsigned lastLayer = nrLayers-1;
+    int lastLayer = nrLayers-1;
     int nrlateralLinks = 0;
 
     int result = soilFluxes3D::initialize(nrLayers, nrLayers, nrlateralLinks, true, false, false);
@@ -146,7 +149,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     {
         soil::Crit3DHorizon horizon = mySoil.horizon[horizonIndex];
         double soilFraction = (1.0 - horizon.coarseFragments);
-        result = soilFluxes3D::setSoilProperties(soilIndex, horizonIndex,
+        result = soilFluxes3D::setSoilProperties(soilIndex, int(horizonIndex),
                             horizon.vanGenuchten.alpha * GRAVITY,
                             horizon.vanGenuchten.n, horizon.vanGenuchten.m,
                             horizon.vanGenuchten.he / GRAVITY,
@@ -157,7 +160,7 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
                             horizon.organicMatter, horizon.texture.clay * 0.01);
         if (result != CRIT3D_OK)
         {
-            error = "Error in setSoilProperties, horizon nr: " + std::to_string(horizonIndex);
+            error = "Error in setSoilProperties, horizon nr: " + std::to_string(horizonIndex + 1);
             return false;
         }
     }
@@ -176,38 +179,41 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
     // set surface (node 0)
     bool isSurface = true;
     int nodeIndex = 0;
-    soilFluxes3D::setNode(nodeIndex, x0, y0, z0, area, isSurface, true, BOUNDARY_RUNOFF, unit.slope, ly);
+    soilFluxes3D::setNode(nodeIndex, x0, y0, z0, area, isSurface, true, BOUNDARY_RUNOFF, float(unit.slope), float(ly));
     soilFluxes3D::setNodeSurface(nodeIndex, surfaceIndex);
-    soilFluxes3D::setNodeLink(nodeIndex, nodeIndex + 1, DOWN, area);
+    soilFluxes3D::setNodeLink(nodeIndex, nodeIndex + 1, DOWN, float(area));
 
-    // set nodes
+    // set soil nodes
     isSurface = false;
-    for (unsigned int i = 1; i < nrLayers; i++)
+    for (int i = 1; i < nrLayers; i++)
     {
-        double volume = area * soilLayers[i].thickness;             // [m^3]
-        double z = z0 - soilLayers[i].depth;                        // [m]
+        double volume = area * soilLayers[unsigned(i)].thickness;             // [m^3]
+        double z = z0 - soilLayers[unsigned(i)].depth;                        // [m]
         if (i == lastLayer)
         {
             if (unit.useWaterTableData)
-                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, unit.slope, area);
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true,
+                                      BOUNDARY_PRESCRIBEDTOTALPOTENTIAL, float(unit.slope), float(area));
             else
-                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREEDRAINAGE, unit.slope, area);
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true,
+                                      BOUNDARY_FREEDRAINAGE, float(unit.slope), float(area));
         }
         else
         {
-            double boundaryArea = ly * soilLayers[i].thickness;
-            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true, BOUNDARY_FREELATERALDRAINAGE, unit.slope, boundaryArea);
+            double boundaryArea = ly * soilLayers[unsigned(i)].thickness;
+            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true,
+                                  BOUNDARY_FREELATERALDRAINAGE, float(unit.slope), float(boundaryArea));
         }
 
         // set soil
-        int horizonIndex = mySoil.getHorizonIndex(soilLayers[i].depth);
+        int horizonIndex = mySoil.getHorizonIndex(soilLayers[unsigned(i)].depth);
         soilFluxes3D::setNodeSoil(i, soilIndex, horizonIndex);
 
         // set links
-        soilFluxes3D::setNodeLink(i, i-1, UP, area);
+        soilFluxes3D::setNodeLink(i, i-1, UP, float(area));
         if (i != lastLayer)
         {
-            soilFluxes3D::setNodeLink(i, i+1, DOWN, area);
+            soilFluxes3D::setNodeLink(i, i+1, DOWN, float(area));
         }
     }
 
@@ -221,8 +227,8 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
  */
 bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &error)
 {
-    int nrLayers = int(soilLayers.size());
-    int lastLayer = nrLayers - 1;
+    unsigned int nrLayers = unsigned(soilLayers.size());
+    unsigned int lastLayer = nrLayers - 1;
     error = "";
 
     // set bottom boundary conditions (water table)
@@ -230,7 +236,7 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     {
         double totalPotential;                          // [m]
         double boundaryZ = 1.0;                         // [m]
-        if (output.dailyWaterTable != NODATA)
+        if (! isEqual(output.dailyWaterTable, NODATA))
         {
             totalPotential = output.dailyWaterTable;    // [m]
         }
@@ -242,30 +248,30 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
             totalPotential = soilLayers[lastLayer].depth + boundaryZ;                                       // [m]
             totalPotential += MINVALUE(fieldCapacity, waterPotential);
         }
-        soilFluxes3D::setPrescribedTotalPotential(lastLayer, -totalPotential);
+        soilFluxes3D::setPrescribedTotalPotential(long(lastLayer), -totalPotential);
     }
 
     // set surface
-    int surfaceIndex = 0;
-    soilFluxes3D::setWaterContent(surfaceIndex, soilLayers[surfaceIndex].waterContent * 0.001);   // [m]
+    unsigned int surfaceIndex = 0;
+    soilFluxes3D::setWaterContent(long(surfaceIndex), soilLayers[surfaceIndex].waterContent * 0.001);   // [m]
 
     // set soil profile
-    for (int i=1; i < nrLayers; i++)
+    for (unsigned int i=1; i < nrLayers; i++)
     {
-        double waterPotential = soilLayers[i].getWaterPotential() / GRAVITY;   // [m]
-        soilFluxes3D::setMatricPotential(i, -waterPotential);
+        double waterPotential = soilLayers[i].getWaterPotential() / GRAVITY;    // [m]
+        soilFluxes3D::setMatricPotential(long(i), -waterPotential);
     }
 
     soilFluxes3D::initializeBalance();
 
     // precipitation
-    // TODO improve lat < 0
+    // TODO improve for lat < 0
     int duration = 24;                              // [hours] winter
     if (myDate.month >= 5 && myDate.month <= 9)
     {
         duration = 12;                               // [hours] summer
     }
-    int precH0 = 13 - duration * 0.5;
+    int precH0 = 13 - duration/2;
     int precH1 = precH0 + duration -1;
     double precFlux = (area * output.dailyPrec * 0.001) / (HOUR_SECONDS * duration);  // [m3 s-1]
 
@@ -291,25 +297,22 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
         if (hour >= irrH0 && hour <= irrH1 && irrFlux > 0)
             flux += irrFlux;
 
-        soilFluxes3D::setWaterSinkSource(surfaceIndex, flux);
+        soilFluxes3D::setWaterSinkSource(long(surfaceIndex), flux);
         soilFluxes3D::computePeriod(HOUR_SECONDS);
     }
 
-    // mass balance error
-    //double massBalanceError = soilFluxes3D::getWaterMBR() - 1;
-
     // output (from [m] to [mm])
-    soilLayers[surfaceIndex].waterContent = soilFluxes3D::getWaterContent(surfaceIndex) * 1000;
-    for (int i=1; i < nrLayers; i++)
+    soilLayers[surfaceIndex].waterContent = soilFluxes3D::getWaterContent(long(surfaceIndex)) * 1000;
+    for (unsigned int i=1; i < nrLayers; i++)
     {
-        soilLayers[i].waterContent = soilFluxes3D::getWaterContent(i) * soilLayers[i].thickness * 1000;
+        soilLayers[i].waterContent = soilFluxes3D::getWaterContent(long(i)) * soilLayers[i].thickness * 1000;
     }
 
-    output.dailySurfaceRunoff = -(soilFluxes3D::getBoundaryWaterFlow(surfaceIndex) / area) * 1000;
+    output.dailySurfaceRunoff = -(soilFluxes3D::getBoundaryWaterFlow(long(surfaceIndex)) / area) * 1000;
     output.dailyLateralDrainage = -(soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE) / area) * 1000;
 
     // drainage / capillary rise
-    double fluxBottom = (soilFluxes3D::getBoundaryWaterFlow(lastLayer) / area) * 1000;
+    double fluxBottom = (soilFluxes3D::getBoundaryWaterFlow(long(lastLayer)) / area) * 1000;
     if (fluxBottom > 0)
     {
         output.dailyCapillaryRise = fluxBottom;
@@ -472,7 +475,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
     // water table
     output.dailyWaterTable = double(meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
     // check
-    if (output.dailyWaterTable != NODATA)
+    if (! isEqual(output.dailyWaterTable, NODATA))
         output.dailyWaterTable = MAXVALUE(output.dailyWaterTable, 0.01);
 
     // prec forecast
@@ -507,7 +510,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
         if (! unit.isOptimalIrrigation)
             output.dailyIrrigation = irrigation;
         else
-            output.dailyIrrigation = assignOptimalIrrigation(soilLayers, crop.roots.lastRootLayer, irrigation);
+            output.dailyIrrigation = assignOptimalIrrigation(soilLayers, unsigned(crop.roots.lastRootLayer), irrigation);
 
         if (! computeWaterFluxes(myDate, error)) return false;
     }
@@ -548,9 +551,9 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
 
     // output variables
     output.dailySurfaceWaterContent = soilLayers[0].waterContent;
-    output.dailySoilWaterContent = getSoilWaterContent(soilLayers, 1.0);
-    output.dailyAvailableWater = getSoilAvailableWater(soilLayers, 1.0);
-    output.dailyFractionAW = getSoilFractionAW(soilLayers, 1.0);
+    output.dailySoilWaterContent = getSoilWaterContent(soilLayers, 100);
+    output.dailyAvailableWater = getAvailableWater(100);
+    output.dailyFractionAW = getFractionAW(100);
     output.dailyReadilyAW = getReadilyAvailableWater(crop, soilLayers);
 
     return true;
@@ -574,14 +577,15 @@ double Crit1DCase::getTotalWaterContent()
 
 
 /*!
- * \brief get volumetric water content at specific depth
- * \param depth = computation soil depth  [cm]
- * \return volumetric water content [-]
+ * \brief getWaterContent
+ * \param computationDepth = computation soil depth  [cm]
+ * \return volumetric water content at specific depth [-]
  */
-double Crit1DCase::getWaterContent(double depth)
+double Crit1DCase::getWaterContent(double computationDepth)
 {
-    depth /= 100;                                   // [cm] --> [m]
-    if (depth <= 0 || depth > mySoil.totalDepth)
+    computationDepth /= 100;        // [cm] --> [m]
+
+    if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
         return NODATA;
 
     double upperDepth, lowerDepth;
@@ -589,7 +593,7 @@ double Crit1DCase::getWaterContent(double depth)
     {
         upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
-        if (depth >= upperDepth && depth <= lowerDepth)
+        if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
         {
             return soilLayers[i].waterContent / (soilLayers[i].thickness * 1000);
         }
@@ -600,14 +604,15 @@ double Crit1DCase::getWaterContent(double depth)
 
 
 /*!
- * \brief get water potential at specific depth
- * \param depth = computation soil depth  [cm]
- * \return water potential [kPa]
+ * \brief getWaterPotential
+ * \param computationDepth = computation soil depth  [cm]
+ * \return water potential at specific depth [kPa]
  */
-double Crit1DCase::getWaterPotential(double depth)
+double Crit1DCase::getWaterPotential(double computationDepth)
 {
-    depth /= 100;                                   // [cm] --> [m]
-    if (depth <= 0 || depth > mySoil.totalDepth)
+    computationDepth /= 100;        // [cm] --> [m]
+
+    if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
         return NODATA;
 
     double upperDepth, lowerDepth;
@@ -615,7 +620,7 @@ double Crit1DCase::getWaterPotential(double depth)
     {
         upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
-        if (depth >= upperDepth && depth <= lowerDepth)
+        if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
         {
             return -soilLayers[i].getWaterPotential();
         }
@@ -626,13 +631,13 @@ double Crit1DCase::getWaterPotential(double depth)
 
 
 /*!
- * \brief getSoilWaterDeficit
- * \param depth = computation soil depth  [cm]
- * \return sum of water deficit from zero to depth (mm)
+ * \brief getWaterDeficit
+ * \param computationDepth = computation soil depth  [cm]
+ * \return sum of water deficit from zero to computationDepth (mm)
  */
-double Crit1DCase::getSoilWaterDeficit(double depth)
+double Crit1DCase::getWaterDeficit(double computationDepth)
 {
-    depth /= 100;                           // [cm] --> [m]
+    computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
     double waterDeficitSum = 0;             // [mm]
 
@@ -640,7 +645,7 @@ double Crit1DCase::getSoilWaterDeficit(double depth)
     {
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
 
-        if (lowerDepth < depth)
+        if (lowerDepth < computationDepth)
         {
             waterDeficitSum += soilLayers[i].FC - soilLayers[i].waterContent;
         }
@@ -649,7 +654,7 @@ double Crit1DCase::getSoilWaterDeficit(double depth)
             // fraction of last layer
             upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
             double layerDeficit = soilLayers[i].FC - soilLayers[i].waterContent;
-            double depthFraction = (depth - upperDepth) / soilLayers[i].thickness;
+            double depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
             return waterDeficitSum + layerDeficit * depthFraction;
         }
     }
@@ -659,13 +664,13 @@ double Crit1DCase::getSoilWaterDeficit(double depth)
 
 
 /*!
- * \brief getAvailableWaterCapacity
- * \param depth = computation soil depth  [cm]
- * \return sum of available water capacity (FC-WP) from zero to depth (mm)
+ * \brief getWaterCapacity
+ * \param computationDepth = computation soil depth  [cm]
+ * \return sum of available water capacity (FC-WP) from zero to computationDepth (mm)
  */
-double Crit1DCase::getAvailableWaterCapacity(double depth)
+double Crit1DCase::getWaterCapacity(double computationDepth)
 {
-    depth /= 100;                           // [cm] --> [m]
+    computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
     double awc = 0;                         // [mm]
 
@@ -673,7 +678,7 @@ double Crit1DCase::getAvailableWaterCapacity(double depth)
     {
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
 
-        if (lowerDepth < depth)
+        if (lowerDepth < computationDepth)
         {
             awc += soilLayers[i].FC - soilLayers[i].WP;
         }
@@ -682,7 +687,7 @@ double Crit1DCase::getAvailableWaterCapacity(double depth)
             // fraction of last layer
             upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
             double layerAWC = soilLayers[i].FC - soilLayers[i].WP;
-            double depthFraction = (depth - upperDepth) / soilLayers[i].thickness;
+            double depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
             return awc + layerAWC * depthFraction;
         }
     }
@@ -691,3 +696,71 @@ double Crit1DCase::getAvailableWaterCapacity(double depth)
 }
 
 
+/*!
+ * \brief getAvailableWater
+ * \param computationDepth = computation soil depth  [cm]
+ * \return sum of available water from zero to computationDepth (mm)
+ */
+double Crit1DCase::getAvailableWater(double computationDepth)
+{
+    computationDepth /= 100;                // [cm] --> [m]
+    double lowerDepth, upperDepth;          // [m]
+    double availableWaterSum = 0;           // [mm]
+
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    {
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+
+        if (lowerDepth < computationDepth)
+        {
+            availableWaterSum += soilLayers[i].waterContent - soilLayers[i].WP;
+        }
+        else
+        {
+            // fraction of last layer
+            upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+            double layerAW = soilLayers[i].waterContent - soilLayers[i].WP;
+            double depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
+            return availableWaterSum + layerAW * depthFraction;
+        }
+    }
+
+    return availableWaterSum;
+}
+
+
+/*!
+ * \brief getFractionAW
+ * \param computationDepth = computation soil depth  [cm]
+ * \return fraction of available water from zero to computationDepth (mm)
+ */
+double Crit1DCase::getFractionAW(double computationDepth)
+{
+    computationDepth /= 100;            // [cm] --> [m]
+    double lowerDepth, upperDepth;      // [m]
+    double depthFraction;               // [-]
+    double availableWaterSum = 0;       // [mm]
+    double potentialAWSum = 0;          // [mm]
+
+    unsigned int i = 1;
+    bool isDepthLower = true;
+    while (i < soilLayers.size() && isDepthLower)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+
+        if (lowerDepth < computationDepth)
+            depthFraction = 1;
+        else
+        {
+            depthFraction = (computationDepth - upperDepth) / soilLayers[i].thickness;
+            isDepthLower = false;
+        }
+
+        availableWaterSum += (soilLayers[i].waterContent - soilLayers[i].WP) * depthFraction;
+        potentialAWSum += (soilLayers[i].FC - soilLayers[i].WP) * depthFraction;
+        i++;
+    }
+
+    return availableWaterSum / potentialAWSum;
+}

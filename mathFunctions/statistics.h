@@ -14,7 +14,7 @@
                             trend, mannKendall,
                             phenology,
                             winkler, huglin, fregoni,
-                            correctedDegreeDaysSum, erosivityFactorElab, rainIntensityElab, noMeteoComp};
+                            correctedDegreeDaysSum, erosivityFactorElab, rainIntensityElab, yearMax, yearMin, noMeteoComp};
 
     enum aggregationMethod {noAggrMethod, aggrAverage, aggrMedian, aggrStdDeviation, aggrMin, aggrMax, aggrSum, aggrPrevailing, aggrIntegral, aggrCenter, aggr95Perc};
 
@@ -24,8 +24,10 @@
     {
         double rootMeanSquareError(double *measured , double *simulated , int nrData);
         float rootMeanSquareError(float *measured , float *simulated , int nrData);
+        double rootMeanSquareError(std::vector <float> measured, std::vector <float> simulated);
         float meanError(std::vector<float> measured , std::vector<float> simulated );
         float meanAbsoluteError(std::vector <float> measured, std::vector <float> simulated);
+        double compoundRelativeError(std::vector <float> measured, std::vector <float> simulated);
         float coefficientOfVariation(float *measured , float *simulated , int nrData);
         float weighedMean(float *data , float *weights, int nrData);
         float linearInterpolation(float x1, float y1, float x2, float y2, float xx);
@@ -33,12 +35,15 @@
         void linearRegression( std::vector<float> x,  std::vector<float> y, long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2);
         float standardDeviation(float *myList, int nrList);
         float standardDeviation(std::vector<float> myList, int nrList);
+        double standardDeviation(std::vector<double> myList, int nrList);
         double standardDeviation(double *myList, int nrList);
         float variance(float *myList, int nrList);
         float variance(std::vector<float> myList, int nrList);
+        double variance(std::vector<double> myList, int nrList);
         double variance(double *myList, int nrList);
         float mean(float *myList, int nrList);
         float mean(std::vector<float> myList, int nrList);
+        double mean(std::vector<double> myList, int nrList);
         double mean(double *myList, int nrList);
         float covariance(float *myList1, int nrList1,float *myList2, int nrList2);
         double covariance(double *myList1, int nrList1,double *myList2, int nrList2);

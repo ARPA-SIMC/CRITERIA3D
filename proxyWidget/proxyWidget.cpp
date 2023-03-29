@@ -35,13 +35,11 @@
 Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationSettings, Crit3DMeteoPoint *meteoPoints, int nrMeteoPoints, frequencyType currentFrequency, QDate currentDate, int currentHour, Crit3DQuality *quality, Crit3DInterpolationSettings* SQinterpolationSettings, Crit3DMeteoSettings *meteoSettings, Crit3DClimateParameters *climateParam, bool checkSpatialQuality)
 :interpolationSettings(interpolationSettings), meteoPoints(meteoPoints), nrMeteoPoints(nrMeteoPoints), currentFrequency(currentFrequency), currentDate(currentDate), currentHour(currentHour), quality(quality), SQinterpolationSettings(SQinterpolationSettings), meteoSettings(meteoSettings), climateParam(climateParam), checkSpatialQuality(checkSpatialQuality)
 {
-    
-    this->setWindowTitle("Proxy analysis");
-    this->resize(1240, 700);
-    this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    this->setWindowTitle("Proxy analysis over " + QString::number(nrMeteoPoints) +  " points");
+    this->resize(1024, 700);
+    this->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     this->setAttribute(Qt::WA_DeleteOnClose);
     
-
     // layout
     QVBoxLayout *mainLayout = new QVBoxLayout();
     QGroupBox *horizontalGroupBox = new QGroupBox();
@@ -50,7 +48,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QVBoxLayout *selectionOptionLayout = new QVBoxLayout;
     QHBoxLayout *selectionOptionBoxLayout = new QHBoxLayout;
     QHBoxLayout *selectionOptionEditLayout = new QHBoxLayout;
-    QVBoxLayout *plotLayout = new QVBoxLayout;
 
     detrended.setText("Detrended data");
     climatologicalLR.setText("Climatological lapse rate");
@@ -71,7 +68,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
 
     std::vector<Crit3DProxy> proxy = interpolationSettings->getCurrentProxy();
 
-    for(int i=0; i<proxy.size(); i++)
+    for(int i=0; i<int(proxy.size()); i++)
     {
         axisX.addItem(QString::fromStdString(proxy[i].getName()));
     }
@@ -103,7 +100,6 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
         }
         myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
     }
-    variable.setMinimumWidth(130);
     variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     
     selectionChartLayout->addWidget(variableLabel);
@@ -129,6 +125,18 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     selectionLayout->addLayout(selectionChartLayout);
     selectionLayout->addStretch(30);
     selectionLayout->addLayout(selectionOptionLayout);
+    horizontalGroupBox->setMaximumSize(1240, 130);
+    horizontalGroupBox->setLayout(selectionLayout);
+
+    chartView = new ChartView();
+    chartView->setMinimumHeight(200);
+    QStatusBar* statusBar = new QStatusBar();
+
+    mainLayout->addWidget(horizontalGroupBox);
+    mainLayout->addWidget(chartView);
+    mainLayout->addWidget(statusBar);
+
+    setLayout(mainLayout);
     
     connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
     connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
@@ -136,23 +144,14 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
 
-    chartView = new ChartView();
-    plotLayout->addWidget(chartView);
-
-    horizontalGroupBox->setMaximumSize(1240, 130);
-    horizontalGroupBox->setLayout(selectionLayout);
-    mainLayout->addWidget(horizontalGroupBox);
-    mainLayout->addLayout(plotLayout);
-    setLayout(mainLayout);
-
     if (currentFrequency != noFrequency)
     {
         plot();
     }
 
     show();
-
 }
+
 
 Crit3DProxyWidget::~Crit3DProxyWidget()
 {
@@ -161,7 +160,7 @@ Crit3DProxyWidget::~Crit3DProxyWidget()
 
 void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
 {
-    for (int pos=0; pos < interpolationSettings->getProxyNr(); pos++)
+    for (int pos=0; pos < int(interpolationSettings->getProxyNr()); pos++)
     {
         QString myProxy = QString::fromStdString(interpolationSettings->getProxy(pos)->getName());
         if (myProxy == proxyName)
@@ -175,13 +174,24 @@ void Crit3DProxyWidget::changeProxyPos(const QString proxyName)
 
 void Crit3DProxyWidget::changeVar(const QString varName)
 {
-    if (currentFrequency == daily)
+    if (varName == "ELABORATION")
     {
-        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
+        myVar = elaboration;
     }
-    else if (currentFrequency == hourly)
+    else if (varName == "ANOMALY")
     {
-        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
+        myVar = anomaly;
+    }
+    else
+    {
+        if (currentFrequency == daily)
+        {
+            myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, varName.toStdString());
+        }
+        else if (currentFrequency == hourly)
+        {
+            myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, varName.toStdString());
+        }
     }
     plot();
 }
@@ -250,7 +260,7 @@ void Crit3DProxyWidget::plot()
     QMap< QString, QPointF > idPointMap3;
 
     QPointF point;
-    for (int i = 0; i<outInterpolationPoints.size(); i++)
+    for (int i = 0; i < int(outInterpolationPoints.size()); i++)
     {
         if (outInterpolationPoints[i].lapseRateCode == primary)
         {
@@ -399,8 +409,8 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
         }
         else
         {
-            xMin = getProxyMinValue(outInterpolationPoints, interpolationSettings, proxyPos);
-            xMax = getProxyMaxValue(outInterpolationPoints, interpolationSettings, proxyPos);
+            xMin = getProxyMinValue(outInterpolationPoints, proxyPos);
+            xMax = getProxyMaxValue(outInterpolationPoints, proxyPos);
             bool isZeroIntercept = false;
             if (!regressionGeneric(outInterpolationPoints, interpolationSettings, proxyPos, isZeroIntercept))
             {
@@ -424,5 +434,4 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
         chartView->drawModelLapseRate(point_vector);
     }
 }
-
 

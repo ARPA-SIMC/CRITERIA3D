@@ -177,7 +177,7 @@ float Drought::computeDroughtIndex()
         {
             if (index == INDEX_SPI)
             {
-                float gammaCDFRes = gammaCDF(mySum[j], currentGamma[myMonthIndex-1].beta, currentGamma[myMonthIndex-1].gamma, currentGamma[myMonthIndex-1].pzero);
+                float gammaCDFRes = generalizedGammaCDF(mySum[j], currentGamma[myMonthIndex-1].beta, currentGamma[myMonthIndex-1].gamma, currentGamma[myMonthIndex-1].pzero);
                 if (gammaCDFRes > 0 && gammaCDFRes < 1)
                 {
                     droughtResults[j] = standardGaussianInvCDF(gammaCDFRes);
@@ -273,7 +273,7 @@ bool Drought::computeSpiParameters()
 
         if (n / (mySums.size()/12) >= meteoSettings->getMinimumPercentage() / 100)
         {
-            gammaFitting(monthSeries, n, &(currentGamma[myMonth-1].beta), &(currentGamma[myMonth-1].gamma),  &(currentGamma[myMonth-1].pzero));
+            generalizedGammaFitting(monthSeries, n, &(currentGamma[myMonth-1].beta), &(currentGamma[myMonth-1].gamma),  &(currentGamma[myMonth-1].pzero));
         }
     }
     return true;

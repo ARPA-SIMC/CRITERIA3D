@@ -5,8 +5,6 @@
     #include "crit3dDate.h"
     #include "console.h"
 
-    using namespace std;
-
     typedef struct
     {
         int coltura;
@@ -44,10 +42,10 @@
         long m_quota;
         Coordinata m_latitudine;
         Coordinata m_longitudine;
-        vector<Crit3DDate> m_data;
-        vector<float> m_tmin;
-        vector<float> m_tmax;
-        vector<float> m_prec;
+        std::vector<Crit3DDate> m_data;
+        std::vector<float> m_tmin;
+        std::vector<float> m_tmax;
+        std::vector<float> m_prec;
 
     public:
         Stazione()
@@ -56,16 +54,16 @@
                 m_quota(0),
                 m_latitudine(Coordinata()),
                 m_longitudine(Coordinata()),
-                m_data(vector<Crit3DDate>()),
-                m_tmin(vector<float>()),
-                m_tmax(vector<float>()),
-                m_prec(vector<float>())
+                m_data(std::vector<Crit3DDate>()),
+                m_tmin(std::vector<float>()),
+                m_tmax(std::vector<float>()),
+                m_prec(std::vector<float>())
         {}
 
         Stazione(char* nome, char* codice, const long& quota,
                  const Coordinata& latitudine, const Coordinata& longitudine,
-                 vector<Crit3DDate>& data, vector<float>& tmin, vector<float>& tmax,
-                 vector<float>& prec)
+                 std::vector<Crit3DDate>& data, std::vector<float>& tmin, std::vector<float>& tmax,
+                 std::vector<float>& prec)
             :	m_nome(nome),
                 m_codice(codice),
                 m_quota(quota),

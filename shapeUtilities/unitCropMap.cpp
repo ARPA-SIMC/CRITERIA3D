@@ -13,7 +13,7 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
                  QString ucmFileName, std::string &error, bool showInfo)
 {
 
-    // make a copy of shapefile and return cloned shapefile complete path
+    // make a copy of crop shapefile (reference) and return cloned shapefile complete path
     QString refFileName = QString::fromStdString(crop.getFilepath());
     QString ucmShapeFileName = cloneShapeFile(refFileName, ucmFileName);
 
@@ -187,7 +187,7 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
         return false;
     }
 
-    QStringList idCase, idCrop, idMeteo, idSoil;
+    QList<QString> idCase, idCrop, idMeteo, idSoil;
     QList<double> ha;
 
     for (int i = 0; i < nrShape; i++)
@@ -195,24 +195,31 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
         QString key = QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CASE"));
         if (key.isEmpty()) continue;
 
+        double hectares = shapeHandler.getNumericValue(signed(i), "hectares");
+
         if ( !idCase.contains(key) )
         {
             idCase << key;
             idCrop << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CROP"));
             idMeteo << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_METEO"));
             idSoil << QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_SOIL"));
-            ha << shapeHandler.getNumericValue(signed(i), "hectares");
+            ha << hectares;
         }
         else
         {
-            // TODO search id_case and sum hectares
+            // sum hectares
+            if (hectares > 0)
+            {
+                int index = idCase.indexOf(key);
+                ha[index] += hectares;
+            }
         }
     }
 
-    ComputationUnitsDB unitsDb(dbName, error);
+    ComputationUnitsDB compUnitsDb(dbName, error);
     if (error != "")
         return false;
 
-    return unitsDb.writeListToUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, error);
+    return compUnitsDb.writeListToCompUnitsTable(idCase, idCrop, idMeteo, idSoil, ha, error);
 
 }

@@ -48,6 +48,7 @@
     #define PATH_PROJECT "PROJECT/"
     #define PATH_TEMPLATE "TEMPLATE/"
     #define PATH_SETTINGS "SETTINGS/"
+    #define PATH_LOG "LOG/"
     #define PATH_OUTPUT "OUTPUT/"
     #define PATH_TD "TD/"
     #define PATH_STATES "STATES/"
@@ -100,10 +101,6 @@
     #define BOUNDARY_NONE 99
 
     #define RELAXATION 1
-
-    #define MAX_SOILS 256
-    #define MAX_SURFACES 256
-    #define MAX_HORIZONS 20
 
     // --------------- heat model -----------------
     #define SAVE_HEATFLUXES_NONE 0

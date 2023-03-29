@@ -240,10 +240,7 @@ DialogRadiation::DialogRadiation(Project* myProject)
 void DialogRadiation::updateAlgorithm(const QString myString)
 {
     TradiationAlgorithm myAlgorithm = radAlgorithmToString.at(myString.toStdString());
-    /*if (myAlgorithm == RADIATION_ALGORITHM_BROOKS)
-    {
-        groupLinke->setEnabled(false);
-    }*/
+
     if (myAlgorithm == RADIATION_ALGORITHM_RSUN)
     {
         groupLinke->setEnabled(true);
@@ -292,9 +289,9 @@ void DialogRadiation::loadLinke()
     qFileName = qFileName.left(qFileName.length()-4);
 
     std::string fileName = qFileName.toStdString();
-    std::string error_;
+    std::string errorStr;
     linkeMap = new gis::Crit3DRasterGrid();
-    if (gis::readEsriGrid(fileName, linkeMap, &error_))
+    if (gis::readEsriGrid(fileName, linkeMap, errorStr))
         editLinkeMap->setText(qFileName);
     else
         QMessageBox::information(nullptr, "Error", "Error opening " + qFileName);
@@ -307,9 +304,9 @@ void DialogRadiation::loadAlbedo()
     qFileName = qFileName.left(qFileName.length()-4);
 
     std::string fileName = qFileName.toStdString();
-    std::string error_;
+    std::string errorStr;
     albedoMap = new gis::Crit3DRasterGrid();
-    if (gis::readEsriGrid(fileName, albedoMap, &error_))
+    if (gis::readEsriGrid(fileName, albedoMap, errorStr))
         editAlbedoMap->setText(qFileName);
     else
         QMessageBox::information(nullptr, "Error", "Error opening " + qFileName);

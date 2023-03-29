@@ -68,7 +68,12 @@ bool loadCropParameters(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop
     myCrop->roots.rootDepthMin = query.value("root_depth_zero").toDouble();
     myCrop->roots.rootDepthMax = query.value("root_depth_max").toDouble();
     myCrop->roots.actualRootDepthMax = myCrop->roots.rootDepthMax;
+
     getValue(query.value("degree_days_root_increase"), &(myCrop->roots.degreeDaysRootGrowth));
+    if (myCrop->roots.degreeDaysRootGrowth == NODATA)
+    {
+        myCrop->roots.degreeDaysRootGrowth = myCrop->degreeDaysIncrease;
+    }
 
     // WATER NEEDS
     myCrop->kcMax = query.value("kc_max").toDouble();

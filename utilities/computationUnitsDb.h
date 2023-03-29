@@ -10,7 +10,9 @@
     #include <QSqlDatabase>
     #include <vector>
 
-    class Crit1DUnit
+class QSqlDatabase;
+
+    class Crit1DCompUnit
     {
     public:
         QString idCase;
@@ -30,7 +32,7 @@
         bool useWaterRetentionData;
         double slope;                           // [m m-1]
 
-        Crit1DUnit();
+        Crit1DCompUnit();
     };
 
     class ComputationUnitsDB
@@ -39,17 +41,17 @@
         ComputationUnitsDB(QString dbname, QString &error);
         ~ComputationUnitsDB();
 
-        bool writeListToUnitsTable(QList<QString> idCase, QList<QString> idCrop, QList<QString> idMeteo,
+        bool writeListToCompUnitsTable(QList<QString> idCase, QList<QString> idCrop, QList<QString> idMeteo,
                                    QList<QString> idSoil, QList<double> hectares, QString &error);
 
-        bool readUnitList(std::vector<Crit1DUnit> &unitList, QString &error);
+        bool readComputationUnitList(std::vector<Crit1DCompUnit> &compUnitList, QString &error);
 
     private:
         QSqlDatabase db;
     };
 
 
-    bool readUnitList(QString dbUnitsName, std::vector<Crit1DUnit> &unitList, QString &error);
+    bool readComputationUnitList(QString dbComputationUnitsName, std::vector<Crit1DCompUnit> &compUnitList, QString &error);
 
 
 #endif // COMPUTATIONUNITSDB_H

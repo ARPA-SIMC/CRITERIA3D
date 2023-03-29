@@ -29,6 +29,7 @@
 */
 
 #include <math.h>
+#include <algorithm>
 
 #include "soil.h"
 #include "commonConstants.h"
@@ -54,6 +55,7 @@ namespace soil
 
     Crit3DFittingOptions::Crit3DFittingOptions()
     {
+        // default
         this->waterRetentionCurve = MODIFIEDVANGENUCHTEN;
         this->useWaterRetentionData = true;
         this->airEntryFixed = true;
@@ -680,9 +682,9 @@ namespace soil
      * \return true if soil properties are correct, false otherwise
      */
     bool setHorizon(Crit3DHorizon* horizon, Crit3DTextureClass* textureClassList,
-                    Crit3DFittingOptions* fittingOptions, std::string* error)
+                    Crit3DFittingOptions* fittingOptions, std::string &error)
     {
-        *error = "";
+        error = "";
 
         // depth [cm]->[m]
         if (horizon->dbData.upperDepth != NODATA && horizon->dbData.lowerDepth != NODATA)
@@ -692,7 +694,7 @@ namespace soil
         }
         else
         {
-            *error += "wrong depth";
+            error += "wrong depth";
             return false;
         }
 
@@ -736,7 +738,7 @@ namespace soil
         horizon->texture.classUSDA = soil::getUSDATextureClass(horizon->texture);
         if (horizon->texture.classUSDA == NODATA)
         {
-            *error = "sand+silt+clay <> 100";
+            error = "sand+silt+clay <> 100";
             return false;
         }
 
@@ -790,12 +792,12 @@ namespace soil
             if (horizon->dbData.kSat < (horizon->waterConductivity.kSat / 100))
             {
                 horizon->waterConductivity.kSat /= 100;
-                *error = "Ksat is out of class limits.";
+                error = "Ksat is out of class limits.";
             }
             else if (horizon->dbData.kSat > (horizon->waterConductivity.kSat * 100))
             {
                 horizon->waterConductivity.kSat *= 100;
-                *error = "Ksat is out of class limits.";
+                error = "Ksat is out of class limits.";
             }
             else
             {
@@ -842,14 +844,38 @@ namespace soil
             return false;
         }
 
-        // values
-        unsigned int nrValues = unsigned(horizon->dbData.waterRetention.size());
+        unsigned int nrObsValues = unsigned(horizon->dbData.waterRetention.size());
+
+        // search theta max
+        double psiMin = 10000;      // [kpa]
+        double thetaMax = 0;        // [m3 m-3]
+        for (unsigned int i = 0; i < nrObsValues; i++)
+        {
+            psiMin = std::min(psiMin, horizon->dbData.waterRetention[i].water_potential);
+            thetaMax = std::max(thetaMax, horizon->dbData.waterRetention[i].water_content);
+        }
+        bool addThetaSat = ((thetaMax < horizon->vanGenuchten.thetaS) && (psiMin > 3));
+
+        // set values
+        unsigned int nrValues = nrObsValues;
+        unsigned int firstIndex = 0;
+        if (addThetaSat)
+        {
+            nrValues++;
+            firstIndex = 1;
+        }
         double* x = new double[nrValues];
         double* y = new double[nrValues];
-        for (unsigned int i = 0; i < nrValues; i++)
+
+        if (addThetaSat)
         {
-            x[i] = horizon->dbData.waterRetention[i].water_potential;
-            y[i] = horizon->dbData.waterRetention[i].water_content;
+            x[0] = 0.0;
+            y[0] = horizon->vanGenuchten.thetaS;
+        }
+        for (unsigned int i = 0; i < nrObsValues; i++)
+        {
+            x[i + firstIndex] = horizon->dbData.waterRetention[i].water_potential;
+            y[i + firstIndex] = horizon->dbData.waterRetention[i].water_content;
         }
 
         int functionCode;
@@ -1008,11 +1034,8 @@ namespace soil
             currentThikness *= geometricFactor;
             i++;
         }
-
         return true;
     }
 
 }
-
-
 

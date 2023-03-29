@@ -49,9 +49,6 @@ ProjectTab::ProjectTab(Project* project_)
     group->addButton(&utc);
     group->addButton(&localTime);
 
-    loadGridData.setText("Load grid data at start");
-    loadGridData.setChecked(project_->loadGridDataAtStart);
-
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(startLocationLat);
     mainLayout->addWidget(&startLocationLatEdit);
@@ -71,8 +68,6 @@ ProjectTab::ProjectTab(Project* project_)
     buttonLayout->addWidget(&localTime);
 
     mainLayout->addLayout(buttonLayout);
-
-    mainLayout->addWidget(&loadGridData);
 
     mainLayout->addStretch(1);
     setLayout(mainLayout);
@@ -312,7 +307,6 @@ bool DialogSettings::acceptValues()
     project_->gisSettings.utmZone = projectTab->utmZoneEdit.text().toInt();
     project_->gisSettings.timeZone = projectTab->timeZoneEdit.text().toInt();
     project_->gisSettings.isUTC = projectTab->utc.isChecked();
-    project_->loadGridDataAtStart = projectTab->loadGridData.isChecked();
 
     project_->quality->setReferenceHeight(qualityTab->referenceClimateHeightEdit.text().toFloat());
     project_->quality->setDeltaTSuspect(qualityTab->deltaTSuspectEdit.text().toFloat());
@@ -326,7 +320,7 @@ bool DialogSettings::acceptValues()
     project_->meteoSettings->setAutomaticTavg(metTab->automaticTavgEdit.isChecked());
     project_->meteoSettings->setAutomaticET0HS(metTab->automaticET0HSEdit.isChecked());
 
-    project_->saveProjectSettings();
+    project_->saveProjectLocation();
     project_->saveGenericParameters();
 
     return true;

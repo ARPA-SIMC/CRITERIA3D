@@ -42,7 +42,9 @@
       { "fregoni", fregoni },
       { "correctedDegreeDaysSum", correctedDegreeDaysSum },
       { "erosivityFactorElab", erosivityFactorElab },
-      { "rainIntensityElab", rainIntensityElab }
+      { "rainIntensityElab", rainIntensityElab },
+      { "yearmax", yearMax },
+      { "yearmin", yearMin }
     };
 
     class Crit3DClimateList
@@ -103,6 +105,9 @@
         void parserElaboration();
         bool parserGenericPeriodString(int index);
 
+        void insertDailyCumulated(bool dailyCumulated);
+        std::vector<bool> listDailyCumulated() const;
+
 
     private:
 
@@ -121,6 +126,7 @@
         std::vector<QString> _listParam1ClimateField;
         std::vector<QString> _listElab2;
         std::vector<float> _listParam2;
+        std::vector<bool> _listDailyCumulated;
 
     };
 

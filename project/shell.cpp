@@ -11,7 +11,6 @@
     #pragma comment(lib, "User32.lib")
 #endif
 
-using namespace std;
 
 
 bool attachOutputToConsole()
@@ -138,10 +137,10 @@ QString getTimeStamp(QList<QString> argumentList)
 
 QList<QString> getArgumentList(QString commandLine)
 {
-    string str;
+    std::string str;
     QList<QString> argumentList;
 
-    istringstream stream(commandLine.toStdString());
+    std::istringstream stream(commandLine.toStdString());
     while (stream >> str)
     {
         argumentList.append(QString::fromStdString(str));
@@ -153,10 +152,10 @@ QList<QString> getArgumentList(QString commandLine)
 
 QString getCommandLine(QString programName)
 {
-    string commandLine;
+    std::string commandLine;
 
-    cout << programName.toStdString() << ">";
-    getline (cin, commandLine);
+    std::cout << programName.toStdString() << ">";
+    getline (std::cin, commandLine);
 
     return QString::fromStdString(commandLine);
 }
@@ -168,6 +167,7 @@ QList<QString> getSharedCommandList()
 
     cmdList.append("Log     | SetLogFile");
     cmdList.append("DEM     | LoadDEM");
+    cmdList.append("POINT   | LoadPoints");
     cmdList.append("GRID    | LoadGrid");
     cmdList.append("Quit    | Exit");
 
@@ -206,6 +206,24 @@ int cmdLoadDEM(Project* myProject, QList<QString> argumentList)
     }
 }
 
+int cmdOpenDbPoint(Project* myProject, QList<QString> argumentList)
+{
+    if (argumentList.size() < 2)
+    {
+        myProject->logError("Missing db point name");
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    QString filename = argumentList.at(1);
+
+    if (! myProject->loadMeteoPointsDB(filename))
+    {
+        myProject->logError();
+        return ERROR_DBPOINT;
+    }
+
+    return PRAGA_OK;
+}
 
 int cmdLoadMeteoGrid(Project* myProject, QList<QString> argumentList)
 {
@@ -268,6 +286,11 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
     {
         *isCommandFound = true;
         return cmdLoadDEM(myProject, argumentList);
+    }
+    else if (command == "POINT" || command == "LOADPOINTS")
+    {
+        *isCommandFound = true;
+        return cmdOpenDbPoint(myProject, argumentList);
     }
     else if (command == "GRID" || command == "LOADGRID")
     {

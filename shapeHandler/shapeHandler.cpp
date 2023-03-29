@@ -24,6 +24,7 @@
     Fausto Tomei ftomei@arpae.it
 */
 
+#include "basicMath.h"
 #include "shapeHandler.h"
 #include "commonConstants.h"
 #include <fstream>
@@ -348,17 +349,35 @@ double Crit3DShapeHandler::getNumericValue(int shapeNumber, std::string fieldNam
 
     if (fieldPos == -1) return NODATA;
 
+    return getNumericValue(shapeNumber, fieldPos);
+}
+
+
+double Crit3DShapeHandler::getNumericValue(int shapeNumber, int fieldPos)
+{
     DBFFieldType fieldType = getFieldType(fieldPos);
 
+    double value = NODATA;
     if (fieldType == FTInteger)
     {
-        return readIntAttribute(shapeNumber, fieldPos);
+        value = readIntAttribute(shapeNumber, fieldPos);
     }
     else if (fieldType == FTDouble)
     {
-        return readDoubleAttribute(shapeNumber, fieldPos);
+        value = readDoubleAttribute(shapeNumber, fieldPos);
     }
-    else return NODATA;
+
+    // check zero as nodata
+    if (isEqual(value, 0))
+    {
+        std::string strValue = readStringAttribute(shapeNumber, fieldPos);
+        if (strValue == "" || strValue == "******")
+        {
+            value = NODATA;
+        }
+    }
+
+    return value;
 }
 
 

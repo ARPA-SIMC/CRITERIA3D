@@ -135,7 +135,9 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         QString key = newFields.last();
         QList<QString> items;
         items << "outputVar" << "FLOAT" << "8";
-        if (key == "FRACTION_AW")
+
+        // fraction of available water [0-1] requires 3 decimal digits
+        if (key == "FRACTION_AW" || key.left(3) == "FAW")
         {
             items << "3";
         }
@@ -233,7 +235,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
 
     // Reads the data and write to output shapefile
     QString line;
-    QStringList items;
+    QList<QString> items;
     QString idCase;
     std::string idCaseStr;
     int nrShapes = outputShapeFile.getShapeCount();

@@ -12,6 +12,7 @@ TEMPLATE = lib
 CONFIG += staticlib
 
 CONFIG += debug_and_release
+CONFIG += c++14 c++17
 
 unix:{
     CONFIG(debug, debug|release) {
@@ -31,24 +32,22 @@ win32:{
     TARGET = meteoWidget
 }
 
-INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../commonDialogs
+INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo ../utilities ../commonDialogs ../commonChartElements
 
 
 SOURCES += \
-    dialogChangeAxis.cpp \
     dialogMeteoTable.cpp \
+    dialogRemoveStation.cpp \
     dialogSelectVar.cpp \
     meteoTable.cpp \
-    meteoWidget.cpp \
-    callout.cpp
+    meteoWidget.cpp
 
 
 HEADERS += \
-    dialogChangeAxis.h \
     dialogMeteoTable.h \
+    dialogRemoveStation.h \
     dialogSelectVar.h \
     meteoTable.h \
-    meteoWidget.h   \
-    callout.h
+    meteoWidget.h
 
 

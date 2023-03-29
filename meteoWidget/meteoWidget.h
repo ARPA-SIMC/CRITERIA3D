@@ -6,17 +6,18 @@
     #include "meteoPoint.h"
     #include "callout.h"
 
-
     qreal findMedian(QList<double> sortedList, int begin, int end);
+
     class Crit3DMeteoWidget : public QWidget
     {
         Q_OBJECT
 
         public:
             Crit3DMeteoWidget(bool isGrid, QString projectPath, Crit3DMeteoSettings* meteoSettings_);
-            ~Crit3DMeteoWidget();
+            ~Crit3DMeteoWidget() override;
             int getMeteoWidgetID() const;
             void setMeteoWidgetID(int value);
+            void setCurrentDate(QDate myDate);
             void setDateInterval(QDate date0, QDate date1);
             void draw(Crit3DMeteoPoint mp, bool isAppend);
             void addMeteoPointsEnsemble(Crit3DMeteoPoint mp);
@@ -38,18 +39,20 @@
             bool computeTooltipLineSeries(QLineSeries *series, QPointF point, bool state);
             void tooltipBar(bool state, int index, QBarSet *barset);
             void handleMarkerClicked();
-            void closeEvent(QCloseEvent *event);
+            void closeEvent(QCloseEvent *event) override;
             void setIsEnsemble(bool value);
             bool getIsEnsemble();
             void setNrMembers(int value);
             void on_actionChangeLeftAxis();
             void on_actionChangeRightAxis();
             void on_actionExportGraph();
+            void on_actionRemoveStation();
 
     private:
             int meteoWidgetID;
             bool isGrid;
             bool isEnsemble;
+            bool isInitialized;
             int nrMembers;
             Crit3DMeteoSettings* meteoSettings;
             QPushButton *addVarButton;
@@ -91,6 +94,7 @@
             QDate lastDailyDate;
             QDate firstHourlyDate;
             QDate lastHourlyDate;
+            QDate currentDate;
             bool isLine;
             bool isBar;
             Callout *m_tooltip;

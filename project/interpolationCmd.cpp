@@ -6,6 +6,90 @@
 #include "interpolation.h"
 #include "interpolationCmd.h"
 
+float crossValidationStatistics::getMeanAbsoluteError() const
+{
+    return meanAbsoluteError;
+}
+
+void crossValidationStatistics::setMeanAbsoluteError(float newMeanAbsoluteError)
+{
+    meanAbsoluteError = newMeanAbsoluteError;
+}
+
+float crossValidationStatistics::getRootMeanSquareError() const
+{
+    return rootMeanSquareError;
+}
+
+void crossValidationStatistics::setRootMeanSquareError(float newRootMeanSquareError)
+{
+    rootMeanSquareError = newRootMeanSquareError;
+}
+
+float crossValidationStatistics::getCompoundRelativeError() const
+{
+    return compoundRelativeError;
+}
+
+void crossValidationStatistics::setCompoundRelativeError(float newCompoundRelativeError)
+{
+    compoundRelativeError = newCompoundRelativeError;
+}
+
+float crossValidationStatistics::getMeanBiasError() const
+{
+    return meanBiasError;
+}
+
+void crossValidationStatistics::setMeanBiasError(float newMeanBiasError)
+{
+    meanBiasError = newMeanBiasError;
+}
+
+const Crit3DTime &crossValidationStatistics::getRefTime() const
+{
+    return refTime;
+}
+
+void crossValidationStatistics::setRefTime(const Crit3DTime &newRefTime)
+{
+    refTime = newRefTime;
+}
+
+const Crit3DProxyCombination &crossValidationStatistics::getProxyCombination() const
+{
+    return proxyCombination;
+}
+
+void crossValidationStatistics::setProxyCombination(const Crit3DProxyCombination &newProxyCombination)
+{
+    proxyCombination = newProxyCombination;
+}
+
+float crossValidationStatistics::getR2() const
+{
+    return R2;
+}
+
+void crossValidationStatistics::setR2(float newR2)
+{
+    R2 = newR2;
+}
+
+crossValidationStatistics::crossValidationStatistics()
+{
+    initialize();
+}
+
+void crossValidationStatistics::initialize()
+{
+    meanAbsoluteError = NODATA;
+    rootMeanSquareError = NODATA;
+    compoundRelativeError = NODATA;
+    meanBiasError = NODATA;
+    R2 = NODATA;
+}
+
 void Crit3DProxyGridSeries::initialize()
 {
     gridName.clear();
@@ -58,7 +142,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     if (nrGrids == 1)
     {
-        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, &myError)) return false;
+        if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError)) return false;
         gis::resampleGrid(tmpGrid, gridOut, *gridBase.header, aggrAverage, 0);
         return true;
     }
@@ -83,8 +167,8 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     // load grids
     gis::Crit3DRasterGrid firstGrid, secondGrid;
-    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, &myError)) return false;
-    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, &myError)) return false;
+    if (! gis::readEsriGrid(gridNames[first].toStdString(), &firstGrid, myError)) return false;
+    if (! gis::readEsriGrid(gridNames[second].toStdString(), &secondGrid, myError)) return false;
 
     firstGrid.setMapTime(getCrit3DTime(QDate(gridYears[first],1,1), 0));
     secondGrid.setMapTime(getCrit3DTime(QDate(gridYears[second],1,1), 0));

@@ -7,9 +7,6 @@
 
     namespace gis
     {
-        enum mapActionType {actionDrag, actionSelect, actionZoom, actionNone};
-
-
         class  Crit3DRasterWindow {
         public:
             Crit3DRasterCell v[2];

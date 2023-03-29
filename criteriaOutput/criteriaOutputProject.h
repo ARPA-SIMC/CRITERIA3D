@@ -39,6 +39,7 @@
 #define ERROR_SHAPEFILE -70
 #define ERROR_NETCDF -75
 #define ERROR_ZONAL_STATISTICS_SHAPE -80
+#define ERROR_MAPS -85
 #define ERROR_MISSING_GDAL -100
 
 
@@ -74,7 +75,7 @@ public:
 
     QDate dateComputation;
 
-    QString dbUnitsName;
+    QString dbComputationUnitsName;
     QString dbDataName;
     QString dbCropName;
     QString dbDataHistoricalName;
@@ -84,7 +85,7 @@ public:
     QSqlDatabase dbDataHistorical;
 
     int nrUnits;
-    std::vector<Crit1DUnit> unitList;
+    std::vector<Crit1DCompUnit> compUnitList;
     CriteriaOutputVariable outputVariable;
     CriteriaAggregationVariable aggregationVariable;
 

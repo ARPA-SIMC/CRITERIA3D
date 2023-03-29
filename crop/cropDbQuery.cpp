@@ -100,11 +100,11 @@ QString getCropFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString crop
 }
 
 
-float getIrriRatioFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField, QString idCrop, QString *myError)
+float getIrriRatioFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString *myError)
 {
     *myError = "";
 
-    QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropClassField + " = '" + idCrop + "'";
+    QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropClassField + " = '" + idCropClass + "'";
 
     QSqlQuery query = dbCrop->exec(queryString);
     query.last();

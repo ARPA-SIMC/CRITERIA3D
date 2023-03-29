@@ -696,7 +696,7 @@ void TabHorizons::cellChanged(int row, int column)
     }
 
     std::string errorString;
-    soil::setHorizon(&(mySoil->horizon[unsigned(row)]), myTextureClassList, myFittingOptions, &errorString);
+    soil::setHorizon(&(mySoil->horizon[unsigned(row)]), myTextureClassList, myFittingOptions, errorString);
 
     // update tableModel values
     tableModel->item(row,0)->setText(QString::fromStdString(mySoil->horizon[unsigned(row)].texture.classNameUSDA));

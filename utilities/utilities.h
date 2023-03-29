@@ -28,6 +28,7 @@
     bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* startDate, QDate* endDate);
 
     QList<QString> getFields(QSqlDatabase* db_, QString tableName);
+    QList<QString> getFieldsUpperCase(QSqlQuery& query);
 
     bool getValue(QVariant myRs);
     bool getValue(QVariant myRs, int* myValue);
@@ -40,7 +41,7 @@
     QString getFilePath(QString fileNameComplete);
     QString getFileName(QString fileNameComplete);
 
-    std::vector <float> StringListToFloat(QStringList myList);
+    std::vector <float> StringListToFloat(QList<QString> myList);
     QStringList FloatVectorToStringList(std::vector <float> myVector);
     QList<QString> readListSingleColumn(QString fileName, QString& error);
 
@@ -48,6 +49,7 @@
     bool searchDocPath(QString* docPath);
     bool searchDataPath(QString* dataPath);
     void clearDir( const QString path );
+    QList<QString> removeList(QList<QString> list, QList<QString> toDelete);
 
 
 #endif // UTILITIES_H

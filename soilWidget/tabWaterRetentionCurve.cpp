@@ -34,7 +34,7 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
     chart->legend()->setAlignment(Qt::AlignBottom);
     chart->setAcceptHoverEvents(true);
 
-    m_tooltip = new SoilCallout(chart);
+    m_tooltip = new Callout(chart);
     m_tooltip->hide();
 
     mainLayout->addWidget(barHorizons.groupBox);
@@ -67,7 +67,7 @@ void TabWaterRetentionCurve::resetAll()
 
     chart->removeAllSeries();
     delete m_tooltip;
-    m_tooltip = new SoilCallout(chart);
+    m_tooltip = new Callout(chart);
     m_tooltip->hide();
     fillElement = false;
 
@@ -134,7 +134,7 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
             {
                 double x = mySoil->horizon[i].dbData.waterRetention[j].water_potential;
                 double y = mySoil->horizon[i].dbData.waterRetention[j].water_content;
-                if (x != NODATA && y != NODATA)
+                if (x>0 && x != NODATA && y != NODATA)
                 {
                     curveMarkers->append(x,y);
                 }
@@ -219,13 +219,9 @@ void TabWaterRetentionCurve::highlightCurve( bool isHightlight )
         if ( isHightlight && i == indexSelected)
         {
             QPen pen = curveList[i]->pen();
-            pen.setWidth(2);
+            pen.setWidth(3);
             pen.setBrush(QBrush(curveColor));
             curveList[i]->setPen(pen);
-            if (!curveMarkerMap.isEmpty() && i<curveMarkerMap.size())
-            {
-                curveMarkerMap[i]->setPen(pen);
-            }
         }
         else
         {
@@ -233,10 +229,6 @@ void TabWaterRetentionCurve::highlightCurve( bool isHightlight )
             pen.setWidth(1);
             pen.setBrush(QBrush(curveColor));
             curveList[i]->setPen(pen);
-            if (!curveMarkerMap.isEmpty() && i<curveMarkerMap.size())
-            {
-                curveMarkerMap[i]->setPen(pen);
-            }
         }
     }
 
