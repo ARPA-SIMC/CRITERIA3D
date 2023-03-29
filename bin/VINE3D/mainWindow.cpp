@@ -1,33 +1,15 @@
-//#include <QGridLayout>
-//#include <QFileDialog>
-//#include <QtDebug>
-//#include <QMessageBox>
-//#include <QDialogButtonBox>
-//#include <QPushButton>
-//#include <QListWidget>
-//#include <QRadioButton>
-//#include <QTextBrowser>
-//#include <QLineEdit>
-//#include <QLabel>
-
-#include <sstream>
-#include <iostream>
-#include <fstream>
-
-#include "tileSources/WebTileSource.h"
-
 #include "commonConstants.h"
 #include "gis.h"
 #include "waterBalance.h"
 #include "vine3DProject.h"
 #include "utilities.h"
-#include "Position.h"
 #include "spatialControl.h"
 #include "dialogInterpolation.h"
 #include "dialogRadiation.h"
 #include "dialogSettings.h"
 #include "dialogSelection.h"
 #include "formTimePeriod.h"
+
 #include "mainWindow.h"
 #include "ui_mainWindow.h"
 
@@ -135,6 +117,8 @@ void MainWindow::updateMaps()
 
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
+    Q_UNUSED(event);
+
     updateMaps();
 }
 

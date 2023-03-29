@@ -242,8 +242,8 @@
     {
         double h = myNode[i].H - myNode[i].z;
         double hr = SoilRelativeHumidity(h, temperature);
-        double satVapPressure = SaturationVaporPressure(temperature - ZEROCELSIUS);
-        double satVapConc = VaporConcentrationFromPressure(satVapPressure, temperature);
+        double satVapPressure = saturationVaporPressure(temperature - ZEROCELSIUS);
+        double satVapConc = vaporConcentrationFromPressure(satVapPressure, temperature);
         double theta = theta_from_sign_Psi(h, i);
         double dThetav_dPsi = (satVapConc * hr / WATER_DENSITY) *
                 ((myNode[i].Soil->Theta_s - theta) * MH2O / (R_GAS * temperature) - dTheta_dH / GRAVITY);

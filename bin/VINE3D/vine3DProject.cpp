@@ -159,7 +159,7 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
     computationSoilDepth = findSoilMaxDepth();
 
     // VINE3D parameters
-    if (!loadVine3DProjectParameters() || !loadTrainingSystems() || !loadFieldsProperties() || !loadFieldBook())
+    if (!loadGrapevineParameters() || !loadTrainingSystems() || !loadFieldsProperties() || !loadFieldBook())
     {
         logError();
         dbVine3D.close();
@@ -649,14 +649,6 @@ bool Vine3DProject::loadFieldsProperties()
     }
 
     return(true);
-}
-
-
-bool Vine3DProject::loadVine3DProjectParameters()
-{
-    if (!loadGrapevineParameters()) return false;
-
-    return true;
 }
 
 

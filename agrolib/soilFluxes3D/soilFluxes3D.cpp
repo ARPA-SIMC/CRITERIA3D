@@ -1317,7 +1317,7 @@ double DLL_EXPORT getBoundaryAerodynamicConductanceOpenWater(long nodeIndex)
     if (myNode[nodeIndex].boundary->type != BOUNDARY_HEAT) return (INDEX_ERROR);
 
     // boundary aerodynamic resistance
-    return (myNode[nodeIndex].boundary->Heat->aerodynamicConductanceOpenWater);
+    return (myNode[nodeIndex].boundary->Heat->aerodynamicConductanceOpenwater);
 }
 */
 
@@ -1373,7 +1373,7 @@ double DLL_EXPORT __STDCALL getHeat(long i, double h)
     if (myStructure.computeWater && myStructure.computeHeatVapor)
     {
         double thetaV = VaporThetaV(h, myNode[i].extra->Heat->T, i);
-        myHeat += thetaV * LatentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY * myNode[i].volume_area;
+        myHeat += thetaV * latentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY * myNode[i].volume_area;
     }
 
     return (myHeat);

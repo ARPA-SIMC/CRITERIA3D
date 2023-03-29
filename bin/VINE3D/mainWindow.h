@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
     #include <QMainWindow>
-    #include <QList>
     #include <QActionGroup>
 
     #include "tileSources/WebTileSource.h"

@@ -25,10 +25,6 @@
         #include "waterBalance.h"
     #endif
 
-    #ifndef PROJECT3D_H
-        #include "project3D.h"
-    #endif
-
     struct TVine3DOperation {
         QDate operationDate;
         TfieldOperation operation;
@@ -95,7 +91,6 @@
 
         bool loadVine3DSettings();
         bool loadVine3DProjectSettings(QString projectFile);
-        bool loadVine3DProjectParameters();
 
         bool loadFieldsProperties();
         bool loadDBPoints();

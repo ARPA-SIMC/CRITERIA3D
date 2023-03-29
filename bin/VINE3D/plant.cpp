@@ -2,14 +2,12 @@
 #include <QFile>
 
 #include "basicMath.h"
-#include "gis.h"
-#include "meteoPoint.h"
-#include "crit3dDate.h"
 #include "interpolation.h"
 #include "plant.h"
 #include "dataHandler.h"
 #include "vine3DProject.h"
 #include "commonConstants.h"
+
 
 bool initializeGrapevine(Vine3DProject* myProject)
 {
