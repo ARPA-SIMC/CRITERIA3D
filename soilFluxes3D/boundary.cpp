@@ -101,11 +101,11 @@ double computeAtmosphericSensibleFlux(long i)
     if (myNode[i].boundary->Heat == nullptr || ! myNode[myNode[i].up.index].isSurface)
         return 0;
 
-    double myPressure = PressureFromAltitude(double(myNode[i].z));
+    double myPressure = pressureFromAltitude(double(myNode[i].z));
 
     double myDeltaT = myNode[i].boundary->Heat->temperature - myNode[i].extra->Heat->T;
 
-    double myCvAir = AirVolumetricSpecificHeat(myPressure, myNode[i].boundary->Heat->temperature);
+    double myCvAir = airVolumetricSpecificHeat(myPressure, myNode[i].boundary->Heat->temperature);
 
     return (myCvAir * myDeltaT * myNode[i].boundary->Heat->aerodynamicConductance);
 }
@@ -122,8 +122,8 @@ double computeAtmosphericLatentFlux(long i)
 
     double PressSat, ConcVapSat, BoundaryVapor;
 
-    PressSat = SaturationVaporPressure(myNode[i].boundary->Heat->temperature - ZEROCELSIUS);
-    ConcVapSat = VaporConcentrationFromPressure(PressSat, myNode[i].boundary->Heat->temperature);
+    PressSat = saturationVaporPressure(myNode[i].boundary->Heat->temperature - ZEROCELSIUS);
+    ConcVapSat = vaporConcentrationFromPressure(PressSat, myNode[i].boundary->Heat->temperature);
     BoundaryVapor = ConcVapSat * (myNode[i].boundary->Heat->relativeHumidity / 100.);
 
     // kg m-3
@@ -155,8 +155,8 @@ double computeAtmosphericLatentFluxSurfaceWater(long i)
     double PressSat, ConcVapSat, BoundaryVapor;
 
     // atmospheric vapor content (kg m-3)
-    PressSat = SaturationVaporPressure(myNode[downIndex].boundary->Heat->temperature - ZEROCELSIUS);
-    ConcVapSat = VaporConcentrationFromPressure(PressSat, myNode[downIndex].boundary->Heat->temperature);
+    PressSat = saturationVaporPressure(myNode[downIndex].boundary->Heat->temperature - ZEROCELSIUS);
+    ConcVapSat = vaporConcentrationFromPressure(PressSat, myNode[downIndex].boundary->Heat->temperature);
     BoundaryVapor = ConcVapSat * (myNode[downIndex].boundary->Heat->relativeHumidity / 100.);
 
     // surface water vapor content (kg m-3) (assuming water temperature is the same of atmosphere)
@@ -182,7 +182,7 @@ double computeAtmosphericLatentHeatFlux(long i)
     double latentHeatFlow = 0.;
 
     // J kg-1
-    double lambda = LatentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS);
+    double lambda = latentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS);
     // waterFlow: vapor sink source (m3 s-1)
     latentHeatFlow = myNode[i].boundary->waterFlow * WATER_DENSITY * lambda;
 
@@ -210,7 +210,7 @@ void updateBoundary()
                     {
                         // update aerodynamic conductance
                         myNode[i].boundary->Heat->aerodynamicConductance =
-                                AerodynamicConductance(myNode[i].boundary->Heat->heightTemperature,
+                                aerodynamicConductance(myNode[i].boundary->Heat->heightTemperature,
                                     myNode[i].boundary->Heat->heightWind,
                                     myNode[i].extra->Heat->T,
                                     myNode[i].boundary->Heat->roughnessHeight,

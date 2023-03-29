@@ -266,8 +266,8 @@ double VaporFromPsiTemp(double h, double T)
 {
     double mySatVapPressure, mySatVapConcentration, myRelHum;
 
-    mySatVapPressure = SaturationVaporPressure(T - ZEROCELSIUS);
-    mySatVapConcentration = VaporConcentrationFromPressure(mySatVapPressure, T);
+    mySatVapPressure = saturationVaporPressure(T - ZEROCELSIUS);
+    mySatVapConcentration = vaporConcentrationFromPressure(mySatVapPressure, T);
     myRelHum = SoilRelativeHumidity(h, T);
 
     return mySatVapConcentration * myRelHum;
@@ -314,7 +314,7 @@ double ThermalVaporConductivity(long i, double temperature, double h)
 
     tempCelsius = temperature - ZEROCELSIUS;
 
-    myPressure = PressureFromAltitude(myNode[i].z);
+    myPressure = pressureFromAltitude(myNode[i].z);
 
     theta = theta_from_sign_Psi(h, i);
 
@@ -322,15 +322,15 @@ double ThermalVaporConductivity(long i, double temperature, double h)
     Dv = SoilVaporDiffusivity(myNode[i].Soil->Theta_s, theta, temperature);
 
 	// slope of saturation vapor pressure
-    svp = SaturationVaporPressure(tempCelsius);
-    slopesvp = SaturationSlope(tempCelsius, svp / 1000);
+    svp = saturationVaporPressure(tempCelsius);
+    slopesvp = saturationSlope(tempCelsius, svp / 1000);
 
     // slope of saturation vapor concentration
-    slopesvc = slopesvp * MH2O * AirMolarDensity(myPressure, temperature) / myPressure;
+    slopesvc = slopesvp * MH2O * airMolarDensity(myPressure, temperature) / myPressure;
 
 	// relative humidity
     myVapor = VaporFromPsiTemp(h, temperature);
-    myVaporPressure = VaporPressureFromConcentration(myVapor, temperature);
+    myVaporPressure = vaporPressureFromConcentration(myVapor, temperature);
 	hr = myVaporPressure / svp;
 
     // enhancement factor (Cass et al. 1984)
@@ -365,7 +365,7 @@ double AirHeatConductivity(long i, double T, double h)
 
     if (myStructure.computeWater)
     {
-        myLambda = LatentHeatVaporization(T - ZEROCELSIUS);
+        myLambda = latentHeatVaporization(T - ZEROCELSIUS);
 
         coeff= myLambda;
 
@@ -567,8 +567,8 @@ double IsothermalLatentHeatFlux(long i, TlinkedNode *myLink, double timeStep, do
 
     long j = (*myLink).index;
 
-    lambda = LatentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS);
-    lambdaLink = LatentHeatVaporization(myNode[j].extra->Heat->T - ZEROCELSIUS);
+    lambda = latentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS);
+    lambdaLink = latentHeatVaporization(myNode[j].extra->Heat->T - ZEROCELSIUS);
     avgLambda = arithmeticMean(lambda, lambdaLink);
 
     myLatentFlux = avgLambda * IsothermalVaporFlux(i, myLink, timeStep, timeStepWater);
@@ -776,7 +776,7 @@ void saveNodeHeatFlux(long myIndex, TlinkedNode *myLink, double timeStep, double
             if (myStructure.computeHeatVapor)
             {
                 double thermalLatentFlux = ThermalVaporFlux(myIndex, myLink, PROCESS_HEAT, timeStep, timeStepWater);
-                thermalLatentFlux *= LatentHeatVaporization(myNode[myIndex].extra->Heat->T - ZEROCELSIUS);
+                thermalLatentFlux *= latentHeatVaporization(myNode[myIndex].extra->Heat->T - ZEROCELSIUS);
                 saveHeatFlux(myLink, HEATFLUX_LATENT_THERMAL, thermalLatentFlux);
                 saveHeatFlux(myLink, HEATFLUX_DIFFUSIVE, myDiffHeat - thermalLatentFlux);
             }
@@ -937,7 +937,7 @@ bool HeatComputation(double timeStep, double timeStepWater)
             dthetav = VaporThetaV(myH - myNode[i].z, myNode[i].extra->Heat->T, i) -
                     VaporThetaV(myNode[i].oldH - myNode[i].z, myNode[i].extra->Heat->oldT, i);
             heatCapacityVar += dthetav * HEAT_CAPACITY_AIR * myNode[i].extra->Heat->T;
-            heatCapacityVar += dthetav * LatentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY;
+            heatCapacityVar += dthetav * latentHeatVaporization(myNode[i].extra->Heat->T - ZEROCELSIUS) * WATER_DENSITY;
         }
 
         heatCapacityVar *= myNode[i].volume_area;

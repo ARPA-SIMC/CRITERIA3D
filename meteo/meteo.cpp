@@ -420,7 +420,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
 
         myPressure = 101.3 * pow(((293 - 0.0065 * myElevation) / 293), 5.26);
 
-        myPsychro = Psychro(myPressure, myTmed);
+        myPsychro = psychro(myPressure, myTmed);
 
         /*!
         \brief
@@ -433,7 +433,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
         /*! Monteith and Unsworth (2008) */
         mySatVapPress = 0.61078 * exp(17.27 * myTmed / (myTmed + 237.3));
         myVapPress = mySatVapPress * myUmed / 100;
-        delta = SaturationSlope(myTmed, mySatVapPress);
+        delta = saturationSlope(myTmed, mySatVapPress);
 
         myDailySB = STEFAN_BOLTZMANN * DAY_SECONDS / 1000000;       /*!<   to MJ */
         myEmissivity = emissivityFromVaporPressure(myVapPress);
@@ -442,7 +442,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
         mySWNetRad = mySWGlobRad * (1 - ALBEDO_CROP_REFERENCE);
         myNetRad = (mySWNetRad - myLWNetRad);
 
-        myLambda = LatentHeatVaporization(myTmed) / 1000000; /*!<  to MJ */
+        myLambda = latentHeatVaporization(myTmed) / 1000000; /*!<  to MJ */
 
         vmed2 = myVmed10 * 0.748;
 
@@ -486,7 +486,7 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
     double firstTerm, secondTerm, denominator;
 
 
-    es = SaturationVaporPressure(airTemp) / 1000.;
+    es = saturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
     emissivity = emissivityFromVaporPressure(ea);
     tAirK = airTemp + ZEROCELSIUS;
@@ -509,12 +509,12 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
         Cd = 0.96;
     }
 
-    delta = SaturationSlope(airTemp, es);
+    delta = saturationSlope(airTemp, es);
 
-    pressure = PressureFromAltitude(heigth) / 1000.;
+    pressure = pressureFromAltitude(heigth) / 1000.;
 
-    gamma = Psychro(pressure, airTemp);
-    lambda = LatentHeatVaporization(airTemp);
+    gamma = psychro(pressure, airTemp);
+    lambda = latentHeatVaporization(airTemp);
 
     windSpeed2 = windSpeed10 * 0.748;
 
@@ -551,7 +551,7 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
 
     netRadiation = 3600 * netIrradiance;
 
-    es = SaturationVaporPressure(airTemp) / 1000.;
+    es = saturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
 
     tAirK = airTemp + ZEROCELSIUS;
@@ -567,12 +567,12 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
         Cd = 0.96;
     }
 
-    delta = SaturationSlope(airTemp, es);
+    delta = saturationSlope(airTemp, es);
 
-    pressure = PressureFromAltitude(heigth) / 1000.;
+    pressure = pressureFromAltitude(heigth) / 1000.;
 
-    gamma = Psychro(pressure, airTemp);
-    lambda = LatentHeatVaporization(airTemp);
+    gamma = psychro(pressure, airTemp);
+    lambda = latentHeatVaporization(airTemp);
 
     windSpeed2 = windSpeed10 * 0.748;
 
