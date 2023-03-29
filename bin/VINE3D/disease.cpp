@@ -265,7 +265,7 @@ bool computeDownyMildew(Vine3DProject* myProject, QDate firstDate, QDate lastDat
     {
         QString fileName, outputFileName;
         QDate myDate;
-        std::string myErrorString;
+        std::string errorStr;
         for (n = 0; n < nrSavingDays; n++)
         {
             myDate = firstDate.addDays(n);
@@ -273,11 +273,11 @@ bool computeDownyMildew(Vine3DProject* myProject, QDate firstDate, QDate lastDat
 
             fileName = getOutputNameDaily("downyINFR", "", myDate);
             outputFileName = dailyPath + fileName;
-            gis::writeEsriGrid(outputFileName.toStdString(), infectionMap[n], &myErrorString);
+            gis::writeEsriGrid(outputFileName.toStdString(), infectionMap[n], errorStr);
 
             fileName = getOutputNameDaily("downySymptoms", "", myDate);
             outputFileName = dailyPath + fileName;
-            gis::writeEsriGrid(outputFileName.toStdString(), oilSpotMap[n], &myErrorString);
+            gis::writeEsriGrid(outputFileName.toStdString(), oilSpotMap[n], errorStr);
         }
         myProject->logInfo("Downy mildew computed.");
     }

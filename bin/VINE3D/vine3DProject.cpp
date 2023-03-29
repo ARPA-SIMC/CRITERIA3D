@@ -506,12 +506,12 @@ bool Vine3DProject::loadFieldMap(QString myFileName)
     this->logInfo ("Read field map...");
 
     std::string fn = myFileName.left(myFileName.length()-4).toStdString();
-    std::string* myError = new std::string();
     gis::Crit3DRasterGrid myGrid;
 
-    if (! gis::readEsriGrid(fn, &(myGrid), myError))
+    std::string errorStr;
+    if (! gis::readEsriGrid(fn, &(myGrid), errorStr))
     {
-        this->errorString = "Load fields map failed:\n" + myFileName + "\n" + QString::fromStdString(*myError);
+        this->errorString = "Load fields map failed:\n" + myFileName + "\n" + QString::fromStdString(errorStr);
         logError();
         return (false);
     }

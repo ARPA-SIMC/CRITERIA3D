@@ -1762,7 +1762,6 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
 
 bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 {
-    // checks
     if (! myProject.DEM.isLoaded)
     {
         myProject.logError(ERROR_STR_MISSING_DEM);

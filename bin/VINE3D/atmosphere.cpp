@@ -302,7 +302,7 @@ bool loadDailyMeteoMap(Vine3DProject* myProject, meteoVariable myDailyVar, QDate
     myFile.setFileName(myFileName + ".hdr");
     if (! myFile.exists()) return false;
 
-    if (!gis::readEsriGrid(myFileName.toStdString(), myProject->vine3DMapsD->getMapFromVar(myDailyVar), &myError))
+    if (!gis::readEsriGrid(myFileName.toStdString(), myProject->vine3DMapsD->getMapFromVar(myDailyVar), myError))
     {
         myProject->logError(QString::fromStdString(myError));
         return false;

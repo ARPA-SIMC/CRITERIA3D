@@ -1,14 +1,14 @@
-#include <QGridLayout>
-#include <QFileDialog>
-#include <QtDebug>
-#include <QMessageBox>
-#include <QDialogButtonBox>
-#include <QPushButton>
-#include <QListWidget>
-#include <QRadioButton>
-#include <QTextBrowser>
-#include <QLineEdit>
-#include <QLabel>
+//#include <QGridLayout>
+//#include <QFileDialog>
+//#include <QtDebug>
+//#include <QMessageBox>
+//#include <QDialogButtonBox>
+//#include <QPushButton>
+//#include <QListWidget>
+//#include <QRadioButton>
+//#include <QTextBrowser>
+//#include <QLineEdit>
+//#include <QLabel>
 
 #include <sstream>
 #include <iostream>
@@ -34,8 +34,8 @@
 
 extern Vine3DProject myProject;
 
-#define MAPBORDER 8
-#define TOOLSWIDTH 260
+#define MAPBORDER 10
+#define TOOLSWIDTH 270
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -133,70 +133,9 @@ void MainWindow::updateMaps()
 }
 
 
-void MainWindow::mouseReleaseEvent(QMouseEvent *event){
+void MainWindow::mouseReleaseEvent(QMouseEvent *event)
+{
     updateMaps();
-
-    /*
-    if (myRubberBand != nullptr && myRubberBand->isVisible())
-    {
-        QPoint lastCornerOffset = getMapPos(event->pos());
-        QPoint firstCornerOffset = myRubberBand->getOrigin() - QPoint(MAPBORDER, MAPBORDER);
-        QPoint pixelTopLeft;
-        QPoint pixelBottomRight;
-
-        if (firstCornerOffset.y() > lastCornerOffset.y())
-        {
-            if (firstCornerOffset.x() > lastCornerOffset.x())
-            {
-                // bottom to left
-                pixelTopLeft = lastCornerOffset;
-                pixelBottomRight = firstCornerOffset;
-            }
-            else
-            {
-                // bottom to right
-                pixelTopLeft = QPoint(firstCornerOffset.x(), lastCornerOffset.y());
-                pixelBottomRight = QPoint(lastCornerOffset.x(), firstCornerOffset.y());
-            }
-        }
-        else
-        {
-            if (firstCornerOffset.x() > lastCornerOffset.x())
-            {
-                // top to left
-                pixelTopLeft = QPoint(lastCornerOffset.x(), firstCornerOffset.y());
-                pixelBottomRight = QPoint(firstCornerOffset.x(), lastCornerOffset.y());
-            }
-            else
-            {
-                // top to right
-                pixelTopLeft = firstCornerOffset;
-                pixelBottomRight = lastCornerOffset;
-            }
-        }
-
-        QPointF topLeft = this->mapView->mapToScene(pixelTopLeft);
-        QPointF bottomRight = this->mapView->mapToScene(pixelBottomRight);
-        QRectF rectF(topLeft, bottomRight);
-        gis::Crit3DGeoPoint pointSelected;
-
-        foreach (StationMarker* marker, pointList)
-        {
-            if (rectF.contains(marker->longitude(), marker->latitude()))
-            {
-                if ( marker->color() ==  Qt::white )
-                {
-                    marker->setFillColor(QColor((Qt::red)));
-                    pointSelected.latitude = marker->latitude();
-                    pointSelected.longitude = marker->longitude();
-                    myProject.meteoPointsSelected << pointSelected;
-                }
-            }
-        }
-
-        myRubberBand->hide();
-    }
-    */
 }
 
 
@@ -761,5 +700,4 @@ void MainWindow::on_actionRadiation_settings_triggered()
     DialogRadiation* myDialogRadiation = new DialogRadiation(&myProject);
     myDialogRadiation->close();
 }
-
 

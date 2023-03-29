@@ -40,14 +40,16 @@ Project3D::Project3D() : Project()
 
 void Project3D::initializeProject3D()
 {
+    initializeProject();
+
     soilDbFileName = "";
     cropDbFileName = "";
     soilMapFileName = "";
 
     // default
-    computationSoilDepth = 0.0;            // [m]
-    minThickness = 0.02;        // [m]
-    maxThickness = 0.1;         // [m]
+    computationSoilDepth = 0.0;     // [m]
+    minThickness = 0.02;            // [m]
+    maxThickness = 0.1;             // [m]
     thickFactor = 1.5;
 
     nrSoils = 0;

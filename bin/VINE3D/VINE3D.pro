@@ -9,6 +9,7 @@
 #-----------------------------------------------------
 
 QT  += core gui widgets charts xml sql network
+greaterThan(QT_MAJOR_VERSION, 5): QT += core5compat
 
 TARGET = VINE3D
 TEMPLATE = app
@@ -31,7 +32,12 @@ CONFIG += debug_and_release
 
 CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/graphics/debug -lgraphics
-    LIBS += -L../../mapGraphics/debug -lMapGraphics
+    win32:{
+        LIBS += -L../../mapGraphics/debug -lMapGraphics
+    }
+    unix:{
+        LIBS += -L../../mapGraphics/release -lMapGraphics
+    }
     LIBS += -L../../agrolib/project/debug -lproject
     LIBS += -L../../agrolib/proxyWidget/debug -lproxyWidget
     LIBS += -L../../agrolib/importDataXML/debug -limportDataXML

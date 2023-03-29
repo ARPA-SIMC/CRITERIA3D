@@ -64,26 +64,16 @@ Crit3DProject::Crit3DProject() : Project3D()
 
 bool Crit3DProject::initializeCriteria3DModel()
 {
-    // check data
-    if (! this->DEM.isLoaded)
+    /*if (! check3DProject())
     {
-        logError("Missing Digital Elevation Model.");
+        logError();
         return false;
-    }
-    else if (! this->soilMap.isLoaded)
-    {
-        logError("Missing soil map.");
-        return false;
-    }
-    else if (this->soilList.size() == 0)
-    {
-        logError("Missing soil properties.");
-        return false;
-    }
+    }*/
 
     clearWaterBalance3D();
 
-    if (!setSoilIndexMap()) return false;
+    if (! setSoilIndexMap())
+        return false;
 
     // TODO set soilUseMap()
 
@@ -245,9 +235,7 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
 {
     if (myFileName == "") return(false);
 
-    clearCriteria3DProject();
-
-    initializeProject();
+    clear3DProject();
     initializeProject3D();
 
     snowModel.initialize();
@@ -412,21 +400,31 @@ bool Crit3DProject::loadSoilMap(QString fileName)
 }
 
 
-bool Crit3DProject::setSoilIndexMap()
+bool Crit3DProject::check3DProject()
 {
-    // check
     if (!DEM.isLoaded || !soilMap.isLoaded || soilList.size() == 0)
     {
-        if (!DEM.isLoaded)
-            logError("Missing Digital Elevation Model.");
-        else if (!soilMap.isLoaded)
-            logError("Missing soil map.");
+        if (! DEM.isLoaded)
+            errorString = ERROR_STR_MISSING_DEM;
+        else if (! soilMap.isLoaded)
+            errorString =  "Missing soil map.";
         else if (soilList.size() == 0)
-            logError("Missing soil properties.");
+            errorString = "Missing soil properties.";
         return false;
     }
 
-    int soilIndex;
+    return true;
+}
+
+
+bool Crit3DProject::setSoilIndexMap()
+{
+    if (! check3DProject())
+    {
+        logError();
+        return false;
+    }
+
     double x, y;
     soilIndexMap.initializeGrid(*(DEM.header));
     for (int row = 0; row < DEM.header->nrRows; row++)
@@ -436,7 +434,7 @@ bool Crit3DProject::setSoilIndexMap()
             if (int(DEM.value[row][col]) != int(DEM.header->flag))
             {
                 gis::getUtmXYFromRowCol(DEM, row, col, &x, &y);
-                soilIndex = getCrit3DSoilIndex(x, y);
+                int soilIndex = getCrit3DSoilIndex(x, y);
                 if (soilIndex != NODATA)
                     soilIndexMap.value[row][col] = float(soilIndex);
             }
@@ -522,7 +520,7 @@ double Crit3DProject::getSoilVar(int soilIndex, int layerIndex, soil::soilVariab
 }
 
 
-void Crit3DProject::clearCriteria3DProject()
+void Crit3DProject::clear3DProject()
 {
     soilUseMap.clear();
     soilMap.clear();

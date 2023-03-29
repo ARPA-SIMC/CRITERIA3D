@@ -133,13 +133,13 @@ double* getSoilVarProfile(Vine3DProject* myProject, int row, int col, soil::soil
 {
     double* myProfile = static_cast<double*> (calloc(size_t(myProject->nrLayers), sizeof(double)));
 
-    for (int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
+    for (unsigned int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
         myProfile[layerIndex] = NODATA;
 
     int nodeIndex;
     int soilIndex = myProject->getSoilIndex(row, col);
 
-    for (int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
+    for (unsigned int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
     {
         nodeIndex = int(myProject->indexMap.at(size_t(layerIndex)).value[row][col]);
 
@@ -162,14 +162,12 @@ double* getCriteria3DVarProfile(Vine3DProject* myProject, int row, int col, crit
 {
     double* myProfile = (double *) calloc(myProject->nrLayers, sizeof(double));
 
-    for (int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
+    for (unsigned int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
         myProfile[layerIndex] = NODATA;
 
-    long nodeIndex, layerIndex;
-
-    for (layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
+    for (unsigned int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
     {
-        nodeIndex = myProject->indexMap.at(layerIndex).value[row][col];
+        long nodeIndex = myProject->indexMap.at(layerIndex).value[row][col];
 
         if (nodeIndex != myProject->indexMap.at(layerIndex).header->flag)
         {
@@ -300,7 +298,7 @@ bool getRootZoneAWCmap(Vine3DProject* myProject, gis::Crit3DRasterGrid* outputMa
 
                 if (soilIndex != NODATA)
                 {
-                    for (int layer = 1; layer < myProject->nrLayers; layer++)
+                    for (unsigned int layer = 1; layer < myProject->nrLayers; layer++)
                     {
                         nodeIndex = myProject->indexMap.at(layer).value[row][col];
 
@@ -403,11 +401,11 @@ bool saveWaterBalanceCumulatedOutput(Vine3DProject* myProject, QDate myDate, cri
                             QString varName, QString notes, QString outputPath)
 {
     QString outputFilename = outputPath + getOutputNameDaily(varName, notes, myDate);
-    std::string myErrorString;
+    std::string errorStr;
     gis::Crit3DRasterGrid* myMap = myProject->outputWaterBalanceMaps->getMapFromVar(myVar);
-    if (! gis::writeEsriGrid(outputFilename.toStdString(), myMap, &myErrorString))
+    if (! gis::writeEsriGrid(outputFilename.toStdString(), myMap, errorStr))
     {
-         myProject->logError(QString::fromStdString(myErrorString));
+         myProject->logError(QString::fromStdString(errorStr));
          return false;
     }
 
@@ -439,10 +437,10 @@ bool saveWaterBalanceOutput(Vine3DProject* myProject, QDate myDate, criteria3DVa
     }
 
     QString outputFilename = outputPath + getOutputNameDaily(varName, notes, myDate);
-    std::string myErrorString;
-    if (! gis::writeEsriGrid(outputFilename.toStdString(), myMap, &myErrorString))
+    std::string errorStr;
+    if (! gis::writeEsriGrid(outputFilename.toStdString(), myMap, errorStr))
     {
-         myProject->logError(QString::fromStdString(myErrorString));
+         myProject->logError(QString::fromStdString(errorStr));
          return false;
     }
 
@@ -455,19 +453,19 @@ bool saveWaterBalanceOutput(Vine3DProject* myProject, QDate myDate, criteria3DVa
 
 bool loadWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString statePath, criteria3DVariable myVar)
 {
-    std::string myErrorString;
+    std::string errorStr;
     QString myMapName;
 
     gis::Crit3DRasterGrid myMap;
 
     QString myPrefix = getDailyPrefixFromVar(myDate, myVar);
 
-    for (int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
+    for (unsigned int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
     {
         myMapName = statePath + myPrefix + QString::number(layerIndex);
-        if (! gis::readEsriGrid(myMapName.toStdString(), &myMap, &myErrorString))
+        if (! gis::readEsriGrid(myMapName.toStdString(), &myMap, errorStr))
         {
-            myProject->logError(QString::fromStdString(myErrorString));
+            myProject->logError(QString::fromStdString(errorStr));
             return false;
         }
         else
@@ -481,20 +479,21 @@ bool loadWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString state
 
 bool saveWaterBalanceState(Vine3DProject* myProject, QDate myDate, QString statePath, criteria3DVariable myVar)
 {
-    std::string myErrorString;
     gis::Crit3DRasterGrid* myMap;
     myMap = new gis::Crit3DRasterGrid();
     myMap->initializeGrid(myProject->indexMap.at(0));
 
     QString myPrefix = getDailyPrefixFromVar(myDate, myVar);
 
-    for (int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
+    for (unsigned int layerIndex = 0; layerIndex < myProject->nrLayers; layerIndex++)
         if (getCriteria3DVarMap(myProject, myVar, layerIndex, myMap))
         {
             QString myOutputMapName = statePath + myPrefix + QString::number(layerIndex);
-            if (! gis::writeEsriGrid(myOutputMapName.toStdString(), myMap, &myErrorString))
+
+            std::string errorStr;
+            if (! gis::writeEsriGrid(myOutputMapName.toStdString(), myMap, errorStr))
             {
-                myProject->logError(QString::fromStdString(myErrorString));
+                myProject->logError(QString::fromStdString(errorStr));
                 return false;
             }
         }

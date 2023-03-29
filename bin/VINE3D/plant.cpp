@@ -340,14 +340,14 @@ bool savePlantState(Vine3DProject* myProject, plantVariable myVar, QDate myDate,
 {
     QString varName = getVarNameFromPlantVariable(myVar);
     QString fileName = myPath + myDate.toString("yyyyMMdd_") + "_" + varName;
-    std::string myErrorString;
+    std::string errorStr;
 
     gis::Crit3DRasterGrid* myMap;
     myMap = myProject->statePlantMaps->getMapFromVar(myVar);
 
-    if (! gis::writeEsriGrid(fileName.toStdString(), myMap, &myErrorString))
+    if (! gis::writeEsriGrid(fileName.toStdString(), myMap, errorStr))
     {
-        myProject->logError(QString::fromStdString(myErrorString));
+        myProject->logError(QString::fromStdString(errorStr));
         return false;
     }
 
@@ -385,10 +385,10 @@ bool savePlantOutput(Vine3DProject* myProject, plantVariable myVar,
 
         }
 
-    std::string myErrorString;
-    if (! gis::writeEsriGrid(outputFileName.toStdString(), &outputMap, &myErrorString))
+    std::string errorStr;
+    if (! gis::writeEsriGrid(outputFileName.toStdString(), &outputMap, errorStr))
     {
-        myProject->logError(QString::fromStdString(myErrorString));
+        myProject->logError(QString::fromStdString(errorStr));
         return false;
     }
 
@@ -410,7 +410,7 @@ bool loadPlantState(Vine3DProject* myProject, plantVariable myVar, QDate myDate,
     myFile.setFileName(fileName + ".hdr");
     if (! myFile.exists()) return false;
 
-    if (! gis::readEsriGrid(fileName.toStdString(), myMap, &errorString))
+    if (! gis::readEsriGrid(fileName.toStdString(), myMap, errorString))
     {
         myProject->logError(QString::fromStdString(errorString));
         return false;

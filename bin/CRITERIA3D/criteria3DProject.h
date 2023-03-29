@@ -26,8 +26,9 @@
     private:
         bool _saveOutputRaster, _saveOutputPoints, _saveDailyState;
 
-        void clearCriteria3DProject();
+        void clear3DProject();
         bool setSoilIndexMap();
+        bool check3DProject();
 
 
     public:
