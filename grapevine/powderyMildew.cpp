@@ -61,7 +61,7 @@ void powderyMildew(Tmildew* mildewCore, bool isBudBreak){
     float currentDegreeDay = computeDegreeDay(tavg);
 
     // compute the vapour pressure deficit
-    float vpre = vapourPressureDeficit(tavg, mildewCore->input.relativeHumidity);
+    float vpre = float(vapourPressureDeficit(tavg, mildewCore->input.relativeHumidity));
 
     // calculate the cumulative of mature ascospore
     mildewCore->state.aic += och*(ascosporesReadyFraction(mildewCore->state.degreeDays+currentDegreeDay)
@@ -140,7 +140,7 @@ float computeDegreeDay(float temp){
 ///
 float ascosporesReadyFraction(float degreeDay){
 
-        return exp(-1.95f * exp (-1.91f * degreeDay / 100.f));
+        return expf(-1.95f * expf(-1.91f * degreeDay / 100.f));
 
 }
 
