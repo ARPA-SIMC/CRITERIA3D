@@ -8,13 +8,13 @@
 #include "fileUtility.h"
 
 
-bool readMeteoDataCsv (QString namefile, char valuesSeparator, double noData, TinputObsData* inputData)
+bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, TinputObsData* inputData)
 {
     clearInputData(inputData);
 
-    QFile file(namefile);
+    QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "\nERROR!\n" << namefile << file.errorString();
+        qDebug() << "\nERROR!\n" << fileName << file.errorString();
         return false;
     }
 
@@ -37,16 +37,16 @@ bool readMeteoDataCsv (QString namefile, char valuesSeparator, double noData, Ti
         QByteArray line = file.readLine();
 
         //check format
-        if (line.split(valuesSeparator).count() < 5)
+        if (line.split(mySeparator).count() < 5)
         {
-            qDebug() << "ERROR!" << "\nfile =" << namefile << "\nline =" << indexLine+2;;
+            qDebug() << "ERROR!" << "\nfile =" << fileName << "\nline =" << indexLine+2;;
             qDebug() << "missing data / invalid format / invalid separator";
-            qDebug() << "required separator =" << valuesSeparator <<"\n";
+            qDebug() << "required separator =" << mySeparator <<"\n";
             return false;
         }
 
         //DATE
-        strDate = line.split(valuesSeparator)[0];
+        strDate = line.split(mySeparator)[0];
         //check presence of quotation
         if (strDate.left(1) == "\"")
             strDate = strDate.mid(1, strDate.length()-2);
@@ -95,24 +95,24 @@ bool readMeteoDataCsv (QString namefile, char valuesSeparator, double noData, Ti
                     listPrecip.append(noDataString);
                     indexLine++;
                 }
-                listDate.append(line.split(valuesSeparator)[0]);
+                listDate.append(line.split(mySeparator)[0]);
             }
         }
 
-        if (line.split(valuesSeparator)[1] == "" || line.split(valuesSeparator)[1] == " " || line.split(valuesSeparator)[1] == noDataString )
+        if (line.split(mySeparator)[1] == "" || line.split(mySeparator)[1] == " " || line.split(mySeparator)[1] == noDataString )
             listTMin.append(QString::number(NODATA));
         else
-            listTMin.append(line.split(valuesSeparator)[1]);
+            listTMin.append(line.split(mySeparator)[1]);
 
-        if (line.split(valuesSeparator)[2] == "" || line.split(valuesSeparator)[2] == " " || line.split(valuesSeparator)[2] == noDataString)
+        if (line.split(mySeparator)[2] == "" || line.split(mySeparator)[2] == " " || line.split(mySeparator)[2] == noDataString)
             listTMax.append(QString::number(NODATA));
         else
-            listTMax.append(line.split(valuesSeparator)[2]);
+            listTMax.append(line.split(mySeparator)[2]);
 
-        if (line.split(valuesSeparator)[4] == "" || line.split(valuesSeparator)[4] == " " || line.split(valuesSeparator)[4] == noDataString)
+        if (line.split(mySeparator)[4] == "" || line.split(mySeparator)[4] == " " || line.split(mySeparator)[4] == noDataString)
             listPrecip.append(QString::number(NODATA));
         else
-            listPrecip.append(line.split(valuesSeparator)[4]);
+            listPrecip.append(line.split(mySeparator)[4]);
 
         indexLine++;
     }
@@ -174,60 +174,16 @@ bool readMeteoDataCsv (QString namefile, char valuesSeparator, double noData, Ti
 
 
 // write output of weather generator: a daily meteo data series
-bool writeMeteoDataCsv (QString namefile, char valueSeparator, ToutputDailyMeteo* mydailyData, long dataLenght)
+bool writeMeteoDataCsv(QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData)
 {
-
-    QFile file(namefile);
+    QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         qDebug() << file.errorString();
         return false;
     }
 
     QTextStream stream( &file );
-
-    QString myDate, tMin, tMax, prec;
-    QString month, day;
-
-    stream << "date" << valueSeparator << "tmin" << valueSeparator << "tmax" << valueSeparator << "tavg"
-           << valueSeparator << "prec" << valueSeparator << "etp" << valueSeparator << "watertable\n";
-
-    for (int i=0; i < dataLenght; i++)
-    {
-        if (mydailyData[i].date.month < 10)
-            month = "0" + QString::number(mydailyData[i].date.month);
-        else
-            month = QString::number(mydailyData[i].date.month);
-
-        if (mydailyData[i].date.day < 10)
-            day = "0" + QString::number(mydailyData[i].date.day);
-        else
-            day = QString::number(mydailyData[i].date.day);
-
-        myDate = QString::number(mydailyData[i].date.year) + "-" + month + "-" + day;
-        tMin = QString::number(mydailyData[i].minTemp, 'f', 1);
-        tMax = QString::number(mydailyData[i].maxTemp, 'f', 1);
-        prec = QString::number(mydailyData[i].prec, 'f', 1);
-
-        stream << myDate << valueSeparator << tMin << valueSeparator << tMax << valueSeparator
-               << valueSeparator << prec << valueSeparator << valueSeparator << "\n";
-
-    }
-
-    return true;
-}
-
-
-// write output of weather generator (simplified version): a daily meteo data series
-bool writeMeteoDataCsv(QString namefile, char valueSeparator, std::vector<ToutputDailyMeteo>& dailyData)
-{
-    QFile file(namefile);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        qDebug() << file.errorString();
-        return false;
-    }
-
-    QTextStream stream( &file );
-    stream << "date" << valueSeparator << "tmin" << valueSeparator << "tmax" << valueSeparator << "prec\n";
+    stream << "date" << separator << "tmin" << separator << "tmax" << separator << "prec\n";
 
     for (unsigned int i=0; i < dailyData.size(); i++)
     {
@@ -240,7 +196,7 @@ bool writeMeteoDataCsv(QString namefile, char valueSeparator, std::vector<Toutpu
         QString tMax = QString::number(double(dailyData[i].maxTemp), 'f', 1);
         QString prec = QString::number(double(dailyData[i].prec), 'f', 1);
 
-        stream << myDate << valueSeparator << tMin << valueSeparator << tMax << valueSeparator << prec << "\n";
+        stream << myDate << separator << tMin << separator << tMax << separator << prec << "\n";
     }
 
     return true;

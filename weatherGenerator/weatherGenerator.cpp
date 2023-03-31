@@ -673,10 +673,9 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
                           float rainfallThreshold)
 {
     TweatherGenClimate wGen;
-    ToutputDailyMeteo* myDailyPredictions;
-    Crit3DDate myFirstDatePrediction;
-    Crit3DDate seasonFirstDate;
-    Crit3DDate seasonLastDate;
+    std::vector<ToutputDailyMeteo> dailyPredictions;
+
+    Crit3DDate myFirstDatePrediction, seasonFirstDate, seasonLastDate;
 
     unsigned int nrMembers;         // number of models into xml anomaly file
     unsigned int nrYears;           // number of years of the output series. It is the length of the virtual period where all the previsions (one for each model) are given one after another
@@ -732,7 +731,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
         return false;
     }
 
-    myDailyPredictions = new ToutputDailyMeteo[nrValues];
+    dailyPredictions.resize(nrValues);
 
     // copy the last 9 months before wgDoy1
     float lastTmax = NODATA;
@@ -740,39 +739,39 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
     Crit3DDate myDate = myFirstDatePrediction;
     for (int tmp = 0; tmp < nrDaysBeforeWgDoy1; tmp++)
     {
-        myDailyPredictions[tmp].date = myDate;
-        obsIndex = difference(lastYearDailyObsData->inputFirstDate, myDailyPredictions[tmp].date);
-        myDailyPredictions[tmp].minTemp = lastYearDailyObsData->inputTMin[obsIndex];
-        myDailyPredictions[tmp].maxTemp = lastYearDailyObsData->inputTMax[obsIndex];
-        myDailyPredictions[tmp].prec = lastYearDailyObsData->inputPrecip[obsIndex];
+        dailyPredictions[tmp].date = myDate;
+        obsIndex = difference(lastYearDailyObsData->inputFirstDate, dailyPredictions[tmp].date);
+        dailyPredictions[tmp].minTemp = lastYearDailyObsData->inputTMin[obsIndex];
+        dailyPredictions[tmp].maxTemp = lastYearDailyObsData->inputTMax[obsIndex];
+        dailyPredictions[tmp].prec = lastYearDailyObsData->inputPrecip[obsIndex];
 
-        if ((int(myDailyPredictions[tmp].maxTemp) == int(NODATA))
-                || (int(myDailyPredictions[tmp].minTemp) == int(NODATA))
-                || (int(myDailyPredictions[tmp].prec) == int(NODATA)))
+        if ((int(dailyPredictions[tmp].maxTemp) == int(NODATA))
+                || (int(dailyPredictions[tmp].minTemp) == int(NODATA))
+                || (int(dailyPredictions[tmp].prec) == int(NODATA)))
         {
             if (tmp == 0)
             {
-                qDebug() << "ERROR: Missing data:" << QString::fromStdString(myDailyPredictions[tmp].date.toStdString());
+                qDebug() << "ERROR: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
                 return false;
             }
             else
             {
-                qDebug() << "WARNING: Missing data:" << QString::fromStdString(myDailyPredictions[tmp].date.toStdString());
+                qDebug() << "WARNING: Missing data:" << QString::fromStdString(dailyPredictions[tmp].date.toStdString());
 
-                if (int(myDailyPredictions[tmp].maxTemp) == int(NODATA))
-                    myDailyPredictions[tmp].maxTemp = lastTmax;
+                if (int(dailyPredictions[tmp].maxTemp) == int(NODATA))
+                    dailyPredictions[tmp].maxTemp = lastTmax;
 
-                if (int(myDailyPredictions[tmp].minTemp) == int(NODATA))
-                    myDailyPredictions[tmp].minTemp = lastTmin;
+                if (int(dailyPredictions[tmp].minTemp) == int(NODATA))
+                    dailyPredictions[tmp].minTemp = lastTmin;
 
-                if (int(myDailyPredictions[tmp].prec) == int(NODATA))
-                    myDailyPredictions[tmp].prec = 0;
+                if (int(dailyPredictions[tmp].prec) == int(NODATA))
+                    dailyPredictions[tmp].prec = 0;
             }
         }
         else
         {
-            lastTmax = myDailyPredictions[tmp].maxTemp;
-            lastTmin = myDailyPredictions[tmp].minTemp;
+            lastTmax = dailyPredictions[tmp].maxTemp;
+            lastTmin = dailyPredictions[tmp].minTemp;
         }
         ++myDate;
     }
@@ -794,8 +793,8 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
         // assign anomaly
         if ( !assignXMLAnomaly(XMLAnomaly, modelIndex, anomalyMonth1, anomalyMonth2, wGenClimate, wGen))
         {
-                    qDebug() << "Error in Scenario: assignXMLAnomaly returns false";
-                    return false;
+            qDebug() << "Error in Scenario: assignXMLAnomaly returns false";
+            return false;
         }
 
         if (modelIndex == nrMembers-1 )
@@ -806,7 +805,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
         if (!computeSeasonalPredictions(lastYearDailyObsData, wGen,
                                         myPredictionYear, myYear, nrRepetitions,
                                         wgDoy1, wgDoy2, rainfallThreshold, isLastMember,
-                                        myDailyPredictions, &outputDataLenght ))
+                                        dailyPredictions, &outputDataLenght ))
         {
             qDebug() << "Error in computeSeasonalPredictions";
             return false;
@@ -818,9 +817,9 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
 
     qDebug() << "\n>>> output:" << outputFileName;
 
-    writeMeteoDataCsv (outputFileName, separator, myDailyPredictions, outputDataLenght);
+    writeMeteoDataCsv (outputFileName, separator, dailyPredictions);
 
-    delete[] myDailyPredictions;
+    dailyPredictions.clear();
 
     return true;
 }
@@ -839,7 +838,7 @@ bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAno
 bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGenClimate &wgClimate,
                                 int predictionYear, int firstYear, int nrRepetitions,
                                 int wgDoy1, int wgDoy2, float rainfallThreshold, bool isLastMember,
-                                ToutputDailyMeteo* outputDailyData, int *outputDataLenght)
+                                std::vector<ToutputDailyMeteo>& outputDailyData, int *outputDataLenght)
 
 {
     Crit3DDate myDate, obsDate;

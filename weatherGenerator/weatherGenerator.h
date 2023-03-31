@@ -116,7 +116,7 @@
     bool computeSeasonalPredictions(TinputObsData *lastYearDailyObsData, TweatherGenClimate& wgClimate,
                                     int predictionYear, int firstYear, int nrRepetitions,
                                     int wgDoy1, int wgDoy2, float minPrec, bool isLastMember,
-                                    ToutputDailyMeteo* outputDailyData, int *outputDataLenght);
+                                    std::vector<ToutputDailyMeteo> &outputDailyData, int *outputDataLenght);
 
     bool computeClimate(TweatherGenClimate &wgClimate, int firstYear, int nrRepetitions,
                         float rainfallThreshold, std::vector<ToutputDailyMeteo> &outputDailyData);
