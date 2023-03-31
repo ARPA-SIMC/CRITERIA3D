@@ -15,5 +15,6 @@
     bool writeMeteoDataCsv(QString namefile, char valueSeparator,
                            std::vector<ToutputDailyMeteo>& dailyData);
 
+
 #endif // FILEUTILITY_H
 

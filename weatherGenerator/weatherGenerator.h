@@ -100,7 +100,7 @@
 
     bool isWGDate(Crit3DDate myDate, int wgDoy1, int wgDoy2);
 
-    bool assignXMLAnomaly(TXMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anomalyMonth1,
+    bool assignXMLAnomaly(XMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anomalyMonth1,
                           int anomalyMonth2, TweatherGenClimate &wGenNoAnomaly, TweatherGenClimate& wGen);
 
     bool assignAnomalyNoPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
@@ -109,7 +109,7 @@
     bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
                            float* myWGMonthlyVarNoAnomaly, float* myWGMonthlyVar);
 
-    bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAnomaly* XMLAnomaly,
+    bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
                             TweatherGenClimate& wGenClimate, TinputObsData* lastYearDailyObsData,
                             int numRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2, float rainfallThreshold);
 
@@ -122,6 +122,7 @@
                         float rainfallThreshold, std::vector<ToutputDailyMeteo> &outputDailyData);
 
     void clearInputData(TinputObsData* myData);
+
 
 #endif // WEATHERGENERATOR_H
 

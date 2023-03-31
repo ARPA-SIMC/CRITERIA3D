@@ -496,8 +496,7 @@ void clearInputData(TinputObsData* myData)
 }
 
 
-
-bool assignXMLAnomaly(TXMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anomalyMonth1, int anomalyMonth2, TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen)
+bool assignXMLAnomaly(XMLSeasonalAnomaly* XMLAnomaly, int modelIndex, int anomalyMonth1, int anomalyMonth2, TweatherGenClimate& wGenNoAnomaly, TweatherGenClimate &wGen)
 {
     unsigned int i = 0;
     QString myVar;
@@ -668,7 +667,7 @@ bool assignAnomalyPrec(float myAnomaly, int anomalyMonth1, int anomalyMonth2,
   * Different members of anomalies loaded by xml files are added to the climate
   * Output is written on outputFileName (csv)
 */
-bool makeSeasonalForecast(QString outputFileName, char separator, TXMLSeasonalAnomaly* XMLAnomaly,
+bool makeSeasonalForecast(QString outputFileName, char separator, XMLSeasonalAnomaly* XMLAnomaly,
                           TweatherGenClimate& wGenClimate, TinputObsData* lastYearDailyObsData,
                           int nrRepetitions, int myPredictionYear, int wgDoy1, int wgDoy2,
                           float rainfallThreshold)
