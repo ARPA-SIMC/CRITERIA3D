@@ -6,22 +6,50 @@
 #include "parserXML.h"
 
 
-void initializeSeasonalAnomaly(TXMLSeasonalAnomaly *XMLAnomaly)
+XMLSeasonalAnomaly::XMLSeasonalAnomaly()
 {
-   XMLAnomaly->point.name = "";
-   XMLAnomaly->point.code = "";
-   XMLAnomaly->point.latitude = NODATA;
-   XMLAnomaly->point.longitude = NODATA;
-   XMLAnomaly->point.info = "";
+    this->initialize();
+}
 
-   XMLAnomaly->climatePeriod.yearFrom = NODATA;
-   XMLAnomaly->climatePeriod.yearTo = NODATA;
 
-   XMLAnomaly->modelNumber = NODATA;
-   XMLAnomaly->repetitions = NODATA;
-   XMLAnomaly->anomalyYear = NODATA;
-   XMLAnomaly->anomalySeason = "";
-   XMLAnomaly->forecast.clear();
+void XMLSeasonalAnomaly::initialize()
+{
+   point.name = "";
+   point.code = "";
+   point.latitude = NODATA;
+   point.longitude = NODATA;
+   point.info = "";
+
+   forecast.clear();
+
+   climatePeriod.yearFrom = NODATA;
+   climatePeriod.yearTo = NODATA;
+
+   modelNumber = NODATA;
+
+   modelName.clear();
+   modelMember.clear();
+
+   repetitions = NODATA;
+   anomalyYear = NODATA;
+   anomalySeason = "";
+}
+
+
+void XMLSeasonalAnomaly::printInfo()
+{
+   qDebug() << "point.name = " << point.name;
+   qDebug() << "point.longitude = " << point.longitude;
+   qDebug() << "point.latitude = " << point.latitude;
+   qDebug() << "climate first year = " << climatePeriod.yearFrom;
+   qDebug() << "climate last year = " << climatePeriod.yearTo;
+   qDebug() << "number of models = " << modelNumber;
+   qDebug() << "models = " << modelName;
+   qDebug() << "number of members = " << modelMember;
+   qDebug() << "number of repetitions = " << repetitions;
+   qDebug() << "anomaly year = " << anomalyYear;
+   qDebug() << "anomaly season = " << anomalySeason;
+   qDebug() << "";
 }
 
 
@@ -58,11 +86,11 @@ bool parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc)
 }
 
 
-bool parseXMLSeasonal(QString xmlFileName, TXMLSeasonalAnomaly* XMLAnomaly)
+bool parseXMLSeasonal(QString xmlFileName, XMLSeasonalAnomaly* XMLAnomaly)
 {
     QDomDocument xmlDoc;
 
-    initializeSeasonalAnomaly(XMLAnomaly);
+    XMLAnomaly->initialize();
 
      if (!parseXMLFile(xmlFileName, &xmlDoc))
     {
@@ -228,6 +256,4 @@ bool parseXMLSeasonal(QString xmlFileName, TXMLSeasonalAnomaly* XMLAnomaly)
 
     return true;
 }
-
-
 

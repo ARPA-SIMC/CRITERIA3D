@@ -29,9 +29,16 @@
     };
 
 
-    struct TXMLSeasonalAnomaly
+    class XMLSeasonalAnomaly
     {
+    public:
+        XMLSeasonalAnomaly();
+
+        void initialize();
+        void printInfo();
+
         TXMLPoint point;
+        std::vector<TXMLValuesList> forecast;
         TXMLClimateField climatePeriod;
         int modelNumber;
         QStringList modelName;
@@ -39,14 +46,11 @@
         int repetitions;
         int anomalyYear;
         QString anomalySeason;
-        std::vector<TXMLValuesList> forecast;
     };
-
-    void initializeSeasonalAnomaly(TXMLSeasonalAnomaly *XMLAnomaly);
 
     bool parseXMLFile(QString xmlFileName, QDomDocument* xmlDoc);
 
-    bool parseXMLSeasonal(QString xmlFileName, TXMLSeasonalAnomaly* XMLAnomaly);
+    bool parseXMLSeasonal(QString xmlFileName, XMLSeasonalAnomaly* XMLAnomaly);
 
 
 #endif // PARSERXML_H

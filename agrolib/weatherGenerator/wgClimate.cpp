@@ -139,32 +139,33 @@ bool computeWGClimate(int nrDays, Crit3DDate inputFirstDate, const std::vector<f
         stream << "----------------- CLIMATE ----------------\n";
         for (m=0; m<12; m++)
         {
-            stream << "month = " << m +1 << endl;
-            stream << "wGen->monthly.monthlyTmin = " << wGen->monthly.monthlyTmin[m] << endl;
-            stream << "wGen->monthly.monthlyTmax = " << wGen->monthly.monthlyTmax[m] << endl;
-            stream << "wGen->monthly.sumPrec = " << wGen->monthly.sumPrec[m] << endl;
-            stream << "wGen->monthly.stDevTmin = " << wGen->monthly.stDevTmin[m] << endl;
-            stream << "wGen->monthly.stDevTmax = " << wGen->monthly.stDevTmax[m] << endl;
-            stream << "wGen->monthly.fractionWetDays = " << wGen->monthly.fractionWetDays[m] << endl;
-            stream << "wGen->monthly.probabilityWetWet = " << wGen->monthly.probabilityWetWet[m] << endl;
-            stream << "wGen->monthly.dw_Tmax = " << wGen->monthly.dw_Tmax[m] << endl;
-            stream << "wGen->monthly.monthlyTminDry = " << wGen->monthly.monthlyTminDry[m] << endl;
-            stream << "wGen->monthly.monthlyTmaxDry = " << wGen->monthly.monthlyTmaxDry[m] << endl;
-            stream << "wGen->monthly.monthlyTminWet = " << wGen->monthly.monthlyTminWet[m] << endl;
-            stream << "wGen->monthly.monthlyTmaxWet = " << wGen->monthly.monthlyTmaxWet[m] << endl;
+            stream << "month = " << m +1 << "\n";
+            stream << "wGen->monthly.monthlyTmin = " << wGen->monthly.monthlyTmin[m] << "\n";
+            stream << "wGen->monthly.monthlyTmax = " << wGen->monthly.monthlyTmax[m] << "\n";
+            stream << "wGen->monthly.sumPrec = " << wGen->monthly.sumPrec[m] << "\n";
+            stream << "wGen->monthly.stDevTmin = " << wGen->monthly.stDevTmin[m] << "\n";
+            stream << "wGen->monthly.stDevTmax = " << wGen->monthly.stDevTmax[m] << "\n";
+            stream << "wGen->monthly.fractionWetDays = " << wGen->monthly.fractionWetDays[m] << "\n";
+            stream << "wGen->monthly.probabilityWetWet = " << wGen->monthly.probabilityWetWet[m] << "\n";
+            stream << "wGen->monthly.dw_Tmax = " << wGen->monthly.dw_Tmax[m] << "\n";
+            stream << "wGen->monthly.monthlyTminDry = " << wGen->monthly.monthlyTminDry[m] << "\n";
+            stream << "wGen->monthly.monthlyTmaxDry = " << wGen->monthly.monthlyTmaxDry[m] << "\n";
+            stream << "wGen->monthly.monthlyTminWet = " << wGen->monthly.monthlyTminWet[m] << "\n";
+            stream << "wGen->monthly.monthlyTmaxWet = " << wGen->monthly.monthlyTmaxWet[m] << "\n";
 
-            stream << "-------------------------------------------" << endl;
+            stream << "-------------------------------------------" << "\n";
         }
     }
 
     return true;
 }
 
+
 bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin, float *inputTMax,
                         float *inputPrec, float precThreshold, float minPrecData,
                         TweatherGenClimate* wGen, bool writeOutput,bool outputForStats, QString outputFileName,
                         float* monthlyPrecipitation, float** consecutiveDry, float** consecutiveWet,
-                        int nrMonth, int nrConsecutiveDryDaysBins)
+                        int nrConsecutiveDryDaysBins)
 {
     long nValidData = 0;
     float dataPresence = 0;
@@ -299,25 +300,25 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
             stream << "----------------- CLIMATE ----------------\n";
             for (m=0; m<12; m++)
             {
-                stream << "month = " << m +1 << endl;
-                stream << "wGen->monthly.monthlyTmin = " << wGen->monthly.monthlyTmin[m] << endl;
-                stream << "wGen->monthly.monthlyTmax = " << wGen->monthly.monthlyTmax[m] << endl;
-                stream << "wGen->monthly.sumPrec = " << wGen->monthly.sumPrec[m] << endl;
-                stream << "wGen->monthly.stDevTmin = " << wGen->monthly.stDevTmin[m] << endl;
-                stream << "wGen->monthly.stDevTmax = " << wGen->monthly.stDevTmax[m] << endl;
-                stream << "wGen->monthly.fractionWetDays = " << wGen->monthly.fractionWetDays[m] << endl;
-                stream << "wGen->monthly.probabilityWetWet = " << wGen->monthly.probabilityWetWet[m] << endl;
-                stream << "wGen->monthly.dw_Tmax = " << wGen->monthly.dw_Tmax[m] << endl;
-                stream << "wGen->monthly.monthlyTminDry = " << wGen->monthly.monthlyTminDry[m] << endl;
-                stream << "wGen->monthly.monthlyTmaxDry = " << wGen->monthly.monthlyTmaxDry[m] << endl;
-                stream << "wGen->monthly.monthlyTminWet = " << wGen->monthly.monthlyTminWet[m] << endl;
-                stream << "wGen->monthly.monthlyTmaxWet = " << wGen->monthly.monthlyTmaxWet[m] << endl;
-                stream << "wGen->monthly.stdDevTminDry = " << wGen->monthly.stDevTminDry[m] << endl;
-                stream << "wGen->monthly.stdDevTmaxDry = " << wGen->monthly.stDevTmaxDry[m] << endl;
-                stream << "wGen->monthly.stdDevTminWet = " << wGen->monthly.stDevTminWet[m] << endl;
-                stream << "wGen->monthly.stdDevTmaxWet = " << wGen->monthly.stDevTmaxWet[m] << endl;
+                stream << "month = " << m +1 << "\n";
+                stream << "wGen->monthly.monthlyTmin = " << wGen->monthly.monthlyTmin[m] << "\n";
+                stream << "wGen->monthly.monthlyTmax = " << wGen->monthly.monthlyTmax[m] << "\n";
+                stream << "wGen->monthly.sumPrec = " << wGen->monthly.sumPrec[m] << "\n";
+                stream << "wGen->monthly.stDevTmin = " << wGen->monthly.stDevTmin[m] << "\n";
+                stream << "wGen->monthly.stDevTmax = " << wGen->monthly.stDevTmax[m] << "\n";
+                stream << "wGen->monthly.fractionWetDays = " << wGen->monthly.fractionWetDays[m] << "\n";
+                stream << "wGen->monthly.probabilityWetWet = " << wGen->monthly.probabilityWetWet[m] << "\n";
+                stream << "wGen->monthly.dw_Tmax = " << wGen->monthly.dw_Tmax[m] << "\n";
+                stream << "wGen->monthly.monthlyTminDry = " << wGen->monthly.monthlyTminDry[m] << "\n";
+                stream << "wGen->monthly.monthlyTmaxDry = " << wGen->monthly.monthlyTmaxDry[m] << "\n";
+                stream << "wGen->monthly.monthlyTminWet = " << wGen->monthly.monthlyTminWet[m] << "\n";
+                stream << "wGen->monthly.monthlyTmaxWet = " << wGen->monthly.monthlyTmaxWet[m] << "\n";
+                stream << "wGen->monthly.stdDevTminDry = " << wGen->monthly.stDevTminDry[m] << "\n";
+                stream << "wGen->monthly.stdDevTmaxDry = " << wGen->monthly.stDevTmaxDry[m] << "\n";
+                stream << "wGen->monthly.stdDevTminWet = " << wGen->monthly.stDevTminWet[m] << "\n";
+                stream << "wGen->monthly.stdDevTmaxWet = " << wGen->monthly.stDevTmaxWet[m] << "\n";
 
-                stream << "-------------------------------------------" << endl;
+                stream << "-------------------------------------------" << "\n";
             }
         }
         else
@@ -330,33 +331,33 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
             QTextStream stream( &file );
             for (m=0; m<12; m++)
             {
-                stream << m +1 << endl;
-                stream <<  wGen->monthly.monthlyTmin[m] << endl;
-                stream <<  wGen->monthly.monthlyTmax[m] << endl;
-                stream <<  wGen->monthly.sumPrec[m] << endl;
-                stream <<  wGen->monthly.stDevTmin[m] << endl;
-                stream <<  wGen->monthly.stDevTmax[m] << endl;
-                stream <<  wGen->monthly.fractionWetDays[m] << endl;
-                stream <<  wGen->monthly.probabilityWetWet[m] << endl;
-                stream <<  wGen->monthly.dw_Tmax[m] << endl;
-                stream <<  wGen->monthly.monthlyTminDry[m] << endl;
-                stream <<  wGen->monthly.monthlyTmaxDry[m] << endl;
-                stream <<  wGen->monthly.monthlyTminWet[m] << endl;
-                stream <<  wGen->monthly.monthlyTmaxWet[m] << endl;
-                stream << wGen->monthly.stDevTminDry[m] << endl;
-                stream << wGen->monthly.stDevTmaxDry[m] << endl;
-                stream << wGen->monthly.stDevTminWet[m] << endl;
-                stream << wGen->monthly.stDevTmaxWet[m] << endl;
+                stream << m +1 << "\n";
+                stream <<  wGen->monthly.monthlyTmin[m] << "\n";
+                stream <<  wGen->monthly.monthlyTmax[m] << "\n";
+                stream <<  wGen->monthly.sumPrec[m] << "\n";
+                stream <<  wGen->monthly.stDevTmin[m] << "\n";
+                stream <<  wGen->monthly.stDevTmax[m] << "\n";
+                stream <<  wGen->monthly.fractionWetDays[m] << "\n";
+                stream <<  wGen->monthly.probabilityWetWet[m] << "\n";
+                stream <<  wGen->monthly.dw_Tmax[m] << "\n";
+                stream <<  wGen->monthly.monthlyTminDry[m] << "\n";
+                stream <<  wGen->monthly.monthlyTmaxDry[m] << "\n";
+                stream <<  wGen->monthly.monthlyTminWet[m] << "\n";
+                stream <<  wGen->monthly.monthlyTmaxWet[m] << "\n";
+                stream << wGen->monthly.stDevTminDry[m] << "\n";
+                stream << wGen->monthly.stDevTmaxDry[m] << "\n";
+                stream << wGen->monthly.stDevTminWet[m] << "\n";
+                stream << wGen->monthly.stDevTmaxWet[m] << "\n";
                 for (int iBin=0;iBin<nrConsecutiveDryDaysBins;iBin++)
                 {
                     stream << consecutiveDry[m][iBin] << "\t" ;
                 }
-                stream << endl;
+                stream << "\n";
                 for (int iBin=0;iBin<nrConsecutiveDryDaysBins;iBin++)
                 {
                     stream << consecutiveWet[m][iBin] << "\t" ;
                 }
-                stream << endl;
+                stream << "\n";
             }
         }
     }
@@ -502,25 +503,25 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
             stream << "----------------- CLIMATE ----------------\n";
             for (m=0; m<12; m++)
             {
-                stream << "month = " << m +1 << endl;
-                stream << "wGen->monthly.monthlyTmin = " << wGen->monthly.monthlyTmin[m] << endl;
-                stream << "wGen->monthly.monthlyTmax = " << wGen->monthly.monthlyTmax[m] << endl;
-                stream << "wGen->monthly.sumPrec = " << wGen->monthly.sumPrec[m] << endl;
-                stream << "wGen->monthly.stDevTmin = " << wGen->monthly.stDevTmin[m] << endl;
-                stream << "wGen->monthly.stDevTmax = " << wGen->monthly.stDevTmax[m] << endl;
-                stream << "wGen->monthly.fractionWetDays = " << wGen->monthly.fractionWetDays[m] << endl;
-                stream << "wGen->monthly.probabilityWetWet = " << wGen->monthly.probabilityWetWet[m] << endl;
-                stream << "wGen->monthly.dw_Tmax = " << wGen->monthly.dw_Tmax[m] << endl;
-                stream << "wGen->monthly.monthlyTminDry = " << wGen->monthly.monthlyTminDry[m] << endl;
-                stream << "wGen->monthly.monthlyTmaxDry = " << wGen->monthly.monthlyTmaxDry[m] << endl;
-                stream << "wGen->monthly.monthlyTminWet = " << wGen->monthly.monthlyTminWet[m] << endl;
-                stream << "wGen->monthly.monthlyTmaxWet = " << wGen->monthly.monthlyTmaxWet[m] << endl;
-                stream << "wGen->monthly.stdDevTminDry = " << wGen->monthly.stDevTminDry[m] << endl;
-                stream << "wGen->monthly.stdDevTmaxDry = " << wGen->monthly.stDevTmaxDry[m] << endl;
-                stream << "wGen->monthly.stdDevTminWet = " << wGen->monthly.stDevTminWet[m] << endl;
-                stream << "wGen->monthly.stdDevTmaxWet = " << wGen->monthly.stDevTmaxWet[m] << endl;
+                stream << "month = " << m +1 << "\n";
+                stream << "wGen->monthly.monthlyTmin = " << wGen->monthly.monthlyTmin[m] << "\n";
+                stream << "wGen->monthly.monthlyTmax = " << wGen->monthly.monthlyTmax[m] << "\n";
+                stream << "wGen->monthly.sumPrec = " << wGen->monthly.sumPrec[m] << "\n";
+                stream << "wGen->monthly.stDevTmin = " << wGen->monthly.stDevTmin[m] << "\n";
+                stream << "wGen->monthly.stDevTmax = " << wGen->monthly.stDevTmax[m] << "\n";
+                stream << "wGen->monthly.fractionWetDays = " << wGen->monthly.fractionWetDays[m] << "\n";
+                stream << "wGen->monthly.probabilityWetWet = " << wGen->monthly.probabilityWetWet[m] << "\n";
+                stream << "wGen->monthly.dw_Tmax = " << wGen->monthly.dw_Tmax[m] << "\n";
+                stream << "wGen->monthly.monthlyTminDry = " << wGen->monthly.monthlyTminDry[m] << "\n";
+                stream << "wGen->monthly.monthlyTmaxDry = " << wGen->monthly.monthlyTmaxDry[m] << "\n";
+                stream << "wGen->monthly.monthlyTminWet = " << wGen->monthly.monthlyTminWet[m] << "\n";
+                stream << "wGen->monthly.monthlyTmaxWet = " << wGen->monthly.monthlyTmaxWet[m] << "\n";
+                stream << "wGen->monthly.stdDevTminDry = " << wGen->monthly.stDevTminDry[m] << "\n";
+                stream << "wGen->monthly.stdDevTmaxDry = " << wGen->monthly.stDevTmaxDry[m] << "\n";
+                stream << "wGen->monthly.stdDevTminWet = " << wGen->monthly.stDevTminWet[m] << "\n";
+                stream << "wGen->monthly.stdDevTmaxWet = " << wGen->monthly.stDevTmaxWet[m] << "\n";
 
-                stream << "-------------------------------------------" << endl;
+                stream << "-------------------------------------------" << "\n";
             }
         }
         else
@@ -533,23 +534,23 @@ bool computeWG2DClimate(int nrDays, Crit3DDate inputFirstDate, float *inputTMin,
             QTextStream stream( &file );
             for (m=0; m<12; m++)
             {
-                stream << m +1 << endl;
-                stream <<  wGen->monthly.monthlyTmin[m] << endl;
-                stream <<  wGen->monthly.monthlyTmax[m] << endl;
-                stream <<  wGen->monthly.sumPrec[m] << endl;
-                stream <<  wGen->monthly.stDevTmin[m] << endl;
-                stream <<  wGen->monthly.stDevTmax[m] << endl;
-                stream <<  wGen->monthly.fractionWetDays[m] << endl;
-                stream <<  wGen->monthly.probabilityWetWet[m] << endl;
-                stream <<  wGen->monthly.dw_Tmax[m] << endl;
-                stream <<  wGen->monthly.monthlyTminDry[m] << endl;
-                stream <<  wGen->monthly.monthlyTmaxDry[m] << endl;
-                stream <<  wGen->monthly.monthlyTminWet[m] << endl;
-                stream <<  wGen->monthly.monthlyTmaxWet[m] << endl;
-                stream << wGen->monthly.stDevTminDry[m] << endl;
-                stream << wGen->monthly.stDevTmaxDry[m] << endl;
-                stream << wGen->monthly.stDevTminWet[m] << endl;
-                stream << wGen->monthly.stDevTmaxWet[m] << endl;
+                stream << m +1 << "\n";
+                stream <<  wGen->monthly.monthlyTmin[m] << "\n";
+                stream <<  wGen->monthly.monthlyTmax[m] << "\n";
+                stream <<  wGen->monthly.sumPrec[m] << "\n";
+                stream <<  wGen->monthly.stDevTmin[m] << "\n";
+                stream <<  wGen->monthly.stDevTmax[m] << "\n";
+                stream <<  wGen->monthly.fractionWetDays[m] << "\n";
+                stream <<  wGen->monthly.probabilityWetWet[m] << "\n";
+                stream <<  wGen->monthly.dw_Tmax[m] << "\n";
+                stream <<  wGen->monthly.monthlyTminDry[m] << "\n";
+                stream <<  wGen->monthly.monthlyTmaxDry[m] << "\n";
+                stream <<  wGen->monthly.monthlyTminWet[m] << "\n";
+                stream <<  wGen->monthly.monthlyTmaxWet[m] << "\n";
+                stream << wGen->monthly.stDevTminDry[m] << "\n";
+                stream << wGen->monthly.stDevTmaxDry[m] << "\n";
+                stream << wGen->monthly.stDevTminWet[m] << "\n";
+                stream << wGen->monthly.stDevTmaxWet[m] << "\n";
             }
         }
     }
@@ -568,7 +569,7 @@ bool climateGenerator(int nrData, TinputObsData climateDailyObsData, Crit3DDate 
     TinputObsData newDailyObsData;
     bool result = false;
 
-    startIndex = difference(climateDailyObsData.inputFirstDate, climateDateIni); // starts from 0
+    startIndex = difference(climateDailyObsData.inputFirstDate, climateDateIni);  // starts from 0
     nrDays = difference(climateDateIni, climateDateFin)+1;
 
     newDailyObsData.inputFirstDate = climateDateIni;
@@ -580,7 +581,7 @@ bool climateGenerator(int nrData, TinputObsData climateDailyObsData, Crit3DDate 
 
     for (int i = 0; i < nrData; i++)
     {
-        if (i >= startIndex && i < startIndex+nrDays)
+        if (i >= startIndex && i < (startIndex+nrDays))
         {
             newDailyObsData.inputTMin[j] = climateDailyObsData.inputTMin[i];
             newDailyObsData.inputTMax[j] = climateDailyObsData.inputTMax[i];

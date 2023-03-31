@@ -14,7 +14,6 @@
 
     public:
         FormTimePeriod(QDateTime* timeIni, QDateTime* timeFin, QWidget * parent = nullptr);
-        ~FormTimePeriod() override;
 
         void setMinimumDate(QDate myDate);
         void setMaximumDate(QDate myDate);

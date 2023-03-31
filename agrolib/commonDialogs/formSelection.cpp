@@ -30,10 +30,6 @@ FormSelection::FormSelection(QList<QString> stringList_)
     exec();
 }
 
-FormSelection::~FormSelection()
-{
-    close();
-}
 
 void FormSelection::done(int res)
 {
@@ -63,5 +59,4 @@ int FormSelection::getSelectionId()
 {
     return cmbStringList->currentIndex();
 }
-
 
