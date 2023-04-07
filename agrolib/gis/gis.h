@@ -30,7 +30,7 @@
         };
 
         class Crit3DRasterHeader;
-        class Crit3DGridHeader;
+        class Crit3DLatLonHeader;
 
         class  Crit3DUtmPoint {
         public:
@@ -52,7 +52,7 @@
             Crit3DGeoPoint();
             Crit3DGeoPoint(double lat, double lon);
 
-            bool isInsideGrid(const Crit3DGridHeader& latLonHeader) const;
+            bool isInsideGrid(const Crit3DLatLonHeader& latLonHeader) const;
         };
 
 
@@ -85,7 +85,7 @@
         };
 
 
-        class Crit3DGridHeader
+        class Crit3DLatLonHeader
         {
         public:
             int nrRows;
@@ -94,8 +94,9 @@
             float flag;
             Crit3DGeoPoint llCorner;
 
-            Crit3DGridHeader();
+            Crit3DLatLonHeader();
         };
+
 
         class Crit3DRasterHeader
         {
@@ -135,7 +136,9 @@
             Crit3DTime mapTime;
 
             Crit3DUtmPoint* utmPoint(int myRow, int myCol);
-            void getXY(int myRow, int myCol, double* x, double* y);
+            void getXY(int myRow, int myCol, double &x, double &y) const;
+            void getRowCol(double x, double y, int& row, int& col) const;
+            Crit3DPoint getCenter();
 
             void clear();
             void emptyGrid();
@@ -149,17 +152,16 @@
             bool initializeGrid(float initValue);
             bool initializeGrid(const Crit3DRasterGrid& initGrid);
             bool initializeGrid(const Crit3DRasterHeader& initHeader);
-            bool initializeGrid(const Crit3DGridHeader& latLonHeader);
+            bool initializeGrid(const Crit3DLatLonHeader& latLonHeader);
             bool initializeGrid(const Crit3DRasterGrid& initGrid, float initValue);
 
             bool copyGrid(const Crit3DRasterGrid& initGrid);
 
             bool setConstantValueWithBase(float initValue, const Crit3DRasterGrid& initGrid);
             float getValueFromRowCol(int myRow, int myCol) const;
-            float getFastValueXY(float x, float y) const;
+            float getValueFromXY(double x, double y) const;
             bool isFlag(int myRow, int myCol);
 
-            Crit3DPoint mapCenter();
             Crit3DTime getMapTime() const;
             void setMapTime(const Crit3DTime &value);
         };
@@ -190,27 +192,25 @@
         bool updateMinMaxRasterGrid(Crit3DRasterGrid *rasterGrid);
         bool updateColorScale(Crit3DRasterGrid* rasterGrid, int row0, int col0, int row1, int col1);
 
-        void getRowColFromXY(const Crit3DRasterGrid &rasterGrid, double myX, double myY, int* row, int* col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, double myX, double myY, int *row, int *col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, int *row, int *col);
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, const Crit3DUtmPoint& p, Crit3DRasterCell* v);
-        void getGridRowColFromXY(const Crit3DGridHeader& myHeader, double myX, double myY, int *row, int *col);
+        void getGridRowColFromXY(const Crit3DLatLonHeader& myHeader, double myX, double myY, int *row, int *col);
 
-        void getRowColFromLatLon(const Crit3DGridHeader &latLonHeader, const Crit3DGeoPoint& p, int *myRow, int *myCol);
+        void getRowColFromLatLon(const Crit3DLatLonHeader &latLonHeader, const Crit3DGeoPoint& p, int *myRow, int *myCol);
         bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DRasterGrid &rasterGrid);
 
         void getUtmXYFromRowColSinglePrecision(const Crit3DRasterGrid& rasterGrid, int myRow, int myCol,float* myX,float* myY);
         void getUtmXYFromRowColSinglePrecision(const Crit3DRasterHeader& myHeader, int myRow, int myCol,float* myX,float* myY);
-        void getUtmXYFromRowCol(const Crit3DRasterGrid& rasterGrid, int myRow, int myCol ,double* myX, double* myY);
         void getUtmXYFromRowCol(const Crit3DRasterHeader& myHeader,int myRow, int myCol, double* myX, double* myY);
 
-        void getLatLonFromRowCol(const Crit3DGridHeader &latLonHeader, int myRow, int myCol, double* lat, double* lon);
-        void getLatLonFromRowCol(const Crit3DGridHeader &latLonHeader, const Crit3DRasterCell& v, Crit3DGeoPoint* p);
+        void getLatLonFromRowCol(const Crit3DLatLonHeader &latLonHeader, int myRow, int myCol, double* lat, double* lon);
+        void getLatLonFromRowCol(const Crit3DLatLonHeader &latLonHeader, const Crit3DRasterCell& v, Crit3DGeoPoint* p);
         float getValueFromXY(const Crit3DRasterGrid& rasterGrid, double x, double y);
         float getValueFromUTMPoint(const Crit3DRasterGrid& rasterGrid, Crit3DUtmPoint& utmPoint);
 
         bool isOutOfGridXY(double x, double y, Crit3DRasterHeader* header);
-        bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DGridHeader& header);
+        bool isOutOfGridRowCol(int myRow, int myCol, const Crit3DLatLonHeader& header);
 
         bool isMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
@@ -249,9 +249,9 @@
                                gis::Crit3DRasterGrid* slopeMap, gis::Crit3DRasterGrid* aspectMap);
 
         bool getGeoExtentsFromUTMHeader(const Crit3DGisSettings& mySettings,
-                                        Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
-        bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader);
-        double getGeoCellSizeFromLatLonHeader(const Crit3DGisSettings& mySettings, Crit3DGridHeader *latLonHeader);
+                                        Crit3DRasterHeader *utmHeader, Crit3DLatLonHeader *latLonHeader);
+        bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DLatLonHeader *latLonHeader);
+        double getGeoCellSizeFromLatLonHeader(const Crit3DGisSettings& mySettings, Crit3DLatLonHeader *latLonHeader);
 
         float topographicDistance(float x1, float y1, float z1, float x2, float y2, float z2, float distance,
                                   const gis::Crit3DRasterGrid& dem);

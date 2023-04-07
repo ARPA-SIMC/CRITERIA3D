@@ -69,6 +69,10 @@ void MapGraphicsShapeObject::paint(QPainter *painter, const QStyleOptionGraphics
 }
 
 
+/*!
+\brief convert a point in geo (lat,lon) coordinates
+ in pixel (local object) coordinates
+*/
 QPointF MapGraphicsShapeObject::getPixel(const LatLonPoint &geoPoint)
 {
     QPointF point = QPointF(geoPoint.lon, geoPoint.lat);

@@ -26,8 +26,8 @@
 */
 
 
-#ifndef MAPGRAPHICSRASTEROBJECT_H
-#define MAPGRAPHICSRASTEROBJECT_H
+#ifndef MAPGRAPHICSRASTERUTM_H
+#define MAPGRAPHICSRASTERUTM_H
 
     #include "MapGraphicsObject.h"
     #include "MapGraphicsView.h"
@@ -44,52 +44,42 @@
         #include "geoMap.h"
     #endif
 
-    struct RowCol
-    {
-        int row;
-        int col;
-    };
-
 
     /*!
      * \brief The RasterObject class
      */
-    class RasterObject : public MapGraphicsObject
+    class RasterUtmObject : public MapGraphicsObject
     {
         Q_OBJECT
     public:
         /*!
-         * \brief RasterObject constructor
+         * \brief RasterUtmObject constructor
          * \param view a MapGraphicsView pointer
          * \param parent MapGraphicsObject
          */
-        explicit RasterObject(MapGraphicsView* _view, MapGraphicsObject *parent = nullptr);
+        explicit RasterUtmObject(MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
 
         bool isLoaded;
 
         void clear();
-        void setDrawing(bool value);
-        void setDrawBorders(bool value);
-        void setColorLegend(ColorLegend* colorLegendPtr);
-        void setNetCDF(bool value);
-        bool isNetCDF();
+        bool initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings, bool _isGrid);
 
+        void setDrawing(bool value) {_isDrawing = value;}
+        void setDrawBorders(bool value) {_isDrawBorder = value;}
+        void setColorLegend(ColorLegend* colorLegendPtr) {_colorLegendPointer = colorLegendPtr;}
+        void setIsNetCDF(bool value) {_isNetcdf = value;}
+        void setIsGrid(bool value) {_isGrid = value;}
+        void setRaster(gis::Crit3DRasterGrid* rasterPtr) {_rasterPointer = rasterPtr;}
+
+        bool isNetCDF() {return _isNetcdf;}
+        gis::Crit3DRasterGrid* getRaster() {return _rasterPointer;}
+
+        float getValue(gis::Crit3DGeoPoint& geoPoint);
+        float getValue(Position& pos);
+        Position getCurrentCenterGeo();
         QPointF getPixel(const QPointF &geoPoint);
 
-        bool initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings, bool isGrid_);
-        bool initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings,
-                              const gis::Crit3DLatLonHeader& latLonHeader, bool isGrid_);
-        float getRasterMaxSize();
-        gis::Crit3DGeoPoint* getRasterCenter();
-        void setRaster(gis::Crit3DRasterGrid* rasterPtr);
-        gis::Crit3DRasterGrid* getRaster();
         void updateCenter();
-        Position getCurrentCenter();
-
-        gis::Crit3DLatLonHeader getLatLonHeader() const;
-        bool getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col);
-        float getValue(gis::Crit3DGeoPoint& geoPoint);
-        float getValue(Position& myPos);
 
     protected:
         //virtual from MapGraphicsObject
@@ -109,32 +99,25 @@
         QRectF boundingRect() const;
 
     private:
-        MapGraphicsView* view;
-        gis::Crit3DRasterGrid* rasterPointer;
-        gis::Crit3DGeoMap* geoMap;
-        ColorLegend* colorLegendPointer;
+        MapGraphicsView* _view;
+        gis::Crit3DRasterGrid* _rasterPointer;
+        gis::Crit3DGeoMap* _geoMap;
+        ColorLegend* _colorLegendPointer;
 
-        RowCol **matrix;
-        gis::Crit3DLatLonHeader latLonHeader;
-        double longitudeShift;
+        QPointF _refCenterPixel;
 
-        QPointF refCenterPixel;
+        bool _isDrawBorder;
+        bool _isDrawing;
+        bool _isGrid;
+        bool _isNetcdf;
+        int _utmZone;
 
-        bool isDrawBorder;
-        bool isLatLon;
-        bool isDrawing;
-        bool isGrid;
-        bool isNetcdf;
-        int utmZone;
-
-        void freeIndexesMatrix();
-        void initializeIndexesMatrix();
         void setMapExtents();
         bool getCurrentWindow(gis::Crit3DRasterWindow* window);
         int getCurrentStep(const gis::Crit3DRasterWindow& window);
-        bool drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter);
+        bool drawRaster(gis::Crit3DRasterGrid *raster, QPainter* painter);
 
     };
 
 
-#endif // MAPGRAPHICSRASTEROBJECT_H
+#endif // MAPGRAPHICSRASTERUTM_H

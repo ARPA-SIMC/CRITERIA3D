@@ -54,7 +54,7 @@
         bool isHourly;
         bool isDaily;
 
-        gis::Crit3DGridHeader latLonHeader;
+        gis::Crit3DLatLonHeader latLonHeader;
 
         NetCDFHandler();
 
@@ -100,7 +100,7 @@
 
         bool createNewFile(std::string fileName);
 
-        bool writeMetadata(const gis::Crit3DGridHeader& latLonHeader, const std::string &title,
+        bool writeMetadata(const gis::Crit3DLatLonHeader& latLonHeader, const std::string &title,
                            const std::string &variableName, const std::string &variableUnit,
                            const Crit3DDate &myDate, int nDays, int refYearStart, int refYearEnd);
 

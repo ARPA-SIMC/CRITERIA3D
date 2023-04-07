@@ -217,7 +217,7 @@ bool Crit3DMeteoGridDbHandler::parseXMLGrid(QString xmlFileName, QString *myErro
             }
 
             child = ancestor.firstChild();
-            gis::Crit3DGridHeader header;
+            gis::Crit3DLatLonHeader header;
             /* init */
             header.llCorner.longitude = NODATA;
             header.llCorner.latitude = NODATA;

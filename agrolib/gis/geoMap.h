@@ -58,7 +58,7 @@
 
 
         bool updateColorScale(Crit3DRasterGrid* myGrid, const Crit3DRasterWindow& myWindow);
-        bool getUtmWindow(const Crit3DGridHeader &latLonHeader, const Crit3DRasterHeader &utmHeader,
+        bool getUtmWindow(const Crit3DLatLonHeader &latLonHeader, const Crit3DRasterHeader &utmHeader,
                           const Crit3DRasterWindow &latLonWindow, Crit3DRasterWindow *utmWindow, int utmZone);
 
     }

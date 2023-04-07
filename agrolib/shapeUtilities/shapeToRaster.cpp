@@ -85,7 +85,7 @@ bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler
             {
                 if (int(raster.value[row][col]) == int(raster.header->flag))
                 {
-                    raster.getXY(row, col, &x, &y);
+                    raster.getXY(row, col, x, y);
                     if (object.pointInPolygon(x, y))
                     {
                         raster.value[row][col] = float(shapeIndex);
@@ -140,7 +140,7 @@ bool fillRasterWithField(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler &shap
                 {
                     if (int(raster.value[row][col]) == int(raster.header->flag))
                     {
-                        raster.getXY(row, col, &x, &y);
+                        raster.getXY(row, col, x, y);
                         if (object.pointInPolygon(x, y))
                         {
                             raster.value[row][col] = float(fieldValue);

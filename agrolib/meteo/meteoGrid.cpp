@@ -44,12 +44,12 @@ void Crit3DMeteoGridStructure::setName(const std::string &name)
     _name = name;
 }
 
-gis::Crit3DGridHeader Crit3DMeteoGridStructure::header() const
+gis::Crit3DLatLonHeader Crit3DMeteoGridStructure::header() const
 {
     return _header;
 }
 
-void Crit3DMeteoGridStructure::setHeader(const gis::Crit3DGridHeader &header)
+void Crit3DMeteoGridStructure::setHeader(const gis::Crit3DLatLonHeader &header)
 {
     _header = header;
 }
@@ -694,7 +694,7 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
 
             gis::Crit3DGeoPoint pointLatLon0;
             gis::Crit3DGeoPoint pointLatLon;
-            gis::Crit3DGridHeader latLonHeader;
+            gis::Crit3DLatLonHeader latLonHeader;
             double utmX, utmY;
 
             pointLatLon0.latitude = _gridStructure.header().llCorner.latitude + row * _gridStructure.header().dy;
@@ -731,8 +731,8 @@ void Crit3DMeteoGrid::assignCellAggregationPoints(unsigned row, unsigned col, gi
 
             gis::Crit3DRasterCell demLL, demUR;
 
-            gis::getRowColFromXY(*myDEM, utmLL.x, utmLL.y, &demLL.row, &demLL.col);
-            gis::getRowColFromXY(*myDEM, utmUR.x, utmUR.y, &demUR.row, &demUR.col);
+            myDEM->getRowCol( utmLL.x, utmLL.y, demLL.row, demLL.col);
+            myDEM->getRowCol(utmUR.x, utmUR.y, demUR.row, demUR.col);
             _meteoPoints[row][col]->aggregationPoints.clear();
             _meteoPoints[row][col]->aggregationPointsMaxNr = 0;
 
@@ -983,7 +983,7 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
             value = zoneGrid->value[row][col];
             if (value != zoneGrid->header->flag)
             {
-                zoneGrid->getXY(row, col, &x, &y);
+                zoneGrid->getXY(row, col, x, y);
                 if (!_gridStructure.isUTM())
                 {
                     double utmX = x;
@@ -993,7 +993,7 @@ void Crit3DMeteoGrid::saveRowColfromZone(gis::Crit3DRasterGrid* zoneGrid, std::v
                 }
                 else
                 {
-                    gis::getRowColFromXY(dataMeteoGrid, x, y, &myRow, &myCol);
+                    dataMeteoGrid.getRowCol(x, y, myRow, myCol);
                 }
 
                 if (myRow >= 0 && myCol >= 0 && myRow < _gridStructure.header().nrRows && myCol < _gridStructure.header().nrCols)
