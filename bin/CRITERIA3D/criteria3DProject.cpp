@@ -433,7 +433,7 @@ bool Crit3DProject::setSoilIndexMap()
         {
             if (int(DEM.value[row][col]) != int(DEM.header->flag))
             {
-                gis::getUtmXYFromRowCol(DEM, row, col, &x, &y);
+                DEM.getXY(row, col, x, y);
                 int soilIndex = getCrit3DSoilIndex(x, y);
                 if (soilIndex != NODATA)
                     soilIndexMap.value[row][col] = float(soilIndex);
@@ -719,7 +719,7 @@ bool Crit3DProject::computeSnowModel()
                 double y = outputPoints[i].utm.y;
 
                 int row, col;
-                gis::getRowColFromXY(DEM, x, y, &row, &col);
+                DEM.getRowCol(x, y, row, col);
                 if (! gis::isOutOfGridRowCol(row, col, DEM))
                 {
                     this->computeSnowPoint(row, col);
@@ -1115,29 +1115,29 @@ bool Crit3DProject::writeOutputPointsData()
             tableName = QString::fromStdString(outputPoints[i].id);
             if (computeMeteo)
             {
-                valuesList.push_back(hourlyMeteoMaps->mapHourlyTair->getFastValueXY(x, y));
-                valuesList.push_back(hourlyMeteoMaps->mapHourlyPrec->getFastValueXY(x, y));
-                valuesList.push_back(hourlyMeteoMaps->mapHourlyRelHum->getFastValueXY(x, y));
-                valuesList.push_back(hourlyMeteoMaps->mapHourlyWindScalarInt->getFastValueXY(x, y));
+                valuesList.push_back(hourlyMeteoMaps->mapHourlyTair->getValueFromXY(x, y));
+                valuesList.push_back(hourlyMeteoMaps->mapHourlyPrec->getValueFromXY(x, y));
+                valuesList.push_back(hourlyMeteoMaps->mapHourlyRelHum->getValueFromXY(x, y));
+                valuesList.push_back(hourlyMeteoMaps->mapHourlyWindScalarInt->getValueFromXY(x, y));
             }
             if (computeRadiation)
             {
-                valuesList.push_back(radiationMaps->transmissivityMap->getFastValueXY(x, y));
-                valuesList.push_back(radiationMaps->globalRadiationMap->getFastValueXY(x, y));
-                valuesList.push_back(radiationMaps->beamRadiationMap->getFastValueXY(x, y));
-                valuesList.push_back(radiationMaps->diffuseRadiationMap->getFastValueXY(x, y));
-                valuesList.push_back(radiationMaps->reflectedRadiationMap->getFastValueXY(x, y));
+                valuesList.push_back(radiationMaps->transmissivityMap->getValueFromXY(x, y));
+                valuesList.push_back(radiationMaps->globalRadiationMap->getValueFromXY(x, y));
+                valuesList.push_back(radiationMaps->beamRadiationMap->getValueFromXY(x, y));
+                valuesList.push_back(radiationMaps->diffuseRadiationMap->getValueFromXY(x, y));
+                valuesList.push_back(radiationMaps->reflectedRadiationMap->getValueFromXY(x, y));
             }
             if (computeSnow)
             {
-                valuesList.push_back(snowMaps.getSnowWaterEquivalentMap()->getFastValueXY(x, y));
-                valuesList.push_back(snowMaps.getSnowFallMap()->getFastValueXY(x, y));
-                valuesList.push_back(snowMaps.getSnowMeltMap()->getFastValueXY(x, y));
-                valuesList.push_back(snowMaps.getSnowSurfaceTempMap()->getFastValueXY(x, y));
-                valuesList.push_back(snowMaps.getSurfaceEnergyMap()->getFastValueXY(x, y));
-                valuesList.push_back(snowMaps.getInternalEnergyMap()->getFastValueXY(x, y));
-                valuesList.push_back(snowMaps.getSensibleHeatMap()->getFastValueXY(x, y));
-                valuesList.push_back(snowMaps.getLatentHeatMap()->getFastValueXY(x, y));
+                valuesList.push_back(snowMaps.getSnowWaterEquivalentMap()->getValueFromXY(x, y));
+                valuesList.push_back(snowMaps.getSnowFallMap()->getValueFromXY(x, y));
+                valuesList.push_back(snowMaps.getSnowMeltMap()->getValueFromXY(x, y));
+                valuesList.push_back(snowMaps.getSnowSurfaceTempMap()->getValueFromXY(x, y));
+                valuesList.push_back(snowMaps.getSurfaceEnergyMap()->getValueFromXY(x, y));
+                valuesList.push_back(snowMaps.getInternalEnergyMap()->getValueFromXY(x, y));
+                valuesList.push_back(snowMaps.getSensibleHeatMap()->getValueFromXY(x, y));
+                valuesList.push_back(snowMaps.getLatentHeatMap()->getValueFromXY(x, y));
             }
 
             if (! outputPointsDbHandler->saveHourlyData(tableName, getCurrentTime(), varList, valuesList, errorString))
@@ -1204,11 +1204,10 @@ bool Crit3DProject::initializeGeometry()
     geometry = new Crit3DGeometry();
 
     // set center
-    double xCenter, yCenter;
-    gis::getUtmXYFromRowCol(DEM, DEM.header->nrRows / 2, DEM.header->nrCols / 2, &xCenter, &yCenter);
+    gis::Crit3DPoint center = DEM.getCenter();
     gis::updateMinMaxRasterGrid(&DEM);
     float zCenter = (DEM.maximum + DEM.minimum) * 0.5f;
-    geometry->setCenter(float(xCenter), float(yCenter), zCenter);
+    geometry->setCenter(float(center.utm.x), float(center.utm.y), zCenter);
 
     // set dimension
     float dx = float(DEM.header->nrCols * DEM.header->cellSize);
@@ -1231,7 +1230,7 @@ bool Crit3DProject::initializeGeometry()
             z1 = DEM.getValueFromRowCol(row, col);
             if (! isEqual(z1, DEM.header->flag))
             {
-                gis::getUtmXYFromRowCol(DEM, row, col, &x, &y);
+                DEM.getXY(row, col, x, y);
                 p1 = gis::Crit3DPoint(x, y, z1);
                 c1 = DEM.colorScale->getColor(z1);
                 shadowColor(*c1, sc1, row, col);
@@ -1239,7 +1238,7 @@ bool Crit3DProject::initializeGeometry()
                 z3 = DEM.getValueFromRowCol(row+1, col+1);
                 if (! isEqual(z3, DEM.header->flag))
                 {
-                    gis::getUtmXYFromRowCol(DEM, row+1, col+1, &x, &y);
+                    DEM.getXY(row+1, col+1, x, y);
                     p3 = gis::Crit3DPoint(x, y, z3);
                     c3 = DEM.colorScale->getColor(z3);
                     shadowColor(*c3, sc3, row+1, col+1);
@@ -1247,7 +1246,7 @@ bool Crit3DProject::initializeGeometry()
                     z2 = DEM.getValueFromRowCol(row+1, col);
                     if (! isEqual(z2, DEM.header->flag))
                     {
-                        gis::getUtmXYFromRowCol(DEM, row+1, col, &x, &y);
+                        DEM.getXY(row+1, col, x, y);
                         p2 = gis::Crit3DPoint(x, y, z2);
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row+1, col);
@@ -1257,7 +1256,7 @@ bool Crit3DProject::initializeGeometry()
                     z2 = DEM.getValueFromRowCol(row, col+1);
                     if (! isEqual(z2, DEM.header->flag))
                     {
-                        gis::getUtmXYFromRowCol(DEM, row, col+1, &x, &y);
+                        DEM.getXY(row, col+1, x, y);
                         p2 = gis::Crit3DPoint(x, y, z2);
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row, col+1);

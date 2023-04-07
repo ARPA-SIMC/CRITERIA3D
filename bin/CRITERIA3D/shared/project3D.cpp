@@ -429,7 +429,7 @@ bool Project3D::setCrit3DTopography()
 
                 if (index != long(indexMap.at(layer).header->flag))
                 {
-                    gis::getUtmXYFromRowCol(DEM, row, col, &x, &y);
+                    DEM.getXY(row, col, x, y);
                     area = DEM.header->cellSize * DEM.header->cellSize;
                     slope = radiationMaps->slopeMap->value[row][col] / 100;
                     z = DEM.value[row][col] - float(layerDepth[layer]);
