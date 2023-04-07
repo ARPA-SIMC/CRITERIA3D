@@ -193,7 +193,7 @@ bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
 
     bool isHeight = (getProxyPragaName(name_) == height);
 
-    if (!isHeight & (myProxy.getGridName() == "") & (myProxy.getProxyTable() == "" && myProxy.getProxyField() == ""))
+    if (!isHeight && (myProxy.getGridName() == "") && (myProxy.getProxyTable() == "" && myProxy.getProxyField() == ""))
     {
         *error = "error reading grid, table or field for proxy " + QString::fromStdString(name_);
         return false;
