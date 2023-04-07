@@ -132,7 +132,7 @@ float Crit3DRadiationSettings::getLinke(const gis::Crit3DPoint& myPoint) const
     if (linkeMap != nullptr && linkeMap->isLoaded)
     {
         int row, col;
-        gis::getRowColFromXY(*linkeMap, myPoint.utm.x, myPoint.utm.y, &row, &col);
+        linkeMap->getRowCol(myPoint.utm.x, myPoint.utm.y, row, col);
         if (gis::isOutOfGridRowCol(row, col, *linkeMap))
             myLinke = linkeMap->value[row][col];
     }
@@ -172,7 +172,7 @@ float Crit3DRadiationSettings::getAlbedo(const gis::Crit3DPoint& myPoint) const
     if (albedoMap != nullptr && albedoMap->isLoaded)
     {
         int row, col;
-        gis::getRowColFromXY(*albedoMap, myPoint.utm.x, myPoint.utm.y, &row, &col);
+        albedoMap->getRowCol(myPoint.utm.x, myPoint.utm.y, row, col);
         if (gis::isOutOfGridRowCol(row, col, *albedoMap))
             myAlbedo = albedoMap->value[row][col];
     }

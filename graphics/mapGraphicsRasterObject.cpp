@@ -41,22 +41,10 @@ RasterObject::RasterObject(MapGraphicsView* _view, MapGraphicsObject *parent) :
     setFlag(MapGraphicsObject::ObjectIsSelectable, false);
     setFlag(MapGraphicsObject::ObjectIsMovable, false);
     setFlag(MapGraphicsObject::ObjectIsFocusable, false);
+
     view = _view;
-
-    matrix = nullptr;
-    rasterPointer = nullptr;
-    colorScaleLegend = nullptr;
-    isLoaded = false;
-    isLatLon = false;
-    isGrid = false;
-    isNetcdf = false;
     geoMap = new gis::Crit3DGeoMap();
-    referencePixel = QPointF(NODATA, NODATA);
-    isDrawing = false;
-    isDrawBorder = false;
-    utmZone = NODATA;
-
-    longitudeShift = 0;
+    this->clear();
 }
 
 
@@ -68,18 +56,32 @@ void RasterObject::clear()
 
     latLonHeader.nrCols = 0;
     latLonHeader.nrRows = 0;
-    colorScaleLegend = nullptr;
+
     matrix = nullptr;
     rasterPointer = nullptr;
+    colorLegendPointer = nullptr;
 
     isGrid = false;
     isLatLon = false;
-    isLoaded = false;
-    isDrawing = false;
-    isDrawBorder = false;
+    isNetcdf = false;
+
     utmZone = NODATA;
+    refCenterPixel = QPointF(NODATA, NODATA);
+    longitudeShift = 0;
+
+    isLoaded = false;
 }
 
+
+void RasterObject::setRaster(gis::Crit3DRasterGrid* rasterPtr)
+{
+    rasterPointer = rasterPtr;
+}
+
+gis::Crit3DRasterGrid* RasterObject::getRaster()
+{
+    return rasterPointer;
+}
 
 void RasterObject::setNetCDF(bool value)
 {
@@ -96,34 +98,33 @@ void RasterObject::setDrawing(bool value)
     isDrawing = value;
 }
 
-
 void RasterObject::setDrawBorders(bool value)
 {
     isDrawBorder = value;
 }
 
-void RasterObject::setColorLegend(ColorLegend* myLegend)
+void RasterObject::setColorLegend(ColorLegend* colorLegendPtr)
 {
-    colorScaleLegend = myLegend;
+    colorLegendPointer = colorLegendPtr;
 }
 
 
-QPointF RasterObject::getPixel(const QPointF &latLonPoint)
+/*!
+\brief convert a point in geo (lat,lon) coordinates
+ in pixel (local object) coordinates
+*/
+QPointF RasterObject::getPixel(const QPointF &geoPoint)
 {
-    QPointF pixel = view->tileSource()->ll2qgs(latLonPoint, view->zoomLevel());
-    pixel.setX(pixel.x() - referencePixel.x());
-    pixel.setY(referencePixel.y() - pixel.y());
+    QPointF pixel = view->tileSource()->ll2qgs(geoPoint, view->zoomLevel());
+    pixel.setX(pixel.x() - refCenterPixel.x());
+    pixel.setY(refCenterPixel.y() - pixel.y());
     return pixel;
 }
 
 
-QPointF RasterObject::getLatLon(const QPointF &pos)
+gis::Crit3DLatLonHeader RasterObject::getLatLonHeader() const
 {
-    QPointF pixel = pos;
-    pixel.setX(pixel.x() + referencePixel.x());
-    pixel.setY(referencePixel.y() + pixel.y());
-    QPointF latLonPoint = view->tileSource()->qgs2ll(pixel, view->zoomLevel());
-    return latLonPoint;
+    return latLonHeader;
 }
 
 
@@ -140,10 +141,6 @@ QPointF RasterObject::getLatLon(const QPointF &pos)
     return QRectF( -widthPixels, -heightPixels, widthPixels*2, heightPixels*2);
  }
 
- gis::Crit3DGridHeader RasterObject::getLatLonHeader() const
- {
-     return latLonHeader;
- }
 
  void RasterObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
  {
@@ -157,21 +154,9 @@ QPointF RasterObject::getLatLon(const QPointF &pos)
         if (rasterPointer != nullptr)
             drawRaster(rasterPointer, painter);
 
-        if (colorScaleLegend != nullptr)
-            colorScaleLegend->update();
+        if (colorLegendPointer != nullptr)
+            colorLegendPointer->update();
     }
-}
-
-
-void RasterObject::setRaster(gis::Crit3DRasterGrid* rasterPtr)
-{
-    rasterPointer = rasterPtr;
-}
-
-
-gis::Crit3DRasterGrid* RasterObject::getRaster()
-{
-    return rasterPointer;
 }
 
 
@@ -272,7 +257,7 @@ bool RasterObject::initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Cri
 
 
 bool RasterObject::initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings,
-                                    const gis::Crit3DGridHeader &latLonHeader_, bool isGrid_)
+                                    const gis::Crit3DLatLonHeader &latLonHeader_, bool isGrid_)
 {
     if (myRaster == nullptr) return false;
     if (! myRaster->isLoaded) return false;
@@ -301,7 +286,6 @@ bool RasterObject::initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::
 
     return true;
 }
-
 
 
 bool RasterObject::getCurrentWindow(gis::Crit3DRasterWindow* window)
@@ -505,7 +489,7 @@ void RasterObject::updateCenter()
     // reference point
     geoMap->referencePoint.longitude = newCenter.x();
     geoMap->referencePoint.latitude = newCenter.y();
-    referencePixel = view->tileSource()->ll2qgs(newCenter, view->zoomLevel());
+    refCenterPixel = view->tileSource()->ll2qgs(newCenter, view->zoomLevel());
 
     if (isDrawing)
     {
@@ -538,7 +522,6 @@ void RasterObject::setMapExtents()
 }
 
 
-
 bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
 {
     // only for grid
@@ -563,6 +546,4 @@ bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
 
     return true;
 }
-
-
 

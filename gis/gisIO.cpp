@@ -543,7 +543,7 @@ namespace gis
     }
 
 
-    bool getGeoExtentsFromUTMHeader(const Crit3DGisSettings& mySettings, Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader)
+    bool getGeoExtentsFromUTMHeader(const Crit3DGisSettings& mySettings, Crit3DRasterHeader *utmHeader, Crit3DLatLonHeader *latLonHeader)
     {
         Crit3DGeoPoint v[4];
 
@@ -590,7 +590,7 @@ namespace gis
         return true;
     }
 
-    bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DGridHeader *latLonHeader)
+    bool getGeoExtentsFromLatLonHeader(const Crit3DGisSettings& mySettings, double cellSize, Crit3DRasterHeader *utmHeader, Crit3DLatLonHeader *latLonHeader)
     {
         Crit3DUtmPoint v[4];
 
@@ -629,7 +629,7 @@ namespace gis
         return true;
     }
 
-    double getGeoCellSizeFromLatLonHeader(const Crit3DGisSettings& mySettings, Crit3DGridHeader *latLonHeader)
+    double getGeoCellSizeFromLatLonHeader(const Crit3DGisSettings& mySettings, Crit3DLatLonHeader *latLonHeader)
     {
         Crit3DUtmPoint v[4];
 
