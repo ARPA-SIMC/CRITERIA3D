@@ -926,7 +926,7 @@ bool CriteriaOutputProject::convertShapeToNetcdf(Crit3DShapeHandler &shape, std:
     gisSettings.startLocation.latitude = sign * abs(gisSettings.startLocation.latitude);
 
     // convert to lat lon raster
-    gis::Crit3DGridHeader latLonHeader;
+    gis::Crit3DLatLonHeader latLonHeader;
     gis::getGeoExtentsFromUTMHeader(gisSettings, myRaster.header, &latLonHeader);
 
     // initialize data raster (only for values)
