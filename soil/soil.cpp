@@ -51,6 +51,8 @@ namespace soil
         this->bulkDensity = NODATA;
         this->thetaSat = NODATA;
         this->kSat = NODATA;
+        this->effectiveCohesion = NODATA;
+        this->frictionAngle = NODATA;
     }
 
     Crit3DFittingOptions::Crit3DFittingOptions()
@@ -87,6 +89,7 @@ namespace soil
         this->classUSDA = NODATA;
         this->classNL = NODATA;
         this->classNameUSDA = "UNDEFINED";
+        this->classNameUSCS = "UNDEFINED";
     }
 
     Crit3DTexture::Crit3DTexture (double mySand, double mySilt, double myClay)
@@ -132,6 +135,8 @@ namespace soil
         this->coarseFragments = NODATA;
         this->organicMatter = NODATA;
         this->bulkDensity = NODATA;
+        this->effectiveCohesion = NODATA;
+        this->frictionAngle = NODATA;
 
         this->fieldCapacity = NODATA;
         this->wiltingPoint = NODATA;
@@ -299,6 +304,69 @@ namespace soil
             else return 10;
         }
         else return getUSDATextureClass(sand, silt, clay);
+    }
+
+
+    std::string getUSCSClass(Crit3DHorizon* horizon)
+    {
+        double coarseFraction = horizon->coarseFragments + (horizon->texture.sand / 100) * (1 - horizon->coarseFragments);
+        double fineFraction = (horizon->texture.clay + horizon->texture.silt) / 100 * (1 - horizon->coarseFragments);
+        if (coarseFraction > 0.5)
+        {
+            double gravelsFraction = 0.66 * horizon->coarseFragments;
+            if (gravelsFraction/coarseFraction > 0.5)
+            {
+                // GRAVELS
+                if (fineFraction < 0.12)
+                   return "GW";  // also GP
+                else
+                   return "GM";  // also GC
+            }
+            else
+            {
+                // SANDS
+                if (horizon->texture.classNameUSDA == "sand")
+                   return "SP";
+                if (horizon->texture.classNameUSDA == "sandy loam" || horizon->texture.classNameUSDA == "loamy sand")
+                   return "SM";
+                if (horizon->texture.classNameUSDA == "sandy clayloam" || horizon->texture.classNameUSDA == "sandy clay")
+                   return "SC";
+
+                // default
+                return "SM";
+            }
+        }
+        else
+        {
+            // FINE grained soils
+            if (horizon->texture.classNameUSDA == "loam" || horizon->texture.classNameUSDA == "clayloam" || horizon->texture.classNameUSDA == "silty clayloam")
+            {
+                if (horizon->organicMatter > 0.2)
+                   return "OL";
+                else
+                   return "CL";
+            }
+            if (horizon->texture.classNameUSDA == "silt" || horizon->texture.classNameUSDA == "silt loam")
+            {
+                if (horizon->organicMatter > 0.2)
+                   return "OL";
+                else
+                   return "ML";
+            }
+            if (horizon->texture.classNameUSDA == "clay" || horizon->texture.classNameUSDA == "silty clay")
+            {
+                if (horizon->organicMatter > 0.2)
+                   return "OH";
+                else
+                   return "CH";
+            }
+
+            //default
+            if (horizon->organicMatter > 0.2)
+                return "OL";
+            else
+                return "CL";
+        }
     }
 
 
@@ -809,12 +877,27 @@ namespace soil
             horizon->waterConductivity.kSat = soil::estimateSaturatedConductivity(horizon, horizon->bulkDensity);
         }
 
-        // update with coarse fragment (TODO check altre parti del codice!)
-        //horizon->vanGenuchten.thetaS *= (1.0 - horizon->coarseFragments);
-        //horizon->vanGenuchten.thetaR *= (1.0 - horizon->coarseFragments);
-
         horizon->CEC = 50.0;
         horizon->PH = 7.7;
+
+        // new parameters for slope stability
+        horizon->texture.classNameUSCS = getUSCSClass(horizon);
+        if (horizon->dbData.effectiveCohesion != NODATA)
+        {
+            horizon->effectiveCohesion = horizon->dbData.effectiveCohesion;
+        }
+        else
+        {
+            // TODO
+        }
+        if (horizon->dbData.frictionAngle != NODATA)
+        {
+            horizon->frictionAngle = horizon->dbData.frictionAngle;
+        }
+        else
+        {
+            // TODO
+        }
 
         horizon->fieldCapacity = soil::getFieldCapacity(horizon, soil::KPA);
         horizon->wiltingPoint = soil::getWiltingPoint(soil::KPA);
