@@ -822,6 +822,7 @@ float loadDailyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler *meteoPoin
 
     if ( dailyValues.empty() )
     {
+        qDebug() << "myError: " << *myError;
         return 0;
     }
     else

@@ -2169,6 +2169,7 @@ bool Crit3DMeteoGridDbHandler::loadGridMonthlyData(QString *myError, QString met
 std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, QString meteoPoint,
                                     meteoVariable variable, QDate first, QDate last, QDate* firstDateDB)
 {
+
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
     QDate currentDate, lastDateDB;
@@ -2192,15 +2193,41 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     if(! qry.exec(statement) )
     {
         *myError = qry.lastError().text();
-        return dailyVarList;
+        if (!_db.open())
+        {
+            qDebug() << "db is not open";
+        }
+        else
+        {
+            return dailyVarList;
+        }
     }
 
     // read first date
-    qry.first();
+    if (!qry.first())
+    {
+        *myError = qry.lastError().text();
+        if (!_db.open())
+        {
+            qDebug() << "db is not open, re-connect";
+        }
+        else
+        {
+            return dailyVarList;
+        }
+    }
+
     if (!getValue(qry.value(_tableDaily.fieldTime), firstDateDB))
     {
         *myError = "Missing first date";
-        return dailyVarList;
+        if (!_db.open())
+        {
+            qDebug() << "db is not open";
+        }
+        else
+        {
+            return dailyVarList;
+        }
     }
 
     // read last date
