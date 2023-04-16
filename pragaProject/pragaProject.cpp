@@ -2782,6 +2782,7 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             referenceClima->setParam2(listXMLAnomaly->listRefParam2()[i]);
 
             elaborationPointsCycleGrid(false, false);
+            qDebug() << "--------------------------------------------------";
             elaborationPointsCycleGrid(true, false);
 
             if (!listXMLAnomaly->isPercentage()[i])

@@ -2198,6 +2198,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
         if (!_db.open())
         {
             qDebug() << "db is not open";
+            exit(EXIT_FAILURE);
         }
         else
         {
@@ -2212,6 +2213,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
         if (!_db.open())
         {
             qDebug() << "db is not open";
+            exit(EXIT_FAILURE);
         }
         else
         {
@@ -2225,6 +2227,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
         if (!_db.open())
         {
             qDebug() << "db is not open";
+            exit(EXIT_FAILURE);
         }
         else
         {
