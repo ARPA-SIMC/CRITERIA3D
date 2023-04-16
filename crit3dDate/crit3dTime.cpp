@@ -95,15 +95,15 @@ bool operator != (const Crit3DTime& time1, const Crit3DTime& time2)
     return ! time1.isEqual(time2);
 }
 
-Crit3DTime getNullTime()
+void Crit3DTime::setNullTime()
 {
-    Crit3DTime* nullTime = new Crit3DTime();
-    return *nullTime;
+    date.setNullDate();
+    time = 0;
 }
 
-bool isNullTime(const Crit3DTime& myTime)
+bool Crit3DTime::isNullTime()
 {
-    return myTime.isEqual(getNullTime());
+    return date.isNullDate() && time == 0;
 }
 
 bool Crit3DTime::isEqual(const Crit3DTime& myTime) const
