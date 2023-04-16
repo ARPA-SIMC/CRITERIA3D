@@ -2190,14 +2190,14 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
         return dailyVarList;
     }
 
-    QString statement = QString("SELECT * FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`").arg(tableD).arg(varCode).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
+    QString statement = QString("SELECT `%3`,`Value` FROM `%1` WHERE VariableCode = '%2' AND `%3` >= '%4' AND `%3`<= '%5' ORDER BY `%3`").arg(tableD).arg(varCode).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
 
     if(! qry.exec(statement) )
     {
         *myError = qry.lastError().text();
         if (!_db.open())
         {
-            qDebug() << "db is not open";
+            qDebug() << "qry exec: db is not open: " << *myError;
             exit(EXIT_FAILURE);
         }
         else
@@ -2212,7 +2212,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
         *myError = qry.lastError().text();
         if (!_db.open())
         {
-            qDebug() << "db is not open";
+            qDebug() << "qry.first: db is not open: " << *myError;
             exit(EXIT_FAILURE);
         }
         else
@@ -2226,7 +2226,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
         *myError = "Missing first date";
         if (!_db.open())
         {
-            qDebug() << "db is not open";
+            qDebug() << "qry.value: db is not open: " << *myError;
             exit(EXIT_FAILURE);
         }
         else
