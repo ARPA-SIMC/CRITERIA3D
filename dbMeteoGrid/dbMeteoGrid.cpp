@@ -2195,7 +2195,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     if(! qry.exec(statement) )
     {
         *myError = qry.lastError().text();
-        if (!_db.open())
+        if (!_db.isOpen())
         {
             qDebug() << "qry exec: db is not open: " << *myError;
             exit(EXIT_FAILURE);
@@ -2210,7 +2210,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     if (!qry.first())
     {
         *myError = qry.lastError().text();
-        if (!_db.open())
+        if (!_db.isOpen())
         {
             qDebug() << "qry.first: db is not open: " << *myError;
             exit(EXIT_FAILURE);
@@ -2224,7 +2224,7 @@ std::vector<float> Crit3DMeteoGridDbHandler::loadGridDailyVar(QString *myError, 
     if (!getValue(qry.value(_tableDaily.fieldTime), firstDateDB))
     {
         *myError = "Missing first date";
-        if (!_db.open())
+        if (!_db.isOpen())
         {
             qDebug() << "qry.value: db is not open: " << *myError;
             exit(EXIT_FAILURE);
