@@ -242,6 +242,17 @@ bool loadSoilData(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySo
         getValue(query.value("k_sat"), &ksat);
         mySoil->horizon[i].dbData.kSat = ksat;
 
+        double value = NODATA;
+        // new fields not present in old databases
+        if(getValue(query.value("effective_cohesion"), &value))
+        {
+            mySoil->horizon[i].dbData.effectiveCohesion = value;
+        }
+        if(getValue(query.value("friction_angle"), &value))
+        {
+            mySoil->horizon[i].dbData.frictionAngle = value;
+        }
+
         i++;
 
     } while(query.next());

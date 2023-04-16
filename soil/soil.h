@@ -37,6 +37,8 @@
             double bulkDensity;                 /*!<   [g cm^-3]    */
             double thetaSat;                    /*!<   [m^3 m^-3]   */
             double kSat;                        /*!<   [cm day^-1]  */
+            double effectiveCohesion;           /*!<   [kPa]        */
+            double frictionAngle;               /*!<   [degrees]    */
 
             std::vector <Crit3DWaterRetention> waterRetention;
 
@@ -53,6 +55,7 @@
             int classUSDA;
             int classNL;
             std::string classNameUSDA;
+            std::string classNameUSCS;
 
             Crit3DTexture();
             /*!
@@ -121,6 +124,8 @@
             double coarseFragments;             /*!<  [-] 0-1   */
             double organicMatter;               /*!<  [-] 0-1   */
             double bulkDensity;                 /*!<  [g/cm^3]  */
+            double effectiveCohesion;           /*!<  [kPa]     */
+            double frictionAngle;               /*!<  [degrees] */
 
             double fieldCapacity;               /*!<  [kPa]     */
             double wiltingPoint;                /*!<  [kPa]     */
@@ -205,6 +210,8 @@
         int getNLTextureClass(Crit3DTexture texture);
         int getUSDATextureClass(double sand, double silt, double clay);
         int getNLTextureClass(double sand, double silt, double clay);
+
+        std::string getUSCSClass(Crit3DHorizon* horizon);
 
         int getHorizonIndex(Crit3DSoil* soil, double depth);
         int getSoilLayerIndex(std::vector<soil::Crit3DLayer> &soilLayers, double depth);
