@@ -22,8 +22,8 @@
             std::string name() const;
             void setName(const std::string &name);
 
-            gis::Crit3DGridHeader header() const;
-            void setHeader(const gis::Crit3DGridHeader &header);
+            gis::Crit3DLatLonHeader header() const;
+            void setHeader(const gis::Crit3DLatLonHeader &header);
 
             int dataType() const;
             void setDataType(int dataType);
@@ -60,7 +60,7 @@
 
     private:
             std::string _name;
-            gis::Crit3DGridHeader _header;
+            gis::Crit3DLatLonHeader _header;
 
             int _dataType;
 

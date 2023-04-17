@@ -193,7 +193,7 @@ bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
 
     bool isHeight = (getProxyPragaName(name_) == height);
 
-    if (!isHeight & (myProxy.getGridName() == "") & (myProxy.getProxyTable() == "" && myProxy.getProxyField() == ""))
+    if (!isHeight && (myProxy.getGridName() == "") && (myProxy.getProxyTable() == "" && myProxy.getProxyField() == ""))
     {
         *error = "error reading grid, table or field for proxy " + QString::fromStdString(name_);
         return false;
@@ -783,8 +783,16 @@ int Project::getCurrentHour()
 
 Crit3DTime Project::getCrit3DCurrentTime()
 {
-     return getCrit3DTime(this->currentDate, this->currentHour);
+    if (currentFrequency == hourly)
+    {
+        return getCrit3DTime(this->currentDate, this->currentHour);
+    }
+    else
+    {
+        return getCrit3DTime(this->currentDate, 0);
+    }
 }
+
 
 QDateTime Project::getCurrentTime()
 {
@@ -913,13 +921,14 @@ bool Project::loadDEM(QString myFileName)
 
     logInfoGUI("Load DEM = " + myFileName);
 
-    this->demFileName = myFileName;
+    demFileName = myFileName;
     myFileName = getCompleteFileName(myFileName, PATH_DEM);
 
     std::string error;
-    if (! gis::openRaster(myFileName.toStdString(), &DEM, error))
+    if (! gis::openRaster(myFileName.toStdString(), &DEM, gisSettings.utmZone, error))
     {
-        this->logError("Wrong Digital Elevation Model file.\n" + QString::fromStdString(error));
+        closeLogInfo();
+        logError("Wrong Digital Elevation Model:\n" + QString::fromStdString(error));
         errorType = ERROR_DEM;
         return false;
     }
@@ -1973,7 +1982,7 @@ void Project::passInterpolatedTemperatureToHumidityPoints(Crit3DTime myTime, Cri
 
         if (! isEqual(airRelHum, NODATA) && isEqual(airT, NODATA))
         {
-            gis::getRowColFromXY(*(hourlyMeteoMaps->mapHourlyTair), meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, &row, &col);
+            hourlyMeteoMaps->mapHourlyTair->getRowCol(meteoPoints[i].point.utm.x, meteoPoints[i].point.utm.y, row, col);
             if (! gis::isOutOfGridRowCol(row, col, *(hourlyMeteoMaps->mapHourlyTair)))
             {
                 meteoPoints[i].setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(),
@@ -2001,7 +2010,7 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
             double z = outputPoints[i].z;
 
             int row, col;
-            gis::getRowColFromXY(*outputGrid, x, y, &row, &col);
+            outputGrid->getRowCol(x, y, row, col);
             if (! gis::isOutOfGridRowCol(row, col, *outputGrid))
             {
                 if (getUseDetrendingVar(myVar)) getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
@@ -2151,7 +2160,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
 
     radSettings.setGisSettings(&gisSettings);
 
-    gis::Crit3DPoint mapCenter = DEM.mapCenter();
+    gis::Crit3DPoint mapCenter = DEM.getCenter();
 
     int intervalWidth = radiation::estimateTransmissivityWindow(&radSettings, DEM, mapCenter, myTime, int(HOUR_SECONDS));
 
@@ -3489,8 +3498,8 @@ bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
 
         if (!meteoGridDbHandler->gridStructure().isUTM())
         {
-            // lat lon grid
-            gis::Crit3DGridHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
+            // lat/lon grid
+            gis::Crit3DLatLonHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
             gis::getGeoExtentsFromLatLonHeader(gisSettings, cellSize, myGrid->header, &latlonHeader);
             if (!myGrid->initializeGrid(NODATA))
             {
@@ -3498,20 +3507,17 @@ bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
                 delete myGrid;
                 return false;
             }
-            double utmx;
-            double utmy;
-            double lat;
-            double lon;
-            int dataGridRow;
-            int dataGridCol;
+
+            double utmx, utmy, lat, lon;
+            int dataGridRow, dataGridCol;
             float myValue;
 
             for (int row = 0; row < myGrid->header->nrRows; row++)
             {
                 for (int col = 0; col < myGrid->header->nrCols; col++)
                 {
-                    myGrid->getXY(row,col,&utmx,&utmy);
-                    gis::getLatLonFromUtm(gisSettings,utmx,utmy,&lat,&lon);
+                    myGrid->getXY(row, col, utmx, utmy);
+                    gis::getLatLonFromUtm(gisSettings, utmx, utmy, &lat, &lon);
                     gis::getGridRowColFromXY (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
                     if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
                     {
@@ -3557,7 +3563,7 @@ int Project::computeCellSizeFromMeteoGrid()
     }
 
     // lat lon grid
-    gis::Crit3DGridHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
+    gis::Crit3DLatLonHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
     int cellSize = gis::getGeoCellSizeFromLatLonHeader(gisSettings, &latlonHeader);
 
     cellSize /= 10;

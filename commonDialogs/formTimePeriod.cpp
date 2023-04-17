@@ -18,11 +18,6 @@ FormTimePeriod::FormTimePeriod(QDateTime *timeIni, QDateTime *timeFin, QWidget *
     ui->dateTimeEditLast->setDateTime(*dateTimeLast);
 }
 
-FormTimePeriod::~FormTimePeriod()
-{
-    delete ui;
-}
-
 
 void FormTimePeriod::setMinimumDate(QDate myDate)
 {

@@ -78,7 +78,7 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
         case stdDev:
             return statistics::standardDeviation(values, nValues);
         case timeIntegration:
-            return TimeIntegration(values, param);
+            return timeIntegrationFunction(values, param);
         case yearMax:
         {
             float maxValue = statistics::maxList(values, nValues);

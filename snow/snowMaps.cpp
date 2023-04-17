@@ -77,7 +77,7 @@ void Crit3DSnowMaps::clear()
 }
 
 
-void Crit3DSnowMaps::initialize(const gis::Crit3DRasterGrid& dtm, double snowSkinThickness)
+void Crit3DSnowMaps::initialize(const gis::Crit3DRasterGrid &dtm, double snowSkinThickness)
 {
     _snowFallMap->initializeGrid(dtm);
     _snowMeltMap->initializeGrid(dtm);

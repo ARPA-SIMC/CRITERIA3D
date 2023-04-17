@@ -438,7 +438,7 @@ double Vine3D_Grapevine::acclimationFunction2(double preFactor, double expFactor
 void Vine3D_Grapevine::weatherVariables()
 {
     // taken from Hydrall Model, Magnani UNIBO
-    myAirVapourPressure = SaturationVaporPressure(myInstantTemp)*myRelativeHumidity/100.;
+    myAirVapourPressure = saturationVaporPressure(myInstantTemp)*myRelativeHumidity/100.;
     myEmissivitySky = 1.24 * pow((myAirVapourPressure/100.0) / (myInstantTemp+ZEROCELSIUS),(1.0/7.0))*(1 - 0.84*myCloudiness)+ 0.84*myCloudiness;
     myLongWaveIrradiance = pow(myInstantTemp+ZEROCELSIUS,4) * myEmissivitySky * STEFAN_BOLTZMANN ;
     mySlopeSatVapPressureVSTemp = 2588464.2 / pow(240.97 + myInstantTemp, 2) * exp(17.502 * myInstantTemp / (240.97 + myInstantTemp)) ;

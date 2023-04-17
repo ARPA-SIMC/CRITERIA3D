@@ -26,7 +26,7 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
            if (refIndex != NODATA && refIndex < signed(nrRefShapes))
            {
                double x, y;
-               rasterRef.getXY(row, col, &x, &y);
+               rasterRef.getXY(row, col, x, y);
                if (! gis::isOutOfGridXY(x, y, rasterVal.header))
                {
                     int rowVal, colVal;

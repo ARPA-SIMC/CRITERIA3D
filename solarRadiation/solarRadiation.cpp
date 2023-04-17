@@ -548,7 +548,7 @@ namespace radiation
             y = y0 + sunMaskStepY * stepCount;
             z = z0 + sunMaskStepZ * stepCount;
 
-            gis::getRowColFromXY(dem, x, y, &row, &col);
+            dem.getRowCol(x, y, row, col);
             if (gis::isOutOfGridRowCol(row, col, dem))
             {
                 // not shadowed - exit
@@ -747,7 +747,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
             radPoint.height = double(gis::getValueFromXY(dem, radPoint.x, radPoint.y));
         }
 
-        gis::getRowColFromXY(dem, radPoint.x, radPoint.y, &row, &col);
+        dem.getRowCol(radPoint.x, radPoint.y, row, col);
         radPoint.aspect = 0;
         radPoint.slope = 0;
 
@@ -917,7 +917,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
             {
                 if(isGridPointComputable(radSettings, row, col, dem, radiationMaps))
                 {
-                    gis::getUtmXYFromRowCol(dem, row, col, &(radPoint.x), &(radPoint.y));
+                    dem.getXY(row, col, radPoint.x, radPoint.y);
                     radPoint.height = dem.value[row][col];
 
                     if (! computeRadiationRSunGridPoint(radSettings, dem, radiationMaps, radPoint, row, col, myTime))
@@ -1123,7 +1123,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
                 radPoint.x = outputPoints[i].utm.x;
                 radPoint.y = outputPoints[i].utm.y;
                 radPoint.height = outputPoints[i].z;
-                gis::getRowColFromXY(dem, radPoint.x, radPoint.y, &row, &col);
+                dem.getRowCol(radPoint.x, radPoint.y, row, col);
 
                 if(isGridPointComputable(radSettings, row, col, dem, radiationMaps))
                 {

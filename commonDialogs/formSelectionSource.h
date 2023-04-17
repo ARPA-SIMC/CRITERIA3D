@@ -9,12 +9,14 @@
 
     public:
         FormSelectionSource();
-        void done(int res);
+
         int getSourceSelectionId();
 
     private:
         QRadioButton* pointButton;
         QRadioButton* gridButton;
+
+        void done(int res);
     };
 
 #endif // FORMSELECTIONSOURCE_H

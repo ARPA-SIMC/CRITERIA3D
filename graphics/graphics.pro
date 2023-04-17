@@ -37,6 +37,7 @@ INCLUDEPATH += ../crit3dDate ../mathFunctions ../gis ../meteo \
 SOURCES += \
     colorLegend.cpp \
     mapGraphicsRasterObject.cpp \
+    mapGraphicsRasterUtm.cpp \
     mapGraphicsShapeObject.cpp \
     rubberBand.cpp \
     squareMarker.cpp \
@@ -46,6 +47,7 @@ SOURCES += \
 HEADERS += \
     colorLegend.h \
     mapGraphicsRasterObject.h \
+    mapGraphicsRasterUtm.h \
     mapGraphicsShapeObject.h \
     rubberBand.h \
     squareMarker.h \

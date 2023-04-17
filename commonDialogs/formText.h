@@ -13,8 +13,6 @@
     public:
         FormText(QString title);
 
-        void done(int res) override;
-
         QString getText() const;
     };
 

@@ -1,7 +1,6 @@
 #ifndef MAPGRAPHICSSHAPEOBJECT_H
 #define MAPGRAPHICSSHAPEOBJECT_H
 
-    #include "MapGraphics_global.h"
     #include "MapGraphicsObject.h"
     #include "MapGraphicsView.h"
 

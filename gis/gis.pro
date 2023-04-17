@@ -37,6 +37,3 @@ HEADERS += gis.h \
     color.h \
     gisIO.h \
     geoMap.h
-
-
-#test
