@@ -35,7 +35,7 @@ void CriteriaOutputProject::initialize()
     operation = "";
     dbComputationUnitsName = "";
     dbDataName = "";
-    dbDataHistoricalName = "";
+    dbHistoricalDataName = "";
     dbCropName = "";
     variableListFileName = "";
     ucmFileName = "";
@@ -60,7 +60,7 @@ void CriteriaOutputProject::initialize()
     dbComputationUnitsName = "";
     dbDataName = "";
     dbCropName = "";
-    dbDataHistoricalName = "";
+    dbHistoricalDataName = "";
 
     projectError = "";
     nrUnits = 0;
@@ -83,7 +83,7 @@ void CriteriaOutputProject::closeProject()
         logFile.close();
         dbData.close();
         dbCrop.close();
-        dbDataHistorical.close();
+        dbHistoricalData.close();
 
         isProjectLoaded = false;
     }
@@ -93,22 +93,26 @@ void CriteriaOutputProject::closeProject()
 int CriteriaOutputProject::initializeProjectDtx()
 {
     // open DB Data Historical
-    if(!dbDataHistoricalName.isEmpty())
+    if(dbHistoricalDataName.isEmpty())
     {
-        logger.writeInfo("DB data historical: " + dbDataHistoricalName);
-        if (! QFile(dbDataHistoricalName).exists())
-        {
-            projectError = "DB data historical doesn't exist";
-            return ERROR_DBPARAMETERS;
-        }
+        projectError = "Missing historical data parameter in the ini file ('db_historical_data')";
+        return ERROR_DBPARAMETERS;
+    }
 
-        dbDataHistorical = QSqlDatabase::addDatabase("QSQLITE", "dataHistorical");
-        dbDataHistorical.setDatabaseName(dbDataHistoricalName);
-        if (! dbDataHistorical.open())
-        {
-            projectError = "Open DB data historical failed: " + dbDataHistorical.lastError().text();
-            return ERROR_DBPARAMETERS;
-        }
+    logger.writeInfo("DB historical data: " + dbHistoricalDataName);
+
+    if (! QFile(dbHistoricalDataName).exists())
+    {
+        projectError = "DB historical data doesn't exist";
+        return ERROR_DBPARAMETERS;
+    }
+
+    dbHistoricalData = QSqlDatabase::addDatabase("QSQLITE", "historicalData");
+    dbHistoricalData.setDatabaseName(dbHistoricalDataName);
+    if (! dbHistoricalData.open())
+    {
+        projectError = "Open DB historical data failed: " + dbHistoricalData.lastError().text();
+        return ERROR_DBPARAMETERS;
     }
 
     return CRIT1D_OK;
@@ -150,20 +154,20 @@ int CriteriaOutputProject::initializeProjectCsv()
     }
 
     // open DB Data Historical
-    if(!dbDataHistoricalName.isEmpty())
+    if(!dbHistoricalDataName.isEmpty())
     {
-        logger.writeInfo("DB data historical: " + dbDataHistoricalName);
-        if (!QFile(dbDataHistoricalName).exists())
+        logger.writeInfo("DB data historical: " + dbHistoricalDataName);
+        if (!QFile(dbHistoricalDataName).exists())
         {
             projectError = "DB data historical doesn't exist";
             return ERROR_DBPARAMETERS;
         }
 
-        dbDataHistorical = QSqlDatabase::addDatabase("QSQLITE", "dataHistorical");
-        dbDataHistorical.setDatabaseName(dbDataHistoricalName);
-        if (! dbDataHistorical.open())
+        dbHistoricalData = QSqlDatabase::addDatabase("QSQLITE", "dataHistorical");
+        dbHistoricalData.setDatabaseName(dbHistoricalDataName);
+        if (! dbHistoricalData.open())
         {
-            projectError = "Open DB data historical failed: " + dbDataHistorical.lastError().text();
+            projectError = "Open DB data historical failed: " + dbHistoricalData.lastError().text();
             return ERROR_DBPARAMETERS;
         }
     }
@@ -263,10 +267,10 @@ bool CriteriaOutputProject::readSettings()
         dbCropName = path + QDir::cleanPath(dbCropName);
     }
 
-    dbDataHistoricalName = projectSettings->value("db_data_historical","").toString();
-    if (dbDataHistoricalName.left(1) == ".")
+    dbHistoricalDataName = projectSettings->value("db_data_historical","").toString();
+    if (dbHistoricalDataName.left(1) == ".")
     {
-        dbDataHistoricalName = path + QDir::cleanPath(dbDataHistoricalName);
+        dbHistoricalDataName = path + QDir::cleanPath(dbHistoricalDataName);
     }
 
     addDateTimeLogFile = projectSettings->value("add_date_to_log","").toBool();
@@ -400,6 +404,8 @@ int CriteriaOutputProject::precomputeDtx()
     }
     logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
 
+
+
     logger.writeInfo("Compute dtx...");
 
     QString idCase;
@@ -408,7 +414,7 @@ int CriteriaOutputProject::precomputeDtx()
         idCase = compUnitList[i].idCase;
         logger.writeInfo(QString::number(i) + " ID CASE: " + idCase);
 
-        int myResult = computeAllDtxUnit(dbDataHistorical, idCase, projectError);
+        int myResult = computeAllDtxUnit(dbHistoricalData, idCase, projectError);
         if (myResult != CRIT1D_OK)
         {
             projectError = "ID CASE: " + idCase + "\n" + projectError;
@@ -453,7 +459,7 @@ int CriteriaOutputProject::createCsvFile()
         idCase = compUnitList[i].idCase;
         idCropClass = compUnitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, outputCsvFileName, projectError);
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbHistoricalData, dateComputation, outputVariable, outputCsvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
             if (QFile(outputCsvFileName).exists())
@@ -1177,7 +1183,7 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
         idCase = compUnitList[i].idCase;
         idCropClass = compUnitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbDataHistorical, dateComputation, outputVariable, csvFileName, projectError);
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbHistoricalData, dateComputation, outputVariable, csvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
             if (QFile(csvFileName).exists())

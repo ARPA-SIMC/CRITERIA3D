@@ -288,7 +288,7 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
 }
 
 
-int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData, QSqlDatabase& dbCrop, QSqlDatabase& dbDataHistorical,
+int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData, QSqlDatabase& dbCrop, QSqlDatabase& dbHistoricalData,
                        QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString &error)
 {
     // IRRI RATIO (parameter for elaboration on IRRIGATION variable)
@@ -455,7 +455,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                     // find historical period available
                     QDate historicalFirstDate;
                     QDate historicalLastDate;
-                    QSqlQuery qry(dbDataHistorical);
+                    QSqlQuery qry(dbHistoricalData);
                     statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
                     if( !qry.exec(statement) )
                     {
@@ -497,7 +497,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                             lastDate.setDate(year,lastDate.month(),lastDate.day());
                             int selectRes;
 
-                            selectRes = selectSimpleVar(dbDataHistorical, idCase, varName, computation, firstDate, lastDate, irriRatio, resVector, error);
+                            selectRes = selectSimpleVar(dbHistoricalData, idCase, varName, computation, firstDate, lastDate, irriRatio, resVector, error);
                             if (selectRes == ERROR_DB_INCOMPLETE_DATA)
                             {
                                 // only first year can be incomplete, otherwise the comparison is not valid and can be terminated

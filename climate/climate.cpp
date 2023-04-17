@@ -822,7 +822,7 @@ float loadDailyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler *meteoPoin
 
     if ( dailyValues.empty() )
     {
-        qDebug() << "myError: " << *myError;
+        //qDebug() << "myError: " << *myError;
         return 0;
     }
     else
@@ -2226,6 +2226,7 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
         }
         case dailyBIC:
         {
+
             if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyReferenceEvapotranspirationHS, startDate, endDate) > 0)
             {
                 preElaboration = true;

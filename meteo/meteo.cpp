@@ -176,7 +176,7 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTi
     int myHour = myTime.getNearestHour();
 
     // TODO improve!
-    if (myDate == getNullDate() || myHour == NODATA)
+    if (myDate.isNullDate() || myHour == NODATA)
         return -0.006f;
 
     unsigned int indexMonth = unsigned(myDate.month - 1);

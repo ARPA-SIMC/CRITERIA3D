@@ -43,6 +43,8 @@
         friend Crit3DDate& operator -- (Crit3DDate& myFirstDate);
 
         void setDate(int myDay, int myMonth, int myYear);
+        bool isNullDate();
+        void setNullDate();
         Crit3DDate addDays(long offset) const;
         int daysTo(const Crit3DDate& myDate) const;
         std::string toStdString();
@@ -70,6 +72,9 @@
 
         Crit3DTime addSeconds(long mySeconds) const;
         bool isEqual(const Crit3DTime&) const;
+        bool isNullTime();
+
+        void setNullTime();
 
         int getHour() const;
         int getNearestHour() const;
@@ -79,12 +84,6 @@
         std::string toISOString();
         std::string toString();
     };
-
-
-    Crit3DTime getNullTime();
-    Crit3DDate getNullDate();
-    bool isNullDate(Crit3DDate);
-    bool isNullTime(const Crit3DTime& myTime);
 
     bool isLeapYear(int year);
     int getDaysInMonth(int month, int year);
