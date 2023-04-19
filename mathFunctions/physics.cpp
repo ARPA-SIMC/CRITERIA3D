@@ -199,7 +199,7 @@ double aerodynamicConductance(double heightTemperature,
                               double windSpeed)
 {
     double K = NODATA;				    // (m s-1) aerodynamic conductance
-    double psiM, psiH;					// () stability correction factors for momentum and for heat
+    double psiM, psiH;					// () diabatic correction factors for momentum and for heat
     double uStar;						// (m s-1) friction velocity
     double zeroPlane;					// (m) zero place displacement
     double roughnessMomentum;           // () surface roughness parameter for momentum
@@ -226,7 +226,7 @@ double aerodynamicConductance(double heightTemperature,
         Sp = -VON_KARMAN_CONST * heightWind * GRAVITY * H / (Ch * airTemperature * (pow(uStar, 3)));
         if (Sp > 0)
         {// stability
-            psiH = 4.7 * Sp;
+            psiH = 6 * log(1 + Sp);
             psiM = psiH;
         }
         else
