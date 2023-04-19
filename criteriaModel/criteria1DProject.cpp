@@ -934,8 +934,8 @@ int Crit1DProject::computeAllUnits()
         }
     }
 
-    logger.writeInfo("COMPUTE...");
     int infoStep = std::max(1, int(compUnitList.size() / 20));
+    logger.writeInfo("COMPUTE...");
 
     try
     {

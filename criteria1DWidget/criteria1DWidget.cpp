@@ -574,18 +574,15 @@ void Criteria1DWidget::on_actionOpenProject()
 
     this->cropListComboBox.blockSignals(true);
     this->soilListComboBox.blockSignals(true);
-
-    openCropDB(myProject.dbCropName);
-    openSoilDB(myProject.dbSoilName);
-
-    this->cropListComboBox.blockSignals(false);
-    this->soilListComboBox.blockSignals(false);
-
     this->firstYearListComboBox.blockSignals(true);
     this->lastYearListComboBox.blockSignals(true);
 
+    openCropDB(myProject.dbCropName);
+    openSoilDB(myProject.dbSoilName);
     openMeteoDB(myProject.dbMeteoName);
 
+    this->cropListComboBox.blockSignals(false);
+    this->soilListComboBox.blockSignals(false);
     this->firstYearListComboBox.blockSignals(false);
     this->lastYearListComboBox.blockSignals(false);
 

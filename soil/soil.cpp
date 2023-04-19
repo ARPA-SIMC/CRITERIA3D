@@ -33,6 +33,7 @@
 
 #include "soil.h"
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "furtherMathFunctions.h"
 
 
@@ -1080,10 +1081,10 @@ namespace soil
 
         // layer > 0: soil
         unsigned int i = 1;
-        double upperDepth = 0.0;
-        double currentThikness = layerThicknessMin;
+        double upperDepth = 0.0;                        // [m]
+        double currentThikness = layerThicknessMin;     // [m]
 
-        while (upperDepth < totalDepth)
+        while ((totalDepth - upperDepth) >= 0.001)
         {
             Crit3DLayer newLayer;
             newLayer.thickness = round(currentThikness*100) / 100;
@@ -1118,6 +1119,12 @@ namespace soil
             currentThikness *= geometricFactor;
             i++;
         }
+
+        if (! isEqual(upperDepth,totalDepth))
+        {
+            totalDepth = upperDepth;
+        }
+
         return true;
     }
 
