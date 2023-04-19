@@ -78,11 +78,11 @@ public:
     QString dbComputationUnitsName;
     QString dbDataName;
     QString dbCropName;
-    QString dbDataHistoricalName;
+    QString dbHistoricalDataName;
 
     QSqlDatabase dbCrop;
     QSqlDatabase dbData;
-    QSqlDatabase dbDataHistorical;
+    QSqlDatabase dbHistoricalData;
 
     int nrUnits;
     std::vector<Crit1DCompUnit> compUnitList;

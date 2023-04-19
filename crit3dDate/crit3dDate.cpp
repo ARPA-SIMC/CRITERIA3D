@@ -233,16 +233,16 @@ Crit3DDate getDateFromDoy(int year, int doy)
     return Crit3DDate(doy-(doyMonth[month-1]+leap), month, year);
 }
 
-
-Crit3DDate getNullDate()
+void Crit3DDate::setNullDate()
 {
-    Crit3DDate* myDate = new Crit3DDate();
-    return *myDate;
+    day = 0;
+    month = 0;
+    year = 0;
 }
 
-bool isNullDate(Crit3DDate myDate)
+bool Crit3DDate::isNullDate()
 {
-    return (myDate.day == 0 && myDate.month == 0 && myDate.year == 0);
+    return (day == 0 && month == 0 && year == 0);
 }
 
 

@@ -220,8 +220,8 @@ double aerodynamicConductance(double heightTemperature,
 
     for (short i = 1; i <= 3; i++)
     {
-        uStar = VON_KARMAN_CONST * windSpeed / (log((heightWind - zeroPlane) / roughnessMomentum) + psiM);
-        K = VON_KARMAN_CONST * uStar / (log((heightTemperature - zeroPlane) / roughnessHeat) + psiH);
+        uStar = VON_KARMAN_CONST * windSpeed / (log((heightWind - zeroPlane + roughnessMomentum) / roughnessMomentum) + psiM);
+        K = VON_KARMAN_CONST * uStar / (log((heightTemperature - zeroPlane + roughnessHeat) / roughnessHeat) + psiH);
         H = K * Ch * (soilSurfaceTemperature - airTemperature);
         Sp = -VON_KARMAN_CONST * heightWind * GRAVITY * H / (Ch * airTemperature * (pow(uStar, 3)));
         if (Sp > 0)

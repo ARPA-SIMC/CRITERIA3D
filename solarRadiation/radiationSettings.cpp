@@ -33,6 +33,11 @@ Crit3DRadiationSettings::Crit3DRadiationSettings()
     initialize();
 }
 
+Crit3DRadiationSettings::~Crit3DRadiationSettings()
+{
+    delete gisSettings;
+}
+
 void Crit3DRadiationSettings::initialize()
 {
     gisSettings = new gis::Crit3DGisSettings();

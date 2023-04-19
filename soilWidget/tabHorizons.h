@@ -18,7 +18,7 @@
 
     public:
         TabHorizons();
-        void insertSoilHorizons(soil::Crit3DSoil* mySoil, soil::Crit3DTextureClass *textureClassList,
+        void insertSoilHorizons(soil::Crit3DSoil* mySoil, std::vector<soil::Crit3DTextureClass> *textureClassList,
                                 soil::Crit3DFittingOptions *fittingOptions);
         void updateTableModel(soil::Crit3DSoil *soil);
         bool checkDepths();
@@ -49,7 +49,7 @@
         QPushButton* addRow;
         QPushButton* deleteRow;
         soil::Crit3DSoil* mySoil;
-        soil::Crit3DTextureClass* myTextureClassList;
+        std::vector<soil::Crit3DTextureClass>* myTextureClassList;
         soil::Crit3DFittingOptions* myFittingOptions;
         bool insertSoilElement;
     private slots:

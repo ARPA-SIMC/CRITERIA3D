@@ -243,7 +243,7 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
         else
         {
             // boundary total potential = depth of the last layer + boundaryZ + field capacity
-            double fieldCapacity = -soil::getFieldCapacity(soilLayers[lastLayer].horizon, soil::METER);     // [m]
+            double fieldCapacity = -soil::getFieldCapacity(*(soilLayers[lastLayer].horizonPtr), soil::METER);     // [m]
             double waterPotential = soilLayers[lastLayer].getWaterPotential() / GRAVITY;                    // [m]
             totalPotential = soilLayers[lastLayer].depth + boundaryZ;                                       // [m]
             totalPotential += MINVALUE(fieldCapacity, waterPotential);

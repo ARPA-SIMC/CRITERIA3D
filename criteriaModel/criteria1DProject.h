@@ -48,7 +48,7 @@
         Crit1DCarbonNitrogenProfile myCarbonNitrogenProfile;
 
         // soil
-        soil::Crit3DTextureClass soilTexture[13];
+        std::vector<soil::Crit3DTextureClass> soilTexture;
 
         std::vector<Crit1DCompUnit> compUnitList;
 
@@ -108,7 +108,7 @@
         int openAllDatabase();
         void checkSimulationDates();
 
-        bool setSoil(QString soilCode, QString &myError);
+        bool setSoil(QString soilCode, QString &errorStr);
 
         bool setMeteoSqlite(QString idMeteo, QString idForecast);
         bool setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr);
