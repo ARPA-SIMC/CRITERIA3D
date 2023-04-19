@@ -70,7 +70,7 @@ double convertToGramsPerLiter(double myQuantity, soil::Crit3DLayer &soilLayer)
 double convertToGramsPerKg(double myQuantity, soil::Crit3DLayer &soilLayer)
 {
     // convert [g m-2] -> [g m-3] -> [g kg-1]
-    return (convertToGramsPerM3(myQuantity, soilLayer) / 1000) / soilLayer.horizon->bulkDensity;
+    return (convertToGramsPerM3(myQuantity, soilLayer) / 1000) / soilLayer.horizonPtr->bulkDensity;
 }
 
 

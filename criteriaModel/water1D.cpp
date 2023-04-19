@@ -101,11 +101,11 @@ double computeInfiltration(std::vector<soil::Crit3DLayer> &soilLayers, double in
     // Maximum infiltration - due to gravitational force and permeability (Driessen 1986, eq.34)
     for (i = 1; i < nrLayers; i++)
     {
-        soilLayers[i].maxInfiltration = 10 * soilLayers[i].horizon->Driessen.gravConductivity;
+        soilLayers[i].maxInfiltration = 10 * soilLayers[i].horizonPtr->Driessen.gravConductivity;
 
         if (soilLayers[i].depth < ploughedSoilDepth)
         {
-            soilLayers[i].maxInfiltration += 10 * (1 - avgPloughSatDegree) * soilLayers[i].horizon->Driessen.maxSorptivity;
+            soilLayers[i].maxInfiltration += 10 * (1 - avgPloughSatDegree) * soilLayers[i].horizonPtr->Driessen.maxSorptivity;
         }
     }
 
@@ -307,7 +307,7 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
     }
 
     // air entry point of boundary layer
-    he_boundary = soilLayers[boundaryLayer].horizon->vanGenuchten.he;       // [kPa]
+    he_boundary = soilLayers[boundaryLayer].horizonPtr->vanGenuchten.he;       // [kPa]
 
     // above watertable: assign water content threshold for vertical drainage
     for (unsigned int i = 1; i <= boundaryLayer; i++)
@@ -315,7 +315,7 @@ double computeCapillaryRise(std::vector<soil::Crit3DLayer> &soilLayers, double w
         dz = (waterTableDepth - soilLayers[i].depth);                       // [m]
         psi = soil::metersTokPa(dz) + he_boundary;                          // [kPa]
 
-        soilLayers[i].critical = soil::getWaterContentFromPsi(psi, &(soilLayers[i]));
+        soilLayers[i].critical = soil::getWaterContentFromPsi(psi, soilLayers[i]);
 
         if (soilLayers[i].critical < soilLayers[i].FC)
         {
@@ -486,7 +486,7 @@ double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
 
             hydrHead = satFactor * (drainDepth - soilLayers[i].depth);                      // [m]
 
-            maxDrainage =  10 * soilLayers[i].horizon->Driessen.k0 * hydrHead /
+            maxDrainage =  10 * soilLayers[i].horizonPtr->Driessen.k0 * hydrHead /
                     (hydrHead + (fieldWidth / PI) * log(fieldWidth / (PI * drainRadius)));      // [mm]
 
             layerDrainage = MINVALUE(waterSurplus, maxDrainage);                                // [mm]
@@ -576,7 +576,7 @@ double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil
     double sumRAW = 0.0;
     for (unsigned int i = unsigned(myCrop.roots.firstRootLayer); i <= unsigned(myCrop.roots.lastRootLayer); i++)
     {
-        double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCrop.psiLeaf), soilLayers[i].horizon);
+        double thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(myCrop.psiLeaf), *(soilLayers[i].horizonPtr));
         // [mm]
         double cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
         // [mm]

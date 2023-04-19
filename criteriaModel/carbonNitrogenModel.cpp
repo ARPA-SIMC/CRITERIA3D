@@ -109,7 +109,8 @@ void Crit1DCarbonNitrogenProfile::humus_Initialize(Crit1DCase &myCase)
     {
         if (l!= 0)
         {
-            myCase.carbonNitrogenLayers[l].C_humus = myCase.soilLayers[l].horizon->bulkDensity * 1000000 * (myCase.soilLayers[l].horizon->organicMatter / 100) * 0.58 * myCase.soilLayers[l].thickness; // tolto il 100 perche gia in metri
+            myCase.carbonNitrogenLayers[l].C_humus = myCase.soilLayers[l].horizonPtr->bulkDensity * 1000000
+                                                     * (myCase.soilLayers[l].horizonPtr->organicMatter / 100) * 0.58 * myCase.soilLayers[l].thickness; // tolto il 100 perche gia in metri
             myCase.carbonNitrogenLayers[l].N_humus = myCase.carbonNitrogenLayers[l].C_humus / carbonNitrogenParameter.ratioHumusCN;
         }
         else
@@ -148,12 +149,12 @@ void Crit1DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
     {
         myTheta = myCase.soilLayers[l].waterContent / (myCase.soilLayers[l].thickness * 1000);
         N_NH4_g_dm3 = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_NH4, myCase.soilLayers[l]) / 1000;
-        N_NH4_sol_g_l = N_NH4_g_dm3 / (carbonNitrogenParameter.Kd_NH4 * myCase.soilLayers[l].horizon->bulkDensity + myTheta);
+        N_NH4_sol_g_l = N_NH4_g_dm3 / (carbonNitrogenParameter.Kd_NH4 * myCase.soilLayers[l].horizonPtr->bulkDensity + myTheta);
 
         myCase.carbonNitrogenLayers[l].N_NH4_Sol = N_NH4_sol_g_l * myCase.soilLayers[l].thickness * myTheta * 1000;
 
         N_NH4_ads_g_kg = carbonNitrogenParameter.Kd_NH4 * N_NH4_sol_g_l;
-        N_NH4_ads_g_m3 = N_NH4_ads_g_kg * myCase.soilLayers[l].horizon->bulkDensity * 1000;
+        N_NH4_ads_g_m3 = N_NH4_ads_g_kg * myCase.soilLayers[l].horizonPtr->bulkDensity * 1000;
         myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed = N_NH4_ads_g_m3 * myCase.soilLayers[l].thickness;
         nitrogenTotalProfile.NH4_adsorbedGG += myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed;
     }

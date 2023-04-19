@@ -51,7 +51,7 @@
 Crit3DSoilWidget::Crit3DSoilWidget()
 {
     dbSoilType = DB_SQLITE;
-    fittingOptions = new soil::Crit3DFittingOptions();
+    textureClassList.resize(13);
 
     this->setWindowTitle(QStringLiteral("CRITERIA - Soil Editor"));
     this->resize(1240, 700);
@@ -265,34 +265,34 @@ Crit3DSoilWidget::Crit3DSoilWidget()
 
 void Crit3DSoilWidget::setFittingMenu()
 {
-    bool isFittingActive = fittingOptions->useWaterRetentionData;
+    bool isFittingActive = fittingOptions.useWaterRetentionData;
 
     useWaterRetentionData->setChecked(isFittingActive);
     airEntryFixed->setEnabled(isFittingActive);
     parameterRestriction->setEnabled(isFittingActive);
 
-    airEntryFixed->setChecked(fittingOptions->airEntryFixed);
-    parameterRestriction->setChecked(fittingOptions->mRestriction);
+    airEntryFixed->setChecked(fittingOptions.airEntryFixed);
+    parameterRestriction->setChecked(fittingOptions.mRestriction);
 }
 
 
 void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
 {
     dbSoil = dbOpened;
-    QString error;
+    QString errorStr;
 
     // load default VG parameters
-    if (! loadVanGenuchtenParameters(&dbSoil, textureClassList, &error))
+    if (! loadVanGenuchtenParameters(dbSoil, textureClassList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error", "loadVanGenuchtenParameters: " + error);
+        QMessageBox::critical(nullptr, "Error", "loadVanGenuchtenParameters: " + errorStr);
         return;
     }
 
     // read soil list
     QList<QString> soilStringList;
-    if (! getSoilList(&dbSoil, &soilStringList, &error))
+    if (! getSoilList(dbSoil, soilStringList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error", "getSoilList: " + error);
+        QMessageBox::critical(nullptr, "Error", "getSoilList: " + errorStr);
         return;
     }
 
@@ -314,25 +314,25 @@ void Crit3DSoilWidget::on_actionOpenSoilDB()
     if (dbSoilName == "") return;
 
     // open soil db
-    QString error;
-    if (! openDbSoil(dbSoilName, &dbSoil, &error))
+    QString errorStr;
+    if (! openDbSoil(dbSoilName, dbSoil, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
     }
 
     // load default VG parameters
-    if (! loadVanGenuchtenParameters(&dbSoil, textureClassList, &error))
+    if (! loadVanGenuchtenParameters(dbSoil, textureClassList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
     }
 
     // read soil list
     QList<QString> soilStringList;
-    if (! getSoilList(&dbSoil, &soilStringList, &error))
+    if (! getSoilList(dbSoil, soilStringList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
     }
 
@@ -381,7 +381,7 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
     copyParamFromDbTable->setEnabled(true);
     copyEstimatedParamTable->setEnabled(true);
 
-    QString error;
+    QString errorStr;
     // somethig has been modified, ask for saving
     if (changed)
     {
@@ -392,9 +392,9 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
 
         if (confirm == QMessageBox::Yes)
         {
-            if (!updateSoilData(&dbSoil, soilCodeChanged, &mySoil, &error))
+            if (!updateSoilData(dbSoil, soilCodeChanged, mySoil, errorStr))
             {
-                QMessageBox::critical(nullptr, "Error!", error);
+                QMessageBox::critical(nullptr, "Error!", errorStr);
                 return;
             }
 
@@ -403,14 +403,12 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
             for (int i = 0; i < horizonChanged.size(); i++)
             {
 
-                if (!updateWaterRetentionData(&dbSoil, soilCodeChanged, &mySoil, horizonChanged[i] + 1, &error))
+                if (!updateWaterRetentionData(dbSoil, soilCodeChanged, mySoil, horizonChanged[i] + 1, errorStr))
                 {
-                    QMessageBox::critical(nullptr, "Error!", error);
+                    QMessageBox::critical(nullptr, "Error!", errorStr);
                     return;
                 }
-
             }
-
         }
     }
     changed = false;
@@ -423,19 +421,19 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
 
     mySoil.cleanSoil();
 
-    if (! loadSoil(&dbSoil, soilCode, &mySoil, textureClassList, fittingOptions, &error))
+    if (! loadSoil(dbSoil, soilCode, mySoil, textureClassList, fittingOptions, errorStr))
     {
-        if (error.contains("Empty", Qt::CaseInsensitive))
+        if (errorStr.contains("Empty", Qt::CaseInsensitive))
         {
-            QMessageBox::information(nullptr, "Warning", error);
+            QMessageBox::information(nullptr, "Warning", errorStr);
         }
         else
         {
-            QMessageBox::critical(nullptr, "Error!", error);
+            QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
-
     }
+
     savedSoil = mySoil;
     cleanInfoGroup();
     restoreData->setEnabled(true);
@@ -479,7 +477,7 @@ void Crit3DSoilWidget::on_actionNewSoil()
         return;
     }
     DialogNewSoil dialog;
-    QString error;
+    QString errorStr;
     if (dialog.result() != QDialog::Accepted)
     {
         return;
@@ -490,14 +488,14 @@ void Crit3DSoilWidget::on_actionNewSoil()
         QString code = dialog.getCodeSoilValue();
         QString name = dialog.getNameSoilValue();
         QString info = dialog.getInfoSoilValue();
-        if (insertSoilData(&dbSoil, id, code, name, info, &error))
+        if (insertSoilData(dbSoil, id, code, name, info, errorStr))
         {
             this->soilListComboBox.addItem(code);
             soilListComboBox.setCurrentText(code);
         }
         else
         {
-            QMessageBox::critical(nullptr, "Error", error);
+            QMessageBox::critical(nullptr, "Error", errorStr);
         }
     }
 }
@@ -516,11 +514,11 @@ void Crit3DSoilWidget::on_actionDeleteSoil()
         QMessageBox::StandardButton confirm;
         msg = "Are you sure you want to delete "+soilListComboBox.currentText()+" ?";
         confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
-        QString error;
+        QString errorStr;
 
         if (confirm == QMessageBox::Yes)
         {
-            if (deleteSoilData(&dbSoil, soilListComboBox.currentText(), &error))
+            if (deleteSoilData(dbSoil, soilListComboBox.currentText(), errorStr))
             {
                 soilListComboBox.removeItem(soilListComboBox.currentIndex());
             }
@@ -545,7 +543,7 @@ void Crit3DSoilWidget::on_actionCopyEstimatedParamTable()
 
 void Crit3DSoilWidget::on_actionUseWaterRetentionData()
 {
-    fittingOptions->useWaterRetentionData = this->useWaterRetentionData->isChecked();
+    fittingOptions.useWaterRetentionData = this->useWaterRetentionData->isChecked();
     setFittingMenu();
 
     // nothing open
@@ -557,7 +555,7 @@ void Crit3DSoilWidget::on_actionUseWaterRetentionData()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, errorString);
+        soil::setHorizon(mySoil.horizon[i], textureClassList, fittingOptions, errorString);
     }
 
     updateAll();
@@ -566,7 +564,7 @@ void Crit3DSoilWidget::on_actionUseWaterRetentionData()
 
 void Crit3DSoilWidget::on_actionAirEntry()
 {
-    fittingOptions->airEntryFixed = this->airEntryFixed->isChecked();
+    fittingOptions.airEntryFixed = this->airEntryFixed->isChecked();
 
     // nothing open
     if (mySoil.code.empty())
@@ -577,7 +575,7 @@ void Crit3DSoilWidget::on_actionAirEntry()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, errorString);
+        soil::setHorizon(mySoil.horizon[i], textureClassList, fittingOptions, errorString);
     }
     updateAll();
 }
@@ -585,7 +583,7 @@ void Crit3DSoilWidget::on_actionAirEntry()
 
 void Crit3DSoilWidget::on_actionParameterRestriction()
 {
-    fittingOptions->mRestriction = this->parameterRestriction->isChecked();
+    fittingOptions.mRestriction = this->parameterRestriction->isChecked();
 
     // nothing open
     if (mySoil.code.empty())
@@ -595,7 +593,7 @@ void Crit3DSoilWidget::on_actionParameterRestriction()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(&(mySoil.horizon[i]), textureClassList, fittingOptions, errorString);
+        soil::setHorizon(mySoil.horizon[i], textureClassList, fittingOptions, errorString);
     }
     updateAll();
 }
@@ -603,7 +601,7 @@ void Crit3DSoilWidget::on_actionParameterRestriction()
 
 void Crit3DSoilWidget::on_actionSave()
 {
-    QString error;
+    QString errorStr;
     QString soilCodeChanged = QString::fromStdString(mySoil.code);
 
     QString msg = "Are you sure you want to save " + soilCodeChanged + " ?";
@@ -611,9 +609,9 @@ void Crit3DSoilWidget::on_actionSave()
     if (confirm == QMessageBox::No)
         return;
 
-    if (!updateSoilData(&dbSoil, soilCodeChanged, &mySoil, &error))
+    if (!updateSoilData(dbSoil, soilCodeChanged, mySoil, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error in update horizon table!", error);
+        QMessageBox::critical(nullptr, "Error in update horizon table!", errorStr);
         return;
     }
 
@@ -621,9 +619,9 @@ void Crit3DSoilWidget::on_actionSave()
     // update water_retention DB table
     for (int i = 0; i < horizonChanged.size(); i++)
     {
-        if (!updateWaterRetentionData(&dbSoil, soilCodeChanged, &mySoil, horizonChanged[i]+1, &error))
+        if (!updateWaterRetentionData(dbSoil, soilCodeChanged, mySoil, horizonChanged[i]+1, errorStr))
         {
-            QMessageBox::critical(nullptr, "Error in update water_retention table!", error);
+            QMessageBox::critical(nullptr, "Error in update water_retention table!", errorStr);
             return;
         }
     }
@@ -800,7 +798,7 @@ void Crit3DSoilWidget::tabChanged(int index)
         {
             if (mySoil.nrHorizons > 0)
             {
-                horizonsTab->insertSoilHorizons(&mySoil, textureClassList, fittingOptions);
+                horizonsTab->insertSoilHorizons(&mySoil, &textureClassList, &fittingOptions);
                 addHorizon->setEnabled(true);
                 deleteHorizon->setEnabled(true);
             }
@@ -818,7 +816,7 @@ void Crit3DSoilWidget::tabChanged(int index)
         {
             if (mySoil.nrHorizons > 0)
             {
-                wrDataTab->insertData(&mySoil, textureClassList, fittingOptions);
+                wrDataTab->insertData(&mySoil, &textureClassList, &fittingOptions);
                 addHorizon->setEnabled(false);
                 deleteHorizon->setEnabled(false);
             }
@@ -866,7 +864,7 @@ void Crit3DSoilWidget::updateAll()
     changed = true;
     horizonsTab->updateBarHorizon(&mySoil);
     horizonsTab->updateTableModel(&mySoil);
-    wrDataTab->insertData(&mySoil, textureClassList, fittingOptions);
+    wrDataTab->insertData(&mySoil, &textureClassList, &fittingOptions);
     wrCurveTab->insertElements(&mySoil);
     hydraConducCurveTab->insertElements(&mySoil);
 }
