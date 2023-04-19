@@ -305,28 +305,37 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
     }
 
     errorStr = "";
-    int wrongIndex = NODATA;
-    bool isOk = true;
+    bool isFirstError = true;
+    int firstWrongIndex = NODATA;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        std::string errorString;
-        if (! soil::setHorizon(mySoil.horizon[i], textureClassList, fittingOptions, errorString))
+        std::string currentError;
+        if (! soil::setHorizon(mySoil.horizon[i], textureClassList, fittingOptions, currentError))
         {
-            errorStr += "SOIL:" + QString::fromStdString(mySoil.code)
+            if (isFirstError)
+            {
+                firstWrongIndex = i;
+                isFirstError = false;
+            }
+            else
+            {
+                errorStr += "\n";
+            }
+
+            errorStr += "SOIL " + QString::fromStdString(mySoil.code)
                         + " horizon nr." + QString::number(mySoil.horizon[i].dbData.horizonNr)
-                        + " error: " + QString::fromStdString(errorString);
-            wrongIndex = i;
-            isOk = false;
+                        + " " + QString::fromStdString(currentError);
         }
     }
 
+    // error on the last horizon is tolerated (bedrock)
     unsigned int lastHorizonIndex = mySoil.nrHorizons -1;
-    if (! isOk)
+    if (firstWrongIndex != NODATA)
     {
-        if (wrongIndex == 0)
+        if (mySoil.nrHorizons == 1)
             return false;
         else
-            lastHorizonIndex = wrongIndex-1;
+            lastHorizonIndex = firstWrongIndex-1;
     }
 
     mySoil.totalDepth = mySoil.horizon[lastHorizonIndex].lowerDepth;

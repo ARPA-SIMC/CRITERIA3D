@@ -392,7 +392,7 @@ bool Crit1DProject::setSoil(QString soilCode, QString &errorStr)
     // warning: some soil data are wrong
     if (errorStr != "")
     {
-        logger.writeInfo("SOIL WARNING: " + errorStr);
+        //logger.writeInfo("WARNING: " + errorStr);
         errorStr = "";
     }
 
@@ -935,6 +935,7 @@ int Crit1DProject::computeAllUnits()
     }
 
     logger.writeInfo("COMPUTE...");
+    int infoStep = std::max(1, int(compUnitList.size() / 20));
 
     try
     {
@@ -1004,6 +1005,12 @@ int Crit1DProject::computeAllUnits()
                         isErrorModel = true;
                     }
                 }
+            }
+
+            if ((i+1) % infoStep == 0)
+            {
+                double percentage = (i+1) * 100.0 / compUnitList.size();
+                logger.writeInfo("..." + QString::number(round(percentage)) + "%");
             }
         }
 
