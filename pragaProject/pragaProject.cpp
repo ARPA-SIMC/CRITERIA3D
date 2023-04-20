@@ -2837,7 +2837,16 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             if (listXMLDrought->listIndex()[i] == INDEX_SPI)
             {
                 int fistMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
-                QDate dateStart(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                QDate dateStart;
+                if (fistMonth <= 0)
+                {
+                    fistMonth = 12 + fistMonth;
+                    dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                }
+                else
+                {
+                    dateStart.setDate(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                }
                 int lastDay = listXMLDrought->listDate()[i].daysInMonth();
                 QDate dateEnd(listXMLDrought->listDate()[i].year(),listXMLDrought->listDate()[i].month(),lastDay);
                 int nDays = dateStart.daysTo(dateEnd);
@@ -2846,7 +2855,16 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             else if (listXMLDrought->listIndex()[i] == INDEX_SPEI )
             {
                 int fistMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
-                QDate dateStart(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                QDate dateStart;
+                if (fistMonth <= 0)
+                {
+                    fistMonth = 12 + fistMonth;
+                    dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                }
+                else
+                {
+                    dateStart.setDate(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                }
                 int lastDay = listXMLDrought->listDate()[i].daysInMonth();
                 QDate dateEnd(listXMLDrought->listDate()[i].year(),listXMLDrought->listDate()[i].month(),lastDay);
                 int nDays = dateStart.daysTo(dateEnd);
