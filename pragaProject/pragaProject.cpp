@@ -2838,10 +2838,15 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             {
                 int fistMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
                 QDate dateStart;
-                if (fistMonth <= 0)
+                if (fistMonth <= 0 && fistMonth >= -11)
                 {
-                    fistMonth = 12 + fistMonth;
-                    dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                        fistMonth = 12 + fistMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                }
+                if (fistMonth < -11)
+                {
+                        fistMonth = 24 + fistMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-2, fistMonth, 1);
                 }
                 else
                 {
@@ -2856,10 +2861,15 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             {
                 int fistMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
                 QDate dateStart;
-                if (fistMonth <= 0)
+                if (fistMonth <= 0 && fistMonth >= -11)
                 {
-                    fistMonth = 12 + fistMonth;
-                    dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                        fistMonth = 12 + fistMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                }
+                if (fistMonth < -11)
+                {
+                        fistMonth = 24 + fistMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-2, fistMonth, 1);
                 }
                 else
                 {
