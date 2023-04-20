@@ -538,7 +538,6 @@ void TabHorizons::tableDbVerticalHeaderClick(int index)
 
 void TabHorizons::cellChanged(int row, int column)
 {
-
     if (tableDb->itemAt(row,column) == nullptr || mySoil->nrHorizons < unsigned(row))
     {
         qDebug() << "mySoil->horizon->dbData.horizonNr < row ";
@@ -750,12 +749,11 @@ void TabHorizons::cellChanged(int row, int column)
         checkComputedValues(row);
     }
 
+    updateBarHorizon(mySoil);
     tableDb->blockSignals(false);
 
-    if ( (depthsOk == true) && (checkHorizon == true))
+    if (depthsOk && checkHorizon)
     {
-        //update soil total depth
-        mySoil->totalDepth = (tableDb->item(tableDb->rowCount()-1, 1)->text().toDouble())/100;
         emit horizonSelected(row);
         emit updateSignal();
     }
@@ -876,8 +874,6 @@ void TabHorizons::removeRowClicked()
 
     if (depthsOk)
     {
-        //update soil total depth
-        mySoil->totalDepth = (tableDb->item(tableDb->rowCount()-1, 1)->text().toDouble())/100;
         emit updateSignal();
     }
 

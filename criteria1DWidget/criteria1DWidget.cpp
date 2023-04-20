@@ -51,7 +51,7 @@
 
 Criteria1DWidget::Criteria1DWidget()
 {
-    resize(1280, 600);
+    resize(1400, 700);
 
     // font
     QFont currentFont = this->font();
