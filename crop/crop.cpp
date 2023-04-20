@@ -551,7 +551,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
         // [mm]
         waterSurplusThreshold = soilLayers[i].SAT - (WSS * (soilLayers[i].SAT - soilLayers[i].FC));
 
-        thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), soilLayers[i].horizon);
+        thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), *(soilLayers[i].horizonPtr));
         // [mm]
         cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
 

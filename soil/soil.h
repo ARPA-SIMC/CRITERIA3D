@@ -159,7 +159,7 @@
             double maxInfiltration;     /*!<   [mm]  */
             double flux;                /*!<   [mm]  */
 
-            Crit3DHorizon *horizon;
+            Crit3DHorizon *horizonPtr;
 
             Crit3DLayer();
 
@@ -185,7 +185,7 @@
 
             void initialize(const std::string &soilCode, int nrHorizons);
             void cleanSoil();
-            void addHorizon(int nHorizon, Crit3DHorizon *newHorizon);
+            void addHorizon(int nHorizon, const Crit3DHorizon &newHorizon);
             void deleteHorizon(int nHorizon);
             int getHorizonIndex(double depth);
 
@@ -211,12 +211,12 @@
         int getUSDATextureClass(double sand, double silt, double clay);
         int getNLTextureClass(double sand, double silt, double clay);
 
-        std::string getUSCSClass(Crit3DHorizon* horizon);
+        std::string getUSCSClass(const Crit3DHorizon &horizon);
 
-        int getHorizonIndex(Crit3DSoil* soil, double depth);
-        int getSoilLayerIndex(std::vector<soil::Crit3DLayer> &soilLayers, double depth);
+        int getHorizonIndex(const Crit3DSoil &soil, double depth);
+        int getSoilLayerIndex(const std::vector<Crit3DLayer> &soilLayers, double depth);
 
-        double getFieldCapacity(Crit3DHorizon* horizon, soil::units unit);
+        double getFieldCapacity(const Crit3DHorizon &horizon, soil::units unit);
         double getWiltingPoint(soil::units unit);
 
         double kPaToMeters(double value);
@@ -225,29 +225,29 @@
         double kPaToCm(double value);
         double cmTokPa(double value);
 
-        double SeFromTheta(double theta, Crit3DHorizon* horizon);
-        double psiFromTheta(double theta, Crit3DHorizon* horizon);
-        double degreeOfSaturationFromSignPsi(double signPsi, Crit3DHorizon* horizon);
-        double thetaFromSignPsi(double signPsi, Crit3DHorizon* horizon);
-        double waterConductivityFromSignPsi(double psi, Crit3DHorizon* horizon);
+        double SeFromTheta(double theta, const Crit3DHorizon &horizon);
+        double psiFromTheta(double theta, const Crit3DHorizon &horizon);
+        double degreeOfSaturationFromSignPsi(double signPsi, const Crit3DHorizon &horizon);
+        double thetaFromSignPsi(double signPsi, const Crit3DHorizon &horizon);
+        double waterConductivityFromSignPsi(double psi, const Crit3DHorizon &horizon);
 
-        double waterConductivity(double Se, Crit3DHorizon* horizon);
+        double waterConductivity(double Se, const Crit3DHorizon &horizon);
 
         double estimateOrganicMatter(double upperDepth);
         double estimateSpecificDensity(double organicMatter);
-        double estimateBulkDensity(Crit3DHorizon* horizon, double totalPorosity, bool increaseWithDepth);
-        double estimateSaturatedConductivity(Crit3DHorizon* horizon, double bulkDensity);
-        double estimateTotalPorosity(Crit3DHorizon* horizon, double bulkDensity);
-        double estimateThetaSat(Crit3DHorizon* horizon, double bulkDensity);
+        double estimateBulkDensity(const Crit3DHorizon &horizon, double totalPorosity, bool increaseWithDepth);
+        double estimateSaturatedConductivity(const Crit3DHorizon &horizon, double bulkDensity);
+        double estimateTotalPorosity(const Crit3DHorizon &horizon, double bulkDensity);
+        double estimateThetaSat(const Crit3DHorizon &horizon, double bulkDensity);
 
-        double getWaterContentFromPsi(double signPsi, Crit3DLayer* layer);
+        double getWaterContentFromPsi(double signPsi, const Crit3DLayer &layer);
         double getWaterContentFromAW(double availableWater, const Crit3DLayer &layer);
 
-        bool setHorizon(Crit3DHorizon* horizon, Crit3DTextureClass* textureClassList,
-                        Crit3DFittingOptions *fittingOptions, std::string &error);
+        bool setHorizon(Crit3DHorizon &horizon, const std::vector<Crit3DTextureClass> &textureClassList,
+                        const Crit3DFittingOptions &fittingOptions, std::string &errorStr);
 
-        bool fittingWaterRetentionCurve(Crit3DHorizon* horizon,
-                        Crit3DFittingOptions* fittingOptions);
+        bool fittingWaterRetentionCurve(Crit3DHorizon &horizon, const Crit3DFittingOptions &fittingOptions);
+
         bool sortWaterPotential(soil::Crit3DWaterRetention first, soil::Crit3DWaterRetention second);
     }
 
