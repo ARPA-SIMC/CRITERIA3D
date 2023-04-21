@@ -266,7 +266,7 @@ bool Crit3DCrop::isRootStatic() const
  * \brief getSurfaceWaterPonding
  * \return maximum height of water ponding [mm]
  */
-double Crit3DCrop::getSurfaceWaterPonding()
+double Crit3DCrop::getSurfaceWaterPonding() const
 {
     // TODO taking into account tillage and crop development
     double clodHeight;          // [mm] height of clod

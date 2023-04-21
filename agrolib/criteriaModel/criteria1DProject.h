@@ -128,13 +128,13 @@
         bool saveState(QString &myError);
         bool restoreState(QString dbStateToRestoreName, QString &myError);
         void updateOutput(Crit3DDate myDate, bool isFirst);
-        bool saveOutput(QString &myError);
+        bool saveOutput(QString &errorStr);
 
     };
 
 
     QString getOutputStringNullZero(double value);
-    bool setVariableDepth(QList<QString> &depthList, std::vector<int> &variableDepth);
+    bool setVariableDepth(const QList<QString> &depthList, std::vector<int> &variableDepth);
 
 
 #endif // CRITERIA1DPROJECT_H

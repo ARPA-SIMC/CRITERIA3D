@@ -13,7 +13,7 @@
     class Crit3DMeteoPoint;
 
     bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error);
-    bool getMeteoPointList(QSqlDatabase* dbMeteo, QList<QString>* idMeteoList, QString* error);
+    bool getMeteoPointList(const QSqlDatabase &dbMeteo, QList<QString> &idMeteoList, QString &errorStr);
     bool getYearList(QSqlDatabase* dbMeteo, QString table, QList<QString>* yearList, QString *error);
     bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *error);
     bool updateLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString lat, QString lon, QString *error);

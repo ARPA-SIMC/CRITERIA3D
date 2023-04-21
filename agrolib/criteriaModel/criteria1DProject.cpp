@@ -783,7 +783,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
 {
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
 
-    if (! loadCropParameters(&dbCrop, myCase.unit.idCrop, &(myCase.crop), &projectError))
+    if (! loadCropParameters(dbCrop, myCase.unit.idCrop, myCase.crop, projectError))
         return false;
 
     if (! setSoil(myCase.unit.idSoil, projectError))
@@ -1624,14 +1624,14 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
 }
 
 
-bool Crit1DProject::saveOutput(QString &myError)
+bool Crit1DProject::saveOutput(QString &errorStr)
 {
     QSqlQuery myQuery = dbOutput.exec(outputString);
     outputString.clear();
 
     if (myQuery.lastError().type() != QSqlError::NoError)
     {
-        myError = "Error in saving output:\n" + myQuery.lastError().text();
+        errorStr = "Error in saveOutput:\n" + myQuery.lastError().text();
         return false;
     }
 
@@ -1804,7 +1804,7 @@ QString getOutputStringNullZero(double value)
 }
 
 
-bool setVariableDepth(QList<QString>& depthList, std::vector<int>& variableDepth)
+bool setVariableDepth(const QList<QString>& depthList, std::vector<int>& variableDepth)
 {
     int nrDepth = depthList.size();
     if (nrDepth > 0)

@@ -434,7 +434,7 @@ double computeEvaporation(std::vector<soil::Crit3DLayer> &soilLayers, double max
 /*!
  * \brief compute surface runoff [mm]
  */
-double computeSurfaceRunoff(Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers)
+double computeSurfaceRunoff(const Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &soilLayers)
 {
     double surfaceRunoff;           // [mm]
     double maxSurfaceWater;         // [mm]
@@ -458,7 +458,7 @@ double computeSurfaceRunoff(Crit3DCrop &myCrop, std::vector<soil::Crit3DLayer> &
  * \note P.M.Driessen, 1986, eq.58
  * \return lateralDrainage
  */
-double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
+double computeLateralDrainage(std::vector<soil::Crit3DLayer>& soilLayers)
 {
     double satFactor;                       // [-]
     double hydrHead;                        // [m]
