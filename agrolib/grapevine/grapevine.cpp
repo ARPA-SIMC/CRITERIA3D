@@ -1674,8 +1674,6 @@ double* getTrapezoidRoots(int layersNr, soil::Crit3DSoil* mySoil, std::vector<do
         myRoots[layer] /= rootDensitySum;
     }
 
-
-
     return myRoots;
 }
 
