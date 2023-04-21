@@ -943,7 +943,7 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
     }
 
 
-     Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
+     //Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
      bool dataAlreadyLoaded = false;
 
      for (int row = 0; row < meteoGridDbHandler->gridStructure().header().nrRows; row++)
@@ -959,6 +959,7 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
                 Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
 
                 // copy data to MPTemp
+                Crit3DMeteoPoint* meteoPointTemp = new Crit3DMeteoPoint;
                 meteoPointTemp->id = meteoPoint->id;
                 meteoPointTemp->point.z = meteoPoint->point.z;
                 meteoPointTemp->latitude = meteoPoint->latitude;
@@ -987,6 +988,7 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
                 meteoPoint->elaboration = meteoPointTemp->elaboration;
                 meteoPoint->anomaly = meteoPointTemp->anomaly;
                 meteoPoint->anomalyPercentage = meteoPointTemp->anomalyPercentage;
+                delete meteoPointTemp;
 
             }
 
@@ -1001,13 +1003,13 @@ bool PragaProject::elaborationPointsCycleGrid(bool isAnomaly, bool showInfo)
         {
             errorString = "no valid cells available";
         }
-        delete meteoPointTemp;
+        //delete meteoPointTemp;
         delete climaUsed;
         return false;
     }
     else
     {
-        delete meteoPointTemp;
+        //delete meteoPointTemp;
         delete climaUsed;
         return true;
     }
@@ -2780,7 +2782,9 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             referenceClima->setParam2(listXMLAnomaly->listRefParam2()[i]);
 
             elaborationPointsCycleGrid(false, false);
+            qDebug() << "--------------------------------------------------";
             elaborationPointsCycleGrid(true, false);
+
             if (!listXMLAnomaly->isPercentage()[i])
             {
                 meteoGridDbHandler->meteoGrid()->fillMeteoRasterAnomalyValue();
@@ -2833,7 +2837,21 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             if (listXMLDrought->listIndex()[i] == INDEX_SPI)
             {
                 int fistMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
-                QDate dateStart(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                QDate dateStart;
+                if (fistMonth <= 0 && fistMonth >= -11)
+                {
+                        fistMonth = 12 + fistMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                }
+                if (fistMonth < -11)
+                {
+                        fistMonth = 24 + fistMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-2, fistMonth, 1);
+                }
+                else
+                {
+                    dateStart.setDate(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                }
                 int lastDay = listXMLDrought->listDate()[i].daysInMonth();
                 QDate dateEnd(listXMLDrought->listDate()[i].year(),listXMLDrought->listDate()[i].month(),lastDay);
                 int nDays = dateStart.daysTo(dateEnd);
@@ -2842,7 +2860,21 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             else if (listXMLDrought->listIndex()[i] == INDEX_SPEI )
             {
                 int fistMonth = listXMLDrought->listDate()[i].month() - listXMLDrought->listTimescale()[i]+1;
-                QDate dateStart(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                QDate dateStart;
+                if (fistMonth <= 0 && fistMonth >= -11)
+                {
+                        fistMonth = 12 + fistMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-1, fistMonth, 1);
+                }
+                if (fistMonth < -11)
+                {
+                        fistMonth = 24 + fistMonth;
+                        dateStart.setDate(listXMLDrought->listDate()[i].year()-2, fistMonth, 1);
+                }
+                else
+                {
+                    dateStart.setDate(listXMLDrought->listDate()[i].year(), fistMonth, 1);
+                }
                 int lastDay = listXMLDrought->listDate()[i].daysInMonth();
                 QDate dateEnd(listXMLDrought->listDate()[i].year(),listXMLDrought->listDate()[i].month(),lastDay);
                 int nDays = dateStart.daysTo(dateEnd);

@@ -98,7 +98,7 @@ void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
         x = dxMin;
         while (x < dxMax*factor)
         {
-            double y = soil::waterConductivityFromSignPsi(-x, &mySoil->horizon[i]);
+            double y = soil::waterConductivityFromSignPsi(-x, mySoil->horizon[i]);
             if (y != NODATA)
             {
                 curve->append(x,y);

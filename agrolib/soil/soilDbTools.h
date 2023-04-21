@@ -4,43 +4,45 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
-    #include <QString>
 
+    #include <QString>
     class QSqlDatabase;
 
-    bool loadSoilData(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil *mySoil, QString *myError);
+    bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, QString &errorStr);
 
-    bool loadSoil(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySoil,
-                  soil::Crit3DTextureClass* textureClassList,
-                  soil::Crit3DFittingOptions *fittingOptions, QString* error);
+    bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil,
+                  const std::vector<soil::Crit3DTextureClass> &textureClassList,
+                  const soil::Crit3DFittingOptions &fittingOptions, QString &errorStr);
 
-    bool updateSoilData(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySoil, QString *error);
+    bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, QString& errorStr);
 
-    bool updateWaterRetentionData(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySoil, int horizon, QString *error);
+    bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, int horizon, QString& errorStr);
 
-    bool insertSoilData(QSqlDatabase* dbSoil, int soilID, QString soilCode, QString soilName, QString soilInfo, QString *error);
+    bool insertSoilData(QSqlDatabase &dbSoil, int soilID, const QString &soilCode,
+                        const QString &soilName, const QString &soilInfo, QString &errorStr);
 
-    bool deleteSoilData(QSqlDatabase* dbSoil, QString soilCode, QString *error);
+    bool deleteSoilData(QSqlDatabase &dbSoil, const QString &soilCode, QString &errorStr);
 
-    bool loadVanGenuchtenParameters(QSqlDatabase* dbSoil, soil::Crit3DTextureClass* textureClassList, QString *error);
+    bool loadVanGenuchtenParameters(const QSqlDatabase &dbSoil, std::vector<soil::Crit3DTextureClass> &textureClassList, QString &errorStr);
 
-    bool loadDriessenParameters(QSqlDatabase* dbSoil, soil::Crit3DTextureClass* textureClassList, QString *error);
+    bool loadDriessenParameters(const QSqlDatabase &dbSoil, std::vector<soil::Crit3DTextureClass> &textureClassList, QString &errorStr);
 
-    QString getIdSoilString(QSqlDatabase* dbSoil, int idSoilNumber, QString *myError);
-    int getIdSoilNumeric(QSqlDatabase *dbSoil, QString soilCode, QString *myError);
+    QString getIdSoilString(const QSqlDatabase &dbSoil, int idSoilNumber, QString &errorStr);
+    int getIdSoilNumeric(const QSqlDatabase &dbSoil, QString soilCode, QString &errorStr);
 
-    bool openDbSoil(QString dbName, QSqlDatabase* dbSoil, QString* error);
+    bool openDbSoil(const QString &dbSoilName, QSqlDatabase &dbSoil, QString &errorStr);
 
-    bool loadAllSoils(QString dbSoilName, std::vector <soil::Crit3DSoil> *soilList,
-                      soil::Crit3DTextureClass *textureClassList,
-                      soil::Crit3DFittingOptions *fittingOptions, QString* error);
+    bool loadAllSoils(const QString &dbSoilName, std::vector <soil::Crit3DSoil> &soilList,
+                      std::vector<soil::Crit3DTextureClass> &textureClassList,
+                      const soil::Crit3DFittingOptions &fittingOptions, QString &errorStr);
 
-    bool loadAllSoils(QSqlDatabase* dbSoil, std::vector <soil::Crit3DSoil> *soilList,
-                      soil::Crit3DTextureClass *textureClassList,
-                      soil::Crit3DFittingOptions *fittingOptions, QString* error);
+    bool loadAllSoils(const QSqlDatabase &dbSoil, std::vector <soil::Crit3DSoil> &soilList,
+                      std::vector<soil::Crit3DTextureClass> &textureClassList,
+                      const soil::Crit3DFittingOptions &fittingOptions, QString& errorStr);
 
-    bool loadSoilInfo(QSqlDatabase* dbSoil, QString soilCode, soil::Crit3DSoil* mySoil, QString *error);
-    bool getSoilList(QSqlDatabase* dbSoil, QList<QString>* soilList, QString* error);
+    bool loadSoilInfo(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, QString &errorStr);
+
+    bool getSoilList(const QSqlDatabase &dbSoil, QList<QString> &soilList, QString &errorStr);
 
 
 #endif // SOILDBTOOLS_H

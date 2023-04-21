@@ -345,7 +345,7 @@ namespace gis
             value = nullptr;
         }
 
-        mapTime = getNullTime();
+        mapTime.setNullTime();
         minimum = NODATA;
         maximum = NODATA;
         header->nrRows = 0;
@@ -1497,7 +1497,7 @@ namespace gis
         int firstYear, secondYear;
 
         if (! firstGrid.isLoaded || ! secondGrid.isLoaded) return false;
-        if (isNullTime(firstGrid.getMapTime()) || isNullTime(secondGrid.getMapTime())) return false;
+        if (firstGrid.getMapTime().isNullTime() || secondGrid.getMapTime().isNullTime()) return false;
         if (! compareGrids(firstGrid, secondGrid)) return false;
 
         outGrid->initializeGrid(firstGrid);

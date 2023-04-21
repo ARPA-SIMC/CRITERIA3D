@@ -252,15 +252,14 @@ namespace root
     int highestCommonFactor(int* vector, int vectorDim)
     {
         // highest common factor (hcf) amongst n integer numbers
-        int num1, num2, i, hcf;
-        hcf = num1 = vector[0];
+        int num1, num2;
+        int hcf = vector[0];
         for (int j=0; j<vectorDim-1; j++)
         {
-
             num1 = hcf;
             num2 = vector[j+1];
 
-            for(i=1; i<=num1 || i<=num2; ++i)
+            for(int i=1; i<=num1 || i<=num2; ++i)
             {
                 if(num1%i==0 && num2%i==0)   /* Checking whether i is a factor of both number */
                     hcf=i;
@@ -269,9 +268,9 @@ namespace root
         return hcf;
     }
 
+
     int checkTheOrderOfMagnitude(double number,int* order)
     {
-
         if (number<1)
         {
             number *= 10;
@@ -296,27 +295,27 @@ namespace root
     }
 
 
-    int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double rootDepthMin, double* minThickness, int* atoms)
+    int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double rootDepthMin, double &minThickness, int *atoms)
     {
         unsigned int i;
         unsigned int nrLayers = unsigned(soilLayers.size());
         int multiplicationFactor = 1;
 
         if (rootDepthMin > 0)
-            *minThickness = rootDepthMin;
+            minThickness = rootDepthMin;
         else
-            *minThickness = soilLayers[1].thickness;
+            minThickness = soilLayers[1].thickness;
 
         for(i=1; i < nrLayers; i++)
-            *minThickness = MINVALUE(*minThickness, soilLayers[i].thickness);
+            minThickness = MINVALUE(minThickness, soilLayers[i].thickness);
 
-        double tmp = *minThickness * 1.001;
+        double tmp = minThickness * 1.001;
         if (tmp < 1)
             multiplicationFactor = int(pow(10.0,-orderOfMagnitude(tmp)));
 
-        if (*minThickness < 1)
+        if (minThickness < 1)
         {
-            *minThickness = 1./multiplicationFactor;
+            minThickness = 1./multiplicationFactor;
         }
 
         int value;
@@ -470,9 +469,9 @@ namespace root
             int* atoms = new int[nrLayers];
             int numberOfRootedLayers, numberOfTopUnrootedLayers;
             unsigned int nrAtoms;
-            nrAtoms = root::getNrAtoms(soilLayers, myCrop->roots.rootDepthMin, &minimumThickness, atoms);
+            nrAtoms = root::getNrAtoms(soilLayers, myCrop->roots.rootDepthMin, minimumThickness, atoms);
             numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
-            numberOfRootedLayers = int(ceil(MINVALUE(myCrop->roots.rootLength, soilDepth) / minimumThickness));
+            numberOfRootedLayers = int(round(MINVALUE(myCrop->roots.rootLength, soilDepth) / minimumThickness));
             double* densityThinLayers =  new double[nrAtoms];
 
             for (i=0; i < nrAtoms; i++)

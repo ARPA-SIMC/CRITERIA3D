@@ -64,8 +64,8 @@ void TabHorizons::updateBarHorizon(soil::Crit3DSoil* mySoil)
 }
 
 
-void TabHorizons::insertSoilHorizons(soil::Crit3DSoil *soil, soil::Crit3DTextureClass* textureClassList,
-                                     soil::Crit3DFittingOptions* fittingOptions)
+void TabHorizons::insertSoilHorizons(soil::Crit3DSoil *soil, std::vector<soil::Crit3DTextureClass> *textureClassList,
+                                     soil::Crit3DFittingOptions *fittingOptions)
 {
     if (soil == nullptr)
     {
@@ -538,7 +538,6 @@ void TabHorizons::tableDbVerticalHeaderClick(int index)
 
 void TabHorizons::cellChanged(int row, int column)
 {
-
     if (tableDb->itemAt(row,column) == nullptr || mySoil->nrHorizons < unsigned(row))
     {
         qDebug() << "mySoil->horizon->dbData.horizonNr < row ";
@@ -696,7 +695,7 @@ void TabHorizons::cellChanged(int row, int column)
     }
 
     std::string errorString;
-    soil::setHorizon(&(mySoil->horizon[unsigned(row)]), myTextureClassList, myFittingOptions, errorString);
+    soil::setHorizon(mySoil->horizon[unsigned(row)], *myTextureClassList, *myFittingOptions, errorString);
 
     // update tableModel values
     tableModel->item(row,0)->setText(QString::fromStdString(mySoil->horizon[unsigned(row)].texture.classNameUSDA));
@@ -750,12 +749,11 @@ void TabHorizons::cellChanged(int row, int column)
         checkComputedValues(row);
     }
 
+    updateBarHorizon(mySoil);
     tableDb->blockSignals(false);
 
-    if ( (depthsOk == true) && (checkHorizon == true))
+    if (depthsOk && checkHorizon)
     {
-        //update soil total depth
-        mySoil->totalDepth = (tableDb->item(tableDb->rowCount()-1, 1)->text().toDouble())/100;
         emit horizonSelected(row);
         emit updateSignal();
     }
@@ -810,32 +808,32 @@ void TabHorizons::addRowClicked()
 
     setInvalidTableModelRow(numRow);
 
-    soil::Crit3DHorizon* newHor = new soil::Crit3DHorizon();
-    // set newHor dbData
-    newHor->dbData.horizonNr = numRow;
+    soil::Crit3DHorizon* newHorizon = new soil::Crit3DHorizon();
+    // set newHorizon dbData
+    newHorizon->dbData.horizonNr = numRow;
     QString lowerDepth;
     if (numRow != 0)
     {
         lowerDepth = tableDb->item(numRow-1, 1)->text();
         tableDb->item(numRow, 0)->setText(lowerDepth);
-        newHor->dbData.upperDepth = lowerDepth.toDouble();
+        newHorizon->dbData.upperDepth = lowerDepth.toDouble();
     }
     else
     {
-        newHor->dbData.upperDepth = 0;
+        newHorizon->dbData.upperDepth = 0;
         tableDb->item(numRow, 0)->setText("0");
     }
-    newHor->dbData.lowerDepth = NODATA;
-    newHor->dbData.sand = NODATA;
-    newHor->dbData.silt = NODATA;
-    newHor->dbData.clay = NODATA;
-    newHor->dbData.coarseFragments = NODATA;
-    newHor->dbData.organicMatter = NODATA;
-    newHor->dbData.bulkDensity = NODATA;
-    newHor->dbData.thetaSat = NODATA;
-    newHor->dbData.kSat = NODATA;
+    newHorizon->dbData.lowerDepth = NODATA;
+    newHorizon->dbData.sand = NODATA;
+    newHorizon->dbData.silt = NODATA;
+    newHorizon->dbData.clay = NODATA;
+    newHorizon->dbData.coarseFragments = NODATA;
+    newHorizon->dbData.organicMatter = NODATA;
+    newHorizon->dbData.bulkDensity = NODATA;
+    newHorizon->dbData.thetaSat = NODATA;
+    newHorizon->dbData.kSat = NODATA;
 
-    mySoil->addHorizon(numRow,newHor);
+    mySoil->addHorizon(numRow, *newHorizon);
     // check all Depths
     checkDepths();
     // check new values and assign background color
@@ -876,8 +874,6 @@ void TabHorizons::removeRowClicked()
 
     if (depthsOk)
     {
-        //update soil total depth
-        mySoil->totalDepth = (tableDb->item(tableDb->rowCount()-1, 1)->text().toDouble())/100;
         emit updateSignal();
     }
 
