@@ -5,17 +5,17 @@
     class QString;
     class Crit3DCrop;
 
-    bool openDbCrop(QSqlDatabase* dbCrop, QString dbName, QString* error);
+    bool openDbCrop(QSqlDatabase& dbCrop, const QString& dbName, QString& errorStr);
 
-    bool deleteCropData(QSqlDatabase* dbCrop, QString cropName, QString *error);
+    bool deleteCropData(QSqlDatabase &dbCrop, const QString& cropName, QString& errorStr);
 
-    bool loadCropParameters(QSqlDatabase* dbCrop, QString idCrop, Crit3DCrop* myCrop, QString *myError);
+    bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &myCrop, QString& errorStr);
 
-    bool updateCropLAIparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error);
+    bool updateCropLAIparam(QSqlDatabase &dbCrop, const Crit3DCrop &myCrop, QString &errorStr);
 
-    bool updateCropRootparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error);
+    bool updateCropRootparam(QSqlDatabase &dbCrop, const Crit3DCrop &myCrop, QString &errorStr);
 
-    bool updateCropIrrigationparam(QSqlDatabase* dbCrop, Crit3DCrop* myCrop, QString *error);
+    bool updateCropIrrigationparam(QSqlDatabase &dbCrop, const Crit3DCrop &myCrop, QString &errorStr);
 
 
 #endif // CROPDBTOOLS_H

@@ -1264,7 +1264,7 @@ void Vine3D_Grapevine::setRootDensity(Crit3DModelCase* modelCase, soil::Crit3DSo
                 modelCase->rootDensity[i] = incompleteGamma(kappa, (b - depthWithoutRoots) / theta) - incompleteGamma(kappa, (a - depthWithoutRoots)/ theta);
 
                 //skeleton
-                indexHorizon = soil::getHorizonIndex(mySoil, layerDepth.at(size_t(i)));
+                indexHorizon = soil::getHorizonIndex(*mySoil, layerDepth.at(size_t(i)));
                 skeleton = mySoil->horizon[indexHorizon].coarseFragments;
                 modelCase->rootDensity[i] *= (1.0 - skeleton);
 
@@ -1661,7 +1661,7 @@ double* getTrapezoidRoots(int layersNr, soil::Crit3DSoil* mySoil, std::vector<do
             y1 = m*x1 + q;
             y2 = m*x2 + q;
 
-            indexHorizon = soil::getHorizonIndex(mySoil, layerDepth.at(size_t(layer)));
+            indexHorizon = soil::getHorizonIndex(*mySoil, layerDepth.at(size_t(layer)));
             skeleton = mySoil->horizon[indexHorizon].coarseFragments;
             myRoots[layer] = (y1+y2) * fabs(x2-x1) * 0.5 * (1 - skeleton);
             rootDensitySum += myRoots[layer];

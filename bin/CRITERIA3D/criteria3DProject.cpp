@@ -500,20 +500,20 @@ QString Crit3DProject::getCrit3DSoilCode(double x, double y)
 
 double Crit3DProject::getSoilVar(int soilIndex, int layerIndex, soil::soilVariable myVar)
 {
-    unsigned int horizonIndex = unsigned(soil::getHorizonIndex(&(soilList[unsigned(soilIndex)]),
-                                                               layerDepth[unsigned(layerIndex)]));
+    unsigned int hIndex = unsigned(soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[unsigned(layerIndex)]));
+
     if (myVar == soil::soilWaterPotentialWP)
-        return soilList[unsigned(soilIndex)].horizon[horizonIndex].wiltingPoint;
+        return soilList[unsigned(soilIndex)].horizon[hIndex].wiltingPoint;
     else if (myVar == soil::soilWaterPotentialFC)
-        return soilList[unsigned(soilIndex)].horizon[horizonIndex].fieldCapacity;
+        return soilList[unsigned(soilIndex)].horizon[hIndex].fieldCapacity;
     else if (myVar == soil::soilWaterContentFC)
-        return soilList[unsigned(soilIndex)].horizon[horizonIndex].waterContentFC;
+        return soilList[unsigned(soilIndex)].horizon[hIndex].waterContentFC;
     else if (myVar == soil::soilWaterContentSat)
-        return soilList[unsigned(soilIndex)].horizon[horizonIndex].vanGenuchten.thetaS;
+        return soilList[unsigned(soilIndex)].horizon[hIndex].vanGenuchten.thetaS;
     else if (myVar == soil::soilWaterContentWP)
     {
         double signPsiLeaf = -160;      //[m]
-        return soil::thetaFromSignPsi(signPsiLeaf, &(soilList[unsigned(soilIndex)].horizon[horizonIndex]));
+        return soil::thetaFromSignPsi(signPsiLeaf, soilList[unsigned(soilIndex)].horizon[hIndex]);
     }
     else
         return NODATA;

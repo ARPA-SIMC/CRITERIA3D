@@ -1519,7 +1519,7 @@ void MainWindow::openSoilWidget(QPoint mapPos)
     {
         QString dbSoilName = myProject.getCompleteFileName(myProject.soilDbFileName, PATH_SOIL);
         QSqlDatabase dbSoil;
-        if (! openDbSoil(dbSoilName, &dbSoil, &(myProject.errorString)))
+        if (! openDbSoil(dbSoilName, dbSoil, myProject.errorString))
         {
             myProject.logError();
             return;

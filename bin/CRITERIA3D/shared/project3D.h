@@ -55,7 +55,7 @@
         double computationSoilDepth;            // [m]
 
         std::vector <soil::Crit3DSoil> soilList;
-        soil::Crit3DTextureClass texturalClassList[13];
+        std::vector <soil::Crit3DTextureClass> texturalClassList;
         soil::Crit3DFittingOptions fittingOptions;
 
         // layers

@@ -42,6 +42,8 @@ void Project3D::initializeProject3D()
 {
     initializeProject();
 
+    texturalClassList.resize(13);
+
     soilDbFileName = "";
     cropDbFileName = "";
     soilMapFileName = "";
@@ -191,7 +193,7 @@ bool Project3D::loadSoilDatabase(QString fileName)
     soilDbFileName = fileName;
     fileName = getCompleteFileName(fileName, PATH_SOIL);
 
-    if (! loadAllSoils(fileName, &(soilList), texturalClassList, &fittingOptions, &errorString))
+    if (! loadAllSoils(fileName, soilList, texturalClassList, fittingOptions, errorString))
     {
         logError();
         return false;
@@ -600,7 +602,7 @@ bool Project3D::setCrit3DNodeSoil()
                     else
                     {
                         // sub-surface
-                        horizonIndex = soil::getHorizonIndex(&(soilList[unsigned(soilIndex)]), layerDepth[layer]);
+                        horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layer]);
                         if (horizonIndex == NODATA)
                         {
                             logError("function setCrit3DNodeSoil: \nno horizon definition in soil "
@@ -663,7 +665,7 @@ bool Project3D::initializeSoilMoisture(int month)
                         soilIndex = getSoilIndex(row, col);
                         if (soilIndex != NODATA)
                         {
-                            horizonIndex = soil::getHorizonIndex(&(soilList[unsigned(soilIndex)]), layerDepth[size_t(layer)]);
+                            horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[size_t(layer)]);
                             if (horizonIndex != NODATA)
                             {
                                 fieldCapacity = soilList[unsigned(soilIndex)].horizon[unsigned(horizonIndex)].fieldCapacity;
