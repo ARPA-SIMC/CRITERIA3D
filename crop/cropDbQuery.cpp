@@ -5,26 +5,25 @@
 #include <QtSql>
 
 
-bool getCropIdList(QSqlDatabase* dbCrop, QList<QString>* cropIdList, QString* error)
+bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString>& cropIdList, QString& errorStr)
 {
-    // query crop list
     QString queryString = "SELECT id_crop FROM crop";
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
 
     query.first();
     if (! query.isValid())
     {
-        *error = query.lastError().text();
+        errorStr = query.lastError().text();
         return false;
     }
 
-    QString cropId;
     do
     {
+        QString cropId;
         getValue(query.value("id_crop"), &cropId);
         if (cropId != "")
         {
-            cropIdList->append(cropId);
+            cropIdList.append(cropId);
         }
     }
     while(query.next());

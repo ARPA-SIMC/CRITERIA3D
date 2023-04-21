@@ -4,7 +4,7 @@
     #include <QString>
     class QSqlDatabase;
 
-    bool getCropIdList(QSqlDatabase* dbCrop, QList<QString>* cropIdList, QString* error);
+    bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString>& cropIdList, QString& errorStr);
 
     QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myError);
 
