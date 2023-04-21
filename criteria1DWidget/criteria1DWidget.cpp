@@ -825,7 +825,7 @@ void Criteria1DWidget::openCropDB(QString newDbCropName)
     clearCrop();
 
     QString errorStr;
-    if (! openDbCrop(&(myProject.dbCrop), newDbCropName, &errorStr))
+    if (! openDbCrop(myProject.dbCrop, newDbCropName, errorStr))
     {
         QMessageBox::critical(nullptr, "Error DB crop", errorStr);
         return;
@@ -833,7 +833,7 @@ void Criteria1DWidget::openCropDB(QString newDbCropName)
 
     // read crop list
     QList<QString> cropStringList;
-    if (! getCropIdList(&(myProject.dbCrop), &cropStringList, &errorStr))
+    if (! getCropIdList(myProject.dbCrop, cropStringList, errorStr))
     {
         QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
@@ -903,7 +903,7 @@ void Criteria1DWidget::openMeteoDB(QString dbMeteoName)
         }
 
         // read id_meteo list
-        if (! getMeteoPointList(&(myProject.dbMeteo), &idMeteoList, &errorStr))
+        if (! getMeteoPointList(myProject.dbMeteo, idMeteoList, errorStr))
         {
             QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
@@ -1114,7 +1114,7 @@ void Criteria1DWidget::on_actionChooseCrop(QString idCrop)
 void Criteria1DWidget::updateCropParam(QString idCrop)
 {
     QString errorStr;
-    if (!loadCropParameters(&(myProject.dbCrop), idCrop, &(myProject.myCase.crop), &errorStr))
+    if (!loadCropParameters(myProject.dbCrop, idCrop, myProject.myCase.crop, errorStr))
     {
         if (errorStr.contains("Empty"))
         {
@@ -1596,7 +1596,7 @@ void Criteria1DWidget::on_actionDeleteCrop()
 
         if (confirm == QMessageBox::Yes)
         {
-            if (deleteCropData(&(myProject.dbCrop), cropListComboBox.currentText(), &errorStr))
+            if (deleteCropData(myProject.dbCrop, cropListComboBox.currentText(), errorStr))
             {
                 cropListComboBox.removeItem(cropListComboBox.currentIndex());
             }
@@ -1645,9 +1645,9 @@ void Criteria1DWidget::on_actionSave()
 bool Criteria1DWidget::saveCrop()
 {
     QString errorStr;
-    if ( !updateCropLAIparam(&(myProject.dbCrop), &(myProject.myCase.crop), &errorStr)
-            || !updateCropRootparam(&(myProject.dbCrop), &(myProject.myCase.crop), &errorStr)
-            || !updateCropIrrigationparam(&(myProject.dbCrop), &(myProject.myCase.crop), &errorStr) )
+    if ( !updateCropLAIparam(myProject.dbCrop, myProject.myCase.crop, errorStr)
+            || !updateCropRootparam(myProject.dbCrop, myProject.myCase.crop, errorStr)
+            || !updateCropIrrigationparam(myProject.dbCrop, myProject.myCase.crop, errorStr) )
     {
         QMessageBox::critical(nullptr, "Update param failed!", errorStr);
         return false;
