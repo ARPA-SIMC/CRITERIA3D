@@ -28,16 +28,15 @@ bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
 }
 
 
-bool getMeteoPointList(QSqlDatabase* dbMeteo, QList<QString>* idMeteoList, QString* error)
+bool getMeteoPointList(const QSqlDatabase &dbMeteo, QList<QString> &idMeteoList, QString &errorStr)
 {
-    // query id_meteo list
     QString queryString = "SELECT id_meteo FROM meteo_locations";
-    QSqlQuery query = dbMeteo->exec(queryString);
+    QSqlQuery query = dbMeteo.exec(queryString);
 
     query.first();
     if (! query.isValid())
     {
-        *error = query.lastError().text();
+        errorStr = query.lastError().text();
         return false;
     }
 
@@ -47,7 +46,7 @@ bool getMeteoPointList(QSqlDatabase* dbMeteo, QList<QString>* idMeteoList, QStri
         getValue(query.value("id_meteo"), &idMeteo);
         if (idMeteo != "")
         {
-            idMeteoList->append(idMeteo);
+            idMeteoList.append(idMeteo);
         }
     }
     while(query.next());
