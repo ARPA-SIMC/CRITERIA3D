@@ -38,6 +38,8 @@ Project::Project()
     initializeProject();
 
     modality = MODE_GUI;
+
+    verboseStdoutLogging = true;
 }
 
 
@@ -2391,6 +2393,7 @@ bool Project::loadProjectSettings(QString settingsFileName)
     projectSettings->beginGroup("settings");
         parametersFileName = projectSettings->value("parameters_file").toString();
         logFileName = projectSettings->value("log_file").toString();
+        verboseStdoutLogging = projectSettings->value("verbose_stdout_log", "true").toBool();
         currentTileMap = projectSettings->value("tile_map").toString();
     projectSettings->endGroup();
     return true;
@@ -3618,8 +3621,10 @@ bool Project::setLogFile(QString myFileName)
 
 void Project::logInfo(QString myStr)
 {
-    // standard output in all modalities
-    std::cout << myStr.toStdString() << std::endl;
+    if (verboseStdoutLogging) {
+        // standard output in all modalities
+        std::cout << myStr.toStdString() << std::endl;
+    }
 
     if (logFile.is_open())
     {
@@ -3640,12 +3645,7 @@ void Project::logInfoGUI(QString myStr)
     }
     else
     {
-        std::cout << myStr.toStdString() << std::endl;
-    }
-
-    if (logFile.is_open())
-    {
-        logFile << myStr.toStdString() << std::endl;
+        logInfo(myStr);
     }
 }
 

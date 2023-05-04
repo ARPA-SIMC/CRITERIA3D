@@ -72,6 +72,8 @@
         bool createDefaultProject(QString fileName);
         bool searchDefaultPath(QString* defaultPath);
 
+        bool verboseStdoutLogging;
+
     protected:
         frequencyType currentFrequency;
         meteoVariable currentVariable;
