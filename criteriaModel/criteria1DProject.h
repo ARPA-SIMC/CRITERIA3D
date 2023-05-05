@@ -49,6 +49,7 @@
 
         // soil
         std::vector<soil::Crit3DTextureClass> soilTexture;
+        std::vector<soil::Crit3DGeotechnicsClass> geotechnicsClass;
 
         std::vector<Crit1DCompUnit> compUnitList;
 

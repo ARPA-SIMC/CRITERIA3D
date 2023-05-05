@@ -27,6 +27,8 @@
 
     bool loadDriessenParameters(const QSqlDatabase &dbSoil, std::vector<soil::Crit3DTextureClass> &textureClassList, QString &errorStr);
 
+    bool loadGeotechnicsParameters(const QSqlDatabase &dbSoil, std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList, QString &errorStr);
+
     QString getIdSoilString(const QSqlDatabase &dbSoil, int idSoilNumber, QString &errorStr);
     int getIdSoilNumeric(const QSqlDatabase &dbSoil, QString soilCode, QString &errorStr);
 

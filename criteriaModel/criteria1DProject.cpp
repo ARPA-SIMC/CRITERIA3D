@@ -71,6 +71,7 @@ void Crit1DProject::initialize()
     awcDepth.clear();
 
     soilTexture.resize(13);
+    geotechnicsClass.resize(19);
 }
 
 
@@ -324,6 +325,10 @@ int Crit1DProject::initializeProject(QString settingsFileName)
 
     if (! loadDriessenParameters(dbSoil, soilTexture, projectError))
         return ERROR_SOIL_PARAMETERS;
+
+    // missing table is not critical
+    loadGeotechnicsParameters(dbSoil, geotechnicsClass, projectError);
+    projectError = "";
 
     // Computational unit list
     if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))

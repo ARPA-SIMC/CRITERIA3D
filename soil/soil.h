@@ -55,7 +55,8 @@
             int classUSDA;
             int classNL;
             std::string classNameUSDA;
-            std::string classNameUSCS;
+            // Unified Soil Classification System (USCS)
+            int classUSCS;
 
             Crit3DTexture();
             /*!
@@ -81,6 +82,16 @@
             double refThetaS;               /*!<  [m^3 m^-3] reference volumetric water content at saturation */
 
             Crit3DVanGenuchten();
+        };
+
+
+        class Crit3DGeotechnicsClass
+        {
+        public:
+            double effectiveCohesion;      /*!<  [kPa] soil effective cohesion */
+            double frictionAngle;          /*!<  [°] soil failure angle */
+
+            Crit3DGeotechnicsClass();
         };
 
 
@@ -211,7 +222,7 @@
         int getUSDATextureClass(double sand, double silt, double clay);
         int getNLTextureClass(double sand, double silt, double clay);
 
-        std::string getUSCSClass(const Crit3DHorizon &horizon);
+        int getUSCSClass(const Crit3DHorizon &horizon);
 
         int getHorizonIndex(const Crit3DSoil &soil, double depth);
         int getSoilLayerIndex(const std::vector<Crit3DLayer> &soilLayers, double depth);

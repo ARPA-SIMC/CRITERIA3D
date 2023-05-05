@@ -27,6 +27,52 @@ bool openDbSoil(const QString &dbSoilName, QSqlDatabase &dbSoil, QString &errorS
 }
 
 
+bool loadGeotechnicsParameters(const QSqlDatabase &dbSoil, std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList, QString &errorStr)
+{
+    QString queryString = "SELECT id_class, effective_cohesion, friction_angle ";
+    queryString        += "FROM geotechnics ORDER BY id_class";
+
+    QSqlQuery query = dbSoil.exec(queryString);
+    if (query.lastError().text() != "")
+    {
+        errorStr = query.lastError().text();
+        return false;
+    }
+
+    query.last();
+    int tableSize = query.at() + 1;     // SQLITE doesn't support SIZE
+
+    if (tableSize == 0)
+    {
+        errorStr = "Table geotechnics: missing data.";
+        return false;
+    }
+    else if (tableSize != 18)
+    {
+        errorStr = "Table geotechnics: wrong number of soil classes (must be 18).";
+        return false;
+    }
+
+    query.first();
+    do
+    {
+        bool isOk;
+        int id = query.value("id_class").toInt(&isOk);
+        if (! isOk)
+        {
+            errorStr = "Table geotechnics: \nWrong id_class: " + query.value("id_class").toString();
+            return false;
+        }
+
+        geotechnicsClassList[id].effectiveCohesion = query.value("effective_cohesion").toDouble();      // [kPa]
+        geotechnicsClassList[id].frictionAngle = query.value("friction_angle").toDouble();              // [°]
+    }
+    while (query.next());
+
+    return true;
+}
+
+
 bool loadVanGenuchtenParameters(const QSqlDatabase &dbSoil, std::vector<soil::Crit3DTextureClass> &textureClassList, QString &errorStr)
 {
     QString queryString = "SELECT id_texture, texture, alpha, n, he, theta_r, theta_s, k_sat, l ";
