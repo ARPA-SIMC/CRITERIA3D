@@ -64,8 +64,8 @@ bool loadGeotechnicsParameters(const QSqlDatabase &dbSoil, std::vector<soil::Cri
             return false;
         }
 
-        geotechnicsClassList[id].effectiveCohesion = query.value("effective_cohesion").toDouble();      // [kPa]
-        geotechnicsClassList[id].frictionAngle = query.value("friction_angle").toDouble();              // [°]
+        getValue(query.value("effective_cohesion"), &(geotechnicsClassList[id].effectiveCohesion));     // [kPa]
+        getValue(query.value("friction_angle"), &(geotechnicsClassList[id].frictionAngle));             // [°]
     }
     while (query.next());
 
