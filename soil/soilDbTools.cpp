@@ -289,7 +289,7 @@ bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
         mySoil.horizon[i].dbData.kSat = ksat;
 
         // NEW fields for soil stability, not present in old databases
-        QList<QString> fieldList = getFieldsUpperCase(query);
+        QList<QString> fieldList = getFields(query);
 
         double value = NODATA;
         if (fieldList.contains("effective_cohesion"))
