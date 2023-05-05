@@ -71,7 +71,7 @@ void Crit1DProject::initialize()
     awcDepth.clear();
 
     soilTexture.resize(13);
-    geotechnicsClass.resize(19);
+    geotechnicsClassList.resize(19);
 }
 
 
@@ -327,7 +327,7 @@ int Crit1DProject::initializeProject(QString settingsFileName)
         return ERROR_SOIL_PARAMETERS;
 
     // missing table is not critical
-    loadGeotechnicsParameters(dbSoil, geotechnicsClass, projectError);
+    loadGeotechnicsParameters(dbSoil, geotechnicsClassList, projectError);
     projectError = "";
 
     // Computational unit list
@@ -391,7 +391,7 @@ void Crit1DProject::checkSimulationDates()
 
 bool Crit1DProject::setSoil(QString soilCode, QString &errorStr)
 {
-    if (! loadSoil(dbSoil, soilCode, myCase.mySoil, soilTexture, geotechnicsClass, myCase.fittingOptions, errorStr))
+    if (! loadSoil(dbSoil, soilCode, myCase.mySoil, soilTexture, geotechnicsClassList, myCase.fittingOptions, errorStr))
         return false;
 
     // warning: some soil data are wrong

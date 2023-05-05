@@ -468,23 +468,22 @@
             return PARAMETER_ERROR;
        if (valueProbability < 0.995)
        {
-           float x;
-           float y;
            float rightBound = 25.0;
            float leftBound = 0.0;
+           float x, y;
            int counter = 0;
            do {
                //y = incompleteGamma(alpha,rightBound/beta);
                y = generalizedGammaCDF(rightBound,beta,alpha,pZero);
-               if (valueProbability>y)
+               if (valueProbability > y)
                {
                    rightBound *= 2;
                    counter++;
                    if (counter == 7) return rightBound;
                }
-           } while ((valueProbability>y));
+           } while ((valueProbability > y));
 
-           x = (rightBound + leftBound)*0.5;
+           x = (rightBound + leftBound) * 0.5f;
            y = generalizedGammaCDF(x,beta,alpha,pZero);
            while ((fabs(valueProbability - y) > accuracy) && (counter < 200))
            {
@@ -496,11 +495,11 @@
                {
                    leftBound = x;
                }
-               x = (rightBound + leftBound)*0.5;
+               x = (rightBound + leftBound) * 0.5f;
                y = generalizedGammaCDF(x,beta,alpha,pZero);
                ++counter;
            }
-           x = (rightBound + leftBound)*0.5;
+           x = (rightBound + leftBound) * 0.5f;
            return x;
        }
        double x,y;
@@ -511,7 +510,7 @@
            y = generalizedGammaCDF(x,beta,alpha,pZero);
            x += outlierStep;
        }
-       return (x - outlierStep);
+       return float(x - outlierStep);
     }
 
     double inverseGeneralizedGammaCDFDoublePrecision(double valueProbability, double alpha, double beta, double accuracy,double pZero,double outlierStep)

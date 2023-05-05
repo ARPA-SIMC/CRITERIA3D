@@ -52,6 +52,7 @@ Crit3DSoilWidget::Crit3DSoilWidget()
 {
     dbSoilType = DB_SQLITE;
     textureClassList.resize(13);
+    geotechnicsClassList.resize(19);
 
     this->setWindowTitle(QStringLiteral("CRITERIA - Soil Editor"));
     this->resize(1240, 700);
@@ -288,6 +289,9 @@ void Crit3DSoilWidget::setDbSoil(QSqlDatabase dbOpened, QString soilCode)
         return;
     }
 
+    // load default geotechnics parameters (not mandatory)
+    loadGeotechnicsParameters(dbSoil, geotechnicsClassList, errorStr);
+
     // read soil list
     QList<QString> soilStringList;
     if (! getSoilList(dbSoil, soilStringList, errorStr))
@@ -421,7 +425,7 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
 
     mySoil.cleanSoil();
 
-    if (! loadSoil(dbSoil, soilCode, mySoil, textureClassList, fittingOptions, errorStr))
+    if (! loadSoil(dbSoil, soilCode, mySoil, textureClassList, geotechnicsClassList, fittingOptions, errorStr))
     {
         if (errorStr.contains("Empty", Qt::CaseInsensitive))
         {
@@ -555,7 +559,7 @@ void Crit3DSoilWidget::on_actionUseWaterRetentionData()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(mySoil.horizon[i], textureClassList, fittingOptions, errorString);
+        soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, errorString);
     }
 
     updateAll();
@@ -575,7 +579,7 @@ void Crit3DSoilWidget::on_actionAirEntry()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(mySoil.horizon[i], textureClassList, fittingOptions, errorString);
+        soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, errorString);
     }
     updateAll();
 }
@@ -593,7 +597,7 @@ void Crit3DSoilWidget::on_actionParameterRestriction()
     std::string errorString;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        soil::setHorizon(mySoil.horizon[i], textureClassList, fittingOptions, errorString);
+        soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, errorString);
     }
     updateAll();
 }
@@ -798,7 +802,7 @@ void Crit3DSoilWidget::tabChanged(int index)
         {
             if (mySoil.nrHorizons > 0)
             {
-                horizonsTab->insertSoilHorizons(&mySoil, &textureClassList, &fittingOptions);
+                horizonsTab->insertSoilHorizons(&mySoil, &textureClassList, &geotechnicsClassList, &fittingOptions);
                 addHorizon->setEnabled(true);
                 deleteHorizon->setEnabled(true);
             }
@@ -816,7 +820,7 @@ void Crit3DSoilWidget::tabChanged(int index)
         {
             if (mySoil.nrHorizons > 0)
             {
-                wrDataTab->insertData(&mySoil, &textureClassList, &fittingOptions);
+                wrDataTab->insertData(&mySoil, &textureClassList, &geotechnicsClassList, &fittingOptions);
                 addHorizon->setEnabled(false);
                 deleteHorizon->setEnabled(false);
             }
@@ -864,7 +868,7 @@ void Crit3DSoilWidget::updateAll()
     changed = true;
     horizonsTab->updateBarHorizon(&mySoil);
     horizonsTab->updateTableModel(&mySoil);
-    wrDataTab->insertData(&mySoil, &textureClassList, &fittingOptions);
+    wrDataTab->insertData(&mySoil, &textureClassList, &geotechnicsClassList, &fittingOptions);
     wrCurveTab->insertElements(&mySoil);
     hydraConducCurveTab->insertElements(&mySoil);
 }
