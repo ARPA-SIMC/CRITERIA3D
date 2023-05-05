@@ -255,6 +255,7 @@
         double getWaterContentFromAW(double availableWater, const Crit3DLayer &layer);
 
         bool setHorizon(Crit3DHorizon &horizon, const std::vector<Crit3DTextureClass> &textureClassList,
+                        const std::vector<Crit3DGeotechnicsClass> &geotechnicsClassList,
                         const Crit3DFittingOptions &fittingOptions, std::string &errorStr);
 
         bool fittingWaterRetentionCurve(Crit3DHorizon &horizon, const Crit3DFittingOptions &fittingOptions);

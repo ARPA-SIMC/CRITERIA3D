@@ -759,6 +759,7 @@ namespace soil
      * \return true if soil properties are correct, false otherwise
      */
     bool setHorizon(Crit3DHorizon &horizon, const std::vector<Crit3DTextureClass> &textureClassList,
+                    const std::vector<Crit3DGeotechnicsClass> &geotechnicsClassList,
                     const Crit3DFittingOptions &fittingOptions, std::string &errorStr)
     {
         errorStr = "";
@@ -897,7 +898,8 @@ namespace soil
         }
         else
         {
-            // TODO valore da tabella
+            if (horizon.texture.classUSCS >= 1 && horizon.texture.classUSCS <= 18)
+                horizon.effectiveCohesion = geotechnicsClassList[horizon.texture.classUSCS].effectiveCohesion;
         }
         if (horizon.dbData.frictionAngle != NODATA)
         {
@@ -905,7 +907,8 @@ namespace soil
         }
         else
         {
-            // TODO
+            if (horizon.texture.classUSCS >= 1 && horizon.texture.classUSCS <= 18)
+                horizon.frictionAngle = geotechnicsClassList[horizon.texture.classUSCS].frictionAngle;
         }
 
         horizon.fieldCapacity = soil::getFieldCapacity(horizon, soil::KPA);

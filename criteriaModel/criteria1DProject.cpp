@@ -391,7 +391,7 @@ void Crit1DProject::checkSimulationDates()
 
 bool Crit1DProject::setSoil(QString soilCode, QString &errorStr)
 {
-    if (! loadSoil(dbSoil, soilCode, myCase.mySoil, soilTexture, myCase.fittingOptions, errorStr))
+    if (! loadSoil(dbSoil, soilCode, myCase.mySoil, soilTexture, geotechnicsClass, myCase.fittingOptions, errorStr))
         return false;
 
     // warning: some soil data are wrong

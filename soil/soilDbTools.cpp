@@ -339,6 +339,7 @@ bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
 
 bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil,
               const std::vector<soil::Crit3DTextureClass> &textureClassList,
+              const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
               const soil::Crit3DFittingOptions &fittingOptions, QString& errorStr)
 {
     if (!loadSoilData(dbSoil, soilCode, mySoil, errorStr))
@@ -356,7 +357,7 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
         std::string currentError;
-        if (! soil::setHorizon(mySoil.horizon[i], textureClassList, fittingOptions, currentError))
+        if (! soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, currentError))
         {
             if (isFirstError)
             {
@@ -680,12 +681,13 @@ bool getSoilList(const QSqlDatabase &dbSoil, QList<QString> &soilList, QString &
 
 bool loadAllSoils(const QString &dbSoilName, std::vector <soil::Crit3DSoil> &soilList,
                   std::vector<soil::Crit3DTextureClass> &textureClassList,
+                  const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
                   const soil::Crit3DFittingOptions &fittingOptions, QString &errorStr)
 {
     QSqlDatabase dbSoil;
     if (! openDbSoil(dbSoilName, dbSoil, errorStr)) return false;
 
-    bool result = loadAllSoils(dbSoil, soilList, textureClassList, fittingOptions, errorStr);
+    bool result = loadAllSoils(dbSoil, soilList, textureClassList, geotechnicsClassList, fittingOptions, errorStr);
     dbSoil.close();
 
     return result;
@@ -694,6 +696,7 @@ bool loadAllSoils(const QString &dbSoilName, std::vector <soil::Crit3DSoil> &soi
 
 bool loadAllSoils(const QSqlDatabase &dbSoil, std::vector <soil::Crit3DSoil> &soilList,
                   std::vector<soil::Crit3DTextureClass> &textureClassList,
+                  const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
                   const soil::Crit3DFittingOptions &fittingOptions, QString& errorStr)
 {
     soilList.clear();
@@ -728,7 +731,7 @@ bool loadAllSoils(const QSqlDatabase &dbSoil, std::vector <soil::Crit3DSoil> &so
         if (idSoil != NODATA && soilCode != "")
         {
             soil::Crit3DSoil mySoil;
-            if (loadSoil(dbSoil, soilCode, mySoil, textureClassList, fittingOptions, errorStr))
+            if (loadSoil(dbSoil, soilCode, mySoil, textureClassList, geotechnicsClassList, fittingOptions, errorStr))
             {
                 mySoil.id = idSoil;
                 mySoil.code = soilCode.toStdString();
