@@ -1,3 +1,4 @@
+#include <math.h>
 #include "commonConstants.h"
 #include "criteria1DError.h"
 #include "criteria1DProject.h"
@@ -71,6 +72,7 @@ void Crit1DProject::initialize()
     awcDepth.clear();
 
     soilTexture.resize(13);
+    geotechnicsClassList.resize(19);
 }
 
 
@@ -325,6 +327,10 @@ int Crit1DProject::initializeProject(QString settingsFileName)
     if (! loadDriessenParameters(dbSoil, soilTexture, projectError))
         return ERROR_SOIL_PARAMETERS;
 
+    // missing table is not critical
+    loadGeotechnicsParameters(dbSoil, geotechnicsClassList, projectError);
+    projectError = "";
+
     // Computational unit list
     if (! readComputationUnitList(dbComputationUnitsName, compUnitList, projectError))
     {
@@ -386,7 +392,7 @@ void Crit1DProject::checkSimulationDates()
 
 bool Crit1DProject::setSoil(QString soilCode, QString &errorStr)
 {
-    if (! loadSoil(dbSoil, soilCode, myCase.mySoil, soilTexture, myCase.fittingOptions, errorStr))
+    if (! loadSoil(dbSoil, soilCode, myCase.mySoil, soilTexture, geotechnicsClassList, myCase.fittingOptions, errorStr))
         return false;
 
     // warning: some soil data are wrong

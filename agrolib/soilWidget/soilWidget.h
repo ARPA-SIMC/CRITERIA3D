@@ -44,6 +44,7 @@
             soil::Crit3DSoil mySoil;
             soil::Crit3DSoil savedSoil;
             std::vector<soil::Crit3DTextureClass> textureClassList;
+            std::vector<soil::Crit3DGeotechnicsClass> geotechnicsClassList;
             soil::Crit3DFittingOptions fittingOptions;
             int dbSoilType;
 

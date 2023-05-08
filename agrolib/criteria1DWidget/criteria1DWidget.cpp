@@ -1545,7 +1545,7 @@ void Criteria1DWidget::on_actionChooseSoil(QString soilCode)
     myProject.myCase.mySoil.cleanSoil();
 
     if (! loadSoil(myProject.dbSoil, soilCode, myProject.myCase.mySoil,
-                  myProject.soilTexture, myProject.myCase.fittingOptions, errorStr))
+                  myProject.soilTexture, myProject.geotechnicsClassList, myProject.myCase.fittingOptions, errorStr))
     {
         if (errorStr.contains("Empty"))
         {
