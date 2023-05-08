@@ -36,12 +36,12 @@
 
     bool loadAllSoils(const QString &dbSoilName, std::vector <soil::Crit3DSoil> &soilList,
                       std::vector<soil::Crit3DTextureClass> &textureClassList,
-                      const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
+                      std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
                       const soil::Crit3DFittingOptions &fittingOptions, QString &errorStr);
 
     bool loadAllSoils(const QSqlDatabase &dbSoil, std::vector <soil::Crit3DSoil> &soilList,
                       std::vector<soil::Crit3DTextureClass> &textureClassList,
-                      const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
+                      std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
                       const soil::Crit3DFittingOptions &fittingOptions, QString& errorStr);
 
     bool loadSoilInfo(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, QString &errorStr);

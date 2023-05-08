@@ -681,7 +681,7 @@ bool getSoilList(const QSqlDatabase &dbSoil, QList<QString> &soilList, QString &
 
 bool loadAllSoils(const QString &dbSoilName, std::vector <soil::Crit3DSoil> &soilList,
                   std::vector<soil::Crit3DTextureClass> &textureClassList,
-                  const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
+                  std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
                   const soil::Crit3DFittingOptions &fittingOptions, QString &errorStr)
 {
     QSqlDatabase dbSoil;
@@ -696,15 +696,17 @@ bool loadAllSoils(const QString &dbSoilName, std::vector <soil::Crit3DSoil> &soi
 
 bool loadAllSoils(const QSqlDatabase &dbSoil, std::vector <soil::Crit3DSoil> &soilList,
                   std::vector<soil::Crit3DTextureClass> &textureClassList,
-                  const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
+                  std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
                   const soil::Crit3DFittingOptions &fittingOptions, QString& errorStr)
 {
     soilList.clear();
 
     if (! loadVanGenuchtenParameters(dbSoil, textureClassList, errorStr))
-    {
         return false;
-    }
+
+    // geotechnics table is not mandatory
+    loadGeotechnicsParameters(dbSoil, geotechnicsClassList, errorStr);
+    errorStr = "";
 
     // query soil list
     QString queryString = "SELECT id_soil, soil_code, name FROM soils";
