@@ -86,8 +86,7 @@ gis::Crit3DRasterGrid* Crit3DWaterBalanceMaps::getMapFromVar(criteria3DVariable 
 
 double getSoilVar(Vine3DProject* myProject, int soilIndex, int layerIndex, soil::soilVariable myVar)
 {
-    int horizonIndex = soil::getHorizonIndex(&(myProject->soilList[soilIndex]),
-                                          myProject->layerDepth[unsigned(layerIndex)]);
+    int horizonIndex = soil::getHorizonIndex(myProject->soilList[soilIndex], myProject->layerDepth[unsigned(layerIndex)]);
 
     if (int(horizonIndex) == int(NODATA)) return NODATA;
 
@@ -117,7 +116,7 @@ double getSoilVar(Vine3DProject* myProject, int soilIndex, int layerIndex, soil:
         {
             double signPsiLeaf = - myProject->cultivar[0].parameterWangLeuning.psiLeaf;         // [kPa]
             // [m^3 m^-3]
-            return soil::thetaFromSignPsi(signPsiLeaf, &(myProject->soilList[soilIndex].horizon[horizonIndex]));
+            return soil::thetaFromSignPsi(signPsiLeaf, myProject->soilList[soilIndex].horizon[horizonIndex]);
         }
         else
             return NODATA;
@@ -310,8 +309,7 @@ bool getRootZoneAWCmap(Vine3DProject* myProject, gis::Crit3DRasterGrid* outputMa
                                 if (awc != NODATA)
                                 {
                                     thickness = myProject->layerThickness[layer] * 1000.0;  //[mm]
-                                    horizonIndex = soil::getHorizonIndex(&(myProject->soilList[soilIndex]),
-                                                                         myProject->layerDepth[layer]);
+                                    horizonIndex = soil::getHorizonIndex(myProject->soilList[soilIndex], myProject->layerDepth[layer]);
                                     sumAWC += (awc * thickness);         //[mm]
                                 }
                             }

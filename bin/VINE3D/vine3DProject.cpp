@@ -1495,7 +1495,7 @@ soil::Crit3DHorizon* Vine3DProject::getSoilHorizon(long row, long col, int layer
     int soilIndex = getSoilIndex(row, col);
     if (soilIndex == NODATA) return nullptr;
 
-    int horizonIndex = soil::getHorizonIndex(&(soilList[unsigned(soilIndex)]), layer);
+    int horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layer);
     if (horizonIndex == NODATA) return nullptr;
 
     soil::Crit3DHorizon* horizonPtr = &(soilList[unsigned(soilIndex)].horizon[unsigned(horizonIndex)]);
