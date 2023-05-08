@@ -71,7 +71,7 @@ void Crit1DProject::initialize()
     fractionAvailableWaterDepth.clear();
     awcDepth.clear();
 
-    soilTexture.resize(13);
+    texturalClassList.resize(13);
     geotechnicsClassList.resize(19);
 }
 
@@ -321,10 +321,10 @@ int Crit1DProject::initializeProject(QString settingsFileName)
     if (myError != CRIT1D_OK)
         return myError;
 
-    if (! loadVanGenuchtenParameters(dbSoil, soilTexture, projectError))
+    if (! loadVanGenuchtenParameters(dbSoil, texturalClassList, projectError))
         return ERROR_SOIL_PARAMETERS;
 
-    if (! loadDriessenParameters(dbSoil, soilTexture, projectError))
+    if (! loadDriessenParameters(dbSoil, texturalClassList, projectError))
         return ERROR_SOIL_PARAMETERS;
 
     // missing table is not critical
@@ -392,7 +392,7 @@ void Crit1DProject::checkSimulationDates()
 
 bool Crit1DProject::setSoil(QString soilCode, QString &errorStr)
 {
-    if (! loadSoil(dbSoil, soilCode, myCase.mySoil, soilTexture, geotechnicsClassList, myCase.fittingOptions, errorStr))
+    if (! loadSoil(dbSoil, soilCode, myCase.mySoil, texturalClassList, geotechnicsClassList, myCase.fittingOptions, errorStr))
         return false;
 
     // warning: some soil data are wrong
