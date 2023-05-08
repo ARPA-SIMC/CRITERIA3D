@@ -1,3 +1,4 @@
+#include <math.h>
 #include "commonConstants.h"
 #include "criteria1DError.h"
 #include "criteria1DProject.h"
