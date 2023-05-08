@@ -48,7 +48,8 @@
         Crit1DCarbonNitrogenProfile myCarbonNitrogenProfile;
 
         // soil
-        std::vector<soil::Crit3DTextureClass> soilTexture;
+        std::vector<soil::Crit3DTextureClass> texturalClassList;
+        std::vector<soil::Crit3DGeotechnicsClass> geotechnicsClassList;
 
         std::vector<Crit1DCompUnit> compUnitList;
 

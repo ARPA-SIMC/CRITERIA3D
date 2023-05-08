@@ -23,7 +23,18 @@ QList<QString> getFields(QSqlDatabase* db_, QString tableName)
 }
 
 
-QList<QString> getFieldsUpperCase(QSqlQuery& query)
+QList<QString> getFields(const QSqlQuery &query)
+{
+    QSqlRecord record = query.record();
+    QList<QString> fieldList;
+    for (int i=0; i < record.count(); i++)
+        fieldList.append(record.fieldName(i));
+
+    return fieldList;
+}
+
+
+QList<QString> getFieldsUpperCase(const QSqlQuery& query)
 {
     QSqlRecord record = query.record();
     QList<QString> fieldList;

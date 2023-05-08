@@ -90,7 +90,7 @@ namespace soil
         this->classUSDA = NODATA;
         this->classNL = NODATA;
         this->classNameUSDA = "UNDEFINED";
-        this->classNameUSCS = "UNDEFINED";
+        this->classUSCS = NODATA;
     }
 
     Crit3DTexture::Crit3DTexture (double mySand, double mySilt, double myClay)
@@ -112,6 +112,12 @@ namespace soil
         this->thetaR = NODATA;
         this->thetaS = NODATA;
         this->refThetaS = NODATA;
+    }
+
+    Crit3DGeotechnicsClass::Crit3DGeotechnicsClass()
+    {
+        this->effectiveCohesion = NODATA;
+        this->frictionAngle = NODATA;
     }
 
     Crit3DDriessen::Crit3DDriessen()
@@ -309,7 +315,8 @@ namespace soil
     }
 
 
-    std::string getUSCSClass(const Crit3DHorizon &horizon)
+    // Unified Soil Classification System (USCS)
+    int getUSCSClass(const Crit3DHorizon &horizon)
     {
         double coarseFraction = horizon.coarseFragments + (horizon.texture.sand / 100) * (1 - horizon.coarseFragments);
         double fineFraction = (horizon.texture.clay + horizon.texture.silt) / 100 * (1 - horizon.coarseFragments);
@@ -320,22 +327,22 @@ namespace soil
             {
                 // GRAVELS
                 if (fineFraction < 0.12)
-                   return "GW";  // also GP
+                   return 1;    // GW (also GP)
                 else
-                   return "GM";  // also GC
+                   return 3;    // GM (also GC)
             }
             else
             {
                 // SANDS
                 if (horizon.texture.classNameUSDA == "sand")
-                   return "SP";
+                   return 8; // SP
                 if (horizon.texture.classNameUSDA == "sandy loam" || horizon.texture.classNameUSDA == "loamy sand")
-                   return "SM";
+                   return 9; // SM
                 if (horizon.texture.classNameUSDA == "sandy clayloam" || horizon.texture.classNameUSDA == "sandy clay")
-                   return "SC";
+                   return 10; // SC
 
                 // default
-                return "SM";
+                return 9;     // SM
             }
         }
         else
@@ -344,30 +351,30 @@ namespace soil
             if (horizon.texture.classNameUSDA == "loam" || horizon.texture.classNameUSDA == "clayloam" || horizon.texture.classNameUSDA == "silty clayloam")
             {
                 if (horizon.organicMatter > 0.2)
-                   return "OL";
+                   return 16; // OL
                 else
-                   return "CL";
+                   return 14; // CL
             }
             if (horizon.texture.classNameUSDA == "silt" || horizon.texture.classNameUSDA == "silt loam")
             {
                 if (horizon.organicMatter > 0.2)
-                   return "OL";
+                   return 16; // OL
                 else
-                   return "ML";
+                   return 13; // ML
             }
             if (horizon.texture.classNameUSDA == "clay" || horizon.texture.classNameUSDA == "silty clay")
             {
                 if (horizon.organicMatter > 0.2)
-                   return "OH";
+                   return 17; // OH
                 else
-                   return "CH";
+                   return 15; // CH
             }
 
             //default
             if (horizon.organicMatter > 0.2)
-                return "OL";
+                return 16; // OL
             else
-                return "CL";
+                return 14; // CL
         }
     }
 
@@ -752,6 +759,7 @@ namespace soil
      * \return true if soil properties are correct, false otherwise
      */
     bool setHorizon(Crit3DHorizon &horizon, const std::vector<Crit3DTextureClass> &textureClassList,
+                    const std::vector<Crit3DGeotechnicsClass> &geotechnicsClassList,
                     const Crit3DFittingOptions &fittingOptions, std::string &errorStr)
     {
         errorStr = "";
@@ -883,14 +891,15 @@ namespace soil
         horizon.PH = 7.7;
 
         // new parameters for slope stability
-        horizon.texture.classNameUSCS = getUSCSClass(horizon);
+        horizon.texture.classUSCS = getUSCSClass(horizon);
         if (horizon.dbData.effectiveCohesion != NODATA)
         {
             horizon.effectiveCohesion = horizon.dbData.effectiveCohesion;
         }
         else
         {
-            // TODO
+            if (horizon.texture.classUSCS >= 1 && horizon.texture.classUSCS <= 18)
+                horizon.effectiveCohesion = geotechnicsClassList[horizon.texture.classUSCS].effectiveCohesion;
         }
         if (horizon.dbData.frictionAngle != NODATA)
         {
@@ -898,7 +907,8 @@ namespace soil
         }
         else
         {
-            // TODO
+            if (horizon.texture.classUSCS >= 1 && horizon.texture.classUSCS <= 18)
+                horizon.frictionAngle = geotechnicsClassList[horizon.texture.classUSCS].frictionAngle;
         }
 
         horizon.fieldCapacity = soil::getFieldCapacity(horizon, soil::KPA);

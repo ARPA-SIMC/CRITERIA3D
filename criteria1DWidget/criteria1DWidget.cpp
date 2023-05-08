@@ -961,14 +961,14 @@ void Criteria1DWidget::openSoilDB(QString dbSoilName)
     }
 
     // load default VG parameters
-    if (! loadVanGenuchtenParameters(myProject.dbSoil, myProject.soilTexture, errorStr))
+    if (! loadVanGenuchtenParameters(myProject.dbSoil, myProject.texturalClassList, errorStr))
     {
         QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
     }
 
     // load default Driessen parameters
-    if (! loadDriessenParameters(myProject.dbSoil, myProject.soilTexture, errorStr))
+    if (! loadDriessenParameters(myProject.dbSoil, myProject.texturalClassList, errorStr))
     {
         QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
@@ -1544,8 +1544,8 @@ void Criteria1DWidget::on_actionChooseSoil(QString soilCode)
     QString errorStr;
     myProject.myCase.mySoil.cleanSoil();
 
-    if (! loadSoil(myProject.dbSoil, soilCode, myProject.myCase.mySoil,
-                  myProject.soilTexture, myProject.myCase.fittingOptions, errorStr))
+    if (! loadSoil(myProject.dbSoil, soilCode, myProject.myCase.mySoil, myProject.texturalClassList,
+                  myProject.geotechnicsClassList, myProject.myCase.fittingOptions, errorStr))
     {
         if (errorStr.contains("Empty"))
         {
