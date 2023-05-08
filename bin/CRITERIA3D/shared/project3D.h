@@ -56,6 +56,7 @@
 
         std::vector <soil::Crit3DSoil> soilList;
         std::vector <soil::Crit3DTextureClass> texturalClassList;
+        std::vector<soil::Crit3DGeotechnicsClass> geotechnicsClassList;
         soil::Crit3DFittingOptions fittingOptions;
 
         // layers

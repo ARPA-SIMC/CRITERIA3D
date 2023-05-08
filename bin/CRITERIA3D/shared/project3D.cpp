@@ -43,6 +43,7 @@ void Project3D::initializeProject3D()
     initializeProject();
 
     texturalClassList.resize(13);
+    geotechnicsClassList.resize(19);
 
     soilDbFileName = "";
     cropDbFileName = "";
@@ -193,7 +194,7 @@ bool Project3D::loadSoilDatabase(QString fileName)
     soilDbFileName = fileName;
     fileName = getCompleteFileName(fileName, PATH_SOIL);
 
-    if (! loadAllSoils(fileName, soilList, texturalClassList, fittingOptions, errorString))
+    if (! loadAllSoils(fileName, soilList, texturalClassList, geotechnicsClassList, fittingOptions, errorString))
     {
         logError();
         return false;
