@@ -1252,6 +1252,7 @@ bool Project::loadMeteoGridDB(QString xmlName)
     return true;
 }
 
+
 bool Project::newMeteoGridDB(QString xmlName)
 {
     if (xmlName == "") return false;
