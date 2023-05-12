@@ -33,6 +33,7 @@
 #include "water1D.h"
 #include "criteria1DCase.h"
 #include "soilFluxes3D.h"
+#include "soil.h"
 
 
 Crit1DOutput::Crit1DOutput()
@@ -551,8 +552,8 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
 
     // output variables
     output.dailySurfaceWaterContent = soilLayers[0].waterContent;
-    output.dailySoilWaterContent = getSoilWaterContent(soilLayers, 100);
-    output.dailyAvailableWater = getAvailableWater(100);
+    output.dailySoilWaterContent = getSoilWaterContentSum(soilLayers, 100);
+    output.dailyAvailableWater = getAvailableWaterSum(100);
     output.dailyFractionAW = getFractionAW(100);
     output.dailyReadilyAW = getReadilyAvailableWater(crop, soilLayers);
 
@@ -635,7 +636,7 @@ double Crit1DCase::getWaterPotential(double computationDepth)
  * \param computationDepth = computation soil depth  [cm]
  * \return sum of water deficit from zero to computationDepth (mm)
  */
-double Crit1DCase::getWaterDeficit(double computationDepth)
+double Crit1DCase::getWaterDeficitSum(double computationDepth)
 {
     computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
@@ -668,7 +669,7 @@ double Crit1DCase::getWaterDeficit(double computationDepth)
  * \param computationDepth = computation soil depth  [cm]
  * \return sum of available water capacity (FC-WP) from zero to computationDepth (mm)
  */
-double Crit1DCase::getWaterCapacity(double computationDepth)
+double Crit1DCase::getWaterCapacitySum(double computationDepth)
 {
     computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
@@ -697,11 +698,11 @@ double Crit1DCase::getWaterCapacity(double computationDepth)
 
 
 /*!
- * \brief getAvailableWater
+ * \brief getAvailableWaterSum
  * \param computationDepth = computation soil depth  [cm]
  * \return sum of available water from zero to computationDepth (mm)
  */
-double Crit1DCase::getAvailableWater(double computationDepth)
+double Crit1DCase::getAvailableWaterSum(double computationDepth)
 {
     computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]
@@ -764,3 +765,58 @@ double Crit1DCase::getFractionAW(double computationDepth)
 
     return availableWaterSum / potentialAWSum;
 }
+
+
+/*!
+ * \brief getSlopeStability
+ * \param computationDepth [cm]
+ * \return slope factor (sf) of safety [-]
+ * if sf < 1 the slope is unstable
+ */
+double Crit1DCase::getSlopeStability(double computationDepth)
+{
+    // check computation depth
+    computationDepth /= 100;             // [cm] --> [m]
+    if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
+        return NODATA;
+
+    soil::Crit3DHorizon *horizonPtr = nullptr;
+    int currentIndex = NODATA;
+    double upperDepth, lowerDepth;
+    for (unsigned int i = 1; i < soilLayers.size(); i++)
+    {
+        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
+        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
+        if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
+        {
+            horizonPtr = soilLayers[i].horizonPtr;
+            currentIndex = i;
+        }
+    }
+
+    if (horizonPtr == nullptr)
+        return NODATA;
+
+    double suctionStress = -soilLayers[currentIndex].getWaterPotential();           // [kPa]
+    // TODO gestire i casi in cui psi è positivo (saturo) nella dll (sink?)
+    // eq. caso saturo
+
+    double slopeAngle = asin(unit.slope);
+    double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
+
+    double tanAngle = tan(slopeAngle);
+    double tanFrictionAngle = tan(frictionAngle);
+
+    double frictionEffect =  tanFrictionAngle / tanAngle;
+
+    // TODO check HSS (computation depth or thickness?)
+    // TODO check unit
+    double unitWeight = horizonPtr->bulkDensity * 1000 * GRAVITY;                   // [N m-3]
+    double cohesionEffect = 2 * horizonPtr->effectiveCohesion / (unitWeight * computationDepth * sin(2*slopeAngle));
+
+    double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * computationDepth);
+
+    double slopeStability = frictionEffect + cohesionEffect - suctionEffect;       // [-]
+    return slopeStability;
+}
+

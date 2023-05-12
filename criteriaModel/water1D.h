@@ -22,7 +22,8 @@
 
     double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, unsigned int lastRootLayer, double irrigationMax);
 
-    double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, double computationDepth);
+    double getSoilWaterContentSum(const std::vector<soil::Crit3DLayer> &soilLayers, double computationDepth);
+
     double getReadilyAvailableWater(const Crit3DCrop &myCrop, const std::vector<soil::Crit3DLayer> &soilLayers);
 
 

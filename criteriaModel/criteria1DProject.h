@@ -94,6 +94,7 @@
         std::vector<int> awcDepth;
         std::vector<int> availableWaterDepth;
         std::vector<int> fractionAvailableWaterDepth;
+        std::vector<int> slopeStabilityDepth;
 
         // DATABASE
         QSqlDatabase dbForecast;
