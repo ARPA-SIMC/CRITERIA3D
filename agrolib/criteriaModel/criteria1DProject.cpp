@@ -69,6 +69,7 @@ void Crit1DProject::initialize()
     waterPotentialDepth.clear();
     availableWaterDepth.clear();
     fractionAvailableWaterDepth.clear();
+    slopeStabilityDepth.clear();
     awcDepth.clear();
 
     texturalClassList.resize(13);
@@ -278,6 +279,14 @@ bool Crit1DProject::readSettings()
         if (! setVariableDepth(depthList, fractionAvailableWaterDepth))
         {
             projectError = "Wrong fraction available water depth in " + configFileName;
+            return false;
+        }
+        depthList = projectSettings->value("slopeStability").toStringList();
+        if (depthList.size() == 0)
+            depthList = projectSettings->value("slopeStability").toStringList();
+        if (! setVariableDepth(depthList, slopeStabilityDepth))
+        {
+            projectError = "Wrong slope stability depth in " + configFileName;
             return false;
         }
     projectSettings->endGroup();
@@ -1516,6 +1525,11 @@ bool Crit1DProject::createOutputTable(QString &myError)
         QString fieldName = "FAW_" + QString::number(fractionAvailableWaterDepth[i]);
         queryString += ", " + fieldName + " REAL";
     }
+    for (unsigned int i = 0; i < slopeStabilityDepth.size(); i++)
+    {
+        QString fieldName = "SF_" + QString::number(slopeStabilityDepth[i]);
+        queryString += ", " + fieldName + " REAL";
+    }
 
     queryString += ")";
     myQuery = this->dbOutput.exec(queryString);
@@ -1571,6 +1585,11 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
             QString fieldName = "FAW_" + QString::number(fractionAvailableWaterDepth[i]);
             outputString += ", " + fieldName;
         }
+        for (unsigned int i = 0; i < slopeStabilityDepth.size(); i++)
+        {
+            QString fieldName = "SF_" + QString::number(slopeStabilityDepth[i]);
+            outputString += ", " + fieldName;
+        }
 
         outputString += ") VALUES ";
     }
@@ -1611,19 +1630,23 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
     }
     for (unsigned int i = 0; i < waterDeficitDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getWaterDeficit(waterDeficitDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getWaterDeficitSum(waterDeficitDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < awcDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getWaterCapacity(awcDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getWaterCapacitySum(awcDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < availableWaterDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getAvailableWater(availableWaterDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getAvailableWaterSum(availableWaterDepth[i]), 'g', 4);
     }
     for (unsigned int i = 0; i < fractionAvailableWaterDepth.size(); i++)
     {
         outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 3);
+    }
+    for (unsigned int i = 0; i < slopeStabilityDepth.size(); i++)
+    {
+        outputString += "," + QString::number(myCase.getSlopeStability(slopeStabilityDepth[i]), 'g', 4);
     }
 
     outputString += ")";

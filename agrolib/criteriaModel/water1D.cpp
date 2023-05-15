@@ -530,12 +530,12 @@ double assignOptimalIrrigation(std::vector<soil::Crit3DLayer> &soilLayers, unsig
 
 
 /*!
- * \brief getSoilWaterContent
+ * \brief getSoilWaterContentSum
  * \param soilLayers
  * \param computationDepth = computation soil depth [cm]
  * \return sum of water content from zero to computationSoilDepth [mm]
  */
-double getSoilWaterContent(const std::vector<soil::Crit3DLayer> &soilLayers, double computationDepth)
+double getSoilWaterContentSum(const std::vector<soil::Crit3DLayer> &soilLayers, double computationDepth)
 {
     computationDepth /= 100;                // [cm] --> [m]
     double lowerDepth, upperDepth;          // [m]

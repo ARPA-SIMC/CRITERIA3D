@@ -1254,6 +1254,7 @@ bool Crit3DMeteoGridDbHandler::loadCellProperties(QString *myError)
     return true;
 }
 
+
 bool Crit3DMeteoGridDbHandler::newCellProperties(QString *myError)
 {
     QSqlQuery qry(_db);
@@ -1270,19 +1271,21 @@ bool Crit3DMeteoGridDbHandler::newCellProperties(QString *myError)
     return true;
 }
 
+
 bool Crit3DMeteoGridDbHandler::writeCellProperties(QString *myError, int nRow, int nCol)
 {
     QSqlQuery qry(_db);
     QString table = "CellsProperties";
     int id = 0;
     QString statement = QString(("INSERT INTO `%1` (`Code`, `Name`, `Row`, `Col`, `Active`) VALUES ")).arg(table);
-    for (int i = 0; i<nRow; i++)
+    // standard QGis: first value at top left
+    for (int c = 0; c<nCol; c++)
     {
-        for (int j = 0; j<nCol; j++)
+        for (int r = nRow-1; r>=0; r--)
         {
             id = id + 1;
-            statement += QString(" ('%1','%2','%3','%4',1),").arg(id, 6, 10, QChar('0')).arg(id, 6, 10, QChar('0')).arg(i).arg(j);
-            _meteoGrid->fillMeteoPoint(i, j, QString("%1").arg(id, 6, 10, QChar('0')).toStdString(), QString("%1").arg(id, 6, 10, QChar('0')).toStdString(), 0, 1);
+            statement += QString(" ('%1','%2','%3','%4',1),").arg(id, 6, 10, QChar('0')).arg(id, 6, 10, QChar('0')).arg(r).arg(c);
+            _meteoGrid->fillMeteoPoint(r, c, QString("%1").arg(id, 6, 10, QChar('0')).toStdString(), QString("%1").arg(id, 6, 10, QChar('0')).toStdString(), 0, 1);
         }
     }
 
@@ -1295,6 +1298,7 @@ bool Crit3DMeteoGridDbHandler::writeCellProperties(QString *myError, int nRow, i
     }
     return true;
 }
+
 
 bool Crit3DMeteoGridDbHandler::activeAllCells(QString *myError)
 {
