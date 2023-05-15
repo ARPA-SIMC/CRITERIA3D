@@ -1,5 +1,5 @@
 #include "glWidget.h"
-#include "viewer3d.h"
+#include "viewer3D.h"
 
 #include <QSlider>
 #include <QLabel>

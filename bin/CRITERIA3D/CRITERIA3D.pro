@@ -13,7 +13,7 @@ TEMPLATE = app
 TARGET = CRITERIA3D
 
 CONFIG += debug_and_release
-QMAKE_CXXFLAGS += -std=c++11
+CONFIG += c++11 c++14 c++17
 
 DEFINES += CRITERIA3D
 
