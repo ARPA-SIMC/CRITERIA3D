@@ -12,20 +12,20 @@ QList<QString> getPragaCommandList()
 
     // praga commands
     cmdList.append("List            | ListCommands");
-    cmdList.append("Proj            | OpenProject");
-    cmdList.append("Point           | OpenDbPoint");
-    cmdList.append("Download        | Download");
-    cmdList.append("Netcdf          | ExportNetcdf");
-    cmdList.append("XMLToNetcdf     | ExportXMLElaborationsToNetcdf");
-    //cmdList.append("LoadForecast  | LoadForecastData");
-    cmdList.append("GridAggr        | GridAggregation");
-    cmdList.append("GridDerVar      | GridDerivedVariables");
-    cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
     cmdList.append("AggrOnZones     | GridAggregationOnZones");
     cmdList.append("ComputeClimate  | ComputeClimaFromXMLSaveOnDB");
     cmdList.append("Drought         | ComputeDroughtIndexGrid");
     cmdList.append("DroughtPoint    | ComputeDroughtIndexPoint");
+    cmdList.append("Download        | Download");
+    cmdList.append("GridAggr        | GridAggregation");
+    cmdList.append("GridDerVar      | GridDerivedVariables");
+    cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
+    cmdList.append("Netcdf          | ExportNetcdf");
+    cmdList.append("Point           | OpenDbPoint");
+    cmdList.append("Proj            | OpenProject");
+    //cmdList.append("LoadForecast  | LoadForecastData");
     cmdList.append("SaveLogProc     | SaveLogProceduresGrid");
+    cmdList.append("XMLToNetcdf     | ExportXMLElaborationsToNetcdf");
 
     return cmdList;
 }
@@ -36,7 +36,7 @@ int cmdList(PragaProject* myProject)
     QList<QString> list = getPragaCommandList();
 
     myProject->logInfo("Available PRAGA Console commands:");
-    myProject->logInfo("(short  | long version)");
+    myProject->logInfo("(short      | long version)");
     for (int i = 0; i < list.size(); i++)
     {
         myProject->logInfo(list[i]);

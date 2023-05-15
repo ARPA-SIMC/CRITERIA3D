@@ -165,11 +165,11 @@ QList<QString> getSharedCommandList()
 {
     QList<QString> cmdList;
 
-    cmdList.append("Log     | SetLogFile");
-    cmdList.append("DEM     | LoadDEM");
-    cmdList.append("POINT   | LoadPoints");
-    cmdList.append("GRID    | LoadGrid");
-    cmdList.append("Quit    | Exit");
+    cmdList.append("Log         | SetLogFile");
+    cmdList.append("DEM         | LoadDEM");
+    cmdList.append("POINT       | LoadPoints");
+    cmdList.append("GRID        | LoadGrid");
+    cmdList.append("Quit        | Exit");
 
     return cmdList;
 }
