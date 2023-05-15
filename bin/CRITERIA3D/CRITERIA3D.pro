@@ -28,8 +28,6 @@ INCLUDEPATH +=  ./shared  \
                 ../../agrolib/graphics  ../../agrolib/commonChartElements ../../agrolib/commonDialogs \
                 ../../mapGraphics ../../agrolib/meteoWidget
 
-LIBS += -lopengl32
-
 CONFIG(debug, debug|release) {
     LIBS += -L../../agrolib/graphics/debug -lgraphics
     win32:{
