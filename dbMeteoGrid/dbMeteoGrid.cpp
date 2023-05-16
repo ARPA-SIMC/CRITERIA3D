@@ -1,4 +1,5 @@
 #include "dbMeteoGrid.h"
+#include "meteoGrid.h"
 #include "basicMath.h"
 #include "utilities.h"
 #include "commonConstants.h"
@@ -3527,6 +3528,7 @@ bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameP
 
     return true;
 }
+
 
 QDate Crit3DMeteoGridDbHandler::firstDate() const
 {

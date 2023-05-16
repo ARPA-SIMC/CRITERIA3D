@@ -1271,7 +1271,28 @@ TObsDataH *Crit3DMeteoPoint::getObsDataH() const
     return obsDataH;
 }
 
+
+bool Crit3DMeteoPoint::getDailyDataCsv_TPrec(std::string &outStr)
+{
+    if (obsDataD.size() == 0)
+        return false;
+
+    outStr = "Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)\n";
+
+    for (int i = 0; i < obsDataD.size(); i++)
+    {
+        if (obsDataD[i].tMin != NODATA)
+            outStr += std::to_string(obsDataD[i].tMin);
+        outStr += ",";
+
+        // todo other variables
+    }
+
+    return true;
+}
+
 // ---- end class
+
 
 bool isSelectionPointsActive(Crit3DMeteoPoint* meteoPoints,int nrMeteoPoints)
 {

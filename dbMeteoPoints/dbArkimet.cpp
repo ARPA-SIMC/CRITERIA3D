@@ -13,6 +13,8 @@ DbArkimet::DbArkimet(QString dbName) : Crit3DMeteoPointsDbHandler(dbName)
 QList<VariablesList> DbArkimet::getVariableProperties(QList<int> id)
 {
     QList<VariablesList> variableList;
+    if (! (id.size() > 0))
+        return variableList;
 
     QString idlist = QString("(%1").arg(id[0]);
 

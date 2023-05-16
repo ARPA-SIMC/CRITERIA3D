@@ -537,6 +537,9 @@ bool Download::downloadHourlyData(QDate startDate, QDate endDate, QString datase
 {
 
     QList<VariablesList> variableList = _dbMeteo->getVariableProperties(variables);
+    if (variableList.size() == 0)
+        return false;
+
     QList<QString> idVar;
 
     for (int i = 0; i < variableList.size(); i++)

@@ -1435,7 +1435,8 @@ bool PragaProject::downloadHourlyDataArkimet(QList<QString> variables, QDate sta
                 updateProgressBar(int(startDate.daysTo(date2)+1));
             }
 
-            myDownload->downloadHourlyData(date1, date2, datasetList[i], idList[i], arkIdVar);
+            if (! myDownload->downloadHourlyData(date1, date2, datasetList[i], idList[i], arkIdVar))
+                updateProgressBarText("NO DATA");
 
             date1 = date2.addDays(1);
             date2 = std::min(date1.addDays(MAXDAYS-1), endDate);
