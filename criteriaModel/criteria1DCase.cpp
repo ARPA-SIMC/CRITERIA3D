@@ -797,9 +797,8 @@ double Crit1DCase::getSlopeStability(double computationDepth)
     if (horizonPtr == nullptr)
         return NODATA;
 
-    double suctionStress = -soilLayers[currentIndex].getWaterPotential();           // [kPa]
-    // TODO gestire i casi in cui psi è positivo (saturo) nella dll (sink?)
-    // eq. caso saturo
+    double suctionStress = -soilLayers[currentIndex].getVolumetricWaterContent()*soilLayers[currentIndex].getWaterPotential();           // [kPa]
+    // TODO differenziare i casi saturo e insaturo. Per ora ho inserito l'equazione unificata generale
 
     double slopeAngle = asin(unit.slope);
     double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
@@ -809,8 +808,6 @@ double Crit1DCase::getSlopeStability(double computationDepth)
 
     double frictionEffect =  tanFrictionAngle / tanAngle;
 
-    // TODO check HSS (computation depth or thickness?)
-    // TODO check unit
     double unitWeight = horizonPtr->bulkDensity * 1000 * GRAVITY;                   // [N m-3]
     double cohesionEffect = 2 * horizonPtr->effectiveCohesion / (unitWeight * computationDepth * sin(2*slopeAngle));
 
