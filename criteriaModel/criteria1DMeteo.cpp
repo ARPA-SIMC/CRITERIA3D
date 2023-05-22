@@ -885,8 +885,16 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
 
         if (! myDate.isValid())
         {
-            error = meteoID + " wrong date format: " + query.value("date").toString();
-            return false;
+            if (currentIndex < (maxNrDays-1))
+            {
+                error = meteoID + "Wrong date format: " + query.value("date").toString();
+                return false;
+            }
+            else
+            {
+                // last value is wrong - skip
+                continue;
+            }
         }
 
         if (myDate != previousDate)
