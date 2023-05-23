@@ -25,6 +25,8 @@
 
 
 #include <math.h>
+#include <iomanip>
+#include <sstream>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -1279,13 +1281,39 @@ bool Crit3DMeteoPoint::getDailyDataCsv_TPrec(std::string &outStr)
 
     outStr = "Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)\n";
 
+    std::ostringstream valueStream;
     for (int i = 0; i < obsDataD.size(); i++)
     {
+        // Date
+        outStr += obsDataD[i].date.toStdString() + ",";
+
         if (obsDataD[i].tMin != NODATA)
-            outStr += std::to_string(obsDataD[i].tMin);
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].tMin;
+            outStr += valueStream.str();
+        }
         outStr += ",";
 
-        // todo other variables
+        if (obsDataD[i].tMax != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].tMax;
+            outStr += valueStream.str();
+        }
+        outStr += ",";
+
+        if (obsDataD[i].tAvg != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].tAvg;
+            outStr += valueStream.str();
+        }
+        outStr += ",";
+
+        if (obsDataD[i].prec != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].prec;
+            outStr += valueStream.str();
+        }
+        outStr += "\n";
     }
 
     return true;

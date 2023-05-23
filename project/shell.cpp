@@ -165,10 +165,11 @@ QList<QString> getSharedCommandList()
 {
     QList<QString> cmdList;
 
-    cmdList.append("Log         | SetLogFile");
     cmdList.append("DEM         | LoadDEM");
-    cmdList.append("POINT       | LoadPoints");
-    cmdList.append("GRID        | LoadGrid");
+    cmdList.append("Point       | LoadPoints");
+    cmdList.append("Grid        | LoadGrid");
+    cmdList.append("DailyCsv    | ExportDailyDataCsv");
+    cmdList.append("Log         | SetLogFile");
     cmdList.append("Quit        | Exit");
 
     return cmdList;
@@ -270,6 +271,33 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 }
 
 
+int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
+{
+    if (argumentList.size() < 3)
+    {
+        myProject->logInfo("\nDailyCsv -d1:firstDate -d2:lastDate -t:GRID|POINTS [default: GRID] -l:pointList [default: ALL]\n");
+        return PRAGA_OK;
+    }
+
+    QString typeString = "GRID";
+    for (int i = 1; i < argumentList.size(); i++)
+    {
+        if (argumentList.at(i).left(3) == "-t:")
+        {
+            typeString = argumentList[i].right(argumentList[i].length()-3).toUpper();
+
+            if (typeString != "GRID" && typeString != "POINTS")
+            {
+                myProject->logError("Wrong data type: only GRID or POINTS are allowed.");
+                return PRAGA_OK;
+            }
+        }
+    }
+
+    return PRAGA_OK;
+}
+
+
 int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* isCommandFound)
 {
     *isCommandFound = false;
@@ -301,6 +329,11 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
     {
         *isCommandFound = true;
         return cmdSetLogFile(myProject, argumentList);
+    }
+    else if (command == "DAILYCSV" || command == "EXPORTDAILYDATACSV")
+    {
+        *isCommandFound = true;
+        return cmdExportDailyDataCsv(myProject, argumentList);
     }
     else
     {

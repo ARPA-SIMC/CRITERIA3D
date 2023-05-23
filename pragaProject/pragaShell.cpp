@@ -25,7 +25,7 @@ QList<QString> getPragaCommandList()
     cmdList.append("Proj            | OpenProject");
     //cmdList.append("LoadForecast  | LoadForecastData");
     cmdList.append("SaveLogProc     | SaveLogProceduresGrid");
-    cmdList.append("XMLToNetcdf     | ExportXMLElaborationsToNetcdf");
+    cmdList.append("XMLToNetcdf     | ExportXMLElabToNetcdf");
 
     return cmdList;
 }
@@ -94,12 +94,12 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
         *isCommandFound = true;
         return cmdDroughtIndexGrid(this, argumentList);
     }
-    else if (command == "NETCDF" || command == "NETCDFEXPORT")
+    else if (command == "NETCDF" || command == "EXPORTNETCDF")
     {
         *isCommandFound = true;
         return cmdNetcdfExport(this, argumentList);
     }
-    else if (command == "XMLTONETCDF" || command == "XMLNETCDFEXPORT")
+    else if (command == "XMLTONETCDF" || command == "EXPORTXMLELABTONECTD")
     {
         *isCommandFound = true;
         return cmdExportXMLElabToNetcdf(this, argumentList);
