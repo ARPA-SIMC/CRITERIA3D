@@ -769,7 +769,7 @@ double Crit1DCase::getFractionAW(double computationDepth)
 
 /*!
  * \brief getSlopeStability
- * \param computationDepth [cm]
+ * \param computationDepth [m]
  * \return slope factor (sf) of safety [-]
  * if sf < 1 the slope is unstable
  */
@@ -797,10 +797,17 @@ double Crit1DCase::getSlopeStability(double computationDepth)
     if (horizonPtr == nullptr)
         return NODATA;
 
-    double suctionStress = -soilLayers[currentIndex].getVolumetricWaterContent()*soilLayers[currentIndex].getWaterPotential();           // [kPa]
-    // TODO differenziare i casi saturo e insaturo. Per ora ho inserito l'equazione unificata generale
 
-    double slopeAngle = asin(unit.slope);
+    // Formula del suction stress per pressioni negative
+    // TODO gestire i casi in cui le pressioni diventano positive nella dll (sink?)
+    double baseDenSuctionStress = 1 + pow(horizonPtr->vanGenuchten.alpha * soilLayers[currentIndex].getWaterPotential(), horizonPtr->vanGenuchten.n);
+    double expDenSuctionStress = (horizonPtr->vanGenuchten.n - 1)/horizonPtr->vanGenuchten.n;
+    double denomSuctionStress = pow(baseDenSuctionStress, expDenSuctionStress);
+
+    double suctionStress = soilLayers[currentIndex].getWaterPotential() / denomSuctionStress;           // [kPa]
+
+    //double slopeAngle = asin(unit.slope);
+    double slopeAngle = 30 * DEG_TO_RAD;
     double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
 
     double tanAngle = tan(slopeAngle);
