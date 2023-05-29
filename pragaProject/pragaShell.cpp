@@ -53,7 +53,7 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
 
     QString command = argumentList[0].toUpper();
 
-    if (command == "LIST" || command == "LISTCOMMANDS")
+    if (command == "?" || command == "LIST" || command == "LISTCOMMANDS")
     {
         *isCommandFound = true;
         return cmdList(this);

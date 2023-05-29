@@ -5,6 +5,8 @@
 #include <sstream>
 #include <QString>
 #include <QList>
+#include <QFile>
+
 
 #ifdef _WIN32
     #include "Windows.h"
@@ -273,26 +275,123 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 
 int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 {
-    if (argumentList.size() < 3)
+    if (argumentList.size() < 2)
     {
-        myProject->logInfo("\nDailyCsv -d1:firstDate -d2:lastDate -t:GRID|POINTS [default: GRID] -l:pointList [default: ALL]\n");
+        QString usage = "Usage:\n"
+                        "ExportDailyDataCsv [TPREC] -d1:firstDate [-d2:lastDate] [-t:GRID|POINTS] [-l:pointList] [-p:outputPath]\n"
+                        "date format: YYYY-MM-DD \n"
+                        "lastDate default: yesterday \n"
+                        "TPREC: save only Tmin, Tmax, Tavg, Prec \n"
+                        "type default: GRID \n"
+                        "point list default: ALL \n"
+                        "output path default: ProjectPath/OUTPUT/ \n";
+
+        myProject->logInfo(usage);
         return PRAGA_OK;
     }
 
-    QString typeString = "GRID";
+    QString typeStr = "GRID";
+    QString pointListStr = "";
+    QString outputPath = myProject->getProjectPath() + PATH_OUTPUT;
+    QDate firstDate, lastDate;
+    bool isTPrec = false;
+
     for (int i = 1; i < argumentList.size(); i++)
     {
-        if (argumentList.at(i).left(3) == "-t:")
-        {
-            typeString = argumentList[i].right(argumentList[i].length()-3).toUpper();
+        if (argumentList.at(i).left(5).toUpper() == "TPREC")
+            isTPrec = true;
 
-            if (typeString != "GRID" && typeString != "POINTS")
+        if (argumentList.at(i).left(4) == "-d1:")
+        {
+            QString dateStr = argumentList[i].right(argumentList[i].length()-4);
+            firstDate = QDate::fromString(dateStr, "yyyy-MM-dd");
+
+            if (! firstDate.isValid())
             {
-                myProject->logError("Wrong data type: only GRID or POINTS are allowed.");
+                myProject->logError("Wrong first date, required format is: YYYY-MM-DD");
                 return PRAGA_OK;
             }
         }
+
+        if (argumentList.at(i).left(4) == "-d2:")
+        {
+            QString dateStr = argumentList[i].right(argumentList[i].length()-4);
+            lastDate = QDate::fromString(dateStr, "yyyy-MM-dd");
+
+            if (! lastDate.isValid())
+            {
+                myProject->logError("Wrong last date, required format is: YYYY-MM-DD");
+                return PRAGA_OK;
+            }
+        }
+
+        if (argumentList.at(i).left(3) == "-t:")
+        {
+            typeStr = argumentList[i].right(argumentList[i].length()-3).toUpper();
+
+            if (typeStr != "GRID" && typeStr != "POINTS")
+            {
+                myProject->logError("Wrong date, required format is: YYYY-MM-DD");
+                return PRAGA_OK;
+            }
+        }
+
+        if (argumentList.at(i).left(3) == "-l:")
+        {
+            pointListStr = argumentList[i].right(argumentList[i].length()-3);
+            if (! QFile::exists(pointListStr))
+            {
+                myProject->logError("Wrong point list, the file does not exist: " + pointListStr);
+                return PRAGA_OK;
+            }
+        }
+
+        if (argumentList.at(i).left(3) == "-p:")
+        {
+            outputPath = argumentList[i].right(argumentList[i].length()-3);
+            QDir dir(outputPath);
+            if (! dir.exists())
+            {
+                if (! dir.mkpath(outputPath))
+                {
+                    myProject->logError("Wrong outputPath, the directory could not be created: " + outputPath);
+                    return PRAGA_OK;
+                }
+            }
+            outputPath = dir.absolutePath();
+        }
     }
+
+    // check first date (mandatory)
+    if (! firstDate.isValid())
+    {
+        myProject->logError("Missing first date: use option -d1:firstDate");
+        return PRAGA_OK;
+    }
+    // check last date (default: yesterday)
+    if (! lastDate.isValid())
+    {
+        lastDate = QDateTime::currentDateTime().date().addDays(-1);
+    }
+
+    myProject->logInfo("... first date is: " + firstDate.toString());
+    myProject->logInfo("... last date is: " + lastDate.toString());
+    if (isTPrec)
+    {
+        myProject->logInfo("... output format is: Tmin, Tmax, Tavg, Prec");
+    }
+    if (pointListStr != "")
+    {
+        myProject->logInfo("... point list file is: " + pointListStr);
+    }
+    else
+    {
+        if (typeStr == "GRID")
+            myProject->logInfo("... export ALL the cells of the meteoGrid");
+        else
+            myProject->logInfo("... export ALL meteo points");
+    }
+    myProject->logInfo("... output path is: " + outputPath);
 
     return PRAGA_OK;
 }
