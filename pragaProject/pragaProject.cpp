@@ -2593,6 +2593,7 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
 
     bool PragaProject::exportXMLElabGridToNetcdf(QString xmlName)
     {
+        QString xmlPath = QFileInfo(xmlName).absolutePath()+"/";
         if (meteoGridDbHandler == nullptr)
         {
             return false;
@@ -2710,12 +2711,12 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             if(listXMLElab->listFileName().size() <= i)
             {
                 netcdfTitle = "ELAB_"+listXMLElab->listAll()[i];
-                netcdfName = getCompleteFileName("ELAB_"+listXMLElab->listAll()[i]+".nc", PATH_PROJECT);
+                netcdfName = xmlPath + "ELAB_"+listXMLElab->listAll()[i]+".nc";
             }
             else
             {
                 netcdfTitle = listXMLElab->listFileName()[i];
-                netcdfName = getCompleteFileName(listXMLElab->listFileName()[i]+".nc", PATH_PROJECT);
+                netcdfName = xmlPath + listXMLElab->listFileName()[i]+".nc";
             }
             QDate dateEnd = listXMLElab->listDateEnd()[i].addYears(listXMLElab->listNYears()[i]);
             QDate dateStart = listXMLElab->listDateStart()[i];
@@ -2799,12 +2800,12 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             if (listXMLAnomaly->listFileName().size() <= i)
             {
                 netcdfTitle = "ANOMALY_"+listXMLAnomaly->listAll()[i];
-                netcdfName = getCompleteFileName("ANOMALY_"+listXMLAnomaly->listAll()[i]+".nc", PATH_PROJECT);
+                netcdfName = xmlPath + "ANOMALY_"+listXMLAnomaly->listAll()[i]+".nc";
             }
             else
             {
                 netcdfTitle = listXMLAnomaly->listFileName()[i];
-                netcdfName = getCompleteFileName(listXMLAnomaly->listFileName()[i]+".nc", PATH_PROJECT);
+                netcdfName = xmlPath + listXMLAnomaly->listFileName()[i]+".nc";
             }
 
             QDate dateEnd = listXMLAnomaly->listDateEnd()[i].addYears(listXMLAnomaly->listNYears()[i]);
@@ -2829,11 +2830,11 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
             QString netcdfName;
             if(listXMLDrought->listFileName().size() <= i)
             {
-                netcdfName = getCompleteFileName(listXMLDrought->listAll()[i]+".nc", PATH_PROJECT);
+                netcdfName = xmlPath + listXMLDrought->listAll()[i]+".nc";
             }
             else
             {
-                netcdfName = getCompleteFileName(listXMLDrought->listFileName()[i]+".nc", PATH_PROJECT);
+                netcdfName = xmlPath + listXMLDrought->listFileName()[i]+".nc";
             }
             if (listXMLDrought->listIndex()[i] == INDEX_SPI)
             {
