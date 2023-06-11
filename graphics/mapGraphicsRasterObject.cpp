@@ -161,7 +161,7 @@ gis::Crit3DLatLonHeader RasterObject::getLatLonHeader() const
 
 
 /*!
- * \brief RasterObject::getRasterMaxSize
+ * \brief getRasterMaxSize
  * \return max of raster width and height (decimal degree)
  */
 float RasterObject::getRasterMaxSize()
@@ -172,7 +172,7 @@ float RasterObject::getRasterMaxSize()
 
 
 /*!
- * \brief RasterObject::getRasterCenter
+ * \brief getRasterCenter
  * \return center of raster (lat lon)
  */
 gis::Crit3DGeoPoint* RasterObject::getRasterCenter()

@@ -44,6 +44,8 @@
         #include "geoMap.h"
     #endif
 
+    #include <vector>
+
 
     /*!
      * \brief The RasterObject class
@@ -76,7 +78,9 @@
 
         float getValue(gis::Crit3DGeoPoint& geoPoint);
         float getValue(Position& pos);
-        Position getCurrentCenterGeo();
+        float getRasterMaxSize();
+        Position getCurrentCenter();
+        Position getRasterCenter();
         QPointF getPixel(const QPointF &geoPoint);
 
         void updateCenter();
@@ -104,6 +108,10 @@
         gis::Crit3DGeoMap* _geoMap;
         ColorLegend* _colorLegendPointer;
 
+        gis::Crit3DRasterGrid _latRaster;
+        gis::Crit3DRasterGrid _lonRaster;
+        gis::Crit3DLatLonHeader _latLonHeader;
+
         QPointF _refCenterPixel;
 
         bool _isDrawBorder;
@@ -113,9 +121,9 @@
         int _utmZone;
 
         void setMapExtents();
-        bool getCurrentWindow(gis::Crit3DRasterWindow* window);
-        int getCurrentStep(const gis::Crit3DRasterWindow& window);
-        bool drawRaster(gis::Crit3DRasterGrid *raster, QPainter* painter);
+        bool getCurrentWindow(gis::Crit3DRasterWindow* rasterWindow);
+        int getCurrentStep(const gis::Crit3DRasterWindow& rasterWindow);
+        bool drawRaster(QPainter* painter);
 
     };
 
