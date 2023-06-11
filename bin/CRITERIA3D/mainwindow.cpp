@@ -40,7 +40,6 @@
 #include "dialogSnowSettings.h"
 #include "dialogLoadState.h"
 #include "dialogNewPoint.h"
-#include "utilities.h"
 #include "glWidget.h"
 
 #include <QDebug>
@@ -107,13 +106,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->mapView, SIGNAL(mouseMoveSignal(QPoint)), this, SLOT(mouseMove(QPoint)));
 
     // Set raster objects
-    this->rasterDEM = new RasterObject(this->mapView);
+    this->rasterDEM = new RasterUtmObject(this->mapView);
     this->rasterDEM->setOpacity(this->ui->opacitySliderRasterInput->value() / 100.0);
     this->rasterDEM->setColorLegend(this->inputRasterColorLegend);
     this->rasterDEM->setVisible(false);
     this->mapView->scene()->addObject(this->rasterDEM);
 
-    this->rasterOutput = new RasterObject(this->mapView);
+    this->rasterOutput = new RasterUtmObject(this->mapView);
     this->rasterOutput->setOpacity(this->ui->opacitySliderRasterOutput->value() / 100.0);
     this->rasterOutput->setColorLegend(this->outputRasterColorLegend);
     this->rasterOutput->setVisible(false);
@@ -346,7 +345,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton)
     {
-        if (contextMenuRequested(event->pos(), event->globalPos()))
+        if (contextMenuRequested(event->pos()))
             return;
 
         if (rubberBand != nullptr)
@@ -363,7 +362,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 }
 
 
-bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
+bool MainWindow::contextMenuRequested(QPoint localPos)
 {
     QMenu submenu;
     int nrItems = 0;
@@ -384,7 +383,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos, QPoint globalPos)
     if (nrItems == 0)
         return false;
 
-    QAction* myAction = submenu.exec(globalPos);
+    QAction* myAction = submenu.exec();
 
     if (myAction)
     {
@@ -623,14 +622,14 @@ void MainWindow::renderDEM()
     ui->labelInputRaster->setText(QString::fromStdString(getVariableString(noMeteoTerrain)));
 
     // center map
-    gis::Crit3DGeoPoint* center = this->rasterDEM->getRasterCenter();
-    mapView->centerOn(qreal(center->longitude), qreal(center->latitude));
+    Position center = this->rasterDEM->getRasterCenter();
+    mapView->centerOn(center.longitude(), center.latitude());
 
     // resize map
     double size = double(this->rasterDEM->getRasterMaxSize());
     size = log2(1000 / size);
     mapView->setZoomLevel(quint8(size));
-    mapView->centerOn(qreal(center->longitude), qreal(center->latitude));
+    mapView->centerOn(center.longitude(), center.latitude());
 
     this->updateMaps();
 }
@@ -1008,7 +1007,7 @@ void MainWindow::setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster)
 {
     setInputRasterVisible(true);
 
-    rasterDEM->initializeUTM(myRaster, myProject.gisSettings, false);
+    rasterDEM->initialize(myRaster, myProject.gisSettings, false);
     inputRasterColorLegend->colorScale = myRaster->colorScale;
 
     inputRasterColorLegend->repaint();
@@ -1019,7 +1018,7 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
 {
     setOutputRasterVisible(true);
 
-    rasterOutput->initializeUTM(myRaster, myProject.gisSettings, false);
+    rasterOutput->initialize(myRaster, myProject.gisSettings, false);
     outputRasterColorLegend->colorScale = myRaster->colorScale;
 
     emit rasterOutput->redrawRequested();

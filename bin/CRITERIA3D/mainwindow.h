@@ -14,6 +14,7 @@
     #include "viewer3D.h"
     #include "ArrowObject.h"
     #include "project3D.h"
+    #include "mapGraphicsRasterUtm.h"
 
     #include <QMainWindow>
 
@@ -234,8 +235,9 @@
         MapGraphicsScene* mapScene;
         MapGraphicsView* mapView;
 
-        RasterObject* rasterDEM;
-        RasterObject* rasterOutput;
+        RasterUtmObject* rasterDEM;
+        RasterUtmObject* rasterOutput;
+
         QList<StationMarker*> meteoPointList;
         QList<SquareMarker*> outputPointList;
         QList<ArrowObject*> windVectorList;
@@ -277,7 +279,7 @@
         bool isSoil(QPoint mapPos);
         void openSoilWidget(QPoint mapPos);
         void showSoilMap();
-        bool contextMenuRequested(QPoint localPos, QPoint globalPos);
+        bool contextMenuRequested(QPoint localPos);
 
         void setInputRasterVisible(bool value);
         void setOutputRasterVisible(bool value);

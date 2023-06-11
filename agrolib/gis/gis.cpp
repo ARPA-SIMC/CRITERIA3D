@@ -245,7 +245,7 @@ namespace gis
     bool Crit3DRasterGrid::initializeGrid(const Crit3DRasterHeader& initHeader)
     {
         clear();
-        *(header) = initHeader;
+        *header = initHeader;
         return initializeGrid(header->flag);
     }
 
