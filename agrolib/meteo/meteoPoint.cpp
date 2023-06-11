@@ -25,6 +25,8 @@
 
 
 #include <math.h>
+#include <iomanip>
+#include <sstream>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -1271,7 +1273,54 @@ TObsDataH *Crit3DMeteoPoint::getObsDataH() const
     return obsDataH;
 }
 
+
+bool Crit3DMeteoPoint::getDailyDataCsv_TPrec(std::string &outStr)
+{
+    if (obsDataD.size() == 0)
+        return false;
+
+    outStr = "Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)\n";
+
+    std::ostringstream valueStream;
+    for (int i = 0; i < obsDataD.size(); i++)
+    {
+        // Date
+        outStr += obsDataD[i].date.toStdString() + ",";
+
+        if (obsDataD[i].tMin != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].tMin;
+            outStr += valueStream.str();
+        }
+        outStr += ",";
+
+        if (obsDataD[i].tMax != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].tMax;
+            outStr += valueStream.str();
+        }
+        outStr += ",";
+
+        if (obsDataD[i].tAvg != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].tAvg;
+            outStr += valueStream.str();
+        }
+        outStr += ",";
+
+        if (obsDataD[i].prec != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].prec;
+            outStr += valueStream.str();
+        }
+        outStr += "\n";
+    }
+
+    return true;
+}
+
 // ---- end class
+
 
 bool isSelectionPointsActive(Crit3DMeteoPoint* meteoPoints,int nrMeteoPoints)
 {

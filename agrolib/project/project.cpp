@@ -14,11 +14,13 @@
 #include "dialogPointDeleteData.h"
 #include "formInfo.h"
 
+
 #include <iostream>
 #include <QDir>
 #include <QFile>
 #include <QSqlQuery>
 #include <QMessageBox>
+#include <string>
 
 
 Project::Project()
@@ -3556,6 +3558,40 @@ bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
 
     }
     return false;
+}
+
+
+bool Project::exportMeteoGridToCsv(QString fileName)
+{
+    if (fileName == "")
+        return false;
+
+    QFile myFile(fileName);
+    if (!myFile.open(QIODevice::WriteOnly | QFile::Truncate))
+    {
+        logError("Open CSV failed: " + fileName);
+        return false;
+    }
+
+    QTextStream out(&myFile);
+
+    for (int row = 0; row < meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header->nrRows; row++)
+    {
+        for (int col = 0; col < meteoGridDbHandler->meteoGrid()->dataMeteoGrid.header->nrCols; col++)
+        {
+            float value = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.value[row][col];
+            std::string id = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->id;
+            std::string name = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->name;
+
+            if (value != NO_ACTIVE && value != NODATA)
+            {
+                out << QString::fromStdString(id + ',' + name + ',') + QString::number(value) + "\n";
+            }
+        }
+    }
+    myFile.close();
+
+    return true;
 }
 
 

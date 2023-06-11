@@ -1,4 +1,5 @@
 #include "dbMeteoGrid.h"
+#include "meteoGrid.h"
 #include "basicMath.h"
 #include "utilities.h"
 #include "commonConstants.h"
@@ -3516,7 +3517,7 @@ bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameP
     }
     else
     {
-        statement = QString("REPLACE INTO `%1` VALUES ('%2','%3')").arg(table).arg(nameProc).arg(date.toString("yyyy-MM-dd"));
+        statement = QString("REPLACE INTO `%1` VALUES ('%2','%3')").arg(table, nameProc, date.toString("yyyy-MM-dd"));
 
         if( !qry.exec(statement) )
         {
@@ -3527,6 +3528,7 @@ bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameP
 
     return true;
 }
+
 
 QDate Crit3DMeteoGridDbHandler::firstDate() const
 {

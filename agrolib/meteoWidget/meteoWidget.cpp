@@ -1843,7 +1843,6 @@ bool Crit3DMeteoWidget::computeTooltipLineSeries(QLineSeries *series, QPointF po
 
 void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
 {
-
     QBarSeries *series = qobject_cast<QBarSeries *>(sender());
 
     if (state && barset!=nullptr && index < barset->count())
@@ -1860,12 +1859,14 @@ void Crit3DMeteoWidget::tooltipBar(bool state, int index, QBarSet *barset)
             {
                 for (int i = 0; i < nameLines.size(); i++)
                 {
-                    double lineSeriesY = lineSeries[mp][i]->at(pointF.toPoint().x()).y();
-                    if (  static_cast<int>( lineSeriesY) == pointF.toPoint().y())
+                    int index = pointF.toPoint().x();
+                    if (index < lineSeries[mp][i]->count())
                     {
-                        if (computeTooltipLineSeries(lineSeries[mp][i], pointF, true))
+                        double lineSeriesY = lineSeries[mp][i]->at(index).y();
+                        if (static_cast<int>( lineSeriesY) == pointF.toPoint().y())
                         {
-                            return;
+                            if (computeTooltipLineSeries(lineSeries[mp][i], pointF, true))
+                                return;
                         }
                     }
                 }
