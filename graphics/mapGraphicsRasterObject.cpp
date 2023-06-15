@@ -446,7 +446,9 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
             }
 
             // skip NODATA values
-            if (isEqual(value, myRaster->header->flag) || isEqual(value, NODATA) || isEqual(value, NO_ACTIVE))
+            if ( (!isGrid && (isEqual(value, myRaster->header->flag) || isEqual(value, NODATA)))
+                || (isGrid && isEqual(value, NO_ACTIVE))
+                || (isGrid && !isDrawBorder && isEqual(value, NODATA)) )
                 continue;
 
             p0.setX(lowerLeft.x() + (col1 - window.v[0].col) * latLonHeader.dx);
