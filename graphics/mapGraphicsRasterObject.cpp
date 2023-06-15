@@ -63,7 +63,6 @@ void RasterObject::clear()
 
     isGrid = false;
     isLatLon = false;
-    isNetcdf = false;
 
     utmZone = NODATA;
     refCenterPixel = QPointF(NODATA, NODATA);
@@ -81,16 +80,6 @@ void RasterObject::setRaster(gis::Crit3DRasterGrid* rasterPtr)
 gis::Crit3DRasterGrid* RasterObject::getRaster()
 {
     return rasterPointer;
-}
-
-void RasterObject::setNetCDF(bool value)
-{
-    isNetcdf = value;
-}
-
-bool RasterObject::isNetCDF()
-{
-    return isNetcdf;
 }
 
 void RasterObject::setDrawing(bool value)
@@ -534,7 +523,7 @@ void RasterObject::setMapExtents()
 bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
 {
     // only for grid
-    if (! (this->isGrid || this->isNetcdf))
+    if (! this->isGrid)
         return false;
 
     gis::getGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
