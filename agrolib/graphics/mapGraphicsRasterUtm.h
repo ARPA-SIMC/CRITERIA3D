@@ -64,19 +64,14 @@
         bool isLoaded;
 
         void clear();
-        bool initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings, bool _isGrid);
+        bool initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings);
 
         void setDrawing(bool value) {_isDrawing = value;}
-        void setDrawBorders(bool value) {_isDrawBorder = value;}
         void setColorLegend(ColorLegend* colorLegendPtr) {_colorLegendPointer = colorLegendPtr;}
-        void setIsNetCDF(bool value) {_isNetcdf = value;}
-        void setIsGrid(bool value) {_isGrid = value;}
         void setRaster(gis::Crit3DRasterGrid* rasterPtr) {_rasterPointer = rasterPtr;}
 
-        bool isNetCDF() {return _isNetcdf;}
         gis::Crit3DRasterGrid* getRaster() {return _rasterPointer;}
 
-        float getValue(gis::Crit3DGeoPoint& geoPoint);
         float getValue(Position& pos);
         float getRasterMaxSize();
         Position getCurrentCenter();
@@ -114,10 +109,7 @@
 
         QPointF _refCenterPixel;
 
-        bool _isDrawBorder;
         bool _isDrawing;
-        bool _isGrid;
-        bool _isNetcdf;
         int _utmZone;
 
         void setMapExtents();

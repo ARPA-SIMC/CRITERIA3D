@@ -50,9 +50,6 @@ RasterUtmObject::RasterUtmObject(MapGraphicsView* view, MapGraphicsObject *paren
 void RasterUtmObject::clear()
 {
     setDrawing(false);
-    setDrawBorders(false);
-    setIsNetCDF(false);
-    setIsGrid(false);
 
     _rasterPointer = nullptr;
     _colorLegendPointer = nullptr;
@@ -65,7 +62,8 @@ void RasterUtmObject::clear()
 
 
 /*!
-\brief If sizeIsZoomInvariant() is true, this should return the size of the
+\brief boundingRect
+ If sizeIsZoomInvariant() is true, this should return the size of the
  rectangle you want in PIXELS. If false, this should return the size of the rectangle in METERS. The
  rectangle should be centered at (0,0) regardless.
 */
@@ -78,113 +76,41 @@ void RasterUtmObject::clear()
 }
 
 
-/*!
-\brief convert a point in geo (lat,lon) coordinates
- in pixel (local object) coordinates
-*/
-QPointF RasterUtmObject::getPixel(const QPointF &geoPoint)
-{
-    QPointF mapPixel = _view->tileSource()->ll2qgs(geoPoint, _view->zoomLevel());
-    QPointF pixel;
-    pixel.setX(mapPixel.x() - _refCenterPixel.x());
-    pixel.setY(_refCenterPixel.y() - mapPixel.y());
-    return pixel;
-}
-
-
-float RasterUtmObject::getValue(Position& pos)
-{
-    gis::Crit3DGeoPoint geoPoint(pos.latitude(), pos.longitude());
-    return getValue(geoPoint);
-}
-
-
-/*!
- * \brief getValue
- * \return return the raster value at a lat lon position
- */
-float RasterUtmObject::getValue(gis::Crit3DGeoPoint& geoPoint)
-{
-    if (_rasterPointer == nullptr)
-        return NODATA;
-    if (! _rasterPointer->isLoaded)
-        return NODATA;
-
-    gis::Crit3DUtmPoint utmPoint;
-    gis::getUtmFromLatLon(_utmZone, geoPoint, &utmPoint);
-
-    float value = _rasterPointer->getValueFromXY(utmPoint.x, utmPoint.y);
-
-    if (isEqual(value, _rasterPointer->header->flag))
-        return NODATA;
-    else
-        return value;
-}
-
-
-/*!
- * \brief getCurrentCenter
- * \return current center of mapView (lat lon)
- */
-Position RasterUtmObject::getCurrentCenter()
-{
-    Position center;
-    center.setLatitude(_geoMap->referencePoint.latitude);
-    center.setLongitude(_geoMap->referencePoint.longitude);
-
-    return center;
-}
-
-
-/*!
- * \brief getRasterCenter
- * \return center of raster (lat lon)
- */
-Position RasterUtmObject::getRasterCenter()
-{
-    Position center;
-    int rowCenter = _latRaster.header->nrRows * 0.5;
-    int colCenter = _latRaster.header->nrCols * 0.5;
-    center.setLatitude(_latRaster.value[rowCenter][colCenter]);
-    center.setLongitude(_lonRaster.value[rowCenter][colCenter]);
-
-    return center;
-}
-
-
-/*!
- * \brief getRasterMaxSize
- * \return max of raster width and height (decimal degree)
- */
-float RasterUtmObject::getRasterMaxSize()
-{
-    return float(MAXVALUE(_latLonHeader.nrRows * _latLonHeader.dy,
-                          _latLonHeader.nrCols * _latLonHeader.dx));
-}
-
-
-bool RasterUtmObject::initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings, bool isGrid)
+bool RasterUtmObject::initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings)
 {
     if (rasterPtr == nullptr)
         return false;
     if (! rasterPtr->isLoaded)
         return false;
 
-    setIsGrid(isGrid);
     _utmZone = gisSettings.utmZone;
     _rasterPointer = rasterPtr;
 
     gis::getGeoExtentsFromUTMHeader(gisSettings, _rasterPointer->header, &_latLonHeader);
     gis::Crit3DRasterHeader utmHeader = *_rasterPointer->header;
-    _latRaster.initializeGrid(utmHeader);
-    _lonRaster.initializeGrid(utmHeader);
+    // lat/lon raster have one extra cell
+    gis::Crit3DRasterHeader extHeader = utmHeader;
+    extHeader.nrCols++;
+    extHeader.nrRows++;
+    _latRaster.initializeGrid(extHeader);
+    _lonRaster.initializeGrid(extHeader);
 
     double x, y, lat, lon;
-    for (int row = 0; row < utmHeader.nrRows; row++)
+    for (int row = 0; row < extHeader.nrRows; row++)
     {
-        for (int col = 0; col < utmHeader.nrCols; col++)
+        for (int col = 0; col < extHeader.nrCols; col++)
         {
             gis::getUtmXYFromRowCol(utmHeader, row, col, &x, &y);
+            // move to top left of the cell, except the last row/column (bottom right)
+            if (row < extHeader.nrRows -1)
+                y += utmHeader.cellSize * 0.5;
+            else
+                y -= utmHeader.cellSize * 0.5;
+            if (col < extHeader.nrCols -1)
+                x -= utmHeader.cellSize * 0.5;
+            else
+                x += utmHeader.cellSize * 0.5;
+
             gis::getLatLonFromUtm(gisSettings, x, y, &lat, &lon);
             _latRaster.value[row][col] = lat;
             _lonRaster.value[row][col] = lon;
@@ -192,7 +118,6 @@ bool RasterUtmObject::initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Cr
     }
 
     setDrawing(true);
-    setDrawBorders(isGrid);
     isLoaded = true;
 
     return true;
@@ -217,7 +142,89 @@ void RasterUtmObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *o
 }
 
 
+/*!
+\brief convert a point in geo (lat,lon) coordinates
+ in pixel (local object) coordinates
+*/
+QPointF RasterUtmObject::getPixel(const QPointF &geoPoint)
+{
+    QPointF mapPixel = _view->tileSource()->ll2qgs(geoPoint, _view->zoomLevel());
+    QPointF pixel;
+    pixel.setX(mapPixel.x() - _refCenterPixel.x());
+    pixel.setY(_refCenterPixel.y() - mapPixel.y());
+    return pixel;
+}
 
+
+/*!
+ * \brief getValue
+ * \return return the raster value at a lat lon position
+ */
+float RasterUtmObject::getValue(Position& pos)
+{
+    if (_rasterPointer == nullptr)
+        return NODATA;
+    if (! _rasterPointer->isLoaded)
+        return NODATA;
+
+    gis::Crit3DUtmPoint utmPoint;
+    gis::Crit3DGeoPoint geoPoint(pos.latitude(), pos.longitude());
+    gis::getUtmFromLatLon(_utmZone, geoPoint, &utmPoint);
+
+    float value = _rasterPointer->getValueFromXY(utmPoint.x, utmPoint.y);
+
+    if (isEqual(value, _rasterPointer->header->flag))
+        return NODATA;
+    else
+        return value;
+}
+
+
+/*!
+ * \brief getCurrentCenter
+ * \return the current center of mapView (lat, lon)
+ */
+Position RasterUtmObject::getCurrentCenter()
+{
+    Position center;
+    center.setLatitude(_geoMap->referencePoint.latitude);
+    center.setLongitude(_geoMap->referencePoint.longitude);
+
+    return center;
+}
+
+
+/*!
+ * \brief getRasterCenter
+ * \return the center of the raster (lat, lon)
+ */
+Position RasterUtmObject::getRasterCenter()
+{
+    Position center;
+    int rowCenter = _latRaster.header->nrRows * 0.5;
+    int colCenter = _latRaster.header->nrCols * 0.5;
+    center.setLatitude(_latRaster.value[rowCenter][colCenter]);
+    center.setLongitude(_lonRaster.value[rowCenter][colCenter]);
+
+    return center;
+}
+
+
+/*!
+ * \brief getRasterMaxSize
+ * \return the maximum size of the raster in decimal degrees (width or height)
+ */
+float RasterUtmObject::getRasterMaxSize()
+{
+    return float(MAXVALUE(_latLonHeader.nrRows * _latLonHeader.dy,
+                          _latLonHeader.nrCols * _latLonHeader.dx));
+}
+
+
+/*!
+ * \brief getCurrentWindow
+ * \return the currently displayed raster window (row, col)
+ */
 bool RasterUtmObject::getCurrentWindow(gis::Crit3DRasterWindow* rasterWindow)
 {
     // get current view extent
@@ -229,7 +236,7 @@ bool RasterUtmObject::getCurrentWindow(gis::Crit3DRasterWindow* rasterWindow)
     gis::Crit3DRasterHeader utmHeader = *_rasterPointer->header;
     gis::getRowColFromXY(utmHeader, bottomleft, &row0, &col0);
     gis::getRowColFromXY(utmHeader, topRight, &row1, &col1);
-    col0--;
+    col0 -= 2;
     row1--;
 
     // check if current window is out of map
@@ -297,9 +304,9 @@ int RasterUtmObject::getCurrentStep(const gis::Crit3DRasterWindow& rasterWindow)
 
     // compute step
     qreal dx = (pixelRT.x() - pixelLL.x() + 1) / qreal(rasterWindow.nrCols());
-    qreal dy = (pixelRT.y() - pixelLL.y() + 1) / qreal(rasterWindow.nrRows());
+    qreal dy = (pixelLL.y() - pixelRT.y() + 1) / qreal(rasterWindow.nrRows());
 
-    int step = int(round(2.0 / std::min(dx, dy)));
+    int step = int(round(1.0 / std::min(dx, dy)));
     return std::max(step, 1);
 }
 
@@ -327,20 +334,35 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
     int step = getCurrentStep(rasterWindow);
 
     // draw
+    painter->setPen(Qt::NoPen);
     QPointF geoPoint[4];
     QPointF pixel[4];
     Crit3DColor* myColor;
     QColor myQColor;
-    int row2, col2, rowCenter, colCenter;
+
     for (int row1 = rasterWindow.v[0].row; row1 <= rasterWindow.v[1].row; row1 += step)
     {
+        int row2 = std::min(row1 + step, _rasterPointer->header->nrRows-1);
+        int rowCenter = floor((row1 + row2) * 0.5);
+
         for (int col1 = rasterWindow.v[0].col; col1 <= rasterWindow.v[1].col; col1 += step)
         {
-            row2 = std::min(row1 + step, _rasterPointer->header->nrRows-1);
-            col2 = std::min(col1 + step, _rasterPointer->header->nrCols-1);
-            rowCenter = (row1 + row2 -1) * 0.5;
-            colCenter = (col1 + col2 -1) * 0.5;
+            int col2 = std::min(col1 + step, _rasterPointer->header->nrCols-1);
+            int colCenter = floor((col1 + col2) * 0.5);
 
+            // raster value
+            float value = _rasterPointer->value[rowCenter][colCenter];
+
+            // skip the NODATA value
+            if (isEqual(value, _rasterPointer->header->flag) || isEqual(value, NODATA))
+                continue;
+
+            // set color
+            myColor = _rasterPointer->colorScale->getColor(value);
+            myQColor = QColor(myColor->red, myColor->green, myColor->blue);
+            painter->setBrush(myQColor);
+
+            // set polygon
             geoPoint[0].setX(_lonRaster.value[row1][col1]);
             geoPoint[0].setY(_latRaster.value[row1][col1]);
             pixel[0] = getPixel(geoPoint[0]);
@@ -357,32 +379,7 @@ bool RasterUtmObject::drawRaster(QPainter* painter)
             geoPoint[3].setY(_latRaster.value[row2][col1]);
             pixel[3] = getPixel(geoPoint[3]);
 
-            float value = _rasterPointer->value[rowCenter][colCenter];
-
-            if (_isGrid && _isDrawBorder && ! isEqual(value, NO_ACTIVE))
-            {
-                painter->setPen(QColor(64, 64, 64));
-                painter->setBrush(Qt::NoBrush);
-
-                QPolygonF polylyne;
-                for (int i = 0; i < 4; i++)
-                    polylyne.append(pixel[i]);
-
-                painter->drawPolyline(polylyne);
-            }
-            else if (! isEqual(value, _rasterPointer->header->flag) && ! isEqual(value, NODATA) && ! isEqual(value, NO_ACTIVE))
-            {
-                myColor = _rasterPointer->colorScale->getColor(value);
-                myQColor = QColor(myColor->red, myColor->green, myColor->blue);
-                painter->setPen(myQColor);
-                painter->setBrush(myQColor);
-
-                QPolygonF polygon;
-                for (int i = 0; i < 4; i++)
-                    polygon.append(pixel[i]);
-
-                painter->drawPolygon(polygon);
-            }
+            painter->drawPolygon(pixel, 4);
         }
     }
 

@@ -95,7 +95,7 @@ MainWindow::MainWindow(QWidget *parent) :
     showPointsGroup->addAction(ui->actionView_PointsCurrentVariable);
     showPointsGroup->setEnabled(false);
 
-    this->setTileMapSource(WebTileSource::OPEN_STREET_MAP);
+    this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
 
     // Set start size and position
     this->startCenter = new Position (myProject.gisSettings.startLocation.longitude,
@@ -364,7 +364,7 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 
 bool MainWindow::contextMenuRequested(QPoint localPos)
 {
-    QMenu submenu;
+    QMenu contextMenu;
     int nrItems = 0;
 
     QPoint mapPos = getMapPos(localPos);
@@ -375,7 +375,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
     {
         if (isSoil(mapPos))
         {
-            submenu.addAction("Show soil data");
+            contextMenu.addAction("Show soil data");
             nrItems++;
         }
     }
@@ -383,11 +383,11 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
     if (nrItems == 0)
         return false;
 
-    QAction* myAction = submenu.exec();
+    QAction *selection =  contextMenu.exec(QCursor::pos());
 
-    if (myAction)
+    if (selection != nullptr)
     {
-        if (myAction->text().contains("Show soil data") )
+        if (selection->text().contains("Show soil data") )
         {
             if (myProject.nrSoils > 0) {
                 openSoilWidget(mapPos);
@@ -548,8 +548,8 @@ void MainWindow::setProjectTileMap()
     }
     else
     {
-        // default: Open Street Map
-        this->setTileMapSource(WebTileSource::OPEN_STREET_MAP);
+        // default: Google terrain
+        this->setTileMapSource(WebTileSource::GOOGLE_Terrain);
     }
 }
 
@@ -1007,7 +1007,7 @@ void MainWindow::setCurrentRasterInput(gis::Crit3DRasterGrid *myRaster)
 {
     setInputRasterVisible(true);
 
-    rasterDEM->initialize(myRaster, myProject.gisSettings, false);
+    rasterDEM->initialize(myRaster, myProject.gisSettings);
     inputRasterColorLegend->colorScale = myRaster->colorScale;
 
     inputRasterColorLegend->repaint();
@@ -1018,7 +1018,7 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
 {
     setOutputRasterVisible(true);
 
-    rasterOutput->initialize(myRaster, myProject.gisSettings, false);
+    rasterOutput->initialize(myRaster, myProject.gisSettings);
     outputRasterColorLegend->colorScale = myRaster->colorScale;
 
     emit rasterOutput->redrawRequested();
