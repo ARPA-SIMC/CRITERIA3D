@@ -63,7 +63,6 @@ void RasterObject::clear()
 
     isGrid = false;
     isLatLon = false;
-    isNetcdf = false;
 
     utmZone = NODATA;
     refCenterPixel = QPointF(NODATA, NODATA);
@@ -81,16 +80,6 @@ void RasterObject::setRaster(gis::Crit3DRasterGrid* rasterPtr)
 gis::Crit3DRasterGrid* RasterObject::getRaster()
 {
     return rasterPointer;
-}
-
-void RasterObject::setNetCDF(bool value)
-{
-    isNetcdf = value;
-}
-
-bool RasterObject::isNetCDF()
-{
-    return isNetcdf;
 }
 
 void RasterObject::setDrawing(bool value)
@@ -161,7 +150,7 @@ gis::Crit3DLatLonHeader RasterObject::getLatLonHeader() const
 
 
 /*!
- * \brief RasterObject::getRasterMaxSize
+ * \brief getRasterMaxSize
  * \return max of raster width and height (decimal degree)
  */
 float RasterObject::getRasterMaxSize()
@@ -172,7 +161,7 @@ float RasterObject::getRasterMaxSize()
 
 
 /*!
- * \brief RasterObject::getRasterCenter
+ * \brief getRasterCenter
  * \return center of raster (lat lon)
  */
 gis::Crit3DGeoPoint* RasterObject::getRasterCenter()
@@ -331,7 +320,7 @@ int RasterObject::getCurrentStep(const gis::Crit3DRasterWindow& window)
     double dx = (pixelRT.x() - pixelLL.x() + 1) / double(window.nrCols());
     double dy = (pixelRT.y() - pixelLL.y() + 1) / double(window.nrRows());
 
-    int step = int(round(2.0 / std::min(dx, dy)));
+    int step = int(round(1.0 / std::min(dx, dy)));
     return std::max(1, step);
 }
 
@@ -375,8 +364,10 @@ float RasterObject::getValue(gis::Crit3DGeoPoint& geoPoint)
 
 bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter)
 {
-    if (myRaster == nullptr) return false;
-    if (! myRaster->isLoaded) return false;
+    if (myRaster == nullptr)
+        return false;
+    if (! myRaster->isLoaded)
+        return false;
 
     gis::Crit3DRasterWindow window;
     if (! getCurrentWindow(&window))
@@ -411,64 +402,71 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
     lowerLeft.setY(latLonHeader.llCorner.latitude + (latLonHeader.nrRows-1 - window.v[1].row) * latLonHeader.dy);
 
     // draw
-    int x0, y0, x1, y1, lx, ly;
     float value;
-    QPointF p0, p1, pixel;
+    QPointF p0, p1, pixel[2];
     Crit3DColor* myColor;
     QColor myQColor;
 
-    for (int row = window.v[1].row; row >= window.v[0].row; row -= step)
+    for (int row1 = window.v[1].row; row1 >= window.v[0].row; row1 -= step)
     {
-        p0.setY(lowerLeft.y() + (window.v[1].row - row) * latLonHeader.dy);
+        p0.setY(lowerLeft.y() + (window.v[1].row - row1) * latLonHeader.dy);
         p1.setY(p0.y() + step * latLonHeader.dy);
 
-        for (int col = window.v[0].col; col <= window.v[1].col; col += step)
+        int row2 = std::max(row1 - step, 0);
+        int rowCenter = ceil((row1 + row2) * 0.5);
+
+        for (int col1 = window.v[0].col; col1 <= window.v[1].col; col1 += step)
         {
-            p0.setX(lowerLeft.x() + (col - window.v[0].col) * latLonHeader.dx);
+            int col2 = std::min(col1 + step, latLonHeader.nrCols-1);
+            int colCenter = floor((col1 + col2) * 0.5);
+
+            if (isLatLon)
+                value = myRaster->value[rowCenter][colCenter];
+            else
+            {
+                value = myRaster->header->flag;
+                int r = matrix[rowCenter][colCenter].row;
+                if (r != int(NODATA))
+                {
+                    int c = matrix[rowCenter][colCenter].col;
+                    if (! gis::isOutOfGridRowCol(r, c, *(myRaster)))
+                        value = myRaster->value[r][c];
+                }
+            }
+
+            // skip NODATA values
+            if ( (!isGrid && (isEqual(value, myRaster->header->flag) || isEqual(value, NODATA)))
+                || (isGrid && isEqual(value, NO_ACTIVE))
+                || (isGrid && !isDrawBorder && isEqual(value, NODATA)) )
+                continue;
+
+            p0.setX(lowerLeft.x() + (col1 - window.v[0].col) * latLonHeader.dx);
             p1.setX(p0.x() + step * latLonHeader.dx);
+
             if (p0.x() > 180)
             {
                 p0.setX(p0.x() - 360);
                 p1.setX(p1.x() - 360);
             }
 
-            pixel = getPixel(p0);
-            x0 = int(pixel.x());
-            y0 = int(pixel.y());
+            pixel[0] = getPixel(p0);
+            pixel[1] = getPixel(p1);
 
-            pixel = getPixel(p1);
-            y1 = int(pixel.y());
-            x1 = int(pixel.x());
+            int width = pixel[1].x() - pixel[0].x();
+            int height = pixel[1].y() - pixel[0].y();
 
-            lx = x1 - x0;
-            ly = y1 - y0;
-
-            if (isLatLon)
-                value = myRaster->value[row][col];
-            else
-            {
-                value = myRaster->header->flag;
-                int r = matrix[row][col].row;
-                if (r != int(NODATA))
-                {
-                    int c = matrix[row][col].col;
-                    if (! gis::isOutOfGridRowCol(r, c, *(myRaster)))
-                        value = myRaster->value[r][c];
-                }
-            }
-
-            if (this->isGrid && isDrawBorder && ! isEqual(value, NO_ACTIVE))
+            if (this->isGrid && isDrawBorder)
             {
                 myPainter->setPen(QColor(64, 64, 64));
                 myPainter->setBrush(Qt::NoBrush);
-                myPainter->drawRect(x0, y0, lx, ly);
+                myPainter->drawRect(pixel[0].x(), pixel[0].y(), width, height);
             }
-            else if (! isEqual(value, myRaster->header->flag) && ! isEqual(value, NODATA) && ! isEqual(value, NO_ACTIVE))
+            else
             {
                 myColor = myRaster->colorScale->getColor(value);
                 myQColor = QColor(myColor->red, myColor->green, myColor->blue);
                 myPainter->setBrush(myQColor);
-                myPainter->fillRect(x0, y0, lx, ly, myPainter->brush());
+                myPainter->fillRect(pixel[0].x(), pixel[0].y(), width, height, myPainter->brush());
             }
         }
     }
@@ -525,7 +523,7 @@ void RasterObject::setMapExtents()
 bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
 {
     // only for grid
-    if (! (this->isGrid || this->isNetcdf))
+    if (! this->isGrid)
         return false;
 
     gis::getGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);

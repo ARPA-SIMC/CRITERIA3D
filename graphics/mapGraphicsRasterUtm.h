@@ -44,6 +44,8 @@
         #include "geoMap.h"
     #endif
 
+    #include <vector>
+
 
     /*!
      * \brief The RasterObject class
@@ -62,21 +64,18 @@
         bool isLoaded;
 
         void clear();
-        bool initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings, bool _isGrid);
+        bool initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings);
 
         void setDrawing(bool value) {_isDrawing = value;}
-        void setDrawBorders(bool value) {_isDrawBorder = value;}
         void setColorLegend(ColorLegend* colorLegendPtr) {_colorLegendPointer = colorLegendPtr;}
-        void setIsNetCDF(bool value) {_isNetcdf = value;}
-        void setIsGrid(bool value) {_isGrid = value;}
         void setRaster(gis::Crit3DRasterGrid* rasterPtr) {_rasterPointer = rasterPtr;}
 
-        bool isNetCDF() {return _isNetcdf;}
         gis::Crit3DRasterGrid* getRaster() {return _rasterPointer;}
 
-        float getValue(gis::Crit3DGeoPoint& geoPoint);
         float getValue(Position& pos);
-        Position getCurrentCenterGeo();
+        float getRasterMaxSize();
+        Position getCurrentCenter();
+        Position getRasterCenter();
         QPointF getPixel(const QPointF &geoPoint);
 
         void updateCenter();
@@ -104,18 +103,19 @@
         gis::Crit3DGeoMap* _geoMap;
         ColorLegend* _colorLegendPointer;
 
+        gis::Crit3DRasterGrid _latRaster;
+        gis::Crit3DRasterGrid _lonRaster;
+        gis::Crit3DLatLonHeader _latLonHeader;
+
         QPointF _refCenterPixel;
 
-        bool _isDrawBorder;
         bool _isDrawing;
-        bool _isGrid;
-        bool _isNetcdf;
         int _utmZone;
 
         void setMapExtents();
-        bool getCurrentWindow(gis::Crit3DRasterWindow* window);
-        int getCurrentStep(const gis::Crit3DRasterWindow& window);
-        bool drawRaster(gis::Crit3DRasterGrid *raster, QPainter* painter);
+        bool getCurrentWindow(gis::Crit3DRasterWindow* rasterWindow);
+        int getCurrentStep(const gis::Crit3DRasterWindow& rasterWindow);
+        bool drawRaster(QPainter* painter);
 
     };
 
