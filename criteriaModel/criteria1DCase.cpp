@@ -800,14 +800,23 @@ double Crit1DCase::getSlopeStability(double computationDepth)
 
     // Formula del suction stress per pressioni negative
     // TODO gestire i casi in cui le pressioni diventano positive nella dll (sink?)
-    double baseDenSuctionStress = 1 + pow(horizonPtr->vanGenuchten.alpha * soilLayers[currentIndex].getWaterPotential(), horizonPtr->vanGenuchten.n);
+
+    // Controllo per vedere l'evoluzione di certe variabili:
+
+    if (horizonPtr->effectiveCohesion > 0) {
+       float a = 5;
+      }
+
+
+    double waterPotential = soilLayers[currentIndex].getWaterPotential();
+    double baseDenSuctionStress = 1 + pow(horizonPtr->vanGenuchten.alpha * waterPotential, horizonPtr->vanGenuchten.n);
     double expDenSuctionStress = (horizonPtr->vanGenuchten.n - 1)/horizonPtr->vanGenuchten.n;
     double denomSuctionStress = pow(baseDenSuctionStress, expDenSuctionStress);
 
-    double suctionStress = soilLayers[currentIndex].getWaterPotential() / denomSuctionStress;           // [kPa]
+    double suctionStress = - (waterPotential / denomSuctionStress);           // [kPa]
 
-    //double slopeAngle = asin(unit.slope);
-    double slopeAngle = 30 * DEG_TO_RAD;
+    double slopeAngle = asin(unit.slope);
+    //double slopeAngle = 30 * DEG_TO_RAD;
     double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
 
     double tanAngle = tan(slopeAngle);
@@ -815,7 +824,7 @@ double Crit1DCase::getSlopeStability(double computationDepth)
 
     double frictionEffect =  tanFrictionAngle / tanAngle;
 
-    double unitWeight = horizonPtr->bulkDensity * 1000 * GRAVITY;                   // [N m-3]
+    double unitWeight = horizonPtr->bulkDensity * GRAVITY;                   // [N m-3]
     double cohesionEffect = 2 * horizonPtr->effectiveCohesion / (unitWeight * computationDepth * sin(2*slopeAngle));
 
     double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * computationDepth);
@@ -823,4 +832,3 @@ double Crit1DCase::getSlopeStability(double computationDepth)
     double slopeStability = frictionEffect + cohesionEffect - suctionEffect;       // [-]
     return slopeStability;
 }
-
