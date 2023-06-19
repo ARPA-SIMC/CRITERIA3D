@@ -424,8 +424,7 @@ bool Crit1DProject::setSoil(QString soilCode, QString &errorStr)
 
 bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr)
 {
-    unsigned row;
-    unsigned col;
+    unsigned row, col;
     unsigned nrDays = unsigned(firstSimulationDate.daysTo(lastSimulationDate)) + 1;
 
     if (!observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, idMeteo.toStdString()) )

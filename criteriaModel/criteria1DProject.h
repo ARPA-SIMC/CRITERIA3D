@@ -37,6 +37,7 @@
         QSqlDatabase dbCrop;
         QSqlDatabase dbSoil;
         QSqlDatabase dbMeteo;
+        Crit3DMeteoGridDbHandler* observedMeteoGrid;
 
         // dates
         QDate firstSimulationDate;
@@ -101,7 +102,6 @@
         QSqlDatabase dbOutput;
         QSqlDatabase dbState;
 
-        Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
 
         void closeProject();

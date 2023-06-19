@@ -51,7 +51,8 @@
 
 Criteria1DWidget::Criteria1DWidget()
 {
-    resize(1400, 700);
+    resize(1200, 700);
+    setWindowState(Qt::WindowMaximized);
 
     // font
     QFont currentFont = this->font();
@@ -871,24 +872,21 @@ void Criteria1DWidget::on_actionOpenMeteoDB()
 
 void Criteria1DWidget::openMeteoDB(QString dbMeteoName)
 {
-
     QString errorStr;
     QList<QString> idMeteoList;
     if (myProject.isXmlMeteoGrid)
     {
-        if (! xmlMeteoGrid.parseXMLGrid(dbMeteoName, &errorStr))
+        if (! myProject.observedMeteoGrid->parseXMLGrid(dbMeteoName, &errorStr))
         {
             QMessageBox::critical(nullptr, "Error XML meteo grid", errorStr);
             return;
         }
-        if (! xmlMeteoGrid.openDatabase(&errorStr, "observed"))
+        if (! myProject.observedMeteoGrid->openDatabase(&errorStr, "observed"))
         {
             QMessageBox::critical(nullptr, "Error DB Grid", errorStr);
             return;
         }
-        myProject.dbMeteo = xmlMeteoGrid.db();
-
-        if (!xmlMeteoGrid.idDailyList(&errorStr, &idMeteoList))
+        if (! myProject.observedMeteoGrid->idDailyList(&errorStr, &idMeteoList))
         {
             QMessageBox::critical(nullptr, "Error daily table list", errorStr);
             return;
@@ -1235,36 +1233,36 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
 
     if (myProject.isXmlMeteoGrid)
     {
-        if (! xmlMeteoGrid.loadIdMeteoProperties(&errorStr, idMeteo))
+        if (! myProject.observedMeteoGrid->loadIdMeteoProperties(&errorStr, idMeteo))
         {
             QMessageBox::critical(nullptr, "Error load properties DB Grid", errorStr);
             return;
         }
         double lat;
-        if (!xmlMeteoGrid.meteoGrid()->getLatFromId(idMeteo.toStdString(), &lat) )
+        if (!myProject.observedMeteoGrid->meteoGrid()->getLatFromId(idMeteo.toStdString(), &lat) )
         {
             errorStr = "Missing observed meteo cell";
             return;
         }
         myProject.myCase.meteoPoint.latitude = lat;
-        meteoTableName = xmlMeteoGrid.tableDaily().prefix + idMeteo + xmlMeteoGrid.tableDaily().postFix;
-        if (!xmlMeteoGrid.getYearList(&errorStr, idMeteo, &yearList))
+        meteoTableName = myProject.observedMeteoGrid->tableDaily().prefix + idMeteo + myProject.observedMeteoGrid->tableDaily().postFix;
+        if (!myProject.observedMeteoGrid->getYearList(&errorStr, idMeteo, &yearList))
         {
             QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
         int pos = 0;
-        if (xmlMeteoGrid.gridStructure().isFixedFields())
+        if (myProject.observedMeteoGrid->gridStructure().isFixedFields())
         {
-            QString fieldTmin = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMin);
-            QString fieldTmax = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMax);
-            QString fieldPrec = xmlMeteoGrid.getDailyVarField(dailyPrecipitation);
+            QString fieldTmin = myProject.observedMeteoGrid->getDailyVarField(dailyAirTemperatureMin);
+            QString fieldTmax = myProject.observedMeteoGrid->getDailyVarField(dailyAirTemperatureMax);
+            QString fieldPrec = myProject.observedMeteoGrid->getDailyVarField(dailyPrecipitation);
 
             // last year can be incomplete
             for (int i = 0; i<yearList.size()-1; i++)
             {
 
-                    if ( !checkYearMeteoGridFixedFields(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &errorStr))
+                    if ( !checkYearMeteoGridFixedFields(myProject.dbMeteo, meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &errorStr))
                     {
                         yearList.removeAt(pos);
                         i = i - 1;
@@ -1275,13 +1273,13 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
                     }
             }
             // store last Date
-            getLastDateGrid(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &(myProject.lastSimulationDate), &errorStr);
+            getLastDateGrid(myProject.dbMeteo, meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, yearList[yearList.size()-1], &(myProject.lastSimulationDate), &errorStr);
         }
         else
         {
-            int varCodeTmin = xmlMeteoGrid.getDailyVarCode(dailyAirTemperatureMin);
-            int varCodeTmax = xmlMeteoGrid.getDailyVarCode(dailyAirTemperatureMax);
-            int varCodePrec = xmlMeteoGrid.getDailyVarCode(dailyPrecipitation);
+            int varCodeTmin = myProject.observedMeteoGrid->getDailyVarCode(dailyAirTemperatureMin);
+            int varCodeTmax = myProject.observedMeteoGrid->getDailyVarCode(dailyAirTemperatureMax);
+            int varCodePrec = myProject.observedMeteoGrid->getDailyVarCode(dailyPrecipitation);
             if (varCodeTmin == NODATA || varCodeTmax == NODATA || varCodePrec == NODATA)
             {
                 errorStr = "Variable not existing";
@@ -1290,10 +1288,9 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
             }
 
             // last year can be incomplete
-            for (int i = 0; i<yearList.size()-1; i++)
+            for (int i = 0; i < yearList.size()-1; i++)
             {
-
-                    if ( !checkYearMeteoGrid(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, varCodeTmin, varCodeTmax, varCodePrec, yearList[i], &errorStr))
+                    if ( !checkYearMeteoGrid(myProject.observedMeteoGrid->db(), meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, varCodeTmin, varCodeTmax, varCodePrec, yearList[i], &errorStr))
                     {
                         yearList.removeAt(pos);
                         i = i - 1;
@@ -1304,7 +1301,7 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
                     }
              }
             // store last Date
-            getLastDateGrid(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &myProject.lastSimulationDate, &errorStr);
+            getLastDateGrid(myProject.dbMeteo, meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, yearList[yearList.size()-1], &myProject.lastSimulationDate, &errorStr);
         }
     }
     else
@@ -1426,16 +1423,16 @@ void Criteria1DWidget::updateMeteoPointValues()
     {
         unsigned row;
         unsigned col;
-        if (!xmlMeteoGrid.meteoGrid()->findMeteoPointFromId(&row, &col, myProject.myCase.meteoPoint.id) )
+        if (!myProject.observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, myProject.myCase.meteoPoint.id) )
         {
             errorStr = "Missing observed meteo cell";
             QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
 
-        if (!xmlMeteoGrid.gridStructure().isFixedFields())
+        if (!myProject.observedMeteoGrid->gridStructure().isFixedFields())
         {
-            if (!xmlMeteoGrid.loadGridDailyData(&errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
+            if (!myProject.observedMeteoGrid->loadGridDailyData(&errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
             {
                 errorStr = "Missing observed data";
                 QMessageBox::critical(nullptr, "Error!", errorStr);
@@ -1444,7 +1441,7 @@ void Criteria1DWidget::updateMeteoPointValues()
         }
         else
         {
-            if (!xmlMeteoGrid.loadGridDailyDataFixedFields(&errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
+            if (!myProject.observedMeteoGrid->loadGridDailyDataFixedFields(&errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
             {
                 errorStr = "Missing observed data";
                 QMessageBox::critical(nullptr, "Error!", errorStr);
@@ -1455,23 +1452,23 @@ void Criteria1DWidget::updateMeteoPointValues()
         for (int i = 0; i < (firstDate.daysTo(QDate(lastDate.year(), 12, 31)) + 1); i++)
         {
             Crit3DDate myDate = getCrit3DDate(firstDate.addDays(i));
-            tmin = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+            tmin = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmin);
 
-            tmax = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+            tmax = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMax, tmax);
 
-            tavg = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
+            tavg = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
             if (isEqual(tavg, NODATA))
             {
                 tavg = (tmax + tmin) / 2;
             }
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureAvg, tavg);
 
-            prec = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
+            prec = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyPrecipitation, prec);
 
-            waterDepth = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyWaterTableDepth);
+            waterDepth = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyWaterTableDepth);
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyWaterTableDepth, waterDepth);
         }
         if (onlyOneYear)
