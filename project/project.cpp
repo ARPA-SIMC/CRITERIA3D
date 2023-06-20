@@ -579,6 +579,9 @@ bool Project::loadParameters(QString parametersFileName)
             if (parameters->contains("topographicDistance"))
                 interpolationSettings.setUseTD(parameters->value("topographicDistance").toBool());
 
+            if (parameters->contains("dynamicLapserate"))
+                interpolationSettings.setUseDynamicLapserate(parameters->value("dynamicLapserate").toBool());
+
             if (parameters->contains("lapseRateCode"))
             {
                 interpolationSettings.setUseLapseRateCode(parameters->value("lapseRateCode").toBool());
@@ -2111,6 +2114,7 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
     return true;
 }
 
+
 bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
@@ -2124,15 +2128,21 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
+    // dynamic lapserate
+    if (getUseDetrendingVar(myVar) && interpolationSettings.getUseDynamicLapserate())
+    {
+        return interpolationDemDynamicLapserate(myVar, myTime, myRaster);
+    }
+
     // detrending and checking precipitation
-    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
+                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
 
     if (! interpolationReady)
     {
         logError("Interpolation: error in function preInterpolation");
         return false;
     }
-
 
     // interpolate
     bool result;
@@ -2152,6 +2162,14 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     }
 
     myRaster->setMapTime(myTime);
+
+    return true;
+}
+
+
+bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
+{
+    myRaster->initializeGrid(myRaster->header->flag);
 
     return true;
 }
@@ -2514,6 +2532,7 @@ void Project::saveInterpolationParameters()
         parameters->setValue("lapseRateCode", interpolationSettings.getUseLapseRateCode());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parameters->setValue("topographicDistance", interpolationSettings.getUseTD());
+        parameters->setValue("dynamicLapserate", interpolationSettings.getUseDynamicLapserate());
         parameters->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
         parameters->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
         parameters->setValue("useDewPoint", interpolationSettings.getUseDewPoint());

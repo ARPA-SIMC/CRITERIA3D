@@ -292,6 +292,7 @@ void Crit3DInterpolationSettings::initialize()
     interpolationMethod = idw;
     useThermalInversion = true;
     useTD = false;
+    useDynamicLapserate = false;
     topoDist_maxKh = 128;
     useDewPoint = true;
     useInterpolatedTForRH = true;
@@ -341,6 +342,9 @@ TInterpolationMethod Crit3DInterpolationSettings::getInterpolationMethod()
 bool Crit3DInterpolationSettings::getUseTD()
 { return useTD;}
 
+bool Crit3DInterpolationSettings::getUseDynamicLapserate()
+{ return useDynamicLapserate;}
+
 float Crit3DInterpolationSettings::getMaxHeightInversion()
 { return maxHeightInversion;}
 
@@ -355,6 +359,9 @@ void Crit3DInterpolationSettings::setUseThermalInversion(bool myValue)
 
 void Crit3DInterpolationSettings::setUseTD(bool myValue)
 { useTD = myValue;}
+
+void Crit3DInterpolationSettings::setUseDynamicLapserate(bool myValue)
+{ useDynamicLapserate = myValue;}
 
 void Crit3DInterpolationSettings::setUseDewPoint(bool myValue)
 { useDewPoint = myValue;}

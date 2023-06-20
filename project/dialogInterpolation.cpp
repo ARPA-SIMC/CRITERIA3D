@@ -40,6 +40,11 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     topographicDistanceEdit->setChecked(_interpolationSettings->getUseTD());
     layoutMain->addWidget(topographicDistanceEdit);
 
+    // dynamic lapse rate
+    dynamicLapserateEdit = new QCheckBox(tr("use dynamic lapse rate"));
+    dynamicLapserateEdit->setChecked(_interpolationSettings->getUseDynamicLapserate());
+    layoutMain->addWidget(dynamicLapserateEdit);
+
     QLabel *labelMaxTd = new QLabel(tr("maximum Td multiplier"));
     QIntValidator *intValTd = new QIntValidator(1, 1000000, this);
     maxTdMultiplierEdit.setFixedWidth(60);
@@ -191,6 +196,7 @@ void DialogInterpolation::accept()
     _interpolationSettings->setMeteoGridAggrMethod(aggregationMethodToString.at(aggrString.toStdString()));
 
     _interpolationSettings->setUseTD(topographicDistanceEdit->isChecked());
+    _interpolationSettings->setUseDynamicLapserate(dynamicLapserateEdit->isChecked());
     _interpolationSettings->setUseLapseRateCode(lapseRateCodeEdit->isChecked());
     _interpolationSettings->setUseBestDetrending(optimalDetrendingEdit->isChecked());
     _interpolationSettings->setUseThermalInversion(thermalInversionEdit->isChecked());

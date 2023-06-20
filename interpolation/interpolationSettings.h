@@ -111,6 +111,7 @@
         float minRegressionR2;
         bool useThermalInversion;
         bool useTD;
+        bool useDynamicLapserate;
         int maxTdMultiplier;
         bool useLapseRateCode;
         bool useBestDetrending;
@@ -161,6 +162,9 @@
 
         void setUseTD(bool myValue);
         bool getUseTD();
+
+        void setUseDynamicLapserate(bool myValue);
+        bool getUseDynamicLapserate();
 
         void setUseDewPoint(bool myValue);
         bool getUseDewPoint();
