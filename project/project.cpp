@@ -2074,19 +2074,28 @@ bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, cro
 {
     if (! checkInterpolationMain(myVar)) return false;
 
-    if ((interpolationSettings.getUseDewPoint() && (myVar == dailyAirRelHumidityAvg ||
-            myVar == dailyAirRelHumidityMin || myVar == dailyAirRelHumidityMax || myVar == airRelHumidity)) ||
-            myVar == dailyGlobalRadiation ||
-            myVar == dailyLeafWetness ||
-            myVar == dailyWindVectorDirectionPrevailing ||
-            myVar == dailyWindVectorIntensityAvg ||
-            myVar == dailyWindVectorIntensityMax ||
-            myVar == globalIrradiance)
+    // check variables
+    if ( interpolationSettings.getUseDewPoint() &&
+        (myVar == dailyAirRelHumidityAvg ||
+        myVar == dailyAirRelHumidityMin ||
+        myVar == dailyAirRelHumidityMax ||
+        myVar == airRelHumidity))
     {
-        logError("Not available for " + QString::fromStdString(getVariableString(myVar)));
+        logError("Cross validation is not available for " + QString::fromStdString(getVariableString(myVar))
+                 + "\n Deactive 'Interpolate relative humidity using dew point' option.");
         return false;
     }
 
+    if (myVar == dailyGlobalRadiation ||
+        myVar == dailyLeafWetness ||
+        myVar == dailyWindVectorDirectionPrevailing ||
+        myVar == dailyWindVectorIntensityAvg ||
+        myVar == dailyWindVectorIntensityMax ||
+        myVar == globalIrradiance)
+    {
+        logError("Cross validation is not available for " + QString::fromStdString(getVariableString(myVar)));
+        return false;
+    }
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
