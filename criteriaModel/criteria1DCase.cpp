@@ -773,6 +773,7 @@ double Crit1DCase::getFractionAW(double computationDepth)
  * \return slope factor (sf) of safety [-]
  * if sf < 1 the slope is unstable
  */
+
 double Crit1DCase::getSlopeStability(double computationDepth)
 {
     // check computation depth
@@ -816,7 +817,6 @@ double Crit1DCase::getSlopeStability(double computationDepth)
     double suctionStress = - (waterPotential / denomSuctionStress);           // [kPa]
 
     double slopeAngle = asin(unit.slope);
-    //double slopeAngle = 30 * DEG_TO_RAD;
     double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
 
     double tanAngle = tan(slopeAngle);
@@ -824,7 +824,7 @@ double Crit1DCase::getSlopeStability(double computationDepth)
 
     double frictionEffect =  tanFrictionAngle / tanAngle;
 
-    double unitWeight = horizonPtr->bulkDensity * GRAVITY;                   // [N m-3]
+    double unitWeight = horizonPtr->bulkDensity * GRAVITY * 1000;                   // [N m-3]
     double cohesionEffect = 2 * horizonPtr->effectiveCohesion / (unitWeight * computationDepth * sin(2*slopeAngle));
 
     double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * computationDepth);
