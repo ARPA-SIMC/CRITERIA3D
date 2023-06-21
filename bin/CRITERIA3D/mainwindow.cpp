@@ -984,7 +984,7 @@ void MainWindow::on_opacitySliderRasterOutput_sliderMoved(int position)
 
 void MainWindow::on_variableButton_clicked()
 {
-    myProject.setCurrentVariable(chooseMeteoVariable(&myProject));
+    myProject.setCurrentVariable(chooseMeteoVariable(myProject));
     this->currentPointsVisualization = showCurrentVariable;
     this->updateCurrentVariable();
 }
