@@ -1748,8 +1748,9 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString *myError, QString meteo
     int numberOfDays = first.daysTo(last) + 1;
     _meteoGrid->meteoPointPointer(row,col)->initializeObsDataD(numberOfDays, getCrit3DDate(first));
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `%2`>= '%3' AND `%2`<= '%4' ORDER BY `%2`").arg(tableD).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
-    if( !qry.exec(statement) )
+    QString statement = QString("SELECT * FROM `%1` WHERE %2 >= '%3' AND %2 <= '%4' ORDER BY %2").arg(tableD, _tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
+    qry.prepare(statement);
+    if( !qry.exec())
     {
         *myError = qry.lastError().text();
         return false;
@@ -3480,7 +3481,7 @@ bool Crit3DMeteoGridDbHandler::getYearList(QString *myError, QString meteoPoint,
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
 
-    QString statement = QString("SELECT `%1`, DATE_FORMAT(`%1`,'%Y') as Year FROM `%2` ORDER BY `%1`").arg(_tableDaily.fieldTime).arg(tableD);
+    QString statement = QString("SELECT DISTINCT DATE_FORMAT(`%1`,'%Y') as Year FROM `%2` ORDER BY Year").arg(_tableDaily.fieldTime, tableD);
     if( !qry.exec(statement) )
     {
         *myError = qry.lastError().text();

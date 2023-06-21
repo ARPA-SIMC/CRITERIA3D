@@ -81,6 +81,7 @@
         double getWaterPotential(double computationDepth);
         double getFractionAW(double computationDepth);
         double getSlopeStability(double computationDepth);
+        double getSlopeStability2(double computationDepth);
 
         double getWaterDeficitSum(double computationDepth);
         double getWaterCapacitySum(double computationDepth);

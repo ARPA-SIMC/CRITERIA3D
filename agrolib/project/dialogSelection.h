@@ -11,8 +11,8 @@
     QString editValue(QString windowsTitle, QString defaultValue);
 
     meteoVariable chooseColorScale();
-    frequencyType chooseFrequency(Project *project_);
-    meteoVariable chooseMeteoVariable(Project *project_);
+    frequencyType chooseFrequency(const Project &myProject);
+    meteoVariable chooseMeteoVariable(const Project &myProject);
 
 
 #endif // DIALOGSELECTION_H

@@ -502,7 +502,6 @@ bool getLastDateGrid(QSqlDatabase dbMeteo, QString table, QString fieldTime, QSt
 
 bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, int varCodeTmin, int varCodeTmax, int varCodePrec, QString year, QString *error)
 {
-
     QSqlQuery qry(dbMeteo);
 
     *error = "";
@@ -885,8 +884,16 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
 
         if (! myDate.isValid())
         {
-            error = meteoID + " wrong date format: " + query.value("date").toString();
-            return false;
+            if (currentIndex < (maxNrDays-1))
+            {
+                error = meteoID + "Wrong date format: " + query.value("date").toString();
+                return false;
+            }
+            else
+            {
+                // last value is wrong - skip
+                continue;
+            }
         }
 
         if (myDate != previousDate)

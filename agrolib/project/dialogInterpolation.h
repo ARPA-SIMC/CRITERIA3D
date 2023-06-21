@@ -25,6 +25,7 @@
             QCheckBox* thermalInversionEdit;
             QCheckBox* optimalDetrendingEdit;
             QCheckBox* topographicDistanceEdit;
+            QCheckBox* dynamicLapserateEdit;
             QCheckBox* useDewPointEdit;
             QCheckBox* useInterpolTForRH;
             QComboBox gridAggregationMethodEdit;

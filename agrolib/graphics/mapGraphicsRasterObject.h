@@ -71,8 +71,6 @@
         void setDrawing(bool value);
         void setDrawBorders(bool value);
         void setColorLegend(ColorLegend* colorLegendPtr);
-        void setNetCDF(bool value);
-        bool isNetCDF();
 
         QPointF getPixel(const QPointF &geoPoint);
 
@@ -124,7 +122,6 @@
         bool isLatLon;
         bool isDrawing;
         bool isGrid;
-        bool isNetcdf;
         int utmZone;
 
         void freeIndexesMatrix();

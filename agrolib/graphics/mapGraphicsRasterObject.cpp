@@ -63,7 +63,6 @@ void RasterObject::clear()
 
     isGrid = false;
     isLatLon = false;
-    isNetcdf = false;
 
     utmZone = NODATA;
     refCenterPixel = QPointF(NODATA, NODATA);
@@ -81,16 +80,6 @@ void RasterObject::setRaster(gis::Crit3DRasterGrid* rasterPtr)
 gis::Crit3DRasterGrid* RasterObject::getRaster()
 {
     return rasterPointer;
-}
-
-void RasterObject::setNetCDF(bool value)
-{
-    isNetcdf = value;
-}
-
-bool RasterObject::isNetCDF()
-{
-    return isNetcdf;
 }
 
 void RasterObject::setDrawing(bool value)
@@ -329,7 +318,7 @@ int RasterObject::getCurrentStep(const gis::Crit3DRasterWindow& window)
 
     // compute step
     double dx = (pixelRT.x() - pixelLL.x() + 1) / double(window.nrCols());
-    double dy = (pixelLL.y() - pixelRT.y() + 1) / double(window.nrRows());
+    double dy = (pixelRT.y() - pixelLL.y() + 1) / double(window.nrRows());
 
     int step = int(round(1.0 / std::min(dx, dy)));
     return std::max(1, step);
@@ -423,8 +412,8 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
         p0.setY(lowerLeft.y() + (window.v[1].row - row1) * latLonHeader.dy);
         p1.setY(p0.y() + step * latLonHeader.dy);
 
-        int row2 = std::min(row1 - step, 0);
-        int rowCenter = (row1 + row2) * 0.5;
+        int row2 = std::max(row1 - step, 0);
+        int rowCenter = ceil((row1 + row2) * 0.5);
 
         for (int col1 = window.v[0].col; col1 <= window.v[1].col; col1 += step)
         {
@@ -446,7 +435,9 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
             }
 
             // skip NODATA values
-            if (isEqual(value, myRaster->header->flag) || isEqual(value, NODATA) || isEqual(value, NO_ACTIVE))
+            if ( (!isGrid && (isEqual(value, myRaster->header->flag) || isEqual(value, NODATA)))
+                || (isGrid && isEqual(value, NO_ACTIVE))
+                || (isGrid && !isDrawBorder && isEqual(value, NODATA)) )
                 continue;
 
             p0.setX(lowerLeft.x() + (col1 - window.v[0].col) * latLonHeader.dx);
@@ -462,7 +453,7 @@ bool RasterObject::drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPaint
             pixel[1] = getPixel(p1);
 
             int width = pixel[1].x() - pixel[0].x();
-            int height = pixel[1].y() - pixel[1].y();
+            int height = pixel[1].y() - pixel[0].y();
 
             if (this->isGrid && isDrawBorder)
             {
@@ -532,7 +523,7 @@ void RasterObject::setMapExtents()
 bool RasterObject::getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col)
 {
     // only for grid
-    if (! (this->isGrid || this->isNetcdf))
+    if (! this->isGrid)
         return false;
 
     gis::getGridRowColFromXY(this->latLonHeader, geoPoint.longitude, geoPoint.latitude, row, col);
