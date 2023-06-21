@@ -138,11 +138,6 @@ Crit3DProxyCombination Crit3DInterpolationSettings::getOptimalCombination() cons
     return optimalCombination;
 }
 
-Crit3DProxyCombination* Crit3DInterpolationSettings::getOptimalCombinationRef()
-{
-    return &optimalCombination;
-}
-
 void Crit3DInterpolationSettings::setOptimalCombination(const Crit3DProxyCombination &value)
 {
     optimalCombination = value;
@@ -151,11 +146,6 @@ void Crit3DInterpolationSettings::setOptimalCombination(const Crit3DProxyCombina
 Crit3DProxyCombination Crit3DInterpolationSettings::getSelectedCombination() const
 {
     return selectedCombination;
-}
-
-Crit3DProxyCombination* Crit3DInterpolationSettings::getSelectedCombinationRef()
-{
-    return &selectedCombination;
 }
 
 void Crit3DInterpolationSettings::setSelectedCombination(const Crit3DProxyCombination &value)
@@ -178,12 +168,12 @@ void Crit3DInterpolationSettings::setIndexHeight(unsigned value)
     indexHeight = value;
 }
 
-void Crit3DInterpolationSettings::setCurrentCombination(Crit3DProxyCombination *value)
+void Crit3DInterpolationSettings::setCurrentCombination(Crit3DProxyCombination value)
 {
     currentCombination = value;
 }
 
-Crit3DProxyCombination *Crit3DInterpolationSettings::getCurrentCombination() const
+Crit3DProxyCombination Crit3DInterpolationSettings::getCurrentCombination() const
 {
     return currentCombination;
 }
@@ -310,9 +300,6 @@ void Crit3DInterpolationSettings::initialize()
 
     refHeightWind = 2;
     surfaceRoughness = 0.1f;
-
-    if (currentCombination == nullptr)
-        currentCombination = new Crit3DProxyCombination();
 
     Kh_series.clear();
     Kh_error_series.clear();

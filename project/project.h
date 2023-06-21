@@ -180,7 +180,7 @@
         QDate getCurrentDate();
         Crit3DTime getCrit3DCurrentTime();
         QDateTime getCurrentTime();
-        meteoVariable getCurrentVariable();
+        meteoVariable getCurrentVariable() const;
 
         void setApplicationPath(QString myPath);
         QString getApplicationPath();
