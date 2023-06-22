@@ -1,10 +1,12 @@
 #include <QDate>
 #include <QString>
 
+#include "basicMath.h"
 #include "gis.h"
 #include "utilities.h"
 #include "interpolation.h"
 #include "interpolationCmd.h"
+
 
 float crossValidationStatistics::getMeanAbsoluteError() const
 {
@@ -243,18 +245,19 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
         {
             gis::getUtmXYFromRowColSinglePrecision(*outputGrid, myRow, myCol, &myX, &myY);
             float myZ = raster.value[myRow][myCol];
-            if (int(myZ) != int(outputGrid->header->flag))
+            if (! isEqual(myZ, outputGrid->header->flag))
             {
-                if (getUseDetrendingVar(myVar)) getProxyValuesXY(myX, myY, mySettings, proxyValues);
+                if (getUseDetrendingVar(myVar))
+                {
+                    getProxyValuesXY(myX, myY, mySettings, proxyValues);
+                }
                 outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
             }
         }
     }
 
     if (! gis::updateMinMaxRasterGrid(outputGrid))
-    {
         return false;
-    }
 
     return true;
 }

@@ -37,10 +37,10 @@
     #endif
 
 
-    float getMinHeight(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
-    float getMaxHeight(std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
-    float getZmin(std::vector <Crit3DInterpolationDataPoint> &myPoints);
-    float getZmax(std::vector <Crit3DInterpolationDataPoint> &myPoints);
+    float getMinHeight(const std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
+    float getMaxHeight(const std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
+    float getZmin(const std::vector <Crit3DInterpolationDataPoint> &myPoints);
+    float getZmax(const std::vector <Crit3DInterpolationDataPoint> &myPoints);
     float getProxyMinValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, unsigned pos);
     float getProxyMaxValue(std::vector <Crit3DInterpolationDataPoint> &myPoints, unsigned pos);
 
@@ -59,7 +59,7 @@
     void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<float> &myValues);
 
     void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
-                    Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
+                    Crit3DProxyCombination myCombination, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,
                     meteoVariable myVar, Crit3DTime myTime);
 
     bool getUseDetrendingVar(meteoVariable myVar);
@@ -74,5 +74,14 @@
     bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                              Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                              Crit3DTime myTime, meteoVariable myVar, int orogProxyPos);
+
+    void optimalDetrending(meteoVariable myVar, Crit3DMeteoPoint* &myMeteoPoints, int nrMeteoPoints,
+                           std::vector <Crit3DInterpolationDataPoint> &outInterpolationPoints,
+                           Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* myClimate,
+                           const Crit3DTime &myTime);
+
+    bool dynamicSelection(std::vector <Crit3DInterpolationDataPoint> &inputPoints,
+                          std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
+                          float x, float y, const Crit3DInterpolationSettings& mySettings, bool excludeSupplemental);
 
 #endif // INTERPOLATION_H

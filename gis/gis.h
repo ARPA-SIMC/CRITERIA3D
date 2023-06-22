@@ -158,9 +158,11 @@
             bool copyGrid(const Crit3DRasterGrid& initGrid);
 
             bool setConstantValueWithBase(float initValue, const Crit3DRasterGrid& initGrid);
+
+            bool isOutOfGrid(int row, int col) const;
+            bool isFlag(int myRow, int myCol) const;
             float getValueFromRowCol(int myRow, int myCol) const;
             float getValueFromXY(double x, double y) const;
-            bool isFlag(int myRow, int myCol);
 
             Crit3DTime getMapTime() const;
             void setMapTime(const Crit3DTime &value);

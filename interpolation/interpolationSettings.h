@@ -4,6 +4,9 @@
     #ifndef INTERPOLATIONCONSTS_H
         #include "interpolationConstants.h"
     #endif
+    #ifndef GIS_H
+        #include "gis.h"
+    #endif
     #ifndef METEO_H
         #include "meteo.h"
     #endif
@@ -111,6 +114,7 @@
         float minRegressionR2;
         bool useThermalInversion;
         bool useTD;
+        bool useDynamicLapserate;
         int maxTdMultiplier;
         bool useLapseRateCode;
         bool useBestDetrending;
@@ -134,7 +138,7 @@
         std::vector <Crit3DProxy> currentProxy;
         Crit3DProxyCombination optimalCombination;
         Crit3DProxyCombination selectedCombination;
-        Crit3DProxyCombination *currentCombination;
+        Crit3DProxyCombination currentCombination;
         unsigned indexHeight;
 
     public:
@@ -162,6 +166,9 @@
         void setUseTD(bool myValue);
         bool getUseTD();
 
+        void setUseDynamicLapserate(bool myValue);
+        bool getUseDynamicLapserate();
+
         void setUseDewPoint(bool myValue);
         bool getUseDewPoint();
 
@@ -188,16 +195,14 @@
         int getTopoDist_Kh() const;
         void setTopoDist_Kh(int value);
         Crit3DProxyCombination getOptimalCombination() const;
-        Crit3DProxyCombination* getOptimalCombinationRef();
         void setOptimalCombination(const Crit3DProxyCombination &value);
         Crit3DProxyCombination getSelectedCombination() const;
-        Crit3DProxyCombination* getSelectedCombinationRef();
         void setSelectedCombination(const Crit3DProxyCombination &value);
         void setValueSelectedCombination(unsigned int index, bool isActive);
         unsigned getIndexHeight() const;
         void setIndexHeight(unsigned value);
-        Crit3DProxyCombination *getCurrentCombination() const;
-        void setCurrentCombination(Crit3DProxyCombination* value);
+        Crit3DProxyCombination getCurrentCombination() const;
+        void setCurrentCombination(Crit3DProxyCombination value);
         std::vector<Crit3DProxy> getCurrentProxy() const;
         void setCurrentProxy(const std::vector<Crit3DProxy> &value);
         float getRefHeightWind() const;

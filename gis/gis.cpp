@@ -413,6 +413,37 @@ namespace gis
     }
 
 
+    bool Crit3DRasterGrid::isOutOfGrid(int row, int col) const
+    {
+        return (row < 0 || row > (header->nrRows - 1) || col < 0 || col > header->nrCols - 1);
+    }
+
+
+    bool Crit3DRasterGrid::isFlag(int row, int col) const
+    {
+        if (isOutOfGrid(row, col))
+            return true;
+        else
+            return (isEqual(value[row][col], header->flag));
+    }
+
+    float Crit3DRasterGrid::getValueFromRowCol(int row, int col) const
+    {
+        if (isOutOfGrid(row, col))
+            return header->flag;
+        else
+            return value[row][col];
+    }
+
+    float Crit3DRasterGrid::getValueFromXY(double x, double y) const
+    {
+        int row, col;
+        getRowCol(x, y, row, col);
+        return getValueFromRowCol(row, col);
+    }
+
+
+
     bool updateMinMaxRasterGrid(Crit3DRasterGrid* myGrid)
     {
         float myValue;
@@ -519,10 +550,8 @@ namespace gis
 
     float computeDistance(float x1, float y1, float x2, float y2)
     {
-            float dx, dy;
-
-            dx = x2 - x1;
-            dy = y2 - y1;
+            float dx = x2 - x1;
+            float dy = y2 - y1;
 
             return sqrtf((dx * dx) + (dy * dy));
     }
@@ -611,29 +640,6 @@ namespace gis
     float getValueFromXY(const Crit3DRasterGrid& myGrid, double x, double y)
     {
         return myGrid.getValueFromXY(x, y);
-    }
-
-    bool Crit3DRasterGrid::isFlag(int row, int col)
-    {
-        if (row < 0 || row > (header->nrRows - 1) || col < 0 || col > header->nrCols - 1)
-            return true;
-        else
-            return (isEqual(value[row][col], header->flag));
-    }
-
-    float Crit3DRasterGrid::getValueFromRowCol(int row, int col) const
-    {
-        if (row < 0 || row > (header->nrRows - 1) || col < 0 || col > header->nrCols - 1)
-            return header->flag;
-        else
-            return value[row][col];
-    }
-
-    float Crit3DRasterGrid::getValueFromXY(double x, double y) const
-    {
-        int row, col;
-        getRowCol(x, y, row, col);
-        return getValueFromRowCol(row, col);
     }
 
     bool isOutOfGridXY(double x, double y, Crit3DRasterHeader* header)
