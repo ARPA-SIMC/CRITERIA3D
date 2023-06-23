@@ -309,14 +309,7 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     for (long i=1; i < nrLayers; i++)
     {
         soilLayers[i].waterContent = soilFluxes3D::getWaterContent(i) * soilLayers[i].thickness * 1000;
-        if (soilFluxes3D::getMatricPotential(i) >= 0)
-        {
-            soilLayers[i].waterPotential = 0;
-        }
-        else
-        {
-            soilLayers[i].waterPotential = -soilFluxes3D::getMatricPotential(i) * GRAVITY;                       // [kPa]
-        }
+        soilLayers[i].waterPotential = -soilFluxes3D::getMatricPotential(i) * GRAVITY;                       // [kPa]
     }
 
     output.dailySurfaceRunoff = -(soilFluxes3D::getBoundaryWaterFlow(long(surfaceIndex)) / area) * 1000;

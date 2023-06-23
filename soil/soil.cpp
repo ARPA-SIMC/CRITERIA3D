@@ -749,7 +749,7 @@ namespace soil
      */
     double Crit3DLayer::computeSlopeStability(double slope)
     {
-        double suctionStress = -waterPotential * getVolumetricWaterContent();    // [kPa]
+        double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
 
         // only unsaturated
         /*double baseDenSuctionStress = 1 + pow(horizonPtr->vanGenuchten.alpha * waterPotential, horizonPtr->vanGenuchten.n);
@@ -758,6 +758,7 @@ namespace soil
         suctionStress = -(waterPotential / denomSuctionStress);   */
 
         double slopeAngle = asin(slope);
+        slopeAngle = 30 * DEG_TO_RAD;
         double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
 
         double tanAngle = tan(slopeAngle);
