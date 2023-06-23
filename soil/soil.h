@@ -230,7 +230,7 @@
         int getHorizonIndex(const Crit3DSoil &soil, double depth);
         int getSoilLayerIndex(const std::vector<Crit3DLayer> &soilLayers, double depth);
 
-        double getFieldCapacity(const Crit3DHorizon &horizon, soil::units unit);
+        double getFieldCapacity(double clayContent, soil::units unit);
         double getWiltingPoint(soil::units unit);
 
         double kPaToMeters(double value);

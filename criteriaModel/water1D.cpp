@@ -464,7 +464,7 @@ double computeSurfaceRunoff(const Crit3DCrop &myCrop, std::vector<soil::Crit3DLa
  * \note P.M.Driessen, 1986, eq.58
  * \return lateralDrainage
  */
-double computeLateralDrainage(std::vector<soil::Crit3DLayer>& soilLayers)
+double computeLateralDrainage(std::vector<soil::Crit3DLayer> &soilLayers)
 {
     double satFactor;                       // [-]
     double hydrHead;                        // [m]

@@ -491,7 +491,7 @@ namespace soil
      * \note author: Franco Zinoni
      * \return water potential at field capacity (with sign)
      */
-    double getFieldCapacity(const Crit3DHorizon &horizon, soil::units unit)
+    double getFieldCapacity(double clayContent, soil::units unit)
     {
         double fcMin = -10;                 /*!< [kPa] clay < 20% : sandy soils */
         double fcMax = -33;                 /*!< [kPa] clay > 50% : clay soils */
@@ -501,13 +501,13 @@ namespace soil
 
         double fieldCapacity;
 
-        if (double(horizon.texture.clay) <= CLAYMIN)
+        if (clayContent <= CLAYMIN)
             fieldCapacity = fcMin;
-        else if (double(horizon.texture.clay) >= CLAYMAX)
+        else if (clayContent >= CLAYMAX)
             fieldCapacity = fcMax;
         else
         {
-            double clayFactor = (double(horizon.texture.clay) - CLAYMIN) / (CLAYMAX - CLAYMIN);
+            double clayFactor = (clayContent - CLAYMIN) / (CLAYMAX - CLAYMIN);
             fieldCapacity = (fcMin + (fcMax - fcMin) * clayFactor);
         }
 
@@ -950,7 +950,7 @@ namespace soil
                 horizon.frictionAngle = geotechnicsClassList[horizon.texture.classUSCS].frictionAngle;
         }
 
-        horizon.fieldCapacity = soil::getFieldCapacity(horizon, soil::KPA);
+        horizon.fieldCapacity = soil::getFieldCapacity(horizon.texture.clay, soil::KPA);
         horizon.wiltingPoint = soil::getWiltingPoint(soil::KPA);
         horizon.waterContentFC = soil::thetaFromSignPsi(horizon.fieldCapacity, horizon);
         horizon.waterContentWP = soil::thetaFromSignPsi(horizon.wiltingPoint, horizon);

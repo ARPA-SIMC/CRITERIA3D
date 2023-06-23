@@ -246,9 +246,9 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
         else
         {
             // boundary total potential = depth of the last layer + boundaryZ + field capacity
-            double fieldCapacity = -soil::getFieldCapacity(*(soilLayers[lastLayer].horizonPtr), soil::METER);     // [m]
-            double waterPotential = soilLayers[lastLayer].getWaterPotential() / GRAVITY;                    // [m]
-            totalPotential = soilLayers[lastLayer].depth + boundaryZ;                                       // [m]
+            double fieldCapacity = -soil::getFieldCapacity(soilLayers[lastLayer].horizonPtr->texture.clay, soil::METER);   // [m]
+            double waterPotential = soilLayers[lastLayer].getWaterPotential() / GRAVITY;                        // [m]
+            totalPotential = soilLayers[lastLayer].depth + boundaryZ;                                           // [m]
             totalPotential += MINVALUE(fieldCapacity, waterPotential);
         }
         soilFluxes3D::setPrescribedTotalPotential(long(lastLayer), -totalPotential);
@@ -259,10 +259,16 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     soilFluxes3D::setWaterContent(long(surfaceIndex), soilLayers[surfaceIndex].waterContent * 0.001);   // [m]
 
     // set soil profile
-    for (unsigned int i=1; i < nrLayers; i++)
+    // use previous waterPotential when saturated
+    for (unsigned long i=1; i < nrLayers; i++)
     {
-        double waterPotential = soilLayers[i].getWaterPotential() / GRAVITY;    // [m]
-        soilFluxes3D::setMatricPotential(long(i), -waterPotential);
+        double currentWaterPotential = soilLayers[i].getWaterPotential();           // [kPa]
+        soilFluxes3D::setMatricPotential(i, -currentWaterPotential / GRAVITY);      // [m]
+
+        if (isEqual(currentWaterPotential, 0) && soilLayers[i].waterPotential < 0 && ! isEqual(soilLayers[i].waterPotential, NODATA))
+        {
+            soilFluxes3D::setMatricPotential(i, -soilLayers[i].waterPotential / GRAVITY);
+        }
     }
 
     soilFluxes3D::initializeBalance();
@@ -306,7 +312,7 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
 
     // output (from [m] to [mm])
     soilLayers[surfaceIndex].waterContent = soilFluxes3D::getWaterContent(long(surfaceIndex)) * 1000;
-    for (long i=1; i < nrLayers; i++)
+    for (unsigned long i=1; i < nrLayers; i++)
     {
         soilLayers[i].waterContent = soilFluxes3D::getWaterContent(i) * soilLayers[i].thickness * 1000;
         soilLayers[i].waterPotential = -soilFluxes3D::getMatricPotential(i) * GRAVITY;                       // [kPa]
