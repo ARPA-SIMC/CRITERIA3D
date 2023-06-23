@@ -162,6 +162,7 @@
             double thickness;           /*!<   [m] */
             double soilFraction;        /*!<   [-] fraction of soil (1 - coarse fragment fraction) */
             double waterContent;        /*!<   [mm] */
+            double waterPotential;      /*!<   [kPa] water potential (psi) positive: unsaturated */
             double SAT;                 /*!<   [mm] water content at saturation  */
             double FC;                  /*!<   [mm] water content at field capacity */
             double WP;                  /*!<   [mm] water content at wilting point  */
@@ -169,6 +170,7 @@
             double critical;            /*!<   [mm] water content at critical point for water movement (typical FC)  */
             double maxInfiltration;     /*!<   [mm]  */
             double flux;                /*!<   [mm]  */
+            double slopeStability;      /*!<   [-]  factor of safety (FoS) - if FoS < 1 the slope is unstable */
 
             Crit3DHorizon *horizonPtr;
 
@@ -179,6 +181,7 @@
             double getDegreeOfSaturation();
             double getWaterPotential();
             double getWaterConductivity();
+            double computeSlopeStability(double slope);
         };
 
 

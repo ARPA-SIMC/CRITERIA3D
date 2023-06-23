@@ -75,6 +75,8 @@ Crit1DCase::Crit1DCase()
 
     soilLayers.clear();
     prevWaterContent.clear();
+
+    computeFactorOfSafety = false;
 }
 
 
@@ -304,9 +306,17 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
 
     // output (from [m] to [mm])
     soilLayers[surfaceIndex].waterContent = soilFluxes3D::getWaterContent(long(surfaceIndex)) * 1000;
-    for (unsigned int i=1; i < nrLayers; i++)
+    for (long i=1; i < nrLayers; i++)
     {
-        soilLayers[i].waterContent = soilFluxes3D::getWaterContent(long(i)) * soilLayers[i].thickness * 1000;
+        soilLayers[i].waterContent = soilFluxes3D::getWaterContent(i) * soilLayers[i].thickness * 1000;
+        if (soilFluxes3D::getMatricPotential(i) >= 0)
+        {
+            soilLayers[i].waterPotential = 0;
+        }
+        else
+        {
+            soilLayers[i].waterPotential = -soilFluxes3D::getMatricPotential(i) * GRAVITY;                       // [kPa]
+        }
     }
 
     output.dailySurfaceRunoff = -(soilFluxes3D::getBoundaryWaterFlow(long(surfaceIndex)) / area) * 1000;
@@ -516,6 +526,16 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
         if (! computeWaterFluxes(myDate, error)) return false;
     }
 
+    // compute slope stability
+    if (computeFactorOfSafety)
+    {
+        unsigned int nrLayers = unsigned(soilLayers.size());
+        for (unsigned int l = 1; l < nrLayers; l++)
+        {
+            soilLayers[l].slopeStability = soilLayers[l].computeSlopeStability(unit.slope);
+        }
+    }
+
     // adjust irrigation losses
     if (! unit.isOptimalIrrigation)
     {
@@ -624,6 +644,33 @@ double Crit1DCase::getWaterPotential(double computationDepth)
         if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
         {
             return -soilLayers[i].getWaterPotential();
+        }
+    }
+
+    return NODATA;
+}
+
+
+/*!
+ * \brief getSlopeStability
+ * \param computationDepth = computation soil depth  [cm]
+ * \return slope Factor of Safety FoS [-]
+ */
+double Crit1DCase::getSlopeStability(double computationDepth)
+{
+    computationDepth /= 100;        // [cm] --> [m]
+
+    if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
+        return NODATA;
+
+    double upperDepth, lowerDepth;
+    for (unsigned int l = 1; l < soilLayers.size(); l++)
+    {
+        upperDepth = soilLayers[l].depth - soilLayers[l].thickness * 0.5;
+        lowerDepth = soilLayers[l].depth + soilLayers[l].thickness * 0.5;
+        if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
+        {
+            return soilLayers[l].slopeStability;
         }
     }
 
@@ -767,17 +814,16 @@ double Crit1DCase::getFractionAW(double computationDepth)
 }
 
 
+/*
+ * old version
 /*!
  * \brief getSlopeStability
  * \param computationDepth [m]
  * \return slope factor (sf) of safety [-]
  * if sf < 1 the slope is unstable
- */
-
-double Crit1DCase::getSlopeStability(double computationDepth)
+/*double Crit1DCase::getSlopeStability(double computationDepth)
 {
     // check computation depth
-    computationDepth /= 100;             // [cm] --> [m]
     if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
         return NODATA;
 
@@ -798,23 +844,15 @@ double Crit1DCase::getSlopeStability(double computationDepth)
     if (horizonPtr == nullptr)
         return NODATA;
 
-
     // Formula del suction stress per pressioni negative
     // TODO gestire i casi in cui le pressioni diventano positive nella dll (sink?)
-
-    // Controllo per vedere l'evoluzione di certe variabili:
-
-    if (horizonPtr->effectiveCohesion > 0) {
-       float a = 5;
-      }
-
 
     double waterPotential = soilLayers[currentIndex].getWaterPotential();
     double baseDenSuctionStress = 1 + pow(horizonPtr->vanGenuchten.alpha * waterPotential, horizonPtr->vanGenuchten.n);
     double expDenSuctionStress = (horizonPtr->vanGenuchten.n - 1)/horizonPtr->vanGenuchten.n;
     double denomSuctionStress = pow(baseDenSuctionStress, expDenSuctionStress);
 
-    double suctionStress = - (waterPotential / denomSuctionStress);           // [kPa]
+    double suctionStress = - (waterPotential / denomSuctionStress);                 // [kPa]
 
     double slopeAngle = asin(unit.slope);
     double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
@@ -829,6 +867,6 @@ double Crit1DCase::getSlopeStability(double computationDepth)
 
     double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * computationDepth);
 
-    double slopeStability = frictionEffect + cohesionEffect - suctionEffect;       // [-]
+    double slopeStability = frictionEffect + cohesionEffect - suctionEffect;        // [-]
     return slopeStability;
-}
+}*/

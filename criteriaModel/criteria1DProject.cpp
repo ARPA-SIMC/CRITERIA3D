@@ -796,6 +796,8 @@ bool Crit1DProject::computeUnit(unsigned int unitIndex, unsigned int memberNr)
 bool Crit1DProject::computeCase(unsigned int memberNr)
 {
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
+    // user wants to compute factor of safety
+    myCase.computeFactorOfSafety = (slopeStabilityDepth.size() > 0);
 
     if (! loadCropParameters(dbCrop, myCase.unit.idCrop, myCase.crop, projectError))
         return false;
