@@ -671,9 +671,9 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
 
 
  /*!
-  * \brief comoputes matric potential (psi)           [m]
+  * \brief get matric potential (psi)
   * \param nodeIndex [-]
-  * \return result
+  * \return matric potential [m]
   */
  double DLL_EXPORT __STDCALL getMatricPotential(long nodeIndex)
  {
