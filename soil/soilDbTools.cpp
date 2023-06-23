@@ -411,8 +411,9 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
     }
 
     // insert new rows
-    qry.prepare( "INSERT INTO horizons (soil_code, horizon_nr, upper_depth, lower_depth, coarse_fragment, organic_matter, sand, silt, clay, bulk_density, theta_sat, k_sat)"
-                                              " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" );
+    qry.prepare( "INSERT INTO horizons (soil_code, horizon_nr, upper_depth, lower_depth, coarse_fragment, organic_matter,"
+                " sand, silt, clay, bulk_density, theta_sat, k_sat, effective_cohesion, friction_angle)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" );
 
     QVariantList soil_code;
     QVariantList horizon_nr;
@@ -426,6 +427,8 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
     QVariantList bulk_density;
     QVariantList theta_sat;
     QVariantList k_sat;
+    QVariantList effective_cohesion;
+    QVariantList friction_angle;
 
     for (unsigned int i=0; i < mySoil.nrHorizons; i++)
     {
@@ -461,6 +464,16 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
             k_sat << mySoil.horizon[i].dbData.kSat;
         else
             k_sat << "";
+
+        if (mySoil.horizon[i].dbData.effectiveCohesion != NODATA)
+            effective_cohesion << mySoil.horizon[i].dbData.effectiveCohesion;
+        else
+            effective_cohesion << "";
+
+        if (mySoil.horizon[i].dbData.frictionAngle != NODATA)
+            friction_angle << mySoil.horizon[i].dbData.frictionAngle;
+        else
+            friction_angle << "";
     }
 
     qry.addBindValue(soil_code);
@@ -475,6 +488,8 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
     qry.addBindValue(bulk_density);
     qry.addBindValue(theta_sat);
     qry.addBindValue(k_sat);
+    qry.addBindValue(effective_cohesion);
+    qry.addBindValue(friction_angle);
 
     if( !qry.execBatch() )
     {
