@@ -265,7 +265,9 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
         double currentWaterPotential = soilLayers[i].getWaterPotential();           // [kPa]
         soilFluxes3D::setMatricPotential(i, -currentWaterPotential / GRAVITY);      // [m]
 
-        if (isEqual(currentWaterPotential, 0) && soilLayers[i].waterPotential < 0 && ! isEqual(soilLayers[i].waterPotential, NODATA))
+        if (currentWaterPotential <= soilLayers[i].horizonPtr->vanGenuchten.he
+            && soilLayers[i].waterPotential <= soilLayers[i].horizonPtr->vanGenuchten.he
+            && ! isEqual(soilLayers[i].waterPotential, NODATA))
         {
             soilFluxes3D::setMatricPotential(i, -soilLayers[i].waterPotential / GRAVITY);
         }
