@@ -1338,25 +1338,28 @@ bool PragaProject::downloadDailyDataArkimet(QList<QString> variables, bool prec0
 
     for( int i=0; i < datasetList.size(); i++ )
     {
-        QDate date1 = startDate;
-        QDate date2 = std::min(date1.addDays(MAXDAYS-1), endDate);
-
         if (showInfo)
         {
             setProgressBar("Download data from: " + startDate.toString("yyyy-MM-dd") + " to: " + endDate.toString("yyyy-MM-dd") + " dataset:" + datasetList[i], nrDays);
         }
 
+        int nrStations = idList[i].size();
+        int stepDays = std::max(MAXDAYS, 360 / nrStations);
+
+        QDate date1 = startDate;
+        QDate date2 = std::min(date1.addDays(stepDays), endDate);
+
         while (date1 <= endDate)
         {
-            if (showInfo)
-            {
-                updateProgressBar(int(startDate.daysTo(date2)+1));
-            }
-
             myDownload->downloadDailyData(date1, date2, datasetList[i], idList[i], arkIdVar, prec0024);
 
+            if (showInfo)
+            {
+                updateProgressBar(startDate.daysTo(date2)+1);
+            }
+
             date1 = date2.addDays(1);
-            date2 = std::min(date1.addDays(MAXDAYS-1), endDate);
+            date2 = std::min(date1.addDays(stepDays), endDate);
         }
 
         if (showInfo) closeProgressBar();
