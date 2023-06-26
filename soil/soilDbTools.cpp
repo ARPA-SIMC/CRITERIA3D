@@ -1,3 +1,4 @@
+#include "soil.h"
 #include "soilDbTools.h"
 #include "commonConstants.h"
 #include "utilities.h"
@@ -400,6 +401,17 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
         return false;
     }
 
+    // check slopeStability
+    bool isSlopeStability = false;
+    qry.prepare("SELECT * FROM horizons WHERE soil_code = :soil_code");
+    qry.bindValue(":soil_code", soilCode);
+    qry.exec();
+    QList<QString> fieldList = getFields(qry);
+    if (fieldList.contains("effective_cohesion") && fieldList.contains("friction_angle"))
+    {
+        isSlopeStability = true;
+    }
+
     // delete all row from table horizons of soil:soilCode
     qry.prepare( "DELETE FROM horizons WHERE soil_code = :soil_code");
     qry.bindValue(":soil_code", soilCode);
@@ -411,9 +423,18 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
     }
 
     // insert new rows
-    qry.prepare( "INSERT INTO horizons (soil_code, horizon_nr, upper_depth, lower_depth, coarse_fragment, organic_matter,"
+    if (isSlopeStability)
+    {
+        qry.prepare( "INSERT INTO horizons (soil_code, horizon_nr, upper_depth, lower_depth, coarse_fragment, organic_matter,"
                 " sand, silt, clay, bulk_density, theta_sat, k_sat, effective_cohesion, friction_angle)"
                 " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" );
+    }
+    else
+    {
+        qry.prepare( "INSERT INTO horizons (soil_code, horizon_nr, upper_depth, lower_depth, coarse_fragment, organic_matter,"
+                    " sand, silt, clay, bulk_density, theta_sat, k_sat)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" );
+    }
 
     QVariantList soil_code;
     QVariantList horizon_nr;
@@ -488,8 +509,11 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
     qry.addBindValue(bulk_density);
     qry.addBindValue(theta_sat);
     qry.addBindValue(k_sat);
-    qry.addBindValue(effective_cohesion);
-    qry.addBindValue(friction_angle);
+    if (isSlopeStability)
+    {
+        qry.addBindValue(effective_cohesion);
+        qry.addBindValue(friction_angle);
+    }
 
     if( !qry.execBatch() )
     {
@@ -503,7 +527,6 @@ bool updateSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::C
 
 bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DSoil &mySoil, int horizon, QString &errorStr)
 {
-
     QSqlQuery qry(dbSoil);
     if (soilCode.isEmpty())
     {
@@ -557,7 +580,6 @@ bool updateWaterRetentionData(QSqlDatabase &dbSoil, const QString &soilCode, soi
 
 bool insertSoilData(QSqlDatabase &dbSoil, int soilID, const QString &soilCode, const QString &soilName, const QString &soilInfo, QString &errorStr)
 {
-
     QSqlQuery qry(dbSoil);
     if (soilID == NODATA)
     {
