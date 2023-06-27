@@ -16,6 +16,9 @@ class ChartView : public QChartView
     Q_OBJECT
 public:
     explicit ChartView(QWidget *parent = 0);
+    QValueAxis* axisX;
+    QValueAxis* axisY;
+
     void cleanScatterSeries();
     void drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3);
     void cleanClimLapseRate();
@@ -31,8 +34,6 @@ private:
     QScatterSeries *series3;
     QLineSeries* climLapseRatelineSeries;
     QLineSeries* modelLapseRatelineSeries;
-    QValueAxis* axisX;
-    QValueAxis* axisY;
     Callout *m_tooltip;
     QMap< QString, QPointF > idPointMap;
     QMap< QString, QPointF > idPointMap2;

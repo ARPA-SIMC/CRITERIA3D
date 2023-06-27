@@ -28,6 +28,7 @@
 #include "spatialControl.h"
 #include "commonConstants.h"
 #include "formInfo.h"
+#include "math.h"
 
 #include <QLayout>
 #include <QDate>
@@ -70,11 +71,11 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
 
     for(int i=0; i<int(proxy.size()); i++)
     {
-        axisX.addItem(QString::fromStdString(proxy[i].getName()));
+        comboAxisX.addItem(QString::fromStdString(proxy[i].getName()));
     }
     proxyPos = 0;
-    axisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
-    if (axisX.currentText() != "elevation")
+    comboAxisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    if (comboAxisX.currentText() != "elevation")
     {
         climatologicalLR.setVisible(false);
     }
@@ -88,24 +89,24 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     {
         for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
         {
-            variable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(it->second));
         }
-        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, comboVariable.currentText().toStdString());
     }
     else if (currentFrequency == hourly)
     {
         for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
         {
-            variable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(it->second));
         }
-        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
+        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, comboVariable.currentText().toStdString());
     }
-    variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    comboVariable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     
     selectionChartLayout->addWidget(variableLabel);
-    selectionChartLayout->addWidget(&variable);
+    selectionChartLayout->addWidget(&comboVariable);
     selectionChartLayout->addWidget(axisXLabel);
-    selectionChartLayout->addWidget(&axisX);
+    selectionChartLayout->addWidget(&comboAxisX);
     
     selectionOptionBoxLayout->addWidget(&detrended);
     selectionOptionBoxLayout->addWidget(&modelLR);
@@ -138,8 +139,8 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
 
     setLayout(mainLayout);
     
-    connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
-    connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
+    connect(&comboAxisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
+    connect(&comboVariable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
@@ -206,26 +207,26 @@ void Crit3DProxyWidget::updateDateTime(QDate newDate, int newHour)
 void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
 {
     currentFrequency = newFrequency;
-    variable.clear();
+    comboVariable.clear();
 
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
     {
         for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
         {
-            variable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(it->second));
         }
-        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, comboVariable.currentText().toStdString());
     }
     else if (currentFrequency == hourly)
     {
         for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
         {
-            variable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(it->second));
         }
-        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
+        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, comboVariable.currentText().toStdString());
     }
-    variable.adjustSize();
+    comboVariable.adjustSize();
 
     plot();
 }
@@ -320,10 +321,30 @@ void Crit3DProxyWidget::plot()
     }
     chartView->setIdPointMap(idPointMap,idPointMap2,idPointMap3);
     chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
-    if (axisX.currentText() != "elevation")
+
+    chartView->axisX->setTitleText(comboAxisX.currentText());
+    chartView->axisY->setTitleText(comboVariable.currentText());
+
+    chartView->axisY->setMin(floor(chartView->axisY->min()));
+    chartView->axisY->setMax(ceil(chartView->axisY->max()));
+
+    if (comboAxisX.currentText() != "elevation")
     {
         chartView->cleanClimLapseRate();
         climatologicalLR.setVisible(false);
+
+        if (comboAxisX.currentText() == "seaProximity" || comboAxisX.currentText() == "urban")
+        {
+            chartView->axisX->setMin(-0.1);
+            chartView->axisX->setMax(1.1);
+            chartView->axisX->setTickCount(13);
+        }
+        else if (comboAxisX.currentText() == "orogIndex")
+        {
+            chartView->axisX->setMin(-1);
+            chartView->axisX->setMax(1.0);
+            chartView->axisX->setTickCount(11);
+        }
     }
     else
     {
@@ -332,6 +353,13 @@ void Crit3DProxyWidget::plot()
         {
             climatologicalLRClicked(1);
         }
+
+        // round maximum
+        double maximum = chartView->axisX->max();
+        int nrStep = floor(maximum / 100) + 1;
+        chartView->axisX->setMin(-100);
+        chartView->axisX->setMax(nrStep * 100);
+        chartView->axisX->setTickCount(nrStep+2);
     }
     if (modelLR.isChecked())
     {
@@ -370,7 +398,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
     float xMax;
     if (toggled && outInterpolationPoints.size() != 0)
     {
-        if (axisX.currentText() == "elevation")
+        if (comboAxisX.currentText() == "elevation")
         {
             xMin = getZmin(outInterpolationPoints);
             xMax = getZmax(outInterpolationPoints);
