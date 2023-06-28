@@ -58,10 +58,10 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
     
     r2.setMaximumWidth(60);
-    r2.setMaximumHeight(30);
+    r2.setMaximumHeight(24);
     r2.setEnabled(false);
     lapseRate.setMaximumWidth(60);
-    lapseRate.setMaximumHeight(30);
+    lapseRate.setMaximumHeight(24);
     lapseRate.setEnabled(false);
     
     QLabel *variableLabel = new QLabel(tr("Variable"));
@@ -283,12 +283,11 @@ void Crit3DProxyWidget::plot()
         checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
                                         interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
     }
-    QList<QPointF> point_vector;
-    QList<QPointF> point_vector2;
-    QList<QPointF> point_vector3;
-    QMap< QString, QPointF > idPointMap;
+    QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;
+    QMap< QString, QPointF > idPointMap1;
     QMap< QString, QPointF > idPointMap2;
     QMap< QString, QPointF > idPointMap3;
+    QMap< QString, QPointF > idPointMapMarked;
 
     QPointF point;
     for (int i = 0; i < int(outInterpolationPoints.size()); i++)
@@ -302,26 +301,31 @@ void Crit3DProxyWidget::plot()
             point.setY(varValue);
             QString text = "id: " + QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\n"
                          + "name: " + QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name);
+            if (outInterpolationPoints[i].isMarked)
+            {
+                pointListMarked.append(point);
+                idPointMapMarked.insert(text, point);
+            }
             if (outInterpolationPoints[i].lapseRateCode == primary)
             {
-                point_vector.append(point);
-                idPointMap.insert(text, point);
+                pointListPrimary.append(point);
+                idPointMap1.insert(text, point);
             }
             else if (outInterpolationPoints[i].lapseRateCode == secondary)
             {
-                point_vector2.append(point);
+                pointListSecondary.append(point);
                 idPointMap2.insert(text, point);
             }
             else if (outInterpolationPoints[i].lapseRateCode == supplemental)
             {
-                point_vector3.append(point);
+                pointListSupplemental.append(point);
                 idPointMap3.insert(text, point);
             }
         }
     }
 
-    chartView->setIdPointMap(idPointMap, idPointMap2, idPointMap3);
-    chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
+    chartView->setIdPointMap(idPointMap1, idPointMap2, idPointMap3, idPointMapMarked);
+    chartView->drawScatterSeries(pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked);
 
     chartView->axisX->setTitleText(comboAxisX.currentText());
     chartView->axisY->setTitleText(comboVariable.currentText());
