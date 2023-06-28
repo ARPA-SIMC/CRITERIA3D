@@ -93,6 +93,7 @@ void ChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF
 
     pointListSeries1.append(pointListSeries2);
     pointListSeries1.append(pointListSeries3);
+
     double xMin = std::numeric_limits<int>::max();
     double xMax = std::numeric_limits<int>::min();
     double yMin = std::numeric_limits<int>::max();
@@ -106,12 +107,13 @@ void ChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF
 
     double xRange = xMax - xMin;
     double yRange = yMax - yMin;
-    double deltaX = xRange/100;
-    double deltaY = yRange/100;
-    axisX->setMax(xMax+3*deltaX);
-    axisX->setMin(xMin-3*deltaX);
-    axisY->setMax(yMax+3*deltaY);
-    axisY->setMin(yMin-3*deltaY);
+    double deltaX = xRange/20;
+    double deltaY = yRange/20;
+
+    axisX->setMax(xMax + deltaX);
+    axisX->setMin(xMin - deltaX);
+    axisY->setMax(yMax + deltaY);
+    axisY->setMin(yMin - deltaY);
 
     chart()->addSeries(series1);
     chart()->addSeries(series2);

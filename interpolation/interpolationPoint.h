@@ -15,12 +15,13 @@
         gis::Crit3DPoint* point;
         int index;
         bool isActive;
+        bool isMarked;
         float distance;
         float deltaZ;
         float value;
         lapseRateCodeType lapseRateCode;
         gis::Crit3DRasterGrid* topographicDistance;
-        std::vector <float> proxyValues;
+        std::vector<float> proxyValues;
 
         Crit3DInterpolationDataPoint();
 

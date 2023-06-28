@@ -293,44 +293,34 @@ void Crit3DProxyWidget::plot()
     QPointF point;
     for (int i = 0; i < int(outInterpolationPoints.size()); i++)
     {
-        if (outInterpolationPoints[i].lapseRateCode == primary)
+        float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
+        float varValue = outInterpolationPoints[i].value;
+
+        if (proxyVal != NODATA && varValue != NODATA)
         {
-            float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
-            float varVal = outInterpolationPoints[i].value;
-            if (proxyVal != NODATA && varVal != NODATA)
+            point.setX(proxyVal);
+            point.setY(varValue);
+            QString text = "id: " + QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\n"
+                         + "name: " + QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name);
+            if (outInterpolationPoints[i].lapseRateCode == primary)
             {
-                point.setX(proxyVal);
-                point.setY(varVal);
                 point_vector.append(point);
-                idPointMap.insert("id: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\nname: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name), point);
+                idPointMap.insert(text, point);
             }
-        }
-        else if (outInterpolationPoints[i].lapseRateCode == secondary)
-        {
-            float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
-            float varVal = outInterpolationPoints[i].value;
-            if (proxyVal != NODATA && varVal != NODATA)
+            else if (outInterpolationPoints[i].lapseRateCode == secondary)
             {
-                point.setX(proxyVal);
-                point.setY(varVal);
                 point_vector2.append(point);
-                idPointMap2.insert("id: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\nname: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name), point);
+                idPointMap2.insert(text, point);
             }
-        }
-        else if (outInterpolationPoints[i].lapseRateCode == supplemental)
-        {
-            float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
-            float varVal = outInterpolationPoints[i].value;
-            if (proxyVal != NODATA && varVal != NODATA)
+            else if (outInterpolationPoints[i].lapseRateCode == supplemental)
             {
-                point.setX(proxyVal);
-                point.setY(varVal);
                 point_vector3.append(point);
-                idPointMap3.insert("id: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\nname: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name), point);
+                idPointMap3.insert(text, point);
             }
         }
     }
-    chartView->setIdPointMap(idPointMap,idPointMap2,idPointMap3);
+
+    chartView->setIdPointMap(idPointMap, idPointMap2, idPointMap3);
     chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
 
     chartView->axisX->setTitleText(comboAxisX.currentText());
@@ -344,11 +334,18 @@ void Crit3DProxyWidget::plot()
         chartView->cleanClimLapseRate();
         climatologicalLR.setVisible(false);
 
-        if (comboAxisX.currentText() == "seaProximity" || comboAxisX.currentText() == "urban")
+        // set minumum and maximum
+        if (comboAxisX.currentText() == "urban")
         {
             chartView->axisX->setMin(-0.1);
             chartView->axisX->setMax(1.1);
             chartView->axisX->setTickCount(13);
+        }
+        if (comboAxisX.currentText() == "seaProximity")
+        {
+            chartView->axisX->setMin(0.0);
+            chartView->axisX->setMax(1.1);
+            chartView->axisX->setTickCount(12);
         }
         else if (comboAxisX.currentText() == "orogIndex")
         {
@@ -365,19 +362,20 @@ void Crit3DProxyWidget::plot()
             climatologicalLRClicked(1);
         }
 
-        // round maximum
+        // set minumum and maximum
         double maximum = chartView->axisX->max();
         int nrStep = floor(maximum / 100) + 1;
         chartView->axisX->setMin(-100);
         chartView->axisX->setMax(nrStep * 100);
         chartView->axisX->setTickCount(nrStep+2);
     }
+
     if (modelLR.isChecked())
     {
         modelLRClicked(1);
     }
-
 }
+
 
 void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
 {
