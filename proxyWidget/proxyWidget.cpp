@@ -129,13 +129,23 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     horizontalGroupBox->setMaximumSize(1240, 130);
     horizontalGroupBox->setLayout(selectionLayout);
 
+    mainLayout->addWidget(horizontalGroupBox);
+
     chartView = new ChartView();
     chartView->setMinimumHeight(200);
-    QStatusBar* statusBar = new QStatusBar();
-
-    mainLayout->addWidget(horizontalGroupBox);
     mainLayout->addWidget(chartView);
+
+    QStatusBar* statusBar = new QStatusBar();
     mainLayout->addWidget(statusBar);
+
+    // menu
+    QMenuBar* menuBar = new QMenuBar();
+    QMenu *editMenu = new QMenu("Edit");
+    QAction* updateStations = new QAction(tr("&Update"), this);
+    editMenu->addAction(updateStations);
+
+    menuBar->addMenu(editMenu);
+    mainLayout->setMenuBar(menuBar);
 
     setLayout(mainLayout);
     
@@ -144,6 +154,7 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
+    connect(updateStations, &QAction::triggered, this, [=](){ this->plot(); });
 
     if (currentFrequency != noFrequency)
     {
