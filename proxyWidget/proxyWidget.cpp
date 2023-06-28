@@ -58,10 +58,12 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
     
     r2.setMaximumWidth(60);
-    r2.setMaximumHeight(24);
+    r2.setMinimumHeight(25);
+    r2.setMaximumHeight(25);
     r2.setEnabled(false);
     lapseRate.setMaximumWidth(60);
-    lapseRate.setMaximumHeight(24);
+    lapseRate.setMinimumHeight(25);
+    lapseRate.setMaximumHeight(25);
     lapseRate.setEnabled(false);
     
     QLabel *variableLabel = new QLabel(tr("Variable"));
@@ -463,7 +465,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             }
             if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
             {
-                r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 4));
+                r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 2));
             }
             lapseRate.setText(QString("%1").arg(regressionSlope*1000, 0, 'f', 2));
         }
