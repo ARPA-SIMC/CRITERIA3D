@@ -113,15 +113,21 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
         QMenu menu;
         QAction *openMeteoWidget = menu.addAction("Open new meteo widget");
         QAction *appendMeteoWidget = menu.addAction("Append to last meteo widget");
+        menu.addSeparator();
         QAction *openPointStatisticsWidget = menu.addAction("Open point statistics widget");
         QAction *openHomogeneityWidget = menu.addAction("Open homogeneity test widget");
+        menu.addSeparator();
         QAction *openSynchronicityWidget = menu.addAction("Open synchronicity test widget");
         QAction *setSynchronicityReferencePoint = menu.addAction("Set as synchronicity reference point");
+        menu.addSeparator();
         QMenu *orogCodeSubMenu;
         orogCodeSubMenu = menu.addMenu("Orog code");
         QAction *actionOrogCode_primary = orogCodeSubMenu->addAction( "Set as primary station" );
         QAction *actionOrogCode_secondary = orogCodeSubMenu->addAction( "Set as secondary station" );
         QAction *actionOrogCode_supplemental = orogCodeSubMenu->addAction( "Set as supplemental station" );
+        menu.addSeparator();
+        QAction *actionMarkPoint = menu.addAction( "Mark point" );
+        QAction *actionUnmarkPoint = menu.addAction( "Unmark point" );
 
         QAction *selection =  menu.exec(QCursor::pos());
 
@@ -162,6 +168,14 @@ void StationMarker::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
             else if (selection == actionOrogCode_supplemental)
             {
                 emit changeOrogCodeClicked(_id, 2);
+            }
+            else if (selection == actionMarkPoint)
+            {
+                emit markPoint(_id);
+            }
+            else if (selection == actionUnmarkPoint)
+            {
+                emit unmarkPoint(_id);
             }
         }
     }
