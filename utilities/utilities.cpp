@@ -8,6 +8,7 @@
 #include <QSqlRecord>
 #include <QSqlQuery>
 #include <QDir>
+#include <QDirIterator>
 #include <QTextStream>
 
 
@@ -554,12 +555,39 @@ QList<QString> readListSingleColumn(QString fileName, QString& error)
     return myList;
 }
 
+
 QList<QString> removeList(QList<QString> list, QList<QString> toDelete)
 {
-  QList<QString>::iterator i;
-  for (i = toDelete.begin(); i != toDelete.end(); ++i)
-  {
-    list.removeAll(*i);
-  }
-  return list;
+    QList<QString>::iterator i;
+    for (i = toDelete.begin(); i != toDelete.end(); ++i)
+    {
+        list.removeAll(*i);
+    }
+    return list;
+}
+
+
+// remove files from targetPath, containing targetStr in the name and older than nrDays
+void removeOldFiles(const QString &targetPath, const QString &targetStr, int nrDays)
+{
+    // iterate through the directory using the QDirIterator
+    QDirIterator it(targetPath);
+
+    while (it.hasNext())
+    {
+        QString filename = it.next();
+        QFileInfo file(filename);
+
+        if (file.isDir())
+            continue;
+
+        if (file.fileName().contains(targetStr, Qt::CaseInsensitive))
+        {
+            if (file.fileTime(QFileDevice::FileModificationTime) < QDateTime::currentDateTime().addDays(-nrDays))
+            {
+                QFile myFile(filename);
+                myFile.remove();
+            }
+        }
+    }
 }

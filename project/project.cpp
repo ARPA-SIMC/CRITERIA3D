@@ -3736,35 +3736,34 @@ int Project::computeCellSizeFromMeteoGrid()
 
 bool Project::setLogFile(QString myFileName)
 {
-    this->logFileName = myFileName;
-    myFileName = getCompleteFileName(myFileName, PATH_LOG);
+    QString fileNameWithPath = getCompleteFileName(myFileName, PATH_LOG);
 
-    QString filePath = getFilePath(myFileName);
-    QString fileName = getFileName(myFileName);
+    QString logFilePath = getFilePath(fileNameWithPath);
+    QString endLogFileName = getFileName(fileNameWithPath);
 
-    if (!QDir(filePath).exists())
+    if (!QDir(logFilePath).exists())
     {
-         QDir().mkdir(filePath);
+         QDir().mkdir(logFilePath);
     }
+
+    // remove previous log files (older than 7 days)
+    removeOldFiles(logFilePath, endLogFileName, 7);
 
     QDate myQDate = QDateTime().currentDateTime().date();
     QTime myQTime = QDateTime().currentDateTime().time();
     QString myDate = QDateTime(myQDate, myQTime, Qt::UTC).currentDateTime().toString("yyyyMMdd_HHmm");
 
-    fileName = myDate + "_" + fileName;
+    logFileName = logFilePath + myDate + "_" + endLogFileName;
 
-    QString currentFileName = filePath + fileName;
-
-    logFile.open(currentFileName.toStdString().c_str());
+    logFile.open(logFileName.toStdString().c_str());
     if (logFile.is_open())
     {
-        logInfo("LogFile = " + currentFileName);
-        this->logFileName = currentFileName;
+        logInfo("LogFile = " + logFileName);
         return true;
     }
     else
     {
-        logError("Unable to open file: " + currentFileName);
+        logError("Unable to open log file: " + logFileName);
         return false;
     }
 }
