@@ -170,7 +170,7 @@
             double critical;            /*!<   [mm] water content at critical point for water movement (typical FC)  */
             double maxInfiltration;     /*!<   [mm]  */
             double flux;                /*!<   [mm]  */
-            double slopeStability;      /*!<   [-]  factor of safety (FoS) - if FoS < 1 the slope is unstable */
+            double factorOfSafety;      /*!<   [-]  factor of safety (FoS) - if FoS < 1 the slope is unstable */
 
             Crit3DHorizon *horizonPtr;
 

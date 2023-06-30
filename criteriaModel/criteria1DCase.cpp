@@ -536,7 +536,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
         unsigned int nrLayers = unsigned(soilLayers.size());
         for (unsigned int l = 1; l < nrLayers; l++)
         {
-            soilLayers[l].slopeStability = soilLayers[l].computeSlopeStability(unit.slope);
+            soilLayers[l].factorOfSafety = soilLayers[l].computeSlopeStability(unit.slope);
         }
     }
 
@@ -684,7 +684,7 @@ double Crit1DCase::getSlopeStability(double computationDepth)
         lowerDepth = soilLayers[l].depth + soilLayers[l].thickness * 0.5;
         if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
         {
-            return soilLayers[l].slopeStability;
+            return soilLayers[l].factorOfSafety;
         }
     }
 
@@ -826,61 +826,3 @@ double Crit1DCase::getFractionAW(double computationDepth)
 
     return availableWaterSum / potentialAWSum;
 }
-
-
-/*
- * old version
-/*!
- * \brief getSlopeStability
- * \param computationDepth [m]
- * \return slope factor (sf) of safety [-]
- * if sf < 1 the slope is unstable
-/*double Crit1DCase::getSlopeStability(double computationDepth)
-{
-    // check computation depth
-    if (computationDepth <= 0 || computationDepth > mySoil.totalDepth)
-        return NODATA;
-
-    soil::Crit3DHorizon *horizonPtr = nullptr;
-    int currentIndex = NODATA;
-    double upperDepth, lowerDepth;
-    for (unsigned int i = 1; i < soilLayers.size(); i++)
-    {
-        upperDepth = soilLayers[i].depth - soilLayers[i].thickness * 0.5;
-        lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
-        if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
-        {
-            horizonPtr = soilLayers[i].horizonPtr;
-            currentIndex = i;
-        }
-    }
-
-    if (horizonPtr == nullptr)
-        return NODATA;
-
-    // Formula del suction stress per pressioni negative
-    // TODO gestire i casi in cui le pressioni diventano positive nella dll (sink?)
-
-    double waterPotential = soilLayers[currentIndex].getWaterPotential();
-    double baseDenSuctionStress = 1 + pow(horizonPtr->vanGenuchten.alpha * waterPotential, horizonPtr->vanGenuchten.n);
-    double expDenSuctionStress = (horizonPtr->vanGenuchten.n - 1)/horizonPtr->vanGenuchten.n;
-    double denomSuctionStress = pow(baseDenSuctionStress, expDenSuctionStress);
-
-    double suctionStress = - (waterPotential / denomSuctionStress);                 // [kPa]
-
-    double slopeAngle = asin(unit.slope);
-    double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
-
-    double tanAngle = tan(slopeAngle);
-    double tanFrictionAngle = tan(frictionAngle);
-
-    double frictionEffect =  tanFrictionAngle / tanAngle;
-
-    double unitWeight = horizonPtr->bulkDensity * GRAVITY * 1000;                   // [N m-3]
-    double cohesionEffect = 2 * horizonPtr->effectiveCohesion / (unitWeight * computationDepth * sin(2*slopeAngle));
-
-    double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * computationDepth);
-
-    double slopeStability = frictionEffect + cohesionEffect - suctionEffect;        // [-]
-    return slopeStability;
-}*/

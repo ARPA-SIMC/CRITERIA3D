@@ -82,7 +82,7 @@ namespace soil
         this->critical = NODATA;
         this->maxInfiltration = NODATA;
         this->flux = NODATA;
-        this->slopeStability = NODATA;
+        this->factorOfSafety = NODATA;
 
         this->horizonPtr = nullptr;
     }
@@ -744,21 +744,14 @@ namespace soil
 
     /*!
      * \brief getSlopeStability
-     * \return slope factor (sf) of safety [-]
-     * if sf < 1 the slope is unstable
+     * \return factor of safety FoS [-]
+     * if fos < 1 the slope is unstable
      */
     double Crit3DLayer::computeSlopeStability(double slope)
     {
         double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
 
-        // only unsaturated
-        /*double baseDenSuctionStress = 1 + pow(horizonPtr->vanGenuchten.alpha * waterPotential, horizonPtr->vanGenuchten.n);
-        double expDenSuctionStress = (horizonPtr->vanGenuchten.n - 1)/horizonPtr->vanGenuchten.n;
-        double denomSuctionStress = pow(baseDenSuctionStress, expDenSuctionStress);
-        suctionStress = -(waterPotential / denomSuctionStress);   */
-
         double slopeAngle = asin(slope);
-        slopeAngle = 30 * DEG_TO_RAD;
         double frictionAngle = horizonPtr->frictionAngle * DEG_TO_RAD;
 
         double tanAngle = tan(slopeAngle);
@@ -771,8 +764,8 @@ namespace soil
 
         double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * depth);
 
-        double slopeStability = frictionEffect + cohesionEffect - suctionEffect;        // [-]
-        return slopeStability;
+        // factor of safety
+        return frictionEffect + cohesionEffect - suctionEffect;        // [-]
     }
 
 
