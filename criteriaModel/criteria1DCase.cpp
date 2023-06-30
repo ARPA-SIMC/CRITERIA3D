@@ -204,8 +204,17 @@ bool Crit1DCase::initializeNumericalFluxes(std::string &error)
         else
         {
             double boundaryArea = ly * soilLayers[unsigned(i)].thickness;
-            soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true,
-                                  BOUNDARY_FREELATERALDRAINAGE, float(unit.slope), float(boundaryArea));
+
+            if (unit.isComputeLateralDrainage)
+            {
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, true,
+                            BOUNDARY_FREELATERALDRAINAGE, float(unit.slope), float(boundaryArea));
+            }
+            else
+            {
+                soilFluxes3D::setNode(i, x0, y0, z, volume, isSurface, false,
+                            BOUNDARY_NONE, float(unit.slope), float(boundaryArea));
+            }
         }
 
         // set soil
@@ -392,7 +401,14 @@ bool Crit1DCase::computeWaterFluxes(const Crit3DDate &myDate, std::string &error
         output.dailySurfaceRunoff = computeSurfaceRunoff(crop, soilLayers);
 
         // LATERAL DRAINAGE
-        output.dailyLateralDrainage = computeLateralDrainage(soilLayers);
+        if (this->unit.isComputeLateralDrainage)
+        {
+            output.dailyLateralDrainage = computeLateralDrainage(soilLayers);
+        }
+        else
+        {
+            output.dailyLateralDrainage = 0;
+        }
     }
 
     return true;
