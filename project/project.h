@@ -191,7 +191,7 @@
         QString getRelativePath(QString fileName);
         QString getCompleteFileName(QString fileName, QString secondaryPath);
 
-        bool setLogFile(QString fileNameWithPath);
+        bool setLogFile(QString myFileName);
         void logError(QString myStr);
         void logInfo(QString myStr);
         void logInfoGUI(QString myStr);

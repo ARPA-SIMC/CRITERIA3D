@@ -28,6 +28,7 @@
 #include "spatialControl.h"
 #include "commonConstants.h"
 #include "formInfo.h"
+#include "math.h"
 
 #include <QLayout>
 #include <QDate>
@@ -57,10 +58,10 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     QLabel *lapseRateLabel = new QLabel(tr("Lapse rate"));
     
     r2.setMaximumWidth(60);
-    r2.setMaximumHeight(30);
+    r2.setMaximumHeight(24);
     r2.setEnabled(false);
     lapseRate.setMaximumWidth(60);
-    lapseRate.setMaximumHeight(30);
+    lapseRate.setMaximumHeight(24);
     lapseRate.setEnabled(false);
     
     QLabel *variableLabel = new QLabel(tr("Variable"));
@@ -70,11 +71,11 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
 
     for(int i=0; i<int(proxy.size()); i++)
     {
-        axisX.addItem(QString::fromStdString(proxy[i].getName()));
+        comboAxisX.addItem(QString::fromStdString(proxy[i].getName()));
     }
     proxyPos = 0;
-    axisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
-    if (axisX.currentText() != "elevation")
+    comboAxisX.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    if (comboAxisX.currentText() != "elevation")
     {
         climatologicalLR.setVisible(false);
     }
@@ -88,24 +89,24 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     {
         for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
         {
-            variable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(it->second));
         }
-        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, comboVariable.currentText().toStdString());
     }
     else if (currentFrequency == hourly)
     {
         for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
         {
-            variable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(it->second));
         }
-        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
+        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, comboVariable.currentText().toStdString());
     }
-    variable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    comboVariable.setSizeAdjustPolicy(QComboBox::AdjustToContents);
     
     selectionChartLayout->addWidget(variableLabel);
-    selectionChartLayout->addWidget(&variable);
+    selectionChartLayout->addWidget(&comboVariable);
     selectionChartLayout->addWidget(axisXLabel);
-    selectionChartLayout->addWidget(&axisX);
+    selectionChartLayout->addWidget(&comboAxisX);
     
     selectionOptionBoxLayout->addWidget(&detrended);
     selectionOptionBoxLayout->addWidget(&modelLR);
@@ -128,21 +129,32 @@ Crit3DProxyWidget::Crit3DProxyWidget(Crit3DInterpolationSettings* interpolationS
     horizontalGroupBox->setMaximumSize(1240, 130);
     horizontalGroupBox->setLayout(selectionLayout);
 
+    mainLayout->addWidget(horizontalGroupBox);
+
     chartView = new ChartView();
     chartView->setMinimumHeight(200);
-    QStatusBar* statusBar = new QStatusBar();
-
-    mainLayout->addWidget(horizontalGroupBox);
     mainLayout->addWidget(chartView);
+
+    QStatusBar* statusBar = new QStatusBar();
     mainLayout->addWidget(statusBar);
+
+    // menu
+    QMenuBar* menuBar = new QMenuBar();
+    QMenu *editMenu = new QMenu("Edit");
+    QAction* updateStations = new QAction(tr("&Update"), this);
+    editMenu->addAction(updateStations);
+
+    menuBar->addMenu(editMenu);
+    mainLayout->setMenuBar(menuBar);
 
     setLayout(mainLayout);
     
-    connect(&axisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
-    connect(&variable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
+    connect(&comboAxisX, &QComboBox::currentTextChanged, [=](const QString &newProxy){ this->changeProxyPos(newProxy); });
+    connect(&comboVariable, &QComboBox::currentTextChanged, [=](const QString &newVariable){ this->changeVar(newVariable); });
     connect(&climatologicalLR, &QCheckBox::toggled, [=](int toggled){ this->climatologicalLRClicked(toggled); });
     connect(&modelLR, &QCheckBox::toggled, [=](int toggled){ this->modelLRClicked(toggled); });
     connect(&detrended, &QCheckBox::toggled, [=](){ this->plot(); });
+    connect(updateStations, &QAction::triggered, this, [=](){ this->plot(); });
 
     if (currentFrequency != noFrequency)
     {
@@ -206,26 +218,26 @@ void Crit3DProxyWidget::updateDateTime(QDate newDate, int newHour)
 void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
 {
     currentFrequency = newFrequency;
-    variable.clear();
+    comboVariable.clear();
 
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
     {
         for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
         {
-            variable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(it->second));
         }
-        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable.currentText().toStdString());
+        myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, comboVariable.currentText().toStdString());
     }
     else if (currentFrequency == hourly)
     {
         for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
         {
-            variable.addItem(QString::fromStdString(it->second));
+            comboVariable.addItem(QString::fromStdString(it->second));
         }
-        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable.currentText().toStdString());
+        myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, comboVariable.currentText().toStdString());
     }
-    variable.adjustSize();
+    comboVariable.adjustSize();
 
     plot();
 }
@@ -271,59 +283,80 @@ void Crit3DProxyWidget::plot()
         checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, getCurrentTime(), SQinterpolationSettings,
                                         interpolationSettings, meteoSettings, climateParam, outInterpolationPoints, checkSpatialQuality);
     }
-    QList<QPointF> point_vector;
-    QList<QPointF> point_vector2;
-    QList<QPointF> point_vector3;
-    QMap< QString, QPointF > idPointMap;
+    QList<QPointF> pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked;
+    QMap< QString, QPointF > idPointMap1;
     QMap< QString, QPointF > idPointMap2;
     QMap< QString, QPointF > idPointMap3;
+    QMap< QString, QPointF > idPointMapMarked;
 
     QPointF point;
     for (int i = 0; i < int(outInterpolationPoints.size()); i++)
     {
-        if (outInterpolationPoints[i].lapseRateCode == primary)
+        float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
+        float varValue = outInterpolationPoints[i].value;
+
+        if (proxyVal != NODATA && varValue != NODATA)
         {
-            float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
-            float varVal = outInterpolationPoints[i].value;
-            if (proxyVal != NODATA && varVal != NODATA)
+            point.setX(proxyVal);
+            point.setY(varValue);
+            QString text = "id: " + QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\n"
+                         + "name: " + QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name);
+            if (outInterpolationPoints[i].isMarked)
             {
-                point.setX(proxyVal);
-                point.setY(varVal);
-                point_vector.append(point);
-                idPointMap.insert("id: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\nname: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name), point);
+                pointListMarked.append(point);
+                idPointMapMarked.insert(text, point);
             }
-        }
-        else if (outInterpolationPoints[i].lapseRateCode == secondary)
-        {
-            float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
-            float varVal = outInterpolationPoints[i].value;
-            if (proxyVal != NODATA && varVal != NODATA)
+            if (outInterpolationPoints[i].lapseRateCode == primary)
             {
-                point.setX(proxyVal);
-                point.setY(varVal);
-                point_vector2.append(point);
-                idPointMap2.insert("id: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\nname: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name), point);
+                pointListPrimary.append(point);
+                idPointMap1.insert(text, point);
             }
-        }
-        else if (outInterpolationPoints[i].lapseRateCode == supplemental)
-        {
-            float proxyVal = outInterpolationPoints[i].getProxyValue(proxyPos);
-            float varVal = outInterpolationPoints[i].value;
-            if (proxyVal != NODATA && varVal != NODATA)
+            else if (outInterpolationPoints[i].lapseRateCode == secondary)
             {
-                point.setX(proxyVal);
-                point.setY(varVal);
-                point_vector3.append(point);
-                idPointMap3.insert("id: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].id) + "\nname: "+QString::fromStdString(meteoPoints[outInterpolationPoints[i].index].name), point);
+                pointListSecondary.append(point);
+                idPointMap2.insert(text, point);
+            }
+            else if (outInterpolationPoints[i].lapseRateCode == supplemental)
+            {
+                pointListSupplemental.append(point);
+                idPointMap3.insert(text, point);
             }
         }
     }
-    chartView->setIdPointMap(idPointMap,idPointMap2,idPointMap3);
-    chartView->drawScatterSeries(point_vector, point_vector2, point_vector3);
-    if (axisX.currentText() != "elevation")
+
+    chartView->setIdPointMap(idPointMap1, idPointMap2, idPointMap3, idPointMapMarked);
+    chartView->drawScatterSeries(pointListPrimary, pointListSecondary, pointListSupplemental, pointListMarked);
+
+    chartView->axisX->setTitleText(comboAxisX.currentText());
+    chartView->axisY->setTitleText(comboVariable.currentText());
+
+    chartView->axisY->setMin(floor(chartView->axisY->min()));
+    chartView->axisY->setMax(ceil(chartView->axisY->max()));
+
+    if (comboAxisX.currentText() != "elevation")
     {
         chartView->cleanClimLapseRate();
         climatologicalLR.setVisible(false);
+
+        // set minumum and maximum
+        if (comboAxisX.currentText() == "urban")
+        {
+            chartView->axisX->setMin(-0.1);
+            chartView->axisX->setMax(1.1);
+            chartView->axisX->setTickCount(13);
+        }
+        if (comboAxisX.currentText() == "seaProximity")
+        {
+            chartView->axisX->setMin(0.0);
+            chartView->axisX->setMax(1.1);
+            chartView->axisX->setTickCount(12);
+        }
+        else if (comboAxisX.currentText() == "orogIndex")
+        {
+            chartView->axisX->setMin(-1);
+            chartView->axisX->setMax(1.0);
+            chartView->axisX->setTickCount(11);
+        }
     }
     else
     {
@@ -332,13 +365,21 @@ void Crit3DProxyWidget::plot()
         {
             climatologicalLRClicked(1);
         }
+
+        // set minumum and maximum
+        double maximum = chartView->axisX->max();
+        int nrStep = floor(maximum / 100) + 1;
+        chartView->axisX->setMin(-100);
+        chartView->axisX->setMax(nrStep * 100);
+        chartView->axisX->setTickCount(nrStep+2);
     }
+
     if (modelLR.isChecked())
     {
         modelLRClicked(1);
     }
-
 }
+
 
 void Crit3DProxyWidget::climatologicalLRClicked(int toggled)
 {
@@ -370,7 +411,7 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
     float xMax;
     if (toggled && outInterpolationPoints.size() != 0)
     {
-        if (axisX.currentText() == "elevation")
+        if (comboAxisX.currentText() == "elevation")
         {
             xMin = getZmin(outInterpolationPoints);
             xMax = getZmax(outInterpolationPoints);

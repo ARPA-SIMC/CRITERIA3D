@@ -32,12 +32,17 @@ Crit3DInterpolationDataPoint::Crit3DInterpolationDataPoint()
 {
     index = NODATA;
     isActive = false;
+    isMarked = false;
+
     distance = NODATA;
     deltaZ = NODATA;
     value = NODATA;
     lapseRateCode = primary;
+
     topographicDistance = nullptr;
+
     point = new gis::Crit3DPoint();
+    proxyValues.clear();
 }
 
 float Crit3DInterpolationDataPoint::getProxyValue(unsigned int pos)
