@@ -262,14 +262,17 @@ bool Crit1DCase::computeNumericalFluxes(const Crit3DDate &myDate, std::string &e
     // use previous waterPotential when saturated
     for (unsigned long i=1; i < nrLayers; i++)
     {
-        double currentWaterPotential = soilLayers[i].getWaterPotential();           // [kPa]
-        soilFluxes3D::setMatricPotential(i, -currentWaterPotential / GRAVITY);      // [m]
+        double currentPsi = soilLayers[i].getWaterPotential();           // [kPa]
 
-        if (currentWaterPotential <= soilLayers[i].horizonPtr->vanGenuchten.he
-            && soilLayers[i].waterPotential <= soilLayers[i].horizonPtr->vanGenuchten.he
-            && ! isEqual(soilLayers[i].waterPotential, NODATA))
+        if ( (currentPsi < soilLayers[i].horizonPtr->vanGenuchten.he
+             || isEqual(currentPsi, soilLayers[i].horizonPtr->vanGenuchten.he))
+            && (! isEqual(soilLayers[i].waterPotential, NODATA)) )
         {
             soilFluxes3D::setMatricPotential(i, -soilLayers[i].waterPotential / GRAVITY);
+        }
+        else
+        {
+            soilFluxes3D::setMatricPotential(i, -currentPsi / GRAVITY);      // [m]
         }
     }
 
@@ -644,7 +647,17 @@ double Crit1DCase::getWaterPotential(double computationDepth)
         lowerDepth = soilLayers[i].depth + soilLayers[i].thickness * 0.5;
         if (computationDepth >= upperDepth && computationDepth <= lowerDepth)
         {
-            return -soilLayers[i].getWaterPotential();
+            double currentPsi = soilLayers[i].getWaterPotential();
+            if ( (currentPsi < soilLayers[i].horizonPtr->vanGenuchten.he
+                || isEqual(currentPsi, soilLayers[i].horizonPtr->vanGenuchten.he))
+                && (! isEqual(soilLayers[i].waterPotential, NODATA)) )
+            {
+                    return -soilLayers[i].waterPotential;
+            }
+            else
+            {
+                return -currentPsi;
+            }
         }
     }
 

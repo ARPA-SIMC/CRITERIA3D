@@ -162,7 +162,7 @@
             double thickness;           /*!<   [m] */
             double soilFraction;        /*!<   [-] fraction of soil (1 - coarse fragment fraction) */
             double waterContent;        /*!<   [mm] */
-            double waterPotential;      /*!<   [kPa] water potential (psi) positive: unsaturated */
+            double waterPotential;      /*!<   [kPa] water potential (psi) saved after soilFluxes computation (positive: unsaturated) */
             double SAT;                 /*!<   [mm] water content at saturation  */
             double FC;                  /*!<   [mm] water content at field capacity */
             double WP;                  /*!<   [mm] water content at wilting point  */

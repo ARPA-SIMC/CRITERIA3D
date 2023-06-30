@@ -703,7 +703,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
   * \brief getWaterFlow
   * \param n
   * \param direction
-  * \return maximum integrated flow in the computed direction [m^3]
+  * \return maximum integrated flow in the requested direction [m^3]
   */
  double DLL_EXPORT __STDCALL getWaterFlow(long n, short direction)
  {
