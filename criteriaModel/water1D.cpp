@@ -251,7 +251,7 @@ double computeInfiltration(std::vector<soil::Crit3DLayer> &soilLayers, double in
     }
 
     // update water potential
-    for (long i=1; i < nrLayers; i++)
+    for (unsigned i=1; i < nrLayers; i++)
     {
         soilLayers[i].waterPotential = soilLayers[i].getWaterPotential();                      // [kPa]
     }

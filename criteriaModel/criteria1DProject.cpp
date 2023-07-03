@@ -69,7 +69,7 @@ void Crit1DProject::initialize()
     waterPotentialDepth.clear();
     availableWaterDepth.clear();
     fractionAvailableWaterDepth.clear();
-    slopeStabilityDepth.clear();
+    factorOfSafetyDepth.clear();
     awcDepth.clear();
 
     texturalClassList.resize(13);
@@ -281,10 +281,10 @@ bool Crit1DProject::readSettings()
             projectError = "Wrong fraction available water depth in " + configFileName;
             return false;
         }
-        depthList = projectSettings->value("slopeStability").toStringList();
+        depthList = projectSettings->value("factorOfSafety").toStringList();
         if (depthList.size() == 0)
-            depthList = projectSettings->value("slopeStability").toStringList();
-        if (! setVariableDepth(depthList, slopeStabilityDepth))
+            depthList = projectSettings->value("factorOfSafety").toStringList();
+        if (! setVariableDepth(depthList, factorOfSafetyDepth))
         {
             projectError = "Wrong slope stability depth in " + configFileName;
             return false;
@@ -797,7 +797,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
 {
     myCase.fittingOptions.useWaterRetentionData = myCase.unit.useWaterRetentionData;
     // user wants to compute factor of safety
-    myCase.computeFactorOfSafety = (slopeStabilityDepth.size() > 0);
+    myCase.computeFactorOfSafety = (factorOfSafetyDepth.size() > 0);
 
     if (! loadCropParameters(dbCrop, myCase.unit.idCrop, myCase.crop, projectError))
         return false;
@@ -1526,9 +1526,9 @@ bool Crit1DProject::createOutputTable(QString &myError)
         QString fieldName = "FAW_" + QString::number(fractionAvailableWaterDepth[i]);
         queryString += ", " + fieldName + " REAL";
     }
-    for (unsigned int i = 0; i < slopeStabilityDepth.size(); i++)
+    for (unsigned int i = 0; i < factorOfSafetyDepth.size(); i++)
     {
-        QString fieldName = "SF_" + QString::number(slopeStabilityDepth[i]);
+        QString fieldName = "FoS_" + QString::number(factorOfSafetyDepth[i]);
         queryString += ", " + fieldName + " REAL";
     }
 
@@ -1586,9 +1586,9 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
             QString fieldName = "FAW_" + QString::number(fractionAvailableWaterDepth[i]);
             outputString += ", " + fieldName;
         }
-        for (unsigned int i = 0; i < slopeStabilityDepth.size(); i++)
+        for (unsigned int i = 0; i < factorOfSafetyDepth.size(); i++)
         {
-            QString fieldName = "SF_" + QString::number(slopeStabilityDepth[i]);
+            QString fieldName = "FoS_" + QString::number(factorOfSafetyDepth[i]);
             outputString += ", " + fieldName;
         }
 
@@ -1645,9 +1645,9 @@ void Crit1DProject::updateOutput(Crit3DDate myDate, bool isFirst)
     {
         outputString += "," + QString::number(myCase.getFractionAW(fractionAvailableWaterDepth[i]), 'g', 3);
     }
-    for (unsigned int i = 0; i < slopeStabilityDepth.size(); i++)
+    for (unsigned int i = 0; i < factorOfSafetyDepth.size(); i++)
     {
-        outputString += "," + QString::number(myCase.getSlopeStability(slopeStabilityDepth[i]), 'g', 4);
+        outputString += "," + QString::number(myCase.getSlopeStability(factorOfSafetyDepth[i]), 'g', 4);
     }
 
     outputString += ")";

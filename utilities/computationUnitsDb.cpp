@@ -19,6 +19,7 @@ Crit1DCompUnit::Crit1DCompUnit()
 
     // default values
     isNumericalInfiltration = false;
+    isComputeLateralDrainage = true;
     isGeometricLayers = false;
     isOptimalIrrigation = false;
     useWaterTableData = true;
@@ -97,6 +98,7 @@ bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &co
     QString compUnitsTable = "computational_units";
     QList<QString> fieldList = getFields(&db, compUnitsTable);
     bool existNumericalInfiltration = fieldList.contains("numerical_solution");
+    bool existComputeLateralDrainage = fieldList.contains("compute_lateral_drainage");
     bool existWaterRetentionData = fieldList.contains("water_retention_fitting");
     bool existWaterTable = fieldList.contains("use_water_table");
     bool existOptimalIrrigation = fieldList.contains("optimal_irrigation");
@@ -143,6 +145,8 @@ bool ComputationUnitsDB::readComputationUnitList(std::vector<Crit1DCompUnit> &co
 
         if (existNumericalInfiltration)
             compUnitList[i].isNumericalInfiltration = query.value("numerical_solution").toBool();
+        if (existComputeLateralDrainage)
+            compUnitList[i].isComputeLateralDrainage = query.value("compute_lateral_drainage").toBool();
         if (existWaterTable)
             compUnitList[i].useWaterTableData = query.value("use_water_table").toBool();
         if (existOptimalIrrigation)
