@@ -36,7 +36,7 @@ int cmdList(PragaProject* myProject)
     QList<QString> list = getPragaCommandList();
 
     myProject->logInfo("Available PRAGA Console commands:");
-    myProject->logInfo("(short      | long version)");
+    myProject->logInfo("(short          | long version)");
     for (int i = 0; i < list.size(); i++)
     {
         myProject->logInfo(list[i]);
