@@ -171,6 +171,7 @@ QList<QString> getSharedCommandList()
     cmdList.append("Point       | LoadPoints");
     cmdList.append("Grid        | LoadGrid");
     cmdList.append("DailyCsv    | ExportDailyDataCsv");
+    cmdList.append("DailyFlt    | ExportDailyGridFlt");    // TODO Antonio
     cmdList.append("Log         | SetLogFile");
     cmdList.append("Quit        | Exit");
 
@@ -392,6 +393,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             myProject->logInfo("... export ALL meteo points");
     }
     myProject->logInfo("... output path is: " + outputPath);
+
 
     return PRAGA_OK;
 }
