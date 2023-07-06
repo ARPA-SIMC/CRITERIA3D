@@ -167,12 +167,13 @@ QList<QString> getSharedCommandList()
 {
     QList<QString> cmdList;
 
-    cmdList.append("DEM         | LoadDEM");
-    cmdList.append("Point       | LoadPoints");
-    cmdList.append("Grid        | LoadGrid");
-    cmdList.append("DailyCsv    | ExportDailyDataCsv");
-    cmdList.append("Log         | SetLogFile");
-    cmdList.append("Quit        | Exit");
+    cmdList.append("DEM             | LoadDEM");
+    cmdList.append("Point           | LoadPoints");
+    cmdList.append("Grid            | LoadGrid");
+    cmdList.append("Log             | SetLogFile");
+    cmdList.append("Quit            | Exit");
+    cmdList.append("DailyCsv        | ExportDailyDataCsv");
+    cmdList.append("DailyGridFlt    | ExportDailyGridFlt");    // TODO Antonio
 
     return cmdList;
 }
@@ -331,7 +332,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 
             if (typeStr != "GRID" && typeStr != "POINTS")
             {
-                myProject->logError("Wrong date, required format is: YYYY-MM-DD");
+                myProject->logError("Wrong type: available GRID or POINTS.");
                 return PRAGA_OK;
             }
         }
@@ -392,6 +393,27 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             myProject->logInfo("... export ALL meteo points");
     }
     myProject->logInfo("... output path is: " + outputPath);
+
+    if (typeStr == "GRID")
+    {
+        if (! myProject->meteoGridLoaded)
+        {
+            myProject->logError("No meteo grid open.");
+            return PRAGA_ERROR;
+        }
+
+        //return ExportDailyDataCsv(isTPrec, pointListStr, firstDate, lastDate, outputPath);
+    }
+    else if (typeStr == "POINTS")
+    {
+        if (! myProject->meteoPointsLoaded)
+        {
+            myProject->logError("No meteo grid open.");
+            return PRAGA_ERROR;
+        }
+
+        //return ExportDailyDataCsv(isTPrec, pointListStr, firstDate, lastDate, outputPath);
+    }
 
     return PRAGA_OK;
 }
