@@ -12,20 +12,19 @@ QList<QString> getPragaCommandList()
 
     // praga commands
     cmdList.append("List            | ListCommands");
+    cmdList.append("Proj            | OpenProject");
+    cmdList.append("Download        | Download");
     cmdList.append("AggrOnZones     | GridAggregationOnZones");
     cmdList.append("ComputeClimate  | ComputeClimaFromXMLSaveOnDB");
     cmdList.append("Drought         | ComputeDroughtIndexGrid");
     cmdList.append("DroughtPoint    | ComputeDroughtIndexPoint");
-    cmdList.append("Download        | Download");
     cmdList.append("GridAggr        | GridAggregation");
     cmdList.append("GridDerVar      | GridDerivedVariables");
     cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
     cmdList.append("Netcdf          | ExportNetcdf");
-    cmdList.append("Point           | OpenDbPoint");
-    cmdList.append("Proj            | OpenProject");
-    //cmdList.append("LoadForecast  | LoadForecastData");
     cmdList.append("SaveLogProc     | SaveLogProceduresGrid");
     cmdList.append("XMLToNetcdf     | ExportXMLElabToNetcdf");
+    //cmdList.append("LoadForecast  | LoadForecastData");
 
     return cmdList;
 }
