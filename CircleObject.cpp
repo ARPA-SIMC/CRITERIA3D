@@ -57,6 +57,21 @@ void CircleObject::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
                 QPen myPen;
                 myPen.setColor(_fillColor);
                 painter->setPen(myPen);
+                if (! painter->font().bold())
+                {
+                    QFont currentFont = painter->font();
+                    currentFont.setBold(true);
+                    painter->setFont(currentFont);
+                }
+            }
+            else
+            {
+                if (painter->font().bold())
+                {
+                    QFont currentFont = painter->font();
+                    currentFont.setBold(false);
+                    painter->setFont(currentFont);
+                }
             }
 
             painter->scale(1,-1);
