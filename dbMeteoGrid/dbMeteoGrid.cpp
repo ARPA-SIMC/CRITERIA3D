@@ -3529,6 +3529,41 @@ bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameP
 }
 
 
+bool Crit3DMeteoGridDbHandler::ExportDailyDataCsv(QString &myError, bool isTPrec, QDate firstDate, QDate lastDate,
+                                                  QString idListFile, QString outputPath)
+{
+    // check output dir and id list file
+    QDir outDir(outputPath);
+    if (! outDir.exists())
+    {
+        if (! outDir.mkpath(outputPath))
+        {
+            myError = "Wrong outputPath, this directory could not be created: " + outputPath;
+            return false;
+        }
+    }
+    outputPath = outDir.absolutePath();
+
+    bool isList = (idListFile != "");
+    QList<QString> idList;
+    if (isList)
+    {
+        if (! QFile::exists(idListFile))
+        {
+            myError = "The ID list file does not exist: " + idListFile;
+            return false;
+        }
+
+        // TODO read list
+    }
+
+    // TODO save data
+
+
+    return true;
+}
+
+
 QDate Crit3DMeteoGridDbHandler::firstDate() const
 {
     return _firstDate;

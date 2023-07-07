@@ -1,6 +1,9 @@
 #ifndef DBMETEOGRID_H
 #define DBMETEOGRID_H
 
+    #ifndef METEO_H
+        #include "meteo.h"
+    #endif
     #ifndef METEOGRID_H
         #include "meteoGrid.h"
     #endif
@@ -149,6 +152,8 @@
         bool saveCellCurrentGridHourlyFF(QString *myError, QString meteoPointID, QDateTime dateTime, QString varPragaName, float value);
         bool activeAllCells(QString *myError);
         bool setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState);
+
+        bool ExportDailyDataCsv(QString &myError, bool isTPrec, QDate firstDate, QDate lastDate, QString idListFile, QString outputPath);
 
         QDate getFirstDailyDate() const;
         QDate getLastDailyDate() const;
