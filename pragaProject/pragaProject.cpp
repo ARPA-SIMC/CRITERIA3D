@@ -2265,16 +2265,16 @@ bool PragaProject::dbMeteoGridMissingData(QDate myFirstDate, QDate myLastDate, m
                 if (!meteoGridDbHandler->gridStructure().isFixedFields())
                 {
                     if (myFreq == daily)
-                        meteoGridDbHandler->loadGridDailyData(&errorString, QString::fromStdString(id), myFirstDate, myLastDate);
+                        meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(id), myFirstDate, myLastDate);
                     else if (myFreq == hourly)
-                        meteoGridDbHandler->loadGridHourlyData(&errorString, QString::fromStdString(id), QDateTime(myFirstDate,QTime(0,0,0),Qt::UTC), QDateTime(myLastDate,QTime(23,0,0),Qt::UTC));
+                        meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(id), QDateTime(myFirstDate,QTime(0,0,0),Qt::UTC), QDateTime(myLastDate,QTime(23,0,0),Qt::UTC));
                 }
                 else
                 {
                     if (myFreq == daily)
-                        meteoGridDbHandler->loadGridDailyDataFixedFields(&errorString, QString::fromStdString(id), myFirstDate, myLastDate);
+                        meteoGridDbHandler->loadGridDailyDataFixedFields(errorString, QString::fromStdString(id), myFirstDate, myLastDate);
                     else if (myFreq ==hourly)
-                        meteoGridDbHandler->loadGridHourlyDataFixedFields(&errorString, QString::fromStdString(id), QDateTime(myFirstDate, QTime(0,0,0), Qt::UTC), QDateTime(myLastDate,QTime(23,0,0), Qt::UTC));
+                        meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(id), QDateTime(myFirstDate, QTime(0,0,0), Qt::UTC), QDateTime(myLastDate,QTime(23,0,0), Qt::UTC));
                 }
 
                 for (myDate = myFirstDate; myDate <= myLastDate; myDate = myDate.addDays(1))
@@ -2530,16 +2530,16 @@ void PragaProject::showPointStatisticsWidgetGrid(std::string id)
     if (!meteoGridDbHandler->gridStructure().isFixedFields())
     {
         logInfoGUI("Loading daily data...");
-        meteoGridDbHandler->loadGridDailyData(&errorString, QString::fromStdString(id), firstDaily, lastDaily);
+        meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(id), firstDaily, lastDaily);
         logInfoGUI("Loading hourly data...");
-        meteoGridDbHandler->loadGridHourlyData(&errorString, QString::fromStdString(id), firstDateTime, lastDateTime);
+        meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(id), firstDateTime, lastDateTime);
     }
     else
     {
         logInfoGUI("Loading daily data...");
-        meteoGridDbHandler->loadGridDailyDataFixedFields(&errorString, QString::fromStdString(id), firstDaily, lastDaily);
+        meteoGridDbHandler->loadGridDailyDataFixedFields(errorString, QString::fromStdString(id), firstDaily, lastDaily);
         logInfoGUI("Loading hourly data...");
-        meteoGridDbHandler->loadGridHourlyDataFixedFields(&errorString, QString::fromStdString(id), firstDateTime, lastDateTime);
+        meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(id), firstDateTime, lastDateTime);
     }
     closeLogInfo();
 
@@ -3038,7 +3038,7 @@ bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int
         {
             if (meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->active)
             {
-                meteoGridDbHandler->loadGridMonthlyData(&errorString, QString::fromStdString(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id), firstDate, lastDate);
+                meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col)->id), firstDate, lastDate);
                 Drought mydrought(index, firstYear, lastYear, getCrit3DDate(date), meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col), meteoSettings);
                 if (timescale > 0)
                 {
