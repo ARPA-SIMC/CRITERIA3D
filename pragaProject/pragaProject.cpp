@@ -3003,7 +3003,6 @@ bool PragaProject::monthlyVariablesGrid(QDate first, QDate last, QList <meteoVar
 
 bool PragaProject::computeDroughtIndexAll(droughtIndex index, int firstYear, int lastYear, QDate date, int timescale, meteoVariable myVar)
 {
-
     // check meteo grid
     if (! meteoGridLoaded)
     {

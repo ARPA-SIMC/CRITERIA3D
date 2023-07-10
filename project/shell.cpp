@@ -276,6 +276,8 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 
 int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 {
+    QString outputPath = myProject->getProjectPath() + PATH_OUTPUT;
+
     if (argumentList.size() < 2)
     {
         QString usage = "Usage:\n"
@@ -285,14 +287,13 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
                         "default lastDate: yesterday \n"
                         "type: GRID|POINTS (default GRID) \n"
                         "idList: points or cells file list (default ALL) \n"
-                        "default output path: projectPath/OUTPUT/ \n";
+                        "default output path: " + outputPath + "\n";
         myProject->logInfo(usage);
         return PRAGA_OK;
     }
 
     QString typeStr = "GRID";
-    QString idListStr = "";
-    QString outputPath = myProject->getProjectPath() + PATH_OUTPUT;
+    QString idListFileName = "";
     QDate firstDate, lastDate;
     bool isTPrec = false;
 
@@ -338,12 +339,18 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 
         if (argumentList.at(i).left(3) == "-l:")
         {
-            idListStr = argumentList[i].right(argumentList[i].length()-3);
+            idListFileName = argumentList[i].right(argumentList[i].length()-3);
+            idListFileName = myProject->getCompleteFileName(idListFileName, PATH_OUTPUT);
         }
 
         if (argumentList.at(i).left(3) == "-p:")
         {
             outputPath = argumentList[i].right(argumentList[i].length()-3);
+            if (outputPath.left(1) == ".")
+            {
+                QString completeOutputPath = myProject->getProjectPath() + outputPath;
+                outputPath = QDir().cleanPath(completeOutputPath);
+            }
         }
     }
 
@@ -363,11 +370,11 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     myProject->logInfo("... last date is: " + lastDate.toString());
     if (isTPrec)
     {
-        myProject->logInfo("... output format is: Tmin, Tmax, Tavg, Prec");
+        myProject->logInfo("... output format is: Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)");
     }
-    if (idListStr != "")
+    if (idListFileName != "")
     {
-        myProject->logInfo("... ID list file is: " + idListStr);
+        myProject->logInfo("... ID list file is: " + idListFileName);
     }
     else
     {
@@ -387,7 +394,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
         }
 
         if (! myProject->meteoGridDbHandler->ExportDailyDataCsv(myProject->errorString, isTPrec,
-                                             firstDate, lastDate, idListStr, outputPath))
+                                             firstDate, lastDate, idListFileName, outputPath))
         {
             myProject->logError();
             return PRAGA_ERROR;

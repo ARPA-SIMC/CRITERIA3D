@@ -3598,16 +3598,63 @@ bool Crit3DMeteoGridDbHandler::ExportDailyDataCsv(QString &errorStr, bool isTPre
                     }
                 }
 
-                // save data
-                if (isTPrec)
+                // create csv file
+                QString csvFileName = outputPath + "/" + id + ".csv";
+                QFile outputFile(csvFileName);
+                if ( !outputFile.open(QIODevice::WriteOnly | QFile::Truncate) )
                 {
-                    std::cout << "Write id: " << id.toStdString() << "\n";
-                }
-                else
-                {
-                    // TODO
+                    errorStr = "Open CSV failed: " + csvFileName + "\n " + outputFile.errorString();
+                    return false;
                 }
 
+                // header
+                QTextStream out(&outputFile);
+                out << "Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)";
+                if (isTPrec)
+                    out << "\n";
+                else
+                    out << "RHmin (%), RHmax (%), RHavg (%), Windspeed (m/s), Rad (MJ)\n";
+
+                // save data
+                QDate currentDate = firstDate;
+                while (currentDate <= lastDate)
+                {
+                    Crit3DDate myDate = getCrit3DDate(currentDate);
+
+                    float tmin = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+                    QString tminStr = "";
+                    if (tmin != NODATA)
+                        tminStr = QString::number(tmin);
+
+                    float tmax = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+                    QString tmaxStr = "";
+                    if (tmax != NODATA)
+                        tmaxStr = QString::number(tmax);
+
+                    float tavg = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
+                    QString tavgStr = "";
+                    if (tavg != NODATA)
+                        tavgStr = QString::number(tavg);
+
+                    float prec = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyPrecipitation);
+                    QString precStr = "";
+                    if (prec != NODATA)
+                        precStr = QString::number(prec);
+
+                    out << currentDate.toString("yyyy-MM-dd") << "," << tminStr << "," << tmaxStr << "," << tavgStr << "," << precStr;
+                    if (isTPrec)
+                        out << "\n";
+                    else
+                    {
+                        // todo other variables
+                        out << "\n";
+                    }
+
+                    currentDate = currentDate.addDays(1);
+                }
+
+                // data
+                outputFile.close();
             }
         }
     }
