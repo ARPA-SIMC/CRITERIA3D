@@ -3226,7 +3226,8 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataEnsemble(QString *myError, 
 
 
     QString statement = QString("CREATE TABLE IF NOT EXISTS `%1` "
-                                "(`%2` datetime, VariableCode tinyint(3) UNSIGNED, Value float(6,1), MemberNr int(11), PRIMARY KEY(`%2`,VariableCode,MemberNr))").arg(tableH).arg(_tableHourly.fieldTime);
+                                "(`%2` datetime, VariableCode tinyint(3) UNSIGNED, Value float(6,1), "
+                                "MemberNr int(11), PRIMARY KEY(`%2`,VariableCode,MemberNr))").arg(tableH, _tableHourly.fieldTime);
 
     if( !qry.exec(statement) )
     {
@@ -3235,7 +3236,7 @@ bool Crit3DMeteoGridDbHandler::saveCellGridHourlyDataEnsemble(QString *myError, 
     }
     else
     {
-        statement =  QString(("REPLACE INTO `%1` (%2, VariableCode, Value, MemberNr) VALUES ")).arg(tableH).arg(_tableHourly.fieldTime);
+        statement =  QString(("REPLACE INTO `%1` (%2, VariableCode, Value, MemberNr) VALUES ")).arg(tableH, _tableHourly.fieldTime);
 
         foreach (meteoVariable meteoVar, meteoVariableList)
             if (getVarFrequency(meteoVar) == hourly)
@@ -3535,6 +3536,14 @@ bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameP
 }
 
 
+/*!
+ * \brief ExportDailyDataCsv
+ * export daily meteo data to csv files (id.csv)
+ * \param isTPrec       save only Tmin, Tmax, Tavg, Prec
+ * \param idListFile    filename of cells id list (a column list) DEFAULT: if idListFile == "" save ALL cells
+ * \param outputPath    path for output files
+ * \return true on success, false otherwise
+ */
 bool Crit3DMeteoGridDbHandler::ExportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate,
                                                   QString idListFile, QString outputPath)
 {
@@ -3646,8 +3655,32 @@ bool Crit3DMeteoGridDbHandler::ExportDailyDataCsv(QString &errorStr, bool isTPre
                         out << "\n";
                     else
                     {
-                        // todo other variables
-                        out << "\n";
+                        float rhmin = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirRelHumidityMin);
+                        QString rhminStr = "";
+                        if (rhmin != NODATA)
+                            rhminStr = QString::number(rhmin);
+
+                        float rhmax = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirRelHumidityMax);
+                        QString rhmaxStr = "";
+                        if (rhmax != NODATA)
+                            rhmaxStr = QString::number(rhmax);
+
+                        float rhavg = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyAirRelHumidityAvg);
+                        QString rhavgStr = "";
+                        if (rhavg != NODATA)
+                            rhavgStr = QString::number(rhavg);
+
+                        float wspeed = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyWindScalarIntensityAvg);
+                        QString wspeedStr = "";
+                        if (wspeed != NODATA)
+                            wspeedStr = QString::number(wspeed);
+
+                        float rad = _meteoGrid->meteoPointPointer(row,col)->getMeteoPointValueD(myDate, dailyGlobalRadiation);
+                        QString radStr = "";
+                        if (rad != NODATA)
+                            radStr = QString::number(rad);
+
+                        out << "," << rhminStr << "," << rhmaxStr << "," << rhavgStr << "," << wspeedStr << "," << radStr << "\n";
                     }
 
                     currentDate = currentDate.addDays(1);
