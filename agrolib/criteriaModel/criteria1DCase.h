@@ -55,6 +55,7 @@
     {
     public:
         Crit1DCompUnit unit;
+        bool computeFactorOfSafety;
 
         // SOIL
         soil::Crit3DSoil mySoil;
@@ -81,7 +82,6 @@
         double getWaterPotential(double computationDepth);
         double getFractionAW(double computationDepth);
         double getSlopeStability(double computationDepth);
-        double getSlopeStability2(double computationDepth);
 
         double getWaterDeficitSum(double computationDepth);
         double getWaterCapacitySum(double computationDepth);

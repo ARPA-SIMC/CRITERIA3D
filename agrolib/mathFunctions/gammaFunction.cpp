@@ -3,6 +3,7 @@
 #include <limits.h>             // required for LONG_MAX
 #include "commonConstants.h"
 #include "gammaFunction.h"
+#include "basicMath.h"
 #include "furtherMathFunctions.h"
 
 
@@ -569,13 +570,13 @@
 
     float generalizedGammaCDF(float x, double beta, double alpha,  double pZero)
     {
-
-        float gammaCDF = NODATA;
-
-        if (fabs(x - NODATA) < EPSILON || fabs(beta - NODATA)< EPSILON || fabs(alpha - NODATA) < EPSILON || fabs(pZero - NODATA) < EPSILON || beta == 0)
+        if ( isEqual(x, NODATA) || isEqual(beta, NODATA) || isEqual(alpha, NODATA)
+            || isEqual(pZero, NODATA) || isEqual(beta, 0) )
         {
-            return gammaCDF;
+            return NODATA;
         }
+
+        double gammaCDF;
 
         if (x <= 0)
         {
@@ -585,9 +586,10 @@
         {
             gammaCDF = pZero + (1 - pZero) * incompleteGamma(alpha, double(x) / beta);
         }
-        return gammaCDF;
 
+        return float(gammaCDF);
     }
+
 
     double generalizedGammaCDF(double x, double beta, double alpha,  double pZero)
     {
@@ -613,12 +615,12 @@
 
     float probabilityGamma(float x, double alfa, double gamma, float gammaFunc)
     {
-        return ( exp(-alfa * x) *( pow(x,(gamma - 1)) * pow(alfa,gamma) / gammaFunc) );
+        return float(exp(-alfa * x) *( pow(x,(gamma - 1)) * pow(alfa,gamma) / gammaFunc));
     }
 
     float probabilityGamma(float x, double alpha, double beta)
     {
-        return exp(-x/beta) * pow(x,(alpha - 1)) / pow(beta,alpha) / gammaFunction(alpha);
+        return float(exp(-x/beta) * pow(x,(alpha - 1)) / pow(beta,alpha) / gammaFunction(alpha));
     }
 
     void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta)

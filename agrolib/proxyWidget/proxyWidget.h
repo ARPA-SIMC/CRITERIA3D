@@ -37,8 +37,8 @@
             QDate currentDate;
             int currentHour;
             std::vector <Crit3DInterpolationDataPoint> outInterpolationPoints;
-            QComboBox variable;
-            QComboBox axisX;
+            QComboBox comboVariable;
+            QComboBox comboAxisX;
             QCheckBox detrended;
             QCheckBox climatologicalLR;
             QCheckBox modelLR;

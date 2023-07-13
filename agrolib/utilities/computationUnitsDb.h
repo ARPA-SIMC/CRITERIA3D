@@ -26,6 +26,7 @@ class QSqlDatabase;
         int idSoilNumber;
 
         bool isNumericalInfiltration;
+        bool isComputeLateralDrainage;
         bool isGeometricLayers;
         bool isOptimalIrrigation;
         bool useWaterTableData;

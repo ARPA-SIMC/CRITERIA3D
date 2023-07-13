@@ -1432,7 +1432,7 @@ void Criteria1DWidget::updateMeteoPointValues()
 
         if (!myProject.observedMeteoGrid->gridStructure().isFixedFields())
         {
-            if (!myProject.observedMeteoGrid->loadGridDailyData(&errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
+            if (!myProject.observedMeteoGrid->loadGridDailyData(errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
             {
                 errorStr = "Missing observed data";
                 QMessageBox::critical(nullptr, "Error!", errorStr);
@@ -1441,7 +1441,7 @@ void Criteria1DWidget::updateMeteoPointValues()
         }
         else
         {
-            if (!myProject.observedMeteoGrid->loadGridDailyDataFixedFields(&errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
+            if (!myProject.observedMeteoGrid->loadGridDailyDataFixedFields(errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
             {
                 errorStr = "Missing observed data";
                 QMessageBox::critical(nullptr, "Error!", errorStr);

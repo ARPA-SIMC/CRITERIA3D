@@ -1452,14 +1452,14 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
                     if (this->meteoGridDbHandler->gridStructure().isEnsemble())
                     {
                         int memberNr = 1;
-                        if (this->meteoGridDbHandler->loadGridDailyDataEnsemble(&errorString, QString::fromStdString(id), memberNr, firstDate, lastDate))
+                        if (this->meteoGridDbHandler->loadGridDailyDataEnsemble(errorString, QString::fromStdString(id), memberNr, firstDate, lastDate))
                         {
                             count = count + 1;
                         }
                     }
                     else
                     {
-                        if (this->meteoGridDbHandler->loadGridDailyData(&errorString, QString::fromStdString(id), firstDate, lastDate))
+                        if (this->meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(id), firstDate, lastDate))
                         {
                             count = count + 1;
                         }
@@ -1467,7 +1467,7 @@ bool Project::loadMeteoGridDailyData(QDate firstDate, QDate lastDate, bool showI
                 }
                 else
                 {
-                    if (this->meteoGridDbHandler->loadGridDailyDataFixedFields(&errorString, QString::fromStdString(id), firstDate, lastDate))
+                    if (this->meteoGridDbHandler->loadGridDailyDataFixedFields(errorString, QString::fromStdString(id), firstDate, lastDate))
                     {
                         count = count + 1;
                     }
@@ -1515,14 +1515,14 @@ bool Project::loadMeteoGridHourlyData(QDateTime firstDate, QDateTime lastDate, b
             {
                 if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
                 {
-                    if (this->meteoGridDbHandler->loadGridHourlyData(&errorString, QString::fromStdString(id), firstDate, lastDate))
+                    if (this->meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(id), firstDate, lastDate))
                     {
                         count = count + 1;
                     }
                 }
                 else
                 {
-                    if (this->meteoGridDbHandler->loadGridHourlyDataFixedFields(&errorString, QString::fromStdString(id), firstDate, lastDate))
+                    if (this->meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(id), firstDate, lastDate))
                     {
                         count = count + 1;
                     }
@@ -1570,7 +1570,7 @@ bool Project::loadMeteoGridMonthlyData(QDate firstDate, QDate lastDate, bool sho
             if (this->meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
             {
 
-                if (this->meteoGridDbHandler->loadGridMonthlyData(&errorString, QString::fromStdString(id), firstDate, lastDate))
+                if (this->meteoGridDbHandler->loadGridMonthlyData(errorString, QString::fromStdString(id), firstDate, lastDate))
                 {
                     count = count + 1;
                 }
@@ -3033,13 +3033,13 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         logInfoGUI("Loading data...");
         if (!meteoGridDbHandler->gridStructure().isFixedFields())
         {
-            meteoGridDbHandler->loadGridDailyData(&errorString, QString::fromStdString(idCell), firstDate, lastDate);
-            meteoGridDbHandler->loadGridHourlyData(&errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+            meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(idCell), firstDate, lastDate);
+            meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
         }
         else
         {
-            meteoGridDbHandler->loadGridDailyDataFixedFields(&errorString, QString::fromStdString(idCell), firstDate, lastDate);
-            meteoGridDbHandler->loadGridHourlyDataFixedFields(&errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+            meteoGridDbHandler->loadGridDailyDataFixedFields(errorString, QString::fromStdString(idCell), firstDate, lastDate);
+            meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
         }
         closeLogInfo();
         if(meteoWidgetGridList[meteoWidgetGridList.size()-1]->getIsEnsemble())
@@ -3092,7 +3092,7 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
             }
             for (int i = 1; i<=nMembers; i++)
             {
-                meteoGridDbHandler->loadGridDailyDataEnsemble(&errorString, QString::fromStdString(idCell), i, firstDate, lastDate);
+                meteoGridDbHandler->loadGridDailyDataEnsemble(errorString, QString::fromStdString(idCell), i, firstDate, lastDate);
                 meteoWidgetGrid->addMeteoPointsEnsemble(meteoGridDbHandler->meteoGrid()->meteoPoint(row,col));
             }
             meteoWidgetGrid->drawEnsemble();
@@ -3102,13 +3102,13 @@ void Project::showMeteoWidgetGrid(std::string idCell, bool isAppend)
         {
             if (!meteoGridDbHandler->gridStructure().isFixedFields())
             {
-                meteoGridDbHandler->loadGridDailyData(&errorString, QString::fromStdString(idCell), firstDate, lastDate);
-                meteoGridDbHandler->loadGridHourlyData(&errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+                meteoGridDbHandler->loadGridDailyData(errorString, QString::fromStdString(idCell), firstDate, lastDate);
+                meteoGridDbHandler->loadGridHourlyData(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
             }
             else
             {
-                meteoGridDbHandler->loadGridDailyDataFixedFields(&errorString, QString::fromStdString(idCell), firstDate, lastDate);
-                meteoGridDbHandler->loadGridHourlyDataFixedFields(&errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
+                meteoGridDbHandler->loadGridDailyDataFixedFields(errorString, QString::fromStdString(idCell), firstDate, lastDate);
+                meteoGridDbHandler->loadGridHourlyDataFixedFields(errorString, QString::fromStdString(idCell), firstDateTime, lastDateTime);
             }
             closeLogInfo();
             unsigned row;
@@ -3736,35 +3736,34 @@ int Project::computeCellSizeFromMeteoGrid()
 
 bool Project::setLogFile(QString myFileName)
 {
-    this->logFileName = myFileName;
-    myFileName = getCompleteFileName(myFileName, PATH_LOG);
+    QString fileNameWithPath = getCompleteFileName(myFileName, PATH_LOG);
 
-    QString filePath = getFilePath(myFileName);
-    QString fileName = getFileName(myFileName);
+    QString logFilePath = getFilePath(fileNameWithPath);
+    QString endLogFileName = getFileName(fileNameWithPath);
 
-    if (!QDir(filePath).exists())
+    if (!QDir(logFilePath).exists())
     {
-         QDir().mkdir(filePath);
+         QDir().mkdir(logFilePath);
     }
+
+    // remove previous log files (older than 7 days)
+    removeOldFiles(logFilePath, endLogFileName, 7);
 
     QDate myQDate = QDateTime().currentDateTime().date();
     QTime myQTime = QDateTime().currentDateTime().time();
     QString myDate = QDateTime(myQDate, myQTime, Qt::UTC).currentDateTime().toString("yyyyMMdd_HHmm");
 
-    fileName = myDate + "_" + fileName;
+    logFileName = logFilePath + myDate + "_" + endLogFileName;
 
-    QString currentFileName = filePath + fileName;
-
-    logFile.open(currentFileName.toStdString().c_str());
+    logFile.open(logFileName.toStdString().c_str());
     if (logFile.is_open())
     {
-        logInfo("LogFile = " + currentFileName);
-        this->logFileName = currentFileName;
+        logInfo("LogFile = " + logFileName);
         return true;
     }
     else
     {
-        logError("Unable to open file: " + currentFileName);
+        logError("Unable to open log file: " + logFileName);
         return false;
     }
 }

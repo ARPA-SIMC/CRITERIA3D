@@ -992,12 +992,12 @@ bool checkPrecipitationZero(std::vector <Crit3DInterpolationDataPoint> &myPoints
 // predisposta per eventuale aggiunta wind al detrend
 bool isThermal(meteoVariable myVar)
 {
-    if (myVar == airTemperature ||
+    if ( myVar == airTemperature ||
             myVar == airDewTemperature ||
             myVar == dailyAirTemperatureAvg ||
             myVar == dailyAirTemperatureMax ||
-            myVar == dailyAirTemperatureMin)
-
+            myVar == dailyAirTemperatureMin ||
+            myVar == elaboration )
         return true;
     else
         return false;
@@ -1006,12 +1006,12 @@ bool isThermal(meteoVariable myVar)
 
 bool getUseDetrendingVar(meteoVariable myVar)
 {
-    if (myVar == airTemperature ||
+    if ( myVar == airTemperature ||
             myVar == airDewTemperature ||
             myVar == dailyAirTemperatureAvg ||
             myVar == dailyAirTemperatureMax ||
             myVar == dailyAirTemperatureMin ||
-            myVar == elaboration)
+            myVar == elaboration )
 
         return true;
     else

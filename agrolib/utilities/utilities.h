@@ -49,6 +49,9 @@
     bool removeDirectory(QString myPath);
     bool searchDocPath(QString* docPath);
     bool searchDataPath(QString* dataPath);
+
+    void removeOldFiles(const QString &targetPath, const QString &targetStr, int nrDays);
+
     void clearDir( const QString path );
     QList<QString> removeList(QList<QString> list, QList<QString> toDelete);
 

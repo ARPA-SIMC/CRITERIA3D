@@ -13,7 +13,7 @@
         void done(int res);
 
     public:
-        FormSelection(QList<QString> stringList_);
+        FormSelection(QList<QString> stringList_, QString title);
 
         QString getSelection();
         int getSelectionId();
