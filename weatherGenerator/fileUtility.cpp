@@ -187,9 +187,12 @@ bool writeMeteoDataCsv(QString &fileName, char separator, std::vector<ToutputDai
 
     for (unsigned int i=0; i < dailyData.size(); i++)
     {
+        QString year = QString::number(dailyData[i].date.year);
+        if (year == 0)
+            break;
+
         QString month = QString::number(dailyData[i].date.month).rightJustified(2, '0');
         QString day = QString::number(dailyData[i].date.day).rightJustified(2, '0');
-        QString year = QString::number(dailyData[i].date.year);
         QString myDate = year + "-" + month + "-" + day;
 
         QString tMin = QString::number(double(dailyData[i].minTemp), 'f', 1);
