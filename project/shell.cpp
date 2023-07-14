@@ -343,7 +343,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             idListFileName = myProject->getCompleteFileName(idListFileName, PATH_OUTPUT);
         }
 
-        if (argumentList.at(i).left(3) == "-p:")
+        if (argumentList.at(i).left(3) == "-p:" || argumentList.at(i).left(3) == "-o:")
         {
             outputPath = argumentList[i].right(argumentList[i].length()-3);
             if (outputPath.left(1) == ".")
@@ -393,7 +393,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             return PRAGA_ERROR;
         }
 
-        if (! myProject->meteoGridDbHandler->ExportDailyDataCsv(myProject->errorString, isTPrec,
+        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, isTPrec,
                                              firstDate, lastDate, idListFileName, outputPath))
         {
             myProject->logError();
