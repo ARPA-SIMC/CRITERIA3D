@@ -44,6 +44,7 @@
       { "erosivityFactorElab", erosivityFactorElab },
       { "rainIntensityElab", rainIntensityElab },
       { "yearmax", yearMax },
+      { "yearmin", yearMin },
       { "yearmin", yearMin }
     };
 

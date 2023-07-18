@@ -296,6 +296,10 @@ bool Project::loadParameters(QString parametersFileName)
             {
                 meteoSettings->setThomThreshold(parameters->value("thom_threshold").toFloat());
             }
+            if (parameters->contains("temperature_threshold") && !parameters->value("temperature_threshold").toString().isEmpty())
+            {
+                meteoSettings->setTemperatureThreshold(parameters->value("temperature_threshold").toFloat());
+            }
             if (parameters->contains("samani_coefficient") && !parameters->value("samani_coefficient").toString().isEmpty())
             {
                 meteoSettings->setTransSamaniCoefficient(parameters->value("samani_coefficient").toFloat());
@@ -2671,6 +2675,7 @@ void Project::saveGenericParameters()
         parameters->setValue("prec_threshold", QString::number(meteoSettings->getRainfallThreshold()));
         parameters->setValue("samani_coefficient", QString::number(meteoSettings->getTransSamaniCoefficient()));
         parameters->setValue("thom_threshold", QString::number(meteoSettings->getThomThreshold()));
+        parameters->setValue("temperature_threshold", QString::number(meteoSettings->getTemperatureThreshold()));
         parameters->setValue("wind_intensity_default", QString::number(meteoSettings->getWindIntensityDefault()));
         parameters->setValue("hourly_intervals", QString::number(meteoSettings->getHourlyIntervals()));
         parameters->setValue("compute_tavg", meteoSettings->getAutomaticTavg());

@@ -1575,7 +1575,7 @@ bool elaborateDailyAggrVarFromStartDate(meteoVariable myVar, Crit3DMeteoPoint me
 frequencyType getAggregationFrequency(meteoVariable myVar)
 {
 
-    if (myVar == dailyThomHoursAbove || myVar == dailyThomAvg || myVar == dailyThomMax || myVar == dailyLeafWetness)
+    if (myVar == dailyThomHoursAbove || myVar == dailyThomAvg || myVar == dailyThomMax || myVar == dailyLeafWetness || myVar == dailyTemperatureHoursAbove)
     {
         return hourly;
     }
