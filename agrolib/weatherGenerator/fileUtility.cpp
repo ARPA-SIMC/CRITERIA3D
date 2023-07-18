@@ -173,7 +173,7 @@ bool readMeteoDataCsv (QString &fileName, char mySeparator, double noData, Tinpu
 }
 
 
-// write output of weather generator: a daily meteo data series
+// Write the output of weather generator: a daily series of tmin, tmax, prec data
 bool writeMeteoDataCsv(QString &fileName, char separator, std::vector<ToutputDailyMeteo> &dailyData)
 {
     QFile file(fileName);
@@ -187,9 +187,12 @@ bool writeMeteoDataCsv(QString &fileName, char separator, std::vector<ToutputDai
 
     for (unsigned int i=0; i < dailyData.size(); i++)
     {
+        if (dailyData[i].date == NO_DATE)
+            break;
+
+        QString year = QString::number(dailyData[i].date.year);
         QString month = QString::number(dailyData[i].date.month).rightJustified(2, '0');
         QString day = QString::number(dailyData[i].date.day).rightJustified(2, '0');
-        QString year = QString::number(dailyData[i].date.year);
         QString myDate = year + "-" + month + "-" + day;
 
         QString tMin = QString::number(double(dailyData[i].minTemp), 'f', 1);

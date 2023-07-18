@@ -144,6 +144,13 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
     thomThresholdEdit.setValidator(doubleValThom);
     thomThresholdEdit.setText(QString::number(meteoSettings->getThomThreshold()));
 
+    QLabel *temperatureThreshold = new QLabel(tr("threshold for temperature [degC]:"));
+    QDoubleValidator *doubleValTemp = new QDoubleValidator( -100.0, 100.0, 5, this );
+    doubleValTemp->setNotation(QDoubleValidator::StandardNotation);
+    temperatureThresholdEdit.setFixedWidth(EDIT_SIZE);
+    temperatureThresholdEdit.setValidator(doubleValThom);
+    temperatureThresholdEdit.setText(QString::number(meteoSettings->getTemperatureThreshold()));
+
     QLabel *transSamaniCoefficient = new QLabel(tr("Samani coefficient for ET0 computation []:"));
     QDoubleValidator *doubleValSamani = new QDoubleValidator( -5.0, 5.0, 5, this );
     doubleValSamani->setNotation(QDoubleValidator::StandardNotation);
@@ -172,6 +179,9 @@ MeteoTab::MeteoTab(Crit3DMeteoSettings *meteoSettings)
 
     mainLayout->addWidget(thomThreshold);
     mainLayout->addWidget(&thomThresholdEdit);
+
+    mainLayout->addWidget(temperatureThreshold);
+    mainLayout->addWidget(&temperatureThresholdEdit);
 
     mainLayout->addWidget(transSamaniCoefficient);
     mainLayout->addWidget(&transSamaniCoefficientEdit);
@@ -316,6 +326,7 @@ bool DialogSettings::acceptValues()
     project_->meteoSettings->setMinimumPercentage(metTab->minimumPercentageEdit.text().toFloat());
     project_->meteoSettings->setRainfallThreshold(metTab->rainfallThresholdEdit.text().toFloat());
     project_->meteoSettings->setThomThreshold(metTab->thomThresholdEdit.text().toFloat());
+    project_->meteoSettings->setTemperatureThreshold(metTab->temperatureThresholdEdit.text().toFloat());
     project_->meteoSettings->setTransSamaniCoefficient(metTab->transSamaniCoefficientEdit.text().toFloat());
     project_->meteoSettings->setAutomaticTavg(metTab->automaticTavgEdit.isChecked());
     project_->meteoSettings->setAutomaticET0HS(metTab->automaticET0HSEdit.isChecked());

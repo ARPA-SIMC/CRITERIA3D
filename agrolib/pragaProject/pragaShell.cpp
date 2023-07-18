@@ -696,7 +696,7 @@ int pragaBatch(PragaProject* myProject, QString scriptFileName)
         attachOutputToConsole();
     #endif
 
-    myProject->logInfo("\nPRAGA v1");
+    myProject->logInfo("\nPRAGA v1.7");
     myProject->logInfo("Execute script: " + scriptFileName);
 
     if (scriptFileName == "")
