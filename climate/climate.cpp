@@ -1759,6 +1759,7 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
                     break;
                 case dailyTemperatureHoursAbove:
                     res = temperatureDailyNHoursAbove(hourlyValues, meteoSettings->getTemperatureThreshold(), meteoSettings->getMinimumPercentage());
+                    break;
                 default:
                     res = NODATA;
                     break;
