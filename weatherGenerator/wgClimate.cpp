@@ -581,7 +581,7 @@ bool climateGenerator(int nrData, TinputObsData climateDailyObsData, Crit3DDate 
 
     for (int i = 0; i < nrData; i++)
     {
-        if (i >= startIndex && i < (startIndex+nrDays))
+        if (i >= startIndex && i < (startIndex+int(nrDays)))
         {
             newDailyObsData.inputTMin[j] = climateDailyObsData.inputTMin[i];
             newDailyObsData.inputTMax[j] = climateDailyObsData.inputTMax[i];

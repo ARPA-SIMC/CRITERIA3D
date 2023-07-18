@@ -1575,7 +1575,7 @@ bool elaborateDailyAggrVarFromStartDate(meteoVariable myVar, Crit3DMeteoPoint me
 frequencyType getAggregationFrequency(meteoVariable myVar)
 {
 
-    if (myVar == dailyThomHoursAbove || myVar == dailyThomAvg || myVar == dailyThomMax || myVar == dailyLeafWetness)
+    if (myVar == dailyThomHoursAbove || myVar == dailyThomAvg || myVar == dailyThomMax || myVar == dailyLeafWetness || myVar == dailyTemperatureHoursAbove)
     {
         return hourly;
     }
@@ -1759,6 +1759,7 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
                     break;
                 case dailyTemperatureHoursAbove:
                     res = temperatureDailyNHoursAbove(hourlyValues, meteoSettings->getTemperatureThreshold(), meteoSettings->getMinimumPercentage());
+                    break;
                 default:
                     res = NODATA;
                     break;

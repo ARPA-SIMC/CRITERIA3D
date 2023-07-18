@@ -1863,8 +1863,7 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyDataFixedFields(QString &myError, QS
     int varCode;
     float value;
 
-    unsigned row;
-    unsigned col;
+    unsigned row, col;
 
     if (!_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
@@ -1875,7 +1874,8 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyDataFixedFields(QString &myError, QS
     int numberOfDays = first.daysTo(last) + 1;
     _meteoGrid->meteoPointPointer(row,col)->initializeObsDataD(numberOfDays, getCrit3DDate(first));
 
-    QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2` <= '%4' ORDER BY `%2`").arg(tableD).arg(_tableDaily.fieldTime).arg(first.toString("yyyy-MM-dd")).arg(last.toString("yyyy-MM-dd"));
+    QString statement = QString("SELECT * FROM `%1` WHERE `%2` >= '%3' AND `%2` <= '%4' ORDER BY `%2`").arg(tableD,
+                                    _tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
     if( !qry.exec(statement) )
     {
         myError = qry.lastError().text();
@@ -1903,11 +1903,8 @@ bool Crit3DMeteoGridDbHandler::loadGridDailyDataFixedFields(QString &myError, QS
 
                 if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueD(getCrit3DDate(date), variable, value))
                     return false;
-
             }
-
         }
-
     }
 
     return true;
@@ -3544,7 +3541,7 @@ bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameP
  * \param outputPath    path for output files
  * \return true on success, false otherwise
  */
-bool Crit3DMeteoGridDbHandler::ExportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate,
+bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate,
                                                   QString idListFile, QString outputPath)
 {
     errorStr = "";
@@ -3590,30 +3587,29 @@ bool Crit3DMeteoGridDbHandler::ExportDailyDataCsv(QString &errorStr, bool isTPre
             if (! isList || idList.contains(id))
             {
                 // read data
+                bool isOk;
                 if (gridStructure().isFixedFields())
                 {
-                    if (! loadGridDailyDataFixedFields(errorStr, id, firstDate, lastDate))
-                    {
-                        errorStr = "Error in reading cell id: " + id;
-                        return false;
-                    }
+                    isOk = loadGridDailyDataFixedFields(errorStr, id, firstDate, lastDate);
                 }
                 else
                 {
-                    if (! loadGridDailyData(errorStr, id, firstDate, lastDate))
-                    {
-                        errorStr = "Error in reading cell id: " + id;
-                        return false;
-                    }
+                    isOk = loadGridDailyData(errorStr, id, firstDate, lastDate);
+                }
+                if (! isOk)
+                {
+                    std::cout << "Error in reading cell id: " << id.toStdString() << "\n";
+                    continue;
                 }
 
                 // create csv file
                 QString csvFileName = outputPath + "/" + id + ".csv";
                 QFile outputFile(csvFileName);
-                if ( !outputFile.open(QIODevice::WriteOnly | QFile::Truncate) )
+                isOk = outputFile.open(QIODevice::WriteOnly | QFile::Truncate);
+                if (! isOk)
                 {
-                    errorStr = "Open CSV failed: " + csvFileName + "\n " + outputFile.errorString();
-                    return false;
+                    std::cout << "Open CSV failed: " << csvFileName.toStdString() << "\n";
+                    continue;
                 }
 
                 // header
