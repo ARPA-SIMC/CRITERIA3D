@@ -155,7 +155,7 @@
         bool activeAllCells(QString *myError);
         bool setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState);
 
-        bool ExportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate, QString idListFile, QString outputPath);
+        bool exportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate, QString idListFile, QString outputPath);
 
         QDate getFirstDailyDate() const;
         QDate getLastDailyDate() const;
