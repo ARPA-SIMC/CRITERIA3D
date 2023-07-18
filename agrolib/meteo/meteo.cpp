@@ -42,6 +42,7 @@ void Crit3DMeteoSettings::initialize()
     minimumPercentage = DEFAULT_MIN_PERCENTAGE;
     rainfallThreshold = DEFAULT_RAINFALL_THRESHOLD;
     thomThreshold = DEFAULT_THOM_THRESHOLD;
+    temperatureThreshold = DEFAULT_TEMPERATURE_THRESHOLD;
     transSamaniCoefficient = DEFAULT_TRANSMISSIVITY_SAMANI;
     windIntensityDefault = DEFAULT_WIND_INTENSITY;
     hourlyIntervals = DEFAULT_HOURLY_INTERVALS;
@@ -112,6 +113,11 @@ float Crit3DMeteoSettings::getTemperatureThreshold() const
 void Crit3DMeteoSettings::setThomThreshold(float value)
 {
     thomThreshold = value;
+}
+
+void Crit3DMeteoSettings::setTemperatureThreshold(float value)
+{
+    temperatureThreshold = value;
 }
 
 bool Crit3DMeteoSettings::getAutomaticTavg() const

@@ -59,6 +59,7 @@
         QLineEdit minimumPercentageEdit;
         QLineEdit rainfallThresholdEdit;
         QLineEdit thomThresholdEdit;
+        QLineEdit temperatureThresholdEdit;
         QLineEdit transSamaniCoefficientEdit;
         QCheckBox automaticTavgEdit;
         QCheckBox automaticET0HSEdit;
