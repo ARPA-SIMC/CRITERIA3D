@@ -545,7 +545,7 @@ void MainWindow::on_rasterScaleButton_clicked()
 
 void MainWindow::on_variableButton_clicked()
 {
-    meteoVariable myVar = chooseMeteoVariable(&myProject);
+    meteoVariable myVar = chooseMeteoVariable(myProject);
     if (myVar == noMeteoVar) return;
 
     myProject.setCurrentVariable(myVar);

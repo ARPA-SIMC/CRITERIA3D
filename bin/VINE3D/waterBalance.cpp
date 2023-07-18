@@ -42,7 +42,7 @@ void updateWaterBalanceMaps(Vine3DProject* myProject)
 {
     long row, col;
     long nodeIndex;
-    int layer, soilIndex;
+    unsigned int layer, soilIndex;
     double flow, flow_mm;
     double area;
 
