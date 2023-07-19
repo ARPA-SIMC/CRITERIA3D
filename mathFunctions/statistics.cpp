@@ -32,6 +32,8 @@
 #include "basicMath.h"
 #include "statistics.h"
 #include "physics.h"
+#include "furtherMathFunctions.h"
+
 
 
 float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float rainfallThreshold)
@@ -310,6 +312,94 @@ namespace statistics
         rate = (y2 - y1) / (x2 - x1);
 
         return (y1 + rate * (xx - x1));
+    }
+
+    void multiRegression1D(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors)
+    {
+        double* SUMx;
+        double* SUMxx;
+        double* SUMxy;
+        double SUMy = 0;
+        SUMx = (double*)calloc(nrPredictors, sizeof(double));
+        SUMxx = (double*)calloc(nrPredictors, sizeof(double));
+        SUMxy = (double*)calloc(nrPredictors, sizeof(double));
+        for(int i = 0;i<nrPredictors;i++)
+        {
+            SUMx[i] = 0.;
+            SUMxx[i] = 0.;
+            SUMxy[i] = 0.;
+            for (int j = 0; j<nrItems;j++)
+            {
+                SUMx[i] += x[i][j];
+                SUMxx[i] += x[i][j]*x[i][j];
+                SUMxy[i] += x[i][j]*y[j];
+            }
+        }
+        for (int j = 0; j<nrItems;j++)
+        {
+            SUMy += y[j];
+        }
+        int matrixSize = nrPredictors+1;
+        double* roots = (double*)calloc(matrixSize, sizeof(double));
+        double* constantTerm=(double*)calloc(matrixSize, sizeof(double));
+        double** coefficientMatrix = (double**)calloc(matrixSize, sizeof(double*));
+        for(int i = 0;i<matrixSize;i++)
+        {
+            coefficientMatrix[i] = (double*)calloc(matrixSize, sizeof(double));
+            for (int j = 0; j<matrixSize;j++)
+            {
+                coefficientMatrix[i][j] = 0.;
+            }
+        }
+
+        for (int j = 0; j<matrixSize;j++)
+        {
+            roots[j] = 0.;
+            constantTerm[j]= 0.;
+        }
+        // set the constant term
+        for (int j = 0; j<nrPredictors;j++)
+        {
+            constantTerm[j] += SUMxy[j];
+        }
+        constantTerm[nrPredictors] = SUMy;
+        // set the coefficient matrix
+        for (int k = 0; k<nrPredictors;k++)
+        {
+            for (int j = 0; j<matrixSize;j++)
+            {
+                if (k != j)
+                {
+                    coefficientMatrix[k][j] = SUMx[k];
+                }
+                else
+                {
+                    coefficientMatrix[k][j] = SUMxx[k];
+                }
+            }
+        }
+        for (int j = 0; j<nrPredictors;j++)
+        {
+            coefficientMatrix[nrPredictors][j] = coefficientMatrix[j][nrPredictors];
+        }
+        coefficientMatrix[nrPredictors][nrPredictors] = 1.0*nrItems;
+
+        matricial::linearSystemResolutionByCramerMethod(constantTerm,coefficientMatrix,matrixSize,roots);
+        for (int j = 0; j<nrPredictors;j++)
+        {
+            m[j] = (float)(roots[j]);
+        }
+        *q = (float)(roots[nrPredictors]);
+
+        for (int j = 0; j<matrixSize;j++)
+        {
+            free(coefficientMatrix[j]);
+        }
+        free(coefficientMatrix);
+        free(roots);
+        free(constantTerm);
+        free(SUMx);
+        free(SUMxx);
     }
 
 
