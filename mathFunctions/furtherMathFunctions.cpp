@@ -1483,6 +1483,42 @@ namespace matricial
         }
         return 0;
     }
+
+    bool linearSystemResolutionByCramerMethod(double* constantTerm, double** coefficientMatrix, int matrixSize, double* roots)
+    {
+
+        double denominator;
+        denominator = determinant(coefficientMatrix,matrixSize);
+        if (fabs(denominator)<EPSILON) return false;
+
+        double** numerator = (double**)calloc(matrixSize, sizeof(double*));
+        for(int i = 0;i<matrixSize;i++)
+        {
+            numerator[i] = (double*)calloc(matrixSize, sizeof(double));
+        }
+        for(int counterRoot = 0;counterRoot<matrixSize; counterRoot++)
+        {
+            for(int i = 0;i<matrixSize;i++)
+            {
+                for(int j = 0;j<matrixSize;j++)
+                {
+                    numerator[j][i] = coefficientMatrix[j][i];
+                }
+            }
+            for(int j = 0;j<matrixSize;j++)
+            {
+                numerator[j][counterRoot] = constantTerm[j];
+            }
+            roots[counterRoot] = determinant(numerator,matrixSize)/denominator;
+        }
+        for(int i = 0;i<matrixSize;i++)
+        {
+            free(numerator[i]);
+        }
+        free(numerator);
+
+        return true;
+    }
 }
 
 

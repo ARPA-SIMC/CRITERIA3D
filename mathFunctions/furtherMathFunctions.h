@@ -105,6 +105,7 @@
         void minorMatrix(double** b,double** a,int i,int n);
         int eigenSystemMatrix2x2(double** a, double* eigenvalueA, double** eigenvectorA, int n);
         bool inverseGaussJordan(double** a,double** d,int n);
+        bool linearSystemResolutionByCramerMethod(double* constantTerm, double** coefficientMatrix, int matrixSize, double* roots);
     }
 
     namespace distribution
