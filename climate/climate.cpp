@@ -12,7 +12,6 @@
 #include "quality.h"
 #include "dbClimate.h"
 #include "qdebug.h"
-#include "iostream"
 
 using namespace std;
 
