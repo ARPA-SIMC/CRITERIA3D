@@ -1015,15 +1015,23 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
         return (obsDataD[i].rhAvg);
     else if (myVar == dailyGlobalRadiation)
         return (obsDataD[i].globRad);
-    else if (myVar == dailyReferenceEvapotranspirationHS)
+    else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyBIC)
     {
+        float et0 = NODATA;
         if (! isEqual(obsDataD[i].et0_hs, NODATA))
-            return obsDataD[i].et0_hs;
+            et0 = obsDataD[i].et0_hs;
         else if (meteoSettings->getAutomaticET0HS() && !isEqual(obsDataD[i].tMin, NODATA) && !isEqual(obsDataD[i].tMax, NODATA))
-            return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude,
+            et0 = float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude,
                                         getDoyFromDate(myDate), obsDataD[i].tMax, obsDataD[i].tMin));
+
+        if (myVar == dailyReferenceEvapotranspirationHS)
+            return et0;
         else
-            return NODATA;
+        {
+            float prec = NODATA;
+            prec = obsDataD[i].prec;
+            return computeDailyBIC(prec, et0);
+        }
     }
     else if (myVar == dailyReferenceEvapotranspirationPM)
         return (obsDataD[i].et0_pm);
