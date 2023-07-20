@@ -1,3 +1,4 @@
+#include "commonConstants.h"
 #include "unitCropMap.h"
 #include "zonalStatistic.h"
 #include "shapeToRaster.h"
@@ -195,7 +196,11 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
         QString key = QString::fromStdString(shapeHandler.getStringValue(signed(i), "ID_CASE"));
         if (key.isEmpty()) continue;
 
-        double hectares = shapeHandler.getNumericValue(signed(i), "hectares");
+        double hectares = shapeHandler.getNumericValue(signed(i), "HA");
+        if (hectares == NODATA)
+            hectares = shapeHandler.getNumericValue(signed(i), "Hectares");
+        if (hectares == NODATA)
+            hectares = shapeHandler.getNumericValue(signed(i), "hectares");
 
         if ( !idCase.contains(key) )
         {
@@ -208,7 +213,7 @@ bool writeUcmListToDb(Crit3DShapeHandler &shapeHandler, QString dbName, QString 
         else
         {
             // sum hectares
-            if (hectares > 0)
+            if (hectares != NODATA && hectares > 0)
             {
                 int index = idCase.indexOf(key);
                 ha[index] += hectares;
