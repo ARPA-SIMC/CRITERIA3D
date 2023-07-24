@@ -307,6 +307,11 @@
     double tDewFromRelHum(double RH, double T);
     double tDewFromRelHum(double RH, double T);
 
+    float computeDailyBIC(float prec, float etp);
+    float dailyThermalRange(float Tmin, float Tmax);
+    float dailyAverageT(float Tmin, float Tmax);
+    float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings *meteoSettings);
+    float dewPoint(float relHumAir, float tempAir);
     bool computeLeafWetness(double prec, double relHumidity, short* leafW);
 
     double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalIrradiance,
