@@ -984,7 +984,9 @@ int Crit1DProject::computeAllUnits()
             }
 
             // SOIL
-            compUnitList[i].idSoil = getIdSoilString(dbSoil, compUnitList[i].idSoilNumber, projectError);
+            if (compUnitList[i].idSoilNumber != NODATA)
+                compUnitList[i].idSoil = getIdSoilString(dbSoil, compUnitList[i].idSoilNumber, projectError);
+
             if (compUnitList[i].idSoil == "")
             {
                 logger.writeInfo("Unit " + compUnitList[i].idCase + " Soil nr." + QString::number(compUnitList[i].idSoilNumber) + " ***** missing SOIL *****");

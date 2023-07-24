@@ -600,7 +600,7 @@ bool PragaProject::showClimateFields(bool isMeteoGrid, QList<QString>* climateDb
 
 }
 
-void PragaProject::saveClimateResult(bool isMeteoGrid, QString climaSelected, int climateIndex, bool showInfo)
+void PragaProject::readClimate(bool isMeteoGrid, QString climateSelected, int climateIndex, bool showInfo)
 {
 
     int infoStep = 0;
@@ -611,7 +611,7 @@ void PragaProject::saveClimateResult(bool isMeteoGrid, QString climaSelected, in
 
     Crit3DClimateList climateList;
     QList<QString> climate;
-    climate.push_back(climaSelected);
+    climate.push_back(climateSelected);
 
     climateList.setListClimateElab(climate);
     climateList.parserElaboration();
@@ -632,7 +632,11 @@ void PragaProject::saveClimateResult(bool isMeteoGrid, QString climaSelected, in
     clima->setParam1IsClimate(climateList.listParam1IsClimate().at(0));
     clima->setParam1ClimateField(climateList.listParam1ClimateField().at(0));
 
-    QString table = "climate_" + climateList.listPeriodStr().at(0);
+    QString table;
+    if (clima->periodType() == genericPeriod)
+        table = "climate_generic";
+    else
+        table = "climate_" + climateList.listPeriodStr().at(0);
 
     if (isMeteoGrid)
     {
@@ -654,7 +658,7 @@ void PragaProject::saveClimateResult(bool isMeteoGrid, QString climaSelected, in
                 if (meteoGridDbHandler->meteoGrid()->getMeteoPointActiveId(row, col, &id))
                 {
                     Crit3DMeteoPoint* meteoPoint = meteoGridDbHandler->meteoGrid()->meteoPointPointer(row,col);
-                    results = readElab(db, table.toLower(), &errorString, QString::fromStdString(meteoPoint->id), climaSelected);
+                    results = readElab(db, table.toLower(), &errorString, QString::fromStdString(meteoPoint->id), climateSelected);
                     if (results.size() < climateIndex)
                     {
                         errorString = "climate index error";
@@ -687,7 +691,7 @@ void PragaProject::saveClimateResult(bool isMeteoGrid, QString climaSelected, in
                     updateProgressBar(i);
                 }
                 QString id = QString::fromStdString(meteoPoints[i].id);
-                results = readElab(db, table.toLower(), &errorString, id, climaSelected);
+                results = readElab(db, table.toLower(), &errorString, id, climateSelected);
                 if (results.size() < climateIndex)
                 {
                     errorString = "climate index error";
@@ -706,7 +710,7 @@ void PragaProject::saveClimateResult(bool isMeteoGrid, QString climaSelected, in
     if (showInfo) closeProgressBar();
 }
 
-bool PragaProject::deleteClima(bool isMeteoGrid, QString climaSelected)
+bool PragaProject::deleteClimate(bool isMeteoGrid, QString climaSelected)
 {
     QSqlDatabase db;
 

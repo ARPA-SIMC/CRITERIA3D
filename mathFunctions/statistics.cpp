@@ -360,7 +360,7 @@ namespace statistics
         // set the constant term
         for (int j = 0; j<nrPredictors;j++)
         {
-            constantTerm[j] += SUMxy[j];
+            constantTerm[j] = SUMxy[j];
         }
         constantTerm[nrPredictors] = SUMy;
         // set the coefficient matrix
@@ -380,7 +380,7 @@ namespace statistics
         }
         for (int j = 0; j<nrPredictors;j++)
         {
-            coefficientMatrix[nrPredictors][j] = coefficientMatrix[j][nrPredictors];
+            coefficientMatrix[nrPredictors][j] = SUMx[nrPredictors];
         }
         coefficientMatrix[nrPredictors][nrPredictors] = 1.0*nrItems;
 
