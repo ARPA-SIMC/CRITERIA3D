@@ -2406,6 +2406,8 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     }
 }
 
+
+
 bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 {
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
@@ -2430,54 +2432,18 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     }
 
     // proxy aggregation
+    std::vector <gis::Crit3DRasterGrid> meteoGridProxies;
     if (getUseDetrendingVar(myVar))
-    {
-        gis::Crit3DRasterGrid* proxyGrid;
-        std::vector <gis::Crit3DRasterGrid> meteoGridProxies;
-        gis::Crit3DRasterGrid* myGrid;
-
-
-        /*for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
-        {
-            myGrid = new gis::Crit3DRasterGrid(meteoGridDbHandler->meteoGrid()->dataMeteoGrid);
-
-            if (interpolationSettings.getCurrentCombination().getValue(i))
-            {
-                proxyGrid = interpolationSettings.getProxy(i)->getGrid();
-                if (proxyGrid != nullptr && proxyGrid->isLoaded)
-                {
-                    myValue = gis::getValueFromXY(*proxyGrid, x, y);
-                    if (myValue != proxyGrid->header->flag)
-                        myValues[i] = myValue;
-                }
-            }
-        }*/
-
-    }
-
-    gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
-
-
-    /*
-            gis::getUtmXYFromRowColSinglePrecision(*outputGrid, myRow, myCol, &myX, &myY);
-            float myZ = raster.value[myRow][myCol];
-            if (! isEqual(myZ, outputGrid->header->flag))
-            {
-                if (getUseDetrendingVar(myVar))
-                {
-                    getProxyValuesXY(myX, myY, mySettings, proxyValues);
-                }
-                outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
-            }
-
-    */
+        meteoGridProxies = aggregationProxyGrid(meteoGridDbHandler->meteoGrid()->dataMeteoGrid, interpolationSettings);
 
     frequencyType freq = getVarFrequency(myVar);
 
-    float myX, myY;
+    float myX, myY, myZ;
     std::vector <float> proxyValues;
-    proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
     float interpolatedValue = NODATA;
+    Crit3DProxyCombination myCombination = interpolationSettings.getCurrentCombination();
+    unsigned int i, proxyIndex;
+    float proxyValue;
 
     for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
     {
@@ -2485,7 +2451,25 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         {
             if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
             {
-                //double myValue = spatialAggregateMeteoGridPoint(*(meteoGridDbHandler->meteoGrid()->meteoPoints[row][col]), elab);
+                myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
+                myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
+                myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
+
+                if (getUseDetrendingVar(myVar))
+                {
+                    proxyIndex = 0;
+                    proxyValue = NODATA;
+                    for (i=0; i < interpolationSettings.getProxyNr(); i++)
+                    {
+                        if (myCombination.getValue(i))
+                        {
+                            proxyValue = gis::getValueFromXY(meteoGridProxies[proxyIndex], myX, myY);
+                            proxyValues.push_back(proxyValue);
+                        }
+                    }
+                }
+
+                interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
 
                 if (freq == hourly)
                 {
