@@ -2365,6 +2365,24 @@ bool Project::checkInterpolationMain(meteoVariable myVar)
 
 }
 
+bool Project::checkInterpolationMainSimple(meteoVariable myVar)
+{
+    if (nrMeteoPoints == 0)
+    {
+        logError("Open a meteo points DB before.");
+        return false;
+    }
+
+    if (myVar == noMeteoVar)
+    {
+        logError("Select a variable before.");
+        return false;
+    }
+
+    return true;
+
+}
+
 bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     if (! checkInterpolationMain(myVar))
@@ -2388,6 +2406,137 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     }
 }
 
+bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
+{
+    std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
+
+    // check quality and pass data to interpolation
+    if (!checkAndPassDataToInterpolation(quality, myVar, meteoPoints, nrMeteoPoints, myTime,
+                                         &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
+                                         checkSpatialQuality))
+    {
+        logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
+        return false;
+    }
+
+    // detrending and checking precipitation
+    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
+                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+
+    if (! interpolationReady)
+    {
+        logError("Interpolation: error in function preInterpolation");
+        return false;
+    }
+
+    // proxy aggregation
+    if (getUseDetrendingVar(myVar))
+    {
+        gis::Crit3DRasterGrid* proxyGrid;
+        std::vector <gis::Crit3DRasterGrid> meteoGridProxies;
+        gis::Crit3DRasterGrid* myGrid;
+
+
+        /*for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
+        {
+            myGrid = new gis::Crit3DRasterGrid(meteoGridDbHandler->meteoGrid()->dataMeteoGrid);
+
+            if (interpolationSettings.getCurrentCombination().getValue(i))
+            {
+                proxyGrid = interpolationSettings.getProxy(i)->getGrid();
+                if (proxyGrid != nullptr && proxyGrid->isLoaded)
+                {
+                    myValue = gis::getValueFromXY(*proxyGrid, x, y);
+                    if (myValue != proxyGrid->header->flag)
+                        myValues[i] = myValue;
+                }
+            }
+        }*/
+
+    }
+
+    gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
+
+
+    /*
+            gis::getUtmXYFromRowColSinglePrecision(*outputGrid, myRow, myCol, &myX, &myY);
+            float myZ = raster.value[myRow][myCol];
+            if (! isEqual(myZ, outputGrid->header->flag))
+            {
+                if (getUseDetrendingVar(myVar))
+                {
+                    getProxyValuesXY(myX, myY, mySettings, proxyValues);
+                }
+                outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+            }
+
+    */
+
+    frequencyType freq = getVarFrequency(myVar);
+
+    float myX, myY;
+    std::vector <float> proxyValues;
+    proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
+    float interpolatedValue = NODATA;
+
+    for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
+    {
+        for (unsigned row = 0; row < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrRows); row++)
+        {
+            if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->active)
+            {
+                //double myValue = spatialAggregateMeteoGridPoint(*(meteoGridDbHandler->meteoGrid()->meteoPoints[row][col]), elab);
+
+                if (freq == hourly)
+                {
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysH == 0)
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataH(1, 1, myTime.date);
+
+                    meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueH(myTime.date, myTime.getHour(), myTime.getMinutes(), myVar, float(interpolatedValue));
+                    meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue);
+                }
+                else if (freq == daily)
+                {
+                    if (meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->nrObsDataDaysD == 0)
+                        meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->initializeObsDataD(1, myTime.date);
+
+                    meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->setMeteoPointValueD(myTime.date, myVar, float(interpolatedValue));
+                    meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->currentValue = float(interpolatedValue);
+
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool Project::interpolationGridMain(meteoVariable myVar, const Crit3DTime& myTime)
+{
+    if (! checkInterpolationMainSimple(myVar))
+        return false;
+
+    /* solar radiation model
+    if (myVar == globalIrradiance)
+    {
+        Crit3DTime halfHour = myTime.addSeconds(-1800);
+        return interpolateDemRadiation(halfHour, myRaster);
+    }
+    */
+
+    // dynamic lapserate
+    /*if (getUseDetrendingVar(myVar) && interpolationSettings.getUseDynamicLapserate())
+    {
+        return interpolationDemDynamicLapserate(myVar, myTime, myRaster);
+    }
+    else
+    {
+        return interpolationDem(myVar, myTime, myRaster);
+    }
+    */
+
+    return interpolationGrid(myVar, myTime);
+}
 
 
 float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeIni, const Crit3DTime& timeFin)

@@ -284,11 +284,11 @@ namespace gis
     }
 
 
-    bool Crit3DRasterGrid::copyGrid(const Crit3DRasterGrid& initGrid)
+    bool Crit3DRasterGrid::(const Crit3DRasterGrid& initGrid)
     {
         clear();
 
-        *(header) = *(initGrid.header);
+        *(header) = *(initGrid.heacopyGridder);
         *(colorScale) = *(initGrid.colorScale);
 
         initializeGrid();
