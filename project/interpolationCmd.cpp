@@ -145,7 +145,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     if (nrGrids == 1)
     {
         if (! gis::readEsriGrid(gridNames[0].toStdString(), &tmpGrid, myError)) return false;
-        gis::resampleGrid(tmpGrid, gridOut, *gridBase.header, aggrAverage, 0);
+        gis::resampleGrid(tmpGrid, gridOut, gridBase.header, aggrAverage, 0);
         return true;
     }
 
@@ -180,7 +180,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
     {
         tmpGrid = secondGrid;
         secondGrid.clear();
-        gis::resampleGrid(tmpGrid, &secondGrid, *firstGrid.header, aggrAverage, 0);
+        gis::resampleGrid(tmpGrid, &secondGrid, firstGrid.header, aggrAverage, 0);
         tmpGrid.initializeGrid();
     }
 
@@ -189,7 +189,7 @@ bool interpolateProxyGridSeries(const Crit3DProxyGridSeries& mySeries, QDate myD
 
     if (! gis::temporalYearlyInterpolation(firstGrid, secondGrid, myDate.year(), myMin, myMax, &tmpGrid)) return false;
 
-    gis::resampleGrid(tmpGrid, gridOut, *gridBase.header, aggrAverage, 0);
+    gis::resampleGrid(tmpGrid, gridOut, gridBase.header, aggrAverage, 0);
 
     gridOut->setMapTime(tmpGrid.getMapTime());
 
@@ -262,25 +262,3 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
     return true;
 }
 
-std::vector <gis::Crit3DRasterGrid> aggregationProxyGrid(const gis::Crit3DRasterGrid& gridIn, Crit3DInterpolationSettings& mySettings)
-{
-    std::vector <gis::Crit3DRasterGrid> myGrids;
-    gis::Crit3DRasterGrid* myGrid;
-    gis::Crit3DRasterGrid const * proxyGrid;
-
-    for (unsigned int i=0; i < mySettings.getProxyNr(); i++)
-    {
-        myGrid = new gis::Crit3DRasterGrid(gridIn);
-
-        if (mySettings.getCurrentCombination().getValue(i))
-        {
-            proxyGrid = mySettings.getProxy(i)->getGrid();
-            if (proxyGrid != nullptr && proxyGrid->isLoaded)
-                gis::resampleGrid(*proxyGrid, myGrid, *gridIn.header, aggrAverage, 0);
-
-            myGrids.push_back(*myGrid);
-        }
-    }
-
-    return myGrids;
-}

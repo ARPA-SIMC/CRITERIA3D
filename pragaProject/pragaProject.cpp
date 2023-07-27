@@ -1918,7 +1918,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     QString myError, rasterName, varName;
     int myHour;
     QDate myDate = dateIni;
-    gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
+    gis::Crit3DRasterGrid* myGrid;
     meteoVariable myVar;
     frequencyType freq;
     bool isDaily = false, isHourly = false;

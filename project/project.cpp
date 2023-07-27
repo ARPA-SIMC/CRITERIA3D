@@ -1734,7 +1734,7 @@ bool Project::loadProxyGrids()
             if (DEM.isLoaded && gis::readEsriGrid(fileName.toStdString(), &proxyGrid, myError))
             {
                 gis::Crit3DRasterGrid* resGrid = new gis::Crit3DRasterGrid();
-                gis::resampleGrid(proxyGrid, resGrid, *(DEM.header), aggrAverage, 0);
+                gis::resampleGrid(proxyGrid, resGrid, DEM.header, aggrAverage, 0);
                 myProxy->setGrid(resGrid);
             }
             else
@@ -2407,6 +2407,32 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
 }
 
 
+bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid> &myGrids)
+{
+    gis::Crit3DRasterGrid* myGrid;
+    gis::Crit3DRasterGrid* proxyGrid;
+
+    float cellSize = computeDefaultCellSizeFromMeteoGrid(1);
+    gis::Crit3DRasterGrid meteoGridRaster;
+    if (! meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, meteoGridRaster))
+        return false;
+
+    for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
+    {
+        myGrid = new gis::Crit3DRasterGrid();
+
+        if (interpolationSettings.getCurrentCombination().getValue(i))
+        {
+            proxyGrid = interpolationSettings.getProxy(i)->getGrid();
+            if (proxyGrid != nullptr && proxyGrid->isLoaded)
+                gis::resampleGrid(*proxyGrid, myGrid, meteoGridRaster.header, aggrAverage, 0);
+
+            myGrids.push_back(*myGrid);
+        }
+    }
+
+    return true;
+}
 
 bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 {
@@ -2434,7 +2460,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     // proxy aggregation
     std::vector <gis::Crit3DRasterGrid> meteoGridProxies;
     if (getUseDetrendingVar(myVar))
-        meteoGridProxies = aggregationProxyGrid(meteoGridDbHandler->meteoGrid()->dataMeteoGrid, interpolationSettings);
+        if (! meteoGridAggregateProxy(meteoGridProxies)) return false;
 
     frequencyType freq = getVarFrequency(myVar);
 
@@ -2463,8 +2489,12 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     {
                         if (myCombination.getValue(i))
                         {
-                            proxyValue = gis::getValueFromXY(meteoGridProxies[proxyIndex], myX, myY);
-                            proxyValues.push_back(proxyValue);
+                            if (proxyIndex < meteoGridProxies.size())
+                            {
+                                proxyValue = gis::getValueFromXY(meteoGridProxies[proxyIndex], myX, myY);
+                                proxyValues.push_back(proxyValue);
+                            }
+
                         }
                     }
                 }
@@ -3748,64 +3778,24 @@ bool Project::getComputeOnlyPoints()
     return computeOnlyPoints;
 }
 
-bool Project::exportMeteoGridToESRI(QString fileName, double cellSize)
+bool Project::exportMeteoGridToRasterFlt(QString fileName, double cellSize)
 {
     if (fileName != "")
     {
-        gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
-
-        if (!meteoGridDbHandler->gridStructure().isUTM())
+        gis::Crit3DRasterGrid myGrid;
+        if (!meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
         {
-            // lat/lon grid
-            gis::Crit3DLatLonHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
-            gis::getGeoExtentsFromLatLonHeader(gisSettings, cellSize, myGrid->header, &latlonHeader);
-            if (!myGrid->initializeGrid(NODATA))
-            {
-                errorString = "initializeGrid failed";
-                delete myGrid;
-                return false;
-            }
-
-            double utmx, utmy, lat, lon;
-            int dataGridRow, dataGridCol;
-            float myValue;
-
-            for (int row = 0; row < myGrid->header->nrRows; row++)
-            {
-                for (int col = 0; col < myGrid->header->nrCols; col++)
-                {
-                    myGrid->getXY(row, col, utmx, utmy);
-                    gis::getLatLonFromUtm(gisSettings, utmx, utmy, &lat, &lon);
-                    gis::getGridRowColFromXY (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
-                    if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
-                    {
-                        myValue = NODATA;
-                    }
-                    else
-                    {
-                        myValue = meteoGridDbHandler->meteoGrid()->dataMeteoGrid.value[latlonHeader.nrRows-1-dataGridRow][dataGridCol];
-                    }
-                    if (myValue != NO_ACTIVE && myValue != NODATA)
-                    {
-                        myGrid->value[row][col] = myValue;
-                    }
-                }
-            }
-        }
-        else
-        {
-            myGrid->copyGrid(meteoGridDbHandler->meteoGrid()->dataMeteoGrid);
+            errorString = "initializeGrid failed";
+            return false;
         }
 
         std::string myError = errorString.toStdString();
         QString fileWithoutExtension = QFileInfo(fileName).absolutePath() + QDir::separator() + QFileInfo(fileName).baseName();
-        if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), myGrid, myError))
+        if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), &myGrid, myError))
         {
             errorString = QString::fromStdString(myError);
-            delete myGrid;
             return false;
         }
-        delete myGrid;
         return true;
 
     }
@@ -3847,7 +3837,7 @@ bool Project::exportMeteoGridToCsv(QString fileName)
 }
 
 
-int Project::computeCellSizeFromMeteoGrid()
+int Project::computeDefaultCellSizeFromMeteoGrid(float resolutionRatio)
 {
     if (meteoGridDbHandler->gridStructure().isUTM())
     {
@@ -3858,7 +3848,7 @@ int Project::computeCellSizeFromMeteoGrid()
     gis::Crit3DLatLonHeader latlonHeader = meteoGridDbHandler->gridStructure().header();
     int cellSize = gis::getGeoCellSizeFromLatLonHeader(gisSettings, &latlonHeader);
 
-    cellSize /= 10;
+    cellSize *= resolutionRatio;
     // round cellSize
     int nTimes = int(floor(log10(cellSize)));
     int roundValue = int(round(cellSize / pow(10, nTimes)));
