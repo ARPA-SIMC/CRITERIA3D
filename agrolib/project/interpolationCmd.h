@@ -73,5 +73,7 @@
     bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings *meteoSettings,
                             gis::Crit3DRasterGrid* outputGrid, const gis::Crit3DRasterGrid& raster, meteoVariable myVar);
 
+    std::vector <gis::Crit3DRasterGrid> aggregationProxyGrid(const gis::Crit3DRasterGrid& gridIn, Crit3DInterpolationSettings &mySettings);
+
 
 #endif // INTERPOLATIONCMD_H

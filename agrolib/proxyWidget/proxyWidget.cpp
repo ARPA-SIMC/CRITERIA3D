@@ -220,23 +220,35 @@ void Crit3DProxyWidget::updateDateTime(QDate newDate, int newHour)
 void Crit3DProxyWidget::updateFrequency(frequencyType newFrequency)
 {
     currentFrequency = newFrequency;
+    meteoVariable newVar = updateMeteoVariable(myVar, newFrequency);
+    int cmbIndex = -1;
+    std::string newVarString ;
+
     comboVariable.clear();
 
     std::map<meteoVariable, std::string>::const_iterator it;
     if (currentFrequency == daily)
     {
+        newVarString = getKeyStringMeteoMap(MapDailyMeteoVar, newVar);
+
         for(it = MapDailyMeteoVarToString.begin(); it != MapDailyMeteoVarToString.end(); ++it)
         {
             comboVariable.addItem(QString::fromStdString(it->second));
         }
+        cmbIndex = comboVariable.findText(QString::fromStdString(newVarString));
+        if (cmbIndex != -1) comboVariable.setCurrentIndex(cmbIndex);
         myVar = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, comboVariable.currentText().toStdString());
     }
     else if (currentFrequency == hourly)
     {
+        newVarString = getKeyStringMeteoMap(MapHourlyMeteoVar, newVar);
+
         for(it = MapHourlyMeteoVarToString.begin(); it != MapHourlyMeteoVarToString.end(); ++it)
         {
             comboVariable.addItem(QString::fromStdString(it->second));
         }
+        cmbIndex = comboVariable.findText(QString::fromStdString(newVarString));
+        if (cmbIndex != -1) comboVariable.setCurrentIndex(cmbIndex);
         myVar = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, comboVariable.currentText().toStdString());
     }
     comboVariable.adjustSize();
@@ -250,7 +262,6 @@ void Crit3DProxyWidget::closeEvent(QCloseEvent *event)
     event->accept();
 
 }
-
 
 Crit3DTime Crit3DProxyWidget::getCurrentTime()
 {
