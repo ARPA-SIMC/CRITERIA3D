@@ -1424,9 +1424,9 @@ namespace gis
     }
 
     void resampleGrid(const gis::Crit3DRasterGrid& oldGrid, gis::Crit3DRasterGrid* newGrid,
-                      const gis::Crit3DRasterHeader& header, aggregationMethod elab, float nodataThreshold)
+                      gis::Crit3DRasterHeader* header, aggregationMethod elab, float nodataThreshold)
     {
-        *(newGrid->header) = header;
+        *(newGrid->header) = *header;
 
         double factor = newGrid->header->cellSize / oldGrid.header->cellSize;
         int row, col, tmpRow, tmpCol, nrValues, maxValues;

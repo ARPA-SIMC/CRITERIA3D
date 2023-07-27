@@ -1024,3 +1024,4 @@ void Crit3DMeteoGrid::computeHourlyDerivedVariables(Crit3DTime dateTime)
         }
     }
 }
+

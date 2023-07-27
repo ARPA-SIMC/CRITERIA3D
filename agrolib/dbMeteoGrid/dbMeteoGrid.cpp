@@ -3691,6 +3691,50 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, bool isTPre
     return true;
 }
 
+bool Crit3DMeteoGridDbHandler::MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings& gisSettings, gis::Crit3DRasterGrid& myGrid)
+{
+    if (! gridStructure().isUTM())
+    {
+        // lat/lon grid
+        gis::Crit3DLatLonHeader latlonHeader = gridStructure().header();
+        gis::getGeoExtentsFromLatLonHeader(gisSettings, cellSize, myGrid.header, &latlonHeader);
+        if (!myGrid.initializeGrid(NODATA))
+            return false;
+
+        double utmx, utmy, lat, lon;
+        int dataGridRow, dataGridCol;
+        float myValue;
+
+        for (int row = 0; row < myGrid.header->nrRows; row++)
+        {
+            for (int col = 0; col < myGrid.header->nrCols; col++)
+            {
+                myGrid.getXY(row, col, utmx, utmy);
+                gis::getLatLonFromUtm(gisSettings, utmx, utmy, &lat, &lon);
+                gis::getGridRowColFromXY (latlonHeader, lon, lat, &dataGridRow, &dataGridCol);
+                if (dataGridRow < 0 || dataGridRow >= latlonHeader.nrRows || dataGridCol < 0 || dataGridCol >= latlonHeader.nrCols)
+                {
+                    myValue = NODATA;
+                }
+                else
+                {
+                    myValue = meteoGrid()->dataMeteoGrid.value[latlonHeader.nrRows-1-dataGridRow][dataGridCol];
+                }
+                if (myValue != NO_ACTIVE && myValue != NODATA)
+                {
+                    myGrid.value[row][col] = myValue;
+                }
+            }
+        }
+    }
+    else
+    {
+        myGrid.copyGrid(meteoGrid()->dataMeteoGrid);
+    }
+
+    return true;
+}
+
 
 QDate Crit3DMeteoGridDbHandler::firstDate() const
 {

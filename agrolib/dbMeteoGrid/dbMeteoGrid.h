@@ -156,6 +156,7 @@
         bool setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState);
 
         bool exportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate, QString idListFile, QString outputPath);
+        bool MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings &gisSettings, gis::Crit3DRasterGrid& myGrid);
 
         QDate getFirstDailyDate() const;
         QDate getLastDailyDate() const;
