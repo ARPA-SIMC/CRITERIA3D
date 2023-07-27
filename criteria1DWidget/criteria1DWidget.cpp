@@ -1149,7 +1149,7 @@ void Criteria1DWidget::updateCropParam(QString idCrop)
     // LAI parameters
     LAIminValue->setValue(myProject.myCase.crop.LAImin);
     LAImaxValue->setValue(myProject.myCase.crop.LAImax);
-    if (myProject.myCase.crop.type == FRUIT_TREE)
+    if (myProject.myCase.crop.type == TREE)
     {
         LAIgrass->setVisible(true);
         LAIgrassValue->setVisible(true);
@@ -1718,7 +1718,7 @@ bool Criteria1DWidget::updateCrop()
     myProject.myCase.crop.kcMax = maxKcValue->text().toDouble();
     myProject.myCase.crop.LAImin = LAIminValue->value();
     myProject.myCase.crop.LAImax = LAImaxValue->value();
-    if (myProject.myCase.crop.type == FRUIT_TREE)
+    if (myProject.myCase.crop.type == TREE)
     {
         myProject.myCase.crop.LAIgrass = LAIgrassValue->text().toDouble();
     }
@@ -2017,7 +2017,7 @@ bool Criteria1DWidget::checkIfCropIsChanged()
         return cropChanged;
 
     }
-    if (cropFromDB.type == FRUIT_TREE && cropFromDB.LAIgrass != LAIgrassValue->text().toDouble())
+    if (cropFromDB.type == TREE && cropFromDB.LAIgrass != LAIgrassValue->text().toDouble())
     {
         cropChanged = true;
         return cropChanged;
