@@ -191,7 +191,7 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
         else
             myLai = LAImin;
 
-        if (type == FRUIT_TREE)
+        if (type == TREE)
         {
             bool isLeafFall;
             if (latitude > 0)   // north
@@ -258,7 +258,7 @@ bool Crit3DCrop::isRootStatic() const
     return (type == HERBACEOUS_PERENNIAL ||
             type == GRASS ||
             type == FALLOW ||
-            type == FRUIT_TREE);
+            type == TREE);
 }
 
 
@@ -359,7 +359,7 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
         // LAI
         LAI = LAImin;
         LAIpreviousDay = LAImin;
-        if (type == FRUIT_TREE) LAI += LAIgrass;
+        if (type == TREE) LAI += LAIgrass;
     }
     else
     {
@@ -661,7 +661,7 @@ speciesType getCropType(std::string cropType)
     else if (cropType == "annual_fallow" || cropType == "fallow_annual")
         return FALLOW_ANNUAL;
     else if (cropType == "tree" || cropType == "fruit_tree")
-        return FRUIT_TREE;
+        return TREE;
     else
         return HERBACEOUS_ANNUAL;
 }
@@ -682,8 +682,8 @@ std::string getCropTypeString(speciesType cropType)
         return "fallow";
     case FALLOW_ANNUAL:
         return "fallow_annual";
-    case FRUIT_TREE:
-        return "fruit_tree";
+    case TREE:
+        return "tree";
     }
 
     return "No crop type";

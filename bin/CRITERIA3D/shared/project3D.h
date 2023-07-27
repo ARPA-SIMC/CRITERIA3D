@@ -39,10 +39,15 @@
         QString soilDbFileName;
         QString cropDbFileName;
         QString soilMapFileName;
+        QString landUseMapFileName;
 
         unsigned long nrNodes;
         unsigned int nrLayers;
         int nrLateralLink;
+
+        // soil and land use
+        gis::Crit3DRasterGrid soilMap;
+        gis::Crit3DRasterGrid landUseMap;
 
         // 3D soil fluxes maps
         gis::Crit3DRasterGrid soilIndexMap;

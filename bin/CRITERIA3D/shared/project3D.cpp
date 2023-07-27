@@ -48,6 +48,7 @@ void Project3D::initializeProject3D()
     soilDbFileName = "";
     cropDbFileName = "";
     soilMapFileName = "";
+    landUseMapFileName = "";
 
     // default
     computationSoilDepth = 0.0;     // [m]
@@ -110,6 +111,9 @@ void Project3D::clearProject3D()
         soilList[i].cleanSoil();
     }
     soilList.clear();
+
+    soilMap.clear();
+    landUseMap.clear();
 
     clearProject();
 }
@@ -226,7 +230,8 @@ bool Project3D::loadCropDatabase(QString fileName)
        return false;
     }
 
-    // TODO: Load crop parameters
+    // TODO: load land use
+
     logInfo("Crop database = " + fileName);
     return true;
 }

@@ -1484,6 +1484,7 @@ bool MainWindow::isSoil(QPoint mapPos)
     return (idSoil != NODATA);
 }
 
+
 void MainWindow::showSoilMap()
 {
     if (myProject.soilMap.isLoaded)
@@ -1495,6 +1496,21 @@ void MainWindow::showSoilMap()
     else
     {
         myProject.logError("Load a soil map before.");
+    }
+}
+
+
+void MainWindow::showLandUseMap()
+{
+    if (myProject.landUseMap.isLoaded)
+    {
+        setColorScale(airTemperature, myProject.landUseMap.colorScale);
+        setCurrentRasterOutput(&(myProject.landUseMap));
+        ui->labelOutputRaster->setText("Land use");
+    }
+    else
+    {
+        myProject.logError("Load a land use map before.");
     }
 }
 

@@ -35,8 +35,6 @@
         Crit3DGeometry* geometry;
 
         // same header of DEM
-        gis::Crit3DRasterGrid soilMap;
-        gis::Crit3DRasterGrid soilUseMap;
         Crit3DSnowMaps snowMaps;
         Crit3DSnow snowModel;
 
@@ -65,7 +63,9 @@
         bool loadCriteria3DSettings();
         bool loadCriteria3DParameters();
         bool writeCriteria3DParameters();
+
         bool loadSoilMap(QString fileName);
+        bool loadLandUseMap(QString fileName);
 
         double getSoilVar(int soilIndex, int layerIndex, soil::soilVariable myVar);
         double* getSoilVarProfile(int row, int col, soil::soilVariable myVar);

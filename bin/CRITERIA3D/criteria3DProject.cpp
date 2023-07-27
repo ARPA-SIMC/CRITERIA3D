@@ -75,7 +75,7 @@ bool Crit3DProject::initializeCriteria3DModel()
     if (! setSoilIndexMap())
         return false;
 
-    // TODO set soilUseMap()
+    // TODO set landUseMap()
 
     /* TODO initialize root density
     // andrebbe rifatto per ogni tipo di suolo (ora considera solo suolo 0)
@@ -268,9 +268,8 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
     if (soilMapFileName != "") loadSoilMap(soilMapFileName);
     if (soilDbFileName != "") loadSoilDatabase(soilDbFileName);
 
-    // soiluse map and data
-    // TODO soilUse map
-
+    // land use map and crop data
+    if (landUseMapFileName != "") loadLandUseMap(landUseMapFileName);
     if (cropDbFileName != "") loadCropDatabase(cropDbFileName);
 
     if (projectName != "")
@@ -386,16 +385,41 @@ bool Crit3DProject::loadSoilMap(QString fileName)
     soilMapFileName = fileName;
     fileName = getCompleteFileName(fileName, PATH_GEO);
 
-    std::string myError;
+    std::string errorStr;
     std::string myFileName = fileName.left(fileName.length()-4).toStdString();
 
-    if (! gis::readEsriGrid(myFileName, &soilMap, myError))
+    if (! gis::readEsriGrid(myFileName, &soilMap, errorStr))
     {
-        logError("Load soil map failed: " + fileName);
+        logError("Load soil map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
         return false;
     }
 
     logInfo("Soil map = " + fileName);
+    return true;
+}
+
+
+bool Crit3DProject::loadLandUseMap(QString fileName)
+{
+    if (fileName == "")
+    {
+        logError("Missing land use map filename");
+        return false;
+    }
+
+    landUseMapFileName = fileName;
+    fileName = getCompleteFileName(fileName, PATH_GEO);
+
+    std::string errorStr;
+    std::string myFileName = fileName.left(fileName.length()-4).toStdString();
+
+    if (! gis::readEsriGrid(myFileName, &landUseMap, errorStr))
+    {
+        logError("Load land use map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
+        return false;
+    }
+
+    logInfo("Land use map = " + fileName);
     return true;
 }
 
@@ -522,8 +546,6 @@ double Crit3DProject::getSoilVar(int soilIndex, int layerIndex, soil::soilVariab
 
 void Crit3DProject::clear3DProject()
 {
-    soilUseMap.clear();
-    soilMap.clear();
     snowMaps.clear();
 
     clearProject3D();
