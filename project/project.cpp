@@ -2549,6 +2549,7 @@ bool Project::interpolationGridMain(meteoVariable myVar, const Crit3DTime& myTim
     }
     */
 
+
     return interpolationGrid(myVar, myTime);
 }
 

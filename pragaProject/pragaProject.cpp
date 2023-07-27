@@ -2159,16 +2159,24 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
 
 bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myFrequency, const Crit3DTime& myTime)
 {
+    bool interpolationUpscaleFromDem = false;
+
     if (meteoGridDbHandler != nullptr)
     {
-        gis::Crit3DRasterGrid *myRaster = new gis::Crit3DRasterGrid;
-        if (!interpolationDemMain(myVar, myTime, myRaster))
+        if (interpolationUpscaleFromDem)
         {
-            return false;
-        }
+            gis::Crit3DRasterGrid *myRaster = new gis::Crit3DRasterGrid;
+            if (!interpolationDemMain(myVar, myTime, myRaster)) return false;
 
         meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, myFrequency, myTime.date, myTime.getHour(),
                             myTime.getMinutes(), &DEM, myRaster, interpolationSettings.getMeteoGridAggrMethod());
+        }
+        else
+        {
+            if (! interpolationGridMain(myVar, myTime))
+                return false;
+        }
+
         meteoGridDbHandler->meteoGrid()->fillMeteoRaster();
     }
     else
