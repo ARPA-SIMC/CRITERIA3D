@@ -380,7 +380,7 @@ namespace gis
      * \param error       string pointer
      * \return true on success, false otherwise
      */
-    bool writeEsriGridFlt(string myFileName, gis::Crit3DRasterGrid *myGrid, string &error)
+    bool writeEsriGridFlt(string myFileName, gis::Crit3DRasterGrid* myGrid, string &error)
     {
         myFileName += ".flt";
 
@@ -405,7 +405,7 @@ namespace gis
      * \brief Write a ESRI float raster (.hdr and .flt)
      * \return true on success, false otherwise
      */
-    bool writeEsriGrid(string fileName, Crit3DRasterGrid *rasterGrid, string &error)
+    bool writeEsriGrid(string fileName, Crit3DRasterGrid* rasterGrid, string &error)
     {
         if (gis::writeEsriGridHeader(fileName, rasterGrid->header, error))
             if (gis::writeEsriGridFlt(fileName, rasterGrid, error))
