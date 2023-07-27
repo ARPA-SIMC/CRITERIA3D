@@ -261,3 +261,26 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
 
     return true;
 }
+
+std::vector <gis::Crit3DRasterGrid> aggregationProxyGrid(const gis::Crit3DRasterGrid& gridIn, Crit3DInterpolationSettings& mySettings)
+{
+    std::vector <gis::Crit3DRasterGrid> myGrids;
+    gis::Crit3DRasterGrid* myGrid;
+    gis::Crit3DRasterGrid const * proxyGrid;
+
+    for (unsigned int i=0; i < mySettings.getProxyNr(); i++)
+    {
+        myGrid = new gis::Crit3DRasterGrid(gridIn);
+
+        if (mySettings.getCurrentCombination().getValue(i))
+        {
+            proxyGrid = mySettings.getProxy(i)->getGrid();
+            if (proxyGrid != nullptr && proxyGrid->isLoaded)
+                gis::resampleGrid(*proxyGrid, myGrid, *gridIn.header, aggrAverage, 0);
+
+            myGrids.push_back(*myGrid);
+        }
+    }
+
+    return myGrids;
+}
