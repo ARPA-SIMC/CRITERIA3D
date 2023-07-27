@@ -388,7 +388,7 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
                         double VG_he, double ThetaR, double ThetaS, double Ksat, double L, double organicMatter, double clay)
  {
 
-    if (VG_alpha <= 0 || ThetaR < 0 || ThetaR >= 1 || ThetaS <= 0 || ThetaS > 1 || ThetaR > ThetaS)
+    if (VG_alpha <= 0 || (ThetaR < 0) || ThetaR >= 1 || ThetaS <= 0 || ThetaS > 1 || ThetaR > ThetaS)
         return PARAMETER_ERROR;
 
     if (nSoil >= int(Soil_List.size()))
