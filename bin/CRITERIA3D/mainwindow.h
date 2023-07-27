@@ -81,7 +81,6 @@
         void on_actionView_Air_relative_humidity_triggered();
         void on_actionView_Wind_intensity_triggered();
         void on_actionView_ET0_triggered();
-        void on_actionView_None_triggered();
         void on_actionViewMeteoVariable_None_triggered();
 
         void on_actionMapOpenStreetMap_triggered();
@@ -209,6 +208,14 @@
 
         void on_actionView_SurfaceWaterContent_triggered();
 
+        void on_actionLoad_land_use_map_triggered();
+
+        void on_actionHide_LandUseMap_triggered();
+
+        void on_actionView_LandUseMap_triggered();
+
+        void on_actionHide_Geomap_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -279,6 +286,10 @@
         bool isSoil(QPoint mapPos);
         void openSoilWidget(QPoint mapPos);
         void showSoilMap();
+
+        bool isLandUse(QPoint mapPos);
+        void showLandUseMap();
+
         bool contextMenuRequested(QPoint localPos);
 
         void setInputRasterVisible(bool value);

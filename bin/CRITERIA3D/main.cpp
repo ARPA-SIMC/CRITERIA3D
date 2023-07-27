@@ -42,9 +42,6 @@ int main(int argc, char *argv[])
     if (! myProject.loadProject3DSettings())
         return -1;
 
-    if (! myProject.loadCriteria3DSettings())
-        return -1;
-
     QNetworkProxyFactory::setUseSystemConfiguration(true);
 
     QApplication::setOverrideCursor(Qt::ArrowCursor);

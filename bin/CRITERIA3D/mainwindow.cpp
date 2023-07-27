@@ -371,11 +371,19 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
     if (! isInsideMap(mapPos))
         return false;
 
-    if (myProject.soilMap.isLoaded && ui->labelOutputRaster->text() == "Soil")
+    if (myProject.soilMap.isLoaded)
     {
         if (isSoil(mapPos))
         {
             contextMenu.addAction("Show soil data");
+            nrItems++;
+        }
+    }
+    if (myProject.landUseMap.isLoaded)
+    {
+        if (isLandUse(mapPos))
+        {
+            contextMenu.addAction("Show land use data");
             nrItems++;
         }
     }
@@ -392,7 +400,8 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             if (myProject.nrSoils > 0) {
                 openSoilWidget(mapPos);
             }
-            else {
+            else
+            {
                 myProject.logError("Load soil database before.");
             }
         }
@@ -1069,10 +1078,6 @@ void MainWindow::on_actionView_PointsCurrentVariable_triggered()
     redrawMeteoPoints(showCurrentVariable, true);
 }
 
-void MainWindow::on_actionView_None_triggered()
-{
-    setOutputRasterVisible(false);
-}
 
 void MainWindow::on_actionView_Slope_triggered()
 {
@@ -1469,6 +1474,21 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 }
 
 
+// --------------- LAND USE ---------------------------
+bool MainWindow::isLandUse(QPoint mapPos)
+{
+    if (! myProject.landUseMap.isLoaded)
+        return false;
+
+    double x, y;
+    Position geoPos = mapView->mapToScene(mapPos);
+    gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
+
+    return (myProject.getLandUseId(x, y) != NODATA);
+}
+
+
+
 // --------------- SOIL --------------------------------
 
 bool MainWindow::isSoil(QPoint mapPos)
@@ -1504,7 +1524,7 @@ void MainWindow::showLandUseMap()
 {
     if (myProject.landUseMap.isLoaded)
     {
-        setColorScale(airTemperature, myProject.landUseMap.colorScale);
+        setColorScale(noMeteoTerrain, myProject.landUseMap.colorScale);
         setCurrentRasterOutput(&(myProject.landUseMap));
         ui->labelOutputRaster->setText("Land use");
     }
@@ -2807,5 +2827,37 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
 
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
     connect (viewer3D, SIGNAL(slopeChanged()), this, SLOT(on_slopeChanged()));
+}
+
+
+void MainWindow::on_actionLoad_land_use_map_triggered()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open land use map"), "", tr("ESRI grid files (*.flt)"));
+    if (fileName == "") return;
+
+    if (myProject.loadLandUseMap(fileName))
+    {
+        showLandUseMap();
+    }
+}
+
+
+void MainWindow::on_actionView_LandUseMap_triggered()
+{
+    showLandUseMap();
+}
+
+void MainWindow::on_actionHide_LandUseMap_triggered()
+{
+    if (ui->labelOutputRaster->text() == "Land use")
+    {
+        setOutputRasterVisible(false);
+    }
+}
+
+
+void MainWindow::on_actionHide_Geomap_triggered()
+{
+    setOutputRasterVisible(false);
 }
 

@@ -246,9 +246,6 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
     if (! loadProject3DSettings())
         return false;
 
-    if (! loadCriteria3DSettings())
-        return false;
-
     if (! loadProject())
     {
         if (errorType != ERROR_DBGRID)
@@ -281,24 +278,6 @@ bool Crit3DProject::loadCriteria3DProject(QString myFileName)
     return isProjectLoaded;
 }
 
-
-bool Crit3DProject::loadCriteria3DSettings()
-{
-    projectSettings->beginGroup("project");
-        cropDbFileName = projectSettings->value("crop_db").toString();
-        if (cropDbFileName == "")
-            cropDbFileName = projectSettings->value("db_crop").toString();
-        soilMapFileName = projectSettings->value("soil_map").toString();
-    projectSettings->endGroup();
-
-    projectSettings->beginGroup("simulation");
-        computeHeat = projectSettings->value("compute_heat").toBool();
-        computeLatentHeat = projectSettings->value("compute_latent_heat").toBool();
-        computeAdvectiveHeat = projectSettings->value("compute_advective_heat").toBool();
-    projectSettings->endGroup();
-
-    return true;
-}
 
 bool Crit3DProject::loadCriteria3DParameters()
 {
@@ -467,6 +446,24 @@ bool Crit3DProject::setSoilIndexMap()
 
     soilIndexMap.isLoaded = true;
     return true;
+}
+
+
+int Crit3DProject::getLandUseId(double x, double y)
+{
+    if (! landUseMap.isLoaded)
+        return NODATA;
+
+    int id = int(gis::getValueFromXY(landUseMap, x, y));
+
+    if (id == int(landUseMap.header->flag))
+    {
+        return NODATA;
+    }
+    else
+    {
+        return id;
+    }
 }
 
 

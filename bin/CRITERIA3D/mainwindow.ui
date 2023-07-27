@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>14</day>
+       <day>13</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1739,7 +1739,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>29</height>
+     <height>28</height>
     </rect>
    </property>
    <property name="palette">
@@ -1773,6 +1773,7 @@
      <addaction name="actionLoad_soil_map"/>
      <addaction name="actionLoad_soil_data"/>
      <addaction name="actionLoad_Crop_data"/>
+     <addaction name="actionLoad_land_use_map"/>
     </widget>
     <widget class="QMenu" name="menuOpen_project">
      <property name="title">
@@ -1882,7 +1883,7 @@
      <addaction name="separator"/>
      <addaction name="actionView_Boundary"/>
      <addaction name="separator"/>
-     <addaction name="actionView_None"/>
+     <addaction name="actionHide_Geomap"/>
     </widget>
     <widget class="QMenu" name="menuMeteo_variables">
      <property name="title">
@@ -1902,6 +1903,7 @@
       <string>Soil</string>
      </property>
      <addaction name="actionView_SoilMap"/>
+     <addaction name="separator"/>
      <addaction name="actionHide_soil_map"/>
     </widget>
     <widget class="QMenu" name="menuSnow">
@@ -1945,6 +1947,14 @@
      </property>
      <addaction name="actionView_SurfaceWaterContent"/>
     </widget>
+    <widget class="QMenu" name="menuLand_use">
+     <property name="title">
+      <string>Land use</string>
+     </property>
+     <addaction name="actionView_LandUseMap"/>
+     <addaction name="separator"/>
+     <addaction name="actionHide_LandUseMap"/>
+    </widget>
     <addaction name="actionShow_3D_viewer"/>
     <addaction name="separator"/>
     <addaction name="menuPoints"/>
@@ -1959,8 +1969,9 @@
     <addaction name="menuWater_fluxes"/>
     <addaction name="separator"/>
     <addaction name="menuDEM"/>
-    <addaction name="separator"/>
     <addaction name="menuSoil"/>
+    <addaction name="menuLand_use"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuSnow_model">
     <property name="title">
@@ -2290,9 +2301,9 @@
     <string>Close</string>
    </property>
   </action>
-  <action name="actionView_None">
+  <action name="actionHide_Geomap">
    <property name="text">
-    <string>None</string>
+    <string>Hide map</string>
    </property>
   </action>
   <action name="actionViewMeteoVariable_None">
@@ -2603,7 +2614,7 @@
   </action>
   <action name="actionHide_soil_map">
    <property name="text">
-    <string>Hide soil map</string>
+    <string>Hide map</string>
    </property>
   </action>
   <action name="flagOutputPoints_save_output">
@@ -2668,6 +2679,21 @@
   <action name="actionView_SurfaceWaterContent">
    <property name="text">
     <string>Surface water content</string>
+   </property>
+  </action>
+  <action name="actionLoad_land_use_map">
+   <property name="text">
+    <string>Land use map...</string>
+   </property>
+  </action>
+  <action name="actionView_LandUseMap">
+   <property name="text">
+    <string>Land use map</string>
+   </property>
+  </action>
+  <action name="actionHide_LandUseMap">
+   <property name="text">
+    <string>Hide map</string>
    </property>
   </action>
  </widget>
