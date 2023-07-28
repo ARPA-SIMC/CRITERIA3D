@@ -61,7 +61,7 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
         case consecutiveDaysBelow:
             return statistics::countConsecutive(values, nValues, param, false);
         case percentile:
-            return sorting::percentile(values, &nValues, param, true);
+            return sorting::percentile(values, nValues, param, true);
         case freqPositive:
             return statistics::frequencyPositive(values, nValues);
         case prevailingWindDir:
