@@ -1626,7 +1626,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                 case aggrMedian:
                     {
 
-                        res = sorting::percentile(validValues, &size, 50.0, true);
+                        res = sorting::percentile(validValues, size, 50.0, true);
                         break;
                     }
                 case aggrStdDeviation:
@@ -1636,7 +1636,7 @@ bool PragaProject::averageSeriesOnZonesMeteoGrid(meteoVariable variable, meteoCo
                     }
                 case aggr95Perc:
                     {
-                        res = sorting::percentile(validValues, &size, 95.0, true);
+                        res = sorting::percentile(validValues, size, 95.0, true);
                         break;
                     }
                 default:

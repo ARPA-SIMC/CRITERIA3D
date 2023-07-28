@@ -1211,8 +1211,8 @@ void Crit3DPointStatisticsWidget::plot()
                 }
                 avg = statistics::mean(series, nrValues);
                 dev_std = statistics::standardDeviation(series, nrValues);
-                millile3dev = sorting::percentile(sortedSeries, &nrValues, 99.73, true);
-                millile_3Dev = sorting::percentile(sortedSeries, &nrValues, 0.27, false);
+                millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73, true);
+                millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27, false);
             }
 
             availability.setText(QString::number((float)nrValues/(float)totDays * 100, 'f', 3));
@@ -1237,7 +1237,7 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 sigma.setText(QString::number(dev_std, 'f', 1));
             }
-            median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 1));
+            median.setText(QString::number(sorting::percentile(sortedSeries, nrValues, 50, false), 'f', 1));
 
             QList<QPointF> lineValues;
             for (int i = 0; i<bucket.size(); i++)
@@ -1482,8 +1482,8 @@ void Crit3DPointStatisticsWidget::plot()
             }
             avg = statistics::mean(series, nrValues);
             dev_std = statistics::standardDeviation(series, nrValues);
-            millile3dev = sorting::percentile(sortedSeries, &nrValues, 99.73, true);
-            millile_3Dev = sorting::percentile(sortedSeries, &nrValues, 0.27, false);
+            millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73, true);
+            millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27, false);
         }
         availability.setText(QString::number((float)nrValues/(float)totDays * 100, 'f', 3));
         average.setText(QString::number(avg, 'f', 1));
@@ -1507,7 +1507,7 @@ void Crit3DPointStatisticsWidget::plot()
         {
             sigma.setText(QString::number(dev_std, 'f', 1));
         }
-        median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 1));
+        median.setText(QString::number(sorting::percentile(sortedSeries, nrValues, 50, false), 'f', 1));
 
         QList<QPointF> lineValues;
         for (int i = 0; i<bucket.size(); i++)
