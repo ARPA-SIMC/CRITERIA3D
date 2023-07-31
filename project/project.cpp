@@ -2462,17 +2462,18 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     if (getUseDetrendingVar(myVar))
         if (! meteoGridAggregateProxy(meteoGridProxies)) return false;
 
-    std::string errString;
-    gis::writeEsriGrid("C:\\Users\\gantolini\\Desktop\\tmp\\testDemGrid", &meteoGridProxies[0], errString);
+    //std::string errString;
+    //gis::writeEsriGrid("C:\\Users\\gantolini\\Desktop\\tmp\\testDemGrid", &meteoGridProxies[0], errString);
 
     frequencyType freq = getVarFrequency(myVar);
 
     float myX, myY, myZ;
     std::vector <float> proxyValues;
+    proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
+
     float interpolatedValue = NODATA;
     Crit3DProxyCombination myCombination = interpolationSettings.getCurrentCombination();
     unsigned int i, proxyIndex;
-    float proxyValue;
 
     for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
     {
@@ -2484,20 +2485,21 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
                 myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
 
-                proxyValues.clear();
-
                 if (getUseDetrendingVar(myVar))
                 {
                     proxyIndex = 0;
-                    proxyValue = NODATA;
+
                     for (i=0; i < interpolationSettings.getProxyNr(); i++)
                     {
+                        proxyValues[i] = NODATA;
+
                         if (myCombination.getValue(i))
                         {
                             if (proxyIndex < meteoGridProxies.size())
                             {
-                                proxyValue = gis::getValueFromXY(meteoGridProxies[proxyIndex], myX, myY);
-                                proxyValues.push_back(proxyValue);
+                                float proxyValue = gis::getValueFromXY(meteoGridProxies[proxyIndex], myX, myY);
+                                if (proxyValue != meteoGridProxies[proxyIndex].header->flag)
+                                    proxyValues[i] = proxyValue;
                             }
 
                         }
