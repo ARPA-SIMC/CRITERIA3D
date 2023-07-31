@@ -2462,6 +2462,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     if (getUseDetrendingVar(myVar))
         if (! meteoGridAggregateProxy(meteoGridProxies)) return false;
 
+    std::string errString;
+    gis::writeEsriGrid("C:\\Users\\gantolini\\Desktop\\tmp\\testDemGrid", &meteoGridProxies[0], errString);
+
     frequencyType freq = getVarFrequency(myVar);
 
     float myX, myY, myZ;
@@ -2480,6 +2483,8 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 myX = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.x;
                 myY = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.utm.y;
                 myZ = meteoGridDbHandler->meteoGrid()->meteoPoints()[row][col]->point.z;
+
+                proxyValues.clear();
 
                 if (getUseDetrendingVar(myVar))
                 {
