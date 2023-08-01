@@ -358,6 +358,32 @@ namespace integration
 
 namespace interpolation
 {
+    double secant_method(float (*func) (float),  double x0, double x1)
+    {
+        double x2, fx0, fx1, error;
+
+        for (int i = 0; i < MAX_NUMBER_ITERATIONS; i++)
+        {
+            fx0 = (*func)(x0);
+            fx1 = (*func)(x1);
+
+            // secant method formula
+            x2 = x1 - (fx1 * (x1 - x0)) / (fx1 - fx0);
+            error = fabs(x2 - x1);
+            //printf("Iteration %d: x = %.8f, f(x) = %.8f, error = %.8f\n", i+1, x2, fx2, error);
+            if (error < EPSILON)
+                return x2; // the roots was successfully approximated
+
+            // Update the values for the next iteration
+            x0 = x1;
+            x1 = x2;
+        }
+
+        //printf("No converge after %d iterations.\n", MAX_ITER);
+        return 0.0;
+    }
+
+
     float linearInterpolation (float x, float *xColumn , float *yColumn, int dimTable )
     {
         //float *firstColumn = (float *) calloc(dimTable, sizeof(float));

@@ -63,6 +63,7 @@
 
     namespace interpolation
     {
+        double secant_method(float (*func) (float),  double x0, double x1);
         double linearInterpolation (double x, double *xColumn , double *yColumn, int dimTable);
         float linearInterpolation (float x, float *xColumn , float *yColumn, int dimTable );
         float linearExtrapolation(double x3,double x1,double y1,double x2 , double y2);
