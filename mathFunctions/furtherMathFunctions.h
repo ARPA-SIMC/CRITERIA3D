@@ -44,7 +44,7 @@
     double parabolicFunction(double x, double* par);
     float gaussianFunction(TfunctionInput fInput);
     float gaussianFunction(float x, float mean, float devStd);
-
+    float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5);
 
 
 

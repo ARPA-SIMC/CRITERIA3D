@@ -29,6 +29,15 @@
 #include "furtherMathFunctions.h"
 
 
+float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5)
+{
+    // par1 correponds to T0
+    // par2 descent slope (negative value)
+    // par3 magnitude of the sigmoid par2 >= 0, if par2==0 no sigmoid
+    // par4 steepness of the sigmoid function
+    // par5 center of the sigmoid
+    return par1 + par2*x + par3*(1/(1+exp(-par4*(x-par5))));
+}
 float gaussianFunction(TfunctionInput fInput)
 {
     double y = (1 / (fInput.par[1] * sqrt(2*PI))
