@@ -2144,6 +2144,8 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
+    interpolationSettings.setUseMultipleDetrending(true);
+
     // detrending and checking precipitation
     bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
                                                &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);

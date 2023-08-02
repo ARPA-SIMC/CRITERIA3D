@@ -250,6 +250,16 @@ void Crit3DInterpolationSettings::setMeteoGridUpscaleFromDem(bool newMeteoGridUp
     meteoGridUpscaleFromDem = newMeteoGridUpscaleFromDem;
 }
 
+bool Crit3DInterpolationSettings::getUseMultipleDetrending() const
+{
+    return useMultipleDetrending;
+}
+
+void Crit3DInterpolationSettings::setUseMultipleDetrending(bool newUseMultipleDetrending)
+{
+    useMultipleDetrending = newUseMultipleDetrending;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -276,6 +286,7 @@ void Crit3DInterpolationSettings::initialize()
     topoDist_maxKh = 128;
     useDewPoint = true;
     useInterpolatedTForRH = true;
+    useMultipleDetrending = false;
     useBestDetrending = false;
     useLapseRateCode = false;
     minRegressionR2 = float(PEARSONSTANDARDTHRESHOLD);

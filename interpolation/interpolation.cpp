@@ -1157,6 +1157,72 @@ bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 }
 
 
+void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
+                Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, meteoVariable myVar)
+{
+    if (! getUseDetrendingVar(myVar)) return;
+
+    unsigned i;
+    float proxyValue;
+    Crit3DInterpolationDataPoint myPoint;
+    std::vector <float> predictands;
+    std::vector <float> predictors;
+    std::vector <std::vector <float>> predictorsRows;
+    unsigned nrPredictors = 0;
+
+    for (i = 0; i < myPoints.size(); i++)
+    {
+        myPoint = myPoints[i];
+        if (myPoint.isActive)
+        {
+            predictands.push_back(myPoint.value);
+
+            for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
+            {
+                if (myCombination.getValue(pos))
+                {
+                    nrPredictors++;
+
+                    proxyValue = myPoint.getProxyValue(pos);
+                    if (! isEqual(proxyValue, NODATA))
+                    {
+                        predictors.push_back(proxyValue);
+                    }
+                }
+            }
+
+            predictorsRows.push_back(predictors);
+        }
+    }
+
+    float *m;
+    float *q;
+
+    if (predictands.size() >= MIN_REGRESSION_POINTS)
+    {
+        statistics::multiRegressionLinear((float**)(predictors.data()), (float*)(predictands.data()), predictands.size(), q, m, nrPredictors);
+    }
+
+    float detrendValue;
+
+    for (i = 0; i < myPoints.size(); i++)
+    {
+        detrendValue = 0;
+
+        for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
+        {
+            proxyValue = myPoints[i].getProxyValue(pos);
+
+            if (proxyValue != NODATA)
+                detrendValue = proxyValue * m[pos];
+
+            myPoints[i].value -= detrendValue;
+        }
+    }
+
+}
+
+
 void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                 Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                 meteoVariable myVar, Crit3DTime myTime)
@@ -1300,15 +1366,22 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
 
     if (getUseDetrendingVar(myVar))
     {
-        if (mySettings->getUseBestDetrending())
+        if (mySettings->getUseMultipleDetrending())
         {
-            optimalDetrending(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings, myClimate, myTime);
-            mySettings->setCurrentCombination(mySettings->getOptimalCombination());
+            multipleDetrending(myPoints, mySettings->getSelectedCombination(), mySettings, myVar);
         }
         else
         {
-            detrending(myPoints, mySettings->getSelectedCombination(), mySettings, myClimate, myVar, myTime);
-            mySettings->setCurrentCombination(mySettings->getSelectedCombination());
+            if (mySettings->getUseBestDetrending())
+            {
+                optimalDetrending(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings, myClimate, myTime);
+                mySettings->setCurrentCombination(mySettings->getOptimalCombination());
+            }
+            else
+            {
+                detrending(myPoints, mySettings->getSelectedCombination(), mySettings, myClimate, myVar, myTime);
+                mySettings->setCurrentCombination(mySettings->getSelectedCombination());
+            }
         }
     }
 
