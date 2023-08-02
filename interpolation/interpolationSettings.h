@@ -205,10 +205,6 @@
         void setCurrentCombination(Crit3DProxyCombination value);
         std::vector<Crit3DProxy> getCurrentProxy() const;
         void setCurrentProxy(const std::vector<Crit3DProxy> &value);
-        float getRefHeightWind() const;
-        void setRefHeightWind(float value);
-        float getSurfaceRoughness() const;
-        void setSurfaceRoughness(float value);
         bool getUseInterpolatedTForRH() const;
         void setUseInterpolatedTForRH(bool value);
         bool getProxyLoaded() const;
