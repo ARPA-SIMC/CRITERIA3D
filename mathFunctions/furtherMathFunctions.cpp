@@ -1530,21 +1530,30 @@ namespace matricial
         for(int i = 0;i<matrixSize;i++)
         {
             numerator[i] = (double*)calloc(matrixSize, sizeof(double));
+            for(int j = 0;j<matrixSize;j++)
+            {
+                numerator[i][j] = coefficientMatrix[i][j];
+            }
         }
+
         for(int counterRoot = 0;counterRoot<matrixSize; counterRoot++)
         {
-            for(int i = 0;i<matrixSize;i++)
+            /*for(int i = 0;i<matrixSize;i++)
             {
                 for(int j = 0;j<matrixSize;j++)
                 {
                     numerator[j][i] = coefficientMatrix[j][i];
                 }
-            }
+            }*/
             for(int j = 0;j<matrixSize;j++)
             {
                 numerator[j][counterRoot] = constantTerm[j];
             }
             roots[counterRoot] = determinant(numerator,matrixSize)/denominator;
+            for(int j = 0;j<matrixSize;j++)
+            {
+                numerator[j][counterRoot] = coefficientMatrix[j][counterRoot];
+            }
         }
         for(int i = 0;i<matrixSize;i++)
         {

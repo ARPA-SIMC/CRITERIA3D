@@ -314,7 +314,7 @@ namespace statistics
         return (y1 + rate * (xx - x1));
     }
 
-    void multiRegression1D(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors)
+    void multiRegressionLinear(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors)
     {
         double* SUMx;
         double* SUMxx;
@@ -346,17 +346,8 @@ namespace statistics
         for(int i = 0;i<matrixSize;i++)
         {
             coefficientMatrix[i] = (double*)calloc(matrixSize, sizeof(double));
-            for (int j = 0; j<matrixSize;j++)
-            {
-                coefficientMatrix[i][j] = 0.;
-            }
         }
 
-        for (int j = 0; j<matrixSize;j++)
-        {
-            roots[j] = 0.;
-            constantTerm[j]= 0.;
-        }
         // set the constant term
         for (int j = 0; j<nrPredictors;j++)
         {
