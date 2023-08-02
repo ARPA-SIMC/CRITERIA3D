@@ -188,26 +188,6 @@ void Crit3DInterpolationSettings::setCurrentProxy(const std::vector<Crit3DProxy>
     currentProxy = value;
 }
 
-float Crit3DInterpolationSettings::getRefHeightWind() const
-{
-    return refHeightWind;
-}
-
-void Crit3DInterpolationSettings::setRefHeightWind(float value)
-{
-    refHeightWind = value;
-}
-
-float Crit3DInterpolationSettings::getSurfaceRoughness() const
-{
-    return surfaceRoughness;
-}
-
-void Crit3DInterpolationSettings::setSurfaceRoughness(float value)
-{
-    surfaceRoughness = value;
-}
-
 bool Crit3DInterpolationSettings::getUseInterpolatedTForRH() const
 {
     return useInterpolatedTForRH;
