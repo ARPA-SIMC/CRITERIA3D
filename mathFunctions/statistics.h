@@ -31,7 +31,7 @@
         float coefficientOfVariation(float *measured , float *simulated , int nrData);
         float weighedMean(float *data , float *weights, int nrData);
         float linearInterpolation(float x1, float y1, float x2, float y2, float xx);
-        void multiRegression1D(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors);
+        void multiRegressionLinear(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors);
         void linearRegression(float* x, float* y, long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2);
         void linearRegression( std::vector<float> x,  std::vector<float> y, long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2);
         float standardDeviation(float *myList, int nrList);
