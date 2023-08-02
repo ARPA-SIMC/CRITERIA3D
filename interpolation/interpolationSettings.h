@@ -118,6 +118,7 @@
         int maxTdMultiplier;
         bool useLapseRateCode;
         bool useBestDetrending;
+        bool useMultipleDetrending;
         bool useDewPoint;
         bool useInterpolatedTForRH;
 
@@ -216,6 +217,8 @@
         void initializeKhSeries();
         bool getMeteoGridUpscaleFromDem() const;
         void setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem);
+        bool getUseMultipleDetrending() const;
+        void setUseMultipleDetrending(bool newUseMultipleDetrending);
     };
 
 #endif // INTERPOLATIONSETTINGS_H
