@@ -240,6 +240,16 @@ void Crit3DInterpolationSettings::setKh_error_series(const std::vector<float> &n
     Kh_error_series = newKh_error_series;
 }
 
+bool Crit3DInterpolationSettings::getMeteoGridUpscaleFromDem() const
+{
+    return meteoGridUpscaleFromDem;
+}
+
+void Crit3DInterpolationSettings::setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem)
+{
+    meteoGridUpscaleFromDem = newMeteoGridUpscaleFromDem;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -270,6 +280,7 @@ void Crit3DInterpolationSettings::initialize()
     useLapseRateCode = false;
     minRegressionR2 = float(PEARSONSTANDARDTHRESHOLD);
     meteoGridAggrMethod = aggrAverage;
+    meteoGridUpscaleFromDem = true;
     indexHeight = unsigned(NODATA);
 
     isKrigingReady = false;
@@ -277,9 +288,6 @@ void Crit3DInterpolationSettings::initialize()
     maxHeightInversion = 1000.;
     shepardInitialRadius = NODATA;
     indexPointCV = NODATA;
-
-    refHeightWind = 2;
-    surfaceRoughness = 0.1f;
 
     Kh_series.clear();
     Kh_error_series.clear();

@@ -26,6 +26,7 @@
             QCheckBox* optimalDetrendingEdit;
             QCheckBox* topographicDistanceEdit;
             QCheckBox* dynamicLapserateEdit;
+            QCheckBox* upscaleFromDemEdit;
             QCheckBox* useDewPointEdit;
             QCheckBox* useInterpolTForRH;
             QComboBox gridAggregationMethodEdit;
@@ -43,6 +44,7 @@
 
         private slots:
             void editProxies();
+            void upscaleFromDemChanged(int active);
 
     };
 

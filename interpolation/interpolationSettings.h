@@ -120,9 +120,8 @@
         bool useBestDetrending;
         bool useDewPoint;
         bool useInterpolatedTForRH;
-        float refHeightWind;
-        float surfaceRoughness;
 
+        bool meteoGridUpscaleFromDem;
         aggregationMethod meteoGridAggrMethod;
 
         bool isKrigingReady;
@@ -215,6 +214,8 @@
         void setKh_error_series(const std::vector<float> &newKh_error_series);
         void addToKhSeries(float kh, float error);
         void initializeKhSeries();
+        bool getMeteoGridUpscaleFromDem() const;
+        void setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem);
     };
 
 #endif // INTERPOLATIONSETTINGS_H

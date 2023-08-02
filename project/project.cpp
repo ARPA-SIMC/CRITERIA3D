@@ -586,6 +586,9 @@ bool Project::loadParameters(QString parametersFileName)
             if (parameters->contains("dynamicLapserate"))
                 interpolationSettings.setUseDynamicLapserate(parameters->value("dynamicLapserate").toBool());
 
+            if (parameters->contains("meteogrid_upscalefromdem=true"))
+                interpolationSettings.setMeteoGridUpscaleFromDem(parameters->value("meteogrid_upscalefromdem").toBool());
+
             if (parameters->contains("lapseRateCode"))
             {
                 interpolationSettings.setUseLapseRateCode(parameters->value("lapseRateCode").toBool());
@@ -2800,6 +2803,7 @@ void Project::saveInterpolationParameters()
         parameters->setValue("aggregationMethod", QString::fromStdString(getKeyStringAggregationMethod(interpolationSettings.getMeteoGridAggrMethod())));
         parameters->setValue("algorithm", QString::fromStdString(getKeyStringInterpolationMethod(interpolationSettings.getInterpolationMethod())));
         parameters->setValue("lapseRateCode", interpolationSettings.getUseLapseRateCode());
+        parameters->setValue("meteogrid_upscalefromdem", interpolationSettings.getMeteoGridUpscaleFromDem());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parameters->setValue("topographicDistance", interpolationSettings.getUseTD());
         parameters->setValue("dynamicLapserate", interpolationSettings.getUseDynamicLapserate());
