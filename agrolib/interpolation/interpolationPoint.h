@@ -7,6 +7,9 @@
     #ifndef METEO_H
         #include "meteo.h"
     #endif
+    #ifndef INTERPOLATIONSETTINGS_H
+        #include "interpolationSettings.h"
+    #endif
 
     class Crit3DInterpolationDataPoint {
     private:
@@ -27,6 +30,7 @@
 
         float getProxyValue(unsigned int pos);
         std::vector <float> getProxyValues();
+        std::vector <float> getActiveProxyValues(Crit3DProxyCombination activeCombination);
     };
 
 #endif // INTERPOLATIONPOINT_H
