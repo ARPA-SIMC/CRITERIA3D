@@ -344,29 +344,38 @@ namespace statistics
                     XT[j][i] = x[j-1][i];
                }
             }
-            matricial::transposedMatrix(XT,nrPredictors+1,nrItems,X);
+
         }
+        matricial::transposedMatrix(XT,nrPredictors+1,nrItems,X);
         matricial::matrixProduct(XT,X,nrItems,nrPredictors+1,nrPredictors+1,nrItems,X2);
         matricial::inverse(X2,X2Inverse,nrPredictors+1);
-        matricial::matrixProduct(X2Inverse,XT,nrPredictors+1,nrPredictors+1,nrItems,nrPredictors+1,X);
+        //matricial::matrixProduct(X2Inverse,XT,nrPredictors+1,nrPredictors+1,nrItems,nrPredictors+1,X);
         double* roots = (double*)calloc(nrPredictors+1, sizeof(double));
         for (int j=0;j<nrPredictors+1;j++)
         {
             roots[j]=0;
             for (int i=0;i<nrItems;i++)
             {
-                roots[j] += X[j][i]*y[j];
-            }
-            if (j==0)
-            {
-                *q = roots[j];
-            }
-            else
-            {
-                m[j-1] = roots[j];
+                roots[j] += (XT[j][i]*y[i]);
             }
         }
+        *q=0;
+        for (int j=0;j<nrPredictors;j++)
+        {
+            m[j]=0;
+        }
+        for (int i=0;i<nrPredictors+1;i++)
+        {
+            *q += (X2Inverse[0][i]*roots[i]);
+        }
 
+        for (int j=1;j<nrPredictors+1;j++)
+        {
+            for (int i=0;i<nrPredictors+1;i++)
+            {
+                m[j-1] += (X2Inverse[j][i]*roots[i]);
+            } 
+        }
         for (int j=0;j<nrPredictors+1;j++)
         {
             free(XT[j]);
@@ -381,6 +390,7 @@ namespace statistics
         free(XT);
         free(X2);
         free(X2Inverse);
+        free(roots);
     }
 
     void multiRegressionLinear(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors)
