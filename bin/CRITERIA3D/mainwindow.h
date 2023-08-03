@@ -216,6 +216,8 @@
 
         void on_actionHide_Geomap_triggered();
 
+        void on_actionLoad_crop_data_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

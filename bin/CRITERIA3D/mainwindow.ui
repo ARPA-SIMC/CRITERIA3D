@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>13</day>
+       <day>12</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1768,12 +1768,24 @@
       <addaction name="actionLoad_MeteoPoints"/>
       <addaction name="actionMeteoPointsImport_data"/>
      </widget>
+     <widget class="QMenu" name="menuSoil">
+      <property name="title">
+       <string>soil</string>
+      </property>
+      <addaction name="actionLoad_soil_map"/>
+      <addaction name="actionLoad_soil_data"/>
+     </widget>
+     <widget class="QMenu" name="menuLand_use">
+      <property name="title">
+       <string>Land use</string>
+      </property>
+      <addaction name="actionLoad_land_use_map"/>
+      <addaction name="actionLoad_crop_data"/>
+     </widget>
      <addaction name="actionLoad_DEM"/>
      <addaction name="menuMeteo_points"/>
-     <addaction name="actionLoad_soil_map"/>
-     <addaction name="actionLoad_soil_data"/>
-     <addaction name="actionLoad_Crop_data"/>
-     <addaction name="actionLoad_land_use_map"/>
+     <addaction name="menuSoil"/>
+     <addaction name="menuLand_use"/>
     </widget>
     <widget class="QMenu" name="menuOpen_project">
      <property name="title">
@@ -1898,7 +1910,7 @@
      <addaction name="separator"/>
      <addaction name="actionViewMeteoVariable_None"/>
     </widget>
-    <widget class="QMenu" name="menuSoil">
+    <widget class="QMenu" name="menuShowSoil">
      <property name="title">
       <string>Soil</string>
      </property>
@@ -1947,7 +1959,7 @@
      </property>
      <addaction name="actionView_SurfaceWaterContent"/>
     </widget>
-    <widget class="QMenu" name="menuLand_use">
+    <widget class="QMenu" name="menuShowLand_use">
      <property name="title">
       <string>Land use</string>
      </property>
@@ -1969,8 +1981,8 @@
     <addaction name="menuWater_fluxes"/>
     <addaction name="separator"/>
     <addaction name="menuDEM"/>
-    <addaction name="menuSoil"/>
-    <addaction name="menuLand_use"/>
+    <addaction name="menuShowSoil"/>
+    <addaction name="menuShowLand_use"/>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuSnow_model">
@@ -2129,30 +2141,6 @@
    </property>
    <property name="text">
     <string>Spatial quality control</string>
-   </property>
-  </action>
-  <action name="actionLoad_Crop_data">
-   <property name="text">
-    <string>Crop data...</string>
-   </property>
-   <property name="visible">
-    <bool>true</bool>
-   </property>
-  </action>
-  <action name="actionLoad_soil_map">
-   <property name="text">
-    <string>Soil map...</string>
-   </property>
-   <property name="visible">
-    <bool>true</bool>
-   </property>
-  </action>
-  <action name="actionLoad_soil_data">
-   <property name="text">
-    <string>Soil data...</string>
-   </property>
-   <property name="visible">
-    <bool>true</bool>
    </property>
   </action>
   <action name="actionCriteria3D_settings">
@@ -2681,11 +2669,6 @@
     <string>Surface water content</string>
    </property>
   </action>
-  <action name="actionLoad_land_use_map">
-   <property name="text">
-    <string>Land use map...</string>
-   </property>
-  </action>
   <action name="actionView_LandUseMap">
    <property name="text">
     <string>Land use map</string>
@@ -2694,6 +2677,26 @@
   <action name="actionHide_LandUseMap">
    <property name="text">
     <string>Hide map</string>
+   </property>
+  </action>
+  <action name="actionLoad_soil_map">
+   <property name="text">
+    <string>Soil map...</string>
+   </property>
+  </action>
+  <action name="actionLoad_soil_data">
+   <property name="text">
+    <string>Soil data...</string>
+   </property>
+  </action>
+  <action name="actionLoad_land_use_map">
+   <property name="text">
+    <string>Land use map...</string>
+   </property>
+  </action>
+  <action name="actionLoad_crop_data">
+   <property name="text">
+    <string>Crop data...</string>
    </property>
   </action>
  </widget>

@@ -2838,6 +2838,20 @@ void MainWindow::on_actionLoad_land_use_map_triggered()
     if (myProject.loadLandUseMap(fileName))
     {
         showLandUseMap();
+
+        if (! myProject.DEM.isLoaded)
+        {
+            // resize map
+            double size = double(this->rasterOutput->getRasterMaxSize());
+            size = log2(1000 / size);
+            mapView->setZoomLevel(quint8(size));
+
+            // center map
+            gis::Crit3DGeoPoint center = myProject.landUseMap.getCenterLatLon(myProject.gisSettings);
+            mapView->centerOn(center.longitude, center.latitude);
+
+            showLandUseMap();
+        }
     }
 }
 
@@ -2859,5 +2873,11 @@ void MainWindow::on_actionHide_LandUseMap_triggered()
 void MainWindow::on_actionHide_Geomap_triggered()
 {
     setOutputRasterVisible(false);
+}
+
+
+void MainWindow::on_actionLoad_crop_data_triggered()
+{
+
 }
 
