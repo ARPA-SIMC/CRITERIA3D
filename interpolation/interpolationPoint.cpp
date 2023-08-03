@@ -61,3 +61,13 @@ std::vector <float> Crit3DInterpolationDataPoint::getProxyValues()
 
     return myValues;
 }
+
+std::vector <float> Crit3DInterpolationDataPoint::getActiveProxyValues(Crit3DProxyCombination activeCombination)
+{
+    std::vector <float> myValues;
+    for (unsigned int i=0; i < proxyValues.size(); i++)
+        if (activeCombination.getValue(i))
+            myValues.push_back(getProxyValue(i));
+
+    return myValues;
+}

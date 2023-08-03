@@ -1162,45 +1162,47 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 {
     if (! getUseDetrendingVar(myVar)) return;
 
-    unsigned i;
+    unsigned i,j;
+    int nrPoints;
+
     float proxyValue;
     Crit3DInterpolationDataPoint myPoint;
-    std::vector <float> predictands;
-    std::vector <float> predictors;
-    std::vector <std::vector <float>> predictorsRows;
+    //std::vector <std::vector <float>> predictors;
+
     unsigned nrPredictors = 0;
+    for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
+        if (myCombination.getValue(pos)) nrPredictors++;
+
+    std::vector <float> proxyValues;
+
+    nrPoints = 0;
+    for (i = 0; i < myPoints.size(); i++)
+        if (myPoint.isActive)
+            nrPoints++;
+
+    float* predictands = (float*)calloc(nrPoints, sizeof(float));
+    float** predictors = (float**)calloc(nrPredictors, sizeof(float*));
 
     for (i = 0; i < myPoints.size(); i++)
     {
         myPoint = myPoints[i];
         if (myPoint.isActive)
         {
-            predictands.push_back(myPoint.value);
-
-            for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
-            {
-                if (myCombination.getValue(pos))
-                {
-                    nrPredictors++;
-
-                    proxyValue = myPoint.getProxyValue(pos);
-                    if (! isEqual(proxyValue, NODATA))
-                    {
-                        predictors.push_back(proxyValue);
-                    }
-                }
-            }
-
-            predictorsRows.push_back(predictors);
+            //predictands.push_back(myPoint.value);
+            //predictors.push_back(myPoint.getActiveProxyValues(mySettings->getSelectedCombination()));
+            predictands[i] = myPoint.value;
+            proxyValues = myPoint.getActiveProxyValues(mySettings->getSelectedCombination());
+            for (j=0; j < proxyValues.size(); j++)
+                predictors[i][j] = proxyValues[j];
         }
     }
 
     float *m;
     float *q;
 
-    if (predictands.size() >= MIN_REGRESSION_POINTS)
+    if (nrPoints >= MIN_REGRESSION_POINTS)
     {
-        statistics::multiRegressionLinear((float**)(predictors.data()), (float*)(predictands.data()), predictands.size(), q, m, nrPredictors);
+        statistics::multiRegressionLinear(predictors, predictands, nrPoints, q, m, nrPredictors);
     }
 
     float detrendValue;
