@@ -549,13 +549,13 @@ namespace gis
 
         // compute vertexes
         Crit3DUtmPoint myVertex = utmHeader->llCorner;
-        gis::getLatLonFromUtm(mySettings, myVertex, &(v[0]));
+        gis::getLatLonFromUtm(mySettings, myVertex, v[0]);
         myVertex.x += utmHeader->nrCols * utmHeader->cellSize;
-        gis::getLatLonFromUtm(mySettings, myVertex, &(v[1]));
+        gis::getLatLonFromUtm(mySettings, myVertex, v[1]);
         myVertex.y += utmHeader->nrRows * utmHeader->cellSize;
-        gis::getLatLonFromUtm(mySettings, myVertex, &(v[2]));
+        gis::getLatLonFromUtm(mySettings, myVertex, v[2]);
         myVertex.x = utmHeader->llCorner.x;
-        gis::getLatLonFromUtm(mySettings, myVertex, &(v[3]));
+        gis::getLatLonFromUtm(mySettings, myVertex, v[3]);
 
         // compute LLcorner and URcorner
         Crit3DGeoPoint LLcorner, URcorner;

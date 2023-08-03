@@ -333,6 +333,16 @@ namespace gis
     }
 
 
+    Crit3DGeoPoint Crit3DRasterGrid::getCenterLatLon(const Crit3DGisSettings &gisSettings)
+    {
+        Crit3DUtmPoint utmCenter = this->getCenter().utm;
+        Crit3DGeoPoint geoCenter;
+        getLatLonFromUtm(gisSettings, utmCenter, geoCenter);
+
+        return geoCenter;
+    }
+
+
     void Crit3DRasterGrid::clear()
     {
         if (value != nullptr && header->nrRows > 0)
@@ -658,9 +668,9 @@ namespace gis
     }
 
 
-    void getLatLonFromUtm(const Crit3DGisSettings& gisSettings, const Crit3DUtmPoint& utmPoint, Crit3DGeoPoint *geoPoint)
+    void getLatLonFromUtm(const Crit3DGisSettings& gisSettings, const Crit3DUtmPoint& utmPoint, Crit3DGeoPoint& geoPoint)
     {
-        gis::utmToLatLon(gisSettings.utmZone, gisSettings.startLocation.latitude, utmPoint.x, utmPoint.y, &(geoPoint->latitude), &(geoPoint->longitude));
+        gis::utmToLatLon(gisSettings.utmZone, gisSettings.startLocation.latitude, utmPoint.x, utmPoint.y, &(geoPoint.latitude), &(geoPoint.longitude));
     }
 
 
