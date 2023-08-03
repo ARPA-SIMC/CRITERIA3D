@@ -1177,11 +1177,13 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
     nrPoints = 0;
     for (i = 0; i < myPoints.size(); i++)
-        if (myPoint.isActive)
+        if (myPoints[i].isActive)
             nrPoints++;
 
     float* predictands = (float*)calloc(nrPoints, sizeof(float));
     float** predictors = (float**)calloc(nrPredictors, sizeof(float*));
+    for (i=0; i<nrPoints; i++)
+        predictors[i]= (float*)calloc(nrPoints, sizeof(float));
 
     for (i = 0; i < myPoints.size(); i++)
     {
@@ -1193,16 +1195,17 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
             predictands[i] = myPoint.value;
             proxyValues = myPoint.getActiveProxyValues(mySettings->getSelectedCombination());
             for (j=0; j < proxyValues.size(); j++)
-                predictors[i][j] = proxyValues[j];
+                predictors[j][i] = proxyValues[j];
         }
     }
 
     float *m;
-    float *q;
+    float *q = nullptr;
+    float *weights;
 
     if (nrPoints >= MIN_REGRESSION_POINTS)
     {
-        statistics::multiRegressionLinear(predictors, predictands, nrPoints, q, m, nrPredictors);
+        statistics::weightedMultiRegressionLinear(predictors, predictands, weights, nrPoints, q, m, nrPredictors);
     }
 
     float detrendValue;
