@@ -586,6 +586,9 @@ bool Project::loadParameters(QString parametersFileName)
             if (parameters->contains("dynamicLapserate"))
                 interpolationSettings.setUseDynamicLapserate(parameters->value("dynamicLapserate").toBool());
 
+            if (parameters->contains("meteogrid_upscalefromdem=true"))
+                interpolationSettings.setMeteoGridUpscaleFromDem(parameters->value("meteogrid_upscalefromdem").toBool());
+
             if (parameters->contains("lapseRateCode"))
             {
                 interpolationSettings.setUseLapseRateCode(parameters->value("lapseRateCode").toBool());
@@ -2141,6 +2144,8 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
+    interpolationSettings.setUseMultipleDetrending(true);
+
     // detrending and checking precipitation
     bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
                                                &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
@@ -2462,14 +2467,18 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     if (getUseDetrendingVar(myVar))
         if (! meteoGridAggregateProxy(meteoGridProxies)) return false;
 
+    //std::string errString;
+    //gis::writeEsriGrid("C:\\Users\\gantolini\\Desktop\\tmp\\testDemGrid", &meteoGridProxies[0], errString);
+
     frequencyType freq = getVarFrequency(myVar);
 
     float myX, myY, myZ;
     std::vector <float> proxyValues;
+    proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
+
     float interpolatedValue = NODATA;
     Crit3DProxyCombination myCombination = interpolationSettings.getCurrentCombination();
     unsigned int i, proxyIndex;
-    float proxyValue;
 
     for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
     {
@@ -2484,15 +2493,18 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                 if (getUseDetrendingVar(myVar))
                 {
                     proxyIndex = 0;
-                    proxyValue = NODATA;
+
                     for (i=0; i < interpolationSettings.getProxyNr(); i++)
                     {
+                        proxyValues[i] = NODATA;
+
                         if (myCombination.getValue(i))
                         {
                             if (proxyIndex < meteoGridProxies.size())
                             {
-                                proxyValue = gis::getValueFromXY(meteoGridProxies[proxyIndex], myX, myY);
-                                proxyValues.push_back(proxyValue);
+                                float proxyValue = gis::getValueFromXY(meteoGridProxies[proxyIndex], myX, myY);
+                                if (proxyValue != meteoGridProxies[proxyIndex].header->flag)
+                                    proxyValues[i] = proxyValue;
                             }
 
                         }
@@ -2793,6 +2805,7 @@ void Project::saveInterpolationParameters()
         parameters->setValue("aggregationMethod", QString::fromStdString(getKeyStringAggregationMethod(interpolationSettings.getMeteoGridAggrMethod())));
         parameters->setValue("algorithm", QString::fromStdString(getKeyStringInterpolationMethod(interpolationSettings.getInterpolationMethod())));
         parameters->setValue("lapseRateCode", interpolationSettings.getUseLapseRateCode());
+        parameters->setValue("meteogrid_upscalefromdem", interpolationSettings.getMeteoGridUpscaleFromDem());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parameters->setValue("topographicDistance", interpolationSettings.getUseTD());
         parameters->setValue("dynamicLapserate", interpolationSettings.getUseDynamicLapserate());

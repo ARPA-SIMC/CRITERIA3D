@@ -18,10 +18,17 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     QVBoxLayout *layoutMain = new QVBoxLayout;
     QVBoxLayout *layoutDetrending = new QVBoxLayout();
 
+    // use dem for interolation meteo grid
+    upscaleFromDemEdit = new QCheckBox(tr("grid upscale from Dem"));
+    upscaleFromDemEdit->setChecked(_interpolationSettings->getMeteoGridUpscaleFromDem());
+    layoutMain->addWidget(upscaleFromDemEdit);
+
     // grid aggregation
     QHBoxLayout *layoutAggregation = new QHBoxLayout;
     QLabel *labelAggregation = new QLabel(tr("aggregation method"));
     layoutAggregation->addWidget(labelAggregation);
+
+    connect(upscaleFromDemEdit, SIGNAL(stateChanged(int)), this, SLOT(upscaleFromDemChanged(int)));
 
     std::map<std::string, aggregationMethod>::const_iterator itAggr;
     for (itAggr = aggregationMethodToString.begin(); itAggr != aggregationMethodToString.end(); ++itAggr)
@@ -136,6 +143,11 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     exec();
 }
 
+void DialogInterpolation::upscaleFromDemChanged(int active)
+{
+    gridAggregationMethodEdit.setEnabled(active == Qt::Checked);
+}
+
 void DialogInterpolation::redrawProxies()
 {
     proxyListCheck->clear();
@@ -195,6 +207,7 @@ void DialogInterpolation::accept()
     QString aggrString = gridAggregationMethodEdit.itemData(gridAggregationMethodEdit.currentIndex()).toString();
     _interpolationSettings->setMeteoGridAggrMethod(aggregationMethodToString.at(aggrString.toStdString()));
 
+    _interpolationSettings->setMeteoGridUpscaleFromDem(upscaleFromDemEdit->isChecked());
     _interpolationSettings->setUseTD(topographicDistanceEdit->isChecked());
     _interpolationSettings->setUseDynamicLapserate(dynamicLapserateEdit->isChecked());
     _interpolationSettings->setUseLapseRateCode(lapseRateCodeEdit->isChecked());

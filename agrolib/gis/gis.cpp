@@ -1479,7 +1479,7 @@ namespace gis
                             if (elab == aggrAverage)
                                 value = statistics::mean(values, nrValues);
                             else if (elab == aggrMedian)
-                                value = sorting::percentile(values, &nrValues, 50, true);
+                                value = sorting::percentile(values, nrValues, 50, true);
                             else if (elab == aggrPrevailing)
                                 value = prevailingValue(values);
                         }

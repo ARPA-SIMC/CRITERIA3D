@@ -29,6 +29,15 @@
 #include "furtherMathFunctions.h"
 
 
+float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5)
+{
+    // par1 correponds to T0
+    // par2 descent slope (negative value)
+    // par3 magnitude of the sigmoid par2 >= 0, if par2==0 no sigmoid
+    // par4 steepness of the sigmoid function
+    // par5 center of the sigmoid
+    return par1 + par2*x + par3*(1/(1+exp(-par4*(x-par5))));
+}
 float gaussianFunction(TfunctionInput fInput)
 {
     double y = (1 / (fInput.par[1] * sqrt(2*PI))
@@ -349,6 +358,32 @@ namespace integration
 
 namespace interpolation
 {
+    double secant_method(float (*func) (float),  double x0, double x1)
+    {
+        double x2, fx0, fx1, error;
+
+        for (int i = 0; i < MAX_NUMBER_ITERATIONS; i++)
+        {
+            fx0 = (*func)(x0);
+            fx1 = (*func)(x1);
+
+            // secant method formula
+            x2 = x1 - (fx1 * (x1 - x0)) / (fx1 - fx0);
+            error = fabs(x2 - x1);
+            //printf("Iteration %d: x = %.8f, f(x) = %.8f, error = %.8f\n", i+1, x2, fx2, error);
+            if (error < EPSILON)
+                return x2; // the roots was successfully approximated
+
+            // Update the values for the next iteration
+            x0 = x1;
+            x1 = x2;
+        }
+
+        //printf("No converge after %d iterations.\n", MAX_ITER);
+        return 0.0;
+    }
+
+
     float linearInterpolation (float x, float *xColumn , float *yColumn, int dimTable )
     {
         //float *firstColumn = (float *) calloc(dimTable, sizeof(float));
@@ -1495,21 +1530,30 @@ namespace matricial
         for(int i = 0;i<matrixSize;i++)
         {
             numerator[i] = (double*)calloc(matrixSize, sizeof(double));
+            for(int j = 0;j<matrixSize;j++)
+            {
+                numerator[i][j] = coefficientMatrix[i][j];
+            }
         }
+
         for(int counterRoot = 0;counterRoot<matrixSize; counterRoot++)
         {
-            for(int i = 0;i<matrixSize;i++)
+            /*for(int i = 0;i<matrixSize;i++)
             {
                 for(int j = 0;j<matrixSize;j++)
                 {
                     numerator[j][i] = coefficientMatrix[j][i];
                 }
-            }
+            }*/
             for(int j = 0;j<matrixSize;j++)
             {
                 numerator[j][counterRoot] = constantTerm[j];
             }
             roots[counterRoot] = determinant(numerator,matrixSize)/denominator;
+            for(int j = 0;j<matrixSize;j++)
+            {
+                numerator[j][counterRoot] = coefficientMatrix[j][counterRoot];
+            }
         }
         for(int i = 0;i<matrixSize;i++)
         {

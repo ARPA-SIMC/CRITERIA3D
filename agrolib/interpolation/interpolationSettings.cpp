@@ -188,26 +188,6 @@ void Crit3DInterpolationSettings::setCurrentProxy(const std::vector<Crit3DProxy>
     currentProxy = value;
 }
 
-float Crit3DInterpolationSettings::getRefHeightWind() const
-{
-    return refHeightWind;
-}
-
-void Crit3DInterpolationSettings::setRefHeightWind(float value)
-{
-    refHeightWind = value;
-}
-
-float Crit3DInterpolationSettings::getSurfaceRoughness() const
-{
-    return surfaceRoughness;
-}
-
-void Crit3DInterpolationSettings::setSurfaceRoughness(float value)
-{
-    surfaceRoughness = value;
-}
-
 bool Crit3DInterpolationSettings::getUseInterpolatedTForRH() const
 {
     return useInterpolatedTForRH;
@@ -260,6 +240,26 @@ void Crit3DInterpolationSettings::setKh_error_series(const std::vector<float> &n
     Kh_error_series = newKh_error_series;
 }
 
+bool Crit3DInterpolationSettings::getMeteoGridUpscaleFromDem() const
+{
+    return meteoGridUpscaleFromDem;
+}
+
+void Crit3DInterpolationSettings::setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem)
+{
+    meteoGridUpscaleFromDem = newMeteoGridUpscaleFromDem;
+}
+
+bool Crit3DInterpolationSettings::getUseMultipleDetrending() const
+{
+    return useMultipleDetrending;
+}
+
+void Crit3DInterpolationSettings::setUseMultipleDetrending(bool newUseMultipleDetrending)
+{
+    useMultipleDetrending = newUseMultipleDetrending;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -286,10 +286,12 @@ void Crit3DInterpolationSettings::initialize()
     topoDist_maxKh = 128;
     useDewPoint = true;
     useInterpolatedTForRH = true;
+    useMultipleDetrending = false;
     useBestDetrending = false;
     useLapseRateCode = false;
     minRegressionR2 = float(PEARSONSTANDARDTHRESHOLD);
     meteoGridAggrMethod = aggrAverage;
+    meteoGridUpscaleFromDem = true;
     indexHeight = unsigned(NODATA);
 
     isKrigingReady = false;
@@ -297,9 +299,6 @@ void Crit3DInterpolationSettings::initialize()
     maxHeightInversion = 1000.;
     shepardInitialRadius = NODATA;
     indexPointCV = NODATA;
-
-    refHeightWind = 2;
-    surfaceRoughness = 0.1f;
 
     Kh_series.clear();
     Kh_error_series.clear();

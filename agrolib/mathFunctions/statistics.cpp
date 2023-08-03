@@ -61,7 +61,7 @@ float statisticalElab(meteoComputation elab, float param, std::vector<float> val
         case consecutiveDaysBelow:
             return statistics::countConsecutive(values, nValues, param, false);
         case percentile:
-            return sorting::percentile(values, &nValues, param, true);
+            return sorting::percentile(values, nValues, param, true);
         case freqPositive:
             return statistics::frequencyPositive(values, nValues);
         case prevailingWindDir:
@@ -314,7 +314,86 @@ namespace statistics
         return (y1 + rate * (xx - x1));
     }
 
-    void multiRegression1D(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors)
+    void weightedMultiRegressionLinear(float** x,  float* y, float* weight, long nrItems,float* q,float* m, int nrPredictors)
+    {
+        //int matrixSize = nrPredictors+1;
+        double** XT = (double**)calloc(nrPredictors+1, sizeof(double*));
+        double** X = (double**)calloc(nrItems, sizeof(double*));
+        double** X2 = (double**)calloc(nrPredictors+1, sizeof(double*));
+        double** X2Inverse = (double**)calloc(nrPredictors+1, sizeof(double*));
+        for (int i=0;i<nrPredictors+1;i++)
+        {
+            XT[i]= (double*)calloc(nrItems, sizeof(double));
+            X2[i]= (double*)calloc(nrItems, sizeof(double));
+            X2Inverse[i]= (double*)calloc(nrItems, sizeof(double));
+        }
+        for (int i=0;i<nrItems;i++)
+        {
+            X[i]= (double*)calloc(nrPredictors+1, sizeof(double));
+        }
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            for (int i=0;i<nrItems;i++)
+            {
+               if (j == 0)
+               {
+                    XT[j][i] = 1.;
+               }
+               else
+               {
+                    XT[j][i] = x[j-1][i];
+               }
+            }
+
+        }
+        matricial::transposedMatrix(XT,nrPredictors+1,nrItems,X);
+        matricial::matrixProduct(XT,X,nrItems,nrPredictors+1,nrPredictors+1,nrItems,X2);
+        matricial::inverse(X2,X2Inverse,nrPredictors+1);
+        //matricial::matrixProduct(X2Inverse,XT,nrPredictors+1,nrPredictors+1,nrItems,nrPredictors+1,X);
+        double* roots = (double*)calloc(nrPredictors+1, sizeof(double));
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            roots[j]=0;
+            for (int i=0;i<nrItems;i++)
+            {
+                roots[j] += (XT[j][i]*y[i]);
+            }
+        }
+        *q=0;
+        for (int j=0;j<nrPredictors;j++)
+        {
+            m[j]=0;
+        }
+        for (int i=0;i<nrPredictors+1;i++)
+        {
+            *q += (X2Inverse[0][i]*roots[i]);
+        }
+
+        for (int j=1;j<nrPredictors+1;j++)
+        {
+            for (int i=0;i<nrPredictors+1;i++)
+            {
+                m[j-1] += (X2Inverse[j][i]*roots[i]);
+            } 
+        }
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            free(XT[j]);
+            free(X2[j]);
+            free(X2Inverse[j]);
+        }
+        for (int i=0;i<nrItems;i++)
+        {
+            free(X[i]);
+        }
+        free(X);
+        free(XT);
+        free(X2);
+        free(X2Inverse);
+        free(roots);
+    }
+
+    void multiRegressionLinear(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors)
     {
         double* SUMx;
         double* SUMxx;
@@ -346,17 +425,8 @@ namespace statistics
         for(int i = 0;i<matrixSize;i++)
         {
             coefficientMatrix[i] = (double*)calloc(matrixSize, sizeof(double));
-            for (int j = 0; j<matrixSize;j++)
-            {
-                coefficientMatrix[i][j] = 0.;
-            }
         }
 
-        for (int j = 0; j<matrixSize;j++)
-        {
-            roots[j] = 0.;
-            constantTerm[j]= 0.;
-        }
         // set the constant term
         for (int j = 0; j<nrPredictors;j++)
         {
