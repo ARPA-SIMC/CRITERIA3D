@@ -1162,8 +1162,7 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 {
     if (! getUseDetrendingVar(myVar)) return;
 
-    unsigned i,j;
-    int nrPoints;
+    unsigned i,j,nrPoints;
 
     float proxyValue;
     Crit3DInterpolationDataPoint myPoint;
@@ -1179,6 +1178,9 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     for (i = 0; i < myPoints.size(); i++)
         if (myPoints[i].isActive)
             nrPoints++;
+
+    if (nrPoints == 0) return;
+    if (nrPredictors <= 1) return;
 
     float* predictands = (float*)calloc(nrPoints, sizeof(float));
     float** predictors = (float**)calloc(nrPredictors, sizeof(float*));
@@ -1199,29 +1201,32 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         }
     }
 
-    float *m;
-    float *q = nullptr;
-    float *weights;
+    float *m = (float*)calloc(nrPredictors, sizeof(float));
+    float q;
+    float *weights = (float*)calloc(nrPoints, sizeof(float));;
 
     if (nrPoints >= MIN_REGRESSION_POINTS)
     {
-        statistics::weightedMultiRegressionLinear(predictors, predictands, weights, nrPoints, q, m, nrPredictors);
+        statistics::weightedMultiRegressionLinear(predictors, predictands, weights, nrPoints, &q, m, nrPredictors);
     }
 
     float detrendValue;
 
     for (i = 0; i < myPoints.size(); i++)
-    {
-        detrendValue = 0;
-
+    {   
         for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
         {
-            proxyValue = myPoints[i].getProxyValue(pos);
+            detrendValue = 0;
 
-            if (proxyValue != NODATA)
-                detrendValue = proxyValue * m[pos];
+            if (myCombination.getValue(pos))
+            {
+                proxyValue = myPoints[i].getProxyValue(pos);
 
-            myPoints[i].value -= detrendValue;
+                if (proxyValue != NODATA)
+                    detrendValue = proxyValue * m[pos];
+
+                myPoints[i].value -= detrendValue;
+            }
         }
     }
 
