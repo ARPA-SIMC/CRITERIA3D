@@ -1162,42 +1162,58 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 {
     if (! getUseDetrendingVar(myVar)) return;
 
-    unsigned i,j,nrPoints;
-
-    float proxyValue;
-    Crit3DInterpolationDataPoint myPoint;
-    //std::vector <std::vector <float>> predictors;
-
-    unsigned nrPredictors = 0;
+    unsigned nrPredictors = 0, proxyPos;
     for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
-        if (myCombination.getValue(pos)) nrPredictors++;
+    {
+        if (myCombination.getValue(pos))
+        {
+            nrPredictors++;
+            proxyPos = pos;
+        }
+    }
+
+    if (nrPredictors == 0)
+        return;
+    else if (nrPredictors == 1)
+        regressionGeneric(myPoints, mySettings, proxyPos, false);
+
+    unsigned i,j,nrPoints;
 
     std::vector <float> proxyValues;
 
     nrPoints = 0;
     for (i = 0; i < myPoints.size(); i++)
+    {
         if (myPoints[i].isActive)
-            nrPoints++;
+        {
+            proxyValues.clear();
+            if (myPoints[i].getActiveProxyValues(myCombination, proxyValues))
+                nrPoints++;
+        }
+    }
 
     if (nrPoints == 0) return;
-    if (nrPredictors <= 1) return;
 
+    float proxyValue;
     float* predictands = (float*)calloc(nrPoints, sizeof(float));
     float** predictors = (float**)calloc(nrPredictors, sizeof(float*));
+
     for (i=0; i<nrPoints; i++)
         predictors[i]= (float*)calloc(nrPoints, sizeof(float));
 
     for (i = 0; i < myPoints.size(); i++)
     {
-        myPoint = myPoints[i];
-        if (myPoint.isActive)
+        if (myPoints[i].isActive)
         {
-            //predictands.push_back(myPoint.value);
-            //predictors.push_back(myPoint.getActiveProxyValues(mySettings->getSelectedCombination()));
-            predictands[i] = myPoint.value;
-            proxyValues = myPoint.getActiveProxyValues(mySettings->getSelectedCombination());
-            for (j=0; j < proxyValues.size(); j++)
-                predictors[j][i] = proxyValues[j];
+            proxyValues.clear();
+
+            if (myPoints[i].getActiveProxyValues(myCombination, proxyValues))
+            {
+                predictands[i] = myPoints[i].value;
+
+                for (j=0; j < proxyValues.size(); j++)
+                    predictors[j][i] = proxyValues[j];
+            }
         }
     }
 
