@@ -589,6 +589,9 @@ bool Project::loadParameters(QString parametersFileName)
             if (parameters->contains("meteogrid_upscalefromdem=true"))
                 interpolationSettings.setMeteoGridUpscaleFromDem(parameters->value("meteogrid_upscalefromdem").toBool());
 
+            if (parameters->contains("multipleDetrending"))
+                interpolationSettings.setUseMultipleDetrending(parameters->value("multipleDetrending").toBool());
+
             if (parameters->contains("lapseRateCode"))
             {
                 interpolationSettings.setUseLapseRateCode(parameters->value("lapseRateCode").toBool());
@@ -2144,8 +2147,6 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    interpolationSettings.setUseMultipleDetrending(true);
-
     // detrending and checking precipitation
     bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
                                                &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
@@ -2811,6 +2812,7 @@ void Project::saveInterpolationParameters()
         parameters->setValue("dynamicLapserate", interpolationSettings.getUseDynamicLapserate());
         parameters->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
         parameters->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
+        parameters->setValue("multipleDetrending", interpolationSettings.getUseMultipleDetrending());
         parameters->setValue("useDewPoint", interpolationSettings.getUseDewPoint());
         parameters->setValue("useInterpolationTemperatureForRH", interpolationSettings.getUseInterpolatedTForRH());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());

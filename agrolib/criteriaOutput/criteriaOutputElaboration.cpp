@@ -292,7 +292,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                        QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString &error)
 {
     // IRRI RATIO (parameter for elaboration on IRRIGATION variable)
-    float irriRatio = getIrriRatioFromClass(&(dbCrop), "crop_class", "id_class", idCropClass, &error);
+    float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class", idCropClass, error);
 
     QList<QString> results;
     QString statement;
@@ -554,7 +554,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
     QTextStream out(&outputFile);
     out << dateComputation.toString("yyyy-MM-dd");
     out << "," << idCase;
-    out << "," << getCropFromClass(&(dbCrop), "crop_class", "id_class", idCropClass, &(error)).toUpper();
+    out << "," << getIdCropFromClass(dbCrop, "crop_class", "id_class", idCropClass, error).toUpper();
     out << "," << results.join(",");
     out << "\n";
 

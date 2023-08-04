@@ -260,6 +260,16 @@ void Crit3DInterpolationSettings::setUseMultipleDetrending(bool newUseMultipleDe
     useMultipleDetrending = newUseMultipleDetrending;
 }
 
+std::vector<float> Crit3DInterpolationSettings::getMultiRegressionSlopes() const
+{
+    return multiRegressionSlopes;
+}
+
+void Crit3DInterpolationSettings::setMultiRegressionSlopes(const std::vector<float> &newMultiRegressionSlopes)
+{
+    multiRegressionSlopes = newMultiRegressionSlopes;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -302,6 +312,8 @@ void Crit3DInterpolationSettings::initialize()
 
     Kh_series.clear();
     Kh_error_series.clear();
+
+    multiRegressionSlopes.clear();
 
     initializeProxy();
 }
