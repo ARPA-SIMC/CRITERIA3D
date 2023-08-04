@@ -365,9 +365,7 @@ bool Crit3DProject::loadSoilMap(QString fileName)
     fileName = getCompleteFileName(fileName, PATH_GEO);
 
     std::string errorStr;
-    std::string myFileName = fileName.left(fileName.length()-4).toStdString();
-
-    if (! gis::readEsriGrid(myFileName, &soilMap, errorStr))
+    if (! gis::openRaster(fileName.toStdString(), &soilMap, gisSettings.utmZone, errorStr))
     {
         logError("Load soil map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
         return false;
@@ -390,9 +388,7 @@ bool Crit3DProject::loadLandUseMap(QString fileName)
     fileName = getCompleteFileName(fileName, PATH_GEO);
 
     std::string errorStr;
-    std::string myFileName = fileName.left(fileName.length()-4).toStdString();
-
-    if (! gis::readEsriGrid(myFileName, &landUseMap, errorStr))
+    if (! gis::openRaster(fileName.toStdString(), &landUseMap, gisSettings.utmZone, errorStr))
     {
         logError("Load land use map failed: " + fileName + "\n" + QString::fromStdString(errorStr));
         return false;

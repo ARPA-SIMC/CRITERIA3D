@@ -1672,7 +1672,8 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
 
 void MainWindow::on_actionLoad_soil_map_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), "", tr("ESRI grid files (*.flt)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open soil map"), "",
+                                                    tr("ESRI float (*.flt);; ENVI image (*.img)"));
     if (fileName == "") return;
 
     if (myProject.loadSoilMap(fileName))
@@ -1683,15 +1684,16 @@ void MainWindow::on_actionLoad_soil_map_triggered()
 
 void MainWindow::on_actionLoad_soil_data_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open DB soil"), "", tr("SQLite files (*.db)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load soil data"), "", tr("SQLite files (*.db)"));
     if (fileName == "") return;
 
     myProject.loadSoilDatabase(fileName);
 }
 
-void MainWindow::on_actionLoad_Crop_data_triggered()
+
+void MainWindow::on_actionLoad_crop_data_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open DB Crop"), "", tr("SQLite files (*.db)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Load crop and land units data"), "", tr("SQLite files (*.db)"));
     if (fileName == "") return;
 
     myProject.loadCropDatabase(fileName);
@@ -2832,7 +2834,8 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
 
 void MainWindow::on_actionLoad_land_use_map_triggered()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open land use map"), "", tr("ESRI grid files (*.flt)"));
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open land use map"), "",
+                                                    tr("ESRI float (*.flt);; ENVI image (*.img)"));
     if (fileName == "") return;
 
     if (myProject.loadLandUseMap(fileName))
@@ -2873,11 +2876,5 @@ void MainWindow::on_actionHide_LandUseMap_triggered()
 void MainWindow::on_actionHide_Geomap_triggered()
 {
     setOutputRasterVisible(false);
-}
-
-
-void MainWindow::on_actionLoad_crop_data_triggered()
-{
-
 }
 

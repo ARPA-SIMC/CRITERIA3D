@@ -7,6 +7,9 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
+    #ifndef LANDUNIT_H
+        #include "landUnit.h"
+    #endif
     class QString;
 
 
@@ -48,6 +51,7 @@
         // soil and land use
         gis::Crit3DRasterGrid soilMap;
         gis::Crit3DRasterGrid landUseMap;
+        std::vector <Crit3DLandUnit> landUnitList;
 
         // 3D soil fluxes maps
         gis::Crit3DRasterGrid soilIndexMap;

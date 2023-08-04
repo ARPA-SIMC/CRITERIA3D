@@ -47,7 +47,6 @@
         void on_actionLoad_DEM_triggered();
         void on_actionLoad_soil_map_triggered();
         void on_actionLoad_soil_data_triggered();
-        void on_actionLoad_Crop_data_triggered();
         void on_actionLoad_MeteoPoints_triggered();
         void on_actionMeteoPointsImport_data_triggered();
 

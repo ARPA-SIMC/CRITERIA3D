@@ -27,8 +27,10 @@
 #include "project3D.h"
 #include "soilFluxes3D.h"
 #include "soilDbTools.h"
+
 #include "math.h"
 #include "utilities.h"
+
 #include <QUuid>
 #include <QApplication>
 
@@ -124,6 +126,7 @@ void Project3D::clearProject3D()
 
     soilMap.clear();
     landUseMap.clear();
+    landUnitList.clear();
 
     clearProject();
 }
@@ -227,6 +230,7 @@ bool Project3D::loadCropDatabase(QString fileName)
         logError("Missing Crop DB filename");
         return false;
     }
+
     cropDbFileName = fileName;
     fileName = getCompleteFileName(fileName, PATH_SOIL);
 
@@ -240,7 +244,11 @@ bool Project3D::loadCropDatabase(QString fileName)
        return false;
     }
 
-    // TODO: load land use
+    if (! loadLandUnitList(dbCrop, landUnitList, errorString))
+    {
+       logError("Error in reading land_units table:\n" + errorString);
+       return false;
+    }
 
     logInfo("Crop database = " + fileName);
     return true;
