@@ -53,7 +53,7 @@ QString getIdCropFromName(const QSqlDatabase &dbCrop, QString cropName, QString 
 }
 
 
-QString getCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
+QString getIdCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
 {
     errorStr = "";
     QString queryString = "SELECT * FROM " + cropClassTable
@@ -70,14 +70,14 @@ QString getCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QSt
         return "";
     }
 
-    QString myCrop;
-    getValue(query.value("id_crop"), &myCrop);
+    QString idCrop;
+    getValue(query.value("id_crop"), &idCrop);
 
-    return myCrop;
+    return idCrop;
 }
 
 
-QString getCropFromId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
+QString getIdCropFromField(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
 {
     errorStr = "";
     QString queryString = "SELECT * FROM " + cropClassTable + " WHERE " + cropIdField + " = " + QString::number(cropId);
@@ -92,14 +92,14 @@ QString getCropFromId(const QSqlDatabase &dbCrop, QString cropClassTable, QStrin
         return "";
     }
 
-    QString myCrop;
-    getValue(query.value("id_crop"), &myCrop);
+    QString idCrop;
+    getValue(query.value("id_crop"), &idCrop);
 
-    return myCrop;
+    return idCrop;
 }
 
 
-float getIrriRatioFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
+float getIrriRatioFromCropClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
 {
     errorStr = "";
 
@@ -115,16 +115,16 @@ float getIrriRatioFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, 
         return(NODATA);
     }
 
-    float myRatio = 0;
+    float irriRatio = 0;
 
-    if (getValue(query.value("irri_ratio"), &(myRatio)))
-        return myRatio;
+    if (getValue(query.value("irri_ratio"), &irriRatio))
+        return irriRatio;
     else
         return NODATA;
 }
 
 
-float getIrriRatioFromId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
+float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
 {
     errorStr = "";
 
@@ -140,10 +140,10 @@ float getIrriRatioFromId(const QSqlDatabase &dbCrop, QString cropClassTable, QSt
         return(NODATA);
     }
 
-    float myRatio = 0;
+    float irriRatio = 0;
 
-    if (getValue(query.value("irri_ratio"), &(myRatio)))
-        return myRatio;
+    if (getValue(query.value("irri_ratio"), &irriRatio))
+        return irriRatio;
     else
         return NODATA;
 }
