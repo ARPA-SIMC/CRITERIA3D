@@ -445,24 +445,6 @@ bool Crit3DProject::setSoilIndexMap()
 }
 
 
-int Crit3DProject::getLandUseId(double x, double y)
-{
-    if (! landUseMap.isLoaded)
-        return NODATA;
-
-    int id = int(gis::getValueFromXY(landUseMap, x, y));
-
-    if (id == int(landUseMap.header->flag))
-    {
-        return NODATA;
-    }
-    else
-    {
-        return id;
-    }
-}
-
-
 int Crit3DProject::getCrit3DSoilId(double x, double y)
 {
     if (! soilMap.isLoaded)

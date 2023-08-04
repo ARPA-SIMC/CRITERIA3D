@@ -41,6 +41,7 @@
 #include "dialogLoadState.h"
 #include "dialogNewPoint.h"
 #include "glWidget.h"
+#include "formInfo.h"
 
 #include <QDebug>
 
@@ -403,6 +404,20 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
             else
             {
                 myProject.logError("Load soil database before.");
+            }
+        }
+        if (selection->text().contains("Show land use data") )
+        {
+            Position geoPos = mapView->mapToScene(mapPos);
+            int id = myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude());
+            if (id != NODATA)
+            {
+                int index = getLandUnitIndex(myProject.landUnitList, id);
+                if (index != NODATA)
+                {
+                    FormInfo formInfo;
+                    formInfo.showInfo("LAND UNIT\nID: " + QString::number(id));
+                }
             }
         }
     }
@@ -1480,11 +1495,8 @@ bool MainWindow::isLandUse(QPoint mapPos)
     if (! myProject.landUseMap.isLoaded)
         return false;
 
-    double x, y;
     Position geoPos = mapView->mapToScene(mapPos);
-    gis::latLonToUtmForceZone(myProject.gisSettings.utmZone, geoPos.latitude(), geoPos.longitude(), &x, &y);
-
-    return (myProject.getLandUseId(x, y) != NODATA);
+    return (myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude()) != NODATA);
 }
 
 

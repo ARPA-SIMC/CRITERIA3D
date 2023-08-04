@@ -1153,6 +1153,33 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
 }
 
 
+int Project3D::getLandUnitIdUTM(double x, double y)
+{
+    if (! landUseMap.isLoaded)
+        return NODATA;
+
+    int id = int(gis::getValueFromXY(landUseMap, x, y));
+
+    if (id == int(landUseMap.header->flag))
+    {
+        return NODATA;
+    }
+    else
+    {
+        return id;
+    }
+}
+
+
+int Project3D::getLandUnitIdGeo(double lat, double lon)
+{
+    double x, y;
+    gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
+
+    return getLandUnitIdUTM(x, y);
+}
+
+
 // ------------------------- other functions -------------------------
 
 bool isCrit3dError(int result, QString& error)
@@ -1329,4 +1356,7 @@ double getMaxEvaporation(double ET0, double LAI)
     double Kc = exp(-ke * LAI);
     return(ET0 * Kc * maxEvaporationRatio);
 }
+
+
+
 

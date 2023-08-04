@@ -96,6 +96,8 @@
         double getSoilLayerTop(unsigned int i);
         double getSoilLayerBottom(unsigned int i);
         int getSoilLayerIndex(double depth);
+        int getLandUnitIdUTM(double x, double y);
+        int getLandUnitIdGeo(double lat, double lon);
 
         bool initializeSoilMoisture(int month);
 

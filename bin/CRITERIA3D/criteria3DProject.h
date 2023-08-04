@@ -72,7 +72,6 @@
         int getCrit3DSoilId(double x, double y);
         int getCrit3DSoilIndex(double x, double y);
         QString getCrit3DSoilCode(double x, double y);
-        int getLandUseId(double x, double y);
 
         bool computeAllMeteoMaps(const QDateTime& myTime, bool showInfo);
 
