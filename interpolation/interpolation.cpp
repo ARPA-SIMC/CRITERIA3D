@@ -1094,6 +1094,7 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
     float myProxyValue;
     Crit3DProxy* myProxy;
     Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
+    float proxySlope;
 
     for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
@@ -1105,25 +1106,33 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
 
             if (myProxyValue != NODATA)
             {
-                float proxySlope = myProxy->getRegressionSlope();
-
-                if (getProxyPragaName(myProxy->getName()) == height)
+                if (mySettings->getUseMultipleDetrending())
                 {
-                    if (mySettings->getUseThermalInversion() && myProxy->getInversionIsSignificative())
-                    {
-                        float LR_H0 = myProxy->getLapseRateH0();
-                        float LR_H1 = myProxy->getLapseRateH1();
-                        float LR_Below = myProxy->getInversionLapseRate();
-                        if (myProxyValue <= LR_H1)
-                            retrendValue += (MAXVALUE(myProxyValue - LR_H0, 0) * LR_Below);
-                        else
-                            retrendValue += ((LR_H1 - LR_H0) * LR_Below) + (myProxyValue - LR_H1) * proxySlope;
-                    }
-                    else
-                        retrendValue += MAXVALUE(myProxyValue, 0) * proxySlope;
+                    proxySlope = mySettings->getMultiRegressionSlopes()[pos];
+                    retrendValue += myProxyValue * proxySlope;
                 }
                 else
-                    retrendValue += myProxyValue * proxySlope;
+                {
+                    proxySlope = myProxy->getRegressionSlope();
+
+                    if (getProxyPragaName(myProxy->getName()) == height)
+                    {
+                        if (mySettings->getUseThermalInversion() && myProxy->getInversionIsSignificative())
+                        {
+                            float LR_H0 = myProxy->getLapseRateH0();
+                            float LR_H1 = myProxy->getLapseRateH1();
+                            float LR_Below = myProxy->getInversionLapseRate();
+                            if (myProxyValue <= LR_H1)
+                                retrendValue += (MAXVALUE(myProxyValue - LR_H0, 0) * LR_Below);
+                            else
+                                retrendValue += ((LR_H1 - LR_H0) * LR_Below) + (myProxyValue - LR_H1) * proxySlope;
+                        }
+                        else
+                            retrendValue += MAXVALUE(myProxyValue, 0) * proxySlope;
+                    }
+                    else
+                        retrendValue += myProxyValue * proxySlope;
+                }
             }
         }
     }
@@ -1177,29 +1186,11 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     else if (nrPredictors == 1)
         regressionGeneric(myPoints, mySettings, proxyPos, false);
 
-    unsigned i,j,nrPoints;
+    unsigned i;
 
     std::vector <float> proxyValues;
-
-    nrPoints = 0;
-    for (i = 0; i < myPoints.size(); i++)
-    {
-        if (myPoints[i].isActive)
-        {
-            proxyValues.clear();
-            if (myPoints[i].getActiveProxyValues(myCombination, proxyValues))
-                nrPoints++;
-        }
-    }
-
-    if (nrPoints == 0) return;
-
-    float proxyValue;
-    float* predictands = (float*)calloc(nrPoints, sizeof(float));
-    float** predictors = (float**)calloc(nrPredictors, sizeof(float*));
-
-    for (i=0; i<nrPoints; i++)
-        predictors[i]= (float*)calloc(nrPoints, sizeof(float));
+    std::vector <float> predictands;
+    std::vector <std::vector <float>> predictors;
 
     for (i = 0; i < myPoints.size(); i++)
     {
@@ -1209,24 +1200,47 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
 
             if (myPoints[i].getActiveProxyValues(myCombination, proxyValues))
             {
-                predictands[i] = myPoints[i].value;
-
-                for (j=0; j < proxyValues.size(); j++)
-                    predictors[j][i] = proxyValues[j];
+                predictands.push_back(myPoints[i].value);
+                predictors.push_back(proxyValues);
             }
         }
     }
 
+    int nrPoints = int(predictands.size());
+    if (nrPoints == 0) return;
+
+    float** predictorsArray = (float**)calloc(nrPredictors, sizeof(float*));
     float *m = (float*)calloc(nrPredictors, sizeof(float));
     float q;
     float *weights = (float*)calloc(nrPoints, sizeof(float));;
 
-    if (nrPoints >= MIN_REGRESSION_POINTS)
+    for (i=0; i< nrPredictors; i++)
     {
-        statistics::weightedMultiRegressionLinear(predictors, predictands, weights, nrPoints, &q, m, nrPredictors);
+        predictorsArray[i] = (float*)calloc(nrPoints, sizeof(float));
+        predictorsArray[i] = predictors[i].data();
     }
 
-    float detrendValue;
+    if (predictands.size() >= MIN_REGRESSION_POINTS)
+    {
+        statistics::weightedMultiRegressionLinear(predictorsArray, predictands.data(), weights, nrPoints, &q, m, nrPredictors);
+    }
+
+    std::vector <float> regrSlopes;
+    int index = 0;
+    for (i=0; i < int(mySettings->getProxyNr()); i++)
+    {
+        mySettings->getProxy(i)->setIsSignificant(true);
+
+        if (myCombination.getValue(i))
+        {
+            regrSlopes.push_back(m[index]);
+            index++;
+        }
+    }
+
+    mySettings->setMultiRegressionSlopes(regrSlopes);
+
+    float detrendValue, proxyValue;
 
     for (i = 0; i < myPoints.size(); i++)
     {   
