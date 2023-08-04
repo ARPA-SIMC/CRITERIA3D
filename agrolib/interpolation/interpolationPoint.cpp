@@ -25,6 +25,7 @@
 
 
 #include "interpolationPoint.h"
+#include "basicMath.h"
 #include "gis.h"
 #include "commonConstants.h"
 
@@ -62,12 +63,21 @@ std::vector <float> Crit3DInterpolationDataPoint::getProxyValues()
     return myValues;
 }
 
-std::vector <float> Crit3DInterpolationDataPoint::getActiveProxyValues(Crit3DProxyCombination activeCombination)
+bool Crit3DInterpolationDataPoint::getActiveProxyValues(Crit3DProxyCombination& activeCombination, std::vector <float> &myValues)
 {
-    std::vector <float> myValues;
-    for (unsigned int i=0; i < proxyValues.size(); i++)
-        if (activeCombination.getValue(i))
-            myValues.push_back(getProxyValue(i));
+    bool isComplete = true;
+    float myValue;
 
-    return myValues;
+    for (unsigned int i=0; i < proxyValues.size(); i++)
+    {
+        if (activeCombination.getValue(i))
+        {
+            myValue = getProxyValue(i);
+            myValues.push_back(myValue);
+
+            if (myValue == NODATA) isComplete = false;
+        }
+    }
+
+    return (isComplete);
 }
