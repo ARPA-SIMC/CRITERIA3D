@@ -85,6 +85,19 @@
         };
 
 
+        class Crit3DGisSettings
+        {
+        public:
+            Crit3DGeoPoint startLocation;
+            int utmZone;
+            bool isUTC;
+            int timeZone;
+
+            Crit3DGisSettings();
+            void initialize();
+        };
+
+
         class Crit3DLatLonHeader
         {
         public:
@@ -139,6 +152,7 @@
             void getXY(int myRow, int myCol, double &x, double &y) const;
             void getRowCol(double x, double y, int& row, int& col) const;
             Crit3DPoint getCenter();
+            Crit3DGeoPoint getCenterLatLon(const Crit3DGisSettings &gisSettings);
 
             void clear();
             void emptyGrid();
@@ -168,17 +182,6 @@
             void setMapTime(const Crit3DTime &value);
         };
 
-        class Crit3DGisSettings
-        {
-        public:
-            Crit3DGeoPoint startLocation;
-            int utmZone;
-            bool isUTC;
-            int timeZone;
-
-            Crit3DGisSettings();
-            void initialize();
-        };
 
         class Crit3DEllipsoid
         {
@@ -222,7 +225,7 @@
 
         bool getNorthernEmisphere();
         void getLatLonFromUtm(const Crit3DGisSettings& gisSettings, double utmX,double utmY, double *myLat, double *myLon);
-        void getLatLonFromUtm(const Crit3DGisSettings& gisSettings, const Crit3DUtmPoint& utmPoint, Crit3DGeoPoint *geoPoint);
+        void getLatLonFromUtm(const Crit3DGisSettings& gisSettings, const Crit3DUtmPoint& utmPoint, Crit3DGeoPoint& geoPoint);
         void getUtmFromLatLon(int zoneNumber, const Crit3DGeoPoint& geoPoint, Crit3DUtmPoint* utmPoint);
 
         void latLonToUtm(double lat, double lon,double *utmEasting,double *utmNorthing,int *zoneNumber);
