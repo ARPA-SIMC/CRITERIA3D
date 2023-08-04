@@ -8,16 +8,16 @@
 
     QString getIdCropFromName(const QSqlDatabase &dbCrop, QString cropName, QString& errorStr);
 
-    QString getCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField,
+    QString getIdCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField,
                              QString idCropClass, QString& errorStr);
 
-    QString getCropFromId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField,
+    QString getIdCropFromField(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField,
                           int cropId, QString& errorStr);
 
-    float getIrriRatioFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField,
+    float getIrriRatioFromCropClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField,
                                 QString idCropClass, QString& errorStr);
 
-    float getIrriRatioFromId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField,
+    float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField,
                          int cropId, QString& errorStr);
 
 
