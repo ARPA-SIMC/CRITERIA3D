@@ -32,17 +32,17 @@ bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString>& cropIdList, QStri
 }
 
 
-QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myError)
+QString getIdCropFromName(const QSqlDatabase &dbCrop, QString cropName, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
     QString queryString = "SELECT * FROM crop WHERE crop_name='" + cropName +"' COLLATE NOCASE";
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
-        *myError = query.lastError().text();
+        errorStr = query.lastError().text();
         return "";
     }
 
@@ -53,20 +53,20 @@ QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myErr
 }
 
 
-QString getCropFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString *myError)
+QString getCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
     QString queryString = "SELECT * FROM " + cropClassTable
                           + " WHERE " + cropClassField + " = '" + idCropClass + "'"
                           + " COLLATE NOCASE";
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
         if (query.lastError().isValid())
-            *myError = query.lastError().text();
+            errorStr = query.lastError().text();
         return "";
     }
 
@@ -77,18 +77,18 @@ QString getCropFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString c
 }
 
 
-QString getCropFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString *myError)
+QString getCropFromId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
     QString queryString = "SELECT * FROM " + cropClassTable + " WHERE " + cropIdField + " = " + QString::number(cropId);
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
         if (query.lastError().isValid())
-            *myError = query.lastError().text();
+            errorStr = query.lastError().text();
         return "";
     }
 
@@ -99,19 +99,19 @@ QString getCropFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString crop
 }
 
 
-float getIrriRatioFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString *myError)
+float getIrriRatioFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
 
     QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropClassField + " = '" + idCropClass + "'";
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
         if (query.lastError().isValid())
-            *myError = query.lastError().text();
+            errorStr = query.lastError().text();
         return(NODATA);
     }
 
@@ -124,19 +124,19 @@ float getIrriRatioFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QStrin
 }
 
 
-float getIrriRatioFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString *myError)
+float getIrriRatioFromId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
 
     QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropIdField + " = " + QString::number(cropId);
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
         if (query.lastError().isValid())
-            *myError = query.lastError().text();
+            errorStr = query.lastError().text();
         return(NODATA);
     }
 
