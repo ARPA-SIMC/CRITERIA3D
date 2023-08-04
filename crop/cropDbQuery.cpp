@@ -32,17 +32,17 @@ bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString>& cropIdList, QStri
 }
 
 
-QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myError)
+QString getIdCropFromName(const QSqlDatabase &dbCrop, QString cropName, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
     QString queryString = "SELECT * FROM crop WHERE crop_name='" + cropName +"' COLLATE NOCASE";
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
-        *myError = query.lastError().text();
+        errorStr = query.lastError().text();
         return "";
     }
 
@@ -53,97 +53,97 @@ QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myErr
 }
 
 
-QString getCropFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString *myError)
+QString getIdCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
     QString queryString = "SELECT * FROM " + cropClassTable
                           + " WHERE " + cropClassField + " = '" + idCropClass + "'"
                           + " COLLATE NOCASE";
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
         if (query.lastError().isValid())
-            *myError = query.lastError().text();
+            errorStr = query.lastError().text();
         return "";
     }
 
-    QString myCrop;
-    getValue(query.value("id_crop"), &myCrop);
+    QString idCrop;
+    getValue(query.value("id_crop"), &idCrop);
 
-    return myCrop;
+    return idCrop;
 }
 
 
-QString getCropFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString *myError)
+QString getIdCropFromField(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
     QString queryString = "SELECT * FROM " + cropClassTable + " WHERE " + cropIdField + " = " + QString::number(cropId);
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
         if (query.lastError().isValid())
-            *myError = query.lastError().text();
+            errorStr = query.lastError().text();
         return "";
     }
 
-    QString myCrop;
-    getValue(query.value("id_crop"), &myCrop);
+    QString idCrop;
+    getValue(query.value("id_crop"), &idCrop);
 
-    return myCrop;
+    return idCrop;
 }
 
 
-float getIrriRatioFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString *myError)
+float getIrriRatioFromCropClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField, QString idCropClass, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
 
     QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropClassField + " = '" + idCropClass + "'";
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
         if (query.lastError().isValid())
-            *myError = query.lastError().text();
+            errorStr = query.lastError().text();
         return(NODATA);
     }
 
-    float myRatio = 0;
+    float irriRatio = 0;
 
-    if (getValue(query.value("irri_ratio"), &(myRatio)))
-        return myRatio;
+    if (getValue(query.value("irri_ratio"), &irriRatio))
+        return irriRatio;
     else
         return NODATA;
 }
 
 
-float getIrriRatioFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString *myError)
+float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField, int cropId, QString &errorStr)
 {
-    *myError = "";
+    errorStr = "";
 
     QString queryString = "SELECT irri_ratio FROM " + cropClassTable + " WHERE " + cropIdField + " = " + QString::number(cropId);
 
-    QSqlQuery query = dbCrop->exec(queryString);
+    QSqlQuery query = dbCrop.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
         if (query.lastError().isValid())
-            *myError = query.lastError().text();
+            errorStr = query.lastError().text();
         return(NODATA);
     }
 
-    float myRatio = 0;
+    float irriRatio = 0;
 
-    if (getValue(query.value("irri_ratio"), &(myRatio)))
-        return myRatio;
+    if (getValue(query.value("irri_ratio"), &irriRatio))
+        return irriRatio;
     else
         return NODATA;
 }

@@ -1041,7 +1041,7 @@ void Criteria1DWidget::on_actionChooseCase()
     meteoListComboBox.setCurrentText(myProject.myCase.unit.idMeteo);
 
     // CROP
-    myProject.myCase.unit.idCrop = getCropFromClass(&(myProject.dbCrop), "crop_class", "id_class", myProject.myCase.unit.idCropClass, &errorStr);
+    myProject.myCase.unit.idCrop = getIdCropFromClass(myProject.dbCrop, "crop_class", "id_class", myProject.myCase.unit.idCropClass, errorStr);
     if (myProject.myCase.unit.idCrop != "")
     {
         cropListComboBox.setCurrentText(myProject.myCase.unit.idCrop);

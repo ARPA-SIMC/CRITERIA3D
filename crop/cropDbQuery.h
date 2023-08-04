@@ -6,19 +6,19 @@
 
     bool getCropIdList(const QSqlDatabase &dbCrop, QList<QString>& cropIdList, QString& errorStr);
 
-    QString getIdCropFromName(QSqlDatabase* dbCrop, QString cropName, QString *myError);
+    QString getIdCropFromName(const QSqlDatabase &dbCrop, QString cropName, QString& errorStr);
 
-    QString getCropFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField,
-                             QString idCropClass, QString *myError);
+    QString getIdCropFromClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField,
+                             QString idCropClass, QString& errorStr);
 
-    QString getCropFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString cropIdField,
-                          int cropId, QString *myError);
+    QString getIdCropFromField(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField,
+                          int cropId, QString& errorStr);
 
-    float getIrriRatioFromClass(QSqlDatabase* dbCrop, QString cropClassTable, QString cropClassField,
-                                QString idCropClass, QString *myError);
+    float getIrriRatioFromCropClass(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropClassField,
+                                QString idCropClass, QString& errorStr);
 
-    float getIrriRatioFromId(QSqlDatabase* dbCrop, QString cropClassTable, QString cropIdField,
-                         int cropId, QString *myError);
+    float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField,
+                         int cropId, QString& errorStr);
 
 
 #endif // CROPDBQUERY_H

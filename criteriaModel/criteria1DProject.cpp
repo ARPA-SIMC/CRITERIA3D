@@ -830,8 +830,8 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
     }
     if (isYearlyStatistics || isSeasonalForecast)
     {
-        float irriRatio = getIrriRatioFromClass(&dbCrop, "crop_class", "id_class",
-                                                myCase.unit.idCropClass, &projectError);
+        float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class",
+                                                myCase.unit.idCropClass, projectError);
         if (irriRatio < 0.001f)
         {
             // No irrigation: nothing to do
@@ -964,8 +964,8 @@ int Crit1DProject::computeAllUnits()
             }
 
             // CROP
-            compUnitList[i].idCrop = getCropFromClass(&dbCrop, "crop_class", "id_class",
-                                                         compUnitList[i].idCropClass, &projectError);
+            compUnitList[i].idCrop = getIdCropFromClass(dbCrop, "crop_class", "id_class",
+                                                         compUnitList[i].idCropClass, projectError);
             if (compUnitList[i].idCrop == "")
             {
                 logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing CROP *****");
@@ -974,8 +974,8 @@ int Crit1DProject::computeAllUnits()
             }
 
             // IRRI_RATIO
-            float irriRatio = getIrriRatioFromClass(&dbCrop, "crop_class", "id_class",
-                                                    compUnitList[i].idCropClass, &projectError);
+            float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class",
+                                                    compUnitList[i].idCropClass, projectError);
             if ((isYearlyStatistics || isSeasonalForecast || isMonthlyForecast || isShortTermForecast)
                 && (int(irriRatio) == int(NODATA)))
             {
