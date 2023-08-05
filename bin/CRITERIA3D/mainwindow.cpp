@@ -376,15 +376,17 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
     {
         if (isSoil(mapPos))
         {
-            contextMenu.addAction("Show soil data");
+            contextMenu.addAction("View soil data");
             nrItems++;
         }
     }
-    if (myProject.landUseMap.isLoaded)
+    if (myProject.landUseMap.isLoaded && myProject.landUnitList.size() != 0)
     {
         if (isLandUse(mapPos))
         {
-            contextMenu.addAction("Show land use data");
+            contextMenu.addAction("View land use");
+            nrItems++;
+            contextMenu.addAction("View crop");
             nrItems++;
         }
     }
@@ -396,7 +398,7 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
 
     if (selection != nullptr)
     {
-        if (selection->text().contains("Show soil data") )
+        if (selection->text().contains("View soil data"))
         {
             if (myProject.nrSoils > 0) {
                 openSoilWidget(mapPos);
@@ -406,7 +408,8 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
                 myProject.logError("Load soil database before.");
             }
         }
-        if (selection->text().contains("Show land use data") )
+
+        if (selection->text().contains("View land use"))
         {
             Position geoPos = mapView->mapToScene(mapPos);
             int id = myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude());
@@ -415,8 +418,54 @@ bool MainWindow::contextMenuRequested(QPoint localPos)
                 int index = getLandUnitIndex(myProject.landUnitList, id);
                 if (index != NODATA)
                 {
-                    FormInfo formInfo;
-                    formInfo.showInfo("LAND UNIT\nID: " + QString::number(id));
+                    Crit3DLandUnit landUnit = myProject.landUnitList[index];
+
+                    QString infoStr = "LAND UNIT: " + QString::number(landUnit.id) + "\n\n";
+                    infoStr += "name: " + landUnit.name + "\n";
+
+                    if (landUnit.description != "" && landUnit.description != landUnit.name)
+                        infoStr += "description: " + landUnit.description + "\n";
+
+                    infoStr += "land use: " + landUnit.idLandUse + "\n";
+                    infoStr += "crop: " + landUnit.idCrop + "\n";
+
+                    infoStr += "roughness: " + QString::number(landUnit.roughness) + " [s m-1/3]\n";
+                    infoStr += "pond: " + QString::number(landUnit.pond) + " [m]";
+
+                    myProject.logInfoGUI(infoStr);
+                }
+            }
+        }
+
+        if (selection->text().contains("View crop"))
+        {
+            Position geoPos = mapView->mapToScene(mapPos);
+            int id = myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude());
+            if (id != NODATA)
+            {
+                int index = getLandUnitIndex(myProject.landUnitList, id);
+                if (index != NODATA)
+                {
+                    QString infoStr;
+                    if (myProject.landUnitList[index].idCrop != "")
+                    {
+                        // same index of landUnitsList
+                        Crit3DCrop crop = myProject.cropList[index];
+                        infoStr = "CROP: " + QString::fromStdString(crop.idCrop) + "\n";
+                        infoStr += "name: " + QString::fromStdString(crop.name) + "\n";
+                        infoStr += "LAI min: " + QString::number(crop.LAImin) + "\n";
+                        infoStr += "LAI max: " + QString::number(crop.LAImax) + "\n";
+                        infoStr += "thermal threshold: " + QString::number(crop.thermalThreshold) + " °C\n";
+                        infoStr += "degree days (phase 1): " + QString::number(crop.degreeDaysIncrease) + " °C\n";
+                        infoStr += "degree days (phase 2): " + QString::number(crop.degreeDaysDecrease) + " °C\n";
+                        infoStr += "kcmax: " + QString::number(crop.kcMax) + "\n";
+                    }
+                    else
+                    {
+                        infoStr = "CROP: none";
+                    }
+
+                    myProject.logInfoGUI(infoStr);
                 }
             }
         }

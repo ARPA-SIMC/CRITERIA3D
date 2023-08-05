@@ -24,6 +24,7 @@
 */
 
 #include "basicMath.h"
+#include "cropDbTools.h"
 #include "project3D.h"
 #include "soilFluxes3D.h"
 #include "soilDbTools.h"
@@ -70,6 +71,50 @@ void Project3D::initializeProject3D()
     setCurrentFrequency(hourly);
 }
 
+
+void Project3D::clearProject3D()
+{
+    clearWaterBalance3D();
+
+    for (unsigned int i = 0; i < soilList.size(); i++)
+    {
+        soilList[i].cleanSoil();
+    }
+    soilList.clear();
+
+    soilMap.clear();
+    landUseMap.clear();
+
+    landUnitList.clear();
+    cropList.clear();
+
+    clearProject();
+}
+
+
+void Project3D::clearWaterBalance3D()
+{
+    soilFluxes3D::cleanMemory();
+
+    layerThickness.clear();
+    layerDepth.clear();
+
+    waterSinkSource.clear();
+
+    for (unsigned int i = 0; i < indexMap.size(); i++)
+    {
+        indexMap[i].clear();
+    }
+    indexMap.clear();
+
+    boundaryMap.clear();
+    soilIndexMap.clear();
+    criteria3DMap.clear();
+
+    isCriteria3DInitialized = false;
+}
+
+
 bool Project3D::loadProject3DSettings()
 {
     projectSettings->beginGroup("project");
@@ -84,51 +129,17 @@ bool Project3D::loadProject3DSettings()
     if (cropDbFileName == "")
         cropDbFileName = projectSettings->value("db_crop").toString();
 
-    // maps
+    // soil map
     soilMapFileName = projectSettings->value("soil_map").toString();
+
+    // land use map
     landUseMapFileName = projectSettings->value("landuse_map").toString();
+    if (landUseMapFileName == "")
+        landUseMapFileName = projectSettings->value("landUnits_map").toString();
 
     projectSettings->endGroup();
 
     return true;
-}
-
-void Project3D::clearWaterBalance3D()
-{
-    soilFluxes3D::cleanMemory();
-    waterSinkSource.clear();
-
-    layerThickness.clear();
-    layerDepth.clear();
-
-    for (unsigned int i = 0; i < indexMap.size(); i++)
-    {
-        indexMap[i].clear();
-    }
-    indexMap.clear();
-
-    boundaryMap.clear();
-    soilIndexMap.clear();
-
-    isCriteria3DInitialized = false;
-}
-
-
-void Project3D::clearProject3D()
-{
-    clearWaterBalance3D();
-
-    for (unsigned int i = 0; i < soilList.size(); i++)
-    {
-        soilList[i].cleanSoil();
-    }
-    soilList.clear();
-
-    soilMap.clear();
-    landUseMap.clear();
-    landUnitList.clear();
-
-    clearProject();
 }
 
 
@@ -244,13 +255,28 @@ bool Project3D::loadCropDatabase(QString fileName)
        return false;
     }
 
+    // land unit list
     if (! loadLandUnitList(dbCrop, landUnitList, errorString))
     {
-       logError("Error in reading land_units table:\n" + errorString);
+       logError("Error in reading land_units table\n" + errorString);
        return false;
     }
 
-    logInfo("Crop database = " + fileName);
+    // crop list (same index of landUnitsList)
+    cropList.resize(landUnitList.size());
+    for (int i = 0; i < landUnitList.size(); i++)
+    {
+        if (landUnitList[i].idCrop == "") continue;
+
+        if (! loadCropParameters(dbCrop, landUnitList[i].idCrop, cropList[i], errorString))
+        {
+            QString infoStr = "Error in reading crop data: " + landUnitList[i].idCrop;
+            logError(infoStr + "\n" + errorString);
+            return false;
+        }
+    }
+
+    logInfo("LandUse and crop database = " + fileName);
     return true;
 }
 

@@ -10,8 +10,11 @@
     #ifndef LANDUNIT_H
         #include "landUnit.h"
     #endif
-    class QString;
+    #ifndef CROP_H
+        #include "crop.h"
+    #endif
 
+    class QString;
 
     enum criteria3DVariable {waterContent, waterTotalPotential, waterMatricPotential,
                         availableWaterContent, degreeOfSaturation, soilTemperature,
@@ -52,6 +55,8 @@
         gis::Crit3DRasterGrid soilMap;
         gis::Crit3DRasterGrid landUseMap;
         std::vector <Crit3DLandUnit> landUnitList;
+        // same index of landUnitsList
+        std::vector <Crit3DCrop> cropList;
 
         // 3D soil fluxes maps
         gis::Crit3DRasterGrid soilIndexMap;
@@ -63,9 +68,10 @@
         unsigned int nrSoils;
         double computationSoilDepth;            // [m]
 
-        std::vector <soil::Crit3DSoil> soilList;
         std::vector <soil::Crit3DTextureClass> texturalClassList;
         std::vector<soil::Crit3DGeotechnicsClass> geotechnicsClassList;
+        std::vector <soil::Crit3DSoil> soilList;
+
         soil::Crit3DFittingOptions fittingOptions;
 
         // layers
