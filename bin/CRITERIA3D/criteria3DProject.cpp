@@ -387,14 +387,12 @@ bool Crit3DProject::loadLandUseMap(QString fileName)
 
 bool Crit3DProject::check3DProject()
 {
-    if (!DEM.isLoaded || !soilMap.isLoaded || soilList.size() == 0)
+    if (!DEM.isLoaded || !meteoPointsLoaded)
     {
         if (! DEM.isLoaded)
             errorString = ERROR_STR_MISSING_DEM;
-        else if (! soilMap.isLoaded)
-            errorString =  "Missing soil map.";
-        else if (soilList.size() == 0)
-            errorString = "Missing soil properties.";
+        else if (! meteoPointsLoaded)
+            errorString =  ERROR_STR_MISSING_DB;
         return false;
     }
 
@@ -404,12 +402,6 @@ bool Crit3DProject::check3DProject()
 
 bool Crit3DProject::setSoilIndexMap()
 {
-    if (! check3DProject())
-    {
-        logError();
-        return false;
-    }
-
     double x, y;
     soilIndexMap.initializeGrid(*(DEM.header));
     for (int row = 0; row < DEM.header->nrRows; row++)

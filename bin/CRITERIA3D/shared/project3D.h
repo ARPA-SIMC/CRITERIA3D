@@ -31,7 +31,7 @@
     private:
         void computeNrLayers();
         void setLayersDepth();
-        bool setIndexMaps();
+        void setIndexMaps();
         bool setLateralBoundary();
         bool setCrit3DSurfaces();
         bool setCrit3DSoils();
@@ -104,6 +104,7 @@
         int getSoilLayerIndex(double depth);
         int getLandUnitIdUTM(double x, double y);
         int getLandUnitIdGeo(double lat, double lon);
+        int getLandUnitIndexRowCol(int row, int col);
 
         bool initializeSoilMoisture(int month);
 

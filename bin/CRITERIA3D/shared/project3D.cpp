@@ -146,16 +146,40 @@ bool Project3D::loadProject3DSettings()
 bool Project3D::initializeWaterBalance3D()
 {
     logInfo("\nInitialize Waterbalance...");
-    QString myError;
+
+    if (!soilMap.isLoaded || soilList.size() == 0)
+    {
+        logInfo("WARNING: soil map or soil db is missing: only surface fluxes will be computed.");
+    }
+
+    if (! landUseMap.isLoaded || landUnitList.empty())
+    {
+        logInfo("WARNING: land use map or crop db is missing: default properties will be used (FALLOW).");
+        landUnitList.clear();
+        Crit3DLandUnit deafultLandUnit;
+        landUnitList.push_back(deafultLandUnit);
+    }
+
+    // set computation depth
+    for (unsigned int i = 0; i < nrSoils; i++)
+    {
+        computationSoilDepth = std::max(computationSoilDepth, soilList[i].totalDepth);
+    }
+    logInfo("Computation depth: " + QString::number(computationSoilDepth) + " m");
 
     // Layers depth
     computeNrLayers();
     setLayersDepth();
-    logInfo("nr of layers: " + QString::number(nrLayers));
+    logInfo("Nr of layers: " + QString::number(nrLayers));
 
-    // Index map
-    if (! setIndexMaps()) return false;
-    logInfo("nr of nodes: " + QString::number(nrNodes));
+    // nr of nodes
+    setIndexMaps();
+    logInfo("Nr of nodes: " + QString::number(nrNodes));
+    if (nrNodes == 0)
+    {
+        logError("Missing information to assign nodes.");
+        return false;
+    }
 
     waterSinkSource.resize(nrNodes);
 
@@ -165,14 +189,14 @@ bool Project3D::initializeWaterBalance3D()
 
     // Initiale soil fluxes
     int myResult = soilFluxes3D::initialize(long(nrNodes), int(nrLayers), nrLateralLink, true, false, false);
-    if (isCrit3dError(myResult, myError))
+    if (isCrit3dError(myResult, errorString))
     {
-        logError("initializeWaterBalance3D:" + myError);
+        logError("initializeWaterBalance3D:" + errorString);
         return false;
     }
     logInfo("Memory initialized");
 
-    // Set properties for all voxels
+    // Set properties for soil surface (roughness, pond)
     if (! setCrit3DSurfaces())
     {
         logError();
@@ -184,7 +208,8 @@ bool Project3D::initializeWaterBalance3D()
         logError();
         return false;
     }
-    logInfo("Soils initialized");
+    if (nrSoils > 0)
+        logInfo("Soils initialized");
 
     if (! setCrit3DTopography())
     {
@@ -195,7 +220,7 @@ bool Project3D::initializeWaterBalance3D()
 
     if (! setCrit3DNodeSoil())
         return false;
-    logInfo("Soils initialized");
+    logInfo("Node properties initialized");
 
     soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, 10.0);
 
@@ -276,7 +301,7 @@ bool Project3D::loadCropDatabase(QString fileName)
         }
     }
 
-    logInfo("LandUse and crop database = " + fileName);
+    logInfo("Crop/landUse database = " + fileName);
     return true;
 }
 
@@ -329,37 +354,38 @@ void Project3D::setLayersDepth()
 }
 
 
-bool Project3D::setIndexMaps()
+void Project3D::setIndexMaps()
 {
-    // check
-    if (!DEM.isLoaded || !soilIndexMap.isLoaded || nrSoils == 0)
-    {
-        if (!DEM.isLoaded)
-            logError("Missing Digital Elevation Model.");
-        else if (!soilIndexMap.isLoaded)
-            logError("Missing soil map.");
-        else if (nrSoils == 0)
-            logError("Missing soil properties.");
-        return false;
-    }
-
     indexMap.resize(nrLayers);
 
     unsigned long currentIndex = 0;
-    for (unsigned int i = 0; i < nrLayers; i++)
+    for (unsigned int layer = 0; layer < nrLayers; layer++)
     {
-        indexMap.at(i).initializeGrid(DEM);
+        indexMap.at(layer).initializeGrid(DEM);
 
-        for (int row = 0; row < indexMap.at(i).header->nrRows; row++)
+        for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
         {
-            for (int col = 0; col < indexMap.at(i).header->nrCols; col++)
+            for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
             {
                 if (int(DEM.value[row][col]) != int(DEM.header->flag))
                 {
-                    int soilIndex = getSoilIndex(row, col);
-                    if (isWithinSoil(soilIndex, layerDepth.at(i)))
+                    int soilIndex;
+                    if (layer == 0)
                     {
-                        indexMap.at(i).value[row][col] = currentIndex;
+                        // surface
+                        soilIndex = getLandUnitIndexRowCol(row, col);
+                    }
+                    else
+                    {
+                        // sub-surface
+                        soilIndex = getSoilIndex(row, col);
+                        if (! isWithinSoil(soilIndex, layerDepth.at(layer)))
+                            soilIndex = NODATA;
+                    }
+
+                    if (soilIndex != NODATA)
+                    {
+                        indexMap.at(layer).value[row][col] = currentIndex;
                         currentIndex++;
                     }
                 }
@@ -368,7 +394,6 @@ bool Project3D::setIndexMaps()
     }
 
     nrNodes = currentIndex;
-    return (currentIndex > 0);
 }
 
 
@@ -398,30 +423,24 @@ bool Project3D::setLateralBoundary()
 
 bool Project3D::setCrit3DSurfaces()
 {
-    QString myError;
-    int result;
-
-    // TODO: read soilUse parameters
-    int nrSurfaces = 1;
-    double ManningRoughness = 0.24;         // [s m^-1/3]
-    double surfacePond = 0.002;             // [m]
-
-    for (int surfaceIndex = 0; surfaceIndex < nrSurfaces; surfaceIndex++)
+    for (int i = 0; i < landUnitList.size(); i++)
     {
-        result = soilFluxes3D::setSurfaceProperties(surfaceIndex, ManningRoughness, surfacePond);
-        if (isCrit3dError(result, myError))
+        int result = soilFluxes3D::setSurfaceProperties(i, landUnitList[i].roughness, landUnitList[i].pond);
+        if (isCrit3dError(result, errorString))
         {
-            errorString = "setCrit3DSurfaces: " + myError
-                           + "\n surface nr:" + QString::number(surfaceIndex);
+            errorString = "setCrit3DSurfaces: " + errorString + "\n"
+                           + "Unit nr:" + QString::number(i);
             return false;
         }
     }
+
+    logInfo("Nr of land units: " + QString::number(landUnitList.size()));
 
     return true;
 }
 
 
-// ThetaS and ThetaR already corrected for coarse fragments
+// thetaS and thetaR are already corrected for coarse fragments
 bool Project3D::setCrit3DSoils()
 {
     soil::Crit3DHorizon* myHorizon;
@@ -629,9 +648,7 @@ bool Project3D::initializeMatricPotential(float psi)
 
 bool Project3D::setCrit3DNodeSoil()
 {
-    long index;
     int soilIndex, horizonIndex, myResult;
-    QString myError;
 
     for (unsigned int layer = 0; layer < nrLayers; layer ++)
     {
@@ -639,34 +656,42 @@ bool Project3D::setCrit3DNodeSoil()
         {
             for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
             {
-                index = long(indexMap.at(layer).value[row][col]);
+                long index = long(indexMap.at(layer).value[row][col]);
                 if (index != long(indexMap.at(layer).header->flag))
                 {
-                    soilIndex = getSoilIndex(row, col);
-
                     if (layer == 0)
                     {
                         // surface
-                        myResult = soilFluxes3D::setNodeSurface(index, 0);
+                        int landUnitIndex = getLandUnitIndexRowCol(row, col);
+
+                        if (landUnitIndex != NODATA)
+                            soilFluxes3D::setNodeSurface(index, landUnitIndex);
+                        else
+                            logError("Wrong surface definition in row, col: "
+                                     + QString::number(row) + "," + QString::number(col));
                     }
                     else
                     {
                         // sub-surface
+                        soilIndex = getSoilIndex(row, col);
+
                         horizonIndex = soil::getHorizonIndex(soilList[unsigned(soilIndex)], layerDepth[layer]);
                         if (horizonIndex == NODATA)
                         {
-                            logError("function setCrit3DNodeSoil: \nno horizon definition in soil "
-                                    + QString::fromStdString(soilList[unsigned(soilIndex)].code) + " depth: " + QString::number(layerDepth[layer])
-                                    +"\nCheck soil totalDepth");
+                            errorString = "function setCrit3DNodeSoil:\n No horizon definition in soil "
+                                     + QString::fromStdString(soilList[unsigned(soilIndex)].code)
+                                     + " depth: " + QString::number(layerDepth[layer])
+                                     +"\nCheck soil totalDepth";
+                            logError();
                             return false;
                         }
 
                         myResult = soilFluxes3D::setNodeSoil(index, soilIndex, horizonIndex);
 
                         // check error
-                        if (isCrit3dError(myResult, myError))
+                        if (isCrit3dError(myResult, errorString))
                         {
-                            logError("setCrit3DNodeSoil:" + myError + " in soil nr: " + QString::number(soilIndex)
+                            logError("setCrit3DNodeSoil:" + errorString + " in soil nr: " + QString::number(soilIndex)
                                     + " horizon nr:" + QString::number(horizonIndex));
                             return false;
                         }
@@ -675,6 +700,7 @@ bool Project3D::setCrit3DNodeSoil()
             }
         }
     }
+
     return true;
 }
 
@@ -1203,6 +1229,22 @@ int Project3D::getLandUnitIdGeo(double lat, double lon)
     gis::latLonToUtmForceZone(gisSettings.utmZone, lat, lon, &x, &y);
 
     return getLandUnitIdUTM(x, y);
+}
+
+
+int Project3D::getLandUnitIndexRowCol(int row, int col)
+{
+    if (! landUseMap.isLoaded || landUnitList.empty())
+        return 0;                       // default
+
+    double x, y;
+    DEM.getXY(row, col, x, y);
+
+    int id = getLandUnitIdUTM(x, y);
+    if (id == NODATA)
+        return NODATA;
+
+    return getLandUnitIndex(landUnitList, id);
 }
 
 
