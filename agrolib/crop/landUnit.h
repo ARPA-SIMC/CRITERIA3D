@@ -2,6 +2,7 @@
 #define LANDUNIT_H
 
     #include <QString>
+    #include <vector>
     class QSqlDatabase;
 
     class Crit3DLandUnit
