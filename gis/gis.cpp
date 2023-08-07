@@ -928,10 +928,7 @@ namespace gis
         if (! dem.isLoaded) return false;
 
         double dz_dx, dz_dy;
-        double slope, aspect;
-        double z, dz;
-        double zNorth, zSouth, zEast, zWest;
-        int i, nr;
+        double lateral_distance = dem.header->cellSize * sqrt(2);
 
         slopeMap->initializeGrid(dem);
         aspectMap->initializeGrid(dem);
@@ -939,64 +936,72 @@ namespace gis
         for (int row = 0; row < dem.header->nrRows; row++)
             for (int col = 0; col < dem.header->nrCols; col++)
             {
-                z = double(dem.value[row][col]);
-                if (! isEqual(z, double(dem.header->flag)))
+                float z = dem.value[row][col];
+                if (! isEqual(z, dem.header->flag))
                 {
                     /*! compute dz/dy */
-                    nr = 0;
-                    dz = 0;
-                    for (i=-1; i <=1; i++)
+                    double dz = 0;
+                    double dy = 0;
+                    for (int i=-1; i <=1; i++)
                     {
-                        zNorth = double(dem.getValueFromRowCol(row-1, col+i));
-                        zSouth = double(dem.getValueFromRowCol(row+1, col+i));
-                        if (! isEqual(zNorth, double(dem.header->flag)))
+                        if (i != 0)
                         {
-                            dz += zNorth - z;
-                            nr++;
-                        }
-                        if (! isEqual(zSouth, double(dem.header->flag)))
-                        {
-                            dz += z - zSouth;
-                            nr++;
+                            for(int j=-1; j <=1; j++)
+                            {
+                                float z1 = dem.getValueFromRowCol(row+i, col+j);
+                                if (! isEqual(z1, dem.header->flag))
+                                {
+                                    dz += i * (z - z1);
+                                    if (j == 0)
+                                        dy += dem.header->cellSize;
+                                    else
+                                        dy += lateral_distance;
+                                }
+                            }
                         }
                     }
-                    if (nr == 0)
-                        dz_dy = EPSILON;
+
+                    if (dy > 0)
+                        dz_dy = dz / dy;
                     else
-                        dz_dy = dz / (nr * dem.header->cellSize);
+                        dz_dy = EPSILON;
 
                     /*! compute dz/dx */
-                    nr = 0;
                     dz = 0;
-                    for (i=-1; i <=1; i++)
+                    double dx = 0;
+                    for (int j=-1; j <=1; j++)
                     {
-                        zWest = double(dem.getValueFromRowCol(row+i, col-1));
-                        zEast = double(dem.getValueFromRowCol(row+i, col+1));
-                        if (! isEqual (zWest, double(dem.header->flag)))
+                        if (j != 0)
                         {
-                            dz += zWest - z;
-                            nr++;
-                        }
-                        if (! isEqual(zEast, double(dem.header->flag)))
-                        {
-                            dz += z - zEast;
-                            nr++;
+                            for(int i=-1; i <=1; i++)
+                            {
+                                float z1 = dem.getValueFromRowCol(row+i, col+j);
+                                if (! isEqual(z1, dem.header->flag))
+                                {
+                                    dz = dz + j * (z - z1);
+                                    if (i == 0)
+                                        dx += dem.header->cellSize;
+                                    else
+                                        dx += lateral_distance;
+                                }
+                            }
                         }
                     }
-                    if (nr == 0)
-                        dz_dx = EPSILON;
+
+                    if (dx > 0)
+                        dz_dx = dz / dx;
                     else
-                        dz_dx = dz / (nr * dem.header->cellSize);
+                        dz_dx = EPSILON;
 
                     /*! slope in degrees */
-                    slope = atan(sqrt(dz_dx * dz_dx + dz_dy * dz_dy)) * RAD_TO_DEG;
+                    double slope = atan(sqrt(dz_dx * dz_dx + dz_dy * dz_dy)) * RAD_TO_DEG;
                     slopeMap->value[row][col] = float(slope);
 
                     /*! avoid arctan to infinite */
                     if (dz_dx == 0.) dz_dx = EPSILON;
 
                     /*! compute with zero to east */
-                    aspect = 0.0;
+                    double aspect = 0.0;
                     if (dz_dx > 0)
                     {
                         aspect = atan(dz_dy / dz_dx);
