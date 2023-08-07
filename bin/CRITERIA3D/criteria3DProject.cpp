@@ -64,35 +64,21 @@ Crit3DProject::Crit3DProject() : Project3D()
 
 bool Crit3DProject::initializeCriteria3DModel()
 {
-    /*if (! check3DProject())
+    if (! check3DProject())
     {
         logError();
         return false;
-    }*/
+    }
 
     clearWaterBalance3D();
 
     if (! setSoilIndexMap())
         return false;
 
-    // TODO set landUseMap()
-
-    /* TODO initialize root density
-    // andrebbe rifatto per ogni tipo di suolo (ora considera solo suolo 0)
-    int nrSoilLayersWithoutRoots = 2;
-    int soilLayerWithRoot = this->nrSoilLayers - nrSoilLayersWithoutRoots;
-    double depthModeRootDensity = 0.35*this->soilDepth;     //[m] depth of mode of root density
-    double depthMeanRootDensity = 0.5*this->soilDepth;      //[m] depth of mean of root density
-    initializeRootProperties(&(this->soilList[0]), this->nrSoilLayers, this->computationSoilDepth,
-                         this->layerDepth.data(), this->layerThickness.data(),
-                         nrSoilLayersWithoutRoots, soilLayerWithRoot,
-                         GAMMA_DISTRIBUTION, depthModeRootDensity, depthMeanRootDensity);
-    */
-
     if (! initializeWaterBalance3D())
     {
         clearWaterBalance3D();
-        logError("Criteria3D model not initialized.");
+        logError("Criteria3D model NOT initialized.");
         return false;
     }
 
