@@ -27,7 +27,7 @@
 
 #include "commonConstants.h"
 #include "basicMath.h"
-#include "meteoPoint.h"
+#include "meteo.h"
 #include "snow.h"
 
 
@@ -413,11 +413,14 @@ void Crit3DSnow::computeSnowBrooksModel()
 
     /*! Internal energy */
     _internalEnergy = prevInternalEnergy + QTotal + Qr;
+    // check (aggiunto) : scioglimento
+    if (Qr > QTotal && prevInternalEnergy < 0 && _internalEnergy > EPSILON)
+        _internalEnergy = EPSILON;
 
     /*! Snow Pack Mass */
 
     /*! Ice content */
-    if (_internalEnergy > EPSILON)
+    if (_internalEnergy >= EPSILON)
     {
         _iceContent = 0;
     }
@@ -431,7 +434,7 @@ void Crit3DSnow::computeSnowBrooksModel()
                                   / (1 - snowParameters.snowWaterHoldingCapacity); // [%]
 
     /*! Liquid water content */
-    if (_internalEnergy > EPSILON)
+    if (_internalEnergy >= EPSILON)
     {
         _liquidWaterContent = 0;
     }
