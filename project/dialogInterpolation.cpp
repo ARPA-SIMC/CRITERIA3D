@@ -28,8 +28,6 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     QLabel *labelAggregation = new QLabel(tr("aggregation method"));
     layoutAggregation->addWidget(labelAggregation);
 
-    connect(upscaleFromDemEdit, SIGNAL(stateChanged(int)), this, SLOT(upscaleFromDemChanged(int)));
-
     std::map<std::string, aggregationMethod>::const_iterator itAggr;
     for (itAggr = aggregationMethodToString.begin(); itAggr != aggregationMethodToString.end(); ++itAggr)
         gridAggregationMethodEdit.addItem(QString::fromStdString(itAggr->first), QString::fromStdString(itAggr->first));
@@ -41,6 +39,8 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     layoutAggregation->addWidget(&gridAggregationMethodEdit);
     layoutMain->addLayout(layoutAggregation);
+
+    connect(upscaleFromDemEdit, SIGNAL(stateChanged(int)), this, SLOT(upscaleFromDemChanged(int)));
 
     // topographic distances
     topographicDistanceEdit = new QCheckBox(tr("use topographic distance"));
@@ -146,6 +146,9 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     layoutMain->addStretch(1);
     setLayout(layoutMain);
+
+    upscaleFromDemChanged(upscaleFromDemEdit->isChecked() ? 1 : 0);
+    multipleDetrendingChanged(multipleDetrendingEdit->isChecked() ? 1 : 0);
 
     exec();
 }
