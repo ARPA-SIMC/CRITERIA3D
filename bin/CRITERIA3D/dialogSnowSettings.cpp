@@ -7,20 +7,20 @@ DialogSnowSettings::DialogSnowSettings(QWidget *parent) : QDialog(parent)
     QGridLayout *layoutSettings = new QGridLayout();
     QHBoxLayout *layoutOk = new QHBoxLayout();
 
-    QLabel *allRainfallThreshold = new QLabel(tr("All rainfall at temperature [°C] > "));
-    allRainfallThresholdValue = new QLineEdit();
-    allRainfallThresholdValue->setFixedWidth(70);
+    QLabel *rainfallThreshold = new QLabel(tr("All rainfall at temperature [°C] > "));
+    rainfallThresholdValue = new QLineEdit();
+    rainfallThresholdValue->setFixedWidth(70);
 
-    doubleValidator* doubleRainfallThresholdVal = new doubleValidator(0.0, 4.0, 1, allRainfallThresholdValue);
+    doubleValidator* doubleRainfallThresholdVal = new doubleValidator(0.0, 4.0, 1, rainfallThresholdValue);
     doubleRainfallThresholdVal->setNotation(doubleValidator::StandardNotation);
-    allRainfallThresholdValue->setValidator(doubleRainfallThresholdVal);
+    rainfallThresholdValue->setValidator(doubleRainfallThresholdVal);
 
-    QLabel *allSnowThreshold = new QLabel(tr("All snow at temperature [°C] < "));
-    allSnowThresholdValue = new QLineEdit();
-    doubleValidator* doubleAllSnowThresholdVal = new doubleValidator(-2.0, 1.0, 1, allSnowThresholdValue);
+    QLabel *snowThreshold = new QLabel(tr("All snow at temperature [°C] < "));
+    snowThresholdValue = new QLineEdit();
+    doubleValidator* doubleAllSnowThresholdVal = new doubleValidator(-2.0, 1.0, 1, snowThresholdValue);
     doubleAllSnowThresholdVal->setNotation(doubleValidator::StandardNotation);
-    allSnowThresholdValue->setValidator(doubleAllSnowThresholdVal);
-    allSnowThresholdValue->setFixedWidth(70);
+    snowThresholdValue->setValidator(doubleAllSnowThresholdVal);
+    snowThresholdValue->setFixedWidth(70);
 
     QLabel *waterHolding = new QLabel(tr("Water holding capacity [-] "));
     waterHoldingValue = new QLineEdit();
@@ -50,10 +50,10 @@ DialogSnowSettings::DialogSnowSettings(QWidget *parent) : QDialog(parent)
     soilAlbedoValue->setValidator(doubleAlbedoVal);
     soilAlbedoValue->setFixedWidth(70);
 
-    layoutSettings->addWidget(allRainfallThreshold, 0 , 0);
-    layoutSettings->addWidget(allRainfallThresholdValue, 0 , 1);
-    layoutSettings->addWidget(allSnowThreshold, 1 , 0);
-    layoutSettings->addWidget(allSnowThresholdValue, 1 , 1);
+    layoutSettings->addWidget(rainfallThreshold, 0 , 0);
+    layoutSettings->addWidget(rainfallThresholdValue, 0 , 1);
+    layoutSettings->addWidget(snowThreshold, 1 , 0);
+    layoutSettings->addWidget(snowThresholdValue, 1 , 1);
     layoutSettings->addWidget(waterHolding, 2 , 0);
     layoutSettings->addWidget(waterHoldingValue, 2 , 1);
     layoutSettings->addWidget(surfaceThick, 3 , 0);
@@ -94,12 +94,12 @@ void DialogSnowSettings::accept()
 
 bool DialogSnowSettings::checkEmptyValues()
 {
-    if (allRainfallThresholdValue->text().isEmpty())
+    if (rainfallThresholdValue->text().isEmpty())
     {
         QMessageBox::information(nullptr, "Missing max temp value with snow", "Insert max temp");
         return false;
     }
-    if (allSnowThresholdValue->text().isEmpty())
+    if (snowThresholdValue->text().isEmpty())
     {
         QMessageBox::information(nullptr, "Missing min temp value with rain", "Insert min temp");
         return false;
@@ -130,7 +130,7 @@ bool DialogSnowSettings::checkEmptyValues()
 bool DialogSnowSettings::checkWrongValues()
 {
     bool ok;
-    if (allRainfallThresholdValue->text().toDouble(&ok) < 0.0 || allRainfallThresholdValue->text().toDouble() > 4.0)
+    if (rainfallThresholdValue->text().toDouble(&ok) < 0.0 || rainfallThresholdValue->text().toDouble() > 4.0)
     {
         QMessageBox::information(nullptr, "Max temp value with snow should be in [0:4]", "Insert a valid value");
         return false;
@@ -140,7 +140,7 @@ bool DialogSnowSettings::checkWrongValues()
         QMessageBox::information(nullptr, "Max temp value with snow is not a number", "Insert a valid value");
         return false;
     }
-    if (allSnowThresholdValue->text().toDouble(&ok) < -2.0 || allSnowThresholdValue->text().toDouble() > 1.0)
+    if (snowThresholdValue->text().toDouble(&ok) < -2.0 || snowThresholdValue->text().toDouble() > 1.0)
     {
         QMessageBox::information(nullptr, "Min temp value with rain should be in [-2:1]", "Insert a valid value");
         return false;
@@ -193,24 +193,24 @@ bool DialogSnowSettings::checkWrongValues()
     return true;
 }
 
-double DialogSnowSettings::getAllRainfallThresholdValue() const
+double DialogSnowSettings::getRainfallThresholdValue() const
 {
-    return allRainfallThresholdValue->text().toDouble();
+    return rainfallThresholdValue->text().toDouble();
 }
 
-void DialogSnowSettings::setAllRainfallThresholdValue(double value)
+void DialogSnowSettings::setRainfallThresholdValue(double value)
 {
-    allRainfallThresholdValue->setText(QString::number(value));
+    rainfallThresholdValue->setText(QString::number(value));
 }
 
-double DialogSnowSettings::getAllSnowThresholdValue() const
+double DialogSnowSettings::getSnowThresholdValue() const
 {
-    return allSnowThresholdValue->text().toDouble();
+    return snowThresholdValue->text().toDouble();
 }
 
-void DialogSnowSettings::setAllSnowThresholdValue(double value)
+void DialogSnowSettings::setSnowThresholdValue(double value)
 {
-    allSnowThresholdValue->setText(QString::number(value));
+    snowThresholdValue->setText(QString::number(value));
 }
 
 double DialogSnowSettings::getWaterHoldingValue() const

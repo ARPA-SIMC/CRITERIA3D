@@ -17,11 +17,11 @@ class DialogSnowSettings : public QDialog
 public:
     DialogSnowSettings(QWidget *parent = nullptr);
 
-    double getAllRainfallThresholdValue() const;
-    void setAllRainfallThresholdValue(double value);
+    double getRainfallThresholdValue() const;
+    void setRainfallThresholdValue(double value);
 
-    double getAllSnowThresholdValue() const;
-    void setAllSnowThresholdValue(double value);
+    double getSnowThresholdValue() const;
+    void setSnowThresholdValue(double value);
 
     double getWaterHoldingValue() const;
     void setWaterHoldingValue(double value);
@@ -40,8 +40,8 @@ public:
     void accept();
 
 private:
-    QLineEdit *allRainfallThresholdValue;
-    QLineEdit *allSnowThresholdValue;
+    QLineEdit *rainfallThresholdValue;
+    QLineEdit *snowThresholdValue;
     QLineEdit *waterHoldingValue;
     QLineEdit *surfaceThickValue;
     QLineEdit *vegetationHeightValue;

@@ -2047,8 +2047,8 @@ void MainWindow::on_actionSnow_compute_current_hour_triggered()
 void MainWindow::on_actionSnow_settings_triggered()
 {
     DialogSnowSettings dialogSnowSetting;
-    dialogSnowSetting.setAllRainfallThresholdValue(myProject.snowModel.snowParameters.tempMaxWithSnow);
-    dialogSnowSetting.setAllSnowThresholdValue(myProject.snowModel.snowParameters.tempMinWithRain);
+    dialogSnowSetting.setRainfallThresholdValue(myProject.snowModel.snowParameters.tempMaxWithSnow);
+    dialogSnowSetting.setSnowThresholdValue(myProject.snowModel.snowParameters.tempMinWithRain);
     dialogSnowSetting.setWaterHoldingValue(myProject.snowModel.snowParameters.snowWaterHoldingCapacity);
     dialogSnowSetting.setSurfaceThickValue(myProject.snowModel.snowParameters.snowSkinThickness);
     dialogSnowSetting.setVegetationHeightValue(myProject.snowModel.snowParameters.snowVegetationHeight);
@@ -2061,8 +2061,8 @@ void MainWindow::on_actionSnow_settings_triggered()
     }
     else
     {
-        double tempMaxWithSnow = dialogSnowSetting.getAllRainfallThresholdValue();
-        double tempMinWithRain = dialogSnowSetting.getAllSnowThresholdValue();
+        double tempMaxWithSnow = dialogSnowSetting.getRainfallThresholdValue();
+        double tempMinWithRain = dialogSnowSetting.getSnowThresholdValue();
         double snowWaterHoldingCapacity = dialogSnowSetting.getWaterHoldingValue();
         double snowSkinThickness = dialogSnowSetting.getSurfaceThickValue();
         double snowVegetationHeight = dialogSnowSetting.getVegetationHeightValue();
