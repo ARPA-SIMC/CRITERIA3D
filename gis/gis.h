@@ -220,7 +220,7 @@
         bool isMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
         bool isBoundary(const Crit3DRasterGrid& rasterGrid, int row, int col);
-        bool isBoundaryRunoff(const Crit3DRasterGrid& dem, const Crit3DRasterGrid &aspectMap, int row, int col);
+        bool isBoundaryRunoff(const Crit3DRasterGrid& rasterRef, const Crit3DRasterGrid &aspectMap, int row, int col);
         bool isStrictMaximum(const Crit3DRasterGrid& rasterGrid, int row, int col);
 
         bool getNorthernEmisphere();
