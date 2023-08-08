@@ -1095,6 +1095,7 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
     Crit3DProxy* myProxy;
     Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
     float proxySlope;
+    unsigned indexMultiRegr = 0;
 
     for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
@@ -1108,8 +1109,9 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
             {
                 if (mySettings->getUseMultipleDetrending())
                 {
-                    proxySlope = mySettings->getMultiRegressionSlopes()[pos];
-                    retrendValue += myProxyValue * proxySlope;
+                    proxySlope = mySettings->getMultiRegressionSlopes()[indexMultiRegr];
+                    retrendValue += (myProxyValue * mySettings->getMultiRegressionStdDevs()[indexMultiRegr] + mySettings->getMultiRegressionAvgs()[indexMultiRegr]) * proxySlope;
+                    indexMultiRegr++;
                 }
                 else
                 {
@@ -1186,11 +1188,11 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     else if (nrPredictors == 1)
         regressionGeneric(myPoints, mySettings, proxyPos, false);
 
-    unsigned i;
+    unsigned i,j;
 
-    std::vector <float> proxyValues;
-    std::vector <float> predictands;
-    std::vector <std::vector <float>> predictors;
+    std::vector <double> proxyValues;
+    std::vector <double> predictands;
+    std::vector <std::vector <double>> predictors;
 
     for (i = 0; i < myPoints.size(); i++)
     {
@@ -1206,44 +1208,62 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         }
     }
 
+    // z-score normalization
+    float sum = 0;
+    std::vector <std::vector <double>> predictorsNorm(predictors.size(), std::vector <double> (predictors[0].size()));
+    std::vector <double> avgs(nrPredictors);
+    std::vector <double> stdDevs(nrPredictors);
+
+    for (i=0; i<nrPredictors; i++)
+    {
+        sum = 0;
+        for (j=0; j<predictors.size(); j++)
+            sum += predictors[j][i];
+        avgs[i] = sum / predictors.size();
+
+        sum = 0;
+        for (j=0; j<predictors.size(); j++)
+            sum += (predictors[j][i] - avgs[i]) * (predictors[j][i] - avgs[i]);
+        stdDevs[i] = sqrt(sum / (predictors.size() - 1));
+
+        for (j=0; j<predictors.size(); j++)
+            predictorsNorm[j][i] = (predictors[j][i] - avgs[i]) / stdDevs[i];
+    }
+
     int nrPoints = int(predictands.size());
     if (nrPoints == 0) return;
 
-    float** predictorsArray = (float**)calloc(nrPredictors, sizeof(float*));
-    float *m = (float*)calloc(nrPredictors, sizeof(float));
-    float q;
-    float *weights = (float*)calloc(nrPoints, sizeof(float));;
+    double** predictorsArray = (double**)calloc(nrPredictors, sizeof(double*));
+    double *m = (double*)calloc(nrPredictors, sizeof(double));
+    double q;
+    double *weights = (double*)calloc(nrPoints, sizeof(double));;
 
     for (i=0; i< nrPredictors; i++)
     {
-        predictorsArray[i] = (float*)calloc(nrPoints, sizeof(float));
+        predictorsArray[i] = (double*)calloc(nrPoints, sizeof(double));
         predictorsArray[i] = predictors[i].data();
     }
 
+    std::vector <double> slopes;
     if (predictands.size() >= MIN_REGRESSION_POINTS)
     {
-        statistics::weightedMultiRegressionLinear(predictorsArray, predictands.data(), weights, nrPoints, &q, m, nrPredictors);
+        slopes = stat_openai::multipleLinearRegression(predictorsNorm, predictands);
+        //statistics::weightedMultiRegressionLinear(predictorsArray, predictands.data(), weights, nrPoints, &q, m, nrPredictors);
     }
 
-    std::vector <float> regrSlopes;
-    int index = 0;
-    for (i=0; i < int(mySettings->getProxyNr()); i++)
-    {
-        mySettings->getProxy(i)->setIsSignificant(true);
+    free(predictorsArray);
+    free(weights);
 
-        if (myCombination.getValue(i))
-        {
-            regrSlopes.push_back(m[index]);
-            index++;
-        }
-    }
-
-    mySettings->setMultiRegressionSlopes(regrSlopes);
+    mySettings->setMultiRegressionSlopes(slopes);
+    mySettings->setMultiRegressionAvgs(avgs);
+    mySettings->setMultiRegressionStdDevs(stdDevs);
 
     float detrendValue, proxyValue;
+    unsigned index = 0;
 
     for (i = 0; i < myPoints.size(); i++)
-    {   
+    {
+        index = 0;
         for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
         {
             detrendValue = 0;
@@ -1253,7 +1273,9 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                 proxyValue = myPoints[i].getProxyValue(pos);
 
                 if (proxyValue != NODATA)
-                    detrendValue = proxyValue * m[pos];
+                    detrendValue = proxyValue * slopes[index];
+
+                index++;
 
                 myPoints[i].value -= detrendValue;
             }
@@ -1409,6 +1431,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
         if (mySettings->getUseMultipleDetrending())
         {
             multipleDetrending(myPoints, mySettings->getSelectedCombination(), mySettings, myVar);
+            mySettings->setCurrentCombination(mySettings->getSelectedCombination());
         }
         else
         {
@@ -1523,3 +1546,57 @@ float getFirstIntervalHeightValue(std::vector <Crit3DInterpolationDataPoint> &my
 }
 
 
+
+namespace stat_openai
+{
+
+    // Funzione per calcolare la trasposta di una matrice
+    vector<vector<float>> transpose(const vector<vector<float>>& matrix) {
+        int rows = matrix.size();
+        int cols = matrix[0].size();
+
+        vector<vector<float>> result(cols, vector<float>(rows));
+
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                result[j][i] = matrix[i][j];
+            }
+        }
+
+        return result;
+    }
+
+    // Funzione per calcolare la regressione lineare multipla
+    std::vector<double> multipleLinearRegression(const std::vector<std::vector<double>>& X, const std::vector<double>& y)
+    {
+        int numSamples = X.size();
+        int numFeatures = X[0].size();
+
+        // Calcola la matrice X^T * X
+        vector<vector<double>> XTX(numFeatures, vector<double>(numFeatures));
+        for (int i = 0; i < numFeatures; ++i) {
+            for (int j = 0; j < numFeatures; ++j) {
+                for (int k = 0; k < numSamples; ++k) {
+                XTX[i][j] += X[k][i] * X[k][j];
+                }
+            }
+        }
+
+        // Calcola il vettore X^T * y
+        vector<double> XTy(numFeatures);
+        for (int i = 0; i < numFeatures; ++i) {
+            for (int j = 0; j < numSamples; ++j) {
+                XTy[i] += X[j][i] * y[j];
+            }
+        }
+
+        // Risoluzione del sistema di equazioni lineari per ottenere i coefficienti
+        vector<double> coefficients(numFeatures);
+        for (int i = 0; i < numFeatures; ++i) {
+            coefficients[i] = XTy[i] / XTX[i][i];
+        }
+
+        return coefficients;
+    }
+
+}
