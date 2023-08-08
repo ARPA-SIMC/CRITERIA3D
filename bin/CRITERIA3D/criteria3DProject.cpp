@@ -32,6 +32,7 @@
 #include "gis.h"
 #include "color.h"
 #include "statistics.h"
+#include "project3D.h"
 
 #include <QtSql>
 #include <QPaintEvent>

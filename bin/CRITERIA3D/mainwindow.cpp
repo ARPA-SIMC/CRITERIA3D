@@ -2087,6 +2087,13 @@ void MainWindow::on_actionSnow_settings_triggered()
 void MainWindow::on_actionCriteria3D_settings_triggered()
 {
     // TODO
+    // initial water potential
+    // layer thickness
+    // processes (snow crop)
+    // compution depth (only surface, maximum soil depth, user choice)
+    // boundary (lateral free drainage, bottom free drainage)
+    // lateral conductivy ratio
+    // model accuracy
 }
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
@@ -2107,7 +2114,7 @@ void MainWindow::on_actionCriteria3D_compute_current_hour_triggered()
 
     myProject.computeMeteo = true;
     myProject.computeRadiation = true;
-    myProject.computeSnow = false;
+    myProject.computeSnow = true;
     myProject.computeCrop = true;
     myProject.computeWater = true;
 

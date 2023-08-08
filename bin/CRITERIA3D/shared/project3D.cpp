@@ -152,6 +152,7 @@ bool Project3D::initializeWaterBalance3D()
         logInfo("WARNING: soil map or soil db is missing: only surface fluxes will be computed.");
     }
 
+    // TODO considerare i vari casi
     if (! landUseMap.isLoaded || landUnitList.empty())
     {
         logInfo("WARNING: land use map or crop db is missing: default properties will be used (FALLOW).");
@@ -161,9 +162,16 @@ bool Project3D::initializeWaterBalance3D()
     }
 
     // set computation depth
-    for (unsigned int i = 0; i < nrSoils; i++)
+    if (!soilMap.isLoaded)
     {
-        computationSoilDepth = std::max(computationSoilDepth, soilList[i].totalDepth);
+        computationSoilDepth = 0;
+    }
+    else
+    {
+        for (unsigned int i = 0; i < nrSoils; i++)
+        {
+            computationSoilDepth = std::max(computationSoilDepth, soilList[i].totalDepth);
+        }
     }
     logInfo("Computation depth: " + QString::number(computationSoilDepth) + " m");
 
@@ -405,12 +413,12 @@ bool Project3D::setLateralBoundary()
         return false;
     }
 
-    boundaryMap.initializeGrid(DEM);
+    boundaryMap.initializeGrid(indexMap[0]);
     for (int row = 0; row < boundaryMap.header->nrRows; row++)
     {
         for (int col = 0; col < boundaryMap.header->nrCols; col++)
         {
-            if (gis::isBoundaryRunoff(DEM, *(radiationMaps->aspectMap), row, col))
+            if (gis::isBoundaryRunoff(indexMap[0], *(radiationMaps->aspectMap), row, col))
             {
                 boundaryMap.value[row][col] = BOUNDARY_RUNOFF;
             }
