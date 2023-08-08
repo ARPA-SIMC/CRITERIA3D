@@ -2086,7 +2086,7 @@ void MainWindow::on_actionSnow_settings_triggered()
 
 void MainWindow::on_actionCriteria3D_settings_triggered()
 {
-    // TODO
+    // TODO 3D settings
     // initial water potential
     // layer thickness
     // processes (snow crop)
@@ -2114,7 +2114,7 @@ void MainWindow::on_actionCriteria3D_compute_current_hour_triggered()
 
     myProject.computeMeteo = true;
     myProject.computeRadiation = true;
-    myProject.computeSnow = true;
+    myProject.computeSnow = false;
     myProject.computeCrop = true;
     myProject.computeWater = true;
 

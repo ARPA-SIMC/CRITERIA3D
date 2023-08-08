@@ -134,6 +134,8 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
             }
         }
 
+        // TODO update crop roots
+
         // cycle on hours
         int firstHour = (myDate == firstDate) ? hour1 : 0;
         int lastHour = (myDate == lastDate) ? hour2 : 23;
@@ -765,8 +767,6 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
             saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myTime);
         }
         qApp->processEvents();
-
-        // computeCrop(myTime);
 
         // TODO compute evap/transp
     }
