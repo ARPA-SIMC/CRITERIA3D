@@ -156,7 +156,9 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
 
     // soil data
     if (soilDbFileName != "") loadSoilDatabase(soilDbFileName);
-    computationSoilDepth = findSoilMaxDepth();
+    soilFluxesParameters.computeOnlySurface = false;
+    soilFluxesParameters.computeAllSoilDepth = true;
+
 
     // VINE3D parameters
     if (!loadGrapevineParameters() || !loadTrainingSystems() || !loadFieldsProperties() || !loadFieldBook())
@@ -174,6 +176,7 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
 
     if (! setVine3DSoilIndexMap())
         return false;
+    soilMap.isLoaded = true;
 
     if (! initializeWaterBalance3D())
     {

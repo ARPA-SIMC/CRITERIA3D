@@ -4,6 +4,9 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
+    #ifndef ROOT_H
+        #include "root.h"
+    #endif
     #ifndef BIOMASS_H
         #include "biomass.h"
     #endif
@@ -14,9 +17,6 @@
         #include "crit3dDate.h"
     #endif
 
-    #ifndef _VECTOR_
-        #include <vector>
-    #endif
     #ifndef _MAP_
         #include <map>
     #endif
@@ -39,7 +39,6 @@
 
 
     enum phenoStage {endoDormancy, ecoDormancy , budBurst , flowering , fruitSet, veraison, physiologicalMaturity, vineSenescence};
-    enum rootDistribution {CARDIOID_DISTRIBUTION, BLACKBODY_DISTRIBUTION , GAMMA_DISTRIBUTION};
     enum TfieldOperation {irrigationOperation, grassSowing, grassRemoving, trimming, leafRemoval,
                           clusterThinning, harvesting, tartaricAnalysis};
     enum Crit3DLanduse {landuse_nodata, landuse_bare, landuse_vineyard};
@@ -399,7 +398,7 @@
         void resetLayers();
 
         void setRootDensity(Crit3DModelCase *modelCase, soil::Crit3DSoil* mySoil, std::vector<double> layerDepth, std::vector<double> layerThickness,
-                            int nrLayersWithRoot, int nrUpperLayersWithoutRoot, rootDistribution type, double mode, double mean);
+                            int nrLayersWithRoot, int nrUpperLayersWithoutRoot, rootDistributionType rootType, double mode, double mean);
         void setGrassRootDensity(Crit3DModelCase* modelCase, soil::Crit3DSoil *mySoil, std::vector<double> layerDepth, std::vector<double> layerThickness,
                                  double startRootDepth, double totalRootDepth);
         void setFallowRootDensity(Crit3DModelCase* modelCase, soil::Crit3DSoil* mySoil, std::vector<double> layerDepth, std::vector<double> layerThickness,

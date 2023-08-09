@@ -1194,14 +1194,14 @@ double Vine3D_Grapevine::meanLastMonthTemperature(double previousLastMonthTemp)
 
 
 void Vine3D_Grapevine::setRootDensity(Crit3DModelCase* modelCase, soil::Crit3DSoil* mySoil, std::vector <double> layerDepth, std::vector <double> layerThickness,
-                                       int nrLayersWithRoot, int nrUpperLayersWithoutRoot, rootDistribution type, double mode , double mean)
+                                       int nrLayersWithRoot, int nrUpperLayersWithoutRoot, rootDistributionType rootType, double mode , double mean)
 {
 
     modelCase->rootDensity =  static_cast<double*> (calloc(size_t(modelCase->soilLayersNr), sizeof(double)));
 
     double shapeFactor=2.;
 
-    if (type == CARDIOID_DISTRIBUTION)
+    if (rootType == CARDIOID_DISTRIBUTION)
     {
         double *lunette = static_cast<double*> (calloc(size_t(2 * nrLayersWithRoot), sizeof(double)));
         double *lunetteDensity =  static_cast<double*> (calloc(size_t(2 * nrLayersWithRoot), sizeof(double)));
@@ -1244,7 +1244,7 @@ void Vine3D_Grapevine::setRootDensity(Crit3DModelCase* modelCase, soil::Crit3DSo
         }
     }
 
-    else if (type == GAMMA_DISTRIBUTION)
+    else if (rootType == GAMMA_DISTRIBUTION)
     {
         double kappa, theta;
         double a, b, skeleton;
