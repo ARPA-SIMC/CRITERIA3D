@@ -1094,7 +1094,7 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
     float myProxyValue;
     Crit3DProxy* myProxy;
     Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
-    float proxySlope;
+    float proxySlope, proxyAvg, proxyStdDev;
     unsigned indexMultiRegr = 0;
 
     for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
@@ -1110,7 +1110,9 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
                 if (mySettings->getUseMultipleDetrending())
                 {
                     proxySlope = mySettings->getMultiRegressionSlopes()[indexMultiRegr];
-                    retrendValue += (myProxyValue * mySettings->getMultiRegressionStdDevs()[indexMultiRegr] + mySettings->getMultiRegressionAvgs()[indexMultiRegr]) * proxySlope;
+                    proxyAvg = mySettings->getMultiRegressionAvgs()[indexMultiRegr];
+                    proxyStdDev = mySettings->getMultiRegressionStdDevs()[indexMultiRegr];
+                    retrendValue += (myProxyValue - proxyAvg) / proxyStdDev * proxySlope;
                     indexMultiRegr++;
                 }
                 else
@@ -1178,6 +1180,7 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     {
         if (myCombination.getValue(pos))
         {
+            mySettings->getProxy(pos)->setIsSignificant(true);
             nrPredictors++;
             proxyPos = pos;
         }
@@ -1273,7 +1276,7 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                 proxyValue = myPoints[i].getProxyValue(pos);
 
                 if (proxyValue != NODATA)
-                    detrendValue = proxyValue * slopes[index];
+                    detrendValue = (proxyValue - avgs[index]) / stdDevs[index] * slopes[index];
 
                 index++;
 
