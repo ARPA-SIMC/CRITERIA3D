@@ -2226,7 +2226,11 @@ bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3D
                 {
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     dynamicSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, true);
-                    detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
+
+                    if (interpolationSettings.getUseMultipleDetrending())
+                        multipleDetrending(subsetInterpolationPoints, interpolationSettings.getSelectedCombination(), &interpolationSettings, myVar);
+                    else
+                        detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
 
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     outputPoints[i].currentValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
@@ -2253,7 +2257,11 @@ bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3D
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     dynamicSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, true);
-                    detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
+
+                    if (interpolationSettings.getUseMultipleDetrending())
+                        multipleDetrending(subsetInterpolationPoints, interpolationSettings.getSelectedCombination(), &interpolationSettings, myVar);
+                    else
+                        detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
 
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
