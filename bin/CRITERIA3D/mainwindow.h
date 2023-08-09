@@ -217,6 +217,8 @@
 
         void on_actionLoad_crop_data_triggered();
 
+        void on_actionView_SoilMoisture_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -259,6 +261,9 @@
         QActionGroup *showPointsGroup;
 
         visualizationType currentPointsVisualization;
+        criteria3DVariable current3DVariable;
+        int current3DlayerIndex;
+
         bool viewNotActivePoints;
         bool viewOutputPoints;
         bool viewNotActiveOutputPoints;
@@ -306,7 +311,7 @@
 
         void setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
         void setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
-        void setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myGrid);
+        void setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myRaster);
 
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);

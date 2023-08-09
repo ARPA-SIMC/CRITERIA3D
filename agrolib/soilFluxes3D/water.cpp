@@ -300,7 +300,7 @@ bool waterFlowComputation(double deltaT)
             {
                 halveTimeStep();
                 setForcedHalvedTime(true);
-                return (false);
+                return false;
             }
 
         if (! GaussSeidelRelaxation(approximationNr, myParameters.ResidualTolerance, PROCESS_WATER))
@@ -325,7 +325,7 @@ bool waterFlowComputation(double deltaT)
         }
     while ((!isValidStep) && (++approximationNr < myParameters.maxApproximationsNumber));
 
-    return (isValidStep);
+    return isValidStep;
  }
 
 

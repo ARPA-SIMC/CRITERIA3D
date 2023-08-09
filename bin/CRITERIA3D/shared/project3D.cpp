@@ -36,6 +36,18 @@
 #include <QApplication>
 
 
+Crit3DSoilFluxesParameters::Crit3DSoilFluxesParameters()
+{
+    freeCatchmentRunoff = true;
+    freeLateralDrainage = true;
+    freeBottomDrainage = true;
+    computeOnlySurface = false;
+    computeAllSoilDepth = false;
+
+    imposedComputationDepth = 0.3;
+}
+
+
 Project3D::Project3D() : Project()
 {
     initializeProject3D();
@@ -150,6 +162,7 @@ bool Project3D::initializeWaterBalance3D()
     if (!soilMap.isLoaded || soilList.size() == 0)
     {
         logInfo("WARNING: soil map or soil db is missing: only surface fluxes will be computed.");
+        soilFluxesParameters.computeOnlySurface = true;
     }
 
     // TODO considerare i vari casi
@@ -162,15 +175,22 @@ bool Project3D::initializeWaterBalance3D()
     }
 
     // set computation depth
-    if (!soilMap.isLoaded)
+    if (soilFluxesParameters.computeOnlySurface)
     {
         computationSoilDepth = 0;
     }
     else
     {
-        for (unsigned int i = 0; i < nrSoils; i++)
+        if (soilFluxesParameters.computeAllSoilDepth)
         {
-            computationSoilDepth = std::max(computationSoilDepth, soilList[i].totalDepth);
+            for (unsigned int i = 0; i < nrSoils; i++)
+            {
+                computationSoilDepth = std::max(computationSoilDepth, soilList[i].totalDepth);
+            }
+        }
+        else
+        {
+            computationSoilDepth = soilFluxesParameters.imposedComputationDepth;
         }
     }
     logInfo("Computation depth: " + QString::number(computationSoilDepth) + " m");
@@ -232,9 +252,12 @@ bool Project3D::initializeWaterBalance3D()
 
     soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, 10.0);
 
-    soilFluxes3D::setNumericalParameters(6, 600, 200, 10, 12, 3);   // precision
-    //soilFluxes3D::setNumericalParameters(30, 1800, 100, 10, 12, 2);  // speedy
-    //soilFluxes3D::setNumericalParameters(300, 3600, 100, 10, 12, 1);   // very speedy (high error)
+    double vmax = 4.0;                                      // [m s-1]
+    double minimumDeltaT = DEM.header->cellSize / vmax;     // [m]
+
+    soilFluxes3D::setNumericalParameters(minimumDeltaT, 1800, 100, 10, 12, 3);   // precision
+    //soilFluxes3D::setNumericalParameters(minimumDeltaT, 1800, 100, 10, 12, 2);  // speedy
+    //soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 1);   // very speedy (high error)
 
     if (!initializeMatricPotential(-3.0))       // [m]
         return false;
@@ -492,54 +515,71 @@ bool Project3D::setCrit3DSoils()
 bool Project3D::setCrit3DTopography()
 {
     double x, y;
-    float z, lateralArea, slope;
-    double area, volume;
-    long index, linkIndex, soilIndex;
+    float lateralArea;
+    long linkIndex, soilIndex;
     int myResult;
     QString myError;
 
+    double area = DEM.header->cellSize * DEM.header->cellSize;
+
     for (size_t layer = 0; layer < nrLayers; layer++)
     {
+        double volume = area * layerThickness[layer];
+        if (layer == 0)
+            lateralArea = DEM.header->cellSize;
+        else
+            lateralArea = DEM.header->cellSize * layerThickness[layer];
+
         for (int row = 0; row < indexMap.at(layer).header->nrRows; row++)
         {
             for (int col = 0; col < indexMap.at(layer).header->nrCols; col++)
             {
-                index = long(indexMap.at(layer).value[row][col]);
-
-                if (index != long(indexMap.at(layer).header->flag))
+                long index = long(indexMap.at(layer).value[row][col]);
+                long flag = long(indexMap.at(layer).header->flag);
+                if (index != flag)
                 {
                     DEM.getXY(row, col, x, y);
-                    area = DEM.header->cellSize * DEM.header->cellSize;
-                    slope = radiationMaps->slopeMap->value[row][col] / 100;
-                    z = DEM.value[row][col] - float(layerDepth[layer]);
-                    volume = area * layerThickness[layer];
+                    float slopeDegree = radiationMaps->slopeMap->value[row][col];
+                    float boundarySlope = tan(slopeDegree * DEG_TO_RAD);
+                    float z = DEM.value[row][col] - float(layerDepth[layer]);
 
                     soilIndex = getSoilIndex(row, col);
 
-                    // surface
                     if (layer == 0)
                     {
-                        lateralArea = float(DEM.header->cellSize);
-
-                        if (int(boundaryMap.value[row][col]) == BOUNDARY_RUNOFF)
-                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, true, BOUNDARY_RUNOFF, slope, DEM.header->cellSize);
-                        else
-                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, false, BOUNDARY_NONE, 0, 0);
-                    }
-                    // sub-surface
-                    else
-                    {
-                        lateralArea = float(DEM.header->cellSize * layerThickness[layer]);
-
-                        // last project layer or last soil layer
-                        if (layer == (nrLayers - 1) || ! isWithinSoil(soilIndex, layerDepth.at(size_t(layer+1))))
-                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREEDRAINAGE, 0, area);
+                        // SURFACE
+                        if (int(boundaryMap.value[row][col]) == BOUNDARY_RUNOFF && soilFluxesParameters.freeCatchmentRunoff)
+                        {
+                            float boundaryArea = DEM.header->cellSize;
+                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, true, BOUNDARY_RUNOFF, boundarySlope, boundaryArea);
+                        }
                         else
                         {
+                            myResult = soilFluxes3D::setNode(index, float(x), float(y), z, area, true, false, BOUNDARY_NONE, 0, 0);
+                        }
+                    }
+                    else
+                    {
+                        // LAST SOIL LAYER
+                        if (layer == (nrLayers - 1) || ! isWithinSoil(soilIndex, layerDepth.at(size_t(layer+1))))
+                        {
+                            if (soilFluxesParameters.freeLateralDrainage)
+                            {
+                                float boundaryArea = area;
+                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREEDRAINAGE, 0, boundaryArea);
+                            }
+                            else
+                            {
+                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, false, BOUNDARY_NONE, 0, 0);
+                            }
+                        }
+                        else
+                        {
+                            // SUB-SURFACE
                             if (int(boundaryMap.value[row][col]) == BOUNDARY_RUNOFF)
                             {
-                                float boundaryArea = DEM.header->cellSize * layerThickness[layer];
-                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREELATERALDRAINAGE, slope, boundaryArea);
+                                float boundaryArea = lateralArea;
+                                myResult = soilFluxes3D::setNode(index, float(x), float(y), z, volume, false, true, BOUNDARY_FREELATERALDRAINAGE, boundarySlope, boundaryArea);
                             }
                             else
                             {
@@ -600,7 +640,7 @@ bool Project3D::setCrit3DTopography()
                                     linkIndex = long(indexMap.at(layer).value[row+i][col+j]);
                                     if (linkIndex != long(indexMap.at(layer).header->flag))
                                     {
-                                        myResult = soilFluxes3D::setNodeLink(index, linkIndex, LATERAL, float(lateralArea / 2));
+                                        myResult = soilFluxes3D::setNodeLink(index, linkIndex, LATERAL, lateralArea * 0.5);
                                         if (isCrit3dError(myResult, myError))
                                         {
                                             errorString = "setNodeLink:" + myError + " in layer nr:" + QString::number(layer);
@@ -1000,7 +1040,19 @@ void Project3D::computeWaterBalance3D(double timeStep)
     soilFluxes3D::initializeBalance();
 
     logInfo("Compute water flow");
-    soilFluxes3D::computePeriod(timeStep);
+    double sumTime = 0.0;
+    double showTime = 600;
+    int showStep = 0;
+    while (sumTime < timeStep)
+    {
+        sumTime += soilFluxes3D::computeStep(timeStep - sumTime);
+        if (sumTime < timeStep && int(sumTime / showTime) > showStep)
+        {
+            showStep = int(sumTime / showTime);
+            emit updateOutputSignal();
+        }
+    }
+    //soilFluxes3D::computePeriod(timeStep);
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
     logInfo("runoff [m^3]: " + QString::number(runoff));

@@ -86,6 +86,8 @@ MainWindow::MainWindow(QWidget *parent) :
     this->viewNotActiveOutputPoints = true;
     ui->flagView_not_active_outputPoints->setChecked(this->viewNotActiveOutputPoints);
     this->currentPointsVisualization = notShown;
+    current3DlayerIndex = waterContent;
+    current3DlayerIndex = 0;
     ui->flagView_values->setChecked(false);
 
     // show menu
@@ -184,10 +186,11 @@ void MainWindow::updateOutputMap()
     updateDateTime();
     if (myProject.isCriteria3DInitialized)
     {
-        myProject.setCriteria3DMap(waterContent, 0);
+        myProject.setCriteria3DMap(current3DVariable, current3DlayerIndex);
     }
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
+    qApp->processEvents();
 }
 
 
@@ -1236,14 +1239,14 @@ void MainWindow::setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *m
     ui->labelOutputRaster->setText(QString::fromStdString(getVariableString(myVar)));
 }
 
-void MainWindow::setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myGrid)
+void MainWindow::setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myRaster)
 {
     if (myVar == waterContent && layerIndex == 0)
     {
-        setSurfaceWaterScale(myGrid->colorScale);
+        setSurfaceWaterScale(myRaster->colorScale);
         ui->labelOutputRaster->setText("Surface water content [mm]");
     }
-    setCurrentRasterOutput(myGrid);
+    setCurrentRasterOutput(myRaster);
 }
 
 void MainWindow::showMeteoVariable(meteoVariable var)
@@ -2098,7 +2101,12 @@ void MainWindow::on_actionCriteria3D_settings_triggered()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
-    myProject.initializeCriteria3DModel();
+    if (myProject.initializeCriteria3DModel())
+    {
+        int layerIndex = ui->layerNrEdit->value();
+        float depth = myProject.layerDepth[layerIndex];
+        ui->layerDepthEdit->setText(QString::number(depth) + " m");
+    }
 }
 
 
@@ -2135,9 +2143,9 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
         return;
 
     myProject.computeMeteo = true;
-    myProject.computeRadiation = true;
+    myProject.computeRadiation = false;
     myProject.computeSnow = false;
-    myProject.computeCrop = true;
+    myProject.computeCrop = false;
     myProject.computeWater = true;
 
     startModels(firstTime, lastTime);
@@ -2152,11 +2160,14 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex)
         return;
     }
 
-    switch(var)
+    current3DVariable = var;
+    current3DlayerIndex = layerIndex;
+    myProject.setCriteria3DMap(current3DVariable, current3DlayerIndex);
+
+    switch(current3DVariable)
     {
     case waterContent:
-        myProject.setCriteria3DMap(waterContent, layerIndex);
-        setCriteria3DVariable(waterContent, layerIndex, &(myProject.criteria3DMap));
+        setCriteria3DVariable(waterContent, current3DlayerIndex, &(myProject.criteria3DMap));
         break;
 
     default: {}
@@ -2944,5 +2955,11 @@ void MainWindow::on_actionHide_LandUseMap_triggered()
 void MainWindow::on_actionHide_Geomap_triggered()
 {
     setOutputRasterVisible(false);
+}
+
+
+void MainWindow::on_actionView_SoilMoisture_triggered()
+{
+    showCriteria3DVariable(waterContent, 1);
 }
 
