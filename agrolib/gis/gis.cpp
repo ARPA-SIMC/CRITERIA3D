@@ -453,6 +453,25 @@ namespace gis
     }
 
 
+    void convertNodataRasterGrid(Crit3DRasterGrid& myGrid)
+    {
+        if (myGrid.header->flag == NODATA)
+            return;
+
+        for (int row = 0; row < myGrid.header->nrRows; row++)
+        {
+            for (int col = 0; col < myGrid.header->nrCols; col++)
+            {
+                if (isEqual(myGrid.value[row][col], myGrid.header->flag))
+                {
+                    myGrid.value[row][col] = NODATA;
+                }
+            }
+        }
+
+        myGrid.header->flag = NODATA;
+    }
+
 
     bool updateMinMaxRasterGrid(Crit3DRasterGrid* myGrid)
     {

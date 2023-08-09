@@ -1241,10 +1241,21 @@ void MainWindow::setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *m
 
 void MainWindow::setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myRaster)
 {
-    if (myVar == waterContent && layerIndex == 0)
+    if (myVar == waterContent)
     {
-        setSurfaceWaterScale(myRaster->colorScale);
-        ui->labelOutputRaster->setText("Surface water content [mm]");
+        if (layerIndex == 0)
+        {
+            // SURFACE
+            setSurfaceWaterScale(myRaster->colorScale);
+            ui->labelOutputRaster->setText("Surface water content [mm]");
+        }
+        else
+        {
+            // SUB-SURFACE
+            setTemperatureScale(myRaster->colorScale);
+            reverseColorScale(myRaster->colorScale);
+            ui->labelOutputRaster->setText("Volumetric water content [m3 m-3]");
+        }
     }
     setCurrentRasterOutput(myRaster);
 }
@@ -2104,8 +2115,11 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
     if (myProject.initializeCriteria3DModel())
     {
         int layerIndex = ui->layerNrEdit->value();
-        float depth = myProject.layerDepth[layerIndex];
-        ui->layerDepthEdit->setText(QString::number(depth) + " m");
+        if (layerIndex < myProject.nrLayers)
+        {
+            float depth = myProject.layerDepth[layerIndex];
+            ui->layerDepthEdit->setText(QString::number(depth) + " m");
+        }
     }
 }
 
@@ -2162,16 +2176,10 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex)
 
     current3DVariable = var;
     current3DlayerIndex = layerIndex;
+
     myProject.setCriteria3DMap(current3DVariable, current3DlayerIndex);
 
-    switch(current3DVariable)
-    {
-    case waterContent:
-        setCriteria3DVariable(waterContent, current3DlayerIndex, &(myProject.criteria3DMap));
-        break;
-
-    default: {}
-    }
+    setCriteria3DVariable(waterContent, current3DlayerIndex, &(myProject.criteria3DMap));
 }
 
 

@@ -31,7 +31,7 @@
         bool computeOnlySurface;
         bool computeAllSoilDepth;
 
-        float imposedComputationDepth;          // [m]
+        double imposedComputationDepth;          // [m]
 
         Crit3DSoilFluxesParameters();
     };

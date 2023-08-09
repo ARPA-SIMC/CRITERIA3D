@@ -1237,6 +1237,7 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
     criteria3DMap.initializeGrid(indexMap.at(layerIndex));
 
     for (int row = 0; row < indexMap.at(layerIndex).header->nrRows; row++)
+    {
         for (int col = 0; col < indexMap.at(layerIndex).header->nrCols; col++)
         {
             nodeIndex = indexMap.at(layerIndex).value[row][col];
@@ -1245,19 +1246,25 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
                 double value = getCriteria3DVar(var, nodeIndex);
 
                 if (value == NODATA)
+                {
                     criteria3DMap.value[row][col] = criteria3DMap.header->flag;
+                }
                 else
                 {
                     if (var == waterContent && layerIndex == 0)
                     {
+                        // surface
                         value *= 1000;          // [m] -> [mm]
                     }
                     criteria3DMap.value[row][col] = value;
                 }
             }
             else
+            {
                 criteria3DMap.value[row][col] = criteria3DMap.header->flag;
+            }
         }
+    }
 
     gis::updateMinMaxRasterGrid(&criteria3DMap);
 
