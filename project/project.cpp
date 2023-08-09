@@ -936,7 +936,7 @@ bool Project::loadDEM(QString myFileName)
         return false;
     }
 
-    logInfoGUI("Load DEM = " + myFileName);
+    logInfoGUI("Load Digital Elevation Model = " + myFileName);
 
     demFileName = myFileName;
     myFileName = getCompleteFileName(myFileName, PATH_DEM);
@@ -948,6 +948,16 @@ bool Project::loadDEM(QString myFileName)
         logError("Wrong Digital Elevation Model:\n" + QString::fromStdString(error));
         errorType = ERROR_DEM;
         return false;
+    }
+    logInfo("Digital Elevation Model = " + myFileName);
+
+    // check nodata
+    if (DEM.header->flag != NODATA)
+    {
+        QString infoStr = "WARNING: " + QString::number(DEM.header->flag) + " is not a valid NODATA value for DEM!";
+        infoStr += " It will be converted in: " + QString::number(NODATA);
+        logInfo(infoStr);
+        gis::convertNodataRasterGrid(DEM);
     }
 
     setColorScale(noMeteoTerrain, DEM.colorScale);
