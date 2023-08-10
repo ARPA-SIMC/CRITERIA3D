@@ -1027,7 +1027,7 @@ bool getUseTdVar(meteoVariable myVar)
             myVar == atmTransmissivity ||
             myVar == dailyGlobalRadiation ||
             myVar == atmPressure ||
-            myVar == dailyWaterTableDepth )
+            myVar == dailyWaterTableDepth)
 
         return false;
     else

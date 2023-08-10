@@ -584,7 +584,7 @@ bool Project::loadParameters(QString parametersFileName)
                 interpolationSettings.setUseTD(parameters->value("topographicDistance").toBool());
 
             if (parameters->contains("dynamicLapserate"))
-                interpolationSettings.setUseDynamicLapserate(parameters->value("dynamicLapserate").toBool());
+                interpolationSettings.setUseLocalDetrending(parameters->value("localDetrending").toBool());
 
             if (parameters->contains("meteogrid_upscalefromdem=true"))
                 interpolationSettings.setMeteoGridUpscaleFromDem(parameters->value("meteogrid_upscalefromdem").toBool());
@@ -2147,11 +2147,9 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    // detrending and checking precipitation
-    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
-                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
-
-    if (! interpolationReady)
+    // detrending, checking precipitation and optimizing td parameters
+    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
+                         &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
     {
         logError("Interpolation: error in function preInterpolation");
         return false;
@@ -2182,7 +2180,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 
 bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
-    if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseDynamicLapserate())
+    if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseLocalDetrending())
         return false;
 
     // pass data to interpolation
@@ -2193,19 +2191,6 @@ bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3D
     {
         logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
         return false;
-    }
-
-
-    // optimal detrending combination
-    if (interpolationSettings.getUseBestDetrending())
-    {
-        std::vector <Crit3DInterpolationDataPoint> interpolationPointsTmp = interpolationPoints;
-        optimalDetrending(myVar, meteoPoints, nrMeteoPoints, interpolationPointsTmp, &interpolationSettings, meteoSettings, &climateParameters, myTime);
-        interpolationSettings.setCurrentCombination(interpolationSettings.getOptimalCombination());
-    }
-    else
-    {
-        interpolationSettings.setCurrentCombination(interpolationSettings.getSelectedCombination());
     }
 
     std::vector <float> proxyValues;
@@ -2224,13 +2209,17 @@ bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3D
                 myRaster->getRowCol(x, y, row, col);
                 if (! myRaster->isOutOfGrid(row, col))
                 {
+
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     dynamicSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, true);
 
-                    if (interpolationSettings.getUseMultipleDetrending())
-                        multipleDetrending(subsetInterpolationPoints, interpolationSettings.getSelectedCombination(), &interpolationSettings, myVar);
-                    else
-                        detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
+                    if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+                    {
+                        if (interpolationSettings.getUseMultipleDetrending())
+                            multipleDetrending(subsetInterpolationPoints, interpolationSettings.getSelectedCombination(), &interpolationSettings, myVar);
+                        else
+                            detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
+                    }
 
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     outputPoints[i].currentValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
@@ -2410,7 +2399,7 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     }
 
     // dynamic lapserate
-    if (getUseDetrendingVar(myVar) && interpolationSettings.getUseDynamicLapserate())
+    if (getUseDetrendingVar(myVar) && interpolationSettings.getUseLocalDetrending())
     {
         return interpolationDemDynamicLapserate(myVar, myTime, myRaster);
     }
@@ -2557,7 +2546,6 @@ bool Project::interpolationGridMain(meteoVariable myVar, const Crit3DTime& myTim
         Crit3DTime halfHour = myTime.addSeconds(-1800);
         return interpolateDemRadiation(halfHour, myRaster);
     }
-    */
 
     // dynamic lapserate
     /*if (getUseDetrendingVar(myVar) && interpolationSettings.getUseDynamicLapserate())
@@ -2817,7 +2805,7 @@ void Project::saveInterpolationParameters()
         parameters->setValue("meteogrid_upscalefromdem", interpolationSettings.getMeteoGridUpscaleFromDem());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parameters->setValue("topographicDistance", interpolationSettings.getUseTD());
-        parameters->setValue("dynamicLapserate", interpolationSettings.getUseDynamicLapserate());
+        parameters->setValue("localDetrending", interpolationSettings.getUseLocalDetrending());
         parameters->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
         parameters->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
         parameters->setValue("multipleDetrending", interpolationSettings.getUseMultipleDetrending());
