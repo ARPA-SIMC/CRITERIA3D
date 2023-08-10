@@ -1463,7 +1463,8 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
                   bool excludeSupplemental)
 
 {
-    if ((myVar == precipitation || myVar == dailyPrecipitation) && mySettings->getPrecipitationAllZero()) return 0.;
+    if ((myVar == precipitation || myVar == dailyPrecipitation) && mySettings->getPrecipitationAllZero())
+        return 0.;
 
     float myResult = NODATA;
 
