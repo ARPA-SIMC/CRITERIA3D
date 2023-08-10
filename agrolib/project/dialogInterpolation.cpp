@@ -48,9 +48,11 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     layoutMain->addWidget(topographicDistanceEdit);
 
     // dynamic lapse rate
-    dynamicLapserateEdit = new QCheckBox(tr("use dynamic lapse rate"));
-    dynamicLapserateEdit->setChecked(_interpolationSettings->getUseDynamicLapserate());
-    layoutMain->addWidget(dynamicLapserateEdit);
+    localDetrendingEdit = new QCheckBox(tr("local detrending"));
+    localDetrendingEdit->setChecked(_interpolationSettings->getUseLocalDetrending());
+    layoutMain->addWidget(localDetrendingEdit);
+
+    connect(localDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(dynamicDetrendingChanged(int)));
 
     QLabel *labelMaxTd = new QLabel(tr("maximum Td multiplier"));
     QIntValidator *intValTd = new QIntValidator(1, 1000000, this);
@@ -149,6 +151,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     upscaleFromDemChanged(upscaleFromDemEdit->isChecked() ? 1 : 0);
     multipleDetrendingChanged(multipleDetrendingEdit->isChecked() ? 1 : 0);
+    localDetrendingChanged(localDetrendingEdit->isChecked() ? 1 : 0);
 
     exec();
 }
@@ -161,6 +164,11 @@ void DialogInterpolation::upscaleFromDemChanged(int active)
 void DialogInterpolation::multipleDetrendingChanged(int active)
 {
     optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
+}
+
+void DialogInterpolation::localDetrendingChanged(int active)
+{
+    topographicDistanceEdit->setEnabled(active == Qt::Unchecked);
 }
 
 void DialogInterpolation::redrawProxies()
@@ -224,7 +232,7 @@ void DialogInterpolation::accept()
 
     _interpolationSettings->setMeteoGridUpscaleFromDem(upscaleFromDemEdit->isChecked());
     _interpolationSettings->setUseTD(topographicDistanceEdit->isChecked());
-    _interpolationSettings->setUseDynamicLapserate(dynamicLapserateEdit->isChecked());
+    _interpolationSettings->setUseLocalDetrending(localDetrendingEdit->isChecked());
     _interpolationSettings->setUseLapseRateCode(lapseRateCodeEdit->isChecked());
     _interpolationSettings->setUseBestDetrending(optimalDetrendingEdit->isChecked());
     _interpolationSettings->setUseMultipleDetrending(multipleDetrendingEdit->isChecked());
