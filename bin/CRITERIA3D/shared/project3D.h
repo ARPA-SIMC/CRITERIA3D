@@ -34,6 +34,7 @@
         double imposedComputationDepth;          // [m]
 
         Crit3DSoilFluxesParameters();
+        void initialize();
     };
 
 

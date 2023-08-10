@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>9</day>
+       <day>8</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1675,7 +1675,7 @@
      <bool>true</bool>
     </property>
     <property name="title">
-     <string notr="true">3D model</string>
+     <string notr="true">Model run</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

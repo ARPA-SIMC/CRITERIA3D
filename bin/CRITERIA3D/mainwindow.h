@@ -20,8 +20,7 @@
 
     class QActionGroup;
 
-    enum visualizationType {notShown, showLocation, showCurrentVariable, showElaboration,
-                        showAnomalyAbsolute, showAnomalyPercentage, showClimate};
+    enum visualizationType {notShown, showLocation, showCurrentVariable, showElaboration};
 
     namespace Ui
     {
@@ -219,6 +218,8 @@
 
         void on_actionView_SoilMoisture_triggered();
 
+        void on_layerNrEdit_valueChanged(int layerIndex);
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter
@@ -264,6 +265,7 @@
         criteria3DVariable current3DVariable;
         int current3DlayerIndex;
 
+        bool view3DVariable;
         bool viewNotActivePoints;
         bool viewOutputPoints;
         bool viewNotActiveOutputPoints;
@@ -310,8 +312,7 @@
         void clearMeteoPoints_GUI();
 
         void setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
-        void setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
-        void setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myRaster);
+        void setOutputMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid);
 
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);

@@ -38,11 +38,17 @@
 
 Crit3DSoilFluxesParameters::Crit3DSoilFluxesParameters()
 {
+    initialize();
+}
+
+void Crit3DSoilFluxesParameters::initialize()
+{
     freeCatchmentRunoff = true;
     freeLateralDrainage = true;
     freeBottomDrainage = true;
+
     computeOnlySurface = false;
-    computeAllSoilDepth = false;
+    computeAllSoilDepth = true;
 
     imposedComputationDepth = 0.3;
 }
@@ -56,6 +62,8 @@ Project3D::Project3D() : Project()
 void Project3D::initializeProject3D()
 {
     initializeProject();
+
+    soilFluxesParameters.initialize();
 
     texturalClassList.resize(13);
     geotechnicsClassList.resize(19);
@@ -250,7 +258,8 @@ bool Project3D::initializeWaterBalance3D()
         return false;
     logInfo("Node properties initialized");
 
-    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, 10.0);
+    float horizVertRatioConductivity = 1.0;
+    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, horizVertRatioConductivity);
 
     double vmax = 4.0;                                      // [m s-1]
     double minimumDeltaT = DEM.header->cellSize / vmax;     // [m]
@@ -1232,7 +1241,11 @@ bool Project3D::computeWaterSinkSource()
 
 bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
 {
-    long nodeIndex;
+    if (layerIndex >= indexMap.size())
+    {
+        errorString = "Layer is not defined: " + QString::number(layerIndex);
+        return false;
+    }
 
     criteria3DMap.initializeGrid(indexMap.at(layerIndex));
 
@@ -1240,7 +1253,7 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
     {
         for (int col = 0; col < indexMap.at(layerIndex).header->nrCols; col++)
         {
-            nodeIndex = indexMap.at(layerIndex).value[row][col];
+            long nodeIndex = indexMap.at(layerIndex).value[row][col];
             if (nodeIndex != indexMap.at(layerIndex).header->flag)
             {
                 double value = getCriteria3DVar(var, nodeIndex);
@@ -1267,7 +1280,6 @@ bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)
     }
 
     gis::updateMinMaxRasterGrid(&criteria3DMap);
-
     return true;
 }
 
