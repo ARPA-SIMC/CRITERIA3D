@@ -2188,7 +2188,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 }
 
 
-bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
+bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
     if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseLocalDetrending())
         return false;
@@ -2411,7 +2411,7 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     // dynamic lapserate
     if (getUseDetrendingVar(myVar) && interpolationSettings.getUseLocalDetrending())
     {
-        return interpolationDemDynamicLapserate(myVar, myTime, myRaster);
+        return interpolationDemLocalDetrending(myVar, myTime, myRaster);
     }
     else
     {
@@ -2460,23 +2460,18 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         return false;
     }
 
-    // detrending and checking precipitation
-    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
-                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
-
-    if (! interpolationReady)
-    {
-        logError("Interpolation: error in function preInterpolation");
-        return false;
-    }
+    if (! interpolationSettings.getUseLocalDetrending())
+        if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
+                              &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+        {
+            logError("Interpolation: error in function preInterpolation");
+            return false;
+        }
 
     // proxy aggregation
     std::vector <gis::Crit3DRasterGrid> meteoGridProxies;
     if (getUseDetrendingVar(myVar))
         if (! meteoGridAggregateProxy(meteoGridProxies)) return false;
-
-    //std::string errString;
-    //gis::writeEsriGrid("C:\\Users\\gantolini\\Desktop\\tmp\\testDemGrid", &meteoGridProxies[0], errString);
 
     frequencyType freq = getVarFrequency(myVar);
 
@@ -2517,6 +2512,20 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 
                         }
                     }
+
+                    if (interpolationSettings.getUseLocalDetrending())
+                    {
+                        std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+                        dynamicSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings, true);
+
+                        if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+                        {
+                            if (interpolationSettings.getUseMultipleDetrending())
+                                multipleDetrending(subsetInterpolationPoints, interpolationSettings.getSelectedCombination(), &interpolationSettings, myVar);
+                            else
+                                detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
+                        }
+                    }
                 }
 
                 interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
@@ -2555,19 +2564,7 @@ bool Project::interpolationGridMain(meteoVariable myVar, const Crit3DTime& myTim
     {
         Crit3DTime halfHour = myTime.addSeconds(-1800);
         return interpolateDemRadiation(halfHour, myRaster);
-    }
-
-    // dynamic lapserate
-    /*if (getUseDetrendingVar(myVar) && interpolationSettings.getUseDynamicLapserate())
-    {
-        return interpolationDemDynamicLapserate(myVar, myTime, myRaster);
-    }
-    else
-    {
-        return interpolationDem(myVar, myTime, myRaster);
-    }
-    */
-
+    }*/
 
     return interpolationGrid(myVar, myTime);
 }

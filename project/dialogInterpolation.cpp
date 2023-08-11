@@ -15,97 +15,11 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     _qualityInterpolationSettings = &(myProject->qualityInterpolationSettings);
 
     setWindowTitle(tr("Interpolation settings"));
+
     QVBoxLayout *layoutMain = new QVBoxLayout;
-    QVBoxLayout *layoutDetrending = new QVBoxLayout();
-
-    // use dem for interolation meteo grid
-    upscaleFromDemEdit = new QCheckBox(tr("grid upscale from Dem"));
-    upscaleFromDemEdit->setChecked(_interpolationSettings->getMeteoGridUpscaleFromDem());
-    layoutMain->addWidget(upscaleFromDemEdit);
-
-    // grid aggregation
-    QHBoxLayout *layoutAggregation = new QHBoxLayout;
-    QLabel *labelAggregation = new QLabel(tr("aggregation method"));
-    layoutAggregation->addWidget(labelAggregation);
-
-    std::map<std::string, aggregationMethod>::const_iterator itAggr;
-    for (itAggr = aggregationMethodToString.begin(); itAggr != aggregationMethodToString.end(); ++itAggr)
-        gridAggregationMethodEdit.addItem(QString::fromStdString(itAggr->first), QString::fromStdString(itAggr->first));
-
-    QString aggregationString = QString::fromStdString(getKeyStringAggregationMethod(_interpolationSettings->getMeteoGridAggrMethod()));
-    int indexAggregation = gridAggregationMethodEdit.findData(aggregationString);
-    if (indexAggregation != -1)
-       gridAggregationMethodEdit.setCurrentIndex(indexAggregation);
-
-    layoutAggregation->addWidget(&gridAggregationMethodEdit);
-    layoutMain->addLayout(layoutAggregation);
-
-    connect(upscaleFromDemEdit, SIGNAL(stateChanged(int)), this, SLOT(upscaleFromDemChanged(int)));
-
-    // topographic distances
-    topographicDistanceEdit = new QCheckBox(tr("use topographic distance"));
-    topographicDistanceEdit->setChecked(_interpolationSettings->getUseTD());
-    layoutMain->addWidget(topographicDistanceEdit);
-
-    // dynamic lapse rate
-    localDetrendingEdit = new QCheckBox(tr("local detrending"));
-    localDetrendingEdit->setChecked(_interpolationSettings->getUseLocalDetrending());
-    layoutMain->addWidget(localDetrendingEdit);
-
-    connect(localDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(dynamicDetrendingChanged(int)));
-
-    QLabel *labelMaxTd = new QLabel(tr("maximum Td multiplier"));
-    QIntValidator *intValTd = new QIntValidator(1, 1000000, this);
-    maxTdMultiplierEdit.setFixedWidth(60);
-    maxTdMultiplierEdit.setValidator(intValTd);
-    maxTdMultiplierEdit.setText(QString::number(_interpolationSettings->getTopoDist_maxKh()));
-    layoutMain->addWidget(labelMaxTd);
-    layoutMain->addWidget(&maxTdMultiplierEdit);
-
-    // dew point
-    useDewPointEdit = new QCheckBox(tr("interpolate relative humidity using dew point"));
-    useDewPointEdit->setChecked(_interpolationSettings->getUseDewPoint());
-    layoutMain->addWidget(useDewPointEdit);
-
-    // temperature interpolation for relative humidity
-    useInterpolTForRH = new QCheckBox(tr("use interpolated temperature (if missing) for relative humidity"));
-    useInterpolTForRH->setChecked(_interpolationSettings->getUseInterpolatedTForRH());
-    layoutMain->addWidget(useInterpolTForRH);
-
-    // use interpolated
-    // R2
-    QLabel *labelMinR2 = new QLabel(tr("minimum regression R2"));
-    QDoubleValidator *doubleValR2 = new QDoubleValidator(0.0, 1.0, 2, this);
-    doubleValR2->setNotation(QDoubleValidator::StandardNotation);
-    minRegressionR2Edit.setFixedWidth(30);
-    minRegressionR2Edit.setValidator(doubleValR2);
-    minRegressionR2Edit.setText(QString::number(double(_interpolationSettings->getMinRegressionR2())));
-    layoutDetrending->addWidget(labelMinR2);
-    layoutDetrending->addWidget(&minRegressionR2Edit);
-
-    // lapse rate code
-    lapseRateCodeEdit = new QCheckBox(tr("use lapse rate code"));
-    lapseRateCodeEdit->setChecked(_interpolationSettings->getUseLapseRateCode());
-    layoutDetrending->addWidget(lapseRateCodeEdit);
-
-    // thermal inversion
-    thermalInversionEdit = new QCheckBox(tr("thermal inversion"));
-    thermalInversionEdit->setChecked(_interpolationSettings->getUseThermalInversion());
-    layoutDetrending->addWidget(thermalInversionEdit);
-
-    // optimal detrending
-    optimalDetrendingEdit = new QCheckBox(tr("optimal detrending"));
-    optimalDetrendingEdit->setChecked(_interpolationSettings->getUseBestDetrending());
-    layoutDetrending->addWidget(optimalDetrendingEdit);
-
-    // multiple detrending
-    multipleDetrendingEdit = new QCheckBox(tr("multiple detrending"));
-    multipleDetrendingEdit->setChecked(_interpolationSettings->getUseMultipleDetrending());
-    layoutDetrending->addWidget(multipleDetrendingEdit);
-
-    connect(multipleDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(multipleDetrendingChanged(int)));
 
     //algorithm
+    QGroupBox *groupAlgorithm = new QGroupBox(tr("Algorithm"));
     QHBoxLayout *layoutAlgorithm = new QHBoxLayout;
     QLabel *labelAlgorithm = new QLabel(tr("algorithm"));
     layoutAlgorithm->addWidget(labelAlgorithm);
@@ -117,13 +31,103 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     QString algorithmString = QString::fromStdString(getKeyStringInterpolationMethod(_interpolationSettings->getInterpolationMethod()));
     int indexAlgorithm = algorithmEdit.findData(algorithmString);
     if (indexAlgorithm != -1)
-       algorithmEdit.setCurrentIndex(indexAlgorithm);
+        algorithmEdit.setCurrentIndex(indexAlgorithm);
 
     layoutAlgorithm->addWidget(&algorithmEdit);
-    layoutMain->addLayout(layoutAlgorithm);
+    groupAlgorithm->setLayout(layoutAlgorithm);
+    layoutMain->addWidget(groupAlgorithm);
 
-    // proxies
-    QHBoxLayout *layoutProxy = new QHBoxLayout;
+    // grid interpolation
+    QGroupBox *groupGrid = new QGroupBox(tr("Gridding"));
+    QVBoxLayout *layoutGrid = new QVBoxLayout;
+
+    upscaleFromDemEdit = new QCheckBox(tr("grid upscale from Dem"));
+    upscaleFromDemEdit->setChecked(_interpolationSettings->getMeteoGridUpscaleFromDem());
+    layoutGrid->addWidget(upscaleFromDemEdit);
+
+    QHBoxLayout * gridAggrLayout = new QHBoxLayout();
+    QLabel *labelAggregation = new QLabel(tr("aggregation method"));
+    gridAggrLayout->addWidget(labelAggregation);
+
+    std::map<std::string, aggregationMethod>::const_iterator itAggr;
+    for (itAggr = aggregationMethodToString.begin(); itAggr != aggregationMethodToString.end(); ++itAggr)
+        gridAggregationMethodEdit.addItem(QString::fromStdString(itAggr->first), QString::fromStdString(itAggr->first));
+
+    QString aggregationString = QString::fromStdString(getKeyStringAggregationMethod(_interpolationSettings->getMeteoGridAggrMethod()));
+    int indexAggregation = gridAggregationMethodEdit.findData(aggregationString);
+    if (indexAggregation != -1)
+       gridAggregationMethodEdit.setCurrentIndex(indexAggregation);
+
+    gridAggrLayout->addWidget(&gridAggregationMethodEdit);
+    layoutGrid->addLayout(gridAggrLayout);
+    groupGrid->setLayout(layoutGrid);
+    layoutMain->addWidget(groupGrid);
+
+    connect(upscaleFromDemEdit, SIGNAL(stateChanged(int)), this, SLOT(upscaleFromDemChanged(int)));
+
+    // topographic distances
+    QGroupBox *groupTD = new QGroupBox(tr("Topographic distance"));
+    QVBoxLayout *layoutTD = new QVBoxLayout();
+
+    topographicDistanceEdit = new QCheckBox(tr("use topographic distance"));
+    topographicDistanceEdit->setChecked(_interpolationSettings->getUseTD());
+    layoutTD->addWidget(topographicDistanceEdit);
+
+    QHBoxLayout *layoutTdMult = new QHBoxLayout();
+    QLabel *labelMaxTd = new QLabel(tr("maximum Td multiplier"));
+    QIntValidator *intValTd = new QIntValidator(1, 1000000, this);
+    maxTdMultiplierEdit.setFixedWidth(60);
+    maxTdMultiplierEdit.setValidator(intValTd);
+    maxTdMultiplierEdit.setText(QString::number(_interpolationSettings->getTopoDist_maxKh()));
+    layoutTdMult->addWidget(labelMaxTd);
+    layoutTdMult->addWidget(&maxTdMultiplierEdit);
+    layoutTD->addLayout(layoutTdMult);
+
+    groupTD->setLayout(layoutTD);
+    layoutMain->addWidget(groupTD);
+
+    // detrending
+    QGroupBox *groupDetrending = new QGroupBox(tr("Detrending"));
+    QVBoxLayout *layoutDetrending = new QVBoxLayout();
+
+    QHBoxLayout *layoutR2 = new QHBoxLayout();
+    QLabel *labelMinR2 = new QLabel(tr("minimum regression R2"));
+    QDoubleValidator *doubleValR2 = new QDoubleValidator(0.0, 1.0, 2, this);
+    doubleValR2->setNotation(QDoubleValidator::StandardNotation);
+    minRegressionR2Edit.setFixedWidth(30);
+    minRegressionR2Edit.setValidator(doubleValR2);
+    minRegressionR2Edit.setText(QString::number(double(_interpolationSettings->getMinRegressionR2())));
+    layoutR2->addWidget(labelMinR2);
+    layoutR2->addWidget(&minRegressionR2Edit);
+    layoutDetrending->addLayout(layoutR2);
+
+    lapseRateCodeEdit = new QCheckBox(tr("use lapse rate code"));
+    lapseRateCodeEdit->setChecked(_interpolationSettings->getUseLapseRateCode());
+    layoutDetrending->addWidget(lapseRateCodeEdit);
+
+    thermalInversionEdit = new QCheckBox(tr("thermal inversion"));
+    thermalInversionEdit->setChecked(_interpolationSettings->getUseThermalInversion());
+    layoutDetrending->addWidget(thermalInversionEdit);
+
+    optimalDetrendingEdit = new QCheckBox(tr("optimal detrending"));
+    optimalDetrendingEdit->setChecked(_interpolationSettings->getUseBestDetrending());
+    layoutDetrending->addWidget(optimalDetrendingEdit);
+
+    connect(optimalDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(optimalDetrendingChanged(int)));
+
+    multipleDetrendingEdit = new QCheckBox(tr("multiple detrending"));
+    multipleDetrendingEdit->setChecked(_interpolationSettings->getUseMultipleDetrending());
+    layoutDetrending->addWidget(multipleDetrendingEdit);
+
+    connect(multipleDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(multipleDetrendingChanged(int)));
+
+    localDetrendingEdit = new QCheckBox(tr("local detrending"));
+    localDetrendingEdit->setChecked(_interpolationSettings->getUseLocalDetrending());
+    layoutDetrending->addWidget(localDetrendingEdit);
+
+    connect(localDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(localDetrendingChanged(int)));
+
+    QVBoxLayout *layoutProxy = new QVBoxLayout;
     QLabel *labelProxy = new QLabel(tr("temperature detrending proxies"));
     layoutProxy->addWidget(labelProxy);
 
@@ -138,7 +142,23 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     connect(editProxy, &QPushButton::clicked, this, &DialogInterpolation::editProxies);
     layoutDetrending->addLayout(layoutProxy);
 
-    layoutMain->addLayout(layoutDetrending);
+    groupDetrending->setLayout(layoutDetrending);
+    layoutMain->addWidget(groupDetrending);
+
+    // dew point
+    QGroupBox *groupRH = new QGroupBox(tr("Relative humidity"));
+    QVBoxLayout * layoutRH = new QVBoxLayout();
+    useDewPointEdit = new QCheckBox(tr("interpolate relative humidity using dew point"));
+    useDewPointEdit->setChecked(_interpolationSettings->getUseDewPoint());
+    layoutRH->addWidget(useDewPointEdit);
+
+    // temperature interpolation for relative humidity
+    useInterpolTForRH = new QCheckBox(tr("use interpolated temperature (if missing) for relative humidity"));
+    useInterpolTForRH->setChecked(_interpolationSettings->getUseInterpolatedTForRH());
+    layoutRH->addWidget(useInterpolTForRH);
+
+    groupRH->setLayout(layoutRH);
+    layoutMain->addWidget(groupRH);
 
     //buttons
     QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
@@ -149,9 +169,9 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     layoutMain->addStretch(1);
     setLayout(layoutMain);
 
-    upscaleFromDemChanged(upscaleFromDemEdit->isChecked() ? 1 : 0);
-    multipleDetrendingChanged(multipleDetrendingEdit->isChecked() ? 1 : 0);
-    localDetrendingChanged(localDetrendingEdit->isChecked() ? 1 : 0);
+    upscaleFromDemChanged(upscaleFromDemEdit->checkState());
+    multipleDetrendingChanged(multipleDetrendingEdit->checkState());
+    localDetrendingChanged(localDetrendingEdit->checkState());
 
     exec();
 }
@@ -163,12 +183,21 @@ void DialogInterpolation::upscaleFromDemChanged(int active)
 
 void DialogInterpolation::multipleDetrendingChanged(int active)
 {
+    optimalDetrendingEdit->setChecked(Qt::Unchecked);
     optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
 }
 
 void DialogInterpolation::localDetrendingChanged(int active)
 {
+    topographicDistanceEdit->setChecked(Qt::Unchecked);
     topographicDistanceEdit->setEnabled(active == Qt::Unchecked);
+    maxTdMultiplierEdit.setEnabled(active == Qt::Unchecked);
+}
+
+void DialogInterpolation::optimalDetrendingChanged(int active)
+{
+    localDetrendingEdit->setChecked(Qt::Unchecked);
+    localDetrendingEdit->setEnabled(active == Qt::Unchecked);
 }
 
 void DialogInterpolation::redrawProxies()

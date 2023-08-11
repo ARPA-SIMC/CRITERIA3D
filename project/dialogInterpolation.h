@@ -48,6 +48,7 @@
             void upscaleFromDemChanged(int active);
             void multipleDetrendingChanged(int active);
             void localDetrendingChanged(int active);
+            void optimalDetrendingChanged(int active);
     };
 
     class ProxyDialog : public QDialog
