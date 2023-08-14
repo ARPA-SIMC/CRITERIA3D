@@ -583,10 +583,10 @@ bool Project::loadParameters(QString parametersFileName)
             if (parameters->contains("topographicDistance"))
                 interpolationSettings.setUseTD(parameters->value("topographicDistance").toBool());
 
-            if (parameters->contains("dynamicLapserate"))
+            if (parameters->contains("localDetrending"))
                 interpolationSettings.setUseLocalDetrending(parameters->value("localDetrending").toBool());
 
-            if (parameters->contains("meteogrid_upscalefromdem=true"))
+            if (parameters->contains("meteogrid_upscalefromdem"))
                 interpolationSettings.setMeteoGridUpscaleFromDem(parameters->value("meteogrid_upscalefromdem").toBool());
 
             if (parameters->contains("multipleDetrending"))
@@ -2207,6 +2207,9 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
     double x, y;
 
+    Crit3DProxyCombination myCombination = interpolationSettings.getSelectedCombination();
+    interpolationSettings.setCurrentCombination(myCombination);
+
     if (getComputeOnlyPoints())
     {
         for (unsigned int i = 0; i < outputPoints.size(); i++)
@@ -2222,15 +2225,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     dynamicSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, true);
-
-                    if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
-                    {
-                        if (interpolationSettings.getUseMultipleDetrending())
-                            multipleDetrending(subsetInterpolationPoints, interpolationSettings.getSelectedCombination(), &interpolationSettings, myVar);
-                        else
-                            detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
-                    }
-
+                    preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     outputPoints[i].currentValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                                myVar, x, y, outputPoints[i].z, proxyValues, true);
@@ -2256,12 +2251,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     dynamicSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, true);
-
-                    if (interpolationSettings.getUseMultipleDetrending())
-                        multipleDetrending(subsetInterpolationPoints, interpolationSettings.getSelectedCombination(), &interpolationSettings, myVar);
-                    else
-                        detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
-
+                    preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
@@ -2460,13 +2450,23 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         return false;
     }
 
+    Crit3DProxyCombination myCombination;
+
     if (! interpolationSettings.getUseLocalDetrending())
+    {
         if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
         {
             logError("Interpolation: error in function preInterpolation");
             return false;
         }
+        myCombination = interpolationSettings.getCurrentCombination();
+    }
+    else
+    {
+        myCombination = interpolationSettings.getSelectedCombination();
+        interpolationSettings.setCurrentCombination(myCombination);
+    }
 
     // proxy aggregation
     std::vector <gis::Crit3DRasterGrid> meteoGridProxies;
@@ -2480,7 +2480,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
     float interpolatedValue = NODATA;
-    Crit3DProxyCombination myCombination = interpolationSettings.getCurrentCombination();
     unsigned int i, proxyIndex;
 
     for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
@@ -2521,9 +2520,9 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
                         {
                             if (interpolationSettings.getUseMultipleDetrending())
-                                multipleDetrending(subsetInterpolationPoints, interpolationSettings.getSelectedCombination(), &interpolationSettings, myVar);
+                                multipleDetrending(subsetInterpolationPoints, myCombination, &interpolationSettings, myVar);
                             else
-                                detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
+                                detrending(subsetInterpolationPoints, myCombination, &interpolationSettings, &climateParameters, myVar, myTime);
                         }
                     }
                 }

@@ -196,12 +196,10 @@ bool dynamicSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector
     // compute distances (only topographic)
     for (unsigned long i = 0; i < inputPoints.size() ; i++)
     {
-        if (excludeSupplemental && mySettings.getUseLapseRateCode() && inputPoints[i].lapseRateCode == supplemental)
-            inputPoints[i].distance = NODATA;
-        else
-        {
+        if (checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
             inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
-        }
+        else
+            inputPoints[i].distance = NODATA;
     }
 
     unsigned int nrValid = 0;
