@@ -2410,9 +2410,8 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
 }
 
 
-bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid> &myGrids)
+bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid*> &myGrids)
 {
-    gis::Crit3DRasterGrid* myGrid;
     gis::Crit3DRasterGrid* proxyGrid;
 
     float cellSize = computeDefaultCellSizeFromMeteoGrid(1);
@@ -2422,15 +2421,15 @@ bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid> &myGri
 
     for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
     {
-        myGrid = new gis::Crit3DRasterGrid();
-
         if (interpolationSettings.getCurrentCombination().getValue(i))
         {
+            gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
+
             proxyGrid = interpolationSettings.getProxy(i)->getGrid();
             if (proxyGrid != nullptr && proxyGrid->isLoaded)
                 gis::resampleGrid(*proxyGrid, myGrid, meteoGridRaster.header, aggrAverage, 0);
 
-            myGrids.push_back(*myGrid);
+            myGrids.push_back(myGrid);
         }
     }
 
@@ -2469,7 +2468,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     }
 
     // proxy aggregation
-    std::vector <gis::Crit3DRasterGrid> meteoGridProxies;
+    std::vector <gis::Crit3DRasterGrid*> meteoGridProxies;
     if (getUseDetrendingVar(myVar))
         if (! meteoGridAggregateProxy(meteoGridProxies)) return false;
 
@@ -2504,11 +2503,12 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         {
                             if (proxyIndex < meteoGridProxies.size())
                             {
-                                float proxyValue = gis::getValueFromXY(meteoGridProxies[proxyIndex], myX, myY);
-                                if (proxyValue != meteoGridProxies[proxyIndex].header->flag)
+                                float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
+                                if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
                                     proxyValues[i] = proxyValue;
                             }
 
+                            proxyIndex++;
                         }
                     }
 
@@ -2516,18 +2516,18 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     {
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                         dynamicSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings, true);
-
-                        if (! preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
-                        {
-                            if (interpolationSettings.getUseMultipleDetrending())
-                                multipleDetrending(subsetInterpolationPoints, myCombination, &interpolationSettings, myVar);
-                            else
-                                detrending(subsetInterpolationPoints, myCombination, &interpolationSettings, &climateParameters, myVar, myTime);
-                        }
+                        preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+                        interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                    }
+                    else
+                    {
+                        interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
                     }
                 }
-
-                interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                else
+                {
+                    interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                }
 
                 if (freq == hourly)
                 {
