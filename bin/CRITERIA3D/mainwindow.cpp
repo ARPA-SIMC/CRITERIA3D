@@ -3016,7 +3016,7 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
         return;
     }
 
-    if (layerIndex >= myProject.nrLayers)
+    if (unsigned(layerIndex) >= myProject.nrLayers)
     {
         layerIndex = myProject.nrLayers - 1;
         ui->layerNrEdit->setValue(layerIndex);
