@@ -120,7 +120,6 @@
         void on_actionLoad_state_triggered();
         void on_flagSave_state_daily_step_toggled(bool isChecked);
 
-        void on_actionCriteria3D_settings_triggered();
         void on_actionCriteria3D_Initialize_triggered();
         void on_actionCriteria3D_run_models_triggered();
 
@@ -219,6 +218,8 @@
         void on_actionView_SoilMoisture_triggered();
 
         void on_layerNrEdit_valueChanged(int layerIndex);
+
+        void on_actionWaterFluxes_settings_triggered();
 
     protected:
         /*!

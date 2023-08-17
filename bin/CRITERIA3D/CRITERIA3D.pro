@@ -86,6 +86,7 @@ CONFIG(debug, debug|release) {
 
 
 SOURCES += \
+    dialogWaterFluxesSettings.cpp \
     shared/project3D.cpp \
     mainwindow.cpp \
     criteria3DProject.cpp \
@@ -98,6 +99,7 @@ SOURCES += \
 
 
 HEADERS += \
+    dialogWaterFluxesSettings.h \
     shared/project3D.h \
     mainwindow.h \
     criteria3DProject.h \

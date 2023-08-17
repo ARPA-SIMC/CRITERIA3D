@@ -42,6 +42,7 @@
 #include "dialogNewPoint.h"
 #include "glWidget.h"
 #include "formInfo.h"
+#include "dialogWaterFluxesSettings.h"
 
 #include <QDebug>
 
@@ -1911,13 +1912,7 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     ui->buttonModelStart->setDisabled(true);
     ui->buttonModelStop->setEnabled(true);
 
-    bool isOk = myProject.runModels(firstTime, lastTime);
-
-    ui->buttonModelPause->setDisabled(true);
-    ui->buttonModelStart->setDisabled(true);
-    ui->buttonModelStop->setDisabled(true);
-
-    return isOk;
+    return myProject.runModels(firstTime, lastTime);
 }
 
 
@@ -1952,10 +1947,6 @@ void MainWindow::on_buttonModelStart_clicked()
         newFirstTime = newFirstTime.addSecs(3600);
 
         myProject.runModels(newFirstTime, myProject.modelLastTime);
-
-        ui->buttonModelPause->setDisabled(true);
-        ui->buttonModelStart->setDisabled(true);
-        ui->buttonModelStop->setDisabled(true);
     }
 }
 
@@ -2099,17 +2090,46 @@ void MainWindow::on_actionSnow_settings_triggered()
 
 //--------------------- MENU WATER FLUXES  -----------------------
 
-void MainWindow::on_actionCriteria3D_settings_triggered()
+
+
+void MainWindow::on_actionWaterFluxes_settings_triggered()
 {
-    // TODO 3D settings
-    // initial water potential
+    DialogWaterFluxesSettings dialogWaterFluxes;
+    dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
+    dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
+
+    if (myProject.waterFluxesParameters.computeOnlySurface)
+        dialogWaterFluxes.onlySurface->setChecked(true);
+    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
+        dialogWaterFluxes.allSoilDepth->setChecked(true);
+    else
+        dialogWaterFluxes.imposedDepth->setChecked(true);
+
+    dialogWaterFluxes.exec();
+    if (dialogWaterFluxes.result() != QDialog::Accepted)
+    {
+        return;
+    }
+    else
+    {
+        myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
+        myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
+        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();
+        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
+
+        /*if (!myProject.writeCriteria3DParameters())
+        {
+            myProject.logError("Error writing snow parameters");
+        }*/
+    }
+
     // layer thickness
     // processes (snow crop)
-    // compution depth (only surface, maximum soil depth, user choice)
     // boundary (lateral free drainage, bottom free drainage)
-    // lateral conductivy ratio
+    // lateral conductivity ratio
     // model accuracy
 }
+
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
@@ -2187,14 +2207,14 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex)
         return;
     }
 
-    current3DVariable = var;
-    current3DlayerIndex = layerIndex;
-
-    if (! myProject.setCriteria3DMap(current3DVariable, current3DlayerIndex))
+    if (! myProject.setCriteria3DMap(var, layerIndex))
     {
         myProject.logError();
         return;
     }
+
+    current3DVariable = var;
+    current3DlayerIndex = layerIndex;
 
     if (current3DVariable == waterContent)
     {

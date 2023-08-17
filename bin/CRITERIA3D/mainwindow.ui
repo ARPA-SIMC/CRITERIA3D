@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>8</day>
+       <day>7</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1797,7 +1797,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>28</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="palette">
@@ -1922,7 +1922,7 @@
     <property name="title">
      <string>Water fluxes</string>
     </property>
-    <addaction name="actionCriteria3D_settings"/>
+    <addaction name="actionWaterFluxes_settings"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Initialize"/>
     <addaction name="actionCriteria3D_compute_current_hour"/>
@@ -2202,9 +2202,9 @@
     <string>Spatial quality control</string>
    </property>
   </action>
-  <action name="actionCriteria3D_settings">
+  <action name="actionWaterFluxes_settings">
    <property name="text">
-    <string>3D model settings...</string>
+    <string>Water fluxes settings...</string>
    </property>
   </action>
   <action name="actionCriteria3D_Initialize">
