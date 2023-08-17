@@ -199,7 +199,7 @@ DialogSettings::DialogSettings(Project* myProject)
     project_ = myProject;
 
     setWindowTitle(tr("Parameters"));
-    setFixedSize(650,700);
+    setFixedSize(600,500);
     projectTab = new ProjectTab(myProject);
     qualityTab = new QualityTab(myProject->quality);
     metTab = new MeteoTab(myProject->meteoSettings);
