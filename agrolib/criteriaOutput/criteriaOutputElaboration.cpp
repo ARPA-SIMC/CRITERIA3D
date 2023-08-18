@@ -300,7 +300,6 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
     std::vector<float> resVector;
     double res = NODATA;
     int periodTDX = NODATA;
-    QSqlQuery qry(dbData);
 
     // check if table exist (skip otherwise)
     if (! dbData.tables().contains(idCase))
@@ -459,13 +458,13 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                     statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
                     if( !qry.exec(statement) )
                     {
-                        error = qry.lastError().text();
+                        error = "Error in query historical data";
                         return ERROR_DBHISTORICAL;
                     }
                     qry.first();
                     if (!qry.isValid())
                     {
-                        error = qry.lastError().text();
+                        error = "Historical data: " + qry.lastError().text();
                         return ERROR_DBHISTORICAL ;
                     }
                     getValue(qry.value("MIN(DATE)"), &historicalFirstDate);
