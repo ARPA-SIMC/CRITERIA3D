@@ -184,7 +184,7 @@ unsigned sortPointsByDistance(unsigned maxIndex, std::vector<Crit3DInterpolation
 
 // TODO elevation std dev?
 bool dynamicSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <Crit3DInterpolationDataPoint> &selectedPoints,
-                      float x, float y, const Crit3DInterpolationSettings& mySettings, bool excludeSupplemental)
+                      float x, float y, const Crit3DInterpolationSettings& mySettings)
 {
     const int MIN_POINTS = 20;
     if (inputPoints.size() <= MIN_POINTS)
@@ -806,7 +806,7 @@ bool regressionOrographyT(std::vector <Crit3DInterpolationDataPoint> &myPoints, 
 
 }
 
-float computeShepard(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* settings, float X, float Y)
+float shepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* settings, float X, float Y)
 {
     std::vector <Crit3DInterpolationDataPoint> shepardValidPoints;
     std::vector <Crit3DInterpolationDataPoint> shepardNeighbourPoints;
@@ -906,6 +906,66 @@ float computeShepard(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInte
     result = 0;
     for (i=0; i < nrValid; i++)
         result += weight[i] * shepardValidPoints[i].value;
+
+    return result;
+}
+
+
+float modifiedShepardIdw(vector <Crit3DInterpolationDataPoint> &myPoints, float radius, float X, float Y)
+{
+    unsigned int i;
+
+    unsigned int j;
+    float weightSum, cosine, result;
+    std::vector <float> weight, t, S;
+
+    weight.resize(myPoints.size());
+    t.resize(myPoints.size());
+    S.resize(myPoints.size());
+
+    weightSum = 0;
+    for (i=0; i < myPoints.size(); i++)
+        if (myPoints[i].distance > 0)
+        {
+            if (myPoints[i].distance <= radius)
+                S[i] = (radius - myPoints[i].distance) / (radius * myPoints[i].distance);
+            else
+                S[i] = 0;
+
+            weightSum = weightSum + S[i];
+        }
+
+    if (weightSum == 0)
+        return NODATA;
+
+    // including direction
+    for (i=0; i < myPoints.size(); i++)
+    {
+        t[i] = 0;
+        for (j=0; j < myPoints.size(); j++)
+            if (i != j && S[i] > 0)
+            {
+                cosine = ((X - (float)myPoints[i].point->utm.x) * (X - (float)myPoints[j].point->utm.x) + (Y - (float)myPoints[i].point->utm.y) * (Y - (float)myPoints[j].point->utm.y)) / (myPoints[i].distance * myPoints[j].distance);
+                t[i] = t[i] + S[j] * (1 - cosine);
+            }
+
+        if (weightSum != 0)
+            t[i] /= weightSum;
+    }
+
+    // weights
+    weightSum = 0;
+    for (i=0; i < myPoints.size(); i++)
+    {
+        weight[i] = S[i] * S[i] * (1 + t[i]);
+        weightSum += weight[i];
+    }
+    for (i=0; i < myPoints.size(); i++)
+        weight[i] /= weightSum;
+
+    result = 0;
+    for (i=0; i < myPoints.size(); i++)
+        result += weight[i] * myPoints[i].value;
 
     return result;
 }
@@ -1479,7 +1539,7 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
     }
     else if (mySettings->getInterpolationMethod() == shepard)
     {
-        myResult = computeShepard(myPoints, mySettings, myX, myY);
+        myResult = shepardIdw(myPoints, mySettings, myX, myY);
     }
 
     if (int(myResult) != int(NODATA))

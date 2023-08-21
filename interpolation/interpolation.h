@@ -86,7 +86,7 @@
 
     bool dynamicSelection(std::vector <Crit3DInterpolationDataPoint> &inputPoints,
                           std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
-                          float x, float y, const Crit3DInterpolationSettings& mySettings, bool excludeSupplemental);
+                          float x, float y, const Crit3DInterpolationSettings& mySettings);
 
 
 #endif // INTERPOLATION_H
