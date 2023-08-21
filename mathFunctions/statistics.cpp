@@ -314,6 +314,7 @@ namespace statistics
         return (y1 + rate * (xx - x1));
     }
 
+
     void weightedMultiRegressionLinear(float** x,  float* y, float* weight, long nrItems,float* q,float* m, int nrPredictors)
     {
         //int matrixSize = nrPredictors+1;
@@ -341,7 +342,7 @@ namespace statistics
                }
                else
                {
-                    XT[j][i] = x[j-1][i];
+                    XT[j][i] = x[i][j-1];
                }
             }
 
@@ -374,7 +375,85 @@ namespace statistics
             for (int i=0;i<nrPredictors+1;i++)
             {
                 m[j-1] += (X2Inverse[j][i]*roots[i]);
-            } 
+            }
+        }
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            free(XT[j]);
+            free(X2[j]);
+            free(X2Inverse[j]);
+        }
+        for (int i=0;i<nrItems;i++)
+        {
+            free(X[i]);
+        }
+        free(X);
+        free(XT);
+        free(X2);
+        free(X2Inverse);
+        free(roots);
+    }
+
+    void weightedMultiRegressionLinear(const std::vector <std::vector <float>> &x, const std::vector <float> &y, const std::vector <float> &weight, long nrItems,float* q,std::vector <float> &m, int nrPredictors)
+    {
+        double** XT = (double**)calloc(nrPredictors+1, sizeof(double*));
+        double** X = (double**)calloc(nrItems, sizeof(double*));
+        double** X2 = (double**)calloc(nrPredictors+1, sizeof(double*));
+        double** X2Inverse = (double**)calloc(nrPredictors+1, sizeof(double*));
+        for (int i=0;i<nrPredictors+1;i++)
+        {
+            XT[i]= (double*)calloc(nrItems, sizeof(double));
+            X2[i]= (double*)calloc(nrItems, sizeof(double));
+            X2Inverse[i]= (double*)calloc(nrItems, sizeof(double));
+        }
+        for (int i=0;i<nrItems;i++)
+        {
+            X[i]= (double*)calloc(nrPredictors+1, sizeof(double));
+        }
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            for (int i=0;i<nrItems;i++)
+            {
+               if (j == 0)
+               {
+                    XT[j][i] = 1.;
+               }
+               else
+               {
+                    XT[j][i] = x[i][j-1];
+               }
+            }
+
+        }
+        matricial::transposedMatrix(XT,nrPredictors+1,nrItems,X);
+        matricial::matrixProduct(XT,X,nrItems,nrPredictors+1,nrPredictors+1,nrItems,X2);
+        matricial::inverse(X2,X2Inverse,nrPredictors+1);
+        //matricial::matrixProduct(X2Inverse,XT,nrPredictors+1,nrPredictors+1,nrItems,nrPredictors+1,X);
+        double* roots = (double*)calloc(nrPredictors+1, sizeof(double));
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            roots[j]=0;
+            for (int i=0;i<nrItems;i++)
+            {
+                roots[j] += (XT[j][i]*y[i]);
+            }
+        }
+        *q=0;
+        for (int j=0;j<nrPredictors;j++)
+        {
+            m[j]=0;
+        }
+        for (int i=0;i<nrPredictors+1;i++)
+        {
+            *q += (X2Inverse[0][i]*roots[i]);
+        }
+
+        for (int j=1;j<nrPredictors+1;j++)
+        {
+            for (int i=0;i<nrPredictors+1;i++)
+            {
+                m[j-1] += (X2Inverse[j][i]*roots[i]);
+            }
         }
         for (int j=0;j<nrPredictors+1;j++)
         {
