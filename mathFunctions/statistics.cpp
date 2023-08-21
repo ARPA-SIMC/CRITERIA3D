@@ -27,13 +27,13 @@
 #include <stdlib.h>
 #include <float.h>
 #include <algorithm>    // std::find
+#include <vector>
 
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "statistics.h"
 #include "physics.h"
 #include "furtherMathFunctions.h"
-
 
 
 float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float rainfallThreshold)
@@ -1358,6 +1358,59 @@ namespace statistics
                 arrayOutput[i] = NODATA;
         }
         return true;
+    }
+
+}
+
+namespace stat_openai
+{
+    // Funzione per calcolare la trasposta di una matrice
+    std::vector<std::vector<float>> transpose(const std::vector<std::vector<float>>& matrix) {
+        int rows = matrix.size();
+        int cols = matrix[0].size();
+
+        std::vector<std::vector<float>> result(cols, std::vector<float>(rows));
+
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                result[j][i] = matrix[i][j];
+            }
+        }
+
+        return result;
+    }
+
+    // Funzione per calcolare la regressione lineare multipla
+    std::vector<double> multipleLinearRegression(const std::vector<std::vector<double>>& X, const std::vector<double>& y)
+    {
+        int numSamples = X.size();
+        int numFeatures = X[0].size();
+
+        // Calcola la matrice X^T * X
+        std::vector<std::vector<double>> XTX(numFeatures, std::vector<double>(numFeatures));
+        for (int i = 0; i < numFeatures; ++i) {
+            for (int j = 0; j < numFeatures; ++j) {
+                for (int k = 0; k < numSamples; ++k) {
+                    XTX[i][j] += X[k][i] * X[k][j];
+                }
+            }
+        }
+
+        // Calcola il vettore X^T * y
+        std::vector<double> XTy(numFeatures);
+        for (int i = 0; i < numFeatures; ++i) {
+            for (int j = 0; j < numSamples; ++j) {
+                XTy[i] += X[j][i] * y[j];
+            }
+        }
+
+        // Risoluzione del sistema di equazioni lineari per ottenere i coefficienti
+        std::vector<double> coefficients(numFeatures);
+        for (int i = 0; i < numFeatures; ++i) {
+            coefficients[i] = XTy[i] / XTX[i][i];
+        }
+
+        return coefficients;
     }
 
 }

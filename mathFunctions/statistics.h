@@ -71,4 +71,9 @@
         void correlationsMatrixNoCheck(int nrRowCol, double**myLists,int nrLists, double** c);
     }
 
+    namespace stat_openai
+    {
+        std::vector<double> multipleLinearRegression(const std::vector<std::vector<double>>& X, const std::vector<double>& y);
+    }
+
 #endif // STATISTICS_H
