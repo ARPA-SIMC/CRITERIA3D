@@ -141,9 +141,9 @@
         Crit3DProxyCombination currentCombination;
         unsigned indexHeight;
 
-        std::vector <double> multiRegressionSlopes;
-        std::vector <double> multiRegressionAvgs;
-        std::vector <double> multiRegressionStdDevs;
+        std::vector <float> multiRegressionSlopes;
+        std::vector <float> multiRegressionAvgs;
+        std::vector <float> multiRegressionStdDevs;
 
     public:
         Crit3DInterpolationSettings();
@@ -223,12 +223,12 @@
         void setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem);
         bool getUseMultipleDetrending() const;
         void setUseMultipleDetrending(bool newUseMultipleDetrending);
-        std::vector<double> getMultiRegressionSlopes() const;
-        void setMultiRegressionSlopes(const std::vector<double> &newMultiRegressionSlopes);
-        std::vector<double> getMultiRegressionAvgs() const;
-        void setMultiRegressionAvgs(const std::vector<double> &newMultiRegressionAvgs);
-        std::vector<double> getMultiRegressionStdDevs() const;
-        void setMultiRegressionStdDevs(const std::vector<double> &newMultiRegressionStdDevs);
+        std::vector<float> getMultiRegressionSlopes() const;
+        void setMultiRegressionSlopes(const std::vector<float> &newMultiRegressionSlopes);
+        std::vector<float> getMultiRegressionAvgs() const;
+        void setMultiRegressionAvgs(const std::vector<float> &newMultiRegressionAvgs);
+        std::vector<float> getMultiRegressionStdDevs() const;
+        void setMultiRegressionStdDevs(const std::vector<float> &newMultiRegressionStdDevs);
     };
 
 #endif // INTERPOLATIONSETTINGS_H

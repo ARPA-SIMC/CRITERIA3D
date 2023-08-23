@@ -1227,125 +1227,6 @@ bool regressionOrography(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 }
 
-
-void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
-                Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, meteoVariable myVar)
-{
-    if (! getUseDetrendingVar(myVar)) return;
-
-    unsigned nrPredictors = 0, proxyPos;
-    for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
-    {
-        if (myCombination.getValue(pos))
-        {
-            mySettings->getProxy(pos)->setIsSignificant(true);
-            nrPredictors++;
-            proxyPos = pos;
-        }
-    }
-
-    if (nrPredictors == 0)
-        return;
-    else if (nrPredictors == 1)
-        regressionGeneric(myPoints, mySettings, proxyPos, false);
-
-    unsigned i,j;
-
-    std::vector <double> proxyValues;
-    std::vector <double> predictands;
-    std::vector <std::vector <double>> predictors;
-
-    for (i = 0; i < myPoints.size(); i++)
-    {
-        if (myPoints[i].isActive)
-        {
-            proxyValues.clear();
-
-            if (myPoints[i].getActiveProxyValues(myCombination, proxyValues))
-            {
-                predictands.push_back(myPoints[i].value);
-                predictors.push_back(proxyValues);
-            }
-        }
-    }
-
-    // z-score normalization
-    float sum = 0;
-    std::vector <std::vector <double>> predictorsNorm(predictors.size(), std::vector <double> (predictors[0].size()));
-    std::vector <double> avgs(nrPredictors);
-    std::vector <double> stdDevs(nrPredictors);
-
-    for (i=0; i<nrPredictors; i++)
-    {
-        sum = 0;
-        for (j=0; j<predictors.size(); j++)
-            sum += predictors[j][i];
-        avgs[i] = sum / predictors.size();
-
-        sum = 0;
-        for (j=0; j<predictors.size(); j++)
-            sum += (predictors[j][i] - avgs[i]) * (predictors[j][i] - avgs[i]);
-        stdDevs[i] = sqrt(sum / (predictors.size() - 1));
-
-        for (j=0; j<predictors.size(); j++)
-            predictorsNorm[j][i] = (predictors[j][i] - avgs[i]) / stdDevs[i];
-    }
-
-    int nrPoints = int(predictands.size());
-    if (nrPoints == 0) return;
-
-    double** predictorsArray = (double**)calloc(nrPredictors, sizeof(double*));
-    double *m = (double*)calloc(nrPredictors, sizeof(double));
-    double q;
-    double *weights = (double*)calloc(nrPoints, sizeof(double));;
-
-    for (i=0; i< nrPredictors; i++)
-    {
-        predictorsArray[i] = (double*)calloc(nrPoints, sizeof(double));
-        predictorsArray[i] = predictors[i].data();
-    }
-
-    std::vector <double> slopes;
-    if (predictands.size() >= MIN_REGRESSION_POINTS)
-    {
-        slopes = stat_openai::multipleLinearRegression(predictorsNorm, predictands);
-        //statistics::weightedMultiRegressionLinear(predictorsArray, predictands.data(), weights, nrPoints, &q, m, nrPredictors);
-    }
-
-    free(predictorsArray);
-    free(weights);
-
-    mySettings->setMultiRegressionSlopes(slopes);
-    mySettings->setMultiRegressionAvgs(avgs);
-    mySettings->setMultiRegressionStdDevs(stdDevs);
-
-    float detrendValue, proxyValue;
-    unsigned index = 0;
-
-    for (i = 0; i < myPoints.size(); i++)
-    {
-        index = 0;
-        for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
-        {
-            detrendValue = 0;
-
-            if (myCombination.getValue(pos))
-            {
-                proxyValue = myPoints[i].getProxyValue(pos);
-
-                if (proxyValue != NODATA)
-                    detrendValue = (proxyValue - avgs[index]) / stdDevs[index] * slopes[index];
-
-                index++;
-
-                myPoints[i].value -= detrendValue;
-            }
-        }
-    }
-
-}
-
-
 void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                 Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
                 meteoVariable myVar, Crit3DTime myTime)
@@ -1381,6 +1262,117 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 }
 
+void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
+                        Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
+                        meteoVariable myVar, Crit3DTime myTime)
+{
+    if (! getUseDetrendingVar(myVar)) return;
+
+    unsigned nrPredictors = 0;
+    int proxyPos;
+    for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
+    {
+        if (myCombination.getValue(pos))
+        {
+            mySettings->getProxy(pos)->setIsSignificant(true);
+            nrPredictors++;
+            proxyPos = pos;
+        }
+    }
+
+    if (nrPredictors == 0)
+        return;
+    else if (nrPredictors == 1)
+        detrending(myPoints, mySettings->getSelectedCombination(), mySettings, myClimate, myVar, myTime);
+
+    unsigned i,j;
+
+    std::vector <float> proxyValues;
+    std::vector <float> predictands;
+    std::vector <std::vector <float>> predictors;
+    std::vector <float> weights(predictors.size());
+
+    for (i = 0; i < myPoints.size(); i++)
+    {
+        if (myPoints[i].isActive)
+        {
+            weights[i] = 1;
+
+            proxyValues.clear();
+
+            if (myPoints[i].getActiveProxyValues(myCombination, proxyValues))
+            {
+                predictands.push_back(myPoints[i].value);
+                predictors.push_back(proxyValues);
+            }
+        }
+    }
+
+    // z-score normalization
+    float sum = 0;
+    std::vector <std::vector <float>> predictorsNorm(predictors.size(), std::vector <float> (predictors[0].size()));
+    std::vector <float> avgs(nrPredictors);
+    std::vector <float> stdDevs(nrPredictors);
+
+    for (i=0; i<nrPredictors; i++)
+    {
+        sum = 0;
+        for (j=0; j<predictors.size(); j++)
+            sum += predictors[j][i];
+        avgs[i] = sum / predictors.size();
+
+        sum = 0;
+        for (j=0; j<predictors.size(); j++)
+            sum += (predictors[j][i] - avgs[i]) * (predictors[j][i] - avgs[i]);
+        stdDevs[i] = sqrt(sum / (predictors.size() - 1));
+
+        for (j=0; j<predictors.size(); j++)
+            predictorsNorm[j][i] = (predictors[j][i] - avgs[i]) / stdDevs[i];
+    }
+
+    int nrPoints = int(predictands.size());
+    if (nrPoints == 0) return;
+
+    std::vector <float> m(nrPredictors);
+    float q;
+
+    std::vector <double> slopes;
+
+    if (predictands.size() >= MIN_REGRESSION_POINTS)
+    {
+        //slopes = stat_openai::multipleLinearRegression(predictorsNorm, predictands);
+        statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, predictorsNorm.size(), &q, m, predictorsNorm[0].size());
+    }
+
+    mySettings->setMultiRegressionSlopes(m);
+    mySettings->setMultiRegressionAvgs(avgs);
+    mySettings->setMultiRegressionStdDevs(stdDevs);
+
+    float detrendValue, proxyValue;
+    unsigned index = 0;
+
+    for (i = 0; i < myPoints.size(); i++)
+    {
+        index = 0;
+        for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
+        {
+            detrendValue = 0;
+
+            if (myCombination.getValue(pos))
+            {
+                proxyValue = myPoints[i].getProxyValue(pos);
+
+                if (proxyValue != NODATA)
+                    detrendValue = (proxyValue - avgs[index]) / stdDevs[index] * slopes[index];
+
+                index++;
+
+                myPoints[i].value -= detrendValue;
+            }
+        }
+    }
+
+}
 
 void topographicDistanceOptimize(meteoVariable myVar,
                                  Crit3DMeteoPoint* &myMeteoPoints,
@@ -1491,7 +1483,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     {
         if (mySettings->getUseMultipleDetrending())
         {
-            multipleDetrending(myPoints, mySettings->getSelectedCombination(), mySettings, myVar);
+            multipleDetrending(myPoints, mySettings->getSelectedCombination(), mySettings, myClimate, myVar, myTime);
             mySettings->setCurrentCombination(mySettings->getSelectedCombination());
         }
         else

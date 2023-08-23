@@ -64,7 +64,8 @@
                     Crit3DProxyCombination myCombination, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,
                     meteoVariable myVar, Crit3DTime myTime);
     void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
-                                 Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, meteoVariable myVar);
+                            Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
+                            Crit3DClimateParameters *myClimate, meteoVariable myVar, Crit3DTime myTime);
 
     bool getUseDetrendingVar(meteoVariable myVar);
     bool isThermal(meteoVariable myVar);

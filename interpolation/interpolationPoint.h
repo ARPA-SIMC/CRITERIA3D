@@ -30,7 +30,7 @@
 
         float getProxyValue(unsigned int pos);
         std::vector <float> getProxyValues();
-        bool getActiveProxyValues(Crit3DProxyCombination &activeCombination, std::vector<double> &myValues);
+        bool getActiveProxyValues(Crit3DProxyCombination &activeCombination, std::vector<float> &myValues);
     };
 
 #endif // INTERPOLATIONPOINT_H
