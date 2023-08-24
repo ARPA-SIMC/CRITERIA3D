@@ -15,11 +15,12 @@
         #include <map>
     #endif
 
-    enum TInterpolationMethod { idw, kriging, shepard };
+    enum TInterpolationMethod { idw, kriging, shepard, shepard_modified };
 
     const std::map<std::string, TInterpolationMethod> interpolationMethodNames = {
       { "idw", idw },
       { "shepard", shepard },
+      { "shepard_modified", shepard_modified },
       { "kriging", kriging }
     };
 

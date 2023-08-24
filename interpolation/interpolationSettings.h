@@ -128,7 +128,8 @@
         bool isKrigingReady;
         bool precipitationAllZero;
         float maxHeightInversion;
-        float shepardInitialRadius;
+        float pointsBoundingBoxArea;
+        float localRadius;
         int indexPointCV;
         int topoDist_maxKh, topoDist_Kh;
         std::vector <float> Kh_series;
@@ -150,8 +151,6 @@
 
         void initialize();
         void initializeProxy();
-
-        void computeShepardInitialRadius(float area, int nrPoints);
 
         Crit3DProxy* getProxy(unsigned pos);
         std::string getProxyName(unsigned pos);
@@ -229,6 +228,10 @@
         void setMultiRegressionAvgs(const std::vector<float> &newMultiRegressionAvgs);
         std::vector<float> getMultiRegressionStdDevs() const;
         void setMultiRegressionStdDevs(const std::vector<float> &newMultiRegressionStdDevs);
+        float getPointsBoundingBoxArea() const;
+        void setPointsBoundingBoxArea(float newPointsBoundingBoxArea);
+        float getLocalRadius() const;
+        void setLocalRadius(float newLocalRadius);
     };
 
 #endif // INTERPOLATIONSETTINGS_H

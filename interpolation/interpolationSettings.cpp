@@ -83,16 +83,6 @@ void Crit3DInterpolationSettings::setMeteoGridAggrMethod(const aggregationMethod
     meteoGridAggrMethod = value;
 }
 
-float Crit3DInterpolationSettings::getShepardInitialRadius() const
-{
-    return shepardInitialRadius;
-}
-
-void Crit3DInterpolationSettings::setShepardInitialRadius(float value)
-{
-    shepardInitialRadius = value;
-}
-
 int Crit3DInterpolationSettings::getIndexPointCV() const
 {
     return indexPointCV;
@@ -290,6 +280,26 @@ void Crit3DInterpolationSettings::setMultiRegressionStdDevs(const std::vector<fl
     multiRegressionStdDevs = newMultiRegressionStdDevs;
 }
 
+float Crit3DInterpolationSettings::getPointsBoundingBoxArea() const
+{
+    return pointsBoundingBoxArea;
+}
+
+void Crit3DInterpolationSettings::setPointsBoundingBoxArea(float newPointsBoundingBoxArea)
+{
+    pointsBoundingBoxArea = newPointsBoundingBoxArea;
+}
+
+float Crit3DInterpolationSettings::getLocalRadius() const
+{
+    return localRadius;
+}
+
+void Crit3DInterpolationSettings::setLocalRadius(float newLocalRadius)
+{
+    localRadius = newLocalRadius;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -327,7 +337,6 @@ void Crit3DInterpolationSettings::initialize()
     isKrigingReady = false;
     precipitationAllZero = false;
     maxHeightInversion = 1000.;
-    shepardInitialRadius = NODATA;
     indexPointCV = NODATA;
 
     Kh_series.clear();
@@ -633,11 +642,6 @@ float Crit3DInterpolationSettings::getProxyValue(unsigned pos, std::vector <floa
         return currentProxy[pos].getValue(pos, proxyValues);
     else
         return NODATA;
-}
-
-void Crit3DInterpolationSettings::computeShepardInitialRadius(float area, int nrPoints)
-{
-    setShepardInitialRadius(sqrt((SHEPARD_AVG_NRPOINTS * area) / (float(PI) * nrPoints)));
 }
 
 std::deque<bool> Crit3DProxyCombination::getIsActive() const
