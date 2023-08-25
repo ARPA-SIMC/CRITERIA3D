@@ -15,13 +15,12 @@
         #include <map>
     #endif
 
-    enum TInterpolationMethod { idw, kriging, shepard, shepard_modified };
+    enum TInterpolationMethod { idw, shepard, shepard_modified };
 
     const std::map<std::string, TInterpolationMethod> interpolationMethodNames = {
       { "idw", idw },
       { "shepard", shepard },
-      { "shepard_modified", shepard_modified },
-      { "kriging", kriging }
+      { "shepard_modified", shepard_modified }
     };
 
     enum TProxyVar { height, heightInversion, urbanFraction, orogIndex, seaDistance, aspect, slope, noProxy };

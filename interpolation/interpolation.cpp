@@ -1545,8 +1545,8 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
 
     if (mySettings->getInterpolationMethod() == idw)
         myResult = inverseDistanceWeighted(myPoints);
-    else if (mySettings->getInterpolationMethod() == kriging)
-        myResult = NODATA;  //TODO
+    //else if (mySettings->getInterpolationMethod() == kriging)
+    //    myResult = NODATA;  //TODO
     else if (mySettings->getInterpolationMethod() == shepard)
         myResult = shepardIdw(myPoints, mySettings, myX, myY);
     else if (mySettings->getInterpolationMethod() == shepard_modified)
