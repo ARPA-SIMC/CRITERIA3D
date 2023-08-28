@@ -1311,20 +1311,19 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     std::vector <float> proxyValues;
     std::vector <float> predictands;
     std::vector <std::vector <float>> predictors;
-    std::vector <float> weights(predictors.size());
+    std::vector <float> weights;
 
     for (i = 0; i < myPoints.size(); i++)
     {
         if (myPoints[i].isActive)
         {
-            weights[i] = 1;
-
             proxyValues.clear();
 
             if (myPoints[i].getActiveProxyValues(myCombination, proxyValues))
             {
                 predictands.push_back(myPoints[i].value);
                 predictors.push_back(proxyValues);
+                weights.push_back(1);
             }
         }
     }
@@ -1359,8 +1358,6 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     std::vector <float> m(nrPredictors);
     float q;
 
-    std::vector <double> slopes;
-
     if (predictands.size() >= MIN_REGRESSION_POINTS)
     {
         //slopes = stat_openai::multipleLinearRegression(predictorsNorm, predictands);
@@ -1386,7 +1383,7 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                 proxyValue = myPoints[i].getProxyValue(pos);
 
                 if (proxyValue != NODATA)
-                    detrendValue = float((proxyValue - avgs[index]) / stdDevs[index] * slopes[index]);
+                    detrendValue = float((proxyValue - avgs[index]) / stdDevs[index] * m[index]);
 
                 index++;
 
