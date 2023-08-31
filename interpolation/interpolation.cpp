@@ -1022,10 +1022,10 @@ void dynamicSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector
     // compute distances (only topographic)
     for (unsigned long i = 0; i < inputPoints.size() ; i++)
     {
-        if (checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
+        //if (checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
             inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
-        else
-            inputPoints[i].distance = NODATA;
+        //else
+            //inputPoints[i].distance = NODATA;
     }
 
     unsigned int nrValid = 0;
@@ -1175,8 +1175,7 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
     float myProxyValue;
     Crit3DProxy* myProxy;
     Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
-    float proxySlope, proxyAvg, proxyStdDev;
-    unsigned indexMultiRegr = 0;
+    float proxySlope;
 
     for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
@@ -1190,11 +1189,9 @@ float retrend(meteoVariable myVar, vector<float> myProxyValues, Crit3DInterpolat
             {
                 if (mySettings->getUseMultipleDetrending())
                 {
-                    proxySlope = mySettings->getMultiRegressionSlopes()[indexMultiRegr];
-                    proxyAvg = mySettings->getMultiRegressionAvgs()[indexMultiRegr];
-                    proxyStdDev = mySettings->getMultiRegressionStdDevs()[indexMultiRegr];
-                    retrendValue += (myProxyValue - proxyAvg) / proxyStdDev * proxySlope;
-                    indexMultiRegr++;
+                    proxySlope = myProxy->getRegressionSlope();
+                    if (proxySlope != NODATA)
+                        retrendValue += (myProxyValue - myProxy->getAvg()) / myProxy->getStdDev() * proxySlope;
                 }
                 else
                 {
@@ -1285,105 +1282,165 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 }
 
-void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
-                        Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, Crit3DClimateParameters* myClimate,
-                        meteoVariable myVar, Crit3DTime myTime)
+bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float* avg, float* stdDev)
 {
-    if (! getUseDetrendingVar(myVar)) return;
-
-    unsigned nrPredictors = 0;
-    for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
-    {
-        if (myCombination.getValue(pos))
-        {
-            mySettings->getProxy(pos)->setIsSignificant(true);
-            nrPredictors++;
-        }
-    }
-
-    if (nrPredictors == 0)
-        return;
-    else if (nrPredictors == 1)
-        detrending(myPoints, mySettings->getSelectedCombination(), mySettings, myClimate, myVar, myTime);
-
-    unsigned i,j;
-
     std::vector <float> proxyValues;
-    std::vector <float> predictands;
-    std::vector <std::vector <float>> predictors;
-    std::vector <float> weights;
+    float myValue, sum = 0;
+    const int MIN_NR = 10;
+    unsigned i;
+    std::vector <float> proxyVarThresholds = {0.1, 50, 0.1, 0.1, 0, 0};
+
+    *avg = NODATA;
+    *stdDev = NODATA;
 
     for (i = 0; i < myPoints.size(); i++)
     {
         if (myPoints[i].isActive)
         {
-            proxyValues.clear();
-
-            if (myPoints[i].getActiveProxyValues(myCombination, proxyValues))
+            myValue = myPoints[i].getProxyValue(proxyPos);
+            if (myValue != NODATA)
             {
-                predictands.push_back(myPoints[i].value);
-                predictors.push_back(proxyValues);
-                weights.push_back(1);
+                proxyValues.push_back(myValue);
+                sum += myValue;
             }
         }
     }
 
+    if (proxyValues.size() < MIN_NR) return false;
+
+    *avg = sum / proxyValues.size();
+
+    sum = 0;
+    for (i=0; i < proxyValues.size(); i++)
+        sum += (proxyValues[i] - *avg) * (proxyValues[i] - *avg);
+
+    *stdDev = float(sqrt(sum / (proxyValues.size() - 1)));
+
+    return (*stdDev > proxyVarThresholds[proxyPos]);
+}
+
+Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
+                        Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, meteoVariable myVar)
+{
+    if (! getUseDetrendingVar(myVar)) return myCombination;
+
+    unsigned nrPredictors = 0;
+    std::vector <unsigned int> proxyIndex;
+    for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
+    {
+        if (myCombination.getValue(pos))
+        {
+            mySettings->getProxy(pos)->setIsSignificant(false);
+            proxyIndex.push_back(pos);
+            nrPredictors++;
+        }
+    }
+
+    if (nrPredictors == 0) return myCombination;
+
+    // proxy dispersion
+    float avg, stdDev;
+    std::vector <float> avgs;
+    std::vector <float> stdDevs;
+    unsigned validNr;
+    Crit3DProxyCombination outCombination = myCombination;
+    unsigned pos;
+
+    validNr = 0;
+    for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
+    {
+        if (myCombination.getValue(pos) && proxyValidity(myPoints, pos, &avg, &stdDev))
+        {
+            avgs.push_back(avg);
+            stdDevs.push_back(stdDev);
+            outCombination.setValue(pos, true);
+            validNr++;
+        }
+        else
+            outCombination.setValue(pos, false);
+    }
+
+    if (validNr == 0) return outCombination;
+
     // z-score normalization
-    float sum = 0;
-    std::vector <std::vector <float>> predictorsNorm(predictors.size(), std::vector <float> (predictors[0].size()));
-    std::vector <float> avgs(nrPredictors);
-    std::vector <float> stdDevs(nrPredictors);
-
-    for (i=0; i<nrPredictors; i++)
-    {
-        sum = 0;
-        for (j=0; j<predictors.size(); j++)
-            sum += predictors[j][i];
-
-        avgs[i] = sum / predictors.size();
-
-        sum = 0;
-        for (j=0; j<predictors.size(); j++)
-            sum += (predictors[j][i] - avgs[i]) * (predictors[j][i] - avgs[i]);
-
-        stdDevs[i] = float(sqrt(sum / (predictors.size() - 1)));
-
-        for (j=0; j<predictors.size(); j++)
-            predictorsNorm[j][i] = (predictors[j][i] - avgs[i]) / stdDevs[i];
-    }
-
-    int nrPoints = int(predictands.size());
-    if (nrPoints == 0) return;
-
-    std::vector <float> m(nrPredictors);
-    float q;
-
-    if (predictands.size() >= MIN_REGRESSION_POINTS)
-    {
-        //slopes = stat_openai::multipleLinearRegression(predictorsNorm, predictands);
-        statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, m, int(predictorsNorm[0].size()));
-    }
-
-    mySettings->setMultiRegressionSlopes(m);
-    mySettings->setMultiRegressionAvgs(avgs);
-    mySettings->setMultiRegressionStdDevs(stdDevs);
-
-    float detrendValue, proxyValue;
+    std::vector <float> rowPredictors;
+    std::vector <std::vector <float>> predictorsNorm;
+    std::vector <float> predictands;
+    std::vector <float> weights;
+    bool isValid;
+    float proxyValue;
     unsigned index = 0;
+    const int MIN_NR = 20;
+    unsigned i;
 
+    for (i=0; i < myPoints.size(); i++)
+    {
+        isValid = true;
+        rowPredictors.clear();
+        index = 0;
+        for (pos=0; pos < mySettings->getProxyNr(); pos++)
+            if (outCombination.getValue(pos))
+            {
+                proxyValue = myPoints[i].getProxyValue(pos);
+                if (proxyValue == NODATA)
+                {
+                    isValid = false;
+                    break;
+                }
+                else
+                    rowPredictors.push_back((proxyValue - avgs[index]) / stdDevs[index]);
+
+                index++;
+            }
+
+        if (isValid)
+        {
+            predictorsNorm.push_back(rowPredictors);
+            predictands.push_back(myPoints[i].value);
+            weights.push_back(1);
+        }
+    }
+
+    if (predictorsNorm.size() < MIN_NR)
+    {
+        for (pos = 0; pos < mySettings->getProxyNr(); pos++)
+            mySettings->getProxy(pos)->setIsSignificant(false);
+
+        return outCombination;
+    }
+
+    float q;
+    std::vector <float> slopes(avgs.size());
+    statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, slopes, int(predictorsNorm[0].size()));
+
+    Crit3DProxy* myProxy;
+    index=0;
+    for (pos = 0; pos < mySettings->getProxyNr(); pos++)
+        if (outCombination.getValue(pos))
+        {
+            myProxy = mySettings->getProxy(pos);
+            myProxy->setRegressionSlope(slopes[index]);
+            myProxy->setAvg(avgs[index]);
+            myProxy->setStdDev(stdDevs[index]);
+            mySettings->getProxy(pos)->setIsSignificant(true);
+            index++;
+        }
+
+    // detrending
+    float detrendValue;
     for (i = 0; i < myPoints.size(); i++)
     {
         index = 0;
-        for (int pos=0; pos < int(mySettings->getProxyNr()); pos++)
+        for (pos=0; pos < mySettings->getProxyNr(); pos++)
         {
             detrendValue = 0;
 
-            if (myCombination.getValue(pos))
+            if (outCombination.getValue(pos))
             {
                 proxyValue = myPoints[i].getProxyValue(pos);
 
                 if (proxyValue != NODATA)
-                    detrendValue = float((proxyValue - avgs[index]) / stdDevs[index] * m[index]);
+                    detrendValue = float((proxyValue - avgs[index]) / stdDevs[index] * slopes[index]);
 
                 index++;
 
@@ -1392,6 +1449,7 @@ void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
         }
     }
 
+    return outCombination;
 }
 
 void topographicDistanceOptimize(meteoVariable myVar,
@@ -1502,10 +1560,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     if (getUseDetrendingVar(myVar))
     {
         if (mySettings->getUseMultipleDetrending())
-        {
-            multipleDetrending(myPoints, mySettings->getSelectedCombination(), mySettings, myClimate, myVar, myTime);
-            mySettings->setCurrentCombination(mySettings->getSelectedCombination());
-        }
+            mySettings->setCurrentCombination(multipleDetrending(myPoints, mySettings->getSelectedCombination(), mySettings, myVar));
         else
         {
             if (mySettings->getUseBestDetrending())

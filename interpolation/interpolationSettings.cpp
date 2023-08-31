@@ -25,13 +25,9 @@
 
 #include <string>
 
-#include "crit3dDate.h"
 #include "interpolationSettings.h"
-#include "interpolation.h"
 #include "basicMath.h"
 #include "commonConstants.h"
-#include "cmath"
-
 
 bool Crit3DInterpolationSettings::getPrecipitationAllZero() const
 {
@@ -250,36 +246,6 @@ void Crit3DInterpolationSettings::setUseMultipleDetrending(bool newUseMultipleDe
     useMultipleDetrending = newUseMultipleDetrending;
 }
 
-std::vector<float> Crit3DInterpolationSettings::getMultiRegressionSlopes() const
-{
-    return multiRegressionSlopes;
-}
-
-void Crit3DInterpolationSettings::setMultiRegressionSlopes(const std::vector<float> &newMultiRegressionSlopes)
-{
-    multiRegressionSlopes = newMultiRegressionSlopes;
-}
-
-std::vector<float> Crit3DInterpolationSettings::getMultiRegressionAvgs() const
-{
-    return multiRegressionAvgs;
-}
-
-void Crit3DInterpolationSettings::setMultiRegressionAvgs(const std::vector<float> &newMultiRegressionAvgs)
-{
-    multiRegressionAvgs = newMultiRegressionAvgs;
-}
-
-std::vector<float> Crit3DInterpolationSettings::getMultiRegressionStdDevs() const
-{
-    return multiRegressionStdDevs;
-}
-
-void Crit3DInterpolationSettings::setMultiRegressionStdDevs(const std::vector<float> &newMultiRegressionStdDevs)
-{
-    multiRegressionStdDevs = newMultiRegressionStdDevs;
-}
-
 float Crit3DInterpolationSettings::getPointsBoundingBoxArea() const
 {
     return pointsBoundingBoxArea;
@@ -341,10 +307,6 @@ void Crit3DInterpolationSettings::initialize()
 
     Kh_series.clear();
     Kh_error_series.clear();
-
-    multiRegressionSlopes.clear();
-    multiRegressionAvgs.clear();
-    multiRegressionStdDevs.clear();
 
     initializeProxy();
 }
@@ -526,6 +488,26 @@ void Crit3DProxy::setRegressionIntercept(float newRegressionIntercept)
     regressionIntercept = newRegressionIntercept;
 }
 
+float Crit3DProxy::getAvg() const
+{
+    return avg;
+}
+
+void Crit3DProxy::setAvg(float newAvg)
+{
+    avg = newAvg;
+}
+
+float Crit3DProxy::getStdDev() const
+{
+    return stdDev;
+}
+
+void Crit3DProxy::setStdDev(float newStdDev)
+{
+    stdDev = newStdDev;
+}
+
 Crit3DProxy::Crit3DProxy()
 {
     name = "";
@@ -542,6 +524,9 @@ Crit3DProxy::Crit3DProxy()
     lapseRateT1 = NODATA;
     inversionLapseRate = NODATA;
     inversionIsSignificative = false;
+
+    avg = NODATA;
+    stdDev = NODATA;
 
     proxyTable = "";
     proxyField = "";

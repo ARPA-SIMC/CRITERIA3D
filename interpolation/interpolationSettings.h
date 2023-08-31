@@ -34,6 +34,9 @@
         float regressionSlope;
         float regressionIntercept;
 
+        float avg;
+        float stdDev;
+
         //orography
         float lapseRateH1;
         float lapseRateH0;
@@ -82,6 +85,10 @@
         void setLapseRateT1(float newLapseRateT1);
         float getRegressionIntercept() const;
         void setRegressionIntercept(float newRegressionIntercept);
+        float getAvg() const;
+        void setAvg(float newAvg);
+        float getStdDev() const;
+        void setStdDev(float newStdDev);
     };
 
     class Crit3DProxyCombination
@@ -141,10 +148,6 @@
         Crit3DProxyCombination selectedCombination;
         Crit3DProxyCombination currentCombination;
         unsigned indexHeight;
-
-        std::vector <float> multiRegressionSlopes;
-        std::vector <float> multiRegressionAvgs;
-        std::vector <float> multiRegressionStdDevs;
 
     public:
         Crit3DInterpolationSettings();
@@ -222,12 +225,6 @@
         void setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem);
         bool getUseMultipleDetrending() const;
         void setUseMultipleDetrending(bool newUseMultipleDetrending);
-        std::vector<float> getMultiRegressionSlopes() const;
-        void setMultiRegressionSlopes(const std::vector<float> &newMultiRegressionSlopes);
-        std::vector<float> getMultiRegressionAvgs() const;
-        void setMultiRegressionAvgs(const std::vector<float> &newMultiRegressionAvgs);
-        std::vector<float> getMultiRegressionStdDevs() const;
-        void setMultiRegressionStdDevs(const std::vector<float> &newMultiRegressionStdDevs);
         float getPointsBoundingBoxArea() const;
         void setPointsBoundingBoxArea(float newPointsBoundingBoxArea);
         float getLocalRadius() const;
