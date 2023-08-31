@@ -36,6 +36,7 @@
 
         float avg;
         float stdDev;
+        float stdDevThreshold;
 
         //orography
         float lapseRateH1;
@@ -89,6 +90,8 @@
         void setAvg(float newAvg);
         float getStdDev() const;
         void setStdDev(float newStdDev);
+        float getStdDevThreshold() const;
+        void setStdDevThreshold(float newStdDevThreshold);
     };
 
     class Crit3DProxyCombination

@@ -660,6 +660,9 @@ bool Project::loadParameters(QString parametersFileName)
             myProxy->setGridName(getCompleteFileName(parameters->value("raster").toString(), PATH_GEO).toStdString());
             myProxy->setForQualityControl(parameters->value("use_for_spatial_quality_control").toBool());
 
+            if (parameters->contains("stddev_threshold"))
+                myProxy->setStdDevThreshold(parameters->value("stddev_threshold").toFloat());
+
             if (! parameters->contains("active"))
             {
                 errorString = "active not specified for proxy " + QString::fromStdString(myProxy->getName());

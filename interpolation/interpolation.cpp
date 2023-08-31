@@ -1282,13 +1282,12 @@ void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
     }
 }
 
-bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float* avg, float* stdDev)
+bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int proxyPos, float stdDevThreshold, float* avg, float* stdDev)
 {
     std::vector <float> proxyValues;
     float myValue, sum = 0;
     const int MIN_NR = 10;
     unsigned i;
-    std::vector <float> proxyVarThresholds = {0.1, 50, 0.1, 0.1, 0, 0};
 
     *avg = NODATA;
     *stdDev = NODATA;
@@ -1316,7 +1315,7 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
 
     *stdDev = float(sqrt(sum / (proxyValues.size() - 1)));
 
-    return (*stdDev > proxyVarThresholds[proxyPos]);
+    return (*stdDev > stdDevThreshold);
 }
 
 Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
@@ -1349,7 +1348,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     validNr = 0;
     for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
-        if (myCombination.getValue(pos) && proxyValidity(myPoints, pos, &avg, &stdDev))
+        if (myCombination.getValue(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
         {
             avgs.push_back(avg);
             stdDevs.push_back(stdDev);
@@ -1370,7 +1369,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     bool isValid;
     float proxyValue;
     unsigned index = 0;
-    const int MIN_NR = 20;
+    const int MIN_NR = 10;
     unsigned i;
 
     for (i=0; i < myPoints.size(); i++)

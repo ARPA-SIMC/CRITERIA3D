@@ -508,6 +508,16 @@ void Crit3DProxy::setStdDev(float newStdDev)
     stdDev = newStdDev;
 }
 
+float Crit3DProxy::getStdDevThreshold() const
+{
+    return stdDevThreshold;
+}
+
+void Crit3DProxy::setStdDevThreshold(float newStdDevThreshold)
+{
+    stdDevThreshold = newStdDevThreshold;
+}
+
 Crit3DProxy::Crit3DProxy()
 {
     name = "";
@@ -527,6 +537,7 @@ Crit3DProxy::Crit3DProxy()
 
     avg = NODATA;
     stdDev = NODATA;
+    stdDevThreshold = NODATA;
 
     proxyTable = "";
     proxyField = "";
