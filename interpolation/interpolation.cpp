@@ -977,7 +977,7 @@ float inverseDistanceWeighted(vector <Crit3DInterpolationDataPoint> &myPointList
         return NODATA;
 }
 
-
+/*
 float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 {
     double sum, sumWeights, weight;
@@ -1006,9 +1006,10 @@ float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
     else
         return NODATA;
 }
+*/
 
 // TODO elevation std dev?
-void dynamicSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <Crit3DInterpolationDataPoint> &selectedPoints,
+void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <Crit3DInterpolationDataPoint> &selectedPoints,
                        float x, float y, Crit3DInterpolationSettings& mySettings)
 {
     const int MIN_POINTS = 20;
@@ -1032,10 +1033,11 @@ void dynamicSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector
     float stepRadius = 10000;           // [m]
     float r0 = 0;                       // [m]
     float r1 = stepRadius;              // [m]
+    unsigned int i;
 
     while (nrValid < MIN_POINTS)
     {
-        for (unsigned int i=0; i < inputPoints.size(); i++)
+        for (i=0; i < inputPoints.size(); i++)
             if (inputPoints[i].distance != NODATA && inputPoints[i].distance > r0 && inputPoints[i].distance <= r1)
             {
                 selectedPoints.push_back(inputPoints[i]);
@@ -1044,6 +1046,9 @@ void dynamicSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector
         r0 = r1;
         r1 += stepRadius;
     }
+
+    for (i=0; i < selectedPoints.size(); i++)
+        selectedPoints[i].regressionWeight = (1 - selectedPoints[i].distance / r1);
 
     mySettings.setLocalRadius(r1);
 }
@@ -1396,7 +1401,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
         {
             predictorsNorm.push_back(rowPredictors);
             predictands.push_back(myPoints[i].value);
-            weights.push_back(1);
+            weights.push_back(myPoints[i].regressionWeight);
         }
     }
 

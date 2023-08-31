@@ -20,8 +20,8 @@
         bool isActive;
         bool isMarked;
         float distance;
-        float deltaZ;
         float value;
+        float regressionWeight;
         lapseRateCodeType lapseRateCode;
         gis::Crit3DRasterGrid* topographicDistance;
         std::vector<float> proxyValues;

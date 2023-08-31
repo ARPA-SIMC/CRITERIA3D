@@ -84,7 +84,7 @@
                            Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* myClimate,
                            const Crit3DTime &myTime);
 
-    void dynamicSelection(std::vector <Crit3DInterpolationDataPoint> &inputPoints,
+    void localSelection(std::vector <Crit3DInterpolationDataPoint> &inputPoints,
                           std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
                           float x, float y, Crit3DInterpolationSettings &mySettings);
 

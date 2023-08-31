@@ -25,7 +25,6 @@
 
 
 #include "interpolationPoint.h"
-#include "basicMath.h"
 #include "gis.h"
 #include "commonConstants.h"
 
@@ -36,8 +35,9 @@ Crit3DInterpolationDataPoint::Crit3DInterpolationDataPoint()
     isMarked = false;
 
     distance = NODATA;
-    deltaZ = NODATA;
     value = NODATA;
+    regressionWeight = NODATA;
+
     lapseRateCode = primary;
 
     topographicDistance = nullptr;
