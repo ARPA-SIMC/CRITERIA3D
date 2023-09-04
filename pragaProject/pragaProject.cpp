@@ -1992,9 +1992,6 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
     if (nrDaysLoading == NODATA)
         nrDaysLoading = dateIni.daysTo(dateFin)+1;
 
-    logInfoGUI("Initializing meteo grid...");
-    meteoGridDbHandler->meteoGrid()->initializeData(getCrit3DDate(dateIni), getCrit3DDate(dateFin), isHourly, isDaily, false);
-
     while (myDate <= dateFin)
     {
         countDaysSaving++;
@@ -2005,9 +2002,11 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
             loadDateFin = myDate.addDays(nrDaysLoading-1);
             if (loadDateFin > dateFin) loadDateFin = dateFin;
 
-            logInfoGUI("Loading meteo points data from " + myDate.addDays(-1).toString("dd/MM/yyyy") + " to " + loadDateFin.toString("dd/MM/yyyy"));
+            logInfoGUI("Initializing meteo grid from " + myDate.addDays(-1).toString("dd/MM/yyyy") + " to " + loadDateFin.toString("dd/MM/yyyy"));
+            meteoGridDbHandler->meteoGrid()->initializeData(getCrit3DDate(myDate.addDays(-1)), getCrit3DDate(loadDateFin), isHourly, isDaily, false);
 
-            //load also one day in advance (for transmissivity)
+            logInfoGUI("Loading meteo points data from " + myDate.addDays(-1).toString("dd/MM/yyyy") + " to " + loadDateFin.toString("dd/MM/yyyy"));
+            //load one day before (for transmissivity)
             if (! loadMeteoPointsData(myDate.addDays(-1), loadDateFin, isHourly, isDaily, false))
                 return false;
         }
