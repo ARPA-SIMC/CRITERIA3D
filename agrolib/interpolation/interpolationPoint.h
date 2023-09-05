@@ -20,8 +20,8 @@
         bool isActive;
         bool isMarked;
         float distance;
-        float deltaZ;
         float value;
+        float regressionWeight;
         lapseRateCodeType lapseRateCode;
         gis::Crit3DRasterGrid* topographicDistance;
         std::vector<float> proxyValues;
@@ -30,7 +30,7 @@
 
         float getProxyValue(unsigned int pos);
         std::vector <float> getProxyValues();
-        bool getActiveProxyValues(Crit3DProxyCombination &activeCombination, std::vector<double> &myValues);
+        bool getActiveProxyValues(Crit3DProxyCombination &activeCombination, std::vector<float> &myValues);
     };
 
 #endif // INTERPOLATIONPOINT_H

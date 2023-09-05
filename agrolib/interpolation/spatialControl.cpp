@@ -357,7 +357,7 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
 
     if (nrValid > 0)
     {
-        mySettings->computeShepardInitialRadius((xMax - xMin)*(yMax-yMin), nrValid);
+        mySettings->setPointsBoundingBoxArea((xMax - xMin) * (yMax - yMin));
         return true;
     }
     else

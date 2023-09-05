@@ -25,13 +25,9 @@
 
 #include <string>
 
-#include "crit3dDate.h"
 #include "interpolationSettings.h"
-#include "interpolation.h"
 #include "basicMath.h"
 #include "commonConstants.h"
-#include "cmath"
-
 
 bool Crit3DInterpolationSettings::getPrecipitationAllZero() const
 {
@@ -81,16 +77,6 @@ aggregationMethod Crit3DInterpolationSettings::getMeteoGridAggrMethod() const
 void Crit3DInterpolationSettings::setMeteoGridAggrMethod(const aggregationMethod &value)
 {
     meteoGridAggrMethod = value;
-}
-
-float Crit3DInterpolationSettings::getShepardInitialRadius() const
-{
-    return shepardInitialRadius;
-}
-
-void Crit3DInterpolationSettings::setShepardInitialRadius(float value)
-{
-    shepardInitialRadius = value;
 }
 
 int Crit3DInterpolationSettings::getIndexPointCV() const
@@ -260,34 +246,24 @@ void Crit3DInterpolationSettings::setUseMultipleDetrending(bool newUseMultipleDe
     useMultipleDetrending = newUseMultipleDetrending;
 }
 
-std::vector<double> Crit3DInterpolationSettings::getMultiRegressionSlopes() const
+float Crit3DInterpolationSettings::getPointsBoundingBoxArea() const
 {
-    return multiRegressionSlopes;
+    return pointsBoundingBoxArea;
 }
 
-void Crit3DInterpolationSettings::setMultiRegressionSlopes(const std::vector<double> &newMultiRegressionSlopes)
+void Crit3DInterpolationSettings::setPointsBoundingBoxArea(float newPointsBoundingBoxArea)
 {
-    multiRegressionSlopes = newMultiRegressionSlopes;
+    pointsBoundingBoxArea = newPointsBoundingBoxArea;
 }
 
-std::vector<double> Crit3DInterpolationSettings::getMultiRegressionAvgs() const
+float Crit3DInterpolationSettings::getLocalRadius() const
 {
-    return multiRegressionAvgs;
+    return localRadius;
 }
 
-void Crit3DInterpolationSettings::setMultiRegressionAvgs(const std::vector<double> &newMultiRegressionAvgs)
+void Crit3DInterpolationSettings::setLocalRadius(float newLocalRadius)
 {
-    multiRegressionAvgs = newMultiRegressionAvgs;
-}
-
-std::vector<double> Crit3DInterpolationSettings::getMultiRegressionStdDevs() const
-{
-    return multiRegressionStdDevs;
-}
-
-void Crit3DInterpolationSettings::setMultiRegressionStdDevs(const std::vector<double> &newMultiRegressionStdDevs)
-{
-    multiRegressionStdDevs = newMultiRegressionStdDevs;
+    localRadius = newLocalRadius;
 }
 
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
@@ -327,15 +303,10 @@ void Crit3DInterpolationSettings::initialize()
     isKrigingReady = false;
     precipitationAllZero = false;
     maxHeightInversion = 1000.;
-    shepardInitialRadius = NODATA;
     indexPointCV = NODATA;
 
     Kh_series.clear();
     Kh_error_series.clear();
-
-    multiRegressionSlopes.clear();
-    multiRegressionAvgs.clear();
-    multiRegressionStdDevs.clear();
 
     initializeProxy();
 }
@@ -517,6 +488,36 @@ void Crit3DProxy::setRegressionIntercept(float newRegressionIntercept)
     regressionIntercept = newRegressionIntercept;
 }
 
+float Crit3DProxy::getAvg() const
+{
+    return avg;
+}
+
+void Crit3DProxy::setAvg(float newAvg)
+{
+    avg = newAvg;
+}
+
+float Crit3DProxy::getStdDev() const
+{
+    return stdDev;
+}
+
+void Crit3DProxy::setStdDev(float newStdDev)
+{
+    stdDev = newStdDev;
+}
+
+float Crit3DProxy::getStdDevThreshold() const
+{
+    return stdDevThreshold;
+}
+
+void Crit3DProxy::setStdDevThreshold(float newStdDevThreshold)
+{
+    stdDevThreshold = newStdDevThreshold;
+}
+
 Crit3DProxy::Crit3DProxy()
 {
     name = "";
@@ -533,6 +534,10 @@ Crit3DProxy::Crit3DProxy()
     lapseRateT1 = NODATA;
     inversionLapseRate = NODATA;
     inversionIsSignificative = false;
+
+    avg = NODATA;
+    stdDev = NODATA;
+    stdDevThreshold = NODATA;
 
     proxyTable = "";
     proxyField = "";
@@ -633,11 +638,6 @@ float Crit3DInterpolationSettings::getProxyValue(unsigned pos, std::vector <floa
         return currentProxy[pos].getValue(pos, proxyValues);
     else
         return NODATA;
-}
-
-void Crit3DInterpolationSettings::computeShepardInitialRadius(float area, int nrPoints)
-{
-    setShepardInitialRadius(sqrt((SHEPARD_AVG_NRPOINTS * area) / (float(PI) * nrPoints)));
 }
 
 std::deque<bool> Crit3DProxyCombination::getIsActive() const

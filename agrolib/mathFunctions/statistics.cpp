@@ -27,13 +27,13 @@
 #include <stdlib.h>
 #include <float.h>
 #include <algorithm>    // std::find
+#include <vector>
 
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "statistics.h"
 #include "physics.h"
 #include "furtherMathFunctions.h"
-
 
 
 float statisticalElab(meteoComputation elab, float param, std::vector<float> values, int nValues, float rainfallThreshold)
@@ -314,6 +314,7 @@ namespace statistics
         return (y1 + rate * (xx - x1));
     }
 
+
     void weightedMultiRegressionLinear(float** x,  float* y, float* weight, long nrItems,float* q,float* m, int nrPredictors)
     {
         //int matrixSize = nrPredictors+1;
@@ -341,15 +342,27 @@ namespace statistics
                }
                else
                {
-                    XT[j][i] = x[j-1][i];
+                    XT[j][i] = x[i][j-1];
                }
             }
 
         }
         matricial::transposedMatrix(XT,nrPredictors+1,nrItems,X);
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            for (int i =0; i<nrItems; i++)
+            {
+                X[i][j]= 1./weight[i]*X[i][j];
+            }
+        }
         matricial::matrixProduct(XT,X,nrItems,nrPredictors+1,nrPredictors+1,nrItems,X2);
         matricial::inverse(X2,X2Inverse,nrPredictors+1);
         //matricial::matrixProduct(X2Inverse,XT,nrPredictors+1,nrPredictors+1,nrItems,nrPredictors+1,X);
+        for (int i=0;i<nrItems;i++)
+        {
+            y[i] /= weight[i];
+        }
+
         double* roots = (double*)calloc(nrPredictors+1, sizeof(double));
         for (int j=0;j<nrPredictors+1;j++)
         {
@@ -374,7 +387,96 @@ namespace statistics
             for (int i=0;i<nrPredictors+1;i++)
             {
                 m[j-1] += (X2Inverse[j][i]*roots[i]);
-            } 
+            }
+        }
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            free(XT[j]);
+            free(X2[j]);
+            free(X2Inverse[j]);
+        }
+        for (int i=0;i<nrItems;i++)
+        {
+            free(X[i]);
+        }
+        free(X);
+        free(XT);
+        free(X2);
+        free(X2Inverse);
+        free(roots);
+    }
+
+    void weightedMultiRegressionLinear(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight, long nrItems,float* q,std::vector <float> &m, int nrPredictors)
+    {
+        double** XT = (double**)calloc(nrPredictors+1, sizeof(double*));
+        double** X = (double**)calloc(nrItems, sizeof(double*));
+        double** X2 = (double**)calloc(nrPredictors+1, sizeof(double*));
+        double** X2Inverse = (double**)calloc(nrPredictors+1, sizeof(double*));
+        for (int i=0;i<nrPredictors+1;i++)
+        {
+            XT[i]= (double*)calloc(nrItems, sizeof(double));
+            X2[i]= (double*)calloc(nrItems, sizeof(double));
+            X2Inverse[i]= (double*)calloc(nrItems, sizeof(double));
+        }
+        for (int i=0;i<nrItems;i++)
+        {
+            X[i]= (double*)calloc(nrPredictors+1, sizeof(double));
+        }
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            for (int i=0;i<nrItems;i++)
+            {
+               if (j == 0)
+               {
+                    XT[j][i] = 1.;
+               }
+               else
+               {
+                    XT[j][i] = x[i][j-1];
+               }
+            }
+
+        }
+        matricial::transposedMatrix(XT,nrPredictors+1,nrItems,X);
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            for (int i =0; i<nrItems; i++)
+            {
+                X[i][j]= 1./weight[i]*X[i][j];
+            }
+        }
+        matricial::matrixProduct(XT,X,nrItems,nrPredictors+1,nrPredictors+1,nrItems,X2);
+        matricial::inverse(X2,X2Inverse,nrPredictors+1);
+        //matricial::matrixProduct(X2Inverse,XT,nrPredictors+1,nrPredictors+1,nrItems,nrPredictors+1,X);
+        for (int i=0;i<nrItems;i++)
+        {
+            y[i] /= weight[i];
+        }
+        double* roots = (double*)calloc(nrPredictors+1, sizeof(double));
+        for (int j=0;j<nrPredictors+1;j++)
+        {
+            roots[j]=0;
+            for (int i=0;i<nrItems;i++)
+            {
+                roots[j] += (XT[j][i]*y[i]);
+            }
+        }
+        *q=0;
+        for (int j=0;j<nrPredictors;j++)
+        {
+            m[j]=0;
+        }
+        for (int i=0;i<nrPredictors+1;i++)
+        {
+            *q += (X2Inverse[0][i]*roots[i]);
+        }
+
+        for (int j=1;j<nrPredictors+1;j++)
+        {
+            for (int i=0;i<nrPredictors+1;i++)
+            {
+                m[j-1] += (X2Inverse[j][i]*roots[i]);
+            }
         }
         for (int j=0;j<nrPredictors+1;j++)
         {
@@ -1358,6 +1460,59 @@ namespace statistics
                 arrayOutput[i] = NODATA;
         }
         return true;
+    }
+
+}
+
+namespace stat_openai
+{
+    // Funzione per calcolare la trasposta di una matrice
+    std::vector<std::vector<float>> transpose(const std::vector<std::vector<float>>& matrix) {
+        int rows = matrix.size();
+        int cols = matrix[0].size();
+
+        std::vector<std::vector<float>> result(cols, std::vector<float>(rows));
+
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                result[j][i] = matrix[i][j];
+            }
+        }
+
+        return result;
+    }
+
+    // Funzione per calcolare la regressione lineare multipla
+    std::vector<double> multipleLinearRegression(const std::vector<std::vector<double>>& X, const std::vector<double>& y)
+    {
+        int numSamples = X.size();
+        int numFeatures = X[0].size();
+
+        // Calcola la matrice X^T * X
+        std::vector<std::vector<double>> XTX(numFeatures, std::vector<double>(numFeatures));
+        for (int i = 0; i < numFeatures; ++i) {
+            for (int j = 0; j < numFeatures; ++j) {
+                for (int k = 0; k < numSamples; ++k) {
+                    XTX[i][j] += X[k][i] * X[k][j];
+                }
+            }
+        }
+
+        // Calcola il vettore X^T * y
+        std::vector<double> XTy(numFeatures);
+        for (int i = 0; i < numFeatures; ++i) {
+            for (int j = 0; j < numSamples; ++j) {
+                XTy[i] += X[j][i] * y[j];
+            }
+        }
+
+        // Risoluzione del sistema di equazioni lineari per ottenere i coefficienti
+        std::vector<double> coefficients(numFeatures);
+        for (int i = 0; i < numFeatures; ++i) {
+            coefficients[i] = XTy[i] / XTX[i][i];
+        }
+
+        return coefficients;
     }
 
 }

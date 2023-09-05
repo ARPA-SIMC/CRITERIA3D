@@ -32,6 +32,7 @@
         float weighedMean(float *data , float *weights, int nrData);
         float linearInterpolation(float x1, float y1, float x2, float y2, float xx);
         void weightedMultiRegressionLinear(float** x,  float* y, float* weight, long nrItems,float* q,float* m, int nrPredictors);
+        void weightedMultiRegressionLinear(const std::vector <std::vector <float>> &x, std::vector <float> &y, const std::vector <float> &weight, long nrItems,float* q,std::vector <float> &m, int nrPredictors);
         void multiRegressionLinear(float** x,  float* y, long nrItems,float* q,float* m, int nrPredictors);
         void linearRegression(float* x, float* y, long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2);
         void linearRegression( std::vector<float> x,  std::vector<float> y, long nrItems, bool zeroIntercept, float* y_intercept, float* mySlope, float* r2);
@@ -69,6 +70,11 @@
         double varianceNoCheck(double *myList, int nrList);
         double covarianceNoCheck(double *myList1, int nrList1,double *myList2, int nrList2);
         void correlationsMatrixNoCheck(int nrRowCol, double**myLists,int nrLists, double** c);
+    }
+
+    namespace stat_openai
+    {
+        std::vector<double> multipleLinearRegression(const std::vector<std::vector<double>>& X, const std::vector<double>& y);
     }
 
 #endif // STATISTICS_H

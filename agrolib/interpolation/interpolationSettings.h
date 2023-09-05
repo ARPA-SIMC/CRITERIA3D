@@ -34,6 +34,10 @@
         float regressionSlope;
         float regressionIntercept;
 
+        float avg;
+        float stdDev;
+        float stdDevThreshold;
+
         //orography
         float lapseRateH1;
         float lapseRateH0;
@@ -82,6 +86,12 @@
         void setLapseRateT1(float newLapseRateT1);
         float getRegressionIntercept() const;
         void setRegressionIntercept(float newRegressionIntercept);
+        float getAvg() const;
+        void setAvg(float newAvg);
+        float getStdDev() const;
+        void setStdDev(float newStdDev);
+        float getStdDevThreshold() const;
+        void setStdDevThreshold(float newStdDevThreshold);
     };
 
     class Crit3DProxyCombination
@@ -128,7 +138,8 @@
         bool isKrigingReady;
         bool precipitationAllZero;
         float maxHeightInversion;
-        float shepardInitialRadius;
+        float pointsBoundingBoxArea;
+        float localRadius;
         int indexPointCV;
         int topoDist_maxKh, topoDist_Kh;
         std::vector <float> Kh_series;
@@ -141,17 +152,11 @@
         Crit3DProxyCombination currentCombination;
         unsigned indexHeight;
 
-        std::vector <double> multiRegressionSlopes;
-        std::vector <double> multiRegressionAvgs;
-        std::vector <double> multiRegressionStdDevs;
-
     public:
         Crit3DInterpolationSettings();
 
         void initialize();
         void initializeProxy();
-
-        void computeShepardInitialRadius(float area, int nrPoints);
 
         Crit3DProxy* getProxy(unsigned pos);
         std::string getProxyName(unsigned pos);
@@ -223,12 +228,10 @@
         void setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem);
         bool getUseMultipleDetrending() const;
         void setUseMultipleDetrending(bool newUseMultipleDetrending);
-        std::vector<double> getMultiRegressionSlopes() const;
-        void setMultiRegressionSlopes(const std::vector<double> &newMultiRegressionSlopes);
-        std::vector<double> getMultiRegressionAvgs() const;
-        void setMultiRegressionAvgs(const std::vector<double> &newMultiRegressionAvgs);
-        std::vector<double> getMultiRegressionStdDevs() const;
-        void setMultiRegressionStdDevs(const std::vector<double> &newMultiRegressionStdDevs);
+        float getPointsBoundingBoxArea() const;
+        void setPointsBoundingBoxArea(float newPointsBoundingBoxArea);
+        float getLocalRadius() const;
+        void setLocalRadius(float newLocalRadius);
     };
 
 #endif // INTERPOLATIONSETTINGS_H

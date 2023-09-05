@@ -183,20 +183,20 @@ void DialogInterpolation::upscaleFromDemChanged(int active)
 
 void DialogInterpolation::multipleDetrendingChanged(int active)
 {
-    optimalDetrendingEdit->setChecked(Qt::Unchecked);
+    if (active == Qt::Checked) optimalDetrendingEdit->setChecked(Qt::Unchecked);
     optimalDetrendingEdit->setEnabled(active == Qt::Unchecked);
 }
 
 void DialogInterpolation::localDetrendingChanged(int active)
 {
-    topographicDistanceEdit->setChecked(Qt::Unchecked);
+    if (active == Qt::Checked) topographicDistanceEdit->setChecked(Qt::Unchecked);
     topographicDistanceEdit->setEnabled(active == Qt::Unchecked);
     maxTdMultiplierEdit.setEnabled(active == Qt::Unchecked);
 }
 
 void DialogInterpolation::optimalDetrendingChanged(int active)
 {
-    localDetrendingEdit->setChecked(Qt::Unchecked);
+    if (active == Qt::Checked) localDetrendingEdit->setChecked(Qt::Unchecked);
     localDetrendingEdit->setEnabled(active == Qt::Unchecked);
 }
 

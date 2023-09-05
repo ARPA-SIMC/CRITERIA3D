@@ -660,6 +660,9 @@ bool Project::loadParameters(QString parametersFileName)
             myProxy->setGridName(getCompleteFileName(parameters->value("raster").toString(), PATH_GEO).toStdString());
             myProxy->setForQualityControl(parameters->value("use_for_spatial_quality_control").toBool());
 
+            if (parameters->contains("stddev_threshold"))
+                myProxy->setStdDevThreshold(parameters->value("stddev_threshold").toFloat());
+
             if (! parameters->contains("active"))
             {
                 errorString = "active not specified for proxy " + QString::fromStdString(myProxy->getName());
@@ -2224,7 +2227,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                 {
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                    dynamicSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, true);
+                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
                     preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     outputPoints[i].currentValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
@@ -2250,7 +2253,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                     gis::getUtmXYFromRowCol(myHeader, row, col, &x, &y);
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                    dynamicSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, true);
+                    localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
                     preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
@@ -2515,7 +2518,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                     if (interpolationSettings.getUseLocalDetrending())
                     {
                         std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
-                        dynamicSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings, true);
+                        localSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings);
                         preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
                         interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
                     }

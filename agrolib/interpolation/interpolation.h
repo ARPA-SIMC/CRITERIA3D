@@ -63,8 +63,8 @@
     void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                     Crit3DProxyCombination myCombination, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,
                     meteoVariable myVar, Crit3DTime myTime);
-    void multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
-                                 Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, meteoVariable myVar);
+    Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
+                            Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, meteoVariable myVar);
 
     bool getUseDetrendingVar(meteoVariable myVar);
     bool isThermal(meteoVariable myVar);
@@ -84,13 +84,9 @@
                            Crit3DInterpolationSettings* mySettings, Crit3DMeteoSettings* meteoSettings, Crit3DClimateParameters* myClimate,
                            const Crit3DTime &myTime);
 
-    bool dynamicSelection(std::vector <Crit3DInterpolationDataPoint> &inputPoints,
+    void localSelection(std::vector <Crit3DInterpolationDataPoint> &inputPoints,
                           std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
-                          float x, float y, const Crit3DInterpolationSettings& mySettings, bool excludeSupplemental);
+                          float x, float y, Crit3DInterpolationSettings &mySettings);
 
-    namespace stat_openai
-    {
-        std::vector<double> multipleLinearRegression(const std::vector<std::vector<double>>& X, const std::vector<double>& y);
-    }
 
 #endif // INTERPOLATION_H
