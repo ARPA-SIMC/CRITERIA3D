@@ -8,11 +8,12 @@
         #include <string>
     #endif
 
-    enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_CODE_PARABOLIC,
-                       FUNCTION_CODE_EXPONENTIAL, FUNCTION_CODE_LOGARITMIC,
-                       FUNCTION_CODE_TWOPARAMETERSPOLYNOMIAL, FUNCTION_CODE_FOURIER_2_HARMONICS,
-                       FUNCTION_CODE_FOURIER_GENERAL_HARMONICS,
-                       FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN, FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN_RESTRICTED};
+enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_CODE_PARABOLIC,
+                   FUNCTION_CODE_EXPONENTIAL, FUNCTION_CODE_LOGARITMIC,
+                   FUNCTION_CODE_TWOPARAMETERSPOLYNOMIAL, FUNCTION_CODE_FOURIER_2_HARMONICS,
+                   FUNCTION_CODE_FOURIER_GENERAL_HARMONICS,
+                   FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN, FUNCTION_CODE_MODIFIED_VAN_GENUCHTEN_RESTRICTED,
+                   FUNCTION_CODE_MULTILINEAR,FUNCTION_CODE_TEMPVSHEIGHT};
 
 
     struct TfunctionInput{
@@ -36,6 +37,8 @@
         float *par ;
     };
 
+
+
     double twoParametersAndExponentialPolynomialFunctions(double x, double* par);
     double twoHarmonicsFourier(double x, double* par);
     double harmonicsFourierGeneral(double x, double* par,int nrPar);
@@ -45,6 +48,11 @@
     float gaussianFunction(TfunctionInput fInput);
     float gaussianFunction(float x, float mean, float devStd);
     float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5);
+
+    double functionTemperatureVsHeight(double* x, double* par, int xDim, int parDim);
+    double parabolicFunction(double* x, double* par, int xDim, int parDim);
+    double multilinear(double* x, double* par, int xDim, int parDim);
+    double bilinear(double* x, double* par, int xDim, int parDim);
 
 
 
@@ -83,6 +91,32 @@
         double cubicSpline(double x , double *firstColumn , double *secondColumn, int dim); // not working to be checked
         void punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative); // not working to be checked
         void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output); // not working to be checked
+
+        double computeR2(double *obs, double* sim, int nrPoints);
+        int bestFittingMarquardt_nDimension(int nrTrials,int nrMinima,double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
+                                              double* parametersDelta, int maxIterationsNr, double myEpsilon, int idFunction,
+                                              double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights);
+        bool fittingMarquardt_nDimension(double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
+                              double* parametersDelta, int maxIterationsNr, double myEpsilon, int idFunction,
+                              double** x, double* y, int nrData, int xDim, bool isWeighted, double *weights);
+
+        double normGeneric_nDimension(int idFunction, double *parameters,int nrParameters, double** x, double* y, int nrData, int xDim);
+        double estimateFunction_nDimension(int idFunction, double *parameters, int nrParameters, double* x, int xDim);
+        void leastSquares_nDimension(int idFunction, double* parameters, int nrParameters,
+                          double** x, double* y, int nrData,int xDim, double* lambda,
+                          double* parametersDelta, double* parametersChange,bool isWeighted, double* weights);
+
+        int bestFittingMarquardt_nDimension(double (*func)(double*, double*,int,int),int nrTrials,int nrMinima, double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
+                                              double* parametersDelta, int maxIterationsNr, double myEpsilon,
+                                              double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights);
+        bool fittingMarquardt_nDimension(double (*func)(double *, double *,int,int), double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
+                              double* parametersDelta, int maxIterationsNr, double myEpsilon,
+                              double** x, double* y, int nrData, int xDim, bool isWeighted, double *weights);
+
+        double normGeneric_nDimension(double (*func)(double *, double *,int,int), double *parameters,int nrParameters, double** x, double* y, int nrData, int xDim);
+        void leastSquares_nDimension(double (*func)(double *, double *,int,int), double* parameters, int nrParameters,
+                          double** x, double* y, int nrData,int xDim, double* lambda,
+                          double* parametersDelta, double* parametersChange,bool isWeighted, double* weights);
 
     }
 

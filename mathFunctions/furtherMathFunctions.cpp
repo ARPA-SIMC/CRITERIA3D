@@ -28,7 +28,34 @@
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
+double functionTemperatureVsHeight(double* x, double* par,int xDim,int nrParameters)
+{
+    double y;
+    y = par[0] + par[1]*x[0] + par[2]*(1/(1+exp(-par[3]*(x[0] - par[4]))));
+    return y;
+}
+double bilinear(double* x, double* par,int xDim,int nrParameters)
+{
+    double y = 0;
+    for (int i=0;i<2;i++)
+        y += par[i] * x[i];
+    y += par[2];
+    return y;
+}
 
+double multilinear(double* x, double* par, int xDim, int nrParameters)
+{
+    double y = 0;
+    for (int i=0;i<xDim;i++)
+        y += par[i] * x[i];
+    y += par[xDim];
+    return y;
+}
+
+double parabolicFunction(double* x, double* par)
+{
+    return par[1]*(x[0] - par[0])*(x[0] - par[0]) + par[2] ;
+}
 float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5)
 {
     // par1 correponds to T0
@@ -831,6 +858,672 @@ namespace interpolation
         free(newDiagonal);
         free(newConstantTerm);
     }
+
+    double computeR2(double *obs, double* sim, int nrPoints)
+    {
+        double R2=0;
+        double meanObs=0;
+        double RSS=0;
+        double TSS=0;
+        for (int i=0;i<nrPoints;i++)
+        {
+            meanObs += obs[i];
+        }
+        meanObs /= nrPoints;
+        //compute RSS and TSS
+        for (int i=0;i<nrPoints;i++)
+        {
+            RSS += (obs[i]-sim[i])*(obs[i]-sim[i]);
+            TSS += (obs[i]-meanObs)*(obs[i]-meanObs);
+        }
+        R2 = 1 - RSS/TSS;
+        return R2;
+    }
+
+    int bestFittingMarquardt_nDimension(double (*func)(double*, double*,int,int), int nrTrials, int nrMinima,
+                                                        double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
+                                                        double* parametersDelta, int maxIterationsNr, double myEpsilon,
+                                                        double** x, double* y, int nrData, int xDim, bool isWeighted, double* weights)
+    {
+        double bestR2 = -9999;
+        double R2;
+        double* R2Previous = (double *) calloc(nrMinima, sizeof(double));
+        double* ySim = (double *) calloc(nrData, sizeof(double));
+        double* bestParameters = (double *) calloc(nrParameters, sizeof(double));
+        double* xPoint = (double *) calloc(nrParameters, sizeof(double));
+        int i;
+        int iRandom = 0;
+        int counter = 0;
+        for (i=0; i<nrMinima; i++)
+        {
+            R2Previous[i] = NODATA;
+        }
+        srand (time(nullptr));
+        do
+        {
+            for (i=0;i<nrParameters;i++)
+            {
+                parameters[i] = parametersMin[i] + ((double) rand() / (RAND_MAX))*(parametersMax[i]-parametersMin[i]);
+            }
+            fittingMarquardt_nDimension(func,parametersMin,parametersMax,parameters,nrParameters,parametersDelta,maxIterationsNr,myEpsilon,x,y,nrData,xDim,isWeighted,weights);
+            for (i=0;i<nrData;i++)
+            {
+                //double xSim;
+                //xSim = x[i][0];
+                for (int k=0; k<xDim; k++)
+                {
+                    xPoint[k] = x[i][k];
+                }
+                ySim[i]= func(xPoint,parameters,xDim,nrParameters);//
+            }
+            R2 = computeR2(y,ySim,nrData);
+            //printf("%d R2 = %f\n",iRandom,R2);
+            if (R2 > bestR2-EPSILON)
+            {
+                for (int j=0;j<nrMinima-1;j++)
+                {
+                    R2Previous[j] = R2Previous[j+1];
+                }
+                R2Previous[nrMinima-1] = R2;
+                bestR2 = R2;
+                for (i=0;i<nrParameters;i++)
+                {
+                    bestParameters[i] = parameters[i];
+                }
+            }
+            iRandom++;
+            counter++;
+        } while(iRandom<nrTrials && R2<(1 - EPSILON) && fabs(R2Previous[0]-R2Previous[nrMinima-1])>0.0001);
+
+        for (i=0;i<nrParameters;i++)
+        {
+            parameters[i] = bestParameters[i];
+        }
+        free(xPoint);
+        free(bestParameters);
+        free(ySim);
+        free(R2Previous);
+        return counter;
+    }
+
+    bool fittingMarquardt_nDimension(double (*func)(double*, double*,int,int),double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
+                          double* parametersDelta, int maxIterationsNr, double myEpsilon,
+                          double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights)
+    {
+        // Sum of Squared Erros
+        double mySSE, diffSSE, newSSE;
+        static double VFACTOR = 10;
+
+        double* paramChange = (double *) calloc(nrParameters, sizeof(double));
+        double* newParameters = (double *) calloc(nrParameters, sizeof(double));
+        double* lambda = (double *) calloc(nrParameters, sizeof(double));
+
+        for(int i = 0; i < nrParameters; i++)
+        {
+            lambda[i] = 0.01;       // damping parameter
+            paramChange[i] = 0;
+        }
+
+        mySSE = normGeneric_nDimension(func, parameters, nrParameters, x, y, nrData,xDim);
+
+        int iterationNr = 0;
+        do
+        {
+            leastSquares_nDimension(func, parameters, nrParameters, x, y, nrData,xDim, lambda, parametersDelta, paramChange,isWeighted,weights);
+                // change parameters
+            for (int i = 0; i < nrParameters; i++)
+            {
+                newParameters[i] = parameters[i] + paramChange[i];
+                if ((newParameters[i] > parametersMax[i]) && (lambda[i] < 1000))
+                {
+                    newParameters[i] = parametersMax[i];
+                    if (lambda[i] < 1000)
+                        lambda[i] *= VFACTOR;
+                }
+                if (newParameters[i] < parametersMin[i])
+                {
+                    newParameters[i] = parametersMin[i];
+                    if (lambda[i] < 1000)
+                        lambda[i] *= VFACTOR;
+                }
+            }
+
+            newSSE = normGeneric_nDimension(func, newParameters, nrParameters, x, y, nrData,xDim);
+
+            if (newSSE == NODATA)
+            {
+                // free memory
+                free(lambda);
+                free(paramChange);
+                free(newParameters);
+
+                return false;
+            }
+
+            diffSSE = mySSE - newSSE ;
+
+            if (diffSSE > 0)
+            {
+                mySSE = newSSE;
+                for (int i = 0; i < nrParameters ; i++)
+                {
+                    parameters[i] = newParameters[i];
+                    lambda[i] /= VFACTOR;
+                }
+            }
+            else
+            {
+                for(int i = 0; i < nrParameters; i++)
+                {
+                    lambda[i] *= VFACTOR;
+                }
+            }
+
+            iterationNr++;
+        }
+        while (iterationNr <= maxIterationsNr && fabs(diffSSE) > myEpsilon);
+
+        // free memory
+        free(lambda);
+        free(paramChange);
+        free(newParameters);
+
+
+        return (fabs(diffSSE) <= myEpsilon);
+    }
+
+    void leastSquares_nDimension(double (*func)(double*, double*,int,int), double* parameters, int nrParameters,
+                      double** x, double* y, int nrData,int xDim, double* lambda,
+                      double* parametersDelta, double* parametersChange, bool isWeighted, double* weights)
+    {
+        int i, j, k;
+        double pivot, mult, top;
+
+        double* g = (double *) calloc(nrParameters+1, sizeof(double));
+        double* z = (double *) calloc(nrParameters+1, sizeof(double));
+        double* firstEst = (double *) calloc(nrData+1, sizeof(double));
+
+        double** a = (double **) calloc(nrParameters+1, sizeof(double*));
+        double** P = (double **) calloc(nrParameters+1, sizeof(double*));
+        double* xPoint = (double *) calloc(xDim, sizeof(double));
+        for (i = 0; i < nrParameters+1; i++)
+        {
+                a[i] = (double *) calloc(nrParameters+1, sizeof(double));
+                P[i] = (double *) calloc(nrData+1, sizeof(double));
+        }
+
+        // first set of estimates
+        for (i = 0; i < nrData; i++)
+        {
+            for (k=0; k<xDim; k++)
+            {
+                xPoint[k] = x[i][k];
+            }
+            firstEst[i] = func(xPoint,parameters,xDim,nrParameters);
+            //firstEst[i] = estimateFunction_nDimensionExternalFunction(idFunction, parameters, nrParameters, xPoint,xDim);
+        }
+
+        // change parameters and compute derivatives
+        for (i = 0; i < nrParameters; i++)
+        {
+            parameters[i] += parametersDelta[i];
+            for (j = 0; j < nrData; j++)
+            {
+                for (k=0; k<xDim; k++)
+                {
+                    xPoint[k] = x[j][k];
+                }
+                double newEst = func(xPoint,parameters,xDim,nrParameters);
+                //double newEst = estimateFunction_nDimensionExternalFunction(idFunction, parameters, nrParameters, xPoint,xDim);
+                P[i][j] = (newEst - firstEst[j]) / MAXVALUE(parametersDelta[i], EPSILON) ;
+            }
+            parameters[i] -= parametersDelta[i];
+        }
+
+        for (i = 0; i < nrParameters; i++)
+        {
+            for (j = i; j < nrParameters; j++)
+            {
+                a[i][j] = 0;
+                for (k = 0; k < nrData; k++)
+                {
+                    if (isWeighted)
+                    {
+                        a[i][j] += (weights[k]*(P[i][k] * P[j][k]));
+                    }
+                    else
+                    {
+                        a[i][j] += (P[i][k] * P[j][k]);
+                    }
+                }
+            }
+            z[i] = sqrt(a[i][i]) + EPSILON; //?
+        }
+
+        for (i = 0; i < nrParameters; i++)
+        {
+            g[i] = 0.;
+            for (k = 0 ; k<nrData ; k++)
+            {
+                g[i] += P[i][k] * (y[k] - firstEst[k]);
+            }
+            g[i] /= z[i];
+            for (j = i; j < nrParameters; j++)
+            {
+                a[i][j] /= (z[i] * z[j]);
+            }
+        }
+
+        for (i = 0; i < (nrParameters+1); i++)
+        {
+            a[i][i] += lambda[i];
+            for (j = i+1; j < nrParameters; j++)
+            {
+                a[j][i] = a[i][j];
+            }
+        }
+
+        for (j = 0; j < (nrParameters - 1); j++)
+        {
+            pivot = a[j][j];
+            for (i = j + 1 ; i < nrParameters; i++)
+            {
+                mult = a[i][j] / pivot;
+                for (k = j + 1; k < nrParameters; k++)
+                {
+                    a[i][k] -= mult * a[j][k];
+                }
+                g[i] -= mult * g[j];
+            }
+        }
+
+        parametersChange[nrParameters - 1] = g[nrParameters - 1] / a[nrParameters - 1][nrParameters - 1];
+
+        for (i = nrParameters - 2; i >= 0; i--)
+        {
+            top = g[i];
+            for (k = i + 1; k < nrParameters; k++)
+            {
+                top -= a[i][k] * parametersChange[k];
+            }
+            parametersChange[i] = top / a[i][i];
+        }
+
+        for (i = 0; i < nrParameters; i++)
+        {
+            parametersChange[i] /= z[i];
+        }
+
+        // free memory
+        for (i = 0; i < nrParameters+1; i++)
+        {
+            free(a[i]);
+            free(P[i]);
+        }
+        free(a);
+        free(P);
+        free(g);
+        free(z);
+        free(firstEst);
+        free(xPoint);
+    }
+
+    double normGeneric_nDimension(double (*func)(double*, double*,int,int), double *parameters,int nrParameters, double** x, double *y, int nrData, int xDim)
+    {
+        double estimate, error;
+        double norm = 0;
+        double* xPoint = (double *) calloc(xDim, sizeof(double));
+        for (int i = 0; i < nrData; i++)
+        {
+            for (int j=0; j<xDim; j++)
+            {
+                xPoint[j] = x[i][j];
+            }
+            estimate = func(xPoint,parameters,xDim,nrParameters);
+            if (estimate == NODATA)
+            {
+                free(xPoint);
+                return NODATA;
+            }
+            error = y[i] - estimate;
+            norm += error * error;
+        }
+        free(xPoint);
+        return norm;
+    }
+
+
+    /* ////////////////////////////////////////////////////////////////// */
+    /* ////////////////////////////////////////////////////////////////// */
+    /* ////////////////////////////////////////////////////////////////// */
+    /* ////////////////////////////////////////////////////////////////// */
+    /* ////////////////////////////////////////////////////////////////// */
+
+    int bestFittingMarquardt_nDimension(int nrTrials,int nrMinima, double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
+                                          double* parametersDelta, int maxIterationsNr, double myEpsilon, int idFunction,
+                                          double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights)
+    {
+        double bestR2 = -9999;
+        double R2;
+        double* R2Previous = (double *) calloc(nrMinima, sizeof(double));
+        double* ySim = (double *) calloc(nrData, sizeof(double));
+        double* bestParameters = (double *) calloc(nrParameters, sizeof(double));
+        double* xPoint = (double *) calloc(xDim, sizeof(double));
+        int i;
+        int iRandom = 0;
+        int counter = 0;
+        for (i=0; i<nrMinima; i++)
+        {
+            R2Previous[i] = NODATA;
+        }
+        srand (time(nullptr));
+        do
+        {
+            for (i=0;i<nrParameters;i++)
+            {
+                parameters[i] = parametersMin[i] + ((double) rand() / (RAND_MAX))*(parametersMax[i]-parametersMin[i]);
+            }
+            fittingMarquardt_nDimension(parametersMin,parametersMax,parameters,nrParameters,parametersDelta,maxIterationsNr,myEpsilon,idFunction,x,y,nrData,xDim,isWeighted,weights);
+            for (i=0;i<nrData;i++)
+            {
+                for (int k=0; k<xDim; k++)
+                {
+                    xPoint[k] = x[i][k];
+                }
+                ySim[i]= estimateFunction_nDimension(idFunction,parameters,nrParameters,xPoint,xDim);
+            }
+            R2 = computeR2(y,ySim,nrData);
+            if (R2 > bestR2-EPSILON)
+            {
+                for (int j=0;j<nrMinima-1;j++)
+                {
+                    R2Previous[j] = R2Previous[j+1];
+                }
+                R2Previous[nrMinima-1] = R2;
+                bestR2 = R2;
+                for (i=0;i<nrParameters;i++)
+                {
+                    bestParameters[i] = parameters[i];
+                }
+            }
+            iRandom++;
+            counter++;
+        } while(iRandom<nrTrials && R2<(1 - EPSILON) && fabs(R2Previous[0]-R2Previous[nrMinima-1])>0.0001);
+
+        for (i=0;i<nrParameters;i++)
+        {
+            parameters[i] = bestParameters[i];
+        }
+        free(bestParameters);
+        free(ySim);
+        free(R2Previous);
+        free(xPoint);
+        return counter;
+    }
+
+    bool fittingMarquardt_nDimension(double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
+                          double* parametersDelta, int maxIterationsNr, double myEpsilon, int idFunction,
+                          double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights)
+    {
+        // Sum of Squared Erros
+        double mySSE, diffSSE, newSSE;
+        static double VFACTOR = 10;
+
+        double* paramChange = (double *) calloc(nrParameters, sizeof(double));
+        double* newParameters = (double *) calloc(nrParameters, sizeof(double));
+        double* lambda = (double *) calloc(nrParameters, sizeof(double));
+
+        for(int i = 0; i < nrParameters; i++)
+        {
+            lambda[i] = 0.01;       // damping parameter
+            paramChange[i] = 0;
+        }
+
+        mySSE = normGeneric_nDimension(idFunction, parameters, nrParameters, x, y, nrData,xDim);
+
+        int iterationNr = 0;
+        do
+        {
+            leastSquares_nDimension(idFunction, parameters, nrParameters, x, y, nrData,xDim, lambda, parametersDelta, paramChange,isWeighted,weights);
+                // change parameters
+            for (int i = 0; i < nrParameters; i++)
+            {
+                newParameters[i] = parameters[i] + paramChange[i];
+                if ((newParameters[i] > parametersMax[i]) && (lambda[i] < 1000))
+                {
+                    newParameters[i] = parametersMax[i];
+                    if (lambda[i] < 1000)
+                        lambda[i] *= VFACTOR;
+                }
+                if (newParameters[i] < parametersMin[i])
+                {
+                    newParameters[i] = parametersMin[i];
+                    if (lambda[i] < 1000)
+                        lambda[i] *= VFACTOR;
+                }
+            }
+
+            newSSE = normGeneric_nDimension(idFunction, newParameters, nrParameters, x, y, nrData,xDim);
+
+            if (newSSE == NODATA)
+            {
+                // free memory
+                free(lambda);
+                free(paramChange);
+                free(newParameters);
+
+                return false;
+            }
+
+            diffSSE = mySSE - newSSE ;
+
+            if (diffSSE > 0)
+            {
+                mySSE = newSSE;
+                for (int i = 0; i < nrParameters ; i++)
+                {
+                    parameters[i] = newParameters[i];
+                    lambda[i] /= VFACTOR;
+                }
+            }
+            else
+            {
+                for(int i = 0; i < nrParameters; i++)
+                {
+                    lambda[i] *= VFACTOR;
+                }
+            }
+
+            iterationNr++;
+        }
+        while (iterationNr <= maxIterationsNr && fabs(diffSSE) > myEpsilon);
+
+        // free memory
+        free(lambda);
+        free(paramChange);
+        free(newParameters);
+
+        return (fabs(diffSSE) <= myEpsilon);
+    }
+
+    void leastSquares_nDimension(int idFunction, double* parameters, int nrParameters,
+                      double** x, double* y, int nrData,int xDim, double* lambda,
+                      double* parametersDelta, double* parametersChange, bool isWeighted, double* weights)
+    {
+        int i, j, k;
+        double pivot, mult, top;
+
+        double* g = (double *) calloc(nrParameters+1, sizeof(double));
+        double* z = (double *) calloc(nrParameters+1, sizeof(double));
+        double* firstEst = (double *) calloc(nrData+1, sizeof(double));
+
+        double** a = (double **) calloc(nrParameters+1, sizeof(double*));
+        double** P = (double **) calloc(nrParameters+1, sizeof(double*));
+        double* xPoint = (double *) calloc(xDim, sizeof(double));
+        for (i = 0; i < nrParameters+1; i++)
+        {
+                a[i] = (double *) calloc(nrParameters+1, sizeof(double));
+                P[i] = (double *) calloc(nrData+1, sizeof(double));
+        }
+
+        // first set of estimates
+        for (i = 0; i < nrData; i++)
+        {
+            for (k=0; k<xDim; k++)
+            {
+                xPoint[k] = x[i][k];
+            }
+            firstEst[i] = estimateFunction_nDimension(idFunction, parameters, nrParameters, xPoint,xDim);
+        }
+
+        // change parameters and compute derivatives
+        for (i = 0; i < nrParameters; i++)
+        {
+            parameters[i] += parametersDelta[i];
+            for (j = 0; j < nrData; j++)
+            {
+                for (k=0; k<xDim; k++)
+                {
+                    xPoint[k] = x[j][k];
+                }
+                double newEst = estimateFunction_nDimension(idFunction, parameters, nrParameters, xPoint,xDim);
+                P[i][j] = (newEst - firstEst[j]) / MAXVALUE(parametersDelta[i], EPSILON) ;
+            }
+            parameters[i] -= parametersDelta[i];
+        }
+
+        for (i = 0; i < nrParameters; i++)
+        {
+            for (j = i; j < nrParameters; j++)
+            {
+                a[i][j] = 0;
+                for (k = 0; k < nrData; k++)
+                {
+                    if (isWeighted)
+                    {
+                        a[i][j] += (weights[k]*(P[i][k] * P[j][k]));
+                    }
+                    else
+                    {
+                        a[i][j] += (P[i][k] * P[j][k]);
+                    }
+                }
+            }
+            z[i] = sqrt(a[i][i]) + EPSILON; //?
+        }
+
+        for (i = 0; i < nrParameters; i++)
+        {
+            g[i] = 0.;
+            for (k = 0 ; k<nrData ; k++)
+            {
+                g[i] += P[i][k] * (y[k] - firstEst[k]);
+            }
+            g[i] /= z[i];
+            for (j = i; j < nrParameters; j++)
+            {
+                a[i][j] /= (z[i] * z[j]);
+            }
+        }
+
+        for (i = 0; i < (nrParameters+1); i++)
+        {
+            a[i][i] += lambda[i];
+            for (j = i+1; j < nrParameters; j++)
+            {
+                a[j][i] = a[i][j];
+            }
+        }
+
+        for (j = 0; j < (nrParameters - 1); j++)
+        {
+            pivot = a[j][j];
+            for (i = j + 1 ; i < nrParameters; i++)
+            {
+                mult = a[i][j] / pivot;
+                for (k = j + 1; k < nrParameters; k++)
+                {
+                    a[i][k] -= mult * a[j][k];
+                }
+                g[i] -= mult * g[j];
+            }
+        }
+
+        parametersChange[nrParameters - 1] = g[nrParameters - 1] / a[nrParameters - 1][nrParameters - 1];
+
+        for (i = nrParameters - 2; i >= 0; i--)
+        {
+            top = g[i];
+            for (k = i + 1; k < nrParameters; k++)
+            {
+                top -= a[i][k] * parametersChange[k];
+            }
+            parametersChange[i] = top / a[i][i];
+        }
+
+        for (i = 0; i < nrParameters; i++)
+        {
+            parametersChange[i] /= z[i];
+        }
+
+        // free memory
+        for (i = 0; i < nrParameters+1; i++)
+        {
+            free(a[i]);
+            free(P[i]);
+        }
+        free(a);
+        free(P);
+        free(g);
+        free(z);
+        free(firstEst);
+        free(xPoint);
+    }
+
+
+    double estimateFunction_nDimension(int idFunction, double *parameters, int nrParameters, double* xPoint, int xDim)
+    {
+        switch (idFunction)
+        {
+            case FUNCTION_CODE_PARABOLIC :
+                return parabolicFunction(xPoint, parameters);
+
+            case FUNCTION_CODE_MULTILINEAR :
+                return multilinear(xPoint,parameters,xDim,nrParameters);
+
+            case FUNCTION_CODE_TEMPVSHEIGHT :
+                return functionTemperatureVsHeight(xPoint,parameters,xDim,nrParameters);
+
+            default:
+                return NODATA ;
+        }
+    }
+
+
+    double normGeneric_nDimension(int idFunction, double *parameters,int nrParameters, double** x, double *y, int nrData, int xDim)
+    {
+        double estimate, error;
+        double norm = 0;
+        double* xPoint = (double *) calloc(xDim, sizeof(double));
+        for (int i = 0; i < nrData; i++)
+        {
+            for (int j=0; j<xDim; j++)
+            {
+                xPoint[j] = x[i][j];
+            }
+            estimate = estimateFunction_nDimension(idFunction, parameters, nrParameters, xPoint,xDim);
+            if (estimate == NODATA)
+            {
+                free(xPoint);
+                return NODATA;
+            }
+            error = y[i] - estimate;
+            norm += error * error;
+        }
+        free(xPoint);
+        return norm;
+    }
+
 
 
 }
