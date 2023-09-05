@@ -475,16 +475,17 @@ namespace gis
         std::string fileNameWithoutExt = fileName.substr(0, fileName.size() - 4);
         std::string fileExtension = fileName.substr(fileName.size() - 4);
 
+        bool isOk = false;
         if (fileExtension == ".flt")
         {
-            return gis::readEsriGrid(fileNameWithoutExt, rasterGrid, error);
+            isOk = gis::readEsriGrid(fileNameWithoutExt, rasterGrid, error);
         }
         else if (fileExtension == ".img")
         {
-            return gis::readEnviGrid(fileNameWithoutExt, rasterGrid, currentUtmZone, error);
+            isOk = gis::readEnviGrid(fileNameWithoutExt, rasterGrid, currentUtmZone, error);
         }
 
-        return false;
+        return isOk;
     }
 
 

@@ -63,7 +63,7 @@ std::vector <float> Crit3DInterpolationDataPoint::getProxyValues()
     return myValues;
 }
 
-bool Crit3DInterpolationDataPoint::getActiveProxyValues(Crit3DProxyCombination& activeCombination, std::vector <float> &myValues)
+bool Crit3DInterpolationDataPoint::getActiveProxyValues(Crit3DProxyCombination& activeCombination, std::vector <double> &myValues)
 {
     bool isComplete = true;
     float myValue;

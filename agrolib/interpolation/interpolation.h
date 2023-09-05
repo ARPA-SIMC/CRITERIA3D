@@ -35,7 +35,9 @@
     #ifndef INTERPOLATIONPOINT_H
         #include "interpolationPoint.h"
     #endif
-
+    #ifndef VECTOR_H
+        #include <vector>
+    #endif
 
     float getMinHeight(const std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
     float getMaxHeight(const std::vector <Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode);
@@ -85,5 +87,10 @@
     bool dynamicSelection(std::vector <Crit3DInterpolationDataPoint> &inputPoints,
                           std::vector <Crit3DInterpolationDataPoint> &selectedPoints,
                           float x, float y, const Crit3DInterpolationSettings& mySettings, bool excludeSupplemental);
+
+    namespace stat_openai
+    {
+        std::vector<double> multipleLinearRegression(const std::vector<std::vector<double>>& X, const std::vector<double>& y);
+    }
 
 #endif // INTERPOLATION_H

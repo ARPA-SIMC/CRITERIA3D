@@ -408,14 +408,12 @@ void Crit3DSnow::computeSnowBrooksModel()
         /*! melt */
         freeze_melt = -std::min(prevIceContent + _precSnow + sublimation, w * 1000.);   // [mm]
     }
+
     // pag.53 (3.23) modificata (errore nel denominatore)
     double Qr = (freeze_melt / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY;
 
     /*! Internal energy */
     _internalEnergy = prevInternalEnergy + QTotal + Qr;
-    // check (aggiunto) : scioglimento
-    if (Qr > QTotal && prevInternalEnergy < 0 && _internalEnergy > EPSILON)
-        _internalEnergy = EPSILON;
 
     /*! Snow Pack Mass */
 

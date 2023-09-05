@@ -583,10 +583,10 @@ bool Project::loadParameters(QString parametersFileName)
             if (parameters->contains("topographicDistance"))
                 interpolationSettings.setUseTD(parameters->value("topographicDistance").toBool());
 
-            if (parameters->contains("dynamicLapserate"))
-                interpolationSettings.setUseDynamicLapserate(parameters->value("dynamicLapserate").toBool());
+            if (parameters->contains("localDetrending"))
+                interpolationSettings.setUseLocalDetrending(parameters->value("localDetrending").toBool());
 
-            if (parameters->contains("meteogrid_upscalefromdem=true"))
+            if (parameters->contains("meteogrid_upscalefromdem"))
                 interpolationSettings.setMeteoGridUpscaleFromDem(parameters->value("meteogrid_upscalefromdem").toBool());
 
             if (parameters->contains("multipleDetrending"))
@@ -936,7 +936,7 @@ bool Project::loadDEM(QString myFileName)
         return false;
     }
 
-    logInfoGUI("Load DEM = " + myFileName);
+    logInfoGUI("Load Digital Elevation Model = " + myFileName);
 
     demFileName = myFileName;
     myFileName = getCompleteFileName(myFileName, PATH_DEM);
@@ -948,6 +948,16 @@ bool Project::loadDEM(QString myFileName)
         logError("Wrong Digital Elevation Model:\n" + QString::fromStdString(error));
         errorType = ERROR_DEM;
         return false;
+    }
+    logInfo("Digital Elevation Model = " + myFileName);
+
+    // check nodata
+    if (DEM.header->flag != NODATA)
+    {
+        QString infoStr = "WARNING: " + QString::number(DEM.header->flag) + " is not a valid NODATA value for DEM!";
+        infoStr += " It will be converted in: " + QString::number(NODATA);
+        logInfo(infoStr);
+        gis::convertNodataRasterGrid(DEM);
     }
 
     setColorScale(noMeteoTerrain, DEM.colorScale);
@@ -2147,11 +2157,9 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
         return false;
     }
 
-    // detrending and checking precipitation
-    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
-                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
-
-    if (! interpolationReady)
+    // detrending, checking precipitation and optimizing td parameters
+    if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
+                         &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
     {
         logError("Interpolation: error in function preInterpolation");
         return false;
@@ -2180,9 +2188,9 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
 }
 
 
-bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
+bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
-    if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseDynamicLapserate())
+    if (!getUseDetrendingVar(myVar) || !interpolationSettings.getUseLocalDetrending())
         return false;
 
     // pass data to interpolation
@@ -2195,22 +2203,12 @@ bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3D
         return false;
     }
 
-
-    // optimal detrending combination
-    if (interpolationSettings.getUseBestDetrending())
-    {
-        std::vector <Crit3DInterpolationDataPoint> interpolationPointsTmp = interpolationPoints;
-        optimalDetrending(myVar, meteoPoints, nrMeteoPoints, interpolationPointsTmp, &interpolationSettings, meteoSettings, &climateParameters, myTime);
-        interpolationSettings.setCurrentCombination(interpolationSettings.getOptimalCombination());
-    }
-    else
-    {
-        interpolationSettings.setCurrentCombination(interpolationSettings.getSelectedCombination());
-    }
-
     std::vector <float> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
     double x, y;
+
+    Crit3DProxyCombination myCombination = interpolationSettings.getSelectedCombination();
+    interpolationSettings.setCurrentCombination(myCombination);
 
     if (getComputeOnlyPoints())
     {
@@ -2224,10 +2222,10 @@ bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3D
                 myRaster->getRowCol(x, y, row, col);
                 if (! myRaster->isOutOfGrid(row, col))
                 {
+
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     dynamicSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, true);
-                    detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
-
+                    preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     outputPoints[i].currentValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                                myVar, x, y, outputPoints[i].z, proxyValues, true);
@@ -2253,8 +2251,7 @@ bool Project::interpolationDemDynamicLapserate(meteoVariable myVar, const Crit3D
 
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     dynamicSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings, true);
-                    detrending(subsetInterpolationPoints, interpolationSettings.getCurrentCombination(), &interpolationSettings, &climateParameters, myVar, myTime);
-
+                    preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
                     getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
                     myRaster->value[row][col] = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings,
                                                             myVar, x, y, z, proxyValues, true);
@@ -2402,9 +2399,9 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
     }
 
     // dynamic lapserate
-    if (getUseDetrendingVar(myVar) && interpolationSettings.getUseDynamicLapserate())
+    if (getUseDetrendingVar(myVar) && interpolationSettings.getUseLocalDetrending())
     {
-        return interpolationDemDynamicLapserate(myVar, myTime, myRaster);
+        return interpolationDemLocalDetrending(myVar, myTime, myRaster);
     }
     else
     {
@@ -2413,9 +2410,8 @@ bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime
 }
 
 
-bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid> &myGrids)
+bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid*> &myGrids)
 {
-    gis::Crit3DRasterGrid* myGrid;
     gis::Crit3DRasterGrid* proxyGrid;
 
     float cellSize = computeDefaultCellSizeFromMeteoGrid(1);
@@ -2425,15 +2421,15 @@ bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid> &myGri
 
     for (unsigned int i=0; i < interpolationSettings.getProxyNr(); i++)
     {
-        myGrid = new gis::Crit3DRasterGrid();
-
         if (interpolationSettings.getCurrentCombination().getValue(i))
         {
+            gis::Crit3DRasterGrid* myGrid = new gis::Crit3DRasterGrid();
+
             proxyGrid = interpolationSettings.getProxy(i)->getGrid();
             if (proxyGrid != nullptr && proxyGrid->isLoaded)
                 gis::resampleGrid(*proxyGrid, myGrid, meteoGridRaster.header, aggrAverage, 0);
 
-            myGrids.push_back(*myGrid);
+            myGrids.push_back(myGrid);
         }
     }
 
@@ -2453,23 +2449,28 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
         return false;
     }
 
-    // detrending and checking precipitation
-    bool interpolationReady = preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
-                                               &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+    Crit3DProxyCombination myCombination;
 
-    if (! interpolationReady)
+    if (! interpolationSettings.getUseLocalDetrending())
     {
-        logError("Interpolation: error in function preInterpolation");
-        return false;
+        if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
+                              &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
+        {
+            logError("Interpolation: error in function preInterpolation");
+            return false;
+        }
+        myCombination = interpolationSettings.getCurrentCombination();
+    }
+    else
+    {
+        myCombination = interpolationSettings.getSelectedCombination();
+        interpolationSettings.setCurrentCombination(myCombination);
     }
 
     // proxy aggregation
-    std::vector <gis::Crit3DRasterGrid> meteoGridProxies;
+    std::vector <gis::Crit3DRasterGrid*> meteoGridProxies;
     if (getUseDetrendingVar(myVar))
         if (! meteoGridAggregateProxy(meteoGridProxies)) return false;
-
-    //std::string errString;
-    //gis::writeEsriGrid("C:\\Users\\gantolini\\Desktop\\tmp\\testDemGrid", &meteoGridProxies[0], errString);
 
     frequencyType freq = getVarFrequency(myVar);
 
@@ -2478,7 +2479,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
     float interpolatedValue = NODATA;
-    Crit3DProxyCombination myCombination = interpolationSettings.getCurrentCombination();
     unsigned int i, proxyIndex;
 
     for (unsigned col = 0; col < unsigned(meteoGridDbHandler->meteoGrid()->gridStructure().header().nrCols); col++)
@@ -2503,16 +2503,31 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                         {
                             if (proxyIndex < meteoGridProxies.size())
                             {
-                                float proxyValue = gis::getValueFromXY(meteoGridProxies[proxyIndex], myX, myY);
-                                if (proxyValue != meteoGridProxies[proxyIndex].header->flag)
+                                float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
+                                if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
                                     proxyValues[i] = proxyValue;
                             }
 
+                            proxyIndex++;
                         }
                     }
-                }
 
-                interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                    if (interpolationSettings.getUseLocalDetrending())
+                    {
+                        std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
+                        dynamicSelection(interpolationPoints, subsetInterpolationPoints, myX, myY, interpolationSettings, true);
+                        preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
+                        interpolatedValue = interpolate(subsetInterpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                    }
+                    else
+                    {
+                        interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                    }
+                }
+                else
+                {
+                    interpolatedValue = interpolate(interpolationPoints, &interpolationSettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
+                }
 
                 if (freq == hourly)
                 {
@@ -2548,20 +2563,7 @@ bool Project::interpolationGridMain(meteoVariable myVar, const Crit3DTime& myTim
     {
         Crit3DTime halfHour = myTime.addSeconds(-1800);
         return interpolateDemRadiation(halfHour, myRaster);
-    }
-    */
-
-    // dynamic lapserate
-    /*if (getUseDetrendingVar(myVar) && interpolationSettings.getUseDynamicLapserate())
-    {
-        return interpolationDemDynamicLapserate(myVar, myTime, myRaster);
-    }
-    else
-    {
-        return interpolationDem(myVar, myTime, myRaster);
-    }
-    */
-
+    }*/
 
     return interpolationGrid(myVar, myTime);
 }
@@ -2809,7 +2811,7 @@ void Project::saveInterpolationParameters()
         parameters->setValue("meteogrid_upscalefromdem", interpolationSettings.getMeteoGridUpscaleFromDem());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parameters->setValue("topographicDistance", interpolationSettings.getUseTD());
-        parameters->setValue("dynamicLapserate", interpolationSettings.getUseDynamicLapserate());
+        parameters->setValue("localDetrending", interpolationSettings.getUseLocalDetrending());
         parameters->setValue("topographicDistanceMaxMultiplier", QString::number(interpolationSettings.getTopoDist_maxKh()));
         parameters->setValue("optimalDetrending", interpolationSettings.getUseBestDetrending());
         parameters->setValue("multipleDetrending", interpolationSettings.getUseMultipleDetrending());

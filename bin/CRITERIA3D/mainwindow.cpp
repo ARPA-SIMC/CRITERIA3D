@@ -42,6 +42,7 @@
 #include "dialogNewPoint.h"
 #include "glWidget.h"
 #include "formInfo.h"
+#include "dialogWaterFluxesSettings.h"
 
 #include <QDebug>
 
@@ -86,6 +87,11 @@ MainWindow::MainWindow(QWidget *parent) :
     this->viewNotActiveOutputPoints = true;
     ui->flagView_not_active_outputPoints->setChecked(this->viewNotActiveOutputPoints);
     this->currentPointsVisualization = notShown;
+
+    current3DlayerIndex = waterContent;
+    current3DlayerIndex = 0;
+    view3DVariable = false;
+
     ui->flagView_values->setChecked(false);
 
     // show menu
@@ -184,10 +190,11 @@ void MainWindow::updateOutputMap()
     updateDateTime();
     if (myProject.isCriteria3DInitialized)
     {
-        myProject.setCriteria3DMap(waterContent, 0);
+        myProject.setCriteria3DMap(current3DVariable, current3DlayerIndex);
     }
     emit rasterOutput->redrawRequested();
     outputRasterColorLegend->update();
+    qApp->processEvents();
 }
 
 
@@ -1098,6 +1105,7 @@ void MainWindow::setCurrentRasterOutput(gis::Crit3DRasterGrid *myRaster)
     outputRasterColorLegend->update();
 
     rasterOutput->updateCenter();
+    view3DVariable = (myRaster == &(myProject.criteria3DMap));
 }
 
 void MainWindow::on_actionProjectSettings_triggered()
@@ -1223,28 +1231,19 @@ bool MainWindow::checkMapVariable(bool isComputed)
 
 void MainWindow::setMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
 {   
-    setOutputVariable(myVar, myGrid);
+    setOutputMeteoVariable(myVar, myGrid);
     myProject.setCurrentVariable(myVar);
     currentPointsVisualization = showCurrentVariable;
     updateCurrentVariable();
 }
 
-void MainWindow::setOutputVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
+void MainWindow::setOutputMeteoVariable(meteoVariable myVar, gis::Crit3DRasterGrid *myGrid)
 {
     setColorScale(myVar, myGrid->colorScale);
     setCurrentRasterOutput(myGrid);
     ui->labelOutputRaster->setText(QString::fromStdString(getVariableString(myVar)));
 }
 
-void MainWindow::setCriteria3DVariable(criteria3DVariable myVar, int layerIndex, gis::Crit3DRasterGrid *myGrid)
-{
-    if (myVar == waterContent && layerIndex == 0)
-    {
-        setSurfaceWaterScale(myGrid->colorScale);
-        ui->labelOutputRaster->setText("Surface water content [mm]");
-    }
-    setCurrentRasterOutput(myGrid);
-}
 
 void MainWindow::showMeteoVariable(meteoVariable var)
 {
@@ -1380,43 +1379,43 @@ void MainWindow::showSnowVariable(meteoVariable var)
     switch(var)
     {
     case snowWaterEquivalent:
-        setOutputVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
+        setOutputMeteoVariable(snowWaterEquivalent, myProject.snowMaps.getSnowWaterEquivalentMap());
         break;
 
     case snowSurfaceTemperature:
-        setOutputVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
+        setOutputMeteoVariable(snowSurfaceTemperature, myProject.snowMaps.getSnowSurfaceTempMap());
         break;
 
     case snowInternalEnergy:
-        setOutputVariable(snowInternalEnergy, myProject.snowMaps.getInternalEnergyMap());
+        setOutputMeteoVariable(snowInternalEnergy, myProject.snowMaps.getInternalEnergyMap());
         break;
 
     case snowSurfaceEnergy:
-        setOutputVariable(snowSurfaceEnergy, myProject.snowMaps.getSurfaceEnergyMap());
+        setOutputMeteoVariable(snowSurfaceEnergy, myProject.snowMaps.getSurfaceEnergyMap());
         break;
 
     case snowLiquidWaterContent:
-        setOutputVariable(snowLiquidWaterContent, myProject.snowMaps.getLWContentMap());
+        setOutputMeteoVariable(snowLiquidWaterContent, myProject.snowMaps.getLWContentMap());
         break;
 
     case snowAge:
-        setOutputVariable(snowAge, myProject.snowMaps.getAgeOfSnowMap());
+        setOutputMeteoVariable(snowAge, myProject.snowMaps.getAgeOfSnowMap());
         break;
 
     case snowFall:
-        setOutputVariable(snowFall, myProject.snowMaps.getSnowFallMap());
+        setOutputMeteoVariable(snowFall, myProject.snowMaps.getSnowFallMap());
         break;
 
     case snowMelt:
-        setOutputVariable(snowMelt, myProject.snowMaps.getSnowMeltMap());
+        setOutputMeteoVariable(snowMelt, myProject.snowMaps.getSnowMeltMap());
         break;
 
     case sensibleHeat:
-        setOutputVariable(sensibleHeat, myProject.snowMaps.getSensibleHeatMap());
+        setOutputMeteoVariable(sensibleHeat, myProject.snowMaps.getSensibleHeatMap());
         break;
 
     case latentHeat:
-        setOutputVariable(latentHeat, myProject.snowMaps.getLatentHeatMap());
+        setOutputMeteoVariable(latentHeat, myProject.snowMaps.getLatentHeatMap());
         break;
 
     default:
@@ -1911,6 +1910,7 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     ui->groupBoxModel->setEnabled(true);
     ui->buttonModelPause->setEnabled(true);
     ui->buttonModelStart->setDisabled(true);
+    ui->buttonModelStop->setEnabled(true);
 
     return myProject.runModels(firstTime, lastTime);
 }
@@ -1921,13 +1921,16 @@ void MainWindow::on_buttonModelPause_clicked()
     myProject.modelPause = true;
     ui->buttonModelPause->setDisabled(true);
     ui->buttonModelStart->setEnabled(true);
+    ui->buttonModelStop->setEnabled(true);
 }
 
 
 void MainWindow::on_buttonModelStop_clicked()
 {
     myProject.modelStop = true;
-    ui->groupBoxModel->setDisabled(true);
+    ui->buttonModelPause->setDisabled(true);
+    ui->buttonModelStart->setDisabled(true);
+    ui->buttonModelStop->setDisabled(true);
 }
 
 
@@ -1938,8 +1941,11 @@ void MainWindow::on_buttonModelStart_clicked()
         myProject.modelPause = false;
         ui->buttonModelPause->setEnabled(true);
         ui->buttonModelStart->setDisabled(true);
+        ui->buttonModelStop->setEnabled(true);
+
         QDateTime newFirstTime = QDateTime(myProject.getCurrentDate(), QTime(myProject.getCurrentHour(), 0, 0), Qt::UTC);
         newFirstTime = newFirstTime.addSecs(3600);
+
         myProject.runModels(newFirstTime, myProject.modelLastTime);
     }
 }
@@ -2084,14 +2090,70 @@ void MainWindow::on_actionSnow_settings_triggered()
 
 //--------------------- MENU WATER FLUXES  -----------------------
 
-void MainWindow::on_actionCriteria3D_settings_triggered()
+
+
+void MainWindow::on_actionWaterFluxes_settings_triggered()
 {
-    // TODO
+    DialogWaterFluxesSettings dialogWaterFluxes;
+    dialogWaterFluxes.setInitialWaterPotential(myProject.waterFluxesParameters.initialWaterPotential);
+    dialogWaterFluxes.setImposedComputationDepth(myProject.waterFluxesParameters.imposedComputationDepth);
+
+    if (myProject.waterFluxesParameters.computeOnlySurface)
+        dialogWaterFluxes.onlySurface->setChecked(true);
+    else if (myProject.waterFluxesParameters.computeAllSoilDepth)
+        dialogWaterFluxes.allSoilDepth->setChecked(true);
+    else
+        dialogWaterFluxes.imposedDepth->setChecked(true);
+
+    dialogWaterFluxes.exec();
+    if (dialogWaterFluxes.result() != QDialog::Accepted)
+    {
+        return;
+    }
+    else
+    {
+        myProject.waterFluxesParameters.initialWaterPotential = dialogWaterFluxes.getInitialWaterPotential();
+        myProject.waterFluxesParameters.imposedComputationDepth = dialogWaterFluxes.getImposedComputationDepth();
+        myProject.waterFluxesParameters.computeOnlySurface = dialogWaterFluxes.onlySurface->isChecked();
+        myProject.waterFluxesParameters.computeAllSoilDepth = dialogWaterFluxes.allSoilDepth->isChecked();
+
+        /*if (!myProject.writeCriteria3DParameters())
+        {
+            myProject.logError("Error writing snow parameters");
+        }*/
+    }
+
+    // layer thickness
+    // processes (snow crop)
+    // boundary (lateral free drainage, bottom free drainage)
+    // lateral conductivity ratio
+    // model accuracy
 }
+
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
-    myProject.initializeCriteria3DModel();
+    if (myProject.initializeCriteria3DModel())
+    {
+        ui->groupBoxModel->setEnabled(true);
+
+        if (myProject.nrLayers <= 1)
+        {
+            ui->layerNrEdit->setMinimum(0);
+            ui->layerNrEdit->setMaximum(0);
+            ui->layerNrEdit->setValue(0);
+            ui->layerDepthEdit->setText("No soil");
+        }
+        else
+        {
+            ui->layerNrEdit->setMinimum(1);
+            ui->layerNrEdit->setMaximum(myProject.nrLayers - 1);
+            ui->layerNrEdit->setValue(1);
+
+            float depth = myProject.layerDepth[1];
+            ui->layerDepthEdit->setText(QString::number(depth) + " m");
+        }
+    }
 }
 
 
@@ -2145,15 +2207,33 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex)
         return;
     }
 
-    switch(var)
+    if (! myProject.setCriteria3DMap(var, layerIndex))
     {
-    case waterContent:
-        myProject.setCriteria3DMap(waterContent, layerIndex);
-        setCriteria3DVariable(waterContent, layerIndex, &(myProject.criteria3DMap));
-        break;
-
-    default: {}
+        myProject.logError();
+        return;
     }
+
+    current3DVariable = var;
+    current3DlayerIndex = layerIndex;
+
+    if (current3DVariable == waterContent)
+    {
+        if (layerIndex == 0)
+        {
+            // SURFACE
+            setSurfaceWaterScale(myProject.criteria3DMap.colorScale);
+            ui->labelOutputRaster->setText("Surface water content [mm]");
+        }
+        else
+        {
+            // SUB-SURFACE
+            setTemperatureScale(myProject.criteria3DMap.colorScale);
+            reverseColorScale(myProject.criteria3DMap.colorScale);
+            ui->labelOutputRaster->setText("Volumetric water content [m3 m-3]");
+        }
+    }
+
+    setCurrentRasterOutput(&(myProject.criteria3DMap));
 }
 
 
@@ -2937,5 +3017,37 @@ void MainWindow::on_actionHide_LandUseMap_triggered()
 void MainWindow::on_actionHide_Geomap_triggered()
 {
     setOutputRasterVisible(false);
+}
+
+
+void MainWindow::on_actionView_SoilMoisture_triggered()
+{
+    int layerIndex = std::max(1, ui->layerNrEdit->value());
+    showCriteria3DVariable(waterContent, layerIndex);
+}
+
+
+void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
+{
+    if (myProject.nrLayers <= 1)
+    {
+        ui->layerNrEdit->setValue(1);
+        ui->layerDepthEdit->setText("No soil");
+        return;
+    }
+
+    if (unsigned(layerIndex) >= myProject.nrLayers)
+    {
+        layerIndex = myProject.nrLayers - 1;
+        ui->layerNrEdit->setValue(layerIndex);
+    }
+
+    float depth = myProject.layerDepth[layerIndex];
+    ui->layerDepthEdit->setText(QString::number(depth) + " m");
+
+    if (view3DVariable && current3DlayerIndex != 0)
+    {
+        showCriteria3DVariable(current3DVariable, layerIndex);
+    }
 }
 

@@ -21,6 +21,24 @@
                         soilSurfaceMoisture, bottomDrainage, waterDeficit, waterInflow, waterOutflow};
 
 
+    class WaterFluxesParameters
+    {
+    public:
+
+        double initialWaterPotential;            // [m]
+        double imposedComputationDepth;          // [m]
+
+        bool freeCatchmentRunoff;
+        bool freeLateralDrainage;
+        bool freeBottomDrainage;
+        bool computeOnlySurface;
+        bool computeAllSoilDepth;
+
+        WaterFluxesParameters();
+        void initialize();
+    };
+
+
     class Project3D : public Project
     {
         Q_OBJECT
@@ -41,6 +59,7 @@
 
     public:
         bool isCriteria3DInitialized;
+        WaterFluxesParameters waterFluxesParameters;
 
         QString soilDbFileName;
         QString cropDbFileName;

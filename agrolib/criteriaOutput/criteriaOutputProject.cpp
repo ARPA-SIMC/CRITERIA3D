@@ -147,7 +147,7 @@ int CriteriaOutputProject::initializeProjectCsv()
     // open DB Data
     dbData = QSqlDatabase::addDatabase("QSQLITE", "data");
     dbData.setDatabaseName(dbDataName);
-    if (! dbData.open())
+    if (! dbData.open() || ! dbData.lastError().text().isEmpty())
     {
         projectError = "Open DB data failed: " + dbData.lastError().text();
         return ERROR_DBPARAMETERS;
@@ -236,19 +236,19 @@ bool CriteriaOutputProject::readSettings()
 
     // computational units
     dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
-    if (dbComputationUnitsName == "")
+    if (dbComputationUnitsName.isEmpty())
     {
         // check old name
         dbComputationUnitsName = projectSettings->value("db_units","").toString();
     }
-    if (dbComputationUnitsName == "")
+    if (dbComputationUnitsName.isEmpty())
     {
         projectError = "Missing information on computational units";
         return false;
     }
     if (dbComputationUnitsName.left(1) == ".")
     {
-        dbComputationUnitsName = path + QDir::cleanPath(dbComputationUnitsName);
+        dbComputationUnitsName = QDir().cleanPath(path + dbComputationUnitsName);
     }
 
     dbDataName = projectSettings->value("db_data","").toString();
@@ -258,19 +258,19 @@ bool CriteriaOutputProject::readSettings()
     }
     if (dbDataName.left(1) == ".")
     {
-        dbDataName = path + QDir::cleanPath(dbDataName);
+        dbDataName = QDir::cleanPath(path + dbDataName);
     }
 
     dbCropName = projectSettings->value("db_crop","").toString();
     if (dbCropName.left(1) == ".")
     {
-        dbCropName = path + QDir::cleanPath(dbCropName);
+        dbCropName = QDir::cleanPath(path + dbCropName);
     }
 
     dbHistoricalDataName = projectSettings->value("db_data_historical","").toString();
     if (dbHistoricalDataName.left(1) == ".")
     {
-        dbHistoricalDataName = path + QDir::cleanPath(dbHistoricalDataName);
+        dbHistoricalDataName = QDir::cleanPath(path + dbHistoricalDataName);
     }
 
     addDateTimeLogFile = projectSettings->value("add_date_to_log","").toBool();
@@ -282,7 +282,7 @@ bool CriteriaOutputProject::readSettings()
     variableListFileName = projectSettings->value("variable_list","").toString();
     if (variableListFileName.left(1) == ".")
     {
-        variableListFileName = path + QDir::cleanPath(variableListFileName);
+        variableListFileName = QDir::cleanPath(path + variableListFileName);
     }
 
     bool addDate = projectSettings->value("add_date_to_filename","").toBool();
@@ -297,7 +297,7 @@ bool CriteriaOutputProject::readSettings()
 
     if (outputCsvFileName.left(1) == ".")
     {
-        outputCsvFileName = path + QDir::cleanPath(outputCsvFileName);
+        outputCsvFileName = QDir::cleanPath(path + outputCsvFileName);
     }
     projectSettings->endGroup();
 
@@ -307,13 +307,13 @@ bool CriteriaOutputProject::readSettings()
     ucmFileName = projectSettings->value("UCM","").toString();
     if (ucmFileName.left(1) == ".")
     {
-        ucmFileName = path + QDir::cleanPath(ucmFileName);
+        ucmFileName = QDir::cleanPath(path + ucmFileName);
     }
 
     fieldListFileName = projectSettings->value("field_list", "").toString();
     if (fieldListFileName.left(1) == ".")
     {
-        fieldListFileName = path + QDir::cleanPath(fieldListFileName);
+        fieldListFileName = QDir::cleanPath(path + fieldListFileName);
     }
 
     // output shapefile
@@ -329,7 +329,7 @@ bool CriteriaOutputProject::readSettings()
     aggregationShapeFileName = projectSettings->value("aggregation_shape","").toString();
     if (aggregationShapeFileName.left(1) == ".")
     {
-        aggregationShapeFileName = path + QDir::cleanPath(aggregationShapeFileName);
+        aggregationShapeFileName = QDir::cleanPath(path + aggregationShapeFileName);
     }
 
     shapeFieldName = projectSettings->value("shape_field", "").toString();
@@ -337,7 +337,7 @@ bool CriteriaOutputProject::readSettings()
     aggregationListFileName = projectSettings->value("aggregation_list","").toString();
     if (aggregationListFileName.left(1) == ".")
     {
-        aggregationListFileName = path + QDir::cleanPath(aggregationListFileName);
+        aggregationListFileName = QDir::cleanPath(path + aggregationListFileName);
     }
 
     aggregationCellSize = projectSettings->value("aggregation_cellsize","").toString();
@@ -358,7 +358,7 @@ bool CriteriaOutputProject::readSettings()
 
     if (outputAggrCsvFileName.left(1) == ".")
     {
-        outputAggrCsvFileName = path + QDir::cleanPath(outputAggrCsvFileName);
+        outputAggrCsvFileName = QDir::cleanPath(path + outputAggrCsvFileName);
     }
     projectSettings->endGroup();
 
@@ -368,7 +368,7 @@ bool CriteriaOutputProject::readSettings()
     mapListFileName = projectSettings->value("map_list","").toString();
     if (mapListFileName.left(1) == ".")
     {
-        mapListFileName = path + QDir::cleanPath(mapListFileName);
+        mapListFileName = QDir::cleanPath(path + mapListFileName);
     }
 
     // format

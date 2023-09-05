@@ -32,6 +32,7 @@
 #include "gis.h"
 #include "color.h"
 #include "statistics.h"
+#include "project3D.h"
 
 #include <QtSql>
 #include <QPaintEvent>
@@ -133,6 +134,8 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
             }
         }
 
+        // TODO update crop roots
+
         // cycle on hours
         int firstHour = (myDate == firstDate) ? hour1 : 0;
         int lastHour = (myDate == lastDate) ? hour2 : 23;
@@ -147,7 +150,7 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
                 return false;
             }
 
-             emit updateOutputSignal();
+            emit updateOutputSignal();
 
             // output points
             if (isSaveOutputPoints())
@@ -765,8 +768,6 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         }
         qApp->processEvents();
 
-        // computeCrop(myTime);
-
         // TODO compute evap/transp
     }
 
@@ -1137,11 +1138,12 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
     float aspect = radiationMaps->aspectMap->getValueFromRowCol(row, col);
     if (! isEqual(aspect, radiationMaps->aspectMap->header->flag))
     {
-        float slope = radiationMaps->slopeMap->getValueFromRowCol(row, col);
-        if (! isEqual(slope, radiationMaps->slopeMap->header->flag))
+        float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
+        if (! isEqual(slopeDegree, radiationMaps->slopeMap->header->flag))
         {
             float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
-            float shadow = -cos(aspect * float(DEG_TO_RAD)) * std::max(5.f, slope * slopeAmplification);
+            float shadow = -cos(aspect * DEG_TO_RAD) * std::max(5.f, slopeDegree * slopeAmplification);
+
             colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
             colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
             colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));

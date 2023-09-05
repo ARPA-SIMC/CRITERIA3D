@@ -195,6 +195,7 @@
         float computeDistance(float x1, float y1, float x2, float y2);
         double computeDistancePoint(Crit3DUtmPoint *p0, Crit3DUtmPoint *p1);
         bool updateMinMaxRasterGrid(Crit3DRasterGrid *rasterGrid);
+        void convertNodataRasterGrid(Crit3DRasterGrid& myGrid);
         bool updateColorScale(Crit3DRasterGrid* rasterGrid, int row0, int col0, int row1, int col1);
 
         void getRowColFromXY(const Crit3DRasterHeader& myHeader, double myX, double myY, int *row, int *col);
@@ -220,7 +221,7 @@
         bool isMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
         bool isMinimumOrNearMinimum(const Crit3DRasterGrid& rasterGrid, int row, int col);
         bool isBoundary(const Crit3DRasterGrid& rasterGrid, int row, int col);
-        bool isBoundaryRunoff(const Crit3DRasterGrid& dem, const Crit3DRasterGrid &aspectMap, int row, int col);
+        bool isBoundaryRunoff(const Crit3DRasterGrid& rasterRef, const Crit3DRasterGrid &aspectMap, int row, int col);
         bool isStrictMaximum(const Crit3DRasterGrid& rasterGrid, int row, int col);
 
         bool getNorthernEmisphere();

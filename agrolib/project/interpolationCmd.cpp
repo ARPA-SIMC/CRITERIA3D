@@ -248,9 +248,8 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
             if (! isEqual(myZ, outputGrid->header->flag))
             {
                 if (getUseDetrendingVar(myVar))
-                {
                     getProxyValuesXY(myX, myY, mySettings, proxyValues);
-                }
+
                 outputGrid->value[myRow][myCol] = interpolate(myPoints, mySettings, meteoSettings, myVar, myX, myY, myZ, proxyValues, true);
             }
         }

@@ -290,7 +290,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>260</y>
+      <y>290</y>
       <width>271</width>
       <height>112</height>
      </rect>
@@ -629,7 +629,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>380</y>
+      <y>410</y>
       <width>271</width>
       <height>115</height>
      </rect>
@@ -968,7 +968,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>100</y>
+      <y>130</y>
       <width>271</width>
       <height>151</height>
      </rect>
@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>11</day>
+       <day>7</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1436,7 +1436,7 @@
       <x>0</x>
       <y>20</y>
       <width>271</width>
-      <height>71</height>
+      <height>111</height>
      </rect>
     </property>
     <property name="palette">
@@ -1675,7 +1675,7 @@
      <bool>true</bool>
     </property>
     <property name="title">
-     <string notr="true">Run model</string>
+     <string notr="true">Model run</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1731,6 +1731,64 @@
       <string>Stop</string>
      </property>
     </widget>
+    <widget class="QSpinBox" name="layerNrEdit">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>70</y>
+       <width>42</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>100</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelLayer">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>72</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="palette">
+      <palette>
+       <active/>
+       <inactive/>
+       <disabled/>
+      </palette>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::RightToLeft</enum>
+     </property>
+     <property name="text">
+      <string>Layer</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="layerDepthEdit">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>70</y>
+       <width>61</width>
+       <height>24</height>
+      </rect>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -1739,7 +1797,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>28</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="palette">
@@ -1864,7 +1922,7 @@
     <property name="title">
      <string>Water fluxes</string>
     </property>
-    <addaction name="actionCriteria3D_settings"/>
+    <addaction name="actionWaterFluxes_settings"/>
     <addaction name="separator"/>
     <addaction name="actionCriteria3D_Initialize"/>
     <addaction name="actionCriteria3D_compute_current_hour"/>
@@ -1958,6 +2016,7 @@
       <string>Water fluxes</string>
      </property>
      <addaction name="actionView_SurfaceWaterContent"/>
+     <addaction name="actionView_SoilMoisture"/>
     </widget>
     <widget class="QMenu" name="menuShowLand_use">
      <property name="title">
@@ -2143,9 +2202,9 @@
     <string>Spatial quality control</string>
    </property>
   </action>
-  <action name="actionCriteria3D_settings">
+  <action name="actionWaterFluxes_settings">
    <property name="text">
-    <string>3D model settings...</string>
+    <string>Water fluxes settings...</string>
    </property>
   </action>
   <action name="actionCriteria3D_Initialize">
@@ -2697,6 +2756,11 @@
   <action name="actionLoad_crop_data">
    <property name="text">
     <string>Crop and land units data...</string>
+   </property>
+  </action>
+  <action name="actionView_SoilMoisture">
+   <property name="text">
+    <string>Soil moisture</string>
    </property>
   </action>
  </widget>

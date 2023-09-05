@@ -257,11 +257,11 @@ bool getSoilSurfaceMoisture(Vine3DProject* myProject, gis::Crit3DRasterGrid* out
                     {
                         if (int(myProject->indexMap.at(size_t(layer)).value[row][col]) != int(myProject->indexMap.at(size_t(layer)).header->flag))
                         {
-                            waterContent = soilFluxes3D::getWaterContent(nodeIndex);              //[m^3 m^-3]
+                            waterContent = soilFluxes3D::getWaterContent(nodeIndex);                        //[m^3 m^-3]
                             sumWater += waterContent * myProject->layerThickness.at(size_t(layer));
-                            wiltingPoint = getSoilVar(myProject, 0, layer, soil::soilWaterContentWP); //[m^3 m^-3]
-                            minWater += wiltingPoint * myProject->layerThickness.at(size_t(layer));        //[m]
-                            saturation = getSoilVar(myProject, 0, layer, soil::soilWaterContentSat);       //[m^3 m^-3]
+                            wiltingPoint = getSoilVar(myProject, 0, layer, soil::soilWaterContentWP);       //[m^3 m^-3]
+                            minWater += wiltingPoint * myProject->layerThickness.at(size_t(layer));         //[m]
+                            saturation = getSoilVar(myProject, 0, layer, soil::soilWaterContentSat);        //[m^3 m^-3]
                             maxWater += saturation * myProject->layerThickness.at(size_t(layer));
                         }
                     }

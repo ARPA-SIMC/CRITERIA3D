@@ -3,6 +3,7 @@
 
     #include <qopengl.h>
     #include <vector>
+
     #ifndef CRIT3DCOLOR_H
         #include "color.h"
     #endif

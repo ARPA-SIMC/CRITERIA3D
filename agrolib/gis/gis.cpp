@@ -453,6 +453,25 @@ namespace gis
     }
 
 
+    void convertNodataRasterGrid(Crit3DRasterGrid& myGrid)
+    {
+        if (myGrid.header->flag == NODATA)
+            return;
+
+        for (int row = 0; row < myGrid.header->nrRows; row++)
+        {
+            for (int col = 0; col < myGrid.header->nrCols; col++)
+            {
+                if (isEqual(myGrid.value[row][col], myGrid.header->flag))
+                {
+                    myGrid.value[row][col] = NODATA;
+                }
+            }
+        }
+
+        myGrid.header->flag = NODATA;
+    }
+
 
     bool updateMinMaxRasterGrid(Crit3DRasterGrid* myGrid)
     {
@@ -1182,11 +1201,11 @@ namespace gis
     }
 
 
-    bool isBoundaryRunoff(const Crit3DRasterGrid& dem, const Crit3DRasterGrid& aspectMap, int row, int col)
+    bool isBoundaryRunoff(const Crit3DRasterGrid& rasterRef, const Crit3DRasterGrid& aspectMap, int row, int col)
     {
-        float z = dem.getValueFromRowCol(row,col);
+        float value = rasterRef.getValueFromRowCol(row,col);
         float aspect = aspectMap.getValueFromRowCol(row,col);
-        if ( isEqual(z, dem.header->flag)
+        if ( isEqual(value, rasterRef.header->flag)
             || isEqual(aspect, aspectMap.header->flag) )
                 return false;
 
@@ -1194,7 +1213,7 @@ namespace gis
         int c = 0;
         if (aspect > 135 && aspect < 225)
             r = 1;
-        else if (aspect < 45 || aspect > 315)
+        else if ((aspect < 45) || (aspect > 315))
             r = -1;
 
         if (aspect > 45 && aspect < 135)
@@ -1202,8 +1221,8 @@ namespace gis
         else if (aspect > 225 && aspect < 315)
             c = -1;
 
-        float zBoundary = dem.getValueFromRowCol(row + r, col + c);
-        return isEqual(zBoundary, dem.header->flag);
+        float valueBoundary = rasterRef.getValueFromRowCol(row + r, col + c);
+        return isEqual(valueBoundary, rasterRef.header->flag);
     }
 
 
