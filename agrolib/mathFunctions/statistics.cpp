@@ -372,23 +372,26 @@ namespace statistics
                 roots[j] += (XT[j][i]*y[i]);
             }
         }
-        *q=0;
-        for (int j=0;j<nrPredictors;j++)
+
+        *q = 0;
+        for (int j=0; j<nrPredictors; j++)
         {
             m[j]=0;
         }
-        for (int i=0;i<nrPredictors+1;i++)
+
+        for (int i=0; i<nrPredictors+1; i++)
         {
-            *q += (X2Inverse[0][i]*roots[i]);
+            *q += float(X2Inverse[0][i]*roots[i]);
         }
 
-        for (int j=1;j<nrPredictors+1;j++)
+        for (int j=1; j<nrPredictors+1; j++)
         {
             for (int i=0;i<nrPredictors+1;i++)
             {
-                m[j-1] += (X2Inverse[j][i]*roots[i]);
+                m[j-1] += float(X2Inverse[j][i]*roots[i]);
             }
         }
+
         for (int j=0;j<nrPredictors+1;j++)
         {
             free(XT[j]);
@@ -468,14 +471,14 @@ namespace statistics
         }
         for (int i=0;i<nrPredictors+1;i++)
         {
-            *q += (X2Inverse[0][i]*roots[i]);
+            *q += float(X2Inverse[0][i]*roots[i]);
         }
 
         for (int j=1;j<nrPredictors+1;j++)
         {
             for (int i=0;i<nrPredictors+1;i++)
             {
-                m[j-1] += (X2Inverse[j][i]*roots[i]);
+                m[j-1] += float(X2Inverse[j][i]*roots[i]);
             }
         }
         for (int j=0;j<nrPredictors+1;j++)
@@ -1468,8 +1471,8 @@ namespace stat_openai
 {
     // Funzione per calcolare la trasposta di una matrice
     std::vector<std::vector<float>> transpose(const std::vector<std::vector<float>>& matrix) {
-        int rows = matrix.size();
-        int cols = matrix[0].size();
+        int rows = int(matrix.size());
+        int cols = int(matrix[0].size());
 
         std::vector<std::vector<float>> result(cols, std::vector<float>(rows));
 
@@ -1485,8 +1488,8 @@ namespace stat_openai
     // Funzione per calcolare la regressione lineare multipla
     std::vector<double> multipleLinearRegression(const std::vector<std::vector<double>>& X, const std::vector<double>& y)
     {
-        int numSamples = X.size();
-        int numFeatures = X[0].size();
+        int numSamples = int(X.size());
+        int numFeatures = int(X[0].size());
 
         // Calcola la matrice X^T * X
         std::vector<std::vector<double>> XTX(numFeatures, std::vector<double>(numFeatures));

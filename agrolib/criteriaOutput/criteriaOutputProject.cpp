@@ -19,6 +19,7 @@
 
 #include <QtSql>
 #include <iostream>
+#include <math.h>
 
 
 CriteriaOutputProject::CriteriaOutputProject()
@@ -267,7 +268,12 @@ bool CriteriaOutputProject::readSettings()
         dbCropName = QDir::cleanPath(path + dbCropName);
     }
 
-    dbHistoricalDataName = projectSettings->value("db_data_historical","").toString();
+    dbHistoricalDataName = projectSettings->value("db_data_climate","").toString();
+    if (dbHistoricalDataName == "")
+    {
+        dbHistoricalDataName = projectSettings->value("db_data_historical","").toString();
+    }
+
     if (dbHistoricalDataName.left(1) == ".")
     {
         dbHistoricalDataName = QDir::cleanPath(path + dbHistoricalDataName);
@@ -403,22 +409,31 @@ int CriteriaOutputProject::precomputeDtx()
         return ERROR_READ_UNITS;
     }
     logger.writeInfo("Query result: " + QString::number(compUnitList.size()) + " distinct computational units.");
-
-
-
     logger.writeInfo("Compute dtx...");
 
     QString idCase;
+    int step = compUnitList.size() * 0.01;
+
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
         idCase = compUnitList[i].idCase;
-        logger.writeInfo(QString::number(i) + " ID CASE: " + idCase);
 
         int myResult = computeAllDtxUnit(dbHistoricalData, idCase, projectError);
         if (myResult != CRIT1D_OK)
         {
             projectError = "ID CASE: " + idCase + "\n" + projectError;
             return myResult;
+        }
+
+        // counter
+        if (i % step == 0)
+        {
+            int percentage = round(i * 100.0 / compUnitList.size());
+            std::cout << percentage << "..";
+        }
+        if (i == compUnitList.size()-1)
+        {
+            std::cout << "100\n";
         }
     }
 
@@ -454,12 +469,15 @@ int CriteriaOutputProject::createCsvFile()
     // write output
     QString idCase;
     QString idCropClass;
+    int step = compUnitList.size() * 0.01;
+
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
         idCase = compUnitList[i].idCase;
         idCropClass = compUnitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbHistoricalData, dateComputation, outputVariable, outputCsvFileName, projectError);
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbHistoricalData,
+                                      dateComputation, outputVariable, outputCsvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
             if (QFile(outputCsvFileName).exists())
@@ -467,6 +485,17 @@ int CriteriaOutputProject::createCsvFile()
                 QDir().remove(outputCsvFileName);
             }
             return myResult;
+        }
+
+        // counter
+        if (i % step == 0)
+        {
+            int percentage = round(i * 100.0 / compUnitList.size());
+            std::cout << percentage << "..";
+        }
+        if (i == compUnitList.size()-1)
+        {
+            std::cout << "100\n";
         }
     }
 

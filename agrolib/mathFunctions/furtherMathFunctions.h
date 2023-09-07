@@ -38,22 +38,14 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
     };
 
 
-
     double twoParametersAndExponentialPolynomialFunctions(double x, double* par);
     double twoHarmonicsFourier(double x, double* par);
     double harmonicsFourierGeneral(double x, double* par,int nrPar);
     float errorFunctionPrimitive(float x);
     double errorFunctionPrimitive(double x);
-    double parabolicFunction(double x, double* par);
     float gaussianFunction(TfunctionInput fInput);
     float gaussianFunction(float x, float mean, float devStd);
     float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5);
-
-    double functionTemperatureVsHeight(double* x, double* par, int xDim, int parDim);
-    double parabolicFunction(double* x, double* par, int xDim, int parDim);
-    double multilinear(double* x, double* par, int xDim, int parDim);
-    double bilinear(double* x, double* par, int xDim, int parDim);
-
 
 
     namespace integration
@@ -71,10 +63,12 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
 
     namespace interpolation
     {
-        double secant_method(float (*func) (float),  double x0, double x1);
+        double secant_method(double (*func)(double),  double x0, double x1);
         double linearInterpolation (double x, double *xColumn , double *yColumn, int dimTable);
         float linearInterpolation (float x, float *xColumn , float *yColumn, int dimTable );
         float linearExtrapolation(double x3,double x1,double y1,double x2 , double y2);
+
+        double parabolicFunction(double x, double* par);
 
         void leastSquares(int idFunction, double* parameters, int nrParameters,
                           double* x, double* y, int nrData, double* lambda,
@@ -93,31 +87,44 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
         void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output); // not working to be checked
 
         double computeR2(double *obs, double* sim, int nrPoints);
-        int bestFittingMarquardt_nDimension(int nrTrials,int nrMinima,double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
-                                              double* parametersDelta, int maxIterationsNr, double myEpsilon, int idFunction,
-                                              double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights);
-        bool fittingMarquardt_nDimension(double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
-                              double* parametersDelta, int maxIterationsNr, double myEpsilon, int idFunction,
-                              double** x, double* y, int nrData, int xDim, bool isWeighted, double *weights);
+        int bestFittingMarquardt_nDimension(int nrTrials, int nrMinima,
+                                             std::vector<double>& parametersMin, std::vector<double>& parametersMax,
+                                             std::vector<double> &parameters, std::vector<double>& parametersDelta,
+                                             int maxIterationsNr, double myEpsilon, int idFunction,
+                                             double** x, double* y, int nrData, int xDim, bool isWeighted, double* weights);
 
-        double normGeneric_nDimension(int idFunction, double *parameters,int nrParameters, double** x, double* y, int nrData, int xDim);
-        double estimateFunction_nDimension(int idFunction, double *parameters, int nrParameters, double* x, int xDim);
-        void leastSquares_nDimension(int idFunction, double* parameters, int nrParameters,
-                          double** x, double* y, int nrData,int xDim, double* lambda,
-                          double* parametersDelta, double* parametersChange,bool isWeighted, double* weights);
+        bool fittingMarquardt_nDimension(std::vector<double>& parametersMin, std::vector<double>& parametersMax,
+                                         std::vector<double>& parameters, std::vector<double>& parametersDelta,
+                                         int maxIterationsNr, double myEpsilon, int idFunction,
+                                         double** x, double* y, int nrData, int xDim, bool isWeighted, double *weights);
 
-        int bestFittingMarquardt_nDimension(double (*func)(double*, double*,int,int),int nrTrials,int nrMinima, double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
-                                              double* parametersDelta, int maxIterationsNr, double myEpsilon,
-                                              double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights);
-        bool fittingMarquardt_nDimension(double (*func)(double *, double *,int,int), double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
-                              double* parametersDelta, int maxIterationsNr, double myEpsilon,
-                              double** x, double* y, int nrData, int xDim, bool isWeighted, double *weights);
+        double normGeneric_nDimension(int idFunction, std::vector<double>& parameters, double** x, double* y, int nrData, int xDim);
 
-        double normGeneric_nDimension(double (*func)(double *, double *,int,int), double *parameters,int nrParameters, double** x, double* y, int nrData, int xDim);
-        void leastSquares_nDimension(double (*func)(double *, double *,int,int), double* parameters, int nrParameters,
-                          double** x, double* y, int nrData,int xDim, double* lambda,
-                          double* parametersDelta, double* parametersChange,bool isWeighted, double* weights);
+        double estimateFunction_nDimension(int idFunction, std::vector<double>& parameters, std::vector<double>& x);
 
+        void leastSquares_nDimension(int idFunction, std::vector<double>& parameters, std::vector<double>& parametersDelta,
+                                        double** x, double* y, int nrData, int xDim, double* lambda,
+                                        double* parametersChange, bool isWeighted, double* weights);
+
+        int bestFittingMarquardt_nDimension(double (*func)(std::vector<double>&, std::vector<double>&), int nrTrials, int nrMinima,
+                                        std::vector<double>& parametersMin, std::vector<double>& parametersMax,
+                                        std::vector<double>& parameters, std::vector<double> &parametersDelta,
+                                        int maxIterationsNr, double myEpsilon,
+                                        double** x, double* y, int nrData, int xDim, bool isWeighted, double* weights);
+
+        bool fittingMarquardt_nDimension(double (*func)(std::vector<double>&, std::vector<double>&),
+                                         std::vector<double>& parametersMin, std::vector<double>& parametersMax,
+                                         std::vector<double>& parameters, std::vector<double>& parametersDelta,
+                                         int maxIterationsNr, double myEpsilon,
+                                         double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights);
+
+        double normGeneric_nDimension(double (*func)(std::vector<double>&, std::vector<double>&),
+                                      std::vector<double> &parameters, double** x, double *y, int nrData, int xDim);
+
+        void leastSquares_nDimension(double (*func)(std::vector<double>&, std::vector<double>&),
+                                    std::vector<double>& parameters, std::vector<double>& parametersDelta,
+                                    double** x, double* y, int nrData,int xDim, double* lambda,
+                                    double* parametersChange,bool isWeighted, double* weights);
     }
 
     namespace matricial
