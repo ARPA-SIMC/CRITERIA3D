@@ -16,23 +16,23 @@
     int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &error);
 
     int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period,
-                            std::vector<double> &dtx, QString &error);
+                            std::vector<double> &dtx, QString &errorStr);
 
     bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double> &dt30,
-                      std::vector<double> &dt90, std::vector<double> &dt180, QString &error);
+                      std::vector<double> &dt90, std::vector<double> &dt180, QString &errorStr);
 
     int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase &dbData, QSqlDatabase &dbCrop,
                            QSqlDatabase &dbHistoricalData, QDate dateComputation,
-                           CriteriaOutputVariable outputVariable, QString csvFileName, QString &error);
+                           CriteriaOutputVariable outputVariable, QString csvFileName, QString &errorStr);
 
     int selectSimpleVar(QSqlDatabase &db, QString idCase, QString varName, QString computation, QDate firstDate,
-                        QDate lastDate, float irriRatio, std::vector<float> &resVector, QString &error);
+                        QDate lastDate, float irriRatio, std::vector<float> &resultVector, QString &errorStr);
 
     int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation, QDate firstDate,
-                   QDate lastDate, std::vector<float> &resVector, QString &error);
+                   QDate lastDate, std::vector<float> &resultVector, QString &errorStr);
 
     int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName, QDate dateComputation,
-                              QList<QString> outputVarName, QString shapeField, QString &error);
+                              QList<QString> outputVarName, QString shapeField, QString &errorStr);
 
     int orderCsvByField(QString csvFileName, QString field, QString &error);
 

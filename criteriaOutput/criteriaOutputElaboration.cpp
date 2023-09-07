@@ -10,7 +10,7 @@
 #include <QSqlRecord>
 #include <QTextStream>
 
-int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &error)
+int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &errorStr)
 {
     // check if table exist (skip otherwise)
     if (! db.tables().contains(idCase))
@@ -28,13 +28,13 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &error)
     QString name;
     if( !qry.exec(statement) )
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return ERROR_DBHISTORICAL;
     }
     qry.first();
     if (!qry.isValid())
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return ERROR_DBHISTORICAL ;
     }
     do
@@ -61,7 +61,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &error)
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT30 REAL").arg(idCase);
         if( !qry.exec(statement) )
         {
-            error = qry.lastError().text();
+            errorStr = qry.lastError().text();
             return ERROR_DBHISTORICAL;
         }
     }
@@ -70,7 +70,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &error)
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT90 REAL").arg(idCase);
         if( !qry.exec(statement) )
         {
-            error = qry.lastError().text();
+            errorStr = qry.lastError().text();
             return ERROR_DBHISTORICAL;
         }
     }
@@ -79,7 +79,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &error)
         statement = QString("ALTER TABLE `%1` ADD COLUMN DT180 REAL").arg(idCase);
         if( !qry.exec(statement) )
         {
-            error = qry.lastError().text();
+            errorStr = qry.lastError().text();
             return ERROR_DBHISTORICAL;
         }
     }
@@ -95,21 +95,21 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &error)
 
     // compute DTX30
     std::vector<double> dt30;
-    int myResult = computeAllDtxPeriod(db, idCase, 30, dt30, error);
+    int myResult = computeAllDtxPeriod(db, idCase, 30, dt30, errorStr);
     if (myResult != CRIT1D_OK)
     {
         return myResult;
     }
     // compute DTX90
     std::vector<double> dt90;
-    myResult = computeAllDtxPeriod(db, idCase, 90, dt90, error);
+    myResult = computeAllDtxPeriod(db, idCase, 90, dt90, errorStr);
     if (myResult != CRIT1D_OK)
     {
         return myResult;
     }
     // compute DTX180
     std::vector<double> dt180;
-    myResult = computeAllDtxPeriod(db, idCase, 180, dt180, error);
+    myResult = computeAllDtxPeriod(db, idCase, 180, dt180, errorStr);
     if (myResult != CRIT1D_OK)
     {
         return myResult;
@@ -118,7 +118,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &error)
     // write data
     if (dt30.size() > 0)
     {
-        if (! writeDtxToDB(db, idCase, dt30, dt90, dt180, error))
+        if (! writeDtxToDB(db, idCase, dt30, dt90, dt180, errorStr))
         {
             return ERROR_TDXWRITE;
         }
@@ -128,22 +128,22 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &error)
 }
 
 
-int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, std::vector<double>& dtx, QString& error)
+int computeAllDtxPeriod(QSqlDatabase db, QString idCase, unsigned int period, std::vector<double>& dtx, QString& errorStr)
 {
     // read all data
     QSqlQuery qry(db);
     QString statement = QString("SELECT TRANSP_MAX, TRANSP FROM `%1`").arg(idCase);
 
-    // error check
+    // errorStr check
     if(!qry.exec(statement))
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return ERROR_OUTPUT_VARIABLES;
     }
     qry.first();
     if (!qry.isValid())
     {
-        error = qry.lastError().text();
+        errorStr = qry.lastError().text();
         return ERROR_OUTPUT_VARIABLES ;
     }
 
@@ -212,13 +212,13 @@ QString getNumberStr(double value)
 
 
 bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
-                  std::vector<double>& dt90, std::vector<double>& dt180, QString& error)
+                  std::vector<double>& dt90, std::vector<double>& dt180, QString& errorStr)
 {
     QSqlQuery qry(db);
     qry.prepare("SELECT * FROM " + idCase);
     if( !qry.exec())
     {
-        error = "DB error: " + qry.lastError().text();
+        errorStr = "DB errorStr: " + qry.lastError().text();
         return false;
     }
     if (!qry.first())
@@ -271,13 +271,13 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
 
     if( !qry.exec("DELETE FROM " + idCase))
     {
-        error = "DELETE error: " + qry.lastError().text();
+        errorStr = "DELETE errorStr: " + qry.lastError().text();
         return false;
     }
 
     if( !qry.exec(insertQuery))
     {
-        error = "INSERT error: " + qry.lastError().text();
+        errorStr = "INSERT errorStr: " + qry.lastError().text();
         return false;
     }
 
@@ -289,19 +289,20 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
 
 
 int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData, QSqlDatabase& dbCrop, QSqlDatabase& dbHistoricalData,
-                       QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString &error)
+                       QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString &errorStr)
 {
     // IRRI RATIO (parameter for elaboration on IRRIGATION variable)
-    float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class", idCropClass, error);
+    float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class", idCropClass, errorStr);
 
-    QList<QString> results;
+    QList<QString> resultList;
     QString statement;
     QDate firstDate, lastDate;
-    std::vector<float> resVector;
-    double res = NODATA;
+    std::vector<float> resultVector;
+
+    double result = NODATA;
     int periodTDX = NODATA;
 
-    // check if table exist (skip otherwise)
+    // check if table for idCase exist (skip otherwise)
     if (! dbData.tables().contains(idCase))
     {
         return CRIT1D_OK;
@@ -309,7 +310,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
 
     for (int i = 0; i < outputVariable.varName.size(); i++)
     {
-        resVector.clear();
+        resultVector.clear();
         QString varName = outputVariable.varName[i];
         QString computation = outputVariable.computation[i];
         if (!computation.isEmpty())
@@ -317,9 +318,9 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             // nrDays is required, because the computation should be done between values into interval referenceDate+-nrDays
             if (outputVariable.nrDays[i].isEmpty())
             {
-                // write NODATA
-                res = NODATA;
-                results.append(QString::number(res));
+                // if nrDays is missing write NODATA
+                result = NODATA;
+                resultList.append(QString::number(result));
                 continue;
             }
             else
@@ -333,20 +334,20 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                     QString tmp = outputVariable.nrDays[i];
                     tmp.replace("YYYY",QString::number(lastDate.year()));
                     firstDate = QDate::fromString(tmp, "yyyy-MM-dd");
-                    if (lastDate<firstDate)
+                    if (lastDate < firstDate)
                     {
-                        firstDate.setDate(firstDate.year()-1,firstDate.month(),firstDate.day());
+                        firstDate.setDate(firstDate.year()-1, firstDate.month(), firstDate.day());
                     }
                 }
                 else
                 {
-                    // outputVariable.nrDays should be added or subtracted to referenceDate
-                    // (given by dateComputation +- referenceDay)
+                    // outputVariable.nrDays should be added or subtracted to referenceDate,
+                    // given by dateComputation +- referenceDay
                     bool ok;
                     int nrDays = outputVariable.nrDays[i].toInt(&ok, 10);
                     if (!ok)
                     {
-                        error = "Parser CSV error";
+                        errorStr = "Parser CSV errorStr";
                         return ERROR_PARSERCSV;
                     }
                     if (nrDays == 0)
@@ -381,10 +382,10 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
         // All cases except DTX
         if (varName.left(2) != "DT")
         {
-            int selectRes = selectSimpleVar(dbData, idCase, varName, computation, firstDate, lastDate, irriRatio, resVector, error);
+            int selectRes = selectSimpleVar(dbData, idCase, varName, computation, firstDate, lastDate, irriRatio, resultVector, errorStr);
             if (selectRes == ERROR_DB_INCOMPLETE_DATA)
             {
-                res = NODATA;
+                result = NODATA;
             }
             else if(selectRes != CRIT1D_OK)
             {
@@ -392,7 +393,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             }
             else
             {
-                res = double(resVector[0]);
+                result = double(resultVector[0]);
             }
         }
         else
@@ -402,14 +403,14 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             periodTDX = varName.right(varName.size()-2).toInt(&ok, 10);
             if (!ok)
             {
-                error = "Parser CSV error";
+                errorStr = "Parser CSV errorStr";
                 return ERROR_PARSERCSV;
             }
-            int DTXRes = computeDTX(dbData, idCase, periodTDX, computation, firstDate, lastDate, resVector, error);
+            int DTXRes = computeDTX(dbData, idCase, periodTDX, computation, firstDate, lastDate, resultVector, errorStr);
             // check errors in computeDTX
             if (DTXRes == ERROR_DB_INCOMPLETE_DATA)
             {
-                res = NODATA;
+                result = NODATA;
             }
             else if (DTXRes != CRIT1D_OK)
             {
@@ -417,13 +418,13 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             }
             else
             {
-                res = double(resVector[0]);
+                result = double(resultVector[0]);
             }
         }
 
-        if (int(res) == int(NODATA))
+        if (int(result) == int(NODATA))
         {
-            results.append(QString::number(res));
+            resultList.append(QString::number(result));
         }
         else
         {
@@ -434,20 +435,20 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                 QString varName = outputVariable.varName[i];
                 if (varName == "FRACTION_AW" || varName.left(3) == "FAW")
                 {
-                    results.append(QString::number(res,'f', 3));
+                    resultList.append(QString::number(result,'f', 3));
                 }
                 else
                 {
-                    results.append(QString::number(res,'f', 1));
+                    resultList.append(QString::number(result,'f', 1));
                 }
             }
             else
             {
                 // first parameter for  historical analysis (threshold)
-                if (outputVariable.param1[i] != NODATA && res < outputVariable.param1[i])
+                if (outputVariable.param1[i] != NODATA && result < outputVariable.param1[i])
                 {
                     // skip historical analysis
-                    results.append(QString::number(NODATA));
+                    resultList.append(QString::number(NODATA));
                 }
                 else
                 {
@@ -458,82 +459,88 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                     statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
                     if( !qry.exec(statement) )
                     {
-                        error = "Error in query historical data";
+                        errorStr = "Error in query historical data";
                         return ERROR_DBHISTORICAL;
                     }
+
                     qry.first();
                     if (!qry.isValid())
                     {
-                        error = "Historical data: " + qry.lastError().text();
+                        errorStr = "Historical data: " + qry.lastError().text();
                         return ERROR_DBHISTORICAL ;
                     }
+
                     getValue(qry.value("MIN(DATE)"), &historicalFirstDate);
                     getValue(qry.value("MAX(DATE)"), &historicalLastDate);
 
                     if (!historicalFirstDate.isValid() || !historicalLastDate.isValid())
                     {
                         // incomplete data, there is not historical period to analyze
-                        results.append(QString::number(NODATA));
+                        resultList.append(QString::number(NODATA));
                     }
                     else
                     {
                         std::vector<float> allYearsVector;
-                        // second parameter for  historical analysis (timewindow)
-                        if (outputVariable.param2[i] != NODATA)
-                        {
-                            // historical period to compare, if outputVariable.param2[i] is empty, current value should be compare
-                            // with previous value in the same day (firstDate = lastDate for all the year available into DB)
-                            firstDate = firstDate.addDays(-outputVariable.param2[i]);
-                            lastDate = lastDate.addDays(outputVariable.param2[i]);
-                        }
 
                         int year = historicalFirstDate.year();
                         bool skip = false;
                         while(year <= historicalLastDate.year())
                         {
-                            resVector.clear();
-                            firstDate.setDate(year,firstDate.month(),firstDate.day());
-                            lastDate.setDate(year,lastDate.month(),lastDate.day());
-                            int selectRes;
+                            // set date
+                            QDate previousFirstDate, previousLastDate;
+                            previousFirstDate.setDate(year, firstDate.month(), firstDate.day());
+                            previousLastDate.setDate(year, lastDate.month(), lastDate.day());
+                            if (lastDate.year() == (firstDate.year()+1))
+                                previousLastDate.setDate(year+1, lastDate.month(), lastDate.day());
 
-                            selectRes = selectSimpleVar(dbHistoricalData, idCase, varName, computation, firstDate, lastDate, irriRatio, resVector, error);
-                            if (selectRes == ERROR_DB_INCOMPLETE_DATA)
+                            // second parameter for historical analysis (timewindow)
+                            // if outputVariable.param2 is empty, current value should be compare with previous value in the same day
+                            if (outputVariable.param2[i] != NODATA)
+                            {
+                                previousFirstDate = previousFirstDate.addDays(-outputVariable.param2[i]);
+                                previousLastDate = previousLastDate.addDays(outputVariable.param2[i]);
+                            }
+
+                            resultVector.clear();
+                            int queryResult = selectSimpleVar(dbHistoricalData, idCase, varName, computation,
+                                                        previousFirstDate, previousLastDate, irriRatio, resultVector, errorStr);
+                            if (queryResult == ERROR_DB_INCOMPLETE_DATA)
                             {
                                 // only first year can be incomplete, otherwise the comparison is not valid and can be terminated
                                 if (year != historicalFirstDate.year())
                                 {
-                                    res = NODATA;
+                                    result = NODATA;
                                     skip = true;
                                     break;
                                 }
                             }
 
-                            if (selectRes != CRIT1D_OK && selectRes != ERROR_DB_INCOMPLETE_DATA)
+                            if (queryResult != CRIT1D_OK && queryResult != ERROR_DB_INCOMPLETE_DATA)
                             {
-                                // something wrong happened (if ERROR_DB_INCOMPLETE_DATA res is NODATA)
-                                return selectRes;
+                                // something wrong happened (if ERROR_DB_INCOMPLETE_DATA result is NODATA)
+                                return queryResult;
                             }
                             else
                             {
-                                allYearsVector.insert(std::end(allYearsVector), std::begin(resVector), std::end(resVector));
+                                allYearsVector.insert(std::end(allYearsVector), std::begin(resultVector), std::end(resultVector));
                             }
                             year = year+1;
                         }
-                        resVector.clear();
+                        resultVector.clear();
                         if (skip)
                         {
                             // incomplete data
-                            results.append(QString::number(NODATA));
+                            resultList.append(QString::number(NODATA));
                         }
                         else
                         {
-                            // comparison between current value (res) and historical values during timewindow (resAllYearsVector)
+                            // comparison between current value (result) and historical values during timewindow (allYearsVector)
                             if (outputVariable.climateComputation[i] == "PERCENTILE")
                             {
                                 // compute percentile
                                 bool sortValues = true;
-                                res = double(sorting::percentileRank(allYearsVector, float(res), sortValues));
-                                results.append(QString::number(res,'f',1));
+                                result = double(sorting::percentileRank(allYearsVector, float(result), sortValues));
+                                resultList.append(QString::number(result,'f',1));
                             }
                         }
                     }
@@ -547,14 +554,14 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
     outputFile.setFileName(csvFileName);
     if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Append))
     {
-        error = "Open failure: " + csvFileName;
+        errorStr = "Open failure: " + csvFileName;
         return false;
     }
     QTextStream out(&outputFile);
     out << dateComputation.toString("yyyy-MM-dd");
     out << "," << idCase;
-    out << "," << getIdCropFromClass(dbCrop, "crop_class", "id_class", idCropClass, error).toUpper();
-    out << "," << results.join(",");
+    out << "," << getIdCropFromClass(dbCrop, "crop_class", "id_class", idCropClass, errorStr).toUpper();
+    out << "," << resultList.join(",");
     out << "\n";
 
     outputFile.flush();
@@ -563,7 +570,9 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
 }
 
 
-int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString computation, QDate firstDate, QDate lastDate, float irriRatio, std::vector<float>& resVector, QString& error)
+// TODO: possibile problema con computation != "" e valori pari a -9999
+int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString computation,
+                    QDate firstDate, QDate lastDate, float irriRatio, std::vector<float>& resultVector, QString& errorStr)
 {
 
     QSqlQuery qry(db);
@@ -571,20 +580,24 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     QString statement;
     float result = NODATA;
 
+    // check nr of values
     if (computation != "")
     {
-        statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE >= '%3' AND DATE <= '%4'").arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
+        statement = QString("SELECT COUNT(`%1`) FROM `%2` WHERE DATE >= '%3' AND DATE <= '%4'")
+                        .arg(varName, idCase, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd"));
         if( !qry.exec(statement) )
         {
-            error = "Wrong variable: " + varName + "\n" + qry.lastError().text();
+            errorStr = "Wrong variable: " + varName + "\n" + qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES;
         }
+
         qry.first();
         if (!qry.isValid())
         {
-            error = qry.lastError().text();
+            errorStr = qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES ;
         }
+
         getValue(qry.value(0), &count);
         if (count < firstDate.daysTo(lastDate)+1)
         {
@@ -593,26 +606,29 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     }
 
     count = 0;
-    statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'").arg(computation).arg(varName).arg(idCase).arg(firstDate.toString("yyyy-MM-dd")).arg(lastDate.toString("yyyy-MM-dd"));
+    statement = QString("SELECT %1(`%2`) FROM `%3` WHERE DATE >= '%4' AND DATE <= '%5'")
+                    .arg(computation, varName, idCase, firstDate.toString("yyyy-MM-dd"), lastDate.toString("yyyy-MM-dd"));
     if( !qry.exec(statement) )
     {
         if (varName.left(2) == "DT")
         {
             if (qry.lastError().text().contains("no such column"))
             {
-                error = "Precompute DTX before: " + computation + "\n" + qry.lastError().text();
+                errorStr = "Precompute DTX before: " + computation + "\n" + qry.lastError().text();
                 return ERROR_DB_MISSING_PRECOMPUTED_DTX ;
             }
         }
-        error = "Wrong computation: " + computation + "\n" + qry.lastError().text();
+        errorStr = "Wrong computation: " + computation + "\n" + qry.lastError().text();
         return ERROR_OUTPUT_VARIABLES ;
     }
+
     qry.first();
     if (!qry.isValid())
     {
-        error = "Missing data: " + statement;
+        errorStr = "Missing data: " + statement;
         return ERROR_DB_MISSING_DATA ;
     }
+
     do
     {
         getValue(qry.value(0), &result);
@@ -621,8 +637,7 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
         {
             result = result * irriRatio;
         }
-        resVector.push_back(result);
-
+        resultVector.push_back(result);
     }
     while(qry.next());
 
@@ -631,7 +646,7 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
     {
         if (count < firstDate.daysTo(lastDate)+1)
         {
-            error = "Incomplete data: " + statement;
+            errorStr = "Incomplete data: " + statement;
             return ERROR_DB_INCOMPLETE_DATA;
         }
     }
@@ -640,11 +655,12 @@ int selectSimpleVar(QSqlDatabase& db, QString idCase, QString varName, QString c
 
 }
 
-int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation, QDate firstDate, QDate lastDate, std::vector<float>& resVector, QString &Error)
+int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation,
+               QDate firstDate, QDate lastDate, std::vector<float>& resultVector, QString &errorStr)
 {
     QSqlQuery qry(db);
     QString statement;
-    double res = NODATA;
+    double result = NODATA;
     std::vector<float> dtx;
     int count = 0;
     int count2 = 0;
@@ -654,16 +670,17 @@ int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation
     while (end <= lastDate)
     {
         start = end.addDays(-period+1);
-        statement = QString("SELECT COUNT(TRANSP_MAX),COUNT(TRANSP) FROM `%1` WHERE DATE >= '%2' AND DATE <= '%3'").arg(idCase).arg(start.toString("yyyy-MM-dd")).arg(end.toString("yyyy-MM-dd"));
+        statement = QString("SELECT COUNT(TRANSP_MAX),COUNT(TRANSP) FROM `%1` "
+                            "WHERE DATE >= '%2' AND DATE <= '%3'").arg(idCase, start.toString("yyyy-MM-dd"), end.toString("yyyy-MM-dd"));
         if( !qry.exec(statement) )
         {
-            Error = qry.lastError().text();
+            errorStr = qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES;
         }
         qry.first();
         if (!qry.isValid())
         {
-            Error = qry.lastError().text();
+            errorStr = qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES ;
         }
         getValue(qry.value(0), &count);
@@ -673,16 +690,17 @@ int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation
             dtx.push_back(NODATA);
             return ERROR_DB_INCOMPLETE_DATA;
         }
-        statement = QString("SELECT SUM(TRANSP_MAX),SUM(TRANSP) FROM `%1` WHERE DATE >= '%2' AND DATE <= '%3'").arg(idCase).arg(start.toString("yyyy-MM-dd")).arg(end.toString("yyyy-MM-dd"));
+        statement = QString("SELECT SUM(TRANSP_MAX),SUM(TRANSP) FROM `%1` WHERE DATE >= '%2' AND DATE <= '%3'")
+                        .arg(idCase, start.toString("yyyy-MM-dd"), end.toString("yyyy-MM-dd"));
         if( !qry.exec(statement) )
         {
-            Error = qry.lastError().text();
+            errorStr = qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES ;
         }
         qry.first();
         if (!qry.isValid())
         {
-            Error = qry.lastError().text();
+            errorStr = qry.lastError().text();
             return ERROR_OUTPUT_VARIABLES ;
         }
         getValue(qry.value("SUM(TRANSP_MAX)"), &var1);
@@ -692,41 +710,42 @@ int computeDTX(QSqlDatabase &db, QString idCase, int period, QString computation
     }
     if (computation.isEmpty())
     {
-        resVector.insert(std::end(resVector), std::begin(dtx), std::end(dtx));
+        resultVector.insert(std::end(resultVector), std::begin(dtx), std::end(dtx));
         return CRIT1D_OK;
     }
     else if (computation == "SUM")
     {
-        res = 0;
+        result = 0;
         for(unsigned int i=0; i < dtx.size(); i++)
         {
-            res = res + double(dtx[i]);
+            result = result + double(dtx[i]);
         }
     }
     else if (computation == "AVG")
     {
-        res = 0;
+        result = 0;
         for(unsigned int i=0; i < dtx.size(); i++)
         {
-            res = res + double(dtx[i]);
+            result = result + double(dtx[i]);
         }
-        res = res/double(dtx.size());
+        result = result/double(dtx.size());
     }
     else if (computation == "MAX")
     {
-        res = double(*std::max_element(dtx.begin(), dtx.end()));
+        result = double(*std::max_element(dtx.begin(), dtx.end()));
     }
     else if (computation == "MIN")
     {
-        res = double(*std::min_element(dtx.begin(), dtx.end()));
+        result = double(*std::min_element(dtx.begin(), dtx.end()));
     }
 
-    resVector.push_back(float(res));
+    resultVector.push_back(float(result));
     return CRIT1D_OK;
 }
 
 
-int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName, QDate dateComputation, QList<QString> outputVarName, QString shapeField, QString &error)
+int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
+                          QDate dateComputation, QList<QString> outputVarName, QString shapeField, QString &errorStr)
 {
     QList<QList<QString>> valuesFromShape;
     // write CSV
@@ -734,7 +753,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     outputFile.setFileName(csvFileName);
     if (!outputFile.open(QIODevice::ReadWrite | QIODevice::Truncate))
     {
-        error = "Open failure: " + csvFileName;
+        errorStr = "Open failure: " + csvFileName;
         return ERROR_WRITECSV;
     }
 
@@ -750,7 +769,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         fieldIndex = refShapeFile.getDBFFieldIndex(shapeFieldStdString.c_str());
         if (fieldIndex == -1)
         {
-            error = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + shapeField;
+            errorStr = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + shapeField;
             return ERROR_SHAPEFILE;
         }
         DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
@@ -774,7 +793,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
             fieldIndex = refShapeFile.getDBFFieldIndex(valField.c_str());
             if (fieldIndex == -1)
             {
-                error = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + outputVarName[field];
+                errorStr = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + outputVarName[field];
                 return ERROR_SHAPEFILE;
             }
             DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
@@ -812,13 +831,13 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
 }
 
 
-int orderCsvByField(QString csvFileName, QString field, QString &error)
+int orderCsvByField(QString csvFileName, QString field, QString &errorStr)
 {
     QFile fileCsv;
     fileCsv.setFileName(csvFileName);
     if (!fileCsv.open(QIODevice::ReadWrite))
     {
-        error = "Open failure: " + csvFileName;
+        errorStr = "Open failure: " + csvFileName;
         return ERROR_WRITECSV;
     }
 
@@ -829,7 +848,7 @@ int orderCsvByField(QString csvFileName, QString field, QString &error)
     int pos = int(header.indexOf(field));   // save field to order position
     if (pos == -1)
     {
-        error = "missing field";
+        errorStr = "missing field";
         return false;
     }
 
