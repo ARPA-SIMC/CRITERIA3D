@@ -255,11 +255,6 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
             int percentage = round(currentRow * 100.0 / nrRows);
             std::cout << percentage << "..";
         }
-        if (currentRow == nrRows -1)
-        {
-            std::cout << "100\n";
-        }
-        currentRow++;
 
         line = inputStream.readLine();
         items = line.split(",");
@@ -294,6 +289,12 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                     }
                 }
             }
+        }
+
+        currentRow++;
+        if (currentRow == (nrRows-1))
+        {
+            std::cout << "100\n";
         }
     }
 
