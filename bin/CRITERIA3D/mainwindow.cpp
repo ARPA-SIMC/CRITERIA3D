@@ -2150,8 +2150,9 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             ui->layerNrEdit->setMaximum(myProject.nrLayers - 1);
             ui->layerNrEdit->setValue(1);
 
-            float depth = myProject.layerDepth[1];
-            ui->layerDepthEdit->setText(QString::number(depth) + " m");
+            QString depthStr;
+            depthStr.sprintf("%04.2f", myProject.layerDepth[1]);
+            ui->layerDepthEdit->setText(depthStr + " m");
         }
     }
 }
@@ -3042,8 +3043,9 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
         ui->layerNrEdit->setValue(layerIndex);
     }
 
-    float depth = myProject.layerDepth[layerIndex];
-    ui->layerDepthEdit->setText(QString::number(depth) + " m");
+    QString depthStr;
+    depthStr.sprintf("%04.2f", myProject.layerDepth[layerIndex]);
+    ui->layerDepthEdit->setText(depthStr + " m");
 
     if (view3DVariable && current3DlayerIndex != 0)
     {

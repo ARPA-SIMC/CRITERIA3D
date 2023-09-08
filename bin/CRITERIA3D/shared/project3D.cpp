@@ -1042,7 +1042,6 @@ void Project3D::computeWaterBalance3D(double timeStep)
 {
     double previousWaterContent = soilFluxes3D::getTotalWaterContent();
     logInfo("total water [m^3]: " + QString::number(previousWaterContent));
-
     logInfo("precipitation [m^3]: " + QString::number(totalPrecipitation));
     logInfo("evaporation [m^3]: " + QString::number(-totalEvaporation));
     logInfo("transpiration [m^3]: " + QString::number(-totalTranspiration));
