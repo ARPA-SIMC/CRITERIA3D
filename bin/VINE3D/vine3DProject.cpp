@@ -156,8 +156,8 @@ bool Vine3DProject::loadVine3DProject(QString myFileName)
 
     // soil data
     if (soilDbFileName != "") loadSoilDatabase(soilDbFileName);
-    soilFluxesParameters.computeOnlySurface = false;
-    soilFluxesParameters.computeAllSoilDepth = true;
+    waterFluxesParameters.computeOnlySurface = false;
+    waterFluxesParameters.computeAllSoilDepth = true;
 
 
     // VINE3D parameters
