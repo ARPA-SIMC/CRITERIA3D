@@ -2,6 +2,10 @@
 #include "shapeUtilities.h"
 #include "commonConstants.h"
 
+#include <math.h>
+#include <iostream>
+#include <fstream>
+
 #include <QtSql>
 
 long getFileLenght(QString fileName)
@@ -241,8 +245,17 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     int nrShapes = outputShapeFile.getShapeCount();
     QMapIterator<int, int> iterator(myPosMap);
 
+    int step = nrRows * 0.01;
+    int currentRow = 0;
     while (!inputStream.atEnd())
     {
+        // counter
+        if (currentRow % step == 0)
+        {
+            int percentage = round(currentRow * 100.0 / nrRows);
+            std::cout << percentage << "..";
+        }
+
         line = inputStream.readLine();
         items = line.split(",");
         idCase = items[idCaseIndexCsv];
@@ -276,6 +289,12 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                     }
                 }
             }
+        }
+
+        currentRow++;
+        if (currentRow == (nrRows-1))
+        {
+            std::cout << "100\n";
         }
     }
 
