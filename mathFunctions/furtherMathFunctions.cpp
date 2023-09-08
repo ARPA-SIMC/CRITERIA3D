@@ -28,34 +28,31 @@
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
-double functionTemperatureVsHeight(double* x, double* par,int xDim,int nrParameters)
+// Air temperature vs height
+double functionTemperatureVsHeight(std::vector<double> &x, std::vector<double> &par)
 {
-    double y;
-    y = par[0] + par[1]*x[0] + par[2]*(1/(1+exp(-par[3]*(x[0] - par[4]))));
-    return y;
-}
-double bilinear(double* x, double* par,int xDim,int nrParameters)
-{
-    double y = 0;
-    for (int i=0;i<2;i++)
-        y += par[i] * x[i];
-    y += par[2];
+    if (par.size() < 5)
+        return NODATA;
+
+    double y = par[0] + par[1]*x[0] + par[2]*(1/(1+exp(-par[3]*(x[0] - par[4]))));
     return y;
 }
 
-double multilinear(double* x, double* par, int xDim, int nrParameters)
+
+double multilinear(std::vector<double> &x, std::vector<double> &par)
 {
+    if (par.size() != (x.size()+1))
+        return NODATA;
+
     double y = 0;
-    for (int i=0;i<xDim;i++)
+    for (int i=0; i < x.size(); i++)
         y += par[i] * x[i];
-    y += par[xDim];
+
+    y += par[x.size()];
     return y;
 }
 
-double parabolicFunction(double* x, double* par)
-{
-    return par[1]*(x[0] - par[0])*(x[0] - par[0]) + par[2] ;
-}
+
 float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5)
 {
     // par1 correponds to T0
@@ -96,10 +93,6 @@ float blackBodyShape(TfunctionInput fInput)
     b = fInput.par[0];
     y = b * float(pow(fInput.x, 3)*(1. / (exp(b*fInput.x)-0.99)));
     return (y);
-}
-double parabolicFunction(double x, double* par)
-{
-    return par[1]*(x - par[0])*(x - par[0]) + par[2] ;
 }
 
 double twoParametersAndExponentialPolynomialFunctions(double x, double* par)
@@ -385,7 +378,7 @@ namespace integration
 
 namespace interpolation
 {
-    double secant_method(float (*func) (float),  double x0, double x1)
+    double secant_method(double (*func) (double),  double x0, double x1)
     {
         double x2, fx0, fx1, error;
 
@@ -703,7 +696,7 @@ namespace interpolation
                 return modifiedVanGenuchten(x, parameters, true);
 
             case FUNCTION_CODE_PARABOLIC :
-            return parabolicFunction(x, parameters);
+                return parabolicFunction(x, parameters);
 
             default:
                 return NODATA ;
@@ -728,6 +721,12 @@ namespace interpolation
         }
 
         return norm;
+    }
+
+
+    double parabolicFunction(double x, double* par)
+    {
+        return par[1]*(x - par[0])*(x - par[0]) + par[2];
     }
 
 
@@ -880,17 +879,22 @@ namespace interpolation
         return R2;
     }
 
-    int bestFittingMarquardt_nDimension(double (*func)(double*, double*,int,int), int nrTrials, int nrMinima,
-                                                        double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
-                                                        double* parametersDelta, int maxIterationsNr, double myEpsilon,
-                                                        double** x, double* y, int nrData, int xDim, bool isWeighted, double* weights)
+    int bestFittingMarquardt_nDimension(double (*func)(std::vector<double>&, std::vector<double>&), int nrTrials, int nrMinima,
+                                        std::vector<double> &parametersMin, std::vector<double> &parametersMax,
+                                        std::vector<double> &parameters, std::vector<double>& parametersDelta,
+                                        int maxIterationsNr, double myEpsilon,
+                                        double** x, double* y, int nrData, int xDim, bool isWeighted, double* weights)
     {
-        double bestR2 = -9999;
+        int nrParameters = int(parameters.size());
+        double bestR2 = NODATA;
         double R2;
         double* R2Previous = (double *) calloc(nrMinima, sizeof(double));
         double* ySim = (double *) calloc(nrData, sizeof(double));
         double* bestParameters = (double *) calloc(nrParameters, sizeof(double));
-        double* xPoint = (double *) calloc(nrParameters, sizeof(double));
+
+        std::vector<double> xPoint;
+        xPoint.resize(xDim);
+
         int i;
         int iRandom = 0;
         int counter = 0;
@@ -901,11 +905,12 @@ namespace interpolation
         srand (time(nullptr));
         do
         {
-            for (i=0;i<nrParameters;i++)
+            for (i=0; i<nrParameters; i++)
             {
                 parameters[i] = parametersMin[i] + ((double) rand() / (RAND_MAX))*(parametersMax[i]-parametersMin[i]);
             }
-            fittingMarquardt_nDimension(func,parametersMin,parametersMax,parameters,nrParameters,parametersDelta,maxIterationsNr,myEpsilon,x,y,nrData,xDim,isWeighted,weights);
+            fittingMarquardt_nDimension(func,parametersMin, parametersMax, parameters, parametersDelta, maxIterationsNr,
+                                        myEpsilon, x, y, nrData, xDim, isWeighted, weights);
             for (i=0;i<nrData;i++)
             {
                 //double xSim;
@@ -914,7 +919,7 @@ namespace interpolation
                 {
                     xPoint[k] = x[i][k];
                 }
-                ySim[i]= func(xPoint,parameters,xDim,nrParameters);//
+                ySim[i]= func(xPoint, parameters);
             }
             R2 = computeR2(y,ySim,nrData);
             //printf("%d R2 = %f\n",iRandom,R2);
@@ -933,29 +938,33 @@ namespace interpolation
             }
             iRandom++;
             counter++;
-        } while(iRandom<nrTrials && R2<(1 - EPSILON) && fabs(R2Previous[0]-R2Previous[nrMinima-1])>0.0001);
+        } while( (iRandom < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > 0.0001) );
 
         for (i=0;i<nrParameters;i++)
         {
             parameters[i] = bestParameters[i];
         }
-        free(xPoint);
+
         free(bestParameters);
         free(ySim);
         free(R2Previous);
         return counter;
     }
 
-    bool fittingMarquardt_nDimension(double (*func)(double*, double*,int,int),double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
-                          double* parametersDelta, int maxIterationsNr, double myEpsilon,
-                          double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights)
+
+    bool fittingMarquardt_nDimension(double (*func)(std::vector<double>&, std::vector<double>&),
+                                     std::vector<double>& parametersMin, std::vector<double>& parametersMax,
+                                     std::vector<double>& parameters, std::vector<double>& parametersDelta,
+                                     int maxIterationsNr, double myEpsilon,
+                                     double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights)
     {
-        // Sum of Squared Erros
+        int nrParameters = int(parameters.size());
         double mySSE, diffSSE, newSSE;
         static double VFACTOR = 10;
 
         double* paramChange = (double *) calloc(nrParameters, sizeof(double));
-        double* newParameters = (double *) calloc(nrParameters, sizeof(double));
+        std::vector<double> newParameters;
+        newParameters.resize(nrParameters);
         double* lambda = (double *) calloc(nrParameters, sizeof(double));
 
         for(int i = 0; i < nrParameters; i++)
@@ -964,12 +973,12 @@ namespace interpolation
             paramChange[i] = 0;
         }
 
-        mySSE = normGeneric_nDimension(func, parameters, nrParameters, x, y, nrData,xDim);
+        mySSE = normGeneric_nDimension(func, parameters, x, y, nrData,xDim);
 
         int iterationNr = 0;
         do
         {
-            leastSquares_nDimension(func, parameters, nrParameters, x, y, nrData,xDim, lambda, parametersDelta, paramChange,isWeighted,weights);
+            leastSquares_nDimension(func, parameters, parametersDelta, x, y, nrData, xDim, lambda, paramChange, isWeighted, weights);
                 // change parameters
             for (int i = 0; i < nrParameters; i++)
             {
@@ -988,14 +997,13 @@ namespace interpolation
                 }
             }
 
-            newSSE = normGeneric_nDimension(func, newParameters, nrParameters, x, y, nrData,xDim);
+            newSSE = normGeneric_nDimension(func, newParameters, x, y, nrData,xDim);
 
             if (newSSE == NODATA)
             {
                 // free memory
                 free(lambda);
                 free(paramChange);
-                free(newParameters);
 
                 return false;
             }
@@ -1026,18 +1034,18 @@ namespace interpolation
         // free memory
         free(lambda);
         free(paramChange);
-        free(newParameters);
-
 
         return (fabs(diffSSE) <= myEpsilon);
     }
 
-    void leastSquares_nDimension(double (*func)(double*, double*,int,int), double* parameters, int nrParameters,
-                      double** x, double* y, int nrData,int xDim, double* lambda,
-                      double* parametersDelta, double* parametersChange, bool isWeighted, double* weights)
+    void leastSquares_nDimension(double (*func)(std::vector<double>&, std::vector<double>&),
+                                 std::vector<double>& parameters, std::vector<double>& parametersDelta,
+                                 double** x, double* y, int nrData, int xDim, double* lambda,
+                                 double* parametersChange, bool isWeighted, double* weights)
     {
         int i, j, k;
         double pivot, mult, top;
+        int nrParameters = int(parameters.size());
 
         double* g = (double *) calloc(nrParameters+1, sizeof(double));
         double* z = (double *) calloc(nrParameters+1, sizeof(double));
@@ -1045,7 +1053,10 @@ namespace interpolation
 
         double** a = (double **) calloc(nrParameters+1, sizeof(double*));
         double** P = (double **) calloc(nrParameters+1, sizeof(double*));
-        double* xPoint = (double *) calloc(xDim, sizeof(double));
+
+        std::vector<double>xPoint;
+        xPoint.resize(xDim);
+
         for (i = 0; i < nrParameters+1; i++)
         {
                 a[i] = (double *) calloc(nrParameters+1, sizeof(double));
@@ -1059,7 +1070,7 @@ namespace interpolation
             {
                 xPoint[k] = x[i][k];
             }
-            firstEst[i] = func(xPoint,parameters,xDim,nrParameters);
+            firstEst[i] = func(xPoint, parameters);
             //firstEst[i] = estimateFunction_nDimensionExternalFunction(idFunction, parameters, nrParameters, xPoint,xDim);
         }
 
@@ -1073,7 +1084,7 @@ namespace interpolation
                 {
                     xPoint[k] = x[j][k];
                 }
-                double newEst = func(xPoint,parameters,xDim,nrParameters);
+                double newEst = func(xPoint, parameters);
                 //double newEst = estimateFunction_nDimensionExternalFunction(idFunction, parameters, nrParameters, xPoint,xDim);
                 P[i][j] = (newEst - firstEst[j]) / MAXVALUE(parametersDelta[i], EPSILON) ;
             }
@@ -1165,50 +1176,51 @@ namespace interpolation
         free(g);
         free(z);
         free(firstEst);
-        free(xPoint);
     }
 
-    double normGeneric_nDimension(double (*func)(double*, double*,int,int), double *parameters,int nrParameters, double** x, double *y, int nrData, int xDim)
+    double normGeneric_nDimension(double (*func)(std::vector<double>&, std::vector<double>&),
+                                  std::vector<double> &parameters, double** x, double *y, int nrData, int xDim)
     {
         double estimate, error;
         double norm = 0;
-        double* xPoint = (double *) calloc(xDim, sizeof(double));
+
+        std::vector<double> xPoint;
+        xPoint.resize(xDim);
         for (int i = 0; i < nrData; i++)
         {
             for (int j=0; j<xDim; j++)
             {
                 xPoint[j] = x[i][j];
             }
-            estimate = func(xPoint,parameters,xDim,nrParameters);
+            estimate = func(xPoint, parameters);
             if (estimate == NODATA)
             {
-                free(xPoint);
                 return NODATA;
             }
             error = y[i] - estimate;
             norm += error * error;
         }
-        free(xPoint);
         return norm;
     }
 
-
-    /* ////////////////////////////////////////////////////////////////// */
-    /* ////////////////////////////////////////////////////////////////// */
-    /* ////////////////////////////////////////////////////////////////// */
-    /* ////////////////////////////////////////////////////////////////// */
     /* ////////////////////////////////////////////////////////////////// */
 
-    int bestFittingMarquardt_nDimension(int nrTrials,int nrMinima, double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
-                                          double* parametersDelta, int maxIterationsNr, double myEpsilon, int idFunction,
-                                          double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights)
+    int bestFittingMarquardt_nDimension(int nrTrials, int nrMinima,
+                                        std::vector<double>& parametersMin, std::vector<double>& parametersMax,
+                                        std::vector<double> &parameters, std::vector<double>& parametersDelta,
+                                        int maxIterationsNr, double myEpsilon, int idFunction,
+                                        double** x, double* y, int nrData, int xDim, bool isWeighted, double* weights)
     {
+        int nrParameters = int(parameters.size());
         double bestR2 = -9999;
         double R2;
         double* R2Previous = (double *) calloc(nrMinima, sizeof(double));
         double* ySim = (double *) calloc(nrData, sizeof(double));
         double* bestParameters = (double *) calloc(nrParameters, sizeof(double));
-        double* xPoint = (double *) calloc(xDim, sizeof(double));
+
+        std::vector<double> xPoint;
+        xPoint.resize(xDim);
+
         int i;
         int iRandom = 0;
         int counter = 0;
@@ -1219,18 +1231,19 @@ namespace interpolation
         srand (time(nullptr));
         do
         {
-            for (i=0;i<nrParameters;i++)
+            for (i=0; i<nrParameters; i++)
             {
                 parameters[i] = parametersMin[i] + ((double) rand() / (RAND_MAX))*(parametersMax[i]-parametersMin[i]);
             }
-            fittingMarquardt_nDimension(parametersMin,parametersMax,parameters,nrParameters,parametersDelta,maxIterationsNr,myEpsilon,idFunction,x,y,nrData,xDim,isWeighted,weights);
+            fittingMarquardt_nDimension(parametersMin, parametersMax, parameters, parametersDelta,
+                                        maxIterationsNr, myEpsilon, idFunction, x, y, nrData, xDim, isWeighted,weights);
             for (i=0;i<nrData;i++)
             {
                 for (int k=0; k<xDim; k++)
                 {
                     xPoint[k] = x[i][k];
                 }
-                ySim[i]= estimateFunction_nDimension(idFunction,parameters,nrParameters,xPoint,xDim);
+                ySim[i]= estimateFunction_nDimension(idFunction, parameters, xPoint);
             }
             R2 = computeR2(y,ySim,nrData);
             if (R2 > bestR2-EPSILON)
@@ -1248,7 +1261,7 @@ namespace interpolation
             }
             iRandom++;
             counter++;
-        } while(iRandom<nrTrials && R2<(1 - EPSILON) && fabs(R2Previous[0]-R2Previous[nrMinima-1])>0.0001);
+        } while( (iRandom < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > 0.0001) );
 
         for (i=0;i<nrParameters;i++)
         {
@@ -1257,20 +1270,22 @@ namespace interpolation
         free(bestParameters);
         free(ySim);
         free(R2Previous);
-        free(xPoint);
         return counter;
     }
 
-    bool fittingMarquardt_nDimension(double* parametersMin, double* parametersMax, double* parameters, int nrParameters,
-                          double* parametersDelta, int maxIterationsNr, double myEpsilon, int idFunction,
-                          double** x, double* y, int nrData, int xDim,bool isWeighted, double* weights)
+
+    bool fittingMarquardt_nDimension(std::vector<double>& parametersMin, std::vector<double>& parametersMax,
+                                    std::vector<double>& parameters, std::vector<double>& parametersDelta,
+                                    int maxIterationsNr, double myEpsilon, int idFunction,
+                                    double** x, double* y, int nrData, int xDim, bool isWeighted, double* weights)
     {
-        // Sum of Squared Erros
+        int nrParameters = int(parameters.size());
         double mySSE, diffSSE, newSSE;
         static double VFACTOR = 10;
 
         double* paramChange = (double *) calloc(nrParameters, sizeof(double));
-        double* newParameters = (double *) calloc(nrParameters, sizeof(double));
+        std::vector<double> newParameters;
+        newParameters.resize(nrParameters);
         double* lambda = (double *) calloc(nrParameters, sizeof(double));
 
         for(int i = 0; i < nrParameters; i++)
@@ -1279,13 +1294,14 @@ namespace interpolation
             paramChange[i] = 0;
         }
 
-        mySSE = normGeneric_nDimension(idFunction, parameters, nrParameters, x, y, nrData,xDim);
+        mySSE = normGeneric_nDimension(idFunction, parameters, x, y, nrData, xDim);
 
         int iterationNr = 0;
         do
         {
-            leastSquares_nDimension(idFunction, parameters, nrParameters, x, y, nrData,xDim, lambda, parametersDelta, paramChange,isWeighted,weights);
-                // change parameters
+            leastSquares_nDimension(idFunction, parameters, parametersDelta, x, y,
+                                    nrData, xDim, lambda, paramChange, isWeighted, weights);
+            // change parameters
             for (int i = 0; i < nrParameters; i++)
             {
                 newParameters[i] = parameters[i] + paramChange[i];
@@ -1303,14 +1319,13 @@ namespace interpolation
                 }
             }
 
-            newSSE = normGeneric_nDimension(idFunction, newParameters, nrParameters, x, y, nrData,xDim);
+            newSSE = normGeneric_nDimension(idFunction, newParameters, x, y, nrData,xDim);
 
             if (newSSE == NODATA)
             {
                 // free memory
                 free(lambda);
                 free(paramChange);
-                free(newParameters);
 
                 return false;
             }
@@ -1341,25 +1356,26 @@ namespace interpolation
         // free memory
         free(lambda);
         free(paramChange);
-        free(newParameters);
 
         return (fabs(diffSSE) <= myEpsilon);
     }
 
-    void leastSquares_nDimension(int idFunction, double* parameters, int nrParameters,
-                      double** x, double* y, int nrData,int xDim, double* lambda,
-                      double* parametersDelta, double* parametersChange, bool isWeighted, double* weights)
+
+    void leastSquares_nDimension(int idFunction, std::vector<double>& parameters, std::vector<double>& parametersDelta,
+                                 double** x, double* y, int nrData, int xDim, double* lambda,
+                                 double* parametersChange, bool isWeighted, double* weights)
     {
         int i, j, k;
         double pivot, mult, top;
-
+        int nrParameters = int(parameters.size());
         double* g = (double *) calloc(nrParameters+1, sizeof(double));
         double* z = (double *) calloc(nrParameters+1, sizeof(double));
         double* firstEst = (double *) calloc(nrData+1, sizeof(double));
 
         double** a = (double **) calloc(nrParameters+1, sizeof(double*));
         double** P = (double **) calloc(nrParameters+1, sizeof(double*));
-        double* xPoint = (double *) calloc(xDim, sizeof(double));
+        std::vector<double> xPoint;
+        xPoint.resize(xDim);
         for (i = 0; i < nrParameters+1; i++)
         {
                 a[i] = (double *) calloc(nrParameters+1, sizeof(double));
@@ -1373,7 +1389,7 @@ namespace interpolation
             {
                 xPoint[k] = x[i][k];
             }
-            firstEst[i] = estimateFunction_nDimension(idFunction, parameters, nrParameters, xPoint,xDim);
+            firstEst[i] = estimateFunction_nDimension(idFunction, parameters, xPoint);
         }
 
         // change parameters and compute derivatives
@@ -1386,7 +1402,7 @@ namespace interpolation
                 {
                     xPoint[k] = x[j][k];
                 }
-                double newEst = estimateFunction_nDimension(idFunction, parameters, nrParameters, xPoint,xDim);
+                double newEst = estimateFunction_nDimension(idFunction, parameters, xPoint);
                 P[i][j] = (newEst - firstEst[j]) / MAXVALUE(parametersDelta[i], EPSILON) ;
             }
             parameters[i] -= parametersDelta[i];
@@ -1477,22 +1493,21 @@ namespace interpolation
         free(g);
         free(z);
         free(firstEst);
-        free(xPoint);
     }
 
 
-    double estimateFunction_nDimension(int idFunction, double *parameters, int nrParameters, double* xPoint, int xDim)
+    double estimateFunction_nDimension(int idFunction, std::vector<double> &parameters, std::vector<double> &xPoint)
     {
         switch (idFunction)
         {
             case FUNCTION_CODE_PARABOLIC :
-                return parabolicFunction(xPoint, parameters);
+                return parabolicFunction(xPoint[0], parameters.data());
 
             case FUNCTION_CODE_MULTILINEAR :
-                return multilinear(xPoint,parameters,xDim,nrParameters);
+                return multilinear(xPoint, parameters);
 
             case FUNCTION_CODE_TEMPVSHEIGHT :
-                return functionTemperatureVsHeight(xPoint,parameters,xDim,nrParameters);
+                return functionTemperatureVsHeight(xPoint, parameters);
 
             default:
                 return NODATA ;
@@ -1500,31 +1515,32 @@ namespace interpolation
     }
 
 
-    double normGeneric_nDimension(int idFunction, double *parameters,int nrParameters, double** x, double *y, int nrData, int xDim)
+    double normGeneric_nDimension(int idFunction, std::vector<double>& parameters, double** x, double* y, int nrData, int xDim)
     {
         double estimate, error;
         double norm = 0;
-        double* xPoint = (double *) calloc(xDim, sizeof(double));
+
+        std::vector<double> xPoint;
+        xPoint.resize(xDim);
+
         for (int i = 0; i < nrData; i++)
         {
             for (int j=0; j<xDim; j++)
             {
                 xPoint[j] = x[i][j];
             }
-            estimate = estimateFunction_nDimension(idFunction, parameters, nrParameters, xPoint,xDim);
+
+            estimate = estimateFunction_nDimension(idFunction, parameters, xPoint);
             if (estimate == NODATA)
             {
-                free(xPoint);
                 return NODATA;
             }
             error = y[i] - estimate;
             norm += error * error;
         }
-        free(xPoint);
+
         return norm;
     }
-
-
 
 }
 
@@ -1576,6 +1592,7 @@ namespace matricial
         }
         return CRIT3D_OK;
     }
+
 
     // it assume that rowSecond == colFirst
     int matrixProductNoCheck(double **first, double**second,int rowFirst, int colFirst, int colSecond, double ** multiply)

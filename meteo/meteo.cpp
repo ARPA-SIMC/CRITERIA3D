@@ -382,7 +382,6 @@ float dailyThermalRange(float Tmin, float Tmax)
 
 float dailyAverageT(float Tmin, float Tmax)
 {
-
         Crit3DQuality qualityCheck;
 
         // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
@@ -392,12 +391,11 @@ float dailyAverageT(float Tmin, float Tmax)
             return ( (Tmin + Tmax) / 2) ;
         else
             return NODATA;
-
 }
+
 
 float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings* meteoSettings)
 {
-
     Crit3DQuality qualityCheck;
 
     // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
@@ -405,24 +403,22 @@ float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitud
     quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
     int dayOfYear = getDoyFromDate(date);
     if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-        return ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin);
+            return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin));
     else
         return NODATA;
-
 }
+
 
 float dewPoint(float relHumAir, float tempAir)
 {
-
     if (relHumAir == NODATA || relHumAir == 0 || tempAir == NODATA)
         return NODATA;
 
     relHumAir = MINVALUE(100, relHumAir);
 
-    float saturatedVaporPres = exp((16.78 * tempAir - 116.9) / (tempAir + 237.3));
-    float actualVaporPres = relHumAir / 100 * saturatedVaporPres;
-    return (log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres));
-
+    double saturatedVaporPres = exp((16.78 * tempAir - 116.9) / (tempAir + 237.3));
+    double actualVaporPres = relHumAir / 100 * saturatedVaporPres;
+    return float((log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres)));
 }
 
 
