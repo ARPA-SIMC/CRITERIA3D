@@ -245,7 +245,16 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
     int nrShapes = outputShapeFile.getShapeCount();
     QMapIterator<int, int> iterator(myPosMap);
 
-    int step = nrRows * 0.01;
+    // save the attribute idCase in a list (to speed search)
+    std::vector<std::string> idCaseList;
+    idCaseList.resize(nrShapes);
+    for (int i = 0; i < nrShapes; i++)
+    {
+        idCaseList[i] = outputShapeFile.readStringAttribute(i, idCaseIndexShape);
+    }
+
+    // main cycle
+    int step = nrRows * 0.1;
     int currentRow = 0;
     while (!inputStream.atEnd())
     {
@@ -253,7 +262,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         if (currentRow % step == 0)
         {
             int percentage = round(currentRow * 100.0 / nrRows);
-            std::cout << percentage << "..";
+            std::cout << percentage << "...";
         }
 
         line = inputStream.readLine();
@@ -264,7 +273,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         for (int shapeIndex = 0; shapeIndex < nrShapes; shapeIndex++)
         {
             // check ID_CASE
-            if (outputShapeFile.readStringAttribute(shapeIndex, idCaseIndexShape) == idCaseStr)
+            if (idCaseList[shapeIndex] == idCaseStr)
             {
                 iterator.toFront();
                 while (iterator.hasNext())
@@ -294,7 +303,7 @@ bool shapeFromCsv(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         currentRow++;
         if (currentRow == (nrRows-1))
         {
-            std::cout << "100\n";
+            std::cout << " done.\n";
         }
     }
 
