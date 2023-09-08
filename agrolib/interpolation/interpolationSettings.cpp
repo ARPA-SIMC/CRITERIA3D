@@ -266,6 +266,16 @@ void Crit3DInterpolationSettings::setLocalRadius(float newLocalRadius)
     localRadius = newLocalRadius;
 }
 
+int Crit3DInterpolationSettings::getMinPointsLocalDetrending() const
+{
+    return minPointsLocalDetrending;
+}
+
+void Crit3DInterpolationSettings::setMinPointsLocalDetrending(int newMinPointsLocalDetrending)
+{
+    minPointsLocalDetrending = newMinPointsLocalDetrending;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -304,6 +314,7 @@ void Crit3DInterpolationSettings::initialize()
     precipitationAllZero = false;
     maxHeightInversion = 1000.;
     indexPointCV = NODATA;
+    minPointsLocalDetrending = 20;
 
     Kh_series.clear();
     Kh_error_series.clear();

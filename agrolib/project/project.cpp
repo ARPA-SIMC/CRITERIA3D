@@ -607,6 +607,9 @@ bool Project::loadParameters(QString parametersFileName)
                 qualityInterpolationSettings.setMinRegressionR2(parameters->value("minRegressionR2").toFloat());
             }
 
+            if (parameters->contains("min_points_local_detrending"))
+                interpolationSettings.setMinPointsLocalDetrending(parameters->value("min_points_local_detrending").toInt());
+
             if (parameters->contains("topographicDistanceMaxMultiplier"))
             {
                 interpolationSettings.setTopoDist_maxKh(parameters->value("topographicDistanceMaxMultiplier").toInt());
@@ -2821,6 +2824,7 @@ void Project::saveInterpolationParameters()
         parameters->setValue("useInterpolationTemperatureForRH", interpolationSettings.getUseInterpolatedTForRH());
         parameters->setValue("thermalInversion", interpolationSettings.getUseThermalInversion());
         parameters->setValue("minRegressionR2", QString::number(double(interpolationSettings.getMinRegressionR2())));
+        parameters->setValue("min_points_local_detrending", QString::number(int(interpolationSettings.getMinPointsLocalDetrending())));
     parameters->endGroup();
 
     saveProxies();
@@ -2847,7 +2851,7 @@ void Project::saveProxies()
             if (myProxy->getProxyTable() != "") parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
             if (myProxy->getProxyField() != "") parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));
             if (myProxy->getGridName() != "") parameters->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
-            if (myProxy->getStdDevThreshold() != NODATA) parameters->setValue("stddev_threshold", myProxy->getStdDevThreshold());
+            if (myProxy->getStdDevThreshold() != NODATA) parameters->setValue("stddev_threshold", QString::number(myProxy->getStdDevThreshold()));
         parameters->endGroup();
     }
 }

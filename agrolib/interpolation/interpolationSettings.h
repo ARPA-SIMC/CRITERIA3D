@@ -131,7 +131,7 @@
         bool useMultipleDetrending;
         bool useDewPoint;
         bool useInterpolatedTForRH;
-
+        int minPointsLocalDetrending;
         bool meteoGridUpscaleFromDem;
         aggregationMethod meteoGridAggrMethod;
 
@@ -232,6 +232,8 @@
         void setPointsBoundingBoxArea(float newPointsBoundingBoxArea);
         float getLocalRadius() const;
         void setLocalRadius(float newLocalRadius);
+        int getMinPointsLocalDetrending() const;
+        void setMinPointsLocalDetrending(int newMinPointsLocalDetrending);
     };
 
 #endif // INTERPOLATIONSETTINGS_H
