@@ -38,11 +38,8 @@
 #include "spatialControl.h"
 #include "interpolation.h"
 
-#include <iostream>
 
 using namespace std;
-
-
 
 float getMinHeight(const std::vector<Crit3DInterpolationDataPoint> &myPoints, bool useLapseRateCode)
 {
@@ -1014,22 +1011,18 @@ float gaussWeighted(vector <Crit3DInterpolationDataPoint> &myPointList)
 void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <Crit3DInterpolationDataPoint> &selectedPoints,
                        float x, float y, Crit3DInterpolationSettings& mySettings)
 {
-    const int MIN_POINTS = 20;
-    if (inputPoints.size() <= MIN_POINTS)
+    // search more stations to assure min points with all valid proxies
+    float ratioMinPoints = float(1.2);
+    unsigned minPoints = unsigned(mySettings.getMinPointsLocalDetrending() * ratioMinPoints);
+    if (inputPoints.size() <= minPoints)
     {
         selectedPoints = inputPoints;
         mySettings.setLocalRadius(computeShepardInitialRadius(mySettings.getPointsBoundingBoxArea(),
-                                                              unsigned(inputPoints.size()), MIN_POINTS));
+                                                              unsigned(inputPoints.size()), minPoints));
     }
 
-    // compute distances (only topographic)
     for (unsigned long i = 0; i < inputPoints.size() ; i++)
-    {
-        //if (checkLapseRateCode(inputPoints[i].lapseRateCode, mySettings.getUseLapseRateCode(), true))
-            inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
-        //else
-            //inputPoints[i].distance = NODATA;
-    }
+        inputPoints[i].distance = gis::computeDistance(x, y, float((inputPoints[i]).point->utm.x), float((inputPoints[i]).point->utm.y));
 
     unsigned int nrValid = 0;
     float stepRadius = 10000;           // [m]
@@ -1037,7 +1030,7 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     float r1 = stepRadius;              // [m]
     unsigned int i;
 
-    while (nrValid < MIN_POINTS)
+    while (nrValid < minPoints)
     {
         for (i=0; i < inputPoints.size(); i++)
             if (inputPoints[i].distance != NODATA && inputPoints[i].distance > r0 && inputPoints[i].distance <= r1)
@@ -1409,13 +1402,21 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
 
     if (validNr == 0) return outCombination;
 
+    // set all proxies unsignificant if not enough points
+    if (finalPoints.size() < mySettings->getMinPointsLocalDetrending()) return outCombination;
+    {
+        for (pos = 0; pos < mySettings->getProxyNr(); pos++)
+            mySettings->getProxy(pos)->setIsSignificant(false);
+
+        return outCombination;
+    }
+
     // z-score normalization
     std::vector <float> rowPredictors;
     std::vector <std::vector <float>> predictorsNorm;
     std::vector <float> predictands;
     std::vector <float> weights;
     unsigned index = 0;
-    const int MIN_NR = 10;
 
     for (i=0; i < finalPoints.size(); i++)
     {
@@ -1434,7 +1435,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
         weights.push_back(finalPoints[i].regressionWeight);
     }
 
-    if (predictorsNorm.size() < MIN_NR)
+    if (finalPoints.size() < mySettings->getMinPointsLocalDetrending()) return outCombination;
     {
         for (pos = 0; pos < mySettings->getProxyNr(); pos++)
             mySettings->getProxy(pos)->setIsSignificant(false);
