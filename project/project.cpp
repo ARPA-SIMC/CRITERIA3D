@@ -2225,7 +2225,6 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
                 myRaster->getRowCol(x, y, row, col);
                 if (! myRaster->isOutOfGrid(row, col))
                 {
-
                     std::vector <Crit3DInterpolationDataPoint> subsetInterpolationPoints;
                     localSelection(interpolationPoints, subsetInterpolationPoints, x, y, interpolationSettings);
                     preInterpolation(subsetInterpolationPoints, &interpolationSettings, meteoSettings, &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime);
@@ -2848,6 +2847,7 @@ void Project::saveProxies()
             if (myProxy->getProxyTable() != "") parameters->setValue("table", QString::fromStdString(myProxy->getProxyTable()));
             if (myProxy->getProxyField() != "") parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));
             if (myProxy->getGridName() != "") parameters->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
+            if (myProxy->getStdDevThreshold() != NODATA) parameters->setValue("stddev_threshold", myProxy->getStdDevThreshold());
         parameters->endGroup();
     }
 }

@@ -23,6 +23,7 @@
     ftomei@arpae.it
 */
 
+#include <ostream>
 #include <stdlib.h>
 #include <math.h>
 #include <vector>
@@ -37,6 +38,7 @@
 #include "spatialControl.h"
 #include "interpolation.h"
 
+#include <iostream>
 
 using namespace std;
 
@@ -1320,7 +1322,10 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
 
     *stdDev = float(sqrt(sum / (proxyValues.size() - 1)));
 
-    return (*stdDev > stdDevThreshold);
+    if (stdDevThreshold != NODATA)
+        return (*stdDev > stdDevThreshold);
+    else
+        return true;
 }
 
 Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
@@ -1340,20 +1345,58 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
         }
     }
 
-    if (nrPredictors == 0) return myCombination;
+    if (nrPredictors == 0) return myCombination;    
 
-    // proxy dispersion
+    // proxy spatial variability (1st step)
     float avg, stdDev;
-    std::vector <float> avgs;
-    std::vector <float> stdDevs;
     unsigned validNr;
     Crit3DProxyCombination outCombination = myCombination;
     unsigned pos;
-
     validNr = 0;
+
     for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
         if (myCombination.getValue(pos) && proxyValidity(myPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
+        {
+            outCombination.setValue(pos, true);
+            validNr++;
+        }
+        else
+            outCombination.setValue(pos, false);
+    }
+
+    if (validNr == 0) return outCombination;
+
+    // exclude points with incomplete proxies
+    unsigned i;
+    std::vector <Crit3DInterpolationDataPoint> finalPoints;
+    bool isValid;
+    float proxyValue;
+
+    for (i=0; i < myPoints.size(); i++)
+    {
+        isValid = true;
+        for (pos=0; pos < mySettings->getProxyNr(); pos++)
+            if (outCombination.getValue(pos))
+            {
+                proxyValue = myPoints[i].getProxyValue(pos);
+                if (proxyValue == NODATA)
+                {
+                    isValid = false;
+                    break;
+                }
+            }
+
+        if (isValid) finalPoints.push_back(myPoints[i]);
+    }
+
+    // proxy spatial variability (2nd step)
+    std::vector <float> avgs;
+    std::vector <float> stdDevs;
+
+    for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
+    {
+        if (myCombination.getValue(pos) && proxyValidity(finalPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
         {
             avgs.push_back(avg);
             stdDevs.push_back(stdDev);
@@ -1371,38 +1414,24 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     std::vector <std::vector <float>> predictorsNorm;
     std::vector <float> predictands;
     std::vector <float> weights;
-    bool isValid;
-    float proxyValue;
     unsigned index = 0;
     const int MIN_NR = 10;
-    unsigned i;
 
-    for (i=0; i < myPoints.size(); i++)
+    for (i=0; i < finalPoints.size(); i++)
     {
-        isValid = true;
         rowPredictors.clear();
         index = 0;
         for (pos=0; pos < mySettings->getProxyNr(); pos++)
             if (outCombination.getValue(pos))
             {
-                proxyValue = myPoints[i].getProxyValue(pos);
-                if (proxyValue == NODATA)
-                {
-                    isValid = false;
-                    break;
-                }
-                else
-                    rowPredictors.push_back((proxyValue - avgs[index]) / stdDevs[index]);
-
+                proxyValue = finalPoints[i].getProxyValue(pos);
+                rowPredictors.push_back((proxyValue - avgs[index]) / stdDevs[index]);
                 index++;
             }
 
-        if (isValid)
-        {
-            predictorsNorm.push_back(rowPredictors);
-            predictands.push_back(myPoints[i].value);
-            weights.push_back(myPoints[i].regressionWeight);
-        }
+        predictorsNorm.push_back(rowPredictors);
+        predictands.push_back(finalPoints[i].value);
+        weights.push_back(finalPoints[i].regressionWeight);
     }
 
     if (predictorsNorm.size() < MIN_NR)
