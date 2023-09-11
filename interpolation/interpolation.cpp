@@ -1322,13 +1322,13 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
         return true;
 }
 
-std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> combineFunction(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings mySettings)
+std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> combineFunction(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
 {
     std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc;
     for (unsigned i=0; i<myCombination.getIsActive().size(); i++)
         if (myCombination.getValue(i))
         {
-            if (getProxyPragaName(mySettings.getProxy(i)->getName()) == height)
+            if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
                 myFunc.push_back(functionTemperatureVsHeight);
             else
                 myFunc.push_back(functionLinear);
@@ -1428,10 +1428,10 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     }
 
     // z-score normalization
-    std::vector <float> rowPredictors;
-    std::vector <std::vector <float>> predictorsNorm;
-    std::vector <float> predictands;
-    std::vector <float> weights;
+    std::vector <double> rowPredictors;
+    std::vector <std::vector <double>> predictorsNorm;
+    std::vector <double> predictands;
+    std::vector <double> weights;
     unsigned index = 0;
 
     for (i=0; i < finalPoints.size(); i++)
@@ -1460,19 +1460,22 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     }
 
 
+    std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc = combineFunction(myCombination, mySettings);
+
     float q;
-    std::vector <float> slopes(avgs.size());
+    std::vector <double> parameters;
+    std::vector <double> parametersMin = {-20, -0.05, -0.01, -0.01, -10};
+    std::vector <double> parametersMax = {45, 0.001, 100, 1, 1000};
+    std::vector <double> parametersDelta = {0.01, 0.01, 0.01, 0.01, 0.01};
+
+
     //statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, slopes, int(predictorsNorm[0].size()));
-    /*bestFittingMarquardt_nDimension(double (*func)(std::vector<double>&, std::vector<double>&), int nrTrials, int nrMinima,
-                                        std::vector<double>& parametersMin, std::vector<double>& parametersMax,
-                                        std::vector<double>& parameters, std::vector<double> &parametersDelta,
-                                        int maxIterationsNr, double myEpsilon,
-                                        double** x, double* y, int nrData, int xDim, bool isWeighted, double* weights);
-    */
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 10, parametersMin, parametersMax, parameters, parametersDelta,
+                                    10000, EPSILON, predictorsNorm, predictands, predictands.size(), validNr, false, weights);
 
     Crit3DProxy* myProxy;
     index=0;
-    for (pos = 0; pos < mySettings->getProxyNr(); pos++)
+    /*for (pos = 0; pos < mySettings->getProxyNr(); pos++)
         if (outCombination.getValue(pos))
         {
             myProxy = mySettings->getProxy(pos);
@@ -1505,6 +1508,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
             }
         }
     }
+    */
 
     return outCombination;
 }

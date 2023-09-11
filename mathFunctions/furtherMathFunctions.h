@@ -48,7 +48,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
     float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5);
     double functionLinear(std::vector <double>& x, std::vector <double>& par);
     double functionTemperatureVsHeight(std::vector<double> &x, std::vector<double> &par);
-    double functionSum(std::vector<std::function<double(std::vector<double>, std::vector<double>)>>& functions, std::vector<double>& x, std::vector<double>& par);
+    double functionSum(std::vector<std::function<double (std::vector<double> &, std::vector<double> &)> > &functions, std::vector<double>& x, std::vector<double>& par);
 
     namespace integration
     {
@@ -89,7 +89,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
         void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output); // not working to be checked
 
         double computeR2(const std::vector<double>& obs,const std::vector<double>& sim, int nrPoints);
-        int bestFittingMarquardt_nDimension(double (*func)(const std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>>&, std::vector<double>& , std::vector<double>&),
+        int bestFittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>>&, std::vector<double>& , std::vector<double>&),
                                         std::vector<std::function<double (std::vector<double> &, std::vector<double> &)> > myFunc,
                                         int nrTrials, int nrMinima,
                                         std::vector<double>& parametersMin, std::vector<double>& parametersMax,

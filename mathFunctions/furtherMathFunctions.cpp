@@ -30,8 +30,7 @@
 #include "furtherMathFunctions.h"
 
 
-
-double functionSum(std::vector<std::function<double(std::vector<double>, std::vector<double>)>>& functions, std::vector<double>& x, std::vector<double>& par)
+double functionSum(std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>>& functions, std::vector<double>& x, std::vector<double>& par)
 {
     double result = 0.0;
     for (const auto& function : functions)
@@ -40,6 +39,7 @@ double functionSum(std::vector<std::function<double(std::vector<double>, std::ve
     }
     return result;
 }
+
 // Air temperature vs height
 double functionTemperatureVsHeight(std::vector<double> &x, std::vector<double> &par)
 {
