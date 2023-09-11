@@ -1322,27 +1322,6 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
         return true;
 }
 
-double functionTemperatureVsHeight(std::vector <double>& x, std::vector <double>& par)
-{
-    double y;
-    y = par[0] + par[1]*x[0] + par[2]*(1/(1+exp(-par[3]*(x[0] - par[4]))));
-    return y;
-}
-
-double linear(std::vector <double>& x, std::vector <double>& par)
-{
-    return par[0] * x[0];
-}
-
-double functionSum(const std::vector<std::function<double(std::vector<double>, std::vector<double>)>>& functions, std::vector<double> x, std::vector<double> par)
-{
-    double result = 0.0;
-    for (const auto& function : functions)
-        result += function(x,par);
-
-    return result;
-}
-
 std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> combineFunction(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings mySettings)
 {
     std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc;
@@ -1352,7 +1331,7 @@ std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> c
             if (getProxyPragaName(mySettings.getProxy(i)->getName()) == height)
                 myFunc.push_back(functionTemperatureVsHeight);
             else
-                myFunc.push_back(linear);
+                myFunc.push_back(functionLinear);
         }
 
     return myFunc;
