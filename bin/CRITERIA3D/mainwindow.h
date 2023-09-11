@@ -282,6 +282,7 @@
         bool updateSelection(const QPoint& position);
         void updateCurrentVariable();
         void updateDateTime();
+        void updateModelTime();
         void resetMeteoPointMarkers();
         void redrawMeteoPoints(visualizationType myType, bool updateColorSCale);
 

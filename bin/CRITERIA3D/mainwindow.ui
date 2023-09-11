@@ -290,7 +290,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>290</y>
+      <y>310</y>
       <width>271</width>
       <height>112</height>
      </rect>
@@ -629,7 +629,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>410</y>
+      <y>430</y>
       <width>271</width>
       <height>115</height>
      </rect>
@@ -968,7 +968,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>130</y>
+      <y>150</y>
       <width>271</width>
       <height>151</height>
      </rect>
@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>7</day>
+       <day>5</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1434,9 +1434,9 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>20</y>
+      <y>10</y>
       <width>271</width>
-      <height>111</height>
+      <height>141</height>
      </rect>
     </property>
     <property name="palette">
@@ -1740,6 +1740,9 @@
        <height>24</height>
       </rect>
      </property>
+     <property name="readOnly">
+      <bool>false</bool>
+     </property>
      <property name="minimum">
       <number>1</number>
      </property>
@@ -1751,7 +1754,7 @@
      <property name="geometry">
       <rect>
        <x>40</x>
-       <y>72</y>
+       <y>70</y>
        <width>51</width>
        <height>21</height>
       </rect>
@@ -1784,9 +1787,57 @@
       <rect>
        <x>150</x>
        <y>70</y>
-       <width>61</width>
+       <width>71</width>
        <height>24</height>
       </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelLayer_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>102</y>
+       <width>50</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="palette">
+      <palette>
+       <active/>
+       <inactive/>
+       <disabled/>
+      </palette>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::RightToLeft</enum>
+     </property>
+     <property name="text">
+      <string>Time</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="modelTimeEdit">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>102</y>
+       <width>151</width>
+       <height>24</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
      </property>
     </widget>
    </widget>

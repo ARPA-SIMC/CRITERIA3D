@@ -147,8 +147,9 @@ void MainWindow::resizeEvent(QResizeEvent * event)
     Q_UNUSED(event)
 
     const int INFOHEIGHT = 42;
+    const int STEPY = 24;
     int x1 = this->width() - TOOLSWIDTH - MAPBORDER;
-    int dy = ui->groupBoxModel->height() + ui->groupBoxMeteoPoints->height() + ui->groupBoxDEM->height() + ui->groupBoxVariableMap->height() + MAPBORDER*4;
+    int dy = ui->groupBoxModel->height() + ui->groupBoxMeteoPoints->height() + ui->groupBoxDEM->height() + ui->groupBoxVariableMap->height() + STEPY*3;
     int y1 = (this->height() - INFOHEIGHT - dy) / 2;
 
     ui->widgetMap->setGeometry(0, 0, x1, this->height() - INFOHEIGHT);
@@ -156,15 +157,15 @@ void MainWindow::resizeEvent(QResizeEvent * event)
 
     ui->groupBoxModel->move(x1, y1);
     ui->groupBoxModel->resize(TOOLSWIDTH, ui->groupBoxModel->height());
-    y1 += ui->groupBoxModel->height() + MAPBORDER*2;
+    y1 += ui->groupBoxModel->height() + STEPY;
 
     ui->groupBoxDEM->move(x1, y1);
     ui->groupBoxDEM->resize(TOOLSWIDTH, ui->groupBoxDEM->height());
-    y1 += ui->groupBoxDEM->height() + MAPBORDER;
+    y1 += ui->groupBoxDEM->height() + STEPY;
 
     ui->groupBoxMeteoPoints->move(x1, y1);
     ui->groupBoxMeteoPoints->resize(TOOLSWIDTH, ui->groupBoxMeteoPoints->height());
-    y1 += ui->groupBoxMeteoPoints->height() + MAPBORDER;
+    y1 += ui->groupBoxMeteoPoints->height() + STEPY;
 
     ui->groupBoxVariableMap->move(x1, y1);
     ui->groupBoxVariableMap->resize(TOOLSWIDTH, ui->groupBoxVariableMap->height());
@@ -188,6 +189,8 @@ void MainWindow::updateMaps()
 void MainWindow::updateOutputMap()
 {
     updateDateTime();
+    updateModelTime();
+
     if (myProject.isCriteria3DInitialized)
     {
         myProject.setCriteria3DMap(current3DVariable, current3DlayerIndex);
@@ -720,7 +723,24 @@ void MainWindow::renderDEM()
 void MainWindow::updateDateTime()
 {
     this->ui->dateEdit->setDate(myProject.getCurrentDate());
-    this->ui->timeEdit->setValue(myProject.getCurrentHour());
+    this->ui->timeEdit->setValue(myProject.getCurrentHour()); 
+}
+
+
+void MainWindow::updateModelTime()
+{
+    QDateTime currentDateTime;
+    currentDateTime.setDate(myProject.getCurrentDate());
+    int hour = myProject.getCurrentHour();
+    int minutes = int(floor(myProject.currentSeconds / 60));
+    int seconds = myProject.currentSeconds - (minutes * 60);
+    if (minutes == 60)
+    {
+        hour++;
+        minutes = 0;
+    }
+    currentDateTime.setTime(QTime(hour, minutes, seconds));
+    this->ui->modelTimeEdit->setText(currentDateTime.toString("yyyy-MM-dd HH:mm:ss"));
 }
 
 
@@ -735,7 +755,6 @@ void MainWindow::on_dateEdit_dateChanged(const QDate &date)
     if (date != myProject.getCurrentDate())
     {
         loadMeteoPointsDataSingleDay(date, true);
-        //myProject.loadMeteoGridData(date, date, true);
         myProject.setAllHourlyMeteoMapsComputed(false);
         myProject.setCurrentDate(date);
     }

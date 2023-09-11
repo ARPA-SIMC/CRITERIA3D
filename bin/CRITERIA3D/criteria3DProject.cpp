@@ -789,9 +789,6 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
 
         logInfo("\nWater balance: " + myTime.toString());
         computeWaterBalance3D(3600);
-        qApp->processEvents();
-
-        //updateWaterBalanceMaps();
     }
 
     // soil heat

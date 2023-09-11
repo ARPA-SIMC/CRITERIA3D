@@ -69,6 +69,7 @@
         unsigned long nrNodes;
         unsigned int nrLayers;
         int nrLateralLink;
+        double currentSeconds;
 
         // soil and land use
         gis::Crit3DRasterGrid soilMap;

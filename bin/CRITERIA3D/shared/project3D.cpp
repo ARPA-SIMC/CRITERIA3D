@@ -23,6 +23,7 @@
     gantolini@arpae.it
 */
 
+#include "commonConstants.h"
 #include "basicMath.h"
 #include "cropDbTools.h"
 #include "project3D.h"
@@ -84,6 +85,8 @@ void Project3D::initializeProject3D()
     nrLayers = 0;
     nrNodes = 0;
     nrLateralLink = 8;
+
+    currentSeconds = 0;
 
     totalPrecipitation = 0;
     totalEvaporation = 0;
@@ -265,8 +268,8 @@ bool Project3D::initializeWaterBalance3D()
     double vmax = 4.0;                                      // [m s-1]
     double minimumDeltaT = DEM.header->cellSize / vmax;     // [m]
 
-    soilFluxes3D::setNumericalParameters(minimumDeltaT, 1800, 100, 10, 12, 3);     // precision
-    //soilFluxes3D::setNumericalParameters(minimumDeltaT, 1800, 100, 10, 12, 2);   // speedy
+    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 3);     // precision
+    //soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 2);   // speedy
     //soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 1);   // very speedy (high error)
 
     if (!initializeMatricPotential(waterFluxesParameters.initialWaterPotential))    // [m]
@@ -1041,42 +1044,41 @@ double Project3D::computeEvaporation(int row, int col, double lai)
 void Project3D::computeWaterBalance3D(double timeStep)
 {
     double previousWaterContent = soilFluxes3D::getTotalWaterContent();
-    logInfo("total water [m^3]: " + QString::number(previousWaterContent));
-    logInfo("precipitation [m^3]: " + QString::number(totalPrecipitation));
-    logInfo("evaporation [m^3]: " + QString::number(-totalEvaporation));
-    logInfo("transpiration [m^3]: " + QString::number(-totalTranspiration));
+    this->logInfo("total water [m^3]: " + QString::number(previousWaterContent));
+    this->logInfo("precipitation [m^3]: " + QString::number(totalPrecipitation));
+    this->logInfo("evaporation [m^3]: " + QString::number(-totalEvaporation));
+    this->logInfo("transpiration [m^3]: " + QString::number(-totalTranspiration));
 
     soilFluxes3D::initializeBalance();
 
-    logInfo("Compute water flow");
-    double sumTime = 0.0;
-    double showTime = 600;
-    int showStep = 0;
-    while (sumTime < timeStep)
+    this->logInfo("Compute water flow");
+    currentSeconds = 0;
+    double showTime = 300;
+    int currentStep = 0;
+    while (currentSeconds < timeStep)
     {
-        sumTime += soilFluxes3D::computeStep(timeStep - sumTime);
-        if (sumTime < timeStep && int(sumTime / showTime) > showStep)
+        currentSeconds += soilFluxes3D::computeStep(timeStep - currentSeconds);
+        if (currentSeconds < timeStep && int(currentSeconds / showTime) > currentStep)
         {
-            showStep = int(sumTime / showTime);
+            currentStep = int(currentSeconds / showTime);
             emit updateOutputSignal();
         }
     }
-    //soilFluxes3D::computePeriod(timeStep);
 
     double runoff = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_RUNOFF);
-    logInfo("runoff [m^3]: " + QString::number(runoff));
+    this->logInfo("runoff [m^3]: " + QString::number(runoff));
 
     double freeDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREEDRAINAGE);
-    logInfo("free drainage [m^3]: " + QString::number(freeDrainage));
+    this->logInfo("free drainage [m^3]: " + QString::number(freeDrainage));
 
     double lateralDrainage = soilFluxes3D::getBoundaryWaterSumFlow(BOUNDARY_FREELATERALDRAINAGE);
-    logInfo("lateral drainage [m^3]: " + QString::number(lateralDrainage));
+    this->logInfo("lateral drainage [m^3]: " + QString::number(lateralDrainage));
 
     double currentWaterContent = soilFluxes3D::getTotalWaterContent();
     double forecastWaterContent = previousWaterContent + runoff + freeDrainage + lateralDrainage
                                   + totalPrecipitation - totalEvaporation - totalTranspiration;
     double massBalanceError = currentWaterContent - forecastWaterContent;
-    logInfo("Mass balance error [m^3]: " + QString::number(massBalanceError));
+    this->logInfo("Mass balance error [m^3]: " + QString::number(massBalanceError));
 }
 
 
