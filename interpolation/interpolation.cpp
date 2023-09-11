@@ -31,13 +31,14 @@
 
 #include "commonConstants.h"
 #include "basicMath.h"
+#include "furtherMathFunctions.h"
 #include "statistics.h"
 #include "basicMath.h"
 #include "meteoPoint.h"
 #include "gis.h"
 #include "spatialControl.h"
 #include "interpolation.h"
-
+#include <functional>
 
 using namespace std;
 
@@ -1321,6 +1322,42 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
         return true;
 }
 
+double functionTemperatureVsHeight(std::vector <double>& x, std::vector <double>& par)
+{
+    double y;
+    y = par[0] + par[1]*x[0] + par[2]*(1/(1+exp(-par[3]*(x[0] - par[4]))));
+    return y;
+}
+
+double linear(std::vector <double>& x, std::vector <double>& par)
+{
+    return par[0] * x[0];
+}
+
+double functionSum(const std::vector<std::function<double(std::vector<double>, std::vector<double>)>>& functions, std::vector<double> x, std::vector<double> par)
+{
+    double result = 0.0;
+    for (const auto& function : functions)
+        result += function(x,par);
+
+    return result;
+}
+
+std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> combineFunction(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings mySettings)
+{
+    std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc;
+    for (unsigned i=0; i<myCombination.getIsActive().size(); i++)
+        if (myCombination.getValue(i))
+        {
+            if (getProxyPragaName(mySettings.getProxy(i)->getName()) == height)
+                myFunc.push_back(functionTemperatureVsHeight);
+            else
+                myFunc.push_back(linear);
+        }
+
+    return myFunc;
+}
+
 Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                         Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings, meteoVariable myVar)
 {
@@ -1443,9 +1480,16 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
         return outCombination;
     }
 
+
     float q;
     std::vector <float> slopes(avgs.size());
-    statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, slopes, int(predictorsNorm[0].size()));
+    //statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, slopes, int(predictorsNorm[0].size()));
+    /*bestFittingMarquardt_nDimension(double (*func)(std::vector<double>&, std::vector<double>&), int nrTrials, int nrMinima,
+                                        std::vector<double>& parametersMin, std::vector<double>& parametersMax,
+                                        std::vector<double>& parameters, std::vector<double> &parametersDelta,
+                                        int maxIterationsNr, double myEpsilon,
+                                        double** x, double* y, int nrData, int xDim, bool isWeighted, double* weights);
+    */
 
     Crit3DProxy* myProxy;
     index=0;

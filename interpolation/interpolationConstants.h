@@ -23,7 +23,7 @@
       { "shepard_modified", shepard_modified }
     };
 
-    enum TProxyVar { height, heightInversion, urbanFraction, orogIndex, seaDistance, aspect, slope, noProxy };
+    enum TProxyVar { height, heightInversion, urbanFraction, orogIndex, seaDistance, aspect, slope, waterIndex, noProxy };
 
     const std::map<std::string, TProxyVar> ProxyVarNames = {
       { "elevation", height },
@@ -33,7 +33,8 @@
       { "urbanFraction", urbanFraction },
       { "seaDistance", seaDistance },
       { "aspect", aspect },
-      { "slope", slope }
+      { "slope", slope },
+      { "water_index", waterIndex}
     };
 
 
