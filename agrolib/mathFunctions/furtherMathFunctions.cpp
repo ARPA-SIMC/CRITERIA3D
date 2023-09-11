@@ -25,9 +25,21 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <functional>
 #include "commonConstants.h"
 #include "furtherMathFunctions.h"
 
+
+
+double functionSum(std::vector<std::function<double(std::vector<double>, std::vector<double>)>>& functions, std::vector<double>& x, std::vector<double>& par)
+{
+    double result = 0.0;
+    for (const auto& function : functions)
+    {
+        result += function(x,par);
+    }
+    return result;
+}
 // Air temperature vs height
 double functionTemperatureVsHeight(std::vector<double> &x, std::vector<double> &par)
 {
@@ -38,6 +50,10 @@ double functionTemperatureVsHeight(std::vector<double> &x, std::vector<double> &
     return y;
 }
 
+double functionLinear(std::vector <double>& x, std::vector <double>& par)
+{
+    return par[0] * x[0];
+}
 
 double multilinear(std::vector<double> &x, std::vector<double> &par)
 {
@@ -879,7 +895,9 @@ namespace interpolation
         return R2;
     }
 
-    int bestFittingMarquardt_nDimension(double (*func)(std::vector<double>&, std::vector<double>&), int nrTrials, int nrMinima,
+    int bestFittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>>&, std::vector<double>& , std::vector<double>&),
+                                        std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc,
+                                        int nrTrials, int nrMinima,
                                         std::vector<double> &parametersMin, std::vector<double> &parametersMax,
                                         std::vector<double> &parameters, std::vector<double>& parametersDelta,
                                         int maxIterationsNr, double myEpsilon,
@@ -912,7 +930,7 @@ namespace interpolation
             {
                 parameters[i] = parametersMin[i] + ((double) rand() / (RAND_MAX))*(parametersMax[i]-parametersMin[i]);
             }
-            fittingMarquardt_nDimension(func,parametersMin, parametersMax, parameters, parametersDelta, maxIterationsNr,
+            fittingMarquardt_nDimension(func,myFunc,parametersMin, parametersMax, parameters, parametersDelta, maxIterationsNr,
                                         myEpsilon, x, y, nrData, xDim, isWeighted, weights);
             for (i=0;i<nrData;i++)
             {
@@ -922,7 +940,7 @@ namespace interpolation
                 {
                     xPoint[k] = x[i][k];
                 }
-                ySim[i]= func(xPoint, parameters);
+                ySim[i]= func(myFunc,xPoint, parameters);
             }
             R2 = computeR2(y,ySim,nrData);
             //printf("%d R2 = %f\n",iRandom,R2);
@@ -954,12 +972,13 @@ namespace interpolation
     }
 
 
-    bool fittingMarquardt_nDimension(double (*func)(std::vector<double>&, std::vector<double>&),
+    bool fittingMarquardt_nDimension(double (*func)(std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>>&, std::vector<double>& , std::vector<double>&),
+                                     std::vector<std::function<double (std::vector<double> &, std::vector<double> &)> > myFunc,
                                      std::vector<double>& parametersMin, std::vector<double>& parametersMax,
                                      std::vector<double>& parameters, std::vector<double>& parametersDelta,
                                      int maxIterationsNr, double myEpsilon,
-                                     std::vector <std::vector <double>>& x,std::vector<double>& y,
-                                     int nrData, int xDim,bool isWeighted, std::vector<double>& weights)
+                                     std::vector <std::vector <double>>& x, std::vector<double>& y,
+                                     int nrData, int xDim, bool isWeighted, std::vector<double>& weights)
     {
         int nrParameters = int(parameters.size());
         double mySSE, diffSSE, newSSE;
@@ -979,12 +998,12 @@ namespace interpolation
             paramChange[i] = 0;
         }
 
-        mySSE = normGeneric_nDimension(func, parameters, x, y, nrData,xDim);
+        mySSE = normGeneric_nDimension(func,myFunc, parameters, x, y, nrData,xDim);
 
         int iterationNr = 0;
         do
         {
-            leastSquares_nDimension(func, parameters, parametersDelta, x, y, nrData, xDim, lambda, paramChange, isWeighted, weights);
+            leastSquares_nDimension(func,myFunc, parameters, parametersDelta, x, y, nrData, xDim, lambda, paramChange, isWeighted, weights);
                 // change parameters
             for (int i = 0; i < nrParameters; i++)
             {
@@ -1003,7 +1022,7 @@ namespace interpolation
                 }
             }
 
-            newSSE = normGeneric_nDimension(func, newParameters, x, y, nrData,xDim);
+            newSSE = normGeneric_nDimension(func, myFunc, newParameters, x, y, nrData,xDim);
 
             if (newSSE == NODATA)
             {
@@ -1039,7 +1058,8 @@ namespace interpolation
         return (fabs(diffSSE) <= myEpsilon);
     }
 
-    void leastSquares_nDimension(double (*func)(std::vector<double>&, std::vector<double>&),
+    void leastSquares_nDimension(double (*func)(std::vector<std::function<double (std::vector<double> &, std::vector<double> &)> > &, std::vector<double> &, std::vector<double> &),
+                                 std::vector<std::function<double (std::vector<double> &, std::vector<double> &)> > myFunc,
                                  std::vector<double>& parameters, std::vector<double>& parametersDelta,
                                  std::vector <std::vector <double>>& x, std::vector<double>& y, int nrData, int xDim, std::vector<double>& lambda,
                                  std::vector<double>& parametersChange, bool isWeighted, std::vector<double>& weights)
@@ -1071,7 +1091,7 @@ namespace interpolation
             {
                 xPoint[k] = x[i][k];
             }
-            firstEst[i] = func(xPoint, parameters);
+            firstEst[i] = func(myFunc,xPoint, parameters);
             //firstEst[i] = estimateFunction_nDimensionExternalFunction(idFunction, parameters, nrParameters, xPoint,xDim);
         }
 
@@ -1085,7 +1105,7 @@ namespace interpolation
                 {
                     xPoint[k] = x[j][k];
                 }
-                double newEst = func(xPoint, parameters);
+                double newEst = func(myFunc,xPoint, parameters);
                 //double newEst = estimateFunction_nDimensionExternalFunction(idFunction, parameters, nrParameters, xPoint,xDim);
                 P[i][j] = (newEst - firstEst[j]) / MAXVALUE(parametersDelta[i], EPSILON) ;
             }
@@ -1179,7 +1199,8 @@ namespace interpolation
         free(firstEst);
     }
 
-    double normGeneric_nDimension(double (*func)(std::vector<double>&, std::vector<double>&),
+    double normGeneric_nDimension(double (*func)(std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>>&, std::vector<double>& , std::vector<double>&),
+                                  std::vector<std::function<double (std::vector<double> &, std::vector<double> &)> > myFunc,
                                   std::vector<double> &parameters,std::vector <std::vector <double>>& x,
                                   std::vector<double>& y, int nrData, int xDim)
     {
@@ -1194,7 +1215,7 @@ namespace interpolation
             {
                 xPoint[j] = x[i][j];
             }
-            estimate = func(xPoint, parameters);
+            estimate = func(myFunc,xPoint, parameters);
             if (estimate == NODATA)
             {
                 return NODATA;
