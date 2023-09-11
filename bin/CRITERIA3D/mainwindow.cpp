@@ -2173,6 +2173,9 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             depthStr.sprintf("%04.2f", myProject.layerDepth[1]);
             ui->layerDepthEdit->setText(depthStr + " m");
         }
+
+        myProject.currentSeconds = 0;
+        updateModelTime();
     }
 }
 

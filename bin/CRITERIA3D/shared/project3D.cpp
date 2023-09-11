@@ -53,6 +53,7 @@ void WaterFluxesParameters::initialize()
 
     initialWaterPotential = -3.0;           // [m]
     imposedComputationDepth = 0.3;          // [m]
+    horizVertRatioConductivity = 1.0;       // [-]
 }
 
 
@@ -262,14 +263,13 @@ bool Project3D::initializeWaterBalance3D()
         return false;
     logInfo("Node properties initialized");
 
-    float horizVertRatioConductivity = 1.0;
-    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, horizVertRatioConductivity);
+    soilFluxes3D::setHydraulicProperties(MODIFIEDVANGENUCHTEN, MEAN_LOGARITHMIC, waterFluxesParameters.horizVertRatioConductivity);
 
     double vmax = 4.0;                                      // [m s-1]
     double minimumDeltaT = DEM.header->cellSize / vmax;     // [m]
 
-    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 3);     // precision
-    //soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 2);   // speedy
+    //soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 3);     // precision
+    soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 2);   // speedy
     //soilFluxes3D::setNumericalParameters(minimumDeltaT, 3600, 100, 10, 12, 1);   // very speedy (high error)
 
     if (!initializeMatricPotential(waterFluxesParameters.initialWaterPotential))    // [m]
@@ -1053,7 +1053,7 @@ void Project3D::computeWaterBalance3D(double timeStep)
 
     this->logInfo("Compute water flow");
     currentSeconds = 0;
-    double showTime = 300;
+    double showTime = 1;
     int currentStep = 0;
     while (currentSeconds < timeStep)
     {

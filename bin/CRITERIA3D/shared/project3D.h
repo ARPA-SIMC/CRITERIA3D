@@ -27,6 +27,7 @@
 
         double initialWaterPotential;            // [m]
         double imposedComputationDepth;          // [m]
+        double horizVertRatioConductivity;       // [-]
 
         bool freeCatchmentRunoff;
         bool freeLateralDrainage;
