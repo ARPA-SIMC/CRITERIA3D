@@ -1343,13 +1343,13 @@ double functionSum(const std::vector<std::function<double(std::vector<double>, s
     return result;
 }
 
-std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> combineFunction(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings mySettings)
+std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> combineFunction(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings)
 {
     std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc;
     for (unsigned i=0; i<myCombination.getIsActive().size(); i++)
         if (myCombination.getValue(i))
         {
-            if (getProxyPragaName(mySettings.getProxy(i)->getName()) == height)
+            if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
                 myFunc.push_back(functionTemperatureVsHeight);
             else
                 myFunc.push_back(linear);
@@ -1481,10 +1481,13 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     }
 
 
+    // interpolation function based on active proxies
+    std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc = combineFunction(outCombination, mySettings);
+
     float q;
     std::vector <float> slopes(avgs.size());
     //statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, slopes, int(predictorsNorm[0].size()));
-    /*bestFittingMarquardt_nDimension(double (*func)(std::vector<double>&, std::vector<double>&), int nrTrials, int nrMinima,
+    /*bestFittingMarquardt_nDimension(myFunc, 1000, 5,
                                         std::vector<double>& parametersMin, std::vector<double>& parametersMax,
                                         std::vector<double>& parameters, std::vector<double> &parametersDelta,
                                         int maxIterationsNr, double myEpsilon,
