@@ -907,11 +907,10 @@ namespace interpolation
         int nrParameters = int(parameters.size());
         double bestR2 = NODATA;
         double R2;
-        double* R2Previous = (double *) calloc(nrMinima, sizeof(double));
-        //double* ySim = (double *) calloc(nrData, sizeof(double));
+        std::vector <double> R2Previous(nrMinima);
         std::vector<double> ySim;
         ySim.resize(nrData);
-        double* bestParameters = (double *) calloc(nrParameters, sizeof(double));
+        std::vector <double> bestParameters(nrParameters);
 
         std::vector<double> xPoint;
         xPoint.resize(xDim);
@@ -934,8 +933,6 @@ namespace interpolation
                                         myEpsilon, x, y, nrData, xDim, isWeighted, weights);
             for (i=0;i<nrData;i++)
             {
-                //double xSim;
-                //xSim = x[i][0];
                 for (int k=0; k<xDim; k++)
                 {
                     xPoint[k] = x[i][k];
@@ -966,8 +963,6 @@ namespace interpolation
             parameters[i] = bestParameters[i];
         }
 
-        free(bestParameters);
-        free(R2Previous);
         return counter;
     }
 
@@ -986,13 +981,13 @@ namespace interpolation
 
         //double* paramChange = (double *) calloc(nrParameters, sizeof(double));
         std::vector<double> paramChange;
-        paramChange.resize(nrParameters);
+        paramChange.resize(nrParameters+1);
         std::vector<double> newParameters;
         newParameters.resize(nrParameters);
         //double* lambda = (double *) calloc(nrParameters, sizeof(double));
         std::vector<double> lambda;
-        lambda.resize(nrParameters);
-        for(int i = 0; i < nrParameters; i++)
+        lambda.resize(nrParameters+1);
+        for(int i = 0; i < nrParameters+1; i++)
         {
             lambda[i] = 0.01;       // damping parameter
             paramChange[i] = 0;
