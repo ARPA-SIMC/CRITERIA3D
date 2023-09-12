@@ -794,7 +794,11 @@ namespace interpolation
             secondDerivative[i] = NODATA;
         }
 
-        punctualSecondDerivative(dim, firstColumn, secondColumn, secondDerivative);
+        if (! punctualSecondDerivative(dim, firstColumn, secondColumn, secondDerivative))
+        {
+            free(secondDerivative);
+            return NODATA;
+        }
 
         while (x > firstColumn[i])
             i++;
@@ -811,10 +815,12 @@ namespace interpolation
         return y ;
     }
 
-    void punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative)
+
+    bool punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative)
     {
-        int matrixDimension;
-        matrixDimension = dim-2;
+        if (dim <= 2) return false;
+
+        int matrixDimension = dim-2;
         double *y2 = (double *) calloc(matrixDimension, sizeof(double));
         double *constantTerm = (double *) calloc(matrixDimension, sizeof(double));
         double *diagonal =  (double *) calloc(matrixDimension, sizeof(double));
@@ -842,7 +848,9 @@ namespace interpolation
         free(subDiagonal);
         free(superDiagonal);
 
+        return true;
     }
+
 
     void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output)
     {
@@ -922,7 +930,8 @@ namespace interpolation
         {
             R2Previous[i] = NODATA;
         }
-        srand (time(nullptr));
+        srand (unsigned(time(nullptr)));
+
         do
         {
             for (i=0; i<nrParameters; i++)

@@ -344,16 +344,13 @@
 
     bool generalizedGammaFitting(std::vector<float> &series, int n, double *beta, double *alpha,  double *pZero)
     {
-        if (n<=0)
-        {
-            return false;
-        }
+        if (n<=0) return false;
+
         double sum = 0;
         double sumLog = 0;
-        *pZero = 0;
-        double delta;
         int nAct = 0;
         double average = 0;
+        *pZero = 0;
 
         // compute sums
         for (int i = 0; i<n; i++)
@@ -372,6 +369,7 @@
                 }
             }
         }
+
         if (nAct > 0)
         {
             average = sum / nAct;
@@ -381,7 +379,6 @@
         {
             // Bogus data array but do something reasonable
             *pZero = 0;
-            delta = 0;
             *alpha = 1;
             *beta = average;
         }
@@ -389,7 +386,6 @@
         {
             // They were all zeroes
             *pZero = 1;
-            delta = 0;
             *alpha = 1;
             *beta = average;
         }
@@ -397,10 +393,11 @@
         {
             // Use MLE
             *pZero = *pZero/n;
-            delta = log(average) - sumLog / nAct;
+            double delta = log(average) - sumLog / nAct;
             *alpha = (1 + sqrt(1 + 4 * delta / 3)) / (4 * delta);
             *beta = average / (*alpha);
         }
+
         if (*alpha <= 0 || *beta <= 0)
         {
             return false;

@@ -85,7 +85,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
 
         double modifiedVanGenuchten(double psi, double *parameters, bool isRestricted);
         double cubicSpline(double x , double *firstColumn , double *secondColumn, int dim); // not working to be checked
-        void punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative); // not working to be checked
+        bool punctualSecondDerivative(int dim, double *firstColumn , double *secondColumn, double* secondDerivative); // not working to be checked
         void tridiagonalThomasAlgorithm (int n, double *subDiagonal, double *mainDiagonal, double *superDiagonal, double *constantTerm, double* output); // not working to be checked
 
         double computeR2(const std::vector<double>& obs,const std::vector<double>& sim, int nrPoints);
