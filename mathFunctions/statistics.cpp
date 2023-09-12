@@ -1,5 +1,5 @@
 /*!
-    \copyright 2016 Fausto Tomei, Gabriele Antolini,
+    \copyright 2022 Fausto Tomei, Gabriele Antolini,
     Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
 
     This file is part of CRITERIA3D.
@@ -19,8 +19,9 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     Contacts:
-    fausto.tomei@gmail.com
     ftomei@arpae.it
+    gantolini@arpae.it
+    avolta@arpae.it
 */
 
 #include <math.h>

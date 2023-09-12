@@ -1,5 +1,5 @@
 /*!
-    \copyright 2016 Fausto Tomei, Gabriele Antolini,
+    \copyright 2022 Fausto Tomei, Gabriele Antolini,
     Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
 
     This file is part of CRITERIA3D.
@@ -19,14 +19,17 @@
     along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
 
     Contacts:
-    Antonio Volta  avolta@arpae.it
+    ftomei@arpae.it
+    gantolini@arpae.it
+    avolta@arpae.it
 */
 
-#include "commonConstants.h"
-#include "basicMath.h"
 #include <math.h>
 #include <stdlib.h>
 #include <algorithm>
+
+#include "commonConstants.h"
+#include "basicMath.h"
 
 
     bool sameSignNoZero(float a, float b)
