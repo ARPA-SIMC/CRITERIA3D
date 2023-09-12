@@ -564,17 +564,17 @@ namespace interpolation
         int i, j, k;
         double pivot, mult, top;
 
-        double* g = (double *) calloc(nrParameters+1, sizeof(double));
-        double* z = (double *) calloc(nrParameters+1, sizeof(double));
-        double* firstEst = (double *) calloc(nrData+1, sizeof(double));
+        double* g = (double *) calloc(nrParameters, sizeof(double));
+        double* z = (double *) calloc(nrParameters, sizeof(double));
+        double* firstEst = (double *) calloc(nrData, sizeof(double));
 
-        double** a = (double **) calloc(nrParameters+1, sizeof(double*));
-        double** P = (double **) calloc(nrParameters+1, sizeof(double*));
+        double** a = (double **) calloc(nrParameters, sizeof(double*));
+        double** P = (double **) calloc(nrParameters, sizeof(double*));
 
-        for (i = 0; i < nrParameters+1; i++)
+        for (i = 0; i < nrParameters; i++)
         {
-                a[i] = (double *) calloc(nrParameters+1, sizeof(double));
-                P[i] = (double *) calloc(nrData+1, sizeof(double));
+                a[i] = (double *) calloc(nrParameters, sizeof(double));
+                P[i] = (double *) calloc(nrData, sizeof(double));
         }
 
         // first set of estimates
@@ -611,7 +611,7 @@ namespace interpolation
         for (i = 0; i < nrParameters; i++)
         {
             g[i] = 0.;
-            for (k = 0 ; k<nrData ; k++)
+            for (k = 0 ; k < nrData ; k++)
             {
                 g[i] += P[i][k] * (y[k] - firstEst[k]);
             }
@@ -622,7 +622,7 @@ namespace interpolation
             }
         }
 
-        for (i = 0; i < (nrParameters+1); i++)
+        for (i = 0; i < nrParameters; i++)
         {
             a[i][i] += lambda[i];
             for (j = i+1; j < nrParameters; j++)
@@ -663,7 +663,7 @@ namespace interpolation
         }
 
         // free memory
-        for (i = 0; i < nrParameters+1; i++)
+        for (i = 0; i < nrParameters; i++)
         {
             free(a[i]);
             free(P[i]);
