@@ -8,8 +8,8 @@
 #include <gdalwarper.h>
 
 
-bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj,
-                   QString outputName, QString &errorStr)
+bool shapeToRaster(QString shapeFileName, QString shapeField, QString resolution, QString proj,
+                   QString outputName, QString paletteFileName, QString &errorStr)
 {
 
     int error = -1;
@@ -29,7 +29,6 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
     }
 
     GDALDataset* shpDS;
-    GDALDatasetH rasterizeDS;
     shpDS = (GDALDataset*)GDALOpenEx(shapeFileName.toStdString().data(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
     if( shpDS == nullptr )
     {
@@ -55,22 +54,22 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         errorStr = "Missing projection";
         return false;
     }
-    std::string outputNoReprojStd;
 
+    std::string outputNoReprojStr;
     if (proj.isEmpty())
     {
-        outputNoReprojStd = outputName.toStdString();   // there is no reprojection to do
+        outputNoReprojStr = outputName.toStdString();   // there is no reprojection to do
     }
     else
     {
         QString fileName = file.absolutePath() + "/" + file.baseName() + "_noreproj." + ext;
-        outputNoReprojStd = fileName.toStdString();
+        outputNoReprojStr = fileName.toStdString();
     }
 
     std::string res = resolution.toStdString();
 
     // set options
-    char *options[] = {strdup("-at"), strdup("-of"), strdup(formatOption.c_str()), strdup("-a"), strdup(shapeField.c_str()), strdup("-a_nodata"), strdup("-9999"),
+    char *options[] = {strdup("-at"), strdup("-of"), strdup(formatOption.c_str()), strdup("-a"), strdup(shapeField.toStdString().c_str()), strdup("-a_nodata"), strdup("-9999"),
                        strdup("-a_srs"), pszProjection, strdup("-tr"), strdup(res.c_str()), strdup(res.c_str()), strdup("-co"), strdup("COMPRESS=LZW"), nullptr};
 
     GDALRasterizeOptions *psOptions = GDALRasterizeOptionsNew(options, nullptr);
@@ -81,12 +80,28 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         return false;
     }
 
-    rasterizeDS = GDALRasterize(strdup(outputNoReprojStd.c_str()),nullptr,shpDS,psOptions,&error);
+    // rasterize
+    GDALDatasetH noColorDataset = GDALRasterize(strdup(outputNoReprojStr.c_str()), nullptr, shpDS, psOptions, &error);
+
+    GDALClose(shpDS);
+    GDALRasterizeOptionsFree(psOptions);
+
+    if (noColorDataset == nullptr || error == 1)
+    {
+        CPLFree( pszProjection );
+        return false;
+    }
+
+    // save color map (before reprojection)
+    GDALDatasetH rasterizeDS;
+    rasterizeDS = GDALDEMProcessing(strdup(outputName.toStdString().c_str()), noColorDataset, "color-relief",
+                                      strdup(paletteFileName.toStdString().c_str()), nullptr, &error);
+
+    GDALClose(noColorDataset);
 
     if (rasterizeDS == nullptr || error == 1)
     {
-        GDALClose(shpDS);
-        GDALRasterizeOptionsFree(psOptions);
+        QFile::remove(outputName);
         CPLFree( pszProjection );
         return false;
     }
@@ -105,9 +120,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         if (hDriver == nullptr)
         {
             errorStr = "Error GDALGetDriverByName";
-            GDALClose(shpDS);
             GDALClose(rasterizeDS);
-            GDALRasterizeOptionsFree(psOptions);
             CPLFree( pszProjection );
             return false;
         }
@@ -128,9 +141,7 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         if ( hTransformArg == nullptr )
         {
             errorStr = "Error GDALCreateGenImgProjTransformer";
-            GDALClose(shpDS);
             GDALClose(rasterizeDS);
-            GDALRasterizeOptionsFree(psOptions);
             CPLFree( pszProjection );
             return false;
         }
@@ -145,24 +156,21 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         if( eErr != CE_None )
         {
             errorStr = "Error GDALSuggestedWarpOutput";
-            GDALClose(shpDS);
             GDALClose(rasterizeDS);
-            GDALRasterizeOptionsFree(psOptions);
             CPLFree( pszProjection );
             return false;
         }
 
         char *createOptions[] = {strdup("COMPRESS=LZW"), nullptr};
         // Create the output file.
-        hDstDS = GDALCreate( hDriver, strdup(outputName.toStdString().c_str()) , nPixels, nLines,
+        QString fileName = file.absolutePath() + "/" + file.baseName() + "_proj." + ext;
+        hDstDS = GDALCreate( hDriver, strdup(fileName.toStdString().c_str()) , nPixels, nLines,
                              GDALGetRasterCount(rasterizeDS), eDT, createOptions );
 
         if( hDstDS == nullptr )
         {
             errorStr = "Error GDALCreate output reprojected";
-            GDALClose(shpDS);
             GDALClose(rasterizeDS);
-            GDALRasterizeOptionsFree(psOptions);
             CPLFree( pszProjection );
             return false;
         }
@@ -239,26 +247,19 @@ bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolu
         {
             errorStr =  CPLGetLastErrorMsg();
             GDALDestroyGenImgProjTransformer( hTransformArg );
-            GDALClose(shpDS);
             GDALClose(rasterizeDS);
-            GDALRasterizeOptionsFree(psOptions);
             GDALDestroyWarpOptions( psWarpOptions );
             CPLFree( pszProjection );
             return false;
         }
+
         GDALDestroyGenImgProjTransformer( hTransformArg );
         GDALDestroyWarpOptions( psWarpOptions );
         GDALClose( hDstDS );
-        GDALClose(shpDS);
-        GDALClose(rasterizeDS);
-        GDALRasterizeOptionsFree(psOptions);
-        CPLFree( pszProjection );
-        QFile::remove(QString::fromStdString(outputNoReprojStd));
-        return true;
+        QFile::remove(QString::fromStdString(outputNoReprojStr));
     }
-    GDALClose(shpDS);
+
     GDALClose(rasterizeDS);
-    GDALRasterizeOptionsFree(psOptions);
     CPLFree( pszProjection );
     return true;
 }
