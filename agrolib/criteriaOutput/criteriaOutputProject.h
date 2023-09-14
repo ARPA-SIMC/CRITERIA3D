@@ -13,7 +13,7 @@
 #include "shapeHandler.h"
 #include "crit3dDate.h"
 
-#define REQUIREDMAPLISTCSVINFO 2
+#define REQUIREDMAPLISTCSVINFO 3
 
 #define ERROR_MISSINGPARAMETERS -900
 #define ERROR_WRONGPARAMETER -901
@@ -63,6 +63,7 @@ public:
     QString aggregationThreshold;
 
     QString mapListFileName;
+    QString mapPalettePath;
     QString mapCellSize;
     QString mapFormat;
     QString mapProjection;

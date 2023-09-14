@@ -32,8 +32,8 @@ static QMap<QString, QString> mapExtensionShortName
     {"bil", "EHdr"}
 };
 
-bool shapeToRaster(QString shapeFileName, std::string shapeField, QString resolution, QString proj,
-                   QString outputName, QString &errorStr);
+bool shapeToRaster(QString shapeFileName, QString shapeField, QString resolution, QString proj,
+                   QString outputName, QString paletteFileName, QString &errorStr);
 
 
 #endif // GDALSHAPEFUNCTIONS_H

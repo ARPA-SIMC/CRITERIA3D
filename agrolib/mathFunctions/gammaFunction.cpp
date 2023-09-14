@@ -1,6 +1,33 @@
+/*!
+    \copyright 2023
+    Fausto Tomei, Gabriele Antolini, Antonio Volta
+
+    This file is part of AGROLIB distribution.
+    AGROLIB has been developed under contract issued by A.R.P.A. Emilia-Romagna
+
+    AGROLIB is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    AGROLIB is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with AGROLIB.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contacts:
+    ftomei@arpae.it
+    gantolini@arpae.it
+    avolta@arpae.it
+*/
+
 #include <math.h>
 #include <float.h>
-#include <limits.h>             // required for LONG_MAX
+#include <limits>             // required for LONG_MAX
+
 #include "commonConstants.h"
 #include "gammaFunction.h"
 #include "basicMath.h"
@@ -344,16 +371,13 @@
 
     bool generalizedGammaFitting(std::vector<float> &series, int n, double *beta, double *alpha,  double *pZero)
     {
-        if (n<=0)
-        {
-            return false;
-        }
+        if (n<=0) return false;
+
         double sum = 0;
         double sumLog = 0;
-        *pZero = 0;
-        double delta;
         int nAct = 0;
         double average = 0;
+        *pZero = 0;
 
         // compute sums
         for (int i = 0; i<n; i++)
@@ -372,6 +396,7 @@
                 }
             }
         }
+
         if (nAct > 0)
         {
             average = sum / nAct;
@@ -381,7 +406,6 @@
         {
             // Bogus data array but do something reasonable
             *pZero = 0;
-            delta = 0;
             *alpha = 1;
             *beta = average;
         }
@@ -389,7 +413,6 @@
         {
             // They were all zeroes
             *pZero = 1;
-            delta = 0;
             *alpha = 1;
             *beta = average;
         }
@@ -397,10 +420,11 @@
         {
             // Use MLE
             *pZero = *pZero/n;
-            delta = log(average) - sumLog / nAct;
+            double delta = log(average) - sumLog / nAct;
             *alpha = (1 + sqrt(1 + 4 * delta / 3)) / (4 * delta);
             *beta = average / (*alpha);
         }
+
         if (*alpha <= 0 || *beta <= 0)
         {
             return false;

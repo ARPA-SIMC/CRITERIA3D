@@ -1403,6 +1403,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     std::vector <float> avgs;
     std::vector <float> stdDevs;
 
+    validNr = 0;
     for (pos=0; pos < int(mySettings->getProxyNr()); pos++)
     {
         if (myCombination.getValue(pos) && proxyValidity(finalPoints, pos, mySettings->getProxy(pos)->getStdDevThreshold(), &avg, &stdDev))
@@ -1419,7 +1420,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     if (validNr == 0) return outCombination;
 
     // set all proxies unsignificant if not enough points
-    if (finalPoints.size() < mySettings->getMinPointsLocalDetrending()) return outCombination;
+    if (finalPoints.size() < mySettings->getMinPointsLocalDetrending())
     {
         for (pos = 0; pos < mySettings->getProxyNr(); pos++)
             mySettings->getProxy(pos)->setIsSignificant(false);
@@ -1451,7 +1452,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
         weights.push_back(finalPoints[i].regressionWeight);
     }
 
-    if (finalPoints.size() < mySettings->getMinPointsLocalDetrending()) return outCombination;
+    if (finalPoints.size() < mySettings->getMinPointsLocalDetrending())
     {
         for (pos = 0; pos < mySettings->getProxyNr(); pos++)
             mySettings->getProxy(pos)->setIsSignificant(false);
@@ -1463,14 +1464,13 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc = combineFunction(myCombination, mySettings);
 
     float q;
-    std::vector <double> parameters;
-    std::vector <double> parametersMin = {-20, -0.05, -0.01, -0.01, -10};
-    std::vector <double> parametersMax = {45, 0.001, 100, 1, 1000};
-    std::vector <double> parametersDelta = {0.01, 0.01, 0.01, 0.01, 0.01};
-
+    std::vector <double> parametersMin = {-200, -100, 0, 0, -10};
+    std::vector <double> parametersMax = {200, 100, 100, 100, 10};
+    std::vector <double> parametersDelta = {0.1, 0.1, 0.1, 0.1, 0.1};
+    std::vector <double> parameters = {20, -5, 10, 10, 0};
 
     //statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, slopes, int(predictorsNorm[0].size()));
-    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 10, parametersMin, parametersMax, parameters, parametersDelta,
+    int nSteps = interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 10, parametersMin, parametersMax, parameters, parametersDelta,
                                     10000, EPSILON, predictorsNorm, predictands, predictands.size(), validNr, false, weights);
 
     Crit3DProxy* myProxy;
