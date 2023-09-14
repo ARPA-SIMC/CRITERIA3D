@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>5</day>
+       <day>4</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2066,7 +2066,14 @@
      <property name="title">
       <string>Water fluxes</string>
      </property>
-     <addaction name="actionView_SurfaceWaterContent"/>
+     <widget class="QMenu" name="menuSurface_water_content">
+      <property name="title">
+       <string>Surface water content</string>
+      </property>
+      <addaction name="action_surface_wc_automatic_range"/>
+      <addaction name="action_surface_wc_Fixed_range"/>
+     </widget>
+     <addaction name="menuSurface_water_content"/>
      <addaction name="actionView_SoilMoisture"/>
     </widget>
     <widget class="QMenu" name="menuShowLand_use">
@@ -2774,11 +2781,6 @@
     <string>3D viewer</string>
    </property>
   </action>
-  <action name="actionView_SurfaceWaterContent">
-   <property name="text">
-    <string>Surface water content</string>
-   </property>
-  </action>
   <action name="actionView_LandUseMap">
    <property name="text">
     <string>Land use map</string>
@@ -2812,6 +2814,22 @@
   <action name="actionView_SoilMoisture">
    <property name="text">
     <string>Soil moisture</string>
+   </property>
+  </action>
+  <action name="action_surface_wc_automatic_range">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Automatic range</string>
+   </property>
+  </action>
+  <action name="action_surface_wc_Fixed_range">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fixed range</string>
    </property>
   </action>
  </widget>

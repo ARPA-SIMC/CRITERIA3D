@@ -203,8 +203,6 @@
         void on_viewer3DClosed();
         void on_slopeChanged();
 
-        void on_actionView_SurfaceWaterContent_triggered();
-
         void on_actionLoad_land_use_map_triggered();
 
         void on_actionHide_LandUseMap_triggered();
@@ -220,6 +218,10 @@
         void on_layerNrEdit_valueChanged(int layerIndex);
 
         void on_actionWaterFluxes_settings_triggered();
+
+        void on_action_surface_wc_automatic_range_triggered(bool checked);
+
+        void on_action_surface_wc_Fixed_range_triggered(bool checked);
 
     protected:
         /*!
@@ -318,7 +320,7 @@
 
         void showMeteoVariable(meteoVariable var);
         void showSnowVariable(meteoVariable var);
-        void showCriteria3DVariable(criteria3DVariable var, int layerIndex);
+        void showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange, float minimum, float maximum);
 
         bool setRadiationAsCurrentVariable();
         bool startModels(QDateTime firstTime, QDateTime lastTime);

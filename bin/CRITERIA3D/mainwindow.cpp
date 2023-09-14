@@ -2222,7 +2222,7 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
 }
 
 
-void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex)
+void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex, bool isFixedRange, float minimum, float maximum)
 {
     if (! myProject.isCriteria3DInitialized)
     {
@@ -2256,14 +2256,54 @@ void MainWindow::showCriteria3DVariable(criteria3DVariable var, int layerIndex)
         }
     }
 
+    // set range
+    if (isFixedRange)
+    {
+        myProject.criteria3DMap.colorScale->setRange(minimum, maximum);
+        myProject.criteria3DMap.colorScale->setRangeBlocked(true);
+    }
+    else
+    {
+        myProject.criteria3DMap.colorScale->setRangeBlocked(false);
+    }
+
     setCurrentRasterOutput(&(myProject.criteria3DMap));
 }
 
 
-void MainWindow::on_actionView_SurfaceWaterContent_triggered()
+void MainWindow::on_action_surface_wc_automatic_range_triggered(bool checked)
 {
-    showCriteria3DVariable(waterContent, 0);
+    ui->action_surface_wc_Fixed_range->setChecked(! checked);
+
+    if (checked)
+    {
+        showCriteria3DVariable(waterContent, 0, false, NODATA, NODATA);
+    }
 }
+
+
+void MainWindow::on_action_surface_wc_Fixed_range_triggered(bool checked)
+{
+    ui->action_surface_wc_automatic_range->setChecked(! checked);
+
+    if (checked)
+    {
+        // choose minimum
+        float minimum = 0;
+        QString valueStr = editValue("Choose minimum value [mm]", QString::number(minimum));
+        if (valueStr == "") return;
+        minimum = valueStr.toFloat();
+
+        // choose maximum
+        float maximum = 100;
+        valueStr = editValue("Choose maximum value [mm]", QString::number(maximum));
+        if (valueStr == "") return;
+        maximum = valueStr.toFloat();
+
+        showCriteria3DVariable(waterContent, 0, true, minimum, maximum);
+    }
+}
+
 
 
 //------------------- STATES ----------------------
@@ -3046,7 +3086,7 @@ void MainWindow::on_actionHide_Geomap_triggered()
 void MainWindow::on_actionView_SoilMoisture_triggered()
 {
     int layerIndex = std::max(1, ui->layerNrEdit->value());
-    showCriteria3DVariable(waterContent, layerIndex);
+    showCriteria3DVariable(waterContent, layerIndex, false, NODATA, NODATA);
 }
 
 
@@ -3071,7 +3111,16 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
 
     if (view3DVariable && current3DlayerIndex != 0)
     {
-        showCriteria3DVariable(current3DVariable, layerIndex);
+        if (myProject.criteria3DMap.colorScale->isRangeBlocked())
+        {
+            showCriteria3DVariable(current3DVariable, layerIndex, true,
+                                   myProject.criteria3DMap.colorScale->minimum(),
+                                   myProject.criteria3DMap.colorScale->maximum());
+        }
+        else
+        {
+            showCriteria3DVariable(current3DVariable, layerIndex, false, NODATA, NODATA);
+        }
     }
 }
 
