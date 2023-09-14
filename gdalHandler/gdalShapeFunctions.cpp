@@ -94,17 +94,25 @@ bool shapeToRaster(QString shapeFileName, QString shapeField, QString resolution
 
     // save color map (before reprojection)
     GDALDatasetH rasterizeDS;
-    rasterizeDS = GDALDEMProcessing(strdup(outputName.toStdString().c_str()), noColorDataset, "color-relief",
+    if (! paletteFileName.isEmpty())
+    {
+        rasterizeDS = GDALDEMProcessing(strdup(outputName.toStdString().c_str()), noColorDataset, "color-relief",
                                       strdup(paletteFileName.toStdString().c_str()), nullptr, &error);
 
-    GDALClose(noColorDataset);
-
-    if (rasterizeDS == nullptr || error == 1)
-    {
-        QFile::remove(outputName);
-        CPLFree( pszProjection );
-        return false;
+        if (rasterizeDS == nullptr || error == 1)
+        {
+            QFile::remove(outputName);
+            GDALClose(noColorDataset);
+            CPLFree(pszProjection );
+            return false;
+        }
     }
+    else
+    {
+        rasterizeDS = noColorDataset;
+    }
+
+    GDALClose(noColorDataset);
 
     // reprojection
     if (!proj.isEmpty())
