@@ -44,6 +44,31 @@ double functionSum(std::vector<std::function<double(std::vector<double>&, std::v
 }
 
 // Air temperature vs height
+double tempVsHeightPiecewise(std::vector<double> &x, std::vector<double> &par)
+{
+    double y,m,q;
+    double xb;
+    // par[2] means the delta between the two quotes. It must be positive.
+    xb = par[0]+par[2];
+    if (x[0] < par[0])
+    {
+        m = par[4];
+        q = par[1]-m*par[0];
+    }
+    else if (x[0]>par[2])
+    {
+        m = par[4];
+        q = par[3]-m*xb;
+    }
+    else
+    {
+        m = (par[3]-par[1])/xb;
+        q = par[1]-m*par[0];
+    }
+    y = m*x[0]+q;
+    return y;
+}
+
 double functionTemperatureVsHeight(std::vector<double> &x, std::vector<double> &par)
 {
     if (par.size() < 5)
