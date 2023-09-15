@@ -258,14 +258,10 @@ bool CriteriaOutputProject::readSettings()
     {
         dbDataName = projectSettings->value("db_output","").toString();
     }
-    if (dbDataName.isEmpty())
+    if (! dbDataName.isEmpty())
     {
-        projectError = "Missing db_data";
-        return false;
-    }
-    if (dbDataName.at(0) == ".")
-    {
-        dbDataName = QDir::cleanPath(path + dbDataName);
+        if (dbDataName.at(0) == ".")
+            dbDataName = QDir::cleanPath(path + dbDataName);
     }
 
     dbCropName = projectSettings->value("db_crop","").toString();
