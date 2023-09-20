@@ -1471,7 +1471,6 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     std::vector <double> parametersDelta = {5, 1, 5, 1, 0.01};
     std::vector <double> parameters = {100, 45, 300, 0, 0};
 
-    //statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, slopes, int(predictorsNorm[0].size()));
     int nSteps = interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 10, parametersMin, parametersMax, parameters, parametersDelta,
                                     10000, EPSILON, predictors, predictands, predictands.size(), validNr, false, weights);
 
