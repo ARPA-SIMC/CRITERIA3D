@@ -45,10 +45,11 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
     double errorFunctionPrimitive(double x);
     float gaussianFunction(TfunctionInput fInput);
     float gaussianFunction(float x, float mean, float devStd);
-    float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5);
-    double functionLinear(std::vector <double>& x, std::vector <double>& par);
-    double functionTemperatureVsHeight(std::vector<double> &x, std::vector<double> &par);
     double functionSum(std::vector<std::function<double (std::vector<double> &, std::vector<double> &)> > &functions, std::vector<double>& x, std::vector<double>& par);
+    double functionLinear(std::vector <double>& x, std::vector <double>& par);
+    double lapseRatePiecewise(std::vector <double> x, std::vector <double> par, int xDim, int nrPar);
+    double lapseRateFrei(std::vector <double> x, std::vector <double> par, int xDim, int nrPar);
+    double lapseRateRotatedSigmoid(std::vector <double> x, std::vector <double> par, int xDim, int nrPar);
 
     namespace integration
     {

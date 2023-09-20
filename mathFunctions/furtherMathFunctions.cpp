@@ -33,18 +33,36 @@
 #include "furtherMathFunctions.h"
 
 
-double functionSum(std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>>& functions, std::vector<double>& x, std::vector<double>& par)
+double lapseRateRotatedSigmoid(std::vector <double> x, std::vector <double> par, int xDim, int nrPar)
 {
-    double result = 0.0;
-    for (const auto& function : functions)
-    {
-        result += function(x,par);
-    }
-    return result;
+    double y;
+    y = par[0] + par[1]*x[0] + par[2]*(1/(1+exp(-par[3]*(x[0] - par[4]))));
+    return y;
 }
 
-// Air temperature vs height
-double tempVsHeightPiecewise(std::vector<double> &x, std::vector<double> &par)
+double lapseRateFrei(std::vector <double> x, std::vector <double> par, int xDim, int nrPar)
+{
+    /*
+    par[0] = T0;
+    par[1] = gamma;
+    par[2] = a;
+    par[3] = h0;
+    par[4] = h1;
+    */
+    double y;
+    y = par[0] - par[1]*x[0];
+    if (x[0] <= par[3])
+    {
+        return y - par[2];
+    }
+    else if (x[0] >= par[4])
+    {
+        return y;
+    }
+    return y - 0.5*par[2]*(1 + cos(PI*(x[0]-par[3])/(par[4]-par[3])));
+}
+
+double lapseRatePiecewise(std::vector <double> x, std::vector <double> par, int xDim, int nrPar)
 {
     double y,m,q;
     double xb;
@@ -69,13 +87,14 @@ double tempVsHeightPiecewise(std::vector<double> &x, std::vector<double> &par)
     return y;
 }
 
-double functionTemperatureVsHeight(std::vector<double> &x, std::vector<double> &par)
+double functionSum(std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>>& functions, std::vector<double>& x, std::vector<double>& par)
 {
-    if (par.size() < 5)
-        return NODATA;
-
-    double y = par[0] + par[1]*x[0] + par[2]*(1/(1+exp(-par[3]*(x[0] - par[4]))));
-    return y;
+    double result = 0.0;
+    for (const auto& function : functions)
+    {
+        result += function(x,par);
+    }
+    return result;
 }
 
 double functionLinear(std::vector <double>& x, std::vector <double>& par)
@@ -96,16 +115,6 @@ double multilinear(std::vector<double> &x, std::vector<double> &par)
     return y;
 }
 
-
-float lapseRateSigmoidalFunction(float x, float par1, float par2, float par3, float par4, float par5)
-{
-    // par1 correponds to T0
-    // par2 descent slope (negative value)
-    // par3 magnitude of the sigmoid par2 >= 0, if par2==0 no sigmoid
-    // par4 steepness of the sigmoid function
-    // par5 center of the sigmoid
-    return par1 + par2*x + par3*(1/(1+exp(-par4*(x-par5))));
-}
 float gaussianFunction(TfunctionInput fInput)
 {
     double y = (1 / (fInput.par[1] * sqrt(2*PI))

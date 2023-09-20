@@ -1329,7 +1329,7 @@ std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> c
         if (myCombination.getValue(i))
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
-                myFunc.push_back(functionTemperatureVsHeight);
+                myFunc.push_back(tempVsHeightPiecewise);
             else
                 myFunc.push_back(functionLinear);
         }
@@ -1430,7 +1430,8 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
 
     // z-score normalization
     std::vector <double> rowPredictors;
-    std::vector <std::vector <double>> predictorsNorm;
+    //std::vector <std::vector <double>> predictorsNorm;
+    std::vector <std::vector <double>> predictors;
     std::vector <double> predictands;
     std::vector <double> weights;
     unsigned index = 0;
@@ -1443,11 +1444,13 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
             if (outCombination.getValue(pos))
             {
                 proxyValue = finalPoints[i].getProxyValue(pos);
-                rowPredictors.push_back((proxyValue - avgs[index]) / stdDevs[index]);
+                //rowPredictors.push_back((proxyValue - avgs[index]) / stdDevs[index]);
+                rowPredictors.push_back(proxyValue);
                 index++;
             }
 
-        predictorsNorm.push_back(rowPredictors);
+        //predictorsNorm.push_back(rowPredictors);
+        predictors.push_back(rowPredictors);
         predictands.push_back(finalPoints[i].value);
         weights.push_back(finalPoints[i].regressionWeight);
     }
@@ -1471,7 +1474,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
 
     //statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, slopes, int(predictorsNorm[0].size()));
     int nSteps = interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 10, parametersMin, parametersMax, parameters, parametersDelta,
-                                    10000, EPSILON, predictorsNorm, predictands, predictands.size(), validNr, false, weights);
+                                    10000, EPSILON, predictors, predictands, predictands.size(), validNr, false, weights);
 
     Crit3DProxy* myProxy;
     index=0;
