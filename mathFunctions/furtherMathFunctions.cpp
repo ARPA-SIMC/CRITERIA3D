@@ -33,14 +33,15 @@
 #include "furtherMathFunctions.h"
 
 
-double lapseRateRotatedSigmoid(std::vector <double> x, std::vector <double> par, int xDim, int nrPar)
+double lapseRateRotatedSigmoid(std::vector <double> x, std::vector <double> par)
 {
+    if (par.size() < 4) return NODATA;
     double y;
     y = par[0] + par[1]*x[0] + par[2]*(1/(1+exp(-par[3]*(x[0] - par[4]))));
     return y;
 }
 
-double lapseRateFrei(std::vector <double> x, std::vector <double> par, int xDim, int nrPar)
+double lapseRateFrei(std::vector <double> x, std::vector <double> par)
 {
     /*
     par[0] = T0;
@@ -49,6 +50,9 @@ double lapseRateFrei(std::vector <double> x, std::vector <double> par, int xDim,
     par[3] = h0;
     par[4] = h1;
     */
+
+    if (par.size() < 4) return NODATA;
+
     double y;
     y = par[0] - par[1]*x[0];
     if (x[0] <= par[3])
@@ -62,8 +66,10 @@ double lapseRateFrei(std::vector <double> x, std::vector <double> par, int xDim,
     return y - 0.5*par[2]*(1 + cos(PI*(x[0]-par[3])/(par[4]-par[3])));
 }
 
-double lapseRatePiecewise(std::vector <double> x, std::vector <double> par, int xDim, int nrPar)
+double lapseRatePiecewise(std::vector <double> x, std::vector <double> par)
 {
+    if (par.size() < 4) return NODATA;
+
     double y,m,q;
     double xb;
     // par[2] means the delta between the two quotes. It must be positive.

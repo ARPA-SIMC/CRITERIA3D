@@ -1329,7 +1329,7 @@ std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> c
         if (myCombination.getValue(i))
         {
             if (getProxyPragaName(mySettings->getProxy(i)->getName()) == height)
-                myFunc.push_back(tempVsHeightPiecewise);
+                myFunc.push_back(lapseRatePiecewise);
             else
                 myFunc.push_back(functionLinear);
         }
@@ -1466,11 +1466,10 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
 
     std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc = combineFunction(myCombination, mySettings);
 
-    float q;
-    std::vector <double> parametersMin = {-200, -100, 0, 0, -10};
-    std::vector <double> parametersMax = {200, 100, 100, 100, 10};
-    std::vector <double> parametersDelta = {0.1, 0.1, 0.1, 0.1, 0.1};
-    std::vector <double> parameters = {20, -5, 10, 10, 0};
+    std::vector <double> parametersMin = {0, 40, -0.1, -40, -0.05};
+    std::vector <double> parametersMax = {1500, 55, 1500, 55, 0.001};
+    std::vector <double> parametersDelta = {5, 1, 5, 1, 0.01};
+    std::vector <double> parameters = {100, 45, 300, 0, 0};
 
     //statistics::weightedMultiRegressionLinear(predictorsNorm, predictands, weights, long(predictorsNorm.size()), &q, slopes, int(predictorsNorm[0].size()));
     int nSteps = interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 10, parametersMin, parametersMax, parameters, parametersDelta,
