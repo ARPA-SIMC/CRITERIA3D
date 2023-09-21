@@ -907,7 +907,6 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
         }
 
         // output
-        // all computation type produce db output except EnsembleForecast and SeasonalForecast
         if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast)
         {
             updateIrrigationStatistics(myDate, indexIrrigationSeries);
@@ -916,7 +915,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
         {
             updateMediumTermForecastOutput(myDate, memberNr);
         }
-        if ( !isEnsembleForecast && !isSeasonalForecast )
+        if ( !isEnsembleForecast && !isSeasonalForecast && !isMonthlyStatistics)
         {
             updateOutput(myDate, isFirstDay);
             isFirstDay = false;
@@ -930,8 +929,8 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
         logger.writeInfo("Save state:" + dbState.databaseName());
     }
 
-    // SeasonalForecast and EnsembleForecast do not produce db output (too much useless data)
-    if (isSeasonalForecast || isEnsembleForecast)
+    // SeasonalForecast, EnsembleForecast and MonthlyStatistics do not produce db output (too much useless data)
+    if (isSeasonalForecast || isEnsembleForecast || isMonthlyStatistics)
         return true;
     else
         return saveOutput(projectError);
@@ -1817,7 +1816,7 @@ int Crit1DProject::openAllDatabase()
     }
 
     // output DB (not used in seasonal/monthly forecast)
-    if ((! isSeasonalForecast) && (! isEnsembleForecast))
+    if ( !isMonthlyStatistics && !isSeasonalForecast && !isEnsembleForecast)
     {
         if (dbOutputName == "")
         {
