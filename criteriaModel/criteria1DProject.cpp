@@ -839,9 +839,8 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
         return false;
     }
 
-    if ((! isSeasonalForecast) && (! isEnsembleForecast))
+    if ( !isMonthlyStatistics && !isSeasonalForecast && !isEnsembleForecast )
     {
-        // all computation types produce the db output except EnsembleForecast and SeasonalForecast
         if (! createOutputTable(projectError))
             return false;
     }
