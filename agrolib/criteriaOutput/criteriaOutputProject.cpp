@@ -583,13 +583,6 @@ int CriteriaOutputProject::createMaps()
         return ERROR_SETTINGS_MISSINGDATA;
     }
 
-    // check format and projection
-    if (mapProjection.isEmpty())
-    {
-        projectError = "Missing projection ";
-        return ERROR_SETTINGS_MISSINGDATA;
-    }
-
     if (!mapExtensionShortName.contains(mapFormat))
     {
         projectError = "Unknown output format ";
