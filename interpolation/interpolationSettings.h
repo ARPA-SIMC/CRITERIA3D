@@ -34,6 +34,9 @@
         float regressionSlope;
         float regressionIntercept;
 
+        std::vector <double> fittingParametersRange;
+        std::vector <double> fittingParameters;
+
         float avg;
         float stdDev;
         float stdDevThreshold;
@@ -92,6 +95,10 @@
         void setStdDev(float newStdDev);
         float getStdDevThreshold() const;
         void setStdDevThreshold(float newStdDevThreshold);
+        std::vector<double> getFittingParameters() const;
+        void setFittingParameters(const std::vector<double> &newFittingParameters);
+        std::vector<double> getFittingParametersRange() const;
+        void setFittingParametersRange(const std::vector<double> &newFittingParametersRange);
     };
 
     class Crit3DProxyCombination

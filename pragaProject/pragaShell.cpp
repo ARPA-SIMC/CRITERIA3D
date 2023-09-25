@@ -21,6 +21,7 @@ QList<QString> getPragaCommandList()
     cmdList.append("GridAggr        | GridAggregation");
     cmdList.append("GridDerVar      | GridDerivedVariables");
     cmdList.append("GridMonthlyInt  | GridMonthlyIntegrationVariables");
+    cmdList.append("GridExport      | GridRaster");
     cmdList.append("Netcdf          | ExportNetcdf");
     cmdList.append("SaveLogProc     | SaveLogProceduresGrid");
     cmdList.append("XMLToNetcdf     | ExportXMLElabToNetcdf");
@@ -86,6 +87,11 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
     {
         *isCommandFound = true;
         return cmdMonthlyIntegrationVariablesGrid(this, argumentList);
+    }
+    else if (command == "GRIDEXPORT" || "GRIDRASTER")
+    {
+        *isCommandFound = true;
+        return cmdExportDailyGridToRaster(this, argumentList);
     }
 #ifdef NETCDF
     else if (command == "DROUGHTINDEX" || command == "DROUGHT")
@@ -516,6 +522,91 @@ int cmdMonthlyIntegrationVariablesGrid(PragaProject* myProject, QList<QString> a
     }
 
     if (! myProject->monthlyVariablesGrid(first, last, variables))
+        return PRAGA_ERROR;
+
+    return PRAGA_OK;
+}
+
+int cmdExportDailyGridToRaster(PragaProject* myProject, QList<QString> argumentList)
+{
+    // default date
+    QDate dateIni = QDate::currentDate();
+    QDate dateFin = QDate::currentDate();
+    QString dateIniStr = "", dateFinStr = "";
+    QString var = "";
+    meteoVariable meteoVar = noMeteoVar;
+    bool parseCellsize = false;
+    int cellSize = NODATA;
+    QString path_ = "";
+    bool parseDaysPrevious = false;
+    int nrPreviousDays = NODATA;
+
+    for (int i = 1; i < argumentList.size(); i++)
+    {
+        if (argumentList.at(i).left(3) == "-v:")
+        {
+            var = argumentList[i].right(argumentList[i].length()-3);
+            meteoVar = getMeteoVar(var.toStdString());
+        }
+        else if (argumentList.at(i).left(4) == "-d1:")
+        {
+            dateIniStr = argumentList[i].right(argumentList[i].length()-4);
+            dateIni = QDate::fromString(dateIniStr, "dd/MM/yyyy");
+        }
+        else if (argumentList.at(i).left(4) == "-d2:")
+        {
+            dateFinStr = argumentList[i].right(argumentList[i].length()-4);
+            dateFin = QDate::fromString(dateIniStr, "dd/MM/yyyy");
+        }
+        else if (argumentList.at(i).left(4) == "-dp:")
+        {
+            nrPreviousDays = argumentList[i].right(argumentList[i].length()-4).toInt(&parseDaysPrevious);
+        }
+        else if (argumentList.at(i).left(3) == "-p:")
+        {
+            path_ = argumentList[i].right(argumentList[i].length()-3);
+        }
+        else if (argumentList.at(i).left(3) == "-r:")
+        {
+            cellSize = argumentList[i].right(argumentList[i].length()-3).toInt(&parseCellsize);
+        }
+    }
+
+    if (meteoVar == noMeteoVar)
+    {
+        myProject->logError("Wrong variable");
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (nrPreviousDays != NODATA && parseDaysPrevious)
+    {
+        dateFin = QDateTime::currentDateTime().date()-1;
+        dateIni = dateFin.addDays(-nrPreviousDays+1);
+    }
+    else if (dateIniStr == "" || ! dateIni.isValid())
+    {
+        myProject->logError("Wrong initial date");
+        return PRAGA_INVALID_COMMAND;
+    }
+    else if (dateIniStr == "" || ! dateFin.isValid())
+    {
+        myProject->logError("Wrong final date");
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (path_ == "")
+    {
+        myProject->logError("Wrong path");
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (! parseCellsize)
+    {
+        myProject->logError("Wrong cell size");
+        return PRAGA_INVALID_COMMAND;
+    }
+
+    if (! myProject->loadAndExportMeteoGridToRasterFlt(path_, cellSize, meteoVar, dateIni, dateFin))
         return PRAGA_ERROR;
 
     return PRAGA_OK;

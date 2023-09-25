@@ -3805,28 +3805,100 @@ bool Project::getComputeOnlyPoints()
 
 bool Project::exportMeteoGridToRasterFlt(QString fileName, double cellSize)
 {
-    if (fileName != "")
+    if (! meteoGridLoaded || meteoGridDbHandler == nullptr)
     {
-        gis::Crit3DRasterGrid myGrid;
-        if (!meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
-        {
-            errorString = "initializeGrid failed";
-            return false;
-        }
-
-        std::string myError = errorString.toStdString();
-        QString fileWithoutExtension = QFileInfo(fileName).absolutePath() + QDir::separator() + QFileInfo(fileName).baseName();
-        if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), &myGrid, myError))
-        {
-            errorString = QString::fromStdString(myError);
-            return false;
-        }
-        return true;
-
+        logInfoGUI("No meteogrid open");
+        return false;
     }
-    return false;
+
+    if (fileName == "")
+    {
+        logInfoGUI("No filename provided");
+        return false;
+    }
+
+    if (cellSize < 0)
+    {
+        logInfoGUI("Incorrect cell size");
+        return false;
+    }
+
+    gis::Crit3DRasterGrid myGrid;
+    if (!meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
+    {
+        errorString = "initializeGrid failed";
+        return false;
+    }
+
+    std::string myError = errorString.toStdString();
+    QString fileWithoutExtension = QFileInfo(fileName).absolutePath() + QDir::separator() + QFileInfo(fileName).baseName();
+    if (!gis::writeEsriGrid(fileWithoutExtension.toStdString(), &myGrid, myError))
+    {
+        errorString = QString::fromStdString(myError);
+        return false;
+    }
+
+    return true;
 }
 
+
+bool Project::loadAndExportMeteoGridToRasterFlt(QString outPath, double cellSize, meteoVariable myVar, QDate dateIni, QDate dateFin)
+{
+    if (! meteoGridLoaded || meteoGridDbHandler == nullptr)
+    {
+        logInfoGUI("No meteogrid open");
+        return false;
+    }
+
+    if (outPath == "")
+    {
+        logInfoGUI("No filename provided");
+        return false;
+    }
+
+    if (cellSize < 0)
+    {
+        logInfoGUI("Incorrect cell size");
+        return false;
+    }
+
+    if (myVar == noMeteoVar)
+    {
+        logInfoGUI("No meteo variable");
+        return false;
+    }
+
+    if (! dateIni.isValid() || ! dateFin.isValid())
+    {
+        logInfoGUI("Invalid dates");
+        return false;
+    }
+
+    QDate date_ = dateIni;
+    gis::Crit3DRasterGrid myGrid;
+    QString fileName;
+
+    if (! loadMeteoGridDailyData(dateIni, dateFin, false))
+        return false;
+
+   while (date_ <= dateFin)
+    {
+
+        meteoGridDbHandler->meteoGrid()->fillCurrentDailyValue(getCrit3DDate(date_), myVar, meteoSettings);
+        meteoGridDbHandler->meteoGrid()->fillMeteoRaster();
+
+        if (! meteoGridDbHandler->MeteoGridToRasterFlt(cellSize, gisSettings, myGrid))
+            return false;
+
+        fileName = outPath + QDir::separator() + QString::fromStdString(getVariableString(myVar)) + "_" + date_.toString("yyyyMMdd") + ".flt";
+        if (! exportMeteoGridToRasterFlt(fileName, cellSize))
+            return false;
+
+        date_ = date_.addDays(1);
+    }
+
+    return true;
+}
 
 bool Project::exportMeteoGridToCsv(QString fileName)
 {
