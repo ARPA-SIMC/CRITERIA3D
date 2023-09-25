@@ -69,13 +69,14 @@
         bool isSaveState;
         bool isRestart;
 
-        // forecast period
+        // forecast/climate type
         bool isYearlyStatistics;
+        bool isMonthlyStatistics;
         bool isSeasonalForecast;
-        bool isMonthlyForecast;
+        bool isEnsembleForecast;
         bool isShortTermForecast;
 
-        int firstSeasonMonth;
+        int firstMonth;
         int daysOfForecast;
         int nrYears;
         std::vector<float> irriSeries;
@@ -116,9 +117,9 @@
         bool setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr);
 
         bool setPercentileOutputCsv();
-        void updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int memberNr);
+        void updateMediumTermForecastOutput(Crit3DDate myDate, unsigned int memberNr);
         void initializeIrrigationStatistics(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
-        void updateIrrigationStatistics(Crit3DDate myDate, int &index);
+        void updateIrrigationStatistics(Crit3DDate myDate, int &currentIndex);
         bool computeIrrigationStatistics(unsigned int index, float irriRatio);
         bool computeMonthlyForecast(unsigned int unitIndex, float irriRatio);
 

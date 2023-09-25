@@ -550,9 +550,22 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
     if (computeFactorOfSafety)
     {
         unsigned int nrLayers = unsigned(soilLayers.size());
+        double rootDensityMax = 0;
         for (unsigned int l = 1; l < nrLayers; l++)
         {
-            soilLayers[l].factorOfSafety = soilLayers[l].computeSlopeStability(unit.slope);
+            rootDensityMax = std::max(rootDensityMax, crop.roots.rootDensity[l]);
+        }
+
+        // TODO add crop.roots.tensileStrength
+        for (unsigned int l = 1; l < nrLayers; l++)
+        {
+            double rootDensityNorm;
+            if (rootDensityMax == 0)
+                rootDensityNorm = 0;
+            else
+                rootDensityNorm = crop.roots.rootDensity[l] / rootDensityMax;
+
+            soilLayers[l].factorOfSafety = soilLayers[l].computeSlopeStability(unit.slope, rootDensityNorm);
         }
     }
 
