@@ -580,7 +580,7 @@ int cmdExportDailyGridToRaster(PragaProject* myProject, QList<QString> argumentL
 
     if (nrPreviousDays != NODATA && parseDaysPrevious)
     {
-        dateFin = QDateTime::currentDateTime().date()-1;
+        dateFin = QDateTime::currentDateTime().date().addDays(-1);
         dateIni = dateFin.addDays(-nrPreviousDays+1);
     }
     else if (dateIniStr == "" || ! dateIni.isValid())
