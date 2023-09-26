@@ -1475,19 +1475,16 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     std::vector <std::vector <double>> predictors;
     std::vector <double> predictands;
     std::vector <double> weights;
-    unsigned index = 0;
 
     for (i=0; i < finalPoints.size(); i++)
     {
         rowPredictors.clear();
-        index = 0;
         for (pos=0; pos < mySettings->getProxyNr(); pos++)
             if (outCombination.getValue(pos))
             {
                 proxyValue = finalPoints[i].getProxyValue(pos);
                 //rowPredictors.push_back((proxyValue - avgs[index]) / stdDevs[index]);
                 rowPredictors.push_back(proxyValue);
-                index++;
             }
 
         //predictorsNorm.push_back(rowPredictors);
@@ -1542,8 +1539,6 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
     {
         for (pos=0; pos < mySettings->getProxyNr(); pos++)
         {
-            detrendValue = 0;
-
             if (outCombination.getValue(pos))
             {
                 proxyValue = myPoints[i].getProxyValue(pos);
@@ -1551,7 +1546,7 @@ Crit3DProxyCombination multipleDetrending(std::vector <Crit3DInterpolationDataPo
             }
         }
 
-        detrendValue = functionSum(myFunc, proxyValues, parameters);
+        detrendValue = float(functionSum(myFunc, proxyValues, parameters));
         myPoints[i].value -= detrendValue;
     }
 
