@@ -1323,8 +1323,8 @@ bool proxyValidity(std::vector <Crit3DInterpolationDataPoint> &myPoints, int pro
 }
 
 bool setfittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolationSettings* mySettings,
-                     std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>> myFunc,
-                     std::vector <double> paramMin, std::vector <double> paramMax)
+                     std::vector<std::function<double(std::vector<double>&, std::vector<double>&)>>& myFunc,
+                     std::vector <double>& paramMin, std::vector <double>& paramMax)
 {
     for (unsigned i=0; i<myCombination.getIsActive().size(); i++)
         if (myCombination.getValue(i))
@@ -1335,11 +1335,12 @@ bool setfittingParameters(Crit3DProxyCombination myCombination, Crit3DInterpolat
                 myFunc.push_back(functionLinear);
 
             std::vector <double> myParam = mySettings->getProxy(i)->getFittingParametersRange();
+            unsigned int nrParam = unsigned(myParam.size() / 2);
 
-            for (unsigned j=0; j<myParam.size()/2; j++)
+            for (unsigned j=0; j < nrParam; j++)
             {
                 paramMin.push_back(myParam[j]);
-                paramMax.push_back(myParam[j]+1);
+                paramMax.push_back(myParam[nrParam+j]);
             }
         }
 

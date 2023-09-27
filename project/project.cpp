@@ -652,9 +652,12 @@ bool Project::loadParameters(QString parametersFileName)
         //proxy variables (for interpolation)
         if (group.startsWith("proxy_"))
         {
+            QString name_;
+
             Crit3DProxy* myProxy = new Crit3DProxy();
 
-            myProxy->setName(group.right(group.size()-6).toStdString());
+            name_ = group.right(group.size()-6);
+            myProxy->setName(name_.toStdString());
 
             parameters->beginGroup(group);
 
@@ -665,6 +668,25 @@ bool Project::loadParameters(QString parametersFileName)
 
             if (parameters->contains("stddev_threshold"))
                 myProxy->setStdDevThreshold(parameters->value("stddev_threshold").toFloat());
+
+            if (parameters->contains("fitting_parameters"))
+            {
+                unsigned int nrParameters;
+
+                if (getProxyPragaName(name_.toStdString()) == height)
+                    nrParameters = 5;
+                else
+                    nrParameters = 1;
+
+                myList = parameters->value("fitting_parameters").toStringList();
+                if (myList.size() != nrParameters*2)
+                {
+                    errorString = "Incomplete fitting parameters for proxy " + name_;
+                    return  false;
+                }
+
+                myProxy->setFittingParametersRange(StringListToDouble(myList));
+            }
 
             if (! parameters->contains("active"))
             {
@@ -2852,6 +2874,7 @@ void Project::saveProxies()
             if (myProxy->getProxyField() != "") parameters->setValue("field", QString::fromStdString(myProxy->getProxyField()));
             if (myProxy->getGridName() != "") parameters->setValue("raster", getRelativePath(QString::fromStdString(myProxy->getGridName())));
             if (myProxy->getStdDevThreshold() != NODATA) parameters->setValue("stddev_threshold", QString::number(myProxy->getStdDevThreshold()));
+            if (myProxy->getFittingParametersRange().size() > 0) parameters->setValue("fitting_parameters", DoubleVectorToStringList(myProxy->getFittingParametersRange()));
         parameters->endGroup();
     }
 }
