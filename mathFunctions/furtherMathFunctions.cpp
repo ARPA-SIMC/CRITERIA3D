@@ -79,14 +79,14 @@ double lapseRatePiecewise(std::vector <double> x, std::vector <double> par)
         m = par[4];
         q = par[1]-m*par[0];
     }
-    else if (x[0]>par[2])
+    else if (x[0]>par[0] + par[2])
     {
         m = par[4];
         q = par[3]-m*xb;
     }
     else
     {
-        m = (par[3]-par[1])/xb;
+        m = (par[3]-par[1])/par[2];
         q = par[1]-m*par[0];
     }
     y = m*x[0]+q;
@@ -951,7 +951,7 @@ namespace interpolation
                                         int nrTrials, int nrMinima,
                                         std::vector<double> &parametersMin, std::vector<double> &parametersMax,
                                         std::vector<double> &parameters, std::vector<double>& parametersDelta,
-                                        int maxIterationsNr, double myEpsilon,
+                                        int maxIterationsNr, double myEpsilon, double deltaR2,
                                         std::vector <std::vector <double>>& x ,std::vector<double>& y,
                                         int nrData, int xDim, bool isWeighted, std::vector<double>& weights)
     {
@@ -1008,7 +1008,7 @@ namespace interpolation
             }
             iRandom++;
             counter++;
-        } while( (iRandom < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > 0.0001) );
+        } while( (iRandom < nrTrials) && (R2 < (1 - EPSILON)) && (fabs(R2Previous[0]-R2Previous[nrMinima-1]) > deltaR2) );
 
         for (i=0;i<nrParameters;i++)
         {
