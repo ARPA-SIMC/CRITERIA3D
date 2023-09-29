@@ -529,6 +529,26 @@ void Crit3DProxy::setStdDevThreshold(float newStdDevThreshold)
     stdDevThreshold = newStdDevThreshold;
 }
 
+std::vector<double> Crit3DProxy::getFittingParameters() const
+{
+    return fittingParameters;
+}
+
+void Crit3DProxy::setFittingParameters(const std::vector<double> &newFittingParameters)
+{
+    fittingParameters = newFittingParameters;
+}
+
+std::vector<double> Crit3DProxy::getFittingParametersRange() const
+{
+    return fittingParametersRange;
+}
+
+void Crit3DProxy::setFittingParametersRange(const std::vector<double> &newFittingParametersRange)
+{
+    fittingParametersRange = newFittingParametersRange;
+}
+
 Crit3DProxy::Crit3DProxy()
 {
     name = "";

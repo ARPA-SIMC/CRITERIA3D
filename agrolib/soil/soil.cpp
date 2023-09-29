@@ -747,7 +747,7 @@ namespace soil
      * \return factor of safety FoS [-]
      * if fos < 1 the slope is unstable
      */
-    double Crit3DLayer::computeSlopeStability(double slope)
+    double Crit3DLayer::computeSlopeStability(double slope, double normalizedRootDensity)
     {
         double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
 

@@ -95,7 +95,7 @@ enum estimatedFunction {FUNCTION_CODE_SPHERICAL, FUNCTION_CODE_LINEAR, FUNCTION_
                                         int nrTrials, int nrMinima,
                                         std::vector<double>& parametersMin, std::vector<double>& parametersMax,
                                         std::vector<double>& parameters, std::vector<double> &parametersDelta,
-                                        int maxIterationsNr, double myEpsilon,
+                                        int maxIterationsNr, double myEpsilon, double deltaR2,
                                         std::vector <std::vector <double>>& x , std::vector<double>& y, int nrData, int xDim, bool isWeighted, std::vector<double>& weights);
 
         bool fittingMarquardt_nDimension(double (*func)(std::vector<std::function<double (std::vector<double> &, std::vector<double> &)> > &, std::vector<double> &, std::vector<double> &),
