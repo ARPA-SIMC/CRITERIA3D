@@ -84,7 +84,7 @@
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
         void resetCrop(unsigned int nrLayers);
-        bool updateLAI(double latitude, unsigned int nrLayers, int myDoy);
+        bool updateLAI(double latitude, unsigned int nrLayers, int currentDoy);
         bool dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
                          double tmin, double tmax, double waterTableDepth, std::string &myError);
         bool restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
