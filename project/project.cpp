@@ -1023,11 +1023,12 @@ bool Project::loadDEM(QString myFileName)
 
 bool Project::loadMeteoPointsDB(QString fileName)
 {
-    if (fileName == "") return false;
-
-    logInfoGUI("Load meteo points DB = " + fileName);
+    if (fileName == "")
+        return false;
 
     closeMeteoPointsDB();
+
+    logInfoGUI("Load meteo points DB = " + fileName);
 
     dbPointsFileName = fileName;
     QString dbName = getCompleteFileName(fileName, PATH_METEOPOINT);
@@ -3390,7 +3391,7 @@ bool Project::parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString>*
 }
 
 
-bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
+bool Project::writeMeteoPointsProperties(QList<QString> propertiesList)
 {
     QList<QString> header = importProperties->getHeader();
     QList<QList<QString>> dataFields = importProperties->getData();
@@ -3398,9 +3399,9 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
     QList<QString> column;
     QList<int> posValues;
 
-    for (int i = 0; i<joinedList.size(); i++)
+    for (int i = 0; i < propertiesList.size(); i++)
     {
-        QList<QString> couple = joinedList[i].split("-->");
+        QList<QString> couple = propertiesList[i].split("-->");
         QString pragaProperties = couple[0];
         QString fileProperties = couple[1];
         int pos = header.indexOf(fileProperties);
@@ -3416,7 +3417,7 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
     for (int row = 0; row<dataFields.size(); row++)
     {
         values.clear();
-        for (int j = 0; j<posValues.size(); j++)
+        for (int j = 0; j < posValues.size(); j++)
         {
             values << dataFields[row][posValues[j]];
         }
@@ -3425,6 +3426,7 @@ bool Project::writeMeteoPointsProperties(QList<QString> joinedList)
 
     return true;
 }
+
 
 void Project::showProxyGraph()
 {
