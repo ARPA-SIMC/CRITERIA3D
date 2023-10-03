@@ -88,7 +88,7 @@ int PragaProject::executePragaCommand(QList<QString> argumentList, bool* isComma
         *isCommandFound = true;
         return cmdMonthlyIntegrationVariablesGrid(this, argumentList);
     }
-    else if (command == "GRIDEXPORT" || "GRIDRASTER")
+    else if ((command == "GRIDEXPORT") || (command ==  "GRIDRASTER"))
     {
         *isCommandFound = true;
         return cmdExportDailyGridToRaster(this, argumentList);
