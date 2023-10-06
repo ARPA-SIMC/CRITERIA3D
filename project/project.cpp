@@ -2055,7 +2055,7 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
 {
     if (! getComputeOnlyPoints()) return false;
 
-    std::vector <float> proxyValues;
+    std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
     for (unsigned int i = 0; i < outputPoints.size(); i++)
@@ -2232,7 +2232,7 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
         return false;
     }
 
-    std::vector <float> proxyValues;
+    std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
     double x, y;
 
@@ -2503,7 +2503,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     frequencyType freq = getVarFrequency(myVar);
 
     float myX, myY, myZ;
-    std::vector <float> proxyValues;
+    std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
     float interpolatedValue = NODATA;
@@ -2533,7 +2533,7 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
                             {
                                 float proxyValue = gis::getValueFromXY(*meteoGridProxies[proxyIndex], myX, myY);
                                 if (proxyValue != meteoGridProxies[proxyIndex]->header->flag)
-                                    proxyValues[i] = proxyValue;
+                                    proxyValues[i] = double(proxyValue);
                             }
 
                             proxyIndex++;
