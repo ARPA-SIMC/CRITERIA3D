@@ -33,11 +33,11 @@
 #include "furtherMathFunctions.h"
 
 
-double lapseRateRotatedSigmoid(std::vector <double> x, std::vector <double> par)
+double lapseRateRotatedSigmoid(double x, std::vector <double> par)
 {
     if (par.size() < 4) return NODATA;
     double y;
-    y = par[0] + par[1]*x[0] + par[2]*(1/(1+exp(-par[3]*(x[0] - par[4]))));
+    y = par[0] + par[1]*x + par[2]*(1/(1+exp(-par[3]*(x - par[4]))));
     return y;
 }
 
