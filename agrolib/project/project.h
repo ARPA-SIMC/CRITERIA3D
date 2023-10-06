@@ -262,7 +262,7 @@
         void importHourlyMeteoData(const QString& fileName, bool importAllFiles, bool deletePreviousData);
 
         bool parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString> *csvFields);
-        bool writeMeteoPointsProperties(QList<QString> joinedList);
+        bool writeMeteoPointsProperties(QList<QString> propertiesList);
 
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
