@@ -276,6 +276,26 @@ void Crit3DInterpolationSettings::setMinPointsLocalDetrending(int newMinPointsLo
     minPointsLocalDetrending = newMinPointsLocalDetrending;
 }
 
+std::vector<std::vector<double> > Crit3DInterpolationSettings::getFittingParameters() const
+{
+    return fittingParameters;
+}
+
+void Crit3DInterpolationSettings::setFittingParameters(const std::vector<std::vector<double> > &newFittingParameters)
+{
+    fittingParameters = newFittingParameters;
+}
+
+std::vector<std::function<double (double, std::vector<double> &)>> Crit3DInterpolationSettings::getFittingFunction() const
+{
+    return fittingFunction;
+}
+
+void Crit3DInterpolationSettings::setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction)
+{
+    fittingFunction = newFittingFunction;
+}
+
 Crit3DInterpolationSettings::Crit3DInterpolationSettings()
 {
     initialize();
@@ -529,16 +549,6 @@ void Crit3DProxy::setStdDevThreshold(float newStdDevThreshold)
     stdDevThreshold = newStdDevThreshold;
 }
 
-std::vector<double> Crit3DProxy::getFittingParameters() const
-{
-    return fittingParameters;
-}
-
-void Crit3DProxy::setFittingParameters(const std::vector<double> &newFittingParameters)
-{
-    fittingParameters = newFittingParameters;
-}
-
 std::vector<double> Crit3DProxy::getFittingParametersRange() const
 {
     return fittingParametersRange;
@@ -626,7 +636,7 @@ void Crit3DProxy::setRegressionSlope(float myValue)
 float Crit3DProxy::getRegressionSlope()
 { return regressionSlope;}
 
-float Crit3DProxy::getValue(unsigned int pos, std::vector <float> proxyValues)
+double Crit3DProxy::getValue(unsigned int pos, std::vector <double> proxyValues)
 {
     if (pos < proxyValues.size())
         return proxyValues[pos];
@@ -663,7 +673,7 @@ void Crit3DInterpolationSettings::addProxy(Crit3DProxy myProxy, bool isActive_)
 std::string Crit3DInterpolationSettings::getProxyName(unsigned pos)
 { return currentProxy[pos].getName();}
 
-float Crit3DInterpolationSettings::getProxyValue(unsigned pos, std::vector <float> proxyValues)
+double Crit3DInterpolationSettings::getProxyValue(unsigned pos, std::vector <double> proxyValues)
 {
     if (pos < currentProxy.size())
         return currentProxy[pos].getValue(pos, proxyValues);
