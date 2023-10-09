@@ -92,7 +92,7 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
 
     for (int i = 0; i < nrMeteoPoints; i++)
     {
-        myProxyValues = getActiveProxyValues(settings, meteoPoints[i].getProxyValues());
+        myProxyValues = meteoPoints[i].getProxyValues();
 
         meteoPoints[i].residual = NODATA;
 
@@ -207,7 +207,7 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
                                             float(meteoPoints[listIndex[i]].point.utm.x),
                                             float(meteoPoints[listIndex[i]].point.utm.y),
                                             float(meteoPoints[listIndex[i]].point.z),
-                                            getActiveProxyValues(settings, meteoPoints[i].getProxyValues()),
+                                            meteoPoints[i].getProxyValues(),
                                             false);
 
                     myValue = meteoPoints[listIndex[i]].currentValue;
