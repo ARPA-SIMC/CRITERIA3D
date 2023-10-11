@@ -445,6 +445,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
     }
 
     QString myPointCode = "";
+    QString previousPointCode = "";
 
     if (format_isSinglePoint)
     {
@@ -456,6 +457,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
                 *error = "Point code not found for file: " + dataFileName;
                 return false;
             }
+
             // check if myPointCode exists
             if (isGrid)
             {
@@ -487,200 +489,228 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
     QVariant myFlag;
     QVariant myValue;
     int nErrors = 0;
-    int nReplication = 0;  // LC è sempre 0,eliminare?
 
     QMultiMap<QString, QList<QString>> mapIdValues;
     QList<QString> listEntries;
 
     while (!in.atEnd())
     {
-      QString line = in.readLine();
-      if (nRow >= format_headerRow && !line.isEmpty())
-      {
-          if (!format_isSinglePoint)
-          {
-              //multipoint
-              QString previousPointCode = "";
-              myPointCode = parseXMLPointCode(line);
-              if (myPointCode.isEmpty())
-              {
-                  *error = "Point code not found for file: " + dataFileName;
-                  return false;
-              }
-              if (myPointCode != previousPointCode)
-              {
-                  // check if myPointCode exists
-                  if (isGrid)
-                  {
-                      if(!meteoGridDbHandler->meteoGrid()->existsMeteoPointFromId(myPointCode.toStdString()))
-                      {
-                          *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
-                          return false;
-                      }
-                  }
-                  else
-                  {
-                      if (!meteoPointsDbHandler->existIdPoint(myPointCode))
-                      {
-                          *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
-                          return false;
-                      }
-                  }
-                  previousPointCode = myPointCode;
-              }
-          }
-        if (time.getType().toUpper() == "DAILY")
+        QString line = in.readLine();
+        if (nRow >= format_headerRow && !line.isEmpty())
         {
-            QDate myDate = parseXMLDate(line);
-            if (!myDate.isValid() || myDate.year() == 1800)
+            if (!format_isSinglePoint)
             {
-                *error = "Date not found or not valid for file: " + dataFileName;
-                return false;
-            }
-            for (int i = 0; i<variable.size(); i++)
-            {
-                if (variable[i].nReplication > 1)
+                // multipoint
+                myPointCode = parseXMLPointCode(line);
+                if (myPointCode.isEmpty())
                 {
-                    // TO DO (anche in vb)
+                    *error = "Point code not found for file: " + dataFileName;
+                    return false;
                 }
-                else
-                {
-                    // FLAG
-                    if (!variable[i].flagAccepted.isEmpty())
-                    {
-                        QString format = variable[i].flagField.getFormat();
-                        if (format.isEmpty() || format == "%s" || format == "%d")
-                        {
-                            myFlagAccepted = variable[i].flagAccepted;
-                            myFlag = parseXMLFixedValue(line, nReplication, variable[i].flagField);
-                        }
-                    }
-                    else
-                    {
-                        myFlagAccepted = 0;
-                        myFlag = 0;
-                    }
-                    myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
-                    if (myValue.toString() == "ERROR")
-                    {
-                        nErrors = nErrors + 1;
-                        myValue = format_missingValue;
-                    }
-                    else if (myFlag != myFlagAccepted)
-                    {
-                        myValue = format_missingValue;
-                    }
 
-                } // end flag if
-                if (myValue != format_missingValue)
+                if (myPointCode != previousPointCode)
                 {
-                    // write myValue
-                    meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable[i].varField.getType().toStdString());
-                    if (var == noMeteoVar)
-                    {
-                        *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
-                        return false;
-                    }
+                    // check if myPointCode exists
                     if (isGrid)
                     {
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoGridDbHandler->getDailyVarCode(var)).arg(myValue.toFloat()));
-                    }
-                    else
-                    {
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
-                    }
-                    mapIdValues.insert(myPointCode, listEntries);
-                    // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
-                    if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
-                    {
-                        if (!meteoGridDbHandler->saveCellCurrentGridDailyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
+                        if(!meteoGridDbHandler->meteoGrid()->existsMeteoPointFromId(myPointCode.toStdString()))
                         {
+                            *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
                             return false;
                         }
                     }
-                }
-            }
-        } // end daily
-        else if (time.getType().toUpper() == "HOURLY")
-        {
-            QDateTime myDateTime = parseXMLDateTime(line);
-            if (!myDateTime.isValid() || myDateTime.date().year() == 1800)
-            {
-                *error = "Date not found or not valid for file: " + dataFileName + "\n" + line;
-                return false;
-            }
-            for (int i = 0; i<variable.size(); i++)
-            {
-                if (variable[i].nReplication > 1)
-                {
-                    // TO DO (anche in vb)
-                }
-                else
-                {
-                    // FLAG
-                    if (!variable[i].flagAccepted.isEmpty())
-                    {
-                        QString format = variable[i].flagField.getFormat();
-                        if (format.isEmpty() || format == "%s" || format == "%d")
-                        {
-                            myFlagAccepted = variable[i].flagAccepted;
-                            myFlag = parseXMLFixedValue(line, nReplication, variable[i].flagField);
-                        }
-                    }
                     else
                     {
-                        myFlagAccepted = 0;
-                        myFlag = 0;
-                    }
-                    myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
-                    if (myValue.toString() == "ERROR")
-                    {
-                        nErrors = nErrors + 1;
-                        myValue = format_missingValue;
-                    }
-                    else if (myFlag != myFlagAccepted)
-                    {
-                        myValue = format_missingValue;
-                    }
-
-                } // end flag if
-                if (myValue != format_missingValue)
-                {
-                    // write myValue
-                    meteoVariable var = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable[i].varField.getType().toStdString());
-                    if (var == noMeteoVar)
-                    {
-                        *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
-                        return false;
-                    }
-                    if (isGrid)
-                    {
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm:ss")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
-                    }
-                    else
-                    {
-                        listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm:ss")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
-                    }
-                    mapIdValues.insert(myPointCode, listEntries);
-                    // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
-                    if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
-                    {
-                        if (!meteoGridDbHandler->saveCellCurrentGridHourlyFF(error, myPointCode, myDateTime, QString::fromStdString(meteoGridDbHandler->getHourlyPragaName(var)), myValue.toFloat()))
+                        if (!meteoPointsDbHandler->existIdPoint(myPointCode))
                         {
+                            *error = "Point code: " + myPointCode + "not exists for file: " + dataFileName;
                             return false;
                         }
                     }
+
+                    if (previousPointCode != "" && ! listEntries.isEmpty())
+                    {
+                        mapIdValues.insert(previousPointCode, listEntries);
+                        listEntries.clear();
+                    }
+                    previousPointCode = myPointCode;
                 }
             }
+
+            // DAILY
+            if (time.getType().toUpper() == "DAILY")
+            {
+                QDate myDate = parseXMLDate(line);
+                if (!myDate.isValid() || myDate.year() == 1800)
+                {
+                    *error = "Date not found or not valid for file: " + dataFileName;
+                    return false;
+                }
+                for (int i = 0; i<variable.size(); i++)
+                {
+                    if (variable[i].nReplication > 1)
+                    {
+                        // TO DO (anche in vb)
+                    }
+                    else
+                    {
+                        int nReplication = 0;
+
+                        // FLAG
+                        if (!variable[i].flagAccepted.isEmpty())
+                        {
+                            QString format = variable[i].flagField.getFormat();
+                            if (format.isEmpty() || format == "%s" || format == "%d")
+                            {
+                                myFlagAccepted = variable[i].flagAccepted;
+                                myFlag = parseXMLFixedValue(line, nReplication, variable[i].flagField);
+                            }
+                        }
+                        else
+                        {
+                            myFlagAccepted = 0;
+                            myFlag = 0;
+                        }
+
+                        myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
+                        if (myValue.toString() == "ERROR")
+                        {
+                            nErrors++;
+                            myValue = format_missingValue;
+                        }
+                        else if (myFlag != myFlagAccepted)
+                        {
+                            myValue = format_missingValue;
+                        }
+
+                    } // end flag if
+
+                    if (myValue != format_missingValue)
+                    {
+                        // write myValue
+                        meteoVariable var = getKeyMeteoVarMeteoMap(MapDailyMeteoVarToString, variable[i].varField.getType().toStdString());
+                        if (var == noMeteoVar)
+                        {
+                            *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
+                            return false;
+                        }
+                        if (isGrid)
+                        {
+                            listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoGridDbHandler->getDailyVarCode(var)).arg(myValue.toFloat()));
+                        }
+                        else
+                        {
+                            listEntries.push_back(QString("('%1',%2,%3)").arg(myDate.toString("yyyy-MM-dd")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                        }
+
+                        // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
+                        if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
+                        {
+                            if (!meteoGridDbHandler->saveCellCurrentGridDailyFF(error, myPointCode, myDate, QString::fromStdString(meteoGridDbHandler->getDailyPragaName(var)), myValue.toFloat()))
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            } // end daily
+
+            // HOURLY
+            else if (time.getType().toUpper() == "HOURLY")
+            {
+                QDateTime myDateTime = parseXMLDateTime(line);
+                if (!myDateTime.isValid() || myDateTime.date().year() == 1800)
+                {
+                    *error = "Date not found or not valid for file: " + dataFileName + "\n" + line;
+                    return false;
+                }
+                for (int i = 0; i < variable.size(); i++)
+                {
+                    if (variable[i].nReplication > 1)
+                    {
+                        // TO DO (anche in vb)
+                    }
+                    else
+                    {
+                        int nReplication = 0;
+
+                        // FLAG
+                        if (!variable[i].flagAccepted.isEmpty())
+                        {
+                            QString format = variable[i].flagField.getFormat();
+                            if (format.isEmpty() || format == "%s" || format == "%d")
+                            {
+                                myFlagAccepted = variable[i].flagAccepted;
+                                myFlag = parseXMLFixedValue(line, nReplication, variable[i].flagField);
+                            }
+                        }
+                        else
+                        {
+                            myFlagAccepted = 0;
+                            myFlag = 0;
+                        }
+
+                        if (myFlag != myFlagAccepted)
+                        {
+                            myValue = format_missingValue;
+                        }
+                        else
+                        {
+                            myValue  = parseXMLFixedValue(line, nReplication, variable[i].varField);
+                            if (myValue.toString() == "ERROR")
+                            {
+                                nErrors++;
+                                myValue = format_missingValue;
+                            }
+                        }
+                    }
+
+                    if (myValue != format_missingValue)
+                    {
+                        // write myValue
+                        meteoVariable var = getKeyMeteoVarMeteoMap(MapHourlyMeteoVarToString, variable[i].varField.getType().toStdString());
+                        if (var == noMeteoVar)
+                        {
+                            *error = "Meteovariable not found or not valid for file:\n" + dataFileName;
+                            return false;
+                        }
+                        if (isGrid)
+                        {
+                            listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm:ss")).arg(meteoGridDbHandler->getHourlyVarCode(var)).arg(myValue.toFloat()));
+                        }
+                        else
+                        {
+                            listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm:ss")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
+                        }
+
+                        // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
+                        if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
+                        {
+                            if (!meteoGridDbHandler->saveCellCurrentGridHourlyFF(error, myPointCode, myDateTime, QString::fromStdString(meteoGridDbHandler->getHourlyPragaName(var)), myValue.toFloat()))
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            } // end hourly
+
+            else
+            {
+                *error = "Unknown time type" + time.getType().toUpper() + "for file: " + dataFileName;
+                return false;
+            }
         }
-        else
-        {
-            *error = "Unknown time type" + time.getType().toUpper() + "for file: " + dataFileName;
-            return false;
-        }
-      }
-      nRow = nRow + 1;
+
+        nRow++;
     }
+
+    if (myPointCode != "" && ! listEntries.isEmpty())
+    {
+        mapIdValues.insert(myPointCode, listEntries);
+        listEntries.clear();
+    }
+
     myFile.close();
 
     if (isGrid && !meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
@@ -688,7 +718,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
         QList<QString> keys = mapIdValues.uniqueKeys();
         if (time.getType().toUpper() == "DAILY")
         {
-            for (int i = 0; i<keys.size(); i++)
+            for (int i = 0; i < keys.size(); i++)
             {
                 if (!meteoGridDbHandler->saveCellCurrentGridDailyList(keys[i], mapIdValues.value(keys[i]), error))
                 {
@@ -698,7 +728,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
         }
         else if (time.getType().toUpper() == "HOURLY")
         {
-            for (int i = 0; i<keys.size(); i++)
+            for (int i = 0; i < keys.size(); i++)
             {
                 if (!meteoGridDbHandler->saveCellCurrentGridHourlyList(keys[i], mapIdValues.value(keys[i]), error))
                 {
@@ -712,7 +742,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
         QList<QString> keys = mapIdValues.uniqueKeys();
         if (time.getType().toUpper() == "DAILY")
         {
-            for (int i = 0; i<keys.size(); i++)
+            for (int i = 0; i < keys.size(); i++)
             {
                 if (!meteoPointsDbHandler->writeDailyDataList(keys[i], mapIdValues.value(keys[i]), error))
                 {
@@ -722,7 +752,7 @@ bool ImportDataXML::importXMLDataFixed(QString *error)
         }
         else if (time.getType().toUpper() == "HOURLY")
         {
-            for (int i = 0; i<keys.size(); i++)
+            for (int i = 0; i < keys.size(); i++)
             {
                 if (!meteoPointsDbHandler->writeHourlyDataList(keys[i], mapIdValues.value(keys[i]), error))
                 {
@@ -789,8 +819,8 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
     QTextStream in(&myFile);
     int nRow = 0;
     QVariant myValue;
-    int nReplication = 0;  // TO DO
     int nErrors = 0;
+
     QMultiMap<QString, QList<QString>> mapIdValues;
     QList<QString> listEntries;
 
@@ -857,6 +887,8 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                     }
                     else
                     {
+                        int nReplication = 0;
+
                         if (!variable[i].flagAccepted.isEmpty() && variable[i].flagField.getPosition()>0 && variable[i].flagField.getPosition()-1 < myFields.size())
                         {
                             if (variable[i].varField.getPosition() > 0 && variable[i].varField.getPosition()-1 < myFields.size())
@@ -864,13 +896,13 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                                 myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
                                 if (myValue.toString() == "ERROR")
                                 {
-                                    nErrors = nErrors + 1;
+                                    nErrors++;
                                     myValue = format_missingValue;
                                 }
                             }
                             else
                             {
-                                nErrors = nErrors + 1;
+                                nErrors++;
                                 myValue = format_missingValue;
                                 return false;
                             }
@@ -887,13 +919,13 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                                 myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
                                 if (myValue.toString() == "ERROR")
                                 {
-                                    nErrors = nErrors + 1;
+                                    nErrors++;
                                     myValue = format_missingValue;
                                 }
                             }
                             else
                             {
-                                nErrors = nErrors + 1;
+                                nErrors++;
                                 myValue = format_missingValue;
                                 return false;
                             }
@@ -953,6 +985,8 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                     }
                     else
                     {
+                        int nReplication = 0;
+
                         if (!variable[i].flagAccepted.isEmpty() && variable[i].flagField.getPosition()>0 && variable[i].flagField.getPosition()-1 < myFields.size())
                         {
                             if (variable[i].varField.getPosition() > 0 && variable[i].varField.getPosition()-1 < myFields.size())
@@ -960,13 +994,13 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                                 myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
                                 if (myValue.toString() == "ERROR")
                                 {
-                                    nErrors = nErrors + 1;
+                                    nErrors++;
                                     myValue = format_missingValue;
                                 }
                             }
                             else
                             {
-                                nErrors = nErrors + 1;
+                                nErrors++;
                                 myValue = format_missingValue;
                                 return false;
                             }
@@ -983,13 +1017,13 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                                 myValue  = parseXMLFixedValue(myFields[variable[i].varField.getPosition()-1], nReplication, variable[i].varField);
                                 if (myValue.toString() == "ERROR")
                                 {
-                                    nErrors = nErrors + 1;
+                                    nErrors++;
                                     myValue = format_missingValue;
                                 }
                             }
                             else
                             {
-                                nErrors = nErrors + 1;
+                                nErrors++;
                                 myValue = format_missingValue;
                                 return false;
                             }
@@ -1011,7 +1045,9 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
                             {
                                 listEntries.push_back(QString("('%1',%2,%3)").arg(myDateTime.toString("yyyy-MM-dd hh:mm:ss")).arg(meteoPointsDbHandler->getIdfromMeteoVar(var)).arg(myValue.toFloat()));
                             }
+
                             mapIdValues.insert(myPointCode, listEntries);
+
                             // TO DO isFixedFields non è ottimizzata la scrittura, struttura non piu' utilizzata
                             if (isGrid && meteoGridDbHandler->meteoGrid()->gridStructure().isFixedFields())
                             {
@@ -1050,7 +1086,7 @@ bool ImportDataXML::importXMLDataDelimited(QString *error)
         }
         else if (time.getType().toUpper() == "HOURLY")
         {
-            for (int i = 0; i<keys.size(); i++)
+            for (int i = 0; i < keys.size(); i++)
             {
                 if (!meteoGridDbHandler->saveCellCurrentGridHourlyList(keys[i], mapIdValues.value(keys[i]), error))
                 {

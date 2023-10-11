@@ -1434,6 +1434,7 @@ bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QSt
     }
 }
 
+
 bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(QString pointCode, QList<QString> listEntries, QString* log)
 {
     if (!existIdPoint(pointCode))
@@ -1441,6 +1442,7 @@ bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(QString pointCode, QList<QS
         *log += "\nID " + pointCode + " is not present in the point properties table.";
         return false;
     }
+
     // create table
     bool deletePreviousData = false;
     QString tableName = pointCode + "_H";
@@ -1450,8 +1452,7 @@ bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(QString pointCode, QList<QS
         return false;
     }
 
-    QString queryStr = QString(("INSERT OR REPLACE INTO `%1`"
-                                " VALUES ")).arg(tableName);
+    QString queryStr = QString("INSERT OR REPLACE INTO `%1` VALUES ").arg(tableName);
 
     queryStr = queryStr + listEntries.join(",");
 
@@ -1463,11 +1464,10 @@ bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(QString pointCode, QList<QS
         *log += "\nError in execute query: " + qry.lastError().text();
         return false;
     }
-    else
-    {
-        return true;
-    }
+
+    return true;
 }
+
 
 bool Crit3DMeteoPointsDbHandler::setAllPointsActive()
 {
