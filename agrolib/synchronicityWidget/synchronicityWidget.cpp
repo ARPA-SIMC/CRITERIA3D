@@ -306,7 +306,7 @@ void Crit3DSynchronicityWidget::addInterpolationGraph()
                                               float(mp.point.utm.x),
                                               float(mp.point.utm.y),
                                               float(mp.point.z),
-                                              getActiveProxyValues(&interpolationSettings, mp.getProxyValues()), false);
+                                              mp.getProxyValues(), false);
 
         if (myValue1 != NODATA && interpolatedValue != NODATA)
         {

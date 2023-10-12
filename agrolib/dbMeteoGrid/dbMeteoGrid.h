@@ -143,15 +143,17 @@
         bool cleanDailyOldData(QString *myError, QDate date);
         bool saveListHourlyData(QString *myError, QString meteoPointID, QDateTime firstDateTime, meteoVariable meteoVar, QList<float> values);
         bool saveCellCurrentGridDaily(QString *myError, QString meteoPointID, QDate date, int varCode, float value);
-        bool saveCellCurrentGridDailyList(QString meteoPointID, QList<QString> listEntries, QString *myError);
-        bool saveCellCurrentGridHourlyList(QString meteoPointID, QList<QString> listEntries, QString *myError);
-        bool saveCellCurrentGridDailyFF(QString *myError, QString meteoPointID, QDate date, QString varPragaName, float value);
+
+        bool saveCellCurrentGridDailyList(QString meteoPointID, QList<QString> listEntries, QString &errorStr);
+        bool saveCellCurrentGridHourlyList(QString meteoPointID, QList<QString> listEntries, QString &errorStr);
+
+        bool saveCellCurrentGridDailyFF(QString &errorStr, QString meteoPointID, QDate date, QString varPragaName, float value);
         bool saveCellGridHourlyData(QString *myError, QString meteoPointID, int row, int col, QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList);
         bool saveCellGridHourlyDataFF(QString *myError, QString meteoPointID, int row, int col, QDateTime firstTime, QDateTime lastTime);
         bool saveCellGridHourlyDataEnsemble(QString *myError, QString meteoPointID, int row, int col,
                                                               QDateTime firstTime, QDateTime lastTime, QList<meteoVariable> meteoVariableList, int memberNr);
-        bool saveCellCurrentGridHourly(QString *myError, QString meteoPointID, QDateTime dateTime, int varCode, float value);
-        bool saveCellCurrentGridHourlyFF(QString *myError, QString meteoPointID, QDateTime dateTime, QString varPragaName, float value);
+        bool saveCellCurrentGridHourly(QString& errorStr, QString meteoPointID, QDateTime dateTime, int varCode, float value);
+        bool saveCellCurrentGridHourlyFF(QString &errorStr, QString meteoPointID, QDateTime dateTime, QString varPragaName, float value);
         bool activeAllCells(QString *myError);
         bool setActiveStateCellsInList(QString *myError, QList<QString> idList, bool activeState);
 

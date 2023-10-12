@@ -452,7 +452,7 @@ bool PragaProject::saveGrid(meteoVariable myVar, frequencyType myFrequency, cons
                     }
                     else
                     {
-                        this->meteoGridDbHandler->saveCellCurrentGridDailyFF(&errorString, QString::fromStdString(id), QDate(myTime.date.year, myTime.date.month, myTime.date.day), QString::fromStdString(this->meteoGridDbHandler->getDailyPragaName(myVar)), this->meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).currentValue);
+                        this->meteoGridDbHandler->saveCellCurrentGridDailyFF(errorString, QString::fromStdString(id), QDate(myTime.date.year, myTime.date.month, myTime.date.day), QString::fromStdString(this->meteoGridDbHandler->getDailyPragaName(myVar)), this->meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).currentValue);
                     }
                 }
             }
@@ -476,11 +476,11 @@ bool PragaProject::saveGrid(meteoVariable myVar, frequencyType myFrequency, cons
                 {
                     if (!this->meteoGridDbHandler->gridStructure().isFixedFields())
                     {
-                        this->meteoGridDbHandler->saveCellCurrentGridHourly(&errorString, QString::fromStdString(id), QDateTime(QDate(myTime.date.year, myTime.date.month, myTime.date.day), QTime(myTime.getHour(), myTime.getMinutes(), myTime.getSeconds()), Qt::UTC), this->meteoGridDbHandler->getHourlyVarCode(myVar), this->meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).currentValue);
+                        this->meteoGridDbHandler->saveCellCurrentGridHourly(errorString, QString::fromStdString(id), QDateTime(QDate(myTime.date.year, myTime.date.month, myTime.date.day), QTime(myTime.getHour(), myTime.getMinutes(), myTime.getSeconds()), Qt::UTC), this->meteoGridDbHandler->getHourlyVarCode(myVar), this->meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).currentValue);
                     }
                     else
                     {
-                        this->meteoGridDbHandler->saveCellCurrentGridHourlyFF(&errorString, QString::fromStdString(id), QDateTime(QDate(myTime.date.year, myTime.date.month, myTime.date.day), QTime(myTime.getHour(), myTime.getMinutes(), myTime.getSeconds()), Qt::UTC), QString::fromStdString(this->meteoGridDbHandler->getHourlyPragaName(myVar)), this->meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).currentValue);
+                        this->meteoGridDbHandler->saveCellCurrentGridHourlyFF(errorString, QString::fromStdString(id), QDateTime(QDate(myTime.date.year, myTime.date.month, myTime.date.day), QTime(myTime.getHour(), myTime.getMinutes(), myTime.getSeconds()), Qt::UTC), QString::fromStdString(this->meteoGridDbHandler->getHourlyPragaName(myVar)), this->meteoGridDbHandler->meteoGrid()->meteoPoint(row,col).currentValue);
                     }
                 }
             }
@@ -1779,7 +1779,7 @@ bool PragaProject::computeDailyVariablesPoint(Crit3DMeteoPoint *meteoPoint, QDat
         logError("Failed to compute daily data id point "+QString::fromStdString(meteoPoint->id));
         return false;
     }
-    if (!meteoPointsDbHandler->writeDailyDataList(QString::fromStdString(meteoPoint->id), listEntries, &errorString))
+    if (!meteoPointsDbHandler->writeDailyDataList(QString::fromStdString(meteoPoint->id), listEntries, errorString))
     {
         logError("Failed to write daily data id point "+QString::fromStdString(meteoPoint->id));
         return false;
@@ -2973,13 +2973,15 @@ bool PragaProject::loadXMLImportData(QString fileName)
     }
 
     errorString = "";
-    if (!importData->importData(fileName, &errorString))
+    if (!importData->importDataMain(fileName, errorString))
     {
         logError(errorString);
         return false;
     }
+
     return true;
 }
+
 
 bool PragaProject::monthlyVariablesGrid(QDate first, QDate last, QList <meteoVariable> variables)
 {
