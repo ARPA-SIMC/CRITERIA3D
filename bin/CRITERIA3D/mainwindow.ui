@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>4</day>
+       <day>3</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -2008,7 +2008,7 @@
     </widget>
     <widget class="QMenu" name="menuMeteo_variables">
      <property name="title">
-      <string>Meteo variables</string>
+      <string>Meteo map</string>
      </property>
      <addaction name="actionView_Air_temperature"/>
      <addaction name="actionView_Air_relative_humidity"/>
@@ -2084,6 +2084,13 @@
      <addaction name="separator"/>
      <addaction name="actionHide_LandUseMap"/>
     </widget>
+    <widget class="QMenu" name="actionView_Crop_degreeDays">
+     <property name="title">
+      <string>Crop model</string>
+     </property>
+     <addaction name="actiondegree_days"/>
+     <addaction name="actionView_Crop_LAI"/>
+    </widget>
     <addaction name="actionShow_3D_viewer"/>
     <addaction name="separator"/>
     <addaction name="menuPoints"/>
@@ -2094,6 +2101,8 @@
     <addaction name="menuSolar_radiation_model"/>
     <addaction name="separator"/>
     <addaction name="menuSnow"/>
+    <addaction name="separator"/>
+    <addaction name="actionView_Crop_degreeDays"/>
     <addaction name="separator"/>
     <addaction name="menuWater_fluxes"/>
     <addaction name="separator"/>
@@ -2830,6 +2839,16 @@
    </property>
    <property name="text">
     <string>Fixed range</string>
+   </property>
+  </action>
+  <action name="actiondegree_days">
+   <property name="text">
+    <string>Degree days</string>
+   </property>
+  </action>
+  <action name="actionView_Crop_LAI">
+   <property name="text">
+    <string>Leaf Area Index</string>
    </property>
   </action>
  </widget>

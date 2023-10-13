@@ -85,10 +85,6 @@
         gis::Crit3DRasterGrid criteria3DMap;
         std::vector <gis::Crit3DRasterGrid> indexMap;
 
-        // 3D crop
-        gis::Crit3DRasterGrid degreeDaysMap;
-        gis::Crit3DRasterGrid laiMap;
-
         // soil properties
         unsigned int nrSoils;
         double computationSoilDepth;            // [m]
@@ -147,7 +143,7 @@
         double computeEvaporation(int row, int col, double lai);
         bool computeWaterSinkSource();
         void computeWaterBalance3D(double timeStep);
-        bool computeCrop(QDateTime myTime);
+        bool updateCrop(QDateTime myTime);
 
         bool setCriteria3DMap(criteria3DVariable var, int layerIndex);
 

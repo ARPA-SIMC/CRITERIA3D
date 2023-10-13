@@ -223,6 +223,10 @@
 
         void on_action_surface_wc_Fixed_range_triggered(bool checked);
 
+        void on_actionView_Crop_LAI_triggered();
+
+        void on_actiondegree_days_triggered();
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

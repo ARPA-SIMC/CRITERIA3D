@@ -32,10 +32,13 @@
 
 
     public:
-        Crit3DGeometry* geometry;
+        Crit3DGeometry* openGlGeometry;
 
         // same header of DEM
         Crit3DSnowMaps snowMaps;
+        gis::Crit3DRasterGrid degreeDaysMap;
+        gis::Crit3DRasterGrid laiMap;
+
         Crit3DSnow snowModel;
 
         bool computeMeteo, computeRadiation, computeCrop, computeWater, computeSnow, computeHeat, computeSolutes;
@@ -48,6 +51,8 @@
         Crit3DProject();
 
         bool initializeCriteria3DModel();
+        void initializeCrop();
+
         bool runModels(QDateTime firstTime, QDateTime lastTime);
 
         void setSaveDailyState(bool isSave);

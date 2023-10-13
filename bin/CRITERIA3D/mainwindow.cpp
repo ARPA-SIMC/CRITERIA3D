@@ -1492,7 +1492,36 @@ void MainWindow::on_actionView_Snow_latent_heat_triggered()
     showSnowVariable(latentHeat);
 }
 
-// ------------- TILES -----------------------------
+
+// ------------- CROP MAPS ---------------------------------------------------
+
+void MainWindow::on_actiondegree_days_triggered()
+{
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logError("Initialize 3D model before.");
+        return;
+    }
+
+    // TODO add variable
+    setOutputMeteoVariable(airTemperature, &(myProject.degreeDaysMap));
+}
+
+
+void MainWindow::on_actionView_Crop_LAI_triggered()
+{
+    if (! myProject.isCriteria3DInitialized)
+    {
+        myProject.logError("Initialize 3D model before.");
+        return;
+    }
+
+    // TODO add variable
+    setOutputMeteoVariable(airTemperature, &(myProject.laiMap));
+}
+
+
+// ------------- TILES -------------------------------------------------------
 
 void MainWindow::on_actionMapTerrain_triggered()
 {
@@ -1556,19 +1585,7 @@ void MainWindow::setTileMapSource(WebTileSource::WebTileType tileSource)
 }
 
 
-// --------------- LAND USE ---------------------------
-bool MainWindow::isLandUse(QPoint mapPos)
-{
-    if (! myProject.landUseMap.isLoaded)
-        return false;
-
-    Position geoPos = mapView->mapToScene(mapPos);
-    return (myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude()) != NODATA);
-}
-
-
-
-// --------------- SOIL --------------------------------
+// --------------- SOIL AND LAND USE --------------------------------
 
 bool MainWindow::isSoil(QPoint mapPos)
 {
@@ -1596,6 +1613,16 @@ void MainWindow::showSoilMap()
     {
         myProject.logError("Load a soil map before.");
     }
+}
+
+
+bool MainWindow::isLandUse(QPoint mapPos)
+{
+    if (! myProject.landUseMap.isLoaded)
+        return false;
+
+    Position geoPos = mapView->mapToScene(mapPos);
+    return (myProject.getLandUnitIdGeo(geoPos.latitude(), geoPos.longitude()) != NODATA);
 }
 
 
@@ -1645,7 +1672,7 @@ void MainWindow::openSoilWidget(QPoint mapPos)
 }
 
 
-// --------------- METEOPOINTS DB ----------------------------------
+// --------------- METEOPOINTS ----------------------------------
 
 bool MainWindow::loadMeteoPointsDB_GUI(QString dbName)
 {
@@ -1780,6 +1807,7 @@ void MainWindow::on_actionLoad_crop_data_triggered()
 
 
 //------------------- MENU INTERPOLATION --------------------
+
 void MainWindow::on_actionInterpolationSettings_triggered()
 {
     DialogInterpolation* myInterpolationDialog = new DialogInterpolation(&myProject);
@@ -3007,7 +3035,7 @@ void MainWindow::on_viewer3DClosed()
 
 void MainWindow::on_slopeChanged()
 {
-    myProject.geometry->setArtifactSlope(int(viewer3D->getSlope()));
+    myProject.openGlGeometry->setArtifactSlope(int(viewer3D->getSlope()));
     myProject.update3DColors();
     viewer3D->glWidget->update();
 }
@@ -3028,7 +3056,7 @@ void MainWindow::on_actionShow_3D_viewer_triggered()
         return;
     }
 
-    viewer3D = new Viewer3D(myProject.geometry);
+    viewer3D = new Viewer3D(myProject.openGlGeometry);
     viewer3D->show();
 
     connect (viewer3D, SIGNAL(destroyed()), this, SLOT(on_viewer3DClosed()));
@@ -3123,4 +3151,5 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
         }
     }
 }
+
 

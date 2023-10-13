@@ -110,9 +110,6 @@ void Project3D::clearProject3D()
     soilMap.clear();
     landUseMap.clear();
 
-    degreeDaysMap.clear();
-    laiMap.clear();
-
     landUnitList.clear();
     cropList.clear();
 
@@ -189,31 +186,6 @@ bool Project3D::initializeWaterBalance3D()
         Crit3DLandUnit deafultLandUnit;
         landUnitList.push_back(deafultLandUnit);
     }
-
-    // todo check sui proceddi attivi (pianta)
-    degreeDaysMap.initializeGrid(*(DEM.header));
-    laiMap.initializeGrid(*(DEM.header));
-
-
-    // TODO spostato in una funzione initializeCrop
-    for (int row = 0; row <= degreeDaysMap.header->nrRows; row++)
-    {
-        for (int col = 0; col <= degreeDaysMap.header->nrCols; col++)
-        {
-            float height = DEM.value[row][col];
-            if (height != DEM.header->flag)
-            {
-                // TODO ciclo dal primo gennaio sino a currentDate
-                float airT = climateParameters.getClimateVar(dailyAirTemperatureAvg, currentDate.month(), height, quality->getReferenceHeight());
-                int index = getLandUnitIndexRowCol(row, col);
-                if (index != NODATA)
-                {
-                    degreeDaysMap.value[row][col] = airT - cropList[index].thermalThreshold;
-                }
-            }
-        }
-    }
-
 
     // set computation depth
     if (waterFluxesParameters.computeOnlySurface)
@@ -1110,7 +1082,7 @@ void Project3D::computeWaterBalance3D(double timeStep)
 }
 
 
-bool Project3D::computeCrop(QDateTime myTime)
+bool Project3D::updateCrop(QDateTime myTime)
 {
     for (long row = 0; row < DEM.header->nrRows ; row++)
     {

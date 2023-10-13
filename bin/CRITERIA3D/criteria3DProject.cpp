@@ -83,10 +83,52 @@ bool Crit3DProject::initializeCriteria3DModel()
         return false;
     }
 
+    // TODO mettere nei settings
+    computeCrop = true;
+
+    if (computeCrop)
+    {
+        initializeCrop();
+    }
+
     isCriteria3DInitialized = true;
     logInfoGUI("Criteria3D model initialized");
 
     return true;
+}
+
+
+void Crit3DProject::initializeCrop()
+{
+    degreeDaysMap.initializeGrid(*(DEM.header));
+    laiMap.initializeGrid(*(DEM.header));
+
+    for (int row = 0; row <= DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col <= DEM.header->nrCols; col++)
+        {
+            float height = DEM.value[row][col];
+            if (height != DEM.header->flag)
+            {
+                int index = getLandUnitIndexRowCol(row, col);
+                if (index != NODATA)
+                {
+                    double degreeDays = 0;
+                    // daily cycle
+                    for (int doy = 1; doy <= currentDate.dayOfYear(); doy++)
+                    {
+                        Crit3DDate myDate = getDateFromDoy(currentDate.year(), doy);
+                        // TODO cambiare in tmin e tmax
+                        float airT = climateParameters.getClimateVar(dailyAirTemperatureAvg, myDate.month, height, quality->getReferenceHeight());
+                        degreeDays += (airT - cropList[index].thermalThreshold);
+                    }
+
+                    degreeDaysMap.value[row][col] = float(degreeDays);
+                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                }
+            }
+        }
+    }
 }
 
 
@@ -407,6 +449,7 @@ bool Crit3DProject::setSoilIndexMap()
 {
     double x, y;
     soilIndexMap.initializeGrid(*(DEM.header));
+
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
         for (int col = 0; col < DEM.header->nrCols; col++)
@@ -503,6 +546,10 @@ double Crit3DProject::getSoilVar(int soilIndex, int layerIndex, soil::soilVariab
 void Crit3DProject::clear3DProject()
 {
     snowMaps.clear();
+    degreeDaysMap.clear();
+    laiMap.clear();
+
+    clearGeometry();
 
     clearProject3D();
 }
@@ -1144,7 +1191,7 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
             colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
             colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
             colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
-            if (slope > geometry->artifactSlope())
+            if (slope > openGlGeometry->artifactSlope())
             {
                 colorOut.red = std::min(255, std::max(0, int((colorOut.red + 256) / 2)));
                 colorOut.green = std::min(255, std::max(0, int((colorOut.green + 256) / 2)));
@@ -1157,11 +1204,11 @@ void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOu
 
 void Crit3DProject::clearGeometry()
 {
-    if (geometry != nullptr)
+    if (openGlGeometry != nullptr)
     {
-        geometry->clear();
-        delete geometry;
-        geometry = nullptr;
+        openGlGeometry->clear();
+        delete openGlGeometry;
+        openGlGeometry = nullptr;
     }
 }
 
@@ -1175,21 +1222,21 @@ bool Crit3DProject::initializeGeometry()
     }
 
     this->clearGeometry();
-    geometry = new Crit3DGeometry();
+    openGlGeometry = new Crit3DGeometry();
 
     // set center
     gis::Crit3DPoint center = DEM.getCenter();
     gis::updateMinMaxRasterGrid(&DEM);
     float zCenter = (DEM.maximum + DEM.minimum) * 0.5f;
-    geometry->setCenter(float(center.utm.x), float(center.utm.y), zCenter);
+    openGlGeometry->setCenter(float(center.utm.x), float(center.utm.y), zCenter);
 
     // set dimension
     float dx = float(DEM.header->nrCols * DEM.header->cellSize);
     float dy = float(DEM.header->nrRows * DEM.header->cellSize);
     float dz = DEM.maximum + DEM.minimum;
-    geometry->setDimension(dx, dy);
+    openGlGeometry->setDimension(dx, dy);
     float magnify = ((dx + dy) * 0.5f) / (dz * 10.f);
-    geometry->setMagnify(std::min(5.f, std::max(1.f, magnify)));
+    openGlGeometry->setMagnify(std::min(5.f, std::max(1.f, magnify)));
 
     // set triangles
     double x, y;
@@ -1224,7 +1271,7 @@ bool Crit3DProject::initializeGeometry()
                         p2 = gis::Crit3DPoint(x, y, z2);
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row+1, col);
-                        geometry->addTriangle(p1, p2, p3, sc1, sc2, sc3);
+                        openGlGeometry->addTriangle(p1, p2, p3, sc1, sc2, sc3);
                     }
 
                     z2 = DEM.getValueFromRowCol(row, col+1);
@@ -1234,7 +1281,7 @@ bool Crit3DProject::initializeGeometry()
                         p2 = gis::Crit3DPoint(x, y, z2);
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row, col+1);
-                        geometry->addTriangle(p3, p2, p1, sc3, sc2, sc1);
+                        openGlGeometry->addTriangle(p3, p2, p1, sc3, sc2, sc1);
                     }
                 }
             }
@@ -1247,9 +1294,9 @@ bool Crit3DProject::initializeGeometry()
 
 bool Crit3DProject::update3DColors()
 {
-    if (geometry == nullptr)
+    if (openGlGeometry == nullptr)
     {
-        errorString = "Initialize 3D geometry before.";
+        errorString = "Initialize 3D openGlGeometry before.";
         return false;
     }
 
@@ -1276,9 +1323,9 @@ bool Crit3DProject::update3DColors()
                     {
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row+1, col);
-                        geometry->setVertexColor(i++, sc1);
-                        geometry->setVertexColor(i++, sc2);
-                        geometry->setVertexColor(i++, sc3);
+                        openGlGeometry->setVertexColor(i++, sc1);
+                        openGlGeometry->setVertexColor(i++, sc2);
+                        openGlGeometry->setVertexColor(i++, sc3);
                     }
 
                     z2 = DEM.getValueFromRowCol(row, col+1);
@@ -1286,9 +1333,9 @@ bool Crit3DProject::update3DColors()
                     {
                         c2 = DEM.colorScale->getColor(z2);
                         shadowColor(*c2, sc2, row, col+1);
-                        geometry->setVertexColor(i++, sc3);
-                        geometry->setVertexColor(i++, sc2);
-                        geometry->setVertexColor(i++, sc1);
+                        openGlGeometry->setVertexColor(i++, sc3);
+                        openGlGeometry->setVertexColor(i++, sc2);
+                        openGlGeometry->setVertexColor(i++, sc1);
                     }
                 }
             }
