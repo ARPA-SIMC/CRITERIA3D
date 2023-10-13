@@ -104,15 +104,21 @@
 		double Se = NODATA;
 
         if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
-			if (myPsi <=  mySoil->VG_he)
-				Se = 1.;
+        {
+            if (myPsi <=  mySoil->VG_he)
+            {
+                Se = 1.;
+            }
 			else
-				{
+            {
                 Se = pow(1. + pow(mySoil->VG_alpha * myPsi, mySoil->VG_n), - mySoil->VG_m);
-				Se *= (1. / mySoil->VG_Sc);
-				}
+                Se *= (1. / mySoil->VG_Sc);
+            }
+        }
         else if (myParameters.waterRetentionCurve == VANGENUCHTEN)
+        {
             Se = pow(1. + pow(mySoil->VG_alpha * myPsi, mySoil->VG_n), - mySoil->VG_m);
+        }
 
 		return Se;
 	}
