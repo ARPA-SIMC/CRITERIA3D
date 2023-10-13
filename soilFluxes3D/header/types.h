@@ -66,7 +66,7 @@
         double VG_alpha;            /*!< [m^-1] Van Genutchen alpha parameter */
         double VG_n;                /*!< [-] Van Genutchen n parameter */
         double VG_m;                /*!< [-] Van Genutchen m parameter  ]0. , 1.[ */
-        double VG_he;               /*!< [m] air-entry potential for modified VG formulation [0 , 1] */
+        double VG_he;               /*!< [m] air-entry potential for modified VG formulation */
         double VG_Sc;               /*!< [-] reduction factor for modified VG formulation */
         double Theta_s;             /*!< [m^3/m^3] saturated water content */
         double Theta_r;             /*!< [m^3/m^3] residual water content */
