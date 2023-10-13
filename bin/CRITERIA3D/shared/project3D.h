@@ -85,6 +85,10 @@
         gis::Crit3DRasterGrid criteria3DMap;
         std::vector <gis::Crit3DRasterGrid> indexMap;
 
+        // 3D crop
+        gis::Crit3DRasterGrid degreeDaysMap;
+        gis::Crit3DRasterGrid laiMap;
+
         // soil properties
         unsigned int nrSoils;
         double computationSoilDepth;            // [m]
