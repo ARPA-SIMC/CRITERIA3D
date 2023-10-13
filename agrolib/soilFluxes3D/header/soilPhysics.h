@@ -4,7 +4,7 @@
     struct Tsoil;
 
     double computeWaterConductivity(double Se, Tsoil *mySoil);
-    double computeSefromPsi(double myPsi, Tsoil *mySoil);
+    double computeSefromPsi_unsat(double myPsi, Tsoil *mySoil);
     double theta_from_Se(unsigned long myIndex);
     double theta_from_Se (double Se, unsigned long myIndex);
     double theta_from_sign_Psi (double myPsi, unsigned long myIndex);

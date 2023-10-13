@@ -278,20 +278,25 @@ void updateBoundaryWater (double deltaT)
                 // water table
                 double L = 1.0;                         // [m]
                 double boundaryZ = myNode[i].z - L;     // [m]
-                double boundaryK;
+                double boundaryK;                       // [m s-1]
+
                 if (myNode[i].boundary->prescribedTotalPotential >= boundaryZ)
+                {
+                    // saturated
                     boundaryK = myNode[i].Soil->K_sat;
+                }
                 else
                 {
+                    // unsaturated
                     double boundaryPsi = fabs(myNode[i].boundary->prescribedTotalPotential - boundaryZ);
-                    double boundarySe = computeSefromPsi(boundaryPsi, myNode[i].Soil);
+                    double boundarySe = computeSefromPsi_unsat(boundaryPsi, myNode[i].Soil);
                     boundaryK = computeWaterConductivity(boundarySe, myNode[i].Soil);
                 }
+
                 double meanK = computeMean(myNode[i].k, boundaryK);
                 double dH = myNode[i].boundary->prescribedTotalPotential - myNode[i].H;
                 flow = meanK * myNode[i].boundary->boundaryArea * (dH / L);
                 myNode[i].boundary->waterFlow = flow;
-
             }
 
             else if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)
