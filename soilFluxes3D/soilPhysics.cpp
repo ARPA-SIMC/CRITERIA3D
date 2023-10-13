@@ -58,9 +58,9 @@
 
     /*!
      * \brief Computes volumetric water content from water potential (with sign)
-     * \param signPsi
+     * \param signPsi   water potential with sign [m]
      * \param index
-     * \return result
+     * \return volumetric water content [m3 m-3]
      */
     double theta_from_sign_Psi (double signPsi, unsigned long index)
 	{
@@ -68,12 +68,12 @@
 
         if (signPsi >= 0.0)
         {
-            /*! saturated */
+            // saturated
             return myNode[index].Soil->Theta_s;
         }
 		else
         {
-            double Se = computeSefromPsi(fabs(signPsi),myNode[index].Soil);
+            double Se = computeSefromPsi_unsat(fabs(signPsi),myNode[index].Soil);
             return theta_from_Se(Se, index);
         }
 	}
@@ -95,11 +95,12 @@
 
     /*!
      * \brief Computes degree of saturation from matric potential (Van Genutchen) Se = [1+(alfa*|h|)^n]^-m
-     * \param myPsi
+     * valid only for unsaturated soil
+     * \param myPsi  water potential (absolute value) [m]
      * \param mySoil
-     * \return result Se
+     * \return degree of saturation [-]
      */
-    double computeSefromPsi(double myPsi, Tsoil *mySoil)
+    double computeSefromPsi_unsat(double myPsi, Tsoil *mySoil)
 	{
 		double Se = NODATA;
 
@@ -130,12 +131,17 @@
      */
     double computeSe(unsigned long myIndex)
     {
-        /*! saturated */
-        if (myNode[myIndex].H >= myNode[myIndex].z) return 1.;
-
-        double psi = fabs(myNode[myIndex].H - myNode[myIndex].z);   /*!< [m] */
-
-        return computeSefromPsi(psi, myNode[myIndex].Soil);
+        if (myNode[myIndex].H >= myNode[myIndex].z)
+        {
+            // saturated
+            return 1.;
+        }
+        else
+        {
+            // unsaturated
+            double psi = fabs(myNode[myIndex].H - myNode[myIndex].z);   /*!< [m] */
+            return computeSefromPsi_unsat(psi, myNode[myIndex].Soil);
+        }
     }
 
 
@@ -256,6 +262,7 @@
         return dThetav_dPsi * GRAVITY;
     }
 
+
     /*!
      * \brief [m-1] dTheta/dH  (Van Genutchen)
      * dTheta/dH = dSe/dH (Theta_s-Theta_r)
@@ -264,40 +271,46 @@
      * \return derivative of water volumetric content with respect to H
      */
 	double dTheta_dH(unsigned long myIndex)
-	 {
-     double alfa = myNode[myIndex].Soil->VG_alpha;
-	 double n    = myNode[myIndex].Soil->VG_n;
-	 double m    = myNode[myIndex].Soil->VG_m;
-	 double dSe_dH;
-
-     double psi = fabs(MINVALUE(myNode[myIndex].H - myNode[myIndex].z, 0.));
-     double psiPrevious = fabs(MINVALUE(myNode[myIndex].oldH - myNode[myIndex].z, 0.));
-
-    if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
     {
-        if ((psi <= myNode[myIndex].Soil->VG_he) && (psiPrevious <= myNode[myIndex].Soil->VG_he)) return 0.;
-    }
-    if (myParameters.waterRetentionCurve == VANGENUCHTEN)
-    {
-        if ((psi == 0.) && (psiPrevious == 0.)) return 0.;
-    }
+        double alfa = myNode[myIndex].Soil->VG_alpha;
+        double n    = myNode[myIndex].Soil->VG_n;
+        double m    = myNode[myIndex].Soil->VG_m;
 
-	 if (psi == psiPrevious)
-    {
-        dSe_dH = alfa * n * m * pow(1. + pow(alfa * psi, n), -(m + 1.)) * pow(alfa * psi, n - 1.);
+        double psi_abs = fabs(MINVALUE(myNode[myIndex].H - myNode[myIndex].z, 0.));
+        double psiPrevious_abs = fabs(MINVALUE(myNode[myIndex].oldH - myNode[myIndex].z, 0.));
+
         if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
+        {
+            // saturated
+            if ((psi_abs <= myNode[myIndex].Soil->VG_he) && (psiPrevious_abs <= myNode[myIndex].Soil->VG_he)) return 0.;
+        }
+
+        if (myParameters.waterRetentionCurve == VANGENUCHTEN)
+        {
+            if ((psi_abs == 0.) && (psiPrevious_abs == 0.)) return 0.;
+        }
+
+        double dSe_dH;
+
+        if (psi_abs == psiPrevious_abs)
+        {
+            dSe_dH = alfa * n * m * pow(1. + pow(alfa * psi_abs, n), -(m + 1.)) * pow(alfa * psi_abs, n - 1.);
+            if (myParameters.waterRetentionCurve == MODIFIEDVANGENUCHTEN)
+            {
                 dSe_dH *= (1. / myNode[myIndex].Soil->VG_Sc);
-    }
-	 else
-    {
-        double theta = computeSefromPsi(psi, myNode[myIndex].Soil);
-        double thetaPrevious = computeSefromPsi(psiPrevious, myNode[myIndex].Soil);
-        double delta_H = myNode[myIndex].H - myNode[myIndex].oldH;
-        dSe_dH = fabs((theta - thetaPrevious) / delta_H);
+            }
+        }
+        else
+        {
+            double theta = computeSefromPsi_unsat(psi_abs, myNode[myIndex].Soil);
+            double thetaPrevious = computeSefromPsi_unsat(psiPrevious_abs, myNode[myIndex].Soil);
+            double delta_H = myNode[myIndex].H - myNode[myIndex].oldH;
+            dSe_dH = fabs((theta - thetaPrevious) / delta_H);
+        }
+
+        return dSe_dH * (myNode[myIndex].Soil->Theta_s - myNode[myIndex].Soil->Theta_r);
     }
 
-	 return (dSe_dH * (myNode[myIndex].Soil->Theta_s - myNode[myIndex].Soil->Theta_r));
-	 }
 
     double getThetaMean(long i)
 	{
