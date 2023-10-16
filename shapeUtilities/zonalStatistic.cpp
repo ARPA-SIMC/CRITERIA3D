@@ -57,13 +57,13 @@ std::vector <std::vector<int> > computeMatrixAnalysis(Crit3DShapeHandler &shapeR
 bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shapeVal,
                           std::vector <std::vector<int> > &matrix, std::vector<int> &vectorNull,
                           std::string valField, std::string valFieldOutput, std::string aggregationType,
-                          double threshold, std::string& error)
+                          double threshold, std::string& errorStr)
 {
     // check if valField exists
     int fieldIndex = shapeVal.getDBFFieldIndex(valField.c_str());
     if (fieldIndex == -1)
     {
-        error = shapeVal.getFilepath() + " has not field called " + valField.c_str();
+        errorStr = shapeVal.getFilepath() + " has not field called " + valField.c_str();
         return false;
     }
 
@@ -153,14 +153,20 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
     for (unsigned int shapeIndex = 0; shapeIndex < nrRefShapes; shapeIndex++)
     {
         valueToSave = aggregationValues[shapeIndex];
+        int fieldIndex = shapeRef.getDBFFieldIndex(valFieldOutput.c_str());
+        if (fieldIndex == -1)
+        {
+            errorStr = "Wrong shape field name: " + valFieldOutput;
+            return false;
+        }
 
         if (fieldType == FTInteger)
         {
-            shapeRef.writeIntAttribute(int(shapeIndex), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), int(valueToSave));
+            shapeRef.writeIntAttribute(int(shapeIndex), fieldIndex, int(valueToSave));
         }
         else if (fieldType == FTDouble)
         {
-            shapeRef.writeDoubleAttribute(int(shapeIndex), shapeRef.getDBFFieldIndex(valFieldOutput.c_str()), valueToSave);
+            shapeRef.writeDoubleAttribute(int(shapeIndex), fieldIndex, valueToSave);
         }
     }
 
@@ -175,13 +181,13 @@ bool zonalStatisticsShape(Crit3DShapeHandler& shapeRef, Crit3DShapeHandler& shap
 bool zonalStatisticsShapeMajority(Crit3DShapeHandler &shapeRef, Crit3DShapeHandler &shapeVal,
                           std::vector <std::vector<int> >&matrix, std::vector<int> &vectorNull,
                           std::string valField, std::string valFieldOutput,
-                          double threshold, std::string &error)
+                          double threshold, std::string &errorStr)
 {
     // check if valField exists
     int fieldIndex = shapeVal.getDBFFieldIndex(valField.c_str());
     if (fieldIndex == -1)
     {
-        error = shapeVal.getFilepath() + "has not field called " + valField.c_str();
+        errorStr = shapeVal.getFilepath() + "has not field called " + valField.c_str();
         return false;
     }
 

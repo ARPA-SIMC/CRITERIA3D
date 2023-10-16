@@ -39,9 +39,9 @@ bool Logger::setLog(QString path, QString fileName, bool addDateTime)
     }
 }
 
+
 void Logger::writeInfo(const QString &value)
 {
-
     QString text = value;
     if (m_showDate)
     {
@@ -54,12 +54,11 @@ void Logger::writeInfo(const QString &value)
         out << text + "\n";
     }
     std::cout << text.toStdString() << std::endl;
-
 }
+
 
 void Logger::writeError(const QString &value)
 {
-
     QString text = "----ERROR!----\n" + value;
     if (m_showDate)
     {
@@ -72,15 +71,14 @@ void Logger::writeError(const QString &value)
         out << text + "\n";
     }
     std::cout << text.toStdString() << std::endl;
-
 }
+
 
 void Logger::setShowDateTime(bool value)
 {
-
     m_showDate = value;
-
 }
+
 
 Logger::~Logger()
 {
