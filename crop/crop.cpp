@@ -152,6 +152,57 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
 }
 
 
+float Crit3DCrop::computeSimpleLAI(float myDegreeDays, double latitude, int currentDoy)
+{
+    float myLAI = 0;
+
+    if (isSowingCrop())
+    {
+        if (myDegreeDays < degreeDaysEmergence)
+        {
+            myLAI = 0;
+        }
+        else
+        {
+            myDegreeDays -= degreeDaysEmergence;
+            myLAI = leafDevelopment::getLAICriteria(this, myDegreeDays);
+        }
+    }
+    else
+    {
+        if (myDegreeDays > 0)
+            myLAI = leafDevelopment::getLAICriteria(this, myDegreeDays);
+        else
+            myLAI = LAImin;
+
+        if (type == TREE)
+        {
+            bool isLeafFall;
+            if (latitude > 0)   // north
+            {
+                isLeafFall = (currentDoy >= doyStartSenescence);
+            }
+            else                // south
+            {
+                isLeafFall = ((currentDoy >= doyStartSenescence) && (currentDoy < 182));
+            }
+
+            if (isLeafFall)
+            {
+                if (currentDoy == doyStartSenescence || int(LAIstartSenescence) == int(NODATA))
+                    LAIstartSenescence = myLAI;
+                else
+                    myLAI = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence, currentDoy - doyStartSenescence);
+            }
+
+            myLAI += LAIgrass;
+        }
+    }
+
+    return myLAI;
+}
+
+
 bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDoy)
 {
     double degreeDaysLai = 0;

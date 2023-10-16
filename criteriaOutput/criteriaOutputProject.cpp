@@ -720,7 +720,7 @@ int CriteriaOutputProject::createAggregationFile()
         projectError = "Invalid aggregation_threshold: " + aggregationThreshold;
         return ERROR_WRONGPARAMETER;
     }
-    if (threshold < 0 || threshold > 1)
+    if ((threshold < 0) || (threshold > 1))
     {
         projectError = "Invalid aggregation_threshold (must be between 0 and 1): " + aggregationThreshold;
         return ERROR_WRONGPARAMETER;
