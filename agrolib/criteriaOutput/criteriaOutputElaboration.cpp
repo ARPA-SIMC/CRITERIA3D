@@ -775,16 +775,17 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
         if (fieldType == FTInteger)
         {
-            shapeFieldList.push_back(QString::number(refShapeFile.readIntAttribute(row,fieldIndex)));
+            shapeFieldList.push_back(QString::number(refShapeFile.readIntAttribute(row, fieldIndex)));
         }
         else if (fieldType == FTDouble)
         {
-            shapeFieldList.push_back(QString::number(refShapeFile.readDoubleAttribute(row,fieldIndex),'f',1));
+            shapeFieldList.push_back(QString::number(refShapeFile.readDoubleAttribute(row, fieldIndex), 'f', 1));
         }
         else if (fieldType == FTString)
         {
-            shapeFieldList.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row,fieldIndex)));
+            shapeFieldList.push_back(QString::fromStdString(refShapeFile.readStringAttribute(row, fieldIndex)));
         }
+
         // read outputVarName
         values.clear();
         for (int field = 0; field < outputVarName.size(); field++)
@@ -796,6 +797,7 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
                 errorStr = QString::fromStdString(refShapeFile.getFilepath()) + "has not field called " + outputVarName[field];
                 return ERROR_SHAPEFILE;
             }
+
             DBFFieldType fieldType = refShapeFile.getFieldType(fieldIndex);
             if (fieldType == FTInteger)
             {
@@ -813,19 +815,21 @@ int writeCsvAggrFromShape(Crit3DShapeHandler &refShapeFile, QString csvFileName,
         valuesFromShape.push_back(values);
     }
 
+    QString dateStr = dateComputation.toString("yyyy-MM-dd");
     QString header = "DATE,ZONE ID," + outputVarName.join(",");
     QTextStream out(&outputFile);
     out << header << "\n";
 
     for (int row = 0; row < nrRefShapes; row++)
     {
-        out << dateComputation.toString("yyyy-MM-dd");
+        out << dateStr;
         out << "," << shapeFieldList[row];
         out << "," << valuesFromShape[row].join(",");
         out << "\n";
     }
 
     outputFile.flush();
+    outputFile.close();
 
     return CRIT1D_OK;
 }
