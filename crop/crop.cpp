@@ -152,54 +152,63 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
 }
 
 
-float Crit3DCrop::computeSimpleLAI(float myDegreeDays, double latitude, int currentDoy)
+double Crit3DCrop::getDailyDegreeIncrease(double tmin, double tmax)
 {
-    float myLAI = 0;
+    if (isEqual(tmin, NODATA) || isEqual(tmax, NODATA))
+        return NODATA;
+
+    double tmed = (tmin + MINVALUE(tmax, upperThermalThreshold)) * 0.5;
+    return MAXVALUE(tmed - thermalThreshold, 0);
+}
+
+
+double Crit3DCrop::computeSimpleLAI(double myDegreeDays, double latitude, int currentDoy)
+{
+    double currentLAI = 0;
 
     if (isSowingCrop())
     {
         if (myDegreeDays < degreeDaysEmergence)
         {
-            myLAI = 0;
+            currentLAI = 0;
         }
         else
         {
             myDegreeDays -= degreeDaysEmergence;
-            myLAI = leafDevelopment::getLAICriteria(this, myDegreeDays);
+            currentLAI = leafDevelopment::getLAICriteria(this, myDegreeDays);
         }
     }
     else
     {
         if (myDegreeDays > 0)
-            myLAI = leafDevelopment::getLAICriteria(this, myDegreeDays);
+            currentLAI = leafDevelopment::getLAICriteria(this, myDegreeDays);
         else
-            myLAI = LAImin;
+            currentLAI = LAImin;
 
         if (type == TREE)
         {
             bool isLeafFall;
             if (latitude > 0)   // north
             {
+                doyStartSenescence = 305;
                 isLeafFall = (currentDoy >= doyStartSenescence);
             }
             else                // south
             {
+                doyStartSenescence = 120;
                 isLeafFall = ((currentDoy >= doyStartSenescence) && (currentDoy < 182));
             }
 
             if (isLeafFall)
             {
-                if (currentDoy == doyStartSenescence || int(LAIstartSenescence) == int(NODATA))
-                    LAIstartSenescence = myLAI;
-                else
-                    myLAI = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence, currentDoy - doyStartSenescence);
+                currentLAI = leafDevelopment::getLAISenescence(LAImin, LAImax*0.66, currentDoy - doyStartSenescence);
             }
 
-            myLAI += LAIgrass;
+            currentLAI += LAIgrass;
         }
     }
 
-    return myLAI;
+    return currentLAI;
 }
 
 
