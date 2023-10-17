@@ -1858,11 +1858,9 @@ void MainWindow::on_actionComputePeriod_meteoVariables_triggered()
     if (! selectDates (firstTime, lastTime))
         return;
 
-    myProject.computeMeteo = true;
-    myProject.computeRadiation = true;
-    myProject.computeSnow = false;
-    myProject.computeCrop = false;
-    myProject.computeWater = false;
+    myProject.processes.initialize();
+    myProject.processes.computeMeteo = true;
+    myProject.processes.computeRadiation = true;
 
     startModels(firstTime, lastTime);
 }
@@ -1912,19 +1910,19 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
         return false;
     }
 
-    if (myProject.computeSnow && (! myProject.snowMaps.isInitialized))
+    if (myProject.processes.computeSnow && (! myProject.snowMaps.isInitialized))
     {
         myProject.logError("Initialize Snow model or load a state before.");
         return false;
     }
 
-    if (myProject.computeWater && (! myProject.isCriteria3DInitialized))
+    if (myProject.processes.computeWater && (! myProject.isCriteria3DInitialized))
     {
         myProject.logError("Initialize 3D water fluxes or load a state before.");
         return false;
     }
 
-    if (myProject.computeCrop)
+    if (myProject.processes.computeCrop)
     {
         // TODO: check on crop
     }
@@ -2038,11 +2036,8 @@ void MainWindow::on_actionRadiation_run_model_triggered()
     if (! selectDates (firstTime, lastTime))
         return;
 
-    myProject.computeMeteo = false;
-    myProject.computeRadiation = true;
-    myProject.computeSnow = false;
-    myProject.computeCrop = false;
-    myProject.computeWater = false;
+    myProject.processes.initialize();
+    myProject.processes.computeRadiation = true;
 
     startModels(firstTime, lastTime);
 }
@@ -2069,11 +2064,10 @@ void MainWindow::on_actionSnow_run_model_triggered()
     if (! selectDates (firstTime, lastTime))
         return;
 
-    myProject.computeMeteo = true;
-    myProject.computeRadiation = true;
-    myProject.computeSnow = true;
-    myProject.computeCrop = false;
-    myProject.computeWater = false;
+    myProject.processes.initialize();
+    myProject.processes.computeMeteo = true;
+    myProject.processes.computeRadiation = true;
+    myProject.processes.computeSnow = true;
 
     startModels(firstTime, lastTime);
 }
@@ -2088,11 +2082,10 @@ void MainWindow::on_actionSnow_compute_current_hour_triggered()
 
     QDateTime currentTime = myProject.getCurrentTime();
 
-    myProject.computeMeteo = true;
-    myProject.computeRadiation = true;
-    myProject.computeSnow = true;
-    myProject.computeCrop = false;
-    myProject.computeWater = false;
+    myProject.processes.initialize();
+    myProject.processes.computeMeteo = true;
+    myProject.processes.computeRadiation = true;
+    myProject.processes.computeSnow = true;
 
     startModels(currentTime, currentTime);
 }
@@ -2180,6 +2173,8 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
+    myProject.processes.computeCrop = true;
+
     if (myProject.initializeCriteria3DModel())
     {
         ui->groupBoxModel->setEnabled(true);
@@ -2218,11 +2213,11 @@ void MainWindow::on_actionCriteria3D_compute_current_hour_triggered()
 
     QDateTime currentTime = myProject.getCurrentTime();
 
-    myProject.computeMeteo = true;
-    myProject.computeRadiation = true;
-    myProject.computeSnow = false;
-    myProject.computeCrop = true;
-    myProject.computeWater = true;
+    myProject.processes.initialize();
+    myProject.processes.computeMeteo = true;
+    myProject.processes.computeRadiation = true;
+    myProject.processes.computeWater = true;
+    myProject.processes.computeCrop = true;
 
     startModels(currentTime, currentTime);
 }
@@ -2240,11 +2235,11 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     if (! selectDates(firstTime, lastTime))
         return;
 
-    myProject.computeMeteo = true;
-    myProject.computeRadiation = true;
-    myProject.computeSnow = false;
-    myProject.computeCrop = true;
-    myProject.computeWater = true;
+    myProject.processes.initialize();
+    myProject.processes.computeMeteo = true;
+    myProject.processes.computeRadiation = true;
+    myProject.processes.computeWater = true;
+    myProject.processes.computeCrop = true;
 
     startModels(firstTime, lastTime);
 }

@@ -4,6 +4,9 @@
     #ifndef SOIL_H
         #include "soil.h"
     #endif
+    #ifndef GIS_H
+        #include "gis.h"
+    #endif
     #ifndef SNOWMAPS_H
         #include "snowMaps.h"
     #endif
@@ -18,6 +21,19 @@
     #endif
 
     #include <QString>
+
+
+    class Crit3DProcesses
+    {
+    public:
+
+        bool computeMeteo, computeRadiation, computeWater;
+        bool computeCrop, computeSnow, computeSolutes;
+        bool computeHeat, computeAdvectiveHeat, computeLatentHeat;
+
+        Crit3DProcesses();
+        void initialize();
+    };
 
 
     class Crit3DProject : public Project3D
@@ -40,9 +56,7 @@
         gis::Crit3DRasterGrid laiMap;
 
         Crit3DSnow snowModel;
-
-        bool computeMeteo, computeRadiation, computeCrop, computeWater, computeSnow, computeHeat, computeSolutes;
-        bool computeAdvectiveHeat, computeLatentHeat;
+        Crit3DProcesses processes;
 
         bool modelPause, modelStop;
         QDateTime modelFirstTime, modelLastTime;
