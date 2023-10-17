@@ -81,12 +81,14 @@
         bool isSowingCrop() const;
         bool isRootStatic() const;
 
+        double getDailyDegreeIncrease(double tmin, double tmax);
+
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
         void resetCrop(unsigned int nrLayers);
         bool updateLAI(double latitude, unsigned int nrLayers, int currentDoy);
 
-        float computeSimpleLAI(float myDegreeDays, double latitude, int currentDoy);
+        double computeSimpleLAI(double myDegreeDays, double latitude, int currentDoy);
 
         bool dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
                          double tmin, double tmax, double waterTableDepth, std::string &myError);

@@ -110,28 +110,68 @@ void Crit3DProject::initializeCrop()
     degreeDaysMap.initializeGrid(*(DEM.header));
     laiMap.initializeGrid(*(DEM.header));
 
-    for (int row = 0; row <= DEM.header->nrRows; row++)
+    for (int row = 0; row < DEM.header->nrRows; row++)
     {
-        for (int col = 0; col <= DEM.header->nrCols; col++)
+        for (int col = 0; col < DEM.header->nrCols; col++)
         {
             float height = DEM.value[row][col];
-            if (height != DEM.header->flag)
+            if (! isEqual(height, DEM.header->flag))
             {
                 int index = getLandUnitIndexRowCol(row, col);
                 if (index != NODATA)
                 {
-                    double degreeDays = 0;
-                    // daily cycle
-                    for (int doy = 1; doy <= currentDate.dayOfYear(); doy++)
+                    // is crop unit
+                    if (landUnitList[index].idCrop != "")
                     {
-                        Crit3DDate myDate = getDateFromDoy(currentDate.year(), doy);
-                        // TODO cambiare in tmin e tmax
-                        float airT = climateParameters.getClimateVar(dailyAirTemperatureAvg, myDate.month, height, quality->getReferenceHeight());
-                        degreeDays += (airT - cropList[index].thermalThreshold);
-                    }
+                        double degreeDays = 0;
+                        int firstDoy = 1;
+                        int lastDoy = currentDate.dayOfYear();
 
-                    degreeDaysMap.value[row][col] = float(degreeDays);
-                    laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                        if (gisSettings.startLocation.latitude >= 0)
+                        {
+                            // Northern hemisphere
+                            firstDoy = 1;
+                        }
+                        else
+                        {
+                            // Southern hemisphere
+                            if (currentDate.dayOfYear() >= 182)
+                            {
+                                firstDoy = 182;
+                            }
+                            else
+                            {
+                                firstDoy = -183;
+                            }
+                        }
+
+                        // daily cycle
+                        for (int doy = firstDoy; doy <= lastDoy; doy++)
+                        {
+                            int currentDoy = doy;
+                            int currentYear = currentDate.year();
+                            if (currentDoy <= 0)
+                            {
+                                currentYear--;
+                                currentDoy += 365;
+                            }
+                            Crit3DDate myDate = getDateFromDoy(currentYear, currentDoy);
+
+                            float tmin = climateParameters.getClimateVar(dailyAirTemperatureMin, myDate.month,
+                                                                         height, quality->getReferenceHeight());
+                            float tmax = climateParameters.getClimateVar(dailyAirTemperatureMax, myDate.month,
+                                                                         height, quality->getReferenceHeight());
+
+                            double currentDD = cropList[index].getDailyDegreeIncrease(tmin, tmax);
+                            if (! isEqual(currentDD, NODATA))
+                            {
+                                degreeDays += currentDD;
+                            }
+                        }
+
+                        degreeDaysMap.value[row][col] = float(degreeDays);
+                        laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDays, gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                    }
                 }
             }
         }
