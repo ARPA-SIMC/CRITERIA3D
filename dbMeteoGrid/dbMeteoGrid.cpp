@@ -3546,46 +3546,47 @@ bool Crit3DMeteoGridDbHandler::saveLogProcedures(QString *myError, QString nameP
 
 /*!
  * \brief ExportDailyDataCsv
- * export daily meteo data to csv files (id.csv)
- * \param isTPrec       save only Tmin, Tmax, Tavg, Prec
- * \param idListFile    filename of cells id list (a column list) DEFAULT: if idListFile == "" save ALL cells
- * \param outputPath    path for output files
+ * export gridded daily meteo data to csv files
+ * \param isTPrec           save only variables: Tmin, Tmax, Tavg, Prec
+ * \param idListFileName    filename of cells id list (list by columns)
+ * if idListFile == ""      save ALL cells
+ * \param outputPath        path for output files
  * \return true on success, false otherwise
  */
 bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, bool isTPrec, QDate firstDate, QDate lastDate,
-                                                  QString idListFile, QString outputPath)
+                                                  QString idListFileName, QString outputPath)
 {
     errorStr = "";
 
-    // check output dir and id list file
+    // check output path
     QDir outDir(outputPath);
     if (! outDir.exists())
     {
         if (! outDir.mkpath(outputPath))
         {
-            errorStr = "Wrong outputPath, this directory could not be created: " + outputPath;
+            errorStr = "Wrong outputPath, unable to create this directory: " + outputPath;
             return false;
         }
     }
     outputPath = outDir.absolutePath();
 
-    bool isList = (idListFile != "");
+    bool isList = (idListFileName != "");
     QList<QString> idList;
     if (isList)
     {
-        if (! QFile::exists(idListFile))
+        if (! QFile::exists(idListFileName))
         {
-            errorStr = "The ID list file does not exist: " + idListFile;
+            errorStr = "The ID list file does not exist: " + idListFileName;
             return false;
         }
 
-        idList = readListSingleColumn(idListFile, errorStr);
+        idList = readListSingleColumn(idListFileName, errorStr);
         if (errorStr != "")
             return false;
 
         if (idList.size() == 0)
         {
-            errorStr = "The ID list is empty: " + idListFile;
+            errorStr = "The ID list file is empty: " + idListFileName;
             return false;
         }
     }
@@ -3693,7 +3694,6 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, bool isTPre
                     currentDate = currentDate.addDays(1);
                 }
 
-                // data
                 outputFile.close();
             }
         }
@@ -3701,6 +3701,7 @@ bool Crit3DMeteoGridDbHandler::exportDailyDataCsv(QString &errorStr, bool isTPre
 
     return true;
 }
+
 
 bool Crit3DMeteoGridDbHandler::MeteoGridToRasterFlt(double cellSize, const gis::Crit3DGisSettings& gisSettings, gis::Crit3DRasterGrid& myGrid)
 {
