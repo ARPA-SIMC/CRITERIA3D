@@ -346,7 +346,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
             outputPath = argumentList[i].right(argumentList[i].length()-3);
             if (outputPath.size() > 0)
             {
-                if (outputPath.at(0) == ".")
+                if (outputPath.at(0) == '.')
                 {
                     QString completeOutputPath = myProject->getProjectPath() + outputPath;
                     outputPath = QDir().cleanPath(completeOutputPath);
