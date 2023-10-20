@@ -28,16 +28,15 @@ bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
 }
 
 
-bool getMeteoPointList(QSqlDatabase* dbMeteo, QList<QString>* idMeteoList, QString* error)
+bool getMeteoPointList(const QSqlDatabase &dbMeteo, QList<QString> &idMeteoList, QString &errorStr)
 {
-    // query id_meteo list
     QString queryString = "SELECT id_meteo FROM meteo_locations";
-    QSqlQuery query = dbMeteo->exec(queryString);
+    QSqlQuery query = dbMeteo.exec(queryString);
 
     query.first();
     if (! query.isValid())
     {
-        *error = query.lastError().text();
+        errorStr = query.lastError().text();
         return false;
     }
 
@@ -47,7 +46,7 @@ bool getMeteoPointList(QSqlDatabase* dbMeteo, QList<QString>* idMeteoList, QStri
         getValue(query.value("id_meteo"), &idMeteo);
         if (idMeteo != "")
         {
-            idMeteoList->append(idMeteo);
+            idMeteoList.append(idMeteo);
         }
     }
     while(query.next());
@@ -503,7 +502,6 @@ bool getLastDateGrid(QSqlDatabase dbMeteo, QString table, QString fieldTime, QSt
 
 bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime, int varCodeTmin, int varCodeTmax, int varCodePrec, QString year, QString *error)
 {
-
     QSqlQuery qry(dbMeteo);
 
     *error = "";
@@ -886,8 +884,16 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
 
         if (! myDate.isValid())
         {
-            error = meteoID + " wrong date format: " + query.value("date").toString();
-            return false;
+            if (currentIndex < (maxNrDays-1))
+            {
+                error = meteoID + "Wrong date format: " + query.value("date").toString();
+                return false;
+            }
+            else
+            {
+                // last value is wrong - skip
+                continue;
+            }
         }
 
         if (myDate != previousDate)

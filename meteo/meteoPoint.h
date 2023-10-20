@@ -162,7 +162,7 @@
             bool setMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar, float myValue);
 
             float getProxyValue(unsigned pos);
-            std::vector <float> getProxyValues();
+            std::vector<double> getProxyValues();
 
             void setId(std::string value);
             void setName(std::string name);
@@ -172,6 +172,8 @@
             TObsDataH *getObsDataH() const;
             void initializeObsDataDFromMp(unsigned int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp);
             void initializeObsDataHFromMp(int myHourlyFraction, int numberOfDays, const Crit3DDate& firstDate, Crit3DMeteoPoint mp);
+
+            bool getDailyDataCsv_TPrec(std::string &outStr);
 
     private:
             TObsDataH *obsDataH;

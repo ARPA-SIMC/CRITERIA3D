@@ -25,6 +25,8 @@
 
 
 #include <math.h>
+#include <iomanip>
+#include <sstream>
 
 #include "commonConstants.h"
 #include "basicMath.h"
@@ -1013,15 +1015,23 @@ float Crit3DMeteoPoint::getMeteoPointValueD(const Crit3DDate &myDate, meteoVaria
         return (obsDataD[i].rhAvg);
     else if (myVar == dailyGlobalRadiation)
         return (obsDataD[i].globRad);
-    else if (myVar == dailyReferenceEvapotranspirationHS)
+    else if (myVar == dailyReferenceEvapotranspirationHS || myVar == dailyBIC)
     {
+        float et0 = NODATA;
         if (! isEqual(obsDataD[i].et0_hs, NODATA))
-            return obsDataD[i].et0_hs;
+            et0 = obsDataD[i].et0_hs;
         else if (meteoSettings->getAutomaticET0HS() && !isEqual(obsDataD[i].tMin, NODATA) && !isEqual(obsDataD[i].tMax, NODATA))
-            return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude,
+            et0 = float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude,
                                         getDoyFromDate(myDate), obsDataD[i].tMax, obsDataD[i].tMin));
+
+        if (myVar == dailyReferenceEvapotranspirationHS)
+            return et0;
         else
-            return NODATA;
+        {
+            float prec = NODATA;
+            prec = obsDataD[i].prec;
+            return computeDailyBIC(prec, et0);
+        }
     }
     else if (myVar == dailyReferenceEvapotranspirationPM)
         return (obsDataD[i].et0_pm);
@@ -1165,9 +1175,9 @@ float Crit3DMeteoPoint::getProxyValue(unsigned pos)
         return NODATA;
 }
 
-std::vector <float> Crit3DMeteoPoint::getProxyValues()
+std::vector <double> Crit3DMeteoPoint::getProxyValues()
 {
-    std::vector <float> myValues;
+    std::vector <double> myValues;
     for (unsigned int i=0; i < proxyValues.size(); i++)
         myValues.push_back(getProxyValue(i));
 
@@ -1271,7 +1281,54 @@ TObsDataH *Crit3DMeteoPoint::getObsDataH() const
     return obsDataH;
 }
 
+
+bool Crit3DMeteoPoint::getDailyDataCsv_TPrec(std::string &outStr)
+{
+    if (obsDataD.size() == 0)
+        return false;
+
+    outStr = "Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)\n";
+
+    std::ostringstream valueStream;
+    for (int i = 0; i < obsDataD.size(); i++)
+    {
+        // Date
+        outStr += obsDataD[i].date.toStdString() + ",";
+
+        if (obsDataD[i].tMin != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].tMin;
+            outStr += valueStream.str();
+        }
+        outStr += ",";
+
+        if (obsDataD[i].tMax != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].tMax;
+            outStr += valueStream.str();
+        }
+        outStr += ",";
+
+        if (obsDataD[i].tAvg != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].tAvg;
+            outStr += valueStream.str();
+        }
+        outStr += ",";
+
+        if (obsDataD[i].prec != NODATA)
+        {
+            valueStream << std::setprecision(1) << obsDataD[i].prec;
+            outStr += valueStream.str();
+        }
+        outStr += "\n";
+    }
+
+    return true;
+}
+
 // ---- end class
+
 
 bool isSelectionPointsActive(Crit3DMeteoPoint* meteoPoints,int nrMeteoPoints)
 {

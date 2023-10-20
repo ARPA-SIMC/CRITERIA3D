@@ -28,6 +28,7 @@
 
 #include "commonConstants.h"
 #include "basicMath.h"
+#include "quality.h"
 #include "physics.h"
 #include "meteo.h"
 #include "color.h"
@@ -42,6 +43,7 @@ void Crit3DMeteoSettings::initialize()
     minimumPercentage = DEFAULT_MIN_PERCENTAGE;
     rainfallThreshold = DEFAULT_RAINFALL_THRESHOLD;
     thomThreshold = DEFAULT_THOM_THRESHOLD;
+    temperatureThreshold = DEFAULT_TEMPERATURE_THRESHOLD;
     transSamaniCoefficient = DEFAULT_TRANSMISSIVITY_SAMANI;
     windIntensityDefault = DEFAULT_WIND_INTENSITY;
     hourlyIntervals = DEFAULT_HOURLY_INTERVALS;
@@ -114,6 +116,11 @@ void Crit3DMeteoSettings::setThomThreshold(float value)
     thomThreshold = value;
 }
 
+void Crit3DMeteoSettings::setTemperatureThreshold(float value)
+{
+    temperatureThreshold = value;
+}
+
 bool Crit3DMeteoSettings::getAutomaticTavg() const
 {
     return automaticTavg;
@@ -176,7 +183,7 @@ float Crit3DClimateParameters::getClimateLapseRate(meteoVariable myVar, Crit3DTi
     int myHour = myTime.getNearestHour();
 
     // TODO improve!
-    if (myDate == getNullDate() || myHour == NODATA)
+    if (myDate.isNullDate() || myHour == NODATA)
         return -0.006f;
 
     unsigned int indexMonth = unsigned(myDate.month - 1);
@@ -341,6 +348,79 @@ double dailyExtrRadiation(double myLat, int myDoy)
     return SOLAR_CONSTANT * DAY_SECONDS / 1000000. * dr / PI * (OmegaS * sin(Phi) * sin(delta) + cos(Phi) * cos(delta) * sin(OmegaS));
 }
 
+float computeDailyBIC(float prec, float etp)
+{
+
+    Crit3DQuality qualityCheck;
+
+    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
+    quality::qualityType qualityPrec = qualityCheck.syntacticQualitySingleValue(dailyPrecipitation, prec);
+    quality::qualityType qualityETP = qualityCheck.syntacticQualitySingleValue(dailyReferenceEvapotranspirationHS, etp);
+    if (qualityPrec == quality::accepted && qualityETP == quality::accepted)
+    {
+            return (prec - etp);
+    }
+    else
+        return NODATA;
+
+}
+
+float dailyThermalRange(float Tmin, float Tmax)
+{
+
+    Crit3DQuality qualityCheck;
+
+    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
+    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
+    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+    if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
+        return (Tmax - Tmin);
+    else
+        return NODATA;
+
+}
+
+float dailyAverageT(float Tmin, float Tmax)
+{
+        Crit3DQuality qualityCheck;
+
+        // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
+        quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
+        quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+        if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
+            return ( (Tmin + Tmax) / 2) ;
+        else
+            return NODATA;
+}
+
+
+float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings* meteoSettings)
+{
+    Crit3DQuality qualityCheck;
+
+    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
+    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
+    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
+    int dayOfYear = getDoyFromDate(date);
+    if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
+            return float(ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin));
+    else
+        return NODATA;
+}
+
+
+float dewPoint(float relHumAir, float tempAir)
+{
+    if (relHumAir == NODATA || relHumAir == 0 || tempAir == NODATA)
+        return NODATA;
+
+    relHumAir = MINVALUE(100, relHumAir);
+
+    double saturatedVaporPres = exp((16.78 * tempAir - 116.9) / (tempAir + 237.3));
+    double actualVaporPres = relHumAir / 100 * saturatedVaporPres;
+    return float((log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres)));
+}
+
 
 /*!
  * \brief [] net surface emissivity
@@ -420,7 +500,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
 
         myPressure = 101.3 * pow(((293 - 0.0065 * myElevation) / 293), 5.26);
 
-        myPsychro = Psychro(myPressure, myTmed);
+        myPsychro = psychro(myPressure, myTmed);
 
         /*!
         \brief
@@ -433,7 +513,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
         /*! Monteith and Unsworth (2008) */
         mySatVapPress = 0.61078 * exp(17.27 * myTmed / (myTmed + 237.3));
         myVapPress = mySatVapPress * myUmed / 100;
-        delta = SaturationSlope(myTmed, mySatVapPress);
+        delta = saturationSlope(myTmed, mySatVapPress);
 
         myDailySB = STEFAN_BOLTZMANN * DAY_SECONDS / 1000000;       /*!<   to MJ */
         myEmissivity = emissivityFromVaporPressure(myVapPress);
@@ -442,7 +522,7 @@ double ET0_Penman_daily(int myDOY, double myElevation, double myLatitude,
         mySWNetRad = mySWGlobRad * (1 - ALBEDO_CROP_REFERENCE);
         myNetRad = (mySWNetRad - myLWNetRad);
 
-        myLambda = LatentHeatVaporization(myTmed) / 1000000; /*!<  to MJ */
+        myLambda = latentHeatVaporization(myTmed) / 1000000; /*!<  to MJ */
 
         vmed2 = myVmed10 * 0.748;
 
@@ -486,7 +566,7 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
     double firstTerm, secondTerm, denominator;
 
 
-    es = SaturationVaporPressure(airTemp) / 1000.;
+    es = saturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
     emissivity = emissivityFromVaporPressure(ea);
     tAirK = airTemp + ZEROCELSIUS;
@@ -509,12 +589,12 @@ double ET0_Penman_hourly(double heigth, double normalizedTransmissivity, double 
         Cd = 0.96;
     }
 
-    delta = SaturationSlope(airTemp, es);
+    delta = saturationSlope(airTemp, es);
 
-    pressure = PressureFromAltitude(heigth) / 1000.;
+    pressure = pressureFromAltitude(heigth) / 1000.;
 
-    gamma = Psychro(pressure, airTemp);
-    lambda = LatentHeatVaporization(airTemp);
+    gamma = psychro(pressure, airTemp);
+    lambda = latentHeatVaporization(airTemp);
 
     windSpeed2 = windSpeed10 * 0.748;
 
@@ -551,7 +631,7 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
 
     netRadiation = 3600 * netIrradiance;
 
-    es = SaturationVaporPressure(airTemp) / 1000.;
+    es = saturationVaporPressure(airTemp) / 1000.;
     ea = airHum * es / 100.0;
 
     tAirK = airTemp + ZEROCELSIUS;
@@ -567,12 +647,12 @@ double ET0_Penman_hourly_net_rad(double heigth, double netIrradiance, double air
         Cd = 0.96;
     }
 
-    delta = SaturationSlope(airTemp, es);
+    delta = saturationSlope(airTemp, es);
 
-    pressure = PressureFromAltitude(heigth) / 1000.;
+    pressure = pressureFromAltitude(heigth) / 1000.;
 
-    gamma = Psychro(pressure, airTemp);
-    lambda = LatentHeatVaporization(airTemp);
+    gamma = psychro(pressure, airTemp);
+    lambda = latentHeatVaporization(airTemp);
 
     windSpeed2 = windSpeed10 * 0.748;
 

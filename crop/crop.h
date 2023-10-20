@@ -11,7 +11,7 @@
         #include "root.h"
     #endif
 
-    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, FRUIT_TREE, FALLOW, FALLOW_ANNUAL};
+    enum speciesType {HERBACEOUS_ANNUAL, HERBACEOUS_PERENNIAL, HORTICULTURAL, GRASS, TREE, FALLOW, FALLOW_ANNUAL};
     #define NR_CROP_SPECIES 6
 
     /*!
@@ -84,7 +84,10 @@
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
         void resetCrop(unsigned int nrLayers);
-        bool updateLAI(double latitude, unsigned int nrLayers, int myDoy);
+        bool updateLAI(double latitude, unsigned int nrLayers, int currentDoy);
+
+        float computeSimpleLAI(float myDegreeDays, double latitude, int currentDoy);
+
         bool dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
                          double tmin, double tmax, double waterTableDepth, std::string &myError);
         bool restore(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,
@@ -93,7 +96,7 @@
         double getSurfaceCoverFraction();
         double getMaxEvaporation(double ET0);
         double getMaxTranspiration(double ET0);
-        double getSurfaceWaterPonding();
+        double getSurfaceWaterPonding() const;
 
         double getCropWaterDeficit(const std::vector<soil::Crit3DLayer> & soilLayers);
 

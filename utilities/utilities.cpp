@@ -8,6 +8,7 @@
 #include <QSqlRecord>
 #include <QSqlQuery>
 #include <QDir>
+#include <QDirIterator>
 #include <QTextStream>
 
 
@@ -23,7 +24,18 @@ QList<QString> getFields(QSqlDatabase* db_, QString tableName)
 }
 
 
-QList<QString> getFieldsUpperCase(QSqlQuery& query)
+QList<QString> getFields(const QSqlQuery &query)
+{
+    QSqlRecord record = query.record();
+    QList<QString> fieldList;
+    for (int i=0; i < record.count(); i++)
+        fieldList.append(record.fieldName(i));
+
+    return fieldList;
+}
+
+
+QList<QString> getFieldsUpperCase(const QSqlQuery& query)
 {
     QSqlRecord record = query.record();
     QList<QString> fieldList;
@@ -207,7 +219,7 @@ QDateTime getQDateTime(const Crit3DTime& t)
 }
 
 
-QString getFileName(QString fileNameComplete)
+QString getFileName(const QString &fileNameComplete)
 {
     QString c;
     QString fileName = "";
@@ -215,15 +227,20 @@ QString getFileName(QString fileNameComplete)
     {
         c = fileNameComplete.mid(i,1);
         if ((c != "\\") && (c != "/"))
+        {
             fileName = c + fileName;
+        }
         else
+        {
             return fileName;
+        }
     }
+
     return fileName;
 }
 
 
-QString getFilePath(QString fileNameComplete)
+QString getFilePath(const QString &fileNameComplete)
 {
     QString fileName = getFileName(fileNameComplete);
     QString filePath = fileNameComplete.left(fileNameComplete.length() - fileName.length());
@@ -401,7 +418,6 @@ bool getPeriodDates(QString periodSelected, int year, QDate myDate, QDate* start
 
 }
 
-
 std::vector <float> StringListToFloat(QList<QString> myList)
 {
     std::vector <float> myVector;
@@ -412,8 +428,26 @@ std::vector <float> StringListToFloat(QList<QString> myList)
     return myVector;
 }
 
+std::vector <double> StringListToDouble(QList<QString> myList)
+{
+    std::vector <double> myVector;
+    myVector.resize(unsigned(myList.size()));
+    for (unsigned i=0; i < unsigned(myList.size()); i++)
+        myVector[i] = myList[int(i)].toFloat();
+
+    return myVector;
+}
 
 QStringList FloatVectorToStringList(std::vector <float> myVector)
+{
+    QList<QString> myList;
+    for (unsigned i=0; i < unsigned(myVector.size()); i++)
+        myList.push_back(QString::number(double(myVector[i])));
+
+    return myList;
+}
+
+QStringList DoubleVectorToStringList(std::vector <double> myVector)
 {
     QList<QString> myList;
     for (unsigned i=0; i < unsigned(myVector.size()); i++)
@@ -538,12 +572,39 @@ QList<QString> readListSingleColumn(QString fileName, QString& error)
     return myList;
 }
 
+
 QList<QString> removeList(QList<QString> list, QList<QString> toDelete)
 {
-  QList<QString>::iterator i;
-  for (i = toDelete.begin(); i != toDelete.end(); ++i)
-  {
-    list.removeAll(*i);
-  }
-  return list;
+    QList<QString>::iterator i;
+    for (i = toDelete.begin(); i != toDelete.end(); ++i)
+    {
+        list.removeAll(*i);
+    }
+    return list;
+}
+
+
+// remove files from targetPath, containing targetStr in the name and older than nrDays
+void removeOldFiles(const QString &targetPath, const QString &targetStr, int nrDays)
+{
+    // iterate through the directory using the QDirIterator
+    QDirIterator it(targetPath);
+
+    while (it.hasNext())
+    {
+        QString filename = it.next();
+        QFileInfo file(filename);
+
+        if (file.isDir())
+            continue;
+
+        if (file.fileName().contains(targetStr, Qt::CaseInsensitive))
+        {
+            if (file.fileTime(QFileDevice::FileModificationTime) < QDateTime::currentDateTime().addDays(-nrDays))
+            {
+                QFile myFile(filename);
+                myFile.remove();
+            }
+        }
+    }
 }

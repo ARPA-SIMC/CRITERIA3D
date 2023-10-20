@@ -73,7 +73,6 @@
             QList<QString> yearList;
             bool onlyOneYear;
 
-            Crit3DMeteoGridDbHandler xmlMeteoGrid;
             Crit3DMeteoSettings meteoSettings;
 
             QGroupBox *infoCaseGroup;

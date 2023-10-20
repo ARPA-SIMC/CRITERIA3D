@@ -12,7 +12,6 @@
 #include "quality.h"
 #include "dbClimate.h"
 #include "qdebug.h"
-#include "iostream"
 
 using namespace std;
 
@@ -822,6 +821,7 @@ float loadDailyVarSeries(QString *myError, Crit3DMeteoPointsDbHandler *meteoPoin
 
     if ( dailyValues.empty() )
     {
+        //qDebug() << "myError: " << *myError;
         return 0;
     }
     else
@@ -1173,82 +1173,6 @@ float dailyLeafWetnessComputation(TObsDataH* hourlyValues, float minimumPercenta
 
 }
 
-float computeDailyBIC(float prec, float etp)
-{
-
-    Crit3DQuality qualityCheck;
-
-    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
-    quality::qualityType qualityPrec = qualityCheck.syntacticQualitySingleValue(dailyPrecipitation, prec);
-    quality::qualityType qualityETP = qualityCheck.syntacticQualitySingleValue(dailyReferenceEvapotranspirationHS, etp);
-    if (qualityPrec == quality::accepted && qualityETP == quality::accepted)
-    {
-            return (prec - etp);
-    }
-    else
-        return NODATA;
-
-}
-
-float dailyThermalRange(float Tmin, float Tmax)
-{
-
-    Crit3DQuality qualityCheck;
-
-    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
-    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
-    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
-    if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-        return (Tmax - Tmin);
-    else
-        return NODATA;
-
-}
-
-float dailyAverageT(float Tmin, float Tmax)
-{
-
-        Crit3DQuality qualityCheck;
-
-        // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
-        quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
-        quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
-        if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-            return ( (Tmin + Tmax) / 2) ;
-        else
-            return NODATA;
-
-}
-
-float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings* meteoSettings)
-{
-
-    Crit3DQuality qualityCheck;
-
-    // TODO nella versione vb ammessi anche i qualitySuspectData, questo tipo per ora non è stato implementato
-    quality::qualityType qualityTmin = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMin, Tmin);
-    quality::qualityType qualityTmax = qualityCheck.syntacticQualitySingleValue(dailyAirTemperatureMax, Tmax);
-    int dayOfYear = getDoyFromDate(date);
-    if (qualityTmin  == quality::accepted && qualityTmax == quality::accepted)
-        return ET0_Hargreaves(meteoSettings->getTransSamaniCoefficient(), latitude, dayOfYear, Tmax, Tmin);
-    else
-        return NODATA;
-
-}
-
-float dewPoint(float relHumAir, float tempAir)
-{
-
-    if (relHumAir == NODATA || relHumAir == 0 || tempAir == NODATA)
-        return NODATA;
-
-    relHumAir = MINVALUE(100, relHumAir);
-
-    float saturatedVaporPres = exp((16.78 * tempAir - 116.9) / (tempAir + 237.3));
-    float actualVaporPres = relHumAir / 100 * saturatedVaporPres;
-    return (log(actualVaporPres) * 237.3 + 116.9) / (16.78 - log(actualVaporPres));
-
-}
 
 
 float computeWinkler(Crit3DMeteoPoint* meteoPoint, Crit3DDate firstDate, Crit3DDate finishDate, float minimumPercentage)
@@ -1574,7 +1498,7 @@ bool elaborateDailyAggrVarFromStartDate(meteoVariable myVar, Crit3DMeteoPoint me
 frequencyType getAggregationFrequency(meteoVariable myVar)
 {
 
-    if (myVar == dailyThomHoursAbove || myVar == dailyThomAvg || myVar == dailyThomMax || myVar == dailyLeafWetness)
+    if (myVar == dailyThomHoursAbove || myVar == dailyThomAvg || myVar == dailyThomMax || myVar == dailyLeafWetness || myVar == dailyTemperatureHoursAbove)
     {
         return hourly;
     }
@@ -1758,6 +1682,7 @@ bool elaborateDailyAggregatedVarFromHourly(meteoVariable myVar, Crit3DMeteoPoint
                     break;
                 case dailyTemperatureHoursAbove:
                     res = temperatureDailyNHoursAbove(hourlyValues, meteoSettings->getTemperatureThreshold(), meteoSettings->getMinimumPercentage());
+                    break;
                 default:
                     res = NODATA;
                     break;
@@ -2225,6 +2150,7 @@ bool preElaboration(QString *myError, Crit3DMeteoPointsDbHandler* meteoPointsDbH
         }
         case dailyBIC:
         {
+
             if (loadDailyVarSeries(myError, meteoPointsDbHandler, meteoGridDbHandler, meteoPoint, isMeteoGrid, dailyReferenceEvapotranspirationHS, startDate, endDate) > 0)
             {
                 preElaboration = true;

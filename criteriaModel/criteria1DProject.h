@@ -37,6 +37,7 @@
         QSqlDatabase dbCrop;
         QSqlDatabase dbSoil;
         QSqlDatabase dbMeteo;
+        Crit3DMeteoGridDbHandler* observedMeteoGrid;
 
         // dates
         QDate firstSimulationDate;
@@ -48,7 +49,8 @@
         Crit1DCarbonNitrogenProfile myCarbonNitrogenProfile;
 
         // soil
-        soil::Crit3DTextureClass soilTexture[13];
+        std::vector<soil::Crit3DTextureClass> texturalClassList;
+        std::vector<soil::Crit3DGeotechnicsClass> geotechnicsClassList;
 
         std::vector<Crit1DCompUnit> compUnitList;
 
@@ -67,13 +69,14 @@
         bool isSaveState;
         bool isRestart;
 
-        // forecast period
+        // forecast/climate type
         bool isYearlyStatistics;
+        bool isMonthlyStatistics;
         bool isSeasonalForecast;
-        bool isMonthlyForecast;
+        bool isEnsembleForecast;
         bool isShortTermForecast;
 
-        int firstSeasonMonth;
+        int firstMonth;
         int daysOfForecast;
         int nrYears;
         std::vector<float> irriSeries;
@@ -93,13 +96,13 @@
         std::vector<int> awcDepth;
         std::vector<int> availableWaterDepth;
         std::vector<int> fractionAvailableWaterDepth;
+        std::vector<int> factorOfSafetyDepth;
 
         // DATABASE
         QSqlDatabase dbForecast;
         QSqlDatabase dbOutput;
         QSqlDatabase dbState;
 
-        Crit3DMeteoGridDbHandler* observedMeteoGrid;
         Crit3DMeteoGridDbHandler* forecastMeteoGrid;
 
         void closeProject();
@@ -108,15 +111,15 @@
         int openAllDatabase();
         void checkSimulationDates();
 
-        bool setSoil(QString soilCode, QString &myError);
+        bool setSoil(QString soilCode, QString &errorStr);
 
         bool setMeteoSqlite(QString idMeteo, QString idForecast);
         bool setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigned int memberNr);
 
         bool setPercentileOutputCsv();
-        void updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int memberNr);
+        void updateMediumTermForecastOutput(Crit3DDate myDate, unsigned int memberNr);
         void initializeIrrigationStatistics(const Crit3DDate &firstDate, const Crit3DDate &lastDate);
-        void updateIrrigationStatistics(Crit3DDate myDate, int &index);
+        void updateIrrigationStatistics(Crit3DDate myDate, int &currentIndex);
         bool computeIrrigationStatistics(unsigned int index, float irriRatio);
         bool computeMonthlyForecast(unsigned int unitIndex, float irriRatio);
 
@@ -128,13 +131,13 @@
         bool saveState(QString &myError);
         bool restoreState(QString dbStateToRestoreName, QString &myError);
         void updateOutput(Crit3DDate myDate, bool isFirst);
-        bool saveOutput(QString &myError);
+        bool saveOutput(QString &errorStr);
 
     };
 
 
     QString getOutputStringNullZero(double value);
-    bool setVariableDepth(QList<QString> &depthList, std::vector<int> &variableDepth);
+    bool setVariableDepth(const QList<QString> &depthList, std::vector<int> &variableDepth);
 
 
 #endif // CRITERIA1DPROJECT_H

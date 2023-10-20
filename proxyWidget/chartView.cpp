@@ -30,6 +30,13 @@ ChartView::ChartView(QWidget *parent) :
     series3->setColor(Qt::gray);
     series3->setMarkerSize(8.0);
 
+    seriesMarked = new QScatterSeries();
+    seriesMarked->setName("Marked");
+    seriesMarked->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    seriesMarked->setPen(pen);
+    seriesMarked->setColor(Qt::red);
+    seriesMarked->setMarkerSize(8.0);
+
     climLapseRatelineSeries = new QLineSeries();
     climLapseRatelineSeries->setName("Climatological Lapse Rate");
     climLapseRatelineSeries->setColor(Qt::blue);
@@ -39,13 +46,9 @@ ChartView::ChartView(QWidget *parent) :
     modelLapseRatelineSeries->setColor(Qt::red);
 
     setRenderHint(QPainter::Antialiasing);
-    chart()->addSeries(series1);
-    chart()->addSeries(series2);
-    chart()->addSeries(series3);
 
     axisX = new QValueAxis();
     axisY = new QValueAxis();
-
     chart()->addAxis(axisX, Qt::AlignBottom);
     chart()->addAxis(axisY, Qt::AlignLeft);
     chart()->setDropShadowEnabled(false);
@@ -72,32 +75,44 @@ void ChartView::cleanScatterSeries()
         chart()->removeSeries(series3);
         series3->clear();
     }
+    if (chart()->series().contains(seriesMarked))
+    {
+        chart()->removeSeries(seriesMarked);
+        seriesMarked->clear();
+    }
 }
 
-void ChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF> pointListSeries2, QList<QPointF> pointListSeries3)
+void ChartView::drawScatterSeries(const QList<QPointF> &pointListPrimary, const QList<QPointF> &pointListSecondary,
+                                  const QList<QPointF> &pointListSupplemental, const QList<QPointF> &pointListMarked)
 {
-    for (int i = 0; i < pointListSeries1.size(); i++)
+    for (int i = 0; i < pointListPrimary.size(); i++)
     {
-        series1->append(pointListSeries1[i]);
+        series1->append(pointListPrimary[i]);
+    }
+    for (int i = 0; i < pointListSecondary.size(); i++)
+    {
+        series2->append(pointListSecondary[i]);
+    }
+    for (int i = 0; i < pointListSupplemental.size(); i++)
+    {
+        series3->append(pointListSupplemental[i]);
+    }
+    for (int i = 0; i < pointListMarked.size(); i++)
+    {
+        seriesMarked->append(pointListMarked[i]);
     }
 
-    for (int i = 0; i < pointListSeries2.size(); i++)
-    {
-        series2->append(pointListSeries2[i]);
-    }
+    QList<QPointF> pointList;
+    pointList.append(pointListPrimary);
+    pointList.append(pointListSecondary);
+    pointList.append(pointListSupplemental);
+    pointList.append(pointListMarked);
 
-    for (int i = 0; i < pointListSeries3.size(); i++)
-    {
-        series3->append(pointListSeries3[i]);
-    }
-
-    pointListSeries1.append(pointListSeries2);
-    pointListSeries1.append(pointListSeries3);
     double xMin = std::numeric_limits<int>::max();
     double xMax = std::numeric_limits<int>::min();
     double yMin = std::numeric_limits<int>::max();
     double yMax = std::numeric_limits<int>::min();
-    foreach (QPointF p, pointListSeries1) {
+    foreach (QPointF p, pointList) {
         xMin = qMin(xMin, p.x());
         xMax = qMax(xMax, p.x());
         yMin = qMin(yMin, p.y());
@@ -106,16 +121,18 @@ void ChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF
 
     double xRange = xMax - xMin;
     double yRange = yMax - yMin;
-    double deltaX = xRange/100;
-    double deltaY = yRange/100;
-    axisX->setMax(xMax+3*deltaX);
-    axisX->setMin(xMin-3*deltaX);
-    axisY->setMax(yMax+3*deltaY);
-    axisY->setMin(yMin-3*deltaY);
+    double deltaX = xRange/20;
+    double deltaY = yRange/20;
+
+    axisX->setMax(xMax + deltaX);
+    axisX->setMin(xMin - deltaX);
+    axisY->setMax(yMax + deltaY);
+    axisY->setMin(yMin - deltaY);
 
     chart()->addSeries(series1);
     chart()->addSeries(series2);
     chart()->addSeries(series3);
+    chart()->addSeries(seriesMarked);
 
     series1->attachAxis(axisX);
     series1->attachAxis(axisY);
@@ -126,9 +143,13 @@ void ChartView::drawScatterSeries(QList<QPointF> pointListSeries1, QList<QPointF
     series3->attachAxis(axisX);
     series3->attachAxis(axisY);
 
+    seriesMarked->attachAxis(axisX);
+    seriesMarked->attachAxis(axisY);
+
     connect(series1, &QScatterSeries::hovered, this, &ChartView::tooltipScatterSeries);
     connect(series2, &QScatterSeries::hovered, this, &ChartView::tooltipScatterSeries);
     connect(series3, &QScatterSeries::hovered, this, &ChartView::tooltipScatterSeries);
+    connect(seriesMarked, &QScatterSeries::hovered, this, &ChartView::tooltipScatterSeries);
 }
 
 void ChartView::cleanClimLapseRate()
@@ -169,19 +190,22 @@ void ChartView::drawModelLapseRate(QList<QPointF> pointList)
     modelLapseRatelineSeries->attachAxis(axisY);
 }
 
-void ChartView::setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary, const QMap<QString, QPointF> &valueSupplemental)
+void ChartView::setIdPointMap(const QMap<QString, QPointF> &valuePrimary, const QMap<QString, QPointF> &valueSecondary,
+                              const QMap<QString, QPointF> &valueSupplemental, const QMap<QString, QPointF> &valueMarked)
 {
-    idPointMap.clear();
+    idPointMap1.clear();
     idPointMap2.clear();
     idPointMap3.clear();
-    idPointMap = valuePrimary;
+    idPointMapMarked.clear();
+
+    idPointMap1 = valuePrimary;
     idPointMap2 = valueSecondary;
     idPointMap3 = valueSupplemental;
+    idPointMapMarked = valueMarked;
 }
 
 void ChartView::tooltipScatterSeries(QPointF point, bool state)
 {
-
     auto serie = qobject_cast<QScatterSeries *>(sender());
     if (state)
     {
@@ -192,7 +216,7 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
 
         if (serie->name() == "Primary")
         {
-            QMapIterator<QString, QPointF> i(idPointMap);
+            QMapIterator<QString, QPointF> i(idPointMap1);
             while (i.hasNext()) {
                 i.next();
                 if (i.value() == point)
@@ -215,6 +239,17 @@ void ChartView::tooltipScatterSeries(QPointF point, bool state)
         else if (serie->name() == "Supplemental")
         {
             QMapIterator<QString, QPointF> i(idPointMap3);
+            while (i.hasNext()) {
+                i.next();
+                if (i.value() == point)
+                {
+                    key = i.key();
+                }
+            }
+        }
+        else if (serie->name() == "Marked")
+        {
+            QMapIterator<QString, QPointF> i(idPointMapMarked);
             while (i.hasNext()) {
                 i.next();
                 if (i.value() == point)

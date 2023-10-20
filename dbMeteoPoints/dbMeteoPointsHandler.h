@@ -81,8 +81,9 @@
                             const QString& idVarStr, meteoVariable myVar,
                             int* nrMissingData, int* nrWrongData, Crit3DQuality* dataQuality);
         bool importHourlyMeteoData(QString fileNameComplete, bool deletePreviousData, QString *log);
-        bool writeDailyDataList(QString pointCode, QList<QString> listEntries, QString* log);
-        bool writeHourlyDataList(QString pointCode, QList<QString> listEntries, QString* log);
+
+        bool writeDailyDataList(QString pointCode, QList<QString> listEntries, QString& log);
+        bool writeHourlyDataList(QString pointCode, QList<QString> listEntries, QString& log);
 
         bool setAllPointsActive();
         bool setAllPointsNotActive();

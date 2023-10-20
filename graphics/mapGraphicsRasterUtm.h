@@ -26,8 +26,8 @@
 */
 
 
-#ifndef MAPGRAPHICSRASTEROBJECT_H
-#define MAPGRAPHICSRASTEROBJECT_H
+#ifndef MAPGRAPHICSRASTERUTM_H
+#define MAPGRAPHICSRASTERUTM_H
 
     #include "MapGraphicsObject.h"
     #include "MapGraphicsView.h"
@@ -44,50 +44,41 @@
         #include "geoMap.h"
     #endif
 
-    struct RowCol
-    {
-        int row;
-        int col;
-    };
+    #include <vector>
 
 
     /*!
      * \brief The RasterObject class
      */
-    class RasterObject : public MapGraphicsObject
+    class RasterUtmObject : public MapGraphicsObject
     {
         Q_OBJECT
     public:
         /*!
-         * \brief RasterObject constructor
+         * \brief RasterUtmObject constructor
          * \param view a MapGraphicsView pointer
          * \param parent MapGraphicsObject
          */
-        explicit RasterObject(MapGraphicsView* _view, MapGraphicsObject *parent = nullptr);
+        explicit RasterUtmObject(MapGraphicsView* view, MapGraphicsObject *parent = nullptr);
 
         bool isLoaded;
 
         void clear();
-        void setDrawing(bool value);
-        void setDrawBorders(bool value);
-        void setColorLegend(ColorLegend* colorLegendPtr);
+        bool initialize(gis::Crit3DRasterGrid* rasterPtr, const gis::Crit3DGisSettings& gisSettings);
 
+        void setDrawing(bool value) {_isDrawing = value;}
+        void setColorLegend(ColorLegend* colorLegendPtr) {_colorLegendPointer = colorLegendPtr;}
+        void setRaster(gis::Crit3DRasterGrid* rasterPtr) {_rasterPointer = rasterPtr;}
+
+        gis::Crit3DRasterGrid* getRaster() {return _rasterPointer;}
+
+        float getValue(Position& pos);
+        float getRasterMaxSize();
+        Position getCurrentCenter();
+        Position getRasterCenter();
         QPointF getPixel(const QPointF &geoPoint);
 
-        bool initializeUTM(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings, bool isGrid_);
-        bool initializeLatLon(gis::Crit3DRasterGrid* myRaster, const gis::Crit3DGisSettings& gisSettings,
-                              const gis::Crit3DLatLonHeader& latLonHeader, bool isGrid_);
-        float getRasterMaxSize();
-        gis::Crit3DGeoPoint* getRasterCenter();
-        void setRaster(gis::Crit3DRasterGrid* rasterPtr);
-        gis::Crit3DRasterGrid* getRaster();
         void updateCenter();
-        Position getCurrentCenter();
-
-        gis::Crit3DLatLonHeader getLatLonHeader() const;
-        bool getRowCol(gis::Crit3DGeoPoint geoPoint, int* row, int* col);
-        float getValue(gis::Crit3DGeoPoint& geoPoint);
-        float getValue(Position& myPos);
 
     protected:
         //virtual from MapGraphicsObject
@@ -107,31 +98,26 @@
         QRectF boundingRect() const;
 
     private:
-        MapGraphicsView* view;
-        gis::Crit3DRasterGrid* rasterPointer;
-        gis::Crit3DGeoMap* geoMap;
-        ColorLegend* colorLegendPointer;
+        MapGraphicsView* _view;
+        gis::Crit3DRasterGrid* _rasterPointer;
+        gis::Crit3DGeoMap* _geoMap;
+        ColorLegend* _colorLegendPointer;
 
-        RowCol **matrix;
-        gis::Crit3DLatLonHeader latLonHeader;
-        double longitudeShift;
+        gis::Crit3DRasterGrid _latRaster;
+        gis::Crit3DRasterGrid _lonRaster;
+        gis::Crit3DLatLonHeader _latLonHeader;
 
-        QPointF refCenterPixel;
+        QPointF _refCenterPixel;
 
-        bool isDrawBorder;
-        bool isLatLon;
-        bool isDrawing;
-        bool isGrid;
-        int utmZone;
+        bool _isDrawing;
+        int _utmZone;
 
-        void freeIndexesMatrix();
-        void initializeIndexesMatrix();
         void setMapExtents();
-        bool getCurrentWindow(gis::Crit3DRasterWindow* window);
-        int getCurrentStep(const gis::Crit3DRasterWindow& window);
-        bool drawRaster(gis::Crit3DRasterGrid *myRaster, QPainter* myPainter);
+        bool getCurrentWindow(gis::Crit3DRasterWindow* rasterWindow);
+        int getCurrentStep(const gis::Crit3DRasterWindow& rasterWindow);
+        bool drawRaster(QPainter* painter);
 
     };
 
 
-#endif // MAPGRAPHICSRASTEROBJECT_H
+#endif // MAPGRAPHICSRASTERUTM_H

@@ -15,6 +15,7 @@
     #define DEFAULT_RAINFALL_THRESHOLD 0.2f
     #define DEFAULT_LEAFWETNESS_RH_THRESHOLD 87
     #define DEFAULT_THOM_THRESHOLD 24
+    #define DEFAULT_TEMPERATURE_THRESHOLD 30
     #define DEFAULT_TRANSMISSIVITY_SAMANI 0.17f
     #define DEFAULT_HOURLY_INTERVALS 1
     #define DEFAULT_WIND_INTENSITY 2.0f
@@ -306,6 +307,11 @@
     double tDewFromRelHum(double RH, double T);
     double tDewFromRelHum(double RH, double T);
 
+    float computeDailyBIC(float prec, float etp);
+    float dailyThermalRange(float Tmin, float Tmax);
+    float dailyAverageT(float Tmin, float Tmax);
+    float dailyEtpHargreaves(float Tmin, float Tmax, Crit3DDate date, double latitude, Crit3DMeteoSettings *meteoSettings);
+    float dewPoint(float relHumAir, float tempAir);
     bool computeLeafWetness(double prec, double relHumidity, short* leafW);
 
     double ET0_Penman_hourly(double heigth, double clearSkyIndex, double globalIrradiance,

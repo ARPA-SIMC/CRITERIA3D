@@ -48,6 +48,8 @@
             void newHomogeneityTestClicked(std::string);
             void newSynchronicityTestClicked(std::string);
             void setSynchronicityReferenceClicked(std::string);
+            void markPoint(std::string);
+            void unmarkPoint(std::string);
 
     };
 

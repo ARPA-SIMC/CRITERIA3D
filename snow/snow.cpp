@@ -27,7 +27,7 @@
 
 #include "commonConstants.h"
 #include "basicMath.h"
-#include "meteoPoint.h"
+#include "meteo.h"
 #include "snow.h"
 
 
@@ -408,6 +408,7 @@ void Crit3DSnow::computeSnowBrooksModel()
         /*! melt */
         freeze_melt = -std::min(prevIceContent + _precSnow + sublimation, w * 1000.);   // [mm]
     }
+
     // pag.53 (3.23) modificata (errore nel denominatore)
     double Qr = (freeze_melt / 1000.) * LATENT_HEAT_FUSION * WATER_DENSITY;
 
@@ -417,7 +418,7 @@ void Crit3DSnow::computeSnowBrooksModel()
     /*! Snow Pack Mass */
 
     /*! Ice content */
-    if (_internalEnergy > EPSILON)
+    if (_internalEnergy >= EPSILON)
     {
         _iceContent = 0;
     }
@@ -431,7 +432,7 @@ void Crit3DSnow::computeSnowBrooksModel()
                                   / (1 - snowParameters.snowWaterHoldingCapacity); // [%]
 
     /*! Liquid water content */
-    if (_internalEnergy > EPSILON)
+    if (_internalEnergy >= EPSILON)
     {
         _liquidWaterContent = 0;
     }

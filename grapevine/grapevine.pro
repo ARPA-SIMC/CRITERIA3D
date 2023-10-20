@@ -7,11 +7,9 @@
 
 QT      -= core gui
 
-TARGET = grapevine
 TEMPLATE = lib
 CONFIG += staticlib
 
-DEFINES += GRAPEVINE_LIBRARY
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
 CONFIG += debug_and_release

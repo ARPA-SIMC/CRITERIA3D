@@ -1,8 +1,36 @@
+/*!
+    \copyright 2023
+    Fausto Tomei, Gabriele Antolini, Antonio Volta
+
+    This file is part of AGROLIB distribution.
+    AGROLIB has been developed under contract issued by A.R.P.A. Emilia-Romagna
+
+    AGROLIB is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    AGROLIB is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with AGROLIB.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contacts:
+    ftomei@arpae.it
+    gantolini@arpae.it
+    avolta@arpae.it
+*/
+
 #include <math.h>
 #include <float.h>
-#include <limits.h>             // required for LONG_MAX
+#include <limits>             // required for LONG_MAX
+
 #include "commonConstants.h"
 #include "gammaFunction.h"
+#include "basicMath.h"
 #include "furtherMathFunctions.h"
 
 
@@ -343,16 +371,13 @@
 
     bool generalizedGammaFitting(std::vector<float> &series, int n, double *beta, double *alpha,  double *pZero)
     {
-        if (n<=0)
-        {
-            return false;
-        }
+        if (n<=0) return false;
+
         double sum = 0;
         double sumLog = 0;
-        *pZero = 0;
-        double delta;
         int nAct = 0;
         double average = 0;
+        *pZero = 0;
 
         // compute sums
         for (int i = 0; i<n; i++)
@@ -371,6 +396,7 @@
                 }
             }
         }
+
         if (nAct > 0)
         {
             average = sum / nAct;
@@ -380,7 +406,6 @@
         {
             // Bogus data array but do something reasonable
             *pZero = 0;
-            delta = 0;
             *alpha = 1;
             *beta = average;
         }
@@ -388,7 +413,6 @@
         {
             // They were all zeroes
             *pZero = 1;
-            delta = 0;
             *alpha = 1;
             *beta = average;
         }
@@ -396,10 +420,11 @@
         {
             // Use MLE
             *pZero = *pZero/n;
-            delta = log(average) - sumLog / nAct;
+            double delta = log(average) - sumLog / nAct;
             *alpha = (1 + sqrt(1 + 4 * delta / 3)) / (4 * delta);
             *beta = average / (*alpha);
         }
+
         if (*alpha <= 0 || *beta <= 0)
         {
             return false;
@@ -468,23 +493,22 @@
             return PARAMETER_ERROR;
        if (valueProbability < 0.995)
        {
-           float x;
-           float y;
            float rightBound = 25.0;
            float leftBound = 0.0;
+           float x, y;
            int counter = 0;
            do {
                //y = incompleteGamma(alpha,rightBound/beta);
                y = generalizedGammaCDF(rightBound,beta,alpha,pZero);
-               if (valueProbability>y)
+               if (valueProbability > y)
                {
                    rightBound *= 2;
                    counter++;
                    if (counter == 7) return rightBound;
                }
-           } while ((valueProbability>y));
+           } while ((valueProbability > y));
 
-           x = (rightBound + leftBound)*0.5;
+           x = (rightBound + leftBound) * 0.5f;
            y = generalizedGammaCDF(x,beta,alpha,pZero);
            while ((fabs(valueProbability - y) > accuracy) && (counter < 200))
            {
@@ -496,11 +520,11 @@
                {
                    leftBound = x;
                }
-               x = (rightBound + leftBound)*0.5;
+               x = (rightBound + leftBound) * 0.5f;
                y = generalizedGammaCDF(x,beta,alpha,pZero);
                ++counter;
            }
-           x = (rightBound + leftBound)*0.5;
+           x = (rightBound + leftBound) * 0.5f;
            return x;
        }
        double x,y;
@@ -511,7 +535,7 @@
            y = generalizedGammaCDF(x,beta,alpha,pZero);
            x += outlierStep;
        }
-       return (x - outlierStep);
+       return float(x - outlierStep);
     }
 
     double inverseGeneralizedGammaCDFDoublePrecision(double valueProbability, double alpha, double beta, double accuracy,double pZero,double outlierStep)
@@ -570,13 +594,13 @@
 
     float generalizedGammaCDF(float x, double beta, double alpha,  double pZero)
     {
-
-        float gammaCDF = NODATA;
-
-        if (fabs(x - NODATA) < EPSILON || fabs(beta - NODATA)< EPSILON || fabs(alpha - NODATA) < EPSILON || fabs(pZero - NODATA) < EPSILON || beta == 0)
+        if ( isEqual(x, NODATA) || isEqual(beta, NODATA) || isEqual(alpha, NODATA)
+            || isEqual(pZero, NODATA) || isEqual(beta, 0) )
         {
-            return gammaCDF;
+            return NODATA;
         }
+
+        double gammaCDF;
 
         if (x <= 0)
         {
@@ -586,9 +610,10 @@
         {
             gammaCDF = pZero + (1 - pZero) * incompleteGamma(alpha, double(x) / beta);
         }
-        return gammaCDF;
 
+        return float(gammaCDF);
     }
+
 
     double generalizedGammaCDF(double x, double beta, double alpha,  double pZero)
     {
@@ -614,12 +639,12 @@
 
     float probabilityGamma(float x, double alfa, double gamma, float gammaFunc)
     {
-        return ( exp(-alfa * x) *( pow(x,(gamma - 1)) * pow(alfa,gamma) / gammaFunc) );
+        return float(exp(-alfa * x) *( pow(x,(gamma - 1)) * pow(alfa,gamma) / gammaFunc));
     }
 
     float probabilityGamma(float x, double alpha, double beta)
     {
-        return exp(-x/beta) * pow(x,(alpha - 1)) / pow(beta,alpha) / gammaFunction(alpha);
+        return float(exp(-x/beta) * pow(x,(alpha - 1)) / pow(beta,alpha) / gammaFunction(alpha));
     }
 
     void probabilityWeightedMoments(std::vector<float> series, int n, std::vector<float> &probWeightedMoments, float a, float b, bool isBeta)

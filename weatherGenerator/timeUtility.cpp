@@ -30,7 +30,7 @@ bool checkLastYearDate(Crit3DDate inputFirstDate, Crit3DDate inputLastDate, int 
 
     if (inputLastDate.addDays(NRDAYSTOLERANCE+1) <  predictionFirstDate)
     {
-        qDebug() << "\nObserved days missing are more than NRDAYSTOLERANCE" << NRDAYSTOLERANCE << endl;
+        qDebug() << "\nObserved days missing are more than NRDAYSTOLERANCE" << NRDAYSTOLERANCE << "\n";
         return false;
     }
 
@@ -61,7 +61,7 @@ bool checkLastYearDate(Crit3DDate inputFirstDate, Crit3DDate inputLastDate, int 
     {
         if (inputLastDate > predictionFirstDate.addDays(80))
         {
-            qDebug() << "Check your XML: you have already all observed data" << endl;
+            qDebug() << "Check your XML: you have already all observed data" << "\n";
             return false;
         }
         if (isLeapYear(predictionFirstDate.year))

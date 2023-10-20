@@ -58,12 +58,12 @@ INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../crop ../gis \
                 ../utilities ../shapeHandler ../netcdfHandler ../shapeUtilities
 
 # comment to compile without GDAL library
-#CONFIG += GDAL
+CONFIG += GDAL
 
-GDAL {
+GDAL:{
     DEFINES += GDAL
     INCLUDEPATH += ../gdalHandler
     include(../gdal.pri)
-}
+    }
 
 

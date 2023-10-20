@@ -5,7 +5,7 @@
    - add GDAL_PATH to the system variables - example: GDAL_PATH = C:\OSGeo4W64
    - add GDAL_DATA to the system variables - example: GDAL_DATA = C:\OSGeo4W64\share\epsg_csv
    - add PROJ_LIB to the system variables  - example: PROJ_LIB  = C:\OSGeo4W64\share\proj
-   - add OSGeo4W\bin to the system path
+   - add OSGeo4W64\bin to the system path
 
    #### win32-g++ (MinGW)
    Unfortunately it doesn't seem to work at the moment

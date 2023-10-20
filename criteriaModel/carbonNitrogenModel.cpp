@@ -109,7 +109,8 @@ void Crit1DCarbonNitrogenProfile::humus_Initialize(Crit1DCase &myCase)
     {
         if (l!= 0)
         {
-            myCase.carbonNitrogenLayers[l].C_humus = myCase.soilLayers[l].horizon->bulkDensity * 1000000 * (myCase.soilLayers[l].horizon->organicMatter / 100) * 0.58 * myCase.soilLayers[l].thickness; // tolto il 100 perche gia in metri
+            myCase.carbonNitrogenLayers[l].C_humus = myCase.soilLayers[l].horizonPtr->bulkDensity * 1000000
+                                                     * (myCase.soilLayers[l].horizonPtr->organicMatter / 100) * 0.58 * myCase.soilLayers[l].thickness; // tolto il 100 perche gia in metri
             myCase.carbonNitrogenLayers[l].N_humus = myCase.carbonNitrogenLayers[l].C_humus / carbonNitrogenParameter.ratioHumusCN;
         }
         else
@@ -148,12 +149,12 @@ void Crit1DCarbonNitrogenProfile::partitioning(Crit1DCase &myCase)
     {
         myTheta = myCase.soilLayers[l].waterContent / (myCase.soilLayers[l].thickness * 1000);
         N_NH4_g_dm3 = convertToGramsPerM3(myCase.carbonNitrogenLayers[l].N_NH4, myCase.soilLayers[l]) / 1000;
-        N_NH4_sol_g_l = N_NH4_g_dm3 / (carbonNitrogenParameter.Kd_NH4 * myCase.soilLayers[l].horizon->bulkDensity + myTheta);
+        N_NH4_sol_g_l = N_NH4_g_dm3 / (carbonNitrogenParameter.Kd_NH4 * myCase.soilLayers[l].horizonPtr->bulkDensity + myTheta);
 
         myCase.carbonNitrogenLayers[l].N_NH4_Sol = N_NH4_sol_g_l * myCase.soilLayers[l].thickness * myTheta * 1000;
 
         N_NH4_ads_g_kg = carbonNitrogenParameter.Kd_NH4 * N_NH4_sol_g_l;
-        N_NH4_ads_g_m3 = N_NH4_ads_g_kg * myCase.soilLayers[l].horizon->bulkDensity * 1000;
+        N_NH4_ads_g_m3 = N_NH4_ads_g_kg * myCase.soilLayers[l].horizonPtr->bulkDensity * 1000;
         myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed = N_NH4_ads_g_m3 * myCase.soilLayers[l].thickness;
         nitrogenTotalProfile.NH4_adsorbedGG += myCase.carbonNitrogenLayers[l].N_NH4_Adsorbed;
     }
@@ -1798,7 +1799,7 @@ void Crit1DCarbonNitrogenProfile::N_initializeCrop(bool noReset,Crit1DCase &myCa
 
     //Select Case TipoColtura
 
-        if (myCase.crop.type == FRUIT_TREE)
+        if (myCase.crop.type == TREE)
         {
             // 2001 Rufat Dejong Fig. 4 e Tagliavini
             nitrogenTotalProfile.ratioHarvested = 0.4;      // fruits, pruning wood
@@ -1853,7 +1854,7 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
         else if (myCase.crop.type == HERBACEOUS_PERENNIAL|| myCase.crop.type == GRASS|| myCase.crop.type ==  FALLOW)
             N_toLitter = myCase.crop.roots.rootDensity[l] * nitrogenTotalProfile.roots / 2;
         // tree crops
-        else if (myCase.crop.type == FRUIT_TREE)
+        else if (myCase.crop.type == TREE)
             N_toLitter = myCase.crop.roots.rootDensity[l] * nitrogenTotalProfile.roots / 2;
 
         myCase.carbonNitrogenLayers[l].N_litter += N_toLitter;
@@ -1874,7 +1875,7 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
         nitrogenTotalProfile.cropToResidues = 0;
         nitrogenTotalProfile.roots *= 0.5;
     }
-    else if (myCase.crop.type == FRUIT_TREE)
+    else if (myCase.crop.type == TREE)
     {
         // tree crops
             nitrogenTotalProfile.cropToHarvest = 0;

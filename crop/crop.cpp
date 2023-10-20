@@ -152,7 +152,58 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
 }
 
 
-bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
+float Crit3DCrop::computeSimpleLAI(float myDegreeDays, double latitude, int currentDoy)
+{
+    float myLAI = 0;
+
+    if (isSowingCrop())
+    {
+        if (myDegreeDays < degreeDaysEmergence)
+        {
+            myLAI = 0;
+        }
+        else
+        {
+            myDegreeDays -= degreeDaysEmergence;
+            myLAI = leafDevelopment::getLAICriteria(this, myDegreeDays);
+        }
+    }
+    else
+    {
+        if (myDegreeDays > 0)
+            myLAI = leafDevelopment::getLAICriteria(this, myDegreeDays);
+        else
+            myLAI = LAImin;
+
+        if (type == TREE)
+        {
+            bool isLeafFall;
+            if (latitude > 0)   // north
+            {
+                isLeafFall = (currentDoy >= doyStartSenescence);
+            }
+            else                // south
+            {
+                isLeafFall = ((currentDoy >= doyStartSenescence) && (currentDoy < 182));
+            }
+
+            if (isLeafFall)
+            {
+                if (currentDoy == doyStartSenescence || int(LAIstartSenescence) == int(NODATA))
+                    LAIstartSenescence = myLAI;
+                else
+                    myLAI = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence, currentDoy - doyStartSenescence);
+            }
+
+            myLAI += LAIgrass;
+        }
+    }
+
+    return myLAI;
+}
+
+
+bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int currentDoy)
 {
     double degreeDaysLai = 0;
     double myLai = 0;
@@ -163,7 +214,7 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
         {
             if (degreeDays < degreeDaysEmergence)
                 return true;
-            else if (myDoy - sowingDoy >= MIN_EMERGENCE_DAYS)
+            else if (currentDoy - sowingDoy >= MIN_EMERGENCE_DAYS)
             {
                 isEmerged = true;
                 degreeDaysLai = degreeDays - degreeDaysEmergence;
@@ -191,24 +242,24 @@ bool Crit3DCrop::updateLAI(double latitude, unsigned int nrLayers, int myDoy)
         else
             myLai = LAImin;
 
-        if (type == FRUIT_TREE)
+        if (type == TREE)
         {
             bool isLeafFall;
             if (latitude > 0)   // north
             {
-                isLeafFall = (myDoy >= doyStartSenescence);
+                isLeafFall = (currentDoy >= doyStartSenescence);
             }
             else                // south
             {
-                isLeafFall = ((myDoy >= doyStartSenescence) && (myDoy < 182));
+                isLeafFall = ((currentDoy >= doyStartSenescence) && (currentDoy < 182));
             }
 
             if (isLeafFall)
             {
-                if (myDoy == doyStartSenescence || int(LAIstartSenescence) == int(NODATA))
+                if (currentDoy == doyStartSenescence || int(LAIstartSenescence) == int(NODATA))
                     LAIstartSenescence = myLai;
                 else
-                    myLai = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence, myDoy - doyStartSenescence);
+                    myLai = leafDevelopment::getLAISenescence(LAImin, LAIstartSenescence, currentDoy - doyStartSenescence);
             }
 
             myLai += LAIgrass;
@@ -258,7 +309,7 @@ bool Crit3DCrop::isRootStatic() const
     return (type == HERBACEOUS_PERENNIAL ||
             type == GRASS ||
             type == FALLOW ||
-            type == FRUIT_TREE);
+            type == TREE);
 }
 
 
@@ -266,7 +317,7 @@ bool Crit3DCrop::isRootStatic() const
  * \brief getSurfaceWaterPonding
  * \return maximum height of water ponding [mm]
  */
-double Crit3DCrop::getSurfaceWaterPonding()
+double Crit3DCrop::getSurfaceWaterPonding() const
 {
     // TODO taking into account tillage and crop development
     double clodHeight;          // [mm] height of clod
@@ -359,7 +410,7 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
         // LAI
         LAI = LAImin;
         LAIpreviousDay = LAImin;
-        if (type == FRUIT_TREE) LAI += LAIgrass;
+        if (type == TREE) LAI += LAIgrass;
     }
     else
     {
@@ -551,7 +602,7 @@ double Crit3DCrop::computeTranspiration(double maxTranspiration, const std::vect
         // [mm]
         waterSurplusThreshold = soilLayers[i].SAT - (WSS * (soilLayers[i].SAT - soilLayers[i].FC));
 
-        thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), soilLayers[i].horizon);
+        thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), *(soilLayers[i].horizonPtr));
         // [mm]
         cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
 
@@ -661,7 +712,7 @@ speciesType getCropType(std::string cropType)
     else if (cropType == "annual_fallow" || cropType == "fallow_annual")
         return FALLOW_ANNUAL;
     else if (cropType == "tree" || cropType == "fruit_tree")
-        return FRUIT_TREE;
+        return TREE;
     else
         return HERBACEOUS_ANNUAL;
 }
@@ -682,8 +733,8 @@ std::string getCropTypeString(speciesType cropType)
         return "fallow";
     case FALLOW_ANNUAL:
         return "fallow_annual";
-    case FRUIT_TREE:
-        return "fruit_tree";
+    case TREE:
+        return "tree";
     }
 
     return "No crop type";

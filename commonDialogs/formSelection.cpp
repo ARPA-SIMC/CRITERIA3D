@@ -1,13 +1,13 @@
 #include "formSelection.h"
 
 
-FormSelection::FormSelection(QList<QString> stringList_)
+FormSelection::FormSelection(QList<QString> stringList_, QString title)
 : stringList(stringList_)
 {
 
-    this->setWindowTitle("Select");
+    this->setWindowTitle(title);
     QVBoxLayout* mainLayout = new QVBoxLayout;
-    this->resize(200, 100);
+    this->resize(250, 100);
 
     QHBoxLayout *layoutOk = new QHBoxLayout;
     QHBoxLayout *datasetLayout = new QHBoxLayout;
@@ -30,10 +30,6 @@ FormSelection::FormSelection(QList<QString> stringList_)
     exec();
 }
 
-FormSelection::~FormSelection()
-{
-    close();
-}
 
 void FormSelection::done(int res)
 {
@@ -63,5 +59,4 @@ int FormSelection::getSelectionId()
 {
     return cmbStringList->currentIndex();
 }
-
 

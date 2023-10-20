@@ -51,7 +51,8 @@
 
 Criteria1DWidget::Criteria1DWidget()
 {
-    resize(1200, 600);
+    resize(1200, 700);
+    setWindowState(Qt::WindowMaximized);
 
     // font
     QFont currentFont = this->font();
@@ -94,14 +95,14 @@ Criteria1DWidget::Criteria1DWidget()
         savePixmap.load(saveButtonPath);
     else
     {
-        QMessageBox::critical(nullptr, "error", "missing file: img/saveButton.png");
+        QMessageBox::critical(nullptr, "errorStr", "missing file: img/saveButton.png");
     }
 
     if (QFileInfo(updateButtonPath).exists())
         updatePixmap.load(updateButtonPath);
     else
     {
-        QMessageBox::critical(nullptr, "error", "missing file: img/updateButton.png");
+        QMessageBox::critical(nullptr, "errorStr", "missing file: img/updateButton.png");
     }
 
     saveButton = new QPushButton();
@@ -574,18 +575,15 @@ void Criteria1DWidget::on_actionOpenProject()
 
     this->cropListComboBox.blockSignals(true);
     this->soilListComboBox.blockSignals(true);
-
-    openCropDB(myProject.dbCropName);
-    openSoilDB(myProject.dbSoilName);
-
-    this->cropListComboBox.blockSignals(false);
-    this->soilListComboBox.blockSignals(false);
-
     this->firstYearListComboBox.blockSignals(true);
     this->lastYearListComboBox.blockSignals(true);
 
+    openCropDB(myProject.dbCropName);
+    openSoilDB(myProject.dbSoilName);
     openMeteoDB(myProject.dbMeteoName);
 
+    this->cropListComboBox.blockSignals(false);
+    this->soilListComboBox.blockSignals(false);
     this->firstYearListComboBox.blockSignals(false);
     this->lastYearListComboBox.blockSignals(false);
 
@@ -797,10 +795,10 @@ void Criteria1DWidget::checkCropUpdate()
 
 void Criteria1DWidget::openComputationUnitsDB(QString dbComputationUnitsName)
 {  
-    QString error;
-    if (! readComputationUnitList(dbComputationUnitsName, myProject.compUnitList, error))
+    QString errorStr;
+    if (! readComputationUnitList(dbComputationUnitsName, myProject.compUnitList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error in DB Units:", error);
+        QMessageBox::critical(nullptr, "Error in DB Units:", errorStr);
         return;
     }
 
@@ -827,18 +825,18 @@ void Criteria1DWidget::openCropDB(QString newDbCropName)
 {
     clearCrop();
 
-    QString error;
-    if (! openDbCrop(&(myProject.dbCrop), newDbCropName, &error))
+    QString errorStr;
+    if (! openDbCrop(myProject.dbCrop, newDbCropName, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error DB crop", error);
+        QMessageBox::critical(nullptr, "Error DB crop", errorStr);
         return;
     }
 
     // read crop list
     QList<QString> cropStringList;
-    if (! getCropIdList(&(myProject.dbCrop), &cropStringList, &error))
+    if (! getCropIdList(myProject.dbCrop, cropStringList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
     }
 
@@ -874,41 +872,38 @@ void Criteria1DWidget::on_actionOpenMeteoDB()
 
 void Criteria1DWidget::openMeteoDB(QString dbMeteoName)
 {
-
-    QString error;
+    QString errorStr;
     QList<QString> idMeteoList;
     if (myProject.isXmlMeteoGrid)
     {
-        if (! xmlMeteoGrid.parseXMLGrid(dbMeteoName, &error))
+        if (! myProject.observedMeteoGrid->parseXMLGrid(dbMeteoName, &errorStr))
         {
-            QMessageBox::critical(nullptr, "Error XML meteo grid", error);
+            QMessageBox::critical(nullptr, "Error XML meteo grid", errorStr);
             return;
         }
-        if (! xmlMeteoGrid.openDatabase(&error, "observed"))
+        if (! myProject.observedMeteoGrid->openDatabase(&errorStr, "observed"))
         {
-            QMessageBox::critical(nullptr, "Error DB Grid", error);
+            QMessageBox::critical(nullptr, "Error DB Grid", errorStr);
             return;
         }
-        myProject.dbMeteo = xmlMeteoGrid.db();
-
-        if (!xmlMeteoGrid.idDailyList(&error, &idMeteoList))
+        if (! myProject.observedMeteoGrid->idDailyList(&errorStr, &idMeteoList))
         {
-            QMessageBox::critical(nullptr, "Error daily table list", error);
+            QMessageBox::critical(nullptr, "Error daily table list", errorStr);
             return;
         }
     }
     else
     {
-        if (! openDbMeteo(dbMeteoName, &(myProject.dbMeteo), &error))
+        if (! openDbMeteo(dbMeteoName, &(myProject.dbMeteo), &errorStr))
         {
-            QMessageBox::critical(nullptr, "Error DB meteo", error);
+            QMessageBox::critical(nullptr, "Error DB meteo", errorStr);
             return;
         }
 
         // read id_meteo list
-        if (! getMeteoPointList(&(myProject.dbMeteo), &idMeteoList, &error))
+        if (! getMeteoPointList(myProject.dbMeteo, idMeteoList, errorStr))
         {
-            QMessageBox::critical(nullptr, "Error!", error);
+            QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
     }
@@ -956,32 +951,32 @@ void Criteria1DWidget::on_actionOpenSoilDB()
 
 void Criteria1DWidget::openSoilDB(QString dbSoilName)
 {
-    QString error;
-    if (! openDbSoil(dbSoilName, &(myProject.dbSoil), &error))
+    QString errorStr;
+    if (! openDbSoil(dbSoilName, myProject.dbSoil, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
     }
 
     // load default VG parameters
-    if (! loadVanGenuchtenParameters(&(myProject.dbSoil), myProject.soilTexture, &error))
+    if (! loadVanGenuchtenParameters(myProject.dbSoil, myProject.texturalClassList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
     }
 
     // load default Driessen parameters
-    if (! loadDriessenParameters(&(myProject.dbSoil), myProject.soilTexture, &error))
+    if (! loadDriessenParameters(myProject.dbSoil, myProject.texturalClassList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
     }
 
     // read soil list
     QList<QString> soilStringList;
-    if (! getSoilList(&(myProject.dbSoil), &soilStringList, &error))
+    if (! getSoilList(myProject.dbSoil, soilStringList, errorStr))
     {
-        QMessageBox::critical(nullptr, "Error!", error);
+        QMessageBox::critical(nullptr, "Error!", errorStr);
         return;
     }
 
@@ -1046,7 +1041,7 @@ void Criteria1DWidget::on_actionChooseCase()
     meteoListComboBox.setCurrentText(myProject.myCase.unit.idMeteo);
 
     // CROP
-    myProject.myCase.unit.idCrop = getCropFromClass(&(myProject.dbCrop), "crop_class", "id_class", myProject.myCase.unit.idCropClass, &errorStr);
+    myProject.myCase.unit.idCrop = getIdCropFromClass(myProject.dbCrop, "crop_class", "id_class", myProject.myCase.unit.idCropClass, errorStr);
     if (myProject.myCase.unit.idCrop != "")
     {
         cropListComboBox.setCurrentText(myProject.myCase.unit.idCrop);
@@ -1059,7 +1054,7 @@ void Criteria1DWidget::on_actionChooseCase()
     // SOIL
     if (myProject.myCase.unit.idSoilNumber != NODATA)
     {
-        myProject.myCase.unit.idSoil = getIdSoilString(&(myProject.dbSoil), myProject.myCase.unit.idSoilNumber, &errorStr);
+        myProject.myCase.unit.idSoil = getIdSoilString(myProject.dbSoil, myProject.myCase.unit.idSoilNumber, errorStr);
     }
     if (myProject.myCase.unit.idSoil != "")
     {
@@ -1116,16 +1111,16 @@ void Criteria1DWidget::on_actionChooseCrop(QString idCrop)
 
 void Criteria1DWidget::updateCropParam(QString idCrop)
 {
-    QString error;
-    if (!loadCropParameters(&(myProject.dbCrop), idCrop, &(myProject.myCase.crop), &error))
+    QString errorStr;
+    if (!loadCropParameters(myProject.dbCrop, idCrop, myProject.myCase.crop, errorStr))
     {
-        if (error.contains("Empty"))
+        if (errorStr.contains("Empty"))
         {
-            QMessageBox::information(nullptr, "Warning", error);
+            QMessageBox::information(nullptr, "Warning", errorStr);
         }
         else
         {
-            QMessageBox::critical(nullptr, "Error!", error);
+            QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
     }
@@ -1154,7 +1149,7 @@ void Criteria1DWidget::updateCropParam(QString idCrop)
     // LAI parameters
     LAIminValue->setValue(myProject.myCase.crop.LAImin);
     LAImaxValue->setValue(myProject.myCase.crop.LAImax);
-    if (myProject.myCase.crop.type == FRUIT_TREE)
+    if (myProject.myCase.crop.type == TREE)
     {
         LAIgrass->setVisible(true);
         LAIgrassValue->setVisible(true);
@@ -1234,40 +1229,40 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
     this->firstYearListComboBox.blockSignals(false);
 
     myProject.myCase.meteoPoint.setId(idMeteo.toStdString());
-    QString error;
+    QString errorStr;
 
     if (myProject.isXmlMeteoGrid)
     {
-        if (! xmlMeteoGrid.loadIdMeteoProperties(&error, idMeteo))
+        if (! myProject.observedMeteoGrid->loadIdMeteoProperties(&errorStr, idMeteo))
         {
-            QMessageBox::critical(nullptr, "Error load properties DB Grid", error);
+            QMessageBox::critical(nullptr, "Error load properties DB Grid", errorStr);
             return;
         }
         double lat;
-        if (!xmlMeteoGrid.meteoGrid()->getLatFromId(idMeteo.toStdString(), &lat) )
+        if (!myProject.observedMeteoGrid->meteoGrid()->getLatFromId(idMeteo.toStdString(), &lat) )
         {
-            error = "Missing observed meteo cell";
+            errorStr = "Missing observed meteo cell";
             return;
         }
         myProject.myCase.meteoPoint.latitude = lat;
-        meteoTableName = xmlMeteoGrid.tableDaily().prefix + idMeteo + xmlMeteoGrid.tableDaily().postFix;
-        if (!xmlMeteoGrid.getYearList(&error, idMeteo, &yearList))
+        meteoTableName = myProject.observedMeteoGrid->tableDaily().prefix + idMeteo + myProject.observedMeteoGrid->tableDaily().postFix;
+        if (!myProject.observedMeteoGrid->getYearList(&errorStr, idMeteo, &yearList))
         {
-            QMessageBox::critical(nullptr, "Error!", error);
+            QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
         int pos = 0;
-        if (xmlMeteoGrid.gridStructure().isFixedFields())
+        if (myProject.observedMeteoGrid->gridStructure().isFixedFields())
         {
-            QString fieldTmin = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMin);
-            QString fieldTmax = xmlMeteoGrid.getDailyVarField(dailyAirTemperatureMax);
-            QString fieldPrec = xmlMeteoGrid.getDailyVarField(dailyPrecipitation);
+            QString fieldTmin = myProject.observedMeteoGrid->getDailyVarField(dailyAirTemperatureMin);
+            QString fieldTmax = myProject.observedMeteoGrid->getDailyVarField(dailyAirTemperatureMax);
+            QString fieldPrec = myProject.observedMeteoGrid->getDailyVarField(dailyPrecipitation);
 
             // last year can be incomplete
             for (int i = 0; i<yearList.size()-1; i++)
             {
 
-                    if ( !checkYearMeteoGridFixedFields(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &error))
+                    if ( !checkYearMeteoGridFixedFields(myProject.dbMeteo, meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &errorStr))
                     {
                         yearList.removeAt(pos);
                         i = i - 1;
@@ -1278,25 +1273,24 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
                     }
             }
             // store last Date
-            getLastDateGrid(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &(myProject.lastSimulationDate), &error);
+            getLastDateGrid(myProject.dbMeteo, meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, yearList[yearList.size()-1], &(myProject.lastSimulationDate), &errorStr);
         }
         else
         {
-            int varCodeTmin = xmlMeteoGrid.getDailyVarCode(dailyAirTemperatureMin);
-            int varCodeTmax = xmlMeteoGrid.getDailyVarCode(dailyAirTemperatureMax);
-            int varCodePrec = xmlMeteoGrid.getDailyVarCode(dailyPrecipitation);
+            int varCodeTmin = myProject.observedMeteoGrid->getDailyVarCode(dailyAirTemperatureMin);
+            int varCodeTmax = myProject.observedMeteoGrid->getDailyVarCode(dailyAirTemperatureMax);
+            int varCodePrec = myProject.observedMeteoGrid->getDailyVarCode(dailyPrecipitation);
             if (varCodeTmin == NODATA || varCodeTmax == NODATA || varCodePrec == NODATA)
             {
-                error = "Variable not existing";
-                QMessageBox::critical(nullptr, "Error!", error);
+                errorStr = "Variable not existing";
+                QMessageBox::critical(nullptr, "Error!", errorStr);
                 return;
             }
 
             // last year can be incomplete
-            for (int i = 0; i<yearList.size()-1; i++)
+            for (int i = 0; i < yearList.size()-1; i++)
             {
-
-                    if ( !checkYearMeteoGrid(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, varCodeTmin, varCodeTmax, varCodePrec, yearList[i], &error))
+                    if ( !checkYearMeteoGrid(myProject.observedMeteoGrid->db(), meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, varCodeTmin, varCodeTmax, varCodePrec, yearList[i], &errorStr))
                     {
                         yearList.removeAt(pos);
                         i = i - 1;
@@ -1307,22 +1301,22 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
                     }
              }
             // store last Date
-            getLastDateGrid(myProject.dbMeteo, meteoTableName, xmlMeteoGrid.tableDaily().fieldTime, yearList[yearList.size()-1], &myProject.lastSimulationDate, &error);
+            getLastDateGrid(myProject.dbMeteo, meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, yearList[yearList.size()-1], &myProject.lastSimulationDate, &errorStr);
         }
     }
     else
     {
         QString lat,lon;
-        if (getLatLonFromIdMeteo(&(myProject.dbMeteo), idMeteo, &lat, &lon, &error))
+        if (getLatLonFromIdMeteo(&(myProject.dbMeteo), idMeteo, &lat, &lon, &errorStr))
         {
             myProject.myCase.meteoPoint.latitude = lat.toDouble();
         }
 
-        meteoTableName = getTableNameFromIdMeteo(&(myProject.dbMeteo), idMeteo, &error);
+        meteoTableName = getTableNameFromIdMeteo(&(myProject.dbMeteo), idMeteo, &errorStr);
 
-        if (!getYearList(&(myProject.dbMeteo), meteoTableName, &yearList, &error))
+        if (!getYearList(&(myProject.dbMeteo), meteoTableName, &yearList, &errorStr))
         {
-            QMessageBox::critical(nullptr, "Error!", error);
+            QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
 
@@ -1331,7 +1325,7 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
         // last year can be incomplete
         for (int i = 0; i<yearList.size()-1; i++)
         {
-            if ( !checkYear(&(myProject.dbMeteo), meteoTableName, yearList[i], &error))
+            if ( !checkYear(&(myProject.dbMeteo), meteoTableName, yearList[i], &errorStr))
             {
                 yearList.removeAt(pos);
                 i = i - 1;
@@ -1342,7 +1336,7 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
             }
         }
         // store last Date
-        getLastDate(&(myProject.dbMeteo), meteoTableName, yearList[yearList.size()-1], &myProject.lastSimulationDate, &error);
+        getLastDate(&(myProject.dbMeteo), meteoTableName, yearList[yearList.size()-1], &myProject.lastSimulationDate, &errorStr);
     }
     if (yearList.size() == 1)
     {
@@ -1409,7 +1403,7 @@ void Criteria1DWidget::on_actionChooseLastYear(QString year)
 
 void Criteria1DWidget::updateMeteoPointValues()
 {
-    QString error;
+    QString errorStr;
 
     // init meteoPoint with all years asked
     int firstYear = this->firstYearListComboBox.currentText().toInt() - 1;
@@ -1429,28 +1423,28 @@ void Criteria1DWidget::updateMeteoPointValues()
     {
         unsigned row;
         unsigned col;
-        if (!xmlMeteoGrid.meteoGrid()->findMeteoPointFromId(&row, &col, myProject.myCase.meteoPoint.id) )
+        if (!myProject.observedMeteoGrid->meteoGrid()->findMeteoPointFromId(&row, &col, myProject.myCase.meteoPoint.id) )
         {
-            error = "Missing observed meteo cell";
-            QMessageBox::critical(nullptr, "Error!", error);
+            errorStr = "Missing observed meteo cell";
+            QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
 
-        if (!xmlMeteoGrid.gridStructure().isFixedFields())
+        if (!myProject.observedMeteoGrid->gridStructure().isFixedFields())
         {
-            if (!xmlMeteoGrid.loadGridDailyData(&error, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
+            if (!myProject.observedMeteoGrid->loadGridDailyData(errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
             {
-                error = "Missing observed data";
-                QMessageBox::critical(nullptr, "Error!", error);
+                errorStr = "Missing observed data";
+                QMessageBox::critical(nullptr, "Error!", errorStr);
                 return;
             }
         }
         else
         {
-            if (!xmlMeteoGrid.loadGridDailyDataFixedFields(&error, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
+            if (!myProject.observedMeteoGrid->loadGridDailyDataFixedFields(errorStr, QString::fromStdString(myProject.myCase.meteoPoint.id), firstDate, QDate(lastDate.year(),12,31)))
             {
-                error = "Missing observed data";
-                QMessageBox::critical(nullptr, "Error!", error);
+                errorStr = "Missing observed data";
+                QMessageBox::critical(nullptr, "Error!", errorStr);
                 return;
             }
         }
@@ -1458,23 +1452,23 @@ void Criteria1DWidget::updateMeteoPointValues()
         for (int i = 0; i < (firstDate.daysTo(QDate(lastDate.year(), 12, 31)) + 1); i++)
         {
             Crit3DDate myDate = getCrit3DDate(firstDate.addDays(i));
-            tmin = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
+            tmin = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMin);
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMin, tmin);
 
-            tmax = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+            tmax = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureMax);
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureMax, tmax);
 
-            tavg = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
+            tavg = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyAirTemperatureAvg);
             if (isEqual(tavg, NODATA))
             {
                 tavg = (tmax + tmin) / 2;
             }
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyAirTemperatureAvg, tavg);
 
-            prec = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
+            prec = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyPrecipitation, prec);
 
-            waterDepth = xmlMeteoGrid.meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyWaterTableDepth);
+            waterDepth = myProject.observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyWaterTableDepth);
             myProject.myCase.meteoPoint.setMeteoPointValueD(myDate, dailyWaterTableDepth, waterDepth);
         }
         if (onlyOneYear)
@@ -1498,9 +1492,9 @@ void Criteria1DWidget::updateMeteoPointValues()
     {
         if (onlyOneYear)
         {
-            if (!fillDailyTempPrecCriteria1D(&(myProject.dbMeteo), meteoTableName, &(myProject.myCase.meteoPoint), QString::number(lastYear), &error))
+            if (!fillDailyTempPrecCriteria1D(&(myProject.dbMeteo), meteoTableName, &(myProject.myCase.meteoPoint), QString::number(lastYear), &errorStr))
             {
-                QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
+                QMessageBox::critical(nullptr, "Error!", errorStr + " year: " + QString::number(firstYear));
                 return;
             }
             // copy values to prev years
@@ -1523,9 +1517,9 @@ void Criteria1DWidget::updateMeteoPointValues()
             for (int year = firstYear; year <= lastYear; year++)
             {
                 if (!fillDailyTempPrecCriteria1D(&(myProject.dbMeteo), meteoTableName,
-                                                 &(myProject.myCase.meteoPoint), QString::number(year), &error))
+                                                 &(myProject.myCase.meteoPoint), QString::number(year), &errorStr))
                 {
-                    QMessageBox::critical(nullptr, "Error!", error + " year: " + QString::number(firstYear));
+                    QMessageBox::critical(nullptr, "Error!", errorStr + " year: " + QString::number(firstYear));
                     return;
                 }
             }
@@ -1542,32 +1536,36 @@ void Criteria1DWidget::on_actionChooseSoil(QString soilCode)
 {
     // soilListComboBox has been cleared
     if (soilCode.isEmpty())
-    {
         return;
-    }
 
-    QString error;
+    QString errorStr;
     myProject.myCase.mySoil.cleanSoil();
 
-    if (! loadSoil(&(myProject.dbSoil), soilCode, &(myProject.myCase.mySoil),
-                  myProject.soilTexture, &(myProject.myCase.fittingOptions), &error))
+    if (! loadSoil(myProject.dbSoil, soilCode, myProject.myCase.mySoil, myProject.texturalClassList,
+                  myProject.geotechnicsClassList, myProject.myCase.fittingOptions, errorStr))
     {
-        if (error.contains("Empty"))
+        if (errorStr.contains("Empty"))
         {
-            QMessageBox::information(nullptr, "Warning", error);
+            QMessageBox::information(nullptr, "Warning", errorStr);
         }
         else
         {
-            QMessageBox::critical(nullptr, "Error!", error);
+            QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
     }
 
-    std::string errorString;
-
-    if (! myProject.myCase.initializeSoil(errorString))
+    // warning: some soil data are wrong
+    if (errorStr != "")
     {
-        QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorString));
+        QMessageBox::information(nullptr, "SOIL Warning", errorStr);
+        errorStr = "";
+    }
+
+    std::string errorStdString;
+    if (! myProject.myCase.initializeSoil(errorStdString))
+    {
+        QMessageBox::critical(nullptr, "Error!", QString::fromStdString(errorStdString));
         return;
     }
 
@@ -1591,11 +1589,11 @@ void Criteria1DWidget::on_actionDeleteCrop()
         QMessageBox::StandardButton confirm;
         msg = "Are you sure you want to delete " + cropListComboBox.currentText() + " ?";
         confirm = QMessageBox::question(nullptr, "Warning", msg, QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
-        QString error;
+        QString errorStr;
 
         if (confirm == QMessageBox::Yes)
         {
-            if (deleteCropData(&(myProject.dbCrop), cropListComboBox.currentText(), &error))
+            if (deleteCropData(myProject.dbCrop, cropListComboBox.currentText(), errorStr))
             {
                 cropListComboBox.removeItem(cropListComboBox.currentIndex());
             }
@@ -1643,12 +1641,12 @@ void Criteria1DWidget::on_actionSave()
 
 bool Criteria1DWidget::saveCrop()
 {
-    QString error;
-    if ( !updateCropLAIparam(&(myProject.dbCrop), &(myProject.myCase.crop), &error)
-            || !updateCropRootparam(&(myProject.dbCrop), &(myProject.myCase.crop), &error)
-            || !updateCropIrrigationparam(&(myProject.dbCrop), &(myProject.myCase.crop), &error) )
+    QString errorStr;
+    if ( !updateCropLAIparam(myProject.dbCrop, myProject.myCase.crop, errorStr)
+            || !updateCropRootparam(myProject.dbCrop, myProject.myCase.crop, errorStr)
+            || !updateCropIrrigationparam(myProject.dbCrop, myProject.myCase.crop, errorStr) )
     {
-        QMessageBox::critical(nullptr, "Update param failed!", error);
+        QMessageBox::critical(nullptr, "Update param failed!", errorStr);
         return false;
     }
     cropFromDB = myProject.myCase.crop;
@@ -1720,7 +1718,7 @@ bool Criteria1DWidget::updateCrop()
     myProject.myCase.crop.kcMax = maxKcValue->text().toDouble();
     myProject.myCase.crop.LAImin = LAIminValue->value();
     myProject.myCase.crop.LAImax = LAImaxValue->value();
-    if (myProject.myCase.crop.type == FRUIT_TREE)
+    if (myProject.myCase.crop.type == TREE)
     {
         myProject.myCase.crop.LAIgrass = LAIgrassValue->text().toDouble();
     }
@@ -1750,11 +1748,11 @@ bool Criteria1DWidget::updateCrop()
         myProject.myCase.crop.roots.degreeDaysRootGrowth = rootDegreeDaysIncValue->text().toDouble();
     }
     // irrigation
-    QString error;
+    QString errorStr;
     if (irrigationVolumeValue->text().isEmpty())
     {
-        error = "irrigation Volume is NULL, insert a valid value";
-        QMessageBox::critical(nullptr, "Error irrigation update", error);
+        errorStr = "irrigation Volume is NULL, insert a valid value";
+        QMessageBox::critical(nullptr, "Error irrigation update", errorStr);
         return false;
     }
     else if (irrigationVolumeValue->text() == "0")
@@ -1769,14 +1767,14 @@ bool Criteria1DWidget::updateCrop()
     {
         if (irrigationShiftValue->value() == 0)
         {
-            error = "irrigation shift sould be > 0";
-            QMessageBox::critical(nullptr, "Error irrigation update", error);
+            errorStr = "irrigation shift sould be > 0";
+            QMessageBox::critical(nullptr, "Error irrigation update", errorStr);
             return false;
         }
         if (degreeDaysStartValue->text().isEmpty() || degreeDaysEndValue->text().isEmpty())
         {
-            error = "irrigation degree days is NULL, insert a valid value";
-            QMessageBox::critical(nullptr, "Error irrigation update", error);
+            errorStr = "irrigation degree days is NULL, insert a valid value";
+            QMessageBox::critical(nullptr, "Error irrigation update", errorStr);
             return false;
         }
         myProject.myCase.crop.irrigationVolume = irrigationVolumeValue->text().toDouble();
@@ -2019,7 +2017,7 @@ bool Criteria1DWidget::checkIfCropIsChanged()
         return cropChanged;
 
     }
-    if (cropFromDB.type == FRUIT_TREE && cropFromDB.LAIgrass != LAIgrassValue->text().toDouble())
+    if (cropFromDB.type == TREE && cropFromDB.LAIgrass != LAIgrassValue->text().toDouble())
     {
         cropChanged = true;
         return cropChanged;
@@ -2101,7 +2099,7 @@ void Criteria1DWidget::irrigationVolumeChanged()
 }
 
 
-bool Criteria1DWidget::setMeteoSqlite(QString& error)
+bool Criteria1DWidget::setMeteoSqlite(QString& errorStr)
 {
 
     if (myProject.myCase.meteoPoint.id.empty())
@@ -2114,9 +2112,9 @@ bool Criteria1DWidget::setMeteoSqlite(QString& error)
     if (! query.isValid())
     {
         if (query.lastError().text() != "")
-            error = "dbMeteo error: " + query.lastError().text();
+            errorStr = "dbMeteo errorStr: " + query.lastError().text();
         else
-            error = "Missing meteo table:" + meteoTableName;
+            errorStr = "Missing meteo table:" + meteoTableName;
         return false;
     }
 
@@ -2141,11 +2139,11 @@ bool Criteria1DWidget::setMeteoSqlite(QString& error)
 
     // Read observed data
     int maxNrDays = NODATA; // all data
-    if (! readDailyDataCriteria1D(query, myProject.myCase.meteoPoint, maxNrDays, error))
+    if (! readDailyDataCriteria1D(query, myProject.myCase.meteoPoint, maxNrDays, errorStr))
         return false;
 
-    if (error != "")
-        QMessageBox::warning(nullptr, "WARNING!", error);
+    if (errorStr != "")
+        QMessageBox::warning(nullptr, "WARNING!", errorStr);
 
     return true;
 
@@ -2154,10 +2152,10 @@ bool Criteria1DWidget::setMeteoSqlite(QString& error)
 
 void Criteria1DWidget::on_actionViewWeather()
 {
-    QString error;
-    if (!setMeteoSqlite(error))
+    QString errorStr;
+    if (!setMeteoSqlite(errorStr))
     {
-        QMessageBox::critical(nullptr, "ERROR!", error);
+        QMessageBox::critical(nullptr, "ERROR!", errorStr);
         return;
     }
 

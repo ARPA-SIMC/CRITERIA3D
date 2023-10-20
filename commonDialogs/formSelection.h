@@ -10,11 +10,11 @@
     private:
         QList<QString> stringList;
         QComboBox* cmbStringList;
+        void done(int res);
 
     public:
-        FormSelection(QList<QString> stringList_);
-        ~FormSelection();
-        void done(int res);
+        FormSelection(QList<QString> stringList_, QString title);
+
         QString getSelection();
         int getSelectionId();
     };

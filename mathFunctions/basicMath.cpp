@@ -1,31 +1,35 @@
 /*!
-    \copyright 2016 Fausto Tomei, Gabriele Antolini,
-    Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
+    \copyright 2023
+    Fausto Tomei, Gabriele Antolini, Antonio Volta
 
-    This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
+    This file is part of AGROLIB distribution.
+    AGROLIB has been developed under contract issued by A.R.P.A. Emilia-Romagna
 
-    CRITERIA3D is free software: you can redistribute it and/or modify
+    AGROLIB is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CRITERIA3D is distributed in the hope that it will be useful,
+    AGROLIB is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
+    along with AGROLIB.  If not, see <http://www.gnu.org/licenses/>.
 
     Contacts:
-    Antonio Volta  avolta@arpae.it
+    ftomei@arpae.it
+    gantolini@arpae.it
+    avolta@arpae.it
 */
+
+#include <math.h>
+#include <stdlib.h>
+#include <algorithm>
 
 #include "commonConstants.h"
 #include "basicMath.h"
-#include <math.h>
-#include <stdlib.h>
 
 
     bool sameSignNoZero(float a, float b)
@@ -413,85 +417,30 @@
 
 
         // warning: if isSortValues is true, list will be modified
-        double percentile(double* list, int* nrList, double perc, bool isSortValues)
+        float percentile(std::vector<float>& list, int& nrList, float perc, bool isSortValues)
         {
             // check
-            if (*nrList < MINIMUM_PERCENTILE_DATA || perc <= 0 || perc >= 100) return NODATA;
-
-            perc /= 100.;
-
-            if (isSortValues)
-            {
-                // clean missing data
-                double* cleanList = new double[unsigned(*nrList)];
-                int n = 0;
-                for (int i = 0; i < *nrList; i++)
-                    if (int(list[i]) != int(NODATA))
-                        cleanList[n++] = list[i];
-
-                // switch
-                *nrList = n;
-                *list = *cleanList;
-                delete[] cleanList;
-
-                // check on data presence
-                if (*nrList < MINIMUM_PERCENTILE_DATA)
-                    return NODATA;
-
-                // sort
-                quicksortAscendingDouble(list, 0, *nrList - 1);
-            }
-
-            double rank = double(*nrList) * perc - 1;
-
-            // return percentile
-            if ((rank + 1) > (*nrList - 1))
-                return list[*nrList - 1];
-            else if (rank < 0)
-                return list[0];
-            else
-                return ((rank - int(rank)) * (list[int(rank) + 1] - list[int(rank)])) + list[int(rank)];
-        }
-
-
-        // warning: if isSortValues is true, list will be modified
-        float percentile(std::vector<float> &list, int* nrList, float perc, bool isSortValues)
-        {
-            // check
-            if (*nrList < MINIMUM_PERCENTILE_DATA || perc <= 0 || perc >= 100) return NODATA;
-
+            if (nrList < MINIMUM_PERCENTILE_DATA || (perc <= 0) || (perc > 100)) return NODATA;
             perc /= 100.f;
 
             if (isSortValues)
             {
-                // clean nodata
-                std::vector<float> cleanList;
-                for (unsigned int i = 0; i < unsigned(*nrList); i++)
-                {
-                    if (int(list[i]) != int(NODATA))
-                    {
-                        cleanList.push_back(list[i]);
-                    }
-                }
-
-                // check on data presence
-                if (cleanList.size() < MINIMUM_PERCENTILE_DATA)
-                    return NODATA;
+                // remove nodata
+                list.erase(std::remove(list.begin(), list.end(), float(NODATA)), list.end());
 
                 // sort
-                quicksortAscendingFloat(cleanList, 0, unsigned(cleanList.size() - 1));
+                std::sort(list.begin(), list.end());
 
-                // switch
-                *nrList = int(cleanList.size());
-                list.clear();
-                list = cleanList;
+                nrList = int(list.size());
+                // check on data presence
+                if (nrList < MINIMUM_PERCENTILE_DATA) return NODATA;
             }
 
-            float rank = float(*nrList) * perc - 1;
+            float rank = float(nrList) * perc -1;
 
             // return percentile
-            if ((rank + 1) > (*nrList - 1))
-                return list[unsigned(*nrList - 1)];
+            if ((int(rank) + 1) > (nrList - 1))
+                return list[unsigned(nrList - 1)];
             else if (rank < 0)
                 return list[0];
             else
@@ -500,29 +449,18 @@
 
 
         // warning: if isSortValues is true, list will be modified
-        float percentileRank(std::vector<float> &list, float value, bool sortValues)
+        float percentileRank(std::vector<float>& list, float value, bool isSortValues)
         {
-            if (sortValues)
+            if (isSortValues)
             {
-                // clean nodata
-                std::vector<float> cleanList;
-                for (unsigned int i = 0; i < list.size(); i++)
-                {
-                    if (int(list[i]) != int(NODATA))
-                    {
-                        cleanList.push_back(list[i]);
-                    }
-                }
-
-                // check on data presence
-                if (cleanList.size() < MINIMUM_PERCENTILE_DATA)
-                    return NODATA;
+                // remove nodata
+                list.erase(std::remove(list.begin(), list.end(), float(NODATA)), list.end());
 
                 // sort
-                quicksortAscendingFloat(cleanList, 0, unsigned(cleanList.size()-1));
+                std::sort(list.begin(), list.end());
 
-                list.clear();
-                list = cleanList;
+                // check on data presence
+                if (list.size() < MINIMUM_PERCENTILE_DATA) return NODATA;
             }
 
             float nrValuesF = float(list.size());
@@ -549,6 +487,7 @@
 
             return NODATA;
         }
+
 
         // warning: if isSortValues is true, list will be modified
         float mode(std::vector<float> &list, int* nrList, bool isSortValues)

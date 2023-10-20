@@ -805,7 +805,7 @@ bool NetCDFHandler::createNewFile(std::string fileName)
 }
 
 
-bool NetCDFHandler::writeMetadata(const gis::Crit3DGridHeader& latLonHeader, const string& title,
+bool NetCDFHandler::writeMetadata(const gis::Crit3DLatLonHeader& latLonHeader, const string& title,
                                   const string& variableName, const string& variableUnit,
                                   const Crit3DDate& myDate, int nDays, int refYearStart, int refYearEnd)
 {

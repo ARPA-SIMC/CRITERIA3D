@@ -185,16 +185,15 @@ BarHorizonList::BarHorizonList()
 
 void BarHorizonList::draw(soil::Crit3DSoil *soil)
 {
-
     int totHeight = int(groupBox->height() * 0.9);
+    double soilDepth = soil->horizon[soil->nrHorizons - 1].dbData.lowerDepth;
 
     for (unsigned int i = 0; i < soil->nrHorizons; i++)
     {
-
         int length = 0;
-        if (soil->totalDepth > 0)
+        if (soilDepth > 0)
         {
-            length = int(totHeight * (soil->horizon[i].lowerDepth - soil->horizon[i].upperDepth) / soil->totalDepth);
+            length = int(totHeight * (soil->horizon[i].dbData.lowerDepth - soil->horizon[i].dbData.upperDepth) / soilDepth);
         }
 
         BarHorizon* newBar = new BarHorizon();
@@ -210,9 +209,9 @@ void BarHorizonList::draw(soil::Crit3DSoil *soil)
         QFont font = depthLabel->font();
         font.setPointSize(8);
         depthLabel->setFont(font);
-        if (soil->horizon[i].upperDepth != NODATA)
+        if (soil->horizon[i].dbData.upperDepth != NODATA)
         {
-            depthLabel->setText(QString::number( (soil->horizon[i].upperDepth*100) ));
+            depthLabel->setText(QString::number( (soil->horizon[i].dbData.upperDepth) ));
         }
 
         depthLabel->setFixedWidth(20);
@@ -229,9 +228,9 @@ void BarHorizonList::draw(soil::Crit3DSoil *soil)
             QFont font = lastLabel->font();
             font.setPointSize(8);
             lastLabel->setFont(font);
-            if (soil->horizon[i].lowerDepth != NODATA)
+            if (soil->horizon[i].dbData.lowerDepth != NODATA)
             {
-                lastLabel->setText(QString::number( (soil->horizon[i].lowerDepth*100) ));
+                lastLabel->setText(QString::number( (soil->horizon[i].dbData.lowerDepth) ));
             }
             lastLabel->setFixedWidth(20);
             lastLabel->setFixedHeight(10);
@@ -239,9 +238,7 @@ void BarHorizonList::draw(soil::Crit3DSoil *soil)
             depthLayout->addWidget(lastLabel);
             labelList.push_back(lastLabel);
         }
-
     }
-
 }
 
 

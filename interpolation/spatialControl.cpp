@@ -2,9 +2,11 @@
 #include <cmath>
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "spatialControl.h"
 #include "interpolation.h"
 #include "statistics.h"
+
 
 float findThreshold(meteoVariable myVar, Crit3DMeteoSettings* meteoSettings,
                     float value, float stdDev, float nrStdDev, float avgDeltaZ, float minDistance)
@@ -85,7 +87,7 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
     float myValue, interpolatedValue;
     interpolatedValue = NODATA;
     myValue = NODATA;
-    std::vector <float> myProxyValues;
+    std::vector <double> myProxyValues;
     bool isValid;
 
     for (int i = 0; i < nrMeteoPoints; i++)
@@ -205,7 +207,8 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
                                             float(meteoPoints[listIndex[i]].point.utm.x),
                                             float(meteoPoints[listIndex[i]].point.utm.y),
                                             float(meteoPoints[listIndex[i]].point.z),
-                                            meteoPoints[listIndex[i]].getProxyValues(), false);
+                                            meteoPoints[i].getProxyValues(),
+                                            false);
 
                     myValue = meteoPoints[listIndex[i]].currentValue;
 
@@ -329,8 +332,9 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
             myPoint.proxyValues = meteoPoints[i].proxyValues;
             myPoint.topographicDistance = meteoPoints[i].topographicDistance;
             myPoint.isActive = true;
+            myPoint.isMarked = meteoPoints[i].marked;
 
-            if (int(xMin) == int(NODATA))
+            if (isEqual(xMin, NODATA))
             {
                 xMin = float(myPoint.point->utm.x);
                 xMax = float(myPoint.point->utm.x);
@@ -354,7 +358,7 @@ bool passDataToInterpolation(Crit3DMeteoPoint* meteoPoints, int nrMeteoPoints,
 
     if (nrValid > 0)
     {
-        mySettings->computeShepardInitialRadius((xMax - xMin)*(yMax-yMin), nrValid);
+        mySettings->setPointsBoundingBoxArea((xMax - xMin) * (yMax - yMin));
         return true;
     }
     else

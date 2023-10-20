@@ -1,8 +1,12 @@
 #ifndef INTERPOLATIONSETTINGS_H
 #define INTERPOLATIONSETTINGS_H
 
-    #ifndef INTERPOLATIONCONSTS_H
+#include <functional>
+#ifndef INTERPOLATIONCONSTS_H
         #include "interpolationConstants.h"
+    #endif
+    #ifndef GIS_H
+        #include "gis.h"
     #endif
     #ifndef METEO_H
         #include "meteo.h"
@@ -30,6 +34,11 @@
         float regressionR2;
         float regressionSlope;
         float regressionIntercept;
+        std::vector <double> fittingParametersRange;
+
+        float avg;
+        float stdDev;
+        float stdDevThreshold;
 
         //orography
         float lapseRateH1;
@@ -56,7 +65,7 @@
         float getRegressionR2();
         void setRegressionSlope(float myValue);
         float getRegressionSlope();
-        float getValue(unsigned int pos, std::vector <float> proxyValues);
+        double getValue(unsigned int pos, std::vector<double> proxyValues);
         float getLapseRateH1() const;
         void setLapseRateH1(float value);
         float getLapseRateH0() const;
@@ -79,6 +88,14 @@
         void setLapseRateT1(float newLapseRateT1);
         float getRegressionIntercept() const;
         void setRegressionIntercept(float newRegressionIntercept);
+        float getAvg() const;
+        void setAvg(float newAvg);
+        float getStdDev() const;
+        void setStdDev(float newStdDev);
+        float getStdDevThreshold() const;
+        void setStdDevThreshold(float newStdDevThreshold);
+        std::vector<double> getFittingParametersRange() const;
+        void setFittingParametersRange(const std::vector<double> &newFittingParametersRange);
     };
 
     class Crit3DProxyCombination
@@ -111,20 +128,22 @@
         float minRegressionR2;
         bool useThermalInversion;
         bool useTD;
+        bool useLocalDetrending;
         int maxTdMultiplier;
         bool useLapseRateCode;
         bool useBestDetrending;
+        bool useMultipleDetrending;
         bool useDewPoint;
         bool useInterpolatedTForRH;
-        float refHeightWind;
-        float surfaceRoughness;
-
+        int minPointsLocalDetrending;
+        bool meteoGridUpscaleFromDem;
         aggregationMethod meteoGridAggrMethod;
 
         bool isKrigingReady;
         bool precipitationAllZero;
         float maxHeightInversion;
-        float shepardInitialRadius;
+        float pointsBoundingBoxArea;
+        float localRadius;
         int indexPointCV;
         int topoDist_maxKh, topoDist_Kh;
         std::vector <float> Kh_series;
@@ -134,8 +153,11 @@
         std::vector <Crit3DProxy> currentProxy;
         Crit3DProxyCombination optimalCombination;
         Crit3DProxyCombination selectedCombination;
-        Crit3DProxyCombination *currentCombination;
+        Crit3DProxyCombination currentCombination;
         unsigned indexHeight;
+
+        std::vector <std::vector<double>> fittingParameters;
+        std::vector<std::function<double(double, std::vector<double>&)>> fittingFunction;
 
     public:
         Crit3DInterpolationSettings();
@@ -143,13 +165,11 @@
         void initialize();
         void initializeProxy();
 
-        void computeShepardInitialRadius(float area, int nrPoints);
-
         Crit3DProxy* getProxy(unsigned pos);
         std::string getProxyName(unsigned pos);
         size_t getProxyNr();
         void addProxy(Crit3DProxy myProxy, bool isActive_);
-        float getProxyValue(unsigned pos, std::vector <float> proxyValues);
+        double getProxyValue(unsigned pos, std::vector<double> proxyValues);
         bool getCombination(int combinationInteger, Crit3DProxyCombination &outCombination);
         int getProxyPosFromName(TProxyVar name);
 
@@ -161,6 +181,9 @@
 
         void setUseTD(bool myValue);
         bool getUseTD();
+
+        void setUseLocalDetrending(bool myValue);
+        bool getUseLocalDetrending();
 
         void setUseDewPoint(bool myValue);
         bool getUseDewPoint();
@@ -188,22 +211,16 @@
         int getTopoDist_Kh() const;
         void setTopoDist_Kh(int value);
         Crit3DProxyCombination getOptimalCombination() const;
-        Crit3DProxyCombination* getOptimalCombinationRef();
         void setOptimalCombination(const Crit3DProxyCombination &value);
         Crit3DProxyCombination getSelectedCombination() const;
-        Crit3DProxyCombination* getSelectedCombinationRef();
         void setSelectedCombination(const Crit3DProxyCombination &value);
         void setValueSelectedCombination(unsigned int index, bool isActive);
         unsigned getIndexHeight() const;
         void setIndexHeight(unsigned value);
-        Crit3DProxyCombination *getCurrentCombination() const;
-        void setCurrentCombination(Crit3DProxyCombination* value);
+        Crit3DProxyCombination getCurrentCombination() const;
+        void setCurrentCombination(Crit3DProxyCombination value);
         std::vector<Crit3DProxy> getCurrentProxy() const;
         void setCurrentProxy(const std::vector<Crit3DProxy> &value);
-        float getRefHeightWind() const;
-        void setRefHeightWind(float value);
-        float getSurfaceRoughness() const;
-        void setSurfaceRoughness(float value);
         bool getUseInterpolatedTForRH() const;
         void setUseInterpolatedTForRH(bool value);
         bool getProxyLoaded() const;
@@ -214,6 +231,20 @@
         void setKh_error_series(const std::vector<float> &newKh_error_series);
         void addToKhSeries(float kh, float error);
         void initializeKhSeries();
+        bool getMeteoGridUpscaleFromDem() const;
+        void setMeteoGridUpscaleFromDem(bool newMeteoGridUpscaleFromDem);
+        bool getUseMultipleDetrending() const;
+        void setUseMultipleDetrending(bool newUseMultipleDetrending);
+        float getPointsBoundingBoxArea() const;
+        void setPointsBoundingBoxArea(float newPointsBoundingBoxArea);
+        float getLocalRadius() const;
+        void setLocalRadius(float newLocalRadius);
+        int getMinPointsLocalDetrending() const;
+        void setMinPointsLocalDetrending(int newMinPointsLocalDetrending);
+        std::vector<std::vector <double>> getFittingParameters() const;
+        void setFittingParameters(const std::vector<std::vector <double>> &newFittingParameters);
+        std::vector<std::function<double (double, std::vector<double> &)> > getFittingFunction() const;
+        void setFittingFunction(const std::vector<std::function<double (double, std::vector<double> &)> > &newFittingFunction);
     };
 
 #endif // INTERPOLATIONSETTINGS_H

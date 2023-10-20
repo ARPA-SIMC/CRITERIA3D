@@ -5,6 +5,8 @@
 #include <sstream>
 #include <QString>
 #include <QList>
+#include <QFile>
+
 
 #ifdef _WIN32
     #include "Windows.h"
@@ -165,11 +167,13 @@ QList<QString> getSharedCommandList()
 {
     QList<QString> cmdList;
 
-    cmdList.append("Log     | SetLogFile");
-    cmdList.append("DEM     | LoadDEM");
-    cmdList.append("POINT   | LoadPoints");
-    cmdList.append("GRID    | LoadGrid");
-    cmdList.append("Quit    | Exit");
+    cmdList.append("DEM             | LoadDEM");
+    cmdList.append("Point           | LoadPoints");
+    cmdList.append("Grid            | LoadGrid");
+    cmdList.append("Log             | SetLogFile");
+    cmdList.append("Quit            | Exit");
+    cmdList.append("DailyCsv        | ExportDailyDataCsv");
+    cmdList.append("DailyGridFlt    | ExportDailyGridFlt");    // TODO Antonio
 
     return cmdList;
 }
@@ -270,6 +274,147 @@ int cmdSetLogFile(Project* myProject, QList<QString> argumentList)
 }
 
 
+int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
+{
+    QString outputPath = myProject->getProjectPath() + PATH_OUTPUT;
+
+    if (argumentList.size() < 2)
+    {
+        QString usage = "Usage:\n"
+                        "ExportDailyDataCsv [TPREC] -d1:firstDate [-d2:lastDate] [-t:type] [-l:idList] [-p:outputPath]\n"
+                        "TPREC: save only Tmin, Tmax, Tavg, Prec \n"
+                        "date format: YYYY-MM-DD \n"
+                        "default lastDate: yesterday \n"
+                        "type: GRID|POINTS (default GRID) \n"
+                        "idList: points or cells file list (default ALL) \n"
+                        "default output path: " + outputPath + "\n";
+        myProject->logInfo(usage);
+        return PRAGA_OK;
+    }
+
+    QString typeStr = "GRID";
+    QString idListFileName = "";
+    QDate firstDate, lastDate;
+    bool isTPrec = false;
+
+    for (int i = 1; i < argumentList.size(); i++)
+    {
+        if (argumentList.at(i).left(5).toUpper() == "TPREC")
+            isTPrec = true;
+
+        if (argumentList.at(i).left(4) == "-d1:")
+        {
+            QString dateStr = argumentList[i].right(argumentList[i].length()-4);
+            firstDate = QDate::fromString(dateStr, "yyyy-MM-dd");
+
+            if (! firstDate.isValid())
+            {
+                myProject->logError("Wrong first date, required format is: YYYY-MM-DD");
+                return PRAGA_OK;
+            }
+        }
+
+        if (argumentList.at(i).left(4) == "-d2:")
+        {
+            QString dateStr = argumentList[i].right(argumentList[i].length()-4);
+            lastDate = QDate::fromString(dateStr, "yyyy-MM-dd");
+
+            if (! lastDate.isValid())
+            {
+                myProject->logError("Wrong last date, required format is: YYYY-MM-DD");
+                return PRAGA_OK;
+            }
+        }
+
+        if (argumentList.at(i).left(3) == "-t:")
+        {
+            typeStr = argumentList[i].right(argumentList[i].length()-3).toUpper();
+
+            if (typeStr != "GRID" && typeStr != "POINTS")
+            {
+                myProject->logError("Wrong type: available GRID or POINTS.");
+                return PRAGA_OK;
+            }
+        }
+
+        if (argumentList.at(i).left(3) == "-l:")
+        {
+            idListFileName = argumentList[i].right(argumentList[i].length()-3);
+            idListFileName = myProject->getCompleteFileName(idListFileName, PATH_OUTPUT);
+        }
+
+        if (argumentList.at(i).left(3) == "-p:" || argumentList.at(i).left(3) == "-o:")
+        {
+            outputPath = argumentList[i].right(argumentList[i].length()-3);
+            if (outputPath.left(1) == ".")
+            {
+                QString completeOutputPath = myProject->getProjectPath() + outputPath;
+                outputPath = QDir().cleanPath(completeOutputPath);
+            }
+        }
+    }
+
+    // check first date (mandatory)
+    if (! firstDate.isValid())
+    {
+        myProject->logError("Missing first date: use option -d1:firstDate");
+        return PRAGA_OK;
+    }
+    // check last date (default: yesterday)
+    if (! lastDate.isValid())
+    {
+        lastDate = QDateTime::currentDateTime().date().addDays(-1);
+    }
+
+    myProject->logInfo("... first date is: " + firstDate.toString());
+    myProject->logInfo("... last date is: " + lastDate.toString());
+    if (isTPrec)
+    {
+        myProject->logInfo("... output format is: Date, Tmin (C), Tmax (C), Tavg (C), Prec (mm)");
+    }
+    if (idListFileName != "")
+    {
+        myProject->logInfo("... ID list file is: " + idListFileName);
+    }
+    else
+    {
+        if (typeStr == "GRID")
+            myProject->logInfo("... export ALL meteoGrid cells");
+        else
+            myProject->logInfo("... export ALL meteo points");
+    }
+    myProject->logInfo("... output path is: " + outputPath);
+
+    if (typeStr == "GRID")
+    {
+        if (! myProject->meteoGridLoaded)
+        {
+            myProject->logError("No meteo grid open.");
+            return PRAGA_ERROR;
+        }
+
+        if (! myProject->meteoGridDbHandler->exportDailyDataCsv(myProject->errorString, isTPrec,
+                                             firstDate, lastDate, idListFileName, outputPath))
+        {
+            myProject->logError();
+            return PRAGA_ERROR;
+        }
+    }
+    else if (typeStr == "POINTS")
+    {
+        if (! myProject->meteoPointsLoaded)
+        {
+            myProject->logError("No meteo grid open.");
+            return PRAGA_ERROR;
+        }
+
+        //return ExportDailyDataCsv(isTPrec, firstDate, lastDate, idListStr, outputPath);
+    }
+
+    return PRAGA_OK;
+}
+
+
 int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* isCommandFound)
 {
     *isCommandFound = false;
@@ -301,6 +446,11 @@ int executeSharedCommand(Project* myProject, QList<QString> argumentList, bool* 
     {
         *isCommandFound = true;
         return cmdSetLogFile(myProject, argumentList);
+    }
+    else if (command == "DAILYCSV" || command == "EXPORTDAILYDATACSV")
+    {
+        *isCommandFound = true;
+        return cmdExportDailyDataCsv(myProject, argumentList);
     }
     else
     {

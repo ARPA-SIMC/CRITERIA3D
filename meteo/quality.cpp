@@ -122,6 +122,28 @@ Crit3DQuality::Crit3DQuality()
     initialize();
 }
 
+Crit3DQuality::~Crit3DQuality()
+{
+    delete qualityHourlyT;
+    delete qualityHourlyTd;
+    delete qualityHourlyP;
+    delete qualityHourlyRH;
+    delete qualityHourlyWInt;
+    delete qualityHourlyWDir;
+    delete qualityHourlyGIrr;
+    delete qualityHourlyET0;
+    delete qualityHourlyleafWetness;
+
+    delete qualityTransmissivity;
+
+    delete qualityDailyT;
+    delete qualityDailyP;
+    delete qualityDailyRH;
+    delete qualityDailyWInt;
+    delete qualityDailyWDir;
+    delete qualityDailyGRad;
+    delete qualityDailyET0;
+}
 
 quality::Range* Crit3DQuality::getQualityRange(meteoVariable myVar)
 {

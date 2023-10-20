@@ -15,7 +15,10 @@
         Q_OBJECT
     public:
         TabWaterRetentionData();
-        void insertData(soil::Crit3DSoil *soil, soil::Crit3DTextureClass *textureClassList, soil::Crit3DFittingOptions *fittingOptions);
+
+        void insertData(soil::Crit3DSoil *soil, std::vector<soil::Crit3DTextureClass> *textureClassList,
+                        std::vector<soil::Crit3DGeotechnicsClass> *geotechnicsClassList, soil::Crit3DFittingOptions *fittingOptions);
+
         void tableVerticalHeaderClick(int index);
         void addRowClicked();
         void removeRowClicked();
@@ -34,7 +37,8 @@
         QPushButton* addRow;
         QPushButton* deleteRow;
         soil::Crit3DSoil* mySoil;
-        soil::Crit3DTextureClass* myTextureClassList;
+        std::vector<soil::Crit3DTextureClass>* myTextureClassList;
+        std::vector<soil::Crit3DGeotechnicsClass>* myGeotechnicsClassList;
         soil::Crit3DFittingOptions* myFittingOptions;
         QVector<int> horizonChanged;
         bool fillData;

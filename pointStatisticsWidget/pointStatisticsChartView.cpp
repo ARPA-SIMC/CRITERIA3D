@@ -287,7 +287,7 @@ void PointStatisticsChartView::drawDistribution(std::vector<float> barValues, QL
     distributionBar->append(distributionSet);
     axisY->setMax(maxValueY);
     axisY->setMin(minValueY);
-    axisY->setLabelFormat("%.3f");
+    axisY->setLabelFormat("%.4f");
     axisXvalue->setRange(minValue, maxValue);
     axisX->setCategories(categories);
 
@@ -371,7 +371,7 @@ void PointStatisticsChartView::tooltipDistributionSeries(QPointF point, bool sta
         double xValue = point.x();
         double yValue = point.y();
 
-        m_tooltip->setText(QString("%1,%2").arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 3));
+        m_tooltip->setText(QString("%1,%2").arg(xValue, 0, 'f', 1).arg(yValue, 0, 'f', 4));
         m_tooltip->setSeries(serie);
         m_tooltip->setAnchor(point);
         m_tooltip->setZValue(11);
@@ -405,7 +405,7 @@ void PointStatisticsChartView::tooltipBar(bool state, int index, QBarSet *barset
             tooltipDistributionSeries(pointF, true);
         }
 
-        QString valueStr = QString("[%1:%2] frequency %3").arg(xStart, 0, 'f', 1).arg(xEnd, 0, 'f', 1).arg(barset->at(index), 0, 'f', 3);
+        QString valueStr = QString("[%1:%2] frequency %3").arg(xStart, 0, 'f', 1).arg(xEnd, 0, 'f', 1).arg(barset->at(index), 0, 'f', 4);
         m_tooltip->setSeries(series);
         m_tooltip->setText(valueStr);
         m_tooltip->setAnchor(pointF);

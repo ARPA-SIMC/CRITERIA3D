@@ -55,6 +55,7 @@
     {
     public:
         Crit1DCompUnit unit;
+        bool computeFactorOfSafety;
 
         // SOIL
         soil::Crit3DSoil mySoil;
@@ -79,11 +80,12 @@
 
         double getWaterContent(double computationDepth);
         double getWaterPotential(double computationDepth);
-        double getWaterDeficit(double computationDepth);
-        double getWaterCapacity(double computationDepth);
-        double getAvailableWater(double computationDepth);
         double getFractionAW(double computationDepth);
+        double getSlopeStability(double computationDepth);
 
+        double getWaterDeficitSum(double computationDepth);
+        double getWaterCapacitySum(double computationDepth);
+        double getAvailableWaterSum(double computationDepth);
 
     private:
         double minLayerThickness;       // [m]
@@ -93,7 +95,6 @@
         double area;                    // [m2]
 
 
-
         bool initializeNumericalFluxes(std::string &error);
         bool computeNumericalFluxes(const Crit3DDate &myDate, std::string &error);
         bool computeWaterFluxes(const Crit3DDate &myDate, std::string &error);
@@ -101,6 +102,7 @@
         void saveWaterContent();
         void restoreWaterContent();
         double getTotalWaterContent();
+
 
      public:
         std::vector<double> prevWaterContent;

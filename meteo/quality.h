@@ -63,6 +63,7 @@
     public:
 
         Crit3DQuality();
+        ~Crit3DQuality();
 
         void initialize();
 

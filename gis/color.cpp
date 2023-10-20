@@ -344,11 +344,11 @@ bool roundColorScale(Crit3DColorScale* myScale, int nrIntervals, bool lessRounde
 
     if (isEqual(myScale->minimum(), myScale->maximum()))
     {
-        myScale->setMaximum(myScale->maximum() + 1);
+        myScale->setMaximum(myScale->maximum() + 0.1f);
 
         if (! isEqual(myScale->minimum(), 0))
         {
-            myScale->setMinimum(myScale->minimum() - 1);
+            myScale->setMinimum(myScale->minimum() - 0.1f);
         }
         return true;
     }

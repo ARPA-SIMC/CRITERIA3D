@@ -44,7 +44,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
   lastDaily(lastDaily), firstHourly(firstHourly), lastHourly(lastHourly), meteoSettings(meteoSettings), settings(settings), climateParameters(climateParameters), quality(quality)
 {
     this->setWindowTitle("Point statistics Id:"+QString::fromStdString(meteoPoints[0].id)+" "+QString::fromStdString(meteoPoints[0].name));
-    this->resize(1000, 700);
+    this->resize(1000, 600);
     this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     this->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -233,7 +233,7 @@ Crit3DPointStatisticsWidget::Crit3DPointStatisticsWidget(bool isGrid, Crit3DMete
     classWidth.setMaximumWidth(60);
     classWidth.setMaximumHeight(24);
     classWidth.setText("1");
-    classWidth.setValidator(new QIntValidator(1.0, 5.0));
+    classWidth.setValidator(new QIntValidator(1.0, 30.0));
     gridLeftLayout->addWidget(&classWidth,3,0,1,-1);
 
     valMin.setMaximumWidth(60);
@@ -1186,7 +1186,7 @@ void Crit3DPointStatisticsWidget::plot()
                     if (series[i] > 0)
                     {
                         int index = (series[i] - valMinValue)/classWidthValue;
-                        if( index >= 0 && index<bucket.size())
+                        if( index >= 0 && index < bucket.size())
                         {
                             bucket[index] = bucket[index] + 1;
                             visualizedNrValues = visualizedNrValues + 1;
@@ -1211,8 +1211,8 @@ void Crit3DPointStatisticsWidget::plot()
                 }
                 avg = statistics::mean(series, nrValues);
                 dev_std = statistics::standardDeviation(series, nrValues);
-                millile3dev = sorting::percentile(sortedSeries, &nrValues, 99.73, true);
-                millile_3Dev = sorting::percentile(sortedSeries, &nrValues, 0.27, false);
+                millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73, true);
+                millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27, false);
             }
 
             availability.setText(QString::number((float)nrValues/(float)totDays * 100, 'f', 3));
@@ -1237,7 +1237,7 @@ void Crit3DPointStatisticsWidget::plot()
             {
                 sigma.setText(QString::number(dev_std, 'f', 1));
             }
-            median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 1));
+            median.setText(QString::number(sorting::percentile(sortedSeries, nrValues, 50, false), 'f', 1));
 
             QList<QPointF> lineValues;
             for (int i = 0; i<bucket.size(); i++)
@@ -1482,8 +1482,8 @@ void Crit3DPointStatisticsWidget::plot()
             }
             avg = statistics::mean(series, nrValues);
             dev_std = statistics::standardDeviation(series, nrValues);
-            millile3dev = sorting::percentile(sortedSeries, &nrValues, 99.73, true);
-            millile_3Dev = sorting::percentile(sortedSeries, &nrValues, 0.27, false);
+            millile3dev = sorting::percentile(sortedSeries, nrValues, 99.73, true);
+            millile_3Dev = sorting::percentile(sortedSeries, nrValues, 0.27, false);
         }
         availability.setText(QString::number((float)nrValues/(float)totDays * 100, 'f', 3));
         average.setText(QString::number(avg, 'f', 1));
@@ -1507,7 +1507,7 @@ void Crit3DPointStatisticsWidget::plot()
         {
             sigma.setText(QString::number(dev_std, 'f', 1));
         }
-        median.setText(QString::number(sorting::percentile(sortedSeries, &nrValues, 50, false), 'f', 1));
+        median.setText(QString::number(sorting::percentile(sortedSeries, nrValues, 50, false), 'f', 1));
 
         QList<QPointF> lineValues;
         for (int i = 0; i<bucket.size(); i++)
@@ -1786,7 +1786,7 @@ void Crit3DPointStatisticsWidget::on_actionExportData()
 
         QTextStream myStream (&myFile);
         myStream.setRealNumberNotation(QTextStream::FixedNotation);
-        myStream.setRealNumberPrecision(3);
+        myStream.setRealNumberPrecision(5);
         if (graphType.currentText() == "Trend" || graphType.currentText() == "Anomaly trend")
         {
             QString header = "x,y";
