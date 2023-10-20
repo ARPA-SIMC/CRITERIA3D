@@ -343,10 +343,10 @@ namespace gis
         else if (rasterGrid->header->nrBytes == 1)
         {
             // byte
-            byte *rowValues = new byte[unsigned(rasterGrid->header->nrCols)];
+            unsigned char *rowValues = new unsigned char[unsigned(rasterGrid->header->nrCols)];
             for (int row = 0; row < rasterGrid->header->nrRows; row++)
             {
-                fread (rowValues, sizeof(byte), unsigned(rasterGrid->header->nrCols), filePointer);
+                fread (rowValues, sizeof(unsigned char), unsigned(rasterGrid->header->nrCols), filePointer);
                 for(int col = 0; col < rasterGrid->header->nrCols; col++)
                 {
                     rasterGrid->value[row][col] = float(rowValues[col]);
