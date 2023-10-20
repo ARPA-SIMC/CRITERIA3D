@@ -980,7 +980,7 @@ bool Project::loadDEM(QString myFileName)
     logInfo("Digital Elevation Model = " + myFileName);
 
     // check nodata
-    if (DEM.header->flag != NODATA)
+    if (! isEqual(DEM.header->flag, NODATA))
     {
         QString infoStr = "WARNING: " + QString::number(DEM.header->flag) + " is not a valid NODATA value for DEM!";
         infoStr += " It will be converted in: " + QString::number(NODATA);
