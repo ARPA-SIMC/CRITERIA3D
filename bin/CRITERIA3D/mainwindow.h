@@ -227,6 +227,8 @@
 
         void on_actiondegree_days_triggered();
 
+        void on_actionUpdate_subHourly_triggered(bool checked);
+
     protected:
         /*!
          * \brief mouseReleaseEvent call moveCenter

@@ -48,7 +48,7 @@
         void updateOutputSignal();
 
     private:
-        void computeNrLayers();
+        void setSoilLayers();
         void setLayersDepth();
         void setIndexMaps();
         bool setLateralBoundary();
@@ -60,6 +60,8 @@
 
     public:
         bool isCriteria3DInitialized;
+        bool showEachTimeStep;
+
         WaterFluxesParameters waterFluxesParameters;
 
         QString soilDbFileName;
@@ -142,7 +144,7 @@
         bool interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& myTime);
         double computeEvaporation(int row, int col, double lai);
         bool computeWaterSinkSource();
-        void computeWaterBalance3D(double timeStep);
+        void computeWaterBalance3D(double totalTimeStep);
         bool updateCrop(QDateTime myTime);
 
         bool setCriteria3DMap(criteria3DVariable var, int layerIndex);

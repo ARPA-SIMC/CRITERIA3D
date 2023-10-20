@@ -28,7 +28,6 @@
 #include "basicMath.h"
 #include "utilities.h"
 #include "criteria3DProject.h"
-#include "soilDbTools.h"
 #include "gis.h"
 #include "color.h"
 #include "statistics.h"
@@ -117,10 +116,11 @@ void Crit3DProject::initializeCrop()
             float height = DEM.value[row][col];
             if (! isEqual(height, DEM.header->flag))
             {
+                // is land unit
                 int index = getLandUnitIndexRowCol(row, col);
                 if (index != NODATA)
                 {
-                    // is crop unit
+                    // is crop
                     if (landUnitList[index].idCrop != "")
                     {
                         double degreeDays = 0;

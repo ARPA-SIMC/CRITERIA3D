@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>3</day>
+       <day>2</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1848,7 +1848,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>23</height>
+     <height>29</height>
     </rect>
    </property>
    <property name="palette">
@@ -1979,6 +1979,7 @@
     <addaction name="actionCriteria3D_compute_current_hour"/>
     <addaction name="actionCriteria3D_run_models"/>
     <addaction name="separator"/>
+    <addaction name="actionUpdate_subHourly"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -2849,6 +2850,14 @@
   <action name="actionView_Crop_LAI">
    <property name="text">
     <string>Leaf Area Index</string>
+   </property>
+  </action>
+  <action name="actionUpdate_subHourly">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Update sub hourly</string>
    </property>
   </action>
  </widget>

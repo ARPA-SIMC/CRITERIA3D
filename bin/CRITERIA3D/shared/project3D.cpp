@@ -62,8 +62,12 @@ Project3D::Project3D() : Project()
     initializeProject3D();
 }
 
+
 void Project3D::initializeProject3D()
 {
+    isCriteria3DInitialized = false;
+    showEachTimeStep = false;
+
     initializeProject();
 
     waterFluxesParameters.initialize();
@@ -76,11 +80,11 @@ void Project3D::initializeProject3D()
     soilMapFileName = "";
     landUseMapFileName = "";
 
-    // default
+    // default values
     computationSoilDepth = 0.0;     // [m]
     minThickness = 0.02;            // [m]
     maxThickness = 0.1;             // [m]
-    thickFactor = 1.5;
+    thickFactor = 1.25;
 
     nrSoils = 0;
     nrLayers = 0;
@@ -209,7 +213,7 @@ bool Project3D::initializeWaterBalance3D()
     logInfo("Computation depth: " + QString::number(computationSoilDepth) + " m");
 
     // Layers depth
-    computeNrLayers();
+    setSoilLayers();
     setLayersDepth();
     logInfo("Nr of layers: " + QString::number(nrLayers));
 
@@ -350,7 +354,7 @@ bool Project3D::loadCropDatabase(QString fileName)
 }
 
 
-void Project3D::computeNrLayers()
+void Project3D::setSoilLayers()
  {
     double nextThickness;
     double prevThickness = minThickness;
@@ -1041,27 +1045,32 @@ double Project3D::computeEvaporation(int row, int col, double lai)
 
 
 // input: timeStep [s]
-void Project3D::computeWaterBalance3D(double timeStep)
+void Project3D::computeWaterBalance3D(double totalTimeStep)
 {
     double previousWaterContent = soilFluxes3D::getTotalWaterContent();
+
     this->logInfo("total water [m^3]: " + QString::number(previousWaterContent));
     this->logInfo("precipitation [m^3]: " + QString::number(totalPrecipitation));
     this->logInfo("evaporation [m^3]: " + QString::number(-totalEvaporation));
     this->logInfo("transpiration [m^3]: " + QString::number(-totalTranspiration));
+    this->logInfo("Compute water flow...");
 
     soilFluxes3D::initializeBalance();
 
-    this->logInfo("Compute water flow");
-    currentSeconds = 0;
-    double showTime = 30;
+    currentSeconds = 0;             // [s]
+    double showTime = 60;           // [s]
     int currentStep = 0;
-    while (currentSeconds < timeStep)
+    while (currentSeconds < totalTimeStep)
     {
-        currentSeconds += soilFluxes3D::computeStep(timeStep - currentSeconds);
-        if (currentSeconds < timeStep && int(currentSeconds / showTime) > currentStep)
+        currentSeconds += soilFluxes3D::computeStep(totalTimeStep - currentSeconds);
+
+        if (showEachTimeStep)
         {
-            currentStep = int(currentSeconds / showTime);
-            emit updateOutputSignal();
+            if (currentSeconds < totalTimeStep && int(currentSeconds / showTime) > currentStep)
+            {
+                currentStep = int(currentSeconds / showTime);
+                emit updateOutputSignal();
+            }
         }
     }
 

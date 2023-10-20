@@ -59,6 +59,7 @@
         Crit3DProcesses processes;
 
         bool modelPause, modelStop;
+
         QDateTime modelFirstTime, modelLastTime;
         QDateTime meteoPointsDbFirstTime;
 

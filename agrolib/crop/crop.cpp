@@ -201,7 +201,7 @@ double Crit3DCrop::computeSimpleLAI(double myDegreeDays, double latitude, int cu
 
             if (isLeafFall)
             {
-                currentLAI = leafDevelopment::getLAISenescence(LAImin, LAImax*0.66, currentDoy - doyStartSenescence);
+                currentLAI = leafDevelopment::getLAISenescence(LAImin, LAImax*0.75, currentDoy - doyStartSenescence);
             }
 
             currentLAI += LAIgrass;
