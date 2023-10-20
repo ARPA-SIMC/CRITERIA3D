@@ -41,7 +41,6 @@
 #include "dialogLoadState.h"
 #include "dialogNewPoint.h"
 #include "glWidget.h"
-#include "formInfo.h"
 #include "dialogWaterFluxesSettings.h"
 
 #include <QDebug>
@@ -2192,8 +2191,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
             ui->layerNrEdit->setMaximum(myProject.nrLayers - 1);
             ui->layerNrEdit->setValue(1);
 
-            QString depthStr;
-            depthStr.sprintf("%04.2f", myProject.layerDepth[1]);
+            QString depthStr = QString("%04.2f").arg(myProject.layerDepth[1]);
             ui->layerDepthEdit->setText(depthStr + " m");
         }
 
@@ -3128,8 +3126,7 @@ void MainWindow::on_layerNrEdit_valueChanged(int layerIndex)
         ui->layerNrEdit->setValue(layerIndex);
     }
 
-    QString depthStr;
-    depthStr.sprintf("%04.2f", myProject.layerDepth[layerIndex]);
+    QString depthStr = QString("%04.2f").arg(myProject.layerDepth[layerIndex]);
     ui->layerDepthEdit->setText(depthStr + " m");
 
     if (view3DVariable && current3DlayerIndex != 0)
