@@ -202,6 +202,7 @@ namespace gis
         }
 
         int nrKeys = 0;
+        bool hasNoData = false;
         while (myFile.good())
         {
             getline (myFile, myLine);
@@ -211,9 +212,8 @@ namespace gis
                 cleanSpaces(key);
                 upKey = upperCase(key);
 
-                if ((upKey == "SAMPLES") || (upKey == "LINES")
-                    || (upKey == "DATATYPE") || (upKey == "MAPINFO")
-                    || (upKey == "DATAIGNOREVALUE") || (upKey == "NODATA"))
+                if ((upKey == "SAMPLES") || (upKey == "LINES") || (upKey == "MAPINFO")
+                    || ((upKey == "DATAIGNOREVALUE") || (upKey == "NODATA")) )
                     nrKeys++;
 
                 if (upKey == "SAMPLES")
@@ -286,14 +286,21 @@ namespace gis
                 }
 
                 else if ((upKey == "DATAIGNOREVALUE") || (upKey == "NODATA"))
+                {
                     header->flag = float(::atof(valueStr.c_str()));
+                    hasNoData = true;
+                }
             }
         }
         myFile.close();
 
-        if (nrKeys < 5)
+        if (nrKeys < 4)
         {
-            errorStr = "Wrong header file: missing key values.";
+            if (! hasNoData)
+                errorStr += "Wrong header file: missing data ignore value.";
+            else
+                errorStr = "Wrong header file: missing samples, lines or map info.";
+
             return false;
         }
 
