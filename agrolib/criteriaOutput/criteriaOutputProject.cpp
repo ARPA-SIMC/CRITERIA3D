@@ -248,7 +248,7 @@ bool CriteriaOutputProject::readSettings()
         projectError = "Missing db_comp_units";
         return false;
     }
-    if (dbComputationUnitsName.at(0) == ".")
+    if (dbComputationUnitsName.at(0) == '.')
     {
         dbComputationUnitsName = QDir().cleanPath(path + dbComputationUnitsName);
     }
@@ -260,7 +260,7 @@ bool CriteriaOutputProject::readSettings()
     }
     if (! dbDataName.isEmpty())
     {
-        if (dbDataName.at(0) == ".")
+        if (dbDataName.at(0) == '.')
             dbDataName = QDir::cleanPath(path + dbDataName);
     }
 
@@ -372,7 +372,7 @@ bool CriteriaOutputProject::readSettings()
 
         outputAggrCsvFileName += ".csv";
 
-        if (outputAggrCsvFileName.at(0) == ".")
+        if (outputAggrCsvFileName.at(0) == '.')
             outputAggrCsvFileName = QDir::cleanPath(path + outputAggrCsvFileName);
     }
     projectSettings->endGroup();
@@ -383,7 +383,7 @@ bool CriteriaOutputProject::readSettings()
     mapListFileName = projectSettings->value("map_list","").toString();
     if (! mapListFileName.isEmpty())
     {
-        if (mapListFileName.at(0) == ".")
+        if (mapListFileName.at(0) == '.')
             mapListFileName = QDir::cleanPath(path + mapListFileName);
     }
 
@@ -392,7 +392,7 @@ bool CriteriaOutputProject::readSettings()
          mapPalettePath = projectSettings->value("palette_path","").toString();
     if (! mapPalettePath.isEmpty())
     {
-         if (mapPalettePath.at(0) == ".")
+         if (mapPalettePath.at(0) == '.')
             mapPalettePath = QDir::cleanPath(path + mapPalettePath);
     }
 
