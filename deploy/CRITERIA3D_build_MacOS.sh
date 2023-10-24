@@ -24,13 +24,14 @@ make
 
 cd -
 
-# create directory
+# create bin directory and copy app
 mkdir CRITERIA3D
 mkdir CRITERIA3D/bin
-cd CRITERIA3D/bin
+
+cp -r ../bin/CRITERIA3D/release/CRITERIA3D CRITERIA3D/bin/CRITERIA3D
 
 # deploy app
-cp -r ../bin/CRITERIA3D/release/CRITERIA3D CRITERIA3D
+cd CRITERIA3D/bin
 $DEPLOY CRITERIA3D.app
 
 cd -
@@ -43,7 +44,7 @@ cp ../DOC/img/saveButton.png CRITERIA3D/DOC/img
 cp ../DOC/img/updateButton.png CRITERIA3D/DOC/img
 cp ../DOC/img/textural_soil.png CRITERIA3D/DOC/img
 
-# copy ALL data
+# copy ALL data directory
 mkdir CRITERIA1D/DATA
 cp -R ../DATA/* CRITERIA1D/DATA/
 
