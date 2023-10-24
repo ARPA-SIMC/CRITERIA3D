@@ -4,7 +4,7 @@
  
 ###	Dependencies
 
-	Qt libraries: Qt 5.4 or following is needed (download also QtCharts).
+	Qt libraries: Qt 5.x or following is needed (download also QtCharts).
  
  
 ###	Notes for Windows
@@ -28,7 +28,7 @@
 ###	Notes for Linux
 
 	Compiler:gcc v.6 or later
-	Qt version 5.4 or later
+	Qt version 5.x or later
         
 	build:
 	- execute CRITERIA3D_build_Linux.sh
