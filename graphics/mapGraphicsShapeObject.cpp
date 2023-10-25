@@ -188,8 +188,6 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
     double lat, lon;
     ShapeObject myShape;
     Box<double>* bounds;
-    const Point<double> *p_ptr;
-    Point<double> point;
 
     nrShapes = unsigned(shapePointer->getShapeCount());
     shapeParts.resize(nrShapes);
@@ -200,8 +198,10 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
     double refLatitude = geoMap->referencePoint.latitude;
 
     int zoneNumber = shapePtr->getUtmZone();
-    if (zoneNumber < 1 || zoneNumber > 60)
+    if ((zoneNumber < 1) || (zoneNumber > 60))
+    {
         return false;
+    }
 
     for (unsigned int i = 0; i < nrShapes; i++)
     {
@@ -230,13 +230,14 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
         // vertices
         unsigned long nrVertices = myShape.getVertexCount();
         geoPoints[i].resize(nrVertices);
-        p_ptr = myShape.getVertices();
+
+        const Point<double> *pointPtr = myShape.getVertices();
         for (unsigned long j = 0; j < nrVertices; j++)
         {
-            gis::utmToLatLon(zoneNumber, refLatitude, p_ptr->x, p_ptr->y, &lat, &lon);
+            gis::utmToLatLon(zoneNumber, refLatitude, pointPtr->x, pointPtr->y, &lat, &lon);
             geoPoints[i][j].lat = lat;
             geoPoints[i][j].lon = lon;
-            p_ptr++;
+            pointPtr++;
         }
     }
 
