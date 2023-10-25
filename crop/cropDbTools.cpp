@@ -66,6 +66,7 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
     myCrop.roots.rootDepthMin = query.value("root_depth_zero").toDouble();
     myCrop.roots.rootDepthMax = query.value("root_depth_max").toDouble();
     myCrop.roots.actualRootDepthMax = myCrop.roots.rootDepthMax;
+    myCrop.roots.rootTensileStrength = query.value("root_tensile_strength").toDouble();
 
     getValue(query.value("degree_days_root_increase"), &(myCrop.roots.degreeDaysRootGrowth));
     if (myCrop.roots.degreeDaysRootGrowth == NODATA)
