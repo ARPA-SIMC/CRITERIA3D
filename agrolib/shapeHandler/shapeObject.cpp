@@ -285,7 +285,10 @@ bool ShapeObject::pointInPart(double x, double y, unsigned int indexPart)
 }
 
 
-// LC If the test point is on the border of the polygon, this algorithm will deliver unpredictable results
+// --------------------------------------------------------------
+// WARNING: if the test point is on the border of the polygon,
+// this algorithm will deliver unpredictable results
+// --------------------------------------------------------------
 bool ShapeObject::pointInPolygon(double x, double y)
 {
     if (x < bounds.xmin || x > bounds.xmax || y < bounds.ymin || y > bounds.ymax)

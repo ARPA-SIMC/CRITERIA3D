@@ -9,16 +9,16 @@
 #include <QFile>
 
 
-bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Crit3DShapeHandler &soil, Crit3DShapeHandler &meteo,
+bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shapeCrop, Crit3DShapeHandler &shapeSoil, Crit3DShapeHandler &shapeMeteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize, double threshold,
                  QString ucmFileName, std::string &error, bool showInfo)
 {
 
     // make a copy of crop shapefile (reference) and return cloned shapefile complete path
-    QString refFileName = QString::fromStdString(crop.getFilepath());
+    QString refFileName = QString::fromStdString(shapeCrop.getFilepath());
     QString ucmShapeFileName = cloneShapeFile(refFileName, ucmFileName);
 
-    if (!ucm.open(ucmShapeFileName.toStdString()))
+    if (!shapeUCM.open(ucmShapeFileName.toStdString()))
     {
         error = "Load shapefile failed: " + ucmShapeFileName.toStdString();
         return false;
@@ -27,37 +27,37 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     // create reference and value raster
     gis::Crit3DRasterGrid rasterRef;
     gis::Crit3DRasterGrid rasterVal;
-    initializeRasterFromShape(ucm, rasterRef, cellSize);
-    initializeRasterFromShape(ucm, rasterVal, cellSize);
+    initializeRasterFromShape(shapeUCM, rasterRef, cellSize);
+    initializeRasterFromShape(shapeUCM, rasterVal, cellSize);
 
     FormInfo formInfo;
 
     // CROP (reference shape)
     if (showInfo) formInfo.start("[1/8] Rasterize crop (reference)...", 0);
-    fillRasterWithShapeNumber(rasterRef, ucm);
+    fillRasterWithShapeNumber(rasterRef, shapeUCM);
 
     // meteo grid
     if (showInfo) formInfo.setText("[2/8] Rasterize meteo grid...");
-    fillRasterWithShapeNumber(rasterVal, meteo);
+    fillRasterWithShapeNumber(rasterVal, shapeMeteo);
 
     if (showInfo) formInfo.setText("[3/8] Compute matrix crop/meteo...");
     std::vector <int> vectorNull;
-    std::vector <std::vector<int> > matrix = computeMatrixAnalysis(ucm, meteo, rasterRef, rasterVal, vectorNull);
+    std::vector <std::vector<int> > matrix = computeMatrixAnalysis(shapeUCM, shapeMeteo, rasterRef, rasterVal, vectorNull);
 
     if (showInfo) formInfo.setText("[4/8] Zonal statistic crop/meteo...");
-    bool isOk = zonalStatisticsShapeMajority(ucm, meteo, matrix, vectorNull, idMeteo, "ID_METEO", threshold, error);
+    bool isOk = zonalStatisticsShapeMajority(shapeUCM, shapeMeteo, matrix, vectorNull, idMeteo, "ID_METEO", threshold, error);
 
     // zonal statistic on soil map
     if (isOk)
     {
         if (showInfo) formInfo.setText("[5/8] Rasterize soil...");
-        fillRasterWithShapeNumber(rasterVal, soil);
+        fillRasterWithShapeNumber(rasterVal, shapeSoil);
 
         if (showInfo) formInfo.setText("[6/8] Compute matrix crop/soil...");
-        matrix = computeMatrixAnalysis(ucm, soil, rasterRef, rasterVal, vectorNull);
+        matrix = computeMatrixAnalysis(shapeUCM, shapeSoil, rasterRef, rasterVal, vectorNull);
 
         if (showInfo) formInfo.setText("[7/8] Zonal statistic crop/soil...");
-        isOk = zonalStatisticsShapeMajority(ucm, soil, matrix, vectorNull, idSoil, "ID_SOIL", threshold, error);
+        isOk = zonalStatisticsShapeMajority(shapeUCM, shapeSoil, matrix, vectorNull, idSoil, "ID_SOIL", threshold, error);
     }
 
     if (! isOk)
@@ -79,29 +79,29 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     if (showInfo) formInfo.setText("[8/8] Write UCM...");
 
     // add ID CASE
-    ucm.addField("ID_CASE", FTString, 20, 0);
-    int idCaseIndex = ucm.getFieldPos("ID_CASE");
+    shapeUCM.addField("ID_CASE", FTString, 20, 0);
+    int idCaseIndex = shapeUCM.getFieldPos("ID_CASE");
 
     // add ID CROP
-    bool existIdCrop = ucm.existField("ID_CROP");
-    if (! existIdCrop) ucm.addField("ID_CROP", FTString, 5, 0);
-    int idCropIndex = ucm.getFieldPos("ID_CROP");
+    bool existIdCrop = shapeUCM.existField("ID_CROP");
+    if (! existIdCrop) shapeUCM.addField("ID_CROP", FTString, 5, 0);
+    int idCropIndex = shapeUCM.getFieldPos("ID_CROP");
 
     // read indexes
-    int nShape = ucm.getShapeCount();
-    int cropIndex = ucm.getFieldPos(idCrop);
+    int nShape = shapeUCM.getShapeCount();
+    int cropIndex = shapeUCM.getFieldPos(idCrop);
     if(cropIndex == -1)
     {
         error = "Missing idCrop: " + idCrop;
         return false;
     }
-    int soilIndex = ucm.getFieldPos("ID_SOIL");
+    int soilIndex = shapeUCM.getFieldPos("ID_SOIL");
     if(soilIndex == -1)
     {
         error = "Missing idSoil: " + idSoil;
         return false;
     }
-    int meteoIndex = ucm.getFieldPos("ID_METEO");
+    int meteoIndex = shapeUCM.getFieldPos("ID_METEO");
     if(meteoIndex == -1)
     {
         error = "Missing idMeteo: " + idMeteo;
@@ -111,28 +111,28 @@ bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Cri
     // FILL ID_CROP and ID_CASE
     for (int shapeIndex = 0; shapeIndex < nShape; shapeIndex++)
     {
-        std::string cropStr = ucm.readStringAttribute(shapeIndex, cropIndex);
+        std::string cropStr = shapeUCM.readStringAttribute(shapeIndex, cropIndex);
         if (cropStr == "-9999") cropStr = "";
 
-        std::string soilStr = ucm.readStringAttribute(shapeIndex, soilIndex);
+        std::string soilStr = shapeUCM.readStringAttribute(shapeIndex, soilIndex);
         if (soilStr == "-9999") soilStr = "";
 
-        std::string meteoStr = ucm.readStringAttribute(shapeIndex, meteoIndex);
+        std::string meteoStr = shapeUCM.readStringAttribute(shapeIndex, meteoIndex);
         if (meteoStr == "-9999") meteoStr = "";
 
         std::string caseStr = "";
         if (meteoStr != "" && soilStr != "" && cropStr != "")
             caseStr = "M" + meteoStr + "S" + soilStr + "C" + cropStr;
 
-        if (! existIdCrop) ucm.writeStringAttribute(shapeIndex, idCropIndex, cropStr.c_str());
-        ucm.writeStringAttribute(shapeIndex, idCaseIndex, caseStr.c_str());
+        if (! existIdCrop) shapeUCM.writeStringAttribute(shapeIndex, idCropIndex, cropStr.c_str());
+        shapeUCM.writeStringAttribute(shapeIndex, idCaseIndex, caseStr.c_str());
 
         if (caseStr == "")
-            ucm.deleteRecord(shapeIndex);
+            shapeUCM.deleteRecord(shapeIndex);
     }
 
     if (showInfo) formInfo.close();
-    cleanShapeFile(ucm);
+    cleanShapeFile(shapeUCM);
 
     return isOk;
 }

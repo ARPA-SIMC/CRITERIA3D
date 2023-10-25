@@ -6,7 +6,8 @@
     #endif
     #include <QString>
 
-    bool computeUcmPrevailing(Crit3DShapeHandler &ucm, Crit3DShapeHandler &crop, Crit3DShapeHandler &soil, Crit3DShapeHandler &meteo,
+    bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shapeCrop,
+                          Crit3DShapeHandler &shapeSoil, Crit3DShapeHandler &shapeMeteo,
                  std::string idCrop, std::string idSoil, std::string idMeteo, double cellSize, double threshold,
                  QString ucmFileName, std::string &error, bool showInfo);
 

@@ -53,7 +53,7 @@ bool fillRasterWithShapeNumber(gis::Crit3DRasterGrid &raster, Crit3DShapeHandler
     int nrShape = shapeHandler.getShapeCount();
     if (nrShape <= 0)
     {
-        // void ahapefile
+        // void shapefile
         return false;
     }
 
