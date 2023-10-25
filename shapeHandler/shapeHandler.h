@@ -73,6 +73,7 @@
         std::vector<unsigned int> getHoles(int shapeNumber, int partNumber);
 
         int getShapeIndexfromPoint(double utmX, double utmY);
+        std::string getAttributesList(int index);
 
         std::string getTypeString()
         { return getShapeTypeAsString(m_type); }

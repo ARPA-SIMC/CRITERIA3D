@@ -52,7 +52,8 @@
         bool isRangeBlocked() { return _isRangeBlocked; }
     };
 
-    bool setDefaultDEMScale(Crit3DColorScale* myScale);
+    bool setDefaultScale(Crit3DColorScale* myScale);
+    bool setDTMScale(Crit3DColorScale* myScale);
     bool setTemperatureScale(Crit3DColorScale* myScale);
     bool setAnomalyScale(Crit3DColorScale* myScale);
     bool setPrecipitationScale(Crit3DColorScale* myScale);

@@ -659,3 +659,49 @@ int Crit3DShapeHandler::getShapeIndexfromPoint(double utmX, double utmY)
     return NODATA;
 }
 
+
+/* return list of attributes */
+std::string Crit3DShapeHandler::getAttributesList(int index)
+{
+    // check index
+    if (index == NODATA || index >= m_count)
+    {
+        return "";
+    }
+
+    std::string shapeData = "Shape nr. " + std::to_string(index) + "\n";
+
+    if (m_fields > 0)
+    {
+        shapeData += "\nAttributes:\n";
+
+        for (int i = 0; i < m_fields; i++)
+        {
+            std::string nameField = getFieldName(i);
+            int typeField = getFieldType(i);
+
+            std::string myStr;
+            if (typeField == FTString)
+            {
+                myStr = readStringAttribute(index,i);
+            }
+            else if (typeField == FTInteger)
+            {
+                myStr = std::to_string(readIntAttribute(index,i));
+            }
+            else if (typeField == FTDouble)
+            {
+                myStr = std::to_string(readDoubleAttribute(index,i));
+            }
+            else
+            {
+                myStr = "invalid field type ";
+            }
+
+            shapeData += nameField + " = " + myStr + "\n";
+        }
+    }
+
+    return shapeData;
+}
+
