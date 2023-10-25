@@ -60,6 +60,7 @@ void Crit3DRoot::clear()
     rootLength = NODATA;
     rootDepth = NODATA;
     rootDensity.clear();
+    rootTensileStrength = 10;
 }
 
 
@@ -571,5 +572,6 @@ namespace root
 
         return true;
     }
+
 }
 

@@ -33,6 +33,7 @@
         int firstRootLayer;                 /*!< [-]  */
         int lastRootLayer;                  /*!< [-]  */
         std::vector<double> rootDensity;    /*!< [-]  */
+        double rootTensileStrength;         /*!< [kPa] tensile strength of a single root */
 
         /*! state variables */
         double rootDepth;                   /*!<  [m]  current root depth */
