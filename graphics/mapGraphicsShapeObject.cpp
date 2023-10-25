@@ -21,6 +21,8 @@ MapGraphicsShapeObject::MapGraphicsShapeObject(MapGraphicsView* _view, MapGraphi
     isFill = false;
     shapePointer = nullptr;
     nrShapes = 0;
+    selectedShape = NODATA;
+
     updateCenter();
 }
 
@@ -59,12 +61,14 @@ void MapGraphicsShapeObject::paint(QPainter *painter, const QStyleOptionGraphics
     Q_UNUSED(option)
     Q_UNUSED(widget)
 
-    if (this->isDrawing)
+    if (isDrawing)
     {
         setMapExtents();
 
-        if (this->shapePointer != nullptr)
+        if (shapePointer != nullptr)
+        {
             drawShape(painter);
+        }
     }
 }
 
@@ -112,24 +116,30 @@ void MapGraphicsShapeObject::drawShape(QPainter* myPainter)
     QColor color;
     std::vector<unsigned int> myHoles;
 
-    myPainter->setPen(QColor(64, 64, 64));
-    myPainter->setBrush(Qt::NoBrush);
-
     for (unsigned long i = 0; i < nrShapes; i++)
     {
-        if (isFill)
+        QPen myPen;
+        if (i != selectedShape)
         {
-            if (values[i] != NODATA)
+            myPen.setColor(QColor(64, 64, 64));
+            myPen.setWidth(1);
+        }
+        else
+        {
+            myPen.setColor(QColor(255, 0, 0));
+            myPen.setWidth(5);
+        }
+        myPainter->setPen(myPen);
+        myPainter->setBrush(Qt::NoBrush);
+
+        if (isFill && values[i] != NODATA)
+        {
+            Crit3DColor* myColor = colorScale->getColor(values[i]);
+            color = QColor(myColor->red, myColor->green, myColor->blue);
+            myPainter->setBrush(color);
+            if (i != selectedShape)
             {
-                Crit3DColor* myColor = colorScale->getColor(values[i]);
-                color = QColor(myColor->red, myColor->green, myColor->blue);
                 myPainter->setPen(color);
-                myPainter->setBrush(color);
-            }
-            else
-            {
-                myPainter->setPen(QColor(64, 64, 64));
-                myPainter->setBrush(Qt::NoBrush);
             }
         }
 
@@ -246,12 +256,6 @@ bool MapGraphicsShapeObject::initializeUTM(Crit3DShapeHandler* shapePtr)
 }
 
 
-Crit3DShapeHandler* MapGraphicsShapeObject::getShapePointer()
-{
-    return this->shapePointer;
-}
-
-
 // warning: call after initializeUTM
 void MapGraphicsShapeObject::setNumericValues(std::string fieldName)
 {
@@ -285,6 +289,7 @@ int MapGraphicsShapeObject::getCategoryIndex(std::string strValue)
     {
         if (categories[i] == strValue) return signed(i);
     }
+
     return NODATA;
 }
 
@@ -323,18 +328,6 @@ void MapGraphicsShapeObject::setCategories(std::string fieldName)
     {
         colorScale->setRange(NODATA, NODATA);
     }
-}
-
-
-void MapGraphicsShapeObject::setFill(bool value)
-{
-    isFill = value;
-}
-
-
-void MapGraphicsShapeObject::setDrawing(bool value)
-{
-    this->isDrawing = value;
 }
 
 

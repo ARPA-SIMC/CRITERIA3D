@@ -639,3 +639,23 @@ std::vector<unsigned int> Crit3DShapeHandler::getHoles(int shapeNumber, int part
 
 
 
+int Crit3DShapeHandler::getShapeIndexfromPoint(double utmX, double utmY)
+{
+    if (m_handle == nullptr || m_count <= 0)
+        return NODATA;
+
+    ShapeObject myShape;
+    for (int index = 0; index < m_count; index++)
+    {
+        if (getShape(index, myShape))
+        {
+            if (myShape.pointInPolygon(utmX, utmY))
+            {
+                return index;
+            }
+        }
+    }
+
+    return NODATA;
+}
+
