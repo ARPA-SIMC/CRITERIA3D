@@ -560,22 +560,22 @@ void MainWindow::on_variableButton_clicked()
 
 void MainWindow::on_rasterRestoreButton_clicked()
 {
-    if (this->rasterObj->getRaster() == nullptr)
+    if (rasterObj->getRaster() == nullptr)
     {
         QMessageBox::information(nullptr, "No Raster", "Load raster before");
         return;
     }
 
-    setDefaultDEMScale(myProject.DEM.colorScale);
-    this->setCurrentRaster(&(myProject.DEM));
+    setColorScale(noMeteoTerrain, myProject.DEM.colorScale);
+    setCurrentRaster(&(myProject.DEM));
     ui->labelRasterScale->setText(QString::fromStdString(getVariableString(noMeteoTerrain)));
 }
 
 void MainWindow::setCurrentRaster(gis::Crit3DRasterGrid *myRaster)
 {
-    this->rasterObj->initializeUTM(myRaster, myProject.gisSettings, false);
-    this->rasterLegend->colorScale = myRaster->colorScale;
-    this->rasterObj->redrawRequested();
+    rasterObj->initializeUTM(myRaster, myProject.gisSettings, false);
+    rasterLegend->colorScale = myRaster->colorScale;
+    rasterObj->redrawRequested();
 }
 
 void MainWindow::on_dateEdit_dateChanged(const QDate &date)

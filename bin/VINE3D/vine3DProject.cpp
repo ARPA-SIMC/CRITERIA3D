@@ -808,7 +808,8 @@ float Vine3DProject::meteoDataConsistency(meteoVariable myVar, const Crit3DTime&
     return dataConsistency;
 }
 
-bool Vine3DProject::meteoDataLoaded(const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin)
+
+bool Vine3DProject::isMeteoDataLoaded(const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin)
 {
     for (int i = 0; i < nrMeteoPoints; i++)
         if (meteoPoints[i].isDateIntervalLoadedH(myTimeIni, myTimeFin))
@@ -817,6 +818,8 @@ bool Vine3DProject::meteoDataLoaded(const Crit3DTime& myTimeIni, const Crit3DTim
     return false;
 }
 
+
+/*
 //observed data: 5 minutes
 bool Vine3DProject::loadObsDataSubHourly(int indexPoint, meteoVariable myVar, QDateTime d1, QDateTime d2, QString tableName)
 {
@@ -952,6 +955,7 @@ bool Vine3DProject::loadObsDataHourly(int indexPoint, QDate d1, QDate d2, QStrin
     myQuery.clear();
     return(dataAvailable);
 }
+*/
 
 
 bool Vine3DProject::loadObsDataHourlyVar(int indexPoint, meteoVariable myVar, QDate d1, QDate d2, QString tableName, bool useAggrCodes)
@@ -980,10 +984,14 @@ bool Vine3DProject::loadObsDataHourlyVar(int indexPoint, meteoVariable myVar, QD
     else
     {
         queryString = "SELECT date_, hour_, obs_value, data_valid FROM " + tableName;
-        if (!this->getMeteoVarIndexRaw(myVar, &nrIndices, &varIndices)) return false;
+        if (! this->getMeteoVarIndexRaw(myVar, &nrIndices, &varIndices))
+            return false;
+
         queryString += " WHERE id_variable IN (";
         for (int i=0; i<nrIndices-1; i++)
+        {
             queryString += QString::number(varIndices[i]) + ",";
+        }
         queryString += QString::number(varIndices[nrIndices-1]) + ")";
     }
 
@@ -1038,6 +1046,7 @@ bool Vine3DProject::loadObsDataHourlyVar(int indexPoint, meteoVariable myVar, QD
 }
 
 
+/*
 bool Vine3DProject::loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo)
 {
     isObsDataLoaded = false;
@@ -1092,6 +1101,7 @@ bool Vine3DProject::loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo)
 
     return(isObsDataLoaded);
 }
+*/
 
 
 bool Vine3DProject::loadObsDataAllPointsVar(meteoVariable myVar, QDate d1, QDate d2)
@@ -1126,7 +1136,6 @@ bool Vine3DProject::loadObsDataAllPointsVar(meteoVariable myVar, QDate d1, QDate
             if (loadObsDataHourlyVar(i, myVar, d1, d2, "obs_values_h", false))
                 isObsDataWMSLoaded = true;
         }
-
     }
 
     isObsDataLoaded = (isObsDataBoundaryLoaded || isObsDataWMSLoaded || isForecastLoaded);
@@ -1151,6 +1160,7 @@ float Vine3DProject::getTimeStep()
 }
 
 
+/*
 bool Vine3DProject::loadObsDataFilled(QDateTime firstTime, QDateTime lastTime)
 {
     QDate d1 = firstTime.date().addDays(-30);
@@ -1183,6 +1193,7 @@ bool Vine3DProject::loadObsDataFilled(QDateTime firstTime, QDateTime lastTime)
 
     return true;
 }
+*/
 
 
 bool Vine3DProject::runModels(QDateTime firstTime, QDateTime lastTime, bool saveOutput)

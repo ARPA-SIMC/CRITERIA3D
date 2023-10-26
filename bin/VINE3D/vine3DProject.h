@@ -116,17 +116,19 @@
                             float maxLaiGrass,  float maxIrrigationRate);
         bool getFieldBookIndex(int firstIndex, QDate myQDate, int fieldIndex, int* outputIndex);
 
-
         int getAggregatedVarCode(int rawVarCode);
         bool getMeteoVarIndexRaw(meteoVariable myVar, int *nrVarIndices, int **varIndices);
-        bool loadObsDataSubHourly(int indexPoint, meteoVariable myVar, QDateTime d1, QDateTime d2, QString tableName);
-        bool loadObsDataHourly(int indexPoint, QDate d1, QDate d2, QString tableName, bool useAggrCodes);
+
         bool loadObsDataHourlyVar(int indexPoint, meteoVariable myVar, QDate d1, QDate d2, QString tableName, bool useAggrCodes);
-        bool loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo);
         bool loadObsDataAllPointsVar(meteoVariable myVar, QDate d1, QDate d2);
-        bool meteoDataLoaded(const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin);
+
+        bool isMeteoDataLoaded(const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin);
         float meteoDataConsistency(meteoVariable myVar, const Crit3DTime& myTimeIni, const Crit3DTime& myTimeFin);
-        bool loadObsDataFilled(QDateTime firstTime, QDateTime lastTime);
+
+        //bool loadObsDataSubHourly(int indexPoint, meteoVariable myVar, QDateTime d1, QDateTime d2, QString tableName);
+        //bool loadObsDataHourly(int indexPoint, QDate d1, QDate d2, QString tableName, bool useAggrCodes);
+        //bool loadObsDataFilled(QDateTime firstTime, QDateTime lastTime);
+         //bool loadObsDataAllPoints(QDate d1, QDate d2, bool showInfo);
         void findVine3DLastMeteoDate();
 
         bool loadStates(QDate myDate);

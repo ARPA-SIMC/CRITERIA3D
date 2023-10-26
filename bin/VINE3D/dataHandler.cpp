@@ -75,8 +75,7 @@ QString getVarNameFromPlantVariable(plantVariable myVar)
         return "";
 }
 
-
-
+/*
 meteoVariable getMeteoVariable(int myVar)
 {
     if (myVar == 14) return(airTemperature);
@@ -89,6 +88,7 @@ meteoVariable getMeteoVariable(int myVar)
     else if (myVar == 43) return(windVectorDirection);
     else return(noMeteoVar);
 }
+*/
 
 int getMeteoVarIndex(meteoVariable myVar)
 {
@@ -104,7 +104,10 @@ int getMeteoVarIndex(meteoVariable myVar)
         return NODATA;
 }
 
+
 float getTimeStepFromHourlyInterval(int myHourlyIntervals)
-{    return 3600. / ((float)myHourlyIntervals);}
+{
+    return 3600. / ((float)myHourlyIntervals);
+}
 
 
