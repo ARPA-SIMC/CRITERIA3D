@@ -29,6 +29,7 @@
 #include "utilities.h"
 #include "criteria3DProject.h"
 #include "gis.h"
+#include "meteo.h"
 #include "color.h"
 #include "statistics.h"
 #include "project3D.h"
@@ -106,6 +107,9 @@ bool Crit3DProject::initializeCriteria3DModel()
 
 void Crit3DProject::initializeCrop()
 {
+    dailyTminMap.initializeGrid(*(DEM.header));
+    dailyTmaxMap.initializeGrid(*(DEM.header));
+
     degreeDaysMap.initializeGrid(*(DEM.header));
     laiMap.initializeGrid(*(DEM.header));
 
@@ -593,6 +597,10 @@ double Crit3DProject::getSoilVar(int soilIndex, int layerIndex, soil::soilVariab
 void Crit3DProject::clear3DProject()
 {
     snowMaps.clear();
+
+    dailyTminMap.clear();
+    dailyTmaxMap.clear();
+
     degreeDaysMap.clear();
     laiMap.clear();
 
@@ -818,6 +826,45 @@ bool Crit3DProject::computeSnowModel()
 }
 
 
+bool Crit3DProject::updateDailyTemperatures()
+{
+    if (! dailyTminMap.isLoaded || ! dailyTmaxMap.isLoaded || ! hourlyMeteoMaps->mapHourlyTair->isLoaded)
+        return false;
+
+    for (long row = 0; row < dailyTminMap.header->nrRows; row++)
+    {
+        for (long col = 0; col < dailyTminMap.header->nrCols; col++)
+        {
+            float airT = hourlyMeteoMaps->mapHourlyTair->value[row][col];
+            if (! isEqual(airT, hourlyMeteoMaps->mapHourlyTair->header->flag))
+            {
+                float currentTmin = dailyTminMap.value[row][col];
+                if (isEqual (currentTmin, dailyTminMap.header->flag))
+                {
+                    dailyTminMap.value[row][col] = airT;
+                }
+                else
+                {
+                    dailyTminMap.value[row][col] = std::min(currentTmin, airT);
+                }
+
+                float currentTmax = dailyTmaxMap.value[row][col];
+                if (isEqual (currentTmax, dailyTmaxMap.header->flag))
+                {
+                    dailyTmaxMap.value[row][col] = airT;
+                }
+                else
+                {
+                    dailyTmaxMap.value[row][col] = std::max(currentTmax, airT);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+
 bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutputPath)
 {
     hourlyMeteoMaps->setComputed(false);
@@ -853,13 +900,18 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
 
     if (processes.computeCrop)
     {
+        updateDailyTemperatures();
+
         if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
+        {
             return false;
+        }
 
         if (isSaveOutputRaster())
         {
             saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myTime);
         }
+
         qApp->processEvents();
 
         // TODO compute evap/transp

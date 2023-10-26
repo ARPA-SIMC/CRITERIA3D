@@ -45,6 +45,7 @@
         void clear3DProject();
         bool setSoilIndexMap();
         bool check3DProject();
+        bool updateDailyTemperatures();
 
 
     public:
@@ -54,6 +55,8 @@
         Crit3DSnowMaps snowMaps;
         gis::Crit3DRasterGrid degreeDaysMap;
         gis::Crit3DRasterGrid laiMap;
+        gis::Crit3DRasterGrid dailyTminMap;
+        gis::Crit3DRasterGrid dailyTmaxMap;
 
         Crit3DSnow snowModel;
         Crit3DProcesses processes;
