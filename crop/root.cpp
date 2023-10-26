@@ -60,7 +60,7 @@ void Crit3DRoot::clear()
     rootLength = NODATA;
     rootDepth = NODATA;
     rootDensity.clear();
-    rootTensileStrength = NODATA;
+    rootsAdditionalCohesion = NODATA;
 }
 
 

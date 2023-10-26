@@ -566,7 +566,7 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
             else
                 rootDensityNorm = crop.roots.rootDensity[l] / rootDensityMax;
 
-            double rootCohesion = crop.roots.rootTensileStrength * rootDensityNorm;
+            double rootCohesion = crop.roots.rootsAdditionalCohesion * rootDensityNorm;
 
 
             soilLayers[l].factorOfSafety = soilLayers[l].computeSlopeStability(unit.slope, rootCohesion);
