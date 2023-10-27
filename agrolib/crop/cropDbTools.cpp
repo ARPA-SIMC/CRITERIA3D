@@ -67,6 +67,12 @@ bool loadCropParameters(const QSqlDatabase &dbCrop, QString idCrop, Crit3DCrop &
     myCrop.roots.rootDepthMax = query.value("root_depth_max").toDouble();
     myCrop.roots.actualRootDepthMax = myCrop.roots.rootDepthMax;
 
+    if (! getValue(query.value("roots_additional_cohesion"), &(myCrop.roots.rootsAdditionalCohesion)))
+    {
+        // default: no mechanical effect of roots
+        myCrop.roots.rootsAdditionalCohesion = 0;
+    }
+
     getValue(query.value("degree_days_root_increase"), &(myCrop.roots.degreeDaysRootGrowth));
     if (myCrop.roots.degreeDaysRootGrowth == NODATA)
     {

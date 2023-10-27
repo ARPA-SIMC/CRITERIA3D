@@ -33,6 +33,7 @@
         int firstRootLayer;                 /*!< [-]  */
         int lastRootLayer;                  /*!< [-]  */
         std::vector<double> rootDensity;    /*!< [-]  */
+        double rootsAdditionalCohesion;      /*!< [kPa] Cr = roots reinforcement (RR) derived from a model */
 
         /*! state variables */
         double rootDepth;                   /*!<  [m]  current root depth */
