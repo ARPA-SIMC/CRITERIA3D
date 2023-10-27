@@ -34,6 +34,8 @@
         QPointF referencePixel;
 
         unsigned int nrShapes;
+        unsigned int selectedShape;
+
         std::vector< std::vector<ShapeObject::Part>> shapeParts;
         std::vector< std::vector<GeoBounds>> geoBounds;
         std::vector< std::vector<LatLonPoint>> geoPoints;
@@ -76,7 +78,6 @@
 
         Crit3DColorScale* colorScale;
 
-        void setDrawing(bool value);
         void updateCenter();
         void clear();
 
@@ -84,8 +85,12 @@
         void setNumericValues(std::string fieldName);
         void setCategories(std::string fieldName);
 
-        void setFill(bool value);
-        Crit3DShapeHandler* getShapePointer();
+        int getSelected() { return selectedShape; }
+        void setSelected(int index) { selectedShape = index; }
+        void setFill(bool value) { isFill = value; }
+        void setDrawing(bool value) { isDrawing = value; }
+
+        Crit3DShapeHandler* getShapePointer() { return shapePointer; }
 
         QPointF getPixel(const LatLonPoint &geoPoint);
     };

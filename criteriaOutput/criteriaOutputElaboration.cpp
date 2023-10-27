@@ -3,7 +3,7 @@
 #include "commonConstants.h"
 #include "basicMath.h"
 #include "utilities.h"
-#include "cropDbQuery.h"
+#include "../crop/cropDbQuery.h"
 
 #include <QSqlQuery>
 #include <QSqlError>
