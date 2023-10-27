@@ -70,6 +70,7 @@
 
         bool initializeCriteria3DModel();
         void initializeCrop();
+        void dailyUpdateCrop();
 
         bool runModels(QDateTime firstTime, QDateTime lastTime);
 

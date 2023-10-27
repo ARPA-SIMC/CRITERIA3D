@@ -2236,7 +2236,7 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     myProject.processes.initialize();
     myProject.processes.computeMeteo = true;
     myProject.processes.computeRadiation = true;
-    myProject.processes.computeWater = true;
+    myProject.processes.computeWater = false;
     myProject.processes.computeCrop = true;
 
     startModels(firstTime, lastTime);

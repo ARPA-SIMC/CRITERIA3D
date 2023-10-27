@@ -166,7 +166,7 @@ void Crit3DProject::initializeCrop()
                             float tmax = climateParameters.getClimateVar(dailyAirTemperatureMax, myDate.month,
                                                                          height, quality->getReferenceHeight());
 
-                            double currentDD = cropList[index].getDailyDegreeIncrease(tmin, tmax);
+                            double currentDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDoy);
                             if (! isEqual(currentDD, NODATA))
                             {
                                 degreeDays += currentDD;
@@ -180,6 +180,50 @@ void Crit3DProject::initializeCrop()
             }
         }
     }
+}
+
+
+void Crit3DProject::dailyUpdateCrop()
+{
+    for (int row = 0; row < DEM.header->nrRows; row++)
+    {
+        for (int col = 0; col < DEM.header->nrCols; col++)
+        {
+            float height = DEM.value[row][col];
+            if (! isEqual(height, DEM.header->flag))
+            {
+                // is crop
+                int index = getLandUnitIndexRowCol(row, col);
+                if (index != NODATA && landUnitList[index].idCrop != "")
+                {
+                    float tmin = dailyTminMap.value[row][col];
+                    float tmax = dailyTminMap.value[row][col];
+                    if (! isEqual(tmin, dailyTminMap.header->flag) && ! isEqual(tmax, dailyTmaxMap.header->flag))
+                    {
+                        double dailyDD = cropList[index].getDailyDegreeIncrease(tmin, tmax, currentDate.dayOfYear());
+                        if (! isEqual(dailyDD, NODATA))
+                        {
+                            if (isEqual(degreeDaysMap.value[row][col], degreeDaysMap.header->flag))
+                            {
+                                degreeDaysMap.value[row][col] = float(dailyDD);
+                            }
+                            else
+                            {
+                                degreeDaysMap.value[row][col] += float(dailyDD);
+                            }
+
+                            laiMap.value[row][col] = cropList[index].computeSimpleLAI(degreeDaysMap.value[row][col],
+                                                            gisSettings.startLocation.latitude, currentDate.dayOfYear());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // clean daily temp maps
+    dailyTminMap.emptyGrid();
+    dailyTmaxMap.emptyGrid();
 }
 
 
@@ -215,6 +259,11 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
     for (QDate myDate = firstDate; myDate <= lastDate; myDate = myDate.addDays(1))
     {
         setCurrentDate(myDate);
+
+        if (processes.computeCrop)
+        {
+            dailyUpdateCrop();
+        }
 
         if (isSaveOutputRaster())
         {
