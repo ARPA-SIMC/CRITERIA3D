@@ -34,6 +34,7 @@
 #include "criteria1DCase.h"
 #include "soilFluxes3D.h"
 #include "soil.h"
+#include "crop.h"
 
 
 Crit1DOutput::Crit1DOutput()
@@ -561,11 +562,25 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
         {
             double rootDensityNorm;
             if (rootDensityMax == 0)
+            {
                 rootDensityNorm = 0;
+            }
             else
+            {
                 rootDensityNorm = crop.roots.rootDensity[l] / rootDensityMax;
+            }
 
-            soilLayers[l].factorOfSafety = soilLayers[l].computeSlopeStability(unit.slope, rootDensityNorm);
+            double rootCohesion;
+            if (isEqual(crop.roots.rootsAdditionalCohesion, NODATA))
+            {
+                rootCohesion = 0;
+            }
+            else
+            {
+                rootCohesion = crop.roots.rootsAdditionalCohesion * rootDensityNorm;
+            }
+
+            soilLayers[l].factorOfSafety = soilLayers[l].computeSlopeStability(unit.slope, rootCohesion);
         }
     }
 
