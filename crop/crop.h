@@ -81,7 +81,7 @@
         bool isSowingCrop() const;
         bool isRootStatic() const;
 
-        double getDailyDegreeIncrease(double tmin, double tmax);
+        double getDailyDegreeIncrease(double tmin, double tmax, int doy);
 
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
