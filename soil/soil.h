@@ -181,7 +181,7 @@
             double getDegreeOfSaturation();
             double getWaterPotential();
             double getWaterConductivity();
-            double computeSlopeStability(double slope);
+            double computeSlopeStability(double slope, double normalizedRootDensity);
         };
 
 

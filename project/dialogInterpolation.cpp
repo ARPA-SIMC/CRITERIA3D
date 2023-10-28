@@ -123,9 +123,18 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
 
     localDetrendingEdit = new QCheckBox(tr("local detrending"));
     localDetrendingEdit->setChecked(_interpolationSettings->getUseLocalDetrending());
-    layoutDetrending->addWidget(localDetrendingEdit);
 
     connect(localDetrendingEdit, SIGNAL(stateChanged(int)), this, SLOT(localDetrendingChanged(int)));
+
+    QLabel *labelMinPointsLocalDetrendingEdit = new QLabel(tr("minimum points for local detrending"));
+    QIntValidator *intValMinPoints = new QIntValidator(1, 1000, this);
+    minPointsLocalDetrendingEdit.setFixedWidth(30);
+    minPointsLocalDetrendingEdit.setValidator(intValMinPoints);
+    minPointsLocalDetrendingEdit.setText(QString::number(int(_interpolationSettings->getMinPointsLocalDetrending())));
+    layoutDetrending->addWidget(labelMinPointsLocalDetrendingEdit);
+    layoutDetrending->addWidget(&minPointsLocalDetrendingEdit);
+
+    layoutDetrending->addWidget(localDetrendingEdit);
 
     QVBoxLayout *layoutProxy = new QVBoxLayout;
     QLabel *labelProxy = new QLabel(tr("temperature detrending proxies"));
@@ -192,6 +201,7 @@ void DialogInterpolation::localDetrendingChanged(int active)
     if (active == Qt::Checked) topographicDistanceEdit->setChecked(Qt::Unchecked);
     topographicDistanceEdit->setEnabled(active == Qt::Unchecked);
     maxTdMultiplierEdit.setEnabled(active == Qt::Unchecked);
+    minPointsLocalDetrendingEdit.setEnabled(active == Qt::Checked);
 }
 
 void DialogInterpolation::optimalDetrendingChanged(int active)
@@ -238,6 +248,12 @@ void DialogInterpolation::accept()
         return;
     }
 
+    if (minPointsLocalDetrendingEdit.text().isEmpty() && localDetrendingEdit->isChecked())
+    {
+        QMessageBox::information(nullptr, "Missing minimum points number for local detrending", "insert minimum points");
+        return;
+    }
+
     if (maxTdMultiplierEdit.text().isEmpty())
     {
         QMessageBox::information(nullptr, "Missing Td multiplier", "insert maximum Td multiplier");
@@ -270,6 +286,7 @@ void DialogInterpolation::accept()
     _interpolationSettings->setUseInterpolatedTForRH((useInterpolTForRH->isChecked()));
     _interpolationSettings->setMinRegressionR2(minRegressionR2Edit.text().toFloat());
     _interpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());
+    _interpolationSettings->setMinPointsLocalDetrending(minPointsLocalDetrendingEdit.text().toInt());
 
     _qualityInterpolationSettings->setMinRegressionR2(minRegressionR2Edit.text().toFloat());
     _qualityInterpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());

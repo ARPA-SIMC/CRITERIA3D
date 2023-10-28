@@ -346,8 +346,8 @@ void Crit3DProxyWidget::plot()
     chartView->axisY->setMin(floor(chartView->axisY->min()));
     chartView->axisY->setMax(ceil(chartView->axisY->max()));
 
-    if (comboAxisX.currentText() != "elevation")
-    {
+    if (comboAxisX.currentText() == "elevation")
+/*    {
         chartView->cleanClimLapseRate();
         climatologicalLR.setVisible(false);
 
@@ -371,7 +371,7 @@ void Crit3DProxyWidget::plot()
             chartView->axisX->setTickCount(11);
         }
     }
-    else
+    else */
     {
         climatologicalLR.setVisible(true);
         if (climatologicalLR.isChecked())
@@ -498,9 +498,10 @@ void Crit3DProxyWidget::modelLRClicked(int toggled)
             point.setY(regressionIntercept + regressionSlope * xMax);
             point_vector.append(point);
 
-            if (interpolationSettings->getProxy(proxyPos)->getRegressionR2() != NODATA)
+            float regressionR2 = interpolationSettings->getProxy(proxyPos)->getRegressionR2();
+            if (regressionR2 != NODATA)
             {
-                r2.setText(QString("%1").arg(interpolationSettings->getProxy(proxyPos)->getRegressionR2(), 0, 'f', 4));
+                r2.setText(QString("%1").arg(regressionR2, 0, 'f', 2));
             }
             lapseRate.setText(QString("%1").arg(regressionSlope, 0, 'f', 2));
         }

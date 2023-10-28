@@ -87,7 +87,7 @@ bool computeResiduals(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, int nr
     float myValue, interpolatedValue;
     interpolatedValue = NODATA;
     myValue = NODATA;
-    std::vector <float> myProxyValues;
+    std::vector <double> myProxyValues;
     bool isValid;
 
     for (int i = 0; i < nrMeteoPoints; i++)
@@ -207,7 +207,8 @@ void spatialQualityControl(meteoVariable myVar, Crit3DMeteoPoint* meteoPoints, i
                                             float(meteoPoints[listIndex[i]].point.utm.x),
                                             float(meteoPoints[listIndex[i]].point.utm.y),
                                             float(meteoPoints[listIndex[i]].point.z),
-                                            meteoPoints[listIndex[i]].getProxyValues(), false);
+                                            meteoPoints[i].getProxyValues(),
+                                            false);
 
                     myValue = meteoPoints[listIndex[i]].currentValue;
 

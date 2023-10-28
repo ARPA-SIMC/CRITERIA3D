@@ -29,8 +29,6 @@
         Crit3DInterpolationDataPoint();
 
         float getProxyValue(unsigned int pos);
-        std::vector <float> getProxyValues();
-        bool getActiveProxyValues(Crit3DProxyCombination &activeCombination, std::vector<float> &myValues);
     };
 
 #endif // INTERPOLATIONPOINT_H

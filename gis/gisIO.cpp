@@ -30,7 +30,6 @@
 #include <math.h>
 #include <algorithm>
 
-#include "commonConstants.h"
 #include "gis.h"
 
 using namespace std;
@@ -113,7 +112,7 @@ namespace gis
      * \param error       string
      * \return true on success, false otherwise
      */
-    bool readEsriGridHeader(string fileName, gis::Crit3DRasterHeader *header, string &error)
+    bool readEsriGridHeader(string fileName, gis::Crit3DRasterHeader *header, string &errorStr)
     {
         string myLine, myKey, upKey, valueStr;
         int nrKeys = 0;
@@ -123,7 +122,7 @@ namespace gis
 
         if (!myFile.is_open())
         {
-            error = "Missing file: " + fileName;
+            errorStr = "Missing file: " + fileName;
             return false;
         }
 
@@ -145,7 +144,18 @@ namespace gis
                 else if (upKey == "NROWS")
                     header->nrRows = stoi(valueStr);
 
-                // LLCORNER is the lower-left corner
+                else if (upKey == "DATATYPE")
+                {
+                    // non standard key - derived from envi
+                    header->nrBytes = stoi(valueStr);
+                    if (header->nrBytes > 4)
+                    {
+                        errorStr = "Wrong data type:" + valueStr + " The maximum allowed is 4 (float).";
+                        return false;
+                    }
+                }
+
+                // LLCORNER = Lower Left corner
                 else if (upKey == "XLLCORNER")
                     header->llCorner.x = stod(valueStr);
 
@@ -163,7 +173,7 @@ namespace gis
 
         if (nrKeys < 6)
         {
-            error = "Missing keys in header file.";
+            errorStr = "Missing keys in header file.";
             return false;
         }
 
@@ -192,6 +202,7 @@ namespace gis
         }
 
         int nrKeys = 0;
+        bool hasNoData = false;
         while (myFile.good())
         {
             getline (myFile, myLine);
@@ -201,9 +212,8 @@ namespace gis
                 cleanSpaces(key);
                 upKey = upperCase(key);
 
-                if ((upKey == "SAMPLES") || (upKey == "LINES")
-                    || (upKey == "DATATYPE") || (upKey == "MAPINFO")
-                    || (upKey == "DATAIGNOREVALUE") || (upKey == "NODATA"))
+                if ((upKey == "SAMPLES") || (upKey == "LINES") || (upKey == "MAPINFO")
+                    || ((upKey == "DATAIGNOREVALUE") || (upKey == "NODATA")) )
                     nrKeys++;
 
                 if (upKey == "SAMPLES")
@@ -214,10 +224,10 @@ namespace gis
 
                 else if (upKey == "DATATYPE")
                 {
-                    int type = stoi(valueStr);
-                    if (type != 4)
+                    header->nrBytes = stoi(valueStr);
+                    if (header->nrBytes > 4)
                     {
-                        errorStr = "Only data type 4 (float) is allowed.";
+                        errorStr = "Wrong data type:" + valueStr + " The maximum allowed is 4 (float).";
                         return false;
                     }
                 }
@@ -276,14 +286,21 @@ namespace gis
                 }
 
                 else if ((upKey == "DATAIGNOREVALUE") || (upKey == "NODATA"))
+                {
                     header->flag = float(::atof(valueStr.c_str()));
+                    hasNoData = true;
+                }
             }
         }
         myFile.close();
 
-        if (nrKeys < 5)
+        if (nrKeys < 4)
         {
-            errorStr = "Wrong header file: missing key values.";
+            if (! hasNoData)
+                errorStr += "Wrong header file: missing data ignore value.";
+            else
+                errorStr = "Wrong header file: missing samples, lines or map info.";
+
             return false;
         }
 
@@ -315,9 +332,41 @@ namespace gis
             return false;
         }
 
-        for (int row = 0; row < rasterGrid->header->nrRows; row++)
+        if (rasterGrid->header->nrBytes == 4)
         {
-            fread (rasterGrid->value[row], sizeof(float), unsigned(rasterGrid->header->nrCols), filePointer);
+            // float
+            for (int row = 0; row < rasterGrid->header->nrRows; row++)
+            {
+                fread (rasterGrid->value[row], sizeof(float), unsigned(rasterGrid->header->nrCols), filePointer);
+            }
+        }
+        else if (rasterGrid->header->nrBytes == 1)
+        {
+            // byte
+            unsigned char *rowValues = new unsigned char[unsigned(rasterGrid->header->nrCols)];
+            for (int row = 0; row < rasterGrid->header->nrRows; row++)
+            {
+                fread (rowValues, sizeof(unsigned char), unsigned(rasterGrid->header->nrCols), filePointer);
+                for(int col = 0; col < rasterGrid->header->nrCols; col++)
+                {
+                    rasterGrid->value[row][col] = float(rowValues[col]);
+                }
+            }
+            delete[] rowValues;
+        }
+        else if (rasterGrid->header->nrBytes == 2)
+        {
+            // short
+            short int *rowValues = new short int[unsigned(rasterGrid->header->nrCols)];
+            for (int row = 0; row < rasterGrid->header->nrRows; row++)
+            {
+                fread (rowValues, sizeof(short int), unsigned(rasterGrid->header->nrCols), filePointer);
+                for(int col = 0; col < rasterGrid->header->nrCols; col++)
+                {
+                    rasterGrid->value[row][col] = float(rowValues[col]);
+                }
+            }
+            delete[] rowValues;
         }
 
         fclose (filePointer);

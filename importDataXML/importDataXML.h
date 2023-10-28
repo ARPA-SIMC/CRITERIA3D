@@ -22,10 +22,10 @@ public:
     ImportDataXML(bool isGrid, Crit3DMeteoPointsDbHandler* meteoPointsDbHandler, Crit3DMeteoGridDbHandler* meteoGridDbHandler, QString xmlFileName);
     bool parseXMLFile(QDomDocument* xmlDoc, QString *error);
     bool parserXML(QString *error);
-    bool importData(QString fileName, QString *error);
+    bool importDataMain(QString fileName, QString &error);
     QDateTime parseXMLDateTime(QString text);
-    bool importXMLDataFixed(QString *error);
-    bool importXMLDataDelimited(QString *error);
+    bool importXMLDataFixed(QString &error);
+    bool importXMLDataDelimited(QString &error);
     QString parseXMLPointCode(QString text);
     QDate parseXMLDate(QString text);
     QVariant parseXMLFixedValue(QString text, int nReplication, FieldXML myField);
@@ -51,6 +51,8 @@ private:
     QList<VariableXML> variable;
     QString dataFileName;
     int numVarFields;
+
+    bool checkPointCodeFromFileName(QString& myPointCode, QString& errorStr);
 };
 
 #endif // IMPORTDATAXML_H

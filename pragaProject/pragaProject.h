@@ -103,7 +103,6 @@
         bool timeAggregateGrid(QDate dateIni, QDate dateFin, QList <meteoVariable> variables, bool loadData, bool saveData);
         bool computeDailyVariablesPoint(Crit3DMeteoPoint *meteoPoint, QDate first, QDate last, QList <meteoVariable> variables);
         bool hourlyDerivedVariablesGrid(QDate first, QDate last, bool loadData, bool saveData);
-
         bool elaborationPointsCycle(bool isAnomaly, bool showInfo);
         bool elaborationPointsCycleGrid(bool isAnomaly, bool showInfo);
         bool elaborationCheck(bool isMeteoGrid, bool isAnomaly);

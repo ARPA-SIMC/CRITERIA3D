@@ -60,6 +60,7 @@ void Crit3DRoot::clear()
     rootLength = NODATA;
     rootDepth = NODATA;
     rootDensity.clear();
+    rootsAdditionalCohesion = NODATA;
 }
 
 
@@ -219,8 +220,6 @@ namespace root
         if (currentDD <= 0) return 0.;
         if (currentDD > myRoot->degreeDaysRootGrowth) return maxRootLength;
 
-        double halfDevelopmentPoint = myRoot->degreeDaysRootGrowth * 0.5 ;
-
         if (myRoot->growth == LINEAR)
         {
             myRootLength = maxRootLength * (currentDD / myRoot->degreeDaysRootGrowth);
@@ -230,19 +229,13 @@ namespace root
             double logMax, logMin,deformationFactor;
             double iniLog = log(9.);
             double filLog = log(1 / 0.99 - 1);
-            double k,b;
-            k = -(iniLog - filLog) / (emergenceDD - myRoot->degreeDaysRootGrowth);
-            b = -(filLog + k * myRoot->degreeDaysRootGrowth);
+            double k = -(iniLog - filLog) / (emergenceDD - myRoot->degreeDaysRootGrowth);
+            double b = -(filLog + k * myRoot->degreeDaysRootGrowth);
 
             logMax = (myRoot->actualRootDepthMax) / (1 + exp(-b - k * myRoot->degreeDaysRootGrowth));
             logMin = myRoot->actualRootDepthMax / (1 + exp(-b));
             deformationFactor = (logMax - logMin) / maxRootLength ;
             myRootLength = 1.0 / deformationFactor * (myRoot->actualRootDepthMax / (1.0 + exp(-b - k * currentDD)) - logMin);
-        }
-        else if (myRoot->growth == EXPONENTIAL)
-        {
-            // not used in Criteria Bdp
-            myRootLength = maxRootLength * (1.- exp(-2.*(currentDD/halfDevelopmentPoint)));
         }
 
         return myRootLength;
@@ -571,5 +564,6 @@ namespace root
 
         return true;
     }
+
 }
 

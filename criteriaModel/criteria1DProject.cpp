@@ -48,11 +48,12 @@ void Crit1DProject::initialize()
     isRestart = false;
 
     isYearlyStatistics = false;
+    isMonthlyStatistics = false;
     isSeasonalForecast = false;
-    isMonthlyForecast = false;
+    isEnsembleForecast = false;
     isShortTermForecast = false;
 
-    firstSeasonMonth = NODATA;
+    firstMonth = NODATA;
     daysOfForecast = NODATA;
     nrYears = NODATA;
     irriSeries.clear();
@@ -165,40 +166,50 @@ bool Crit1DProject::readSettings()
     // FORECAST
     projectSettings->beginGroup("forecast");
         isYearlyStatistics = projectSettings->value("isYearlyStatistics", 0).toBool();
+        isMonthlyStatistics = projectSettings->value("isMonthlyStatistics", 0).toBool();
         isSeasonalForecast = projectSettings->value("isSeasonalForecast", 0).toBool();
         isShortTermForecast = projectSettings->value("isShortTermForecast", 0).toBool();
-        isMonthlyForecast = projectSettings->value("isMonthlyForecast", 0).toBool();
 
-        if (isShortTermForecast || isMonthlyForecast)
+        // ensemble forecast (typically they are monthly)
+        isEnsembleForecast = projectSettings->value("isEnsembleForecast", 0).toBool();
+        if (! isEnsembleForecast)
+            // check also monthly
+            isEnsembleForecast = projectSettings->value("isMonthlyForecast", 0).toBool();
+
+        if (isShortTermForecast || isEnsembleForecast)
         {
             daysOfForecast = projectSettings->value("daysOfForecast", 0).toInt();
             if (daysOfForecast == 0)
             {
-                projectError = "Missing daysOfForecast.";
+                projectError = "Missing daysOfForecast";
                 return false;
             }
         }
 
         if (isYearlyStatistics)
         {
-            firstSeasonMonth = 1;
+            firstMonth = 1;
         }
-
-        if (isSeasonalForecast)
+        else if (isMonthlyStatistics || isSeasonalForecast)
         {
-            firstSeasonMonth = projectSettings->value("firstMonth", 0).toInt();
-            if (firstSeasonMonth == 0)
+            firstMonth = projectSettings->value("firstMonth", 0).toInt();
+            if (firstMonth == 0)
             {
-                projectError = "Missing firstSeasonMonth.";
+                projectError = "Missing firstMonth.";
                 return false;
             }
         }
 
-        if ((isShortTermForecast && isMonthlyForecast)
-            || (isShortTermForecast && isSeasonalForecast)
-            || (isMonthlyForecast && isSeasonalForecast))
+        int nrOfComputationType = 0;
+        if (isShortTermForecast) nrOfComputationType++;
+        if (isEnsembleForecast) nrOfComputationType++;
+        if (isSeasonalForecast) nrOfComputationType++;
+        if (isMonthlyStatistics) nrOfComputationType++;
+        if (isYearlyStatistics) nrOfComputationType++;
+
+        if (nrOfComputationType > 1)
         {
-            projectError = "Too many forecast types.";
+            projectError = "Too many forecast/computation types.";
             return false;
         }
 
@@ -388,10 +399,15 @@ void Crit1DProject::checkSimulationDates()
 
     if (isSeasonalForecast)
     {
-        logger.writeInfo("first forecast month: " + QString::number(firstSeasonMonth));
+        logger.writeInfo("First forecast month: " + QString::number(firstMonth));
     }
 
-    if (isMonthlyForecast || isShortTermForecast)
+    if (isMonthlyStatistics)
+    {
+        logger.writeInfo("Computation month: " + QString::number(firstMonth));
+    }
+
+    if (isShortTermForecast || isEnsembleForecast)
     {
         logger.writeInfo("Nr of forecast days: " + QString::number(daysOfForecast));
     }
@@ -491,7 +507,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
         nrDays += unsigned(daysOfForecast);
     }
 
-    if (this->isMonthlyForecast)
+    if (this->isEnsembleForecast)
     {
         if (this->forecastMeteoGrid->gridStructure().isFixedFields())
         {
@@ -541,7 +557,7 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
         prec = this->observedMeteoGrid->meteoGrid()->meteoPointPointer(row, col)->getMeteoPointValueD(myDate, dailyPrecipitation);
         myCase.meteoPoint.setMeteoPointValueD(myDate, dailyPrecipitation, prec);
     }
-    if (isShortTermForecast || isMonthlyForecast)
+    if (isShortTermForecast || isEnsembleForecast)
     {
         QDate start = lastSimulationDate.addDays(1);
         QDate end = lastSimulationDate.addDays(daysOfForecast);
@@ -822,12 +838,13 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
         return false;
     }
 
-    if ((! isSeasonalForecast) && (! isMonthlyForecast))
+    if ( !isMonthlyStatistics && !isSeasonalForecast && !isEnsembleForecast )
     {
         if (! createOutputTable(projectError))
             return false;
     }
-    if (isYearlyStatistics || isSeasonalForecast)
+    // get irri ratio
+    if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast)
     {
         float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class",
                                                 myCase.unit.idCropClass, projectError);
@@ -844,7 +861,7 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
     firstDate = myCase.meteoPoint.obsDataD[0].date;
     lastDate = myCase.meteoPoint.obsDataD[lastIndex].date;
 
-    if (isYearlyStatistics || isSeasonalForecast)
+    if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast)
     {
         initializeIrrigationStatistics(firstDate, lastDate);
     }
@@ -888,15 +905,15 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
         }
 
         // output
-        if (isYearlyStatistics || isSeasonalForecast)
+        if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast)
         {
             updateIrrigationStatistics(myDate, indexIrrigationSeries);
         }
-        if (isMonthlyForecast)
+        if (isEnsembleForecast)
         {
-            updateMonthlyForecastOutput(myDate, memberNr);
+            updateMediumTermForecastOutput(myDate, memberNr);
         }
-        if(! isSeasonalForecast && ! isMonthlyForecast)
+        if ( !isEnsembleForecast && !isSeasonalForecast && !isMonthlyStatistics)
         {
             updateOutput(myDate, isFirstDay);
             isFirstDay = false;
@@ -910,7 +927,8 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
         logger.writeInfo("Save state:" + dbState.databaseName());
     }
 
-    if (isSeasonalForecast || isMonthlyForecast)
+    // SeasonalForecast, EnsembleForecast and MonthlyStatistics do not produce db output (too much useless data)
+    if (isSeasonalForecast || isEnsembleForecast || isMonthlyStatistics)
         return true;
     else
         return saveOutput(projectError);
@@ -924,7 +942,7 @@ int Crit1DProject::computeAllUnits()
     bool isErrorCrop = false;
     unsigned int nrUnitsComputed = 0;
 
-    if (isYearlyStatistics || isSeasonalForecast || isMonthlyForecast)
+    if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast || isEnsembleForecast)
     {
         if (!setPercentileOutputCsv())
             return ERROR_DBOUTPUT;
@@ -975,7 +993,8 @@ int Crit1DProject::computeAllUnits()
             // IRRI_RATIO
             float irriRatio = getIrriRatioFromCropClass(dbCrop, "crop_class", "id_class",
                                                     compUnitList[i].idCropClass, projectError);
-            if ((isYearlyStatistics || isSeasonalForecast || isMonthlyForecast || isShortTermForecast)
+
+            if ((isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast || isEnsembleForecast || isShortTermForecast)
                 && (int(irriRatio) == int(NODATA)))
             {
                 logger.writeInfo("Unit " + compUnitList[i].idCase + " " + compUnitList[i].idCropClass + " ***** missing IRRIGATION RATIO *****");
@@ -993,7 +1012,7 @@ int Crit1DProject::computeAllUnits()
                 continue;
             }
 
-            if (isYearlyStatistics || isSeasonalForecast)
+            if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast)
             {
                 if (computeIrrigationStatistics(i, irriRatio))
                     nrUnitsComputed++;
@@ -1002,7 +1021,7 @@ int Crit1DProject::computeAllUnits()
             }
             else
             {
-                if (isMonthlyForecast)
+                if (isEnsembleForecast)
                 {
                     if (computeMonthlyForecast(i, irriRatio))
                         nrUnitsComputed++;
@@ -1031,7 +1050,7 @@ int Crit1DProject::computeAllUnits()
             }
         }
 
-        if (isYearlyStatistics || isSeasonalForecast || isMonthlyForecast)
+        if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast || isEnsembleForecast)
         {
             outputCsvFile.close();
         }
@@ -1072,8 +1091,8 @@ int Crit1DProject::computeAllUnits()
 }
 
 
-// update values of monthly forecast
-void Crit1DProject::updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int memberNr)
+// update values of medium term forecast
+void Crit1DProject::updateMediumTermForecastOutput(Crit3DDate myDate, unsigned int memberNr)
 {
     QDate myQdate = getQDate(myDate);
 
@@ -1091,9 +1110,9 @@ void Crit1DProject::updateMonthlyForecastOutput(Crit3DDate myDate, unsigned int 
 
 
 // update values of annual irrigation
-void Crit1DProject::updateIrrigationStatistics(Crit3DDate myDate, int &index)
+void Crit1DProject::updateIrrigationStatistics(Crit3DDate myDate, int &currentIndex)
 {
-    if (! isYearlyStatistics && ! isSeasonalForecast)
+    if ( !isYearlyStatistics && !isMonthlyStatistics && !isSeasonalForecast )
         return;
 
     bool isInsideSeason = false;
@@ -1102,19 +1121,25 @@ void Crit1DProject::updateIrrigationStatistics(Crit3DDate myDate, int &index)
     {
         isInsideSeason = true;
     }
-    else
+
+    if (isMonthlyStatistics)
     {
-        // normal seasons
-        if (firstSeasonMonth < 11)
+        isInsideSeason = (myDate.month == firstMonth);
+    }
+
+    if (isSeasonalForecast)
+    {
+        // interannual seasons
+        if (firstMonth < 11)
         {
-            if (myDate.month >= firstSeasonMonth && myDate.month <= firstSeasonMonth+2)
+            if (myDate.month >= firstMonth && myDate.month <= firstMonth+2)
                 isInsideSeason = true;
         }
         // NDJ or DJF
         else
         {
-            int lastMonth = (firstSeasonMonth + 2) % 12;
-            if (myDate.month >= firstSeasonMonth || myDate.month <= lastMonth)
+            int lastMonth = (firstMonth + 2) % 12;
+            if (myDate.month >= firstMonth || myDate.month <= lastMonth)
                 isInsideSeason = true;
         }
     }
@@ -1122,21 +1147,21 @@ void Crit1DProject::updateIrrigationStatistics(Crit3DDate myDate, int &index)
     if (isInsideSeason)
     {
         // first date of season
-        if (myDate.day == 1 && myDate.month == firstSeasonMonth)
+        if (myDate.day == 1 && myDate.month == firstMonth)
         {
-            if (index == NODATA)
-                index = 0;
+            if (currentIndex == NODATA)
+                currentIndex = 0;
             else
-                index++;
+                currentIndex++;
         }
 
         // sum of irrigations
-        if (index != NODATA)
+        if (currentIndex != NODATA)
         {
-            if (isEqual(irriSeries[unsigned(index)], NODATA))
-                irriSeries[unsigned(index)] = float(myCase.output.dailyIrrigation);
+            if (isEqual(irriSeries[unsigned(currentIndex)], NODATA))
+                irriSeries[unsigned(currentIndex)] = float(myCase.output.dailyIrrigation);
             else
-                irriSeries[unsigned(index)] += float(myCase.output.dailyIrrigation);
+                irriSeries[unsigned(currentIndex)] += float(myCase.output.dailyIrrigation);
         }
     }
 }
@@ -1245,53 +1270,47 @@ bool Crit1DProject::computeIrrigationStatistics(unsigned int index, float irriRa
 
 bool Crit1DProject::setPercentileOutputCsv()
 {
-    if (isYearlyStatistics || isSeasonalForecast || isMonthlyForecast)
+    QString outputCsvPath = getFilePath(outputCsvFileName);
+    if (! QDir(outputCsvPath).exists())
     {
-        QString outputCsvPath = getFilePath(outputCsvFileName);
-        if (! QDir(outputCsvPath).exists())
-        {
-            QDir().mkdir(outputCsvPath);
-        }
+        QDir().mkdir(outputCsvPath);
+    }
 
-        outputCsvFile.open(outputCsvFileName.toStdString().c_str(), std::ios::out | std::ios::trunc);
-        if ( outputCsvFile.fail())
-        {
-            logger.writeError("open failure: " + QString(strerror(errno)) + '\n');
-            return false;
-        }
-        else
-        {
-            logger.writeInfo("Statistics output file (csv): " + outputCsvFileName + "\n");
-        }
+    outputCsvFile.open(outputCsvFileName.toStdString().c_str(), std::ios::out | std::ios::trunc);
+    if ( outputCsvFile.fail())
+    {
+        logger.writeError("open failure: " + QString(strerror(errno)) + '\n');
+        return false;
+    }
+    else
+    {
+        logger.writeInfo("Statistics output file (csv): " + outputCsvFileName + "\n");
+    }
 
-        if (isYearlyStatistics || isSeasonalForecast)
-        {
-            outputCsvFile << "ID_CASE,CROP,SOIL,METEO,irri_05,irri_25,irri_50,irri_75,irri_95\n";
-        }
-        if (isMonthlyForecast)
-        {
-            outputCsvFile << "ID_CASE,CROP,irri_05,irri_25,irri_50,irri_75,irri_95,prec_05,prec_25,prec_50,prec_75,prec_95\n";
-        }
+    if (isYearlyStatistics || isMonthlyStatistics || isSeasonalForecast)
+    {
+        outputCsvFile << "ID_CASE,CROP,SOIL,METEO,irri_05,irri_25,irri_50,irri_75,irri_95\n";
+    }
+    if (isEnsembleForecast)
+    {
+        outputCsvFile << "ID_CASE,CROP,irri_05,irri_25,irri_50,irri_75,irri_95,prec_05,prec_25,prec_50,prec_75,prec_95\n";
     }
 
     return true;
 }
 
 
-// alloc memory for annual values of irrigation
+// initialize vector for annual values of irrigation
 void Crit1DProject::initializeIrrigationStatistics(const Crit3DDate& firstDate, const Crit3DDate& lastDate)
 {
-    if (isYearlyStatistics || isSeasonalForecast)
+    irriSeries.clear();
+
+    nrYears = lastDate.year - firstDate.year +1;
+    irriSeries.resize(unsigned(nrYears));
+
+    for (int i = 0; i < nrYears; i++)
     {
-        irriSeries.clear();
-
-        nrYears = lastDate.year - firstDate.year +1;
-        irriSeries.resize(unsigned(nrYears));
-
-        for (int i = 0; i < nrYears; i++)
-        {
-            irriSeries[unsigned(i)] = NODATA;
-        }
+        irriSeries[unsigned(i)] = NODATA;
     }
 }
 
@@ -1755,7 +1774,7 @@ int Crit1DProject::openAllDatabase()
     }
 
     // meteo forecast
-    if (isShortTermForecast || isMonthlyForecast)
+    if (isShortTermForecast || isEnsembleForecast)
     {
         logger.writeInfo ("Forecast DB: " + dbForecastName);
         if (! QFile(dbForecastName).exists())
@@ -1795,7 +1814,7 @@ int Crit1DProject::openAllDatabase()
     }
 
     // output DB (not used in seasonal/monthly forecast)
-    if ((! isSeasonalForecast) && (! isMonthlyForecast))
+    if ( !isMonthlyStatistics && !isSeasonalForecast && !isEnsembleForecast)
     {
         if (dbOutputName == "")
         {

@@ -1,26 +1,27 @@
 /*!
-    \copyright 2016 Fausto Tomei, Gabriele Antolini,
-    Alberto Pistocchi, Marco Bittelli, Antonio Volta, Laura Costantini
+    \copyright 2023
+    Fausto Tomei, Gabriele Antolini, Antonio Volta
 
-    This file is part of CRITERIA3D.
-    CRITERIA3D has been developed under contract issued by A.R.P.A. Emilia-Romagna
+    This file is part of AGROLIB distribution.
+    AGROLIB has been developed under contract issued by A.R.P.A. Emilia-Romagna
 
-    CRITERIA3D is free software: you can redistribute it and/or modify
+    AGROLIB is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    CRITERIA3D is distributed in the hope that it will be useful,
+    AGROLIB is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with CRITERIA3D.  If not, see <http://www.gnu.org/licenses/>.
+    along with AGROLIB.  If not, see <http://www.gnu.org/licenses/>.
 
     Contacts:
-    fausto.tomei@gmail.com
     ftomei@arpae.it
+    gantolini@arpae.it
+    avolta@arpae.it
 */
 
 #include <math.h>
@@ -372,23 +373,26 @@ namespace statistics
                 roots[j] += (XT[j][i]*y[i]);
             }
         }
-        *q=0;
-        for (int j=0;j<nrPredictors;j++)
+
+        *q = 0;
+        for (int j=0; j<nrPredictors; j++)
         {
             m[j]=0;
         }
-        for (int i=0;i<nrPredictors+1;i++)
+
+        for (int i=0; i<nrPredictors+1; i++)
         {
-            *q += (X2Inverse[0][i]*roots[i]);
+            *q += float(X2Inverse[0][i]*roots[i]);
         }
 
-        for (int j=1;j<nrPredictors+1;j++)
+        for (int j=1; j<nrPredictors+1; j++)
         {
             for (int i=0;i<nrPredictors+1;i++)
             {
-                m[j-1] += (X2Inverse[j][i]*roots[i]);
+                m[j-1] += float(X2Inverse[j][i]*roots[i]);
             }
         }
+
         for (int j=0;j<nrPredictors+1;j++)
         {
             free(XT[j]);
@@ -468,14 +472,14 @@ namespace statistics
         }
         for (int i=0;i<nrPredictors+1;i++)
         {
-            *q += (X2Inverse[0][i]*roots[i]);
+            *q += float(X2Inverse[0][i]*roots[i]);
         }
 
         for (int j=1;j<nrPredictors+1;j++)
         {
             for (int i=0;i<nrPredictors+1;i++)
             {
-                m[j-1] += (X2Inverse[j][i]*roots[i]);
+                m[j-1] += float(X2Inverse[j][i]*roots[i]);
             }
         }
         for (int j=0;j<nrPredictors+1;j++)
@@ -1468,8 +1472,8 @@ namespace stat_openai
 {
     // Funzione per calcolare la trasposta di una matrice
     std::vector<std::vector<float>> transpose(const std::vector<std::vector<float>>& matrix) {
-        int rows = matrix.size();
-        int cols = matrix[0].size();
+        int rows = int(matrix.size());
+        int cols = int(matrix[0].size());
 
         std::vector<std::vector<float>> result(cols, std::vector<float>(rows));
 
@@ -1485,8 +1489,8 @@ namespace stat_openai
     // Funzione per calcolare la regressione lineare multipla
     std::vector<double> multipleLinearRegression(const std::vector<std::vector<double>>& X, const std::vector<double>& y)
     {
-        int numSamples = X.size();
-        int numFeatures = X[0].size();
+        int numSamples = int(X.size());
+        int numFeatures = int(X[0].size());
 
         // Calcola la matrice X^T * X
         std::vector<std::vector<double>> XTX(numFeatures, std::vector<double>(numFeatures));

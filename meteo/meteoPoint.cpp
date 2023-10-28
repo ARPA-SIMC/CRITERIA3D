@@ -1175,9 +1175,9 @@ float Crit3DMeteoPoint::getProxyValue(unsigned pos)
         return NODATA;
 }
 
-std::vector <float> Crit3DMeteoPoint::getProxyValues()
+std::vector <double> Crit3DMeteoPoint::getProxyValues()
 {
-    std::vector <float> myValues;
+    std::vector <double> myValues;
     for (unsigned int i=0; i < proxyValues.size(); i++)
         myValues.push_back(getProxyValue(i));
 

@@ -229,45 +229,42 @@ void updateBoundary()
 
 void updateBoundaryWater (double deltaT)
 {
-    double Hs, avgH, maxFlow, flow;
     double const EPSILON_METER = 0.0001;          // [m] 0.1 mm
 
     for (long i = 0; i < myStructure.nrNodes; i++)
     {
-        // extern sink/source
+        // water sink-source
         myNode[i].Qw = myNode[i].waterSinkSource;
 
         if (myNode[i].boundary != nullptr)
         {
-            // initialize
             myNode[i].boundary->waterFlow = 0.;
 
             if (myNode[i].boundary->type == BOUNDARY_RUNOFF)
             {
-                avgH = (myNode[i].H + myNode[i].oldH) * 0.5;
-                // surface water available to runoff [m]
-                Hs = MAXVALUE(avgH - (myNode[i].z + myNode[i].Soil->Pond), 0.0);
-                if (Hs > EPSILON_METER)
+                double avgH = (myNode[i].H + myNode[i].oldH) * 0.5;        // [m]
+                // Surface water available for runoff [m]
+                double hs = MAXVALUE(avgH - (myNode[i].z + myNode[i].Soil->Pond), 0.0);
+                if (hs > EPSILON_METER)
                 {
-                    maxFlow = (Hs * myNode[i].volume_area) / deltaT;        /*!<  [m^3 s^-1] maximum available flow during time step */
+                    double maxFlow = (hs * myNode[i].volume_area) / deltaT;         // [m3 s-1] maximum flow available during the time step
                     // Manning equation
-                    double v = (1. / myNode[i].Soil->Roughness) * pow(Hs, 2./3.) * sqrt(myNode[i].boundary->slope);
+                    double v = (1. / myNode[i].Soil->Roughness) * pow(hs, 2./3.) * sqrt(myNode[i].boundary->slope);
                     // on the surface boundaryArea is a side [m]
-                    flow = myNode[i].boundary->boundaryArea * Hs * v;       /*!< [m^3 s^-1] */
+                    double flow = myNode[i].boundary->boundaryArea * hs * v;        // [m3 s-1]
                     myNode[i].boundary->waterFlow = -MINVALUE(flow, maxFlow);
                 }
             }
             else if (myNode[i].boundary->type == BOUNDARY_FREEDRAINAGE)
             {
-                // [m^3 s^-1] Darcy unit gradient
+                // Darcy unit gradient
                 // dH=dz=L  -> dH/L=1
-                flow = -myNode[i].k * myNode[i].up.area;
-                myNode[i].boundary->waterFlow = flow;
+                myNode[i].boundary->waterFlow = -myNode[i].k * myNode[i].up.area;
             }
 
             else if (myNode[i].boundary->type == BOUNDARY_FREELATERALDRAINAGE)
             {
-                // [m^3 s^-1] Darcy gradient=slope
+                // Darcy gradient = slope
                 // dH=dz slope=dz/L -> dH/L=slope
                 myNode[i].boundary->waterFlow = -myNode[i].k * myParameters.k_lateral_vertical_ratio
                                             * myNode[i].boundary->boundaryArea * myNode[i].boundary->slope;
@@ -278,20 +275,24 @@ void updateBoundaryWater (double deltaT)
                 // water table
                 double L = 1.0;                         // [m]
                 double boundaryZ = myNode[i].z - L;     // [m]
-                double boundaryK;
+                double boundaryK;                       // [m s-1]
+
                 if (myNode[i].boundary->prescribedTotalPotential >= boundaryZ)
+                {
+                    // saturated
                     boundaryK = myNode[i].Soil->K_sat;
+                }
                 else
                 {
+                    // unsaturated
                     double boundaryPsi = fabs(myNode[i].boundary->prescribedTotalPotential - boundaryZ);
-                    double boundarySe = computeSefromPsi(boundaryPsi, myNode[i].Soil);
+                    double boundarySe = computeSefromPsi_unsat(boundaryPsi, myNode[i].Soil);
                     boundaryK = computeWaterConductivity(boundarySe, myNode[i].Soil);
                 }
+
                 double meanK = computeMean(myNode[i].k, boundaryK);
                 double dH = myNode[i].boundary->prescribedTotalPotential - myNode[i].H;
-                flow = meanK * myNode[i].boundary->boundaryArea * (dH / L);
-                myNode[i].boundary->waterFlow = flow;
-
+                myNode[i].boundary->waterFlow = meanK * myNode[i].boundary->boundaryArea * (dH / L);
             }
 
             else if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)
@@ -346,14 +347,14 @@ void updateBoundaryWater (double deltaT)
 		long i = myCulvert.index;
 		double waterLevel = 0.5 * (myNode[i].H + myNode[i].oldH) - myNode[i].z;		// [m]
 
-		flow = 0.0;
+        double flow = 0.0;                                                          // [m3 s-1]
 
 		if (waterLevel >= myCulvert.height * 1.5)
 		{
 			// pressure flow - Hazen-Williams equation
 			double equivalentDiameter = sqrt((4. * myCulvert.width * myCulvert.height) / PI);
 			// roughness = 70 (rough concrete)
-			flow = (70. * pow(myCulvert.slope, 0.54) * pow(equivalentDiameter, 2.63)) / 3.591;
+            flow = (70.0 * pow(myCulvert.slope, 0.54) * pow(equivalentDiameter, 2.63)) / 3.591;
 
 		}
 		else if (waterLevel > myCulvert.height)
@@ -362,13 +363,13 @@ void updateBoundaryWater (double deltaT)
             double wettedPerimeter = myCulvert.width + 2.* myCulvert.height;                // [m]
             double hydraulicRadius = myNode[i].boundary->boundaryArea / wettedPerimeter;	// [m]
 
-			// maximum Manning flow [m^3 s^-1]
+            // maximum Manning flow [m3 s-1]
             double ManningFlow = (myNode[i].boundary->boundaryArea / myCulvert.roughness)
                                 * sqrt(myCulvert.slope) * pow(hydraulicRadius, 2. / 3.);
 
 			// pressure flow - Hazen-Williams equation - roughness = 70
 			double equivalentDiameter = sqrt((4. * myCulvert.width * myCulvert.height) / PI);
-			double pressureFlow = (70. * pow(myCulvert.slope, 0.54) * pow(equivalentDiameter, 2.63)) / 3.591;
+            double pressureFlow = (70.0 * pow(myCulvert.slope, 0.54) * pow(equivalentDiameter, 2.63)) / 3.591;
 
 			double weight = (waterLevel - myCulvert.height) / (myCulvert.height * 0.5);
 			flow = weight * pressureFlow + (1. - weight) * ManningFlow;

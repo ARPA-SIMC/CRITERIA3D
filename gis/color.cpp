@@ -151,7 +151,20 @@ unsigned int Crit3DColorScale::getColorIndex(float value)
 }
 
 
-bool setDefaultDEMScale(Crit3DColorScale* myScale)
+bool setDefaultScale(Crit3DColorScale* myScale)
+{
+    myScale->initialize(4, 256);
+
+    myScale->keyColor[0] = Crit3DColor(0, 0, 255);         /*!< blue */
+    myScale->keyColor[1] = Crit3DColor(64, 196, 64);       /*!< green */
+    myScale->keyColor[2] = Crit3DColor(255, 255, 0);       /*!< yellow */
+    myScale->keyColor[3] = Crit3DColor(255, 0, 0);         /*!< red */
+
+    return(myScale->classify());
+}
+
+
+bool setDTMScale(Crit3DColorScale* myScale)
 {
     myScale->initialize(4, 256);
 

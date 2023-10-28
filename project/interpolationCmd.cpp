@@ -236,7 +236,7 @@ bool interpolationRaster(std::vector <Crit3DInterpolationDataPoint> &myPoints, C
     }
 
     float myX, myY;
-    std::vector <float> proxyValues;
+    std::vector <double> proxyValues;
     proxyValues.resize(unsigned(mySettings->getProxyNr()));
 
     for (long myRow = 0; myRow < outputGrid->header->nrRows ; myRow++)

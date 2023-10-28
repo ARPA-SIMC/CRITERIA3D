@@ -162,7 +162,7 @@
             bool setMeteoPointValueM(const Crit3DDate &myDate, meteoVariable myVar, float myValue);
 
             float getProxyValue(unsigned pos);
-            std::vector <float> getProxyValues();
+            std::vector<double> getProxyValues();
 
             void setId(std::string value);
             void setName(std::string name);
