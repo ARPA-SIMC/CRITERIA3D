@@ -152,10 +152,16 @@ void Crit3DCrop::initialize(double latitude, unsigned int nrLayers, double total
 }
 
 
-double Crit3DCrop::getDailyDegreeIncrease(double tmin, double tmax)
+double Crit3DCrop::getDailyDegreeIncrease(double tmin, double tmax, int doy)
 {
     if (isEqual(tmin, NODATA) || isEqual(tmax, NODATA))
         return NODATA;
+
+    // check crop cycle
+    if (isSowingCrop() && ! isInsideTypicalCycle(doy))
+    {
+        return 0;
+    }
 
     double tmed = (tmin + MINVALUE(tmax, upperThermalThreshold)) * 0.5;
     return MAXVALUE(tmed - thermalThreshold, 0);
@@ -297,7 +303,7 @@ int Crit3DCrop::getDaysFromCurrentSowing(int myDoy) const
 
 bool Crit3DCrop::isInsideTypicalCycle(int myDoy) const
 {
-    return (myDoy >= sowingDoy && getDaysFromTypicalSowing(myDoy) < plantCycle);
+    return (getDaysFromTypicalSowing(myDoy) < plantCycle);
 }
 
 
