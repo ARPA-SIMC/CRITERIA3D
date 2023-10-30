@@ -844,7 +844,6 @@ void Crit3DSoilWidget::tabChanged(int index)
                 wrCurveTab->resetAll();
             }
         }
-
     }
     else if (index == 3) // tab hydraulic conductivity curve
     {

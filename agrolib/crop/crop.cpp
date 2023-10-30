@@ -463,7 +463,13 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
         int currentDoy = getDoyFromDate(myDate);
 
         // update degree days
-        degreeDays += computeDegreeDays(tmin, tmax, thermalThreshold, upperThermalThreshold);
+        double dailyDD = getDailyDegreeIncrease(tmin, tmax, currentDoy);
+        if (isEqual(dailyDD, NODATA))
+        {
+            myError = "Error in computing degree dyas for " + myDate.toStdString();
+            return false;
+        }
+        degreeDays += dailyDD;
 
         // update LAI
         if ( !updateLAI(latitude, nrLayers, currentDoy))
@@ -754,10 +760,4 @@ std::string getCropTypeString(speciesType cropType)
 
     return "No crop type";
 }
-
-double computeDegreeDays(double myTmin, double myTmax, double myLowerThreshold, double myUpperThreshold)
-{
-    return MAXVALUE((myTmin + MINVALUE(myTmax, myUpperThreshold)) / 2. - myLowerThreshold, 0);
-}
-
 

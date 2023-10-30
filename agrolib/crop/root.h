@@ -9,7 +9,8 @@
     class Crit3DCrop;
 
     enum rootDistributionType {CYLINDRICAL_DISTRIBUTION, CARDIOID_DISTRIBUTION, GAMMA_DISTRIBUTION};
-    const int numRootDistributionType = 3;
+    const int nrRootDistributionType = 3;
+
     enum rootGrowthType {LINEAR, EXPONENTIAL, LOGISTIC};
 
     /*!
@@ -22,7 +23,7 @@
         rootGrowthType growth;
 
         /*! parameters */
-        double degreeDaysRootGrowth;        /*!< [°D]  */
+        int degreeDaysRootGrowth;           /*!< [°D]  */
         double rootDepthMin;                /*!< [m]   */
         double rootDepthMax;                /*!< [m]   */
         double shapeDeformation;            /*!< [-]   */

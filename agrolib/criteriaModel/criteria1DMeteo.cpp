@@ -696,11 +696,11 @@ bool checkYearMeteoGrid(QSqlDatabase dbMeteo, QString tableD, QString fieldTime,
 }
 
 
-bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPoint *meteoPoint, QString validYear, QString *error)
+bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMeteoPoint *meteoPoint, int validYear, QString *error)
 {
     *error = "";
 
-    QString queryString = "SELECT * FROM '" + table +"'" + " WHERE strftime('%Y',date) = '" + validYear +"'";
+    QString queryString = "SELECT * FROM '" + table +"'" + " WHERE strftime('%Y',date) = '" + QString::number(validYear) +"'";
     QSqlQuery query = dbMeteo->exec(queryString);
 
     query.first();
@@ -711,8 +711,8 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
     }
 
     QDate date;
-    QDate previousDate(validYear.toInt()-1, 12, 31);
-    QDate lastDate(validYear.toInt(), 12, 31);
+    QDate previousDate(validYear-1, 12, 31);
+    QDate lastDate(validYear, 12, 31);
     float tmin = NODATA;
     float tmax = NODATA;
     float tavg = NODATA;
@@ -724,7 +724,6 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
 
     const float tmax_min = -40;
     const float tmax_max = 60;
-
 
     do
     {
@@ -767,7 +766,7 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
     }
     while(query.next());
 
-    QDate firstDate(validYear.toInt(), 1, 1);
+    QDate firstDate(validYear, 1, 1);
     int daysInYear = firstDate.daysInYear();
     float prevTmin = NODATA;
     float prevTmax = NODATA;
@@ -846,6 +845,7 @@ bool fillDailyTempPrecCriteria1D(QSqlDatabase* dbMeteo, QString table, Crit3DMet
  * \details date format: "yyyy-mm-dd"
  * \return true if data are correctly loaded
  * \note meteoPoint have to be initialized BEFORE function
+ * \note maxNrDays = NODATA: read all data
  */
 bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int maxNrDays, QString &error)
 {
@@ -884,7 +884,7 @@ bool readDailyDataCriteria1D(QSqlQuery &query, Crit3DMeteoPoint &meteoPoint, int
 
         if (! myDate.isValid())
         {
-            if (currentIndex < (maxNrDays-1))
+            if (maxNrDays != NODATA && currentIndex < (maxNrDays-1))
             {
                 error = meteoID + "Wrong date format: " + query.value("date").toString();
                 return false;

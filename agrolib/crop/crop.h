@@ -109,7 +109,5 @@
     speciesType getCropType(std::string cropType);
     std::string getCropTypeString(speciesType cropType);
 
-    double computeDegreeDays(double myTmin, double myTmax, double myLowerThreshold, double myUpperThreshold);
-
 
 #endif // CROP_H
