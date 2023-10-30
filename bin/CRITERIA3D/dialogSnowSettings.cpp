@@ -91,8 +91,8 @@ void DialogSnowSettings::accept()
     {
         return;
     }
-
 }
+
 
 bool DialogSnowSettings::checkEmptyValues()
 {
@@ -129,128 +129,143 @@ bool DialogSnowSettings::checkEmptyValues()
     return true;
 }
 
+
 bool DialogSnowSettings::checkWrongValues()
 {
     bool ok;
-    if (rainfallThresholdValue->text().toDouble(&ok) < 0.0 || rainfallThresholdValue->text().toDouble() > 4.0)
-    {
-        QMessageBox::information(nullptr, "Insert a valid value", "Max temp value with snow should be in [0:4]");
-        return false;
-    }
+
+    double rainfallThreshold = QLocale().toDouble(rainfallThresholdValue->text(), &ok);
     if (!ok)
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Max temp value with snow is not a number");
+        QMessageBox::information(nullptr, "Wrong value", "Max. temperature with snow value is not a number");
         return false;
     }
-    if (snowThresholdValue->text().toDouble(&ok) < -2.0 || snowThresholdValue->text().toDouble() > 1.0)
+    if ((rainfallThreshold < 0.0) || (rainfallThreshold > 4.0))
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Min temp value with rain should be in [-2:1]");
+        QMessageBox::information(nullptr, "Wrong value", "Max. temperature with snow should be in [0:4]");
         return false;
     }
+
+    double snowThreshold = QLocale().toDouble(snowThresholdValue->text(), &ok);
     if (!ok)
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Min temp value with rain is not a number");
+        QMessageBox::information(nullptr, "Wrong value", "Min. temperature with rain value is not a number");
         return false;
     }
-    if (waterHoldingValue->text().toDouble(&ok) < 0 || waterHoldingValue->text().toDouble() > 1)
+    if ((snowThreshold < -2.0) || (snowThreshold > 1.0))
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Water holding capacity should be in [0:1]");
+        QMessageBox::information(nullptr, "Wrong value", "Min. temperature with rain should be in [-2:1]");
         return false;
     }
+
+    double waterHolding = QLocale().toDouble(waterHoldingValue->text(), &ok);
     if (!ok)
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Water holding capacity is not a number");
+        QMessageBox::information(nullptr, "Wrong value", "Water holding capacity value is not a number");
         return false;
     }
-    if (surfaceThickValue->text().toDouble(&ok) < 0.001 || surfaceThickValue->text().toDouble() > 0.02)
+    if ((waterHolding < 0) || (waterHolding > 1))
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Snow skin thickness should be in [0.001:0.02]");
+        QMessageBox::information(nullptr, "Wrong value", "Water holding capacity should be in [0:1]");
         return false;
     }
+
+    double surfaceThick = QLocale().toDouble(surfaceThickValue->text(), &ok);
     if (!ok)
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Snow skin thickness is not a number");
+        QMessageBox::information(nullptr, "Wrong value", "Snow skin thickness value is not a number");
         return false;
     }
-    if (vegetationHeightValue->text().toDouble(&ok) < 0 || vegetationHeightValue->text().toDouble() > 10)
+    if ((surfaceThick < 0.001) || (surfaceThick > 0.02))
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Vegetation heigh should be in [0:10]");
+        QMessageBox::information(nullptr, "Wrong value", "Snow skin thickness should be in [0.001 : 0.02]");
         return false;
     }
+
+    double vegetationHeight = QLocale().toDouble(vegetationHeightValue->text(), &ok);
     if (!ok)
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Vegetation heigh is not a number");
+        QMessageBox::information(nullptr, "Wrong value", "Vegetation height value is not a number");
         return false;
     }
-    if (soilAlbedoValue->text().toDouble(&ok) < 0 || soilAlbedoValue->text().toDouble() > 1)
+    if ((vegetationHeight < 0) || (vegetationHeight > 10))
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Soil albedo should be in [0:1]");
+        QMessageBox::information(nullptr, "Wrong value", "Vegetation height should be in [0:10]");
         return false;
     }
+
+    double soilAlbedo = QLocale().toDouble(soilAlbedoValue->text(), &ok);
     if (!ok)
     {
-        QMessageBox::information(nullptr, "Insert a valid value", "Soil albedo is not a number");
+        QMessageBox::information(nullptr, "Wrong value", "Soil albedo value is not a number");
         return false;
     }
+    if ((soilAlbedo < 0) || (soilAlbedo > 1))
+    {
+        QMessageBox::information(nullptr, "Wrong value", "Soil albedo should be in [0:1]");
+        return false;
+    }
+
     return true;
 }
 
+
 double DialogSnowSettings::getRainfallThresholdValue() const
 {
-    return rainfallThresholdValue->text().toDouble();
+    return QLocale().toDouble(rainfallThresholdValue->text());
 }
 
 void DialogSnowSettings::setRainfallThresholdValue(double value)
 {
-    rainfallThresholdValue->setText(QString::number(value));
+    rainfallThresholdValue->setText(QLocale().toString(value));
 }
 
 double DialogSnowSettings::getSnowThresholdValue() const
 {
-    return snowThresholdValue->text().toDouble();
+    return QLocale().toDouble(snowThresholdValue->text());
 }
 
 void DialogSnowSettings::setSnowThresholdValue(double value)
 {
-    snowThresholdValue->setText(QString::number(value));
+    snowThresholdValue->setText(QLocale().toString(value));
 }
 
 double DialogSnowSettings::getWaterHoldingValue() const
 {
-    return waterHoldingValue->text().toDouble();
+    return QLocale().toDouble(waterHoldingValue->text());
 }
 
 void DialogSnowSettings::setWaterHoldingValue(double value)
 {
-    waterHoldingValue->setText(QString::number(value));
+    waterHoldingValue->setText(QLocale().toString(value));
 }
 
 double DialogSnowSettings::getSurfaceThickValue() const
 {
-    return surfaceThickValue->text().toDouble();
+    return QLocale().toDouble(surfaceThickValue->text());
 }
 
 void DialogSnowSettings::setSurfaceThickValue(double value)
 {
-    surfaceThickValue->setText(QString::number(value));
+    surfaceThickValue->setText(QLocale().toString(value));
 }
 
 double DialogSnowSettings::getVegetationHeightValue() const
 {
-    return vegetationHeightValue->text().toDouble();
+    return QLocale().toDouble(vegetationHeightValue->text());
 }
 
 void DialogSnowSettings::setVegetationHeightValue(double value)
 {
-    vegetationHeightValue->setText(QString::number(value));
+    vegetationHeightValue->setText(QLocale().toString(value));
 }
 
 double DialogSnowSettings::getSoilAlbedoValue() const
 {
-    return soilAlbedoValue->text().toDouble();
+    return QLocale().toDouble(soilAlbedoValue->text());
 }
 
 void DialogSnowSettings::setSoilAlbedoValue(double value)
 {
-    soilAlbedoValue->setText(QString::number(value));
+    soilAlbedoValue->setText(QLocale().toString(value));
 }
