@@ -173,7 +173,6 @@ QList<QString> getSharedCommandList()
     cmdList.append("Log             | SetLogFile");
     cmdList.append("Quit            | Exit");
     cmdList.append("DailyCsv        | ExportDailyDataCsv");
-    cmdList.append("DailyGridFlt    | ExportDailyGridFlt");    // TODO Antonio
 
     return cmdList;
 }
@@ -281,13 +280,12 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     if (argumentList.size() < 2)
     {
         QString usage = "Usage:\n"
-                        "ExportDailyDataCsv [TPREC] -d1:firstDate [-d2:lastDate] [-t:type] [-l:idList] [-p:outputPath]\n"
-                        "TPREC: save only Tmin, Tmax, Tavg, Prec \n"
-                        "date format: YYYY-MM-DD \n"
-                        "default lastDate: yesterday \n"
-                        "type: GRID|POINTS (default GRID) \n"
-                        "idList: points or cells file list (default ALL) \n"
-                        "default output path: " + outputPath + "\n";
+                        "ExportDailyDataCsv [-TPREC] [-t:type] -d1:firstDate [-d2:lastDate] [-l:idList] [-p:outputPath]\n"
+                        "-TPREC     save only Tmin, Tmax, Tavg, Prec \n"
+                        "-t         Type: GRID|POINTS (default: GRID) \n"
+                        "-d1, -d2   Date format: YYYY-MM-DD (default lastDate: yesterday) \n"
+                        "-l         List of output points or cells filename  (default: ALL active cells/points) \n"
+                        "-p         output Path - default:" + outputPath + " \n";
         myProject->logInfo(usage);
         return PRAGA_OK;
     }
@@ -299,7 +297,7 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
 
     for (int i = 1; i < argumentList.size(); i++)
     {
-        if (argumentList.at(i).left(5).toUpper() == "TPREC")
+        if (argumentList.at(i).left(6).toUpper() == "-TPREC")
             isTPrec = true;
 
         if (argumentList.at(i).left(4) == "-d1:")
@@ -346,10 +344,13 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
         if (argumentList.at(i).left(3) == "-p:" || argumentList.at(i).left(3) == "-o:")
         {
             outputPath = argumentList[i].right(argumentList[i].length()-3);
-            if (outputPath.left(1) == ".")
+            if (outputPath.size() > 0)
             {
-                QString completeOutputPath = myProject->getProjectPath() + outputPath;
-                outputPath = QDir().cleanPath(completeOutputPath);
+                if (outputPath.at(0) == '.')
+                {
+                    QString completeOutputPath = myProject->getProjectPath() + outputPath;
+                    outputPath = QDir().cleanPath(completeOutputPath);
+                }
             }
         }
     }
@@ -402,13 +403,11 @@ int cmdExportDailyDataCsv(Project* myProject, QList<QString> argumentList)
     }
     else if (typeStr == "POINTS")
     {
-        if (! myProject->meteoPointsLoaded)
+        if (! myProject->exportMeteoPointsDailyDataCsv(isTPrec, firstDate, lastDate, idListFileName, outputPath))
         {
-            myProject->logError("No meteo grid open.");
+            myProject->logError();
             return PRAGA_ERROR;
         }
-
-        //return ExportDailyDataCsv(isTPrec, firstDate, lastDate, idListStr, outputPath);
     }
 
     return PRAGA_OK;

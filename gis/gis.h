@@ -103,6 +103,7 @@
         public:
             int nrRows;
             int nrCols;
+            int nrBytes;
             double dx, dy;
             float flag;
             Crit3DGeoPoint llCorner;
@@ -116,6 +117,7 @@
         public:
             int nrRows;
             int nrCols;
+            int nrBytes;
             double cellSize;
             float flag;
             Crit3DUtmPoint llCorner;

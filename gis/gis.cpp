@@ -160,6 +160,7 @@ namespace gis
     {
         nrRows = 0;
         nrCols = 0;
+        nrBytes = 4;
         cellSize = NODATA;
         flag = NODATA;
     }
@@ -168,6 +169,7 @@ namespace gis
     {
         nrRows = 0;
         nrCols = 0;
+        nrBytes = 4;
         dx = NODATA;
         dy = NODATA;
         flag = NODATA;
@@ -358,8 +360,10 @@ namespace gis
         mapTime.setNullTime();
         minimum = NODATA;
         maximum = NODATA;
+
         header->nrRows = 0;
         header->nrCols = 0;
+        header->nrBytes = 4;
         header->cellSize = NODATA;
         header->llCorner.initialize();
 
