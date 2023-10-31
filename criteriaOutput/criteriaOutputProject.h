@@ -22,7 +22,7 @@
 #define ERROR_SETTINGS_WRONGFILENAME -2
 #define ERROR_SETTINGS_MISSINGDATA -3
 #define ERROR_DBPARAMETERS -5
-#define ERROR_DBHISTORICAL -6
+#define ERROR_DBCLIMATE -6
 #define ERROR_TDXWRITE -7
 #define ERROR_DBOUTPUT -10
 #define ERROR_WRONGDATE -11
@@ -79,11 +79,11 @@ public:
     QString dbComputationUnitsName;
     QString dbDataName;
     QString dbCropName;
-    QString dbHistoricalDataName;
+    QString dbClimateDataName;
 
     QSqlDatabase dbCrop;
     QSqlDatabase dbData;
-    QSqlDatabase dbHistoricalData;
+    QSqlDatabase dbClimateData;
 
     int nrUnits;
     std::vector<Crit1DCompUnit> compUnitList;

@@ -22,7 +22,7 @@
                       std::vector<double> &dt90, std::vector<double> &dt180, QString &errorStr);
 
     int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase &dbData, QSqlDatabase &dbCrop,
-                           QSqlDatabase &dbHistoricalData, QDate dateComputation,
+                           QSqlDatabase &dbClimateData, QDate dateComputation,
                            CriteriaOutputVariable outputVariable, QString csvFileName, QString &errorStr);
 
     int selectSimpleVar(QSqlDatabase &db, QString idCase, QString varName, QString computation, QDate firstDate,

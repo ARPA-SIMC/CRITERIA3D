@@ -96,7 +96,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     doubleValR2->setNotation(QDoubleValidator::StandardNotation);
     minRegressionR2Edit.setFixedWidth(30);
     minRegressionR2Edit.setValidator(doubleValR2);
-    minRegressionR2Edit.setText(QString::number(double(_interpolationSettings->getMinRegressionR2())));
+    minRegressionR2Edit.setText(QLocale().toString(_interpolationSettings->getMinRegressionR2()));
     layoutR2->addWidget(labelMinR2);
     layoutR2->addWidget(&minRegressionR2Edit);
     layoutDetrending->addLayout(layoutR2);
@@ -130,7 +130,7 @@ DialogInterpolation::DialogInterpolation(Project *myProject)
     QIntValidator *intValMinPoints = new QIntValidator(1, 1000, this);
     minPointsLocalDetrendingEdit.setFixedWidth(30);
     minPointsLocalDetrendingEdit.setValidator(intValMinPoints);
-    minPointsLocalDetrendingEdit.setText(QString::number(int(_interpolationSettings->getMinPointsLocalDetrending())));
+    minPointsLocalDetrendingEdit.setText(QString::number(_interpolationSettings->getMinPointsLocalDetrending()));
     layoutDetrending->addWidget(labelMinPointsLocalDetrendingEdit);
     layoutDetrending->addWidget(&minPointsLocalDetrendingEdit);
 
@@ -284,11 +284,11 @@ void DialogInterpolation::accept()
     _interpolationSettings->setUseThermalInversion(thermalInversionEdit->isChecked());
     _interpolationSettings->setUseDewPoint(useDewPointEdit->isChecked());
     _interpolationSettings->setUseInterpolatedTForRH((useInterpolTForRH->isChecked()));
-    _interpolationSettings->setMinRegressionR2(minRegressionR2Edit.text().toFloat());
+    _interpolationSettings->setMinRegressionR2(QLocale().toFloat(minRegressionR2Edit.text()));
     _interpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());
     _interpolationSettings->setMinPointsLocalDetrending(minPointsLocalDetrendingEdit.text().toInt());
 
-    _qualityInterpolationSettings->setMinRegressionR2(minRegressionR2Edit.text().toFloat());
+    _qualityInterpolationSettings->setMinRegressionR2(QLocale().toFloat(minRegressionR2Edit.text()));
     _qualityInterpolationSettings->setTopoDist_maxKh(maxTdMultiplierEdit.text().toInt());
     _qualityInterpolationSettings->setUseLapseRateCode(lapseRateCodeEdit->isChecked());
     _qualityInterpolationSettings->setUseThermalInversion(thermalInversionEdit->isChecked());
