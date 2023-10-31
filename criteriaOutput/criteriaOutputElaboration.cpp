@@ -29,13 +29,13 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &errorStr)
     if( !qry.exec(statement) )
     {
         errorStr = qry.lastError().text();
-        return ERROR_DBHISTORICAL;
+        return ERROR_DBCLIMATE;
     }
     qry.first();
     if (!qry.isValid())
     {
         errorStr = qry.lastError().text();
-        return ERROR_DBHISTORICAL ;
+        return ERROR_DBCLIMATE ;
     }
     do
     {
@@ -62,7 +62,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &errorStr)
         if( !qry.exec(statement) )
         {
             errorStr = qry.lastError().text();
-            return ERROR_DBHISTORICAL;
+            return ERROR_DBCLIMATE;
         }
     }
     if (insertTD90Col)
@@ -71,7 +71,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &errorStr)
         if( !qry.exec(statement) )
         {
             errorStr = qry.lastError().text();
-            return ERROR_DBHISTORICAL;
+            return ERROR_DBCLIMATE;
         }
     }
     if (insertTD180Col)
@@ -80,7 +80,7 @@ int computeAllDtxUnit(QSqlDatabase db, QString idCase, QString &errorStr)
         if( !qry.exec(statement) )
         {
             errorStr = qry.lastError().text();
-            return ERROR_DBHISTORICAL;
+            return ERROR_DBCLIMATE;
         }
     }
 
@@ -288,7 +288,7 @@ bool writeDtxToDB(QSqlDatabase db, QString idCase, std::vector<double>& dt30,
 }
 
 
-int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData, QSqlDatabase& dbCrop, QSqlDatabase& dbHistoricalData,
+int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData, QSqlDatabase& dbCrop, QSqlDatabase& dbClimateData,
                        QDate dateComputation, CriteriaOutputVariable outputVariable, QString csvFileName, QString &errorStr)
 {
     // IRRI RATIO (parameter for elaboration on IRRIGATION variable)
@@ -444,47 +444,47 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
             }
             else
             {
-                // first parameter for  historical analysis (threshold)
+                // first parameter for  climate analysis (threshold)
                 if (outputVariable.param1[i] != NODATA && result < outputVariable.param1[i])
                 {
-                    // skip historical analysis
+                    // skip climate analysis
                     resultList.append(QString::number(NODATA));
                 }
                 else
                 {
-                    // find historical period available
-                    QDate historicalFirstDate;
-                    QDate historicalLastDate;
-                    QSqlQuery qry(dbHistoricalData);
+                    // find climate period available
+                    QDate climateFirstDate;
+                    QDate climateLastDate;
+                    QSqlQuery qry(dbClimateData);
                     statement = QString("SELECT MIN(DATE),MAX(DATE) FROM `%1`").arg(idCase);
                     if( !qry.exec(statement) )
                     {
-                        errorStr = "Error in query historical data";
-                        return ERROR_DBHISTORICAL;
+                        errorStr = "Error in query climate data";
+                        return ERROR_DBCLIMATE;
                     }
 
                     qry.first();
                     if (!qry.isValid())
                     {
-                        errorStr = "Historical data: " + qry.lastError().text();
-                        return ERROR_DBHISTORICAL ;
+                        errorStr = "climate data: " + qry.lastError().text();
+                        return ERROR_DBCLIMATE ;
                     }
 
-                    getValue(qry.value("MIN(DATE)"), &historicalFirstDate);
-                    getValue(qry.value("MAX(DATE)"), &historicalLastDate);
+                    getValue(qry.value("MIN(DATE)"), &climateFirstDate);
+                    getValue(qry.value("MAX(DATE)"), &climateLastDate);
 
-                    if (!historicalFirstDate.isValid() || !historicalLastDate.isValid())
+                    if (!climateFirstDate.isValid() || !climateLastDate.isValid())
                     {
-                        // incomplete data, there is not historical period to analyze
+                        // incomplete data, there is not climate period to analyze
                         resultList.append(QString::number(NODATA));
                     }
                     else
                     {
                         std::vector<float> allYearsVector;
 
-                        int year = historicalFirstDate.year();
+                        int year = climateFirstDate.year();
                         bool skip = false;
-                        while(year <= historicalLastDate.year())
+                        while(year <= climateLastDate.year())
                         {
                             // set date
                             QDate previousFirstDate, previousLastDate;
@@ -493,7 +493,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                             if (lastDate.year() == (firstDate.year()+1))
                                 previousLastDate.setDate(year+1, lastDate.month(), lastDate.day());
 
-                            // second parameter for historical analysis (timewindow)
+                            // second parameter for climate analysis (timewindow)
                             // if outputVariable.param2 is empty, current value should be compare with previous value in the same day
                             if (outputVariable.param2[i] != NODATA)
                             {
@@ -502,12 +502,12 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                             }
 
                             resultVector.clear();
-                            int queryResult = selectSimpleVar(dbHistoricalData, idCase, varName, computation,
+                            int queryResult = selectSimpleVar(dbClimateData, idCase, varName, computation,
                                                         previousFirstDate, previousLastDate, irriRatio, resultVector, errorStr);
                             if (queryResult == ERROR_DB_INCOMPLETE_DATA)
                             {
                                 // only first year can be incomplete, otherwise the comparison is not valid and can be terminated
-                                if (year != historicalFirstDate.year())
+                                if (year != climateFirstDate.year())
                                 {
                                     result = NODATA;
                                     skip = true;
@@ -534,7 +534,7 @@ int writeCsvOutputUnit(QString idCase, QString idCropClass, QSqlDatabase& dbData
                         }
                         else
                         {
-                            // comparison between current value (result) and historical values during timewindow (allYearsVector)
+                            // comparison between current value (result) and climate values during timewindow (allYearsVector)
                             if (outputVariable.climateComputation[i] == "PERCENTILE")
                             {
                                 // compute percentile
