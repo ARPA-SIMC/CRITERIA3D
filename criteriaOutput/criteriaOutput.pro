@@ -59,7 +59,7 @@ HEADERS += \
 
 
 # comment to compile without GDAL library
-#CONFIG += GDAL
+CONFIG += GDAL
 
 GDAL:{
     DEFINES += GDAL
