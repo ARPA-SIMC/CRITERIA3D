@@ -44,7 +44,7 @@
          * water need
          */
         double kcMax;                               /*!< [-] */
-        double psiLeaf;                             /*!< [cm] */
+        int psiLeaf;                                /*!< [cm] */
         double stressTolerance;                     /*!< [-] */
         double fRAW;                                /*!< [-] fraction of Readily Available Water */
 

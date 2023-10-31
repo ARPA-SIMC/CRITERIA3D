@@ -1212,7 +1212,7 @@ void Criteria1DWidget::updateCropParam(QString idCrop)
         degreeDaysEndValue->setText(QString::number(myProject.myCase.crop.degreeDaysEndIrrigation));
     }
     // water stress parameters
-    psiLeafValue->setText(QLocale().toString(myProject.myCase.crop.psiLeaf));
+    psiLeafValue->setText(QString::number(myProject.myCase.crop.psiLeaf));
     rawFractionValue->setValue(myProject.myCase.crop.fRAW);
     stressToleranceValue->setValue(myProject.myCase.crop.stressTolerance);
 
@@ -1797,7 +1797,7 @@ bool Criteria1DWidget::updateCrop()
         myProject.myCase.crop.degreeDaysEndIrrigation = degreeDaysEndValue->text().toInt();
     }
     // water stress
-    myProject.myCase.crop.psiLeaf = QLocale().toDouble(psiLeafValue->text());
+    myProject.myCase.crop.psiLeaf = psiLeafValue->text().toInt();
     myProject.myCase.crop.fRAW = rawFractionValue->value();
     myProject.myCase.crop.stressTolerance = stressToleranceValue->value();
 
@@ -2065,7 +2065,7 @@ bool Criteria1DWidget::checkCropIsChanged()
 
     // water needs
     if( ! isEqual(cropFromDB.kcMax, QLocale().toDouble(maxKcValue->text()))
-       || ! isEqual(cropFromDB.psiLeaf, QLocale().toDouble(psiLeafValue->text()))
+       || ! (cropFromDB.psiLeaf == psiLeafValue->text().toInt())
        || ! isEqual(cropFromDB.fRAW, rawFractionValue->value())
        || ! isEqual(cropFromDB.stressTolerance, stressToleranceValue->value()) )
     {
