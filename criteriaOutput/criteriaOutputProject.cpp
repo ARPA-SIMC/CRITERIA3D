@@ -440,7 +440,7 @@ int CriteriaOutputProject::precomputeDtx()
     logger.writeInfo("Compute dtx...");
 
     QString idCase;
-    int step = compUnitList.size() * 0.01;
+    int step = MAXVALUE(compUnitList.size() * 0.01, 1);
 
     for (unsigned int i=0; i < compUnitList.size(); i++)
     {
