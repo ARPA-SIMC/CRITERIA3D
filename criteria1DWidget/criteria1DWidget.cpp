@@ -1817,7 +1817,7 @@ void Criteria1DWidget::on_actionNewCrop()
     }
 
     Crit3DCrop* newCrop = new Crit3DCrop();
-    DialogNewCrop dialog(newCrop);
+    DialogNewCrop dialog(&(myProject.dbCrop), newCrop);
     if (dialog.result() == QDialog::Accepted)
     {
         // write newCrop on Db 

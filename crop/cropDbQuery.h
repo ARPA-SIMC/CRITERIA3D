@@ -20,5 +20,7 @@
     float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, QString cropClassTable, QString cropIdField,
                          int cropId, QString& errorStr);
 
+    bool getCropListFromType(const QSqlDatabase &dbCrop, QString cropType, QList<QString>& cropList, QString& errorStr);
+
 
 #endif // CROPDBQUERY_H
