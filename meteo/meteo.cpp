@@ -770,8 +770,10 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
         case dailyAirTemperatureMin: case dailyAirTemperatureRange:
         case airDewTemperature:
         case snowSurfaceTemperature:
-        case elaboration:
             setTemperatureScale(colorScale);
+            break;
+        case elaboration:
+            setDefaultScale(colorScale);
             break;
         case airRelHumidity: case dailyAirRelHumidityAvg: case dailyAirRelHumidityMax:
         case dailyAirRelHumidityMin: case leafWetness: case dailyLeafWetness:
@@ -805,11 +807,11 @@ bool setColorScale(meteoVariable variable, Crit3DColorScale *colorScale)
             setAnomalyScale(colorScale);
             break;
         case noMeteoTerrain:
-            setDefaultDEMScale(colorScale);
+            setDTMScale(colorScale);
             break;
 
         default:
-            setDefaultDEMScale(colorScale);
+            setDefaultScale(colorScale);
     }
 
     return true;

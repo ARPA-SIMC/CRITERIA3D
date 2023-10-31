@@ -40,22 +40,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += _CRT_SECURE_NO_WARNINGS
 
 
+INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../gis ../utilities \
+                ../shapeHandler ../netcdfHandler ../shapeUtilities
+
 SOURCES += \
-    ../../agrolib/crop/cropDbQuery.cpp \
+    ../crop/cropDbQuery.cpp \
     criteriaAggregationVariable.cpp \
     criteriaOutputElaboration.cpp \
     criteriaOutputProject.cpp \
     criteriaOutputVariable.cpp
 
 HEADERS += \
+    ../crop/cropDbQuery.h \
     criteriaAggregationVariable.h \
     criteriaOutputElaboration.h \
     criteriaOutputProject.h \
     criteriaOutputVariable.h
 
-
-INCLUDEPATH +=  ../crit3dDate ../mathFunctions ../crop ../gis \
-                ../utilities ../shapeHandler ../netcdfHandler ../shapeUtilities
 
 # comment to compile without GDAL library
 CONFIG += GDAL

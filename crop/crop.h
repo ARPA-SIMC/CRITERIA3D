@@ -81,7 +81,7 @@
         bool isSowingCrop() const;
         bool isRootStatic() const;
 
-        double getDailyDegreeIncrease(double tmin, double tmax);
+        double getDailyDegreeIncrease(double tmin, double tmax, int doy);
 
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
@@ -108,8 +108,6 @@
 
     speciesType getCropType(std::string cropType);
     std::string getCropTypeString(speciesType cropType);
-
-    double computeDegreeDays(double myTmin, double myTmax, double myLowerThreshold, double myUpperThreshold);
 
 
 #endif // CROP_H

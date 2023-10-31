@@ -60,7 +60,7 @@
             void updateTabCarbonNitrogen();
 
             void tabChanged(int index);
-            bool checkIfCropIsChanged();
+            bool checkCropIsChanged();
             void irrigationVolumeChanged();
 
         private:
@@ -69,9 +69,9 @@
             Crit3DCrop cropFromDB;
 
             QString meteoTableName;
-            bool cropChanged;
+            bool isCropChanged;
             QList<QString> yearList;
-            bool onlyOneYear;
+            bool isOnlyOneYear;
 
             Crit3DMeteoSettings meteoSettings;
 
@@ -106,16 +106,16 @@
             QLineEdit* thermalThresholdValue;
             QLineEdit* upperThermalThresholdValue;
             QLineEdit* degreeDaysEmergenceValue;
-            QLineEdit* degreeDaysLAIincValue;
-            QLineEdit* degreeDaysLAIdecValue;
+            QLineEdit* degreeDaysLaiIncreaseValue;
+            QLineEdit* degreeDaysLaiDecreaseValue;
             QLineEdit* LAIcurveAValue;
             QLineEdit* LAIcurveBValue;
             QLineEdit* rootDepthZeroValue;
             QLineEdit* rootDepthMaxValue;
             QComboBox* rootShapeComboBox;
             QDoubleSpinBox* shapeDeformationValue;
-            QLabel *rootDegreeDaysInc;
-            QLineEdit* rootDegreeDaysIncValue;
+            QLabel *rootDegreeDaysGrowth;
+            QLineEdit* rootDegreeDaysGrowthValue;
             QLineEdit* irrigationVolumeValue;
             QSpinBox* irrigationShiftValue;
             QLineEdit* degreeDaysStartValue;

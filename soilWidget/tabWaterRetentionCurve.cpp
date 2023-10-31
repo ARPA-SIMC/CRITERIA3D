@@ -44,12 +44,11 @@ TabWaterRetentionCurve::TabWaterRetentionCurve()
     setLayout(mainLayout);
     setMouseTracking(true);
     fillElement = false;
-
 }
+
 
 void TabWaterRetentionCurve::resetAll()
 {
-
     // delete all Widgets
     barHorizons.clear();
 
@@ -70,8 +69,8 @@ void TabWaterRetentionCurve::resetAll()
     m_tooltip = new Callout(chart);
     m_tooltip->hide();
     fillElement = false;
-
 }
+
 
 bool TabWaterRetentionCurve::getFillElement() const
 {

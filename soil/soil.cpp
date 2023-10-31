@@ -747,7 +747,7 @@ namespace soil
      * \return factor of safety FoS [-]
      * if fos < 1 the slope is unstable
      */
-    double Crit3DLayer::computeSlopeStability(double slope, double normalizedRootDensity)
+    double Crit3DLayer::computeSlopeStability(double slope, double rootCohesion)
     {
         double suctionStress = -waterPotential * getDegreeOfSaturation();    // [kPa]
 
@@ -760,7 +760,7 @@ namespace soil
         double frictionEffect =  tanFrictionAngle / tanAngle;
 
         double unitWeight = horizonPtr->bulkDensity * GRAVITY;                   // [kN m-3]
-        double cohesionEffect = 2 * horizonPtr->effectiveCohesion / (unitWeight * depth * sin(2*slopeAngle));
+        double cohesionEffect = 2 * (horizonPtr->effectiveCohesion + rootCohesion) / (unitWeight * depth * sin(2*slopeAngle));
 
         double suctionEffect = (suctionStress * (tanAngle + 1/tanAngle) * tanFrictionAngle) / (unitWeight * depth);
 

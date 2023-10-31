@@ -37,21 +37,13 @@
         void close();
         void closeDBF();
         void closeSHP();
+
         bool getShape(int index, ShapeObject &shape);
-        int	getShapeCount();
-        int	getDBFRecordCount();
         int	getDBFFieldIndex(const char *pszFieldName);
         int	isDBFRecordDeleted(int record);
-        int	getType();
-        int getFieldNumbers();
-        std::string	getTypeString();
-
-        std::string	getFieldName(int fieldPos);
-        DBFFieldType getFieldType(int fieldPos);
 
         int getFieldPos(std::string fieldName);
         bool existField(std::string fieldName);
-
         DBFFieldType getFieldType(std::string fieldName);
 
         int readIntAttribute(int shapeNumber, int fieldPos);
@@ -70,27 +62,45 @@
         bool addField(const char * fieldName, int type, int nWidth, int nDecimals );
         bool removeField(int iField);
 
-        void setFilepath(std::string filename);
-        std::string getFilepath() const;
-
-        bool getIsWGS84() const;
-        bool getIsNorth() const;
-        int getUtmZone() const;
-
         void packDBF(std::string newFile);
         void packSHP(std::string newFile);
         bool existRecordDeleted();
-
-        int nWidthField(int fieldIndex);
-        int nDecimalsField(int fieldIndex);
 
         double getNumericValue(int shapeNumber, std::string fieldName);
         double getNumericValue(int shapeNumber, int fieldPos);
         std::string getStringValue(int shapeNumber, std::string fieldName);
 
         std::vector<unsigned int> getHoles(int shapeNumber, int partNumber);
-        int getNrParts() const;
-        int getNrHoles() const;
+
+        int getShapeIndexfromPoint(double utmX, double utmY);
+        std::string getAttributesList(int index);
+
+        std::string getTypeString()
+        { return getShapeTypeAsString(m_type); }
+
+        std::string	getFieldName(int fieldPos)
+        { return m_fieldsList.at(unsigned(fieldPos)); }
+
+        DBFFieldType getFieldType(int fieldPos)
+        { return m_fieldsTypeList.at(unsigned(fieldPos)); }
+
+        int	getType() { return m_type; }
+        int getFieldNumbers() { return m_fields; }
+        int getShapeCount() { return m_count; }
+        int	getDBFRecordCount() { return m_dbf->nRecords; }
+
+        bool getIsWGS84() const { return m_isWGS84; }
+        bool getIsNorth() const { return m_isNorth; }
+        int getUtmZone() const { return m_utmZone; }
+
+        std::string getFilepath() const { return m_filepath; }
+        void setFilepath(std::string filename) { m_filepath = filename; }
+
+        int nWidthField(int fieldIndex) { return m_dbf->panFieldSize[fieldIndex]; }
+        int nDecimalsField(int fieldIndex) { return m_dbf->panFieldDecimals[fieldIndex]; }
+
+        int getNrParts() const { return m_parts; }
+        int getNrHoles() const { return m_holes; }
     };
 
 

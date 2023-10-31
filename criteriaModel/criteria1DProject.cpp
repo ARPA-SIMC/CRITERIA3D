@@ -7,7 +7,6 @@
 #include "cropDbTools.h"
 #include "cropDbQuery.h"
 #include "criteria1DMeteo.h"
-#include "water1D.h"
 #include "utilities.h"
 
 #include <QSqlError>

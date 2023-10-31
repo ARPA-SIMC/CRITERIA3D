@@ -121,8 +121,6 @@
             unsigned long length;
             Box<double> boundsPart;
             bool hole;
-            //double *padfXPart;
-            //double *padfYPart;
 
             Part() : type(0), offset(0), length(0), hole(false) {}
         };

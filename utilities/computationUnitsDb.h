@@ -1,6 +1,6 @@
 /*!
-* \brief computation unit for CRITERIA-1D
-* \note Unit = distinct combination of crop, soil and meteo
+* \brief computational unit for CRITERIA-1D
+* \note computational unit = distinct combination of crop, soil and meteo
 */
 
 #ifndef COMPUTATIONUNITSDB_H
