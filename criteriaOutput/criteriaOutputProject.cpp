@@ -36,7 +36,7 @@ void CriteriaOutputProject::initialize()
     operation = "";
     dbComputationUnitsName = "";
     dbDataName = "";
-    dbHistoricalDataName = "";
+    dbClimateDataName = "";
     dbCropName = "";
     variableListFileName = "";
     ucmFileName = "";
@@ -62,7 +62,7 @@ void CriteriaOutputProject::initialize()
     dbComputationUnitsName = "";
     dbDataName = "";
     dbCropName = "";
-    dbHistoricalDataName = "";
+    dbClimateDataName = "";
 
     projectError = "";
     nrUnits = 0;
@@ -85,7 +85,7 @@ void CriteriaOutputProject::closeProject()
         logFile.close();
         dbData.close();
         dbCrop.close();
-        dbHistoricalData.close();
+        dbClimateData.close();
 
         isProjectLoaded = false;
     }
@@ -94,26 +94,26 @@ void CriteriaOutputProject::closeProject()
 
 int CriteriaOutputProject::initializeProjectDtx()
 {
-    // open DB Data Historical
-    if(dbHistoricalDataName.isEmpty())
+    // open DB climate
+    if(dbClimateDataName.isEmpty())
     {
-        projectError = "Missing historical data parameter in the ini file ('db_historical_data')";
+        projectError = "Missing climate data filename in the ini file ('db_data_climate')";
         return ERROR_DBPARAMETERS;
     }
 
-    logger.writeInfo("DB historical data: " + dbHistoricalDataName);
+    logger.writeInfo("DB climate data: " + dbClimateDataName);
 
-    if (! QFile(dbHistoricalDataName).exists())
+    if (! QFile(dbClimateDataName).exists())
     {
-        projectError = "DB historical data doesn't exist";
+        projectError = "DB climate data doesn't exist";
         return ERROR_DBPARAMETERS;
     }
 
-    dbHistoricalData = QSqlDatabase::addDatabase("QSQLITE", "historicalData");
-    dbHistoricalData.setDatabaseName(dbHistoricalDataName);
-    if (! dbHistoricalData.open())
+    dbClimateData = QSqlDatabase::addDatabase("QSQLITE", "climateData");
+    dbClimateData.setDatabaseName(dbClimateDataName);
+    if (! dbClimateData.open())
     {
-        projectError = "Open DB historical data failed: " + dbHistoricalData.lastError().text();
+        projectError = "Open DB climate data failed: " + dbClimateData.lastError().text();
         return ERROR_DBPARAMETERS;
     }
 
@@ -155,21 +155,21 @@ int CriteriaOutputProject::initializeProjectCsv()
         return ERROR_DBPARAMETERS;
     }
 
-    // open DB Data Historical
-    if(!dbHistoricalDataName.isEmpty())
+    // open DB Data climate
+    if(!dbClimateDataName.isEmpty())
     {
-        logger.writeInfo("DB data historical: " + dbHistoricalDataName);
-        if (!QFile(dbHistoricalDataName).exists())
+        logger.writeInfo("DB data climate: " + dbClimateDataName);
+        if (!QFile(dbClimateDataName).exists())
         {
-            projectError = "DB data historical doesn't exist";
+            projectError = "DB data climate doesn't exist";
             return ERROR_DBPARAMETERS;
         }
 
-        dbHistoricalData = QSqlDatabase::addDatabase("QSQLITE", "dataHistorical");
-        dbHistoricalData.setDatabaseName(dbHistoricalDataName);
-        if (! dbHistoricalData.open())
+        dbClimateData = QSqlDatabase::addDatabase("QSQLITE", "climateData");
+        dbClimateData.setDatabaseName(dbClimateDataName);
+        if (! dbClimateData.open())
         {
-            projectError = "Open DB data historical failed: " + dbHistoricalData.lastError().text();
+            projectError = "Open DB data climate failed: " + dbClimateData.lastError().text();
             return ERROR_DBPARAMETERS;
         }
     }
@@ -234,21 +234,21 @@ bool CriteriaOutputProject::readSettings()
 
     QString dateStr = dateComputation.toString("yyyy-MM-dd");
 
-    projectName = projectSettings->value("name","").toString();
+    projectName = projectSettings->value("name", "").toString();
 
     // computational units
-    dbComputationUnitsName = projectSettings->value("db_comp_units","").toString();
+    dbComputationUnitsName = projectSettings->value("db_comp_units", "").toString();
     if (dbComputationUnitsName.isEmpty())
     {
         // check old name
-        dbComputationUnitsName = projectSettings->value("db_units","").toString();
+        dbComputationUnitsName = projectSettings->value("db_units", "").toString();
     }
     if (dbComputationUnitsName.isEmpty())
     {
         projectError = "Missing db_comp_units";
         return false;
     }
-    if (dbComputationUnitsName.at(0) == '.')
+    else if (dbComputationUnitsName.at(0) == '.')
     {
         dbComputationUnitsName = QDir().cleanPath(path + dbComputationUnitsName);
     }
@@ -261,24 +261,33 @@ bool CriteriaOutputProject::readSettings()
     if (! dbDataName.isEmpty())
     {
         if (dbDataName.at(0) == '.')
+        {
             dbDataName = QDir::cleanPath(path + dbDataName);
+        }
     }
 
-    dbCropName = projectSettings->value("db_crop","").toString();
-    if (dbCropName.left(1) == ".")
+    dbCropName = projectSettings->value("db_crop", "").toString();
+    if (! dbCropName.isEmpty())
     {
-        dbCropName = QDir::cleanPath(path + dbCropName);
+        if (dbCropName.at(0) == '.')
+        {
+            dbCropName = QDir::cleanPath(path + dbCropName);
+        }
     }
 
-    dbHistoricalDataName = projectSettings->value("db_data_climate","").toString();
-    if (dbHistoricalDataName == "")
+    dbClimateDataName = projectSettings->value("db_data_climate", "").toString();
+    if (dbClimateDataName.isEmpty())
     {
-        dbHistoricalDataName = projectSettings->value("db_data_historical","").toString();
+        // check old name
+        dbClimateDataName = projectSettings->value("db_data_historical","").toString();
     }
 
-    if (dbHistoricalDataName.left(1) == ".")
+    if (! dbClimateDataName.isEmpty())
     {
-        dbHistoricalDataName = QDir::cleanPath(path + dbHistoricalDataName);
+        if (dbClimateDataName.at(0) == '.')
+        {
+            dbClimateDataName = QDir::cleanPath(path + dbClimateDataName);
+        }
     }
 
     addDateTimeLogFile = projectSettings->value("add_date_to_log","").toBool();
@@ -437,7 +446,7 @@ int CriteriaOutputProject::precomputeDtx()
     {
         idCase = compUnitList[i].idCase;
 
-        int myResult = computeAllDtxUnit(dbHistoricalData, idCase, projectError);
+        int myResult = computeAllDtxUnit(dbClimateData, idCase, projectError);
         if (myResult != CRIT1D_OK)
         {
             projectError = "ID CASE: " + idCase + "\n" + projectError;
@@ -495,7 +504,7 @@ int CriteriaOutputProject::createCsvFile()
         idCase = compUnitList[i].idCase;
         idCropClass = compUnitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbHistoricalData,
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbClimateData,
                                       dateComputation, outputVariable, outputCsvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
@@ -1217,7 +1226,7 @@ int CriteriaOutputProject::createCsvFileFromGUI(QDate dateComputation, QString c
         idCase = compUnitList[i].idCase;
         idCropClass = compUnitList[i].idCropClass;
 
-        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbHistoricalData, dateComputation, outputVariable, csvFileName, projectError);
+        myResult = writeCsvOutputUnit(idCase, idCropClass, dbData, dbCrop, dbClimateData, dateComputation, outputVariable, csvFileName, projectError);
         if (myResult != CRIT1D_OK)
         {
             if (QFile(csvFileName).exists())
