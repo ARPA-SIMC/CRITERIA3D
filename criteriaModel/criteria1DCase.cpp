@@ -557,7 +557,6 @@ bool Crit1DCase::computeDailyModel(Crit3DDate &myDate, std::string &error)
             rootDensityMax = std::max(rootDensityMax, crop.roots.rootDensity[l]);
         }
 
-        // TODO add crop.roots.tensileStrength
         for (unsigned int l = 1; l < nrLayers; l++)
         {
             double rootDensityNorm;
