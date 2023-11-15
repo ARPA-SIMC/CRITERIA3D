@@ -234,17 +234,18 @@ bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
     {
         if (query.lastError().type() != QSqlError::NoError)
         {
-             errorStr = "dbSoil error: "+ query.lastError().text();
+            errorStr = "dbSoil error: "+ query.lastError().text();
+            return false;
         }
         else
         {
-            errorStr = "Soil " + soilCode + " is missing, check soil_code in dbSoil.";
+            // soil has no horizons
+            mySoil.initialize(soilCode.toStdString(), 0);
+            return true;
         }
-        return false;
     }
 
     int nrHorizons = query.at() + 1;     // SQLITE doesn't support SIZE
-
     mySoil.initialize(soilCode.toStdString(), nrHorizons);
 
     unsigned int i = 0;
@@ -376,17 +377,25 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
         }
     }
 
-    // error on the last horizon is tolerated (bedrock)
-    unsigned int lastHorizonIndex = mySoil.nrHorizons -1;
-    if (firstWrongIndex != NODATA)
+    // check total depth
+    // errors on the last horizon is tolerated (bedrock)
+    if (mySoil.nrHorizons > 0)
     {
-        if (mySoil.nrHorizons == 1)
-            return false;
-        else
-            lastHorizonIndex = firstWrongIndex-1;
-    }
+        int lastHorizonIndex = mySoil.nrHorizons-1;
+        if (firstWrongIndex != NODATA)
+        {
+            if (mySoil.nrHorizons == 1)
+                return false;
+            else
+                lastHorizonIndex = firstWrongIndex-1;
+        }
 
-    mySoil.totalDepth = mySoil.horizon[lastHorizonIndex].lowerDepth;
+        mySoil.totalDepth = mySoil.horizon[lastHorizonIndex].lowerDepth;
+    }
+    else
+    {
+        mySoil.totalDepth = 0;
+    }
 
     return true;
 }

@@ -386,7 +386,7 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
     copyEstimatedParamTable->setEnabled(true);
 
     QString errorStr;
-    // somethig has been modified, ask for saving
+    // something has been modified, ask for saving
     if (changed)
     {
         QString soilCodeChanged = QString::fromStdString(mySoil.code);
@@ -791,11 +791,11 @@ void Crit3DSoilWidget::setInfoTextural(int nHorizon)
 
 void Crit3DSoilWidget::tabChanged(int index)
 {
-
     if (soilListComboBox.currentText().isEmpty())
     {
         return;
     }
+
     if (index == 0)
     {
         if (!horizonsTab->getInsertSoilElement())
@@ -809,9 +809,7 @@ void Crit3DSoilWidget::tabChanged(int index)
             else
             {
                 horizonsTab->resetAll();
-                horizonsTab->addRowClicked();
             }
-
         }
     }
     else if (index == 1) // tab water retention data
@@ -829,7 +827,6 @@ void Crit3DSoilWidget::tabChanged(int index)
                 wrDataTab->resetAll();
             }
         }
-
     }
     else if (index == 2) // tab water retention curve
     {
