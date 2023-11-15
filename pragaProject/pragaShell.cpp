@@ -556,7 +556,7 @@ int cmdExportDailyGridToRaster(PragaProject* myProject, QList<QString> argumentL
         else if (argumentList.at(i).left(4) == "-d2:")
         {
             dateFinStr = argumentList[i].right(argumentList[i].length()-4);
-            dateFin = QDate::fromString(dateIniStr, "dd/MM/yyyy");
+            dateFin = QDate::fromString(dateFinStr, "dd/MM/yyyy");
         }
         else if (argumentList.at(i).left(4) == "-dp:")
         {
