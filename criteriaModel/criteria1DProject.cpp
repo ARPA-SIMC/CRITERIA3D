@@ -1044,7 +1044,7 @@ int Crit1DProject::computeAllUnits()
                 }
             }
 
-            if ((i+1) % infoStep == 0)
+            if ((i+1) % infoStep == 0 && nrUnitsComputed > 0)
             {
                 double percentage = (i+1) * 100.0 / compUnitList.size();
                 logger.writeInfo("..." + QString::number(round(percentage)) + "%");
