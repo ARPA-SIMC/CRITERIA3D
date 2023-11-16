@@ -873,7 +873,8 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
                              myCase.mySoil.totalDepth, getDoyFromDate(firstDate));
 
     // initialize water content
-    myCase.initializeWaterContent(firstDate);
+    if (! myCase.initializeWaterContent(firstDate))
+        return false;
 
     // restart
     bool isFirstDay = true;

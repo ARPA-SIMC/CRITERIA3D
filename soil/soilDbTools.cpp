@@ -239,9 +239,10 @@ bool loadSoilData(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Cri
         }
         else
         {
-            // soil has no horizons
+            // missing data
             mySoil.initialize(soilCode.toStdString(), 0);
-            return true;
+            errorStr = "soil_code:" + soilCode + " has no horizons.";
+            return false;
         }
     }
 
@@ -344,11 +345,11 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
               const std::vector<soil::Crit3DGeotechnicsClass> &geotechnicsClassList,
               const soil::Crit3DFittingOptions &fittingOptions, QString& errorStr)
 {
-    if (!loadSoilData(dbSoil, soilCode, mySoil, errorStr))
+    if (!loadSoilInfo(dbSoil, soilCode, mySoil, errorStr))
     {
         return false;
     }
-    if (!loadSoilInfo(dbSoil, soilCode, mySoil, errorStr))
+    if (!loadSoilData(dbSoil, soilCode, mySoil, errorStr))
     {
         return false;
     }
@@ -358,8 +359,8 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
     int firstWrongIndex = NODATA;
     for (unsigned int i = 0; i < mySoil.nrHorizons; i++)
     {
-        std::string currentError;
-        if (! soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, currentError))
+        std::string horizonError;
+        if (! soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, horizonError))
         {
             if (isFirstError)
             {
@@ -371,9 +372,9 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
                 errorStr += "\n";
             }
 
-            errorStr += "SOIL " + QString::fromStdString(mySoil.code)
+            errorStr += "soil_code: " + soilCode
                         + " horizon nr." + QString::number(mySoil.horizon[i].dbData.horizonNr)
-                        + " " + QString::fromStdString(currentError);
+                        + " " + QString::fromStdString(horizonError);
         }
     }
 
@@ -395,6 +396,7 @@ bool loadSoil(const QSqlDatabase &dbSoil, const QString &soilCode, soil::Crit3DS
     else
     {
         mySoil.totalDepth = 0;
+        errorStr = "soil_code: " + soilCode + " has no horizons.";
     }
 
     return true;

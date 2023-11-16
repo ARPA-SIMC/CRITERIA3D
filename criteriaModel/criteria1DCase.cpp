@@ -106,16 +106,24 @@ bool Crit1DCase::initializeSoil(std::string &error)
 }
 
 
-// meteoPoint has to be loaded
-void Crit1DCase::initializeWaterContent(Crit3DDate myDate)
+bool Crit1DCase::initializeWaterContent(Crit3DDate myDate)
 {
-    initializeWater(soilLayers);
-
-    // water table
-    if (unit.useWaterTableData)
+    if (soilLayers.size() > 0)
     {
-        double waterTable = double(meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth));
-        computeCapillaryRise(soilLayers, waterTable);
+        initializeWater(soilLayers);
+
+        // water table
+        if (unit.useWaterTableData)
+        {
+            float waterTable = meteoPoint.getMeteoPointValueD(myDate, dailyWaterTableDepth);
+            computeCapillaryRise(soilLayers, double(waterTable));
+        }
+
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 

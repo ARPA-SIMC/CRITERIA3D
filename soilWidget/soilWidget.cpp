@@ -427,15 +427,12 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
 
     if (! loadSoil(dbSoil, soilCode, mySoil, textureClassList, geotechnicsClassList, fittingOptions, errorStr))
     {
-        if (errorStr.contains("Empty", Qt::CaseInsensitive))
-        {
-            QMessageBox::information(nullptr, "Warning", errorStr);
-        }
-        else
-        {
-            QMessageBox::critical(nullptr, "Error!", errorStr);
-            return;
-        }
+        QMessageBox::critical(nullptr, "Error!", errorStr);
+        return;
+    }
+    if (! errorStr.isEmpty())
+    {
+        QMessageBox::information(nullptr, "Warning", errorStr);
     }
 
     savedSoil = mySoil;
