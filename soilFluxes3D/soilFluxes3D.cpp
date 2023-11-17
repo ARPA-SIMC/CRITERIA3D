@@ -835,6 +835,11 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
      return (balanceWholePeriod.heatMBE);
   }
 
+  double DLL_EXPORT __STDCALL getWaterStorage()
+  {
+     return (balanceCurrentTimeStep.storageWater);
+  }
+
 
  /*!
   * \brief getBoundaryWaterFlow
