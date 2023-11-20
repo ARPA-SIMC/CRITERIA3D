@@ -19,6 +19,7 @@ TabHydraulicConductivityCurve::TabHydraulicConductivityCurve()
     axisY->setTitleText(QString("Water conductivity [%1]").arg(QString("cm day-1")));
     axisY->setBase(10);
     axisY->setRange(yMin, yMax);
+    axisY->setLabelFormat("%1.0E");
 
     QFont font = axisY->titleFont();
     font.setPointSize(11);
@@ -96,7 +97,7 @@ void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
         curve->setColor(color);
         double factor = 1.1;
         x = xMin;
-        while (x <= xMax)
+        while (x <= (xMax * factor))
         {
             double y = soil::waterConductivityFromSignPsi(-x, mySoil->horizon[i]);
             if (y != NODATA)

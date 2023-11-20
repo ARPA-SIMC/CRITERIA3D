@@ -37,7 +37,7 @@
         int indexSelected;
 
         double xMin = 0.1;
-        double xMax = 100000;
+        double xMax = 1000000;
         double yMin = 0.0;
         double yMax = 0.6;
 

@@ -1035,7 +1035,7 @@ namespace soil
         // water content residual [m^3 m^-3]
         param[1] = horizon.vanGenuchten.thetaR;
         pmin[1] = 0;
-        pmax[1] = horizon.vanGenuchten.thetaR*3;
+        pmax[1] = std::max(0.1, horizon.vanGenuchten.thetaR*2);
 
         // air entry [kPa]
         param[2] = horizon.vanGenuchten.he;
