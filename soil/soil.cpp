@@ -1035,7 +1035,7 @@ namespace soil
         // water content residual [m^3 m^-3]
         param[1] = horizon.vanGenuchten.thetaR;
         pmin[1] = 0;
-        pmax[1] = horizon.vanGenuchten.thetaR;
+        pmax[1] = horizon.vanGenuchten.thetaR*3;
 
         // air entry [kPa]
         param[2] = horizon.vanGenuchten.he;
@@ -1046,20 +1046,24 @@ namespace soil
         }
         else
         {
-            // search last value with theta == thetaMax
             double heMin = 0.01;                            // kPa
             double heMax = 10;                              // kPa
-            for (unsigned int i = 0; i < nrObsValues; i++)
+
+            // search air entry interval
+            if (! addThetaSat)
             {
-                double delta = (thetaMax - horizon.dbData.waterRetention[i].water_content);
-                double psi = horizon.dbData.waterRetention[i].water_potential;
-                if (delta < 0.001)
+                for (unsigned int i = 0; i < nrObsValues; i++)
                 {
-                   heMin = std::max(heMin, psi);
-                }
-                else
-                {
-                   heMax = std::min(heMax, psi);
+                    double delta = (thetaMax - horizon.dbData.waterRetention[i].water_content);
+                    double psi = horizon.dbData.waterRetention[i].water_potential;
+                    if (delta <= 0.0002)
+                    {
+                       heMin = std::max(heMin, psi);
+                    }
+                    if (delta >= 0.002)
+                    {
+                       heMax = std::min(heMax, psi);
+                    }
                 }
             }
             pmin[2] = heMin;
