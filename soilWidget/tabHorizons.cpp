@@ -248,7 +248,6 @@ void TabHorizons::updateTableModel(soil::Crit3DSoil *soil)
             checkComputedValues(i);
         }
     }
-
 }
 
 
@@ -256,7 +255,7 @@ bool TabHorizons::checkDepths()
 {
     bool depthsOk = true;
     // reset background color
-    for (int horizonNum = 0; horizonNum<tableDb->rowCount(); horizonNum++)
+    for (int horizonNum = 0; horizonNum < tableDb->rowCount(); horizonNum++)
     {
         tableDb->item(horizonNum,0)->setBackground(Qt::white);
         tableDb->item(horizonNum,1)->setBackground(Qt::white);
@@ -375,25 +374,35 @@ void TabHorizons::setInvalidTableModelRow(int horizonNum)
     tableModel->item(horizonNum,10)->setBackground(Qt::red);
 }
 
-void TabHorizons::checkMissingItem(int horizonNum)
+
+void TabHorizons::checkMissingItem(int horizonNr)
 {
     QString NODATAString = "-9999";
-    // except for lower/upper depths
-    for (int j = 2; j < tableDb->columnCount(); j++)
+
+    int nrColumns = tableDb->columnCount();
+    // except for lower and upper depths (columns 0 and 1)
+    for (int j = 2; j < nrColumns; j++)
     {
-        if (tableDb->item(horizonNum,j)->text().contains(NODATAString) || tableDb->item(horizonNum,j)->text().isEmpty())
+        if (tableDb->item(horizonNr, j) != nullptr)
         {
-            tableDb->item(horizonNum,j)->setBackground(Qt::yellow);
-            tableDb->item(horizonNum,j)->setText("");
+            if (tableDb->item(horizonNr, j)->text().contains(NODATAString) || tableDb->item(horizonNr,j )->text().isEmpty())
+            {
+                tableDb->item(horizonNr, j)->setBackground(Qt::yellow);
+                tableDb->item(horizonNr, j)->setText("");
+            }
         }
     }
 
-    for (int j = 0; j < tableModel->columnCount(); j++)
+    nrColumns = tableModel->columnCount();
+    for (int j = 0; j < nrColumns; j++)
     {
-        if (tableModel->item(horizonNum,j)->text().contains(NODATAString) || tableModel->item(horizonNum,j)->text().isEmpty())
+        if (tableModel->item(horizonNr, j) != nullptr)
         {
-            tableModel->item(horizonNum,j)->setBackground(Qt::red);
-            tableModel->item(horizonNum,j)->setText("");
+            if (tableModel->item(horizonNr, j)->text().contains(NODATAString) || tableModel->item(horizonNr, j)->text().isEmpty())
+            {
+                tableModel->item(horizonNr, j)->setBackground(Qt::red);
+                tableModel->item(horizonNr, j)->setText("");
+            }
         }
     }
 }
@@ -759,12 +768,11 @@ void TabHorizons::cellChanged(int row, int column)
         emit horizonSelected(row);
         emit updateSignal();
     }
-
 }
+
 
 void TabHorizons::addRowClicked()
 {
-
     tableDb->blockSignals(true);
     int numRow;
 
@@ -793,12 +801,13 @@ void TabHorizons::addRowClicked()
     tableDb->insertRow(numRow);
     tableModel->insertRow(numRow);
 
-    for (int j=0; j<tableDb->columnCount(); j++)
+    for (int j=0; j < tableDb->columnCount(); j++)
     {
         tableDb->setItem(numRow, j, new QTableWidgetItem());
         tableDb->item(numRow,j)->setTextAlignment(Qt::AlignRight);
     }
-    for (int j=0; j<tableModel->columnCount(); j++)
+
+    for (int j=0; j < tableModel->columnCount(); j++)
     {
         tableModel->setItem(numRow, j, new QTableWidgetItem());
         if (j>0)

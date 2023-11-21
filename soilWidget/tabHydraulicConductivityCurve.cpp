@@ -19,6 +19,7 @@ TabHydraulicConductivityCurve::TabHydraulicConductivityCurve()
     axisY->setTitleText(QString("Water conductivity [%1]").arg(QString("cm day-1")));
     axisY->setBase(10);
     axisY->setRange(yMin, yMax);
+    axisY->setLabelFormat("%1.0E");
 
     QFont font = axisY->titleFont();
     font.setPointSize(11);
@@ -85,7 +86,7 @@ void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
     fillElement = true;
     mySoil = soil;
     double x;
-    double maxThetaSat = 0;
+    double maxValue = 0;
 
     for (unsigned int i = 0; i < mySoil->nrHorizons; i++)
     {
@@ -95,14 +96,14 @@ void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
         QLineSeries* curve = new QLineSeries();
         curve->setColor(color);
         double factor = 1.1;
-        x = dxMin;
-        while (x < dxMax*factor)
+        x = xMin;
+        while (x <= (xMax * factor))
         {
             double y = soil::waterConductivityFromSignPsi(-x, mySoil->horizon[i]);
             if (y != NODATA)
             {
                 curve->append(x,y);
-                maxThetaSat = MAXVALUE(maxThetaSat, y);
+                maxValue = std::max(maxValue, y);
             }
             x *= factor;
         }
@@ -114,11 +115,11 @@ void TabHydraulicConductivityCurve::insertElements(soil::Crit3DSoil *soil)
         connect(curve, &QLineSeries::hovered, this, &TabHydraulicConductivityCurve::tooltipLineSeries);
     }
 
-    // round maxThetaSat to first decimal
-    maxThetaSat = ceil(maxThetaSat * 10) * 0.1;
+    // round maxValue to first decimal
+    maxValue = ceil(maxValue * 10) * 0.1;
 
-    // rescale to maxThetaSat
-    axisY->setMax(std::max(yMax, maxThetaSat));
+    // rescale to maxValue
+    axisY->setMax(std::max(yMax, maxValue));
 
     for (int i=0; i < barHorizons.barList.size(); i++)
     {

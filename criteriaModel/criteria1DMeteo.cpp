@@ -12,15 +12,15 @@
 #include "basicMath.h"
 
 
-bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
+bool openDbMeteo(QString dbName, QSqlDatabase &dbMeteo, QString &error)
 {
 
-    *dbMeteo = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
-    dbMeteo->setDatabaseName(dbName);
+    dbMeteo = QSqlDatabase::addDatabase("QSQLITE", QUuid::createUuid().toString());
+    dbMeteo.setDatabaseName(dbName);
 
-    if (!dbMeteo->open())
+    if (!dbMeteo.open())
     {
-       *error = "Connection with database fail";
+       error = "Connection with database fail: " + dbName;
        return false;
     }
 
@@ -30,19 +30,28 @@ bool openDbMeteo(QString dbName, QSqlDatabase* dbMeteo, QString* error)
 
 bool getMeteoPointList(const QSqlDatabase &dbMeteo, QList<QString> &idMeteoList, QString &errorStr)
 {
-    QString queryString = "SELECT id_meteo FROM meteo_locations";
+    errorStr = "";
+    QString queryString = "SELECT id_meteo FROM point_properties";
     QSqlQuery query = dbMeteo.exec(queryString);
-
     query.first();
+
+    if (! query.isValid())
+    {
+        // previous code version
+        queryString = "SELECT id_meteo FROM meteo_locations";
+        query = dbMeteo.exec(queryString);
+        query.first();
+    }
+
     if (! query.isValid())
     {
         errorStr = query.lastError().text();
         return false;
     }
 
-    QString idMeteo;
     do
     {
+        QString idMeteo;
         getValue(query.value("id_meteo"), &idMeteo);
         if (idMeteo != "")
         {
@@ -55,61 +64,46 @@ bool getMeteoPointList(const QSqlDatabase &dbMeteo, QList<QString> &idMeteoList,
 }
 
 
-bool getLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString* lat, QString* lon, QString *error)
+bool getLatLonFromIdMeteo(QSqlDatabase &dbMeteo, QString idMeteo, QString &lat, QString &lon, QString &errorStr)
 {
-    *error = "";
-    QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
-
-    QSqlQuery query = dbMeteo->exec(queryString);
+    errorStr = "";
+    QString queryString = "SELECT * FROM point_properties WHERE id_meteo='" + idMeteo +"'";
+    QSqlQuery query = dbMeteo.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
-        *error = query.lastError().text();
+        // previous code version
+        queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
+        query = dbMeteo.exec(queryString);
+        query.last();
+    }
+
+    if (! query.isValid())
+    {
+        errorStr = query.lastError().text();
         return false;
     }
 
-    getValue(query.value("latitude"), lat);
-    getValue(query.value("longitude"), lon);
+    getValue(query.value("latitude"), &lat);
+    getValue(query.value("longitude"), &lon);
 
     return true;
 }
 
-bool updateLatLonFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString lat, QString lon, QString *error)
+
+bool updateLatFromIdMeteo(QSqlDatabase& dbMeteo, QString idMeteo, QString lat, QString& error)
 {
-    QSqlQuery qry(*dbMeteo);
-    *error = "";
+    error = "";
+
+    QSqlQuery qry(dbMeteo);
     if (idMeteo.isEmpty())
     {
-        *error = "id_meteo missing";
+        error = "id_meteo missing";
         return false;
     }
-    qry.prepare( "UPDATE meteo_locations SET longitude = :longitude, "
-                 "latitude = :latitude WHERE id_meteo = :id_meteo");
 
-    qry.bindValue(":longitude", lon);
-    qry.bindValue(":latitude", lat);
-
-    qry.bindValue(":id_meteo", idMeteo);
-
-    if( !qry.exec() )
-    {
-        *error = qry.lastError().text();
-        return false;
-    }
-    return true;
-}
-
-bool updateLatFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString lat, QString *error)
-{
-    QSqlQuery qry(*dbMeteo);
-    *error = "";
-    if (idMeteo.isEmpty())
-    {
-        *error = "id_meteo missing";
-        return false;
-    }
-    qry.prepare( "UPDATE meteo_locations SET "
+    qry.prepare( "UPDATE point_properties SET "
                  "latitude = :latitude WHERE id_meteo = :id_meteo");
 
     qry.bindValue(":latitude", lat);
@@ -118,29 +112,37 @@ bool updateLatFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString lat, Q
 
     if( !qry.exec() )
     {
-        *error = qry.lastError().text();
+        error = qry.lastError().text();
         return false;
     }
+
     return true;
 }
 
 
-QString getTableNameFromIdMeteo(QSqlDatabase* dbMeteo, QString idMeteo, QString *error)
+QString getTableNameFromIdMeteo(QSqlDatabase &dbMeteo, QString idMeteo, QString &errorStr)
 {
-    *error = "";
-    QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo +"'";
-
-    QSqlQuery query = dbMeteo->exec(queryString);
+    errorStr = "";
+    QString queryString = "SELECT table_name FROM point_properties WHERE id_meteo='" + idMeteo + "'";
+    QSqlQuery query = dbMeteo.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
-        *error = query.lastError().text();
+        // previous code version
+        queryString = "SELECT table_name FROM meteo_locations WHERE id_meteo='" + idMeteo + "'";
+        query = dbMeteo.exec(queryString);
+        query.last();
+    }
+
+    if (! query.isValid())
+    {
+        errorStr = query.lastError().text();
         return "";
     }
 
     QString table_name;
-    getValue(query.value("table_name"), &table_name);
+    getValue(query.value(0), &table_name);
 
     return table_name;
 }

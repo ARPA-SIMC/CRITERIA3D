@@ -159,7 +159,7 @@ Criteria1DWidget::Criteria1DWidget()
     waterContentGroup = new QGroupBox(tr(""));
     carbonNitrogenGroup = new QGroupBox(tr(""));
 
-    float widthRatio = 0.25;
+    float widthRatio = 0.30f;
     infoCaseGroup->setFixedWidth(this->width() * widthRatio);
     infoCropGroup->setFixedWidth(this->width() * widthRatio);
     infoMeteoGroup->setFixedWidth(this->width() * widthRatio);
@@ -342,24 +342,24 @@ Criteria1DWidget::Criteria1DWidget()
     parametersRootDepthLayout->addWidget(rootDegreeDaysGrowth, 4, 0);
     parametersRootDepthLayout->addWidget(rootDegreeDaysGrowthValue, 4, 1);
 
-    QLabel *irrigationVolume = new QLabel(tr("irrigation quantity [mm]: "));
+    QLabel *irrigationVolume = new QLabel(tr("irrigation quantity [mm]:"));
     irrigationVolumeValue = new QLineEdit();
     irrigationVolumeValue->setText(QLocale().toString(0));
     irrigationVolumeValue->setMaximumWidth(irrigationParametersGroup->width()/5);
     irrigationVolumeValue->setValidator(positiveValidator);
-    QLabel *irrigationShift = new QLabel(tr("irrigation shift [days]: "));
+    QLabel *irrigationShift = new QLabel(tr("irrigation shift [days]:"));
     irrigationShiftValue = new QSpinBox();
     irrigationShiftValue->setMaximumWidth(irrigationParametersGroup->width()/5);
     irrigationShiftValue->setMinimum(0);
     irrigationShiftValue->setMaximum(365);
     irrigationShiftValue->setEnabled(false);
 
-    QLabel *degreeDaysStart = new QLabel(tr("degreee days start irrigation [°C]: "));
+    QLabel *degreeDaysStart = new QLabel(tr("deg. days start irrigation [°C]:"));
     degreeDaysStartValue = new QLineEdit();
     degreeDaysStartValue->setMaximumWidth(irrigationParametersGroup->width()/5);
     degreeDaysStartValue->setValidator(positiveValidator);
     degreeDaysStartValue->setEnabled(false);
-    QLabel *degreeDaysEnd = new QLabel(tr("degreee days end irrigation [°C]: "));
+    QLabel *degreeDaysEnd = new QLabel(tr("deg. days end irrigation [°C]:"));
     degreeDaysEndValue = new QLineEdit();
     degreeDaysEndValue->setMaximumWidth(irrigationParametersGroup->width()/5);
     degreeDaysEndValue->setValidator(positiveValidator);
@@ -900,7 +900,7 @@ void Criteria1DWidget::openMeteoDB(QString dbMeteoName)
     }
     else
     {
-        if (! openDbMeteo(dbMeteoName, &(myProject.dbMeteo), &errorStr))
+        if (! openDbMeteo(dbMeteoName, myProject.dbMeteo, errorStr))
         {
             QMessageBox::critical(nullptr, "Error DB meteo", errorStr);
             return;
@@ -1212,7 +1212,7 @@ void Criteria1DWidget::updateCropParam(QString idCrop)
         degreeDaysEndValue->setText(QString::number(myProject.myCase.crop.degreeDaysEndIrrigation));
     }
     // water stress parameters
-    psiLeafValue->setText(QLocale().toString(myProject.myCase.crop.psiLeaf));
+    psiLeafValue->setText(QString::number(myProject.myCase.crop.psiLeaf));
     rawFractionValue->setValue(myProject.myCase.crop.fRAW);
     stressToleranceValue->setValue(myProject.myCase.crop.stressTolerance);
 
@@ -1244,19 +1244,22 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
             QMessageBox::critical(nullptr, "Error load properties DB Grid", errorStr);
             return;
         }
+
         double lat;
-        if (!myProject.observedMeteoGrid->meteoGrid()->getLatFromId(idMeteo.toStdString(), &lat) )
+        if (! myProject.observedMeteoGrid->meteoGrid()->getLatFromId(idMeteo.toStdString(), &lat))
         {
             errorStr = "Missing observed meteo cell";
             return;
         }
         myProject.myCase.meteoPoint.latitude = lat;
+
         meteoTableName = myProject.observedMeteoGrid->tableDaily().prefix + idMeteo + myProject.observedMeteoGrid->tableDaily().postFix;
         if (!myProject.observedMeteoGrid->getYearList(&errorStr, idMeteo, &yearList))
         {
             QMessageBox::critical(nullptr, "Error!", errorStr);
             return;
         }
+
         int pos = 0;
         if (myProject.observedMeteoGrid->gridStructure().isFixedFields())
         {
@@ -1268,7 +1271,7 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
             for (int i = 0; i<yearList.size()-1; i++)
             {
 
-                    if ( !checkYearMeteoGridFixedFields(myProject.dbMeteo, meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &errorStr))
+                    if (! checkYearMeteoGridFixedFields(myProject.dbMeteo, meteoTableName, myProject.observedMeteoGrid->tableDaily().fieldTime, fieldTmin, fieldTmax, fieldPrec, yearList[i], &errorStr))
                     {
                         yearList.removeAt(pos);
                         i = i - 1;
@@ -1313,12 +1316,12 @@ void Criteria1DWidget::on_actionChooseMeteo(QString idMeteo)
     else
     {
         QString lat,lon;
-        if (getLatLonFromIdMeteo(&(myProject.dbMeteo), idMeteo, &lat, &lon, &errorStr))
+        if (getLatLonFromIdMeteo(myProject.dbMeteo, idMeteo, lat, lon, errorStr))
         {
             myProject.myCase.meteoPoint.latitude = lat.toDouble();
         }
 
-        meteoTableName = getTableNameFromIdMeteo(&(myProject.dbMeteo), idMeteo, &errorStr);
+        meteoTableName = getTableNameFromIdMeteo(myProject.dbMeteo, idMeteo, errorStr);
 
         if (!getYearList(&(myProject.dbMeteo), meteoTableName, &yearList, &errorStr))
         {
@@ -1553,15 +1556,8 @@ void Criteria1DWidget::on_actionChooseSoil(QString soilCode)
     if (! loadSoil(myProject.dbSoil, soilCode, myProject.myCase.mySoil, myProject.texturalClassList,
                   myProject.geotechnicsClassList, myProject.myCase.fittingOptions, errorStr))
     {
-        if (errorStr.contains("Empty"))
-        {
-            QMessageBox::information(nullptr, "Warning", errorStr);
-        }
-        else
-        {
-            QMessageBox::critical(nullptr, "Error!", errorStr);
-            return;
-        }
+        QMessageBox::critical(nullptr, "Error!", errorStr);
+        return;
     }
 
     // warning: some soil data are wrong
@@ -1797,7 +1793,7 @@ bool Criteria1DWidget::updateCrop()
         myProject.myCase.crop.degreeDaysEndIrrigation = degreeDaysEndValue->text().toInt();
     }
     // water stress
-    myProject.myCase.crop.psiLeaf = QLocale().toDouble(psiLeafValue->text());
+    myProject.myCase.crop.psiLeaf = psiLeafValue->text().toInt();
     myProject.myCase.crop.fRAW = rawFractionValue->value();
     myProject.myCase.crop.stressTolerance = stressToleranceValue->value();
 
@@ -1817,7 +1813,7 @@ void Criteria1DWidget::on_actionNewCrop()
     }
 
     Crit3DCrop* newCrop = new Crit3DCrop();
-    DialogNewCrop dialog(newCrop);
+    DialogNewCrop dialog(&(myProject.dbCrop), newCrop);
     if (dialog.result() == QDialog::Accepted)
     {
         // write newCrop on Db 
@@ -2065,7 +2061,7 @@ bool Criteria1DWidget::checkCropIsChanged()
 
     // water needs
     if( ! isEqual(cropFromDB.kcMax, QLocale().toDouble(maxKcValue->text()))
-       || ! isEqual(cropFromDB.psiLeaf, QLocale().toDouble(psiLeafValue->text()))
+       || ! (cropFromDB.psiLeaf == psiLeafValue->text().toInt())
        || ! isEqual(cropFromDB.fRAW, rawFractionValue->value())
        || ! isEqual(cropFromDB.stressTolerance, stressToleranceValue->value()) )
     {
@@ -2074,16 +2070,22 @@ bool Criteria1DWidget::checkCropIsChanged()
     }
 
     // irrigation parameters
-    // TODO gestire caso irrigazioni azzerate
     if(irrigationShiftValue->isVisible())
     {
-        if( isEqual(cropFromDB.irrigationVolume, QLocale().toDouble(irrigationVolumeValue->text()))
-           || cropFromDB.irrigationShift != irrigationShiftValue->value()
-           || cropFromDB.degreeDaysStartIrrigation != degreeDaysStartValue->text().toInt()
-           || cropFromDB.degreeDaysEndIrrigation != degreeDaysEndValue->text().toInt() )
+        if(! isEqual(cropFromDB.irrigationVolume, QLocale().toDouble(irrigationVolumeValue->text())) )
         {
             isCropChanged = true;
             return isCropChanged;
+        }
+        if (QLocale().toDouble(irrigationVolumeValue->text()) > 0)
+        {
+            if ( cropFromDB.irrigationShift != irrigationShiftValue->value()
+                || cropFromDB.degreeDaysStartIrrigation != degreeDaysStartValue->text().toInt()
+                || cropFromDB.degreeDaysEndIrrigation != degreeDaysEndValue->text().toInt() )
+            {
+                isCropChanged = true;
+                return isCropChanged;
+            }
         }
     }
 

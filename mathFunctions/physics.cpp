@@ -98,8 +98,8 @@ double vaporConcentrationFromPressure(double myPressure, double myT)
 
 
 double airVolumetricSpecificHeat(double myPressure, double myT)
-{ // (J m-3 K-1) volumetric specific heat of air
-
+// (J m-3 K-1) volumetric specific heat of air
+{
     double myMolarDensity = airMolarDensity(myPressure, myT); // mol m-3
     double mySpHeat = (HEAT_CAPACITY_AIR_MOLAR * myMolarDensity);
     return (mySpHeat);
@@ -222,18 +222,20 @@ double aerodynamicConductance(double heightTemperature,
         H = K * Ch * (soilSurfaceTemperature - airTemperature);
         Sp = -VON_KARMAN_CONST * heightWind * GRAVITY * H / (Ch * airTemperature * (pow(uStar, 3)));
         if (Sp > 0)
-        {// stability
+        {
+            // stability
             psiH = 6 * log(1 + Sp);
             psiM = psiH;
         }
         else
-        {// unstability
+        {
+            // unstability
             psiH = -2 * log((1 + sqrt(1 - 16 * Sp)) / 2);
             psiM = 0.6 * psiH;
         }
     }
 
-    return (K);
+    return K;
 
 }
 

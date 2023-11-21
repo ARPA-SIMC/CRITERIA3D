@@ -147,3 +147,30 @@ float getIrriRatioFromCropId(const QSqlDatabase &dbCrop, QString cropClassTable,
     else
         return NODATA;
 }
+
+
+bool getCropListFromType(const QSqlDatabase &dbCrop, QString cropType, QList<QString>& cropList, QString& errorStr)
+{
+    QString queryString = "SELECT id_crop FROM crop WHERE type = '" + cropType + "'";
+
+    QSqlQuery query = dbCrop.exec(queryString);
+    query.last();
+    if (! query.isValid())
+    {
+        if (query.lastError().isValid())
+            errorStr = "Error in reading crop list from type: " + cropType + "\n" + query.lastError().text();
+        else
+            errorStr = "Missing crop type: " + cropType;
+
+        return false;
+    }
+
+    query.first();
+    do
+    {
+        cropList.append(query.value("id_crop").toString());
+    }
+    while (query.next());
+
+    return true;
+}

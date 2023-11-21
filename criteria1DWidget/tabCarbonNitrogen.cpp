@@ -120,7 +120,10 @@ void TabCarbonNitrogen::computeCarbonNitrogen(Crit1DProject &myProject, carbonNi
     }
 
     myProject.myCase.crop.initialize(myProject.myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
-    myProject.myCase.initializeWaterContent(firstDate);
+    if (! myProject.myCase.initializeWaterContent(firstDate))
+    {
+        return;
+    }
 
     myProject.myCarbonNitrogenProfile.N_InitializeVariables(myProject.myCase);
 

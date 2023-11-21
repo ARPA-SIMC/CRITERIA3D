@@ -815,7 +815,10 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
     InitializeBalanceWater();
     if (myStructure.computeHeat)
         initializeBalanceHeat();
+    else
+        balanceWholePeriod.heatMBR = 1.;
 }
+
 
  double DLL_EXPORT __STDCALL getWaterMBR()
  {
@@ -830,6 +833,11 @@ int DLL_EXPORT __STDCALL setHydraulicProperties(int waterRetentionCurve,
  double DLL_EXPORT __STDCALL getHeatMBE()
   {
      return (balanceWholePeriod.heatMBE);
+  }
+
+  double DLL_EXPORT __STDCALL getWaterStorage()
+  {
+     return (balanceCurrentTimeStep.storageWater);
   }
 
 
@@ -901,8 +909,11 @@ double DLL_EXPORT __STDCALL computeStep(double maxTime)
 {
     double dtWater, dtHeat;
 
-    if (myStructure.computeHeat) initializeHeatFluxes(false, true);
-    updateBoundary();
+    if (myStructure.computeHeat)
+    {
+        initializeHeatFluxes(false, true);
+        updateConductance();
+    }
 
     if (myStructure.computeWater)
         computeWater(maxTime, &dtWater);

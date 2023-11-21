@@ -260,7 +260,8 @@ Crit3DSoilWidget::Crit3DSoilWidget()
     fittingMenu->addAction(airEntryFixed);
     fittingMenu->addAction(parameterRestriction);
 
-    changed = false;
+    soilChanged = false;
+    isFitting = false;
 }
 
 
@@ -346,8 +347,10 @@ void Crit3DSoilWidget::on_actionOpenSoilDB()
     {
         this->soilListComboBox.addItem(soilStringList[i]);
     }
+
     saveChanges->setEnabled(true);
-    changed = false;
+    soilChanged = false;
+    isFitting = false;
     wrDataTab->resetHorizonChanged();
 }
 
@@ -386,8 +389,8 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
     copyEstimatedParamTable->setEnabled(true);
 
     QString errorStr;
-    // somethig has been modified, ask for saving
-    if (changed)
+    // something has been modified, ask for saving
+    if (soilChanged)
     {
         QString soilCodeChanged = QString::fromStdString(mySoil.code);
         QMessageBox::StandardButton confirm;
@@ -414,8 +417,8 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
                 }
             }
         }
+        soilChanged = false;
     }
-    changed = false;
     wrDataTab->resetHorizonChanged();
 
     horizonsTab->resetAll();
@@ -427,15 +430,12 @@ void Crit3DSoilWidget::on_actionChooseSoil(QString soilCode)
 
     if (! loadSoil(dbSoil, soilCode, mySoil, textureClassList, geotechnicsClassList, fittingOptions, errorStr))
     {
-        if (errorStr.contains("Empty", Qt::CaseInsensitive))
-        {
-            QMessageBox::information(nullptr, "Warning", errorStr);
-        }
-        else
-        {
-            QMessageBox::critical(nullptr, "Error!", errorStr);
-            return;
-        }
+        QMessageBox::critical(nullptr, "Error!", errorStr);
+        return;
+    }
+    if (! errorStr.isEmpty())
+    {
+        QMessageBox::information(nullptr, "Warning", errorStr);
     }
 
     savedSoil = mySoil;
@@ -562,7 +562,9 @@ void Crit3DSoilWidget::on_actionUseWaterRetentionData()
         soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, errorString);
     }
 
+    isFitting = true;
     updateAll();
+    isFitting = false;
 }
 
 
@@ -581,7 +583,10 @@ void Crit3DSoilWidget::on_actionAirEntry()
     {
         soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, errorString);
     }
+
+    isFitting = true;
     updateAll();
+    isFitting = false;
 }
 
 
@@ -599,7 +604,10 @@ void Crit3DSoilWidget::on_actionParameterRestriction()
     {
         soil::setHorizon(mySoil.horizon[i], textureClassList, geotechnicsClassList, fittingOptions, errorString);
     }
+
+    isFitting = true;
     updateAll();
+    isFitting = false;
 }
 
 
@@ -631,7 +639,7 @@ void Crit3DSoilWidget::on_actionSave()
     }
 
     savedSoil = mySoil;
-    changed = false;
+    soilChanged = false;
     wrDataTab->resetHorizonChanged();
 }
 
@@ -791,11 +799,11 @@ void Crit3DSoilWidget::setInfoTextural(int nHorizon)
 
 void Crit3DSoilWidget::tabChanged(int index)
 {
-
     if (soilListComboBox.currentText().isEmpty())
     {
         return;
     }
+
     if (index == 0)
     {
         if (!horizonsTab->getInsertSoilElement())
@@ -809,9 +817,7 @@ void Crit3DSoilWidget::tabChanged(int index)
             else
             {
                 horizonsTab->resetAll();
-                horizonsTab->addRowClicked();
             }
-
         }
     }
     else if (index == 1) // tab water retention data
@@ -829,7 +835,6 @@ void Crit3DSoilWidget::tabChanged(int index)
                 wrDataTab->resetAll();
             }
         }
-
     }
     else if (index == 2) // tab water retention curve
     {
@@ -864,7 +869,9 @@ void Crit3DSoilWidget::tabChanged(int index)
 
 void Crit3DSoilWidget::updateAll()
 {
-    changed = true;
+    if (! isFitting)
+        soilChanged = true;
+
     horizonsTab->updateBarHorizon(&mySoil);
     horizonsTab->updateTableModel(&mySoil);
     wrDataTab->insertData(&mySoil, &textureClassList, &geotechnicsClassList, &fittingOptions);
@@ -872,9 +879,10 @@ void Crit3DSoilWidget::updateAll()
     hydraConducCurveTab->insertElements(&mySoil);
 }
 
+
 void Crit3DSoilWidget::updateByTabWR()
 {
-    changed = true;
+    soilChanged = true;
     wrCurveTab->insertElements(&mySoil);
     horizonsTab->updateTableModel(&mySoil);
 }

@@ -105,8 +105,8 @@ void TabWaterRetentionCurve::insertElements(soil::Crit3DSoil *soil)
         QLineSeries* curve = new QLineSeries();
         curve->setColor(color);
         double factor = 1.2;
-        x = dxMin;
-        while (x < dxMax*factor)
+        x = xMin;
+        while (x <= (xMax * factor))
         {
             double y = soil::thetaFromSignPsi(-x, mySoil->horizon[i]);
             if (y != NODATA)

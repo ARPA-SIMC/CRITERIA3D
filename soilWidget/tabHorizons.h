@@ -24,7 +24,7 @@
         void updateTableModel(soil::Crit3DSoil *soil);
         bool checkDepths();
         bool checkHorizonData(int horizonNum);
-        void checkMissingItem(int horizonNum);
+        void checkMissingItem(int horizonNr);
         void checkComputedValues(int horizonNum);
         void setInvalidTableModelRow(int horizonNum);
         void clearSelections();

@@ -179,12 +179,15 @@ BarHorizonList::BarHorizonList()
     mainLayout->addLayout(depthLayout);
     mainLayout->addLayout(barLayout);
     groupBox->setLayout(mainLayout);
-
 }
 
 
 void BarHorizonList::draw(soil::Crit3DSoil *soil)
 {
+    // check
+    if (soil->nrHorizons == 0)
+        return;
+
     int totHeight = int(groupBox->height() * 0.9);
     double soilDepth = soil->horizon[soil->nrHorizons - 1].dbData.lowerDepth;
 

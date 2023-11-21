@@ -200,12 +200,16 @@ double getSurfaceWaterFraction(int i)
     }
 }
 
-void updateBoundary()
+void updateConductance()
 {
-    for (long i = 0; i < myStructure.nrNodes; i++)
-        if (myNode[i].boundary != nullptr)
-            if (myStructure.computeHeat)
+    if (myStructure.computeHeat)
+    {
+        for (long i = 0; i < myStructure.nrNodes; i++)
+        {
+            if (myNode[i].boundary != nullptr)
+            {
                 if (myNode[i].extra->Heat != nullptr)
+                {
                     if (myNode[i].boundary->type == BOUNDARY_HEAT_SURFACE)
                     {
                         // update aerodynamic conductance
@@ -218,12 +222,16 @@ void updateBoundary()
                                     myNode[i].boundary->Heat->windSpeed);
 
                         if (myStructure.computeWater)
-                            // update soil surface conductance
                         {
+                            // update soil surface conductance
                             double theta = theta_from_sign_Psi(myNode[i].H - myNode[i].z, i);
                             myNode[i].boundary->Heat->soilConductance = 1./ computeSoilSurfaceResistance(theta);
                         }
                     }
+                }
+            }
+        }
+    }
 }
 
 
