@@ -773,7 +773,6 @@ QString Crit3DMeteoGridDbHandler::getDailyVarField(meteoVariable meteoGridDailyV
 
 meteoVariable Crit3DMeteoGridDbHandler::getDailyVarEnum(int varCode)
 {
-
     if (varCode == NODATA)
     {
         return noMeteoVar;
@@ -790,6 +789,7 @@ meteoVariable Crit3DMeteoGridDbHandler::getDailyVarEnum(int varCode)
 
     return noMeteoVar;
 }
+
 
 meteoVariable Crit3DMeteoGridDbHandler::getDailyVarFieldEnum(QString varField)
 {
@@ -1724,64 +1724,71 @@ bool Crit3DMeteoGridDbHandler::updateGridDate(QString *myError)
     }
 
     return true;
-
 }
 
 
-bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &myError, QString meteoPoint, QDate first, QDate last)
+bool Crit3DMeteoGridDbHandler::loadGridDailyData(QString &errorStr, const QString &meteoPoint, const QDate &first, const QDate &last)
 {
-    myError = "";
+    errorStr = "";
 
     QSqlQuery qry(_db);
     QString tableD = _tableDaily.prefix + meteoPoint + _tableDaily.postFix;
-    QDate date;
-    int varCode;
-    float value;
 
     unsigned row, col;
-
     if ( !_meteoGrid->findMeteoPointFromId(&row, &col, meteoPoint.toStdString()) )
     {
-        myError = "Missing MeteoPoint id";
+        errorStr = "Missing MeteoPoint id";
         return false;
     }
 
     int numberOfDays = first.daysTo(last) + 1;
-    _meteoGrid->meteoPointPointer(row,col)->initializeObsDataD(numberOfDays, getCrit3DDate(first));
+    _meteoGrid->meteoPointPointer(row, col)->initializeObsDataD(numberOfDays, getCrit3DDate(first));
 
-    QString statement = QString("SELECT * FROM `%1` WHERE %2 >= '%3' AND %2 <= '%4' ORDER BY %2").arg(tableD, _tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
-    qry.prepare(statement);
-    if( !qry.exec())
+    QString statement;
+    if (first == last)
     {
-        myError = qry.lastError().text();
-        return false;
+        statement = QString("SELECT * FROM `%1` WHERE %2 = '%3'").arg(tableD, _tableDaily.fieldTime, first.toString("yyyy-MM-dd"));
     }
     else
     {
-        while (qry.next())
+        statement = QString("SELECT * FROM `%1` WHERE %2 >= '%3' AND %2 <= '%4' ORDER BY %2")
+                            .arg(tableD, _tableDaily.fieldTime, first.toString("yyyy-MM-dd"), last.toString("yyyy-MM-dd"));
+    }
+    qry.prepare(statement);
+
+    if(! qry.exec())
+    {
+        errorStr = qry.lastError().text();
+        return false;
+    }
+
+    int varCode;
+    float value;
+    QDate date;
+
+    while (qry.next())
+    {
+        if (! getValue(qry.value(_tableDaily.fieldTime), &date))
         {
-            if (!getValue(qry.value(_tableDaily.fieldTime), &date))
-            {
-                myError = "Missing fieldTime";
-                return false;
-            }
-
-            if (!getValue(qry.value("VariableCode"), &varCode))
-            {
-                myError = "Missing VariableCode";
-                return false;
-            }
-
-            if (!getValue(qry.value("Value"), &value))
-            {
-                myError = "Missing Value";
-            }
-
-            meteoVariable variable = getDailyVarEnum(varCode);
-
-            if (! _meteoGrid->meteoPointPointer(row,col)->setMeteoPointValueD(getCrit3DDate(date), variable, value))
-                return false;
+            errorStr = "Missing " + _tableDaily.fieldTime;
+            return false;
         }
+
+        if (! getValue(qry.value("VariableCode"), &varCode))
+        {
+            errorStr = "Missing VariableCode";
+            return false;
+        }
+
+        if (! getValue(qry.value("Value"), &value))
+        {
+            // no data
+        }
+
+        meteoVariable variable = getDailyVarEnum(varCode);
+
+        if (! _meteoGrid->meteoPointPointer(row, col)->setMeteoPointValueD(getCrit3DDate(date), variable, value))
+            return false;
     }
 
     return true;
