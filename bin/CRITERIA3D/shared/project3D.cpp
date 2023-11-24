@@ -983,7 +983,8 @@ bool Project3D::aggregateAndSaveDailyMap(meteoVariable myVar, aggregationMethod 
 
 
 // compute evaporation [mm]
-double Project3D::computeEvaporation(int row, int col, double lai)
+// TODO check pond
+double Project3D::assignEvaporation(int row, int col, double lai)
 {
     double depthCoeff, thickCoeff, layerCoeff;
     double availableWater;                              // [mm]
@@ -1041,6 +1042,138 @@ double Project3D::computeEvaporation(int row, int col, double lai)
     }
 
     return realEvaporation;
+}
+
+
+// assign real crop transpiration
+// return sum of crop transpiration over the soil column
+double Project3D::assignTranspiration(int row, int col, double lai)
+{
+    double soilColumnTranspirationSum = 0;
+
+    // check
+    /*if (idCrop == "" || ! isLiving) return 0;
+    if (roots.rootDepth <= roots.rootDepthMin) return 0;
+    if (roots.firstRootLayer == NODATA) return 0;
+    if (maxTranspiration < EPSILON) return 0;
+
+    double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
+    double cropWP;                                  // [mm] wilting point specific for crop
+    double waterSurplusThreshold;                        // [mm] water surplus stress threshold
+    double waterScarcityThreshold;                  // [mm] water scarcity stress threshold
+    double WSS;                                     // [] water surplus stress
+
+    double TRs=0.0;                                 // [mm] actual transpiration with only water scarsity stress
+    double TRe=0.0;                                 // [mm] actual transpiration with only water surplus stress
+    double totRootDensityWithoutStress = 0.0;       // [-]
+    double redistribution = 0.0;                    // [mm]
+
+    // initialize
+    unsigned int nrLayers = unsigned(soilLayers.size());
+    bool* isLayerStressed = new bool[nrLayers];
+    for (unsigned int i = 0; i < nrLayers; i++)
+    {
+        isLayerStressed[i] = false;
+        layerTranspiration[i] = 0;
+    }
+
+    // water surplus
+    if (isWaterSurplusResistant())
+        WSS = 0.0;
+    else
+        WSS = 0.5;
+
+    for (unsigned int i = unsigned(roots.firstRootLayer); i <= unsigned(roots.lastRootLayer); i++)
+    {
+        // [mm]
+        waterSurplusThreshold = soilLayers[i].SAT - (WSS * (soilLayers[i].SAT - soilLayers[i].FC));
+
+        thetaWP = soil::thetaFromSignPsi(-soil::cmTokPa(psiLeaf), *(soilLayers[i].horizonPtr));
+        // [mm]
+        cropWP = thetaWP * soilLayers[i].thickness * soilLayers[i].soilFraction * 1000.0;
+
+        // [mm]
+        waterScarcityThreshold = soilLayers[i].FC - fRAW * (soilLayers[i].FC - cropWP);
+
+        if ((soilLayers[i].waterContent - waterSurplusThreshold) > EPSILON)
+        {
+            // WATER SURPLUS
+            layerTranspiration[i] = maxTranspiration * roots.rootDensity[i] *
+                                    ((soilLayers[i].SAT - soilLayers[i].waterContent)
+                                     / (soilLayers[i].SAT - waterSurplusThreshold));
+
+            TRe += layerTranspiration[i];
+            TRs += maxTranspiration * roots.rootDensity[i];
+            isLayerStressed[i] = true;
+        }
+        else if (soilLayers[i].waterContent < waterScarcityThreshold)
+        {
+            // WATER SCARSITY
+            if (soilLayers[i].waterContent <= cropWP)
+            {
+                layerTranspiration[i] = 0;
+            }
+            else
+            {
+                layerTranspiration[i] = maxTranspiration * roots.rootDensity[i] *
+                                        ((soilLayers[i].waterContent - cropWP) / (waterScarcityThreshold - cropWP));
+            }
+
+            TRs += layerTranspiration[i];
+            TRe += maxTranspiration * roots.rootDensity[i];
+            isLayerStressed[i] = true;
+        }
+        else
+        {
+            // normal conditions
+            layerTranspiration[i] = maxTranspiration * roots.rootDensity[i];
+
+            TRs += layerTranspiration[i];
+            TRe += layerTranspiration[i];
+
+            if ((soilLayers[i].waterContent - layerTranspiration[i]) > waterScarcityThreshold)
+            {
+                isLayerStressed[i] = false;
+                totRootDensityWithoutStress +=  roots.rootDensity[i];
+            }
+            else
+            {
+                isLayerStressed[i] = true;
+            }
+        }
+    }
+
+    // WATER STRESS [-]
+    double firstWaterStress = 1 - (TRs / maxTranspiration);
+
+    // Hydraulic redistribution
+    // the movement of water from moist to dry soil through plant roots
+    // TODO add numerical process
+    if (firstWaterStress > EPSILON && totRootDensityWithoutStress > EPSILON)
+    {
+        // redistribution acts on not stressed roots
+        redistribution = MINVALUE(firstWaterStress, totRootDensityWithoutStress) * maxTranspiration;
+
+        for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
+        {
+            if (! isLayerStressed[i])
+            {
+                double addLayerTransp = redistribution * (roots.rootDensity[unsigned(i)] / totRootDensityWithoutStress);
+                layerTranspiration[unsigned(i)] += addLayerTransp;
+                TRs += addLayerTransp;
+            }
+        }
+    }
+
+    waterStress = 1 - (TRs / maxTranspiration);
+
+    for (int i = roots.firstRootLayer; i <= roots.lastRootLayer; i++)
+    {
+        totalTranspiration += layerTranspiration[unsigned(i)];
+    }
+    */
+
+    return soilColumnTranspirationSum;
 }
 
 
@@ -1155,17 +1288,10 @@ bool Project3D::interpolateAndSaveHourlyMeteo(meteoVariable myVar, const QDateTi
 }
 
 
-bool Project3D::computeWaterSinkSource()
+void Project3D::assignPrecipitation()
 {
     // initialize
     totalPrecipitation = 0;
-    totalEvaporation = 0;
-    totalTranspiration = 0;
-
-    for (unsigned long i = 0; i < nrNodes; i++)
-    {
-        waterSinkSource.at(size_t(i)) = 0.;
-    }
 
     double area = DEM.header->cellSize * DEM.header->cellSize;
 
@@ -1191,8 +1317,32 @@ bool Project3D::computeWaterSinkSource()
             }
         }
     }
+}
 
-    // evaporation
+
+bool Project3D::setSinkSource()
+{
+    for (unsigned long i = 0; i < nrNodes; i++)
+    {
+        int myResult = soilFluxes3D::setWaterSinkSource(signed(i), waterSinkSource.at(i));
+        if (isCrit3dError(myResult, errorString))
+        {
+            errorString = "waterBalanceSinkSource:" + errorString;
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+void Project3D::computeBareSoilEvaporation()
+{
+    // initialize
+    totalEvaporation = 0;
+
+    double area = DEM.header->cellSize * DEM.header->cellSize;
+
     for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
     {
         for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
@@ -1200,19 +1350,21 @@ bool Project3D::computeWaterSinkSource()
             int surfaceIndex = indexMap.at(0).value[row][col];
             if (surfaceIndex != indexMap.at(0).header->flag)
             {
-                // TODO crop
                 double lai = 0;
 
-                double realEvap = computeEvaporation(row, col, lai);            // [mm]
+                double realEvap = assignEvaporation(row, col, lai);             // [mm]
                 double flow = area * (realEvap / 1000.);                        // [m3 h-1]
                 totalEvaporation += flow;
             }
         }
     }
+}
 
-    // crop transpiration
-    // TODO
-    /*
+
+// crop transpiration
+// TODO
+/*
+        totalTranspiration = 0;
     for (unsigned int layerIndex=1; layerIndex < nrLayers; layerIndex++)
     {
         for (long row = 0; row < indexMap.at(size_t(layerIndex)).header->nrRows; row++)
@@ -1235,19 +1387,10 @@ bool Project3D::computeWaterSinkSource()
     }
     */
 
-    // assign sink/source
-    for (unsigned long i = 0; i < nrNodes; i++)
-    {
-        int myResult = soilFluxes3D::setWaterSinkSource(signed(i), waterSinkSource.at(i));
-        if (isCrit3dError(myResult, errorString))
-        {
-            errorString = "waterBalanceSinkSource:" + errorString;
-            return false;
-        }
-    }
 
-    return true;
-}
+
+
+
 
 
 bool Project3D::setCriteria3DMap(criteria3DVariable var, int layerIndex)

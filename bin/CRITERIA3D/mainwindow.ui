@@ -1293,7 +1293,7 @@
        <second>0</second>
        <year>1752</year>
        <month>10</month>
-       <day>2</day>
+       <day>1</day>
       </datetime>
      </property>
      <property name="maximumDate">
@@ -1848,7 +1848,7 @@
      <x>0</x>
      <y>0</y>
      <width>1280</width>
-     <height>29</height>
+     <height>23</height>
     </rect>
    </property>
    <property name="palette">
@@ -2221,8 +2221,8 @@
    <addaction name="menuMeteo_points_2"/>
    <addaction name="menuDataSpatialization"/>
    <addaction name="menuSolar_radiation_model_2"/>
-   <addaction name="menuSnow_model"/>
    <addaction name="menuCriteria3D"/>
+   <addaction name="menuSnow_model"/>
    <addaction name="menuOutput_points"/>
    <addaction name="menuGIS_settings"/>
   </widget>

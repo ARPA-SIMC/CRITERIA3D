@@ -50,6 +50,7 @@ void Crit3DProcesses::initialize()
     computeMeteo = false;
     computeRadiation = false;
     computeWater = false;
+    computeEvaporation = false;
     computeCrop = false;
     computeSnow = false;
     computeSolutes = false;
@@ -224,6 +225,45 @@ void Crit3DProject::dailyUpdateCrop()
     // clean daily temp maps
     dailyTminMap.emptyGrid();
     dailyTmaxMap.emptyGrid();
+}
+
+
+/*!
+ * \brief computeRealET
+ *  assign soil evaporation and crop transpiration for the whole domain
+ */
+void Crit3DProject::computeRealET()
+{
+    totalEvaporation = 0;
+    totalTranspiration = 0;
+
+    double area = DEM.header->cellSize * DEM.header->cellSize;
+
+    for (int row = 0; row < indexMap.at(0).header->nrRows; row++)
+    {
+        for (int col = 0; col < indexMap.at(0).header->nrCols; col++)
+        {
+            int surfaceIndex = indexMap.at(0).value[row][col];
+            if (surfaceIndex != indexMap.at(0).header->flag)
+            {
+                float lai = laiMap.value[row][col];
+                if (isEqual(lai, NODATA))
+                {
+                    lai = 0;
+                }
+
+                // assign real evaporation
+                double realEvap = assignEvaporation(row, col, lai);             // [mm]
+                double flow = area * (realEvap / 1000.);                        // [m3 h-1]
+                totalEvaporation += flow;
+
+                // assign real transpiration
+                double realTransp = assignTranspiration(row, col, lai);             // [mm]
+                flow = area * (realTransp / 1000.);                        // [m3 h-1]
+                totalTranspiration += flow;
+            }
+        }
+    }
 }
 
 
@@ -947,36 +987,55 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         qApp->processEvents();
     }
 
-    if (processes.computeCrop)
+    if (processes.computeSnow)
     {
-        updateDailyTemperatures();
-
-        if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
+        // check conflitti con evaporation
+        // check snowmelt -> surface H0
+        if (! computeSnowModel())
         {
             return false;
         }
+        qApp->processEvents();
+    }
+
+    // initalize sink / source
+    for (unsigned long i = 0; i < nrNodes; i++)
+    {
+        waterSinkSource.at(size_t(i)) = 0.;
+    }
+
+
+    if (processes.computeEvaporation || processes.computeCrop)
+    {
+        if (! hourlyMeteoMaps->computeET0PMMap(DEM, radiationMaps))
+            return false;
 
         if (isSaveOutputRaster())
         {
             saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myTime);
         }
-
-        qApp->processEvents();
-
-        // TODO compute evap/transp
     }
 
-    if (processes.computeSnow)
+    if (processes.computeEvaporation && (! processes.computeCrop))
     {
-        if (! computeSnowModel())
-            return false;
+        computeBareSoilEvaporation();
+    }
+
+    if (processes.computeCrop)
+    {
+        updateDailyTemperatures();
+
+        computeRealET();
+
         qApp->processEvents();
     }
 
     // soil water balance
     if (processes.computeWater)
     {
-        if (! computeWaterSinkSource())
+        assignPrecipitation();
+
+        if (! setSinkSource())
         {
             logError();
             return false;

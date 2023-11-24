@@ -28,7 +28,7 @@
     public:
 
         bool computeMeteo, computeRadiation, computeWater;
-        bool computeCrop, computeSnow, computeSolutes;
+        bool computeEvaporation, computeCrop, computeSnow, computeSolutes;
         bool computeHeat, computeAdvectiveHeat, computeLatentHeat;
 
         Crit3DProcesses();
@@ -71,6 +71,7 @@
         bool initializeCriteria3DModel();
         void initializeCrop();
         void dailyUpdateCrop();
+        void computeRealET();
 
         bool runModels(QDateTime firstTime, QDateTime lastTime);
 

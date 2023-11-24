@@ -1922,6 +1922,11 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
     if (myProject.processes.computeCrop)
     {
         // TODO: check on crop
+        if (myProject.landUnitList.size() == 0)
+        {
+            myProject.logError("load land units map before.");
+            return false;
+        }
     }
 
     // Load meteo data
@@ -2213,6 +2218,7 @@ void MainWindow::on_actionCriteria3D_compute_current_hour_triggered()
     myProject.processes.computeMeteo = true;
     myProject.processes.computeRadiation = true;
     myProject.processes.computeWater = true;
+    myProject.processes.computeEvaporation = true;
     myProject.processes.computeCrop = true;
 
     startModels(currentTime, currentTime);
@@ -2235,6 +2241,7 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     myProject.processes.computeMeteo = true;
     myProject.processes.computeRadiation = true;
     myProject.processes.computeWater = false;
+    myProject.processes.computeEvaporation = true;
     myProject.processes.computeCrop = true;
 
     startModels(firstTime, lastTime);

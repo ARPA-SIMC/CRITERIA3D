@@ -142,8 +142,11 @@
                                       const QString& dailyPath, const QString& hourlyPath);
 
         bool interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& myTime);
-        double computeEvaporation(int row, int col, double lai);
-        bool computeWaterSinkSource();
+        double assignEvaporation(int row, int col, double lai);
+        double assignTranspiration(int row, int col, double lai);
+        void computeBareSoilEvaporation();
+        void assignPrecipitation();
+        bool setSinkSource();
         void computeWaterBalance3D(double totalTimeStep);
         bool updateCrop(QDateTime myTime);
 
