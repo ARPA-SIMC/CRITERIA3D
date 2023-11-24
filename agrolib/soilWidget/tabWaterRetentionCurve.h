@@ -36,13 +36,8 @@
         bool fillElement;
         int indexSelected;
 
-        double dxMin = 0.001;
-        double dxMax = 10000000;
-        double dyMin = 0.0;
-        double dyMax = 1.0;
-
-        double xMin = (dxMin * 100);
-        double xMax = (dxMax / 100);
+        double xMin = 0.1;
+        double xMax = 1000000;
         double yMin = 0.0;
         double yMax = 0.6;
 

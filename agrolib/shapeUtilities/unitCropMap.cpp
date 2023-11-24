@@ -14,7 +14,8 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
                  QString ucmFileName, std::string &error, bool showInfo)
 {
 
-    // make a copy of crop shapefile (reference) and return cloned shapefile complete path
+    // make a copy of crop shapefile (reference shape)
+    // and return complete path of the output shapefile
     QString refFileName = QString::fromStdString(shapeCrop.getFilepath());
     QString ucmShapeFileName = cloneShapeFile(refFileName, ucmFileName);
 
@@ -95,12 +96,14 @@ bool computeUcmPrevailing(Crit3DShapeHandler &shapeUCM, Crit3DShapeHandler &shap
         error = "Missing idCrop: " + idCrop;
         return false;
     }
+
     int soilIndex = shapeUCM.getFieldPos("ID_SOIL");
     if(soilIndex == -1)
     {
         error = "Missing idSoil: " + idSoil;
         return false;
     }
+
     int meteoIndex = shapeUCM.getFieldPos("ID_METEO");
     if(meteoIndex == -1)
     {

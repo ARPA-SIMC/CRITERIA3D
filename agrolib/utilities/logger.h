@@ -16,8 +16,8 @@
 
         bool setLog(QString path, QString fileName, bool addDateTime);
         void setShowDateTime(bool value);
-        void writeInfo(const QString &value);
-        void writeError(const QString &value);
+        void writeInfo(const QString &infoStr);
+        void writeError(const QString &errorStr);
 
     private:
          QFile *file;

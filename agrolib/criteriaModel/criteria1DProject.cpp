@@ -587,13 +587,21 @@ bool Crit1DProject::setMeteoXmlGrid(QString idMeteo, QString idForecast, unsigne
 
 bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
 {
-    QString queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo + "'";
+    QString queryString = "SELECT * FROM point_properties WHERE id_meteo='" + idMeteo + "'";
     QSqlQuery query = dbMeteo.exec(queryString);
     query.last();
 
     if (! query.isValid())
     {
-        projectError = "Missing meteo location: " + idMeteo;
+        // previous code version
+        queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idMeteo + "'";
+        query = dbMeteo.exec(queryString);
+        query.last();
+    }
+
+    if (! query.isValid())
+    {
+        projectError = "Missing point_properties for ID meteo: " + idMeteo;
         return false;
     }
 
@@ -601,7 +609,9 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
 
     double myLat, myLon;
     if (getValue(query.value(("latitude")), &myLat))
+    {
         myCase.meteoPoint.latitude = myLat;
+    }
     else
     {
         projectError = "Missing latitude in idMeteo: " + idMeteo;
@@ -609,7 +619,9 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
     }
 
     if (getValue(query.value(("longitude")), &myLon))
+    {
         myCase.meteoPoint.longitude = myLon;
+    }
     else
     {
         projectError = "Missing longitude in idMeteo: " + idMeteo;
@@ -696,18 +708,31 @@ bool Crit1DProject::setMeteoSqlite(QString idMeteo, QString idForecast)
     // Add Short-Term forecast
     if (this->isShortTermForecast)
     {
-        queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idForecast + "'";
+        queryString = "SELECT * FROM point_properties WHERE id_meteo='" + idForecast + "'";
         query = dbForecast.exec(queryString);
         query.last();
 
         if (! query.isValid())
         {
-            if (query.lastError().text() != "")
-                projectError = "dbForecast error: " + query.lastError().text();
+            // previous code version
+            queryString = "SELECT * FROM meteo_locations WHERE id_meteo='" + idForecast + "'";
+            query = dbMeteo.exec(queryString);
+            query.last();
+        }
+
+        if (! query.isValid())
+        {
+            if (query.lastError().text().isEmpty())
+            {
+                projectError = "DB: " + dbForecast.databaseName() + "\nMissing point_properties for id meteo:" + idForecast;
+            }
             else
-                projectError = "Missing forecast location:" + idForecast;
+            {
+                projectError = "dbForecast error: " + query.lastError().text();
+            }
             return false;
         }
+
         QString tableNameForecast = query.value("table_name").toString();
 
         query.clear();
@@ -873,7 +898,8 @@ bool Crit1DProject::computeCase(unsigned int memberNr)
                              myCase.mySoil.totalDepth, getDoyFromDate(firstDate));
 
     // initialize water content
-    myCase.initializeWaterContent(firstDate);
+    if (! myCase.initializeWaterContent(firstDate))
+        return false;
 
     // restart
     bool isFirstDay = true;
@@ -1043,7 +1069,7 @@ int Crit1DProject::computeAllUnits()
                 }
             }
 
-            if ((i+1) % infoStep == 0)
+            if ((i+1) % infoStep == 0 && nrUnitsComputed > 0)
             {
                 double percentage = (i+1) * 100.0 / compUnitList.size();
                 logger.writeInfo("..." + QString::number(round(percentage)) + "%");

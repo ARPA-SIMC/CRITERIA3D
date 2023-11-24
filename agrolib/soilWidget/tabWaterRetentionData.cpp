@@ -57,12 +57,11 @@ void TabWaterRetentionData::insertData(soil::Crit3DSoil *soil, std::vector<soil:
                                        std::vector<soil::Crit3DGeotechnicsClass> *geotechnicsClassList,
                                        soil::Crit3DFittingOptions* fittingOptions)
 {
-    if (soil == nullptr)
-    {
-        return;
-    }
-
     resetAll();
+
+    if (soil == nullptr || soil->nrHorizons == 0)
+        return;
+
     fillData = true;
 
     barHorizons.draw(soil);

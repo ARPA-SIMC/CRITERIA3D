@@ -75,7 +75,7 @@
         Crit1DCase();
 
         bool initializeSoil(std::string &error);
-        void initializeWaterContent(Crit3DDate myDate);
+        bool initializeWaterContent(Crit3DDate myDate);
         bool computeDailyModel(Crit3DDate &myDate, std::string &error);
 
         double getWaterContent(double computationDepth);

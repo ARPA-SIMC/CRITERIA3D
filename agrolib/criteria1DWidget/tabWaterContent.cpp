@@ -106,21 +106,29 @@ void TabWaterContent::computeWaterContent(Crit1DCase &myCase, int firstYear, int
         lastDate = Crit3DDate(lastDBMeteoDate.day(), lastDBMeteoDate.month(), lastYear);
     }
 
-    // update axes and colorMap size
+    // update axes
     QDateTime first(QDate(firstYear, 1, 1), QTime(0, 0, 0));
     QDateTime last(QDate(lastDate.year, lastDate.month, lastDate.day), QTime(23, 0, 0));
     double firstDouble = first.toSecsSinceEpoch();
     double lastDouble = last.toSecsSinceEpoch();
     graphic->xAxis->setRange(firstDouble, lastDouble);
 
+    // initialize crop and water
+    myCase.crop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
+    if (! myCase.initializeWaterContent(firstDate))
+    {
+        return;
+    }
+
+    // update colorMap
+    if (nrLayers == 0)
+    {
+        return;
+    }
     nx = first.date().daysTo(last.date())+1;
     ny = (nrLayers-1);
-
     colorMap->data()->setSize(nx, ny);
     colorMap->data()->setRange(QCPRange(0, nx), QCPRange(totalSoilDepth,0));
-
-    myCase.crop.initialize(myCase.meteoPoint.latitude, nrLayers, totalSoilDepth, currentDoy);
-    myCase.initializeWaterContent(firstDate);
 
     std::string errorString;
     double waterContent = 0.0;

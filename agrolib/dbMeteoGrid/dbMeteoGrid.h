@@ -112,7 +112,7 @@
         bool loadIdMeteoProperties(QString *myError, QString idMeteo);
         bool updateGridDate(QString *myError);
 
-        bool loadGridDailyData(QString &myError, QString meteoPoint, QDate first, QDate last);
+        bool loadGridDailyData(QString &errorStr, const QString &meteoPoint, const QDate &first, const QDate &last);
         bool loadGridDailyDataFixedFields(QString &myError, QString meteoPoint, QDate first, QDate last);
         bool loadGridDailyDataEnsemble(QString &myError, QString meteoPoint, int memberNr, QDate first, QDate last);
         bool loadGridHourlyData(QString &myError, QString meteoPoint, QDateTime first, QDateTime last);

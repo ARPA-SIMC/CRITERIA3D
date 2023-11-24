@@ -959,7 +959,9 @@ namespace soil
      */
     bool fittingWaterRetentionCurve(Crit3DHorizon &horizon, const Crit3DFittingOptions &fittingOptions)
     {
-        if (! fittingOptions.useWaterRetentionData || horizon.dbData.waterRetention.size() == 0)
+        unsigned int nrObsValues = unsigned(horizon.dbData.waterRetention.size());
+
+        if (! fittingOptions.useWaterRetentionData || nrObsValues == 0)
         {
             // nothing to do
             return true;
@@ -971,8 +973,6 @@ namespace soil
             return false;
         }
 
-        unsigned int nrObsValues = unsigned(horizon.dbData.waterRetention.size());
-
         // search theta max
         double psiMin = 10000;      // [kpa]
         double thetaMax = 0;        // [m3 m-3]
@@ -981,6 +981,7 @@ namespace soil
             psiMin = std::min(psiMin, horizon.dbData.waterRetention[i].water_potential);
             thetaMax = std::max(thetaMax, horizon.dbData.waterRetention[i].water_content);
         }
+        // add theta sat if minimum observed value is greater than 3 kPa
         bool addThetaSat = ((thetaMax < horizon.vanGenuchten.thetaS) && (psiMin > 3));
 
         // set values
@@ -1034,7 +1035,7 @@ namespace soil
         // water content residual [m^3 m^-3]
         param[1] = horizon.vanGenuchten.thetaR;
         pmin[1] = 0;
-        pmax[1] = horizon.vanGenuchten.thetaR;
+        pmax[1] = std::max(0.1, horizon.vanGenuchten.thetaR*2);
 
         // air entry [kPa]
         param[2] = horizon.vanGenuchten.he;
@@ -1045,8 +1046,28 @@ namespace soil
         }
         else
         {
-            pmin[2] = 0.01;
-            pmax[2] = 10;
+            double heMin = 0.01;                            // kPa
+            double heMax = 10;                              // kPa
+
+            // search air entry interval
+            if (! addThetaSat)
+            {
+                for (unsigned int i = 0; i < nrObsValues; i++)
+                {
+                    double delta = (thetaMax - horizon.dbData.waterRetention[i].water_content);
+                    double psi = horizon.dbData.waterRetention[i].water_potential;
+                    if (delta <= 0.0002)
+                    {
+                       heMin = std::max(heMin, psi);
+                    }
+                    if (delta >= 0.002)
+                    {
+                       heMax = std::min(heMax, psi);
+                    }
+                }
+            }
+            pmin[2] = heMin;
+            pmax[2] = heMax;
         }
 
         // Van Genuchten alpha parameter [kPa^-1]

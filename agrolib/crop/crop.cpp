@@ -726,8 +726,6 @@ speciesType getCropType(std::string cropType)
         return HORTICULTURAL;
     else if (cropType == "grass")
         return GRASS;
-    else if (cropType == "grass_first_year")
-        return GRASS;
     else if (cropType == "fallow")
         return FALLOW;
     else if (cropType == "annual_fallow" || cropType == "fallow_annual")

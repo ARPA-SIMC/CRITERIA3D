@@ -347,10 +347,10 @@ bool computeWater(double maxTime, double *acceptedTime)
 
         /*! save the instantaneous H values - Prepare the solutions vector (X = H) */
         for (long n = 0; n < myStructure.nrNodes; n++)
-                {
-                myNode[n].oldH = myNode[n].H;
-                X[n] = myNode[n].H;
-                }
+        {
+            myNode[n].oldH = myNode[n].H;
+            X[n] = myNode[n].H;
+        }
 
         /*! assign Theta_e
             for the surface nodes C = area */
@@ -363,7 +363,7 @@ bool computeWater(double maxTime, double *acceptedTime)
         }
 
         /*! update boundary conditions */
-        updateBoundary();
+        updateConductance();
         updateBoundaryWater(*acceptedTime);
 
         isStepOK = waterFlowComputation(*acceptedTime);
