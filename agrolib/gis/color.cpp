@@ -177,6 +177,19 @@ bool setDTMScale(Crit3DColorScale* myScale)
 }
 
 
+bool setLAIScale(Crit3DColorScale* myScale)
+{
+    myScale->initialize(4, 256);
+
+    myScale->keyColor[0] = Crit3DColor(150, 75, 0);         /*!<  brown */
+    myScale->keyColor[1] = Crit3DColor(200, 150, 0);        /*!<  yellow */
+    myScale->keyColor[2] = Crit3DColor(32, 150, 32);        /*!<  dark green */
+    myScale->keyColor[3] = Crit3DColor(0, 255, 0);          /*!<  green */
+
+    return(myScale->classify());
+}
+
+
 bool setTemperatureScale(Crit3DColorScale* myScale)
 {
     myScale->initialize(5, 256);

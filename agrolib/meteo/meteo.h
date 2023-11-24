@@ -100,7 +100,7 @@
                     dailyBIC, monthlyBIC, dailyHeatingDegreeDays, dailyCoolingDegreeDays,
                     snowWaterEquivalent, snowFall, snowSurfaceTemperature, snowInternalEnergy, snowSurfaceEnergy,
                     snowAge, snowLiquidWaterContent, snowMelt, sensibleHeat, latentHeat,
-                    dailyWaterTableDepth,
+                    dailyWaterTableDepth, leafAreaIndex,
                     anomaly, elaboration, noMeteoTerrain,
                     noMeteoVar};
 

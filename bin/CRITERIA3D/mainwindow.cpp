@@ -1502,8 +1502,7 @@ void MainWindow::on_actiondegree_days_triggered()
         return;
     }
 
-    // TODO add variable
-    setOutputMeteoVariable(airTemperature, &(myProject.degreeDaysMap));
+    setOutputMeteoVariable(dailyHeatingDegreeDays, &(myProject.degreeDaysMap));
 }
 
 
@@ -1515,8 +1514,7 @@ void MainWindow::on_actionView_Crop_LAI_triggered()
         return;
     }
 
-    // TODO add variable
-    setOutputMeteoVariable(airTemperature, &(myProject.laiMap));
+    setOutputMeteoVariable(leafAreaIndex, &(myProject.laiMap));
 }
 
 

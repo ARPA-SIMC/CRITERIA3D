@@ -67,6 +67,7 @@
     bool setGrayScale(Crit3DColorScale* myScale);
     bool setBlackScale(Crit3DColorScale* myScale);
     bool setSurfaceWaterScale(Crit3DColorScale* myScale);
+    bool setLAIScale(Crit3DColorScale* myScale);
 
 
 #endif // CRIT3DCOLOR_H
