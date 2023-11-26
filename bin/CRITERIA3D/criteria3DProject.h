@@ -23,19 +23,6 @@
     #include <QString>
 
 
-    class Crit3DProcesses
-    {
-    public:
-
-        bool computeMeteo, computeRadiation, computeWater;
-        bool computeEvaporation, computeCrop, computeSnow, computeSolutes;
-        bool computeHeat, computeAdvectiveHeat, computeLatentHeat;
-
-        Crit3DProcesses();
-        void initialize();
-    };
-
-
     class Crit3DProject : public Project3D
     {
 
@@ -59,7 +46,6 @@
         gis::Crit3DRasterGrid dailyTmaxMap;
 
         Crit3DSnow snowModel;
-        Crit3DProcesses processes;
 
         bool modelPause, modelStop;
 
@@ -71,7 +57,8 @@
         bool initializeCriteria3DModel();
         void initializeCrop();
         void dailyUpdateCrop();
-        void computeRealET();
+        void assignETreal();
+        void assignPrecipitation();
 
         bool runModels(QDateTime firstTime, QDateTime lastTime);
 

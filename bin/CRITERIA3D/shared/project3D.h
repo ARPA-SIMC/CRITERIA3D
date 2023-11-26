@@ -40,6 +40,19 @@
     };
 
 
+    class Crit3DProcesses
+    {
+    public:
+
+        bool computeMeteo, computeRadiation, computeWater;
+        bool computeEvaporation, computeCrop, computeSnow, computeSolutes;
+        bool computeHeat, computeAdvectiveHeat, computeLatentHeat;
+
+        Crit3DProcesses();
+        void initialize();
+    };
+
+
     class Project3D : public Project
     {
         Q_OBJECT
@@ -62,6 +75,7 @@
         bool isCriteria3DInitialized;
         bool showEachTimeStep;
 
+        Crit3DProcesses processes;
         WaterFluxesParameters waterFluxesParameters;
 
         QString soilDbFileName;
@@ -144,8 +158,6 @@
         bool interpolateHourlyMeteoVar(meteoVariable myVar, const QDateTime& myTime);
         double assignEvaporation(int row, int col, double lai);
         double assignTranspiration(int row, int col, double lai);
-        void computeBareSoilEvaporation();
-        void assignPrecipitation();
         bool setSinkSource();
         void computeWaterBalance3D(double totalTimeStep);
         bool updateCrop(QDateTime myTime);
@@ -164,8 +176,6 @@
 
     float readDataHourly(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, int row, int col);
     bool readHourlyMap(meteoVariable myVar, QString hourlyPath, QDateTime myTime, QString myArea, gis::Crit3DRasterGrid* myGrid);
-
-    double getMaxEvaporation(double ET0, double LAI);
 
 
 #endif // PROJECT3D_H

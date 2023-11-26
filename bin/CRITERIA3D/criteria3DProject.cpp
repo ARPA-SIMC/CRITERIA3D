@@ -39,27 +39,6 @@
 #include <QVector3D>
 
 
-Crit3DProcesses::Crit3DProcesses()
-{
-    initialize();
-}
-
-
-void Crit3DProcesses::initialize()
-{
-    computeMeteo = false;
-    computeRadiation = false;
-    computeWater = false;
-    computeEvaporation = false;
-    computeCrop = false;
-    computeSnow = false;
-    computeSolutes = false;
-    computeHeat = false;
-    computeAdvectiveHeat = false;
-    computeLatentHeat = false;
-}
-
-
 Crit3DProject::Crit3DProject() : Project3D()
 {
     _saveOutputRaster = false;
@@ -90,14 +69,11 @@ bool Crit3DProject::initializeCriteria3DModel()
     if (! initializeWaterBalance3D())
     {
         clearWaterBalance3D();
-        logError("Criteria3D model NOT initialized.");
+        logError("Criteria3D model is NOT initialized.");
         return false;
     }
 
-    if (processes.computeCrop)
-    {
-        initializeCrop();
-    }
+    initializeCrop();
 
     isCriteria3DInitialized = true;
     logInfoGUI("Criteria3D model initialized");
@@ -108,11 +84,18 @@ bool Crit3DProject::initializeCriteria3DModel()
 
 void Crit3DProject::initializeCrop()
 {
+    // initialize LAI and degree days map to NODATA
+    laiMap.initializeGrid(*(DEM.header));
+    degreeDaysMap.initializeGrid(*(DEM.header));
+
+    if (! processes.computeCrop)
+    {
+        // nothing to do
+        return;
+    }
+
     dailyTminMap.initializeGrid(*(DEM.header));
     dailyTmaxMap.initializeGrid(*(DEM.header));
-
-    degreeDaysMap.initializeGrid(*(DEM.header));
-    laiMap.initializeGrid(*(DEM.header));
 
     for (int row = 0; row < DEM.header->nrRows; row++)
     {
@@ -229,10 +212,10 @@ void Crit3DProject::dailyUpdateCrop()
 
 
 /*!
- * \brief computeRealET
+ * \brief assignETreal
  *  assign soil evaporation and crop transpiration for the whole domain
  */
-void Crit3DProject::computeRealET()
+void Crit3DProject::assignETreal()
 {
     totalEvaporation = 0;
     totalTranspiration = 0;
@@ -254,13 +237,45 @@ void Crit3DProject::computeRealET()
 
                 // assign real evaporation
                 double realEvap = assignEvaporation(row, col, lai);             // [mm]
-                double flow = area * (realEvap / 1000.);                        // [m3 h-1]
-                totalEvaporation += flow;
+                double evapFlow = area * (realEvap / 1000.);                    // [m3 h-1]
+                totalEvaporation += evapFlow;
 
                 // assign real transpiration
-                double realTransp = assignTranspiration(row, col, lai);             // [mm]
-                flow = area * (realTransp / 1000.);                        // [m3 h-1]
-                totalTranspiration += flow;
+                double realTransp = assignTranspiration(row, col, lai);         // [mm]
+                double traspFlow = area * (realTransp / 1000.);                 // [m3 h-1]
+                totalTranspiration += traspFlow;
+            }
+        }
+    }
+}
+
+
+void Crit3DProject::assignPrecipitation()
+{
+    // initialize
+    totalPrecipitation = 0;
+
+    double area = DEM.header->cellSize * DEM.header->cellSize;
+
+    // precipitation
+    for (long row = 0; row < indexMap.at(0).header->nrRows; row++)
+    {
+        for (long col = 0; col < indexMap.at(0).header->nrCols; col++)
+        {
+            int surfaceIndex = indexMap.at(0).value[row][col];
+            if (surfaceIndex != indexMap.at(0).header->flag)
+            {
+                double waterSource = 0;
+                float prec = hourlyMeteoMaps->mapHourlyPrec->value[row][col];
+                if (! isEqual(prec, hourlyMeteoMaps->mapHourlyPrec->header->flag))
+                    waterSource += prec;
+
+                if (waterSource > 0)
+                {
+                    double flow = area * (waterSource / 1000.);                     // [m3 h-1]
+                    waterSinkSource[unsigned(surfaceIndex)] += flow / 3600.;        // [m3 s-1]
+                    totalPrecipitation += flow;
+                }
             }
         }
     }
@@ -874,7 +889,7 @@ bool Crit3DProject::computeSnowModel()
 
     if (! snowMaps.isInitialized)
     {
-        if (! this->initializeSnowModel())
+        if (! initializeSnowModel())
             return false;
     }
 
@@ -891,20 +906,20 @@ bool Crit3DProject::computeSnowModel()
                 DEM.getRowCol(x, y, row, col);
                 if (! gis::isOutOfGridRowCol(row, col, DEM))
                 {
-                    this->computeSnowPoint(row, col);
+                    computeSnowPoint(row, col);
                 }
             }
         }
     }
     else
     {
-        for (long row = 0; row < DEM.header->nrRows; row++)
+        for (int row = 0; row < DEM.header->nrRows; row++)
         {
-            for (long col = 0; col < DEM.header->nrCols; col++)
+            for (int col = 0; col < DEM.header->nrCols; col++)
             {
                 if (! isEqual(DEM.value[row][col], DEM.header->flag))
                 {
-                    this->computeSnowPoint(row, col);
+                    computeSnowPoint(row, col);
                 }
             }
         }
@@ -989,7 +1004,7 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
 
     if (processes.computeSnow)
     {
-        // check conflitti con evaporation
+        // check evaporation
         // check snowmelt -> surface H0
         if (! computeSnowModel())
         {
@@ -1014,19 +1029,15 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
         {
             saveHourlyMeteoOutput(referenceEvapotranspiration, hourlyOutputPath, myTime);
         }
-    }
 
-    if (processes.computeEvaporation && (! processes.computeCrop))
-    {
-        computeBareSoilEvaporation();
+        assignETreal();
+
+        qApp->processEvents();
     }
 
     if (processes.computeCrop)
     {
         updateDailyTemperatures();
-
-        computeRealET();
-
         qApp->processEvents();
     }
 

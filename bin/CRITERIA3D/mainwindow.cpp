@@ -2175,6 +2175,11 @@ void MainWindow::on_actionWaterFluxes_settings_triggered()
 
 void MainWindow::on_actionCriteria3D_Initialize_triggered()
 {
+    myProject.processes.initialize();
+    myProject.processes.computeMeteo = true;
+    myProject.processes.computeRadiation = true;
+    myProject.processes.computeWater = true;
+    myProject.processes.computeEvaporation = true;
     myProject.processes.computeCrop = true;
 
     if (myProject.initializeCriteria3DModel())
@@ -2214,13 +2219,6 @@ void MainWindow::on_actionCriteria3D_compute_current_hour_triggered()
 
     QDateTime currentTime = myProject.getCurrentTime();
 
-    myProject.processes.initialize();
-    myProject.processes.computeMeteo = true;
-    myProject.processes.computeRadiation = true;
-    myProject.processes.computeWater = true;
-    myProject.processes.computeEvaporation = true;
-    myProject.processes.computeCrop = true;
-
     startModels(currentTime, currentTime);
 }
 
@@ -2236,13 +2234,6 @@ void MainWindow::on_actionCriteria3D_run_models_triggered()
     QDateTime firstTime, lastTime;
     if (! selectDates(firstTime, lastTime))
         return;
-
-    myProject.processes.initialize();
-    myProject.processes.computeMeteo = true;
-    myProject.processes.computeRadiation = true;
-    myProject.processes.computeWater = false;
-    myProject.processes.computeEvaporation = true;
-    myProject.processes.computeCrop = true;
 
     startModels(firstTime, lastTime);
 }
