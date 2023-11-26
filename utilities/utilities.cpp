@@ -46,6 +46,13 @@ QList<QString> getFieldsUpperCase(const QSqlQuery& query)
 }
 
 
+bool fieldExists(const QSqlQuery &query, const QString fieldName)
+{
+    QList<QString> fieldList = getFieldsUpperCase(query);
+    return fieldList.contains(fieldName.toUpper());
+}
+
+
 // return boolean (false if recordset is not valid)
 bool getValue(QVariant myRs)
 {

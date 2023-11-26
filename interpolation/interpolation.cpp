@@ -23,7 +23,6 @@
     ftomei@arpae.it
 */
 
-#include <ostream>
 #include <stdlib.h>
 #include <math.h>
 #include <vector>
@@ -1172,7 +1171,7 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
 
     if (! getUseDetrendingVar(myVar)) return 0.;
 
-    float retrendValue = 0.;
+    double retrendValue = 0.;
     double myProxyValue;
     Crit3DProxy* myProxy = nullptr;
     Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
@@ -1223,7 +1222,7 @@ float retrend(meteoVariable myVar, vector<double> myProxyValues, Crit3DInterpola
         }
     }
 
-    return retrendValue;
+    return float(retrendValue);
 }
 
 
@@ -1395,6 +1394,7 @@ std::vector <double> getfittingParameters(Crit3DProxyCombination myCombination, 
     return myParam;
 }
 
+
 bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings* mySettings, meteoVariable myVar)
 {
     if (! getUseDetrendingVar(myVar)) return false;
@@ -1519,7 +1519,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
     setFittingParameters(myCombination, mySettings, myFunc, parametersMin, parametersMax, parametersDelta, parameters);
 
     // multiple non linear fitting
-    int nSteps = interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 5, parametersMin, parametersMax, parameters, parametersDelta,
+    interpolation::bestFittingMarquardt_nDimension(&functionSum, myFunc, 10000, 5, parametersMin, parametersMax, parameters, parametersDelta,
                                     100, EPSILON, 0.01, predictors, predictands, false, weights);
 
     mySettings->setFittingFunction(myFunc);
@@ -1546,6 +1546,7 @@ bool multipleDetrending(std::vector <Crit3DInterpolationDataPoint> &myPoints, Cr
 
     return true;
 }
+
 
 void topographicDistanceOptimize(meteoVariable myVar,
                                  Crit3DMeteoPoint* &myMeteoPoints,

@@ -392,7 +392,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     double freeze_melt = 0;      // [mm] freeze (positive) or melt (negative)
 
     // pag.53 (3.25)
-    /*! net amount of liquid water that freezes (heat added to the snow pack) and ice that melts (heat removed from the snow pack) */
+    /*! net amount of liquid water that freezes (heat added to the snow pack)
+     *  and ice that melts (heat removed from the snow pack) */
     double w = (prevInternalEnergy + QTotal) / (LATENT_HEAT_FUSION * WATER_DENSITY);  // [m]
     if (w < 0)
     {

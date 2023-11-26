@@ -51,14 +51,9 @@ void Crit3DCrop::clear()
     idCrop = "";
     type = HERBACEOUS_ANNUAL;
 
-    /*!
-     * \brief roots
-     */
     roots.clear();
 
-    /*!
-     * \brief crop cycle
-     */
+    // crop cycle
     sowingDoy = NODATA;
     currentSowingDoy = NODATA;
     doyStartSenescence = NODATA;
@@ -74,17 +69,13 @@ void Crit3DCrop::clear()
     degreeDaysDecrease = NODATA;
     degreeDaysEmergence = NODATA;
 
-    /*!
-     * \brief water need
-     */
+    // water need
     kcMax  = NODATA;
     psiLeaf = NODATA;
     stressTolerance = NODATA;
     fRAW = NODATA;
 
-    /*!
-     * \brief irrigation
-     */
+    // irrigation
     irrigationShift = NODATA;
     irrigationVolume = NODATA;
     degreeDaysStartIrrigation = NODATA;
@@ -93,9 +84,7 @@ void Crit3DCrop::clear()
     doyEndIrrigation = NODATA;
     maxSurfacePuddle = NODATA;
 
-    /*!
-     * \brief variables
-     */
+    // variables
     isLiving = false;
     isEmerged = false;
     LAIstartSenescence = NODATA;
@@ -330,7 +319,7 @@ bool Crit3DCrop::isRootStatic() const
 
 /*!
  * \brief getSurfaceWaterPonding
- * \return maximum height of water ponding [mm]
+ * \return maximum height of water pond [mm]
  */
 double Crit3DCrop::getSurfaceWaterPonding() const
 {
@@ -406,7 +395,7 @@ bool Crit3DCrop::needReset(Crit3DDate myDate, double latitude, double waterTable
 
 
 // reset of (already initialized) crop
-// TODO: smart start (using sowing doy and cycle)
+// TODO: smart start (using meteo settings)
 void Crit3DCrop::resetCrop(unsigned int nrLayers)
 {
     // roots
@@ -452,7 +441,7 @@ bool Crit3DCrop::dailyUpdate(const Crit3DDate &myDate, double latitude, const st
 
     unsigned int nrLayers = unsigned(soilLayers.size());
 
-    // check start/end crop cycle (update isLiving)
+    // check start/end crop cycle
     if (needReset(myDate, latitude, waterTableDepth))
     {
         resetCrop(nrLayers);
@@ -520,29 +509,26 @@ bool Crit3DCrop::restore(const Crit3DDate &myDate, double latitude, const std::v
 }
 
 
-// Liangxia Zhang, Zhongmin Hu, Jiangwen Fan, Decheng Zhou & Fengpei Tang, 2014
-// A meta-analysis of the canopy light extinction coefficient in terrestrial ecosystems
-// "Cropland had the highest value of K (0.62), followed by broadleaf forest (0.59),
-// shrubland (0.56), grassland (0.50), and needleleaf forest (0.45)"
-double Crit3DCrop::getSurfaceCoverFraction()
+/*! \brief getCoveredSurfaceFraction
+ *  \ref Liangxia Zhang, Zhongmin Hu, Jiangwen Fan, Decheng Zhou & Fengpei Tang, 2014
+ *  A meta-analysis of the canopy light extinction coefficient in terrestrial ecosystems
+ *  "Cropland had the highest value of K (0.62), followed by broadleaf forest (0.59)
+ *  shrubland (0.56), grassland (0.50), and needleleaf forest (0.45)"
+ *  \return covered surface fraction [-]
+ */
+double Crit3DCrop::getCoveredSurfaceFraction()
 {
-    double k = 0.6;      // [-] light extinction coefficient
+    if (idCrop == "" || ! isLiving || LAI < EPSILON) return 0;
 
-    if (idCrop == "" || ! isLiving || LAI < EPSILON)
-    {
-        return 0;
-    }
-    else
-    {
-        return 1 - exp(-k * LAI);
-    }
+    double k = 0.6;      // [-] light extinction coefficient
+    return 1 - exp(-k * LAI);
 }
 
 
 double Crit3DCrop::getMaxEvaporation(double ET0)
 {
-    double evapMax = ET0 * (1.0 - getSurfaceCoverFraction());
-    // TODO check
+    double evapMax = ET0 * (1.0 - getCoveredSurfaceFraction());
+    // TODO check evaporation on free water
     return evapMax * 0.66;
 }
 
@@ -552,9 +538,9 @@ double Crit3DCrop::getMaxTranspiration(double ET0)
     if (idCrop == "" || ! isLiving || LAI < EPSILON)
         return 0;
 
-    double SCF = this->getSurfaceCoverFraction();
-    double kcmaxFactor = 1 + (kcMax - 1) * SCF;
-    return ET0 * (SCF * kcmaxFactor);
+    double coverSurfFraction = getCoveredSurfaceFraction();
+    double kcFactor = 1 + (kcMax - 1) * coverSurfFraction;
+    return ET0 * coverSurfFraction * kcFactor;
 }
 
 

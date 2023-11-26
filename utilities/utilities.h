@@ -30,6 +30,7 @@
     QList<QString> getFields(QSqlDatabase* db_, QString tableName);
     QList<QString> getFields(const QSqlQuery& query);
     QList<QString> getFieldsUpperCase(const QSqlQuery &query);
+    bool fieldExists(const QSqlQuery &query, const QString fieldName);
 
     bool getValue(QVariant myRs);
     bool getValue(QVariant myRs, int* myValue);
