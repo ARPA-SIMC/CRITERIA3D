@@ -42,11 +42,17 @@ void PragaProject::initializePragaProject()
     pragaDailyMaps = nullptr;
     users.clear();
     lastElabTargetisGrid = false;
+
+    outputMeteoPointsDbHandler = nullptr;
+    outputMeteoPointsDbFileName = "";
+    outputMeteoPointsLoaded = false;
 }
 
 void PragaProject::clearPragaProject()
 {
     if (isProjectLoaded) clearProject();
+
+    closeOutputMeteoPointsDB();
 
     users.clear();
 
@@ -3540,5 +3546,75 @@ bool PragaProject::saveLogProceduresGrid(QString nameProc, QDate date)
         logError(myError);
         return false;
     }
+    return true;
+}
+
+
+void PragaProject::closeOutputMeteoPointsDB()
+{
+    if (outputMeteoPointsDbHandler != nullptr)
+    {
+        delete outputMeteoPointsDbHandler;
+        outputMeteoPointsDbHandler = nullptr;
+    }
+
+    outputMeteoPointsLoaded = false;
+    outputPoints.clear();
+}
+
+
+bool PragaProject::loadOutputMeteoPointsDB(QString fileName)
+{
+    if (fileName.isEmpty())
+        return false;
+
+    closeOutputMeteoPointsDB();
+    errorString = "";
+    logInfo("Load output meteo points = " + fileName);
+
+    QString outputDbName = getCompleteFileName(fileName, PATH_METEOPOINT);
+    if (! QFile(outputDbName).exists())
+    {
+        errorString = "Output meteo points DB does not exists:\n" + outputDbName;
+        return false;
+    }
+
+    outputMeteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(outputDbName);
+    if (! outputMeteoPointsDbHandler->error.isEmpty())
+    {
+        errorString = "Function loadOutputMeteoPointsDB:\n" + outputDbName
+                      + "\n" + outputMeteoPointsDbHandler->error;
+        return false;
+    }
+
+    QList<Crit3DMeteoPoint> listMeteoPoints;
+    if (! outputMeteoPointsDbHandler->getPropertiesFromDb(listMeteoPoints, gisSettings, errorString))
+    {
+        errorString = "Error in reading table 'point_properties'\n" + errorString;
+        return false;
+    }
+
+    if (listMeteoPoints.empty())
+    {
+        errorString = "Missing data in the table 'point_properties'";
+        return false;
+    }
+    // set output points
+    outputPoints.resize(listMeteoPoints.size());
+    for (int i=0; i < listMeteoPoints.size(); i++)
+    {
+        outputPoints[i].id = listMeteoPoints[i].id;
+        outputPoints[i].latitude = listMeteoPoints[i].latitude;
+        outputPoints[i].longitude = listMeteoPoints[i].longitude;
+        outputPoints[i].utm = listMeteoPoints[i].point.utm;
+        outputPoints[i].z = listMeteoPoints[i].point.z;
+        outputPoints[i].active = listMeteoPoints[i].active;
+    }
+    listMeteoPoints.clear();
+
+    outputMeteoPointsDbFileName = outputDbName;
+    outputMeteoPointsLoaded = true;
+    logInfo("Output meteo points DB = " + outputMeteoPointsDbFileName);
+
     return true;
 }

@@ -1124,6 +1124,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
     return true;
 }
 
+
 bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
 {
     if (fileName == "") return false;
