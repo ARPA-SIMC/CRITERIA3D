@@ -49,7 +49,9 @@
             void deleteSynchWidget();
 
     public:
+        QString projectPragaFolder;
         QList<QString> users;
+
         gis::Crit3DRasterGrid dataRaster;
         Crit3DDailyMeteoMaps* pragaDailyMaps;
         PragaHourlyMeteoMaps* pragaHourlyMaps;
@@ -71,9 +73,14 @@
         Crit3DPointStatisticsWidget* pointStatisticsWidget;
         Crit3DHomogeneityWidget* homogeneityWidget;
         Crit3DSynchronicityWidget* synchronicityWidget;
+
         std::string synchReferencePoint;
+
         ImportDataXML* importData;
-        QString projectPragaFolder;
+
+        Crit3DMeteoPointsDbHandler* outputMeteoPointsDbHandler;
+        QString outputMeteoPointsDbFileName;
+        bool outputMeteoPointsLoaded;
 
         #ifdef NETCDF
             NetCDFHandler netCDF;
@@ -90,6 +97,9 @@
 
         bool loadPragaProject(QString myFileName);
         bool loadPragaSettings();
+
+        void closeOutputMeteoPointsDB();
+        bool loadOutputMeteoPointsDB(QString fileName);
 
         gis::Crit3DRasterGrid* getPragaMapFromVar(meteoVariable myVar);
 
