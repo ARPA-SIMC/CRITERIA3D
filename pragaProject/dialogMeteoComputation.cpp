@@ -492,16 +492,13 @@ DialogMeteoComputation::DialogMeteoComputation(QSettings *settings, bool isMeteo
             }
     }
 
-
     show();
     exec();
-
 }
 
 
 void DialogMeteoComputation::done(bool res)
 {
-
     if(res)  // ok was pressed
     {
         if ( (!saveClima && !checkValidData()) || (saveClima && saveClimaLayout.getList().empty()) )
@@ -714,14 +711,12 @@ void DialogMeteoComputation::done(bool res)
             QDialog::done(QDialog::Accepted);
             return;
         }
-
     }
     else    // cancel, close or exc was pressed
     {
         QDialog::done(QDialog::Rejected);
         return;
     }
-
 }
 
 
@@ -741,7 +736,6 @@ void DialogMeteoComputation::checkYears()
 
 void DialogMeteoComputation::displayPeriod(const QString value)
 {
-
     if (value == "Daily")
     {
         elaborationList.setCurrentText("No elaboration available");
@@ -936,11 +930,9 @@ void DialogMeteoComputation::displayPeriod(const QString value)
             nrYear.setText("0");
             nrYear.setEnabled(true);
         }
-
     }
-
-
 }
+
 
 void DialogMeteoComputation::listElaboration(const QString value)
 {
@@ -994,8 +986,8 @@ void DialogMeteoComputation::listElaboration(const QString value)
     {
         anomaly.AnomalySetVariableElab(variableList.currentText());
     }
-
 }
+
 
 void DialogMeteoComputation::listSecondElab(const QString value)
 {
@@ -1069,24 +1061,22 @@ void DialogMeteoComputation::listSecondElab(const QString value)
     }
     settings->endArray();
     settings->endGroup();
-
-
 }
+
 
 void DialogMeteoComputation::activeSecondParameter(const QString value)
 {
-
-        if ( MapElabWithParam.find(value.toStdString()) == MapElabWithParam.end())
-        {
-            elab2Parameter.clear();
-            elab2Parameter.setReadOnly(true);
-        }
-        else
-        {
-            elab2Parameter.setReadOnly(false);
-        }
-
+    if ( MapElabWithParam.find(value.toStdString()) == MapElabWithParam.end())
+    {
+        elab2Parameter.clear();
+        elab2Parameter.setReadOnly(true);
+    }
+    else
+    {
+        elab2Parameter.setReadOnly(false);
+    }
 }
+
 
 void DialogMeteoComputation::readParameter(int state)
 {
@@ -1122,9 +1112,7 @@ void DialogMeteoComputation::readParameter(int state)
                     climateDbElabList.addItem(climateDbElab[i]);
                 }
             }
-
         }
-
 
         elab1Parameter.clear();
         elab1Parameter.setReadOnly(true);
@@ -1135,7 +1123,6 @@ void DialogMeteoComputation::readParameter(int state)
         adjustSize();
         elab1Parameter.setReadOnly(false);
     }
-
 }
 
 
@@ -1320,13 +1307,14 @@ bool DialogMeteoComputation::checkValidData()
         }
     }
     return true;
-
 }
+
 
 QList<QString> DialogMeteoComputation::getElabSaveList()
 {
     return saveClimaLayout.getList();
 }
+
 
 void DialogMeteoComputation::copyDataFromXML()
 {
@@ -1376,6 +1364,7 @@ void DialogMeteoComputation::copyDataFromXML()
                     variableList.setCurrentText(QString::fromStdString(xmlVariable));
                     int elabIndex = elaborationList.findText(listXMLElab.listElab1()[index], Qt::MatchFixedString);
                     elaborationList.setCurrentIndex(elabIndex);
+
                     if ( (listXMLElab.listParam1()[index] != NODATA) && (!listXMLElab.listParam1IsClimate()[index]) )
                     {
                         elab1Parameter.setReadOnly(false);
@@ -1389,13 +1378,12 @@ void DialogMeteoComputation::copyDataFromXML()
                         climateDbElabList.setVisible(true);
                         adjustSize();
 
-                        int index = climateDbElabList.findText(listXMLElab.listParam1ClimateField()[index], Qt::MatchFixedString);
-                        if (index == -1)
+                        int climateIndex = climateDbElabList.findText(listXMLElab.listParam1ClimateField()[index], Qt::MatchFixedString);
+                        if (climateIndex == -1)
                         {
                             QMessageBox::information(nullptr, "climate field not found", "Check param1 climate field");
                         }
-                        climateDbElabList.setCurrentIndex(index);
-
+                        climateDbElabList.setCurrentIndex(climateIndex);
                     }
                     else
                     {
@@ -1474,12 +1462,12 @@ void DialogMeteoComputation::copyDataFromXML()
                         climateDbElabList.setVisible(true);
                         adjustSize();
 
-                        int index = climateDbElabList.findText(listXMLAnomaly.listParam1ClimateField()[index], Qt::MatchFixedString);
-                        if (index == -1)
+                        int climateIndex = climateDbElabList.findText(listXMLAnomaly.listParam1ClimateField()[index], Qt::MatchFixedString);
+                        if (climateIndex == -1)
                         {
                             QMessageBox::information(nullptr, "climate field not found", "Check param1 climate field");
                         }
-                        climateDbElabList.setCurrentIndex(index);
+                        climateDbElabList.setCurrentIndex(climateIndex);
 
                     }
                     else
@@ -1537,12 +1525,12 @@ void DialogMeteoComputation::copyDataFromXML()
                         {
                             anomaly.AnomalyReadParameter(1);
 
-                            int index = climateDbElabList.findText(listXMLAnomaly.listRefParam1ClimateField()[index], Qt::MatchFixedString);
-                            if (index == -1)
+                            int climateIndex = climateDbElabList.findText(listXMLAnomaly.listRefParam1ClimateField()[index], Qt::MatchFixedString);
+                            if (climateIndex == -1)
                             {
                                 QMessageBox::information(nullptr, "climate field not found", "Check reference param1 climate field");
                             }
-                            climateDbElabList.setCurrentIndex(index);
+                            climateDbElabList.setCurrentIndex(climateIndex);
                         }
                         else
                         {

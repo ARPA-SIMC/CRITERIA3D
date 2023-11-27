@@ -2170,7 +2170,7 @@ bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myF
         }
         else
         {
-            if (! interpolationGridMain(myVar, myTime))
+            if (! interpolationGrid(myVar, myTime))
                 return false;
         }
 

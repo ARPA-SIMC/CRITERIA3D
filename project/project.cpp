@@ -100,6 +100,7 @@ void Project::initializeProject()
     proxyWidget = nullptr;
 }
 
+
 void Project::clearProject()
 {
     if (logFile.is_open()) logFile.close();
@@ -134,6 +135,7 @@ void Project::clearProject()
 
     isProjectLoaded = false;
 }
+
 
 void Project::clearProxyDEM()
 {
@@ -186,6 +188,7 @@ void Project::setProxyDEM()
     }
 }
 
+
 bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
 {
     std::string name_ = myProxy.getName();
@@ -206,6 +209,7 @@ bool Project::checkProxy(const Crit3DProxy &myProxy, QString* error)
 
     return true;
 }
+
 
 bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque <bool> proxyActive, std::vector <int> proxyOrder)
 {
@@ -235,7 +239,6 @@ bool Project::addProxyToProject(std::vector <Crit3DProxy> proxyList, std::deque 
         if (getProxyPragaName(interpolationSettings.getProxy(i)->getName()) == height) setProxyDEM();
 
     return true;
-
 }
 
 
@@ -251,6 +254,7 @@ void Project::addProxyGridSeries(QString name_, std::vector <QString> gridNames,
 
     proxyGridSeries.push_back(mySeries);
 }
+
 
 bool Project::loadParameters(QString parametersFileName)
 {
@@ -2120,9 +2124,10 @@ bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable 
     return true;
 }
 
+
 bool Project::interpolationCv(meteoVariable myVar, const Crit3DTime& myTime, crossValidationStatistics *myStats)
 {
-    if (! checkInterpolationMain(myVar)) return false;
+    if (! checkInterpolation(myVar)) return false;
 
     // check variables
     if ( interpolationSettings.getUseDewPoint() &&
@@ -2373,7 +2378,8 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     return true;
 }
 
-bool Project::checkInterpolationMain(meteoVariable myVar)
+
+bool Project::checkInterpolation(meteoVariable myVar)
 {
     if (! DEM.isLoaded)
     {
@@ -2394,10 +2400,10 @@ bool Project::checkInterpolationMain(meteoVariable myVar)
     }
 
     return true;
-
 }
 
-bool Project::checkInterpolationMainSimple(meteoVariable myVar)
+
+bool Project::checkInterpolationGrid(meteoVariable myVar)
 {
     if (nrMeteoPoints == 0)
     {
@@ -2412,12 +2418,12 @@ bool Project::checkInterpolationMainSimple(meteoVariable myVar)
     }
 
     return true;
-
 }
+
 
 bool Project::interpolationDemMain(meteoVariable myVar, const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
-    if (! checkInterpolationMain(myVar))
+    if (! checkInterpolation(myVar))
         return false;
 
     // solar radiation model
@@ -2465,8 +2471,12 @@ bool Project::meteoGridAggregateProxy(std::vector <gis::Crit3DRasterGrid*> &myGr
     return true;
 }
 
+
 bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
 {
+    if (! checkInterpolationGrid(myVar))
+        return false;
+
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
     // check quality and pass data to interpolation
@@ -2582,21 +2592,6 @@ bool Project::interpolationGrid(meteoVariable myVar, const Crit3DTime& myTime)
     return true;
 }
 
-bool Project::interpolationGridMain(meteoVariable myVar, const Crit3DTime& myTime)
-{
-    if (! checkInterpolationMainSimple(myVar))
-        return false;
-
-    /* solar radiation model
-    if (myVar == globalIrradiance)
-    {
-        Crit3DTime halfHour = myTime.addSeconds(-1800);
-        return interpolateDemRadiation(halfHour, myRaster);
-    }*/
-
-    return interpolationGrid(myVar, myTime);
-}
-
 
 float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeIni, const Crit3DTime& timeFin)
 {
@@ -2610,14 +2605,14 @@ float Project::meteoDataConsistency(meteoVariable myVar, const Crit3DTime& timeI
 
 QString Project::getCompleteFileName(QString fileName, QString secondaryPath)
 {
-    if (fileName == "") return fileName;
+    if (fileName.isEmpty()) return fileName;
 
     if (getFilePath(fileName) == "")
     {
         QString completeFileName = this->getDefaultPath() + secondaryPath + fileName;
         return QDir().cleanPath(completeFileName);
     }
-    else if (fileName.left(1) == ".")
+    else if (fileName.at(0) == '.')
     {
         QString completeFileName = this->getProjectPath() + fileName;
         return QDir().cleanPath(completeFileName);
@@ -2631,14 +2626,14 @@ QString Project::getCompleteFileName(QString fileName, QString secondaryPath)
 
 QString Project::getRelativePath(QString fileName)
 {
-    if (fileName != "" && fileName.left(1) != "." && getFilePath(fileName) != "")
+    if (!fileName.isEmpty() && fileName.at(0) != '.' && getFilePath(fileName) != "")
     {
         QDir projectDir(getProjectPath());
         QString relativePath = projectDir.relativeFilePath(fileName);
         if (relativePath != fileName)
         {
             fileName = relativePath;
-            if (fileName.left(1) != ".")
+            if (fileName.at(0) != '.')
             {
                 fileName = "./" + relativePath;
             }
@@ -2689,7 +2684,7 @@ bool Project::loadProjectSettings(QString settingsFileName)
         {
             // modify project path
             QString newProjectPath;
-            if(myPath.left(1) == ".")
+            if (myPath.at(0) == '.')
             {
                 newProjectPath = getProjectPath() + myPath;
             }
