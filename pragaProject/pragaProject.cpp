@@ -3582,7 +3582,7 @@ bool PragaProject::loadOutputMeteoPointsDB(QString fileName)
     outputMeteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(outputDbName);
     if (! outputMeteoPointsDbHandler->error.isEmpty())
     {
-        errorString = "Function loadOutputMeteoPointsDB:\n" + outputDbName
+        errorString = "Error in opening:\n" + outputDbName
                       + "\n" + outputMeteoPointsDbHandler->error;
         return false;
     }
@@ -3603,7 +3603,7 @@ bool PragaProject::loadOutputMeteoPointsDB(QString fileName)
     outputPoints.resize(listMeteoPoints.size());
     for (int i=0; i < listMeteoPoints.size(); i++)
     {
-        outputPoints[i].id = listMeteoPoints[i].id;
+        outputPoints[i].id = listMeteoPoints[i].name;
         outputPoints[i].latitude = listMeteoPoints[i].latitude;
         outputPoints[i].longitude = listMeteoPoints[i].longitude;
         outputPoints[i].utm = listMeteoPoints[i].point.utm;
