@@ -23,9 +23,10 @@
     {
         Q_OBJECT
 
-    public:
-        QString error;
+    private:
+        QString errorStr;
 
+    public:
         explicit Crit3DMeteoPointsDbHandler();
         explicit Crit3DMeteoPointsDbHandler(QString dbname_);
         explicit Crit3DMeteoPointsDbHandler(QString provider_, QString host_, QString dbname_, int port_, QString user_, QString pass_);
@@ -36,6 +37,8 @@
         QString getDbName() { return _db.databaseName(); }
         QSqlDatabase getDb() const { return _db; }
         void setDb(const QSqlDatabase &db) { _db = db; }
+        QString getErrorString() { return errorStr; }
+        void setErrorString(QString str) { errorStr = str; }
 
         QString getDatasetURL(QString dataset); 
         bool setAndOpenDb(QString dbname_);
@@ -55,7 +58,7 @@
         bool deleteData(QString pointCode, frequencyType myFreq, QList<meteoVariable> varList, QDate first, QDate last);
         bool deleteAllData(frequencyType myFreq);
         bool writePointProperties(Crit3DMeteoPoint* pointProp);
-        bool updatePointProperties(QList<QString> columnList, QList<QString> valueList);
+        bool updatePointProperties(const QList<QString> &columnList, const QList<QString> &valueList);
         bool updatePointPropertiesGivenId(QString id, QList<QString> columnList, QList<QString> valueList);
         bool getPropertiesFromDb(QList<Crit3DMeteoPoint>& meteoPointsList,
                                  const gis::Crit3DGisSettings& gisSettings, QString& errorString);
@@ -71,7 +74,7 @@
                                          QDateTime* firstDateDB, Crit3DMeteoPoint *meteoPoint);
 
         bool loadVariableProperties();
-        bool getNameColumn(QString tableName, QList<QString>* columnList);
+        bool getFieldList(const QString &tableName, QList<QString> &fieldList);
         int getIdfromMeteoVar(meteoVariable meteoVar);
         int getArkIdFromVar(const QString& variable);
         std::map<int, meteoVariable> getMapIdMeteoVar() const;

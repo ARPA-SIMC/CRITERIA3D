@@ -79,7 +79,6 @@
         ImportDataXML* importData;
 
         Crit3DMeteoPointsDbHandler* outputMeteoPointsDbHandler;
-        QString outputMeteoPointsDbFileName;
         bool outputMeteoPointsLoaded;
 
         #ifdef NETCDF
@@ -99,7 +98,9 @@
         bool loadPragaSettings();
 
         void closeOutputMeteoPointsDB();
-        bool loadOutputMeteoPointsDB(QString fileName);
+        bool loadOutputMeteoPointsDB(const QString &fileName);
+        bool writeMeteoPointsProperties(const QList<QString> &joinedPropertiesList, const QList<QString> &csvFields,
+                                        const QList<QList<QString>> &csvData, bool isOutputPoints);
 
         gis::Crit3DRasterGrid* getPragaMapFromVar(meteoVariable myVar);
 

@@ -1044,16 +1044,16 @@ bool Project::loadMeteoPointsDB(QString fileName)
     }
 
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
-    if (meteoPointsDbHandler->error != "")
+    if (! meteoPointsDbHandler->getErrorString().isEmpty())
     {
-        errorString = "Function loadMeteoPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->error;
+        errorString = "Function loadMeteoPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
 
     if (! meteoPointsDbHandler->loadVariableProperties())
     {
-        errorString = meteoPointsDbHandler->error;
+        errorString = meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
@@ -1140,16 +1140,16 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
     }
 
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
-    if (meteoPointsDbHandler->error != "")
+    if (meteoPointsDbHandler->getErrorString() != "")
     {
-        errorString = "Function loadAggregationPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->error;
+        errorString = "Function loadAggregationPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
 
     if (! meteoPointsDbHandler->loadVariableProperties())
     {
-        errorString = meteoPointsDbHandler->error;
+        errorString = meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
@@ -3362,66 +3362,10 @@ void Project::deleteMeteoWidgetGrid(int id)
     }
 }
 
+
 void Project::deleteProxyWidget()
 {
     proxyWidget = nullptr;
-}
-
-bool Project::parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString>* csvFields)
-{
-    if (! QFile(csvFileName).exists() || ! QFileInfo(csvFileName).isFile())
-    {
-        logError("Missing file: " + csvFileName);
-        return false;
-    }
-    importProperties = new ImportPropertiesCSV(csvFileName);
-
-    errorString = "";
-    if (!importProperties->parserCSV(&errorString))
-    {
-        logError(errorString);
-        delete importProperties;
-        return false;
-    }
-    *csvFields = importProperties->getHeader();
-    return true;
-}
-
-
-bool Project::writeMeteoPointsProperties(QList<QString> propertiesList)
-{
-    QList<QString> header = importProperties->getHeader();
-    QList<QList<QString>> dataFields = importProperties->getData();
-
-    QList<QString> column;
-    QList<int> posValues;
-
-    for (int i = 0; i < propertiesList.size(); i++)
-    {
-        QList<QString> couple = propertiesList[i].split("-->");
-        QString pragaProperties = couple[0];
-        QString fileProperties = couple[1];
-        int pos = header.indexOf(fileProperties);
-        if (pos != -1)
-        {
-            column << pragaProperties;
-            posValues << pos;
-        }
-    }
-
-    QList<QString> values;
-
-    for (int row = 0; row<dataFields.size(); row++)
-    {
-        values.clear();
-        for (int j = 0; j < posValues.size(); j++)
-        {
-            values << dataFields[row][posValues[j]];
-        }
-        meteoPointsDbHandler->updatePointProperties(column, values);
-    }
-
-    return true;
 }
 
 
@@ -3503,7 +3447,7 @@ bool Project::setActiveStateSelectedPoints(bool isActive)
 
     if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive))
     {
-        logError("Failed to activate/deactivate selected points:\n" + meteoPointsDbHandler->error);
+        logError("Failed to activate/deactivate selected points:\n" + meteoPointsDbHandler->getErrorString());
         return false;
     }
 
@@ -3523,7 +3467,7 @@ bool Project::setActiveStatePointList(QString fileName, bool isActive)
 
     if (!meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
     {
-        logError("Failed to activate/deactivate point list:\n" + meteoPointsDbHandler->error);
+        logError("Failed to activate/deactivate point list:\n" + meteoPointsDbHandler->getErrorString());
         return false;
     }
 
@@ -3624,7 +3568,7 @@ bool Project::setActiveStateWithCriteria(bool isActive)
         }
         if (!meteoPointsDbHandler->setActiveStatePointList(points, isActive))
         {
-            logError("Failed to activate/deactivate points selected:\n" + meteoPointsDbHandler->error);
+            logError("Failed to activate/deactivate points selected:\n" + meteoPointsDbHandler->getErrorString());
             return false;
         }
     }
@@ -3668,15 +3612,15 @@ bool Project::deleteMeteoPoints(const QList<QString>& pointList)
         bool isOk = meteoPointsDbHandler->deleteAllPointsFromIdList(pointList);
     closeLogInfo();
 
-    if (!isOk)
+    if (! isOk)
     {
-        logError("Failed to delete points:" + meteoPointsDbHandler->error);
+        logError("Failed to delete points:" + meteoPointsDbHandler->getErrorString());
         return false;
     }
 
-    if (meteoPointsDbHandler->error != "")
+    if (! meteoPointsDbHandler->getErrorString().isEmpty())
     {
-        logError("WARNING: " + meteoPointsDbHandler->error);
+        logError("WARNING: " + meteoPointsDbHandler->getErrorString());
     }
 
     // reload meteoPoint, point properties table is changed

@@ -55,8 +55,10 @@
 
     void removeOldFiles(const QString &targetPath, const QString &targetStr, int nrDays);
 
-    void clearDir( const QString path );
-    QList<QString> removeList(QList<QString> list, QList<QString> toDelete);
+    void clearDir( const QString path);
+    QList<QString> removeList(const QList<QString> &list, QList<QString> &toDelete);
+
+    bool parseCSV(const QString &csvFileName, QList<QString> &csvFields, QList<QList<QString>> &csvData, QString &errorString);
 
 
 #endif // UTILITIES_H
