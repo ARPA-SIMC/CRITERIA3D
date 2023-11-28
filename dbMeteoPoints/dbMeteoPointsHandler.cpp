@@ -1390,7 +1390,7 @@ bool Crit3DMeteoPointsDbHandler::importHourlyMeteoData(QString csvFileName, bool
 }
 
 
-bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QString> listEntries, QString& log)
+bool Crit3DMeteoPointsDbHandler::writeDailyDataList(const QString &pointCode, const QList<QString> &listEntries, QString& log)
 {
     if (! existIdPoint(pointCode))
     {
@@ -1412,7 +1412,6 @@ bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QSt
 
     queryStr = queryStr + listEntries.join(",");
 
-    // exec query
     QSqlQuery qry(_db);
     qry.prepare(queryStr);
     if (! qry.exec())
@@ -1425,7 +1424,7 @@ bool Crit3DMeteoPointsDbHandler::writeDailyDataList(QString pointCode, QList<QSt
 }
 
 
-bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(QString pointCode, QList<QString> listEntries, QString &log)
+bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(const QString &pointCode, const QList<QString> &listEntries, QString &log)
 {
     if (! existIdPoint(pointCode))
     {
@@ -1446,7 +1445,6 @@ bool Crit3DMeteoPointsDbHandler::writeHourlyDataList(QString pointCode, QList<QS
 
     queryStr = queryStr + listEntries.join(",");
 
-    // exec query
     QSqlQuery qry(_db);
     qry.prepare(queryStr);
     if (! qry.exec())

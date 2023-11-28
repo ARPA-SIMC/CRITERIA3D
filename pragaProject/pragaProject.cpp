@@ -1886,7 +1886,72 @@ bool PragaProject::hourlyDerivedVariablesGrid(QDate first, QDate last, bool load
     return true;
 }
 
-bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables, QList <meteoVariable> aggrVariables, bool saveRasters, int nrDaysLoading, int nrDaysSaving)
+
+bool PragaProject::interpolationOutputPointsPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables)
+{
+    // check
+    if (variables.size() == 0)
+    {
+        errorString = "No variables";
+        return false;
+    }
+
+    if (! meteoPointsLoaded || nrMeteoPoints == 0)
+    {
+        errorString = "No meteo points";
+        return false;
+    }
+
+    if (! outputMeteoPointsLoaded || outputPoints.empty())
+    {
+        errorString = "No output points";
+        return false;
+    }
+
+    // check dates
+    if (dateIni.isNull() || dateFin.isNull() || dateIni > dateFin)
+    {
+        errorString = "Wrong period.";
+        return false;
+    }
+
+    // check variables
+    bool isDaily = false;
+    bool isHourly = false;
+    QList<meteoVariable> varToSave;
+    meteoVariable myVar;
+
+    foreach (myVar, variables)
+    {
+        frequencyType freq = getVarFrequency(myVar);
+
+        if (freq == noFrequency)
+        {
+            errorString = "Unknown variable: " + QString::fromStdString(getMeteoVarName(myVar));
+            return false;
+        }
+        else if (freq == hourly)
+            isHourly = true;
+        else if (freq == daily)
+            isDaily = true;
+
+        varToSave.push_back(myVar);
+
+        // save two variables for vector wind
+        if (myVar == windVectorIntensity)
+            varToSave.push_back(windVectorDirection);
+        else if (myVar == windVectorDirection)
+            varToSave.push_back(windVectorIntensity);
+    }
+
+    errorString = "TODO";
+    return false;
+}
+
+
+bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables,
+                                                QList <meteoVariable> aggrVariables, bool saveRasters,
+                                                int nrDaysLoading, int nrDaysSaving)
 {
     // check variables
     if (variables.size() == 0)
@@ -1916,9 +1981,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         return false;
     }
 
-    //order variables for derived computation
-
-    std::string id;
+    // order variables for derived computation
     std::string errString;
     QString myError, rasterName, varName;
     int myHour;
@@ -3548,6 +3611,8 @@ bool PragaProject::saveLogProceduresGrid(QString nameProc, QDate date)
     return true;
 }
 
+
+// --------------------------- OUTPUT METEO POINTS ----------------------------------
 
 void PragaProject::closeOutputMeteoPointsDB()
 {
