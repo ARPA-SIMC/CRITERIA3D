@@ -547,7 +547,7 @@ void Crit3DHomogeneityWidget::saveToDbClicked()
     }
     if (!meteoPointsDbHandler->setJointStations(QString::fromStdString(meteoPointsNearDistanceList[0].id), stationsList))
     {
-        QMessageBox::critical(nullptr, "Error", meteoPointsDbHandler->error);
+        QMessageBox::critical(nullptr, "Error", meteoPointsDbHandler->getErrorString());
     }
     saveToDb.setEnabled(false);
 }

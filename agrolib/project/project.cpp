@@ -1044,16 +1044,16 @@ bool Project::loadMeteoPointsDB(QString fileName)
     }
 
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
-    if (meteoPointsDbHandler->error != "")
+    if (! meteoPointsDbHandler->getErrorString().isEmpty())
     {
-        errorString = "Function loadMeteoPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->error;
+        errorString = "Function loadMeteoPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
 
     if (! meteoPointsDbHandler->loadVariableProperties())
     {
-        errorString = meteoPointsDbHandler->error;
+        errorString = meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
@@ -1140,16 +1140,16 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
     }
 
     meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
-    if (meteoPointsDbHandler->error != "")
+    if (meteoPointsDbHandler->getErrorString() != "")
     {
-        errorString = "Function loadAggregationPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->error;
+        errorString = "Function loadAggregationPointsDB:\n" + dbName + "\n" + meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
 
     if (! meteoPointsDbHandler->loadVariableProperties())
     {
-        errorString = meteoPointsDbHandler->error;
+        errorString = meteoPointsDbHandler->getErrorString();
         closeMeteoPointsDB();
         return false;
     }
@@ -2061,6 +2061,12 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
 {
     if (! getComputeOnlyPoints()) return false;
 
+    if (outputPoints.empty())
+    {
+        errorString = "Missing output points.";
+        return false;
+    }
+
     std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
@@ -2189,7 +2195,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
                                          checkSpatialQuality))
     {
-        logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
+        errorString = "No data available: " + QString::fromStdString(getVariableString(myVar));
         return false;
     }
 
@@ -2197,29 +2203,27 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
                          &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
     {
-        logError("Interpolation: error in function preInterpolation");
+        errorString = "Error in function preInterpolation.";
         return false;
     }
 
     // interpolate
-    bool result;
     if (getComputeOnlyPoints())
     {
-        result = interpolationOutputPoints(interpolationPoints, myRaster, myVar);
+        myRaster->initializeGrid(DEM);
+        if (! interpolationOutputPoints(interpolationPoints, myRaster, myVar))
+            return false;
     }
     else
     {
-        result = interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings, myRaster, DEM, myVar);
-    }
-
-    if (!result)
-    {
-        logError("Interpolation: error in function interpolationRaster");
-        return false;
+        if (! interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings, myRaster, DEM, myVar))
+        {
+            errorString = "Error in function interpolationRaster.";
+            return false;
+        }
     }
 
     myRaster->setMapTime(myTime);
-
     return true;
 }
 
@@ -2343,12 +2347,13 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     // interpolate transmissivity
     if (getComputeOnlyPoints())
     {
-        result = interpolationOutputPoints(interpolationPoints, this->radiationMaps->transmissivityMap, atmTransmissivity);
+        radiationMaps->transmissivityMap->initializeGrid(DEM);
+        result = interpolationOutputPoints(interpolationPoints, radiationMaps->transmissivityMap, atmTransmissivity);
     }
     else
     {
         result = interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings,
-                                     this->radiationMaps->transmissivityMap, DEM, atmTransmissivity);
+                                     radiationMaps->transmissivityMap, DEM, atmTransmissivity);
     }
     if (! result)
     {
@@ -2384,7 +2389,7 @@ bool Project::checkInterpolation(meteoVariable myVar)
 {
     if (! DEM.isLoaded)
     {
-        logError("Digital Elevation Model not loaded");
+        logError("Load a Digital Elevation Model before.");
         return false;
     }
 
@@ -3362,66 +3367,10 @@ void Project::deleteMeteoWidgetGrid(int id)
     }
 }
 
+
 void Project::deleteProxyWidget()
 {
     proxyWidget = nullptr;
-}
-
-bool Project::parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString>* csvFields)
-{
-    if (! QFile(csvFileName).exists() || ! QFileInfo(csvFileName).isFile())
-    {
-        logError("Missing file: " + csvFileName);
-        return false;
-    }
-    importProperties = new ImportPropertiesCSV(csvFileName);
-
-    errorString = "";
-    if (!importProperties->parserCSV(&errorString))
-    {
-        logError(errorString);
-        delete importProperties;
-        return false;
-    }
-    *csvFields = importProperties->getHeader();
-    return true;
-}
-
-
-bool Project::writeMeteoPointsProperties(QList<QString> propertiesList)
-{
-    QList<QString> header = importProperties->getHeader();
-    QList<QList<QString>> dataFields = importProperties->getData();
-
-    QList<QString> column;
-    QList<int> posValues;
-
-    for (int i = 0; i < propertiesList.size(); i++)
-    {
-        QList<QString> couple = propertiesList[i].split("-->");
-        QString pragaProperties = couple[0];
-        QString fileProperties = couple[1];
-        int pos = header.indexOf(fileProperties);
-        if (pos != -1)
-        {
-            column << pragaProperties;
-            posValues << pos;
-        }
-    }
-
-    QList<QString> values;
-
-    for (int row = 0; row<dataFields.size(); row++)
-    {
-        values.clear();
-        for (int j = 0; j < posValues.size(); j++)
-        {
-            values << dataFields[row][posValues[j]];
-        }
-        meteoPointsDbHandler->updatePointProperties(column, values);
-    }
-
-    return true;
 }
 
 
@@ -3503,7 +3452,7 @@ bool Project::setActiveStateSelectedPoints(bool isActive)
 
     if (!meteoPointsDbHandler->setActiveStatePointList(selectedPointList, isActive))
     {
-        logError("Failed to activate/deactivate selected points:\n" + meteoPointsDbHandler->error);
+        logError("Failed to activate/deactivate selected points:\n" + meteoPointsDbHandler->getErrorString());
         return false;
     }
 
@@ -3523,7 +3472,7 @@ bool Project::setActiveStatePointList(QString fileName, bool isActive)
 
     if (!meteoPointsDbHandler->setActiveStatePointList(pointList, isActive))
     {
-        logError("Failed to activate/deactivate point list:\n" + meteoPointsDbHandler->error);
+        logError("Failed to activate/deactivate point list:\n" + meteoPointsDbHandler->getErrorString());
         return false;
     }
 
@@ -3624,7 +3573,7 @@ bool Project::setActiveStateWithCriteria(bool isActive)
         }
         if (!meteoPointsDbHandler->setActiveStatePointList(points, isActive))
         {
-            logError("Failed to activate/deactivate points selected:\n" + meteoPointsDbHandler->error);
+            logError("Failed to activate/deactivate points selected:\n" + meteoPointsDbHandler->getErrorString());
             return false;
         }
     }
@@ -3668,15 +3617,15 @@ bool Project::deleteMeteoPoints(const QList<QString>& pointList)
         bool isOk = meteoPointsDbHandler->deleteAllPointsFromIdList(pointList);
     closeLogInfo();
 
-    if (!isOk)
+    if (! isOk)
     {
-        logError("Failed to delete points:" + meteoPointsDbHandler->error);
+        logError("Failed to delete points:" + meteoPointsDbHandler->getErrorString());
         return false;
     }
 
-    if (meteoPointsDbHandler->error != "")
+    if (! meteoPointsDbHandler->getErrorString().isEmpty())
     {
-        logError("WARNING: " + meteoPointsDbHandler->error);
+        logError("WARNING: " + meteoPointsDbHandler->getErrorString());
     }
 
     // reload meteoPoint, point properties table is changed
@@ -3815,9 +3764,9 @@ bool Project::writeOutputPointList(QString fileName)
     return true;
 }
 
-void Project::setComputeOnlyPoints(bool isOnlyPoints)
+void Project::setComputeOnlyPoints(bool value)
 {
-    computeOnlyPoints = isOnlyPoints;
+    computeOnlyPoints = value;
 }
 
 bool Project::getComputeOnlyPoints()

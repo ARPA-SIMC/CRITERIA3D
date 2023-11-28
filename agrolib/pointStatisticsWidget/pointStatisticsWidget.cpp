@@ -1903,7 +1903,7 @@ void Crit3DPointStatisticsWidget::saveToDbClicked()
     }
     if (!meteoPointsDbHandler->setJointStations(QString::fromStdString(meteoPoints[0].id), stationsList))
     {
-        QMessageBox::critical(nullptr, "Error", meteoPointsDbHandler->error);
+        QMessageBox::critical(nullptr, "Error", meteoPointsDbHandler->getErrorString());
     }
 }
 

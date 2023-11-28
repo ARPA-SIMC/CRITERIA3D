@@ -1678,7 +1678,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     if (mySettings->getUseTD() && getUseTdVar(myVar))
         topographicDistanceOptimize(myVar, myMeteoPoints, nrMeteoPoints, myPoints, mySettings, meteoSettings, myTime);
 
-    return (true);
+    return true;
 }
 
 

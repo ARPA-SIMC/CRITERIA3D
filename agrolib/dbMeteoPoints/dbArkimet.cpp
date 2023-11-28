@@ -78,7 +78,7 @@ QList<int> DbArkimet::getId(QString VarName)
 
     if( !qry.exec(myQuery))
     {
-        error = "Error in execute query:\n" + myQuery + "\n" + qry.lastError().text();
+        this->setErrorString("Error in execute query:\n" + myQuery + "\n" + qry.lastError().text());
     }
     else
     {

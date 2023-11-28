@@ -44,7 +44,6 @@ void PragaProject::initializePragaProject()
     lastElabTargetisGrid = false;
 
     outputMeteoPointsDbHandler = nullptr;
-    outputMeteoPointsDbFileName = "";
     outputMeteoPointsLoaded = false;
 }
 
@@ -1303,10 +1302,10 @@ bool PragaProject::downloadDailyDataArkimet(QList<QString> variables, bool prec0
         else
         {
             arkIdVar.append(myDownload->getDbArkimet()->getId(variables[i]));
-            if (myDownload->getDbArkimet()->error != "")
+            if (myDownload->getDbArkimet()->getErrorString() != "")
             {
-                logError(myDownload->getDbArkimet()->error);
-                myDownload->getDbArkimet()->error.clear();
+                logError(myDownload->getDbArkimet()->getErrorString());
+                myDownload->getDbArkimet()->setErrorString("");
             }
         }
     }
@@ -1887,7 +1886,72 @@ bool PragaProject::hourlyDerivedVariablesGrid(QDate first, QDate last, bool load
     return true;
 }
 
-bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables, QList <meteoVariable> aggrVariables, bool saveRasters, int nrDaysLoading, int nrDaysSaving)
+
+bool PragaProject::interpolationOutputPointsPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables)
+{
+    // check
+    if (variables.size() == 0)
+    {
+        errorString = "No variables";
+        return false;
+    }
+
+    if (! meteoPointsLoaded || nrMeteoPoints == 0)
+    {
+        errorString = "No meteo points";
+        return false;
+    }
+
+    if (! outputMeteoPointsLoaded || outputPoints.empty())
+    {
+        errorString = "No output points";
+        return false;
+    }
+
+    // check dates
+    if (dateIni.isNull() || dateFin.isNull() || dateIni > dateFin)
+    {
+        errorString = "Wrong period.";
+        return false;
+    }
+
+    // check variables
+    bool isDaily = false;
+    bool isHourly = false;
+    QList<meteoVariable> varToSave;
+    meteoVariable myVar;
+
+    foreach (myVar, variables)
+    {
+        frequencyType freq = getVarFrequency(myVar);
+
+        if (freq == noFrequency)
+        {
+            errorString = "Unknown variable: " + QString::fromStdString(getMeteoVarName(myVar));
+            return false;
+        }
+        else if (freq == hourly)
+            isHourly = true;
+        else if (freq == daily)
+            isDaily = true;
+
+        varToSave.push_back(myVar);
+
+        // save two variables for vector wind
+        if (myVar == windVectorIntensity)
+            varToSave.push_back(windVectorDirection);
+        else if (myVar == windVectorDirection)
+            varToSave.push_back(windVectorIntensity);
+    }
+
+    errorString = "TODO";
+    return false;
+}
+
+
+bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables,
+                                                QList <meteoVariable> aggrVariables, bool saveRasters,
+                                                int nrDaysLoading, int nrDaysSaving)
 {
     // check variables
     if (variables.size() == 0)
@@ -1917,9 +1981,7 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         return false;
     }
 
-    //order variables for derived computation
-
-    std::string id;
+    // order variables for derived computation
     std::string errString;
     QString myError, rasterName, varName;
     int myHour;
@@ -3550,6 +3612,8 @@ bool PragaProject::saveLogProceduresGrid(QString nameProc, QDate date)
 }
 
 
+// --------------------------- OUTPUT METEO POINTS ----------------------------------
+
 void PragaProject::closeOutputMeteoPointsDB()
 {
     if (outputMeteoPointsDbHandler != nullptr)
@@ -3563,7 +3627,7 @@ void PragaProject::closeOutputMeteoPointsDB()
 }
 
 
-bool PragaProject::loadOutputMeteoPointsDB(QString fileName)
+bool PragaProject::loadOutputMeteoPointsDB(const QString &fileName)
 {
     if (fileName.isEmpty())
         return false;
@@ -3580,10 +3644,10 @@ bool PragaProject::loadOutputMeteoPointsDB(QString fileName)
     }
 
     outputMeteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(outputDbName);
-    if (! outputMeteoPointsDbHandler->error.isEmpty())
+    if (! outputMeteoPointsDbHandler->getErrorString().isEmpty())
     {
-        errorString = "Function loadOutputMeteoPointsDB:\n" + outputDbName
-                      + "\n" + outputMeteoPointsDbHandler->error;
+        errorString = "Error in opening:\n" + outputDbName
+                      + "\n" + outputMeteoPointsDbHandler->getErrorString();
         return false;
     }
 
@@ -3612,9 +3676,58 @@ bool PragaProject::loadOutputMeteoPointsDB(QString fileName)
     }
     listMeteoPoints.clear();
 
-    outputMeteoPointsDbFileName = outputDbName;
     outputMeteoPointsLoaded = true;
-    logInfo("Output meteo points DB = " + outputMeteoPointsDbFileName);
+    logInfo("Output meteo points DB = " + outputDbName);
+
+    return true;
+}
+
+
+bool PragaProject::writeMeteoPointsProperties(const QList<QString> &joinedPropertiesList, const QList<QString> &csvFields,
+                                              const QList<QList<QString>> &csvData, bool isOutputPoints)
+{
+    QList<QString> propertiesList;
+    QList<int> posValues;
+
+    for (int i = 0; i < joinedPropertiesList.size(); i++)
+    {
+        QList<QString> couple = joinedPropertiesList[i].split("-->");
+        QString pragaProperty = couple[0];
+        QString csvProperty = couple[1];
+        int pos = csvFields.indexOf(csvProperty);
+        if (pos != -1)
+        {
+            propertiesList << pragaProperty;
+            posValues << pos;
+        }
+    }
+
+    for (int row = 0; row < csvData.size(); row++)
+    {
+        QList<QString> csvDataList;
+
+        for (int j = 0; j < posValues.size(); j++)
+        {
+            csvDataList << csvData[row][posValues[j]];
+        }
+
+        if (isOutputPoints)
+        {
+            if (! outputMeteoPointsDbHandler->updatePointProperties(propertiesList, csvDataList))
+            {
+                errorString = outputMeteoPointsDbHandler->getErrorString();
+                return false;
+            }
+        }
+        else
+        {
+            if (! meteoPointsDbHandler->updatePointProperties(propertiesList, csvDataList))
+            {
+                errorString = meteoPointsDbHandler->getErrorString();
+                return false;
+            }
+        }
+    }
 
     return true;
 }

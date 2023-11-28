@@ -580,14 +580,17 @@ QList<QString> readListSingleColumn(QString fileName, QString& error)
 }
 
 
-QList<QString> removeList(QList<QString> list, QList<QString> toDelete)
+QList<QString> removeList(const QList<QString> &list, QList<QString> &toDelete)
 {
+    QList<QString> newList = list;
+
     QList<QString>::iterator i;
     for (i = toDelete.begin(); i != toDelete.end(); ++i)
     {
-        list.removeAll(*i);
+        newList.removeAll(*i);
     }
-    return list;
+
+    return newList;
 }
 
 
@@ -614,4 +617,46 @@ void removeOldFiles(const QString &targetPath, const QString &targetStr, int nrD
             }
         }
     }
+}
+
+
+bool parseCSV(const QString &csvFileName, QList<QString> &csvFields, QList<QList<QString>> &csvData, QString &errorString)
+{
+    if (csvFileName.isEmpty() || ! QFile(csvFileName).exists() || ! QFileInfo(csvFileName).isFile())
+    {
+        errorString = "Missing file: " + csvFileName;
+        return false;
+    }
+
+    QFile myFile(csvFileName);
+    if (! myFile.open(QIODevice::ReadOnly))
+    {
+        errorString = "Open failed: " + csvFileName + "\n " + myFile.errorString();
+        return false;
+    }
+
+    QTextStream myStream (&myFile);
+    if (myStream.atEnd())
+    {
+        errorString = "File is void";
+        myFile.close();
+        return false;
+    }
+    else
+    {
+        csvFields = myStream.readLine().split(',');
+    }
+
+    csvData.clear();
+    while(! myStream.atEnd())
+    {
+        QList<QString> line = myStream.readLine().split(',');
+
+        // skip void lines
+        if (line.size() <= 1) continue;
+        csvData.append(line);
+    }
+
+    myFile.close();
+    return true;
 }

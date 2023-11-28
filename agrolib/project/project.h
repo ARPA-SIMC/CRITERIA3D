@@ -31,9 +31,6 @@
     #ifndef METEOMAPS_H
         #include "meteoMaps.h"
     #endif
-    #ifndef IMPORTPROPERTIESCSV_H
-        #include "importPropertiesCSV.h"
-    #endif
     #ifndef PROXYWIDGET_H
         #include "proxyWidget.h"
     #endif
@@ -66,7 +63,6 @@
         QString projectPath;
         bool computeOnlyPoints;
         FormInfo* formLog;
-        ImportPropertiesCSV* importProperties;
 
         void clearMeteoPoints();
         bool createDefaultProject(QString fileName);
@@ -260,9 +256,6 @@
         bool checkMeteoGridForExport();
         void importHourlyMeteoData(const QString& fileName, bool importAllFiles, bool deletePreviousData);
 
-        bool parseMeteoPointsPropertiesCSV(QString csvFileName, QList<QString> *csvFields);
-        bool writeMeteoPointsProperties(QList<QString> propertiesList);
-
         gis::Crit3DRasterGrid* getHourlyMeteoRaster(meteoVariable myVar);
         void showMeteoWidgetPoint(std::string idMeteoPoint, std::string namePoint, bool isAppend);
         void showMeteoWidgetGrid(std::string idCell, bool isAppend);
@@ -286,7 +279,7 @@
         bool loadAndExportMeteoGridToRasterFlt(QString fileName, double cellSize, meteoVariable myVar, QDate dateIni, QDate dateFin);
         int computeDefaultCellSizeFromMeteoGrid(float resolutionRatio);
 
-        void setComputeOnlyPoints(bool isOnlyPoints);
+        void setComputeOnlyPoints(bool value);
         bool getComputeOnlyPoints();
 
     private slots:
