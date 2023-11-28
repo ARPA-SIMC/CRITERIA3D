@@ -42,6 +42,7 @@
 #include "dialogNewPoint.h"
 #include "glWidget.h"
 #include "dialogWaterFluxesSettings.h"
+#include "utilities.h"
 
 #include <QDebug>
 
@@ -1705,6 +1706,7 @@ void MainWindow::on_actionMeteoPointsImport_data_triggered()
     myProject.importHourlyMeteoData(fileName, importAllFiles, true);
 }
 
+
 void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
 {
     QString templateFileName = myProject.getDefaultPath() + PATH_TEMPLATE + "template_meteo.db";
@@ -1740,15 +1742,16 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
     myProject.meteoPointsDbHandler = new Crit3DMeteoPointsDbHandler(dbName);
 
     QList<QString> pointPropertiesList;
-    if (!myProject.meteoPointsDbHandler->getNameColumn("point_properties", &pointPropertiesList))
+    if (!myProject.meteoPointsDbHandler->getFieldList("point_properties", pointPropertiesList))
     {
         myProject.logError("Error in read table point_properties");
         return;
     }
     QList<QString> csvFields;
-    if (!myProject.parseMeteoPointsPropertiesCSV(csvFileName, &csvFields))
+    QList<QList<QString>> csvData;
+    if (! parseCSV(csvFileName, csvFields, csvData, myProject.errorString))
     {
-        myProject.logError("Error in parse properties");
+        myProject.logError("Error in parse properties: " + myProject.errorString);
         return;
     }
 
@@ -1759,19 +1762,20 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
     }
     else
     {
-        QList<QString> joinedList = dialogPointProp.getJoinedList();
+        /*QList<QString> joinedList = dialogPointProp.getJoinedList();
+         * TODO
         if (! myProject.writeMeteoPointsProperties(joinedList))
         {
             myProject.logError("Error in write points properties");
             return;
-        }
+        }*/
     }
 
-    this->loadMeteoPointsDB_GUI(dbName);
+    loadMeteoPointsDB_GUI(dbName);
 }
 
 
-// --------------- LOAD DATA ------------------------------------
+// ----------------------- SOIL and CROP DATA ------------------------------------
 
 void MainWindow::on_actionLoad_soil_map_triggered()
 {
