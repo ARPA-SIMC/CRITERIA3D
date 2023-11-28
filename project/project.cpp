@@ -2061,6 +2061,12 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
 {
     if (! getComputeOnlyPoints()) return false;
 
+    if (outputPoints.empty())
+    {
+        errorString = "Missing output points.";
+        return false;
+    }
+
     std::vector <double> proxyValues;
     proxyValues.resize(unsigned(interpolationSettings.getProxyNr()));
 
@@ -2189,7 +2195,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
                                          &qualityInterpolationSettings, &interpolationSettings, meteoSettings, &climateParameters, interpolationPoints,
                                          checkSpatialQuality))
     {
-        logError("No data available: " + QString::fromStdString(getVariableString(myVar)));
+        errorString = "No data available: " + QString::fromStdString(getVariableString(myVar));
         return false;
     }
 
@@ -2197,29 +2203,27 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     if (! preInterpolation(interpolationPoints, &interpolationSettings, meteoSettings,
                          &climateParameters, meteoPoints, nrMeteoPoints, myVar, myTime))
     {
-        logError("Interpolation: error in function preInterpolation");
+        errorString = "Error in function preInterpolation.";
         return false;
     }
 
     // interpolate
-    bool result;
     if (getComputeOnlyPoints())
     {
-        result = interpolationOutputPoints(interpolationPoints, myRaster, myVar);
+        myRaster->initializeGrid(DEM);
+        if (! interpolationOutputPoints(interpolationPoints, myRaster, myVar))
+            return false;
     }
     else
     {
-        result = interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings, myRaster, DEM, myVar);
-    }
-
-    if (!result)
-    {
-        logError("Interpolation: error in function interpolationRaster");
-        return false;
+        if (! interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings, myRaster, DEM, myVar))
+        {
+            errorString = "Error in function interpolationRaster.";
+            return false;
+        }
     }
 
     myRaster->setMapTime(myTime);
-
     return true;
 }
 
@@ -2343,12 +2347,13 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     // interpolate transmissivity
     if (getComputeOnlyPoints())
     {
-        result = interpolationOutputPoints(interpolationPoints, this->radiationMaps->transmissivityMap, atmTransmissivity);
+        radiationMaps->transmissivityMap->initializeGrid(DEM);
+        result = interpolationOutputPoints(interpolationPoints, radiationMaps->transmissivityMap, atmTransmissivity);
     }
     else
     {
         result = interpolationRaster(interpolationPoints, &interpolationSettings, meteoSettings,
-                                     this->radiationMaps->transmissivityMap, DEM, atmTransmissivity);
+                                     radiationMaps->transmissivityMap, DEM, atmTransmissivity);
     }
     if (! result)
     {
@@ -2384,7 +2389,7 @@ bool Project::checkInterpolation(meteoVariable myVar)
 {
     if (! DEM.isLoaded)
     {
-        logError("Digital Elevation Model not loaded");
+        logError("Load a Digital Elevation Model before.");
         return false;
     }
 
@@ -3759,9 +3764,9 @@ bool Project::writeOutputPointList(QString fileName)
     return true;
 }
 
-void Project::setComputeOnlyPoints(bool isOnlyPoints)
+void Project::setComputeOnlyPoints(bool value)
 {
-    computeOnlyPoints = isOnlyPoints;
+    computeOnlyPoints = value;
 }
 
 bool Project::getComputeOnlyPoints()

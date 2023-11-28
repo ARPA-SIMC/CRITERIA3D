@@ -279,7 +279,7 @@
         bool loadAndExportMeteoGridToRasterFlt(QString fileName, double cellSize, meteoVariable myVar, QDate dateIni, QDate dateFin);
         int computeDefaultCellSizeFromMeteoGrid(float resolutionRatio);
 
-        void setComputeOnlyPoints(bool isOnlyPoints);
+        void setComputeOnlyPoints(bool value);
         bool getComputeOnlyPoints();
 
     private slots:
