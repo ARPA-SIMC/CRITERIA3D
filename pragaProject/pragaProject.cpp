@@ -1945,7 +1945,7 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
     }
 
     int nrDays = firstDate.daysTo(lastDate) + 1;
-    int nrDaysLoading = std::min(nrDays, 30);
+    int nrDaysLoading = std::min(nrDays, 10);
     int countDaysSaving = 0;
 
     QDate myDate = firstDate;
