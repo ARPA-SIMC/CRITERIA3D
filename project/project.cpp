@@ -63,8 +63,8 @@ void Project::initializeProject()
     outputPointsDbHandler = nullptr;
     meteoGridDbHandler = nullptr;
     aggregationDbHandler = nullptr;
-    meteoPointsDbFirstTime.setTime_t(0);
-    meteoPointsDbLastTime.setTime_t(0);
+    meteoPointsDbFirstTime.setSecsSinceEpoch(0);
+    meteoPointsDbLastTime.setSecsSinceEpoch(0);
 
     meteoSettings->initialize();
     quality->initialize();
@@ -1093,7 +1093,7 @@ bool Project::loadMeteoPointsDB(QString fileName)
 
     // find dates
     meteoPointsDbLastTime = findDbPointLastTime();
-    meteoPointsDbFirstTime.setTime_t(0);
+    meteoPointsDbFirstTime.setSecsSinceEpoch(0);
 
     if (! meteoPointsDbLastTime.isNull())
     {
@@ -1190,7 +1190,7 @@ bool Project::loadAggregationDBAsMeteoPoints(QString fileName)
 
     // find dates
     meteoPointsDbLastTime = findDbPointLastTime();
-    meteoPointsDbFirstTime.setTime_t(0);
+    meteoPointsDbFirstTime.setSecsSinceEpoch(0);
 
     if (! meteoPointsDbLastTime.isNull())
     {
