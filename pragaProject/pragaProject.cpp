@@ -1887,7 +1887,7 @@ bool PragaProject::hourlyDerivedVariablesGrid(QDate first, QDate last, bool load
 }
 
 
-bool PragaProject::interpolationOutputPointsPeriod(QDate dateIni, QDate dateFin, QList <meteoVariable> variables)
+bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDate, QList <meteoVariable> variables)
 {
     // check
     if (variables.size() == 0)
@@ -1909,9 +1909,9 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate dateIni, QDate dateFin,
     }
 
     // check dates
-    if (dateIni.isNull() || dateFin.isNull() || dateIni > dateFin)
+    if (firstDate.isNull() || lastDate.isNull() || firstDate > lastDate)
     {
-        errorString = "Wrong period.";
+        errorString = "Wrong dates";
         return false;
     }
 
@@ -1944,7 +1944,32 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate dateIni, QDate dateFin,
             varToSave.push_back(windVectorIntensity);
     }
 
-    errorString = "TODO";
+    int nrDays = firstDate.daysTo(lastDate) + 1;
+    int nrDaysLoading = std::min(nrDays, 30);
+    int countDaysSaving = 0;
+
+    QDate myDate = firstDate;
+    QDate lastLoadingDate = firstDate.addDays(nrDaysLoading - 1);
+    while (myDate <= lastDate)
+    {
+        countDaysSaving++;
+
+        // check if load needed
+        if (myDate == firstDate || myDate > lastLoadingDate)
+        {
+            lastLoadingDate = myDate.addDays(nrDaysLoading - 1);
+            if (lastLoadingDate > lastDate)
+                lastLoadingDate = lastDate;
+
+            // load one day before (for transmissivity)
+            logInfoGUI("Loading meteo points data from " + myDate.addDays(-1).toString("yyyy-MM-dd") + " to " + lastLoadingDate.toString("yyyy-MM-dd"));
+            if (! loadMeteoPointsData(myDate.addDays(-1), lastLoadingDate, isHourly, isDaily, false))
+                return false;
+        }
+    }
+
+    closeLogInfo();
+    errorString = "TODO save data";
     return false;
 }
 

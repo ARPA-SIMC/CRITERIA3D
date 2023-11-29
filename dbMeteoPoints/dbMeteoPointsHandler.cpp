@@ -502,12 +502,12 @@ bool Crit3DMeteoPointsDbHandler::deleteAllPointsFromDataset(QList<QString> datas
 }
 
 
-bool Crit3DMeteoPointsDbHandler::loadDailyData(Crit3DDate firstDate, Crit3DDate lastDate, Crit3DMeteoPoint *meteoPoint)
+bool Crit3DMeteoPointsDbHandler::loadDailyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint *meteoPoint)
 {
     // check dates
     if (firstDate > lastDate)
     {
-        this->errorStr = "wrong dates: first > last";
+        errorStr = "wrong dates: first > last";
         return false;
     }
 
@@ -545,57 +545,61 @@ bool Crit3DMeteoPointsDbHandler::loadDailyData(Crit3DDate firstDate, Crit3DDate 
 }
 
 
-bool Crit3DMeteoPointsDbHandler::loadHourlyData(Crit3DDate dateStart, Crit3DDate dateEnd, Crit3DMeteoPoint *meteoPoint)
+bool Crit3DMeteoPointsDbHandler::loadHourlyData(const Crit3DDate &firstDate, const Crit3DDate &lastDate, Crit3DMeteoPoint *meteoPoint)
 {
-    meteoVariable variable;
-    int idVar;
-    float value;
+    // check dates
+    if (firstDate > lastDate)
+    {
+        errorStr = "wrong dates: first > last";
+        return false;
+    }
 
-    int numberOfDays = difference(dateStart, dateEnd)+1;
+    // initialize obs data
+    int numberOfDays = difference(firstDate, lastDate) + 1;
     int myHourlyFraction = 1;
-    QString startDate = QString::fromStdString(dateStart.toStdString());
-    QString endDate = QString::fromStdString(dateEnd.toStdString());
+    meteoPoint->initializeObsDataH(myHourlyFraction, numberOfDays, firstDate);
 
-    QSqlQuery qry(_db);
-
-    meteoPoint->initializeObsDataH(myHourlyFraction, numberOfDays, dateStart);
-
+    QString startDateStr = QString::fromStdString(firstDate.toStdString());
+    QString endDateStr = QString::fromStdString(lastDate.toStdString());
     QString tableName = QString::fromStdString(meteoPoint->id) + "_H";
 
     QString statement = QString( "SELECT * FROM `%1` WHERE date_time >= DATETIME('%2 01:00:00') AND date_time <= DATETIME('%3 00:00:00', '+1 day')")
-                                 .arg(tableName, startDate, endDate);
-    if( !qry.exec(statement) )
+                                 .arg(tableName, startDateStr, endDateStr);
+    QSqlQuery qry(_db);
+    if(! qry.exec(statement) )
     {
-        qDebug() << qry.lastError();
+        errorStr = qry.lastError().text();
         return false;
     }
     else
     {
+        meteoVariable variable;
         while (qry.next())
         {
             QDateTime d = qry.value(0).toDateTime();
             Crit3DDate myDate = Crit3DDate(d.date().day(), d.date().month(), d.date().year());
-            //myDate = QDate::fromString(dateStr.mid(0,10), "yyyy-MM-dd");
-            //myTime = QTime::fromString(dateStr.mid(11,8), "HH:mm:ss");
-            //QDateTime d(QDateTime(myDate, myTime, Qt::UTC));
 
-            idVar = qry.value(1).toInt();
-            try {
+            int idVar = qry.value(1).toInt();
+            try
+            {
                 variable = _mapIdMeteoVar.at(idVar);
             }
-            catch (const std::out_of_range& ) {
+            catch (const std::out_of_range& )
+            {
                 variable = noMeteoVar;
             }
 
             if (variable != noMeteoVar)
             {
-                value = qry.value(2).toFloat();
+                float value = qry.value(2).toFloat();
                 meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), variable, value);
 
                 // copy scalar intensity to vector intensity (instantaneous values are equivalent, following WMO)
                 // should be removed when hourly averages are available
                 if (variable == windScalarIntensity)
+                {
                     meteoPoint->setMeteoPointValueH(myDate, d.time().hour(), d.time().minute(), windVectorIntensity, value);
+                }
             }
         }
     }
