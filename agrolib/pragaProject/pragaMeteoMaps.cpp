@@ -38,6 +38,15 @@ void PragaHourlyMeteoMaps::clear()
 }
 
 
+void PragaHourlyMeteoMaps::initialize()
+{
+    mapHourlyWindVectorInt->emptyGrid();
+    mapHourlyWindVectorDir->emptyGrid();
+    mapHourlyWindVectorX->emptyGrid();
+    mapHourlyWindVectorY->emptyGrid();
+}
+
+
 gis::Crit3DRasterGrid* PragaHourlyMeteoMaps::getMapFromVar(meteoVariable myVar)
 {
     if (myVar == windVectorIntensity)

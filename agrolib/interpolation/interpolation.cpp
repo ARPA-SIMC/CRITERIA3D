@@ -36,6 +36,7 @@
 #include "meteoPoint.h"
 #include "gis.h"
 #include "spatialControl.h"
+#include "interpolationPoint.h"
 #include "interpolation.h"
 #include <functional>
 
@@ -1048,25 +1049,18 @@ void localSelection(vector <Crit3DInterpolationDataPoint> &inputPoints, vector <
     mySettings.setLocalRadius(r1);
 }
 
-bool checkPrecipitationZero(std::vector <Crit3DInterpolationDataPoint> &myPoints, float precThreshold, int* nrPrecNotNull, bool* flatPrecipitation)
+
+bool checkPrecipitationZero(const std::vector<Crit3DInterpolationDataPoint> &myPoints, float precThreshold, int &nrNotNull)
 {
-    *flatPrecipitation = true;
-    *nrPrecNotNull = 0;
-    float myValue = NODATA;
+    nrNotNull = 0;
 
     for (unsigned int i = 0; i < myPoints.size(); i++)
         if (myPoints[i].isActive)
-            if (int(myPoints[i].value) != int(NODATA))
-                if (myPoints[i].value >= float(precThreshold))
-                {
-                    if (*nrPrecNotNull > 0 && myPoints[i].value != myValue)
-                        *flatPrecipitation = false;
+            if (! isEqual(myPoints[i].value, NODATA))
+                if (myPoints[i].value >= precThreshold)
+                    nrNotNull++;
 
-                    myValue = myPoints[i].value;
-                    (*nrPrecNotNull)++;
-                }
-
-    return (*nrPrecNotNull == 0);
+    return (nrNotNull == 0);
 }
 
 
@@ -1643,8 +1637,7 @@ bool preInterpolation(std::vector <Crit3DInterpolationDataPoint> &myPoints, Crit
     if (myVar == precipitation || myVar == dailyPrecipitation)
     {
         int nrPrecNotNull;
-        bool isFlatPrecipitation;
-        if (checkPrecipitationZero(myPoints, meteoSettings->getRainfallThreshold(), &nrPrecNotNull, &isFlatPrecipitation))
+        if (checkPrecipitationZero(myPoints, meteoSettings->getRainfallThreshold(), nrPrecNotNull))
         {
             mySettings->setPrecipitationAllZero(true);
             return true;
@@ -1727,15 +1720,16 @@ float interpolate(vector <Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpo
         myResult = MAXVALUE(myResult, 0);
 
     return myResult;
-
 }
 
-bool getActiveProxyValues(Crit3DInterpolationSettings* mySettings, std::vector <double> & allProxyValues, std::vector <double> & activeProxyValues)
+
+bool getActiveProxyValues(Crit3DInterpolationSettings *mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues)
 {
     Crit3DProxyCombination myCombination = mySettings->getCurrentCombination();
-    std::vector <double> myValues;
 
-    if (allProxyValues.size() != mySettings->getProxyNr()) return false;
+    if (allProxyValues.size() != mySettings->getProxyNr())
+        return false;
+
     activeProxyValues.clear();
 
     bool isComplete = true;
@@ -1744,11 +1738,13 @@ bool getActiveProxyValues(Crit3DInterpolationSettings* mySettings, std::vector <
         if (myCombination.getValue(i) && mySettings->getProxy(i)->getIsSignificant())
         {
             activeProxyValues.push_back(allProxyValues[i]);
-            if (allProxyValues[i] == NODATA) isComplete = false;
+            if (allProxyValues[i] == NODATA)
+                isComplete = false;
         }
 
     return isComplete;
 }
+
 
 void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues)
 {

@@ -22,6 +22,8 @@
         ~PragaHourlyMeteoMaps();
 
         void clear();
+        void initialize();
+
         gis::Crit3DRasterGrid* getMapFromVar(meteoVariable myVar);
         bool computeWindVector();
     };

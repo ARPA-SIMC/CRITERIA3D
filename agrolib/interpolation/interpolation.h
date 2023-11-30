@@ -53,13 +53,15 @@
     bool krigLinearPrep(double *mySlope, double *myNugget, int nrPointData);
 
     void clearInterpolationPoints();
+    bool checkPrecipitationZero(const std::vector<Crit3DInterpolationDataPoint> &myPoints, float precThreshold, int &nrNotNull);
 
     bool neighbourhoodVariability(meteoVariable myVar, std::vector<Crit3DInterpolationDataPoint> &myInterpolationPoints, Crit3DInterpolationSettings *mySettings, float x, float y, float z, int nMax,
                                   float* devSt, float* avgDeltaZ, float* minDistance);
 
     float interpolate(std::vector<Crit3DInterpolationDataPoint> &myPoints, Crit3DInterpolationSettings *mySettings, Crit3DMeteoSettings *meteoSettings, meteoVariable myVar, float myX, float myY, float myZ, std::vector<double> myProxyValues, bool excludeSupplemental);
     void getProxyValuesXY(float x, float y, Crit3DInterpolationSettings* mySettings, std::vector<double> &myValues);
-    bool getActiveProxyValues(Crit3DInterpolationSettings* mySettings, std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues);
+
+    bool getActiveProxyValues(Crit3DInterpolationSettings *mySettings, const std::vector<double> &allProxyValues, std::vector<double> &activeProxyValues);
 
     void detrending(std::vector <Crit3DInterpolationDataPoint> &myPoints,
                     Crit3DProxyCombination myCombination, Crit3DInterpolationSettings *mySettings, Crit3DClimateParameters *myClimate,

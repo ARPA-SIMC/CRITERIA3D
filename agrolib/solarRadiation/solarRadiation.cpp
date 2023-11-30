@@ -824,7 +824,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
     }
 
 
-    bool computeRadiationRSunGridPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
+    bool computeRadiationDemPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& myDem,
                               Crit3DRadiationMaps* radiationMaps, TradPoint radPoint,
                               int row, int col, const Crit3DTime& myTime)
     {
@@ -839,8 +839,8 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         float transmissivity = radiationMaps->transmissivityMap->value[row][col];
 
         TsunPosition sunPosition;
-        if (!computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime,
-            linke, albedo, radSettings->getClearSky(), transmissivity, &sunPosition, &radPoint, dem))
+        if (! computeRadiationRsun(radSettings, TEMPERATURE_DEFAULT, PRESSURE_SEALEVEL, myTime,
+            linke, albedo, radSettings->getClearSky(), transmissivity, &sunPosition, &radPoint, myDem))
             return false;
 
         /*
@@ -856,6 +856,7 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
         return true;
     }
+
 
     bool computeRadiationPotentialRSunMeteoPoint(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
                               Crit3DMeteoPoint* myMeteoPoint, float slope, float aspect, const Crit3DTime& myTime, TradPoint* radPoint)
@@ -905,27 +906,38 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
     }
 
 
-    bool computeRadiationGridRsun(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
-                                 Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime)
+    bool computeRadiationDEM(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& myDem,
+                              Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime)
     {
+        if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
+            return false;
+
         int row, col;
         TradPoint radPoint;
 
-        for (row = 0; row < dem.header->nrRows; row++ )
+        for (row = 0; row < myDem.header->nrRows; row++ )
         {
-            for (col = 0; col < dem.header->nrCols; col++)
+            for (col = 0; col < myDem.header->nrCols; col++)
             {
-                if(isGridPointComputable(radSettings, row, col, dem, radiationMaps))
+                if(isGridPointComputable(radSettings, row, col, myDem, radiationMaps))
                 {
-                    dem.getXY(row, col, radPoint.x, radPoint.y);
-                    radPoint.height = dem.value[row][col];
+                    myDem.getXY(row, col, radPoint.x, radPoint.y);
+                    radPoint.height = myDem.value[row][col];
 
-                    if (! computeRadiationRSunGridPoint(radSettings, dem, radiationMaps, radPoint, row, col, myTime))
+                    if (! computeRadiationDemPoint(radSettings, myDem, radiationMaps, radPoint, row, col, myTime))
                         return false;
                 }
             }
         }
 
+        updateRadiationMaps(radiationMaps, myTime);
+
+        return true;
+    }
+
+
+    void updateRadiationMaps(Crit3DRadiationMaps* radiationMaps, const Crit3DTime &myTime)
+    {
         gis::updateMinMaxRasterGrid(radiationMaps->sunElevationMap);
         gis::updateMinMaxRasterGrid(radiationMaps->transmissivityMap);
         gis::updateMinMaxRasterGrid(radiationMaps->beamRadiationMap);
@@ -941,7 +953,6 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
         radiationMaps->globalRadiationMap->setMapTime(myTime);
 
         radiationMaps->setComputed(true);
-        return true;
     }
 
 
@@ -1080,37 +1091,10 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
     }
 
 
-    bool preConditionsRadiationGrid(const Crit3DRadiationMaps& radiationMaps)
-    {
-        if (! radiationMaps.latMap->isLoaded || ! radiationMaps.lonMap->isLoaded) return false;
-        if (! radiationMaps.slopeMap->isLoaded || ! radiationMaps.aspectMap->isLoaded) return false;
-
-        return true;
-    }
-
-
-    bool computeRadiationGrid(Crit3DRadiationSettings* radSettings, const gis::Crit3DRasterGrid& dem,
-                                         Crit3DRadiationMaps* radiationMaps, const Crit3DTime& myTime)
-    {
-        if (! preConditionsRadiationGrid(*radiationMaps))
-            return false;        
-
-        if (radSettings->getAlgorithm() == RADIATION_ALGORITHM_RSUN)
-        {
-            return computeRadiationGridRsun(radSettings, dem, radiationMaps, myTime);
-        }
-        else
-            return false;
-    }
-
-
     bool computeRadiationOutputPoints(Crit3DRadiationSettings *radSettings, const gis::Crit3DRasterGrid& dem,
                                          Crit3DRadiationMaps* radiationMaps, std::vector<gis::Crit3DOutputPoint> &outputPoints,
                                          const Crit3DTime& myTime)
     {
-        if (! preConditionsRadiationGrid(*radiationMaps))
-            return false;
-
         if (radSettings->getAlgorithm() != RADIATION_ALGORITHM_RSUN)
             return false;
 
@@ -1127,13 +1111,14 @@ bool computeRadiationRsun(Crit3DRadiationSettings* radSettings, float temperatur
 
                 if(isGridPointComputable(radSettings, row, col, dem, radiationMaps))
                 {
-                    if (! computeRadiationRSunGridPoint(radSettings, dem, radiationMaps, radPoint, row, col, myTime))
+                    if (! computeRadiationDemPoint(radSettings, dem, radiationMaps, radPoint, row, col, myTime))
                         return false;
                 }
             }
         }
 
-        radiationMaps->setComputed(true);
+        updateRadiationMaps(radiationMaps, myTime);
+
         return true;
     }
 
