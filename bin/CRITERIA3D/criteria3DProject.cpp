@@ -1392,34 +1392,46 @@ bool Crit3DProject::writeOutputPointsData()
 }
 
 
-void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col)
+bool Crit3DProject::writeMeteoPointsProperties(const QList<QString> &joinedPropertiesList, const QList<QString> &csvFields,
+                                              const QList<QList<QString>> &csvData)
 {
-    colorOut.red = colorIn.red;
-    colorOut.green = colorIn.green;
-    colorOut.blue = colorIn.blue;
+    QList<QString> propertiesList;
+    QList<int> posValues;
 
-    float aspect = radiationMaps->aspectMap->getValueFromRowCol(row, col);
-    if (! isEqual(aspect, radiationMaps->aspectMap->header->flag))
+    for (int i = 0; i < joinedPropertiesList.size(); i++)
     {
-        float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
-        if (! isEqual(slopeDegree, radiationMaps->slopeMap->header->flag))
+        QList<QString> couple = joinedPropertiesList[i].split("-->");
+        QString pragaProperty = couple[0];
+        QString csvProperty = couple[1];
+        int pos = csvFields.indexOf(csvProperty);
+        if (pos != -1)
         {
-            float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
-            float shadow = -cos(aspect * DEG_TO_RAD) * std::max(5.f, slopeDegree * slopeAmplification);
-
-            colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
-            colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
-            colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
-            if (slope > openGlGeometry->artifactSlope())
-            {
-                colorOut.red = std::min(255, std::max(0, int((colorOut.red + 256) / 2)));
-                colorOut.green = std::min(255, std::max(0, int((colorOut.green + 256) / 2)));
-                colorOut.blue = std::min(255, std::max(0, int((colorOut.blue + 256) / 2)));
-            }
+            propertiesList << pragaProperty;
+            posValues << pos;
         }
     }
+
+    for (int row = 0; row < csvData.size(); row++)
+    {
+        QList<QString> csvDataList;
+
+        for (int j = 0; j < posValues.size(); j++)
+        {
+            csvDataList << csvData[row][posValues[j]];
+        }
+
+        if (! meteoPointsDbHandler->updatePointProperties(propertiesList, csvDataList))
+        {
+            errorString = meteoPointsDbHandler->getErrorString();
+            return false;
+        }
+    }
+
+    return true;
 }
 
+
+//------------------------------------- 3D geometry and color --------------------------------------
 
 void Crit3DProject::clearGeometry()
 {
@@ -1508,6 +1520,35 @@ bool Crit3DProject::initializeGeometry()
     }
 
     return true;
+}
+
+
+void Crit3DProject::shadowColor(const Crit3DColor &colorIn, Crit3DColor &colorOut, int row, int col)
+{
+    colorOut.red = colorIn.red;
+    colorOut.green = colorIn.green;
+    colorOut.blue = colorIn.blue;
+
+    float aspect = radiationMaps->aspectMap->getValueFromRowCol(row, col);
+    if (! isEqual(aspect, radiationMaps->aspectMap->header->flag))
+    {
+        float slopeDegree = radiationMaps->slopeMap->getValueFromRowCol(row, col);
+        if (! isEqual(slopeDegree, radiationMaps->slopeMap->header->flag))
+        {
+            float slopeAmplification = 120.f / std::max(radiationMaps->slopeMap->maximum, 1.f);
+            float shadow = -cos(aspect * DEG_TO_RAD) * std::max(5.f, slopeDegree * slopeAmplification);
+
+            colorOut.red = std::min(255, std::max(0, int(colorOut.red + shadow)));
+            colorOut.green = std::min(255, std::max(0, int(colorOut.green + shadow)));
+            colorOut.blue = std::min(255, std::max(0, int(colorOut.blue + shadow)));
+            if (slope > openGlGeometry->artifactSlope())
+            {
+                colorOut.red = std::min(255, std::max(0, int((colorOut.red + 256) / 2)));
+                colorOut.green = std::min(255, std::max(0, int((colorOut.green + 256) / 2)));
+                colorOut.blue = std::min(255, std::max(0, int((colorOut.blue + 256) / 2)));
+            }
+        }
+    }
 }
 
 

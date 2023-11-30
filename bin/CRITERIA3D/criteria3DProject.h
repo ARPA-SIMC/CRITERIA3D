@@ -102,6 +102,8 @@
 
         bool writeOutputPointsTables();
         bool writeOutputPointsData();
+        bool writeMeteoPointsProperties(const QList<QString> &joinedPropertiesList,
+                                        const QList<QString> &csvFields, const QList<QList<QString>> &csvData);
 
         void clearGeometry();
         bool initializeGeometry();

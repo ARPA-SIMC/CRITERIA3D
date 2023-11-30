@@ -1762,13 +1762,12 @@ void MainWindow::on_actionNew_meteoPointsDB_from_csv_triggered()
     }
     else
     {
-        /*QList<QString> joinedList = dialogPointProp.getJoinedList();
-         * TODO
-        if (! myProject.writeMeteoPointsProperties(joinedList))
+        QList<QString> joinedPropertiesList = dialogPointProp.getJoinedList();
+        if (! myProject.writeMeteoPointsProperties(joinedPropertiesList, csvFields, csvData))
         {
             myProject.logError("Error in write points properties");
             return;
-        }*/
+        }
     }
 
     loadMeteoPointsDB_GUI(dbName);
@@ -1925,7 +1924,6 @@ bool MainWindow::startModels(QDateTime firstTime, QDateTime lastTime)
 
     if (myProject.processes.computeCrop)
     {
-        // TODO: check on crop
         if (myProject.landUnitList.size() == 0)
         {
             myProject.logError("load land units map before.");
