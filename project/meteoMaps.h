@@ -63,7 +63,7 @@
 
         gis::Crit3DRasterGrid* getMapFromVar(meteoVariable myVar);
         bool computeET0PMMap(const gis::Crit3DRasterGrid &DEM, Crit3DRadiationMaps *radMaps);
-        bool computeRelativeHumidityMap(gis::Crit3DRasterGrid* myGrid);
+        bool computeRelativeHumidityMap(gis::Crit3DRasterGrid* myRaster);
         bool computeLeafWetnessMap();
         void setComputed(bool value);
         bool getComputed();

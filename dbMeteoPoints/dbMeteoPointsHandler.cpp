@@ -224,7 +224,6 @@ QDateTime Crit3DMeteoPointsDbHandler::getFirstDate(frequencyType frequency)
         }
     }
 
-    QString tmp = firstDate.toString("yyyy-MM-dd");
     return firstDate;
 }
 

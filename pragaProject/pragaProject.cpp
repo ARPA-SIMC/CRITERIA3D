@@ -2017,9 +2017,33 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
                 {
                     if (getVarFrequency(myVar) == hourly)
                     {
-                        // TODO RH and other special variables
+                        setComputeOnlyPoints(true);
 
-                        if (! interpolationDemMain(myVar, getCrit3DTime(myDate, hour), getPragaMapFromVar(myVar)))
+                        // TODO other special variables
+
+                        bool isOk;
+                        if (myVar == airRelHumidity && interpolationSettings.getUseDewPoint())
+                        {
+                            if (interpolationSettings.getUseInterpolatedTForRH())
+                            {
+                                passInterpolatedTemperatureToHumidityPoints(getCrit3DTime(myDate, hour), meteoSettings);
+                            }
+
+                            isOk = interpolationDemMain(airDewTemperature, getCrit3DTime(myDate, hour), hourlyMeteoMaps->mapHourlyTdew);
+
+                            if (isOk)
+                            {
+                                hourlyMeteoMaps->computeRelativeHumidityMap(hourlyMeteoMaps->mapHourlyRelHum);
+                            }
+                        }
+                        else
+                        {
+                            isOk = interpolationDemMain(myVar, getCrit3DTime(myDate, hour), getPragaMapFromVar(myVar));
+                        }
+
+                        setComputeOnlyPoints(false);
+
+                        if (! isOk)
                             return false;
                     }
                 }
@@ -2037,9 +2061,15 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
             {
                 if (getVarFrequency(myVar) == daily)
                 {
+                    setComputeOnlyPoints(true);
+
                     // TODO special variables
 
-                    if (! interpolationDemMain(myVar, getCrit3DTime(myDate, 0), getPragaMapFromVar(myVar)))
+                    bool isOk = interpolationDemMain(myVar, getCrit3DTime(myDate, 0), getPragaMapFromVar(myVar));
+
+                    setComputeOnlyPoints(false);
+
+                    if (! isOk)
                         return false;
 
                     // fix daily temperatures consistency

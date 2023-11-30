@@ -2089,9 +2089,14 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
             outputGrid->getRowCol(x, y, row, col);
             if (! gis::isOutOfGridRowCol(row, col, *outputGrid))
             {
-                if (getUseDetrendingVar(myVar)) getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+                if (getUseDetrendingVar(myVar))
+                {
+                    getProxyValuesXY(x, y, &interpolationSettings, proxyValues);
+                }
+
                 outputPoints[i].currentValue = interpolate(interpolationPoints, &interpolationSettings,
-                                                       meteoSettings, myVar, x, y, z, proxyValues, true);
+                                                            meteoSettings, myVar, x, y, z, proxyValues, true);
+
                 outputGrid->value[row][col] = outputPoints[i].currentValue;
             }
         }
@@ -2099,6 +2104,7 @@ bool Project::interpolationOutputPoints(std::vector <Crit3DInterpolationDataPoin
 
     return true;
 }
+
 
 bool Project::computeStatisticsCrossValidation(Crit3DTime myTime, meteoVariable myVar, crossValidationStatistics* myStats)
 {
@@ -2318,7 +2324,13 @@ bool Project::interpolationDemLocalDetrending(meteoVariable myVar, const Crit3DT
 
 bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRasterGrid *myRaster)
 {
-    this->radiationMaps->initialize();
+    if (! radiationMaps->latMap->isLoaded || ! radiationMaps->lonMap->isLoaded)
+        return false;
+
+    if (! radiationMaps->slopeMap->isLoaded || ! radiationMaps->aspectMap->isLoaded)
+        return false;
+
+    radiationMaps->initialize();
 
     std::vector <Crit3DInterpolationDataPoint> interpolationPoints;
 
@@ -2334,7 +2346,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
         // TODO: add flag to parameters. Could be NOT wanted
         if (! computeTransmissivityFromTRange(meteoPoints, nrMeteoPoints, myTime))
         {
-            logError("Function interpolateDemRadiation: cannot compute transmissivity.");
+            logError("Error in function interpolateDemRadiation: cannot compute transmissivity.");
             return false;
         }
     }
@@ -2345,7 +2357,7 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
                                           meteoSettings, &climateParameters, interpolationPoints, checkSpatialQuality);
     if (! result)
     {
-        logError("Function interpolateDemRadiation: not enough transmissivity data.");
+        logError("Error in function interpolateDemRadiation: not enough transmissivity data.");
         return false;
     }
 
@@ -2355,7 +2367,6 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     // interpolate transmissivity
     if (getComputeOnlyPoints())
     {
-        radiationMaps->transmissivityMap->initializeGrid(DEM);
         result = interpolationOutputPoints(interpolationPoints, radiationMaps->transmissivityMap, atmTransmissivity);
     }
     else
@@ -2365,18 +2376,18 @@ bool Project::interpolateDemRadiation(const Crit3DTime& myTime, gis::Crit3DRaste
     }
     if (! result)
     {
-        logError("Function interpolateDemRadiation: error interpolating transmissivity.");
+        logError("Function interpolateDemRadiation: error in interpolating transmissivity.");
         return false;
     }
 
     // compute radiation
     if (getComputeOnlyPoints())
     {
-        result = radiation::computeRadiationOutputPoints(&radSettings, this->DEM, this->radiationMaps, outputPoints, myTime);
+        result = radiation::computeRadiationOutputPoints(&radSettings, DEM, radiationMaps, outputPoints, myTime);
     }
     else
     {
-        result = radiation::computeRadiationGrid(&radSettings, this->DEM, this->radiationMaps, myTime);
+        result = radiation::computeRadiationDEM(&radSettings, DEM, radiationMaps, myTime);
     }
     if (! result)
     {
