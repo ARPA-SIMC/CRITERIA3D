@@ -63,6 +63,9 @@ void Project::initializeProject()
     outputPointsDbHandler = nullptr;
     meteoGridDbHandler = nullptr;
     aggregationDbHandler = nullptr;
+
+    meteoPointsDbFirstTime.setTimeSpec(Qt::UTC);
+    meteoPointsDbLastTime.setTimeSpec(Qt::UTC);
     meteoPointsDbFirstTime.setSecsSinceEpoch(0);
     meteoPointsDbLastTime.setSecsSinceEpoch(0);
 
@@ -2228,6 +2231,7 @@ bool Project::interpolationDem(meteoVariable myVar, const Crit3DTime& myTime, gi
     }
 
     myRaster->setMapTime(myTime);
+
     return true;
 }
 

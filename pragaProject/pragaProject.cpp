@@ -1699,13 +1699,17 @@ QString getMapFileOutName(meteoVariable myVar, QDate myDate, int myHour)
     return name;
 }
 
+
 gis::Crit3DRasterGrid* PragaProject::getPragaMapFromVar(meteoVariable myVar)
 {
     gis::Crit3DRasterGrid* myGrid = nullptr;
 
+    // search in project maps (hourlyMeteoMaps and radiationMaps)
     myGrid = getHourlyMeteoRaster(myVar);
-    if (myGrid == nullptr) myGrid = pragaHourlyMaps->getMapFromVar(myVar);
+    // search in pragaDailyMaps
     if (myGrid == nullptr) myGrid = pragaDailyMaps->getMapFromVar(myVar);
+    // saerch in pragaHourlyMaps
+    if (myGrid == nullptr) myGrid = pragaHourlyMaps->getMapFromVar(myVar);
 
     return myGrid;
 }
@@ -1908,6 +1912,12 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
         return false;
     }
 
+    if (! DEM.isLoaded)
+    {
+        errorString = "Load a Digital Elevation Model before.";
+        return false;
+    }
+
     // check dates
     if (firstDate.isNull() || lastDate.isNull() || firstDate > lastDate)
     {
@@ -1944,8 +1954,34 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
             varToSave.push_back(windVectorIntensity);
     }
 
+    // initialize maps
+    if (pragaDailyMaps == nullptr) pragaDailyMaps = new Crit3DDailyMeteoMaps(DEM);
+    if (pragaHourlyMaps == nullptr) pragaHourlyMaps = new PragaHourlyMeteoMaps(DEM);
+
+    // check if topographic distance is needed
+    bool useTd = false;
+    if (interpolationSettings.getUseTD())
+    {
+        foreach (myVar, variables)
+        {
+            if (getUseTdVar(myVar))
+            {
+                useTd = true;
+                break;
+            }
+        }
+    }
+
+    // load topographic distance
+    if (useTd)
+    {
+        logInfoGUI("Loading topographic distance maps...");
+        if (! loadTopographicDistanceMaps(true, false))
+            return false;
+    }
+
     int nrDays = firstDate.daysTo(lastDate) + 1;
-    int nrDaysLoading = std::min(nrDays, 10);
+    int nrDaysLoading = std::min(nrDays, 30);
     int countDaysSaving = 0;
 
     QDate myDate = firstDate;
@@ -1966,6 +2002,57 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
             if (! loadMeteoPointsData(myDate.addDays(-1), lastLoadingDate, isHourly, isDaily, false))
                 return false;
         }
+
+        if (isHourly)
+        {
+            // initialize
+            hourlyMeteoMaps->initialize();
+            radiationMaps->initialize();
+            pragaHourlyMaps->initialize();
+
+            for (int hour = 1; hour <= 24; hour++)
+            {
+                logInfoGUI("Interpolating hourly variables for " + myDate.toString("yyyy-MM-dd") + " " + QString::number(hour) + ":00");
+                foreach (myVar, variables)
+                {
+                    if (getVarFrequency(myVar) == hourly)
+                    {
+                        // TODO RH and other special variables
+
+                        if (! interpolationDemMain(myVar, getCrit3DTime(myDate, hour), getPragaMapFromVar(myVar)))
+                            return false;
+                    }
+                }
+            }
+        }
+
+        if (isDaily)
+        {
+            logInfoGUI("Interpolating daily variables for " + myDate.toString("yyyy-MM-dd"));
+
+            // initialize
+            pragaDailyMaps->initialize();
+
+            foreach (myVar, variables)
+            {
+                if (getVarFrequency(myVar) == daily)
+                {
+                    // TODO special variables
+
+                    if (! interpolationDemMain(myVar, getCrit3DTime(myDate, 0), getPragaMapFromVar(myVar)))
+                        return false;
+
+                    // fix daily temperatures consistency
+                    if (myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureMin)
+                    {
+                        if (! pragaDailyMaps->fixDailyThermalConsistency())
+                            return false;
+                    }
+                }
+            }
+        }
+
+        myDate = myDate.addDays(1);
     }
 
     closeLogInfo();
@@ -2214,7 +2301,6 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
                     }
 
                     meteoGridDbHandler->meteoGrid()->spatialAggregateMeteoGrid(myVar, daily, getCrit3DDate(myDate), 0, 0, &DEM, myGrid, interpolationSettings.getMeteoGridAggrMethod());
-
                 }
             }
         }
@@ -2246,8 +2332,8 @@ bool PragaProject::interpolationMeteoGridPeriod(QDate dateIni, QDate dateFin, QL
         return false;
 
     return true;
-
 }
+
 
 bool PragaProject::interpolationMeteoGrid(meteoVariable myVar, frequencyType myFrequency, const Crit3DTime& myTime)
 {

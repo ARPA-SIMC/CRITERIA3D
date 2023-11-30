@@ -58,6 +58,20 @@ void Crit3DDailyMeteoMaps::clear()
 }
 
 
+void Crit3DDailyMeteoMaps::initialize()
+{
+    mapDailyTAvg->emptyGrid();
+    mapDailyTMax->emptyGrid();
+    mapDailyTMin->emptyGrid();
+    mapDailyPrec->emptyGrid();
+    mapDailyRHAvg->emptyGrid();
+    mapDailyRHMin->emptyGrid();
+    mapDailyRHMax->emptyGrid();
+    mapDailyLeafW->emptyGrid();
+    mapDailyET0HS->emptyGrid();
+}
+
+
 bool Crit3DDailyMeteoMaps::computeHSET0Map(gis::Crit3DGisSettings* gisSettings, Crit3DDate myDate)
 {
     float airTmin, airTmax;
@@ -84,30 +98,26 @@ bool Crit3DDailyMeteoMaps::computeHSET0Map(gis::Crit3DGisSettings* gisSettings, 
     return gis::updateMinMaxRasterGrid(mapDailyET0HS);
 }
 
+
 bool Crit3DDailyMeteoMaps::fixDailyThermalConsistency()
 {
     if (! mapDailyTMax->isLoaded || ! mapDailyTMin->isLoaded) return true;
     if ( mapDailyTMax->getMapTime() != mapDailyTMin->getMapTime()) return true;
 
-    float TRange = NODATA;
-    unsigned row, col;
-
-    for (row = 0; row < unsigned(mapDailyTMax->header->nrRows); row++)
-        for (col = 0; col < unsigned(mapDailyTMax->header->nrCols); col++)
+    for (unsigned row = 0; row < unsigned(mapDailyTMax->header->nrRows); row++)
+    {
+        for (unsigned col = 0; col < unsigned(mapDailyTMax->header->nrCols); col++)
         {
             if (! isEqual(mapDailyTMax->value[row][col], mapDailyTMax->header->flag) &&
                 ! isEqual(mapDailyTMin->value[row][col], mapDailyTMin->header->flag))
             {
                 if (mapDailyTMin->value[row][col] > mapDailyTMax->value[row][col])
                 {
-                    //TRange = findNeighbourTRangeRaster(grdTmax, grdTmin, myRow, myCol)
-                    if (! isEqual(TRange, NODATA))
-                        mapDailyTMin->value[row][col] = mapDailyTMax->value[row][col] - TRange;
-                    else
-                        mapDailyTMin->value[row][col] = mapDailyTMax->value[row][col] - 0.1f;
+                    mapDailyTMin->value[row][col] = mapDailyTMax->value[row][col] - 0.1f;
                 }
             }
         }
+    }
 
     return true;
 }

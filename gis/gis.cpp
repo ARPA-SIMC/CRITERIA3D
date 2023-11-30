@@ -371,12 +371,14 @@ namespace gis
     }
 
 
+    // clean the grid (all NO DATA)
     void Crit3DRasterGrid::emptyGrid()
     {
         for (int row = 0; row < header->nrRows; row++)
             for (int col = 0; col < header->nrCols; col++)
                 value[row][col] = header->flag;
     }
+
 
     Crit3DRasterGrid::~Crit3DRasterGrid()
     {

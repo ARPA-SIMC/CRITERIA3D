@@ -32,8 +32,10 @@
         ~Crit3DDailyMeteoMaps();
 
         void clear();
+        void initialize();
 
         gis::Crit3DRasterGrid* getMapFromVar(meteoVariable myVar);
+
         bool computeHSET0Map(gis::Crit3DGisSettings *gisSettings, Crit3DDate myDate);
         bool fixDailyThermalConsistency();
     };
