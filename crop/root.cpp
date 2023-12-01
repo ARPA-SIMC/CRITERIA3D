@@ -33,6 +33,7 @@
 
 #include "commonConstants.h"
 #include "gammaFunction.h"
+#include "basicMath.h"
 #include "root.h"
 #include "crop.h"
 
@@ -186,10 +187,10 @@ namespace root
         const double MAX_DAILY_GROWTH = 0.02;             // [m]
         const double MIN_WATERTABLE_DISTANCE = 0.2;       // [m]
 
-        if (int(waterTableDepth) != int(NODATA)
+        if (! isEqual(waterTableDepth, NODATA)
                 && waterTableDepth > 0
-                && int(myCrop->roots.rootLength) != int(NODATA)
-                && !myCrop->isWaterSurplusResistant()
+                && ! isEqual(myCrop->roots.rootLength, NODATA)
+                && ! myCrop->isWaterSurplusResistant()
                 && myRootLength > myCrop->roots.rootLength)
         {
             // check on growth
@@ -288,7 +289,7 @@ namespace root
     }
 
 
-    int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double &minThickness, int *atoms)
+    int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms)
     {
         unsigned int nrLayers = unsigned(soilLayers.size());
         int multiplicationFactor = 1;
@@ -297,7 +298,7 @@ namespace root
 
         double tmp = minThickness * 1.001;
         if (tmp < 1)
-            multiplicationFactor = int(pow(10.0,-orderOfMagnitude(tmp)));
+            multiplicationFactor = int(pow(10.0, -orderOfMagnitude(tmp)));
 
         if (minThickness < 1)
         {
@@ -312,6 +313,7 @@ namespace root
            atoms[i] = value;
            counter += value;
         }
+
         return counter;
     }
 
@@ -324,7 +326,7 @@ namespace root
      */
     void cardioidDistribution(double shapeFactor, unsigned int nrLayersWithRoot,
                               unsigned int nrUpperLayersWithoutRoot, unsigned int totalLayers,
-                              double* densityThinLayers)
+                              std::vector<double> &densityThinLayers)
     {
         unsigned int i;
         std::vector<double> lunette, lunetteDensity;
@@ -382,15 +384,17 @@ namespace root
 
     void cylindricalDistribution(double deformation, unsigned int nrLayersWithRoot,
                                  unsigned int nrUpperLayersWithoutRoot, unsigned int totalLayers,
-                                 double* densityThinLayers)
+                                 std::vector<double> &densityThinLayers)
     {
        unsigned int i;
-       double* cylinderDensity = new double[nrLayersWithRoot*2];
+       std::vector<double> cylinderDensity;
+       cylinderDensity.resize(nrLayersWithRoot*2);
 
+       // initialize not deformed cylinder
        for (i = 0 ; i < (2*nrLayersWithRoot); i++)
        {
            cylinderDensity[i]= 1./(2*nrLayersWithRoot);
-       } // not deformed cylinder
+       }
 
        // linear and ovoidal deformation
        double deltaDeformation,rootDensitySum;
@@ -421,8 +425,6 @@ namespace root
        {
            densityThinLayers[nrUpperLayersWithoutRoot+i] = cylinderDensity[2*i] + cylinderDensity[2*i+1];
        }
-
-       delete[] cylinderDensity;
     }
 
 
@@ -452,26 +454,27 @@ namespace root
             || (myCrop->roots.rootShape == CYLINDRICAL_DISTRIBUTION))
         {
             double minimumThickness;
-            int* atoms = new int[nrLayers];
+            std::vector<int> atoms;
+            atoms.resize(nrLayers);
             int nrAtoms = root::getNrAtoms(soilLayers, minimumThickness, atoms);
 
             int numberOfRootedLayers, numberOfTopUnrootedLayers;
             numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
             numberOfRootedLayers = int(round(MINVALUE(myCrop->roots.rootLength, soilDepth) / minimumThickness));
+
             // roots are still too short
             if (numberOfRootedLayers == 0)
-            {
-                delete[] atoms;
                 return true;
-            }
-            // check nr thin layers
+
+            // check nr of thin layers
             if ((numberOfTopUnrootedLayers + numberOfRootedLayers) > nrAtoms)
             {
                 numberOfRootedLayers = nrAtoms - numberOfTopUnrootedLayers;
             }
 
             // initialize thin layers density
-            double* densityThinLayers =  new double[nrAtoms];
+            std::vector<double> densityThinLayers;
+            densityThinLayers.resize(nrAtoms);
             for (int i=0; i < nrAtoms; i++)
             {
                 densityThinLayers[i] = 0.;
@@ -491,16 +494,13 @@ namespace root
             int counter = 0;
             for (unsigned int layer=0; layer < nrLayers; layer++)
             {
-                for (unsigned int j = 0; j < unsigned(atoms[layer]); j++)
+                for (int j = 0; j < atoms[layer]; j++)
                 {
                     if (counter < nrAtoms)
                         myCrop->roots.rootDensity[layer] += densityThinLayers[counter];
                     counter++;
                 }
             }
-
-            delete[] atoms;
-            delete[] densityThinLayers;
         }
         else if (myCrop->roots.rootShape == GAMMA_DISTRIBUTION)
         {
