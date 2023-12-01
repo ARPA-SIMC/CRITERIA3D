@@ -47,7 +47,7 @@
 
     namespace root
     {
-        int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double &minThickness, int *atoms);
+        int getNrAtoms(const std::vector<soil::Crit3DLayer> &soilLayers, double &minThickness, std::vector<int> &atoms);
         double getRootLengthDD(Crit3DRoot* myRoot, double currentDD, double emergenceDD);
         rootDistributionType getRootDistributionType(int rootShape);
         int getRootDistributionNumber(rootDistributionType rootShape);
@@ -57,6 +57,7 @@
         double computeRootLength(Crit3DCrop* myCrop, double currentDD, double waterTableDepth);
         double computeRootDepth(Crit3DCrop* myCrop, double currentDD, double waterTableDepth);
         bool computeRootDensity(Crit3DCrop* myCrop, const std::vector<soil::Crit3DLayer> &soilLayers);
+
     }
 
 #endif // ROOT_H

@@ -24,6 +24,7 @@
 */
 
 #include "commonConstants.h"
+#include "basicMath.h"
 #include "cropDbTools.h"
 #include "project3D.h"
 #include "soilFluxes3D.h"
@@ -1342,13 +1343,27 @@ double Project3D::assignEvaporation(int row, int col, double lai)
 }
 
 
-// assign real crop transpiration
+// assign actual crop transpiration
 // return sum of crop transpiration over the soil column
-double Project3D::assignTranspiration(int row, int col, double lai)
+double Project3D::assignTranspiration(int row, int col, double lai, double degreeDays)
 {
     double transpirationSum = 0;
 
-    // check
+    if (lai < EPSILON || isEqual(degreeDays, NODATA))
+        return transpirationSum;
+
+    // check land unit
+    int index = getLandUnitIndexRowCol(row, col);
+    if (index == NODATA)
+        return transpirationSum;
+
+    // check crop
+    if (landUnitList[index].idCrop == "")
+        return transpirationSum;
+
+    Crit3DCrop myCrop = cropList[index];
+    // TODO assign roots from degreedays
+
     /*if (idCrop == "" || ! isLiving) return 0;
     if (roots.rootDepth <= roots.rootDepthMin) return 0;
     if (roots.firstRootLayer == NODATA) return 0;

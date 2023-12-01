@@ -241,9 +241,13 @@ void Crit3DProject::assignETreal()
                 totalEvaporation += evapFlow;
 
                 // assign real transpiration
-                double realTransp = assignTranspiration(row, col, lai);         // [mm]
-                double traspFlow = area * (realTransp / 1000.);                 // [m3 h-1]
-                totalTranspiration += traspFlow;
+                if (lai > 0)
+                {
+                    float degreeDays = degreeDaysMap.value[row][col];
+                    double realTransp = assignTranspiration(row, col, lai, degreeDays);     // [mm]
+                    double traspFlow = area * (realTransp / 1000.);                         // [m3 h-1]
+                    totalTranspiration += traspFlow;
+                }
             }
         }
     }
@@ -1018,7 +1022,6 @@ bool Crit3DProject::modelHourlyCycle(QDateTime myTime, const QString& hourlyOutp
     {
         waterSinkSource.at(size_t(i)) = 0.;
     }
-
 
     if (processes.computeEvaporation || processes.computeCrop)
     {
