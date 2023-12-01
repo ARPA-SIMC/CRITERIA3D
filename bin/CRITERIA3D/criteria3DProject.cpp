@@ -651,11 +651,11 @@ int Crit3DProject::getCrit3DSoilIndex(double x, double y)
     int idSoil = getCrit3DSoilId(x, y);
     if (idSoil == NODATA) return NODATA;
 
-    for (unsigned int index = 0; index < soilList.size(); index++)
+    for (int index = 0; index < soilList.size(); index++)
     {
         if (soilList[index].id == idSoil)
         {
-            return signed(index);
+            return index;
         }
     }
 
