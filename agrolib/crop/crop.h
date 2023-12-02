@@ -91,6 +91,8 @@
         void updateRootDepth(double currentDD, double waterTableDepth);
         double computeRootLength(double currentDD, double waterTableDepth);
 
+        void updateRootDepth3D(double currentDD, double waterTableDepth, double previousRootDepth, double totalSoilDepth);
+
         double computeSimpleLAI(double myDegreeDays, double latitude, int currentDoy);
 
         bool dailyUpdate(const Crit3DDate &myDate, double latitude, const std::vector<soil::Crit3DLayer> &soilLayers,

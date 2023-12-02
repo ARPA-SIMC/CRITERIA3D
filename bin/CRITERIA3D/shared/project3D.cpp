@@ -1253,12 +1253,12 @@ double getCoveredSurfaceFraction(double leafAreaIndex)
 }
 
 
-/*! \brief getMaxEvaporation
+/*! \brief getPotentialEvaporation
  *  \param ET0: potential evapo-transpiration [mm]
  *  \param leafAreaIndex [m2 m-2]
  *  \return maximum soil evaporation [mm]
  */
-double getMaxSoilEvaporation(double ET0, double leafAreaIndex)
+double getPotentialEvaporation(double ET0, double leafAreaIndex)
 {
     double evapMax = ET0 * (1.0 - getCoveredSurfaceFraction(leafAreaIndex));
     // TODO check evaporation on free water
@@ -1280,15 +1280,18 @@ double getMaxCropTranspiration(double ET0, double leafAreaIndex, double maxKc)
 }
 
 
-// compute evaporation [mm]
-// TODO check pond
-double Project3D::assignEvaporation(int row, int col, double lai)
+/*! \brief assignEvaporation
+ *  assign soil evaporation with a decrescent rate from surface to MAX_EVAPORATION_DEPTH
+ *  \param row, col
+ *  \param leafAreaIndex [m2 m-2]
+ *  \return actual evaporation on soil column [mm]
+ */
+// TODO cambiare con codice 1D
+double Project3D::assignEvaporation(int row, int col, double leafAreaIndex)
 {
-    double depthCoeff, thickCoeff, layerCoeff;
-    double availableWater;                              // [mm]
+    double const MAX_EVAPORATION_DEPTH = 0.2;               // [m]
 
-    double const MAX_EVAPORATION_DEPTH = 0.2;           // [m]
-    int lastEvapLayer;                                  // [-] index
+    int lastEvapLayer;
     if (computationSoilDepth >= MAX_EVAPORATION_DEPTH)
     {
         lastEvapLayer = getSoilLayerIndex(MAX_EVAPORATION_DEPTH);
@@ -1298,22 +1301,23 @@ double Project3D::assignEvaporation(int row, int col, double lai)
        lastEvapLayer = getSoilLayerIndex(computationSoilDepth);
     }
 
-    double area = DEM.header->cellSize * DEM.header->cellSize;              // [m2]
+    double area = DEM.header->cellSize * DEM.header->cellSize;                  // [m2]
 
-    double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);    // [mm]
-    double potentialEvaporation = getMaxSoilEvaporation(et0, lai);          // [mm]
-    double realEvaporation = 0;                                             // [mm]
+    double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);        // [mm]
+    double potentialEvaporation = getPotentialEvaporation(et0, leafAreaIndex);  // [mm]
+    double actualEvaporation = 0;                                               // [mm]
 
     for (unsigned int layer=0; layer <= unsigned(lastEvapLayer); layer++)
     {
         long nodeIndex = long(indexMap.at(layer).value[row][col]);
 
-        // layer coefficient
+        double availableWater;              // [mm]
+        double layerRate;                   // [-]
         if (layer == 0)
         {
             // surface: water level [m] -> [mm]
             availableWater = getCriteria3DVar(availableWaterContent, nodeIndex) * 1000;
-            layerCoeff = 1;
+            layerRate = 1;
         }
         else
         {
@@ -1322,24 +1326,24 @@ double Project3D::assignEvaporation(int row, int col, double lai)
             // [m] -> [mm]
             availableWater *= layerThickness[layer] * 1000;
 
-            depthCoeff = layerDepth[layer] / MAX_EVAPORATION_DEPTH;
-            thickCoeff = layerThickness[layer] / 0.04;
-            layerCoeff = exp(-EULER * depthCoeff) * thickCoeff;
+            double depthCoeff = layerDepth[layer] / MAX_EVAPORATION_DEPTH;
+            double thickCoeff = layerThickness[layer] / 0.04;
+            layerRate = exp(-EULER * depthCoeff) * thickCoeff;
         }
 
-        double residualEvap = potentialEvaporation - realEvaporation;       // [mm]
-        double layerEvap = MINVALUE(potentialEvaporation * layerCoeff, residualEvap);  // [mm]
+        double residualEvap = potentialEvaporation - actualEvaporation;                  // [mm]
+        double layerEvap = MINVALUE(potentialEvaporation * layerRate, residualEvap);     // [mm]
         layerEvap = MINVALUE(layerEvap, availableWater);
 
         if (layerEvap > 0)
         {
-            realEvaporation += layerEvap;
+            actualEvaporation += layerEvap;
             double flow = area * (layerEvap / 1000);                        // [m3 h-1]
             waterSinkSource.at(unsigned(nodeIndex)) -= (flow / 3600);       // [m3 s-1]
         }
     }
 
-    return realEvaporation;
+    return actualEvaporation;
 }
 
 
@@ -1352,6 +1356,11 @@ double Project3D::assignTranspiration(int row, int col, double lai, double degre
     if (lai < EPSILON || isEqual(degreeDays, NODATA))
         return transpirationSum;
 
+    // check soil
+    int soilIndex = int(soilIndexMap.value[row][col]);
+    if (soilIndex == NODATA)
+        return transpirationSum;
+
     // check land unit
     int index = getLandUnitIndexRowCol(row, col);
     if (index == NODATA)
@@ -1362,7 +1371,15 @@ double Project3D::assignTranspiration(int row, int col, double lai, double degre
         return transpirationSum;
 
     Crit3DCrop myCrop = cropList[index];
-    // TODO assign roots from degreedays
+    soil::Crit3DSoil mySoil = soilList[soilIndex];
+
+    // TODO roots in watertable
+    double watertableDepth = NODATA;
+    double previousRootDepth = NODATA;
+
+    myCrop.updateRootDepth3D(degreeDays, watertableDepth, previousRootDepth, mySoil.totalDepth);
+
+    // TODO assign root density from degreedays
 
     /*if (idCrop == "" || ! isLiving) return 0;
     if (roots.rootDepth <= roots.rootDepthMin) return 0;
