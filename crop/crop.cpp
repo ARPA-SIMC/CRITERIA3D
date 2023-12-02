@@ -528,7 +528,7 @@ void Crit3DCrop::updateRootDepth(double currentDD, double waterTableDepth)
 // return current root lenght [m]
 double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
 {
-    double newRootLength = NODATA;
+    double newRootLength;
 
     if (isRootStatic())
     {
@@ -555,19 +555,23 @@ double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
         }
     }
 
+    if (isEqual(waterTableDepth, NODATA))
+    {
+        return newRootLength;
+    }
+
     // WATERTABLE
     // Nel saturo le radici vanno in asfissia
     // per cui si mantengono a distanza dalla falda nella fase di crescita
-    // le radici possono crescere se:
-    // la falda è più bassa o si abbassa (max 2 cm al giorno)
+    // le radici possono crescere (max 2 cm al giorno) se:
+    // la falda è più bassa o si sta abbassando
     // restano invariate se:
     // 1) non sono più in fase di crescita
-    // 2) se sono già dentro la falda
+    // 2) sono già dentro la falda (currentRootDepth > waterTableDepth)
     const double MAX_DAILY_GROWTH = 0.02;             // [m]
     const double MIN_WATERTABLE_DISTANCE = 0.1;       // [m]
 
     if (! isWaterSurplusResistant()
-        && ! isEqual(waterTableDepth, NODATA)
         && ! isEqual(roots.currentRootLength, NODATA)
         && newRootLength > roots.currentRootLength)
     {
@@ -586,6 +590,41 @@ double Crit3DCrop::computeRootLength(double currentDD, double waterTableDepth)
     }
 
     return newRootLength;
+}
+
+
+/*! \brief updateRootDepth3D
+ *  update current root lenght and root depth
+ *  function for Criteria3D (update key variables)
+ *  \param currentDD:  current degree days sum
+ *  \param waterTableDepth      [m]
+ *  \param previousRootDepth    [m]
+ *  \param totalSoilDepth       [m]
+ */
+void Crit3DCrop::updateRootDepth3D(double currentDD,  double waterTableDepth, double previousRootDepth, double totalSoilDepth)
+{
+    // set actualRootDepthMax
+    if (isEqual(totalSoilDepth, NODATA) || isEqual(totalSoilDepth, 0))
+    {
+        roots.actualRootDepthMax = roots.rootDepthMax;
+    }
+    else
+    {
+        roots.actualRootDepthMax = std::min(roots.rootDepthMax, totalSoilDepth);
+    }
+
+    // set currentRootLength
+    if (isEqual(previousRootDepth, NODATA))
+    {
+        roots.currentRootLength = 0;
+    }
+    else
+    {
+        roots.currentRootLength = previousRootDepth - roots.rootDepthMin;
+    }
+
+    roots.currentRootLength = computeRootLength(currentDD, waterTableDepth);
+    roots.rootDepth = roots.rootDepthMin + roots.currentRootLength;
 }
 
 
