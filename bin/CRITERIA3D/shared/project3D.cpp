@@ -1362,22 +1362,20 @@ double Project3D::assignTranspiration(int row, int col, double lai, double degre
         return transpirationSum;
 
     // check land unit
-    int index = getLandUnitIndexRowCol(row, col);
-    if (index == NODATA)
+    int cropIndex = getLandUnitIndexRowCol(row, col);
+    if (cropIndex == NODATA)
         return transpirationSum;
 
     // check crop
-    if (landUnitList[index].idCrop == "")
+    if (landUnitList[cropIndex].idCrop == "")
         return transpirationSum;
 
-    Crit3DCrop myCrop = cropList[index];
-    soil::Crit3DSoil mySoil = soilList[soilIndex];
-
     // TODO roots in watertable
-    double watertableDepth = NODATA;
-    double previousRootDepth = NODATA;
+    double watertableDepth = NODATA;                            // [m]
+    double previousRootDepth = NODATA;                          // [m]
+    double totalSoilDepth = soilList[soilIndex].totalDepth;     // [m]
 
-    myCrop.updateRootDepth3D(degreeDays, watertableDepth, previousRootDepth, mySoil.totalDepth);
+    cropList[cropIndex].updateRootDepth3D(degreeDays, watertableDepth, previousRootDepth, totalSoilDepth);
 
     // TODO assign root density from degreedays
 
