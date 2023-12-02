@@ -30,7 +30,7 @@
 
         /*! variables */
         double actualRootDepthMax;          /*!< [m]  it takes into account soil depth */
-        double rootLength;                  /*!< [m]  */
+        double actualRootLength;            /*!< [m]  */
         int firstRootLayer;                 /*!< [-]  */
         int lastRootLayer;                  /*!< [-]  */
         std::vector<double> rootDensity;    /*!< [-]  */

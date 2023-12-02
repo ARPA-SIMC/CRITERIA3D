@@ -424,7 +424,7 @@ void Crit3DCrop::resetCrop(unsigned int nrLayers)
         currentSowingDoy = NODATA;
 
         // roots
-        roots.rootLength = 0.0;
+        roots.actualRootLength = 0.0;
         roots.rootDepth = NODATA;
     }
 

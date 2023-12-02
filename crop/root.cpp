@@ -29,7 +29,6 @@
 
 
 #include <math.h>
-#include <iostream>
 
 #include "commonConstants.h"
 #include "gammaFunction.h"
@@ -58,7 +57,7 @@ void Crit3DRoot::clear()
     actualRootDepthMax = NODATA;
     firstRootLayer = NODATA;
     lastRootLayer = NODATA;
-    rootLength = NODATA;
+    actualRootLength = NODATA;
     rootDepth = NODATA;
     rootDensity.clear();
     rootsAdditionalCohesion = NODATA;
@@ -93,6 +92,7 @@ namespace root
             case (GAMMA_DISTRIBUTION):
                 return 5;
             default:
+                // cardioid
                 return 4;
          }
     }
@@ -128,94 +128,97 @@ namespace root
             return "gamma function";
         }
 
-        return "No root type";
+        return "Undefined root type";
     }
 
+
+    // [m]
     double computeRootDepth(Crit3DCrop* myCrop, double currentDD, double waterTableDepth)
     {
         if (!(myCrop->isLiving))
         {
-            myCrop->roots.rootLength = 0.0;
+            myCrop->roots.actualRootLength = 0.0;
             myCrop->roots.rootDepth = NODATA;
         }
         else
         {
-            myCrop->roots.rootLength = computeRootLength(myCrop, currentDD, waterTableDepth);
-            myCrop->roots.rootDepth = myCrop->roots.rootDepthMin + myCrop->roots.rootLength;
+            myCrop->roots.actualRootLength = computeRootLength(myCrop, currentDD, waterTableDepth);
+            myCrop->roots.rootDepth = myCrop->roots.rootDepthMin + myCrop->roots.actualRootLength;
         }
 
         return myCrop->roots.rootDepth;
     }
 
 
-    // TODO this function computes the root length based on thermal units, it could be changed for perennial crops
+    // [m]
     double computeRootLength(Crit3DCrop* myCrop, double currentDD, double waterTableDepth)
     {
-        double myRootLength = NODATA;
+        double newRootLength = NODATA;
 
         if (myCrop->isRootStatic())
         {
-            myRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
+            newRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
         }
         else
         {
             if (currentDD <= 0)
             {
-                myRootLength = 0.0;
+                newRootLength = 0.0;
             }
             else
             {
                 if (currentDD > myCrop->roots.degreeDaysRootGrowth)
-                    myRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
+                {
+                    newRootLength = myCrop->roots.actualRootDepthMax - myCrop->roots.rootDepthMin;
+                }
                 else
                 {
                     // in order to avoid numerical divergences when calculating density through cardioid and gamma function
                     currentDD = MAXVALUE(currentDD, 1.0);
-                    myRootLength = getRootLengthDD(&(myCrop->roots), currentDD, myCrop->degreeDaysEmergence);
+                    newRootLength = getRootLengthDD(&(myCrop->roots), currentDD, myCrop->degreeDaysEmergence);
                 }
             }
         }
 
         // WATERTABLE
-        // le radici nel terreno saturo vanno in asfissia
-        // per cui vanno mantenute a distanza nella fase di crescita
+        // Nel saturo le radici vanno in asfissia
+        // per cui si mantengono a distanza dalla falda nella fase di crescita
         // le radici possono crescere se:
         // la falda è più bassa o si abbassa (max 2 cm al giorno)
         // restano invariate se:
         // 1) non sono più in fase di crescita
         // 2) se sono già dentro la falda
         const double MAX_DAILY_GROWTH = 0.02;             // [m]
-        const double MIN_WATERTABLE_DISTANCE = 0.2;       // [m]
+        const double MIN_WATERTABLE_DISTANCE = 0.1;       // [m]
 
         if (! isEqual(waterTableDepth, NODATA)
-                && waterTableDepth > 0
-                && ! isEqual(myCrop->roots.rootLength, NODATA)
-                && ! myCrop->isWaterSurplusResistant()
-                && myRootLength > myCrop->roots.rootLength)
+            && ! isEqual(myCrop->roots.actualRootLength, NODATA)
+            && ! myCrop->isWaterSurplusResistant()
+            && newRootLength > myCrop->roots.actualRootLength)
         {
-            // check on growth
+            // la fase di crescita è finita
             if (currentDD > myCrop->roots.degreeDaysRootGrowth)
-                myRootLength = myCrop->roots.rootLength;
+                newRootLength = myCrop->roots.actualRootLength;
             else
-                myRootLength = MINVALUE(myRootLength, myCrop->roots.rootLength + MAX_DAILY_GROWTH);
+                newRootLength = MINVALUE(newRootLength, myCrop->roots.actualRootLength + MAX_DAILY_GROWTH);
 
             // check on watertable
-            double maxLenght = waterTableDepth - myCrop->roots.rootDepthMin - MIN_WATERTABLE_DISTANCE;
-            if (myRootLength > maxLenght)
+            double maxRootLenght = waterTableDepth - MIN_WATERTABLE_DISTANCE - myCrop->roots.rootDepthMin;
+            if (newRootLength > maxRootLenght)
             {
-                myRootLength = MAXVALUE(myCrop->roots.rootLength, maxLenght);
+                newRootLength = MAXVALUE(myCrop->roots.actualRootLength, maxRootLenght);
             }
         }
 
-        return myRootLength;
+        return newRootLength;
     }
 
 
-    //[m]
+    // [m]
     double getRootLengthDD(Crit3DRoot* myRoot, double currentDD, double emergenceDD)
     {
         // this function computes the roots rate of development
-        double myRootLength = NODATA;
+        double newRootLength = NODATA;
         double maxRootLength = myRoot->actualRootDepthMax - myRoot->rootDepthMin;
 
         if (currentDD <= 0) return 0.;
@@ -223,7 +226,7 @@ namespace root
 
         if (myRoot->growth == LINEAR)
         {
-            myRootLength = maxRootLength * (currentDD / myRoot->degreeDaysRootGrowth);
+            newRootLength = maxRootLength * (currentDD / myRoot->degreeDaysRootGrowth);
         }
         else if (myRoot->growth == LOGISTIC)
         {
@@ -236,10 +239,10 @@ namespace root
             logMax = (myRoot->actualRootDepthMax) / (1 + exp(-b - k * myRoot->degreeDaysRootGrowth));
             logMin = myRoot->actualRootDepthMax / (1 + exp(-b));
             deformationFactor = (logMax - logMin) / maxRootLength ;
-            myRootLength = 1.0 / deformationFactor * (myRoot->actualRootDepthMax / (1.0 + exp(-b - k * currentDD)) - logMin);
+            newRootLength = 1.0 / deformationFactor * (myRoot->actualRootDepthMax / (1.0 + exp(-b - k * currentDD)) - logMin);
         }
 
-        return myRootLength;
+        return newRootLength;
     }
 
 
@@ -447,7 +450,7 @@ namespace root
             myCrop->roots.rootDensity[i] = 0.0;
         }
 
-        if ((! myCrop->isLiving) || (myCrop->roots.rootLength <= 0 ))
+        if ((! myCrop->isLiving) || (myCrop->roots.actualRootLength <= 0 ))
             return true;
 
         if ((myCrop->roots.rootShape == CARDIOID_DISTRIBUTION)
@@ -460,7 +463,7 @@ namespace root
 
             int numberOfRootedLayers, numberOfTopUnrootedLayers;
             numberOfTopUnrootedLayers = int(round(myCrop->roots.rootDepthMin / minimumThickness));
-            numberOfRootedLayers = int(round(MINVALUE(myCrop->roots.rootLength, soilDepth) / minimumThickness));
+            numberOfRootedLayers = int(round(MINVALUE(myCrop->roots.actualRootLength, soilDepth) / minimumThickness));
 
             // roots are still too short
             if (numberOfRootedLayers == 0)
@@ -506,7 +509,7 @@ namespace root
         {
             double kappa, theta,a,b;
             double mean, mode;
-            mean = myCrop->roots.rootLength * 0.5;
+            mean = myCrop->roots.actualRootLength * 0.5;
             int iterations=0;
             double integralComplementary;
             do{
@@ -514,14 +517,14 @@ namespace root
                 theta = mean - mode;
                 kappa = mean / theta;
                 iterations++;
-                integralComplementary=incompleteGamma(kappa,3*myCrop->roots.rootLength/theta) - incompleteGamma(kappa,myCrop->roots.rootLength/theta);
+                integralComplementary=incompleteGamma(kappa,3*myCrop->roots.actualRootLength/theta) - incompleteGamma(kappa,myCrop->roots.actualRootLength/theta);
                 mean *= 0.99;
             } while(integralComplementary>0.01 && iterations<1000);
 
             for (unsigned int i=1 ; i < nrLayers; i++)
             {
                 b = MAXVALUE(soilLayers[i].depth + soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // right extreme
-                if (b>0 && b< myCrop->roots.rootLength)
+                if (b>0 && b< myCrop->roots.actualRootLength)
                 {
                     a = MAXVALUE(soilLayers[i].depth - soilLayers[i].thickness*0.5 - myCrop->roots.rootDepthMin,0); // left extreme
                     myCrop->roots.rootDensity[i] = incompleteGamma(kappa,b/theta) - incompleteGamma(kappa,a/theta); // incompleteGamma is already normalized by gamma(kappa)
