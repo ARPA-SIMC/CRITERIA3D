@@ -1846,7 +1846,6 @@ void Crit1DCarbonNitrogenProfile::N_harvest(Crit1DCase &myCase) // public functi
 
     for (int l = myCase.crop.roots.firstRootLayer; l <= myCase.crop.roots.lastRootLayer; l++) // verificare i cicli for per cambio indici
     {
-        //Select Case TipoColtura
         // annual crop
         if (myCase.crop.type == HERBACEOUS_ANNUAL || myCase.crop.type == HORTICULTURAL || myCase.crop.type ==  FALLOW_ANNUAL)
             N_toLitter = myCase.crop.roots.rootDensity[l] * nitrogenTotalProfile.roots; // !! prendere il dato da dove?
