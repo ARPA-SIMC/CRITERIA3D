@@ -137,12 +137,16 @@ namespace root
     // this function computes the roots rate of development
     double getRootLengthDD(const Crit3DRoot &myRoot, double currentDD, double emergenceDD)
     {
-        double currentRootLength = NODATA;
+        // in order to avoid numerical divergences when calculating density through cardioid and gamma function
+        if (currentDD <= 1)
+            return 0.;
+
+        // growth phase ended
         double maxRootLength = myRoot.actualRootDepthMax - myRoot.rootDepthMin;
+        if (currentDD > myRoot.degreeDaysRootGrowth)
+            return maxRootLength;
 
-        if (currentDD <= 0) return 0.;
-        if (currentDD > myRoot.degreeDaysRootGrowth) return maxRootLength;
-
+        double currentRootLength = NODATA;
         if (myRoot.growth == LINEAR)
         {
             currentRootLength = maxRootLength * (currentDD / myRoot.degreeDaysRootGrowth);
