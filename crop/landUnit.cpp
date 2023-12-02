@@ -21,17 +21,18 @@ bool loadLandUnitList(const QSqlDatabase &dbCrop, std::vector<Crit3DLandUnit> &l
 {
     landUnitList.clear();
 
-    QString queryString = "SELECT * FROM land_units";
-    QSqlQuery query = dbCrop.exec(queryString);
-    query.last();
+    QSqlQuery query(dbCrop);
+    query.prepare("SELECT * FROM land_units");
+    if (! query.exec())
+    {
+        errorStr = query.lastError().text();
+        return false;
+    }
 
+    query.last();
     if (! query.isValid())
     {
-        if (query.lastError().isValid())
-            errorStr = query.lastError().text();
-        else
-            errorStr = "the table is empty";
-
+        errorStr = "the table land_units is empty";
         return false;
     }
 
@@ -54,7 +55,7 @@ bool loadLandUnitList(const QSqlDatabase &dbCrop, std::vector<Crit3DLandUnit> &l
 
         i++;
     }
-    while(query.next());
+    while( query.next() );
 
     return true;
 }
