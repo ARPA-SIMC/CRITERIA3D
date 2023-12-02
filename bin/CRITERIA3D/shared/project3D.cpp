@@ -1237,45 +1237,45 @@ bool Project3D::setSinkSource()
 }
 
 /*! \brief getCoveredSurfaceFraction
- *  \param leafAreaIndex [m2 m-2]
+ *  \param lai: leaf area index [m2 m-2]
  *  \ref Liangxia Zhang, Zhongmin Hu, Jiangwen Fan, Decheng Zhou & Fengpei Tang, 2014
  *  A meta-analysis of the canopy light extinction coefficient in terrestrial ecosystems
  *  "Cropland had the highest value of K (0.62), followed by broadleaf forest (0.59)
  *  shrubland (0.56), grassland (0.50), and needleleaf forest (0.45)"
  *  \return covered surface fraction [-]
  */
-double getCoveredSurfaceFraction(double leafAreaIndex)
+double getCoveredSurfaceFraction(double lai)
 {
-    if (leafAreaIndex < EPSILON) return 0;
+    if (lai < EPSILON) return 0;
 
-    double k = 0.6;      // [-] light extinction coefficient
-    return 1 - exp(-k * leafAreaIndex);
+    double k = 0.6;             // [-] light extinction coefficient
+    return 1 - exp(-k * lai);
 }
 
 
 /*! \brief getPotentialEvaporation
  *  \param ET0: potential evapo-transpiration [mm]
- *  \param leafAreaIndex [m2 m-2]
+ *  \param lai: leaf area index [m2 m-2]
  *  \return maximum soil evaporation [mm]
  */
-double getPotentialEvaporation(double ET0, double leafAreaIndex)
+double getPotentialEvaporation(double ET0, double lai)
 {
-    double evapMax = ET0 * (1.0 - getCoveredSurfaceFraction(leafAreaIndex));
+    double evapMax = ET0 * (1.0 - getCoveredSurfaceFraction(lai));
     // TODO check evaporation on free water
-    return evapMax * 0.66;
+    return evapMax * 0.67;
 }
 
 
 /*! \brief getMaxCropTranspiration
  *  \param ET0: potential evapo-transpiration [mm]
- *  \param leafAreaIndex [m2 m-2]
+ *  \param lai: leaf area index [m2 m-2]
  *  \param maxKc: maximum crop coefficient [-]
  *  \return maximum crop transpiration [mm]
  */
-double getMaxCropTranspiration(double ET0, double leafAreaIndex, double maxKc)
+double getPotentialTranspiration(double ET0, double lai, double kcMax)
 {
-    double covSurfFraction = getCoveredSurfaceFraction(leafAreaIndex);
-    double kcFactor = 1 + (maxKc - 1) * covSurfFraction;
+    double covSurfFraction = getCoveredSurfaceFraction(lai);
+    double kcFactor = 1 + (kcMax - 1) * covSurfFraction;
     return ET0 * covSurfFraction * kcFactor;
 }
 
@@ -1283,11 +1283,11 @@ double getMaxCropTranspiration(double ET0, double leafAreaIndex, double maxKc)
 /*! \brief assignEvaporation
  *  assign soil evaporation with a decrescent rate from surface to MAX_EVAPORATION_DEPTH
  *  \param row, col
- *  \param leafAreaIndex [m2 m-2]
+ *  \param lai: leaf area index [m2 m-2]
  *  \return actual evaporation on soil column [mm]
  */
 // TODO cambiare con codice 1D
-double Project3D::assignEvaporation(int row, int col, double leafAreaIndex)
+double Project3D::assignEvaporation(int row, int col, double lai)
 {
     double const MAX_EVAPORATION_DEPTH = 0.2;               // [m]
 
@@ -1304,7 +1304,7 @@ double Project3D::assignEvaporation(int row, int col, double leafAreaIndex)
     double area = DEM.header->cellSize * DEM.header->cellSize;                  // [m2]
 
     double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);        // [mm]
-    double potentialEvaporation = getPotentialEvaporation(et0, leafAreaIndex);  // [mm]
+    double potentialEvaporation = getPotentialEvaporation(et0, lai);            // [mm]
     double actualEvaporation = 0;                                               // [mm]
 
     for (unsigned int layer=0; layer <= unsigned(lastEvapLayer); layer++)
@@ -1351,38 +1351,46 @@ double Project3D::assignEvaporation(int row, int col, double leafAreaIndex)
 // return sum of crop transpiration over the soil column
 double Project3D::assignTranspiration(int row, int col, double lai, double degreeDays)
 {
-    double transpirationSum = 0;
+    double actualTranspiration = 0;
 
     if (lai < EPSILON || isEqual(degreeDays, NODATA))
-        return transpirationSum;
-
-    // check soil
-    int soilIndex = int(soilIndexMap.value[row][col]);
-    if (soilIndex == NODATA)
-        return transpirationSum;
+        return actualTranspiration;
 
     // check land unit
     int cropIndex = getLandUnitIndexRowCol(row, col);
     if (cropIndex == NODATA)
-        return transpirationSum;
+        return actualTranspiration;
 
     // check crop
-    if (landUnitList[cropIndex].idCrop == "")
-        return transpirationSum;
+    if (landUnitList[cropIndex].idCrop.isEmpty())
+        return actualTranspiration;
 
-    // TODO roots in watertable
-    double watertableDepth = NODATA;                            // [m]
-    double previousRootDepth = NODATA;                          // [m]
+    // compute maximum transpiration
+    double et0 = double(hourlyMeteoMaps->mapHourlyET0->value[row][col]);        // [mm]
+    double kcMax = cropList[cropIndex].kcMax;                                   // [-]
+    double maxTranspiration = getPotentialTranspiration(et0, lai, kcMax);
+
+    if (maxTranspiration < EPSILON)
+        return actualTranspiration;
+
+    // check soil
+    int soilIndex = int(soilIndexMap.value[row][col]);
+    if (soilIndex == NODATA)
+        return actualTranspiration;
     double totalSoilDepth = soilList[soilIndex].totalDepth;     // [m]
 
+    // TODO watertable
+    double watertableDepth = NODATA;                            // [m]
+    double previousRootDepth = NODATA;                          // [m]
+
+    // update root lenght
     cropList[cropIndex].updateRootDepth3D(degreeDays, watertableDepth, previousRootDepth, totalSoilDepth);
+    if (cropList[cropIndex].roots.currentRootLength <= 0)
+        return actualTranspiration;
 
     // TODO assign root density from degreedays
-
-    /*if (idCrop == "" || ! isLiving) return 0;
-    if (roots.rootDepth <= roots.rootDepthMin) return 0;
+    /*
     if (roots.firstRootLayer == NODATA) return 0;
-    if (maxTranspiration < EPSILON) return 0;
 
     double thetaWP;                                 // [m3 m-3] volumetric water content at Wilting Point
     double cropWP;                                  // [mm] wilting point specific for crop
@@ -1500,7 +1508,7 @@ double Project3D::assignTranspiration(int row, int col, double lai, double degre
     }
     */
 
-    return transpirationSum;
+    return actualTranspiration;
 }
 
 
