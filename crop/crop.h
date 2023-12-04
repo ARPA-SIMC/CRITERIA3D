@@ -86,7 +86,12 @@
         void initialize(double latitude, unsigned int nrLayers, double totalSoilDepth, int currentDoy);
         bool needReset(Crit3DDate myDate, double latitude, double waterTableDepth);
         void resetCrop(unsigned int nrLayers);
+
         bool updateLAI(double latitude, unsigned int nrLayers, int currentDoy);
+        void updateRootDepth(double currentDD, double waterTableDepth);
+        double computeRootLength(double currentDD, double waterTableDepth);
+
+        void updateRootDepth3D(double currentDD, double waterTableDepth, double previousRootDepth, double totalSoilDepth);
 
         double computeSimpleLAI(double myDegreeDays, double latitude, int currentDoy);
 

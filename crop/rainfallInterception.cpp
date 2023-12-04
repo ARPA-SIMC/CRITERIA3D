@@ -1,8 +1,6 @@
-#include <stdio.h>
 #include <math.h>
 
 #include "rainfallInterception.h"
-#include "commonConstants.h"
 
 
 namespace canopy {

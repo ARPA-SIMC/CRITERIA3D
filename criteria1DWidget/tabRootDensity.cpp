@@ -192,14 +192,15 @@ void TabRootDensity::updateRootDensity()
     int prevYear = year - 1;
     Crit3DDate firstDate = Crit3DDate(1, 1, prevYear);
     Crit3DDate lastDate = Crit3DDate(currentDate->date().day(), currentDate->date().month(), year);
-    double waterTableDepth = NODATA;
-    double tmin;
-    double tmax;
+
+    double tmin, tmax, waterTableDepth;
     double maxRootDensity = 0;
+
     for (Crit3DDate myDate = firstDate; myDate <= lastDate; ++myDate)
     {
         tmin = mp.getMeteoPointValueD(myDate, dailyAirTemperatureMin);
         tmax = mp.getMeteoPointValueD(myDate, dailyAirTemperatureMax);
+        waterTableDepth = mp.getMeteoPointValueD(myDate, dailyWaterTableDepth);
 
         if (!myCrop.dailyUpdate(myDate, mp.latitude, layers, tmin, tmax, waterTableDepth, error))
         {
