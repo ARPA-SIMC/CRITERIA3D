@@ -1928,7 +1928,6 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
     // check variables
     bool isDaily = false;
     bool isHourly = false;
-    QList<meteoVariable> varToSave;
     meteoVariable myVar;
 
     foreach (myVar, variables)
@@ -1944,14 +1943,6 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
             isHourly = true;
         else if (freq == daily)
             isDaily = true;
-
-        varToSave.push_back(myVar);
-
-        // save two variables for vector wind
-        if (myVar == windVectorIntensity)
-            varToSave.push_back(windVectorDirection);
-        else if (myVar == windVectorDirection)
-            varToSave.push_back(windVectorIntensity);
     }
 
     // initialize maps
@@ -1980,17 +1971,27 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
             return false;
     }
 
+    // initialize data list
+    QList<QList<QString>> dailyDataList;
+    QList<QList<QString>> hourlyDataList;
+    if (isDaily)
+    {
+        dailyDataList.resize(outputPoints.size());
+    }
+    if (isHourly)
+    {
+        hourlyDataList.resize(outputPoints.size());
+    }
+
     int nrDays = firstDate.daysTo(lastDate) + 1;
     int nrDaysLoading = std::min(nrDays, 30);
-    int countDaysSaving = 0;
+    QDate lastLoadingDate;
+    bool isOk;
 
     QDate myDate = firstDate;
-    QDate lastLoadingDate = firstDate.addDays(nrDaysLoading - 1);
     while (myDate <= lastDate)
     {
-        countDaysSaving++;
-
-        // check if load needed
+        // load data
         if (myDate == firstDate || myDate > lastLoadingDate)
         {
             lastLoadingDate = myDate.addDays(nrDaysLoading - 1);
@@ -2012,16 +2013,21 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
 
             for (int hour = 1; hour <= 24; hour++)
             {
-                logInfoGUI("Interpolating hourly variables for " + myDate.toString("yyyy-MM-dd") + " " + QString::number(hour) + ":00");
+                QDateTime myDateTime;
+                myDateTime.setDate(myDate);
+                myDateTime.setTime(QTime(hour, 0, 0, 0));
+                QString dateTimeStr = myDateTime.toString("yyyy-MM-dd hh:mm:ss");
+
+                logInfoGUI("Interpolating hourly variables for " + dateTimeStr);
+
                 foreach (myVar, variables)
                 {
                     if (getVarFrequency(myVar) == hourly)
                     {
                         setComputeOnlyPoints(true);
 
-                        // TODO other special variables
+                        // TODO special variables
 
-                        bool isOk;
                         if (myVar == airRelHumidity && interpolationSettings.getUseDewPoint())
                         {
                             if (interpolationSettings.getUseInterpolatedTForRH())
@@ -2045,6 +2051,13 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
 
                         if (! isOk)
                             return false;
+
+                        int varId = meteoPointsDbHandler->getIdfromMeteoVar(myVar);
+                        for (int i = 0; i < outputPoints.size(); i++)
+                        {
+                            float value = outputPoints[i].currentValue;
+                            hourlyDataList[i].push_back(QString("('%1',%2,%3)").arg(dateTimeStr).arg(varId).arg(value));
+                        }
                     }
                 }
             }
@@ -2052,10 +2065,11 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
 
         if (isDaily)
         {
-            logInfoGUI("Interpolating daily variables for " + myDate.toString("yyyy-MM-dd"));
-
             // initialize
             pragaDailyMaps->initialize();
+            QString dateStr = myDate.toString("yyyy-MM-dd");
+
+            logInfoGUI("Interpolating daily variables for " + dateStr);
 
             foreach (myVar, variables)
             {
@@ -2065,19 +2079,49 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
 
                     // TODO special variables
 
-                    bool isOk = interpolationDemMain(myVar, getCrit3DTime(myDate, 0), getPragaMapFromVar(myVar));
+                    isOk = interpolationDemMain(myVar, getCrit3DTime(myDate, 0), getPragaMapFromVar(myVar));
 
                     setComputeOnlyPoints(false);
 
                     if (! isOk)
                         return false;
 
-                    // fix daily temperatures consistency
-                    if (myVar == dailyAirTemperatureMax || myVar == dailyAirTemperatureMin)
+                    int varId = meteoPointsDbHandler->getIdfromMeteoVar(myVar);
+                    for (int i = 0; i < outputPoints.size(); i++)
                     {
-                        if (! pragaDailyMaps->fixDailyThermalConsistency())
-                            return false;
+                        float value = outputPoints[i].currentValue;
+                        dailyDataList[i].push_back(QString("('%1',%2,%3)").arg(dateStr).arg(varId).arg(value));
                     }
+                }
+            }
+        }
+
+        if (myDate == lastLoadingDate)
+        {
+            // save and clear datalist
+            for (int i = 0; i < outputPoints.size(); i++)
+            {
+                if (isDaily)
+                {
+                    QString logStr = "";
+                    QString pointCode = QString::fromStdString(outputPoints[i].id);
+                    outputMeteoPointsDbHandler->writeDailyDataList(pointCode, dailyDataList[i], logStr);
+                    if (! logStr.isEmpty())
+                    {
+                        logInfo(logStr);
+                    }
+                    dailyDataList[i].clear();
+                }
+                if (isHourly)
+                {
+                    QString logStr = "";
+                    QString pointCode = QString::fromStdString(outputPoints[i].id);
+                    outputMeteoPointsDbHandler->writeHourlyDataList(pointCode, hourlyDataList[i], logStr);
+                    if (! logStr.isEmpty())
+                    {
+                        logInfo(logStr);
+                    }
+                    hourlyDataList[i].clear();
                 }
             }
         }
@@ -2086,8 +2130,7 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
     }
 
     closeLogInfo();
-    errorString = "TODO save data";
-    return false;
+    return true;
 }
 
 
