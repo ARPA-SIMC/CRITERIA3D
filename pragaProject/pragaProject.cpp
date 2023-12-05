@@ -1972,8 +1972,8 @@ bool PragaProject::interpolationOutputPointsPeriod(QDate firstDate, QDate lastDa
     }
 
     // initialize data list
-    QList<QList<QString>> dailyDataList;
-    QList<QList<QString>> hourlyDataList;
+    QVector<QList<QString>> dailyDataList;
+    QVector<QList<QString>> hourlyDataList;
     if (isDaily)
     {
         dailyDataList.resize(outputPoints.size());
