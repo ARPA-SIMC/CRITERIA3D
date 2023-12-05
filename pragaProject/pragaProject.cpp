@@ -3314,7 +3314,7 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
 
     QDate firstDate = meteoPointsDbHandler->getFirstDate(daily).date();
     QDate lastDate = meteoPointsDbHandler->getLastDate(daily).date();
-    QDate myDate = firstDate;
+    QDate myDate;
     bool loadHourly = false;
     bool loadDaily = true;
     bool showInfo = true;
@@ -3360,6 +3360,7 @@ bool PragaProject::computeDroughtIndexPoint(droughtIndex index, int timescale, i
 
     for (int i=0; i < nrMeteoPoints; i++)
     {
+        myDate = firstDate;
         if (showInfo && (i % step) == 0)
         {
             updateProgressBar(i);
