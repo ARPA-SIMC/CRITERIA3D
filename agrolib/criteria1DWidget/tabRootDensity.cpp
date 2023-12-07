@@ -27,7 +27,7 @@ TabRootDensity::TabRootDensity()
     chartView->setChart(chart);
 
     seriesRootDensity = new QHorizontalBarSeries();
-    seriesRootDensity->setName("Rooth density");
+    seriesRootDensity->setName("Root density");
     set = new QBarSet("");
     seriesRootDensity->append(set);
     chart->addSeries(seriesRootDensity);
@@ -35,7 +35,7 @@ TabRootDensity::TabRootDensity()
     axisX = new QValueAxis();
     axisY = new QBarCategoryAxis();
 
-    axisX->setTitleText("Rooth density [%]");
+    axisX->setTitleText("Root density [%]");
     axisX->setRange(0,2.2);
     axisX->setTickCount(12);
     axisX->setLabelFormat("%.1f");
