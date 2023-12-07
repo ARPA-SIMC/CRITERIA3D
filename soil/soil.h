@@ -201,7 +201,7 @@
             void cleanSoil();
             void addHorizon(int nHorizon, const Crit3DHorizon &newHorizon);
             void deleteHorizon(int nHorizon);
-            int getHorizonIndex(double depth);
+            int getHorizonIndex(double depth) const;
 
             bool setSoilLayers(double layerThicknessMin, double geometricFactor,
                                std::vector<Crit3DLayer> &soilLayers, std::string &myError);
