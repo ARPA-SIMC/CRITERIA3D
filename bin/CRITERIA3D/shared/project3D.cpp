@@ -32,6 +32,7 @@
 
 #include "math.h"
 #include "utilities.h"
+#include "root.h"
 
 #include <QUuid>
 #include <QApplication>
@@ -1387,6 +1388,12 @@ double Project3D::assignTranspiration(int row, int col, double lai, double degre
     cropList[cropIndex].updateRootDepth3D(degreeDays, watertableDepth, previousRootDepth, totalSoilDepth);
     if (cropList[cropIndex].roots.currentRootLength <= 0)
         return actualTranspiration;
+
+    // update root density
+    if (! root::computeRootDensity3D(&(cropList[cropIndex]), soilList[soilIndex], nrLayers, layerDepth, layerThickness))
+    {
+        return actualTranspiration;
+    }
 
     // TODO assign root density from degreedays
     /*
