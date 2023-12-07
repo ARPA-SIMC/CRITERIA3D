@@ -648,7 +648,7 @@ double Crit3DCrop::getMaxEvaporation(double ET0)
 {
     double evapMax = ET0 * (1.0 - getCoveredSurfaceFraction());
     // TODO check evaporation on wet bare soil
-    return evapMax * 0.66;
+    return evapMax * 0.67;
 }
 
 
