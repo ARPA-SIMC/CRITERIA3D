@@ -499,9 +499,9 @@ bool Crit3DProject::loadCriteria3DParameters()
             {
                 snowModel.snowParameters.snowWaterHoldingCapacity = parameters->value("snowWaterHoldingCapacity").toDouble();
             }
-            if (parameters->contains("snowSkinThickness") && !parameters->value("snowSkinThickness").toString().isEmpty())
+            if (parameters->contains("skinThickness") && !parameters->value("skinThickness").toString().isEmpty())
             {
-                snowModel.snowParameters.snowSkinThickness = parameters->value("snowSkinThickness").toDouble();
+                snowModel.snowParameters.skinThickness = parameters->value("skinThickness").toDouble();
             }
             if (parameters->contains("snowVegetationHeight") && !parameters->value("snowVegetationHeight").toString().isEmpty())
             {
@@ -534,7 +534,7 @@ bool Crit3DProject::writeCriteria3DParameters()
     parameters->setValue("snow/tempMaxWithSnow", snowModel.snowParameters.tempMaxWithSnow);
     parameters->setValue("snow/tempMinWithRain", snowModel.snowParameters.tempMinWithRain);
     parameters->setValue("snow/snowWaterHoldingCapacity", snowModel.snowParameters.snowWaterHoldingCapacity);
-    parameters->setValue("snow/snowSkinThickness", snowModel.snowParameters.snowSkinThickness);
+    parameters->setValue("snow/skinThickness", snowModel.snowParameters.skinThickness);
     parameters->setValue("snow/snowVegetationHeight", snowModel.snowParameters.snowVegetationHeight);
     parameters->setValue("snow/soilAlbedo", snowModel.snowParameters.soilAlbedo);
 
@@ -848,7 +848,7 @@ bool Crit3DProject::initializeSnowModel()
         return false;
     }
 
-    snowMaps.initialize(DEM, snowModel.snowParameters.snowSkinThickness);
+    snowMaps.initialize(DEM, snowModel.snowParameters.skinThickness);
     return true;
 }
 

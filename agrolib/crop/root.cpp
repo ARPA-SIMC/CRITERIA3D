@@ -493,7 +493,7 @@ namespace root
     }
 
 
-    bool computeRootDensity3D(Crit3DCrop* myCrop, const soil::Crit3DSoil &currentSoil, int nrLayers,
+    bool computeRootDensity3D(Crit3DCrop* myCrop, const soil::Crit3DSoil &currentSoil, unsigned int nrLayers,
                               const std::vector<double> &layerDepth, const std::vector<double> &layerThickness)
     {
         // check soil
@@ -506,7 +506,7 @@ namespace root
 
         // Initialize
         myCrop->roots.rootDensity.clear();
-         myCrop->roots.rootDensity.resize(nrLayers);
+        myCrop->roots.rootDensity.resize(nrLayers);
         for (unsigned int i = 0; i < nrLayers; i++)
         {
             myCrop->roots.rootDensity[i] = 0.0;
@@ -554,14 +554,13 @@ namespace root
                                     numberOfTopUnrootedLayers, signed(nrAtoms), densityThinLayers);
         }
 
-
         double maxLayerDepth = layerDepth[nrLayers-1] + layerThickness[nrLayers-1] * 0.5;
         int atom = 0;
-        double currentDepth = atom / 100.;                                    // [m]
+        double currentDepth = double(atom) * 0.01;                              // [m]
         double rootDensitySum = 0.;
         while (currentDepth <= maxLayerDepth && atom < nrAtoms)
         {
-            for (int l = 0; l < nrLayers; l++)
+            for (unsigned int l = 0; l < nrLayers; l++)
             {
                 double upperDepth = layerDepth[l] - layerThickness[l] * 0.5;
                 double lowerDepth = layerDepth[l] + layerThickness[l] * 0.5;
@@ -574,7 +573,7 @@ namespace root
             }
 
             atom++;
-            currentDepth = atom / 100.;                                    // [m]
+            currentDepth = double(atom) * 0.01;                                 // [m]
         }
 
         if (rootDensitySum <= EPSILON)

@@ -29,7 +29,7 @@
     class Crit3DSnowParameters
     {
     public:
-        double snowSkinThickness;              /*!<  [m] */
+        double skinThickness;                  /*!<  [m] */
         double soilAlbedo;                     /*!<  [-] bare soil */
         double snowVegetationHeight;           /*!<  [m] height of vegetation */
         double snowWaterHoldingCapacity;       /*!<  [-] percentuale di acqua libera che il manto nevoso può trattenere */
@@ -113,7 +113,7 @@
 
     double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double windSpeed, double vegetativeHeight);
     double computeInternalEnergy(double initSoilPackTemp,int bulkDensity, double initSWE);
-    double computeSurfaceEnergy(double initSnowSurfaceTemp, double snowSkinThickness);
+    double computeSurfaceEnergy(double initSnowSurfaceTemp, double skinThickness);
 
 
 #endif // SNOW_H

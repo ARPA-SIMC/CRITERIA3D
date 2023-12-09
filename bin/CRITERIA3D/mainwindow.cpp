@@ -2100,7 +2100,7 @@ void MainWindow::on_actionSnow_settings_triggered()
     dialogSnowSetting.setRainfallThresholdValue(myProject.snowModel.snowParameters.tempMaxWithSnow);
     dialogSnowSetting.setSnowThresholdValue(myProject.snowModel.snowParameters.tempMinWithRain);
     dialogSnowSetting.setWaterHoldingValue(myProject.snowModel.snowParameters.snowWaterHoldingCapacity);
-    dialogSnowSetting.setSurfaceThickValue(myProject.snowModel.snowParameters.snowSkinThickness);
+    dialogSnowSetting.setSurfaceThickValue(myProject.snowModel.snowParameters.skinThickness);
     dialogSnowSetting.setVegetationHeightValue(myProject.snowModel.snowParameters.snowVegetationHeight);
     dialogSnowSetting.setSoilAlbedoValue(myProject.snowModel.snowParameters.soilAlbedo);
 
@@ -2114,13 +2114,13 @@ void MainWindow::on_actionSnow_settings_triggered()
         double tempMaxWithSnow = dialogSnowSetting.getRainfallThresholdValue();
         double tempMinWithRain = dialogSnowSetting.getSnowThresholdValue();
         double snowWaterHoldingCapacity = dialogSnowSetting.getWaterHoldingValue();
-        double snowSkinThickness = dialogSnowSetting.getSurfaceThickValue();
+        double skinThickness = dialogSnowSetting.getSurfaceThickValue();
         double snowVegetationHeight = dialogSnowSetting.getVegetationHeightValue();
         double soilAlbedo = dialogSnowSetting.getSoilAlbedoValue();
         myProject.snowModel.snowParameters.tempMinWithRain = tempMinWithRain;
         myProject.snowModel.snowParameters.tempMaxWithSnow = tempMaxWithSnow;
         myProject.snowModel.snowParameters.snowWaterHoldingCapacity = snowWaterHoldingCapacity;
-        myProject.snowModel.snowParameters.snowSkinThickness = snowSkinThickness;
+        myProject.snowModel.snowParameters.skinThickness = skinThickness;
         myProject.snowModel.snowParameters.snowVegetationHeight = snowVegetationHeight;
         myProject.snowModel.snowParameters.soilAlbedo = soilAlbedo;
         if (!myProject.writeCriteria3DParameters())
