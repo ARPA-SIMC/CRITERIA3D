@@ -851,10 +851,11 @@ Crit3DTime Project::getCrit3DCurrentTime()
 
 QDateTime Project::getCurrentTime()
 {
-    QDateTime myTime;
-    myTime.setDate(this->currentDate);
-    return myTime.addSecs(this->currentHour * HOUR_SECONDS);
+    QDateTime myDateTime;
+    myDateTime.setDate(this->currentDate);
+    return myDateTime.addSecs(this->currentHour * HOUR_SECONDS);
 }
+
 
 void Project::getMeteoPointsRange(float& minimum, float& maximum, bool useNotActivePoints)
 {

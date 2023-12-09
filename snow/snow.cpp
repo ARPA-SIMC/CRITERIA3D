@@ -43,8 +43,8 @@ Crit3DSnowParameters::Crit3DSnowParameters()
 void Crit3DSnowParameters::initialize()
 {
     // default values
-    skinThickness = 0.02;            /*!<  [m] */ // LC: VERSIONI DIVERSE IN BROOKS: 3mm (nel testo), 2-3cm (nel codice)
-    soilAlbedo = 0.2;                    /*!<  [-] bare soil - 20% */
+    skinThickness = 0.02;               /*!<  [m] */ // LC: VERSIONI DIVERSE IN BROOKS: 3mm (nel testo), 2-3cm (nel codice)
+    soilAlbedo = 0.2;                   /*!<  [-] bare soil */
     snowVegetationHeight = 1;
     snowWaterHoldingCapacity = 0.05;
     snowMaxWaterContent = 0.1;
@@ -205,8 +205,8 @@ void Crit3DSnow::computeSnowBrooksModel()
     else
         cloudCover = 0.1;
 
-    // ombreggiamento per vegetazione (4m sopra manto nevoso: ombreggiamento completo)
-    // TODO improve - use LAI when available
+    // vegetation shadowing (4 m sopra manto nevoso: ombreggiamento completo)
+    // TODO: use LAI when available
     double maxSnowDensity = 10;          // 1 mm snow = 1 cm water
     double maxVegetationHeight = 4;      // [m]
     double vegetationShadowing;          // [-]
