@@ -341,9 +341,10 @@ bool Crit3DProject::runModels(QDateTime firstTime, QDateTime lastTime)
         int firstHour = (myDate == firstDate) ? hour1 : 0;
         int lastHour = (myDate == lastDate) ? hour2 : 23;
 
-        for (currentHour = firstHour; currentHour <= lastHour; currentHour++)
+        for (int hour = firstHour; hour <= lastHour; hour++)
         {
-            QDateTime myTime = QDateTime(myDate, QTime(currentHour, 0, 0), Qt::UTC);
+            currentHour = hour;
+            QDateTime myTime = QDateTime(myDate, QTime(hour, 0, 0), Qt::UTC);
 
             if (! modelHourlyCycle(myTime, currentOutputPath))
             {
@@ -1191,8 +1192,16 @@ bool Crit3DProject::loadModelState(QString statePath)
     int month = stateStr.mid(4,2).toInt();
     int day = stateStr.mid(6,2).toInt();
     int hour = stateStr.mid(10,2).toInt();
-    setCurrentDate(QDate(year, month, day));
-    setCurrentHour(hour);
+    if (hour == 24)
+    {
+        setCurrentDate(QDate(year, month, day).addDays(1));
+        setCurrentHour(0);
+    }
+    else
+    {
+        setCurrentDate(QDate(year, month, day));
+        setCurrentHour(hour);
+    }
 
     // snow model
     QString snowPath = statePath + "/snow";

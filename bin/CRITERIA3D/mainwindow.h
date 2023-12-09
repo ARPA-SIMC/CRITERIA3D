@@ -104,7 +104,7 @@
 
         void on_actionSnow_settings_triggered();
         void on_actionSnow_initialize_triggered();
-        void on_actionSnow_compute_current_hour_triggered();
+        void on_actionSnow_compute_next_hour_triggered();
         void on_actionSnow_run_model_triggered();
 
         void on_actionView_Snow_water_equivalent_triggered();
@@ -121,6 +121,7 @@
         void on_flagSave_state_daily_step_toggled(bool isChecked);
 
         void on_actionCriteria3D_Initialize_triggered();
+        void on_actionCriteria3D_compute_next_hour_triggered();
         void on_actionCriteria3D_run_models_triggered();
 
         void on_buttonModelPause_clicked();
@@ -195,8 +196,6 @@
         void on_actionTopographicDistanceMapWrite_triggered();
 
         void on_actionTopographicDistanceMapLoad_triggered();
-
-        void on_actionCriteria3D_compute_current_hour_triggered();
 
         void on_actionShow_3D_viewer_triggered();
 

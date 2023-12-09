@@ -44,7 +44,7 @@
 #include "dialogWaterFluxesSettings.h"
 #include "utilities.h"
 
-#include <QDebug>
+#include <QTime>
 
 
 extern Crit3DProject myProject;
@@ -1876,11 +1876,20 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
         return false;
     }
 
-    firstTime.setTimeSpec(Qt::UTC);
-    firstTime.setDate(myProject.getCurrentDate());
-    firstTime = firstTime.addSecs((myProject.getCurrentHour() +1) * HOUR_SECONDS);
+    firstTime.setTimeZone(QTimeZone::UTC);
+    if (myProject.getCurrentHour() == 24)
+    {
+        firstTime.setDate(myProject.getCurrentDate().addDays(1));
+        firstTime.setTime(QTime(0,0,0,0));
+    }
+    else
+    {
+        firstTime.setDate(myProject.getCurrentDate());
+        firstTime.setTime(QTime(myProject.getCurrentHour(),0,0,0));
+    }
+    firstTime = firstTime.addSecs(HOUR_SECONDS);
 
-    lastTime.setTimeSpec(Qt::UTC);
+    lastTime.setTimeZone(QTimeZone::UTC);
     lastTime = firstTime;
     lastTime.setTime(QTime(23,0,0));
 
@@ -2076,7 +2085,8 @@ void MainWindow::on_actionSnow_run_model_triggered()
     startModels(firstTime, lastTime);
 }
 
-void MainWindow::on_actionSnow_compute_current_hour_triggered()
+
+void MainWindow::on_actionSnow_compute_next_hour_triggered()
 {
     if (! myProject.snowMaps.isInitialized)
     {
@@ -2084,7 +2094,16 @@ void MainWindow::on_actionSnow_compute_current_hour_triggered()
             return;
     }
 
-    QDateTime currentTime = myProject.getCurrentTime();
+    QDateTime currentTime;
+    if (myProject.getCurrentHour() == 23)
+    {
+        currentTime.setDate(myProject.getCurrentDate().addDays(1));
+        currentTime.setTime(QTime(0, 0, 0, 0));
+    }
+    else
+    {
+        currentTime = myProject.getCurrentTime().addSecs(HOUR_SECONDS);
+    }
 
     myProject.processes.initialize();
     myProject.processes.computeMeteo = true;
@@ -2093,6 +2112,7 @@ void MainWindow::on_actionSnow_compute_current_hour_triggered()
 
     startModels(currentTime, currentTime);
 }
+
 
 void MainWindow::on_actionSnow_settings_triggered()
 {
@@ -2211,7 +2231,7 @@ void MainWindow::on_actionCriteria3D_Initialize_triggered()
 }
 
 
-void MainWindow::on_actionCriteria3D_compute_current_hour_triggered()
+void MainWindow::on_actionCriteria3D_compute_next_hour_triggered()
 {
     if (! myProject.isCriteria3DInitialized)
     {
@@ -2219,7 +2239,16 @@ void MainWindow::on_actionCriteria3D_compute_current_hour_triggered()
         return;
     }
 
-    QDateTime currentTime = myProject.getCurrentTime();
+    QDateTime currentTime;
+    if (myProject.getCurrentHour() == 23)
+    {
+        currentTime.setDate(myProject.getCurrentDate().addDays(1));
+        currentTime.setTime(QTime(0, 0, 0, 0));
+    }
+    else
+    {
+        currentTime = myProject.getCurrentTime().addSecs(HOUR_SECONDS);
+    }
 
     startModels(currentTime, currentTime);
 }
@@ -2398,9 +2427,6 @@ void MainWindow::on_actionLoad_state_triggered()
         updateDateTime();
         loadMeteoPointsDataSingleDay(myProject.getCurrentDate(), true);
         redrawMeteoPoints(currentPointsVisualization, true);
-
-        //myProject.logInfoGUI("Model state successfully loaded: " + myProject.getCurrentDate().toString()
-        //                     + " H:" + QString::number(myProject.getCurrentHour()));
     }
     else
     {
