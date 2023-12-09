@@ -77,7 +77,7 @@ void Crit3DSnowMaps::clear()
 }
 
 
-void Crit3DSnowMaps::initialize(const gis::Crit3DRasterGrid &dtm, double snowSkinThickness)
+void Crit3DSnowMaps::initialize(const gis::Crit3DRasterGrid &dtm, double skinThickness)
 {
     _snowFallMap->initializeGrid(dtm);
     _snowMeltMap->initializeGrid(dtm);
@@ -99,7 +99,7 @@ void Crit3DSnowMaps::initialize(const gis::Crit3DRasterGrid &dtm, double snowSki
     // initialize with zero values
     _snowWaterEquivalentMap->setConstantValueWithBase(0, dtm);
 
-    resetSnowModel(snowSkinThickness);
+    resetSnowModel(skinThickness);
 
     isInitialized = true;
 }
@@ -151,7 +151,7 @@ void Crit3DSnowMaps::setPoint(Crit3DSnow &snowPoint, int row, int col)
 }
 
 
-void Crit3DSnowMaps::resetSnowModel(double snowSkinThickness)
+void Crit3DSnowMaps::resetSnowModel(double skinThickness)
 {
     float initSWE;                  /*!<  [mm]     */
     int surfaceBulkDensity;         /*!<  [kg/m^3] */
@@ -172,7 +172,7 @@ void Crit3DSnowMaps::resetSnowModel(double snowSkinThickness)
 
                 _snowSurfaceTempMap->value[row][col] = float(_initSnowSurfaceTemp);
 
-                _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergy(_initSnowSurfaceTemp, snowSkinThickness));
+                _surfaceEnergyMap->value[row][col] = float(computeSurfaceEnergy(_initSnowSurfaceTemp, skinThickness));
 
                 _internalEnergyMap->value[row][col] = float(computeInternalEnergy(_initSoilPackTemp, surfaceBulkDensity, initSWE/1000.));
 
