@@ -1876,7 +1876,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
         return false;
     }
 
-    firstTime.setTimeZone(QTimeZone::UTC);
+    firstTime.setTimeZone(QTimeZone::utc());
     if (myProject.getCurrentHour() == 24)
     {
         firstTime.setDate(myProject.getCurrentDate().addDays(1));
@@ -1889,7 +1889,7 @@ bool selectDates(QDateTime &firstTime, QDateTime &lastTime)
     }
     firstTime = firstTime.addSecs(HOUR_SECONDS);
 
-    lastTime.setTimeZone(QTimeZone::UTC);
+    lastTime.setTimeZone(QTimeZone::utc());
     lastTime = firstTime;
     lastTime.setTime(QTime(23,0,0));
 
