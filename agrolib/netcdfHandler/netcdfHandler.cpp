@@ -149,6 +149,8 @@ void NetCDFHandler::clear()
     variables.clear();
     metadata.str("");
     timeUnit = "";
+
+    missingValue = NODATA;
 }
 
 
@@ -525,11 +527,25 @@ bool NetCDFHandler::readProperties(string fileName)
             else if (ncTypeId == NC_INT)
             {
                 nc_get_att(ncId, v, attrName, &valueInt);
+
+                // no data
+                if (lowerCase(string(attrName)) == "missing_value" || lowerCase(string(attrName)) == "nodata")
+                {
+                    missingValue = double(valueInt);
+                }
+
                 metadata << attrName << " = " << valueInt << endl;
             }
             else if (ncTypeId == NC_DOUBLE)
             {
                 nc_get_att(ncId, v, attrName, &value);
+
+                // no data
+                if (lowerCase(string(attrName)) == "missing_value" || lowerCase(string(attrName)) == "nodata")
+                {
+                    missingValue = value;
+                }
+
                 metadata << attrName << " = " << value << endl;
             }
         }
@@ -1131,6 +1147,7 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
         }
             default:
         {
+            delete[] values;
             errorStr = "Wrong variable type.";
             return false;
         }
