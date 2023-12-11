@@ -54,6 +54,8 @@
         bool isHourly;
         bool isDaily;
 
+        double missingValue;
+
         gis::Crit3DLatLonHeader latLonHeader;
 
         NetCDFHandler();
