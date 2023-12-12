@@ -40,13 +40,13 @@ Crit3DSnowParameters::Crit3DSnowParameters()
 void Crit3DSnowParameters::initialize()
 {
     // default values
-    skinThickness = 0.02;               /*!<  [m] */ // LC: VERSIONI DIVERSE IN BROOKS: 3mm (nel testo), 2-3cm (nel codice)
+    skinThickness = 0.02;               /*!<  [m]   */ // VERSIONI DIVERSE IN BROOKS: 3mm (nel testo), 2-3cm (nel codice)
     soilAlbedo = 0.2;                   /*!<  [-] bare soil */
-    snowVegetationHeight = 1;
-    snowWaterHoldingCapacity = 0.05;
-    snowMaxWaterContent = 0.1;
-    tempMaxWithSnow = 2;
-    tempMinWithRain = -0.5;
+    snowVegetationHeight = 1;           /*!<  [m]   */
+    snowWaterHoldingCapacity = 0.05;    /*!<  [-]   */
+    tempMaxWithSnow = 2;                /*!<  [°C]  */
+    tempMinWithRain = -0.5;             /*!<  [°C]  */
+    snowSurfaceDampingDepth = 0.05;     /*!<  [m]   */ // VERSIONI DIVERSE IN BROOKS: 0.05 - 0.15
 }
 
 
@@ -145,7 +145,6 @@ void Crit3DSnow::computeSnowBrooksModel()
 {
     double solarRadTot;
     double cloudCover;                           /*!<   [-]        */
-    double prevIceContent, prevLWaterContent;    /*!<   [mm]       */
     double currentRatio;
 
     double airActualVapDensity;                  /*!<   [kg m-3]   */
@@ -171,7 +170,7 @@ void Crit3DSnow::computeSnowBrooksModel()
 
     // free water
     bool isWater = false;
-    if ((_surfaceWaterContent / 1000) > snowParameters.snowMaxWaterContent )     /*!<  [m]  */
+    if (_surfaceWaterContent > 100. )     /*!<  [mm]  acqua libera (fiumi - torrenti) */
             isWater = true;
 
     if (isWater || (! checkValidPoint()))
@@ -216,32 +215,31 @@ void Crit3DSnow::computeSnowBrooksModel()
     double prevInternalEnergy = _internalEnergy;
     double prevSurfaceEnergy = _surfaceEnergy;
     double prevSurfaceTemp = _surfaceTemp;
+    double prevIceContent = _iceContent;
+    double prevLWaterContent = _liquidWaterContent;
 
-    /*--------------------------------------------------------------------
-    // controlli di coerenza per eventuali modifiche manuali su mappa SWE
-    // -------------------------------------------------------------------*/
     if (previousSWE > 0)
     {
-        prevIceContent = _iceContent;
-        prevLWaterContent = _liquidWaterContent;
-
-        if ( (prevIceContent <= 0) && (prevLWaterContent <= 0) )
+        /*--------------------------------------------------------------------
+        // controlli di coerenza per eventuali modifiche manuali su mappa SWE
+        // -------------------------------------------------------------------*/
+        if (prevIceContent <= 0 && prevLWaterContent <= 0)
         {
-            // neve aggiunta
             prevIceContent = previousSWE;
+            prevLWaterContent = previousSWE * snowParameters.snowWaterHoldingCapacity / (1 - snowParameters.snowWaterHoldingCapacity);
 
             // Pag. 53 formula 3.23
-            prevInternalEnergy = -(previousSWE / 1000) * LATENT_HEAT_FUSION * WATER_DENSITY;
+            prevInternalEnergy = -previousSWE * 0.001 * LATENT_HEAT_FUSION * WATER_DENSITY;
 
-            // stato fittizio:: neve recente prossima alla fusione, con una settimana di età
-            _ageOfSnow = 7;
             prevSurfaceTemp = std::min(prevSurfaceTemp, 0.);
-            prevSurfaceEnergy = std::min(prevSurfaceEnergy, 0.);
+            prevSurfaceEnergy = computeSurfaceEnergySnow(prevSurfaceTemp, std::min(previousSWE, snowParameters.skinThickness));
+
+            _ageOfSnow = 1;
         }
 
         /*! check on sum */
         currentRatio = previousSWE / (prevIceContent + prevLWaterContent);
-        if (fabs(currentRatio - 1) > 0.001)
+        if (! isEqual(currentRatio, 1) )
         {
             prevIceContent = prevIceContent * currentRatio;
             prevLWaterContent = prevLWaterContent * currentRatio;
@@ -254,7 +252,31 @@ void Crit3DSnow::computeSnowBrooksModel()
         _ageOfSnow = NODATA;
     }
 
-    /*! \brief Vapor Density and Roughness Calculations */
+    /*! \brief check on soil internal energy - added by ftomei  */
+
+    if ( previousSWE < EPSILON )
+    {
+        // no snow condition: all soil
+        double estInternalEnergy = computeInternalEnergySoil(prevSurfaceTemp, DEFAULT_BULK_DENSITY);    // [kJ m-2]
+        double absDifference = fabs(estInternalEnergy - prevInternalEnergy);                            // [kJ m-2]
+
+        // the difference is very high
+        if (absDifference > 1000)
+        {
+            // check to avoid division by zero
+            if ( isEqual(estInternalEnergy, 0) )
+            {
+                estInternalEnergy = EPSILON;
+            }
+            double ratio = prevInternalEnergy / estInternalEnergy;                                      // [-]
+            if ( (ratio < 0.5) || (ratio > 2))
+            {
+                prevInternalEnergy = (prevInternalEnergy + estInternalEnergy) * 0.5;
+            }
+        }
+    }
+
+    /*! \brief compute Roughness and Vapor Density  */
 
     // brooks originale
     if ( previousSWE > SNOW_MINIMUM_HEIGHT)
@@ -449,16 +471,25 @@ void Crit3DSnow::computeSnowBrooksModel()
     /*! Snow water equivalent */
     _snowWaterEquivalent = _iceContent + _liquidWaterContent;
 
-    /*! surface energy [kJ m-2] and surface temeprature [°C] */
-    // all snow
-    double surfaceEnergySnow = std::min(0., prevSurfaceEnergy + (QTotal + Qr) * (snowParameters.skinThickness / SNOW_DAMPING_DEPTH) );
+    /*! surface energy [kJ m-2] and surface temperature [°C] */
+    double surfaceEnergySnow;
+    // snow
+    if (_snowWaterEquivalent > 0 && fabs(_internalEnergy) < EPSILON)
+    {
+        surfaceEnergySnow = 0.;
+    }
+    else
+    {
+        double snowRatio = std::min(snowWaterEquivalent * 0.001, snowParameters.skinThickness) / snowParameters.snowSurfaceDampingDepth;
+        surfaceEnergySnow = std::min(0., prevSurfaceEnergy + (QTotal + Qr) * snowRatio);
+    }
     double surfaceTempSnow = surfaceEnergySnow / (WATER_DENSITY * SNOW_SPECIFIC_HEAT * snowParameters.skinThickness);
 
     // all soil
     double surfaceEnergySoil = prevSurfaceEnergy + (QTotal + Qr) * (snowParameters.skinThickness / SOIL_DAMPING_DEPTH);
     double surfaceTempSoil = surfaceEnergySoil / (DEFAULT_BULK_DENSITY * SOIL_SPECIFIC_HEAT * snowParameters.skinThickness);
 
-    double snowDepthRatio = 5.;
+    double snowDepthRatio = 4.;
     double snowFraction = std::min(_snowWaterEquivalent * snowDepthRatio / 1000., snowParameters.skinThickness) / snowParameters.skinThickness;
 
     _surfaceEnergy = (surfaceEnergySnow * snowFraction) + surfaceEnergySoil * (1 - snowFraction);
@@ -611,14 +642,27 @@ double aerodynamicResistanceCampbell77(bool isSnow , double zRefWind, double win
 
 
 // pag. 54 (3.29)
-double computeInternalEnergy(double initSoilPackTemp,int bulkDensity, double initSWE)
+double computeInternalEnergy(double soilTemperature, int bulkDensity, double swe)
 {
-    return initSoilPackTemp * (WATER_DENSITY * SNOW_SPECIFIC_HEAT * initSWE + bulkDensity * SOIL_SPECIFIC_HEAT * SNOW_DAMPING_DEPTH);
+    return soilTemperature * ( WATER_DENSITY * SNOW_SPECIFIC_HEAT * swe * 0.001
+                                  + bulkDensity * SOIL_SPECIFIC_HEAT * SOIL_DAMPING_DEPTH );
 }
 
 
-double computeSurfaceEnergy(double initSnowSurfaceTemp, double skinThickness)
+double computeInternalEnergySoil(double soilTemperature, int bulkDensity)
 {
-    return initSnowSurfaceTemp * WATER_DENSITY * SNOW_SPECIFIC_HEAT * skinThickness;
+    return soilTemperature * bulkDensity * SOIL_SPECIFIC_HEAT * SOIL_DAMPING_DEPTH;
+}
+
+
+double computeSurfaceEnergySnow(double surfaceTemperature, double skinThickness)
+{
+    return surfaceTemperature * WATER_DENSITY * SNOW_SPECIFIC_HEAT * skinThickness;
+}
+
+
+double computeSurfaceEnergySoil(double surfaceTemperature, double skinThickness)
+{
+    return surfaceTemperature * DEFAULT_BULK_DENSITY * SOIL_SPECIFIC_HEAT * skinThickness;
 }
 
