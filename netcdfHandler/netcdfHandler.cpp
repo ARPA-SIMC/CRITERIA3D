@@ -127,6 +127,10 @@ void NetCDFHandler::clear()
     idTime = NODATA;
     idTimeBnds = NODATA;
 
+    indexTimeDim = NODATA;
+    indexYLonDim = NODATA;
+    indexXLatDim = NODATA;
+
     isUTM = false;
     isLatLon = false;
     isRotatedLatLon = false;
@@ -349,35 +353,40 @@ bool NetCDFHandler::readProperties(string fileName)
    int nrVarDimensions, nrVarAttributes;
 
    metadata << "\nDimensions: " << endl;
-   for (int i = 0; i < nrDimensions; i++)
+   for (int index = 0; index < nrDimensions; index++)
    {
-       nc_inq_dim(ncId, i, name, &length);
+       nc_inq_dim(ncId, index, name, &length);
 
-       dimensions.push_back(NetCDFVariable(name, i, NODATA));
+       dimensions.push_back(NetCDFVariable(name, index, NODATA));
 
        if (lowerCase(string(name)) == "time")
        {
            nrTime = int(length);
+           indexTimeDim = index;
        }
        else if (lowerCase(string(name)) == "x")
        {
            nrX = int(length);
            isUTM = true;
+           indexXLatDim = index;
        }
        else if (lowerCase(string(name)) == "y")
        {
            nrY = int(length);
            isUTM = true;
+           indexYLonDim = index;
        }
        else if (lowerCase(string(name)) == "lat" || lowerCase(string(name)) == "latitude")
        {
            nrLat = int(length);
            isLatLon = true;
+           indexXLatDim = index;
        }
        else if (lowerCase(string(name)) == "lon" || lowerCase(string(name)) == "longitude")
        {
            nrLon = int(length);
            isLatLon = true;
+           indexYLonDim = index;
        }
        else if (lowerCase(string(name)) == "rlat")
        {
@@ -390,7 +399,7 @@ bool NetCDFHandler::readProperties(string fileName)
            isRotatedLatLon = true;
        }
 
-       metadata << i << " - " << name << "\t values: " << length << endl;
+       metadata << index << " - " << name << "\t values: " << length << endl;
    }
 
    if (isLatLon)
@@ -529,7 +538,7 @@ bool NetCDFHandler::readProperties(string fileName)
                 nc_get_att(ncId, v, attrName, &valueInt);
 
                 // no data
-                if (lowerCase(string(attrName)) == "missing_value" || lowerCase(string(attrName)) == "nodata")
+                if (lowerCase(string(attrName)) == "missing_value" || lowerCase(string(attrName)) == "_fillvalue")
                 {
                     missingValue = double(valueInt);
                 }
@@ -541,7 +550,7 @@ bool NetCDFHandler::readProperties(string fileName)
                 nc_get_att(ncId, v, attrName, &value);
 
                 // no data
-                if (lowerCase(string(attrName)) == "missing_value" || lowerCase(string(attrName)) == "nodata")
+                if (lowerCase(string(attrName)) == "missing_value" || lowerCase(string(attrName)) == "_fillvalue")
                 {
                     missingValue = value;
                 }
@@ -704,25 +713,39 @@ bool NetCDFHandler::readProperties(string fileName)
 
 bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Crit3DTime seriesFirstTime, Crit3DTime seriesLastTime, stringstream *buffer)
 {
-    // check
+    // check dimensions
     if (! isTimeReadable())
     {
         *buffer << "Wrong or missing time dimension!" << endl;
         return false;
     }
+    if (indexTimeDim == NODATA || indexXLatDim == NODATA || indexYLonDim == NODATA)
+    {
+        *buffer << "One dimension is missing: required (time, x, y) or (time, lon, lat)." << endl;
+        return false;
+    }
+    if (std::max(indexTimeDim, std::max(indexXLatDim, indexYLonDim)) > 2)
+    {
+        *buffer << "Wrong dimension index: greater than 3." << endl;
+        return false;
+    }
+
+    // check variable
+    NetCDFVariable var = getVariableFromId(idVar);
+    if (var.getVarName() == "")
+    {
+        *buffer << "Wrong variable!" << endl;
+        return false;
+    }
+
+    // check point
     if (! isPointInside(geoPoint))
     {
         *buffer << "Wrong position!" << endl;
         return false;
     }
 
-    if (seriesFirstTime < getFirstTime() || seriesLastTime > getLastTime())
-    {
-        *buffer << "Wrong time index!" << endl;
-        return false;
-    }
-
-    // find row, col
+    // search row, col
     int row, col;
     if (isLatLon)
     {
@@ -738,7 +761,14 @@ bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Cr
         row = (nrY -1) - row;
     }
 
-    // find time indexes
+    // check time indexes
+    if (seriesFirstTime < getFirstTime() || seriesLastTime > getLastTime())
+    {
+        *buffer << "Wrong time index!" << endl;
+        return false;
+    }
+
+    // search time indexes
     int t1 = NODATA;
     int t2 = NODATA;
     int i = 0;
@@ -751,18 +781,10 @@ bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Cr
         i++;
     }
 
-    // check time
+    // check time range
     if  (t1 == NODATA || t2 == NODATA)
     {
         *buffer << "Time out of range!" << endl;
-        return false;
-    }
-
-    // check variable
-    NetCDFVariable var = getVariableFromId(idVar);
-    if (var.getVarName() == "")
-    {
-        *buffer << "Wrong variable!" << endl;
         return false;
     }
 
@@ -782,12 +804,12 @@ bool NetCDFHandler::exportDataSeries(int idVar, gis::Crit3DGeoPoint geoPoint, Cr
 
     // write data
     size_t* index = new size_t[3];
-    index[1] = size_t(row);
-    index[2] = size_t(col);
+    index[indexYLonDim] = size_t(row);
+    index[indexXLatDim] = size_t(col);
 
     for (int t = t1; t <= t2; t++)
     {
-        index[0] = unsigned(t);
+        index[indexTimeDim] = unsigned(t);
         if (var.type == NC_DOUBLE)
         {
             double value;
@@ -1049,16 +1071,11 @@ bool NetCDFHandler::writeData_NoTime(const gis::Crit3DRasterGrid& myDataGrid)
 }
 
 
+// TODO: sistemare con dimensioni
 bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std::string& errorStr)
 {
     // initialize
-    for (int row = 0; row < dataGrid.header->nrRows; row++)
-    {
-        for (int col = 0; col < dataGrid.header->nrCols; col++)
-        {
-            dataGrid.value[row][col] = NODATA;
-        }
-    }
+    dataGrid.emptyGrid();
 
     // check variable
     NetCDFVariable currentVar = getVariableFromId(idVar);
@@ -1100,7 +1117,7 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
     // read data
     int retVal;
     long nrValues;
-    size_t start[] = {unsigned(timeIndex), 0, 0};
+    size_t start[] = {size_t(timeIndex), 0, 0};
     size_t count[] = {1, 1, 1};
     if (isLatLon)
     {
@@ -1178,6 +1195,103 @@ bool NetCDFHandler::extractVariableMap(int idVar, const Crit3DTime& myTime, std:
         delete[] values;
         return true;
     }
+}
+
+
+bool NetCDFHandler::extractVariableMap2(int idVar, const Crit3DTime &myTime, std::string &errorStr)
+{
+    // initialize
+    dataGrid.emptyGrid();
+
+    // check dimensions
+    if (indexTimeDim == NODATA || indexXLatDim == NODATA || indexYLonDim == NODATA)
+    {
+        errorStr = "One dimension is missing: required (time, x, y) or (time, lon, lat).";
+        return false;
+    }
+    if (std::max(indexTimeDim, std::max(indexXLatDim, indexYLonDim)) > 2)
+    {
+        errorStr = "Wrong dimension number: greater than 3.";
+        return false;
+    }
+
+    // check variable
+    NetCDFVariable currentVar = getVariableFromId(idVar);
+    if (currentVar.getVarName() == "")
+    {
+        errorStr = "Wrong variable.";
+        return false;
+    }
+
+    // check time
+    if (! isTimeReadable())
+    {
+        errorStr = "Wrong Time dimension.";
+        return false;
+    }
+
+    if (myTime < getFirstTime() || myTime > getLastTime())
+    {
+        errorStr = "Time is out of range.";
+        return false;
+    }
+
+    // search time index
+    long timeIndex = NODATA;
+    for (long i = 0; i < nrTime; i++)
+    {
+        if (getTime(i) == myTime)
+        {
+            timeIndex = i;
+            break;
+        }
+    }
+    if  (timeIndex == NODATA)
+    {
+        errorStr = "No available time index.";
+        return false;
+    }
+
+    // get data
+    size_t* index = new size_t[3];
+    index[indexTimeDim] = size_t(timeIndex);
+
+    for (int row = 0; row < dataGrid.header->nrRows; row++)
+    {
+        if (isYincreasing)
+            index[indexYLonDim] = size_t((nrLat-1) - row);
+        else
+            index[indexYLonDim] = size_t(row);
+
+        for (int col = 0; col < dataGrid.header->nrCols; col++)
+        {
+            index[indexXLatDim] = size_t(col);
+            float value;
+
+            if (currentVar.type == NC_DOUBLE)
+            {
+                double valueDouble;
+                nc_get_var1_double(ncId, idVar, index, &valueDouble);
+                value = float(valueDouble);
+            }
+            if (currentVar.type == NC_FLOAT)
+            {
+                nc_get_var1_float(ncId, idVar, index, &value);
+            }
+            if (currentVar.type <= NC_INT)
+            {
+                int valueInt;
+                nc_get_var1_int(ncId, idVar, index, &valueInt);
+                value = float(valueInt);
+            }
+
+            dataGrid.value[row][col] = value;
+        }
+    }
+
+    delete[] index;
+
+    return true;
 }
 
 
